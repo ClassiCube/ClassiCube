@@ -14,8 +14,10 @@
 #include <Dialogs.h>
 #include <Fonts.h>
 #include <Events.h>
+#ifndef M68K_INLINE
 #include <DiskInit.h>
 #include <Scrap.h>
+#endif
 #include <Gestalt.h>
 static WindowPtr win;
 static cc_bool hasColorQD, useGWorld;
@@ -40,7 +42,7 @@ static cc_bool hasColorQD, useGWorld;
     #define MAC_FOURWORDINLINE(w1,w2,w3,w4)
 #endif
 typedef unsigned long MAC_FourCharCode;
-
+typedef SInt16 MAC_WindowPartCode;
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
@@ -179,7 +181,7 @@ void Window_RequestClose(void) {
 
 
 static void HandleMouseDown(EventRecord* event) {
-	WindowPartCode part;
+	MAC_WindowPartCode part;
 	WindowPtr      window;
 	Point localPoint;
                     
@@ -348,8 +350,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 static void DrawFramebufferBulk(Rect2D r, struct Bitmap* bmp) {
     GrafPtr thePort = (GrafPtr)win;
-	const BitMap* memBits;
-	const BitMap* winBits;
+	BitMap* memBits;
+	BitMap* winBits;
 
 	for (int y = r.y; y < r.y + r.height; y++)
 	{

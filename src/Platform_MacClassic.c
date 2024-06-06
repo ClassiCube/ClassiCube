@@ -20,7 +20,6 @@
 #include <Processes.h>
 #include <Files.h>
 #include <Gestalt.h>
-#include <Math64.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -59,7 +58,7 @@ typedef unsigned long MAC_FourCharCode;
 
 // ==================================== IMPORTS FROM TIMER.H ====================================
 // Availability: in InterfaceLib 7.1 and later
-MAC_SYSAPI(void) Microseconds(UnsignedWide* microTickCount) MAC_FOURWORDINLINE(0xA193, 0x225F, 0x22C8, 0x2280);
+MAC_SYSAPI(void) Microseconds(cc_uint64* microTickCount) MAC_FOURWORDINLINE(0xA193, 0x225F, 0x22C8, 0x2280);
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -144,16 +143,15 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 #define MS_PER_SEC 1000000ULL
 
 cc_uint64 Stopwatch_Measure(void) {
+	cc_uint64 count;
 	if (sysVersion < 0x7000) {
 		// 60 ticks a second
-		cc_uint64 count = TickCount();
+		count = TickCount();
 		return count * MS_PER_SEC / 60;
 	}
 
-	UnsignedWide count;
 	Microseconds(&count);
-	return (cc_uint64)count.lo | ((cc_uint64)count.hi << 32);
-	//return UnsignedWideToUInt64(count);
+	return count;
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
