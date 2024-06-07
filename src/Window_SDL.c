@@ -394,7 +394,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 static SDL_Surface* win_surface;
 static SDL_Surface* blit_surface;
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	SDL_PixelFormat* fmt;
 	win_surface = SDL_GetWindowSurface(win_handle);
 	if (!win_surface) Window_SDLFail("getting window surface");
@@ -416,6 +416,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 		}
 		bmp->scan0 = win_surface->pixels;
 	}
+	/* TODO proper stride */
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

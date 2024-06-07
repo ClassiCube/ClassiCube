@@ -516,6 +516,7 @@
     <ClCompile Include="Platform_PS3.c" />
     <ClCompile Include="Platform_PSP.c" />
     <ClCompile Include="Platform_PSVita.c" />
+    <ClCompile Include="Platform_Saturn.c" />
     <ClCompile Include="Platform_Switch.c" />
     <ClCompile Include="Platform_Web.c" />
     <ClCompile Include="Platform_WiiU.c" />
@@ -564,6 +565,7 @@
     <ClCompile Include="Window_PS3.c" />
     <ClCompile Include="Window_PSP.c" />
     <ClCompile Include="Window_PSVita.c" />
+    <ClCompile Include="Window_Saturn.c" />
     <ClCompile Include="Window_SDL.c" />
     <ClCompile Include="Window_SDL3.c" />
     <ClCompile Include="Window_Switch.c" />

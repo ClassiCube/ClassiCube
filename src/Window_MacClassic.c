@@ -332,8 +332,10 @@ static PixMapHandle fb_pixmap;
 static int fb_stride;
 static char* fb_bits;
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 	if (!useGWorld) return;
 
 	// TODO bmp->scan0 should be the fb_world

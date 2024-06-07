@@ -776,6 +776,12 @@
     <ClCompile Include="Window_Terminal.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
+    <ClCompile Include="Window_Saturn.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Saturn.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">

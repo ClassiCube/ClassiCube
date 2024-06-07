@@ -693,9 +693,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 *--------------------------------------------------------Framebuffer------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Bitmap fb_bmp;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
+	fb_bmp      = *bmp;
 }
 
 static void DoDrawFramebuffer(NSRect dirty) {

@@ -684,7 +684,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return interop_DownloadFile(fileBuffer, args->filters, args->titles);
 }
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) { }
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) { }
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 

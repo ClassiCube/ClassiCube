@@ -149,15 +149,18 @@ void Window_Create2D(int width, int height) {
 static DISPENV disp;
 static cc_uint16* fb;
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	SetDefDispEnv(&disp, 0, 0, SCREEN_XRES, SCREEN_YRES);
 	disp.isinter = 1;
 
 	PutDispEnv(&disp);
 	SetDispMask(1);
 
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb         = 			 Mem_Alloc(bmp->width * bmp->height, 2, "real surface");
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
+
+	fb = Mem_Alloc(width * height, 2, "real surface");
 }
 
 #define BGRA8_to_PS1(src) \
@@ -172,8 +175,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 	for (int y = r.y; y < r.y + r.height; y++)
 	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width;
-		cc_uint16* dst = fb         + y * bmp->width;
+		cc_uint32* src = Bitmap_GetRow(bmp, y);
+		cc_uint16* dst = fb + y * bmp->width;
 		
 		for (int x = r.x; x < r.x + r.width; x++) {
 			cc_uint8* color = (cc_uint8*)&src[x];

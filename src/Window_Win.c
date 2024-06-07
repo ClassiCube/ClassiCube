@@ -699,19 +699,21 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static HDC draw_DC;
 static HBITMAP draw_DIB;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	BITMAPINFO hdr = { 0 };
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
 	/* sizeof(BITMAPINFO) does not work on Windows 9x */
 	hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	hdr.bmiHeader.biWidth    =  bmp->width;
-	hdr.bmiHeader.biHeight   = -bmp->height;
+	hdr.bmiHeader.biWidth    =  width;
+	hdr.bmiHeader.biHeight   = -height;
 	hdr.bmiHeader.biBitCount = 32;
 	hdr.bmiHeader.biPlanes   = 1; 
 
 	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->scan0, NULL, 0);
 	if (!draw_DIB) Logger_Abort2(GetLastError(), "Failed to create DIB");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

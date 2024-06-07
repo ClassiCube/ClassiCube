@@ -648,13 +648,15 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 static BBitmap* win_framebuffer;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	// right/bottom coordinates are inclusive of the coordinates,
 	//  so need to subtract 1 to end up with correct width/height
-	BRect bounds(0, 0, bmp->width - 1, bmp->height - 1);
+	BRect bounds(0, 0, width - 1, height - 1);
 	
 	win_framebuffer = new BBitmap(bounds, B_RGB32);
-	bmp->scan0 = (BitmapCol*)win_framebuffer->Bits();
+	bmp->scan0  = (BitmapCol*)win_framebuffer->Bits();
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -667,7 +669,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	delete win_framebuffer;
-	bmp->scan0 = NULL;
 }
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }

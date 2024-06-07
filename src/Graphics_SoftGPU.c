@@ -622,8 +622,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_OnWindowResize(void) {
 	if (depthBuffer) DestroyBuffers();
 
-	fb_bmp.width  = fb_width  = Game.Width;
-	fb_bmp.height = fb_height = Game.Height;
+	fb_width   = Game.Width;
+	fb_height  = Game.Height;
 
 	vp_hwidth  = fb_width  / 2.0f;
 	vp_hheight = fb_height / 2.0f;
@@ -631,7 +631,7 @@ void Gfx_OnWindowResize(void) {
 	fb_maxX = fb_width  - 1;
 	fb_maxY = fb_height - 1;
 
-	Window_AllocFramebuffer(&fb_bmp);
+	Window_AllocFramebuffer(&fb_bmp, Game.Width, Game.Height);
 	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
 	colorBuffer = fb_bmp.scan0;
 }

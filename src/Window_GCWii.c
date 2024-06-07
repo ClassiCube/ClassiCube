@@ -439,8 +439,10 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 // TODO: Get rid of this complexity and use the 3D API instead..
@@ -477,7 +479,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO XFB is raw yuv, but is absolutely a pain to work with..
 	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width     + r.x;
+		cc_uint32* src = Bitmap_GetRow(bmp, y)           + r.x;
 		u16* dst       = (u16*)xfb  + y * rmode->fbWidth + r.x;
 		
 		for (int x = 0; x < r.width / 2; x++) {

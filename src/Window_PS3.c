@@ -326,9 +326,11 @@ static u32 fb_offset;
 extern u32* Gfx_AllocImage(u32* offset, s32 w, s32 h);
 extern void Gfx_TransferImage(u32 offset, s32 w, s32 h);
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	u32* pixels = Gfx_AllocImage(&fb_offset, bmp->width, bmp->height);
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	u32* pixels = Gfx_AllocImage(&fb_offset, width, height);
 	bmp->scan0  = pixels;
+	bmp->width  = width;
+	bmp->height = height;
 	
 	Gfx_ClearColor(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
 }

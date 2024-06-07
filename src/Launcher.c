@@ -548,13 +548,15 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	/* Put title on top screen */
 	struct Context2D topCtx;
 	struct Bitmap bmp;
+	int width  = Window_Alt.Width;
+	int height = Window_Alt.Height;
 	launcherTop = true;
 
 	ctx = &topCtx;
-	bmp.width  = Window_Alt.Width;
-	bmp.height = Window_Alt.Height;
-	Window_AllocFramebuffer(&bmp);
+	Window_AllocFramebuffer(&bmp, width, height);
 	Context2D_Wrap(ctx, &bmp);
+	ctx.width  = width;
+	ctx.height = height;
 	
 	Launcher_DrawBackgroundAll(ctx);
 	DrawTitleText(font, text, ctx, ANCHOR_CENTRE, ANCHOR_CENTRE);
