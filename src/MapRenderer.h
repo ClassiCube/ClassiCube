@@ -34,11 +34,12 @@ struct ChunkPartInfo {
 struct ChunkInfo {	
 	cc_uint16 centreX, centreY, centreZ; /* Centre coordinates of the chunk */
 
-	cc_uint8 visible : 1;       /* Whether chunk is visible to the player */
-	cc_uint8 empty : 1;         /* Whether the chunk is empty of data */
-	cc_uint8 pendingDelete : 1; /* Whether chunk is pending deletion */
-	cc_uint8 allAir : 1;        /* Whether chunk is completely air */
-	cc_uint8 : 0;               /* pad to next byte*/
+	cc_uint8 visible : 1; /* Whether chunk is visible to the player */
+	cc_uint8 empty : 1;   /* Whether the chunk is empty of data and is known to have no data */
+	cc_uint8 dirty : 1;   /* Whether chunk is pending being rebuilt */
+	cc_uint8 allAir : 1;  /* Whether chunk is completely air */
+	cc_uint8 noData : 1;  /* Whether the chunk is currently empty of data, but may have data if built */
+	cc_uint8 : 0;         /* pad to next byte*/
 
 	cc_uint8 drawXMin : 1;
 	cc_uint8 drawXMax : 1;
