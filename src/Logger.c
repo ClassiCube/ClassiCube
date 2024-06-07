@@ -386,6 +386,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 #elif defined CC_BACKTRACE_BUILTIN
 /* Implemented later at end of the file */
 #elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
+#ifdef _GLIBC_
 #include <execinfo.h>
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	void* addrs[MAX_BACKTRACE_FRAMES];
@@ -396,8 +397,21 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	}
 	String_AppendConst(trace, _NL);
 }
-#else
-void Logger_Backtrace(cc_string* trace, void* ctx) { }
+#endif
+#include <unwind.h>
+
+static _Unwind_Reason_Code UnwindFrame(struct _Unwind_Context* ctx, void* arg) {
+	cc_uintptr addr = _Unwind_GetIP(ctx);
+	if (!addr) return _URC_END_OF_STACK;
+
+	DumpFrame((cc_string*)arg, (void*)addr);
+	return _URC_NO_REASON;
+}
+
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	_Unwind_Backtrace(UnwindFrame, trace);
+	String_AppendConst(trace, _NL);
+}
 #endif
 
 
