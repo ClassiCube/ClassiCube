@@ -25,17 +25,19 @@ static CC_INLINE cc_string String_Init(STRING_REF char* buffer, int length, int 
 CC_API int String_CalcLen(const char* raw, int capacity);
 /* Counts number of characters until a '\0' is found. */
 int String_Length(const char* raw);
-/* Constructs a string from a (maybe null terminated) buffer. */
-CC_NOINLINE cc_string String_FromRaw(STRING_REF char* buffer, int capacity);
-/* Constructs a string from a null-terminated constant readonly buffer. */
-CC_API cc_string String_FromReadonly(STRING_REF const char* buffer);
 
 /* Constructs a string from a compile time string constant */
 #define String_FromConst(text) { (char*)(text), (sizeof(text) - 1), (sizeof(text) - 1)}
 /* Constructs a string from a compile time array */
 #define String_FromArray(buffer) { buffer, 0, sizeof(buffer)}
+
+/* Constructs a string from a (maybe null terminated) buffer. */
+CC_NOINLINE cc_string String_FromRaw(STRING_REF char* buffer, int capacity);
+/* Constructs a string from a null-terminated constant readonly buffer. */
+CC_API cc_string String_FromReadonly(STRING_REF const char* buffer);
 /* Constructs a string from a compile time array, that may have arbitary actual length of data at runtime */
 #define String_FromRawArray(buffer) String_FromRaw(buffer, sizeof(buffer))
+
 /* Constructs a string from a compile time array (leaving 1 byte of room for null terminator) */
 #define String_NT_Array(buffer) { buffer, 0, (sizeof(buffer) - 1)}
 /* Initialises a string from a compile time array. */
