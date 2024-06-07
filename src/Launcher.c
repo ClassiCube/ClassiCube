@@ -555,8 +555,8 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	ctx = &topCtx;
 	Window_AllocFramebuffer(&bmp, width, height);
 	Context2D_Wrap(ctx, &bmp);
-	ctx.width  = width;
-	ctx.height = height;
+	topCtx.width  = width;
+	topCtx.height = height;
 	
 	Launcher_DrawBackgroundAll(ctx);
 	DrawTitleText(font, text, ctx, ANCHOR_CENTRE, ANCHOR_CENTRE);
