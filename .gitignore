@@ -120,6 +120,7 @@ TestResult.xml
 [Rr]eleasePS/
 dlldata.c
 
+# Mac classic
 retro68scripts/
 
 *_i.c

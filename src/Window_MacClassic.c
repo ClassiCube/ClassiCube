@@ -329,16 +329,15 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static GWorldPtr fb_world;
 static PixMapHandle fb_pixmap;
-static int fb_stride;
-static char* fb_bits;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
-	bmp->width  = width;
-	bmp->height = height;
-	if (!useGWorld) return;
+	if (!useGWorld) {
+		bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+		bmp->width  = width;
+		bmp->height = height;
+		return;
+	}
 
-	// TODO bmp->scan0 should be the fb_world
 	QDErr err = NewGWorld(&fb_world, 32, &win->portRect, 0, 0, 0);
 	if (err != noErr) Logger_Abort2(err, "Failed to allocate GWorld");
 	
@@ -346,28 +345,17 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	if (!fb_pixmap) Logger_Abort("Failed to allocate pixmap");
 
 	LockPixels(fb_pixmap);
-	fb_stride = (*fb_pixmap)->rowBytes & 0x3FFF;
-	fb_bits   = (char*)GetPixBaseAddr(fb_pixmap);
+	int stride = (*fb_pixmap)->rowBytes & 0x3FFF;
+
+	bmp->scan0  = (BitmapCol*)GetPixBaseAddr(fb_pixmap);
+	bmp->width  = stride >> 2;
+	bmp->height = height;
 }
 
 static void DrawFramebufferBulk(Rect2D r, struct Bitmap* bmp) {
     GrafPtr thePort = (GrafPtr)win;
-	BitMap* memBits;
-	BitMap* winBits;
-
-	for (int y = r.y; y < r.y + r.height; y++)
-	{
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		uint32_t*  dst = (uint32_t*)(fb_bits + fb_stride * y);
-		
-		for (int x = r.x; x < r.x + r.width; x++)
-		{
-			dst[x] = src[x];
-		}
-	}
-
-	memBits = &((GrafPtr)fb_world)->portBits;
-	winBits = &thePort->portBits;
+	BitMap* memBits = &((GrafPtr)fb_world)->portBits;
+	BitMap* winBits = &thePort->portBits;
 
 	Rect update;
 	update.left   = r.x;
