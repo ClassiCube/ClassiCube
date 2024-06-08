@@ -257,10 +257,4 @@ cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p);
 /* Moves local player back to spawn point. */
 void LocalPlayers_MoveToSpawn(struct LocationUpdate* update);
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update);
-
-cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p);
-cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p);
-cc_bool LocalPlayer_HandleFly(struct LocalPlayer* p);
-cc_bool LocalPlayer_HandleNoclip(struct LocalPlayer* p);
-cc_bool LocalPlayer_HandleJump(struct LocalPlayer* p);
 #endif

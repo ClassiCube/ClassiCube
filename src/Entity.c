@@ -871,7 +871,8 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p) {
+static cc_bool LocalPlayer_HandleRespawn(int key) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn(p);
 		return true;
@@ -882,7 +883,8 @@ cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p) {
+static cc_bool LocalPlayer_HandleSetSpawn(int key) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	if (p->Hacks.CanRespawn) {
 
 		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
@@ -904,10 +906,12 @@ cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p) {
 		p->SpawnYaw   = p->Base.Yaw;
 		p->SpawnPitch = p->Base.Pitch;
 	}
-	return LocalPlayer_HandleRespawn(p);
+	return LocalPlayer_HandleRespawn(key);
 }
 
-cc_bool LocalPlayer_HandleFly(struct LocalPlayer* p) {
+static cc_bool LocalPlayer_HandleFly(int key) {
+	struct LocalPlayer* p = Entities.CurPlayer;
+
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
 		return true;
@@ -918,7 +922,9 @@ cc_bool LocalPlayer_HandleFly(struct LocalPlayer* p) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleNoclip(struct LocalPlayer* p) {
+static cc_bool LocalPlayer_HandleNoclip(int key) {
+	struct LocalPlayer* p = Entities.CurPlayer;
+
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.y = 0;
@@ -932,7 +938,8 @@ cc_bool LocalPlayer_HandleNoclip(struct LocalPlayer* p) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleJump(struct LocalPlayer* p) {
+static cc_bool LocalPlayer_HandleJump(int key) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
@@ -948,6 +955,14 @@ cc_bool LocalPlayer_HandleJump(struct LocalPlayer* p) {
 		return true;
 	}
 	return false;
+}
+
+static void LocalPlayer_HookBinds(void) {
+	Bind_OnTriggered[BIND_RESPAWN]   = LocalPlayer_HandleRespawn;
+	Bind_OnTriggered[BIND_SET_SPAWN] = LocalPlayer_HandleSetSpawn;
+	Bind_OnTriggered[BIND_FLY]       = LocalPlayer_HandleFly;
+	Bind_OnTriggered[BIND_NOCLIP]    = LocalPlayer_HandleNoclip;
+	Bind_OnTriggered[BIND_JUMP]      = LocalPlayer_HandleJump;
 }
 
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
@@ -1061,6 +1076,7 @@ static void Entities_Init(void) {
 		Entities.List[MAX_NET_PLAYERS + i] = &LocalPlayer_Instances[i].Base;
 	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];
+	LocalPlayer_HookBinds();
 }
 
 static void Entities_Free(void) {

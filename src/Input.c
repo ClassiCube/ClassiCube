@@ -381,6 +381,7 @@ void Pointer_SetPosition(int idx, int x, int y) {
 *#########################################################################################################################*/
 BindMapping PadBind_Mappings[BIND_COUNT];
 BindMapping KeyBind_Mappings[BIND_COUNT];
+BindTriggered Bind_OnTriggered[BIND_COUNT];
 
 const BindMapping PadBind_Defaults[BIND_COUNT] = {
 	{ CCPAD_UP,   0 },  { CCPAD_DOWN,  0 }, /* BIND_FORWARD, BIND_BACK */
@@ -1152,72 +1153,91 @@ static void InputHandler_CheckZoomFov(void* obj) {
 	if (!h->Enabled || !h->CanUseThirdPerson) Camera_SetFov(Camera.DefaultFov);
 }
 
-static cc_bool HandleBlockKey(int key) {
-	if (InputBind_Claims(BIND_DELETE_BLOCK, key)) {
-		MouseStatePress(MOUSE_LEFT);
-		InputHandler_DeleteBlock();
-	} else if (InputBind_Claims(BIND_PLACE_BLOCK, key)) {
-		MouseStatePress(MOUSE_RIGHT);
-		InputHandler_PlaceBlock();
-	} else if (InputBind_Claims(BIND_PICK_BLOCK, key)) {
-		MouseStatePress(MOUSE_MIDDLE);
-		InputHandler_PickBlock();
-	} else {
-		return false;
+static cc_bool BindTriggered_DeleteBlock(int key) {
+	MouseStatePress(MOUSE_LEFT);
+	InputHandler_DeleteBlock();
+	return true;
+}
+
+static cc_bool BindTriggered_PlaceBlock(int key) {
+	MouseStatePress(MOUSE_RIGHT);
+	InputHandler_PlaceBlock();
+	return true;
+}
+
+static cc_bool BindTriggered_PickBlock(int key) {
+	MouseStatePress(MOUSE_MIDDLE);
+	InputHandler_PickBlock();
+	return true;
+}
+
+
+static cc_bool BindTriggered_HideFPS(int key) {
+	Gui.ShowFPS = !Gui.ShowFPS;
+	return true;
+}
+
+static cc_bool BindTriggered_Fullscreen(int key) {
+	Game_ToggleFullscreen();
+	return true;
+}
+
+static cc_bool BindTriggered_Fog(int key) {
+	Game_CycleViewDistance();
+	return true;
+}
+
+
+static cc_bool BindTriggered_HideGUI(int key) {
+	Game_HideGui = !Game_HideGui;
+	return true;
+}
+
+static cc_bool BindTriggered_SmoothCamera(int key) {
+	InputHandler_Toggle(key, &Camera.Smooth,
+		"  &eSmooth camera is &aenabled",
+		"  &eSmooth camera is &cdisabled");
+	return true;
+}
+
+static cc_bool BindTriggered_AxisLines(int key) {
+	InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
+		"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
+		"  &eAxis lines no longer show");
+	return true;
+} 
+
+static cc_bool BindTriggered_AutoRotate(int key) {
+	InputHandler_Toggle(key, &AutoRotate_Enabled,
+		"  &eAuto rotate is &aenabled",
+		"  &eAuto rotate is &cdisabled");
+	return true;
+}
+
+static cc_bool BindTriggered_ThirdPerson(int key) {
+	Camera_CycleActive();
+	return true;
+}
+
+static cc_bool BindTriggered_DropBlock(int key) {
+	if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
+		/* Don't assign SelectedIndex directly, because we don't want held block
+		switching positions if they already have air in their inventory hotbar. */
+		Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
+		Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 	}
 	return true;
 }
 
-static cc_bool HandleNonClassicKey(int key) {
-	if (InputBind_Claims(BIND_HIDE_GUI, key)) {
-		Game_HideGui = !Game_HideGui;
-	} else if (InputBind_Claims(BIND_SMOOTH_CAMERA, key)) {
-		InputHandler_Toggle(key, &Camera.Smooth,
-			"  &eSmooth camera is &aenabled",
-			"  &eSmooth camera is &cdisabled");
-	} else if (InputBind_Claims(BIND_AXIS_LINES, key)) {
-		InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
-			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
-			"  &eAxis lines no longer show");
-	} else if (InputBind_Claims(BIND_AUTOROTATE, key)) {
-		InputHandler_Toggle(key, &AutoRotate_Enabled,
-			"  &eAuto rotate is &aenabled",
-			"  &eAuto rotate is &cdisabled");
-	} else if (InputBind_Claims(BIND_THIRD_PERSON, key)) {
-		Camera_CycleActive();
-	} else if (InputBind_Claims(BIND_DROP_BLOCK, key)) {
-		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
-			/* Don't assign SelectedIndex directly, because we don't want held block
-			switching positions if they already have air in their inventory hotbar. */
-			Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
-			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
-		}
-	} else if (InputBind_Claims(BIND_IDOVERLAY, key)) {
-		TexIdsOverlay_Show();
-	} else if (InputBind_Claims(BIND_BREAK_LIQUIDS, key)) {
-		InputHandler_Toggle(key, &Game_BreakableLiquids,
-			"  &eBreakable liquids is &aenabled",
-			"  &eBreakable liquids is &cdisabled");
-	} else {
-		return false;
-	}
+static cc_bool BindTriggered_IDOverlay(int key) {
+	TexIdsOverlay_Show();
 	return true;
 }
 
-static cc_bool HandleCoreKey(int key) {
-	if (InputBind_Claims(BIND_HIDE_FPS, key)) {
-		Gui.ShowFPS = !Gui.ShowFPS;
-	} else if (InputBind_Claims(BIND_FULLSCREEN, key)) {
-		Game_ToggleFullscreen();
-	} else if (InputBind_Claims(BIND_FOG, key)) {
-		Game_CycleViewDistance();
-	} else if (key == CCKEY_F5 && Game_ClassicMode) {
-		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
-		Env_SetWeather(weather);
-	} else {
-		if (Game_ClassicMode) return false;
-		return HandleNonClassicKey(key);
-	}
+static cc_bool BindTriggered_BreakLiquids(int key) {
+	InputHandler_Toggle(key, &Game_BreakableLiquids,
+		"  &eBreakable liquids is &aenabled",
+		"  &eBreakable liquids is &cdisabled");
 	return true;
 }
 
@@ -1237,21 +1257,24 @@ static void HandleHotkeyDown(int key) {
 	}
 }
 
-static cc_bool HandleLocalPlayerKey(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
-	
-	if (InputBind_Claims(BIND_RESPAWN, key)) {
-		return LocalPlayer_HandleRespawn(p);
-	} else if (InputBind_Claims(BIND_SET_SPAWN, key)) {
-		return LocalPlayer_HandleSetSpawn(p);
-	} else if (InputBind_Claims(BIND_FLY, key)) {
-		return LocalPlayer_HandleFly(p);
-	} else if (InputBind_Claims(BIND_NOCLIP, key)) {
-		return LocalPlayer_HandleNoclip(p);
-	} else if (InputBind_Claims(BIND_JUMP, key)) {
-		return LocalPlayer_HandleJump(p);
-	}
-	return false;
+static void HookInputBinds(void) {
+	Bind_OnTriggered[BIND_HIDE_FPS]   = BindTriggered_HideFPS;
+	Bind_OnTriggered[BIND_FULLSCREEN] = BindTriggered_Fullscreen;
+	Bind_OnTriggered[BIND_FOG]        = BindTriggered_Fog;
+
+	Bind_OnTriggered[BIND_DELETE_BLOCK] = BindTriggered_DeleteBlock;
+	Bind_OnTriggered[BIND_PLACE_BLOCK]  = BindTriggered_PlaceBlock;
+	Bind_OnTriggered[BIND_PICK_BLOCK]   = BindTriggered_PickBlock;
+
+	if (Game_ClassicMode) return;
+	Bind_OnTriggered[BIND_HIDE_GUI]      = BindTriggered_HideGUI;
+	Bind_OnTriggered[BIND_SMOOTH_CAMERA] = BindTriggered_SmoothCamera;
+	Bind_OnTriggered[BIND_AXIS_LINES]    = BindTriggered_AxisLines;
+	Bind_OnTriggered[BIND_AUTOROTATE]    = BindTriggered_AutoRotate;
+	Bind_OnTriggered[BIND_THIRD_PERSON]  = BindTriggered_ThirdPerson;
+	Bind_OnTriggered[BIND_DROP_BLOCK]    = BindTriggered_DropBlock;
+	Bind_OnTriggered[BIND_IDOVERLAY]     = BindTriggered_IDOverlay;
+	Bind_OnTriggered[BIND_BREAK_LIQUIDS] = BindTriggered_BreakLiquids;
 }
 
 
@@ -1307,6 +1330,7 @@ static void OnPointerUp(void* obj, int idx) {
 
 static void OnInputDown(void* obj, int key, cc_bool was) {
 	struct Screen* s;
+	cc_bool triggered;
 	int i;
 	if (Window_Main.SoftKeyboardFocus) return;
 
@@ -1346,9 +1370,20 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 
 	/* These should not be triggered multiple times when holding down */
 	if (was) return;
-	if (HandleBlockKey(key)) {
-	} else if (HandleCoreKey(key)) {
-	} else if (HandleLocalPlayerKey(key)) {
+	triggered = false;
+
+	for (i = 0; i < BIND_COUNT; i++)
+	{
+		if (!Bind_OnTriggered[i])      continue;
+		if (!InputBind_Claims(i, key)) continue;
+
+		triggered |= Bind_OnTriggered[i](key);
+	}
+
+	if (triggered) {
+	} else if (key == CCKEY_F5 && Game_ClassicMode) {
+		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
+		Env_SetWeather(weather);
 	} else { HandleHotkeyDown(key); }
 }
 
@@ -1392,6 +1427,7 @@ static struct LocalPlayerInput normalInput = { PlayerInputNormal };
 static void OnInit(void) {
 	LocalPlayerInput_Add(&normalInput);
 	LocalPlayerInput_Add(&gamepadInput);
+	HookInputBinds();
 	
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
