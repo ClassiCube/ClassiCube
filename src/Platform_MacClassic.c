@@ -55,6 +55,7 @@ static long sysVersion;
     #define MAC_FOURWORDINLINE(w1,w2,w3,w4)
 #endif
 typedef unsigned long MAC_FourCharCode;
+static const int MAC_smSystemScript = -1;
 
 // ==================================== IMPORTS FROM TIMER.H ====================================
 // Availability: in InterfaceLib 7.1 and later
@@ -162,13 +163,38 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+static void GetNativePath(FSSpec* spec, const cc_string* src) {
+	char buffer[NATIVE_STR_LEN];
+	char* str = buffer;
+	*str++ = ':';
+	
+	// Classic Mac OS uses : to separate directories
+	for (int i = 0; i < src->length; i++) 
+	{
+		char c = (char)src->buffer[i];
+		if (c == '/') c = ':';
+		*str++ = c;
+	}
+	*str = '\0';
+
+	Mem_Set(spec, 0, sizeof(FSSpec));
+	FSMakeFSSpec(0, 0, buffer, spec);
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_string* path) {
-	return 0; // TODO
+	FSSpec spec;
+	GetNativePath(&spec, path);
+
+	long dirID;
+	return 0;
 }
 
 int File_Exists(const cc_string* path) {
+	FSSpec spec;
+	GetNativePath(&spec, path);
+
 	return 0;
 }
 
@@ -177,14 +203,23 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
+	FSSpec spec;
+	GetNativePath(&spec, path);
+
 	return ReturnCode_FileNotFound;
 }
 
 cc_result File_Create(cc_file* file, const cc_string* path) {
+	FSSpec spec;
+	GetNativePath(&spec, path);
+
 	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+	FSSpec spec;
+	GetNativePath(&spec, path);
+
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -205,7 +240,7 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	return ERR_NOT_SUPPORTED;
+	FSClose(file);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
@@ -215,7 +250,7 @@ cc_result File_Seek(cc_file file, int offset, int seekType) {
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	return ERR_NOT_SUPPORTED;
+	return GetFPos(file, pos);
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {

@@ -14,6 +14,7 @@
 #include <Dialogs.h>
 #include <Fonts.h>
 #include <Events.h>
+#include <LowMem.h>
 #ifndef M68K_INLINE
 #include <DiskInit.h>
 #include <Scrap.h>
@@ -151,6 +152,7 @@ void Window_PreInit(void) {
 	for (int i = 0; i < 5; i++)
 		EventAvail(everyEvent, &event);
 	FlushEvents(everyEvent, 0);
+	SetEventMask(everyEvent);
 
     long tmpLong = 0;
     Gestalt(gestaltQuickdrawVersion, &tmpLong);
@@ -370,6 +372,10 @@ static void Cursor_GetRawPos(int* x, int* y) {
 
 void Cursor_SetPosition(int x, int y) { 
 	// TODO
+	Point where;
+	where.h = x;
+	where.v = y;
+	//LMSetRawMouseLocation(where);
 }
 
 static void Cursor_DoSetVisible(cc_bool visible) {
