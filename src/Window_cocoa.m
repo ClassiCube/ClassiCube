@@ -842,9 +842,12 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 // kCGLCPCurrentRendererID is only available on macOS 10.4 and later
+// Before 10.5 uses long instead of glInt and didn't include the normal gl.h with typedefs
 #if defined MAC_OS_X_VERSION_10_4
+typedef int GLinteger;
+
 static const char* GetAccelerationMode(CGLContextObj ctx) {
-	GLint fGPU, vGPU;
+	GLinteger fGPU, vGPU;
 	
 	// NOTE: only macOS 10.4 or later
 	if (CGLGetParameter(ctx, kCGLCPGPUFragmentProcessing, &fGPU)) return NULL;
@@ -857,24 +860,24 @@ static const char* GetAccelerationMode(CGLContextObj ctx) {
 
 void GLContext_GetApiInfo(cc_string* info) {
 	CGLContextObj ctx = [ctxHandle CGLContextObj];
-	GLint rendererID;
+	GLinteger rendererID;
 	CGLGetParameter(ctx, kCGLCPCurrentRendererID, &rendererID);
 	
-	GLint nRenders = 0;
+	GLinteger nRenders = 0;
 	CGLRendererInfoObj rend;
 	CGLQueryRendererInfo(-1, &rend, &nRenders);
 	
 	for (int i = 0; i < nRenders; i++)
 	{
-		GLint curID = -1;
+		GLinteger curID = -1;
 		CGLDescribeRenderer(rend, i, kCGLRPRendererID, &curID);
 		if (curID != rendererID) continue;
 		
-		GLint acc = 0;
+		GLinteger acc = 0;
 		CGLDescribeRenderer(rend, i, kCGLRPAccelerated, &acc);
 		const char* mode = GetAccelerationMode(ctx);
 		
-		GLint vram = 0;
+		GLinteger vram = 0;
 		if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemoryMegabytes, &vram)) {
 			// preferred path (macOS 10.7 or later)
 		} else if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemory, &vram)) {
