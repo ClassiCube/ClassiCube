@@ -519,11 +519,11 @@ static struct Widget* touch_widgets[ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS + 2] = 
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
-static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(Entities.CurPlayer); }
-static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(Entities.CurPlayer); }
-static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(Entities.CurPlayer); }
-static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(Entities.CurPlayer); }
-static void TouchScreen_CameraClick(void* s,   void* w) { Camera_CycleActive(); }
+static void TouchScreen_RespawnClick(void* s,  void* w) { Bind_OnTriggered[BIND_RESPAWN](0); }
+static void TouchScreen_SetSpawnClick(void* s, void* w) { Bind_OnTriggered[BIND_SET_SPAWN](0); }
+static void TouchScreen_FlyClick(void* s,      void* w) { Bind_OnTriggered[BIND_FLY](0); }
+static void TouchScreen_NoclipClick(void* s,   void* w) { Bind_OnTriggered[BIND_NOCLIP](0); }
+static void TouchScreen_CameraClick(void* s,   void* w) { Bind_OnTriggered[BIND_THIRD_PERSON](0); }
 static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_SwitchClick(void* s,   void* w) { Inventory_SwitchHotbar(); }
 static void TouchScreen_DeleteClick(void* s,   void* w) { InputHandler_DeleteBlock(); } /* TODO: also Send CPEClick packet */

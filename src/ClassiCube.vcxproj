@@ -547,6 +547,7 @@
     <ClCompile Include="String.c" />
     <ClCompile Include="SystemFonts.c" />
     <ClCompile Include="TexturePack.c" />
+    <ClCompile Include="TouchUI.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="Vorbis.c" />

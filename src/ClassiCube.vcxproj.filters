@@ -782,6 +782,9 @@
     <ClCompile Include="Platform_Saturn.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="TouchUI.c">
+      <Filter>Source Files\2D</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">
