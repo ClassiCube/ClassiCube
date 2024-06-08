@@ -7,111 +7,16 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+
 /* The OpenGL backend is a bit of a mess, since it's really 2 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
 */
+#include "../misc/opengl/GLCommon.h"
 
-#if defined CC_BUILD_WIN
-	/* Avoid pointless includes */
-	#define WIN32_LEAN_AND_MEAN
-	#define NOSERVICE
-	#define NOMCX
-	#define NOIME
-	#include <windows.h>
-	#define GLAPI WINGDIAPI
-#else
-	#define GLAPI extern
-	#define APIENTRY
-#endif
-/* === BEGIN OPENGL HEADERS === */
-typedef unsigned int GLenum;
-typedef unsigned char GLboolean;
-typedef signed char GLbyte;
-typedef int GLint;
-typedef int GLsizei;
-typedef unsigned char GLubyte;
-typedef unsigned int GLuint;
-typedef float GLfloat;
-typedef void GLvoid;
-
-/* NOTE: With the OpenGL 1.1 backend "pointer" arguments are actual pointers, */
-/* but with VBOs they are just offsets instead */
-#ifdef CC_BUILD_GL11
-typedef const void* GLpointer;
-#else
-typedef cc_uintptr GLpointer;
-#endif
-
-#define GL_LEQUAL                0x0203
-#define GL_GREATER               0x0204
-
-#define GL_DEPTH_BUFFER_BIT      0x00000100
-#define GL_COLOR_BUFFER_BIT      0x00004000
-
-#define GL_LINES                 0x0001
-#define GL_TRIANGLES             0x0004
-#define GL_QUADS                 0x0007
-
-#define GL_BLEND                 0x0BE2
-#define GL_SRC_ALPHA             0x0302
-#define GL_ONE_MINUS_SRC_ALPHA   0x0303
-
-#define GL_UNSIGNED_BYTE         0x1401
-#define GL_UNSIGNED_SHORT        0x1403
-#define GL_UNSIGNED_INT          0x1405
-#define GL_FLOAT                 0x1406
-#define GL_RGBA                  0x1908
-
-#define GL_FOG                   0x0B60
-#define GL_FOG_DENSITY           0x0B62
-#define GL_FOG_END               0x0B64
-#define GL_FOG_MODE              0x0B65
-#define GL_FOG_COLOR             0x0B66
-#define GL_LINEAR                0x2601
-#define GL_EXP                   0x0800
-#define GL_EXP2                  0x0801
-
-#define GL_CULL_FACE             0x0B44
-#define GL_DEPTH_TEST            0x0B71
-#define GL_MATRIX_MODE           0x0BA0
-#define GL_VIEWPORT              0x0BA2
-#define GL_ALPHA_TEST            0x0BC0
-#define GL_MAX_TEXTURE_SIZE      0x0D33
-#define GL_DEPTH_BITS            0x0D56
-
-#define GL_FOG_HINT              0x0C54
-#define GL_NICEST                0x1102
-#define GL_COMPILE               0x1300
-
-#define GL_MODELVIEW             0x1700
-#define GL_PROJECTION            0x1701
-#define GL_TEXTURE               0x1702
-
-#define GL_VENDOR                0x1F00
-#define GL_RENDERER              0x1F01
-#define GL_VERSION               0x1F02
-#define GL_EXTENSIONS            0x1F03
-
-#define GL_TEXTURE_2D            0x0DE1
-#define GL_NEAREST               0x2600
-#define GL_NEAREST_MIPMAP_LINEAR 0x2702
-#define GL_TEXTURE_MAG_FILTER    0x2800
-#define GL_TEXTURE_MIN_FILTER    0x2801
-
-#define GL_VERTEX_ARRAY          0x8074
-#define GL_COLOR_ARRAY           0x8076
-#define GL_TEXTURE_COORD_ARRAY   0x8078
-
-/* Not present in gl.h on Windows (only up to OpenGL 1.1) */
-#define GL_ARRAY_BUFFER          0x8892
-#define GL_ELEMENT_ARRAY_BUFFER  0x8893
-#define GL_STATIC_DRAW           0x88E4
-#define GL_DYNAMIC_DRAW          0x88E8
-
+/* e.g. GLAPI void APIENTRY glFunction(int args); */
 #define GL_FUNC(_retType, name) GLAPI _retType APIENTRY name
-#include "_GL1Funcs.h"
-/* === END OPENGL HEADERS === */
+#include "../misc/opengl/GL1Funcs.h"
 
 #if defined CC_BUILD_GL11
 static GLuint activeList;
@@ -147,36 +52,24 @@ static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
 /*    call [glDrawElements]  --> opengl32.dll thunk--> GL driver thunk --> GL driver implementation */
 /*    call [_glDrawElements] --> GL driver thunk --> GL driver implementation */
 
-#undef GL_FUNC
+/* e.g. typedef void (APIENTRY *FP_glFunction)(int args); */
+#undef  GL_FUNC
 #define GL_FUNC(_retType, name) typedef _retType (APIENTRY *FP_ ## name)
-#include "_GL1Funcs.h"
+#include "../misc/opengl/GL1Funcs.h"
 
-static FP_glColorPointer    _glColorPointer;
-static FP_glTexCoordPointer _glTexCoordPointer;
-static FP_glVertexPointer   _glVertexPointer;
+/* e.g. static void (APIENTRY *_glFunction)(int args); */
+#undef  GL_FUNC
+#define GL_FUNC(_retType, name) static _retType (APIENTRY *_ ## name)
+#include "../misc/opengl/GL1Funcs.h"
 
-static FP_glDrawArrays   _glDrawArrays;
-static FP_glDrawElements _glDrawElements;
-
-static FP_glBindTexture    _glBindTexture;
-static FP_glDeleteTextures _glDeleteTextures;
-static FP_glGenTextures    _glGenTextures;
-static FP_glTexImage2D     _glTexImage2D;
-static FP_glTexSubImage2D  _glTexSubImage2D;
-
+#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&_ ## sym }
 static const struct DynamicLibSym coreFuncs[] = {
-	DynamicLib_Sym2("glColorPointer",    glColorPointer),
-	DynamicLib_Sym2("glTexCoordPointer", glTexCoordPointer),
-	DynamicLib_Sym2("glVertexPointer",   glVertexPointer),
+	GLSym(glColorPointer), GLSym(glTexCoordPointer), GLSym(glVertexPointer),
 
-	DynamicLib_Sym2("glDrawArrays",   glDrawArrays),
-	DynamicLib_Sym2("glDrawElements", glDrawElements),
+	GLSym(glDrawArrays),   GLSym(glDrawElements),
 
-	DynamicLib_Sym2("glBindTexture",    glBindTexture),
-	DynamicLib_Sym2("glDeleteTextures", glDeleteTextures),
-	DynamicLib_Sym2("glGenTextures",    glGenTextures),
-	DynamicLib_Sym2("glTexImage2D",     glTexImage2D),
-	DynamicLib_Sym2("glTexSubImage2D",  glTexSubImage2D),
+	GLSym(glBindTexture),  GLSym(glDeleteTextures), GLSym(glGenTextures),
+	GLSym(glTexImage2D),   GLSym(glTexSubImage2D),
 };
 
 static void LoadCoreFuncs(void) {
