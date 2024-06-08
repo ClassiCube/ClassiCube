@@ -72,6 +72,7 @@ And also runs on:
 * BeOS - untested on actual hardware
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
+* Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
 * Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
 * Wii U - unfinished, major issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_wiiu.yml)), **untested on real hardware**)
@@ -354,6 +355,14 @@ Install openal_devel package if needed
 Install SDL2 port if needed
 
 ```cc *.c -o ClassiCube -lgl -lSDL2```
+
+#### Classic Mac OS
+
+Install Retro68 to compile (supports both M68k and PowerPC compiling)
+
+```make macclassic_68k``` or ```make macclassic_ppc```
+
+The PowerPC build will usually perform much better
 
 #### Other systems
 
