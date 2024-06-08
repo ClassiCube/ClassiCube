@@ -116,6 +116,15 @@ void Console_Write(const char* msg, int len) {
 #endif
 typedef unsigned long MAC_FourCharCode;
 typedef SInt16 MAC_WindowPartCode;
+typedef UInt16 MAC_EventMask;
+
+// Workaround issue in multiversal headers
+#if defined M68K_INLINE && TARGET_CPU_68K
+
+// Availability: in InterfaceLib 7.1 and later
+MAC_SYSAPI(void) _SetEventMask(MAC_EventMask value) MAC_TWOWORDINLINE(0x31DF, 0x0144);
+#define SetEventMask _SetEventMask
+#endif
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
@@ -258,7 +267,7 @@ static void HandleMouseDown(EventRecord* event) {
 	MAC_WindowPartCode part;
 	WindowPtr window;
 	Point localPoint;
-                    
+	long res;        
 	int x, y;
 
 	part = FindWindow(event->where, &window);
@@ -273,6 +282,7 @@ static void HandleMouseDown(EventRecord* event) {
 		case inContent:
 			SetPt(&localPoint, event->where.h, event->where.v);
 			GlobalToLocal(&localPoint);
+			if (window != win) break;
 
 			x = localPoint.h;
 			y = localPoint.v;
@@ -287,9 +297,20 @@ static void HandleMouseDown(EventRecord* event) {
  				Window_RequestClose();
 				Window_Main.Exists = false;
 			}
+			break;
+		case inGrow:
+			res = GrowWindow(window, event->where, &qd.screenBits.bounds);
+			x   = res & 0xFFFF;
+			y   = res >> 16;
+			SizeWindow(window, x, y, false);
+			if (window != win) break;
+
+			Window_Main.Width  = x;
+			Window_Main.Height = y;
+			Event_RaiseVoid(&WindowEvents.Resized);
+			break;
 	}
 }
-
 
 static void HandleMouseUp(EventRecord* event) {
 	Input_SetReleased(CCMOUSE_L);

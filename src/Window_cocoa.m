@@ -866,8 +866,9 @@ void GLContext_GetApiInfo(cc_string* info) {
 	GLinteger nRenders = 0;
 	CGLRendererInfoObj rend;
 	CGLQueryRendererInfo(-1, &rend, &nRenders);
+	int i;
 	
-	for (int i = 0; i < nRenders; i++)
+	for (i = 0; i < nRenders; i++)
 	{
 		GLinteger curID = -1;
 		CGLDescribeRenderer(rend, i, kCGLRPRendererID, &curID);
