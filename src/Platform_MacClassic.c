@@ -102,11 +102,10 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-ssize_t _consolewrite(int fd, const void *buf, size_t count);
+void Console_Write(const char* msg, int len);
 
 void Platform_Log(const char* msg, int len) {
-	_consolewrite(0, msg,  len);
-	_consolewrite(0, "\n",   1);
+	Console_Write(msg, len);
 }
 
 // classic macOS uses an epoch of 1904

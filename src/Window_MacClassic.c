@@ -24,6 +24,78 @@ static cc_bool hasColorQD, useGWorld;
 
 
 /*########################################################################################################################*
+*--------------------------------------------------Console log window-----------------------------------------------------*
+*#########################################################################################################################*/
+static int con_cellSizeX, con_cellSizeY;
+static int con_rows, con_cols;
+static int cursorX, cursorY;
+static WindowPtr con_win;
+static Rect con_bounds;
+
+static void Console_EraseLine(int y) {
+	Rect r   = con_bounds;
+	r.top    += y * con_cellSizeY;
+	r.bottom = r.top + con_cellSizeY;
+
+	MoveTo(r.left, r.bottom - 2);
+	EraseRect(&r);
+}
+
+static void Console_Init(void) {
+	Rect r = qd.screenBits.bounds;
+	r.top += 40;
+	InsetRect(&r, 5, 5);  
+
+	con_win = NewWindow(NULL, &r, "\pConsole log", true, 0, (WindowPtr)-1, true, 0);
+	GrafPtr savedPort;
+	GetPort(&savedPort);
+	SetPort(con_win);
+
+	con_bounds = con_win->portRect;
+	EraseRect(&con_bounds);
+
+	TextFont(kFontIDMonaco);
+	TextSize(9);
+
+	InsetRect(&con_bounds, 2, 2);
+	con_cellSizeX = CharWidth('M');
+	con_cellSizeY = 12;
+
+	con_rows = (con_bounds.bottom - con_bounds.top)  / con_cellSizeY;
+	con_cols = (con_bounds.right  - con_bounds.left) / con_cellSizeX;
+
+	Console_EraseLine(0);
+	cursorX = cursorY = 0;
+	SetPort(savedPort);
+}
+
+static void Console_NewLine(void) {
+	Console_EraseLine(cursorY);
+	cursorY++;
+	cursorX = 0;
+	if (cursorY >= con_rows) cursorY = 0;
+}
+
+void Console_Write(const char* msg, int len) {
+	if (!con_win) Console_Init();
+
+	GrafPtr savedPort;
+	GetPort(&savedPort);
+	SetPort(con_win);
+
+	for (int i = 0; i < len; i++) 
+	{
+		DrawChar(msg[i]);
+		cursorX++;
+		if (cursorX >= con_cols) Console_NewLine();
+	}
+	Console_NewLine();
+
+	SetPort(savedPort);
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------Imported headers------------------------------------------------------*
 *#########################################################################################################################*/
 // On 68k these are implemented using direct 68k opcodes
@@ -182,7 +254,7 @@ void Window_RequestClose(void) {
 
 static void HandleMouseDown(EventRecord* event) {
 	MAC_WindowPartCode part;
-	WindowPtr      window;
+	WindowPtr window;
 	Point localPoint;
                     
 	int x, y;

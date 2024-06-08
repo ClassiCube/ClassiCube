@@ -9,7 +9,7 @@ CFLAGS=-O1 -fno-math-errno
 REZ=$(RETRO68)/bin/Rez
 MakePEF=$(RETRO68)/bin/MakePEF
 
-LDFLAGS=-lRetroConsole
+LDFLAGS=-lm
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
@@ -27,7 +27,7 @@ $(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(BUILD_DIR) $(TARGET).pef
 		-o $(TARGET).bin --cc $(TARGET).APPL --cc $(TARGET).dsk
 
 $(TARGET).elf: $(C_OBJECTS)
-	$(CXX) $(C_OBJECTS) -o $@ $(LDFLAGS)	# C++ used for linking because RetroConsole needs it
+	$(CC) $(C_OBJECTS) -o $@ $(LDFLAGS)
 
 $(TARGET).pef: $(TARGET).elf
 	$(MakePEF) $(TARGET).elf -o $(TARGET).pef
