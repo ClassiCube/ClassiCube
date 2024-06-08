@@ -163,9 +163,11 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static void GetNativePath(FSSpec* spec, const cc_string* src) {
-	char buffer[NATIVE_STR_LEN];
-	char* str = buffer;
+static int retrievedWD, wd_refNum, wd_dirID;
+
+static void GetNativePath(char* dst, const cc_string* src) {
+	char* str = dst;
+	str++; // placeholder for length later
 	*str++ = ':';
 	
 	// Classic Mac OS uses : to separate directories
@@ -175,25 +177,34 @@ static void GetNativePath(FSSpec* spec, const cc_string* src) {
 		if (c == '/') c = ':';
 		*str++ = c;
 	}
-	*str = '\0';
+	*str   = '\0';
+	dst[0] = String_Length(dst + 1); // pascal strings
 
-	Mem_Set(spec, 0, sizeof(FSSpec));
-	FSMakeFSSpec(0, 0, buffer, spec);
+	if (retrievedWD) return;
+	retrievedWD = true;
+
+	WDPBRec r = { 0 };
+	PBHGetVolSync(&r);
+	wd_refNum = r.ioWDVRefNum;
+	wd_dirID  = r.ioWDDirID;
+
+	int V = r.ioWDVRefNum, D = r.ioWDDirID;
+	Platform_Log2("Working directory: %i, %i", &V, &D);
 }
 
 void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_string* path) {
-	FSSpec spec;
-	GetNativePath(&spec, path);
+	char buffer[NATIVE_STR_LEN];
+	GetNativePath(buffer, path);
 
 	long dirID;
-	return 0;
+	return DirCreate(wd_refNum, wd_dirID, buffer, &dirID);
 }
 
 int File_Exists(const cc_string* path) {
-	FSSpec spec;
-	GetNativePath(&spec, path);
+	char buffer[NATIVE_STR_LEN];
+	GetNativePath(buffer, path);
 
 	return 0;
 }
@@ -203,22 +214,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	FSSpec spec;
-	GetNativePath(&spec, path);
+	char buffer[NATIVE_STR_LEN];
+	GetNativePath(buffer, path);
 
 	return ReturnCode_FileNotFound;
 }
 
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	FSSpec spec;
-	GetNativePath(&spec, path);
+	char buffer[NATIVE_STR_LEN];
+	GetNativePath(buffer, path);
 
 	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	FSSpec spec;
-	GetNativePath(&spec, path);
+	char buffer[NATIVE_STR_LEN];
+	GetNativePath(buffer, path);
 
 	return ERR_NOT_SUPPORTED;
 }
@@ -314,26 +325,6 @@ void Waitable_Wait(void* handle) {
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	// TODO
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-static void FontDirCallback(const cc_string* path, void* obj) {
-	SysFonts_Register(path, NULL);
-}
-
-void Platform_LoadSysFonts(void) {
-	int i;
-	static const cc_string dirs[] = {
-		String_FromConst("/usr/share/fonts"),
-		String_FromConst("/usr/local/share/fonts")
-	};
-
-	for (i = 0; i < Array_Elems(dirs); i++) {
-		Directory_Enum(&dirs[i], NULL, FontDirCallback);
-	}
 }
 
 
@@ -468,7 +459,12 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 void Platform_Init(void) {
 	Gestalt(gestaltSystemVersion, &sysVersion);
 	Platform_Log1("Running on Mac OS %h", &sysVersion);
-	Platform_LoadSysFonts();
+
+	cc_string path = String_FromConst("aaabbb.txt");
+	char buffer[NATIVE_STR_LEN];
+	GetNativePath(buffer, &path);
+
+	//int ERR2 = HCreate(wd_refNum, wd_dirID, buffer, 'CCBE', '????');
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
