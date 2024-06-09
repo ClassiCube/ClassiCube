@@ -1028,6 +1028,9 @@ static void NetPlayer_RenderModel(struct Entity* e, float delta, float t) {
 
 	AnimatedComp_GetCurrent(e, t);
 	e->ShouldRender = Model_ShouldRender(e);
+	/* Original classic only shows players up to 64 blocks away */
+	if (Game_ClassicMode) e->ShouldRender &= Model_RenderDistance(e) <= 64 * 64;
+
 	if (e->ShouldRender) Model_Render(e->Model, e);
 }
 

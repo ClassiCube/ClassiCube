@@ -7,6 +7,9 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+#ifdef CC_BUILD_WIN
+	#define CC_BUILD_GL11_FALLBACK
+#endif
 
 /* The OpenGL backend is a bit of a mess, since it's really 2 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
@@ -41,7 +44,7 @@ static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
 }
 
 
-#if defined CC_BUILD_WIN && !defined CC_BUILD_GL11
+#if defined CC_BUILD_GL11_FALLBACK && !defined CC_BUILD_GL11
 /* Note the following about calling OpenGL functions on Windows */
 /*  1) wglGetProcAddress returns a context specific address */
 /*  2) dllimport functions are implemented using indirect function pointers */
@@ -506,7 +509,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES, NULL); }
 #else
 
-#if defined CC_BUILD_WIN
+#ifdef CC_BUILD_GL11_FALLBACK
 static FP_glDrawElements    _realDrawElements;
 static FP_glColorPointer    _realColorPointer;
 static FP_glTexCoordPointer _realTexCoordPointer;
@@ -670,7 +673,7 @@ static void GLBackend_Init(void) {
 
 	/* Version string is always: x.y. (and whatever afterwards) */
 	int major = ver[0] - '0', minor = ver[2] - '0';
-#ifdef CC_BUILD_WIN
+#ifdef CC_BUILD_GL11_FALLBACK
 	LoadCoreFuncs();
 #endif
 	customMipmapsLevels = true;
