@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    if: ${{ inputs.WEBHOOK_URL != '' }}
+    if: ${{ secrets.GHCR_ACCESS_KEY != '' }}
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/classicube/minimal-osxcross:latest

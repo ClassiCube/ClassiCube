@@ -1,27 +1,3 @@
-!r0 = clip flags
-!r1 = GPU command
-!r2 = temp
-!r3 = prefetch address
-!r4 = src pointer ARG
-!r5 = dst pointer ARG
-!r6 = quads count ARG
-!r7 = ?
-
-!fr0  = temp
-!fr1  = u
-!fr2  = v
-!fr3  = c
-!fr4  = x
-!fr5  = y
-!fr6  = z
-!fr7  = w
-!fr8  = VIEWPORT_HWIDTH
-!fr9  = VIEWPORT_HHEIGHT
-!fr10 = VIEWPORT_X_PLUS_HWIDTH
-!fr11 = VIEWPORT_Y_PLUS_HHEIGHT
-
-!fv4  = XYZW
-
 #include "ViewportTransform.S"
 .global _DrawTexturedQuads
 .align 4
