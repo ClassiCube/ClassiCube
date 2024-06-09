@@ -1,13 +1,13 @@
 ! =========================================================
 ! ======================== PROCESSOR INFO =================
 ! =========================================================
-! The SH4 can dual issue (i.e. parallel execution) instructions
+! The SH4 can dual issue (i.e. parallel execution) two instructions
 ! as long as the groups of the two instructions are different:
 ! * LS - most APU and FPU register load/stores
 ! * EX - most APU arithmetic instructions
 ! * MT - TST, CMP, NOP, MOV Rm,Rn
 ! * FE - most FPU arithmetic instructions
-! * CO - other instructions
+! * CO - other instructions (NOTE: Cannot be exeucted in parallel)
 
 ! Thee following general aspects of instructions are important to note per the SH4 manual:
 ! * Issue rate: Interval between the issue of an instruction and that of the next instruction

@@ -13,7 +13,9 @@ concurrency:
 
 jobs:
   build:
-    if: ${{ secrets.GHCR_ACCESS_KEY != '' }}
+    env:
+      GHCR_ACCESS_KEY: ${{ secrets.GHCR_ACCESS_KEY }}	  
+    if: env.GHCR_ACCESS_KEY
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/classicube/minimal-osxcross:latest
