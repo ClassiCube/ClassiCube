@@ -10,7 +10,6 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
-#include <errno.h>
 #include <string.h>
 #include <sys/time.h>
 
@@ -18,14 +17,15 @@
 #undef false
 #include <MacMemory.h>
 #include <Processes.h>
+#include <Devices.h>
 #include <Files.h>
 #include <Gestalt.h>
 
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_FileShareViolation = 1000000000;
+const cc_result ReturnCode_FileNotFound     = fnfErr;
+const cc_result ReturnCode_SocketInProgess  = 1000000;
+const cc_result ReturnCode_SocketWouldBlock = 1000000;
+const cc_result ReturnCode_DirectoryExists  = dupFNErr;
 
 #if TARGET_CPU_68K
 const char* Platform_AppNameSuffix = " MAC 68k";
@@ -192,14 +192,49 @@ static void GetNativePath(char* dst, const cc_string* src) {
 	Platform_Log2("Working directory: %i, %i", &V, &D);
 }
 
+static int DoOpenDF(char* name, char perm, cc_file* file) {
+    HParamBlockRec pb;
+	Mem_Set(&pb, 0, sizeof(pb));
+
+	pb.fileParam.ioVRefNum = wd_refNum;
+	pb.fileParam.ioDirID   = wd_dirID;
+	pb.fileParam.ioNamePtr = name;
+	pb.ioParam.ioPermssn   = perm;
+
+	int err = PBHOpenDFSync(&pb);
+	*file   = pb.ioParam.ioRefNum;
+	return err;
+}
+
+static int DoCreateFile(char* name) {
+    HParamBlockRec pb;
+	Mem_Set(&pb, 0, sizeof(pb));
+
+	pb.fileParam.ioVRefNum = wd_refNum;
+	pb.fileParam.ioDirID   = wd_dirID;
+	pb.fileParam.ioNamePtr = name;
+
+    return PBHCreateSync(&pb);
+}
+
+static int DoCreateFolder(char* name) {
+    HParamBlockRec pb;
+	Mem_Set(&pb, 0, sizeof(pb));
+
+	pb.fileParam.ioVRefNum = wd_refNum;
+	pb.fileParam.ioDirID   = wd_dirID;
+	pb.fileParam.ioNamePtr = name;
+
+    return PBDirCreateSync(&pb);
+}
+
+
 void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_string* path) {
 	char buffer[NATIVE_STR_LEN];
 	GetNativePath(buffer, path);
-
-	long dirID;
-	return DirCreate(wd_refNum, wd_dirID, buffer, &dirID);
+	return DoCreateFolder(buffer);
 }
 
 int File_Exists(const cc_string* path) {
@@ -217,55 +252,86 @@ cc_result File_Open(cc_file* file, const cc_string* path) {
 	char buffer[NATIVE_STR_LEN];
 	GetNativePath(buffer, path);
 
-	return ReturnCode_FileNotFound;
+	return DoOpenDF(buffer, fsRdPerm, file);
 }
 
 cc_result File_Create(cc_file* file, const cc_string* path) {
 	char buffer[NATIVE_STR_LEN];
 	GetNativePath(buffer, path);
 
-	return ERR_NOT_SUPPORTED;
+	int res = DoCreateFile(buffer);
+	if (res && res != dupFNErr) return res;
+
+	return DoOpenDF(buffer, fsWrPerm, file);
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	char buffer[NATIVE_STR_LEN];
 	GetNativePath(buffer, path);
 
-	return ERR_NOT_SUPPORTED;
+	int res = DoCreateFile(buffer);
+	if (res && res != dupFNErr) return res;
+
+	return DoOpenDF(buffer, fsRdWrPerm, file);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	long cnt = count;
-    int res  = FSRead(file, &cnt, data);
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum   = file;
+	pb.ioParam.ioBuffer   = data;
+	pb.ioParam.ioReqCount = count;
+	pb.ioParam.ioPosMode  = fsAtMark;
 
-	*bytesRead = cnt;
-	return res;
+	int err = PBReadSync(&pb);
+	*bytesRead = pb.ioParam.ioActCount;
+	return err;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	long cnt = count;
-    int res  = FSWrite(file, &cnt, data);
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum   = file;
+	pb.ioParam.ioBuffer   = data;
+	pb.ioParam.ioReqCount = count;
+	pb.ioParam.ioPosMode  = fsAtMark;
 
-	*bytesWrote = cnt;
-	return res;
+	int err = PBWriteSync(&pb);
+	*bytesWrote = pb.ioParam.ioActCount;
+	return err;
 }
 
 cc_result File_Close(cc_file file) {
-	FSClose(file);
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum = file;
+
+	return PBCloseSync(&pb);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
 	static cc_uint8 modes[] = { fsFromStart, fsFromMark, fsFromLEOF };
-	SetFPos(file, modes[seekType], offset);
-	return 0;
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum    = file;
+	pb.ioParam.ioPosMode   = modes[seekType];
+	pb.ioParam.ioPosOffset = offset;
+
+	return PBSetFPosSync(&pb);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	return GetFPos(file, pos);
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum = file;
+
+	int err = PBGetFPosSync(&pb);
+	*pos    = pb.ioParam.ioPosOffset;
+	return err;
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	return ERR_NOT_SUPPORTED;
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum = file;
+
+	int err = PBGetEOFSync(&pb);
+	*len    = (cc_uint32)pb.ioParam.ioMisc;
+	return err;
 }
 
 
@@ -460,11 +526,12 @@ void Platform_Init(void) {
 	Gestalt(gestaltSystemVersion, &sysVersion);
 	Platform_Log1("Running on Mac OS %h", &sysVersion);
 
-	cc_string path = String_FromConst("aaabbb.txt");
+	cc_string path = String_FromConst("aB.txt");
 	char buffer[NATIVE_STR_LEN];
 	GetNativePath(buffer, &path);
 
-	//int ERR2 = HCreate(wd_refNum, wd_dirID, buffer, 'CCBE', '????');
+	int ERR2 = DoCreateFile(buffer);
+	Platform_Log1("TEST FILE: %i", &ERR2);
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
