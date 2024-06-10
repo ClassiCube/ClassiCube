@@ -214,11 +214,14 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 
 void LBackend_InitFramebuffer(void) {
 	struct Bitmap bmp;
-	bmp.width  = max(Window_Main.Width,  1);
-	bmp.height = max(Window_Main.Height, 1);
+	int width  = max(Window_Main.Width,  1);
+	int height = max(Window_Main.Height, 1);
 
-	Window_AllocFramebuffer(&bmp);
+	Window_AllocFramebuffer(&bmp, width, height);
 	Context2D_Wrap(&framebuffer, &bmp);
+	/* Backing surface may be bigger then valid area */
+	framebuffer.width  = width;
+	framebuffer.height = height;
 }
 
 void LBackend_FreeFramebuffer(void) {

@@ -41,16 +41,16 @@ enum InputButtons {
 	CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, CCKEY_KP8, CCKEY_KP9,
 	CCKEY_KP_DIVIDE, CCKEY_KP_MULTIPLY, CCKEY_KP_MINUS,
 	CCKEY_KP_PLUS, CCKEY_KP_DECIMAL, CCKEY_KP_ENTER,
+
+	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
+	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
+	CCWHEEL_UP, CCWHEEL_DOWN, CCWHEEL_LEFT, CCWHEEL_RIGHT,
+	CCMOUSE_X3, CCMOUSE_X4, CCMOUSE_X5, CCMOUSE_X6,
 	
 	CCKEY_VOLUME_MUTE, CCKEY_VOLUME_UP, CCKEY_VOLUME_DOWN, CCKEY_SLEEP,
 	CCKEY_MEDIA_NEXT, CCKEY_MEDIA_PREV, CCKEY_MEDIA_PLAY, CCKEY_MEDIA_STOP,
 	CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP, CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME,
 	CCKEY_LAUNCH_MAIL, CCKEY_LAUNCH_MEDIA, CCKEY_LAUNCH_APP1, CCKEY_LAUNCH_CALC, 
-
-	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
-	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_X3, CCMOUSE_X4, CCMOUSE_X5, CCMOUSE_X6,
-	CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
-	CCWHEEL_UP, CCWHEEL_DOWN, CCWHEEL_LEFT, CCWHEEL_RIGHT,
 
 	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R, 
 	CCPAD_Z, CCPAD_C, CCPAD_D,
@@ -175,6 +175,7 @@ enum InputBind_ {
 };
 typedef int InputBind;
 typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
+typedef cc_bool (*BindTriggered)(int key);
 #define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
 
 /* The keyboard/mouse buttons that are bound to each input binding */
@@ -185,6 +186,8 @@ extern BindMapping PadBind_Mappings[BIND_COUNT];
 extern const BindMapping KeyBind_Defaults[BIND_COUNT];
 /* Default gamepad button that each input binding is bound to */
 extern const BindMapping PadBind_Defaults[BIND_COUNT];
+/* Callback behaviour for when the given input binding is triggered */
+extern BindTriggered Bind_OnTriggered[BIND_COUNT];
 
 /* InputBind_IsPressed is what should be used, but export KeyBind_IsPressed for backwards compatibility */
 #define InputBind_IsPressed KeyBind_IsPressed

@@ -48,7 +48,7 @@ ifeq ($(PLAT),sunos)
 endif
 
 ifeq ($(PLAT),darwin)
-	OBJECTS += $(BUILD_DIR)/interop_cocoa.o
+	OBJECTS += $(BUILD_DIR)/Window_cocoa.o
 	CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
 	LIBS    =
 	LDFLAGS = -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
@@ -79,14 +79,14 @@ ifeq ($(PLAT),dragonfly)
 endif
 
 ifeq ($(PLAT),haiku)
-	OBJECTS += $(BUILD_DIR)/interop_BeOS.o
+	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
 	CFLAGS  = -g -pipe -fno-math-errno
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(PLAT),beos)
-	OBJECTS += $(BUILD_DIR)/interop_BeOS.o
+	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
 	CFLAGS  = -g -pipe
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
@@ -102,8 +102,18 @@ ifeq ($(PLAT),irix)
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
 endif
 
+
 ifeq ($(OS),Windows_NT)
 	DEL     = del
+endif
+
+ifdef SDL2
+	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
+	LIBS += -lSDL2
+endif
+ifdef SDL3
+	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
+	LIBS += -lSDL3
 endif
 
 default: $(PLAT)
@@ -134,8 +144,12 @@ serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
 irix:
 	$(MAKE) $(ENAME) PLAT=irix
+sdl2:
+	$(MAKE) $(ENAME) SDL2=1
+sdl3:
+	$(MAKE) $(ENAME) SDL3=1
 
-# consoles builds require special handling, so are moved to
+# Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
 dreamcast:
 	$(MAKE) -f misc/dreamcast/Makefile
@@ -172,6 +186,10 @@ switch:
 	$(MAKE) -f misc/switch/Makefile
 os/2:
 	$(MAKE) -f misc/os2/Makefile
+macclassic_68k:
+	$(MAKE) -f misc/macclassic/Makefile_68k
+macclassic_ppc:
+	$(MAKE) -f misc/macclassic/Makefile_ppc
 	
 clean:
 	$(DEL) $(OBJECTS)
@@ -201,8 +219,8 @@ $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
 endif
 	
 # === Platform specific file compiling ===
-$(BUILD_DIR)/interop_cocoa.o: $(SOURCE_DIR)/interop_cocoa.m
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.m
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-$(BUILD_DIR)/interop_BeOS.o: $(SOURCE_DIR)/interop_BeOS.cpp
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@

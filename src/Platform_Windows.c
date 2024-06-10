@@ -29,6 +29,9 @@ typedef struct _CRYPTOAPI_BLOB {
 	DWORD cbData;
 	BYTE* pbData;
 } DATA_BLOB;
+
+static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
+static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
 /* === END wincrypt.h === */
 
 static HANDLE heap;
@@ -43,8 +46,43 @@ cc_bool Platform_SingleProcess;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
+#ifdef CC_BUILD_NOSTDLIB
+void* Mem_Set(void* dst, cc_uint8 value,  unsigned numBytes) {
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = value; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) {
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = *sp++; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { 
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+	
+	/* Check if destination range overlaps source range */
+	/* If this happens, then need to copy backwards */
+	if (dp >= sp && dp < (sp + numBytes)) {
+		sp += numBytes;
+		dp += numBytes;
+
+		while (numBytes--) *--dp = *--sp;
+	} else {
+		while (numBytes--) *dp++ = *sp++;
+	}
+	return dst;
+}
+#else
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
+#endif
 
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
@@ -316,7 +354,7 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	InitializeCriticalSection(ptr);
 	return ptr;
@@ -329,7 +367,7 @@ void Mutex_Free(void* handle)   {
 void Mutex_Lock(void* handle)   { EnterCriticalSection((CRITICAL_SECTION*)handle); }
 void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle); }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	void* handle = CreateEventA(NULL, false, false, NULL);
 	if (!handle) {
 		Logger_Abort2(GetLastError(), "Creating waitable");
@@ -518,15 +556,13 @@ static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* num
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family != AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 	
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family == AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 
 	_freeaddrinfo(result);
@@ -725,18 +761,29 @@ cc_result Process_StartOpen(const cc_string* args) {
 #define UPDATE_SRC TEXT(UPDATE_FILE)
 cc_bool Updater_Supported = true;
 
+#if defined _M_IX86
 const struct UpdaterInfo Updater_Info = {
 	"&eDirect3D 9 is recommended", 2,
 	{
-#if _WIN64
-		{ "Direct3D9", "ClassiCube.64.exe" },
-		{ "OpenGL",    "ClassiCube.64-opengl.exe" }
-#else
 		{ "Direct3D9", "ClassiCube.exe" },
 		{ "OpenGL",    "ClassiCube.opengl.exe" }
-#endif
 	}
 };
+#elif defined _M_X64
+const struct UpdaterInfo Updater_Info = {
+	"&eDirect3D 9 is recommended", 2,
+	{
+		{ "Direct3D9", "ClassiCube.64.exe" },
+		{ "OpenGL",    "ClassiCube.64-opengl.exe" }
+	}
+};
+#elif defined _M_ARM64
+const struct UpdaterInfo Updater_Info = { "", 1, { { "Direct3D11", "cc-arm64-d3d11.exe" } } };
+#elif defined _M_ARM
+const struct UpdaterInfo Updater_Info = { "", 1, { { "Direct3D11", "cc-arm32-d3d11.exe" } } };
+#else
+const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+#endif
 
 cc_bool Updater_Clean(void) {
 	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;
@@ -953,8 +1000,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
-static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
 
 static void LoadCryptFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {

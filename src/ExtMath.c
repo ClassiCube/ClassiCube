@@ -42,9 +42,6 @@ float sqrtf(float x) {
 float Math_Mod1(float x)  { return x - (int)x; /* fmodf(x, 1); */ }
 int   Math_AbsI(int x)    { return abs(x); /* MSVC intrinsic */ }
 
-float Math_SinF(float x) { return (float)Math_Sin(x); }
-float Math_CosF(float x) { return (float)Math_Cos(x); }
-
 int Math_Floor(float value) {
 	int valueI = (int)value;
 	return valueI > value ? valueI - 1 : valueI;
@@ -156,8 +153,8 @@ float Random_Float(RNGState* seed) {
 /* TODO: Properly investigate this issue */
 /* double make_dreamcast_build_compile(void) { fabs(4); } */
 
-double Math_Sin(double x)  { return sinf(x); }
-double Math_Cos(double x)  { return cosf(x); }
+float Math_SinF(float x)   { return sinf(x); }
+float Math_CosF(float x)   { return cosf(x); }
 double Math_Exp2(double x) { return exp2(x); }
 double Math_Log2(double x) { return log2(x); }
 #else
@@ -215,7 +212,7 @@ static double Floord(double x) {
  * Precision: 16.47
  */
 static double SinStage1(double x) {
-	const double A[] = {
+	const static double A[] = {
 		.52359877559829885532,
 		-.2392459620393377657e-1,
 		.32795319441392666e-3,
@@ -270,11 +267,11 @@ static double SinStage3(double x) {
  * Associated math function: sin(x)
  * Allowed input range: anything
  */
-double Math_Sin(double x) {
+float Math_SinF(float x) {
 	double x_div_pi;
 
 	x_div_pi = x * DIV_2_PI;
-	return SinStage3(x_div_pi - Floord(x_div_pi));
+	return (float)SinStage3(x_div_pi - Floord(x_div_pi));
 }
 
 /************
@@ -287,11 +284,11 @@ double Math_Sin(double x) {
  * Associated math function: cos(x)
  * Allowed input range: anything
  */
-double Math_Cos(double x) {
+float Math_CosF(float x) {
 	double x_div_pi_shifted;
 
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;
-	return SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
+	return (float)SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
 }
 
 /************
@@ -466,3 +463,6 @@ float Math_Atan2f(float x, float y) {
 	if (y < 0)   r = -r;
 	return r;
 }
+
+double Math_Sin(double x) { return Math_SinF(x); }
+double Math_Cos(double x) { return Math_CosF(x); }

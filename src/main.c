@@ -56,9 +56,10 @@ static void SetupProgram(int argc, char** argv) {
 	static char ipBuffer[STRING_SIZE];
 	cc_result res;
 	Logger_Hook();
+	Window_PreInit();
 	Platform_Init();
+	
 	res = Platform_SetDefaultCurrentDirectory(argc, argv);
-
 	Options_Load();
 	Window_Init();
 	
@@ -164,7 +165,12 @@ int main(int argc, char** argv) {
 	cc_result res;
 	SetupProgram(argc, argv);
 
-	res = RunProgram(argc, argv);
+	/* If single process mode, then the loop is launcher -> game -> launcher etc */
+	do {
+		res = RunProgram(argc, argv);
+	} while (Platform_SingleProcess && Window_Main.Exists);
+
+	Window_Free();
 	Process_Exit(res);
 	return res;
 }

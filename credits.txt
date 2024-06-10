@@ -4,13 +4,14 @@
 * AndrewPH - Advice on how to improve ui of both client and launcher, multiple 
   suggestions, and hosting the automatic build bot for ClassiCube.
 * 123DMWM - many suggestions, and assistance in identifying bugs and their causes.
-* video_error - Allowing remote use of an OSX machine, pointing out many flaws in the plugin API.
-  The OSX port would not have been possible without you, thanks!
+* video_error - Allowing remote use of an macOS machine, pointing out many flaws in the plugin API.
+  The macOS port would not have been possible without you, thanks!
 * Jerralish - reverse engineering and documenting the original classic map generation algorithm.
 * Cybertoon - Adding water animation, better metal step/dig sounds, identifying multiple flaws
 * Cheesse - multiple suggestions, testing ClassicalSharp on AMD graphics cards.
-* Hemsindor - testing ClassicalSharp on OSX.
-* headshotnoby - developing the Switch port
+* Hemsindor - testing ClassicalSharp on macOS.
+* headshotnoby - developing the Switch port.
+* Beyond_5D - identifying many differences from original Classic
 
 And a big thanks to everyone else in the ClassiCube community (who I didn't mention here),
 who in the past have provided many suggestions and assisted in identifying bugs.

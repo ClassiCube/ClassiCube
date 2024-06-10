@@ -28,6 +28,7 @@ static void OnVblank(void* work) {
 	smpc_peripheral_intback_issue();
 }
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
@@ -181,11 +182,13 @@ void Window_Create2D(int width, int height) {
 	vdp2_vram_cycp_set(&vram_cycp);
 }
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	// bottom half of VRAM is allocated for the 512x256 16 bit per pixel "bitmap"
 	// but since only draw 224 rows anyways, can move the launcher framebuffer 
 	// slightly into the end of the bottom half of VRAM
-	bmp->scan0 = (BitmapCol*)VDP2_VRAM_ADDR(1, SCREEN_HEIGHT * 512);
+	bmp->scan0  = (BitmapCol*)VDP2_VRAM_ADDR(1, SCREEN_HEIGHT * 512);
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -211,7 +214,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = NULL;
 }
 
 

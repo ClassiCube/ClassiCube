@@ -3,91 +3,47 @@
 #define GLES_SILENCE_DEPRECATION
 
 #include "Core.h"
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
+#include "../misc/opengl/GLCommon.h"
 
-#if defined CC_BUILD_WIN
-	/* Avoid pointless includes */
-	#define WIN32_LEAN_AND_MEAN
-	#define NOSERVICE
-	#define NOMCX
-	#define NOIME
-	#include <windows.h>
-	#include <GL/gl.h>
-#elif defined CC_BUILD_IOS
-	#include <OpenGLES/ES2/gl.h>
-#elif defined CC_BUILD_MACOS
-	#include <OpenGL/gl.h>
-#elif defined CC_BUILD_GLES
-	#include <GLES2/gl2.h>
-#else
-	#define GL_GLEXT_PROTOTYPES
-	#include <GL/gl.h>
-#endif
+/* e.g. GLAPI void APIENTRY glFunction(int args); */
+#define GL_FUNC(_retType, name) GLAPI _retType APIENTRY name
+#include "../misc/opengl/GL1Funcs.h"
 
-/* Windows gl.h only supplies up to OpenGL 1.1 headers */
+/* Functions must be dynamically linked on Windows */
 #ifdef CC_BUILD_WIN
-/* === BEGIN OPENGL HEADERS === */
-#define GL_ARRAY_BUFFER          0x8892
-#define GL_ELEMENT_ARRAY_BUFFER  0x8893
-#define GL_STATIC_DRAW           0x88E4
-#define GL_DYNAMIC_DRAW          0x88E8
-
-#define GL_FRAGMENT_SHADER       0x8B30
-#define GL_VERTEX_SHADER         0x8B31
-#define GL_COMPILE_STATUS        0x8B81
-#define GL_LINK_STATUS           0x8B82
-#define GL_INFO_LOG_LENGTH       0x8B84
-
-static void (APIENTRY *glBindBuffer)(GLenum target, GLuint buffer);
-static void (APIENTRY *glDeleteBuffers)(GLsizei n, const GLuint* buffers);
-static void (APIENTRY *glGenBuffers)(GLsizei n, GLuint *buffers);
-static void (APIENTRY *glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
-static void (APIENTRY *glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
-
-static GLuint (APIENTRY* glCreateShader)(GLenum type);
-static void   (APIENTRY* glDeleteShader)(GLuint shader);
-static void   (APIENTRY* glGetShaderiv)(GLuint shader, GLenum pname, GLint* params);
-static void   (APIENTRY* glGetShaderInfoLog)(GLuint shader, GLsizei bufSize, GLsizei* length, char* infoLog);
-static void   (APIENTRY* glShaderSource)(GLuint shader, GLsizei count, const char* const* string, const GLint* length);
-
-static void (APIENTRY* glAttachShader)(GLuint program, GLuint shader);
-static void (APIENTRY* glBindAttribLocation)(GLuint program, GLuint index, const char* name);
-static void (APIENTRY* glCompileShader)(GLuint shader);
-static void (APIENTRY* glDetachShader)(GLuint program, GLuint shader);
-static void (APIENTRY* glLinkProgram)(GLuint program);
-
-static GLuint (APIENTRY* glCreateProgram)(void);
-static void   (APIENTRY* glDeleteProgram)(GLuint program);
-static void   (APIENTRY* glGetProgramiv)(GLuint program, GLenum pname, GLint* params);
-static void   (APIENTRY* glGetProgramInfoLog)(GLuint program, GLsizei bufSize, GLsizei* length, char* infoLog);
-static void   (APIENTRY* glUseProgram)(GLuint program);
-
-static void (APIENTRY *glDisableVertexAttribArray)(GLuint index);
-static void (APIENTRY *glEnableVertexAttribArray)(GLuint index);
-static void (APIENTRY *glVertexAttribPointer)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
-
-static GLint (APIENTRY *glGetUniformLocation)(GLuint program, const char* name);
-static void  (APIENTRY *glUniform1f)(GLint location, GLfloat v0);
-static void  (APIENTRY *glUniform2f)(GLint location, GLfloat v0, GLfloat v1);
-static void  (APIENTRY *glUniform3f)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-static void  (APIENTRY *glUniformMatrix4fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+/* e.g. static void (APIENTRY *_glFunction)(int args); */
+#undef  GL_FUNC
+#define GL_FUNC(_retType, name) static _retType (APIENTRY *name)
+#include "../misc/opengl/GL2Funcs.h"
 
 #define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)& ## sym }
 static const struct DynamicLibSym core_funcs[] = {
 	GLSym(glBindBuffer), GLSym(glDeleteBuffers), GLSym(glGenBuffers), GLSym(glBufferData), GLSym(glBufferSubData),
-	GLSym(glCreateShader), GLSym(glDeleteShader), GLSym(glGetShaderiv), GLSym(glGetShaderInfoLog), GLSym(glShaderSource),
-	GLSym(glAttachShader), GLSym(glBindAttribLocation), GLSym(glCompileShader), GLSym(glDetachShader), GLSym(glLinkProgram),
+
+	GLSym(glCreateShader),  GLSym(glDeleteShader),  GLSym(glGetShaderiv), GLSym(glGetShaderInfoLog), GLSym(glShaderSource),
+	GLSym(glAttachShader),  GLSym(glBindAttribLocation), GLSym(glCompileShader), GLSym(glDetachShader), GLSym(glLinkProgram),
+
 	GLSym(glCreateProgram), GLSym(glDeleteProgram), GLSym(glGetProgramiv), GLSym(glGetProgramInfoLog), GLSym(glUseProgram),
+
 	GLSym(glDisableVertexAttribArray), GLSym(glEnableVertexAttribArray), GLSym(glVertexAttribPointer),
+
 	GLSym(glGetUniformLocation), GLSym(glUniform1f), GLSym(glUniform2f), GLSym(glUniform3f), GLSym(glUniformMatrix4fv),
 };
-
-/* === END OPENGL HEADERS === */
+#else
+#include "../misc/opengl/GL2Funcs.h"
 #endif
+
+#define _glBindTexture    glBindTexture
+#define _glDeleteTextures glDeleteTextures
+#define _glGenTextures    glGenTextures
+#define _glTexImage2D     glTexImage2D
+#define _glTexSubImage2D  glTexSubImage2D
 
 #include "_GLShared.h"
 static GfxResourceID white_square;
@@ -547,6 +503,14 @@ void Gfx_DisableTextureOffset(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------State setup-------------------------------------------------------*
 *#########################################################################################################################*/
+static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
+	int i;
+	for (i = 0; i < count; i++) 
+	{
+		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
+	}
+}
+
 static void GLBackend_Init(void) {
 #ifdef CC_BUILD_WIN
 	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));

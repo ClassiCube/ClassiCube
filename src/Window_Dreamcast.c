@@ -18,6 +18,12 @@ cc_bool window_inited;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
+void Window_PreInit(void) {
+	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
+	vid_flip(0);
+	// TODO: Why doesn't 32 bit work on real hardware for in-game?	
+}
+
 void Window_Init(void) {
 	DisplayInfo.Width  = vid_mode->width;
 	DisplayInfo.Height = vid_mode->height;
@@ -33,10 +39,7 @@ void Window_Init(void) {
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 20;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
-	
-	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
-	vid_flip(0);
-	// TODO: Why doesn't 32 bit work on real hardware for in-game?
+
 	window_inited = true;
 }
 
@@ -268,8 +271,10 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

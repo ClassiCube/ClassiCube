@@ -1,0 +1,39 @@
+# path to RETRO68
+RETRO68=../Retro68-build/toolchain
+
+PREFIX=$(RETRO68)/powerpc-apple-macos
+CC=$(RETRO68)/bin/powerpc-apple-macos-gcc
+CXX=$(RETRO68)/bin/powerpc-apple-macos-g++
+CFLAGS=-O1 -fno-math-errno
+
+REZ=$(RETRO68)/bin/Rez
+MakePEF=$(RETRO68)/bin/MakePEF
+
+LDFLAGS=-lm
+RINCLUDES=$(PREFIX)/RIncludes
+REZFLAGS=-I$(RINCLUDES)
+
+TARGET		:=	ClassiCube-ppc
+BUILD_DIR 	:=	build-ppc
+SOURCE_DIR	:=	src
+C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
+C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+
+$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(BUILD_DIR) $(TARGET).pef
+	$(REZ) $(REZFLAGS) \
+		"misc/macclassic/ppcAPPL.r" \
+		-t "APPL" -c "????" \
+		--data $(TARGET).pef \
+		-o $(TARGET).bin --cc $(TARGET).APPL --cc $(TARGET).dsk
+
+$(TARGET).elf: $(C_OBJECTS)
+	$(CC) $(C_OBJECTS) -o $@ $(LDFLAGS)
+
+$(TARGET).pef: $(TARGET).elf
+	$(MakePEF) $(TARGET).elf -o $(TARGET).pef
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@

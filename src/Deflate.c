@@ -33,38 +33,45 @@ cc_result GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 		Header_ReadU8(tmp);
 		if (tmp != 0x1F) return GZIP_ERR_HEADER1;
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_HEADER2:
 		Header_ReadU8(tmp);
 		if (tmp != 0x8B) return GZIP_ERR_HEADER2;
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_COMPRESSIONMETHOD:
 		Header_ReadU8(tmp);
 		if (tmp != 0x08) return GZIP_ERR_METHOD;
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_FLAGS:
 		Header_ReadU8(tmp);
 		header->flags = tmp;
 		if (header->flags & 0x04) return GZIP_ERR_FLAGS;
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_LASTMODIFIED:
 		for (; header->partsRead < 4; header->partsRead++) {
 			Header_ReadU8(tmp);
 		}
 		header->state++;
 		header->partsRead = 0;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_COMPRESSIONFLAGS:
 		Header_ReadU8(tmp);
 		header->state++;
-
+		
+	/* FALLTHRU */	
 	case GZIP_STATE_OPERATINGSYSTEM:
 		Header_ReadU8(tmp);
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_FILENAME:
 		if (header->flags & 0x08) {
 			for (; ;) {
@@ -73,7 +80,8 @@ cc_result GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 			}
 		}
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_COMMENT:
 		if (header->flags & 0x10) {
 			for (; ;) {
@@ -82,7 +90,8 @@ cc_result GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 			}
 		}
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case GZIP_STATE_HEADERCHECKSUM:
 		if (header->flags & 0x02) {
 			for (; header->partsRead < 2; header->partsRead++) {
@@ -117,7 +126,8 @@ cc_result ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
 		if ((tmp & 0x0F) != 0x08) return ZLIB_ERR_METHOD;
 		/* Upper 4 bits are window size (ignored) */
 		header->state++;
-
+		
+	/* FALLTHRU */
 	case ZLIB_STATE_FLAGS:
 		Header_ReadU8(tmp);
 		if (tmp & 0x20) return ZLIB_ERR_FLAGS;
@@ -523,7 +533,8 @@ void Inflate_Process(struct InflateState* s) {
 			s->Index = len; /* Reuse for 'uncompressed length' */
 			s->State = INFLATE_STATE_UNCOMPRESSED_DATA;
 		}
-
+		
+		/* FALLTHRU */
 		case INFLATE_STATE_UNCOMPRESSED_DATA: {
 			/* read bits left in bit buffer (slow way) */
 			while (s->NumBits && s->AvailOut && s->Index) {
@@ -565,7 +576,8 @@ void Inflate_Process(struct InflateState* s) {
 			s->Index = 0;
 			s->State = INFLATE_STATE_DYNAMIC_CODELENS;
 		}
-
+		/* FALLTHRU */
+		
 		case INFLATE_STATE_DYNAMIC_CODELENS: {
 			while (s->Index < s->NumCodeLens) {
 				Inflate_EnsureBits(s, 3);
@@ -582,7 +594,8 @@ void Inflate_Process(struct InflateState* s) {
 			res = Huffman_Build(&s->Table.CodeLens, s->Buffer, INFLATE_MAX_CODELENS);
 			if (res) { Inflate_Fail(s, res); return; }
 		}
-
+		
+		/* FALLTHRU */
 		case INFLATE_STATE_DYNAMIC_LITSDISTS: {
 			count = s->NumLits + s->NumDists;
 			while (s->Index < count) {
@@ -670,13 +683,15 @@ void Inflate_Process(struct InflateState* s) {
 			s->TmpLit = len_base[lenIdx] + Inflate_ReadBits(s, bits);
 			s->State  = INFLATE_STATE_COMPRESSED_DIST;
 		}
-
+		
+		/* FALLTHRU */		
 		case INFLATE_STATE_COMPRESSED_DIST: {
 			s->TmpDist = Huffman_Decode(s, &s->TableDists);
 			if (s->TmpDist == -1) return;
 			s->State = INFLATE_STATE_COMPRESSED_DISTEXTRA;
 		}
-
+		
+		/* FALLTHRU */		
 		case INFLATE_STATE_COMPRESSED_DISTEXTRA: {
 			distIdx = s->TmpDist;
 			bits    = dist_bits[distIdx];
@@ -684,7 +699,8 @@ void Inflate_Process(struct InflateState* s) {
 			s->TmpDist = dist_base[distIdx] + Inflate_ReadBits(s, bits);
 			s->State   = INFLATE_STATE_COMPRESSED_DATA;
 		}
-
+		
+		/* FALLTHRU */	
 		case INFLATE_STATE_COMPRESSED_DATA: {
 			if (!s->AvailOut) return;
 			len = s->TmpLit; dist = s->TmpDist;

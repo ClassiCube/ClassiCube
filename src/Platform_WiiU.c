@@ -202,7 +202,7 @@ cc_result File_Close(cc_file file) {
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
+	static cc_uint8 modes[] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
 }
 
@@ -254,10 +254,10 @@ void Thread_Join(void* handle) {
 	OSJoinThread((OSThread*)handle, &result);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	OSFastMutex* mutex = (OSFastMutex*)Mem_Alloc(1, sizeof(OSFastMutex), "mutex");
 	
-	OSFastMutex_Init(mutex, "CC mutex");
+	OSFastMutex_Init(mutex, name);
 	return mutex;
 }
 
@@ -273,7 +273,7 @@ void Mutex_Unlock(void* handle) {
 	OSFastMutex_Unlock((OSFastMutex*)handle);
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	OSEvent* event = (OSEvent*)Mem_Alloc(1, sizeof(OSEvent), "waitable");
 
 	OSInitEvent(event, false, OS_EVENT_MODE_AUTO);
@@ -331,15 +331,13 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family != AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 	
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family == AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 
 	freeaddrinfo(result);

@@ -252,7 +252,7 @@ void Thread_Join(void* handle) {
 	Mem_Free(thread);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	Mutex* mutex = (Mutex*)Mem_Alloc(1, sizeof(Mutex), "mutex");
 	mutexInit(mutex);
 	return mutex;
@@ -277,7 +277,7 @@ struct WaitData {
 	int signalled; // For when Waitable_Signal is called before Waitable_Wait
 };
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	struct WaitData* ptr = (struct WaitData*)Mem_Alloc(1, sizeof(struct WaitData), "waitable");
 	
 	mutexInit(&ptr->mutex);
@@ -326,7 +326,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 }
 /*
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	LEvent* ptr = (LEvent*)Mem_Alloc(1, sizeof(LEvent), "waitable");
 	leventInit(ptr, false, true);
 	return ptr;
@@ -384,15 +384,13 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family != AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 	
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family == AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 
 	freeaddrinfo(result);

@@ -403,28 +403,38 @@ void EntityNames_Render(void) {
 
 void EntityNames_RenderHovered(void) {
 	struct LocalPlayer* p = Entities.CurPlayer;
+	struct Entity* e;
 	cc_bool allNames, hadFog;
+	cc_bool setupState = false;
 	int i;
 
 	if (Entities.NamesMode == NAME_MODE_NONE) return;
 	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
 		&& p->Hacks.CanSeeAllNames;
 
-	Gfx_SetAlphaTest(true);
-	Gfx_SetDepthTest(false);
-	hadFog = Gfx_GetFog();
-	if (hadFog) Gfx_SetFog(false);
-
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
-		if (!Entities.List[i]) continue;
-		if ((i == closestEntityId || allNames) && Entities.List[i] != &p->Base) {
-			DrawName(Entities.List[i]);
+		e = Entities.List[i];
+		if (!e || e == &p->Base) continue;
+		if (!allNames && i != closestEntityId) continue;
+
+		/* Only alter the GPU state when actually necessary */
+		if (!setupState) {
+			Gfx_SetAlphaTest(true);
+			Gfx_SetDepthTest(false);
+			Gfx_SetDepthWrite(false);
+
+			setupState = true;
+			hadFog = Gfx_GetFog();
+			if (hadFog) Gfx_SetFog(false);
 		}
+		DrawName(e);
 	}
 
+	if (!setupState) return;
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthTest(true);
+	Gfx_SetDepthWrite(true);
 	if (hadFog) Gfx_SetFog(true);
 }
 

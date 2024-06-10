@@ -2760,7 +2760,7 @@ static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** ver
 
 static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 	int i, dx, dy, dirs = 0;
-	double angle;
+	float angle;
 
 	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
 		if (!(w->active & (1 << i))) continue;

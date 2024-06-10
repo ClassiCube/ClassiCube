@@ -1,5 +1,6 @@
 #include "Core.h"
-#if defined CC_BUILD_BEOS || defined CC_BUILD_HAIKU
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_BEOS
+
 extern "C" {
 #include "_WindowBase.h"
 #include "Graphics.h"
@@ -9,7 +10,6 @@ extern "C" {
 #include "Errors.h"
 #include "Utils.h"
 }
-
 // Other
 #include <errno.h>
 // AppKit
@@ -27,110 +27,6 @@ extern "C" {
 #include <FilePanel.h>
 #include <Path.h>
 
-/*########################################################################################################################*
-*--------------------------------------------------------Platform---------------------------------------------------------*
-*#########################################################################################################################*/
-cc_uint64 Stopwatch_Measure(void) {
-	return system_time();
-}
-
-cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
-	if (end < beg) return 0;
-	return end - beg;
-}
-
-cc_result Process_StartOpen(const cc_string* args) {
-	static const cc_string https_protocol = String_FromConst("https://");
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, args);
-
-	cc_bool https    = String_CaselessStarts(args, &https_protocol);
-	const char* mime = https ? "application/x-vnd.Be.URL.https" : "application/x-vnd.Be.URL.http";
-	
-	char* argv[] = { str, NULL };
-	return be_roster->Launch(mime, 1, argv);
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------BeOS threading------------------------------------------------------*
-*#########################################################################################################################*/
-// NOTE: BeOS only, as haiku uses the more efficient pthreads implementation in Platform_Posix.c
-#if defined CC_BUILD_BEOS
-#include <OS.h>
-void Thread_Sleep(cc_uint32 milliseconds) { snooze(milliseconds * 1000); }
-
-static int32 ExecThread(void* param) {
-	((Thread_StartFunc)param)();
-	return 0;
-}
-
-void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
-	thread_id thread = spawn_thread(ExecThread, name, B_NORMAL_PRIORITY, func);
-	*handle = (void*)thread;
-	
-	resume_thread(thread);
-}
-
-void Thread_Detach(void* handle) { }
-
-void Thread_Join(void* handle) {
-	thread_id thread = (thread_id)handle;
-	wait_for_thread(thread, NULL);
-}
-
-void* Mutex_Create(void) {
-	sem_id id = create_sem(1, "CC MUTEX");
-	return (void*)id;
-}
-
-void Mutex_Free(void* handle) {
-	sem_id id = (sem_id)handle;
-	delete_sem(id);
-}
-
-void Mutex_Lock(void* handle) {
-	sem_id id = (sem_id)handle;
-	acquire_sem(id);
-}
-
-void Mutex_Unlock(void* handle) {
-	sem_id id = (sem_id)handle;
-	release_sem(id);
-}
-
-void* Waitable_Create(void) {
-	sem_id id = create_sem(0, "CC WAITABLE");
-	return (void*)id;
-}
-
-void Waitable_Free(void* handle) {
-	sem_id id = (sem_id)handle;
-	delete_sem(id);
-}
-
-void Waitable_Signal(void* handle) {
-	sem_id id = (sem_id)handle;
-	release_sem(id);
-}
-
-void Waitable_Wait(void* handle) {
-	sem_id id = (sem_id)handle;
-	acquire_sem(id);
-}
-
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	int microseconds = milliseconds * 1000;
-	sem_id id = (sem_id)handle;
-	acquire_sem_etc(id, 1, B_RELATIVE_TIMEOUT, microseconds);
-}
-#endif
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Window----------------------------------------------------------*
-*#########################################################################################################################*/
-#if CC_WIN_BACKEND == CC_WIN_BACKEND_BEOS
 static BApplication* app_handle;
 static BWindow* win_handle;
 static BView* view_handle;
@@ -156,7 +52,7 @@ static int events_count, events_capacity;
 static CCEvent* events_list, events_default[EVENTS_DEFAULT_MAX];
 
 static void Events_Init(void) {
-	events_mutex    = Mutex_Create();
+	events_mutex    = Mutex_Create("BeOS events");
 	events_capacity = EVENTS_DEFAULT_MAX;
 	events_list     = events_default;
 }
@@ -426,6 +322,7 @@ static void RunApp(void) {
 	Platform_LogConst("App initialised");
 }
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	Events_Init();
 	RunApp();
@@ -751,13 +648,15 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 static BBitmap* win_framebuffer;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	// right/bottom coordinates are inclusive of the coordinates,
 	//  so need to subtract 1 to end up with correct width/height
-	BRect bounds(0, 0, bmp->width - 1, bmp->height - 1);
+	BRect bounds(0, 0, width - 1, height - 1);
 	
 	win_framebuffer = new BBitmap(bounds, B_RGB32);
-	bmp->scan0 = (BitmapCol*)win_framebuffer->Bits();
+	bmp->scan0  = (BitmapCol*)win_framebuffer->Bits();
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -770,7 +669,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	delete win_framebuffer;
-	bmp->scan0 = NULL;
 }
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
@@ -802,7 +700,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
 static cc_bool win_vsync;
 
 void GLContext_Create(void) {
@@ -840,7 +738,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	win_vsync = vsync;
 }
 void GLContext_GetApiInfo(cc_string* info) { }
-#endif // CC_GFX_BACKEND == CC_GFX_BACKEND_GL && !CC_BUILD_EGL
-#endif // CC_WIN_BACKEND == CC_WIN_BACKEND_BEOS
+#endif // (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !CC_BUILD_EGL
 
 #endif

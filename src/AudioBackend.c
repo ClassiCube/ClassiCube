@@ -941,7 +941,7 @@ cc_bool AudioBackend_Init(void) {
 	if (switchAudio) return true;
 	switchAudio = true;
 
-	if (!audrv_mutex) audrv_mutex = Mutex_Create();
+	if (!audrv_mutex) audrv_mutex = Mutex_Create("Audio sync");
 
 	Mem_Set(audioPools, 0, sizeof(audioPools));
 

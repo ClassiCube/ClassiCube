@@ -30,6 +30,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <dirent.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -136,13 +137,50 @@ int File_Exists(const cc_string* path) {
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	return ERR_NOT_SUPPORTED;
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	char str[NATIVE_STR_LEN];
+	struct dirent* entry;
+	int res;
+
+	String_EncodeUtf8(str, dirPath);
+	DIR* dirPtr = opendir(str);
+	if (!dirPtr) return errno;
+
+	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
+	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
+	errno = 0;
+	String_InitArray(path, pathBuffer);
+
+	while ((entry = readdir(dirPtr))) {
+		path.length = 0;
+		String_Format1(&path, "%s/", dirPath);
+
+		/* ignore . and .. entry */
+		char* src = entry->d_name;
+		if (src[0] == '.' && src[1] == '\0') continue;
+		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
+
+		int len = String_Length(src);
+		String_AppendUtf8(&path, src, len);
+
+		if (entry->d_type == DT_DIR) {
+			res = Directory_Enum(&path, obj, callback);
+			if (res) { closedir(dirPtr); return res; }
+		} else {
+			callback(&path, obj);
+		}
+		errno = 0;
+	}
+
+	res = errno; /* return code from readdir */
+	closedir(dirPtr);
+	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
+static cc_result File_Do(cc_file* file, const cc_string* path, int mode, const char* type) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
-    Platform_Log1("Open %c", str);
+	Platform_Log2("%c %c", type, str);
 
 	*file = open(str, mode, 0);
 	return *file == -1 ? errno : 0;
@@ -150,17 +188,17 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
 	if (!fat_available) return ReturnCode_FileNotFound;
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path, O_RDONLY, "Open");
 }
 
 cc_result File_Create(cc_file* file, const cc_string* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC, "Create");
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path, O_RDWR | O_CREAT, "Update");
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -219,6 +257,7 @@ static void InitFilesystem(void) {
 
     char* dir = fatGetDefaultCwd();
     if (dir) {
+		Platform_Log1("CWD: %c", dir);
         root_path.buffer = dir;
         root_path.length = String_Length(dir);
     }
@@ -244,7 +283,7 @@ void Thread_Detach(void* handle) {
 void Thread_Join(void* handle) {
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	return NULL;
 }
 
@@ -257,7 +296,7 @@ void Mutex_Lock(void* handle) {
 void Mutex_Unlock(void* handle) {
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	return NULL;
 }
 
@@ -421,9 +460,11 @@ static void InitNetworking(void) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
+	cc_bool dsiMode = isDSiMode();
+	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
+
 	InitFilesystem();
     InitNetworking();
-
 	cpuStartTiming(1);
 }
 void Platform_Free(void) { }

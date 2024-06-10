@@ -62,13 +62,13 @@ static void InitPalette(PackedCol* palette, float shaded, PackedCol ambientColor
 			else {
 				curLerp = lampLevel / (float)(FANCY_LIGHTING_LEVELS - 1);
 				curLerp *= (MATH_PI / 2);
-				curLerp = Math_Cos(curLerp);
+				curLerp = Math_CosF(curLerp);
 				lampColor = PackedCol_Lerp(0, Env.LampLightCol, 1 - curLerp);
 			}
 
 			curLerp = lavaLevel / (float)(FANCY_LIGHTING_LEVELS - 1);
 			curLerp *= (MATH_PI / 2);
-			curLerp = Math_Cos(curLerp);
+			curLerp = Math_CosF(curLerp);
 
 			lavaColor = PackedCol_Lerp(0, Env.LavaLightCol, 1 - curLerp);
 

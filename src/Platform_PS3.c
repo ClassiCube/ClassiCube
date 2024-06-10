@@ -260,7 +260,7 @@ void Thread_Join(void* handle) {
 	Mem_Free(thread);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	sys_mutex_attr_t attr;	
 	sysMutexAttrInitialize(attr);
 	
@@ -289,7 +289,7 @@ void Mutex_Unlock(void* handle) {
 	if (res) Logger_Abort2(res, "Unlocking mutex");
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	sys_sem_attr_t attr = { 0 };
 	attr.attr_protocol  = SYS_SEM_ATTR_PROTOCOL;
 	attr.attr_pshared   = SYS_SEM_ATTR_PSHARED; 

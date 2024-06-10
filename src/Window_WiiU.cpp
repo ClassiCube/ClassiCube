@@ -76,6 +76,14 @@ static uint32_t OnReleased(void* context) {
 	return 0;
 }
 
+void Window_PreInit(void) {
+	KPADInit();
+	VPADInit();
+
+	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, OnAcquired, NULL, 100);
+	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, OnReleased, NULL, 100);
+}
+
 void Window_Init(void) {
 	LoadTVDimensions();
 	DisplayInfo.ScaleX = 1;
@@ -95,12 +103,6 @@ void Window_Init(void) {
 	
 	Window_Alt.Width  = 854;
 	Window_Alt.Height = 480;
-		
-	KPADInit();
-	VPADInit();
-
-	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, OnAcquired, NULL, 100);
-	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, OnReleased, NULL, 100);
 	WHBGfxInit();
 }
 
@@ -351,9 +353,9 @@ static void Init2DResources(void) {
 }
 
 static GX2Texture fb;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	fb.surface.width    = bmp->width;
-	fb.surface.height   = bmp->height;
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	fb.surface.width    = width;
+	fb.surface.height   = height;
 	fb.surface.depth    = 1;
 	fb.surface.dim      = GX2_SURFACE_DIM_TEXTURE_2D;
 	fb.surface.format   = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
@@ -364,7 +366,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	GX2InitTextureRegs(&fb);
 
 	fb.surface.image = MEMAllocFromDefaultHeapEx(fb.surface.imageSize, fb.surface.alignment);
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 static void DrawLauncher(void) {

@@ -436,6 +436,7 @@ void Window_SetTitle(const cc_string* title) {
     // TODO: Implement this somehow
 }
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
     //Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
     // keyboard now shifts up
@@ -718,7 +719,7 @@ void Window_Create3D(int width, int height) {
 /*########################################################################################################################*
 *--------------------------------------------------------GLContext--------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
 

@@ -383,10 +383,12 @@ extern void interop_AddClipboardListeners(void);
 extern void interop_ForceTouchPageLayout(void);
 
 extern void Game_DoFrame(void);
+void Window_PreInit(void) {
+	emscripten_set_main_loop(Game_DoFrame, 0, false);
+}
+
 void Window_Init(void) {
 	int is_ios, droid;
-	emscripten_set_main_loop(Game_DoFrame, 0, false);
-
 	DisplayInfo.Width  = GetScreenWidth();
 	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;
@@ -682,7 +684,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return interop_DownloadFile(fileBuffer, args->filters, args->titles);
 }
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) { }
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) { }
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
@@ -743,7 +745,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *------------------------------------------------Emscripten WebGL context-------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 #include "Graphics.h"
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx_handle;
 

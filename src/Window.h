@@ -94,6 +94,8 @@ CC_VAR extern struct _WindowData WindowInfo; /* Named WindowInfo for backwards c
 /* Data for alternate game window (e.g. 3DS) */
 extern struct _WindowData Window_Alt;
 
+/* Initialises necessary state before initing platform and loading options */
+void Window_PreInit(void);
 /* Initialises state for window, input, and display. */
 void Window_Init(void);
 /* Potentially frees/resets state for window, input, and display. */
@@ -170,7 +172,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args);
 /* Allocates a framebuffer that can be drawn/transferred to the window. */
 /* NOTE: Do NOT free bmp->Scan0, use Window_FreeFramebuffer. */
 /* NOTE: This MUST be called whenever the window is resized. */
-void Window_AllocFramebuffer(struct Bitmap* bmp);
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height);
 /* Transfers pixels from the allocated framebuffer to the on-screen window. */
 /*   r can be used to only update a small region of pixels (may be ignored) */
 /* NOTE: bmp must have come from Window_AllocFramebuffer */
@@ -214,7 +216,7 @@ void Window_UpdateRawMouse(void);
 void Window_DisableRawMouse(void);
 
 /* OpenGL contexts are heavily tied to the window, so for simplicitly are also provided here */
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 #define GLCONTEXT_DEFAULT_DEPTH 24
 /* Creates an OpenGL context, then makes it the active context. */
 /* NOTE: You MUST have created the window beforehand, as the GL context is attached to the window. */

@@ -522,7 +522,7 @@ static void Music_Init(void) {
 	/* music is delayed between 2 - 7 minutes by default */
 	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
 	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
-	music_waitable = Waitable_Create();
+	music_waitable = Waitable_Create("Music sleep");
 
 	volume = Options_GetInt(OPT_MUSIC_VOLUME, 0, 100, DEFAULT_MUSIC_VOLUME);
 	Audio_SetMusic(volume);

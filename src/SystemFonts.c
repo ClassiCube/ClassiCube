@@ -258,6 +258,120 @@ void FallbackFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x,
 #include "freetype/ftmodapi.h"
 #include "freetype/ftglyph.h"
 
+int cc_strncmp(const char* strA, const char* strB, size_t maxCount) {
+	const unsigned char* a = (const unsigned char*)strA;
+	const unsigned char* b = (const unsigned char*)strB;
+	int i;
+
+	for (i = 0; a[i] && i < maxCount; i++)
+	{
+		if (a[i] != b[i]) return a[i] - b[i];
+	}
+	return 0;
+}
+
+int cc_strcmp(const char* strA, const char* strB) {
+	const unsigned char* a = (const unsigned char*)strA;
+	const unsigned char* b = (const unsigned char*)strB;
+	int i;
+
+	for (i = 0; a[i]; i++)
+	{
+		if (a[i] != b[i]) return a[i] - b[i];
+	}
+	return 0;
+}
+
+size_t cc_strlen(const char* a) {
+	int i = 0;
+	while (*a++) i++;
+	return i;
+}
+
+char* cc_strstr(const char* str, const char* substr) {
+	if (!substr[0]) return (char*)str;
+
+	for (; *str; str++) 
+	{
+		/* Definitely not a match */
+		if (*str != substr[0]) continue;
+
+		/* It's a possible match */
+		if (cc_strcmp(str, substr) == 0) return (char*)str;
+	}
+	return NULL;
+}
+
+int cc_memcmp(const void* ptrA, const void* ptrB, size_t num) {
+	const unsigned char* a = (const unsigned char*)ptrA;
+	const unsigned char* b = (const unsigned char*)ptrB;
+
+	for (; num > 0; num--, a++, b++)
+	{
+		if (*a != *b) return *a - *b;
+	}
+	return 0;
+}
+
+void* cc_memchr(const void* ptr, int ch, size_t num) {
+	const char* a = (const char*)ptr;
+
+	for (; num > 0; num--, a++)
+	{
+		if (*a == ch) return (void*)a;
+	}
+	return NULL;
+}
+
+static void swap(void* v1, void* v2, int size) {
+	char buffer[1024]; 
+
+	Mem_Copy(buffer, v1, size); 
+	Mem_Copy(v1,     v2, size); 
+	Mem_Copy(v2, buffer, size); 
+}
+
+// https://www.geeksforgeeks.org/generic-implementation-of-quicksort-algorithm-in-c/
+static void _qsort(void* v, int size, int left, int right,
+					int (*comp)(const void*, const void*)) {
+	void* ptrL;
+	void* ptrM;
+	void* ptrI;
+	void* ptrE; 
+	int i, last, mid;
+
+	if (left >= right) return;
+	mid = (left + right) / 2; 
+
+	ptrL = (char*)v + (left * size); 
+	ptrM = (char*)v + (mid  * size); 
+	swap(ptrL, ptrM, size); 
+	last = left; 
+
+	for (i = left + 1; i <= right; i++) 
+	{
+		ptrI = (char*)v + (i * size); 
+		if ((*comp)(ptrL, ptrI) > 0) { 
+			last++;
+			ptrE = (char*)v + (last * size); 
+			swap(ptrI, ptrE, size); 
+		} 
+	}
+
+	ptrE = (char*)v + (last * size); 
+	swap(ptrL, ptrE, size); 
+	_qsort(v, size, left, last - 1,  comp); 
+	_qsort(v, size, last + 1, right, comp); 
+}
+
+void cc_qsort(void* v, size_t count, size_t size,
+					int (*comp)(const void*, const void*)) {
+	if (!count) return;
+	_qsort(v, 0, count - 1, size, comp);
+}
+
+
+
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct StringsBuffer font_list;
@@ -271,7 +385,7 @@ struct SysFont {
 	FT_StreamRec stream;
 	cc_uint8 buffer[8192]; /* small buffer to minimise disk I/O */
 	cc_uint16 widths[256]; /* cached width of each character glyph */
-	FT_BitmapGlyph glyphs[256];        /* cached glyphs */
+	FT_BitmapGlyph glyphs[256];	       /* cached glyphs */
 	FT_BitmapGlyph shadow_glyphs[256]; /* cached glyphs (for back layer shadow) */
 #ifdef CC_BUILD_DARWIN
 	char filename[FILENAME_SIZE + 1];
@@ -367,8 +481,8 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 
 #define FONT_CACHE_FILE "fontscache.txt"
 static cc_string font_candidates[] = {
-	String_FromConst(""),                /* replaced with font_default */
-	String_FromConst("Arial"),           /* preferred font on all platforms */
+	String_FromConst(""),			     /* replaced with font_default */
+	String_FromConst("Arial"),		     /* preferred font on all platforms */
 	String_FromConst("Liberation Sans"), /* Nice looking fallbacks for linux */
 	String_FromConst("Nimbus Sans"),
 	String_FromConst("Bitstream Charter"),
@@ -810,7 +924,7 @@ void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int 
 		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
 
 		int ulHeight = TEXT_CEIL(ul_thick);
-		int ulY      = height + TEXT_CEIL(ul_pos);
+		int ulY	     = height + TEXT_CEIL(ul_pos);
 		Drawer2D_Fill(bmp, begX, ulY + y, x - begX, ulHeight, color);
 	}
 
@@ -930,31 +1044,31 @@ cc_result SysFonts_Register(const cc_string* path, SysFont_RegisterCallback call
 }
 
 const cc_string* SysFonts_UNSAFE_GetDefault(void) {
-    return &String_Empty;
+	return &String_Empty;
 }
 
 void SysFonts_GetNames(struct StringsBuffer* buffer) {
-    interop_GetFontNames(buffer);
+	interop_GetFontNames(buffer);
 }
 
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
-    return interop_SysFontMake(desc, fontName, size, flags);
+	return interop_SysFontMake(desc, fontName, size, flags);
 }
 
 void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
-    interop_SysMakeDefault(desc, size, flags);
+	interop_SysMakeDefault(desc, size, flags);
 }
 
 void SysFont_Free(struct FontDesc* desc) {
-    interop_SysFontFree(desc->handle);
+	interop_SysFontFree(desc->handle);
 }
 
 int SysFont_TextWidth(struct DrawTextArgs* args) {
-    return interop_SysTextWidth(args);
+	return interop_SysTextWidth(args);
 }
 
 void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
-    interop_SysTextDraw(args, bmp, x, y, shadow);
+	interop_SysTextDraw(args, bmp, x, y, shadow);
 }
 #else
 void SysFonts_SaveCache(void) { }

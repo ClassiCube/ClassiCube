@@ -73,8 +73,9 @@ cc_bool Platform_SingleProcess;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
 
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
@@ -388,7 +389,7 @@ void Thread_Join(void* handle) {
 	Mem_Free(ptr);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	pthread_mutex_t* ptr = (pthread_mutex_t*)Mem_Alloc(1, sizeof(pthread_mutex_t), "mutex");
 	int res = pthread_mutex_init(ptr, NULL);
 	if (res) Logger_Abort2(res, "Creating mutex");
@@ -417,7 +418,7 @@ struct WaitData {
 	int signalled; /* For when Waitable_Signal is called before Waitable_Wait */
 };
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	struct WaitData* ptr = (struct WaitData*)Mem_Alloc(1, sizeof(struct WaitData), "waitable");
 	int res;
 	
@@ -594,15 +595,13 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next)
 	{
 		if (cur->ai_family != AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 	
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next)
 	{
 		if (cur->ai_family == AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 
 	freeaddrinfo(result);
@@ -1046,6 +1045,20 @@ cc_bool Updater_Clean(void) { return true; }
 #elif defined CC_BUILD_HAIKU
 	#if __x86_64__
 	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-haiku-64" } } };
+	#else
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	#endif
+#elif defined CC_BUILD_FREEBSD
+	#if __x86_64__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-fbsd64-gl1" } } };
+	#elif __i386__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-fbsd32-gl1" } } };
+	#else
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	#endif
+#elif defined CC_BUILD_NETBSD
+	#if __x86_64__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-netbsd64-gl1" } } };
 	#else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 	#endif

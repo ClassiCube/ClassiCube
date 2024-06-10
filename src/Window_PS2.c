@@ -28,6 +28,7 @@ static char padBuf[256] __attribute__((aligned(64)));
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
@@ -181,8 +182,10 @@ void Window_Create2D(int width, int height) {
 	graph_initialize(win_fb.address, win_fb.width, win_fb.height, win_fb.psm, 0, 0);
 }
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

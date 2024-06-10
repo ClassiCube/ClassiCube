@@ -1,0 +1,61 @@
+name: Build latest (PS1)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-ps1
+  cancel-in-progress: true
+
+jobs:
+  build-PS1:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/classicube/minimal-psn00b:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile PS1 build
+        id: compile
+        run: |
+          apt-get update
+          apt-get install -y curl
+          export PSNOOB=/usr/local/psnoob
+          export PATH=$PATH:$PSNOOB/bin
+          export PSN00BSDK_LIBS=$PSNOOB/lib/libpsn00b
+          make ps1
+
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile PS1 build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'misc/ps1/build/template.elf'
+          DEST_NAME: 'ClassiCube-PS1.elf'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'misc/ps1/build/template.exe'
+          DEST_NAME: 'ClassiCube-PS1.exe'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'misc/ps1/build/template.bin'
+          DEST_NAME: 'ClassiCube-PS1.bin'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'misc/ps1/build/template.cue'
+          DEST_NAME: 'ClassiCube-PS1.cue'

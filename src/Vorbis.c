@@ -1079,15 +1079,15 @@ void imdct_init(struct imdct_state* state, int n) {
 	/* setup twiddle factors */
 	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) 
 	{
-		A[k2]   =  (float)Math_Cos((4*k * PI) / n);
-		A[k2+1] = -(float)Math_Sin((4*k * PI) / n);
-		B[k2]   =  (float)Math_Cos(((k2+1) * PI) / (2*n));
-		B[k2+1] =  (float)Math_Sin(((k2+1) * PI) / (2*n));
+		A[k2]   =  Math_CosF((4*k * PI) / n);
+		A[k2+1] = -Math_SinF((4*k * PI) / n);
+		B[k2]   =  Math_CosF(((k2+1) * PI) / (2*n));
+		B[k2+1] =  Math_SinF(((k2+1) * PI) / (2*n));
 	}
 	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) 
 	{
-		C[k2]   =  (float)Math_Cos(((k2+1) * (2*PI)) / n);
-		C[k2+1] = -(float)Math_Sin(((k2+1) * (2*PI)) / n);
+		C[k2]   =  Math_CosF(((k2+1) * (2*PI)) / n);
+		C[k2+1] = -Math_SinF(((k2+1) * (2*PI)) / n);
 	}
 
 	for (k = 0; k < n8; k++) 
@@ -1219,13 +1219,13 @@ static void Vorbis_CalcWindow(struct VorbisWindow* window, int blockSize) {
 
 	for (i = 0; i < n; i++) 
 	{
-		inner          = Math_Sin((i + 0.5) / n * (PI/2));
-		cur_window[i]  = Math_Sin((PI/2) * inner * inner);
+		inner          = Math_SinF((i + 0.5f) / n * (PI/2));
+		cur_window[i]  = Math_SinF((PI/2) * inner * inner);
 	}
 	for (i = 0; i < n; i++) 
 	{
-		inner          = Math_Sin((i + 0.5) / n * (PI/2) + (PI/2));
-		prev_window[i] = Math_Sin((PI/2) * inner * inner);
+		inner          = Math_SinF((i + 0.5f) / n * (PI/2) + (PI/2));
+		prev_window[i] = Math_SinF((PI/2) * inner * inner);
 	}
 }
 

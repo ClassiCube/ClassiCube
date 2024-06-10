@@ -54,8 +54,12 @@ static void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->vb = 0;
 #endif
 
-	chunk->visible = true;        chunk->empty = false;
-	chunk->pendingDelete = false; chunk->allAir = false;
+	chunk->visible = true;  
+	chunk->empty   = false;
+	chunk->dirty   = false; 
+	chunk->allAir  = false;
+	chunk->noData  = true;
+
 	chunk->drawXMin = false; chunk->drawXMax = false; chunk->drawZMin = false;
 	chunk->drawZMax = false; chunk->drawYMin = false; chunk->drawYMax = false;
 
@@ -313,7 +317,9 @@ static void DeleteChunk(struct ChunkInfo* info) {
 	Gfx_DeleteVb(&info->vb);
 #endif
 
-	info->empty = false; info->allAir = false;
+	info->empty  = false; 
+	info->allAir = false;
+	info->noData = true;
 #ifdef OCCLUSION
 	info.OcclusionFlags = 0;
 	info.OccludedFlags = 0;
@@ -351,12 +357,12 @@ static void BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 
 	Game.ChunkUpdates++;
 	(*chunkUpdates)++;
-	info->pendingDelete = false;
 	Builder_MakeChunk(info);
 
-	if (!info->normalParts && !info->translucentParts) {
-		info->empty = true; return;
-	}
+	info->dirty  = false;
+	info->noData = !info->normalParts && !info->translucentParts;
+	info->empty  = info->noData;
+	if (info->empty) return;
 	
 	if (info->normalParts) {
 		ptr = info->normalParts;
@@ -545,13 +551,13 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 		if (info->empty) continue;
 
 		distSqr = distances[i];
-		noData  = !info->normalParts && !info->translucentParts;
+		noData  = info->noData;
 		
 		/* Auto unload chunks far away chunks */
 		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(info); continue;
 		}
-		noData |= info->pendingDelete;
+		noData |= info->dirty;
 
 		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(info);
@@ -578,13 +584,13 @@ static int UpdateChunksStill(int* chunkUpdates) {
 		if (info->empty) continue;
 
 		distSqr = distances[i];
-		noData  = !info->normalParts && !info->translucentParts;
+		noData  = info->noData;
 
 		/* Auto unload chunks far away chunks */
 		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(info); continue;
 		}
-		noData |= info->pendingDelete;
+		noData |= info->dirty;
 
 		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(info);
@@ -700,8 +706,8 @@ void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
 
 	info = &mapChunks[World_ChunkPack(cx, cy, cz)];
 	if (info->allAir) return; /* do not recreate chunks completely air */
-	info->empty         = false;
-	info->pendingDelete = true;
+	info->empty = false;
+	info->dirty = true;
 }
 
 void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {

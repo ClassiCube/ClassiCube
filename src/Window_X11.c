@@ -270,14 +270,14 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_EGL || (CC_GFX_BACKEND != CC_GFX_BACKEND_GL)
+#if defined CC_BUILD_EGL || !(CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	cc_result res;
 	int screen = DefaultScreen(win_display);
 
 	res = XMatchVisualInfo(win_display, screen, 24, TrueColor, &info) ||
-		XMatchVisualInfo(win_display, screen, 32, TrueColor, &info);
+		  XMatchVisualInfo(win_display, screen, 32, TrueColor, &info);
 
 	if (!res) Logger_Abort("Selecting visual");
 	return info;
@@ -286,6 +286,7 @@ static XVisualInfo GLContext_SelectVisual(void) {
 static XVisualInfo GLContext_SelectVisual(void);
 #endif
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
@@ -501,7 +502,7 @@ void Window_RequestClose(void) {
 	ev.xclient.display = win_display;
 	ev.xclient.window  = win_handle;
 	ev.xclient.data.l[0] = wm_destroy;
-
+	
 	XSendEvent(win_display, win_handle, false, 0, &ev);
 	XFlush(win_display);
 }
@@ -1112,19 +1113,22 @@ static XImage* fb_image;
 static void* fb_data;
 static int fb_fast;
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 
 	/* X11 requires that the image to draw has same depth as window */
 	/* Easy for 24/32 bit case, but much trickier with other depths */
 	/*  (have to do a manual and slow second blit for other depths) */
 	fb_fast = win_visual.depth == 24 || win_visual.depth == 32;
-	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(bmp->width * bmp->height, 4, "window blit");
+	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(width * height, 4, "window blit");
 
 	fb_image = XCreateImage(win_display, win_visual.visual,
 		win_visual.depth, ZPixmap, 0, fb_data,
-		bmp->width, bmp->height, 32, 0);
+		width, height, 32, 0);
 }
 
 static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap* bmp) {
@@ -1308,7 +1312,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
 #include <GL/glx.h>
 static GLXContext ctx_handle;
 typedef int  (*FP_SWAPINTERVAL)(int interval);

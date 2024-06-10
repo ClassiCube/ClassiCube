@@ -20,6 +20,10 @@ android/app/.externalNativeBuild/
 android/local.properties
 *.iml
 
+#XCode stuff
+project.xcworkspace/
+xcuserdata/
+
 # Nintendo Console build results
 build-3ds/
 build-gc/
@@ -115,6 +119,9 @@ TestResult.xml
 [Dd]ebugPS/
 [Rr]eleasePS/
 dlldata.c
+
+# Mac classic
+retro68scripts/
 
 *_i.c
 *_p.c

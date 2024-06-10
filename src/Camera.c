@@ -42,15 +42,17 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	Gfx_CalcPerspectiveMatrix(proj, fovy, aspectRatio, (float)Game_ViewDistance);
 }
 
-static void PerspectiveCamera_GetView(struct LocalPlayer* p, struct Matrix* mat) {
+static void PerspectiveCamera_GetView(struct Matrix* mat) {
 	Vec3 pos = Camera.CurrentPos;
-	Vec2 rot = Camera.Active->GetOrientation(p);
+	Vec2 rot = Camera.Active->GetOrientation();
 	Matrix_LookRot(mat, pos, rot);
 	Matrix_MulBy(mat, &Camera.TiltM);
 }
 
-static void PerspectiveCamera_GetPickedBlock(struct LocalPlayer* p, struct RayTracer* t) {
-	struct Entity* e = &p->Base;
+static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {
+	struct LocalPlayer* p = Entities.CurPlayer;
+	struct Entity* e      = &p->Base;
+
 	Vec3 dir    = Vec3_GetDirVector(e->Yaw * MATH_DEG2RAD, e->Pitch * MATH_DEG2RAD + Camera.TiltPitch);
 	Vec3 eyePos = Entity_GetEyePosition(e);
 	Picking_CalcPickedBlock(&eyePos, &dir, p->ReachDistance, t);
@@ -146,8 +148,10 @@ static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, fl
 /*########################################################################################################################*
 *---------------------------------------------------First person camera---------------------------------------------------*
 *#########################################################################################################################*/
-static Vec2 FirstPersonCamera_GetOrientation(struct LocalPlayer* p) {
+static Vec2 FirstPersonCamera_GetOrientation(void) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e = &p->Base;
+
 	Vec2 v;	
 	v.x = e->Yaw   * MATH_DEG2RAD; 
 	v.y = e->Pitch * MATH_DEG2RAD;
@@ -185,8 +189,10 @@ static struct Camera cam_FirstPerson = {
 #define DEF_ZOOM 3.0f
 static float dist_third = DEF_ZOOM, dist_forward = DEF_ZOOM;
 
-static Vec2 ThirdPersonCamera_GetOrientation(struct LocalPlayer* p) {
+static Vec2 ThirdPersonCamera_GetOrientation(void) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e = &p->Base;
+
 	Vec2 v;	
 	v.x = e->Yaw   * MATH_DEG2RAD; 
 	v.y = e->Pitch * MATH_DEG2RAD;
@@ -216,7 +222,7 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 	target = Entity_GetEyePosition(e);
 	target.y += Camera.BobbingVer;
 
-	rot = Camera.Active->GetOrientation(p);
+	rot = Camera.Active->GetOrientation();
 	dir = Vec3_GetDirVector(rot.x, rot.y);
 	Vec3_Negate(&dir, &dir);
 

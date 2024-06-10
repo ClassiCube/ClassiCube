@@ -887,16 +887,20 @@ static void MainScreen_Activated(struct LScreen* s_) {
 	s->iptPassword.inputType = KEYBOARD_TYPE_PASSWORD;
 	s->lblUpdate.small       = true;
 
+#ifdef CC_BUILD_NETWORKING
 	LInput_Add(s,  &s->iptUsername, 280, "Username..",  main_iptUsername);
 	LInput_Add(s,  &s->iptPassword, 280, "Password..",  main_iptPassword);
 	LButton_Add(s, &s->btnLogin,    100, 35, "Sign in", 
 				MainScreen_Login,  main_btnLogin);
 	LButton_Add(s, &s->btnResume,   100, 35, "Resume",  
 				MainScreen_Resume, main_btnResume);
+#endif
 
 	LLabel_Add(s,  &s->lblStatus,  "",  main_lblStatus);
+#ifdef CC_BUILD_NETWORKING
 	LButton_Add(s, &s->btnDirect,  200, 35, "Direct connect", 
 				SwitchToDirectConnect,   main_btnDirect);
+#endif
 	LButton_Add(s, &s->btnSPlayer, 200, 35, "Singleplayer",
 				MainScreen_Singleplayer, main_btnSPlayer);
 #ifdef CC_BUILD_SPLITSCREEN
@@ -1043,7 +1047,12 @@ void MainScreen_SetActive(void) {
 	s->LoadState     = MainScreen_Load;
 	s->Tick          = MainScreen_Tick;
 	s->title         = "ClassiCube";
+
+#ifdef CC_BUILD_NETWORKING
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;
+#else
+	s->onEnterWidget = (struct LWidget*)&s->btnSPlayer;
+#endif
 
 	Launcher_SetScreen((struct LScreen*)s);
 }

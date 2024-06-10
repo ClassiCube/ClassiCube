@@ -1614,13 +1614,12 @@ static cc_uint8* CPE_Tick(cc_uint8* data) {
 *------------------------------------------------------Custom models------------------------------------------------------*
 *#########################################################################################################################*/
 static void CPE_DefineModel(cc_uint8* data) {
-	cc_uint8 id = data[0];
-	struct CustomModel* cm = &custom_models[id];
+	struct CustomModel* cm = CustomModel_Get(data[0]);
 	cc_string name;
 	cc_uint8 flags;
 	cc_uint8 numParts;
 
-	if (id >= MAX_CUSTOM_MODELS) return;
+	if (!cm) return;
 	CustomModel_Undefine(cm);
 	Model_Init(&cm->model);
 
@@ -1665,13 +1664,13 @@ static void CPE_DefineModel(cc_uint8* data) {
 }
 
 static void CPE_DefineModelPart(cc_uint8* data) {
-	cc_uint8 id = data[0];
-	struct CustomModel* m = &custom_models[id];
+	struct CustomModel* m;
 	struct CustomModelPart* part;
 	struct CustomModelPartDef p;
 	int i;
 
-	if (id >= MAX_CUSTOM_MODELS || !m->defined || m->curPartIndex >= m->numParts) return;
+	m = CustomModel_Get(data[0]);
+	if (!m || !m->defined || m->curPartIndex >= m->numParts) return;
 	part = &m->parts[m->curPartIndex];
 
 	p.min.x = GetFloat(data +  1);
@@ -1682,7 +1681,8 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	p.max.z = GetFloat(data + 21);
 
 	/* read u, v coords for our 6 faces */
-	for (i = 0; i < 6; i++) {
+	for (i = 0; i < 6; i++) 
+	{
 		p.u1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 0));
 		p.v1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 2));
 		p.u2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 4));
@@ -1704,7 +1704,8 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 		p.flags = data[165];
 
 		data += 97;
-		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) {
+		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) 
+		{
 			cc_uint8 tmp = *data++;
 			part->anims[i].type = tmp & 0x3F;
 			part->anims[i].axis = tmp >> 6;
@@ -1725,10 +1726,9 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	if (m->curPartIndex == m->numParts) CustomModel_Register(m);
 }
 
-/* unregisters and frees the custom model */
 static void CPE_UndefineModel(cc_uint8* data) {
-	cc_uint8 id = data[0];
-	if (id < MAX_CUSTOM_MODELS) CustomModel_Undefine(&custom_models[id]);
+	struct CustomModel* cm = CustomModel_Get(data[0]);
+	if (cm) CustomModel_Undefine(cm);
 }
 
 static void CustomModels_Reset(void) {

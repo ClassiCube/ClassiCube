@@ -58,8 +58,11 @@ static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
     xid_ctrl = NULL;
 }
 
-void Window_Init(void) {
+void Window_PreInit(void) {
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT); // TODO not call
+}
+
+void Window_Init(void) {
 	VIDEO_MODE mode = XVideoGetMode();
 	
 	DisplayInfo.Width  = mode.width;
@@ -180,8 +183,10 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

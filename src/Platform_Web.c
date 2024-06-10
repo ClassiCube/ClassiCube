@@ -43,8 +43,9 @@ cc_bool Platform_SingleProcess;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
+void* Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { return memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { return memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, cc_uint32 numBytes) { return memmove(dst, src,   numBytes); }
 
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
@@ -227,12 +228,12 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /* No real threading support with emscripten backend */
 void  Thread_Sleep(cc_uint32 milliseconds) { }
 
-void* Mutex_Create(void) { return NULL; }
+void* Mutex_Create(const char* name) { return NULL; }
 void  Mutex_Free(void* handle) { }
 void  Mutex_Lock(void* handle) { }
 void  Mutex_Unlock(void* handle) { }
 
-void* Waitable_Create(void) { return NULL; }
+void* Waitable_Create(const char* name) { return NULL; }
 void  Waitable_Free(void* handle) { }
 void  Waitable_Signal(void* handle) { }
 void  Waitable_Wait(void* handle) { }

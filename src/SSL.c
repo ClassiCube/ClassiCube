@@ -194,7 +194,7 @@ static SECURITY_STATUS SSL_Negotiate(struct SSLContext* ctx) {
 			/* SChannel didn't process the entirety of the input buffer */
 			/*  So move the leftover data back to the front of the input buffer */
 			leftover_len = in_buffers[1].cbBuffer;
-			memmove(ctx->incoming, ctx->incoming + (ctx->bufferLen - leftover_len), leftover_len);
+			Mem_Move(ctx->incoming, ctx->incoming + (ctx->bufferLen - leftover_len), leftover_len);
 			ctx->bufferLen = leftover_len;
 		} else if (sec != SEC_E_INCOMPLETE_MESSAGE) {
 			/* SChannel processed entirely of input buffer */
@@ -279,7 +279,7 @@ static cc_result SSL_ReadDecrypted(struct SSLContext* ctx, cc_uint8* data, cc_ui
 		/* incoming buffer stores decrypted data and then any leftover ciphertext */
 		/*  So move the leftover ciphertext back to the start of the input buffer */
 		/* TODO: Share function with handshake function */
-		memmove(ctx->incoming, ctx->incoming + (ctx->bufferLen - ctx->leftover), ctx->leftover);
+		Mem_Move(ctx->incoming, ctx->incoming + (ctx->bufferLen - ctx->leftover), ctx->leftover);
 		ctx->bufferLen = ctx->leftover;
 		ctx->leftover  = 0;
 

@@ -53,6 +53,7 @@ $(BUILD_DIR):
 
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
 $(BUILD_DIR)/$(TARGET).res: misc/os2/$(TARGET).rc misc/os2/$(TARGET).ico
 	wrc -r misc/os2/$(TARGET).rc -fo=$@
 

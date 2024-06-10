@@ -24,11 +24,14 @@ static void Window_SDLFail(const char* place) {
 	Logger_Abort(str.buffer);
 }
 
-void Window_Init(void) {
+void Window_PreInit(void) {
 	SDL_Init(SDL_INIT_VIDEO);
 	#ifdef CC_BUILD_FLATPAK
 	SDL_SetHint(SDL_HINT_APP_ID, "net.classicube.flatpak.client");
 	#endif
+}
+
+void Window_Init(void) {
 	int displayID = SDL_GetPrimaryDisplay();
 	Input.Sources = INPUT_SOURCE_NORMAL;
 	
@@ -43,6 +46,19 @@ void Window_Init(void) {
 }
 
 void Window_Free(void) { }
+
+#ifdef CC_BUILD_ICON
+/* See misc/sdl/sdl_icon_gen.cs for how to generate this file */
+#include "../misc/sdl/CCIcon_SDL.h"
+
+static void ApplyIcon(void) {
+	SDL_Surface* surface = SDL_CreateSurfaceFrom(CCIcon_Data, CCIcon_Width, CCIcon_Height, 
+												CCIcon_Pitch, SDL_PIXELFORMAT_BGRA8888);
+	SDL_SetWindowIcon(win_handle, surface);
+}
+#else
+static void ApplyIcon(void) { }
+#endif
 
 static void DoCreateWindow(int width, int height, int flags) {
 	SDL_PropertiesID props = SDL_CreateProperties();
@@ -59,11 +75,12 @@ static void DoCreateWindow(int width, int height, int flags) {
 	RefreshWindowBounds();
 	Window_Main.Exists = true;
 	Window_Main.Handle = win_handle;
+	ApplyIcon();
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
 #else
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
@@ -138,7 +155,7 @@ static int MapNativeKey(SDL_Keycode k) {
 		case SDLK_BACKSPACE: return CCKEY_BACKSPACE;
 		case SDLK_TAB:    return CCKEY_TAB;
 		case SDLK_SPACE:  return CCKEY_SPACE;
-		case SDLK_QUOTE:  return CCKEY_QUOTE;
+		case SDLK_APOSTROPHE: return CCKEY_QUOTE;
 		case SDLK_EQUALS: return CCKEY_EQUALS;
 		case SDLK_COMMA:  return CCKEY_COMMA;
 		case SDLK_MINUS:  return CCKEY_MINUS;
@@ -148,7 +165,7 @@ static int MapNativeKey(SDL_Keycode k) {
 		case SDLK_LEFTBRACKET:  return CCKEY_LBRACKET;
 		case SDLK_BACKSLASH:    return CCKEY_BACKSLASH;
 		case SDLK_RIGHTBRACKET: return CCKEY_RBRACKET;
-		case SDLK_BACKQUOTE:    return CCKEY_TILDE;
+		case SDLK_GRAVE:        return CCKEY_TILDE;
 		case SDLK_CAPSLOCK:     return CCKEY_CAPSLOCK;
 		case SDLK_PRINTSCREEN: return CCKEY_PRINTSCREEN;
 		case SDLK_SCROLLLOCK:  return CCKEY_SCROLLLOCK;
@@ -410,7 +427,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 static SDL_Surface* win_surface;
 static SDL_Surface* blit_surface;
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	SDL_PixelFormat* fmt;
 	win_surface = SDL_GetWindowSurface(win_handle);
 	if (!win_surface) Window_SDLFail("getting window surface");
@@ -432,6 +449,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 		}
 		bmp->scan0 = win_surface->pixels;
 	}
+	/* TODO proper stride */
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -475,7 +495,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
 static SDL_GLContext win_ctx;
 
 void GLContext_Create(void) {

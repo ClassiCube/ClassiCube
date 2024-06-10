@@ -52,9 +52,12 @@ static void Window_SDLFail(const char* place) {
 	Logger_Abort(str.buffer);
 }
 
+void Window_PreInit(void) {
+	SDL_Init(SDL_INIT_VIDEO);
+}
+
 void Window_Init(void) {
 	SDL_DisplayMode mode = { 0 };
-	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GetDesktopDisplayMode(0, &mode);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
@@ -67,6 +70,20 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
+
+#ifdef CC_BUILD_ICON
+/* See misc/sdl/sdl_icon_gen.cs for how to generate this file */
+#include "../misc/sdl/CCIcon_SDL.h"
+
+static void ApplyIcon(void) {
+	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(CCIcon_Data, CCIcon_Width, CCIcon_Height, 32, CCIcon_Pitch,
+													0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	SDL_SetWindowIcon(win_handle, surface);
+}
+#else
+static void ApplyIcon(void) { }
+#endif
+
 static void DoCreateWindow(int width, int height, int flags) {
 	win_handle = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 
 					flags | SDL_WINDOW_RESIZABLE);
@@ -75,11 +92,12 @@ static void DoCreateWindow(int width, int height, int flags) {
 	RefreshWindowBounds();
 	Window_Main.Exists = true;
 	Window_Main.Handle = win_handle;
+	ApplyIcon();
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
 #else
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
@@ -376,7 +394,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 static SDL_Surface* win_surface;
 static SDL_Surface* blit_surface;
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	SDL_PixelFormat* fmt;
 	win_surface = SDL_GetWindowSurface(win_handle);
 	if (!win_surface) Window_SDLFail("getting window surface");
@@ -398,6 +416,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 		}
 		bmp->scan0 = win_surface->pixels;
 	}
+	/* TODO proper stride */
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -441,7 +462,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
 static SDL_GLContext win_ctx;
 
 void GLContext_Create(void) {

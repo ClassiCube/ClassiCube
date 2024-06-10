@@ -72,6 +72,7 @@ And also runs on:
 * BeOS - untested on actual hardware
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
+* Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
 * Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
 * Wii U - unfinished, major issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_wiiu.yml)), **untested on real hardware**)
@@ -159,6 +160,10 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 Note: You may need to install Xcode before you can compile ClassiCube
 
+##### Using Xcode GUI
+
+Open the `misc/macOS/CCMAC.xcodeproj` project in Xcode, and then compile it
+
 ## Compiling - for Android
 
 NOTE: If you are distributing a modified version, **please change the package ID from `com.classicube.android.client` to something else** - otherwise Android users won't be able to have both ClassiCube and your modified version installed at the same time on their Android device
@@ -179,7 +184,7 @@ NOTE: If you are distributing a modified version, **please change the bundle ID 
 
 ##### Using Xcode GUI
 
-Import `ios/CCIOS.xcodeproj` project into Xcode (TODO explain more detailed)
+Open the `ios/CCIOS.xcodeproj` project in Xcode, and then compile it
 
 ##### Using command line (Xcode)
 
@@ -350,6 +355,14 @@ Install openal_devel package if needed
 Install SDL2 port if needed
 
 ```cc *.c -o ClassiCube -lgl -lSDL2```
+
+#### Classic Mac OS
+
+Install Retro68 to compile (supports both M68k and PowerPC compiling)
+
+```make macclassic_68k``` or ```make macclassic_ppc```
+
+The PowerPC build will usually perform much better
 
 #### Other systems
 

@@ -25,13 +25,6 @@
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
-	int i;
-	for (i = 0; i < count; i++) {
-		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
-	}
-}
-
 static void GL_UpdateVsync(void) {
 	GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
 }
@@ -93,9 +86,9 @@ static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_boo
 		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		if (partial) {
-			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
+			_glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
 		} else {
-			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
+			_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
 		}
 
 		if (prev != bmp->scan0) Mem_Free(prev);
@@ -120,17 +113,17 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
 
 	if (full) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
 	} else {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+		_glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
 	}
 	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
 }
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	GLuint texId;
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_2D, texId);
+	GfxResourceID texId = NULL;
+	_glGenTextures(1, (GLuint*)&texId);
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	if (mipmaps) {
@@ -144,20 +137,20 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	}
 
 	if (bmp->width == rowWidth) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
+		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
 	} else {
 		UpdateTextureSlow(0, 0, bmp, rowWidth, true);
 	}
 
 	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, rowWidth, false);
-	return uint_to_ptr(texId);
+	return texId;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 
 	if (part->width == rowWidth) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
+		_glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
 	} else {
 		UpdateTextureSlow(x, y, part, rowWidth, false);
 	}
@@ -167,7 +160,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GLuint id = ptr_to_uint(*texId);
-	if (id) glDeleteTextures(1, &id);
+	if (id) _glDeleteTextures(1, &id);
 	*texId = 0;
 }
 
@@ -285,7 +278,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;
 
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-#ifdef CC_BUILD_GLMODERN
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	String_Format1(info, "-- Using OpenGL Modern (%i bit) --\n", &pointerSize);
 #else
 	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
@@ -315,13 +308,14 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
-#ifndef CC_BUILD_GLMODERN
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
 	if (Window_IsObscured()) {
 		TickReducedPerformance();
 	} else {
 		EndReducedPerformance();
 	}
 #endif
+	/* TODO always run ?? */
 
 	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
 	if (gfx_minFrameMs) LimitFPS();

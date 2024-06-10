@@ -261,7 +261,7 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	RtlInitializeCriticalSection(ptr);
 	return ptr;
@@ -280,7 +280,7 @@ void Mutex_Unlock(void* handle) {
 	RtlLeaveCriticalSection((CRITICAL_SECTION*)handle); 
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	HANDLE handle;
 	NTSTATUS status = NtCreateEvent(&handle, NULL, SynchronizationEvent, false);
 
@@ -336,8 +336,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
 	{
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
 	}
 
 	lwip_freeaddrinfo(result);

@@ -276,7 +276,7 @@ void Thread_Join(void* handle) {
 	}
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	ee_sema_t sema  = { 0 };
 	sema.init_count = 1;
 	sema.max_count  = 1;
@@ -307,7 +307,7 @@ void Mutex_Unlock(void* handle) {
 	if (res < 0) Logger_Abort2(res, "Unlocking mutex");
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	ee_sema_t sema  = { 0 };
 	sema.init_count = 0;
 	sema.max_count  = 1;
@@ -474,8 +474,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
 	{
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
 	}
 	
 	freeaddrinfo(result);

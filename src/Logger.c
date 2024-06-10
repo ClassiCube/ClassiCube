@@ -340,21 +340,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #elif defined CC_BUILD_ANDROID
-/* android's bionic libc doesn't provide backtrace (execinfo.h) */
-#include <unwind.h>
-
-static _Unwind_Reason_Code UnwindFrame(struct _Unwind_Context* ctx, void* arg) {
-	cc_uintptr addr = _Unwind_GetIP(ctx);
-	if (!addr) return _URC_END_OF_STACK;
-
-	DumpFrame((cc_string*)arg, (void*)addr);
-	return _URC_NO_REASON;
-}
-
-void Logger_Backtrace(cc_string* trace, void* ctx) {
-	_Unwind_Backtrace(UnwindFrame, trace);
-	String_AppendConst(trace, _NL);
-}
+	#define CC_BACKTRACE_UNWIND
 #elif defined CC_BUILD_DARWIN
 /* backtrace is only available on macOS since 10.5 */
 void Logger_Backtrace(cc_string* trace, void* ctx) {
@@ -368,7 +354,8 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	/* Skip frames don't want to include in backtrace */
 	/*  frame 0 = thread_stack_pcs */
 	/*  frame 1 = Logger_Backtrace */
-	for (i = 2; i < frames; i++) {
+	for (i = 2; i < frames; i++) 
+	{
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
@@ -385,17 +372,21 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 }
 #elif defined CC_BACKTRACE_BUILTIN
 /* Implemented later at end of the file */
-#elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
+#elif defined CC_BUILD_POSIX && defined _GLIBC_
 #include <execinfo.h>
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	void* addrs[MAX_BACKTRACE_FRAMES];
 	int i, frames = backtrace(addrs, MAX_BACKTRACE_FRAMES);
 
-	for (i = 0; i < frames; i++) {
+	for (i = 0; i < frames; i++) 
+	{
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
 }
+#elif defined CC_BUILD_POSIX
+/* musl etc - rely on unwind from GCC instead */
+	#define CC_BACKTRACE_UNWIND
 #else
 void Logger_Backtrace(cc_string* trace, void* ctx) { }
 #endif
@@ -1243,9 +1234,9 @@ static void CloseLogFile(void) {
 	#define GFX_BACKEND " (Direct3D11)"
 #elif CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 	#define GFX_BACKEND " (Direct3D9)"
-#elif (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
+#elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	#define GFX_BACKEND " (ModernGL)"
-#elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
 	#define GFX_BACKEND " (OpenGL)"
 #else
 	#define GFX_BACKEND " (Unknown)"
@@ -1297,6 +1288,24 @@ void Logger_FailToStart(const char* raw_msg) {
 	Logger_Log(&msg);
 	Process_Exit(1);
 }
+
+
+#if defined CC_BACKTRACE_UNWIND
+#include <unwind.h>
+
+static _Unwind_Reason_Code UnwindFrame(struct _Unwind_Context* ctx, void* arg) {
+	cc_uintptr addr = _Unwind_GetIP(ctx);
+	if (!addr) return _URC_END_OF_STACK;
+
+	DumpFrame((cc_string*)arg, (void*)addr);
+	return _URC_NO_REASON;
+}
+
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	_Unwind_Backtrace(UnwindFrame, trace);
+	String_AppendConst(trace, _NL);
+}
+#endif
 
 #if defined CC_BACKTRACE_BUILTIN
 static CC_NOINLINE void* GetReturnAddress(int level) {

@@ -181,9 +181,12 @@ static void LogUnhandledNSErrors(NSException* ex) {
 	LogUnhandled([ex reason]);
 }
 
+void Window_PreInit(void) {
+	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+}
+
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
-	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
@@ -263,7 +266,7 @@ static void RefreshWindowBounds(void) {
 
 - (void)windowDidMove:(NSNotification *)notification {
 	RefreshWindowBounds();
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 	GLContext_Update();
 #endif
 }
@@ -690,9 +693,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 *--------------------------------------------------------Framebuffer------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Bitmap fb_bmp;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
+	fb_bmp      = *bmp;
 }
 
 static void DoDrawFramebuffer(NSRect dirty) {
@@ -756,7 +761,7 @@ void OnscreenKeyboard_Close(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 
@@ -837,9 +842,12 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 // kCGLCPCurrentRendererID is only available on macOS 10.4 and later
+// Before 10.5 uses long instead of glInt and didn't include the normal gl.h with typedefs
 #if defined MAC_OS_X_VERSION_10_4
+typedef int GLinteger;
+
 static const char* GetAccelerationMode(CGLContextObj ctx) {
-	GLint fGPU, vGPU;
+	GLinteger fGPU, vGPU;
 	
 	// NOTE: only macOS 10.4 or later
 	if (CGLGetParameter(ctx, kCGLCPGPUFragmentProcessing, &fGPU)) return NULL;
@@ -852,24 +860,25 @@ static const char* GetAccelerationMode(CGLContextObj ctx) {
 
 void GLContext_GetApiInfo(cc_string* info) {
 	CGLContextObj ctx = [ctxHandle CGLContextObj];
-	GLint rendererID;
+	GLinteger rendererID;
 	CGLGetParameter(ctx, kCGLCPCurrentRendererID, &rendererID);
 	
-	GLint nRenders = 0;
+	GLinteger nRenders = 0;
 	CGLRendererInfoObj rend;
 	CGLQueryRendererInfo(-1, &rend, &nRenders);
+	int i;
 	
-	for (int i = 0; i < nRenders; i++)
+	for (i = 0; i < nRenders; i++)
 	{
-		GLint curID = -1;
+		GLinteger curID = -1;
 		CGLDescribeRenderer(rend, i, kCGLRPRendererID, &curID);
 		if (curID != rendererID) continue;
 		
-		GLint acc = 0;
+		GLinteger acc = 0;
 		CGLDescribeRenderer(rend, i, kCGLRPAccelerated, &acc);
 		const char* mode = GetAccelerationMode(ctx);
 		
-		GLint vram = 0;
+		GLinteger vram = 0;
 		if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemoryMegabytes, &vram)) {
 			// preferred path (macOS 10.7 or later)
 		} else if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemory, &vram)) {

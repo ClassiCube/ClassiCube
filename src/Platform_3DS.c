@@ -228,7 +228,7 @@ void Thread_Join(void* handle) {
 	threadFree(thread);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	LightLock* lock = (LightLock*)Mem_Alloc(1, sizeof(LightLock), "mutex");
 	LightLock_Init(lock);
 	return lock;
@@ -246,7 +246,7 @@ void Mutex_Unlock(void* handle) {
 	LightLock_Unlock((LightLock*)handle);
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	LightEvent* event = (LightEvent*)Mem_Alloc(1, sizeof(LightEvent), "waitable");
 	LightEvent_Init(event, RESET_ONESHOT);
 	return event;
@@ -311,8 +311,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		if (!cur->ai_addrlen) break; 
 		// TODO citra returns empty addresses past first one? does that happen on real hardware too?
 		
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
 	}
 
 	freeaddrinfo(result);

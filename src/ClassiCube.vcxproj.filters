@@ -761,13 +761,39 @@
     <ClCompile Include="Queue.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Platform_MacClassic.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_MacClassic.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_BeOS.cpp">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_BeOS.cpp">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
     <ClCompile Include="Window_Terminal.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Saturn.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Saturn.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="TouchUI.c">
+      <Filter>Source Files\2D</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Window_cocoa.m">
+      <Filter>Source Files\Window</Filter>
+    </None>
   </ItemGroup>
 </Project>
