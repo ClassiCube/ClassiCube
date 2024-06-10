@@ -26,6 +26,7 @@
 #include <linux/keyboard.h>
 #endif
 
+#define CHARS_PER_CELL 2
 static cc_bool pendingResize, pendingClose;
 #define CSI "\x1B["
 
@@ -47,7 +48,7 @@ static void UpdateDimensions(void) {
 	Platform_Log2("RESIZE: %i, %i", &cols, &rows);
 
 	DisplayInfo.Width  = cols;
-	DisplayInfo.Height = rows * 2;
+	DisplayInfo.Height = rows * CHARS_PER_CELL;
 	Window_Main.Width  = DisplayInfo.Width;
 	Window_Main.Height = DisplayInfo.Height;
 }
@@ -101,9 +102,9 @@ static void UpdateDimensions(void) {
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 
 	DisplayInfo.Width  = ws.ws_col;
-	DisplayInfo.Height = ws.ws_row * 2;
+	DisplayInfo.Height = ws.ws_row * CHARS_PER_CELL;
 	Window_Main.Width  = DisplayInfo.Width;
-	Window_Main.Height = DisplayInfo.Height;	
+	Window_Main.Height = DisplayInfo.Height;
 }
 
 static void HookTerminal(void) {
@@ -209,42 +210,75 @@ void Window_RequestClose(void) {
 }
 
 #ifdef CC_BUILD_WIN
-static void KeyEventProc(KEY_EVENT_RECORD ker)
-{
-	if(ker.bKeyDown)
-		Platform_LogConst("key pressed");
-	else 
-		Platform_LogConst("key released");
+
+// TODO these seem to be wrong
+static const cc_uint8 key_map[] = {
+/* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 
+/* 08 */ CCKEY_BACKSPACE, CCKEY_TAB, 0, 0, CCKEY_F5, CCKEY_ENTER, 0, 0,
+/* 10 */ 0, 0, 0, CCKEY_PAUSE, CCKEY_CAPSLOCK, 0, 0, 0, 
+/* 18 */ 0, 0, 0, CCKEY_ESCAPE, 0, 0, 0, 0,
+/* 20 */ CCKEY_SPACE, CCKEY_PAGEUP, CCKEY_PAGEDOWN, CCKEY_END, CCKEY_HOME, CCKEY_LEFT, CCKEY_UP, CCKEY_RIGHT, 
+/* 28 */ CCKEY_DOWN, 0, CCKEY_PRINTSCREEN, 0, CCKEY_PRINTSCREEN, CCKEY_INSERT, CCKEY_DELETE, 0,
+/* 30 */ '0', '1', '2', '3', '4', '5', '6', '7', 
+/* 38 */ '8', '9', 0, 0, 0, 0, 0, 0,
+/* 40 */ 0, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 
+/* 48 */ 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+/* 50 */ 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 
+/* 58 */ 'X', 'Y', 'Z', CCKEY_LWIN, CCKEY_RWIN, CCKEY_MENU, 0, CCKEY_SLEEP,
+/* 60 */ CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, 
+/* 68 */ CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MULTIPLY, CCKEY_KP_PLUS, 0, CCKEY_KP_MINUS, CCKEY_KP_DECIMAL, CCKEY_KP_DIVIDE,
+/* 70 */ CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F8, 
+/* 78 */ CCKEY_F9, CCKEY_F10, CCKEY_F11, CCKEY_F12, CCKEY_F13, CCKEY_F14, CCKEY_F15, CCKEY_F16,
+/* 80 */ CCKEY_F17, CCKEY_F18, CCKEY_F19, CCKEY_F20, CCKEY_F21, CCKEY_F22, CCKEY_F23, CCKEY_F24, 
+/* 88 */ 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */ CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, 0, 0, 0, 0, 0, 0, 
+/* 98 */ 0, 0, 0, 0, 0, 0, 0, 0,
+/* A0 */ CCKEY_LSHIFT, CCKEY_RSHIFT, CCKEY_LCTRL, CCKEY_RCTRL, CCKEY_LALT, CCKEY_RALT, CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, 
+/* A8 */ CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP, CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME, CCKEY_VOLUME_MUTE, CCKEY_VOLUME_DOWN, CCKEY_VOLUME_UP,
+/* B0 */ CCKEY_MEDIA_NEXT, CCKEY_MEDIA_PREV, CCKEY_MEDIA_STOP, CCKEY_MEDIA_PLAY, CCKEY_LAUNCH_MAIL, CCKEY_LAUNCH_MEDIA, CCKEY_LAUNCH_APP1, CCKEY_LAUNCH_CALC, 
+/* B8 */ 0, 0, CCKEY_SEMICOLON, CCKEY_EQUALS, CCKEY_COMMA, CCKEY_MINUS, CCKEY_PERIOD, CCKEY_SLASH,
+/* C0 */ CCKEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 
+/* C8 */ 0, 0, 0, 0, 0, 0, 0, 0,
+/* D0 */ 0, 0, 0, 0, 0, 0, 0, 0, 
+/* D8 */ 0, 0, 0, CCKEY_LBRACKET, CCKEY_BACKSLASH, CCKEY_RBRACKET, CCKEY_QUOTE, 0,
+};
+
+static int MapNativeKey(DWORD vk_key) {
+	int key = vk_key < Array_Elems(key_map) ? key_map[vk_key] : 0;
+	if (!key) Platform_Log1("Unknown key: %x", &vk_key);
+	return key;
 }
 
-static VOID MouseEventProc(MOUSE_EVENT_RECORD mer) {
-	switch(mer.dwEventFlags)
+static void KeyEventProc(KEY_EVENT_RECORD ker)
+{
+	int key = MapNativeKey(ker.wVirtualScanCode);
+	int uni = ker.uChar.UnicodeChar;
+
+	if (ker.bKeyDown) {
+		Input_SetPressed(key);
+		if (uni) Event_RaiseInt(&InputEvents.Press, (cc_unichar)uni);
+	} else {
+		Input_SetReleased(key);
+	}
+}
+
+static void MouseEventProc(MOUSE_EVENT_RECORD mer) {
+	switch (mer.dwEventFlags)
 	{
 		case 0:
-			if(mer.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED)
-			{
-				Platform_LogConst("left button press");
-			}
-			else if(mer.dwButtonState == RIGHTMOST_BUTTON_PRESSED)
-			{
-				Platform_LogConst("right button press");
-			}
-			else
-			{
-				Platform_LogConst("button press");
-			}
-			break;
 		case DOUBLE_CLICK:
-			Platform_LogConst("double click");
+			Input_Set(CCMOUSE_L, mer.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED);
+			Input_Set(CCMOUSE_R, mer.dwButtonState & RIGHTMOST_BUTTON_PRESSED);
+			// TODO other mouse buttons
 			break;
 		case MOUSE_MOVED:
-			Platform_LogConst("mouse moved");
+			Pointer_SetPosition(0, mer.dwMousePosition.X, mer.dwMousePosition.Y * CHARS_PER_CELL);
 			break;
 		case MOUSE_WHEELED:
-			Platform_LogConst("vertical mouse wheel");
+			Mouse_ScrollVWheel((int)mer.dwButtonState > 0 ? 1 : -1);
 			break;
 		default:
-			Platform_LogConst("unknown");
+			Platform_LogConst("unknown mouse event");
 			break;
 	}
 }
@@ -304,7 +338,7 @@ static int stdin_available(void) {
   tok = strtok(NULL, ";"); \
   x   = atoi(tok); \
   tok = strtok(NULL, ";"); \
-  y   = atoi(tok) * 2;
+  y   = atoi(tok) * CHARS_PER_CELL;
 
 static void ProcessMouse(char* buf, int n) {
 	char cpy[256 + 2];
@@ -466,7 +500,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		//OutputConsole(buf, len);
 		str.length = 0;
 		String_AppendConst(&str, CSI);
-		String_AppendInt(  &str, y / 2);
+		String_AppendInt(  &str, y / CHARS_PER_CELL);
 		String_Append(     &str, ';');
 		String_AppendInt(  &str, r.x);
 		String_Append(     &str, 'H');
