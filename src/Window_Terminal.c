@@ -206,12 +206,11 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_RequestClose(void) {
-	// TODO
+	pendingClose = true;
 }
 
 #ifdef CC_BUILD_WIN
 
-// TODO these seem to be wrong
 static const cc_uint8 key_map[] = {
 /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 
 /* 08 */ CCKEY_BACKSPACE, CCKEY_TAB, 0, 0, CCKEY_F5, CCKEY_ENTER, 0, 0,
@@ -243,6 +242,7 @@ static const cc_uint8 key_map[] = {
 /* D8 */ 0, 0, 0, CCKEY_LBRACKET, CCKEY_BACKSLASH, CCKEY_RBRACKET, CCKEY_QUOTE, 0,
 };
 
+// TODO lshift, rshift
 static int MapNativeKey(DWORD vk_key) {
 	int key = vk_key < Array_Elems(key_map) ? key_map[vk_key] : 0;
 	if (!key) Platform_Log1("Unknown key: %x", &vk_key);
@@ -251,7 +251,7 @@ static int MapNativeKey(DWORD vk_key) {
 
 static void KeyEventProc(KEY_EVENT_RECORD ker)
 {
-	int key = MapNativeKey(ker.wVirtualScanCode);
+	int key = MapNativeKey(ker.wVirtualKeyCode);
 	int uni = ker.uChar.UnicodeChar;
 
 	if (ker.bKeyDown) {
