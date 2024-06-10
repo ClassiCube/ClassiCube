@@ -5,9 +5,17 @@ C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
 OBJECTS := $(C_OBJECTS)
 ENAME   = ClassiCube
-DEL     = rm -f
 CFLAGS  = -g -pipe -fno-math-errno
 LDFLAGS = -g -rdynamic
+
+ifndef RM
+	# No prefined RM variable, try to guess OS default
+	ifeq ($(OS),Windows_NT)
+		RM = del
+	else
+		RM = rm -f
+	endif
+endif
 
 # Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
 # This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
@@ -102,11 +110,6 @@ ifeq ($(PLAT),irix)
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
 endif
 
-
-ifeq ($(OS),Windows_NT)
-	DEL     = del
-endif
-
 ifdef SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
 	LIBS += -lSDL2
@@ -114,6 +117,9 @@ endif
 ifdef SDL3
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
 	LIBS += -lSDL3
+endif
+ifdef TERMINAL
+	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
 endif
 
 default: $(PLAT)
@@ -144,10 +150,14 @@ serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
 irix:
 	$(MAKE) $(ENAME) PLAT=irix
+
+# Default overrides
 sdl2:
 	$(MAKE) $(ENAME) SDL2=1
 sdl3:
 	$(MAKE) $(ENAME) SDL3=1
+terminal:
+	$(MAKE) $(ENAME) TERMINAL=1
 
 # Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
@@ -192,7 +202,7 @@ macclassic_ppc:
 	$(MAKE) -f misc/macclassic/Makefile_ppc
 	
 clean:
-	$(DEL) $(OBJECTS)
+	$(RM) $(OBJECTS)
 
 
 $(ENAME): $(BUILD_DIR) $(OBJECTS)
