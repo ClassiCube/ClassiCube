@@ -968,7 +968,9 @@ void Platform_Init(void) {
 	LoadKernelFuncs();
 	if (_IsDebuggerPresent) hasDebugger = _IsDebuggerPresent();
 	/* For when user runs from command prompt */
+#if CC_WIN_BACKEND != CC_WIN_BACKEND_TERMINAL
 	if (_AttachConsole) _AttachConsole(-1); /* ATTACH_PARENT_PROCESS */
+#endif
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;

@@ -64,7 +64,8 @@ static void HookTerminal(void) {
 	GetConsoleMode(hStdout, &outOldMode);
 	SetConsoleOutputCP(CP_UTF8);
 
-	SetConsoleMode(hStdin,  ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+	// https://stackoverflow.com/questions/37069599/cant-read-mouse-event-use-readconsoleinput-in-c
+	SetConsoleMode(hStdin,  ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 	SetConsoleMode(hStdout, ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT);
 }
 
@@ -435,17 +436,21 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 }
 
 #ifdef CC_BUILD_WIN
-	#define OutputConsole(buf, len) WriteConsole(hStdout, buf, len, NULL, NULL)
+	#define OutputConsole(buf, len) WriteConsoleA(hStdout, buf, len, NULL, NULL)
 	#define BOX_CHAR "\xE2\x96\x84"
 #else
 	#define OutputConsole(buf, len) write(STDOUT_FILENO, buf, len)
 	#define BOX_CHAR "\xE2\x96\x84"
 #endif
 
-// TODO doesn't work
+// TODO still wrong
 static void AppendByteFast(cc_string* str, int value) {
-	if (value >= 100) { String_Append(str, '0' + (value / 100)); value %= 100; }
-	if (value >=  10) { String_Append(str, '0' + (value /  10)); value %=  10; }
+	if (value >= 100) { 
+		String_Append(str, '0' + (value / 100)); value %= 100;
+		String_Append(str, '0' + (value /  10)); value %=  10;
+	} else if (value >=  10) { 
+		String_Append(str, '0' + (value /  10)); value %=  10; 
+	}
 	String_Append(str, '0' + value);
 }
 
@@ -465,7 +470,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		String_Append(     &str, ';');
 		String_AppendInt(  &str, r.x);
 		String_Append(     &str, 'H');
-		String_Append(     &str, '\0');
 		OutputConsole(buf, str.length);
 		
 		for (int x = r.x; x < r.x + r.width; x++)
@@ -500,7 +504,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			String_Append(     &str, 'm');
 			
 			String_AppendConst(&str, BOX_CHAR);
-			String_Append(     &str, '\0');
 			OutputConsole(buf, str.length);
 		}		
 	}
