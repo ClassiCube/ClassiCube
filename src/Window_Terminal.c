@@ -25,15 +25,36 @@
 #include <sys/kd.h>
 #include <linux/keyboard.h>
 #endif
+#ifdef CC_BUILD_MACOS
+#define ONLY_256
+#endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Console output-----------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_WIN
+	#define OutputConsole(buf, len) WriteConsoleA(hStdout, buf, len, NULL, NULL)
+	#define BOX_CHAR "\xE2\x96\x84"
+#else
+	#define OutputConsole(buf, len) write(STDOUT_FILENO, buf, len)
+	#define BOX_CHAR "\xE2\x96\x84"
+#endif
 
 #define CHARS_PER_CELL 2
 static cc_bool pendingResize, pendingClose;
 #define CSI "\x1B["
 
-#define ERASE_CMD(cmd)	CSI cmd "J"
+#define ERASE_CMD(cmd)	  CSI cmd "J"
 #define DEC_PM_SET(cmd)   CSI "?" cmd "h"
 #define DEC_PM_RESET(cmd) CSI "?" cmd "1"
 
+#define OutputConst(str) OutputConsole(str, sizeof(str) - 1)
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Terminal backend----------------------------------------------------*
+*#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
 static HANDLE hStdin, hStdout;
 static DWORD inOldMode, outOldMode;
@@ -116,26 +137,26 @@ static void HookTerminal(void) {
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 	
 	// https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Normal-tracking-mode
-	printf(DEC_PM_SET("1049")); // Use Normal Screen Buffer and restore cursor as in DECRC, xterm.
-	printf(CSI "0m");
-	printf(ERASE_CMD("2")); // Ps = 2  ⇒  Erase All.
-	printf(DEC_PM_SET("1003")); // Ps = 1 0 0 3  ⇒  Use All Motion Mouse Tracking, xterm.  See
-	printf(DEC_PM_SET("1015")); // Ps = 1 0 1 5  ⇒  Enable urxvt Mouse Mode.
-	printf(DEC_PM_SET("1006")); // Ps = 1 0 0 6  ⇒  Enable SGR Mouse Mode, xterm.
-	printf(DEC_PM_RESET("25")); // Ps = 2 5  ⇒  Show cursor (DECTCEM), VT220.
+	OutputConst(DEC_PM_SET("1049")); // Use Normal Screen Buffer and restore cursor as in DECRC, xterm.
+	OutputConst(CSI "0m");
+	OutputConst(ERASE_CMD("2")); // Ps = 2  ⇒  Erase All.
+	OutputConst(DEC_PM_SET("1003")); // Ps = 1 0 0 3  ⇒  Use All Motion Mouse Tracking, xterm.  See
+	OutputConst(DEC_PM_SET("1015")); // Ps = 1 0 1 5  ⇒  Enable urxvt Mouse Mode.
+	OutputConst(DEC_PM_SET("1006")); // Ps = 1 0 0 6  ⇒  Enable SGR Mouse Mode, xterm.
+	OutputConst(DEC_PM_RESET("25")); // Ps = 2 5  ⇒  Show cursor (DECTCEM), VT220.
 }
 
 static void UnhookTerminal(void) {
 	//ioctl(STDIN_FILENO, KDSKBMODE, orig_KB);	
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio);
 	
-	printf(DEC_PM_RESET("1049"));
-	printf(CSI "0m");
-	printf(ERASE_CMD("2")); // Ps = 2  ⇒  Erase All.
-	printf(DEC_PM_RESET("1003"));
-	printf(DEC_PM_RESET("1015"));
-	printf(DEC_PM_RESET("1006"));
-	printf(DEC_PM_SET("25"));
+	OutputConst(DEC_PM_RESET("1049"));
+	OutputConst(CSI "0m");
+	OutputConst(ERASE_CMD("2")); // Ps = 2  ⇒  Erase All.
+	OutputConst(DEC_PM_SET("25"));
+	OutputConst(DEC_PM_RESET("1003"));
+	OutputConst(DEC_PM_RESET("1015"));
+	OutputConst(DEC_PM_RESET("1006"));
 }
 
 static void sigwinch_handler(int sig) { pendingResize = true; }
@@ -148,69 +169,11 @@ static void HookSignals(void) {
 }
 #endif
 
-void Window_PreInit(void) { }
-void Window_Init(void) {
-	Input.Sources = INPUT_SOURCE_NORMAL;
-	DisplayInfo.Depth  = 4;
-	DisplayInfo.ScaleX = 0.5f;
-	DisplayInfo.ScaleY = 0.5f;
-	
-	//ioctl(STDIN_FILENO , KDGKBMODE, &orig_KB);
-	//ioctl(STDIN_FILENO,  KDSKBMODE, K_MEDIUMRAW);
-	HookTerminal();
-	UpdateDimensions();
-	HookSignals();
-}
 
-void Window_Free(void) {
-	UnhookTerminal();
-}
-
-static void DoCreateWindow(int width, int height) {
-	Window_Main.Exists = true;
-	Window_Main.Handle = (void*)1;
-	Window_Main.Focused = true;
-}
-void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
-void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
-
-void Window_SetTitle(const cc_string* title) {
-	// TODO
-}
-
-void Clipboard_GetText(cc_string* value) {
-	// TODO
-}
-
-void Clipboard_SetText(const cc_string* value) {
-	// TODO
-}
-
-int Window_GetWindowState(void) {
-	return WINDOW_STATE_NORMAL;
-}
-
-cc_result Window_EnterFullscreen(void) {
-	return 0;
-}
-cc_result Window_ExitFullscreen(void) {
-	return 0;
-}
-
-int Window_IsObscured(void) { return 0; }
-
-void Window_Show(void) { }
-
-void Window_SetSize(int width, int height) {
-	// TODO
-}
-
-void Window_RequestClose(void) {
-	pendingClose = true;
-}
-
+/*########################################################################################################################*
+*---------------------------------------------------------Input backend---------------------------------------------------*
+*#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
-
 static const cc_uint8 key_map[] = {
 /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 
 /* 08 */ CCKEY_BACKSPACE, CCKEY_TAB, 0, 0, CCKEY_F5, CCKEY_ENTER, 0, 0,
@@ -415,6 +378,71 @@ static void ProcessConsoleEvents(float delta) {
 }
 #endif
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------Window common-----------------------------------------------------*
+*#########################################################################################################################*/
+void Window_PreInit(void) { }
+void Window_Init(void) {
+	Input.Sources = INPUT_SOURCE_NORMAL;
+	DisplayInfo.Depth  = 4;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
+	
+	//ioctl(STDIN_FILENO , KDGKBMODE, &orig_KB);
+	//ioctl(STDIN_FILENO,  KDSKBMODE, K_MEDIUMRAW);
+	HookTerminal();
+	UpdateDimensions();
+	HookSignals();
+}
+
+void Window_Free(void) {
+	UnhookTerminal();
+}
+
+static void DoCreateWindow(int width, int height) {
+	Window_Main.Exists = true;
+	Window_Main.Handle = (void*)1;
+	Window_Main.Focused = true;
+}
+void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
+
+void Window_SetTitle(const cc_string* title) {
+	// TODO
+}
+
+void Clipboard_GetText(cc_string* value) {
+	// TODO
+}
+
+void Clipboard_SetText(const cc_string* value) {
+	// TODO
+}
+
+int Window_GetWindowState(void) {
+	return WINDOW_STATE_NORMAL;
+}
+
+cc_result Window_EnterFullscreen(void) {
+	return 0;
+}
+cc_result Window_ExitFullscreen(void) {
+	return 0;
+}
+
+int Window_IsObscured(void) { return 0; }
+
+void Window_Show(void) { }
+
+void Window_SetSize(int width, int height) {
+	// TODO
+}
+
+void Window_RequestClose(void) {
+	pendingClose = true;
+}
+
 void Window_ProcessEvents(float delta) {
 	if (pendingResize) {
 		pendingResize = false;
@@ -469,14 +497,32 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->height = height;
 }
 
-#ifdef CC_BUILD_WIN
-	#define OutputConsole(buf, len) WriteConsoleA(hStdout, buf, len, NULL, NULL)
-	#define BOX_CHAR "\xE2\x96\x84"
-#else
-	#define OutputConsole(buf, len) write(STDOUT_FILENO, buf, len)
-	#define BOX_CHAR "\xE2\x96\x84"
-#endif
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
+	Mem_Free(bmp->scan0);
+}
 
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { }
+
+void Window_EnableRawMouse(void) {
+	DefaultEnableRawMouse();
+}
+
+void Window_UpdateRawMouse(void) {
+	CentreMousePosition();
+}
+
+void Window_DisableRawMouse(void) {
+	DefaultDisableRawMouse();
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Console output-----------------------------------------------------*
+*#########################################################################################################################*/
 // TODO still wrong
 static void AppendByteFast(cc_string* str, int value) {
 	if (value >= 100) { 
@@ -486,6 +532,20 @@ static void AppendByteFast(cc_string* str, int value) {
 		String_Append(str, '0' + (value /  10)); value %=  10; 
 	}
 	String_Append(str, '0' + value);
+}
+
+static int Index256(int value) {
+	if (value <= 0x5F) return value;
+	// Add 20 to round to nearest
+	return (value - 0x5F + 20) / 40;
+}
+
+static int CalcIndex(BitmapCol rgb) {
+	int r = Index256(BitmapCol_R(rgb));
+	int g = Index256(BitmapCol_G(rgb));
+	int b = Index256(BitmapCol_B(rgb));
+
+	return 16 + 36 * r + 6 * g + b;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -520,7 +580,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			//				BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top),
 			//				BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
 			
+			// https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
 			str.length = 0;
+#ifndef ONLY_256
 			String_AppendConst(&str, CSI "48;2;");
 			String_AppendInt(  &str, BitmapCol_R(top));
 			String_Append(     &str, ';');
@@ -536,32 +598,19 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			String_Append(     &str, ';');
 			String_AppendInt(  &str, BitmapCol_B(bot));
 			String_Append(     &str, 'm');
+#else
+			String_AppendConst(&str, CSI "48;5;");
+			String_AppendInt(  &str, CalcIndex(top));
+			String_Append(     &str, 'm');
+			
+			String_AppendConst(&str, CSI "38;5;");
+			String_AppendInt(  &str, CalcIndex(bot));
+			String_Append(     &str, 'm');
+#endif
 			
 			String_AppendConst(&str, BOX_CHAR);
 			OutputConsole(buf, str.length);
 		}		
 	}
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
-}
-
-void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
-void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
-void OnscreenKeyboard_Close(void) { }
-
-void Window_EnableRawMouse(void) {
-	DefaultEnableRawMouse();
-}
-
-void Window_UpdateRawMouse(void) {
-	CentreMousePosition();
-}
-
-void Window_DisableRawMouse(void) {
-	DefaultDisableRawMouse();
 }
 #endif
