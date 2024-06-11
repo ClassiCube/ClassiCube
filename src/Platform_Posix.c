@@ -729,10 +729,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *#########################################################################################################################*/
 cc_bool Process_OpenSupported = true;
 
-#if defined CC_BUILD_ANDROID
-/* implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
+#if defined CC_BUILD_MOBILE
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	return SetGameArgs(args, numArgs);
+}
 #else
 static cc_result Process_RawStart(const char* path, char** argv) {
 	pid_t pid = fork();
@@ -1485,10 +1485,10 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_ANDROID
-/* implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
+#if defined CC_BUILD_MOBILE
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	return GetGameArgs(args);
+}
 #else
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
@@ -1505,7 +1505,8 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	#endif
 
 	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count; i++) 
+	{
 		/* -d[directory] argument used to change directory data is stored in */
 		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
 			Logger_Abort("-d argument no longer supported - cd to desired working directory instead");

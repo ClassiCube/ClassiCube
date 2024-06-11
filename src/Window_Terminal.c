@@ -47,6 +47,7 @@
 	#define SEP_CHAR ';'
 #endif
 
+static void SetMousePosition(int x, int y);
 static cc_bool pendingResize, pendingClose;
 static int supportsTruecolor;
 #define CHARS_PER_CELL 2
@@ -244,7 +245,7 @@ static void MouseEventProc(MOUSE_EVENT_RECORD mer) {
 			// TODO other mouse buttons
 			break;
 		case MOUSE_MOVED:
-			Pointer_SetPosition(0, mer.dwMousePosition.X, mer.dwMousePosition.Y * CHARS_PER_CELL);
+			SetMousePosition(mer.dwMousePosition.X, mer.dwMousePosition.Y * CHARS_PER_CELL);
 			break;
 		case MOUSE_WHEELED:
 			Mouse_ScrollVWheel((int)mer.dwButtonState > 0 ? 1 : -1);
@@ -323,13 +324,13 @@ static void ProcessMouse(char* buf, int n) {
 	case '0':
 		mouse = strchr(buf, 'm') == NULL;
 		ExtractXY();
-		Pointer_SetPosition(0, x, y);
+		SetMousePosition(x, y);
 		Input_SetNonRepeatable(CCMOUSE_L, mouse);
 		break;
 	case '3':
 		mouse = (strcmp(tok, "32") == 0);
 		ExtractXY();
-		Pointer_SetPosition(0, x, y);
+		SetMousePosition(x, y);
 	break;
 	}
 }
@@ -472,10 +473,16 @@ void Window_ProcessEvents(float delta) {
 
 void Window_ProcessGamepads(float delta) { }
 
+static int mouseX, mouseY;
+static void SetMousePosition(int x, int y) {
+	mouseX = x;
+	mouseY = y;
+	Pointer_SetPosition(0, x, y);
+}
+
 static void Cursor_GetRawPos(int* x, int* y) {
-	*x = 0;
-	*y = 0;
-	// TODO
+	*x = mouseX;
+	*y = mouseY;
 }
 
 void Cursor_SetPosition(int x, int y) {
@@ -522,7 +529,7 @@ void Window_EnableRawMouse(void) {
 }
 
 void Window_UpdateRawMouse(void) {
-	CentreMousePosition();
+	DefaultUpdateRawMouse();
 }
 
 void Window_DisableRawMouse(void) {

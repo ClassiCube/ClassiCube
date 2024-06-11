@@ -880,14 +880,6 @@ cc_result Process_StartOpen(const cc_string* args) {
     return 0;
 }
 
-cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	return SetGameArgs(args, numArgs);
-}
-
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	return GetGameArgs(args);
-}
-
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
     // NSSearchPathForDirectoriesInDomains - iOS 2.0
     // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
