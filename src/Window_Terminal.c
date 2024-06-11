@@ -307,31 +307,43 @@ static int stdin_available(void) {
 	return 0;
 }
 
-#define ExtractXY() \
-  tok = strtok(NULL, ";"); \
-  x   = atoi(tok); \
-  tok = strtok(NULL, ";"); \
-  y   = atoi(tok) * CHARS_PER_CELL;
+static void UpdatePointerPosition(char* tok) {
+	int x, y;
+	tok = strtok(NULL, ";");
+	x   = atoi(tok);
+	tok = strtok(NULL, ";");
+	y   = atoi(tok) * CHARS_PER_CELL;
+
+	SetMousePosition(x, y);
+}
 
 static void ProcessMouse(char* buf, int n) {
 	char cpy[256 + 2];
 	strncpy(cpy, buf, n);
 	char* tok = strtok(cpy + 3, ";");
-	int x, y, mouse;
+	int mouse;
 	if (!tok) return;
 
-	switch (tok[0]){
+	switch (tok[0]) {
 	case '0':
 		mouse = strchr(buf, 'm') == NULL;
-		ExtractXY();
-		SetMousePosition(x, y);
+		UpdatePointerPosition(tok);
 		Input_SetNonRepeatable(CCMOUSE_L, mouse);
+		break;
+	case '1':
+		mouse = strchr(buf, 'm') == NULL;
+		UpdatePointerPosition(tok);
+		Input_SetNonRepeatable(CCMOUSE_M, mouse);
+		break;
+	case '2':
+		mouse = strchr(buf, 'm') == NULL;
+		UpdatePointerPosition(tok);
+		Input_SetNonRepeatable(CCMOUSE_R, mouse);
 		break;
 	case '3':
 		mouse = (strcmp(tok, "32") == 0);
-		ExtractXY();
-		SetMousePosition(x, y);
-	break;
+		UpdatePointerPosition(tok);
+		break;
 	}
 }
 

@@ -14,12 +14,7 @@
 ! * Latency: Interval between the issue of an instruction and the generation of its result (completion)
 ! * Latency is also the interval between the execution of two instructions with an interdependent relationship.
 !   (although different cases may either increase or decrease Latency)
-! 
-! The instructions have the following latencies
-! * FADD.S/FMUL.S/FSUB.S/FMAC.S - 3/4
-! * FTRV - 5/8
-! * SHL/SHR - 1
-! * ADD/SUB/OR/XOR - 1
+!
 
 
 ! =========================================================
@@ -64,15 +59,15 @@
 ! ========================= VERTEX LOADING ================
 ! =========================================================
 .macro LoadColouredVertex
-! PREPARE NEXT VERTEX
-    add #16, r3      ! EX, r3 += VERTEX_STRIDE
-    pref @r3         ! LS, PREFETCH r3 (next vertex)
-    add #64, r5      ! EX, r5 += 2 * sizeof(VERTEX)
 ! LOAD XYZ
     fmov @r4+, fr4   ! LS, X = src->x
     fmov @r4+, fr5   ! LS, Y = src->y
     fmov @r4+, fr6   ! LS, Z = src->z
     fldi1 fr7        ! LS, W = 1.0
+! PREPARE NEXT VERTEX
+    add #16, r3      ! EX, r3 += VERTEX_STRIDE
+    pref @r3         ! LS, PREFETCH r3 (next vertex)
+    add #64, r5      ! EX, r5 += 2 * sizeof(VERTEX)
 ! TRANSFORM VERTEX
     ftrv xmtrx, fv4  ! FE, TRANSFORM(XYZW)
 ! LOAD ATTRIBUTES
@@ -80,15 +75,15 @@
 .endm
 
 .macro LoadTexturedVertex
-! PREPARE NEXT VERTEX
-    add #24, r3      ! EX, r3 += VERTEX_STRIDE
-    pref @r3         ! LS, PREFETCH r3 (next vertex)
-    add #64, r5      ! EX, r5 += 2 * sizeof(VERTEX)
 ! LOAD XYZ
     fmov @r4+, fr4   ! LS, X = src->x
     fmov @r4+, fr5   ! LS, Y = src->y
     fmov @r4+, fr6   ! LS, Z = src->z
     fldi1 fr7        ! LS, W = 1.0
+! PREPARE NEXT VERTEX
+    add #24, r3      ! EX, r3 += VERTEX_STRIDE
+    pref @r3         ! LS, PREFETCH r3 (next vertex)
+    add #64, r5      ! EX, r5 += 2 * sizeof(VERTEX)
 ! TRANSFORM VERTEX
     ftrv xmtrx, fv4  ! FE, TRANSFORM(XYZW)
 ! LOAD ATTRIBUTES
