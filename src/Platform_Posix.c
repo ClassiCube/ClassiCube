@@ -756,13 +756,16 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	char path[NATIVE_STR_LEN];
 	int i, j, len = 0;
 	char* argv[15];
+	cc_result res;
+	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
 
-	cc_result res = Process_RawGetExePath(path, &len);
+	res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 	argv[0]   = path;
 
-	for (i = 0, j = 1; i < numArgs; i++, j++) {
+	for (i = 0, j = 1; i < numArgs; i++, j++) 
+	{
 		String_EncodeUtf8(raw[i], &args[i]);
 		argv[j] = raw[i];
 	}
@@ -1490,7 +1493,7 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
-	
+	if (Platform_SingleProcess) return GetGameArgs(args);
 
 	#if defined CC_BUILD_MACOS
 	/* Sometimes a "-psn_0_[number]" argument is added before actual args */

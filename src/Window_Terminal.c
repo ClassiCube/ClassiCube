@@ -25,9 +25,6 @@
 #include <sys/kd.h>
 #include <linux/keyboard.h>
 #endif
-#ifdef CC_BUILD_MACOS
-#define ONLY_256
-#endif
 
 
 /*########################################################################################################################*
@@ -41,8 +38,18 @@
 	#define BOX_CHAR "\xE2\x96\x84"
 #endif
 
-#define CHARS_PER_CELL 2
+#ifdef CC_BUILD_MACOS
+	// iTerm only displays trucolour properly with :
+	#define SEP_STR  ":"
+	#define SEP_CHAR ':'
+#else
+	#define SEP_STR  ";"
+	#define SEP_CHAR ';'
+#endif
+
 static cc_bool pendingResize, pendingClose;
+static int supportsTruecolor;
+#define CHARS_PER_CELL 2
 #define CSI "\x1B["
 
 #define ERASE_CMD(cmd)	  CSI cmd "J"
@@ -89,6 +96,7 @@ static void HookTerminal(void) {
 	// https://stackoverflow.com/questions/37069599/cant-read-mouse-event-use-readconsoleinput-in-c
 	SetConsoleMode(hStdin,  ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 	SetConsoleMode(hStdout, ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT);
+	supportsTruecolor = true;
 }
 
 static void UnhookTerminal(void) {
@@ -144,6 +152,8 @@ static void HookTerminal(void) {
 	OutputConst(DEC_PM_SET("1015")); // Ps = 1 0 1 5  ⇒  Enable urxvt Mouse Mode.
 	OutputConst(DEC_PM_SET("1006")); // Ps = 1 0 0 6  ⇒  Enable SGR Mouse Mode, xterm.
 	OutputConst(DEC_PM_RESET("25")); // Ps = 2 5  ⇒  Show cursor (DECTCEM), VT220.
+
+	supportsTruecolor = true;
 }
 
 static void UnhookTerminal(void) {
@@ -212,8 +222,7 @@ static int MapNativeKey(DWORD vk_key) {
 	return key;
 }
 
-static void KeyEventProc(KEY_EVENT_RECORD ker)
-{
+static void KeyEventProc(KEY_EVENT_RECORD ker) {
 	int key = MapNativeKey(ker.wVirtualKeyCode);
 	int uni = ker.uChar.UnicodeChar;
 
@@ -394,6 +403,7 @@ void Window_Init(void) {
 	HookTerminal();
 	UpdateDimensions();
 	HookSignals();
+	Platform_SingleProcess = true;
 }
 
 void Window_Free(void) {
@@ -582,31 +592,31 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			
 			// https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
 			str.length = 0;
-#ifndef ONLY_256
-			String_AppendConst(&str, CSI "48;2;");
-			String_AppendInt(  &str, BitmapCol_R(top));
-			String_Append(     &str, ';');
-			String_AppendInt(  &str, BitmapCol_G(top));
-			String_Append(     &str, ';');
-			String_AppendInt(  &str, BitmapCol_B(top));
-			String_Append(     &str, 'm');
-			
-			String_AppendConst(&str, CSI "38;2;");
-			String_AppendInt(  &str, BitmapCol_R(bot));
-			String_Append(     &str, ';');
-			String_AppendInt(  &str, BitmapCol_G(bot));
-			String_Append(     &str, ';');
-			String_AppendInt(  &str, BitmapCol_B(bot));
-			String_Append(     &str, 'm');
-#else
-			String_AppendConst(&str, CSI "48;5;");
-			String_AppendInt(  &str, CalcIndex(top));
-			String_Append(     &str, 'm');
-			
-			String_AppendConst(&str, CSI "38;5;");
-			String_AppendInt(  &str, CalcIndex(bot));
-			String_Append(     &str, 'm');
-#endif
+			if (supportsTruecolor) {
+				String_AppendConst(&str, CSI "48" SEP_STR "2" SEP_STR);
+				String_AppendInt(  &str, BitmapCol_R(top));
+				String_Append(     &str, SEP_CHAR);
+				String_AppendInt(  &str, BitmapCol_G(top));
+				String_Append(     &str, SEP_CHAR);
+				String_AppendInt(  &str, BitmapCol_B(top));
+				String_Append(     &str, 'm');
+				
+				String_AppendConst(&str, CSI "38" SEP_STR "2" SEP_STR);
+				String_AppendInt(  &str, BitmapCol_R(bot));
+				String_Append(     &str, SEP_CHAR);
+				String_AppendInt(  &str, BitmapCol_G(bot));
+				String_Append(     &str, SEP_CHAR);
+				String_AppendInt(  &str, BitmapCol_B(bot));
+				String_Append(     &str, 'm');
+			} else {
+				String_AppendConst(&str, CSI "48" SEP_STR "5" SEP_STR);
+				String_AppendInt(  &str, CalcIndex(top));
+				String_Append(     &str, 'm');
+				
+				String_AppendConst(&str, CSI "38" SEP_STR "5" SEP_STR);
+				String_AppendInt(  &str, CalcIndex(bot));
+				String_Append(     &str, 'm');
+			}
 			
 			String_AppendConst(&str, BOX_CHAR);
 			OutputConsole(buf, str.length);

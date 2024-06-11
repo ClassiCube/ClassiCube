@@ -707,6 +707,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	cc_result res;
 	int len, i;
 
+	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
 	si.wide.cb = sizeof(STARTUPINFOW);
 	
@@ -1079,8 +1080,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	cc_string cmdArgs = String_FromReadonly(GetCommandLineA());
 	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
+	if (Platform_SingleProcess) return GetGameArgs(args);
 
-	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
+	for (i = 0; i < GAME_MAX_CMDARGS; i++) 
+	{
 		args[i] = Platform_NextArg(&cmdArgs);
 
 		if (!args[i].length) break;

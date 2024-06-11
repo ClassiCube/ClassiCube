@@ -107,7 +107,7 @@
     fmov.s  fr3,@-r5 ! LS, dst->c = C
     fneg    fr7      ! LS, W = -W
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! CO, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r0       ! EX, CLIPFLAGS = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
@@ -121,7 +121,7 @@
     fmov.s  fr3,@-r5 ! LS, dst->c = C
     fneg    fr7      ! LS, W = -W
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! CO, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r2       ! EX, tmp = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
@@ -137,7 +137,7 @@
     fmov.s  fr3,@-r5 ! LS, dst->c = C
     fneg    fr7      ! LS, W = -W
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! CO, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r2       ! EX, tmp = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
@@ -153,7 +153,7 @@
     fmov.s  fr3,@-r5 ! LS, dst->c = C
     fneg    fr7      ! LS, W = -W
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! CO, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r2       ! EX, tmp = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
@@ -184,13 +184,13 @@
 !fr10 = VIEWPORT_X_PLUS_HWIDTH
 !fr11 = VIEWPORT_Y_PLUS_HHEIGHT
 
-.macro ViewportTransformSetup viewport_addr
-    mova \viewport_addr, r0 ! EX, r0 = &VIEWPORT
+.macro ViewportTransformSetup vp_addr
+    mova \vp_addr, r0 ! EX,  r0  = &VIEWPORT
     fmov.s	@r0+,fr8  ! LS, fr8  = VIEWPORT_HWIDTH
     fmov.s	@r0+,fr9  ! LS, fr9  = VIEWPORT_HHEIGHT
     fmov.s	@r0+,fr10 ! LS, fr10 = VIEWPORT_X_PLUS_HWIDTH
     fmov.s	@r0+,fr11 ! LS, fr11 = VIEWPORT_Y_PLUS_HHEIGHT
-    nop               ! MT, align to even instructions
+    nop               ! MT (align to even instructions boundary)
 .endm
 
 .macro ViewportTransformVertex

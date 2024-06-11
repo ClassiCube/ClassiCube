@@ -871,9 +871,6 @@ cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
 /*########################################################################################################################*
  *--------------------------------------------------------Platform--------------------------------------------------------*
  *#########################################################################################################################*/
-static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
-static int gameNumArgs;
-
 cc_result Process_StartOpen(const cc_string* args) {
     // openURL - iOS 2.0 (deprecated)
     NSString* str = ToNSString(args);
@@ -884,25 +881,11 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-    for (int i = 0; i < numArgs; i++)
-    {
-        String_CopyToRawArray(gameArgs[i], &args[i]);
-    }
-
-    gameNumArgs = numArgs;
-    return 0;
+	return SetGameArgs(args, numArgs);
 }
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-    int count = gameNumArgs;
-    for (int i = 0; i < count; i++)
-    {
-        args[i] = String_FromRawArray(gameArgs[i]);
-    }
-
-    // clear arguments so after game is closed, launcher is started
-    gameNumArgs = 0;
-    return count;
+	return GetGameArgs(args);
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {

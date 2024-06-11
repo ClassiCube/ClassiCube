@@ -27,16 +27,12 @@ void Platform_Log(const char* msg, int len) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
-static int gameNumArgs;
-
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	for (int i = 0; i < numArgs; i++) {
-		String_CopyToRawArray(gameArgs[i], &args[i]);
-	}
+	return SetGameArgs(args, numArgs);
+}
 
-	gameNumArgs = numArgs;
-	return 0;
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	return GetGameArgs(args);
 }
 
 cc_result Process_StartOpen(const cc_string* args) {
@@ -102,17 +98,6 @@ void Directory_GetCachePath(cc_string* path) {
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int count = gameNumArgs;
-	for (int i = 0; i < count; i++) {
-		args[i] = String_FromRawArray(gameArgs[i]);
-	}
-
-	// clear arguments so after game is closed, launcher is started
-    gameNumArgs = 0;
-    return count;
-}
-
 #include "Window.h"
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	cc_string dir; char dirBuffer[FILENAME_SIZE + 1];

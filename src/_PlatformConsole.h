@@ -36,32 +36,9 @@ void Directory_GetCachePath(cc_string* path) { }
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
-static int gameNumArgs;
-static cc_bool gameHasArgs;
-
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	for (int i = 0; i < numArgs; i++) 
-	{
-		String_CopyToRawArray(gameArgs[i], &args[i]);
-	}
-	
 	Platform_LogConst("START CLASSICUBE");
-	gameHasArgs = true;
-	gameNumArgs = numArgs;
-	return 0;
-}
-
-static int GetGameArgs(cc_string* args) {
-	int count = gameNumArgs;
-	for (int i = 0; i < count; i++) 
-	{
-		args[i] = String_FromRawArray(gameArgs[i]);
-	}
-	
-	// clear arguments so after game is closed, launcher is started
-	gameNumArgs = 0;
-	return count;
+	return SetGameArgs(args, numArgs);
 }
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
