@@ -1,4 +1,4 @@
-#include <stddef.h>
+#include <stdbool.h>
 #include "aligned_vector.h"
 #include "private.h"
 
