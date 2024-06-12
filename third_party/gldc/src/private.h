@@ -4,15 +4,43 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "gl_assert.h"
 #include "sh4.h"
 #include "types.h"
-
-#include "../gldc.h"
-
 #include "aligned_vector.h"
 
 #define MAX_TEXTURE_COUNT 768
+
+
+#define GL_SCISSOR_TEST     0x0008
+#define GL_NEAREST          0x2600
+#define GL_LINEAR           0x2601
+#define GL_OUT_OF_MEMORY    0x0505
+
+#define GLushort   unsigned short
+#define GLuint     unsigned int
+#define GLenum     unsigned int
+#define GLubyte    unsigned char
+#define GLboolean  unsigned char
+
+#define GL_FALSE   0
+#define GL_TRUE    1
+
+
+void glClearDepth(float depth);
+
+GLuint gldcGenTexture(void);
+void   gldcDeleteTexture(GLuint texture);
+void   gldcBindTexture(GLuint texture);
+
+/* Loads texture from SH4 RAM into PVR VRAM */
+int  gldcAllocTexture(int w, int h, int format);
+void gldcGetTexture(void** data, int* width, int* height);
+
+void glViewport(int x, int y, int width, int height);
+void glScissor( int x, int y, int width, int height);
+
+void glKosInit();
+void glKosSwapBuffers();
 
 
 extern void* memcpy4 (void *dest, const void *src, size_t count);
@@ -109,7 +137,6 @@ void _glInitTextures();
 extern TextureObject* TEXTURE_ACTIVE;
 extern GLboolean TEXTURES_ENABLED;
 
-extern GLenum DEPTH_FUNC;
 extern GLboolean DEPTH_TEST_ENABLED;
 extern GLboolean DEPTH_MASK_ENABLED;
 
@@ -138,9 +165,12 @@ GL_FORCE_INLINE PolyList* _glActivePolyList() {
     }
 }
 
-GLuint _glFreeTextureMemory();
-GLuint _glUsedTextureMemory();
-GLuint _glFreeContiguousTextureMemory();
+/* Memory allocation extension (GL_KOS_texture_memory_management) */
+void glDefragmentTextureMemory_KOS(void);
+
+GLuint _glFreeTextureMemory(void);
+GLuint _glUsedTextureMemory(void);
+GLuint _glFreeContiguousTextureMemory(void);
 
 void _glApplyScissor(int force);
 

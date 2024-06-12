@@ -1,4 +1,4 @@
-#include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -15,7 +15,7 @@ GLboolean FOG_ENABLED        = GL_FALSE;
 GLboolean ALPHA_TEST_ENABLED = GL_FALSE;
 
 GLboolean SCISSOR_TEST_ENABLED = GL_FALSE;
-GLenum SHADE_MODEL = GL_SMOOTH;
+GLenum SHADE_MODEL = PVR_SHADE_GOURAUD;
 
 GLboolean BLEND_ENABLED = GL_FALSE;
 
@@ -38,12 +38,12 @@ void _glInitContext() {
 }
 
 /* Depth Testing */
-GLAPI void APIENTRY glClearDepth(float depth) {
+void glClearDepth(float depth) {
     /* We reverse because using invW means that farther Z == lower number */
     pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
 }
 
-void APIENTRY glScissor(int x, int y, int width, int height) {
+void glScissor(int x, int y, int width, int height) {
 
     if(scissor_rect.x == x &&
         scissor_rect.y == y &&
@@ -130,7 +130,7 @@ void _glApplyScissor(int force) {
 Viewport VIEWPORT;
 
 /* Set the GL viewport */
-void APIENTRY glViewport(int x, int y, int width, int height) {
+void glViewport(int x, int y, int width, int height) {
     VIEWPORT.hwidth  = width  *  0.5f;
     VIEWPORT.hheight = height * -0.5f;
     VIEWPORT.x_plus_hwidth  = x + width  * 0.5f;
@@ -150,7 +150,7 @@ void apply_poly_header(PolyHeader* dst, PolyList* activePolyList) {
     int depth_comp  = DEPTH_TEST_ENABLED ? PVR_DEPTHCMP_GEQUAL : PVR_DEPTHCMP_ALWAYS;
     int depth_write = DEPTH_MASK_ENABLED ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
 
-    int gen_shading   = (SHADE_MODEL == GL_SMOOTH) ? PVR_SHADE_GOURAUD : PVR_SHADE_FLAT;
+    int gen_shading   = SHADE_MODEL;
     int gen_clip_mode = SCISSOR_TEST_ENABLED       ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
     int gen_fog_type  = FOG_ENABLED                ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
 

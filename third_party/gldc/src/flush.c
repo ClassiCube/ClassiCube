@@ -15,7 +15,7 @@ PolyList TR_LIST;
 
 #define FAST_MODE GL_FALSE
 
-void APIENTRY glKosInit() {
+void glKosInit() {
     TRACE();
 
     _glInitContext();
@@ -35,7 +35,7 @@ void APIENTRY glKosInit() {
 }
 
 
-void APIENTRY glKosSwapBuffers() {
+void glKosSwapBuffers() {
     TRACE();
     
     pvr_scene_begin();   

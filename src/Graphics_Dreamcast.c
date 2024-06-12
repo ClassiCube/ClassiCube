@@ -4,8 +4,6 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-#include "../third_party/gldc/gldc.h"
-#include "../third_party/gldc/src/private.h"
 #include "../third_party/gldc/src/sh4.h"
 #include <malloc.h>
 #include <kos.h>
@@ -337,7 +335,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	GLuint texId = gldcGenTexture();
 	gldcBindTexture(texId);
 	
-	gldcAllocTexture(bmp->width, bmp->height, PVR_TXRFMT_ARGB4444);
+	int res = gldcAllocTexture(bmp->width, bmp->height, PVR_TXRFMT_ARGB4444);
+	if (res) { Platform_LogConst("Out of PVR VRAM!"); return 0; }
 				
 	void* pixels;
 	int width, height;

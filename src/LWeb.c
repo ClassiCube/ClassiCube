@@ -211,6 +211,7 @@ static cc_bool Json_Handle(cc_uint8* data, cc_uint32 len,
 *#########################################################################################################################*/
 static char servicesBuffer[FILENAME_SIZE];
 static cc_string servicesServer = String_FromArray(servicesBuffer);
+static struct StringsBuffer ccCookies;
 
 static void LWebTask_Reset(struct LWebTask* task) {
 	task->completed = false;
@@ -244,7 +245,16 @@ void LWebTasks_Init(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------GetTokenTask------------------------------------------------------*
 *#########################################################################################################################*/
-static struct StringsBuffer ccCookies;
+/*
+< GET /api/login/
+
+> {
+>	"username": null,
+>	"authenticated": false,
+>	"token": "f033ab37c30201f73f142449d037028d",
+>	"errors": []
+>}
+*/
 struct GetTokenTaskData GetTokenTask;
 
 static void GetTokenTask_OnValue(struct JsonContext* ctx, const cc_string* str) {
@@ -286,6 +296,17 @@ void GetTokenTask_Run(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------SignInTask-------------------------------------------------------*
 *#########################################################################################################################*/
+/*
+< POST /api/login/
+< username=AndrewPH&password=examplePassW0rd&token=f033ab37c30201f73f142449d037028d
+
+> {
+> 	"username": "AndrewPH",
+> 	"authenticated": true,
+> 	"token": "33e75ff09dd601bbe69f351039152189",
+> 	"errors": []
+> }
+*/
 struct SignInTaskData SignInTask;
 
 static void SignInTask_LogError(const cc_string* str) {
@@ -356,6 +377,13 @@ void SignInTask_Run(const cc_string* user, const cc_string* pass, const cc_strin
 /*########################################################################################################################*
 *-----------------------------------------------------FetchServerTask-----------------------------------------------------*
 *#########################################################################################################################*/
+/*
+< GET /api/server/a709fabdf836a2a102c952442bf2dab1
+
+> { "servers" : [
+>	{"hash": "a709fabdf836a2a102c952442bf2dab1", "maxplayers": 70, "name": "Freebuild server", "players": 5, "software": "MCGalaxy", "uptime": 185447, "country_abbr": "CA"},
+> ]}
+*/
 struct FetchServerData FetchServerTask;
 static struct ServerInfo* curServer;
 
@@ -429,6 +457,14 @@ void FetchServerTask_Run(const cc_string* hash) {
 /*########################################################################################################################*
 *-----------------------------------------------------FetchServersTask----------------------------------------------------*
 *#########################################################################################################################*/
+/*
+< GET /api/servers/
+
+> { "servers" : [
+>	{"hash": "a709fabdf836a2a102c952442bf2dab1", "maxplayers": 70, "name": "Freebuild server", "players": 5, "software": "MCGalaxy", "uptime": 185447, "country_abbr": "CA"},
+>	{"hash": "23860c5e192cbaa4698408338efd61cc", "maxplayers": 30, "name": "Other server", "players": 0, software: "", "uptime": 54661, "country_abbr": "T1"}
+> ]}
+*/
 struct FetchServersData FetchServersTask;
 static void FetchServersTask_Count(struct JsonContext* ctx) {
 	/* JSON is expected in this format: */
@@ -496,6 +532,11 @@ void FetchServersTask_ResetOrder(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------CheckUpdateTask-----------------------------------------------------*
 *#########################################################################################################################*/
+/*
+< GET /builds.json
+
+> {"latest_ts": 1718187640.9587102, "release_ts": 1693265172.020421, "release_version": "1.3.6"}
+*/
 struct CheckUpdateData CheckUpdateTask;
 static char relVersionBuffer[16];
 

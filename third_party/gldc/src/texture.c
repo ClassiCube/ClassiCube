@@ -8,6 +8,26 @@
 #include "sh4.h"
 #include "yalloc/yalloc.h"
 
+#ifndef NDEBUG
+/* We're debugging, use normal assert */
+#include <assert.h>
+#define gl_assert assert
+#else
+/* Release mode, use our custom assert */
+#include <stdio.h>
+#include <stdlib.h>
+
+#define gl_assert(x) \
+    do {\
+        if(!(x)) {\
+            fprintf(stderr, "Assertion failed at %s:%d\n", __FILE__, __LINE__);\
+            exit(1);\
+        }\
+    } while(0); \
+
+#endif
+
+
 /* We always leave this amount of vram unallocated to prevent
  * issues with the allocator */
 #define PVR_MEM_BUFFER_SIZE (64 * 1024)
@@ -100,9 +120,7 @@ void _glInitTextures() {
     yalloc_init(YALLOC_BASE, YALLOC_SIZE);
 }
 
-GLuint APIENTRY gldcGenTexture(void) {
-    TRACE();
-
+GLuint gldcGenTexture(void) {
     GLuint id = texture_id_map_alloc();
     gl_assert(id);  // Generated IDs must never be zero
     
@@ -114,9 +132,7 @@ GLuint APIENTRY gldcGenTexture(void) {
     return id;
 }
 
-void APIENTRY gldcDeleteTexture(GLuint id) {
-    TRACE();
-
+void gldcDeleteTexture(GLuint id) {
     if(id == 0) return;
     /* Zero is the "default texture" and we never allow deletion of it */
 
@@ -138,9 +154,7 @@ void APIENTRY gldcDeleteTexture(GLuint id) {
     }
 }
 
-void APIENTRY gldcBindTexture(GLuint id) {
-    TRACE();
-
+void gldcBindTexture(GLuint id) {
     gl_assert(texture_id_map_used(id));
     TextureObject* txr = &TEXTURE_LIST[id];
 
@@ -150,14 +164,12 @@ void APIENTRY gldcBindTexture(GLuint id) {
     STATE_DIRTY = GL_TRUE;
 }
 
-int APIENTRY gldcAllocTexture(int w, int h, int format) {
-    TRACE();
-
+int gldcAllocTexture(int w, int h, int format) {
     TextureObject* active = TEXTURE_ACTIVE;
 
-    if(active->data) {
+    if (active->data) {
         /* pre-existing texture - check if changed */
-        if(active->width != w || active->height != h) {
+        if (active->width != w || active->height != h) {
             /* changed - free old texture memory */
             yalloc_free(YALLOC_BASE, active->data);
             active->data = NULL;
@@ -173,25 +185,16 @@ int APIENTRY gldcAllocTexture(int w, int h, int format) {
 
     if(!active->data) {
         /* need texture memory */
-        active->data   = yalloc_alloc_and_defrag(bytes);
+        active->data = yalloc_alloc_and_defrag(bytes);
     }
-
-    gl_assert(active->data);
-
-    /* If we run out of PVR memory just return */
-    if(!active->data) {
-        fprintf(stderr, "Out of texture memory\n");
-        return GL_OUT_OF_MEMORY;
-    }
+    if (!active->data) return GL_OUT_OF_MEMORY;
 
     /* Mark level 0 as set in the mipmap bitmask */
     active->mipmap |= (1 << 0);
-
-    STATE_DIRTY = GL_TRUE;
     return 0;
 }
 
-GLAPI void APIENTRY gldcGetTexture(void** data, int* width, int* height) {
+void gldcGetTexture(void** data, int* width, int* height) {
     TextureObject* active = TEXTURE_ACTIVE;
     *data   = active->data;
     *width  = active->width;
@@ -214,7 +217,7 @@ GLuint _glFreeContiguousTextureMemory() {
     return yalloc_count_continuous(YALLOC_BASE);
 }
 
-GLAPI void APIENTRY glDefragmentTextureMemory_KOS(void) {
+void glDefragmentTextureMemory_KOS(void) {
     yalloc_defrag_start(YALLOC_BASE);
 
     GLuint id;

@@ -1,4 +1,6 @@
+#include <math.h>
 #include "sh4.h"
+#include "sh4_math.h"
 
 #define CLIP_DEBUG 0
 
