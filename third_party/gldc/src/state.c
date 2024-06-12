@@ -23,10 +23,10 @@ GLboolean TEXTURES_ENABLED = GL_FALSE;
 GLboolean AUTOSORT_ENABLED = GL_FALSE;
 
 static struct {
-    GLint x;
-    GLint y;
-    GLsizei width;
-    GLsizei height;
+    int x;
+    int y;
+    int width;
+    int height;
     GLboolean applied;
 } scissor_rect = {0, 0, 640, 480, false};
 
@@ -38,18 +38,12 @@ void _glInitContext() {
 }
 
 /* Depth Testing */
-GLAPI void APIENTRY glClearDepth(GLfloat depth) {
+GLAPI void APIENTRY glClearDepth(float depth) {
     /* We reverse because using invW means that farther Z == lower number */
     pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
 }
 
-/* Blending */
-GLAPI void APIENTRY glAlphaFunc(GLenum func, GLclampf ref) {
-    GLubyte val = (GLubyte)(ref * 255.0f);
-    GPUSetAlphaCutOff(val);
-}
-
-void APIENTRY glScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+void APIENTRY glScissor(int x, int y, int width, int height) {
 
     if(scissor_rect.x == x &&
         scissor_rect.y == y &&
@@ -91,7 +85,7 @@ void APIENTRY glScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
     at the right place, either when enabling the scissor test, or
     when the scissor test changes.
 */
-void _glApplyScissor(bool force) {
+void _glApplyScissor(int force) {
     /* Don't do anyting if clipping is disabled */
     if(!SCISSOR_TEST_ENABLED) {
         return;
@@ -104,10 +98,10 @@ void _glApplyScissor(bool force) {
 
     PVRTileClipCommand c;
 
-    GLint miny, maxx, maxy;
+    int miny, maxx, maxy;
 
-    GLsizei scissor_width  = MAX(MIN(scissor_rect.width,  vid_mode->width),  0);
-    GLsizei scissor_height = MAX(MIN(scissor_rect.height, vid_mode->height), 0);
+    int scissor_width  = MAX(MIN(scissor_rect.width,  vid_mode->width),  0);
+    int scissor_height = MAX(MIN(scissor_rect.height, vid_mode->height), 0);
 
     /* force the origin to the lower left-hand corner of the screen */
     miny = (vid_mode->height - scissor_height) - scissor_rect.y;
@@ -136,7 +130,7 @@ void _glApplyScissor(bool force) {
 Viewport VIEWPORT;
 
 /* Set the GL viewport */
-void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+void APIENTRY glViewport(int x, int y, int width, int height) {
     VIEWPORT.hwidth  = width  *  0.5f;
     VIEWPORT.hheight = height * -0.5f;
     VIEWPORT.x_plus_hwidth  = x + width  * 0.5f;
@@ -219,10 +213,10 @@ void apply_poly_header(PolyHeader* dst, PolyList* activePolyList) {
         GLuint filter = PVR_FILTER_NEAREST;
         if (tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) filter = PVR_FILTER_BILINEAR;
 
-        dst->mode2 |= (txr_alpha        << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
-        dst->mode2 |= (filter           << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
-        dst->mode2 |= (tx1->mipmap_bias << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
-        dst->mode2 |= (tx1->env         << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
+        dst->mode2 |= (txr_alpha                << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
+        dst->mode2 |= (filter                   << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
+        dst->mode2 |= (tx1->mipmap_bias         << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
+        dst->mode2 |= (PVR_TXRENV_MODULATEALPHA << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
 
         dst->mode2 |= (DimensionFlag(tx1->width)  << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
         dst->mode2 |= (DimensionFlag(tx1->height) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;

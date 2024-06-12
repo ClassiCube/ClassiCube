@@ -337,11 +337,10 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	GLuint texId = gldcGenTexture();
 	gldcBindTexture(texId);
 	
-	gldcAllocTexture(bmp->width, bmp->height, GL_RGBA,
-				GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS);
+	gldcAllocTexture(bmp->width, bmp->height, PVR_TXRFMT_ARGB4444);
 				
 	void* pixels;
-	GLsizei width, height;
+	int width, height;
 	gldcGetTexture(&pixels, &width, &height);
 	ConvertTexture(pixels, bmp, rowWidth);
 	return texId;
@@ -377,7 +376,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	gldcBindTexture(texId);
 				
 	void* pixels;
-	GLsizei width, height;
+	int width, height;
 	gldcGetTexture(&pixels, &width, &height);
 	
 	ConvertSubTexture(pixels, width, height,
@@ -508,14 +507,12 @@ cc_bool Gfx_WarnIfNecessary(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
-#define VB_PTR gfx_vertices
-static const void* VERTEX_PTR;
 extern void apply_poly_header(PolyHeader* header, PolyList* activePolyList);
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
 
-void DrawQuads(int count) {
+void DrawQuads(int count, void* src) {
 	if (!count) return;
 	PolyList* output = _glActivePolyList();
 	AlignedVectorHeader* hdr = &output->vector.hdr;
@@ -533,9 +530,9 @@ void DrawQuads(int count) {
 	Vertex* end;
 
 	if (TEXTURES_ENABLED) {
-		end = DrawTexturedQuads(VERTEX_PTR, beg, count >> 2);
+		end = DrawTexturedQuads(src, beg, count >> 2);
 	} else {
-		end = DrawColouredQuads(VERTEX_PTR, beg, count >> 2);
+		end = DrawColouredQuads(src, beg, count >> 2);
 	}
 	hdr->size += (end - beg);
 }
@@ -555,28 +552,27 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	void* src;
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+		src = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
 	} else {
-		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
+		src = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
 	}
 
-	DrawQuads(verticesCount);
+	DrawQuads(verticesCount, src);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	VERTEX_PTR = gfx_vertices;
-
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	DrawQuads(verticesCount);
+	DrawQuads(verticesCount, gfx_vertices);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (renderingDisabled) return;
 	
-	VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
-	DrawQuads(verticesCount);
+	void* src = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	DrawQuads(verticesCount, src);
 }
 
 
@@ -588,8 +584,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	GLint freeMem = _glFreeTextureMemory();
-	GLint usedMem = _glUsedTextureMemory();
+	int freeMem = _glFreeTextureMemory();
+	int usedMem = _glUsedTextureMemory();
 	
 	float freeMemMB = freeMem / (1024.0 * 1024.0);
 	float usedMemMB = usedMem / (1024.0 * 1024.0);

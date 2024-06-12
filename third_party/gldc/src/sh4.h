@@ -53,23 +53,6 @@ static inline void GPUSetAlphaCutOff(uint8_t val) {
     PVR_SET(PT_ALPHA_REF, val);
 }
 
-typedef enum GPUTextureFormat {
-    GPU_TXRFMT_NONE,
-    GPU_TXRFMT_VQ_DISABLE = (0 << 30),
-    GPU_TXRFMT_VQ_ENABLE = (1 << 30),
-    GPU_TXRFMT_ARGB1555 = (0 << 27),
-    GPU_TXRFMT_RGB565 = (1 << 27),
-    GPU_TXRFMT_ARGB4444 = (2 << 27),
-    GPU_TXRFMT_YUV422 = (3 << 27),
-    GPU_TXRFMT_BUMP = (4 << 27),
-    GPU_TXRFMT_PAL4BPP = (5 << 27),
-    GPU_TXRFMT_PAL8BPP = (6 << 27),
-    GPU_TXRFMT_TWIDDLED = (0 << 26),
-    GPU_TXRFMT_NONTWIDDLED = (1 << 26),
-    GPU_TXRFMT_NOSTRIDE = (0 << 21),
-    GPU_TXRFMT_STRIDE = (1 << 21)
-} GPUTextureFormat;
-
 typedef struct {
     uint32_t cmd;
     uint32_t mode1;

@@ -56,7 +56,7 @@ typedef struct {
     GLenum minFilter;
     GLenum magFilter;
     //16
-    GLvoid *data;
+    void *data;
     //20
     GLushort width;
     GLushort height;
@@ -64,7 +64,7 @@ typedef struct {
     GLushort  mipmap;  /* Bitmask of supplied mipmap levels */
     // 26
     GLubyte mipmap_bias;
-    GLubyte  env;
+    GLubyte _pad3;
     // 28
     GLushort _pad0;
     // 30
@@ -142,7 +142,7 @@ GLuint _glFreeTextureMemory();
 GLuint _glUsedTextureMemory();
 GLuint _glFreeContiguousTextureMemory();
 
-void _glApplyScissor(bool force);
+void _glApplyScissor(int force);
 
 extern GLboolean STATE_DIRTY;
 

@@ -25,7 +25,7 @@ static const cc_string audio_dir = String_FromConst("audio");
 
 struct Sound {
 	int channels, sampleRate;
-	void* data; cc_uint32 size;
+	struct AudioChunk chunk;
 };
 
 
@@ -92,13 +92,11 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			if ((res = Audio_AllocChunks(size, &snd->data, 1))) return res;
-
-			snd->size = size;
-			res = Stream_Read(stream, (cc_uint8*)snd->data, size);
+			if ((res = Audio_AllocChunks(size, &snd->chunk, 1))) return res;
+			res = Stream_Read(stream, snd->chunk.data, size);
 
 			#ifdef CC_BUILD_BIGENDIAN
-			Utils_SwapEndian16((cc_int16*)snd->data, size / 2);
+			Utils_SwapEndian16((cc_int16*)snd->chunk.data, size / 2);
 			#endif
 			return res;
 		}
@@ -149,9 +147,9 @@ static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName
 
 	if (res) {
 		Logger_SysWarn2(res, "decoding", file);
-		Audio_FreeChunks(&snd->data, 1);
-		snd->data = NULL;
-		snd->size = 0;
+		Audio_FreeChunks(&snd->chunk, 1);
+		snd->chunk.data = NULL;
+		snd->chunk.size = 0;
 	} else { group->count++; }
 }
 
@@ -185,8 +183,8 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	snd = Soundboard_PickRandom(board, type);
 	if (!snd) return;
 
-	data.data       = snd->data;
-	data.size       = snd->size;
+	data.data       = snd->chunk.data;
+	data.size       = snd->chunk.size;
 	data.channels   = snd->channels;
 	data.sampleRate = snd->sampleRate;
 	data.rate       = 100;
@@ -356,7 +354,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	int channels, sampleRate, volume;
 
 	int chunkSize, samplesPerSecond;
-	void* chunks[AUDIO_MAX_BUFFERS] = { 0 };
+	struct AudioChunk chunks[AUDIO_MAX_BUFFERS] = { 0 };
 	int inUse, i, cur;
 	cc_result res;
 
@@ -381,7 +379,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) 
 	{
-		res = Music_Buffer((cc_int16*)chunks[i], samplesPerSecond, &vorbis);
+		res = Music_Buffer((cc_int16*)chunks[i].data, samplesPerSecond, &vorbis);
 	}
 	if (music_stopping) goto cleanup;
 
@@ -413,7 +411,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 			Thread_Sleep(10); continue;
 		}
 
-		res = Music_Buffer((cc_int16*)chunks[cur], samplesPerSecond, &vorbis);
+		res = Music_Buffer((cc_int16*)chunks[cur].data, samplesPerSecond, &vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 
 		/* need to specially handle last bit of audio */

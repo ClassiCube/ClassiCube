@@ -73,7 +73,6 @@ static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
     txr->index  = id;
     txr->width  = txr->height = 0;
     txr->mipmap = 0;
-    txr->env    = PVR_TXRENV_MODULATEALPHA;
     txr->data   = NULL;
     txr->minFilter = GL_NEAREST;
     txr->magFilter = GL_NEAREST;
@@ -151,43 +150,10 @@ void APIENTRY gldcBindTexture(GLuint id) {
     STATE_DIRTY = GL_TRUE;
 }
 
-static GLuint _determinePVRFormat(GLint internalFormat, GLenum type) {
-    /* Given a cleaned internalFormat, return the Dreamcast format
-     * that can hold it
-     */
-    switch(internalFormat) {
-        case GL_RGBA:
-        /* OK so if we have something that requires alpha, we return 4444 unless
-         * the type was already 1555 (1-bit alpha) in which case we return that
-         */
-            if(type == GL_UNSIGNED_SHORT_1_5_5_5_REV) {
-                return GPU_TXRFMT_ARGB1555 | GPU_TXRFMT_NONTWIDDLED;
-            } else if(type == GL_UNSIGNED_SHORT_1_5_5_5_REV_TWID_KOS) {
-                return GPU_TXRFMT_ARGB1555 | GPU_TXRFMT_TWIDDLED;
-            } else if(type == GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS) {
-                return GPU_TXRFMT_ARGB4444 | GPU_TXRFMT_TWIDDLED;
-            } else {
-                return GPU_TXRFMT_ARGB4444 | GPU_TXRFMT_NONTWIDDLED;
-            }
-        /* Compressed and twiddled versions */
-        case GL_UNSIGNED_SHORT_5_6_5_TWID_KOS:
-            return GPU_TXRFMT_RGB565 | GPU_TXRFMT_TWIDDLED;
-        case GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS:
-            return GPU_TXRFMT_ARGB4444 | GPU_TXRFMT_TWIDDLED;
-        case GL_UNSIGNED_SHORT_1_5_5_5_REV_TWID_KOS:
-            return GPU_TXRFMT_ARGB1555 | GPU_TXRFMT_TWIDDLED;
-        default:
-            return 0;
-    }
-}
-
-
-int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) {
+int APIENTRY gldcAllocTexture(int w, int h, int format) {
     TRACE();
 
     TextureObject* active = TEXTURE_ACTIVE;
-    /* Calculate the format that we need to convert the data to */
-    GLuint pvr_format = _determinePVRFormat(format, type);
 
     if(active->data) {
         /* pre-existing texture - check if changed */
@@ -200,14 +166,13 @@ int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) 
     }
 
     /* All colour formats are represented as shorts internally. */
-    GLuint bytes = w * h * 2;
+    GLuint bytes   = w * h * 2;
+    active->width  = w;
+    active->height = h;
+    active->color  = format;
 
     if(!active->data) {
         /* need texture memory */
-        active->width  = w;
-        active->height = h;
-        active->color  = pvr_format;
-
         active->data   = yalloc_alloc_and_defrag(bytes);
     }
 
@@ -222,16 +187,11 @@ int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) 
     /* Mark level 0 as set in the mipmap bitmask */
     active->mipmap |= (1 << 0);
 
-    /* We make sure we remove nontwiddled and add twiddled. We could always
-     * make it twiddled when determining the format but I worry that would make the
-     * code less flexible to change in the future */
-    active->color &= ~(1 << 26);
-
     STATE_DIRTY = GL_TRUE;
     return 0;
 }
 
-GLAPI void APIENTRY gldcGetTexture(GLvoid** data, GLsizei* width, GLsizei* height) {
+GLAPI void APIENTRY gldcGetTexture(void** data, int* width, int* height) {
     TextureObject* active = TEXTURE_ACTIVE;
     *data   = active->data;
     *width  = active->width;
@@ -254,7 +214,7 @@ GLuint _glFreeContiguousTextureMemory() {
     return yalloc_count_continuous(YALLOC_BASE);
 }
 
-GLAPI GLvoid APIENTRY glDefragmentTextureMemory_KOS(void) {
+GLAPI void APIENTRY glDefragmentTextureMemory_KOS(void) {
     yalloc_defrag_start(YALLOC_BASE);
 
     GLuint id;

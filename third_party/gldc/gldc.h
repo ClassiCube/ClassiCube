@@ -22,12 +22,6 @@ __BEGIN_DECLS
 /* Scissor box */
 #define GL_SCISSOR_TEST     0x0008      /* capability bit */
 
-/* Texture Environment */
-#define GL_TEXTURE_ENV_MODE 0x2200
-#define GL_REPLACE          0x1E01
-#define GL_MODULATE         0x2100
-#define GL_DECAL            0x2101
-
 /* TextureMagFilter */
 #define GL_NEAREST                      0x2600
 #define GL_LINEAR                       0x2601
@@ -49,77 +43,33 @@ __BEGIN_DECLS
 #define GL_INVALID_VALUE                  0x0501
 #define GL_OUT_OF_MEMORY                  0x0505
 
-#define GL_UNSIGNED_SHORT_4_4_4_4       0x8033
-#define GL_UNSIGNED_SHORT_5_5_5_1       0x8034
-#define GL_UNSIGNED_SHORT_5_6_5         0x8363
-#define GL_UNSIGNED_SHORT_5_6_5_REV     0x8364
-#define GL_UNSIGNED_SHORT_4_4_4_4_REV   0x8365
-#define GL_UNSIGNED_SHORT_1_5_5_5_REV   0x8366
-
-#define GL_RGBA                           0x1908
-
-#define GLbyte   char
-#define GLshort  short
-#define GLint    int
-#define GLfloat  float
-#define GLvoid   void
 #define GLushort unsigned short
 #define GLuint   unsigned int
 #define GLenum   unsigned int
-#define GLsizei  unsigned int
-#define GLclampf float
 #define GLubyte  unsigned char
 #define GLboolean  unsigned char
+
 #define GL_FALSE   0
 #define GL_TRUE    1
 
 #define GLAPI extern
 #define APIENTRY
+#define GL_NEARZ_CLIPPING_KOS                       0xEEFA
 
 /* Depth Testing */
-GLAPI void glClearDepth(GLfloat depth);
+GLAPI void glClearDepth(float depth);
 
 GLAPI GLuint gldcGenTexture(void);
 GLAPI void   gldcDeleteTexture(GLuint texture);
 GLAPI void   gldcBindTexture(GLuint texture);
 
-/* Loads texture from SH4 RAM into PVR VRAM applying color conversion if needed */
-/* internalformat must be one of the following constants:
-     GL_RGB
-     GL_RGBA
+/* Loads texture from SH4 RAM into PVR VRAM */
+GLAPI int  gldcAllocTexture(int w, int h, int format);
+GLAPI void gldcGetTexture(void** data, int* width, int* height);
 
-   format must be the same as internalformat
+GLAPI void glViewport(int x, int y, int width, int height);
 
-   if internal format is GL_RGBA, type must be one of the following constants:
-     GL_BYTE
-     GL_UNSIGNED_BYTE
-     GL_SHORT
-     GL_UNSIGNED_SHORT
-     GL_FLOAT
-     GL_UNSIGNED_SHORT_4_4_4_4
-     GL_UNSIGNED_SHORT_4_4_4_4_TWID
-     GL_UNSIGNED_SHORT_1_5_5_5
-     GL_UNSIGNED_SHORT_1_5_5_5_TWID
- */                      
-GLAPI int  gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type);
-GLAPI void gldcGetTexture(GLvoid** data, GLsizei* width, GLsizei* height);
-
-GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
-
-GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
-
-
-/*
- * Dreamcast specific compressed + twiddled formats.
- * We use constants from the range 0xEEE0 onwards
- * to avoid trampling any real GL constants (this is in the middle of the
- * any_vendor_future_use range defined in the GL enum.spec file.
-*/
-#define GL_UNSIGNED_SHORT_5_6_5_TWID_KOS            0xEEE0
-#define GL_UNSIGNED_SHORT_1_5_5_5_REV_TWID_KOS      0xEEE2
-#define GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS      0xEEE3
-
-#define GL_NEARZ_CLIPPING_KOS                       0xEEFA
+GLAPI void glScissor(int x, int y, int width, int height);
 
 
 /* Initialize the GL pipeline. GL will initialize the PVR. */

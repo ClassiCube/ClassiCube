@@ -47,6 +47,13 @@ cc_bool AudioBackend_Init(void);
 void    AudioBackend_Tick(void);
 void    AudioBackend_Free(void);
 
+union AudioChunkMeta { void* ptr; cc_uintptr val; };
+struct AudioChunk {
+	void* data;
+	cc_uint32 size;
+	union AudioChunkMeta meta;
+};
+
 /* Initialises an audio context. */
 cc_result Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
@@ -71,9 +78,9 @@ cc_result Audio_Pause(struct AudioContext* ctx); /* Only implemented with OpenSL
 /* Outputs more detailed information about errors with audio. */
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
 /* Allocates a group of chunks of data to store audio samples */
-cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks);
+cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks);
 /* Frees a previously allocated group of chunks of data */
-void Audio_FreeChunks(void** chunks, int numChunks);
+void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks);
 
 extern struct AudioContext music_ctx;
 void Audio_Warn(cc_result res, const char* action);

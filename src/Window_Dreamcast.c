@@ -25,7 +25,7 @@ void Window_PreInit(void) {
 	int cable = vid_check_cable();
 	if (cable == CT_VGA) return;
 
-	if (flashrom_get_region == FLASHROM_REGION_EUROPE) {
+	if (flashrom_get_region() == FLASHROM_REGION_EUROPE) {
 		Platform_LogConst("Forcing 50hz for PAL region");
 		vid_set_mode(DM_640x480_PAL_IL, DEFAULT_PIXEL_MODE);
 	}

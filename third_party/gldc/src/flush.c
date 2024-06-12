@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "aligned_vector.h"
 #include "private.h"
 
