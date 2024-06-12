@@ -21,7 +21,14 @@ struct _WindowData WindowInfo;
 void Window_PreInit(void) {
 	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
 	vid_flip(0);
-	// TODO: Why doesn't 32 bit work on real hardware for in-game?	
+
+	int cable = vid_check_cable();
+	if (cable == CT_VGA) return;
+
+	if (flashrom_get_region == FLASHROM_REGION_EUROPE) {
+		Platform_LogConst("Forcing 50hz for PAL region");
+		vid_set_mode(DM_640x480_PAL_IL, DEFAULT_PIXEL_MODE);
+	}
 }
 
 void Window_Init(void) {

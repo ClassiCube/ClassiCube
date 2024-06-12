@@ -51,17 +51,13 @@ CMD_TEX_VERT: .long 0xe0000000
 CMD_TEX_EOS:  .long 0xf0000000
 
 .global _VP_TEX_HWIDTH
-.type   _VP_TEX_HWIDTH,%object
 _VP_TEX_HWIDTH:  .long 0
 
 .global _VP_TEX_HHEIGHT
-.type   _VP_TEX_HHEIGHT,%object
 _VP_TEX_HHEIGHT: .long 0
 
 .global _VP_TEX_X_PLUS_HWIDTH
-.type   _VP_TEX_X_PLUS_HWIDTH,%object
 _VP_TEX_X_PLUS_HWIDTH:  .long 0
 
 .global _VP_TEX_Y_PLUS_HHEIGHT
-.type   _VP_TEX_Y_PLUS_HHEIGHT,%object
 _VP_TEX_Y_PLUS_HHEIGHT: .long 0

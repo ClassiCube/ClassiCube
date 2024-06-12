@@ -9,6 +9,7 @@
 
 #include "private.h"
 #include "sh4_math.h"
+#include "types.h"
 
 #ifndef GL_FORCE_INLINE
 #define GL_NO_INSTRUMENT inline __attribute__((no_instrument_function))
@@ -46,30 +47,53 @@ GL_FORCE_INLINE void* memcpy_fast(void *dest, const void *src, size_t len) {
   return dest;
 }
 
-
-GL_FORCE_INLINE void TransformVertex(const float* xyz, const float* w, float* oxyz, float* ow) {
-    register float __x __asm__("fr12") = (xyz[0]);
-    register float __y __asm__("fr13") = (xyz[1]);
-    register float __z __asm__("fr14") = (xyz[2]);
-    register float __w __asm__("fr15") = (*w);
-
-    __asm__ __volatile__(
-        "fldi1 fr15\n"
-        "ftrv   xmtrx,fv12\n"
-        : "=f" (__x), "=f" (__y), "=f" (__z), "=f" (__w)
-        : "0" (__x), "1" (__y), "2" (__z), "3" (__w)
-    );
-
-    oxyz[0] = __x;
-    oxyz[1] = __y;
-    oxyz[2] = __z;
-    *ow = __w;
-}
-
-void InitGPU(_Bool autosort, _Bool fsaa);
-
 #define PT_ALPHA_REF 0x011c
 
 static inline void GPUSetAlphaCutOff(uint8_t val) {
     PVR_SET(PT_ALPHA_REF, val);
+}
+
+typedef enum GPUTextureFormat {
+    GPU_TXRFMT_NONE,
+    GPU_TXRFMT_VQ_DISABLE = (0 << 30),
+    GPU_TXRFMT_VQ_ENABLE = (1 << 30),
+    GPU_TXRFMT_ARGB1555 = (0 << 27),
+    GPU_TXRFMT_RGB565 = (1 << 27),
+    GPU_TXRFMT_ARGB4444 = (2 << 27),
+    GPU_TXRFMT_YUV422 = (3 << 27),
+    GPU_TXRFMT_BUMP = (4 << 27),
+    GPU_TXRFMT_PAL4BPP = (5 << 27),
+    GPU_TXRFMT_PAL8BPP = (6 << 27),
+    GPU_TXRFMT_TWIDDLED = (0 << 26),
+    GPU_TXRFMT_NONTWIDDLED = (1 << 26),
+    GPU_TXRFMT_NOSTRIDE = (0 << 21),
+    GPU_TXRFMT_STRIDE = (1 << 21)
+} GPUTextureFormat;
+
+typedef struct {
+    uint32_t cmd;
+    uint32_t mode1;
+    uint32_t mode2;
+    uint32_t mode3;
+    uint32_t d1;
+    uint32_t d2;
+    uint32_t d3;
+    uint32_t d4;
+} PolyHeader;
+
+void SceneListSubmit(Vertex* v2, int n);
+
+static inline int DimensionFlag(const int w) {
+    switch(w) {
+        case 16: return 1;
+        case 32: return 2;
+        case 64: return 3;
+        case 128: return 4;
+        case 256: return 5;
+        case 512: return 6;
+        case 1024: return 7;
+        case 8:
+        default:
+            return 0;
+    }
 }

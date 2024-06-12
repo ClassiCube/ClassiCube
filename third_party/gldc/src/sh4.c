@@ -1,39 +1,11 @@
-#include "platform.h"
 #include "sh4.h"
 
 #define CLIP_DEBUG 0
-
-#define PVR_VERTEX_BUF_SIZE 32 * 40000
 
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
 #define SQ_BASE_ADDRESS (void*) 0xe0000000
-
-void InitGPU(_Bool autosort, _Bool fsaa) {
-    pvr_init_params_t params = {
-        /* Enable opaque and translucent polygons with size 32 and 32 */
-        {PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32},
-        PVR_VERTEX_BUF_SIZE, /* Vertex buffer size */
-        0, /* No DMA */
-        fsaa, /* No FSAA */
-        (autosort) ? 0 : 1 /* Disable translucent auto-sorting to match traditional GL */
-    };
-
-    pvr_init(&params);
-
-    /* If we're PAL and we're NOT VGA, then use 50hz by default. This is the safest
-    thing to do. If someone wants to force 60hz then they can call vid_set_mode later and hopefully
-    that'll work... */
-
-    int cable = vid_check_cable();
-    int region = flashrom_get_region();
-
-    if(region == FLASHROM_REGION_EUROPE && cable != CT_VGA) {
-        printf("PAL region without VGA - enabling 50hz");
-        vid_set_mode(DM_640x480_PAL_IL, PM_RGB565);
-    }
-}
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
     return MATH_fsrra(x * x);
@@ -135,9 +107,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //    /      |
         //  v3--v2---v1
         _glClipEdge(v3, v0, a);
-        a->flags = GPU_CMD_VERTEX_EOL;
+        a->flags = PVR_CMD_VERTEX_EOL;
         _glClipEdge(v0, v1, b);
-        b->flags = GPU_CMD_VERTEX;
+        b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v0);
         _glPushHeaderOrVertex(v0);
@@ -158,9 +130,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //    /      |
         //  v0--v3---v2
         _glClipEdge(v0, v1, a);
-        a->flags = GPU_CMD_VERTEX;
+        a->flags = PVR_CMD_VERTEX;
         _glClipEdge(v1, v2, b);
-        b->flags = GPU_CMD_VERTEX_EOL;
+        b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
         _glPushHeaderOrVertex(a);
@@ -181,9 +153,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //  v1--v0---v3
 
         _glClipEdge(v1, v2, a);
-        a->flags = GPU_CMD_VERTEX;
+        a->flags = PVR_CMD_VERTEX;
         _glClipEdge(v2, v3, b);
-        b->flags = GPU_CMD_VERTEX_EOL;
+        b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
         _glPushHeaderOrVertex(a);
@@ -203,9 +175,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //    /      |
         //  v2--v1---v0
         _glClipEdge(v2, v3, a);
-        a->flags = GPU_CMD_VERTEX;
+        a->flags = PVR_CMD_VERTEX;
         _glClipEdge(v3, v0, b);
-        b->flags = GPU_CMD_VERTEX;
+        b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
         _glPushHeaderOrVertex(b);
@@ -225,9 +197,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //         \        |
         //          v3-----v2
         _glClipEdge(v1, v2, a);
-        a->flags = GPU_CMD_VERTEX;
+        a->flags = PVR_CMD_VERTEX;
         _glClipEdge(v3, v0, b);
-        b->flags = GPU_CMD_VERTEX_EOL;
+        b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
         _glPushHeaderOrVertex(v1);
@@ -250,9 +222,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //         \        |
         //          v2-----v1
         _glClipEdge(v0, v1, a);
-        a->flags = GPU_CMD_VERTEX;
+        a->flags = PVR_CMD_VERTEX;
         _glClipEdge(v2, v3, b);
-        b->flags = GPU_CMD_VERTEX;
+        b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(a);
         _glPushHeaderOrVertex(a);
@@ -274,9 +246,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //         \        |
         //          v0-----v3
         _glClipEdge(v2, v3, a);
-        a->flags = GPU_CMD_VERTEX_EOL;
+        a->flags = PVR_CMD_VERTEX_EOL;
         _glClipEdge(v0, v1, b);
-        b->flags = GPU_CMD_VERTEX;
+        b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v1);
         _glPushHeaderOrVertex(v1);
@@ -299,9 +271,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //         \        |
         //          v1-----v0
         _glClipEdge(v3, v0, a);
-        a->flags = GPU_CMD_VERTEX;
+        a->flags = PVR_CMD_VERTEX;
         _glClipEdge(v1, v2, b);
-        b->flags = GPU_CMD_VERTEX;
+        b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
         _glPushHeaderOrVertex(b);
@@ -325,9 +297,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //            v3
         // v1,v2,v0  v2,v0,A  v0,A,B
         _glClipEdge(v2, v3, a);
-        a->flags = GPU_CMD_VERTEX;
+        a->flags = PVR_CMD_VERTEX;
         _glClipEdge(v3, v0, b);
-        b->flags = GPU_CMD_VERTEX_EOL;
+        b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
         _glPushHeaderOrVertex(v1);
@@ -354,10 +326,10 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //            v2
         // v0,v1,v3  v1,v3,A  v3,A,B
         _glClipEdge(v1, v2, a);
-        a->flags  = GPU_CMD_VERTEX;
+        a->flags  = PVR_CMD_VERTEX;
         _glClipEdge(v2, v3, b);
-        b->flags  = GPU_CMD_VERTEX_EOL;
-        v3->flags = GPU_CMD_VERTEX;
+        b->flags  = PVR_CMD_VERTEX_EOL;
+        v3->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v0);
         _glPushHeaderOrVertex(v0);
@@ -384,10 +356,10 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //            v1
         // v3,v0,v2  v0,v2,A  v2,A,B
         _glClipEdge(v0, v1, a);
-        a->flags  = GPU_CMD_VERTEX;
+        a->flags  = PVR_CMD_VERTEX;
         _glClipEdge(v1, v2, b);
-        b->flags  = GPU_CMD_VERTEX_EOL;
-        v3->flags = GPU_CMD_VERTEX;
+        b->flags  = PVR_CMD_VERTEX_EOL;
+        v3->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v3);
         _glPushHeaderOrVertex(v3);
@@ -414,10 +386,10 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //            v0
         // v2,v3,v1  v3,v1,A  v1,A,B
         _glClipEdge(v3, v0, a);
-        a->flags  = GPU_CMD_VERTEX;
+        a->flags  = PVR_CMD_VERTEX;
         _glClipEdge(v0, v1, b);
-        b->flags  = GPU_CMD_VERTEX_EOL;
-        v3->flags = GPU_CMD_VERTEX;
+        b->flags  = PVR_CMD_VERTEX_EOL;
+        v3->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v2);
         _glPushHeaderOrVertex(v2);
@@ -466,9 +438,9 @@ void SceneListSubmit(Vertex* v3, int n) {
     for(int i = 0; i < n; ++i, ++v3) {
         PREFETCH(v3 + 1);
         switch(v3->flags & 0xFF000000) {
-        case GPU_CMD_VERTEX_EOL:
+        case PVR_CMD_VERTEX_EOL:
             break;
-        case GPU_CMD_VERTEX:
+        case PVR_CMD_VERTEX:
             continue;
         default:
             _glPushHeaderOrVertex(v3);

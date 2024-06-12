@@ -20,9 +20,7 @@ GLenum SHADE_MODEL = GL_SMOOTH;
 GLboolean BLEND_ENABLED = GL_FALSE;
 
 GLboolean TEXTURES_ENABLED = GL_FALSE;
-
-extern GLboolean AUTOSORT_ENABLED;
-
+GLboolean AUTOSORT_ENABLED = GL_FALSE;
 
 static struct {
     GLint x;
@@ -43,12 +41,6 @@ void _glInitContext() {
 GLAPI void APIENTRY glClearDepth(GLfloat depth) {
     /* We reverse because using invW means that farther Z == lower number */
     pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
-}
-
-/* Shading - Flat or Goraud */
-GLAPI void APIENTRY glShadeModel(GLenum mode) {
-    SHADE_MODEL = mode;
-    STATE_DIRTY = GL_TRUE;
 }
 
 /* Blending */
@@ -123,7 +115,7 @@ void _glApplyScissor(bool force) {
     maxy = (scissor_height + miny);
 
     /* load command structure while mapping screen coords to TA tiles */
-    c.flags = GPU_CMD_USERCLIP;
+    c.flags = PVR_CMD_USERCLIP;
     c.d1 = c.d2 = c.d3 = 0;
 
     uint16_t vw = vid_mode->width >> 5;
@@ -158,54 +150,54 @@ void apply_poly_header(PolyHeader* dst, PolyList* activePolyList) {
     TRACE();
 
     int list_type = activePolyList->list_type;
-    int gen_color_clamp = GPU_CLRCLAMP_DISABLE;
+    int gen_color_clamp = PVR_CLRCLAMP_DISABLE;
 
-    int gen_culling = CULLING_ENABLED    ? GPU_CULLING_CW : GPU_CULLING_SMALL;
-    int depth_comp  = DEPTH_TEST_ENABLED ? GPU_DEPTHCMP_GEQUAL : GPU_DEPTHCMP_ALWAYS;
-    int depth_write = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
+    int gen_culling = CULLING_ENABLED    ? PVR_CULLING_CW : PVR_CULLING_SMALL;
+    int depth_comp  = DEPTH_TEST_ENABLED ? PVR_DEPTHCMP_GEQUAL : PVR_DEPTHCMP_ALWAYS;
+    int depth_write = DEPTH_MASK_ENABLED ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
 
-    int gen_shading   = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
-    int gen_clip_mode = SCISSOR_TEST_ENABLED ? GPU_USERCLIP_INSIDE : GPU_USERCLIP_DISABLE;
-    int gen_fog_type  = FOG_ENABLED ? GPU_FOG_TABLE : GPU_FOG_DISABLE;
+    int gen_shading   = (SHADE_MODEL == GL_SMOOTH) ? PVR_SHADE_GOURAUD : PVR_SHADE_FLAT;
+    int gen_clip_mode = SCISSOR_TEST_ENABLED       ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
+    int gen_fog_type  = FOG_ENABLED                ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
 
-    int gen_alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_ALPHA_ENABLE : GPU_ALPHA_DISABLE;
+    int gen_alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? PVR_ALPHA_ENABLE : PVR_ALPHA_DISABLE;
     int blend_src = PVR_BLEND_SRCALPHA;
     int blend_dst = PVR_BLEND_INVSRCALPHA;
 
-    if (list_type == GPU_LIST_OP_POLY) {
+    if (list_type == PVR_LIST_OP_POLY) {
         /* Opaque polys are always one/zero */
         blend_src  = PVR_BLEND_ONE;
         blend_dst  = PVR_BLEND_ZERO;
-    } else if (list_type == GPU_LIST_PT_POLY) {
+    } else if (list_type == PVR_LIST_PT_POLY) {
         /* Punch-through polys require fixed blending and depth modes */
         blend_src  = PVR_BLEND_SRCALPHA;
         blend_dst  = PVR_BLEND_INVSRCALPHA;
-        depth_comp = GPU_DEPTHCMP_LEQUAL;
-    } else if (list_type == GPU_LIST_TR_POLY && AUTOSORT_ENABLED) {
+        depth_comp = PVR_DEPTHCMP_LEQUAL;
+    } else if (list_type == PVR_LIST_TR_POLY && AUTOSORT_ENABLED) {
         /* Autosort mode requires this mode for transparent polys */
-        depth_comp = GPU_DEPTHCMP_GEQUAL;
+        depth_comp = PVR_DEPTHCMP_GEQUAL;
     }
 
     int txr_enable, txr_alpha;
     if (!TEXTURES_ENABLED || !tx1 || !tx1->data) {
         /* Disable all texturing to start with */
-        txr_enable = GPU_TEXTURE_DISABLE;
+        txr_enable = PVR_TEXTURE_DISABLE;
     } else {
-        txr_alpha  = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_TXRALPHA_ENABLE : GPU_TXRALPHA_DISABLE;
-        txr_enable = GPU_TEXTURE_ENABLE;
+        txr_alpha  = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? PVR_TXRALPHA_ENABLE : PVR_TXRALPHA_DISABLE;
+        txr_enable = PVR_TEXTURE_ENABLE;
     }
 
     /* The base values for CMD */
-    dst->cmd = GPU_CMD_POLYHDR;
+    dst->cmd = PVR_CMD_POLYHDR;
     dst->cmd |= txr_enable << 3;
     /* Force bits 18 and 19 on to switch to 6 triangle strips */
     dst->cmd |= 0xC0000;
 
     /* Or in the list type, shading type, color and UV formats */
     dst->cmd |= (list_type             << PVR_TA_CMD_TYPE_SHIFT)     & PVR_TA_CMD_TYPE_MASK;
-    dst->cmd |= (GPU_CLRFMT_ARGBPACKED << PVR_TA_CMD_CLRFMT_SHIFT)   & PVR_TA_CMD_CLRFMT_MASK;
+    dst->cmd |= (PVR_CLRFMT_ARGBPACKED << PVR_TA_CMD_CLRFMT_SHIFT)   & PVR_TA_CMD_CLRFMT_MASK;
     dst->cmd |= (gen_shading           << PVR_TA_CMD_SHADE_SHIFT)    & PVR_TA_CMD_SHADE_MASK;
-    dst->cmd |= (GPU_UVFMT_32BIT       << PVR_TA_CMD_UVFMT_SHIFT)    & PVR_TA_CMD_UVFMT_MASK;
+    dst->cmd |= (PVR_UVFMT_32BIT       << PVR_TA_CMD_UVFMT_SHIFT)    & PVR_TA_CMD_UVFMT_MASK;
     dst->cmd |= (gen_clip_mode         << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
 
     /* Polygon mode 1 */
@@ -221,11 +213,11 @@ void apply_poly_header(PolyHeader* dst, PolyList* activePolyList) {
     dst->mode2 |= (gen_color_clamp << PVR_TA_PM2_CLAMP_SHIFT)    & PVR_TA_PM2_CLAMP_MASK;
     dst->mode2 |= (gen_alpha       << PVR_TA_PM2_ALPHA_SHIFT)    & PVR_TA_PM2_ALPHA_MASK;
 
-    if (txr_enable == GPU_TEXTURE_DISABLE) {
+    if (txr_enable == PVR_TEXTURE_DISABLE) {
         dst->mode3 = 0;
     } else {
-        GLuint filter = GPU_FILTER_NEAREST;
-        if (tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) filter = GPU_FILTER_BILINEAR;
+        GLuint filter = PVR_FILTER_NEAREST;
+        if (tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) filter = PVR_FILTER_BILINEAR;
 
         dst->mode2 |= (txr_alpha        << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
         dst->mode2 |= (filter           << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;

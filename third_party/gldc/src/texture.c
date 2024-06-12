@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "platform.h"
+#include "sh4.h"
 #include "yalloc/yalloc.h"
 
 /* We always leave this amount of vram unallocated to prevent
@@ -73,7 +73,7 @@ static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
     txr->index  = id;
     txr->width  = txr->height = 0;
     txr->mipmap = 0;
-    txr->env    = GPU_TXRENV_MODULATEALPHA;
+    txr->env    = PVR_TXRENV_MODULATEALPHA;
     txr->data   = NULL;
     txr->minFilter = GL_NEAREST;
     txr->magFilter = GL_NEAREST;

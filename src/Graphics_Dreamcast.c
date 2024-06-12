@@ -5,17 +5,35 @@
 #include "Logger.h"
 #include "Window.h"
 #include "../third_party/gldc/gldc.h"
-#include "../third_party/gldc/src/draw.c"
+#include "../third_party/gldc/src/private.h"
+#include "../third_party/gldc/src/sh4.h"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
+
 static cc_bool renderingDisabled;
+#define VERTEX_BUFFER_SIZE 32 * 40000
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
+static int InitPowerVR(void) {
+	cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
+	cc_bool fsaa     = false;
+	AUTOSORT_ENABLED = autosort;
+
+	pvr_init_params_t params = {
+		// Opaque, punch through, translucent polygons with largest bin sizes
+		{ PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
+		VERTEX_BUFFER_SIZE,
+		0, fsaa,
+		(autosort) ? 0 : 1
+	};
+    pvr_init(&params);
+}
+
 static void InitGLState(void) {
 	glClearDepth(1.0f);
 	GPUSetAlphaCutOff(127);
@@ -32,6 +50,7 @@ static void InitGLState(void) {
 }
 
 void Gfx_Create(void) {
+	if (!Gfx.Created) InitPowerVR();
 	if (!Gfx.Created) glKosInit();
 
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);

@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #include "gl_assert.h"
-#include "platform.h"
+#include "sh4.h"
 #include "types.h"
 
 #include "../gldc.h"
@@ -60,13 +60,13 @@ typedef struct {
     //20
     GLushort width;
     GLushort height;
-    //24
+    // 24
     GLushort  mipmap;  /* Bitmask of supplied mipmap levels */
     // 26
-    GLushort _pad0;
-    // 28
     GLubyte mipmap_bias;
     GLubyte  env;
+    // 28
+    GLushort _pad0;
     // 30
     GLubyte _pad1;
     GLubyte _pad2;
@@ -121,6 +121,7 @@ extern GLboolean BLEND_ENABLED;
 
 extern GLboolean SCISSOR_TEST_ENABLED;
 extern GLenum SHADE_MODEL;
+extern GLboolean AUTOSORT_ENABLED;
 
 
 extern PolyList OP_LIST;

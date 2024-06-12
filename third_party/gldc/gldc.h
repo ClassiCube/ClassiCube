@@ -19,14 +19,6 @@ __BEGIN_DECLS
 
 #include <math.h>
 
-/* Primitive Types taken from GL for compatability */
-/* Not all types are implemented in Open GL DC V.1.0 */
-#define GL_POINTS                               0x0000
-#define GL_LINES                                0x0001
-#define GL_TRIANGLES                            0x0004
-#define GL_TRIANGLE_STRIP                       0x0005
-#define GL_QUADS                                0x0007
-
 /* Scissor box */
 #define GL_SCISSOR_TEST     0x0008      /* capability bit */
 
@@ -84,14 +76,8 @@ __BEGIN_DECLS
 #define GLAPI extern
 #define APIENTRY
 
-/* Clear Caps */
-GLAPI void glClear(GLuint mode);
-
 /* Depth Testing */
 GLAPI void glClearDepth(GLfloat depth);
-
-/* Shading - Flat or Goraud */
-GLAPI void glShadeModel(GLenum mode);
 
 GLAPI GLuint gldcGenTexture(void);
 GLAPI void   gldcDeleteTexture(GLuint texture);
@@ -139,15 +125,6 @@ GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 /* Initialize the GL pipeline. GL will initialize the PVR. */
 GLAPI void glKosInit();
 GLAPI void glKosSwapBuffers();
-
-typedef struct {
-    /* If GL_TRUE, enables pvr autosorting, this *will* break glDepthFunc/glDepthTest */
-    GLboolean autosort_enabled;
-
-    /* If GL_TRUE, enables the PVR FSAA */
-    GLboolean fsaa_enabled;
-} GLdcConfig;
-
 
 /* Memory allocation extension (GL_KOS_texture_memory_management) */
 GLAPI void glDefragmentTextureMemory_KOS(void);

@@ -53,17 +53,13 @@ CMD_COL_VERT: .long 0xe0000000
 CMD_COL_EOS:  .long 0xf0000000
 
 .global _VP_COL_HWIDTH
-.type   _VP_COL_HWIDTH,%object
 _VP_COL_HWIDTH:  .long 0
 
 .global _VP_COL_HHEIGHT
-.type   _VP_COL_HHEIGHT,%object
 _VP_COL_HHEIGHT: .long 0
 
 .global _VP_COL_X_PLUS_HWIDTH
-.type   _VP_COL_X_PLUS_HWIDTH,%object
 _VP_COL_X_PLUS_HWIDTH:  .long 0
 
 .global _VP_COL_Y_PLUS_HHEIGHT
-.type   _VP_COL_Y_PLUS_HHEIGHT,%object
 _VP_COL_Y_PLUS_HHEIGHT: .long 0
