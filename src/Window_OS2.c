@@ -53,14 +53,14 @@ FILEDLG fileDialog;
 void *mutex = NULL;
 
 /**
- * Handling native keystrokes 
+ * Handling native keystrokes
  * Borrowed from SDL2 OS/2 code
  **/
 static void MapKeys(MPARAM mp1, MPARAM mp2) {
 	ULONG   ulFlags = SHORT1FROMMP(mp1);      /* WM_CHAR flags         */
 	ULONG   ulVirtualKey = SHORT2FROMMP(mp2); /* Virtual key code VK_* */
 	ULONG   ulCharCode = SHORT1FROMMP(mp2);   /* Character code        */
-	ULONG   ulScanCode = CHAR4FROMMP(mp1);    /* Scan code             */    
+	ULONG   ulScanCode = CHAR4FROMMP(mp1);    /* Scan code             */
 	static const int aScancode[] = {
 		INPUT_NONE, CCKEY_ESCAPE, CCKEY_1, CCKEY_2, CCKEY_3, CCKEY_4, CCKEY_5, CCKEY_6,
 		CCKEY_7, CCKEY_8, CCKEY_9, CCKEY_0, CCKEY_MINUS, CCKEY_EQUALS, CCKEY_BACKSPACE, CCKEY_TAB,
@@ -93,7 +93,7 @@ static void MapKeys(MPARAM mp1, MPARAM mp2) {
 		}
 	}
 	if ((ulFlags & KC_SCANCODE) != 0) {
-		Input_Set(aScancode[ulScanCode], (ulFlags & KC_KEYUP) == 0); 
+		Input_Set(aScancode[ulScanCode], (ulFlags & KC_KEYUP) == 0);
 	}
 }
 
@@ -120,9 +120,11 @@ static void RefreshWindowBounds() {
 MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2) {
 //printf("m %lu (%x)\n", message, message);
 	switch(message) {
-		case WM_CLOSE:
-			WinPostMsg(hwnd, WM_QUIT, 0L, 0L);
-			break;
+	   case WM_CLOSE:
+		   Event_RaiseVoid(&WindowEvents.Closing);
+		   if (Window_Main.Exists) WinDestroyWindow(hwndFrame);
+		   Window_Main.Exists = false;
+	   	break;
 
 		case WM_QUIT:
 			Window_Free();
@@ -151,7 +153,7 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
       return FALSE;
       break;
 
-    case WM_VRNENABLED: 
+    case WM_VRNENABLED:
     	{
     		HPS hps;
     		HRGN hrgn;
@@ -188,7 +190,7 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 			return FALSE;
       break;
 
-		case WM_MOUSEMOVE: 
+		case WM_MOUSEMOVE:
 			{
 				SHORT x = SHORT1FROMMP(mp1);
 				SHORT y = Window_Main.Height - SHORT2FROMMP(mp1);
@@ -210,7 +212,7 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 		case WM_BUTTON2UP:
 			Input_SetReleased(CCMOUSE_R); break;
 
-		case WM_CHAR: 
+		case WM_CHAR:
 			MapKeys(mp1, mp2);
 			return (MRESULT)TRUE;
 	}
@@ -241,6 +243,7 @@ void DiveFreeBuffer(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	ULONG rc;
 	PPIB pib;
@@ -297,7 +300,7 @@ void Window_Init(void) {
 
 void Window_Create(int width, int height) {
 	ULONG ulFlags = FCF_SHELLPOSITION | FCF_TASKLIST
-		| FCF_SIZEBORDER | FCF_ICON | FCF_MAXBUTTON |FCF_MINBUTTON 
+		| FCF_SIZEBORDER | FCF_ICON | FCF_MAXBUTTON |FCF_MINBUTTON
 		| FCF_MAXBUTTON | FCF_TITLEBAR | FCF_SYSMENU;
 	
 	if (!WinRegisterClass(habAnchor, CC_WIN_CLASSNAME, ClientWndProc, 0, 0)) {
@@ -394,27 +397,28 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	APIRET rc;
-	ULONG scanLineSize = bmp->width * (32 >> 3);
+	ULONG scanLineSize = width * (32 >> 3);
 
 	/* Destroy previous buffer. */
 	DiveFreeBuffer();
 
-	if (bmp->width == 0 || bmp->height == 0) return;
+	if (width == 0 || height == 0) return;
 
 	/* Bytes per line. */
 	scanLineSize  = (scanLineSize + 3) & ~3; /* 4-byte aligning */
 
 	rc = DosAllocMem((PVOID)&imageBuffer,
-		 (bmp->height * scanLineSize) + sizeof(ULONG),
+		 (height * scanLineSize) + sizeof(ULONG),
 		 PAG_COMMIT | PAG_READ | PAG_WRITE);
+
 	if (rc != NO_ERROR) {
 			// TODO Debug messages
 			return;
 	}
 
-	rc = DiveAllocImageBuffer(hDive, &bufNum, FOURCC_BGR4, bmp->width, bmp->height,
+	rc = DiveAllocImageBuffer(hDive, &bufNum, FOURCC_BGR4, width, height,
 		scanLineSize, imageBuffer);
 	if (rc != DIVE_SUCCESS) {
 			DosFreeMem(imageBuffer);
@@ -437,6 +441,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	}
 
 	bmp->scan0 = (unsigned int*)imageBuffer;
+	bmp->width = width;
+	bmp->height = height;
 }
 
 
@@ -539,7 +545,7 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	if (fileDialog.lReturn == DID_OK) {
 		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
 		args->Callback(&temp);
-	}                               
+	}
 	WinSetVisibleRegionNotify(hwndClient, TRUE);
 	return 0;
 }
@@ -581,16 +587,16 @@ void OnscreenKeyboard_Close(void) { }
 void Window_LockLandscapeOrientation(cc_bool lock) { }
 
 void Window_EnableRawMouse(void) {
-	if (WinSetCapture(HWND_DESKTOP, hwndClient)) 
+	if (WinSetCapture(HWND_DESKTOP, hwndClient))
 		DefaultEnableRawMouse();
 }
 
-void Window_UpdateRawMouse(void) { 
+void Window_UpdateRawMouse(void) {
 	DefaultUpdateRawMouse();
 }
 
 void Window_DisableRawMouse(void) {
-	if (WinSetCapture(HWND_DESKTOP, NULLHANDLE)) 
+	if (WinSetCapture(HWND_DESKTOP, NULLHANDLE))
 		DefaultDisableRawMouse();
 }
 
