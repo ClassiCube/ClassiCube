@@ -851,7 +851,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 
 	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
 	if (((uintptr_t)chunk->data & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk>data);
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk->data);
 	}
 	if ((chunk->size & 0x7F) != 0) {
 		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &chunk->size);
@@ -863,7 +863,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
 
-		buf->data_pcm16 = chunk>data;
+		buf->data_pcm16 = chunk->data;
 		buf->nsamples   = chunk->size / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
 		DSP_FlushDataCache(buf->data_pcm16, chunk->size);
 		ndspChnWaveBufAdd(ctx->chanID, buf);
@@ -1429,10 +1429,13 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
 
+static int totalSize;
 cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
 	size = (size + 0x1F) & ~0x1F;  // round up to nearest multiple of 32
 	void* dst = memalign(32, size * numChunks);
 	if (!dst) return ERR_OUT_OF_MEMORY;
+	totalSize += size * numChunks;
+	Platform_Log3("ALLOC: %i X %i (%i)", &size, &numChunks, &totalSize);
 
 	for (int i = 0; i < numChunks; i++) 
 	{

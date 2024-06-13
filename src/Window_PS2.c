@@ -28,7 +28,11 @@ static char padBuf[256] __attribute__((aligned(64)));
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
+	dma_channel_fast_waits(DMA_CHANNEL_GIF);
+}
+
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
@@ -56,8 +60,6 @@ static void ResetGfxState(void) {
 	
 	graph_shutdown();
 	graph_vram_clear();
-	
-	dma_channel_shutdown(DMA_CHANNEL_GIF,0);
 }
 
 void Window_Create3D(int width, int height) { 

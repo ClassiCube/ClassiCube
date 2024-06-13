@@ -706,9 +706,6 @@ void Platform_Init(void) {
 	// Create root directory
 	int res = fioMkdir("mass:/ClassiCube");
 	Platform_Log1("ROOT CREATE %i", &res);
-	
-	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
-	dma_channel_fast_waits(DMA_CHANNEL_GIF);
 }
 
 void Platform_Free(void) { }
