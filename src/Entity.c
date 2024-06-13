@@ -668,23 +668,6 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	}
 }
 
-static void LocalPlayer_InputSet(int key, cc_bool pressed) {
-	struct HacksComp* hacks = &LocalPlayer_Instances[0].Hacks;
-
-	if (pressed && !hacks->Enabled) return;
-	if (InputBind_Claims(BIND_SPEED, key))      hacks->Speeding     = pressed;
-	if (InputBind_Claims(BIND_HALF_SPEED, key)) hacks->HalfSpeeding = pressed;
-}
-
-static void LocalPlayer_InputDown(void* obj, int key, cc_bool was) {
-	/* e.g. pressing Shift in chat input shouldn't turn on speeding */
-	if (!Gui.InputGrab) LocalPlayer_InputSet(key, true);
-}
-
-static void LocalPlayer_InputUp(void* obj, int key) {
-	LocalPlayer_InputSet(key, false);
-}
-
 static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	LocalInterpComp_SetLocation(&p->Interp, update, e);
@@ -957,12 +940,39 @@ static cc_bool LocalPlayer_HandleJump(int key) {
 	return false;
 }
 
+static cc_bool LocalPlayer_TriggerHalfSpeed(int key) {
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
+	hacks->HalfSpeeding     = hacks->Enabled;
+	return true;
+}
+
+static cc_bool LocalPlayer_TriggerSpeed(int key) {
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
+	hacks->Speeding         = hacks->Enabled;
+	return true;
+}
+
+static void LocalPlayer_ReleaseHalfSpeed(int key) {
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
+	hacks->HalfSpeeding     = false;
+}
+
+static void LocalPlayer_ReleaseSpeed(int key) {
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
+	hacks->Speeding         = false;
+}
+
 static void LocalPlayer_HookBinds(void) {
 	Bind_OnTriggered[BIND_RESPAWN]   = LocalPlayer_HandleRespawn;
 	Bind_OnTriggered[BIND_SET_SPAWN] = LocalPlayer_HandleSetSpawn;
 	Bind_OnTriggered[BIND_FLY]       = LocalPlayer_HandleFly;
 	Bind_OnTriggered[BIND_NOCLIP]    = LocalPlayer_HandleNoclip;
 	Bind_OnTriggered[BIND_JUMP]      = LocalPlayer_HandleJump;
+
+	Bind_OnTriggered[BIND_HALF_SPEED] = LocalPlayer_TriggerHalfSpeed;
+	Bind_OnTriggered[BIND_SPEED]      = LocalPlayer_TriggerSpeed;
+	Bind_OnReleased[BIND_HALF_SPEED]  = LocalPlayer_ReleaseHalfSpeed;
+	Bind_OnReleased[BIND_SPEED]       = LocalPlayer_ReleaseSpeed;
 }
 
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
@@ -1062,8 +1072,6 @@ void NetPlayer_Init(struct NetPlayer* p) {
 static void Entities_Init(void) {
 	int i;
 	Event_Register_(&GfxEvents.ContextLost, NULL, Entities_ContextLost);
-	Event_Register_(&InputEvents.Down,      NULL, LocalPlayer_InputDown);
-	Event_Register_(&InputEvents.Up,        NULL, LocalPlayer_InputUp);
 
 	Entities.NamesMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_Elems(NameMode_Names));
