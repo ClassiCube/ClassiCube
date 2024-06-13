@@ -15,7 +15,7 @@ static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 
 /* Common/Base methods */
 static void AudioBase_Clear(struct AudioContext* ctx);
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, void** data, cc_uint32* size);
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, struct AudioChunk* chunk);
 static cc_result AudioBase_AllocChunks(int size, struct AudioChunk* chunks, int numChunks);
 static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks);
 
@@ -226,7 +226,7 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 	_alGetError(); /* Reset error state */
 }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	ALuint buffer;
 	ALenum err;
 	
@@ -234,7 +234,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 	buffer = ctx->freeIDs[--ctx->free];
 	_alGetError(); /* Reset error state */
 
-	_alBufferData(buffer, ctx->format, chunk, size, ctx->sampleRate);
+	_alBufferData(buffer, ctx->format, chunk->data, chunk->size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
@@ -433,22 +433,23 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) { ctx->volume = volume; }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	cc_result res;
 	WAVEHDR* hdr;
 	cc_bool ok;
 	int i;
+	struct AudioChunk tmp = *chunk;
 
 	for (i = 0; i < ctx->count; i++) {
 		hdr = &ctx->headers[i];
 		if (!(hdr->dwFlags & WHDR_DONE)) continue;
 		
-		ok = AudioBase_AdjustSound(ctx, i, &chunk, &dataSize);
+		ok = AudioBase_AdjustSound(ctx, i, &tmp);
 		if (!ok) return ERR_OUT_OF_MEMORY;
 
 		Mem_Set(hdr, 0, sizeof(WAVEHDR));
-		hdr->lpData         = (LPSTR)chunk;
-		hdr->dwBufferLength = dataSize;
+		hdr->lpData         = (LPSTR)tmp.data;
+		hdr->dwBufferLength = tmp.size;
 		hdr->dwLoops        = 1;
 		
 		if ((res = waveOutPrepareHeader(ctx->handle, hdr, sizeof(WAVEHDR)))) return res;
@@ -703,8 +704,8 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 	UpdateVolume(ctx);
 }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
-	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, chunk, size);
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, chunk->data, chunk->size);
 }
 
 cc_result Audio_Pause(struct AudioContext* ctx) {
@@ -845,15 +846,15 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
  	ndspChnSetMix(ctx->chanID, mix);
 }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	ndspWaveBuf* buf;
 
 	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
-	if (((uintptr_t)chunk & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	if (((uintptr_t)chunk->data & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk>data);
 	}
-	if ((dataSize & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+	if ((chunk->size & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &chunk->size);
 	}
 
 	for (int i = 0; i < ctx->count; i++) 
@@ -862,9 +863,9 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
 
-		buf->data_pcm16 = chunk;
-		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
-		DSP_FlushDataCache(buf->data_pcm16, dataSize);
+		buf->data_pcm16 = chunk>data;
+		buf->nsamples   = chunk->size / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
+		DSP_FlushDataCache(buf->data_pcm16, chunk->size);
 		ndspChnWaveBufAdd(ctx->chanID, buf);
 		return 0;
 	}
@@ -1030,15 +1031,15 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 	audrvVoiceSetVolume(&drv, ctx->chanID, volume / 100.0f);
 }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	AudioDriverWaveBuf* buf;
 
 	// Audio buffers must be aligned to a multiple of 0x1000, according to libnx example code
-	if (((uintptr_t)chunk & 0xFFF) != 0) {
-		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	if (((uintptr_t)chunk->data & 0xFFF) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk->data);
 	}
-	if ((dataSize & 0xFFF) != 0) {
-		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+	if ((chunk->size & 0xFFF) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &chunk->size);
 	}
 
 
@@ -1046,16 +1047,15 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 	{
 		buf = &ctx->bufs[i];
 		int state = buf->state;
-		cc_uint32 size = dataSize;
-		cc_uint32 endOffset = dataSize / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
+		cc_uint32 endOffset = chunk->size / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
 
 		if (state == AudioDriverWaveBufState_Queued || state == AudioDriverWaveBufState_Playing || state == AudioDriverWaveBufState_Waiting)
 			continue;
 
-		buf->data_pcm16 = chunk;
-		buf->size       = size;
+		buf->data_pcm16 = chunk->data;
+		buf->size       = chunk->size;
 		buf->start_sample_offset = 0;
-		buf->end_sample_offset = endOffset;
+		buf->end_sample_offset   = endOffset;
 
 		Mutex_Lock(audrv_mutex);
 		audrvVoiceAddWaveBuf(&drv, ctx->chanID, buf);
@@ -1218,10 +1218,10 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 	ctx->volume = (volume / 100.0f) * 255;
 }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	// Audio buffers must be aligned and padded to a multiple of 32 bytes
-	if (((uintptr_t)chunk & 0x1F) != 0) {
-		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	if (((uintptr_t)chunk->data & 0x1F) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk->data);
 	}
 
 	struct AudioBuffer* buf;
@@ -1231,8 +1231,8 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		buf = &ctx->bufs[i];
 		if (!buf->available) continue;
 
-		buf->samples   = chunk;
-		buf->size      = dataSize;
+		buf->samples   = chunk->data;
+		buf->size      = chunk->size;
 		buf->available = false;
 
 		return 0;
@@ -1385,7 +1385,7 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 	snd_stream_volume(ctx->hnd, volume);
 }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	struct AudioBuffer* buf;
 
 	for (int i = 0; i < ctx->count; i++) 
@@ -1393,8 +1393,8 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		buf = &ctx->bufs[i];
 		if (!buf->available) continue;
 
-		buf->samples   = chunk;
-		buf->bytesLeft = dataSize;
+		buf->samples   = chunk->data;
+		buf->bytesLeft = chunk->size;
 		buf->available = false;
 		return 0;
 	}
@@ -1492,8 +1492,8 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 	interop_AudioVolume(ctx->contextID, volume);
 }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
-	ctx->data = chunk; return 0;
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	ctx->data = chunk->data; return 0;
 }
 
 cc_result Audio_Play(struct AudioContext* ctx) { 
@@ -1546,7 +1546,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) { }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -1609,9 +1609,9 @@ static void AudioBase_Clear(struct AudioContext* ctx) {
 	}
 }
 
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, void** data, cc_uint32* size) {
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, struct AudioChunk* chunk) {
 	void* audio;
-	cc_uint32 src_size = *size;
+	cc_uint32 src_size = chunk->size;
 	if (ctx->volume >= 100) return true;
 
 	/* copy to temp buffer to apply volume */
@@ -1623,17 +1623,16 @@ static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, void** dat
 			audio = Mem_TryAlloc(src_size, 1);
 		}
 
-		if (!data) return false;
+		if (!audio) return false;
 		ctx->_tmpData[i] = audio;
 		ctx->_tmpSize[i] = src_size;
 	}
 
 	audio = ctx->_tmpData[i];
-	Mem_Copy(audio, *data, src_size);
+	Mem_Copy(audio, chunk->data, src_size);
 	ApplyVolume((cc_int16*)audio, src_size / 2, ctx->volume);
 
-	*data = audio;
-	*size = src_size;
+	chunk->data = audio;
 	return true;
 }
 #endif
@@ -1671,7 +1670,7 @@ static cc_result PlayAudio(struct AudioContext* ctx, struct AudioData* data) {
     Audio_SetVolume(ctx, data->volume);
 
 	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,     data->size))) return res;
+	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
 	if ((res = Audio_Play(ctx))) return res;
 	return 0;
 }

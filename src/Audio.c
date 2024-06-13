@@ -183,8 +183,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	snd = Soundboard_PickRandom(board, type);
 	if (!snd) return;
 
-	data.data       = snd->chunk.data;
-	data.size       = snd->chunk.size;
+	data.chunk      = snd->chunk;
 	data.channels   = snd->channels;
 	data.sampleRate = snd->sampleRate;
 	data.rate       = 100;
@@ -331,10 +330,11 @@ static void* music_waitable;
 static volatile cc_bool music_stopping, music_joining;
 static int music_minDelay, music_maxDelay;
 
-static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState* ctx) {
+static cc_result Music_Buffer(struct AudioChunk* chunk, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
 	cc_int16* cur;
 	cc_result res = 0, res2;
+	cc_int16* data = chunk->data;
 
 	while (samples < maxSamples) {
 		if ((res = Vorbis_DecodeFrame(ctx))) break;
@@ -343,7 +343,8 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
 
-	res2 = Audio_QueueChunk(&music_ctx, data, samples * 2);
+	chunk->size = samples * 2;
+	res2 = Audio_QueueChunk(&music_ctx, chunk);
 	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
@@ -379,7 +380,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) 
 	{
-		res = Music_Buffer((cc_int16*)chunks[i].data, samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[i], samplesPerSecond, &vorbis);
 	}
 	if (music_stopping) goto cleanup;
 
@@ -411,7 +412,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 			Thread_Sleep(10); continue;
 		}
 
-		res = Music_Buffer((cc_int16*)chunks[cur].data, samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[cur], samplesPerSecond, &vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 
 		/* need to specially handle last bit of audio */

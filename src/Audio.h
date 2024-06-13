@@ -20,8 +20,15 @@ struct AudioContext;
 #define DEFAULT_MUSIC_VOLUME 100
 #endif
 
+union AudioChunkMeta { void* ptr; cc_uintptr val; };
+struct AudioChunk {
+	void* data; /* the raw 16 bit integer samples */
+	cc_uint32 size;
+	union AudioChunkMeta meta;
+};
+
 struct AudioData {
-	void* data; cc_uint32 size; /* the raw 16 bit integer samples */
+	struct AudioChunk chunk;
 	int channels;
 	int sampleRate; /* frequency / sample rate */
 	int volume; /* volume data played at (100 = normal volume) */
@@ -47,13 +54,6 @@ cc_bool AudioBackend_Init(void);
 void    AudioBackend_Tick(void);
 void    AudioBackend_Free(void);
 
-union AudioChunkMeta { void* ptr; cc_uintptr val; };
-struct AudioChunk {
-	void* data;
-	cc_uint32 size;
-	union AudioChunkMeta meta;
-};
-
 /* Initialises an audio context. */
 cc_result Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
@@ -65,8 +65,8 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 void Audio_SetVolume(struct AudioContext* ctx, int volume);
 /* Queues the given audio chunk for playing. */
 /* NOTE: You MUST ensure Audio_Poll indicates a buffer is free before calling this. */
-/* NOTE: Some backends directly read from the data - therefore you MUST NOT modify it */
-cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size);
+/* NOTE: Some backends directly read from the chunk data - therefore you MUST NOT modify it */
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk);
 /* Begins playing audio. Audio_QueueChunk must have been used before this. */
 cc_result Audio_Play(struct AudioContext* ctx);
 /* Polls the audio context and then potentially unqueues buffer */
