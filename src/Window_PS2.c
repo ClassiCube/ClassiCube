@@ -66,6 +66,8 @@ static void ResetGfxState(void) {
 	fb_color.psm     = GS_PSM_32;
 	fb_color.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_color.psm, GRAPH_ALIGN_PAGE);
 
+	fb_depth.enable  = 1;
+	fb_depth.method  = ZTEST_METHOD_ALLPASS;
 	fb_depth.mask    = 0;
 	fb_depth.zsm     = GS_ZBUF_32;
 	fb_depth.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
@@ -104,7 +106,6 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ProcessEvents(float delta) {
-	Platform_LogConst("TICK");
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita

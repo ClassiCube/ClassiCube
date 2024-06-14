@@ -130,6 +130,9 @@ void Gfx_Create(void) {
 	context = 1;
 	FlipContext();
 	
+// TODO maybe Min not actually needed?
+	Gfx.MinTexWidth  = 4;
+	Gfx.MinTexHeight = 4;	
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 512 * 512;
@@ -176,7 +179,6 @@ static void UpdateTextureBuffer(int context, texbuffer_t *texture, CCTexture* te
 	q++;
 }
 
-static int BINDS;
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
@@ -238,13 +240,13 @@ void Gfx_SetFogMode(FogFunc func)   { }
 static void UpdateState(int context) {
 	// TODO: toggle Enable instead of method ?
 	int aMethod = gfx_alphaTest ? ATEST_METHOD_GREATER_EQUAL : ATEST_METHOD_ALLPASS;
-	int dMethod = gfx_depthTest ? ZTEST_METHOD_GREATER_EQUAL : ZTEST_METHOD_ALLPASS;
+	int zMethod = gfx_depthTest ? ZTEST_METHOD_GREATER_EQUAL : ZTEST_METHOD_ALLPASS;
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x80, ATEST_KEEP_FRAMEBUFFER,
 							   DRAW_DISABLE, DRAW_DISABLE,
-							   DRAW_ENABLE,  dMethod), GS_REG_TEST + context);
+							   DRAW_ENABLE,  zMethod), GS_REG_TEST + context);
 	q++;
 	
 	stateDirty = false;
@@ -619,7 +621,6 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_EndFrame(void) {
-	BINDS = 0;
 	Platform_LogConst("--- EF1 ---");
 	q = draw_finish(q);
 	Platform_LogConst("--- EF2 ---");
