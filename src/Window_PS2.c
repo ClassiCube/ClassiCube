@@ -23,7 +23,8 @@
 #include <kernel.h>
 
 static cc_bool launcherMode;
-static char padBuf[256] __attribute__((aligned(64)));
+static char padBuf0[256] __attribute__((aligned(64)));
+static char padBuf1[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
@@ -51,7 +52,8 @@ void Window_Init(void) {
 	DisplayInfo.ContentOffsetY = 10;
 	
 	padInit(0);
-	padPortOpen(0, 0, padBuf);
+	padPortOpen(0, 0, padBuf0);
+	padPortOpen(1, 0, padBuf1);
 }
 
 void Window_Free(void) { }
@@ -162,7 +164,6 @@ static void ProcessPadInput(int port, float delta, struct padButtonStatus* pad) 
 static cc_bool setMode[INPUT_MAX_GAMEPADS];
 static void ProcessPad(int port, float delta) {
 	 struct padButtonStatus pad;
-	
 	int state = padGetState(port, 0);
 	if (state != PAD_STATE_STABLE) return;
 
@@ -177,10 +178,8 @@ static void ProcessPad(int port, float delta) {
 }
 
 void Window_ProcessGamepads(float delta) {
-	for (int port = 0; port < 2; port++)
-	{
-		ProcessPad(port, delta);
-	}
+	ProcessPad(0, delta);
+	ProcessPad(1, delta);
 }
 
 
@@ -192,10 +191,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->width  = width;
 	bmp->height = height;
 
-	packet_t* packet = packet_init(50, PACKET_NORMAL);
+	packet_t* packet = packet_init(100, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
 	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
+	q = draw_clear(q, 0, 0, 0,
+					fb_color.width, fb_color.height, 170, 170, 170);
 	q = draw_finish(q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
