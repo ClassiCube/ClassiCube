@@ -152,7 +152,7 @@ void Gfx_Free(void) {
 typedef struct CCTexture_ {
 	cc_uint32 width, height;
 	cc_uint32 log2_width, log2_height;
-	cc_uint32 pad[(64 - 4)/4];
+	cc_uint32 pad[(64 - 16)/4];
 	cc_uint32 pixels[]; // aligned to 64 bytes (only need 16?)
 } CCTexture;
 
@@ -164,6 +164,9 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->height      = bmp->height;
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
+	
+	cc_uintptr addr = (cc_uintptr)tex->pixels;
+	Platform_Log1("ADDR: %x", &addr);
 	
 	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
@@ -621,24 +624,23 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_EndFrame(void) {
-	Platform_LogConst("--- EF1 ---");
+	//Platform_LogConst("--- EF1 ---");
 	q = draw_finish(q);
-	Platform_LogConst("--- EF2 ---");
 	
 	// Fill out and then send DMA chain
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
 	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
-	Platform_LogConst("--- EF3 ---");
+	//Platform_LogConst("--- EF2 ---");
 		
 	draw_wait_finish();
-	Platform_LogConst("--- EF4 ---");
+	//Platform_LogConst("--- EF3 ---");
 	
 	if (gfx_vsync) graph_wait_vsync();
 	if (gfx_minFrameMs) LimitFPS();
 	
 	FlipContext();
-	Platform_LogConst("--- EF5 ---");
+	//Platform_LogConst("--- EF4 ---");
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

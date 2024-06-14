@@ -120,10 +120,10 @@ static void ProcessMouseInput(float delta) {
 	mouse_data mData = { 0 };
 	if (PS2MouseRead(&mData) < 0) return;
 
-	//Platform_Log3("MOUSE: %i, %i, %i", &mData.x, &mData.y, &mData.buttons);
 	Input_SetNonRepeatable(CCMOUSE_L, mData.buttons & PS2MOUSE_BTN1);
 	Input_SetNonRepeatable(CCMOUSE_R, mData.buttons & PS2MOUSE_BTN2);
 	Input_SetNonRepeatable(CCMOUSE_M, mData.buttons & PS2MOUSE_BTN3);
+	Mouse_ScrollVWheel(mData.wheel);
 	
 	if (!Input.RawMode) return;	
 	float scale = (delta * 60.0) / 2.0f;
