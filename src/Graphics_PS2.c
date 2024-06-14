@@ -248,7 +248,7 @@ static void UpdateState(int context) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 	// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
-	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_FRAMEBUFFER,
+	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
 							   DRAW_DISABLE, DRAW_DISABLE,
 							   DRAW_ENABLE,  zMethod), GS_REG_TEST + context);
 	q++;
@@ -303,7 +303,9 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	// TODO
+	fb_depth.mask = !enabled;
+	q = draw_zbuffer(q, 0, &fb_depth);
+	fb_depth.mask = 0;
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
