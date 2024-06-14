@@ -16,7 +16,7 @@
 #include <malloc.h>
 
 static void* gfx_vertices;
-extern framebuffer_t fb_color;
+extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
 static float vp_hwidth, vp_hheight;
 
@@ -87,7 +87,7 @@ static void InitDrawingEnv(void) {
 	packet_t *packet = packet_init(30, PACKET_NORMAL); // TODO: is 30 too much?
 	qword_t *q = packet->data;
 	
-	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
+	q = draw_setup_environment(q, 0, &fb_colors[0], &fb_depth);
 	// GS can render from 0 to 4096, so set primitive origin to centre of that
 	q = draw_primitive_xyoffset(q, 0, 2048 - vp_hwidth, 2048 - vp_hheight);
 
@@ -164,9 +164,6 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->height      = bmp->height;
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
-	
-	cc_uintptr addr = (cc_uintptr)tex->pixels;
-	Platform_Log1("ADDR: %x", &addr);
 	
 	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
@@ -272,8 +269,8 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	// TODO clear only some buffers
 	q = draw_disable_tests(q, 0, &fb_depth);
-	q = draw_clear(q, 0, 2048.0f - fb_color.width / 2.0f, 2048.0f - fb_color.height / 2.0f,
-					fb_color.width, fb_color.height, clearR, clearG, clearB);
+	q = draw_clear(q, 0, 2048.0f - fb_colors[0].width / 2.0f, 2048.0f - fb_colors[0].height / 2.0f,
+					fb_colors[0].width, fb_colors[0].height, clearR, clearG, clearB);
 	UpdateState(0);
 }
 
@@ -624,23 +621,29 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_EndFrame(void) {
-	//Platform_LogConst("--- EF1 ---");
+	Platform_LogConst("--- EF1 ---");
+	// Double buffering
+	graph_set_framebuffer_filtered(fb_colors[context].address,
+                                   fb_colors[context].width,
+                                   fb_colors[context].psm, 0, 0);
+
+	q = draw_framebuffer(q, 0, &fb_colors[context ^ 1]);
 	q = draw_finish(q);
 	
 	// Fill out and then send DMA chain
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
 	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
-	//Platform_LogConst("--- EF2 ---");
+	Platform_LogConst("--- EF2 ---");
 		
 	draw_wait_finish();
-	//Platform_LogConst("--- EF3 ---");
+	Platform_LogConst("--- EF3 ---");
 	
 	if (gfx_vsync) graph_wait_vsync();
 	if (gfx_minFrameMs) LimitFPS();
 	
 	FlipContext();
-	//Platform_LogConst("--- EF4 ---");
+	Platform_LogConst("--- EF4 ---");
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

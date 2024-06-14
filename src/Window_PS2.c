@@ -29,7 +29,7 @@ static char padBuf1[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
-framebuffer_t fb_color;
+framebuffer_t fb_colors[2];
 zbuffer_t     fb_depth;
 
 void Window_PreInit(void) {
@@ -68,19 +68,25 @@ static void ResetGfxState(void) {
 	graph_shutdown();
 	graph_vram_clear();
 
-	fb_color.width   = DisplayInfo.Width;
-	fb_color.height  = DisplayInfo.Height;
-	fb_color.mask    = 0;
-	fb_color.psm     = GS_PSM_32;
-	fb_color.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_color.psm, GRAPH_ALIGN_PAGE);
+	fb_colors[0].width   = DisplayInfo.Width;
+	fb_colors[0].height  = DisplayInfo.Height;
+	fb_colors[0].mask    = 0;
+	fb_colors[0].psm     = GS_PSM_32;
+	fb_colors[0].address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_colors[1].psm, GRAPH_ALIGN_PAGE);
+
+	fb_colors[1].width   = DisplayInfo.Width;
+	fb_colors[1].height  = DisplayInfo.Height;
+	fb_colors[1].mask    = 0;
+	fb_colors[1].psm     = GS_PSM_32;
+	fb_colors[1].address = graph_vram_allocate(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm, GRAPH_ALIGN_PAGE);
 
 	fb_depth.enable  = 1;
 	fb_depth.method  = ZTEST_METHOD_ALLPASS;
 	fb_depth.mask    = 0;
 	fb_depth.zsm     = GS_ZBUF_32;
-	fb_depth.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
+	fb_depth.address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
 
-	graph_initialize(fb_color.address, fb_color.width, fb_color.height, fb_color.psm, 0, 0);
+	graph_initialize(fb_colors[1].address, fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm, 0, 0);
 }
 
 void Window_Create2D(int width, int height) {
@@ -219,9 +225,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	packet_t* packet = packet_init(100, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
-	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
+	q = draw_setup_environment(q, 0, &fb_colors[1], &fb_depth);
 	q = draw_clear(q, 0, 0, 0,
-					fb_color.width, fb_color.height, 170, 170, 170);
+					fb_colors[1].width, fb_colors[1].height, 170, 170, 170);
 	q = draw_finish(q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
@@ -238,7 +244,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	qword_t* q = packet->data;
 
 	q = draw_texture_transfer(q, bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
-								 fb_color.address, fb_color.width);
+								 fb_colors[1].address, fb_colors[1].width);
 	q = draw_texture_flush(q);
 
 	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
