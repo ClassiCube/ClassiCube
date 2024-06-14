@@ -27,8 +27,10 @@ static char padBuf[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
+framebuffer_t fb_color;
+zbuffer_t     fb_depth;
 
-void Window_PreInit(void) { 
+void Window_PreInit(void) {
 	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
 	dma_channel_fast_waits(DMA_CHANNEL_GIF);
 }
@@ -54,12 +56,26 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-static cc_bool hasCreated;
 static void ResetGfxState(void) {
-	if (!hasCreated) { hasCreated = true; return; }
-	
 	graph_shutdown();
 	graph_vram_clear();
+
+	fb_color.width   = DisplayInfo.Width;
+	fb_color.height  = DisplayInfo.Height;
+	fb_color.mask    = 0;
+	fb_color.psm     = GS_PSM_32;
+	fb_color.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_color.psm, GRAPH_ALIGN_PAGE);
+
+	fb_depth.mask    = 0;
+	fb_depth.zsm     = GS_ZBUF_32;
+	fb_depth.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
+
+	graph_initialize(fb_color.address, fb_color.width, fb_color.height, fb_color.psm, 0, 0);
+}
+
+void Window_Create2D(int width, int height) {
+	ResetGfxState();
+	launcherMode = true;
 }
 
 void Window_Create3D(int width, int height) { 
@@ -88,6 +104,7 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ProcessEvents(float delta) {
+	Platform_LogConst("TICK");
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -169,25 +186,19 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static framebuffer_t win_fb;
-
-void Window_Create2D(int width, int height) {
-	ResetGfxState();
-	launcherMode = true;
-	
-	win_fb.width   = DisplayInfo.Width;
-	win_fb.height  = DisplayInfo.Height;
-	win_fb.mask    = 0;
-	win_fb.psm     = GS_PSM_32;
-	win_fb.address = graph_vram_allocate(win_fb.width, win_fb.height, win_fb.psm, GRAPH_ALIGN_PAGE);
-	
-	graph_initialize(win_fb.address, win_fb.width, win_fb.height, win_fb.psm, 0, 0);
-}
-
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+
+	packet_t* packet = packet_init(200, PACKET_NORMAL);
+	qword_t* q = packet->data;
+
+	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
+
+	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
+	dma_wait_fast();
+	packet_free(packet);
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -195,16 +206,15 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//   mode=0: Flush data cache (invalidate+writeback dirty contents to memory)
 	FlushCache(0);
 	
-	packet_t* packet = packet_init(50, PACKET_NORMAL);
+	packet_t* packet = packet_init(200, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
 	q = draw_texture_transfer(q, bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
-								 win_fb.address, win_fb.width);
+								 fb_color.address, fb_color.width);
 	q = draw_texture_flush(q);
 
 	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
 	dma_wait_fast();
-
 	packet_free(packet);
 }
 

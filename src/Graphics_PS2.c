@@ -16,8 +16,8 @@
 #include <malloc.h>
 
 static void* gfx_vertices;
-static framebuffer_t fb_color;
-static zbuffer_t     fb_depth;
+extern framebuffer_t fb_color;
+extern zbuffer_t     fb_depth;
 static float vp_hwidth, vp_hheight;
 
 // double buffering
@@ -44,23 +44,6 @@ void Gfx_RestoreState(void) {
 void Gfx_FreeState(void) {
 	FreeDefaultResources();
 	Gfx_DeleteTexture(&white_square);
-}
-
-// TODO: Maybe move to Window backend and just initialise once ??
-static void InitBuffers(void) {
-	fb_color.width   = DisplayInfo.Width;
-	fb_color.height  = DisplayInfo.Height;
-	fb_color.mask    = 0;
-	fb_color.psm     = GS_PSM_32;
-	fb_color.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_color.psm, GRAPH_ALIGN_PAGE);
-
-	fb_depth.enable  = DRAW_ENABLE;
-	fb_depth.mask    = 0;
-	fb_depth.method  = ZTEST_METHOD_GREATER_EQUAL;
-	fb_depth.zsm     = GS_ZBUF_32;
-	fb_depth.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
-
-	graph_initialize(fb_color.address, fb_color.width, fb_color.height, fb_color.psm, 0, 0);
 }
 
 static qword_t* SetTextureWrapping(qword_t* q, int context) {
@@ -140,7 +123,6 @@ void Gfx_Create(void) {
 	vp_hheight = DisplayInfo.Height / 2;
 	primitive_type = 0; // PRIM_POINT, which isn't used here
 	
-	InitBuffers();
 	InitDrawingEnv();
 	InitDMABuffers();
 	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
