@@ -19,6 +19,7 @@ static void* gfx_vertices;
 extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
 static float vp_hwidth, vp_hheight;
+static cc_bool stateDirty, formatDirty;
 
 // double buffering
 static packet_t* packets[2];
@@ -123,6 +124,8 @@ void Gfx_Create(void) {
 	vp_hheight = DisplayInfo.Height / 2;
 	primitive_type = 0; // PRIM_POINT, which isn't used here
 	
+	stateDirty  = true;
+	formatDirty = true;
 	InitDrawingEnv();
 	InitDMABuffers();
 	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
@@ -216,7 +219,9 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	// TODO
+	CCTexture* tex = (CCTexture*)texId;
+	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
+	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
 }
 
 void Gfx_EnableMipmaps(void)  { }
@@ -228,7 +233,6 @@ void Gfx_DisableMipmaps(void) { }
 *#########################################################################################################################*/
 static int clearR, clearG, clearB;
 static cc_bool gfx_depthTest;
-static cc_bool stateDirty;
 
 void Gfx_SetFog(cc_bool enabled)    { }
 void Gfx_SetFogCol(PackedCol col)   { }
@@ -236,7 +240,6 @@ void Gfx_SetFogDensity(float value) { }
 void Gfx_SetFogEnd(float value)     { }
 void Gfx_SetFogMode(FogFunc func)   { }
 
-// 
 static void UpdateState(int context) {
 	// TODO: toggle Enable instead of method ?
 	int aMethod = gfx_alphaTest ? ATEST_METHOD_GREATER_EQUAL : ATEST_METHOD_ALLPASS;
@@ -252,6 +255,19 @@ static void UpdateState(int context) {
 	stateDirty = false;
 }
 
+static void UpdateFormat(void) {
+	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
+	
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
+							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
+							  0, PRIM_UNFIXED), GS_REG_PRIM);
+	q++;
+	
+	formatDirty = false;
+}
+
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	// TODO
 }
@@ -261,7 +277,7 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
-	// TODO update primitive state
+	formatDirty = true;
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -418,9 +434,9 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-	// TODO update cached primitive state
+	gfx_format  = fmt;
+	gfx_stride  = strideSizes[fmt];
+	formatDirty = true;
 }
 
 typedef struct Vector4 { float x, y, z, w; } Vector4;
@@ -456,7 +472,8 @@ static cc_bool NotClipped(Vector4 pos) {
 		pos.z >= -pos.w && pos.z <= pos.w;
 }
 
-static Vector4 TransformVertex(struct VertexTextured* pos) {
+static Vector4 TransformVertex(void* raw) {
+	Vec3* pos = raw;
 	Vector4 coord;
 	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
 	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
@@ -482,7 +499,40 @@ static xyz_t FinishVertex(struct Vector4 src, float invW) {
 	return xyz;
 }
 
-static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
+static void DrawColouredTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
+	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.x, &v0.y, &v0.z, &v0.w);	
+	u64* dw;
+	
+	Vector4 verts[3] = { v0, v1, v2 };
+	struct VertexColoured* v[] = { V0, V1, V2 };
+	
+	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
+	
+	// 3 "primitives" follow in the GIF packet (vertices in this case)
+	// 2 registers per "primitive" (colour, position)
+	PACK_GIFTAG(q, GIF_SET_TAG(3,1,0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
+	q++;
+
+	// TODO optimise
+	// Add the "primitives" to the GIF packet
+	dw = (u64*)q;
+	for (int i = 0; i < 3; i++)
+	{
+		float Q   = 1.0f / verts[i].w;
+		xyz_t xyz = FinishVertex(verts[i], Q);
+		color_t color;
+		texel_t texel;
+		
+		color.rgbaq = v[i]->Col;
+		color.q     = Q;
+		
+		*dw++ = color.rgbaq;
+		*dw++ = xyz.xyz;
+	}
+	q = (qword_t*)dw;
+}
+
+static void DrawTexturedTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
 	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.x, &v0.y, &v0.z, &v0.w);	
 	u64* dw;
 	
@@ -492,7 +542,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
 	
 	// 3 "primitives" follow in the GIF packet (vertices in this case)
-	// 2 registers per "primitive" (colour, position)
+	// 3 registers per "primitive" (colour, texture, position)
 	PACK_GIFTAG(q, GIF_SET_TAG(3,1,0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
 	q++;
 
@@ -530,19 +580,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	q = (qword_t*)dw;
 }
 
-static void DrawTriangles(int verticesCount, int startVertex) {
-	if (stateDirty) UpdateState(0);
-	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
-	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
-	
-	// TODO: only when vertex format changes ?
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	q++;
-	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
-							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
-							  0, PRIM_UNFIXED), GS_REG_PRIM);
-	q++;
-	
+static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
@@ -551,22 +589,43 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 		Vector4 V2 = TransformVertex(v + 2);
 		Vector4 V3 = TransformVertex(v + 3);
 		
-		
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[0].x, &v[0].y, &v[0].z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[1].x, &v[1].y, &v[1].z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[2].x, &v[2].y, &v[2].z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[3].x, &v[3].y, &v[3].z);
-	//Platform_LogConst(">>>>>>>>>>");
-		
 		if (NotClipped(V0) && NotClipped(V1) && NotClipped(V2)) {
-			DrawTriangle(V0, V1, V2, v + 0, v + 1, v + 2);
+			DrawTexturedTriangle(V0, V1, V2, v + 0, v + 1, v + 2);
 		}
 		
 		if (NotClipped(V2) && NotClipped(V3) && NotClipped(V0)) {
-			DrawTriangle(V2, V3, V0, v + 2, v + 3, v + 0);
+			DrawTexturedTriangle(V2, V3, V0, v + 2, v + 3, v + 0);
+		}
+	}
+}
+
+static void DrawColouredTriangles(int verticesCount, int startVertex) {
+	struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex;
+	for (int i = 0; i < verticesCount / 4; i++, v += 4)
+	{
+		Vector4 V0 = TransformVertex(v + 0);
+		Vector4 V1 = TransformVertex(v + 1);
+		Vector4 V2 = TransformVertex(v + 2);
+		Vector4 V3 = TransformVertex(v + 3);
+		
+		if (NotClipped(V0) && NotClipped(V1) && NotClipped(V2)) {
+			DrawColouredTriangle(V0, V1, V2, v + 0, v + 1, v + 2);
 		}
 		
-		//Platform_LogConst("-----");
+		if (NotClipped(V2) && NotClipped(V3) && NotClipped(V0)) {
+			DrawColouredTriangle(V2, V3, V0, v + 2, v + 3, v + 0);
+		}
+	}
+}
+
+static void DrawTriangles(int verticesCount, int startVertex) {
+	if (stateDirty)  UpdateState(0);
+	if (formatDirty) UpdateFormat();
+
+	if (gfx_format == VERTEX_FORMAT_COLOURED) {
+		DrawColouredTriangles(verticesCount, startVertex);
+	} else {
+		DrawTexturedTriangles(verticesCount, startVertex);
 	}
 }
 
