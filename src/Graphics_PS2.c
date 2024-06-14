@@ -247,7 +247,8 @@ static void UpdateState(int context) {
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
-	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x80, ATEST_KEEP_FRAMEBUFFER,
+	// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
+	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_FRAMEBUFFER,
 							   DRAW_DISABLE, DRAW_DISABLE,
 							   DRAW_ENABLE,  zMethod), GS_REG_TEST + context);
 	q++;
@@ -306,7 +307,16 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
+	unsigned mask = 0;
+	if (!r) mask |= 0x000000FF;
+	if (!g) mask |= 0x0000FF00;
+	if (!b) mask |= 0x00FF0000;
+	if (!a) mask |= 0xFF000000;
+
+	framebuffer_t* fb = &fb_colors[context];
+	fb->mask = mask;
+	q = draw_framebuffer(q, 0, fb);
+	fb->mask = 0;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -330,6 +340,48 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
+// Preprocess vertex buffers into optimised layout for PS2
+static VertexFormat buf_fmt;
+static int buf_count;
+
+// Precalculate all the vertex data adjustment
+static void PreprocessTexturedVertices(void) {
+    struct VertexTextured* v = gfx_vertices;
+
+    for (int i = 0; i < buf_count; i++, v++)
+    {
+		// See 'Colour Functions' https://psi-rockin.github.io/ps2tek/#gstextures
+		// Essentially, colour blending is calculated as
+		//   finalR = (vertexR * textureR) >> 7
+		// However, this behaves contrary to standard expectations
+		//  and results in final vertex colour being too bright
+		//
+		// For instance, if vertexR was white and textureR was grey:
+		//   finalR = (255 * 127) / 128 = 255
+		// White would be produced as the final colour instead of expected grey
+		//
+		// To counteract this, just divide all vertex colours by 2 first
+		v->Col = (v->Col & 0xFEFEFEFE) >> 1;
+
+		// Alpha blending divides by 128 instead of 256, so need to half alpha here
+		//  so that alpha blending produces the expected results like normal GPUs
+		int A = PackedCol_A(v->Col) >> 1;
+		v->Col = (v->Col & ~PACKEDCOL_A_MASK) | (A << PACKEDCOL_A_SHIFT);
+    }
+}
+
+static void PreprocessColouredVertices(void) {
+    struct VertexColoured* v = gfx_vertices;
+
+    for (int i = 0; i < buf_count; i++, v++)
+    {
+		// Alpha blending divides by 128 instead of 256, so need to half alpha here
+		//  so that alpha blending produces the expected results like normal GPUs
+		int A = PackedCol_A(v->Col) >> 1;
+		v->Col = (v->Col & ~PACKEDCOL_A_MASK) | (A << PACKEDCOL_A_SHIFT);
+    }
+}
+
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return Mem_TryAlloc(count, strideSizes[fmt]);
 }
@@ -343,11 +395,19 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+    buf_fmt   = fmt;
+    buf_count = count;
 	return vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
+	gfx_vertices = vb;
+
+    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+        PreprocessTexturedVertices();
+    } else {
+        PreprocessColouredVertices();
+    }
 }
 
 
@@ -358,12 +418,10 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb; 
+	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
@@ -410,6 +468,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
+	// Swap zNear/zFar since PS2 only supports GREATER or GEQUAL depth comparison modes
 	float zNear_ = zFar;
 	float zFar_  = 0.1f;
 	float c = Cotangent(0.5f * fov);
@@ -521,7 +580,6 @@ static void DrawColouredTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct Vert
 		float Q   = 1.0f / verts[i].w;
 		xyz_t xyz = FinishVertex(verts[i], Q);
 		color_t color;
-		texel_t texel;
 		
 		color.rgbaq = v[i]->Col;
 		color.q     = Q;
@@ -556,18 +614,7 @@ static void DrawTexturedTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct Vert
 		color_t color;
 		texel_t texel;
 		
-		// See 'Colour Functions' https://psi-rockin.github.io/ps2tek/#gstextures
-		// Essentially, colour blending is calculated as
-		//   finalR = (vertexR * textureR) >> 7
-		// However, this behaves contrary to standard expectations
-		//  and results in final vertex colour being too bright
-		//
-		// For instance, if vertexR was white and textureR was grey:
-		//   finalR = (255 * 127) / 128 = 255
-		// White would be produced as the final colour instead of expected grey
-		//
-		// To counteract this, just divide all vertex colours by 2 first
-		color.rgbaq = (v[i]->Col & 0xFEFEFEFE) >> 1;
+		color.rgbaq = v[i]->Col;
 		color.q     = Q;
 		texel.u     = v[i]->U * Q;
 		texel.v     = v[i]->V * Q;
@@ -621,6 +668,14 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty)  UpdateState(0);
 	if (formatDirty) UpdateFormat();
+
+	if ((q - current->data) > 45000) {
+		DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
+		dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+		dma_wait_fast();
+		q = dma_tag + 1;
+		Platform_LogConst("Too much geometry!!!");
+	}
 
 	if (gfx_format == VERTEX_FORMAT_COLOURED) {
 		DrawColouredTriangles(verticesCount, startVertex);
