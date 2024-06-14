@@ -21,8 +21,9 @@
 #include <graph.h>
 #include <draw.h>
 #include <kernel.h>
+#include <libmouse.h>
 
-static cc_bool launcherMode;
+static cc_bool launcherMode, mouseSupported;
 static char padBuf0[256] __attribute__((aligned(64)));
 static char padBuf1[256] __attribute__((aligned(64)));
 
@@ -54,6 +55,11 @@ void Window_Init(void) {
 	padInit(0);
 	padPortOpen(0, 0, padBuf0);
 	padPortOpen(1, 0, padBuf1);
+
+	if (PS2MouseInit() >= 0) {
+		PS2MouseSetReadMode(PS2MOUSE_READMODE_DIFF);
+		mouseSupported = true;
+	}
 }
 
 void Window_Free(void) { }
@@ -107,7 +113,26 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+static void ProcessMouseInput(float delta) {
+	if (!mouseSupported)     return;
+	if (PS2MouseEnum() == 0) return;
+
+	mouse_data mData = { 0 };
+	if (PS2MouseRead(&mData) < 0) return;
+
+	//Platform_Log3("MOUSE: %i, %i, %i", &mData.x, &mData.y, &mData.buttons);
+	Input_SetNonRepeatable(CCMOUSE_L, mData.buttons & PS2MOUSE_BTN1);
+	Input_SetNonRepeatable(CCMOUSE_R, mData.buttons & PS2MOUSE_BTN2);
+	Input_SetNonRepeatable(CCMOUSE_M, mData.buttons & PS2MOUSE_BTN3);
+	
+	if (!Input.RawMode) return;	
+	float scale = (delta * 60.0) / 2.0f;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				mData.x * scale, mData.y * scale);
+}
+
 void Window_ProcessEvents(float delta) {
+	ProcessMouseInput(delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -149,8 +174,8 @@ static void HandleButtons(int port, int buttons) {
 
 #define AXIS_SCALE 16.0f
 static void HandleJoystick(int port, int axis, int x, int y, float delta) {
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }

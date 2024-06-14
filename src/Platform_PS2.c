@@ -50,12 +50,24 @@ const char* Platform_AppNameSuffix = " PS2";
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool hookedDebug;
+
 void Platform_Log(const char* msg, int len) {
 	char tmp[2048 + 1];
 	len = min(len, 2048);
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
-	
 	_print("%s", tmp);
+
+#ifdef PS2_DEBUG
+	volatile char* dst = (char*)0x1000F180;
+
+	for (int i = 0; i < len; i++)
+	{
+		*dst = msg[i];
+	}
+	*dst = '\n';
+	*dst = '\r';
+#endif
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -609,6 +621,12 @@ extern unsigned int  size_USBMASS_BD_irx;
 extern unsigned char USBHDFSD_irx[];
 extern unsigned int  size_USBHDFSD_irx;
 
+extern unsigned char USBMASS_BD_irx[];
+extern unsigned int  size_USBMASS_BD_irx;
+
+extern unsigned char USBMOUSE_irx[];
+extern unsigned int  size_USBMOUSE_irx;
+
 static void USBStorage_LoadIOPModules(void) {   
     int ret;
     // TODO: Seems that
@@ -629,6 +647,9 @@ static void USBStorage_LoadIOPModules(void) {
     
 	ret = SifExecModuleBuffer(USBMASS_BD_irx,  size_USBMASS_BD_irx,  0, NULL, NULL);
     if (ret < 0) Platform_Log1("SifExecModuleBuffer USBMASS_BD_irx failed: %i", &ret);
+    
+	ret = SifExecModuleBuffer(USBMOUSE_irx,    size_USBMOUSE_irx,  0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBMOUSE_irx failed: %i", &ret);
 }
 
 // TODO Maybe needed ???
