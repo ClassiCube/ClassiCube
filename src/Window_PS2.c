@@ -192,12 +192,13 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->width  = width;
 	bmp->height = height;
 
-	packet_t* packet = packet_init(200, PACKET_NORMAL);
+	packet_t* packet = packet_init(50, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
 	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
+	q = draw_finish(q);
 
-	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
+	dma_channel_send_normal(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
 	dma_wait_fast();
 	packet_free(packet);
 }
