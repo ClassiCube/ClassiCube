@@ -108,6 +108,81 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------VMU options file-----------------------------------------------------*
+*#########################################################################################################################*/
+static volatile int vmu_write_FD = -10000;
+static int VMUFile_Do(cc_file* file, int mode) {
+	void* data = NULL;
+	int fd, err = -1, len;
+	vmu_pkg_t pkg;
+	
+	errno = 0;
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDONLY);
+	
+	// Try to extract stored data from the VMU
+	if (fd >= 0) {
+		len  = fs_total(fd);
+		data = Mem_Alloc(len, 1, "VMU data");
+		fs_read(fd, data, len);
+		
+		err = vmu_pkg_parse(data, &pkg);
+		fs_close(fd);
+	}
+	
+	// Copy VMU data into a RAM temp file
+	errno = 0;
+	fd    = fs_open("/ram/ccopt", O_RDWR | O_CREAT | O_TRUNC);
+	if (fd < 0) return errno;
+	
+	if (err >= 0) {
+		fs_write(fd, pkg.data, pkg.data_len);
+		fs_seek(fd,  0, SEEK_SET);
+	}
+	Mem_Free(data);
+
+	if (mode != O_RDONLY) vmu_write_FD = fd;
+	*file = fd;
+	return 0;
+}
+
+static cc_result VMUFile_Close(cc_file file) {
+	void* data;
+	uint8* pkg_data;
+	int fd, err = -1, len, pkg_len;
+	vmu_pkg_t pkg = { 0 };
+	vmu_write_FD  = -10000;
+	
+	len  = fs_total(file);
+	data = Mem_Alloc(len, 1, "VMU data");
+	fs_seek(file, 0, SEEK_SET);
+	fs_read(file, data, len);
+	
+	fs_close(file);
+	fs_unlink("/ram/ccopt");
+	
+	strcpy(pkg.desc_short, "CC options file");
+	strcpy(pkg.desc_long,  "ClassiCube config/settings");
+	strcpy(pkg.app_id,     "ClassiCube");
+	pkg.eyecatch_type = VMUPKG_EC_NONE;
+	pkg.data_len      = len;
+	pkg.data          = data;
+		
+	err = vmu_pkg_build(&pkg, &pkg_data, &pkg_len);
+	if (err) { Mem_Free(data); return ERR_OUT_OF_MEMORY; }
+	
+	// Copy into VMU file
+	errno = 0;
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDWR | O_CREAT | O_TRUNC);
+	if (fd < 0) return errno;
+	
+	fs_write(fd, pkg_data, pkg_len);
+	fs_close(fd);
+	free(pkg_data);
+	return 0;
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("/cd/");
@@ -193,6 +268,11 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	
 	int err = res == -1 ? errno : 0;
 	if (res == -1 && err == 0) err = ENOENT;
+
+	// Read/Write VMU for options.txt, since that file is critical
+	if (err && Platform_ReadonlyFilesystem && String_CaselessEqualsConst(path, "options.txt")) {
+		return VMUFile_Do(file, mode);
+	}
 	return err;
 }
 
@@ -219,6 +299,9 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
+	if (file == vmu_write_FD) 
+		return VMUFile_Close(file);
+	
 	int res = fs_close(file);
 	return res == -1 ? errno : 0;
 }
@@ -453,17 +536,17 @@ static void InitSDCard(void) {
 	
 	if (sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
 		Platform_LogConst("Unable to find first partition on SD card"); return;
-  	}
-  	
-  	if (fs_fat_init()) {
+	}
+	
+	if (fs_fat_init()) {
 		Platform_LogConst("Failed to init FAT filesystem"); return;
 	}
 	
-  	if (fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
+	if (fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
 		Platform_LogConst("Failed to mount SD card"); return;
-  	}
-  	
-  	root_path = String_FromReadonly("/sd/ClassiCube");
+	}
+
+	root_path = String_FromReadonly("/sd/ClassiCube");
 	fs_mkdir("/sd/ClassiCube");
 	Platform_ReadonlyFilesystem = false;
 }
