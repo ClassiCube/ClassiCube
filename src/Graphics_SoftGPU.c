@@ -109,10 +109,10 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)    { }
+void Gfx_SetFog(cc_bool enabled)	{ }
 void Gfx_SetFogCol(PackedCol col)   { }
 void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value)     { }
+void Gfx_SetFogEnd(float value) 	{ }
 void Gfx_SetFogMode(FogFunc func)   { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -324,22 +324,15 @@ static void TransformVertex2D(int index, Vertex* vertex) {
 	}
 }
 
-static void TransformVertex3D(int index, Vertex* vertex) {
+static int TransformVertex3D(int index, Vertex* vertex) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
 	Vector3* pos = (Vector3*)ptr;
 
-	struct Vec4 coord;
-	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
-	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
-	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
-	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
-
-	float invW = 1.0f / coord.w;
-	vertex->x = vp_hwidth  * (1 + coord.x * invW);
-	vertex->y = vp_hheight * (1 - coord.y * invW);
-	vertex->z = coord.z * invW;
-	vertex->w = invW;
+	vertex->x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
+	vertex->y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
+	vertex->z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
+	vertex->w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;
@@ -348,10 +341,23 @@ static void TransformVertex3D(int index, Vertex* vertex) {
 		vertex->c = v->Col;
 	} else {
 		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		vertex->u = (v->U + texOffsetX) * invW;
-		vertex->v = (v->V + texOffsetY) * invW;
+		vertex->u = (v->U + texOffsetX);
+		vertex->v = (v->V + texOffsetY);
 		vertex->c = v->Col;
 	}
+	return vertex->z >= -vertex->w;
+}
+
+static void ViewportVertex3D(Vertex* vertex) {
+	float invW = 1.0f / vertex->w;
+
+	vertex->x = vp_hwidth  * (1 + vertex->x * invW);
+	vertex->y = vp_hheight * (1 - vertex->y * invW);
+	vertex->z = vertex->z * invW;
+	vertex->w = invW;
+
+	vertex->u *= invW;
+	vertex->v *= invW;
 }
 
 // Ensure it's inlined, whereas Math_FloorF might not be
@@ -479,7 +485,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	float w0 = V0->w, w1 = V1->w, w2 = V2->w;
 	
 	// TODO proper clipping
-	if (w0 <= 0 || w1 <= 0 || w2 <= 0) return;
+	if (w0 <= 0 || w1 <= 0 || w2 <= 0) {
+		return;
+	}
 
 	float z0 = V0->z, z1 = V1->z, z2 = V2->z;
 	float u0 = V0->u, u1 = V1->u, u2 = V2->u;
@@ -562,6 +570,270 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	}
 }
 
+#define V0_VIS (1 << 0)
+#define V1_VIS (1 << 1)
+#define V2_VIS (1 << 2)
+#define V3_VIS (1 << 3)
+
+// https://github.com/behindthepixels/EDXRaster/blob/master/EDXRaster/Core/Clipper.h
+static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
+	float d0 = v1->z + v1->w;
+	float d1 = v2->z + v2->w;
+	float t  = Math_AbsF(d0 / (d1 - d0));
+	float invt = 1.0f - t;
+	
+	V->x = invt * v1->x + t * v2->x;
+	V->y = invt * v1->y + t * v2->y;
+	V->z = invt * v1->z + t * v2->z;
+	V->w = invt * v1->w + t * v2->w;
+	
+	V->u = invt * v1->u + t * v2->u;
+	V->v = invt * v1->v + t * v2->v;
+	V->c = v1->c;
+}
+
+// https://casual-effects.com/research/McGuire2011Clipping/clip.glsl
+static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3) {
+	Vertex tmp[2];
+	Vertex* a = &tmp[0];
+	Vertex* b = &tmp[1];
+
+    switch (mask) {
+	case V0_VIS:
+	{
+		//		   v0
+		//		  / |
+		//       /   |
+		// .....A....B...
+		//    /      |
+		//  v3--v2---v1
+		ClipLine(v3, v0, a);
+		ClipLine(v0, v1, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v0, a, b);
+	}
+    break;
+	case V1_VIS:
+	{
+		//		   v1
+		//		  / |
+		//       /   |
+		// ....A.....B...
+		//    /      |
+		//  v0--v3---v2
+		ClipLine(v0, v1, a);
+		ClipLine(v1, v2, b);
+
+		ViewportVertex3D(v1);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(a, b, v1);
+	} break;
+	case V2_VIS:
+	{
+		//		   v2
+		//		  / |
+		//       /   |
+		// ....A.....B...
+		//    /      |
+		//  v1--v0---v3
+		ClipLine(v1, v2, a);
+		ClipLine(v2, v3, b);
+
+		ViewportVertex3D(v2);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(a, b, v2);
+	} break;
+	case V3_VIS:
+	{
+		//		   v3
+		//		  / |
+		//       /   |
+		// ....A.....B...
+		//    /      |
+		//  v2--v1---v0
+		ClipLine(v2, v3, a);
+		ClipLine(v3, v0, b);
+
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+		
+		DrawTriangle3D(b, v3, a);
+	}
+	break;
+	case V0_VIS | V1_VIS:
+	{
+		//    v0-----------v1
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v3-----v2
+		ClipLine(v1, v2, a);
+		ClipLine(v3, v0, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v1);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v1, v0,  a);
+		DrawTriangle3D(a,   b, v0);
+	} break;
+	// case V0_VIS | V2_VIS: degenerate case that should never happen
+	case V0_VIS | V3_VIS:
+	{
+		//    v3-----------v0
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v2-----v1
+		ClipLine(v0, v1, a);
+		ClipLine(v2, v3, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(a, v0,  b);
+		DrawTriangle3D(b, v3, v0);
+	} break;
+	case V1_VIS | V2_VIS:
+	{
+		//    v1-----------v2
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v0-----v3
+		ClipLine(v2, v3, a);
+		ClipLine(v0, v1, b);
+
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v1,  b, v2);
+		DrawTriangle3D(v2,  a,  b);
+	} break;
+	// case V1_VIS | V3_VIS: degenerate case that should never happen
+	case V2_VIS | V3_VIS:
+	{
+		//    v2-----------v3
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v1-----v0
+		ClipLine(v3, v0, a);
+		ClipLine(v1, v2, b);
+
+		ViewportVertex3D(v2);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D( b,  a, v2);
+		DrawTriangle3D(v2, v3,  a);
+	} break;
+	case V0_VIS | V1_VIS | V2_VIS:
+	{
+		//		  --v1--
+		//    v0--      --v2
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v3
+		// v1,v2,v0  v2,v0,A  v0,A,B
+		ClipLine(v2, v3, a);
+		ClipLine(v3, v0, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v1, v0, v2);
+		DrawTriangle3D(v2,  a, v0);
+		DrawTriangle3D(v0,  b,  a);
+	} break;
+	case V0_VIS | V1_VIS | V3_VIS:
+	{
+		//		  --v0--
+		//    v3--      --v1
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v2
+		// v0,v1,v3  v1,v3,A  v3,A,B
+		ClipLine(v1, v2, a);
+		ClipLine(v2, v3, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v0, v3, v1);
+		DrawTriangle3D(v1,  a, v3);
+		DrawTriangle3D(v3,  b,  a);
+	} break;
+	case V0_VIS | V2_VIS | V3_VIS:
+	{
+		//		  --v3--
+		//    v2--      --v0
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v1
+		// v3,v0,v2  v0,v2,A  v2,A,B
+		ClipLine(v0, v1, a);
+		ClipLine(v1, v2, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v3, v2, v0);
+		DrawTriangle3D(v0,  a, v2);
+		DrawTriangle3D(v2,  b,  a);
+	} break;
+	case V1_VIS | V2_VIS | V3_VIS:
+	{
+		//		  --v2--
+		//    v1--      --v3
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v0
+		// v2,v3,v1  v3,v1,A  v1,A,B
+		ClipLine(v3, v0, a);
+		ClipLine(v0, v1, b);
+
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v2, v1, v3);
+		DrawTriangle3D(v3,  a, v1);
+		DrawTriangle3D(v1,  b,  a);
+	} break;
+	}
+}
+
 void DrawQuads(int startVertex, int verticesCount) {
 	Vertex vertices[4];
 	int j = startVertex;
@@ -582,13 +854,26 @@ void DrawQuads(int startVertex, int verticesCount) {
 		// 4 vertices = 1 quad = 2 triangles
 		for (int i = 0; i < verticesCount / 4; i++, j += 4)
 		{
-			TransformVertex3D(j + 0, &vertices[0]);
-			TransformVertex3D(j + 1, &vertices[1]);
-			TransformVertex3D(j + 2, &vertices[2]);
-			TransformVertex3D(j + 3, &vertices[3]);
+			int clip = TransformVertex3D(j + 0, &vertices[0]) << 0
+					|  TransformVertex3D(j + 1, &vertices[1]) << 1
+					|  TransformVertex3D(j + 2, &vertices[2]) << 2
+					|  TransformVertex3D(j + 3, &vertices[3]) << 3;
 
-			DrawTriangle3D(&vertices[0], &vertices[2], &vertices[1]);
-			DrawTriangle3D(&vertices[2], &vertices[0], &vertices[3]);
+			if (clip == 0) {
+				// Quad entirely clipped
+			} else if (clip == 0x0F) {
+				// Quad entirely visible
+				ViewportVertex3D(&vertices[0]);
+				ViewportVertex3D(&vertices[1]);
+				ViewportVertex3D(&vertices[2]);
+				ViewportVertex3D(&vertices[3]);
+
+				DrawTriangle3D(&vertices[0], &vertices[2], &vertices[1]);
+				DrawTriangle3D(&vertices[2], &vertices[0], &vertices[3]);
+			} else {
+				// Quad partially visible
+				DrawClipped(clip, &vertices[0], &vertices[1], &vertices[2], &vertices[3]);
+			}
 		}
 	}
 }
