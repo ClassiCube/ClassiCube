@@ -345,7 +345,7 @@ static int TransformVertex3D(int index, Vertex* vertex) {
 		vertex->v = (v->V + texOffsetY);
 		vertex->c = v->Col;
 	}
-	return vertex->z >= -vertex->w;
+	return vertex->z >= 0.0f;
 }
 
 static void ViewportVertex3D(Vertex* vertex) {
@@ -577,14 +577,13 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 // https://github.com/behindthepixels/EDXRaster/blob/master/EDXRaster/Core/Clipper.h
 static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
-	float d0 = v1->z + v1->w;
-	float d1 = v2->z + v2->w;
-	float t  = Math_AbsF(d0 / (d1 - d0));
+	float t  = Math_AbsF(v1->z / (v2->z - v1->z));
 	float invt = 1.0f - t;
 	
 	V->x = invt * v1->x + t * v2->x;
 	V->y = invt * v1->y + t * v2->y;
-	V->z = invt * v1->z + t * v2->z;
+	//V->z = invt * v1->z + t * v2->z;
+	V->z = 0.0f; // Z will always be 0 since clipping against w=0 (near plane) anyways
 	V->w = invt * v1->w + t * v2->w;
 	
 	V->u = invt * v1->u + t * v2->u;
