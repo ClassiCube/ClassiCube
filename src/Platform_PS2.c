@@ -50,8 +50,6 @@ const char* Platform_AppNameSuffix = " PS2";
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool hookedDebug;
-
 void Platform_Log(const char* msg, int len) {
 	char tmp[2048 + 1];
 	len = min(len, 2048);
@@ -131,47 +129,40 @@ int File_Exists(const cc_string* path) {
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	return ERR_NOT_SUPPORTED;
-	/*cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
-	struct dirent* entry;
-	int res;
+	io_dirent_t entry;
+	int fd, res;
 
 	GetNativePath(str, dirPath);
-	DIR* dirPtr = opendir(str);
-	if (!dirPtr) return errno;
-
-	// POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed."
-	// errno is sometimes leftover from previous calls, so always reset it before readdir gets called
-	errno = 0;
+	fd = fioDopen(str);
+	if (fd < 0) return fd;
+	
+	res = 0;
 	String_InitArray(path, pathBuffer);
 
-	while ((entry = readdir(dirPtr))) {
+	while ((res = fioDread(fd, &entry)) > 0) {
 		path.length = 0;
 		String_Format1(&path, "%s/", dirPath);
 
 		// ignore . and .. entry
-		char* src = entry->d_name;
+		char* src = entry.name;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
 		int len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
-		int is_dir = entry->d_type == DT_DIR;
-		// TODO: fallback to stat when this fails
 
-		if (is_dir) {
+		if (FIO_SO_ISDIR(entry.stat.mode)) {
 			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
+			if (res) break;
 		} else {
 			callback(&path, obj);
 		}
-		errno = 0;
 	}
 
-	res = errno; // return code from readdir
-	closedir(dirPtr);
-	return res;*/
+	fioDclose(fd);
+	return res;
 }
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
