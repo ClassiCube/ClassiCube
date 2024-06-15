@@ -120,8 +120,7 @@ static void FlipContext(void) {
 
 static int tex_offset;
 void Gfx_Create(void) {
-	vp_hwidth  = DisplayInfo.Width  / 2;
-	vp_hheight = DisplayInfo.Height / 2;
+	Gfx_SetViewport(0, 0, Window_Main.Width, Window_Main.Height);
 	primitive_type = 0; // PRIM_POINT, which isn't used here
 	
 	stateDirty  = true;
@@ -560,27 +559,16 @@ static xyz_t FinishVertex(struct Vector4 src, float invW) {
 	return xyz;
 }
 
-static void DrawColouredTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
-	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.x, &v0.y, &v0.z, &v0.w);	
-	u64* dw;
-	
-	Vector4 verts[3] = { v0, v1, v2 };
+static u64* DrawColouredTriangle(u64* dw, Vector4* coords, 
+								struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
 	struct VertexColoured* v[] = { V0, V1, V2 };
-	
-	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
-	
-	// 3 "primitives" follow in the GIF packet (vertices in this case)
-	// 2 registers per "primitive" (colour, position)
-	PACK_GIFTAG(q, GIF_SET_TAG(3,1,0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
-	q++;
 
 	// TODO optimise
 	// Add the "primitives" to the GIF packet
-	dw = (u64*)q;
 	for (int i = 0; i < 3; i++)
 	{
-		float Q   = 1.0f / verts[i].w;
-		xyz_t xyz = FinishVertex(verts[i], Q);
+		float Q   = 1.0f / coords[i].w;
+		xyz_t xyz = FinishVertex(coords[i], Q);
 		color_t color;
 		
 		color.rgbaq = v[i]->Col;
@@ -589,30 +577,19 @@ static void DrawColouredTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct Vert
 		*dw++ = color.rgbaq;
 		*dw++ = xyz.xyz;
 	}
-	q = (qword_t*)dw;
+	return dw;
 }
 
-static void DrawTexturedTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
-	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.x, &v0.y, &v0.z, &v0.w);	
-	u64* dw;
-	
-	Vector4 verts[3] = { v0, v1, v2 };
+static u64* DrawTexturedTriangle(u64* dw, Vector4* coords, 
+								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
 	struct VertexTextured* v[] = { V0, V1, V2 };
-	
-	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
-	
-	// 3 "primitives" follow in the GIF packet (vertices in this case)
-	// 3 registers per "primitive" (colour, texture, position)
-	PACK_GIFTAG(q, GIF_SET_TAG(3,1,0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
-	q++;
 
 	// TODO optimise
 	// Add the "primitives" to the GIF packet
-	dw = (u64*)q;
 	for (int i = 0; i < 3; i++)
 	{
-		float Q   = 1.0f / verts[i].w;
-		xyz_t xyz = FinishVertex(verts[i], Q);
+		float Q   = 1.0f / coords[i].w;
+		xyz_t xyz = FinishVertex(coords[i], Q);
 		color_t color;
 		texel_t texel;
 		
@@ -625,45 +602,97 @@ static void DrawTexturedTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct Vert
 		*dw++ = texel.uv;
 		*dw++ = xyz.xyz;
 	}
-	dw++; // one more to even out number of doublewords
-	q = (qword_t*)dw;
+	return dw;
 }
 
 static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
+	qword_t* base = q;
+	q++; // skip over GIF tag (will be filled in later)
+	u64* dw = (u64*)q;
+
+	unsigned numVerts = 0;
+	Vector4 V[4];
+
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		Vector4 V0 = TransformVertex(v + 0);
-		Vector4 V1 = TransformVertex(v + 1);
-		Vector4 V2 = TransformVertex(v + 2);
-		Vector4 V3 = TransformVertex(v + 3);
+		V[0] = TransformVertex(v + 0);
+		V[1] = TransformVertex(v + 1);
+		V[2] = TransformVertex(v + 2);
+		V[3] = TransformVertex(v + 3);
 		
-		if (NotClipped(V0) && NotClipped(V1) && NotClipped(V2)) {
-			DrawTexturedTriangle(V0, V1, V2, v + 0, v + 1, v + 2);
+		// V0, V1, V2
+		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+			dw = DrawTexturedTriangle(dw, V, v + 0, v + 1, v + 2);
+			numVerts += 3;
 		}
+
+		Vector4 v0 = V[0];
+		V[0] = V[2];
+		V[1] = V[3];
+		V[2] = v0;
 		
-		if (NotClipped(V2) && NotClipped(V3) && NotClipped(V0)) {
-			DrawTexturedTriangle(V2, V3, V0, v + 2, v + 3, v + 0);
+		// V2, V3, V0
+		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+			dw = DrawTexturedTriangle(dw, V, v + 2, v + 3, v + 0);
+			numVerts += 3;
 		}
+	}
+
+	if (numVerts == 0) {
+		q--; // No GIF tag was added
+	} else {
+		if (numVerts & 1) dw++; // one more to even out number of doublewords
+		q = (qword_t*)dw;
+
+		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
+		// 2 registers per GIF "primitive" (colour, position)
+		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1,0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
 	}
 }
 
 static void DrawColouredTriangles(int verticesCount, int startVertex) {
 	struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex;
+	qword_t* base = q;
+	q++; // skip over GIF tag (will be filled in later)
+	u64* dw = (u64*)q;
+
+	unsigned numVerts = 0;
+	Vector4 V[4];
+
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		Vector4 V0 = TransformVertex(v + 0);
-		Vector4 V1 = TransformVertex(v + 1);
-		Vector4 V2 = TransformVertex(v + 2);
-		Vector4 V3 = TransformVertex(v + 3);
+		V[0] = TransformVertex(v + 0);
+		V[1] = TransformVertex(v + 1);
+		V[2] = TransformVertex(v + 2);
+		V[3] = TransformVertex(v + 3);
 		
-		if (NotClipped(V0) && NotClipped(V1) && NotClipped(V2)) {
-			DrawColouredTriangle(V0, V1, V2, v + 0, v + 1, v + 2);
+		// V0, V1, V2
+		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+			dw = DrawColouredTriangle(dw, V, v + 0, v + 1, v + 2);
+			numVerts += 3;
 		}
+
+		Vector4 v0 = V[0];
+		V[0] = V[2];
+		V[1] = V[3];
+		V[2] = v0;
 		
-		if (NotClipped(V2) && NotClipped(V3) && NotClipped(V0)) {
-			DrawColouredTriangle(V2, V3, V0, v + 2, v + 3, v + 0);
+		// V2, V3, V0
+		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+			dw = DrawColouredTriangle(dw, V, v + 2, v + 3, v + 0);
+			numVerts += 3;
 		}
+	}
+
+	if (numVerts == 0) {
+		q--; // No GIF tag was added
+	} else {
+		q = (qword_t*)dw;
+
+		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
+		// 2 registers per GIF "primitive" (colour, texture, position)
+		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1,0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
 	}
 }
 
@@ -679,10 +708,16 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 		Platform_LogConst("Too much geometry!!!");
 	}
 
-	if (gfx_format == VERTEX_FORMAT_COLOURED) {
-		DrawColouredTriangles(verticesCount, startVertex);
-	} else {
-		DrawTexturedTriangles(verticesCount, startVertex);
+	while (verticesCount)
+	{
+		int count = min(32000, verticesCount);
+
+		if (gfx_format == VERTEX_FORMAT_COLOURED) {
+			DrawColouredTriangles(count, startVertex);
+		} else {
+			DrawTexturedTriangles(count, startVertex);
+		}
+		verticesCount -= count; startVertex += count;
 	}
 }
 
@@ -771,7 +806,10 @@ void Gfx_OnWindowResize(void) {
 	// TODO
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	vp_hwidth  = w / 2;
+	vp_hheight = h / 2;	
+}
 
 void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "-- Using PS2 --\n");
