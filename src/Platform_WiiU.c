@@ -156,12 +156,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		is_dir = entry->d_type == DT_DIR;
 		/* TODO: fallback to stat when this fails */
 
-		if (is_dir) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
-		} else {
-			callback(&path, obj);
-		}
+		callback(&path, obj, is_dir);
 		errno = 0;
 	}
 

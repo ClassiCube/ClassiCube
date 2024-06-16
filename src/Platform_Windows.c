@@ -205,6 +205,8 @@ int File_Exists(const cc_string* path) {
 static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
 									void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
+	int is_dir;
+	
 	/* ignore . and .. entry */
 	if (file->length == 1 && file->buffer[0] == '.') return 0;
 	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
@@ -212,8 +214,8 @@ static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* f
 	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "%s/%s", dirPath, file);
 
-	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
-	callback(&path, obj);
+	is_dir = attribs & FILE_ATTRIBUTE_DIRECTORY;
+	callback(&path, obj, is_dir);
 	return 0;
 }
 
@@ -394,11 +396,16 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FontDirCallback(const cc_string* path, void* obj) {
+static void FontDirCallback(const cc_string* path, void* obj, int isDirectory) {
 	static const cc_string fonExt = String_FromConst(".fon");
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
-	SysFonts_Register(path, NULL);
+	
+	if (isDirectory) {
+		Directory_Enum(path, NULL, FontDirCallback);
+	} else {
+		SysFonts_Register(path, NULL);
+	}
 }
 
 void Platform_LoadSysFonts(void) { 
@@ -420,7 +427,8 @@ void Platform_LoadSysFonts(void) {
 	}
 	String_AppendConst(&dirs[0], "/fonts");
 
-	for (i = 0; i < Array_Elems(dirs); i++) {
+	for (i = 0; i < Array_Elems(dirs); i++) 
+	{
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }

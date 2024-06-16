@@ -122,7 +122,7 @@ EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 
 	String_InitArray(path, pathBuffer);
 	String_AppendUtf8(&path, src, String_Length(src));
-	enum_callback(&path, enum_obj);
+	enum_callback(&path, enum_obj, false);
 }
 
 extern int interop_DirectoryIter(const char* path);

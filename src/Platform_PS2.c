@@ -166,12 +166,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		int len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-		if (FIO_SO_ISDIR(entry.stat.mode)) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) break;
-		} else {
-			callback(&path, obj);
-		}
+		int is_dir = FIO_SO_ISDIR(entry.stat.mode);
+		callback(&path, obj, is_dir);
 	}
 
 	fioDclose(fd);

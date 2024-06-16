@@ -253,12 +253,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		/* TODO: fallback to stat when this fails */
 #endif
 
-		if (is_dir) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
-		} else {
-			callback(&path, obj);
-		}
+		callback(&path, obj, is_dir);
 		errno = 0;
 	}
 
@@ -497,8 +492,12 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FontDirCallback(const cc_string* path, void* obj) {
-	SysFonts_Register(path, NULL);
+static void FontDirCallback(const cc_string* path, void* obj, int isDirectory) {
+	if (isDirectory) {
+		Directory_Enum(path, NULL, FontDirCallback);
+	} else {
+		SysFonts_Register(path, NULL);
+	}
 }
 
 void Platform_LoadSysFonts(void) {
@@ -549,7 +548,8 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/usr/local/share/fonts")
 	};
 #endif
-	for (i = 0; i < Array_Elems(dirs); i++) {
+	for (i = 0; i < Array_Elems(dirs); i++) 
+	{
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }

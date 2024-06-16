@@ -438,12 +438,15 @@ cleanup:
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }
 
-static void Music_AddFile(const cc_string* path, void* obj) {
+static void Music_AddFile(const cc_string* path, void* obj, int isDirectory) {
 	struct StringsBuffer* files = (struct StringsBuffer*)obj;
 	static const cc_string ogg  = String_FromConst(".ogg");
 
-	if (!String_CaselessEnds(path, &ogg)) return;
-	StringsBuffer_Add(files, path);
+	if (isDirectory) {
+		Directory_Enum(path, obj, Music_AddFile);
+	} else if (String_CaselessEnds(path, &ogg)) {
+		StringsBuffer_Add(files, path);
+	}
 }
 
 static void Music_RunLoop(void) {

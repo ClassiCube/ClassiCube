@@ -355,11 +355,12 @@ static void LoadOptions(void) {
 }
 
 #ifdef CC_BUILD_PLUGINS
-static void LoadPlugin(const cc_string* path, void* obj) {
+static void LoadPlugin(const cc_string* path, void* obj, int isDirectory) {
 	void* lib;
 	void* verSym;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
 	void* compSym; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
 	int ver;
+	if (isDirectory) return;
 
 	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
 	if (!String_CaselessEnds(path, &DynamicLib_Ext)) return;

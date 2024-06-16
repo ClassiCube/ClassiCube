@@ -122,19 +122,18 @@ int File_Exists(const cc_string* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
+static void Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
 									void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	/* ignore . and .. entry */
-	if (file->length == 1 && file->buffer[0] == '.') return 0;
-	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
+	if (file->length == 1 && file->buffer[0] == '.') return;
+	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return;
 
 	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "%s/%s", dirPath, file);
 
-	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
-	callback(&path, obj);
-	return 0;
+	int is_dir = attribs & FILE_ATTRIBUTE_DIRECTORY;
+	callback(&path, obj, is_dir);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -160,7 +159,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		{
 			String_Append(&path, Convert_CodepointToCP437(eA.cFileName[i]));
 		}
-		if ((res = Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback))) return res;
+		Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback);
 	} while (FindNextFileA(find, &eA));
 
 	res = GetLastError(); /* return code from FindNextFile */

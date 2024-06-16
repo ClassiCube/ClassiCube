@@ -243,12 +243,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		String_AppendUtf8(&path, src, len);
 
 		// negative size indicates a directory entry
-		if (entry->size < 0) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) break;
-		} else {
-			callback(&path, obj);
-		}
+		int is_dir = entry->size < 0;
+		callback(&path, obj, is_dir);
 	}
 
 	int err = errno; // save error from fs_readdir
