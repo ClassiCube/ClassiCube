@@ -13,8 +13,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <dirent.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -128,6 +126,18 @@ int File_Exists(const cc_string* path) {
 	return fioGetstat(str, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
 }
 
+// For some reason fioDread seems to be returning a iox_dirent_t, instead of a io_dirent_t
+// The offset of 'name' in iox_dirent_t is different to 'iox_dirent_t', so naively trying
+// to use entry.name doesn't work
+// TODO: Properly investigate why this is happening
+static char* GetEntryName(char* src) {
+	for (int i = 0; i < 256; i++)
+	{
+		if (src[i]) return &src[i];
+	}
+	return NULL;
+}
+
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
@@ -140,13 +150,16 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	
 	res = 0;
 	String_InitArray(path, pathBuffer);
+	Mem_Set(&entry, 0, sizeof(entry));
 
 	while ((res = fioDread(fd, &entry)) > 0) {
 		path.length = 0;
 		String_Format1(&path, "%s/", dirPath);
 
+		char* src = GetEntryName(entry.name);
+		if (!src) continue;
+
 		// ignore . and .. entry
-		char* src = entry.name;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
@@ -197,7 +210,8 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	return fioClose(file);
+	int res = fioClose(file);
+	return res < 0 ? res : 0;
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
