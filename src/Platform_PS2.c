@@ -63,7 +63,6 @@ void Platform_Log(const char* msg, int len) {
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	_print("%s", tmp);
 
-#define PS2_DEBUG
 #ifdef PS2_DEBUG
 	volatile char* dst = (char*)0x1000F180;
 

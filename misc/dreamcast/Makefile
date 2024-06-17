@@ -4,7 +4,7 @@ SOURCE_DIRS		:= src third_party/bearssl/src misc/dreamcast
 S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-CFLAGS	:=-g -O1 -pipe -fno-math-errno -Ithird_party/bearssl/inc
+CFLAGS	:=-g -O2 -pipe -fno-math-errno -Ithird_party/bearssl/inc
 
 GLDC_LIB=third_party/gldc/libGLdc.a
 LDFLAGS=-g

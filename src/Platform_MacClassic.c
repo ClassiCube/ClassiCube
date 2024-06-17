@@ -172,9 +172,9 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str++ = ':';
 	
 	// Classic Mac OS uses : to separate directories
-	for (int i = 0; i < src->length; i++) 
+	for (int i = 0; i < path->length; i++) 
 	{
-		char c = (char)src->buffer[i];
+		char c = (char)path->buffer[i];
 		if (c == '/') c = ':';
 		*str++ = c;
 	}
