@@ -107,14 +107,15 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("mass:/ClassiCube/");
 
-void Platform_EncodePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(char* path) {
-	return fioMkdir(path);
+cc_result Directory_Create(const cc_filepath* pathh) {
+	return fioMkdir(path->buffer);
 }
 
 int File_Exists(const cc_string* path) {
@@ -178,14 +179,14 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return res < 0 ? res : 0;
 }
 
-cc_result File_Open(cc_file* file, char* path) {
-	return File_Do(file, path, FIO_O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, FIO_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, char* path) {
-	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT | FIO_O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, FIO_O_RDWR | FIO_O_CREAT | FIO_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
-	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, FIO_O_RDWR | FIO_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {

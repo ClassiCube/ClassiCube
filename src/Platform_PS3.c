@@ -95,16 +95,17 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("/dev_hdd0/ClassiCube/");
 
-void Platform_EncodePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(char* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return sysLv2FsMkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	return sysLv2FsMkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 int File_Exists(const cc_string* path) {
@@ -164,14 +165,14 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	}
 }
 
-cc_result File_Open(cc_file* file, char* path) {
-	return File_Do(file, path, SYS_O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SYS_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, char* path) {
-	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT | SYS_O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SYS_O_RDWR | SYS_O_CREAT | SYS_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
-	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SYS_O_RDWR | SYS_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -444,7 +445,9 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	netInitialize();
-	Directory_Create(root_path.buffer);
+	
+	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
+	Directory_Create(root);
 }
 
 void Platform_Free(void) { }

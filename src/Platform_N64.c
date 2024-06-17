@@ -70,7 +70,8 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("/");
 
-void Platform_EncodePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	// TODO temp hack
 	cc_string path_ = *path;
 	int idx = String_IndexOf(path, '/');
@@ -81,7 +82,7 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, &path_);
 }
 
-cc_result Directory_Create(char* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -93,7 +94,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED; // TODO add support
 }
 
-static cc_result File_Do(cc_file* file, char* path) {
+static cc_result File_Do(cc_file* file, const char* path) {
 	//*file = -1;
 	//return ReturnCode_FileNotFound;
 	// TODO: Why does trying this code break everything
@@ -106,18 +107,18 @@ static cc_result File_Do(cc_file* file, char* path) {
 	return 0;
 }
 
-cc_result File_Open(cc_file* file, char* path) {
-	return File_Do(file, path);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer);
 }
-cc_result File_Create(cc_file* file, char* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
-	//return File_Do(file, path);
+	//return File_Do(file, path->buffer);
 }
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
-	//return File_Do(file, path);
+	//return File_Do(file, path->buffer);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {

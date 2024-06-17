@@ -69,7 +69,8 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("ux0:data/ClassiCube/");
 
-void Platform_EncodePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
@@ -77,8 +78,8 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
-cc_result Directory_Create(char* path) {
-	int result = sceIoMkdir(path, 0777);
+cc_result Directory_Create(const cc_filepath* path) {
+	int result = sceIoMkdir(path->buffer, 0777);
 	return GetSCEResult(result);
 }
 
@@ -127,14 +128,14 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return GetSCEResult(result);
 }
 
-cc_result File_Open(cc_file* file, char* path) {
-	return File_Do(file, path, SCE_O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SCE_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, char* path) {
-	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT | SCE_O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SCE_O_RDWR | SCE_O_CREAT | SCE_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
-	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SCE_O_RDWR | SCE_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -385,7 +386,9 @@ void Platform_Init(void) {
 	/*pspDebugSioInit();*/ 
 	InitNetworking();
 	epoll_id = sceNetEpollCreate("CC poll", 0);
-	Directory_Create(root_path.buffer);
+	
+	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
+	Directory_Create(root);
 }
 void Platform_Free(void) { }
 

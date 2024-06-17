@@ -100,14 +100,15 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_EncodePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	String_EncodeUtf8(str, path);
 }
 
 void Directory_GetCachePath(cc_string* path) { }
 
 extern void interop_InitFilesystem(void);
-cc_result Directory_Create(char* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	/* Web filesystem doesn't need directories */
 	return 0;
 }
@@ -152,14 +153,14 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	}
 }
 
-cc_result File_Open(cc_file* file, char* path) {
-	return File_Do(file, path, O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, char* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
 extern int interop_FileRead(int fd, void* data, int count);

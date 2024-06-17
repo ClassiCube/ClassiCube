@@ -165,8 +165,8 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static int retrievedWD, wd_refNum, wd_dirID;
 
-void Platform_EncodePath(char* dst, const cc_string* src) {
-	char* str = dst;
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	str++; // placeholder for length later
 	*str++ = ':';
 	
@@ -231,8 +231,8 @@ static int DoCreateFolder(char* name) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(char* path) {
-	return DoCreateFolder(path);
+cc_result Directory_Create(const cc_filepath* path) {
+	return DoCreateFolder(path->buffer);
 }
 
 int File_Exists(const cc_string* path) {
@@ -246,22 +246,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, char* path) {
-	return DoOpenDF(path, fsRdPerm, file);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return DoOpenDF(path->buffer, fsRdPerm, file);
 }
 
-cc_result File_Create(cc_file* file, char* path) {
-	int res = DoCreateFile(path);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	int res = DoCreateFile(path->buffer);
 	if (res && res != dupFNErr) return res;
 
-	return DoOpenDF(path, fsWrPerm, file);
+	return DoOpenDF(path->buffer, fsWrPerm, file);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
-	int res = DoCreateFile(path);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	int res = DoCreateFile(path->buffer);
 	if (res && res != dupFNErr) return res;
 
-	return DoOpenDF(path, fsRdWrPerm, file);
+	return DoOpenDF(path->buffer, fsRdWrPerm, file);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {

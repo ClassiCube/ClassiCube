@@ -189,7 +189,8 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_EncodePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	String_EncodeUtf8(str, path);
 }
 
@@ -201,10 +202,10 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 void Directory_GetCachePath(cc_string* path) { }
 #endif
 
-cc_result Directory_Create(char* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {
@@ -270,25 +271,25 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, char* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 #if !defined CC_BUILD_OS2
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path->buffer, O_RDONLY);
 #else
-	return File_Do(file, path, O_RDONLY | O_BINARY);
+	return File_Do(file, path->buffer, O_RDONLY | O_BINARY);
 #endif
 }
-cc_result File_Create(cc_file* file, char* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 #if !defined CC_BUILD_OS2
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 #else
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
 #endif
 }
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 #if !defined CC_BUILD_OS2
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 #else
-	return File_Do(file, path, O_RDWR | O_CREAT | O_BINARY);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_BINARY);
 #endif
 }
 

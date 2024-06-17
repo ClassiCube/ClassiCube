@@ -86,7 +86,8 @@ static void Stopwatch_Init(void) {
 static cc_string root_path = String_FromConst("E:\\ClassiCube\\");
 static BOOL hdd_mounted;
 
-void Platform_EncodePath(char* str, const cc_string* src) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	
@@ -100,10 +101,10 @@ void Platform_EncodePath(char* str, const cc_string* src) {
 	*str = '\0';
 }
 
-cc_result Directory_Create(char* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	
-	return CreateDirectoryA(path, NULL) ? 0 : GetLastError();
+	return CreateDirectoryA(path->buffer, NULL) ? 0 : GetLastError();
 }
 
 int File_Exists(const cc_string* path) {
@@ -168,19 +169,19 @@ static cc_result DoFile(cc_file* file, const char* path, DWORD access, DWORD cre
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-cc_result File_Open(cc_file* file, char* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 	if (!hdd_mounted) return ReturnCode_FileNotFound;
-	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
+	return DoFile(file, path->buffer, GENERIC_READ, OPEN_EXISTING);
 }
 
-cc_result File_Create(cc_file* file, char* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
+	return DoFile(file, path->buffer, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
+	return DoFile(file, path->buffer, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -411,7 +412,9 @@ static void InitHDD(void) {
 		Platform_LogConst("Failed to mount E:/ from Data partition");
 		return;
 	}
-	Directory_Create(root_path.buffer);
+	
+	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
+	Directory_Create(root);
 }
 
 void Platform_Init(void) {

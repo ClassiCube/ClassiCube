@@ -119,17 +119,18 @@ static bool fat_available;
 // FindDevice() returns -1 when no matching device, however the code still unconditionally does "if (devoptab_list[dev]->mkdir_r) {"
 // - so will either attempt to access or execute invalid memory
 
-void Platform_EncodePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str   += root_path.length;
 	*str++ = '/';
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(char* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	if (!fat_available) return ENOSYS;
 
-	return mkdir(path, 0) == -1 ? errno : 0;
+	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {
@@ -181,24 +182,24 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, char* path, int mode) {
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	*file = open(path, mode, 0);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, char* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 	if (!fat_available) return ReturnCode_FileNotFound;
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path->buffer, O_RDONLY);
 }
 
-cc_result File_Create(cc_file* file, char* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, char* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
