@@ -255,11 +255,13 @@ CC_INLINE static void HashUrl(cc_string* key, const cc_string* url) {
 static cc_bool createdCache, cacheInvalid;
 static cc_bool UseDedicatedCache(cc_string* path, const cc_string* key) {
 	cc_result res;
+	cc_filepath str;
 	Directory_GetCachePath(path);
 	if (!path->length || cacheInvalid) return false;
 
 	String_AppendConst(path, "/texturecache");
-	res = Directory_Create(path);
+	Platform_EncodePath(&str, path);
+	res = Directory_Create(&str);
 
 	/* Check if something is deleting the cache directory behind our back */
 	/*  (Several users have reported this happening on some Android devices) */

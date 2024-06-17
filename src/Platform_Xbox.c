@@ -100,14 +100,10 @@ void Platform_EncodePath(char* str, const cc_string* src) {
 	*str = '\0';
 }
 
-cc_result Directory_Create(const cc_string* path) {
+cc_result Directory_Create(char* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	
-	cc_filepath str;
-	cc_result res;
-
-	Platform_EncodePath(str, path);
-	return CreateDirectoryA(str, NULL) ? 0 : GetLastError();
+	return CreateDirectoryA(path, NULL) ? 0 : GetLastError();
 }
 
 int File_Exists(const cc_string* path) {
@@ -172,17 +168,17 @@ static cc_result DoFile(cc_file* file, const char* path, DWORD access, DWORD cre
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	if (!hdd_mounted) return ReturnCode_FileNotFound;
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
 
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
@@ -415,7 +411,7 @@ static void InitHDD(void) {
 		Platform_LogConst("Failed to mount E:/ from Data partition");
 		return;
 	}
-	Directory_Create(&String_Empty); // create root ClassiCube folder
+	Directory_Create(root_path.buffer);
 }
 
 void Platform_Init(void) {

@@ -126,12 +126,10 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
+cc_result Directory_Create(char* path) {
 	if (!fat_available) return ENOSYS;
-	
-	cc_filepath str;;
-	Platform_EncodePath(str, path);
-	return mkdir(str, 0) == -1 ? errno : 0;
+
+	return mkdir(path, 0) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {
@@ -183,22 +181,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const char* path, int mode) {
+static cc_result File_Do(cc_file* file, char* path, int mode) {
 	*file = open(path, mode, 0);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	if (!fat_available) return ReturnCode_FileNotFound;
 	return File_Do(file, path, O_RDONLY);
 }
 
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }

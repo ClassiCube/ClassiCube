@@ -101,12 +101,10 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(str, path);
+cc_result Directory_Create(char* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return sysLv2FsMkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	return sysLv2FsMkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 int File_Exists(const cc_string* path) {
@@ -166,13 +164,13 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	}
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return File_Do(file, path, SYS_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT | SYS_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT);
 }
 
@@ -446,8 +444,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	netInitialize();
-	// Create root directory
-	Directory_Create(&String_Empty);
+	Directory_Create(root_path.buffer);
 }
 
 void Platform_Free(void) { }

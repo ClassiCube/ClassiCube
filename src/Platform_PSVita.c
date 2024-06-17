@@ -77,11 +77,8 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(str, path);
-	
-	int result = sceIoMkdir(str, 0777);
+cc_result Directory_Create(char* path) {
+	int result = sceIoMkdir(path, 0777);
 	return GetSCEResult(result);
 }
 
@@ -130,13 +127,13 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return GetSCEResult(result);
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return File_Do(file, path, SCE_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT | SCE_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT);
 }
 
@@ -388,8 +385,7 @@ void Platform_Init(void) {
 	/*pspDebugSioInit();*/ 
 	InitNetworking();
 	epoll_id = sceNetEpollCreate("CC poll", 0);
-	// Create root directory
-	Directory_Create(&String_Empty);
+	Directory_Create(root_path.buffer);
 }
 void Platform_Free(void) { }
 

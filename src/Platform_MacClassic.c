@@ -231,10 +231,8 @@ static int DoCreateFolder(char* name) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	Platform_EncodePath(buffer, path);
-	return DoCreateFolder(buffer);
+cc_result Directory_Create(char* path) {
+	return DoCreateFolder(path);
 }
 
 int File_Exists(const cc_string* path) {
@@ -248,18 +246,18 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return DoOpenDF(path, fsRdPerm, file);
 }
 
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	int res = DoCreateFile(path);
 	if (res && res != dupFNErr) return res;
 
 	return DoOpenDF(path, fsWrPerm, file);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	int res = DoCreateFile(path);
 	if (res && res != dupFNErr) return res;
 

@@ -94,10 +94,7 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(str, path);
-	
+cc_result Directory_Create(char* path) {
 	int result = sceIoMkdir(str, 0777);
 	return GetSCEResult(result);
 }
@@ -147,13 +144,13 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return GetSCEResult(result);
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return File_Do(file, path, PSP_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	return File_Do(file, path, PSP_O_RDWR | PSP_O_CREAT | PSP_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	return File_Do(file, path, PSP_O_RDWR | PSP_O_CREAT);
 }
 
@@ -431,9 +428,8 @@ void Platform_Init(void) {
 	//  *tx = vel->x == 0.0f ? MATH_LARGENUM : Math_AbsF(dx / vel->x);
 	// TODO: work out why this error is actually happening (inexact or underflow?) and properly fix it
 	pspSdkDisableFPUExceptions();
-	
-	// Create root directory
-	Directory_Create(&String_Empty);
+
+	Directory_Create(root_path.buffer);
 }
 void Platform_Free(void) { }
 

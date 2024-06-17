@@ -109,12 +109,10 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(str, path);
+cc_result Directory_Create(char* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {

@@ -184,16 +184,13 @@ void Platform_EncodePath(cc_filepath_ptr dst, const cc_string* src) {
 	Platform_EncodeString(dst, src);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
+cc_result Directory_Create(cc_filepath_ptr path) {
 	cc_result res;
-
-	Platform_EncodePath(&str, path);
-	if (CreateDirectoryW(str.uni, NULL)) return 0;
+	if (CreateDirectoryW(path->uni, NULL)) return 0;
 	/* Windows 9x does not support W API functions */
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
-	return CreateDirectoryA(str.ansi, NULL) ? 0 : GetLastError();
+	return CreateDirectoryA(path->ansi, NULL) ? 0 : GetLastError();
 }
 
 int File_Exists(const cc_string* path) {
@@ -283,13 +280,13 @@ static cc_result DoFile(cc_file* file, const cc_filepath* path, DWORD access, DW
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-cc_result File_Open(cc_file* file, const cc_filepath_ptr path) {
+cc_result File_Open(cc_file* file, cc_filepath_ptr path) {
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-cc_result File_Create(cc_file* file, const cc_filepath_ptr path) {
+cc_result File_Create(cc_file* file, cc_filepath_ptr path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_filepath_ptr path) {
+cc_result File_OpenOrCreate(cc_file* file, cc_filepath_ptr path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 

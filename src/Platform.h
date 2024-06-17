@@ -192,7 +192,7 @@ CC_API cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end);
 int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
 
 /* Attempts to create a new directory. */
-CC_API cc_result Directory_Create(const cc_string* path);
+cc_result Directory_Create(cc_filepath_ptr path);
 /* Callback function invoked for each file found. */
 typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj, int isDirectory);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
@@ -203,11 +203,11 @@ void Directory_GetCachePath(cc_string* path);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
-cc_result File_Create(cc_file* file, const cc_filepath_ptr path);
+cc_result File_Create(cc_file* file, cc_filepath_ptr path);
 /* Attempts to open an existing file for reading. */
-cc_result File_Open(cc_file* file, const cc_filepath_ptr path);
+cc_result File_Open(cc_file* file,   cc_filepath_ptr path);
 /* Attempts to open an existing or create a new file for reading and writing. */
-cc_result File_OpenOrCreate(cc_file* file, const cc_filepath_ptr path);
+cc_result File_OpenOrCreate(cc_file* file, cc_filepath_ptr path);
 /* Attempts to read data from the file. */
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead);
 /* Attempts to write data to the file. */

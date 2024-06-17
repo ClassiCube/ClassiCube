@@ -113,10 +113,8 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(str, path);
-	return fioMkdir(str);
+cc_result Directory_Create(char* path) {
+	return fioMkdir(path);
 }
 
 int File_Exists(const cc_string* path) {
@@ -180,13 +178,13 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return res < 0 ? res : 0;
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return File_Do(file, path, FIO_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT | FIO_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT);
 }
 

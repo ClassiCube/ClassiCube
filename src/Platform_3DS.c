@@ -97,11 +97,8 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(str, path);
-	
-	return mkdir(str, 0666) == -1 ? errno : 0; // FS has no permissions anyways
+cc_result Directory_Create(char* path) {
+	return mkdir(path, 0666) == -1 ? errno : 0; // FS has no permissions anyways
 }
 
 int File_Exists(const cc_string* path) {
@@ -152,13 +149,13 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 

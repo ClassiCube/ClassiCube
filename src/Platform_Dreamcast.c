@@ -193,11 +193,8 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(str, path);
-	
-	int res = fs_mkdir(str);
+cc_result Directory_Create(char* path) {
+	int res = fs_mkdir(path);
 	int err = res == -1 ? errno : 0;
 	
 	// Filesystem returns EINVAL when operation unsupported (e.g. CD system)
@@ -252,7 +249,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return err;
 }
 
-static cc_result File_Do(cc_file* file, const char* path, int mode) {
+static cc_result File_Do(cc_file* file, char* path, int mode) {
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
@@ -271,13 +268,13 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	return err;
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 

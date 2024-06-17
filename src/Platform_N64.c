@@ -81,7 +81,7 @@ void Platform_EncodePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, &path_);
 }
 
-cc_result Directory_Create(const cc_string* path) {
+cc_result Directory_Create(char* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -93,7 +93,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED; // TODO add support
 }
 
-static cc_result File_Do(cc_file* file, const char* path) {
+static cc_result File_Do(cc_file* file, char* path) {
 	//*file = -1;
 	//return ReturnCode_FileNotFound;
 	// TODO: Why does trying this code break everything
@@ -106,15 +106,15 @@ static cc_result File_Do(cc_file* file, const char* path) {
 	return 0;
 }
 
-cc_result File_Open(cc_file* file, const char* path) {
+cc_result File_Open(cc_file* file, char* path) {
 	return File_Do(file, path);
 }
-cc_result File_Create(cc_file* file, const char* path) {
+cc_result File_Create(cc_file* file, char* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
 	//return File_Do(file, path);
 }
-cc_result File_OpenOrCreate(cc_file* file, const char* path) {
+cc_result File_OpenOrCreate(cc_file* file, char* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
 	//return File_Do(file, path);

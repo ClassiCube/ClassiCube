@@ -24,8 +24,13 @@ cc_bool Utils_IsUrlPrefix(const cc_string* value) {
 }
 
 cc_bool Utils_EnsureDirectory(const char* dirName) {
-	cc_string dir = String_FromReadonly(dirName);
-	cc_result res = Directory_Create(&dir);
+	cc_filepath path;
+	cc_string dir;
+	cc_result res;
+	
+	dir = String_FromReadonly(dirName);
+	Platform_EncodePath(&path, &dir);
+	res = Directory_Create(&path);
 
 	if (!res || res == ReturnCode_DirectoryExists) return true;
 	Logger_SysWarn2(res, "creating directory", &dir);
