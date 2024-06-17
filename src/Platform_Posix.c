@@ -105,8 +105,10 @@ void Mem_Free(void* mem) {
 /* implemented in interop_ios.m */
 #else
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	int ret;
+	/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
+	ret = write(STDOUT_FILENO, msg,  len);
+	ret = write(STDOUT_FILENO, "\n",   1);
 }
 #endif
 
@@ -1518,6 +1520,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
+/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
+/* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66425#c34 */
+#define IGNORE_RETURN_VALUE(func) (void)!(func)
+
 /* Detects if the game is running in $HOME directory */
 static cc_bool IsProblematicWorkingDirectory(void) {
 	#ifdef CC_BUILD_MACOS
@@ -1529,7 +1535,7 @@ static cc_bool IsProblematicWorkingDirectory(void) {
 	char path[2048] = { 0 };
 	const char* home;
 
-	getcwd(path, 2048);
+	IGNORE_RETURN_VALUE(getcwd(path, 2048));
 	curDir = String_FromReadonly(path);
 	
 	home = getenv("HOME");

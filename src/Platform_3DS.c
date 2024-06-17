@@ -439,9 +439,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "3DS_3DS_3DS_3DS_"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	// doesn't really matter if called multiple times
-	psInit();
-	return PS_GetDeviceId(key);
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

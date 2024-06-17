@@ -597,15 +597,13 @@ cc_result Process_StartOpen(const cc_string* args) {
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined HW_RVL
-#include <ogc/es.h>
-
-static cc_result GetMachineID(cc_uint32* key) {
-	return ES_GetDeviceID(key);
-}
+	#define MACHINE_KEY "Wii_Wii_Wii_Wii_"
 #else
-static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
-}
+	#define MACHINE_KEY "GameCubeGameCube"
 #endif
 
+static cc_result GetMachineID(cc_uint32* key) {
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
+}
 #endif

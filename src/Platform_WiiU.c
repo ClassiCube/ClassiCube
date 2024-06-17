@@ -451,5 +451,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
+#define MACHINE_KEY "WiiUWiiUWiiUWiiU"
+
+static cc_result GetMachineID(cc_uint32* key) {
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
+}
 #endif
