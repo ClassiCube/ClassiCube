@@ -69,7 +69,7 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("ux0:data/ClassiCube/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
@@ -78,26 +78,26 @@ static void GetNativePath(char* str, const cc_string* path) {
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
 cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 	
 	int result = sceIoMkdir(str, 0777);
 	return GetSCEResult(result);
 }
 
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;;
 	SceIoStat sb;
-	GetNativePath(str, path);
+	Platform_EncodePath(str, path);
 	return sceIoGetstat(str, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	int res;
 
-	GetNativePath(str, dirPath);
+	Platform_EncodePath(str, dirPath);
 	SceUID uid = sceIoDopen(str);
 	if (uid < 0) return GetSCEResult(uid); // error
 
@@ -124,22 +124,19 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return GetSCEResult(res);
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int result = sceIoOpen(str, mode, 0777);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	int result = sceIoOpen(path, mode, 0777);
 	*file      = result;
 	return GetSCEResult(result);
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	return File_Do(file, path, SCE_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT | SCE_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT);
 }
 

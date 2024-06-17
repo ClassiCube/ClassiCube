@@ -86,7 +86,7 @@ static void Stopwatch_Init(void) {
 static cc_string root_path = String_FromConst("E:\\ClassiCube\\");
 static BOOL hdd_mounted;
 
-static void GetNativePath(char* str, const cc_string* src) {
+void Platform_EncodePath(char* str, const cc_string* src) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	
@@ -103,20 +103,20 @@ static void GetNativePath(char* str, const cc_string* src) {
 cc_result Directory_Create(const cc_string* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	cc_result res;
 
-	GetNativePath(str, path);
+	Platform_EncodePath(str, path);
 	return CreateDirectoryA(str, NULL) ? 0 : GetLastError();
 }
 
 int File_Exists(const cc_string* path) {
 	if (!hdd_mounted) return 0;
 	
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	DWORD attribs;
 
-	GetNativePath(str, path);
+	Platform_EncodePath(str, path);
 	attribs = GetFileAttributesA(str);
 
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
@@ -141,14 +141,14 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	WIN32_FIND_DATAA eA;
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	HANDLE find;
 	cc_result res;	
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
-	GetNativePath(str, &path);
+	Platform_EncodePath(str, &path);
 	
 	find = FindFirstFileA(str, &eA);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
@@ -167,26 +167,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	cc_result res;
-
-	*file = CreateFileA(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+static cc_result DoFile(cc_file* file, const char* path, DWORD access, DWORD createMode) {
+	*file = CreateFileA(path, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	if (!hdd_mounted) return ReturnCode_FileNotFound;
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }

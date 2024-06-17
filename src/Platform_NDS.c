@@ -109,7 +109,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 static cc_string root_path = String_FromConst("fat:/"); // may be overriden in InitFilesystem
 static bool fat_available;
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
@@ -118,8 +118,8 @@ static void GetNativePath(char* str, const cc_string* path) {
 cc_result Directory_Create(const cc_string* path) {
 	if (!fat_available) return 0;
 
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
     Platform_Log1("mkdir %c", str);
 
 	return mkdir(str, 0) == -1 ? errno : 0;
@@ -127,10 +127,10 @@ cc_result Directory_Create(const cc_string* path) {
 
 int File_Exists(const cc_string* path) {
 	if (!fat_available) return false;
-	
-	char str[NATIVE_STR_LEN];
+
+	cc_filepath str;
 	struct stat sb;
-	GetNativePath(str, path);
+	Platform_EncodePath(str, path);
     Platform_Log1("Check %c", str);
 
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
@@ -138,7 +138,7 @@ int File_Exists(const cc_string* path) {
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	struct dirent* entry;
 	int res;
 
@@ -173,26 +173,24 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode, const char* type) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	Platform_Log2("%c %c", type, str);
+static cc_result File_Do(cc_file* file, const char* path, int mode, const char* type) {
+	Platform_Log2("%c %c", type, path);
 
-	*file = open(str, mode, 0);
+	*file = open(path, mode, 0);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	if (!fat_available) return ReturnCode_FileNotFound;
 	return File_Do(file, path, O_RDONLY, "Open");
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC, "Create");
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT, "Update");
 }

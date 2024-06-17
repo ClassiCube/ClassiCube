@@ -165,7 +165,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static int retrievedWD, wd_refNum, wd_dirID;
 
-static void GetNativePath(char* dst, const cc_string* src) {
+void Platform_EncodePath(char* dst, const cc_string* src) {
 	char* str = dst;
 	str++; // placeholder for length later
 	*str++ = ':';
@@ -233,13 +233,13 @@ void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_string* path) {
 	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
+	Platform_EncodePath(buffer, path);
 	return DoCreateFolder(buffer);
 }
 
 int File_Exists(const cc_string* path) {
 	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
+	Platform_EncodePath(buffer, path);
 
 	return 0;
 }
@@ -248,31 +248,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
-
-	return DoOpenDF(buffer, fsRdPerm, file);
+cc_result File_Open(cc_file* file, const char* path) {
+	return DoOpenDF(path, fsRdPerm, file);
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
-
-	int res = DoCreateFile(buffer);
+cc_result File_Create(cc_file* file, const char* path) {
+	int res = DoCreateFile(path);
 	if (res && res != dupFNErr) return res;
 
-	return DoOpenDF(buffer, fsWrPerm, file);
+	return DoOpenDF(path, fsWrPerm, file);
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
-
-	int res = DoCreateFile(buffer);
+	int res = DoCreateFile(path);
 	if (res && res != dupFNErr) return res;
 
-	return DoOpenDF(buffer, fsRdWrPerm, file);
+	return DoOpenDF(path, fsRdWrPerm, file);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -528,7 +519,7 @@ void Platform_Init(void) {
 
 	cc_string path = String_FromConst("aB.txt");
 	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, &path);
+	Platform_EncodePath(buffer, &path);
 
 	int ERR2 = DoCreateFile(buffer);
 	Platform_Log1("TEST FILE: %i", &ERR2);

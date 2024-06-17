@@ -70,7 +70,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(char* str, const cc_string* path) {
 	// TODO temp hack
 	cc_string path_ = *path;
 	int idx = String_IndexOf(path, '/');
@@ -93,31 +93,28 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED; // TODO add support
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
+static cc_result File_Do(cc_file* file, const char* path) {
 	//*file = -1;
 	//return ReturnCode_FileNotFound;
 	// TODO: Why does trying this code break everything
 	
-	int ret = dfs_open(str);
-	Platform_Log2("Opened %c = %i", str, &ret);
+	int ret = dfs_open(path);
+	Platform_Log2("Opened %c = %i", path, &ret);
 	if (ret < 0) { *file = -1; return ret; }
 	
 	*file = ret;
 	return 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	return File_Do(file, path);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
 	//return File_Do(file, path);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
 	//return File_Do(file, path);

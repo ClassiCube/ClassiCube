@@ -119,7 +119,7 @@ static bool fat_available;
 // FindDevice() returns -1 when no matching device, however the code still unconditionally does "if (devoptab_list[dev]->mkdir_r) {"
 // - so will either attempt to access or execute invalid memory
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str   += root_path.length;
 	*str++ = '/';
@@ -129,17 +129,17 @@ static void GetNativePath(char* str, const cc_string* path) {
 cc_result Directory_Create(const cc_string* path) {
 	if (!fat_available) return ENOSYS;
 	
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+	cc_filepath str;;
+	Platform_EncodePath(str, path);
 	return mkdir(str, 0) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {
 	if (!fat_available) return false;
 	
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	struct stat sb;
-	GetNativePath(str, path);
+	Platform_EncodePath(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -147,11 +147,11 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	if (!fat_available) return ENOSYS;
 
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	struct dirent* entry;
 	int res;
 
-	GetNativePath(str, dirPath);
+	Platform_EncodePath(str, dirPath);
 	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -183,24 +183,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	*file = open(str, mode, 0);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	*file = open(path, mode, 0);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	if (!fat_available) return ReturnCode_FileNotFound;
 	return File_Do(file, path, O_RDONLY);
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }

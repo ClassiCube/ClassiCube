@@ -187,15 +187,15 @@ static cc_result VMUFile_Close(cc_file file) {
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("/cd/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
 cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 	
 	int res = fs_mkdir(str);
 	int err = res == -1 ? errno : 0;
@@ -207,21 +207,21 @@ cc_result Directory_Create(const cc_string* path) {
 }
 
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;;
 	struct stat sb;
-	GetNativePath(str, path);
+	Platform_EncodePath(str, path);
 	return fs_stat(str, &sb, 0) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	int res;
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
 
-	GetNativePath(str, dirPath);
+	Platform_EncodePath(str, dirPath);
 	int fd = fs_open(str, O_DIR | O_RDONLY);
 	if (fd < 0) return errno;
 
@@ -252,33 +252,32 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return err;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
 
-	int res = fs_open(str, mode);
+	int res = fs_open(path, mode);
 	*file   = res;
 	
 	int err = res == -1 ? errno : 0;
 	if (res == -1 && err == 0) err = ENOENT;
 
-	// Read/Write VMU for options.txt, since that file is critical
-	if (err && Platform_ReadonlyFilesystem && String_CaselessEqualsConst(path, "options.txt")) {
+	// Read/Write VMU for options.txt if no SD card, since that file is critical
+	cc_string raw = String_FromReadonly(path);
+	if (err && String_CaselessEqualsConst(raw, "/cd/options.txt")) {
 		return VMUFile_Do(file, mode);
 	}
 	return err;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 

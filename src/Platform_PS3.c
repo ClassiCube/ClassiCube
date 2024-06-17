@@ -95,35 +95,35 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("/dev_hdd0/ClassiCube/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
 cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return sysLv2FsMkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	sysFSStat sb;
-	GetNativePath(str, path);
+	Platform_EncodePath(str, path);
 	return sysLv2FsStat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	sysFSDirent entry;
 	char* src;
 	int dir_fd, res;
 
-	GetNativePath(str, dirPath);
+	Platform_EncodePath(str, dirPath);
 	if ((res = sysLv2FsOpenDir(str, &dir_fd))) return res;
 
 	for (;;)
@@ -151,13 +151,11 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	int fd = -1;
 	
 	int access = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-	int res    = sysLv2FsOpen(str, mode, &fd, access, NULL, 0);
+	int res    = sysLv2FsOpen(path, mode, &fd, access, NULL, 0);
 	
 	if (res) {
 		*file = -1; return res;
@@ -168,13 +166,13 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	}
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	return File_Do(file, path, SYS_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT | SYS_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT);
 }
 

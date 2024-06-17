@@ -566,7 +566,7 @@ void Game_TakeScreenshot(void) {
 	struct DateTime now;
 	cc_result res;
 #ifdef CC_BUILD_WEB
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 #else
 	struct Stream stream;
 #endif
@@ -579,7 +579,7 @@ void Game_TakeScreenshot(void) {
 
 #ifdef CC_BUILD_WEB
 	extern void interop_TakeScreenshot(const char* path);
-	String_EncodeUtf8(str, &filename);
+	Platform_EncodePath(str, &filename);
 	interop_TakeScreenshot(str);
 #else
 	if (!Utils_EnsureDirectory("screenshots")) return;

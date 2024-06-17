@@ -87,7 +87,7 @@ static void Stopwatch_Init(void) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("cdrom:/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
@@ -105,15 +105,15 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	return ERR_NOT_SUPPORTED;
 }
 

@@ -189,6 +189,10 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+void Platform_EncodePath(char* str, const cc_string* path) {
+	String_EncodeUtf8(str, path);
+}
+
 #if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
@@ -198,29 +202,30 @@ void Directory_GetCachePath(cc_string* path) { }
 #endif
 
 cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	String_EncodeUtf8(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
+	
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	DIR* dirPtr;
 	struct dirent* entry;
 	char* src;
 	int len, res, is_dir;
 
-	String_EncodeUtf8(str, dirPath);
+	Platform_EncodePath(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -262,29 +267,26 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	*file = open(path, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 #if !defined CC_BUILD_OS2
 	return File_Do(file, path, O_RDONLY);
 #else
 	return File_Do(file, path, O_RDONLY | O_BINARY);
 #endif
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 #if !defined CC_BUILD_OS2
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 #else
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
 #endif
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 #if !defined CC_BUILD_OS2
 	return File_Do(file, path, O_RDWR | O_CREAT);
 #else
@@ -1129,8 +1131,8 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
 void* DynamicLib_Load2(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING |
 							NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
@@ -1171,8 +1173,8 @@ const cc_string DynamicLib_Ext = String_FromConst(".so");
 #endif
 
 void* DynamicLib_Load2(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 	return dlopen(str, RTLD_NOW);
 }
 

@@ -85,6 +85,10 @@ static void Stopwatch_Init(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+void Platform_EncodePath(char* str, const cc_string* path) {
+	String_EncodeUtf8(str, path);
+}
+
 cc_result Directory_Create(const cc_string* path) {
 	return ERR_NOT_SUPPORTED;
 }
@@ -97,15 +101,15 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	return ERR_NOT_SUPPORTED;
 }
 

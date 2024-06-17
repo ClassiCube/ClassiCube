@@ -180,11 +180,15 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
 
+void Platform_EncodePath(cc_filepath_ptr dst, const cc_string* src) {
+	Platform_EncodeString(dst, src);
+}
+
 cc_result Directory_Create(const cc_string* path) {
-	cc_winstring str;
+	cc_filepath str;
 	cc_result res;
 
-	Platform_EncodeString(&str, path);
+	Platform_EncodePath(&str, path);
 	if (CreateDirectoryW(str.uni, NULL)) return 0;
 	/* Windows 9x does not support W API functions */
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
@@ -193,10 +197,10 @@ cc_result Directory_Create(const cc_string* path) {
 }
 
 int File_Exists(const cc_string* path) {
-	cc_winstring str;
+	cc_filepath str;
 	DWORD attribs;
 
-	Platform_EncodeString(&str, path);
+	Platform_EncodePath(&str, path);
 	attribs = GetFileAttributesW(str.uni);
 
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
@@ -224,14 +228,14 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	WIN32_FIND_DATAW eW;
 	WIN32_FIND_DATAA eA;
 	int i, ansi = false;
-	cc_winstring str;
+	cc_filepath str;
 	HANDLE find;
 	cc_result res;	
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
-	Platform_EncodeString(&str, &path);
+	Platform_EncodePath(&str, &path);
 	
 	find = FindFirstFileW(str.uni, &eW);
 	if (!find || find == INVALID_HANDLE_VALUE) {
@@ -267,31 +271,25 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
-static cc_result DoFileRaw(cc_file* file, const cc_winstring* str, DWORD access, DWORD createMode) {
+static cc_result DoFile(cc_file* file, const cc_filepath* path, DWORD access, DWORD createMode) {
 	cc_result res;
 
-	*file = CreateFileW(str->uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileW(path->uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	if (*file && *file != INVALID_HANDLE_VALUE) return 0;
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
 	/* Windows 9x does not support W API functions */
-	*file = CreateFileA(str->ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileA(path->ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	cc_winstring str;
-	Platform_EncodeString(&str, path);
-	return DoFileRaw(file, &str, access, createMode);
-}
-
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const cc_filepath_ptr path) {
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const cc_filepath_ptr path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath_ptr path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
@@ -826,7 +824,7 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 	int len;
 
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
-	if ((res = DoFileRaw(&file, &path, GENERIC_READ, OPEN_EXISTING))) return res;
+	if ((res = File_Open(&file, &path)))            return res;
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
 		raw        = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
@@ -843,10 +841,14 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 cc_result Updater_MarkExecutable(void) { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 	static const cc_string path = String_FromConst(UPDATE_FILE);
+	cc_filepath str;
 	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
-	cc_result res = File_OpenOrCreate(&file, &path);
+	cc_result res;
+	
+	Platform_EncodePath(&str, &path);
+	res = File_OpenOrCreate(&file, &str);
 	if (res) return res;
 
 	raw = 10000000 * (timestamp + FILETIME_UNIX_EPOCH);
@@ -868,10 +870,10 @@ static cc_bool loadingPlugin;
 
 void* DynamicLib_Load2(const cc_string* path) {
 	static cc_string plugins_dir = String_FromConst("plugins/");
-	cc_winstring str;
+	cc_filepath str;
 	void* lib;
 
-	Platform_EncodeString(&str, path);
+	Platform_EncodePath(&str, path);
 	loadingPlugin = String_CaselessStarts(path, &plugins_dir);
 
 	if ((lib = LoadLibraryW(str.uni))) return lib;

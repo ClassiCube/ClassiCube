@@ -100,6 +100,10 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+void Platform_EncodePath(char* str, const cc_string* path) {
+	String_EncodeUtf8(str, path);
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
 extern void interop_InitFilesystem(void);
@@ -110,8 +114,8 @@ cc_result Directory_Create(const cc_string* path) {
 
 extern int interop_FileExists(const char* path);
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 	return interop_FileExists(str);
 }
 
@@ -127,8 +131,8 @@ EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 
 extern int interop_DirectoryIter(const char* path);
 cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	cc_filepath str;
+	Platform_EncodePath(str, path);
 
 	enum_obj      = obj;
 	enum_callback = callback;
@@ -137,11 +141,8 @@ cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallbac
 }
 
 extern int interop_FileCreate(const char* path, int mode);
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	int res;
-	String_EncodeUtf8(str, path);
-	res = interop_FileCreate(str, mode);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	int res = interop_FileCreate(path, mode);
 
 	/* returned result is negative for error */
 	if (res >= 0) {
@@ -151,13 +152,13 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	}
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const char* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const char* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 

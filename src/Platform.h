@@ -52,6 +52,15 @@ void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
 #endif
 
+#ifdef CC_BUILD_WIN
+typedef cc_winstring  cc_filepath;
+typedef cc_winstring* cc_filepath_ptr;
+#else
+typedef char  cc_filepath[NATIVE_STR_LEN];
+typedef char* cc_filepath_ptr;
+#endif
+void Platform_EncodePath(cc_filepath_ptr dst, const cc_string* src);
+
 /* Initialises the platform specific state. */
 void Platform_Init(void);
 /* Frees the platform specific state. */
@@ -194,11 +203,11 @@ void Directory_GetCachePath(cc_string* path);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
-cc_result File_Create(cc_file* file, const cc_string* path);
+cc_result File_Create(cc_file* file, const cc_filepath_ptr path);
 /* Attempts to open an existing file for reading. */
-cc_result File_Open(cc_file* file, const cc_string* path);
+cc_result File_Open(cc_file* file, const cc_filepath_ptr path);
 /* Attempts to open an existing or create a new file for reading and writing. */
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath_ptr path);
 /* Attempts to read data from the file. */
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead);
 /* Attempts to write data to the file. */
