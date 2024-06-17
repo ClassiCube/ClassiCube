@@ -5,7 +5,7 @@ C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
 OBJECTS := $(C_OBJECTS)
 ENAME   = ClassiCube
-CFLAGS  = -g -pipe -fno-math-errno
+CFLAGS  = -g -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=maybe-uninitialized
 LDFLAGS = -g -rdynamic
 
 ifndef RM
@@ -38,52 +38,52 @@ ifeq ($(PLAT),web)
 endif
 
 ifeq ($(PLAT),mingw)
-	CC      = gcc
-	OEXT    = .exe
-	CFLAGS  = -g -pipe -DUNICODE -fno-math-errno
-	LDFLAGS = -g
-	LIBS    = -mwindows -lwinmm -limagehlp
+	CC      =  gcc
+	OEXT    =  .exe
+	CFLAGS  += -DUNICODE
+	LDFLAGS =  -g
+	LIBS    =  -mwindows -lwinmm -limagehlp
 endif
 
 ifeq ($(PLAT),linux)
-	CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
-	LIBS    = -lX11 -lXi -lpthread -lGL -ldl
+	CFLAGS  += -DCC_BUILD_ICON
+	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
 endif
 
 ifeq ($(PLAT),sunos)
-	CFLAGS  = -g -pipe -fno-math-errno
-	LIBS    = -lsocket -lX11 -lXi -lGL
+	CFLAGS  += -DCC_BUILD_ICON
+	LIBS    =  -lsocket -lX11 -lXi -lGL
 endif
 
 ifeq ($(PLAT),darwin)
 	OBJECTS += $(BUILD_DIR)/Window_cocoa.o
-	CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
+	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =
-	LDFLAGS = -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 endif
 
 ifeq ($(PLAT),freebsd)
-	CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
-	LDFLAGS = -L /usr/local/lib -rdynamic
-	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
+	LDFLAGS =  -L /usr/local/lib -rdynamic
+	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),openbsd)
-	CFLAGS  = -g -pipe -I /usr/X11R6/include -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
-	LDFLAGS = -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
-	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include -DCC_BUILD_ICON
+	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
+	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),netbsd)
-	CFLAGS  = -g -pipe -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno -DCC_BUILD_ICON
-	LDFLAGS = -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
-	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include -DCC_BUILD_ICON
+	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
+	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),dragonfly)
-	CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
-	LDFLAGS = -L /usr/local/lib -rdynamic
-	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
+	LDFLAGS =  -L /usr/local/lib -rdynamic
+	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),haiku)

@@ -21,9 +21,10 @@
 #include <graph.h>
 #include <draw.h>
 #include <kernel.h>
+#include <libkbd.h>
 #include <libmouse.h>
 
-static cc_bool launcherMode, mouseSupported;
+static cc_bool launcherMode, mouseSupported, kbdSupported;
 static char padBuf0[256] __attribute__((aligned(64)));
 static char padBuf1[256] __attribute__((aligned(64)));
 
@@ -59,6 +60,10 @@ void Window_Init(void) {
 	if (PS2MouseInit() >= 0) {
 		PS2MouseSetReadMode(PS2MOUSE_READMODE_DIFF);
 		mouseSupported = true;
+	}
+	if (PS2KbdInit() >= 0) {
+		PS2KbdSetReadmode(PS2KBD_READMODE_RAW);
+		kbdSupported = true;
 	}
 }
 
@@ -137,8 +142,18 @@ static void ProcessMouseInput(float delta) {
 				mData.x * scale, mData.y * scale);
 }
 
+static void ProcessKeyboardInput(void) {
+	if (!kbdSupported) return;
+
+	PS2KbdRawKey key;
+	if (PS2KbdReadRaw(&key) <= 0) return;
+
+	Platform_Log1("%i", &key.key);
+}
+
 void Window_ProcessEvents(float delta) {
 	ProcessMouseInput(delta);
+	ProcessKeyboardInput();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita

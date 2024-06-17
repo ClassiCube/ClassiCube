@@ -236,8 +236,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 }
 
 int File_Exists(const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	Platform_EncodePath(buffer, path);
+	cc_filepath str;
+	Platform_EncodePath(&str, path);
 
 	return 0;
 }

@@ -5,11 +5,11 @@ BUILD_DIR = build-ps2
 
 CFILES 	:= $(wildcard src/*.c)
 OBJS	:=$(patsubst %.c, %.o, $(CFILES))
-IOP_MODS:= DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o
+IOP_MODS:= DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o USBKBD_irx.o
 
 EE_BIN = ClassiCube-ps2.elf
 EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
-EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse
+EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse -lkbd
 EE_CFLAGS = -DPLAT_PS2
 
 all: $(BUILD_DIR) $(EE_BIN)
@@ -49,6 +49,9 @@ $(BUILD_DIR)/USBHDFSD_irx.c: $(PS2SDK)/iop/irx/usbhdfsd.irx
 # USB input IRX modules
 $(BUILD_DIR)/USBMOUSE_irx.c: $(PS2SDK)/iop/irx/ps2mouse.irx
 	bin2c $< $@ USBMOUSE_irx
+
+$(BUILD_DIR)/USBKBD_irx.c: $(PS2SDK)/iop/irx/ps2kbd.irx
+	bin2c $< $@ USBKBD_irx
 
 
 include $(PS2SDK)/samples/Makefile.pref

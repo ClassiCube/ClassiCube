@@ -116,8 +116,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 extern int interop_FileExists(const char* path);
 int File_Exists(const cc_string* path) {
 	cc_filepath str;
-	Platform_EncodePath(str, path);
-	return interop_FileExists(str);
+	Platform_EncodePath(&str, path);
+	return interop_FileExists(str.buffer);
 }
 
 static void* enum_obj;
@@ -133,12 +133,12 @@ EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 extern int interop_DirectoryIter(const char* path);
 cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
 	cc_filepath str;
-	Platform_EncodePath(str, path);
+	Platform_EncodePath(&str, path);
 
 	enum_obj      = obj;
 	enum_callback = callback;
 	/* returned result is negative for error */
-	return -interop_DirectoryIter(str);
+	return -interop_DirectoryIter(str.buffer);
 }
 
 extern int interop_FileCreate(const char* path, int mode);

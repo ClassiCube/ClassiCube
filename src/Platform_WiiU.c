@@ -119,8 +119,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 int File_Exists(const cc_string* path) {
 	cc_filepath str;
 	struct stat sb;
-	Platform_EncodePath(str, path);
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	Platform_EncodePath(&str, path);
+	return stat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -131,8 +131,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res, is_dir;
 
-	Platform_EncodePath(str, dirPath);
-	dirPtr = opendir(str);
+	Platform_EncodePath(&str, dirPath);
+	dirPtr = opendir(str.buffer);
 	if (!dirPtr) return errno;
 
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */

@@ -111,8 +111,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 int File_Exists(const cc_string* path) {
 	cc_filepath str;
 	sysFSStat sb;
-	Platform_EncodePath(str, path);
-	return sysLv2FsStat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	Platform_EncodePath(&str, path);
+	return sysLv2FsStat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -122,8 +122,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int dir_fd, res;
 
-	Platform_EncodePath(str, dirPath);
-	if ((res = sysLv2FsOpenDir(str, &dir_fd))) return res;
+	Platform_EncodePath(&str, dirPath);
+	if ((res = sysLv2FsOpenDir(str.buffer, &dir_fd))) return res;
 
 	for (;;)
 	{

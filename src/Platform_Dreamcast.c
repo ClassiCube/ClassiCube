@@ -207,8 +207,8 @@ cc_result Directory_Create(const cc_filepath* path {
 int File_Exists(const cc_string* path) {
 	cc_filepath str;;
 	struct stat sb;
-	Platform_EncodePath(str, path);
-	return fs_stat(str, &sb, 0) == 0 && S_ISREG(sb.st_mode);
+	Platform_EncodePath(&str, path);
+	return fs_stat(str.buffer, &sb, 0) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -219,8 +219,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	//  when it can't find the requested file
 	errno = 0;
 
-	Platform_EncodePath(str, dirPath);
-	int fd = fs_open(str, O_DIR | O_RDONLY);
+	Platform_EncodePath(&str, dirPath);
+	int fd = fs_open(str.buffer, O_DIR | O_RDONLY);
 	if (fd < 0) return errno;
 
 	String_InitArray(path, pathBuffer);

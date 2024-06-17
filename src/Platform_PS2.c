@@ -44,6 +44,15 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const char* Platform_AppNameSuffix = " PS2";
 
+// extern unsigned char DEV9_irx[];
+// extern unsigned int  size_DEV9_irx;
+#define STRINGIFY(a) #a
+#define SifLoadBuffer(name) \
+	extern unsigned char name[]; \
+	extern unsigned int  size_ ## name; \
+	ret = SifExecModuleBuffer(name, size_ ## name, 0, NULL, NULL); \
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer " STRINGIFY(name) " failed: %i", &ret);
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
@@ -121,8 +130,8 @@ cc_result Directory_Create(const cc_filepath* pathh) {
 int File_Exists(const cc_string* path) {
 	cc_filepath str;
 	io_stat_t sb;
-	Platform_EncodePath(str, path);
-	return fioGetstat(str, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
+	Platform_EncodePath(&str, path);
+	return fioGetstat(str.buffer, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
 }
 
 // For some reason fioDread seems to be returning a iox_dirent_t, instead of a io_dirent_t
@@ -143,8 +152,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	io_dirent_t entry;
 	int fd, res;
 
-	Platform_EncodePath(str, dirPath);
-	fd = fioDopen(str);
+	Platform_EncodePath(&str, dirPath);
+	fd = fioDopen(str.buffer);
 	if (fd < 0) return fd;
 	
 	res = 0;
@@ -358,15 +367,6 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 *#########################################################################################################################*/
 // https://github.com/ps2dev/ps2sdk/blob/master/NETMAN.txt
 // https://github.com/ps2dev/ps2sdk/blob/master/ee/network/tcpip/samples/tcpip_dhcp/ps2ip.c
-extern unsigned char DEV9_irx[];
-extern unsigned int  size_DEV9_irx;
-
-extern unsigned char SMAP_irx[];
-extern unsigned int  size_SMAP_irx;
-
-extern unsigned char NETMAN_irx[];
-extern unsigned int  size_NETMAN_irx;
-
 static void ethStatusCheckCb(s32 alarm_id, u16 time, void *common) {
 	int threadID = *(int*)common;
 	iWakeupThread(threadID);
@@ -450,14 +450,9 @@ static void Networking_Init(void) {
 static void Networking_LoadIOPModules(void) {
 	int ret;
 	
-	ret = SifExecModuleBuffer(DEV9_irx,   size_DEV9_irx,   0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer DEV9_irx failed: %i", &ret);
-	
-	ret = SifExecModuleBuffer(NETMAN_irx, size_NETMAN_irx, 0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer NETMAN_irx failed: %i", &ret);
-	
-	ret = SifExecModuleBuffer(SMAP_irx,   size_SMAP_irx,   0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer SMAP_irx failed: %i", &ret);
+	SifLoadBuffer(DEV9_irx);
+	SifLoadBuffer(NETMAN_irx);
+	SifLoadBuffer(SMAP_irx);
 }
 
 /*########################################################################################################################*
@@ -603,50 +598,21 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *----------------------------------------------------USB mass storage-----------------------------------------------------*
 *#########################################################################################################################*/
-extern unsigned char USBD_irx[];
-extern unsigned int  size_USBD_irx;
-
-extern unsigned char BDM_irx[];
-extern unsigned int  size_BDM_irx;
-
-extern unsigned char BDMFS_FATFS_irx[];
-extern unsigned int  size_BDMFS_FATFS_irx;
-
-extern unsigned char USBMASS_BD_irx[];
-extern unsigned int  size_USBMASS_BD_irx;
-
-extern unsigned char USBHDFSD_irx[];
-extern unsigned int  size_USBHDFSD_irx;
-
-extern unsigned char USBMASS_BD_irx[];
-extern unsigned int  size_USBMASS_BD_irx;
-
-extern unsigned char USBMOUSE_irx[];
-extern unsigned int  size_USBMOUSE_irx;
-
 static void USBStorage_LoadIOPModules(void) {   
     int ret;
     // TODO: Seems that
     // BDM, BDMFS_FATFS, USBMASS_BD - newer ?
     // USBHDFSD - older ?
     
-	ret = SifExecModuleBuffer(USBD_irx, size_USBD_irx, 0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBD_irx failed: %i", &ret);
+	SifLoadBuffer(USBD_irx);  
+	//SifLoadBuffer(USBHDFSD_irx);
     
-	//ret = SifExecModuleBuffer(USBHDFSD_irx,  size_USBHDFSD_irx,  0, NULL, NULL);
-    //if (ret < 0) Platform_Log1("SifExecModuleBuffer USBHDFSD_irx failed: %i", &ret);
+	SifLoadBuffer(BDM_irx);
+	SifLoadBuffer(BDMFS_FATFS_irx);
     
-	ret = SifExecModuleBuffer(BDM_irx,  size_BDM_irx,  0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer BDM_irx failed: %i", &ret);
-    
-	ret = SifExecModuleBuffer(BDMFS_FATFS_irx, size_BDMFS_FATFS_irx, 0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer BDMFS_FATFS_irx failed: %i", &ret);
-    
-	ret = SifExecModuleBuffer(USBMASS_BD_irx,  size_USBMASS_BD_irx,  0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBMASS_BD_irx failed: %i", &ret);
-    
-	ret = SifExecModuleBuffer(USBMOUSE_irx,    size_USBMOUSE_irx,  0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBMOUSE_irx failed: %i", &ret);
+	SifLoadBuffer(USBMASS_BD_irx);
+	SifLoadBuffer(USBMOUSE_irx);
+	SifLoadBuffer(USBKBD_irx);
 }
 
 // TODO Maybe needed ???

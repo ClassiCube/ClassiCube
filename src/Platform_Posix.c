@@ -211,9 +211,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 int File_Exists(const cc_string* path) {
 	struct stat sb;
 	cc_filepath str;
-	Platform_EncodePath(str, path);
+	Platform_EncodePath(&str, path);
 	
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	return stat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -224,8 +224,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res, is_dir;
 
-	Platform_EncodePath(str, dirPath);
-	dirPtr = opendir(str);
+	Platform_EncodePath(&str, dirPath);
+	dirPtr = opendir(str.buffer);
 	if (!dirPtr) return errno;
 
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
@@ -1131,9 +1131,9 @@ const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	cc_filepath str;
-	Platform_EncodePath(str, path);
-	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING |
-							NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+	Platform_EncodePath(&str, path);
+	return NSAddImage(str.buffer, NSADDIMAGE_OPTION_WITH_SEARCHING |
+								NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
@@ -1173,8 +1173,8 @@ const cc_string DynamicLib_Ext = String_FromConst(".so");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	cc_filepath str;
-	Platform_EncodePath(str, path);
-	return dlopen(str, RTLD_NOW);
+	Platform_EncodePath(&str, path);
+	return dlopen(str.buffer, RTLD_NOW);
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {

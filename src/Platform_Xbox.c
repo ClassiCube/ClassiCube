@@ -113,8 +113,8 @@ int File_Exists(const cc_string* path) {
 	cc_filepath str;
 	DWORD attribs;
 
-	Platform_EncodePath(str, path);
-	attribs = GetFileAttributesA(str);
+	Platform_EncodePath(&str, path);
+	attribs = GetFileAttributesA(str.buffer);
 
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
@@ -145,9 +145,9 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
-	Platform_EncodePath(str, &path);
+	Platform_EncodePath(&str, &path);
 	
-	find = FindFirstFileA(str, &eA);
+	find = FindFirstFileA(str.buffer, &eA);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
