@@ -263,7 +263,7 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 
 	// Read/Write VMU for options.txt if no SD card, since that file is critical
 	cc_string raw = String_FromReadonly(path);
-	if (err && String_CaselessEqualsConst(raw, "/cd/options.txt")) {
+	if (err && String_CaselessEqualsConst(&raw, "/cd/options.txt")) {
 		return VMUFile_Do(file, mode);
 	}
 	return err;

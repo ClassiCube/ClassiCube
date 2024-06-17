@@ -156,7 +156,7 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 		if (state[i] == curIdx) continue;
 
 		/* Flush previous batch */
-		Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
+		Atlas1D_Bind(curIdx);
 		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
 
 		/* Reset for next batch */
@@ -165,6 +165,6 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 		batchLen = 0;
 	}
 
-	Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
+	Atlas1D_Bind(curIdx);
 	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
 }

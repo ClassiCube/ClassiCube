@@ -2190,11 +2190,12 @@ static void BlockModel_DrawParts(void) {
 	int lastTexIndex, i, offset = 0, count = 0;
 
 	lastTexIndex = bModel_texIndices[0];
-	for (i = 0; i < bModel_index; i++, count += 4) {
+	for (i = 0; i < bModel_index; i++, count += 4) 
+	{
 		if (bModel_texIndices[i] == lastTexIndex) continue;
 
 		/* Different 1D flush texture, flush current vertices */
-		Gfx_BindTexture(Atlas1D.TexIds[lastTexIndex]);
+		Atlas1D_Bind(lastTexIndex);
 		Gfx_DrawVb_IndexedTris_Range(count, offset);
 		lastTexIndex = bModel_texIndices[i];
 			
@@ -2204,7 +2205,7 @@ static void BlockModel_DrawParts(void) {
 
 	/* Leftover vertices */
 	if (!count) return;
-	Gfx_BindTexture(Atlas1D.TexIds[lastTexIndex]); 
+	Atlas1D_Bind(lastTexIndex); 
 	Gfx_DrawVb_IndexedTris_Range(count, offset);
 }
 

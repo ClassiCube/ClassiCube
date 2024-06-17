@@ -63,6 +63,7 @@ void Platform_Log(const char* msg, int len) {
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	_print("%s", tmp);
 
+#define PS2_DEBUG
 #ifdef PS2_DEBUG
 	volatile char* dst = (char*)0x1000F180;
 
@@ -689,7 +690,7 @@ void Platform_Init(void) {
 	
 	// Create root directory
 	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
-	int res = Diectory_Create(root);
+	int res = Directory_Create(root);
 	Platform_Log1("ROOT CREATE %i", &res);
 }
 

@@ -3708,8 +3708,9 @@ static void TexIdsOverlay_BuildMesh(void* screen) {
 
 static int TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s, int offset) {
 	int i, count = Atlas1D.TilesPerAtlas * 4;
-	for (i = 0; i < Atlas1D.Count; i++) {
-		Gfx_BindTexture(Atlas1D.TexIds[i]);
+	for (i = 0; i < Atlas1D.Count; i++) 
+	{
+		Atlas1D_Bind(i);
 
 		Gfx_DrawVb_IndexedTris_Range(count, offset);
 		offset += count;

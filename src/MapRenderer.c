@@ -195,10 +195,11 @@ void MapRenderer_RenderNormal(float delta) {
 	Gfx_SetAlphaTest(true);
 	
 	Gfx_EnableMipmaps();
-	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
+	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) 
+	{
 		if (normPartsCount[batch] <= 0) continue;
 		if (hasNormParts[batch] || checkNormParts[batch]) {
-			Gfx_BindTexture(Atlas1D.TexIds[batch]);
+			Atlas1D_Bind(batch);
 			RenderNormalBatch(batch);
 			checkNormParts[batch] = false;
 		}
@@ -270,7 +271,8 @@ void MapRenderer_RenderTranslucent(float delta) {
 	Gfx_SetAlphaBlending(false);
 	Gfx_DepthOnlyRendering(true);
 
-	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
+	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) 
+	{
 		if (tranPartsCount[batch] <= 0) continue;
 		if (hasTranParts[batch] || checkTranParts[batch]) {
 			RenderTranslucentBatch(batch);
@@ -285,10 +287,12 @@ void MapRenderer_RenderTranslucent(float delta) {
 	Gfx_SetDepthWrite(false); /* already calculated depth values in depth pass */
 
 	Gfx_EnableMipmaps();
-	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
+	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) 
+	{
 		if (tranPartsCount[batch] <= 0) continue;
 		if (!hasTranParts[batch]) continue;
-		Gfx_BindTexture(Atlas1D.TexIds[batch]);
+
+		Atlas1D_Bind(batch);
 		RenderTranslucentBatch(batch);
 	}
 	Gfx_DisableMipmaps();
