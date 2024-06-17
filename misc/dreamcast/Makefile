@@ -6,6 +6,10 @@ C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 CFLAGS	:=-g -O2 -pipe -fno-math-errno -Ithird_party/bearssl/inc
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
 GLDC_LIB=third_party/gldc/libGLdc.a
 LDFLAGS=-g
 LIBS=-lm $(GLDC_LIB) -lppp -lkosfat
@@ -31,14 +35,13 @@ $(CC_TEXTURES):
 	curl http://www.classicube.net/static/default.zip -o $@
 	
 $(BUILD_DIR)/%.o: src/%.c
-	kos-cc $(CFLAGS) -c $< -o $@
+	kos-cc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: misc/dreamcast/%.S
 	kos-cc -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@
-	
 
 $(TARGET).elf: $(OBJS)
 	kos-cc $(LDFLAGS) $^ -o $@ $(LIBS)
@@ -64,3 +67,8 @@ $(TARGET).iso: $(TARGET)-scr.bin
 	
 $(TARGET).cdi: $(TARGET).iso
 	cdi4dc $(TARGET).iso $(TARGET).cdi
+
+# Dependency tracking
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))

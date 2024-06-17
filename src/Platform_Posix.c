@@ -1275,7 +1275,8 @@ static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
 	cc_uint32 v0 = v[0], v1 = v[1], sum = 0, delta = 0x9E3779B9;
 	int i;
 
-    for (i = 0; i < 12; i++) {
+    for (i = 0; i < 12; i++) 
+	{
         v0  += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
         sum += delta;
         v1  += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
@@ -1288,7 +1289,8 @@ static void DecipherBlock(cc_uint32* v, const cc_uint32* key) {
 	cc_uint32 v0 = v[0], v1 = v[1], delta = 0x9E3779B9, sum = delta * 12;
 	int i;
 
-    for (i = 0; i < 12; i++) {
+    for (i = 0; i < 12; i++) 
+	{
         v1  -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
         sum -= delta;
         v0  -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
@@ -1308,12 +1310,14 @@ static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 	cc_uint8* dst = (cc_uint8*)key;
 
 	/* Get each valid hex character */
-	for (i = 0, j = 0; i < len && j < MACHINEID_LEN; i++) {
+	for (i = 0, j = 0; i < len && j < MACHINEID_LEN; i++) 
+	{
 		c = PackedCol_DeHex(tmp[i]);
 		if (c != -1) hex[j++] = c;
 	}
 
-	for (i = 0; i < MACHINEID_LEN / 2; i++) {
+	for (i = 0; i < MACHINEID_LEN / 2; i++) 
+	{
 		dst[i] = (hex[i * 2] << 4) | hex[i * 2 + 1];
 	}
 }
@@ -1447,7 +1451,8 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	EncipherBlock(header + 0, key, dst);
 	EncipherBlock(header + 2, key, dst);
 
-	for (; len > 0; len -= ENC_SIZE, src += ENC_SIZE) {
+	for (; len > 0; len -= ENC_SIZE, src += ENC_SIZE) 
+	{
 		header[0] = 0; header[1] = 0;
 		Mem_Copy(header, src, min(len, ENC_SIZE));
 		EncipherBlock(header, key, dst);
@@ -1474,7 +1479,8 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	if (header[3] > len) return ERR_INVALID_ARGUMENT;
 	dataLen = header[3];
 
-	for (; dataLen > 0; len -= ENC_SIZE, src += ENC_SIZE, dataLen -= ENC_SIZE) {
+	for (; dataLen > 0; len -= ENC_SIZE, src += ENC_SIZE, dataLen -= ENC_SIZE) 
+	{
 		header[0] = 0; header[1] = 0;
 		Mem_Copy(header, src, min(len, ENC_SIZE));
 
@@ -1496,7 +1502,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
-	if (Platform_SingleProcess) return GetGameArgs(args);
+	if (gameHasArgs) return GetGameArgs(args);
 
 	#if defined CC_BUILD_MACOS
 	/* Sometimes a "-psn_0_[number]" argument is added before actual args */

@@ -1087,7 +1087,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	cc_string cmdArgs = String_FromReadonly(GetCommandLineA());
 	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
-	if (Platform_SingleProcess) return GetGameArgs(args);
+	if (gameHasArgs) return GetGameArgs(args);
 
 	for (i = 0; i < GAME_MAX_CMDARGS; i++) 
 	{
