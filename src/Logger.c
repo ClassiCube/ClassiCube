@@ -107,6 +107,7 @@ static const char* GetCCErrorDesc(cc_result res) {
 
 	case HTTP_ERR_NO_SSL: return "HTTPS URLs are not currently supported";
 	case SOCK_ERR_UNKNOWN_HOST: return "Host could not be resolved to an IP address";
+	case ERR_NO_NETWORKING: return "No working network access";
 	}
 	return NULL;
 }

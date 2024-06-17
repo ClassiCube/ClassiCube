@@ -160,7 +160,7 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 		*file = -1; return res;
 	} else {
 		// TODO: is this actually needed?
-		if (mode & SYS_O_CREAT) sysLv2FsChmod(str, access);
+		if (mode & SYS_O_CREAT) sysLv2FsChmod(path, access);
 		*file = fd; return 0;
 	}
 }

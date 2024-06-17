@@ -92,9 +92,9 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	str += root_path.length;
 	
 	// XBox kernel doesn't seem to convert /
-	for (int i = 0; i < src->length; i++) 
+	for (int i = 0; i < path->length; i++) 
 	{
-		char c = (char)src->buffer[i];
+		char c = (char)path->buffer[i];
 		if (c == '/') c = '\\';
 		*str++ = c;
 	}

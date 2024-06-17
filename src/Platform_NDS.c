@@ -345,7 +345,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (!net_supported) return ERR_NOT_SUPPORTED;
+	if (!net_supported) return ERR_NO_NETWORKING;
 	*numValidAddrs = 1;
 
 	if (inet_aton(str, &addr4->sin_addr) > 0) {
@@ -362,7 +362,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	int res;
-	if (!net_supported) { *s = -1; return ERR_NOT_SUPPORTED; }
+	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
 	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return errno;

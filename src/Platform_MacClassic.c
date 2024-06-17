@@ -166,6 +166,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 static int retrievedWD, wd_refNum, wd_dirID;
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* buf = dst->buffer;
 	char* str = dst->buffer;
 	str++; // placeholder for length later
 	*str++ = ':';
@@ -178,7 +179,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 		*str++ = c;
 	}
 	*str   = '\0';
-	dst[0] = String_Length(dst + 1); // pascal strings
+	buf[0] = String_Length(buf + 1); // pascal strings
 
 	if (retrievedWD) return;
 	retrievedWD = true;
@@ -192,7 +193,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	Platform_Log2("Working directory: %i, %i", &V, &D);
 }
 
-static int DoOpenDF(char* name, char perm, cc_file* file) {
+static int DoOpenDF(const char* name, char perm, cc_file* file) {
     HParamBlockRec pb;
 	Mem_Set(&pb, 0, sizeof(pb));
 
@@ -206,7 +207,7 @@ static int DoOpenDF(char* name, char perm, cc_file* file) {
 	return err;
 }
 
-static int DoCreateFile(char* name) {
+static int DoCreateFile(const char* name) {
     HParamBlockRec pb;
 	Mem_Set(&pb, 0, sizeof(pb));
 
@@ -217,7 +218,7 @@ static int DoCreateFile(char* name) {
     return PBHCreateSync(&pb);
 }
 
-static int DoCreateFolder(char* name) {
+static int DoCreateFolder(const char* name) {
     HParamBlockRec pb;
 	Mem_Set(&pb, 0, sizeof(pb));
 
@@ -516,10 +517,10 @@ void Platform_Init(void) {
 	Platform_Log1("Running on Mac OS %h", &sysVersion);
 
 	cc_string path = String_FromConst("aB.txt");
-	char buffer[NATIVE_STR_LEN];
-	Platform_EncodePath(buffer, &path);
+	cc_filepath str;
+	Platform_EncodePath(&str, &path);
 
-	int ERR2 = DoCreateFile(buffer);
+	int ERR2 = DoCreateFile(&str);
 	Platform_Log1("TEST FILE: %i", &ERR2);
 }
 

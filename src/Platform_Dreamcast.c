@@ -194,7 +194,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_filepath* path {
+cc_result Directory_Create(const cc_filepath* path) {
 	int res = fs_mkdir(path->buffer);
 	int err = res == -1 ? errno : 0;
 	

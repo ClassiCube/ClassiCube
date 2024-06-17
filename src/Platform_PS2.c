@@ -123,7 +123,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_filepath* pathh) {
+cc_result Directory_Create(const cc_filepath* path) {
 	return fioMkdir(path->buffer);
 }
 
@@ -688,7 +688,8 @@ void Platform_Init(void) {
 	Networking_Setup();
 	
 	// Create root directory
-	int res = fioMkdir("mass:/ClassiCube");
+	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
+	int res = Diectory_Create(root);
 	Platform_Log1("ROOT CREATE %i", &res);
 }
 
