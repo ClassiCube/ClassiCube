@@ -3,8 +3,8 @@
 ! =========================================================
 ! The SH4 can dual issue (i.e. parallel execution) two instructions
 ! as long as the groups of the two instructions are different:
-! * LS - most APU and FPU register load/stores
-! * EX - most APU arithmetic instructions
+! * LS - most ALU and FPU register load/stores
+! * EX - most ALU arithmetic instructions
 ! * MT - TST, CMP, NOP, MOV Rm,Rn
 ! * FE - most FPU arithmetic instructions
 ! * CO - other instructions (NOTE: Cannot be exeucted in parallel)
@@ -14,7 +14,6 @@
 ! * Latency: Interval between the issue of an instruction and the generation of its result (completion)
 ! * Latency is also the interval between the execution of two instructions with an interdependent relationship.
 !   (although different cases may either increase or decrease Latency)
-!
 
 
 ! =========================================================
@@ -38,6 +37,8 @@
 !r5 = dst pointer ARG
 !r6 = quads count ARG
 !r7 = ?
+!r10  = PVR_CMD_VERTEX
+!r11  = PVR_CMD_VERTEX_EOL
 
 !fr0  = temp
 !fr1  = u
@@ -53,6 +54,34 @@
 !fr11 = VIEWPORT_Y_PLUS_HHEIGHT
 
 !fv4  = XYZW
+
+
+! =========================================================
+! ========================= TRANSFORM SETUP ===============
+! =========================================================
+.macro TransformSetup
+    mov r4,r3        ! MT, r3  = src
+    mov.l r10, @-r15 ! LS, push(r10)
+    add #-32, r5     ! EX, r5 -= sizeof(VERTEX)
+    mov.l r11, @-r15 ! LS, push(r11)
+    mov #0xE0, r10   ! EX, r10 = 0x00 00 00 E0
+    pref @r3         ! LS, PREFETCH r3 (first vertex)
+    shll16 r10       ! EX, r10 = 0x00 E0 00 00
+    shll8  r10       ! EX, r10 = 0xE0 00 00 00 (PVR_CMD_VERTEX)
+    mov #0xF0, r11   ! EX, r11 = 0x00 00 00 F0
+    shll16 r11       ! EX, r11 = 0x00 F0 00 00
+    shll8  r11       ! EX, r11 = 0xF0 00 00 00 (PVR_CMD_VERTEX_EOL)
+    nop              ! MT, align to even boundary
+.endm
+
+.macro TransformEnd
+    mov.l @r15+, r11 ! LS, pop(r11)
+    mov.l @r15+, r10 ! LS, pop(r10)
+
+    add #32, r5      ! EX, r5 += sizeof(VERTEX)
+    rts              ! CO, return after executing instruction in delay slot
+    mov r5,r0        ! MT, r0 = r5
+.endm
 
 
 ! =========================================================
@@ -108,7 +137,7 @@
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
     fmov.s  fr5,@-r5 ! LS, dst->y = Y
     fmov.s  fr4,@-r5 ! LS, dst->x = X
-    mov.l   r1,@-r5  ! LS, dst->flags = CMD_VERT
+    mov.l   r10,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex2
@@ -124,7 +153,7 @@
     fmov.s  fr5,@-r5 ! LS, dst->y = Y
     or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 1)
     fmov.s  fr4,@-r5 ! LS, dst->x = X
-    mov.l   r1,@-r5  ! LS, dst->flags = CMD_VERT
+    mov.l   r10,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex3
@@ -140,11 +169,12 @@
     shll2   r2       ! EX, tmp = tmp << 2
     fmov.s  fr4,@-r5 ! LS, dst->x = X
     or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 2)
-    mov.l   r1,@-r5  ! LS, dst->flags = CMD_VERT
+    mov.l   r10,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
-.macro ProcessVertex4 eos_addr
+.macro ProcessVertex4
     fmov.s  fr7,@-r5 ! LS, dst->w = W
+    or      r11,r0   ! EX, CLIPFLAGS |= PVR_CMD_VERTEX_EOL
     fmov.s  fr3,@-r5 ! LS, dst->c = C
     fneg    fr7      ! LS, W = -W
     fmov.s  fr2,@-r5 ! LS, dst->v = V
@@ -154,12 +184,10 @@
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
     shll2   r2       ! EX, tmp = tmp << 2
     fmov.s  fr5,@-r5 ! LS, dst->y = Y
-    add     r2,r2    ! EX, tmp = (tmp << 2) + (tmp << 2)
+    add     r2,r2    ! EX, tmp = (tmp << 2) + (tmp << 2) (T << 3)
     fmov.s  fr4,@-r5 ! LS, dst->x = X
-    mov.l \eos_addr, r1 ! LS, r1  = GPU EOS command
     or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 3)
-    or      r0,r1    ! EX, r1 |= CLIPFLAGS
-    mov.l   r1,@-r5  ! LS, dst->flags = GPU EOS | CLIPFLAGS
+    mov.l   r0,@-r5  ! LS, dst->flags = PVR_CMD_VERTEX_EOL | CLIPFLAGS
 .endm
 
 
