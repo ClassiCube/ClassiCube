@@ -14,24 +14,12 @@ GL_FORCE_INLINE float _glFastInvert(float x) {
 }
 
 GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
-    TRACE();
-
     const float f = _glFastInvert(vertex->w);
 
     /* Convert to NDC and apply viewport */
-    vertex->xyz[0] = (vertex->xyz[0] * f * VIEWPORT.hwidth)  + VIEWPORT.x_plus_hwidth;
-    vertex->xyz[1] = (vertex->xyz[1] * f * VIEWPORT.hheight) + VIEWPORT.y_plus_hheight;
-
-    /* Orthographic projections need to use invZ otherwise we lose
-    the depth information. As w == 1, and clip-space range is -w to +w
-    we add 1.0 to the Z to bring it into range. We add a little extra to
-    avoid a divide by zero.
-    */
-    if(vertex->w == 1.0f) {
-        vertex->xyz[2] = _glFastInvert(1.0001f + vertex->xyz[2]);
-    } else {
-        vertex->xyz[2] = f;
-    }
+    vertex->x = (vertex->x * f * VIEWPORT.hwidth)  + VIEWPORT.x_plus_hwidth;
+    vertex->y = (vertex->y * f * VIEWPORT.hheight) + VIEWPORT.y_plus_hheight;
+    vertex->z = f;
 }
 
 
@@ -62,17 +50,17 @@ static inline void _glPushHeaderOrVertex(Vertex* v)  {
 }
 
 static void _glClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout) {
-    const float d0 = v1->w + v1->xyz[2];
-    const float d1 = v2->w + v2->xyz[2];
-    const float t = (fabs(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
+    const float d0 = v1->w + v1->z;
+    const float d1 = v2->w + v2->z;
+    const float t = (fabsf(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
     const float invt = 1.0f - t;
 
-    vout->xyz[0] = invt * v1->xyz[0] + t * v2->xyz[0];
-    vout->xyz[1] = invt * v1->xyz[1] + t * v2->xyz[1];
-    vout->xyz[2] = invt * v1->xyz[2] + t * v2->xyz[2];
+    vout->x = invt * v1->x + t * v2->x;
+    vout->y = invt * v1->y + t * v2->y;
+    vout->z = invt * v1->z + t * v2->z;
 
-    vout->uv[0] = invt * v1->uv[0] + t * v2->uv[0];
-    vout->uv[1] = invt * v1->uv[1] + t * v2->uv[1];
+    vout->u = invt * v1->u + t * v2->u;
+    vout->v = invt * v1->v + t * v2->v;
 
     vout->w = invt * v1->w + t * v2->w;
 

@@ -417,8 +417,11 @@ void Window_Free(void) { }
 
 extern void interop_InitContainer(void);
 static void DoCreateWindow(void) {
-	Window_Main.Exists  = true;
-	Window_Main.Focused = true;
+	Window_Main.Exists   = true;
+	Window_Main.Focused  = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	
 	HookEvents();
 	/* Let the webpage decide on initial bounds */
 	Window_Main.Width  = interop_CanvasWidth();

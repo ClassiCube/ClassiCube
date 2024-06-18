@@ -87,14 +87,10 @@ void glScissor(int x, int y, int width, int height) {
 */
 void _glApplyScissor(int force) {
     /* Don't do anyting if clipping is disabled */
-    if(!SCISSOR_TEST_ENABLED) {
-        return;
-    }
+    if (!SCISSOR_TEST_ENABLED) return;
 
     /* Don't apply if we already applied - nothing changed */
-    if(scissor_rect.applied && !force) {
-        return;
-    }
+    if (scissor_rect.applied && !force) return;
 
     PVRTileClipCommand c;
 
@@ -151,8 +147,8 @@ void apply_poly_header(PolyHeader* dst, PolyList* activePolyList) {
     int depth_write = DEPTH_MASK_ENABLED ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
 
     int gen_shading   = SHADE_MODEL;
-    int gen_clip_mode = SCISSOR_TEST_ENABLED       ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
-    int gen_fog_type  = FOG_ENABLED                ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
+    int gen_clip_mode = SCISSOR_TEST_ENABLED ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
+    int gen_fog_type  = FOG_ENABLED          ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
 
     int gen_alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? PVR_ALPHA_ENABLE : PVR_ALPHA_DISABLE;
     int blend_src = PVR_BLEND_SRCALPHA;

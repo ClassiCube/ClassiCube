@@ -326,7 +326,10 @@ static void RemakeWindowSurface(void) {
 }
 
 static void DoCreateWindow(void) {
-	Window_Main.Exists = true;
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	
 	RemakeWindowSurface();
 	/* always start as fullscreen */
 	Window_EnterFullscreen();

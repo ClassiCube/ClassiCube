@@ -470,7 +470,10 @@ static CGRect DoCreateWindow(void) {
     
     win_handle.rootViewController = cc_controller;
     win_handle.backgroundColor = CalcBackgroundColor();
-    Window_Main.Exists = true;
+    Window_Main.Exists   = true;
+    Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+    Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+
     Window_Main.Width  = bounds.size.width;
     Window_Main.Height = bounds.size.height;
     
