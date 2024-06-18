@@ -120,13 +120,13 @@ static void FlipContext(void) {
 
 static int tex_offset;
 void Gfx_Create(void) {
-	Gfx_SetViewport(0, 0, Window_Main.Width, Window_Main.Height);
 	primitive_type = 0; // PRIM_POINT, which isn't used here
 	
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
 	InitDMABuffers();
+	Gfx_SetViewport(0, 0, Window_Main.Width, Window_Main.Height);
 	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
 	
 	context = 1;
@@ -808,7 +808,13 @@ void Gfx_OnWindowResize(void) {
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	vp_hwidth  = w / 2;
-	vp_hheight = h / 2;	
+	vp_hheight = h / 2;
+	int context = 0;
+	
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR + context);
+	q++;
 }
 
 void Gfx_GetApiInfo(cc_string* info) {

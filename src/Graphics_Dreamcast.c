@@ -514,17 +514,17 @@ extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
 void DrawQuads(int count, void* src) {
 	if (!count) return;
 	PolyList* output = _glActivePolyList();
-	AlignedVectorHeader* hdr = &output->vector.hdr;
+	AlignedVector* vec = &output->vector;
 
-	uint32_t header_required = (hdr->size == 0) || STATE_DIRTY;
+	uint32_t header_required = (vec->size == 0) || STATE_DIRTY;
 	// Reserve room for the vertices and header
-	Vertex* beg = aligned_vector_reserve(&output->vector, hdr->size + (header_required) + count);
+	Vertex* beg = aligned_vector_reserve(&output->vector, vec->size + (header_required) + count);
 
 	if (header_required) {
 		apply_poly_header((PolyHeader*)beg, output);
 		STATE_DIRTY = GL_FALSE;
 		beg++; 
-		hdr->size += 1;
+		vec->size += 1;
 	}
 	Vertex* end;
 
@@ -533,7 +533,7 @@ void DrawQuads(int count, void* src) {
 	} else {
 		end = DrawColouredQuads(src, beg, count >> 2);
 	}
-	hdr->size += (end - beg);
+	vec->size += (end - beg);
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
