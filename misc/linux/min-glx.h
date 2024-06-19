@@ -25,7 +25,6 @@
 
 #ifndef GLX_H
 #define GLX_H
-#include <X11/Xlib.h>
 
 #ifdef __cplusplus
 extern "C" {

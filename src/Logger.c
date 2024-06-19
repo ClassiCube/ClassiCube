@@ -375,6 +375,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 /* Implemented later at end of the file */
 #elif defined CC_BUILD_POSIX && defined _GLIBC_
 #include <execinfo.h>
+
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	void* addrs[MAX_BACKTRACE_FRAMES];
 	int i, frames = backtrace(addrs, MAX_BACKTRACE_FRAMES);

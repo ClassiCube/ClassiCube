@@ -7,6 +7,7 @@
 #include "Options.h"
 #include "Errors.h"
 #include "Utils.h"
+/*
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
@@ -14,6 +15,13 @@
 #ifdef CC_BUILD_XINPUT2
 #include <X11/extensions/XInput2.h>
 #endif
+*/
+#include <X11/Xlib.h>
+#include "../misc/linux/min-keysymdef.h"
+#include "../misc/linux/min-xutil.h"
+#include "../misc/linux/min-xkblib.h"
+#include "../misc/linux/min-xinput2.h"
+#include <X11/XF86keysym.h>
 #include <stdio.h>
 
 #ifdef X_HAVE_UTF8_STRING

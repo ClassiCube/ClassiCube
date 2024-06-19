@@ -1408,6 +1408,10 @@ static cc_result GetMachineID(cc_uint32* key) {
 /* Use SI_HW_SERIAL for the key */
 /* TODO: Should be using SMBIOS UUID for this (search it in illomos source) */
 /* NOTE: Got a '0' for serial number when running in a VM */
+#ifndef HW_HOSTID_LEN
+#define HW_HOSTID_LEN 11
+#endif
+
 static cc_result GetMachineID(cc_uint32* key) {
 	char host[HW_HOSTID_LEN] = { 0 };
 	if (sysinfo(SI_HW_SERIAL, host, sizeof(host)) == -1) return errno;
@@ -1426,6 +1430,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 }
 #elif defined CC_BUILD_IOS
 extern void GetDeviceUUID(cc_string* str);
+
 static cc_result GetMachineID(cc_uint32* key) {
     cc_string str; char strBuffer[STRING_SIZE];
     String_InitArray(str, strBuffer);

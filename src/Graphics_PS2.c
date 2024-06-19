@@ -18,7 +18,7 @@
 static void* gfx_vertices;
 extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
-static float vp_hwidth, vp_hheight;
+static float vp_hwidth, vp_hheight, vp_x_hwidth, vp_y_hheight;
 static cc_bool stateDirty, formatDirty;
 
 // double buffering
@@ -807,8 +807,11 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_hwidth  = w / 2;
-	vp_hheight = h / 2;
+	vp_hwidth    = w / 2;
+	vp_hheight   = h / 2;
+	vp_x_hwidth  = x + vp_hwidth;
+	vp_y_hheight = y + vp_hheight;
+
 	int context = 0;
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
