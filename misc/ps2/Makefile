@@ -63,6 +63,9 @@ include $(PS2SDK)/samples/Makefile.pref
 $(BUILD_DIR)/%.o: src/%.c
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
+$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
 $(BUILD_DIR)/%.o: %.S
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 

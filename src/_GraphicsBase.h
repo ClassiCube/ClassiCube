@@ -354,7 +354,7 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
-static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
+static CC_INLINE void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
 	cc_uint8* src_ = (cc_uint8*)src->scan0;
 	cc_uint8* dst_ = (cc_uint8*)dst;
 	int y;

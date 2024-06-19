@@ -1380,7 +1380,7 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	return (void*)glXGetProcAddress((const GLubyte*)function);
+	return (void*)glXGetProcAddress(function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {
