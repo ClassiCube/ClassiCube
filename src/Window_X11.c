@@ -1315,7 +1315,9 @@ void Window_DisableRawMouse(void) {
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
 #if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
-#include <GL/glx.h>
+/* #include <GL/glx.h> */
+#include "../misc/linux/min-glx.h"
+
 static GLXContext ctx_handle;
 typedef int  (*FP_SWAPINTERVAL)(int interval);
 typedef Bool (*FP_QUERYRENDERER)(int attribute, unsigned int* value);

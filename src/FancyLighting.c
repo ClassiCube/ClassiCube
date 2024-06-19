@@ -13,7 +13,6 @@
 #include "Options.h"
 #include "Queue.h"
 
-
 struct LightNode {
 	IVec3 coords; /* 12 bytes */
 	cc_uint8 brightness; /* 1 byte */
