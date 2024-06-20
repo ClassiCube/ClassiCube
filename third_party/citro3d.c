@@ -1431,37 +1431,18 @@ static void C3Di_LoadShaderUniforms(shaderInstance_s* si)
 
 
 
-
-static aptHookCookie hookCookie;
-
-static void C3Di_AptEventHook(APT_HookType hookType, void* param)
+static void C3Di_OnRestore(void)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 
-	switch (hookType)
-	{
-		case APTHOOK_ONSUSPEND:
-		{
-			C3Di_RenderQueueWaitDone();
-			C3Di_RenderQueueDisableVBlank();
-			break;
-		}
-		case APTHOOK_ONRESTORE:
-		{
-			C3Di_RenderQueueEnableVBlank();
-			ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
-				| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
-				| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
+	ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
+		| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
+		| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
 
-			C3Di_DirtyUniforms();
+	C3Di_DirtyUniforms();
 
-			if (ctx->fogLut)
-				ctx->flags |= C3DiF_FogLut;
-			break;
-		}
-		default:
-			break;
-	}
+	if (ctx->fogLut)
+		ctx->flags |= C3DiF_FogLut;
 }
 
 static bool C3D_Init(size_t cmdBufSize)
@@ -1510,7 +1491,6 @@ static bool C3D_Init(size_t cmdBufSize)
 		ctx->tex[i] = NULL;
 
 	C3Di_RenderQueueInit();
-	aptHook(&hookCookie, C3Di_AptEventHook, NULL);
 
 	return true;
 }
