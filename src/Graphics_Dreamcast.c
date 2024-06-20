@@ -4,14 +4,15 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-#include "../third_party/gldc/src/sh4.h"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
+#include "../third_party/gldc/src/gldc.h"
 
 static cc_bool renderingDisabled;
 #define VERTEX_BUFFER_SIZE 32 * 40000
+#define PT_ALPHA_REF 0x011c
 
 
 /*########################################################################################################################*
@@ -33,8 +34,8 @@ static int InitPowerVR(void) {
 }
 
 static void InitGLState(void) {
-	glClearDepth(1.0f);
-	GPUSetAlphaCutOff(127);
+	pvr_set_zclip(0.0f);
+	PVR_SET(PT_ALPHA_REF, 127); // define missing from KOS
 
 	ALPHA_TEST_ENABLED = GL_FALSE;
 	CULLING_ENABLED    = GL_FALSE;
@@ -506,7 +507,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
-extern void apply_poly_header(PolyHeader* header, PolyList* activePolyList);
+extern void apply_poly_header(pvr_poly_hdr_t* header, PolyList* activePolyList);
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
@@ -521,7 +522,7 @@ void DrawQuads(int count, void* src) {
 	Vertex* beg = aligned_vector_reserve(&output->vector, vec->size + (header_required) + count);
 
 	if (header_required) {
-		apply_poly_header((PolyHeader*)beg, output);
+		apply_poly_header((pvr_poly_hdr_t*)beg, output);
 		STATE_DIRTY = GL_FALSE;
 		beg++; 
 		vec->size += 1;

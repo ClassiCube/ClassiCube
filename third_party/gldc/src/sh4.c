@@ -1,13 +1,13 @@
 #include <math.h>
-#include "sh4.h"
+#include <kos.h>
+#include <dc/pvr.h>
+#include "gldc.h"
 #include "sh4_math.h"
 
 #define CLIP_DEBUG 0
 
-#define likely(x)      __builtin_expect(!!(x), 1)
-#define unlikely(x)    __builtin_expect(!!(x), 0)
-
 #define SQ_BASE_ADDRESS (void*) 0xe0000000
+#define PREFETCH(addr) __builtin_prefetch((addr))
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
     return MATH_fsrra(x * x);

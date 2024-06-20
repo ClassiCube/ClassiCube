@@ -7,55 +7,7 @@
 #include <stdio.h>
 #include <malloc.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef __cplusplus
-#define AV_FORCE_INLINE static inline
-#else
-#define AV_NO_INSTRUMENT inline __attribute__((no_instrument_function))
-#define AV_INLINE_DEBUG AV_NO_INSTRUMENT __attribute__((always_inline))
-#define AV_FORCE_INLINE static AV_INLINE_DEBUG
-#endif
-
-
-#ifdef __DREAMCAST__
-#include <kos/string.h>
-
-AV_FORCE_INLINE void *AV_MEMCPY4(void *dest, const void *src, size_t len)
-{
-  if(!len)
-  {
-    return dest;
-  }
-
-  const uint8_t *s = (uint8_t *)src;
-  uint8_t *d = (uint8_t *)dest;
-
-  uint32_t diff = (uint32_t)d - (uint32_t)(s + 1); // extra offset because input gets incremented before output is calculated
-  // Underflow would be like adding a negative offset
-
-  // Can use 'd' as a scratch reg now
-  asm volatile (
-    "clrs\n" // Align for parallelism (CO) - SH4a use "stc SR, Rn" instead with a dummy Rn
-  ".align 2\n"
-  "0:\n\t"
-    "dt %[size]\n\t" // (--len) ? 0 -> T : 1 -> T (EX 1)
-    "mov.b @%[in]+, %[scratch]\n\t" // scratch = *(s++) (LS 1/2)
-    "bf.s 0b\n\t" // while(s != nexts) aka while(!T) (BR 1/2)
-    " mov.b %[scratch], @(%[offset], %[in])\n" // *(datatype_of_s*) ((char*)s + diff) = scratch, where src + diff = dest (LS 1)
-    : [in] "+&r" ((uint32_t)s), [scratch] "=&r" ((uint32_t)d), [size] "+&r" (len) // outputs
-    : [offset] "z" (diff) // inputs
-    : "t", "memory" // clobbers
-  );
-
-  return dest;
-}
-
-#else
-#define AV_MEMCPY4 memcpy
-#endif
+#define AV_FORCE_INLINE static __attribute__((always_inline)) inline
 #define AV_ELEMENT_SIZE 32
 
 typedef struct {
@@ -93,7 +45,7 @@ AV_FORCE_INLINE void* aligned_vector_reserve(AlignedVector* vector, uint32_t ele
     vector->data = (uint8_t*) memalign(0x20, new_byte_size);
     assert(vector->data);
 
-    AV_MEMCPY4(vector->data, original_data, original_byte_size);
+    memcpy(vector->data, original_data, original_byte_size);
     free(original_data);
 
     vector->capacity = element_count;
@@ -148,7 +100,7 @@ AV_FORCE_INLINE void* aligned_vector_push_back(AlignedVector* vector, const void
     assert(dest);
 
     /* Copy the objects in */
-    AV_MEMCPY4(dest, objs, count * AV_ELEMENT_SIZE);
+    memcpy(dest, objs, count * AV_ELEMENT_SIZE);
 
     assert(vector->size == initial_size + count);
     return dest;
@@ -172,7 +124,3 @@ AV_FORCE_INLINE void aligned_vector_init(AlignedVector* vector) {
     vector->data = NULL;
 }
 
-
-#ifdef __cplusplus
-}
-#endif

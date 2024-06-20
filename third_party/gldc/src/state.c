@@ -1,8 +1,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
-
-#include "private.h"
+#include "gldc.h"
 
 GLboolean STATE_DIRTY = GL_TRUE;
 
@@ -35,14 +34,6 @@ void _glInitContext() {
     scissor_rect.y = 0;
     scissor_rect.width  = vid_mode->width;
     scissor_rect.height = vid_mode->height;
-}
-
-/* Depth Testing */
-void glClearDepth(float depth) {
-    /* We reverse because using invW means that farther Z == lower number */
-	float D = MIN(1.0f - depth, PVR_MIN_Z);
-	Platform_Log2("DEPTH: %f3, %x", &D, &D);
-    pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
 }
 
 void glScissor(int x, int y, int width, int height) {
@@ -136,7 +127,7 @@ void glViewport(int x, int y, int width, int height) {
 }
 
 
-void apply_poly_header(PolyHeader* dst, PolyList* activePolyList) {
+void apply_poly_header(pvr_poly_hdr_t* dst, PolyList* activePolyList) {
     const TextureObject *tx1 = TEXTURE_ACTIVE;
     uint32_t txr_base;
     TRACE();

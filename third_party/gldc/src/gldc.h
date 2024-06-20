@@ -3,9 +3,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
-
-#include "sh4.h"
-#include "types.h"
+#include <kos.h>
+#include <dc/pvr.h>
 #include "aligned_vector.h"
 
 #define MAX_TEXTURE_COUNT 768
@@ -26,8 +25,6 @@
 #define GL_TRUE    1
 
 
-void glClearDepth(float depth);
-
 GLuint gldcGenTexture(void);
 void   gldcDeleteTexture(GLuint texture);
 void   gldcBindTexture(GLuint texture);
@@ -42,13 +39,21 @@ void glScissor( int x, int y, int width, int height);
 void glKosInit();
 void glKosSwapBuffers();
 
+typedef struct {
+    /* Same 32 byte layout as pvr_vertex_t */
+    uint32_t flags;
+    float x, y, z;
+    float u, v;
+    uint8_t bgra[4];
 
-extern void* memcpy4 (void *dest, const void *src, size_t count);
+    /* In the pvr_vertex_t structure, this next 4 bytes is oargb
+     * but we're not using that for now, so having W here makes the code
+     * simpler */
+    float w;
+} __attribute__ ((aligned (32))) Vertex;
 
-#define GL_NO_INSTRUMENT inline __attribute__((no_instrument_function))
-#define GL_INLINE_DEBUG GL_NO_INSTRUMENT __attribute__((always_inline))
-#define GL_FORCE_INLINE static GL_INLINE_DEBUG
-#define _GL_UNUSED(x) (void)(x)
+
+#define GL_FORCE_INLINE static __attribute__((always_inline)) inline
 
 #define TRACE_ENABLED 0
 #define TRACE() if(TRACE_ENABLED) {fprintf(stderr, "%s\n", __func__);} (void) 0
@@ -101,35 +106,6 @@ typedef struct {
 } __attribute__((aligned(32))) TextureObject;
 
 
-GL_FORCE_INLINE void memcpy_vertex(Vertex *dest, const Vertex *src) {
-#ifdef __DREAMCAST__
-    _Complex float double_scratch;
-
-    asm volatile (
-        "fschg\n\t"
-        "clrs\n\t"
-        ".align 2\n\t"
-        "fmov.d @%[in]+, %[scratch]\n\t"
-        "fmov.d %[scratch], @%[out]\n\t"
-        "fmov.d @%[in]+, %[scratch]\n\t"
-        "add #8, %[out]\n\t"
-        "fmov.d %[scratch], @%[out]\n\t"
-        "fmov.d @%[in]+, %[scratch]\n\t"
-        "add #8, %[out]\n\t"
-        "fmov.d %[scratch], @%[out]\n\t"
-        "fmov.d @%[in], %[scratch]\n\t"
-        "add #8, %[out]\n\t"
-        "fmov.d %[scratch], @%[out]\n\t"
-        "fschg\n"
-        : [in] "+&r" ((uint32_t) src), [scratch] "=&d" (double_scratch), [out] "+&r" ((uint32_t) dest)
-        :
-        : "t", "memory" // clobbers
-    );
-#else
-    *dest = *src;
-#endif
-}
-
 void _glInitContext();
 void _glInitSubmissionTarget();
 void _glInitTextures();
@@ -176,12 +152,25 @@ void _glApplyScissor(int force);
 
 extern GLboolean STATE_DIRTY;
 
-
-/* This is from KOS pvr_buffers.c */
-#define PVR_MIN_Z 0.0001f
-
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define CLAMP( X, _MIN, _MAX )  ( (X)<(_MIN) ? (_MIN) : ((X)>(_MAX) ? (_MAX) : (X)) )
+
+void SceneListSubmit(Vertex* v2, int n);
+
+static inline int DimensionFlag(int w) {
+    switch(w) {
+        case 16: return 1;
+        case 32: return 2;
+        case 64: return 3;
+        case 128: return 4;
+        case 256: return 5;
+        case 512: return 6;
+        case 1024: return 7;
+        case 8:
+        default:
+            return 0;
+    }
+}
 
 #endif // PRIVATE_H

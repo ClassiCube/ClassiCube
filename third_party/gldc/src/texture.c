@@ -1,11 +1,9 @@
-#include "private.h"
-
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "sh4.h"
+#include "gldc.h"
 #include "yalloc/yalloc.h"
 
 #ifndef NDEBUG
@@ -14,8 +12,6 @@
 #define gl_assert assert
 #else
 /* Release mode, use our custom assert */
-#include <stdio.h>
-#include <stdlib.h>
 
 #define gl_assert(x) \
     do {\

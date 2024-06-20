@@ -1,6 +1,5 @@
 #include <stdbool.h>
-#include "aligned_vector.h"
-#include "private.h"
+#include "gldc.h"
 
 PolyList OP_LIST;
 PolyList PT_LIST;
