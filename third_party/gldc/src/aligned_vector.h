@@ -19,6 +19,13 @@ typedef struct {
 
 #define ALIGNED_VECTOR_CHUNK_SIZE 256u
 
+#define av_assert(x) \
+    do {\
+        if(!(x)) {\
+            fprintf(stderr, "Assertion failed at %s:%d\n", __FILE__, __LINE__);\
+            exit(1);\
+        }\
+    } while(0); \
 
 #define ROUND_TO_CHUNK_SIZE(v) \
     ((((v) + ALIGNED_VECTOR_CHUNK_SIZE - 1) / ALIGNED_VECTOR_CHUNK_SIZE) * ALIGNED_VECTOR_CHUNK_SIZE)
@@ -51,14 +58,6 @@ AV_FORCE_INLINE void* aligned_vector_reserve(AlignedVector* vector, uint32_t ele
     vector->capacity = element_count;
     return vector->data + original_byte_size;
 }
-
-#define av_assert(x) \
-    do {\
-        if(!(x)) {\
-            fprintf(stderr, "Assertion failed at %s:%d\n", __FILE__, __LINE__);\
-            exit(1);\
-        }\
-    } while(0); \
 
 /* Resizes the array and returns a pointer to the first new element (if upsizing) or NULL (if downsizing) */
 AV_FORCE_INLINE void* aligned_vector_resize(AlignedVector* vector, const uint32_t element_count) {

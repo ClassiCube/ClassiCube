@@ -400,7 +400,7 @@ static void LoadPlugins(void) {
 static void LoadPlugins(void) { }
 #endif
 
-static void Game_Free(void* obj);
+static void Game_PendingClose(void* obj) { gameRunning = false; }
 static void Game_Load(void) {
 	struct IGameComponent* comp;
 	Game_UpdateDimensions();
@@ -415,7 +415,7 @@ static void Game_Load(void) {
 	Event_Register_(&WorldEvents.NewMap,           NULL, HandleOnNewMap);
 	Event_Register_(&WorldEvents.MapLoaded,        NULL, HandleOnNewMapLoaded);
 	Event_Register_(&WindowEvents.Resized,         NULL, Game_OnResize);
-	Event_Register_(&WindowEvents.Closing,         NULL, Game_Free);
+	Event_Register_(&WindowEvents.Closing,         NULL, Game_PendingClose);
 	Event_Register_(&WindowEvents.InactiveChanged, NULL, HandleInactiveChanged);
 
 	Game_AddComponent(&World_Component);
@@ -647,9 +647,17 @@ static void DrawSplitscreen(float delta, float t, int i, int x, int y, int w, in
 }
 #endif
 
-static CC_INLINE void Game_RenderFrame(double delta) {
+static CC_INLINE void Game_RenderFrame(void) {
 	struct ScheduledTask entTask;
 	float t;
+
+	cc_uint64 render = Stopwatch_Measure();
+	double delta     = Stopwatch_ElapsedMicroseconds(Game_FrameStart, render) / (1000.0 * 1000.0);
+	Window_ProcessEvents(delta);
+
+	if (delta > 5.0)  delta = 5.0; /* avoid large delta with suspended process */
+	if (delta <= 0.0) return;
+	Game_FrameStart = render;
 
 	/* TODO: Should other tasks get called back too? */
 	/* Might not be such a good idea for the http_clearcache, */
@@ -722,7 +730,7 @@ static CC_INLINE void Game_RenderFrame(double delta) {
 	Gfx_EndFrame();
 }
 
-static void Game_Free(void* obj) {
+static void Game_Free(void) {
 	struct IGameComponent* comp;
 	/* Most components will call OnContextLost in their Free functions */
 	/* Set to false so components will always free managed textures too */
@@ -730,7 +738,8 @@ static void Game_Free(void* obj) {
 	Event_UnregisterAll();
 	tasksCount = 0;
 
-	for (comp = comps_head; comp; comp = comp->next) {
+	for (comp = comps_head; comp; comp = comp->next) 
+	{
 		if (comp->Free) comp->Free();
 	}
 
@@ -741,25 +750,17 @@ static void Game_Free(void* obj) {
 	Window_DisableRawMouse();
 }
 
-#define Game_DoFrameBody() \
-	render = Stopwatch_Measure();\
-	delta  = Stopwatch_ElapsedMicroseconds(Game_FrameStart, render) / (1000.0 * 1000.0);\
-	\
-	Window_ProcessEvents(delta);\
-	if (!gameRunning) return;\
-	\
-	if (delta > 5.0) delta = 5.0; /* avoid large delta with suspended process */ \
-	if (delta > 0.0) { Game_FrameStart = render; Game_RenderFrame(delta); }
-
 #ifdef CC_BUILD_WEB
 void Game_DoFrame(void) {
-	cc_uint64 render; 
-	double delta;
-	Game_DoFrameBody()
+	if (gameRunning) {
+		Game_RenderFrame();
+	} else if (tasksCount) {
+		Game_Free();
+		Window_Free();
+	}	
 }
 
 static void Game_RunLoop(void) {
-	Game_FrameStart = Stopwatch_Measure();
 	/* Window_Web.c sets Game_DoFrame as the main loop callback function */
 	/* (i.e. web browser is in charge of calling Game_DoFrame, not us) */
 }
@@ -777,11 +778,11 @@ cc_bool Game_ShouldClose(void) {
 }
 #else
 static void Game_RunLoop(void) {
-	cc_uint64 render;
-	double delta;
-
-	Game_FrameStart = Stopwatch_Measure();
-	for (;;) { Game_DoFrameBody() }
+	while (gameRunning)
+	{
+		Game_RenderFrame();
+	}
+	Game_Free();
 }
 #endif
 
@@ -793,5 +794,7 @@ void Game_Run(int width, int height, const cc_string* title) {
 
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents.Resized);
+
+	Game_FrameStart = Stopwatch_Measure();
 	Game_RunLoop();
 }

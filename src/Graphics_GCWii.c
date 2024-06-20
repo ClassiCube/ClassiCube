@@ -14,6 +14,7 @@ extern void* Window_XFB;
 static void* xfbs[2];
 static  int curFB;
 static GfxResourceID white_square;
+static GXTexRegionCallback regionCB;
 // https://wiibrew.org/wiki/Developer_tips
 // https://devkitpro.org/wiki/libogc/GX
 
@@ -44,6 +45,9 @@ static void InitGX(void) {
 	
 	xfbs[0] = Window_XFB;
 	xfbs[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(mode));
+
+	regionCB = GX_SetTexRegionCallback(NULL);
+	GX_SetTexRegionCallback(regionCB);
 }
 
 void Gfx_Create(void) {
@@ -173,7 +177,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex = white_square;
 
-	GX_LoadTexObj(&tex->obj, GX_TEXMAP0);
+	GXTexRegion* reg = regionCB(&tex->obj, GX_TEXMAP0);
+	GX_LoadTexObjPreloaded(&tex->obj, reg, GX_TEXMAP0);
 }
 
 
