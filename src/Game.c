@@ -766,6 +766,8 @@ static void Game_RunLoop(void) {
 }
 
 cc_bool Game_ShouldClose(void) {
+	if (!gameRunning) return true;
+
 	if (Server.IsSinglePlayer) {
 		/* Close if map was saved within last 5 seconds */
 		return World.LastSave + 5 >= Game.Time;

@@ -136,16 +136,12 @@ static void SetDefaultState(void) {
 
 static aptHookCookie hookCookie;
 static void AptEventHook(APT_HookType hookType, void* param) {
-	switch (hookType)
-	{
-		case APTHOOK_ONSUSPEND:
-			C3Di_RenderQueueWaitDone();
-			C3Di_RenderQueueDisableVBlank();
-			break;
-		case APTHOOK_ONRESTORE:
-			C3Di_RenderQueueEnableVBlank();
-			C3Di_OnRestore();
-			break;
+	if (hookType == APTHOOK_ONSUSPEND) {
+		C3Di_RenderQueueWaitDone();
+		C3Di_RenderQueueDisableVBlank();
+	} else if (hookType == APTHOOK_ONRESTORE) {
+		C3Di_RenderQueueEnableVBlank();
+		C3Di_OnRestore();
 	}
 }
 
@@ -190,6 +186,7 @@ void Gfx_Free(void) {
 
 	// FreeShaders()
 	// C3D_Fini()
+	// aptUnhook(&hookCookie);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }

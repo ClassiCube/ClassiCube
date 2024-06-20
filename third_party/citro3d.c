@@ -1517,21 +1517,51 @@ static void C3D_SetScissor(GPU_SCISSORMODE mode, u32 left, u32 top, u32 right, u
 	ctx->scissor[2] = ((bottom-1) << 16) | ((right-1) & 0xFFFF);
 }
 
+
+static void C3Di_Reset(C3D_Context* ctx) {
+	// Reset texture environment
+	C3D_TexEnv texEnv;
+	C3D_TexEnvInit(&texEnv);
+	for (int i = 0; i < 6; i++)
+	{
+		C3Di_TexEnvBind(i, &texEnv);
+	}
+
+	// Reset lighting
+	GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, false);
+	GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1,  true);
+
+	// Reset attirubte buffer info
+	C3D_BufCfg buffers[12] = { 0 };
+	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, BUFFER_BASE_PADDR >> 3);
+	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)buffers, 12 * 3);
+}
+
+static void C3Di_UpdateFramebuffer(C3D_Context* ctx) {
+	if (ctx->flags & C3DiF_DrawUsed)
+	{
+		ctx->flags &= ~C3DiF_DrawUsed;
+		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+		GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
+	}
+	C3Di_FrameBufBind(&ctx->fb);
+}
+
 static void C3Di_UpdateContext(void)
 {
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
 
+	if (ctx->flags & C3DiF_Reset)
+	{
+		ctx->flags &= ~C3DiF_Reset;
+		C3Di_Reset(ctx);
+	}
+
 	if (ctx->flags & C3DiF_FrameBuf)
 	{
 		ctx->flags &= ~C3DiF_FrameBuf;
-		if (ctx->flags & C3DiF_DrawUsed)
-		{
-			ctx->flags &= ~C3DiF_DrawUsed;
-			GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
-			GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
-		}
-		C3Di_FrameBufBind(&ctx->fb);
+		C3Di_UpdateFramebuffer(ctx);
 	}
 
 	if (ctx->flags & C3DiF_Viewport)
@@ -1616,28 +1646,6 @@ static void C3Di_UpdateContext(void)
 		}
 	}
 
-	if (ctx->flags & C3DiF_Reset)
-	{
-		// Reset texture environment
-		C3D_TexEnv texEnv;
-		C3D_TexEnvInit(&texEnv);
-		for (i = 0; i < 6; i++)
-		{
-			C3Di_TexEnvBind(i, &texEnv);
-		}
-
-		// Reset lighting
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, false);
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1,  true);
-
-		// Reset attirubte buffer info
-		C3D_BufCfg buffers[12] = { 0 };
-		GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, BUFFER_BASE_PADDR >> 3);
-		GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)buffers, 12 * 3);
-
-		ctx->flags &= ~C3DiF_Reset;
-	}
-
 	C3D_UpdateUniforms();
 }
 
@@ -1667,7 +1675,6 @@ static void C3D_Fini(void)
 	if (!(ctx->flags & C3DiF_Active))
 		return;
 
-	aptUnhook(&hookCookie);
 	C3Di_RenderQueueExit();
 	free(ctx->gxQueue.entries);
 	linearFree(ctx->cmdBuf);
