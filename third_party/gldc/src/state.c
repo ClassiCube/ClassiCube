@@ -40,6 +40,8 @@ void _glInitContext() {
 /* Depth Testing */
 void glClearDepth(float depth) {
     /* We reverse because using invW means that farther Z == lower number */
+	float D = MIN(1.0f - depth, PVR_MIN_Z);
+	Platform_Log2("DEPTH: %f3, %x", &D, &D);
     pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
 }
 
