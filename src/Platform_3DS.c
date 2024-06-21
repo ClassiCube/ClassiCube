@@ -309,19 +309,23 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
 	if (*s == -1) return errno;
-	
+
 	if (nonblocking) {
 		int flags = fcntl(*s, F_GETFL, 0);
 		if (flags >= 0) fcntl(*s, F_SETFL, flags | O_NONBLOCK);
 	}
+	return 0;
+}
 
-	res = connect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	
+	int res = connect(s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 

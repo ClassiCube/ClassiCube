@@ -294,19 +294,23 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
-	int res;
 
 	*s = sceNetSocket("CC socket", raw->sa_family, SCE_NET_SOCK_STREAM, SCE_NET_IPPROTO_TCP);
 	if (*s < 0) return *s;
-	
+
 	if (nonblocking) {
 		int on = 1;
 		sceNetSetsockopt(*s, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO, &on, sizeof(int));
 	}
+	return 0;
+}
 
-	res = sceNetConnect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
+	
+	int res = sceNetConnect(s, raw, addr->size);
 	return res;
 }
 

@@ -273,8 +273,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
 /* Otherwise, attempts to resolve the input via DNS into one or more IP addresses */
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs);
 
-/* Allocates a new socket and then begins connecting to the given address */
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);
+/* Allocates a new socket that is capable of connecting to the given address */
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);
+/* Begins connecting to the given address */
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr);
 /* Attempts to read data from the given socket */
 /* NOTE: A closed socket may set modified to 0, but still return 'success' (i.e. 0) */
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);

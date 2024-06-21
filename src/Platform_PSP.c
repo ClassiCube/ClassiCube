@@ -311,19 +311,23 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
 	*s = sceNetInetSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return sceNetInetGetErrno();
-	
+
 	if (nonblocking) {
 		int on = 1;
 		sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
 	}
+	return 0;
+}
 
-	res = sceNetInetConnect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	
+	int res = sceNetInetConnect(*s, raw, addr->size);
 	return res < 0 ? sceNetInetGetErrno() : 0;
 }
 

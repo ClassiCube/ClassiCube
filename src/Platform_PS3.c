@@ -374,20 +374,23 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
-	res = netSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
-	if (res < 0) return net_errno;
-	*s  = res;
+	*s = netSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s < 0) return net_errno;
 
 	if (nonblocking) {
 		int on = 1;
 		netSetSockOpt(*s, SOL_SOCKET, SO_NBIO, &on, sizeof(int));
 	}
+	return 0;
+}
 
-	res = netConnect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	
+	int res = netConnect(s, raw, addr->size);
 	return res < 0 ? net_errno : 0;
 }
 

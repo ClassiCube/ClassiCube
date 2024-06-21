@@ -785,6 +785,9 @@
     <ClCompile Include="TouchUI.c">
       <Filter>Source Files\2D</Filter>
     </ClCompile>
+    <ClCompile Include="LBackend_Android.c">
+      <Filter>Source Files\Launcher</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">

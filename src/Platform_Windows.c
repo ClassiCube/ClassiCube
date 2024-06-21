@@ -607,7 +607,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	}
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
 	cc_result res;
 
@@ -618,8 +618,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 		u_long blockingMode = -1; /* non-blocking mode */
 		_ioctlsocket(*s, FIONBIO, &blockingMode);
 	}
+	return 0;
+}
 
-	res = _connect(*s, raw_addr, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
+
+	int res = _connect(s, raw_addr, addr->size);
 	return res == -1 ? _WSAGetLastError() : 0;
 }
 

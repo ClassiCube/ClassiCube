@@ -265,13 +265,16 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 extern int interop_SocketCreate(void);
 extern int interop_SocketConnect(int sock, const cc_uint8* host, int port);
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	int res;
 
-	*s  = interop_SocketCreate();
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	*s = interop_SocketCreate();
+	return 0;
+}
+
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	/* size is used to store port number instead */
 	/* returned result is negative for error */
-	res = -interop_SocketConnect(*s, addr->data, addr->size);
+	int res = -interop_SocketConnect(s, addr->data, addr->size);
 
 	/* error returned when invalid address provided */
 	if (res == _EHOSTUNREACH) return ERR_INVALID_ARGUMENT;

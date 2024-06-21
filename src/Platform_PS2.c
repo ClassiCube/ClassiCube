@@ -512,20 +512,24 @@ static cc_result GetSocketError(cc_socket s) {
 	return res;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
-	
+
 	if (nonblocking) {
 		int blocking_raw = -1; // non-blocking mode
-		//ioctlsocket(*s, FIONBIO, &blocking_raw); TODO doesn't work
+							   //ioctlsocket(*s, FIONBIO, &blocking_raw); TODO doesn't work
 	}
+	return 0;
+}
 
-	res = connect(*s, raw, addr->size);
-	return res == -1 ? GetSocketError(*s) : 0;
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+
+	int res = connect(s, raw, addr->size);
+	return res == -1 ? GetSocketError(s) : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {

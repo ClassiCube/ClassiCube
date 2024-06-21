@@ -417,9 +417,8 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
 	*s = net_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
@@ -428,8 +427,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 		int blocking_raw = -1; /* non-blocking mode */
 		net_ioctl(*s, FIONBIO, &blocking_raw);
 	}
+	return 0;
+}
 
-	res = net_connect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	
+	int res = net_connect(s, raw, addr->size);
 	return res < 0 ? res : 0;
 }
 
