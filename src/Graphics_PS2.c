@@ -18,7 +18,8 @@
 static void* gfx_vertices;
 extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
-static float vp_hwidth, vp_hheight, vp_x_hwidth, vp_y_hheight;
+static float vp_hwidth, vp_hheight;
+static int vp_originX, vp_originY;
 static cc_bool stateDirty, formatDirty;
 
 // double buffering
@@ -524,7 +525,6 @@ static cc_bool NotClipped(Vector4 pos) {
 	// 
 		
 	// Clip X/Y to INSIDE the guard band regions
-	// NOTE: This seems to result in lockup at end of frame
 	return
 		xAdj > -pos.w && xAdj < pos.w &&
 		yAdj > -pos.w && yAdj < pos.w &&
@@ -543,17 +543,15 @@ static Vector4 TransformVertex(void* raw) {
 
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
 static xyz_t FinishVertex(struct Vector4 src, float invW) {
-	float x = (vp_hwidth /2048) * (src.x * invW);
-	float y = (vp_hheight/2048) * (src.y * invW);
+	float x = vp_hwidth  * (src.x * invW);
+	float y = vp_hheight * (src.y * invW);
 	float z = src.z * invW;
 	
-	int originX = ftoi4(2048);
-	int originY = ftoi4(2048);
 	unsigned int maxZ = 1 << (32 - 1); // TODO: half this? or << 24 instead?
 	
 	xyz_t xyz;
-	xyz.x = (short)((x + 1.0f) *  originX);
-	xyz.y = (short)((y + 1.0f) * -originY);
+	xyz.x = (short)(x *  16 + vp_originX);
+	xyz.y = (short)(y * -16 + vp_originY);
 	xyz.z = (unsigned int)((z + 1.0f) * maxZ);
 	return xyz;
 }
@@ -807,10 +805,10 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_hwidth    = w / 2;
-	vp_hheight   = h / 2;
-	vp_x_hwidth  = x + vp_hwidth;
-	vp_y_hheight = y + vp_hheight;
+	vp_hwidth  = w / 2;
+	vp_hheight = h / 2;
+	vp_originX =  ftoi4(2048 - (x / 2));
+	vp_originY = -ftoi4(2048 - (y / 2));
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
