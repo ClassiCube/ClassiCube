@@ -1435,7 +1435,7 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 	void* dst = memalign(32, size * numChunks);
 	if (!dst) return ERR_OUT_OF_MEMORY;
 	totalSize += size * numChunks;
-	Platform_Log3("ALLOC: %i X %i (%i)", &size, &numChunks, &totalSize);
+	//Platform_Log3("ALLOC: %i X %i (%i)", &size, &numChunks, &totalSize);
 
 	for (int i = 0; i < numChunks; i++) 
 	{

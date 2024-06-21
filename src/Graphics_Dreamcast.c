@@ -18,7 +18,7 @@ static cc_bool renderingDisabled;
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static int InitPowerVR(void) {
+static void InitPowerVR(void) {
 	cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
 	cc_bool fsaa     = false;
 	AUTOSORT_ENABLED = autosort;
@@ -507,7 +507,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
-extern void apply_poly_header(pvr_poly_hdr_t* header, PolyList* activePolyList);
+extern void apply_poly_header(pvr_poly_hdr_t* header, int list_type);
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
@@ -522,7 +522,7 @@ void DrawQuads(int count, void* src) {
 	Vertex* beg = aligned_vector_reserve(&output->vector, vec->size + (header_required) + count);
 
 	if (header_required) {
-		apply_poly_header((pvr_poly_hdr_t*)beg, output);
+		apply_poly_header((pvr_poly_hdr_t*)beg, output->list_type);
 		STATE_DIRTY = GL_FALSE;
 		beg++; 
 		vec->size += 1;
@@ -632,8 +632,12 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	}
 	STATE_DIRTY = GL_TRUE;
 	
-	glViewport(x, y, w, h);
 	glScissor (x, y, w, h);
+
+	VIEWPORT.hwidth  = w *  0.5f;
+	VIEWPORT.hheight = h * -0.5f;
+	VIEWPORT.x_plus_hwidth  = x + w * 0.5f;
+	VIEWPORT.y_plus_hheight = y + h * 0.5f;
 
 	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
 	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;

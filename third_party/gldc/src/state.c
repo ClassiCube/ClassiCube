@@ -1,7 +1,13 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <kos.h>
+#include <dc/pvr.h>
 #include "gldc.h"
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#define CLAMP( X, _MIN, _MAX )  ( (X)<(_MIN) ? (_MIN) : ((X)>(_MAX) ? (_MAX) : (X)) )
 
 GLboolean STATE_DIRTY = GL_TRUE;
 
@@ -21,37 +27,67 @@ GLboolean BLEND_ENABLED = GL_FALSE;
 GLboolean TEXTURES_ENABLED = GL_FALSE;
 GLboolean AUTOSORT_ENABLED = GL_FALSE;
 
+PolyList OP_LIST;
+PolyList PT_LIST;
+PolyList TR_LIST;
+Viewport VIEWPORT;
+
 static struct {
     int x;
     int y;
     int width;
     int height;
     GLboolean applied;
-} scissor_rect = {0, 0, 640, 480, false};
+} scissor_rect;
 
-void _glInitContext() {
-    scissor_rect.x = 0;
-    scissor_rect.y = 0;
+void glKosInit() {
     scissor_rect.width  = vid_mode->width;
     scissor_rect.height = vid_mode->height;
+    _glInitTextures();
+
+    OP_LIST.list_type = PVR_LIST_OP_POLY;
+    PT_LIST.list_type = PVR_LIST_PT_POLY;
+    TR_LIST.list_type = PVR_LIST_TR_POLY;
+
+    aligned_vector_reserve(&OP_LIST.vector, 1024 * 3);
+    aligned_vector_reserve(&PT_LIST.vector,  512 * 3);
+    aligned_vector_reserve(&TR_LIST.vector, 1024 * 3);
+}
+
+void glKosSwapBuffers() {
+    _glApplyScissor(true);
+
+    pvr_scene_begin();   
+        if (OP_LIST.vector.size > 2) {
+            pvr_list_begin(PVR_LIST_OP_POLY);
+            SceneListSubmit((Vertex*)OP_LIST.vector.data, OP_LIST.vector.size);
+            pvr_list_finish();
+        }
+
+        if (PT_LIST.vector.size > 2) {
+            pvr_list_begin(PVR_LIST_PT_POLY);
+            SceneListSubmit((Vertex*)PT_LIST.vector.data, PT_LIST.vector.size);
+            pvr_list_finish();
+        }
+
+        if (TR_LIST.vector.size > 2) {
+            pvr_list_begin(PVR_LIST_TR_POLY);
+            SceneListSubmit((Vertex*)TR_LIST.vector.data, TR_LIST.vector.size);
+            pvr_list_finish();
+        }
+    pvr_scene_finish();
+    
+    OP_LIST.vector.size = 0;
+    PT_LIST.vector.size = 0;
+    TR_LIST.vector.size = 0;
 }
 
 void glScissor(int x, int y, int width, int height) {
-
-    if(scissor_rect.x == x &&
-        scissor_rect.y == y &&
-        scissor_rect.width == width &&
-        scissor_rect.height == height) {
-        return;
-    }
-
     scissor_rect.x = x;
     scissor_rect.y = y;
     scissor_rect.width = width;
     scissor_rect.height = height;
     scissor_rect.applied = false;
-    STATE_DIRTY = GL_TRUE; // FIXME: do we need this?
-
     _glApplyScissor(false);
 }
 
@@ -87,27 +123,27 @@ void _glApplyScissor(int force) {
 
     PVRTileClipCommand c;
 
-    int miny, maxx, maxy;
-
+    int sx, sy, ex, ey;
     int scissor_width  = MAX(MIN(scissor_rect.width,  vid_mode->width),  0);
     int scissor_height = MAX(MIN(scissor_rect.height, vid_mode->height), 0);
 
     /* force the origin to the lower left-hand corner of the screen */
-    miny = (vid_mode->height - scissor_height) - scissor_rect.y;
-    maxx = (scissor_width + scissor_rect.x);
-    maxy = (scissor_height + miny);
+	sx = scissor_rect.x;
+    sy = (vid_mode->height - scissor_height) - scissor_rect.y;
+    ex = sx + scissor_width;
+    ey = sy + scissor_height;
 
     /* load command structure while mapping screen coords to TA tiles */
     c.flags = PVR_CMD_USERCLIP;
     c.d1 = c.d2 = c.d3 = 0;
 
-    uint16_t vw = vid_mode->width >> 5;
+    uint16_t vw = vid_mode->width  >> 5;
     uint16_t vh = vid_mode->height >> 5;
 
-    c.sx = CLAMP(scissor_rect.x >> 5, 0, vw);
-    c.sy = CLAMP(miny >> 5, 0, vh);
-    c.ex = CLAMP((maxx >> 5) - 1, 0, vw);
-    c.ey = CLAMP((maxy >> 5) - 1, 0, vh);
+    c.sx = CLAMP(sx >> 5, 0, vw);
+    c.sy = CLAMP(sy >> 5, 0, vh);
+    c.ex = CLAMP((ex >> 5) - 1, 0, vw);
+    c.ey = CLAMP((ey >> 5) - 1, 0, vh);
 
     aligned_vector_push_back(&OP_LIST.vector, &c, 1);
     aligned_vector_push_back(&PT_LIST.vector, &c, 1);
@@ -116,30 +152,16 @@ void _glApplyScissor(int force) {
     scissor_rect.applied = true;
 }
 
-Viewport VIEWPORT;
 
-/* Set the GL viewport */
-void glViewport(int x, int y, int width, int height) {
-    VIEWPORT.hwidth  = width  *  0.5f;
-    VIEWPORT.hheight = height * -0.5f;
-    VIEWPORT.x_plus_hwidth  = x + width  * 0.5f;
-    VIEWPORT.y_plus_hheight = y + height * 0.5f;
-}
-
-
-void apply_poly_header(pvr_poly_hdr_t* dst, PolyList* activePolyList) {
-    const TextureObject *tx1 = TEXTURE_ACTIVE;
+void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
+    TextureObject* tx1 = TEXTURE_ACTIVE;
     uint32_t txr_base;
-    TRACE();
-
-    int list_type = activePolyList->list_type;
     int gen_color_clamp = PVR_CLRCLAMP_DISABLE;
 
     int gen_culling = CULLING_ENABLED    ? PVR_CULLING_CW : PVR_CULLING_SMALL;
     int depth_comp  = DEPTH_TEST_ENABLED ? PVR_DEPTHCMP_GEQUAL : PVR_DEPTHCMP_ALWAYS;
     int depth_write = DEPTH_MASK_ENABLED ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
 
-    int gen_shading   = SHADE_MODEL;
     int gen_clip_mode = SCISSOR_TEST_ENABLED ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
     int gen_fog_type  = FOG_ENABLED          ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
 
@@ -179,7 +201,7 @@ void apply_poly_header(pvr_poly_hdr_t* dst, PolyList* activePolyList) {
     /* Or in the list type, shading type, color and UV formats */
     dst->cmd |= (list_type             << PVR_TA_CMD_TYPE_SHIFT)     & PVR_TA_CMD_TYPE_MASK;
     dst->cmd |= (PVR_CLRFMT_ARGBPACKED << PVR_TA_CMD_CLRFMT_SHIFT)   & PVR_TA_CMD_CLRFMT_MASK;
-    dst->cmd |= (gen_shading           << PVR_TA_CMD_SHADE_SHIFT)    & PVR_TA_CMD_SHADE_MASK;
+    dst->cmd |= (SHADE_MODEL           << PVR_TA_CMD_SHADE_SHIFT)    & PVR_TA_CMD_SHADE_MASK;
     dst->cmd |= (PVR_UVFMT_32BIT       << PVR_TA_CMD_UVFMT_SHIFT)    & PVR_TA_CMD_UVFMT_MASK;
     dst->cmd |= (gen_clip_mode         << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
 

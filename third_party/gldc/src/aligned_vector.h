@@ -112,14 +112,3 @@ AV_FORCE_INLINE void* aligned_vector_extend(AlignedVector* vector, const uint32_
     return ret;
 }
 
-AV_FORCE_INLINE void aligned_vector_clear(AlignedVector* vector){
-    vector->size = 0;
-}
-
-AV_FORCE_INLINE void aligned_vector_init(AlignedVector* vector) {
-    /* Now initialize the header*/
-    vector->size = 0;
-    vector->capacity = 0;
-    vector->data = NULL;
-}
-

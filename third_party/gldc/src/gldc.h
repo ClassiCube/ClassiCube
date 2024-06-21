@@ -2,15 +2,10 @@
 #define PRIVATE_H
 
 #include <stdint.h>
-#include <stdio.h>
-#include <kos.h>
-#include <dc/pvr.h>
 #include "aligned_vector.h"
 
 #define MAX_TEXTURE_COUNT 768
 
-
-#define GL_SCISSOR_TEST     0x0008
 #define GL_NEAREST          0x2600
 #define GL_LINEAR           0x2601
 #define GL_OUT_OF_MEMORY    0x0505
@@ -33,7 +28,6 @@ void   gldcBindTexture(GLuint texture);
 int  gldcAllocTexture(int w, int h, int format);
 void gldcGetTexture(void** data, int* width, int* height);
 
-void glViewport(int x, int y, int width, int height);
 void glScissor( int x, int y, int width, int height);
 
 void glKosInit();
@@ -106,8 +100,6 @@ typedef struct {
 } __attribute__((aligned(32))) TextureObject;
 
 
-void _glInitContext();
-void _glInitSubmissionTarget();
 void _glInitTextures();
 
 extern TextureObject* TEXTURE_ACTIVE;
@@ -151,10 +143,6 @@ GLuint _glFreeContiguousTextureMemory(void);
 void _glApplyScissor(int force);
 
 extern GLboolean STATE_DIRTY;
-
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define CLAMP( X, _MIN, _MAX )  ( (X)<(_MIN) ? (_MIN) : ((X)>(_MAX) ? (_MAX) : (X)) )
 
 void SceneListSubmit(Vertex* v2, int n);
 

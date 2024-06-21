@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <kos.h>
+#include <dc/pvr.h>
 
 #include "gldc.h"
 #include "yalloc/yalloc.h"

@@ -327,7 +327,7 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	
-	int res = sceNetInetConnect(*s, raw, addr->size);
+	int res = sceNetInetConnect(s, raw, addr->size);
 	return res < 0 ? sceNetInetGetErrno() : 0;
 }
 
