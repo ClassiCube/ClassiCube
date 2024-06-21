@@ -42,6 +42,7 @@ void Window_Init(void) {
 	Window_Main.Exists   = true;
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);

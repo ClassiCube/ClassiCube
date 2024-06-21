@@ -42,6 +42,7 @@ void Window_Init(void) {
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 	
 	usb_init();
 	usb_do_poll();

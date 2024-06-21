@@ -63,6 +63,7 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 20;
 	DisplayInfo.ContentOffsetY = 20;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	ioPadInit(MAX_PORT_NUM);
 	ioKbInit(MAX_KB_PORT_NUM);

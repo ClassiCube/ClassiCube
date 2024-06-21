@@ -579,10 +579,27 @@ static cc_uint64 caretStart;
 static Rect2D caretRect, lastCaretRect;
 #define Rect2D_Equals(a, b) a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height
 
+static void LInput_OpenKeyboard(struct LInput* w) {
+	struct OpenKeyboardArgs args;
+	
+	if (w->kbShowing) return;
+	w->kbShowing = true;
+	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
+	OnscreenKeyboard_Open(&args);
+}
+
+static void LInput_OnClick(void* widget) {
+	struct LInput* w = (struct LInput*)widget;
+	LInput_OpenKeyboard(w);
+}
+
 void LBackend_InputInit(struct LInput* w, int width) {
 	w->width    = Display_ScaleX(width);
 	w->height   = Display_ScaleY(LINPUT_HEIGHT);
 	w->minWidth = w->width;
+	
+	if (Window_Main.SoftKeyboard)
+		w->OnClick  = LInput_OnClick;
 
 	/* Text may end up being wider than minimum width */
 	if (w->text.length) LBackend_InputUpdate(w);
@@ -681,20 +698,20 @@ void LBackend_InputTick(struct LInput* w) {
 }
 
 void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
-	struct OpenKeyboardArgs args;
 	caretStart   = Stopwatch_Measure();
 	w->caretShow = true;
+	w->kbShowing = false;
 	LInput_MoveCaretToCursor(w, idx);
 	LBackend_MarkDirty(w);
-
-	if (wasSelected) return;
-	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
-	OnscreenKeyboard_Open(&args);
+	
+	if (Window_Main.SoftKeyboard && Input_TouchMode)
+		LInput_OpenKeyboard(w);
 }
 
 void LBackend_InputUnselect(struct LInput* w) {
 	caretStart   = 0;
 	w->caretShow = false;
+	w->kbShowing = false;
 	LBackend_MarkDirty(w);
 	OnscreenKeyboard_Close();
 }

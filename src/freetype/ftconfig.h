@@ -46,7 +46,7 @@
 FT_BEGIN_HEADER
 
 /* ClassiCube patch - don't export FreeType symbols to avoid conflicting with system */
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(_WIN32)
 	#define FT_EXPORT( x ) __attribute__((visibility("hidden"))) extern x
 	#define FT_BASE( x )   __attribute__((visibility("hidden"))) extern x
 #elif defined(__cplusplus)

@@ -81,6 +81,7 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	#if defined HW_RVL
 	WPAD_Init();

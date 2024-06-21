@@ -176,34 +176,32 @@ void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot) {
 	Matrix_Mul(result, &trans, result);
 }
 
-/* TODO: Move to matrix instance instead */
-static float
-frustum00, frustum01, frustum02, frustum03,
-frustum10, frustum11, frustum12, frustum13,
-frustum20, frustum21, frustum22, frustum23,
-frustum30, frustum31, frustum32, frustum33,
-frustum40, frustum41, frustum42, frustum43;
 
-static void FrustumCulling_Normalise(float* plane0, float* plane1, float* plane2, float* plane3) {
-	float val1 = *plane0, val2 = *plane1, val3 = *plane2;
+struct Plane { float a, b, c, d; };
+static struct Plane frustumR, frustumL, frustumB, frustumT, frustumF;
+
+static void FrustumCulling_Normalise(struct Plane* plane) {
+	float val1 = plane->a, val2 = plane->b, val3 = plane->c;
 	float t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
-	*plane0 /= t; *plane1 /= t; *plane2 /= t; *plane3 /= t;
+	plane->a /= t; plane->b /= t; plane->c /= t; plane->d /= t;
 }
 
 cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) {
-	float d = frustum00 * x + frustum01 * y + frustum02 * z + frustum03;
+	float d;
+
+	d = frustumR.a * x + frustumR.b * y + frustumR.c * z + frustumR.d;
 	if (d <= -radius) return false;
 
-	d = frustum10 * x + frustum11 * y + frustum12 * z + frustum13;
+	d = frustumL.a * x + frustumL.b * y + frustumL.c * z + frustumL.d;
 	if (d <= -radius) return false;
 
-	d = frustum20 * x + frustum21 * y + frustum22 * z + frustum23;
+	d = frustumB.a * x + frustumB.b * y + frustumB.c * z + frustumB.d;
 	if (d <= -radius) return false;
 
-	d = frustum30 * x + frustum31 * y + frustum32 * z + frustum33;
+	d = frustumT.a * x + frustumT.b * y + frustumT.c * z + frustumT.d;
 	if (d <= -radius) return false;
 
-	d = frustum40 * x + frustum41 * y + frustum42 * z + frustum43;
+	d = frustumF.a * x + frustumF.b * y + frustumF.c * z + frustumF.d;
 	if (d <= -radius) return false;
 	/* Don't test NEAR plane, it's pointless */
 	return true;
@@ -214,47 +212,47 @@ void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matri
 	Matrix_Mul(&clip, modelView, projection);
 
 	/* Extract the RIGHT plane */
-	frustum00 = clip.row1.w - clip.row1.x;
-	frustum01 = clip.row2.w - clip.row2.x;
-	frustum02 = clip.row3.w - clip.row3.x;
-	frustum03 = clip.row4.w - clip.row4.x;
-	FrustumCulling_Normalise(&frustum00, &frustum01, &frustum02, &frustum03);
+	frustumR.a = clip.row1.w - clip.row1.x;
+	frustumR.b = clip.row2.w - clip.row2.x;
+	frustumR.c = clip.row3.w - clip.row3.x;
+	frustumR.d = clip.row4.w - clip.row4.x;
+	FrustumCulling_Normalise(&frustumR);
 
 	/* Extract the LEFT plane */
-	frustum10 = clip.row1.w + clip.row1.x;
-	frustum11 = clip.row2.w + clip.row2.x;
-	frustum12 = clip.row3.w + clip.row3.x;
-	frustum13 = clip.row4.w + clip.row4.x;
-	FrustumCulling_Normalise(&frustum10, &frustum11, &frustum12, &frustum13);
+	frustumL.a = clip.row1.w + clip.row1.x;
+	frustumL.b = clip.row2.w + clip.row2.x;
+	frustumL.c = clip.row3.w + clip.row3.x;
+	frustumL.d = clip.row4.w + clip.row4.x;
+	FrustumCulling_Normalise(&frustumL);
 
 	/* Extract the BOTTOM plane */
-	frustum20 = clip.row1.w + clip.row1.y;
-	frustum21 = clip.row2.w + clip.row2.y;
-	frustum22 = clip.row3.w + clip.row3.y;
-	frustum23 = clip.row4.w + clip.row4.y;
-	FrustumCulling_Normalise(&frustum20, &frustum21, &frustum22, &frustum23);
+	frustumB.a = clip.row1.w + clip.row1.y;
+	frustumB.b = clip.row2.w + clip.row2.y;
+	frustumB.c = clip.row3.w + clip.row3.y;
+	frustumB.d = clip.row4.w + clip.row4.y;
+	FrustumCulling_Normalise(&frustumB);
 
 	/* Extract the TOP plane */
-	frustum30 = clip.row1.w - clip.row1.y;
-	frustum31 = clip.row2.w - clip.row2.y;
-	frustum32 = clip.row3.w - clip.row3.y;
-	frustum33 = clip.row4.w - clip.row4.y;
-	FrustumCulling_Normalise(&frustum30, &frustum31, &frustum32, &frustum33);
+	frustumT.a = clip.row1.w - clip.row1.y;
+	frustumT.b = clip.row2.w - clip.row2.y;
+	frustumT.c = clip.row3.w - clip.row3.y;
+	frustumT.d = clip.row4.w - clip.row4.y;
+	FrustumCulling_Normalise(&frustumT);
 
 	/* Extract the FAR plane (Different for each graphics backend) */
 #if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11)
 	/* OpenGL and Direct3D require slightly different behaviour for NEAR clipping planes */
 	/* https://www.gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-view-projection-matrix.pdf */
 	/* (and because reverse Z is used, 'NEAR' plane is actually the 'FAR' clipping plane) */
-	frustum40 = clip.row1.z;
-	frustum41 = clip.row2.z;
-	frustum42 = clip.row3.z;
-	frustum43 = clip.row4.z;
+	frustumF.a = clip.row1.z;
+	frustumF.b = clip.row2.z;
+	frustumF.c = clip.row3.z;
+	frustumF.d = clip.row4.z;
 #else
-	frustum40 = clip.row1.w - clip.row1.z;
-	frustum41 = clip.row2.w - clip.row2.z;
-	frustum42 = clip.row3.w - clip.row3.z;
-	frustum43 = clip.row4.w - clip.row4.z;
+	frustumF.a = clip.row1.w - clip.row1.z;
+	frustumF.b = clip.row2.w - clip.row2.z;
+	frustumF.c = clip.row3.w - clip.row3.z;
+	frustumF.d = clip.row4.w - clip.row4.z;
 #endif
-	FrustumCulling_Normalise(&frustum40, &frustum41, &frustum42, &frustum43);
+	FrustumCulling_Normalise(&frustumF);
 }

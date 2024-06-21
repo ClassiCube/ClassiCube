@@ -55,6 +55,7 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 	
 	padInit(0);
 	padPortOpen(0, 0, padBuf0);
@@ -80,7 +81,7 @@ static void ResetGfxState(void) {
 	fb_colors[0].height  = DisplayInfo.Height;
 	fb_colors[0].mask    = 0;
 	fb_colors[0].psm     = GS_PSM_32;
-	fb_colors[0].address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_colors[1].psm, GRAPH_ALIGN_PAGE);
+	fb_colors[0].address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm, GRAPH_ALIGN_PAGE);
 
 	fb_colors[1].width   = DisplayInfo.Width;
 	fb_colors[1].height  = DisplayInfo.Height;
