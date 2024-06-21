@@ -90,7 +90,7 @@ static void InitDrawingEnv(void) {
 	
 	q = draw_setup_environment(q, 0, &fb_colors[0], &fb_depth);
 	// GS can render from 0 to 4096, so set primitive origin to centre of that
-	q = draw_primitive_xyoffset(q, 0, 2048 - vp_hwidth, 2048 - vp_hheight);
+	q = draw_primitive_xyoffset(q, 0, 2048 - Game.Width / 2, 2048 - Game.Height / 2);
 
 	q = SetTextureWrapping(q, 0);
 	q = SetTextureSampling(q, 0);

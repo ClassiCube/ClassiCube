@@ -61,18 +61,7 @@ void Platform_Log(const char* msg, int len) {
 	char tmp[2048 + 1];
 	len = min(len, 2048);
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
-	_print("%s", tmp);
-
-#ifdef PS2_DEBUG
-	volatile char* dst = (char*)0x1000F180;
-
-	for (int i = 0; i < len; i++)
-	{
-		*dst = msg[i];
-	}
-	*dst = '\n';
-	*dst = '\r';
-#endif
+	_print("%s\n", tmp);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -339,7 +328,7 @@ void Waitable_Free(void* handle) {
 	int semID = (int)handle;
 	int res   = DeleteSema(semID);
 	
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res < 0) Logger_Abort2(res, "Destroying waitable");
 }
 
 void Waitable_Signal(void* handle) {
