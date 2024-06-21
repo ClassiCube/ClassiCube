@@ -624,15 +624,6 @@ extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
 extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
-		SCISSOR_TEST_ENABLED = GL_FALSE;
-	} else {
-		SCISSOR_TEST_ENABLED = GL_TRUE;
-	}
-	STATE_DIRTY = GL_TRUE;
-	
-	glScissor (x, y, w, h);
-
 	VIEWPORT.hwidth  = w *  0.5f;
 	VIEWPORT.hheight = h * -0.5f;
 	VIEWPORT.x_plus_hwidth  = x + w * 0.5f;
@@ -643,5 +634,11 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 
 	VP_COL_X_PLUS_HWIDTH  = VP_TEX_X_PLUS_HWIDTH  = x + w * 0.5f;
 	VP_COL_Y_PLUS_HHEIGHT = VP_TEX_Y_PLUS_HHEIGHT = y + h * 0.5f;
+}
+
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
+	STATE_DIRTY = GL_TRUE;
+	glScissor(x, y, w, h);
 }
 #endif

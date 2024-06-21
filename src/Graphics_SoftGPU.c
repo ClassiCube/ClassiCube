@@ -932,22 +932,27 @@ void Gfx_OnWindowResize(void) {
 	fb_width   = Game.Width;
 	fb_height  = Game.Height;
 
-	vp_hwidth  = fb_width  / 2.0f;
-	vp_hheight = fb_height / 2.0f;
-
-	fb_maxX = fb_width  - 1;
-	fb_maxY = fb_height - 1;
-
 	Window_AllocFramebuffer(&fb_bmp, Game.Width, Game.Height);
 	colorBuffer = fb_bmp.scan0;
 	cb_stride   = fb_bmp.width;
 
 	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
 	db_stride   = fb_width;
+
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
-void Gfx_SetScissor (int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	vp_hwidth  = w / 2.0f;
+	vp_hheight = h / 2.0f;
+}
+
+void Gfx_SetScissor (int x, int y, int w, int h) {
+	/* TODO minX/Y */
+	fb_maxX = x + w - 1;
+	fb_maxY = y + h - 1;
+}
 
 void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;

@@ -33,6 +33,7 @@ GL_FUNC(void, glVertexPointer)(GLint size, GLenum type, GLsizei stride, GLpointe
 GL_FUNC(void, glClear)(GLuint mask);
 GL_FUNC(void, glHint)(GLenum target, GLenum mode);
 GL_FUNC(void, glReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
+GL_FUNC(void, glScissor)(GLint x, GLint y, GLsizei width, GLsizei height);
 
 /* Texture functions */
 GL_FUNC(void, glBindTexture)(GLenum target, GLuint texture);
