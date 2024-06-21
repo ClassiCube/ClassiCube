@@ -129,9 +129,9 @@
 .macro ProcessVertex1
     fmov.s  fr7,@-r5 ! LS, dst->w = W
     fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fneg    fr7      ! LS, W = -W
+    fldi0   fr0      ! LS, fr0 = 0.0
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr0,fr6  ! FE, T = Z > 0
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r0       ! EX, CLIPFLAGS = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
@@ -143,9 +143,9 @@
 .macro ProcessVertex2
     fmov.s  fr7,@-r5 ! LS, dst->w = W
     fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fneg    fr7      ! LS, W = -W
+    fldi0   fr0      ! LS, fr0 = 0.0
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr0,fr6  ! FE, T = Z > 0
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r2       ! EX, tmp = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
@@ -159,9 +159,9 @@
 .macro ProcessVertex3
     fmov.s  fr7,@-r5 ! LS, dst->w = W
     fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fneg    fr7      ! LS, W = -W
+    fldi0   fr0      ! LS, fr0 = 0.0
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr0,fr6  ! FE, T = Z > 0
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r2       ! EX, tmp = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
@@ -176,9 +176,9 @@
     fmov.s  fr7,@-r5 ! LS, dst->w = W
     or      r11,r0   ! EX, CLIPFLAGS |= PVR_CMD_VERTEX_EOL
     fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fneg    fr7      ! LS, W = -W
+    fldi0   fr0      ! LS, fr0 = 0.0
     fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr7,fr6  ! FE, T = Z > W (i.e. Z > -W)
+    fcmp/gt fr0,fr6  ! FE, T = Z > 0
     fmov.s  fr1,@-r5 ! LS, dst->u = U
     movt    r2       ! EX, tmp = T
     fmov.s  fr6,@-r5 ! LS, dst->z = Z

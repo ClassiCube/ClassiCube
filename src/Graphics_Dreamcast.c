@@ -132,35 +132,34 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
-	matrix->row3.z = -2.0f / (zFar - zNear);
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
 	matrix->row4.x = -1.0f;
 	matrix->row4.y =  1.0f;
-	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = Cotangent(0.5f * fov);
 
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
-	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
-	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
-	/* Calculations are simplified because of left/right and top/bottom symmetry */
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;
 	matrix->row2.y =  c;
-	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.z = zFar / (zNear - zFar);
 	matrix->row3.w = -1.0f;
-	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.z = (zNear * zFar) / (zNear - zFar);
 	matrix->row4.w =  0.0f;
 }
 

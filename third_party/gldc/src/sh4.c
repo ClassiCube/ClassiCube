@@ -49,19 +49,18 @@ static inline void _glPushHeaderOrVertex(Vertex* v)  {
     sq += 8;
 }
 
-static void _glClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout) {
-    const float d0 = v1->w + v1->z;
-    const float d1 = v2->w + v2->z;
-    const float t = (fabsf(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
-    const float invt = 1.0f - t;
+static void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout) {
+    float d0 = v1->z;
+    float d1 = v2->z;
+    float t = (fabsf(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
+    float invt = 1.0f - t;
 
     vout->x = invt * v1->x + t * v2->x;
     vout->y = invt * v1->y + t * v2->y;
-    vout->z = invt * v1->z + t * v2->z;
+    vout->z = 0.0f; // clipped against near plane, where Z = 0 anyways
 
     vout->u = invt * v1->u + t * v2->u;
     vout->v = invt * v1->v + t * v2->v;
-
     vout->w = invt * v1->w + t * v2->w;
 
     vout->bgra[0] = invt * v1->bgra[0] + t * v2->bgra[0];
@@ -96,9 +95,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // .....A....B...
         //    /      |
         //  v3--v2---v1
-        _glClipEdge(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags = PVR_CMD_VERTEX_EOL;
-        _glClipEdge(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v0);
@@ -119,9 +118,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v0--v3---v2
-        _glClipEdge(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
@@ -142,9 +141,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //    /      |
         //  v1--v0---v3
 
-        _glClipEdge(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
@@ -164,9 +163,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v2--v1---v0
-        _glClipEdge(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
@@ -186,9 +185,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v3-----v2
-        _glClipEdge(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
@@ -211,9 +210,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v2-----v1
-        _glClipEdge(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(a);
@@ -235,9 +234,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v0-----v3
-        _glClipEdge(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX_EOL;
-        _glClipEdge(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v1);
@@ -260,9 +259,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v1-----v0
-        _glClipEdge(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
@@ -286,9 +285,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v3
         // v1,v2,v0  v2,v0,A  v0,A,B
-        _glClipEdge(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
@@ -315,9 +314,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v2
         // v0,v1,v3  v1,v3,A  v3,A,B
-        _glClipEdge(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags  = PVR_CMD_VERTEX;
-        _glClipEdge(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
@@ -345,9 +344,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v1
         // v3,v0,v2  v0,v2,A  v2,A,B
-        _glClipEdge(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags  = PVR_CMD_VERTEX;
-        _glClipEdge(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
@@ -375,9 +374,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v0
         // v2,v3,v1  v3,v1,A  v1,A,B
-        _glClipEdge(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags  = PVR_CMD_VERTEX;
-        _glClipEdge(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
