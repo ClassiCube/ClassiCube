@@ -881,5 +881,14 @@ void Gfx_OnWindowResize(void) {
 	UpdateSwapchain(" (resizing window)");
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	D3DVIEWPORT9 vp;
+	vp.X      = x;
+	vp.Y      = y;
+	vp.Width  = w;
+	vp.Height = h;
+	vp.MinZ   = 0.0f;
+	vp.MaxZ   = 1.0f;
+	IDirect3DDevice9_SetViewport(device, &vp);
+}
 #endif

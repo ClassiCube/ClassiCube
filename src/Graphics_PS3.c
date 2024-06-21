@@ -406,6 +406,7 @@ static void ResetFrameState(void) {
         
 	// NOTE: Must be called each frame, otherwise renders upside down at 4x zoom
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
 }
 
 // https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
@@ -442,6 +443,7 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) {
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
@@ -460,13 +462,16 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	offset[3] = 0.0f;
 
 	rsxSetViewport(context, x, y, w, h, zmin, zmax, scale, offset);
-	rsxSetScissor(context,  x, y, w, h);
 	
 	// TODO: even needed?
 	for (int i = 0; i < 8; i++)
 	{
 		rsxSetViewportClip(context, i, w, h);
 	}
+}
+
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	rsxSetScissor(context, x, y, w, h);
 }
 
 

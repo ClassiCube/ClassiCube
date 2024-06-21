@@ -29,6 +29,8 @@ static void InitGX(void) {
 
 	GX_Init(fifo_buffer, FIFO_SIZE);
 	Gfx_SetViewport(0, 0, mode->fbWidth, mode->efbHeight);
+	Gfx_SetScissor( 0, 0, mode->fbWidth, mode->efbHeight);
+	
 	GX_SetDispCopyYScale((f32)mode->xfbHeight / (f32)mode->efbHeight);
 	GX_SetDispCopySrc(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyDst(mode->fbWidth, mode->xfbHeight);
@@ -316,6 +318,9 @@ void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	GX_SetViewport(x, y, w, h, 0, 1);
+}
+
+void Gfx_SetScissor(int x, int y, int w, int h) {
 	GX_SetScissor(x, y, w, h);
 }
 

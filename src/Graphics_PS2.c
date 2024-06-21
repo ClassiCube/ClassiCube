@@ -126,7 +126,6 @@ void Gfx_Create(void) {
 	formatDirty = true;
 	InitDrawingEnv();
 	InitDMABuffers();
-	Gfx_SetViewport(0, 0, Window_Main.Width, Window_Main.Height);
 	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
 	
 	context = 1;
@@ -803,7 +802,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_OnWindowResize(void) {
-	// TODO
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
@@ -811,7 +811,9 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	vp_hheight   = h / 2;
 	vp_x_hwidth  = x + vp_hwidth;
 	vp_y_hheight = y + vp_hheight;
+}
 
+void Gfx_SetScissor(int x, int y, int w, int h) {
 	int context = 0;
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
