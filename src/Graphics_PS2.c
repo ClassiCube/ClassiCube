@@ -435,6 +435,7 @@ typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));
 typedef struct Vec4   VU0_VECTOR __attribute__((aligned(16)));
 
 static VU0_MATRIX mvp;
+extern void LoadMvpMatrix(VU0_MATRIX* matrix);
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
@@ -442,14 +443,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 
 	Matrix_Mul(&mvp, &_view, &_proj);
 	// TODO	
-	asm __volatile__(
-		"lqc2 $vf1, 0x00(%0) \n" // vf1 = mvp.row1
-		"lqc2 $vf2, 0x10(%0) \n" // vf2 = mvp.row2
-		"lqc2 $vf3, 0x20(%0) \n" // vf3 = mvp.row3
-		"lqc2 $vf4, 0x30(%0) \n" // vf4 = mvp.row4
-	: 
-	: "r" (&mvp)
-	);
+	LoadMvpMatrix(&mvp);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -619,6 +613,8 @@ static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords,
 	return dw;
 }
 
+extern void TransformTexturedQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
+
 static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
 	qword_t* base = q;
@@ -626,29 +622,22 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	u64* dw = (u64*)q;
 
 	unsigned numVerts = 0;
-	VU0_VECTOR V[4];
+	VU0_VECTOR V[6], tmp;
+	int clip[4];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		TransformVertex(v + 0, &V[0]);
-		TransformVertex(v + 1, &V[1]);
-		TransformVertex(v + 2, &V[2]);
-		TransformVertex(v + 3, &V[3]);
+		TransformTexturedQuad(v, V, &tmp, clip);
 		
-		// V0, V1, V2
+		//if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
 		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
 			dw = DrawTexturedTriangle(dw, V, v + 0, v + 1, v + 2);
 			numVerts += 3;
 		}
-
-		VU0_VECTOR v0 = V[0];
-		V[0] = V[2];
-		V[1] = V[3];
-		V[2] = v0;
 		
-		// V2, V3, V0
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
-			dw = DrawTexturedTriangle(dw, V, v + 2, v + 3, v + 0);
+		//if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
+		if (NotClipped(V[3]) && NotClipped(V[4]) && NotClipped(V[5])) {
+			dw = DrawTexturedTriangle(dw, V + 3, v + 2, v + 3, v + 0);
 			numVerts += 3;
 		}
 	}
@@ -821,11 +810,36 @@ void Gfx_OnWindowResize(void) {
 	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
 }
 
+extern void LoadClipScaleFactors(VU0_VECTOR* scale);
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	vp_hwidth  = w / 2;
 	vp_hheight = h / 2;
 	vp_originX =  ftoi4(2048 - (x / 2));
 	vp_originY = -ftoi4(2048 - (y / 2));
+
+	// The code below clips to the viewport clip planes
+	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
+	//  However the guard band itself ranges from 0 to 4096
+	// To reduce need to clip, clip against guard band on X/Y axes instead
+	/*return
+		xAdj  >= -pos.w && xAdj  <= pos.w &&
+		yAdj  >= -pos.w && yAdj  <= pos.w &&
+		pos.z >= -pos.w && pos.z <= pos.w;*/	
+		
+	// Rescale clip planes to guard band extent:
+	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
+	//              X/W <= 1
+	//              X   <= W
+	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
+	//              X/W <= 2048 / vp_hwidth
+	//              X * vp_hwidth / 2048 <= W
+	VU0_VECTOR scale;
+	scale.x = vp_hwidth  / 2048.0f;
+	scale.y = vp_hheight / 2048.0f;
+	scale.z = 1.0f;
+	scale.w = 1.0f;
+	
+	LoadClipScaleFactors(&scale);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {

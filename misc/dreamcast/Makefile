@@ -77,7 +77,7 @@ $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: misc/dreamcast/%.S
-	kos-cc -c $< -o $@
+	kos-cc $(DEPFLAGS) -c $< -o $@
 
 # Dependency tracking
 $(DEPFILES):

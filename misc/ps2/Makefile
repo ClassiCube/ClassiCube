@@ -1,10 +1,17 @@
 ifeq ($(strip $(PS2SDK)),)
 $(error "PS2SDK must be set in your environment")
 endif
+SOURCE_DIRS	:= src misc/ps2
 BUILD_DIR = build-ps2
 
-CFILES 	:= $(wildcard src/*.c)
-OBJS	:= $(patsubst src/%.c, $(BUILD_DIR)/%.o, $(CFILES))
+S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
 IOP_MODS:= DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o USBKBD_irx.o
 
 EE_BIN 	= ClassiCube-ps2.elf
@@ -23,6 +30,8 @@ clean:
 	
 $(BUILD_DIR):
 	mkdir -p $@
+
+include $(PS2SDK)/samples/Makefile.pref
 	
 # Networking IRX modules
 $(BUILD_DIR)/DEV9_irx.c: $(PS2SDK)/iop/irx/ps2dev9.irx
@@ -58,17 +67,27 @@ $(BUILD_DIR)/USBKBD_irx.c: $(PS2SDK)/iop/irx/ps2kbd.irx
 	bin2c $< $@ USBKBD_irx
 
 
-include $(PS2SDK)/samples/Makefile.pref
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
+$(EE_BIN): $(EE_OBJS)
+	$(EE_CC) -T$(EE_LINKFILE) -O2 -o $(EE_BIN) $(EE_OBJS) $(EE_LDFLAGS) $(EE_LIBS)
 
+
+#---------------------------------------------------------------------------------
+# object generation
+#---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
-	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: %.S
-	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+$(BUILD_DIR)/%.o: misc/ps2/%.S
+	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
-$(EE_BIN): $(EE_OBJS)
-	$(EE_CC) -T$(EE_LINKFILE) -O2 -o $(EE_BIN) $(EE_OBJS) $(EE_LDFLAGS) $(EE_LIBS)
+# Dependency tracking
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))
 
