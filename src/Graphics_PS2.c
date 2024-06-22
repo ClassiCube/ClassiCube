@@ -19,7 +19,7 @@ static void* gfx_vertices;
 extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
 static float vp_hwidth, vp_hheight;
-static int vp_originX, vp_originY;
+static float vp_originX, vp_originY;
 static cc_bool stateDirty, formatDirty;
 
 typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));

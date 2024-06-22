@@ -543,7 +543,7 @@ static void InitSDCard(void) {
 		Platform_LogConst("Failed to mount SD card"); return;
 	}
 
-	root_path = String_FromReadonly("/sd/ClassiCube");
+	root_path = String_FromReadonly("/sd/ClassiCube/");
 	fs_mkdir("/sd/ClassiCube");
 	Platform_ReadonlyFilesystem = false;
 }
