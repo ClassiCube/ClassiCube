@@ -201,12 +201,12 @@ static int MapNativeKey(SDL_Keycode k) {
 		case SDLK_RALT: return CCKEY_RALT;
 		case SDLK_RGUI: return CCKEY_RWIN;
 		
-		case SDLK_AUDIONEXT: return CCKEY_MEDIA_NEXT;
-		case SDLK_AUDIOPREV: return CCKEY_MEDIA_PREV;
-		case SDLK_AUDIOPLAY: return CCKEY_MEDIA_PLAY;
-		case SDLK_AUDIOSTOP: return CCKEY_MEDIA_STOP;
+		case SDLK_MEDIA_NEXT_TRACK: return CCKEY_MEDIA_NEXT;
+		case SDLK_MEDIA_PREVIOUS_TRACK: return CCKEY_MEDIA_PREV;
+		case SDLK_MEDIA_PLAY: return CCKEY_MEDIA_PLAY;
+		case SDLK_MEDIA_STOP: return CCKEY_MEDIA_STOP;
 		
-		case SDLK_AUDIOMUTE:  return CCKEY_VOLUME_MUTE;
+		case SDLK_MUTE:  return CCKEY_VOLUME_MUTE;
 		case SDLK_VOLUMEDOWN: return CCKEY_VOLUME_DOWN;
 		case SDLK_VOLUMEUP:   return CCKEY_VOLUME_UP;
 	}
@@ -215,7 +215,7 @@ static int MapNativeKey(SDL_Keycode k) {
 
 static void OnKeyEvent(const SDL_Event* e) {
 	cc_bool pressed = e->key.state == SDL_PRESSED;
-	int key = MapNativeKey(e->key.keysym.sym);
+	int key = MapNativeKey(e->key.key);
 	if (key) Input_Set(key, pressed);
 }
 
@@ -393,12 +393,10 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	pattern[str.length] = '\0';
 	filters[0].name     = args->description;
 	filters[0].pattern  = pattern;
-	filters[1].name     = NULL;
-	filters[1].pattern  = NULL;
 	
 	dlgCallback  = args->Callback;
 	save_filters = NULL;
-	SDL_ShowOpenFileDialog(DialogCallback, NULL, win_handle, filters, NULL, false);
+	SDL_ShowOpenFileDialog(DialogCallback, NULL, win_handle, filters, 1, NULL, false);
 	return 0;
 }
 
@@ -422,7 +420,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	
 	dlgCallback  = args->Callback;
 	save_filters = filters;
-	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, defName);
+	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, 1, defName);
 	return 0;
 }
 
