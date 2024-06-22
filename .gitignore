@@ -95,6 +95,9 @@ fontscache.txt
 # Android source files need to be included
 !android/app/src/main/java/com/classicube
 
+# Flatpak wrapper which needs to be included
+!misc/linux/flatpak/ClassiCubeLauncher
+
 # CMake files
 CMakeFiles/
 CMakeCache.txt
