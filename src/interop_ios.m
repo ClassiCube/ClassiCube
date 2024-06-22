@@ -476,6 +476,7 @@ static CGRect DoCreateWindow(void) {
 
     Window_Main.Width  = bounds.size.width;
     Window_Main.Height = bounds.size.height;
+	Window_Main.SoftKeyboardInstant = true;
     
     NSNotificationCenter* notifications = NSNotificationCenter.defaultCenter;
     [notifications addObserver:cc_controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];

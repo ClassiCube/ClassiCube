@@ -86,6 +86,9 @@ struct _WindowData {
 	cc_bool Inactive;
 	/* Whether input should be ignored due to soft keyboard being open */
 	cc_bool SoftKeyboardFocus;
+	/* Whether on-screen keyboard should be instantly opened when an input field is selected */
+	/* Otherwise, the on-screen keyboard is only opened when the input field is clicked */
+	cc_uint8 SoftKeyboardInstant;
 	/* Scale factors specifically for some in-game elements (e.g. chat) */
 	/*  that vary their elements based on the window dimensions */
 	float UIScaleX, UIScaleY;

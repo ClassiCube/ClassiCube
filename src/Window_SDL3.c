@@ -77,6 +77,8 @@ static void DoCreateWindow(int width, int height, int flags) {
 	Window_Main.Handle   = win_handle;
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+
+	Window_Main.SoftKeyboardInstant = true;
 	ApplyIcon();
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }

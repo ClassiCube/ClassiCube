@@ -704,7 +704,7 @@ void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
 	LInput_MoveCaretToCursor(w, idx);
 	LBackend_MarkDirty(w);
 	
-	if (Window_Main.SoftKeyboard && Input_TouchMode)
+	if (Window_Main.SoftKeyboardInstant)
 		LInput_OpenKeyboard(w);
 }
 

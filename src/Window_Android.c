@@ -330,6 +330,7 @@ static void DoCreateWindow(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 	
+	Window_Main.SoftKeyboardInstant = true;
 	RemakeWindowSurface();
 	/* always start as fullscreen */
 	Window_EnterFullscreen();
