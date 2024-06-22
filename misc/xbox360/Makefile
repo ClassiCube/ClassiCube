@@ -75,43 +75,39 @@ export INCLUDE	:= -I$(LIBXENON_INC)
 #---------------------------------------------------------------------------------
 export LIBPATHS	:= -L$(LIBXENON_LIB)
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(OUTPUT).elf32: $(OUTPUT).elf
-$(OUTPUT).elf: $(OFILES)
+default: $(BUILD) $(TARGET).elf32
 
-default: $(BUILD) $(OUTPUT).elf32
-	cp $(OUTPUT).elf32 /tftpboot/xenon
-	xenon-strip /tftpboot/xenon
+$(TARGET).elf32: $(TARGET).elf
+$(TARGET).elf: $(OFILES)
 
 
 #---------------------------------------------------------------------------------
 $(BUILD):
-	@[ -d $@ ] || mkdir -p $@
+	[ -d $@ ] || mkdir -p $@
 
 #---------------------------------------------------------------------------------
 clean:
-	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).elf32
+	echo clean ...
+	rm -fr $(BUILD) $(TARGET).elf $(TARGET).elf32
 	
 #---------------------------------------------------------------------------------
 %.o: %.c
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.s
-	@$(CC) -x assembler-with-cpp $(ASFLAGS) -c $< -o $@
+	$(CC) -x assembler-with-cpp $(ASFLAGS) -c $< -o $@
 
 %.o: %.S
-	@$(CC) -x assembler-with-cpp $(ASFLAGS) -c $< -o $@
+	$(CC) -x assembler-with-cpp $(ASFLAGS) -c $< -o $@
 
 %.elf:
-	@echo linking ... $(notdir $@)
-	@$(LD)  $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -n -T $(LDSCRIPT) -o $@
+	echo linking ... $(notdir $@)
+	$(LD)  $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -n -T $(LDSCRIPT) -o $@
 
 %.elf32: %.elf
-	@echo converting and stripping ... $(notdir $@)
-	@xenon-objcopy -O elf32-powerpc --adjust-vma 0x80000000 $< $@
-	@xenon-strip $@
+	echo converting and stripping ... $(notdir $@)
+	xenon-objcopy -O elf32-powerpc --adjust-vma 0x80000000 $< $@
+	xenon-strip $@

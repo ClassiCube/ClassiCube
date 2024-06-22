@@ -19,7 +19,24 @@ SOURCE_DIR	:=	src
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
-$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(BUILD_DIR) $(TARGET).pef
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(C_OBJECTS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+default: $(BUILD_DIR) $(TARGET).bin
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
+$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).pef
 	$(REZ) $(REZFLAGS) \
 		"misc/macclassic/ppcAPPL.r" \
 		-t "APPL" -c "????" \
@@ -35,5 +52,14 @@ $(TARGET).pef: $(TARGET).elf
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+
+#---------------------------------------------------------------------------------
+# object generation
+#---------------------------------------------------------------------------------
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+# Dependency tracking
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))

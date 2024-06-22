@@ -680,10 +680,9 @@ void Platform_Init(void) {
 	Networking_Init();
 	Networking_Setup();
 	
-	// Create root directory
 	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
 	int res = Directory_Create(root);
-	Platform_Log1("ROOT CREATE %i", &res);
+	Platform_Log1("ROOT DIRECTORY CREATE %i", &res);
 }
 
 void Platform_Free(void) { }

@@ -214,7 +214,6 @@ int File_Exists(const cc_string* path) {
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_filepath str;
-	int res;
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
@@ -544,8 +543,11 @@ static void InitSDCard(void) {
 	}
 
 	root_path = String_FromReadonly("/sd/ClassiCube/");
-	fs_mkdir("/sd/ClassiCube");
 	Platform_ReadonlyFilesystem = false;
+
+	cc_filepath* root = FILEPATH_RAW("/sd/ClassiCube");
+	int res = Directory_Create(root);
+	Platform_Log1("ROOT DIRECTORY CREATE %i", &res);
 }
 
 static void InitModem(void) {
