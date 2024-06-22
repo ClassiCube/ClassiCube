@@ -430,14 +430,26 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Matrix _view, _proj, mvp;
+static struct Matrix _view, _proj;
+typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));
+typedef struct Vec4   VU0_VECTOR __attribute__((aligned(16)));
+
+static VU0_MATRIX mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
 
 	Matrix_Mul(&mvp, &_view, &_proj);
-	// TODO
+	// TODO	
+	asm __volatile__(
+		"lqc2 $vf1, 0x00(%0) \n" // vf1 = mvp.row1
+		"lqc2 $vf2, 0x10(%0) \n" // vf2 = mvp.row2
+		"lqc2 $vf3, 0x20(%0) \n" // vf3 = mvp.row3
+		"lqc2 $vf4, 0x30(%0) \n" // vf4 = mvp.row4
+	: 
+	: "r" (&mvp)
+	);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -499,9 +511,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	formatDirty = true;
 }
 
-typedef struct Vector4 { float x, y, z, w; } Vector4;
-
-static cc_bool NotClipped(Vector4 pos) {
+static cc_bool NotClipped(VU0_VECTOR pos) {
 	// The code below clips to the viewport clip planes
 	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
 	//  However the guard band itself ranges from 0 to 4096
@@ -531,18 +541,25 @@ static cc_bool NotClipped(Vector4 pos) {
 		pos.z >= -pos.w && pos.z <= pos.w;
 }
 
-static Vector4 TransformVertex(void* raw) {
+static void TransformVertex(void* raw, VU0_VECTOR* dst) {
 	Vec3* pos = raw;
-	Vector4 coord;
-	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
-	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
-	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
-	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
-	return coord;
+
+	VU0_VECTOR coord; coord.x = pos->x; coord.y = pos->y; coord.z = pos->z; coord.w = 1.0f;
+	asm __volatile__ (
+		"lqc2		$vf5, 0x00(%0)	\n" // vf5 = coord
+		"vmulaw		$ACC, $vf4, $vf0\n" // ACC[xyzw] = mvp.row3[xyzw] * 1.0f; (vf0.w is 1)
+		"vmaddax	$ACC, $vf1, $vf5\n" // ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * coord.x
+		"vmadday	$ACC, $vf2, $vf5\n" // ACC[xyzw] = ACC[xyzw] + mvp.row2[xyzw] * coord.y
+		"vmaddz		$vf6, $vf3, $vf5\n" // vf6[xyzw] = ACC[xyzw] + mvp.row3[xyzw] * coord.z
+		"sqc2		$vf6, 0x00(%1)	\n" // dst = vf6
+	: 
+	: "r" (&coord), "r" (dst)
+	: "memory"
+	);
 }
 
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
-static xyz_t FinishVertex(struct Vector4 src, float invW) {
+static xyz_t FinishVertex(VU0_VECTOR src, float invW) {
 	float x = vp_hwidth  * (src.x * invW);
 	float y = vp_hheight * (src.y * invW);
 	float z = src.z * invW;
@@ -556,7 +573,7 @@ static xyz_t FinishVertex(struct Vector4 src, float invW) {
 	return xyz;
 }
 
-static u64* DrawColouredTriangle(u64* dw, Vector4* coords, 
+static u64* DrawColouredTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
 	struct VertexColoured* v[] = { V0, V1, V2 };
 
@@ -577,7 +594,7 @@ static u64* DrawColouredTriangle(u64* dw, Vector4* coords,
 	return dw;
 }
 
-static u64* DrawTexturedTriangle(u64* dw, Vector4* coords, 
+static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
 	struct VertexTextured* v[] = { V0, V1, V2 };
 
@@ -609,14 +626,14 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	u64* dw = (u64*)q;
 
 	unsigned numVerts = 0;
-	Vector4 V[4];
+	VU0_VECTOR V[4];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		V[0] = TransformVertex(v + 0);
-		V[1] = TransformVertex(v + 1);
-		V[2] = TransformVertex(v + 2);
-		V[3] = TransformVertex(v + 3);
+		TransformVertex(v + 0, &V[0]);
+		TransformVertex(v + 1, &V[1]);
+		TransformVertex(v + 2, &V[2]);
+		TransformVertex(v + 3, &V[3]);
 		
 		// V0, V1, V2
 		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
@@ -624,7 +641,7 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 			numVerts += 3;
 		}
 
-		Vector4 v0 = V[0];
+		VU0_VECTOR v0 = V[0];
 		V[0] = V[2];
 		V[1] = V[3];
 		V[2] = v0;
@@ -655,14 +672,14 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 	u64* dw = (u64*)q;
 
 	unsigned numVerts = 0;
-	Vector4 V[4];
+	VU0_VECTOR V[4];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		V[0] = TransformVertex(v + 0);
-		V[1] = TransformVertex(v + 1);
-		V[2] = TransformVertex(v + 2);
-		V[3] = TransformVertex(v + 3);
+		TransformVertex(v + 0, &V[0]);
+		TransformVertex(v + 1, &V[1]);
+		TransformVertex(v + 2, &V[2]);
+		TransformVertex(v + 3, &V[3]);
 		
 		// V0, V1, V2
 		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
@@ -670,7 +687,7 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 			numVerts += 3;
 		}
 
-		Vector4 v0 = V[0];
+		VU0_VECTOR v0 = V[0];
 		V[0] = V[2];
 		V[1] = V[3];
 		V[2] = v0;

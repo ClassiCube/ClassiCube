@@ -57,7 +57,7 @@ static void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vou
 
     vout->x = invt * v1->x + t * v2->x;
     vout->y = invt * v1->y + t * v2->y;
-    vout->z = 0.0f; // clipped against near plane, where Z = 0 anyways
+    vout->z = 0.0f; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
 
     vout->u = invt * v1->u + t * v2->u;
     vout->v = invt * v1->v + t * v2->v;

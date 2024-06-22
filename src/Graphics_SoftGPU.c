@@ -583,7 +583,7 @@ static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
 	V->x = invt * v1->x + t * v2->x;
 	V->y = invt * v1->y + t * v2->y;
 	//V->z = invt * v1->z + t * v2->z;
-	V->z = 0.0f; // Z will always be 0 since clipping against w=0 (near plane) anyways
+	V->z = 0.0f; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
 	V->w = invt * v1->w + t * v2->w;
 	
 	V->u = invt * v1->u + t * v2->u;
