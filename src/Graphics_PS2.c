@@ -22,6 +22,14 @@ static float vp_hwidth, vp_hheight;
 static int vp_originX, vp_originY;
 static cc_bool stateDirty, formatDirty;
 
+typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));
+typedef struct Vec4   VU0_VECTOR __attribute__((aligned(16)));
+
+static VU0_MATRIX mvp;
+static VU0_VECTOR clip_scale;
+extern void LoadMvpMatrix(VU0_MATRIX* matrix);
+extern void LoadClipScaleFactors(VU0_VECTOR* scale);
+
 // double buffering
 static packet_t* packets[2];
 static packet_t* current;
@@ -431,11 +439,6 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));
-typedef struct Vec4   VU0_VECTOR __attribute__((aligned(16)));
-
-static VU0_MATRIX mvp;
-extern void LoadMvpMatrix(VU0_MATRIX* matrix);
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
@@ -629,14 +632,12 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	{
 		TransformTexturedQuad(v, V, &tmp, clip);
 		
-		//if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
 			dw = DrawTexturedTriangle(dw, V, v + 0, v + 1, v + 2);
 			numVerts += 3;
 		}
 		
-		//if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
-		if (NotClipped(V[3]) && NotClipped(V[4]) && NotClipped(V[5])) {
+		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
 			dw = DrawTexturedTriangle(dw, V + 3, v + 2, v + 3, v + 0);
 			numVerts += 3;
 		}
@@ -710,6 +711,7 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 		q = dma_tag + 1;
 		Platform_LogConst("Too much geometry!!!");
 	}
+	LoadClipScaleFactors(&clip_scale);
 
 	while (verticesCount)
 	{
@@ -810,7 +812,6 @@ void Gfx_OnWindowResize(void) {
 	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
 }
 
-extern void LoadClipScaleFactors(VU0_VECTOR* scale);
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	vp_hwidth  = w / 2;
 	vp_hheight = h / 2;
@@ -833,13 +834,13 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
 	//              X/W <= 2048 / vp_hwidth
 	//              X * vp_hwidth / 2048 <= W
-	VU0_VECTOR scale;
-	scale.x = vp_hwidth  / 2048.0f;
-	scale.y = vp_hheight / 2048.0f;
-	scale.z = 1.0f;
-	scale.w = 1.0f;
 	
-	LoadClipScaleFactors(&scale);
+	clip_scale.x = vp_hwidth  / 2048.0f;
+	clip_scale.y = vp_hheight / 2048.0f;
+	clip_scale.z = 1.0f;
+	clip_scale.w = 1.0f;
+	
+	LoadClipScaleFactors(&clip_scale);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
