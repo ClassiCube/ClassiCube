@@ -81,7 +81,7 @@ static void MapKeys(MPARAM mp1, MPARAM mp2) {
 	};
 	
 	if ((ulFlags & KC_CHAR) != 0 && (ulFlags & KC_KEYUP) == 0) {
-		if (WinQueryCapture(HWND_DESKTOP) != hwndClient) {
+		if (WinQueryCapture(HWND_DESKTOP) != hwndClient) { // Mouse isn't captured
 			char c;
 			if (Convert_TryCodepointToCP437(ulCharCode, &c)) {
 				Event_RaiseInt(&InputEvents.Press, c);
@@ -89,10 +89,10 @@ static void MapKeys(MPARAM mp1, MPARAM mp2) {
 			}
 		}
 		else {
-			Input_Set(ulCharCode, (ulFlags & KC_KEYUP) == 0);
+			Input_Set(ulCharCode, 0);
 		}
 	}
-	if ((ulFlags & KC_SCANCODE) != 0) {
+	if ((ulFlags & KC_SCANCODE) != 0 && ulScanCode < sizeof(aScancode)/sizeof(int)) {
 		Input_Set(aScancode[ulScanCode], (ulFlags & KC_KEYUP) == 0);
 	}
 }

@@ -1637,23 +1637,23 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	APIRET rc;
 	
 	ksWanted.usDeviceIndex      = 0;
-  ksWanted.ulType             = KAIT_PLAY;
-  ksWanted.ulBitsPerSample    = 16;
-  ksWanted.ulSamplingRate     = Audio_AdjustSampleRate(sampleRate, playbackRate);
-  ksWanted.ulDataFormat       = 0;
-  ksWanted.ulChannels         = channels;
-  ksWanted.ulNumBuffers       = 0;
-  ksWanted.ulBufferSize       = 0;
-  ksWanted.fShareable         = TRUE;
-  ksWanted.pfnCallBack        = kaiCallback;
-  ksWanted.pCallBackData      = (PVOID)ctx;
+   ksWanted.ulType             = KAIT_PLAY;
+   ksWanted.ulBitsPerSample    = 16;
+   ksWanted.ulSamplingRate     = Audio_AdjustSampleRate(sampleRate, playbackRate);
+   ksWanted.ulDataFormat       = 0;
+   ksWanted.ulChannels         = channels;
+   ksWanted.ulNumBuffers       = 0;
+   ksWanted.ulBufferSize       = 0;
+   ksWanted.fShareable         = TRUE;
+   ksWanted.pfnCallBack        = kaiCallback;
+   ksWanted.pCallBackData      = (PVOID)ctx;
 
-  rc = kaiOpen(&ksWanted, &ksObtained, &ctx->hkai);
-  if (rc != KAIE_NO_ERROR) {
-  	Logger_SimpleWarn(ERROR_BASE, "Kai: Could not open playback");
-  	ctx->hkai = 0;
-  	return rc;
-  }
+   rc = kaiOpen(&ksWanted, &ksObtained, &ctx->hkai);
+   if (rc != KAIE_NO_ERROR) {
+  	  Logger_SimpleWarn(ERROR_BASE, "Kai: Could not open playback");
+  	  ctx->hkai = 0;
+  	  return rc;
+   }
 
 	kaiSetSoundState(ctx->hkai, MCI_SET_AUDIO_ALL, true);
 	return 0;
