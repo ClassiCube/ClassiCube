@@ -1,0 +1,3 @@
+#!/bin/sh
+mkdir -p ${XDG_DATA_HOME}/ClassiCube
+cd ${XDG_DATA_HOME}/ClassiCube && exec ClassiCube $@
