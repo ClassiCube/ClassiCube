@@ -521,6 +521,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* kArgs) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
+	DisplayInfo.ShowingSoftKeyboard = true;
 
 	args[0].l = JavaMakeString(env, kArgs->text);
 	args[1].i = kArgs->type;
@@ -544,6 +545,8 @@ void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
+	DisplayInfo.ShowingSoftKeyboard = false;
+
 	JavaICall_Void(env, JAVA_closeKeyboard, NULL);
 }
 

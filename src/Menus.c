@@ -131,6 +131,14 @@ static cc_bool Menu_IsSelectable(struct Widget* w) {
 	return true;
 }
 
+static void Menu_SelectWidget(struct Screen* s, int i) {
+	struct Widget* w= s->widgets[i];
+
+	Menu_UnselectAll(s);
+	s->selectedI = i;
+	w->active    = true;
+}
+
 static void Menu_CycleSelected(struct Screen* s, int dir) {
 	struct Widget* w;
 	int index = s->selectedI + dir;
@@ -144,9 +152,7 @@ static void Menu_CycleSelected(struct Screen* s, int dir) {
 		w = s->widgets[i];
 		if (!Menu_IsSelectable(w)) continue;
 
-		Menu_UnselectAll(s);
-		s->selectedI = i;
-		w->active    = true;
+		Menu_SelectWidget(s, i);
 		return;
 	}
 }
@@ -1534,7 +1540,9 @@ void SaveLevelScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE = &SaveLevelScreen_VTABLE;
+
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+	TextInputWidget_OpenKeyboard(&s->input);
 }
 
 

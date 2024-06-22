@@ -1677,14 +1677,27 @@ static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
 	return valid;
 }
 
-static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
-	struct TextInputWidget* w = (struct TextInputWidget*)widget;
+void TextInputWidget_OpenKeyboard(struct TextInputWidget* w) {
 	struct OpenKeyboardArgs args;
 
 	OpenKeyboardArgs_Init(&args, &w->base.text, w->onscreenType);
 	args.placeholder = w->onscreenPlaceholder;
 	OnscreenKeyboard_Open(&args);
+}
 
+static int TextInputWidget_KeyDown(void* widget, int key) {
+	struct InputWidget* w = (struct InputWidget*)widget;
+
+	if (Window_Main.SoftKeyboard && !DisplayInfo.ShowingSoftKeyboard && Input_IsEnterButton(key)) { 
+		TextInputWidget_OpenKeyboard(widget); return true; 
+	}
+	return InputWidget_KeyDown(w, key);
+}
+
+static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
+	struct TextInputWidget* w = (struct TextInputWidget*)widget;
+
+	TextInputWidget_OpenKeyboard(w);
 	w->base.showCaret = true;
 	return InputWidget_PointerDown(widget, id, x, y);
 }
@@ -1692,7 +1705,7 @@ static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
 static int TextInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE TextInputWidget_VTABLE = {
 	TextInputWidget_Render,      InputWidget_Free, InputWidget_Reposition,
-	InputWidget_KeyDown,         Widget_InputUp,   Widget_MouseScroll,
+	TextInputWidget_KeyDown,     Widget_InputUp,   Widget_MouseScroll,
 	TextInputWidget_PointerDown, Widget_PointerUp, Widget_PointerMove,
 	TextInputWidget_BuildMesh,   TextInputWidget_Render2, TextInputWidget_MaxVertices
 };

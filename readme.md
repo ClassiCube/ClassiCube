@@ -156,7 +156,7 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ## Compiling - macOS
 
-```cc -fno-math-errno *.c Window_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+```cc -fno-math-errno *.c *.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
 
 Note: You may need to install Xcode before you can compile ClassiCube
 

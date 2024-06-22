@@ -10,7 +10,7 @@
 #include "Window.h"
 #include "Graphics.h"
 
-static cc_bool kb_inited, kb_showing, kb_shift, kb_needsHook;
+static cc_bool kb_inited, kb_shift, kb_needsHook;
 static struct FontDesc kb_font;
 static int kb_selected;
 static const char** kb_table;
@@ -238,7 +238,7 @@ static void VirtualKeyboard_Display2D(Rect2D* r, struct Bitmap* bmp) {
 	struct Context2D ctx;
 	struct Bitmap copy = *bmp;
 	int x, y;
-	if (!kb_showing) return;
+	if (!DisplayInfo.ShowingSoftKeyboard) return;
 
 	/* Mark entire framebuffer as needing to be redrawn */
 	r->x = 0; r->width  = bmp->width;
@@ -287,7 +287,7 @@ static void VirtualKeyboard_MakeTexture(void) {
 
 /* TODO hook into context lost etc */
 static void VirtualKeyboard_Display3D(void) {
-	if (!kb_showing) return;
+	if (!DisplayInfo.ShowingSoftKeyboard) return;
 	
 	if (!kb_vb) {
 		kb_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
@@ -324,14 +324,14 @@ static void VirtualKeyboard_Hook(void) {
 static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher) {
 	VirtualKeyboard_Close();
 	VirtualKeyboard_Init();
-	kb_showing   = true;
-	kb_needsHook = true;
+	DisplayInfo.ShowingSoftKeyboard = true;
 
-	kb_table    = kb_table_lower;
-	kb_selected = -1;
-	kb_padXAcc  = 0;
-	kb_padYAcc  = 0;
-	kb_shift    = false;
+	kb_needsHook = true;
+	kb_table     = kb_table_lower;
+	kb_selected  = -1;
+	kb_padXAcc   = 0;
+	kb_padYAcc   = 0;
+	kb_shift     = false;
 
 	kb_str.length = 0;
 	String_AppendString(&kb_str, args->text);
@@ -346,7 +346,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {
-	if (!kb_showing) return;
+	if (!DisplayInfo.ShowingSoftKeyboard) return;
 	String_Copy(&kb_str, text);
 }
 
@@ -362,6 +362,7 @@ static void VirtualKeyboard_Close(void) {
 	Window_Main.SoftKeyboardFocus = false;
 
 	KB_MarkDirty = NULL;
-	kb_showing   = false;
 	kb_needsHook = false;
+
+	DisplayInfo.ShowingSoftKeyboard = false;
 }

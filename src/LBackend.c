@@ -581,15 +581,14 @@ static Rect2D caretRect, lastCaretRect;
 
 static void LInput_OpenKeyboard(struct LInput* w) {
 	struct OpenKeyboardArgs args;
-	
-	if (w->kbShowing) return;
-	w->kbShowing = true;
 	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
 	OnscreenKeyboard_Open(&args);
 }
 
 static void LInput_OnClick(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
+	if (DisplayInfo.ShowingSoftKeyboard) return;
+
 	LInput_OpenKeyboard(w);
 }
 
@@ -700,7 +699,6 @@ void LBackend_InputTick(struct LInput* w) {
 void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
 	caretStart   = Stopwatch_Measure();
 	w->caretShow = true;
-	w->kbShowing = false;
 	LInput_MoveCaretToCursor(w, idx);
 	LBackend_MarkDirty(w);
 	
@@ -711,7 +709,6 @@ void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
 void LBackend_InputUnselect(struct LInput* w) {
 	caretStart   = 0;
 	w->caretShow = false;
-	w->kbShowing = false;
 	LBackend_MarkDirty(w);
 	OnscreenKeyboard_Close();
 }

@@ -227,6 +227,7 @@ CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, co
 CC_NOINLINE void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
 CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
+CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w);
 
 
 struct ChatInputWidget {

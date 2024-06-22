@@ -1,6 +1,8 @@
 // Silence deprecation warnings on modern iOS
 #define GLES_SILENCE_DEPRECATION
+#include "Core.h"
 
+#if defined CC_BUILD_IOS
 #include "_WindowBase.h"
 #include "Bitmap.h"
 #include "Input.h"
@@ -568,6 +570,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
         kb_controller = [[CCKBController alloc] init];
         CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
     }
+	DisplayInfo.ShowingSoftKeyboard = true;
     
     text_input = [[UITextField alloc] initWithFrame:CGRectZero];
     text_input.hidden   = YES;
@@ -594,6 +597,7 @@ void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
 void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) {
+	DisplayInfo.ShowingSoftKeyboard = false;
     [text_input resignFirstResponder];
 }
 
@@ -1822,3 +1826,4 @@ void LBackend_CloseScreen(struct LScreen* s) {
         [view removeFromSuperview];
     }
 }
+#endif

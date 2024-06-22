@@ -99,7 +99,6 @@ struct LInput {
 	cc_uint8 inputType;
 	/* Whether caret is currently visible */
 	cc_bool caretShow;
-	cc_bool kbShowing;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
 	void (*ClipboardFilter)(cc_string* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
