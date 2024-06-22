@@ -13,7 +13,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 
 GLDC_LIB	= third_party/gldc/libGLdc.a
 LDFLAGS		= -g
-LIBS		= -lm $(GLDC_LIB) -lppp -lkosfat_dbg
+LIBS		= -lm $(GLDC_LIB) -lppp -lkosfat
 
 ifeq ($(strip $(KOS_BASE)),)
 $(warning Please set KOS variables in your environment. For example:)
@@ -29,6 +29,9 @@ default: $(GLDC_LIB) $(BUILD_DIR) $(TARGET).cdi
 
 clean:
 	rm $(TARGET).cdi $(TARGET).iso $(TARGET).elf $(TARGET)-scr.bin $(TARGET).bin $(OBJS)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 
 #---------------------------------------------------------------------------------
@@ -66,9 +69,6 @@ $(TARGET).cdi: $(TARGET).iso
 $(GLDC_LIB): FORCE
 	$(MAKE) -C third_party/gldc
 FORCE: ;
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
 	
 $(BUILD_DIR)/%.o: src/%.c
 	kos-cc $(CFLAGS) $(DEPFLAGS) -c $< -o $@

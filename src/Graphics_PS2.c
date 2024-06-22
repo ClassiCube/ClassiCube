@@ -510,6 +510,12 @@ typedef struct {
 	xyz_t xyz;
 } __attribute__((packed,aligned(8))) TexturedVertex;
 
+typedef struct {
+	u32 rgba;
+	float q;
+	xyz_t xyz;
+} __attribute__((packed,aligned(8))) ColouredVertex;
+
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format  = fmt;
 	gfx_stride  = strideSizes[fmt];
@@ -551,12 +557,12 @@ static void TransformVertex(void* raw, VU0_VECTOR* dst) {
 
 	VU0_VECTOR coord; coord.x = pos->x; coord.y = pos->y; coord.z = pos->z; coord.w = 1.0f;
 	asm __volatile__ (
-		"lqc2		$vf5, 0x00(%0)	\n" // vf5 = coord
+		"lqc2		$vf8, 0x00(%0)	\n" // vf8 = coord
 		"vmulaw		$ACC, $vf4, $vf0\n" // ACC[xyzw] = mvp.row3[xyzw] * 1.0f; (vf0.w is 1)
-		"vmaddax	$ACC, $vf1, $vf5\n" // ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * coord.x
-		"vmadday	$ACC, $vf2, $vf5\n" // ACC[xyzw] = ACC[xyzw] + mvp.row2[xyzw] * coord.y
-		"vmaddz		$vf6, $vf3, $vf5\n" // vf6[xyzw] = ACC[xyzw] + mvp.row3[xyzw] * coord.z
-		"sqc2		$vf6, 0x00(%1)	\n" // dst = vf6
+		"vmaddax	$ACC, $vf1, $vf8\n" // ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * coord.x
+		"vmadday	$ACC, $vf2, $vf8\n" // ACC[xyzw] = ACC[xyzw] + mvp.row2[xyzw] * coord.y
+		"vmaddz		$vf9, $vf3, $vf8\n" // vf9[xyzw] = ACC[xyzw] + mvp.row3[xyzw] * coord.z
+		"sqc2		$vf9, 0x00(%1)	\n" // dst = vf9
 	: 
 	: "r" (&coord), "r" (dst)
 	: "memory"
@@ -564,10 +570,10 @@ static void TransformVertex(void* raw, VU0_VECTOR* dst) {
 }
 
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
-static xyz_t FinishVertex(VU0_VECTOR src, float invW) {
-	float x = vp_hwidth  * (src.x * invW);
-	float y = vp_hheight * (src.y * invW);
-	float z = src.z * invW;
+static xyz_t FinishVertex(VU0_VECTOR* src, float invW) {
+	float x = vp_hwidth  * (src->x * invW);
+	float y = vp_hheight * (src->y * invW);
+	float z = src->z * invW;
 	
 	unsigned int maxZ = 1 << (32 - 1); // TODO: half this? or << 24 instead?
 	
@@ -580,23 +586,27 @@ static xyz_t FinishVertex(VU0_VECTOR src, float invW) {
 
 static u64* DrawColouredTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
-	struct VertexColoured* v[] = { V0, V1, V2 };
+	ColouredVertex* dst = (ColouredVertex*)dw;
+	float Q;
 
 	// TODO optimise
 	// Add the "primitives" to the GIF packet
-	for (int i = 0; i < 3; i++)
-	{
-		float Q   = 1.0f / coords[i].w;
-		xyz_t xyz = FinishVertex(coords[i], Q);
-		color_t color;
-		
-		color.rgbaq = v[i]->Col;
-		color.q     = Q;
-		
-		*dw++ = color.rgbaq;
-		*dw++ = xyz.xyz;
-	}
-	return dw;
+	Q   = 1.0f / coords[0].w;
+	dst[0].rgba  = V0->Col;
+	dst[0].q     = Q;
+	dst[0].xyz   = FinishVertex(&coords[0], Q);
+
+	Q   = 1.0f / coords[1].w;
+	dst[1].rgba  = V1->Col;
+	dst[1].q     = Q;
+	dst[1].xyz   = FinishVertex(&coords[1], Q);
+
+	Q   = 1.0f / coords[2].w;
+	dst[2].rgba  = V2->Col;
+	dst[2].q     = Q;
+	dst[2].xyz   = FinishVertex(&coords[2], Q);
+
+	return dw + 6;
 }
 
 static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords, 
@@ -611,21 +621,21 @@ static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords,
 	dst[0].q     = Q;
 	dst[0].u     = V0->U * Q;
 	dst[0].v     = V0->V * Q;
-	dst[0].xyz   = FinishVertex(coords[0], Q);
+	dst[0].xyz   = FinishVertex(&coords[0], Q);
 
 	Q   = 1.0f / coords[1].w;
 	dst[1].rgba  = V1->Col;
 	dst[1].q     = Q;
 	dst[1].u     = V1->U * Q;
 	dst[1].v     = V1->V * Q;
-	dst[1].xyz   = FinishVertex(coords[1], Q);
+	dst[1].xyz   = FinishVertex(&coords[1], Q);
 
 	Q   = 1.0f / coords[2].w;
 	dst[2].rgba  = V2->Col;
 	dst[2].q     = Q;
 	dst[2].u     = V2->U * Q;
 	dst[2].v     = V2->V * Q;
-	dst[2].xyz   = FinishVertex(coords[2], Q);
+	dst[2].xyz   = FinishVertex(&coords[2], Q);
 
 	return dw + 9;
 }
@@ -725,7 +735,6 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 		q = dma_tag + 1;
 		Platform_LogConst("Too much geometry!!!");
 	}
-	LoadClipScaleFactors(&clip_scale);
 
 	while (verticesCount)
 	{
