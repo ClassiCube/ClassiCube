@@ -502,6 +502,14 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
+typedef struct {
+	u32 rgba;
+	float q;
+	float u;
+	float v;
+	xyz_t xyz;
+} __attribute__((packed,aligned(8))) TexturedVertex;
+
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format  = fmt;
 	gfx_stride  = strideSizes[fmt];
@@ -593,27 +601,33 @@ static u64* DrawColouredTriangle(u64* dw, VU0_VECTOR* coords,
 
 static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
-	struct VertexTextured* v[] = { V0, V1, V2 };
+	TexturedVertex* dst = (TexturedVertex*)dw;
+	float Q;
 
 	// TODO optimise
 	// Add the "primitives" to the GIF packet
-	for (int i = 0; i < 3; i++)
-	{
-		float Q   = 1.0f / coords[i].w;
-		xyz_t xyz = FinishVertex(coords[i], Q);
-		color_t color;
-		texel_t texel;
-		
-		color.rgbaq = v[i]->Col;
-		color.q     = Q;
-		texel.u     = v[i]->U * Q;
-		texel.v     = v[i]->V * Q;
-		
-		*dw++ = color.rgbaq;
-		*dw++ = texel.uv;
-		*dw++ = xyz.xyz;
-	}
-	return dw;
+	Q   = 1.0f / coords[0].w;
+	dst[0].rgba  = V0->Col;
+	dst[0].q     = Q;
+	dst[0].u     = V0->U * Q;
+	dst[0].v     = V0->V * Q;
+	dst[0].xyz   = FinishVertex(coords[0], Q);
+
+	Q   = 1.0f / coords[1].w;
+	dst[1].rgba  = V1->Col;
+	dst[1].q     = Q;
+	dst[1].u     = V1->U * Q;
+	dst[1].v     = V1->V * Q;
+	dst[1].xyz   = FinishVertex(coords[1], Q);
+
+	Q   = 1.0f / coords[2].w;
+	dst[2].rgba  = V2->Col;
+	dst[2].q     = Q;
+	dst[2].u     = V2->U * Q;
+	dst[2].v     = V2->V * Q;
+	dst[2].xyz   = FinishVertex(coords[2], Q);
+
+	return dw + 9;
 }
 
 extern void TransformTexturedQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);

@@ -13,7 +13,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 
 GLDC_LIB	= third_party/gldc/libGLdc.a
 LDFLAGS		= -g
-LIBS		= -lm $(GLDC_LIB) -lppp -lkosfat
+LIBS		= -lm $(GLDC_LIB) -lppp -lkosfat_dbg
 
 ifeq ($(strip $(KOS_BASE)),)
 $(warning Please set KOS variables in your environment. For example:)

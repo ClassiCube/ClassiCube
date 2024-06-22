@@ -201,6 +201,10 @@ cc_result Directory_Create(const cc_filepath* path) {
 	// Filesystem returns EINVAL when operation unsupported (e.g. CD system)
 	//  so rather than logging an error, just pretend it already exists
 	if (err == EINVAL) err = EEXIST;
+
+	// Changes are cached in memory, sync to SD card
+	// TODO maybe use fs_shutdown/fs_unmount and only sync once??
+	if (!err) fs_fat_sync("/sd");
 	return err;
 }
 
@@ -294,6 +298,10 @@ cc_result File_Close(cc_file file) {
 	if (file == vmu_write_FD) 
 		return VMUFile_Close(file);
 	
+	// Changes are cached in memory, sync to SD card
+	// TODO maybe use fs_shutdown/fs_unmount and only sync once??
+	if (!Platform_ReadonlyFilesystem) fs_fat_sync("/sd");
+
 	int res = fs_close(file);
 	return res == -1 ? errno : 0;
 }
@@ -547,7 +555,7 @@ static void InitSDCard(void) {
 
 	cc_filepath* root = FILEPATH_RAW("/sd/ClassiCube");
 	int res = Directory_Create(root);
-	Platform_Log1("ROOT DIRECTORY CREATE %i", &res);
+	Platform_Log1("ROOT DIRECTORY CREATE: %i", &res);
 }
 
 static void InitModem(void) {
