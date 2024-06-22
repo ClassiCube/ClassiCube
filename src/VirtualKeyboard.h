@@ -25,10 +25,19 @@ static void (*KB_MarkDirty)(void);
 #define KB_LAST_ROW      (KB_TOTAL_ROWS - 1)
 
 #define KB_TOTAL_CHARS (KB_CELLS_PER_ROW * 4) + 4
-#define KB_INDEX(x, y) ((y) * KB_CELLS_PER_ROW + (x))
 #define KB_TOTAL_SIZE  KB_CELLS_PER_ROW * KB_TOTAL_ROWS
 
 #define KB_TILE_SIZE     32
+
+#define KB_B_CAPS  0x10
+#define KB_B_SHIFT 0x20
+#define KB_B_SPACE 0x30
+#define KB_B_CLOSE 0x40
+#define KB_B_BACK  0x50
+#define KB_B_ENTER 0x60
+
+#define KB_GetBehaviour(i) (kb_table_behaviour[i] & 0xF0)
+#define KB_GetCellWidth(i) (kb_table_behaviour[i] & 0x0F)
 
 static const char* kb_table_lower[] =
 {
@@ -43,8 +52,16 @@ static const char* kb_table_upper[] =
 	"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "_", "+", "Backspace",
 	"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "&   ",
 	"A", "S", "D", "F", "G", "H", "J", "K", "L", "?", ":", "\"", "Enter",
-	"Z", "X", "C", "V", "B", "N", "M", "<", ">","*", "%", "#", "/    ",
+	"Z", "X", "C", "V", "B", "N", "M", "<", ">", "*", "%", "#", "/    ",
 	"Caps", "Shift", "Space", "Close"
+};
+static const cc_uint8 kb_table_behaviour[] =
+{
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, KB_B_BACK | 4,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, KB_B_ENTER | 4,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
+	KB_B_CAPS | 4, KB_B_SHIFT | 4, KB_B_SPACE | 4, KB_B_CLOSE | 4
 };
 
 extern void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int borderX, int borderY,
@@ -102,7 +119,7 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 
 			str = String_FromReadonly(kb_table[i]);
 			DrawTextArgs_Make(&args, &str, &kb_font, false);
-			w = KB_TILE_SIZE * (str.length > 1 ? 4 : 1);
+			w = KB_TILE_SIZE * KB_GetCellWidth(i);
 			h = KB_TILE_SIZE;
 
 			Gradient_Noise(ctx, i == selected ? KB_SELECTED_COLOR : KB_NORMAL_COLOR, 4, x, y, w, h);
@@ -163,29 +180,31 @@ static void VirtualKeyboard_Backspace(void) {
 static void VirtualKeyboard_ClickSelected(void) {
 	int selected = VirtualKeyboard_GetSelected();
 	if (selected < 0) return;
+	int behaviour = KB_GetBehaviour(selected);
+	int B = kb_table_behaviour[selected];
+	Platform_Log2("%i, %i", &B, &behaviour);
 
-	/* TODO kinda hacky, redo this */
-	switch (selected) {
-	case KB_INDEX(KB_LAST_CELL, 0):
+	switch (behaviour) {
+	case KB_B_BACK:
 		VirtualKeyboard_Backspace();
 		break;
-	case KB_INDEX(KB_LAST_CELL, 2):
-		OnscreenKeyboard_Close();
+	case KB_B_ENTER:
 		Input_SetPressed(CCKEY_ENTER);
 		Input_SetReleased(CCKEY_ENTER);
+		OnscreenKeyboard_Close();
 		break;
 
-	case KB_INDEX(0, KB_LAST_ROW):
+	case KB_B_CAPS:
 		VirtualKeyboard_ToggleTable();
 		break;
-	case KB_INDEX(1, KB_LAST_ROW):
+	case KB_B_SHIFT:
 		VirtualKeyboard_ToggleTable();
 		kb_shift = true;
 		break;
-	case KB_INDEX(2, KB_LAST_ROW):
+	case KB_B_SPACE:
 		VirtualKeyboard_AppendChar(' ');
 		break;
-	case KB_INDEX(3, KB_LAST_ROW):
+	case KB_B_CLOSE:
 		OnscreenKeyboard_Close();
 		break;
 
