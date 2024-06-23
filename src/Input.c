@@ -310,13 +310,13 @@ void Input_Clear(void) {
 	ClearTouches();
 }
 
-int Input_CalcDelta(int key, int horDelta, int verDelta) {
-	if (Input_IsLeftButton(key)  || key == CCKEY_KP4) return -horDelta;
-	if (Input_IsRightButton(key) || key == CCKEY_KP6) return +horDelta;
-	if (Input_IsUpButton(key)    || key == CCKEY_KP8) return -verDelta;
-	if (Input_IsDownButton(key)  || key == CCKEY_KP2) return +verDelta;
-	
-	return 0;
+void Input_CalcDelta(int key, int* horDelta, int* verDelta) {
+	*horDelta = 0; *verDelta = 0;
+
+	if (Input_IsLeftButton(key)  || key == CCKEY_KP4) *horDelta = -1;
+	if (Input_IsRightButton(key) || key == CCKEY_KP6) *horDelta = +1;
+	if (Input_IsUpButton(key)    || key == CCKEY_KP8) *verDelta = -1;
+	if (Input_IsDownButton(key)  || key == CCKEY_KP2) *verDelta = +1;
 }
 
 

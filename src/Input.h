@@ -114,7 +114,7 @@ void Input_Clear(void);
 #else
 	#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
-int Input_CalcDelta(int btn, int horDelta, int verDelta);
+void Input_CalcDelta(int btn, int* horDelta, int* verDelta);
 
 
 #ifdef CC_BUILD_TOUCH

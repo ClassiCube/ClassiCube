@@ -372,12 +372,13 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 }
 
 static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	int delta = Input_CalcDelta(key, 1, 10);
-	if (key == CCWHEEL_UP)   delta = +1;
-	if (key == CCWHEEL_DOWN) delta = -1;
+	int deltaX, deltaY;
+	Input_CalcDelta(key, &deltaX, &deltaY);
+	if (key == CCWHEEL_UP)   deltaX = +1;
+	if (key == CCWHEEL_DOWN) deltaX = -1;
 	
-	if (delta) {
-		ColoursScreen_AdjustSelected(s, delta);
+	if (deltaX || deltaY) {
+		ColoursScreen_AdjustSelected(s, deltaY * 10 + deltaX);
 	} else {
 		LScreen_KeyDown(s, key, was);
 	}

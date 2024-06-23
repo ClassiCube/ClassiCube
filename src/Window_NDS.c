@@ -126,7 +126,6 @@ static void consoleInit(void) {
 *------------------------------------------------------General data-------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool launcherMode;
-cc_bool keyboardOpen;
 static int bg_id;
 static u16* bg_ptr;
 
@@ -211,7 +210,7 @@ static void ProcessTouchInput(int mods) {
 void Window_ProcessEvents(float delta) {
 	scanKeys();	
 	
-	if (keyboardOpen) {
+	if (DisplayInfo.ShowingSoftKeyboard) {
 		keyboardUpdate();
 	} else {
 		ProcessTouchInput(keysDown() | keysHeld());
@@ -317,7 +316,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     kbd->OnKeyPressed = OnKeyPressed;
     String_InitArray(kbText, kbBuffer);
 	String_AppendString(&kbText, args->text);
-    keyboardOpen = true;
+    DisplayInfo.ShowingSoftKeyboard = true;
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) { }
@@ -327,8 +326,8 @@ void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) {
     keyboardHide();
-	if (!keyboardOpen) return;
-    keyboardOpen = false;
+	if (!DisplayInfo.ShowingSoftKeyboard) return;
+    DisplayInfo.ShowingSoftKeyboard = false;
 
     videoBgEnableSub(0); // show console
 }

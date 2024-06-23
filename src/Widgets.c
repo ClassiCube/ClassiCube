@@ -964,12 +964,12 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 
 static int TableWidget_KeyDown(void* widget, int key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	int delta;
+	int deltaX, deltaY;
 	if (w->selectedIndex == -1) return false;
 
-	delta = Input_CalcDelta(key, 1, w->blocksPerRow);
-	if (delta) {
-		TableWidget_ScrollRelative(w, delta);
+	Input_CalcDelta(key, &deltaX, &deltaY);
+	if (deltaX || deltaY) {
+		TableWidget_ScrollRelative(w, deltaX + deltaY * w->blocksPerRow);
 		return true;
 	}
 	return false;
