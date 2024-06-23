@@ -15,6 +15,8 @@
 .type   LoadClipScaleFactors,%function
 .global TransformTexturedQuad
 .type   TransformTexturedQuad,%function
+.global TransformColouredQuad
+.type   TransformColouredQuad,%function
 
 # Loads matrix into VU0 registers
 #	$a0 = addresss of mvp
@@ -36,6 +38,7 @@ LoadClipScaleFactors:
 
 
 .macro TransformVertex1
+	# TRANSFORM VERTEX 1
 	lqc2	$vf10, 0x00($a2)   # IN = tmp
 	vmulaw	$ACC,  $vf4,  $vf0 # ACC[xyzw] = mvp.row3[xyzw] * 1.0f; (vf0.w is 1)
 	vmaddax	$ACC,  $vf1, $vf10 # ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * IN.x
@@ -47,6 +50,11 @@ LoadClipScaleFactors:
 .endm
 
 .macro TransformVertex2
+	# STORE CLIP FLAGS 1 RESULT
+	cfc2	$t0, $18	  # t0 = VP0_REGS[CLIP_FLAGS]
+	sw		$t0,0x00($a3) # clip_flags[0] = t0
+
+	# TRANSFORM VERTEX 2
 	lqc2	$vf12, 0x00($a2)   # IN = tmp
 	vmulaw	$ACC,  $vf4,  $vf0 # ACC[xyzw] = mvp.row3[xyzw] * 1.0f; (vf0.w is 1)
 	vmaddax	$ACC,  $vf1, $vf12 # ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * IN.x
@@ -58,6 +66,11 @@ LoadClipScaleFactors:
 .endm
 
 .macro TransformVertex3
+	# STORE CLIP FLAGS 2 RESULT
+	cfc2	$t0, $18	  # t0 = VP0_REGS[CLIP_FLAGS]
+	sw		$t0,0x04($a3) # clip_flags[1] = t0
+
+	# TRANSFORM VERTEX 3
 	lqc2	$vf14, 0x00($a2)   # IN = tmp
 	vmulaw	$ACC,  $vf4,  $vf0 # ACC[xyzw] = mvp.row3[xyzw] * 1.0f; (vf0.w is 1)
 	vmaddax	$ACC,  $vf1, $vf14 # ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * IN.x
@@ -69,6 +82,11 @@ LoadClipScaleFactors:
 .endm
 
 .macro TransformVertex4
+	# STORE CLIP FLAGS 3 RESULT
+	cfc2	$t0, $18	  # t0 = VP0_REGS[CLIP_FLAGS]
+	sw		$t0,0x08($a3) # clip_flags[2] = t0
+
+	# TRANSFORM VERTEX 4
 	lqc2	$vf16, 0x00($a2)   # IN = tmp
 	vmulaw	$ACC,  $vf4,  $vf0 # ACC[xyzw] = mvp.row3[xyzw] * 1.0f; (vf0.w is 1)
 	vmaddax	$ACC,  $vf1, $vf16 # ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * IN.x
@@ -77,6 +95,25 @@ LoadClipScaleFactors:
 	vmul	$vf16, $vf17, $vf5 # TMP = TRANSFORMED(V3) * CLIP_PLANES_ADJUST
 	vclipw.xyz $vf16, $vf16    # CLIP_FLAGS.append(CLIP(TMP.xyz, TMP.w))
 .endm
+
+.macro TransformFinish
+	# Vertex output
+	# dst[0] = V0 (done by TransformVertex1)
+	# dst[1] = V1 (done by TransformVertex2)
+	# dst[2] = V2 (done by TransformVertex3)
+	# dst[3] = V2
+	# dst[4] = V3
+	# dst[5] = V0
+	sqc2	$vf15, 0x30($a1)   # dst[3] = TRANSFORMED(V2)
+	sqc2	$vf17, 0x40($a1)   # dst[4] = TRANSFORMED(V3)
+	sqc2	$vf11, 0x50($a1)   # dst[5] = TRANSFORMED(V0)
+	vnop					   # adjust for delay
+
+	# STORE CLIP FLAGS 4 RESULT
+	cfc2	$t0, $18	  	   # t0 = VP0_REGS[CLIP_FLAGS]
+	sw		$t0,0x0C($a3)      # clip_flags[3] = t0
+.endm
+
 
 # Transforms 4 vertices with size of 24 bytes
 #	$a0 = addresss of src  vertices
@@ -93,7 +130,6 @@ TransformTexturedQuad:
 	sd		$t0,0x00($a2) # tmp.x,y = t0
 	lw		$t0,0x08($a0) # t0 = src[0].z
 	sw		$t0,0x08($a2) # tmp.z = t0
-	# TRANSFORM VERTEX 1
 	TransformVertex1
 
 	# LOAD VERTEX 2
@@ -101,10 +137,6 @@ TransformTexturedQuad:
 	sd		$t0,0x00($a2) # tmp.x,y = t0
 	lw		$t0,0x20($a0) # t0 = src[1].z
 	sw		$t0,0x08($a2) # tmp.z = t0
-	# STORE CLIP FLAGS 1 RESULT
-	cfc2	$t0, $18	  # t0 = VP0_REGS[CLIP_FLAGS]
-	sw		$t0,0x00($a3) # clip_flags[0] = t0
-	# TRANSFORM VERTEX 2
 	TransformVertex2
 
 	# LOAD VERTEX 3
@@ -112,10 +144,6 @@ TransformTexturedQuad:
 	sd		$t0,0x00($a2) # tmp.x,y = t0
 	lw		$t0,0x38($a0) # t0 = src[2].z
 	sw		$t0,0x08($a2) # tmp.z = t0
-	# STORE CLIP FLAGS 2 RESULT
-	cfc2	$t0, $18	  # t0 = VP0_REGS[CLIP_FLAGS]
-	sw		$t0,0x04($a3) # clip_flags[1] = t0
-	# TRANSFORM VERTEX 3
 	TransformVertex3
 
 	# LOAD VERTEX 4
@@ -123,31 +151,53 @@ TransformTexturedQuad:
 	sd		$t0,0x00($a2) # tmp.x,y = t0
 	lw		$t0,0x50($a0) # t0 = src[3].z
 	sw		$t0,0x08($a2) # tmp.z = t0
-	# STORE CLIP FLAGS 3 RESULT
-	cfc2	$t0, $18	  # t0 = VP0_REGS[CLIP_FLAGS]
-	sw		$t0,0x08($a3) # clip_flags[2] = t0
-	# TRANSFORM VERTEX 4
 	TransformVertex4
 
-	# Desired output
-	# dst[0] = V0
-	# dst[1] = V1
-	# dst[2] = V2
-	# dst[3] = V2
-	# dst[4] = V3
-	# dst[5] = V0
-	sqc2	$vf15, 0x30($a1)   # dst[3] = TRANSFORMED(V2)
-	sqc2	$vf17, 0x40($a1)   # dst[4] = TRANSFORMED(V3)
-	sqc2	$vf11, 0x50($a1)   # dst[5] = TRANSFORMED(V0)
-	vnop					   # adjust for delay
-	# STORE CLIP FLAGS 4 RESULT
-	cfc2	$t0, $18	  	   # t0 = VP0_REGS[CLIP_FLAGS]
-	sw		$t0,0x0C($a3)      # clip_flags[3] = t0
-
+	TransformFinish
 	jr		$ra
 	nop
 
-.align 4
+# Transforms 4 vertices with size of 16 bytes
+#	$a0 = addresss of src  vertices
+#	$a1 = addresss of dst  vertices
+#   $a2 = address of  tmp  vertex
+#   $a3 = address of clip flags
+TransformColouredQuad:
+	# LOAD 1.0 into W
+	lw		$t0,ONE_VALUE # t0 = 1.0f
+	sw		$t0,0x0C($a2) # tmp.w = f5
+
+	# LOAD VERTEX 1
+	ld		$t0,0x00($a0) # t0 = src[0].x,y
+	sd		$t0,0x00($a2) # tmp.x,y = t0
+	lw		$t0,0x08($a0) # t0 = src[0].z
+	sw		$t0,0x08($a2) # tmp.z = t0
+	TransformVertex1
+
+	# LOAD VERTEX 2
+	ld		$t0,0x10($a0) # t0 = src[1].x,y
+	sd		$t0,0x00($a2) # tmp.x,y = t0
+	lw		$t0,0x18($a0) # t0 = src[1].z
+	sw		$t0,0x08($a2) # tmp.z = t0
+	TransformVertex2
+
+	# LOAD VERTEX 3
+	ld		$t0,0x20($a0) # t0 = src[2].x,y
+	sd		$t0,0x00($a2) # tmp.x,y = t0
+	lw		$t0,0x28($a0) # t0 = src[2].z
+	sw		$t0,0x08($a2) # tmp.z = t0
+	TransformVertex3
+
+	# LOAD VERTEX 4
+	ld		$t0,0x30($a0) # t0 = src[3].x,y
+	sd		$t0,0x00($a2) # tmp.x,y = t0
+	lw		$t0,0x38($a0) # t0 = src[3].z
+	sw		$t0,0x08($a2) # tmp.z = t0
+	TransformVertex4
+
+	TransformFinish
+	jr		$ra
+	nop
 
 .global ONE_VALUE
 ONE_VALUE:  .float 1.0

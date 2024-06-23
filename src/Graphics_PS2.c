@@ -521,53 +521,6 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	formatDirty = true;
 }
 
-static cc_bool NotClipped(VU0_VECTOR pos) {
-	// The code below clips to the viewport clip planes
-	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
-	//  However the guard band itself ranges from 0 to 4096
-	// To reduce need to clip, clip against guard band on X/Y axes instead
-	/*return
-		xAdj  >= -pos.w && xAdj  <= pos.w &&
-		yAdj  >= -pos.w && yAdj  <= pos.w &&
-		pos.z >= -pos.w && pos.z <= pos.w;*/	
-		
-	// Rescale clip planes to guard band extent:
-	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
-	//              X/W <= 1
-	//              X   <= W
-	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
-	//              X/W <= 2048 / vp_hwidth
-	//              X * vp_hwidth / 2048 <= W
-	float xAdj = pos.x * (vp_hwidth/2048);
-	float yAdj = pos.y * (vp_hheight/2048);
-	
-	// X/W * vp_hwidth <= 2048
-	// 
-		
-	// Clip X/Y to INSIDE the guard band regions
-	return
-		xAdj > -pos.w && xAdj < pos.w &&
-		yAdj > -pos.w && yAdj < pos.w &&
-		pos.z >= -pos.w && pos.z <= pos.w;
-}
-
-static void TransformVertex(void* raw, VU0_VECTOR* dst) {
-	Vec3* pos = raw;
-
-	VU0_VECTOR coord; coord.x = pos->x; coord.y = pos->y; coord.z = pos->z; coord.w = 1.0f;
-	asm __volatile__ (
-		"lqc2		$vf8, 0x00(%0)	\n" // vf8 = coord
-		"vmulaw		$ACC, $vf4, $vf0\n" // ACC[xyzw] = mvp.row3[xyzw] * 1.0f; (vf0.w is 1)
-		"vmaddax	$ACC, $vf1, $vf8\n" // ACC[xyzw] = ACC[xyzw] + mvp.row0[xyzw] * coord.x
-		"vmadday	$ACC, $vf2, $vf8\n" // ACC[xyzw] = ACC[xyzw] + mvp.row2[xyzw] * coord.y
-		"vmaddz		$vf9, $vf3, $vf8\n" // vf9[xyzw] = ACC[xyzw] + mvp.row3[xyzw] * coord.z
-		"sqc2		$vf9, 0x00(%1)	\n" // dst = vf9
-	: 
-	: "r" (&coord), "r" (dst)
-	: "memory"
-	);
-}
-
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
 static xyz_t FinishVertex(VU0_VECTOR* src, float invW) {
 	float x = vp_hwidth  * (src->x * invW);
@@ -640,6 +593,7 @@ static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords,
 }
 
 extern void TransformTexturedQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
+extern void TransformColouredQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
 
 static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
@@ -685,29 +639,20 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 	u64* dw = (u64*)q;
 
 	unsigned numVerts = 0;
-	VU0_VECTOR V[4];
+	VU0_VECTOR V[6], tmp;
+	int clip[4];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		TransformVertex(v + 0, &V[0]);
-		TransformVertex(v + 1, &V[1]);
-		TransformVertex(v + 2, &V[2]);
-		TransformVertex(v + 3, &V[3]);
+		TransformColouredQuad(v, V, &tmp, clip);
 		
-		// V0, V1, V2
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
 			dw = DrawColouredTriangle(dw, V, v + 0, v + 1, v + 2);
 			numVerts += 3;
 		}
-
-		VU0_VECTOR v0 = V[0];
-		V[0] = V[2];
-		V[1] = V[3];
-		V[2] = v0;
 		
-		// V2, V3, V0
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
-			dw = DrawColouredTriangle(dw, V, v + 2, v + 3, v + 0);
+		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
+			dw = DrawColouredTriangle(dw, V + 3, v + 2, v + 3, v + 0);
 			numVerts += 3;
 		}
 	}

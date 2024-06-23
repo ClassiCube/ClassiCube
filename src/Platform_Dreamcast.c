@@ -541,6 +541,7 @@ static void InitSDCard(void) {
 	if (sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
 		Platform_LogConst("Unable to find first partition on SD card"); return;
 	}
+	Platform_Log1("Found SD card (partitioned using: %b)", &partition_type);
 	
 	if (fs_fat_init()) {
 		Platform_LogConst("Failed to init FAT filesystem"); return;
