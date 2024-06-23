@@ -546,9 +546,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) {
@@ -578,8 +577,6 @@ void Gfx_EndFrame(void) {
 	C3D_FrameEnd(0);
 	//gfxFlushBuffers();
 	//gfxSwapBuffers();
-
-	if (gfx_minFrameMs) LimitFPS();
 		
 	GPUBuffers_DeleteUnreferenced();
 	GPUTextures_DeleteUnreferenced();

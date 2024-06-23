@@ -242,9 +242,9 @@ cc_bool Gfx_WarnIfNecessary(void);
 void Gfx_BeginFrame(void);
 /* Finishes rendering a frame, and swaps it with the back buffer */
 void Gfx_EndFrame(void);
-/* Sets whether to synchronise with monitor refresh to avoid tearing, and maximum frame rate */
+/* Sets whether to synchronise with monitor refresh to avoid tearing */
 /* NOTE: VSync setting may be unsupported or just ignored */
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMillis);
+void Gfx_SetVSync(cc_bool vsync);
 /* Gets information about the user's GPU and current backend state */
 /* Backend state may include depth buffer bits, free memory, etc */
 /* NOTE: Each line is separated by \n */

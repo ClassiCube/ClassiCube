@@ -60,20 +60,6 @@ static void SetupContexts(int w, int h, int r, int g, int b) {
 	OnBufferUpdated();
 }
 
-static void FlipBuffers(void) {
-	DrawSync(0);
-	VSync(0);
-
-	RenderBuffer* draw_buffer = &buffers[active_buffer];
-	RenderBuffer* disp_buffer = &buffers[active_buffer ^ 1];
-
-	PutDispEnv(&disp_buffer->disp_env);
-	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
-
-	active_buffer ^= 1;
-	OnBufferUpdated();
-}
-
 static void* new_primitive(int size) {
 	RenderBuffer* buffer = &buffers[active_buffer];
 	uint8_t* prim        = next_packet;
@@ -844,13 +830,21 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_EndFrame(void) {
-	FlipBuffers();
-	if (gfx_minFrameMs) LimitFPS();
+	DrawSync(0);
+	VSync(0);
+
+	RenderBuffer* draw_buffer = &buffers[active_buffer];
+	RenderBuffer* disp_buffer = &buffers[active_buffer ^ 1];
+
+	PutDispEnv(&disp_buffer->disp_env);
+	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
+
+	active_buffer ^= 1;
+	OnBufferUpdated();
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_OnWindowResize(void) {

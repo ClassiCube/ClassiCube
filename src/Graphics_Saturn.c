@@ -581,13 +581,10 @@ void Gfx_EndFrame(void) {
 	vdp1_sync();
 	vdp2_sync();
 	vdp2_sync_wait();
-
-	if (gfx_minFrameMs) LimitFPS();
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_OnWindowResize(void) {

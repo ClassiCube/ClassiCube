@@ -1388,7 +1388,7 @@ cc_bool GLContext_SwapBuffers(void) {
 	return true;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	int res = 0;
 	if (swapIntervalMESA) {
 		res = swapIntervalMESA(vsync);

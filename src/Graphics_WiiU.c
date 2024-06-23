@@ -399,10 +399,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
-	
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 	// TODO GX2SetSwapInterval(1);
 }
 
@@ -452,8 +450,6 @@ void Gfx_EndFrame(void) {
 	GX2DrawDone();
 	GX2SetTVEnable(TRUE);
 	GX2SetDRCEnable(TRUE);
-
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }

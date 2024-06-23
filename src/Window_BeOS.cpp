@@ -736,7 +736,7 @@ cc_bool GLContext_SwapBuffers(void) {
 	return true;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	win_vsync = vsync;
 }
 void GLContext_GetApiInfo(cc_string* info) { }

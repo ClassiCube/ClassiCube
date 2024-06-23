@@ -17,9 +17,6 @@ static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static void GL_UpdateVsync(void) {
-	//GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
-}
 static surface_t zbuffer;
 
 void Gfx_Create(void) {
@@ -40,7 +37,6 @@ void Gfx_Create(void) {
 
 	Gfx.SupportsNonPowTwoTextures = true;
 	Gfx_RestoreState();
-	GL_UpdateVsync();
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -71,10 +67,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
-	if (Gfx.Created) GL_UpdateVsync();
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync; // TODO update vsync
 }
 
 void Gfx_OnWindowResize(void) { }
@@ -115,8 +109,6 @@ void Gfx_EndFrame(void) {
 	Platform_LogConst("GFX ctx end");
 	gl_context_end();
     rdpq_detach_show();
-    
-	if (gfx_minFrameMs) LimitFPS();
 //Platform_LogConst("GFX END");
 }
 

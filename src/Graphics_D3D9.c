@@ -818,8 +818,7 @@ static void UpdateSwapchain(const char* reason) {
 	Gfx_LoseContext(reason);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
+void Gfx_SetVSync(cc_bool vsync) {
 	if (gfx_vsync == vsync) return;
 
 	gfx_vsync = vsync;
@@ -848,7 +847,6 @@ void Gfx_EndFrame(void) {
 		/* TODO: Make sure this actually works on all graphics cards. */
 		Gfx_LoseContext(" (Direct3D9 device lost)");
 	}
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }

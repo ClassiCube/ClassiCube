@@ -789,11 +789,15 @@ void GLContext_Free(void) {
 void* GLContext_GetAddress(const char* function) { return NULL; }
 cc_bool GLContext_SwapBuffers(void) { return true; /* Browser implicitly does this */ }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void Window_SetMinFrameTime(float timeMS) {
+	emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, (int)timeMS);
+}
+
+void GLContext_SetVSync(cc_bool vsync) {
 	if (vsync) {
 		emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
 	} else {
-		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, (int)minFrameMs);
+		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 1000 / 60);
 	}
 }
 

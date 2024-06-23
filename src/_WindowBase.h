@@ -208,7 +208,7 @@ cc_bool GLContext_SwapBuffers(void) {
 	return false;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	eglSwapInterval(ctx_display, vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }

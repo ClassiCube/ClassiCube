@@ -2126,8 +2126,7 @@ static void DisconnectScreen_Init(void* screen) {
 	ButtonWidget_Add(s, &s->quit,      300, DisconnectScreen_OnQuit);
 	if (!s->canReconnect) s->reconnect.flags = WIDGET_FLAG_DISABLED;
 
-	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
-	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
+	Game_SetMinFrameTime(1000 / 5.0f);
 
 	s->initTime     = Game.Time;
 	s->lastSecsLeft = DISCONNECT_DELAY_SECS;

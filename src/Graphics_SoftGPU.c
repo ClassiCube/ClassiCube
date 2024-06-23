@@ -921,8 +921,7 @@ void Gfx_EndFrame(void) {
 	Window_DrawFramebuffer(r, &fb_bmp);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
+void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
