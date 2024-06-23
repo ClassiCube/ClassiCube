@@ -32,6 +32,7 @@ struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 framebuffer_t fb_colors[2];
 zbuffer_t     fb_depth;
+static int display_mode;
 
 void Window_PreInit(void) {
 	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
@@ -39,8 +40,10 @@ void Window_PreInit(void) {
 }
 
 void Window_Init(void) {
+	display_mode = graph_get_region();
+
 	DisplayInfo.Width  = 640;
-	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
+	DisplayInfo.Height = display_mode == GRAPH_MODE_PAL ? 512 : 448;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
@@ -73,7 +76,7 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-static void ResetGfxState(void) {
+static void ResetDisplay(void) {
 	graph_shutdown();
 	graph_vram_clear();
 
@@ -94,17 +97,32 @@ static void ResetGfxState(void) {
 	fb_depth.mask    = 0;
 	fb_depth.zsm     = GS_ZBUF_32;
 	fb_depth.address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
+}
 
-	graph_initialize(fb_colors[1].address, fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm, 0, 0);
+static void InitDisplay(framebuffer_t* fb) {
+	int interlaced = display_mode == GRAPH_MODE_NTSC || display_mode == GRAPH_MODE_PAL || display_mode == GRAPH_MODE_HDTV_1080I;
+	int mode       = interlaced ? GRAPH_MODE_INTERLACED : GRAPH_MODE_NONINTERLACED;
+	int display    = interlaced ? GRAPH_MODE_FIELD      : GRAPH_MODE_FRAME;
+
+	graph_set_mode(mode, display_mode, display, GRAPH_ENABLE);
+	graph_set_screen(0, 0, fb->width, fb->height);
+
+	graph_set_bgcolor(50, 50, 50);
+	graph_set_framebuffer_filtered(fb->address, fb->width, fb->psm, 0, 0);
+	graph_enable_output();
 }
 
 void Window_Create2D(int width, int height) {
-	ResetGfxState();
+	ResetDisplay();
+
+	InitDisplay(&fb_colors[0]);
 	launcherMode = true;
 }
 
 void Window_Create3D(int width, int height) { 
-	ResetGfxState();
+	ResetDisplay();
+
+	InitDisplay(&fb_colors[1]);
 	launcherMode = false; 
 }
 
@@ -244,9 +262,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	packet_t* packet = packet_init(100, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
-	q = draw_setup_environment(q, 0, &fb_colors[1], &fb_depth);
+	q = draw_setup_environment(q, 0, &fb_colors[0], &fb_depth);
 	q = draw_clear(q, 0, 0, 0,
-					fb_colors[1].width, fb_colors[1].height, 170, 170, 170);
+					fb_colors[0].width, fb_colors[0].height, 170, 170, 170);
 	q = draw_finish(q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
@@ -263,7 +281,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	qword_t* q = packet->data;
 
 	q = draw_texture_transfer(q, bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
-								 fb_colors[1].address, fb_colors[1].width);
+								 fb_colors[0].address, fb_colors[0].width);
 	q = draw_texture_flush(q);
 
 	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);

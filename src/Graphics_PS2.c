@@ -118,9 +118,8 @@ static void InitDMABuffers(void) {
 	packets[1] = packet_init(50000, PACKET_NORMAL);
 }
 
-static void FlipContext(void) {
-	context ^= 1;
-	current  = packets[context];
+static void UpdateContext(void) {
+	current = packets[context];
 	
 	dma_tag = current->data;
 	// increment past the dmatag itself
@@ -137,8 +136,8 @@ void Gfx_Create(void) {
 	InitDMABuffers();
 	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
 	
-	context = 1;
-	FlipContext();
+	context = 0;
+	UpdateContext();
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -821,7 +820,8 @@ void Gfx_EndFrame(void) {
 	if (gfx_vsync) graph_wait_vsync();
 	if (gfx_minFrameMs) LimitFPS();
 	
-	FlipContext();
+	context ^= 1;
+	UpdateContext();
 	Platform_LogConst("--- EF4 ---");
 }
 
