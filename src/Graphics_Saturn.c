@@ -28,6 +28,7 @@ static int cmdts_count;
 static vdp1_vram_partitions_t _vdp1_vram_partitions;
 static void* tex_vram_addr;
 static void* tex_vram_cur;
+static cc_uint32* gourad_base;
 
 static vdp1_cmdt_t* NextPrimitive(void) {
 	if (cmdts_count >= CMDS_COUNT) Logger_Abort("Too many VDP1 commands");
@@ -35,10 +36,12 @@ static vdp1_cmdt_t* NextPrimitive(void) {
 }
 
 static const vdp1_cmdt_draw_mode_t color_draw_mode = {
-	.raw = 0x0000
+	.cc_mode = VDP1_CMDT_CC_REPLACE,
+        .color_mode = VDP1_CMDT_CM_RGB_32768
 };
 static const vdp1_cmdt_draw_mode_t texture_draw_mode = {
-    .cc_mode = PRIMITIVE_DRAW_MODE_GOURAUD_SHADING
+	.cc_mode = VDP1_CMDT_CC_GOURAUD,
+	.color_mode = VDP1_CMDT_CM_RGB_32768
 };
 
 static void UpdateVDP1Env(void) {
@@ -98,6 +101,7 @@ void Gfx_Create(void) {
 
 		tex_vram_addr = _vdp1_vram_partitions.texture_base;
 		tex_vram_cur  = _vdp1_vram_partitions.texture_base;
+		gourad_base   = _vdp1_vram_partitions.gouraud_base;
 
 		UpdateVDP1Env();
 		CalcGouraudColours();
@@ -119,7 +123,9 @@ void Gfx_Free(void) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 #define BGRA8_to_SATURN(src) \
-	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
+((src[1] & 0xF8) >> 3) | ((src[2] & 0xF8) << 2) | ((src[3] & 0xF8) << 7) | 0x8000
+//	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
+
 
 typedef struct CCTexture {
 	int width, height;
@@ -133,7 +139,6 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
 	if (!tmp) return NULL;
 
-	cc_uintptr addr = tex_vram_addr;
 	tex->addr   = tex_vram_addr;
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
@@ -149,7 +154,6 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 		{
 			cc_uint8* color = (cc_uint8*)&src[x];
 			dst[x] = BGRA8_to_SATURN(color);
-			dst[x] = 0xFEDD;
 		}
 	}
 
@@ -494,12 +498,15 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
 		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
 		vdp1_cmdt_vtx_set(cmd, 		 points);*/
+		int gIndex = ((R >> 5) << 7) | ((G >> 4) << 3) | (B >> 3);
+
 
 		cmd = NextPrimitive();
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, 8, 8);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
 		vdp1_cmdt_draw_mode_set(cmd, texture_draw_mode);
+		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[gIndex]);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
 	}
 }
