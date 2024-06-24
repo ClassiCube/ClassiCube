@@ -107,20 +107,22 @@ static int MapNativeKey(WPARAM vk_key, LPARAM meta) {
 	return key;
 }
 
-static cc_bool RefreshWindowBounds(void) {
+static cc_bool RefreshWindowDimensions(void) {
 	RECT rect;
-	POINT topLeft = { 0, 0 };
 	int width = Window_Main.Width, height = Window_Main.Height;
 
 	GetClientRect(win_handle, &rect);
 	Window_Main.Width  = Rect_Width(rect);
 	Window_Main.Height = Rect_Height(rect);
 
+	return width != Window_Main.Width || height != Window_Main.Height;
+}
+
+static void RefreshWindowPosition(void) {
+	POINT topLeft = { 0, 0 };
 	/* GetClientRect always returns 0,0 for left,top (see MSDN) */
 	ClientToScreen(win_handle, &topLeft);
 	windowX = topLeft.x; windowY = topLeft.y;
-
-	return width != Window_Main.Width || height != Window_Main.Height;
 }
 
 static void GrabCursor(void) {
@@ -151,7 +153,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_SIZE:
 		GrabCursor();
-		sized = RefreshWindowBounds();
+		sized = RefreshWindowDimensions();
 
 		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
 		Event_RaiseVoid(&WindowEvents.StateChanged);
@@ -159,7 +161,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	
 	case WM_MOVE:
 		GrabCursor();
-		RefreshWindowBounds();
+		RefreshWindowPosition();
 		break;
 
 	case WM_CHAR:
@@ -386,7 +388,8 @@ static void DoCreateWindow(int width, int height) {
 
 	atom = DoRegisterClass();
 	CreateWindowHandle(atom, width, height);
-	RefreshWindowBounds();
+	RefreshWindowDimensions();
+	RefreshWindowPosition();
 
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
@@ -501,7 +504,7 @@ static void ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 	suppress_resize = false;
 
 	/* call Resized event only once */
-	RefreshWindowBounds();
+	RefreshWindowDimensions();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
