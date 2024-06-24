@@ -52,7 +52,6 @@ static HINSTANCE win_instance;
 static HWND win_handle;
 static HDC win_DC;
 static cc_bool suppress_resize;
-static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
 static cc_bool is_ansiWindow, grabCursor;
 static int windowX, windowY;
 
@@ -108,13 +107,10 @@ static int MapNativeKey(WPARAM vk_key, LPARAM meta) {
 	return key;
 }
 
-static void RefreshWindowBounds(void) {
+static cc_bool RefreshWindowBounds(void) {
 	RECT rect;
 	POINT topLeft = { 0, 0 };
-
-	GetWindowRect(win_handle, &rect);
-	win_totalWidth  = Rect_Width(rect);
-	win_totalHeight = Rect_Height(rect);
+	int width = Window_Main.Width, height = Window_Main.Height;
 
 	GetClientRect(win_handle, &rect);
 	Window_Main.Width  = Rect_Width(rect);
@@ -123,6 +119,8 @@ static void RefreshWindowBounds(void) {
 	/* GetClientRect always returns 0,0 for left,top (see MSDN) */
 	ClientToScreen(win_handle, &topLeft);
 	windowX = topLeft.x; windowY = topLeft.y;
+
+	return width != Window_Main.Width || height != Window_Main.Height;
 }
 
 static void GrabCursor(void) {
@@ -135,6 +133,7 @@ static void GrabCursor(void) {
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	float wheelDelta;
+	cc_bool sized;
 
 	switch (message) {
 	case WM_ACTIVATE:
@@ -150,19 +149,17 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 		return 0;
 
-	case WM_WINDOWPOSCHANGED:
-	{
-		WINDOWPOS* pos = (WINDOWPOS*)lParam;
-		cc_bool sized  = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
-		if (pos->hwnd != win_handle) break;
+	case WM_SIZE:
+		GrabCursor();
+		sized = RefreshWindowBounds();
 
+		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
+		Event_RaiseVoid(&WindowEvents.StateChanged);
+		break;
+	
+	case WM_MOVE:
 		GrabCursor();
 		RefreshWindowBounds();
-		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
-	} break;
-
-	case WM_SIZE:
-		Event_RaiseVoid(&WindowEvents.StateChanged);
 		break;
 
 	case WM_CHAR:
