@@ -8,6 +8,7 @@
 
 #define SQ_BASE_ADDRESS (void*) 0xe0000000
 #define PREFETCH(addr) __builtin_prefetch((addr))
+static Viewport vp;
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
     return MATH_fsrra(x * x);
@@ -17,8 +18,8 @@ GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     const float f = _glFastInvert(vertex->w);
 
     /* Convert to NDC and apply viewport */
-    vertex->x = (vertex->x * f * VIEWPORT.hwidth)  + VIEWPORT.x_plus_hwidth;
-    vertex->y = (vertex->y * f * VIEWPORT.hheight) + VIEWPORT.y_plus_hheight;
+    vertex->x = (vertex->x * f * vp.hwidth)  + vp.x_plus_hwidth;
+    vertex->y = (vertex->y * f * vp.hheight) + vp.y_plus_hheight;
     vertex->z = f;
 }
 
@@ -26,16 +27,12 @@ GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
 volatile uint32_t *sq = SQ_BASE_ADDRESS;
 
 static inline void _glFlushBuffer() {
-    TRACE();
-
     /* Wait for both store queues to complete */
     sq = (uint32_t*) 0xe0000000;
     sq[0] = sq[8] = 0;
 }
 
 static inline void _glPushHeaderOrVertex(Vertex* v)  {
-    TRACE();
-
     uint32_t* s = (uint32_t*) v;
     sq[0] = *(s++);
     sq[1] = *(s++);
@@ -398,11 +395,20 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
     }
 }
 
-void SceneListSubmit(Vertex* v3, int n) {
-    TRACE();
-    /* You need at least a header, and 3 vertices to render anything */
-    if(n < 4) return;
+static __attribute__((noinline)) void HandleCommand(Vertex* v, int type) {
+	if ((v->flags & 0xFF) != 0x23) {
+		_glPushHeaderOrVertex(v);
+		return;
+	}
 
+	vp.hwidth  = v->x;
+	vp.hheight = v->y;
+	vp.x_plus_hwidth  = v->z;
+	vp.y_plus_hheight = v->w;
+}
+
+void SceneListSubmit(Vertex* v3, int n, int type) {
+	vp = VIEWPORTS[type];
     PVR_SET(SPAN_SORT_CFG, 0x0);
 
     //Set PVR DMA registers
@@ -412,19 +418,12 @@ void SceneListSubmit(Vertex* v3, int n) {
     //Set QACR registers
 	QACR[1] = QACR[0] = 0x11;
 
-#if CLIP_DEBUG
-    Vertex* vertex = (Vertex*) src;
-    for(int i = 0; i < n; ++i) {
-        fprintf(stderr, "{%f, %f, %f, %f}, // %x (%x)\n", vertex[i].xyz[0], vertex[i].xyz[1], vertex[i].xyz[2], vertex[i].w, vertex[i].flags, &vertex[i]);
-    }
-
-    fprintf(stderr, "----\n");
-#endif
     uint8_t visible_mask = 0;
 
     sq = SQ_BASE_ADDRESS;
 
-    for(int i = 0; i < n; ++i, ++v3) {
+    for(int i = 0; i < n; ++i, ++v3) 
+	{
         PREFETCH(v3 + 1);
         switch(v3->flags & 0xFF000000) {
         case PVR_CMD_VERTEX_EOL:
@@ -432,7 +431,7 @@ void SceneListSubmit(Vertex* v3, int n) {
         case PVR_CMD_VERTEX:
             continue;
         default:
-            _glPushHeaderOrVertex(v3);
+            HandleCommand(v3, type);
             continue;
         };
 

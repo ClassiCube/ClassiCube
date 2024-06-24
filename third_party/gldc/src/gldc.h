@@ -29,6 +29,7 @@ int  gldcAllocTexture(int w, int h, int format);
 void gldcGetTexture(void** data, int* width, int* height);
 
 void glScissor( int x, int y, int width, int height);
+void glViewport(int x, int y, int width, int height);
 
 void glKosInit();
 void glKosSwapBuffers();
@@ -49,18 +50,6 @@ typedef struct {
 
 #define GL_FORCE_INLINE static __attribute__((always_inline)) inline
 
-#define TRACE_ENABLED 0
-#define TRACE() if(TRACE_ENABLED) {fprintf(stderr, "%s\n", __func__);} (void) 0
-
-typedef struct {
-    unsigned int flags;      /* Constant PVR_CMD_USERCLIP */
-    unsigned int d1, d2, d3; /* Ignored for this type */
-    unsigned int sx,         /* Start x */
-             sy,         /* Start y */
-             ex,         /* End x */
-             ey;         /* End y */
-} PVRTileClipCommand; /* Tile Clip command for the pvr */
-
 typedef struct {
     unsigned int list_type;
     AlignedVector vector;
@@ -73,7 +62,7 @@ typedef struct {
     float hheight; /* height * 0.5f */
 } Viewport;
 
-extern Viewport VIEWPORT;
+extern Viewport VIEWPORTS[3];
 
 typedef struct {
     //0
@@ -144,7 +133,7 @@ void _glApplyScissor(int force);
 
 extern GLboolean STATE_DIRTY;
 
-void SceneListSubmit(Vertex* v2, int n);
+void SceneListSubmit(Vertex* v2, int n, int type);
 
 static inline int DimensionFlag(int w) {
     switch(w) {

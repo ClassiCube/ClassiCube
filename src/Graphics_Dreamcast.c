@@ -621,10 +621,7 @@ extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
 extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	VIEWPORT.hwidth  = w *  0.5f;
-	VIEWPORT.hheight = h * -0.5f;
-	VIEWPORT.x_plus_hwidth  = x + w * 0.5f;
-	VIEWPORT.y_plus_hheight = y + h * 0.5f;
+	glViewport(x, y, w, h);
 
 	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
 	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;

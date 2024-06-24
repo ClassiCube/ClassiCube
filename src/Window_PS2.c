@@ -95,7 +95,7 @@ static void ResetDisplay(void) {
 	fb_depth.enable  = 1;
 	fb_depth.method  = ZTEST_METHOD_ALLPASS;
 	fb_depth.mask    = 0;
-	fb_depth.zsm     = GS_ZBUF_32;
+	fb_depth.zsm     = GS_ZBUF_24;
 	fb_depth.address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
 }
 
