@@ -5,9 +5,7 @@
 #include <dc/pvr.h>
 #include "gldc.h"
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define CLAMP( X, _MIN, _MAX )  ( (X)<(_MIN) ? (_MIN) : ((X)>(_MAX) ? (_MAX) : (X)) )
+#define CLAMP( X, MAX ) ( (X) < 0 ? 0 : ((X)>(_MAX) ? (_MAX) : (X)) )
 
 GLboolean STATE_DIRTY = GL_TRUE;
 
@@ -71,24 +69,19 @@ void glKosSwapBuffers() {
 
 void glScissor(int x, int y, int width, int height) {
     pvr_poly_hdr_t c;
-
-    width  = MIN(width,  vid_mode->width);
-    height = MIN(height, vid_mode->height);
-
     int sx = x, ex = x + width;
     int sy = y, ey = y + height;
 
-    /* load command structure while mapping screen coords to TA tiles */
     c.cmd = PVR_CMD_USERCLIP;
     c.mode1 = c.mode2 = c.mode3 = 0;
 
-    uint16_t vw = vid_mode->width  >> 5;
-    uint16_t vh = vid_mode->height >> 5;
+    int vw = vid_mode->width  >> 5;
+    int vh = vid_mode->height >> 5;
 
-    c.d1 = CLAMP(sx >> 5, 0, vw);
-    c.d2 = CLAMP(sy >> 5, 0, vh);
-    c.d3 = CLAMP((ex >> 5) - 1, 0, vw);
-    c.d4 = CLAMP((ey >> 5) - 1, 0, vh);
+    c.d1 = CLAMP(sx >> 5,       vw);
+    c.d2 = CLAMP(sy >> 5,       vh);
+    c.d3 = CLAMP((ex >> 5) - 1, vw);
+    c.d4 = CLAMP((ey >> 5) - 1, vh);
 
     aligned_vector_push_back(&OP_LIST.vector, &c, 1);
     aligned_vector_push_back(&PT_LIST.vector, &c, 1);
@@ -96,23 +89,12 @@ void glScissor(int x, int y, int width, int height) {
 }
 
 void glViewport(int x, int y, int w, int h) {
-	Viewport vp;
-
-    vp.hwidth  = w *  0.5f;
-	vp.hheight = h * -0.5f;
-	vp.x_plus_hwidth  = x + w * 0.5f;
-	vp.y_plus_hheight = y + h * 0.5f;
-
-	VIEWPORTS[0] = vp;
-	VIEWPORTS[1] = vp;
-	VIEWPORTS[2] = vp;
-
     Vertex c;
     c.flags = PVR_CMD_USERCLIP | 0x23;
-    c.x = vp.hwidth;
-    c.y = vp.hheight;
-    c.z = vp.x_plus_hwidth;
-    c.w = vp.y_plus_hheight;
+    c.x = w *  0.5f; // hwidth
+    c.y = h * -0.5f; // hheight
+    c.z = x + w * 0.5f; // x_plus_hwidth
+    c.w = y + h * 0.5f; // y_plus_hheight
 
     aligned_vector_push_back(&OP_LIST.vector, &c, 1);
     aligned_vector_push_back(&PT_LIST.vector, &c, 1);
