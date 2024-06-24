@@ -15,20 +15,21 @@
 #include <draw3d.h>
 #include <malloc.h>
 
+typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));
+typedef struct Vec4   VU0_VECTOR __attribute__((aligned(16)));
+typedef struct { int x, y, z, w; } VU0_IVECTOR __attribute__((aligned(16)));
+
 static void* gfx_vertices;
 extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
-static float vp_hwidth, vp_hheight;
-static float vp_originX, vp_originY;
+static VU0_VECTOR vp_origin, vp_scale;
 static cc_bool stateDirty, formatDirty;
 
-typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));
-typedef struct Vec4   VU0_VECTOR __attribute__((aligned(16)));
-
 static VU0_MATRIX mvp;
-static VU0_VECTOR clip_scale;
 extern void LoadMvpMatrix(VU0_MATRIX* matrix);
 extern void LoadClipScaleFactors(VU0_VECTOR* scale);
+extern void LoadViewportOrigin(VU0_VECTOR* origin);
+extern void LoadViewportScale(VU0_VECTOR* scale);
 
 // double buffering
 static packet_t* packets[2];
@@ -521,18 +522,16 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	formatDirty = true;
 }
 
-//#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
+extern void ViewportTransform(VU0_VECTOR* src, VU0_IVECTOR* dst);
 static xyz_t FinishVertex(VU0_VECTOR* src, float invW) {
-	float x = vp_hwidth  * (src->x * invW);
-	float y = vp_hheight * (src->y * invW);
-	float z = src->z * invW;
-	
-	unsigned int maxZ = 1 << (32 - 1); // TODO: half this? or << 24 instead?
-	
+	src->w = invW;
+	VU0_IVECTOR tmp;
+	ViewportTransform(src, &tmp);
+
 	xyz_t xyz;
-	xyz.x = (short)(x *  16 + vp_originX);
-	xyz.y = (short)(y * -16 + vp_originY);
-	xyz.z = (unsigned int)((z + 1.0f) * maxZ);
+	xyz.x = (short)tmp.x;
+	xyz.y = (short)tmp.y;
+	xyz.z = tmp.z;
 	return xyz;
 }
 
@@ -740,11 +739,11 @@ cc_bool Gfx_WarnIfNecessary(void) {
 }
 
 void Gfx_BeginFrame(void) { 
-	Platform_LogConst("--- Frame ---");
+	//Platform_LogConst("--- Frame ---");
 }
 
 void Gfx_EndFrame(void) {
-	Platform_LogConst("--- EF1 ---");
+	//Platform_LogConst("--- EF1 ---");
 	// Double buffering
 	graph_set_framebuffer_filtered(fb_colors[context].address,
                                    fb_colors[context].width,
@@ -757,16 +756,16 @@ void Gfx_EndFrame(void) {
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
 	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
-	Platform_LogConst("--- EF2 ---");
+	//Platform_LogConst("--- EF2 ---");
 		
 	draw_wait_finish();
-	Platform_LogConst("--- EF3 ---");
+	//Platform_LogConst("--- EF3 ---");
 	
 	if (gfx_vsync) graph_wait_vsync();
 	
 	context ^= 1;
 	UpdateContext();
-	Platform_LogConst("--- EF4 ---");
+	//Platform_LogConst("--- EF4 ---");
 }
 
 void Gfx_SetVSync(cc_bool vsync) {
@@ -779,11 +778,21 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_hwidth  = w / 2;
-	vp_hheight = h / 2;
-	vp_originX =  ftoi4(2048 - (x / 2));
-	vp_originY = -ftoi4(2048 - (y / 2));
+	VU0_VECTOR clip_scale;
+	unsigned int maxZ = 1 << (24 - 1); // TODO: half this? or << 24 instead?
 
+	vp_origin.x =  ftoi4(2048 - (x / 2));
+	vp_origin.y = -ftoi4(2048 - (y / 2));
+	vp_origin.z =  maxZ / 2.0f;
+	LoadViewportOrigin(&vp_origin);
+
+	vp_scale.x =  16 * (w / 2);
+	vp_scale.y = -16 * (h / 2);
+	vp_scale.z =  maxZ / 2.0f;
+	LoadViewportScale(&vp_scale);
+
+	float hwidth  = w / 2;
+	float hheight = h / 2;
 	// The code below clips to the viewport clip planes
 	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
 	//  However the guard band itself ranges from 0 to 4096
@@ -801,8 +810,8 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	//              X/W <= 2048 / vp_hwidth
 	//              X * vp_hwidth / 2048 <= W
 	
-	clip_scale.x = vp_hwidth  / 2048.0f;
-	clip_scale.y = vp_hheight / 2048.0f;
+	clip_scale.x = hwidth  / 2048.0f;
+	clip_scale.y = hheight / 2048.0f;
 	clip_scale.z = 1.0f;
 	clip_scale.w = 1.0f;
 	

@@ -5,6 +5,8 @@
 # vf3 = mvp.row3
 # vf4 = mvp.row4
 # vf5 = clipping scale adjustments to match guardbands
+# vf6 = viewport origin
+# vf7 = viewport scale
 # NOTE: vclipw.xyz takes 4 cycles to produce result, which must be accounted for
 
 .align 4
@@ -13,10 +15,17 @@
 .type   LoadMvpMatrix,%function
 .global LoadClipScaleFactors
 .type   LoadClipScaleFactors,%function
+.global LoadViewportOrigin
+.type   LoadViewportOrigin,%function
+.global LoadViewportScale
+.type   LoadViewportScale,%function
+
 .global TransformTexturedQuad
 .type   TransformTexturedQuad,%function
 .global TransformColouredQuad
 .type   TransformColouredQuad,%function
+.global ViewportTransform
+.type   ViewportTransform,%function
 
 # Loads matrix into VU0 registers
 #	$a0 = addresss of mvp
@@ -33,6 +42,22 @@ LoadMvpMatrix:
 #	$a0 = addresss of factors
 LoadClipScaleFactors:
 	lqc2 	$vf5, 0x00($a0) # vf5 = factors
+	jr		$ra
+	nop
+
+
+# Loads viewport origin into VU0 registers
+#	$a0 = addresss of origin
+LoadViewportOrigin:
+	lqc2 	$vf6, 0x00($a0) # vf6 = origin
+	jr		$ra
+	nop
+
+
+# Loads viewport scale into VU0 registers
+#	$a0 = addresss of scale
+LoadViewportScale:
+	lqc2 	$vf7, 0x00($a0) # vf7 = scale
 	jr		$ra
 	nop
 
@@ -201,3 +226,16 @@ TransformColouredQuad:
 
 .global ONE_VALUE
 ONE_VALUE:  .float 1.0
+
+
+#	$a0 = addresss of src
+#	$a1 = addresss of dst
+ViewportTransform:
+	lqc2	$vf16, 0x00($a0)    # IN = src
+	vmulw	$vf17, $vf16, $vf16 # TMP = IN[xyzw] * IN.w (inverse W)
+	vmul	$vf18, $vf17, $vf7  # TMP = TMP * viewport_scale
+	vadd	$vf19, $vf18, $vf6  # TMP = TMP + viewport_origin
+	vftoi0  $vf19, $vf19	    # TMP = int(TMP)
+	sqc2	$vf19, 0x00($a1)    # dst = TMP
+	jr		$ra
+	nop
