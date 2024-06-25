@@ -24,6 +24,8 @@ extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
 static VU0_VECTOR vp_origin, vp_scale;
 static cc_bool stateDirty, formatDirty;
+static framebuffer_t* fb_draw;
+static framebuffer_t* fb_display;
 
 static VU0_MATRIX mvp;
 extern void LoadMvpMatrix(VU0_MATRIX* matrix);
@@ -57,17 +59,34 @@ void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
-static qword_t* SetTextureWrapping(qword_t* q, int context) {
+// TODO: Find a better way than just increasing this hardcoded size
+static void InitDMABuffers(void) {
+	packets[0] = packet_init(50000, PACKET_NORMAL);
+	packets[1] = packet_init(50000, PACKET_NORMAL);
+}
+
+static void UpdateContext(void) {
+	fb_display = &fb_colors[context];
+	fb_draw    = &fb_colors[context ^ 1];
+
+	current = packets[context];
+	
+	dma_tag = current->data;
+	// increment past the dmatag itself
+	q = dma_tag + 1;
+}
+
+
+static void SetTextureWrapping(int context) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
 	PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), 
 					GS_REG_CLAMP + context);
 	q++;
-	return q;
 }
 
-static qword_t* SetTextureSampling(qword_t* q, int context) {
+static void SetTextureSampling(int context) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
@@ -75,10 +94,9 @@ static qword_t* SetTextureSampling(qword_t* q, int context) {
 	PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), 
 					GS_REG_TEX1 + context);
 	q++;
-	return q;
 }
 
-static qword_t* SetAlphaBlending(qword_t* q, int context) {
+static void SetAlphaBlending(int context) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
@@ -91,54 +109,36 @@ static qword_t* SetAlphaBlending(qword_t* q, int context) {
 	PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
 								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA + context);
 	q++;
-	return q;
 }
 
 static void InitDrawingEnv(void) {
-	packet_t *packet = packet_init(30, PACKET_NORMAL); // TODO: is 30 too much?
-	qword_t *q = packet->data;
-	
-	q = draw_setup_environment(q, 0, &fb_colors[0], &fb_depth);
+	qword_t* beg = q;
+	q = draw_setup_environment(q, 0, fb_draw, &fb_depth);
 	// GS can render from 0 to 4096, so set primitive origin to centre of that
 	q = draw_primitive_xyoffset(q, 0, 2048 - Game.Width / 2, 2048 - Game.Height / 2);
 
-	q = SetTextureWrapping(q, 0);
-	q = SetTextureSampling(q, 0);
-	q = SetAlphaBlending(q,   0); // TODO has no effect ?
+	SetTextureWrapping(0);
+	SetTextureSampling(0);
+	SetAlphaBlending(0); // TODO has no effect ?
 	q = draw_finish(q);
 
-	dma_channel_send_normal(DMA_CHANNEL_GIF,packet->data,q - packet->data, 0, 0);
+	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, q - beg, 0, 0);
 	dma_wait_fast();
-
-	packet_free(packet);
-}
-
-// TODO: Find a better way than just increasing this hardcoded size
-static void InitDMABuffers(void) {
-	packets[0] = packet_init(50000, PACKET_NORMAL);
-	packets[1] = packet_init(50000, PACKET_NORMAL);
-}
-
-static void UpdateContext(void) {
-	current = packets[context];
-	
-	dma_tag = current->data;
-	// increment past the dmatag itself
 	q = dma_tag + 1;
 }
 
 static int tex_offset;
 void Gfx_Create(void) {
 	primitive_type = 0; // PRIM_POINT, which isn't used here
+
+	InitDMABuffers();
+	context = 0;
+	UpdateContext();
 	
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
-	InitDMABuffers();
 	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
-	
-	context = 0;
-	UpdateContext();
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -322,10 +322,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	if (!b) mask |= 0x00FF0000;
 	if (!a) mask |= 0xFF000000;
 
-	framebuffer_t* fb = &fb_colors[context];
-	fb->mask = mask;
-	q = draw_framebuffer(q, 0, fb);
-	fb->mask = 0;
+	fb_draw->mask = mask;
+	q = draw_framebuffer(q, 0, fb_draw);
+	fb_draw->mask = 0;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -744,12 +743,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_EndFrame(void) {
 	//Platform_LogConst("--- EF1 ---");
-	// Double buffering
-	graph_set_framebuffer_filtered(fb_colors[context].address,
-                                   fb_colors[context].width,
-                                   fb_colors[context].psm, 0, 0);
 
-	q = draw_framebuffer(q, 0, &fb_colors[context ^ 1]);
 	q = draw_finish(q);
 	
 	// Fill out and then send DMA chain
@@ -765,6 +759,12 @@ void Gfx_EndFrame(void) {
 	
 	context ^= 1;
 	UpdateContext();
+
+	// Double buffering
+	q = draw_framebuffer(q, 0, fb_draw);
+	graph_set_framebuffer_filtered(fb_display->address,
+                                   fb_display->width,
+                                   fb_display->psm, 0, 0);
 	//Platform_LogConst("--- EF4 ---");
 }
 

@@ -185,8 +185,6 @@ static int Menu_DoInputDown(void* screen, int key) {
 }
 
 int Menu_InputDown(void* screen, int key) {
-	struct Screen* s = (struct Screen*)screen;
-	
 	Menu_DoInputDown(screen, key);
 	return Screen_InputDown(screen, key);
 }

@@ -114,15 +114,13 @@ static void InitDisplay(framebuffer_t* fb) {
 
 void Window_Create2D(int width, int height) {
 	ResetDisplay();
-
 	InitDisplay(&fb_colors[0]);
 	launcherMode = true;
 }
 
 void Window_Create3D(int width, int height) { 
 	ResetDisplay();
-
-	InitDisplay(&fb_colors[1]);
+	InitDisplay(&fb_colors[0]);
 	launcherMode = false; 
 }
 
