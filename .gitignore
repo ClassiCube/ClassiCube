@@ -53,9 +53,10 @@ build-ps2/
 build-ps3/
 build-psp/
 build-vita/
-eboot.pbp
-eboot.bin
+EBOOT.PBP
+PARAM.SFO
 param.sfo
+eboot.bin
 
 # Build results
 [Dd]ebug/

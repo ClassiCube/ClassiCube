@@ -21,7 +21,7 @@
 #include "../misc/linux/min-xutil.h"
 #include "../misc/linux/min-xkblib.h"
 #include "../misc/linux/min-xinput2.h"
-#include <X11/XF86keysym.h>
+#include "../misc/linux/min-XF86keysym.h"
 #include <stdio.h>
 
 #ifdef X_HAVE_UTF8_STRING
