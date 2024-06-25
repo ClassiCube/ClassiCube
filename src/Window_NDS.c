@@ -130,7 +130,7 @@ static int bg_id;
 static u16* bg_ptr;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
 	videoSetModeSub(MODE_0_2D);

@@ -15,7 +15,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
     display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);

@@ -394,10 +394,10 @@ static void DoCreateWindow(int width, int height) {
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
 
-	Window_Main.Exists   = true;
-	Window_Main.Handle   = win_handle;
-	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
-	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = win_handle;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 }

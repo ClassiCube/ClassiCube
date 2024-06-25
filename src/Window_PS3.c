@@ -25,7 +25,7 @@ static KbData   kb_data;
 static KbConfig kb_config;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 static void sysutil_callback(u64 status, u64 param, void* usrdata) {
 	switch (status) {

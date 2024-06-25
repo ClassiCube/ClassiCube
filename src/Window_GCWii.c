@@ -23,7 +23,7 @@ static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 
 static void OnPowerOff(void) {

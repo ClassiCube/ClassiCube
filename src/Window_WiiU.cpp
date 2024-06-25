@@ -33,8 +33,8 @@ extern "C" {
 static cc_bool launcherMode;
 static cc_bool keyboardOpen;
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
-struct _WindowData Window_Alt;
+struct cc_window WindowInfo;
+struct cc_window Window_Alt;
 cc_bool launcherTop;
 
 

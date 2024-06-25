@@ -20,6 +20,8 @@ ifeq ($(strip $(PSPSDK)),)
 $(warning "Please set PSPSDK variables in your environment. For example:")
 $(warning   export PSPSDK=/usr/local/pspsk/psp/sdk)
 $(warning   export PATH=/usr/local/pspsk/bin:$$PATH)
+$(warning Or)
+$(warning   export PSPSDK=$$(shell psp-config --pspsdk-path))
 $(error   Failed to find PSPSDK installation)
 endif
 

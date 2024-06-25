@@ -17,7 +17,7 @@ static cc_bool launcherMode;
 static SceTouchPanelInfo frontPanel;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 #define DISPLAY_WIDTH   960
 #define DISPLAY_HEIGHT  544

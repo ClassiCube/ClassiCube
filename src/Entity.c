@@ -399,7 +399,8 @@ static cc_bool CanDeleteTexture(struct Entity* except) {
 	int i;
 	if (!except->TextureId) return false;
 
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		if (!Entities.List[i] || Entities.List[i] == except)  continue;
 		if (Entities.List[i]->TextureId == except->TextureId) return false;
 	}

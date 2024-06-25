@@ -471,6 +471,7 @@ typedef cc_uint8 EntityID;
 typedef cc_uint8 Face;
 typedef cc_uint32 cc_result;
 typedef cc_uint64 TimeMS;
+typedef union cc_pointer_ { cc_uintptr val; void* ptr; } cc_pointer;
 
 typedef struct Rect2D_  { int x, y, width, height; } Rect2D;
 typedef struct TextureRec_ { float u1, v1, u2, v2; } TextureRec;

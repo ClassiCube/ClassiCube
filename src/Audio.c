@@ -392,9 +392,9 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 #ifdef CC_BUILD_ANDROID
 		/* Don't play music while in the background on Android */
     	/* TODO: Not use such a terrible approach */
-    	if (!Window_Main.Handle) {
+    	if (!Window_Main.Handle.ptr) {
     		Audio_Pause(&music_ctx);
-    		while (!Window_Main.Handle && !music_stopping) {
+    		while (!Window_Main.Handle.ptr && !music_stopping) {
     			Thread_Sleep(10); continue;
     		}
     		Audio_Play(&music_ctx);

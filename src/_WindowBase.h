@@ -5,7 +5,7 @@
 #include "Platform.h"
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 #define Display_CentreX(width)  (DisplayInfo.x + (DisplayInfo.Width  - width)  / 2)
 #define Display_CentreY(height) (DisplayInfo.y + (DisplayInfo.Height - height) / 2)
@@ -115,7 +115,7 @@ static EGLint ctx_numConfig;
 static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
 #else
 static void GLContext_InitSurface(void) {
-	void* window = Window_Main.Handle;
+	void* window = Window_Main.Handle.ptr;
 	if (!window) return; /* window not created or lost */
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
 

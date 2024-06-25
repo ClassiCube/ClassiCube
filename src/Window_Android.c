@@ -158,7 +158,8 @@ static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject s
 	Platform_LogConst("WIN - CREATED");
 	win_handle        = ANativeWindow_fromSurface(env, surface);
 	winCreated        = true;
-	Window_Main.Handle = win_handle;
+
+	Window_Main.Handle.ptr = win_handle;
 	RefreshWindowBounds();
 	/* TODO: Restore context */
 	Event_RaiseVoid(&WindowEvents.Created);
@@ -168,8 +169,9 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	Platform_LogConst("WIN - DESTROYED");
 	if (win_handle) ANativeWindow_release(win_handle);
 
-	win_handle        = NULL;
-	Window_Main.Handle = NULL;
+	win_handle             = NULL;
+	Window_Main.Handle.ptr = NULL;
+
 	/* eglSwapBuffers might return EGL_BAD_SURFACE, EGL_BAD_ALLOC, or some other error */
 	/* Instead the context is lost here in a consistent manner */
 	if (Gfx.Created) Gfx_LoseContext("surface lost");

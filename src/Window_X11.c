@@ -379,10 +379,10 @@ static void DoCreateWindow(int width, int height) {
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 
 	RefreshWindowBounds(width, height);
-	Window_Main.Exists   = true;
-	Window_Main.Handle   = (void*)win_handle;
-	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
-	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.val = win_handle;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 	
 	/* So right name appears in e.g. Ubuntu Unity launchbar */

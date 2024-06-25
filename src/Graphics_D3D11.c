@@ -74,7 +74,7 @@ static void CreateDeviceAndSwapChain(void) {
 	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	// RefreshRate intentionally left at 0 so display's refresh rate is used
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.OutputWindow = Window_Main.Handle;
+	desc.OutputWindow = Window_Main.Handle.ptr;
 	desc.SampleDesc.Count   = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Windowed           = TRUE;

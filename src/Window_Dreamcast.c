@@ -16,7 +16,7 @@ static cc_bool launcherMode;
 cc_bool window_inited;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
 	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);

@@ -22,7 +22,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 static void OnVblank(void* work) {
 	smpc_peripheral_intback_issue();

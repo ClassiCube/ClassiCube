@@ -89,10 +89,10 @@ static void DoCreateWindow(int width, int height, int flags) {
 	if (!win_handle) Window_SDLFail("creating window");
 
 	RefreshWindowBounds();
-	Window_Main.Exists   = true;
-	Window_Main.Handle   = win_handle;
-	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
-	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = win_handle;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 
 	Window_Main.SoftKeyboardInstant = true;
 	ApplyIcon();

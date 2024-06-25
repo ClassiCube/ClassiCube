@@ -378,10 +378,10 @@ static void DoCreateWindow(int width, int height) {
 	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
 		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
 	
-	Window_Main.Exists   = true;
-	Window_Main.Handle   = winHandle;
-	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
-	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = winHandle;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor
 
 	del = [CCWindowDelegate alloc];

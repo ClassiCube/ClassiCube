@@ -21,7 +21,7 @@ static PadState pad;
 static AppletHookCookie cookie;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 static void SetResolution(void) {
 	// check whether the Switch is docked
@@ -66,18 +66,18 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 
-	Window_Main.Focused  = true;
-	Window_Main.Exists   = true;
-	Window_Main.Handle   = nwindowGetDefault();
-	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
-	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.Focused    = true;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = nwindowGetDefault();
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
-	nwindowSetDimensions(Window_Main.Handle, 1920, 1080);
+	nwindowSetDimensions(Window_Main.Handle.ptr, 1920, 1080);
 	SetResolution();
 }
 
@@ -228,7 +228,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
 static void GLContext_InitSurface(void) {
-	NWindow* window = (NWindow*)Window_Main.Handle;
+	NWindow* window = (NWindow*)Window_Main.Handle.ptr;
 	if (!window) return; /* window not created or lost */
 
 	// terrible, but fixes 720p/1080p resolution change on handheld/docked modes

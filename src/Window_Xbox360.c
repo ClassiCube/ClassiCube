@@ -19,7 +19,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 static uint32_t reg_read32(int reg)
 {

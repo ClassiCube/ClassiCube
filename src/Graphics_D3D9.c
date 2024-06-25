@@ -136,7 +136,7 @@ static cc_bool deviceCreated;
 static void TryCreateDevice(void) {
 	cc_result res;
 	D3DCAPS9 caps;
-	HWND winHandle = (HWND)Window_Main.Handle;
+	HWND winHandle = (HWND)Window_Main.Handle.ptr;
 	D3DPRESENT_PARAMETERS args = { 0 };
 	D3D9_FillPresentArgs(&args);
 

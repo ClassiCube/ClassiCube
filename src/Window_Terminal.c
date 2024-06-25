@@ -425,7 +425,6 @@ void Window_Free(void) {
 
 static void DoCreateWindow(int width, int height) {
 	Window_Main.Exists   = true;
-	Window_Main.Handle   = (void*)1;
 	Window_Main.Focused  = true;
 	
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;

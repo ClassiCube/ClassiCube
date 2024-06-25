@@ -22,6 +22,7 @@ jobs:
         id: compile
         run: |
           apk add curl curl-dev
+          export PSPSDK=$(psp-config --pspsdk-path)
           make psp
           
 

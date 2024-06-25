@@ -349,10 +349,10 @@ static void DoCreateWindow(int width, int height) {
 	BRect frame(x, y, x + width - 1, y + height - 1);
 	win_handle = new CC_BWindow(frame);
 	
-	Window_Main.Exists   = true;
-	Window_Main.Handle   = win_handle;
-	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
-	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = win_handle;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	
 	frame = win_handle->Bounds();
 	Window_Main.Width  = frame.IntegerWidth()  + 1;

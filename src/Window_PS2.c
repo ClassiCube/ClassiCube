@@ -29,7 +29,8 @@ static char padBuf0[256] __attribute__((aligned(64)));
 static char padBuf1[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
+
 framebuffer_t fb_colors[2];
 zbuffer_t     fb_depth;
 static int display_mode;

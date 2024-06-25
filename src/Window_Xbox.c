@@ -20,7 +20,7 @@ static xid_dev_t* xid_ctrl;
 static xid_gamepad_in gp_state;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 // TODO No idea if this even works
 static void OnDataReceived(UTR_T* utr) {

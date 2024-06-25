@@ -27,7 +27,7 @@ static cc_bool launcherMode;
 static char pad_buff[2][34];
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 void Window_PreInit(void) { }
 void Window_Init(void) {

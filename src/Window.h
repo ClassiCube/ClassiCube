@@ -71,9 +71,9 @@ static CC_INLINE int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX
 static CC_INLINE int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 
 /* Data for a window */
-struct _WindowData {
+struct cc_window {
 	/* Readonly platform-specific handle to the window. */
-	void* Handle;
+	cc_pointer Handle;
 	/* Size of the content area of the window. (i.e. area that can draw to) */
 	/* This area does NOT include borders and titlebar surrounding the window. */
 	int Width, Height;
@@ -100,10 +100,10 @@ struct _WindowData {
 #define DEFAULT_UI_SCALE_Y (1.0f / 480)
 
 /* Data for the game/launcher window */
-CC_VAR extern struct _WindowData WindowInfo; /* Named WindowInfo for backwards compatibility */
+CC_VAR extern struct cc_window WindowInfo; /* Named WindowInfo for backwards compatibility */
 #define Window_Main WindowInfo
 /* Data for alternate game window (e.g. 3DS) */
-extern struct _WindowData Window_Alt;
+extern struct cc_window Window_Alt;
 
 /* Initialises necessary state before initing platform and loading options */
 void Window_PreInit(void);

@@ -19,8 +19,8 @@ static u16 top_width, top_height;
 static u16 btm_width, btm_height;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
-struct _WindowData Window_Alt;
+struct cc_window WindowInfo;
+struct cc_window Window_Alt;
 cc_bool launcherTop;
 
 void Window_PreInit(void) {
