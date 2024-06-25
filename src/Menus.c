@@ -139,7 +139,7 @@ static void Menu_SelectWidget(struct Screen* s, int i) {
 	w->active    = true;
 }
 
-static void Menu_CycleSelected(struct Screen* s, int dir) {
+static int Menu_CycleSelected(struct Screen* s, int dir) {
 	struct Widget* w;
 	int index = s->selectedI + dir;
 	int i, j;
@@ -153,34 +153,41 @@ static void Menu_CycleSelected(struct Screen* s, int dir) {
 		if (!Menu_IsSelectable(w)) continue;
 
 		Menu_SelectWidget(s, i);
-		return;
+		return true;
 	}
+	return false;
 }
 
-static void Menu_InputSelected(struct Screen* s, int key) {
+static int Menu_InputSelected(struct Screen* s, int key) {
 	struct Widget* w;
-	if (s->selectedI < 0) return;
+	if (s->selectedI < 0) return false;
 
 	w = s->widgets[s->selectedI];
-	if (!Menu_IsSelectable(w)) return;
+	if (!Menu_IsSelectable(w)) return false;
 
 	if (w->MenuClick && Input_IsEnterButton(key)) {
 		w->MenuClick(s, w);
+		return true;
+	}
+	return Elem_HandlesKeyDown(w, key);
+}
+
+static int Menu_DoInputDown(void* screen, int key) {
+	struct Screen* s = (struct Screen*)screen;
+	
+	if (Input_IsUpButton(key)) {
+		return Menu_CycleSelected(s, -1);
+	} else if (Input_IsDownButton(key)) {
+		return Menu_CycleSelected(s, +1);
 	} else {
-		Elem_HandlesKeyDown(w, key);
+		return Menu_InputSelected(s, key);
 	}
 }
 
 int Menu_InputDown(void* screen, int key) {
 	struct Screen* s = (struct Screen*)screen;
 	
-	if (Input_IsUpButton(key)) {
-		Menu_CycleSelected(s, -1);
-	} else if (Input_IsDownButton(key)) {
-		Menu_CycleSelected(s, +1);
-	} else {
-		Menu_InputSelected(s, key);
-	}
+	Menu_DoInputDown(screen, key);
 	return Screen_InputDown(screen, key);
 }
 
@@ -1454,7 +1461,13 @@ static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
 static int SaveLevelScreen_KeyDown(void* screen, int key) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
-	return Menu_InputDown(s, key);
+	
+	int handled = Menu_DoInputDown(s, key);
+	/* Pressing Enter triggers save */
+	if (!handled && Input_IsEnterButton(key))
+		SaveLevelScreen_Save(s, &s->save);
+
+	return Screen_InputDown(s, key);
 }
 
 static void SaveLevelScreen_ContextLost(void* screen) {
@@ -1483,8 +1496,6 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 
 static void SaveLevelScreen_Update(void* screen, float delta) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	if (!s->input.base.active) return;
-
 	s->input.base.caretAccumulator += delta;
 }
 
@@ -2278,10 +2289,12 @@ static int MenuInputOverlay_TextChanged(void* screen, const cc_string* str) {
 static int MenuInputOverlay_KeyDown(void* screen, int key) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 
-	if (Input_IsEnterButton(key)) {
-		MenuInputOverlay_EnterInput(s); return true;
-	}
-	return Menu_InputDown(screen, key);
+	int handled = Menu_DoInputDown(s, key);
+	/* Pressing Enter triggers OK click */
+	if (!handled && Input_IsEnterButton(key))
+		MenuInputOverlay_EnterInput(s);
+
+	return Screen_InputDown(s, key);
 }
 
 static int MenuInputOverlay_PointerDown(void* screen, int id, int x, int y) {
