@@ -37,15 +37,15 @@ static void InitGLState(void) {
 	pvr_set_zclip(0.0f);
 	PVR_SET(PT_ALPHA_REF, 127); // define missing from KOS
 
-	ALPHA_TEST_ENABLED = GL_FALSE;
-	CULLING_ENABLED    = GL_FALSE;
-	BLEND_ENABLED      = GL_FALSE;
-	DEPTH_TEST_ENABLED = GL_FALSE;
-	DEPTH_MASK_ENABLED = GL_TRUE;
-	TEXTURES_ENABLED   = GL_FALSE;
-	FOG_ENABLED        = GL_FALSE;
+	ALPHA_TEST_ENABLED = false;
+	CULLING_ENABLED    = false;
+	BLEND_ENABLED      = false;
+	DEPTH_TEST_ENABLED = false;
+	DEPTH_MASK_ENABLED = true;
+	TEXTURES_ENABLED   = false;
+	FOG_ENABLED        = false;
 	
-	STATE_DIRTY = GL_TRUE;
+	STATE_DIRTY = true;
 }
 
 void Gfx_Create(void) {
@@ -80,12 +80,12 @@ static PackedCol gfx_clearColor;
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	CULLING_ENABLED = enabled;
-	STATE_DIRTY     = GL_TRUE;
+	STATE_DIRTY     = true;
 }
 
 static void SetAlphaBlend(cc_bool enabled) { 
 	BLEND_ENABLED = enabled;
-	STATE_DIRTY   = GL_TRUE;
+	STATE_DIRTY   = true;
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -107,19 +107,19 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	if (DEPTH_MASK_ENABLED == enabled) return;
 	
 	DEPTH_MASK_ENABLED = enabled;
-	STATE_DIRTY        = GL_TRUE;
+	STATE_DIRTY        = true;
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	if (DEPTH_TEST_ENABLED == enabled) return;
 	
 	DEPTH_TEST_ENABLED = enabled;
-	STATE_DIRTY        = GL_TRUE;
+	STATE_DIRTY        = true;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
 	ALPHA_TEST_ENABLED = enabled;
-	STATE_DIRTY        = GL_TRUE;
+	STATE_DIRTY        = true;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -228,6 +228,7 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *#########################################################################################################################*/
 void Gfx_BindTexture(GfxResourceID texId) {
 	gldcBindTexture((GLuint)texId);
+	STATE_DIRTY = true;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -395,7 +396,7 @@ void Gfx_SetFog(cc_bool enabled) {
 	if (FOG_ENABLED == enabled) return;
 	
 	FOG_ENABLED = enabled;
-	STATE_DIRTY = GL_TRUE;
+	STATE_DIRTY = true;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -521,7 +522,7 @@ void DrawQuads(int count, void* src) {
 
 	if (header_required) {
 		apply_poly_header((pvr_poly_hdr_t*)beg, output->list_type);
-		STATE_DIRTY = GL_FALSE;
+		STATE_DIRTY = false;
 		beg++; 
 		vec->size += 1;
 	}
@@ -541,7 +542,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	TEXTURES_ENABLED = fmt == VERTEX_FORMAT_TEXTURED;
-	STATE_DIRTY      = GL_TRUE;
+	STATE_DIRTY      = true;
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -620,19 +621,40 @@ extern float VP_COL_HHEIGHT, VP_TEX_HHEIGHT;
 extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
 extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
 
-void Gfx_SetViewport(int x, int y, int w, int h) {
-	glViewport(x, y, w, h);
+static void PushCommand(void* cmd) {
+    aligned_vector_push_back(&OP_LIST.vector, cmd, 1);
+    aligned_vector_push_back(&PT_LIST.vector, cmd, 1);
+    aligned_vector_push_back(&TR_LIST.vector, cmd, 1);
+}
 
+void Gfx_SetViewport(int x, int y, int w, int h) {
 	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
 	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;
 
 	VP_COL_X_PLUS_HWIDTH  = VP_TEX_X_PLUS_HWIDTH  = x + w * 0.5f;
 	VP_COL_Y_PLUS_HHEIGHT = VP_TEX_Y_PLUS_HHEIGHT = y + h * 0.5f;
+
+	Vertex c;
+	c.flags = PVR_CMD_USERCLIP | 0x23;
+	c.x = w *  0.5f; // hwidth
+	c.y = h * -0.5f; // hheight
+	c.z = x + w * 0.5f; // x_plus_hwidth
+	c.w = y + h * 0.5f; // y_plus_hheight
+	PushCommand(&c);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
 	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
-	STATE_DIRTY = GL_TRUE;
-	glScissor(x, y, w, h);
+	STATE_DIRTY = true;
+
+	pvr_poly_hdr_t c;
+	c.cmd = PVR_CMD_USERCLIP;
+	c.mode1 = c.mode2 = c.mode3 = 0;
+
+	c.d1 = x >> 5;
+	c.d2 = y >> 5;
+	c.d3 = ((x + w) >> 5) - 1;
+	c.d4 = ((y + h) >> 5) - 1;
+	PushCommand(&c);
 }
 #endif

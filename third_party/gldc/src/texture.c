@@ -158,8 +158,6 @@ void gldcBindTexture(GLuint id) {
 
     TEXTURE_ACTIVE = txr;
     gl_assert(TEXTURE_ACTIVE->index == id);
-
-    STATE_DIRTY = GL_TRUE;
 }
 
 int gldcAllocTexture(int w, int h, int format) {

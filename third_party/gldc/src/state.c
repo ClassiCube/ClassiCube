@@ -5,25 +5,23 @@
 #include <dc/pvr.h>
 #include "gldc.h"
 
-#define CLAMP( X, MAX ) ( (X) < 0 ? 0 : ((X)>(_MAX) ? (_MAX) : (X)) )
+GLboolean STATE_DIRTY;
 
-GLboolean STATE_DIRTY = GL_TRUE;
+GLboolean DEPTH_TEST_ENABLED;
+GLboolean DEPTH_MASK_ENABLED;
 
-GLboolean DEPTH_TEST_ENABLED = GL_FALSE;
-GLboolean DEPTH_MASK_ENABLED = GL_FALSE;
+GLboolean CULLING_ENABLED;
 
-GLboolean CULLING_ENABLED = GL_FALSE;
+GLboolean FOG_ENABLED;
+GLboolean ALPHA_TEST_ENABLED;
 
-GLboolean FOG_ENABLED        = GL_FALSE;
-GLboolean ALPHA_TEST_ENABLED = GL_FALSE;
-
-GLboolean SCISSOR_TEST_ENABLED = GL_FALSE;
+GLboolean SCISSOR_TEST_ENABLED;
 GLenum SHADE_MODEL = PVR_SHADE_GOURAUD;
 
-GLboolean BLEND_ENABLED = GL_FALSE;
+GLboolean BLEND_ENABLED;
 
-GLboolean TEXTURES_ENABLED = GL_FALSE;
-GLboolean AUTOSORT_ENABLED = GL_FALSE;
+GLboolean TEXTURES_ENABLED;
+GLboolean AUTOSORT_ENABLED;
 
 PolyList OP_LIST;
 PolyList PT_LIST;
@@ -65,40 +63,6 @@ void glKosSwapBuffers() {
     		TR_LIST.vector.size = 0;
         }
     pvr_scene_finish();
-}
-
-void glScissor(int x, int y, int width, int height) {
-    pvr_poly_hdr_t c;
-    int sx = x, ex = x + width;
-    int sy = y, ey = y + height;
-
-    c.cmd = PVR_CMD_USERCLIP;
-    c.mode1 = c.mode2 = c.mode3 = 0;
-
-    int vw = vid_mode->width  >> 5;
-    int vh = vid_mode->height >> 5;
-
-    c.d1 = CLAMP(sx >> 5,       vw);
-    c.d2 = CLAMP(sy >> 5,       vh);
-    c.d3 = CLAMP((ex >> 5) - 1, vw);
-    c.d4 = CLAMP((ey >> 5) - 1, vh);
-
-    aligned_vector_push_back(&OP_LIST.vector, &c, 1);
-    aligned_vector_push_back(&PT_LIST.vector, &c, 1);
-    aligned_vector_push_back(&TR_LIST.vector, &c, 1);
-}
-
-void glViewport(int x, int y, int w, int h) {
-    Vertex c;
-    c.flags = PVR_CMD_USERCLIP | 0x23;
-    c.x = w *  0.5f; // hwidth
-    c.y = h * -0.5f; // hheight
-    c.z = x + w * 0.5f; // x_plus_hwidth
-    c.w = y + h * 0.5f; // y_plus_hheight
-
-    aligned_vector_push_back(&OP_LIST.vector, &c, 1);
-    aligned_vector_push_back(&PT_LIST.vector, &c, 1);
-    aligned_vector_push_back(&TR_LIST.vector, &c, 1);
 }
 
 void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
@@ -175,7 +139,7 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
         dst->mode2 |= (DimensionFlag(tx1->width)  << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
         dst->mode2 |= (DimensionFlag(tx1->height) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
 
-        dst->mode3  = (GL_FALSE   << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
+        dst->mode3  = (0          << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
         dst->mode3 |= (tx1->color << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
         dst->mode3 |= ((uint32_t)tx1->data & 0x00fffff8) >> 3;
     }

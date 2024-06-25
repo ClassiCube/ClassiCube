@@ -1686,12 +1686,15 @@ void TextInputWidget_OpenKeyboard(struct TextInputWidget* w) {
 }
 
 static int TextInputWidget_KeyDown(void* widget, int key) {
-	struct InputWidget* w = (struct InputWidget*)widget;
+	struct TextInputWidget* w  = (struct TextInputWidget*)widget;
+	struct MenuInputDesc* desc = &w->desc;
 
 	if (Window_Main.SoftKeyboard && !DisplayInfo.ShowingSoftKeyboard && Input_IsEnterButton(key)) { 
-		TextInputWidget_OpenKeyboard(widget); return true; 
+		TextInputWidget_OpenKeyboard(w); return true; 
 	}
-	return InputWidget_KeyDown(w, key);
+	if (InputWidget_KeyDown(&w->base, key)) return true;
+
+	return desc->VTABLE->ProcessInput(desc, &w->base.text, key);
 }
 
 static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {

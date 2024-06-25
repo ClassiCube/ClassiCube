@@ -126,6 +126,9 @@ dlldata.c
 # Mac classic
 retro68scripts/
 
+# PS2
+openvcl/
+
 *_i.c
 *_p.c
 *_i.h

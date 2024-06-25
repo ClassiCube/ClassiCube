@@ -16,9 +16,6 @@
 #define GLubyte    unsigned char
 #define GLboolean  unsigned char
 
-#define GL_FALSE   0
-#define GL_TRUE    1
-
 
 GLuint gldcGenTexture(void);
 void   gldcDeleteTexture(GLuint texture);
@@ -27,9 +24,6 @@ void   gldcBindTexture(GLuint texture);
 /* Loads texture from SH4 RAM into PVR VRAM */
 int  gldcAllocTexture(int w, int h, int format);
 void gldcGetTexture(void** data, int* width, int* height);
-
-void glScissor( int x, int y, int width, int height);
-void glViewport(int x, int y, int width, int height);
 
 void glKosInit();
 void glKosSwapBuffers();

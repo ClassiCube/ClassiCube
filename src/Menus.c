@@ -157,13 +157,18 @@ static void Menu_CycleSelected(struct Screen* s, int dir) {
 	}
 }
 
-static void Menu_ClickSelected(struct Screen* s) {
+static void Menu_InputSelected(struct Screen* s, int key) {
 	struct Widget* w;
 	if (s->selectedI < 0) return;
-	w = s->widgets[s->selectedI];
 
+	w = s->widgets[s->selectedI];
 	if (!Menu_IsSelectable(w)) return;
-	if (w->MenuClick) w->MenuClick(s, w);
+
+	if (w->MenuClick && Input_IsEnterButton(key)) {
+		w->MenuClick(s, w);
+	} else {
+		Elem_HandlesKeyDown(w, key);
+	}
 }
 
 int Menu_InputDown(void* screen, int key) {
@@ -173,8 +178,8 @@ int Menu_InputDown(void* screen, int key) {
 		Menu_CycleSelected(s, -1);
 	} else if (Input_IsDownButton(key)) {
 		Menu_CycleSelected(s, +1);
-	} else if (Input_IsEnterButton(key)) {
-		Menu_ClickSelected(s);
+	} else {
+		Menu_InputSelected(s, key);
 	}
 	return Screen_InputDown(screen, key);
 }
@@ -1116,20 +1121,6 @@ static struct TextInputWidget* GenLevelScreen_SelectedInput(struct GenLevelScree
 	return NULL;
 }
 
-static int GenLevelScreen_KeyDown(void* screen, int key) {
-	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	struct TextInputWidget* selected = GenLevelScreen_SelectedInput(s);
-	struct MenuInputDesc* desc;
-
-	if (selected) {
-		if (Elem_HandlesKeyDown(&selected->base, key)) return true;
-
-		desc = &selected->desc;
-		if (desc->VTABLE->ProcessInput(desc, &selected->base.text, key)) return true;
-	}
-	return Menu_InputDown(s, key);
-}
-
 static int GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	struct TextInputWidget* selected = GenLevelScreen_SelectedInput(s);
@@ -1236,7 +1227,7 @@ static void GenLevelScreen_Init(void* screen) {
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	GenLevelScreen_Init,        GenLevelScreen_Update, Menu_CloseKeyboard,
 	MenuScreen_Render2,         Screen_BuildMesh,
-	GenLevelScreen_KeyDown,     Screen_InputUp,    GenLevelScreen_KeyPress, GenLevelScreen_TextChanged,
+	Menu_InputDown,             Screen_InputUp,    GenLevelScreen_KeyPress, GenLevelScreen_TextChanged,
 	GenLevelScreen_PointerDown, Screen_PointerUp,  Menu_PointerMove,        Screen_TMouseScroll,
 	GenLevelScreen_Layout,      GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
 };
@@ -1462,10 +1453,7 @@ static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
 
 static int SaveLevelScreen_KeyDown(void* screen, int key) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	if (Elem_HandlesKeyDown(&s->input.base, key)) {
-		SaveLevelScreen_RemoveOverwrites(s);
-		return true;
-	}
+	SaveLevelScreen_RemoveOverwrites(s);
 	return Menu_InputDown(s, key);
 }
 
@@ -1495,6 +1483,8 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 
 static void SaveLevelScreen_Update(void* screen, float delta) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	if (!s->input.base.active) return;
+
 	s->input.base.caretAccumulator += delta;
 }
 
@@ -1521,7 +1511,9 @@ static void SaveLevelScreen_Init(void* screen) {
 	ButtonWidget_Add(s, &s->file, 400, SaveLevelScreen_File);
 
 	ButtonWidget_Add(s, &s->cancel, 400, Menu_SwitchPause);
-	TextInputWidget_Add(s, &s->input, 400, &World.Name, &desc);
+	TextInputWidget_Add(s, &s->input, 400, &World.Name, &desc);	
+	Menu_SelectWidget((struct Screen*)s, 3); /* s->input */
+
 	TextWidget_Add(s, &s->desc);
 	s->input.onscreenPlaceholder = "Map name";
 
@@ -2285,7 +2277,6 @@ static int MenuInputOverlay_TextChanged(void* screen, const cc_string* str) {
 
 static int MenuInputOverlay_KeyDown(void* screen, int key) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
-	if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
 
 	if (Input_IsEnterButton(key)) {
 		MenuInputOverlay_EnterInput(s); return true;
@@ -2326,6 +2317,7 @@ static void MenuInputOverlay_Init(void* screen) {
 	ButtonWidget_Add(s,    &s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
 	ButtonWidget_Add(s,    &s->Default,              200, MenuInputOverlay_Default);
 	TextInputWidget_Add(s, &s->input,                400, &s->value, s->desc);
+	Menu_SelectWidget((struct Screen*)s, 2); /* s->input */
 
 	if (s->desc->VTABLE == &IntInput_VTABLE) {
 		s->input.onscreenType = KEYBOARD_TYPE_INTEGER;
