@@ -397,7 +397,7 @@ void Gamepads_Init(void) {
 
 }
 
-void Gamepads_Process(float delta) {
+void Gamepads_Process(float delta) { }
 
 /* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
