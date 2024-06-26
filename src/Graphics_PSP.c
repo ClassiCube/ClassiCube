@@ -19,6 +19,7 @@
 #define FB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
 static unsigned int __attribute__((aligned(16))) list[262144];
 
+#define GE_CMD_TEXTUREMAPENABLE		0x1E
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
@@ -264,7 +265,7 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int targets = 0;
+	int targets = GU_FAST_CLEAR_BIT;
 	if (buffers & GFX_BUFFER_COLOR) targets |= GU_COLOR_BUFFER_BIT;
 	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
 	
@@ -297,6 +298,7 @@ static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	fillFunc(gfx_indices, count, obj);
+	return gfx_indices;
 }
 
 void Gfx_BindIb(GfxResourceID ib)    { }

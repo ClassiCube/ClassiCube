@@ -196,6 +196,10 @@ static void OnMouseWheel(void* obj, float delta) {
 	Launcher_Active->MouseWheel(Launcher_Active, delta);
 }
 
+static void OnClosing(void* obj) {
+	Launcher_ShouldExit = true;
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------------Main body-----------------------------------------------------*
@@ -203,6 +207,7 @@ static void OnMouseWheel(void* obj, float delta) {
 static void Launcher_Init(void) {
 	Event_Register_(&WindowEvents.Resized,      NULL, OnResize);
 	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
+	Event_Register_(&WindowEvents.Closing,      NULL, OnClosing);
 
 	Event_Register_(&InputEvents.Down,          NULL, OnInputDown);
 	Event_Register_(&InputEvents.Wheel,         NULL, OnMouseWheel);

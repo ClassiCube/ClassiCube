@@ -90,7 +90,9 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
 #endif
 
-void Window_Destroy(void) { }
+void Window_Destroy(void) {
+	SDL_DestroyWindow(win_handle);
+}
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
@@ -280,7 +282,6 @@ void Window_ProcessEvents(float delta) {
 		case SDL_EVENT_QUIT:
 			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
-			SDL_DestroyWindow(win_handle);
 			break;
 
 		case SDL_EVENT_RENDER_DEVICE_RESET:
