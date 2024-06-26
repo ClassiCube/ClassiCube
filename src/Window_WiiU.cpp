@@ -170,7 +170,7 @@ void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 
 	KPADInit();
-	VPADInit()
+	VPADInit();
 }
 
 static void ProcessKPadButtons(int port, int mods) {

@@ -84,7 +84,7 @@
 		9A89D58A27F802F600FF3F80 /* BlockPhysics.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4DB27F802F600FF3F80 /* BlockPhysics.c */; };
 		9A89D58B27F802F600FF3F80 /* Launcher.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4DD27F802F600FF3F80 /* Launcher.c */; };
 		9A89D58D27F802F600FF3F80 /* Options.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4E327F802F600FF3F80 /* Options.c */; };
-		9A89D58E27F802F600FF3F80 /* Window_SDL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4E427F802F600FF3F80 /* Window_SDL.c */; };
+		9A89D58E27F802F600FF3F80 /* Window_SDL2.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4E427F802F600FF3F80 /* Window_SDL2.c */; };
 		9A89D58F27F802F600FF3F80 /* Audio.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4E727F802F600FF3F80 /* Audio.c */; };
 		9A89D59027F802F600FF3F80 /* Stream.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4E827F802F600FF3F80 /* Stream.c */; };
 		9A89D59127F802F600FF3F80 /* Vectors.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4E927F802F600FF3F80 /* Vectors.c */; };
@@ -174,7 +174,7 @@
 		9A89D4DB27F802F600FF3F80 /* BlockPhysics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BlockPhysics.c; sourceTree = "<group>"; };
 		9A89D4DD27F802F600FF3F80 /* Launcher.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Launcher.c; sourceTree = "<group>"; };
 		9A89D4E327F802F600FF3F80 /* Options.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Options.c; sourceTree = "<group>"; };
-		9A89D4E427F802F600FF3F80 /* Window_SDL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Window_SDL.c; sourceTree = "<group>"; };
+		9A89D4E427F802F600FF3F80 /* Window_SDL2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Window_SDL2.c; sourceTree = "<group>"; };
 		9A89D4E727F802F600FF3F80 /* Audio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Audio.c; sourceTree = "<group>"; };
 		9A89D4E827F802F600FF3F80 /* Stream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Stream.c; sourceTree = "<group>"; };
 		9A89D4E927F802F600FF3F80 /* Vectors.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Vectors.c; sourceTree = "<group>"; };
@@ -297,7 +297,7 @@
 				9A89D4E927F802F600FF3F80 /* Vectors.c */,
 				9A89D37C27F802F500FF3F80 /* Vorbis.c */,
 				9A89D4EE27F802F600FF3F80 /* Widgets.c */,
-				9A89D4E427F802F600FF3F80 /* Window_SDL.c */,
+				9A89D4E427F802F600FF3F80 /* Window_SDL2.c */,
 				9A89D48727F802F600FF3F80 /* World.c */,
 				9A89D47F27F802F600FF3F80 /* interop_ios.m */,
 			);
@@ -377,7 +377,7 @@
 				9A89D56C27F802F600FF3F80 /* _ftinit.c in Sources */,
 				9A89D58F27F802F600FF3F80 /* Audio.c in Sources */,
 				9A89D55227F802F600FF3F80 /* Logger.c in Sources */,
-				9A89D58E27F802F600FF3F80 /* Window_SDL.c in Sources */,
+				9A89D58E27F802F600FF3F80 /* Window_SDL2.c in Sources */,
 				9A89D4FF27F802F600FF3F80 /* Gui.c in Sources */,
 				9A89D55027F802F600FF3F80 /* Entity.c in Sources */,
 				9A89D58327F802F600FF3F80 /* EntityComponents.c in Sources */,

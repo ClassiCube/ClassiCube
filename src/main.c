@@ -100,6 +100,15 @@ static int RunProgram(int argc, char** argv) {
 		String_Copy(&SP_AutoloadMap, &args[0]); /* TODO: don't copy args? */
 		RunGame();
 #endif
+	} else if (argsCount == 1 && DirectUrl_Claims(&args[0], &args[1], &args[2], &args[3])) {
+		String_Copy(&Game_Username, &args[2]);
+		String_Copy(&Game_Mppass,   &args[3]);
+		
+		if (!DirectUrl_ExtractAddress(&args[1], &Server.Address, &args[4], &Server.Port)) {
+			WarnInvalidArg("Invalid port", &args[4]);
+			return 1;
+		}
+		RunGame();		
 	} else if (argsCount == 1) {
 		String_Copy(&Game_Username, &args[0]);
 		RunGame();		
@@ -111,11 +120,10 @@ static int RunProgram(int argc, char** argv) {
 		String_Copy(&Game_Mppass,   &args[1]);
 		String_Copy(&Server.Address,&args[2]);
 
-		if (!Convert_ParseUInt16(&args[3], &port)) {
+		if (!Convert_ParseInt(&args[3], &Server.Port) || port < 0 || port > 65535) {
 			WarnInvalidArg("Invalid port", &args[3]);
 			return 1;
 		}
-		Server.Port = port;
 		RunGame();
 	}
 	return 0;

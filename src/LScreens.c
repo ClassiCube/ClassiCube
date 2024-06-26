@@ -462,53 +462,39 @@ LAYOUTS dc_lblStatus[]   = { { ANCHOR_CENTRE,    0 }, { ANCHOR_CENTRE, 70 } };
 
 
 static void DirectConnectScreen_UrlFilter(cc_string* str) {
-	static const cc_string prefix = String_FromConst("mc://");
-	cc_string parts[6];
-	if (!String_CaselessStarts(str, &prefix)) return;
-	/* mc://[ip:port]/[username]/[mppass] */
-	if (String_UNSAFE_Split(str, '/', parts, 6) != 5) return;
+	cc_string addr, user, mppass;
+	if (!DirectUrl_Claims(str, &addr, &user, &mppass)) return;
 	
-	LInput_SetString(&DirectConnectScreen.iptAddress,  &parts[2]);
-	LInput_SetString(&DirectConnectScreen.iptUsername, &parts[3]);
-	LInput_SetString(&DirectConnectScreen.iptMppass,   &parts[4]);
+	LInput_SetString(&DirectConnectScreen.iptAddress,  &addr);
+	LInput_SetString(&DirectConnectScreen.iptUsername, &user);
+	LInput_SetString(&DirectConnectScreen.iptMppass,   &mppass);
 	str->length = 0;
 }
 
 static void DirectConnectScreen_StartClient(void* w) {
 	static const cc_string defMppass = String_FromConst("(none)");
-	static const cc_string defPort   = String_FromConst("25565");
 	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
 	const cc_string* addr   = &DirectConnectScreen.iptAddress.text;
 	const cc_string* mppass = &DirectConnectScreen.iptMppass.text;
 	struct LLabel* status   = &DirectConnectScreen.lblStatus;
 
 	cc_string ip, port;
-	cc_uint16 raw_port;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
-	int numAddrs;
+	int numAddrs, raw_port;
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index == 0 || index == addr->length - 1) {
 		LLabel_SetConst(status, "&cInvalid address"); return;
 	}
 
-	/* support either "[IP]" or "[IP]:[PORT]" */
-	if (index == -1) {
-		ip   = *addr;
-		port = defPort;
-	} else {
-		ip   = String_UNSAFE_Substring(addr, 0, index);
-		port = String_UNSAFE_SubstringAt(addr, index + 1);
-	}
-
 	if (!user->length) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
+	if (!DirectUrl_ExtractAddress(addr, &ip, &port, &raw_port)) {
+		LLabel_SetConst(status, "&cInvalid port"); return;
+	}
 	if (Socket_ParseAddress(&ip, 0, addrs, &numAddrs)) {
 		LLabel_SetConst(status, "&cInvalid ip"); return;
-	}
-	if (!Convert_ParseUInt16(&port, &raw_port)) {
-		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;
 
