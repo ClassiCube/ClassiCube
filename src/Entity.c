@@ -483,7 +483,7 @@ static void Entities_ContextLost(void* obj) {
 }
 /* No OnContextCreated, skin textures remade when needed */
 
-void Entities_Remove(EntityID id) {
+void Entities_Remove(int id) {
 	struct Entity* e = Entities.List[id];
 	if (!e) return;
 
@@ -492,7 +492,7 @@ void Entities_Remove(EntityID id) {
 	Entities.List[id] = NULL;
 
 	/* TODO: Move to EntityEvents.Removed callback instead */
-	if (TabList_EntityLinked_Get(id)) {
+	if (id < TABLIST_MAX_NAMES && TabList_EntityLinked_Get(id)) {
 		TabList_Remove(id);
 		TabList_EntityLinked_Reset(id);
 	}
@@ -756,7 +756,6 @@ static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	p->index = index;
 
 	hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
-	/* p->Base.Health = 20; TODO: survival mode stuff */
 	if (Game_ClassicMode) return;
 
 	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR,  0.1f, 50.0f, 10.0f);
@@ -1087,6 +1086,10 @@ static void Entities_Init(void) {
 		LocalPlayer_Init(&LocalPlayer_Instances[i], i);
 		Entities.List[MAX_NET_PLAYERS + i] = &LocalPlayer_Instances[i].Base;
 	}
+	for (; i < MAX_LOCAL_PLAYERS; i++)
+	{
+		Entities.List[MAX_NET_PLAYERS + i] = NULL;
+	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];
 	LocalPlayer_HookBinds();
 }
@@ -1095,7 +1098,7 @@ static void Entities_Free(void) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
-		Entities_Remove((EntityID)i);
+		Entities_Remove(i);
 	}
 	sources_head = NULL;
 }

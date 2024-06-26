@@ -179,7 +179,7 @@ void Entities_Tick(struct ScheduledTask* task);
 /* Renders all entities */
 void Entities_RenderModels(float delta, float t);
 /* Removes the given entity, raising EntityEvents.Removed event */
-void Entities_Remove(EntityID id);
+void Entities_Remove(int id);
 /* Gets the ID of the closest entity to the given entity */
 /* Returns -1 if there is no other entity nearby */
 int Entities_GetClosest(struct Entity* src);

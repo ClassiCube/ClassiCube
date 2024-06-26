@@ -499,7 +499,7 @@ static void OnNewMap(void) {
 	/* wipe all existing entities */
 	for (i = 0; i < MAX_NET_PLAYERS; i++) 
 	{
-		Entities_Remove((EntityID)i);
+		Entities_Remove(i);
 	}
 }
 
