@@ -439,6 +439,8 @@ static void DoCreateWindow(void) {
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
 void Window_Create3D(int width, int height) { DoCreateWindow(); }
 
+void Window_Destroy(void) { }
+
 extern void interop_SetPageTitle(const char* title);
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];

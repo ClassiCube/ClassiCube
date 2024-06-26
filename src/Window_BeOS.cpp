@@ -375,6 +375,9 @@ void Window_Create3D(int width, int height) {
 	win_handle->AddChild(view_handle);
 }
 
+void Window_Destroy(void) {
+}
+
 void Window_SetTitle(const cc_string* title) {
 	char raw[NATIVE_STR_LEN];
 	String_EncodeUtf8(raw, title);

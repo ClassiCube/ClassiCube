@@ -340,6 +340,8 @@ static void DoCreateWindow(void) {
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
 void Window_Create3D(int width, int height) { DoCreateWindow(); }
 
+void Window_Destroy(void) { }
+
 void Window_SetTitle(const cc_string* title) {
 	/* TODO: Implement this somehow */
 	/* Maybe https://stackoverflow.com/questions/2198410/how-to-change-title-of-activity-in-android */

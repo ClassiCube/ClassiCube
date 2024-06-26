@@ -297,6 +297,7 @@ void Launcher_Run(void) {
 		cc_result res = Updater_Start(&action);
 		if (res) Logger_SysWarn(res, action);
 	}
+	Window_Destroy();
 }
 
 

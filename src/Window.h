@@ -117,6 +117,9 @@ void Window_Create2D(int width, int height);
 /* Creates a window of the given size at centre of the screen. */
 /* NOTE: The created window is compatible with 3D rendering */
 void Window_Create3D(int width, int height);
+/* Destroys the window. */
+void Window_Destroy(void);
+
 /* Sets the text of the titlebar above the window. */
 CC_API void Window_SetTitle(const cc_string* title);
 

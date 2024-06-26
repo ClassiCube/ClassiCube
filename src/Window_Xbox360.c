@@ -56,6 +56,8 @@ void Window_Free(void) { }
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
 
+void Window_Destroy(void) { }
+
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
 void Clipboard_SetText(const cc_string* value) { }

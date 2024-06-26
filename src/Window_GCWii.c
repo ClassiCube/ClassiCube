@@ -102,6 +102,8 @@ void Window_Create3D(int width, int height) {
 	launcherMode = false; 
 }
 
+void Window_Destroy(void) { }
+
 void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }

@@ -404,6 +404,13 @@ static void DoCreateWindow(int width, int height) {
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
+void Window_Destroy(void) {
+	/* sync and discard all events queued */
+	XSync(win_display, true);
+	XDestroyWindow(win_display, win_handle);
+	Window_Main.Exists = false;
+}
+
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, title);
@@ -567,10 +574,6 @@ static Bool FilterEvent(Display* d, XEvent* e, XPointer w) {
 static void HandleWMDestroy(void) {
 	Platform_LogConst("Exit message received.");
 	Event_RaiseVoid(&WindowEvents.Closing);
-
-	/* sync and discard all events queued */
-	XSync(win_display, true);
-	XDestroyWindow(win_display, win_handle);
 	Window_Main.Exists = false;
 }
 

@@ -106,6 +106,8 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
 #endif
 
+void Window_Destroy(void) { }
+
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, title);

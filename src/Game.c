@@ -852,4 +852,5 @@ void Game_Run(int width, int height, const cc_string* title) {
 
 	frameStart = Stopwatch_Measure();
 	Game_RunLoop();
+	Window_Destroy();
 }

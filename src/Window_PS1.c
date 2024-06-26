@@ -58,9 +58,14 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
+void Window_Create2D(int width, int height) {
+	launcherMode = true;
+}
 void Window_Create3D(int width, int height) { 
 	launcherMode = false; 
 }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -145,10 +150,6 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_Create2D(int width, int height) {
-	launcherMode = true;
-}
-
 static DISPENV disp;
 static cc_uint16* fb;
 

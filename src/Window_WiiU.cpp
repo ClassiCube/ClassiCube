@@ -136,6 +136,8 @@ void Window_Create3D(int width, int height) {
 	Event_Unregister_(&WindowEvents.InactiveChanged, NULL, LauncherInactiveChanged);
 }
 
+void Window_Destroy(void) { }
+
 void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }

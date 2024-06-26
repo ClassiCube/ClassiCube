@@ -395,6 +395,8 @@ static void DoCreateWindow(int width, int height) {
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
+void Window_Destroy(void) { }
+
 void Window_SetTitle(const cc_string* title) {
 	char raw[NATIVE_STR_LEN];
 	NSString* str;
