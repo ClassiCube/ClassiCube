@@ -393,7 +393,11 @@ void Window_ProcessEvents(float delta) {
 	JavaICall_Void(env, JAVA_processEvents, NULL);
 }
 
-void Window_ProcessGamepads(float delta) { }
+void Gamepads_Init(void) {
+
+}
+
+void Gamepads_Process(float delta) {
 
 /* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }

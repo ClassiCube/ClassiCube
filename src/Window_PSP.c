@@ -25,8 +25,6 @@ struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
-	sceCtrlSetSamplingCycle(0);
-	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 }
 
 void Window_Init(void) {
@@ -44,7 +42,6 @@ void Window_Init(void) {
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
@@ -87,6 +84,13 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	sceCtrlSetSamplingCycle(0);
+	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+}
+
 static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & PSP_CTRL_LTRIGGER);
 	Gamepad_SetButton(port, CCPAD_R, mods & PSP_CTRL_RTRIGGER);
@@ -116,7 +120,7 @@ static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	SceCtrlData pad;
 	/* TODO implement */
 	int ret = sceCtrlPeekBufferPositive(&pad, 1);

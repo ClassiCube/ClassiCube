@@ -60,12 +60,10 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 20;
 	DisplayInfo.ContentOffsetY = 20;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
-	ioPadInit(MAX_PORT_NUM);
 	ioKbInit(MAX_KB_PORT_NUM);
 	ioKbSetCodeType(0, KB_CODETYPE_RAW);
 	ioKbGetConfiguration(0, &kb_config);
@@ -106,6 +104,7 @@ void Window_RequestClose(void) {
 *#########################################################################################################################*/
 #define MAX_KEYCODE_MAPPINGS 148
 static char now_pressed[MAX_KEYCODE_MAPPINGS], was_pressed[MAX_KEYCODE_MAPPINGS];
+
 static int MapKey(int k) {
 	if (k >= KB_RAWKEY_A      && k <= KB_RAWKEY_Z)      return 'A'       + (k - KB_RAWKEY_A);
 	if (k >= KB_RAWKEY_1      && k <= KB_RAWKEY_9)      return '1'       + (k - KB_RAWKEY_1);
@@ -275,6 +274,11 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	ioPadInit(MAX_PORT_NUM);
+}
+
 static void HandleButtons(int port, padData* data) {
 	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
 	Gamepad_SetButton(port, CCPAD_A, data->BTN_TRIANGLE);
@@ -312,7 +316,7 @@ static void ProcessPadInput(int port, float delta, padData* pad) {
 	HandleJoystick(port, PAD_AXIS_RIGHT, pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	ioPadGetInfo(&pad_info);
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{

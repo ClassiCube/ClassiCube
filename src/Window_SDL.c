@@ -330,8 +330,6 @@ void Window_ProcessEvents(float delta) {
 	}
 }
 
-void Window_ProcessGamepads(float delta) { }
-
 static void Cursor_GetRawPos(int* x, int* y) {
 	SDL_GetMouseState(x, y);
 }
@@ -463,6 +461,9 @@ void Window_DisableRawMouse(void) {
 	SDL_SetRelativeMouseMode(false);
 	Input.RawMode = false;
 }
+
+void Gamepads_Init(void) { }
+void Gamepads_Process(float delta) { }
 
 
 /*########################################################################################################################*

@@ -62,6 +62,7 @@ static void SetupProgram(int argc, char** argv) {
 	res = Platform_SetDefaultCurrentDirectory(argc, argv);
 	Options_Load();
 	Window_Init();
+	Gamepads_Init();
 	
 	if (res) Logger_SysWarn(res, "setting current directory");
 	Platform_LogConst("Starting " GAME_APP_NAME " ..");

@@ -45,7 +45,6 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 20;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
@@ -223,6 +222,10 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+}
+
 static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_A, mods & CONT_A);
 	Gamepad_SetButton(port, CCPAD_B, mods & CONT_B);
@@ -263,7 +266,7 @@ static void HandleController(int port, cont_state_t* state, float delta) {
 	HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	maple_device_t* cont;
 	cont_state_t*  state;
 

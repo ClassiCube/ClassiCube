@@ -25,8 +25,6 @@
 #include <libmouse.h>
 
 static cc_bool launcherMode, mouseSupported, kbdSupported;
-static char padBuf0[256] __attribute__((aligned(64)));
-static char padBuf1[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -56,14 +54,9 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = 1.0f / Window_Main.Height;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
-	
-	padInit(0);
-	padPortOpen(0, 0, padBuf0);
-	padPortOpen(1, 0, padBuf1);
 
 	if (PS2MouseInit() >= 0) {
 		PS2MouseSetReadMode(PS2MOUSE_READMODE_DIFF);
@@ -189,6 +182,17 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static char padBuf0[256] __attribute__((aligned(64)));
+static char padBuf1[256] __attribute__((aligned(64)));
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	
+	padInit(0);
+	padPortOpen(0, 0, padBuf0);
+	padPortOpen(1, 0, padBuf1);
+}
+
 static void HandleButtons(int port, int buttons) {
 	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
 	// So just flip the bits to make more sense
@@ -246,7 +250,7 @@ static void ProcessPad(int port, float delta) {
 	if (ret != 0) ProcessPadInput(port, delta, &pad);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	ProcessPad(0, delta);
 	ProcessPad(1, delta);
 }

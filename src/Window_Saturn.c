@@ -43,7 +43,6 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 
@@ -51,7 +50,6 @@ void Window_Init(void) {
 	vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(0, 0), RGB1555(1, 19, 0, 0));
 	vdp2_tvmd_display_set();
 
-	smpc_peripheral_init();
 	vdp_sync_vblank_out_set(OnVblank, NULL);
 }
 
@@ -84,7 +82,6 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ProcessEvents(float delta) {
-	smpc_peripheral_process();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -97,6 +94,11 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	smpc_peripheral_init();
+}
+
 static void ProcessButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
 	Gamepad_SetButton(port, CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
@@ -120,7 +122,9 @@ static void ProcessButtons(int port, int mods) {
 static smpc_peripheral_digital_t dig_state;
 static smpc_peripheral_analog_t  ana_state;
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
+	smpc_peripheral_process();
+
 	smpc_peripheral_digital_port(1, &dig_state);
 	ProcessButtons(0, dig_state.pressed.raw | dig_state.held.raw);
 	

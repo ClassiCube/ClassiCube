@@ -78,17 +78,13 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	#if defined HW_RVL
-	WPAD_Init();
-	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
 	KEYBOARD_Init(NULL);
 	#endif
-	PAD_Init();
 }
 
 void Window_Free(void) { }
@@ -305,6 +301,16 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	#if defined HW_RVL
+	WPAD_Init();
+	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
+	#endif
+	PAD_Init();
+}
+
 #if defined HW_RVL
 static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
@@ -425,7 +431,7 @@ static void ProcessWPADInput(int port, float delta) {
 	ProcessWPADDrag(res, mods);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		ProcessWPADInput(port, delta);
@@ -433,7 +439,7 @@ void Window_ProcessGamepads(float delta) {
 	}
 }
 #else
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		ProcessPADInput(port, delta);

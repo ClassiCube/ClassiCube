@@ -31,7 +31,6 @@ extern void (*DQ_OnNextFrame)(void* fb);
 static void DQ_OnNextFrame2D(void* fb);
 
 void Window_PreInit(void) {
-	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK,  SCE_TOUCH_SAMPLING_STATE_START);
 }
@@ -52,7 +51,6 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	
 	sceTouchGetPanelInfo(SCE_TOUCH_PORT_FRONT, &frontPanel);
 	Gfx_InitGXM();
@@ -139,6 +137,12 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+}
+
 static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_A, mods & SCE_CTRL_TRIANGLE);
 	Gamepad_SetButton(port, CCPAD_B, mods & SCE_CTRL_SQUARE);
@@ -180,7 +184,7 @@ static void ProcessPadInput(float delta) {
 	ProcessCircleInput(0, PAD_AXIS_RIGHT, pad.rx - 127, pad.ry - 127, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	ProcessPadInput(delta);
 }
 

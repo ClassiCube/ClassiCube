@@ -36,10 +36,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
-	joypad_init();
 
 	// change defaults to make more sense for N64
 	BindMapping* binds = (BindMapping*)PadBind_Defaults;
@@ -88,7 +86,6 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ProcessEvents(float delta) {
-	joypad_poll();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
@@ -100,6 +97,11 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	joypad_init();
+}
+
 static void HandleButtons(int port, joypad_buttons_t btns) {
 	Gamepad_SetButton(port, CCPAD_L, btns.l);
 	Gamepad_SetButton(port, CCPAD_R, btns.r);
@@ -132,7 +134,9 @@ static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, float delta) {
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
+	joypad_poll();
+
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		if (!joypad_is_connected(port)) continue;

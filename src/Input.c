@@ -626,7 +626,7 @@ void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
 
 void Gamepad_Tick(float delta) {
 	int port;
-	Window_ProcessGamepads(delta);
+	Gamepads_Process(delta);
 	
 	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{

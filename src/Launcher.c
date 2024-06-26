@@ -277,7 +277,6 @@ void Launcher_Run(void) {
 
 	for (;;) {
 		Window_ProcessEvents(10 / 1000.0f);
-		Window_ProcessGamepads(10 / 1000.0f);
 		Gamepad_Tick(10 / 1000.0f);
 		if (!Window_Main.Exists || Launcher_ShouldExit) break;
 

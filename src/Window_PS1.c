@@ -24,8 +24,6 @@
 #define SCREEN_YRES	240
 
 static cc_bool launcherMode;
-static char pad_buff[2][34];
-
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -44,16 +42,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
-	
-// http://lameguy64.net/tutorials/pstutorials/chapter1/4-controllers.html
-	InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
-	pad_buff[0][0] = pad_buff[0][1] = 0xff;
-	pad_buff[1][0] = pad_buff[1][1] = 0xff;
-	StartPAD();
-	ChangeClearPAD(0);
 }
 
 void Window_Free(void) { }
@@ -100,6 +90,19 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static char pad_buff[2][34];
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	
+	// http://lameguy64.net/tutorials/pstutorials/chapter1/4-controllers.html
+	InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
+	pad_buff[0][0] = pad_buff[0][1] = 0xff;
+	pad_buff[1][0] = pad_buff[1][1] = 0xff;
+	StartPAD();
+	ChangeClearPAD(0);
+}
+
 static void HandleButtons(int port, int buttons) {
 	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
 	// So just flip the bits to make more sense
@@ -141,7 +144,7 @@ static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
 	}
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
 	if (pad->stat == 0) ProcessPadInput(0, pad, delta);
 }

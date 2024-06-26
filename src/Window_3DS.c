@@ -14,7 +14,6 @@
 #include <3ds.h>
 
 static cc_bool launcherMode;
-static Result irrst_result;
 static u16 top_width, top_height;
 static u16 btm_width, btm_height;
 
@@ -52,8 +51,6 @@ void Window_Init(void) {
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	irrst_result  = irrstInit();
 	
 	Window_Alt.Width  = btm_width;
 	Window_Alt.Height = btm_height;
@@ -131,6 +128,13 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static Result irrst_result;
+
+void Gamepads_Init(void) {
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	irrst_result  = irrstInit();
+}
+
 static void HandleButtons(u32 mods) {
 	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);
 	Gamepad_SetButton(0, CCPAD_R, mods & KEY_R);
@@ -161,7 +165,7 @@ static void ProcessCircleInput(int axis, circlePosition* pos, float delta) {
 	Gamepad_SetAxis(0, axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	u32 mods = hidKeysDown() | hidKeysHeld();
 	HandleButtons(mods);
 	

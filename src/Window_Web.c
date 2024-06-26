@@ -570,6 +570,8 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) { }
+
 /* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
 #define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
 static void ProcessGamepadButtons(int port, EmscriptenGamepadEvent* ev) {
@@ -617,19 +619,18 @@ static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delt
 	}
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	int i, res, count;
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
-	if (emscripten_sample_gamepad_data() == 0) {
-		count = emscripten_get_num_gamepads();
+	if (emscripten_sample_gamepad_data() != 0) return;
+	count = emscripten_get_num_gamepads();
 
-		for (i = 0; i < count; i++)
-		{
-			EmscriptenGamepadEvent ev;
-			res = emscripten_get_gamepad_status(i, &ev);
-			if (res == 0) ProcessGamepadInput(i, &ev, delta);
-		}	
+	for (i = 0; i < count; i++)
+	{
+		EmscriptenGamepadEvent ev;
+		res = emscripten_get_gamepad_status(i, &ev);
+		if (res == 0) ProcessGamepadInput(i, &ev, delta);
 	}
 }
 

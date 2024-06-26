@@ -77,9 +77,6 @@ static uint32_t OnReleased(void* context) {
 }
 
 void Window_PreInit(void) {
-	KPADInit();
-	VPADInit();
-
 	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, OnAcquired, NULL, 100);
 	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, OnReleased, NULL, 100);
 }
@@ -97,7 +94,6 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 
@@ -169,6 +165,13 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 static VPADStatus vpadStatus;
 static bool kpad_valid[4];
 static KPADStatus kpads[4];
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	KPADInit();
+	VPADInit()
+}
 
 static void ProcessKPadButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_BUTTON_1);
@@ -325,7 +328,7 @@ static void ProcessVPAD(float delta) {
 }
 
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	ProcessVPAD(delta);
 	for (int i = 0; i < 4; i++)
 		ProcessKPAD(delta, i);

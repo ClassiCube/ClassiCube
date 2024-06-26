@@ -156,7 +156,6 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 }
 
 void Window_Free(void) { }
@@ -228,8 +227,12 @@ void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
-*#########################################################################################################################*/
-void Window_ProcessGamepads(float delta) {
+*#########################################################################################################################*/	
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+}
+
+void Gamepads_Process(float delta) {
 	int mods = keysDown() | keysHeld();
 	
 	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);

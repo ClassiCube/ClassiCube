@@ -75,7 +75,6 @@ void Window_Init(void) {
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
 	nwindowSetDimensions(Window_Main.Handle.ptr, 1920, 1080);
 	SetResolution();
@@ -149,6 +148,10 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+}
+
 static void HandleButtons(int port, u64 mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & HidNpadButton_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & HidNpadButton_R);
@@ -176,7 +179,7 @@ static void ProcessJoystickInput(int port, int axis, HidAnalogStickState* pos, f
 	Gamepad_SetAxis(port, axis, pos->x / AXIS_SCALE, -pos->y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	u64 keys = padGetButtons(&pad);
 	HandleButtons(0, keys);
 

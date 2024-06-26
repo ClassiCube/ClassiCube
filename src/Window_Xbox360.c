@@ -41,12 +41,7 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
-	
-	usb_init();
-	usb_do_poll();
-	
 	//xenon_ata_init();
 	//xenon_atapi_init();
 }
@@ -79,7 +74,6 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ProcessEvents(float delta) {
-	usb_do_poll();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
@@ -92,6 +86,12 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	usb_init();
+	usb_do_poll();
+}
 /*
 struct controller_data_s
 {
@@ -130,7 +130,9 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
+	usb_do_poll();
+
 	struct controller_data_s pad;
 	int res = get_controller_data(&pad, 0);
 	if (res == 0) return;

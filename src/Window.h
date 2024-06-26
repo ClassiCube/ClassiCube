@@ -152,8 +152,11 @@ void Window_SetSize(int width, int height);
 void Window_RequestClose(void);
 /* Processes all pending window messages/events. */
 void Window_ProcessEvents(float delta);
+
+/* Initialises state for gamepad/joystick input. */
+void Gamepads_Init(void);
 /* Processes all pending gamepad/joystick input. */
-void Window_ProcessGamepads(float delta);
+void Gamepads_Process(float delta);
 
 /* Sets the position of the cursor. */
 /* NOTE: This should be avoided because it is unsupported on some platforms. */
