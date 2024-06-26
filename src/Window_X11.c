@@ -16,7 +16,7 @@
 #include <X11/extensions/XInput2.h>
 #endif
 */
-#include <X11/Xlib.h>
+#include "../misc/linux/min-xlib.h"
 #include "../misc/linux/min-keysymdef.h"
 #include "../misc/linux/min-xutil.h"
 #include "../misc/linux/min-xkblib.h"
@@ -388,12 +388,12 @@ static void DoCreateWindow(int width, int height) {
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
 	XClassHint hint = { 0 };
 	#ifdef CC_BUILD_FLATPAK
-          hint.res_name   = "net.classicube.flatpak.client";
-          hint.res_class  = "net.classicube.flatpak.client";
-        #else
-	  hint.res_name   = GAME_APP_TITLE;
-          hint.res_class  = GAME_APP_TITLE;
-        #endif
+		hint.res_name   = "net.classicube.flatpak.client";
+		hint.res_class  = "net.classicube.flatpak.client";
+	#else
+		hint.res_name   = GAME_APP_TITLE;
+		hint.res_class  = GAME_APP_TITLE;
+	#endif
 	XSetClassHint(win_display, win_handle, &hint);
 	ApplyIcon();
 

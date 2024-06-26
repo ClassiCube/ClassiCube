@@ -27,7 +27,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef _X11_XKBLIB_H_
 #define _X11_XKBLIB_H_
 
-#include <X11/Xlib.h>
+#include "min-xlib.h"
 
 extern	Bool	XkbSetDetectableAutoRepeat(
 	Display *		/* dpy */,
