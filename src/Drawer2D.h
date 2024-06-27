@@ -93,7 +93,7 @@ cc_bool Drawer2D_IsWhiteColor(char c);
 cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, char* colorCode);
 
 /* Divides R/G/B by 4 */
-#define SHADOW_MASK ((0x3F << BITMAPCOLOR_R_SHIFT) | (0x3F << BITMAPCOLOR_G_SHIFT) | (0x3F << BITMAPCOLOR_B_SHIFT))
+#define SHADOW_MASK (BitmapColor_R_Bits(0x3F) | BitmapColor_G_Bits(0x3F) | BitmapColor_B_Bits(0x3F))
 static CC_INLINE BitmapCol GetShadowColor(BitmapCol c) {
 	if (Drawer2D.BlackTextShadows) return BITMAPCOLOR_BLACK;
 

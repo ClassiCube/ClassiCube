@@ -35,12 +35,12 @@ void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY,
 
 void Bitmap_Allocate(struct Bitmap* bmp, int width, int height) {
 	bmp->width = width; bmp->height = height;
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, 4, "bitmap data");
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "bitmap data");
 }
 
 void Bitmap_TryAllocate(struct Bitmap* bmp, int width, int height) {
 	bmp->width = width; bmp->height = height;
-	bmp->scan0 = (BitmapCol*)Mem_TryAlloc(width * height, 4);
+	bmp->scan0 = (BitmapCol*)Mem_TryAlloc(width * height, BITMAPCOLOR_SIZE);
 }
 
 void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src, 
@@ -409,9 +409,9 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			for (i = 0; i < dataSize; i += 3) {
 				palette[i / 3] &= BITMAPCOLOR_A_MASK; /* set RGB to 0 */
-				palette[i / 3] |= buffer[i    ] << BITMAPCOLOR_R_SHIFT;
-				palette[i / 3] |= buffer[i + 1] << BITMAPCOLOR_G_SHIFT;
-				palette[i / 3] |= buffer[i + 2] << BITMAPCOLOR_B_SHIFT;
+				palette[i / 3] |= BitmapColor_R_Bits(buffer[i    ]);
+				palette[i / 3] |= BitmapColor_G_Bits(buffer[i + 1]);
+				palette[i / 3] |= BitmapColor_B_Bits(buffer[i + 2]);
 			}
 		} break;
 
@@ -434,7 +434,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 				/* set alpha component of palette */
 				for (i = 0; i < dataSize; i++) {
 					palette[i] &= BITMAPCOLOR_RGB_MASK; /* set A to 0 */
-					palette[i] |= buffer[i] << BITMAPCOLOR_A_SHIFT;
+					palette[i] |= BitmapColor_A_Bits(buffer[i]);
 				}
 			} else if (colorspace == PNG_COLOR_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;

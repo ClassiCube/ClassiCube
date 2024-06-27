@@ -6,8 +6,15 @@
 */
 struct Stream;
 
-/* Represents a packed 32 bit RGBA colour, suitable for native graphics API texture pixels. */
-typedef cc_uint32 BitmapCol;
+/* Represents a packed RGBA colour, suitable for 3D graphics API textures and 2D window framebuffers. */
+#ifndef BITMAP_16BPP
+	typedef cc_uint32 BitmapCol;
+	#define BITMAPCOLOR_SIZE 4
+#else
+	typedef cc_uint16 BitmapCol;
+	#define BITMAPCOLOR_SIZE 2
+#endif
+
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_PSP || defined CC_BUILD_PSVITA || defined CC_BUILD_PS2
 	#define BITMAPCOLOR_R_SHIFT  0
 	#define BITMAPCOLOR_G_SHIFT  8
@@ -18,6 +25,11 @@ typedef cc_uint32 BitmapCol;
 	#define BITMAPCOLOR_G_SHIFT 16
 	#define BITMAPCOLOR_B_SHIFT  8
 	#define BITMAPCOLOR_A_SHIFT  0
+#elif defined BITMAP_16BPP
+	#define BITMAPCOLOR_B_SHIFT  0
+	#define BITMAPCOLOR_G_SHIFT  5
+	#define BITMAPCOLOR_R_SHIFT 10
+	#define BITMAPCOLOR_A_SHIFT 15
 #else
 	#define BITMAPCOLOR_B_SHIFT  0
 	#define BITMAPCOLOR_G_SHIFT  8
@@ -25,21 +37,43 @@ typedef cc_uint32 BitmapCol;
 	#define BITMAPCOLOR_A_SHIFT 24
 #endif
 
-#define BITMAPCOLOR_R_MASK (0xFFU << BITMAPCOLOR_R_SHIFT)
-#define BITMAPCOLOR_G_MASK (0xFFU << BITMAPCOLOR_G_SHIFT)
-#define BITMAPCOLOR_B_MASK (0xFFU << BITMAPCOLOR_B_SHIFT)
-#define BITMAPCOLOR_A_MASK (0xFFU << BITMAPCOLOR_A_SHIFT)
-
-/* Extracts just the R/G/B/A component from a bitmap color */
-#define BitmapCol_R(color) ((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT))
-#define BitmapCol_G(color) ((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT))
-#define BitmapCol_B(color) ((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT))
-#define BitmapCol_A(color) ((cc_uint8)(color >> BITMAPCOLOR_A_SHIFT))
-
-#define BitmapColor_R_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_R_SHIFT)
-#define BitmapColor_G_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_G_SHIFT)
-#define BitmapColor_B_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_B_SHIFT)
-#define BitmapColor_A_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_A_SHIFT)
+#ifndef BITMAP_16BPP
+	/* Masks a packed color to the selected component */
+	#define BITMAPCOLOR_R_MASK (0xFFU << BITMAPCOLOR_R_SHIFT)
+	#define BITMAPCOLOR_G_MASK (0xFFU << BITMAPCOLOR_G_SHIFT)
+	#define BITMAPCOLOR_B_MASK (0xFFU << BITMAPCOLOR_B_SHIFT)
+	#define BITMAPCOLOR_A_MASK (0xFFU << BITMAPCOLOR_A_SHIFT)
+	
+	/* Extracts just the R/G/B/A component from a bitmap color */
+	#define BitmapCol_R(color) ((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT))
+	#define BitmapCol_G(color) ((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT))
+	#define BitmapCol_B(color) ((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT))
+	#define BitmapCol_A(color) ((cc_uint8)(color >> BITMAPCOLOR_A_SHIFT))
+	
+	/* Converts input value into a packed color component */
+	#define BitmapColor_R_Bits(value) ((cc_uint8)(value) << BITMAPCOLOR_R_SHIFT)
+	#define BitmapColor_G_Bits(value) ((cc_uint8)(value) << BITMAPCOLOR_G_SHIFT)
+	#define BitmapColor_B_Bits(value) ((cc_uint8)(value) << BITMAPCOLOR_B_SHIFT)
+	#define BitmapColor_A_Bits(value) ((cc_uint8)(value) << BITMAPCOLOR_A_SHIFT)
+#else
+	/* Masks a packed color to the selected component */
+	#define BITMAPCOLOR_R_MASK (0x3FU << BITMAPCOLOR_R_SHIFT)
+	#define BITMAPCOLOR_G_MASK (0x3FU << BITMAPCOLOR_G_SHIFT)
+	#define BITMAPCOLOR_B_MASK (0x3FU << BITMAPCOLOR_B_SHIFT)
+	#define BITMAPCOLOR_A_MASK (0x01U << BITMAPCOLOR_A_SHIFT)
+	
+	/* Extracts just the R/G/B/A component from a bitmap color */
+	#define BitmapCol_R(color) (((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT) & 0x3F) << 3)
+	#define BitmapCol_G(color) (((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT) & 0x3F) << 3)
+	#define BitmapCol_B(color) (((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT) & 0x3F) << 3)
+	#define BitmapCol_A(color) (((cc_uint8)(color >> BITMAPCOLOR_A_SHIFT) & 0x01) << 7)
+	
+	/* Converts input value into a packed color component */
+	#define BitmapColor_R_Bits(value) (((cc_uint8)(value) >> 3) << BITMAPCOLOR_R_SHIFT)
+	#define BitmapColor_G_Bits(value) (((cc_uint8)(value) >> 3) << BITMAPCOLOR_G_SHIFT)
+	#define BitmapColor_B_Bits(value) (((cc_uint8)(value) >> 3) << BITMAPCOLOR_B_SHIFT)
+	#define BitmapColor_A_Bits(value) (((cc_uint8)(value) >> 7) << BITMAPCOLOR_A_SHIFT)
+#endif
 
 #define BitmapCol_Make(r, g, b, a) (BitmapColor_R_Bits(r) | BitmapColor_G_Bits(g) | BitmapColor_B_Bits(b) | BitmapColor_A_Bits(a))
 #define BitmapColor_RGB(r, g, b)   (BitmapColor_R_Bits(r) | BitmapColor_G_Bits(g) | BitmapColor_B_Bits(b) | BITMAPCOLOR_A_MASK)

@@ -178,7 +178,7 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 		if (width > 1)  width  /= 2;
 		if (height > 1) height /= 2;
 
-		cur = (BitmapCol*)Mem_Alloc(width * height, 4, "mipmaps");
+		cur = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "mipmaps");
 		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		D3D11_BOX box;

@@ -1401,7 +1401,7 @@ void LBackend_Redraw(void) {
     struct Bitmap bmp;
     bmp.width  = max(Window_Main.Width,  1);
     bmp.height = max(Window_Main.Height, 1);
-    bmp.scan0  = (BitmapCol*)Mem_Alloc(bmp.width * bmp.height, 4, "window pixels");
+    bmp.scan0  = (BitmapCol*)Mem_Alloc(bmp.width * bmp.height, BITMAPCOLOR_SIZE, "window pixels");
     
     Context2D_Wrap(&ctx, &bmp);
     win_ctx = CGBitmapContextCreate(bmp.scan0, bmp.width, bmp.height, 8, bmp.width * 4,

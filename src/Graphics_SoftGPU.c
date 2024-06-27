@@ -98,7 +98,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
 	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
 }
 

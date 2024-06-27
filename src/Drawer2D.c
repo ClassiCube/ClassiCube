@@ -163,7 +163,7 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 
 	ctx->bmp.width  = width; 
 	ctx->bmp.height = height;
-	ctx->bmp.scan0  = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
+	ctx->bmp.scan0  = (BitmapCol*)Mem_AllocCleared(width * height, BITMAPCOLOR_SIZE, "bitmap data");
 }
 
 void Context2D_Wrap(struct Context2D* ctx, struct Bitmap* bmp) {

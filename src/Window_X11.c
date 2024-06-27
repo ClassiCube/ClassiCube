@@ -1133,7 +1133,7 @@ static int fb_fast;
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
 
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
 
@@ -1141,7 +1141,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	/* Easy for 24/32 bit case, but much trickier with other depths */
 	/*  (have to do a manual and slow second blit for other depths) */
 	fb_fast = win_visual.depth == 24 || win_visual.depth == 32;
-	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(width * height, 4, "window blit");
+	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window blit");
 
 	fb_image = XCreateImage(win_display, win_visual.visual,
 		win_visual.depth, ZPixmap, 0, fb_data,
