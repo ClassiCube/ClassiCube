@@ -154,7 +154,6 @@ void Gamepads_Process(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 static DISPENV disp;
-static cc_uint16* fb;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	SetDefDispEnv(&disp, 0, 0, SCREEN_XRES, SCREEN_YRES);
@@ -166,12 +165,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
-
-	fb = Mem_Alloc(width * height, 2, "real surface");
 }
-
-#define BGRA8_to_PS1(src) \
-	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | 0x8000
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	RECT rect;
@@ -180,24 +174,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	rect.w = SCREEN_XRES;
 	rect.h = SCREEN_YRES;
 
-	for (int y = r.y; y < r.y + r.height; y++)
-	{
-		cc_uint32* src = Bitmap_GetRow(bmp, y);
-		cc_uint16* dst = fb + y * bmp->width;
-		
-		for (int x = r.x; x < r.x + r.width; x++) {
-			cc_uint8* color = (cc_uint8*)&src[x];
-			dst[x] = BGRA8_to_PS1(color);
-		}
-	}
-
-	LoadImage(&rect, fb);
+	LoadImage(&rect, bmp->scan0);
 	DrawSync(0);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
-	Mem_Free(fb);
 }
 
 

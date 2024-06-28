@@ -272,10 +272,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		
 		for (int x = r.x; x < r.x + r.width; x++)
 		{
-			BitmapCol color = src[x];
-			// 888 to 565 (discard least significant bits)
-			// quoting libDNS: < Bitmap background with 16 bit color values of the form aBBBBBGGGGGRRRRR (if 'a' is not set, the pixel will be transparent)
-			dst[x] = 0x8000 | ((BitmapCol_B(color) & 0xF8) << 7) | ((BitmapCol_G(color) & 0xF8) << 2) | (BitmapCol_R(color) >> 3);
+			dst[x] = src[x];
 		}
 	}
 	

@@ -210,11 +210,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		for (int x = r.x; x < r.x + r.width; x++) 
 		{
 			// TODO optimise
-			BitmapCol col = row[x];
-			cc_uint8 R = BitmapCol_R(col);
-			cc_uint8 G = BitmapCol_G(col);
-			cc_uint8 B = BitmapCol_B(col);
-			vram[x + (y * 512)] = RGB1555(0, R >> 3, G >> 3, B >> 3);
+			vram[x + (y * 512)].raw = row[x];
 		}
 	}
 

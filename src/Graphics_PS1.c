@@ -210,21 +210,18 @@ typedef struct GPUTexture {
 static GPUTexture textures[TEXTURES_MAX_COUNT];
 static GPUTexture* curTex;
 
-#define BGRA8_to_PS1(src) \
-	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
-
 static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
 	if (!tmp) return NULL;
 
+	// TODO: Only copy when rowWidth != bmp->width
 	for (int y = 0; y < bmp->height; y++)
 	{
-		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		cc_uint16* src = bmp->scan0 + y * rowWidth;
 		cc_uint16* dst = tmp        + y * bmp->width;
 		
 		for (int x = 0; x < bmp->width; x++) {
-			cc_uint8* color = (cc_uint8*)&src[x];
-			dst[x] = BGRA8_to_PS1(color);
+			dst[x] = src[x];
 		}
 	}
 

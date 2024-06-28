@@ -91,7 +91,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 }
 
 cc_result Directory_Create(const cc_filepath* path) {
-	return ERR_NOT_SUPPORTED;
+	return ReturnCode_DirectoryExists;
 }
 
 int File_Exists(const cc_string* path) {
@@ -103,7 +103,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-	return ERR_NOT_SUPPORTED;
+	return ReturnCode_FileNotFound;
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {

@@ -122,11 +122,6 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-#define BGRA8_to_SATURN(src) \
-((src[1] & 0xF8) >> 3) | ((src[2] & 0xF8) << 2) | ((src[3] & 0xF8) << 7) | 0x8000
-//	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
-
-
 typedef struct CCTexture {
 	int width, height;
 	void* addr;
@@ -145,15 +140,15 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 
 	tex_vram_addr += tex->width * tex->height * 2;
 
+	// TODO: Only copy when rowWidth != bmp->width
 	for (int y = 0; y < bmp->height; y++)
 	{
-		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		cc_uint16* src = bmp->scan0 + y * rowWidth;
 		cc_uint16* dst = tmp        + y * bmp->width;
 
 		for (int x = 0; x < bmp->width; x++)
 		{
-			cc_uint8* color = (cc_uint8*)&src[x];
-			dst[x] = BGRA8_to_SATURN(color);
+			dst[x] = src[x];
 		}
 	}
 

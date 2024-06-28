@@ -94,28 +94,23 @@ void Gfx_EndFrame(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-// B8 G8 R8 A8 > R5 G5 B5 A1
-#define BGRA8_to_DS(src) \
-	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8);	
-
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
-	for (int y = 0; y < bmp->height; y++)
-	{
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
-		
-		for (int x = 0; x < bmp->width; x++, src += 4)
-		{
-			*dst++ = BGRA8_to_DS(src);
-		}
-	}
-}
-
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
     vramSetBankA(VRAM_A_TEXTURE);
 
     cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
     if (!tmp) return 0;
-    ConvertTexture(tmp, bmp, rowWidth);
+
+	// TODO: Only copy when rowWidth != bmp->width
+	for (int y = 0; y < bmp->height; y++)
+	{
+		cc_uint16* src = bmp->scan0 + y * rowWidth;
+		cc_uint16* dst = tmp        + y * bmp->width;
+
+		for (int x = 0; x < bmp->width; x++)
+		{
+			dst[x] = src[x];
+		}
+	}
 
     int textureID;
     glGenTextures(1, &textureID);
@@ -148,11 +143,11 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
     for (int yy = 0; yy < part->height; yy++)
 	{
 		cc_uint16* dst = vram_ptr + width * (y + yy) + x;
-		cc_uint8* src  = (cc_uint8*)(part->scan0 + rowWidth * yy);
+		cc_uint16* src = part->scan0 + rowWidth * yy;
 		
-		for (int xx = 0; xx < part->width; xx++, src += 4, dst++)
+		for (int xx = 0; xx < part->width; xx++)
 		{
-			*dst = BGRA8_to_DS(src);
+			*dst++ = *src++;
 		}
 	}
 }
