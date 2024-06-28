@@ -17,7 +17,7 @@ static int cmdts_count;
 static vdp1_vram_partitions_t _vdp1_vram_partitions;
 static void* tex_vram_addr;
 static void* tex_vram_cur;
-static cc_uint32* gourad_base;
+static vdp1_gouraud_table_t* gourad_base;
 
 static vdp1_cmdt_t* NextPrimitive(void) {
 	if (cmdts_count >= CMDS_COUNT) Logger_Abort("Too many VDP1 commands");
@@ -28,7 +28,7 @@ static const vdp1_cmdt_draw_mode_t color_draw_mode = {
 	.cc_mode    = VDP1_CMDT_CC_REPLACE,
 	.color_mode = VDP1_CMDT_CM_RGB_32768
 };
-static const vdp1_cmdt_draw_mode_t texture_draw_mode = {
+static const vdp1_cmdt_draw_mode_t shaded_draw_mode = {
 	.cc_mode    = VDP1_CMDT_CC_GOURAUD,
 	.color_mode = VDP1_CMDT_CM_RGB_32768
 };
@@ -231,7 +231,36 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
+// Preprocess vertex buffers into optimised layout for DS
+static VertexFormat buf_fmt;
+static int buf_count;
+
 static void* gfx_vertices;
+
+static void PreprocessTexturedVertices(void) {
+    struct VertexTextured* v = gfx_vertices;
+
+    for (int i = 0; i < buf_count; i++, v++)
+    {
+        int r = PackedCol_R(v->Col);
+        int g = PackedCol_G(v->Col);
+        int b = PackedCol_B(v->Col);
+        v->Col = ((b >> 5) << 7) | ((g >> 4) << 3) | (r >> 5);
+    }
+}
+
+static void PreprocessColouredVertices(void) {
+    struct VertexColoured* v = gfx_vertices;
+
+    for (int i = 0; i < buf_count; i++, v++)
+    {
+        int r = PackedCol_R(v->Col);
+        int g = PackedCol_G(v->Col);
+        int b = PackedCol_B(v->Col);
+        v->Col = RGB1555(1, r >> 3, g >> 3, b >> 3).raw;
+    }
+}
+
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return Mem_TryAlloc(count, strideSizes[fmt]);
@@ -246,11 +275,19 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+    buf_fmt   = fmt;
+    buf_count = count;
 	return vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
+    gfx_vertices = vb;
+
+    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+        PreprocessTexturedVertices();
+    } else {
+        PreprocessColouredVertices();
+    }
 }
 
 
@@ -261,12 +298,10 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb; 
+	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
@@ -363,15 +398,12 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		points[2].x = (int)v[2].x - SCREEN_WIDTH / 2; points[2].y = (int)v[2].y - SCREEN_HEIGHT / 2;
 		points[3].x = (int)v[3].x - SCREEN_WIDTH / 2; points[3].y = (int)v[3].y - SCREEN_HEIGHT / 2;
 
-		int R = PackedCol_R(v->Col);
-		int G = PackedCol_G(v->Col);
-		int B = PackedCol_B(v->Col);
-
+		rgb1555_t color; color.raw = v->Col;
 		vdp1_cmdt_t* cmd;
-
 		cmd = NextPrimitive();
+
 		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
+		vdp1_cmdt_color_set(cmd,     color);
 		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
 	}
@@ -388,19 +420,14 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		points[2].x = (int)v[2].x - SCREEN_WIDTH / 2; points[2].y = (int)v[2].y - SCREEN_HEIGHT / 2;
 		points[3].x = (int)v[3].x - SCREEN_WIDTH / 2; points[3].y = (int)v[3].y - SCREEN_HEIGHT / 2;
 
-		int R = PackedCol_R(v->Col);
-		int G = PackedCol_G(v->Col);
-		int B = PackedCol_B(v->Col);
-		int gIndex = ((B >> 5) << 7) | ((G >> 4) << 3) | (R >> 5);
-
 		vdp1_cmdt_t* cmd;
-
 		cmd = NextPrimitive();
+
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, 8, 8);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
-		vdp1_cmdt_draw_mode_set(cmd, texture_draw_mode);
-		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[gIndex]);
+		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
+		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
 	}
 }
@@ -416,26 +443,23 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		Transform(&coords[2], &v[2], &mvp);
 		Transform(&coords[3], &v[3], &mvp);
 
+		if (IsPointCulled(coords[0])) continue;
+		if (IsPointCulled(coords[1])) continue;
+		if (IsPointCulled(coords[2])) continue;
+		if (IsPointCulled(coords[3])) continue;
+
 		int16_vec2_t points[4];
 		points[0].x = coords[0].x; points[0].y = coords[0].y;
 		points[1].x = coords[1].x; points[1].y = coords[1].y;
 		points[2].x = coords[2].x; points[2].y = coords[2].y;
 		points[3].x = coords[3].x; points[3].y = coords[3].y;
 
-		if (IsPointCulled(coords[0])) continue;
-		if (IsPointCulled(coords[1])) continue;
-		if (IsPointCulled(coords[2])) continue;
-		if (IsPointCulled(coords[3])) continue;
-
-		int R = PackedCol_R(v->Col);
-		int G = PackedCol_G(v->Col);
-		int B = PackedCol_B(v->Col);
-
+		rgb1555_t color; color.raw = v->Col;
 		vdp1_cmdt_t* cmd;
-
 		cmd = NextPrimitive();
+
 		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
+		vdp1_cmdt_color_set(cmd,     color);
 		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
 	}
@@ -452,30 +476,25 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		Transform(&coords[2], &v[2], &mvp);
 		Transform(&coords[3], &v[3], &mvp);
 
+		if (IsPointCulled(coords[0])) continue;
+		if (IsPointCulled(coords[1])) continue;
+		if (IsPointCulled(coords[2])) continue;
+		if (IsPointCulled(coords[3])) continue;
+
 		int16_vec2_t points[4];
 		points[0].x = coords[0].x; points[0].y = coords[0].y;
 		points[1].x = coords[1].x; points[1].y = coords[1].y;
 		points[2].x = coords[2].x; points[2].y = coords[2].y;
 		points[3].x = coords[3].x; points[3].y = coords[3].y;
 
-		if (IsPointCulled(coords[0])) continue;
-		if (IsPointCulled(coords[1])) continue;
-		if (IsPointCulled(coords[2])) continue;
-		if (IsPointCulled(coords[3])) continue;
-
-		int R = PackedCol_R(v->Col);
-		int G = PackedCol_G(v->Col);
-		int B = PackedCol_B(v->Col);
-
 		vdp1_cmdt_t* cmd;
-		int gIndex = ((B >> 5) << 7) | ((G >> 4) << 3) | (R >> 5);
-
 		cmd = NextPrimitive();
+
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, 8, 8);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
-		vdp1_cmdt_draw_mode_set(cmd, texture_draw_mode);
-		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[gIndex]);
+		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
+		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
 	}
 }
