@@ -6,15 +6,7 @@
 */
 struct Stream;
 
-/* Represents a packed RGBA colour, suitable for 3D graphics API textures and 2D window framebuffers. */
-#ifndef BITMAP_16BPP
-	typedef cc_uint32 BitmapCol;
-	#define BITMAPCOLOR_SIZE 4
-#else
-	typedef cc_uint16 BitmapCol;
-	#define BITMAPCOLOR_SIZE 2
-#endif
-
+#define BITMAP_16BPP
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_PSP || defined CC_BUILD_PSVITA || defined CC_BUILD_PS2
 	#define BITMAPCOLOR_R_SHIFT  0
 	#define BITMAPCOLOR_G_SHIFT  8
@@ -38,6 +30,10 @@ struct Stream;
 #endif
 
 #ifndef BITMAP_16BPP
+	/* Represents a packed RGBA colour, suitable for 3D graphics API textures and 2D window framebuffers. */
+	typedef cc_uint32 BitmapCol;
+	#define BITMAPCOLOR_SIZE 4
+
 	/* Masks a packed color to the selected component */
 	#define BITMAPCOLOR_R_MASK (0xFFU << BITMAPCOLOR_R_SHIFT)
 	#define BITMAPCOLOR_G_MASK (0xFFU << BITMAPCOLOR_G_SHIFT)
@@ -56,6 +52,10 @@ struct Stream;
 	#define BitmapColor_B_Bits(value) ((cc_uint8)(value) << BITMAPCOLOR_B_SHIFT)
 	#define BitmapColor_A_Bits(value) ((cc_uint8)(value) << BITMAPCOLOR_A_SHIFT)
 #else
+	/* Represents a packed RGBA colour, suitable for 3D graphics API textures and 2D window framebuffers. */
+	typedef cc_uint16 BitmapCol;
+	#define BITMAPCOLOR_SIZE 2
+
 	/* Masks a packed color to the selected component */
 	#define BITMAPCOLOR_R_MASK (0x3FU << BITMAPCOLOR_R_SHIFT)
 	#define BITMAPCOLOR_G_MASK (0x3FU << BITMAPCOLOR_G_SHIFT)
@@ -63,9 +63,9 @@ struct Stream;
 	#define BITMAPCOLOR_A_MASK (0x01U << BITMAPCOLOR_A_SHIFT)
 	
 	/* Extracts just the R/G/B/A component from a bitmap color */
-	#define BitmapCol_R(color) (((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT) & 0x3F) << 3)
-	#define BitmapCol_G(color) (((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT) & 0x3F) << 3)
-	#define BitmapCol_B(color) (((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT) & 0x3F) << 3)
+	#define BitmapCol_R(color) (((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT) & 0x1F) << 3)
+	#define BitmapCol_G(color) (((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT) & 0x1F) << 3)
+	#define BitmapCol_B(color) (((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT) & 0x1F) << 3)
 	#define BitmapCol_A(color) (((cc_uint8)(color >> BITMAPCOLOR_A_SHIFT) & 0x01) << 7)
 	
 	/* Converts input value into a packed color component */

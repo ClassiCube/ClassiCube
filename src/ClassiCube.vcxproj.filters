@@ -641,9 +641,6 @@
     <ClCompile Include="Window_3DS.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
-    <ClCompile Include="Window_SDL.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
     <ClCompile Include="Window_Web.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
@@ -787,6 +784,9 @@
     </ClCompile>
     <ClCompile Include="LBackend_Android.c">
       <Filter>Source Files\Launcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_SDL2.c">
+      <Filter>Source Files\Window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

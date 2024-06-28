@@ -328,7 +328,7 @@ static CC_INLINE void CopyTextureData(void* dst, int dstStride, const struct Bit
 	} else {
 		/* Have to copy scanline by scanline */
 		for (y = 0; y < src->height; y++) {
-			Mem_Copy(dst_, src_, src->width << 2);
+			Mem_Copy(dst_, src_, src->width * BITMAPCOLOR_SIZE);
 			src_ += srcStride;
 			dst_ += dstStride;
 		}

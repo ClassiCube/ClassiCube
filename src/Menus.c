@@ -1987,7 +1987,7 @@ static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	
 	int old     = s->curI;
-	s->curI     = btn->meta.val;
+	s->curI     = (int)btn->meta.val;
 	s->closable = false;
 
 	KeyBindsScreen_Update(s, s->curI);

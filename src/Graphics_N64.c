@@ -162,7 +162,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 		}
 	} else {
 		// 32 bpp can just be copied straight across
-		CopyTextureData(fb->buffer, fb->stride, bmp, rowWidth << 2);
+		CopyTextureData(fb->buffer, fb->stride, 
+						bmp, rowWidth * BITMAPCOLOR_SIZE);
 	}
 	
 	

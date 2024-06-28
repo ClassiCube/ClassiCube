@@ -562,7 +562,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	return tex;
 }
 
@@ -613,8 +614,9 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	CCTexture* tex = (CCTexture*)texId;
 	
 	// NOTE: Only valid for LINEAR textures
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;	
-	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;	
+	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE, 
+					part, rowWidth  * BITMAPCOLOR_SIZE);
 	
 	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
 	/* TODO */

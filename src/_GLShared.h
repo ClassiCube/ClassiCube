@@ -107,7 +107,8 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
 	}
 
-	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
+	CopyTextureData(ptr, part->width * BITMAPCOLOR_SIZE,
+					part, rowWidth   * BITMAPCOLOR_SIZE);
 
 	if (full) {
 		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);

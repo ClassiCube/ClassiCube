@@ -817,7 +817,9 @@ static void DrawGrayscaleGlyph(FT_Bitmap* img, struct Bitmap* bmp, int x, int y,
 
 		for (xx = 0; xx < img->width; xx++, src++, dst++) {
 			if ((unsigned)(x + xx) >= (unsigned)bmp->width) continue;
+
 			I = *src; invI = UInt8_MaxValue - I;
+			if (!I) continue;
 
 			/* TODO: Support transparent text */
 			/* dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/

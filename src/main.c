@@ -73,8 +73,6 @@ static void SetupProgram(int argc, char** argv) {
 
 static int RunProgram(int argc, char** argv) {
 	cc_string args[GAME_MAX_CMDARGS];
-	cc_uint16 port;
-
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 #ifdef _MSC_VER
 	/* NOTE: Make sure to comment this out before pushing a commit */
@@ -120,7 +118,7 @@ static int RunProgram(int argc, char** argv) {
 		String_Copy(&Game_Mppass,   &args[1]);
 		String_Copy(&Server.Address,&args[2]);
 
-		if (!Convert_ParseInt(&args[3], &Server.Port) || port < 0 || port > 65535) {
+		if (!Convert_ParseInt(&args[3], &Server.Port) || Server.Port < 0 || Server.Port > 65535) {
 			WarnInvalidArg("Invalid port", &args[3]);
 			return 1;
 		}

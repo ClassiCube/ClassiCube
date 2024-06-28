@@ -111,7 +111,7 @@ void Gfx_FreeState(void) {
 typedef struct CCTexture_ {
 	cc_uint32 width, height;
 	cc_uint32 pad1, pad2; // data must be aligned to 16 bytes
-	cc_uint32 pixels[];
+	BitmapCol pixels[];
 } CCTexture;
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
@@ -120,14 +120,17 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
-	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+
+	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE,
+					part, rowWidth  * BITMAPCOLOR_SIZE);
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
 	sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
 }

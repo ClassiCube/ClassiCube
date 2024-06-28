@@ -96,7 +96,8 @@ static void Gfx_RestoreState(void) {
 static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
 	void* dst = Xe_Surface_LockRect(xe, xtex, x, y, bmp->width, bmp->height, XE_LOCK_WRITE);
 
-	CopyTextureData(dst, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(dst, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth   * BITMAPCOLOR_SIZE);
 	
 	Xe_Surface_Unlock(xe, xtex);
 }

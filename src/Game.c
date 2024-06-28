@@ -703,11 +703,12 @@ static CC_INLINE void Game_RenderFrame(void) {
 	float t;
 
 	cc_uint64 render = Stopwatch_Measure();
-	double delta     = Stopwatch_ElapsedMicroseconds(frameStart, render) / (1000.0 * 1000.0);
+	double deltaD    = Stopwatch_ElapsedMicroseconds(frameStart, render) / (1000.0 * 1000.0);
+	float delta      = (float)deltaD;
 	Window_ProcessEvents(delta);
 
-	if (delta > 5.0)  delta = 5.0; /* avoid large delta with suspended process */
-	if (delta <= 0.0) return;
+	if (delta > 5.0f)  delta = 5.0f; /* avoid large delta with suspended process */
+	if (delta <= 0.0f) return;
 	frameStart = render;
 
 	/* TODO: Should other tasks get called back too? */
@@ -727,7 +728,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 
 	Gfx_BeginFrame();
 	Gfx_BindIb(Gfx_defaultIb);
-	Game.Time += delta;
+	Game.Time += deltaD;
 	Game_Vertices = 0;
 
 	if (Input.Sources & INPUT_SOURCE_GAMEPAD) Gamepad_Tick(delta);
@@ -739,7 +740,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 		InputHandler_SetFOV(Camera.ZoomFov);
 	}
 
-	PerformScheduledTasks(delta);
+	PerformScheduledTasks(deltaD);
 	entTask = tasks[entTaskI];
 	t = (float)(entTask.accumulator / entTask.interval);
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);

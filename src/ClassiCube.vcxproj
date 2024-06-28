@@ -568,7 +568,7 @@
     <ClCompile Include="Window_PSP.c" />
     <ClCompile Include="Window_PSVita.c" />
     <ClCompile Include="Window_Saturn.c" />
-    <ClCompile Include="Window_SDL.c" />
+    <ClCompile Include="Window_SDL2.c" />
     <ClCompile Include="Window_SDL3.c" />
     <ClCompile Include="Window_Switch.c" />
     <ClCompile Include="Window_Terminal.c" />

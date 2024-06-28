@@ -682,7 +682,8 @@ static void GPUTextures_DeleteUnreferenced(void) {
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	struct GPUTexture* tex = GPUTexture_Alloc(size);
-	CopyTextureData(tex->data, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->data, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
             
 	sceGxmTextureInitLinear(&tex->texture, tex->data,
 		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, bmp->width, bmp->height, 0);
@@ -697,9 +698,10 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	int texWidth = sceGxmTextureGetWidth(&tex->texture);
 	
 	// NOTE: Only valid for LINEAR textures
-	cc_uint32* dst = (tex->data + x) + y * texWidth;
+	BitmapCol* dst = (tex->data + x) + y * texWidth;
 	
-	CopyTextureData(dst, texWidth * 4, part, rowWidth << 2);
+	CopyTextureData(dst, texWidth  * BITMAPCOLOR_SIZE,
+					part, rowWidth * BITMAPCOLOR_SIZE);
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
 	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
 }

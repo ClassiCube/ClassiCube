@@ -163,7 +163,7 @@ typedef struct CCTexture_ {
 	cc_uint32 width, height;
 	cc_uint32 log2_width, log2_height;
 	cc_uint32 pad[(64 - 16)/4];
-	cc_uint32 pixels[]; // aligned to 64 bytes (only need 16?)
+	BitmapCol pixels[]; // aligned to 64 bytes (only need 16?)
 } CCTexture;
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
@@ -175,7 +175,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
 	
-	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	return tex;
 }
 
@@ -227,8 +228,10 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
-	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+
+	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE, 
+					part, rowWidth  * BITMAPCOLOR_SIZE);
 }
 
 void Gfx_EnableMipmaps(void)  { }
