@@ -128,6 +128,11 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->height = bmp->height;
 
 	tex_vram_addr += tex->width * tex->height * 2;
+	if (tex_vram_addr >= gourad_base) {
+		Platform_LogConst("OUT OF VRAM");
+		Mem_Free(tmp); 
+		return NULL; 
+	}
 
 	// TODO: Only copy when rowWidth != bmp->width
 	for (int y = 0; y < bmp->height; y++)
@@ -143,6 +148,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 
 	scu_dma_transfer(0, tex->addr, tmp, tex->width * tex->height * 2);
 	scu_dma_transfer_wait(0);
+	Mem_Free(tmp);
 	return tex;
 }
 
