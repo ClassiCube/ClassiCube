@@ -13,6 +13,7 @@
 		9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A62ADF4286D906F00E5E3DE /* Assets.xcassets */; };
 		9A6C79652BFDDEF200676D27 /* FancyLighting.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79642BFDDEF100676D27 /* FancyLighting.c */; };
 		9A6C79672BFDDF0700676D27 /* Queue.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79662BFDDF0600676D27 /* Queue.c */; };
+		9A6C7DFA2C2F610C00676D27 /* LBackend_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */; };
 		9A7401D92B737D5C0040E575 /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401D82B737D5B0040E575 /* Commands.c */; };
 		9A7401DB2B7384060040E575 /* SSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401DA2B7384060040E575 /* SSL.c */; };
 		9A89D4F227F802F600FF3F80 /* LWidgets.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37827F802F500FF3F80 /* LWidgets.c */; };
@@ -101,6 +102,7 @@
 		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ClassiCube/Assets.xcassets; sourceTree = "<group>"; };
 		9A6C79642BFDDEF100676D27 /* FancyLighting.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FancyLighting.c; sourceTree = "<group>"; };
 		9A6C79662BFDDF0600676D27 /* Queue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Queue.c; sourceTree = "<group>"; };
+		9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LBackend_ios.m; sourceTree = "<group>"; };
 		9A7401D82B737D5B0040E575 /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Commands.c; sourceTree = "<group>"; };
 		9A7401DA2B7384060040E575 /* SSL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SSL.c; sourceTree = "<group>"; };
 		9A89D35727F802B100FF3F80 /* ClassiCube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassiCube.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -216,6 +218,7 @@
 		9A89D37727F802F500FF3F80 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */,
 				9A6C79662BFDDF0600676D27 /* Queue.c */,
 				9A6C79642BFDDEF100676D27 /* FancyLighting.c */,
 				9A4D0C632BDD168800E1695D /* TouchUI.c */,
@@ -448,6 +451,7 @@
 				9A89D57427F802F600FF3F80 /* MapRenderer.c in Sources */,
 				9A89D57627F802F600FF3F80 /* _pshinter.c in Sources */,
 				9A89D56A27F802F600FF3F80 /* Physics.c in Sources */,
+				9A6C7DFA2C2F610C00676D27 /* LBackend_ios.m in Sources */,
 				9A89D58727F802F600FF3F80 /* SelectionBox.c in Sources */,
 				9A89D4FE27F802F600FF3F80 /* Inventory.c in Sources */,
 				9A89D56527F802F600FF3F80 /* Generator.c in Sources */,

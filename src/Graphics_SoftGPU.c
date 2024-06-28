@@ -443,6 +443,7 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				A = PackedCol_A(color);
 			}
 
+			if (gfx_alphaTest && A < 0x80) continue;
 			if (gfx_alphaBlend) {
 				BitmapCol dst = colorBuffer[cb_index];
 				int dstR = BitmapCol_R(dst);
@@ -453,7 +454,6 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = (G * A + dstG * (255 - A)) >> 8;
 				B = (B * A + dstB * (255 - A)) >> 8;
 			}
-			if (gfx_alphaTest && A < 0x80) continue;
 
 			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
@@ -554,7 +554,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				A = PackedCol_A(color);
 			}
 
+			if (gfx_alphaTest && A < 0x80) continue;
 			int cb_index = y * cb_stride + x;
+			
 			if (gfx_alphaBlend) {
 				BitmapCol dst = colorBuffer[cb_index];
 				int dstR = BitmapCol_R(dst);
@@ -565,7 +567,6 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = (G * A + dstG * (255 - A)) >> 8;
 				B = (B * A + dstB * (255 - A)) >> 8;
 			}
-			if (gfx_alphaTest && A < 0x80) continue;
 
 			if (depthWrite) depthBuffer[db_index] = z;
 			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
