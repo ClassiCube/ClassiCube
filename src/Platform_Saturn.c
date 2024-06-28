@@ -144,6 +144,12 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) {
 	// TODO sleep a bit
+	cc_uint32 cycles = 26846 * milliseconds;
+	
+	for (cc_uint32 i = 0; i < cycles; i++)
+	{
+		__asm__ volatile ("nop;");
+	}
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {

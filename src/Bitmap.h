@@ -62,9 +62,9 @@ struct Stream;
 	#define BITMAPCOLOR_SIZE 2
 
 	/* Masks a packed color to the selected component */
-	#define BITMAPCOLOR_R_MASK (0x3FU << BITMAPCOLOR_R_SHIFT)
-	#define BITMAPCOLOR_G_MASK (0x3FU << BITMAPCOLOR_G_SHIFT)
-	#define BITMAPCOLOR_B_MASK (0x3FU << BITMAPCOLOR_B_SHIFT)
+	#define BITMAPCOLOR_R_MASK (0x1FU << BITMAPCOLOR_R_SHIFT)
+	#define BITMAPCOLOR_G_MASK (0x1FU << BITMAPCOLOR_G_SHIFT)
+	#define BITMAPCOLOR_B_MASK (0x1FU << BITMAPCOLOR_B_SHIFT)
 	#define BITMAPCOLOR_A_MASK (0x01U << BITMAPCOLOR_A_SHIFT)
 	
 	/* Extracts just the R/G/B/A component from a bitmap color */

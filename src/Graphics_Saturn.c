@@ -9,17 +9,6 @@
 
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 224
-
-#define PRIMITIVE_DRAW_MODE_NORMAL             (0)
-#define PRIMITIVE_DRAW_MODE_MESH               (1)
-#define PRIMITIVE_DRAW_MODE_SHADOW             (2)
-#define PRIMITIVE_DRAW_MODE_HALF_LUMINANCE     (3)
-#define PRIMITIVE_DRAW_MODE_HALF_TRANSPARENT   (4)
-#define PRIMITIVE_DRAW_MODE_GOURAUD_SHADING    (5)
-#define PRIMITIVE_DRAW_MODE_GOURAUD_HALF_LUM   (6)
-#define PRIMITIVE_DRAW_MODE_GOURAUD_HALF_TRANS (7)
-#define PRIMITIVE_DRAW_MODE_COUNT              (8)
-
 #define CMDS_COUNT 400
 
 static PackedCol clear_color;
@@ -36,11 +25,11 @@ static vdp1_cmdt_t* NextPrimitive(void) {
 }
 
 static const vdp1_cmdt_draw_mode_t color_draw_mode = {
-	.cc_mode = VDP1_CMDT_CC_REPLACE,
-        .color_mode = VDP1_CMDT_CM_RGB_32768
+	.cc_mode    = VDP1_CMDT_CC_REPLACE,
+	.color_mode = VDP1_CMDT_CM_RGB_32768
 };
 static const vdp1_cmdt_draw_mode_t texture_draw_mode = {
-	.cc_mode = VDP1_CMDT_CC_GOURAUD,
+	.cc_mode    = VDP1_CMDT_CC_GOURAUD,
 	.color_mode = VDP1_CMDT_CM_RGB_32768
 };
 
@@ -402,24 +391,17 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		int R = PackedCol_R(v->Col);
 		int G = PackedCol_G(v->Col);
 		int B = PackedCol_B(v->Col);
+		int gIndex = ((B >> 5) << 7) | ((G >> 4) << 3) | (R >> 5);
 
 		vdp1_cmdt_t* cmd;
 
-
-		cmd = NextPrimitive();
-		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
-		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
-
-/*
 		cmd = NextPrimitive();
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, 8, 8);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
 		vdp1_cmdt_draw_mode_set(cmd, texture_draw_mode);
+		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[gIndex]);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
-*/
 	}
 }
 
@@ -486,15 +468,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		int B = PackedCol_B(v->Col);
 
 		vdp1_cmdt_t* cmd;
-
-/*
-		cmd = NextPrimitive();
-		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
-		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
-		vdp1_cmdt_vtx_set(cmd, 		 points);*/
-		int gIndex = ((R >> 5) << 7) | ((G >> 4) << 3) | (B >> 3);
-
+		int gIndex = ((B >> 5) << 7) | ((G >> 4) << 3) | (R >> 5);
 
 		cmd = NextPrimitive();
 		vdp1_cmdt_distorted_sprite_set(cmd);
