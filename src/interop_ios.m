@@ -437,8 +437,7 @@ void Window_Show(void) {
 }
 
 void Window_RequestClose(void) {
-    Window_Main.Exists = false;
-    Event_RaiseVoid(&WindowEvents.Closing);
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 void Window_ProcessEvents(float delta) {

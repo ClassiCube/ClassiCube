@@ -465,8 +465,7 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_RequestClose(void) {
-	BMessage* msg = new BMessage(B_QUIT_REQUESTED);
-	app_handle->PostMessage(msg);
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 static const cc_uint8 key_map[] = {
@@ -538,7 +537,7 @@ void Window_ProcessEvents(float delta) {
 			break;
 		case CC_WIN_QUIT:
 			Window_Main.Exists = false;
-			Event_RaiseVoid(&WindowEvents.Closing);
+			Window_RequestClose();
 			break;
 		case CC_RAW_MOUSE:
 			if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, event.v1.i32, event.v2.i32);

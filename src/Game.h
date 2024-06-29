@@ -30,7 +30,7 @@ extern int Game_NumLocalPlayers;
 
 #if defined CC_BUILD_N64
     #define DEFAULT_VIEWDIST 20
-#elif defined CC_BUILD_NDS || defined CC_BUILD_PS1
+#elif defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
     #define DEFAULT_VIEWDIST 192
 #else
     #define DEFAULT_VIEWDIST 512

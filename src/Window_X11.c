@@ -513,15 +513,7 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_RequestClose(void) {
-	XEvent ev = { 0 };
-	ev.type = ClientMessage;
-	ev.xclient.format  = 32;
-	ev.xclient.display = win_display;
-	ev.xclient.window  = win_handle;
-	ev.xclient.data.l[0] = wm_destroy;
-	
-	XSendEvent(win_display, win_handle, false, 0, &ev);
-	XFlush(win_display);
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 static int MapNativeMouse(int button) {

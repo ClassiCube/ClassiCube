@@ -282,16 +282,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_CLOSE:
-		Event_RaiseVoid(&WindowEvents.Closing);
-		if (Window_Main.Exists) DestroyWindow(win_handle);
 		Window_Main.Exists = false;
-		break;
+		Window_RequestClose();
+		return 0;
 
 	case WM_DESTROY:
-		Window_Main.Exists = false;
 		UnregisterClassW(CC_WIN_CLASSNAME, win_instance);
-
-		if (win_DC) ReleaseDC(win_handle, win_DC);
 		break;
 	}
 	return is_ansiWindow ? DefWindowProcA(handle, message, wParam, lParam)
@@ -404,7 +400,10 @@ static void DoCreateWindow(int width, int height) {
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
-void Window_Destroy(void) { }
+void Window_Destroy(void) {
+	if (win_DC) ReleaseDC(win_handle, win_DC);
+	DestroyWindow(win_handle);
+}
 
 void Window_SetTitle(const cc_string* title) {
 	cc_winstring str;
@@ -544,7 +543,7 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_RequestClose(void) {
-	PostMessageA(win_handle, WM_CLOSE, 0, 0);
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 void Window_ProcessEvents(float delta) {

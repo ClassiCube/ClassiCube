@@ -1353,7 +1353,6 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 #endif
 
 	if (InputHandler_IsShutdown(key)) {
-		/* TODO: Do we need a separate exit function in Game class? */
 		Window_RequestClose(); return;
 	} else if (InputBind_Claims(BIND_SCREENSHOT, key) && !was) {
 		Game_ScreenshotRequested = true; return;
