@@ -98,9 +98,9 @@ void Gfx_Create(void) {
 	SetDispMask(1);
 
 	InitGeom();
-	//gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
+	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
 	// Set screen depth (basically FOV control, W/2 works best)
-	//gte_SetGeomScreen(Window_Main.Width / 2);
+	gte_SetGeomScreen(Window_Main.Width / 2);
 }
 
 void Gfx_Free(void) { 
@@ -413,40 +413,6 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
 	MATRIX mtx;
 
-	mtx.t[0] = 0;
-	mtx.t[1] = 0;
-	mtx.t[2] = 0;
-
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row1.x, &src->row1.y, &src->row1.z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row2.x, &src->row2.y, &src->row2.z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row3.x, &src->row3.y, &src->row3.z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row4.x, &src->row4.y, &src->row4.z);
-	//Platform_LogConst("====");
-
-	float len1 = Math_SqrtF(src->row1.x + src->row1.y + src->row1.z);
-	float len2 = Math_SqrtF(src->row2.x + src->row2.y + src->row2.z);
-	float len3 = Math_SqrtF(src->row3.x + src->row3.y + src->row3.z);
-
-	mtx.m[0][0] = ToFixed(1);
-	mtx.m[0][1] = 0;
-	mtx.m[0][2] = 0;
-
-	mtx.m[1][0] = 0;
-	mtx.m[1][1] = ToFixed(1);
-	mtx.m[1][2] = 0;
-
-	mtx.m[2][0] = 0;
-	mtx.m[2][1] = ToFixed(1);
-	mtx.m[2][2] = 1;
-	
-	gte_SetRotMatrix(&mtx);
-	gte_SetTransMatrix(&mtx);
-}
-
-/*static void LoadTransformMatrix(struct Matrix* src) {
-	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
-	MATRIX mtx;
-
 	mtx.t[0] = ToFixed(src->row4.x);
 	mtx.t[1] = ToFixed(src->row4.y);
 	mtx.t[2] = ToFixed(src->row4.z);
@@ -457,25 +423,21 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row4.x, &src->row4.y, &src->row4.z);
 	Platform_LogConst("====");
 
-	float len1 = Math_SqrtF(src->row1.x + src->row1.y + src->row1.z);
-	float len2 = Math_SqrtF(src->row2.x + src->row2.y + src->row2.z);
-	float len3 = Math_SqrtF(src->row3.x + src->row3.y + src->row3.z);
+	mtx.m[0][0] = ToFixed(src->row1.x);
+	mtx.m[0][1] = ToFixed(src->row1.y);
+	mtx.m[0][2] = ToFixed(src->row1.z);
 
-	mtx.m[0][0] = ToFixed(src->row1.x / len1);
-	mtx.m[0][1] = ToFixed(src->row1.y / len1);
-	mtx.m[0][2] = ToFixed(src->row1.z / len1);
+	mtx.m[1][0] = ToFixed(src->row2.x);
+	mtx.m[1][1] = ToFixed(src->row2.y);
+	mtx.m[1][2] = ToFixed(src->row2.z);
 
-	mtx.m[1][0] = ToFixed(src->row2.x / len2);
-	mtx.m[1][1] = ToFixed(src->row2.y / len2);
-	mtx.m[1][2] = ToFixed(src->row2.z / len2);
-
-	mtx.m[2][0] = ToFixed(src->row3.x / len3);
-	mtx.m[2][1] = ToFixed(src->row3.y / len3);
-	mtx.m[2][2] = ToFixed(src->row3.z / len3);
+	mtx.m[2][0] = ToFixed(src->row3.x);
+	mtx.m[2][1] = ToFixed(src->row3.y);
+	mtx.m[2][2] = ToFixed(src->row3.z);
 	
 	gte_SetRotMatrix(&mtx);
 	gte_SetTransMatrix(&mtx);
-}*/
+}
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
