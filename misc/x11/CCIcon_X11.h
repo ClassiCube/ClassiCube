@@ -1,4 +1,4 @@
-/* Generated using misc/linux_icon_gen.cs */
+/* Generated using misc/x11_icon_gen.cs */
 
 static const unsigned long CCIcon_Data[] = {
 64,64,

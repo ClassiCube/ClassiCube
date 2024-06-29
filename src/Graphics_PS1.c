@@ -363,7 +363,40 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
+// Preprocess vertex buffers into optimised layout for PS1
+struct PS1VertexTextured { float x, y, z; PackedCol Col; int u, v; };
+static VertexFormat buf_fmt;
+static int buf_count;
+
 static void* gfx_vertices;
+
+static int ToUVFixed(float value) {
+	return ((int)(value * 1024.0f) & 0x3FF); // U/V wrapping not supported
+}
+
+static void PreprocessTexturedVertices(void) {
+	struct PS1VertexTextured* dst = gfx_vertices;
+	struct VertexTextured* src    = gfx_vertices;
+
+	// PS1 need to use raw U/V coordinates
+	//   i.e. U = (src->U * tex->width) % tex->width
+	// To avoid expensive floating point conversions,
+	//  convert the U coordinates to fixed point
+	//  (using 10 bits for the fractional coordinate)
+	// Converting from fixed point using 1024 as base
+	//  to tex->width/height as base is relatively simple:
+	//  value / 1024 = X / tex_size
+	//  X = value * tex_size / 1024
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->u = ToUVFixed(src->U * 0.99f);
+		dst->v = ToUVFixed(src->V        );
+	}
+}
+
+static void PreprocessColouredVertices(void) {
+}
+
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return Mem_TryAlloc(count, strideSizes[fmt]);
@@ -378,11 +411,19 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+    buf_fmt   = fmt;
+    buf_count = count;
 	return vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
+    gfx_vertices = vb;
+
+    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+        PreprocessTexturedVertices();
+    } else {
+        PreprocessColouredVertices();
+    }
 }
 
 
@@ -393,14 +434,13 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb; 
+	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+
 
 
 /*########################################################################################################################*
@@ -417,11 +457,11 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	mtx.t[1] = ToFixed(src->row4.y);
 	mtx.t[2] = ToFixed(src->row4.z);
 
-	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row1.x, &src->row1.y, &src->row1.z);
-	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row2.x, &src->row2.y, &src->row2.z);
-	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row3.x, &src->row3.y, &src->row3.z);
-	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row4.x, &src->row4.y, &src->row4.z);
-	Platform_LogConst("====");
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row1.x, &src->row1.y, &src->row1.z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row2.x, &src->row2.y, &src->row2.z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row3.x, &src->row3.y, &src->row3.z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row4.x, &src->row4.y, &src->row4.z);
+	//Platform_LogConst("====");
 
 	mtx.m[0][0] = ToFixed(src->row1.x);
 	mtx.m[0][1] = ToFixed(src->row1.y);
@@ -548,7 +588,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
 		
 		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
 		setPolyFT4(poly);
@@ -561,14 +601,14 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		poly->x2 = v[2].x; poly->y2 = v[2].y; 
 		poly->x3 = v[3].x; poly->y3 = v[3].y; 
 		
-		poly->u0 = ((int)(v[1].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v0 = ((int)(v[1].V         * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u1 = ((int)(v[0].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v1 = ((int)(v[0].V         * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u2 = ((int)(v[2].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v2 = ((int)(v[2].V         * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u3 = ((int)(v[3].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v3 = ((int)(v[3].V         * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u0 = ((v[1].u * curTex->width)  >> 10) + uOffset;
+		poly->v0 = ((v[1].v * curTex->height) >> 10) + vOffset;
+		poly->u1 = ((v[0].u * curTex->width)  >> 10) + uOffset;
+		poly->v1 = ((v[0].v * curTex->height) >> 10) + vOffset;
+		poly->u2 = ((v[2].u * curTex->width)  >> 10) + uOffset;
+		poly->v2 = ((v[2].v * curTex->height) >> 10) + vOffset;
+		poly->u3 = ((v[3].u * curTex->width)  >> 10) + uOffset;
+		poly->v3 = ((v[3].v * curTex->height) >> 10) + vOffset;
 
 		// https://problemkaputt.de/psxspx-gpu-rendering-attributes.htm
 		// "For untextured graphics, 8bit RGB values of FFh are brightest. However, for texture blending, 8bit values of 80h are brightest"
@@ -625,7 +665,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
 		
 		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
 		setPolyFT4(poly);
@@ -651,14 +691,14 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 			if (signA > signB) continue;
 		}
 		
-		poly->u0 = ((int)(v[1].U * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v0 = ((int)(v[1].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u1 = ((int)(v[0].U * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v1 = ((int)(v[0].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u2 = ((int)(v[2].U * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v2 = ((int)(v[2].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u3 = ((int)(v[3].U * curTex->width)  & curTex->width_mask)  + uOffset;
-		poly->v3 = ((int)(v[3].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u0 = ((v[1].u * curTex->width)  >> 10) + uOffset;
+		poly->v0 = ((v[1].v * curTex->height) >> 10) + vOffset;
+		poly->u1 = ((v[0].u * curTex->width)  >> 10) + uOffset;
+		poly->v1 = ((v[0].v * curTex->height) >> 10) + vOffset;
+		poly->u2 = ((v[2].u * curTex->width)  >> 10) + uOffset;
+		poly->v2 = ((v[2].v * curTex->height) >> 10) + vOffset;
+		poly->u3 = ((v[3].u * curTex->width)  >> 10) + uOffset;
+		poly->v3 = ((v[3].v * curTex->height) >> 10) + vOffset;
 		
 		//int P = curTex->height, page = poly->tpage & 0xFF, ll = curTex->yOffset;
 		//Platform_Log4("XYZ: %f3 x %i, %i, %i", &v[0].V, &P, &page, &ll);

@@ -237,7 +237,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
-// Preprocess vertex buffers into optimised layout for DS
+// Preprocess vertex buffers into optimised layout for Saturn
 static VertexFormat buf_fmt;
 static int buf_count;
 

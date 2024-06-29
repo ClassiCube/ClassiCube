@@ -16,12 +16,12 @@
 #include <X11/extensions/XInput2.h>
 #endif
 */
-#include "../misc/linux/min-xlib.h"
-#include "../misc/linux/min-keysymdef.h"
-#include "../misc/linux/min-xutil.h"
-#include "../misc/linux/min-xkblib.h"
-#include "../misc/linux/min-xinput2.h"
-#include "../misc/linux/min-XF86keysym.h"
+#include "../misc/x11/min-xlib.h"
+#include "../misc/x11/min-keysymdef.h"
+#include "../misc/x11/min-xutil.h"
+#include "../misc/x11/min-xkblib.h"
+#include "../misc/x11/min-xinput2.h"
+#include "../misc/x11/min-XF86keysym.h"
 #include <stdio.h>
 
 #ifdef X_HAVE_UTF8_STRING
@@ -318,8 +318,8 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 #ifdef CC_BUILD_ICON
-/* See misc/linux/linux_icon_gen.cs for how to generate this file */
-#include "../misc/linux/CCIcon_X11.h"
+/* See misc/x11/x11_icon_gen.cs for how to generate this file */
+#include "../misc/x11/CCIcon_X11.h"
 
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
