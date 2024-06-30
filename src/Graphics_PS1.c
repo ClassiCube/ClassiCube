@@ -203,7 +203,7 @@ static int VRAM_CalcPage(int line) {
 #define TEXTURES_MAX_COUNT 64
 typedef struct GPUTexture {
 	cc_uint16 width, height;
-	cc_uint8 width_mask, height_mask;
+	cc_uint8 width_shift, height_shift;
 	cc_uint16 line, tpage;
 	cc_uint8 xOffset, yOffset;
 } GPUTexture;
@@ -229,8 +229,8 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
 	if (line == -1) { Mem_Free(tmp); return NULL; }
 	
-	tex->width  = bmp->width;  tex->width_mask  = bmp->width  - 1;
-	tex->height = bmp->height; tex->height_mask = bmp->height - 1;
+	tex->width  = bmp->width;  tex->width_shift  = Math_ilog2(bmp->width);
+	tex->height = bmp->height; tex->height_shift = Math_ilog2(bmp->height);
 	tex->line   = line;
 	
 	int page   = VRAM_CalcPage(line);
@@ -520,7 +520,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
 
 	struct Matrix mvp;
-	Matrix_Mul(&mvp, &_view, &_proj);
+	if (matrix == &Matrix_Identity && type == MATRIX_VIEW) {
+		mvp = _proj; // 2D mode uses identity view matrix
+	} else {
+		Matrix_Mul(&mvp, &_view, &_proj);
+	}
+	
 	LoadTransformMatrix(&mvp);
 }
 
@@ -621,6 +626,8 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
+	int uShift  = 10 - curTex->width_shift;
+	int vShift  = 10 - curTex->height_shift;
 
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
@@ -636,14 +643,14 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		poly->x2 = XYZInteger(v[2].x); poly->y2 = XYZInteger(v[2].y);
 		poly->x3 = XYZInteger(v[3].x); poly->y3 = XYZInteger(v[3].y);
 		
-		poly->u0 = ((v[1].u * curTex->width)  >> 10) + uOffset;
-		poly->v0 = ((v[1].v * curTex->height) >> 10) + vOffset;
-		poly->u1 = ((v[0].u * curTex->width)  >> 10) + uOffset;
-		poly->v1 = ((v[0].v * curTex->height) >> 10) + vOffset;
-		poly->u2 = ((v[2].u * curTex->width)  >> 10) + uOffset;
-		poly->v2 = ((v[2].v * curTex->height) >> 10) + vOffset;
-		poly->u3 = ((v[3].u * curTex->width)  >> 10) + uOffset;
-		poly->v3 = ((v[3].v * curTex->height) >> 10) + vOffset;
+		poly->u0 = (v[1].u >> uShift) + uOffset;
+		poly->v0 = (v[1].v >> vShift) + vOffset;
+		poly->u1 = (v[0].u >> uShift) + uOffset;
+		poly->v1 = (v[0].v >> vShift) + vOffset;
+		poly->u2 = (v[2].u >> uShift) + uOffset;
+		poly->v2 = (v[2].v >> vShift) + vOffset;
+		poly->u3 = (v[3].u >> uShift) + uOffset;
+		poly->v3 = (v[3].v >> vShift) + vOffset;
 
 		// https://problemkaputt.de/psxspx-gpu-rendering-attributes.htm
 		// "For untextured graphics, 8bit RGB values of FFh are brightest. However, for texture blending, 8bit values of 80h are brightest"
@@ -699,6 +706,8 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
+	int uShift  = 10 - curTex->width_shift;
+	int vShift  = 10 - curTex->height_shift;
 
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
@@ -730,14 +739,14 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 			if (signA > signB) continue;
 		}
 		
-		poly->u0 = ((v[1].u * curTex->width)  >> 10) + uOffset;
-		poly->v0 = ((v[1].v * curTex->height) >> 10) + vOffset;
-		poly->u1 = ((v[0].u * curTex->width)  >> 10) + uOffset;
-		poly->v1 = ((v[0].v * curTex->height) >> 10) + vOffset;
-		poly->u2 = ((v[2].u * curTex->width)  >> 10) + uOffset;
-		poly->v2 = ((v[2].v * curTex->height) >> 10) + vOffset;
-		poly->u3 = ((v[3].u * curTex->width)  >> 10) + uOffset;
-		poly->v3 = ((v[3].v * curTex->height) >> 10) + vOffset;
+		poly->u0 = (v[1].u >> uShift) + uOffset;
+		poly->v0 = (v[1].v >> vShift) + vOffset;
+		poly->u1 = (v[0].u >> uShift) + uOffset;
+		poly->v1 = (v[0].v >> vShift) + vOffset;
+		poly->u2 = (v[2].u >> uShift) + uOffset;
+		poly->v2 = (v[2].v >> vShift) + vOffset;
+		poly->u3 = (v[3].u >> uShift) + uOffset;
+		poly->v3 = (v[3].v >> vShift) + vOffset;
 		
 		//int P = curTex->height, page = poly->tpage & 0xFF, ll = curTex->yOffset;
 		//Platform_Log4("XYZ: %f3 x %i, %i, %i", &v[0].V, &P, &page, &ll);
