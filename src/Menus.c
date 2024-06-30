@@ -2803,7 +2803,7 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClassicOptionsScreen_GetInvert,   ClassicOptionsScreen_SetInvert },
 		{ -1,  -50, "Render distance", MenuOptionsScreen_Enum,
 			ClassicOptionsScreen_GetViewDist, ClassicOptionsScreen_SetViewDist },
-		{ -1,    0, "3D anaglyph",     MenuOptionsScreen_Bool,
+		{ -1,    0, "3d anaglyph",     MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph },
 
 		{ 1, -150, "Sound",         MenuOptionsScreen_Bool,
@@ -2994,7 +2994,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,    0,  "Mipmaps", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps },
 #endif
-		{ 1,   50,  "Anaglyph 3D", MenuOptionsScreen_Bool,
+		{ 1,   50,  "3D anaglyph", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
 	};
 

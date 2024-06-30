@@ -900,7 +900,9 @@ void CustomModel_Undefine(struct CustomModel* cm) {
 
 static void CustomModel_FreeAll(void) {
 	int i;
+#ifdef CC_BUILD_LOWMEM
 	if (!custom_models) return;
+#endif
 
 	for (i = 0; i < MAX_CUSTOM_MODELS; i++) 
 	{

@@ -637,7 +637,7 @@ void Window_ProcessEvents(float delta) {
 
 			status = Xutf8LookupString(win_xic, &e.xkey, data, Array_Elems(data), NULL, &status_type);
 			while (status > 0) {
-				i = Convert_Utf8ToCodepoint(&cp, chars, status);
+				i = Convert_Utf8ToCodepoint(&cp, (cc_uint8*)chars, status);
 				if (!i) break;
 
 				Event_RaiseInt(&InputEvents.Press, cp);
@@ -1323,7 +1323,7 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
 /* #include <GL/glx.h> */
-#include "../misc/linux/min-glx.h"
+#include "../misc/x11/min-glx.h"
 
 static GLXContext ctx_handle;
 typedef int  (*FP_SWAPINTERVAL)(int interval);

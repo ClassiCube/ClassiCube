@@ -1370,7 +1370,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 	if (res) res = Stream_OpenFile(&s, &altFile);
 	if (res) return res;
 
-	res = Stream_Read(&s, tmp, MACHINEID_LEN);
+	res = Stream_Read(&s, (cc_uint8*)tmp, MACHINEID_LEN);
 	if (!res) DecodeMachineID(tmp, MACHINEID_LEN, key);
 
 	(void)s.Close(&s);
