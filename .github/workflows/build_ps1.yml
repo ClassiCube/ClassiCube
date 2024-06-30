@@ -39,13 +39,13 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'misc/ps1/build/ClassiCube.elf'
+          SOURCE_FILE: 'misc/ps1/build/template.elf'
           DEST_NAME: 'ClassiCube-PS1.elf'
 
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'misc/ps1/build/ClassiCube.exe'
+          SOURCE_FILE: 'misc/ps1/build/template.exe'
           DEST_NAME: 'ClassiCube-PS1.exe'
           
       - uses: ./.github/actions/upload_build
