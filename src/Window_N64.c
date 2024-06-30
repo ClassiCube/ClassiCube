@@ -41,9 +41,9 @@ void Window_Init(void) {
 
 	// change defaults to make more sense for N64
 	BindMapping* binds = (BindMapping*)PadBind_Defaults;
-	BindMapping_Set(&binds[BIND_JUMP],         CCPAD_A, 0);
-	BindMapping_Set(&binds[BIND_INVENTORY],    CCPAD_B, 0);
-	BindMapping_Set(&binds[BIND_PLACE_BLOCK],  CCPAD_Z, 0);
+	BindMapping_Set(&binds[BIND_JUMP],         CCPAD_1, 0);
+	BindMapping_Set(&binds[BIND_INVENTORY],    CCPAD_2, 0);
+	BindMapping_Set(&binds[BIND_PLACE_BLOCK],  CCPAD_5, 0);
 	BindMapping_Set(&binds[BIND_HOTBAR_RIGHT], CCPAD_L, 0);
 	BindMapping_Set(&binds[BIND_DELETE_BLOCK], CCPAD_R, 0);
 
@@ -106,9 +106,9 @@ static void HandleButtons(int port, joypad_buttons_t btns) {
 	Gamepad_SetButton(port, CCPAD_L, btns.l);
 	Gamepad_SetButton(port, CCPAD_R, btns.r);
 	
-	Gamepad_SetButton(port, CCPAD_A, btns.a);
-	Gamepad_SetButton(port, CCPAD_B, btns.b);
-	Gamepad_SetButton(port, CCPAD_Z, btns.z);
+	Gamepad_SetButton(port, CCPAD_1, btns.a);
+	Gamepad_SetButton(port, CCPAD_2, btns.b);
+	Gamepad_SetButton(port, CCPAD_5, btns.z);
 	
 	Gamepad_SetButton(port, CCPAD_START,  btns.start);
 	

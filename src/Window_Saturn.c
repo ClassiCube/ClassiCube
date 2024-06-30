@@ -97,15 +97,21 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	smpc_peripheral_init();
+	
+	Input_DisplayNames[CCPAD_1] = "A";
+	Input_DisplayNames[CCPAD_2] = "B";
+	Input_DisplayNames[CCPAD_3] = "C";
+	Input_DisplayNames[CCPAD_4] = "X";
+	Input_DisplayNames[CCPAD_5] = "Y";
 }
 
 static void ProcessButtons(int port, int mods) {
-	Gamepad_SetButton(port, CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & PERIPHERAL_DIGITAL_C);
+	Gamepad_SetButton(port, CCPAD_1, mods & PERIPHERAL_DIGITAL_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & PERIPHERAL_DIGITAL_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & PERIPHERAL_DIGITAL_C);
 	
-	Gamepad_SetButton(port, CCPAD_Y, mods & PERIPHERAL_DIGITAL_X);
-	Gamepad_SetButton(port, CCPAD_Z, mods & PERIPHERAL_DIGITAL_Y);
+	Gamepad_SetButton(port, CCPAD_4, mods & PERIPHERAL_DIGITAL_X);
+	Gamepad_SetButton(port, CCPAD_5, mods & PERIPHERAL_DIGITAL_Y);
 
 	Gamepad_SetButton(port, CCPAD_L, mods & PERIPHERAL_DIGITAL_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & PERIPHERAL_DIGITAL_R);

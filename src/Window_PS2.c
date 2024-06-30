@@ -191,6 +191,11 @@ void Gamepads_Init(void) {
 	padInit(0);
 	padPortOpen(0, 0, padBuf0);
 	padPortOpen(1, 0, padBuf1);
+	
+	Input_DisplayNames[CCPAD_1] = "CIRCLE";
+	Input_DisplayNames[CCPAD_2] = "CROSS";
+	Input_DisplayNames[CCPAD_3] = "SQUARE";
+	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
 }
 
 static void HandleButtons(int port, int buttons) {
@@ -199,10 +204,10 @@ static void HandleButtons(int port, int buttons) {
 	buttons = buttons ^ 0xFFFF;
 	//Platform_Log1("BUTTONS: %h", &buttons);
 	
-	Gamepad_SetButton(port, CCPAD_A, buttons & PAD_TRIANGLE);
-	Gamepad_SetButton(port, CCPAD_B, buttons & PAD_SQUARE);
-	Gamepad_SetButton(port, CCPAD_X, buttons & PAD_CROSS);
-	Gamepad_SetButton(port, CCPAD_Y, buttons & PAD_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_1, buttons & PAD_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_2, buttons & PAD_CROSS);
+	Gamepad_SetButton(port, CCPAD_3, buttons & PAD_SQUARE);
+	Gamepad_SetButton(port, CCPAD_4, buttons & PAD_TRIANGLE);
       
 	Gamepad_SetButton(port, CCPAD_START,  buttons & PAD_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, buttons & PAD_SELECT);

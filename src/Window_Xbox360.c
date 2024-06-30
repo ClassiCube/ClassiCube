@@ -108,10 +108,10 @@ static void HandleButtons(int port, struct controller_data_s* pad) {
 	Gamepad_SetButton(port, CCPAD_LSTICK, pad->lt > 100);
 	Gamepad_SetButton(port, CCPAD_RSTICK, pad->rt > 100);
 	
-	Gamepad_SetButton(port, CCPAD_A, pad->a);
-	Gamepad_SetButton(port, CCPAD_B, pad->b);
-	Gamepad_SetButton(port, CCPAD_X, pad->x);
-	Gamepad_SetButton(port, CCPAD_Y, pad->y);
+	Gamepad_SetButton(port, CCPAD_1, pad->a);
+	Gamepad_SetButton(port, CCPAD_2, pad->b);
+	Gamepad_SetButton(port, CCPAD_3, pad->x);
+	Gamepad_SetButton(port, CCPAD_4, pad->y);
 	
 	Gamepad_SetButton(port, CCPAD_START,  pad->start);
 	Gamepad_SetButton(port, CCPAD_SELECT, pad->back);

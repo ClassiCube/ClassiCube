@@ -153,10 +153,10 @@ static void HandleButtons(int port, xid_gamepad_in* gp) {
 	Gamepad_SetButton(port, CCPAD_ZL, gp->white > 0x7F);
 	Gamepad_SetButton(port, CCPAD_ZR, gp->black > 0x7F);
 	
-	Gamepad_SetButton(port, CCPAD_A, gp->a > 0x7F);
-	Gamepad_SetButton(port, CCPAD_B, gp->b > 0x7F);
-	Gamepad_SetButton(port, CCPAD_X, gp->x > 0x7F);
-	Gamepad_SetButton(port, CCPAD_Y, gp->y > 0x7F);
+	Gamepad_SetButton(port, CCPAD_1, gp->a > 0x7F);
+	Gamepad_SetButton(port, CCPAD_2, gp->b > 0x7F);
+	Gamepad_SetButton(port, CCPAD_3, gp->x > 0x7F);
+	Gamepad_SetButton(port, CCPAD_4, gp->y > 0x7F);
 	
 	Gamepad_SetButton(port, CCPAD_START,  mods & XINPUT_GAMEPAD_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & XINPUT_GAMEPAD_BACK);

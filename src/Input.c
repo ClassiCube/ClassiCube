@@ -189,6 +189,7 @@ static void ClearTouches(void) { }
 "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",\
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
+
 #define Pad_Names \
 "PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
 "PAD_Z", "PAD_C", "PAD_D", \
@@ -196,6 +197,14 @@ static void ClearTouches(void) { }
 "PAD_START", "PAD_SELECT", "PAD_ZL", "PAD_ZR", \
 "PAD_LSTICK", "PAD_RSTICK", \
 "PAD_CLEFT", "PAD_CRIGHT", "PAD_CUP", "PAD_CDOWN"
+
+#define Pad_DisplayNames \
+"A", "B", "X", "Y", "L", "R", \
+"Z", "C", "D", \
+"LEFT", "RIGHT", "UP", "DOWN", \
+"START", "SELECT", "ZL", "ZR", \
+"LSTICK", "RSTICK", \
+"CLEFT", "CRIGHT", "CUP", "CDOWN"
 
 /* Names for each input button when stored to disc */
 static const char* const storageNames[INPUT_COUNT] = {
@@ -259,7 +268,7 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"BROWSERPREV", "BROWSERNEXT", "BROWSERREFRESH", "BROWSERSTOP", "BROWSERSEARCH", "BROWSERFAVORITES", "BROWSERHOME",
 	"LAUNCHMAIL", "LAUNCHMEDIA", "LAUNCHAPP1", "LAUNCHCALC", 
 
-	Pad_Names
+	Pad_DisplayNames
 };
 
 void Input_SetPressed(int key) {
@@ -387,13 +396,13 @@ BindReleased  Bind_OnReleased[BIND_COUNT];
 const BindMapping PadBind_Defaults[BIND_COUNT] = {
 	{ CCPAD_UP,   0 },  { CCPAD_DOWN,  0 }, /* BIND_FORWARD, BIND_BACK */
 	{ CCPAD_LEFT, 0 },  { CCPAD_RIGHT, 0 }, /* BIND_LEFT, BIND_RIGHT */
-	{ CCPAD_A, 0 },     { 0, 0 },           /* BIND_JUMP, BIND_RESPAWN */
-	{ CCPAD_START, 0 }, { CCPAD_Y,     0 }, /* BIND_SET_SPAWN, BIND_CHAT */
-	{ CCPAD_X, 0     }, { 0, 0 },           /* BIND_INVENTORY, BIND_FOG */
+	{ CCPAD_1, 0 },     { 0, 0 },           /* BIND_JUMP, BIND_RESPAWN */
+	{ CCPAD_START, 0 }, { CCPAD_4,     0 }, /* BIND_SET_SPAWN, BIND_CHAT */
+	{ CCPAD_3, 0     }, { 0, 0 },           /* BIND_INVENTORY, BIND_FOG */
 	{ CCPAD_START, 0 }, { 0, 0 },           /* BIND_SEND_CHAT, BIND_TABLIST */
-	{ CCPAD_B, CCPAD_L},{ CCPAD_B, CCPAD_X},/* BIND_SPEED, BIND_NOCLIP */ 
-	{ CCPAD_B, CCPAD_R },                   /* BIND_FLY */ 
-	{CCPAD_B,CCPAD_UP},{CCPAD_B,CCPAD_DOWN},/* BIND_FLY_UP, BIND_FLY_DOWN */
+	{ CCPAD_2, CCPAD_L},{ CCPAD_2, CCPAD_3},/* BIND_SPEED, BIND_NOCLIP */ 
+	{ CCPAD_2, CCPAD_R },                   /* BIND_FLY */ 
+	{CCPAD_2,CCPAD_UP},{CCPAD_2,CCPAD_DOWN},/* BIND_FLY_UP, BIND_FLY_DOWN */
 	{ 0, 0 }, { 0, 0 },                     /* BIND_EXT_INPUT, BIND_HIDE_FPS */
 	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, /* BIND_SCREENSHOT, BIND_FULLSCREEN, BIND_THIRD_PERSON, BIND_HIDE_GUI */
 	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
@@ -568,7 +577,7 @@ static void KeyBind_Init(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Gamepad---------------------------------------------------------*
 *#########################################################################################################################*/
-#define GAMEPAD_BEG_BTN CCPAD_A
+#define GAMEPAD_BEG_BTN CCPAD_1
 #define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
 
 int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };

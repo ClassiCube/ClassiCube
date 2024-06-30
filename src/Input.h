@@ -52,8 +52,9 @@ enum InputButtons {
 	CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP, CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME,
 	CCKEY_LAUNCH_MAIL, CCKEY_LAUNCH_MEDIA, CCKEY_LAUNCH_APP1, CCKEY_LAUNCH_CALC, 
 
-	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R, 
-	CCPAD_Z, CCPAD_C, CCPAD_D,
+	CCPAD_1, CCPAD_2, CCPAD_3, CCPAD_4, /* Primary buttons (e.g. A, B, X, Y) */
+	CCPAD_L, CCPAD_R, 
+	CCPAD_5, CCPAD_6, CCPAD_7, /* Secondary buttons (e.g. Z, C, D) */
 	CCPAD_LEFT, CCPAD_RIGHT, CCPAD_UP, CCPAD_DOWN,
 	CCPAD_START, CCPAD_SELECT, CCPAD_ZL, CCPAD_ZR,
 	CCPAD_LSTICK, CCPAD_RSTICK,
@@ -64,7 +65,7 @@ enum InputButtons {
 	INPUT_CLIPBOARD_COPY  = 1001,
 	INPUT_CLIPBOARD_PASTE = 1002
 };
-#define Input_IsPadButton(btn) ((btn) >= CCPAD_A && (btn) < INPUT_COUNT)
+#define Input_IsPadButton(btn) ((btn) >= CCPAD_1 && (btn) < INPUT_COUNT)
 
 extern const char* const Input_DisplayNames[INPUT_COUNT];
 
@@ -101,7 +102,7 @@ void Input_Clear(void);
 #define Input_IsLeftButton(btn)   ((btn) == CCKEY_LEFT   || (btn) == CCPAD_LEFT)
 #define Input_IsRightButton(btn)  ((btn) == CCKEY_RIGHT  || (btn) == CCPAD_RIGHT)
 
-#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER || (btn) == CCPAD_A)
+#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER || (btn) == CCPAD_1)
 #define Input_IsPauseButton(btn)  ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_START || (btn) == CCKEY_PAUSE)
 #define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
 

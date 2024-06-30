@@ -123,10 +123,10 @@ static void ProcessPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & PAD_TRIGGER_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & PAD_TRIGGER_R);
 	
-	Gamepad_SetButton(port, CCPAD_A, mods & PAD_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & PAD_BUTTON_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & PAD_BUTTON_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & PAD_BUTTON_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & PAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & PAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & PAD_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & PAD_BUTTON_Y);
 	
 	Gamepad_SetButton(port, CCPAD_START,  mods & PAD_BUTTON_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & PAD_TRIGGER_Z);
@@ -320,9 +320,9 @@ static void ProcessWPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_BUTTON_1);
 	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_BUTTON_2);
       
-	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & WPAD_BUTTON_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_BUTTON_PLUS);
+	Gamepad_SetButton(port, CCPAD_1, mods & WPAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & WPAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & WPAD_BUTTON_PLUS);
       
 	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
@@ -340,9 +340,9 @@ static void ProcessNunchuck_Game(int port, int mods, float delta) {
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_C);
 	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_Z);
       
-	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_Y, mods & WPAD_BUTTON_1);
-	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_BUTTON_2);
+	Gamepad_SetButton(port, CCPAD_1, mods & WPAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_4, mods & WPAD_BUTTON_1);
+	Gamepad_SetButton(port, CCPAD_3, mods & WPAD_BUTTON_2);
 
 	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
@@ -384,10 +384,10 @@ static void ProcessClassicButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & CLASSIC_CTRL_BUTTON_FULL_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & CLASSIC_CTRL_BUTTON_FULL_R);
       
-	Gamepad_SetButton(port, CCPAD_A, mods & CLASSIC_CTRL_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & CLASSIC_CTRL_BUTTON_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & CLASSIC_CTRL_BUTTON_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & CLASSIC_CTRL_BUTTON_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & CLASSIC_CTRL_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & CLASSIC_CTRL_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & CLASSIC_CTRL_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & CLASSIC_CTRL_BUTTON_Y);
       
 	Gamepad_SetButton(port, CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_PLUS);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_MINUS);

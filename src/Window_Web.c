@@ -577,10 +577,10 @@ void Gamepads_Init(void) { }
 static void ProcessGamepadButtons(int port, EmscriptenGamepadEvent* ev) {
 	int numButtons = ev->numButtons;
 
-	Gamepad_SetButton(port, CCPAD_A, GetGamepadButton(0));
-	Gamepad_SetButton(port, CCPAD_B, GetGamepadButton(1));
-	Gamepad_SetButton(port, CCPAD_X, GetGamepadButton(2));
-	Gamepad_SetButton(port, CCPAD_Y, GetGamepadButton(3));
+	Gamepad_SetButton(port, CCPAD_1, GetGamepadButton(0));
+	Gamepad_SetButton(port, CCPAD_2, GetGamepadButton(1));
+	Gamepad_SetButton(port, CCPAD_3, GetGamepadButton(2));
+	Gamepad_SetButton(port, CCPAD_4, GetGamepadButton(3));
 
 	Gamepad_SetButton(port, CCPAD_ZL, GetGamepadButton(4));
 	Gamepad_SetButton(port, CCPAD_ZR, GetGamepadButton(5));

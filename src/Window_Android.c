@@ -86,10 +86,10 @@ static int MapNativeKey(int code) {
 	case AKEYCODE_DPAD_LEFT:  return CCPAD_LEFT;
 	case AKEYCODE_DPAD_RIGHT: return CCPAD_RIGHT;
 
-	case AKEYCODE_BUTTON_A: return CCPAD_A;
-	case AKEYCODE_BUTTON_B: return CCPAD_B;
-	case AKEYCODE_BUTTON_X: return CCPAD_X;
-	case AKEYCODE_BUTTON_Y: return CCPAD_Y;
+	case AKEYCODE_BUTTON_A: return CCPAD_1;
+	case AKEYCODE_BUTTON_B: return CCPAD_2;
+	case AKEYCODE_BUTTON_X: return CCPAD_3;
+	case AKEYCODE_BUTTON_Y: return CCPAD_4;
 
 	case AKEYCODE_BUTTON_L1: return CCPAD_L;
 	case AKEYCODE_BUTTON_R1: return CCPAD_R;

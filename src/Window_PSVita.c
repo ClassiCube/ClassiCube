@@ -141,13 +141,18 @@ void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+	
+	Input_DisplayNames[CCPAD_1] = "CIRCLE";
+	Input_DisplayNames[CCPAD_2] = "CROSS";
+	Input_DisplayNames[CCPAD_3] = "SQUARE";
+	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
 }
 
 static void HandleButtons(int port, int mods) {
-	Gamepad_SetButton(port, CCPAD_A, mods & SCE_CTRL_TRIANGLE);
-	Gamepad_SetButton(port, CCPAD_B, mods & SCE_CTRL_SQUARE);
-	Gamepad_SetButton(port, CCPAD_X, mods & SCE_CTRL_CROSS);
-	Gamepad_SetButton(port, CCPAD_Y, mods & SCE_CTRL_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_1, mods & SCE_CTRL_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_2, mods & SCE_CTRL_CROSS);
+	Gamepad_SetButton(port, CCPAD_3, mods & SCE_CTRL_SQUARE);
+	Gamepad_SetButton(port, CCPAD_4, mods & SCE_CTRL_TRIANGLE);
       
 	Gamepad_SetButton(port, CCPAD_START,  mods & SCE_CTRL_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & SCE_CTRL_SELECT);

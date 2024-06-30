@@ -277,14 +277,19 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	ioPadInit(MAX_PORT_NUM);
+	
+	Input_DisplayNames[CCPAD_1] = "CIRCLE";
+	Input_DisplayNames[CCPAD_2] = "CROSS";
+	Input_DisplayNames[CCPAD_3] = "SQUARE";
+	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
 }
 
 static void HandleButtons(int port, padData* data) {
 	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
-	Gamepad_SetButton(port, CCPAD_A, data->BTN_TRIANGLE);
-	Gamepad_SetButton(port, CCPAD_B, data->BTN_SQUARE);
-	Gamepad_SetButton(port, CCPAD_X, data->BTN_CROSS);
-	Gamepad_SetButton(port, CCPAD_Y, data->BTN_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_1, data->BTN_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_2, data->BTN_CROSS);
+	Gamepad_SetButton(port, CCPAD_3, data->BTN_SQUARE);
+	Gamepad_SetButton(port, CCPAD_4, data->BTN_TRIANGLE);
       
 	Gamepad_SetButton(port, CCPAD_START,  data->BTN_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, data->BTN_SELECT);

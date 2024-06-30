@@ -156,10 +156,10 @@ static void HandleButtons(int port, u64 mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & HidNpadButton_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & HidNpadButton_R);
 	
-	Gamepad_SetButton(port, CCPAD_A, mods & HidNpadButton_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & HidNpadButton_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & HidNpadButton_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & HidNpadButton_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & HidNpadButton_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & HidNpadButton_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & HidNpadButton_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & HidNpadButton_Y);
 	
 	Gamepad_SetButton(port, CCPAD_START,  mods & HidNpadButton_Plus);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & HidNpadButton_Minus);

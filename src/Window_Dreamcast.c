@@ -227,10 +227,10 @@ void Gamepads_Init(void) {
 }
 
 static void HandleButtons(int port, int mods) {
-	Gamepad_SetButton(port, CCPAD_A, mods & CONT_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & CONT_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & CONT_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & CONT_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & CONT_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & CONT_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & CONT_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & CONT_Y);
       
 	Gamepad_SetButton(port, CCPAD_START,  mods & CONT_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & CONT_D);
@@ -241,9 +241,9 @@ static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 	
 	// Buttons not on standard controller
-	Gamepad_SetButton(port, CCPAD_C,       mods & CONT_C);
-	Gamepad_SetButton(port, CCPAD_D,       mods & CONT_D);
-	Gamepad_SetButton(port, CCPAD_Z,       mods & CONT_Z);
+	Gamepad_SetButton(port, CCPAD_6,       mods & CONT_C);
+	Gamepad_SetButton(port, CCPAD_7,       mods & CONT_D);
+	Gamepad_SetButton(port, CCPAD_5,       mods & CONT_Z);
 	Gamepad_SetButton(port, CCPAD_CLEFT,   mods & CONT_DPAD2_LEFT);
 	Gamepad_SetButton(port, CCPAD_CRIGHT,  mods & CONT_DPAD2_RIGHT);
 	Gamepad_SetButton(port, CCPAD_CUP,     mods & CONT_DPAD2_UP);

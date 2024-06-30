@@ -253,13 +253,13 @@ static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
 
 	if (deltaX || deltaY) {
 		VirtualKeyboard_Scroll(deltaX, deltaY);
-	} else if (key == CCPAD_START  || key == CCPAD_A) {
+	} else if (key == CCPAD_START  || key == CCPAD_1) {
 		VirtualKeyboard_ClickSelected();
-	} else if (key == CCPAD_SELECT || key == CCPAD_B) {
+	} else if (key == CCPAD_SELECT || key == CCPAD_2) {
 		VirtualKeyboard_Close();
-	} else if (key == CCPAD_X) {
+	} else if (key == CCPAD_3) {
 		VirtualKeyboard_Backspace();
-	} else if (key == CCPAD_Y) {
+	} else if (key == CCPAD_4) {
 		VirtualKeyboard_AppendChar('@');
 	} else if (key == CCPAD_L) {
 		VirtualKeyboard_AppendChar(' ');

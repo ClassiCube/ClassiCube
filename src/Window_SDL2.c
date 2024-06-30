@@ -487,10 +487,10 @@ void Gamepads_Init(void) {
 static void ProcessGamepadButtons(int port) {
 	SDL_GameController* gp = controllers[port];
 
-	Gamepad_SetButton(port, CCPAD_A, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_A));
-	Gamepad_SetButton(port, CCPAD_B, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_B));
-	Gamepad_SetButton(port, CCPAD_X, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_X));
-	Gamepad_SetButton(port, CCPAD_Y, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_Y));
+	Gamepad_SetButton(port, CCPAD_1, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_A));
+	Gamepad_SetButton(port, CCPAD_2, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_B));
+	Gamepad_SetButton(port, CCPAD_3, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_X));
+	Gamepad_SetButton(port, CCPAD_4, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_Y));
 
 	Gamepad_SetButton(port, CCPAD_ZL, SDL_GameControllerGetAxis(  gp, SDL_CONTROLLER_AXIS_TRIGGERLEFT ) > 8000);
 	Gamepad_SetButton(port, CCPAD_ZR, SDL_GameControllerGetAxis(  gp, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 8000);
