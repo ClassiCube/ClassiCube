@@ -21,7 +21,7 @@
 #include "Game.h"
 
 #define LAYOUTS static const struct LLayout
-#define IsBackButton(btn) (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_B)
+#define IsBackButton(btn) (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_2)
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -103,7 +103,7 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was)) return;
 	}
 
-	if (key == CCKEY_TAB || key == CCPAD_X) {
+	if (key == CCKEY_TAB || key == CCPAD_3) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
 	} else if (Input_IsUpButton(key)) {
 		LScreen_CycleSelected(s, -1);

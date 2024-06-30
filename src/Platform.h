@@ -46,7 +46,7 @@ typedef struct cc_winstring_ {
 	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */
 	char ansi[NATIVE_STR_LEN]; /* String lossily represented using ANSI format */
 } cc_winstring;
-/* Encodes a string in UTF16 and ASCII format, also null terminating the string. */
+/* Encodes a string into the platform native string format */
 void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
 
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
@@ -58,6 +58,7 @@ typedef cc_winstring cc_filepath;
 typedef struct cc_filepath_ { char buffer[NATIVE_STR_LEN]; } cc_filepath;
 #define FILEPATH_RAW(raw) ((cc_filepath*)raw)
 #endif
+/* Converts the provided path into a platform native file path */
 void Platform_EncodePath(cc_filepath* dst, const cc_string* src);
 
 /* Initialises the platform specific state. */

@@ -290,12 +290,14 @@ cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
+	/* NOTE: the (DWORD*) cast assumes that sizeof(long) is 4 */
+	BOOL success = ReadFile(file, data, count, (DWORD*)bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
+	/* NOTE: the (DWORD*) cast assumes that sizeof(long) is 4 */
+	BOOL success = WriteFile(file, data, count, (DWORD*)bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
 

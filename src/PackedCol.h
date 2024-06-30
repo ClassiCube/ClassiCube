@@ -1,7 +1,7 @@
 #ifndef CC_PACKEDCOL_H
 #define CC_PACKEDCOL_H
 #include "Core.h"
-/* Manipulates a packed 32 bit RGBA colour, in a format suitable for the native 3D graphics API.
+/* Manipulates a packed 32 bit RGBA colour, in a format suitable for the native 3D graphics API vertex colours.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
