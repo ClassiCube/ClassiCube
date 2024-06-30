@@ -116,11 +116,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return fioMkdir(path->buffer);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
+int File_Exists(const cc_filepath* path) {
 	io_stat_t sb;
-	Platform_EncodePath(&str, path);
-	return fioGetstat(str.buffer, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
+	return fioGetstat(path->buffer, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
 }
 
 // For some reason fioDread seems to be returning a iox_dirent_t, instead of a io_dirent_t

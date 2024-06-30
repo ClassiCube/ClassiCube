@@ -211,12 +211,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	struct stat sb;
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-	
-	return stat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

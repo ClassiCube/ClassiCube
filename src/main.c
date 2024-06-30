@@ -69,7 +69,14 @@ static void SetupProgram(int argc, char** argv) {
 	String_InitArray(Server.Address, ipBuffer);
 }
 
-#define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
+#define SP_HasDir(path) (String_IndexOf(path, '/') >= 0 || String_IndexOf(path, '\\') >= 0)
+static cc_bool IsOpenableFile(const cc_string* path) {
+	cc_filepath str;
+	if (!SP_HasDir(path)) return false;
+	
+	Platform_EncodePath(&str, path);
+	return File_Exists(&str);
+}
 
 static int RunProgram(int argc, char** argv) {
 	cc_string args[GAME_MAX_CMDARGS];
@@ -93,7 +100,7 @@ static int RunProgram(int argc, char** argv) {
 		String_Copy(&Launcher_AutoHash, &args[0]);
 		Launcher_Run();
 	/* File path to auto load a map in singleplayer */
-	} else if (argsCount == 1 && SP_HasDir(args[0]) && File_Exists(&args[0])) {
+	} else if (argsCount == 1 && IsOpenableFile(&args[0])) {
 		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
 		String_Copy(&SP_AutoloadMap, &args[0]); /* TODO: don't copy args? */
 		RunGame();

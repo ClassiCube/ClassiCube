@@ -94,8 +94,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return ReturnCode_DirectoryExists;
 }
 
-int File_Exists(const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+int File_Exists(const cc_filepath* path) {
+	return false;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

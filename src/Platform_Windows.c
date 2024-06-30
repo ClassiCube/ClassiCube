@@ -193,12 +193,11 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return CreateDirectoryA(path->ansi, NULL) ? 0 : GetLastError();
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
-	DWORD attribs;
-
-	Platform_EncodePath(&str, path);
-	attribs = GetFileAttributesW(str.uni);
+int File_Exists(const cc_filepath* path) {
+	DWORD attribs = GetFileAttributesW(path->uni);
+	
+	if (attribs == INVALID_FILE_ATTRIBUTES)
+		attribs = GetFileAttributesA(path->ansi);
 
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }

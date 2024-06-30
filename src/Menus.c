@@ -1396,6 +1396,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget) {
 	struct ButtonWidget* btn  = (struct ButtonWidget*)widget;
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string file = s->input.base.text;
+	cc_filepath str;
 	cc_result res;
 
 	if (!file.length) {
@@ -1407,7 +1408,8 @@ static void SaveLevelScreen_Save(void* screen, void* widget) {
 	String_Format1(&path, "maps/%s.cw", &file);
 	String_Copy(&World.Name, &file);
 
-	if (File_Exists(&path) && !btn->optName) {
+	Platform_EncodePath(&str, &path);
+	if (File_Exists(&str) && !btn->optName) {
 		btn->optName = "";
 		SaveLevelScreen_UpdateSave(s);
 		return;

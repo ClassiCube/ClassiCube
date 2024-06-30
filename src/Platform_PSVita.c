@@ -83,11 +83,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return GetSCEResult(result);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;;
+int File_Exists(const cc_filepath* path) {
 	SceIoStat sb;
-	Platform_EncodePath(&str, path);
-	return sceIoGetstat(str.buffer, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
+	return sceIoGetstat(path->buffer, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

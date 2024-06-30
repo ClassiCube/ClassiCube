@@ -108,11 +108,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return sysLv2FsMkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
+int File_Exists(const cc_filepath* path) {
 	sysFSStat sb;
-	Platform_EncodePath(&str, path);
-	return sysLv2FsStat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	return sysLv2FsStat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

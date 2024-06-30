@@ -208,11 +208,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return err;
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;;
+int File_Exists(const cc_filepath* path) {
 	struct stat sb;
-	Platform_EncodePath(&str, path);
-	return fs_stat(str.buffer, &sb, 0) == 0 && S_ISREG(sb.st_mode);
+	return fs_stat(path->buffer, &sb, 0) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

@@ -86,7 +86,7 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	return false;
 }
 

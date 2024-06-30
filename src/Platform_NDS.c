@@ -118,19 +118,16 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 cc_result Directory_Create(const cc_filepath* path) {
 	if (!fat_available) return 0;
 
-    Platform_Log1("mkdir %c", path->buffer);
+	Platform_Log1("mkdir %c", path->buffer);
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	if (!fat_available) return false;
-
-	cc_filepath str;
 	struct stat sb;
-	Platform_EncodePath(&str, path);
-    Platform_Log1("Check %c", str.buffer);
-
-	return stat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	
+	Platform_Log1("Check %c", path->buffer);
+	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

@@ -236,11 +236,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return DoCreateFolder(path->buffer);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-
-	return 0;
+int File_Exists(const cc_filepath* path) {
+	return false; // TODO
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

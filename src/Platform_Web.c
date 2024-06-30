@@ -114,10 +114,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 }
 
 extern int interop_FileExists(const char* path);
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-	return interop_FileExists(str.buffer);
+int File_Exists(const cc_filepath* path) {
+	return interop_FileExists(path->buffer);
 }
 
 static void* enum_obj;

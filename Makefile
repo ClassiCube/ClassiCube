@@ -209,7 +209,7 @@ clean:
 
 
 $(ENAME): $(BUILD_DIR) $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRALIBS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
@@ -222,21 +222,21 @@ DEPFILES := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.d, $(C_SOURCES))
 $(DEPFILES):
 
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c $(BUILD_DIR)/%.d
-	$(CC) $(CFLAGS) $(EXTRAFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 include $(wildcard $(DEPFILES))
 # === Compiling WITHOUT dependency tracking ===
 else
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
-	$(CC) $(CFLAGS) $(EXTRAFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 endif
 	
 # === Platform specific file compiling ===
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.m
-	$(CC) $(CFLAGS) $(EXTRAFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 	
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-	$(CC) $(CFLAGS) $(EXTRAFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 
-# EXTRAFLAGS and EXTRALIBS are not defined in the makefile intentionally -
+# EXTRA_CFLAGS and EXTRA_LIBS are not defined in the makefile intentionally -
 # define them on the command line as a simple way of adding CFLAGS/LIBS

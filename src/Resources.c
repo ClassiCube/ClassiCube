@@ -399,6 +399,7 @@ static struct MusicAsset {
 
 static void MusicAssets_CheckExistence(void) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_filepath str;
 	int i;
 	String_InitArray(path, pathBuffer);
 
@@ -407,7 +408,8 @@ static void MusicAssets_CheckExistence(void) {
 		path.length = 0;
 		String_Format1(&path, "audio/%c", musicAssets[i].name);
 
-		musicAssets[i].downloaded = File_Exists(&path);
+		Platform_EncodePath(&str, &path);
+		musicAssets[i].downloaded = File_Exists(&str);
 	}
 }
 
@@ -679,7 +681,10 @@ static cc_bool ccTexturesExist, ccTexturesDownloaded;
 static int ccTexturesReqID;
 
 static void CCTextures_CheckExistence(void) {
-	ccTexturesExist = File_Exists(&ccTexPack);
+	cc_filepath path;
+	Platform_EncodePath(&path, &ccTexPack);
+	
+	ccTexturesExist = File_Exists(&path);
 }
 
 static void CCTextures_CountMissing(void) {

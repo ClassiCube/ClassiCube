@@ -336,11 +336,16 @@ CC_NOINLINE static void MakeCachePath(cc_string* mainPath, cc_string* altPath, c
 static int IsCached(const cc_string* url) {
 	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
 	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
+	cc_filepath mainStr, altStr;
+	
 	String_InitArray(mainPath, mainBuffer);
 	String_InitArray(altPath,   altBuffer);
 
 	MakeCachePath(&mainPath, &altPath, url);
-	return File_Exists(&mainPath) || (altPath.length && File_Exists(&altPath));
+	Platform_EncodePath(&mainStr, &mainPath);
+	Platform_EncodePath(&altStr,  &altPath);
+
+	return File_Exists(&mainStr) || (altPath.length && File_Exists(&altStr));
 }
 
 /* Attempts to open the cached data stream for the given url */
