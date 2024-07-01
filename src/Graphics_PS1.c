@@ -691,14 +691,9 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
 		if (p < 0 || p >= OT_LENGTH) continue;
 
-		//int X = v[0].x, Y = v[0].y, Z = v[0].z;
-		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
-		//X = poly->x1; Y = poly->y1, Z = coords[0].z;
-
 		poly->r0 = PackedCol_R(v->Col);
 		poly->g0 = PackedCol_G(v->Col);
 		poly->b0 = PackedCol_B(v->Col);
-		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
@@ -748,21 +743,13 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		poly->u3 = (v[3].u >> uShift) + uOffset;
 		poly->v3 = (v[3].v >> vShift) + vOffset;
 		
-		//int P = curTex->height, page = poly->tpage & 0xFF, ll = curTex->yOffset;
-		//Platform_Log4("XYZ: %f3 x %i, %i, %i", &v[0].V, &P, &page, &ll);
 		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
 		if (p < 0 || p >= OT_LENGTH) continue;
-
-		//int X = v[0].x, Y = v[0].y, Z = v[0].z;
-		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
-		//X = poly->x1; Y = poly->y1, Z = coords[0].z;
 
 		poly->r0 = PackedCol_R(v->Col) >> 1;
 		poly->g0 = PackedCol_G(v->Col) >> 1;
 		poly->b0 = PackedCol_B(v->Col) >> 1;
-		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
-		// TODO: 2D shouldn't use AddPrim, draws in the wrong way
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }

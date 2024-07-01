@@ -55,7 +55,7 @@ static int supportsTruecolor;
 
 #define ERASE_CMD(cmd)	  CSI cmd "J"
 #define DEC_PM_SET(cmd)   CSI "?" cmd "h"
-#define DEC_PM_RESET(cmd) CSI "?" cmd "1"
+#define DEC_PM_RESET(cmd) CSI "?" cmd "l"
 
 #define OutputConst(str) OutputConsole(str, sizeof(str) - 1)
 

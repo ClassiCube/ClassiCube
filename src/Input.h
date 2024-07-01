@@ -67,7 +67,7 @@ enum InputButtons {
 };
 #define Input_IsPadButton(btn) ((btn) >= CCPAD_1 && (btn) < INPUT_COUNT)
 
-extern const char* const Input_DisplayNames[INPUT_COUNT];
+extern const char* Input_DisplayNames[INPUT_COUNT];
 
 extern struct _InputState {
 	/* Pressed state of each input button. Use Input_Set to change */

@@ -239,7 +239,7 @@ static const char* const storageNames[INPUT_COUNT] = {
 	Pad_Names
 };
 
-const char* const Input_DisplayNames[INPUT_COUNT] = {
+const char* Input_DisplayNames[INPUT_COUNT] = {
 	"NONE",
 	Key_Function_Names,
 	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET", "SLASH",
