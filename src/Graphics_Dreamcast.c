@@ -342,7 +342,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	int width, height;
 	gldcGetTexture(&pixels, &width, &height);
 	ConvertTexture(pixels, bmp, rowWidth);
-	return texId;
+	return (GfxResourceID)texId;
 }
 
 // TODO: struct GPUTexture ??
@@ -372,7 +372,7 @@ static void ConvertSubTexture(cc_uint16* dst, int texWidth, int texHeight,
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	gldcBindTexture(texId);
+	gldcBindTexture((GLuint)texId);
 				
 	void* pixels;
 	int width, height;
