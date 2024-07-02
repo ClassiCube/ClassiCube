@@ -342,6 +342,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define CC_BUILD_SMALLSTACK
 	#undef  CC_BUILD_RESOURCES
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
@@ -358,6 +359,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_SMALLSTACK
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_FILESYSTEM
@@ -378,6 +380,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_TOUCH
+	#define CC_BUILD_SMALLSTACK
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
@@ -425,6 +428,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_SMALLSTACK
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */

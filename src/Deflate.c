@@ -1168,7 +1168,11 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 	cc_uint32 compressedSize, uncompressedSize;
 	int method, pathLen, extraLen;
 	struct Stream portion, compStream;
+#ifdef CC_BUILD_SMALLSTACK
+	struct InflateState* inflate;
+#else
 	struct InflateState inflate;
+#endif
 	cc_result res;
 
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
@@ -1194,16 +1198,27 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 
 	if (method == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
-		return state->ProcessEntry(&path, &portion, entry);
+		res = state->ProcessEntry(&path, &portion, entry);
 	} else if (method == 8) {
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
+
+#ifdef CC_BUILD_SMALLSTACK
+		inflate = Mem_TryAlloc(1, sizeof(struct InflateState));
+		if (!inflate) return ERR_OUT_OF_MEMORY;
+
+		Inflate_MakeStream2(&compStream, inflate, &portion);
+		res = state->ProcessEntry(&path, &compStream, entry);
+		Mem_Free(inflate);
+#else
 		Inflate_MakeStream2(&compStream, &inflate, &portion);
-		return state->ProcessEntry(&path, &compStream, entry);
+		res = state->ProcessEntry(&path, &compStream, entry);	
+#endif
 	} else {
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
 		/* TODO: Should this be an error */
+		res = 0;
 	}
-	return 0;
+	return res;
 }
 
 static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {

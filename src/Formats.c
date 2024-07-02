@@ -1795,7 +1795,7 @@ static const cc_uint8 cpe_fallback[] = {
 	BLOCK_WOOD, BLOCK_STONE
 };
 
-#define DAT_BUFFER_SIZE (64 * 1024)
+#define DAT_BUFFER_SIZE (32 * 1024)
 static cc_result WriteLevelBlocks(struct Stream* stream) {
 	cc_uint8 buffer[DAT_BUFFER_SIZE];
 	int i, bIndex = 0;

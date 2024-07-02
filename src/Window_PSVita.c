@@ -169,8 +169,8 @@ static void HandleButtons(int port, int mods) {
 #define AXIS_SCALE 16.0f
 static void ProcessCircleInput(int port, int axis, int x, int y, float delta) {
 	// May not be exactly 0 on actual hardware
-	if (Math_AbsI(x) <= 16) x = 0;
-	if (Math_AbsI(y) <= 16) y = 0;
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }

@@ -1354,16 +1354,15 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 	}
 }
 
-static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
+static cc_result DoSaveMap(const cc_string* path, struct GZipState* state) {
 	static const cc_string schematic = String_FromConst(".schematic");
-	static const cc_string mine = String_FromConst(".mine");
+	static const cc_string mine      = String_FromConst(".mine");
 	struct Stream stream, compStream;
-	struct GZipState state;
 	cc_result res;
 
 	res = Stream_CreateFile(&stream, path);
 	if (res) { Logger_SysWarn2(res, "creating", path); return res; }
-	GZip_MakeStream(&compStream, &state, &stream);
+	GZip_MakeStream(&compStream, state, &stream);
 
 	if (String_CaselessEnds(path, &schematic)) {
 		res = Schematic_Save(&compStream);
@@ -1385,6 +1384,20 @@ static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
 
 	res = stream.Close(&stream);
 	if (res) { Logger_SysWarn2(res, "closing", path); return res; }
+	return 0;
+}
+
+static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
+	struct GZipState* state;
+	cc_result res;
+
+	state = Mem_TryAlloc(1, sizeof(struct GZipState));
+	res   = ERR_OUT_OF_MEMORY;
+	if (!state) { Logger_SysWarn(res, "allocating temp memory"); return res; }
+
+	res = DoSaveMap(path, state);
+	Mem_Free(state);
+	if (res) return res;
 
 	World.LastSave = Game.Time;
 	Gui_ShowPauseMenu();
