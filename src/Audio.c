@@ -224,13 +224,15 @@ static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, s
 }
 
 static cc_result Sounds_ExtractZip(const cc_string* path) {
+	struct ZipEntry entries[128];
 	struct Stream stream;
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
-	res = Zip_Extract(&stream, SelectZipEntry, ProcessZipEntry);
+	res = Zip_Extract(&stream, SelectZipEntry, ProcessZipEntry,
+						entries, Array_Elems(entries));
 	if (res) Logger_SysWarn2(res, "extracting", path);
 
 	/* No point logging error for closing readonly file */

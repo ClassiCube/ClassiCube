@@ -1142,14 +1142,16 @@ void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stre
 /*########################################################################################################################*
 *--------------------------------------------------------ZipReader--------------------------------------------------------*
 *#########################################################################################################################*/
-#define ZIP_MAXNAMELEN  512
-#define ZIP_MAX_ENTRIES 1024
-
+#define ZIP_MAXNAMELEN 512
 /* Stores state for reading and processing entries in a .zip archive */
 struct ZipState {
 	struct Stream* source;
 	Zip_SelectEntry SelectEntry;
 	Zip_ProcessEntry ProcessEntry;
+	/* Data for each entry in the .zip archive */
+	struct ZipEntry* entries;
+	/* Maximum number of entries that can be stores in 'entries' buffer */
+	int maxEntries;
 
 	/* Number of entries selected by SelectEntry */
 	int usedEntries;
@@ -1157,8 +1159,6 @@ struct ZipState {
 	int totalEntries;
 	/* Offset to central directory entries */
 	cc_uint32 centralDirBeg;
-	/* Data for each entry in the .zip archive */
-	struct ZipEntry entries[ZIP_MAX_ENTRIES];
 };
 
 static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
@@ -1229,7 +1229,7 @@ static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {
 	if ((res = stream->Skip(stream, extraLen + commentLen))) return res;
 
 	if (!state->SelectEntry(&path)) return 0;
-	if (state->usedEntries >= ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
+	if (state->usedEntries >= state->maxEntries) return ZIP_ERR_TOO_MANY_ENTRIES;
 	entry = &state->entries[state->usedEntries++];
 
 	entry->CompressedSize    = Stream_GetU32_LE(&header[16]);
@@ -1256,7 +1256,8 @@ enum ZipSig {
 	ZIP_SIG_LOCALFILEHEADER = 0x04034b50
 };
 
-cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor) {
+cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor, 
+						struct ZipEntry* entries, int maxEntries) {
 	struct ZipState state;
 	cc_uint32 stream_len;
 	cc_uint32 sig = 0;
@@ -1278,6 +1279,8 @@ cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_Proce
 	state.source       = source;
 	state.SelectEntry  = selector;
 	state.ProcessEntry = processor;
+	state.entries      = entries;
+	state.maxEntries   = maxEntries;
 
 	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
 	res = Zip_ReadEndOfCentralDirectory(&state);

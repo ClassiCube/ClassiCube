@@ -481,6 +481,7 @@ static cc_result ExtractPng(struct Stream* stream) {
 
 static cc_bool needReload;
 static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
+	struct ZipEntry entries[1024];
 	cc_result res;
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
@@ -492,7 +493,8 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	res = ExtractPng(stream);
 	if (res == PNG_ERR_INVALID_SIG) {
 		/* file isn't a .png image, probably a .zip archive then */
-		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry);
+		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry,
+							entries, Array_Elems(entries));
 
 		if (res) Logger_SysWarn2(res, "extracting", path);
 	} else if (res) {

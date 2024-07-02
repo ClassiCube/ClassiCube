@@ -453,6 +453,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 }
 
 static cc_result ExtractTexturePack(const cc_string* path) {
+	struct ZipEntry entries[32];
 	struct Stream stream;
 	cc_result res;
 
@@ -461,7 +462,8 @@ static cc_result ExtractTexturePack(const cc_string* path) {
 	if (res) { Logger_SysWarn(res, "opening texture pack"); return res; }
 
 	res = Zip_Extract(&stream, 
-			Launcher_SelectZipEntry, Launcher_ProcessZipEntry);
+			Launcher_SelectZipEntry, Launcher_ProcessZipEntry,
+			entries, Array_Elems(entries));
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
