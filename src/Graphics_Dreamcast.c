@@ -507,9 +507,26 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
 extern void apply_poly_header(pvr_poly_hdr_t* header, int list_type);
+static cc_bool loggedNoVRAM;
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+
+static Vertex* ReserveOutput(AlignedVector* vec, uint32_t elems) {
+	Vertex* beg;
+	for (;;)
+	{
+		if ((beg = aligned_vector_reserve(vec, elems))) return beg;
+		// Try to reduce view distance to save on RAM
+		if (Game_ReduceVRAM()) continue;
+
+		if (!loggedNoVRAM) {
+			loggedNoVRAM = true;
+			Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating temp memory");
+		}
+		return NULL;
+	}
+}
 
 void DrawQuads(int count, void* src) {
 	if (!count) return;
@@ -518,7 +535,8 @@ void DrawQuads(int count, void* src) {
 
 	uint32_t header_required = (vec->size == 0) || STATE_DIRTY;
 	// Reserve room for the vertices and header
-	Vertex* beg = aligned_vector_reserve(&output->vector, vec->size + (header_required) + count);
+	Vertex* beg = ReserveOutput(&output->vector, vec->size + (header_required) + count);
+	if (!beg) return;
 
 	if (header_required) {
 		apply_poly_header((pvr_poly_hdr_t*)beg, output->list_type);
