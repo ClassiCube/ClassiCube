@@ -12,6 +12,7 @@ extern "C" {
 #include "ExtMath.h"
 #include "Graphics.h"
 #include "Launcher.h"
+}
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -27,7 +28,6 @@ extern "C" {
 #include <gx2/mem.h>
 #include <coreinit/filesystem.h>
 #include <coreinit/memdefaultheap.h>
-}
 #include <nn/swkbd.h>
 
 static cc_bool launcherMode;
