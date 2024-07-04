@@ -13,6 +13,7 @@ extern "C" {
 #include "Graphics.h"
 #include "Launcher.h"
 }
+#include <algorithm>
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -467,7 +468,7 @@ static nn::swkbd::AppearArg appear_arg;
 
 static char kb_buffer[512];
 static cc_string kb_str = String_FromArray(kb_buffer);
-#define UNI_STR_LENGTH 64
+#define UNI_STR_LENGTH (cc_uint16)64
 
 static int UniString_Length(const char16_t* raw) {
 	int length = 0;
@@ -481,7 +482,7 @@ static void UniString_WriteConst(const char* src, char16_t* dst) {
 }
 
 static void UniString_WriteString(const cc_string* src, char16_t* dst) {
-	int len = min(src->length, UNI_STR_LENGTH);
+	int len = std::min(src->length, UNI_STR_LENGTH);
 
 	for (int i = 0; i < len; i++) 
 	{
