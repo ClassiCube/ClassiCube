@@ -12,6 +12,7 @@ extern "C" {
 #include "ExtMath.h"
 #include "Graphics.h"
 #include "Launcher.h"
+}
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -27,7 +28,6 @@ extern "C" {
 #include <gx2/mem.h>
 #include <coreinit/filesystem.h>
 #include <coreinit/memdefaultheap.h>
-}
 #include <nn/swkbd.h>
 
 static cc_bool launcherMode;
@@ -249,17 +249,17 @@ static void ProcessKPAD(float delta, int i) {
 	switch (kpads[i].extensionType)
 	{
 	case WPAD_EXT_CLASSIC:
-		ProcessClassicButtons(i,  kpads[i].classic.hold  | kpads[i].classic.trigger);
+		ProcessClassicButtons(i,  kpads[i].classic.hold | kpads[i].classic.trigger);
 		break;
 	case WPAD_EXT_PRO_CONTROLLER:
-		ProcessProButtons( i,     kpads[i].pro.hold      | kpads[i].pro.trigger);
+		ProcessProButtons( i,     kpads[i].pro.hold     | kpads[i].pro.trigger);
 		break;
 	case WPAD_EXT_NUNCHUK:
-		ProcessKPadButtons(i,     kpads[i].hold          | kpads[i].trigger);
-		ProcessNunchuckButtons(i, kpads[i].nunchuck.hold | kpads[i].nunchuck.trigger);
+		ProcessKPadButtons(i,     kpads[i].hold         | kpads[i].trigger);
+		ProcessNunchuckButtons(i, kpads[i].nunchuk.hold | kpads[i].nunchuk.trigger);
 		break;
 	default:
-		ProcessKPadButtons(i,     kpads[i].hold          | kpads[i].trigger);
+		ProcessKPadButtons(i,     kpads[i].hold         | kpads[i].trigger);
 		break;
 	}
 }
@@ -481,9 +481,7 @@ static void UniString_WriteConst(const char* src, char16_t* dst) {
 }
 
 static void UniString_WriteString(const cc_string* src, char16_t* dst) {
-	int len = min(src->length, UNI_STR_LENGTH);
-
-	for (int i = 0; i < len; i++) 
+	for (int i = 0; i < src->length && i < UNI_STR_LENGTH; i++) 
 	{
 		*dst++ = Convert_CP437ToUnicode(src->buffer[i]);
 	}

@@ -551,6 +551,7 @@ void Platform_LoadSysFonts(void) {
 #endif
 	for (i = 0; i < Array_Elems(dirs); i++) 
 	{
+		Platform_Log1("Searching for fonts in %s", &dirs[i]);
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }
@@ -1495,6 +1496,7 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	}
 	return 0;
 }
+
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;
 	cc_uint32 header[4], key[4];

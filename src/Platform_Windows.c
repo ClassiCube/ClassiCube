@@ -425,6 +425,7 @@ void Platform_LoadSysFonts(void) {
 
 	for (i = 0; i < Array_Elems(dirs); i++) 
 	{
+		Platform_Log1("Searching for fonts in %s", &dirs[i]);
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }
