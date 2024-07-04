@@ -238,32 +238,49 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
 // Preprocess vertex buffers into optimised layout for Saturn
+struct SATVertexColoured { int x, y, z; PackedCol Col; };
+struct SATVertexTextured { int x, y, z; PackedCol Col; float u, v; };
 static VertexFormat buf_fmt;
 static int buf_count;
 
 static void* gfx_vertices;
 
-static void PreprocessTexturedVertices(void) {
-    struct VertexTextured* v = gfx_vertices;
+#define XYZInteger(value) ((value) >> 6)
+#define XYZFixed(value) ((int)((value) * (1 << 6)))
 
-    for (int i = 0; i < buf_count; i++, v++)
-    {
-        int r = PackedCol_R(v->Col);
-        int g = PackedCol_G(v->Col);
-        int b = PackedCol_B(v->Col);
-        v->Col = ((b >> 5) << 7) | ((g >> 4) << 3) | (r >> 5);
+static void* gfx_vertices;
+
+static void PreprocessTexturedVertices(void) {
+	struct SATVertexTextured* dst = gfx_vertices;
+	struct VertexTextured* src    = gfx_vertices;
+
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->x = XYZFixed(src->x);
+		dst->y = XYZFixed(src->y);
+		dst->z = XYZFixed(src->z);
+
+        int r = PackedCol_R(src->Col);
+        int g = PackedCol_G(src->Col);
+        int b = PackedCol_B(src->Col);
+        dst->Col = ((b >> 5) << 7) | ((g >> 4) << 3) | (r >> 5);
     }
 }
 
 static void PreprocessColouredVertices(void) {
-    struct VertexColoured* v = gfx_vertices;
+	struct SATVertexColoured* dst = gfx_vertices;
+	struct VertexColoured* src    = gfx_vertices;
 
-    for (int i = 0; i < buf_count; i++, v++)
-    {
-        int r = PackedCol_R(v->Col);
-        int g = PackedCol_G(v->Col);
-        int b = PackedCol_B(v->Col);
-        v->Col = RGB1555(1, r >> 3, g >> 3, b >> 3).raw;
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->x = XYZFixed(src->x);
+		dst->y = XYZFixed(src->y);
+		dst->z = XYZFixed(src->z);
+
+        int r = PackedCol_R(src->Col);
+        int g = PackedCol_G(src->Col);
+        int b = PackedCol_B(src->Col);
+        dst->Col = RGB1555(1, r >> 3, g >> 3, b >> 3).raw;
     }
 }
 
@@ -315,13 +332,46 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Matrix _view, _proj, mvp;
+static struct Matrix _view, _proj;
+struct MatrixRow { int x, y, z, w; };
+static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
+
+#define ToFixed(v) (int)(v * (1 << 12))
+
+static void LoadTransformMatrix(struct Matrix* src) {
+	mvp_trans.x = XYZFixed(1) * ToFixed(src->row4.x);
+	mvp_trans.y = XYZFixed(1) * ToFixed(src->row4.y);
+	mvp_trans.z = XYZFixed(1) * ToFixed(src->row4.z);
+	mvp_trans.w = XYZFixed(1) * ToFixed(src->row4.w);
+	
+	mvp_row1.x = ToFixed(src->row1.x);
+	mvp_row1.y = ToFixed(src->row1.y);
+	mvp_row1.z = ToFixed(src->row1.z);
+	mvp_row1.w = ToFixed(src->row1.w);
+	
+	mvp_row2.x = ToFixed(src->row2.x);
+	mvp_row2.y = ToFixed(src->row2.y);
+	mvp_row2.z = ToFixed(src->row2.z);
+	mvp_row2.w = ToFixed(src->row2.w);
+	
+	mvp_row3.x = ToFixed(src->row3.x);
+	mvp_row3.y = ToFixed(src->row3.y);
+	mvp_row3.z = ToFixed(src->row3.z);
+	mvp_row3.w = ToFixed(src->row3.w);
+}
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
 
-	Matrix_Mul(&mvp, &_view, &_proj);
+	struct Matrix mvp;
+	if (matrix == &Matrix_Identity && type == MATRIX_VIEW) {
+		mvp = _proj; // 2D mode uses identity view matrix
+	} else {
+		Matrix_Mul(&mvp, &_view, &_proj);
+	}
+	
+	LoadTransformMatrix(&mvp);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -379,30 +429,30 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 }
 
-static void Transform(Vec3* result, struct VertexTextured* a, const struct Matrix* mat) {
-	/* a could be pointing to result - therefore can't directly assign X/Y/Z */
-	float x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
-	float y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
-	float z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
-	float w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
+static int Transform(IVec3* result, struct SATVertexTextured* a) {
+	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
+	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
+	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
+	int w = a->x * mvp_row1.w + a->y * mvp_row2.w + a->z * mvp_row3.w + mvp_trans.w;
+	if (w <= 0) return 1;
 	
-	result->x = (x/w) *  (SCREEN_WIDTH  / 2); 
-	result->y = (y/w) * -(SCREEN_HEIGHT / 2);
-	result->z = (z/w) * 1024;
-}
+	result->x = (x *  (SCREEN_WIDTH/2)  / w); 
+	result->y = (y * -(SCREEN_HEIGHT/2) / w);
+	result->z = (z *   512              / w);
 
-#define IsPointCulled(vec) vec.x < -2048 || vec.x > 2048 || vec.y < -2048 || vec.y > 2048 || vec.z < 0 || vec.z > 1024
+	return result->x < -2048 || result->x > 2048 || result->y < -2048 || result->y > 2048 || result->z < 0 || result->z > 512;
+}
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
+		struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex + i;
 
 		int16_vec2_t points[4];
-		points[0].x = (int)v[0].x - SCREEN_WIDTH / 2; points[0].y = (int)v[0].y - SCREEN_HEIGHT / 2;
-		points[1].x = (int)v[1].x - SCREEN_WIDTH / 2; points[1].y = (int)v[1].y - SCREEN_HEIGHT / 2;
-		points[2].x = (int)v[2].x - SCREEN_WIDTH / 2; points[2].y = (int)v[2].y - SCREEN_HEIGHT / 2;
-		points[3].x = (int)v[3].x - SCREEN_WIDTH / 2; points[3].y = (int)v[3].y - SCREEN_HEIGHT / 2;
+		points[0].x = XYZInteger(v[0].x) - SCREEN_WIDTH / 2; points[0].y = XYZInteger(v[0].y) - SCREEN_HEIGHT / 2;
+		points[1].x = XYZInteger(v[1].x) - SCREEN_WIDTH / 2; points[1].y = XYZInteger(v[1].y) - SCREEN_HEIGHT / 2;
+		points[2].x = XYZInteger(v[2].x) - SCREEN_WIDTH / 2; points[2].y = XYZInteger(v[2].y) - SCREEN_HEIGHT / 2;
+		points[3].x = XYZInteger(v[3].x) - SCREEN_WIDTH / 2; points[3].y = XYZInteger(v[3].y) - SCREEN_HEIGHT / 2;
 
 		rgb1555_t color; color.raw = v->Col;
 		vdp1_cmdt_t* cmd;
@@ -418,13 +468,13 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex + i;
 
 		int16_vec2_t points[4];
-		points[0].x = (int)v[0].x - SCREEN_WIDTH / 2; points[0].y = (int)v[0].y - SCREEN_HEIGHT / 2;
-		points[1].x = (int)v[1].x - SCREEN_WIDTH / 2; points[1].y = (int)v[1].y - SCREEN_HEIGHT / 2;
-		points[2].x = (int)v[2].x - SCREEN_WIDTH / 2; points[2].y = (int)v[2].y - SCREEN_HEIGHT / 2;
-		points[3].x = (int)v[3].x - SCREEN_WIDTH / 2; points[3].y = (int)v[3].y - SCREEN_HEIGHT / 2;
+		points[0].x = XYZInteger(v[0].x) - SCREEN_WIDTH / 2; points[0].y = XYZInteger(v[0].y) - SCREEN_HEIGHT / 2;
+		points[1].x = XYZInteger(v[1].x) - SCREEN_WIDTH / 2; points[1].y = XYZInteger(v[1].y) - SCREEN_HEIGHT / 2;
+		points[2].x = XYZInteger(v[2].x) - SCREEN_WIDTH / 2; points[2].y = XYZInteger(v[2].y) - SCREEN_HEIGHT / 2;
+		points[3].x = XYZInteger(v[3].x) - SCREEN_WIDTH / 2; points[3].y = XYZInteger(v[3].y) - SCREEN_HEIGHT / 2;
 
 		vdp1_cmdt_t* cmd;
 		cmd = NextPrimitive();
@@ -441,18 +491,15 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
+		struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex + i;
 
-		Vec3 coords[4];
-		Transform(&coords[0], &v[0], &mvp);
-		Transform(&coords[1], &v[1], &mvp);
-		Transform(&coords[2], &v[2], &mvp);
-		Transform(&coords[3], &v[3], &mvp);
-
-		if (IsPointCulled(coords[0])) continue;
-		if (IsPointCulled(coords[1])) continue;
-		if (IsPointCulled(coords[2])) continue;
-		if (IsPointCulled(coords[3])) continue;
+		IVec3 coords[4];
+		int clipped = 0;
+		clipped |= Transform(&coords[0], &v[0]);
+		clipped |= Transform(&coords[1], &v[1]);
+		clipped |= Transform(&coords[2], &v[2]);
+		clipped |= Transform(&coords[3], &v[3]);
+		if (clipped) continue;
 
 		int16_vec2_t points[4];
 		points[0].x = coords[0].x; points[0].y = coords[0].y;
@@ -474,18 +521,15 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex + i;
 
-		Vec3 coords[4];
-		Transform(&coords[0], &v[0], &mvp);
-		Transform(&coords[1], &v[1], &mvp);
-		Transform(&coords[2], &v[2], &mvp);
-		Transform(&coords[3], &v[3], &mvp);
-
-		if (IsPointCulled(coords[0])) continue;
-		if (IsPointCulled(coords[1])) continue;
-		if (IsPointCulled(coords[2])) continue;
-		if (IsPointCulled(coords[3])) continue;
+		IVec3 coords[4];
+		int clipped = 0;
+		clipped |= Transform(&coords[0], &v[0]);
+		clipped |= Transform(&coords[1], &v[1]);
+		clipped |= Transform(&coords[2], &v[2]);
+		clipped |= Transform(&coords[3], &v[3]);
+		if (clipped) continue;
 
 		int16_vec2_t points[4];
 		points[0].x = coords[0].x; points[0].y = coords[0].y;
