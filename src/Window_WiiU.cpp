@@ -191,7 +191,7 @@ static void ProcessKPadButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
 
-static void ProcessNunchuckButtons(int port, int mods) {
+static void ProcessNunchukButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_Z);
 	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_C);
 }
@@ -257,7 +257,7 @@ static void ProcessKPAD(float delta, int i) {
 		break;
 	case WPAD_EXT_NUNCHUK:
 		ProcessKPadButtons(i,     kpads[i].hold          | kpads[i].trigger);
-		ProcessNunchuckButtons(i, kpads[i].nunchuck.hold | kpads[i].nunchuck.trigger);
+		ProcessNunchukButtons(i,  kpads[i].nunchuk.hold  | kpads[i].nunchuk.trigger);
 		break;
 	default:
 		ProcessKPadButtons(i,     kpads[i].hold          | kpads[i].trigger);
