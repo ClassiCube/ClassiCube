@@ -252,7 +252,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *#########################################################################################################################*/
 // Preprocess vertex buffers into optimised layout for Saturn
 struct SATVertexColoured { int x, y, z; PackedCol Col; };
-struct SATVertexTextured { int x, y, z; PackedCol Col; float u, v; };
+struct SATVertexTextured { int x, y, z; PackedCol Col; int flip, pad; };
 static VertexFormat buf_fmt;
 static int buf_count;
 
@@ -277,6 +277,14 @@ static void PreprocessTexturedVertices(void) {
         int g = PackedCol_G(src->Col);
         int b = PackedCol_B(src->Col);
         dst->Col = ((b >> 5) << 7) | ((g >> 4) << 3) | (r >> 5);
+    }
+
+	dst = gfx_vertices;
+	src = gfx_vertices;
+	for (int i = 0; i < buf_count; i += 4, src += 4, dst += 4)
+	{
+        int flipped = src[0].V > src[2].V;
+		dst->flip   = flipped ? VDP1_CMDT_CHAR_FLIP_V : VDP1_CMDT_CHAR_FLIP_NONE;
     }
 }
 
@@ -508,6 +516,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
+		vdp1_cmdt_char_flip_set(cmd, v->flip);
 		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
 		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
@@ -569,6 +578,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
+		vdp1_cmdt_char_flip_set(cmd, v->flip);
 		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
 		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
 		vdp1_cmdt_vtx_set(cmd, 		 points);
