@@ -26,7 +26,9 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const char* Platform_AppNameSuffix = " N64";
+
+const char* Platform_AppNameSuffix  = " N64";
+cc_bool Platform_ReadonlyFilesystem = true;
 
 
 /*########################################################################################################################*
@@ -261,7 +263,6 @@ void Platform_Init(void) {
 	debug_init_usblog();
 	DisableFpuExceptions();
 	
-	Platform_ReadonlyFilesystem = true;
 	dfs_init(DFS_DEFAULT_LOCATION);
 	timer_init();
 	rtc_init();

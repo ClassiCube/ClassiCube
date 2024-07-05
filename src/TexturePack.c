@@ -481,7 +481,7 @@ static cc_result ExtractPng(struct Stream* stream) {
 
 static cc_bool needReload;
 static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
-	struct ZipEntry entries[1024];
+	struct ZipEntry entries[512];
 	cc_result res;
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
@@ -503,7 +503,7 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	return res;
 }
 
-#ifdef CC_BUILD_PS1
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
 #include "../misc/ps1/classicubezip.h"
 
 static cc_result ExtractFromFile(const cc_string* path) {

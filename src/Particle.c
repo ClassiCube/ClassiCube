@@ -10,12 +10,17 @@
 #include "Game.h"
 #include "Event.h"
 
+#ifdef CC_BUILD_TINYMEM
+	#define PARTICLES_MAX 10
+#else
+	#define PARTICLES_MAX 600
+#endif
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Particle base------------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID particles_TexId, particles_VB;
-#define PARTICLES_MAX 600
 static RNGState rnd;
 static cc_bool hitTerrain;
 typedef cc_bool (*CanPassThroughFunc)(BlockID b);

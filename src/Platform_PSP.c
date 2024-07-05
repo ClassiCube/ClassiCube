@@ -27,7 +27,9 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+
 const char* Platform_AppNameSuffix = " PSP";
+cc_bool Platform_ReadonlyFilesystem;
 
 PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);

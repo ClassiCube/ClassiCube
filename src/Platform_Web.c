@@ -36,7 +36,9 @@ const cc_result ReturnCode_FileNotFound     = _ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;
+
 const char* Platform_AppNameSuffix = "";
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess;
 
 

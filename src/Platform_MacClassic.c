@@ -26,14 +26,15 @@ const cc_result ReturnCode_FileNotFound     = fnfErr;
 const cc_result ReturnCode_SocketInProgess  = 1000000;
 const cc_result ReturnCode_SocketWouldBlock = 1000000;
 const cc_result ReturnCode_DirectoryExists  = dupFNErr;
+static long sysVersion;
 
 #if TARGET_CPU_68K
 const char* Platform_AppNameSuffix = " MAC 68k";
 #else
 const char* Platform_AppNameSuffix = " MAC PPC";
 #endif
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess = true;
-static long sysVersion;
 
 
 /*########################################################################################################################*

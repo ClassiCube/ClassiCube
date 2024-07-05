@@ -42,7 +42,9 @@ const cc_result ReturnCode_DirectoryExists    = -8;
 
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+
 const char* Platform_AppNameSuffix = " PS2";
+cc_bool Platform_ReadonlyFilesystem;
 
 // extern unsigned char DEV9_irx[];
 // extern unsigned int  size_DEV9_irx;

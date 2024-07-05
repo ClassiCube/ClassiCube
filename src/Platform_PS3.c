@@ -40,6 +40,7 @@ const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
 
 const char* Platform_AppNameSuffix = " PS3";
+cc_bool Platform_ReadonlyFilesystem;
 
 SYS_PROCESS_PARAM(1001, 256 * 1024); // 256kb stack size
 

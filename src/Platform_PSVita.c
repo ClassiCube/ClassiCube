@@ -19,9 +19,11 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = SCE_NET_ERROR_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = SCE_NET_ERROR_EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const char* Platform_AppNameSuffix = " PS Vita";
 static int epoll_id;
 static int stdout_fd;
+
+const char* Platform_AppNameSuffix = " PS Vita";
+cc_bool Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*

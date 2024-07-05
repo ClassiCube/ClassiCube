@@ -46,6 +46,7 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
 const char* Platform_AppNameSuffix = " Wii U";
+cc_bool Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*

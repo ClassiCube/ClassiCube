@@ -406,6 +406,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_PS1
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_TINYMEM
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
@@ -425,6 +426,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SATURN
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_TINYMEM
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS

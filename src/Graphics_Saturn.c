@@ -17,6 +17,7 @@ static int cmdts_count;
 static vdp1_vram_partitions_t _vdp1_vram_partitions;
 static void* tex_vram_addr;
 static void* tex_vram_cur;
+static int tex_width = 8, tex_height = 8;
 static vdp1_gouraud_table_t* gourad_base;
 
 static vdp1_cmdt_t* NextPrimitive(void) {
@@ -98,8 +99,8 @@ void Gfx_Create(void) {
 
 	Gfx.MinTexWidth  =  8;
 	Gfx.MinTexHeight =  8;
-	Gfx.MaxTexWidth  =  8; // 128
-	Gfx.MaxTexHeight =  8; // 128
+	Gfx.MaxTexWidth  = 16; // 128
+	Gfx.MaxTexHeight = 16; // 128
 	Gfx.Created      = true;
 }
 
@@ -120,7 +121,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	CCTexture* tex = Mem_TryAlloc(1, sizeof(CCTexture));
 	if (!tex) return NULL;
 
-	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
+	// use malloc to ensure tmp is in HRAM (can't DMA from LRAM))
+	cc_uint16* tmp = malloc(bmp->width * bmp->height * 2);
 	if (!tmp) return NULL;
 
 	tex->addr   = tex_vram_addr;
@@ -128,10 +130,13 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->height = bmp->height;
 
 	tex_vram_addr += tex->width * tex->height * 2;
-	if (tex_vram_addr >= gourad_base) {
+	int avail = (char*)gourad_base - (char*)tex_vram_addr;
+	if (avail <= 0) {
 		Platform_LogConst("OUT OF VRAM");
 		Mem_Free(tmp); 
 		return NULL; 
+	} else {
+		Platform_Log1("VRAM: %i bytes left", &avail);	
 	}
 
 	// TODO: Only copy when rowWidth != bmp->width
@@ -148,7 +153,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 
 	scu_dma_transfer(0, tex->addr, tmp, tex->width * tex->height * 2);
 	scu_dma_transfer_wait(0);
-	Mem_Free(tmp);
+	free(tmp);
 	return tex;
 }
 
@@ -157,6 +162,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 
 	tex_vram_cur = tex->addr;
+	tex_width    = tex->width;
+	tex_height   = tex->height;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -488,7 +495,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		cmd = NextPrimitive();
 
 		vdp1_cmdt_distorted_sprite_set(cmd);
-		vdp1_cmdt_char_size_set(cmd, 8, 8);
+		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
 		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
 		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
@@ -549,7 +556,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		cmd = NextPrimitive();
 
 		vdp1_cmdt_distorted_sprite_set(cmd);
-		vdp1_cmdt_char_size_set(cmd, 8, 8);
+		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
 		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
 		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
 		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);

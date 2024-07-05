@@ -40,7 +40,9 @@ const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
+
 const char* Platform_AppNameSuffix = "";
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess;
 
 /*########################################################################################################################*

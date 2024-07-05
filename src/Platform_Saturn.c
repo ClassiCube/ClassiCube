@@ -14,12 +14,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <yaul.h>
+#include <mm/tlsf.h>
 
+//#define OVERRIDE_MEM_FUNCTIONS
 void* calloc(size_t num, size_t size) {
 	void* ptr = malloc(num * size);
 	if (ptr) memset(ptr, 0, num * size);
 	return ptr;
 }
+
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -28,7 +31,39 @@ const cc_result ReturnCode_DirectoryExists    = 99999;
 
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
-const char* Platform_AppNameSuffix = " Saturn";
+
+const char* Platform_AppNameSuffix  = " Saturn";
+cc_bool Platform_ReadonlyFilesystem = true;
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Memory----------------------------------------------------------*
+*#########################################################################################################################*/
+static tlsf_t lwram_mem; // Use LWRAM for 1 MB of memory
+
+static void InitMemory(void) {
+	lwram_mem = tlsf_pool_create(LWRAM(0), LWRAM_SIZE);
+}
+
+/*void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? tlsf_malloc(&lwram_mem, size) : NULL;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	void* ptr = Mem_TryAlloc(numElems, elemsSize);
+	if (ptr) memset(ptr, 0, numElems * elemsSize);
+	return ptr;
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? tlsf_realloc(&lwram_mem, mem, size) : NULL;
+}
+
+void Mem_Free(void* mem) {
+	tlsf_free(&lwram_mem, mem);
+}*/
 
 
 /*########################################################################################################################*
@@ -230,7 +265,13 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+extern void *__end;
+
 void Platform_Init(void) {
+	cc_uint32 avail = HWRAM(HWRAM_SIZE) - (uint32_t)&__end;
+	Platform_Log1("Free HWRAM: %i bytes", &avail);
+
+	InitMemory();
 	Stopwatch_Init();
 }
 
