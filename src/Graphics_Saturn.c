@@ -430,18 +430,26 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 static int Transform(IVec3* result, struct SATVertexTextured* a) {
-	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
-	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
-	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
 	int w = a->x * mvp_row1.w + a->y * mvp_row2.w + a->z * mvp_row3.w + mvp_trans.w;
 	if (w <= 0) return 1;
-	
-	result->x = (x *  (SCREEN_WIDTH/2)  / w); 
-	result->y = (y * -(SCREEN_HEIGHT/2) / w);
-	result->z = (z *   512              / w);
 
-	return result->x < -2048 || result->x > 2048 || result->y < -2048 || result->y > 2048 || result->z < 0 || result->z > 512;
+	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
+	cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
+
+	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
+	result->x = cpu_divu_quotient_get();
+	cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
+
+	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
+	result->y = cpu_divu_quotient_get();
+	cpu_divu_32_32_set(z * 512, w);
+
+	if (result->x < -2048 || result->x > 2048 || result->y < -2048 || result->y > 2048) return 1;
+
+	result->z = cpu_divu_quotient_get();
+	return result->z < 0 || result->z > 512;
 }
+
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
