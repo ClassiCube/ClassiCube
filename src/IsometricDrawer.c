@@ -61,7 +61,7 @@ static void IsometricDrawer_Flat(BlockID block, float size) {
 
 	v = iso_vertices;
 	v->x = minX; v->y = minY; v->z = 0; v->Col = color; v->U = rec.u1; v->V = rec.v1; v++;
-	v->x = maxX; v->y = minY; v->z = 0; v->Col = color; v->U = rec.u1; v->V = rec.v1; v++;
+	v->x = maxX; v->y = minY; v->z = 0; v->Col = color; v->U = rec.u2; v->V = rec.v1; v++;
 	v->x = maxX; v->y = maxY; v->z = 0; v->Col = color; v->U = rec.u2; v->V = rec.v2; v++;
 	v->x = minX; v->y = maxY; v->z = 0; v->Col = color; v->U = rec.u1; v->V = rec.v2; v++;
 	iso_vertices = v;
