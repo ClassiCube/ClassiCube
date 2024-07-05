@@ -46,10 +46,10 @@ struct Stream;
 	#define BITMAPCOLOR_A_MASK (0xFFU << BITMAPCOLOR_A_SHIFT)
 	
 	/* Extracts just the R/G/B/A component from a bitmap color */
-	#define BitmapCol_R(color) ((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT))
-	#define BitmapCol_G(color) ((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT))
-	#define BitmapCol_B(color) ((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT))
-	#define BitmapCol_A(color) ((cc_uint8)(color >> BITMAPCOLOR_A_SHIFT))
+	#define BitmapCol_R(color) ((cc_uint8)((color) >> BITMAPCOLOR_R_SHIFT))
+	#define BitmapCol_G(color) ((cc_uint8)((color) >> BITMAPCOLOR_G_SHIFT))
+	#define BitmapCol_B(color) ((cc_uint8)((color) >> BITMAPCOLOR_B_SHIFT))
+	#define BitmapCol_A(color) ((cc_uint8)((color) >> BITMAPCOLOR_A_SHIFT))
 	
 	/* Converts input value into a packed color component */
 	#define BitmapColor_R_Bits(value) ((cc_uint8)(value) << BITMAPCOLOR_R_SHIFT)

@@ -317,6 +317,18 @@ static void ComputeTransparency(struct Bitmap* bmp, BitmapCol col) {
 	}
 }
 
+static BitmapCol ExpandRGB(cc_uint8 bitsPerSample, int r, int g, int b) {
+	switch (bitsPerSample) {
+	case 1: 
+		r *= 255; g *= 255; b *= 255; break;
+	case 2:
+		r *=  85; g *=  85; b *=  85; break;
+	case 4:
+		r *=  17; g *=  17; b *=  17; break;
+	}
+	return BitmapCol_Make(r, g, b, 0);
+}
+
 cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[64];
 	cc_uint32 dataSize, fourCC;
@@ -428,7 +440,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* RGB is always two bytes */
-				trnsColor = BitmapCol_Make(buffer[1], buffer[1], buffer[1], 0);
+				trnsColor = ExpandRGB(bitsPerSample, buffer[1], buffer[1], buffer[1]);
 			} else if (colorspace == PNG_COLOR_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 
@@ -447,7 +459,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* R,G,B are always two bytes */
-				trnsColor = BitmapCol_Make(buffer[1], buffer[3], buffer[5], 0);
+				trnsColor = ExpandRGB(bitsPerSample, buffer[1], buffer[3], buffer[5]);
 			} else {
 				return PNG_ERR_TRANS_INVALID;
 			}
@@ -505,7 +517,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			/* Check if image fully decoded or not */
 			if (bufferIdx != bufferLen) break;
 
-			/* With other colourspaces, the length of a scanline might be less than the width of a 8bpp image row */
+			/* With other colourspaces, the length of a scanline might be less than the width of a 32 bpp image row */
 			/* Therefore image expansion can only be done after all the rows have been reconstructed, and must */
 			/*  be done backwards to avoid overwriting any source data that has yet to be processed */
 			/* This is slightly slower, but the majority of images ClassiCube encounters are RGBA anyways */
