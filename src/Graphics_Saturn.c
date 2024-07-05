@@ -5,7 +5,7 @@
 #include "Window.h"
 #include <stdint.h>
 #include <yaul.h>
-
+#include <stdlib.h>
 
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 224
@@ -70,7 +70,6 @@ void Gfx_RestoreState(void) {
 	struct Bitmap bmp;
 	BitmapCol pixels[8 * 8];
 	Mem_Set(pixels, 0xFF, sizeof(pixels));
-	pixels[0] = BitmapColor_RGB(255, 0, 0);
 
 	Bitmap_Init(bmp, 8, 8, pixels);
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
@@ -99,7 +98,7 @@ void Gfx_Create(void) {
 
 	Gfx.MinTexWidth  =  8;
 	Gfx.MinTexHeight =  8;
-	Gfx.MaxTexWidth  = 16; // 128
+	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 16; // 128
 	Gfx.Created      = true;
 }
@@ -168,9 +167,16 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = *texId;
-	if (tex) Mem_Free(tex);
+	// TODO properly free vram
+	if (tex) {
+		// This is mainly to avoid leak with text in top left
+		int size = tex->width * tex->height * 2;
+		if (tex_vram_addr == tex->addr + size)
+			tex_vram_addr -= size;
+
+		Mem_Free(tex);
+	}
 	*texId = NULL;
-	// TODO free vram ???
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -253,7 +259,7 @@ static int buf_count;
 static void* gfx_vertices;
 
 #define XYZInteger(value) ((value) >> 6)
-#define XYZFixed(value) ((int)((value) * (1 << 6)))
+#define XYZFixed(value)   ((int)((value) * (1 << 6)))
 
 static void* gfx_vertices;
 
@@ -457,6 +463,8 @@ static int Transform(IVec3* result, struct SATVertexTextured* a) {
 	return result->z < 0 || result->z > 512;
 }
 
+#define Coloured2D_X(value) XYZInteger(value) - SCREEN_WIDTH  / 2
+#define Coloured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
@@ -464,10 +472,10 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex + i;
 
 		int16_vec2_t points[4];
-		points[0].x = XYZInteger(v[0].x) - SCREEN_WIDTH / 2; points[0].y = XYZInteger(v[0].y) - SCREEN_HEIGHT / 2;
-		points[1].x = XYZInteger(v[1].x) - SCREEN_WIDTH / 2; points[1].y = XYZInteger(v[1].y) - SCREEN_HEIGHT / 2;
-		points[2].x = XYZInteger(v[2].x) - SCREEN_WIDTH / 2; points[2].y = XYZInteger(v[2].y) - SCREEN_HEIGHT / 2;
-		points[3].x = XYZInteger(v[3].x) - SCREEN_WIDTH / 2; points[3].y = XYZInteger(v[3].y) - SCREEN_HEIGHT / 2;
+		points[0].x = Coloured2D_X(v[0].x); points[0].y = Coloured2D_Y(v[0].y);
+		points[1].x = Coloured2D_X(v[1].x); points[1].y = Coloured2D_Y(v[1].y);
+		points[2].x = Coloured2D_X(v[2].x); points[2].y = Coloured2D_Y(v[2].y);
+		points[3].x = Coloured2D_X(v[3].x); points[3].y = Coloured2D_Y(v[3].y);
 
 		rgb1555_t color; color.raw = v->Col;
 		vdp1_cmdt_t* cmd;
@@ -480,16 +488,19 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	}
 }
 
+#define Textured2D_X(value) XYZInteger(value) - SCREEN_WIDTH  / 2
+#define Textured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
+
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex + i;
 
 		int16_vec2_t points[4];
-		points[0].x = XYZInteger(v[0].x) - SCREEN_WIDTH / 2; points[0].y = XYZInteger(v[0].y) - SCREEN_HEIGHT / 2;
-		points[1].x = XYZInteger(v[1].x) - SCREEN_WIDTH / 2; points[1].y = XYZInteger(v[1].y) - SCREEN_HEIGHT / 2;
-		points[2].x = XYZInteger(v[2].x) - SCREEN_WIDTH / 2; points[2].y = XYZInteger(v[2].y) - SCREEN_HEIGHT / 2;
-		points[3].x = XYZInteger(v[3].x) - SCREEN_WIDTH / 2; points[3].y = XYZInteger(v[3].y) - SCREEN_HEIGHT / 2;
+		points[0].x = Textured2D_X(v[0].x); points[0].y = Textured2D_Y(v[0].y);
+		points[1].x = Textured2D_X(v[1].x); points[1].y = Textured2D_Y(v[1].y);
+		points[2].x = Textured2D_X(v[2].x); points[2].y = Textured2D_Y(v[2].y);
+		points[3].x = Textured2D_X(v[3].x); points[3].y = Textured2D_Y(v[3].y);
 
 		vdp1_cmdt_t* cmd;
 		cmd = NextPrimitive();
