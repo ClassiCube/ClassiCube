@@ -334,6 +334,10 @@ CC_NOINLINE static void MakeCachePath(cc_string* mainPath, cc_string* altPath, c
 
 /* Returns non-zero if given URL has been cached */
 static int IsCached(const cc_string* url) {
+	return TexturePack_IsCached(url, NULL);
+}
+
+int TexturePack_IsCached(const cc_string* url, char* path) {
 	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
 	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
 	cc_filepath mainStr, altStr;
@@ -345,7 +349,18 @@ static int IsCached(const cc_string* url) {
 	Platform_EncodePath(&mainStr, &mainPath);
 	Platform_EncodePath(&altStr,  &altPath);
 
-	return File_Exists(&mainStr) || (altPath.length && File_Exists(&altStr));
+	if (File_Exists(&mainStr)) {
+		if (path) Mem_Copy(path, mainBuffer, FILENAME_SIZE);
+
+		return 1;
+	}
+	if (altPath.length && File_Exists(&altStr)) {
+		if (path) Mem_Copy(path, altBuffer, FILENAME_SIZE);
+
+		return 2;
+	}
+
+	return 0;
 }
 
 /* Attempts to open the cached data stream for the given url */
