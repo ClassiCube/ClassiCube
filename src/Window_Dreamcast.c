@@ -258,12 +258,19 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-static void HandleController(int port, cont_state_t* state, float delta) {
+static void HandleController(int port, bool dual_analog, cont_state_t* state, float delta) {
 	Gamepad_SetButton(port, CCPAD_L, state->ltrig > 10);
 	Gamepad_SetButton(port, CCPAD_R, state->rtrig > 10);
-	// TODO second joystick
 	// TODO: verify values are right     
-	HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
+	if(dual_analog) 
+	{
+		HandleJoystick(port, PAD_AXIS_LEFT, state->joyx, state->joyy, delta);
+		HandleJoystick(port, PAD_AXIS_RIGHT, state->joy2x, state->joy2y, delta);
+	}
+	else
+	{
+		HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
+	}
 }
 
 void Gamepads_Process(float delta) {
@@ -276,9 +283,12 @@ void Gamepads_Process(float delta) {
 		if (!cont)  return;
 		state = (cont_state_t*)maple_dev_status(cont);
 		if (!state) return;
-		
+
+		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
+		if(dual_analog == -1) dual_analog = 0;
+
 		HandleButtons(port, state->buttons);
-		HandleController(port, state, delta);
+		HandleController(port, dual_analog, state, delta);
 	}
 }
 
