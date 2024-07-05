@@ -25,7 +25,7 @@
 #include "_PlatformConsole.h"
 
 KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
-			   INIT_VMU        | INIT_CDROM    | INIT_NET);
+               INIT_VMU        | INIT_CDROM    | INIT_NET);
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
