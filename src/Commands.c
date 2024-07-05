@@ -286,8 +286,7 @@ static struct ChatCommand MotdCommand = {
 };
 
 static void TexCacheCommand_Execute(const cc_string* args, int argsCount) {
-	/*cc_string path; */char pathBuffer[FILENAME_SIZE];
-	/*String_InitArray(path, pathBuffer);*/
+	char pathBuffer[FILENAME_SIZE];
 
 	int found = TexturePack_IsCached(&TexturePack_Url, pathBuffer);
 	if (found) {
