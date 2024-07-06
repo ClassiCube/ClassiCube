@@ -8,7 +8,7 @@ _DrawColouredQuads:
     fldi0 fr1     ! U = 0
     fldi0 fr2     ! V = 0
     TransformSetup
-    ViewportTransformSetup _VP_COL_HWIDTH
+    !ViewportTransformSetup _VP_COL
 
 .TRANSFORM_QUAD:
     LoadColouredVertex
@@ -45,14 +45,5 @@ _DrawColouredQuads:
 
 .align 4
 
-.global _VP_COL_HWIDTH
-_VP_COL_HWIDTH:  .long 0
-
-.global _VP_COL_HHEIGHT
-_VP_COL_HHEIGHT: .long 0
-
-.global _VP_COL_X_PLUS_HWIDTH
-_VP_COL_X_PLUS_HWIDTH:  .long 0
-
-.global _VP_COL_Y_PLUS_HHEIGHT
-_VP_COL_Y_PLUS_HHEIGHT: .long 0
+!.VP_COL:
+!        .long   _vp

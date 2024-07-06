@@ -208,12 +208,12 @@
 !fr11 = VIEWPORT_Y_PLUS_HHEIGHT
 
 .macro ViewportTransformSetup vp_addr
-    mova \vp_addr, r0 ! EX,  r0  = &VIEWPORT
-    fmov.s	@r0+,fr8  ! LS, fr8  = VIEWPORT_HWIDTH
-    fmov.s	@r0+,fr9  ! LS, fr9  = VIEWPORT_HHEIGHT
-    fmov.s	@r0+,fr10 ! LS, fr10 = VIEWPORT_X_PLUS_HWIDTH
-    fmov.s	@r0+,fr11 ! LS, fr11 = VIEWPORT_Y_PLUS_HHEIGHT
-    nop               ! MT (align to even instructions boundary)
+    mov.l \vp_addr, r0 ! EX,  r0  = &vp
+    fmov.s	@r0+,fr8   ! LS, fr8  = vp->HWIDTH
+    fmov.s	@r0+,fr9   ! LS, fr9  = vp->HHEIGHT
+    fmov.s	@r0+,fr10  ! LS, fr10 = vp->X_PLUS_HWIDTH
+    fmov.s	@r0+,fr11  ! LS, fr11 = vp->Y_PLUS_HHEIGHT
+    nop                ! MT (align to even instructions boundary)
 .endm
 
 .macro ViewportTransformVertex

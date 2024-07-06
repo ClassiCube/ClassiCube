@@ -15,14 +15,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: kazade/dreamcast-sdk
+      image: ghcr.io/kos-builds/kos-dc:sha-656a397-14.1.0
     steps:
       - uses: actions/checkout@v4
       - name: Compile Dreamcast build
         id: compile
         run: |
-          source /opt/toolchains/dc/kos/environ.sh
-          export PATH=/opt/toolchains/dc/kos/utils/img4dc/build/cdi4dc/:$PATH
+          apt-get update
+          apt-get -y install genisoimage
+		  wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/cdi4dc -O /opt/toolchains/dc/kos/utils/cdi4dc
+          chmod +x /opt/toolchains/dc/kos/utils/cdi4dc
+          export PATH=/opt/toolchains/dc/kos/utils/:$PATH
           make dreamcast
           
 

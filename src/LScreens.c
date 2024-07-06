@@ -204,14 +204,16 @@ LAYOUTS mode_btnBack[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, 170 } };
 
 
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
-	Options_SetBool(OPT_CLASSIC_MODE, classic);
-	if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
+	Options_PauseSaving();
+		Options_SetBool(OPT_CLASSIC_MODE, classic);
+		if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
 
-	Options_SetBool(OPT_CUSTOM_BLOCKS,   !classic);
-	Options_SetBool(OPT_CPE,             !classic);
-	Options_SetBool(OPT_SERVER_TEXTURES, !classic);
-	Options_SetBool(OPT_CLASSIC_TABLIST, classic);
-	Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
+		Options_SetBool(OPT_CUSTOM_BLOCKS,   !classic);
+		Options_SetBool(OPT_CPE,             !classic);
+		Options_SetBool(OPT_SERVER_TEXTURES, !classic);
+		Options_SetBool(OPT_CLASSIC_TABLIST, classic);
+		Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
+	Options_ResumeSaving();
 
 	Options_SaveIfChanged();
 	Launcher_LoadTheme();

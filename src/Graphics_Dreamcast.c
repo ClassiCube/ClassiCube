@@ -634,11 +634,6 @@ void Gfx_OnWindowResize(void) {
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
-extern float VP_COL_HWIDTH,  VP_TEX_HWIDTH;
-extern float VP_COL_HHEIGHT, VP_TEX_HHEIGHT;
-extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
-extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
-
 static void PushCommand(void* cmd) {
     aligned_vector_push_back(&OP_LIST.vector, cmd, 1);
     aligned_vector_push_back(&PT_LIST.vector, cmd, 1);
@@ -646,12 +641,6 @@ static void PushCommand(void* cmd) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
-	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;
-
-	VP_COL_X_PLUS_HWIDTH  = VP_TEX_X_PLUS_HWIDTH  = x + w * 0.5f;
-	VP_COL_Y_PLUS_HHEIGHT = VP_TEX_Y_PLUS_HHEIGHT = y + h * 0.5f;
-
 	Vertex c;
 	c.flags = PVR_CMD_USERCLIP | 0x23;
 	c.x = w *  0.5f; // hwidth

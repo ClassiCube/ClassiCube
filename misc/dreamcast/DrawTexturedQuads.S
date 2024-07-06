@@ -1,12 +1,11 @@
 #include "VertexTransform.S"
 .global _DrawTexturedQuads
 .align 4
-.type  _DrawTexturedQuads,%function
 
 _DrawTexturedQuads:
 ! Setup
     TransformSetup
-    ViewportTransformSetup _VP_TEX_HWIDTH
+    !ViewportTransformSetup .VP_TEX
 
 .TRANSFORM_QUAD:
     LoadTexturedVertex
@@ -43,14 +42,5 @@ _DrawTexturedQuads:
 
 .align 4
 
-.global _VP_TEX_HWIDTH
-_VP_TEX_HWIDTH:  .long 0
-
-.global _VP_TEX_HHEIGHT
-_VP_TEX_HHEIGHT: .long 0
-
-.global _VP_TEX_X_PLUS_HWIDTH
-_VP_TEX_X_PLUS_HWIDTH:  .long 0
-
-.global _VP_TEX_Y_PLUS_HHEIGHT
-_VP_TEX_Y_PLUS_HHEIGHT: .long 0
+!.VP_TEX:
+!        .long   _vp
