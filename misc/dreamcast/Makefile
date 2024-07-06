@@ -25,7 +25,7 @@ endif
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-default: $(GLDC_LIB) $(BUILD_DIR) $(TARGET).cdi
+default: $(BUILD_DIR) $(TARGET).cdi
 
 clean:
 	rm $(TARGET).cdi $(TARGET).iso $(TARGET).elf $(TARGET)-scr.bin $(TARGET).bin $(OBJS)
@@ -37,7 +37,7 @@ $(BUILD_DIR):
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).elf: $(OBJS)
+$(TARGET).elf: $(OBJS) $(GLDC_LIB)
 	kos-cc $(LDFLAGS) $^ -o $@ $(LIBS)
 	
 $(TARGET).bin: $(TARGET).elf

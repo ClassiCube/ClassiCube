@@ -386,7 +386,7 @@ static __attribute__((noinline)) void HandleCommand(Vertex* v) {
 	vp.hwidth  = v->x;
 	vp.hheight = v->y;
 	vp.x_plus_hwidth  = v->z;
-	vp.y_plus_hheight = v->w;
+	vp.y_plus_hheight = v->u;
 }
 
 void SceneListSubmit(Vertex* v3, int n, int type) {

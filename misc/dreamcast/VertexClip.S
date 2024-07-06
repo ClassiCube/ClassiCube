@@ -71,33 +71,33 @@ _ClipLine:
 	add       #4,  r6 ! EX, OUT  = &OUT->x
 	fsub    fr11,fr10 ! FE, fr10 = 1.0 - t  --> invT
 	
-	fmov.s  @r4+, fr2 ! LS, A = v1->x
-	fmov.s  @r5+, fr3 ! LS, B = v2->x
-	fipr     fv8, fv0 ! FE, LERP = A * t + B * invT
+	fmov.s  @r4+, fr2 ! LS, A1 = v1->x
+	fmov.s  @r5+, fr3 ! LS, B1 = v2->x
+	fipr     fv8, fv0 ! FE, LERP(A1, B1)
+	fmov.s  @r4+, fr6 ! LS, A2 = v1->y
+	fmov.s  @r5+, fr7 ! LS, B2 = v2->y
+
 	fmov.s   fr3, @r6 ! LS, OUT->x = LERP
 	add       #4,  r6 ! EX, OUT += 4
-	
-	fmov.s  @r4+, fr6 ! LS, A = v1->y
-	fmov.s  @r5+, fr7 ! LS, B = v2->y
-	fipr     fv8, fv4 ! FE, LERP = A * t + B * invT
+	fipr     fv8, fv4 ! FE, LERP(A2, B2)
+	add       #4,  r4 ! EX, v1 += 4
+	add       #4,  r5 ! EX, v2 += 4
+
 	fmov.s   fr7, @r6 ! LS, OUT->y = LERP
 	add       #4,  r6 ! EX, OUT += 4
-	
-	add       #4,  r4 ! EX, A    = &v1->z
-	add       #4,  r5 ! EX, B    = &v2->z
 	fmov.s   fr1, @r6 ! LS, OUT->z = 0
 	add       #4,  r6 ! EX, OUT += 4
 	
-	fmov.s  @r4+, fr2 ! LS, A = v1->u
-	fmov.s  @r5+, fr3 ! LS, B = v2->u
-	fipr     fv8, fv0 ! FE, LERP = A * t + B * invT
+	fmov.s  @r4+, fr2 ! LS, A1 = v1->u
+	fmov.s  @r5+, fr3 ! LS, B1 = v2->u
+	fipr     fv8, fv0 ! FE, LERP(A1, B1)
+	fmov.s  @r4+, fr6 ! LS, A2 = v1->v
+	fmov.s  @r5+, fr7 ! LS, B2 = v2->v
+
 	fmov.s   fr3, @r6 ! LS, OUT->u = LERP
 	add       #4,  r6 ! EX, OUT += 4
-	
-	fmov.s  @r4+, fr6 ! LS, A = v1->v
-	fmov.s  @r5+, fr7 ! LS, B = v2->v
-	fipr     fv8, fv4 ! FE, lerp = A * t + B * invT
-	fmov.s   fr7, @r6 ! LS, OUT->v = lerp
+	fipr     fv8, fv4 ! FE, LERP(A2, B2)
+	fmov.s   fr7, @r6 ! LS, OUT->v = LERP
 	add       #4,  r6 ! EX, OUT += 4
 	
 	mov.l   @r4+,r0   ! LS, ACOLOR = v1->bgra
@@ -108,7 +108,7 @@ _ClipLine:
 	extu.b  r2,r3     ! EX, tmp = BCOLOR.b
 	lds     r3,fpul   ! CO, FPUL = tmp
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, lerp = A * t + B * invT
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	sts     fpul,r3   ! CO, tmp = FPUL
 	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
@@ -122,7 +122,7 @@ _ClipLine:
 	extu.b  r2,r3     ! EX, tmp = BCOLOR.g
 	lds     r3,fpul   ! CO, FPUL = tmp
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, lerp = A * t + B * invT
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	sts     fpul,r3   ! CO, tmp = FPUL
 	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
@@ -137,7 +137,7 @@ _ClipLine:
 	extu.b  r2,r3     ! EX, tmp = BCOLOR.b
 	lds     r3,fpul   ! CO, FPUL = tmp
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, lerp = A * t + B * invT
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	sts     fpul,r3   ! CO, tmp = FPUL
 	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
@@ -152,7 +152,7 @@ _ClipLine:
 	extu.b  r2,r3     ! EX, tmp = BCOLOR.r
 	lds     r3,fpul   ! CO, FPUL = tmp
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, lerp = A * t + B * invT
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	sts     fpul,r3   ! CO, tmp = FPUL
 	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
@@ -161,9 +161,9 @@ _ClipLine:
 	or      r3,r7     ! EX, OUTCOLOR.a |= tmp
 	mov.l   r7, @r6   ! LS, OUT->color = OUTCOLOR
 	
-	fmov.s  @r4+,fr2 ! LS, A = v1->w
-	fmov.s  @r5+,fr3 ! LS, B = v2->w
-	fipr    fv8, fv0 ! FE, lerp = A * t + B * invT
+	fmov.s  @r4+,fr2 ! LS, A1 = v1->w
+	fmov.s  @r5+,fr3 ! LS, B1 = v2->w
+	fipr    fv8, fv0 ! FE, LERP(A1, B1)
 	add      #4,  r6 ! EX, OUT += 4
 	rts              ! CO, return after executing instruction in delay slot
 	fmov.s  fr3, @r6 ! LS, OUT->w = lerp

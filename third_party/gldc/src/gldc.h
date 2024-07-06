@@ -50,10 +50,10 @@ typedef struct {
 } PolyList;
 
 typedef struct {
-    float x_plus_hwidth;
-    float y_plus_hheight;
     float hwidth;  /* width * 0.5f */
     float hheight; /* height * 0.5f */
+    float x_plus_hwidth;
+    float y_plus_hheight;
 } Viewport;
 
 extern Viewport VIEWPORTS[3];

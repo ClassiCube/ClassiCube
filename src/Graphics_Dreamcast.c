@@ -657,7 +657,7 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	c.x = w *  0.5f; // hwidth
 	c.y = h * -0.5f; // hheight
 	c.z = x + w * 0.5f; // x_plus_hwidth
-	c.w = y + h * 0.5f; // y_plus_hheight
+	c.u = y + h * 0.5f; // y_plus_hheight
 	PushCommand(&c);
 }
 
