@@ -286,11 +286,12 @@ static struct ChatCommand MotdCommand = {
 };
 
 static void TexCacheCommand_Execute(const cc_string* args, int argsCount) {
-	char pathBuffer[FILENAME_SIZE];
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	String_InitArray(path, pathBuffer);
 
-	int found = TexturePack_IsCached(&TexturePack_Url, pathBuffer);
+	int found = TexturePack_IsCached(&TexturePack_Url, &path);
 	if (found) {
-		Chat_Add1("&ePath: &f%c", pathBuffer);
+		Chat_Add1("&ePath: &f%s", &path);
 	} else {
 		Chat_AddRaw("&eCurrent texture pack is not cached.");
 	}

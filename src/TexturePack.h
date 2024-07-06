@@ -90,7 +90,7 @@ int TextureCache_ClearDenied(void);
 /* Checks whether the texture pack at the given URL is cached. */
 /* If it is, the method writes the local path to the given pointer */
 /* only if it is non-null. */
-int TexturePack_IsCached(const cc_string* url, char* path);
+int TexturePack_IsCached(const cc_string* url, cc_string* path);
 
 /* Request ID of texture pack currently being downloaded */
 extern int TexturePack_ReqID;

@@ -337,7 +337,7 @@ static int IsCached(const cc_string* url) {
 	return TexturePack_IsCached(url, NULL);
 }
 
-int TexturePack_IsCached(const cc_string* url, char* path) {
+int TexturePack_IsCached(const cc_string* url, cc_string* path) {
 	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
 	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
 	cc_filepath mainStr, altStr;
@@ -349,15 +349,16 @@ int TexturePack_IsCached(const cc_string* url, char* path) {
 	Platform_EncodePath(&mainStr, &mainPath);
 	Platform_EncodePath(&altStr,  &altPath);
 
-	if (File_Exists(&mainStr)) {
-		if (path) Mem_Copy(path, mainBuffer, FILENAME_SIZE);
+	int r;
+	if ((r = File_Exists(&mainStr))) {
+		if (path) String_Copy(path, &mainPath);
 
-		return 1;
+		return r;
 	}
-	if (altPath.length && File_Exists(&altStr)) {
-		if (path) Mem_Copy(path, altBuffer, FILENAME_SIZE);
+	if (altPath.length && (r = File_Exists(&altStr))) {
+		if (path) String_Copy(path, &altPath);
 
-		return 2;
+		return r;
 	}
 
 	return 0;
