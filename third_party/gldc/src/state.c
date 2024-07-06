@@ -41,7 +41,6 @@ void glKosInit() {
 }
 
 void glKosSwapBuffers() {
-    pvr_scene_begin();   
         if (OP_LIST.vector.size > 2) {
             pvr_list_begin(PVR_LIST_OP_POLY);
             SceneListSubmit((Vertex*)OP_LIST.vector.data, OP_LIST.vector.size, 0);
@@ -62,7 +61,21 @@ void glKosSwapBuffers() {
             pvr_list_finish();
     		TR_LIST.vector.size = 0;
         }
-    pvr_scene_finish();
+}
+
+static inline int DimensionFlag(int w) {
+    switch(w) {
+        case 16: return 1;
+        case 32: return 2;
+        case 64: return 3;
+        case 128: return 4;
+        case 256: return 5;
+        case 512: return 6;
+        case 1024: return 7;
+        case 8:
+        default:
+            return 0;
+    }
 }
 
 void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {

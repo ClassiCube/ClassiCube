@@ -123,25 +123,8 @@ GLuint _glFreeTextureMemory(void);
 GLuint _glUsedTextureMemory(void);
 GLuint _glFreeContiguousTextureMemory(void);
 
-void _glApplyScissor(int force);
-
 extern GLboolean STATE_DIRTY;
 
 void SceneListSubmit(Vertex* v2, int n, int type);
-
-static inline int DimensionFlag(int w) {
-    switch(w) {
-        case 16: return 1;
-        case 32: return 2;
-        case 64: return 3;
-        case 128: return 4;
-        case 256: return 5;
-        case 512: return 6;
-        case 1024: return 7;
-        case 8:
-        default:
-            return 0;
-    }
-}
 
 #endif // PRIVATE_H

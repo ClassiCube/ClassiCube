@@ -627,7 +627,10 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 
 void Gfx_EndFrame(void) {
 	pvr_wait_ready();
+
+    pvr_scene_begin();
 	glKosSwapBuffers();
+    pvr_scene_finish();
 }
 
 void Gfx_OnWindowResize(void) {

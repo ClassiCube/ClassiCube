@@ -192,55 +192,94 @@
 
 
 ! =========================================================
-! ====================== VIEWPORT TRANSFORM ===============
+! ==================== TEXTURED VERTEX TRANSFORM ==========
 ! =========================================================
-!r2 = return addr
-!r0 = temp
-!r5 = dst pointer
+.global _DrawTexturedQuads
+.type  _DrawTexturedQuads,%function
+.align 4
 
-!fr0  = temp
-!fr4  = temp
-!fr5  = temp
-!fr5  = temp
-!fr8  = VIEWPORT_HWIDTH
-!fr9  = VIEWPORT_HHEIGHT
-!fr10 = VIEWPORT_X_PLUS_HWIDTH
-!fr11 = VIEWPORT_Y_PLUS_HHEIGHT
+_DrawTexturedQuads:
+! Setup
+    TransformSetup
 
-.macro ViewportTransformSetup vp_addr
-    mov.l \vp_addr, r0 ! EX,  r0  = &vp
-    fmov.s	@r0+,fr8   ! LS, fr8  = vp->HWIDTH
-    fmov.s	@r0+,fr9   ! LS, fr9  = vp->HHEIGHT
-    fmov.s	@r0+,fr10  ! LS, fr10 = vp->X_PLUS_HWIDTH
-    fmov.s	@r0+,fr11  ! LS, fr11 = vp->Y_PLUS_HHEIGHT
-    nop                ! MT (align to even instructions boundary)
-.endm
+.T_TRANSFORM_QUAD:
+    LoadTexturedVertex
+    ProcessVertex1
 
-.macro ViewportTransformVertex
-! INVERSE W CALCULATION
-    add #28, r5       ! EX, r5  = &vertex->w
-    fmov.s  @r5,fr0   ! LS, fr0 = vertex->w
-    fmul    fr0,fr0   ! FE, fr0 = fr0 * fr0
-    add #-24, r5      ! EX, r5  = &vertex->x
-    fsrra   fr0       ! FE, fr0 = 1 / sqrt(fr0) -> 1 / vertex->w
+    LoadTexturedVertex
+    ProcessVertex2
 
-! TRANSFORM X
-    fmov.s @r5,fr4    ! LS, fr4 = vertex->x
-    fmov  fr10,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
-    fmul  fr8,fr4     ! FE, fr4 = VIEWPORT_HWIDTH * vertex->x
-    fmac  fr0,fr4,fr5 ! FE, fr5 = fr0 * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
-    fmov.s fr5,@r5    ! LS, vertex->x = fr5
-    add #4, r5        ! EX, r5  = &vertex->y
+    LoadTexturedVertex
+    ProcessVertex3
 
-! TRANSFORM Y
-    fmov.s @r5,fr4    ! LS, fr4 = vertex->y
-    fmov  fr11,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
-    fmul  fr9,fr4     ! FE, fr4  = VIEWPORT_HHEIGHT * vertex->y
-    fmac  fr0,fr4,fr5 ! FE, fr5  = fr0 * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
-    fmov.s fr5,@r5    ! LS, vertex->y = fr5
-    add #4, r5        ! EX, r5  = &vertex->z
+    LoadTexturedVertex
+    ProcessVertex4
 
-! ASSIGN Z
-    fmov.s fr0,@r5    ! LS, vertex->z = fr0
-    add #20, r5       ! EX, r5 += 20 (points to start of next vertex)
-.endm
+! CLIPFLAGS TESTING
+	and     #15,r0
+    cmp/eq  #0,r0  ! T = r0 == 0 (all points invisible)
+    bt/s    .T_NO_POINTS_VISIBLE ! if T goto NO_POINTS_VISIBLE
+    nop
+    bra     .T_SOME_POINTS_VISIBLE
+    nop
+
+.T_NO_POINTS_VISIBLE:
+    bra .T_LOOP_END ! jump to loop end after executing instruction in delay slot
+    add #-128, r5   ! r5 -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
+
+.T_SOME_POINTS_VISIBLE:
+
+.T_LOOP_END:
+    dt r6 ! r6--; T = r6 == 0
+    bf .T_TRANSFORM_QUAD ! if !T then goto T_TRANSFORM_QUAD
+    nop
+    
+    TransformEnd
+
+
+! =========================================================
+! ==================== COLOURED VERTEX TRANSFORM ==========
+! =========================================================
+.global _DrawColouredQuads
+.type  _DrawColouredQuads,%function
+.align 4
+
+_DrawColouredQuads:
+! Setup
+    fldi0 fr1     ! U = 0
+    fldi0 fr2     ! V = 0
+    TransformSetup
+
+.C_TRANSFORM_QUAD:
+    LoadColouredVertex
+    ProcessVertex1
+
+    LoadColouredVertex
+    ProcessVertex2
+
+    LoadColouredVertex
+    ProcessVertex3
+
+    LoadColouredVertex
+    ProcessVertex4
+
+! CLIPFLAGS TESTING
+	and     #15,r0
+    cmp/eq  #0,r0  ! T = r0 == 0 (all points invisible)
+    bt/s    .C_NO_POINTS_VISIBLE  ! if T goto NO_POINTS_VISIBLE
+    nop
+    bra     .C_SOME_POINTS_VISIBLE
+    nop
+
+.C_NO_POINTS_VISIBLE:
+    bra .C_LOOP_END ! jump to loop end after executing instruction in delay slot
+    add #-128, r5   ! r5 -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
+
+.C_SOME_POINTS_VISIBLE:
+
+.C_LOOP_END:
+    dt r6                ! r6--; T = r6 == 0
+    bf .C_TRANSFORM_QUAD ! if !T then goto TRANSFORM_QUAD
+    nop
+    
+    TransformEnd
