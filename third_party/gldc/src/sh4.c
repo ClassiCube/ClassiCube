@@ -395,7 +395,7 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
     }
 }
 
-static __attribute__((noinline)) void HandleCommand(Vertex* v, int type) {
+static __attribute__((noinline)) void HandleCommand(Vertex* v) {
 	if ((v->flags & 0xFF) != 0x23) {
 		_glPushHeaderOrVertex(v);
 		return;
@@ -405,7 +405,6 @@ static __attribute__((noinline)) void HandleCommand(Vertex* v, int type) {
 	vp.hheight = v->y;
 	vp.x_plus_hwidth  = v->z;
 	vp.y_plus_hheight = v->w;
-	VIEWPORTS[type] = vp;
 }
 
 void SceneListSubmit(Vertex* v3, int n, int type) {
@@ -432,7 +431,7 @@ void SceneListSubmit(Vertex* v3, int n, int type) {
         case PVR_CMD_VERTEX:
             continue;
         default:
-            HandleCommand(v3, type);
+            HandleCommand(v3);
             continue;
         };
 
@@ -478,4 +477,5 @@ void SceneListSubmit(Vertex* v3, int n, int type) {
     }
 
     _glFlushBuffer();
+	VIEWPORTS[type] = vp;
 }
