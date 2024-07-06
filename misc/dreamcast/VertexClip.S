@@ -1,3 +1,7 @@
+! r0 CLOBBERS
+! r1 CLOBBERS
+! r2 CLOBBERS
+! r3 CLOBBERS
 ! r4 = v1
 ! r5 = v2
 ! r6 = OUT
@@ -12,8 +16,8 @@
 ! FR7  = B.2
 ! FR8  = 0
 ! FR9  = 0
-! FR10 = t
-! FR11 = invT
+! FR10 = invT
+! FR11 = t
 
 ! Calculates the near plane intersection point between two points:
 !    float t  = fabsf(v1->z) / fabsf(v2->z - v1->z)
@@ -51,21 +55,21 @@ _ClipLine:
 	mov       r5,  r1 ! MT, r1   = &v2
 	fldi0    fr5      ! LS, fr5  = 0
 	add      #12,  r1 ! EX, r1   = &v2->z
-	fmov.s   @r1,fr10 ! LS, fr10 = v2->z
-	fsub     fr2,fr10 ! FE, fr10 = v2->z - v1->z
+	fmov.s   @r1,fr11 ! LS, fr11 = v2->z
+	fsub     fr2,fr11 ! FE, fr11 = v2->z - v1->z
 	fldi0    fr8      ! LS, fr8  = 0
-	fmul    fr10,fr10 ! FE, fr10 = (v2->z - v1->z) * (B->z * v1->z)
+	fmul    fr11,fr11 ! FE, fr11 = (v2->z - v1->z) * (v2->z * v1->z)
 	fldi0    fr9      ! LS, fr9  = 0
 	fldi0    fr0      ! LS, fr0  = 0
 	fldi0    fr1      ! LS, fr1  = 0
-	fsrra   fr10      ! FE, fr10 = 1 / abs(B->z - v1->z)
+	fsrra   fr11      ! FE, fr11 = 1 / abs(v2->z - v1->z)
 	fabs     fr2      ! LS, fr2  = abs(v1->z)
-	fmul     fr2,fr10 ! FE, fr10 = abs(v1->Z) / abs(B->z - v1->z)  --> t
+	fmul     fr2,fr11 ! FE, fr11 = abs(v1->Z) / abs(v2->z - v1->z)  --> t
 	add       #4,  r4 ! EX, A    = &v1->x
-	fldi1   fr11      ! LS, fr11 = 1
+	fldi1   fr10      ! LS, fr10 = 1
 	add       #4,  r5 ! EX, B    = &v2->x
 	add       #4,  r6 ! EX, OUT  = &OUT->x
-	fsub    fr10,fr11 ! FE, fr11 = 1.0 - t  --> invT
+	fsub    fr11,fr10 ! FE, fr10 = 1.0 - t  --> invT
 	
 	fmov.s  @r4+, fr2 ! LS, A = v1->x
 	fmov.s  @r5+, fr3 ! LS, B = v2->x
