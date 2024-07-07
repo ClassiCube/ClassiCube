@@ -98,7 +98,7 @@
     add #-28, \R      ! EX, SRC -= 28
 	mov.l   @\R+, r2  ! LS, tmp = SRC->flags, SRC += 4
 	mov.l   r2,@r8    ! LS, DST->flags = tmp
-    fsrra   fr0       ! FE, fr0 = 1 / sqrt(fr0) -> 1 / vertex->w
+    fsrra   fr0       ! FE, invW = 1 / sqrt(SRC->W * SRC->W)
     add    #4, r8     ! EX, DST += 4
 
 ! COPY U,V
@@ -113,24 +113,22 @@
     fmul  F_HW,fr4    ! FE, fr4 = VIEWPORT_HWIDTH * SRC->x
 	mov.l @(20,\R),r2 ! LS, tmp = SRC->bgra
 	mov.l r2,@(20,r8) ! LS, SRC->bgra = tmp
-    fmac  fr0,fr4,fr5 ! FE, fr5 = fr0 * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
+    fmac  fr0,fr4,fr5 ! FE, fr5 = invW * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
     add    #4, \R     ! EX, SRC += 4
     fmov.s fr5,@r8    ! LS, DST->x = fr5
 
 ! TRANSFORM Y
-    fmov.s @\R,fr4    ! LS, fr4 = vertex->y
+    fmov.s @\R,fr4    ! LS, fr4  = SRC->y
     fmov  F_YP,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
-    fmul  F_HH,fr4    ! FE, fr4  = VIEWPORT_HHEIGHT * vertex->y
-    fmac  fr0,fr4,fr5 ! FE, fr5  = fr0 * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
-    add    #4, r8     ! EX, DST += 4
+    fmul  F_HH,fr4    ! FE, fr4  = VIEWPORT_HHEIGHT * SRC->y
+    add    #8, r8     ! EX, DST += 8
+    fmov.s fr0,@r8    ! LS, DST->z = invW
+    fmac  fr0,fr4,fr5 ! FE, fr5  = invW * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
+    add   #-4, r8     ! EX, DST -= 4
     add   #-8, \R     ! EX, src -= 8 (back to start of vertex)
     fmov.s fr5,@r8    ! LS, DST->y = fr5
 
-! ASSIGN Z
-    add    #4, r8     ! EX, DST += 4
-    fmov.s fr0,@r8    ! LS, DST->z = fr0
-    add   #-12,r8     ! EX, DST -= 12 (back to start of vertex)	
-
+    add   #-8,r8      ! EX, DST -= 8 (back to start of vertex)	
 	pref    @r8       ! LS, Trigger SQ
 	add     #32,r8    ! EX, SQ += 32
 .endm
@@ -668,21 +666,25 @@ NEXT_ITER:
 .CLIPFUNC:
         .long   _ClipLine
 
+BUGGY_CASE:
+rts
+nop
+
 ! CASES table holds the functions to transfer a quad,
 !  based on the visibility clipflags of the 4 vertices
 !  e.g. CASES[15] = V0_VIS | V1_VIS | V2_VIS | V3_VIS (all 4 visible)
 .CASES:
-	.long   _arch_exit ! Should never happen
+	.long   BUGGY_CASE ! Should never happen
 	.long   _Case_0_0_0_1
 	.long   _Case_0_0_1_0
 	.long   _Case_0_0_1_1
 	.long   _Case_0_1_0_0
-	.long   _arch_exit ! V0_VIS | V2_VIS, Should never happen
+	.long   BUGGY_CASE ! V0_VIS | V2_VIS, Should never happen
 	.long   _Case_0_1_1_0
 	.long   _Case_0_1_1_1
 	.long   _Case_1_0_0_0
 	.long   _Case_1_0_0_1
-	.long   _arch_exit ! V1_VIS | V3_VIS, Should never happen
+	.long   BUGGY_CASE ! V1_VIS | V3_VIS, Should never happen
 	.long   _Case_1_0_1_1
 	.long   _Case_1_1_0_0
 	.long   _Case_1_1_0_1

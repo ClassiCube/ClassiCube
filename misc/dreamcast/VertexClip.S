@@ -122,11 +122,11 @@ _ClipLine:
 	fmov.s   fr3,@OUT ! LS, OUT->w = lerp
 	add      #-4, OUT ! EX, OUT -= 4
 	
-	mov.l  @IN1+,CL1  ! LS, ACOLOR = v1->bgra
+	mov.l  @IN1,CL1   ! LS, ACOLOR = v1->bgra
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	mov.l  @IN2+,CL2  ! LS, BCOLOR = v2->bgra
+	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
