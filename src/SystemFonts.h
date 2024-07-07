@@ -13,6 +13,8 @@ extern struct IGameComponent SystemFonts_Component;
 
 int FallbackFont_TextWidth(const struct DrawTextArgs* args);
 void FallbackFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow);
+typedef void (*FallbackFont_Plotter)(int x, int y, void* ctx);
+void FallbackFont_Plot(cc_string* str, FallbackFont_Plotter plotter, int scale, void* ctx);
 
 /* Allocates a new system font from the given arguments */
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);

@@ -25,6 +25,7 @@ jobs:
           apt-get -y install genisoimage
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/cdi4dc -O /opt/toolchains/dc/kos/utils/cdi4dc
           chmod +x /opt/toolchains/dc/kos/utils/cdi4dc
+          source /opt/toolchains/dc/kos/environ.sh
           export PATH=/opt/toolchains/dc/kos/utils/:$PATH
           make dreamcast
           

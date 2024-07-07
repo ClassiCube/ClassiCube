@@ -7,6 +7,7 @@
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+#include "SystemFonts.h"
 
 #include <errno.h>
 #include <netdb.h>
@@ -49,7 +50,16 @@ cc_uint64 Stopwatch_Measure(void) {
 
 static uint32 str_offset;
 extern cc_bool window_inited;
-#define MAX_ONSCREEN_LINES 20
+#define MAX_ONSCREEN_LINES 17
+#define ONSCREEN_LINE_HEIGHT (24 + 2) // 8 * 3 text, plus 2 pixel padding
+#define Onscreen_LineOffset(y) ((10 + y + (str_offset * ONSCREEN_LINE_HEIGHT)) * vid_mode->width)
+
+static void PlotOnscreen(int x, int y, void* ctx) {
+	if (x >= vid_mode->width) return;
+	
+	uint32 line_offset = Onscreen_LineOffset(y);
+	vram_s[line_offset + x] = 0xFFFF;
+}
 
 static void LogOnscreen(const char* msg, int len) {
 	char buffer[50];
@@ -57,13 +67,12 @@ static void LogOnscreen(const char* msg, int len) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
-	String_InitArray_NT(str, buffer);
+	String_InitArray(str, buffer);
 	String_Format2(&str, "[%p2.%p3] ", &secs, &ms);
 	String_AppendAll(&str, msg, len);
-	buffer[str.length] = '\0';
-	
-	uint32 line_offset = (10 + (str_offset * BFONT_HEIGHT)) * vid_mode->width;
-	bfont_draw_str(vram_s + line_offset, vid_mode->width, 1, buffer);
+
+	sq_set16(vram_s + Onscreen_LineOffset(0), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
+	FallbackFont_Plot(&str, PlotOnscreen, 3, NULL);
 	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
 }
 
@@ -72,7 +81,7 @@ void Platform_Log(const char* msg, int len) {
 	dbgio_write_buffer_xlat("\n",   1);
 	
 	if (window_inited) return;
-	// Log details on-screen for initial model initing etc
+	// Log details on-screen for initial modem initing etc
 	//  (this can take around 40 seconds on average)
 	LogOnscreen(msg, len);
 }

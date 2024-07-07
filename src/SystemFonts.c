@@ -248,6 +248,46 @@ void FallbackFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x,
 	}
 }
 
+static void Fallback_PlotCell(int x, int scale, const cc_uint8* rows, FallbackFont_Plotter plotter, void* ctx) {
+	int xx, srcX, dstX;
+	int yy, srcY, dstY;
+	cc_uint8 src_row;
+
+	for (srcY = 0; srcY < CELL_SIZE; srcY++)
+	{
+		src_row = rows[srcY];
+
+		for (srcX = 0; srcX < CELL_SIZE; srcX++)
+		{
+			if (!(src_row & (1 << srcX))) continue;			
+			dstX = x + srcX * scale;
+			dstY = 0 + srcY * scale;
+
+			for (yy = 0; yy < scale; yy++)
+				for (xx = 0; xx < scale; xx++)
+			{
+				plotter(dstX + xx, dstY + yy, ctx);
+			}
+		}
+	}
+}
+
+void FallbackFont_Plot(cc_string* str, FallbackFont_Plotter plotter, int scale, void* ctx) {
+	const cc_uint8* rows;
+	int i, x = 0;
+
+	for (i = 0; i < str->length; i++) 
+	{
+		cc_uint8 c = str->buffer[i];
+		if (c == ' ') { x += SPACE_WIDTH * scale; continue; }
+
+		rows = FallbackFont_GetRows(c);
+
+		Fallback_PlotCell(x, scale, rows, plotter, ctx);
+		x += Fallback_CellWidth(rows) * scale;
+	}
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Freetype---------------------------------------------------------*
