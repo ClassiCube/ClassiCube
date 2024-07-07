@@ -63,7 +63,7 @@
     fmov  fr10,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
     fmul  fr8,fr4     ! FE, fr4 = VIEWPORT_HWIDTH * vertex->x
     fmac  fr0,fr4,fr5 ! FE, fr5 = fr0 * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
-    fmov.s fr5,@r5    ! LS, vertex->x = fr5
+    fmov.s fr5,@\R    ! LS, vertex->x = fr5
     add #4, \R        ! EX, \R  = &vertex->y
 
 ! TRANSFORM Y
@@ -84,7 +84,7 @@
 !   CLOBBERS: r0, r2, r3
 !   INPUTS:   r4, r8 (SQ global)
 !   OUTPUTS:  r4,r8 altered, fr8-fr12
-_HandleCommand1:
+_HandleCommand:
         mov.l   @REG_V0,r2 ! r2 = v->flags
         extu.b  r2,r0      ! r2 = v->flags & 0xFF
         cmp/eq  #35,r0     ! T  = r2 == 0x23
@@ -181,9 +181,9 @@ _ProcessVertexList:
 	mov      r6,r8
 
 DO_CMD:
-	mov.l   .L37,r2
-	jsr     @r2
-	nop
+	mov.l   .L37,r1
+	jsr     @r1
+	mov     r13,r4
 	bra     NEXT_ITER
 	nop
 
@@ -272,4 +272,4 @@ NEXT_ITER:
 	.long   _Case_1_1_0_0
 	.long   _Case_1_1_0_1
 	.long   _Case_1_1_1_0
-	.long   _Case1111
+	.long   _Case_1_1_1_1

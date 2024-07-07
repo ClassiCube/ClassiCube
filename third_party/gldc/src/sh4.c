@@ -389,6 +389,7 @@ static __attribute__((noinline)) void HandleCommand(Vertex* v) {
 	vp.y_plus_hheight = v->u;
 }
 
+extern void ProcessVertexList(Vertex* v3, int n, void* sq_addr);
 void SceneListSubmit(Vertex* v3, int n, int type) {
 	vp = VIEWPORTS[type];
     PVR_SET(SPAN_SORT_CFG, 0x0);
