@@ -46,7 +46,7 @@ static inline void _glPushHeaderOrVertex(Vertex* v)  {
     sq += 8;
 }
 
-extern void ClipLine(const Vertex* const v1, const Vertex* const v2, Vertex* vout);
+extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout);
 
 #define SPAN_SORT_CFG 0x005F8030
 static volatile uint32_t* PVR_LMMODE0 = (uint32_t*) 0xA05F6884;
@@ -74,9 +74,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // .....A....B...
         //    /      |
         //  v3--v2---v1
-        ClipLine(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags = PVR_CMD_VERTEX_EOL;
-        ClipLine(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v0);
@@ -97,9 +97,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v0--v3---v2
-        ClipLine(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags = PVR_CMD_VERTEX;
-        ClipLine(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
@@ -120,9 +120,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //    /      |
         //  v1--v0---v3
 
-        ClipLine(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags = PVR_CMD_VERTEX;
-        ClipLine(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
@@ -142,9 +142,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v2--v1---v0
-        ClipLine(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX;
-        ClipLine(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
@@ -164,9 +164,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v3-----v2
-        ClipLine(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags = PVR_CMD_VERTEX;
-        ClipLine(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
@@ -189,9 +189,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v2-----v1
-        ClipLine(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags = PVR_CMD_VERTEX;
-        ClipLine(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(a);
@@ -213,9 +213,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v0-----v3
-        ClipLine(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX_EOL;
-        ClipLine(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v1);
@@ -238,9 +238,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v1-----v0
-        ClipLine(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags = PVR_CMD_VERTEX;
-        ClipLine(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
@@ -264,9 +264,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v3
         // v1,v2,v0  v2,v0,A  v0,A,B
-        ClipLine(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX;
-        ClipLine(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
@@ -293,9 +293,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v2
         // v0,v1,v3  v1,v3,A  v3,A,B
-        ClipLine(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags  = PVR_CMD_VERTEX;
-        ClipLine(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
@@ -323,9 +323,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v1
         // v3,v0,v2  v0,v2,A  v2,A,B
-        ClipLine(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags  = PVR_CMD_VERTEX;
-        ClipLine(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
@@ -353,9 +353,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v0
         // v2,v3,v1  v3,v1,A  v1,A,B
-        ClipLine(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags  = PVR_CMD_VERTEX;
-        ClipLine(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 

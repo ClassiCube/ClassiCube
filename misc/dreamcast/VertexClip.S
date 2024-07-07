@@ -1,19 +1,9 @@
-! r0 CLOBBERS
-! r1 CLOBBERS
-! r2 CLOBBERS
-! r3 CLOBBERS
-! r7 CLOBBERS
-! r4 = v1
-! r5 = v2
-! r6 = OUT
-
-#define TM1 r1
-#define TM2 r3
-#define TM3 r7
-
-#define IN1 r4
-#define IN2 r5
-#define OUT r6
+! r1 = v1,    CLOBBERS
+! r2 = v2,    CLOBBERS
+! r3 = OUT,   CLOBBERS
+! r4 = TMP 1, preserved
+! r5 = TMP 2, preserved
+! r0 = CL0,   CLOBBERS
 
 ! FR0  = 0
 ! FR1  = 0
@@ -27,6 +17,17 @@
 ! FR9  = 0
 ! FR10 = invT
 ! FR11 = t
+
+#define TM1 r0
+#define TM2 r4
+#define CLO r5
+
+#define IN1 r1
+#define IN2 r2
+#define OUT r3
+
+#define CL1 r1
+#define CL2 r2
 
 ! Calculates the near plane intersection point between two points:
 !    float t  = fabsf(v1->z) / fabsf(v2->z - v1->z)
@@ -57,6 +58,8 @@
 .align 4
 .type  _ClipLine,%function
 _ClipLine:
+	mov.l    r4,@-r15 ! LS, push(r4)
+	mov.l    r5,@-r15 ! LS, push(r5)
 	mov      IN1, TM1 ! MT, tmp  = &v1
 	fldi0    fr4      ! LS, fr4  = 0
 	add      #12, TM1 ! EX, tmp  = &v1->z
@@ -74,17 +77,17 @@ _ClipLine:
 	fsrra   fr11      ! FE, fr11 = 1 / abs(v2->z - v1->z)
 	fabs     fr2      ! LS, fr2  = abs(v1->z)
 	fmul     fr2,fr11 ! FE, fr11 = abs(v1->Z) / abs(v2->z - v1->z)  --> t
-	add       #4, IN1 ! EX, A    = &v1->x
+	add       #4, IN1 ! EX, v1   += 4
 	fldi1   fr10      ! LS, fr10 = 1
-	add       #4, IN2 ! EX, B    = &v2->x
-	add       #4, OUT ! EX, OUT  = &OUT->x
+	add       #4, IN2 ! EX, v2   += 4
+	add       #4, OUT ! EX, OUT  += 4
 	fsub    fr11,fr10 ! FE, fr10 = 1.0 - t  --> invT
 	
-	fmov.s @IN1+, fr2 ! LS, A1 = v1->x
-	fmov.s @IN2+, fr3 ! LS, B1 = v2->x
+	fmov.s @IN1+, fr2 ! LS, A1 = v1->x, v1 += 4
+	fmov.s @IN2+, fr3 ! LS, B1 = v2->x, v2 += 4
 	fipr     fv8, fv0 ! FE, LERP(A1, B1)
-	fmov.s @IN1+, fr6 ! LS, A2 = v1->y
-	fmov.s @IN2+, fr7 ! LS, B2 = v2->y
+	fmov.s @IN1+, fr6 ! LS, A2 = v1->y, v1 += 4
+	fmov.s @IN2+, fr7 ! LS, B2 = v2->y, v2 += 4
 
 	fmov.s   fr3,@OUT ! LS, OUT->x = LERP
 	add       #4, OUT ! EX, OUT += 4
@@ -97,82 +100,89 @@ _ClipLine:
 	fmov.s   fr1,@OUT ! LS, OUT->z = 0
 	add       #4, OUT ! EX, OUT += 4
 	
-	fmov.s @IN1+, fr2 ! LS, A1 = v1->u
-	fmov.s @IN2+, fr3 ! LS, B1 = v2->u
+	fmov.s @IN1+, fr2 ! LS, A1 = v1->u, v1 += 4
+	fmov.s @IN2+, fr3 ! LS, B1 = v2->u, v2 += 4
 	fipr     fv8, fv0 ! FE, LERP(A1, B1)
-	fmov.s @IN1+, fr6 ! LS, A2 = v1->v
-	fmov.s @IN2+, fr7 ! LS, B2 = v2->v
+	fmov.s @IN1+, fr6 ! LS, A2 = v1->v, v1 += 4
+	fmov.s @IN2+, fr7 ! LS, B2 = v2->v, v2 += 4
 
 	fmov.s   fr3,@OUT ! LS, OUT->u = LERP
 	add       #4, OUT ! EX, OUT += 4
 	fipr     fv8, fv4 ! FE, LERP(A2, B2)
+	add       #4, IN1 ! EX, v1 += 4
+	add       #4, IN2 ! EX, v2 += 4
+	fmov.s  @IN1,fr2  ! LS, A1 = v1->w
+	fmov.s  @IN2,fr3  ! LS, B1 = v2->w
 	fmov.s   fr7,@OUT ! LS, OUT->v = LERP
-	add       #4, OUT ! EX, OUT += 4
+	add       #8, OUT ! EX, OUT += 8
 	
-	mov.l  @IN1+,r0   ! LS, ACOLOR = v1->bgra
-	extu.b  r0,r1     ! EX, tmp = ACOLOR.b
-	lds     r1,fpul   ! CO, FPUL = tmp
+	fipr     fv8, fv0 ! FE, LERP(A1, B1)
+	add      #-4, IN1 ! EX, v1 -= 4
+	add      #-4, IN2 ! EX, v2 -= 4
+	fmov.s   fr3,@OUT ! LS, OUT->w = lerp
+	add      #-4, OUT ! EX, OUT -= 4
+	
+	mov.l  @IN1+,CL1  ! LS, ACOLOR = v1->bgra
+	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
+	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	mov.l  @IN2+,r2   ! LS, BCOLOR = v2->bgra
-	extu.b  r2,r3     ! EX, tmp = BCOLOR.b
-	lds     r3,fpul   ! CO, FPUL = tmp
+	mov.l  @IN2+,CL2  ! LS, BCOLOR = v2->bgra
+	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
+	shlr8   CL1       ! EX, ACOLOR >>= 8
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	shlr8   CL2       ! EX, BCOLOR >>= 8
+	sts     fpul,TM2  ! CO, tmp = FPUL
+	
+	extu.b  CL1,TM1   ! EX, val = ACOLOR.g
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	extu.b  CL2,TM1   ! EX, val = BCOLOR.g
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
+	shlr8   CL1       ! EX, ACOLOR >>= 8
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
+	mov     TM2,CLO   ! MT, OUTCOLOR.b = tmp
+	shlr8   CL2       ! EX, BCOLOR >>= 8
+	sts     fpul,TM2  ! CO, tmp = FPUL
+	
+	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
+	shlr8   CL1       ! EX, ACOLOR >>= 8
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
+	shll8   TM2       ! EX, tmp <<= 8
+	or      TM2,CLO   ! EX, OUTCOLOR.r |= tmp
+	shlr8   CL2       ! EX, BCOLOR >>= 8
+	sts     fpul,TM2  ! CO, tmp = FPUL
+	
+	extu.b  CL1,TM1   ! EX, val = ACOLOR.r
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	extu.b  CL2,TM1   ! EX, val = BCOLOR.r
+	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
 	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
-	sts     fpul,r3   ! CO, tmp = FPUL
-	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
-	mov     r3, r7    ! MT, OUTCOLOR.b = tmp
-	
-	shlr8   r0        ! EX, ACOLOR >>= 8
-	extu.b  r0,r1     ! EX, tmp = ACOLOR.g
-	lds     r1,fpul   ! CO, FPUL = tmp
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	shlr8   r2        ! EX, BCOLOR >>= 8
-	extu.b  r2,r3     ! EX, tmp = BCOLOR.g
-	lds     r3,fpul   ! CO, FPUL = tmp
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, LERP(A1, B1)
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
-	sts     fpul,r3   ! CO, tmp = FPUL
-	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
-	shll8   r3        ! EX, tmp <<= 8
-	or      r3,r7     ! EX, OUTCOLOR.r |= tmp
-	
-	shlr8   r0        ! EX, ACOLOR >>= 8
-	extu.b  r0,r1     ! EX, tmp = ACOLOR.b
-	lds     r1,fpul   ! CO, FPUL = tmp
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	shlr8   r2        ! EX, BCOLOR >>= 8
-	extu.b  r2,r3     ! EX, tmp = BCOLOR.b
-	lds     r3,fpul   ! CO, FPUL = tmp
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, LERP(A1, B1)
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
-	sts     fpul,r3   ! CO, tmp = FPUL
-	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
-	shll16  r3        ! EX, tmp <<= 16
-	or      r3,r7     ! EX, OUTCOLOR.g |= tmp
-	
-	shlr8   r0        ! EX, ACOLOR >>= 8
-	extu.b  r0,r1     ! EX, tmp = ACOLOR.r
-	lds     r1,fpul   ! CO, FPUL = tmp
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	shlr8   r2        ! EX, BCOLOR >>= 8
-	extu.b  r2,r3     ! EX, tmp = BCOLOR.r
-	lds     r3,fpul   ! CO, FPUL = tmp
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, LERP(A1, B1)
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
-	sts     fpul,r3   ! CO, tmp = FPUL
-	extu.b  r3,r3     ! EX, tmp = (uint8)tmp
-	shll16  r3        ! EX, tmp <<= 16
-	shll8   r3        ! EX, tmp <<= 8
-	or      r3,r7     ! EX, OUTCOLOR.a |= tmp
-	mov.l   r7,@OUT   ! LS, OUT->color = OUTCOLOR
-	
-	fmov.s @IN1+,fr2 ! LS, A1 = v1->w
-	fmov.s @IN2+,fr3 ! LS, B1 = v2->w
-	fipr    fv8, fv0 ! FE, LERP(A1, B1)
-	add      #4, OUT ! EX, OUT += 4
-	rts              ! CO, return after executing instruction in delay slot
-	fmov.s  fr3,@OUT ! LS, OUT->w = lerp
+	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
+	shll16  TM2       ! EX, tmp <<= 16
+	or      TM2,CLO   ! EX, OUTCOLOR.g |= tmp
+	sts     fpul,TM2  ! CO, tmp = FPUL
+	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
+	shll16  TM2       ! EX, tmp <<= 16
+	shll8   TM2       ! EX, tmp <<= 8
+	or      TM2,CLO   ! EX, OUTCOLOR.a |= tmp
+	mov.l  CLO,@OUT   ! LS, OUT->color = OUTCOLOR
+
+	mov.l   @r15+,r5  ! LS, pop(r5)
+	rts               ! CO, return after executing instruction in delay slot
+	mov.l   @r15+,r4  ! LS, pop(r4)
