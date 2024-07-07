@@ -178,8 +178,9 @@ _Case_0_0_0_1:
 	TMP_SET_A
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_0_0_1_0:
 	!          v1
@@ -208,8 +209,9 @@ _Case_0_0_1_0:
 	TMP_SET_B
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_0_1_0_0:
  	!          v2
@@ -238,8 +240,9 @@ _Case_0_1_0_0:
 	TMP_SET_B
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_1_0_0_0:
 	!          v3
@@ -268,8 +271,9 @@ _Case_1_0_0_0:
 	TransformVertex REG_TMP
 	TransformVertex REG_V3
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 
 _Case_0_0_1_1:
@@ -299,8 +303,9 @@ _Case_0_0_1_1:
 	TMP_SET_B
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_1_0_0_1:
 	!    v3-----------v0
@@ -329,8 +334,9 @@ _Case_1_0_0_1:
 	TransformVertex REG_V0
 	TransformVertex REG_V3
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_0_1_1_0:
 	!    v1-----------v2
@@ -359,8 +365,9 @@ _Case_0_1_1_0:
 	TMP_SET_A
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_1_1_0_0:
 	!    v2-----------v3
@@ -389,8 +396,9 @@ _Case_1_1_0_0:
 	TransformVertex REG_TMP
 	TransformVertex REG_V3
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_0_1_1_1:
 	!        --v1--
@@ -422,8 +430,9 @@ _Case_0_1_1_1:
 	TMP_SET_B
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_1_0_1_1:
 	!        --v0--
@@ -456,8 +465,9 @@ _Case_1_0_1_1:
 	TMP_SET_B
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_1_1_0_1:
 	!        --v3--
@@ -490,8 +500,9 @@ _Case_1_1_0_1:
 	TMP_SET_B
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_1_1_1_0:
 	!        --v2--
@@ -524,8 +535,9 @@ _Case_1_1_1_0:
 	TMP_SET_B
 	TransformVertex REG_TMP
 
-	rts
 	lds   r13,pr
+	rts
+	nop
 
 _Case_1_1_1_1:
 ! Triangle strip: {1,2,0} {2,0,3}
