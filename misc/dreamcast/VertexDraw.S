@@ -6,35 +6,47 @@
 ! r13 = cur vertex
 ! r14 = next vertex (prefetch)
 
-!fr8  = VIEWPORT_HWIDTH
-!fr9  = VIEWPORT_HHEIGHT
-!fr10 = VIEWPORT_X_PLUS_HWIDTH
-!fr11 = VIEWPORT_Y_PLUS_HHEIGHT
+!fr12 = VIEWPORT_HWIDTH
+!fr13 = VIEWPORT_HHEIGHT
+!fr14 = VIEWPORT_X_PLUS_HWIDTH
+!fr15 = VIEWPORT_Y_PLUS_HHEIGHT
+
+#define F_HW fr12
+#define F_HH fr13
+#define F_XP fr14
+#define F_YP fr15
+
+#define R_VTX        r10
+#define R_EOL        r11
+#define REG_CMD_VTX  r10
+#define REG_CMD_EOL  r11
+#define REG_CLIPFUNC r12
+
 
 .align 4
 
 ! Pushes a vertex to the store queue
-!   CLOBBERS: r3
+!   CLOBBERS: r2
 !   INPUTS:   R (vertex), r8 (SQ global)
 !   OUTPUTS:  r8 altered
 .macro PushVertex R
 	! memcpy(r8, \R, 32)
-	mov.l   @(0,\R), r3
-	mov.l   r3, @(0,r8)
-	mov.l   @(4,\R), r3
-	mov.l   r3, @(4,r8)
-	mov.l   @(8,\R), r3
-	mov.l   r3, @(8,r8)
-	mov.l   @(12,\R),r3
-	mov.l   r3,@(12,r8)
-	mov.l   @(16,\R),r3
-	mov.l   r3,@(16,r8)
-	mov.l   @(20,\R),r3
-	mov.l   r3,@(20,r8)
-	mov.l   @(24,\R),r3
-	mov.l   r3,@(24,r8)
-	mov.l   @(28,\R),r3
-	mov.l   r3,@(28,r8) 
+	mov.l   @(0,\R), r2
+	mov.l   r2, @(0,r8)
+	mov.l   @(4,\R), r2
+	mov.l   r2, @(4,r8)
+	mov.l   @(8,\R), r2
+	mov.l   r2, @(8,r8)
+	mov.l   @(12,\R),r2
+	mov.l   r2,@(12,r8)
+	mov.l   @(16,\R),r2
+	mov.l   r2,@(16,r8)
+	mov.l   @(20,\R),r2
+	mov.l   r2,@(20,r8)
+	mov.l   @(24,\R),r2
+	mov.l   r2,@(24,r8)
+	mov.l   @(28,\R),r2
+	mov.l   r2,@(28,r8) 
 	pref    @r8         ! LS, Trigger SQ
 	add     #32,r8      ! EX, SQ += 32
 .endm
@@ -55,16 +67,16 @@
 
 ! TRANSFORM X
     fmov.s @\R,fr4    ! LS, fr4 = vertex->x
-    fmov  fr10,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
-    fmul  fr8,fr4     ! FE, fr4 = VIEWPORT_HWIDTH * vertex->x
+    fmov  F_XP,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
+    fmul  F_HW,fr4    ! FE, fr4 = VIEWPORT_HWIDTH * vertex->x
     fmac  fr0,fr4,fr5 ! FE, fr5 = fr0 * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
     fmov.s fr5,@\R    ! LS, vertex->x = fr5
     add #4, \R        ! EX, \R  = &vertex->y
 
 ! TRANSFORM Y
     fmov.s @\R,fr4    ! LS, fr4 = vertex->y
-    fmov  fr11,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
-    fmul  fr9,fr4     ! FE, fr4  = VIEWPORT_HHEIGHT * vertex->y
+    fmov  F_YP,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
+    fmul  F_HH,fr4    ! FE, fr4  = VIEWPORT_HHEIGHT * vertex->y
     fmac  fr0,fr4,fr5 ! FE, fr5  = fr0 * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
     fmov.s fr5,@\R    ! LS, vertex->y = fr5
     add #4, \R        ! EX, \R  = &vertex->z
@@ -75,54 +87,52 @@
 .endm
 
 ! Transforms then pushes a vertex to the store queue
-!   CLOBBERS: r3, fr0, fr4, fr5
+!   CLOBBERS: r2, fr0, fr4, fr5
 !   INPUTS:   R (vertex), r8 (SQ global)
-!   OUTPUTS:  r8 altered
+!   OUTPUTS:  R, r8 altered
 .macro TransformVertex R
 ! INVERSE W CALCULATION
-    add #28, \R       ! EX, \R  = &vertex->w
-    fmov.s  @\R,fr0   ! LS, fr0 = vertex->w
+    add #28, \R       ! EX, SRC += 28
+    fmov.s  @\R,fr0   ! LS, fr0 = v->w
     fmul    fr0,fr0   ! FE, fr0 = fr0 * fr0
-    add #-24, \R      ! EX, \R  = &vertex->x
+    add #-28, \R      ! EX, SRC -= 28
+	mov.l   @\R+, r2  ! LS, tmp = SRC->flags, SRC += 4
+	mov.l   r2,@r8    ! LS, DST->flags = tmp
     fsrra   fr0       ! FE, fr0 = 1 / sqrt(fr0) -> 1 / vertex->w
+    add    #4, r8     ! EX, DST += 4
+
+! COPY U,V
+	mov.l @(12,\R),r2 ! LS, tmp = SRC->u
+	mov.l r2,@(12,r8) ! LS, DST->u = tmp
+	mov.l @(16,\R),r2 ! LS, tmp = SRC->v
+	mov.l r2,@(16,r8) ! LS, DST->v = tmp
 
 ! TRANSFORM X
-    fmov.s @\R,fr4    ! LS, fr4 = vertex->x
-    fmov  fr10,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
-    fmul  fr8,fr4     ! FE, fr4 = VIEWPORT_HWIDTH * vertex->x
+    fmov.s @\R,fr4    ! LS, fr4 = SRC->x
+    fmov  F_XP,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
+    fmul  F_HW,fr4    ! FE, fr4 = VIEWPORT_HWIDTH * SRC->x
+	mov.l @(20,\R),r2 ! LS, tmp = SRC->bgra
+	mov.l r2,@(20,r8) ! LS, SRC->bgra = tmp
     fmac  fr0,fr4,fr5 ! FE, fr5 = fr0 * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
-    fmov.s fr5,@\R    ! LS, vertex->x = fr5
-    add #4, \R        ! EX, \R  = &vertex->y
+    add    #4, \R     ! EX, SRC += 4
+    fmov.s fr5,@r8    ! LS, DST->x = fr5
 
 ! TRANSFORM Y
     fmov.s @\R,fr4    ! LS, fr4 = vertex->y
-    fmov  fr11,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
-    fmul  fr9,fr4     ! FE, fr4  = VIEWPORT_HHEIGHT * vertex->y
+    fmov  F_YP,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
+    fmul  F_HH,fr4    ! FE, fr4  = VIEWPORT_HHEIGHT * vertex->y
     fmac  fr0,fr4,fr5 ! FE, fr5  = fr0 * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
-    fmov.s fr5,@\R    ! LS, vertex->y = fr5
-    add #4, \R        ! EX, \R  = &vertex->z
+    add    #4, r8     ! EX, DST += 4
+    add   #-8, \R     ! EX, src -= 8 (back to start of vertex)
+    fmov.s fr5,@r8    ! LS, DST->y = fr5
 
 ! ASSIGN Z
-    fmov.s fr0,@\R    ! LS, vertex->z = fr0
-    add #-12, \R      ! EX, \R -= 12 (back to start of vertex)	
+    add    #4, r8     ! EX, DST += 4
+    fmov.s fr0,@r8    ! LS, DST->z = fr0
+    add   #-12,r8     ! EX, DST -= 12 (back to start of vertex)	
 
-! memcpy(r8, \R, 28)
-	mov.l   @(0,\R), r3
-	mov.l   r3, @(0,r8)
-	mov.l   @(4,\R), r3
-	mov.l   r3, @(4,r8)
-	mov.l   @(8,\R), r3
-	mov.l   r3, @(8,r8)
-	mov.l   @(12,\R),r3
-	mov.l   r3,@(12,r8)
-	mov.l   @(16,\R),r3
-	mov.l   r3,@(16,r8)
-	mov.l   @(20,\R),r3
-	mov.l   r3,@(20,r8)
-	mov.l   @(24,\R),r3
-	mov.l   r3,@(24,r8)
-	pref    @r8         ! LS, Trigger SQ
-	add     #32,r8      ! EX, SQ += 32
+	pref    @r8       ! LS, Trigger SQ
+	add     #32,r8    ! EX, SQ += 32
 .endm
 
 
@@ -134,10 +144,6 @@
 #define REG_V2 r6
 #define REG_V3 r7
 
-#define REG_CMD_VTX  r10
-#define REG_CMD_EOL  r11
-#define REG_CLIPFUNC r12
-
 ! r3 also matches out parameter for ClipLine
 #define REG_TMP r3
 #define TMP_SET_A \
@@ -148,28 +154,25 @@
 
 
 _Case_0_0_0_1:
-	rts; nop
 	!          v0
 	!         / |
 	!       /   |
 	! .....A....B...
 	!    /      |
 	!  v3--v2---v1
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V3, REG_CLIP1
 	mov    REG_V0, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_EOL, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V0, REG_CLIP1
 	mov    REG_V1, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TransformVertex REG_V0
 	TMP_SET_B
@@ -178,31 +181,28 @@ _Case_0_0_0_1:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_0_0_1_0:
-	rts; nop
 	!          v1
 	!         / |
 	!       /   |
 	! ....A.....B...
 	!    /      |
 	!  v0--v3---v2
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V0, REG_CLIP1
 	mov    REG_V1, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
-	mov    REG_V0, REG_CLIP1
-	mov    REG_V1, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
+	mov    REG_V1, REG_CLIP1
+	mov    REG_V2, REG_CLIP2
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_EOL, @REG_TMP
 
 	TMP_SET_A
 	TransformVertex REG_TMP
@@ -211,31 +211,28 @@ _Case_0_0_1_0:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_0_1_0_0:
-	rts; nop
  	!          v2
 	!         / |
 	!       /   |
 	! ....A.....B...
 	!    /      |
 	!  v1--v0---v3
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V1, REG_CLIP1
 	mov    REG_V2, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V2, REG_CLIP1
 	mov    REG_V3, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_EOL, @REG_TMP
 
 	TMP_SET_A
 	TransformVertex REG_TMP
@@ -244,31 +241,28 @@ _Case_0_1_0_0:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_1_0_0_0:
-	rts; nop
 	!          v3
 	!         / |
 	!       /   |
 	! ....A.....B...
 	!    /      |
 	!  v2--v1---v0
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V2, REG_CLIP1
 	mov    REG_V3, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V3, REG_CLIP1
 	mov    REG_V0, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	TransformVertex REG_TMP
@@ -277,31 +271,28 @@ _Case_1_0_0_0:
 	TransformVertex REG_V3
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 
 _Case_0_0_1_1:
-	rts; nop
 	!    v0-----------v1
 	!      \           |
 	!   ....B..........A...
 	!         \        |
 	!          v3-----v2
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V1, REG_CLIP1
 	mov    REG_V2, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V3, REG_CLIP1
 	mov    REG_V0, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_EOL, @REG_TMP
 
 	TransformVertex REG_V1
 	TMP_SET_A
@@ -311,30 +302,27 @@ _Case_0_0_1_1:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_1_0_0_1:
-	rts; nop
 	!    v3-----------v0
 	!      \           |
 	!   ....B..........A...
 	!         \        |
 	!          v2-----v1
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V0, REG_CLIP1
 	mov    REG_V1, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V2, REG_CLIP1
 	mov    REG_V3, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_A
 	TransformVertex REG_TMP
@@ -344,30 +332,27 @@ _Case_1_0_0_1:
 	TransformVertex REG_V3
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_0_1_1_0:
-	rts; nop
 	!    v1-----------v2
 	!      \           |
 	!   ....B..........A...
 	!         \        |
  	!          v0-----v3
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V2, REG_CLIP1
 	mov    REG_V3, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_EOL, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V0, REG_CLIP1
 	mov    REG_V1, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TransformVertex REG_V1
 	TransformVertex REG_V2
@@ -377,30 +362,27 @@ _Case_0_1_1_0:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_1_1_0_0:
-	rts; nop
 	!    v2-----------v3
 	!      \           |
 	!   ....B..........A...
 	!         \        |
 	!          v1-----v0
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V3, REG_CLIP1
 	mov    REG_V0, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V1, REG_CLIP1
 	mov    REG_V2, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	TransformVertex REG_TMP
@@ -410,10 +392,9 @@ _Case_1_1_0_0:
 	TransformVertex REG_V3
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_0_1_1_1:
-	rts; nop
 	!        --v1--
 	!    v0--      --v2
 	!      \        |
@@ -421,21 +402,19 @@ _Case_0_1_1_1:
 	!          \   |
 	!            v3
 	! v1,v2,v0  v2,v0,A  v0,A,B
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V2, REG_CLIP1
 	mov    REG_V3, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V3, REG_CLIP1
 	mov    REG_V0, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_EOL, @REG_TMP
 
 	TransformVertex REG_V1
 	TransformVertex REG_V2
@@ -446,10 +425,9 @@ _Case_0_1_1_1:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_1_0_1_1:
-	rts; nop
 	!        --v0--
 	!    v3--      --v1
 	!      \        |
@@ -457,20 +435,19 @@ _Case_1_0_1_1:
 	!          \   |
 	!            v2
 	! v0,v1,v3  v1,v3,A  v3,A,B
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V1, REG_CLIP1
 	mov    REG_V2, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V2, REG_CLIP1
 	mov    REG_V3, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
+	mov.l  REG_CMD_EOL, @REG_TMP
 	mov.l  REG_CMD_VTX, @REG_V3
 
 	TransformVertex REG_V0
@@ -482,10 +459,9 @@ _Case_1_0_1_1:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_1_1_0_1:
-	rts; nop
 	!        --v3--
 	!    v2--      --v0
 	!      \        |
@@ -493,20 +469,19 @@ _Case_1_1_0_1:
 	!          \   |
 	!            v1
 	! v3,v0,v2  v0,v2,A  v2,A,B
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V0, REG_CLIP1
 	mov    REG_V1, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V1, REG_CLIP1
 	mov    REG_V2, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
+	mov.l  REG_CMD_EOL, @REG_TMP
 	mov.l  REG_CMD_VTX, @REG_V3
 
 	TransformVertex REG_V3
@@ -518,10 +493,9 @@ _Case_1_1_0_1:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_1_1_1_0:
-	rts; nop
 	!        --v2--
 	!    v1--      --v3
 	!      \        |
@@ -529,20 +503,19 @@ _Case_1_1_1_0:
 	!          \   |
 	!            v0
 	! v2,v3,v1  v3,v1,A  v1,A,B
-	sts.l      pr,@-r15
+	sts    pr,r13
 
 	TMP_SET_A
 	mov    REG_V3, REG_CLIP1
 	mov    REG_V0, REG_CLIP2
-	mov.l  REG_CMD_VTX, @REG_TMP
 	jsr @REG_CLIPFUNC
-	nop
+	mov.l  REG_CMD_VTX, @REG_TMP
 
 	TMP_SET_B
 	mov    REG_V0, REG_CLIP1
 	mov    REG_V1, REG_CLIP2
-	mov.l  REG_CMD_EOL, @REG_TMP
 	jsr @REG_CLIPFUNC
+	mov.l  REG_CMD_EOL, @REG_TMP
 	mov.l  REG_CMD_VTX, @REG_V3
 
 	TransformVertex REG_V2
@@ -554,7 +527,7 @@ _Case_1_1_1_0:
 	TransformVertex REG_TMP
 
 	rts
-	lds.l   @r15+,pr
+	lds   r13,pr
 
 _Case_1_1_1_1:
 ! Triangle strip: {1,2,0} {2,0,3}
@@ -579,16 +552,16 @@ _ProcessVertexList:
 	mov.l   r14,@-r15
 	sts.l    pr,@-r15
 ! STORE FPU REGISTERS
-	fmov.s  fr8,@-r15
-	fmov.s  fr9,@-r15
-	fmov.s fr10,@-r15
-	fmov.s fr11,@-r15
+	fmov.s F_HW,@-r15
+	fmov.s F_HH,@-r15
+	fmov.s F_XP,@-r15
+	fmov.s F_YP,@-r15
 ! VIEWPORT SETUP
-    mov.l  .VP_1,r0   ! LS,  r0  = &vp
-    fmov.s	@r0+,fr8  ! LS, fr8  = vp.HWIDTH
-    fmov.s	@r0+,fr9  ! LS, fr9  = vp.HHEIGHT
-    fmov.s	@r0+,fr10 ! LS, fr10 = vp.X_PLUS_HWIDTH
-    fmov.s	@r0+,fr11 ! LS, fr11 = vp.Y_PLUS_HHEIGHT
+    mov.l  .VP_1,r0   ! LS, &vp
+    fmov.s	@r0+,F_HW ! LS, vp.HWIDTH
+    fmov.s	@r0+,F_HH ! LS, vp.HHEIGHT
+    fmov.s	@r0+,F_XP ! LS, vp.X_PLUS_HWIDTH
+    fmov.s	@r0+,F_YP ! LS, vp.Y_PLUS_HHEIGHT
 ! REGISTER SETUP
 	mov      r4,r14
 	mov      r4,r13
@@ -616,17 +589,17 @@ DO_CMD:
 	add      #4,r4
 	mov.l   .VP_1,r2
 	! Load VIEWPORT registers
-	fmov.s  @r4+, fr8  ! VIEWPORT_HWIDTH  = src->x
-	fmov.s  @r4+, fr9  ! VIEWPORT_HHEIGHT = src->y
-	fmov.s  @r4+,fr10  ! VIEWPORT_X_PLUS_HWIDTH  = src->z
+	fmov.s  @r4+,F_HW  ! VIEWPORT_HWIDTH  = src->x
+	fmov.s  @r4+,F_HH  ! VIEWPORT_HHEIGHT = src->y
+	fmov.s  @r4+,F_XP  ! VIEWPORT_X_PLUS_HWIDTH  = src->z
 	add      #16,r2
-	fmov.s  @r4+,fr11  ! VIEWPORT_Y_PLUS_HHEIGHT = src->u
+	fmov.s  @r4+,F_YP  ! VIEWPORT_Y_PLUS_HHEIGHT = src->u
 	! And store to vp global
-	fmov.s  fr11,@-r2
-	fmov.s  fr10,@-r2
-	fmov.s   fr9,@-r2
+	fmov.s  F_YP,@-r2
+	fmov.s  F_XP,@-r2
+	fmov.s  F_HH,@-r2
 	bra     NEXT_ITER
-	fmov.s   fr8,@-r2
+	fmov.s  F_HW,@-r2
 
 SUBMIT_LOOP:
 	mov.l   @r13,r0   ! FLAGS = CUR->flags
@@ -665,15 +638,15 @@ NEXT_ITER:
 ! VIEWPORT SAVE
 	mov.l  .VP_1,r0
 	add      #16,r0
-	fmov.s  fr11,@-r0
-	fmov.s  fr10,@-r0
- 	fmov.s   fr9,@-r0
- 	fmov.s   fr8,@-r0
+	fmov.s  F_YP,@-r0
+	fmov.s  F_XP,@-r0
+ 	fmov.s  F_HH,@-r0
+ 	fmov.s  F_HW,@-r0
 ! RESTORE FPU REGISTERS
-	fmov.s  @r15+, fr8
-	fmov.s  @r15+, fr9
-	fmov.s  @r15+,fr10
-	fmov.s  @r15+,fr11
+	fmov.s  @r15+,F_YP
+	fmov.s  @r15+,F_XP
+	fmov.s  @r15+,F_HH
+	fmov.s  @r15+,F_HW
 ! RESTORE CPU REGISTERS
 	lds.l   @r15+,pr
 	mov.l   @r15+,r14

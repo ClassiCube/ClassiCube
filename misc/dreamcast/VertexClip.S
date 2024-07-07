@@ -63,11 +63,11 @@ _ClipLine:
 	mov      IN1, TM1 ! MT, tmp  = &v1
 	fldi0    fr4      ! LS, fr4  = 0
 	add      #12, TM1 ! EX, tmp  = &v1->z
-	fmov.s   @r1, fr2 ! LS, fr2  = v1->z	
+	fmov.s  @TM1, fr2 ! LS, fr2  = v1->z	
 	mov      IN2, TM1 ! MT, tmp  = &v2
 	fldi0    fr5      ! LS, fr5  = 0
 	add      #12, TM1 ! EX, tmp   = &v2->z
-	fmov.s   @r1,fr11 ! LS, fr11 = v2->z
+	fmov.s  @TM1,fr11 ! LS, fr11 = v2->z
 	fsub     fr2,fr11 ! FE, fr11 = v2->z - v1->z
 	fldi0    fr8      ! LS, fr8  = 0
 	fmul    fr11,fr11 ! FE, fr11 = (v2->z - v1->z) * (v2->z * v1->z)
