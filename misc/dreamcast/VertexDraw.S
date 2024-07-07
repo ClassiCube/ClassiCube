@@ -2,7 +2,7 @@
 ! r9  = num vertices left
 ! r10 = PVR_CMD_VERTEX
 ! r11 = PVR_CMD_VERTEX_EOL
-! r12 = ??????
+! r12 = ClipLine function
 ! r13 = cur vertex
 ! r14 = next vertex (prefetch)
 
@@ -80,39 +80,6 @@
 .endm
 
 
-! Handles a viewport update or PowerVR GPU command
-!   CLOBBERS: r0, r2, r3
-!   INPUTS:   r4, r8 (SQ global)
-!   OUTPUTS:  r4,r8 altered, fr8-fr12
-_HandleCommand:
-        mov.l   @REG_V0,r2 ! r2 = v->flags
-        extu.b  r2,r0      ! r2 = v->flags & 0xFF
-        cmp/eq  #35,r0     ! T  = r2 == 0x23
-        bt.s    1f         ! if (T) goto 1;
-        nop
-		PushVertex REG_V0
-        rts     
-        nop
-1:
-        add      #4,r4
-        mov.l   .VP_0,r2
-		! Load VIEWPORT registers
-        fmov.s  @r4+, fr8  ! VIEWPORT_HWIDTH  = src->x
-        fmov.s  @r4+, fr9  ! VIEWPORT_HHEIGHT = src->y
-        fmov.s  @r4+,fr10  ! VIEWPORT_X_PLUS_HWIDTH  = src->z
-        add      #16,r2
-        fmov.s  @r4+,fr11  ! VIEWPORT_Y_PLUS_HHEIGHT = src->u
-		! And store to vp global
-        fmov.s  fr11,@-r2
-        fmov.s  fr10,@-r2
-        fmov.s   fr9,@-r2
-        rts
-        fmov.s   fr8,@-r2
-.align 4
-.VP_0:
-        .long   _vp
-
-
 _Case_0_0_0_1:
 _Case_0_0_1_0:
 _Case_0_0_1_1:
@@ -173,19 +140,40 @@ _ProcessVertexList:
 ! REGISTER SETUP
 	mov      r4,r14
 	mov      r4,r13
-	!mov.l  .CMD_MSK,r12
-	mov.l  .PVR_EOL,r11
-	mov.l  .PVR_VTX,r10
+	mov.l  .CLIPFUNC,r12
+	mov.l  .PVR_EOL, r11
+	mov.l  .PVR_VTX, r10
 	mov      r5,r9
 	bra     SUBMIT_LOOP
 	mov      r6,r8
 
+! Handles a non-vertex command
 DO_CMD:
-	mov.l   .L37,r1
-	jsr     @r1
-	mov     r13,r4
+	mov     r13,r4     ! r4 = CUR
+	mov     r1,r0      ! r0 = MASK
+	cmp/eq  #35,r0     ! T  = MASK == 0x23
+	bt.s    9f         ! if (T) goto 9;
+	nop
+! PowerVR GPU command
+	PushVertex REG_V0
 	bra     NEXT_ITER
 	nop
+! Viewport update command
+9:
+	add      #4,r4
+	mov.l   .VP_1,r2
+	! Load VIEWPORT registers
+	fmov.s  @r4+, fr8  ! VIEWPORT_HWIDTH  = src->x
+	fmov.s  @r4+, fr9  ! VIEWPORT_HHEIGHT = src->y
+	fmov.s  @r4+,fr10  ! VIEWPORT_X_PLUS_HWIDTH  = src->z
+	add      #16,r2
+	fmov.s  @r4+,fr11  ! VIEWPORT_Y_PLUS_HHEIGHT = src->u
+	! And store to vp global
+	fmov.s  fr11,@-r2
+	fmov.s  fr10,@-r2
+	fmov.s   fr9,@-r2
+	bra     NEXT_ITER
+	fmov.s   fr8,@-r2
 
 SUBMIT_LOOP:
 	mov.l   @r13,r0   ! FLAGS = CUR->flags
@@ -250,8 +238,8 @@ NEXT_ITER:
         .long   0xE0000000
 .PVR_EOL:
         .long   0xF0000000
-.L37:
-        .long   _HandleCommand
+.CLIPFUNC:
+        .long   _ClipLine
 
 ! CASES table holds the functions to transfer a quad,
 !  based on the visibility clipflags of the 4 vertices
@@ -262,12 +250,12 @@ NEXT_ITER:
 	.long   _Case_0_0_1_0
 	.long   _Case_0_0_1_1
 	.long   _Case_0_1_0_0
-	.long   _Case_0_1_0_1
+	.long   _arch_exit ! V0_VIS | V2_VIS, Should never happen
 	.long   _Case_0_1_1_0
 	.long   _Case_0_1_1_1
 	.long   _Case_1_0_0_0
 	.long   _Case_1_0_0_1
-	.long   _Case_1_0_1_0
+	.long   _arch_exit ! V1_VIS | V3_VIS, Should never happen
 	.long   _Case_1_0_1_1
 	.long   _Case_1_1_0_0
 	.long   _Case_1_1_0_1

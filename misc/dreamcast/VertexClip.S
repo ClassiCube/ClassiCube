@@ -2,9 +2,18 @@
 ! r1 CLOBBERS
 ! r2 CLOBBERS
 ! r3 CLOBBERS
+! r7 CLOBBERS
 ! r4 = v1
 ! r5 = v2
 ! r6 = OUT
+
+#define TM1 r1
+#define TM2 r3
+#define TM3 r7
+
+#define IN1 r4
+#define IN2 r5
+#define OUT r6
 
 ! FR0  = 0
 ! FR1  = 0
@@ -48,13 +57,13 @@
 .align 4
 .type  _ClipLine,%function
 _ClipLine:
-	mov       r4,  r1 ! MT, r1   = &v1
+	mov      IN1, TM1 ! MT, tmp  = &v1
 	fldi0    fr4      ! LS, fr4  = 0
-	add      #12,  r1 ! EX, r1   = &v1->z
+	add      #12, TM1 ! EX, tmp  = &v1->z
 	fmov.s   @r1, fr2 ! LS, fr2  = v1->z	
-	mov       r5,  r1 ! MT, r1   = &v2
+	mov      IN2, TM1 ! MT, tmp  = &v2
 	fldi0    fr5      ! LS, fr5  = 0
-	add      #12,  r1 ! EX, r1   = &v2->z
+	add      #12, TM1 ! EX, tmp   = &v2->z
 	fmov.s   @r1,fr11 ! LS, fr11 = v2->z
 	fsub     fr2,fr11 ! FE, fr11 = v2->z - v1->z
 	fldi0    fr8      ! LS, fr8  = 0
@@ -65,46 +74,46 @@ _ClipLine:
 	fsrra   fr11      ! FE, fr11 = 1 / abs(v2->z - v1->z)
 	fabs     fr2      ! LS, fr2  = abs(v1->z)
 	fmul     fr2,fr11 ! FE, fr11 = abs(v1->Z) / abs(v2->z - v1->z)  --> t
-	add       #4,  r4 ! EX, A    = &v1->x
+	add       #4, IN1 ! EX, A    = &v1->x
 	fldi1   fr10      ! LS, fr10 = 1
-	add       #4,  r5 ! EX, B    = &v2->x
-	add       #4,  r6 ! EX, OUT  = &OUT->x
+	add       #4, IN2 ! EX, B    = &v2->x
+	add       #4, OUT ! EX, OUT  = &OUT->x
 	fsub    fr11,fr10 ! FE, fr10 = 1.0 - t  --> invT
 	
-	fmov.s  @r4+, fr2 ! LS, A1 = v1->x
-	fmov.s  @r5+, fr3 ! LS, B1 = v2->x
+	fmov.s @IN1+, fr2 ! LS, A1 = v1->x
+	fmov.s @IN2+, fr3 ! LS, B1 = v2->x
 	fipr     fv8, fv0 ! FE, LERP(A1, B1)
-	fmov.s  @r4+, fr6 ! LS, A2 = v1->y
-	fmov.s  @r5+, fr7 ! LS, B2 = v2->y
+	fmov.s @IN1+, fr6 ! LS, A2 = v1->y
+	fmov.s @IN2+, fr7 ! LS, B2 = v2->y
 
-	fmov.s   fr3, @r6 ! LS, OUT->x = LERP
-	add       #4,  r6 ! EX, OUT += 4
+	fmov.s   fr3,@OUT ! LS, OUT->x = LERP
+	add       #4, OUT ! EX, OUT += 4
 	fipr     fv8, fv4 ! FE, LERP(A2, B2)
-	add       #4,  r4 ! EX, v1 += 4
-	add       #4,  r5 ! EX, v2 += 4
+	add       #4, IN1 ! EX, v1 += 4
+	add       #4, IN2 ! EX, v2 += 4
 
-	fmov.s   fr7, @r6 ! LS, OUT->y = LERP
-	add       #4,  r6 ! EX, OUT += 4
-	fmov.s   fr1, @r6 ! LS, OUT->z = 0
-	add       #4,  r6 ! EX, OUT += 4
+	fmov.s   fr7,@OUT ! LS, OUT->y = LERP
+	add       #4, OUT ! EX, OUT += 4
+	fmov.s   fr1,@OUT ! LS, OUT->z = 0
+	add       #4, OUT ! EX, OUT += 4
 	
-	fmov.s  @r4+, fr2 ! LS, A1 = v1->u
-	fmov.s  @r5+, fr3 ! LS, B1 = v2->u
+	fmov.s @IN1+, fr2 ! LS, A1 = v1->u
+	fmov.s @IN2+, fr3 ! LS, B1 = v2->u
 	fipr     fv8, fv0 ! FE, LERP(A1, B1)
-	fmov.s  @r4+, fr6 ! LS, A2 = v1->v
-	fmov.s  @r5+, fr7 ! LS, B2 = v2->v
+	fmov.s @IN1+, fr6 ! LS, A2 = v1->v
+	fmov.s @IN2+, fr7 ! LS, B2 = v2->v
 
-	fmov.s   fr3, @r6 ! LS, OUT->u = LERP
-	add       #4,  r6 ! EX, OUT += 4
+	fmov.s   fr3,@OUT ! LS, OUT->u = LERP
+	add       #4, OUT ! EX, OUT += 4
 	fipr     fv8, fv4 ! FE, LERP(A2, B2)
-	fmov.s   fr7, @r6 ! LS, OUT->v = LERP
-	add       #4,  r6 ! EX, OUT += 4
+	fmov.s   fr7,@OUT ! LS, OUT->v = LERP
+	add       #4, OUT ! EX, OUT += 4
 	
-	mov.l   @r4+,r0   ! LS, ACOLOR = v1->bgra
+	mov.l  @IN1+,r0   ! LS, ACOLOR = v1->bgra
 	extu.b  r0,r1     ! EX, tmp = ACOLOR.b
 	lds     r1,fpul   ! CO, FPUL = tmp
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	mov.l   @r5+,r2   ! LS, BCOLOR = v2->bgra
+	mov.l  @IN2+,r2   ! LS, BCOLOR = v2->bgra
 	extu.b  r2,r3     ! EX, tmp = BCOLOR.b
 	lds     r3,fpul   ! CO, FPUL = tmp
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
@@ -159,11 +168,11 @@ _ClipLine:
 	shll16  r3        ! EX, tmp <<= 16
 	shll8   r3        ! EX, tmp <<= 8
 	or      r3,r7     ! EX, OUTCOLOR.a |= tmp
-	mov.l   r7, @r6   ! LS, OUT->color = OUTCOLOR
+	mov.l   r7,@OUT   ! LS, OUT->color = OUTCOLOR
 	
-	fmov.s  @r4+,fr2 ! LS, A1 = v1->w
-	fmov.s  @r5+,fr3 ! LS, B1 = v2->w
+	fmov.s @IN1+,fr2 ! LS, A1 = v1->w
+	fmov.s @IN2+,fr3 ! LS, B1 = v2->w
 	fipr    fv8, fv0 ! FE, LERP(A1, B1)
-	add      #4,  r6 ! EX, OUT += 4
+	add      #4, OUT ! EX, OUT += 4
 	rts              ! CO, return after executing instruction in delay slot
-	fmov.s  fr3, @r6 ! LS, OUT->w = lerp
+	fmov.s  fr3,@OUT ! LS, OUT->w = lerp

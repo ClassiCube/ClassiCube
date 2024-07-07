@@ -8,7 +8,7 @@
 
 #define SQ_BASE_ADDRESS (void*) 0xe0000000
 #define PREFETCH(addr) __builtin_prefetch((addr))
-static Viewport vp;
+Viewport vp;
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
     return MATH_fsrra(x * x);
