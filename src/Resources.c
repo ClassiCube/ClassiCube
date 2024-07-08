@@ -89,105 +89,6 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Sound asset writing ------------------------------------------------*
-*#########################################################################################################################*/
-#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
-#define WAV_HDR_SIZE 44
-
-/* Fixes up the .WAV header after having written all samples */
-static cc_result SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 offset, cc_uint32 len) {
-	cc_uint8 header[WAV_HDR_SIZE];
-	cc_result res = s->Seek(s, offset);
-	if (res) return res;
-
-	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(header +  4, len - 8);
-	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
-	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
-	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
-	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
-	Stream_SetU16_LE(header + 22, ctx->channels);
-	Stream_SetU32_LE(header + 24, ctx->sampleRate);
-
-	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
-	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
-	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
-	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
-	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
-
-	return Stream_Write(s, header, WAV_HDR_SIZE);
-}
-
-/* Decodes all samples, then produces a .WAV file from them */
-static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
-	cc_int16* samples;
-	cc_uint32 begOffset;
-	cc_uint32 len = WAV_HDR_SIZE;
-	cc_result res;
-	int count;
-
-	if ((res = s->Position(s, &begOffset))) return res;
-
-	/* reuse context here for a temp garbage header */
-	if ((res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE))) return res;
-	if ((res = Vorbis_DecodeHeaders(ctx))) return res;
-
-	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
-	if (!samples) return ERR_OUT_OF_MEMORY;
-
-	for (;;) {
-		res = Vorbis_DecodeFrame(ctx);
-		if (res == ERR_END_OF_STREAM) {
-			/* reached end of samples, so done */
-			res = SoundPatcher_FixupHeader(s, ctx, begOffset, len);
-			break;
-		}
-		if (res) break;
-
-		count = Vorbis_OutputFrame(ctx, samples);
-		len  += count * 2;
-
-#ifdef CC_BUILD_BIGENDIAN
-		Utils_SwapEndian16(samples, count);
-#endif
-		res = Stream_Write(s, (cc_uint8*)samples, count * 2);
-		if (res) break;
-	}
-
-	Mem_Free(samples);
-	if (!res) res = s->Seek(s, begOffset + len);
-	return res;
-}
-
-/* Converts an OGG sound to a WAV sound for faster decoding later */
-static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) {
-	struct OggState* ogg    = NULL;
-	struct VorbisState* ctx = NULL;
-	struct Stream src;
-	cc_result res;
-
-	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
-	if (!ogg) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
-
-	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
-	if (!ctx) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
-
-	Stream_ReadonlyMemory(&src, e->value.data, e->size);
-
-	Ogg_Init(ogg, &src);
-	Vorbis_Init(ctx);
-	ctx->source = ogg;
-	res = SoundPatcher_WriteWav(s, ctx);
-
-cleanup:
-	if (ctx) Vorbis_Free(ctx);
-	Mem_Free(ctx);
-	Mem_Free(ogg);
-	return res;
-}
-
-
-/*########################################################################################################################*
 *------------------------------------------------------Zip entry writer---------------------------------------------------*
 *#########################################################################################################################*/
 static void GetCurrentZipDate(int* modTime, int* modDate) {
@@ -322,6 +223,7 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 	return ZipWriter_FixupLocalFile(dst, e);
 }
 
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e);
 static cc_result ZipWriter_WriteWav(struct Stream* dst, struct ResourceZipEntry* e) {
 	cc_result res;
 	
@@ -380,6 +282,7 @@ static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entri
 }
 
 
+#ifndef CC_BUILD_NOMUSIC
 /*########################################################################################################################*
 *---------------------------------------------------------Music assets----------------------------------------------------*
 *#########################################################################################################################*/
@@ -501,6 +404,109 @@ static const struct AssetSet mccMusicAssetSet = {
 	MusicAssets_CheckStatus,
 	MusicAssets_ResetState
 };
+#endif
+
+
+#ifdef CC_BUILD_NOSOUNDS
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) { return ERR_NOT_SUPPORTED; }
+#else
+/*########################################################################################################################*
+*-----------------------------------------------------Sound asset writing ------------------------------------------------*
+*#########################################################################################################################*/
+#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
+#define WAV_HDR_SIZE 44
+
+/* Fixes up the .WAV header after having written all samples */
+static cc_result SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 offset, cc_uint32 len) {
+	cc_uint8 header[WAV_HDR_SIZE];
+	cc_result res = s->Seek(s, offset);
+	if (res) return res;
+
+	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
+	Stream_SetU32_LE(header +  4, len - 8);
+	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
+	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
+	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
+	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
+	Stream_SetU16_LE(header + 22, ctx->channels);
+	Stream_SetU32_LE(header + 24, ctx->sampleRate);
+
+	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
+	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
+	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
+	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
+	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
+
+	return Stream_Write(s, header, WAV_HDR_SIZE);
+}
+
+/* Decodes all samples, then produces a .WAV file from them */
+static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
+	cc_int16* samples;
+	cc_uint32 begOffset;
+	cc_uint32 len = WAV_HDR_SIZE;
+	cc_result res;
+	int count;
+
+	if ((res = s->Position(s, &begOffset))) return res;
+
+	/* reuse context here for a temp garbage header */
+	if ((res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE))) return res;
+	if ((res = Vorbis_DecodeHeaders(ctx))) return res;
+
+	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
+	if (!samples) return ERR_OUT_OF_MEMORY;
+
+	for (;;) {
+		res = Vorbis_DecodeFrame(ctx);
+		if (res == ERR_END_OF_STREAM) {
+			/* reached end of samples, so done */
+			res = SoundPatcher_FixupHeader(s, ctx, begOffset, len);
+			break;
+		}
+		if (res) break;
+
+		count = Vorbis_OutputFrame(ctx, samples);
+		len  += count * 2;
+
+#ifdef CC_BUILD_BIGENDIAN
+		Utils_SwapEndian16(samples, count);
+#endif
+		res = Stream_Write(s, (cc_uint8*)samples, count * 2);
+		if (res) break;
+	}
+
+	Mem_Free(samples);
+	if (!res) res = s->Seek(s, begOffset + len);
+	return res;
+}
+
+/* Converts an OGG sound to a WAV sound for faster decoding later */
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) {
+	struct OggState* ogg    = NULL;
+	struct VorbisState* ctx = NULL;
+	struct Stream src;
+	cc_result res;
+
+	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
+	if (!ogg) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+
+	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
+	if (!ctx) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+
+	Stream_ReadonlyMemory(&src, e->value.data, e->size);
+
+	Ogg_Init(ogg, &src);
+	Vorbis_Init(ctx);
+	ctx->source = ogg;
+	res = SoundPatcher_WriteWav(s, ctx);
+
+cleanup:
+	if (ctx) Vorbis_Free(ctx);
+	Mem_Free(ctx);
+	Mem_Free(ogg);
+	return res;
+}
 
 
 /*########################################################################################################################*
@@ -673,6 +679,7 @@ static const struct AssetSet mccSoundAssetSet = {
 	SoundAssets_CheckStatus,
 	SoundAssets_ResetState
 };
+#endif
 
 
 /*########################################################################################################################*
@@ -1183,8 +1190,12 @@ FetcherErrorCallback Fetcher_ErrorCallback;
 static const struct AssetSet* const asset_sets[] = {
 	&ccTexsAssetSet,
 	&mccTexsAssetSet,
+#ifndef CC_BUILD_NOMUSIC
 	&mccMusicAssetSet,
+#endif
+#ifndef CC_BUILD_NOSOUNDS
 	&mccSoundAssetSet
+#endif
 };
 
 static void ResetState() {

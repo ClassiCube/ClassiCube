@@ -381,7 +381,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_SMALLSTACK
-	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 #elif defined __WIIU__
