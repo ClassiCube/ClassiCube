@@ -1,7 +1,7 @@
 ifeq ($(strip $(PS2SDK)),)
 $(error "PS2SDK must be set in your environment")
 endif
-SOURCE_DIRS	:= src misc/ps2
+SOURCE_DIRS	:= src third_party/bearssl/src misc/ps2
 BUILD_DIR = build-ps2
 
 S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
@@ -18,7 +18,7 @@ EE_BIN 	= ClassiCube-ps2.elf
 EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
 EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse -lkbd
 
-EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include
+EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -Ithird_party/bearssl/inc
 EE_CFLAGS 	:= -D_EE -G0 -O2 -Wall -gdwarf-2 -gz -DPLAT_PS2
 EE_LDFLAGS 	:= -L$(PS2SDK)/ee/lib -Wl,-zmax-page-size=128
 EE_LINKFILE := $(PS2SDK)/ee/startup/linkfile
@@ -80,11 +80,14 @@ $(EE_BIN): $(EE_OBJS)
 $(BUILD_DIR)/%.o: src/%.c
 	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
-	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
+	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: misc/ps2/%.S
 	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 # Dependency tracking
 $(DEPFILES):
