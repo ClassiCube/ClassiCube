@@ -23,9 +23,9 @@ GLboolean BLEND_ENABLED;
 GLboolean TEXTURES_ENABLED;
 GLboolean AUTOSORT_ENABLED;
 
-PolyList OP_LIST;
-PolyList PT_LIST;
-PolyList TR_LIST;
+AlignedVector OP_LIST;
+AlignedVector PT_LIST;
+AlignedVector TR_LIST;
 Viewport VIEWPORTS[3];
 
 void glKosInit() {
@@ -35,31 +35,31 @@ void glKosInit() {
     PT_LIST.list_type = PVR_LIST_PT_POLY;
     TR_LIST.list_type = PVR_LIST_TR_POLY;
 
-    aligned_vector_reserve(&OP_LIST.vector, 1024 * 3);
-    aligned_vector_reserve(&PT_LIST.vector,  512 * 3);
-    aligned_vector_reserve(&TR_LIST.vector, 1024 * 3);
+    aligned_vector_reserve(&OP_LIST, 1024 * 3);
+    aligned_vector_reserve(&PT_LIST,  512 * 3);
+    aligned_vector_reserve(&TR_LIST, 1024 * 3);
 }
 
 void glKosSwapBuffers() {
-        if (OP_LIST.vector.size > 2) {
+        if (OP_LIST.size > 2) {
             pvr_list_begin(PVR_LIST_OP_POLY);
-            SceneListSubmit((Vertex*)OP_LIST.vector.data, OP_LIST.vector.size, 0);
+            SceneListSubmit((Vertex*)OP_LIST.data, OP_LIST.size, 0);
             pvr_list_finish();
-    		OP_LIST.vector.size = 0;
+    		OP_LIST.size = 0;
         }
 
-        if (PT_LIST.vector.size > 2) {
+        if (PT_LIST.size > 2) {
             pvr_list_begin(PVR_LIST_PT_POLY);
-            SceneListSubmit((Vertex*)PT_LIST.vector.data, PT_LIST.vector.size, 1);
+            SceneListSubmit((Vertex*)PT_LIST.data, PT_LIST.size, 1);
             pvr_list_finish();
-    		PT_LIST.vector.size = 0;
+    		PT_LIST.size = 0;
         }
 
-        if (TR_LIST.vector.size > 2) {
+        if (TR_LIST.size > 2) {
             pvr_list_begin(PVR_LIST_TR_POLY);
-            SceneListSubmit((Vertex*)TR_LIST.vector.data, TR_LIST.vector.size, 2);
+            SceneListSubmit((Vertex*)TR_LIST.data, TR_LIST.size, 2);
             pvr_list_finish();
-    		TR_LIST.vector.size = 0;
+    		TR_LIST.size = 0;
         }
 }
 

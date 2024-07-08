@@ -530,16 +530,15 @@ static Vertex* ReserveOutput(AlignedVector* vec, uint32_t elems) {
 
 void DrawQuads(int count, void* src) {
 	if (!count) return;
-	PolyList* output = _glActivePolyList();
-	AlignedVector* vec = &output->vector;
+	AlignedVector* vec = _glActivePolyList();
 
 	uint32_t header_required = (vec->size == 0) || STATE_DIRTY;
 	// Reserve room for the vertices and header
-	Vertex* beg = ReserveOutput(&output->vector, vec->size + (header_required) + count);
+	Vertex* beg = ReserveOutput(vec, vec->size + (header_required) + count);
 	if (!beg) return;
 
 	if (header_required) {
-		apply_poly_header((pvr_poly_hdr_t*)beg, output->list_type);
+		apply_poly_header((pvr_poly_hdr_t*)beg, vec->list_type);
 		STATE_DIRTY = false;
 		beg++; 
 		vec->size += 1;
@@ -638,9 +637,9 @@ void Gfx_OnWindowResize(void) {
 }
 
 static void PushCommand(void* cmd) {
-    aligned_vector_push_back(&OP_LIST.vector, cmd, 1);
-    aligned_vector_push_back(&PT_LIST.vector, cmd, 1);
-    aligned_vector_push_back(&TR_LIST.vector, cmd, 1);
+    aligned_vector_push_back(&OP_LIST, cmd, 1);
+    aligned_vector_push_back(&PT_LIST, cmd, 1);
+    aligned_vector_push_back(&TR_LIST, cmd, 1);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {

@@ -45,11 +45,6 @@ typedef struct {
 #define GL_FORCE_INLINE static __attribute__((always_inline)) inline
 
 typedef struct {
-    unsigned int list_type;
-    AlignedVector vector;
-} PolyList;
-
-typedef struct {
     float hwidth;  /* width * 0.5f */
     float hheight; /* height * 0.5f */
     float x_plus_hwidth;
@@ -102,18 +97,15 @@ extern GLenum SHADE_MODEL;
 extern GLboolean AUTOSORT_ENABLED;
 
 
-extern PolyList OP_LIST;
-extern PolyList PT_LIST;
-extern PolyList TR_LIST;
+extern AlignedVector OP_LIST;
+extern AlignedVector PT_LIST;
+extern AlignedVector TR_LIST;
 
-GL_FORCE_INLINE PolyList* _glActivePolyList() {
-    if(BLEND_ENABLED) {
-        return &TR_LIST;
-    } else if(ALPHA_TEST_ENABLED) {
-        return &PT_LIST;
-    } else {
-        return &OP_LIST;
-    }
+GL_FORCE_INLINE AlignedVector* _glActivePolyList() {
+    if (BLEND_ENABLED)      return &TR_LIST;
+    if (ALPHA_TEST_ENABLED) return &PT_LIST;
+
+    return &OP_LIST;
 }
 
 /* Memory allocation extension (GL_KOS_texture_memory_management) */

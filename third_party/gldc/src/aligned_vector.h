@@ -13,7 +13,8 @@
 typedef struct {
     uint32_t size;
     uint32_t capacity;
-    uint32_t padding[6];
+    uint32_t list_type;
+    uint32_t padding[5];
     uint8_t* data;
 } __attribute__((aligned(32))) AlignedVector;
 
