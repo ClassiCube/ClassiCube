@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ijacquez/yaul
+      image: ijacquez/yaul:1.0.10
     steps:
       - uses: actions/checkout@v4
       - name: Compile Saturn build
