@@ -27,13 +27,13 @@
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
 #define CHAT_MAX_CLIENTSTATUS Array_Elems(Chat_ClientStatus)
 
-int Screen_FInput(void* s, int key)             { return false; }
+int Screen_FInput(void* s, int key, struct InputDevice* device) { return false; }
 int Screen_FKeyPress(void* s, char keyChar)     { return false; }
 int Screen_FText(void* s, const cc_string* str) { return false; }
 int Screen_FMouseScroll(void* s, float delta)   { return false; }
 int Screen_FPointer(void* s, int id, int x, int y) { return false; }
 
-int Screen_TInput(void* s, int key)             { return true; }
+int Screen_TInput(void* s, int key, struct InputDevice* device) { return true; }
 int Screen_TKeyPress(void* s, char keyChar)     { return true; }
 int Screen_TText(void* s, const cc_string* str) { return true; }
 int Screen_TMouseScroll(void* s, float delta)   { return true; }
@@ -245,15 +245,15 @@ static void HUDScreen_Layout(void* screen) {
 	Widget_Layout(line2);
 }
 
-static int HUDScreen_KeyDown(void* screen, int key) {
+static int HUDScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	return Elem_HandlesKeyDown(&s->hotbar, key);
+	return Elem_HandlesKeyDown(&s->hotbar, key, device);
 }
 
-static void HUDScreen_InputUp(void* screen, int key) {
+static void HUDScreen_InputUp(void* screen, int key, struct InputDevice* device) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (!InventoryScreen_IsHotbarActive()) return;
-	Elem_OnInputUp(&s->hotbar, key);
+	Elem_OnInputUp(&s->hotbar, key, device);
 }
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
@@ -751,7 +751,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
-static void TabListOverlay_KeyUp(void* screen, int key) {
+static void TabListOverlay_KeyUp(void* screen, int key, struct InputDevice* device) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
 	if (!InputBind_Claims(BIND_TABLIST, key) || s->staysOpen) return;
 	Gui_Remove((struct Screen*)s);
@@ -1310,7 +1310,7 @@ static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
 	return true;
 }
 
-static int ChatScreen_KeyDown(void* screen, int key) {
+static int ChatScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int playerListKey    = KeyBind_Mappings[BIND_TABLIST].button1;
@@ -1331,19 +1331,19 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 		if (InputBind_Claims(BIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (InputBind_Claims(BIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
-			ChatScreen_EnterChatInput(s, Input_IsEscapeButton(key));
+		if (InputBind_Claims(BIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER || key == device->escapeButton) {
+			ChatScreen_EnterChatInput(s, key == device->escapeButton);
 #endif
-		} else if (key == CCKEY_PAGEUP) {
+		} else if (key == device->pageUpButton) {
 			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
-		} else if (key == CCKEY_PAGEDOWN) {
+		} else if (key == device->pageDownButton) {
 			ChatScreen_ScrollChatBy(s, +Gui.Chatlines);
 		} else if (key == CCWHEEL_UP) {
 			ChatScreen_ScrollChatBy(s, -1);
 		} else if (key == CCWHEEL_DOWN) {
 			ChatScreen_ScrollChatBy(s, +1);
 		} else {
-			Elem_HandlesKeyDown(&s->input.base, key);
+			Elem_HandlesKeyDown(&s->input.base, key, device);
 		}
 		return key < CCKEY_F1 || key > CCKEY_F24;
 	}
@@ -1365,7 +1365,7 @@ static void ChatScreen_ToggleAltInput(struct ChatScreen* s) {
 	ChatScreen_UpdateChatYOffsets(s);
 }
 
-static void ChatScreen_KeyUp(void* screen, int key) {
+static void ChatScreen_KeyUp(void* screen, int key, struct InputDevice* device) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (!s->grabsInput || (struct Screen*)s != Gui.InputGrab) return;
 
@@ -1713,19 +1713,19 @@ static void InventoryScreen_Layout(void* screen) {
 	Widget_Layout(&s->title); /* Needed for yOffset */
 }
 
-static int InventoryScreen_KeyDown(void* screen, int key) {
+static int InventoryScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
 
 	/* Accuracy: Original classic doesn't close inventory menu when B is pressed */
 	if (InputBind_Claims(BIND_INVENTORY, key) && s->releasedInv && !Game_ClassicMode) {
 		Gui_Remove((struct Screen*)s);
-	} else if (Input_IsEnterButton(key) && table->selectedIndex != -1) {
+	} else if (InputDevice_IsEnter(key, device) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
-	} else if (Elem_HandlesKeyDown(table, key)) {
+	} else if (Elem_HandlesKeyDown(table, key, device)) {
 	} else {
-		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key);
+		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key, device);
 	}
 	return true;
 }
@@ -1736,7 +1736,7 @@ static cc_bool InventoryScreen_IsHotbarActive(void) {
 	return !grabbed || grabbed == (struct Screen*)&InventoryScreen;
 }
 
-static void InventoryScreen_KeyUp(void* screen, int key) {
+static void InventoryScreen_KeyUp(void* screen, int key, struct InputDevice* device) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	if (InputBind_Claims(BIND_INVENTORY, key)) s->releasedInv = true;
 }

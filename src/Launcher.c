@@ -185,11 +185,11 @@ static cc_bool IsShutdown(int key) {
 #endif
 }
 
-static void OnInputDown(void* obj, int key, cc_bool was) {
+static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* device) {
 	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
-	Launcher_Active->KeyDown(Launcher_Active, key, was);
+	Launcher_Active->KeyDown(Launcher_Active, key, was, device);
 }
 
 static void OnMouseWheel(void* obj, float delta) {

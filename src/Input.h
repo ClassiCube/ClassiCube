@@ -92,19 +92,32 @@ void Input_SetNonRepeatable(int key, int pressed);
 void Input_Clear(void);
 
 
+#define INPUT_DEVICE_NORMAL  1
+#define INPUT_DEVICE_GAMEPAD 2
+struct InputDevice {
+	int deviceType, deviceIndex;
+	int upButton, downButton, leftButton, rightButton;
+	int enterButton1, enterButton2;
+	int pauseButton1, pauseButton2;
+	int escapeButton;
+	int pageUpButton, pageDownButton;
+	/* Buttons in launcher mode */
+	int tabLauncher;
+};
+
+extern struct InputDevice NormDevice;
+extern struct InputDevice PadDevice;
+
+#define InputDevice_IsEnter(key,  dev) ((key) == (dev)->enterButton1 || (key) == (dev)->enterButton2)
+#define InputDevice_IsPause(key,  dev) ((key) == (dev)->pauseButton1 || (key) == (dev)->pauseButton2)
+
 #define Input_IsWinPressed()   (Input.Pressed[CCKEY_LWIN]   || Input.Pressed[CCKEY_RWIN])
 #define Input_IsAltPressed()   (Input.Pressed[CCKEY_LALT]   || Input.Pressed[CCKEY_RALT])
 #define Input_IsCtrlPressed()  (Input.Pressed[CCKEY_LCTRL]  || Input.Pressed[CCKEY_RCTRL])
 #define Input_IsShiftPressed() (Input.Pressed[CCKEY_LSHIFT] || Input.Pressed[CCKEY_RSHIFT])
 
-#define Input_IsUpButton(btn)     ((btn) == CCKEY_UP     || (btn) == CCPAD_UP)
-#define Input_IsDownButton(btn)   ((btn) == CCKEY_DOWN   || (btn) == CCPAD_DOWN)
-#define Input_IsLeftButton(btn)   ((btn) == CCKEY_LEFT   || (btn) == CCPAD_LEFT)
-#define Input_IsRightButton(btn)  ((btn) == CCKEY_RIGHT  || (btn) == CCPAD_RIGHT)
-
 #define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER || (btn) == CCPAD_1)
 #define Input_IsPauseButton(btn)  ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_START || (btn) == CCKEY_PAUSE)
-#define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
 
 #if defined CC_BUILD_HAIKU
 	/* Haiku uses ALT instead of CTRL for clipboard and stuff */
@@ -115,7 +128,7 @@ void Input_Clear(void);
 #else
 	#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
-void Input_CalcDelta(int btn, int* horDelta, int* verDelta);
+void Input_CalcDelta(int btn, struct InputDevice* device, int* horDelta, int* verDelta);
 
 
 #ifdef CC_BUILD_TOUCH

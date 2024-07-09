@@ -271,13 +271,15 @@ const char* Input_DisplayNames[INPUT_COUNT] = {
 	Pad_DisplayNames
 };
 
+#define GetDevice(btn) Input_IsPadButton(btn) ? &PadDevice : &NormDevice
+
 void Input_SetPressed(int key) {
 	cc_bool wasPressed = Input.Pressed[key];
 	Input.Pressed[key] = true;
-	Event_RaiseInput(&InputEvents.Down, key, wasPressed);
+	Event_RaiseInput(&InputEvents.Down, key, wasPressed, GetDevice(key));
 
-	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
-	if (key == 'V' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0, &NormDevice);
+	if (key == 'V' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
 
 	/* don't allow multiple left mouse down events */
 	if (key != CCMOUSE_L || wasPressed) return;
@@ -288,7 +290,7 @@ void Input_SetReleased(int key) {
 	if (!Input.Pressed[key]) return;
 	Input.Pressed[key] = false;
 
-	Event_RaiseInt(&InputEvents.Up, key);
+	Event_RaiseInput(&InputEvents.Up, key, true, GetDevice(key));
 	if (key == CCMOUSE_L) Pointer_SetPressed(0, false);
 }
 
@@ -319,14 +321,37 @@ void Input_Clear(void) {
 	ClearTouches();
 }
 
-void Input_CalcDelta(int key, int* horDelta, int* verDelta) {
+void Input_CalcDelta(int key, struct InputDevice* device, int* horDelta, int* verDelta) {
 	*horDelta = 0; *verDelta = 0;
 
-	if (Input_IsLeftButton(key)  || key == CCKEY_KP4) *horDelta = -1;
-	if (Input_IsRightButton(key) || key == CCKEY_KP6) *horDelta = +1;
-	if (Input_IsUpButton(key)    || key == CCKEY_KP8) *verDelta = -1;
-	if (Input_IsDownButton(key)  || key == CCKEY_KP2) *verDelta = +1;
+	if (key == device->leftButton  || key == CCKEY_KP4) *horDelta = -1;
+	if (key == device->rightButton || key == CCKEY_KP6) *horDelta = +1;
+	if (key == device->upButton    || key == CCKEY_KP8) *verDelta = -1;
+	if (key == device->downButton  || key == CCKEY_KP2) *verDelta = +1;
 }
+
+struct InputDevice NormDevice = {
+	INPUT_DEVICE_NORMAL, 0,
+	/* General buttons */
+	CCKEY_UP, CCKEY_DOWN, CCKEY_LEFT, CCKEY_RIGHT,
+	CCKEY_ENTER,  CCKEY_KP_ENTER,
+	CCKEY_ESCAPE, CCKEY_PAUSE,
+	CCKEY_ESCAPE,
+	CCKEY_PAGEUP, CCKEY_PAGEDOWN,
+	/* Launcher buttons */
+	CCKEY_TAB,
+};
+struct InputDevice PadDevice = {
+	INPUT_DEVICE_GAMEPAD, 0,
+	/* General buttons */
+	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT,
+	CCPAD_START, CCPAD_1,
+	CCPAD_START, 0,
+	CCPAD_SELECT,
+	0, 0,
+	/* Launcher buttons */
+	CCPAD_3,
+};
 
 
 /*########################################################################################################################*
@@ -1347,14 +1372,14 @@ static void OnPointerUp(void* obj, int idx) {
 	}
 }
 
-static void OnInputDown(void* obj, int key, cc_bool was) {
+static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* device) {
 	struct Screen* s;
 	cc_bool triggered;
 	int i;
 	if (Window_Main.SoftKeyboardFocus) return;
 
 #ifndef CC_BUILD_WEB
-	if (Input_IsEscapeButton(key) && (s = Gui_GetClosable())) {
+	if (key == device->escapeButton && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
 		if (!was) Gui_Remove(s);
 		return;
@@ -1367,14 +1392,15 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		Game_ScreenshotRequested = true; return;
 	}
 	
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		s = Gui_Screens[i];
 		s->dirty = true;
-		if (s->VTABLE->HandlesInputDown(s, key)) return;
+		if (s->VTABLE->HandlesInputDown(s, key, device)) return;
 	}
 	if (Gui.InputGrab) return;
 
-	if (Input_IsPauseButton(key)) {
+	if (InputDevice_IsPause(key, device)) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -1405,7 +1431,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	} else { HandleHotkeyDown(key); }
 }
 
-static void OnInputUp(void* obj, int key) {
+static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* device) {
 	struct Screen* s;
 	int i;
 
@@ -1420,10 +1446,11 @@ static void OnInputUp(void* obj, int key) {
 	}
 #endif
 
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		s = Gui_Screens[i];
 		s->dirty = true;
-		s->VTABLE->OnInputUp(s, key);
+		s->VTABLE->OnInputUp(s, key, device);
 	}
 
 	for (i = 0; i < BIND_COUNT; i++)
