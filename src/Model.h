@@ -121,6 +121,7 @@ CC_VAR extern struct _ModelsData {
 /* Initialises fields of a model to default. */
 CC_API void Model_Init(struct Model* model);
 
+void Model_GetEntityTransform(struct Model* model, struct Entity* e, struct Matrix* transform);
 /* Whether the bounding sphere of the model is currently visible. */
 cc_bool Model_ShouldRender(struct Entity* entity);
 /* Approximately how far the given entity is away from the player. */

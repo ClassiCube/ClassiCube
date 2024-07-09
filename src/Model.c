@@ -93,19 +93,24 @@ float Model_RenderDistance(struct Entity* e) {
 	return dx * dx + dy * dy + dz * dz;
 }
 
-void Model_Render(struct Model* model, struct Entity* e) {
-	struct Matrix m;
+void Model_GetEntityTransform(struct Model* model, struct Entity* e, struct Matrix* transform) {
 	Vec3 pos = e->Position;
+
 	if (model->bobbing) pos.y += e->Anim.BobbingModel;
 	/* Original classic offsets models slightly into ground */
 	if (Game_ClassicMode && (e->Flags & ENTITY_FLAG_CLASSIC_ADJUST))
 		pos.y -= 1.5f / 16.0f;
 
+	model->GetTransform(e, pos, transform);
+}
+
+void Model_Render(struct Model* model, struct Entity* e) {
+	struct Matrix m, transform;
 	Model_SetupState(model, e);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
-	model->GetTransform(e, pos, &e->Transform);
-	Matrix_Mul(&m, &e->Transform, &Gfx.View);
+	Model_GetEntityTransform(model, e, &transform);
+	Matrix_Mul(&m, &transform, &Gfx.View);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
 	model->Draw(e);

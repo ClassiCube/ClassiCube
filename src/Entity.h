@@ -121,7 +121,6 @@ struct Entity {
 	cc_bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	float uScale, vScale;
-	struct Matrix Transform;
 
 	struct AnimatedComp Anim;
 	char SkinRaw[STRING_SIZE];

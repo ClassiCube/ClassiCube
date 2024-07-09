@@ -66,6 +66,7 @@ void Platform_Log(const char* msg, int len) {
 	_print("%s\n", tmp);
 }
 
+extern time_t ps2time(time_t* t);
 TimeMS DateTime_CurrentUTC(void) {
 	time_t rtc_sec = ps2time(NULL);
 	return (cc_uint64)rtc_sec + UNIX_EPOCH_SECONDS;
