@@ -519,16 +519,8 @@ static struct Widget* touch_widgets[ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS + 2] = 
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
-static void TouchScreen_RespawnClick(void* s,  void* w) { Bind_OnTriggered[BIND_RESPAWN](0); }
-static void TouchScreen_SetSpawnClick(void* s, void* w) { Bind_OnTriggered[BIND_SET_SPAWN](0); }
-static void TouchScreen_FlyClick(void* s,      void* w) { Bind_OnTriggered[BIND_FLY](0); }
-static void TouchScreen_NoclipClick(void* s,   void* w) { Bind_OnTriggered[BIND_NOCLIP](0); }
-static void TouchScreen_CameraClick(void* s,   void* w) { Bind_OnTriggered[BIND_THIRD_PERSON](0); }
 static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_SwitchClick(void* s,   void* w) { Inventory_SwitchHotbar(); }
-static void TouchScreen_DeleteClick(void* s,   void* w) { InputHandler_DeleteBlock(); } /* TODO: also Send CPEClick packet */
-static void TouchScreen_PlaceClick(void* s,    void* w) { InputHandler_PlaceBlock(); }
-static void TouchScreen_PickClick(void* s,     void* w) { InputHandler_PickBlock(); }
 
 static void TouchScreen_TabClick(void* s, void* w) {
 	struct Screen* tablist = Gui_GetScreen(GUI_PRIORITY_TABLIST);
@@ -539,36 +531,27 @@ static void TouchScreen_TabClick(void* s, void* w) {
 	}
 }
 
-static void TouchScreen_SpeedClick(void* s, void* w) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	if (hacks->Enabled) hacks->Speeding = !hacks->Speeding;
-}
-static void TouchScreen_HalfClick(void* s, void* w) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	if (hacks->Enabled) hacks->HalfSpeeding = !hacks->HalfSpeeding;
-}
-
 static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s    = (struct TouchScreen*)screen;
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	
 	int i = btn->meta.val;
-	Input_Set(KeyBind_Mappings[s->descs[i].bind].button1, true);
+	Bind_OnTriggered[s->descs[i].bind](0, &TouchDevice);
 }
 
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Chat",      0,0,0, TouchScreen_ChatClick },
 	{ "Tablist",   0,0,0, TouchScreen_TabClick },
-	{ "Respawn",   0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instances[0].Hacks.CanRespawn },
-	{ "Set spawn", 0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instances[0].Hacks.CanRespawn },
-	{ "Fly",       0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instances[0].Hacks.CanFly     },
-	{ "Noclip",    0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instances[0].Hacks.CanNoclip  },
-	{ "Speed",     0,0,0, TouchScreen_SpeedClick,    &LocalPlayer_Instances[0].Hacks.CanSpeed   },
-	{ "\xabSpeed", 0,0,0, TouchScreen_HalfClick,     &LocalPlayer_Instances[0].Hacks.CanSpeed   },
-	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instances[0].Hacks.CanUseThirdPerson },
-	{ "Delete",    0,0,0, TouchScreen_DeleteClick },
-	{ "Pick",      0,0,0, TouchScreen_PickClick },
-	{ "Place",     0,0,0, TouchScreen_PlaceClick },
+	{ "Respawn",   BIND_RESPAWN,      0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanRespawn },
+	{ "Set spawn", BIND_SET_SPAWN,    0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanRespawn },
+	{ "Fly",       BIND_FLY,          0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanFly     },
+	{ "Noclip",    BIND_NOCLIP,       0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanNoclip  },
+	{ "Speed",     BIND_SPEED,        0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanSpeed   },
+	{ "\xabSpeed", BIND_HALF_SPEED,   0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanSpeed   },
+	{ "Camera",    BIND_THIRD_PERSON, 0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanUseThirdPerson },
+	{ "Delete",    BIND_DELETE_BLOCK, 0,0, TouchScreen_BindClick },
+	{ "Pick",      BIND_PICK_BLOCK,   0,0, TouchScreen_BindClick },
+	{ "Place",     BIND_PLACE_BLOCK,  0,0, TouchScreen_BindClick },
 	{ "Hotbar",    0,0,0, TouchScreen_SwitchClick }
 };
 static const struct TouchButtonDesc normDescs[1] = {
@@ -693,8 +676,8 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	{
 		if (!(s->btns[i].active & id)) continue;
 
-		if (s->descs[i].bind < BIND_COUNT) {
-			Input_Set(KeyBind_Mappings[s->descs[i].bind].button1, false);
+		if (s->descs[i].bind) {
+			Bind_OnReleased[s->descs[i].bind](0, &TouchDevice);
 		}
 		s->btns[i].active &= ~id;
 		return;

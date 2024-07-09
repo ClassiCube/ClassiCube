@@ -736,7 +736,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 
 	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
-	if (InputBind_IsPressed(BIND_ZOOM_SCROLL) && !Gui.InputGrab) {
+	if (Bind_IsTriggered[BIND_ZOOM_SCROLL] && !Gui.InputGrab) {
 		InputHandler_SetFOV(Camera.ZoomFov);
 	}
 

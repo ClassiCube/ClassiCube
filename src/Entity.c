@@ -642,12 +642,7 @@ void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t) {
 static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	struct HacksComp* hacks = &p->Hacks;
 	struct LocalPlayerInput* input;
-
-	if (Gui.InputGrab) {
-		/* TODO: Don't always turn these off anytime a screen is opened, only do it on InputUp */
-		p->Physics.Jumping = false; hacks->FlyingUp = false; hacks->FlyingDown = false;
-		return;
-	}
+	if (Gui.InputGrab) return;
 
 	/* keyboard input, touch, joystick, etc */
 	for (input = sources_head; input; input = input->next) {
@@ -656,16 +651,12 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	*xMoving *= 0.98f; 
 	*zMoving *= 0.98f;
 
-	p->Physics.Jumping = InputBind_IsPressed(BIND_JUMP);
-	hacks->FlyingUp    = InputBind_IsPressed(BIND_FLY_UP);
-	hacks->FlyingDown  = InputBind_IsPressed(BIND_FLY_DOWN);
-
 	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
 		if (hacks->Noclip) {
 			/* need a { } block because it's a macro */
 			Vec3_Set(p->Base.Velocity, 0,0,0);
 		}
-		HacksComp_SetNoclip(hacks, InputBind_IsPressed(BIND_NOCLIP));
+		HacksComp_SetNoclip(hacks, hacks->_noclipping);
 	}
 }
 
@@ -854,7 +845,7 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static cc_bool LocalPlayer_HandleRespawn(int key) {
+static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn(p);
@@ -866,7 +857,7 @@ static cc_bool LocalPlayer_HandleRespawn(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleSetSpawn(int key) {
+static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 	if (p->Hacks.CanRespawn) {
 
@@ -889,10 +880,10 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key) {
 		p->SpawnYaw   = p->Base.Yaw;
 		p->SpawnPitch = p->Base.Pitch;
 	}
-	return LocalPlayer_HandleRespawn(key);
+	return LocalPlayer_HandleRespawn(key, device);
 }
 
-static cc_bool LocalPlayer_HandleFly(int key) {
+static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
@@ -905,7 +896,7 @@ static cc_bool LocalPlayer_HandleFly(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleNoclip(int key) {
+static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
@@ -921,7 +912,7 @@ static cc_bool LocalPlayer_HandleNoclip(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleJump(int key) {
+static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
@@ -940,26 +931,63 @@ static cc_bool LocalPlayer_HandleJump(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_TriggerHalfSpeed(int key) {
+
+static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	hacks->HalfSpeeding     = hacks->Enabled;
 	return true;
 }
 
-static cc_bool LocalPlayer_TriggerSpeed(int key) {
+static cc_bool LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	hacks->Speeding         = hacks->Enabled;
 	return true;
 }
 
-static void LocalPlayer_ReleaseHalfSpeed(int key) {
+static void LocalPlayer_ReleaseHalfSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->HalfSpeeding     = false;
+	if (device->type != INPUT_DEVICE_TOUCH) hacks->HalfSpeeding = false;
 }
 
-static void LocalPlayer_ReleaseSpeed(int key) {
+static void LocalPlayer_ReleaseSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->Speeding         = false;
+	if (device->type != INPUT_DEVICE_TOUCH) hacks->Speeding = false;
+}
+
+
+static cc_bool LocalPlayer_TriggerFlyUp(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Hacks.FlyingUp = true;
+	return true;
+}
+
+static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Hacks.FlyingDown = true;
+	return true;
+}
+
+static void LocalPlayer_ReleaseFlyUp(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Hacks.FlyingUp   = false;
+}
+
+static void LocalPlayer_ReleaseFlyDown(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Hacks.FlyingDown = false;
+}
+
+
+static cc_bool LocalPlayer_TriggerJump(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Physics.Jumping = true;
+	return true;
+}
+static void LocalPlayer_ReleaseJump(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Physics.Jumping = false;
+}
+
+static cc_bool LocalPlayer_TriggerNoclip(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Hacks._noclipping = true;
+	return true;
+}
+static void LocalPlayer_ReleaseNoclip(int key, struct InputDevice* device) {
+	Entities.CurPlayer->Hacks._noclipping = false;
 }
 
 static void LocalPlayer_HookBinds(void) {
@@ -973,6 +1001,17 @@ static void LocalPlayer_HookBinds(void) {
 	Bind_OnTriggered[BIND_SPEED]      = LocalPlayer_TriggerSpeed;
 	Bind_OnReleased[BIND_HALF_SPEED]  = LocalPlayer_ReleaseHalfSpeed;
 	Bind_OnReleased[BIND_SPEED]       = LocalPlayer_ReleaseSpeed;
+
+	Bind_OnTriggered[BIND_FLY_UP]   = LocalPlayer_TriggerFlyUp;
+	Bind_OnTriggered[BIND_FLY_DOWN] = LocalPlayer_TriggerFlyDown;
+	Bind_OnReleased[BIND_FLY_UP]    = LocalPlayer_ReleaseFlyUp;
+	Bind_OnReleased[BIND_FLY_DOWN]  = LocalPlayer_ReleaseFlyDown;
+
+	Bind_OnTriggered[BIND_JUMP] = LocalPlayer_TriggerJump;
+	Bind_OnReleased[BIND_JUMP]  = LocalPlayer_ReleaseJump;
+
+	Bind_OnTriggered[BIND_NOCLIP] = LocalPlayer_TriggerNoclip;
+	Bind_OnReleased[BIND_NOCLIP]  = LocalPlayer_ReleaseNoclip;
 }
 
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {

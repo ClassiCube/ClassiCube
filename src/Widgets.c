@@ -535,7 +535,7 @@ static int HotbarWidget_MapKey(int key, struct InputDevice* device) {
 	int i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++)
 	{
-		if (InputBind_Claims(BIND_HOTBAR_1 + i, key)) return i;
+		if (InputBind_Claims(BIND_HOTBAR_1 + i, key, device)) return i;
 	}
 	return -1;
 }
@@ -555,14 +555,14 @@ static int HotbarWidget_KeyDown(void* widget, int key, struct InputDevice* devic
 	int index = HotbarWidget_MapKey(key, device);
 
 	if (index == -1) {
-		if (InputBind_Claims(BIND_HOTBAR_LEFT, key))
+		if (InputBind_Claims(BIND_HOTBAR_LEFT, key, device))
 			return HotbarWidget_CycleIndex(-1);
-		if (InputBind_Claims(BIND_HOTBAR_RIGHT, key))
+		if (InputBind_Claims(BIND_HOTBAR_RIGHT, key, device))
 			return HotbarWidget_CycleIndex(+1);
 		return false;
 	}
 
-	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
+	if (Bind_IsTriggered[BIND_HOTBAR_SWITCH]) {
 		/* Pick from first to ninth row */
 		Inventory_SetHotbarIndex(index);
 		w->altHandled = true;
@@ -578,7 +578,7 @@ static void HotbarWidget_InputUp(void* widget, int key, struct InputDevice* devi
 	     a) user presses alt then number
 	     b) user presses alt
 	   We only do case b) if case a) did not happen */
-	if (!InputBind_Claims(BIND_HOTBAR_SWITCH, key)) return;
+	if (!InputBind_Claims(BIND_HOTBAR_SWITCH, key, device)) return;
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */
@@ -649,7 +649,7 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
-	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
+	if (Bind_IsTriggered[BIND_HOTBAR_SWITCH]) {
 		index = Inventory.Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(w, delta, index, 1);
 		Inventory_SetHotbarIndex(index);
@@ -1689,7 +1689,7 @@ static int TextInputWidget_KeyDown(void* widget, int key, struct InputDevice* de
 	struct TextInputWidget* w  = (struct TextInputWidget*)widget;
 	struct MenuInputDesc* desc = &w->desc;
 
-	if (Window_Main.SoftKeyboard && !DisplayInfo.ShowingSoftKeyboard && Input_IsEnterButton(key)) { 
+	if (Window_Main.SoftKeyboard && !DisplayInfo.ShowingSoftKeyboard && InputDevice_IsEnter(key, device)) { 
 		TextInputWidget_OpenKeyboard(w); return true; 
 	}
 	if (InputWidget_KeyDown(&w->base, key, device)) return true;
