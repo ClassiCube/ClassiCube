@@ -30,6 +30,7 @@
 #include "Picking.h"
 #include "Input.h"
 #include "Utils.h"
+#include "InputHandler.h"
 
 struct _ProtocolData Protocol;
 
