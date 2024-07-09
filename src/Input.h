@@ -88,9 +88,11 @@ void Input_SetNonRepeatable(int key, int pressed);
 /* Resets all input buttons to released state. (Input_SetReleased) */
 void Input_Clear(void);
 
-
+struct InputDevice;
+typedef cc_bool (*InputDevice_IsPressed)(struct InputDevice* device, int key);
 struct InputDevice {
 	int type, index; /* Device type and index (e.g. controller port) */
+	InputDevice_IsPressed IsPressed;
 	int upButton, downButton, leftButton, rightButton;
 	int enterButton1, enterButton2;
 	int pauseButton1, pauseButton2;

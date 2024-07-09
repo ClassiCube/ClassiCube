@@ -254,12 +254,10 @@ const char* Input_DisplayNames[INPUT_COUNT] = {
 	Pad_DisplayNames
 };
 
-#define GetDevice(btn) Input_IsPadButton(btn) ? &PadDevice : &NormDevice
-
 void Input_SetPressed(int key) {
 	cc_bool wasPressed = Input.Pressed[key];
 	Input.Pressed[key] = true;
-	Event_RaiseInput(&InputEvents.Down, key, wasPressed, GetDevice(key));
+	Event_RaiseInput(&InputEvents.Down, key, wasPressed, &NormDevice);
 
 	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0, &NormDevice);
 	if (key == 'V' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
@@ -273,7 +271,7 @@ void Input_SetReleased(int key) {
 	if (!Input.Pressed[key]) return;
 	Input.Pressed[key] = false;
 
-	Event_RaiseInput(&InputEvents.Up, key, true, GetDevice(key));
+	Event_RaiseInput(&InputEvents.Up, key, true, &NormDevice);
 	if (key == CCMOUSE_L) Pointer_SetPressed(0, false);
 }
 
@@ -313,8 +311,22 @@ void Input_CalcDelta(int key, struct InputDevice* device, int* horDelta, int* ve
 	if (key == device->downButton  || key == CCKEY_KP2) *verDelta = +1;
 }
 
+static cc_bool NormDevice_IsPressed(struct InputDevice* device, int key) { 
+	return Input.Pressed[key]; 
+}
+
+static cc_bool PadDevice_IsPressed(struct InputDevice* device, int key) { 
+	if (!Input_IsPadButton(key)) return false;
+	return Gamepad_States[device->index - 1].pressed[key - GAMEPAD_BEG_BTN];
+}
+
+static cc_bool TouchDevice_IsPressed(struct InputDevice* device, int key) { 
+	return false; 
+}
+
 struct InputDevice NormDevice = {
 	INPUT_DEVICE_NORMAL, 0,
+	NormDevice_IsPressed,
 	/* General buttons */
 	CCKEY_UP, CCKEY_DOWN, CCKEY_LEFT, CCKEY_RIGHT,
 	CCKEY_ENTER,  CCKEY_KP_ENTER,
@@ -326,6 +338,7 @@ struct InputDevice NormDevice = {
 };
 struct InputDevice PadDevice = {
 	INPUT_DEVICE_GAMEPAD, 0,
+	PadDevice_IsPressed,
 	/* General buttons */
 	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT,
 	CCPAD_START, CCPAD_1,
@@ -336,7 +349,8 @@ struct InputDevice PadDevice = {
 	CCPAD_3,
 };
 struct InputDevice TouchDevice = {
-	INPUT_DEVICE_TOUCH, 0
+	INPUT_DEVICE_TOUCH, 0,
+	TouchDevice_IsPressed
 };
 
 
@@ -399,44 +413,50 @@ void Pointer_SetPosition(int idx, int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Gamepad---------------------------------------------------------*
 *#########################################################################################################################*/
-#define GAMEPAD_BEG_BTN CCPAD_1
-#define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
-
 int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
 int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
+
 static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
 struct GamepadState Gamepad_States[INPUT_MAX_GAMEPADS];
 
-static void Gamepad_Update(struct GamepadState* pad, float delta) {
+static void Gamepad_Apply(int port, int btn, cc_bool was, int pressed) {
+	struct InputDevice device = PadDevice;
+	device.index = port + 1;
+
+	if (pressed) {
+		Event_RaiseInput(&InputEvents.Down, btn + GAMEPAD_BEG_BTN, was, &device);
+	} else {
+		Event_RaiseInput(&InputEvents.Up,   btn + GAMEPAD_BEG_BTN, was, &device);
+	}
+}
+
+static void Gamepad_Update(int port, float delta) {
+	struct GamepadState* pad = &Gamepad_States[port];
 	int btn;
+
 	for (btn = 0; btn < GAMEPAD_BTN_COUNT; btn++)
 	{
 		if (!pad->pressed[btn]) continue;
 		pad->holdtime[btn] += delta;
 		if (pad->holdtime[btn] < 1.0f) continue;
 
-		/* Held for over a second, trigger a fake press */
+		/* Held for over a second, trigger a repeated press */
 		pad->holdtime[btn] = 0;
-		Input_SetPressed(btn + GAMEPAD_BEG_BTN);
+		Gamepad_Apply(port, btn, true, true);
 	}
 }
 
-
 void Gamepad_SetButton(int port, int btn, int pressed) {
 	struct GamepadState* pad = &Gamepad_States[port];
-	int i;
 	btn -= GAMEPAD_BEG_BTN;
+	/* Repeat down is handled in Gamepad_Update instead */
+	if (pressed && pad->pressed[btn]) return;
 
 	/* Reset hold tracking time */
 	if (pressed && !pad->pressed[btn]) pad->holdtime[btn] = 0;
-	pad->pressed[btn] = pressed != 0;;
+	pad->pressed[btn] = pressed != 0;
 
-	/* Set pressed if button pressed on any gamepad, to avoid constant flip flopping */
-	/*  between pressed and non-pressed when multiple controllers are plugged in */
-	for (i = 0; i < INPUT_MAX_GAMEPADS; i++) 
-		pressed |= Gamepad_States[i].pressed[btn];
-
-	Input_SetNonRepeatable(btn + GAMEPAD_BEG_BTN, pressed);
+	Gamepad_Apply(port, btn, false, pressed);
 }
 
 void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
@@ -455,7 +475,7 @@ void Gamepad_Tick(float delta) {
 	
 	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
-		Gamepad_Update(&Gamepad_States[port], delta);
+		Gamepad_Update(port, delta);
 	}
 }
 
