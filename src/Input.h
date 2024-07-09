@@ -202,10 +202,12 @@ void Gamepad_Tick(float delta);
 #define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
 
 struct GamepadState {
+	long deviceID;
 	float axisX[2], axisY[2];
 	cc_bool pressed[GAMEPAD_BTN_COUNT];
 	float holdtime[GAMEPAD_BTN_COUNT];
 };
 extern struct GamepadState Gamepad_States[INPUT_MAX_GAMEPADS];
+int Gamepad_MapPort(long deviceID);
 
 #endif

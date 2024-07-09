@@ -517,9 +517,7 @@ void Gamepads_Init(void) {
 	LoadControllers();
 }
 
-static void ProcessGamepadButtons(int port) {
-	SDL_Gamepad* gp = controllers[port];
-
+static void ProcessGamepadButtons(int port, SDL_Gamepad* gp) {
 	Gamepad_SetButton(port, CCPAD_1, SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_SOUTH));
 	Gamepad_SetButton(port, CCPAD_2, SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_EAST));
 	Gamepad_SetButton(port, CCPAD_3, SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_WEST));
@@ -542,8 +540,7 @@ static void ProcessGamepadButtons(int port) {
 }
 
 #define PAD_AXIS_SCALE 32768.0f
-static void ProcessJoystick(int port, int axis, float delta) {
-	SDL_Gamepad* gp = controllers[port];
+static void ProcessJoystick(int port, SDL_Gamepad* gp, int axis, float delta) {
 	int x = SDL_GetGamepadAxis(gp, axis == PAD_AXIS_LEFT ? SDL_GAMEPAD_AXIS_LEFTX : SDL_GAMEPAD_AXIS_RIGHTX);
 	int y = SDL_GetGamepadAxis(gp, axis == PAD_AXIS_LEFT ? SDL_GAMEPAD_AXIS_LEFTY : SDL_GAMEPAD_AXIS_RIGHTY);
 
@@ -555,13 +552,15 @@ static void ProcessJoystick(int port, int axis, float delta) {
 }
 
 void Gamepads_Process(float delta) {
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		if (!controllers[port]) continue;
+		SDL_Gamepad* gp = controllers[i];
+		if (!gp) continue;
+		int port = Gamepad_MapPort(i + 10);
 
-		ProcessGamepadButtons(port);
-		ProcessJoystick(port, PAD_AXIS_LEFT,  delta);
-		ProcessJoystick(port, PAD_AXIS_RIGHT, delta);
+		ProcessGamepadButtons(port, gp);
+		ProcessJoystick(port, gp, PAD_AXIS_LEFT,  delta);
+		ProcessJoystick(port, gp, PAD_AXIS_RIGHT, delta);
 	}
 }
 
