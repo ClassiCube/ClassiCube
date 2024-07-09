@@ -25,12 +25,7 @@ static void Pointer_SetPressed(int idx, cc_bool pressed);
 *------------------------------------------------------Touch support------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_TOUCH
-static struct TouchPointer {
-	long id;
-	cc_uint8 type;
-	int begX, begY;
-	double start;
-} touches[INPUT_MAX_POINTERS];
+struct TouchPointer touches[INPUT_MAX_POINTERS];
 
 int Pointers_Count;
 int Input_TapMode  = INPUT_MODE_PLACE;
@@ -39,18 +34,6 @@ cc_bool Input_TouchMode;
 
 static void MouseStatePress(int button);
 static void MouseStateRelease(int button);
-
-static cc_bool AnyBlockTouches(void) {
-	int i;
-	for (i = 0; i < Pointers_Count; i++) {
-		if (!(touches[i].type & TOUCH_TYPE_BLOCKS)) continue;
-
-		/* Touch might be an 'all' type - remove 'gui' type */
-		touches[i].type &= TOUCH_TYPE_BLOCKS | TOUCH_TYPE_CAMERA;
-		return true;
-	}
-	return false;
-}
 
 static void ClearTouches(void) {
 	int i;
@@ -70,7 +53,8 @@ static cc_bool MovedFromBeg(int i, int x, int y) {
 
 static cc_bool TryUpdateTouch(long id, int x, int y) {
 	int i;
-	for (i = 0; i < Pointers_Count; i++) {
+	for (i = 0; i < Pointers_Count; i++) 
+	{
 		if (touches[i].id != id || !touches[i].type) continue;
 
 		if (Input.RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
@@ -95,19 +79,15 @@ void Input_AddTouch(long id, int x, int y) {
 	/* Check if already existing pointer with same ID */
 	if (TryUpdateTouch(id, x, y)) return;
 
-	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
+	for (i = 0; i < INPUT_MAX_POINTERS; i++) 
+	{
 		if (touches[i].type) continue;
 
-		touches[i].id   = id;
-		touches[i].type = TOUCH_TYPE_ALL;
-		touches[i].begX = x;
-		touches[i].begY = y;
-
+		touches[i].id    = id;
+		touches[i].type  = TOUCH_TYPE_ALL;
+		touches[i].begX  = x;
+		touches[i].begY  = y;
 		touches[i].start = Game.Time;
-		/* Also set last click time, otherwise quickly tapping */
-		/* sometimes triggers a 'delete' in InputHandler_Tick, */
-		/* and then another 'delete' in CheckBlockTap. */
-		input_lastClick  = Game.Time;
 
 		if (i == Pointers_Count) Pointers_Count++;
 		Pointer_SetPosition(i, x, y);
@@ -116,29 +96,6 @@ void Input_AddTouch(long id, int x, int y) {
 	}
 }
 void Input_UpdateTouch(long id, int x, int y) { TryUpdateTouch(id, x, y); }
-
-/* Quickly tapping should trigger a block place/delete */
-static void CheckBlockTap(int i) {
-	int btn, pressed;
-	if (Game.Time > touches[i].start + 0.25) return;
-	if (touches[i].type != TOUCH_TYPE_ALL)   return;
-
-	if (Input_TapMode == INPUT_MODE_PLACE) {
-		btn = MOUSE_RIGHT;
-	} else if (Input_TapMode == INPUT_MODE_DELETE) {
-		btn = MOUSE_LEFT;
-	} else { return; }
-
-	pressed = input_buttonsDown[btn];
-	MouseStatePress(btn);
-
-	if (btn == MOUSE_LEFT) { 
-		InputHandler_DeleteBlock();
-	} else { 
-		InputHandler_PlaceBlock();
-	}
-	if (!pressed) MouseStateRelease(btn);
-}
 
 void Input_RemoveTouch(long id, int x, int y) {
 	int i;

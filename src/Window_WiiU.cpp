@@ -488,6 +488,7 @@ static void UniString_WriteString(const cc_string* src, char16_t* dst) {
 	*dst = '\0';
 }
 
+static void OnscreenKeyboard_ProcessDown(int key, struct InputDevice* device) { }
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (keyboardOpen) OnscreenKeyboard_Close();
@@ -498,6 +499,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	kb_str.length = 0;
 	keyboardOpen  = true;
 	Window_Main.SoftKeyboardFocus = true;
+	Input.DownHook = OnscreenKeyboard_ProcessDown;
 
 	fs_client = (FSClient *)MEMAllocFromDefaultHeap(sizeof(FSClient));
 	FSAddClient(fs_client, FS_ERROR_FLAG_NONE);
@@ -607,6 +609,7 @@ void OnscreenKeyboard_Close(void) {
 	if (!keyboardOpen) return;
 	keyboardOpen = false;
 	Window_Main.SoftKeyboardFocus = false;
+	Input.DownHook = NULL;
 
 	nn::swkbd::DisappearInputForm();
 	nn::swkbd::Destroy();

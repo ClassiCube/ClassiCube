@@ -37,35 +37,6 @@ enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Touch support------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_TOUCH
-/* Quickly tapping should trigger a block place/delete */
-static void CheckBlockTap(int i) {
-	int btn, pressed;
-	if (Game.Time > touches[i].start + 0.25) return;
-	if (touches[i].type != TOUCH_TYPE_ALL)   return;
-
-	if (Input_TapMode == INPUT_MODE_PLACE) {
-		btn = MOUSE_RIGHT;
-	} else if (Input_TapMode == INPUT_MODE_DELETE) {
-		btn = MOUSE_LEFT;
-	} else { return; }
-
-	pressed = input_buttonsDown[btn];
-	MouseStatePress(btn);
-
-	if (btn == MOUSE_LEFT) { 
-		InputHandler_DeleteBlock();
-	} else { 
-		InputHandler_PlaceBlock();
-	}
-	if (!pressed) MouseStateRelease(btn);
-}
-#endif
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
 BindMapping PadBind_Mappings[BIND_COUNT];
@@ -649,6 +620,9 @@ static void InputHandler_PickBlock(void) {
 	Inventory_PickBlock(cur);
 }
 
+#ifdef CC_BUILD_TOUCH
+static cc_bool AnyBlockTouches(void);
+#endif
 void InputHandler_Tick(void) {
 	cc_bool left, middle, right;
 	double now, delta;
@@ -690,6 +664,47 @@ void InputHandler_Tick(void) {
 		InputHandler_PickBlock();
 	}
 }
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Touch support------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_TOUCH
+static cc_bool AnyBlockTouches(void) {
+	int i;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (!(touches[i].type & TOUCH_TYPE_BLOCKS)) continue;
+
+		/* Touch might be an 'all' type - remove 'gui' type */
+		touches[i].type &= TOUCH_TYPE_BLOCKS | TOUCH_TYPE_CAMERA;
+		return true;
+	}
+	return false;
+}
+
+/* Quickly tapping should trigger a block place/delete */
+static void CheckBlockTap(int i) {
+	int btn, pressed;
+	if (Game.Time > touches[i].start + 0.25) return;
+	if (touches[i].type != TOUCH_TYPE_ALL)   return;
+
+	if (Input_TapMode == INPUT_MODE_PLACE) {
+		btn = MOUSE_RIGHT;
+	} else if (Input_TapMode == INPUT_MODE_DELETE) {
+		btn = MOUSE_LEFT;
+	} else { return; }
+
+	pressed = input_buttonsDown[btn];
+	MouseStatePress(btn);
+
+	if (btn == MOUSE_LEFT) { 
+		InputHandler_DeleteBlock();
+	} else { 
+		InputHandler_PlaceBlock();
+	}
+	if (!pressed) MouseStateRelease(btn);
+}
+#endif
 
 
 /*########################################################################################################################*
@@ -895,6 +910,11 @@ static void HookInputBinds(void) {
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y, mask;
+	/* Always set last click time, otherwise quickly tapping */
+	/* sometimes triggers a 'delete' in InputHandler_Tick, */
+	/* and then another 'delete' in CheckBlockTap. */
+	input_lastClick = Game.Time;
+
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
 #endif
@@ -943,7 +963,7 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 	struct Screen* s;
 	cc_bool triggered;
 	int i;
-	if (Window_Main.SoftKeyboardFocus) return;
+	if (Input.DownHook) { Input.DownHook(key, device); return; }
 
 #ifndef CC_BUILD_WEB
 	if (key == device->escapeButton && (s = Gui_GetClosable())) {
@@ -1066,7 +1086,7 @@ static void Player_ReleaseDown(int key,  struct InputDevice* device) {
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	int flags = moveFlags[0], port;
 
-	if (Game_NumLocalPlayers > 1) {
+	if (Game_NumLocalPlayers == 1) {
 		for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 			flags |= moveFlags[port + 1];
 	} else {

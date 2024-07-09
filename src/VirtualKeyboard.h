@@ -247,9 +247,9 @@ static void VirtualKeyboard_ClickSelected(void) {
 	}
 }
 
-static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
+static void VirtualKeyboard_ProcessDown(int key, struct InputDevice* device) {
 	int deltaX, deltaY;
-	Input_CalcDelta(key, &deltaX, &deltaY);
+	Input_CalcDelta(key, device, &deltaX, &deltaY);
 
 	if (deltaX || deltaY) {
 		VirtualKeyboard_Scroll(deltaX, deltaY);
@@ -370,8 +370,6 @@ static void VirtualKeyboard_Hook(void) {
 	/* Don't hook immediately into events, otherwise the initial up/down press that opened */
 	/*  the virtual keyboard in the first place gets mistakenly processed */
 	kb_needsHook = false;
-
-	Event_Register_(&InputEvents.Down,            NULL, VirtualKeyboard_ProcessDown);
 	Event_Register_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
 }
 
@@ -401,6 +399,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	}
 
 	Window_Main.SoftKeyboardFocus = true;
+	Input.DownHook = VirtualKeyboard_ProcessDown;
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {
@@ -415,12 +414,12 @@ static void VirtualKeyboard_Close(void) {
 	if (KB_MarkDirty == VirtualKeyboard_MarkDirty3D)
 		VirtualKeyboard_Close3D();
 		
-	Event_Unregister_(&InputEvents.Down,            NULL, VirtualKeyboard_ProcessDown);
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
 	Window_Main.SoftKeyboardFocus = false;
 
-	KB_MarkDirty = NULL;
-	kb_needsHook = false;
+	KB_MarkDirty   = NULL;
+	kb_needsHook   = false;
+	Input.DownHook = NULL;
 
 	DisplayInfo.ShowingSoftKeyboard = false;
 }

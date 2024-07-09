@@ -2003,19 +2003,6 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	s->dirty = true;
 }
 
-static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
-	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
-	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
-	
-	int old     = s->curI;
-	s->curI     = (int)btn->meta.val;
-	s->closable = false;
-
-	KeyBindsScreen_Update(s, s->curI);
-	/* previously selected a different button for binding */
-	if (old >= 0) KeyBindsScreen_Update(s, old);
-}
-
 static void KeyBindsScreen_ResetBinding(InputBind bind) {
 	if (binds_gamepad) {
 		PadBind_Reset(bind);
@@ -2032,12 +2019,13 @@ static void KeyBindsScreen_UpdateBinding(InputBind bind, int key, struct InputDe
 	}
 }
 
-static int KeyBindsScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
-	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
+static void KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
+	struct KeyBindsScreen* s = &KeyBindsScreen;
 	InputBind bind;
 	int idx;
 
-	if (s->curI == -1) return Menu_InputDown(s, key, device);
+	Input.DownHook = NULL;
+	if (s->curI == -1) return;
 	bind = s->binds[s->curI];
 	
 	if (key == device->escapeButton) {
@@ -2050,7 +2038,21 @@ static int KeyBindsScreen_KeyDown(void* screen, int key, struct InputDevice* dev
 	s->curI     = -1;
 	s->closable = true;
 	KeyBindsScreen_Update(s, idx);
-	return true;
+}
+
+static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
+	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
+	
+	Input.DownHook = NULL;
+	int old     = s->curI;
+	s->curI     = (int)btn->meta.val;
+	s->closable = false;
+
+	KeyBindsScreen_Update(s, s->curI);
+	/* previously selected a different button for binding */
+	if (old >= 0) KeyBindsScreen_Update(s, old);
+	Input.DownHook = KeyBindsScreen_TriggerBinding;
 }
 
 static void KeyBindsScreen_ContextLost(void* screen) {
@@ -2131,10 +2133,14 @@ static void KeyBindsScreen_Init(void* screen) {
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
+static void KeyBindsScreen_Free(void* screen) {
+	Input.DownHook = NULL;
+}
+
 static const struct ScreenVTABLE KeyBindsScreen_VTABLE = {
-	KeyBindsScreen_Init,    Screen_NullUpdate, Screen_NullFunc,  
+	KeyBindsScreen_Init,    Screen_NullUpdate, KeyBindsScreen_Free,  
 	MenuScreen_Render2,     Screen_BuildMesh,
-	KeyBindsScreen_KeyDown, Screen_InputUp,    Screen_TKeyPress, Screen_TText,
+	Menu_InputDown,         Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,       Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
 	KeyBindsScreen_Layout,  KeyBindsScreen_ContextLost, KeyBindsScreen_ContextRecreated
 };
