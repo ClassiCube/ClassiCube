@@ -92,10 +92,17 @@ void Input_SetNonRepeatable(int key, int pressed);
 void Input_Clear(void);
 
 
-#define INPUT_DEVICE_NORMAL  1
-#define INPUT_DEVICE_GAMEPAD 2
+#define INPUT_DEVICE_NORMAL   0x01
+#define INPUT_DEVICE_TOUCH    0x02
+#define INPUT_DEVICE_GAMEPAD  0x04
+
+#define INPUT_DEVICE_GAMEPAD1 0x10
+#define INPUT_DEVICE_GAMEPAD2 0x20
+#define INPUT_DEVICE_GAMEPAD3 0x30
+#define INPUT_DEVICE_GAMEPAD4 0x40
+
 struct InputDevice {
-	int deviceType, deviceIndex;
+	int type, index; /* Device type and index (e.g. controller port) */
 	int upButton, downButton, leftButton, rightButton;
 	int enterButton1, enterButton2;
 	int pauseButton1, pauseButton2;
@@ -107,6 +114,7 @@ struct InputDevice {
 
 extern struct InputDevice NormDevice;
 extern struct InputDevice PadDevice;
+extern struct InputDevice TouchDevice;
 
 #define InputDevice_IsEnter(key,  dev) ((key) == (dev)->enterButton1 || (key) == (dev)->enterButton2)
 #define InputDevice_IsPause(key,  dev) ((key) == (dev)->pauseButton1 || (key) == (dev)->pauseButton2)
@@ -115,9 +123,6 @@ extern struct InputDevice PadDevice;
 #define Input_IsAltPressed()   (Input.Pressed[CCKEY_LALT]   || Input.Pressed[CCKEY_RALT])
 #define Input_IsCtrlPressed()  (Input.Pressed[CCKEY_LCTRL]  || Input.Pressed[CCKEY_RCTRL])
 #define Input_IsShiftPressed() (Input.Pressed[CCKEY_LSHIFT] || Input.Pressed[CCKEY_RSHIFT])
-
-#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER || (btn) == CCPAD_1)
-#define Input_IsPauseButton(btn)  ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_START || (btn) == CCKEY_PAUSE)
 
 #if defined CC_BUILD_HAIKU
 	/* Haiku uses ALT instead of CTRL for clipboard and stuff */
@@ -189,8 +194,8 @@ enum InputBind_ {
 };
 typedef int InputBind;
 typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
-typedef cc_bool (*BindTriggered)(int key);
-typedef void    (*BindReleased)(int key);
+typedef cc_bool (*BindTriggered)(int key, struct InputDevice* device);
+typedef void    (*BindReleased)(int key, struct InputDevice* device);
 #define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
 
 /* The keyboard/mouse buttons that are bound to each input binding */
@@ -205,13 +210,14 @@ extern const BindMapping PadBind_Defaults[BIND_COUNT];
 extern BindTriggered Bind_OnTriggered[BIND_COUNT];
 /* Callback behaviour for when the given input binding is released */
 extern BindReleased  Bind_OnReleased[BIND_COUNT];
+/* Whether the given input binding is activated by one or more devices */
+extern cc_uint8 Bind_IsTriggered[BIND_COUNT];
 
-/* InputBind_IsPressed is what should be used, but export KeyBind_IsPressed for backwards compatibility */
-#define InputBind_IsPressed KeyBind_IsPressed
 /* Whether the given binding should be triggered in response to given input button being pressed */
-CC_API cc_bool InputBind_Claims(InputBind binding, int btn);
+cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device);
 /* Gets whether the given input binding is currently being triggered */
-CC_API cc_bool InputBind_IsPressed(InputBind binding);
+/* DEPRECATED, and should not be used anymore */
+CC_API cc_bool KeyBind_IsPressed(InputBind binding);
 
 /* Sets the key/mouse button that the given input binding is bound to */
 void KeyBind_Set(InputBind binding, int btn);
@@ -219,7 +225,7 @@ void KeyBind_Set(InputBind binding, int btn);
 void PadBind_Set(InputBind binding, int btn);
 /* Resets the key/mouse button that the given input binding is bound to */
 void KeyBind_Reset(InputBind binding);
-/* Resets the gamepad button that the given input binding is bound to*/
+/* Resets the gamepad button that the given input binding is bound to */
 void PadBind_Reset(InputBind binding);
 
 
@@ -275,12 +281,8 @@ void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* Adds the given hotkey from options. */
 void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const cc_string* text);
 
-
 cc_bool InputHandler_SetFOV(int fov);
 cc_bool Input_HandleMouseWheel(float delta);
 void InputHandler_Tick(void);
 void InputHandler_OnScreensChanged(void);
-void InputHandler_DeleteBlock(void);
-void InputHandler_PlaceBlock(void);
-void InputHandler_PickBlock(void);
 #endif

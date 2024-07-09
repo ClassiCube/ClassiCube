@@ -84,7 +84,7 @@ static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 }
 
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struct InputDevice* device) {
-	if (Input_IsEnterButton(key)) {
+	if (InputDevice_IsEnter(key, device)) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 

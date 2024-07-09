@@ -30,6 +30,7 @@ static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
 static double input_lastClick;
 static float input_fovIndex = -1.0f;
+cc_bool Input_ZoomScrolling;
 #ifdef CC_BUILD_WEB
 static cc_bool suppressEscape;
 #endif
@@ -352,6 +353,9 @@ struct InputDevice PadDevice = {
 	/* Launcher buttons */
 	CCPAD_3,
 };
+struct InputDevice TouchDevice = {
+	INPUT_DEVICE_TOUCH, 0
+};
 
 
 /*########################################################################################################################*
@@ -417,6 +421,7 @@ BindMapping PadBind_Mappings[BIND_COUNT];
 BindMapping KeyBind_Mappings[BIND_COUNT];
 BindTriggered Bind_OnTriggered[BIND_COUNT];
 BindReleased  Bind_OnReleased[BIND_COUNT];
+cc_uint8 Bind_IsTriggered[BIND_COUNT];
 
 const BindMapping PadBind_Defaults[BIND_COUNT] = {
 	{ CCPAD_UP,   0 },  { CCPAD_DOWN,  0 }, /* BIND_FORWARD, BIND_BACK */
@@ -517,14 +522,13 @@ static cc_bool Mappings_IsPressed(InputBind binding, BindMapping* mappings) {
 }
 
 
-cc_bool InputBind_Claims(InputBind binding, int btn) { 
+cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device) { 
 	return Mappings_DoesClaim(binding, btn, KeyBind_Mappings) || 
 		   Mappings_DoesClaim(binding, btn, PadBind_Mappings);
 }
 
-cc_bool InputBind_IsPressed(InputBind binding) {
-	return Mappings_IsPressed(binding, KeyBind_Mappings) || 
-		   Mappings_IsPressed(binding, PadBind_Mappings);
+cc_bool KeyBind_IsPressed(InputBind binding) {
+	return Mappings_IsPressed(binding, KeyBind_Mappings);
 }
 
 static void KeyBind_Load(const char* prefix, BindMapping* keybinds, const BindMapping* defaults) {
@@ -1031,7 +1035,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	return true;
 }
 
-void InputHandler_DeleteBlock(void) {
+static void InputHandler_DeleteBlock(void) {
 	IVec3 pos;
 	BlockID old;
 	/* always play delete animations, even if we aren't deleting a block */
@@ -1047,7 +1051,7 @@ void InputHandler_DeleteBlock(void) {
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, BLOCK_AIR);
 }
 
-void InputHandler_PlaceBlock(void) {
+static void InputHandler_PlaceBlock(void) {
 	IVec3 pos;
 	BlockID old, block;
 	pos = Game_SelectedPos.translatedPos;
@@ -1070,7 +1074,7 @@ void InputHandler_PlaceBlock(void) {
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, block);
 }
 
-void InputHandler_PickBlock(void) {
+static void InputHandler_PickBlock(void) {
 	IVec3 pos;
 	BlockID cur;
 	pos = Game_SelectedPos.pos;
@@ -1163,7 +1167,7 @@ cc_bool Input_HandleMouseWheel(float delta) {
 
 	hotbar = Input_IsAltPressed() || Input_IsCtrlPressed() || Input_IsShiftPressed();
 	if (!hotbar && Camera.Active->Zoom(delta))   return true;
-	if (!InputBind_IsPressed(BIND_ZOOM_SCROLL)) return false;
+	if (!Input_ZoomScrolling) return false;
 
 	h = &Entities.CurPlayer->Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
@@ -1181,85 +1185,85 @@ static void InputHandler_CheckZoomFov(void* obj) {
 }
 
 
-static cc_bool BindTriggered_DeleteBlock(int key) {
+static cc_bool BindTriggered_DeleteBlock(int key, struct InputDevice* device) {
 	MouseStatePress(MOUSE_LEFT);
 	InputHandler_DeleteBlock();
 	return true;
 }
 
-static cc_bool BindTriggered_PlaceBlock(int key) {
+static cc_bool BindTriggered_PlaceBlock(int key, struct InputDevice* device) {
 	MouseStatePress(MOUSE_RIGHT);
 	InputHandler_PlaceBlock();
 	return true;
 }
 
-static cc_bool BindTriggered_PickBlock(int key) {
+static cc_bool BindTriggered_PickBlock(int key, struct InputDevice* device) {
 	MouseStatePress(MOUSE_MIDDLE);
 	InputHandler_PickBlock();
 	return true;
 }
 
-static void BindReleased_DeleteBlock(int key) {
+static void BindReleased_DeleteBlock(int key, struct InputDevice* device) {
 	MouseStateRelease(MOUSE_LEFT);
 }
 
-static void BindReleased_PlaceBlock(int key) {
+static void BindReleased_PlaceBlock(int key, struct InputDevice* device) {
 	MouseStateRelease(MOUSE_RIGHT);
 }
 
-static void BindReleased_PickBlock(int key) {
+static void BindReleased_PickBlock(int key, struct InputDevice* device) {
 	MouseStateRelease(MOUSE_MIDDLE);
 }
 
 
-static cc_bool BindTriggered_HideFPS(int key) {
+static cc_bool BindTriggered_HideFPS(int key, struct InputDevice* device) {
 	Gui.ShowFPS = !Gui.ShowFPS;
 	return true;
 }
 
-static cc_bool BindTriggered_Fullscreen(int key) {
+static cc_bool BindTriggered_Fullscreen(int key, struct InputDevice* device) {
 	Game_ToggleFullscreen();
 	return true;
 }
 
-static cc_bool BindTriggered_Fog(int key) {
+static cc_bool BindTriggered_Fog(int key, struct InputDevice* device) {
 	Game_CycleViewDistance();
 	return true;
 }
 
 
-static cc_bool BindTriggered_HideGUI(int key) {
+static cc_bool BindTriggered_HideGUI(int key, struct InputDevice* device) {
 	Game_HideGui = !Game_HideGui;
 	return true;
 }
 
-static cc_bool BindTriggered_SmoothCamera(int key) {
+static cc_bool BindTriggered_SmoothCamera(int key, struct InputDevice* device) {
 	InputHandler_Toggle(key, &Camera.Smooth,
 		"  &eSmooth camera is &aenabled",
 		"  &eSmooth camera is &cdisabled");
 	return true;
 }
 
-static cc_bool BindTriggered_AxisLines(int key) {
+static cc_bool BindTriggered_AxisLines(int key, struct InputDevice* device) {
 	InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
 		"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 		"  &eAxis lines no longer show");
 	return true;
 } 
 
-static cc_bool BindTriggered_AutoRotate(int key) {
+static cc_bool BindTriggered_AutoRotate(int key, struct InputDevice* device) {
 	InputHandler_Toggle(key, &AutoRotate_Enabled,
 		"  &eAuto rotate is &aenabled",
 		"  &eAuto rotate is &cdisabled");
 	return true;
 }
 
-static cc_bool BindTriggered_ThirdPerson(int key) {
+static cc_bool BindTriggered_ThirdPerson(int key, struct InputDevice* device) {
 	Camera_CycleActive();
 	return true;
 }
 
-static cc_bool BindTriggered_DropBlock(int key) {
+static cc_bool BindTriggered_DropBlock(int key, struct InputDevice* device) {
 	if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 		/* Don't assign SelectedIndex directly, because we don't want held block
 		switching positions if they already have air in their inventory hotbar. */
@@ -1269,12 +1273,12 @@ static cc_bool BindTriggered_DropBlock(int key) {
 	return true;
 }
 
-static cc_bool BindTriggered_IDOverlay(int key) {
+static cc_bool BindTriggered_IDOverlay(int key, struct InputDevice* device) {
 	TexIdsOverlay_Show();
 	return true;
 }
 
-static cc_bool BindTriggered_BreakLiquids(int key) {
+static cc_bool BindTriggered_BreakLiquids(int key, struct InputDevice* device) {
 	InputHandler_Toggle(key, &Game_BreakableLiquids,
 		"  &eBreakable liquids is &aenabled",
 		"  &eBreakable liquids is &cdisabled");
@@ -1388,7 +1392,7 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 
 	if (InputHandler_IsShutdown(key)) {
 		Window_RequestClose(); return;
-	} else if (InputBind_Claims(BIND_SCREENSHOT, key) && !was) {
+	} else if (InputBind_Claims(BIND_SCREENSHOT, key, device) && !was) {
 		Game_ScreenshotRequested = true; return;
 	}
 	
@@ -1418,10 +1422,11 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 
 	for (i = 0; i < BIND_COUNT; i++)
 	{
-		if (!Bind_OnTriggered[i])      continue;
-		if (!InputBind_Claims(i, key)) continue;
+		if (!InputBind_Claims(i, key, device)) continue;
+		Bind_IsTriggered[i] |= device->type;
 
-		triggered |= Bind_OnTriggered[i](key);
+		if (!Bind_OnTriggered[i])              continue;
+		triggered |= Bind_OnTriggered[i](key, device);
 	}
 
 	if (triggered) {
@@ -1435,7 +1440,7 @@ static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* devic
 	struct Screen* s;
 	int i;
 
-	if (InputBind_Claims(BIND_ZOOM_SCROLL, key)) Camera_SetFov(Camera.DefaultFov);
+	if (InputBind_Claims(BIND_ZOOM_SCROLL, key, device)) Camera_SetFov(Camera.DefaultFov);
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
@@ -1455,20 +1460,52 @@ static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* devic
 
 	for (i = 0; i < BIND_COUNT; i++)
 	{
-		if (!Bind_OnReleased[i])      continue;
-		if (!InputBind_Claims(i, key)) continue;
+		if (!InputBind_Claims(i, key, device)) continue;
+		Bind_IsTriggered[i] &= ~device->type;
 
-		Bind_OnReleased[i](key);
+		if (!Bind_OnReleased[i])               continue;
+		Bind_OnReleased[i](key, device);
 	}
 }
 
 static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
+static int moveFlags;
+
+static cc_bool Player_TriggerLeft(int key,  struct InputDevice* device) {
+	moveFlags |= FACE_BIT_XMIN;
+	return Gui.InputGrab == NULL;
+}
+static cc_bool Player_TriggerRight(int key, struct InputDevice* device) {
+	moveFlags |= FACE_BIT_XMAX;
+	return Gui.InputGrab == NULL;
+}
+static cc_bool Player_TriggerUp(int key,    struct InputDevice* device) {
+	moveFlags |= FACE_BIT_YMIN;
+	return Gui.InputGrab == NULL;
+}
+static cc_bool Player_TriggerDown(int key,  struct InputDevice* device) {
+	moveFlags |= FACE_BIT_YMAX;
+	return Gui.InputGrab == NULL;
+}
+
+static void Player_ReleaseLeft(int key,  struct InputDevice* device) {
+	moveFlags &= ~FACE_BIT_XMIN;
+}
+static void Player_ReleaseRight(int key, struct InputDevice* device) {
+	moveFlags &= ~FACE_BIT_XMAX;
+}
+static void Player_ReleaseUp(int key,    struct InputDevice* device) {
+	moveFlags &= ~FACE_BIT_YMIN;
+}
+static void Player_ReleaseDown(int key,  struct InputDevice* device) {
+	moveFlags &= ~FACE_BIT_YMAX;
+}
 
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	if (InputBind_IsPressed(BIND_FORWARD)) *zMoving -= 1;
-	if (InputBind_IsPressed(BIND_BACK))    *zMoving += 1;
-	if (InputBind_IsPressed(BIND_LEFT))    *xMoving -= 1;
-	if (InputBind_IsPressed(BIND_RIGHT))   *xMoving += 1;
+	if (moveFlags & FACE_BIT_YMIN) *zMoving -= 1;
+	if (moveFlags & FACE_BIT_YMAX) *zMoving += 1;
+	if (moveFlags & FACE_BIT_XMIN) *xMoving -= 1;
+	if (moveFlags & FACE_BIT_XMAX) *xMoving += 1;
 }
 static struct LocalPlayerInput normalInput = { PlayerInputNormal };
 
@@ -1489,6 +1526,16 @@ static void OnInit(void) {
 	/* Fix issue with Android where if you double click in server list to join, a touch */
 	/*  pointer is stuck down when the game loads (so you instantly start deleting blocks) */
 	ClearTouches();
+
+	Bind_OnTriggered[BIND_FORWARD] = Player_TriggerUp;
+	Bind_OnTriggered[BIND_BACK]    = Player_TriggerDown;
+	Bind_OnTriggered[BIND_LEFT]    = Player_TriggerLeft;
+	Bind_OnTriggered[BIND_RIGHT]   = Player_TriggerRight;
+
+	Bind_OnReleased[BIND_FORWARD] = Player_ReleaseUp;
+	Bind_OnReleased[BIND_BACK]    = Player_ReleaseDown;
+	Bind_OnReleased[BIND_LEFT]    = Player_ReleaseLeft;
+	Bind_OnReleased[BIND_RIGHT]   = Player_ReleaseRight;
 }
 
 static void OnFree(void) {
