@@ -436,6 +436,22 @@ void Gamepad_Tick(float delta) {
 	}
 }
 
+int Gamepad_MapPort(long deviceID) {
+	int port;
+	
+	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		if (Gamepad_States[port].deviceID == deviceID) return port;
+		
+		if (Gamepad_States[port].deviceID != 0) continue;
+		Gamepad_States[port].deviceID = deviceID;
+		return port;
+	}
+
+	Logger_Abort("Not enough controllers");
+	return 0;
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*

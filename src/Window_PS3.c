@@ -323,11 +323,12 @@ static void ProcessPadInput(int port, float delta, padData* pad) {
 
 void Gamepads_Process(float delta) {
 	ioPadGetInfo(&pad_info);
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		if (!pad_info.status[port]) continue;
-		
-		ioPadGetData(port, &pad_data);
+		if (!pad_info.status[i]) continue;		
+		ioPadGetData(i, &pad_data);
+
+		int port = Gamepad_MapPort(i + 10);
 		ProcessPadInput(port, delta, &pad_data);
 	}
 }
