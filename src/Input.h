@@ -6,6 +6,7 @@ Manages input state and raising input related events
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
+struct InputDevice;
 extern struct IGameComponent Input_Component;
 
 enum InputButtons {
@@ -76,6 +77,8 @@ extern struct _InputState {
 	cc_bool RawMode;
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
+	/* Function that overrides all normal input handling (e.g. for virtual keyboard) */
+	void (*DownHook)(int btn, struct InputDevice* device);
 } Input;
 
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
@@ -132,6 +135,7 @@ extern struct InputDevice TouchDevice;
 void Input_CalcDelta(int btn, struct InputDevice* device, int* horDelta, int* verDelta);
 
 
+
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
 enum INPUT_MODE { INPUT_MODE_PLACE, INPUT_MODE_DELETE, INPUT_MODE_NONE, INPUT_MODE_COUNT };
@@ -145,6 +149,14 @@ void Input_SetTouchMode(cc_bool enabled);
 void Input_AddTouch(long id,    int x, int y);
 void Input_UpdateTouch(long id, int x, int y);
 void Input_RemoveTouch(long id, int x, int y);
+
+struct TouchPointer {
+	long id;
+	cc_uint8 type;
+	int begX, begY;
+	double start;
+}; 
+extern struct TouchPointer touches[INPUT_MAX_POINTERS];
 #else
 #define INPUT_MAX_POINTERS 1
 #define Pointers_Count 1

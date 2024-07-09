@@ -23,6 +23,7 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Options.h"
+#include "InputHandler.h"
 
 
 /* Enumeration of on-screen buttons for touch GUI */
