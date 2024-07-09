@@ -35,6 +35,7 @@
 #include "Errors.h"
 #include "SystemFonts.h"
 #include "Lighting.h"
+#include "InputHandler.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {

@@ -7,6 +7,7 @@
 #include "Gui.h"
 #include "Entity.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Event.h"
 #include "Options.h"
 #include "Picking.h"

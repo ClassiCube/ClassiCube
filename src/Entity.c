@@ -13,6 +13,7 @@
 #include "Chat.h"
 #include "Model.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Gui.h"
 #include "Stream.h"
 #include "Bitmap.h"

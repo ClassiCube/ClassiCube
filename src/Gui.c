@@ -17,6 +17,7 @@
 #include "Funcs.h"
 #include "Server.h"
 #include "TexturePack.h"
+#include "InputHandler.h"
 
 struct _GuiData Gui;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];

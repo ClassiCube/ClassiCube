@@ -16,6 +16,7 @@
 #include "Bitmap.h"
 #include "Block.h"
 #include "Input.h"
+#include "InputHandler.h"
 
 static void Widget_NullFunc(void* widget) { }
 static int  Widget_Pointer(void* elem, int id, int x, int y) { return false; }

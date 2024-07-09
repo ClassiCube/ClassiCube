@@ -22,6 +22,7 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Options.h"
+#include "InputHandler.h"
 
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
