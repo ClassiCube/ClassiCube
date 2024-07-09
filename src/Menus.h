@@ -9,8 +9,9 @@ struct Screen;
 struct MenuInputDesc;
 struct FontDesc;
 struct ButtonWidget;
+struct InputDevice;
 
-int Menu_InputDown(void* screen, int key);
+int Menu_InputDown(void* screen, int key, struct InputDevice* device);
 int Menu_PointerDown(void* screen, int id, int x, int y);
 int Menu_PointerMove(void* screen, int id, int x, int y);
 

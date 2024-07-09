@@ -5,16 +5,17 @@
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
+struct InputDevice;
 
 /* These always return false */
-int Screen_FInput(void* s, int key);
+int Screen_FInput(void* s, int key, struct InputDevice* device);
 int Screen_FKeyPress(void* s, char keyChar);
 int Screen_FText(void* s, const cc_string* str);
 int Screen_FMouseScroll(void* s, float delta);
 int Screen_FPointer(void* s, int id, int x, int y);
 
 /* These always return true */
-int Screen_TInput(void* s, int key);
+int Screen_TInput(void* s, int key, struct InputDevice* device);
 int Screen_TKeyPress(void* s, char keyChar);
 int Screen_TText(void* s, const cc_string* str);
 int Screen_TMouseScroll(void* s, float delta);

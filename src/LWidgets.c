@@ -279,7 +279,7 @@ static void LInput_Delete(struct LInput* w) {
 	LBackend_InputUpdate(w);
 }
 
-static cc_bool LInput_KeyDown(void* widget, int key, cc_bool was) {
+static cc_bool LInput_KeyDown(void* widget, int key, cc_bool was, struct InputDevice* device) {
 	struct LInput* w = (struct LInput*)widget;
 	if (key == CCKEY_BACKSPACE) {
 		LInput_Backspace(w);
@@ -289,11 +289,11 @@ static cc_bool LInput_KeyDown(void* widget, int key, cc_bool was) {
 		if (w->text.length) Clipboard_SetText(&w->text);
 	} else if (key == INPUT_CLIPBOARD_PASTE) {
 		LInput_CopyFromClipboard(w);
-	} else if (Input_IsEscapeButton(key)) {
+	} else if (key == device->escapeButton) {
 		if (w->text.length) LInput_SetString(w, &String_Empty);
-	} else if (Input_IsLeftButton(key)) {
+	} else if (key == device->leftButton) {
 		LInput_AdvanceCaretPos(w, false);
-	} else if (Input_IsRightButton(key)) {
+	} else if (key == device->rightButton) {
 		LInput_AdvanceCaretPos(w, true);
 	} else { return false; }
 
@@ -608,22 +608,22 @@ void LTable_RowClick(struct LTable* w, int row) {
 	w->_lastClick = now;
 }
 
-cc_bool LTable_HandlesKey(int key) {
-	return Input_IsUpButton(key)   || key == CCKEY_PAGEUP ||
-		   Input_IsDownButton(key) || key == CCKEY_PAGEDOWN;
+cc_bool LTable_HandlesKey(int key, struct InputDevice* device) {
+	return key == device->upButton   || key == device->pageUpButton ||
+		   key == device->downButton || key == device->pageDownButton;
 }
 
-static cc_bool LTable_KeyDown(void* widget, int key, cc_bool was) {
+static cc_bool LTable_KeyDown(void* widget, int key, cc_bool was, struct InputDevice* device) {
 	struct LTable* w = (struct LTable*)widget;
 	int index = LTable_GetSelectedIndex(w);
 
-	if (Input_IsUpButton(key)) {
+	if (key == device->upButton) {
 		index--;
-	} else if (Input_IsDownButton(key)) {
+	} else if (key == device->downButton) {
 		index++;
-	} else if (key == CCKEY_PAGEUP) {
+	} else if (key == device->pageUpButton) {
 		index -= w->visibleRows;
-	} else if (key == CCKEY_PAGEDOWN) {
+	} else if (key == device->pageDownButton) {
 		index += w->visibleRows;
 	} else { return false; }
 

@@ -158,35 +158,35 @@ static int Menu_CycleSelected(struct Screen* s, int dir) {
 	return false;
 }
 
-static int Menu_InputSelected(struct Screen* s, int key) {
+static int Menu_InputSelected(struct Screen* s, int key, struct InputDevice* device) {
 	struct Widget* w;
 	if (s->selectedI < 0) return false;
 
 	w = s->widgets[s->selectedI];
 	if (!Menu_IsSelectable(w)) return false;
 
-	if (w->MenuClick && Input_IsEnterButton(key)) {
+	if (w->MenuClick && InputDevice_IsEnter(key, device)) {
 		w->MenuClick(s, w);
 		return true;
 	}
-	return Elem_HandlesKeyDown(w, key);
+	return Elem_HandlesKeyDown(w, key, device);
 }
 
-static int Menu_DoInputDown(void* screen, int key) {
+static int Menu_DoInputDown(void* screen, int key, struct InputDevice* device) {
 	struct Screen* s = (struct Screen*)screen;
 	
-	if (Input_IsUpButton(key)) {
+	if (key == device->upButton) {
 		return Menu_CycleSelected(s, -1);
-	} else if (Input_IsDownButton(key)) {
+	} else if (key == device->downButton) {
 		return Menu_CycleSelected(s, +1);
 	} else {
-		return Menu_InputSelected(s, key);
+		return Menu_InputSelected(s, key, device);
 	}
 }
 
-int Menu_InputDown(void* screen, int key) {
-	Menu_DoInputDown(screen, key);
-	return Screen_InputDown(screen, key);
+int Menu_InputDown(void* screen, int key, struct InputDevice* device) {
+	Menu_DoInputDown(screen, key, device);
+	return Screen_InputDown(screen, key, device);
 }
 
 
@@ -383,19 +383,19 @@ static void ListScreen_Select(struct ListScreen* s, const cc_string* str) {
 	}
 }
 
-static int ListScreen_KeyDown(void* screen, int key) {
+static int ListScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 
-	if (Input_IsLeftButton(key)         || key == CCKEY_PAGEUP) {
+	if (key == device->leftButton         || key == device->pageUpButton) {
 		ListScreen_PageClick(s, false);
-	} else if (Input_IsRightButton(key) || key == CCKEY_PAGEDOWN) {
+	} else if (key == device->rightButton || key == device->pageDownButton) {
 		ListScreen_PageClick(s, true);
 	} else if (key == CCWHEEL_UP) {
 		ListScreen_SetCurrentIndex(s, s->currentIndex - 1);
 	} else if (key == CCWHEEL_DOWN) {
 		ListScreen_SetCurrentIndex(s, s->currentIndex + 1);
 	} else {
-		Menu_InputDown(screen, key);
+		Menu_InputDown(screen, key, device);
 	}
 	return true;
 }
@@ -922,7 +922,7 @@ static int EditHotkeyScreen_TextChanged(void* screen, const cc_string* str) {
 	return true;
 }
 
-static int EditHotkeyScreen_KeyDown(void* screen, int key) {
+static int EditHotkeyScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->selectedI >= 0) {
 		if (s->selectedI == 0) {
@@ -941,7 +941,7 @@ static int EditHotkeyScreen_KeyDown(void* screen, int key) {
 		EditHotkeyScreen_UpdateModifiers(s);
 		return true;
 	}
-	return Elem_HandlesKeyDown(&s->input.base, key) || Screen_InputDown(s, key);
+	return Elem_HandlesKeyDown(&s->input.base, key, device) || Screen_InputDown(s, key, device);
 }
 
 static void EditHotkeyScreen_ContextLost(void* screen) {
@@ -1476,16 +1476,16 @@ static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
 	return true;
 }
 
-static int SaveLevelScreen_KeyDown(void* screen, int key) {
+static int SaveLevelScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
 	
-	int handled = Menu_DoInputDown(s, key);
+	int handled = Menu_DoInputDown(s, key, device);
 	/* Pressing Enter triggers save */
-	if (!handled && Input_IsEnterButton(key))
+	if (!handled && InputDevice_IsEnter(key, device))
 		SaveLevelScreen_Save(s, &s->save);
 
-	return Screen_InputDown(s, key);
+	return Screen_InputDown(s, key, device);
 }
 
 static void SaveLevelScreen_ContextLost(void* screen) {
@@ -2023,7 +2023,7 @@ static void KeyBindsScreen_ResetBinding(InputBind bind) {
 	}
 }
 
-static void KeyBindsScreen_UpdateBinding(InputBind bind, int key) {
+static void KeyBindsScreen_UpdateBinding(InputBind bind, int key, struct InputDevice* device) {
 	if (binds_gamepad) {
 		PadBind_Set(bind, key);
 	} else {
@@ -2031,18 +2031,18 @@ static void KeyBindsScreen_UpdateBinding(InputBind bind, int key) {
 	}
 }
 
-static int KeyBindsScreen_KeyDown(void* screen, int key) {
+static int KeyBindsScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	InputBind bind;
 	int idx;
 
-	if (s->curI == -1) return Menu_InputDown(s, key);
+	if (s->curI == -1) return Menu_InputDown(s, key, device);
 	bind = s->binds[s->curI];
 	
-	if (Input_IsEscapeButton(key)) {
+	if (key == device->escapeButton) {
 		KeyBindsScreen_ResetBinding(bind);
 	} else {
-		KeyBindsScreen_UpdateBinding(bind, key);
+		KeyBindsScreen_UpdateBinding(bind, key, device);
 	}
 
 	idx         = s->curI;
@@ -2304,15 +2304,15 @@ static int MenuInputOverlay_TextChanged(void* screen, const cc_string* str) {
 	return true;
 }
 
-static int MenuInputOverlay_KeyDown(void* screen, int key) {
+static int MenuInputOverlay_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 
-	int handled = Menu_DoInputDown(s, key);
+	int handled = Menu_DoInputDown(s, key, device);
 	/* Pressing Enter triggers OK click */
-	if (!handled && Input_IsEnterButton(key))
+	if (!handled && InputDevice_IsEnter(key, device))
 		MenuInputOverlay_EnterInput(s);
 
-	return Screen_InputDown(s, key);
+	return Screen_InputDown(s, key, device);
 }
 
 static int MenuInputOverlay_PointerDown(void* screen, int id, int x, int y) {
@@ -3788,10 +3788,12 @@ static void TexIdsOverlay_Render(void* screen, float delta) {
 	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset);
 }
 
-static int TexIdsOverlay_KeyDown(void* screen, int key) {
+static int TexIdsOverlay_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct Screen* s = (struct Screen*)screen;
-	if (InputBind_Claims(BIND_IDOVERLAY, key)) { Gui_Remove(s); return true; }
-	return false;
+	if (!InputBind_Claims(BIND_IDOVERLAY, key)) return false;
+
+	Gui_Remove(s); 
+	return true;
 }
 
 static const struct ScreenVTABLE TexIdsOverlay_VTABLE = {
