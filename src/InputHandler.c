@@ -138,8 +138,8 @@ static const char* const bindNames[BIND_COUNT] = {
 };
 
 
-#define BindMapping2_Claims(mapping, btn) (Input.Pressed[(mapping)->button1] && (mapping)->button2 == btn)
-static cc_bool Mappings_DoesClaim(InputBind binding, int btn, BindMapping* mappings) {
+#define BindMapping2_Claims(mapping, btn) (device->IsPressed(device, (mapping)->button1) && (mapping)->button2 == btn)
+static cc_bool Mappings_DoesClaim(InputBind binding, int btn, BindMapping* mappings, struct InputDevice* device) {
 	BindMapping* bind = &mappings[binding];
 	int i;
 	if (bind->button2) return BindMapping2_Claims(bind, btn);
@@ -152,35 +152,13 @@ static cc_bool Mappings_DoesClaim(InputBind binding, int btn, BindMapping* mappi
 	return bind->button1 == btn;
 }
 
-static cc_bool Mappings_IsPressed(InputBind binding, BindMapping* mappings) {
-	BindMapping* bind = &mappings[binding];
-	int btn = bind->button1;
-	int i;
-	
-	if (!Input.Pressed[btn]) return false;
-	if (bind->button2) return Input.Pressed[bind->button2];
-	
-	/* Two button mappings to the button takes priority one button mapping */
-	for (i = 0; i < BIND_COUNT; i++)
-	{	
-		bind = &mappings[i];
-		if (!bind->button2) continue;
-		if (!(bind->button1 == btn || bind->button2 == btn)) continue;
-		
-		if (Input.Pressed[bind->button1] && Input.Pressed[bind->button2]) return false;
-	}
-	return true;
-}
-
 
 cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device) { 
-	return Mappings_DoesClaim(binding, btn, KeyBind_Mappings) || 
-		   Mappings_DoesClaim(binding, btn, PadBind_Mappings);
+	return Mappings_DoesClaim(binding, btn, KeyBind_Mappings, device) || 
+		   Mappings_DoesClaim(binding, btn, PadBind_Mappings, device);
 }
 
-cc_bool KeyBind_IsPressed(InputBind binding) {
-	return Mappings_IsPressed(binding, KeyBind_Mappings);
-}
+cc_bool KeyBind_IsPressed(InputBind binding) { return Bind_IsTriggered[binding]; }
 
 static void KeyBind_Load(const char* prefix, BindMapping* keybinds, const BindMapping* defaults) {
 	cc_string name; char nameBuffer[STRING_SIZE + 1];
@@ -1053,43 +1031,52 @@ static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* devic
 	}
 }
 
-static int moveFlags;
+static int moveFlags[1 + INPUT_MAX_GAMEPADS];
 
 static cc_bool Player_TriggerLeft(int key,  struct InputDevice* device) {
-	moveFlags |= FACE_BIT_XMIN;
+	moveFlags[device->index] |= FACE_BIT_XMIN;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerRight(int key, struct InputDevice* device) {
-	moveFlags |= FACE_BIT_XMAX;
+	moveFlags[device->index] |= FACE_BIT_XMAX;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerUp(int key,    struct InputDevice* device) {
-	moveFlags |= FACE_BIT_YMIN;
+	moveFlags[device->index] |= FACE_BIT_YMIN;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerDown(int key,  struct InputDevice* device) {
-	moveFlags |= FACE_BIT_YMAX;
+	moveFlags[device->index] |= FACE_BIT_YMAX;
 	return Gui.InputGrab == NULL;
 }
 
 static void Player_ReleaseLeft(int key,  struct InputDevice* device) {
-	moveFlags &= ~FACE_BIT_XMIN;
+	moveFlags[device->index] &= ~FACE_BIT_XMIN;
 }
 static void Player_ReleaseRight(int key, struct InputDevice* device) {
-	moveFlags &= ~FACE_BIT_XMAX;
+	moveFlags[device->index] &= ~FACE_BIT_XMAX;
 }
 static void Player_ReleaseUp(int key,    struct InputDevice* device) {
-	moveFlags &= ~FACE_BIT_YMIN;
+	moveFlags[device->index] &= ~FACE_BIT_YMIN;
 }
 static void Player_ReleaseDown(int key,  struct InputDevice* device) {
-	moveFlags &= ~FACE_BIT_YMAX;
+	moveFlags[device->index] &= ~FACE_BIT_YMAX;
 }
 
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	if (moveFlags & FACE_BIT_YMIN) *zMoving -= 1;
-	if (moveFlags & FACE_BIT_YMAX) *zMoving += 1;
-	if (moveFlags & FACE_BIT_XMIN) *xMoving -= 1;
-	if (moveFlags & FACE_BIT_XMAX) *xMoving += 1;
+	int flags = moveFlags[0], port;
+
+	if (Game_NumLocalPlayers > 1) {
+		for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
+			flags |= moveFlags[port + 1];
+	} else {
+		flags |= moveFlags[p->index + 1];
+	}
+
+	if (flags & FACE_BIT_YMIN) *zMoving -= 1;
+	if (flags & FACE_BIT_YMAX) *zMoving += 1;
+	if (flags & FACE_BIT_XMIN) *xMoving -= 1;
+	if (flags & FACE_BIT_XMAX) *xMoving += 1;
 }
 static struct LocalPlayerInput normalInput = { PlayerInputNormal };
 

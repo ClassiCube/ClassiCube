@@ -53,7 +53,6 @@ extern cc_uint8 Bind_IsTriggered[BIND_COUNT];
 /* Whether the given binding should be triggered in response to given input button being pressed */
 cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device);
 /* Gets whether the given input binding is currently being triggered */
-/* DEPRECATED, and should not be used anymore */
 CC_API cc_bool KeyBind_IsPressed(InputBind binding);
 
 /* Sets the key/mouse button that the given input binding is bound to */
