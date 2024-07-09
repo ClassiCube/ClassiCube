@@ -25,12 +25,12 @@ enum HttpProgress {
 };
 
 struct HttpRequest {
-	char url[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
-	int id;                 /* Unique identifier for this request. */
-	volatile int progress;  /* Progress with downloading this request */
-	TimeMS timeDownloaded;  /* Time response contents were completely downloaded. */
-	int statusCode;         /* HTTP status code returned in the response. */
-	cc_uint32 contentLength; /* HTTP content length returned in the response. */
+	char url[URL_MAX_SIZE];   /* URL data is downloaded from/uploaded to. */
+	int id;                   /* Unique identifier for this request. */
+	volatile int progress;    /* Progress with downloading this request */
+	cc_uint64 timeDownloaded; /* Time response contents were completely downloaded. */
+	int statusCode;           /* HTTP status code returned in the response. */
+	cc_uint32 contentLength;  /* HTTP content length returned in the response. */
 
 	cc_result result; /* 0 on success, otherwise platform-specific error. */
 	cc_uint8*   data; /* Contents of the response. (i.e. result data) */

@@ -1346,7 +1346,7 @@ static void WorkerLoop(void) {
 			DoRequest(&request);
 		} else {
 			/* Block until another thread submits a request to do */
-			Platform_LogConst("Going back to sleep...");
+			Platform_LogConst("Download queue empty, going back to sleep...");
 			Waitable_Wait(workerWaitable);
 		}
 	}

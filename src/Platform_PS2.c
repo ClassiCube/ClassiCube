@@ -67,9 +67,8 @@ void Platform_Log(const char* msg, int len) {
 }
 
 TimeMS DateTime_CurrentUTC(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+	time_t rtc_sec = ps2time(NULL);
+	return (cc_uint64)rtc_sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

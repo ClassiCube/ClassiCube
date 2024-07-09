@@ -192,7 +192,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 
 	Mutex_Lock(processedMutex);
 	{
-		req->timeDownloaded = DateTime_CurrentUTC();
+		req->timeDownloaded = Stopwatch_Measure();
 		RequestList_Append(&processedReqs, req, false);
 	}
 	Mutex_Unlock(processedMutex);
@@ -205,11 +205,13 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 
 	Mutex_Lock(processedMutex);
 	{
-		TimeMS now = DateTime_CurrentUTC();
-		for (i = processedReqs.count - 1; i >= 0; i--) {
+		cc_uint64 now = Stopwatch_Measure();
+		for (i = processedReqs.count - 1; i >= 0; i--) 
+		{
 			item = &processedReqs.entries[i];
-			if (now > item->timeDownloaded + 10) continue;
+			if (Stopwatch_ElapsedMS(item->timeDownloaded, now) < 10 * 1000) continue;
 
+			Platform_Log1("Cleaning up forgotten download for %c", item->url);
 			HttpRequest_Free(item);
 			RequestList_RemoveAt(&processedReqs, i);
 		}
