@@ -325,10 +325,15 @@ void Camera_UpdateProjection(void) {
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
 }
 
+static void ZoomScrollReleased(int key, struct InputDevice* device) {
+	Camera_SetFov(Camera.DefaultFov);
+}
+
 static void OnInit(void) {
 	Camera_Register(&cam_FirstPerson);
 	Camera_Register(&cam_ThirdPerson);
 	Camera_Register(&cam_ForwardThird);
+	Bind_OnReleased[BIND_ZOOM_SCROLL] = ZoomScrollReleased;
 
 	Camera.Active = &cam_FirstPerson;
 	Event_Register_(&PointerEvents.RawMoved,      NULL, OnRawMovement);
