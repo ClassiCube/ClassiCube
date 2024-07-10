@@ -908,6 +908,7 @@ static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
 
 static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = LocalPlayer_Get(device->index);
+	p->Hacks._noclipping = true;
 
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
@@ -996,10 +997,6 @@ static void LocalPlayer_ReleaseJump(int key, struct InputDevice* device) {
 	LocalPlayer_Get(device->index)->Physics.Jumping = false;
 }
 
-static cc_bool LocalPlayer_TriggerNoclip(int key, struct InputDevice* device) {
-	LocalPlayer_Get(device->index)->Hacks._noclipping = true;
-	return true;
-}
 static void LocalPlayer_ReleaseNoclip(int key, struct InputDevice* device) {
 	LocalPlayer_Get(device->index)->Hacks._noclipping = false;
 }
@@ -1021,10 +1018,8 @@ static void LocalPlayer_HookBinds(void) {
 	Bind_OnReleased[BIND_FLY_UP]    = LocalPlayer_ReleaseFlyUp;
 	Bind_OnReleased[BIND_FLY_DOWN]  = LocalPlayer_ReleaseFlyDown;
 
-	Bind_OnTriggered[BIND_JUMP] = LocalPlayer_TriggerJump;
-	Bind_OnReleased[BIND_JUMP]  = LocalPlayer_ReleaseJump;
-
-	Bind_OnTriggered[BIND_NOCLIP] = LocalPlayer_TriggerNoclip;
+	Bind_OnTriggered[BIND_JUMP]   = LocalPlayer_TriggerJump;
+	Bind_OnReleased[BIND_JUMP]    = LocalPlayer_ReleaseJump;
 	Bind_OnReleased[BIND_NOCLIP]  = LocalPlayer_ReleaseNoclip;
 }
 
