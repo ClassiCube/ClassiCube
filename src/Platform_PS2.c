@@ -34,6 +34,7 @@
 #include <fileio.h>
 #include <io_common.h>
 #include <iox_stat.h>
+#include <libcdvd.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -66,17 +67,39 @@ void Platform_Log(const char* msg, int len) {
 	_print("%s\n", tmp);
 }
 
-extern time_t ps2time(time_t* t);
+// https://stackoverflow.com/a/42340213
+static CC_INLINE int UnBCD(unsigned char bcd) {
+    return bcd - 6 * (bcd >> 4);
+}
+
+#define JST_OFFSET -9 * 60 // UTC+9 -> UTC
+static time_t CurrentUnixTime(void) {
+    sceCdCLOCK raw;
+    struct tm tim;
+    sceCdReadClock(&raw);
+
+    tim.tm_sec  = UnBCD(raw.second);
+    tim.tm_min  = UnBCD(raw.minute);
+    tim.tm_hour = UnBCD(raw.hour);
+    tim.tm_mday = UnBCD(raw.day);
+	// & 0x1F, since a user had issues with upper 3 bits being set to 1
+    tim.tm_mon  = UnBCD(raw.month & 0x1F) - 1;
+    tim.tm_year = UnBCD(raw.year) + 100;
+
+	// mktime will normalise the time anyways
+    tim.tm_min += JST_OFFSET;
+    return mktime(&tim);
+}
+
 TimeMS DateTime_CurrentUTC(void) {
-	time_t rtc_sec = ps2time(NULL);
+	time_t rtc_sec = CurrentUnixTime();
 	return (cc_uint64)rtc_sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur; 
+	time_t rtc_sec = CurrentUnixTime();
 	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+	localtime_r(&rtc_sec, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;
