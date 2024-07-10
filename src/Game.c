@@ -22,6 +22,7 @@
 #include "Http.h"
 #include "Inventory.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Server.h"
 #include "TexturePack.h"
 #include "Screens.h"
@@ -423,6 +424,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&World_Component);
 	Game_AddComponent(&Textures_Component);
 	Game_AddComponent(&Input_Component);
+	Game_AddComponent(&InputHandler_Component);
 	Game_AddComponent(&Camera_Component);
 	Game_AddComponent(&Gfx_Component);
 	Game_AddComponent(&Blocks_Component);
@@ -736,7 +738,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 
 	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
-	if (InputBind_IsPressed(BIND_ZOOM_SCROLL) && !Gui.InputGrab) {
+	if (Bind_IsTriggered[BIND_ZOOM_SCROLL] && !Gui.InputGrab) {
 		InputHandler_SetFOV(Camera.ZoomFov);
 	}
 

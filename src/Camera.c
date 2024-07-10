@@ -7,6 +7,7 @@
 #include "Gui.h"
 #include "Entity.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Event.h"
 #include "Options.h"
 #include "Picking.h"
@@ -27,10 +28,10 @@ void Camera_KeyLookUpdate(float delta) {
 	/* divide by 25 to have reasonable sensitivity for default mouse sens */
 	float amount = (Camera.Sensitivity / 25.0f) * (1000 * delta);
 
-	if (InputBind_IsPressed(BIND_LOOK_UP))    cam_deltaY -= amount;
-	if (InputBind_IsPressed(BIND_LOOK_DOWN))  cam_deltaY += amount;
-	if (InputBind_IsPressed(BIND_LOOK_LEFT))  cam_deltaX -= amount;
-	if (InputBind_IsPressed(BIND_LOOK_RIGHT)) cam_deltaX += amount;
+	if (Bind_IsTriggered[BIND_LOOK_UP])    cam_deltaY -= amount;
+	if (Bind_IsTriggered[BIND_LOOK_DOWN])  cam_deltaY += amount;
+	if (Bind_IsTriggered[BIND_LOOK_LEFT])  cam_deltaX -= amount;
+	if (Bind_IsTriggered[BIND_LOOK_RIGHT]) cam_deltaX += amount;
 }
 
 /*########################################################################################################################*

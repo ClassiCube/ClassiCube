@@ -13,6 +13,7 @@
 #include "Chat.h"
 #include "Model.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Gui.h"
 #include "Stream.h"
 #include "Bitmap.h"
@@ -642,12 +643,7 @@ void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t) {
 static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	struct HacksComp* hacks = &p->Hacks;
 	struct LocalPlayerInput* input;
-
-	if (Gui.InputGrab) {
-		/* TODO: Don't always turn these off anytime a screen is opened, only do it on InputUp */
-		p->Physics.Jumping = false; hacks->FlyingUp = false; hacks->FlyingDown = false;
-		return;
-	}
+	if (Gui.InputGrab) return;
 
 	/* keyboard input, touch, joystick, etc */
 	for (input = sources_head; input; input = input->next) {
@@ -656,16 +652,12 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	*xMoving *= 0.98f; 
 	*zMoving *= 0.98f;
 
-	p->Physics.Jumping = InputBind_IsPressed(BIND_JUMP);
-	hacks->FlyingUp    = InputBind_IsPressed(BIND_FLY_UP);
-	hacks->FlyingDown  = InputBind_IsPressed(BIND_FLY_DOWN);
-
 	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
 		if (hacks->Noclip) {
 			/* need a { } block because it's a macro */
 			Vec3_Set(p->Base.Velocity, 0,0,0);
 		}
-		HacksComp_SetNoclip(hacks, InputBind_IsPressed(BIND_NOCLIP));
+		HacksComp_SetNoclip(hacks, hacks->_noclipping);
 	}
 }
 
@@ -807,6 +799,15 @@ static void LocalPlayers_OnNewMap(void) {
 	}
 }
 
+static struct LocalPlayer* LocalPlayer_Get(int deviceIndex) {
+	if (Game_NumLocalPlayers >= 4 && deviceIndex == 4) return &LocalPlayer_Instances[3];
+	if (Game_NumLocalPlayers >= 3 && deviceIndex == 3) return &LocalPlayer_Instances[2];
+	if (Game_NumLocalPlayers >= 2 && deviceIndex == 2) return &LocalPlayer_Instances[1];
+	if (Game_NumLocalPlayers >= 1 && deviceIndex == 1) return &LocalPlayer_Instances[0];
+
+	return Entities.CurPlayer;
+}
+
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	struct LocationUpdate update;
@@ -854,8 +855,8 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static cc_bool LocalPlayer_HandleRespawn(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = LocalPlayer_Get(device->index);
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn(p);
 		return true;
@@ -866,8 +867,8 @@ static cc_bool LocalPlayer_HandleRespawn(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleSetSpawn(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = LocalPlayer_Get(device->index);
 	if (p->Hacks.CanRespawn) {
 
 		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
@@ -889,11 +890,11 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key) {
 		p->SpawnYaw   = p->Base.Yaw;
 		p->SpawnPitch = p->Base.Pitch;
 	}
-	return LocalPlayer_HandleRespawn(key);
+	return LocalPlayer_HandleRespawn(key, device);
 }
 
-static cc_bool LocalPlayer_HandleFly(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = LocalPlayer_Get(device->index);
 
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
@@ -905,8 +906,8 @@ static cc_bool LocalPlayer_HandleFly(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleNoclip(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = LocalPlayer_Get(device->index);
 
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
@@ -921,8 +922,8 @@ static cc_bool LocalPlayer_HandleNoclip(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleJump(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = LocalPlayer_Get(device->index);
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
@@ -940,26 +941,67 @@ static cc_bool LocalPlayer_HandleJump(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_TriggerHalfSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->HalfSpeeding     = hacks->Enabled;
+
+static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
+	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+
+	hacks->HalfSpeeding = (!touch || !hacks->HalfSpeeding) && hacks->Enabled;
 	return true;
 }
 
-static cc_bool LocalPlayer_TriggerSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->Speeding         = hacks->Enabled;
+static cc_bool LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
+	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+
+	hacks->Speeding = (!touch || !hacks->Speeding) && hacks->Enabled;
 	return true;
 }
 
-static void LocalPlayer_ReleaseHalfSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->HalfSpeeding     = false;
+static void LocalPlayer_ReleaseHalfSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
+	if (device->type != INPUT_DEVICE_TOUCH) hacks->HalfSpeeding = false;
 }
 
-static void LocalPlayer_ReleaseSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->Speeding         = false;
+static void LocalPlayer_ReleaseSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
+	if (device->type != INPUT_DEVICE_TOUCH) hacks->Speeding = false;
+}
+
+
+static cc_bool LocalPlayer_TriggerFlyUp(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Hacks.FlyingUp = true;
+	return true;
+}
+
+static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Hacks.FlyingDown = true;
+	return true;
+}
+
+static void LocalPlayer_ReleaseFlyUp(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Hacks.FlyingUp   = false;
+}
+
+static void LocalPlayer_ReleaseFlyDown(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Hacks.FlyingDown = false;
+}
+
+
+static cc_bool LocalPlayer_TriggerJump(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Physics.Jumping = true;
+	return true;
+}
+static void LocalPlayer_ReleaseJump(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Physics.Jumping = false;
+}
+
+static cc_bool LocalPlayer_TriggerNoclip(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Hacks._noclipping = true;
+	return true;
+}
+static void LocalPlayer_ReleaseNoclip(int key, struct InputDevice* device) {
+	LocalPlayer_Get(device->index)->Hacks._noclipping = false;
 }
 
 static void LocalPlayer_HookBinds(void) {
@@ -973,6 +1015,17 @@ static void LocalPlayer_HookBinds(void) {
 	Bind_OnTriggered[BIND_SPEED]      = LocalPlayer_TriggerSpeed;
 	Bind_OnReleased[BIND_HALF_SPEED]  = LocalPlayer_ReleaseHalfSpeed;
 	Bind_OnReleased[BIND_SPEED]       = LocalPlayer_ReleaseSpeed;
+
+	Bind_OnTriggered[BIND_FLY_UP]   = LocalPlayer_TriggerFlyUp;
+	Bind_OnTriggered[BIND_FLY_DOWN] = LocalPlayer_TriggerFlyDown;
+	Bind_OnReleased[BIND_FLY_UP]    = LocalPlayer_ReleaseFlyUp;
+	Bind_OnReleased[BIND_FLY_DOWN]  = LocalPlayer_ReleaseFlyDown;
+
+	Bind_OnTriggered[BIND_JUMP] = LocalPlayer_TriggerJump;
+	Bind_OnReleased[BIND_JUMP]  = LocalPlayer_ReleaseJump;
+
+	Bind_OnTriggered[BIND_NOCLIP] = LocalPlayer_TriggerNoclip;
+	Bind_OnReleased[BIND_NOCLIP]  = LocalPlayer_ReleaseNoclip;
 }
 
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {

@@ -277,9 +277,9 @@ void Gamepads_Process(float delta) {
 	maple_device_t* cont;
 	cont_state_t*  state;
 
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		cont  = maple_enum_type(port, MAPLE_FUNC_CONTROLLER);
+		cont  = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
 		if (!cont)  return;
 		state = (cont_state_t*)maple_dev_status(cont);
 		if (!state) return;
@@ -287,6 +287,7 @@ void Gamepads_Process(float delta) {
 		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
 		if(dual_analog == -1) dual_analog = 0;
 
+		int port = Gamepad_MapPort(i + 10);
 		HandleButtons(port, state->buttons);
 		HandleController(port, dual_analog, state, delta);
 	}

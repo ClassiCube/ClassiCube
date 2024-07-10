@@ -137,11 +137,12 @@ static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, float delta) {
 void Gamepads_Process(float delta) {
 	joypad_poll();
 
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
 		if (!joypad_is_connected(port)) continue;
+		int port = Gamepad_MapPort(i + 10);
 		
-		joypad_inputs_t inputs = joypad_get_inputs(port);
+		joypad_inputs_t inputs = joypad_get_inputs(i);
 		HandleButtons(port, inputs.btn);
 		ProcessAnalogInput(port, &inputs, delta);
 	}

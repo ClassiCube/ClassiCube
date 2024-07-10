@@ -38,6 +38,7 @@ void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t);
 struct HacksComp {
 	cc_bool IsOp;
 	cc_bool Floating; /* true if NoClip or Flying */
+	cc_bool _noclipping;
 	/* Speed player move at, relative to normal speed, when the 'speeding' input binding is active */
 	float SpeedMultiplier;
 	/* Whether blocks that the player places that intersect themselves, should cause the player to

@@ -17,6 +17,7 @@
 #include "Funcs.h"
 #include "Server.h"
 #include "TexturePack.h"
+#include "InputHandler.h"
 
 struct _GuiData Gui;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
@@ -571,8 +572,8 @@ void Screen_ContextLost(void* screen) {
 	}
 }
 
-int  Screen_InputDown(void* screen, int key) { return key < CCKEY_F1 || key > CCKEY_F24; }
-void Screen_InputUp(void*   screen, int key) { }
+int  Screen_InputDown(void* screen, int key, struct InputDevice* device) { return key < CCKEY_F1 || key > CCKEY_F24; }
+void Screen_InputUp(void*   screen, int key, struct InputDevice* device) { }
 void Screen_PointerUp(void* s, int id, int x, int y) { }
 
 /*########################################################################################################################*

@@ -8,6 +8,7 @@
 /* Max callbacks that can be registered for an event. */
 #define EVENT_MAX_CALLBACKS 32
 struct Stream;
+struct InputDevice;
 
 typedef void (*Event_Void_Callback)(void* obj);
 struct Event_Void {
@@ -45,7 +46,7 @@ struct Event_Chat {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Input_Callback)(void* obj, int key, cc_bool repeating);
+typedef void (*Event_Input_Callback)(void* obj, int key, cc_bool repeating, struct InputDevice* device);
 struct Event_Input {
 	Event_Input_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -108,7 +109,7 @@ void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlo
 void Event_RaiseChat(struct Event_Chat* handlers, const cc_string* msg, int msgType);
 /* Calls all registered callbacks for an event which has keyboard key/mouse button. */
 /* repeating is whether the key/button was already pressed down. (i.e. user is holding down key) */
-void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
+void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating, struct InputDevice* device);
 /* Calls all registered callbacks for an event which has a string argument. */
 void Event_RaiseString(struct Event_String* handlers, const cc_string* str);
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
@@ -197,8 +198,8 @@ CC_VAR extern struct _WindowEventsList {
 
 CC_VAR extern struct _InputEventsList {
 	struct Event_Int    Press; /* Key input character is typed. Arg is a unicode character */
-	struct Event_Input  Down;  /* Key or button is pressed. Arg is a member of Key enumeration */
-	struct Event_Int    Up;    /* Key or button is released. Arg is a member of Key enumeration */
+	struct Event_Input  Down;  /* Key or button is pressed. Arg is input button state. */
+	struct Event_Input  Up;    /* Key or button is released. Arg is input button state. */
 	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 	struct Event_String TextChanged; /* Text in the on-screen input keyboard changed (for Mobile) */
 } InputEvents;
