@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Platform.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Event.h"
 #include "Graphics.h"
 #include "String.h"
@@ -139,7 +140,7 @@ void Gamepads_Process(float delta) {
 
 	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		if (!joypad_is_connected(port)) continue;
+		if (!joypad_is_connected(i)) continue;
 		int port = Gamepad_MapPort(i + 10);
 		
 		joypad_inputs_t inputs = joypad_get_inputs(i);

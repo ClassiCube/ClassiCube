@@ -20,6 +20,7 @@
 
 static cc_bool needsFBUpdate;
 static cc_bool launcherMode;
+#include "VirtualCursor.h"
 static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
@@ -268,7 +269,7 @@ static void ProcessWPADDrag(int res, u32 mods) {
 	} else {
 		dragActive = false;
 	}
-	Pointer_SetPosition(0, x, y);
+	VirtualCursor_SetPosition(x, y);
 }
 
 #define FACTOR 2
@@ -523,10 +524,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
 }
 
 void OnscreenKeyboard_Draw3D(void) {

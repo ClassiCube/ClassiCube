@@ -285,21 +285,19 @@ static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, floa
 extern Rect2D dirty_rect;
 
 static void VirtualKeyboard_MarkDirty2D(void) {
-	if (!dirty_rect.width) dirty_rect.width = 2;
+	LBackend_MarkAllDirty();
 }
 
-static void VirtualKeyboard_Display2D(Rect2D* r, struct Bitmap* bmp) {
+static void VirtualKeyboard_Display2D(struct Context2D* real_ctx) {
 	struct Context2D ctx;
-	struct Bitmap copy = *bmp;
+	struct Bitmap copy = real_ctx->bmp;
 	int x, y;
+
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
+	LBackend_MarkAllDirty();
 
-	/* Mark entire framebuffer as needing to be redrawn */
-	r->x = 0; r->width  = bmp->width;
-	r->y = 0; r->height = bmp->height;
-
-	VirtualKeyboard_CalcPosition(&x, &y, bmp->width, bmp->height);
-	copy.scan0 = Bitmap_GetRow(bmp, y);
+	VirtualKeyboard_CalcPosition(&x, &y, copy.width, copy.height);
+	copy.scan0 = Bitmap_GetRow(&real_ctx->bmp, y);
 	copy.scan0 += x;
 
 	Context2D_Wrap(&ctx, &copy);
@@ -307,6 +305,7 @@ static void VirtualKeyboard_Display2D(Rect2D* r, struct Bitmap* bmp) {
 }
 
 static void VirtualKeyboard_Close2D(void) {
+	LBackend_Hooks[0] = NULL;
 	LBackend_Redraw();
 }
 
@@ -400,6 +399,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 
 	Window_Main.SoftKeyboardFocus = true;
 	Input.DownHook = VirtualKeyboard_ProcessDown;
+	LBackend_Hooks[0] = VirtualKeyboard_Display2D;
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {
