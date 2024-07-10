@@ -142,9 +142,8 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-extern Rect2D dirty_rect;
 void Window_ProcessEvents(float delta) {
-	if (!dirty_rect.width) dirty_rect.width = 1;
+	LBackend_MarkAllDirty();
 
 	if (!WHBProcIsRunning()) {
 		Window_Main.Exists = false;
