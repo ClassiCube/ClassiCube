@@ -505,7 +505,6 @@ struct TouchButtonDesc {
 
 static struct TouchScreen {
 	Screen_Body
-	const struct TouchButtonDesc* descs;
 	int numOnscreen, numBtns;
 	struct FontDesc font;
 	struct ThumbstickWidget thumbstick;
@@ -536,8 +535,8 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s    = (struct TouchScreen*)screen;
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	
-	int i = btn->meta.val;
-	Bind_OnTriggered[s->descs[i].bind](0, &TouchDevice);
+	struct TouchButtonDesc* desc = (struct TouchButtonDesc*)btn->meta.ptr;
+	Bind_OnTriggered[desc->bind](0, &TouchDevice);
 }
 
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
@@ -566,6 +565,7 @@ static const struct TouchButtonDesc hackDescs[2] = {
 #define TOUCHSCREEN_BTN_COLOR PackedCol_Make(255, 255, 255, 200)
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
+	const struct TouchButtonDesc* descs;
 	const struct TouchButtonDesc* desc;
 	int buttons = GetOnscreenButtons();
 	int i, j;
@@ -579,7 +579,7 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 		ButtonWidget_Init(&s->onscreen[j], 100, desc->OnClick);
 		if (desc->enabled) Widget_SetDisabled(&s->onscreen[j], !(*desc->enabled));
 
-		s->onscreen[j].meta.val = i;
+		s->onscreen[j].meta.ptr = desc;
 		s->onscreen[j].color    = TOUCHSCREEN_BTN_COLOR;
 		s->widgets[j]           = (struct Widget*)&s->onscreen[j];
 		j++;
@@ -587,19 +587,19 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 
 	s->numOnscreen = j;
 	if (hacks->Flying || hacks->Noclip) {
-		s->descs   = hackDescs;
+		descs      = hackDescs;
 		s->numBtns = Array_Elems(hackDescs);
 	} else {
-		s->descs   = normDescs;
+		descs      = normDescs;
 		s->numBtns = Array_Elems(normDescs);
 	}
 
 	for (i = 0; i < s->numBtns; i++) 
 	{
 		s->widgets[i + ONSCREEN_MAX_BTNS] = (struct Widget*)&s->btns[i];
-		ButtonWidget_Init(&s->btns[i], 60, s->descs[i].OnClick);
+		ButtonWidget_Init(&s->btns[i], 60, descs[i].OnClick);
 		s->btns[i].color = TOUCHSCREEN_BTN_COLOR;
-		s->btns[i].meta.val = i;
+		s->btns[i].meta.ptr = &descs[i];
 	}
 }
 
@@ -628,12 +628,12 @@ static void TouchScreen_ContextRecreated(void* screen) {
 
 	for (i = 0; i < s->numOnscreen; i++) 
 	{
-		desc = &onscreenDescs[s->onscreen[i].meta.val];
+		desc = (struct TouchButtonDesc*)s->onscreen[i].meta.ptr;
 		ButtonWidget_SetConst(&s->onscreen[i], desc->text, &s->font);
 	}
 	for (i = 0; i < s->numBtns; i++) 
 	{
-		desc = &s->descs[i];
+		desc = (struct TouchButtonDesc*)s->btns[i].meta.ptr;
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
 	ButtonWidget_SetConst(&s->more, "...", &s->font);
@@ -668,6 +668,7 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 
 static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
+	struct TouchButtonDesc* desc;
 	int i;
 	//Chat_Add1("POINTER UP: %i", &id);
 	s->thumbstick.active &= ~id;
@@ -676,9 +677,10 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	for (i = 0; i < s->numBtns; i++) 
 	{
 		if (!(s->btns[i].active & id)) continue;
+	 	desc = (struct TouchButtonDesc*)s->btns[i].meta.ptr;
 
-		if (s->descs[i].bind) {
-			Bind_OnReleased[s->descs[i].bind](0, &TouchDevice);
+		if (desc->bind) {
+			Bind_OnReleased[desc->bind](0, &TouchDevice);
 		}
 		s->btns[i].active &= ~id;
 		return;
@@ -717,7 +719,7 @@ static void TouchScreen_Layout(void* screen) {
 
 	for (i = 0; i < s->numBtns; i++) 
 	{
-		desc = &s->descs[i];
+		desc = (struct TouchButtonDesc*)s->btns[i].meta.ptr;
 		Widget_SetLocation(&s->btns[i], ANCHOR_MAX, ANCHOR_MAX, desc->x, desc->y);
 		s->btns[i].yOffset += height;
 

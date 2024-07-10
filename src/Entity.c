@@ -944,13 +944,17 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 
 static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
-	hacks->HalfSpeeding     = hacks->Enabled;
+	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+
+	hacks->HalfSpeeding = (!touch || !hacks->HalfSpeeding) && hacks->Enabled;
 	return true;
 }
 
 static cc_bool LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
-	hacks->Speeding         = hacks->Enabled;
+	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+
+	hacks->Speeding = (!touch || !hacks->Speeding) && hacks->Enabled;
 	return true;
 }
 
