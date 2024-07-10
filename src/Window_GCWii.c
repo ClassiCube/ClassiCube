@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Platform.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Event.h"
 #include "String.h"
 #include "Funcs.h"
