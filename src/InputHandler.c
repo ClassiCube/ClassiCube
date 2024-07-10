@@ -1023,7 +1023,6 @@ static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* devic
 	struct Screen* s;
 	int i;
 
-	if (InputBind_Claims(BIND_ZOOM_SCROLL, key, device)) Camera_SetFov(Camera.DefaultFov);
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */

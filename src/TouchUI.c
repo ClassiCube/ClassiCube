@@ -536,6 +536,7 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	
 	struct TouchButtonDesc* desc = (struct TouchButtonDesc*)btn->meta.ptr;
+	if (!Bind_OnTriggered[desc->bind]) return;
 	Bind_OnTriggered[desc->bind](0, &TouchDevice);
 }
 

@@ -25,7 +25,7 @@
 #include <libmouse.h>
 
 static cc_bool launcherMode, mouseSupported, kbdSupported;
-
+#include "VirtualCursor.h"
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
