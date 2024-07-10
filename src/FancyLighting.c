@@ -474,6 +474,13 @@ static void Refresh(void) {
 }
 static cc_bool IsLit(int x, int y, int z) { return ClassicLighting_IsLit(x, y, z); }
 static cc_bool IsLit_Fast(int x, int y, int z) { return ClassicLighting_IsLit_Fast(x, y, z); }
+static cc_bool IsLit_Angled(int x, int y, int z) {
+	/* Test */
+	return (y & 2) == 0;
+}
+static cc_bool IsLit_Fast_Angled(int x, int y, int z) {
+	return IsLit_Angled(x, y, z);
+}
 
 #define CalcForChunkIfNeeded(cx, cy, cz, chunkIndex) \
 	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) { \
@@ -501,7 +508,7 @@ static PackedCol Color_Core(int x, int y, int z, int paletteFace) {
 	}
 
 	/* This cell is exposed to sunlight */
-	if (y > ClassicLighting_GetLightHeight(x, z)) {
+	if (Lighting.IsLit_Fast(x, y, z)) {
 		/* Push the pointer forward into the sun lit palette section */
 		paletteFace += PALETTE_SHADES;
 	}
@@ -548,11 +555,11 @@ static void LightHint(int startX, int startY, int startZ) {
 void FancyLighting_SetActive(void) {
 	Lighting.OnBlockChanged = OnBlockChanged;
 	Lighting.Refresh = Refresh;
-	Lighting.IsLit = IsLit;
+	Lighting.IsLit = Lighting_Mode == LIGHTING_MODE_FANCY ? IsLit : IsLit_Angled;
 	Lighting.Color = Color;
 	Lighting.Color_XSide = Color_XSide;
 
-	Lighting.IsLit_Fast = IsLit_Fast;
+	Lighting.IsLit_Fast = Lighting_Mode == LIGHTING_MODE_FANCY ? IsLit_Fast : IsLit_Fast_Angled;
 	Lighting.Color_Sprite_Fast = Color;
 	Lighting.Color_YMax_Fast   = Color;
 	Lighting.Color_YMin_Fast   = Color_YMinSide;

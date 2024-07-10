@@ -12,7 +12,7 @@ struct IGameComponent;
 extern struct IGameComponent Lighting_Component;
 
 enum LightingMode {
-	LIGHTING_MODE_CLASSIC, LIGHTING_MODE_FANCY, LIGHTING_MODE_COUNT
+	LIGHTING_MODE_CLASSIC, LIGHTING_MODE_FANCY, LIGHTING_MODE_ANGLED, LIGHTING_MODE_COUNT
 };
 extern const char* const LightingMode_Names[LIGHTING_MODE_COUNT];
 extern cc_uint8 Lighting_Mode;

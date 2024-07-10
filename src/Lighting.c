@@ -13,7 +13,7 @@
 #include "Options.h"
 #include "Builder.h"
 
-const char* const LightingMode_Names[LIGHTING_MODE_COUNT] = { "Classic", "Fancy" };
+const char* const LightingMode_Names[LIGHTING_MODE_COUNT] = { "Classic", "Fancy", "Angled Fancy" };
 
 cc_uint8 Lighting_Mode;
 cc_bool  Lighting_ModeLockedByServer;
