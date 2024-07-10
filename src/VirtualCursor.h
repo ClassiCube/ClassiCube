@@ -3,6 +3,7 @@
 #include "Drawer2D.h"
 #include "Input.h"
 #include "LBackend.h"
+static cc_bool vc_hooked;
 
 #define CURSOR_SIZE   1
 #define CURSOR_EXTENT 5
@@ -23,6 +24,7 @@ static void VirtualCursor_Display2D(struct Context2D* ctx) {
 static void VirtualCursor_SetPosition(int x, int y) {
 	x = max(0, min(x, Window_Main.Width  - 1));
 	y = max(0, min(y, Window_Main.Height - 1));
+	vc_hooked = true;
 
 	if (x == Pointers[0].x && y == Pointers[0].y) return;
 	Pointer_SetPosition(0, x, y);

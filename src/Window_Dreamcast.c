@@ -14,7 +14,6 @@
 #include <kos.h>
 
 static cc_bool launcherMode;
-static cc_bool vc_hooked;
 #include "VirtualCursor.h"
 cc_bool window_inited;
 
@@ -204,9 +203,7 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_R, mods & MOUSE_RIGHTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
 
-	/* Start cursor at window middle */
 	if (!vc_hooked) {
-		vc_hooked = true;
 		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
 	}
 	VirtualCursor_SetPosition(Pointers[0].x + state->dx, Pointers[0].y + state->dy);
