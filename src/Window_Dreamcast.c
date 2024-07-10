@@ -12,7 +12,10 @@
 #include "ExtMath.h"
 #include "VirtualKeyboard.h"
 #include <kos.h>
+
 static cc_bool launcherMode;
+static cc_bool vc_hooked;
+#include "VirtualCursor.h"
 cc_bool window_inited;
 
 struct _DisplayData DisplayInfo;
@@ -200,6 +203,13 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_L, mods & MOUSE_LEFTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_R, mods & MOUSE_RIGHTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
+
+	/* Start cursor at window middle */
+	if (!vc_hooked) {
+		vc_hooked = true;
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + state->dx, Pointers[0].y + state->dy);
 	
 	if (!Input.RawMode) return;	
 	float scale = (delta * 60.0) / 2.0f;
@@ -338,10 +348,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
 }
 
 void OnscreenKeyboard_Draw3D(void) {

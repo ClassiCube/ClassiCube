@@ -125,12 +125,12 @@ static void LButton_Draw(void* widget) {
 
 static void LButton_Hover(void* w, int idx, cc_bool wasOver) {
 	/* only need to redraw when changing from unhovered to active */
-	if (!wasOver) LBackend_MarkDirty(w);
+	if (!wasOver) LBackend_NeedsRedraw(w);
 }
 
-static void LButton_Unhover(void* w) { LBackend_MarkDirty(w); }
-static void LButton_OnSelect(void* w,   int idx, cc_bool wasSelected) { LBackend_MarkDirty(w); }
-static void LButton_OnUnselect(void* w, int idx) { LBackend_MarkDirty(w); }
+static void LButton_Unhover(void* w) { LBackend_NeedsRedraw(w); }
+static void LButton_OnSelect(void* w,   int idx, cc_bool wasSelected) { LBackend_NeedsRedraw(w); }
+static void LButton_OnUnselect(void* w, int idx) { LBackend_NeedsRedraw(w); }
 
 static const struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Draw, NULL,
@@ -651,7 +651,7 @@ static void LTable_MouseWheel(void* widget, float delta) {
 	struct LTable* w = (struct LTable*)widget;
 	w->topRow -= Utils_AccumulateWheelDelta(&w->_wheelAcc, delta);
 	LTable_ClampTopRow(w);
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 	w->_lastRow = -1;
 }
 

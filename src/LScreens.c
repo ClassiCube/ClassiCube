@@ -1296,19 +1296,19 @@ static void ServersScreen_HashFilter(cc_string* str) {
 static void ServersScreen_SearchChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ApplyFilter(&s->table);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_HashChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ShowSelected(&s->table);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_OnSelectedChanged(void) {
 	struct ServersScreen* s = &ServersScreen;
-	LBackend_MarkDirty(&s->iptHash);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->iptHash);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_ReloadServers(struct ServersScreen* s) {
@@ -1375,7 +1375,7 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 
 	if (FetchServersTask.Base.success) {
 		ServersScreen_ReloadServers(s);
-		LBackend_MarkDirty(&s->table);
+		LBackend_NeedsRedraw(&s->table);
 	}
 
 	LButton_SetConst(&s->btnRefresh, 

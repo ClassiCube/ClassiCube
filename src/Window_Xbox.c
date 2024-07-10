@@ -231,10 +231,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
 }
 
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
 void OnscreenKeyboard_Draw3D(void) {
 	VirtualKeyboard_Display3D();
 }
