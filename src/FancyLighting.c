@@ -13,6 +13,9 @@
 #include "Options.h"
 #include "Queue.h"
 
+
+static int* blockers;
+
 struct LightNode {
 	IVec3 coords; /* 12 bytes */
 	cc_uint8 brightness; /* 1 byte */
@@ -99,7 +102,14 @@ static void FreePalettes(void) {
 		Mem_Free(palettes[i]);
 	}
 }
+static void CalcLightDepths(int xStart, int zStart, int xWidth, int zLength);
+static void AllocState_Angled(void) {
+	if (Lighting_Mode != LIGHTING_MODE_ANGLED) return;
 
+	blockers = (int*)Mem_AllocCleared((World.Width + World.Height) * (World.Length + World.Height), sizeof(int), "angled lighting heightmap");
+
+	CalcLightDepths(0, 0, World.Width, World.Length);
+}
 static int chunksCount;
 static void AllocState(void) {
 	ClassicLighting_AllocState();
@@ -110,8 +120,105 @@ static void AllocState(void) {
 	chunkLightingData = (LightingChunk*)Mem_AllocCleared(chunksCount, sizeof(LightingChunk), "light chunks");
 	Queue_Init(&lightQueue, sizeof(struct LightNode));
 	Queue_Init(&unlightQueue, sizeof(struct LightNode));
+
+	AllocState_Angled();
 }
 
+
+static void CalcLightDepths(int xStart, int zStart, int xWidth, int zLength) {
+    //xStart and zStart are zero.
+    
+	int width  = World.Width;
+	int height = World.Height;
+	int length = World.Length;
+
+    xStart += height; //add xStart to the height of the map because
+    if (xWidth == width) { //Since xWidth starts the same as width, this always happens at first
+        xWidth += height;
+        xStart -= height;
+        //xStart is zero again...
+        //xWidth is now equal to the height of the map
+    }
+        	
+    zStart += height;
+    if (zLength == length) {
+        zLength += height;
+        zStart -= height;
+    }
+        	
+    //the size of the lightmap in each dimension
+    int xExtent = width + height;
+    int zExtent = length + height;
+    
+	int x, z;
+    for (x = xStart; x < xStart + xWidth; ++x) { //from 0 to the width + height of the map
+        for (z = zStart; z < zStart + zLength; ++z) { //from 0 to the length of the map
+        	        
+            int oldY = blockers[x + z * xExtent];
+     
+            int y = height -1; //-1 because it starts at 0
+            int xD = x + height -1;
+            int zD = z + height -1;
+                    
+            int xOver = 0; //how far past the edge of the map is it?
+            int zOver = 0; 
+                    
+
+            if (xD >= xExtent) {
+                xOver = xD - (xExtent -1);
+            }
+            if (zD >= zExtent) {
+                zOver = zD - (zExtent -1);//how far past the edge of the map is it?
+            }
+            int maxOver = max(xOver, zOver);
+            //pushing y and x and z back to the edge of the map
+            y -= maxOver;
+            xD -= maxOver;
+            zD -= maxOver;
+                    
+            xD -= height;
+            zD -= height;
+                    
+            int ySafe = (y > 0) ? y - 1 : y;
+                    
+            int xSafe = (xD > 0) ? xD - 1 : xD;
+            int zSafe = (zD > 0) ? zD - 1 : zD;
+                    
+            while (y > 0 &&
+                    xD >= 0 &&
+                    xD < width &&
+                    zD >= 0 &&
+                    zD < length &&
+                    !(Blocks.BlocksLight[World_GetBlock(xD, y, zD)] ||
+						Blocks.BlocksLight[World_GetBlock(xD, ySafe, zD)]) &&
+                           
+                    !(Blocks.BlocksLight[World_GetBlock(xSafe, y, zD)]     || Blocks.BlocksLight[World_GetBlock(xD, y, zSafe)]) &&
+                    !(Blocks.BlocksLight[World_GetBlock(xSafe, ySafe, zD)] || Blocks.BlocksLight[World_GetBlock(xD, ySafe, zSafe)])
+                    ) {
+                        
+                --y;
+                --xD;
+                --zD;
+                        
+                ySafe = (y > 0) ? y - 1 : y;
+                xSafe = (xD > 0) ? xD - 1 : xD;
+                zSafe = (zD > 0) ? zD - 1 : zD;
+            }
+                    
+            if (xD < 0 || zD < 0) {
+                y = oldY;
+            }
+            blockers[x + z * xExtent] = y;
+                    
+        }
+    }
+}
+
+static void FreeState_Angled(void) {
+	if (Lighting_Mode != LIGHTING_MODE_ANGLED) return;
+
+	Mem_Free(blockers);
+}
 static void FreeState(void) {
 	int i;
 	ClassicLighting_FreeState();
@@ -131,6 +238,8 @@ static void FreeState(void) {
 	chunkLightingData = NULL;
 	Queue_Clear(&lightQueue);
 	Queue_Clear(&unlightQueue);
+
+	FreeState_Angled();
 }
 
 /* Converts chunk x/y/z coordinates to the corresponding index in chunks array/list */
@@ -476,7 +585,12 @@ static cc_bool IsLit(int x, int y, int z) { return ClassicLighting_IsLit(x, y, z
 static cc_bool IsLit_Fast(int x, int y, int z) { return ClassicLighting_IsLit_Fast(x, y, z); }
 static cc_bool IsLit_Angled(int x, int y, int z) {
 	/* Test */
-	return (y & 2) == 0;
+    return !(x >= 0 &&
+		        y >= 0 &&
+		        z >= 0 &&
+		        x < World.Width &&
+		        y < World.Height &&
+		        z < World.Length) || y >= blockers[(x + World.Height -y) + (z + World.Height -y) * (World.Width + World.Height)];
 }
 static cc_bool IsLit_Fast_Angled(int x, int y, int z) {
 	return IsLit_Angled(x, y, z);
