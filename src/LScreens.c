@@ -495,7 +495,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	if (!DirectUrl_ExtractAddress(addr, &ip, &port, &raw_port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
-	if (Socket_ParseAddress(&ip, 0, addrs, &numAddrs)) {
+	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
 		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;
