@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - AngledLighting
   workflow_dispatch:
 
 

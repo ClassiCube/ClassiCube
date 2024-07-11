@@ -420,7 +420,7 @@ static void ProcessWPADInput(int i, float delta) {
 	if (res) return;
 
 	WPADData* wd = WPAD_Data(i);
-	u32 mods = wd->btn_h | wd->btn_d; // buttons held | buttons down now
+	u32 mods = wd->btns_h | wd->btns_d; // buttons held | buttons down now
 	int port = Gamepad_MapPort(i + 20);
 
 	if (type == WPAD_EXP_CLASSIC) {
