@@ -2908,3 +2908,74 @@ void TexPackOverlay_Show(const cc_string* url) {
 	s->reqID = Http_AsyncGetHeaders(url, HTTP_FLAG_PRIORITY);
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TEXPACK);
 }
+
+
+/*########################################################################################################################*
+*--------------------------------------------------NostalgiaMenuScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct NostalgiaMenuScreen {
+	Screen_Body
+	struct ButtonWidget btnA, btnF, done;
+	struct TextWidget title;
+} NostalgiaMenuScreen;
+
+static struct Widget* nostalgiaMenu_widgets[4];
+
+static void NostalgiaMenuScreen_Appearance(void* a, void* b)    { NostalgiaAppearanceScreen_Show(); }
+static void NostalgiaMenuScreen_Functionality(void* a, void* b) { NostalgiaFunctionalityScreen_Show(); }
+
+static void NostalgiaMenuScreen_SwitchBack(void* a, void* b) {
+	if (Gui.ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
+}
+
+static void NostalgiaMenuScreen_ContextRecreated(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+	struct FontDesc titleFont;
+	Screen_UpdateVb(screen);
+	Gui_MakeTitleFont(&titleFont);
+
+	TextWidget_SetConst(&s->title, "Nostalgia options", &titleFont);
+	ButtonWidget_SetConst(&s->btnA, "Appearance",       &titleFont);
+	ButtonWidget_SetConst(&s->btnF, "Functionality",    &titleFont);
+	ButtonWidget_SetConst(&s->done,    "Done",          &titleFont);
+
+	Font_Free(&titleFont);
+}
+
+static void NostalgiaMenuScreen_Layout(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
+	Widget_SetLocation(&s->btnA,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -25);
+	Widget_SetLocation(&s->btnF,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,   25);
+	Menu_LayoutBack(&s->done);
+}
+
+static void NostalgiaMenuScreen_Init(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+
+	s->widgets     = nostalgiaMenu_widgets;
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(nostalgiaMenu_widgets);
+
+	ButtonWidget_Add(s, &s->btnA, 400, NostalgiaMenuScreen_Appearance);
+	ButtonWidget_Add(s, &s->btnF, 400, NostalgiaMenuScreen_Functionality);
+	ButtonWidget_Add(s, &s->done, 400, NostalgiaMenuScreen_SwitchBack);
+	TextWidget_Add(s,   &s->title);
+
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
+}
+
+static const struct ScreenVTABLE NostalgiaMenuScreen_VTABLE = {
+	NostalgiaMenuScreen_Init,  Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render2,        Screen_BuildMesh,
+	Menu_InputDown,            Screen_InputUp,    Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
+	NostalgiaMenuScreen_Layout, Screen_ContextLost, NostalgiaMenuScreen_ContextRecreated
+};
+void NostalgiaMenuScreen_Show(void) {
+	struct NostalgiaMenuScreen* s = &NostalgiaMenuScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &NostalgiaMenuScreen_VTABLE;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
