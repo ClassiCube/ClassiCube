@@ -12,6 +12,7 @@ extern "C" {
 #include "ExtMath.h"
 #include "Graphics.h"
 #include "Launcher.h"
+#include "LBackend.h"
 }
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
