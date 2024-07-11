@@ -394,14 +394,14 @@ static int WaitValidNetState(int (*checkingFunction)(void)) {
 		SetAlarm(500 * 16, &ethStatusCheckCb, &threadID);
 		SleepThread();
 
-		if (retries >= 10) // 5s = 10 * 500ms
-			return -1;
+		if (retries >= 15) return -1; // 7.5s = 15 * 500ms 
 	}
 	return 0;
 }
 
 static int ethGetNetIFLinkStatus(void) {
-	return NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0) == NETMAN_NETIF_ETH_LINK_STATE_UP;
+	int status = NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0);
+	return status == NETMAN_NETIF_ETH_LINK_STATE_UP;
 }
 
 static int ethWaitValidNetIFLinkState(void) {
@@ -433,13 +433,17 @@ static int ethEnableDHCP(void) {
 		ip_info.dhcp_enabled = 1;	
 		return ps2ip_setconfig(&ip_info);
 	}
-	return 0;
+	return 1;
 }
 
 static void Networking_Setup(void) {
+	NetManInit();
+
 	struct ip4_addr IP  = { 0 }, NM = { 0 }, GW = { 0 };
 	ps2ipInit(&IP, &NM, &GW);
-	ethEnableDHCP();
+
+	int res = ethEnableDHCP();
+	if (res < 0) Platform_Log1("Error %i enabling DHCP", &res);
 
 	Platform_LogConst("Waiting for net link connection...");
 	if(ethWaitValidNetIFLinkState() != 0) {
@@ -453,10 +457,6 @@ static void Networking_Setup(void) {
 		return;
 	}
 	Platform_LogConst("Network setup done");
-}
-
-static void Networking_Init(void) {
-	NetManInit();
 }
 
 static void Networking_LoadIOPModules(void) {
@@ -700,7 +700,6 @@ void Platform_Init(void) {
 	//USBStorage_WaitUntilDeviceReady();
 	
 	Networking_LoadIOPModules();
-	Networking_Init();
 	Networking_Setup();
 	
 	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");

@@ -419,9 +419,9 @@ static void ProcessWPADInput(int i, float delta) {
 	int res  = WPAD_Probe(i, &type);
 	if (res) return;
 
-	u32 mods = WPAD_ButtonsDown(i) | WPAD_ButtonsHeld(i);
-	int port = Gamepad_MapPort(i + 20);
 	WPADData* wd = WPAD_Data(i);
+	u32 mods = wd->btn_h | wd->btn_d; // buttons held | buttons down now
+	int port = Gamepad_MapPort(i + 20);
 
 	if (type == WPAD_EXP_CLASSIC) {
 		ProcessClassicInput(port, wd, delta);
