@@ -229,7 +229,7 @@ static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, Widget_Lef
 	for (i = 0; i < s->numButtons; i++) 
 	{
 		btn = &s->buttons[i];
-		col = i <= half ? -160 : 160;
+		col = i < half ? -160 : 160;
 		row = 50 * (begRow + i % half);
 		Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_CENTRE, col, row);
 	}
@@ -851,14 +851,12 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			0.25f, 4.00f, 1,
 			GuO_GetCrosshair, GuO_SetCrosshair);
 		
-		MenuOptionsScreen_AddBool(s, "Full block stepping",
-			GuO_GetShadows,   GuO_SetShadows);
 		MenuOptionsScreen_AddBool(s, "Black text shadows",
-			GuO_GetTabAuto,   GuO_SetTabAuto);
+			GuO_GetShadows,   GuO_SetShadows);
 		MenuOptionsScreen_AddBool(s, "Tab auto-complete",
-			GuO_GetUseFont,   GuO_SetUseFont);
+			GuO_GetTabAuto,   GuO_SetTabAuto);
 		MenuOptionsScreen_AddBool(s, "Use system font",
-			GuO_GetUseFont,   GuO_SetTabAuto);
+			GuO_GetUseFont,   GuO_SetUseFont);
 		MenuOptionsScreen_AddButton(s, "Select system font", Menu_SwitchFont,
 			NULL,             NULL);
 	}
