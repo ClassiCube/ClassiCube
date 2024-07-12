@@ -673,7 +673,7 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 
 static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty)  UpdateState(0);
-	if (formatDirty) UpdateFormat();
+	if (formatDirty) UpdateFormat(0);
 
 	if ((q - current->data) > 45000) {
 		DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
