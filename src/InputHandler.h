@@ -55,14 +55,10 @@ cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device)
 /* Gets whether the given input binding is currently being triggered */
 CC_API cc_bool KeyBind_IsPressed(InputBind binding);
 
-/* Sets the key/mouse button that the given input binding is bound to */
-void KeyBind_Set(InputBind binding, int btn);
-/* Sets the gamepad button that the given input binding is bound to */
-void PadBind_Set(InputBind binding, int btn);
-/* Resets the key/mouse button that the given input binding is bound to */
-void KeyBind_Reset(InputBind binding);
-/* Resets the gamepad button that the given input binding is bound to */
-void PadBind_Reset(InputBind binding);
+/* Sets the button that the given input binding is bound to */
+void InputBind_Set(InputBind binding, int btn, struct InputDevice* device);
+/* Resets the button that the given input binding is bound to */
+void InputBind_Reset(InputBind binding, struct InputDevice* device);
 
 
 /* whether to leave text input open for user to enter further input */
