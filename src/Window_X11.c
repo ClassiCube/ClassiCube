@@ -35,7 +35,7 @@
 #define _NET_WM_STATE_TOGGLE 2
 
 static Display* win_display;
-static Window win_rootWin, win_handle;
+static Window win_rootWin;
 static XVisualInfo win_visual;
 #ifdef CC_BUILD_XIM
 static XIM win_xim;
@@ -324,15 +324,15 @@ void Window_Free(void) { }
 /* See misc/x11/x11_icon_gen.cs for how to generate this file */
 #include "../misc/x11/CCIcon_X11.h"
 
-static void ApplyIcon(void) {
+static void ApplyIcon(Window win) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
 	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
 	
-	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, 
+	XChangeProperty(win_display, win, net_wm_icon, xa_cardinal, 32, PropModeReplace, 
 					(unsigned char*)CCIcon_Data, CCIcon_Size);
 }
 #else
-static void ApplyIcon(void) { }
+static void ApplyIcon(Window win) { }
 #endif
 
 static void DoCreateWindow(int width, int height) {
@@ -352,7 +352,7 @@ static void DoCreateWindow(int width, int height) {
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
 	attributes.event_mask = win_eventMask;
 
-	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
+	Window win = XCreateWindow(win_display, win_rootWin, x, y, width, height,
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual,
 #ifdef CC_BUILD_IRIX
 		CWColormap | CWEventMask | CWBlackPixel | CWBorderPixel, &attributes);
@@ -361,12 +361,12 @@ static void DoCreateWindow(int width, int height) {
 		CWColormap | CWEventMask, &attributes);
 #endif
 
-	if (!win_handle) Logger_Abort("XCreateWindow failed");
+	if (!win) Logger_Abort("XCreateWindow failed");
 
 #ifdef CC_BUILD_XIM
 	win_xim = XOpenIM(win_display, NULL, NULL, NULL);
 	win_xic = XCreateIC(win_xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
-						XNClientWindow, win_handle, NULL);
+						XNClientWindow, win, NULL);
 #endif
 
 	/* Set hints to try to force WM to create window at requested x,y */
@@ -374,12 +374,12 @@ static void DoCreateWindow(int width, int height) {
 	hints.base_width  = width;
 	hints.base_height = height;
 	hints.flags = PSize | PPosition;
-	XSetWMNormalHints(win_display, win_handle, &hints);
+	XSetWMNormalHints(win_display, win, &hints);
 
 	/* Register for window destroy notification */
 	protocols[0] = wm_destroy;
 	protocols[1] = net_wm_ping;
-	XSetWMProtocols(win_display, win_handle, protocols, 2);
+	XSetWMProtocols(win_display, win, protocols, 2);
 
 	/* Request that auto-repeat is only set on devices that support it physically.
 	   This typically means that it's turned off for keyboards (which is what we want).
@@ -389,7 +389,7 @@ static void DoCreateWindow(int width, int height) {
 
 	RefreshWindowBounds(width, height);
 	Window_Main.Exists     = true;
-	Window_Main.Handle.val = win_handle;
+	Window_Main.Handle.val = win;
 	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
@@ -403,27 +403,29 @@ static void DoCreateWindow(int width, int height) {
 		hint.res_name   = GAME_APP_TITLE;
 		hint.res_class  = GAME_APP_TITLE;
 	#endif
-	XSetClassHint(win_display, win_handle, &hint);
-	ApplyIcon();
+	XSetClassHint(win_display, win, &hint);
+	ApplyIcon(win);
 
 	/* Check for focus initially, in case WM doesn't send a FocusIn event */
 	XGetInputFocus(win_display, &focus, &focusRevert);
-	if (focus == win_handle) Window_Main.Focused = true;
+	if (focus == win) Window_Main.Focused = true;
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_Destroy(void) {
+	Window win = Window_Main.Handle.val;
 	/* sync and discard all events queued */
 	XSync(win_display, true);
-	XDestroyWindow(win_display, win_handle);
+	XDestroyWindow(win_display, win);
 	Window_Main.Exists = false;
 }
 
 void Window_SetTitle(const cc_string* title) {
+	Window win = Window_Main.Handle.val;
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, title);
-	XStoreName(win_display, win_handle, str);
+	XStoreName(win_display, win, str);
 }
 
 static char clipboard_copy_buffer[256];
@@ -433,11 +435,12 @@ static cc_string clipboard_paste_text = String_FromArray(clipboard_paste_buffer)
 static cc_bool clipboard_paste_received;
 
 void Clipboard_GetText(cc_string* value) {
+	Window win   = Window_Main.Handle.val;
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
 	int i;
 	if (!owner) return; /* no window owner */
 
-	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, 0);
+	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win, 0);
 	clipboard_paste_received    = false;
 	clipboard_paste_text.length = 0;
 
@@ -454,19 +457,21 @@ void Clipboard_GetText(cc_string* value) {
 }
 
 void Clipboard_SetText(const cc_string* value) {
+	Window win = Window_Main.Handle.val;
 	String_Copy(&clipboard_copy_text, value);
-	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
+	XSetSelectionOwner(win_display, xa_clipboard, win, 0);
 }
 
 int Window_GetWindowState(void) {
 	cc_bool fullscreen = false, minimised = false;
+	Window win = Window_Main.Handle.val;
 	Atom prop_type;
 	unsigned long items, after;
 	unsigned char* data = NULL;
 	int i, prop_format;
 	Atom* list;
 
-	XGetWindowProperty(win_display, win_handle,
+	XGetWindowProperty(win_display, win,
 		net_wm_state, 0, 256, false, xa_atom, &prop_type,
 		&prop_format, &items, &after, &data);
 
@@ -490,9 +495,10 @@ int Window_GetWindowState(void) {
 }
 
 static void ToggleFullscreen(long op) {
-	XEvent ev = { 0 };
+	Window win = Window_Main.Handle.val;
+	XEvent ev  = { 0 };
 	ev.xclient.type   = ClientMessage;
-	ev.xclient.window = win_handle;
+	ev.xclient.window = win;
 	ev.xclient.message_type = net_wm_state;
 	ev.xclient.format = 32;
 	ev.xclient.data.l[0] = op;
@@ -501,7 +507,7 @@ static void ToggleFullscreen(long op) {
 	XSendEvent(win_display, win_rootWin, false,
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
 	XSync(win_display, false);
-	XRaiseWindow(win_display, win_handle);
+	XRaiseWindow(win_display, win);
 	Window_ProcessEvents(0.0);
 }
 
@@ -514,10 +520,14 @@ cc_result Window_ExitFullscreen(void) {
 
 int Window_IsObscured(void) { return 0; }
 
-void Window_Show(void) { XMapWindow(win_display, win_handle); }
+void Window_Show(void) {
+	Window win = Window_Main.Handle.val;
+	XMapWindow(win_display, win); 
+}
 
 void Window_SetSize(int width, int height) {
-	XResizeWindow(win_display, win_handle, width, height);
+	Window win = Window_Main.Handle.val;
+	XResizeWindow(win_display, win, width, height);
 	Window_ProcessEvents(0.0);
 }
 
@@ -586,13 +596,14 @@ static void HandleWMPing(XEvent* e) {
 static void HandleGenericEvent(XEvent* e);
 
 void Window_ProcessEvents(float delta) {
+	Window win = Window_Main.Handle.val;
 	XEvent e;
 	Window focus;
 	int focusRevert;
 	int i, btn, key, status;
 
 	while (Window_Main.Exists) {
-		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
+		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win)) break;
 		if (XFilterEvent(&e, None) == True) continue;
 
 		switch (e.type) {
@@ -716,9 +727,9 @@ void Window_ProcessEvents(float delta) {
 				unsigned long items, after;
 				cc_uint8* data = NULL;
 
-				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, 0,
+				XGetWindowProperty(win_display, win, xa_data_sel, 0, 1024, false, 0,
 					&prop_type, &prop_format, &items, &after, &data);
-				XDeleteProperty(win_display, win_handle, xa_data_sel);
+				XDeleteProperty(win_display, win, xa_data_sel);
 
 				if (data && items && prop_type == xa_utf8_string) {
 					clipboard_paste_received    = true;
@@ -775,23 +786,25 @@ static void Cursor_GetRawPos(int* x, int* y) {
 }
 
 void Cursor_SetPosition(int x, int y) {
-	XWarpPointer(win_display, None, win_handle, 0, 0, 0, 0, x, y);
+	Window win = Window_Main.Handle.val;
+	XWarpPointer(win_display, None, win, 0, 0, 0, 0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
 static Cursor blankCursor;
 static void Cursor_DoSetVisible(cc_bool visible) {
+	Window win = Window_Main.Handle.val;
 	if (visible) {
-		XUndefineCursor(win_display, win_handle);
+		XUndefineCursor(win_display, win);
 	} else {
 		if (!blankCursor) {
 			char data  = 0;
 			XColor col = { 0 };
-			Pixmap pixmap = XCreateBitmapFromData(win_display, win_handle, &data, 1, 1);
+			Pixmap pixmap = XCreateBitmapFromData(win_display, win, &data, 1, 1);
 			blankCursor   = XCreatePixmapCursor(win_display, pixmap, pixmap, &col, &col, 0, 0);
 			XFreePixmap(win_display, pixmap);
 		}
-		XDefineCursor(win_display, win_handle, blankCursor);
+		XDefineCursor(win_display, win, blankCursor);
 	}
 }
 
@@ -931,6 +944,7 @@ static Bool X11_FilterEvent(Display* d, XEvent* e, XPointer w) { return e->xany.
 static void X11_MessageBox(const char* title, const char* text, struct X11MessageBox* m) {
 	struct X11Button ok    = { 0 };
 	struct X11Textbox body = { 0 };
+	Window win = Window_Main.Handle.val;
 
 	Atom protocols[2];
 	XFontStruct* font;
@@ -973,7 +987,7 @@ static void X11_MessageBox(const char* title, const char* text, struct X11Messag
 	/* This marks the window as popup window of the main window */
 	/* http://tronche.com/gui/x/icccm/sec-4.html#WM_TRANSIENT_FOR */
 	/* Depending on WM, removes minimise and doesn't show in taskbar */
-	if (win_handle) XSetTransientForHint(m->dpy, m->win, win_handle);
+	if (win) XSetTransientForHint(m->dpy, m->win, win);
 
 	XFreeFontInfo(NULL, font, 1);
 	XUnmapWindow(m->dpy, m->win); /* Make window non resizeable */
@@ -1132,7 +1146,8 @@ static void* fb_data;
 static int fb_fast;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
+	Window win = Window_Main.Handle.val;
+	if (!fb_gc) fb_gc = XCreateGC(win_display, win, 0, NULL);
 
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
@@ -1192,10 +1207,11 @@ static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	Window win = Window_Main.Handle.val;
 	/* Convert 32 bit depth to window depth when required */
 	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.width, r.height, bmp);
 
-	XPutImage(win_display, win_handle, fb_gc, fb_image,
+	XPutImage(win_display, win, fb_gc, fb_image,
 		r.x, r.y, r.x, r.y, r.width, r.height);
 }
 
@@ -1300,13 +1316,14 @@ static void InitRawMouse(void) { }
 #endif
 
 void Window_EnableRawMouse(void) {
+	Window win = Window_Main.Handle.val;
 	DefaultEnableRawMouse();
 	if (!rawMouseInited) InitRawMouse();
 	rawMouseInited = true;
 
 	if (!grabCursor) return;
-	XGrabPointer(win_display, win_handle, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
-		GrabModeAsync, GrabModeAsync, win_handle, blankCursor, CurrentTime);
+	XGrabPointer(win_display, win, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+		GrabModeAsync, GrabModeAsync, win, blankCursor, CurrentTime);
 }
 
 void Window_UpdateRawMouse(void) {
@@ -1342,6 +1359,7 @@ void GLContext_Create(void) {
 	static const cc_string vsync_mesa = String_FromConst("GLX_MESA_swap_control");
 	static const cc_string vsync_sgi  = String_FromConst("GLX_SGI_swap_control");
 	static const cc_string info_mesa  = String_FromConst("GLX_MESA_query_renderer");
+	Window win = Window_Main.Handle.val;
 
 	const char* raw_exts;
 	cc_string exts;
@@ -1356,7 +1374,7 @@ void GLContext_Create(void) {
 	if (!glXIsDirect(win_display, ctx_handle)) {
 		Platform_LogConst("== WARNING: Context is not direct ==");
 	}
-	if (!glXMakeCurrent(win_display, win_handle, ctx_handle)) {
+	if (!glXMakeCurrent(win_display, win, ctx_handle)) {
 		Logger_Abort("Failed to make OpenGL context current.");
 	}
 
@@ -1390,7 +1408,8 @@ void* GLContext_GetAddress(const char* function) {
 }
 
 cc_bool GLContext_SwapBuffers(void) {
-	glXSwapBuffers(win_display, win_handle);
+	Window win = Window_Main.Handle.val;
+	glXSwapBuffers(win_display, win);
 	return true;
 }
 
