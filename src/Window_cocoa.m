@@ -183,6 +183,7 @@ static void LogUnhandledNSErrors(NSException* ex) {
 
 void Window_PreInit(void) {
 	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+	DisplayInfo.CursorVisible = true;
 }
 
 static NSAutoreleasePool* pool;

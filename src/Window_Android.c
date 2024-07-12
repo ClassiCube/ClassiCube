@@ -286,7 +286,10 @@ static void CacheMethodRefs(JNIEnv* env) {
 	JAVA_saveFileDialog = JavaGetIMethod(env, "saveFileDialog", "(Ljava/lang/String;Ljava/lang/String;)I");
 }
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 // TODO move to bottom of file?
 void Window_Init(void) {
 	JNIEnv* env;

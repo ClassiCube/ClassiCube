@@ -800,12 +800,11 @@ static void LocalPlayers_OnNewMap(void) {
 }
 
 static struct LocalPlayer* LocalPlayer_Get(int deviceIndex) {
-	if (Game_NumLocalPlayers >= 4 && deviceIndex == 4) return &LocalPlayer_Instances[3];
-	if (Game_NumLocalPlayers >= 3 && deviceIndex == 3) return &LocalPlayer_Instances[2];
-	if (Game_NumLocalPlayers >= 2 && deviceIndex == 2) return &LocalPlayer_Instances[1];
-	if (Game_NumLocalPlayers >= 1 && deviceIndex == 1) return &LocalPlayer_Instances[0];
+	if (Game_NumLocalPlayers >= 4 && deviceIndex == 3) return &LocalPlayer_Instances[3];
+	if (Game_NumLocalPlayers >= 3 && deviceIndex == 2) return &LocalPlayer_Instances[2];
+	if (Game_NumLocalPlayers >= 2 && deviceIndex == 1) return &LocalPlayer_Instances[1];
 
-	return Entities.CurPlayer;
+	return &LocalPlayer_Instances[0];
 }
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }

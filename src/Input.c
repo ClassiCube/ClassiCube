@@ -274,7 +274,7 @@ static cc_bool NormDevice_IsPressed(struct InputDevice* device, int key) {
 
 static cc_bool PadDevice_IsPressed(struct InputDevice* device, int key) { 
 	if (!Input_IsPadButton(key)) return false;
-	return Gamepad_States[device->index - 1].pressed[key - GAMEPAD_BEG_BTN];
+	return Gamepad_States[device->index].pressed[key - GAMEPAD_BEG_BTN];
 }
 
 static cc_bool TouchDevice_IsPressed(struct InputDevice* device, int key) { 
@@ -378,7 +378,7 @@ struct GamepadState Gamepad_States[INPUT_MAX_GAMEPADS];
 
 static void Gamepad_Apply(int port, int btn, cc_bool was, int pressed) {
 	struct InputDevice device = PadDevice;
-	device.index = port + 1;
+	device.index = port;
 
 	if (pressed) {
 		Event_RaiseInput(&InputEvents.Down, btn + GAMEPAD_BEG_BTN, was, &device);

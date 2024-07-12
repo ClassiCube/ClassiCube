@@ -385,6 +385,7 @@ extern void interop_ForceTouchPageLayout(void);
 extern void Game_DoFrame(void);
 void Window_PreInit(void) {
 	emscripten_set_main_loop(Game_DoFrame, 0, false);
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {

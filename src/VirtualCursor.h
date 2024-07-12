@@ -21,7 +21,7 @@ static void VirtualCursor_Display2D(struct Context2D* ctx) {
 					x - CURSOR_SIZE, y - CURSOR_EXTENT, CURSOR_SIZE * 3, CURSOR_EXTENT * 2);
 }
 
-static void VirtualCursor_SetPositionm(int x, int y) {
+static void VirtualCursor_SetPosition(int x, int y) {
 	x = max(0, min(x, Window_Main.Width  - 1));
 	y = max(0, min(y, Window_Main.Height - 1));
 	vc_hooked = true;

@@ -29,6 +29,7 @@ void Window_PreInit(void) {
 	#ifdef CC_BUILD_FLATPAK
 	SDL_SetHint(SDL_HINT_APP_ID, "net.classicube.flatpak.client");
 	#endif
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {

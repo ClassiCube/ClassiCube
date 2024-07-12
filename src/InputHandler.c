@@ -1050,7 +1050,7 @@ static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* devic
 	}
 }
 
-static int moveFlags[1 + INPUT_MAX_GAMEPADS];
+static int moveFlags[INPUT_MAX_GAMEPADS];
 
 static cc_bool Player_TriggerLeft(int key,  struct InputDevice* device) {
 	moveFlags[device->index] |= FACE_BIT_XMIN;
@@ -1083,13 +1083,13 @@ static void Player_ReleaseDown(int key,  struct InputDevice* device) {
 }
 
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	int flags = moveFlags[0], port;
+	int flags = 0, port;
 
 	if (Game_NumLocalPlayers == 1) {
 		for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
-			flags |= moveFlags[port + 1];
+			flags |= moveFlags[port];
 	} else {
-		flags |= moveFlags[p->index + 1];
+		flags = moveFlags[p->index];
 	}
 
 	if (flags & FACE_BIT_YMIN) *zMoving -= 1;

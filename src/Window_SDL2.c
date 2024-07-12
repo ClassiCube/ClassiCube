@@ -53,6 +53,7 @@ static void Window_SDLFail(const char* place) {
 
 void Window_PreInit(void) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {
