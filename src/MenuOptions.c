@@ -39,14 +39,6 @@
 typedef void (*Button_GetValue)(cc_string* raw);
 typedef void (*Button_SetValue)(const cc_string* raw);
 /* Describes a menu option button */
-struct MenuOptionDesc {
-	short dir, y;
-	const char* name;
-	Widget_LeftClick OnClick;
-	Button_Get GetValue; Button_Set SetValue;
-	void* meta;
-};
-
 struct MenuOptionMeta {
 	Button_GetValue GetValue;
 	Button_SetValue SetValue;
@@ -113,10 +105,10 @@ static cc_bool Menu_SetBool(const cc_string* raw, const char* key) {
 	return isOn;
 }
 
-static void MenuOptionsScreen_GetFPS(cc_string* raw) {
+static void MeO_GetFPS(cc_string* raw) {
 	String_AppendConst(raw, FpsLimit_Names[Game_FpsLimit]);
 }
-static void MenuOptionsScreen_SetFPS(const cc_string* v) {
+static void MeO_SetFPS(const cc_string* v) {
 	int method = Utils_ParseEnum(v, FPS_LIMIT_VSYNC, FpsLimit_Names, Array_Elems(FpsLimit_Names));
 	Options_Set(OPT_FPS_LIMIT, v);
 	Game_SetFpsLimit(method);
@@ -231,32 +223,16 @@ static int MenuOptionsScreen_AddButton(struct MenuOptionsScreen* s, const char* 
 
 static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, Widget_LeftClick backClick) {
 	struct ButtonWidget* btn;
-	int i;
+	int i, col, row, half = s->numButtons / 2;
+	int begRow = max(-3, 2 - half);
 	
-	for (i = 0; i < s->numButtons; i++) {
+	for (i = 0; i < s->numButtons; i++) 
+	{
 		btn = &s->buttons[i];
-		Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_CENTRE, i * 160, i * 160);
+		col = i <= half ? -160 : 160;
+		row = 50 * (begRow + i % half);
+		Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_CENTRE, col, row);
 	}
-	s->numButtons = count;
-	ButtonWidget_Add(s, &s->done, 400, backClick);
-}
-
-static void MenuOptionsScreen_AddButtons(struct MenuOptionsScreen* s, const struct MenuOptionDesc* btns, int count, Widget_LeftClick backClick) {
-	struct ButtonWidget* btn;
-	int i;
-	
-	for (i = 0; i < count; i++) {
-		btn = &s->buttons[i];
-		ButtonWidget_Add(s, btn,  300, btns[i].OnClick);
-		Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_CENTRE, btns[i].dir * 160, btns[i].y);
-
-		btn->optName  = btns[i].name;
-		btn->GetValue = btns[i].GetValue;
-		btn->SetValue = btns[i].SetValue;
-		btn->meta.ptr = &menuOpts_descs[i];
-		s->widgets[i] = (struct Widget*)btn;
-	}
-	s->numButtons = count;
 	ButtonWidget_Add(s, &s->done, 400, backClick);
 }
 
@@ -281,14 +257,14 @@ static void MenuOptionsScreen_AddBool(struct MenuOptionsScreen* s, const char* n
 										getValue, setValue);
 }
 
-static void MenuOptionsScreen_Enum(void* screen, void* widget) {
+static void MenuOptionsScreen_EnumClick(void* screen, void* widget) {
 	cc_string value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	
-	struct MenuOptionEnumMeta* meta = (struct MenuOptionEnumMeta*)btn->meta.ptr;
-	const char* const* names = meta->desc.Meta.e.names;
-	int raw, count = meta->desc.Meta.e.count;
+	struct MenuOptionMeta* meta = (struct MenuOptionMeta*)btn->meta.ptr;
+	const char* const* names = meta->desc.meta.e.Names;
+	int raw, count = meta->desc.meta.e.Count;
 	
 	String_InitArray(value, valueBuffer);
 	meta->GetValue(&value);
@@ -299,7 +275,7 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 }
 
 static void MenuOptionsScreen_AddEnum(struct MenuOptionsScreen* s, const char* name,
-									const char* const names, int namesCount,
+									const char* const* names, int namesCount,
 									Button_GetValue getValue, Button_SetValue setValue) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_EnumClick, 
 										getValue, setValue);
@@ -318,20 +294,49 @@ static void MenuInputOverlay_CheckStillValid(struct MenuOptionsScreen* s) {
 	}
 }
 
-static void MenuOptionsScreen_Input(void* screen, void* widget) {
+static void MenuOptionsScreen_InputClick(void* screen, void* widget) {
 	cc_string value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
-	struct MenuInputDesc* desc;
+	struct MenuOptionMeta* meta = (struct MenuOptionMeta*)btn->meta.ptr;
 
 	MenuOptionsScreen_FreeExtHelp(s);
 	s->activeBtn = btn;
 
 	String_InitArray(value, valueBuffer);
-	btn->GetValue(&value);
-	desc = (struct MenuInputDesc*)btn->meta.ptr;
-	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone, Gui_TouchUI);
+	meta->GetValue(&value);
+	MenuInputOverlay_Show(&meta->desc, &value, MenuOptionsScreen_OnDone, Gui_TouchUI);
 }
+
+static void MenuOptionsScreen_AddHex(struct MenuOptionsScreen* s, const char* name, PackedCol defaultValue,
+									Button_GetValue getValue, Button_SetValue setValue) {
+	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
+										getValue, setValue);
+										
+	struct MenuOptionMeta* meta = &menuOpts_meta[i];
+	MenuInput_Hex(meta->desc, defaultValue);
+}
+
+static void MenuOptionsScreen_AddInt(struct MenuOptionsScreen* s, const char* name,
+									int minValue, int maxValue, int defaultValue,
+									Button_GetValue getValue, Button_SetValue setValue) {
+	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
+										getValue, setValue);
+										
+	struct MenuOptionMeta* meta = &menuOpts_meta[i];
+	MenuInput_Int(meta->desc, minValue, maxValue, defaultValue);
+}
+
+static void MenuOptionsScreen_AddNum(struct MenuOptionsScreen* s, const char* name,
+									float minValue, float maxValue, float defaultValue,
+									Button_GetValue getValue, Button_SetValue setValue) {
+	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
+										getValue, setValue);
+										
+	struct MenuOptionMeta* meta = &menuOpts_meta[i];
+	MenuInput_Float(meta->desc, minValue, maxValue, defaultValue);
+}
+
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
@@ -454,16 +459,16 @@ void MenuOptionsScreen_Show(InitMenuOptions init) {
 enum ViewDist { VIEW_TINY, VIEW_SHORT, VIEW_NORMAL, VIEW_FAR, VIEW_COUNT };
 static const char* const viewDistNames[VIEW_COUNT] = { "TINY", "SHORT", "NORMAL", "FAR" };
 
-static void CO_GetMusic(cc_string* v) { Menu_GetBool(v, Audio_MusicVolume > 0); }
-static void CO_SetMusic(const cc_string* v) {
+static void ClO_GetMusic(cc_string* v) { Menu_GetBool(v, Audio_MusicVolume > 0); }
+static void ClO_SetMusic(const cc_string* v) {
 	Audio_SetMusic(String_CaselessEqualsConst(v, "ON") ? 100 : 0);
 	Options_SetInt(OPT_MUSIC_VOLUME, Audio_MusicVolume);
 }
 
-static void CO_GetInvert(cc_string* v) { Menu_GetBool(v, Camera.Invert); }
-static void CO_SetInvert(const cc_string* v) { Camera.Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void ClO_GetInvert(cc_string* v) { Menu_GetBool(v, Camera.Invert); }
+static void ClO_SetInvert(const cc_string* v) { Camera.Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-static void CO_GetViewDist(cc_string* v) {
+static void ClO_GetViewDist(cc_string* v) {
 	if (Game_ViewDistance >= 512) {
 		String_AppendConst(v, viewDistNames[VIEW_FAR]);
 	} else if (Game_ViewDistance >= 128) {
@@ -474,31 +479,31 @@ static void CO_GetViewDist(cc_string* v) {
 		String_AppendConst(v, viewDistNames[VIEW_TINY]);
 	}
 }
-static void CO_SetViewDist(const cc_string* v) {
+static void ClO_SetViewDist(const cc_string* v) {
 	int raw  = Utils_ParseEnum(v, 0, viewDistNames, VIEW_COUNT);
 	int dist = raw == VIEW_FAR ? 512 : (raw == VIEW_NORMAL ? 128 : (raw == VIEW_SHORT ? 32 : 8));
 	Game_UserSetViewDistance(dist);
 }
 
-static void CO_GetAnaglyph(cc_string* v) { Menu_GetBool(v, Game_Anaglyph3D); }
-static void CO_SetAnaglyph(const cc_string* v) {
+static void ClO_GetAnaglyph(cc_string* v) { Menu_GetBool(v, Game_Anaglyph3D); }
+static void ClO_SetAnaglyph(const cc_string* v) {
 	Game_Anaglyph3D = Menu_SetBool(v, OPT_ANAGLYPH3D);
 }
 
-static void CO_GetSounds(cc_string* v) { Menu_GetBool(v, Audio_SoundsVolume > 0); }
-static void CO_SetSounds(const cc_string* v) {
+static void ClO_GetSounds(cc_string* v) { Menu_GetBool(v, Audio_SoundsVolume > 0); }
+static void ClO_SetSounds(const cc_string* v) {
 	Audio_SetSounds(String_CaselessEqualsConst(v, "ON") ? 100 : 0);
 	Options_SetInt(OPT_SOUND_VOLUME, Audio_SoundsVolume);
 }
 
-static void CO_GetShowFPS(cc_string* v) { Menu_GetBool(v, Gui.ShowFPS); }
-static void CO_SetShowFPS(const cc_string* v) { Gui.ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void ClO_GetShowFPS(cc_string* v) { Menu_GetBool(v, Gui.ShowFPS); }
+static void ClO_SetShowFPS(const cc_string* v) { Gui.ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-static void CO_GetViewBob(cc_string* v) { Menu_GetBool(v, Game_ViewBobbing); }
-static void CO_SetViewBob(const cc_string* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
+static void ClO_GetViewBob(cc_string* v) { Menu_GetBool(v, Game_ViewBobbing); }
+static void ClO_SetViewBob(const cc_string* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
-static void CO_GetHacks(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.Enabled); }
-static void CO_SetHacks(const cc_string* v) {
+static void ClO_GetHacks(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.Enabled); }
+static void ClO_SetHacks(const cc_string* v) {
 	Entities.CurPlayer->Hacks.Enabled = Menu_SetBool(v, OPT_HACKS_ENABLED);
 	HacksComp_Update(&Entities.CurPlayer->Hacks);
 }
@@ -511,24 +516,24 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Music",
-			CO_GetMusic,    CO_SetMusic);
+			ClO_GetMusic,    ClO_SetMusic);
 		MenuOptionsScreen_AddBool(s, "Invert mouse",
-			CO_GetInvert,   CO_SetInvert);
+			ClO_GetInvert,   ClO_SetInvert);
 		MenuOptionsScreen_AddEnum(s, "Render distance", viewDistNames, VIEW_COUNT,
-			CO_GetViewDist, CO_SetViewDist);
+			ClO_GetViewDist, ClO_SetViewDist);
 		MenuOptionsScreen_AddBool(s, "3d anaglyph",
-			CO_GetAnaglyph, CO_SetAnaglyph);
+			ClO_GetAnaglyph, ClO_SetAnaglyph);
 		
 		MenuOptionsScreen_AddBool(s, "Sound",
-			CO_GetSounds,   CO_SetSounds);
+			ClO_GetSounds,   ClO_SetSounds);
 		MenuOptionsScreen_AddBool(s, "Show FPS",
-			CO_GetShowFPS,  CO_SetShowFPS);
+			ClO_GetShowFPS,  ClO_SetShowFPS);
 		MenuOptionsScreen_AddBool(s, "View bobbing",
-			CO_GetViewBob,  CO_SetViewBob);
+			ClO_GetViewBob,  ClO_SetViewBob);
 		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			MenuOptionsScreen_GetFPS,         MenuOptionsScreen_SetFPS);
+			MeO_GetFPS,      MeO_SetFPS);
 		MenuOptionsScreen_AddBool(s, "Hacks enabled",
-			CO_GetHacks,   CO_SetHacks);
+			ClO_GetHacks,    ClO_SetHacks);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchPause);
 	s->DoRecreateExtra = ClassicOptionsScreen_RecreateExtra;
@@ -591,9 +596,11 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ES_GetSkyColor,     ES_SetSkyColor);
 		MenuOptionsScreen_AddHex(s, "Fog color",    ENV_DEFAULT_FOG_COLOR,
 			ES_GetFogColor,     ES_SetFogColor);
-		MenuOptionsScreen_AddNum(s, "Clouds speed",       0,  1000,                1,
+		MenuOptionsScreen_AddNum(s, "Clouds speed",
+			0,       1000,                1,
 			ES_GetCloudsSpeed,  ES_SetCloudsSpeed);
-		MenuOptionsScreen_AddInt(s, "Clouds height", -10000, 10000, World.Height + 2,
+		MenuOptionsScreen_AddInt(s, "Clouds height", 
+			-10000, 10000, World.Height + 2,
 			ES_GetCloudsHeight, ES_SetCloudsHeight);
 		
 		MenuOptionsScreen_AddHex(s, "Sunlight color", ENV_DEFAULT_SUN_COLOR,
@@ -602,9 +609,11 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ES_GetShadowColor,  ES_SetShadowColor);
 		MenuOptionsScreen_AddEnum(s, "Weather", Weather_Names, Array_Elems(Weather_Names),
 			ES_GetWeather,      ES_SetWeather);
-		MenuOptionsScreen_AddNum(s, "Rain/Snow speed",  -100,  100, 1,
+		MenuOptionsScreen_AddNum(s, "Rain/Snow speed",
+			 -100,  100,                1,
 			ES_GetWeatherSpeed, ES_SetWeatherSpeed);
-		MenuOptionsScreen_AddInt(s, "Water level",     -2048, 2048, World.Height / 2,
+		MenuOptionsScreen_AddInt(s, "Water level",
+			-2048, 2048, World.Height / 2,
 			ES_GetEdgeHeight,   ES_SetEdgeHeight);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
@@ -618,22 +627,22 @@ void EnvSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
-static void GraphicsOptionsScreen_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
+static void GrO_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
 	Widget_SetDisabled(s->widgets[4], Lighting_ModeLockedByServer);
 }
 
-static void GraphicsOptionsScreen_GetViewDist(cc_string* v) { String_AppendInt(v, Game_ViewDistance); }
-static void GraphicsOptionsScreen_SetViewDist(const cc_string* v) { Game_UserSetViewDistance(Menu_Int(v)); }
+static void GrO_GetViewDist(cc_string* v) { String_AppendInt(v, Game_ViewDistance); }
+static void GrO_SetViewDist(const cc_string* v) { Game_UserSetViewDistance(Menu_Int(v)); }
 
-static void GraphicsOptionsScreen_GetSmooth(cc_string* v) { Menu_GetBool(v, Builder_SmoothLighting); }
-static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
+static void GrO_GetSmooth(cc_string* v) { Menu_GetBool(v, Builder_SmoothLighting); }
+static void GrO_SetSmooth(const cc_string* v) {
 	Builder_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }
 
-static void GraphicsOptionsScreen_GetLighting(cc_string* v) { String_AppendConst(v, LightingMode_Names[Lighting_Mode]); }
-static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
+static void GrO_GetLighting(cc_string* v) { String_AppendConst(v, LightingMode_Names[Lighting_Mode]); }
+static void GrO_SetLighting(const cc_string* v) {
 	cc_uint8 mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);
 	Options_Set(OPT_LIGHTING_MODE, v);
 
@@ -641,66 +650,69 @@ static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
 	Lighting_SetMode(mode, false);
 }
 
-static void GraphicsOptionsScreen_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }
-static void GraphicsOptionsScreen_SetCamera(const cc_string* v) { Camera.Smooth = Menu_SetBool(v, OPT_CAMERA_SMOOTH); }
+static void GrO_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }
+static void GrO_SetCamera(const cc_string* v) { Camera.Smooth = Menu_SetBool(v, OPT_CAMERA_SMOOTH); }
 
-static void GraphicsOptionsScreen_GetNames(cc_string* v) { String_AppendConst(v, NameMode_Names[Entities.NamesMode]); }
-static void GraphicsOptionsScreen_SetNames(const cc_string* v) {
+static void GrO_GetNames(cc_string* v) { String_AppendConst(v, NameMode_Names[Entities.NamesMode]); }
+static void GrO_SetNames(const cc_string* v) {
 	Entities.NamesMode = Utils_ParseEnum(v, 0, NameMode_Names, NAME_MODE_COUNT);
 	Options_Set(OPT_NAMES_MODE, v);
 }
 
-static void GraphicsOptionsScreen_GetShadows(cc_string* v) { String_AppendConst(v, ShadowMode_Names[Entities.ShadowsMode]); }
-static void GraphicsOptionsScreen_SetShadows(const cc_string* v) {
+static void GrO_GetShadows(cc_string* v) { String_AppendConst(v, ShadowMode_Names[Entities.ShadowsMode]); }
+static void GrO_SetShadows(const cc_string* v) {
 	Entities.ShadowsMode = Utils_ParseEnum(v, 0, ShadowMode_Names, SHADOW_MODE_COUNT);
 	Options_Set(OPT_ENTITY_SHADOW, v);
 }
 
-static void GraphicsOptionsScreen_GetMipmaps(cc_string* v) { Menu_GetBool(v, Gfx.Mipmaps); }
-static void GraphicsOptionsScreen_SetMipmaps(const cc_string* v) {
+static void GrO_GetMipmaps(cc_string* v) { Menu_GetBool(v, Gfx.Mipmaps); }
+static void GrO_SetMipmaps(const cc_string* v) {
 	Gfx.Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
 	TexturePack_ExtractCurrent(true);
 }
 
-static void GraphicsOptionsScreen_GetCameraMass(cc_string* v) { String_AppendFloat(v, Camera.Mass, 2); }
-static void GraphicsOptionsScreen_SetCameraMass(const cc_string* c) {
+static void GrO_GetCameraMass(cc_string* v) { String_AppendFloat(v, Camera.Mass, 2); }
+static void GrO_SetCameraMass(const cc_string* c) {
 	Camera.Mass = Menu_Float(c);
 	Options_Set(OPT_CAMERA_MASS, c);
 }
 
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[] = {
-		{ -1, -150, "Camera Mass",       MenuOptionsScreen_Input,
-			GraphicsOptionsScreen_GetCameraMass, GraphicsOptionsScreen_SetCameraMass },
-		{ -1, -100, "FPS mode",          MenuOptionsScreen_Enum,
-			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
-		{ -1,  -50, "View distance",     MenuOptionsScreen_Input,
-			GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist },
-		{ -1,    0, "Smooth lighting", MenuOptionsScreen_Bool,
-			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
-		{ -1,  50,  "Lighting mode", MenuOptionsScreen_Enum,
-			GraphicsOptionsScreen_GetLighting,   GraphicsOptionsScreen_SetLighting },
-		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
-			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
-		{ 1, -100, "Names",   MenuOptionsScreen_Enum,
-			GraphicsOptionsScreen_GetNames,   GraphicsOptionsScreen_SetNames },
-		{ 1,  -50, "Shadows", MenuOptionsScreen_Enum,
-			GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows },
+	MenuOptionsScreen_BeginButtons(s);
+	{
+		MenuOptionsScreen_AddNum(s, "Camera Mass",
+			1, 100, 20,
+			GrO_GetCameraMass, GrO_SetCameraMass);
+		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
+			MeO_GetFPS,        MeO_SetFPS);
+		MenuOptionsScreen_AddInt(s, "View distance",
+			8, 4096, 512,
+			GrO_GetViewDist,   GrO_SetViewDist);
+		MenuOptionsScreen_AddBool(s, "Smooth lighting",
+			GrO_GetSmooth,     GrO_SetSmooth);
+		MenuOptionsScreen_AddEnum(s, "Lighting mode", LightingMode_Names, LIGHTING_MODE_COUNT,
+			GrO_GetLighting,   GrO_SetLighting);
+			
+		MenuOptionsScreen_AddBool(s, "Smooth camera",
+			GrO_GetCamera,     GrO_SetCamera);
+		MenuOptionsScreen_AddEnum(s, "Names",   NameMode_Names,   NAME_MODE_COUNT,
+			GrO_GetNames,      GrO_SetNames);
+		MenuOptionsScreen_AddEnum(s, "Shadows", ShadowMode_Names, SHADOW_MODE_COUNT,
+			GrO_GetShadows,    GrO_SetShadows);
 #ifdef CC_BUILD_N64
-		{ 1,    0,  "Filtering", MenuOptionsScreen_Bool,
-			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps },
+		MenuOptionsScreen_AddBool(s, "Filtering",
+			GrO_GetMipmaps,    GrO_SetMipmaps);
 #else
-		{ 1,    0,  "Mipmaps", MenuOptionsScreen_Bool,
-			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps },
+		MenuOptionsScreen_AddBool(s, "Mipmaps",
+			GrO_GetMipmaps,    GrO_SetMipmaps);
 #endif
-		{ 1,   50,  "3D anaglyph", MenuOptionsScreen_Bool,
-			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
+		MenuOptionsScreen_AddBool(s, "3D anaglyph",
+			ClO_GetAnaglyph,   ClO_SetAnaglyph);
 	};
+	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
-	s->OnLightingModeServerChanged = GraphicsOptionsScreen_CheckLightingModeAllowed;
-
-	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
-	GraphicsOptionsScreen_CheckLightingModeAllowed(s);
+	s->OnLightingModeServerChanged = GrO_CheckLightingModeAllowed;
+	GrO_CheckLightingModeAllowed(s);
 
 	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
 	s->descriptions[1] = \
@@ -731,13 +743,6 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 }
 
 void GraphicsOptionsScreen_Show(void) {
-	MenuInput_Float(menuOpts_descs[0], 1, 100, 20);
-	MenuInput_Enum(menuOpts_descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
-	MenuInput_Int(menuOpts_descs[2],  8, 4096, 512);
-	MenuInput_Enum(menuOpts_descs[4], LightingMode_Names, LIGHTING_MODE_COUNT)
-	MenuInput_Enum(menuOpts_descs[6], NameMode_Names,     NAME_MODE_COUNT);
-	MenuInput_Enum(menuOpts_descs[7], ShadowMode_Names,   SHADOW_MODE_COUNT);
-
 	MenuOptionsScreen_Show(GraphicsOptionsScreen_InitWidgets);
 }
 
@@ -751,53 +756,52 @@ static void ChatOptionsScreen_SetScale(const cc_string* v, float* target, const 
 	Gui_LayoutAll();
 }
 
-static void ChatOptionsScreen_GetAutoScaleChat(cc_string* v) { Menu_GetBool(v, Gui.AutoScaleChat); }
-static void ChatOptionsScreen_SetAutoScaleChat(const cc_string* v) {
+static void ChO_GetAutoScaleChat(cc_string* v) { Menu_GetBool(v, Gui.AutoScaleChat); }
+static void ChO_SetAutoScaleChat(const cc_string* v) {
 	Gui.AutoScaleChat = Menu_SetBool(v, OPT_CHAT_AUTO_SCALE);
 	Gui_LayoutAll();
 }
 
-static void ChatOptionsScreen_GetChatScale(cc_string* v) { String_AppendFloat(v, Gui.RawChatScale, 1); }
-static void ChatOptionsScreen_SetChatScale(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawChatScale, OPT_CHAT_SCALE); }
+static void ChO_GetChatScale(cc_string* v) { String_AppendFloat(v, Gui.RawChatScale, 1); }
+static void ChO_SetChatScale(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawChatScale, OPT_CHAT_SCALE); }
 
-static void ChatOptionsScreen_GetChatlines(cc_string* v) { String_AppendInt(v, Gui.Chatlines); }
-static void ChatOptionsScreen_SetChatlines(const cc_string* v) {
+static void ChO_GetChatlines(cc_string* v) { String_AppendInt(v, Gui.Chatlines); }
+static void ChO_SetChatlines(const cc_string* v) {
 	Gui.Chatlines = Menu_Int(v);
 	ChatScreen_SetChatlines(Gui.Chatlines);
 	Options_Set(OPT_CHATLINES, v);
 }
 
-static void ChatOptionsScreen_GetLogging(cc_string* v) { Menu_GetBool(v, Chat_Logging); }
-static void ChatOptionsScreen_SetLogging(const cc_string* v) { 
+static void ChO_GetLogging(cc_string* v) { Menu_GetBool(v, Chat_Logging); }
+static void ChO_SetLogging(const cc_string* v) { 
 	Chat_Logging = Menu_SetBool(v, OPT_CHAT_LOGGING); 
 	if (!Chat_Logging) Chat_DisableLogging();
 }
 
-static void ChatOptionsScreen_GetClickable(cc_string* v) { Menu_GetBool(v, Gui.ClickableChat); }
-static void ChatOptionsScreen_SetClickable(const cc_string* v) { Gui.ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
+static void ChO_GetClickable(cc_string* v) { Menu_GetBool(v, Gui.ClickableChat); }
+static void ChO_SetClickable(const cc_string* v) { Gui.ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[] = {
-		{ -1,  0, "Chat scale",         MenuOptionsScreen_Input,
-			ChatOptionsScreen_GetChatScale, ChatOptionsScreen_SetChatScale },
-		{ -1, 50, "Chat lines",         MenuOptionsScreen_Input,
-			ChatOptionsScreen_GetChatlines, ChatOptionsScreen_SetChatlines },
+	MenuOptionsScreen_BeginButtons(s);
+	{
+		MenuOptionsScreen_AddBool(s, "Scale with window",
+			ChO_GetAutoScaleChat, ChO_SetAutoScaleChat);
+		MenuOptionsScreen_AddNum(s, "Chat scale",
+			0.25f, 4.00f, 1,
+			ChO_GetChatScale,     ChO_SetChatScale);
+		MenuOptionsScreen_AddInt(s, "Chat lines",
+			    0,    30, Gui.DefaultLines,
+			ChO_GetChatlines,     ChO_SetChatlines);
 
-		{  1,  0, "Log to disk",        MenuOptionsScreen_Bool,
-			ChatOptionsScreen_GetLogging,   ChatOptionsScreen_SetLogging },
-		{  1, 50, "Clickable chat",     MenuOptionsScreen_Bool,
-			ChatOptionsScreen_GetClickable, ChatOptionsScreen_SetClickable },
-
-		{ -1,-50, "Scale with window",         MenuOptionsScreen_Bool,
-			ChatOptionsScreen_GetAutoScaleChat, ChatOptionsScreen_SetAutoScaleChat }
-	};
-	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+		MenuOptionsScreen_AddBool(s, "Log to disk",
+			ChO_GetLogging,       ChO_SetLogging);
+		MenuOptionsScreen_AddBool(s, "Clickable chat",
+			ChO_GetClickable,     ChO_SetClickable);
+	}
+	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 }
 
 void ChatOptionsScreen_Show(void) {
-	MenuInput_Float(menuOpts_descs[0], 0.25f, 4.00f, 1);
-	MenuInput_Int(menuOpts_descs[1],       0,    30, Gui.DefaultLines);
-
 	MenuOptionsScreen_Show(ChatOptionsScreen_InitWidgets);
 }
 
@@ -805,62 +809,63 @@ void ChatOptionsScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------GuiOptionsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static void GuiOptionsScreen_GetShadows(cc_string* v) { Menu_GetBool(v, Drawer2D.BlackTextShadows); }
-static void GuiOptionsScreen_SetShadows(const cc_string* v) {
+static void GuO_GetShadows(cc_string* v) { Menu_GetBool(v, Drawer2D.BlackTextShadows); }
+static void GuO_SetShadows(const cc_string* v) {
 	Drawer2D.BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
-static void GuiOptionsScreen_GetShowFPS(cc_string* v) { Menu_GetBool(v, Gui.ShowFPS); }
-static void GuiOptionsScreen_SetShowFPS(const cc_string* v) { Gui.ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void GuO_GetShowFPS(cc_string* v) { Menu_GetBool(v, Gui.ShowFPS); }
+static void GuO_SetShowFPS(const cc_string* v) { Gui.ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-static void GuiOptionsScreen_GetHotbar(cc_string* v) { String_AppendFloat(v, Gui.RawHotbarScale, 1); }
-static void GuiOptionsScreen_SetHotbar(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawHotbarScale, OPT_HOTBAR_SCALE); }
+static void GuO_GetHotbar(cc_string* v) { String_AppendFloat(v, Gui.RawHotbarScale, 1); }
+static void GuO_SetHotbar(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawHotbarScale, OPT_HOTBAR_SCALE); }
 
-static void GuiOptionsScreen_GetInventory(cc_string* v) { String_AppendFloat(v, Gui.RawInventoryScale, 1); }
-static void GuiOptionsScreen_SetInventory(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawInventoryScale, OPT_INVENTORY_SCALE); }
+static void GuO_GetInventory(cc_string* v) { String_AppendFloat(v, Gui.RawInventoryScale, 1); }
+static void GuO_SetInventory(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawInventoryScale, OPT_INVENTORY_SCALE); }
 
-static void GuiOptionsScreen_GetCrosshair(cc_string* v) { String_AppendFloat(v, Gui.RawCrosshairScale, 1); }
-static void GuiOptionsScreen_SetCrosshair(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawCrosshairScale, OPT_CROSSHAIR_SCALE); }
+static void GuO_GetCrosshair(cc_string* v) { String_AppendFloat(v, Gui.RawCrosshairScale, 1); }
+static void GuO_SetCrosshair(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawCrosshairScale, OPT_CROSSHAIR_SCALE); }
 
-static void GuiOptionsScreen_GetTabAuto(cc_string* v) { Menu_GetBool(v, Gui.TabAutocomplete); }
-static void GuiOptionsScreen_SetTabAuto(const cc_string* v) { Gui.TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
+static void GuO_GetTabAuto(cc_string* v) { Menu_GetBool(v, Gui.TabAutocomplete); }
+static void GuO_SetTabAuto(const cc_string* v) { Gui.TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
 
-static void GuiOptionsScreen_GetUseFont(cc_string* v) { Menu_GetBool(v, !Drawer2D.BitmappedText); }
-static void GuiOptionsScreen_SetUseFont(const cc_string* v) {
+static void GuO_GetUseFont(cc_string* v) { Menu_GetBool(v, !Drawer2D.BitmappedText); }
+static void GuO_SetUseFont(const cc_string* v) {
 	Drawer2D.BitmappedText = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[] = {
+	MenuOptionsScreen_BeginButtons(s);
+	{
+		MenuOptionsScreen_AddBool(s, "Show FPS",
+			GuO_GetShowFPS,   GuO_SetShowFPS);
+		MenuOptionsScreen_AddNum(s,  "Hotbar scale",
+			0.25f, 4.00f, 1,
+			GuO_GetHotbar,    GuO_SetHotbar);
+		MenuOptionsScreen_AddNum(s,  "Inventory scale",
+			0.25f, 4.00f, 1,
+			GuO_GetInventory, GuO_SetInventory);
+		MenuOptionsScreen_AddNum(s,  "Crosshair scale",
+			0.25f, 4.00f, 1,
+			GuO_GetCrosshair, GuO_SetCrosshair);
 		
-		{ -1,  -100, "Show FPS",           MenuOptionsScreen_Bool,
-			GuiOptionsScreen_GetShowFPS,   GuiOptionsScreen_SetShowFPS },
-		{ -1,  -50, "Hotbar scale",       MenuOptionsScreen_Input,
-			GuiOptionsScreen_GetHotbar,    GuiOptionsScreen_SetHotbar },
-		{ -1,    0, "Inventory scale",    MenuOptionsScreen_Input,
-			GuiOptionsScreen_GetInventory, GuiOptionsScreen_SetInventory },
-		{ -1,   50, "Crosshair scale",    MenuOptionsScreen_Input,
-			GuiOptionsScreen_GetCrosshair, GuiOptionsScreen_SetCrosshair },
-
-		{ 1, -100, "Black text shadows", MenuOptionsScreen_Bool,
-			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
-		{ 1,  -50, "Tab auto-complete",  MenuOptionsScreen_Bool,
-			GuiOptionsScreen_GetTabAuto,   GuiOptionsScreen_SetTabAuto },
-		{ 1,    0, "Use system font",    MenuOptionsScreen_Bool,
-			GuiOptionsScreen_GetUseFont,   GuiOptionsScreen_SetUseFont },
-		{ 1,   50, "Select system font", Menu_SwitchFont,
-			NULL,                          NULL }
-	};
-	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+		MenuOptionsScreen_AddBool(s, "Full block stepping",
+			GuO_GetShadows,   GuO_SetShadows);
+		MenuOptionsScreen_AddBool(s, "Black text shadows",
+			GuO_GetTabAuto,   GuO_SetTabAuto);
+		MenuOptionsScreen_AddBool(s, "Tab auto-complete",
+			GuO_GetUseFont,   GuO_SetUseFont);
+		MenuOptionsScreen_AddBool(s, "Use system font",
+			GuO_GetUseFont,   GuO_SetTabAuto);
+		MenuOptionsScreen_AddButton(s, "Select system font", Menu_SwitchFont,
+			NULL,             NULL);
+	}
+	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 }
 
 void GuiOptionsScreen_Show(void) {
-	MenuInput_Float(menuOpts_descs[1], 0.25f, 4.00f, 1);
-	MenuInput_Float(menuOpts_descs[2], 0.25f, 4.00f, 1);
-	MenuInput_Float(menuOpts_descs[3], 0.25f, 4.00f, 1);
-
 	MenuOptionsScreen_Show(GuiOptionsScreen_InitWidgets);
 }
 
@@ -953,28 +958,29 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Hacks enabled",
-			HS_GetHacks,    HS_SetHacks),
-		MenuOptionsScreen_AddNum(s,  "Speed multiplier", 0.1f,   50, 10,
-			HS_GetSpeed,    HS_SetSpeed),
+			HS_GetHacks,    HS_SetHacks);
+		MenuOptionsScreen_AddNum(s,  "Speed multiplier", 
+			0.1f,   50, 10,
+			HS_GetSpeed,    HS_SetSpeed);
 		MenuOptionsScreen_AddBool(s, "Camera clipping",
-			HS_GetClipping, HS_SetClipping),
-		MenuOptionsScreen_AddNum(s,  "Jump height",      0.1f, 2048, 1.233f,
-			HS_GetJump,     HS_SetJump),
-		MenuOptionsScreen_AddInt(s,  "Field of view",       1,  179, 70,
-			HS_GetFOV,      HS_SetFOV),
+			HS_GetClipping, HS_SetClipping);
+		MenuOptionsScreen_AddNum(s,  "Jump height",
+			0.1f, 2048, 1.233f,
+			HS_GetJump,     HS_SetJump);
 		MenuOptionsScreen_AddBool(s, "WoM style hacks",
-			HS_GetWOMHacks, HS_SetWOMHacks),
+			HS_GetWOMHacks, HS_SetWOMHacks);
 		
 		MenuOptionsScreen_AddBool(s, "Full block stepping",
-			HS_GetFullStep, HS_SetFullStep),
+			HS_GetFullStep, HS_SetFullStep);
 		MenuOptionsScreen_AddBool(s, "Breakable liquids",
-			HS_GetLiquids,  HS_SetLiquids),
+			HS_GetLiquids,  HS_SetLiquids);
 		MenuOptionsScreen_AddBool(s, "Pushback placing",
-			HS_GetPushback, HS_SetPushback),
+			HS_GetPushback, HS_SetPushback);
 		MenuOptionsScreen_AddBool(s, "Noclip slide",
-			HS_GetSlide,    HS_SetSlide),
-		MenuOptionsScreen_AddInt(s,  "Field of view", 1,  179, 70,
-			HS_GetFOV,      HS_SetFOV),
+			HS_GetSlide,    HS_SetSlide);
+		MenuOptionsScreen_AddInt(s,  "Field of view", 
+			1,  179, 70,
+			HS_GetFOV,      HS_SetFOV);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
@@ -1003,57 +1009,66 @@ void HacksSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-static void MiscOptionsScreen_GetReach(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->ReachDistance, 2); }
-static void MiscOptionsScreen_SetReach(const cc_string* v) { Entities.CurPlayer->ReachDistance = Menu_Float(v); }
+static void MiO_GetReach(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->ReachDistance, 2); }
+static void MiO_SetReach(const cc_string* v) { Entities.CurPlayer->ReachDistance = Menu_Float(v); }
 
-static void MiscOptionsScreen_GetMusic(cc_string* v) { String_AppendInt(v, Audio_MusicVolume); }
-static void MiscOptionsScreen_SetMusic(const cc_string* v) {
+static void MiO_GetMusic(cc_string* v) { String_AppendInt(v, Audio_MusicVolume); }
+static void MiO_SetMusic(const cc_string* v) {
 	Options_Set(OPT_MUSIC_VOLUME, v);
 	Audio_SetMusic(Menu_Int(v));
 }
 
-static void MiscOptionsScreen_GetSounds(cc_string* v) { String_AppendInt(v, Audio_SoundsVolume); }
-static void MiscOptionsScreen_SetSounds(const cc_string* v) {
+static void MiO_GetSounds(cc_string* v) { String_AppendInt(v, Audio_SoundsVolume); }
+static void MiO_SetSounds(const cc_string* v) {
 	Options_Set(OPT_SOUND_VOLUME, v);
 	Audio_SetSounds(Menu_Int(v));
 }
 
-static void MiscOptionsScreen_GetViewBob(cc_string* v) { Menu_GetBool(v, Game_ViewBobbing); }
-static void MiscOptionsScreen_SetViewBob(const cc_string* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
+static void MiO_GetViewBob(cc_string* v) { Menu_GetBool(v, Game_ViewBobbing); }
+static void MiO_SetViewBob(const cc_string* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
-static void MiscOptionsScreen_GetPhysics(cc_string* v) { Menu_GetBool(v, Physics.Enabled); }
-static void MiscOptionsScreen_SetPhysics(const cc_string* v) {
+static void MiO_GetPhysics(cc_string* v) { Menu_GetBool(v, Physics.Enabled); }
+static void MiO_SetPhysics(const cc_string* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }
 
-static void MiscOptionsScreen_GetInvert(cc_string* v) { Menu_GetBool(v, Camera.Invert); }
-static void MiscOptionsScreen_SetInvert(const cc_string* v) { Camera.Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void MiO_GetInvert(cc_string* v) { Menu_GetBool(v, Camera.Invert); }
+static void MiO_SetInvert(const cc_string* v) { Camera.Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-static void MiscOptionsScreen_GetSensitivity(cc_string* v) { String_AppendInt(v, Camera.Sensitivity); }
-static void MiscOptionsScreen_SetSensitivity(const cc_string* v) {
+static void MiO_GetSensitivity(cc_string* v) { String_AppendInt(v, Camera.Sensitivity); }
+static void MiO_SetSensitivity(const cc_string* v) {
 	Camera.Sensitivity = Menu_Int(v);
 	Options_Set(OPT_SENSITIVITY, v);
 }
 
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[] = {
-		{ -1, -100, "Reach distance", MenuOptionsScreen_Input,
-			MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach },
-		{ -1,  -50, "Music volume",   MenuOptionsScreen_Input,
-			MiscOptionsScreen_GetMusic,       MiscOptionsScreen_SetMusic },
-		{ -1,    0, "Sounds volume",  MenuOptionsScreen_Input,
-			MiscOptionsScreen_GetSounds,      MiscOptionsScreen_SetSounds },
-		{ -1,   50, "View bobbing",   MenuOptionsScreen_Bool,
-			MiscOptionsScreen_GetViewBob,     MiscOptionsScreen_SetViewBob },
-	
-		{ 1, -100, "Block physics",       MenuOptionsScreen_Bool,
-			MiscOptionsScreen_GetPhysics,     MiscOptionsScreen_SetPhysics },
-		{ 1,    0, "Invert mouse",        MenuOptionsScreen_Bool,
-			MiscOptionsScreen_GetInvert,      MiscOptionsScreen_SetInvert },
-		{ 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
-			MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity }
-	};
-	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	MenuOptionsScreen_BeginButtons(s);
+	{
+		MenuOptionsScreen_AddNum(s,  "Reach distance",
+			   1, 1024, 5,
+			MiO_GetReach,    MiO_SetReach);
+		MenuOptionsScreen_AddInt(s,  "Music volume",
+			   0, 100,  DEFAULT_MUSIC_VOLUME,
+			MiO_GetMusic,     MiO_SetMusic);
+		MenuOptionsScreen_AddInt(s,  "Sounds volume",
+			   0, 100,  DEFAULT_SOUNDS_VOLUME,
+			MiO_GetSounds,  MiO_SetSounds);
+		MenuOptionsScreen_AddBool(s, "View bobbing",
+			MiO_GetViewBob, MiO_SetViewBob);
+		
+		MenuOptionsScreen_AddBool(s, "Block physics",
+			MiO_GetPhysics, MiO_SetPhysics);
+		MenuOptionsScreen_AddBool(s, "Invert mouse",
+			MiO_GetInvert,  MiO_SetInvert);
+		MenuOptionsScreen_AddInt(s,  "Mouse sensitivity", 
+#ifdef CC_BUILD_WIN
+			   1, 200, 40,
+#else
+			   1, 200, 30,
+#endif
+			MiO_GetSensitivity, MiO_SetSensitivity);
+	}
+	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
 	/* Disable certain options */
 	if (!Server.IsSinglePlayer) Menu_Remove(s, 0);
@@ -1061,15 +1076,6 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 }
 
 void MiscOptionsScreen_Show(void) {
-	MenuInput_Float(menuOpts_descs[0], 1, 1024, 5);
-	MenuInput_Int(menuOpts_descs[1],   0, 100,  DEFAULT_MUSIC_VOLUME);
-	MenuInput_Int(menuOpts_descs[2],   0, 100,  DEFAULT_SOUNDS_VOLUME);
-#ifdef CC_BUILD_WIN
-	MenuInput_Int(menuOpts_descs[6],   1, 200, 40);
-#else
-	MenuInput_Int(menuOpts_descs[6],   1, 200, 30);
-#endif
-
 	MenuOptionsScreen_Show(MiscSettingsScreen_InitWidgets);
 }
 
@@ -1105,20 +1111,20 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Classic hand model",
-			NA_GetHand,        NA_SetHand),
+			NA_GetHand,        NA_SetHand);
 		MenuOptionsScreen_AddBool(s, "Classic walk anim",
-			NA_GetAnim,        NA_SetAnim),
+			NA_GetAnim,        NA_SetAnim);
 		MenuOptionsScreen_AddBool(s, "Classic chat",
-			NA_GetClassicChat, NA_SetClassicChat),
+			NA_GetClassicChat, NA_SetClassicChat);
 		MenuOptionsScreen_AddBool(s, "Classic inventory",
-			NA_GetClassicInv,  NA_SetClassicInv),
+			NA_GetClassicInv,  NA_SetClassicInv);
 			
 		MenuOptionsScreen_AddBool(s, "Classic GUI textures",
-			NA_GetGui,   NA_SetGui),
+			NA_GetGui,   NA_SetGui);
 		MenuOptionsScreen_AddBool(s, "Classic player list",
-			NA_GetList,  NA_SetList),
+			NA_GetList,  NA_SetList);
 		MenuOptionsScreen_AddBool(s, "Classic options",
-			NA_GetOpts,  NA_SetOpts),
+			NA_GetOpts,  NA_SetOpts);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
 }
@@ -1171,14 +1177,14 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Use server textures",
-			NF_GetTexs,    NF_SetTexs),
+			NF_GetTexs,    NF_SetTexs);
 		MenuOptionsScreen_AddBool(s, "Allow custom blocks",
-			NF_GetCustom,  NF_SetCustom),
+			NF_GetCustom,  NF_SetCustom);
 			
 		MenuOptionsScreen_AddBool(s, "Non-classic features",
-			NF_GetCPE,     NF_SetCPE),
+			NF_GetCPE,     NF_SetCPE);
 		MenuOptionsScreen_AddButton(s, "Game version", NostalgiaScreen_Version,
-			NF_GetVersion, NF_SetVersion),
+			NF_GetVersion, NF_SetVersion);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;

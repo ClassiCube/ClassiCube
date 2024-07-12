@@ -92,7 +92,7 @@ int Menu_PointerDown(void* screen, int id, int x, int y) {
 	return TOUCH_TYPE_GUI;
 }
 
-static int Menu_DoPointerMove(void* screen, int id, int x, int y) {
+int Menu_DoPointerMove(void* screen, int id, int x, int y) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets;
 	int i, count;
@@ -2264,14 +2264,15 @@ static struct MenuInputOverlay {
 
 static struct Widget* menuInput_widgets[2 + 1];
 
-static void MenuInputOverlay_Close(struct MenuInputOverlay* s, cc_bool valid) {
-	Gui_Remove((struct Screen*)&MenuInputOverlay);
+void MenuInputOverlay_Close(cc_bool valid) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)&MenuInputOverlay;
+	Gui_Remove((struct Screen*)s);
 	s->onDone(&s->input.base.text, valid);
 }
 
 static void MenuInputOverlay_EnterInput(struct MenuInputOverlay* s) {
 	cc_bool valid = s->desc->VTABLE->IsValidValue(s->desc, &s->input.base.text);
-	MenuInputOverlay_Close(s, valid);
+	MenuInputOverlay_Close(valid);
 }
 
 static int MenuInputOverlay_KeyPress(void* screen, char keyChar) {
