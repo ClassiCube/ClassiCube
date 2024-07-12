@@ -1853,17 +1853,17 @@ static struct BindsSourceScreen {
 	Screen_Body
 	struct ButtonWidget btns[2], cancel;
 } BindsSourceScreen;
-static int binds_gamepad; /* Default to Normal (Keyboard/Mouse) */
+static struct InputDevice* bind_device;
 
 static struct Widget* bindsSource_widgets[3];
 
 static void BindsSourceScreen_ModeNormal(void* screen, void* b) {
-	binds_gamepad = false;
+	bind_device = &NormDevice;
 	NormalBindingsScreen_Show();
 }
 
 static void BindsSourceScreen_ModeGamepad(void* screen, void* b) {
-	binds_gamepad = true;
+	bind_device = &PadDevice;
 	NormalBindingsScreen_Show();
 }
 
@@ -1921,10 +1921,10 @@ static void SwitchBindsMain(void* s, void* w) {
 		/* User needs to decide whether to configure mouse/keyboard or gamepad */
 		BindsSourceScreen_Show();
 	} else if (Input.Sources == INPUT_SOURCE_GAMEPAD) {
-		binds_gamepad = true;
+		bind_device = &PadDevice;
 		NormalBindingsScreen_Show();
 	} else {
-		binds_gamepad = false;
+		bind_device = &NormDevice;
 		NormalBindingsScreen_Show();
 	}
 }
@@ -1954,19 +1954,12 @@ static struct KeyBindsScreen {
 
 static struct Widget* key_widgets[KEYBINDS_MAX_BTNS + 5];
 
-static BindMapping KeyBindsScreen_GetBinding(struct KeyBindsScreen* s, int i) {
-	const BindMapping* curBinds;
-
-	curBinds = binds_gamepad ? PadBind_Mappings : KeyBind_Mappings;
-	return curBinds[s->binds[i]];
-}
-
 static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	cc_string text; char textBuffer[STRING_SIZE];
 	BindMapping curBind; 
 
 	String_InitArray(text, textBuffer);
-	curBind = KeyBindsScreen_GetBinding(s, i);
+	curBind = bind_device->currentBinds[s->binds[i]];
 
 	String_Format4(&text, s->curI == i ? "> %c: %c%c%c <" : "%c: %c%c%c", 
 		s->descs[i],
@@ -1978,35 +1971,20 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	s->dirty = true;
 }
 
-static void KeyBindsScreen_ResetBinding(InputBind bind) {
-	if (binds_gamepad) {
-		PadBind_Reset(bind);
-	} else {
-		KeyBind_Reset(bind);
-	}
-}
-
-static void KeyBindsScreen_UpdateBinding(InputBind bind, int key, struct InputDevice* device) {
-	if (binds_gamepad) {
-		PadBind_Set(bind, key);
-	} else {
-		KeyBind_Set(bind, key);
-	}
-}
-
 static void KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
 	struct KeyBindsScreen* s = &KeyBindsScreen;
 	InputBind bind;
 	int idx;
-
+	if (device->type != bind_device->type) return;
+	
 	Input.DownHook = NULL;
 	if (s->curI == -1) return;
 	bind = s->binds[s->curI];
 	
 	if (key == device->escapeButton) {
-		KeyBindsScreen_ResetBinding(bind);
+		InputBind_Reset(bind, bind_device);
 	} else {
-		KeyBindsScreen_UpdateBinding(bind, key, device);
+		InputBind_Set(bind, key, bind_device);
 	}
 
 	idx         = s->curI;
@@ -2153,7 +2131,7 @@ static void KeyBindsScreen_Show(int bindsCount, const cc_uint8* binds, const cha
 void ClassicBindingsScreen_Show(void) {
 	static const cc_uint8 binds[]    = { BIND_FORWARD, BIND_BACK, BIND_JUMP, BIND_CHAT, BIND_SET_SPAWN, BIND_LEFT, BIND_RIGHT, BIND_INVENTORY, BIND_FOG, BIND_RESPAWN };
 	static const char* const descs[] = { "Forward", "Back", "Jump", "Chat", "Save location", "Left", "Right", "Build", "Toggle fog", "Load location" };
-	binds_gamepad = false;
+	bind_device = Input.Sources == INPUT_SOURCE_GAMEPAD ? &PadDevice : &NormDevice;
 
 	if (Game_ClassicHacks) {
 		KeyBindsScreen_Reset(NULL, Menu_SwitchBindsClassicHacks, 260);
@@ -2172,7 +2150,7 @@ void ClassicBindingsScreen_Show(void) {
 void ClassicHacksBindingsScreen_Show(void) {
 	static const cc_uint8 binds[6]    = { BIND_SPEED, BIND_NOCLIP, BIND_HALF_SPEED, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN };
 	static const char* const descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
-	binds_gamepad = false;
+	bind_device = Input.Sources == INPUT_SOURCE_GAMEPAD ? &PadDevice : &NormDevice;
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsClassic, NULL, 260);
 	KeyBindsScreen_SetLayout(-90, -40, 3);

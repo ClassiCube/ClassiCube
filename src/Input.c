@@ -292,6 +292,8 @@ struct InputDevice NormDevice = {
 	CCKEY_PAGEUP, CCKEY_PAGEDOWN,
 	/* Launcher buttons */
 	CCKEY_TAB,
+	/* Bindings */
+	"key-%c", NULL, NULL
 };
 struct InputDevice PadDevice = {
 	INPUT_DEVICE_GAMEPAD, 0,
@@ -304,6 +306,8 @@ struct InputDevice PadDevice = {
 	0, 0,
 	/* Launcher buttons */
 	CCPAD_3,
+	/* Bindings */
+	"pad-%c", NULL, NULL
 };
 struct InputDevice TouchDevice = {
 	INPUT_DEVICE_TOUCH, 0,

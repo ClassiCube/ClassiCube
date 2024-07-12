@@ -92,7 +92,9 @@ void Input_SetNonRepeatable(int key, int pressed);
 void Input_Clear(void);
 
 struct InputDevice;
+struct BindMapping_;
 typedef cc_bool (*InputDevice_IsPressed)(struct InputDevice* device, int key);
+
 struct InputDevice {
 	int type, index; /* Device type and index (e.g. controller port) */
 	InputDevice_IsPressed IsPressed;
@@ -103,6 +105,10 @@ struct InputDevice {
 	int pageUpButton, pageDownButton;
 	/* Buttons in launcher mode */
 	int tabLauncher;
+	/* Bindings */
+	const char* bindPrefix;
+	const struct BindMapping_* defaultBinds;
+	struct BindMapping_* currentBinds;
 };
 
 #define INPUT_SOURCE_NORMAL  (1 << 0)

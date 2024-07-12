@@ -131,8 +131,10 @@ cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device)
 
 cc_bool KeyBind_IsPressed(InputBind binding) { return Bind_IsTriggered[binding]; }
 
-static void KeyBind_Load(const char* prefix, BindMapping* keybinds, const BindMapping* defaults) {
+static void KeyBind_Load(struct InputDevice* device) {
 	cc_string name; char nameBuffer[STRING_SIZE + 1];
+	const BindMapping* defaults = device->defaultBinds;
+	BindMapping* keybinds = device->currentBinds;
 	BindMapping mapping;
 	cc_string str, part1, part2;
 	int i;
@@ -141,7 +143,7 @@ static void KeyBind_Load(const char* prefix, BindMapping* keybinds, const BindMa
 	for (i = 0; i < BIND_COUNT; i++) 
 	{
 		name.length = 0;
-		String_Format1(&name, prefix, bindNames[i]);
+		String_Format1(&name, device->bindPrefix, bindNames[i]);
 		name.buffer[name.length] = '\0';
 		
 		if (!Options_UNSAFE_Get(name.buffer, &str)) {
@@ -153,53 +155,42 @@ static void KeyBind_Load(const char* prefix, BindMapping* keybinds, const BindMa
 		mapping.button1 = Utils_ParseEnum(&part1, defaults[i].button1, Input_StorageNames, INPUT_COUNT);
 		mapping.button2 = Utils_ParseEnum(&part2, defaults[i].button2, Input_StorageNames, INPUT_COUNT);
 		
-		if (mapping.button1 == CCKEY_ESCAPE) mapping = defaults[i];
+		if (mapping.button1 == CCKEY_ESCAPE) keybinds[i] = defaults[i];
 		keybinds[i] = mapping;
 	}
 }
 
-static void InputBind_Set(InputBind binding, int btn, BindMapping* binds, const char* fmt) {
+void InputBind_Set(InputBind binding, int btn, struct InputDevice* device) {
 	cc_string name; char nameBuffer[STRING_SIZE];
 	cc_string value;
 	String_InitArray(name, nameBuffer);
 
-	String_Format1(&name, fmt, bindNames[binding]);
+	String_Format1(&name, device->bindPrefix, bindNames[binding]);
 	value = String_FromReadonly(Input_StorageNames[btn]);
 	Options_SetString(&name, &value);
 	
-	BindMapping_Set(&binds[binding], btn, 0);
+	BindMapping_Set(&device->currentBinds[binding], btn, 0);
 }
 
-void KeyBind_Set(InputBind binding, int btn) {
-	InputBind_Set(binding, btn, KeyBind_Mappings, "key-%c");
-}
-
-void PadBind_Set(InputBind binding, int btn) {
-	InputBind_Set(binding, btn, PadBind_Mappings, "pad-%c");
-}
-
-static void InputBind_ResetOption(InputBind binding, const char* fmt) {
+void InputBind_Reset(InputBind binding, struct InputDevice* device) {
 	cc_string name; char nameBuffer[STRING_SIZE];
 	String_InitArray(name, nameBuffer);
 	
-	String_Format1(&name, fmt, bindNames[binding]);
+	String_Format1(&name, device->bindPrefix, bindNames[binding]);
 	Options_SetString(&name, &String_Empty);
-}
-
-void KeyBind_Reset(InputBind binding) {
-	InputBind_ResetOption(binding, "key-%c");
-	KeyBind_Mappings[binding] = KeyBind_Defaults[binding];
-}
-
-void PadBind_Reset(InputBind binding) {
-	InputBind_ResetOption(binding, "pad-%c");
-	PadBind_Mappings[binding] = PadBind_Defaults[binding];
+	
+	device->currentBinds[binding] = device->defaultBinds[binding];
 }
 
 /* Initialises and loads input bindings from options */
 static void KeyBind_Init(void) {
-	KeyBind_Load("key-%c", KeyBind_Mappings, KeyBind_Defaults);
-	KeyBind_Load("pad-%c", PadBind_Mappings, PadBind_Defaults);
+	NormDevice.defaultBinds = KeyBind_Defaults;
+	PadDevice.defaultBinds  = PadBind_Defaults;
+	NormDevice.currentBinds = KeyBind_Mappings;
+	PadDevice.currentBinds  = PadBind_Mappings;
+	
+	KeyBind_Load(&NormDevice);
+	KeyBind_Load(&PadDevice);
 }
 
 
