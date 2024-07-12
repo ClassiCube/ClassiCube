@@ -323,11 +323,12 @@ static void ProcessPadInput(int port, float delta, padData* pad) {
 
 void Gamepads_Process(float delta) {
 	ioPadGetInfo(&pad_info);
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		if (!pad_info.status[port]) continue;
-		
-		ioPadGetData(port, &pad_data);
+		if (!pad_info.status[i]) continue;		
+		ioPadGetData(i, &pad_data);
+
+		int port = Gamepad_MapPort(i + 10);
 		ProcessPadInput(port, delta, &pad_data);
 	}
 }
@@ -375,14 +376,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

@@ -1,9 +1,9 @@
-SOURCE_DIR  := src
-BUILD_DIR   := build
-C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
-C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+SOURCE_DIR  = src
+BUILD_DIR   = build
+C_SOURCES   = $(wildcard $(SOURCE_DIR)/*.c)
+C_OBJECTS   = $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
-OBJECTS := $(C_OBJECTS)
+OBJECTS = $(C_OBJECTS)
 ENAME   = ClassiCube
 CFLAGS  = -g -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=maybe-uninitialized
 LDFLAGS = -g -rdynamic
@@ -34,7 +34,8 @@ ifeq ($(PLAT),web)
 	CC      = emcc
 	OEXT    = .html
 	CFLAGS  = -g
-	LDFLAGS = -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library $(SOURCE_DIR)/interop_web.js
+	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library $(SOURCE_DIR)/interop_web.js
+	BUILD_DIR = build-web
 endif
 
 ifeq ($(PLAT),mingw)
@@ -43,16 +44,19 @@ ifeq ($(PLAT),mingw)
 	CFLAGS  += -DUNICODE
 	LDFLAGS =  -g
 	LIBS    =  -mwindows -lwinmm -limagehlp
+	BUILD_DIR = build-win
 endif
 
 ifeq ($(PLAT),linux)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
+	BUILD_DIR = build-linux
 endif
 
 ifeq ($(PLAT),sunos)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lsocket -lX11 -lXi -lGL
+	BUILD_DIR = build-solaris
 endif
 
 ifeq ($(PLAT),darwin)
@@ -60,30 +64,35 @@ ifeq ($(PLAT),darwin)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	BUILD_DIR = build-macos
 endif
 
 ifeq ($(PLAT),freebsd)
 	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-freebsd
 endif
 
 ifeq ($(PLAT),openbsd)
 	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-openbsd
 endif
 
 ifeq ($(PLAT),netbsd)
 	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-netbsd
 endif
 
 ifeq ($(PLAT),dragonfly)
 	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-flybsd
 endif
 
 ifeq ($(PLAT),haiku)
@@ -91,6 +100,7 @@ ifeq ($(PLAT),haiku)
 	CFLAGS  = -g -pipe -fno-math-errno
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	BUILD_DIR = build-haiku
 endif
 
 ifeq ($(PLAT),beos)
@@ -98,17 +108,21 @@ ifeq ($(PLAT),beos)
 	CFLAGS  = -g -pipe
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	BUILD_DIR = build-beos
 	TRACK_DEPENDENCIES=0
 endif
 
 ifeq ($(PLAT),serenityos)
 	LIBS    = -lgl -lSDL2
+	BUILD_DIR = build-serenity
 endif
 
 ifeq ($(PLAT),irix)
 	CC      = gcc
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
+	BUILD_DIR = build-irix
 endif
+
 
 ifdef SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
@@ -118,7 +132,6 @@ ifdef SDL3
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
 	LIBS += -lSDL3
 endif
-
 
 ifdef TERMINAL
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU

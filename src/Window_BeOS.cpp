@@ -322,7 +322,10 @@ static void RunApp(void) {
 	Platform_LogConst("App initialised");
 }
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 void Window_Init(void) {
 	Events_Init();
 	RunApp();
@@ -681,8 +684,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) {  }
 
 void Window_EnableRawMouse(void) {

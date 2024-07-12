@@ -266,14 +266,14 @@ static void UpdateState(int context) {
 	stateDirty = false;
 }
 
-static void UpdateFormat(void) {
+static void UpdateFormat(int context) {
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
 							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
-							  0, PRIM_UNFIXED), GS_REG_PRIM);
+							  context, PRIM_UNFIXED), GS_REG_PRIM);
 	q++;
 	
 	formatDirty = false;
@@ -298,7 +298,9 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	q = draw_disable_tests(q, 0, &fb_depth);
 	q = draw_clear(q, 0, 2048.0f - fb_colors[0].width / 2.0f, 2048.0f - fb_colors[0].height / 2.0f,
 					fb_colors[0].width, fb_colors[0].height, clearR, clearG, clearB);
+
 	UpdateState(0);
+	UpdateFormat(0);
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -671,7 +673,7 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 
 static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty)  UpdateState(0);
-	if (formatDirty) UpdateFormat();
+	if (formatDirty) UpdateFormat(0);
 
 	if ((q - current->data) > 45000) {
 		DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);

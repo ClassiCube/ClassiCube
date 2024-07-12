@@ -11,7 +11,6 @@ struct cc_window WindowInfo;
 #define Display_CentreY(height) (DisplayInfo.y + (DisplayInfo.Height - height) / 2)
 
 static int cursorPrevX, cursorPrevY;
-static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates */
 static void Cursor_GetRawPos(int* x, int* y);
 /* Sets whether the cursor is visible when over this window */
@@ -21,8 +20,8 @@ static void Cursor_DoSetVisible(cc_bool visible);
 
 /* Sets whether the cursor is visible when over this window */
 static void Cursor_SetVisible(cc_bool visible) {
-	if (cursorVisible == visible) return;
-	cursorVisible = visible;
+	if (DisplayInfo.CursorVisible == visible) return;
+	DisplayInfo.CursorVisible = visible;
 	Cursor_DoSetVisible(visible);
 }
 

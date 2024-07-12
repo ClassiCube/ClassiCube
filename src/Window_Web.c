@@ -385,6 +385,7 @@ extern void interop_ForceTouchPageLayout(void);
 extern void Game_DoFrame(void);
 void Window_PreInit(void) {
 	emscripten_set_main_loop(Game_DoFrame, 0, false);
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {
@@ -451,7 +452,7 @@ void Window_SetTitle(const cc_string* title) {
 static char pasteBuffer[512];
 static cc_string pasteStr;
 EMSCRIPTEN_KEEPALIVE void Window_RequestClipboardText(void) {
-	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY, 0);
+	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY, 0, &NormDevice);
 }
 
 EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
@@ -461,7 +462,7 @@ EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
 
 EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	Window_StoreClipboardText(src);
-	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
 }
 
 extern void interop_TryGetClipboardText(void);
@@ -723,9 +724,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 	String_EncodeUtf8(str, text);
 	interop_SetKeyboardText(str);
 }
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) {
 	keyboardOpen = false;

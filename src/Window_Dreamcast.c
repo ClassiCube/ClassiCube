@@ -12,7 +12,9 @@
 #include "ExtMath.h"
 #include "VirtualKeyboard.h"
 #include <kos.h>
+
 static cc_bool launcherMode;
+#include "VirtualCursor.h"
 cc_bool window_inited;
 
 struct _DisplayData DisplayInfo;
@@ -200,6 +202,12 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_L, mods & MOUSE_LEFTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_R, mods & MOUSE_RIGHTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
+	Mouse_ScrollVWheel(-state->dz * 0.5f);
+
+	if (!vc_hooked) {
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + state->dx, Pointers[0].y + state->dy);
 	
 	if (!Input.RawMode) return;	
 	float scale = (delta * 60.0) / 2.0f;
@@ -212,7 +220,9 @@ void Window_ProcessEvents(float delta) {
 	ProcessMouseInput(delta);
 }
 
-void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
+void Cursor_SetPosition(int x, int y) {
+	if (vc_hooked) VirtualCursor_SetPosition(x, y);
+}
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
@@ -277,9 +287,9 @@ void Gamepads_Process(float delta) {
 	maple_device_t* cont;
 	cont_state_t*  state;
 
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		cont  = maple_enum_type(port, MAPLE_FUNC_CONTROLLER);
+		cont  = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
 		if (!cont)  return;
 		state = (cont_state_t*)maple_dev_status(cont);
 		if (!state) return;
@@ -287,6 +297,7 @@ void Gamepads_Process(float delta) {
 		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
 		if(dual_analog == -1) dual_analog = 0;
 
+		int port = Gamepad_MapPort(i + 10);
 		HandleButtons(port, state->buttons);
 		HandleController(port, dual_analog, state, delta);
 	}
@@ -337,14 +348,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

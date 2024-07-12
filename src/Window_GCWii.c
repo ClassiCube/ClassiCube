@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Platform.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Event.h"
 #include "String.h"
 #include "Funcs.h"
@@ -19,6 +20,7 @@
 
 static cc_bool needsFBUpdate;
 static cc_bool launcherMode;
+#include "VirtualCursor.h"
 static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
@@ -137,22 +139,23 @@ static void ProcessPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
 }
 
-static void ProcessPADInput(int port, float delta) {
+static void ProcessPADInput(int i, float delta) {
 	PADStatus pads[4];
 	PAD_Read(pads);
-	int error = pads[port].err;
+	int error = pads[i].err;
 
 	if (error == 0) {
-		gc_pads[port] = pads[port]; // new state arrived
+		gc_pads[i] = pads[i]; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
 		// usually means still busy transferring state - use last state
 	} else {
 		return; // not connected, still busy, etc
 	}
 	
-	ProcessPAD_Buttons(0, gc_pads[port].button);
-	ProcessPAD_Joystick(0, PAD_AXIS_LEFT,  gc_pads[port].stickX,    gc_pads[port].stickY,    delta);
-	ProcessPAD_Joystick(0, PAD_AXIS_RIGHT, gc_pads[port].substickX, gc_pads[port].substickY, delta);
+	int port = Gamepad_MapPort(i + 10);
+	ProcessPAD_Buttons(port, gc_pads[i].button);
+	ProcessPAD_Joystick(port, PAD_AXIS_LEFT,  gc_pads[i].stickX,    gc_pads[i].stickY,    delta);
+	ProcessPAD_Joystick(port, PAD_AXIS_RIGHT, gc_pads[i].substickX, gc_pads[i].substickY, delta);
 }
 
 
@@ -266,7 +269,7 @@ static void ProcessWPADDrag(int res, u32 mods) {
 	} else {
 		dragActive = false;
 	}
-	Pointer_SetPosition(0, x, y);
+	VirtualCursor_SetPosition(x, y);
 }
 
 #define FACTOR 2
@@ -306,7 +309,8 @@ void Gamepads_Init(void) {
 
 	#if defined HW_RVL
 	WPAD_Init();
-	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
+	for (int i = 0; i < 4; i++)
+		WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
 	#endif
 	PAD_Init();
 }
@@ -333,8 +337,7 @@ static void ProcessWPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
 
-static void ProcessNunchuck_Game(int port, int mods, float delta) {
-	WPADData* wd = WPAD_Data(0);
+static void ProcessNunchuck_Game(int port, WPADData* wd, int mods, float delta) {
 	joystick_t analog = wd->exp.nunchuk.js;
 
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_C);
@@ -401,8 +404,7 @@ static void ProcessClassicButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_ZR, mods & CLASSIC_CTRL_BUTTON_ZR);
 }
 
-static void ProcessClassicInput(int port, float delta) {
-	WPADData* wd = WPAD_Data(0);
+static void ProcessClassicInput(int port, WPADData* wd, float delta) {
 	classic_ctrl_t ctrls = wd->exp.classic;
 	int mods = ctrls.btns | ctrls.btns_held;
 
@@ -411,19 +413,22 @@ static void ProcessClassicInput(int port, float delta) {
 	ProcessClassic_Joystick(port, PAD_AXIS_RIGHT, &ctrls.rjs, delta);
 }
 
-static void ProcessWPADInput(int port, float delta) {
+static void ProcessWPADInput(int i, float delta) {
 	WPAD_ScanPads();
 	u32 type;
-	int res  = WPAD_Probe(port, &type);
+	int res  = WPAD_Probe(i, &type);
 	if (res) return;
-	u32 mods = WPAD_ButtonsDown(port) | WPAD_ButtonsHeld(port);
+
+	WPADData* wd = WPAD_Data(i);
+	u32 mods = wd->btns_h | wd->btns_d; // buttons held | buttons down now
+	int port = Gamepad_MapPort(i + 20);
 
 	if (type == WPAD_EXP_CLASSIC) {
-		ProcessClassicInput(port, delta);
+		ProcessClassicInput(port, wd, delta);
 	} else if (launcherMode) {
 		ProcessWPAD_Buttons(port, mods);
 	} else if (type == WPAD_EXP_NUNCHUK) {
-		ProcessNunchuck_Game(port, mods, delta);
+		ProcessNunchuck_Game(port, wd, mods, delta);
 	} else {
 		ProcessWPAD_Buttons(port, mods);
 	}
@@ -432,17 +437,17 @@ static void ProcessWPADInput(int port, float delta) {
 }
 
 void Gamepads_Process(float delta) {
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		ProcessWPADInput(port, delta);
-		ProcessPADInput( port, delta);
+		ProcessWPADInput(i, delta);
+		ProcessPADInput( i, delta);
 	}
 }
 #else
 void Gamepads_Process(float delta) {
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		ProcessPADInput(port, delta);
+		ProcessPADInput(i, delta);
 	}
 }
 #endif
@@ -519,14 +524,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

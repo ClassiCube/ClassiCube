@@ -722,3 +722,4 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 void FancyLighting_OnInit(void) {
 	Event_Register_(&WorldEvents.EnvVarChanged, NULL, OnEnvVariableChanged);
 }
+

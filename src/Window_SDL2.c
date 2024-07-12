@@ -53,6 +53,7 @@ static void Window_SDLFail(const char* place) {
 
 void Window_PreInit(void) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {
@@ -445,8 +446,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { SDL_StopTextInput(); }
 
 void Window_EnableRawMouse(void) {
@@ -484,9 +483,7 @@ void Gamepads_Init(void) {
 	LoadControllers();
 }
 
-static void ProcessGamepadButtons(int port) {
-	SDL_GameController* gp = controllers[port];
-
+static void ProcessGamepadButtons(int port, SDL_GameController* gp) {
 	Gamepad_SetButton(port, CCPAD_1, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_A));
 	Gamepad_SetButton(port, CCPAD_2, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_B));
 	Gamepad_SetButton(port, CCPAD_3, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_X));
@@ -509,8 +506,7 @@ static void ProcessGamepadButtons(int port) {
 }
 
 #define PAD_AXIS_SCALE 32768.0f
-static void ProcessJoystick(int port, int axis, float delta) {
-	SDL_GameController* gp = controllers[port];
+static void ProcessJoystick(int port, SDL_GameController* gp, int axis, float delta) {
 	int x = SDL_GameControllerGetAxis(gp, axis == PAD_AXIS_LEFT ? SDL_CONTROLLER_AXIS_LEFTX : SDL_CONTROLLER_AXIS_RIGHTX);
 	int y = SDL_GameControllerGetAxis(gp, axis == PAD_AXIS_LEFT ? SDL_CONTROLLER_AXIS_LEFTY : SDL_CONTROLLER_AXIS_RIGHTY);
 
@@ -522,13 +518,15 @@ static void ProcessJoystick(int port, int axis, float delta) {
 }
 
 void Gamepads_Process(float delta) {
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		if (!controllers[port]) continue;
+		SDL_GameController* gp = controllers[i];
+		if (!gp) continue;
+		int port = Gamepad_MapPort(i + 10);
 
-		ProcessGamepadButtons(port);
-		ProcessJoystick(port, PAD_AXIS_LEFT,  delta);
-		ProcessJoystick(port, PAD_AXIS_RIGHT, delta);
+		ProcessGamepadButtons(port, gp);
+		ProcessJoystick(port, gp, PAD_AXIS_LEFT,  delta);
+		ProcessJoystick(port, gp, PAD_AXIS_RIGHT, delta);
 	}
 }
 

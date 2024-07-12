@@ -83,8 +83,8 @@ static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 	}
 }
 
-static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (Input_IsEnterButton(key)) {
+static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struct InputDevice* device) {
+	if (InputDevice_IsEnter(key, device)) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
@@ -100,14 +100,14 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	
 	/* Active widget takes input priority over default behaviour */
 	if (s->selectedWidget && s->selectedWidget->VTABLE->KeyDown) {
-		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was)) return;
+		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was, device)) return;
 	}
 
-	if (key == CCKEY_TAB || key == CCPAD_3) {
+	if (key == device->tabLauncher) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
-	} else if (Input_IsUpButton(key)) {
+	} else if (key == device->upButton) {
 		LScreen_CycleSelected(s, -1);
-	} else if (Input_IsDownButton(key)) {
+	} else if (key == device->downButton) {
 		LScreen_CycleSelected(s,  1);
 	} else if (IsBackButton(key) && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
@@ -373,16 +373,16 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	ColoursScreen_TextChanged(w);
 }
 
-static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
+static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struct InputDevice* device) {
 	int deltaX, deltaY;
-	Input_CalcDelta(key, &deltaX, &deltaY);
+	Input_CalcDelta(key, device, &deltaX, &deltaY);
 	if (key == CCWHEEL_UP)   deltaX = +1;
 	if (key == CCWHEEL_DOWN) deltaX = -1;
 	
 	if (deltaX || deltaY) {
 		ColoursScreen_AdjustSelected(s, deltaY * 10 + deltaX);
 	} else {
-		LScreen_KeyDown(s, key, was);
+		LScreen_KeyDown(s, key, was, device);
 	}
 }
 
@@ -495,7 +495,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	if (!DirectUrl_ExtractAddress(addr, &ip, &port, &raw_port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
-	if (Socket_ParseAddress(&ip, 0, addrs, &numAddrs)) {
+	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
 		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;
@@ -1296,19 +1296,19 @@ static void ServersScreen_HashFilter(cc_string* str) {
 static void ServersScreen_SearchChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ApplyFilter(&s->table);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_HashChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ShowSelected(&s->table);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_OnSelectedChanged(void) {
 	struct ServersScreen* s = &ServersScreen;
-	LBackend_MarkDirty(&s->iptHash);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->iptHash);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_ReloadServers(struct ServersScreen* s) {
@@ -1375,7 +1375,7 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 
 	if (FetchServersTask.Base.success) {
 		ServersScreen_ReloadServers(s);
-		LBackend_MarkDirty(&s->table);
+		LBackend_NeedsRedraw(&s->table);
 	}
 
 	LButton_SetConst(&s->btnRefresh, 
@@ -1387,12 +1387,12 @@ static void ServersScreen_MouseWheel(struct LScreen* s_, float delta) {
 	s->table.VTABLE->MouseWheel(&s->table, delta);
 }
 
-static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was) {
+static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was, struct InputDevice* device) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	if (!LTable_HandlesKey(key)) {
-		LScreen_KeyDown(s_, key, was);
+	if (!LTable_HandlesKey(key, device)) {
+		LScreen_KeyDown(s_, key, was, device);
 	} else {
-		s->table.VTABLE->KeyDown(&s->table, key, was);
+		s->table.VTABLE->KeyDown(&s->table, key, was, device);
 	}
 }
 

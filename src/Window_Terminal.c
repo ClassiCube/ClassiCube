@@ -404,7 +404,10 @@ static void ProcessConsoleEvents(float delta) {
 /*########################################################################################################################*
 *-------------------------------------------------------Window common-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_NORMAL;
 	DisplayInfo.Depth  = 4;
@@ -540,8 +543,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { }
 
 void Window_EnableRawMouse(void) {

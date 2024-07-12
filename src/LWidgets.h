@@ -7,6 +7,8 @@
 */
 struct FontDesc;
 struct Context2D;
+struct InputDevice;
+
 enum LWIDGET_TYPE {
 	LWIDGET_BUTTON, LWIDGET_CHECKBOX, LWIDGET_INPUT,
 	LWIDGET_LABEL,  LWIDGET_LINE, LWIDGET_SLIDER, LWIDGET_TABLE
@@ -24,7 +26,7 @@ struct LWidgetVTABLE {
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
 	/* Returns whether the key press was intercepted */
-	cc_bool (*KeyDown)(void* widget, int key, cc_bool wasDown);
+	cc_bool (*KeyDown)(void* widget, int key, cc_bool wasDown, struct InputDevice* device);
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
@@ -228,7 +230,7 @@ void LTable_Add(void* screen, struct LTable* table,
 void LTable_Reset(struct LTable* table);
 /* Whether this table would handle the given key being pressed. */
 /* e.g. used so pressing up/down works even when another widget is selected */
-cc_bool LTable_HandlesKey(int key);
+cc_bool LTable_HandlesKey(int key, struct InputDevice* device);
 /* Filters rows to only show those containing 'w->Filter' in the name. */
 void LTable_ApplyFilter(struct LTable* table);
 /* Sorts the rows in the table by current Sorter function of table */

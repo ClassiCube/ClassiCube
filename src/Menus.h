@@ -9,10 +9,12 @@ struct Screen;
 struct MenuInputDesc;
 struct FontDesc;
 struct ButtonWidget;
+struct InputDevice;
 
-int Menu_InputDown(void* screen, int key);
+int Menu_InputDown(void* screen, int key, struct InputDevice* device);
 int Menu_PointerDown(void* screen, int id, int x, int y);
 int Menu_PointerMove(void* screen, int id, int x, int y);
+int Menu_DoPointerMove(void* screen, int id, int x, int y);
 
 struct SimpleButtonDesc { short x, y; const char* title; Widget_LeftClick onClick; };
 void Menu_AddButtons(void* screen, struct ButtonWidget* btns, int width, 
@@ -66,4 +68,5 @@ void TouchOnscreenScreen_Show(void);
 void MenuScreen_Render2(void* screen, float delta);
 typedef void (*MenuInputDone)(const cc_string* value, cc_bool valid);
 void MenuInputOverlay_Show(struct MenuInputDesc* desc, const cc_string* value, MenuInputDone onDone, cc_bool screenMode);
+void MenuInputOverlay_Close(cc_bool valid);
 #endif

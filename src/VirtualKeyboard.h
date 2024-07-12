@@ -9,6 +9,7 @@
 #include "LBackend.h"
 #include "Window.h"
 #include "Graphics.h"
+#include "Game.h"
 
 static cc_bool kb_inited, kb_shift, kb_needsHook;
 static struct FontDesc kb_font;
@@ -247,9 +248,9 @@ static void VirtualKeyboard_ClickSelected(void) {
 	}
 }
 
-static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
+static void VirtualKeyboard_ProcessDown(int key, struct InputDevice* device) {
 	int deltaX, deltaY;
-	Input_CalcDelta(key, &deltaX, &deltaY);
+	Input_CalcDelta(key, device, &deltaX, &deltaY);
 
 	if (deltaX || deltaY) {
 		VirtualKeyboard_Scroll(deltaX, deltaY);
@@ -285,21 +286,19 @@ static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, floa
 extern Rect2D dirty_rect;
 
 static void VirtualKeyboard_MarkDirty2D(void) {
-	if (!dirty_rect.width) dirty_rect.width = 2;
+	LBackend_MarkAllDirty();
 }
 
-static void VirtualKeyboard_Display2D(Rect2D* r, struct Bitmap* bmp) {
+static void VirtualKeyboard_Display2D(struct Context2D* real_ctx) {
 	struct Context2D ctx;
-	struct Bitmap copy = *bmp;
+	struct Bitmap copy = real_ctx->bmp;
 	int x, y;
+
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
+	LBackend_MarkAllDirty();
 
-	/* Mark entire framebuffer as needing to be redrawn */
-	r->x = 0; r->width  = bmp->width;
-	r->y = 0; r->height = bmp->height;
-
-	VirtualKeyboard_CalcPosition(&x, &y, bmp->width, bmp->height);
-	copy.scan0 = Bitmap_GetRow(bmp, y);
+	VirtualKeyboard_CalcPosition(&x, &y, copy.width, copy.height);
+	copy.scan0 = Bitmap_GetRow(&real_ctx->bmp, y);
 	copy.scan0 += x;
 
 	Context2D_Wrap(&ctx, &copy);
@@ -307,6 +306,7 @@ static void VirtualKeyboard_Display2D(Rect2D* r, struct Bitmap* bmp) {
 }
 
 static void VirtualKeyboard_Close2D(void) {
+	LBackend_Hooks[0]   = NULL;
 	LBackend_Redraw();
 }
 
@@ -322,7 +322,9 @@ static void VirtualKeyboard_MarkDirty3D(void) {
 
 static void VirtualKeyboard_Close3D(void) {
 	Gfx_DeleteTexture(&kb_texture.ID);
+	Game_Draw2DHooks[0] = NULL;
 }
+
 static void VirtualKeyboard_MakeTexture(void) {
 	struct Context2D ctx;
 	int width  = VirtualKeyboard_Width();
@@ -370,8 +372,6 @@ static void VirtualKeyboard_Hook(void) {
 	/* Don't hook immediately into events, otherwise the initial up/down press that opened */
 	/*  the virtual keyboard in the first place gets mistakenly processed */
 	kb_needsHook = false;
-
-	Event_Register_(&InputEvents.Down,            NULL, VirtualKeyboard_ProcessDown);
 	Event_Register_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
 }
 
@@ -401,6 +401,9 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	}
 
 	Window_Main.SoftKeyboardFocus = true;
+	Input.DownHook = VirtualKeyboard_ProcessDown;
+	LBackend_Hooks[0]   = VirtualKeyboard_Display2D;
+	Game_Draw2DHooks[0] = VirtualKeyboard_Display3D;
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {
@@ -415,12 +418,12 @@ static void VirtualKeyboard_Close(void) {
 	if (KB_MarkDirty == VirtualKeyboard_MarkDirty3D)
 		VirtualKeyboard_Close3D();
 		
-	Event_Unregister_(&InputEvents.Down,            NULL, VirtualKeyboard_ProcessDown);
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
 	Window_Main.SoftKeyboardFocus = false;
 
-	KB_MarkDirty = NULL;
-	kb_needsHook = false;
+	KB_MarkDirty   = NULL;
+	kb_needsHook   = false;
+	Input.DownHook = NULL;
 
 	DisplayInfo.ShowingSoftKeyboard = false;
 }

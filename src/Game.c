@@ -22,6 +22,7 @@
 #include "Http.h"
 #include "Inventory.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Server.h"
 #include "TexturePack.h"
 #include "Screens.h"
@@ -63,6 +64,7 @@ cc_bool Game_Anaglyph3D;
 cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
+Game_Draw2DHook Game_Draw2DHooks[4];
 
 static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];
@@ -423,6 +425,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&World_Component);
 	Game_AddComponent(&Textures_Component);
 	Game_AddComponent(&Input_Component);
+	Game_AddComponent(&InputHandler_Component);
 	Game_AddComponent(&Camera_Component);
 	Game_AddComponent(&Gfx_Component);
 	Game_AddComponent(&Blocks_Component);
@@ -655,6 +658,7 @@ static void LimitFPS(void) {
 #endif
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
+	int i;
 	UpdateViewMatrix();
 
 	if (!Gui_GetBlocksWorld()) {
@@ -673,7 +677,11 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 
 	Gfx_Begin2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
-	OnscreenKeyboard_Draw3D();
+	for (i = 0; i < Array_Elems(Game_Draw2DHooks); i++)
+	{
+		if (Game_Draw2DHooks[i]) Game_Draw2DHooks[i]();
+	}
+
 /* TODO find a better solution than this */
 #ifdef CC_BUILD_3DS
 	if (Game_Anaglyph3D) {
@@ -736,7 +744,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 
 	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
-	if (InputBind_IsPressed(BIND_ZOOM_SCROLL) && !Gui.InputGrab) {
+	if (Bind_IsTriggered[BIND_ZOOM_SCROLL] && !Gui.InputGrab) {
 		InputHandler_SetFOV(Camera.ZoomFov);
 	}
 

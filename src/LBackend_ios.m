@@ -225,7 +225,7 @@ void LBackend_Init(void) {
     CFBridgingRetain(ui_controller); // prevent GC TODO even needed?
 }
 
-void LBackend_MarkDirty(void* widget) { }
+void LBackend_NeedsRedraw(void* widget) { }
 void LBackend_Tick(void) { }
 void LBackend_Free(void) { }
 void LBackend_UpdateTitleFont(void) { }

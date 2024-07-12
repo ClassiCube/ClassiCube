@@ -17,6 +17,7 @@ struct IGameComponent;
 struct VertexTextured;
 struct FontDesc;
 struct Widget;
+struct InputDevice;
 extern struct IGameComponent Gui_Component;
 
 CC_VAR extern struct _GuiData {
@@ -83,9 +84,9 @@ struct ScreenVTABLE {
 	/* Builds the vertex mesh for all the widgets in the screen. */
 	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */
-	int  (*HandlesInputDown)(void* elem, int key);
+	int  (*HandlesInputDown)(void* elem, int key, struct InputDevice* device);
 	/* Called when an input key or button is released */
-	void (*OnInputUp)(void* elem, int key);
+	void (*OnInputUp)(void* elem, int key, struct InputDevice* device);
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
 	/* Returns non-zero if on-screen keyboard text changed is handled. */
@@ -136,10 +137,10 @@ void Screen_Layout(void* screen);
 void Screen_ContextLost(void* screen);
 /* Default input down implementation for a screen */
 /*  (returns true if key is NOT a function key) */
-int  Screen_InputDown(void* screen, int key);
+int  Screen_InputDown(void* screen, int key, struct InputDevice* device);
 /* Default input up implementation for a screen */
 /*  (does nothing) */
-void Screen_InputUp(void*   screen, int key);
+void Screen_InputUp(void*   screen, int key, struct InputDevice* device);
 /* Default pointer release implementation for a screen */
 /*  (does nothing) */
 void Screen_PointerUp(void* s, int id, int x, int y);
@@ -155,9 +156,9 @@ struct WidgetVTABLE {
 	/* Positions this widget on-screen. */
 	void (*Reposition)(void* elem);
 	/* Returns non-zero if an input press is handled. */
-	int (*HandlesKeyDown)(void* elem, int key);
+	int (*HandlesKeyDown)(void* elem, int key, struct InputDevice* device);
 	/* Called when an input key or button is released. */
-	void (*OnInputUp)(void* elem, int key);
+	void (*OnInputUp)(void* elem, int key, struct InputDevice* device);
 	/* Returns non-zero if a mouse wheel scroll is handled. */
 	int (*HandlesMouseScroll)(void* elem, float delta);
 	/* Returns non-zero if a pointer press is handled. */
@@ -289,8 +290,9 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
 #define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
 #define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
-#define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown(elem, key)
-#define Elem_OnInputUp(elem,      key)  (elem)->VTABLE->OnInputUp(elem, key)
+
+#define Elem_HandlesKeyDown(elem, key, device) (elem)->VTABLE->HandlesKeyDown(elem, key, device)
+#define Elem_OnInputUp(elem,      key, device) (elem)->VTABLE->OnInputUp(elem, key, device)
 
 #define Elem_HandlesMouseScroll(elem, delta)    (elem)->VTABLE->HandlesMouseScroll(elem, delta)
 #define Elem_HandlesPointerDown(elem, id, x, y) (elem)->VTABLE->HandlesPointerDown(elem, id, x, y)

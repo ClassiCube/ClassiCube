@@ -383,7 +383,10 @@ void Window_SetTitle(const cc_string* title) {
     // TODO: Implement this somehow
 }
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 void Window_Init(void) {
     //Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
     // keyboard now shifts up
@@ -538,9 +541,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
     if (cur && [str isEqualToString:cur]) return;
     text_input.text = str;
 }
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) {
 	DisplayInfo.ShowingSoftKeyboard = false;

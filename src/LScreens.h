@@ -8,6 +8,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 struct LWidget;
 struct LScreen;
 struct Context2D;
+struct InputDevice;
 
 typedef void (*LScreen_Func)(struct LScreen* s);
 
@@ -18,7 +19,7 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	LScreen_Func Layout;      /* Positions the widgets on this screen */ \
 	LScreen_Func Tick;        /* Repeatedly called multiple times every second */ \
 	void (*DrawBackground)(struct LScreen* s, struct Context2D* ctx); \
-	void (*KeyDown)(struct LScreen* s,     int key, cc_bool wasDown); \
+	void (*KeyDown)(struct LScreen* s,     int key, cc_bool wasDown, struct InputDevice* device); \
 	void (*MouseUp)(struct LScreen* s,     int idx); \
 	void (*MouseWheel)(struct LScreen* s,  float delta); \
 	void (*ResetArea)(struct Context2D* ctx, int x, int y, int width, int height); \

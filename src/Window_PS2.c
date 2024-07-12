@@ -25,7 +25,7 @@
 #include <libmouse.h>
 
 static cc_bool launcherMode, mouseSupported, kbdSupported;
-
+#include "VirtualCursor.h"
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -150,7 +150,12 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_L, mData.buttons & PS2MOUSE_BTN1);
 	Input_SetNonRepeatable(CCMOUSE_R, mData.buttons & PS2MOUSE_BTN2);
 	Input_SetNonRepeatable(CCMOUSE_M, mData.buttons & PS2MOUSE_BTN3);
-	Mouse_ScrollVWheel(mData.wheel);
+	Mouse_ScrollVWheel(mData.wheel * 0.5f);
+
+	if (!vc_hooked) {
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + mData.x, Pointers[0].y + mData.y);
 	
 	if (!Input.RawMode) return;	
 	float scale = (delta * 60.0) / 2.0f;
@@ -172,7 +177,9 @@ void Window_ProcessEvents(float delta) {
 	ProcessKeyboardInput();
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
+void Cursor_SetPosition(int x, int y) {
+	if (vc_hooked) VirtualCursor_SetPosition(x, y);
+}
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
 void Window_UpdateRawMouse(void)  {  }
@@ -314,14 +321,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

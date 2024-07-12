@@ -16,11 +16,12 @@
 #include "Bitmap.h"
 #include "Block.h"
 #include "Input.h"
+#include "InputHandler.h"
 
 static void Widget_NullFunc(void* widget) { }
 static int  Widget_Pointer(void* elem, int id, int x, int y) { return false; }
-static void Widget_InputUp(void* elem, int key)   { }
-static int  Widget_InputDown(void* elem, int key) { return false; }
+static void Widget_InputUp(void* elem, int key, struct InputDevice* device)   { }
+static int  Widget_InputDown(void* elem, int key, struct InputDevice* device) { return false; }
 static void Widget_PointerUp(void* elem, int id, int x, int y) { }
 static int  Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
 static int  Widget_MouseScroll(void* elem, float delta) { return false; }
@@ -531,11 +532,11 @@ static void HotbarWidget_Reposition(void* widget) {
 	Tex_SetUV(w->selTex,   0,22/128.0f, 24/256.0f,44/128.0f);
 }
 
-static int HotbarWidget_MapKey(int key) {
+static int HotbarWidget_MapKey(int key, struct InputDevice* device) {
 	int i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++)
 	{
-		if (InputBind_Claims(BIND_HOTBAR_1 + i, key)) return i;
+		if (InputBind_Claims(BIND_HOTBAR_1 + i, key, device)) return i;
 	}
 	return -1;
 }
@@ -550,19 +551,19 @@ static int HotbarWidget_CycleIndex(int dir) {
 	return true;
 }
 
-static int HotbarWidget_KeyDown(void* widget, int key) {
+static int HotbarWidget_KeyDown(void* widget, int key, struct InputDevice* device) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	int index = HotbarWidget_MapKey(key);
+	int index = HotbarWidget_MapKey(key, device);
 
 	if (index == -1) {
-		if (InputBind_Claims(BIND_HOTBAR_LEFT, key))
+		if (InputBind_Claims(BIND_HOTBAR_LEFT, key, device))
 			return HotbarWidget_CycleIndex(-1);
-		if (InputBind_Claims(BIND_HOTBAR_RIGHT, key))
+		if (InputBind_Claims(BIND_HOTBAR_RIGHT, key, device))
 			return HotbarWidget_CycleIndex(+1);
 		return false;
 	}
 
-	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
+	if (Bind_IsTriggered[BIND_HOTBAR_SWITCH]) {
 		/* Pick from first to ninth row */
 		Inventory_SetHotbarIndex(index);
 		w->altHandled = true;
@@ -572,13 +573,13 @@ static int HotbarWidget_KeyDown(void* widget, int key) {
 	return true;
 }
 
-static void HotbarWidget_InputUp(void* widget, int key) {
+static void HotbarWidget_InputUp(void* widget, int key, struct InputDevice* device) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	/* Need to handle these cases:
 	     a) user presses alt then number
 	     b) user presses alt
 	   We only do case b) if case a) did not happen */
-	if (!InputBind_Claims(BIND_HOTBAR_SWITCH, key)) return;
+	if (!InputBind_Claims(BIND_HOTBAR_SWITCH, key, device)) return;
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */
@@ -649,7 +650,7 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
-	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
+	if (Bind_IsTriggered[BIND_HOTBAR_SWITCH]) {
 		index = Inventory.Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(w, delta, index, 1);
 		Inventory_SetHotbarIndex(index);
@@ -962,12 +963,12 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static int TableWidget_KeyDown(void* widget, int key) {
+static int TableWidget_KeyDown(void* widget, int key, struct InputDevice* device) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int deltaX, deltaY;
 	if (w->selectedIndex == -1) return false;
 
-	Input_CalcDelta(key, &deltaX, &deltaY);
+	Input_CalcDelta(key, device, &deltaX, &deltaY);
 	if (deltaX || deltaY) {
 		TableWidget_ScrollRelative(w, deltaX + deltaY * w->blocksPerRow);
 		return true;
@@ -1388,11 +1389,11 @@ static void InputWidget_Reposition(void* widget) {
 	w->inputTex.x += w->x - oldX; w->inputTex.y += w->y - oldY;
 }
 
-static int InputWidget_KeyDown(void* widget, int key) {
+static int InputWidget_KeyDown(void* widget, int key, struct InputDevice* device) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	if (Input_IsLeftButton(key)) {
+	if (key == device->leftButton) {
 		InputWidget_LeftKey(w);
-	} else if (Input_IsRightButton(key)) {
+	} else if (key == device->rightButton) {
 		InputWidget_RightKey(w);
 	} else if (key == CCKEY_BACKSPACE) {
 		InputWidget_BackspaceKey(w);
@@ -1685,14 +1686,14 @@ void TextInputWidget_OpenKeyboard(struct TextInputWidget* w) {
 	OnscreenKeyboard_Open(&args);
 }
 
-static int TextInputWidget_KeyDown(void* widget, int key) {
+static int TextInputWidget_KeyDown(void* widget, int key, struct InputDevice* device) {
 	struct TextInputWidget* w  = (struct TextInputWidget*)widget;
 	struct MenuInputDesc* desc = &w->desc;
 
-	if (Window_Main.SoftKeyboard && !DisplayInfo.ShowingSoftKeyboard && Input_IsEnterButton(key)) { 
+	if (Window_Main.SoftKeyboard && !DisplayInfo.ShowingSoftKeyboard && InputDevice_IsEnter(key, device)) { 
 		TextInputWidget_OpenKeyboard(w); return true; 
 	}
-	if (InputWidget_KeyDown(&w->base, key)) return true;
+	if (InputWidget_KeyDown(&w->base, key, device)) return true;
 
 	return desc->VTABLE->ProcessInput(desc, &w->base.text, key);
 }
@@ -1975,16 +1976,16 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	}
 }
 
-static int ChatInputWidget_KeyDown(void* widget, int key) {
+static int ChatInputWidget_KeyDown(void* widget, int key, struct InputDevice* device) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == CCKEY_TAB) { 
 		ChatInputWidget_TabKey(w);  return true; 
-	} else if (Input_IsUpButton(key)) { 
+	} else if (key == device->upButton) { 
 		ChatInputWidget_UpKey(w);   return true;
-	} else if (Input_IsDownButton(key)) { 
+	} else if (key == device->downButton) { 
 		ChatInputWidget_DownKey(w); return true; 
 	}
-	return InputWidget_KeyDown(w, key);
+	return InputWidget_KeyDown(w, key, device);
 }
 
 static int ChatInputWidget_GetMaxLines(void) {

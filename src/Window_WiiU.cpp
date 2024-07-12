@@ -12,6 +12,7 @@ extern "C" {
 #include "ExtMath.h"
 #include "Graphics.h"
 #include "Launcher.h"
+#include "LBackend.h"
 }
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
@@ -142,9 +143,8 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-extern Rect2D dirty_rect;
 void Window_ProcessEvents(float delta) {
-	if (!dirty_rect.width) dirty_rect.width = 1;
+	LBackend_MarkAllDirty();
 
 	if (!WHBProcIsRunning()) {
 		Window_Main.Exists = false;
@@ -488,6 +488,7 @@ static void UniString_WriteString(const cc_string* src, char16_t* dst) {
 	*dst = '\0';
 }
 
+static void OnscreenKeyboard_ProcessDown(int key, struct InputDevice* device) { }
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (keyboardOpen) OnscreenKeyboard_Close();
@@ -498,6 +499,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	kb_str.length = 0;
 	keyboardOpen  = true;
 	Window_Main.SoftKeyboardFocus = true;
+	Input.DownHook = OnscreenKeyboard_ProcessDown;
 
 	fs_client = (FSClient *)MEMAllocFromDefaultHeap(sizeof(FSClient));
 	FSAddClient(fs_client, FS_ERROR_FLAG_NONE);
@@ -600,13 +602,12 @@ static void OnscreenKeyboard_DrawDRC(void) {
 
 
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) { 
 	if (!keyboardOpen) return;
 	keyboardOpen = false;
 	Window_Main.SoftKeyboardFocus = false;
+	Input.DownHook = NULL;
 
 	nn::swkbd::DisappearInputForm();
 	nn::swkbd::Destroy();

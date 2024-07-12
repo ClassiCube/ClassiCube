@@ -836,23 +836,35 @@ static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result TerrainPatcher_Process(struct HttpRequest* req);
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req);
-static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req);
+
+static cc_result Classic0023Patcher_OldGoldBlock(struct HttpRequest* req);
+static cc_result Classic0023Patcher_OldGoldOre(  struct HttpRequest* req);
+static cc_result Classic0023Patcher_OldBlackWool(struct HttpRequest* req);
+static cc_result Classic0023Patcher_OldGrayWool( struct HttpRequest* req);
 
 /* URLs which data is downloaded from in order to generate the entries in default.zip */
-static struct ZipfileSource {
+struct ZipfileSource {
 	const char* name;
 	const char* url;
 	cc_result (*Process)(struct HttpRequest* req);
 	short size;
 	cc_bool downloaded;
 	int reqID;
-} defaultZipSources[] = {
+};
+
+#define DEFAULTZIP_0030_ENTRIES_COUNT 4
+static struct ZipfileSource defaultZipSources_0030_0023[] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar", ClassicPatcher_ExtractFiles, 291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     ModernPatcher_ExtractFiles, 4621 },
 	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png", TerrainPatcher_Process, 7 },
 	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21 },
-	{ "classic gold", "https://classic.minecraft.net/assets/textures/gold.png", Classic0023Patcher_OldGold, 1 }, /* NOTE: this must be the last entry */
+	/* 0.0.23 textures */
+	{ "0.0.23 gold",  "https://classic.minecraft.net/assets/textures/gold.png",      Classic0023Patcher_OldGoldBlock, 1 },
+	{ "0.0.23 ore",   "https://classic.minecraft.net/assets/textures/rock_gold.png", Classic0023Patcher_OldGoldOre,   1 },
+	{ "0.0.23 black", "https://classic.minecraft.net/assets/textures/color13.png",   Classic0023Patcher_OldBlackWool, 1 },
+	{ "0.0.23 gray",  "https://classic.minecraft.net/assets/textures/color14.png",   Classic0023Patcher_OldGrayWool,  1 },
 };
+static struct ZipfileSource* defaultZipSources;
 static int numDefaultZipSources, numDefaultZipProcessed;
 
 static void MCCTextures_ResetState(void) {
@@ -1049,7 +1061,7 @@ static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	return 0;
 }
 
-static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req) {
+static cc_result Classic0023Patcher_PatchBlocks(struct HttpRequest* req, const int* targets) {
 	struct Bitmap bmp;
 	struct Stream src;
 	cc_result res;
@@ -1057,12 +1069,38 @@ static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req) {
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	if ((res = Png_Decode(&bmp, &src))) return res;
 
-	PatchTerrainTile(&bmp, 0,0, 8,1);
-	PatchTerrainTile(&bmp, 0,0, 8,2);
-	PatchTerrainTile(&bmp, 0,0, 8,3);
+	while (*targets)
+	{
+		PatchTerrainTile(&bmp, 0,0, *targets >> 8, *targets & 0xFF);
+		targets++;
+	}
 
 	Mem_Free(bmp.scan0);
 	return 0;
+}
+
+static cc_result Classic0023Patcher_OldGoldBlock(struct HttpRequest* req) {
+	static const int targets[] = { (8 << 8) | 1, (8 << 8) | 2, (8 << 8) | 3, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
+}
+
+static cc_result Classic0023Patcher_OldGoldOre(struct HttpRequest* req) {
+	static const int targets[] = { (0 << 8) | 2, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
+}
+
+static cc_result Classic0023Patcher_OldBlackWool(struct HttpRequest* req) {
+	static const int targets[] = { (13 << 8) | 4, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
+}
+
+static cc_result Classic0023Patcher_OldGrayWool(struct HttpRequest* req) {
+	static const int targets[] = { (14 << 8) | 4, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
 }
 
 
@@ -1096,9 +1134,14 @@ static void MCCTextures_CountMissing(void) {
 	int i;
 	if (allZipEntriesExist) return;
 
-	numDefaultZipSources = Array_Elems(defaultZipSources);
 	/* old gold texture only needed in 0.0.23 and earlier */
-	if (Game_Version.Version > VERSION_0023) numDefaultZipSources--;
+	if (Game_Version.Version > VERSION_0023) {
+		numDefaultZipSources = DEFAULTZIP_0030_ENTRIES_COUNT;
+		defaultZipSources    = defaultZipSources_0030_0023;
+	} else {
+		numDefaultZipSources = Array_Elems(defaultZipSources_0030_0023);
+		defaultZipSources    = defaultZipSources_0030_0023;
+	}
 
 	for (i = 0; i < numDefaultZipSources; i++) {
 		Resources_MissingCount++;
