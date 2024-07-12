@@ -378,10 +378,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
 }
 
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
-}
-
 void OnscreenKeyboard_Close(void) {
 	VirtualKeyboard_Close();
 }

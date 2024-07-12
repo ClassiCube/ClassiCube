@@ -21,6 +21,8 @@ extern cc_bool Game_UseCPEBlocks;
 
 extern cc_string Game_Username;
 extern cc_string Game_Mppass;
+typedef void (*Game_Draw2DHook)(void);
+extern Game_Draw2DHook Game_Draw2DHooks[4];
 
 #ifdef CC_BUILD_SPLITSCREEN
 extern int Game_NumLocalPlayers;

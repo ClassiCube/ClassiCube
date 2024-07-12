@@ -540,7 +540,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { }
 
 void Window_EnableRawMouse(void) {

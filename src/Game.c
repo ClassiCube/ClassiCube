@@ -64,6 +64,7 @@ cc_bool Game_Anaglyph3D;
 cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
+Game_Draw2DHook Game_Draw2DHooks[4];
 
 static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];
@@ -657,6 +658,7 @@ static void LimitFPS(void) {
 #endif
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
+	int i;
 	UpdateViewMatrix();
 
 	if (!Gui_GetBlocksWorld()) {
@@ -675,7 +677,11 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 
 	Gfx_Begin2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
-	OnscreenKeyboard_Draw3D();
+	for (i = 0; i < Array_Elems(Game_Draw2DHooks); i++)
+	{
+		if (Game_Draw2DHooks[i]) Game_Draw2DHooks[i]();
+	}
+
 /* TODO find a better solution than this */
 #ifdef CC_BUILD_3DS
 	if (Game_Anaglyph3D) {

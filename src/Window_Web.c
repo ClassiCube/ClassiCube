@@ -724,8 +724,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 	interop_SetKeyboardText(str);
 }
 
-void OnscreenKeyboard_Draw3D(void) { }
-
 void OnscreenKeyboard_Close(void) {
 	keyboardOpen = false;
 	if (!Input_TouchMode) return;
