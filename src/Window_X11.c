@@ -294,7 +294,10 @@ static XVisualInfo GLContext_SelectVisual(void) {
 static XVisualInfo GLContext_SelectVisual(void);
 #endif
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
@@ -350,8 +353,14 @@ static void DoCreateWindow(int width, int height) {
 	attributes.event_mask = win_eventMask;
 
 	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
-		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, 
+		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual,
+#ifdef CC_BUILD_IRIX
+		CWColormap | CWEventMask | CWBlackPixel | CWBorderPixel, &attributes);
+#else
+		/* Omitting black/border pixels produces nicer looking resizing on some WMs */
 		CWColormap | CWEventMask, &attributes);
+#endif
+
 	if (!win_handle) Logger_Abort("XCreateWindow failed");
 
 #ifdef CC_BUILD_XIM

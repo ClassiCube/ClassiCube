@@ -59,6 +59,8 @@ CC_VAR extern struct _DisplayData {
 	cc_bool DPIScaling;
 	/* Whether the soft keyboard is currently being shown */
 	cc_bool ShowingSoftKeyboard;
+	/* Whether the cursor is currently visible */
+	cc_bool CursorVisible;
 	/* Amount to offset content near the edges of the window by */
 	/*  Mainly intended for when the game is rendered on TV displays, where */
 	/*  pixels on the edges of the screen may be hidden due to overscan */

@@ -166,6 +166,7 @@ void Window_PreInit(void) {
     long tmpLong = 0;
     Gestalt(gestaltQuickdrawVersion, &tmpLong);
     hasColorQD = tmpLong >= gestalt32BitQD;
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {

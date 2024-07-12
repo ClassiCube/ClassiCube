@@ -404,7 +404,10 @@ static void ProcessConsoleEvents(float delta) {
 /*########################################################################################################################*
 *-------------------------------------------------------Window common-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_NORMAL;
 	DisplayInfo.Depth  = 4;

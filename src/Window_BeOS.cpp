@@ -322,7 +322,10 @@ static void RunApp(void) {
 	Platform_LogConst("App initialised");
 }
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 void Window_Init(void) {
 	Events_Init();
 	RunApp();
