@@ -602,7 +602,6 @@ static void OnscreenKeyboard_DrawDRC(void) {
 
 
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) { 
 	if (!keyboardOpen) return;

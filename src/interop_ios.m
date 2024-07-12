@@ -539,8 +539,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
     text_input.text = str;
 }
 
-void OnscreenKeyboard_Draw3D(void) { }
-
 void OnscreenKeyboard_Close(void) {
 	DisplayInfo.ShowingSoftKeyboard = false;
     [text_input resignFirstResponder];

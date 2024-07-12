@@ -9,6 +9,7 @@
 #include "LBackend.h"
 #include "Window.h"
 #include "Graphics.h"
+#include "Game.h"
 
 static cc_bool kb_inited, kb_shift, kb_needsHook;
 static struct FontDesc kb_font;
@@ -305,7 +306,7 @@ static void VirtualKeyboard_Display2D(struct Context2D* real_ctx) {
 }
 
 static void VirtualKeyboard_Close2D(void) {
-	LBackend_Hooks[0] = NULL;
+	LBackend_Hooks[0]   = NULL;
 	LBackend_Redraw();
 }
 
@@ -321,7 +322,9 @@ static void VirtualKeyboard_MarkDirty3D(void) {
 
 static void VirtualKeyboard_Close3D(void) {
 	Gfx_DeleteTexture(&kb_texture.ID);
+	Game_Draw2DHooks[0] = NULL;
 }
+
 static void VirtualKeyboard_MakeTexture(void) {
 	struct Context2D ctx;
 	int width  = VirtualKeyboard_Width();
@@ -399,7 +402,8 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 
 	Window_Main.SoftKeyboardFocus = true;
 	Input.DownHook = VirtualKeyboard_ProcessDown;
-	LBackend_Hooks[0] = VirtualKeyboard_Display2D;
+	LBackend_Hooks[0]   = VirtualKeyboard_Display2D;
+	Game_Draw2DHooks[0] = VirtualKeyboard_Display3D;
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {

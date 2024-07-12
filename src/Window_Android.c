@@ -547,8 +547,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
-void OnscreenKeyboard_Draw3D(void) { }
-
 void OnscreenKeyboard_Close(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);

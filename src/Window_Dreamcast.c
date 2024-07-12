@@ -202,6 +202,7 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_L, mods & MOUSE_LEFTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_R, mods & MOUSE_RIGHTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
+	Mouse_ScrollVWheel(-state->dz * 0.5f);
 
 	if (!vc_hooked) {
 		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
@@ -219,7 +220,9 @@ void Window_ProcessEvents(float delta) {
 	ProcessMouseInput(delta);
 }
 
-void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
+void Cursor_SetPosition(int x, int y) {
+	if (vc_hooked) VirtualCursor_SetPosition(x, y);
+}
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
@@ -345,10 +348,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {
