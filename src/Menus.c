@@ -1863,7 +1863,7 @@ static void BindsSourceScreen_ModeNormal(void* screen, void* b) {
 }
 
 static void BindsSourceScreen_ModeGamepad(void* screen, void* b) {
-	bind_device = &PadDevice;
+	bind_device = &Gamepad_Devices[0].base;
 	NormalBindingsScreen_Show();
 }
 
@@ -1921,7 +1921,7 @@ static void SwitchBindsMain(void* s, void* w) {
 		/* User needs to decide whether to configure mouse/keyboard or gamepad */
 		BindsSourceScreen_Show();
 	} else if (Input.Sources == INPUT_SOURCE_GAMEPAD) {
-		bind_device = &PadDevice;
+		bind_device = &Gamepad_Devices[0].base;
 		NormalBindingsScreen_Show();
 	} else {
 		bind_device = &NormDevice;
@@ -2131,7 +2131,7 @@ static void KeyBindsScreen_Show(int bindsCount, const cc_uint8* binds, const cha
 void ClassicBindingsScreen_Show(void) {
 	static const cc_uint8 binds[]    = { BIND_FORWARD, BIND_BACK, BIND_JUMP, BIND_CHAT, BIND_SET_SPAWN, BIND_LEFT, BIND_RIGHT, BIND_INVENTORY, BIND_FOG, BIND_RESPAWN };
 	static const char* const descs[] = { "Forward", "Back", "Jump", "Chat", "Save location", "Left", "Right", "Build", "Toggle fog", "Load location" };
-	bind_device = Input.Sources == INPUT_SOURCE_GAMEPAD ? &PadDevice : &NormDevice;
+	bind_device = Input.Sources == INPUT_SOURCE_GAMEPAD ? &Gamepad_Devices[0].base : &NormDevice;
 
 	if (Game_ClassicHacks) {
 		KeyBindsScreen_Reset(NULL, Menu_SwitchBindsClassicHacks, 260);
@@ -2150,7 +2150,7 @@ void ClassicBindingsScreen_Show(void) {
 void ClassicHacksBindingsScreen_Show(void) {
 	static const cc_uint8 binds[6]    = { BIND_SPEED, BIND_NOCLIP, BIND_HALF_SPEED, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN };
 	static const char* const descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
-	bind_device = Input.Sources == INPUT_SOURCE_GAMEPAD ? &PadDevice : &NormDevice;
+	bind_device = Input.Sources == INPUT_SOURCE_GAMEPAD ? &Gamepad_Devices[0].base : &NormDevice;
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsClassic, NULL, 260);
 	KeyBindsScreen_SetLayout(-90, -40, 3);
