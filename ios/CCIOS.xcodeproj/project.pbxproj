@@ -14,6 +14,9 @@
 		9A6C79652BFDDEF200676D27 /* FancyLighting.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79642BFDDEF100676D27 /* FancyLighting.c */; };
 		9A6C79672BFDDF0700676D27 /* Queue.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79662BFDDF0600676D27 /* Queue.c */; };
 		9A6C7DFA2C2F610C00676D27 /* LBackend_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */; };
+		9A6C7DFC2C41E93700676D27 /* InputHandler.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DFB2C41E93700676D27 /* InputHandler.c */; };
+		9A6C7DFE2C41E95D00676D27 /* MenuOptions.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DFD2C41E95C00676D27 /* MenuOptions.c */; };
+		9A6C7E002C41EED700676D27 /* Window_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DFF2C41EED700676D27 /* Window_ios.m */; };
 		9A7401D92B737D5C0040E575 /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401D82B737D5B0040E575 /* Commands.c */; };
 		9A7401DB2B7384060040E575 /* SSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401DA2B7384060040E575 /* SSL.c */; };
 		9A89D4F227F802F600FF3F80 /* LWidgets.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37827F802F500FF3F80 /* LWidgets.c */; };
@@ -103,6 +106,9 @@
 		9A6C79642BFDDEF100676D27 /* FancyLighting.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FancyLighting.c; sourceTree = "<group>"; };
 		9A6C79662BFDDF0600676D27 /* Queue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Queue.c; sourceTree = "<group>"; };
 		9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LBackend_ios.m; sourceTree = "<group>"; };
+		9A6C7DFB2C41E93700676D27 /* InputHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = InputHandler.c; sourceTree = "<group>"; };
+		9A6C7DFD2C41E95C00676D27 /* MenuOptions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MenuOptions.c; sourceTree = "<group>"; };
+		9A6C7DFF2C41EED700676D27 /* Window_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Window_ios.m; sourceTree = "<group>"; };
 		9A7401D82B737D5B0040E575 /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Commands.c; sourceTree = "<group>"; };
 		9A7401DA2B7384060040E575 /* SSL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SSL.c; sourceTree = "<group>"; };
 		9A89D35727F802B100FF3F80 /* ClassiCube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassiCube.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -218,6 +224,9 @@
 		9A89D37727F802F500FF3F80 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9A6C7DFF2C41EED700676D27 /* Window_ios.m */,
+				9A6C7DFD2C41E95C00676D27 /* MenuOptions.c */,
+				9A6C7DFB2C41E93700676D27 /* InputHandler.c */,
 				9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */,
 				9A6C79662BFDDF0600676D27 /* Queue.c */,
 				9A6C79642BFDDEF100676D27 /* FancyLighting.c */,
@@ -386,6 +395,7 @@
 				9A89D58327F802F600FF3F80 /* EntityComponents.c in Sources */,
 				9A7401D92B737D5C0040E575 /* Commands.c in Sources */,
 				9A89D57327F802F600FF3F80 /* Utils.c in Sources */,
+				9A6C7DFE2C41E95D00676D27 /* MenuOptions.c in Sources */,
 				9A89D58427F802F600FF3F80 /* Camera.c in Sources */,
 				9A89D57C27F802F600FF3F80 /* Chat.c in Sources */,
 				9A89D50527F802F600FF3F80 /* LScreens.c in Sources */,
@@ -456,11 +466,13 @@
 				9A89D4FE27F802F600FF3F80 /* Inventory.c in Sources */,
 				9A89D56527F802F600FF3F80 /* Generator.c in Sources */,
 				9A89D57527F802F600FF3F80 /* AxisLinesRenderer.c in Sources */,
+				9A6C7E002C41EED700676D27 /* Window_ios.m in Sources */,
 				9A89D55E27F802F600FF3F80 /* World.c in Sources */,
 				9A89D58627F802F600FF3F80 /* Screens.c in Sources */,
 				9A89D4F927F802F600FF3F80 /* Http_Worker.c in Sources */,
 				9A89D58B27F802F600FF3F80 /* Launcher.c in Sources */,
 				9A89D59027F802F600FF3F80 /* Stream.c in Sources */,
+				9A6C7DFC2C41E93700676D27 /* InputHandler.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
