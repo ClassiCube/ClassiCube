@@ -855,9 +855,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
-}
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) {
 	lastPoly = NULL;

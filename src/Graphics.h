@@ -9,6 +9,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 struct Bitmap;
 struct Stream;
 struct IGameComponent;
+struct MenuOptionsScreen;
 extern struct IGameComponent Gfx_Component;
 
 typedef enum VertexFormat_ {
@@ -238,6 +239,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output);
 /* Warns in chat if the backend has problems with the user's GPU */
 /* Returns whether legacy rendering mode for borders/sky/clouds is needed */
 cc_bool Gfx_WarnIfNecessary(void);
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s);
 /* Sets up state for rendering a new frame */
 void Gfx_BeginFrame(void);
 /* Finishes rendering a frame, and swaps it with the back buffer */

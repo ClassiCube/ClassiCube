@@ -850,6 +850,8 @@ void Gfx_EndFrame(void) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
+
 static const char* D3D9_StrFlags(void) {
 	if (createFlags & D3DCREATE_HARDWARE_VERTEXPROCESSING) return "Hardware";
 	if (createFlags & D3DCREATE_MIXED_VERTEXPROCESSING)    return "Mixed";

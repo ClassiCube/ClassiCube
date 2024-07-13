@@ -498,9 +498,8 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
-}
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 
 /*########################################################################################################################*

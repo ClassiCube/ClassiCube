@@ -39,8 +39,6 @@
 typedef void (*Button_GetText)(struct ButtonWidget* btn, cc_string* raw);
 typedef void (*Button_SetText)(struct ButtonWidget* btn, const cc_string* raw);
 
-typedef cc_bool (*Button_GetBool)(void);
-typedef void    (*Button_SetBool)(cc_bool value);
 struct MenuOptionMetaBool {
 	Button_GetText GetText;
 	Button_SetText SetText;
@@ -48,8 +46,6 @@ struct MenuOptionMetaBool {
 	Button_SetBool SetValue;
 };
 
-typedef int  (*Button_GetEnum)(void);
-typedef void (*Button_SetEnum)(int value);
 struct MenuOptionMetaEnum {
 	Button_GetText GetText;
 	Button_SetText SetText;
@@ -59,8 +55,6 @@ struct MenuOptionMetaEnum {
 	int count;
 };
 
-typedef PackedCol (*Button_GetHex)(void);
-typedef void      (*Button_SetHex)(PackedCol value);
 struct MenuOptionMetaHex {
 	Button_GetText GetText;
 	Button_SetText SetText;
@@ -69,8 +63,6 @@ struct MenuOptionMetaHex {
 	struct MenuInputDesc desc;
 };
 
-typedef int  (*Button_GetInt)(void);
-typedef void (*Button_SetInt)(int value);
 struct MenuOptionMetaInt {
 	Button_GetText GetText;
 	Button_SetText SetText;
@@ -79,8 +71,6 @@ struct MenuOptionMetaInt {
 	struct MenuInputDesc desc;
 };
 
-typedef void (*Button_GetNum)(cc_string* v);
-typedef void (*Button_SetNum)(const cc_string* v);
 struct MenuOptionMetaNum {
 	Button_GetText GetText;
 	Button_SetText SetText;
@@ -257,13 +247,15 @@ static int MenuOptionsScreen_AddButton(struct MenuOptionsScreen* s, const char* 
 static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, Widget_LeftClick backClick) {
 	struct ButtonWidget* btn;
 	int i, col, row, half = s->numButtons / 2;
-	int begRow = max(-3, 2 - half);
+	int begRow = 2 - half;
+	if (s->numButtons & 1) begRow--;
+	begRow = max(-3, begRow);
 	
 	for (i = 0; i < s->numButtons; i++) 
 	{
 		btn = &s->buttons[i];
 		col = i < half ? -160 : 160;
-		row = 50 * (begRow + i % half);
+		row = 50 * (begRow + (i < half ? i : (i - half)));
 		Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_CENTRE, col, row);
 	}
 	ButtonWidget_Add(s, &s->done, 400, backClick);
@@ -287,7 +279,7 @@ static void MenuOptionsScreen_BoolClick(void* screen, void* widget) {
 	MenuOptionsScreen_Update(s, btn);
 }
 
-static void MenuOptionsScreen_AddBool(struct MenuOptionsScreen* s, const char* name, 
+void MenuOptionsScreen_AddBool(struct MenuOptionsScreen* s, const char* name, 
 									Button_GetBool getValue, Button_SetBool setValue) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_BoolClick, 
 										MenuOptionsScreen_BoolGet, NULL);
@@ -316,7 +308,7 @@ static void MenuOptionsScreen_EnumClick(void* screen, void* widget) {
 	MenuOptionsScreen_Update(s, btn);
 }
 
-static void MenuOptionsScreen_AddEnum(struct MenuOptionsScreen* s, const char* name,
+void MenuOptionsScreen_AddEnum(struct MenuOptionsScreen* s, const char* name,
 									const char* const* names, int namesCount,
 									Button_GetEnum getValue, Button_SetEnum setValue) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_EnumClick, 
@@ -368,7 +360,7 @@ static void MenuOptionsScreen_HexSet(struct ButtonWidget* btn, const cc_string* 
 	meta->SetValue(PackedCol_Make(rgb[0], rgb[1], rgb[2], 255));
 }
 
-static void MenuOptionsScreen_AddHex(struct MenuOptionsScreen* s, const char* name, PackedCol defaultValue,
+void MenuOptionsScreen_AddHex(struct MenuOptionsScreen* s, const char* name, PackedCol defaultValue,
 									Button_GetHex getValue, Button_SetHex setValue) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
 										MenuOptionsScreen_HexGet, MenuOptionsScreen_HexSet);
@@ -392,7 +384,7 @@ static void MenuOptionsScreen_IntSet(struct ButtonWidget* btn, const cc_string* 
 	meta->SetValue(value);
 }
 
-static void MenuOptionsScreen_AddInt(struct MenuOptionsScreen* s, const char* name,
+void MenuOptionsScreen_AddInt(struct MenuOptionsScreen* s, const char* name,
 									int minValue, int maxValue, int defaultValue,
 									Button_GetInt getValue, Button_SetInt setValue) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
@@ -415,7 +407,7 @@ static void MenuOptionsScreen_NumSet(struct ButtonWidget* btn, const cc_string* 
 	meta->SetValue(v);
 }
 
-static void MenuOptionsScreen_AddNum(struct MenuOptionsScreen* s, const char* name,
+void MenuOptionsScreen_AddNum(struct MenuOptionsScreen* s, const char* name,
 									float minValue, float maxValue, float defaultValue,
 									Button_GetNum getValue, Button_SetNum setValue) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
@@ -771,18 +763,9 @@ static void    GrO_SetMipmaps(cc_bool v) {
 	TexturePack_ExtractCurrent(true);
 }
 
-static void GrO_GetCameraMass(cc_string* v) { String_AppendFloat(v, Camera.Mass, 2); }
-static void GrO_SetCameraMass(const cc_string* c) {
-	Camera.Mass = Menu_Float(c);
-	Options_Set(OPT_CAMERA_MASS, c);
-}
-
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddNum(s, "Camera Mass",
-			1, 100, 20,
-			GrO_GetCameraMass, GrO_SetCameraMass);
 		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
 			MeO_GetFPS,        MeO_SetFPS);
 		MenuOptionsScreen_AddInt(s, "View distance",
@@ -793,19 +776,16 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddEnum(s, "Lighting mode", LightingMode_Names, LIGHTING_MODE_COUNT,
 			GrO_GetLighting,   GrO_SetLighting);
 			
-		MenuOptionsScreen_AddBool(s, "Smooth camera",
-			GrO_GetCamera,     GrO_SetCamera);
 		MenuOptionsScreen_AddEnum(s, "Names",   NameMode_Names,   NAME_MODE_COUNT,
 			GrO_GetNames,      GrO_SetNames);
 		MenuOptionsScreen_AddEnum(s, "Shadows", ShadowMode_Names, SHADOW_MODE_COUNT,
 			GrO_GetShadows,    GrO_SetShadows);
-#ifdef CC_BUILD_N64
-		MenuOptionsScreen_AddBool(s, "Filtering",
-			GrO_GetMipmaps,    GrO_SetMipmaps);
-#else
+
+		if (!Gfx_GetUIOptions(s)) {
 		MenuOptionsScreen_AddBool(s, "Mipmaps",
 			GrO_GetMipmaps,    GrO_SetMipmaps);
-#endif
+		}
+
 		MenuOptionsScreen_AddBool(s, "3D anaglyph",
 			ClO_GetAnaglyph,   ClO_SetAnaglyph);
 	};
@@ -1134,6 +1114,12 @@ void HacksSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
 *#########################################################################################################################*/
+static void MiO_GetCameraMass(cc_string* v) { String_AppendFloat(v, Camera.Mass, 2); }
+static void MiO_SetCameraMass(const cc_string* c) {
+	Camera.Mass = Menu_Float(c);
+	Options_Set(OPT_CAMERA_MASS, c);
+}
+
 static void MiO_GetReach(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->ReachDistance, 2); }
 static void MiO_SetReach(const cc_string* v) { Entities.CurPlayer->ReachDistance = Menu_Float(v); }
 
@@ -1153,6 +1139,12 @@ static cc_bool MiO_GetViewBob(void) { return Game_ViewBobbing; }
 static void    MiO_SetViewBob(cc_bool v) { 
 	Game_ViewBobbing = v;
 	Options_SetBool(OPT_VIEW_BOBBING, v); 
+}
+
+static cc_bool MiO_GetCamera(void) { return Camera.Smooth; }
+static void    MiO_SetCamera(cc_bool v) { 
+	Camera.Smooth = v;
+	Options_SetBool(OPT_CAMERA_SMOOTH, v); 
 }
 
 static cc_bool MiO_GetPhysics(void) { return Physics.Enabled; }
@@ -1176,6 +1168,9 @@ static void MiO_SetSensitivity(int v) {
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
+		MenuOptionsScreen_AddNum(s, "Camera Mass",
+			1, 100, 20,
+			MiO_GetCameraMass, MiO_SetCameraMass);
 		MenuOptionsScreen_AddNum(s,  "Reach distance",
 			   1, 1024, 5,
 			MiO_GetReach,    MiO_SetReach);
@@ -1185,9 +1180,11 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddInt(s,  "Sounds volume",
 			   0, 100,  DEFAULT_SOUNDS_VOLUME,
 			MiO_GetSounds,  MiO_SetSounds);
+		MenuOptionsScreen_AddBool(s, "Smooth camera",
+			MiO_GetCamera,     MiO_SetCamera);
+		
 		MenuOptionsScreen_AddBool(s, "View bobbing",
 			MiO_GetViewBob, MiO_SetViewBob);
-		
 		MenuOptionsScreen_AddBool(s, "Block physics",
 			MiO_GetPhysics, MiO_SetPhysics);
 		MenuOptionsScreen_AddBool(s, "Invert mouse",
