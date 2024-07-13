@@ -220,7 +220,6 @@ static void Menu_SwitchLoadLevel(void* a, void* b)       { LoadLevelScreen_Show(
 static void Menu_SwitchSaveLevel(void* a, void* b)       { SaveLevelScreen_Show(); }
 static void Menu_SwitchTexPacks(void* a, void* b)        { TexturePackScreen_Show(); }
 static void Menu_SwitchHotkeys(void* a, void* b)         { HotkeyListScreen_Show(); }
-static void Menu_SwitchFont(void* a, void* b)            { FontListScreen_Show(); }
 
 
 /*########################################################################################################################*

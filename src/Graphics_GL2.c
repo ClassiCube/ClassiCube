@@ -608,7 +608,7 @@ static void SetPostProcess(int v) {
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_AddEnum(s, "Post process", 
 		postProcess_Names, Array_Elems(postProcess_Names),
-		GetPostProcess, SetPostProcess);
+		GetPostProcess, SetPostProcess, NULL);
 	return false;
 }
 

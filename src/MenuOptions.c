@@ -227,7 +227,7 @@ static void MenuOptionsScreen_BeginButtons(struct MenuOptionsScreen* s) {
 }
 
 static int MenuOptionsScreen_AddButton(struct MenuOptionsScreen* s, const char* name, Widget_LeftClick onClick,
-										Button_GetText getValue, Button_SetText setValue) {
+										Button_GetText getValue, Button_SetText setValue, const char* desc) {
 	struct ButtonWidget* btn;
 	int i = s->numButtons;
 	
@@ -237,6 +237,7 @@ static int MenuOptionsScreen_AddButton(struct MenuOptionsScreen* s, const char* 
 	btn->optName  = name;
 	btn->meta.ptr = &menuOpts_meta[i];
 	s->widgets[i] = (struct Widget*)btn;
+	s->descriptions[i] = desc;
 	
 	menuOpts_meta[i].b.GetText = getValue;
 	menuOpts_meta[i].b.SetText = setValue;
@@ -280,9 +281,9 @@ static void MenuOptionsScreen_BoolClick(void* screen, void* widget) {
 }
 
 void MenuOptionsScreen_AddBool(struct MenuOptionsScreen* s, const char* name, 
-									Button_GetBool getValue, Button_SetBool setValue) {
+									Button_GetBool getValue, Button_SetBool setValue, const char* desc) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_BoolClick, 
-										MenuOptionsScreen_BoolGet, NULL);
+										MenuOptionsScreen_BoolGet, NULL, desc);
 	
 	struct MenuOptionMetaBool* meta = &menuOpts_meta[i].b;
 	meta->GetValue = getValue;
@@ -310,9 +311,9 @@ static void MenuOptionsScreen_EnumClick(void* screen, void* widget) {
 
 void MenuOptionsScreen_AddEnum(struct MenuOptionsScreen* s, const char* name,
 									const char* const* names, int namesCount,
-									Button_GetEnum getValue, Button_SetEnum setValue) {
+									Button_GetEnum getValue, Button_SetEnum setValue, const char* desc) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_EnumClick, 
-										MenuOptionsScreen_EnumGet, NULL);
+										MenuOptionsScreen_EnumGet, NULL, desc);
 	
 	struct MenuOptionMetaEnum* meta = &menuOpts_meta[i].e;
 	meta->GetValue = getValue;
@@ -361,9 +362,9 @@ static void MenuOptionsScreen_HexSet(struct ButtonWidget* btn, const cc_string* 
 }
 
 void MenuOptionsScreen_AddHex(struct MenuOptionsScreen* s, const char* name, PackedCol defaultValue,
-									Button_GetHex getValue, Button_SetHex setValue) {
+									Button_GetHex getValue, Button_SetHex setValue, const char* desc) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
-										MenuOptionsScreen_HexGet, MenuOptionsScreen_HexSet);
+										MenuOptionsScreen_HexGet, MenuOptionsScreen_HexSet, desc);
 										
 	struct MenuOptionMetaHex* meta = &menuOpts_meta[i].h;
 	meta->GetValue = getValue;
@@ -386,9 +387,9 @@ static void MenuOptionsScreen_IntSet(struct ButtonWidget* btn, const cc_string* 
 
 void MenuOptionsScreen_AddInt(struct MenuOptionsScreen* s, const char* name,
 									int minValue, int maxValue, int defaultValue,
-									Button_GetInt getValue, Button_SetInt setValue) {
+									Button_GetInt getValue, Button_SetInt setValue, const char* desc) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
-										MenuOptionsScreen_IntGet, MenuOptionsScreen_IntSet);
+										MenuOptionsScreen_IntGet, MenuOptionsScreen_IntSet, desc);
 										
 	struct MenuOptionMetaInt* meta = &menuOpts_meta[i].i;
 	meta->GetValue = getValue;
@@ -409,9 +410,9 @@ static void MenuOptionsScreen_NumSet(struct ButtonWidget* btn, const cc_string* 
 
 void MenuOptionsScreen_AddNum(struct MenuOptionsScreen* s, const char* name,
 									float minValue, float maxValue, float defaultValue,
-									Button_GetNum getValue, Button_SetNum setValue) {
+									Button_GetNum getValue, Button_SetNum setValue, const char* desc) {
 	int i = MenuOptionsScreen_AddButton(s, name, MenuOptionsScreen_InputClick, 
-										MenuOptionsScreen_NumGet, MenuOptionsScreen_NumSet);
+										MenuOptionsScreen_NumGet, MenuOptionsScreen_NumSet, desc);
 										
 	struct MenuOptionMetaNum* meta = &menuOpts_meta[i].n;
 	meta->GetValue = getValue;
@@ -425,6 +426,7 @@ static void MenuOptionsScreen_OnHacksChanged(void* screen) {
 	if (s->OnHacksChanged) s->OnHacksChanged(s);
 	s->dirty = true;
 }
+
 static void MenuOptionsScreen_OnLightingModeServerChanged(void* screen, cc_uint8 oldMode, cc_bool fromServer) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	/* This event only actually matters if it's from the server */
@@ -604,24 +606,24 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Music",
-			ClO_GetMusic,    ClO_SetMusic);
+			ClO_GetMusic,    ClO_SetMusic, NULL);
 		MenuOptionsScreen_AddBool(s, "Invert mouse",
-			ClO_GetInvert,   ClO_SetInvert);
+			ClO_GetInvert,   ClO_SetInvert, NULL);
 		MenuOptionsScreen_AddEnum(s, "Render distance", viewDistNames, VIEW_COUNT,
-			ClO_GetViewDist, ClO_SetViewDist);
+			ClO_GetViewDist, ClO_SetViewDist, NULL);
 		MenuOptionsScreen_AddBool(s, "3d anaglyph",
-			ClO_GetAnaglyph, ClO_SetAnaglyph);
+			ClO_GetAnaglyph, ClO_SetAnaglyph, NULL);
 		
 		MenuOptionsScreen_AddBool(s, "Sound",
-			ClO_GetSounds,   ClO_SetSounds);
+			ClO_GetSounds,   ClO_SetSounds, NULL);
 		MenuOptionsScreen_AddBool(s, "Show FPS",
-			ClO_GetShowFPS,  ClO_SetShowFPS);
+			ClO_GetShowFPS,  ClO_SetShowFPS, NULL);
 		MenuOptionsScreen_AddBool(s, "View bobbing",
-			ClO_GetViewBob,  ClO_SetViewBob);
+			ClO_GetViewBob,  ClO_SetViewBob, NULL);
 		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			MeO_GetFPS,      MeO_SetFPS);
+			MeO_GetFPS,      MeO_SetFPS, NULL);
 		MenuOptionsScreen_AddBool(s, "Hacks enabled",
-			ClO_GetHacks,    ClO_SetHacks);
+			ClO_GetHacks,    ClO_SetHacks, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchPause);
 	s->DoRecreateExtra = ClassicOptionsScreen_RecreateExtra;
@@ -676,30 +678,30 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddHex(s, "Clouds color", ENV_DEFAULT_CLOUDS_COLOR,
-			ES_GetCloudsColor,  ES_SetCloudsColor);
+			ES_GetCloudsColor,  ES_SetCloudsColor, NULL);
 		MenuOptionsScreen_AddHex(s, "Sky color",    ENV_DEFAULT_SKY_COLOR,
-			ES_GetSkyColor,     ES_SetSkyColor);
+			ES_GetSkyColor,     ES_SetSkyColor, NULL);
 		MenuOptionsScreen_AddHex(s, "Fog color",    ENV_DEFAULT_FOG_COLOR,
-			ES_GetFogColor,     ES_SetFogColor);
+			ES_GetFogColor,     ES_SetFogColor, NULL);
 		MenuOptionsScreen_AddNum(s, "Clouds speed",
 			0,       1000,                1,
-			ES_GetCloudsSpeed,  ES_SetCloudsSpeed);
+			ES_GetCloudsSpeed,  ES_SetCloudsSpeed, NULL);
 		MenuOptionsScreen_AddInt(s, "Clouds height", 
 			-10000, 10000, World.Height + 2,
-			ES_GetCloudsHeight, ES_SetCloudsHeight);
+			ES_GetCloudsHeight, ES_SetCloudsHeight, NULL);
 		
 		MenuOptionsScreen_AddHex(s, "Sunlight color", ENV_DEFAULT_SUN_COLOR,
-			ES_GetSunColor,     ES_SetSunColor);
+			ES_GetSunColor,     ES_SetSunColor, NULL);
 		MenuOptionsScreen_AddHex(s, "Shadow color",   ENV_DEFAULT_SHADOW_COLOR,
-			ES_GetShadowColor,  ES_SetShadowColor);
+			ES_GetShadowColor,  ES_SetShadowColor, NULL);
 		MenuOptionsScreen_AddEnum(s, "Weather", Weather_Names, Array_Elems(Weather_Names),
-			ES_GetWeather,      ES_SetWeather);
+			ES_GetWeather,      ES_SetWeather, NULL);
 		MenuOptionsScreen_AddNum(s, "Rain/Snow speed",
 			 -100,  100,                1,
-			ES_GetWeatherSpeed, ES_SetWeatherSpeed);
+			ES_GetWeatherSpeed, ES_SetWeatherSpeed, NULL);
 		MenuOptionsScreen_AddInt(s, "Water level",
 			-2048, 2048, World.Height / 2,
-			ES_GetEdgeHeight,   ES_SetEdgeHeight);
+			ES_GetEdgeHeight,   ES_SetEdgeHeight, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 }
@@ -736,12 +738,6 @@ static void GrO_SetLighting(int v) {
 	Lighting_SetMode(v, false);
 }
 
-static cc_bool GrO_GetCamera(void) { return Camera.Smooth; }
-static void    GrO_SetCamera(cc_bool v) { 
-	Camera.Smooth = v;
-	Options_SetBool(OPT_CAMERA_SMOOTH, v); 
-}
-
 static int  GrO_GetNames(void) { return Entities.NamesMode; }
 static void GrO_SetNames(int v) {
 	cc_string str = String_FromReadonly(NameMode_Names[v]);
@@ -767,59 +763,52 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			MeO_GetFPS,        MeO_SetFPS);
+			MeO_GetFPS,        MeO_SetFPS,
+			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
+			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
+			"&eNoLimit: &fRenders as many frames as possible each second.\n" \
+			"&cNoLimit is pointless - it wastefully renders frames that you don't even see!");
 		MenuOptionsScreen_AddInt(s, "View distance",
 			8, 4096, 512,
-			GrO_GetViewDist,   GrO_SetViewDist);
+			GrO_GetViewDist,   GrO_SetViewDist, NULL);
 		MenuOptionsScreen_AddBool(s, "Smooth lighting",
-			GrO_GetSmooth,     GrO_SetSmooth);
+			GrO_GetSmooth,     GrO_SetSmooth,
+			"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
+			"&cNote: &eThis setting may reduce performance.");
 		MenuOptionsScreen_AddEnum(s, "Lighting mode", LightingMode_Names, LIGHTING_MODE_COUNT,
-			GrO_GetLighting,   GrO_SetLighting);
+			GrO_GetLighting,   GrO_SetLighting,
+			"&eClassic: &fTwo levels of light, sun and shadow.\n" \
+			"    Good for performance.\n" \
+			"&eFancy: &fBright blocks cast a much wider range of light\n" \
+			"    May heavily reduce performance.\n" \
+			"&cNote: &eIn multiplayer, this option may be changed or locked by the server.");
 			
 		MenuOptionsScreen_AddEnum(s, "Names",   NameMode_Names,   NAME_MODE_COUNT,
-			GrO_GetNames,      GrO_SetNames);
+			GrO_GetNames,      GrO_SetNames,
+			"&eNone: &fNo names of players are drawn.\n" \
+			"&eHovered: &fName of the targeted player is drawn see-through.\n" \
+			"&eAll: &fNames of all other players are drawn normally.\n" \
+			"&eAllHovered: &fAll names of players are drawn see-through.\n" \
+			"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.");
 		MenuOptionsScreen_AddEnum(s, "Shadows", ShadowMode_Names, SHADOW_MODE_COUNT,
-			GrO_GetShadows,    GrO_SetShadows);
+			GrO_GetShadows,    GrO_SetShadows,
+			"&eNone: &fNo entity shadows are drawn.\n" \
+			"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
+			"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
+			"&eCircleAll: &fA circular shadow is shown underneath all entities.");
 
 		if (!Gfx_GetUIOptions(s)) {
 		MenuOptionsScreen_AddBool(s, "Mipmaps",
-			GrO_GetMipmaps,    GrO_SetMipmaps);
+			GrO_GetMipmaps,    GrO_SetMipmaps, NULL);
 		}
 
 		MenuOptionsScreen_AddBool(s, "3D anaglyph",
-			ClO_GetAnaglyph,   ClO_SetAnaglyph);
+			ClO_GetAnaglyph,   ClO_SetAnaglyph, NULL);
 	};
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
 	s->OnLightingModeServerChanged = GrO_CheckLightingModeAllowed;
 	GrO_CheckLightingModeAllowed(s);
-
-	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
-	s->descriptions[1] = \
-		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
-		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
-		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
-		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
-	s->descriptions[3] = \
-		"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
-		"&cNote: &eThis setting may reduce performance.";
-	s->descriptions[4] = \
-		"&eClassic: &fTwo levels of light, sun and shadow.\n" \
-		"    Good for performance.\n" \
-		"&eFancy: &fBright blocks cast a much wider range of light\n" \
-		"    May heavily reduce performance.\n" \
-		"&cNote: &eIn multiplayer, this option may be changed or locked by the server.";
-	s->descriptions[6] = \
-		"&eNone: &fNo names of players are drawn.\n" \
-		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
-		"&eAll: &fNames of all other players are drawn normally.\n" \
-		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
-		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	s->descriptions[7] = \
-		"&eNone: &fNo entity shadows are drawn.\n" \
-		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
-		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
-		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
 }
 
 void GraphicsOptionsScreen_Show(void) {
@@ -872,18 +861,18 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Scale with window",
-			ChO_GetAutoScaleChat, ChO_SetAutoScaleChat);
+			ChO_GetAutoScaleChat, ChO_SetAutoScaleChat, NULL);
 		MenuOptionsScreen_AddNum(s, "Chat scale",
 			0.25f, 4.00f, 1,
-			ChO_GetChatScale,     ChO_SetChatScale);
+			ChO_GetChatScale,     ChO_SetChatScale, NULL);
 		MenuOptionsScreen_AddInt(s, "Chat lines",
 			    0,    30, Gui.DefaultLines,
-			ChO_GetChatlines,     ChO_SetChatlines);
+			ChO_GetChatlines,     ChO_SetChatlines, NULL);
 
 		MenuOptionsScreen_AddBool(s, "Log to disk",
-			ChO_GetLogging,       ChO_SetLogging);
+			ChO_GetLogging,       ChO_SetLogging, NULL);
 		MenuOptionsScreen_AddBool(s, "Clickable chat",
-			ChO_GetClickable,     ChO_SetClickable);
+			ChO_GetClickable,     ChO_SetClickable, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 }
@@ -941,25 +930,25 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Show FPS",
-			GuO_GetShowFPS,   GuO_SetShowFPS);
+			GuO_GetShowFPS,   GuO_SetShowFPS, NULL);
 		MenuOptionsScreen_AddNum(s,  "Hotbar scale",
 			0.25f, 4.00f, 1,
-			GuO_GetHotbar,    GuO_SetHotbar);
+			GuO_GetHotbar,    GuO_SetHotbar, NULL);
 		MenuOptionsScreen_AddNum(s,  "Inventory scale",
 			0.25f, 4.00f, 1,
-			GuO_GetInventory, GuO_SetInventory);
+			GuO_GetInventory, GuO_SetInventory, NULL);
 		MenuOptionsScreen_AddNum(s,  "Crosshair scale",
 			0.25f, 4.00f, 1,
-			GuO_GetCrosshair, GuO_SetCrosshair);
+			GuO_GetCrosshair, GuO_SetCrosshair, NULL);
 		
 		MenuOptionsScreen_AddBool(s, "Black text shadows",
-			GuO_GetShadows,   GuO_SetShadows);
+			GuO_GetShadows,   GuO_SetShadows, NULL);
 		MenuOptionsScreen_AddBool(s, "Tab auto-complete",
-			GuO_GetTabAuto,   GuO_SetTabAuto);
+			GuO_GetTabAuto,   GuO_SetTabAuto, NULL);
 		MenuOptionsScreen_AddBool(s, "Use system font",
-			GuO_GetUseFont,   GuO_SetUseFont);
+			GuO_GetUseFont,   GuO_SetUseFont, NULL);
 		MenuOptionsScreen_AddButton(s, "Select system font", Menu_SwitchFont,
-			NULL,             NULL);
+			NULL,             NULL, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 }
@@ -1063,47 +1052,46 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Hacks enabled",
-			HS_GetHacks,    HS_SetHacks);
+			HS_GetHacks,    HS_SetHacks, NULL);
 		MenuOptionsScreen_AddNum(s,  "Speed multiplier", 
 			0.1f,   50, 10,
-			HS_GetSpeed,    HS_SetSpeed);
+			HS_GetSpeed,    HS_SetSpeed, NULL);
 		MenuOptionsScreen_AddBool(s, "Camera clipping",
-			HS_GetClipping, HS_SetClipping);
+			HS_GetClipping, HS_SetClipping,
+			"&eIf &fON&e, then the third person cameras will limit\n" \
+			"&etheir zoom distance if they hit a solid block.");
 		MenuOptionsScreen_AddNum(s,  "Jump height",
 			0.1f, 2048, 1.233f,
-			HS_GetJump,     HS_SetJump);
+			HS_GetJump,     HS_SetJump,
+			"&eSets how many blocks high you can jump up.\n" \
+			"&eNote: You jump much higher when holding down the Speed key binding.");
 		MenuOptionsScreen_AddBool(s, "WoM style hacks",
-			HS_GetWOMHacks, HS_SetWOMHacks);
+			HS_GetWOMHacks, HS_SetWOMHacks,
+			"&eIf &fON&e, gives you a triple jump which increases speed massively,\n" \
+			"&ealong with older noclip style. This is based on the \"World of Minecraft\"\n" \
+			"&eclassic client mod, which popularized hacks conventions and controls\n" \
+			"&ebefore ClassiCube was created.");
 		
 		MenuOptionsScreen_AddBool(s, "Full block stepping",
-			HS_GetFullStep, HS_SetFullStep);
+			HS_GetFullStep, HS_SetFullStep, NULL);
 		MenuOptionsScreen_AddBool(s, "Breakable liquids",
-			HS_GetLiquids,  HS_SetLiquids);
+			HS_GetLiquids,  HS_SetLiquids, NULL);
 		MenuOptionsScreen_AddBool(s, "Pushback placing",
-			HS_GetPushback, HS_SetPushback);
+			HS_GetPushback, HS_SetPushback,
+			"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
+			"&ethe block to be placed, and you to be moved out of the way.\n" \
+			"&fThis is mainly useful for quick pillaring/towering.");
 		MenuOptionsScreen_AddBool(s, "Noclip slide",
-			HS_GetSlide,    HS_SetSlide);
+			HS_GetSlide,    HS_SetSlide,
+			"&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.");
 		MenuOptionsScreen_AddInt(s,  "Field of view", 
 			1,  179, 70,
-			HS_GetFOV,      HS_SetFOV);
+			HS_GetFOV,      HS_SetFOV, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
 	s->OnHacksChanged = HacksSettingsScreen_CheckHacksAllowed;
 	HacksSettingsScreen_CheckHacksAllowed(s);
-
-	s->descriptions[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
-	s->descriptions[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
-	s->descriptions[4] = \
-		"&eIf &fON&e, gives you a triple jump which increases speed massively,\n" \
-		"&ealong with older noclip style. This is based on the \"World of Minecraft\"\n" \
-		"&eclassic client mod, which popularized hacks conventions and controls\n" \
-		"&ebefore ClassiCube was created.";
-	s->descriptions[7] = \
-		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
-		"&ethe block to be placed, and you to be moved out of the way.\n" \
-		"&fThis is mainly useful for quick pillaring/towering.";
-	s->descriptions[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
 }
 
 void HacksSettingsScreen_Show(void) {
@@ -1170,32 +1158,33 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	{
 		MenuOptionsScreen_AddNum(s, "Camera Mass",
 			1, 100, 20,
-			MiO_GetCameraMass, MiO_SetCameraMass);
+			MiO_GetCameraMass, MiO_SetCameraMass,
+			"&eChange the smoothness of the smooth camera.");
 		MenuOptionsScreen_AddNum(s,  "Reach distance",
 			   1, 1024, 5,
-			MiO_GetReach,    MiO_SetReach);
+			MiO_GetReach,    MiO_SetReach, NULL);
 		MenuOptionsScreen_AddInt(s,  "Music volume",
 			   0, 100,  DEFAULT_MUSIC_VOLUME,
-			MiO_GetMusic,     MiO_SetMusic);
+			MiO_GetMusic,     MiO_SetMusic, NULL);
 		MenuOptionsScreen_AddInt(s,  "Sounds volume",
 			   0, 100,  DEFAULT_SOUNDS_VOLUME,
-			MiO_GetSounds,  MiO_SetSounds);
+			MiO_GetSounds,  MiO_SetSounds, NULL);
 		MenuOptionsScreen_AddBool(s, "Smooth camera",
-			MiO_GetCamera,     MiO_SetCamera);
+			MiO_GetCamera,     MiO_SetCamera, NULL);
 		
 		MenuOptionsScreen_AddBool(s, "View bobbing",
-			MiO_GetViewBob, MiO_SetViewBob);
+			MiO_GetViewBob, MiO_SetViewBob, NULL);
 		MenuOptionsScreen_AddBool(s, "Block physics",
-			MiO_GetPhysics, MiO_SetPhysics);
+			MiO_GetPhysics, MiO_SetPhysics, NULL);
 		MenuOptionsScreen_AddBool(s, "Invert mouse",
-			MiO_GetInvert,  MiO_SetInvert);
+			MiO_GetInvert,  MiO_SetInvert, NULL);
 		MenuOptionsScreen_AddInt(s,  "Mouse sensitivity", 
 #ifdef CC_BUILD_WIN
 			   1, 200, 40,
 #else
 			   1, 200, 30,
 #endif
-			MiO_GetSensitivity, MiO_SetSensitivity);
+			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
@@ -1258,20 +1247,20 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Classic hand model",
-			NA_GetHand,        NA_SetHand);
+			NA_GetHand,        NA_SetHand, NULL);
 		MenuOptionsScreen_AddBool(s, "Classic walk anim",
-			NA_GetAnim,        NA_SetAnim);
+			NA_GetAnim,        NA_SetAnim, NULL);
 		MenuOptionsScreen_AddBool(s, "Classic chat",
-			NA_GetClassicChat, NA_SetClassicChat);
+			NA_GetClassicChat, NA_SetClassicChat, NULL);
 		MenuOptionsScreen_AddBool(s, "Classic inventory",
-			NA_GetClassicInv,  NA_SetClassicInv);
+			NA_GetClassicInv,  NA_SetClassicInv, NULL);
 			
 		MenuOptionsScreen_AddBool(s, "Classic GUI textures",
-			NA_GetGui,   NA_SetGui);
+			NA_GetGui,   NA_SetGui, NULL);
 		MenuOptionsScreen_AddBool(s, "Classic player list",
-			NA_GetList,  NA_SetList);
+			NA_GetList,  NA_SetList, NULL);
 		MenuOptionsScreen_AddBool(s, "Classic options",
-			NA_GetOpts,  NA_SetOpts);
+			NA_GetOpts,  NA_SetOpts, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
 }
@@ -1332,14 +1321,17 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Use server textures",
-			NF_GetTexs,    NF_SetTexs);
+			NF_GetTexs,    NF_SetTexs, NULL);
 		MenuOptionsScreen_AddBool(s, "Allow custom blocks",
-			NF_GetCustom,  NF_SetCustom);
+			NF_GetCustom,  NF_SetCustom, NULL);
 			
 		MenuOptionsScreen_AddBool(s, "Non-classic features",
-			NF_GetCPE,     NF_SetCPE);
+			NF_GetCPE,     NF_SetCPE, NULL);
 		MenuOptionsScreen_AddButton(s, "Game version", NostalgiaScreen_Version,
-			NF_GetVersion, NF_SetVersion);
+			NF_GetVersion, NF_SetVersion,
+			"&eNote that support for versions earlier than 0.30 is incomplete.\n" \
+			"\n" \
+			"&cNote that some servers only support 0.30 game version");
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
@@ -1348,10 +1340,6 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 
 	NostalgiaScreen_UpdateVersionDisabled();
-	s->descriptions[3] = \
-		"&eNote that support for versions earlier than 0.30 is incomplete.\n" \
-		"\n" \
-		"&cNote that some servers only support 0.30 game version";
 }
 
 void NostalgiaFunctionalityScreen_Show(void) {

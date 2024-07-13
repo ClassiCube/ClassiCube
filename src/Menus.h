@@ -76,28 +76,28 @@ void MenuInputOverlay_Close(cc_bool valid);
 typedef cc_bool (*Button_GetBool)(void);
 typedef void    (*Button_SetBool)(cc_bool value);
 void MenuOptionsScreen_AddBool(struct MenuOptionsScreen* s, const char* name, 
-								Button_GetBool getValue, Button_SetBool setValue);
+								Button_GetBool getValue, Button_SetBool setValue, const char* desc);
 
 typedef int  (*Button_GetEnum)(void);
 typedef void (*Button_SetEnum)(int value);
 void MenuOptionsScreen_AddEnum(struct MenuOptionsScreen* s, const char* name,
 								const char* const* names, int namesCount,
-								Button_GetEnum getValue, Button_SetEnum setValue);
+								Button_GetEnum getValue, Button_SetEnum setValue, const char* desc);
 
 typedef PackedCol (*Button_GetHex)(void);
 typedef void      (*Button_SetHex)(PackedCol value);
 void MenuOptionsScreen_AddHex(struct MenuOptionsScreen* s, const char* name, PackedCol defaultValue,
-								Button_GetHex getValue, Button_SetHex setValue);
+								Button_GetHex getValue, Button_SetHex setValue, const char* desc);
 
 typedef int  (*Button_GetInt)(void);
 typedef void (*Button_SetInt)(int value);
 void MenuOptionsScreen_AddInt(struct MenuOptionsScreen* s, const char* name,
 								int minValue, int maxValue, int defaultValue,
-								Button_GetInt getValue, Button_SetInt setValue);
+								Button_GetInt getValue, Button_SetInt setValue, const char* desc);
 
 typedef void (*Button_GetNum)(cc_string* v);
 typedef void (*Button_SetNum)(const cc_string* v);
 void MenuOptionsScreen_AddNum(struct MenuOptionsScreen* s, const char* name,
 								float minValue, float maxValue, float defaultValue,
-								Button_GetNum getValue, Button_SetNum setValue);
+								Button_GetNum getValue, Button_SetNum setValue, const char* desc);
 #endif
