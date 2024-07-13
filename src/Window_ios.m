@@ -53,22 +53,22 @@ static cc_bool launcherMode;
 
 static void AddTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
-    int x = loc.x, y = loc.y; long ui_id = (long)t;
-    Platform_Log3("POINTER %x - DOWN %i,%i", &ui_id, &x, &y);
+    //int x = loc.x, y = loc.y; long ui_id = (long)t;
+    //Platform_Log3("POINTER %x - DOWN %i,%i", &ui_id, &x, &y);
     Input_AddTouch((long)t, loc.x, loc.y);
 }
 
 static void UpdateTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
-    int x = loc.x, y = loc.y; long ui_id = (long)t;
-    Platform_Log3("POINTER %x - MOVE %i,%i", &ui_id, &x, &y);
+    //int x = loc.x, y = loc.y; long ui_id = (long)t;
+    //Platform_Log3("POINTER %x - MOVE %i,%i", &ui_id, &x, &y);
     Input_UpdateTouch((long)t, loc.x, loc.y);
 }
 
 static void RemoveTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
-    int x = loc.x, y = loc.y; long ui_id = (long)t;
-    Platform_Log3("POINTER %x - UP %i,%i", &ui_id, &x, &y);
+    //int x = loc.x, y = loc.y; long ui_id = (long)t;
+    //Platform_Log3("POINTER %x - UP %i,%i", &ui_id, &x, &y);
     Input_RemoveTouch((long)t, loc.x, loc.y);
 }
 

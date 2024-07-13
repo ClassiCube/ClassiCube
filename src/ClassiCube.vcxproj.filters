@@ -788,6 +788,12 @@
     <ClCompile Include="Window_SDL2.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
+    <ClCompile Include="InputHandler.c">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuOptions.c">
+      <Filter>Source Files\2D</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">
@@ -797,6 +803,12 @@
   <ItemGroup>
     <None Include="Window_cocoa.m">
       <Filter>Source Files\Window</Filter>
+    </None>
+    <None Include="Window_ios.m">
+      <Filter>Source Files\Window</Filter>
+    </None>
+    <None Include="LBackend_ios.m">
+      <Filter>Source Files\Launcher</Filter>
     </None>
   </ItemGroup>
 </Project>
