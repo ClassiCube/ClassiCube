@@ -180,14 +180,15 @@ static void ProcessJoystickInput(int port, int axis, HidAnalogStickState* pos, f
 }
 
 void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0x51C, PadBind_Defaults);
 	u64 keys = padGetButtons(&pad);
-	HandleButtons(0, keys);
+	HandleButtons(port, keys);
 
 	// Read the sticks' position
 	HidAnalogStickState analog_stick_l = padGetStickPos(&pad, 0);
 	HidAnalogStickState analog_stick_r = padGetStickPos(&pad, 1);
-	ProcessJoystickInput(0, PAD_AXIS_LEFT,  &analog_stick_l, delta);
-	ProcessJoystickInput(0, PAD_AXIS_RIGHT, &analog_stick_r, delta);
+	ProcessJoystickInput(port, PAD_AXIS_LEFT,  &analog_stick_l, delta);
+	ProcessJoystickInput(port, PAD_AXIS_RIGHT, &analog_stick_r, delta);
 }
 
 

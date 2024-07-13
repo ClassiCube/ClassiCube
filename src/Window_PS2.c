@@ -247,19 +247,22 @@ static void ProcessPadInput(int port, float delta, struct padButtonStatus* pad) 
 }
 
 static cc_bool setMode[INPUT_MAX_GAMEPADS];
-static void ProcessPad(int port, float delta) {
-	 struct padButtonStatus pad;
-	int state = padGetState(port, 0);
+static void ProcessPad(int i, float delta) {
+	struct padButtonStatus pad;
+	int state = padGetState(i, 0);
 	if (state != PAD_STATE_STABLE) return;
 
 	// Change to DUALSHOCK mode so analog joysticks return values
-	if (!setMode[port]) { 
-		padSetMainMode(port, 0, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK); 
-		setMode[port] = true;
+	if (!setMode[i]) { 
+		padSetMainMode(i, 0, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK); 
+		setMode[i] = true;
 	}
 
-	int ret = padRead(port, 0, &pad);
-	if (ret != 0) ProcessPadInput(port, delta, &pad);
+	int ret = padRead(i, 0, &pad);
+	if (ret == 0) return;
+	
+	int port = Gamepad_Connect(0x503 + i, PadBind_Defaults);
+	ProcessPadInput(port, delta, &pad);
 }
 
 void Gamepads_Process(float delta) {

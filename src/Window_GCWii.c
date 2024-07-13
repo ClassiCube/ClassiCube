@@ -152,7 +152,7 @@ static void ProcessPADInput(int i, float delta) {
 		return; // not connected, still busy, etc
 	}
 	
-	int port = Gamepad_MapPort(i + 10);
+	int port = Gamepad_Connect(0x5C + i, PadBind_Defaults);
 	ProcessPAD_Buttons(port, gc_pads[i].button);
 	ProcessPAD_Joystick(port, PAD_AXIS_LEFT,  gc_pads[i].stickX,    gc_pads[i].stickY,    delta);
 	ProcessPAD_Joystick(port, PAD_AXIS_RIGHT, gc_pads[i].substickX, gc_pads[i].substickY, delta);
@@ -421,7 +421,7 @@ static void ProcessWPADInput(int i, float delta) {
 
 	WPADData* wd = WPAD_Data(i);
 	u32 mods = wd->btns_h | wd->btns_d; // buttons held | buttons down now
-	int port = Gamepad_MapPort(i + 20);
+	int port = Gamepad_Connect(0x11 + i, PadBind_Defaults);
 
 	if (type == WPAD_EXP_CLASSIC) {
 		ProcessClassicInput(port, wd, delta);

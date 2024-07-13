@@ -176,6 +176,7 @@ static void ProcessCircleInput(int port, int axis, int x, int y, float delta) {
 }
 
 static void ProcessPadInput(float delta) {
+	int port = Gamepad_Connect(0x5O3, PadBind_Defaults);
 	SceCtrlData pad;
 	
 	// sceCtrlReadBufferPositive is blocking (seems to block until vblank), and don't want that
@@ -184,9 +185,9 @@ static void ProcessPadInput(float delta) {
 	if (res < 0)  return; // error occurred
 	// TODO: need to use cached version still? like GameCube/Wii
 	
-	HandleButtons(0, pad.buttons);
-	ProcessCircleInput(0, PAD_AXIS_LEFT,  pad.lx - 127, pad.ly - 127, delta);
-	ProcessCircleInput(0, PAD_AXIS_RIGHT, pad.rx - 127, pad.ry - 127, delta);
+	HandleButtons(port, pad.buttons);
+	ProcessCircleInput(port, PAD_AXIS_LEFT,  pad.lx - 127, pad.ly - 127, delta);
+	ProcessCircleInput(port, PAD_AXIS_RIGHT, pad.rx - 127, pad.ry - 127, delta);
 }
 
 void Gamepads_Process(float delta) {

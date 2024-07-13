@@ -151,7 +151,9 @@ static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
 
 void Gamepads_Process(float delta) {
 	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
-	if (pad->stat == 0) ProcessPadInput(0, pad, delta);
+	int port = Gamepad_Connect(0x503, PadBind_Defaults);
+	
+	if (pad->stat == 0) ProcessPadInput(port, pad, delta);
 }
 
 

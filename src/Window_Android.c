@@ -107,9 +107,15 @@ static int MapNativeKey(int code) {
 static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {
 	int key = MapNativeKey(code);
 	Platform_Log2("KEY - DOWN %i,%i", &code, &key);
-	if (key) Input_SetPressed(key);
 
-	if (Input_IsPadButton(key)) Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	if (Input_IsPadButton(key)) {
+		Input.Sources |= INPUT_SOURCE_GAMEPAD;
+		
+		int port = Gamepad_Connect(0xAD01D, PadBind_Defaults);
+		Gamepad_SetButton(port, key);
+	} else {
+		if (key) Input_SetPressed(key);
+	}
 }
 
 static void JNICALL java_processKeyUp(JNIEnv* env, jobject o, jint code) {
@@ -147,11 +153,13 @@ static void JNICALL java_processPointerMove(JNIEnv* env, jobject o, jint id, jin
 }
 
 static void JNICALL java_processJoystickL(JNIEnv* env, jobject o, jint x, jint y) {
-	Gamepad_SetAxis(0, PAD_AXIS_LEFT,  x / 4096.0f, y / 4096.0f, 1.0f / 60);
+	int port = Gamepad_Connect(0xAD01D, PadBind_Defaults);
+	Gamepad_SetAxis(port, PAD_AXIS_LEFT,  x / 4096.0f, y / 4096.0f, 1.0f / 60);
 }
 
 static void JNICALL java_processJoystickR(JNIEnv* env, jobject o, jint x, jint y) {
-	Gamepad_SetAxis(0, PAD_AXIS_RIGHT, x / 4096.0f, y / 4096.0f, 1.0f / 60);
+	int port = Gamepad_Connect(0xAD01D, PadBind_Defaults);
+	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / 4096.0f, y / 4096.0f, 1.0f / 60);
 }
 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {

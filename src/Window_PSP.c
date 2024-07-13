@@ -126,14 +126,16 @@ static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
 }
 
 void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0x5O3, PadBind_Defaults);
 	SceCtrlData pad;
+	
 	/* TODO implement */
 	int ret = sceCtrlPeekBufferPositive(&pad, 1);
 	if (ret <= 0) return;
 	// TODO: need to use cached version still? like GameCube/Wii
 
-	HandleButtons(0, pad.Buttons);
-	ProcessCircleInput(0, &pad, delta);
+	HandleButtons(port, pad.Buttons);
+	ProcessCircleInput(port, &pad, delta);
 }
 
 

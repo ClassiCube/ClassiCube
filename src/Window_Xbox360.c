@@ -132,14 +132,15 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 
 void Gamepads_Process(float delta) {
 	usb_do_poll();
+	int port = Gamepad_Connect(0xB0360, PadBind_Defaults);
 
 	struct controller_data_s pad;
 	int res = get_controller_data(&pad, 0);
 	if (res == 0) return;
 	
-	HandleButtons(0, &pad);
-	HandleJoystick(0, PAD_AXIS_LEFT,  pad.s1_x, pad.s1_y, delta);
-	HandleJoystick(0, PAD_AXIS_RIGHT, pad.s2_x, pad.s2_y, delta);
+	HandleButtons(port, &pad);
+	HandleJoystick(port, PAD_AXIS_LEFT,  pad.s1_x, pad.s1_y, delta);
+	HandleJoystick(port, PAD_AXIS_RIGHT, pad.s2_x, pad.s2_y, delta);
 }
 
 

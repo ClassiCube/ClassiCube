@@ -215,8 +215,7 @@ struct GamepadDevice {
 	float holdtime[GAMEPAD_BTN_COUNT];
 };
 extern struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
-int Gamepad_MapPort(long deviceID);
-
+int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults);
 
 
 /* Enumeration of all input bindings. */
@@ -243,8 +242,6 @@ typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
 
 /* The keyboard/mouse buttons that are bound to each input binding */
 extern BindMapping KeyBind_Mappings[BIND_COUNT];
-/* The gamepad buttons that are bound to each input binding */
-extern BindMapping PadBind_Mappings[BIND_COUNT];
 /* Default keyboard/mouse button that each input binding is bound to */
 extern const BindMapping KeyBind_Defaults[BIND_COUNT];
 /* Default gamepad button that each input binding is bound to */

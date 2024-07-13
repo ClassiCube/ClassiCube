@@ -325,10 +325,10 @@ void Gamepads_Process(float delta) {
 	ioPadGetInfo(&pad_info);
 	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		if (!pad_info.status[i]) continue;		
+		if (!pad_info.status[i]) continue;
 		ioPadGetData(i, &pad_data);
 
-		int port = Gamepad_MapPort(i + 10);
+		int port = Gamepad_Connect(0x503 + i, PadBind_Defaults);
 		ProcessPadInput(port, delta, &pad_data);
 	}
 }

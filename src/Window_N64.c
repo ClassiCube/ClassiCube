@@ -39,24 +39,6 @@ void Window_Init(void) {
 
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
-
-	// change defaults to make more sense for N64
-	BindMapping* binds = (BindMapping*)PadBind_Defaults;
-	BindMapping_Set(&binds[BIND_JUMP],         CCPAD_1, 0);
-	BindMapping_Set(&binds[BIND_INVENTORY],    CCPAD_2, 0);
-	BindMapping_Set(&binds[BIND_PLACE_BLOCK],  CCPAD_5, 0);
-	BindMapping_Set(&binds[BIND_HOTBAR_RIGHT], CCPAD_L, 0);
-	BindMapping_Set(&binds[BIND_DELETE_BLOCK], CCPAD_R, 0);
-
-	BindMapping_Set(&binds[BIND_FORWARD], CCPAD_CUP,    0);
-	BindMapping_Set(&binds[BIND_BACK],    CCPAD_CDOWN,  0);
-	BindMapping_Set(&binds[BIND_LEFT],    CCPAD_CLEFT,  0);
-	BindMapping_Set(&binds[BIND_RIGHT],   CCPAD_CRIGHT, 0);
-
-	BindMapping_Set(&binds[BIND_FLY_UP],   CCPAD_UP,    0);
-	BindMapping_Set(&binds[BIND_FLY_DOWN], CCPAD_DOWN,  0);
-	BindMapping_Set(&binds[BIND_SPEED],    CCPAD_LEFT,  0);
-	BindMapping_Set(&binds[BIND_FLY],      CCPAD_RIGHT, 0);
 }
 
 void Window_Free(void) { }
@@ -98,6 +80,26 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping default_n64[BIND_COUNT] = {
+	[BIND_FORWARD] = { CCPAD_CUP,    0 },
+	[BIND_BACK]    = { CCPAD_CDOWN,  0 },
+	[BIND_LEFT]    = { CCPAD_CLEFT,  0 },
+	[BIND_RIGHT]   = { CCPAD_CRIGHT, 0 },
+	
+	[BIND_FLY_UP]  = { CCPAD_UP,    0 },
+	[BIND_FLY_DOWN]= { CCPAD_DOWN,  0 },
+	[BIND_SPEED]   = { CCPAD_LEFT,  0 },
+	[BIND_FLY]     = { CCPAD_RIGHT, 0 },
+	
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_INVENTORY]    = { CCPAD_2, 0 },
+	[BIND_PLACE_BLOCK]  = { CCPAD_5, 0 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_L, 0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_R, 0 },
+	
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+};
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	joypad_init();
@@ -141,7 +143,7 @@ void Gamepads_Process(float delta) {
 	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
 		if (!joypad_is_connected(i)) continue;
-		int port = Gamepad_MapPort(i + 10);
+		int port = Gamepad_Connect(0x64 + i, default_n64);
 		
 		joypad_inputs_t inputs = joypad_get_inputs(i);
 		HandleButtons(port, inputs.btn);

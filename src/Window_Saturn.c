@@ -129,10 +129,11 @@ static smpc_peripheral_digital_t dig_state;
 static smpc_peripheral_analog_t  ana_state;
 
 void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0x5A, PadBind_Defaults);
 	smpc_peripheral_process();
 
 	smpc_peripheral_digital_port(1, &dig_state);
-	ProcessButtons(0, dig_state.pressed.raw | dig_state.held.raw);
+	ProcessButtons(port, dig_state.pressed.raw | dig_state.held.raw);
 	
 	smpc_peripheral_analog_port(1, &ana_state);
 }

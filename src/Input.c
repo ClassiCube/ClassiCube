@@ -309,7 +309,7 @@ static const struct InputDevice padDevice = {
 	/* Launcher buttons */
 	CCPAD_3,
 	/* Bindings */
-	"pad-%c", PadBind_Defaults, PadBind_Mappings
+	"pad-%c", NULL, NULL
 };
 struct InputDevice TouchDevice = {
 	INPUT_DEVICE_TOUCH, 0,
@@ -441,15 +441,17 @@ void Gamepad_Tick(float delta) {
 	}
 }
 
-int Gamepad_MapPort(long deviceID) {
+int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults) {
 	int port;
 	
 	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		if (Gamepad_Devices[port].deviceID == deviceID) return port;
-		
 		if (Gamepad_Devices[port].deviceID != 0) continue;
-		Gamepad_Devices[port].deviceID = deviceID;
+		
+		Gamepad_Devices[port].base.defaultBinds = defaults;
+		Gamepad_Devices[port].deviceID          = deviceID;
+		InputBind_Load(&Gamepad_Devices[port]);
 		return port;
 	}
 
@@ -461,7 +463,8 @@ int Gamepad_MapPort(long deviceID) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-BindMapping PadBind_Mappings[BIND_COUNT];
+/* The gamepad buttons that are bound to each input binding */
+static BindMapping padBind_Mappings[INPUT_MAX_GAMEPADS][BIND_COUNT];
 BindMapping KeyBind_Mappings[BIND_COUNT];
 
 const BindMapping PadBind_Defaults[BIND_COUNT] = {
@@ -610,11 +613,11 @@ static void OnInit(void) {
 	for (i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
 		Mem_Copy(&Gamepad_Devices[i].base, &padDevice, sizeof(struct InputDevice));
-		Gamepad_Devices[i].base.index = i;
+		Gamepad_Devices[i].base.index        = i;
+		Gamepad_Devices[i].base.currentBinds = &padBind_Mappings[i];
 	}
 	
 	InputBind_Load(&NormDevice);
-	InputBind_Load(&padDevice);
 }
 
 static void OnFree(void) {
