@@ -152,7 +152,7 @@ void Window_RequestClose(void) {
 
 static int MapNativeKey(SDL_Keycode k) {
 	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'       + (k - SDLK_0); }
-	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'       + (k - SDLK_a); }
+	if (k >= SDLK_A   && k <= SDLK_Z)   { return 'A'       + (k - SDLK_A); }
 	if (k >= SDLK_F1  && k <= SDLK_F12) { return CCKEY_F1  + (k - SDLK_F1); }
 	if (k >= SDLK_F13 && k <= SDLK_F24) { return CCKEY_F13 + (k - SDLK_F13); }
 	/* SDLK_KP_0 isn't before SDLK_KP_1 */
@@ -432,15 +432,14 @@ static SDL_Surface* win_surface;
 static SDL_Surface* blit_surface;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	SDL_PixelFormat* fmt;
 	win_surface = SDL_GetWindowSurface(win_handle);
 	if (!win_surface) Window_SDLFail("getting window surface");
 
-	fmt = win_surface->format;
-	if (fmt->bits_per_pixel != 32) {
+	int bits_per_pixel = SDL_BITSPERPIXEL(win_surface->format);
+	if (bits_per_pixel != 32) {
 		/* Slow path: e.g. 15 or 16 bit pixels */
-		Platform_Log1("Slow color depth: %b bpp", &fmt->bits_per_pixel);
-		blit_surface = SDL_CreateSurface(win_surface->w, win_surface->h, SDL_PIXELFORMAT_RGBA32);
+		Platform_Log1("Slow color depth: %b bpp", &bits_per_pixel);
+		blit_surface = SDL_CreateSurface(win_surface->w, win_surface->h, SDL_PIXELFORMAT_BGRA32);
 		if (!blit_surface) Window_SDLFail("creating blit surface");
 
 		SDL_SetSurfaceBlendMode(blit_surface, SDL_BLENDMODE_NONE);
@@ -592,7 +591,7 @@ void GLContext_Create(void) {
 void GLContext_Update(void) { }
 cc_bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
-	SDL_GL_DeleteContext(win_ctx);
+	SDL_GL_DestroyContext(win_ctx);
 	win_ctx = NULL;
 }
 
