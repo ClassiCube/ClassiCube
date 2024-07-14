@@ -297,7 +297,7 @@ void Gamepads_Process(float delta) {
 		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
 		if(dual_analog == -1) dual_analog = 0;
 
-		int port = Gamepad_MapPort(i + 10);
+		int port = Gamepad_Connect(0xDC + i, PadBind_Defaults);
 		HandleButtons(port, state->buttons);
 		HandleController(port, dual_analog, state, delta);
 	}

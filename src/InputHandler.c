@@ -37,172 +37,14 @@ enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Keybinds--------------------------------------------------------*
-*#########################################################################################################################*/
-BindMapping PadBind_Mappings[BIND_COUNT];
-BindMapping KeyBind_Mappings[BIND_COUNT];
-BindTriggered Bind_OnTriggered[BIND_COUNT];
-BindReleased  Bind_OnReleased[BIND_COUNT];
-cc_uint8 Bind_IsTriggered[BIND_COUNT];
-
-const BindMapping PadBind_Defaults[BIND_COUNT] = {
-	{ CCPAD_UP,   0 },  { CCPAD_DOWN,  0 }, /* BIND_FORWARD, BIND_BACK */
-	{ CCPAD_LEFT, 0 },  { CCPAD_RIGHT, 0 }, /* BIND_LEFT, BIND_RIGHT */
-	{ CCPAD_1, 0 },     { 0, 0 },           /* BIND_JUMP, BIND_RESPAWN */
-	{ CCPAD_START, 0 }, { CCPAD_4,     0 }, /* BIND_SET_SPAWN, BIND_CHAT */
-	{ CCPAD_3, 0     }, { 0, 0 },           /* BIND_INVENTORY, BIND_FOG */
-	{ CCPAD_START, 0 }, { 0, 0 },           /* BIND_SEND_CHAT, BIND_TABLIST */
-	{ CCPAD_2, CCPAD_L},{ CCPAD_2, CCPAD_3},/* BIND_SPEED, BIND_NOCLIP */ 
-	{ CCPAD_2, CCPAD_R },                   /* BIND_FLY */ 
-	{CCPAD_2,CCPAD_UP},{CCPAD_2,CCPAD_DOWN},/* BIND_FLY_UP, BIND_FLY_DOWN */
-	{ 0, 0 }, { 0, 0 },                     /* BIND_EXT_INPUT, BIND_HIDE_FPS */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, /* BIND_SCREENSHOT, BIND_FULLSCREEN, BIND_THIRD_PERSON, BIND_HIDE_GUI */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
-	{ CCPAD_L, 0 }, { 0, 0 },{ CCPAD_R, 0 },/* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH, BIND_SMOOTH_CAMERA */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_DROP_BLOCK, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
-	{ CCPAD_ZL, 0 }, { CCPAD_ZR, 0 }        /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
-};
-
-const BindMapping KeyBind_Defaults[BIND_COUNT] = {
-	{ 'W', 0 }, { 'S', 0 }, { 'A', 0 }, { 'D', 0 }, /* BIND_FORWARD - BIND_RIGHT */
-	{ CCKEY_SPACE, 0 },  { 'R', 0 },                /* BIND_JUMP, BIND_RESPAWN */
-	{ CCKEY_ENTER, 0 },  { 'T', 0 },                /* BIND_SET_SPAWN, BIND_CHAT */
-	{ 'B', 0 },          { 'F', 0 },                /* BIND_INVENTORY, BIND_FOG */
-	{ CCKEY_ENTER, 0 },  { CCKEY_TAB, 0 },          /* BIND_SEND_CHAT, BIND_TABLIST */
-	{ CCKEY_LSHIFT, 0 }, { 'X', 0}, { 'Z', 0 },     /* BIND_SPEED, BIND_NOCLIP, BIND_FLY */ 
-	{ 'Q', 0 },          { 'E', 0 },                /* BIND_FLY_UP, BIND_FLY_DOWN */
-	{ CCKEY_LALT, 0 },   { CCKEY_F3, 0 },           /* BIND_EXT_INPUT, BIND_HIDE_FPS */
-	{ CCKEY_F12, 0 },    { CCKEY_F11, 0 },          /* BIND_SCREENSHOT, BIND_FULLSCREEN */
-	{ CCKEY_F5, 0 },     { CCKEY_F1, 0 },           /* BIND_THIRD_PERSON, BIND_HIDE_GUI */ 
-	{ CCKEY_F7, 0 }, { 'C', 0 }, { CCKEY_LCTRL, 0 },/* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
-	{ CCMOUSE_L, 0},{ CCMOUSE_M, 0},{ CCMOUSE_R, 0},/* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
-	{ CCKEY_F6, 0 },     { CCKEY_LALT, 0 },         /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH */
-	{ CCKEY_F8, 0 },     { 'G', 0 },                /* BIND_SMOOTH_CAMERA, BIND_DROP_BLOCK */
-	{ CCKEY_F10, 0 },    { 0, 0 },                  /* BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },         /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
-	{ '1', 0 }, { '2', 0 }, { '3', 0 },             /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
-	{ '4', 0 }, { '5', 0 }, { '6', 0 },             /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
-	{ '7', 0 }, { '8', 0 }, { '9', 0 },             /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
-	{ 0, 0 }, { 0, 0 }                              /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
-};
-
-static const char* const bindNames[BIND_COUNT] = {
-	"Forward", "Back", "Left", "Right",
-	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
-	"ToggleFog", "SendChat", "PlayerList", 
-	"Speed", "NoClip", "Fly", "FlyUp", "FlyDown", 
-	"ExtInput", "HideFPS", "Screenshot", "Fullscreen", 
-	"ThirdPerson", "HideGUI", "AxisLines", "ZoomScrolling", 
-	"HalfSpeed", "DeleteBlock", "PickBlock", "PlaceBlock", 
-	"AutoRotate", "HotbarSwitching", "SmoothCamera", 
-	"DropBlock", "IDOverlay", "BreakableLiquids",
-	"LookUp", "LookDown", "LookRight", "LookLeft",
-	"Hotbar1", "Hotbar2", "Hotbar3",
-	"Hotbar4", "Hotbar5", "Horbar6",
-	"Hotbar7", "Hotbar8", "Hotbar9",
-	"HotbarLeft", "HotbarRight"
-};
-
-
-#define BindMapping2_Claims(mapping, btn) (device->IsPressed(device, (mapping)->button1) && (mapping)->button2 == btn)
-static cc_bool Mappings_DoesClaim(InputBind binding, int btn, BindMapping* mappings, struct InputDevice* device) {
-	BindMapping* bind = &mappings[binding];
-	int i;
-	if (bind->button2) return BindMapping2_Claims(bind, btn);
-	
-	/* Two button mapping takes priority over one button mapping */
-	for (i = 0; i < BIND_COUNT; i++)
-	{
-		if (mappings[i].button2 && BindMapping2_Claims(&mappings[i], btn)) return false;
-	}
-	return bind->button1 == btn;
-}
-
-
-cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device) { 
-	return Mappings_DoesClaim(binding, btn, KeyBind_Mappings, device) || 
-		   Mappings_DoesClaim(binding, btn, PadBind_Mappings, device);
-}
-
-cc_bool KeyBind_IsPressed(InputBind binding) { return Bind_IsTriggered[binding]; }
-
-static void KeyBind_Load(struct InputDevice* device) {
-	cc_string name; char nameBuffer[STRING_SIZE + 1];
-	const BindMapping* defaults = device->defaultBinds;
-	BindMapping* keybinds = device->currentBinds;
-	BindMapping mapping;
-	cc_string str, part1, part2;
-	int i;
-
-	String_InitArray_NT(name, nameBuffer);
-	for (i = 0; i < BIND_COUNT; i++) 
-	{
-		name.length = 0;
-		String_Format1(&name, device->bindPrefix, bindNames[i]);
-		name.buffer[name.length] = '\0';
-		
-		if (!Options_UNSAFE_Get(name.buffer, &str)) {
-			keybinds[i] = defaults[i];
-			continue;
-		}
-
-		String_UNSAFE_Separate(&str, ',', &part1, &part2); 
-		mapping.button1 = Utils_ParseEnum(&part1, defaults[i].button1, Input_StorageNames, INPUT_COUNT);
-		mapping.button2 = Utils_ParseEnum(&part2, defaults[i].button2, Input_StorageNames, INPUT_COUNT);
-		
-		if (mapping.button1 == CCKEY_ESCAPE) keybinds[i] = defaults[i];
-		keybinds[i] = mapping;
-	}
-}
-
-void InputBind_Set(InputBind binding, int btn, struct InputDevice* device) {
-	cc_string name; char nameBuffer[STRING_SIZE];
-	cc_string value;
-	String_InitArray(name, nameBuffer);
-
-	String_Format1(&name, device->bindPrefix, bindNames[binding]);
-	value = String_FromReadonly(Input_StorageNames[btn]);
-	Options_SetString(&name, &value);
-	
-	BindMapping_Set(&device->currentBinds[binding], btn, 0);
-}
-
-void InputBind_Reset(InputBind binding, struct InputDevice* device) {
-	cc_string name; char nameBuffer[STRING_SIZE];
-	String_InitArray(name, nameBuffer);
-	
-	String_Format1(&name, device->bindPrefix, bindNames[binding]);
-	Options_SetString(&name, &String_Empty);
-	
-	device->currentBinds[binding] = device->defaultBinds[binding];
-}
-
-/* Initialises and loads input bindings from options */
-static void KeyBind_Init(void) {
-	NormDevice.defaultBinds = KeyBind_Defaults;
-	PadDevice.defaultBinds  = PadBind_Defaults;
-	NormDevice.currentBinds = KeyBind_Mappings;
-	PadDevice.currentBinds  = PadBind_Mappings;
-	
-	KeyBind_Load(&NormDevice);
-	KeyBind_Load(&PadDevice);
-}
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Gamepad---------------------------------------------------------*
 *#########################################################################################################################*/
 static void PlayerInputPad(int port, int axis, struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	float x, y, angle;
 	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_MOVEMENT) return;
 	
-	x = Gamepad_States[port].axisX[axis];
-	y = Gamepad_States[port].axisY[axis];
+	x = Gamepad_Devices[port].axisX[axis];
+	y = Gamepad_Devices[port].axisY[axis];
 	
 	if (x != 0 || y != 0) {
 		angle    = Math_Atan2f(x, y);
@@ -896,6 +738,16 @@ static void HookInputBinds(void) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Keybinds--------------------------------------------------------*
+*#########################################################################################################################*/
+BindTriggered Bind_OnTriggered[BIND_COUNT];
+BindReleased  Bind_OnReleased[BIND_COUNT];
+cc_uint8 Bind_IsTriggered[BIND_COUNT];
+
+cc_bool KeyBind_IsPressed(InputBind binding) { return Bind_IsTriggered[binding]; }
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
 *#########################################################################################################################*/
 static void OnPointerDown(void* obj, int idx) {
@@ -1101,7 +953,6 @@ static void OnInit(void) {
 	Event_Register_(&InputEvents.Up,      NULL, OnInputUp);
 
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, InputHandler_CheckZoomFov);
-	KeyBind_Init();
 	StoredHotkeys_LoadAll();
 
 	Bind_OnTriggered[BIND_FORWARD] = Player_TriggerUp;

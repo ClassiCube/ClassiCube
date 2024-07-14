@@ -555,7 +555,7 @@ void Gamepads_Process(float delta) {
 	{
 		SDL_Gamepad* gp = controllers[i];
 		if (!gp) continue;
-		int port = Gamepad_MapPort(i + 10);
+		int port = Gamepad_Connect(0x5D13 + i, PadBind_Defaults);
 
 		ProcessGamepadButtons(port, gp);
 		ProcessJoystick(port, gp, PAD_AXIS_LEFT,  delta);

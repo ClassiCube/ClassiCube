@@ -621,7 +621,7 @@ static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delt
 }
 
 void Gamepads_Process(float delta) {
-	int i, res, count;
+	int i, port, res, count;
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	if (emscripten_sample_gamepad_data() != 0) return;
@@ -631,7 +631,10 @@ void Gamepads_Process(float delta) {
 	{
 		EmscriptenGamepadEvent ev;
 		res = emscripten_get_gamepad_status(i, &ev);
-		if (res == 0) ProcessGamepadInput(i, &ev, delta);
+		if (res != 0) continue;
+		
+		port = Gamepad_Connect(0xEB + i, PadBind_Defaults);
+		ProcessGamepadInput(port, &ev, delta);
 	}
 }
 
