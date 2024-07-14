@@ -417,10 +417,15 @@ static void ProcessClassicInput(int port, WPADData* wd, float delta) {
 	ProcessClassic_Joystick(port, PAD_AXIS_RIGHT, &ctrls.rjs, delta);
 }
 
+static int frame;
 static void ProcessWPADInput(int i, float delta) {
 	WPAD_ScanPads();
+	// First time WPADs are scanned, type is 0 even for classic/nunchuck it seems
+	//  (in Dolphin at least). So delay for a little bit
+	if (frame < 4 * 5) { frame++; return; }
+
 	u32 type;
-	int res  = WPAD_Probe(i, &type);
+	int res = WPAD_Probe(i, &type);
 	if (res) return;
 
 	WPADData* wd = WPAD_Data(i);

@@ -374,93 +374,6 @@ void Pointer_SetPosition(int idx, int x, int y) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Gamepad---------------------------------------------------------*
-*#########################################################################################################################*/
-int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
-int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
-
-static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
-struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
-
-static void Gamepad_Apply(int port, int btn, cc_bool was, int pressed) {
-	struct InputDevice* device = &Gamepad_Devices[port].base;
-	
-	if (pressed) {
-		Event_RaiseInput(&InputEvents.Down, btn + GAMEPAD_BEG_BTN, was, device);
-	} else {
-		Event_RaiseInput(&InputEvents.Up,   btn + GAMEPAD_BEG_BTN, was, device);
-	}
-}
-
-static void Gamepad_Update(int port, float delta) {
-	struct GamepadDevice* pad = &Gamepad_Devices[port];
-	int btn;
-
-	for (btn = 0; btn < GAMEPAD_BTN_COUNT; btn++)
-	{
-		if (!pad->pressed[btn]) continue;
-		pad->holdtime[btn] += delta;
-		if (pad->holdtime[btn] < 1.0f) continue;
-
-		/* Held for over a second, trigger a repeated press */
-		pad->holdtime[btn] = 0;
-		Gamepad_Apply(port, btn, true, true);
-	}
-}
-
-void Gamepad_SetButton(int port, int btn, int pressed) {
-	struct GamepadDevice* pad = &Gamepad_Devices[port];
-	btn -= GAMEPAD_BEG_BTN;
-	/* Repeat down is handled in Gamepad_Update instead */
-	if (pressed && pad->pressed[btn]) return;
-
-	/* Reset hold tracking time */
-	if (pressed && !pad->pressed[btn]) pad->holdtime[btn] = 0;
-	pad->pressed[btn] = pressed != 0;
-
-	Gamepad_Apply(port, btn, false, pressed);
-}
-
-void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
-	Gamepad_Devices[port].axisX[axis] = x;
-	Gamepad_Devices[port].axisY[axis] = y;
-	if (x == 0 && y == 0) return;
-
-	int sensi   = Gamepad_AxisSensitivity[axis];
-	float scale = delta * 60.0f * axis_sensiFactor[sensi];
-	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
-}
-
-void Gamepad_Tick(float delta) {
-	int port;
-	Gamepads_Process(delta);
-	
-	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
-	{
-		Gamepad_Update(port, delta);
-	}
-}
-
-int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults) {
-	int port;
-	
-	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
-	{
-		if (Gamepad_Devices[port].deviceID == deviceID) return port;
-		if (Gamepad_Devices[port].deviceID != 0) continue;
-		
-		Gamepad_Devices[port].base.defaultBinds = defaults;
-		Gamepad_Devices[port].deviceID          = deviceID;
-		InputBind_Load(&Gamepad_Devices[port]);
-		return port;
-	}
-
-	Logger_Abort("Not enough controllers");
-	return 0;
-}
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
 /* The gamepad buttons that are bound to each input binding */
@@ -504,6 +417,7 @@ const BindMapping KeyBind_Defaults[BIND_COUNT] = {
 	{ CCKEY_F7, 0 }, { 'C', 0 }, { CCKEY_LCTRL, 0 },/* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
 	{ CCMOUSE_L, 0},{ CCMOUSE_M, 0},{ CCMOUSE_R, 0},/* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
 	{ CCKEY_F6, 0 },     { CCKEY_LALT, 0 },         /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH */
+
 	{ CCKEY_F8, 0 },     { 'G', 0 },                /* BIND_SMOOTH_CAMERA, BIND_DROP_BLOCK */
 	{ CCKEY_F10, 0 },    { 0, 0 },                  /* BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
 	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },         /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
@@ -599,23 +513,105 @@ void InputBind_Reset(InputBind binding, const struct InputDevice* device) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Gamepad---------------------------------------------------------*
+*#########################################################################################################################*/
+int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
+int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
+
+static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
+struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
+
+static void Gamepad_Apply(int port, int btn, cc_bool was, int pressed) {
+	struct InputDevice* device = &Gamepad_Devices[port].base;
+	
+	if (pressed) {
+		Event_RaiseInput(&InputEvents.Down, btn + GAMEPAD_BEG_BTN, was, device);
+	} else {
+		Event_RaiseInput(&InputEvents.Up,   btn + GAMEPAD_BEG_BTN, was, device);
+	}
+}
+
+static void Gamepad_Update(int port, float delta) {
+	struct GamepadDevice* pad = &Gamepad_Devices[port];
+	int btn;
+
+	for (btn = 0; btn < GAMEPAD_BTN_COUNT; btn++)
+	{
+		if (!pad->pressed[btn]) continue;
+		pad->holdtime[btn] += delta;
+		if (pad->holdtime[btn] < 1.0f) continue;
+
+		/* Held for over a second, trigger a repeated press */
+		pad->holdtime[btn] = 0;
+		Gamepad_Apply(port, btn, true, true);
+	}
+}
+
+void Gamepad_SetButton(int port, int btn, int pressed) {
+	struct GamepadDevice* pad = &Gamepad_Devices[port];
+	btn -= GAMEPAD_BEG_BTN;
+	/* Repeat down is handled in Gamepad_Update instead */
+	if (pressed && pad->pressed[btn]) return;
+
+	/* Reset hold tracking time */
+	if (pressed && !pad->pressed[btn]) pad->holdtime[btn] = 0;
+	pad->pressed[btn] = pressed != 0;
+
+	Gamepad_Apply(port, btn, false, pressed);
+}
+
+void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
+	Gamepad_Devices[port].axisX[axis] = x;
+	Gamepad_Devices[port].axisY[axis] = y;
+	if (x == 0 && y == 0) return;
+
+	int sensi   = Gamepad_AxisSensitivity[axis];
+	float scale = delta * 60.0f * axis_sensiFactor[sensi];
+	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
+}
+
+void Gamepad_Tick(float delta) {
+	int port;
+	Gamepads_Process(delta);
+	
+	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		Gamepad_Update(port, delta);
+	}
+}
+
+int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults) {
+	int i;
+	for (i = 0; i < INPUT_MAX_GAMEPADS; i++)
+	{
+		if (Gamepad_Devices[i].deviceID == deviceID) return i;
+		if (Gamepad_Devices[i].deviceID != 0) continue;
+		
+		Mem_Copy(&Gamepad_Devices[i].base, &padDevice, sizeof(struct InputDevice));
+		Gamepad_Devices[i].base.index        = i;
+		Gamepad_Devices[i].base.currentBinds = padBind_Mappings[i];
+		Gamepad_Devices[i].base.defaultBinds = defaults;
+		Gamepad_Devices[i].deviceID          = deviceID;
+
+		InputBind_Load(&Gamepad_Devices[i].base);
+		return i;
+	}
+
+	Logger_Abort("Not enough controllers");
+	return 0;
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
 *#########################################################################################################################*/
 static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
 
 static void OnInit(void) {
-	int i;
 	Event_Register_(&WindowEvents.FocusChanged, NULL, OnFocusChanged);
 	/* Fix issue with Android where if you double click in server list to join, a touch */
 	/*  pointer is stuck down when the game loads (so you instantly start deleting blocks) */
 	ClearTouches();
-	
-	for (i = 0; i < INPUT_MAX_GAMEPADS; i++)
-	{
-		Mem_Copy(&Gamepad_Devices[i].base, &padDevice, sizeof(struct InputDevice));
-		Gamepad_Devices[i].base.index        = i;
-		Gamepad_Devices[i].base.currentBinds = &padBind_Mappings[i];
-	}
 	
 	InputBind_Load(&NormDevice);
 }
