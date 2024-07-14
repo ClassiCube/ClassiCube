@@ -126,7 +126,7 @@ static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
 }
 
 void Gamepads_Process(float delta) {
-	int port = Gamepad_Connect(0x5O3, PadBind_Defaults);
+	int port = Gamepad_Connect(0x503, PadBind_Defaults);
 	SceCtrlData pad;
 	
 	/* TODO implement */

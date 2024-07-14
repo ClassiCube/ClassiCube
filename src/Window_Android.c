@@ -112,7 +112,7 @@ static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {
 		Input.Sources |= INPUT_SOURCE_GAMEPAD;
 		
 		int port = Gamepad_Connect(0xAD01D, PadBind_Defaults);
-		Gamepad_SetButton(port, key);
+		Gamepad_SetButton(port, key, true);
 	} else {
 		if (key) Input_SetPressed(key);
 	}
@@ -121,7 +121,15 @@ static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {
 static void JNICALL java_processKeyUp(JNIEnv* env, jobject o, jint code) {
 	int key = MapNativeKey(code);
 	Platform_Log2("KEY - UP %i,%i", &code, &key);
-	if (key) Input_SetReleased(key);
+
+	if (Input_IsPadButton(key)) {
+		Input.Sources |= INPUT_SOURCE_GAMEPAD;
+		
+		int port = Gamepad_Connect(0xAD01D, PadBind_Defaults);
+		Gamepad_SetButton(port, key, false);
+	} else {
+		if (key) Input_SetReleased(key);
+	}
 }
 
 static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {

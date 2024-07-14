@@ -71,7 +71,7 @@ static char mppassBuffer[STRING_SIZE];
 cc_string Game_Username  = String_FromArray(usernameBuffer);
 cc_string Game_Mppass    = String_FromArray(mppassBuffer);
 #ifdef CC_BUILD_SPLITSCREEN
-int Game_NumLocalPlayers = 1;
+int Game_NumStates = 1;
 #endif
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
@@ -697,12 +697,21 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 static void DrawSplitscreen(float delta, float t, int i, int x, int y, int w, int h) {
 	Gfx_SetViewport(x, y, w, h);
 	Gfx_SetScissor( x, y, w, h);
+	Game.CurrentState = i;
 	
 	Entities.CurPlayer = &LocalPlayer_Instances[i];
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	
 	Game_DrawFrame(delta, t);
+}
+
+int Game_MapState(int deviceIndex) {
+	if (Game_NumStates >= 4 && deviceIndex == 3) return 3;
+	if (Game_NumStates >= 3 && deviceIndex == 2) return 2;
+	if (Game_NumStates >= 2 && deviceIndex == 1) return 1;
+
+	return 0;
 }
 #endif
 
@@ -763,7 +772,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 	
 #ifdef CC_BUILD_SPLITSCREEN
-	switch (Game_NumLocalPlayers) {
+	switch (Game_NumStates) {
 		case 1:
 			Game_DrawFrame(delta, t); break;
 		case 2:
@@ -855,6 +864,7 @@ void Game_Run(int width, int height, const cc_string* title) {
 	Window_SetTitle(title);
 	Window_Show();
 	gameRunning = true;
+	Game.CurrentState = 0;
 
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents.Resized);

@@ -14,6 +14,8 @@ CC_VAR extern struct _GameData {
 	double Time;
 	/* Number of chunks updated within last second. Resets to 0 after every second. */
 	int ChunkUpdates;
+	/* Index of current game state being used (for splitscreen multiplayer) */
+	int CurrentState;
 } Game;
 
 extern struct RayTracer Game_SelectedPos;
@@ -25,9 +27,11 @@ typedef void (*Game_Draw2DHook)(void);
 extern Game_Draw2DHook Game_Draw2DHooks[4];
 
 #ifdef CC_BUILD_SPLITSCREEN
-extern int Game_NumLocalPlayers;
+	int Game_MapState(int deviceIndex);
+	extern int Game_NumStates;
 #else
-#define Game_NumLocalPlayers 1
+	static CC_INLINE int Game_MapState(int deviceIndex) { return 0; }
+	#define Game_NumStates 1
 #endif
 
 #if defined CC_BUILD_N64

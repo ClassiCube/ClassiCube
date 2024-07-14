@@ -57,7 +57,7 @@ struct Camera {
 	/* Typically, this is used to adjust yaw/pitch based on accumulated mouse movement. */
 	void (*UpdateMouse)(struct LocalPlayer* p, float delta);
 	/* Called when mouse/pointer has moved. */
-	void (*OnRawMovement)(float deltaX, float deltaY);
+	void (*OnRawMovement)(float deltaX, float deltaY, int deviceIndex);
 	/* Called when user closes all menus, and is interacting with camera again. */
 	void (*AcquireFocus)(void);
 	/* Called when user is no longer interacting with camera. (e.g. opened menu) */

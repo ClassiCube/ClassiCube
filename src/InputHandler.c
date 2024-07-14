@@ -58,7 +58,7 @@ static void PlayerInputGamepad(struct LocalPlayer* p, float* xMoving, float* zMo
 	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		/* In splitscreen mode, tie a controller to a specific player*/
-		if (Game_NumLocalPlayers > 1 && p->index != port) continue;
+		if (Game_NumStates > 1 && p->index != port) continue;
 		
 		PlayerInputPad(port, PAD_AXIS_LEFT,  p, xMoving, zMoving);
 		PlayerInputPad(port, PAD_AXIS_RIGHT, p, xMoving, zMoving);
@@ -928,7 +928,7 @@ static void Player_ReleaseDown(int key,  struct InputDevice* device) {
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	int flags = 0, port;
 
-	if (Game_NumLocalPlayers == 1) {
+	if (Game_NumStates == 1) {
 		for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 			flags |= moveFlags[port];
 	} else {

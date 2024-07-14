@@ -17,21 +17,27 @@ struct _CameraData Camera;
 static struct RayTracer cameraClipPos;
 static Vec2 cam_rotOffset;
 static cc_bool cam_isForwardThird;
-static float cam_deltaX, cam_deltaY;
 
-static void Camera_OnRawMovement(float deltaX, float deltaY) {
-	cam_deltaX += deltaX; cam_deltaY += deltaY;
+static struct CameraState {
+	float deltaX, deltaY;
+} states[MAX_LOCAL_PLAYERS];
+
+static void Camera_OnRawMovement(float deltaX, float deltaY, int deviceIndex) {
+	int i = Game_MapState(deviceIndex);
+	states[i].deltaX += deltaX; 
+	states[i].deltaY += deltaY;
 }
 
 void Camera_KeyLookUpdate(float delta) {
 	if (Gui.InputGrab) return;
 	/* divide by 25 to have reasonable sensitivity for default mouse sens */
 	float amount = (Camera.Sensitivity / 25.0f) * (1000 * delta);
+	int i = Game.CurrentState;
 
-	if (Bind_IsTriggered[BIND_LOOK_UP])    cam_deltaY -= amount;
-	if (Bind_IsTriggered[BIND_LOOK_DOWN])  cam_deltaY += amount;
-	if (Bind_IsTriggered[BIND_LOOK_LEFT])  cam_deltaX -= amount;
-	if (Bind_IsTriggered[BIND_LOOK_RIGHT]) cam_deltaX += amount;
+	if (Bind_IsTriggered[BIND_LOOK_UP])    states[i].deltaY -= amount;
+	if (Bind_IsTriggered[BIND_LOOK_DOWN])  states[i].deltaY += amount;
+	if (Bind_IsTriggered[BIND_LOOK_LEFT])  states[i].deltaX -= amount;
+	if (Bind_IsTriggered[BIND_LOOK_RIGHT]) states[i].deltaX += amount;
 }
 
 /*########################################################################################################################*
@@ -64,11 +70,12 @@ static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {
 static Vec2 PerspectiveCamera_GetMouseDelta(float delta) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Camera.Sensitivity;
 	static float speedX, speedY, newSpeedX, newSpeedY, accelX, accelY;
+	int i = Game.CurrentState;
 	Vec2 v;
 
 	if (Camera.Smooth) {
-		accelX = (cam_deltaX - speedX) * 35 / Camera.Mass;
-		accelY = (cam_deltaY - speedY) * 35 / Camera.Mass;
+		accelX = (states[i].deltaX - speedX) * 35 / Camera.Mass;
+		accelY = (states[i].deltaY - speedY) * 35 / Camera.Mass;
 		newSpeedX = accelX * delta + speedX;
 		newSpeedY = accelY * delta + speedY;
 
@@ -79,11 +86,12 @@ static Vec2 PerspectiveCamera_GetMouseDelta(float delta) {
 		if (newSpeedY * speedY < 0) speedY = 0;
 		else speedY = newSpeedY;
 	} else {
-		speedX = cam_deltaX;
-		speedY = cam_deltaY;
+		speedX = states[i].deltaX;
+		speedY = states[i].deltaY;
 	}
 
-	v.x = speedX * sensitivity; v.y = speedY * sensitivity;
+	v.x = speedX * sensitivity; 
+	v.y = speedY * sensitivity;
 	if (Camera.Invert) v.y = -v.y;
 	return v;
 }
@@ -94,7 +102,8 @@ static void PerspectiveCamera_UpdateMouseRotation(struct LocalPlayer* p, float d
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
 	if (Input_IsAltPressed() && Camera.Active->isThirdPerson) {
-		cam_rotOffset.x += rot.x; cam_rotOffset.y += rot.y;
+		cam_rotOffset.x += rot.x; 
+		cam_rotOffset.y += rot.y;
 		return;
 	}
 	
@@ -111,17 +120,19 @@ static void PerspectiveCamera_UpdateMouseRotation(struct LocalPlayer* p, float d
 }
 
 static void PerspectiveCamera_UpdateMouse(struct LocalPlayer* p, float delta) {
+	int i = Game.CurrentState;
 	if (!Gui.InputGrab && Window_Main.Focused) Window_UpdateRawMouse();
 
 	PerspectiveCamera_UpdateMouseRotation(p, delta);
-	cam_deltaX = 0; cam_deltaY = 0;
+	states[i].deltaX = 0; 
+	states[i].deltaY = 0;
 }
 
 static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, float velTiltScale) {
 	struct Entity* e = &p->Base;
-
 	struct Matrix tiltY, velX;
 	float vel, fall;
+	
 	if (!Game_ViewBobbing) { 
 		Camera.TiltM     = Matrix_Identity;
 		Camera.TiltPitch = 0.0f;
@@ -153,7 +164,7 @@ static Vec2 FirstPersonCamera_GetOrientation(void) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e = &p->Base;
 
-	Vec2 v;	
+	Vec2 v;
 	v.x = e->Yaw   * MATH_DEG2RAD; 
 	v.y = e->Pitch * MATH_DEG2RAD;
 	return v;
@@ -261,14 +272,14 @@ static struct Camera cam_ForwardThird = {
 *-----------------------------------------------------General camera------------------------------------------------------*
 *#########################################################################################################################*/
 static void OnRawMovement(void* obj, float deltaX, float deltaY) {
-	Camera.Active->OnRawMovement(deltaX, deltaY);
+	Camera.Active->OnRawMovement(deltaX, deltaY, 0);
 }
 
 static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
 	if (!Input.RawMode) return;
 	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_CAMERA) return;
 
-	Camera.Active->OnRawMovement(x, y);
+	Camera.Active->OnRawMovement(x, y, port);
 }
 
 static void OnHacksChanged(void* obj) {

@@ -61,11 +61,11 @@ _ClipEdge:
 	mov      IN1, TM1 ! MT, tmp  = &v1
 	fldi0    fr4      ! LS, fr4  = 0
 	add      #12, TM1 ! EX, tmp  = &v1->z
-	fmov.s   @r1, fr2 ! LS, fr2  = v1->z	
+	fmov.s  @TM1, fr2 ! LS, fr2  = v1->z
 	mov      IN2, TM1 ! MT, tmp  = &v2
 	fldi0    fr5      ! LS, fr5  = 0
 	add      #12, TM1 ! EX, tmp   = &v2->z
-	fmov.s   @r1,fr11 ! LS, fr11 = v2->z
+	fmov.s  @TM1,fr11 ! LS, fr11 = v2->z
 	fsub     fr2,fr11 ! FE, fr11 = v2->z - v1->z
 	fldi0    fr8      ! LS, fr8  = 0
 	fmul    fr11,fr11 ! FE, fr11 = (v2->z - v1->z) * (v2->z * v1->z)
@@ -120,11 +120,11 @@ _ClipEdge:
 	fmov.s   fr3,@OUT ! LS, OUT->w = lerp
 	add      #-4, OUT ! EX, OUT -= 4
 	
-	mov.l  @IN1+,CL1  ! LS, ACOLOR = v1->bgra
+	mov.l  @IN1,CL1   ! LS, ACOLOR = v1->bgra
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	mov.l  @IN2+,CL2  ! LS, BCOLOR = v2->bgra
+	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
