@@ -92,7 +92,6 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	
 	Gfx_RestoreState();
-	ResetGraph(0);
 
 	SetupContexts(Window_Main.Width, Window_Main.Height, 63, 0, 127);
 	SetDispMask(1);

@@ -26,6 +26,7 @@
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
+static DISPENV disp;
 
 void Window_PreInit(void) { }
 void Window_Init(void) {
@@ -49,9 +50,16 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) {
+	ResetGraph(0);
 	launcherMode = true;
+
+	SetDefDispEnv(&disp, 0, 0, SCREEN_XRES, SCREEN_YRES);
+	PutDispEnv(&disp);
+	SetDispMask(1);
 }
+
 void Window_Create3D(int width, int height) { 
+	ResetGraph(0);
 	launcherMode = false; 
 }
 
@@ -160,15 +168,7 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static DISPENV disp;
-
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	SetDefDispEnv(&disp, 0, 0, SCREEN_XRES, SCREEN_YRES);
-	disp.isinter = 1;
-
-	PutDispEnv(&disp);
-	SetDispMask(1);
-
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
