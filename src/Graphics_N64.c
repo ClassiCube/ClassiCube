@@ -7,6 +7,7 @@
 #include <libdragon.h>
 #include <GL/gl.h>
 #include <GL/gl_integration.h>
+#include <malloc.h>
 
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
@@ -300,8 +301,62 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
-static void* gfx_vertices;
+#define MAX_CACHED_CALLS 8
+
+struct VertexBufferCache {
+	rspq_block_t* blocks[MAX_CACHED_CALLS];
+	int offset[MAX_CACHED_CALLS];
+	int counts[MAX_CACHED_CALLS];
+};
+struct VertexBuffer {
+	struct VertexBufferCache cache;
+	char vertices[];
+};
+
+static struct VertexBuffer* gfx_vb;
 static int vb_size;
+
+static void VB_ClearCache(struct VertexBuffer* vb) {
+	for (int i = 0; i < MAX_CACHED_CALLS; i++)
+	{
+		rspq_block_t* block = vb->cache.blocks[i];
+		if (!block) continue;
+
+		rdpq_call_deferred((void (*)(void*))rspq_block_free, block);
+	}
+	 Mem_Set(&vb->cache, 0, sizeof(vb->cache));
+}
+
+static rspq_block_t* VB_GetCached(struct VertexBuffer* vb, int offset, int count) {
+	if (!count) return NULL;
+
+	// Lookup previously cached draw commands
+	for (int i = 0; i < MAX_CACHED_CALLS; i++)
+	{
+		if (offset == vb->cache.offset[i] && count == vb->cache.counts[i])
+			return vb->cache.blocks[i];
+	}
+
+	// Add a new cached draw command
+	for (int i = 0; i < MAX_CACHED_CALLS; i++)
+	{
+		if (vb->cache.blocks[i]) continue;
+
+		rspq_block_begin();
+		gfx_setupVBRangeFunc(offset);
+		glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gfx_indices);
+		rspq_block_t* block = rspq_block_end();
+
+		vb->cache.blocks[i] = block;
+		vb->cache.offset[i] = offset;
+		vb->cache.counts[i] = count;
+		return block;
+	}
+
+	// .. nope, no room for it
+	return NULL;
+}
+
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	fillFunc(gfx_indices, count, obj);
@@ -313,41 +368,42 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	return Mem_TryAlloc(count, strideSizes[fmt]);
+	struct VertexBuffer* vb = memalign(16, sizeof(struct VertexBufferCache) + count * strideSizes[fmt]);
+	if (vb) Mem_Set(&vb->cache, 0, sizeof(vb->cache));
+	return vb;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
+void Gfx_BindVb(GfxResourceID vb) { gfx_vb = vb; }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID data = *vb;
-	if (data) Mem_Free(data);
-	*vb = 0;
+	if (!data) return;
+
+	VB_ClearCache(data);
+	Mem_Free(data);
+	*vb = NULL;
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
-	return vb;
+	return ((struct VertexBuffer*)vb)->vertices;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
+void Gfx_UnlockVb(GfxResourceID vb) {
+	VB_ClearCache(vb); // data may have changed
+	gfx_vb = vb;
 }
 
 
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
+	return Gfx_AllocStaticVb(fmt, maxVertices);
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
-	return vb; 
-}
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return Gfx_LockVb(vb, fmt, count); }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
@@ -413,31 +469,28 @@ void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
 /*########################################################################################################################*
 *--------------------------------------------------------Rendering--------------------------------------------------------*
 *#########################################################################################################################*/
-#define VB_PTR gfx_vertices
-#define IB_PTR gfx_indices
-
 static void GL_SetupVbColoured(void) {
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + 0));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + 12));
 }
 
 static void GL_SetupVbTextured(void) {
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
-	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 0));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 12));
+	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 16));
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
+	glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + offset + 12));
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -461,26 +514,42 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	gfx_setupVBFunc();
-	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	gfx_setupVBRangeFunc(startVertex);
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+	rspq_block_t* block = VB_GetCached(gfx_vb, startVertex, verticesCount);
+
+	if (block) {
+		rspq_block_run(block);
+	} else {
+		gfx_setupVBRangeFunc(startVertex);
+		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	gfx_setupVBFunc();
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+	rspq_block_t* block = VB_GetCached(gfx_vb, 0, verticesCount);
+
+	if (block) {
+		rspq_block_run(block);
+	} else {
+		gfx_setupVBFunc();
+		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+	}
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
 	if (depthOnlyRendering) return;
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, IB_PTR);
+	rspq_block_t* block = VB_GetCached(gfx_vb, startVertex, verticesCount);
+
+	if (block) {
+		rspq_block_run(block);
+	} else {
+		glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset));
+		glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 12));
+		glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 16));
+		glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, gfx_indices);
+	}
 }
 #endif
