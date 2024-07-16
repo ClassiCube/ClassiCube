@@ -300,7 +300,6 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 #define MAX_CACHED_CALLS 8
 
 struct VertexBufferCache {
@@ -322,6 +321,7 @@ static void VB_ClearCache(struct VertexBuffer* vb) {
 		rspq_block_t* block = vb->cache.blocks[i];
 		if (!block) continue;
 
+		// TODO is this really safe ??
 		rdpq_call_deferred((void (*)(void*))rspq_block_free, block);
 	}
 	 Mem_Set(&vb->cache, 0, sizeof(vb->cache));
@@ -344,7 +344,7 @@ static rspq_block_t* VB_GetCached(struct VertexBuffer* vb, int offset, int count
 
 		rspq_block_begin();
 		gfx_setupVBRangeFunc(offset);
-		glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gfx_indices);
+		glDrawArrays(GL_QUADS, 0, count);
 		rspq_block_t* block = rspq_block_end();
 
 		vb->cache.blocks[i] = block;
@@ -359,7 +359,6 @@ static rspq_block_t* VB_GetCached(struct VertexBuffer* vb, int offset, int count
 
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	fillFunc(gfx_indices, count, obj);
 	return (void*)1;
 }
 
@@ -380,6 +379,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (!data) return;
 
 	VB_ClearCache(data);
+	rspq_wait(); // for deferred deletes TODO needed?
 	Mem_Free(data);
 	*vb = NULL;
 }
@@ -523,7 +523,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 		rspq_block_run(block);
 	} else {
 		gfx_setupVBRangeFunc(startVertex);
-		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+		glDrawArrays(GL_QUADS, 0, verticesCount);
 	}
 }
 
@@ -534,7 +534,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 		rspq_block_run(block);
 	} else {
 		gfx_setupVBFunc();
-		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+		glDrawArrays(GL_QUADS, 0, verticesCount);
 	}
 }
 
@@ -549,7 +549,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 		glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset));
 		glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 12));
 		glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 16));
-		glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, gfx_indices);
+		glDrawArrays(GL_QUADS, 0, verticesCount);
 	}
 }
 #endif
