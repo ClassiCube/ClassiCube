@@ -26,6 +26,10 @@
 #include "Errors.h"
 #include "Options.h"
 
+#if defined CC_BUILD_DREAMCAST
+#	include <kos.h>
+#endif
+
 static char nameBuffer[STRING_SIZE];
 static char motdBuffer[STRING_SIZE];
 static char appBuffer[STRING_SIZE];
@@ -134,6 +138,9 @@ static void SPConnection_BeginConnect(void) {
 #if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC
 	horSize = 16;
 	verSize = 16;
+#elif defined CC_BUILD_DREAMCAST
+	horSize = DBL_MEM? 128 : 64;
+	verSize = 64;
 #elif defined CC_BUILD_LOWMEM
 	horSize = 64;
 	verSize = 64;
