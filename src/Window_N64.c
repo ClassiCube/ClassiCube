@@ -20,8 +20,9 @@ struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
-    display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
-    //display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE, ANTIALIAS_RESAMPLE_FETCH_ALWAYS);    
+	int buffers = is_memory_expanded() ? 3 : 2;
+	display_init(RESOLUTION_320x240, DEPTH_32_BPP, buffers, GAMMA_NONE, FILTERS_DISABLED);
+	//display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE, ANTIALIAS_RESAMPLE_FETCH_ALWAYS);    
 }
 
 void Window_Init(void) {

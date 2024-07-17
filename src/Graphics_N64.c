@@ -10,9 +10,7 @@
 #include <malloc.h>
 
 typedef void (*GL_SetupVBFunc)(void);
-typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
-static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 
 /*########################################################################################################################*
@@ -343,8 +341,8 @@ static rspq_block_t* VB_GetCached(struct VertexBuffer* vb, int offset, int count
 		if (vb->cache.blocks[i]) continue;
 
 		rspq_block_begin();
-		gfx_setupVBRangeFunc(offset);
-		glDrawArrays(GL_QUADS, 0, count);
+		gfx_setupVBFunc();
+		glDrawArrays(GL_QUADS, offset, count);
 		rspq_block_t* block = rspq_block_end();
 
 		vb->cache.blocks[i] = block;
@@ -372,7 +370,9 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return vb;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { gfx_vb = vb; }
+void Gfx_BindVb(GfxResourceID vb) { 
+	gfx_vb = vb; 
+}
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID data = *vb;
@@ -480,19 +480,6 @@ static void GL_SetupVbTextured(void) {
 	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 16));
 }
 
-static void GL_SetupVbColoured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + offset + 12));
-}
-
-static void GL_SetupVbTextured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 16));
-}
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
@@ -502,14 +489,12 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 
-		gfx_setupVBFunc      = GL_SetupVbTextured;
-		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
+		gfx_setupVBFunc = GL_SetupVbTextured;
 	} else {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisable(GL_TEXTURE_2D);
 
-		gfx_setupVBFunc      = GL_SetupVbColoured;
-		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
+		gfx_setupVBFunc = GL_SetupVbColoured;
 	}
 }
 
@@ -522,8 +507,8 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	if (block) {
 		rspq_block_run(block);
 	} else {
-		gfx_setupVBRangeFunc(startVertex);
-		glDrawArrays(GL_QUADS, 0, verticesCount);
+		gfx_setupVBFunc();
+		glDrawArrays(GL_QUADS, startVertex, verticesCount);
 	}
 }
 
@@ -539,17 +524,16 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
 	if (depthOnlyRendering) return;
 	rspq_block_t* block = VB_GetCached(gfx_vb, startVertex, verticesCount);
 
 	if (block) {
 		rspq_block_run(block);
 	} else {
-		glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset));
-		glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 12));
-		glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + offset + 16));
-		glDrawArrays(GL_QUADS, 0, verticesCount);
+		glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices));
+		glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 12));
+		glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 16));
+		glDrawArrays(GL_QUADS, startVertex, verticesCount);
 	}
 }
 #endif
