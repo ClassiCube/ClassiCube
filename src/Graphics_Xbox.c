@@ -606,6 +606,7 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 static uint32_t* PushAttrib(uint32_t* p, int index, int format, int size, int stride) {
 	return pb_push1(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT + index * 4,

@@ -1,4 +1,4 @@
-BOOT=cdrom:\ClassiCube.exe;1
+BOOT=cdrom:\CCUBEPS1.exe;1
 TCB=4
 EVENT=10
 STACK=801FFFF0

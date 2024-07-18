@@ -60,7 +60,7 @@
 		-->
 		<directory_tree>
 			<file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
-			<file name="TEMPLATE.EXE"	type="data" source="template.exe" />
+			<file name="CCUBEPS1.EXE"	type="data" source="ClassiCube-PS1.exe" />
 			<!--
 				This file is only required if you are using dynamic linking
 				(see the system/dynlink example). It contains the executable's

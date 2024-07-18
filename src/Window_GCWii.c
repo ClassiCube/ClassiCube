@@ -152,7 +152,7 @@ static void ProcessPADInput(int i, float delta) {
 		return; // not connected, still busy, etc
 	}
 	
-	int port = Gamepad_MapPort(i + 10);
+	int port = Gamepad_Connect(0x5C + i, PadBind_Defaults);
 	ProcessPAD_Buttons(port, gc_pads[i].button);
 	ProcessPAD_Joystick(port, PAD_AXIS_LEFT,  gc_pads[i].stickX,    gc_pads[i].stickY,    delta);
 	ProcessPAD_Joystick(port, PAD_AXIS_RIGHT, gc_pads[i].substickX, gc_pads[i].substickY, delta);
@@ -316,6 +316,27 @@ void Gamepads_Init(void) {
 }
 
 #if defined HW_RVL
+static const BindMapping default_nunchuck[BIND_COUNT] = {
+	[BIND_FORWARD] = { CCPAD_CUP,    0 },
+	[BIND_BACK]    = { CCPAD_CDOWN,  0 },
+	[BIND_LEFT]    = { CCPAD_CLEFT,  0 },
+	[BIND_RIGHT]   = { CCPAD_CRIGHT, 0 },
+	
+	[BIND_THIRD_PERSON] = { CCPAD_UP,    0 },
+	[BIND_FLY_DOWN]     = { CCPAD_DOWN,  0 },
+	[BIND_FLY]          = { CCPAD_LEFT,  0 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_RIGHT, 0 },
+	
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_CHAT]         = { CCPAD_L, 0 },
+	[BIND_INVENTORY]    = { CCPAD_R, 0 },
+	
+	[BIND_PLACE_BLOCK]  = { CCPAD_5, 0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_6, 0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+	[BIND_SEND_CHAT]    = { CCPAD_START, 0 },
+};
+
 static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
 static cc_bool dragActive;
@@ -337,27 +358,10 @@ static void ProcessWPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
 
-static void ProcessNunchuck_Game(int port, WPADData* wd, int mods, float delta) {
+static void ProcessNunchuck(int port, WPADData* wd, int mods) {
 	joystick_t analog = wd->exp.nunchuk.js;
-
-	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_C);
-	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_Z);
-      
-	Gamepad_SetButton(port, CCPAD_1, mods & WPAD_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_4, mods & WPAD_BUTTON_1);
-	Gamepad_SetButton(port, CCPAD_3, mods & WPAD_BUTTON_2);
-
-	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
-	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
-
-	Input_SetNonRepeatable(KeyBind_Mappings[BIND_FLY].button1, mods & WPAD_BUTTON_LEFT);
-
-	if (mods & WPAD_BUTTON_RIGHT) {
-		Mouse_ScrollVWheel(1.0*delta);
-	}
-
-	Input_SetNonRepeatable(KeyBind_Mappings[BIND_THIRD_PERSON].button1, mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBind_Mappings[BIND_FLY_DOWN].button1,     mods & WPAD_BUTTON_DOWN);
+	Gamepad_SetButton(port, CCPAD_5, mods & WPAD_NUNCHUK_BUTTON_Z);
+	Gamepad_SetButton(port, CCPAD_6, mods & WPAD_NUNCHUK_BUTTON_C);
 
 	const float ANGLE_DELTA = 50;
 	bool nunchuckUp    = (analog.ang > -ANGLE_DELTA)    && (analog.ang < ANGLE_DELTA)     && (analog.mag > 0.5);
@@ -365,10 +369,10 @@ static void ProcessNunchuck_Game(int port, WPADData* wd, int mods, float delta) 
 	bool nunchuckLeft  = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
 	bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA)  && (analog.ang < 90+ANGLE_DELTA)  && (analog.mag > 0.5);
 
-	Gamepad_SetButton(port, CCPAD_LEFT,  nunchuckLeft);
-	Gamepad_SetButton(port, CCPAD_RIGHT, nunchuckRight);
-	Gamepad_SetButton(port, CCPAD_UP,    nunchuckUp);
-	Gamepad_SetButton(port, CCPAD_DOWN,  nunchuckDown);
+	Gamepad_SetButton(port, CCPAD_CLEFT,  nunchuckLeft);
+	Gamepad_SetButton(port, CCPAD_CRIGHT, nunchuckRight);
+	Gamepad_SetButton(port, CCPAD_CUP,    nunchuckUp);
+	Gamepad_SetButton(port, CCPAD_CDOWN,  nunchuckDown);
 }
 
 #define CLASSIC_AXIS_SCALE 2.0f
@@ -413,23 +417,30 @@ static void ProcessClassicInput(int port, WPADData* wd, float delta) {
 	ProcessClassic_Joystick(port, PAD_AXIS_RIGHT, &ctrls.rjs, delta);
 }
 
+static int frame;
 static void ProcessWPADInput(int i, float delta) {
 	WPAD_ScanPads();
+	// First time WPADs are scanned, type is 0 even for classic/nunchuck it seems
+	//  (in Dolphin at least). So delay for a little bit
+	if (frame < 4 * 5) { frame++; return; }
+
 	u32 type;
-	int res  = WPAD_Probe(i, &type);
+	int res = WPAD_Probe(i, &type);
 	if (res) return;
 
 	WPADData* wd = WPAD_Data(i);
 	u32 mods = wd->btns_h | wd->btns_d; // buttons held | buttons down now
-	int port = Gamepad_MapPort(i + 20);
+	int port;
 
 	if (type == WPAD_EXP_CLASSIC) {
+		port = Gamepad_Connect(0xC1 + i, PadBind_Defaults);
 		ProcessClassicInput(port, wd, delta);
-	} else if (launcherMode) {
-		ProcessWPAD_Buttons(port, mods);
 	} else if (type == WPAD_EXP_NUNCHUK) {
-		ProcessNunchuck_Game(port, wd, mods, delta);
+		port = Gamepad_Connect(0xCC + i, default_nunchuck);
+		ProcessWPAD_Buttons(port, mods);
+		ProcessNunchuck(port, wd, mods);
 	} else {
+		port = Gamepad_Connect(0x11 + i, PadBind_Defaults);
 		ProcessWPAD_Buttons(port, mods);
 	}
 

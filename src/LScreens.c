@@ -650,7 +650,7 @@ LAYOUTS sps_btnBack[]     = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
 
 static void SplitScreen_Start(int players) {
 	static const cc_string user = String_FromConst(DEFAULT_USERNAME);
-	Game_NumLocalPlayers = players;
+	Game_NumStates = players;
 	
 	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
 }

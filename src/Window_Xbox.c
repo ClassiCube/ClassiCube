@@ -182,10 +182,11 @@ void Gamepads_Process(float delta) {
 	usbh_pooling_hubs();
 #endif
 	if (!xid_ctrl) return;
+	int port = Gamepad_Connect(0xB0, PadBind_Defaults);
 	
-	HandleButtons(0, &gp_state);
-	HandleJoystick(0, PAD_AXIS_LEFT,  gp_state.leftStickX,  gp_state.leftStickY,  delta);
-	HandleJoystick(0, PAD_AXIS_RIGHT, gp_state.rightStickX, gp_state.rightStickY, delta);
+	HandleButtons(port, &gp_state);
+	HandleJoystick(port, PAD_AXIS_LEFT,  gp_state.leftStickX,  gp_state.leftStickY,  delta);
+	HandleJoystick(port, PAD_AXIS_RIGHT, gp_state.rightStickX, gp_state.rightStickY, delta);
 }
 
 

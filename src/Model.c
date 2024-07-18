@@ -460,6 +460,7 @@ static struct ModelTex* textures_tail;
 static void MakeModel(struct Model* model) {
 	struct Model* active = Models.Active;
 	Models.Active = model;
+	model->index  = 0;
 	model->MakeParts();
 
 	model->flags |= MODEL_FLAG_INITED;

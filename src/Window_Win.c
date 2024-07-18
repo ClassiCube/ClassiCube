@@ -49,7 +49,6 @@ static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data
 static BOOL (WINAPI* _SetProcessDPIAware)(void);
 
 static HINSTANCE win_instance;
-static HWND win_handle;
 static HDC win_DC;
 static cc_bool suppress_resize;
 static cc_bool is_ansiWindow, grabCursor;

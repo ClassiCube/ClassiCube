@@ -246,6 +246,7 @@ void Gfx_Free(void) { Gfx_FreeState(); }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 cc_bool Gfx_WarnIfNecessary(void)   { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_RestoreState(void) {
 	InitDefaultResources();

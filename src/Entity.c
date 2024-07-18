@@ -775,7 +775,7 @@ static void LocalPlayer_Reset(struct LocalPlayer* p) {
 
 static void LocalPlayers_Reset(void) {
 	int i;
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		LocalPlayer_Reset(&LocalPlayer_Instances[i]);
 	}
@@ -793,18 +793,14 @@ static void LocalPlayer_OnNewMap(struct LocalPlayer* p) {
 
 static void LocalPlayers_OnNewMap(void) {
 	int i;
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		LocalPlayer_OnNewMap(&LocalPlayer_Instances[i]);
 	}
 }
 
 static struct LocalPlayer* LocalPlayer_Get(int deviceIndex) {
-	if (Game_NumLocalPlayers >= 4 && deviceIndex == 3) return &LocalPlayer_Instances[3];
-	if (Game_NumLocalPlayers >= 3 && deviceIndex == 2) return &LocalPlayer_Instances[2];
-	if (Game_NumLocalPlayers >= 2 && deviceIndex == 1) return &LocalPlayer_Instances[1];
-
-	return &LocalPlayer_Instances[0];
+	return &LocalPlayer_Instances[Game_MapState(deviceIndex)];
 }
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
@@ -1036,7 +1032,7 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	struct LocalPlayer* p;
 	int i;
 	
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		p = &LocalPlayer_Instances[i];
 		p->Base.VTABLE->SetLocation(&p->Base, update);
@@ -1128,7 +1124,7 @@ static void Entities_Init(void) {
 		ShadowMode_Names, Array_Elems(ShadowMode_Names));
 	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		LocalPlayer_Init(&LocalPlayer_Instances[i], i);
 		Entities.List[MAX_NET_PLAYERS + i] = &LocalPlayer_Instances[i].Base;

@@ -14,13 +14,15 @@
 #include <libdragon.h>
 
 static cc_bool launcherMode;
+#include "VirtualCursor.h"
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
-    display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
-    //display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE, ANTIALIAS_RESAMPLE_FETCH_ALWAYS);    
+	int buffers = is_memory_expanded() ? 3 : 2;
+	display_init(RESOLUTION_320x240, DEPTH_32_BPP, buffers, GAMMA_NONE, FILTERS_DISABLED);
+	//display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE, ANTIALIAS_RESAMPLE_FETCH_ALWAYS);    
 }
 
 void Window_Init(void) {
@@ -39,24 +41,6 @@ void Window_Init(void) {
 
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
-
-	// change defaults to make more sense for N64
-	BindMapping* binds = (BindMapping*)PadBind_Defaults;
-	BindMapping_Set(&binds[BIND_JUMP],         CCPAD_1, 0);
-	BindMapping_Set(&binds[BIND_INVENTORY],    CCPAD_2, 0);
-	BindMapping_Set(&binds[BIND_PLACE_BLOCK],  CCPAD_5, 0);
-	BindMapping_Set(&binds[BIND_HOTBAR_RIGHT], CCPAD_L, 0);
-	BindMapping_Set(&binds[BIND_DELETE_BLOCK], CCPAD_R, 0);
-
-	BindMapping_Set(&binds[BIND_FORWARD], CCPAD_CUP,    0);
-	BindMapping_Set(&binds[BIND_BACK],    CCPAD_CDOWN,  0);
-	BindMapping_Set(&binds[BIND_LEFT],    CCPAD_CLEFT,  0);
-	BindMapping_Set(&binds[BIND_RIGHT],   CCPAD_CRIGHT, 0);
-
-	BindMapping_Set(&binds[BIND_FLY_UP],   CCPAD_UP,    0);
-	BindMapping_Set(&binds[BIND_FLY_DOWN], CCPAD_DOWN,  0);
-	BindMapping_Set(&binds[BIND_SPEED],    CCPAD_LEFT,  0);
-	BindMapping_Set(&binds[BIND_FLY],      CCPAD_RIGHT, 0);
 }
 
 void Window_Free(void) { }
@@ -94,10 +78,46 @@ void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 void Window_UpdateRawMouse(void)  { }
 
+static void ProcessMouse(joypad_inputs_t* inputs, float delta) {
+	Input_SetNonRepeatable(CCMOUSE_L, inputs->btn.a);
+	Input_SetNonRepeatable(CCMOUSE_R, inputs->btn.b);
+
+	// TODO check stick_x/y is right
+	if (!vc_hooked) {
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + inputs->stick_x, Pointers[0].y + inputs->stick_y);
+	
+	if (!Input.RawMode) return;	
+	float scale = (delta * 60.0) / 2.0f;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				inputs->stick_x * scale, inputs->stick_y * scale);
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping default_n64[BIND_COUNT] = {
+	[BIND_FORWARD] = { CCPAD_CUP,    0 },
+	[BIND_BACK]    = { CCPAD_CDOWN,  0 },
+	[BIND_LEFT]    = { CCPAD_CLEFT,  0 },
+	[BIND_RIGHT]   = { CCPAD_CRIGHT, 0 },
+	
+	[BIND_FLY_UP]  = { CCPAD_UP,    0 },
+	[BIND_FLY_DOWN]= { CCPAD_DOWN,  0 },
+	[BIND_SPEED]   = { CCPAD_LEFT,  0 },
+	[BIND_FLY]     = { CCPAD_RIGHT, 0 },
+	
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_INVENTORY]    = { CCPAD_2, 0 },
+	[BIND_PLACE_BLOCK]  = { CCPAD_5, 0 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_L, 0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_R, 0 },
+	
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+};
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	joypad_init();
@@ -141,9 +161,13 @@ void Gamepads_Process(float delta) {
 	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
 		if (!joypad_is_connected(i)) continue;
-		int port = Gamepad_MapPort(i + 10);
-		
 		joypad_inputs_t inputs = joypad_get_inputs(i);
+		
+		if (joypad_get_style(i) == JOYPAD_STYLE_MOUSE) {
+			ProcessMouse(&inputs, delta); continue;
+		}
+
+		int port = Gamepad_Connect(0x64 + i, default_n64);
 		HandleButtons(port, inputs.btn);
 		ProcessAnalogInput(port, &inputs, delta);
 	}

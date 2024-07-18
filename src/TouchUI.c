@@ -540,9 +540,9 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 	Bind_OnTriggered[desc->bind](0, &TouchDevice);
 }
 
-static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
-	{ "Chat",      0,0,0, TouchScreen_ChatClick },
-	{ "Tablist",   0,0,0, TouchScreen_TabClick },
+static struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
+	{ "Chat",      0,                 0,0, TouchScreen_ChatClick },
+	{ "Tablist",   0,                 0,0, TouchScreen_TabClick },
 	{ "Respawn",   BIND_RESPAWN,      0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanRespawn },
 	{ "Set spawn", BIND_SET_SPAWN,    0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanRespawn },
 	{ "Fly",       BIND_FLY,          0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanFly     },
@@ -553,12 +553,12 @@ static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Delete",    BIND_DELETE_BLOCK, 0,0, TouchScreen_BindClick },
 	{ "Pick",      BIND_PICK_BLOCK,   0,0, TouchScreen_BindClick },
 	{ "Place",     BIND_PLACE_BLOCK,  0,0, TouchScreen_BindClick },
-	{ "Hotbar",    0,0,0, TouchScreen_SwitchClick }
+	{ "Hotbar",    0,                 0,0, TouchScreen_SwitchClick }
 };
-static const struct TouchButtonDesc normDescs[1] = {
+static struct TouchButtonDesc normDescs[1] = {
 	{ "\x1E", BIND_JUMP,     50,  10, TouchScreen_BindClick }
 };
-static const struct TouchButtonDesc hackDescs[2] = {
+static struct TouchButtonDesc hackDescs[2] = {
 	{ "\x1E", BIND_FLY_UP,   50,  70, TouchScreen_BindClick },
 	{ "\x1F", BIND_FLY_DOWN, 50,  10, TouchScreen_BindClick }
 };
@@ -566,8 +566,9 @@ static const struct TouchButtonDesc hackDescs[2] = {
 #define TOUCHSCREEN_BTN_COLOR PackedCol_Make(255, 255, 255, 200)
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	const struct TouchButtonDesc* descs;
-	const struct TouchButtonDesc* desc;
+	struct TouchButtonDesc* descs;
+	struct TouchButtonDesc* desc;
+	int haligns = GetOnscreenHAligns();
 	int buttons = GetOnscreenButtons();
 	int i, j;
 	for (i = 0; i < ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS; i++) s->widgets[i] = NULL;
@@ -575,7 +576,8 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	for (i = 0, j = 0; i < ONSCREEN_MAX_BTNS; i++) 
 	{
 		if (!(buttons & (1 << i))) continue;
-		desc = &onscreenDescs[i];
+		desc    = &onscreenDescs[i];
+		desc->x = (haligns & (1 << i)) ? ANCHOR_MIN : ANCHOR_MAX;
 
 		ButtonWidget_Init(&s->onscreen[j], 100, desc->OnClick);
 		if (desc->enabled) Widget_SetDisabled(&s->onscreen[j], !(*desc->enabled));
@@ -622,7 +624,7 @@ static void TouchScreen_ContextLost(void* screen) {
 
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	const struct TouchButtonDesc* desc;
+	struct TouchButtonDesc* desc;
 	int i;
 	Screen_UpdateVb(screen);
 	Gui_MakeTitleFont(&s->font);
@@ -689,14 +691,14 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 }
 
 static void TouchScreen_LayoutOnscreen(struct TouchScreen* s, cc_uint8 alignment) {
-	int haligns = GetOnscreenHAligns();
-	cc_uint8 halign;
+	struct TouchButtonDesc* desc;
 	int i, index, x, y;
+	cc_uint8 halign;
 
 	for (i = 0, x = 10, y = 10; i < s->numOnscreen; i++) 
 	{
-		index  = s->onscreen[i].meta.val;
-		halign = (haligns & (1 << index)) ? ANCHOR_MIN : ANCHOR_MAX;
+		desc   = (struct TouchButtonDesc*)s->onscreen[i].meta.ptr;
+		halign = desc->x;
 		if (halign != alignment) continue;
 		
 		Widget_SetLocation(&s->onscreen[i], halign, ANCHOR_MIN, x, y);
@@ -711,7 +713,7 @@ static void TouchScreen_LayoutOnscreen(struct TouchScreen* s, cc_uint8 alignment
 
 static void TouchScreen_Layout(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	const struct TouchButtonDesc* desc;
+	struct TouchButtonDesc* desc;
 	float scale = Gui.RawTouchScale;
 	int i, height;
 

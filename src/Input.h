@@ -118,7 +118,6 @@ struct InputDevice {
 #define INPUT_DEVICE_GAMEPAD  0x04
 
 extern struct InputDevice NormDevice;
-extern struct InputDevice PadDevice;
 extern struct InputDevice TouchDevice;
 
 #define InputDevice_IsEnter(key,  dev) ((key) == (dev)->enterButton1 || (key) == (dev)->enterButton2)
@@ -207,13 +206,54 @@ void Gamepad_Tick(float delta);
 #define GAMEPAD_BEG_BTN CCPAD_1
 #define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
 
-struct GamepadState {
+
+struct GamepadDevice {
+	struct InputDevice base;
 	long deviceID;
 	float axisX[2], axisY[2];
 	cc_bool pressed[GAMEPAD_BTN_COUNT];
 	float holdtime[GAMEPAD_BTN_COUNT];
 };
-extern struct GamepadState Gamepad_States[INPUT_MAX_GAMEPADS];
-int Gamepad_MapPort(long deviceID);
+extern struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
+int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults);
 
+
+/* Enumeration of all input bindings. */
+enum InputBind_ {
+	BIND_FORWARD, BIND_BACK, BIND_LEFT, BIND_RIGHT,
+	BIND_JUMP, BIND_RESPAWN, BIND_SET_SPAWN, BIND_CHAT,
+	BIND_INVENTORY, BIND_FOG, BIND_SEND_CHAT, BIND_TABLIST,
+	BIND_SPEED, BIND_NOCLIP, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN,
+	BIND_EXT_INPUT, BIND_HIDE_FPS, BIND_SCREENSHOT, BIND_FULLSCREEN,
+	BIND_THIRD_PERSON, BIND_HIDE_GUI, BIND_AXIS_LINES, BIND_ZOOM_SCROLL,
+	BIND_HALF_SPEED, BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK,
+	BIND_AUTOROTATE, BIND_HOTBAR_SWITCH, BIND_SMOOTH_CAMERA,
+	BIND_DROP_BLOCK, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS,
+	BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT,
+	BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3,
+	BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6,
+	BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9,
+	BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT,
+	BIND_COUNT
+};
+typedef int InputBind;
+typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
+#define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
+
+/* The keyboard/mouse buttons that are bound to each input binding */
+extern BindMapping KeyBind_Mappings[BIND_COUNT];
+/* Default keyboard/mouse button that each input binding is bound to */
+extern const BindMapping KeyBind_Defaults[BIND_COUNT];
+/* Default gamepad button that each input binding is bound to */
+extern const BindMapping PadBind_Defaults[BIND_COUNT];
+
+/* Whether the given binding should be triggered in response to given input button being pressed */
+cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device);
+
+/* Sets the button that the given input binding is bound to */
+void InputBind_Set(InputBind binding, int btn, const struct InputDevice* device);
+/* Resets the button that the given input binding is bound to */
+void InputBind_Reset(InputBind binding, const struct InputDevice* device);
+/* Loads the bindings for the given device from either options or its defaults */
+void InputBind_Load(const struct InputDevice* device);
 #endif

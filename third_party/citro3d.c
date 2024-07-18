@@ -332,7 +332,6 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
 static void C3D_FrameSplit(u8 flags);
 static void C3D_FrameEnd(u8 flags);
 
-static void C3D_RenderTargetCreate(C3D_RenderTarget* target, int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt);
 static void C3D_RenderTargetDelete(C3D_RenderTarget* target);
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
@@ -1143,30 +1142,36 @@ static void C3D_FrameEnd(u8 flags)
 	gxCmdQueueRun(&ctx->gxQueue);
 }
 
-void C3D_RenderTargetCreate(C3D_RenderTarget* target, int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt)
+static void C3D_RenderTargetInit(C3D_RenderTarget* target, int width, int height)
 {
-	size_t colorSize = C3D_CalcColorBufSize(width,height,colorFmt);
-	size_t depthSize = C3D_CalcDepthBufSize(width,height,depthFmt);
 	memset(target, 0, sizeof(C3D_RenderTarget));
-
-	void* depthBuf = NULL;
-	void* colorBuf = vramAlloc(colorSize);
-	if (!colorBuf) goto _fail;
-
-	vramAllocPos vramBank = addrGetVRAMBank(colorBuf);
-	depthBuf = vramAllocAt(depthSize, vramBank ^ VRAM_ALLOC_ANY); // Attempt opposite bank first...
-	if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
-	if (!depthBuf) goto _fail;
 
 	C3D_FrameBuf* fb = &target->frameBuf;
 	C3D_FrameBufAttrib(fb, width, height, false);
-	C3D_FrameBufColor(fb, colorBuf, colorFmt);
-	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
-	return;
+}
 
-_fail:
-	if (depthBuf) vramFree(depthBuf);
-	if (colorBuf) vramFree(colorBuf);
+static void C3D_RenderTargetColor(C3D_RenderTarget* target, GPU_COLORBUF colorFmt)
+{
+	C3D_FrameBuf* fb = &target->frameBuf;
+	size_t colorSize = C3D_CalcColorBufSize(fb->width, fb->height, colorFmt);
+	void* colorBuf   = vramAlloc(colorSize);
+
+	if (!colorBuf) return;
+	C3D_FrameBufColor(fb, colorBuf, colorFmt);
+}
+
+static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFmt)
+{
+	C3D_FrameBuf* fb = &target->frameBuf;
+	size_t depthSize = C3D_CalcDepthBufSize(fb->width, fb->height, depthFmt);
+	void* depthBuf   = NULL;
+
+	vramAllocPos vramBank = addrGetVRAMBank(fb->colorBuf);
+	depthBuf = vramAllocAt(depthSize, vramBank ^ VRAM_ALLOC_ANY); // Attempt opposite bank first...
+	if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
+	if (!depthBuf) return;
+
+	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
 }
 
 static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target)

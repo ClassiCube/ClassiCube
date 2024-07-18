@@ -914,9 +914,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return Png_Encode(&bmp, output, CB_GetRow, false, NULL);
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
-}
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) { }
 

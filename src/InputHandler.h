@@ -1,6 +1,6 @@
 #ifndef CC_INPUTHANDLER_H
 #define CC_INPUTHANDLER_H
-#include "Core.h"
+#include "Input.h"
 /* 
 Manages base game input handling
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -9,56 +9,6 @@ struct IGameComponent;
 struct StringsBuffer;
 struct InputDevice;
 extern struct IGameComponent InputHandler_Component;
-
-
-/* Enumeration of all input bindings. */
-enum InputBind_ {
-	BIND_FORWARD, BIND_BACK, BIND_LEFT, BIND_RIGHT,
-	BIND_JUMP, BIND_RESPAWN, BIND_SET_SPAWN, BIND_CHAT,
-	BIND_INVENTORY, BIND_FOG, BIND_SEND_CHAT, BIND_TABLIST,
-	BIND_SPEED, BIND_NOCLIP, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN,
-	BIND_EXT_INPUT, BIND_HIDE_FPS, BIND_SCREENSHOT, BIND_FULLSCREEN,
-	BIND_THIRD_PERSON, BIND_HIDE_GUI, BIND_AXIS_LINES, BIND_ZOOM_SCROLL,
-	BIND_HALF_SPEED, BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK,
-	BIND_AUTOROTATE, BIND_HOTBAR_SWITCH, BIND_SMOOTH_CAMERA,
-	BIND_DROP_BLOCK, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS,
-	BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT,
-	BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3,
-	BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6,
-	BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9,
-	BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT,
-	BIND_COUNT
-};
-typedef int InputBind;
-typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
-typedef cc_bool (*BindTriggered)(int key, struct InputDevice* device);
-typedef void    (*BindReleased)(int key, struct InputDevice* device);
-#define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
-
-/* The keyboard/mouse buttons that are bound to each input binding */
-extern BindMapping KeyBind_Mappings[BIND_COUNT];
-/* The gamepad buttons that are bound to each input binding */
-extern BindMapping PadBind_Mappings[BIND_COUNT];
-/* Default keyboard/mouse button that each input binding is bound to */
-extern const BindMapping KeyBind_Defaults[BIND_COUNT];
-/* Default gamepad button that each input binding is bound to */
-extern const BindMapping PadBind_Defaults[BIND_COUNT];
-/* Callback behaviour for when the given input binding is triggered */
-extern BindTriggered Bind_OnTriggered[BIND_COUNT];
-/* Callback behaviour for when the given input binding is released */
-extern BindReleased  Bind_OnReleased[BIND_COUNT];
-/* Whether the given input binding is activated by one or more devices */
-extern cc_uint8 Bind_IsTriggered[BIND_COUNT];
-
-/* Whether the given binding should be triggered in response to given input button being pressed */
-cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device);
-/* Gets whether the given input binding is currently being triggered */
-CC_API cc_bool KeyBind_IsPressed(InputBind binding);
-
-/* Sets the button that the given input binding is bound to */
-void InputBind_Set(InputBind binding, int btn, struct InputDevice* device);
-/* Resets the button that the given input binding is bound to */
-void InputBind_Reset(InputBind binding, struct InputDevice* device);
 
 
 /* whether to leave text input open for user to enter further input */
@@ -100,4 +50,17 @@ cc_bool InputHandler_SetFOV(int fov);
 cc_bool Input_HandleMouseWheel(float delta);
 void InputHandler_Tick(void);
 void InputHandler_OnScreensChanged(void);
+
+
+typedef cc_bool (*BindTriggered)(int key, struct InputDevice* device);
+typedef void    (*BindReleased)(int key, struct InputDevice* device);
+/* Gets whether the given input binding is currently being triggered */
+CC_API cc_bool KeyBind_IsPressed(InputBind binding);
+
+/* Callback behaviour for when the given input binding is triggered */
+extern BindTriggered Bind_OnTriggered[BIND_COUNT];
+/* Callback behaviour for when the given input binding is released */
+extern BindReleased  Bind_OnReleased[BIND_COUNT];
+/* Whether the given input binding is activated by one or more devices */
+extern cc_uint8 Bind_IsTriggered[BIND_COUNT];
 #endif
