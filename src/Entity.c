@@ -966,13 +966,15 @@ static void LocalPlayer_ReleaseSpeed(int key, struct InputDevice* device) {
 
 
 static cc_bool LocalPlayer_TriggerFlyUp(int key, struct InputDevice* device) {
-	LocalPlayer_Get(device->index)->Hacks.FlyingUp = true;
-	return true;
+	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
+	hacks->FlyingUp = true;
+	return hacks->CanFly && hacks->Enabled;
 }
 
 static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
-	LocalPlayer_Get(device->index)->Hacks.FlyingDown = true;
-	return true;
+	struct HacksComp* hacks = &LocalPlayer_Get(device->index)->Hacks;
+	hacks->FlyingDown = true;
+	return hacks->CanFly && hacks->Enabled;
 }
 
 static void LocalPlayer_ReleaseFlyUp(int key, struct InputDevice* device) {
