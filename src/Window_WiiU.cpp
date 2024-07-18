@@ -562,6 +562,9 @@ static void ProcessKeyboardInput(void) {
 }
 
 static void OnscreenKeyboard_Update(void) {
+	VPADStatus vpadStatus;
+	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, nullptr); // Assuming VPAD_CHAN_0 is correct for your use case
+
 	nn::swkbd::ControllerInfo controllerInfo;
 	controllerInfo.vpad = &vpadStatus;
 	controllerInfo.kpad[0] = kpad_valid[0] ? &kpads[0] : nullptr;
