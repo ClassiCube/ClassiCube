@@ -1,6 +1,5 @@
 #include "Core.h"
 #if defined CC_BUILD_WIIU
-extern "C" {
 #include "Window.h"
 #include "Platform.h"
 #include "Input.h"
@@ -13,7 +12,7 @@ extern "C" {
 #include "Graphics.h"
 #include "Launcher.h"
 #include "LBackend.h"
-}
+#include "VirtualKeyboard.h"
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -29,20 +28,12 @@ extern "C" {
 #include <gx2/mem.h>
 #include <coreinit/filesystem.h>
 #include <coreinit/memdefaultheap.h>
-#include <nn/swkbd.h>
 
 static cc_bool launcherMode;
-static cc_bool keyboardOpen;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 struct cc_window Window_Alt;
 cc_bool launcherTop;
-
-
-
-static void OnscreenKeyboard_Update(void);
-static void OnscreenKeyboard_DrawTV(void);
-static void OnscreenKeyboard_DrawDRC(void);
 
 static void LoadTVDimensions(void) {
 	switch(GX2GetSystemTVScanMode())
@@ -98,7 +89,7 @@ void Window_Init(void) {
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 
-	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 	Input_SetTouchMode(true);
 	
 	Window_Alt.Width  = 854;
@@ -163,7 +154,6 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 static VPADStatus vpadStatus;
-static bool kpad_valid[4];
 static KPADStatus kpads[4];
 
 void Gamepads_Init(void) {
@@ -240,26 +230,28 @@ static void ProcessProButtons(int port, int mods) {
 }
 
 static void ProcessKPAD(float delta, int i) {
-	kpad_valid[i] = false;
-	int res = KPADRead((WPADChan)(WPAD_CHAN_0 + i), &kpads[i], 1);
-
+	int res = KPADRead(WPAD_CHAN_0 + i, &kpads[i], 1);
+	int port;
 	if (res != KPAD_ERROR_OK) return;
-	kpad_valid[i] = true;
 	
 	switch (kpads[i].extensionType)
 	{
 	case WPAD_EXT_CLASSIC:
-		ProcessClassicButtons(i,  kpads[i].classic.hold | kpads[i].classic.trigger);
+		port = Gamepad_Connect(0xC1 + i, PadBind_Defaults);
+		ProcessClassicButtons(port,  kpads[i].classic.hold | kpads[i].classic.trigger);
 		break;
 	case WPAD_EXT_PRO_CONTROLLER:
-		ProcessProButtons( i,     kpads[i].pro.hold     | kpads[i].pro.trigger);
+		port = Gamepad_Connect(0xC110 + i, PadBind_Defaults);
+		ProcessProButtons(port,      kpads[i].pro.hold     | kpads[i].pro.trigger);
 		break;
 	case WPAD_EXT_NUNCHUK:
-		ProcessKPadButtons(i,     kpads[i].hold         | kpads[i].trigger);
-		ProcessNunchuckButtons(i, kpads[i].nunchuk.hold | kpads[i].nunchuk.trigger);
+		port = Gamepad_Connect(0xCC + i, PadBind_Defaults);
+		ProcessKPadButtons(port,     kpads[i].hold         | kpads[i].trigger);
+		ProcessNunchuckButtons(port, kpads[i].nunchuk.hold | kpads[i].nunchuk.trigger);
 		break;
 	default:
-		ProcessKPadButtons(i,     kpads[i].hold         | kpads[i].trigger);
+		port = Gamepad_Connect(0x11 + i, PadBind_Defaults);
+		ProcessKPadButtons(port,     kpads[i].hold         | kpads[i].trigger);
 		break;
 	}
 }
@@ -318,13 +310,14 @@ static void ProcessVPAD(float delta) {
 	VPADReadError error = VPAD_READ_SUCCESS;
 	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
 	if (error != VPAD_READ_SUCCESS) return;
+	int port = Gamepad_Connect(0xDC, PadBind_Defaults);
 	
 	VPADGetTPCalibratedPoint(VPAD_CHAN_0, &vpadStatus.tpNormal, &vpadStatus.tpNormal);
-	ProcessVpadButtons(0, vpadStatus.hold);
+	ProcessVpadButtons(port, vpadStatus.hold);
 	ProcessVpadTouch(&vpadStatus.tpNormal);
 	
-	ProcessVpadStick(0, PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
-	ProcessVpadStick(0, PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
+	ProcessVpadStick(port, PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
+	ProcessVpadStick(port, PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
 }
 
 
@@ -332,8 +325,6 @@ void Gamepads_Process(float delta) {
 	ProcessVPAD(delta);
 	for (int i = 0; i < 4; i++)
 		ProcessKPAD(delta, i);
-
-	if (keyboardOpen) OnscreenKeyboard_Update();
 }
 
 
@@ -395,7 +386,6 @@ static void DrawTV(void) {
 	WHBGfxBeginRenderTV();
 	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 	DrawLauncher();
-	if (keyboardOpen) OnscreenKeyboard_DrawTV();
 	WHBGfxFinishRenderTV();
 }
 
@@ -403,7 +393,6 @@ static void DrawDRC(void) {
 	WHBGfxBeginRenderDRC();
 	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 	DrawLauncher();
-	if (keyboardOpen) OnscreenKeyboard_DrawDRC();
 	WHBGfxFinishRenderDRC();
 }
 
@@ -461,159 +450,16 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 /*########################################################################################################################*
 *----------------------------------------------------Onscreen keyboard----------------------------------------------------*
 *#########################################################################################################################*/
-static FSClient* fs_client;
-static nn::swkbd::CreateArg create_arg;
-static nn::swkbd::AppearArg appear_arg;
-
-static char kb_buffer[512];
-static cc_string kb_str = String_FromArray(kb_buffer);
-#define UNI_STR_LENGTH 64
-
-static int UniString_Length(const char16_t* raw) {
-	int length = 0;
-	while (length < UInt16_MaxValue && *raw) { raw++; length++; }
-	return length;
-}
-
-static void UniString_WriteConst(const char* src, char16_t* dst) {
-	while (*src) { *dst++ = *src++; }
-	*dst = '\0';
-}
-
-static void UniString_WriteString(const cc_string* src, char16_t* dst) {
-	for (int i = 0; i < src->length && i < UNI_STR_LENGTH; i++) 
-	{
-		*dst++ = Convert_CP437ToUnicode(src->buffer[i]);
-	}
-	*dst = '\0';
-}
-
-static void OnscreenKeyboard_ProcessDown(int key, struct InputDevice* device) { }
-
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-	if (keyboardOpen) OnscreenKeyboard_Close();
-	char16_t hint[UNI_STR_LENGTH + 1]   = { 0 };
-	char16_t initial[UNI_STR_LENGTH + 1] = { 0 };
-	int mode = args->type & 0xFF;
-
-	kb_str.length = 0;
-	keyboardOpen  = true;
-	Window_Main.SoftKeyboardFocus = true;
-	Input.DownHook = OnscreenKeyboard_ProcessDown;
-
-	fs_client = (FSClient *)MEMAllocFromDefaultHeap(sizeof(FSClient));
-	FSAddClient(fs_client, FS_ERROR_FLAG_NONE);
-
-	create_arg.regionType = nn::swkbd::RegionType::Europe;
-	create_arg.workMemory = MEMAllocFromDefaultHeap(nn::swkbd::GetWorkMemorySize(0));
-	create_arg.fsClient   = fs_client;
-
-	if (!nn::swkbd::Create(create_arg)) {
-		Platform_LogConst("nn::swkbd::Create failed");
-		return;
-	}
-	nn::swkbd::MuteAllSound(false);
-
-	nn::swkbd::ConfigArg* cfg = &appear_arg.keyboardArg.configArg;
-	cfg->languageType = nn::swkbd::LanguageType::English;
-	cfg->okString = args->type & KEYBOARD_FLAG_SEND ? u"Send" : u"OK";
-
-	if (mode == KEYBOARD_TYPE_INTEGER) {
-		cfg->keyboardMode = nn::swkbd::KeyboardMode::Numpad;
-		cfg->numpadCharLeft  = '-';
-		cfg->numpadCharRight = 0;
-	} else if (mode == KEYBOARD_TYPE_NUMBER) {
-		cfg->keyboardMode = nn::swkbd::KeyboardMode::Numpad;
-		cfg->numpadCharLeft  = '-';
-		cfg->numpadCharRight = '.';
-	} else {
-		cfg->keyboardMode = nn::swkbd::KeyboardMode::Full;
-	}
-
-	nn::swkbd::InputFormArg* ipt = &appear_arg.inputFormArg;
-	UniString_WriteConst(args->placeholder, hint);
-	UniString_WriteString(args->text, initial);
-	ipt->hintText      = hint;
-	ipt->initialText   = initial;
-	ipt->maxTextLength = UNI_STR_LENGTH;
-	
-	if (mode == KEYBOARD_TYPE_PASSWORD)
-		ipt->passwordMode = nn::swkbd::PasswordMode::Hide;
-	else
-		ipt->passwordMode = nn::swkbd::PasswordMode::Clear;
-
-	if (!nn::swkbd::AppearInputForm(appear_arg)) {
-		Platform_LogConst("nn::swkbd::AppearInputForm failed");
-		return;
-   }
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
 }
 
-static void ProcessKeyboardInput(void) {
-	char tmpBuffer[NATIVE_STR_LEN];
-	cc_string tmp = String_FromArray(tmpBuffer);
-
-	const char16_t* str = nn::swkbd::GetInputFormString();
-	if (!str) return;
-	String_AppendUtf16(&tmp, str, UniString_Length(str));
-    
-	if (String_Equals(&tmp, &kb_str)) return;
-	String_Copy(&kb_str, &tmp);
-	Event_RaiseString(&InputEvents.TextChanged, &tmp);
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
 }
 
-static void OnscreenKeyboard_Update(void) {
-	nn::swkbd::ControllerInfo controllerInfo;
-	controllerInfo.vpad = &vpadStatus;
-	controllerInfo.kpad[0] = kpad_valid[0] ? &kpads[0] : nullptr;
-	controllerInfo.kpad[1] = kpad_valid[1] ? &kpads[1] : nullptr;
-	controllerInfo.kpad[2] = kpad_valid[2] ? &kpads[2] : nullptr;
-	controllerInfo.kpad[3] = kpad_valid[3] ? &kpads[3] : nullptr;
-	nn::swkbd::Calc(controllerInfo);
-
-	if (nn::swkbd::IsNeedCalcSubThreadFont()) {
-		nn::swkbd::CalcSubThreadFont();
-	}
-
-	if (nn::swkbd::IsNeedCalcSubThreadPredict()) {
-		nn::swkbd::CalcSubThreadPredict();
-	}
-	ProcessKeyboardInput();
-
-	if (nn::swkbd::IsDecideOkButton(nullptr)) {
-		Input_SetPressed(CCKEY_ENTER);
-		Input_SetReleased(CCKEY_ENTER);
-		OnscreenKeyboard_Close();
-		return;
-	}
-
-	if (nn::swkbd::IsDecideCancelButton(nullptr)) {
-		OnscreenKeyboard_Close();
-		return;
-	}
-}
-
-static void OnscreenKeyboard_DrawTV(void) {
-	nn::swkbd::DrawTV();
-}
-
-static void OnscreenKeyboard_DrawDRC(void) {
-	nn::swkbd::DrawDRC();
-}
-
-
-void OnscreenKeyboard_SetText(const cc_string* text) { }
-
-void OnscreenKeyboard_Close(void) { 
-	if (!keyboardOpen) return;
-	keyboardOpen = false;
-	Window_Main.SoftKeyboardFocus = false;
-	Input.DownHook = NULL;
-
-	nn::swkbd::DisappearInputForm();
-	nn::swkbd::Destroy();
-	MEMFreeToDefaultHeap(create_arg.workMemory);
-
-	FSDelClient(fs_client, FS_ERROR_FLAG_NONE);
-	MEMFreeToDefaultHeap(fs_client);
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
 }
 #endif

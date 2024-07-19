@@ -246,7 +246,7 @@ static void ProcessPadInput(int port, float delta, struct padButtonStatus* pad) 
 	HandleJoystick(port, PAD_AXIS_RIGHT, pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
 }
 
-static cc_bool setMode[INPUT_MAX_GAMEPADS];
+static cc_bool setMode[2];
 static void ProcessPad(int i, float delta) {
 	struct padButtonStatus pad;
 	int state = padGetState(i, 0);

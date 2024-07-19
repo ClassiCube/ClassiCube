@@ -893,47 +893,40 @@ static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* devic
 	}
 }
 
-static int moveFlags[INPUT_MAX_GAMEPADS];
+static int moveFlags[MAX_LOCAL_PLAYERS];
 
 static cc_bool Player_TriggerLeft(int key,  struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_XMIN;
+	moveFlags[device->mappedIndex] |= FACE_BIT_XMIN;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerRight(int key, struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_XMAX;
+	moveFlags[device->mappedIndex] |= FACE_BIT_XMAX;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerUp(int key,    struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_YMIN;
+	moveFlags[device->mappedIndex] |= FACE_BIT_YMIN;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerDown(int key,  struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_YMAX;
+	moveFlags[device->mappedIndex] |= FACE_BIT_YMAX;
 	return Gui.InputGrab == NULL;
 }
 
 static void Player_ReleaseLeft(int key,  struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_XMIN;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_XMIN;
 }
 static void Player_ReleaseRight(int key, struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_XMAX;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_XMAX;
 }
 static void Player_ReleaseUp(int key,    struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_YMIN;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_YMIN;
 }
 static void Player_ReleaseDown(int key,  struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_YMAX;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_YMAX;
 }
 
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	int flags = 0, port;
-
-	if (Game_NumStates == 1) {
-		for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
-			flags |= moveFlags[port];
-	} else {
-		flags = moveFlags[p->index];
-	}
+	int flags = moveFlags[p->index];
 
 	if (flags & FACE_BIT_YMIN) *zMoving -= 1;
 	if (flags & FACE_BIT_YMAX) *zMoving += 1;

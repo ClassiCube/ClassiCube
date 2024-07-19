@@ -96,7 +96,9 @@ struct BindMapping_;
 typedef cc_bool (*InputDevice_IsPressed)(struct InputDevice* device, int key);
 
 struct InputDevice {
-	int type, index; /* Device type and index (e.g. controller port) */
+	int type;
+	int rawIndex; /* Device index (i.e virtual controller port number) */
+	int mappedIndex; /* Device index after calling Game_MapState */
 	InputDevice_IsPressed IsPressed;
 	int upButton, downButton, leftButton, rightButton;
 	int enterButton1, enterButton2;
@@ -202,7 +204,7 @@ void Gamepad_SetButton(int port, int btn, int pressed);
 void Gamepad_SetAxis(int port, int axis, float x, float y, float delta);
 void Gamepad_Tick(float delta);
 
-#define INPUT_MAX_GAMEPADS 4
+#define INPUT_MAX_GAMEPADS 5
 #define GAMEPAD_BEG_BTN CCPAD_1
 #define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
 
