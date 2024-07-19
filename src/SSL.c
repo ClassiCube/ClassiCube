@@ -460,6 +460,10 @@ static void InjectEntropy(SSLContext* ctx) {
 
 static void SetCurrentTime(SSLContext* ctx) {
 	cc_uint64 cur = DateTime_CurrentUTC();
+	/* clamp min system time from RTC to start of 2024 */
+	/* Times earlier than that usually mean an improperly calibrated RTC */
+	if (cur < 63839664000ull) cur = 63839664000ull;
+
 	uint32_t days = (uint32_t)(cur / 86400) + 366;
 	uint32_t secs = (uint32_t)(cur % 86400);
 		

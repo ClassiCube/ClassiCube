@@ -81,6 +81,7 @@ static cc_bool IsOpenableFile(const cc_string* path) {
 static int RunProgram(int argc, char** argv) {
 	cc_string args[GAME_MAX_CMDARGS];
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+
 #ifdef _MSC_VER
 	/* NOTE: Make sure to comment this out before pushing a commit */
 	//cc_string rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");

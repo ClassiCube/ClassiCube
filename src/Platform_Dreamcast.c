@@ -36,6 +36,7 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
 const char* Platform_AppNameSuffix = " Dreamcast";
 cc_bool Platform_ReadonlyFilesystem;
+static cc_bool usingSD;
 
 
 /*########################################################################################################################*
@@ -92,12 +93,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
-	time_t boot_time = rtc_boot_time();
-	// workaround when RTC clock hasn't been setup
-	int boot_time_2000 =  946684800;
-	int boot_time_2024 = 1704067200;
-	if (boot_time < boot_time_2000) boot_time = boot_time_2024;
-	
+	time_t boot_time  = rtc_boot_time();
 	cc_uint64 curSecs = boot_time + secs;
 	return curSecs + UNIX_EPOCH_SECONDS;
 }
@@ -354,7 +350,7 @@ cc_result File_Close(cc_file file) {
 	
 	// Changes are cached in memory, sync to SD card
 	// TODO maybe use fs_shutdown/fs_unmount and only sync once??
-	if (!Platform_ReadonlyFilesystem) fs_fat_sync("/sd");
+	if (usingSD) fs_fat_sync("/sd");
 
 	int res = fs_close(file);
 	return res == -1 ? errno : 0;
@@ -584,7 +580,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 static kos_blockdev_t sd_dev;
 static uint8 partition_type;
 
-static void InitSDCard(void) {
+static void TryInitSDCard(void) {
 	if (sd_init()) {
 		// Both SD card and debug interface use the serial port
 		// So if initing SD card fails, need to restore serial port state for debug logging
@@ -607,6 +603,7 @@ static void InitSDCard(void) {
 
 	root_path = String_FromReadonly("/sd/ClassiCube/");
 	Platform_ReadonlyFilesystem = false;
+	usingSD   = true;
 
 	cc_filepath* root = FILEPATH_RAW("/sd/ClassiCube");
 	int res = Directory_Create(root);
@@ -639,7 +636,7 @@ static void InitModem(void) {
 
 void Platform_Init(void) {
 	Platform_ReadonlyFilesystem = true;
-	InitSDCard();
+	TryInitSDCard();
 	
 	if (net_default_dev) return;
 	// in case Broadband Adapter isn't active
