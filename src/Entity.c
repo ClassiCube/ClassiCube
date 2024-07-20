@@ -848,6 +848,8 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 
 static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+	if (Gui.InputGrab) return false;
+	
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn(p);
 		return true;
@@ -860,6 +862,8 @@ static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
 
 static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+	if (Gui.InputGrab) return false;
+	
 	if (p->Hacks.CanRespawn) {
 
 		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
@@ -886,6 +890,7 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 
 static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+	if (Gui.InputGrab) return false;
 
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
@@ -900,6 +905,7 @@ static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
 static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	p->Hacks._noclipping = true;
+	if (Gui.InputGrab) return false;
 
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
@@ -919,6 +925,7 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
+	if (Gui.InputGrab) return false;
 	physics->Jumping = true;
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
@@ -938,6 +945,7 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
 	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+	if (Gui.InputGrab) return false;
 
 	hacks->HalfSpeeding = (!touch || !hacks->HalfSpeeding) && hacks->Enabled;
 	return true;
@@ -946,6 +954,7 @@ static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device)
 static cc_bool LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
 	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+	if (Gui.InputGrab) return false;
 
 	hacks->Speeding = (!touch || !hacks->Speeding) && hacks->Enabled;
 	return true;
@@ -964,12 +973,16 @@ static void LocalPlayer_ReleaseSpeed(int key, struct InputDevice* device) {
 
 static cc_bool LocalPlayer_TriggerFlyUp(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	if (Gui.InputGrab) return false;
+	
 	hacks->FlyingUp = true;
 	return hacks->CanFly && hacks->Enabled;
 }
 
 static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	if (Gui.InputGrab) return false;
+	
 	hacks->FlyingDown = true;
 	return hacks->CanFly && hacks->Enabled;
 }
