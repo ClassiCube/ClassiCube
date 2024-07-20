@@ -919,6 +919,7 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
+	physics->Jumping = true;
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
@@ -981,11 +982,6 @@ static void LocalPlayer_ReleaseFlyDown(int key, struct InputDevice* device) {
 	LocalPlayer_Instances[device->mappedIndex].Hacks.FlyingDown = false;
 }
 
-
-static cc_bool LocalPlayer_TriggerJump(int key, struct InputDevice* device) {
-	LocalPlayer_Instances[device->mappedIndex].Physics.Jumping = true;
-	return true;
-}
 static void LocalPlayer_ReleaseJump(int key, struct InputDevice* device) {
 	LocalPlayer_Instances[device->mappedIndex].Physics.Jumping = false;
 }
@@ -1011,7 +1007,6 @@ static void LocalPlayer_HookBinds(void) {
 	Bind_OnReleased[BIND_FLY_UP]    = LocalPlayer_ReleaseFlyUp;
 	Bind_OnReleased[BIND_FLY_DOWN]  = LocalPlayer_ReleaseFlyDown;
 
-	Bind_OnTriggered[BIND_JUMP]   = LocalPlayer_TriggerJump;
 	Bind_OnReleased[BIND_JUMP]    = LocalPlayer_ReleaseJump;
 	Bind_OnReleased[BIND_NOCLIP]  = LocalPlayer_ReleaseNoclip;
 }
