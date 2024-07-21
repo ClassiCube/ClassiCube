@@ -12,7 +12,7 @@
 #include "Options.h"
 #include "Logger.h"
 
-#ifndef CC_BUILD_NOFPUHARDWARE
+#ifdef CC_BUILD_ANIMATIONS
 static void Animations_Update(int loc, struct Bitmap* bmp, int stride);
 
 #ifdef CC_BUILD_LOWMEM

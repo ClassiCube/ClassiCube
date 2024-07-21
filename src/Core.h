@@ -143,6 +143,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_RESOURCES
 #define CC_BUILD_PLUGINS
 #define CC_BUILD_ANIMATIONS
+#define CC_BUILD_HELDBLOCK
 #define CC_BUILD_FILESYSTEM
 #define CC_BUILD_ADVLIGHTING
 /*#define CC_BUILD_GL11*/
@@ -382,7 +383,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_SMALLSTACK
-	#define CC_BUILD_NOFPUHARDWARE
+	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
@@ -410,9 +411,10 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPUHARDWARE
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #elif defined OS2
@@ -432,9 +434,10 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_SMALLSTACK
 	#define CC_BUILD_TINYSTACK
-	#define CC_BUILD_NOFPUHARDWARE
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #endif
@@ -501,3 +504,4 @@ struct Texture {
 	TextureRec uv;
 };
 #endif
+
