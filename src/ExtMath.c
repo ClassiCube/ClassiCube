@@ -30,6 +30,16 @@ float sqrtf(float x) {
 		fp_x = SquareRoot12(fp_x);
 		return (float)fp_x / (1 << 12);
 	}
+
+float Math_SinF(float angle) {
+	int raw = (int)(angle * MATH_RAD2DEG * 4096 / 360);
+	return isin(raw) / 4096.0f;
+}
+
+float Math_CosF(float angle) {
+	int raw = (int)(angle * MATH_RAD2DEG * 4096 / 360);
+	return icos(raw) / 4096.0f;
+}
 #elif defined __GNUC__
 	/* Defined in .h using builtins */
 #else
@@ -146,7 +156,7 @@ float Random_Float(RNGState* seed) {
 /*########################################################################################################################*
 *--------------------------------------------------Transcendental functions-----------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_DREAMCAST
+#if defined CC_BUILD_DREAMCAST
 #include <math.h>
 
 /* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
@@ -200,6 +210,7 @@ static double Floord(double x) {
 	return (double) (((int) x) - 1);
 }
 
+#ifndef CC_BUILD_PS1
 /************
  * Math_Sin *
  ************/
@@ -290,6 +301,7 @@ float Math_CosF(float x) {
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;
 	return (float)SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
 }
+#endif
 
 /************
  * Math_Exp *
