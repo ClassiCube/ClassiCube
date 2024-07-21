@@ -148,6 +148,10 @@ static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* 
 	TextAtlas_AddInt(atlas, pos.z, &cur);
 	TextAtlas_Add(atlas,       14, &cur);
 
+	s->lastX = pos.x;
+	s->lastY = pos.y;
+	s->lastZ = pos.z;
+
 	s->posCount = (int)(cur - data);
 }
 
@@ -342,8 +346,9 @@ static void HUDScreen_Update(void* screen, float delta) {
 	}
 
 	IVec3_Floor(&pos, &Entities.CurPlayer->Base.Position);
-	if (pos.x != s->lastX || pos.y != s->lastY || pos.z != s->lastZ)
+	if (pos.x != s->lastX || pos.y != s->lastY || pos.z != s->lastZ) {
 		s->dirty = true;
+	}
 }
 
 #define CH_EXTENT 16

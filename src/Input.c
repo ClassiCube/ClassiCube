@@ -550,13 +550,15 @@ static void Gamepad_Update(int port, float delta) {
 
 void Gamepad_SetButton(int port, int btn, int pressed) {
 	struct GamepadDevice* pad = &Gamepad_Devices[port];
+	pressed = pressed != 0;
+
 	btn -= GAMEPAD_BEG_BTN;
 	/* Repeat down is handled in Gamepad_Update instead */
-	if (pressed && pad->pressed[btn]) return;
+	if (pressed == pad->pressed[btn]) return;
 
 	/* Reset hold tracking time */
 	if (pressed && !pad->pressed[btn]) pad->holdtime[btn] = 0;
-	pad->pressed[btn] = pressed != 0;
+	pad->pressed[btn] = pressed;
 
 	Gamepad_Apply(port, btn, false, pressed);
 }
