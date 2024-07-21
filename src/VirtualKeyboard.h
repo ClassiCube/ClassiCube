@@ -181,18 +181,22 @@ static void VirtualKeyboard_CalcPosition(int* x, int* y, int width, int height) 
 /*########################################################################################################################*
 *-----------------------------------------------------Input handling------------------------------------------------------*
 *#########################################################################################################################*/
-static void VirtualKeyboard_Scroll(int xDelta, int yDelta) {
+static void VirtualKeyboard_Clamp(void) {
 	int perRow = kb->cellsPerRow, numRows = kb->numRows;
-	if (kb_curX < 0) kb_curX = 0;
-
-	kb_curX += xDelta;
 	if (kb_curX < 0)       kb_curX += perRow;
 	if (kb_curX >= perRow) kb_curX -= perRow;
 
-	kb_curY += yDelta;
 	if (kb_curY < 0)        kb_curY += numRows;
 	if (kb_curY >= numRows) kb_curY -= numRows;
+}
+
+static void VirtualKeyboard_Scroll(int xDelta, int yDelta) {
+	if (kb_curX < 0) kb_curX = 0;
+
+	kb_curX += xDelta;
+	kb_curY += yDelta;
 	
+	VirtualKeyboard_Clamp();
 	KB_MarkDirty();
 }
 
@@ -279,6 +283,23 @@ static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, floa
 	if (ySteps) VirtualKeyboard_Scroll(0, ySteps > 0 ? 1 : -1);
 }
 
+static void VirtualKeyboard_PointerDown(void* obj, int idx) {
+	int width  = VirtualKeyboard_Width();
+	int height = VirtualKeyboard_Height();
+	int kbX, kbY;
+	VirtualKeyboard_CalcPosition(&kbX, &kbY, Window_Main.Width, Window_Main.Height);
+
+	int x = Pointers[idx].x, y = Pointers[idx].y;
+	if (x < kbX || y < kbY || x >= kbX + width || y >= kbY + height) return;
+
+	kb_curX = (x - kbX) / KB_TILE_SIZE;
+	kb_curY = (y - kbY) / KB_TILE_SIZE;
+	if (kb_curX >= kb->cellsPerRow) kb_curX = kb->cellsPerRow - 1;
+
+	VirtualKeyboard_Clamp();
+	VirtualKeyboard_ClickSelected();
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------2D mode----------------------------------------------------------*
@@ -358,7 +379,7 @@ static void VirtualKeyboard_Display3D(void) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindTexture(kb_texture.ID);
 	
-	struct VertexTextured* data = Gfx_LockDynamicVb(kb_vb, VERTEX_FORMAT_TEXTURED, 4);
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockDynamicVb(kb_vb, VERTEX_FORMAT_TEXTURED, 4);
 	struct VertexTextured** ptr = &data;
 	Gfx_Make2DQuad(&kb_texture, PACKEDCOL_WHITE, ptr);
 	Gfx_UnlockDynamicVb(kb_vb);
@@ -373,6 +394,7 @@ static void VirtualKeyboard_Hook(void) {
 	/*  the virtual keyboard in the first place gets mistakenly processed */
 	kb_needsHook = false;
 	Event_Register_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
+	Event_Register_(&PointerEvents.Down,          NULL, VirtualKeyboard_PointerDown);
 }
 
 static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher) {
@@ -419,6 +441,7 @@ static void VirtualKeyboard_Close(void) {
 		VirtualKeyboard_Close3D();
 		
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
+	Event_Unregister_(&PointerEvents.Down,          NULL, VirtualKeyboard_PointerDown);
 	Window_Main.SoftKeyboardFocus = false;
 
 	KB_MarkDirty   = NULL;

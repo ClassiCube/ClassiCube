@@ -28,7 +28,8 @@ static void InitPowerVR(void) {
 		{ PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
 		VERTEX_BUFFER_SIZE,
 		0, fsaa,
-		(autosort) ? 0 : 1
+		(autosort) ? 0 : 1,
+		3 // extra OPBs
 	};
     pvr_init(&params);
 }

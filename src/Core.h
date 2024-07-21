@@ -143,6 +143,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_RESOURCES
 #define CC_BUILD_PLUGINS
 #define CC_BUILD_ANIMATIONS
+#define CC_BUILD_HELDBLOCK
 #define CC_BUILD_FILESYSTEM
 #define CC_BUILD_ADVLIGHTING
 /*#define CC_BUILD_GL11*/
@@ -413,6 +414,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #elif defined OS2
@@ -435,6 +437,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #endif
@@ -501,3 +504,4 @@ struct Texture {
 	TextureRec uv;
 };
 #endif
+

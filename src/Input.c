@@ -284,7 +284,7 @@ static cc_bool TouchDevice_IsPressed(struct InputDevice* device, int key) {
 }
 
 struct InputDevice NormDevice = {
-	INPUT_DEVICE_NORMAL, 0,
+	INPUT_DEVICE_NORMAL, 0, 0,
 	NormDevice_IsPressed,
 	/* General buttons */
 	CCKEY_UP, CCKEY_DOWN, CCKEY_LEFT, CCKEY_RIGHT,
@@ -298,7 +298,7 @@ struct InputDevice NormDevice = {
 	"key-%c", KeyBind_Defaults, KeyBind_Mappings
 };
 static const struct InputDevice padDevice = {
-	INPUT_DEVICE_GAMEPAD, 0,
+	INPUT_DEVICE_GAMEPAD, 0, 0,
 	PadDevice_IsPressed,
 	/* General buttons */
 	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT,
@@ -312,7 +312,7 @@ static const struct InputDevice padDevice = {
 	"pad-%c", NULL, NULL
 };
 struct InputDevice TouchDevice = {
-	INPUT_DEVICE_TOUCH, 0,
+	INPUT_DEVICE_TOUCH, 0, 0,
 	TouchDevice_IsPressed
 };
 
@@ -523,6 +523,7 @@ struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
 
 static void Gamepad_Apply(int port, int btn, cc_bool was, int pressed) {
 	struct InputDevice* device = &Gamepad_Devices[port].base;
+	device->mappedIndex = Game_MapState(device->rawIndex);
 	
 	if (pressed) {
 		Event_RaiseInput(&InputEvents.Down, btn + GAMEPAD_BEG_BTN, was, device);
@@ -549,13 +550,15 @@ static void Gamepad_Update(int port, float delta) {
 
 void Gamepad_SetButton(int port, int btn, int pressed) {
 	struct GamepadDevice* pad = &Gamepad_Devices[port];
+	pressed = pressed != 0;
+
 	btn -= GAMEPAD_BEG_BTN;
 	/* Repeat down is handled in Gamepad_Update instead */
-	if (pressed && pad->pressed[btn]) return;
+	if (pressed == pad->pressed[btn]) return;
 
 	/* Reset hold tracking time */
 	if (pressed && !pad->pressed[btn]) pad->holdtime[btn] = 0;
-	pad->pressed[btn] = pressed != 0;
+	pad->pressed[btn] = pressed;
 
 	Gamepad_Apply(port, btn, false, pressed);
 }
@@ -588,7 +591,7 @@ int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults) {
 		if (Gamepad_Devices[i].deviceID != 0) continue;
 		
 		Mem_Copy(&Gamepad_Devices[i].base, &padDevice, sizeof(struct InputDevice));
-		Gamepad_Devices[i].base.index        = i;
+		Gamepad_Devices[i].base.rawIndex     = i;
 		Gamepad_Devices[i].base.currentBinds = padBind_Mappings[i];
 		Gamepad_Devices[i].base.defaultBinds = defaults;
 		Gamepad_Devices[i].deviceID          = deviceID;

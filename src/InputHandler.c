@@ -597,18 +597,24 @@ static void InputHandler_CheckZoomFov(void* obj) {
 
 
 static cc_bool BindTriggered_DeleteBlock(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	MouseStatePress(MOUSE_LEFT);
 	InputHandler_DeleteBlock();
 	return true;
 }
 
 static cc_bool BindTriggered_PlaceBlock(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	MouseStatePress(MOUSE_RIGHT);
 	InputHandler_PlaceBlock();
 	return true;
 }
 
 static cc_bool BindTriggered_PickBlock(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	MouseStatePress(MOUSE_MIDDLE);
 	InputHandler_PickBlock();
 	return true;
@@ -628,27 +634,37 @@ static void BindReleased_PickBlock(int key, struct InputDevice* device) {
 
 
 static cc_bool BindTriggered_HideFPS(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	Gui.ShowFPS = !Gui.ShowFPS;
 	return true;
 }
 
 static cc_bool BindTriggered_Fullscreen(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	Game_ToggleFullscreen();
 	return true;
 }
 
 static cc_bool BindTriggered_Fog(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	Game_CycleViewDistance();
 	return true;
 }
 
 
 static cc_bool BindTriggered_HideGUI(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	Game_HideGui = !Game_HideGui;
 	return true;
 }
 
 static cc_bool BindTriggered_SmoothCamera(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	InputHandler_Toggle(key, &Camera.Smooth,
 		"  &eSmooth camera is &aenabled",
 		"  &eSmooth camera is &cdisabled");
@@ -656,6 +672,8 @@ static cc_bool BindTriggered_SmoothCamera(int key, struct InputDevice* device) {
 }
 
 static cc_bool BindTriggered_AxisLines(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
 		"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 		"  &eAxis lines no longer show");
@@ -663,6 +681,8 @@ static cc_bool BindTriggered_AxisLines(int key, struct InputDevice* device) {
 } 
 
 static cc_bool BindTriggered_AutoRotate(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	InputHandler_Toggle(key, &AutoRotate_Enabled,
 		"  &eAuto rotate is &aenabled",
 		"  &eAuto rotate is &cdisabled");
@@ -670,11 +690,15 @@ static cc_bool BindTriggered_AutoRotate(int key, struct InputDevice* device) {
 }
 
 static cc_bool BindTriggered_ThirdPerson(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	Camera_CycleActive();
 	return true;
 }
 
 static cc_bool BindTriggered_DropBlock(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 		/* Don't assign SelectedIndex directly, because we don't want held block
 		switching positions if they already have air in their inventory hotbar. */
@@ -685,11 +709,18 @@ static cc_bool BindTriggered_DropBlock(int key, struct InputDevice* device) {
 }
 
 static cc_bool BindTriggered_IDOverlay(int key, struct InputDevice* device) {
-	TexIdsOverlay_Show();
+	struct Screen* s = Gui_GetScreen(GUI_PRIORITY_TEXIDS);
+	if (s) {
+		Gui_Remove(s);
+	} else {
+		TexIdsOverlay_Show();
+	}
 	return true;
 }
 
 static cc_bool BindTriggered_BreakLiquids(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return false;
+	
 	InputHandler_Toggle(key, &Game_BreakableLiquids,
 		"  &eBreakable liquids is &aenabled",
 		"  &eBreakable liquids is &cdisabled");
@@ -822,6 +853,16 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 		Game_ScreenshotRequested = true; return;
 	}
 	
+	triggered = false;
+	for (i = 0; !was && i < BIND_COUNT; i++)
+	{
+		if (!InputBind_Claims(i, key, device)) continue;
+		Bind_IsTriggered[i] |= device->type;
+
+		if (!Bind_OnTriggered[i])              continue;
+		triggered |= Bind_OnTriggered[i](key, device);
+	}
+	
 	for (i = 0; i < Gui.ScreensCount; i++) 
 	{
 		s = Gui_Screens[i];
@@ -842,18 +883,8 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 		Gui_ShowPauseMenu(); return;
 	}
 
-	/* These should not be triggered multiple times when holding down */
+	/* Hotkeys should not be triggered multiple times when holding down */
 	if (was) return;
-	triggered = false;
-
-	for (i = 0; i < BIND_COUNT; i++)
-	{
-		if (!InputBind_Claims(i, key, device)) continue;
-		Bind_IsTriggered[i] |= device->type;
-
-		if (!Bind_OnTriggered[i])              continue;
-		triggered |= Bind_OnTriggered[i](key, device);
-	}
 
 	if (triggered) {
 	} else if (key == CCKEY_F5 && Game_ClassicMode) {
@@ -893,47 +924,40 @@ static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* devic
 	}
 }
 
-static int moveFlags[INPUT_MAX_GAMEPADS];
+static int moveFlags[MAX_LOCAL_PLAYERS];
 
 static cc_bool Player_TriggerLeft(int key,  struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_XMIN;
+	moveFlags[device->mappedIndex] |= FACE_BIT_XMIN;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerRight(int key, struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_XMAX;
+	moveFlags[device->mappedIndex] |= FACE_BIT_XMAX;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerUp(int key,    struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_YMIN;
+	moveFlags[device->mappedIndex] |= FACE_BIT_YMIN;
 	return Gui.InputGrab == NULL;
 }
 static cc_bool Player_TriggerDown(int key,  struct InputDevice* device) {
-	moveFlags[device->index] |= FACE_BIT_YMAX;
+	moveFlags[device->mappedIndex] |= FACE_BIT_YMAX;
 	return Gui.InputGrab == NULL;
 }
 
 static void Player_ReleaseLeft(int key,  struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_XMIN;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_XMIN;
 }
 static void Player_ReleaseRight(int key, struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_XMAX;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_XMAX;
 }
 static void Player_ReleaseUp(int key,    struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_YMIN;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_YMIN;
 }
 static void Player_ReleaseDown(int key,  struct InputDevice* device) {
-	moveFlags[device->index] &= ~FACE_BIT_YMAX;
+	moveFlags[device->mappedIndex] &= ~FACE_BIT_YMAX;
 }
 
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	int flags = 0, port;
-
-	if (Game_NumStates == 1) {
-		for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
-			flags |= moveFlags[port];
-	} else {
-		flags = moveFlags[p->index];
-	}
+	int flags = moveFlags[p->index];
 
 	if (flags & FACE_BIT_YMIN) *zMoving -= 1;
 	if (flags & FACE_BIT_YMAX) *zMoving += 1;

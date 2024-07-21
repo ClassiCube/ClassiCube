@@ -158,7 +158,7 @@ static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, float delta) {
 void Gamepads_Process(float delta) {
 	joypad_poll();
 
-	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
+	for (int i = 0; i < JOYPAD_PORT_COUNT; i++)
 	{
 		if (!joypad_is_connected(i)) continue;
 		joypad_inputs_t inputs = joypad_get_inputs(i);

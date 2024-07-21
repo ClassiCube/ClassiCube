@@ -110,7 +110,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *---------------------------------------------GameCube controller processing----------------------------------------------*
 *#########################################################################################################################*/
-static PADStatus gc_pads[INPUT_MAX_GAMEPADS];
+static PADStatus gc_pads[PAD_CHANMAX];
 
 #define PAD_AXIS_SCALE 8.0f
 static void ProcessPAD_Joystick(int port, int axis, int x, int y, float delta) {
@@ -139,8 +139,8 @@ static void ProcessPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
 }
 
-static void ProcessPADInput(int i, float delta) {
-	PADStatus pads[4];
+static void ProcessPADInput(PADStatus* pad, int i, float delta) {
+	PADStatus pads[PAD_CHANMAX];
 	PAD_Read(pads);
 	int error = pads[i].err;
 
@@ -156,6 +156,16 @@ static void ProcessPADInput(int i, float delta) {
 	ProcessPAD_Buttons(port, gc_pads[i].button);
 	ProcessPAD_Joystick(port, PAD_AXIS_LEFT,  gc_pads[i].stickX,    gc_pads[i].stickY,    delta);
 	ProcessPAD_Joystick(port, PAD_AXIS_RIGHT, gc_pads[i].substickX, gc_pads[i].substickY, delta);
+}
+
+static void ProcessPADInputs(float delta) {
+	PADStatus pads[PAD_CHANMAX];
+	PAD_Read(pads);
+
+	for (int i = 0; i < PAD_CHANMAX; i++)
+	{
+		ProcessPADInput(&pads[i], i, delta);
+	}
 }
 
 
@@ -448,18 +458,15 @@ static void ProcessWPADInput(int i, float delta) {
 }
 
 void Gamepads_Process(float delta) {
-	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		ProcessWPADInput(i, delta);
-		ProcessPADInput( i, delta);
 	}
+	ProcessPADInputs(delta);
 }
 #else
 void Gamepads_Process(float delta) {
-	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
-	{
-		ProcessPADInput(i, delta);
-	}
+	ProcessPADInputs(delta);
 }
 #endif
 

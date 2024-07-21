@@ -287,7 +287,7 @@ void Gamepads_Process(float delta) {
 	maple_device_t* cont;
 	cont_state_t*  state;
 
-	for (int i = 0; i < INPUT_MAX_GAMEPADS; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		cont  = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
 		if (!cont)  return;

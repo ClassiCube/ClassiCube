@@ -11,6 +11,7 @@
 #include "Options.h"
 
 cc_bool HeldBlockRenderer_Show;
+#ifdef CC_BUILD_HELDBLOCK
 static BlockID held_block;
 static struct Entity held_entity;
 static struct Matrix held_blockProj;
@@ -261,6 +262,12 @@ static void OnInit(void) {
 	Event_Register_(&UserEvents.BlockChanged,     NULL, OnBlockChanged);
 	Event_Register_(&GfxEvents.ContextLost,       NULL, OnContextLost);
 }
+#else
+void HeldBlockRenderer_ClickAnim(cc_bool digging) { }
+void HeldBlockRenderer_Render(float delta) { }
+
+static void OnInit(void) { }
+#endif
 
 struct IGameComponent HeldBlockRenderer_Component = {
 	OnInit /* Init  */

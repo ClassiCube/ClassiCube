@@ -2598,11 +2598,7 @@ static void TexIdsOverlay_Render(void* screen, float delta) {
 }
 
 static int TexIdsOverlay_KeyDown(void* screen, int key, struct InputDevice* device) {
-	struct Screen* s = (struct Screen*)screen;
-	if (!InputBind_Claims(BIND_IDOVERLAY, key, device)) return false;
-
-	Gui_Remove(s); 
-	return true;
+	return false;
 }
 
 static const struct ScreenVTABLE TexIdsOverlay_VTABLE = {
