@@ -253,7 +253,11 @@ static void OnInit(void) {
 	held_entity.VTABLE  = &heldEntity_VTABLE;
 	held_entity.NoShade = true;
 
+#ifdef CC_BUILD_NOFPUHARDWARE
+	HeldBlockRenderer_Show = false;
+#else
 	HeldBlockRenderer_Show = Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
+#endif
 	held_lastBlock         = Inventory_SelectedBlock;
 
 	Event_Register_(&GfxEvents.ProjectionChanged, NULL, OnProjectionChanged);
