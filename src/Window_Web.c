@@ -452,7 +452,7 @@ void Window_SetTitle(const cc_string* title) {
 static char pasteBuffer[512];
 static cc_string pasteStr;
 EMSCRIPTEN_KEEPALIVE void Window_RequestClipboardText(void) {
-	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY, 0, &NormDevice);
+	Event_RaiseInput(&InputEvents.Down2, INPUT_CLIPBOARD_COPY, 0, &NormDevice);
 }
 
 EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
@@ -462,7 +462,7 @@ EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
 
 EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	Window_StoreClipboardText(src);
-	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
+	Event_RaiseInput(&InputEvents.Down2, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
 }
 
 extern void interop_TryGetClipboardText(void);

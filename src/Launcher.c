@@ -209,7 +209,7 @@ static void Launcher_Init(void) {
 	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
 	Event_Register_(&WindowEvents.Closing,      NULL, OnClosing);
 
-	Event_Register_(&InputEvents.Down,          NULL, OnInputDown);
+	Event_Register_(&InputEvents.Down2,         NULL, OnInputDown);
 	Event_Register_(&InputEvents.Wheel,         NULL, OnMouseWheel);
 
 	Utils_EnsureDirectory("texpacks");
