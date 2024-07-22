@@ -127,6 +127,7 @@ void LBackend_ThemeChanged(void) {
 }
 
 void LBackend_Tick(void) { }
+void LBackend_AddDirtyFrames(int frames) { }
 
 static struct LWidget* FindWidgetForView(int id) {
     struct LScreen* s = Launcher_Active;

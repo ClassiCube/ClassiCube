@@ -34,6 +34,7 @@ static struct Context2D framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
 static Rect2D dirty_rect;
+static int pendingFullDraws;
 
 LBackend_DrawHook LBackend_Hooks[4];
 static cc_uint8 pendingRedraw;
@@ -304,6 +305,11 @@ void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 void LBackend_Tick(void) {
 	int i;
 	DoRedraw();
+
+	if (pendingFullDraws) {
+		pendingFullDraws--;
+		LBackend_MarkAllDirty();
+	}
 	if (!dirty_rect.width) return;
 
 	for (i = 0; i < Array_Elems(LBackend_Hooks); i++)
@@ -314,6 +320,10 @@ void LBackend_Tick(void) {
 
 	dirty_rect.x = 0; dirty_rect.width   = 0;
 	dirty_rect.y = 0; dirty_rect.height  = 0;
+}
+
+void LBackend_AddDirtyFrames(int frames) {
+	pendingFullDraws = frames;
 }
 
 
