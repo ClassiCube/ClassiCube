@@ -209,7 +209,7 @@ static void Launcher_Init(void) {
 	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
 	Event_Register_(&WindowEvents.Closing,      NULL, OnClosing);
 
-	Event_Register_(&InputEvents.Down,          NULL, OnInputDown);
+	Event_Register_(&InputEvents.Down2,         NULL, OnInputDown);
 	Event_Register_(&InputEvents.Wheel,         NULL, OnMouseWheel);
 
 	Utils_EnsureDirectory("texpacks");
@@ -251,6 +251,8 @@ void Launcher_Run(void) {
 	LBackend_InitFramebuffer();
 	Launcher_ShowEmptyServers = Options_GetBool(LOPT_SHOW_EMPTY, true);
 	Options_Get(LOPT_USERNAME, &Launcher_Username, "");
+	/* Some window backends require priming a few frames in case e.g. returning from in-game */
+	LBackend_AddDirtyFrames(4);
 
 	LWebTasks_Init();
 	Session_Load();

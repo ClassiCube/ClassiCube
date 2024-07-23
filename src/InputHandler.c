@@ -893,6 +893,14 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 	} else { HandleHotkeyDown(key); }
 }
 
+static void OnInputDownLegacy(void* obj, int key, cc_bool was, struct InputDevice* device) {
+	/* Event originated from ClassiCube, ignore it */
+	if (device == &NormDevice) return;
+
+	/* Event originated from a plugin, convert it */
+	OnInputDown(obj, key, was, &NormDevice);
+}
+
 static void OnInputUp(void* obj, int key, cc_bool was, struct InputDevice* device) {
 	struct Screen* s;
 	int i;
@@ -973,8 +981,9 @@ static void OnInit(void) {
 	
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
-	Event_Register_(&InputEvents.Down,    NULL, OnInputDown);
-	Event_Register_(&InputEvents.Up,      NULL, OnInputUp);
+	Event_Register_(&InputEvents._down,   NULL, OnInputDownLegacy);
+	Event_Register_(&InputEvents.Down2,   NULL, OnInputDown);
+	Event_Register_(&InputEvents.Up2,     NULL, OnInputUp);
 
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, InputHandler_CheckZoomFov);
 	StoredHotkeys_LoadAll();

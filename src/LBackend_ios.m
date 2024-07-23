@@ -229,6 +229,7 @@ void LBackend_NeedsRedraw(void* widget) { }
 void LBackend_Tick(void) { }
 void LBackend_Free(void) { }
 void LBackend_UpdateTitleFont(void) { }
+void LBackend_AddDirtyFrames(int frames) { }
 
 static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int y) {
     // CTLineCreateWithAttributedString - iOS 3.2

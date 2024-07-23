@@ -1,0 +1,99 @@
+name: Build latest (Android2)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-android
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-20.04
+    container:
+      image: ghcr.io/saschpe/android-ndk:34-jdk17.0.8_7-ndk25.2.9519653-cmake3.22.1
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Compile android builds
+        shell: bash
+        id: compile
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          DROID_FLAGS: "-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+          DROID_LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
+        run: |
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          
+          DROID_FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+          DROID_LIBS="-lGLESv2 -lEGL -lm -landroid -llog"
+          
+          ROOT_DIR=$PWD
+          NDK_ROOT="/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          TOOLS_ROOT=$ROOT_DIR/build-tools
+          SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
+          
+          mkdir build-tools
+          wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/build-tools.zip
+          unzip build-tools.zip -d build-tools
+          chmod +x build-tools/aapt
+          chmod +x build-tools/dx
+          chmod +x build-tools/zipalign
+
+          cd $ROOT_DIR/src
+          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS -march=armv5 $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_16
+          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_32
+          $NDK_ROOT/aarch64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_64
+          $NDK_ROOT/i686-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_32
+          $NDK_ROOT/x86_64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_64
+          
+          cd $ROOT_DIR/android/app/src/main
+          # copy required native libraries
+          mkdir lib lib/armeabi lib/armeabi-v7a lib/arm64-v8a lib/x86 lib/x86_64
+          cp $ROOT_DIR/src/cc-droid-arm_16 lib/armeabi/libclassicube.so
+          cp $ROOT_DIR/src/cc-droid-arm_32 lib/armeabi-v7a/libclassicube.so
+          cp $ROOT_DIR/src/cc-droid-arm_64 lib/arm64-v8a/libclassicube.so
+          cp $ROOT_DIR/src/cc-droid-x86_32 lib/x86/libclassicube.so
+          cp $ROOT_DIR/src/cc-droid-x86_64 lib/x86_64/libclassicube.so
+          
+          # The following commands are for manually building an .apk, see
+          #  https://spin.atomicobject.com/2011/08/22/building-android-application-bundles-apks-by-hand/
+          #  https://github.com/cnlohr/rawdrawandroid/blob/master/Makefile
+          #  https://stackoverflow.com/questions/41132753/how-can-i-build-an-android-apk-without-gradle-on-the-command-line
+          #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/Makefile
+          #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/CMakeLists.txt
+          
+          # compile java files into multiple .class files
+          cd $ROOT_DIR/android/app/src/main/java/com/classicube
+          javac *.java -d $ROOT_DIR/android/app/src/main/obj -classpath $SDK_ROOT/android.jar --release 8
+          
+          cd $ROOT_DIR/android/app/src/main
+          # get debug signing key
+          echo -n "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > debug.keystore
+          
+          # compile the multiple .class files into one .dex file
+          $TOOLS_ROOT/dx --dex --output=obj/classes.dex ./obj
+          # create initial .apk with packaged version of resources
+          $TOOLS_ROOT/aapt package -f -M AndroidManifest.xml -S res -F obj/cc-unsigned.apk -I $SDK_ROOT/android.jar
+          # and add all the required files
+          cp obj/classes.dex classes.dex
+          $TOOLS_ROOT/aapt add -f obj/cc-unsigned.apk classes.dex lib/armeabi/libclassicube.so lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
+          # sign the apk with debug key (https://stackoverflow.com/questions/16711233/)
+          cp obj/cc-unsigned.apk obj/cc-signed.apk
+          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore debug.keystore -storepass android -keypass android obj/cc-signed.apk androiddebugkey
+          # jarsigner -verbose
+          # create aligned .apk file
+          $TOOLS_ROOT/zipalign -f 4 obj/cc-signed.apk $ROOT_DIR/src/cc.apk
+
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile android build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc.apk'
+          DEST_NAME: 'ClassiCube.apk'

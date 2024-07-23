@@ -692,7 +692,7 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 
 static void TouchScreen_LayoutOnscreen(struct TouchScreen* s, cc_uint8 alignment) {
 	struct TouchButtonDesc* desc;
-	int i, index, x, y;
+	int i, x, y;
 	cc_uint8 halign;
 
 	for (i = 0, x = 10, y = 10; i < s->numOnscreen; i++) 

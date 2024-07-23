@@ -41,6 +41,7 @@ void LBackend_MarkAreaDirty(int x, int y, int width, int height);
 
 void LBackend_ThemeChanged(void);
 void LBackend_Tick(void);
+void LBackend_AddDirtyFrames(int frames);
 void LBackend_LayoutWidget(struct LWidget* w);
 
 void LBackend_InitFramebuffer(void);

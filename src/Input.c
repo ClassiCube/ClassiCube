@@ -214,10 +214,12 @@ const char* Input_DisplayNames[INPUT_COUNT] = {
 void Input_SetPressed(int key) {
 	cc_bool wasPressed = Input.Pressed[key];
 	Input.Pressed[key] = true;
-	Event_RaiseInput(&InputEvents.Down, key, wasPressed, &NormDevice);
 
-	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0, &NormDevice);
-	if (key == 'V' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
+	if (key <= CCMOUSE_M) Event_RaiseInput(&InputEvents._down, key, wasPressed, &NormDevice);
+	Event_RaiseInput(&InputEvents.Down2, key, wasPressed, &NormDevice);
+
+	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down2, INPUT_CLIPBOARD_COPY,  0, &NormDevice);
+	if (key == 'V' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down2, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
 
 	/* don't allow multiple left mouse down events */
 	if (key != CCMOUSE_L || wasPressed) return;
@@ -228,7 +230,9 @@ void Input_SetReleased(int key) {
 	if (!Input.Pressed[key]) return;
 	Input.Pressed[key] = false;
 
-	Event_RaiseInput(&InputEvents.Up, key, true, &NormDevice);
+	if (key <= CCMOUSE_M) Event_RaiseInput(&InputEvents._up, key, true, &NormDevice);
+	Event_RaiseInput(&InputEvents.Up2, key, true, &NormDevice);
+
 	if (key == CCMOUSE_L) Pointer_SetPressed(0, false);
 }
 
@@ -526,9 +530,9 @@ static void Gamepad_Apply(int port, int btn, cc_bool was, int pressed) {
 	device->mappedIndex = Game_MapState(device->rawIndex);
 	
 	if (pressed) {
-		Event_RaiseInput(&InputEvents.Down, btn + GAMEPAD_BEG_BTN, was, device);
+		Event_RaiseInput(&InputEvents.Down2, btn + GAMEPAD_BEG_BTN, was, device);
 	} else {
-		Event_RaiseInput(&InputEvents.Up,   btn + GAMEPAD_BEG_BTN, was, device);
+		Event_RaiseInput(&InputEvents.Up2,   btn + GAMEPAD_BEG_BTN, was, device);
 	}
 }
 

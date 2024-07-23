@@ -128,6 +128,7 @@ void Event_UnregisterAll(void);
 /*  Version 1 - Added NetEvents.PluginMessageReceived */
 /*  Version 2 - Added WindowEvents.Redrawing */
 /*  Version 3 - Changed InputEvent.Press from code page 437 to unicode character */
+/*  Version 4 - Added InputEvents.Down2 and InputEvents.Up2 */
 /* You MUST CHECK the event API version before attempting to use the events listed above, */
 /*  as otherwise if the player is using an older client that lacks some of the above events, */
 /*  you will be calling Event_Register on random data instead of the expected EventsList struct */
@@ -198,10 +199,12 @@ CC_VAR extern struct _WindowEventsList {
 
 CC_VAR extern struct _InputEventsList {
 	struct Event_Int    Press; /* Key input character is typed. Arg is a unicode character */
-	struct Event_Input  Down;  /* Key or button is pressed. Arg is input button state. */
-	struct Event_Input  Up;    /* Key or button is released. Arg is input button state. */
+	struct Event_Input  _down; /* DEPRECATED. Key or button is pressed. Arg is input button state. */
+	struct Event_Input  _up;   /* DEPRECATED. Key or button is released. Arg is input button state. */
 	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 	struct Event_String TextChanged; /* Text in the on-screen input keyboard changed (for Mobile) */
+	struct Event_Input  Down2; /* Key or button is pressed. Args are input button and device state. */
+	struct Event_Input  Up2;   /* Key or button is released. Args are input button and device state. */
 } InputEvents;
 
 CC_VAR extern struct _PointerEventsList {
