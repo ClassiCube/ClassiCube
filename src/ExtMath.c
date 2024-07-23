@@ -187,22 +187,15 @@ static CC_INLINE int isin_s4(int x) {
 	return (c >= 0) ? y : (-y);
 }
 
-static CC_INLINE int isin(int x) {
-	return isin_s4(x);
-}
-
-static CC_INLINE int icos(int x) {
-	return isin_s4(x + (1 << ISIN_QN));
-}
-
 float Math_SinF(float angle) {
 	int raw = (int)(angle * MATH_RAD2DEG * 4096 / 360);
-	return isin(raw) / 4096.0f;
+	return isin_s4(raw) / 4096.0f;
 }
 
 float Math_CosF(float angle) {
 	int raw = (int)(angle * MATH_RAD2DEG * 4096 / 360);
-	return icos(raw) / 4096.0f;
+	raw += (1 << ISIN_QN); // add offset to calculate cos(x) instead of sin(x)
+	return isin_s4(raw) / 4096.0f;
 }
 
 #else
