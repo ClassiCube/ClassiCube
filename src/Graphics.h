@@ -263,8 +263,7 @@ enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
 /* Selects which screen on the 3DS to render to */
 void Gfx_3DS_SetRenderScreen(enum Screen3DS screen);
 #else
-static inline
-void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) { }
+static CC_INLINE void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) { }
 #endif
 
 /* Raises ContextLost event and updates state for lost contexts */

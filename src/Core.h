@@ -21,7 +21,11 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	typedef unsigned __int32 cc_uintptr;
 	#endif
 	
+#if _MSC_VER <= 1500
+	#define CC_INLINE
+#else
 	#define CC_INLINE inline
+#endif
 	#define CC_NOINLINE __declspec(noinline)
 	#ifndef CC_API
 	#define CC_API __declspec(dllexport, noinline)

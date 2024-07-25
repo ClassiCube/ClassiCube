@@ -16,7 +16,7 @@
 #define UNICODE
 #define _UNICODE
 #endif
-#include <windows.h>
+#include <winsock2.h> /* auto includes windows.h */
 #include <ws2tcpip.h>
 
 /* === BEGIN shellapi.h === */
@@ -613,7 +613,6 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
-	cc_result res;
 
 	*s = _socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();

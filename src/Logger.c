@@ -205,27 +205,29 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
 static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	char strBuffer[512]; cc_string str;
-	String_InitArray(str, strBuffer);
-
 	struct SymbolAndName s = { 0 };
+	IMAGEHLP_MODULE m = { 0 };
+
 	s.symbol.MaxNameLength = 255;
 	s.symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
 	SymGetSymFromAddr(process, addr, NULL, &s.symbol);
-
-	IMAGEHLP_MODULE m = { 0 };
+	
 	m.SizeOfStruct    = sizeof(IMAGEHLP_MODULE);
 	SymGetModuleInfo(process, addr, &m);
 
+	String_InitArray(str, strBuffer);
 	PrintFrame(&str, addr, s.symbol.Address, s.symbol.Name, m.ModuleName);
 	String_AppendString(trace, &str);
 
 	/* This function only works for .pdb debug info anyways */
 	/* This function is also missing on Windows 9X */
 #if _MSC_VER
-	IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
-	line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-	if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
-		String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
+	{
+		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
+		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
+		if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
+			String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
+		}
 	}
 #endif
 	Logger_Log(&str);

@@ -568,12 +568,15 @@ void Gamepad_SetButton(int port, int btn, int pressed) {
 }
 
 void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
+	float scale;
+	int sensi;
+
 	Gamepad_Devices[port].axisX[axis] = x;
 	Gamepad_Devices[port].axisY[axis] = y;
 	if (x == 0 && y == 0) return;
 
-	int sensi   = Gamepad_AxisSensitivity[axis];
-	float scale = delta * 60.0f * axis_sensiFactor[sensi];
+	sensi = Gamepad_AxisSensitivity[axis];
+	scale = delta * 60.0f * axis_sensiFactor[sensi];
 	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
 }
 

@@ -461,9 +461,9 @@ static void HotbarWidget_RenderEntries(struct HotbarWidget* w, int offset) {
 }
 
 static int HotbarWidget_Render2(void* widget, int offset) {
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 
-	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	HotbarWidget_RenderOutline(w, offset    );
 	HotbarWidget_RenderEntries(w, offset + 8);
 

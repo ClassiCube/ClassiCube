@@ -512,18 +512,20 @@ double Math_Log2(double x) {
 // Approximation of atan2f using the Remez algorithm
 //  https://math.stackexchange.com/a/1105038
 float Math_Atan2f(float x, float y) {
+	float ax, ay, a, s, r;
+
 	if (x == 0) {
 		if (y > 0) return  PI / 2.0f;
 		if (y < 0) return -PI / 2.0f;
 		return 0; /* Should probably be NaN */
 	}
 	
-	float ax = Math_AbsF(x);
-	float ay = Math_AbsF(y);
+	ax = Math_AbsF(x);
+	ay = Math_AbsF(y);
 
-	float a = (ax < ay) ? (ax / ay) : (ay / ax);
-	float s = a * a;
-	float r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;
+	a = (ax < ay) ? (ax / ay) : (ay / ax);
+	s = a * a;
+	r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;
 
 	if (ay > ax) r = 1.57079637f - r;
 	if (x < 0)   r = 3.14159274f - r;
