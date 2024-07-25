@@ -18,7 +18,7 @@ http://www.devmaster.net/articles/raytracing_series/A%20faster%20voxel%20travers
 */
 struct RayTracer {
 	IVec3 pos;    /* Coordinates of block within world */
-	Vec3 origin, dir, invDir;
+	Vec3 origin, dir;
 	Vec3 Min, Max; /* Min/max coords of block's bounding box. */
 	BlockID block;
 	IVec3 step;
@@ -28,6 +28,7 @@ struct RayTracer {
 	IVec3 translatedPos; /* Coords of the neighbouring block that is closest to the player */
 	cc_bool valid;       /* Whether the ray tracer actually intersected with a block */
 	Face closest;        /* Face of the intersected block that is closet to the player */
+	Vec3 invDir;
 };
 
 /* Marks the given ray tracer as having no result. */

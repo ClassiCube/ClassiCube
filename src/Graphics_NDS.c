@@ -25,14 +25,14 @@ void Gfx_Create(void) {
     glAlphaFunc(7);
 
     glClearDepth(GL_MAX_DEPTH);
-    glViewport(0, 0, 255, 191);
+    Gfx_SetViewport(0, 0, 256, 192);
     
     vramSetBankA(VRAM_A_TEXTURE);
     vramSetBankB(VRAM_B_TEXTURE);
     vramSetBankC(VRAM_C_TEXTURE);
     vramSetBankD(VRAM_D_TEXTURE);
     
-    glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
+    Gfx_SetFaceCulling(false);
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -67,7 +67,11 @@ void Gfx_SetVSync(cc_bool vsync) {
 void Gfx_OnWindowResize(void) { 
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	int x2 = x + w - 1, y2 = y + h - 1;
+	GFX_VIEWPORT = x | (y << 8) | (x2 << 16) | (y2 << 24);
+}
+
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 void Gfx_BeginFrame(void) {
