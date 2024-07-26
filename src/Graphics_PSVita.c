@@ -114,7 +114,7 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const 
 	// https://wiki.henkaku.xyz/vita/SceSysmem
 	SceUID uid = sceKernelAllocMemBlock("GPU memory", type, size, NULL);
 	if (uid < 0) {
-		String_Format1(&str, "Failed to allocate GPU memory block for %c%N", memType);
+		String_Format2(&str, "Failed to allocate GPU memory block for %c (%i bytes)%N", memType, &size);
 		Logger_Abort2(uid, buffer);
 	}
 		
@@ -126,7 +126,7 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const 
 		
 	int res2 = sceGxmMapMemory(addr, size, gpu_access);
 	if (res2 < 0) {
-		String_Format1(&str, "Failed to map memory for GPU usage for %c%N", memType);
+		String_Format2(&str, "Failed to map memory for GPU usage for %c (%i bytes)%N", memType, &size);
 		Logger_Abort2(res2, buffer);
 	}
 	// https://wiki.henkaku.xyz/vita/GPU
