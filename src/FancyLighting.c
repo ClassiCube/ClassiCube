@@ -368,14 +368,14 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 			neighborBlockBrightness = GetBlockBrightness(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), isLamp); \
 			/* This spot is a light caster, mark this spot as needing to be re-spread */ \
 			if (neighborBlockBrightness > 0) { \
-				otherNode = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBlockBrightness }; \
+				LightNode_Init(otherNode, neighborCoords.x, neighborCoords.y, neighborCoords.z, neighborBlockBrightness); \
 				Queue_Enqueue(&lightQueue, &otherNode); \
 			} \
 			if (neighborBrightness > 0) { \
 				/* This neighbor is darker than cur spot, darken it*/ \
 				if (neighborBrightness < curNode.brightness) { \
 					SetBrightness(0, neighborCoords.x, neighborCoords.y, neighborCoords.z, isLamp, true); \
-					otherNode = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBrightness }; \
+					LightNode_Init(otherNode, neighborCoords.x, neighborCoords.y, neighborCoords.z, neighborBrightness); \
 					Queue_Enqueue(&unlightQueue, &otherNode); \
 				} \
 				/* This neighbor is brighter or same, mark this spot as needing to be re-spread */ \
@@ -449,7 +449,7 @@ static void CalcBlockChange(int x, int y, int z, BlockID oldBlock, BlockID newBl
 	/* Cell is darker than the new block, only brighter case */
 	if (oldLightLevelHere < newBlockLightLevel) {
 		/* brighten this spot, recalculate lighting */
-		entry = (struct LightNode){ { x, y, z }, newBlockLightLevel };
+		LightNode_Init(entry, x, y, z, newBlockLightLevel);
 		Queue_Enqueue(&lightQueue, &entry);
 		FlushLightQueue(isLamp, true);
 		return;

@@ -23,10 +23,12 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	
 #if _MSC_VER <= 1500
 	#define CC_INLINE
+	#define CC_NOINLINE
 #else
-	#define CC_INLINE inline
-#endif
+	#define CC_INLINE   inline
 	#define CC_NOINLINE __declspec(noinline)
+#endif
+	
 	#ifndef CC_API
 	#define CC_API __declspec(dllexport, noinline)
 	#define CC_VAR __declspec(dllexport)
@@ -62,6 +64,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	
 	#define CC_INLINE inline
 	#define CC_NOINLINE __attribute__((noinline))
+	
 	#ifndef CC_API
 	#ifdef _WIN32
 	#define CC_API __attribute__((dllexport, noinline))
@@ -71,6 +74,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	#define CC_VAR __attribute__((visibility("default")))
 	#endif
 	#endif
+	
 	#define CC_HAS_MISC
 	#ifdef __BIG_ENDIAN__
 	#define CC_BIG_ENDIAN
