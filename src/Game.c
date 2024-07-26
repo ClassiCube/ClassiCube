@@ -719,9 +719,10 @@ static CC_INLINE void Game_RenderFrame(void) {
 	struct ScheduledTask entTask;
 	float t;
 
-	cc_uint64 render = Stopwatch_Measure();
-	double deltaD    = Stopwatch_ElapsedMicroseconds(frameStart, render) / (1000.0 * 1000.0);
-	float delta      = (float)deltaD;
+	cc_uint64 render  = Stopwatch_Measure();
+	cc_uint64 elapsed = Stopwatch_ElapsedMicroseconds(frameStart, render);
+	double deltaD     = elapsed / (1000.0 * 1000.0);
+	float delta       = (float)deltaD;
 	Window_ProcessEvents(delta);
 
 	if (delta > 5.0f)  delta = 5.0f; /* avoid large delta with suspended process */
