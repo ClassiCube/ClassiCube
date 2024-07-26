@@ -520,7 +520,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		tmp[i * 4 + 3] = m[12 + i];
 	}
 		
-	if (type == MATRIX_PROJECTION) {
+	if (type == MATRIX_PROJ) {
 		GX_LoadProjectionMtx(tmp,
 			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
@@ -528,9 +528,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	}
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
+
 static float texOffsetX, texOffsetY;
 static void UpdateTexCoordGen(void) {
 	if (texOffsetX || texOffsetY) {

@@ -112,7 +112,7 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const 
 	String_InitArray_NT(str, buffer);
 	
 	// https://wiki.henkaku.xyz/vita/SceSysmem
-	SceUID uid = sceKernelAllocMemBlock("GPU memory", type, size, NULL);
+	SceUID uid = sceKernelAllocMemBlock(memType, type, size, NULL);
 	if (uid < 0) {
 		String_Format2(&str, "Failed to allocate GPU memory block for %c (%i bytes)%N", memType, &size);
 		Logger_Abort2(uid, buffer);
@@ -1024,8 +1024,8 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 static struct Matrix _view, _proj;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	struct Matrix mvp __attribute__((aligned(64)));	
 	Matrix_Mul(&mvp, &_view, &_proj);
@@ -1044,8 +1044,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	VP_ReloadUniforms();
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) { 
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -1116,8 +1118,8 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	Gfx_SetDepthTest(false);
 	
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
-	Gfx_LoadIdentityMatrix(MATRIX_PROJECTION);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Matrix_Identity);
+	Gfx_LoadMatrix(MATRIX_PROJ, &Matrix_Identity);
 	Gfx_BindVb(clearVB);
 	Gfx_DrawVb_IndexedTris(4);
 	

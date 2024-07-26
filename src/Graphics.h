@@ -15,11 +15,14 @@ extern struct IGameComponent Gfx_Component;
 typedef enum VertexFormat_ {
 	VERTEX_FORMAT_COLOURED, VERTEX_FORMAT_TEXTURED
 } VertexFormat;
+
 typedef enum FogFunc_ {
 	FOG_LINEAR, FOG_EXP, FOG_EXP2
 } FogFunc;
+
 typedef enum MatrixType_ {
-	MATRIX_PROJECTION, MATRIX_VIEW
+	MATRIX_PROJ, /* Projection matrix */
+	MATRIX_VIEW  /* Combined model view matrix */
 } MatrixType;
 
 #define SIZEOF_VERTEX_COLOURED 16
@@ -222,10 +225,10 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
 
 /* Loads the given matrix over the currently active matrix */
 CC_API void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix);
-/* Loads the identity matrix over the currently active matrix */
-CC_API void Gfx_LoadIdentityMatrix(MatrixType type);
 CC_API void Gfx_EnableTextureOffset(float x, float y);
 CC_API void Gfx_DisableTextureOffset(void);
+/* Loads given modelview and projection matrices, then calculates the combined MVP matrix */
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp);
 
 /* Calculates an orthographic projection matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar);

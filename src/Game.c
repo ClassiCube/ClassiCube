@@ -508,8 +508,8 @@ static void UpdateViewMatrix(void) {
 
 static void Render3DFrame(float delta, float t) {
 	Vec3 pos;
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
+	Gfx_LoadMatrix(MATRIX_PROJ, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 
 	AxisLinesRenderer_Render();

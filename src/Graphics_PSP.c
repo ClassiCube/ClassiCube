@@ -401,8 +401,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	sceGuSetMatrix(matrix_modes[type], &tmp_matrix);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	sceGuSetMatrix(matrix_modes[type], &identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
