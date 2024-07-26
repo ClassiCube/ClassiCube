@@ -501,17 +501,18 @@ void Game_SetMinFrameTime(float frameTimeMS) {
 }
 #endif
 
-static void UpdateViewMatrix(void) {
-	Camera.Active->GetView(&Gfx.View);
-	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
-}
-
 static void Render3DFrame(float delta, float t) {
+	struct Matrix mvp;
 	Vec3 pos;
-	Gfx_LoadMatrix(MATRIX_PROJ, &Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
-	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 
+	Camera.Active->GetView(&Gfx.View);
+	/*Gfx_LoadMatrix(MATRIX_PROJ, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
+	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);*/
+	Gfx_LoadMVP(&Gfx.View, &Gfx.Projection, &mvp);
+	FrustumCulling_CalcFrustumEquations(&mvp);
+
+	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);
 	EntityNames_Render();
@@ -659,7 +660,6 @@ static void LimitFPS(void) {
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	int i;
-	UpdateViewMatrix();
 
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */

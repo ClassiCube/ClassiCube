@@ -529,9 +529,11 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
-	Gfx_LoadMatrix(MATRIX_VIEW, view);
-	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	_view = *view;
+	_proj = *proj;
+
 	Matrix_Mul(mvp, view, proj);
+	LoadTransformMatrix(mvp);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {

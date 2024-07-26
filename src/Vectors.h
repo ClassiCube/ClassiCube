@@ -133,5 +133,7 @@ CC_API void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const s
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot);
 
 cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius);
-void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matrix* modelView);
+/* Calculates the clipping planes from the combined modelview and projection matrices */
+/* Matrix_Mul(&clip, modelView, projection); */
+void FrustumCulling_CalcFrustumEquations(struct Matrix* clip);
 #endif
