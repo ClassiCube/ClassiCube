@@ -62,6 +62,9 @@ CC_VAR extern struct _GfxData {
 	struct Matrix View, Projection;
 	/* Whether the graphics backend supports non power of two textures */
 	cc_bool SupportsNonPowTwoTextures;
+	/* Whether the graphics backend supports U/V that don't occupy whole texture */
+	/*   e.g. Saturn, 3D0 systems don't support it */
+	cc_bool NoUVSupport;
 	/* Maximum total size in pixels a low resolution texture can consist of */
 	/* NOTE: Not all graphics backends specify a value for this */
 	int MaxLowResTexSize;

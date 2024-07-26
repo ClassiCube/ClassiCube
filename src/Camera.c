@@ -55,8 +55,9 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
 	Vec3 pos = Camera.CurrentPos;
 	Vec2 rot = Camera.Active->GetOrientation();
+
 	Matrix_LookRot(mat, pos, rot);
-	Matrix_MulBy(mat, &Camera.TiltM);
+	if (Game_ViewBobbing) Matrix_MulBy(mat, &Camera.TiltM);
 }
 
 static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {

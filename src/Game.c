@@ -341,7 +341,12 @@ static void LoadOptions(void) {
 	Game_ClassicMode  = Options_GetBool(OPT_CLASSIC_MODE,  false);
 	Game_ClassicHacks = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_Anaglyph3D   = Options_GetBool(OPT_ANAGLYPH3D,    false);
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+	/* View bobbing requires per-frame matrix multiplications - costly on FPU less systems */
+	Game_ViewBobbing  = Options_GetBool(OPT_VIEW_BOBBING,  false);
+#else
 	Game_ViewBobbing  = Options_GetBool(OPT_VIEW_BOBBING,  true);
+#endif
 	
 	Game_AllowCustomBlocks   = !Game_ClassicMode && Options_GetBool(OPT_CUSTOM_BLOCKS,      true);
 	Game_SimpleArmsAnim      = !Game_ClassicMode && Options_GetBool(OPT_SIMPLE_ARMS_ANIM,   false);

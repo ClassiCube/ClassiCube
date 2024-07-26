@@ -101,6 +101,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 16; // 128
 	Gfx.Created      = true;
+	Gfx.NoUVSupport  = true;
 }
 
 void Gfx_Free(void) { 
