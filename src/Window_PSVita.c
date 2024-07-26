@@ -11,10 +11,11 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Logger.h"
+#include "VirtualKeyboard.h"
 #include <vitasdk.h>
 
 static cc_bool launcherMode;
-static SceTouchPanelInfo frontPanel;
+static SceTouchPanelInfo frontPanel, backPanel;
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -53,6 +54,7 @@ void Window_Init(void) {
 	Input_SetTouchMode(true);
 	
 	sceTouchGetPanelInfo(SCE_TOUCH_PORT_FRONT, &frontPanel);
+	sceTouchGetPanelInfo(SCE_TOUCH_PORT_BACK,  &backPanel);
 	Gfx_InitGXM();
 	Gfx_AllocFramebuffers();
 }
@@ -90,41 +92,43 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void AdjustTouchPress(int* x, int* y) {
-	if (!frontPanel.maxDispX || !frontPanel.maxDispY) return;
+static void AdjustTouchPress(const SceTouchPanelInfo* panel, int* x, int* y) {
+	if (!panel->maxDispX || !panel->maxDispY) return;
 	// TODO: Shouldn't ever happen? need to check
 	
 	// rescale from touch range to screen range
-	*x = (*x - frontPanel.minDispX) * DISPLAY_WIDTH  / frontPanel.maxDispX;
-	*y = (*y - frontPanel.minDispY) * DISPLAY_HEIGHT / frontPanel.maxDispY;
+	*x = (*x - panel->minDispX) * DISPLAY_WIDTH  / panel->maxDispX;
+	*y = (*y - panel->minDispY) * DISPLAY_HEIGHT / panel->maxDispY;
 }
 
-static cc_bool touch_pressed;
-static void ProcessTouchInput(void) {
+static int touch_pressed;
+static void ProcessTouchInput(int port, int id, const SceTouchPanelInfo* panel) {
 	SceTouchData touch;
 	
 	// sceTouchRead is blocking (seems to block until vblank), and don't want that
-	int res = sceTouchPeek(SCE_TOUCH_PORT_FRONT, &touch, 1);
+	int res = sceTouchPeek(port, &touch, 1);
 	if (res == 0) return; // no data available yet
 	if (res < 0)  return; // error occurred
+	int idx = 1 << id;
 	
 	cc_bool isPressed = touch.reportNum > 0;
 	if (isPressed) {
 		int x = touch.report[0].x;
 		int y = touch.report[0].y;
-		AdjustTouchPress(&x, &y);
+		AdjustTouchPress(panel, &x, &y);
 
-		Input_AddTouch(0, x, y);
-		touch_pressed = true;
-	} else if (touch_pressed) {
+		Input_AddTouch(id, x, y);
+		touch_pressed |= idx;
+	} else if (touch_pressed & idx) {
 		// touch.report[0].xy will be 0 when touch.reportNum is 0
-		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
-		touch_pressed = false;
+		Input_RemoveTouch(id, Pointers[id].x, Pointers[id].y);
+		touch_pressed &= ~idx;
 	}
 }
 
 void Window_ProcessEvents(float delta) {
-	ProcessTouchInput();
+	ProcessTouchInput(SCE_TOUCH_PORT_FRONT, 0, &frontPanel);
+	ProcessTouchInput(SCE_TOUCH_PORT_BACK,  1, &backPanel);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -281,78 +285,18 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-static SceWChar16 imeTitle[33];
-static SceWChar16 imeText[33];
-static SceWChar16 imeBuffer[SCE_IME_DIALOG_MAX_TEXT_LENGTH];
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	kb_tileWidth = KB_TILE_SIZE * 2;
 
-static void SetIMEString(SceWChar16* dst, const cc_string* src) {
-	int len = min(32, src->length);
-	// TODO unicode conversion
-	for (int i = 0; i < len; i++) dst[i] = src->buffer[i];
-	dst[len] = '\0';
+	VirtualKeyboard_Open(args, launcherMode);
 }
 
-static void SendIMEResult(void) {
-	char buffer[SCE_IME_DIALOG_MAX_TEXT_LENGTH];
-	cc_string str;
-	String_InitArray(str, buffer);
-	
-	for (int i = 0; i < SCE_IME_DIALOG_MAX_TEXT_LENGTH && imeBuffer[i]; i++)
-	{
-		char c = Convert_CodepointToCP437(imeBuffer[i]);
-		String_Append(&str, c);
-	}
-	Event_RaiseString(&InputEvents.TextChanged, &str);
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
 }
 
-void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
-	SetIMEString(imeText,   args->text);
-	SetIMEString(imeBuffer, &String_Empty);
-	
-	int mode = args->type & 0xFF;
-	if (mode == KEYBOARD_TYPE_TEXT) {
-		SetIMEString(imeTitle,  &(cc_string)String_FromConst("Enter text"));
-	} else if (mode == KEYBOARD_TYPE_PASSWORD) {
-		SetIMEString(imeTitle,  &(cc_string)String_FromConst("Enter password"));
-	} else {
-		SetIMEString(imeTitle,  &(cc_string)String_FromConst("Enter number"));
-	}
-
-    SceImeDialogParam param;
-    sceImeDialogParamInit(&param);
-
-    param.supportedLanguages = SCE_IME_LANGUAGE_ENGLISH_GB;
-    param.languagesForced    = SCE_FALSE;
-    param.type               = SCE_IME_TYPE_DEFAULT;
-    param.option             = 0;
-    param.textBoxMode        = SCE_IME_DIALOG_TEXTBOX_MODE_WITH_CLEAR;
-    param.maxTextLength      = SCE_IME_DIALOG_MAX_TEXT_LENGTH;
-
-    param.title           = imeTitle;
-    param.initialText     = imeText;
-    param.inputTextBuffer = imeBuffer;
-
-    int ret = sceImeDialogInit(&param);
-	if (ret) { Platform_Log1("ERROR SHOWING IME: %e", &ret); return; }
-	
-	void (*prevCallback)(void* fb);
-	prevCallback   = DQ_OnNextFrame;
-	DQ_OnNextFrame = DQ_DialogCallback;
-    
-	while (sceImeDialogGetStatus() == SCE_COMMON_DIALOG_STATUS_RUNNING)
-	{
-		Gfx_UpdateCommonDialogBuffers();
-		Gfx_NextFramebuffer();
-		sceDisplayWaitVblankStart();
-	}
-	
-	sceImeDialogTerm();
-	DQ_OnNextFrame = prevCallback;
-	SendIMEResult();
-/* TODO implement */ 
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
 }
-void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Close(void) { /* TODO implement */ }
-
-
 #endif
