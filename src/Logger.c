@@ -482,6 +482,14 @@ String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25
 String_Format4(str, "r28=%x sp =%x fp =%x ra =%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31)); \
 String_Format3(str, "pc =%x lo =%x hi =%x" _NL,        REG_GET_PC(), REG_GET_LO(), REG_GET_HI());
 
+#define Dump_SH() \
+String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
+String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
+String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
+String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
+String_Format3(str, "mal=%x mah=%x gbr=%x"        _NL, REG_GET_MACL(), REG_GET_MACH(), REG_GET_GBR()); \
+String_Format2(str, "pc =%x ra =%x"               _NL, REG_GET_PC(), REG_GET_RA());
+
 #if defined CC_BUILD_WIN
 /* See CONTEXT in WinNT.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
@@ -507,6 +515,32 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_SP()      &r->Sp
 	#define REG_GET_PC()      &r->Pc
 	Dump_ARM64()
+#elif defined _M_PPC
+	#define REG_GNUM(num) &r->Gpr ## num
+	#define REG_GET_PC()  &r->Iar
+	#define REG_GET_LR()  &r->Lr
+	#define REG_GET_CTR() &r->Ctr
+	Dump_PPC()
+#elif defined _M_ALPHA
+	#define REG_GNUM(num) &r->IntV0 + num
+	#define REG_GET_FP()  &r->IntFp
+	#define REG_GET_SP()  &r->IntSp
+	#define REG_GET_PC()  &r->Fir
+	Dump_Alpha()
+#elif defined MIPS
+	#define REG_GNUM(num) &r->IntZero + num
+	#define REG_GET_PC()  &r->Fir
+	#define REG_GET_LO()  &r->IntLo
+	#define REG_GET_HI()  &r->IntHi
+	Dump_MIPS()
+#elif defined SHx
+	#define REG_GNUM(num)  &r->R ## num
+	#define REG_GET_MACL() &r->MACL
+	#define REG_GET_MACH() &r->MACH
+	#define REG_GET_GBR()  &r->GBR
+	#define REG_GET_PC()   &r->Fir
+	#define REG_GET_RA()   &r->PR
+	Dump_SH()
 #else
 	#error "Unknown CPU architecture"
 #endif
@@ -571,64 +605,64 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 static void PrintRegisters(cc_string* str, void* ctx) {
 #if __PPC__ && __WORDSIZE == 32
 	/* See sysdeps/unix/sysv/linux/powerpc/sys/ucontext.h in glibc */
-	mcontext_t r = *((ucontext_t*)ctx)->uc_mcontext.uc_regs;
+	mcontext_t* r = ((ucontext_t*)ctx)->uc_mcontext.uc_regs;
 #else
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 #endif
 
 #if defined __i386__
-	#define REG_GET(ign, reg) &r.gregs[REG_E##reg]
+	#define REG_GET(ign, reg) &r->gregs[REG_E##reg]
 	Dump_X86()
 #elif defined __x86_64__
-	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
+	#define REG_GET(ign, reg) &r->gregs[REG_R##reg]
 	Dump_X64()
 #elif defined __aarch64__
-	#define REG_GNUM(num)     &r.regs[num]
-	#define REG_GET_FP()      &r.regs[29]
-	#define REG_GET_LR()      &r.regs[30]
-	#define REG_GET_SP()      &r.sp
-	#define REG_GET_PC()      &r.pc
+	#define REG_GNUM(num)     &r->regs[num]
+	#define REG_GET_FP()      &r->regs[29]
+	#define REG_GET_LR()      &r->regs[30]
+	#define REG_GET_SP()      &r->sp
+	#define REG_GET_PC()      &r->pc
 	Dump_ARM64()
 #elif defined __arm__
-	#define REG_GNUM(num)     &r.arm_r##num
-	#define REG_GET_FP()      &r.arm_fp
-	#define REG_GET_IP()      &r.arm_ip
-	#define REG_GET_SP()      &r.arm_sp
-	#define REG_GET_LR()      &r.arm_lr
-	#define REG_GET_PC()      &r.arm_pc
+	#define REG_GNUM(num)     &r->arm_r##num
+	#define REG_GET_FP()      &r->arm_fp
+	#define REG_GET_IP()      &r->arm_ip
+	#define REG_GET_SP()      &r->arm_sp
+	#define REG_GET_LR()      &r->arm_lr
+	#define REG_GET_PC()      &r->arm_pc
 	Dump_ARM32()
 #elif defined __alpha__
-	#define REG_GNUM(num)     &r.sc_regs[num]
-	#define REG_GET_FP()      &r.sc_regs[15]
-	#define REG_GET_PC()      &r.sc_pc
-	#define REG_GET_SP()      &r.sc_regs[30]
+	#define REG_GNUM(num)     &r->sc_regs[num]
+	#define REG_GET_FP()      &r->sc_regs[15]
+	#define REG_GET_PC()      &r->sc_pc
+	#define REG_GET_SP()      &r->sc_regs[30]
 	Dump_Alpha()
 #elif defined __sparc__
-	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
+	#define REG_GET(ign, reg) &r->gregs[REG_##reg]
 	Dump_SPARC()
 #elif defined __PPC__ && __WORDSIZE == 32
-	#define REG_GNUM(num)     &r.gregs[num]
-	#define REG_GET_PC()      &r.gregs[32]
-	#define REG_GET_LR()      &r.gregs[35]
-	#define REG_GET_CTR()     &r.gregs[34]
+	#define REG_GNUM(num)     &r->gregs[num]
+	#define REG_GET_PC()      &r->gregs[32]
+	#define REG_GET_LR()      &r->gregs[35]
+	#define REG_GET_CTR()     &r->gregs[34]
 	Dump_PPC()
 #elif defined __PPC__
-	#define REG_GNUM(num)     &r.gp_regs[num]
-	#define REG_GET_PC()      &r.gp_regs[32]
+	#define REG_GNUM(num)     &r->gp_regs[num]
+	#define REG_GET_PC()      &r->gp_regs[32]
 	/* TODO this might be wrong, compare with PT_LNK in */
 	/* https://elixir.bootlin.com/linux/v4.19.122/source/arch/powerpc/include/uapi/asm/ptrace.h#L102 */
-	#define REG_GET_LR()      &r.gp_regs[35]
-	#define REG_GET_CTR()     &r.gp_regs[34]
+	#define REG_GET_LR()      &r->gp_regs[35]
+	#define REG_GET_CTR()     &r->gp_regs[34]
 	Dump_PPC()
 #elif defined __mips__
-	#define REG_GNUM(num)     &r.gregs[num]
-	#define REG_GET_PC()      &r.pc
-	#define REG_GET_LO()      &r.mdlo
-	#define REG_GET_HI()      &r.mdhi
+	#define REG_GNUM(num)     &r->gregs[num]
+	#define REG_GET_PC()      &r->pc
+	#define REG_GET_LO()      &r->mdlo
+	#define REG_GET_HI()      &r->mdhi
 	Dump_MIPS()
 #elif defined __riscv
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_PC()      &r.__gregs[REG_PC]
+	#define REG_GNUM(num)     &r->__gregs[num]
+	#define REG_GET_PC()      &r->__gregs[REG_PC]
 	Dump_RISCV()
 #else
 	#error "Unknown CPU architecture"
