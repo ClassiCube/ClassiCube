@@ -140,12 +140,10 @@ static void ProcessPAD_Buttons(int port, int mods) {
 }
 
 static void ProcessPADInput(PADStatus* pad, int i, float delta) {
-	PADStatus pads[PAD_CHANMAX];
-	PAD_Read(pads);
-	int error = pads[i].err;
+	int error = pad->err;
 
 	if (error == 0) {
-		gc_pads[i] = pads[i]; // new state arrived
+		gc_pads[i] = *pad; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
 		// usually means still busy transferring state - use last state
 	} else {
