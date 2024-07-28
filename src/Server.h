@@ -1,6 +1,8 @@
 #ifndef CC_SERVERCONNECTION_H
 #define CC_SERVERCONNECTION_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Represents a connection to either a multiplayer or an internal singleplayer server
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -71,4 +73,6 @@ void Server_RetrieveTexturePack(const cc_string* url);
 
 /* Path of map to automatically load in singleplayer */
 extern cc_string SP_AutoloadMap;
+
+CC_END_HEADER
 #endif

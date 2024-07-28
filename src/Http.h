@@ -2,6 +2,8 @@
 #define CC_HTTP_H
 #include "Constants.h"
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Aysnchronously performs http GET, HEAD, and POST requests
   Typically this is used to download skins, texture packs, etc
@@ -87,4 +89,6 @@ int Http_CheckProgress(int reqID);
 void Http_ClearPending(void);
 
 void Http_LogError(const char* action, const struct HttpRequest* item);
+
+CC_END_HEADER
 #endif

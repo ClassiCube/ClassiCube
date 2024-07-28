@@ -1,6 +1,8 @@
 #ifndef CC_ENTITYRENDERERS_H
 #define CC_ENTITYRENDERERS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Renders supporting objects for entities (shadows and names)
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -18,4 +20,5 @@ void EntityNames_Render(void);
 /* Renders hovered entity name tags (these appears through blocks) */
 void EntityNames_RenderHovered(void);
 
+CC_END_HEADER
 #endif

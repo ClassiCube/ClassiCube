@@ -1,6 +1,8 @@
 #ifndef CC_ENVRENDERER_H
 #define CC_ENVRENDERER_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Renders environment of the map (clouds, sky, fog, map sides/edges, skybox, rain/snow)
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -44,4 +46,6 @@ void EnvRenderer_SetMode(int flags);
 /* Calculates mode flags for the given mode. */
 /* mode can be: normal, normalfast, legacy, legacyfast */
 CC_NOINLINE int EnvRenderer_CalcFlags(const cc_string* mode);
+
+CC_END_HEADER
 #endif

@@ -1,6 +1,8 @@
 #ifndef CC_CAMERA_H
 #define CC_CAMERA_H
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /*
 Represents a camera, may be first or third person
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -82,4 +84,6 @@ void Camera_CheckFocus(void);
 void Camera_UpdateProjection(void);
 void Camera_SetFov(int fov);
 void Camera_KeyLookUpdate(float delta);
+
+CC_END_HEADER
 #endif

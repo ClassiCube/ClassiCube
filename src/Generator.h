@@ -2,6 +2,8 @@
 #define CC_MAP_GEN_H
 #include "ExtMath.h"
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /* Implements flatgrass map generator, and original classic vanilla map generation (with perlin noise)
    Based on: https://github.com/ClassiCube/ClassiCube/wiki/Minecraft-Classic-map-generation-algorithm
    Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
@@ -41,4 +43,6 @@ cc_bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight);
 /* Generates the blocks (and their positions in the world) that actually make up a tree. */
 /* Returns the number of blocks generated, which will be <= TREE_MAX_COUNT */
 int  TreeGen_Grow(int treeX, int treeY, int treeZ, int height, IVec3* coords, BlockRaw* blocks);
+
+CC_END_HEADER
 #endif

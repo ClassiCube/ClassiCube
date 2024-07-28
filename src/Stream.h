@@ -2,6 +2,8 @@
 #define CC_STREAM_H
 #include "Constants.h"
 #include "Platform.h"
+CC_BEGIN_HEADER
+
 /* Defines an abstract way of reading and writing data in a streaming manner.
    Also provides common helper methods for reading/writing data to/from streams.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -98,4 +100,6 @@ cc_result Stream_ReadU32_BE(struct Stream* s, cc_uint32* value);
 CC_API cc_result Stream_ReadLine(struct Stream* s, cc_string* text);
 /* Writes a line of UTF8 encoded text to the stream. */
 CC_API cc_result Stream_WriteLine(struct Stream* s, cc_string* text);
+
+CC_END_HEADER
 #endif

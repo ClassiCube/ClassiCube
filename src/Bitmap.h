@@ -4,6 +4,8 @@
 /* Represents a 2D array of pixels.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
+CC_BEGIN_HEADER
+
 struct Stream;
 
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_PSP || defined CC_BUILD_PSVITA || defined CC_BUILD_PS2
@@ -140,4 +142,6 @@ CC_API cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream);
 /* if alpha is non-zero, RGBA channels are saved, otherwise only RGB channels are. */
 cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
 						Png_RowGetter getRow, cc_bool alpha, void* ctx);
+
+CC_END_HEADER
 #endif

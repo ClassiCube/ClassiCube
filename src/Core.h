@@ -511,5 +511,14 @@ struct Texture {
 	short x, y; cc_uint16 width, height;
 	TextureRec uv;
 };
+
+#ifdef __cplusplus
+	#define CC_BEGIN_HEADER extern "C" {
+	#define CC_END_HEADER }
+#else
+	#define CC_BEGIN_HEADER
+	#define CC_END_HEADER
+#endif
+
 #endif
 

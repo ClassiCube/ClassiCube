@@ -1,6 +1,8 @@
 #ifndef CC_INPUTHANDLER_H
 #define CC_INPUTHANDLER_H
 #include "Input.h"
+CC_BEGIN_HEADER
+
 /* 
 Manages base game input handling
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -63,4 +65,6 @@ extern BindTriggered Bind_OnTriggered[BIND_COUNT];
 extern BindReleased  Bind_OnReleased[BIND_COUNT];
 /* Whether the given input binding is activated by one or more devices */
 extern cc_uint8 Bind_IsTriggered[BIND_COUNT];
+
+CC_END_HEADER
 #endif

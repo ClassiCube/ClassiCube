@@ -1,6 +1,8 @@
 #ifndef CC_WINDOW_H
 #define CC_WINDOW_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Abstracts interaction with a windowing system (creating window, moving cursor, etc)
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -260,4 +262,5 @@ void GLContext_SetVSync(cc_bool vsync);
 void GLContext_GetApiInfo(cc_string* info);
 #endif
 
+CC_END_HEADER
 #endif

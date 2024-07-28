@@ -1,6 +1,7 @@
 #ifndef CC_QUEUE_H
 #define CC_QUEUE_H
 #include "Core.h"
+CC_BEGIN_HEADER
 
 struct Queue {
 	cc_uint8* entries;    /* Buffer holding the bytes of the queue */
@@ -18,4 +19,6 @@ void Queue_Enqueue(struct Queue* queue, void* item);
 void* Queue_Dequeue(struct Queue* queue);
 /* Frees the memory of the queue and resets the members to 0. */
 void Queue_Clear(struct Queue* queue);
+
+CC_END_HEADER
 #endif

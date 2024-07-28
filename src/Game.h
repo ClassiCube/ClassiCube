@@ -1,6 +1,8 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Represents the game and related structures.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -159,4 +161,6 @@ struct ScheduledTask {
 typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
 /* Adds a task to list of scheduled tasks. (always at end) */
 CC_API int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
+
+CC_END_HEADER
 #endif

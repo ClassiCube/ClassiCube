@@ -93,7 +93,7 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
 			if ((res = Audio_AllocChunks(size, &snd->chunk, 1))) return res;
-			res = Stream_Read(stream, snd->chunk.data, size);
+			res = Stream_Read(stream, (cc_uint8*)snd->chunk.data, size);
 
 			#ifdef CC_BUILD_BIGENDIAN
 			Utils_SwapEndian16((cc_int16*)snd->chunk.data, size / 2);
@@ -336,7 +336,7 @@ static cc_result Music_Buffer(struct AudioChunk* chunk, int maxSamples, struct V
 	int samples = 0;
 	cc_int16* cur;
 	cc_result res = 0, res2;
-	cc_int16* data = chunk->data;
+	cc_int16* data = (cc_int16*)chunk->data;
 
 	while (samples < maxSamples) {
 		if ((res = Vorbis_DecodeFrame(ctx))) break;

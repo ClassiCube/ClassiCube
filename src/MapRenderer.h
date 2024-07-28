@@ -2,6 +2,8 @@
 #define CC_MAPRENDERER_H
 #include "Core.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /* Renders the blocks of the world by subdividing it into chunks.
    Also manages the process of building/deleting chunk meshes.
    Also sorts chunks so nearest chunks are rendered first, and calculates chunk visibility.
@@ -75,4 +77,6 @@ void MapRenderer_RefreshChunk(int cx, int cy, int cz);
 void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block);
 /* Deletes all chunks and resets internal state. */
 void MapRenderer_Refresh(void);
+
+CC_END_HEADER
 #endif

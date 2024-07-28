@@ -2,6 +2,8 @@
 #define CC_VECTORS_H
 #include "Core.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /* 
 Represents 2 and 3 component vectors, and 4 x 4 matrix
   Frustum culling sourced from http://www.crownandcutlass.com/features/technicaldetails/frustum.html
@@ -136,4 +138,6 @@ cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius);
 /* Calculates the clipping planes from the combined modelview and projection matrices */
 /* Matrix_Mul(&clip, modelView, projection); */
 void FrustumCulling_CalcFrustumEquations(struct Matrix* clip);
+
+CC_END_HEADER
 #endif

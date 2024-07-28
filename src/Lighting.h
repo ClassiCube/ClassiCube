@@ -1,6 +1,8 @@
 #ifndef CC_WORLDLIGHTING_H
 #define CC_WORLDLIGHTING_H
 #include "PackedCol.h"
+CC_BEGIN_HEADER
+
 /*
 Abstracts lighting of blocks in the world
   Built-in lighting engines:
@@ -85,4 +87,5 @@ cc_bool ClassicLighting_IsLit(int x, int y, int z);
 cc_bool ClassicLighting_IsLit_Fast(int x, int y, int z);
 void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 
+CC_END_HEADER
 #endif

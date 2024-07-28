@@ -1,6 +1,8 @@
 #ifndef CC_PICKING_H
 #define CC_PICKING_H
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /* 
 Provides ray tracer functionality for calculating picking/selecting intersection
   e.g. calculating block selected in the world by the user, clipping the camera
@@ -43,4 +45,6 @@ void RayTracer_Step(struct RayTracer* t);
    or not being able to find a suitable candiate within the given reach distance.*/
 void Picking_CalcPickedBlock(const Vec3* origin, const Vec3* dir, float reach, struct RayTracer* t);
 void Picking_ClipCameraPos(const Vec3* origin, const Vec3* dir, float reach, struct RayTracer* t);
+
+CC_END_HEADER
 #endif

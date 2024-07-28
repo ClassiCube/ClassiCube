@@ -2,6 +2,8 @@
 #define CC_GFXAPI_H
 #include "Vectors.h"
 #include "PackedCol.h"
+CC_BEGIN_HEADER
+
 /* 
 Abstracts a 3D graphics rendering API
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -314,4 +316,6 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 void Texture_Render(const struct Texture* tex);
 /* Binds then renders the given texture */
 void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor);
+
+CC_END_HEADER
 #endif

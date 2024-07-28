@@ -1299,12 +1299,14 @@ static void    NF_SetCPE(cc_bool v) {
 
 static void NostalgiaScreen_Version(void* screen, void* widget) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
+
 	int ver = Game_Version.Version - 1;
 	if (ver < VERSION_0017) ver = VERSION_0030;
 
 	Options_SetInt(OPT_GAME_VERSION, ver);
 	GameVersion_Load();
-	MenuOptionsScreen_Update(s, widget);
+	MenuOptionsScreen_Update(s, btn);
 }
 
 static void NF_GetVersion(struct ButtonWidget* btn, cc_string* v) { 

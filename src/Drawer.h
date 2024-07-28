@@ -2,6 +2,8 @@
 #define CC_DRAWER_H
 #include "PackedCol.h"
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /* 
 Draws the vertices for a cuboid region
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -35,4 +37,6 @@ CC_API void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, struct Vert
 CC_API void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices);
 /* Draws maximum Y face of the cuboid. (i.e. at Y2) */
 CC_API void Drawer_YMax(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices);
+
+CC_END_HEADER
 #endif

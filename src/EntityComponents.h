@@ -2,6 +2,8 @@
 #define CC_ENTITY_COMPONENTS_H
 #include "Vectors.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /* Various components for entities.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -133,4 +135,6 @@ void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */
 void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround);
+
+CC_END_HEADER
 #endif

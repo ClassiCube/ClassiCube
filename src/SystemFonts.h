@@ -1,6 +1,8 @@
 #ifndef CC_SYSTEMFONTS_H
 #define CC_SYSTEMFONTS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /*  Manages loading and drawing platform specific system fonts
 	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -40,4 +42,6 @@ CC_API void SysFonts_GetNames(struct StringsBuffer* buffer);
 /*  NOTE: If this file has been decoded before (fontscache.txt), does nothing */
 cc_result SysFonts_Register(const cc_string* path, SysFont_RegisterCallback callback);
 void SysFonts_SaveCache(void);
+
+CC_END_HEADER
 #endif

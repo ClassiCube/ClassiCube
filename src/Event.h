@@ -1,6 +1,8 @@
 #ifndef CC_EVENT_H
 #define CC_EVENT_H
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /* Helper methods for using events, and contains all events.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -223,4 +225,6 @@ CC_VAR extern struct _NetEventsList {
 	struct Event_Void Disconnected; /* Connection to the server was lost */
 	struct Event_PluginMessage PluginMessageReceived; /* Received a PluginMessage packet from the server */
 } NetEvents;
+
+CC_END_HEADER
 #endif

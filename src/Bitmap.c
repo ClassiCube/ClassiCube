@@ -408,7 +408,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			scanlineSize  = ((samplesPerPixel[colorspace] * bitsPerSample * bmp->width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
 
-			data = Mem_TryAlloc(bmp->height, max(scanlineBytes, bmp->width * 4));
+			data = (cc_uint8*)Mem_TryAlloc(bmp->height, max(scanlineBytes, bmp->width * 4));
 			bmp->scan0 = (BitmapCol*)data;
 			if (!bmp->scan0) return ERR_OUT_OF_MEMORY;
 
@@ -729,7 +729,7 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 					Png_RowGetter getRow, cc_bool alpha, void* ctx) {
 	cc_result res;
 	/* Add 1 for scanline filter type byter */
-	cc_uint8* buffer = Mem_TryAlloc(3, bmp->width * 4 + 1);
+	cc_uint8* buffer = (cc_uint8*)Mem_TryAlloc(3, bmp->width * 4 + 1);
 	if (!buffer) return ERR_NOT_SUPPORTED;
 
 	res = Png_EncodeCore(bmp, stream, buffer, getRow, alpha, ctx);
