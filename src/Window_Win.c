@@ -807,7 +807,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);

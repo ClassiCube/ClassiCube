@@ -179,6 +179,7 @@ void Gfx_Create(void) {
 
 	customMipmapsLevels = true;
 	Gfx.Created         = true;
+	Gfx.BackendType     = CC_GFX_BACKEND_D3D9;
 	TryCreateDevice();
 }
 

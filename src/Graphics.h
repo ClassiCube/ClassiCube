@@ -67,6 +67,9 @@ CC_VAR extern struct _GfxData {
 	/* Whether the graphics backend supports U/V that don't occupy whole texture */
 	/*   e.g. Saturn, 3D0 systems don't support it */
 	cc_bool NoUVSupport;
+	/* Type of the backend (e.g. OpenGL, Direct3D 9, etc)*/
+	cc_uint8 BackendType;
+	cc_bool __pad;
 	/* Maximum total size in pixels a low resolution texture can consist of */
 	/* NOTE: Not all graphics backends specify a value for this */
 	int MaxLowResTexSize;

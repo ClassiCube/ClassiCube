@@ -104,6 +104,7 @@ void Gfx_Create(void) {
 	LoadD3D11Library();
 	CreateDeviceAndSwapChain();
 	Gfx.Created         = true;
+	Gfx.BackendType     = CC_GFX_BACKEND_D3D11;
 	customMipmapsLevels = true;
 	Gfx_RestoreState();
 }

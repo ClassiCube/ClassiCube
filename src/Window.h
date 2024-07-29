@@ -235,7 +235,7 @@ void Window_UpdateRawMouse(void);
 void Window_DisableRawMouse(void);
 
 /* OpenGL contexts are heavily tied to the window, so for simplicitly are also provided here */
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
+#if CC_GFX_BACKEND_IS_GL()
 #define GLCONTEXT_DEFAULT_DEPTH 24
 /* Creates an OpenGL context, then makes it the active context. */
 /* NOTE: You MUST have created the window beforehand, as the GL context is attached to the window. */

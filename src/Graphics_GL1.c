@@ -684,6 +684,7 @@ static void GLBackend_Init(void) {
 	LoadCoreFuncs();
 #endif
 	customMipmapsLevels = true;
+	Gfx.BackendType     = CC_GFX_BACKEND_GL1;
 
 	/* Supported in core since 1.5 */
 	if (major > 1 || (major == 1 && minor >= 5)) {

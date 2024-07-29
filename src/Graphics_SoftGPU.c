@@ -42,6 +42,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 4096;
 	Gfx.MaxTexHeight = 4096;
 	Gfx.Created      = true;
+	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	
 	Gfx_RestoreState();
 }

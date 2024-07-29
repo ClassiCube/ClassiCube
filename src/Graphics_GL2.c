@@ -533,6 +533,7 @@ static void GLBackend_Init(void) {
 #ifdef CC_BUILD_WIN
 	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));
 #endif
+	Gfx.BackendType = CC_GFX_BACKEND_GL2;
 
 #ifdef CC_BUILD_GLES
 	// OpenGL ES 2.0 doesn't support custom mipmaps levels, but 3.2 does
