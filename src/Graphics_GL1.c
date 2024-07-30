@@ -73,6 +73,7 @@ static const struct DynamicLibSym coreFuncs[] = {
 
 	GLSym(glBindTexture),  GLSym(glDeleteTextures), GLSym(glGenTextures),
 	GLSym(glTexImage2D),   GLSym(glTexSubImage2D),
+	GLSym(glDisableClientState), GLSym(glEnableClientState)
 };
 
 static void LoadCoreFuncs(void) {
@@ -91,6 +92,9 @@ static void LoadCoreFuncs(void) {
 #define _glGenTextures    glGenTextures
 #define _glTexImage2D     glTexImage2D
 #define _glTexSubImage2D  glTexSubImage2D
+
+#define _glDisableClientState glDisableClientState
+#define _glEnableClientState  glEnableClientState
 #endif
 
 typedef void (*GL_SetupVBFunc)(void);
@@ -316,13 +320,13 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		_glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbTextured;
 		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
 	} else {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		_glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbColoured;
@@ -472,8 +476,8 @@ void Gfx_DisableTextureOffset(void) { Gfx_LoadMatrix(2, &Matrix_Identity); }
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+	_glEnableClientState(GL_VERTEX_ARRAY);
+	_glEnableClientState(GL_COLOR_ARRAY);
 	gfx_format = -1;
 
 	glHint(GL_FOG_HINT, GL_NICEST);
@@ -574,6 +578,10 @@ static void APIENTRY gl10_texSubImage(GLenum target, GLint level, GLint xoffset,
 	
 }
 
+static void APIENTRY gl10_disableClientState(GLenum target) { }
+
+static void APIENTRY gl10_enableClientState(GLenum target) { }
+
 static cc_uint8* gl10_vb;
 static void APIENTRY gl10_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
 	/* TODO */
@@ -654,6 +662,9 @@ static void FallbackOpenGL(void) {
 	_glDeleteTextures = gl10_deleteTexture;
 	_glTexImage2D     = gl10_texImage;
 	_glTexSubImage2D  = gl10_texSubImage;
+
+	_glDisableClientState = gl10_disableClientState;
+	_glEnableClientState  = gl10_enableClientState;
 }
 #else
 /* No point in even trying for other systems */

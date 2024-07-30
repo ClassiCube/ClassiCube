@@ -345,7 +345,7 @@ static void VirtualKeyboard_MarkDirty3D(void) {
 
 static void VirtualKeyboard_Close3D(void) {
 	Gfx_DeleteTexture(&kb_texture.ID);
-	Game_Draw2DHooks[0] = NULL;
+	Game.Draw2DHooks[0] = NULL;
 }
 
 static void VirtualKeyboard_MakeTexture(void) {
