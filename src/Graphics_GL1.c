@@ -562,20 +562,49 @@ static void APIENTRY legacy_bufferSubData(GLenum target, cc_uintptr offset, cc_u
 }
 
 
+struct GL10Texture {
+	int width, height;
+	unsigned char* pixels;
+};
+static struct GL10Texture* gl10_tex;
+
 static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
-	
+	gl10_tex = (struct GL10Texture*)texture;
+	if (gl10_tex && gl10_tex->pixels) {
+		glTexImage2D(GL_TEXTURE_2D, 0, 4, gl10_tex->width, gl10_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gl10_tex->pixels);
+	} else {
+		BitmapCol pixel = BITMAPCOLOR_WHITE;
+		glTexImage2D(GL_TEXTURE_2D, 0, 4, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+	}
 }
+
 static void APIENTRY gl10_deleteTexture(GLsizei n, const GLuint* textures) {
-
+	struct GL10Texture* tex = (struct GL10Texture*)textures[0];
+	if (tex->pixels) Mem_Free(tex->pixels);
+	if (tex) Mem_Free(tex);
 }
+
 static void APIENTRY gl10_genTexture(GLsizei n, GLuint* textures) {
+	textures[0] = (GLuint)Mem_AllocCleared(1, sizeof(struct GL10Texture), "GL 1.0 texture");
+}
 
-}
 static void APIENTRY gl10_texImage(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels) {
-	
+	int i;
+	gl10_tex->width  = width;
+	gl10_tex->height = height;
+	gl10_tex->pixels = Mem_Alloc(width * height, 4, "GL 1.0 pixels");
+
+	Mem_Copy(gl10_tex->pixels, pixels, width * height * 4);
+	for (i = 0; i < width * height * 4; i += 4) 
+	{
+		cc_uint8 t = gl10_tex->pixels[i + 2];
+		gl10_tex->pixels[i + 2] = gl10_tex->pixels[i + 0];
+		gl10_tex->pixels[i + 0] = t;
+	}
 }
+
 static void APIENTRY gl10_texSubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels) {
-	
+	/* TODO */
 }
 
 static void APIENTRY gl10_disableClientState(GLenum target) { }
