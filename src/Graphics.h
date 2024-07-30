@@ -269,8 +269,8 @@ void Gfx_GetApiInfo(cc_string* info);
 /* Updates state when the window's dimensions have changed */
 /* NOTE: This may require recreating the context depending on the backend */
 void Gfx_OnWindowResize(void);
-void Gfx_SetViewport(int x, int y, int w, int h);
-void Gfx_SetScissor (int x, int y, int w, int h);
+CC_API void Gfx_SetViewport(int x, int y, int w, int h);
+CC_API void Gfx_SetScissor (int x, int y, int w, int h);
 
 enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
 #ifdef CC_BUILD_DUALSCREEN

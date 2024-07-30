@@ -64,7 +64,6 @@ cc_bool Game_Anaglyph3D;
 cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
-Game_Draw2DHook Game_Draw2DHooks[4];
 
 static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];

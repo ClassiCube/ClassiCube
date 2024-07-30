@@ -365,7 +365,7 @@ static void VirtualKeyboard_MakeTexture(void) {
 }
 
 /* TODO hook into context lost etc */
-static void VirtualKeyboard_Display3D(void) {
+static void VirtualKeyboard_Display3D(float delta) {
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
 	
 	if (!kb_vb) {
@@ -427,7 +427,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	Window_Main.SoftKeyboardFocus = true;
 	Input.DownHook = VirtualKeyboard_ProcessDown;
 	LBackend_Hooks[0]   = VirtualKeyboard_Display2D;
-	Game_Draw2DHooks[0] = VirtualKeyboard_Display3D;
+	Game.Draw2DHooks[0] = VirtualKeyboard_Display3D;
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {
