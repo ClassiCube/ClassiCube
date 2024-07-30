@@ -203,17 +203,24 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 
 #if defined CC_BUILD_WIN
 struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
+static BOOL (WINAPI *_SymGetSymFromAddr)(HANDLE process, DWORD_PTR addr, DWORD_PTR* displacement, IMAGEHLP_SYMBOL* sym);
+static BOOL (WINAPI *_SymGetModuleInfo) (HANDLE process, DWORD_PTR addr, IMAGEHLP_MODULE* module);
+
 static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	char strBuffer[512]; cc_string str;
 	struct SymbolAndName s = { 0 };
 	IMAGEHLP_MODULE m = { 0 };
 
-	s.symbol.MaxNameLength = 255;
-	s.symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
-	SymGetSymFromAddr(process, addr, NULL, &s.symbol);
+	if (_SymGetSymFromAddr) {
+		s.symbol.MaxNameLength = 255;
+		s.symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
+		_SymGetSymFromAddr(process, addr, NULL, &s.symbol);
+	}
 	
-	m.SizeOfStruct    = sizeof(IMAGEHLP_MODULE);
-	SymGetModuleInfo(process, addr, &m);
+	if (_SymGetModuleInfo) {
+		m.SizeOfStruct    = sizeof(IMAGEHLP_MODULE);
+		_SymGetModuleInfo(process, addr, &m);
+	}
 
 	String_InitArray(str, strBuffer);
 	PrintFrame(&str, addr, s.symbol.Address, s.symbol.Name, m.ModuleName);
@@ -279,6 +286,20 @@ static void DumpFrame(cc_string* trace, void* addr) {
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
+static DWORD_PTR (WINAPI *_SymGetModuleBase)(HANDLE process, DWORD_PTR addr);
+static PVOID     (WINAPI *_SymFunctionTableAccess)(HANDLE process, DWORD_PTR addr);
+static BOOL      (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
+
+static PVOID FunctionTableAccessCallback(HANDLE process, DWORD_PTR addr) {
+	if (!_SymFunctionTableAccess) return NULL;
+	return _SymFunctionTableAccess(process, addr);
+}
+
+static DWORD_PTR GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
+	if (!_SymGetModuleBase) return 0;
+	return _SymGetModuleBase(process, addr);
+}
+
 /* This callback function is used so stack Walking works using StackWalk properly on Windows 9x: */
 /*  - on Windows 9x process ID is passed instead of process handle as the "process" argument */
 /*  - the SymXYZ functions expect a process ID on Windows 9x, so that works fine */
@@ -323,7 +344,8 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 
 	for (count = 0; count < max; count++) 
 	{
-		if (!StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
+		if (!StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, 
+						FunctionTableAccessCallback, GetModuleBaseCallback, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
 		addrs[count] = frame.AddrPC.Offset;
 	}
@@ -334,7 +356,9 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	cc_uintptr addrs[MAX_BACKTRACE_FRAMES];
 	int i, frames;
 
-	SymInitialize(curProcess, NULL, TRUE); /* TODO only in MSVC.. */
+	if (_SymInitialize) {
+		_SymInitialize(curProcess, NULL, TRUE); /* TODO only in MSVC.. */
+	}
 	frames  = GetFrames((CONTEXT*)ctx, addrs, MAX_BACKTRACE_FRAMES);
 
 	for (i = 0; i < frames; i++) {
@@ -527,7 +551,7 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_SP()  &r->IntSp
 	#define REG_GET_PC()  &r->Fir
 	Dump_Alpha()
-#elif defined MIPS
+#elif defined _MIPS_
 	#define REG_GNUM(num) &r->IntZero + num
 	#define REG_GET_PC()  &r->Fir
 	#define REG_GET_LO()  &r->IntLo
@@ -936,8 +960,7 @@ static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, vo
 	Logger_Log(&str);
 	return true;
 }
-
-static BOOL (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
+static BOOL  (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
 static void DumpMisc(void) {
 	static const cc_string modules = String_FromConst("-- modules --\r\n");
 	if (spRegister >= 0xFFFF) DumpStack();
@@ -1095,8 +1118,18 @@ void Logger_Hook(void) {
 	static const struct DynamicLibSym funcs[] = {
 	#ifdef _IMAGEHLP64
 		{ "EnumerateLoadedModules64", (void**)&_EnumerateLoadedModules},
+		{ "SymFunctionTableAccess64", (void**)&_SymFunctionTableAccess},
+		{ "SymGetModuleBase64",       (void**)&_SymGetModuleBase },
+		{ "SymGetModuleInfo64",       (void**)&_SymGetModuleInfo },
+		{ "SymGetSymFromAddr64",      (void**)&_SymGetSymFromAddr },
+		{ "SymInitialize",            (void**)&_SymInitialize },
 	#else
 		{ "EnumerateLoadedModules",   (void**)&_EnumerateLoadedModules },
+		{ "SymFunctionTableAccess",   (void**)&_SymFunctionTableAccess },
+		{ "SymGetModuleBase",         (void**)&_SymGetModuleBase },
+		{ "SymGetModuleInfo",         (void**)&_SymGetModuleInfo },
+		{ "SymGetSymFromAddr",        (void**)&_SymGetSymFromAddr },
+		{ "SymInitialize",            (void**)&_SymInitialize },
 	#endif
 	};
 	static const cc_string imagehlp = String_FromConst("IMAGEHLP.DLL");
