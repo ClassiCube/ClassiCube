@@ -78,9 +78,10 @@ CC_VAR extern struct _GfxData {
 	int MinTexWidth, MinTexHeight;
 	cc_bool  ReducedPerfMode;
 	cc_uint8 ReducedPerfModeCooldown;
+	/* Default index buffer for a triangle list representing quads */
+	GfxResourceID DefaultIb;
 } Gfx;
 
-extern GfxResourceID Gfx_defaultIb;
 extern const cc_string Gfx_LowPerfMessage;
 
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
@@ -93,13 +94,15 @@ typedef enum GfxBuffers_ {
 } GfxBuffers;
 
 /* Texture should persist across gfx context loss (if backend supports ManagedTextures) */
-#define TEXTURE_FLAG_MANAGED 0x01
+#define TEXTURE_FLAG_MANAGED  0x01
 /* Texture should allow updating via Gfx_UpdateTexture */
-#define TEXTURE_FLAG_DYNAMIC 0x02
+#define TEXTURE_FLAG_DYNAMIC  0x02
 /* Texture is deliberately (and not accidentally) being created with non power of two dimensions */
-#define TEXTURE_FLAG_NONPOW2 0x04
+#define TEXTURE_FLAG_NONPOW2  0x04
 /* Texture can fallback to 16 bpp when necessary (most backends don't do this) */
-#define TEXTURE_FLAG_LOWRES  0x08
+#define TEXTURE_FLAG_LOWRES   0x08
+/* Texture should be rendered using bilinear filtering if possible */
+#define TEXTURE_FLAG_BILINEAR 0x10
 
 void  Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);

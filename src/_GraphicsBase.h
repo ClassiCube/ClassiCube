@@ -12,7 +12,6 @@
 #include "Logger.h"
 
 struct _GfxData Gfx;
-GfxResourceID Gfx_defaultIb;
 static GfxResourceID Gfx_quadVb, Gfx_texVb;
 const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced performance mode (game minimised or hidden)");
 
@@ -126,7 +125,7 @@ static void RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertic
 }
 
 static void InitDefaultResources(void) {
-	Gfx_defaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
+	Gfx.DefaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
 
 	RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
@@ -135,7 +134,7 @@ static void InitDefaultResources(void) {
 static void FreeDefaultResources(void) {
 	Gfx_DeleteDynamicVb(&Gfx_quadVb);
 	Gfx_DeleteDynamicVb(&Gfx_texVb);
-	Gfx_DeleteIb(&Gfx_defaultIb);
+	Gfx_DeleteIb(&Gfx.DefaultIb);
 }
 
 

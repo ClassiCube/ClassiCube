@@ -9,6 +9,8 @@ CC_BEGIN_HEADER
 
 struct Bitmap;
 struct Stream;
+typedef void (*Game_Draw2DHook)(float delta);
+
 CC_VAR extern struct _GameData {
 	/* Width and height of the window. (1 at minimum) */
 	int Width, Height;
@@ -18,6 +20,7 @@ CC_VAR extern struct _GameData {
 	int ChunkUpdates;
 	/* Index of current game state being used (for splitscreen multiplayer) */
 	int CurrentState;
+	Game_Draw2DHook Draw2DHooks[4];
 } Game;
 
 extern struct RayTracer Game_SelectedPos;
@@ -25,8 +28,6 @@ extern cc_bool Game_UseCPEBlocks;
 
 extern cc_string Game_Username;
 extern cc_string Game_Mppass;
-typedef void (*Game_Draw2DHook)(void);
-extern Game_Draw2DHook Game_Draw2DHooks[4];
 
 #ifdef CC_BUILD_SPLITSCREEN
 	int Game_MapState(int deviceIndex);

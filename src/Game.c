@@ -682,9 +682,9 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 
 	Gfx_Begin2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
-	for (i = 0; i < Array_Elems(Game_Draw2DHooks); i++)
+	for (i = 0; i < Array_Elems(Game.Draw2DHooks); i++)
 	{
-		if (Game_Draw2DHooks[i]) Game_Draw2DHooks[i]();
+		if (Game.Draw2DHooks[i]) Game.Draw2DHooks[i](delta);
 	}
 
 /* TODO find a better solution than this */
@@ -750,7 +750,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	}
 
 	Gfx_BeginFrame();
-	Gfx_BindIb(Gfx_defaultIb);
+	Gfx_BindIb(Gfx.DefaultIb);
 	Game.Time += deltaD;
 	Game_Vertices = 0;
 
