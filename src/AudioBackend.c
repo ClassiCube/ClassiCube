@@ -22,7 +22,7 @@ static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks);
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(sampleRate, playbackRate) ((sampleRate * playbackRate) / 100)
 
-#if defined CC_BUILD_OPENAL
+#if CC_AUD_BACKEND == CC_AUD_BACKEND_OPENAL
 /*########################################################################################################################*
 *------------------------------------------------------OpenAL backend-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -298,7 +298,7 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	AudioBase_FreeChunks(chunks, numChunks);
 }
-#elif defined CC_BUILD_WINMM
+#elif CC_AUD_BACKEND == CC_AUD_BACKEND_WINMM
 /*########################################################################################################################*
 *------------------------------------------------------WinMM backend------------------------------------------------------*
 *#########################################################################################################################*/
@@ -503,7 +503,7 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	AudioBase_FreeChunks(chunks, numChunks);
 }
-#elif defined CC_BUILD_OPENSLES
+#elif CC_AUD_BACKEND == CC_AUD_BACKEND_OPENSLES
 /*########################################################################################################################*
 *----------------------------------------------------OpenSL ES backend----------------------------------------------------*
 *#########################################################################################################################*/

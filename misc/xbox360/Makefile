@@ -29,7 +29,7 @@ export AR       := xenon-ar
 #---------------------------------------------------------------------------------
 TARGET		:=	ClassiCube-xbox360
 BUILD		:=	build-360
-SOURCES		:=	src
+SOURCES		:=	src third_party/bearssl/src
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -68,7 +68,7 @@ export OFILES	:=	$(CFILES:.c=.o) $(sFILES:.s=.o) $(SFILES:.S=.o)
 #---------------------------------------------------------------------------------
 # build a list of include paths
 #---------------------------------------------------------------------------------
-export INCLUDE	:= -I$(LIBXENON_INC)
+export INCLUDE	:= -I$(LIBXENON_INC) -Ithird_party/bearssl/inc
 
 #---------------------------------------------------------------------------------
 # build a list of library paths

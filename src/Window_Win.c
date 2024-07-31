@@ -812,6 +812,7 @@ static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
 static FP_SWAPINTERVAL wglSwapIntervalEXT;
+static void* gl_lib;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
@@ -846,6 +847,9 @@ void GLContext_Create(void) {
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
 
+	static const cc_string glPath = String_FromConst("OPENGL32.dll");
+	gl_lib = DynamicLib_Load2(&glPath);
+
 	ctx_handle = wglCreateContext(win_DC);
 	if (!ctx_handle) {
 		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
@@ -867,19 +871,20 @@ void GLContext_Free(void) {
 	ctx_handle = NULL;
 }
 
+static PROC (WINAPI *_wglGetProcAddress)(LPCSTR);
 /* https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions#Windows */
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 
 void* GLContext_GetAddress(const char* function) {
-	static const cc_string glPath = String_FromConst("OPENGL32.dll");
-	static void* lib;
-
-	void* addr = (void*)wglGetProcAddress(function);
-	if (!GLContext_IsInvalidAddress(addr)) return addr;
+	/* Not present on NT 3.5 */
+	if (!_wglGetProcAddress) _wglGetProcAddress = DynamicLib_Get2(gl_lib, "wglGetProcAddress");
+	if (_wglGetProcAddress) {
+		void* addr = (void*)_wglGetProcAddress(function);
+		if (!GLContext_IsInvalidAddress(addr)) return addr;
+	}
 
 	/* Some drivers return NULL from wglGetProcAddress for core OpenGL functions */
-	if (!lib) lib = DynamicLib_Load2(&glPath);
-	return DynamicLib_Get2(lib, function);
+	return DynamicLib_Get2(gl_lib, function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {

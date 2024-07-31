@@ -290,12 +290,12 @@ static DWORD_PTR (WINAPI *_SymGetModuleBase)(HANDLE process, DWORD_PTR addr);
 static PVOID     (WINAPI *_SymFunctionTableAccess)(HANDLE process, DWORD_PTR addr);
 static BOOL      (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
 
-static PVOID FunctionTableAccessCallback(HANDLE process, DWORD_PTR addr) {
+static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, DWORD_PTR addr) {
 	if (!_SymFunctionTableAccess) return NULL;
 	return _SymFunctionTableAccess(process, addr);
 }
 
-static DWORD_PTR GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
+static DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
 	if (!_SymGetModuleBase) return 0;
 	return _SymGetModuleBase(process, addr);
 }
