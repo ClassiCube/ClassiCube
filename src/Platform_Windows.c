@@ -136,6 +136,14 @@ void Platform_Log(const char* msg, int len) {
 	OutputDebugStringA("\n");
 }
 
+static VOID (WINAPI *_GetSystemTimeAsFileTime)(LPFILETIME sysTime);
+/* Fallback support for NT 3.5 */
+static VOID WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
+	SYSTEMTIME curTime;
+	GetSystemTime(&curTime);
+	SystemTimeToFileTime(&curTime, sysTime);
+}
+
 #define FILETIME_EPOCH      50491123200ULL
 #define FILETIME_UNIX_EPOCH 11644473600ULL
 #define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
@@ -144,7 +152,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	FILETIME ft; 
 	cc_uint64 raw;
 	
-	GetSystemTimeAsFileTime(&ft);
+	_GetSystemTimeAsFileTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
 	raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 	return FileTime_TotalSecs(raw);
@@ -171,7 +179,7 @@ cc_uint64 Stopwatch_Measure(void) {
 		QueryPerformanceCounter(&t);
 		return (cc_uint64)t.QuadPart;
 	} else {		
-		GetSystemTimeAsFileTime(&ft);
+		_GetSystemTimeAsFileTime(&ft);
 		return (cc_uint64)ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 	}
 }
@@ -964,12 +972,15 @@ static BOOL (WINAPI *_IsDebuggerPresent)(void);
 
 static void LoadKernelFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent)
+		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent),
+		DynamicLib_Sym(GetSystemTimeAsFileTime),
 	};
 
 	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
 	void* lib;
 	DynamicLib_LoadAll(&kernel32, funcs, Array_Elems(funcs), &lib);
+	/* Not present on Windows NT 3.5 */
+	if (!_GetSystemTimeAsFileTime) _GetSystemTimeAsFileTime = Fallback_GetSystemTimeAsFileTime;
 }
 
 void Platform_Init(void) {
@@ -1046,6 +1057,7 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	LocalFree(output.pbData);
 	return 0;
 }
+
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;

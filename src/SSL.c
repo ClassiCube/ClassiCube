@@ -1,7 +1,7 @@
 #include "SSL.h"
 #include "Errors.h"
 
-#if defined CC_BUILD_SCHANNEL
+#if CC_SSL_BACKEND == CC_SSL_BACKEND_SCHANNEL
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -404,7 +404,7 @@ cc_result SSL_Free(void* ctx_) {
 	Mem_Free(ctx);
 	return 0; 
 }
-#elif defined CC_BUILD_BEARSSL
+#elif CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
 #include "String.h"
 #include "bearssl.h"
 #include "../misc/certs/certs.h"

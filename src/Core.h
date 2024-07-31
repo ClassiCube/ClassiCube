@@ -141,6 +141,10 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_D3D11     5
 #define CC_GFX_BACKEND_VULKAN    6
 
+#define CC_SSL_BACKEND_NONE     1
+#define CC_SSL_BACKEND_BEARSSL  2
+#define CC_SSL_BACKEND_SCHANNEL 3
+
 #define CC_GFX_BACKEND_IS_GL() (CC_GFX_BACKEND == CC_GFX_BACKEND_GL1 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL2)
 
 #define CC_BUILD_NETWORKING
@@ -162,8 +166,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined XENON
 	/* libxenon also defines __linux__ (yes, really) */
 	#define CC_BUILD_XBOX360
@@ -172,11 +176,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined _WIN32
 	#define CC_BUILD_WIN
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_SCHANNEL
 	#define CC_BUILD_WINMM
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_SCHANNEL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_D3D9
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32
 #elif defined __ANDROID__
@@ -315,15 +320,15 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined __3DS__
 	#define CC_BUILD_3DS
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_DUALSCREEN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined GEKKO
 	#define CC_BUILD_GCWII
 	#define CC_BUILD_CONSOLE
@@ -332,31 +337,31 @@ typedef cc_uint8  cc_bool;
 	#endif
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined __vita__
 	#define CC_BUILD_PSVITA
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_TOUCH
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined _arch_dreamcast
 	#define CC_BUILD_DREAMCAST
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
 	#define CC_BUILD_SMALLSTACK
 	#undef  CC_BUILD_RESOURCES
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined N64
 	#define CC_BIG_ENDIAN
 	#define CC_BUILD_N64
@@ -376,8 +381,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined PLAT_NDS
 	#define CC_BUILD_NDS
 	#define CC_BUILD_CONSOLE
@@ -396,18 +401,18 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
 	#define CC_BUILD_TOUCH
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined __SWITCH__
 	#define CC_BUILD_SWITCH
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_GLES
 	#define CC_BUILD_EGL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined PLAT_PS1
 	#define CC_BUILD_PS1
 	#define CC_BUILD_CONSOLE
@@ -454,6 +459,9 @@ typedef cc_uint8  cc_bool;
 #endif
 #if defined DEFAULT_GFX_BACKEND && !defined CC_GFX_BACKEND
 	#define CC_GFX_BACKEND DEFAULT_GFX_BACKEND
+#endif
+#if defined DEFAULT_SSL_BACKEND && !defined CC_SSL_BACKEND
+	#define CC_SSL_BACKEND DEFAULT_SSL_BACKEND
 #endif
 
 #ifdef CC_BUILD_CONSOLE
