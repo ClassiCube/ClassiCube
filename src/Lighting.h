@@ -72,6 +72,8 @@ CC_VAR extern struct _Lighting {
 	PackedCol (*Color_YMin_Fast)(int x, int y, int z);
 	PackedCol (*Color_XSide_Fast)(int x, int y, int z);
 	PackedCol (*Color_ZSide_Fast)(int x, int y, int z);
+	PackedCol (*Color_XSideMin_Fast)(int x, int y, int z);
+	PackedCol (*Color_ZSideMin_Fast)(int x, int y, int z);
 } Lighting;
 
 void FancyLighting_SetActive(void);
