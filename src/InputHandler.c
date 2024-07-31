@@ -784,6 +784,8 @@ cc_bool KeyBind_IsPressed(InputBind binding) { return Bind_IsTriggered[binding];
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y, mask;
+	if (Pointers[idx].DownHook) { Pointers[idx].DownHook(idx); return; }
+
 	/* Always set last click time, otherwise quickly tapping */
 	/* sometimes triggers a 'delete' in InputHandler_Tick, */
 	/* and then another 'delete' in CheckBlockTap. */
@@ -820,6 +822,8 @@ static void OnPointerDown(void* obj, int idx) {
 static void OnPointerUp(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y;
+	if (Pointers[idx].UpHook) { Pointers[idx].UpHook(idx); return; }
+
 #ifdef CC_BUILD_TOUCH
 	CheckBlockTap(idx);
 	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;

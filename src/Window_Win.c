@@ -458,7 +458,7 @@ void Clipboard_GetText(cc_string* value) {
 		if (unicode) {
 			String_AppendUtf16(value,  src, size - 2);
 		} else {
-			String_DecodeCP1252(value, src, size - 1);
+			String_AppendCP1252(value, src, size - 1);
 		}
 
 		GlobalUnlock(hGlobal);

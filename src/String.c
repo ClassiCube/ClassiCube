@@ -638,7 +638,7 @@ void String_AppendUtf8(cc_string* value, const void* data, int numBytes) {
 	}
 }
 
-void String_DecodeCP1252(cc_string* value, const void* data, int numBytes) {
+void String_AppendCP1252(cc_string* value, const void* data, int numBytes) {
 	const cc_uint8* chars = (const cc_uint8*)data;
 	int i; char c;
 

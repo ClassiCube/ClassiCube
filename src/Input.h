@@ -182,7 +182,15 @@ extern struct TouchPointer touches[INPUT_MAX_POINTERS];
 #define TOUCH_TYPE_ALL (TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA | TOUCH_TYPE_BLOCKS)
 
 /* Data for mouse and touch */
-extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
+struct Pointer { 
+	int x, y;
+	/* Function that overrides all normal pointer input press handling */
+	void (*DownHook)(int index);
+	/* Function that overrides all normal pointer input release handling */
+	void (*UpHook)  (int index);
+};
+CC_VAR extern struct Pointer Pointers[INPUT_MAX_POINTERS];
+
 /* Raises appropriate events for a mouse vertical scroll */
 void Mouse_ScrollVWheel(float delta);
 /* Raises appropriate events for a mouse horizontal scroll */
