@@ -21,8 +21,14 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	typedef unsigned __int32 cc_uintptr;
 	#endif
 	
-	#define CC_INLINE inline
+#if _MSC_VER <= 1500
+	#define CC_INLINE
+	#define CC_NOINLINE
+#else
+	#define CC_INLINE   inline
 	#define CC_NOINLINE __declspec(noinline)
+#endif
+	
 	#ifndef CC_API
 	#define CC_API __declspec(dllexport, noinline)
 	#define CC_VAR __declspec(dllexport)
@@ -58,6 +64,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	
 	#define CC_INLINE inline
 	#define CC_NOINLINE __attribute__((noinline))
+	
 	#ifndef CC_API
 	#ifdef _WIN32
 	#define CC_API __attribute__((dllexport, noinline))
@@ -67,6 +74,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	#define CC_VAR __attribute__((visibility("default")))
 	#endif
 	#endif
+	
 	#define CC_HAS_MISC
 	#ifdef __BIG_ENDIAN__
 	#define CC_BIG_ENDIAN
@@ -117,26 +125,23 @@ typedef cc_uint8  cc_bool;
 #endif
 #endif
 
-/* Lowest 4 bits are for backends in same group */
-/* Rest of the bits indicate the unique group type */
+#define CC_WIN_BACKEND_TERMINAL 1
+#define CC_WIN_BACKEND_SDL2     2
+#define CC_WIN_BACKEND_SDL3     3
+#define CC_WIN_BACKEND_X11      4
+#define CC_WIN_BACKEND_WIN32    5
+#define CC_WIN_BACKEND_COCOA    6
+#define CC_WIN_BACKEND_BEOS     7
+#define CC_WIN_BACKEND_ANDROID  8
 
-#define CC_WIN_BACKEND_TERMINAL 0x0001
-#define CC_WIN_BACKEND_SDL_MASK 0x0010
-#define CC_WIN_BACKEND_SDL2     0x0011
-#define CC_WIN_BACKEND_SDL3     0x0012
-#define CC_WIN_BACKEND_X11      0x0021
-#define CC_WIN_BACKEND_WIN32    0x0041
-#define CC_WIN_BACKEND_COCOA    0x0081
-#define CC_WIN_BACKEND_BEOS     0x0101
-#define CC_WIN_BACKEND_ANDROID  0x0201
+#define CC_GFX_BACKEND_SOFTGPU   1
+#define CC_GFX_BACKEND_GL1       2
+#define CC_GFX_BACKEND_GL2       3
+#define CC_GFX_BACKEND_D3D9      4
+#define CC_GFX_BACKEND_D3D11     5
+#define CC_GFX_BACKEND_VULKAN    6
 
-#define CC_GFX_BACKEND_SOFTGPU   0x0001
-#define CC_GFX_BACKEND_GL_MASK   0x0010
-#define CC_GFX_BACKEND_GL1       0x0011
-#define CC_GFX_BACKEND_GL2       0x0012
-#define CC_GFX_BACKEND_D3D9      0x0021
-#define CC_GFX_BACKEND_D3D11     0x0041
-#define CC_GFX_BACKEND_VULKAN    0x0081
+#define CC_GFX_BACKEND_IS_GL() (CC_GFX_BACKEND == CC_GFX_BACKEND_GL1 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL2)
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
@@ -503,5 +508,14 @@ struct Texture {
 	short x, y; cc_uint16 width, height;
 	TextureRec uv;
 };
+
+#ifdef __cplusplus
+	#define CC_BEGIN_HEADER extern "C" {
+	#define CC_END_HEADER }
+#else
+	#define CC_BEGIN_HEADER
+	#define CC_END_HEADER
+#endif
+
 #endif
 

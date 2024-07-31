@@ -1,6 +1,8 @@
 #ifndef CC_MATH_H
 #define CC_MATH_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Simple math functions and constants. Also implements a RNG algorithm, based on 
       Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -75,4 +77,6 @@ CC_API float Random_Float(RNGState* rnd);
 static CC_INLINE int Random_Range(RNGState* rnd, int min, int max) {
 	return min + Random_Next(rnd, max - min);
 }
+
+CC_END_HEADER
 #endif

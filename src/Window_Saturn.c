@@ -94,6 +94,27 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping saturn_defaults[BIND_COUNT] = {
+	[BIND_LOOK_UP]      = { CCPAD_4, CCPAD_UP },
+	[BIND_LOOK_DOWN]    = { CCPAD_4, CCPAD_DOWN },
+	[BIND_LOOK_LEFT]    = { CCPAD_4, CCPAD_LEFT },
+	[BIND_LOOK_RIGHT]   = { CCPAD_4, CCPAD_RIGHT },
+	[BIND_FORWARD]      = { CCPAD_UP,    0 },
+	[BIND_BACK]         = { CCPAD_DOWN,  0 },
+	[BIND_LEFT]         = { CCPAD_LEFT,  0 },
+	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
+	[BIND_JUMP]         = { CCPAD_1,     0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 }, 
+	[BIND_INVENTORY]    = { CCPAD_3,     0 },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L},
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3},
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_DELETE_BLOCK] = { CCPAD_L, 0 }, 
+	[BIND_PLACE_BLOCK]  = { CCPAD_R, 0 }
+};
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	smpc_peripheral_init();
@@ -129,7 +150,7 @@ static smpc_peripheral_digital_t dig_state;
 static smpc_peripheral_analog_t  ana_state;
 
 void Gamepads_Process(float delta) {
-	int port = Gamepad_Connect(0x5A, PadBind_Defaults);
+	int port = Gamepad_Connect(0x5A, saturn_defaults);
 	smpc_peripheral_process();
 
 	smpc_peripheral_digital_port(1, &dig_state);

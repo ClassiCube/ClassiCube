@@ -101,6 +101,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 16; // 128
 	Gfx.Created      = true;
+	Gfx.NoUVSupport  = true;
 }
 
 void Gfx_Free(void) { 
@@ -382,8 +383,8 @@ static void LoadTransformMatrix(struct Matrix* src) {
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	struct Matrix mvp;
 	if (matrix == &Matrix_Identity && type == MATRIX_VIEW) {
@@ -395,8 +396,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	LoadTransformMatrix(&mvp);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	_view = *view;
+	_proj = *proj;
+
+	Matrix_Mul(mvp, view, proj);
+	LoadTransformMatrix(mvp);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -621,7 +626,7 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) {
-	Platform_LogConst("FRAME BEG");
+	//Platform_LogConst("FRAME BEG");
 	cmdts_count = 0;
 
 	static const int16_vec2_t system_clip_coord  = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
@@ -639,7 +644,7 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_EndFrame(void) {
-	Platform_LogConst("FRAME END");
+	//Platform_LogConst("FRAME END");
 	vdp1_cmdt_t* cmd;
 
 	cmd = NextPrimitive();

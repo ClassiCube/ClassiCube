@@ -1,6 +1,8 @@
 #ifndef CC_LSCREENS_H
 #define CC_LSCREENS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Implements all of the screens/menus in the launcher
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -50,4 +52,6 @@ void ServersScreen_SetActive(void);
 void SettingsScreen_SetActive(void);
 void ThemesScreen_SetActive(void);
 void UpdatesScreen_SetActive(void);
+
+CC_END_HEADER
 #endif

@@ -2,6 +2,8 @@
 #define CC_DRAWER2D_H
 #include "Bitmap.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /*  Performs a variety of drawing operations on bitmaps, and converts bitmaps into textures.
 	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -126,4 +128,6 @@ cc_bool Font_SetBitmapAtlas(struct Bitmap* bmp);
 void Font_SetPadding(struct FontDesc* desc, int amount);
 /* Initialises the given font for drawing bitmapped text using default.png */
 void Font_MakeBitmapped(struct FontDesc* desc, int size, int flags);
+
+CC_END_HEADER
 #endif

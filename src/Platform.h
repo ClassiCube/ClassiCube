@@ -1,6 +1,8 @@
 #ifndef CC_PLATFORM_H
 #define CC_PLATFORM_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Abstracts platform specific memory management, I/O, etc
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -348,4 +350,6 @@ void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* d
 /* Calls a static method in the activity class that returns a jobject */
 #define JavaSCall_Obj(env,  method, args) (*env)->CallStaticObjectMethodA(env,App_Class, method, args)
 #endif
+
+CC_END_HEADER
 #endif

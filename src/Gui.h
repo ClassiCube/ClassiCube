@@ -1,6 +1,8 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -304,4 +306,6 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
 #define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)
 #define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget)
+
+CC_END_HEADER
 #endif

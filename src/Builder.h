@@ -1,6 +1,8 @@
 #ifndef CC_BUILDER_H
 #define CC_BUILDER_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Converts a 16x16x16 chunk into a mesh of vertices
   NormalMeshBuilder:
@@ -21,4 +23,6 @@ extern cc_bool Builder_SmoothLighting;
 void Builder_MakeChunk(struct ChunkInfo* info);
 
 void Builder_ApplyActive(void);
+
+CC_END_HEADER
 #endif

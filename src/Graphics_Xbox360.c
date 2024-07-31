@@ -317,7 +317,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
 	
 	Matrix_Mul(&_mvp, &_view, &_proj);
@@ -325,8 +325,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	Xe_SetVertexShaderConstantF(xe, 0, (float*)&_mvp, 4);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {	
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {

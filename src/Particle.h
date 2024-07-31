@@ -2,6 +2,8 @@
 #define CC_PARTICLE_H
 #include "Vectors.h"
 #include "PackedCol.h"
+CC_BEGIN_HEADER
+
 /* 
 Represents particle effects, and manages rendering and spawning particles
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -43,4 +45,6 @@ void Particles_Render(float t);
 void Particles_BreakBlockEffect(IVec3 coords, BlockID oldBlock, BlockID block);
 void Particles_RainSnowEffect(float x, float y, float z);
 void Particles_CustomEffect(int effectID, float x, float y, float z, float originX, float originY, float originZ);
+
+CC_END_HEADER
 #endif

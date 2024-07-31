@@ -1,6 +1,8 @@
 #ifndef CC_INPUT_H
 #define CC_INPUT_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Manages input state and raising input related events
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -258,4 +260,6 @@ void InputBind_Set(InputBind binding, int btn, const struct InputDevice* device)
 void InputBind_Reset(InputBind binding, const struct InputDevice* device);
 /* Loads the bindings for the given device from either options or its defaults */
 void InputBind_Load(const struct InputDevice* device);
+
+CC_END_HEADER
 #endif

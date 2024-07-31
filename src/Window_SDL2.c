@@ -101,7 +101,7 @@ static void DoCreateWindow(int width, int height, int flags) {
 }
 
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
+#if CC_GFX_BACKEND_IS_GL()
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
 #else
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
@@ -534,7 +534,7 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static SDL_GLContext win_ctx;
 
 void GLContext_Create(void) {

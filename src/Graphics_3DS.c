@@ -868,7 +868,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	// 
 	// This can be done by rotating the projection matrix 90 degrees around Z axis
 	// https://open.gl/transformations
-	if (type == MATRIX_PROJECTION) {
+	if (type == MATRIX_PROJ) {
 		struct Matrix rot = Matrix_Identity;
 		rot.row1.x =  0; rot.row1.y = 1;
 		rot.row2.x = -1; rot.row2.y = 0;
@@ -882,8 +882,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	ReloadUniforms();
 }*/
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {

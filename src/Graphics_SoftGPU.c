@@ -42,6 +42,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 4096;
 	Gfx.MaxTexHeight = 4096;
 	Gfx.Created      = true;
+	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	
 	Gfx_RestoreState();
 }
@@ -240,17 +241,21 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static float texOffsetX, texOffsetY;
-static struct Matrix _view, _proj, mvp;
+static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&mvp, &_view, &_proj);
+	Matrix_Mul(&_mvp, &_view, &_proj);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	_view = *view;
+	_proj = *proj;
+
+	Matrix_Mul(mvp, view, proj);
+	_mvp  = *mvp;
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -332,10 +337,10 @@ static int TransformVertex3D(int index, Vertex* vertex) {
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
 	Vector3* pos = (Vector3*)ptr;
 
-	vertex->x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
-	vertex->y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
-	vertex->z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
-	vertex->w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
+	vertex->x = pos->x * _mvp.row1.x + pos->y * _mvp.row2.x + pos->z * _mvp.row3.x + _mvp.row4.x;
+	vertex->y = pos->x * _mvp.row1.y + pos->y * _mvp.row2.y + pos->z * _mvp.row3.y + _mvp.row4.y;
+	vertex->z = pos->x * _mvp.row1.z + pos->y * _mvp.row2.z + pos->z * _mvp.row3.z + _mvp.row4.z;
+	vertex->w = pos->x * _mvp.row1.w + pos->y * _mvp.row2.w + pos->z * _mvp.row3.w + _mvp.row4.w;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;

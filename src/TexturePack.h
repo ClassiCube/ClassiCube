@@ -1,6 +1,8 @@
 #ifndef CC_TEXPACKS_H
 #define CC_TEXPACKS_H
 #include "Bitmap.h"
+CC_BEGIN_HEADER
+
 /* 
 Contains everything relating to texture packs
   - Extracting the textures from a .zip archive
@@ -113,4 +115,6 @@ struct TextureEntry {
 	struct TextureEntry* next;
 };
 void TextureEntry_Register(struct TextureEntry* entry);
+
+CC_END_HEADER
 #endif

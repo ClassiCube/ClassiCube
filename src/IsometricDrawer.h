@@ -1,6 +1,8 @@
 #ifndef CC_ISOMETRICDRAWER_H
 #define CC_ISOMETRICDRAWER_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Draws 2D isometric blocks for the hotbar and inventory UIs.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -17,4 +19,6 @@ void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y);
 int  IsometricDrawer_EndBatch(void);
 /* Draws the buffered vertices */
 void IsometricDrawer_Render(int count, int offset, int* state);
+
+CC_END_HEADER
 #endif

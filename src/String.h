@@ -1,6 +1,8 @@
 #ifndef CC_STRING_H
 #define CC_STRING_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Provides various string related operations
    Also provides conversions betweens strings and numbers
@@ -270,4 +272,6 @@ void WordWrap_GetCoords(int index, const cc_string* lines, int numLines, int* co
 int  WordWrap_GetBackLength(const cc_string* text, int index);
 /* Returns number of characters from current character to start of next word. */
 int  WordWrap_GetForwardLength(const cc_string* text, int index);
+
+CC_END_HEADER
 #endif

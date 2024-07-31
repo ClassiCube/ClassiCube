@@ -1453,9 +1453,10 @@ static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
 
 static int SaveLevelScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	int handled;
 	SaveLevelScreen_RemoveOverwrites(s);
 	
-	int handled = Menu_DoInputDown(s, key, device);
+	handled = Menu_DoInputDown(s, key, device);
 	/* Pressing Enter triggers save */
 	if (!handled && InputDevice_IsEnter(key, device))
 		SaveLevelScreen_Save(s, &s->save);
@@ -1995,9 +1996,10 @@ static void KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
 static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
+	int old;
 	
 	Input.DownHook = NULL;
-	int old     = s->curI;
+	old         = s->curI;
 	s->curI     = (int)btn->meta.val;
 	s->closable = false;
 

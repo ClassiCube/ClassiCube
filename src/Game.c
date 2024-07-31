@@ -64,7 +64,6 @@ cc_bool Game_Anaglyph3D;
 cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
-Game_Draw2DHook Game_Draw2DHooks[4];
 
 static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];
@@ -341,7 +340,12 @@ static void LoadOptions(void) {
 	Game_ClassicMode  = Options_GetBool(OPT_CLASSIC_MODE,  false);
 	Game_ClassicHacks = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_Anaglyph3D   = Options_GetBool(OPT_ANAGLYPH3D,    false);
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+	/* View bobbing requires per-frame matrix multiplications - costly on FPU less systems */
+	Game_ViewBobbing  = Options_GetBool(OPT_VIEW_BOBBING,  false);
+#else
 	Game_ViewBobbing  = Options_GetBool(OPT_VIEW_BOBBING,  true);
+#endif
 	
 	Game_AllowCustomBlocks   = !Game_ClassicMode && Options_GetBool(OPT_CUSTOM_BLOCKS,      true);
 	Game_SimpleArmsAnim      = !Game_ClassicMode && Options_GetBool(OPT_SIMPLE_ARMS_ANIM,   false);
@@ -501,17 +505,18 @@ void Game_SetMinFrameTime(float frameTimeMS) {
 }
 #endif
 
-static void UpdateViewMatrix(void) {
-	Camera.Active->GetView(&Gfx.View);
-	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
-}
-
 static void Render3DFrame(float delta, float t) {
+	struct Matrix mvp;
 	Vec3 pos;
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
-	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 
+	Camera.Active->GetView(&Gfx.View);
+	/*Gfx_LoadMatrix(MATRIX_PROJ, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
+	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);*/
+	Gfx_LoadMVP(&Gfx.View, &Gfx.Projection, &mvp);
+	FrustumCulling_CalcFrustumEquations(&mvp);
+
+	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);
 	EntityNames_Render();
@@ -659,7 +664,6 @@ static void LimitFPS(void) {
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	int i;
-	UpdateViewMatrix();
 
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
@@ -677,9 +681,9 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 
 	Gfx_Begin2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
-	for (i = 0; i < Array_Elems(Game_Draw2DHooks); i++)
+	for (i = 0; i < Array_Elems(Game.Draw2DHooks); i++)
 	{
-		if (Game_Draw2DHooks[i]) Game_Draw2DHooks[i]();
+		if (Game.Draw2DHooks[i]) Game.Draw2DHooks[i](delta);
 	}
 
 /* TODO find a better solution than this */
@@ -719,9 +723,10 @@ static CC_INLINE void Game_RenderFrame(void) {
 	struct ScheduledTask entTask;
 	float t;
 
-	cc_uint64 render = Stopwatch_Measure();
-	double deltaD    = Stopwatch_ElapsedMicroseconds(frameStart, render) / (1000.0 * 1000.0);
-	float delta      = (float)deltaD;
+	cc_uint64 render  = Stopwatch_Measure();
+	cc_uint64 elapsed = Stopwatch_ElapsedMicroseconds(frameStart, render);
+	double deltaD     = elapsed / (1000.0 * 1000.0);
+	float delta       = (float)deltaD;
 	Window_ProcessEvents(delta);
 
 	if (delta > 5.0f)  delta = 5.0f; /* avoid large delta with suspended process */
@@ -744,7 +749,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	}
 
 	Gfx_BeginFrame();
-	Gfx_BindIb(Gfx_defaultIb);
+	Gfx_BindIb(Gfx.DefaultIb);
 	Game.Time += deltaD;
 	Game_Vertices = 0;
 

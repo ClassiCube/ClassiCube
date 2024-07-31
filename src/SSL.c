@@ -407,7 +407,7 @@ cc_result SSL_Free(void* ctx_) {
 #elif defined CC_BUILD_BEARSSL
 #include "String.h"
 #include "bearssl.h"
-#include "../misc/certs.h"
+#include "../misc/certs/certs.h"
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
 

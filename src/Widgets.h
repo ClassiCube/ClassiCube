@@ -6,6 +6,8 @@
 #include "Entity.h"
 #include "Inventory.h"
 #include "IsometricDrawer.h"
+CC_BEGIN_HEADER
+
 /* Contains all 2D widget implementations.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -312,4 +314,6 @@ struct ThumbstickWidget {
 void ThumbstickWidget_Init(struct ThumbstickWidget* w);
 void ThumbstickWidget_GetMovement(struct ThumbstickWidget* w, float* xMoving, float* zMoving);
 #endif
+
+CC_END_HEADER
 #endif

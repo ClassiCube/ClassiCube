@@ -1,6 +1,8 @@
 #ifndef CC_MAPFORMATS_H
 #define CC_MAPFORMATS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Imports/exports a world and associated metadata from/to a particular map file format.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -36,4 +38,6 @@ cc_result Schematic_Save(struct Stream* stream);
 /* Exports a world to a .dat Classic map file */
 /* Used by MineCraft Classic */
 cc_result Dat_Save(struct Stream* stream);
+
+CC_END_HEADER
 #endif

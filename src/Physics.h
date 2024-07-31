@@ -1,6 +1,8 @@
 #ifndef CC_PHYSICS_H
 #define CC_PHYSICS_H
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /* 
 Provides various physics related structs and methods such as:
    - An axis aligned bounding box, and various methods related to them.
@@ -38,4 +40,6 @@ extern struct SearcherState* Searcher_States;
 int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB);
 void Searcher_CalcTime(Vec3* vel, struct AABB *entityBB, struct AABB* blockBB, float* tx, float* ty, float* tz);
 void Searcher_Free(void);
+
+CC_END_HEADER
 #endif

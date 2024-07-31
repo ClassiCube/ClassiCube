@@ -449,15 +449,17 @@ static float textureOffsetX, textureOffsetY;
 static int textureOffset;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_PROJECTION) memcpy(&_proj, matrix, sizeof(struct Matrix));
-	if (type == MATRIX_VIEW)       memcpy(&_view, matrix, sizeof(struct Matrix));
+	if (type == MATRIX_PROJ) memcpy(&_proj, matrix, sizeof(struct Matrix));
+	if (type == MATRIX_VIEW) memcpy(&_view, matrix, sizeof(struct Matrix));
 	
 	mat_load( &_proj);
 	mat_apply(&_view);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 

@@ -1,6 +1,8 @@
 #ifndef CC_CHAT_H
 #define CC_CHAT_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Manages sending, adding, logging and handling chat.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -71,4 +73,6 @@ CC_API void Chat_Add1(const char* format, const void* a1);
 CC_API void Chat_Add2(const char* format, const void* a1, const void* a2);
 CC_API void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a3);
 CC_API void Chat_Add4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
+
+CC_END_HEADER
 #endif

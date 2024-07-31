@@ -184,30 +184,30 @@ int FallbackFont_TextWidth(const struct DrawTextArgs* args) {
 
 static void Fallback_DrawCell(struct Bitmap* bmp, int x, int y, 
 					int scale, const cc_uint8* rows, BitmapCol color) {
-	int dst_width  = CELL_SIZE * scale;
-	int dst_height = CELL_SIZE * scale;
 	int xx, srcX, dstX;
 	int yy, srcY, dstY;
 	BitmapCol* dst_row;
 	cc_uint8 src_row;
 
-	for (yy = 0; yy < dst_height; yy++)
+	for (srcY = 0, dstY = y; srcY < CELL_SIZE; srcY++)
 	{
-		srcY = yy / scale;
-		dstY = y + yy;
-		if (dstY < 0 || dstY >= bmp->height) continue;
-
-		dst_row = Bitmap_GetRow(bmp, dstY);
-		src_row = rows[srcY];
-
-		for (xx = 0; xx < dst_width; xx++)
+		for (yy = 0; yy < scale; yy++, dstY++)
 		{
-			srcX = xx / scale;
-			dstX = x + xx;
-			if (dstX < 0 || dstX >= bmp->width) continue;
-
-			if (src_row & (1 << srcX)) {
-				dst_row[dstX] = color;
+			if (dstY < 0 || dstY >= bmp->height) continue;
+	
+			dst_row = Bitmap_GetRow(bmp, dstY);
+			src_row = rows[srcY];
+	
+			for (srcX = 0, dstX = x; srcX < CELL_SIZE; srcX++)
+			{
+				for (xx = 0; xx < scale; xx++, dstX++)
+				{
+					if (dstX < 0 || dstX >= bmp->width) continue;
+		
+					if (src_row & (1 << srcX)) {
+						dst_row[dstX] = color;
+					}
+				}
 			}
 		}
 	}

@@ -2,6 +2,8 @@
 #define CC_WORLD_H
 #include "Vectors.h"
 #include "PackedCol.h"
+CC_BEGIN_HEADER
+
 /* 
 Represents a fixed size 3D array of blocks and associated metadata
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -214,4 +216,6 @@ float Respawn_HighestSolidY(struct AABB* bb);
 /* Finds a suitable initial spawn position for the entity. */
 /* Works by iterating downwards from top of world until solid ground is found. */
 Vec3 Respawn_FindSpawnPosition(float x, float z, Vec3 modelSize);
+
+CC_END_HEADER
 #endif

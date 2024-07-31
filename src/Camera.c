@@ -29,10 +29,13 @@ static void Camera_OnRawMovement(float deltaX, float deltaY, int deviceIndex) {
 }
 
 void Camera_KeyLookUpdate(float delta) {
+	float amount;
+	int i;
 	if (Gui.InputGrab) return;
+
 	/* divide by 25 to have reasonable sensitivity for default mouse sens */
-	float amount = (Camera.Sensitivity / 25.0f) * (1000 * delta);
-	int i = Game.CurrentState;
+	amount = (Camera.Sensitivity / 25.0f) * (1000 * delta);
+	i = Game.CurrentState;
 
 	if (Bind_IsTriggered[BIND_LOOK_UP])    states[i].deltaY -= amount;
 	if (Bind_IsTriggered[BIND_LOOK_DOWN])  states[i].deltaY += amount;
@@ -52,8 +55,9 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
 	Vec3 pos = Camera.CurrentPos;
 	Vec2 rot = Camera.Active->GetOrientation();
+
 	Matrix_LookRot(mat, pos, rot);
-	Matrix_MulBy(mat, &Camera.TiltM);
+	if (Game_ViewBobbing) Matrix_MulBy(mat, &Camera.TiltM);
 }
 
 static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {
@@ -332,7 +336,7 @@ void Camera_SetFov(int fov) {
 
 void Camera_UpdateProjection(void) {
 	Camera.Active->GetProjection(&Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_PROJ,  &Gfx.Projection);
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
 }
 

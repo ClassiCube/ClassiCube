@@ -1,6 +1,8 @@
 #ifndef CC_LBACKEND_H
 #define CC_LBACKEND_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Abstracts the gui drawing backend for the Launcher
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -83,4 +85,6 @@ void LBackend_TableDraw(struct LTable* w);
 void LBackend_TableMouseDown(struct LTable* w, int idx);
 void LBackend_TableMouseUp(struct   LTable* w, int idx);
 void LBackend_TableMouseMove(struct LTable* w, int idx);
+
+CC_END_HEADER
 #endif

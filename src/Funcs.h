@@ -1,6 +1,8 @@
 #ifndef CC_FUNCS_H
 #define CC_FUNCS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Simple function implementations
   NOTE: doing min(x++, y) etc will increment x twice!
@@ -49,4 +51,6 @@ while (cur) {\
 	tail = cur;\
 	cur  = cur->next;\
 }
+
+CC_END_HEADER
 #endif

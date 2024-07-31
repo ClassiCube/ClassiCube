@@ -104,6 +104,7 @@ void Gfx_Create(void) {
 	LoadD3D11Library();
 	CreateDeviceAndSwapChain();
 	Gfx.Created         = true;
+	Gfx.BackendType     = CC_GFX_BACKEND_D3D11;
 	customMipmapsLevels = true;
 	Gfx_RestoreState();
 }
@@ -601,15 +602,17 @@ static void VS_Free(void) {
 
 static struct Matrix _view, _proj;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	Matrix_Mul(&vs_constants.mvp, &_view, &_proj);
 	VS_UpdateConstants();
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {

@@ -4,6 +4,8 @@
 #include "PackedCol.h"
 #include "Constants.h"
 #include "Physics.h"
+CC_BEGIN_HEADER
+
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -298,4 +300,5 @@ void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* pa
 void CustomModel_Register(struct CustomModel* cm);
 void CustomModel_Undefine(struct CustomModel* cm);
 
+CC_END_HEADER
 #endif

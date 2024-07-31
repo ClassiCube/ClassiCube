@@ -2,6 +2,8 @@
 #define CC_MENUS_H
 #include "Gui.h"
 #include "PackedCol.h"
+CC_BEGIN_HEADER
+
 
 /* Contains all 2D menu screen implementations.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -100,4 +102,6 @@ typedef void (*Button_SetNum)(const cc_string* v);
 void MenuOptionsScreen_AddNum(struct MenuOptionsScreen* s, const char* name,
 								float minValue, float maxValue, float defaultValue,
 								Button_GetNum getValue, Button_SetNum setValue, const char* desc);
+
+CC_END_HEADER
 #endif

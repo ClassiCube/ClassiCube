@@ -278,7 +278,7 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_EGL || !(CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
+#if defined CC_BUILD_EGL || !CC_GFX_BACKEND_IS_GL()
 static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	cc_result res;
@@ -397,11 +397,11 @@ static void DoCreateWindow(int width, int height) {
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
 	XClassHint hint = { 0 };
 	#ifdef CC_BUILD_FLATPAK
-		hint.res_name   = "net.classicube.flatpak.client";
-		hint.res_class  = "net.classicube.flatpak.client";
+		hint.res_name   = (char*)"net.classicube.flatpak.client";
+		hint.res_class  = (char*)"net.classicube.flatpak.client";
 	#else
-		hint.res_name   = GAME_APP_TITLE;
-		hint.res_class  = GAME_APP_TITLE;
+		hint.res_name   = (char*)GAME_APP_TITLE;
+		hint.res_class  = (char*)GAME_APP_TITLE;
 	#endif
 	XSetClassHint(win_display, win, &hint);
 	ApplyIcon(win);
@@ -1160,7 +1160,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window blit");
 
 	fb_image = XCreateImage(win_display, win_visual.visual,
-		win_visual.depth, ZPixmap, 0, fb_data,
+		win_visual.depth, ZPixmap, 0, (char*)fb_data,
 		width, height, 32, 0);
 }
 
@@ -1345,7 +1345,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 /* #include <GL/glx.h> */
 #include "../misc/x11/min-glx.h"
 

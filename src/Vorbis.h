@@ -1,6 +1,8 @@
 #ifndef CC_VORBIS_H
 #define CC_VORBIS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Decodes ogg vorbis audio into 16 bit PCM samples
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -66,4 +68,6 @@ cc_result Vorbis_DecodeHeaders(struct VorbisState* ctx);
 cc_result Vorbis_DecodeFrame(struct VorbisState* ctx);
 /* Produces final interleaved audio samples for the current frame. */
 int Vorbis_OutputFrame(struct VorbisState* ctx, cc_int16* data);
+
+CC_END_HEADER
 #endif

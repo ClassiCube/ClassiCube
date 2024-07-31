@@ -20,6 +20,8 @@ static cc_string kb_str = String_FromArray(kb_buffer);
 static void (*KB_MarkDirty)(void);
 
 #define KB_TILE_SIZE 32
+static int kb_tileWidth  = KB_TILE_SIZE;
+static int kb_tileHeight = KB_TILE_SIZE;
 
 #define KB_B_CAPS  0x10
 #define KB_B_SHIFT 0x20
@@ -47,7 +49,7 @@ static const char* kb_normal_lower[] =
 	"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace",
 	"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "(", ")", "&    ",
 	"a", "s", "d", "f", "g", "h", "j", "k", "l", "?", ";", "'", "Enter",
-	"z", "x", "c", "v", "b", "n", "m", ".", ",","\\", "!", "@", "/    ",
+	"z", "x", "c", "v", "b", "n", "m", ",", ".","\\", "!", "@", "/    ",
 	"Caps",0,0,0, "Shift",0,0,0, "Space",0,0,0, "Close"
 };
 static const char* kb_normal_upper[] =
@@ -106,11 +108,11 @@ static void VirtualKeyboard_Init(void) {
 }
 
 static int VirtualKeyboard_Width(void) {
-	return kb->rowWidth * KB_TILE_SIZE;
+	return kb->rowWidth * kb_tileWidth;
 }
 
 static int VirtualKeyboard_Height(void) {
-	return kb->numRows  * KB_TILE_SIZE;
+	return kb->numRows  * kb_tileHeight;
 }
 
 static int VirtualKeyboard_GetSelected(void) {
@@ -151,8 +153,8 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 
 			str = String_FromReadonly(kb->table[i]);
 			DrawTextArgs_Make(&args, &str, &kb_font, false);
-			w = KB_TILE_SIZE * KB_GetCellWidth(i);
-			h = KB_TILE_SIZE;
+			w = kb_tileWidth * KB_GetCellWidth(i);
+			h = kb_tileHeight;
 
 			Gradient_Noise(ctx, i == selected ? KB_SELECTED_COLOR : KB_NORMAL_COLOR, 4, x, y, w, h);
 			LWidget_DrawBorder(ctx, KB_BACKGROUND_COLOR, 1, 1, x, y, w, h);
@@ -163,7 +165,7 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 
 			x += w;
 		}
-		y += KB_TILE_SIZE;
+		y += kb_tileHeight;
 	}
 	
 	Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
@@ -292,8 +294,8 @@ static void VirtualKeyboard_PointerDown(void* obj, int idx) {
 	int x = Pointers[idx].x, y = Pointers[idx].y;
 	if (x < kbX || y < kbY || x >= kbX + width || y >= kbY + height) return;
 
-	kb_curX = (x - kbX) / KB_TILE_SIZE;
-	kb_curY = (y - kbY) / KB_TILE_SIZE;
+	kb_curX = (x - kbX) / kb_tileWidth;
+	kb_curY = (y - kbY) / kb_tileHeight;
 	if (kb_curX >= kb->cellsPerRow) kb_curX = kb->cellsPerRow - 1;
 
 	VirtualKeyboard_Clamp();
@@ -343,7 +345,7 @@ static void VirtualKeyboard_MarkDirty3D(void) {
 
 static void VirtualKeyboard_Close3D(void) {
 	Gfx_DeleteTexture(&kb_texture.ID);
-	Game_Draw2DHooks[0] = NULL;
+	Game.Draw2DHooks[0] = NULL;
 }
 
 static void VirtualKeyboard_MakeTexture(void) {
@@ -363,7 +365,7 @@ static void VirtualKeyboard_MakeTexture(void) {
 }
 
 /* TODO hook into context lost etc */
-static void VirtualKeyboard_Display3D(void) {
+static void VirtualKeyboard_Display3D(float delta) {
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
 	
 	if (!kb_vb) {
@@ -425,7 +427,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	Window_Main.SoftKeyboardFocus = true;
 	Input.DownHook = VirtualKeyboard_ProcessDown;
 	LBackend_Hooks[0]   = VirtualKeyboard_Display2D;
-	Game_Draw2DHooks[0] = VirtualKeyboard_Display3D;
+	Game.Draw2DHooks[0] = VirtualKeyboard_Display3D;
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {

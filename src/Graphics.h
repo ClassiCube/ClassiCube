@@ -2,6 +2,8 @@
 #define CC_GFXAPI_H
 #include "Vectors.h"
 #include "PackedCol.h"
+CC_BEGIN_HEADER
+
 /* 
 Abstracts a 3D graphics rendering API
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -15,11 +17,14 @@ extern struct IGameComponent Gfx_Component;
 typedef enum VertexFormat_ {
 	VERTEX_FORMAT_COLOURED, VERTEX_FORMAT_TEXTURED
 } VertexFormat;
+
 typedef enum FogFunc_ {
 	FOG_LINEAR, FOG_EXP, FOG_EXP2
 } FogFunc;
+
 typedef enum MatrixType_ {
-	MATRIX_PROJECTION, MATRIX_VIEW
+	MATRIX_PROJ, /* Projection matrix */
+	MATRIX_VIEW  /* Combined model view matrix */
 } MatrixType;
 
 #define SIZEOF_VERTEX_COLOURED 16
@@ -59,6 +64,12 @@ CC_VAR extern struct _GfxData {
 	struct Matrix View, Projection;
 	/* Whether the graphics backend supports non power of two textures */
 	cc_bool SupportsNonPowTwoTextures;
+	/* Whether the graphics backend supports U/V that don't occupy whole texture */
+	/*   e.g. Saturn, 3D0 systems don't support it */
+	cc_bool NoUVSupport;
+	/* Type of the backend (e.g. OpenGL, Direct3D 9, etc)*/
+	cc_uint8 BackendType;
+	cc_bool __pad;
 	/* Maximum total size in pixels a low resolution texture can consist of */
 	/* NOTE: Not all graphics backends specify a value for this */
 	int MaxLowResTexSize;
@@ -67,9 +78,10 @@ CC_VAR extern struct _GfxData {
 	int MinTexWidth, MinTexHeight;
 	cc_bool  ReducedPerfMode;
 	cc_uint8 ReducedPerfModeCooldown;
+	/* Default index buffer for a triangle list representing quads */
+	GfxResourceID DefaultIb;
 } Gfx;
 
-extern GfxResourceID Gfx_defaultIb;
 extern const cc_string Gfx_LowPerfMessage;
 
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
@@ -82,13 +94,15 @@ typedef enum GfxBuffers_ {
 } GfxBuffers;
 
 /* Texture should persist across gfx context loss (if backend supports ManagedTextures) */
-#define TEXTURE_FLAG_MANAGED 0x01
+#define TEXTURE_FLAG_MANAGED  0x01
 /* Texture should allow updating via Gfx_UpdateTexture */
-#define TEXTURE_FLAG_DYNAMIC 0x02
+#define TEXTURE_FLAG_DYNAMIC  0x02
 /* Texture is deliberately (and not accidentally) being created with non power of two dimensions */
-#define TEXTURE_FLAG_NONPOW2 0x04
+#define TEXTURE_FLAG_NONPOW2  0x04
 /* Texture can fallback to 16 bpp when necessary (most backends don't do this) */
-#define TEXTURE_FLAG_LOWRES  0x08
+#define TEXTURE_FLAG_LOWRES   0x08
+/* Texture should be rendered using bilinear filtering if possible */
+#define TEXTURE_FLAG_BILINEAR 0x10
 
 void  Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
@@ -222,10 +236,10 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
 
 /* Loads the given matrix over the currently active matrix */
 CC_API void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix);
-/* Loads the identity matrix over the currently active matrix */
-CC_API void Gfx_LoadIdentityMatrix(MatrixType type);
 CC_API void Gfx_EnableTextureOffset(float x, float y);
 CC_API void Gfx_DisableTextureOffset(void);
+/* Loads given modelview and projection matrices, then calculates the combined MVP matrix */
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp);
 
 /* Calculates an orthographic projection matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar);
@@ -255,16 +269,15 @@ void Gfx_GetApiInfo(cc_string* info);
 /* Updates state when the window's dimensions have changed */
 /* NOTE: This may require recreating the context depending on the backend */
 void Gfx_OnWindowResize(void);
-void Gfx_SetViewport(int x, int y, int w, int h);
-void Gfx_SetScissor (int x, int y, int w, int h);
+CC_API void Gfx_SetViewport(int x, int y, int w, int h);
+CC_API void Gfx_SetScissor (int x, int y, int w, int h);
 
 enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
 #ifdef CC_BUILD_DUALSCREEN
 /* Selects which screen on the 3DS to render to */
 void Gfx_3DS_SetRenderScreen(enum Screen3DS screen);
 #else
-static inline
-void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) { }
+static CC_INLINE void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) { }
 #endif
 
 /* Raises ContextLost event and updates state for lost contexts */
@@ -309,4 +322,6 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 void Texture_Render(const struct Texture* tex);
 /* Binds then renders the given texture */
 void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor);
+
+CC_END_HEADER
 #endif

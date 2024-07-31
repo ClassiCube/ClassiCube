@@ -5,6 +5,8 @@
 #include "Constants.h"
 #include "PackedCol.h"
 #include "String.h"
+CC_BEGIN_HEADER
+
 /* Represents an in-game entity.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -256,4 +258,6 @@ cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p);
 /* Moves local player back to spawn point. */
 void LocalPlayers_MoveToSpawn(struct LocationUpdate* update);
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update);
+
+CC_END_HEADER
 #endif

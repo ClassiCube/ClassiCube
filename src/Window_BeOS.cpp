@@ -709,7 +709,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static cc_bool win_vsync;
 
 void GLContext_Create(void) {
@@ -747,6 +747,6 @@ void GLContext_SetVSync(cc_bool vsync) {
 	win_vsync = vsync;
 }
 void GLContext_GetApiInfo(cc_string* info) { }
-#endif // (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !CC_BUILD_EGL
+#endif // CC_GFX_BACKEND_IS_GL() && !CC_BUILD_EGL
 
 #endif

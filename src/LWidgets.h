@@ -2,6 +2,8 @@
 #define CC_LWIDGETS_H
 #include "Bitmap.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /* Describes and manages individual 2D GUI elements in the launcher.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -250,4 +252,6 @@ void LTable_SetSelectedTo(struct LTable* w, int index);
 void LTable_RowClick(struct LTable* w, int row);
 /* Works out the background color of the given row */
 BitmapCol LTable_RowColor(int row, cc_bool selected, cc_bool featured);
+
+CC_END_HEADER
 #endif

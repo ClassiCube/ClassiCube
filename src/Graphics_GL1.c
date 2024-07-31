@@ -73,6 +73,7 @@ static const struct DynamicLibSym coreFuncs[] = {
 
 	GLSym(glBindTexture),  GLSym(glDeleteTextures), GLSym(glGenTextures),
 	GLSym(glTexImage2D),   GLSym(glTexSubImage2D),
+	GLSym(glDisableClientState), GLSym(glEnableClientState)
 };
 
 static void LoadCoreFuncs(void) {
@@ -91,6 +92,9 @@ static void LoadCoreFuncs(void) {
 #define _glGenTextures    glGenTextures
 #define _glTexImage2D     glTexImage2D
 #define _glTexSubImage2D  glTexSubImage2D
+
+#define _glDisableClientState glDisableClientState
+#define _glEnableClientState  glEnableClientState
 #endif
 
 typedef void (*GL_SetupVBFunc)(void);
@@ -316,13 +320,13 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		_glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbTextured;
 		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
 	} else {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		_glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbColoured;
@@ -443,12 +447,18 @@ static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadMatrixf((const float*)matrix);
+
+	if (matrix == &Matrix_Identity) {
+		glLoadIdentity();
+	} else {
+		glLoadMatrixf((const float*)matrix);
+	}
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadIdentity();
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 static struct Matrix texMatrix = Matrix_IdentityValue;
@@ -457,7 +467,7 @@ void Gfx_EnableTextureOffset(float x, float y) {
 	Gfx_LoadMatrix(2, &texMatrix);
 }
 
-void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
+void Gfx_DisableTextureOffset(void) { Gfx_LoadMatrix(2, &Matrix_Identity); }
 
 
 /*########################################################################################################################*
@@ -466,8 +476,8 @@ void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+	_glEnableClientState(GL_VERTEX_ARRAY);
+	_glEnableClientState(GL_COLOR_ARRAY);
 	gfx_format = -1;
 
 	glHint(GL_FOG_HINT, GL_NICEST);
@@ -552,21 +562,54 @@ static void APIENTRY legacy_bufferSubData(GLenum target, cc_uintptr offset, cc_u
 }
 
 
+struct GL10Texture {
+	int width, height;
+	unsigned char* pixels;
+};
+static struct GL10Texture* gl10_tex;
+
 static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
-	
+	gl10_tex = (struct GL10Texture*)texture;
+	if (gl10_tex && gl10_tex->pixels) {
+		glTexImage2D(GL_TEXTURE_2D, 0, 4, gl10_tex->width, gl10_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gl10_tex->pixels);
+	} else {
+		BitmapCol pixel = BITMAPCOLOR_WHITE;
+		glTexImage2D(GL_TEXTURE_2D, 0, 4, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+	}
 }
+
 static void APIENTRY gl10_deleteTexture(GLsizei n, const GLuint* textures) {
-
+	struct GL10Texture* tex = (struct GL10Texture*)textures[0];
+	if (tex->pixels) Mem_Free(tex->pixels);
+	if (tex) Mem_Free(tex);
 }
+
 static void APIENTRY gl10_genTexture(GLsizei n, GLuint* textures) {
+	textures[0] = (GLuint)Mem_AllocCleared(1, sizeof(struct GL10Texture), "GL 1.0 texture");
+}
 
-}
 static void APIENTRY gl10_texImage(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels) {
-	
+	int i;
+	gl10_tex->width  = width;
+	gl10_tex->height = height;
+	gl10_tex->pixels = Mem_Alloc(width * height, 4, "GL 1.0 pixels");
+
+	Mem_Copy(gl10_tex->pixels, pixels, width * height * 4);
+	for (i = 0; i < width * height * 4; i += 4) 
+	{
+		cc_uint8 t = gl10_tex->pixels[i + 2];
+		gl10_tex->pixels[i + 2] = gl10_tex->pixels[i + 0];
+		gl10_tex->pixels[i + 0] = t;
+	}
 }
+
 static void APIENTRY gl10_texSubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels) {
-	
+	/* TODO */
 }
+
+static void APIENTRY gl10_disableClientState(GLenum target) { }
+
+static void APIENTRY gl10_enableClientState(GLenum target) { }
 
 static cc_uint8* gl10_vb;
 static void APIENTRY gl10_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
@@ -648,6 +691,9 @@ static void FallbackOpenGL(void) {
 	_glDeleteTextures = gl10_deleteTexture;
 	_glTexImage2D     = gl10_texImage;
 	_glTexSubImage2D  = gl10_texSubImage;
+
+	_glDisableClientState = gl10_disableClientState;
+	_glEnableClientState  = gl10_enableClientState;
 }
 #else
 /* No point in even trying for other systems */
@@ -678,6 +724,7 @@ static void GLBackend_Init(void) {
 	LoadCoreFuncs();
 #endif
 	customMipmapsLevels = true;
+	Gfx.BackendType     = CC_GFX_BACKEND_GL1;
 
 	/* Supported in core since 1.5 */
 	if (major > 1 || (major == 1 && minor >= 5)) {

@@ -1,6 +1,8 @@
 #ifndef CC_SCREENS_H
 #define CC_SCREENS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Contains all 2D non-menu screen implementations.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -44,4 +46,6 @@ void ChatScreen_OpenInput(const cc_string* text);
 void ChatScreen_AppendInput(const cc_string* text);
 /* Sets number of visible lines in the main chat widget. */
 void ChatScreen_SetChatlines(int lines);
+
+CC_END_HEADER
 #endif

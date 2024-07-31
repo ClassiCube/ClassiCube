@@ -2,6 +2,8 @@
 #define CC_INVENTORY_H
 #include "Core.h"
 #include "BlockID.h"
+CC_BEGIN_HEADER
+
 
 /* Manages inventory hotbar, and ordering of blocks in the inventory menu.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -60,4 +62,6 @@ void Inventory_ResetMapping(void);
 void Inventory_AddDefault(BlockID block);
 /* Removes any slots with the given block from the inventory. */
 void Inventory_Remove(BlockID block);
+
+CC_END_HEADER
 #endif

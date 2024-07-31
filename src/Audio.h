@@ -4,6 +4,8 @@
 /* Manages playing sound and music.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
+CC_BEGIN_HEADER
+
 struct IGameComponent;
 extern struct IGameComponent Audio_Component; 
 struct AudioContext;
@@ -87,4 +89,6 @@ void Audio_Warn(cc_result res, const char* action);
 
 cc_result AudioPool_Play(struct AudioData* data);
 void AudioPool_Close(void);
+
+CC_END_HEADER
 #endif

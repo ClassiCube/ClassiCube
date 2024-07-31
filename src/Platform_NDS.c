@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/time.h>
+#include <time.h>
 #include <nds/bios.h>
 #include <nds/cothread.h>
 #include <nds/interrupts.h>
@@ -29,6 +29,7 @@
 #include <dswifi9.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <dirent.h>
 #include "_PlatformConsole.h"

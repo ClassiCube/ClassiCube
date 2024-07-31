@@ -1,6 +1,8 @@
 #ifndef CC_UTILS_H
 #define CC_UTILS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Provides various utility functions
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -77,4 +79,6 @@ CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const cc_string* key,
 
 cc_bool DirectUrl_Claims(const cc_string* STRING_REF input, cc_string* addr, cc_string* user, cc_string* mppass);
 cc_bool DirectUrl_ExtractAddress(const cc_string* STRING_REF addr, cc_string* ip, cc_string* port, int* portNum);
+
+CC_END_HEADER
 #endif
