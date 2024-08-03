@@ -34,7 +34,6 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "SystemFonts.h"
-#include "Lighting.h"
 
 typedef void (*Button_GetText)(struct ButtonWidget* btn, cc_string* raw);
 typedef void (*Button_SetText)(struct ButtonWidget* btn, const cc_string* raw);
@@ -715,7 +714,7 @@ void EnvSettingsScreen_Show(void) {
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
 static void GrO_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
-	Widget_SetDisabled(s->widgets[4], Lighting_ModeLockedByServer);
+	Widget_SetDisabled(s->widgets[3], Lighting_ModeLockedByServer);
 }
 
 static int  GrO_GetViewDist(void) { return Game_ViewDistance; }
@@ -806,7 +805,6 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClO_GetAnaglyph,   ClO_SetAnaglyph, NULL);
 	};
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
-
 	s->OnLightingModeServerChanged = GrO_CheckLightingModeAllowed;
 	GrO_CheckLightingModeAllowed(s);
 }
@@ -1156,26 +1154,26 @@ static void MiO_SetSensitivity(int v) {
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
+		MenuOptionsScreen_AddNum(s,  "Reach distance",
+			   1, 1024, 5,
+			MiO_GetReach,    MiO_SetReach, NULL);
 		MenuOptionsScreen_AddNum(s, "Camera Mass",
 			1, 100, 20,
 			MiO_GetCameraMass, MiO_SetCameraMass,
 			"&eChange the smoothness of the smooth camera.");
-		MenuOptionsScreen_AddNum(s,  "Reach distance",
-			   1, 1024, 5,
-			MiO_GetReach,    MiO_SetReach, NULL);
 		MenuOptionsScreen_AddInt(s,  "Music volume",
 			   0, 100,  DEFAULT_MUSIC_VOLUME,
 			MiO_GetMusic,     MiO_SetMusic, NULL);
 		MenuOptionsScreen_AddInt(s,  "Sounds volume",
 			   0, 100,  DEFAULT_SOUNDS_VOLUME,
 			MiO_GetSounds,  MiO_SetSounds, NULL);
-		MenuOptionsScreen_AddBool(s, "Smooth camera",
-			MiO_GetCamera,     MiO_SetCamera, NULL);
-		
-		MenuOptionsScreen_AddBool(s, "View bobbing",
-			MiO_GetViewBob, MiO_SetViewBob, NULL);
+
 		MenuOptionsScreen_AddBool(s, "Block physics",
 			MiO_GetPhysics, MiO_SetPhysics, NULL);
+		MenuOptionsScreen_AddBool(s, "Smooth camera",
+			MiO_GetCamera, MiO_SetCamera, NULL);
+		MenuOptionsScreen_AddBool(s, "View bobbing",
+			MiO_GetViewBob, MiO_SetViewBob, NULL);
 		MenuOptionsScreen_AddBool(s, "Invert mouse",
 			MiO_GetInvert,  MiO_SetInvert, NULL);
 		MenuOptionsScreen_AddInt(s,  "Mouse sensitivity", 
