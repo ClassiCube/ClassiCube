@@ -137,6 +137,9 @@ ifdef TERMINAL
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
 	LIBS := $(subst mwindows,mconsole,$(LIBS))
 endif
+ifdef RELEASE
+	CFLAGS += -O1
+endif
 
 default: $(PLAT)
 
@@ -174,6 +177,8 @@ sdl3:
 	$(MAKE) $(ENAME) SDL3=1
 terminal:
 	$(MAKE) $(ENAME) TERMINAL=1
+release:
+	$(MAKE) $(ENAME) RELEASE=1
 
 # Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile

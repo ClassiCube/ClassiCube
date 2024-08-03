@@ -19,7 +19,7 @@ GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     /* Convert to NDC (viewport already applied) */
     vertex->x = vertex->x * f;
     vertex->y = vertex->y * f;
-    vertex->z = _glFastInvert(vertex->w);
+    vertex->z = f;
 }
 
 
