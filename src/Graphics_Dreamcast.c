@@ -448,11 +448,21 @@ static matrix_t __attribute__((aligned(32))) _proj, _view;
 static float textureOffsetX, textureOffsetY;
 static int textureOffset;
 
+static float vp_scaleX, vp_scaleY, vp_offsetX, vp_offsetY;
+static matrix_t __attribute__((aligned(32))) mat_vp;
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_PROJ) memcpy(&_proj, matrix, sizeof(struct Matrix));
 	if (type == MATRIX_VIEW) memcpy(&_view, matrix, sizeof(struct Matrix));
-	
-	mat_load( &_proj);
+
+	memcpy(&mat_vp, &Matrix_Identity, sizeof(struct Matrix));
+	mat_vp[0][0] = vp_scaleX;
+	mat_vp[1][1] = vp_scaleY;
+	mat_vp[3][0] = vp_offsetX;
+	mat_vp[3][1] = vp_offsetY;
+
+	mat_load(&mat_vp);
+	mat_apply(&_proj);
 	mat_apply(&_view);
 }
 
@@ -645,13 +655,10 @@ static void PushCommand(void* cmd) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	Vertex c;
-	c.flags = PVR_CMD_USERCLIP | 0x23;
-	c.x = w *  0.5f; // hwidth
-	c.y = h * -0.5f; // hheight
-	c.z = x + w * 0.5f; // x_plus_hwidth
-	c.u = y + h * 0.5f; // y_plus_hheight
-	PushCommand(&c);
+	vp_scaleX  = w *  0.5f; // hwidth
+	vp_scaleY  = h * -0.5f; // hheight
+	vp_offsetX = x + w * 0.5f; // x_plus_hwidth
+	vp_offsetY = y + h * 0.5f; // y_plus_hheight
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {

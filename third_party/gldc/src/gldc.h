@@ -45,15 +45,6 @@ typedef struct {
 #define GL_FORCE_INLINE static __attribute__((always_inline)) inline
 
 typedef struct {
-    float hwidth;  /* width * 0.5f */
-    float hheight; /* height * 0.5f */
-    float x_plus_hwidth;
-    float y_plus_hheight;
-} Viewport;
-
-extern Viewport VIEWPORTS[3];
-
-typedef struct {
     //0
     GLuint   index;
     GLuint   color; /* This is the PVR texture format */

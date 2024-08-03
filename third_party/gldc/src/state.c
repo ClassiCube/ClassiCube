@@ -26,7 +26,6 @@ GLboolean AUTOSORT_ENABLED;
 AlignedVector OP_LIST;
 AlignedVector PT_LIST;
 AlignedVector TR_LIST;
-Viewport VIEWPORTS[3];
 
 void glKosInit() {
     _glInitTextures();

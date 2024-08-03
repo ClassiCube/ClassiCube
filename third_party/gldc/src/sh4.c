@@ -8,7 +8,6 @@
 
 #define SQ_BASE_ADDRESS (void*) 0xe0000000
 #define PREFETCH(addr) __builtin_prefetch((addr))
-Viewport vp;
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
     return MATH_fsrra(x * x);
@@ -17,10 +16,10 @@ GL_FORCE_INLINE float _glFastInvert(float x) {
 GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     const float f = _glFastInvert(vertex->w);
 
-    /* Convert to NDC and apply viewport */
-    vertex->x = (vertex->x * f * vp.hwidth)  + vp.x_plus_hwidth;
-    vertex->y = (vertex->y * f * vp.hheight) + vp.y_plus_hheight;
-    vertex->z = f;
+    /* Convert to NDC (viewport already applied) */
+    vertex->x = vertex->x * f;
+    vertex->y = vertex->y * f;
+    vertex->z = _glFastInvert(vertex->w);
 }
 
 
@@ -377,21 +376,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
     }
 }
 
-static __attribute__((noinline)) void HandleCommand(Vertex* v) {
-	if ((v->flags & 0xFF) != 0x23) {
-		_glPushHeaderOrVertex(v);
-		return;
-	}
-
-	vp.hwidth  = v->x;
-	vp.hheight = v->y;
-	vp.x_plus_hwidth  = v->z;
-	vp.y_plus_hheight = v->u;
-}
-
 extern void ProcessVertexList(Vertex* v3, int n, void* sq_addr);
 void SceneListSubmit(Vertex* v3, int n, int type) {
-	vp = VIEWPORTS[type];
     PVR_SET(SPAN_SORT_CFG, 0x0);
 
     //Set PVR DMA registers
@@ -414,7 +400,7 @@ void SceneListSubmit(Vertex* v3, int n, int type) {
         case PVR_CMD_VERTEX:
             continue;
         default:
-            HandleCommand(v3);
+            _glPushHeaderOrVertex(v3);
             continue;
         };
 
@@ -460,5 +446,4 @@ void SceneListSubmit(Vertex* v3, int n, int type) {
     }
 
     _glFlushBuffer();
-	VIEWPORTS[type] = vp;
 }

@@ -48,11 +48,6 @@
 !fr5  = y
 !fr6  = z
 !fr7  = w
-!fr8  = VIEWPORT_HWIDTH
-!fr9  = VIEWPORT_HHEIGHT
-!fr10 = VIEWPORT_X_PLUS_HWIDTH
-!fr11 = VIEWPORT_Y_PLUS_HHEIGHT
-
 !fv4  = XYZW
 
 

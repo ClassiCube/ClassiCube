@@ -6,16 +6,6 @@
 ! r13 = cur vertex
 ! r14 = next vertex (prefetch)
 
-!fr12 = VIEWPORT_HWIDTH
-!fr13 = VIEWPORT_HHEIGHT
-!fr14 = VIEWPORT_X_PLUS_HWIDTH
-!fr15 = VIEWPORT_Y_PLUS_HHEIGHT
-
-#define F_HW fr12
-#define F_HH fr13
-#define F_XP fr14
-#define F_YP fr15
-
 #define R_VTX        r10
 #define R_EOL        r11
 #define REG_CMD_VTX  r10
@@ -51,42 +41,8 @@
 	add     #32,r8      ! EX, SQ += 32
 .endm
 
-
-! Pushes a vertex to the store queue
-!   CLOBBERS: fr0, fr4, fr5
-!   INPUTS:   R (vertex)
-!   OUTPUTS:
-! TODO optimise greatly  
-.macro ViewportTransform R
-! INVERSE W CALCULATION
-    add #28, \R       ! EX, \R  = &vertex->w
-    fmov.s  @\R,fr0   ! LS, fr0 = vertex->w
-    fmul    fr0,fr0   ! FE, fr0 = fr0 * fr0
-    add #-24, \R      ! EX, \R  = &vertex->x
-    fsrra   fr0       ! FE, fr0 = 1 / sqrt(fr0) -> 1 / vertex->w
-
-! TRANSFORM X
-    fmov.s @\R,fr4    ! LS, fr4 = vertex->x
-    fmov  F_XP,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
-    fmul  F_HW,fr4    ! FE, fr4 = VIEWPORT_HWIDTH * vertex->x
-    fmac  fr0,fr4,fr5 ! FE, fr5 = fr0 * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
-    fmov.s fr5,@\R    ! LS, vertex->x = fr5
-    add #4, \R        ! EX, \R  = &vertex->y
-
-! TRANSFORM Y
-    fmov.s @\R,fr4    ! LS, fr4 = vertex->y
-    fmov  F_YP,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
-    fmul  F_HH,fr4    ! FE, fr4  = VIEWPORT_HHEIGHT * vertex->y
-    fmac  fr0,fr4,fr5 ! FE, fr5  = fr0 * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
-    fmov.s fr5,@\R    ! LS, vertex->y = fr5
-    add #4, \R        ! EX, \R  = &vertex->z
-
-! ASSIGN Z
-    fmov.s fr0,@\R    ! LS, vertex->z = fr0
-    add #-12, \R      ! EX, \R -= 12 (back to start of vertex)
-.endm
-
 ! Transforms then pushes a vertex to the store queue
+! note: Vertices are assumed as pre viewport transformed already
 !   CLOBBERS: r2, fr0, fr4, fr5
 !   INPUTS:   R (vertex), r8 (SQ global)
 !   OUTPUTS:  R, r8 altered
@@ -109,24 +65,20 @@
 
 ! TRANSFORM X
     fmov.s @\R,fr4    ! LS, fr4 = SRC->x
-    fmov  F_XP,fr5    ! LS, fr5 = VIEWPORT_X_PLUS_HWIDTH
-    fmul  F_HW,fr4    ! FE, fr4 = VIEWPORT_HWIDTH * SRC->x
+    fmul   fr0,fr4    ! FE, fr4 = invW * SRC->x
 	mov.l @(20,\R),r2 ! LS, tmp = SRC->bgra
 	mov.l r2,@(20,r8) ! LS, SRC->bgra = tmp
-    fmac  fr0,fr4,fr5 ! FE, fr5 = invW * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
     add    #4, \R     ! EX, SRC += 4
-    fmov.s fr5,@r8    ! LS, DST->x = fr5
+    fmov.s fr4,@r8    ! LS, DST->x = fr4
 
 ! TRANSFORM Y
     fmov.s @\R,fr4    ! LS, fr4  = SRC->y
-    fmov  F_YP,fr5    ! LS, fr5  = VIEWPORT_Y_PLUS_HHEIGHT
-    fmul  F_HH,fr4    ! FE, fr4  = VIEWPORT_HHEIGHT * SRC->y
     add    #8, r8     ! EX, DST += 8
+    fmul   fr0,fr4    ! FE, fr4 = invW * SRC->y
     fmov.s fr0,@r8    ! LS, DST->z = invW
-    fmac  fr0,fr4,fr5 ! FE, fr5  = invW * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
     add   #-4, r8     ! EX, DST -= 4
     add   #-8, \R     ! EX, src -= 8 (back to start of vertex)
-    fmov.s fr5,@r8    ! LS, DST->y = fr5
+    fmov.s fr4,@r8    ! LS, DST->y = fr4
 
     add   #-8,r8      ! EX, DST -= 8 (back to start of vertex)	
 	pref    @r8       ! LS, Trigger SQ
@@ -561,17 +513,6 @@ _ProcessVertexList:
 	mov.l   r13,@-r15
 	mov.l   r14,@-r15
 	sts.l    pr,@-r15
-! STORE FPU REGISTERS
-	fmov.s F_HW,@-r15
-	fmov.s F_HH,@-r15
-	fmov.s F_XP,@-r15
-	fmov.s F_YP,@-r15
-! VIEWPORT SETUP
-    mov.l  .VP_1,r0   ! LS, &vp
-    fmov.s	@r0+,F_HW ! LS, vp.HWIDTH
-    fmov.s	@r0+,F_HH ! LS, vp.HHEIGHT
-    fmov.s	@r0+,F_XP ! LS, vp.X_PLUS_HWIDTH
-    fmov.s	@r0+,F_YP ! LS, vp.Y_PLUS_HHEIGHT
 ! REGISTER SETUP
 	mov      r4,r14
 	mov      r4,r13
@@ -583,33 +524,11 @@ _ProcessVertexList:
 	bra     SUBMIT_LOOP
 	add    #-64,r15
 
-! Handles a non-vertex command
+! Submits a PowerVR GPU command
 DO_CMD:
-	mov     r13,r4     ! r4 = CUR
-	mov     r1,r0      ! r0 = MASK
-	cmp/eq  #35,r0     ! T  = MASK == 0x23
-	bt.s    9f         ! if (T) goto 9;
-	nop
-! PowerVR GPU command
 	PushVertex REG_V0
 	bra     NEXT_ITER
 	nop
-! Viewport update command
-9:
-	add      #4,r4
-	mov.l   .VP_1,r2
-	! Load VIEWPORT registers
-	fmov.s  @r4+,F_HW  ! VIEWPORT_HWIDTH  = src->x
-	fmov.s  @r4+,F_HH  ! VIEWPORT_HHEIGHT = src->y
-	fmov.s  @r4+,F_XP  ! VIEWPORT_X_PLUS_HWIDTH  = src->z
-	add      #16,r2
-	fmov.s  @r4+,F_YP  ! VIEWPORT_Y_PLUS_HHEIGHT = src->u
-	! And store to vp global
-	fmov.s  F_YP,@-r2
-	fmov.s  F_XP,@-r2
-	fmov.s  F_HH,@-r2
-	bra     NEXT_ITER
-	fmov.s  F_HW,@-r2
 
 SUBMIT_LOOP:
 	mov.l   @r13,r0   ! FLAGS = CUR->flags
@@ -645,18 +564,6 @@ NEXT_ITER:
 	mov     r14,r13     ! CUR = NEXT 
 
 	add      #64,r15
-! VIEWPORT SAVE
-	mov.l  .VP_1,r0
-	add      #16,r0
-	fmov.s  F_YP,@-r0
-	fmov.s  F_XP,@-r0
- 	fmov.s  F_HH,@-r0
- 	fmov.s  F_HW,@-r0
-! RESTORE FPU REGISTERS
-	fmov.s  @r15+,F_YP
-	fmov.s  @r15+,F_XP
-	fmov.s  @r15+,F_HH
-	fmov.s  @r15+,F_HW
 ! RESTORE CPU REGISTERS
 	lds.l   @r15+,pr
 	mov.l   @r15+,r14
