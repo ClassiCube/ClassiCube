@@ -53,8 +53,9 @@ void Window_Free(void) { }
 #include "../misc/sdl/CCIcon_SDL.h"
 
 static void ApplyIcon(void) {
-	SDL_Surface* surface = SDL_CreateSurfaceFrom((void*)CCIcon_Data, CCIcon_Width, CCIcon_Height, 
-												CCIcon_Pitch, SDL_PIXELFORMAT_BGRA8888);
+	SDL_Surface* surface = SDL_CreateSurfaceFrom(CCIcon_Width, CCIcon_Height, SDL_PIXELFORMAT_BGRA8888,
+												 (void*)CCIcon_Data, CCIcon_Pitch);
+
 	SDL_SetWindowIcon(win_handle, surface);
 }
 #else
