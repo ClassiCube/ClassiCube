@@ -4,10 +4,8 @@
 #include "gldc.h"
 #include "sh4_math.h"
 
-#define CLIP_DEBUG 0
-
-#define SQ_BASE_ADDRESS (void*) 0xe0000000
 #define PREFETCH(addr) __builtin_prefetch((addr))
+static volatile uint32_t* sq;
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
     return MATH_fsrra(x * x);
@@ -20,15 +18,6 @@ GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     vertex->x = vertex->x * f;
     vertex->y = vertex->y * f;
     vertex->z = f;
-}
-
-
-volatile uint32_t *sq = SQ_BASE_ADDRESS;
-
-static inline void _glFlushBuffer() {
-    /* Wait for both store queues to complete */
-    sq = (uint32_t*) 0xe0000000;
-    sq[0] = sq[8] = 0;
 }
 
 static inline void _glPushHeaderOrVertex(Vertex* v)  {
@@ -50,7 +39,6 @@ extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vou
 #define SPAN_SORT_CFG 0x005F8030
 static volatile uint32_t* PVR_LMMODE0 = (uint32_t*) 0xA05F6884;
 static volatile uint32_t* PVR_LMMODE1 = (uint32_t*) 0xA05F6888;
-static volatile uint32_t* QACR = (uint32_t*) 0xFF000038;
 
 #define V0_VIS (1 << 0)
 #define V1_VIS (1 << 1)
@@ -384,12 +372,9 @@ void SceneListSubmit(Vertex* v3, int n, int type) {
     *PVR_LMMODE0 = 0;
     *PVR_LMMODE1 = 0;
 
-    //Set QACR registers
-	QACR[1] = QACR[0] = 0x11;
-
-    uint8_t visible_mask = 0;
-
-    sq = SQ_BASE_ADDRESS;
+	sq_lock((void*)PVR_TA_INPUT);
+	sq = (uint32_t*)MEM_AREA_SQ_BASE;
+	uint8_t visible_mask = 0;
 
     for(int i = 0; i < n; ++i, ++v3) 
 	{
@@ -445,5 +430,6 @@ void SceneListSubmit(Vertex* v3, int n, int type) {
         }
     }
 
-    _glFlushBuffer();
+	sq_wait();
+	sq_unlock();
 }
