@@ -23,9 +23,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000;
 const cc_result ReturnCode_FileNotFound     = fnfErr;
+const cc_result ReturnCode_DirectoryExists  = dupFNErr;
 const cc_result ReturnCode_SocketInProgess  = 1000000;
 const cc_result ReturnCode_SocketWouldBlock = 1000000;
-const cc_result ReturnCode_DirectoryExists  = dupFNErr;
+const cc_result ReturnCode_SocketDropped    = 1000000;
 static long sysVersion;
 
 #if TARGET_CPU_68K

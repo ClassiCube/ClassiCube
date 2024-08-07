@@ -46,6 +46,7 @@ const cc_result ReturnCode_DirectoryExists    = -8;
 
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " PS2";
 cc_bool Platform_ReadonlyFilesystem;

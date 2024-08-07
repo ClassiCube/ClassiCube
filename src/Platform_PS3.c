@@ -35,9 +35,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
+const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
 const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
+const cc_result ReturnCode_SocketDropped    = NET_EPIPE;
 
 const char* Platform_AppNameSuffix = " PS3";
 cc_bool Platform_ReadonlyFilesystem;

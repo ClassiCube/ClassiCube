@@ -31,9 +31,11 @@ enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_E
 
 extern const cc_result ReturnCode_FileShareViolation;
 extern const cc_result ReturnCode_FileNotFound;
+extern const cc_result ReturnCode_DirectoryExists;
 extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
-extern const cc_result ReturnCode_DirectoryExists;
+/* Result code for when a socket connection has been dropped by the other side */
+extern const cc_result ReturnCode_SocketDropped;
 
 /* Whether the launcher and game must both be run in the same process */
 /*  (e.g. can't start a separate process on Mobile or Consoles) */

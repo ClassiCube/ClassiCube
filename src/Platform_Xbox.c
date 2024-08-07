@@ -19,9 +19,10 @@
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " XBox";
 cc_bool Platform_ReadonlyFilesystem;

@@ -253,6 +253,25 @@ static struct ChatCommand ModelCommand = {
 	}
 };
 
+static void SkinCommand_Execute(const cc_string* args, int argsCount) {
+	if (argsCount) {
+		Entity_SetSkin(&Entities.CurPlayer->Base, args);
+	} else {
+		Chat_AddRaw("&e/client skin: &cYou didn't specify a skin name.");
+	}
+}
+
+static struct ChatCommand SkinCommand = {
+	"Skin", SkinCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client skin [name]",
+		"&eChanges to the skin to the given player",
+		"&a/client skin [url]",
+		"&eChanges skin to a URL linking directly to a .PNG",
+	}
+};
+
 static void ClearDeniedCommand_Execute(const cc_string* args, int argsCount) {
 	int count = TextureCache_ClearDenied();
 	Chat_Add1("Removed &e%i &fdenied texture pack URLs.", &count);
@@ -724,6 +743,7 @@ static void OnInit(void) {
 	Commands_Register(&RenderTypeCommand);
 	Commands_Register(&ResolutionCommand);
 	Commands_Register(&ModelCommand);
+	Commands_Register(&SkinCommand);
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
 	Commands_Register(&MotdCommand);
