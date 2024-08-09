@@ -132,13 +132,6 @@ static struct MenuOptionsScreen {
 static union  MenuOptionMeta menuOpts_meta[MENUOPTS_MAX_OPTS];
 static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 1];
 
-static int  MeO_GetFPS(void) { return Game_FpsLimit; }
-static void MeO_SetFPS(int v) {
-	cc_string str = String_FromReadonly(FpsLimit_Names[v]);
-	Options_Set(OPT_FPS_LIMIT, &str);
-	Game_SetFpsLimit(v);
-}
-
 static void MenuOptionsScreen_Update(struct MenuOptionsScreen* s, struct ButtonWidget* btn) {
 	struct MenuOptionMetaBool* meta = (struct MenuOptionMetaBool*)btn->meta.ptr;
 	cc_string title; char titleBuffer[STRING_SIZE];
@@ -590,6 +583,14 @@ static void    ClO_SetViewBob(cc_bool v) {
 	Options_SetBool(OPT_VIEW_BOBBING, v); 
 }
 
+static cc_bool ClO_GetFPS(void) { return Game_FpsLimit == FPS_LIMIT_VSYNC; }
+static void ClO_SetFPS(cc_bool v) {
+	int method    = v ? FPS_LIMIT_VSYNC : FPS_LIMIT_NONE;
+	cc_string str = String_FromReadonly(FpsLimit_Names[method]);
+	Options_Set(OPT_FPS_LIMIT, &str);
+	Game_SetFpsLimit(method);
+}
+
 static cc_bool ClO_GetHacks(void) { return Entities.CurPlayer->Hacks.Enabled; }
 static void    ClO_SetHacks(cc_bool v) {
 	Entities.CurPlayer->Hacks.Enabled = v;
@@ -619,8 +620,8 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClO_GetShowFPS,  ClO_SetShowFPS, NULL);
 		MenuOptionsScreen_AddBool(s, "View bobbing",
 			ClO_GetViewBob,  ClO_SetViewBob, NULL);
-		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			MeO_GetFPS,      MeO_SetFPS, NULL);
+		MenuOptionsScreen_AddBool(s, "Limit framerate",
+			ClO_GetFPS,      ClO_SetFPS, NULL);
 		MenuOptionsScreen_AddBool(s, "Hacks enabled",
 			ClO_GetHacks,    ClO_SetHacks, NULL);
 	}
@@ -717,6 +718,13 @@ static void GrO_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
 	Widget_SetDisabled(s->widgets[3], Lighting_ModeLockedByServer);
 }
 
+static int  GrO_GetFPS(void) { return Game_FpsLimit; }
+static void GrO_SetFPS(int v) {
+	cc_string str = String_FromReadonly(FpsLimit_Names[v]);
+	Options_Set(OPT_FPS_LIMIT, &str);
+	Game_SetFpsLimit(v);
+}
+
 static int  GrO_GetViewDist(void) { return Game_ViewDistance; }
 static void GrO_SetViewDist(int v) { Game_UserSetViewDistance(v); }
 
@@ -762,7 +770,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			MeO_GetFPS,        MeO_SetFPS,
+			GrO_GetFPS,        GrO_SetFPS,
 			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 			"&eNoLimit: &fRenders as many frames as possible each second.\n" \

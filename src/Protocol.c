@@ -63,7 +63,7 @@ static struct CpeExt
 	envColors_Ext       = { "EnvColors", 1 },
 	selectionCuboid_Ext = { "SelectionCuboid", 1 },
 	blockPerms_Ext      = { "BlockPermissions", 1 },
-	changeModel_Ext     = { "ChangeModel", 2 },
+	changeModel_Ext     = { "ChangeModel", 1 },
 	mapAppearance_Ext   = { "EnvMapAppearance", 2 },
 	weatherType_Ext     = { "EnvWeatherType", 1 },
 	messageTypes_Ext    = { "MessageTypes", 1 },
