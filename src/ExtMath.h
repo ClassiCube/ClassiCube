@@ -16,14 +16,19 @@ CC_BEGIN_HEADER
 #define Math_Deg2Packed(x) ((cc_uint8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
-#if defined __GNUC__ && !defined CC_PLAT_PS1
-/* fabsf/sqrtf are single intrinsic instructions in gcc/clang */
-/* (sqrtf is only when -fno-math-errno though) */
-#define Math_AbsF(x) __builtin_fabsf(x)
-#define Math_SqrtF(x) __builtin_sqrtf(x)
+#if defined __GNUC__ && defined __APPLE__ && defined _ARCH_PPC
+	/* fabsf is single intrinsic instructions in gcc/clang */
+	/* (sqrtf doesn't seem to exist in 10.3 and earlier SDKs) */
+	#define Math_AbsF(x) __builtin_fabsf(x)
+	#define Math_SqrtF(x) __builtin_sqrt(x)
+#elif defined __GNUC__ && !defined CC_PLAT_PS1
+	/* fabsf/sqrtf are single intrinsic instructions in gcc/clang */
+	/* (sqrtf is only when -fno-math-errno though) */
+	#define Math_AbsF(x) __builtin_fabsf(x)
+	#define Math_SqrtF(x) __builtin_sqrtf(x)
 #else
-float Math_AbsF(float x);
-float Math_SqrtF(float x);
+	float Math_AbsF(float x);
+	float Math_SqrtF(float x);
 #endif
 
 float Math_Mod1(float x);
