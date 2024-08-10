@@ -121,10 +121,15 @@ _ClipEdge:
 	add      #-4, OUT ! EX, OUT -= 4
 	
 	mov.l  @IN1,CL1   ! LS, ACOLOR = v1->bgra
+	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
+! Bypass interpolation if unnecessary
+	cmp/eq  CL1,CL2   ! MT, T = ACOLOR == BCOLOR
+	bt.s    1f        ! BR, if (T) goto 1;
+	mov     CL1,CLO   ! MT, OUTCOLOR = ACOLOR (branch delay instruction)
+	
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
@@ -179,5 +184,7 @@ _ClipEdge:
 	shll16  TM2       ! EX, tmp <<= 16
 	shll8   TM2       ! EX, tmp <<= 8
 	or      TM2,CLO   ! EX, OUTCOLOR.a |= tmp
+
+1:
 	rts               ! CO, return after executing instruction in delay slot
 	mov.l  CLO,@OUT   ! LS, OUT->color = OUTCOLOR
