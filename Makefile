@@ -5,7 +5,7 @@ C_OBJECTS   = $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
 OBJECTS = $(C_OBJECTS)
 ENAME   = ClassiCube
-CFLAGS  = -g -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=maybe-uninitialized
+CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=maybe-uninitialized
 LDFLAGS = -g -rdynamic
 
 ifndef RM
@@ -97,7 +97,7 @@ endif
 
 ifeq ($(PLAT),haiku)
 	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
-	CFLAGS  = -g -pipe -fno-math-errno
+	CFLAGS  = -pipe -fno-math-errno
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 	BUILD_DIR = build-haiku
@@ -105,7 +105,7 @@ endif
 
 ifeq ($(PLAT),beos)
 	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
-	CFLAGS  = -g -pipe
+	CFLAGS  = -pipe
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 	BUILD_DIR = build-beos
@@ -132,13 +132,22 @@ ifdef SDL3
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
 	LIBS += -lSDL3
 endif
-
 ifdef TERMINAL
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
 	LIBS := $(subst mwindows,mconsole,$(LIBS))
 endif
+
+ifdef BEARSSL
+	BEARSSL_SOURCES = $(wildcard third_party/bearssl/src/*.c)
+	BEARSSL_OBJECTS = $(patsubst third_party/bearssl/src/%.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
+	OBJECTS += $(BEARSSL_OBJECTS)
+	CFLAGS  += -Ithird_party/bearssl/inc -DCC_SSL_BACKEND=CC_SSL_BACKEND_BEARSSL -DCC_NET_BACKEND=CC_NET_BACKEND_BUILTIN
+endif
+
 ifdef RELEASE
 	CFLAGS += -O1
+else
+	CFLAGS += -g
 endif
 
 default: $(PLAT)
@@ -254,6 +263,9 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.m
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 	
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+	
+$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 
 # EXTRA_CFLAGS and EXTRA_LIBS are not defined in the makefile intentionally -
