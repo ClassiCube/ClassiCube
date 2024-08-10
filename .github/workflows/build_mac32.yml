@@ -42,6 +42,7 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
  
+          mkdir /home/minty/repos/osxcross-ppc-test/target/bin
           ln -s /usr/local/compiler/ppc/target/bin/powerpc64-apple-darwin9-as /home/minty/repos/osxcross-ppc-test/target/bin/powerpc64-apple-darwin9-as
           cd src
           PATH=$PATH:/usr/local/compiler/ppc/target/bin
