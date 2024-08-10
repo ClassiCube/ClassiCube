@@ -33,7 +33,7 @@ jobs:
           /usr/local/compiler/target/bin/i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -lgcc_s.1
           /usr/local/compiler/target/bin/i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-mac32-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -lgcc_s.1
 
-/usr/local/compiler/ppc/target/bin/powerpc-apple-darwin9-base-gcc *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-ppc -static-libgcc -Wl,-no_compact_unwind -isystem /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk -mmacosx-version-min=10.3.0 -m32 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          /usr/local/compiler/ppc/target/bin/powerpc-apple-darwin9-base-gcc *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-ppc -static-libgcc -Wl,-no_compact_unwind -isystem /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk -mmacosx-version-min=10.3.0 -m32 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 
 
       - uses: ./.github/actions/notify_failure
