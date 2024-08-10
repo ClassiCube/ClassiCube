@@ -38,7 +38,7 @@ jobs:
         shell: bash
         id: compile_ppc
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -static-libgcc -Wl,-no_compact_unwind -DCC_BUILD_ICON -isystem /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -static-libgcc -Wl,-no_compact_unwind -DCC_BUILD_ICON -isystem /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk -Wl,-syslibroot /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
  
