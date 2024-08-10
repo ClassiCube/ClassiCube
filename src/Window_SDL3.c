@@ -482,14 +482,14 @@ void OnscreenKeyboard_Close(void) { SDL_StopTextInput(win_handle); }
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
-	SDL_SetRelativeMouseMode(true);
+	SDL_SetWindowRelativeMouseMode(win_handle, true);
 	Input.RawMode = true;
 }
 void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 
 void Window_DisableRawMouse(void) {
 	RegrabMouse();
-	SDL_SetRelativeMouseMode(false);
+	SDL_SetWindowRelativeMouseMode(win_handle, false);
 	Input.RawMode = false;
 }
 
