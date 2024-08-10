@@ -47,7 +47,7 @@
 !    out->a = invt * v1->a + t * v2->a;
 ! To optimise these calculations, FIPR is used:
 !   FIPR = FVm.x*FVn.x + FVm.y*FVn.x + FVm.z*FVn.z + FVm.w*FVn.w --> FVn.w
-! FIPR can be used to accomplish "vout->Q invt * v1->Q + t * v2->Q" by:
+! FIPR can be used to accomplish "vout->Q = invt * v1->Q + t * v2->Q" by:
 !   - assigning x/y components to 0 for both vectors
 !   - assigning t and invT to z/w of FVm vector
 !   - assigning v1 and v2  to z/w  of FVn vector

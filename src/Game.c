@@ -725,11 +725,13 @@ static CC_INLINE void Game_RenderFrame(void) {
 
 	cc_uint64 render  = Stopwatch_Measure();
 	cc_uint64 elapsed = Stopwatch_ElapsedMicroseconds(frameStart, render);
+	/* avoid large delta with suspended process */
+	if (elapsed > 5000000) elapsed = 5000000; 
+	
 	double deltaD     = elapsed / (1000.0 * 1000.0);
 	float delta       = (float)deltaD;
 	Window_ProcessEvents(delta);
 
-	if (delta > 5.0f)  delta = 5.0f; /* avoid large delta with suspended process */
 	if (delta <= 0.0f) return;
 	frameStart = render;
 

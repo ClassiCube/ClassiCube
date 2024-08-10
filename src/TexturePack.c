@@ -132,7 +132,7 @@ static void Atlas_Convert2DTo1D(void) {
 	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
 	int atlasesCount  = Atlas1D.Count;
 	struct Bitmap atlas1D;
-	int tile = 0, i;
+	int i;
 
 	Platform_Log2("Loaded terrain atlas: %i bmps, %i per bmp", &atlasesCount, &tilesPerAtlas);
 	Bitmap_Allocate(&atlas1D, tileSize, tilesPerAtlas * tileSize);

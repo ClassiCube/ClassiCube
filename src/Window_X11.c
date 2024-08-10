@@ -1067,7 +1067,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 static cc_result OpenSaveFileDialog(const char* args, FileDialogCallback callback, const char* defaultExt) {
 	cc_string path; char pathBuffer[1024];
 	char result[4096] = { 0 };
-	int len, i;
+	int len;
 	/* TODO this doesn't detect when Zenity doesn't exist */
 	FILE* fp = popen(args, "r");
 	if (!fp) return 0;

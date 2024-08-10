@@ -673,7 +673,6 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	cc_result res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
