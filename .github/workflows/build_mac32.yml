@@ -42,7 +42,7 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
  
-          ln -s /home/minty/repos/osxcross-ppc-test/target/bin/powerpc64-apple-darwin9-as /usr/local/compiler/ppc/target/bin/powerpc64-apple-darwin9-as
+          ln -s /usr/local/compiler/ppc/target/bin/powerpc64-apple-darwin9-as /home/minty/repos/osxcross-ppc-test/target/bin/powerpc64-apple-darwin9-as
           cd src
           PATH=$PATH:/usr/local/compiler/ppc/target/bin
           powerpc-apple-darwin9-base-gcc *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-ppc -mmacosx-version-min=10.3.0 -m32 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
