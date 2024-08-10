@@ -636,13 +636,20 @@ static void LimitFPS(void) {
 #else
 static float gfx_targetTime, gfx_actualTime;
 
+static CC_INLINE float ElapsedMilliseconds(cc_uint64 beg, cc_uint64 end) {
+	cc_uint64 elapsed = Stopwatch_ElapsedMicroseconds(beg, end);
+	if (elapsed > 5000000) elapsed = 5000000;
+	
+	return (int)elapsed / 1000.0f;
+}
+
 /* Examines difference between expected and actual frame times, */
 /*  then sleeps if actual frame time is too fast */
 static void LimitFPS(void) {
 	cc_uint64 frameEnd, sleepEnd;
 	
 	frameEnd = Stopwatch_Measure();
-	gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
+	gfx_actualTime += ElapsedMilliseconds(frameStart, frameEnd);
 	gfx_targetTime += gfx_minFrameMs;
 
 	/* going faster than FPS limit - sleep to slow down */
@@ -654,7 +661,7 @@ static void LimitFPS(void) {
 		/*  duration can significantly deviate from requested time */ 
 		/*  (e.g. requested 4ms, but actually slept for 8ms) */
 		sleepEnd = Stopwatch_Measure();
-		gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameEnd, sleepEnd) / 1000.0f;
+		gfx_actualTime += ElapsedMilliseconds(frameEnd, sleepEnd);
 	}
 
 	/* reset accumulated time to avoid excessive FPS drift */
@@ -728,7 +735,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	/* avoid large delta with suspended process */
 	if (elapsed > 5000000) elapsed = 5000000; 
 	
-	double deltaD     = elapsed / (1000.0 * 1000.0);
+	double deltaD     = (int)elapsed / (1000.0 * 1000.0);
 	float delta       = (float)deltaD;
 	Window_ProcessEvents(delta);
 

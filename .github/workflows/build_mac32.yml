@@ -31,8 +31,8 @@ jobs:
  
           cd src
           PATH=$PATH:/usr/local/compiler/target/bin
-          i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -lgcc_s.1
-          i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-mac32-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -lgcc_s.1
+          i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -static-libgcc
+          i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-mac32-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -static-libgcc
 
 
       - uses: ./.github/actions/notify_failure
