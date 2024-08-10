@@ -216,9 +216,12 @@ void Window_Free(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------------Window--------------------------------------------------------*
 *#########################################################################################################################*/
-#if !defined MAC_OS_X_VERSION_10_4
-// Doesn't exist in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways
-#define kCGBitmapByteOrder32Host 0
+#ifdef CC_BIG_ENDIAN
+	/* Default byte order is big endian */
+	/* Also can't use kCGBitmapByteOrder32Host because that doesn't exist in older SDKs */
+	#define BITMAP_BYTE_ORDER 0
+#else
+	#define BITMAP_BYTE_ORDER kCGBitmapByteOrder32Little
 #endif
 
 static void RefreshWindowBounds(void) {
@@ -716,7 +719,7 @@ static void DoDrawFramebuffer(NSRect dirty) {
 	NSGraphicsContext* nsContext;
 	CGImageRef image;
 	CGRect rect;
-	
+
 	Event_RaiseVoid(&WindowEvents.Redrawing);
 
 	// Unfortunately CGImageRef is immutable, so changing the
@@ -734,8 +737,9 @@ static void DoDrawFramebuffer(NSRect dirty) {
 	// TODO: REPLACE THIS AWFUL HACK
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
 		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
+
 	image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
-		kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+		BITMAP_BYTE_ORDER | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
