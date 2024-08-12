@@ -304,6 +304,27 @@ static struct ChatCommand MotdCommand = {
 	}
 };
 
+static void TexCacheCommand_Execute(const cc_string* args, int argsCount) {
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	String_InitArray(path, pathBuffer);
+
+	int found = TexturePack_IsCached(&TexturePack_Url, &path);
+	if (found) {
+		Chat_Add1("&ePath: &f%s", &path);
+	} else {
+		Chat_AddRaw("&eCurrent texture pack is not cached.");
+	}
+}
+
+static struct ChatCommand TexCacheCommand = {
+	"TexCache", TexCacheCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client texcache",
+		"&eTells you a local path to the texturepack currently being used"
+	}
+};
+
 /*########################################################################################################################*
 *-------------------------------------------------------DrawOpCommand-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -747,6 +768,7 @@ static void OnInit(void) {
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
 	Commands_Register(&MotdCommand);
+	Commands_Register(&TexCacheCommand);
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&ReplaceCommand);
