@@ -18,6 +18,7 @@ static float kb_padXAcc, kb_padYAcc;
 static char kb_buffer[512];
 static cc_string kb_str = String_FromArray(kb_buffer);
 static void (*KB_MarkDirty)(void);
+static int kb_yOffset;
 
 #define KB_TILE_SIZE 32
 static int kb_tileWidth  = KB_TILE_SIZE;
@@ -173,7 +174,7 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 
 static void VirtualKeyboard_CalcPosition(int* x, int* y, int width, int height) {
 	/* Draw virtual keyboard at centre of window bottom */
-	*y = height - 1 - VirtualKeyboard_Height();
+	*y = height - 1 - VirtualKeyboard_Height() - kb_yOffset;
 	if (*y < 0) *y = 0;
 
 	*x = (width - VirtualKeyboard_Width()) / 2;
@@ -410,6 +411,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	kb_padXAcc   = 0;
 	kb_padYAcc   = 0;
 	kb_shift     = false;
+	kb_yOffset   = args->yOffset;
 
 	int mode = args->type & 0xFF;
 	int num  = mode == KEYBOARD_TYPE_INTEGER || mode == KEYBOARD_TYPE_NUMBER;

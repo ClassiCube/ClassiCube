@@ -201,10 +201,16 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
-struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque, multiline; };
+struct OpenKeyboardArgs { 
+	const cc_string* text; 
+	int type, yOffset;
+	const char* placeholder; 
+	cc_bool opaque, multiline; 
+};
 static CC_INLINE void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
-	args->text   = text;
-	args->type   = type;
+	args->text    = text;
+	args->type    = type;
+	args->yOffset = 0;
 	args->placeholder = "";
 	args->opaque      = false;
 	args->multiline   = false;

@@ -1551,6 +1551,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
 	args.multiline   = true;
+	args.yOffset     = 30;
 	OnscreenKeyboard_Open(&args);
 
 	Widget_SetDisabled(&s->input.base, args.opaque);
