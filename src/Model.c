@@ -874,8 +874,9 @@ void CustomModel_Register(struct CustomModel* cm) {
 	static struct ModelTex customDefaultTex;
 
 	CheckMaxVertices();
-	cm->model.name       = cm->name;
-	cm->model.defaultTex = &customDefaultTex;
+	cm->model.name        = cm->name;
+	cm->model.defaultTex  = &customDefaultTex;
+	cm->model.maxVertices = cm->numParts * MODEL_BOX_VERTICES;
 
 	cm->model.MakeParts = Model_NoParts;
 	cm->model.Draw      = CustomModel_Draw;
