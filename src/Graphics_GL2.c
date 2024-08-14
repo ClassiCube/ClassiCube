@@ -601,6 +601,8 @@ static void Gfx_RestoreState(void) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { 
+	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
+
 	if (String_ContainsConst(&renderer, "llvmpipe")) {
 		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
 		Chat_AddRaw("&cVSync may also not work.");
