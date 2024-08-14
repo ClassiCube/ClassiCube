@@ -339,6 +339,7 @@ void Gamepads_Process(float delta) {
 *#########################################################################################################################*/
 static u32 fb_offset;
 
+extern void Gfx_WaitFlip(void);
 extern u32* Gfx_AllocImage(u32* offset, s32 w, s32 h);
 extern void Gfx_TransferImage(u32 offset, s32 w, s32 h);
 
@@ -353,8 +354,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO test
-	Gfx_BeginFrame();
-	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
+	Gfx_WaitFlip();
 	// TODO: Only transfer dirty region instead of the entire bitmap
 	Gfx_TransferImage(fb_offset, bmp->width, bmp->height);
 	Gfx_EndFrame();
