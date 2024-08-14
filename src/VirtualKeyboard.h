@@ -181,6 +181,22 @@ static void VirtualKeyboard_CalcPosition(int* x, int* y, int width, int height) 
 	if (*x < 0) *x = 0;
 }
 
+static int VirtualKeyboard_WindowWidth(void) {
+#ifdef CC_BUILD_DUALSCREEN
+	return launcherMode ? Window_Main.Width : Window_Alt.Width;
+#else
+	return Window_Main.Width;
+#endif
+}
+
+static int VirtualKeyboard_WindowHeight(void) {
+#ifdef CC_BUILD_DUALSCREEN
+	return launcherMode ? Window_Main.Height : Window_Alt.Height;
+#else
+	return Window_Main.Height;
+#endif
+}
+
 /*########################################################################################################################*
 *-----------------------------------------------------Input handling------------------------------------------------------*
 *#########################################################################################################################*/
@@ -290,7 +306,7 @@ static void VirtualKeyboard_PointerDown(void* obj, int idx) {
 	int width  = VirtualKeyboard_Width();
 	int height = VirtualKeyboard_Height();
 	int kbX, kbY;
-	VirtualKeyboard_CalcPosition(&kbX, &kbY, Window_Main.Width, Window_Main.Height);
+	VirtualKeyboard_CalcPosition(&kbX, &kbY, VirtualKeyboard_WindowWidth(), VirtualKeyboard_WindowHeight());
 
 	int x = Pointers[idx].x, y = Pointers[idx].y;
 	if (x < kbX || y < kbY || x >= kbX + width || y >= kbY + height) return;
@@ -361,7 +377,7 @@ static void VirtualKeyboard_MakeTexture(void) {
 	Context2D_Free(&ctx);
 	
 	int x, y;
-	VirtualKeyboard_CalcPosition(&x, &y, Window_Main.Width, Window_Main.Height);
+	VirtualKeyboard_CalcPosition(&x, &y, VirtualKeyboard_WindowWidth(), VirtualKeyboard_WindowHeight());
 	kb_texture.x = x; kb_texture.y = y;
 }
 
@@ -379,6 +395,7 @@ static void VirtualKeyboard_Display3D(float delta) {
 		if (!kb_texture.ID) return;
 	}
 	
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindTexture(kb_texture.ID);
 	
@@ -387,6 +404,7 @@ static void VirtualKeyboard_Display3D(float delta) {
 	Gfx_Make2DQuad(&kb_texture, PACKEDCOL_WHITE, ptr);
 	Gfx_UnlockDynamicVb(kb_vb);
 	Gfx_DrawVb_IndexedTris(4);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 }
 
 /*########################################################################################################################*

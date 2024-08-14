@@ -498,6 +498,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 	if (String_ContainsConst(&renderer, "llvmpipe")) {
 		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
 		Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
+		Chat_AddRaw("&cYou may need to install video card drivers.");
 		return true;
 	}
 	if (String_ContainsConst(&renderer, "Intel")) {

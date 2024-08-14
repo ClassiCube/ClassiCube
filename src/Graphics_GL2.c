@@ -599,7 +599,16 @@ static void Gfx_RestoreState(void) {
 	Bitmap_Init(bmp, 1, 1, pixels);
 	Gfx_RecreateTexture(&white_square, &bmp, 0, false);
 }
-cc_bool Gfx_WarnIfNecessary(void) { return false; }
+
+cc_bool Gfx_WarnIfNecessary(void) { 
+	if (String_ContainsConst(&renderer, "llvmpipe")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+		Chat_AddRaw("&cVSync may also not work.");
+		Chat_AddRaw("&cYou may need to install video card drivers.");
+		return true;
+	}
+	return false;
+}
 
 static int  GetPostProcess(void) { return postProcess; }
 static void SetPostProcess(int v) {
