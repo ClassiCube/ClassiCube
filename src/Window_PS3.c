@@ -18,8 +18,6 @@
 #include <sysutil/video.h>
 
 static cc_bool launcherMode;
-static padInfo  pad_info;
-static padData  pad_data;
 static KbInfo   kb_info;
 static KbData   kb_data;
 static KbConfig kb_config;
@@ -274,6 +272,9 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static padInfo pad_info;
+static padData pad_data[MAX_PORT_NUM];
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	ioPadInit(MAX_PORT_NUM);
@@ -326,10 +327,10 @@ void Gamepads_Process(float delta) {
 	for (int i = 0; i < MAX_PORT_NUM; i++)
 	{
 		if (!pad_info.status[i]) continue;
-		ioPadGetData(i, &pad_data);
+		ioPadGetData(i, &pad_data[i]);
 
 		int port = Gamepad_Connect(0x503 + i, PadBind_Defaults);
-		ProcessPadInput(port, delta, &pad_data);
+		ProcessPadInput(port, delta, &pad_data[i]);
 	}
 }
 
