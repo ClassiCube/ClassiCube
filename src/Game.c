@@ -763,7 +763,20 @@ static CC_INLINE void Game_RenderFrame(void) {
 	Game_Vertices = 0;
 
 	if (Input.Sources & INPUT_SOURCE_GAMEPAD) Gamepad_Tick(delta);
+
+#ifdef CC_BUILD_SPLITSCREEN
+	/* TODO: find a better solution */
+	for (int i = 0; i < Game_NumStates; i++)
+	{
+		Game.CurrentState  = i;
+		Entities.CurPlayer = &LocalPlayer_Instances[i];
+		Camera.Active->UpdateMouse(Entities.CurPlayer, delta);
+	}
+	Game.CurrentState  = 0;
+	Entities.CurPlayer = &LocalPlayer_Instances[0];
+#else
 	Camera.Active->UpdateMouse(Entities.CurPlayer, delta);
+#endif
 
 	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
