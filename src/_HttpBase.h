@@ -25,7 +25,12 @@ void HttpRequest_Free(struct HttpRequest* request) {
 /*########################################################################################################################*
 *----------------------------------------------------Http requests list---------------------------------------------------*
 *#########################################################################################################################*/
-#define HTTP_DEF_ELEMS 10
+#ifdef CC_BUILD_NETWORKING
+	#define HTTP_DEF_ELEMS 10
+#else
+	#define HTTP_DEF_ELEMS 1 /* TODO better unused code removal */
+#endif
+
 struct RequestList {
 	int count, capacity;
 	struct HttpRequest* entries;

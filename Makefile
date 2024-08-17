@@ -249,12 +249,10 @@ $(ENAME): $(BUILD_DIR) $(OBJECTS)
 
 # macOS app bundle
 $(ENAME).app : $(ENAME)
-	mkdir $(TARGET)
-	mkdir $(TARGET)/Contents
-	mkdir $(TARGET)/Contents/MacOS
-	mkdir $(TARGET)/Contents/Resources
+	mkdir -p $(TARGET)/Contents/MacOS
+	mkdir -p $(TARGET)/Contents/Resources
 	cp $(ENAME) $(TARGET)/Contents/MacOS/$(ENAME)
-	cp misc/macOS/Info.plist   $(TARGET)/Contents/Resources/Info.plist
+	cp misc/macOS/Info.plist   $(TARGET)/Contents/Info.plist
 	cp misc/macOS/appicon.icns $(TARGET)/Contents/Resources/appicon.icns
 
 

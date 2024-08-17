@@ -2,13 +2,22 @@
 #include <kos.h>
 #include <dc/pvr.h>
 #include "gldc.h"
-#include "sh4_math.h"
 
 #define PREFETCH(addr) __builtin_prefetch((addr))
 static volatile uint32_t* sq;
 
+// calculates 1/sqrt(x)
+GL_FORCE_INLINE float sh4_fsrra(float x) {
+  asm volatile ("fsrra %[value]\n"
+  : [value] "+f" (x) // outputs (r/w to FPU register)
+  : // no inputs
+  : // no clobbers
+  );
+  return x;
+}
+
 GL_FORCE_INLINE float _glFastInvert(float x) {
-    return MATH_fsrra(x * x);
+    return sh4_fsrra(x * x);
 }
 
 GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {

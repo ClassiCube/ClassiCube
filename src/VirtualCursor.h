@@ -51,7 +51,6 @@ static void VirtualCursor_Display3D(float delta) {
 	
 	vc_texture.x = Pointers[0].x - CURSOR_EXTENT;
 	vc_texture.y = Pointers[0].y - CURSOR_EXTENT;
-	int X = vc_texture.x, Y = vc_texture.y;
 	
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindTexture(vc_texture.ID);
