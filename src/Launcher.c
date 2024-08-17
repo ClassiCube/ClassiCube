@@ -78,7 +78,7 @@ void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_s
 *--------------------------------------------------------Starter/Updater--------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint64 lastJoin;
-cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server) {
+cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server, int numStates) {
 	cc_string args[4]; int numArgs;
 	cc_uint64 now;
 	cc_result res;
@@ -110,6 +110,10 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 		numArgs = 4;
 	}
 
+#ifdef CC_BUILD_SPLITSCREEN
+	Game_NumStates = numStates;
+#endif
+
 	res = Process_StartGame2(args, numArgs);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
@@ -123,7 +127,7 @@ CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	String_InitArray(port, portBuffer);
 
 	String_AppendInt(&port, info->port);
-	Launcher_StartGame(&Launcher_Username, &info->mppass, &info->ip, &port, &info->name);
+	Launcher_StartGame(&Launcher_Username, &info->mppass, &info->ip, &port, &info->name, 1);
 }
 
 static void ConnectToServerError(struct HttpRequest* req) {

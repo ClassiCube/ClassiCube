@@ -508,7 +508,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	Options_ResumeSaving();
 
 	LLabel_SetConst(status, "");
-	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
+	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty, 1);
 }
 
 static void DirectConnectScreen_Activated(struct LScreen* s_) {
@@ -650,9 +650,7 @@ LAYOUTS sps_btnBack[]     = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
 
 static void SplitScreen_Start(int players) {
 	static const cc_string user = String_FromConst(DEFAULT_USERNAME);
-	Game_NumStates = players;
-	
-	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
+	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty, players);
 }
 
 static void SplitScreen_Players2(void* w) { SplitScreen_Start(2); }
@@ -794,7 +792,7 @@ static void MainScreen_Resume(void* w) {
 	MainScreen_GetResume(&info, true);
 
 	if (!info.valid) return;
-	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server);
+	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server, 1);
 }
 
 static void MainScreen_Singleplayer(void* w) {
@@ -802,7 +800,7 @@ static void MainScreen_Singleplayer(void* w) {
 	const cc_string* user = &MainScreen.iptUsername.text;
 
 	if (!user->length) user = &defUser;
-	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
+	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty, 1);
 }
 
 static void MainScreen_ResumeHover(void* w) {
