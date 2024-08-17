@@ -71,6 +71,7 @@ ifeq ($(PLAT),darwin)
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build-macos
+	TARGET  = $(ENAME).app
 endif
 
 ifeq ($(PLAT),freebsd)
@@ -159,41 +160,41 @@ endif
 default: $(PLAT)
 
 web:
-	$(MAKE) $(ENAME) PLAT=web
+	$(MAKE) $(TARGET) PLAT=web
 linux:
-	$(MAKE) $(ENAME) PLAT=linux
+	$(MAKE) $(TARGET) PLAT=linux
 mingw:
-	$(MAKE) $(ENAME) PLAT=mingw
+	$(MAKE) $(TARGET) PLAT=mingw
 sunos:
-	$(MAKE) $(ENAME) PLAT=sunos
+	$(MAKE) $(TARGET) PLAT=sunos
 darwin:
-	$(MAKE) $(ENAME) PLAT=darwin
+	$(MAKE) $(TARGET) PLAT=darwin
 freebsd:
-	$(MAKE) $(ENAME) PLAT=freebsd
+	$(MAKE) $(TARGET) PLAT=freebsd
 openbsd:
-	$(MAKE) $(ENAME) PLAT=openbsd
+	$(MAKE) $(TARGET) PLAT=openbsd
 netbsd:
-	$(MAKE) $(ENAME) PLAT=netbsd
+	$(MAKE) $(TARGET) PLAT=netbsd
 dragonfly:
-	$(MAKE) $(ENAME) PLAT=dragonfly
+	$(MAKE) $(TARGET) PLAT=dragonfly
 haiku:
-	$(MAKE) $(ENAME) PLAT=haiku
+	$(MAKE) $(TARGET) PLAT=haiku
 beos:
-	$(MAKE) $(ENAME) PLAT=beos
+	$(MAKE) $(TARGET) PLAT=beos
 serenityos:
-	$(MAKE) $(ENAME) PLAT=serenityos
+	$(MAKE) $(TARGET) PLAT=serenityos
 irix:
-	$(MAKE) $(ENAME) PLAT=irix
+	$(MAKE) $(TARGET) PLAT=irix
 
 # Default overrides
 sdl2:
-	$(MAKE) $(ENAME) SDL2=1
+	$(MAKE) $(TARGET) SDL2=1
 sdl3:
-	$(MAKE) $(ENAME) SDL3=1
+	$(MAKE) $(TARGET) SDL3=1
 terminal:
-	$(MAKE) $(ENAME) TERMINAL=1
+	$(MAKE) $(TARGET) TERMINAL=1
 release:
-	$(MAKE) $(ENAME) RELEASE=1
+	$(MAKE) $(TARGET) RELEASE=1
 
 # Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
@@ -240,11 +241,21 @@ macclassic_ppc:
 clean:
 	$(RM) $(OBJECTS)
 
-
-$(ENAME): $(BUILD_DIR) $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+$(ENAME): $(BUILD_DIR) $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
+
+
+# macOS app bundle
+$(ENAME).app : $(ENAME)
+	mkdir $(TARGET)
+	mkdir $(TARGET)/Contents
+	mkdir $(TARGET)/Contents/MacOS
+	mkdir $(TARGET)/Contents/Resources
+	cp $(ENAME) $(TARGET)/Contents/MacOS/$(ENAME)
+	cp misc/macOS/Info.plist   $(TARGET)/Contents/Resources/Info.plist
+	cp misc/macOS/appicon.icns $(TARGET)/Contents/Resources/appicon.icns
 
 
 # === Compiling with dependency tracking ===
