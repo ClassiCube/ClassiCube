@@ -6,18 +6,18 @@ CC_BEGIN_HEADER
 
 /* 
 SUMMARY:
-- Provides a low level abstraction a 3D graphics rendering API.
-- Because of the numerous possible rendering backends, only a small number of
+- Provides a low level abstraction over a 3D graphics rendering API.
+- Because of the numerous possible graphics backends, only a small number of
    functions are provided so that the available functionality behaves the same
-   regardless of the rendering backend being used. (as much as reasonably possible)
-- Most code using Graphics.h therefore doesn' need to care about the rendering backend being used
+   regardless of the graphics backend being used. (as much as reasonably possible)
+- Most code using Graphics.h therefore doesn't need to care about the graphics backend being used
 
 IMPLEMENTATION NOTES:
-- By default, a reasonable rendering backend is automatically selected in Core.h
-- The selected rendering backend can be altered in two ways:
+- By default, a reasonable graphics backend is automatically selected in Core.h
+- The selected graphics backend can be altered in two ways:
   * explicitly defining CC_GFX_BACKEND in the compilation flags (recommended)
   * altering DEFAULT_GFX_BACKEND for the platform in Core.h
-- Rendering backends are implemented in Graphics_GL1.c, Graphics_D3D9.c etc
+- graphics backends are implemented in Graphics_GL1.c, Graphics_D3D9.c etc
    
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -56,7 +56,7 @@ CC_VAR extern struct _GfxData {
 	/* Maximum total size in pixels a texture can consist of */
 	/* NOTE: Not all graphics backends specify a value for this */
 	int MaxTexSize;
-	/* Whether context graphics has been lost (all creation/render calls fail) */
+	/* Whether graphics context has been lost (all creation/render calls fail) */
 	cc_bool LostContext;
 	/* Whether some textures are created with mipmaps */
 	cc_bool Mipmaps;
@@ -305,7 +305,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar);
 /* Calculates a perspective projection matrix suitable with this backend. (usually for 3D) */
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar);
-/* NOTE: Projection matrix calculation is here because it can depend the graphics backend */
+/* NOTE: The projection matrix calculation can slightly vary depending on the graphics backend */
 /*  (e.g. OpenGL uses a Z clip space range of [-1, 1], whereas Direct3D9 uses [0, 1]) */
 
 /* Sets the region where transformed vertices are drawn in */
@@ -323,12 +323,12 @@ CC_API void Gfx_SetScissor (int x, int y, int w, int h);
 *#########################################################################################################################*/
 /* Outputs a .png screenshot of the backbuffer */
 cc_result Gfx_TakeScreenshot(struct Stream* output);
-/* Warns in chat if the backend has problems with the user's GPU */
+/* Warns in chat if the graphics backend has problems with the user's GPU */
 /* Returns whether legacy rendering mode for borders/sky/clouds is needed */
 cc_bool Gfx_WarnIfNecessary(void);
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s);
-/* Gets information about the user's GPU and current backend state */
-/* Backend state may include depth buffer bits, free memory, etc */
+/* Gets information about the user's GPU and graphics backend state */
+/* Backend state may include depth buffer bits, total free memory, etc */
 /* NOTE: Each line is separated by \n */
 void Gfx_GetApiInfo(cc_string* info);
 

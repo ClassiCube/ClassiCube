@@ -74,9 +74,9 @@ And also runs on:
 * SerenityOS - needs <code>SDL2</code>
 * Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
-* Saturn - unfinished, major rendering and **stability issues** (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_saturn.yml))
+* Saturn - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/saturn))
 * Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
-* Wii U - unfinished, major issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_wiiu.yml)), **untested on real hardware**)
+* Wii U - unfinished, major issues, **broken on real hardware** (can [download from here](https://www.classicube.net/download/wiiu))
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
@@ -86,8 +86,8 @@ And also runs on:
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3))
 * PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
-* PS1 - unfinished, major rendering and **stability issues** (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ps1.yml))
-* Xbox 360 - completely unfinished (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_xbox360.yml)), **untested on real hardware**)
+* PS1 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps1))
+* Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
 
 # Compiling 

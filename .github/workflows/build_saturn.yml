@@ -49,3 +49,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-saturn.cue'
           DEST_NAME: 'ClassiCube-saturn.cue'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'saturn'

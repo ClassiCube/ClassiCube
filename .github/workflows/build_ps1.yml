@@ -59,3 +59,10 @@ jobs:
         with:
           SOURCE_FILE: 'misc/ps1/build/ClassiCube-PS1.cue'
           DEST_NAME: 'ClassiCube-PS1.cue'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'ps1'
