@@ -643,6 +643,10 @@ void Inflate_Process(struct InflateState* s) {
 				repeatCount = Inflate_ReadBits(s, 7);
 				repeatCount += 11; repeatValue = 0;
 				break;
+
+			default:
+				Inflate_Fail(s, INF_ERR_REPEAT_END); 
+				return;
 			}
 
 			count = s->NumLits + s->NumDists;

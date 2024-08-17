@@ -7,7 +7,7 @@ TARGET 			:= ClassiCube-n64
 CFILES 	:= $(notdir $(wildcard src/*.c))
 OFILES 	:= $(CFILES:.c=.o)
 OBJS 	:= $(addprefix $(BUILD_DIR)/,$(OFILES))
-CFLAGS	:= -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=incompatible-pointer-types -Wno-error=maybe-uninitialized
+CFLAGS	:= -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=incompatible-pointer-types
 
 default: $(TARGET).z64
 

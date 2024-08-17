@@ -4,9 +4,15 @@ C_SOURCES   = $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   = $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
 OBJECTS = $(C_OBJECTS)
-ENAME   = ClassiCube
-CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=maybe-uninitialized
+# Flags passed to the C compiler
+CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
+# Flags passed to the linker
 LDFLAGS = -g -rdynamic
+# Name of the main executable
+ENAME   = ClassiCube
+# Name of the final target file
+# (usually this is the executable, but e.g. is app bundle on macOS)
+TARGET := $(ENAME)
 
 ifndef RM
 	# No prefined RM variable, try to guess OS default
