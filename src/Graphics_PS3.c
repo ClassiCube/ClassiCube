@@ -473,14 +473,13 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	f32 scale[4], offset[4];
 	f32 zmin = 0.0f;
 	f32 zmax = 1.0f;
-	y = Game.Height - y - h;
 	
 	scale[0]  = w *  0.5f;
 	scale[1]  = h * -0.5f;
 	scale[2]  = (zmax - zmin) * 0.5f;
 	scale[3]  = 0.0f;
 	offset[0] = x + w * 0.5f;
-	offset[1] = x + h * 0.5f;
+	offset[1] = y + h * 0.5f;
 	offset[2] = (zmax + zmin) * 0.5f;
 	offset[3] = 0.0f;
 
