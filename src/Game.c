@@ -729,14 +729,16 @@ int Game_MapState(int deviceIndex) {
 static CC_INLINE void Game_RenderFrame(void) {
 	struct ScheduledTask entTask;
 	float t;
+	double deltaD;
+	float delta;
 
 	cc_uint64 render  = Stopwatch_Measure();
 	cc_uint64 elapsed = Stopwatch_ElapsedMicroseconds(frameStart, render);
 	/* avoid large delta with suspended process */
 	if (elapsed > 5000000) elapsed = 5000000; 
 	
-	double deltaD     = (int)elapsed / (1000.0 * 1000.0);
-	float delta       = (float)deltaD;
+	deltaD     = (int)elapsed / (1000.0 * 1000.0);
+	delta       = (float)deltaD;
 	Window_ProcessEvents(delta);
 
 	if (delta <= 0.0f) return;
