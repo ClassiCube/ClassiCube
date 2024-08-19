@@ -9,8 +9,6 @@ static const cc_uint64 _DBL_NAN = CC_LL(0x7FF8000000000000U);
 #define DBL_NAN  *((double*)&_DBL_NAN)
 static const cc_uint64 _POS_INF = CC_LL(0x7FF0000000000000U);
 #define POS_INF *((double*)&_POS_INF)
-static const cc_uint64 _NEG_INF = CC_LL(0xFFF0000000000000U);
-#define NEG_INF *((double*)&_NEG_INF)
 
 
 /* Sega saturn is missing these intrinsics */
@@ -416,8 +414,6 @@ double Math_Exp2(double x) {
 
 	if (x == POS_INF || x == DBL_NAN)
 		return x;
-	if (x == NEG_INF)
-		return 0.0;
 
 	x_int = (int) x;
 
