@@ -43,31 +43,20 @@
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501 /* Windows XP */
-/* NOTE: Functions that are not present on Windows 2000 are dynamically loaded. */
-/* Hence the actual minimum supported OS is Windows 2000. This just avoids redeclaring structs. */
+/* NOTE: Functions not present on older OS versions are dynamically loaded. */
+/* Setting WIN32_WINNT to XP just avoids redeclaring structs. */
 #endif
 #include <windows.h>
-#include <commdlg.h>
+/* #include <commdlg.h> */
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-commdlg.h"
+#include "../misc/windows/min-winuser.h"
 
 /* https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpixelformat */
 #define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
 #define CC_WIN_CLASSNAME TEXT("ClassiCube_Window")
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
-
-#ifndef WM_XBUTTONDOWN
-/* Missing if _WIN32_WINNT isn't defined */
-#define WM_XBUTTONDOWN 0x020B
-#define WM_XBUTTONUP   0x020C
-#endif
-#ifndef WM_INPUT
-/* Missing when compiling with some older winapi SDKs */
-#define WM_INPUT       0x00FF
-#endif
-#ifndef WM_MOUSEHWHEEL
-/* Missing when compiling with some older winapi SDKs */
-#define WM_MOUSEHWHEEL 0x020E
-#endif
 
 static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
 static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
