@@ -415,15 +415,15 @@ double Math_Exp2(double x) {
 	if (x == POS_INF || x == DBL_NAN)
 		return x;
 
-	x_int = (int) x;
+	x_int = (int)x;
 
-	if (x < 0)
-		x_int--;
-
-	if (x_int < -1022)
+	if (x_int <= -1022)
 		return 0.0;
 	if (x_int > 1023)
 		return POS_INF;
+
+	if (x < 0)
+		x_int--;
 
 	doi.i = x_int + 1023;
 	doi.i <<= 52;
