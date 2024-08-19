@@ -312,6 +312,7 @@ static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
 	int block;
 	IVec3 pos;
 	cc_uint8 off;
+	cc_string name;
 	
 	if (argsCount == 2) {
 		Chat_AddRaw("&eToo few arguments.");
@@ -346,7 +347,7 @@ static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
 	}
 	
 	Game_ChangeBlock(pos.x, pos.y, pos.z, block);
-	cc_string name = Block_UNSAFE_GetName(block);
+	name = Block_UNSAFE_GetName(block);
 	Chat_Add4("&eSuccessfully placed %s block at (%i, %i, %i).", &name, &pos.x, &pos.y, &pos.z);
 }
 
