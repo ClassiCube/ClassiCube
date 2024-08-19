@@ -24,16 +24,20 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 #if _MSC_VER <= 1500
 	#define CC_INLINE
 	#define CC_NOINLINE
+	#ifndef CC_API
+	#define CC_API __declspec(dllexport)
+	#define CC_VAR __declspec(dllexport)
+	#endif
+	
 #else
 	#define CC_INLINE   inline
 	#define CC_NOINLINE __declspec(noinline)
-#endif
-	
 	#ifndef CC_API
 	#define CC_API __declspec(dllexport, noinline)
 	#define CC_VAR __declspec(dllexport)
 	#endif
 	
+#endif	
 	#define CC_HAS_TYPES
 	#define CC_HAS_MISC
 #elif __GNUC__
