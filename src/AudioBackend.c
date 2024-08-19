@@ -322,11 +322,11 @@ typedef struct WAVEHDR_ {
 	LPSTR       lpData;
 	DWORD       dwBufferLength;
 	DWORD       dwBytesRecorded;
-	DWORD_PTR   dwUser;
+	DWORD       dwUser;
 	DWORD       dwFlags;
 	DWORD       dwLoops;
 	struct WAVEHDR_* lpNext;
-	DWORD_PTR   reserved;
+	DWORD       reserved;
 } WAVEHDR;
 
 typedef struct WAVEFORMATEX_ {
@@ -345,7 +345,7 @@ typedef void* HWAVEOUT;
 #define WHDR_DONE       0x00000001
 #define WHDR_PREPARED   0x00000002
 
-WINMMAPI MMRESULT WINAPI waveOutOpen(HWAVEOUT* phwo, UINT deviceID, const WAVEFORMATEX* fmt, DWORD_PTR callback, DWORD_PTR instance, DWORD flags);
+WINMMAPI MMRESULT WINAPI waveOutOpen(HWAVEOUT* phwo, UINT deviceID, const WAVEFORMATEX* fmt, DWORD callback, DWORD instance, DWORD flags);
 WINMMAPI MMRESULT WINAPI waveOutClose(HWAVEOUT hwo);
 WINMMAPI MMRESULT WINAPI waveOutPrepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
 WINMMAPI MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);

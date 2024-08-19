@@ -203,8 +203,8 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 
 #if defined CC_BUILD_WIN
 struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
-static BOOL (WINAPI *_SymGetSymFromAddr)(HANDLE process, DWORD_PTR addr, DWORD_PTR* displacement, IMAGEHLP_SYMBOL* sym);
-static BOOL (WINAPI *_SymGetModuleInfo) (HANDLE process, DWORD_PTR addr, IMAGEHLP_MODULE* module);
+static BOOL (WINAPI *_SymGetSymFromAddr)(HANDLE process, DWORD addr, DWORD* displacement, IMAGEHLP_SYMBOL* sym);
+static BOOL (WINAPI *_SymGetModuleInfo) (HANDLE process, DWORD addr, IMAGEHLP_MODULE* module);
 
 static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	char strBuffer[512]; cc_string str;
@@ -286,16 +286,16 @@ static void DumpFrame(cc_string* trace, void* addr) {
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static DWORD_PTR (WINAPI *_SymGetModuleBase)(HANDLE process, DWORD_PTR addr);
-static PVOID     (WINAPI *_SymFunctionTableAccess)(HANDLE process, DWORD_PTR addr);
+static DWORD (WINAPI *_SymGetModuleBase)(HANDLE process, DWORD addr);
+static PVOID     (WINAPI *_SymFunctionTableAccess)(HANDLE process, DWORD addr);
 static BOOL      (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
 
-static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, DWORD_PTR addr) {
+static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, DWORD addr) {
 	if (!_SymFunctionTableAccess) return NULL;
 	return _SymFunctionTableAccess(process, addr);
 }
 
-static DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
+static DWORD WINAPI GetModuleBaseCallback(HANDLE process, DWORD addr) {
 	if (!_SymGetModuleBase) return 0;
 	return _SymGetModuleBase(process, addr);
 }
@@ -306,7 +306,7 @@ static DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
 /*  - if NULL is passed as the "ReadMemory" argument, the default callback using ReadProcessMemory is used */
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
-static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
+static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
 	SIZE_T numRead = 0;
 	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
 	
