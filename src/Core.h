@@ -129,6 +129,12 @@ typedef cc_uint8  cc_bool;
 #endif
 #endif
 
+#ifdef _MSC_VER
+#define CC_LL(x) x ## i64
+#else
+#define CC_LL(x) x ## LL
+#endif
+
 #define CC_WIN_BACKEND_TERMINAL 1
 #define CC_WIN_BACKEND_SDL2     2
 #define CC_WIN_BACKEND_SDL3     3

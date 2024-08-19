@@ -27,7 +27,7 @@ typedef int cc_file;
 /*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
 /* Number of seconds since 01/01/0001 to start of unix time. */
-#define UNIX_EPOCH_SECONDS 62135596800ULL
+#define UNIX_EPOCH_SECONDS CC_LL(62135596800U)
 
 extern const cc_result ReturnCode_FileShareViolation;
 extern const cc_result ReturnCode_FileNotFound;
