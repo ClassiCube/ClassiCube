@@ -19,6 +19,14 @@
 #include <winsock2.h> /* auto includes windows.h */
 #include <ws2tcpip.h>
 
+/* defines for MSVC 4.0 */
+#ifndef INVALID_FILE_ATTRIBUTES
+#define INVALID_FILE_ATTRIBUTES (~0u)
+#endif
+
+#ifndef INVALID_SET_FILE_POINTER
+#define INVALID_SET_FILE_POINTER (~0u)
+#endif
 /* === BEGIN shellapi.h === */
 #define SHELLAPI DECLSPEC_IMPORT
 SHELLAPI HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR operation, LPCWSTR file, LPCWSTR parameters, LPCWSTR directory, INT showCmd);
@@ -145,8 +153,8 @@ static VOID WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
 	SystemTimeToFileTime(&curTime, sysTime);
 }
 
-#define FILETIME_EPOCH      50491123200ULL
-#define FILETIME_UNIX_EPOCH 11644473600ULL
+#define FILETIME_EPOCH      CC_LL(50491123200U)
+#define FILETIME_UNIX_EPOCH CC_LL(11644473600U)
 #define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
 #define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
 TimeMS DateTime_CurrentUTC(void) {
