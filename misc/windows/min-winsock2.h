@@ -45,7 +45,11 @@ typedef unsigned short  u_short;
 typedef unsigned int    u_int;
 typedef unsigned long   u_long;
 
+#ifdef _WIN64
 typedef UINT_PTR SOCKET;
+#else
+typedef unsigned int SOCKET;
+#endif
 
 /* Constants */
 #define AF_INET   2
@@ -65,6 +69,11 @@ typedef UINT_PTR SOCKET;
 /* has input parameters | input size| func group | command */
 #define FIONBIO (IOC_IN | (4 << 16) | ('f' << 8) | 126)
 
+#define WSABASEERR 10000
+#define WSAEWOULDBLOCK (WSABASEERR+35)
+#define WSAEINPROGRESS (WSABASEERR+36)
+#define WSAECONNRESET (WSABASEERR+54)
+#define WSAHOST_NOT_FOUND (WSABASEERR+1001)
 /* Struct declarations */
 #define FD_SETSIZE 64
 typedef struct fd_set {

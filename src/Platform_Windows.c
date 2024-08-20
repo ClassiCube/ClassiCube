@@ -28,6 +28,14 @@
 #include "../misc/windows/min-shellapi.h"
 #include "../misc/windows/min-wincrypt.h"
 
+/* winbase.h */
+#ifndef INVALID_FILE_ATTRIBUTES
+#define INVALID_FILE_ATTRIBUTES (~0u)
+#endif
+
+#ifndef INVALID_SET_FILE_POINTER
+#define INVALID_SET_FILE_POINTER (~0u)
+#endif
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
