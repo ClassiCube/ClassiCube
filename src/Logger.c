@@ -17,7 +17,8 @@
 	#define CUR_PROCESS_HANDLE ((HANDLE)-1) /* GetCurrentProcess() always returns -1 */
 	
 	#include <windows.h>
-	#include <imagehlp.h>
+	/*#include <imagehlp.h>*/
+	#include "../misc/windows/min-imagehlp.h"
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
 	#include <signal.h>
@@ -307,7 +308,11 @@ static DWORD WINAPI GetModuleBaseCallback(HANDLE process, DWORD addr) {
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
 static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
+	#ifdef _WIN64
 	SIZE_T numRead = 0;
+	#else
+	unsigned long numRead = 0;
+	#endif
 	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
 	
 	*numBytesRead = (DWORD)numRead; /* DWORD always 32 bits */
@@ -924,7 +929,11 @@ static void DumpStack(void) {
 	static const cc_string stack = String_FromConst("-- stack --\r\n");
 	cc_string str; char strBuffer[128];
 	cc_uint8 buffer[0x10];
-	SIZE_T numRead;
+	#ifdef _WIN64
+	SIZE_T numRead = 0;
+	#else
+	unsigned long numRead = 0;
+	#endif
 	int i, j;
 
 	Logger_Log(&stack);
@@ -949,7 +958,11 @@ static void DumpStack(void) {
 	}
 }
 
+#ifdef _WIN64
 static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, void* userCtx) {
+#else
+static BOOL CALLBACK DumpModule(const char* name, unsigned long base, ULONG size, void* userCtx) {
+#endif
 	cc_string str; char strBuffer[256];
 	cc_uintptr beg, end;
 
