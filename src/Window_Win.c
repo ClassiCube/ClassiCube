@@ -58,7 +58,7 @@
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
-static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
+static BOOL (WINAPI *_RegisterRawInputDevices)(const RAWINPUTDEVICE *devices, UINT numDevices, UINT size);
 static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
 static BOOL (WINAPI* _SetProcessDPIAware)(void);
 
@@ -446,7 +446,12 @@ void Clipboard_GetText(cc_string* value) {
 	cc_bool unicode;
 	HANDLE hGlobal;
 	LPVOID src;
-	SIZE_T size;
+	/* ULONG_PTR size; */
+#ifdef _WIN64
+	ULONG_PTR size;
+#else
+	unsigned long size;
+#endif
 	int i;
 
 	/* retry up to 50 times */
@@ -858,10 +863,10 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 
 void GLContext_Create(void) {
 	struct GraphicsMode mode;
+	static const cc_string glPath = String_FromConst("OPENGL32.dll");
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
 
-	static const cc_string glPath = String_FromConst("OPENGL32.dll");
 	gl_lib = DynamicLib_Load2(&glPath);
 
 	ctx_handle = wglCreateContext(win_DC);
