@@ -16,23 +16,17 @@
 #define UNICODE
 #define _UNICODE
 #endif
-#include <winsock2.h> /* auto includes windows.h */
+#include <windows.h>
+/*
+#include <winsock2.h>
 #include <ws2tcpip.h>
-
-/* === BEGIN shellapi.h === */
-#define SHELLAPI DECLSPEC_IMPORT
-SHELLAPI HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR operation, LPCWSTR file, LPCWSTR parameters, LPCWSTR directory, INT showCmd);
-SHELLAPI HINSTANCE WINAPI ShellExecuteA(HWND hwnd, LPCSTR operation,  LPCSTR file,  LPCSTR  parameters, LPCSTR  directory, INT showCmd);
-/* === END shellapi.h === */
-/* === BEGIN wincrypt.h === */
-typedef struct _CRYPTOAPI_BLOB {
-	DWORD cbData;
-	BYTE* pbData;
-} DATA_BLOB;
-
-static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
-static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
-/* === END wincrypt.h === */
+#include <shellapi.h>
+#include <wincrypt.h>
+*/
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-winsock2.h"
+#include "../misc/windows/min-shellapi.h"
+#include "../misc/windows/min-wincrypt.h"
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
@@ -448,28 +442,6 @@ void Platform_LoadSysFonts(void) {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(SOCKADDR_STORAGE) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
-static int (WINAPI *_WSAStartup)(WORD versionRequested, LPWSADATA wsaData);
-static int (WINAPI *_WSACleanup)(void);
-static int (WINAPI *_WSAGetLastError)(void);
-static int (WINAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
-
-static int (WINAPI *_socket)(int af, int type, int protocol);
-static int (WINAPI *_closesocket)(SOCKET s);
-static int (WINAPI *_connect)(SOCKET s, const struct sockaddr* name, int namelen);
-static int (WINAPI *_shutdown)(SOCKET s, int how);
-
-static int (WINAPI *_ioctlsocket)(SOCKET s, long cmd, u_long* argp);
-static int (WINAPI *_getsockopt)(SOCKET s, int level, int optname, char* optval, int* optlen);
-static int (WINAPI *_recv)(SOCKET s, char* buf, int len, int flags);
-static int (WINAPI *_send)(SOCKET s, const char FAR * buf, int len, int flags);
-static int (WINAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout);
-
-static struct hostent* (WINAPI *_gethostbyname)(const char* name);
-static unsigned short  (WINAPI *_htons)(u_short hostshort);
-static int  (WINAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, PADDRINFOA* result);
-static void (WINAPI* _freeaddrinfo)(PADDRINFOA addrInfo);
-
-
 
 static INT WINAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)address;
@@ -565,7 +537,7 @@ static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* num
 	portRaw[portStr.length] = '\0';
 
 	res = _getaddrinfo(host, portRaw, &hints, &result);
-	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
+	if (res == WSAHOST_NOT_FOUND) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
 	/* Prefer IPv4 addresses first */
