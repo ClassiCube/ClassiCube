@@ -19,6 +19,7 @@
 #include "LBackend.h"
 #include "Http.h"
 #include "Game.h"
+#include "main.h"
 
 #define LAYOUTS static const struct LLayout
 #define IsBackButton(btn) (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_2)
@@ -473,6 +474,11 @@ static void DirectConnectScreen_UrlFilter(cc_string* str) {
 	str->length = 0;
 }
 
+static cc_bool DirectConnectScreen_ParsePort(const cc_string* str) {
+	int port;
+	return Convert_ParseInt(str, &port) && port >= 0 && port <= 65535;
+}
+
 static void DirectConnectScreen_StartClient(void* w) {
 	static const cc_string defMppass = String_FromConst("(none)");
 	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
@@ -492,7 +498,8 @@ static void DirectConnectScreen_StartClient(void* w) {
 	if (!user->length) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
-	if (!DirectUrl_ExtractAddress(addr, &ip, &port, &raw_port)) {
+	DirectUrl_ExtractAddress(addr, &ip, &port);
+	if (!DirectConnectScreen_ParsePort(&port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
@@ -721,34 +728,6 @@ LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    6 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_lblUpdate_N[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
 LAYOUTS main_lblUpdate_H[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 6 } };
 
-
-struct ResumeInfo {
-	cc_string user, ip, port, server, mppass;
-	char _userBuffer[STRING_SIZE], _serverBuffer[STRING_SIZE];
-	char _ipBuffer[16], _portBuffer[16], _mppassBuffer[STRING_SIZE];
-	cc_bool valid;
-};
-
-CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool full) {
-	String_InitArray(info->server, info->_serverBuffer);
-	Options_Get(ROPT_SERVER,       &info->server, "");
-	String_InitArray(info->user,   info->_userBuffer);
-	Options_Get(ROPT_USER,         &info->user, "");
-
-	String_InitArray(info->ip,   info->_ipBuffer);
-	Options_Get(ROPT_IP,         &info->ip, "");
-	String_InitArray(info->port, info->_portBuffer);
-	Options_Get(ROPT_PORT,       &info->port, "");
-
-	if (!full) return;
-	String_InitArray(info->mppass, info->_mppassBuffer);
-	Options_GetSecure(ROPT_MPPASS, &info->mppass);
-
-	info->valid = 
-		info->user.length && info->mppass.length &&
-		info->ip.length   && info->port.length;
-}
-
 CC_NOINLINE static void MainScreen_Error(struct HttpRequest* req, const char* action) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = &MainScreen;
@@ -789,9 +768,8 @@ static void MainScreen_Register(void* w) {
 
 static void MainScreen_Resume(void* w) {
 	struct ResumeInfo info;
-	MainScreen_GetResume(&info, true);
 
-	if (!info.valid) return;
+	if (!Resume_Parse(&info, true)) return;
 	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server, 1);
 }
 
@@ -809,7 +787,7 @@ static void MainScreen_ResumeHover(void* w) {
 	struct ResumeInfo info;
 	if (s->signingIn) return;
 
-	MainScreen_GetResume(&info, false);
+	Resume_Parse(&info, false);
 	if (!info.user.length) return;
 	String_InitArray(str, strBuffer);
 

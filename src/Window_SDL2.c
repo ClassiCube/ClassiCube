@@ -1,5 +1,6 @@
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_SDL2
+#undef CC_BUILD_EGL /* eglCreateWindowSurface can't use an SDL window */
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"
@@ -534,7 +535,7 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL()
 static SDL_GLContext win_ctx;
 
 void GLContext_Create(void) {
@@ -550,6 +551,8 @@ void GLContext_Create(void) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
 #ifdef CC_BUILD_GLES
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
 	win_ctx = SDL_GL_CreateContext(win_handle);

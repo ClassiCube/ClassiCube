@@ -440,6 +440,7 @@ static void InitNetworking(void) {
     {
         int status = Wifi_AssocStatus();
         if (status == ASSOCSTATUS_ASSOCIATED) return;
+		Platform_Log1("STATUS: %i", &status);
 
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
             Platform_LogConst("Can't connect to WIFI"); 
