@@ -77,8 +77,5 @@ CC_NOINLINE STRING_REF cc_string EntryList_UNSAFE_Get(struct StringsBuffer* list
 /* Finds the index of the entry whose key caselessly equals the given key. */
 CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separator);
 
-cc_bool DirectUrl_Claims(const cc_string* STRING_REF input, cc_string* addr, cc_string* user, cc_string* mppass);
-cc_bool DirectUrl_ExtractAddress(const cc_string* STRING_REF addr, cc_string* ip, cc_string* port, int* portNum);
-
 CC_END_HEADER
 #endif

@@ -9,7 +9,63 @@
 #include "Launcher.h"
 #include "Server.h"
 #include "Options.h"
+#include "main.h"
 
+/*########################################################################################################################*
+*-------------------------------------------------Complex argument parsing------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool Resume_Parse(struct ResumeInfo* info, cc_bool full) {
+	String_InitArray(info->server, info->_serverBuffer);
+	Options_Get(ROPT_SERVER,       &info->server, "");
+	String_InitArray(info->user,   info->_userBuffer);
+	Options_Get(ROPT_USER,         &info->user, "");
+
+	String_InitArray(info->ip,   info->_ipBuffer);
+	Options_Get(ROPT_IP,         &info->ip, "");
+	String_InitArray(info->port, info->_portBuffer);
+	Options_Get(ROPT_PORT,       &info->port, "");
+
+	if (!full) return true;
+	String_InitArray(info->mppass, info->_mppassBuffer);
+	Options_GetSecure(ROPT_MPPASS, &info->mppass);
+
+	return 
+		info->user.length && info->mppass.length &&
+		info->ip.length   && info->port.length;
+}
+
+cc_bool DirectUrl_Claims(const cc_string* input, cc_string* addr, cc_string* user, cc_string* mppass) {
+	static const cc_string prefix = String_FromConst("mc://");
+	cc_string parts[6];
+	if (!String_CaselessStarts(input, &prefix)) return false;
+
+	/* mc://[ip:port]/[username]/[mppass] */
+	if (String_UNSAFE_Split(input, '/', parts, 6) != 5) return false;
+
+	*addr   = parts[2];
+	*user   = parts[3];
+	*mppass = parts[4];
+	return true;
+}
+
+void DirectUrl_ExtractAddress(const cc_string* addr, cc_string* ip, cc_string* port) {
+	static const cc_string defPort = String_FromConst("25565");
+	int index = String_LastIndexOf(addr, ':');
+
+	/* support either "[IP]" or "[IP]:[PORT]" */
+	if (index == -1) {
+		*ip   = *addr;
+		*port = defPort;
+	} else {
+		*ip   = String_UNSAFE_Substring(addr, 0, index);
+		*port = String_UNSAFE_SubstringAt(addr, index + 1);
+	}
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Game setup/run-----------------------------------------------------*
+*#########################################################################################################################*/
 static void RunGame(void) {
 	cc_string title; char titleBuffer[STRING_SIZE];
 	int width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, DisplayInfo.Width,  0);
@@ -78,9 +134,23 @@ static cc_bool IsOpenableFile(const cc_string* path) {
 	return File_Exists(&str);
 }
 
+static int ParseMPArgs(const cc_string* user, const cc_string* mppass, const cc_string* addr, const cc_string* port) {
+	String_Copy(&Game_Username,  user);
+	String_Copy(&Game_Mppass,    mppass);
+	String_Copy(&Server.Address, addr);
+
+	if (!Convert_ParseInt(port, &Server.Port) || Server.Port < 0 || Server.Port > 65535) {
+		WarnInvalidArg("Invalid port", port);
+		return false;
+	}
+	return true;
+}
+
 static int RunProgram(int argc, char** argv) {
 	cc_string args[GAME_MAX_CMDARGS];
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+	struct ResumeInfo r;
+	cc_string host;
 
 #ifdef _MSC_VER
 	/* NOTE: Make sure to comment this out before pushing a commit */
@@ -95,41 +165,47 @@ static int RunProgram(int argc, char** argv) {
 		RunGame();
 #else
 		Launcher_Run();
-	/* :hash to auto join server with the given hash */
+	/* :[hash] - auto join server with the given hash */
 	} else if (argsCount == 1 && args[0].buffer[0] == ':') {
 		args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
 		String_Copy(&Launcher_AutoHash, &args[0]);
 		Launcher_Run();
-	/* File path to auto load a map in singleplayer */
+	/* --resume - try to resume to last server */
+	} else if (argsCount == 1 && String_CaselessEqualsConst(&args[0], DEFAULT_RESUME_ARG)) {
+		if (!Resume_Parse(&r, true)) {
+			WarnInvalidArg("No server to resume to", &args[0]);
+			return 1;
+		}
+	
+		if (!ParseMPArgs(&r.user, &r.mppass, &r.ip, &r.port)) return 1;
+		RunGame();
+	/* --singleplayer' - run singleplayer with default user */
+	} else if (argsCount == 1 && String_CaselessEqualsConst(&args[0], DEFAULT_SINGLEPLAYER_ARG)) {
+		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
+		RunGame();
+	/* [file path] - run singleplayer with auto loaded map */
 	} else if (argsCount == 1 && IsOpenableFile(&args[0])) {
 		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
 		String_Copy(&SP_AutoloadMap, &args[0]); /* TODO: don't copy args? */
 		RunGame();
 #endif
-	} else if (argsCount == 1 && DirectUrl_Claims(&args[0], &args[1], &args[2], &args[3])) {
-		String_Copy(&Game_Username, &args[2]);
-		String_Copy(&Game_Mppass,   &args[3]);
-		
-		if (!DirectUrl_ExtractAddress(&args[1], &Server.Address, &args[4], &Server.Port)) {
-			WarnInvalidArg("Invalid port", &args[4]);
-			return 1;
-		}
-		RunGame();		
+	/* mc://[addr]:[port]/[user]/[mppass] - run multiplayer using direct URL form arguments */
+	} else if (argsCount == 1 && DirectUrl_Claims(&args[0], &host, &r.user, &r.mppass)) {
+		DirectUrl_ExtractAddress(&host, &r.ip, &r.port);
+
+		if (!ParseMPArgs(&r.user, &r.mppass, &r.ip, &r.port)) return 1;
+		RunGame();
+	/* [user] - run multiplayer using explicit username */
 	} else if (argsCount == 1) {
 		String_Copy(&Game_Username, &args[0]);
-		RunGame();		
+		RunGame();
+	/* 2 to 3 arguments - unsupported at present */
 	} else if (argsCount < 4) {
 		WarnMissingArgs(argsCount, args);
 		return 1;
+	/* [user] [mppass] [address] [port] - run multiplayer using explicit arguments */
 	} else {
-		String_Copy(&Game_Username, &args[0]);
-		String_Copy(&Game_Mppass,   &args[1]);
-		String_Copy(&Server.Address,&args[2]);
-
-		if (!Convert_ParseInt(&args[3], &Server.Port) || Server.Port < 0 || Server.Port > 65535) {
-			WarnInvalidArg("Invalid port", &args[3]);
-			return 1;
-		}
+		if (!ParseMPArgs(&args[0], &args[1], &args[2], &args[3])) return 1;
 		RunGame();
 	}
 	return 0;

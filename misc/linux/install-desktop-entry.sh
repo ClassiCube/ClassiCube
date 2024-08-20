@@ -24,7 +24,16 @@ Exec=$GAME_DIR/ClassiCube
 Icon=$GAME_DIR/CCicon.png
 Path=$GAME_DIR
 Terminal=false
-Categories=Game
+Categories=Game;
+Actions=singleplayer;resume;
+
+[Desktop Action singleplayer]
+Name=Start singleplayer
+Exec=$GAME_DIR/ClassiCube --singleplayer
+
+[Desktop Action resume]
+Name=Resume last server
+Exec=$GAME_DIR/ClassiCube --resume
 EOF
 chmod +x $DESKTOP_FILE
 
