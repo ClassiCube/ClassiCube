@@ -19,14 +19,6 @@
 #include <winsock2.h> /* auto includes windows.h */
 #include <ws2tcpip.h>
 
-/* defines for MSVC 4.0 */
-#ifndef INVALID_FILE_ATTRIBUTES
-#define INVALID_FILE_ATTRIBUTES (~0u)
-#endif
-
-#ifndef INVALID_SET_FILE_POINTER
-#define INVALID_SET_FILE_POINTER (~0u)
-#endif
 /* === BEGIN shellapi.h === */
 #define SHELLAPI DECLSPEC_IMPORT
 SHELLAPI HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR operation, LPCWSTR file, LPCWSTR parameters, LPCWSTR directory, INT showCmd);
