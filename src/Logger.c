@@ -229,7 +229,7 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 
 	/* This function only works for .pdb debug info anyways */
 	/* This function is also missing on Windows 9X */
-#if _MSC_VER
+#if _MSC_VER > 1000
 	{
 		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
@@ -320,6 +320,8 @@ static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD baseAddress, PVOID b
 }
 static cc_uintptr spRegister;
 
+static BOOL (WINAPI *_StackWalk)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME StackFrame, PVOID ContextRecord, PREAD_PROCESS_MEMORY_ROUTINE ReadMemoryRoutine, PFUNCTION_TABLE_ACCESS_ROUTINE FunctionTableAccessRoutine, PGET_MODULE_BASE_ROUTINE GetModuleBaseRoutine, PTRANSLATE_ADDRESS_ROUTINE TranslateAddress);
+
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
 	int count, type;
@@ -347,12 +349,15 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 #endif
 	thread = GetCurrentThread();
 
-	for (count = 0; count < max; count++) 
+	if (_StackWalk)
 	{
-		if (!StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, 
-						FunctionTableAccessCallback, GetModuleBaseCallback, NULL)) break;
-		if (!frame.AddrFrame.Offset) break;
-		addrs[count] = frame.AddrPC.Offset;
+		for (count = 0; count < max; count++) 
+		{
+			if (!_StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, 
+							FunctionTableAccessCallback, GetModuleBaseCallback, NULL)) break;
+			if (!frame.AddrFrame.Offset) break;
+			addrs[count] = frame.AddrPC.Offset;
+		}
 	}
 	return count;
 }
@@ -1131,6 +1136,7 @@ void Logger_Hook(void) {
 	static const struct DynamicLibSym funcs[] = {
 	#ifdef _IMAGEHLP64
 		{ "EnumerateLoadedModules64", (void**)&_EnumerateLoadedModules},
+		{ "StackWalk",                (void**)&_StackWalk},
 		{ "SymFunctionTableAccess64", (void**)&_SymFunctionTableAccess},
 		{ "SymGetModuleBase64",       (void**)&_SymGetModuleBase },
 		{ "SymGetModuleInfo64",       (void**)&_SymGetModuleInfo },
@@ -1138,6 +1144,7 @@ void Logger_Hook(void) {
 		{ "SymInitialize",            (void**)&_SymInitialize },
 	#else
 		{ "EnumerateLoadedModules",   (void**)&_EnumerateLoadedModules },
+		{ "StackWalk",                (void**)&_StackWalk},
 		{ "SymFunctionTableAccess",   (void**)&_SymFunctionTableAccess },
 		{ "SymGetModuleBase",         (void**)&_SymGetModuleBase },
 		{ "SymGetModuleInfo",         (void**)&_SymGetModuleInfo },
@@ -1254,6 +1261,8 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 		: "eax", "memory"
 	);
 	ctx.ContextFlags = CONTEXT_CONTROL;
+	#elif _MSC_VER == 1000
+	/* TODO find out a way to log stack frame on MSVC4 */
 	#else
 	/* This method is guaranteed to exist on 64 bit windows.  */
 	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
