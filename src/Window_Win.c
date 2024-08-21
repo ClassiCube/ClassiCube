@@ -445,8 +445,8 @@ void Clipboard_GetText(cc_string* value) {
 	HWND hwnd = Window_Main.Handle.ptr;
 	cc_bool unicode;
 	HANDLE hGlobal;
-	LPVOID src;
 	SIZE_T size;
+	void* src;
 	int i;
 
 	/* retry up to 50 times */
@@ -857,11 +857,11 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 }
 
 void GLContext_Create(void) {
+	static const cc_string glPath = String_FromConst("OPENGL32.dll");
 	struct GraphicsMode mode;
+
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
-
-	static const cc_string glPath = String_FromConst("OPENGL32.dll");
 	gl_lib = DynamicLib_Load2(&glPath);
 
 	ctx_handle = wglCreateContext(win_DC);

@@ -309,9 +309,10 @@ static struct ChatCommand MotdCommand = {
 *########################################################################################################################*/
 
 static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
+	cc_string name;
+	cc_uint8 off;
 	int block;
 	IVec3 pos;
-	cc_uint8 off;
 	
 	if (argsCount == 2) {
 		Chat_AddRaw("&eToo few arguments.");
@@ -335,8 +336,7 @@ static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
 			Chat_AddRaw("&eCould not parse coordinates.");
 			return;
 		}
-	}
-	else {
+	} else {
 		IVec3_Floor(&pos, &Entities.CurPlayer->Base.Position);
 	}
 	
@@ -346,7 +346,7 @@ static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
 	}
 	
 	Game_ChangeBlock(pos.x, pos.y, pos.z, block);
-	cc_string name = Block_UNSAFE_GetName(block);
+	name = Block_UNSAFE_GetName(block);
 	Chat_Add4("&eSuccessfully placed %s block at (%i, %i, %i).", &name, &pos.x, &pos.y, &pos.z);
 }
 

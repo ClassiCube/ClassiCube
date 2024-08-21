@@ -131,9 +131,9 @@ void Platform_Log(const char* msg, int len) {
 	OutputDebugStringA("\n");
 }
 
-static VOID (WINAPI *_GetSystemTimeAsFileTime)(LPFILETIME sysTime);
+static void (WINAPI *_GetSystemTimeAsFileTime)(LPFILETIME sysTime);
 /* Fallback support for NT 3.5 */
-static VOID WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
+static void WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
 	SYSTEMTIME curTime;
 	GetSystemTime(&curTime);
 	SystemTimeToFileTime(&curTime, sysTime);
@@ -143,6 +143,7 @@ static VOID WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
 #define FILETIME_UNIX_EPOCH 11644473600ULL
 #define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
 #define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
+
 TimeMS DateTime_CurrentUTC(void) {
 	FILETIME ft; 
 	cc_uint64 raw;
