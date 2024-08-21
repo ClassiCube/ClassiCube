@@ -446,9 +446,9 @@ void Clipboard_GetText(cc_string* value) {
 	cc_bool unicode;
 	HANDLE hGlobal;
 	LPVOID src;
-	/* ULONG_PTR size; */
+	/* SIZE_T size; */
 #ifdef _WIN64
-	ULONG_PTR size;
+	SIZE_T size;
 #else
 	unsigned long size;
 #endif
@@ -862,11 +862,12 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 }
 
 void GLContext_Create(void) {
-	struct GraphicsMode mode;
 	static const cc_string glPath = String_FromConst("OPENGL32.dll");
+	struct GraphicsMode mode;
+
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
-
+  
 	gl_lib = DynamicLib_Load2(&glPath);
 
 	ctx_handle = wglCreateContext(win_DC);

@@ -112,14 +112,14 @@ I am assuming you used the installer from https://sourceforge.net/projects/mingw
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
+4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
 
 ##### Using MinGW
 I am assuming you used the installer from https://osdn.net/projects/mingw/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 2. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
+4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
 
 ##### Using TCC (Tiny C Compiler)
 Setting up TCC:
@@ -131,7 +131,7 @@ Setting up TCC:
 Compiling with TCC:
 1. Navigate to the directory with ClassiCube's source code
 2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
-3. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+3. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux
@@ -144,11 +144,11 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 
 ##### Cross compiling for Windows (32 bit):
 
-```i686-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
+```i686-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
 
 ##### Cross compiling for Windows (64 bit):
 
-```x86_64-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
+```x86_64-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:

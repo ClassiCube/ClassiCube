@@ -18,6 +18,7 @@
 	
 	#include <windows.h>
 	/*#include <imagehlp.h>*/
+	/* Compatibility version so compiling works on older Windows SDKs */
 	#include "../misc/windows/min-imagehlp.h"
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
@@ -204,8 +205,6 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 
 #if defined CC_BUILD_WIN
 struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
-static BOOL (WINAPI *_SymGetSymFromAddr)(HANDLE process, DWORD addr, DWORD* displacement, IMAGEHLP_SYMBOL* sym);
-static BOOL (WINAPI *_SymGetModuleInfo) (HANDLE process, DWORD addr, IMAGEHLP_MODULE* module);
 
 static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	char strBuffer[512]; cc_string str;
@@ -233,7 +232,7 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	{
 		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-		if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
+		if (_SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
 			String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
 		}
 	}
@@ -287,9 +286,6 @@ static void DumpFrame(cc_string* trace, void* addr) {
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static DWORD (WINAPI *_SymGetModuleBase)(HANDLE process, DWORD addr);
-static PVOID     (WINAPI *_SymFunctionTableAccess)(HANDLE process, DWORD addr);
-static BOOL      (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
 
 static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, DWORD addr) {
 	if (!_SymFunctionTableAccess) return NULL;
@@ -348,16 +344,14 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	return RtlCaptureStackBackTrace(0, max, (void**)addrs, NULL);
 #endif
 	thread = GetCurrentThread();
+	if (!_StackWalk) return 0;
 
-	if (_StackWalk)
+	for (count = 0; count < max; count++) 
 	{
-		for (count = 0; count < max; count++) 
-		{
-			if (!_StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, 
-							FunctionTableAccessCallback, GetModuleBaseCallback, NULL)) break;
-			if (!frame.AddrFrame.Offset) break;
-			addrs[count] = frame.AddrPC.Offset;
-		}
+		if (!_StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, 
+						FunctionTableAccessCallback, GetModuleBaseCallback, NULL)) break;
+		if (!frame.AddrFrame.Offset) break;
+		addrs[count] = frame.AddrPC.Offset;
 	}
 	return count;
 }
@@ -978,7 +972,7 @@ static BOOL CALLBACK DumpModule(const char* name, unsigned long base, ULONG size
 	Logger_Log(&str);
 	return true;
 }
-static BOOL  (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
+
 static void DumpMisc(void) {
 	static const cc_string modules = String_FromConst("-- modules --\r\n");
 	if (spRegister >= 0xFFFF) DumpStack();
@@ -1133,31 +1127,9 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 }
 
 void Logger_Hook(void) {
-	static const struct DynamicLibSym funcs[] = {
-	#ifdef _IMAGEHLP64
-		{ "EnumerateLoadedModules64", (void**)&_EnumerateLoadedModules},
-		{ "StackWalk",                (void**)&_StackWalk},
-		{ "SymFunctionTableAccess64", (void**)&_SymFunctionTableAccess},
-		{ "SymGetModuleBase64",       (void**)&_SymGetModuleBase },
-		{ "SymGetModuleInfo64",       (void**)&_SymGetModuleInfo },
-		{ "SymGetSymFromAddr64",      (void**)&_SymGetSymFromAddr },
-		{ "SymInitialize",            (void**)&_SymInitialize },
-	#else
-		{ "EnumerateLoadedModules",   (void**)&_EnumerateLoadedModules },
-		{ "StackWalk",                (void**)&_StackWalk},
-		{ "SymFunctionTableAccess",   (void**)&_SymFunctionTableAccess },
-		{ "SymGetModuleBase",         (void**)&_SymGetModuleBase },
-		{ "SymGetModuleInfo",         (void**)&_SymGetModuleInfo },
-		{ "SymGetSymFromAddr",        (void**)&_SymGetSymFromAddr },
-		{ "SymInitialize",            (void**)&_SymInitialize },
-	#endif
-	};
-	static const cc_string imagehlp = String_FromConst("IMAGEHLP.DLL");
 	OSVERSIONINFOA osInfo;
-	void* lib;
-
 	SetUnhandledExceptionFilter(UnhandledFilter);
-	DynamicLib_LoadAll(&imagehlp, funcs, Array_Elems(funcs), &lib);
+	ImageHlp_LoadDynamicFuncs();
 
 	/* Windows 9x requires process IDs instead - see old DBGHELP docs */
 	/*   https://documentation.help/DbgHelp/documentation.pdf */
