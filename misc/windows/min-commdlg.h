@@ -3,7 +3,11 @@
 #endif
 
 #define COMMDLGAPI DECLSPEC_IMPORT
+#ifdef _WIN64
 typedef UINT_PTR (CALLBACK *LPOFNHOOKPROC)(HWND, UINT, WPARAM, LPARAM);
+#else
+typedef unsigned int (CALLBACK *LPOFNHOOKPROC)(HWND, UINT, WPARAM, LPARAM);
+#endif
 
 #define OFN_READONLY                 0x00000001
 #define OFN_OVERWRITEPROMPT          0x00000002

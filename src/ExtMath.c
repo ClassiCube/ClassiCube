@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #define PI 3.141592653589793238462643383279502884197169399
 
-static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
+static const cc_uint64 _DBL_NAN = CC_LL(0x7FF8000000000000U);
 #define DBL_NAN  *((double*)&_DBL_NAN)
-static const cc_uint64 _POS_INF = 0x7FF0000000000000ULL;
+static const cc_uint64 _POS_INF = CC_LL(0x7FF0000000000000U);
 #define POS_INF *((double*)&_POS_INF)
 
 
@@ -109,8 +109,8 @@ cc_bool Math_IsPowOf2(int value) {
 /*########################################################################################################################*
 *--------------------------------------------------Random number generator------------------------------------------------*
 *#########################################################################################################################*/
-#define RND_VALUE (0x5DEECE66DULL)
-#define RND_MASK ((1ULL << 48) - 1)
+#define RND_VALUE (CC_LL(0x5DEECE66DU))
+#define RND_MASK ((CC_LL(1U) << 48) - 1)
 
 void Random_SeedFromCurrentTime(RNGState* rnd) {
 	cc_uint64 now = Stopwatch_Measure();
@@ -126,13 +126,13 @@ int Random_Next(RNGState* seed, int n) {
 	int bits, val;
 
 	if ((n & -n) == n) { /* i.e., n is a power of 2 */
-		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
+		*seed = (*seed * RND_VALUE + CC_LL(0xB)) & RND_MASK;
 		raw   = (cc_int64)(*seed >> (48 - 31));
 		return (int)((n * raw) >> 31);
 	}
 
 	do {
-		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
+		*seed = (*seed * RND_VALUE + CC_LL(0xB)) & RND_MASK;
 		bits  = (int)(*seed >> (48 - 31));
 		val   = bits % n;
 	} while (bits - val + (n - 1) < 0);
@@ -142,7 +142,7 @@ int Random_Next(RNGState* seed, int n) {
 float Random_Float(RNGState* seed) {
 	int raw;
 
-	*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
+	*seed = (*seed * RND_VALUE + CC_LL(0xB)) & RND_MASK;
 	raw   = (int)(*seed >> (48 - 24));
 	return raw / ((float)(1 << 24));
 }

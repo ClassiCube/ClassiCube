@@ -28,6 +28,14 @@
 #include "../misc/windows/min-shellapi.h"
 #include "../misc/windows/min-wincrypt.h"
 
+/* winbase.h */
+#ifndef INVALID_FILE_ATTRIBUTES
+#define INVALID_FILE_ATTRIBUTES (~0u)
+#endif
+
+#ifndef INVALID_SET_FILE_POINTER
+#define INVALID_SET_FILE_POINTER (~0u)
+#endif
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
@@ -139,8 +147,8 @@ static void WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
 	SystemTimeToFileTime(&curTime, sysTime);
 }
 
-#define FILETIME_EPOCH      50491123200ULL
-#define FILETIME_UNIX_EPOCH 11644473600ULL
+#define FILETIME_EPOCH      CC_LL(50491123200U)
+#define FILETIME_UNIX_EPOCH CC_LL(11644473600U)
 #define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
 #define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
 

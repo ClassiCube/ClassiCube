@@ -738,6 +738,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	
 	deltaD = (int)elapsed / (1000.0 * 1000.0);
 	delta  = (float)deltaD;
+
 	Window_ProcessEvents(delta);
 
 	if (delta <= 0.0f) return;

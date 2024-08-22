@@ -17,7 +17,7 @@
 	#define CUR_PROCESS_HANDLE ((HANDLE)-1) /* GetCurrentProcess() always returns -1 */
 	
 	#include <windows.h>
-	#include <imagehlp.h>
+	/*#include <imagehlp.h>*/
 	/* Compatibility version so compiling works on older Windows SDKs */
 	#include "../misc/windows/min-imagehlp.h"
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
@@ -228,7 +228,7 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 
 	/* This function only works for .pdb debug info anyways */
 	/* This function is also missing on Windows 9X */
-#if _MSC_VER
+#if _MSC_VER > 1000
 	{
 		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
@@ -287,12 +287,12 @@ static void DumpFrame(cc_string* trace, void* addr) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 
-static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, DWORD_PTR addr) {
+static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, DWORD addr) {
 	if (!_SymFunctionTableAccess) return NULL;
 	return _SymFunctionTableAccess(process, addr);
 }
 
-static DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
+static DWORD WINAPI GetModuleBaseCallback(HANDLE process, DWORD addr) {
 	if (!_SymGetModuleBase) return 0;
 	return _SymGetModuleBase(process, addr);
 }
@@ -303,14 +303,20 @@ static DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
 /*  - if NULL is passed as the "ReadMemory" argument, the default callback using ReadProcessMemory is used */
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
-static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
+static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
+	#ifdef _WIN64
 	SIZE_T numRead = 0;
+	#else
+	unsigned long numRead = 0;
+	#endif
 	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
 	
 	*numBytesRead = (DWORD)numRead; /* DWORD always 32 bits */
 	return ok;
 }
 static cc_uintptr spRegister;
+
+static BOOL (WINAPI *_StackWalk)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME StackFrame, PVOID ContextRecord, PREAD_PROCESS_MEMORY_ROUTINE ReadMemoryRoutine, PFUNCTION_TABLE_ACCESS_ROUTINE FunctionTableAccessRoutine, PGET_MODULE_BASE_ROUTINE GetModuleBaseRoutine, PTRANSLATE_ADDRESS_ROUTINE TranslateAddress);
 
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
@@ -922,7 +928,11 @@ static void DumpStack(void) {
 	static const cc_string stack = String_FromConst("-- stack --\r\n");
 	cc_string str; char strBuffer[128];
 	cc_uint8 buffer[0x10];
-	SIZE_T numRead;
+	#ifdef _WIN64
+	SIZE_T numRead = 0;
+	#else
+	unsigned long numRead = 0;
+	#endif
 	int i, j;
 
 	Logger_Log(&stack);
@@ -947,7 +957,11 @@ static void DumpStack(void) {
 	}
 }
 
+#ifdef _WIN64
 static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, void* userCtx) {
+#else
+static BOOL CALLBACK DumpModule(const char* name, unsigned long base, ULONG size, void* userCtx) {
+#endif
 	cc_string str; char strBuffer[256];
 	cc_uintptr beg, end;
 
@@ -1219,6 +1233,8 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 		: "eax", "memory"
 	);
 	ctx.ContextFlags = CONTEXT_CONTROL;
+	#elif _MSC_VER == 1000
+	/* TODO find out a way to log stack frame on MSVC4 */
 	#else
 	/* This method is guaranteed to exist on 64 bit windows.  */
 	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
