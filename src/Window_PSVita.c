@@ -286,7 +286,6 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
 	kb_tileWidth = KB_TILE_SIZE * 2;
 
 	VirtualKeyboard_Open(args, launcherMode);

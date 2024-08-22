@@ -377,6 +377,7 @@ static void* gfx_vertices;
 static void PreprocessTexturedVertices(void) {
 	struct PS1VertexTextured* dst = gfx_vertices;
 	struct VertexTextured* src    = gfx_vertices;
+	float u, v;
 
 	// PS1 need to use raw U/V coordinates
 	//   i.e. U = (src->U * tex->width) % tex->width
@@ -392,8 +393,12 @@ static void PreprocessTexturedVertices(void) {
 		dst->x = XYZFixed(src->x);
 		dst->y = XYZFixed(src->y);
 		dst->z = XYZFixed(src->z);
-		dst->u = UVFixed(src->U * 0.99f);
-		dst->v = UVFixed(src->V        );
+
+		u = src->U * 0.99f;
+		v = src->V == 1.0f ? 0.99f : src->V;
+
+		dst->u = UVFixed(u);
+		dst->v = UVFixed(v);
 	}
 }
 

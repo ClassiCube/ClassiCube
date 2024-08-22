@@ -173,7 +173,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
 	VirtualKeyboard_Open(args, launcherMode);
 }
 

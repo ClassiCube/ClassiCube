@@ -11,6 +11,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Logger.h"
+#include "VirtualKeyboard.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +46,7 @@ void Window_Init(void) {
 
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 }
 
 void Window_Free(void) { }
@@ -193,9 +195,19 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Close(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	kb_tileWidth  = KB_TILE_SIZE / 2;
+	kb_tileHeight = KB_TILE_SIZE / 2;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*
