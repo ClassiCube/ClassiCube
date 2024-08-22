@@ -28,20 +28,22 @@ typedef struct {
 	DISPENV disp_env;
 	DRAWENV draw_env;
 
-	cc_uint32 ot[OT_LENGTH];
-	cc_uint8  buffer[BUFFER_LENGTH];
+	uint32_t ot[OT_LENGTH];
+	uint8_t  buffer[BUFFER_LENGTH];
 } RenderBuffer;
 
 static RenderBuffer buffers[2];
-static cc_uint8*    next_packet;
+static uint8_t*     next_packet;
+static uint8_t*     next_packet_end;
 static int          active_buffer;
 static RenderBuffer* buffer;
 static void* lastPoly;
-static cc_bool cullingEnabled;
+static cc_bool cullingEnabled, noMemWarned;
 
 static void OnBufferUpdated(void) {
-	buffer      = &buffers[active_buffer];
-	next_packet = buffer->buffer;
+	buffer          = &buffers[active_buffer];
+	next_packet     = buffer->buffer;
+    next_packet_end = next_packet + BUFFER_LENGTH;
 	ClearOTagR(buffer->ot, OT_LENGTH);
 }
 
@@ -60,14 +62,22 @@ static void SetupContexts(int w, int h, int r, int g, int b) {
 	OnBufferUpdated();
 }
 
-static void* new_primitive(int size) {
-	RenderBuffer* buffer = &buffers[active_buffer];
-	uint8_t* prim        = next_packet;
+// NOINLINE to avoid polluting the hot path
+static CC_NOINLINE new_primitive_nomem(void) {
+	if (noMemWarned) return NULL;
+	noMemWarned = true;
+	
+	Platform_LogConst("OUT OF VERTEX RAM");
+	return NULL;
+}
 
+static void* new_primitive(int size) {
+	uint8_t* prim  = next_packet;
 	next_packet += size;
 
-	assert(next_packet <= &buffer->buffer[BUFFER_LENGTH]);
-	return (void*)prim;
+	if (next_packet <= next_packet_end);
+		return (void*)prim;
+	return new_primitive_nomem();
 }
 
 static GfxResourceID white_square;
@@ -612,6 +622,7 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex + i;
 		
 		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+        if (!poly) return;
 		setPolyF4(poly);
 
 		poly->x0 = XYZInteger(v[1].x); poly->y0 = XYZInteger(v[1].y);
@@ -642,6 +653,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
 		
 		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
+        if (!poly) return;
 		setPolyFT4(poly);
 		poly->tpage = curTex->tpage;
 		poly->clut  = 0;
@@ -681,6 +693,7 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
 		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+        if (!poly) return;
 		setPolyF4(poly);
 
 		IVec3 coords[4];
@@ -717,6 +730,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
 		
 		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
+        if (!poly) return;
 		setPolyFT4(poly);
 		poly->tpage = curTex->tpage;
 		poly->clut  = 0;
@@ -768,6 +782,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
 		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+        if (!poly) return;
 		setPolyF4(poly);
 
 		SVECTOR coords[4];
@@ -814,6 +829,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
 		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+        if (!poly) return;
 		setPolyF4(poly);
 
 		poly->x0 = v[1].x; poly->y0 = v[1].y;
@@ -867,7 +883,8 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) {
-	lastPoly = NULL;
+	lastPoly    = NULL;
+	noMemWarned = false;
 }
 
 void Gfx_EndFrame(void) {
