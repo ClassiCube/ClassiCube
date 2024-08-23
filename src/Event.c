@@ -1,7 +1,7 @@
 #include "Event.h"
 #include "Logger.h"
 
-int EventAPIVersion = 3;
+int EventAPIVersion = 4;
 struct _EntityEventsList        EntityEvents;
 struct _TabListEventsList       TabListEvents;
 struct _TextureEventsList       TextureEvents;
@@ -99,10 +99,12 @@ void Event_UnregisterAll(void) {
 	WindowEvents.Redrawing.Count    = 0;
 
 	InputEvents.Press.Count = 0;
-	InputEvents.Down.Count  = 0;
-	InputEvents.Up.Count    = 0;
+	InputEvents._down.Count = 0;
+	InputEvents._up.Count   = 0;
 	InputEvents.Wheel.Count = 0;
 	InputEvents.TextChanged.Count = 0;
+	InputEvents.Down2.Count = 0;
+	InputEvents.Up2.Count   = 0;
 
 	PointerEvents.Moved.Count = 0;
 	PointerEvents.Down.Count  = 0;
@@ -158,10 +160,10 @@ void Event_RaiseChat(struct Event_Chat* handlers, const cc_string* msg, int msgT
 	}
 }
 
-void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating) {
+void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating, struct InputDevice* device) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
-		handlers->Handlers[i](handlers->Objs[i], key, repeating);
+		handlers->Handlers[i](handlers->Objs[i], key, repeating, device);
 	}
 }
 

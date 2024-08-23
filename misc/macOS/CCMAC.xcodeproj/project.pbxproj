@@ -19,7 +19,7 @@
 		9A6C7C962C073E0C00676D27 /* Screens.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7BFD2C073DEE00676D27 /* Screens.c */; };
 		9A6C7C972C073E0C00676D27 /* SSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7BFE2C073DEE00676D27 /* SSL.c */; };
 		9A6C7C982C073E0C00676D27 /* LBackend_Android.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7BFF2C073DEE00676D27 /* LBackend_Android.c */; };
-		9A6C7C992C073E0C00676D27 /* Window_SDL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C002C073DEE00676D27 /* Window_SDL.c */; };
+		9A6C7C992C073E0C00676D27 /* Window_SDL2.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C002C073DEE00676D27 /* Window_SDL2.c */; };
 		9A6C7C9A2C073E0C00676D27 /* Graphics_GL2.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C012C073DEE00676D27 /* Graphics_GL2.c */; };
 		9A6C7C9B2C073E0C00676D27 /* Lighting.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C022C073DEE00676D27 /* Lighting.c */; };
 		9A6C7C9C2C073E0C00676D27 /* EntityComponents.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C042C073DEF00676D27 /* EntityComponents.c */; };
@@ -135,7 +135,7 @@
 		9A6C7BFD2C073DEE00676D27 /* Screens.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Screens.c; path = "../../../../../../ClassiCube-master/src/Screens.c"; sourceTree = "<group>"; };
 		9A6C7BFE2C073DEE00676D27 /* SSL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = SSL.c; path = "../../../../../../ClassiCube-master/src/SSL.c"; sourceTree = "<group>"; };
 		9A6C7BFF2C073DEE00676D27 /* LBackend_Android.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = LBackend_Android.c; path = "../../../../../../ClassiCube-master/src/LBackend_Android.c"; sourceTree = "<group>"; };
-		9A6C7C002C073DEE00676D27 /* Window_SDL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Window_SDL.c; path = "../../../../../../ClassiCube-master/src/Window_SDL.c"; sourceTree = "<group>"; };
+		9A6C7C002C073DEE00676D27 /* Window_SDL2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Window_SDL2.c; path = "../../../../../../ClassiCube-master/src/Window_SDL2.c"; sourceTree = "<group>"; };
 		9A6C7C012C073DEE00676D27 /* Graphics_GL2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Graphics_GL2.c; path = "../../../../../../ClassiCube-master/src/Graphics_GL2.c"; sourceTree = "<group>"; };
 		9A6C7C022C073DEE00676D27 /* Lighting.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Lighting.c; path = "../../../../../../ClassiCube-master/src/Lighting.c"; sourceTree = "<group>"; };
 		9A6C7C032C073DEF00676D27 /* Http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Http.h; path = "../../../../../../ClassiCube-master/src/Http.h"; sourceTree = "<group>"; };
@@ -466,7 +466,7 @@
 				9A6C7C0F2C073DF100676D27 /* Vorbis.h */,
 				9A6C7C662C073E0400676D27 /* Widgets.c */,
 				9A6C7C122C073DF100676D27 /* Widgets.h */,
-				9A6C7C002C073DEE00676D27 /* Window_SDL.c */,
+				9A6C7C002C073DEE00676D27 /* Window_SDL2.c */,
 				9A6C7C162C073DF200676D27 /* Window_SDL3.c */,
 				9A6C7C302C073DF600676D27 /* Window_Terminal.c */,
 				9A6C7C692C073E0400676D27 /* Window.h */,
@@ -563,7 +563,7 @@
 				9A6C7CAB2C073E0C00676D27 /* _ftbase.c in Sources */,
 				9A6C7CB22C073E0C00676D27 /* MapRenderer.c in Sources */,
 				9A6C7C9B2C073E0C00676D27 /* Lighting.c in Sources */,
-				9A6C7C992C073E0C00676D27 /* Window_SDL.c in Sources */,
+				9A6C7C992C073E0C00676D27 /* Window_SDL2.c in Sources */,
 				9A6C7CBF2C073E0C00676D27 /* TouchUI.c in Sources */,
 				9A6C7CD32C073E0C00676D27 /* Http_Worker.c in Sources */,
 				9A6C7CD82C073E0C00676D27 /* Entity.c in Sources */,

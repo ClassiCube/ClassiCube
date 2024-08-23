@@ -40,13 +40,14 @@ static void IsometricDrawer_Flat(BlockID block, float size) {
 	TextureLoc loc = Block_Tex(block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &texIndex);
 
-	struct VertexTextured v;
+	struct VertexTextured* v;
 	float minX, maxX, minY, maxY;
+	PackedCol color;
 	float scale;
 
 	*iso_state++ = texIndex;
-	v.Col = PACKEDCOL_WHITE;
-	Block_Tint(v.Col, block);
+	color = PACKEDCOL_WHITE;
+	Block_Tint(color, block);
 
 	/* Rescale by 0.70 in Classic mode to match vanilla size */
 	/* Rescale by 0.88 in Enhanced mode to be slightly nicer */
@@ -58,11 +59,12 @@ static void IsometricDrawer_Flat(BlockID block, float size) {
 	minX  = iso_posX - size; maxX = iso_posX + size;
 	minY  = iso_posY - size; maxY = iso_posY + size;
 
-	v.z = 0.0f;
-	v.x = minX; v.y = minY; v.U = rec.u1; v.V = rec.v1; *iso_vertices++ = v;
-	            v.y = maxY;               v.V = rec.v2; *iso_vertices++ = v;
-	v.x = maxX;             v.U = rec.u2;               *iso_vertices++ = v;
-	            v.y = minY;               v.V = rec.v1; *iso_vertices++ = v;
+	v = iso_vertices;
+	v->x = minX; v->y = minY; v->z = 0; v->Col = color; v->U = rec.u1; v->V = rec.v1; v++;
+	v->x = maxX; v->y = minY; v->z = 0; v->Col = color; v->U = rec.u2; v->V = rec.v1; v++;
+	v->x = maxX; v->y = maxY; v->z = 0; v->Col = color; v->U = rec.u2; v->V = rec.v2; v++;
+	v->x = minX; v->y = maxY; v->z = 0; v->Col = color; v->U = rec.u1; v->V = rec.v2; v++;
+	iso_vertices = v;
 }
 
 static void IsometricDrawer_Angled(BlockID block, float size) {
@@ -156,7 +158,7 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 		if (state[i] == curIdx) continue;
 
 		/* Flush previous batch */
-		Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
+		Atlas1D_Bind(curIdx);
 		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
 
 		/* Reset for next batch */
@@ -165,6 +167,6 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 		batchLen = 0;
 	}
 
-	Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
+	Atlas1D_Bind(curIdx);
 	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
 }

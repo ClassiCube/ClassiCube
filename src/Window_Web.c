@@ -385,6 +385,7 @@ extern void interop_ForceTouchPageLayout(void);
 extern void Game_DoFrame(void);
 void Window_PreInit(void) {
 	emscripten_set_main_loop(Game_DoFrame, 0, false);
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {
@@ -413,12 +414,23 @@ void Window_Init(void) {
 	interop_ForceTouchPageLayout();
 }
 
-void Window_Free(void) { }
+void Window_Free(void) {
+	/* If the game is closed while in fullscreen, the last rendered frame stays */
+	/*  shown in fullscreen, but the game can't be interacted with anymore */
+	Window_ExitFullscreen();
+
+	Window_SetSize(0, 0);
+	UnhookEvents();
+	emscripten_cancel_main_loop();
+}
 
 extern void interop_InitContainer(void);
 static void DoCreateWindow(void) {
-	Window_Main.Exists  = true;
-	Window_Main.Focused = true;
+	Window_Main.Exists   = true;
+	Window_Main.Focused  = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	
 	HookEvents();
 	/* Let the webpage decide on initial bounds */
 	Window_Main.Width  = interop_CanvasWidth();
@@ -427,6 +439,8 @@ static void DoCreateWindow(void) {
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
 void Window_Create3D(int width, int height) { DoCreateWindow(); }
+
+void Window_Destroy(void) { }
 
 extern void interop_SetPageTitle(const char* title);
 void Window_SetTitle(const cc_string* title) {
@@ -438,7 +452,7 @@ void Window_SetTitle(const cc_string* title) {
 static char pasteBuffer[512];
 static cc_string pasteStr;
 EMSCRIPTEN_KEEPALIVE void Window_RequestClipboardText(void) {
-	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY, 0);
+	Event_RaiseInput(&InputEvents.Down2, INPUT_CLIPBOARD_COPY, 0, &NormDevice);
 }
 
 EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
@@ -448,7 +462,7 @@ EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
 
 EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	Window_StoreClipboardText(src);
-	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+	Event_RaiseInput(&InputEvents.Down2, INPUT_CLIPBOARD_PASTE, 0, &NormDevice);
 }
 
 extern void interop_TryGetClipboardText(void);
@@ -522,15 +536,6 @@ void Window_SetSize(int width, int height) {
 void Window_RequestClose(void) {
 	Window_Main.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
-	/* If the game is closed while in fullscreen, the last rendered frame stays */
-	/*  shown in fullscreen, but the game can't be interacted with anymore */
-	Window_ExitFullscreen();
-
-	Window_SetSize(0, 0);
-	UnhookEvents();
-	/* Game_DoFrame doesn't do anything when WindowExists.False is false, */
-	/*  but it's still better to cancel main loop to minimise resource usage */
-	emscripten_cancel_main_loop();
 }
 
 extern void interop_RequestCanvasResize(void);
@@ -566,15 +571,17 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) { }
+
 /* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
 #define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
 static void ProcessGamepadButtons(int port, EmscriptenGamepadEvent* ev) {
 	int numButtons = ev->numButtons;
 
-	Gamepad_SetButton(port, CCPAD_A, GetGamepadButton(0));
-	Gamepad_SetButton(port, CCPAD_B, GetGamepadButton(1));
-	Gamepad_SetButton(port, CCPAD_X, GetGamepadButton(2));
-	Gamepad_SetButton(port, CCPAD_Y, GetGamepadButton(3));
+	Gamepad_SetButton(port, CCPAD_1, GetGamepadButton(0));
+	Gamepad_SetButton(port, CCPAD_2, GetGamepadButton(1));
+	Gamepad_SetButton(port, CCPAD_3, GetGamepadButton(2));
+	Gamepad_SetButton(port, CCPAD_4, GetGamepadButton(3));
 
 	Gamepad_SetButton(port, CCPAD_ZL, GetGamepadButton(4));
 	Gamepad_SetButton(port, CCPAD_ZR, GetGamepadButton(5));
@@ -613,19 +620,21 @@ static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delt
 	}
 }
 
-void Window_ProcessGamepads(float delta) {
-	int i, res, count;
+void Gamepads_Process(float delta) {
+	int i, port, res, count;
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
-	if (emscripten_sample_gamepad_data() == 0) {
-		count = emscripten_get_num_gamepads();
+	if (emscripten_sample_gamepad_data() != 0) return;
+	count = emscripten_get_num_gamepads();
 
-		for (i = 0; i < count; i++)
-		{
-			EmscriptenGamepadEvent ev;
-			res = emscripten_get_gamepad_status(i, &ev);
-			if (res == 0) ProcessGamepadInput(i, &ev, delta);
-		}	
+	for (i = 0; i < count; i++)
+	{
+		EmscriptenGamepadEvent ev;
+		res = emscripten_get_gamepad_status(i, &ev);
+		if (res != 0) continue;
+		
+		port = Gamepad_Connect(0xEB + i, PadBind_Defaults);
+		ProcessGamepadInput(port, &ev, delta);
 	}
 }
 
@@ -684,7 +693,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return interop_DownloadFile(fileBuffer, args->filters, args->titles);
 }
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) { }
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) { }
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
@@ -719,9 +728,6 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 	interop_SetKeyboardText(str);
 }
 
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
-
 void OnscreenKeyboard_Close(void) {
 	keyboardOpen = false;
 	if (!Input_TouchMode) return;
@@ -745,7 +751,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *------------------------------------------------Emscripten WebGL context-------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
+#if CC_GFX_BACKEND_IS_GL()
 #include "Graphics.h"
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx_handle;
 
@@ -787,11 +793,15 @@ void GLContext_Free(void) {
 void* GLContext_GetAddress(const char* function) { return NULL; }
 cc_bool GLContext_SwapBuffers(void) { return true; /* Browser implicitly does this */ }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void Window_SetMinFrameTime(float timeMS) {
+	emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, (int)timeMS);
+}
+
+void GLContext_SetVSync(cc_bool vsync) {
 	if (vsync) {
 		emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
 	} else {
-		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, (int)minFrameMs);
+		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 1000 / 60);
 	}
 }
 

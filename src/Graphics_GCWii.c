@@ -14,6 +14,7 @@ extern void* Window_XFB;
 static void* xfbs[2];
 static  int curFB;
 static GfxResourceID white_square;
+static GXTexRegionCallback regionCB;
 // https://wiibrew.org/wiki/Developer_tips
 // https://devkitpro.org/wiki/libogc/GX
 
@@ -28,6 +29,8 @@ static void InitGX(void) {
 
 	GX_Init(fifo_buffer, FIFO_SIZE);
 	Gfx_SetViewport(0, 0, mode->fbWidth, mode->efbHeight);
+	Gfx_SetScissor( 0, 0, mode->fbWidth, mode->efbHeight);
+	
 	GX_SetDispCopyYScale((f32)mode->xfbHeight / (f32)mode->efbHeight);
 	GX_SetDispCopySrc(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyDst(mode->fbWidth, mode->xfbHeight);
@@ -44,6 +47,9 @@ static void InitGX(void) {
 	
 	xfbs[0] = Window_XFB;
 	xfbs[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(mode));
+
+	regionCB = GX_SetTexRegionCallback(NULL);
+	GX_SetTexRegionCallback(regionCB);
 }
 
 void Gfx_Create(void) {
@@ -173,7 +179,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex = white_square;
 
-	GX_LoadTexObj(&tex->obj, GX_TEXMAP0);
+	GXTexRegion* reg = regionCB(&tex->obj, GX_TEXMAP0);
+	GX_LoadTexObjPreloaded(&tex->obj, reg, GX_TEXMAP0);
 }
 
 
@@ -283,9 +290,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) {
@@ -304,17 +310,20 @@ void Gfx_EndFrame(void) {
 	VIDEO_Flush();
 	
 	if (gfx_vsync) VIDEO_WaitVSync();
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	GX_SetViewport(x, y, w, h, 0, 1);
+}
+
+void Gfx_SetScissor(int x, int y, int w, int h) {
 	GX_SetScissor(x, y, w, h);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 
 /*########################################################################################################################*
@@ -387,24 +396,63 @@ static PackedCol gfx_fogColor;
 static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 static int gfx_fogMode  = -1;
 
+static void UpdateFog(void) {
+	float beg = 0.0f, end = 0.0f;
+	float near = 0.1f, far = Game_ViewDistance;
+	int mode = GX_FOG_NONE;
+
+	GXColor color;
+	color.r = PackedCol_R(gfx_fogColor);
+	color.g = PackedCol_G(gfx_fogColor);
+	color.b = PackedCol_B(gfx_fogColor);
+	color.a = PackedCol_A(gfx_fogColor);
+
+	// Fog end values based off https://github.com/devkitPro/opengx/blob/master/src/gc_gl.c#L1770
+	if (!gfx_fogEnabled) {
+		near = 0.0f;
+		far  = 0.0f;
+	} else if (gfx_fogMode == FOG_LINEAR) {
+		mode = GX_FOG_LIN;
+		end  = gfx_fogEnd;
+	} else if (gfx_fogMode == FOG_EXP) {
+		mode = GX_FOG_EXP;
+		beg  = near;
+		end  = 5.0f / gfx_fogDensity;
+	} else if (gfx_fogMode == FOG_EXP2) {
+		mode = GX_FOG_EXP2;
+		beg  = near;
+		end  = 2.0f / gfx_fogDensity;
+	}
+    GX_SetFog(mode, beg, end, near, far, color);
+}
+
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
+	UpdateFog();
 }
 
 void Gfx_SetFogCol(PackedCol color) {
 	if (color == gfx_fogColor) return;
 	gfx_fogColor = color;
+	UpdateFog();
 }
 
 void Gfx_SetFogDensity(float value) {
+	if (value == gfx_fogDensity) return;
+	gfx_fogDensity = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
 	gfx_fogEnd = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
+	if (func == gfx_fogMode) return;
+	gfx_fogMode = func;
+	UpdateFog();
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -472,7 +520,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		tmp[i * 4 + 3] = m[12 + i];
 	}
 		
-	if (type == MATRIX_PROJECTION) {
+	if (type == MATRIX_PROJ) {
 		GX_LoadProjectionMtx(tmp,
 			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
@@ -480,9 +528,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	}
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
+
 static float texOffsetX, texOffsetY;
 static void UpdateTexCoordGen(void) {
 	if (texOffsetX || texOffsetY) {

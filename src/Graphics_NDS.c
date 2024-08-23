@@ -25,14 +25,14 @@ void Gfx_Create(void) {
     glAlphaFunc(7);
 
     glClearDepth(GL_MAX_DEPTH);
-    glViewport(0, 0, 255, 191);
+    Gfx_SetViewport(0, 0, 256, 192);
     
     vramSetBankA(VRAM_A_TEXTURE);
     vramSetBankB(VRAM_B_TEXTURE);
     vramSetBankC(VRAM_C_TEXTURE);
     vramSetBankD(VRAM_D_TEXTURE);
     
-    glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
+    Gfx_SetFaceCulling(false);
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -60,15 +60,19 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_OnWindowResize(void) { 
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	int x2 = x + w - 1, y2 = y + h - 1;
+	GFX_VIEWPORT = x | (y << 8) | (x2 << 16) | (y2 << 24);
+}
+
+void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 void Gfx_BeginFrame(void) {
 }
@@ -88,36 +92,29 @@ void Gfx_EndFrame(void) {
 	glFlush(0);
 	// TODO not needed?
 	swiWaitForVBlank();
- 
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-// B8 G8 R8 A8 > R5 G5 B5 A1
-#define BGRA8_to_DS(src) \
-	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8);	
-
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
-	for (int y = 0; y < bmp->height; y++)
-	{
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
-		
-		for (int x = 0; x < bmp->width; x++, src += 4)
-		{
-			*dst++ = BGRA8_to_DS(src);
-		}
-	}
-}
-
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
     vramSetBankA(VRAM_A_TEXTURE);
 
     cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
     if (!tmp) return 0;
-    ConvertTexture(tmp, bmp, rowWidth);
+
+	// TODO: Only copy when rowWidth != bmp->width
+	for (int y = 0; y < bmp->height; y++)
+	{
+		cc_uint16* src = bmp->scan0 + y * rowWidth;
+		cc_uint16* dst = tmp        + y * bmp->width;
+
+		for (int x = 0; x < bmp->width; x++)
+		{
+			dst[x] = src[x];
+		}
+	}
 
     int textureID;
     glGenTextures(1, &textureID);
@@ -150,11 +147,11 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
     for (int yy = 0; yy < part->height; yy++)
 	{
 		cc_uint16* dst = vram_ptr + width * (y + yy) + x;
-		cc_uint8* src  = (cc_uint8*)(part->scan0 + rowWidth * yy);
+		cc_uint16* src = part->scan0 + rowWidth * yy;
 		
-		for (int xx = 0; xx < part->width; xx++, src += 4, dst++)
+		for (int xx = 0; xx < part->width; xx++)
 		{
-			*dst = BGRA8_to_DS(src);
+			*dst++ = *src++;
 		}
 	}
 }
@@ -199,6 +196,7 @@ static void Gfx_RestoreState(void) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return true; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 
 /*########################################################################################################################*
@@ -398,6 +396,12 @@ static int lastMatrix;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
 	
+	if (matrix == &Matrix_Identity) {
+		glLoadIdentity();
+		return;
+		// TODO still scale?
+	}
+
 	m4x4 m;
 	const float* src = (const float*)matrix;
 	
@@ -415,9 +419,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
         glScalef32(floattof32(64.0f), floattof32(64.0f), floattof32(64.0f));
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadIdentity();
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 static struct Matrix texMatrix;

@@ -4,6 +4,7 @@
 /* Renders 3 lines showing direction of each axis.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
+CC_BEGIN_HEADER
 
 struct IGameComponent;
 extern struct IGameComponent AxisLinesRenderer_Component;
@@ -11,4 +12,6 @@ extern struct IGameComponent AxisLinesRenderer_Component;
 extern cc_bool AxisLinesRenderer_Enabled;
 
 void AxisLinesRenderer_Render(void);
+
+CC_END_HEADER
 #endif

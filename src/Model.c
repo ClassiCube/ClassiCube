@@ -93,19 +93,24 @@ float Model_RenderDistance(struct Entity* e) {
 	return dx * dx + dy * dy + dz * dz;
 }
 
-void Model_Render(struct Model* model, struct Entity* e) {
-	struct Matrix m;
+void Model_GetEntityTransform(struct Model* model, struct Entity* e, struct Matrix* transform) {
 	Vec3 pos = e->Position;
+
 	if (model->bobbing) pos.y += e->Anim.BobbingModel;
 	/* Original classic offsets models slightly into ground */
 	if (Game_ClassicMode && (e->Flags & ENTITY_FLAG_CLASSIC_ADJUST))
 		pos.y -= 1.5f / 16.0f;
 
+	model->GetTransform(e, pos, transform);
+}
+
+void Model_Render(struct Model* model, struct Entity* e) {
+	struct Matrix m, transform;
 	Model_SetupState(model, e);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
-	model->GetTransform(e, pos, &e->Transform);
-	Matrix_Mul(&m, &e->Transform, &Gfx.View);
+	Model_GetEntityTransform(model, e, &transform);
+	Matrix_Mul(&m, &transform, &Gfx.View);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
 	model->Draw(e);
@@ -455,6 +460,7 @@ static struct ModelTex* textures_tail;
 static void MakeModel(struct Model* model) {
 	struct Model* active = Models.Active;
 	Models.Active = model;
+	model->index  = 0;
 	model->MakeParts();
 
 	model->flags |= MODEL_FLAG_INITED;
@@ -581,13 +587,8 @@ static float EuclidianMod(float x, float y) {
 }
 
 static struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
-static float CustomModel_GetAnimationValue(
-	struct CustomModelAnim* anim,
-	struct CustomModelPart* part,
-	struct CustomModel* cm,
-	struct Entity* e
-) {
-	switch (anim->type) {
+static float CustomModel_GetAnimValue(cc_uint8 type, struct CustomModelAnim* anim, struct Entity* e) {
+	switch (type) {
 		case CustomModelAnimType_Head:
 			return -e->Pitch * MATH_DEG2RAD;
 
@@ -670,6 +671,7 @@ static void CustomModel_DrawPart(
 	float rotX, rotY, rotZ;
 	cc_bool head = false;
 	cc_bool modifiedVertices = false;
+	cc_uint8 type, axis;
 	float value = 0.0f;
 
 	if (part->fullbright) {
@@ -690,20 +692,22 @@ static void CustomModel_DrawPart(
 	for (animIndex = 0; animIndex < MAX_CUSTOM_MODEL_ANIMS; animIndex++) 
 	{
 		struct CustomModelAnim* anim = &part->anims[animIndex];
-		if (anim->type == CustomModelAnimType_None) continue;
+		type = part->animType[animIndex];
+		axis = part->animAxis[animIndex];
 
-		value = CustomModel_GetAnimationValue(anim, part, cm, e);
+		if (type == CustomModelAnimType_None) continue;
+		value = CustomModel_GetAnimValue(type, anim, e);
 	
 		if (
 			!modifiedVertices &&
-			(anim->type == CustomModelAnimType_SinTranslate ||
-				anim->type == CustomModelAnimType_SinTranslateVelocity ||
-				anim->type == CustomModelAnimType_SinSize ||
-				anim->type == CustomModelAnimType_SinSizeVelocity ||
-				anim->type == CustomModelAnimType_FlipTranslate ||
-				anim->type == CustomModelAnimType_FlipTranslateVelocity ||
-				anim->type == CustomModelAnimType_FlipSize ||
-				anim->type == CustomModelAnimType_FlipSizeVelocity)
+			(type == CustomModelAnimType_SinTranslate ||
+				type == CustomModelAnimType_SinTranslateVelocity ||
+				type == CustomModelAnimType_SinSize ||
+				type == CustomModelAnimType_SinSizeVelocity ||
+				type == CustomModelAnimType_FlipTranslate ||
+				type == CustomModelAnimType_FlipTranslateVelocity ||
+				type == CustomModelAnimType_FlipSize ||
+				type == CustomModelAnimType_FlipSizeVelocity)
 		) {
 			modifiedVertices = true;
 			Mem_Copy(
@@ -714,14 +718,14 @@ static void CustomModel_DrawPart(
 		}
 		
 		if (
-			anim->type == CustomModelAnimType_SinTranslate ||
-			anim->type == CustomModelAnimType_SinTranslateVelocity ||
-			anim->type == CustomModelAnimType_FlipTranslate ||
-			anim->type == CustomModelAnimType_FlipTranslateVelocity
+			type == CustomModelAnimType_SinTranslate ||
+			type == CustomModelAnimType_SinTranslateVelocity ||
+			type == CustomModelAnimType_FlipTranslate ||
+			type == CustomModelAnimType_FlipTranslateVelocity
 		) {
 			for (i = 0; i < MODEL_BOX_VERTICES; i++) {
 				struct ModelVertex* vertex = &cm->model.vertices[part->modelPart.offset + i];
-				switch (anim->axis) {
+				switch (axis) {
 					case CustomModelAnimAxis_X:
 						vertex->x += value;
 						break;
@@ -736,14 +740,14 @@ static void CustomModel_DrawPart(
 				}
 			}
 		} else if (
-			anim->type == CustomModelAnimType_SinSize ||
-			anim->type == CustomModelAnimType_SinSizeVelocity ||
-			anim->type == CustomModelAnimType_FlipSize ||
-			anim->type == CustomModelAnimType_FlipSizeVelocity
+			type == CustomModelAnimType_SinSize ||
+			type == CustomModelAnimType_SinSizeVelocity ||
+			type == CustomModelAnimType_FlipSize ||
+			type == CustomModelAnimType_FlipSizeVelocity
 		) {
 			for (i = 0; i < MODEL_BOX_VERTICES; i++) {
 				struct ModelVertex* vertex = &cm->model.vertices[part->modelPart.offset + i];
-				switch (anim->axis) {
+				switch (axis) {
 					case CustomModelAnimAxis_X:
 						vertex->x = Math_Lerp(part->modelPart.rotX, vertex->x, value);
 						break;
@@ -758,11 +762,11 @@ static void CustomModel_DrawPart(
 				}
 			}
 		} else {
-			if (anim->type == CustomModelAnimType_Head) {
+			if (type == CustomModelAnimType_Head) {
 				head = true;
 			}
 			
-			switch (anim->axis) {
+			switch (axis) {
 				case CustomModelAnimAxis_X:
 					rotX += value;
 					break;
@@ -870,8 +874,9 @@ void CustomModel_Register(struct CustomModel* cm) {
 	static struct ModelTex customDefaultTex;
 
 	CheckMaxVertices();
-	cm->model.name       = cm->name;
-	cm->model.defaultTex = &customDefaultTex;
+	cm->model.name        = cm->name;
+	cm->model.defaultTex  = &customDefaultTex;
+	cm->model.maxVertices = cm->numParts * MODEL_BOX_VERTICES;
 
 	cm->model.MakeParts = Model_NoParts;
 	cm->model.Draw      = CustomModel_Draw;
@@ -902,7 +907,9 @@ void CustomModel_Undefine(struct CustomModel* cm) {
 
 static void CustomModel_FreeAll(void) {
 	int i;
+#ifdef CC_BUILD_LOWMEM
 	if (!custom_models) return;
+#endif
 
 	for (i = 0; i < MAX_CUSTOM_MODELS; i++) 
 	{
@@ -2190,11 +2197,12 @@ static void BlockModel_DrawParts(void) {
 	int lastTexIndex, i, offset = 0, count = 0;
 
 	lastTexIndex = bModel_texIndices[0];
-	for (i = 0; i < bModel_index; i++, count += 4) {
+	for (i = 0; i < bModel_index; i++, count += 4) 
+	{
 		if (bModel_texIndices[i] == lastTexIndex) continue;
 
 		/* Different 1D flush texture, flush current vertices */
-		Gfx_BindTexture(Atlas1D.TexIds[lastTexIndex]);
+		Atlas1D_Bind(lastTexIndex);
 		Gfx_DrawVb_IndexedTris_Range(count, offset);
 		lastTexIndex = bModel_texIndices[i];
 			
@@ -2204,7 +2212,7 @@ static void BlockModel_DrawParts(void) {
 
 	/* Leftover vertices */
 	if (!count) return;
-	Gfx_BindTexture(Atlas1D.TexIds[lastTexIndex]); 
+	Atlas1D_Bind(lastTexIndex); 
 	Gfx_DrawVb_IndexedTris_Range(count, offset);
 }
 
@@ -2316,8 +2324,8 @@ static void RecalcProperties(struct Entity* e) {
 }
 
 static void DrawBlockTransform(struct Entity* e, float dispX, float dispY, float dispZ, float scale) {
-	static Vec3 pos;
-	static struct Matrix m, temp;
+	struct Matrix m, temp;
+	Vec3 pos;
 
 	pos = e->Position;
 	pos.y += e->Anim.BobbingModel;

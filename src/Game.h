@@ -1,12 +1,16 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Represents the game and related structures.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct Bitmap;
 struct Stream;
+typedef void (*Game_Draw2DHook)(float delta);
+
 CC_VAR extern struct _GameData {
 	/* Width and height of the window. (1 at minimum) */
 	int Width, Height;
@@ -14,10 +18,11 @@ CC_VAR extern struct _GameData {
 	double Time;
 	/* Number of chunks updated within last second. Resets to 0 after every second. */
 	int ChunkUpdates;
+	/* Index of current game state being used (for splitscreen multiplayer) */
+	int CurrentState;
+	Game_Draw2DHook Draw2DHooks[4];
 } Game;
 
-/* Stopwatch measurement of when current frame started */
-extern cc_uint64 Game_FrameStart;
 extern struct RayTracer Game_SelectedPos;
 extern cc_bool Game_UseCPEBlocks;
 
@@ -25,14 +30,16 @@ extern cc_string Game_Username;
 extern cc_string Game_Mppass;
 
 #ifdef CC_BUILD_SPLITSCREEN
-extern int Game_NumLocalPlayers;
+	int Game_MapState(int deviceIndex);
+	extern int Game_NumStates;
 #else
-#define Game_NumLocalPlayers 1
+	static CC_INLINE int Game_MapState(int deviceIndex) { return 0; }
+	#define Game_NumStates 1
 #endif
 
 #if defined CC_BUILD_N64
     #define DEFAULT_VIEWDIST 20
-#elif defined CC_BUILD_NDS || defined CC_BUILD_PS1
+#elif defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
     #define DEFAULT_VIEWDIST 192
 #else
     #define DEFAULT_VIEWDIST 512
@@ -106,6 +113,7 @@ void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */
 /* See FPS_LIMIT_ for valid strategies/methods */
 void Game_SetFpsLimit(int method);
+void Game_SetMinFrameTime(float frameTimeMS);
 
 cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, 
 							cc_uint8* skinType, int* heightDivisor);
@@ -154,4 +162,6 @@ struct ScheduledTask {
 typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
 /* Adds a task to list of scheduled tasks. (always at end) */
 CC_API int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
+
+CC_END_HEADER
 #endif

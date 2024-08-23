@@ -1,6 +1,8 @@
 #ifndef CC_RESOURCES_H
 #define CC_RESOURCES_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Implements checking, fetching, and patching the default game assets.
 	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -34,4 +36,6 @@ void Fetcher_Run(void);
 /* Checks if any resources have finished downloading. */
 /* If any have, performs required patching and saving. */
 void Fetcher_Update(void);
+
+CC_END_HEADER
 #endif

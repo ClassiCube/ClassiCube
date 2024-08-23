@@ -16,12 +16,15 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = SCE_NET_ERROR_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = SCE_NET_ERROR_EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const char* Platform_AppNameSuffix = " PS Vita";
+const cc_result ReturnCode_SocketDropped    = SCE_NET_ERROR_EPIPE;
 static int epoll_id;
 static int stdout_fd;
+
+const char* Platform_AppNameSuffix = " PS Vita";
+cc_bool Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*
@@ -69,7 +72,8 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("ux0:data/ClassiCube/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
@@ -77,28 +81,23 @@ static void GetNativePath(char* str, const cc_string* path) {
 
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int result = sceIoMkdir(str, 0777);
+cc_result Directory_Create(const cc_filepath* path) {
+	int result = sceIoMkdir(path->buffer, 0777);
 	return GetSCEResult(result);
 }
 
-int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+int File_Exists(const cc_filepath* path) {
 	SceIoStat sb;
-	GetNativePath(str, path);
-	return sceIoGetstat(str, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
+	return sceIoGetstat(path->buffer, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	int res;
 
-	GetNativePath(str, dirPath);
-	SceUID uid = sceIoDopen(str);
+	Platform_EncodePath(&str, dirPath);
+	SceUID uid = sceIoDopen(str.buffer);
 	if (uid < 0) return GetSCEResult(uid); // error
 
 	String_InitArray(path, pathBuffer);
@@ -116,35 +115,28 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		int len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-		if (entry.d_stat.st_attr & SCE_SO_IFDIR) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) break;
-		} else {
-			callback(&path, obj);
-		}
+		int is_dir = entry.d_stat.st_attr & SCE_SO_IFDIR;
+		callback(&path, obj, is_dir);
 	}
 
 	sceIoDclose(uid);
 	return GetSCEResult(res);
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int result = sceIoOpen(str, mode, 0777);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	int result = sceIoOpen(path, mode, 0777);
 	*file      = result;
 	return GetSCEResult(result);
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, SCE_O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SCE_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT | SCE_O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SCE_O_RDWR | SCE_O_CREAT | SCE_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, SCE_O_RDWR | SCE_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -303,19 +295,23 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
-	int res;
 
 	*s = sceNetSocket("CC socket", raw->sa_family, SCE_NET_SOCK_STREAM, SCE_NET_IPPROTO_TCP);
 	if (*s < 0) return *s;
-	
+
 	if (nonblocking) {
 		int on = 1;
 		sceNetSetsockopt(*s, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO, &on, sizeof(int));
 	}
+	return 0;
+}
 
-	res = sceNetConnect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
+	
+	int res = sceNetConnect(s, raw, addr->size);
 	return res;
 }
 
@@ -395,8 +391,9 @@ void Platform_Init(void) {
 	/*pspDebugSioInit();*/ 
 	InitNetworking();
 	epoll_id = sceNetEpollCreate("CC poll", 0);
-	// Create root directory
-	Directory_Create(&String_Empty);
+	
+	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
+	Directory_Create(root);
 }
 void Platform_Free(void) { }
 
@@ -426,7 +423,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "VitaVitaVitaVita"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

@@ -332,7 +332,6 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
 static void C3D_FrameSplit(u8 flags);
 static void C3D_FrameEnd(u8 flags);
 
-static void C3D_RenderTargetCreate(C3D_RenderTarget* target, int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt);
 static void C3D_RenderTargetDelete(C3D_RenderTarget* target);
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
@@ -1143,30 +1142,36 @@ static void C3D_FrameEnd(u8 flags)
 	gxCmdQueueRun(&ctx->gxQueue);
 }
 
-void C3D_RenderTargetCreate(C3D_RenderTarget* target, int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt)
+static void C3D_RenderTargetInit(C3D_RenderTarget* target, int width, int height)
 {
-	size_t colorSize = C3D_CalcColorBufSize(width,height,colorFmt);
-	size_t depthSize = C3D_CalcDepthBufSize(width,height,depthFmt);
 	memset(target, 0, sizeof(C3D_RenderTarget));
-
-	void* depthBuf = NULL;
-	void* colorBuf = vramAlloc(colorSize);
-	if (!colorBuf) goto _fail;
-
-	vramAllocPos vramBank = addrGetVRAMBank(colorBuf);
-	depthBuf = vramAllocAt(depthSize, vramBank ^ VRAM_ALLOC_ANY); // Attempt opposite bank first...
-	if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
-	if (!depthBuf) goto _fail;
 
 	C3D_FrameBuf* fb = &target->frameBuf;
 	C3D_FrameBufAttrib(fb, width, height, false);
-	C3D_FrameBufColor(fb, colorBuf, colorFmt);
-	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
-	return;
+}
 
-_fail:
-	if (depthBuf) vramFree(depthBuf);
-	if (colorBuf) vramFree(colorBuf);
+static void C3D_RenderTargetColor(C3D_RenderTarget* target, GPU_COLORBUF colorFmt)
+{
+	C3D_FrameBuf* fb = &target->frameBuf;
+	size_t colorSize = C3D_CalcColorBufSize(fb->width, fb->height, colorFmt);
+	void* colorBuf   = vramAlloc(colorSize);
+
+	if (!colorBuf) return;
+	C3D_FrameBufColor(fb, colorBuf, colorFmt);
+}
+
+static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFmt)
+{
+	C3D_FrameBuf* fb = &target->frameBuf;
+	size_t depthSize = C3D_CalcDepthBufSize(fb->width, fb->height, depthFmt);
+	void* depthBuf   = NULL;
+
+	vramAllocPos vramBank = addrGetVRAMBank(fb->colorBuf);
+	depthBuf = vramAllocAt(depthSize, vramBank ^ VRAM_ALLOC_ANY); // Attempt opposite bank first...
+	if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
+	if (!depthBuf) return;
+
+	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
 }
 
 static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target)
@@ -1431,37 +1436,18 @@ static void C3Di_LoadShaderUniforms(shaderInstance_s* si)
 
 
 
-
-static aptHookCookie hookCookie;
-
-static void C3Di_AptEventHook(APT_HookType hookType, void* param)
+static void C3Di_OnRestore(void)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 
-	switch (hookType)
-	{
-		case APTHOOK_ONSUSPEND:
-		{
-			C3Di_RenderQueueWaitDone();
-			C3Di_RenderQueueDisableVBlank();
-			break;
-		}
-		case APTHOOK_ONRESTORE:
-		{
-			C3Di_RenderQueueEnableVBlank();
-			ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
-				| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
-				| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
+	ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
+		| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
+		| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
 
-			C3Di_DirtyUniforms();
+	C3Di_DirtyUniforms();
 
-			if (ctx->fogLut)
-				ctx->flags |= C3DiF_FogLut;
-			break;
-		}
-		default:
-			break;
-	}
+	if (ctx->fogLut)
+		ctx->flags |= C3DiF_FogLut;
 }
 
 static bool C3D_Init(size_t cmdBufSize)
@@ -1510,7 +1496,6 @@ static bool C3D_Init(size_t cmdBufSize)
 		ctx->tex[i] = NULL;
 
 	C3Di_RenderQueueInit();
-	aptHook(&hookCookie, C3Di_AptEventHook, NULL);
 
 	return true;
 }
@@ -1537,21 +1522,51 @@ static void C3D_SetScissor(GPU_SCISSORMODE mode, u32 left, u32 top, u32 right, u
 	ctx->scissor[2] = ((bottom-1) << 16) | ((right-1) & 0xFFFF);
 }
 
+
+static void C3Di_Reset(C3D_Context* ctx) {
+	// Reset texture environment
+	C3D_TexEnv texEnv;
+	C3D_TexEnvInit(&texEnv);
+	for (int i = 0; i < 6; i++)
+	{
+		C3Di_TexEnvBind(i, &texEnv);
+	}
+
+	// Reset lighting
+	GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, false);
+	GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1,  true);
+
+	// Reset attirubte buffer info
+	C3D_BufCfg buffers[12] = { 0 };
+	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, BUFFER_BASE_PADDR >> 3);
+	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)buffers, 12 * 3);
+}
+
+static void C3Di_UpdateFramebuffer(C3D_Context* ctx) {
+	if (ctx->flags & C3DiF_DrawUsed)
+	{
+		ctx->flags &= ~C3DiF_DrawUsed;
+		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+		GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
+	}
+	C3Di_FrameBufBind(&ctx->fb);
+}
+
 static void C3Di_UpdateContext(void)
 {
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
 
+	if (ctx->flags & C3DiF_Reset)
+	{
+		ctx->flags &= ~C3DiF_Reset;
+		C3Di_Reset(ctx);
+	}
+
 	if (ctx->flags & C3DiF_FrameBuf)
 	{
 		ctx->flags &= ~C3DiF_FrameBuf;
-		if (ctx->flags & C3DiF_DrawUsed)
-		{
-			ctx->flags &= ~C3DiF_DrawUsed;
-			GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
-			GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
-		}
-		C3Di_FrameBufBind(&ctx->fb);
+		C3Di_UpdateFramebuffer(ctx);
 	}
 
 	if (ctx->flags & C3DiF_Viewport)
@@ -1636,28 +1651,6 @@ static void C3Di_UpdateContext(void)
 		}
 	}
 
-	if (ctx->flags & C3DiF_Reset)
-	{
-		// Reset texture environment
-		C3D_TexEnv texEnv;
-		C3D_TexEnvInit(&texEnv);
-		for (i = 0; i < 6; i++)
-		{
-			C3Di_TexEnvBind(i, &texEnv);
-		}
-
-		// Reset lighting
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, false);
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1,  true);
-
-		// Reset attirubte buffer info
-		C3D_BufCfg buffers[12] = { 0 };
-		GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, BUFFER_BASE_PADDR >> 3);
-		GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)buffers, 12 * 3);
-
-		ctx->flags &= ~C3DiF_Reset;
-	}
-
 	C3D_UpdateUniforms();
 }
 
@@ -1687,7 +1680,6 @@ static void C3D_Fini(void)
 	if (!(ctx->flags & C3DiF_Active))
 		return;
 
-	aptUnhook(&hookCookie);
 	C3Di_RenderQueueExit();
 	free(ctx->gxQueue.entries);
 	linearFree(ctx->cmdBuf);

@@ -7,6 +7,7 @@
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+#include "SystemFonts.h"
 
 #include <errno.h>
 #include <netdb.h>
@@ -23,14 +24,20 @@
 #include <fat/fs_fat.h>
 #include <kos/dbgio.h>
 #include "_PlatformConsole.h"
-KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
+
+KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
+               INIT_VMU        | INIT_CDROM    | INIT_NET);
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
 const char* Platform_AppNameSuffix = " Dreamcast";
+cc_bool Platform_ReadonlyFilesystem;
+static cc_bool usingSD;
 
 
 /*########################################################################################################################*
@@ -47,7 +54,16 @@ cc_uint64 Stopwatch_Measure(void) {
 
 static uint32 str_offset;
 extern cc_bool window_inited;
-#define MAX_ONSCREEN_LINES 20
+#define MAX_ONSCREEN_LINES 17
+#define ONSCREEN_LINE_HEIGHT (24 + 2) // 8 * 3 text, plus 2 pixel padding
+#define Onscreen_LineOffset(y) ((10 + y + (str_offset * ONSCREEN_LINE_HEIGHT)) * vid_mode->width)
+
+static void PlotOnscreen(int x, int y, void* ctx) {
+	if (x >= vid_mode->width) return;
+	
+	uint32 line_offset = Onscreen_LineOffset(y);
+	vram_s[line_offset + x] = 0xFFFF;
+}
 
 static void LogOnscreen(const char* msg, int len) {
 	char buffer[50];
@@ -55,13 +71,12 @@ static void LogOnscreen(const char* msg, int len) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
-	String_InitArray_NT(str, buffer);
+	String_InitArray(str, buffer);
 	String_Format2(&str, "[%p2.%p3] ", &secs, &ms);
 	String_AppendAll(&str, msg, len);
-	buffer[str.length] = '\0';
-	
-	uint32 line_offset = (10 + (str_offset * BFONT_HEIGHT)) * vid_mode->width;
-	bfont_draw_str(vram_s + line_offset, vid_mode->width, 1, buffer);
+
+	sq_set16(vram_s + Onscreen_LineOffset(0), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
+	FallbackFont_Plot(&str, PlotOnscreen, 3, NULL);
 	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
 }
 
@@ -70,7 +85,7 @@ void Platform_Log(const char* msg, int len) {
 	dbgio_write_buffer_xlat("\n",   1);
 	
 	if (window_inited) return;
-	// Log details on-screen for initial model initing etc
+	// Log details on-screen for initial modem initing etc
 	//  (this can take around 40 seconds on average)
 	LogOnscreen(msg, len);
 }
@@ -79,12 +94,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
-	time_t boot_time = rtc_boot_time();
-	// workaround when RTC clock hasn't been setup
-	int boot_time_2000 =  946684800;
-	int boot_time_2024 = 1704067200;
-	if (boot_time < boot_time_2000) boot_time = boot_time_2024;
-	
+	time_t boot_time  = rtc_boot_time();
 	cc_uint64 curSecs = boot_time + secs;
 	return curSecs + UNIX_EPOCH_SECONDS;
 }
@@ -108,46 +118,163 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------VMU options file-----------------------------------------------------*
+*#########################################################################################################################*/
+static const cc_uint8 icon_pal[] = {
+0xff,0xff, 0xdd,0xfd, 0x00,0x50, 0x33,0xf3, 0xee,0xfe, 0xcc,0xfc, 0xbb,0xfb, 0x00,0x40, 
+0x88,0xf8, 0x00,0xb0, 0x22,0xf2, 0x00,0xb0, 0x00,0xf0, 0x00,0x30, 0x00,0x00, 0x00,0xf0,
+};
+static const cc_uint8 icon_data[] = {
+0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xd9, 0x97, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xd9, 0xc3, 0x3c, 0x97, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xee, 0xee, 0xd9, 0xc3, 0x60, 0x06, 0x3c, 0x97, 0xee, 0xee, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xee, 0xd9, 0xc3, 0x60, 0x00, 0x00, 0x06, 0x3c, 0x97, 0xee, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xd9, 0xc3, 0x60, 0x00, 0x00, 0x00, 0x00, 0x06, 0x3c, 0x97, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xd9, 0xc3, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x3c, 0x97, 0xee, 0xee,
+0xee, 0xd9, 0xc3, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x3c, 0x97, 0xee,
+0xe7, 0xc3, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x3c, 0x7e,
+0xe2, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1c, 0x2e,
+0xe2, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x6c, 0x2e,
+0xe2, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0x11, 0x56, 0x6c, 0x2e,
+0xe2, 0xc0, 0x00, 0x01, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x10, 0x00, 0x16, 0x6c, 0x2e,
+0xe2, 0xc0, 0x00, 0x56, 0x66, 0x64, 0x00, 0x00, 0x00, 0x16, 0x64, 0x00, 0x00, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x04, 0x66, 0x66, 0x66, 0x40, 0x00, 0x16, 0x66, 0x40, 0x04, 0x15, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x01, 0x66, 0x14, 0x16, 0x60, 0x00, 0x66, 0x65, 0x00, 0x56, 0x66, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x05, 0x65, 0x00, 0x04, 0x64, 0x00, 0x66, 0x64, 0x04, 0x66, 0x66, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x05, 0x65, 0x00, 0x00, 0x00, 0x00, 0x66, 0x50, 0x05, 0x66, 0x66, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x05, 0x65, 0x00, 0x00, 0x00, 0x00, 0x66, 0x10, 0x06, 0x66, 0x66, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x01, 0x65, 0x00, 0x00, 0x00, 0x00, 0x66, 0x40, 0x46, 0x66, 0x66, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x04, 0x65, 0x00, 0x00, 0x00, 0x00, 0x66, 0x40, 0x46, 0x66, 0x65, 0x66, 0x6c, 0x2e,
+0xe2, 0xc0, 0x00, 0x56, 0x40, 0x00, 0x00, 0x00, 0x66, 0x00, 0x06, 0x66, 0x50, 0x56, 0x6c, 0x2e,
+0xe2, 0xc0, 0x00, 0x16, 0x50, 0x00, 0x00, 0x00, 0x66, 0x40, 0x05, 0x65, 0x40, 0x16, 0x6c, 0x2e,
+0xe2, 0xc0, 0x00, 0x05, 0x61, 0x00, 0x00, 0x00, 0x66, 0x40, 0x00, 0x40, 0x00, 0x66, 0x6c, 0x2e,
+0xe7, 0xc3, 0x60, 0x04, 0x66, 0x55, 0x50, 0x00, 0x66, 0x50, 0x00, 0x00, 0x05, 0x68, 0xac, 0x7e,
+0xee, 0xd9, 0xc3, 0x60, 0x45, 0x66, 0x64, 0x00, 0x66, 0x64, 0x00, 0x04, 0x58, 0xac, 0x97, 0xee,
+0xee, 0xee, 0xd9, 0xc3, 0x60, 0x15, 0x54, 0x00, 0x66, 0x66, 0x55, 0x58, 0xac, 0x97, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xd9, 0xc3, 0x60, 0x00, 0x00, 0x66, 0x66, 0x68, 0xac, 0x97, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xee, 0xd9, 0xc3, 0x60, 0x00, 0x66, 0x68, 0xac, 0x97, 0xee, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xee, 0xee, 0xd9, 0xc3, 0x60, 0x68, 0xac, 0x97, 0xee, 0xee, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xd9, 0xc3, 0xac, 0x97, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee,
+0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xd9, 0x97, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee,
+};
+
+static volatile int vmu_write_FD = -10000;
+static int VMUFile_Do(cc_file* file, int mode) {
+	void* data = NULL;
+	int fd, err = -1, len;
+	vmu_pkg_t pkg;
+	
+	errno = 0;
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDONLY);
+	
+	// Try to extract stored data from the VMU
+	if (fd >= 0) {
+		len  = fs_total(fd);
+		data = Mem_Alloc(len, 1, "VMU data");
+		fs_read(fd, data, len);
+		
+		err = vmu_pkg_parse(data, &pkg);
+		fs_close(fd);
+	}
+	
+	// Copy VMU data into a RAM temp file
+	errno = 0;
+	fd    = fs_open("/ram/ccopt", O_RDWR | O_CREAT | O_TRUNC);
+	if (fd < 0) return errno;
+	
+	if (err >= 0) {
+		fs_write(fd, pkg.data, pkg.data_len);
+		fs_seek(fd,  0, SEEK_SET);
+	}
+	Mem_Free(data);
+
+	if (mode != O_RDONLY) vmu_write_FD = fd;
+	*file = fd;
+	return 0;
+}
+
+static cc_result VMUFile_Close(cc_file file) {
+	void* data;
+	uint8* pkg_data;
+	int fd, err = -1, len, pkg_len;
+	vmu_pkg_t pkg = { 0 };
+	vmu_write_FD  = -10000;
+	
+	len  = fs_total(file);
+	data = Mem_Alloc(len, 1, "VMU data");
+	fs_seek(file, 0, SEEK_SET);
+	fs_read(file, data, len);
+	
+	fs_close(file);
+	fs_unlink("/ram/ccopt");
+	
+	strcpy(pkg.desc_short, "CC options file");
+	strcpy(pkg.desc_long,  "ClassiCube config/settings");
+	strcpy(pkg.app_id,     "ClassiCube");
+	pkg.eyecatch_type = VMUPKG_EC_NONE;
+	pkg.data_len      = len;
+	pkg.data          = data;
+
+	pkg.icon_cnt  = 1;
+	pkg.icon_data = icon_data;
+	Mem_Copy(pkg.icon_pal, icon_pal, sizeof(icon_pal));
+		
+	err = vmu_pkg_build(&pkg, &pkg_data, &pkg_len);
+	if (err) { Mem_Free(data); return ERR_OUT_OF_MEMORY; }
+	
+	// Copy into VMU file
+	errno = 0;
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDWR | O_CREAT | O_TRUNC);
+	if (fd < 0) return errno;
+	
+	fs_write(fd, pkg_data, pkg_len);
+	fs_close(fd);
+	free(pkg_data);
+	return 0;
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("/cd/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int res = fs_mkdir(str);
+cc_result Directory_Create(const cc_filepath* path) {
+	int res = fs_mkdir(path->buffer);
 	int err = res == -1 ? errno : 0;
 	
 	// Filesystem returns EINVAL when operation unsupported (e.g. CD system)
 	//  so rather than logging an error, just pretend it already exists
 	if (err == EINVAL) err = EEXIST;
+
+	// Changes are cached in memory, sync to SD card
+	// TODO maybe use fs_shutdown/fs_unmount and only sync once??
+	if (!err) fs_fat_sync("/sd");
 	return err;
 }
 
-int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+int File_Exists(const cc_filepath* path) {
 	struct stat sb;
-	GetNativePath(str, path);
-	return fs_stat(str, &sb, 0) == 0 && S_ISREG(sb.st_mode);
+	return fs_stat(path->buffer, &sb, 0) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
-	int res;
+	cc_filepath str;
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
 
-	GetNativePath(str, dirPath);
-	int fd = fs_open(str, O_DIR | O_RDONLY);
+	Platform_EncodePath(&str, dirPath);
+	int fd = fs_open(str.buffer, O_DIR | O_RDONLY);
 	if (fd < 0) return errno;
 
 	String_InitArray(path, pathBuffer);
@@ -168,12 +295,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		String_AppendUtf8(&path, src, len);
 
 		// negative size indicates a directory entry
-		if (entry->size < 0) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) break;
-		} else {
-			callback(&path, obj);
-		}
+		int is_dir = entry->size < 0;
+		callback(&path, obj, is_dir);
 	}
 
 	int err = errno; // save error from fs_readdir
@@ -181,29 +304,33 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return err;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
 
-	int res = fs_open(str, mode);
+	int res = fs_open(path, mode);
 	*file   = res;
 	
 	int err = res == -1 ? errno : 0;
 	if (res == -1 && err == 0) err = ENOENT;
+
+	// Read/Write VMU for options.txt if no SD card, since that file is critical
+	cc_string raw = String_FromReadonly(path);
+	if (err && String_CaselessEqualsConst(&raw, "/cd/options.txt")) {
+		return VMUFile_Do(file, mode);
+	}
 	return err;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -219,6 +346,13 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
+	if (file == vmu_write_FD) 
+		return VMUFile_Close(file);
+	
+	// Changes are cached in memory, sync to SD card
+	// TODO maybe use fs_shutdown/fs_unmount and only sync once??
+	if (usingSD) fs_fat_sync("/sd");
+
 	int res = fs_close(file);
 	return res == -1 ? errno : 0;
 }
@@ -376,9 +510,8 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	cc_result res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
@@ -386,8 +519,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	if (nonblocking) {
 		fcntl(*s, F_SETFL, O_NONBLOCK);
 	}
+	return 0;
+}
 
-	res = connect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+
+	int res = connect(s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 
@@ -443,7 +581,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 static kos_blockdev_t sd_dev;
 static uint8 partition_type;
 
-static void InitSDCard(void) {
+static void TryInitSDCard(void) {
 	if (sd_init()) {
 		// Both SD card and debug interface use the serial port
 		// So if initing SD card fails, need to restore serial port state for debug logging
@@ -453,19 +591,24 @@ static void InitSDCard(void) {
 	
 	if (sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
 		Platform_LogConst("Unable to find first partition on SD card"); return;
-  	}
-  	
-  	if (fs_fat_init()) {
+	}
+	Platform_Log1("Found SD card (partitioned using: %b)", &partition_type);
+	
+	if (fs_fat_init()) {
 		Platform_LogConst("Failed to init FAT filesystem"); return;
 	}
 	
-  	if (fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
+	if (fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
 		Platform_LogConst("Failed to mount SD card"); return;
-  	}
-  	
-  	root_path = String_FromReadonly("/sd/ClassiCube");
-	fs_mkdir("/sd/ClassiCube");
+	}
+
+	root_path = String_FromReadonly("/sd/ClassiCube/");
 	Platform_ReadonlyFilesystem = false;
+	usingSD   = true;
+
+	cc_filepath* root = FILEPATH_RAW("/sd/ClassiCube");
+	int res = Directory_Create(root);
+	Platform_Log1("ROOT DIRECTORY CREATE: %i", &res);
 }
 
 static void InitModem(void) {
@@ -494,7 +637,7 @@ static void InitModem(void) {
 
 void Platform_Init(void) {
 	Platform_ReadonlyFilesystem = true;
-	InitSDCard();
+	TryInitSDCard();
 	
 	if (net_default_dev) return;
 	// in case Broadband Adapter isn't active
@@ -531,7 +674,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "DreamCastKOS_PVR"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

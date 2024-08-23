@@ -176,7 +176,6 @@
   parse_fond( char*   fond_data,
               short*  have_sfnt,
               ResID*  sfnt_id,
-              Str255  lwfn_file_name,
               short   face_index )
   {
     AsscEntry*  assoc;
@@ -184,9 +183,8 @@
     FamRec*     fond;
 
 
-    *sfnt_id          = 0;
-    *have_sfnt        = 0;
-    lwfn_file_name[0] = 0;
+    *sfnt_id    = 0;
+    *have_sfnt = 0;
 
     fond       = (FamRec*)fond_data;
     assoc      = (AsscEntry*)( fond_data + sizeof ( FamRec ) + 2 );
@@ -214,21 +212,6 @@
         *sfnt_id   = EndianS16_BtoN( base_assoc->fontID );
       }
     }
-  }
-
-
-  static short
-  count_faces( Handle        fond,
-               const UInt8*  pathname )
-  {
-    ResID     sfnt_id;
-    short     have_sfnt;
-    Str255    lwfn_file_name;
-
-    have_sfnt = 0;
-    parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, 0 );
-
-    return count_faces_scalable( *fond );
   }
 
 
@@ -335,7 +318,7 @@
       if ( ResError() )
         break;
 
-      num_faces_in_fond  = count_faces( fond, pathname );
+      num_faces_in_fond  = count_faces_scalable( *fond );
       num_faces_in_res  += num_faces_in_fond;
 
       if ( 0 <= face_index && face_index < num_faces_in_fond && error )
@@ -363,7 +346,6 @@
     ResID     sfnt_id, fond_id;
     OSType    fond_type;
     Str255    fond_name;
-    Str255    lwfn_file_name;
 
 
     /* check of `library' and `aface' delayed to `FT_New_Face_From_XXX' */
@@ -372,7 +354,7 @@
     if ( ResError() != noErr || fond_type != TTAG_FOND )
       return FT_THROW( Invalid_File_Format );
 
-    parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, face_index );
+    parse_fond( *fond, &have_sfnt, &sfnt_id, face_index );
 
     return FT_New_Face_From_SFNT( library,
                                      sfnt_id,
@@ -407,7 +389,7 @@
 
     *aface = NULL;
 
-    error = FT_New_Face_From_Suitcase( library, args->pathname, face_index, aface );
+    error = FT_New_Face_From_Suitcase( library, (const UInt8*)args->pathname, face_index, aface );
     if ( *aface )
       return FT_Err_Ok;
 

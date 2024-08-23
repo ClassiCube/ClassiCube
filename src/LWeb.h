@@ -2,6 +2,8 @@
 #define CC_LWEB_H
 #include "Bitmap.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /* Implements asynchronous web tasks for the launcher.
 	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -133,4 +135,6 @@ void Flags_Free(void);
 
 void Session_Load(void);
 void Session_Save(void);
+
+CC_END_HEADER
 #endif

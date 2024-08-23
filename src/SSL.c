@@ -1,7 +1,7 @@
 #include "SSL.h"
 #include "Errors.h"
 
-#if defined CC_BUILD_SCHANNEL
+#if CC_SSL_BACKEND == CC_SSL_BACKEND_SCHANNEL
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -404,12 +404,19 @@ cc_result SSL_Free(void* ctx_) {
 	Mem_Free(ctx);
 	return 0; 
 }
-#elif defined CC_BUILD_BEARSSL
+#elif CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
 #include "String.h"
 #include "bearssl.h"
-#include "../misc/certs.h"
+#include "../misc/certs/certs.h"
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
+
+static unsigned fake_minimal_end_chain(const br_x509_class** ctx) {
+	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
+	if (r == BR_ERR_X509_NOT_TRUSTED) r = 0;
+	if (r == BR_ERR_X509_EXPIRED)     r = 0;
+	return r;
+}
 
 typedef struct SSLContext {
 	br_ssl_client_context sc;
@@ -462,6 +469,10 @@ static void SetCurrentTime(SSLContext* ctx) {
 	cc_uint64 cur = DateTime_CurrentUTC();
 	uint32_t days = (uint32_t)(cur / 86400) + 366;
 	uint32_t secs = (uint32_t)(cur % 86400);
+	
+	/* clamp min system time from RTC to start of August 2024 */
+	/* Times earlier than that usually mean an improperly calibrated RTC */
+	if (days < 739464) days = 739464;
 		
 	br_x509_minimal_set_time(&ctx->xc, days, secs);
 	/* This matches bearssl's default time calculation
@@ -499,16 +510,25 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	*out_ctx = (void*)ctx;
 	
 	br_ssl_client_init_full(&ctx->sc, &ctx->xc, TAs, TAs_NUM);
-	/*if (!_verify_certs) {
-		br_x509_minimal_set_rsa(&ctx->xc,   &br_rsa_i31_pkcs1_vrfy);
-		br_x509_minimal_set_ecdsa(&ctx->xc, &br_ec_prime_i31, &br_ecdsa_i31_vrfy_asn1);
-	}*/
 	InjectEntropy(ctx);
 	SetCurrentTime(ctx);
 	ctx->socket = socket;
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);
 	br_ssl_client_reset(&ctx->sc, host, 0);
+	
+	/* Account login must be done over TLS 1.2 */
+	if (String_CaselessEqualsConst(host_, "www.classicube.net")) {
+		br_ssl_engine_set_versions(&ctx->sc.eng, BR_TLS12, BR_TLS12);
+	}
+	
+	/* Override default certificate chain validation */
+	if (!_verifyCerts) {
+		static br_x509_class fake_minimal_vtable;
+		fake_minimal_vtable = br_x509_minimal_vtable;
+		fake_minimal_vtable.end_chain = fake_minimal_end_chain;
+		ctx->xc.vtable = &fake_minimal_vtable;
+	}
 	
 	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
 			sock_read,  ctx, 

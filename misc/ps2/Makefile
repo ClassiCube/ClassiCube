@@ -1,16 +1,27 @@
 ifeq ($(strip $(PS2SDK)),)
 $(error "PS2SDK must be set in your environment")
 endif
+SOURCE_DIRS	:= src third_party/bearssl/src misc/ps2
 BUILD_DIR = build-ps2
 
-CFILES 	:= $(wildcard src/*.c)
-OBJS	:=$(patsubst %.c, %.o, $(CFILES))
-IOP_MODS:= DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o
+S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
-EE_BIN = ClassiCube-ps2.elf
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+IOP_MODS:= DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o USBKBD_irx.o
+
+EE_BIN 	= ClassiCube-ps2.elf
 EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
-EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc
-EE_CFLAGS = -DPLAT_PS2
+EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse -lkbd
+
+EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -Ithird_party/bearssl/inc
+EE_CFLAGS 	:= -D_EE -G0 -O2 -Wall -gdwarf-2 -gz -DPLAT_PS2
+EE_LDFLAGS 	:= -L$(PS2SDK)/ee/lib -Wl,-zmax-page-size=128
+EE_LINKFILE := $(PS2SDK)/ee/startup/linkfile
 
 all: $(BUILD_DIR) $(EE_BIN)
 
@@ -19,6 +30,8 @@ clean:
 	
 $(BUILD_DIR):
 	mkdir -p $@
+
+include $(PS2SDK)/samples/Makefile.pref
 	
 # Networking IRX modules
 $(BUILD_DIR)/DEV9_irx.c: $(PS2SDK)/iop/irx/ps2dev9.irx
@@ -46,6 +59,38 @@ $(BUILD_DIR)/USBMASS_BD_irx.c: $(PS2SDK)/iop/irx/usbmass_bd.irx
 $(BUILD_DIR)/USBHDFSD_irx.c: $(PS2SDK)/iop/irx/usbhdfsd.irx
 	bin2c $< $@ USBHDFSD_irx
 
+# USB input IRX modules
+$(BUILD_DIR)/USBMOUSE_irx.c: $(PS2SDK)/iop/irx/ps2mouse.irx
+	bin2c $< $@ USBMOUSE_irx
 
-include $(PS2SDK)/samples/Makefile.pref
-include $(PS2SDK)/samples/Makefile.eeglobal
+$(BUILD_DIR)/USBKBD_irx.c: $(PS2SDK)/iop/irx/ps2kbd.irx
+	bin2c $< $@ USBKBD_irx
+
+
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
+$(EE_BIN): $(EE_OBJS)
+	$(EE_CC) -T$(EE_LINKFILE) -O2 -o $(EE_BIN) $(EE_OBJS) $(EE_LDFLAGS) $(EE_LIBS)
+
+
+#---------------------------------------------------------------------------------
+# object generation
+#---------------------------------------------------------------------------------
+$(BUILD_DIR)/%.o: src/%.c
+	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
+	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: misc/ps2/%.S
+	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+# Dependency tracking
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))
+

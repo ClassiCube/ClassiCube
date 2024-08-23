@@ -183,6 +183,7 @@ static void LogUnhandledNSErrors(NSException* ex) {
 
 void Window_PreInit(void) {
 	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+	DisplayInfo.CursorVisible = true;
 }
 
 static NSAutoreleasePool* pool;
@@ -215,9 +216,12 @@ void Window_Free(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------------Window--------------------------------------------------------*
 *#########################################################################################################################*/
-#if !defined MAC_OS_X_VERSION_10_4
-// Doesn't exist in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways
-#define kCGBitmapByteOrder32Host 0
+#ifdef CC_BIG_ENDIAN
+	/* Default byte order is big endian */
+	/* Also can't use kCGBitmapByteOrder32Host because that doesn't exist in older SDKs */
+	#define BITMAP_BYTE_ORDER 0
+#else
+	#define BITMAP_BYTE_ORDER kCGBitmapByteOrder32Little
 #endif
 
 static void RefreshWindowBounds(void) {
@@ -266,7 +270,7 @@ static void RefreshWindowBounds(void) {
 
 - (void)windowDidMove:(NSNotification *)notification {
 	RefreshWindowBounds();
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
+#if CC_GFX_BACKEND_IS_GL()
 	GLContext_Update();
 #endif
 }
@@ -378,8 +382,10 @@ static void DoCreateWindow(int width, int height) {
 	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
 		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
 	
-	Window_Main.Exists = true;
-	Window_Main.Handle = winHandle;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = winHandle;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor
 
 	del = [CCWindowDelegate alloc];
@@ -392,6 +398,8 @@ static void DoCreateWindow(int width, int height) {
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) {
 	char raw[NATIVE_STR_LEN];
@@ -602,7 +610,11 @@ void Window_ProcessEvents(float delta) {
 	}
 }
 
-void Window_ProcessGamepads(float delta) { }
+void Gamepads_Init(void) {
+
+}
+
+void Gamepads_Process(float delta) { }
 
 
 /*########################################################################################################################*
@@ -693,9 +705,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 *--------------------------------------------------------Framebuffer------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Bitmap fb_bmp;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
+	fb_bmp      = *bmp;
 }
 
 static void DoDrawFramebuffer(NSRect dirty) {
@@ -705,7 +719,7 @@ static void DoDrawFramebuffer(NSRect dirty) {
 	NSGraphicsContext* nsContext;
 	CGImageRef image;
 	CGRect rect;
-	
+
 	Event_RaiseVoid(&WindowEvents.Redrawing);
 
 	// Unfortunately CGImageRef is immutable, so changing the
@@ -723,8 +737,9 @@ static void DoDrawFramebuffer(NSRect dirty) {
 	// TODO: REPLACE THIS AWFUL HACK
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
 		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
+
 	image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
-		kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+		BITMAP_BYTE_ORDER | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
@@ -751,15 +766,13 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 
@@ -834,15 +847,18 @@ cc_bool GLContext_SwapBuffers(void) {
 	return true;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	int value = vsync ? 1 : 0;
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
 // kCGLCPCurrentRendererID is only available on macOS 10.4 and later
+// Before 10.5 uses long instead of glInt and didn't include the normal gl.h with typedefs
 #if defined MAC_OS_X_VERSION_10_4
+typedef int GLinteger;
+
 static const char* GetAccelerationMode(CGLContextObj ctx) {
-	GLint fGPU, vGPU;
+	GLinteger fGPU, vGPU;
 	
 	// NOTE: only macOS 10.4 or later
 	if (CGLGetParameter(ctx, kCGLCPGPUFragmentProcessing, &fGPU)) return NULL;
@@ -855,24 +871,25 @@ static const char* GetAccelerationMode(CGLContextObj ctx) {
 
 void GLContext_GetApiInfo(cc_string* info) {
 	CGLContextObj ctx = [ctxHandle CGLContextObj];
-	GLint rendererID;
+	GLinteger rendererID;
 	CGLGetParameter(ctx, kCGLCPCurrentRendererID, &rendererID);
 	
-	GLint nRenders = 0;
+	GLinteger nRenders = 0;
 	CGLRendererInfoObj rend;
 	CGLQueryRendererInfo(-1, &rend, &nRenders);
+	int i;
 	
-	for (int i = 0; i < nRenders; i++)
+	for (i = 0; i < nRenders; i++)
 	{
-		GLint curID = -1;
+		GLinteger curID = -1;
 		CGLDescribeRenderer(rend, i, kCGLRPRendererID, &curID);
 		if (curID != rendererID) continue;
 		
-		GLint acc = 0;
+		GLinteger acc = 0;
 		CGLDescribeRenderer(rend, i, kCGLRPAccelerated, &acc);
 		const char* mode = GetAccelerationMode(ctx);
 		
-		GLint vram = 0;
+		GLinteger vram = 0;
 		if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemoryMegabytes, &vram)) {
 			// preferred path (macOS 10.7 or later)
 		} else if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemory, &vram)) {

@@ -10,12 +10,17 @@
 #include "Game.h"
 #include "Event.h"
 
+#ifdef CC_BUILD_TINYMEM
+	#define PARTICLES_MAX 10
+#else
+	#define PARTICLES_MAX 600
+#endif
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Particle base------------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID particles_TexId, particles_VB;
-#define PARTICLES_MAX 600
 static RNGState rnd;
 static cc_bool hitTerrain;
 typedef cc_bool (*CanPassThroughFunc)(BlockID b);
@@ -280,7 +285,8 @@ static void Terrain_Render(float t) {
 	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, terrain_count * 4);
 	Terrain_Update1DCounts();
-	for (i = 0; i < terrain_count; i++) {
+	for (i = 0; i < terrain_count; i++) 
+	{
 		index = Atlas1D_Index(terrain_particles[i].texLoc);
 		ptr   = data + terrain_1DIndices[index];
 
@@ -289,18 +295,20 @@ static void Terrain_Render(float t) {
 	}
 
 	Gfx_UnlockDynamicVb(particles_VB);
-	for (i = 0; i < Atlas1D.Count; i++) {
+	for (i = 0; i < Atlas1D.Count; i++) 
+	{
 		int partCount = terrain_1DCount[i];
 		if (!partCount) continue;
 
-		Gfx_BindTexture(Atlas1D.TexIds[i]);
+		Atlas1D_Bind(i);
 		Gfx_DrawVb_IndexedTris_Range(partCount, offset);
 		offset += partCount;
 	}
 }
 
 static void Terrain_RemoveAt(int i) {
-	for (; i < terrain_count - 1; i++) {
+	for (; i < terrain_count - 1; i++) 
+	{
 		terrain_particles[i] = terrain_particles[i + 1];
 	}
 	terrain_count--;
@@ -308,7 +316,8 @@ static void Terrain_RemoveAt(int i) {
 
 static void Terrain_Tick(float delta) {
 	int i;
-	for (i = 0; i < terrain_count; i++) {
+	for (i = 0; i < terrain_count; i++) 
+	{
 		if (TerrainParticle_Tick(&terrain_particles[i], delta)) {
 			Terrain_RemoveAt(i); i--;
 		}
@@ -499,10 +508,13 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 	struct CustomParticle* p;
 	struct CustomParticleEffect* e = &Particles_CustomEffects[effectID];
 	int i, count = e->particleCount;
-	Vec3 offset, delta;
+	Vec3 offset, delta, origin;
 	float d;
 
-	for (i = 0; i < count; i++) {
+	origin.x = originX; origin.y = originY; origin.z = originZ;
+
+	for (i = 0; i < count; i++) 
+	{
 		if (custom_count == PARTICLES_MAX) Custom_RemoveAt(0);
 		p = &custom_particles[custom_count++];
 		p->effectId = effectID;
@@ -522,7 +534,6 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		p->base.lastPos.y = y + offset.y * d;
 		p->base.lastPos.z = z + offset.z * d;
 		
-		Vec3 origin = { originX, originY, originZ };
 		Vec3_Sub(&delta, &p->base.lastPos, &origin);
 		Vec3_Normalise(&delta);
 

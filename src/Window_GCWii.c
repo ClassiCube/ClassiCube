@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Platform.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Event.h"
 #include "String.h"
 #include "Funcs.h"
@@ -19,11 +20,12 @@
 
 static cc_bool needsFBUpdate;
 static cc_bool launcherMode;
+#include "VirtualCursor.h"
 static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 
 static void OnPowerOff(void) {
@@ -70,21 +72,21 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width   = rmode->fbWidth;
-	Window_Main.Height  = rmode->xfbHeight;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = rmode->fbWidth;
+	Window_Main.Height   = rmode->xfbHeight;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	#if defined HW_RVL
-	WPAD_Init();
-	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
 	KEYBOARD_Init(NULL);
 	#endif
-	PAD_Init();
 }
 
 void Window_Free(void) { }
@@ -98,6 +100,8 @@ void Window_Create3D(int width, int height) {
 	launcherMode = false; 
 }
 
+void Window_Destroy(void) { }
+
 void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
@@ -106,7 +110,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *---------------------------------------------GameCube controller processing----------------------------------------------*
 *#########################################################################################################################*/
-static PADStatus gc_pads[INPUT_MAX_GAMEPADS];
+static PADStatus gc_pads[PAD_CHANMAX];
 
 #define PAD_AXIS_SCALE 8.0f
 static void ProcessPAD_Joystick(int port, int axis, int x, int y, float delta) {
@@ -121,10 +125,10 @@ static void ProcessPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & PAD_TRIGGER_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & PAD_TRIGGER_R);
 	
-	Gamepad_SetButton(port, CCPAD_A, mods & PAD_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & PAD_BUTTON_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & PAD_BUTTON_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & PAD_BUTTON_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & PAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & PAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & PAD_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & PAD_BUTTON_Y);
 	
 	Gamepad_SetButton(port, CCPAD_START,  mods & PAD_BUTTON_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & PAD_TRIGGER_Z);
@@ -135,22 +139,31 @@ static void ProcessPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
 }
 
-static void ProcessPADInput(int port, float delta) {
-	PADStatus pads[4];
-	PAD_Read(pads);
-	int error = pads[port].err;
+static void ProcessPADInput(PADStatus* pad, int i, float delta) {
+	int error = pad->err;
 
 	if (error == 0) {
-		gc_pads[port] = pads[port]; // new state arrived
+		gc_pads[i] = *pad; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
 		// usually means still busy transferring state - use last state
 	} else {
 		return; // not connected, still busy, etc
 	}
 	
-	ProcessPAD_Buttons(0, gc_pads[port].button);
-	ProcessPAD_Joystick(0, PAD_AXIS_LEFT,  gc_pads[port].stickX,    gc_pads[port].stickY,    delta);
-	ProcessPAD_Joystick(0, PAD_AXIS_RIGHT, gc_pads[port].substickX, gc_pads[port].substickY, delta);
+	int port = Gamepad_Connect(0x5C + i, PadBind_Defaults);
+	ProcessPAD_Buttons(port, gc_pads[i].button);
+	ProcessPAD_Joystick(port, PAD_AXIS_LEFT,  gc_pads[i].stickX,    gc_pads[i].stickY,    delta);
+	ProcessPAD_Joystick(port, PAD_AXIS_RIGHT, gc_pads[i].substickX, gc_pads[i].substickY, delta);
+}
+
+static void ProcessPADInputs(float delta) {
+	PADStatus pads[PAD_CHANMAX];
+	PAD_Read(pads);
+
+	for (int i = 0; i < PAD_CHANMAX; i++)
+	{
+		ProcessPADInput(&pads[i], i, delta);
+	}
 }
 
 
@@ -264,7 +277,7 @@ static void ProcessWPADDrag(int res, u32 mods) {
 	} else {
 		dragActive = false;
 	}
-	Pointer_SetPosition(0, x, y);
+	VirtualCursor_SetPosition(x, y);
 }
 
 #define FACTOR 2
@@ -299,7 +312,39 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	#if defined HW_RVL
+	WPAD_Init();
+	for (int i = 0; i < 4; i++)
+		WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
+	#endif
+	PAD_Init();
+}
+
 #if defined HW_RVL
+static const BindMapping default_nunchuck[BIND_COUNT] = {
+	[BIND_FORWARD] = { CCPAD_CUP,    0 },
+	[BIND_BACK]    = { CCPAD_CDOWN,  0 },
+	[BIND_LEFT]    = { CCPAD_CLEFT,  0 },
+	[BIND_RIGHT]   = { CCPAD_CRIGHT, 0 },
+	
+	[BIND_THIRD_PERSON] = { CCPAD_UP,    0 },
+	[BIND_FLY_DOWN]     = { CCPAD_DOWN,  0 },
+	[BIND_FLY]          = { CCPAD_LEFT,  0 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_RIGHT, 0 },
+	
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_CHAT]         = { CCPAD_L, 0 },
+	[BIND_INVENTORY]    = { CCPAD_R, 0 },
+	
+	[BIND_PLACE_BLOCK]  = { CCPAD_5, 0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_6, 0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+	[BIND_SEND_CHAT]    = { CCPAD_START, 0 },
+};
+
 static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
 static cc_bool dragActive;
@@ -308,9 +353,9 @@ static void ProcessWPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_BUTTON_1);
 	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_BUTTON_2);
       
-	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & WPAD_BUTTON_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_BUTTON_PLUS);
+	Gamepad_SetButton(port, CCPAD_1, mods & WPAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & WPAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & WPAD_BUTTON_PLUS);
       
 	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
@@ -321,28 +366,10 @@ static void ProcessWPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
 
-static void ProcessNunchuck_Game(int port, int mods, float delta) {
-	WPADData* wd = WPAD_Data(0);
+static void ProcessNunchuck(int port, WPADData* wd, int mods) {
 	joystick_t analog = wd->exp.nunchuk.js;
-
-	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_C);
-	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_Z);
-      
-	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_Y, mods & WPAD_BUTTON_1);
-	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_BUTTON_2);
-
-	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
-	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
-
-	Input_SetNonRepeatable(KeyBind_Mappings[BIND_FLY].button1, mods & WPAD_BUTTON_LEFT);
-
-	if (mods & WPAD_BUTTON_RIGHT) {
-		Mouse_ScrollVWheel(1.0*delta);
-	}
-
-	Input_SetNonRepeatable(KeyBind_Mappings[BIND_THIRD_PERSON].button1, mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBind_Mappings[BIND_FLY_DOWN].button1,     mods & WPAD_BUTTON_DOWN);
+	Gamepad_SetButton(port, CCPAD_5, mods & WPAD_NUNCHUK_BUTTON_Z);
+	Gamepad_SetButton(port, CCPAD_6, mods & WPAD_NUNCHUK_BUTTON_C);
 
 	const float ANGLE_DELTA = 50;
 	bool nunchuckUp    = (analog.ang > -ANGLE_DELTA)    && (analog.ang < ANGLE_DELTA)     && (analog.mag > 0.5);
@@ -350,10 +377,10 @@ static void ProcessNunchuck_Game(int port, int mods, float delta) {
 	bool nunchuckLeft  = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
 	bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA)  && (analog.ang < 90+ANGLE_DELTA)  && (analog.mag > 0.5);
 
-	Gamepad_SetButton(port, CCPAD_LEFT,  nunchuckLeft);
-	Gamepad_SetButton(port, CCPAD_RIGHT, nunchuckRight);
-	Gamepad_SetButton(port, CCPAD_UP,    nunchuckUp);
-	Gamepad_SetButton(port, CCPAD_DOWN,  nunchuckDown);
+	Gamepad_SetButton(port, CCPAD_CLEFT,  nunchuckLeft);
+	Gamepad_SetButton(port, CCPAD_CRIGHT, nunchuckRight);
+	Gamepad_SetButton(port, CCPAD_CUP,    nunchuckUp);
+	Gamepad_SetButton(port, CCPAD_CDOWN,  nunchuckDown);
 }
 
 #define CLASSIC_AXIS_SCALE 2.0f
@@ -372,10 +399,10 @@ static void ProcessClassicButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & CLASSIC_CTRL_BUTTON_FULL_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & CLASSIC_CTRL_BUTTON_FULL_R);
       
-	Gamepad_SetButton(port, CCPAD_A, mods & CLASSIC_CTRL_BUTTON_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & CLASSIC_CTRL_BUTTON_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & CLASSIC_CTRL_BUTTON_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & CLASSIC_CTRL_BUTTON_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & CLASSIC_CTRL_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & CLASSIC_CTRL_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & CLASSIC_CTRL_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & CLASSIC_CTRL_BUTTON_Y);
       
 	Gamepad_SetButton(port, CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_PLUS);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_MINUS);
@@ -389,8 +416,7 @@ static void ProcessClassicButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_ZR, mods & CLASSIC_CTRL_BUTTON_ZR);
 }
 
-static void ProcessClassicInput(int port, float delta) {
-	WPADData* wd = WPAD_Data(0);
+static void ProcessClassicInput(int port, WPADData* wd, float delta) {
 	classic_ctrl_t ctrls = wd->exp.classic;
 	int mods = ctrls.btns | ctrls.btns_held;
 
@@ -399,39 +425,46 @@ static void ProcessClassicInput(int port, float delta) {
 	ProcessClassic_Joystick(port, PAD_AXIS_RIGHT, &ctrls.rjs, delta);
 }
 
-static void ProcessWPADInput(int port, float delta) {
+static int frame;
+static void ProcessWPADInput(int i, float delta) {
 	WPAD_ScanPads();
+	// First time WPADs are scanned, type is 0 even for classic/nunchuck it seems
+	//  (in Dolphin at least). So delay for a little bit
+	if (frame < 4 * 5) { frame++; return; }
+
 	u32 type;
-	int res  = WPAD_Probe(port, &type);
+	int res = WPAD_Probe(i, &type);
 	if (res) return;
-	u32 mods = WPAD_ButtonsDown(port) | WPAD_ButtonsHeld(port);
+
+	WPADData* wd = WPAD_Data(i);
+	u32 mods = wd->btns_h | wd->btns_d; // buttons held | buttons down now
+	int port;
 
 	if (type == WPAD_EXP_CLASSIC) {
-		ProcessClassicInput(port, delta);
-	} else if (launcherMode) {
-		ProcessWPAD_Buttons(port, mods);
+		port = Gamepad_Connect(0xC1 + i, PadBind_Defaults);
+		ProcessClassicInput(port, wd, delta);
 	} else if (type == WPAD_EXP_NUNCHUK) {
-		ProcessNunchuck_Game(port, mods, delta);
+		port = Gamepad_Connect(0xCC + i, default_nunchuck);
+		ProcessWPAD_Buttons(port, mods);
+		ProcessNunchuck(port, wd, mods);
 	} else {
+		port = Gamepad_Connect(0x11 + i, PadBind_Defaults);
 		ProcessWPAD_Buttons(port, mods);
 	}
 
 	ProcessWPADDrag(res, mods);
 }
 
-void Window_ProcessGamepads(float delta) {
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+void Gamepads_Process(float delta) {
+	for (int i = 0; i < 4; i++)
 	{
-		ProcessWPADInput(port, delta);
-		ProcessPADInput( port, delta);
+		ProcessWPADInput(i, delta);
 	}
+	ProcessPADInputs(delta);
 }
 #else
-void Window_ProcessGamepads(float delta) {
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
-	{
-		ProcessPADInput(port, delta);
-	}
+void Gamepads_Process(float delta) {
+	ProcessPADInputs(delta);
 }
 #endif
 
@@ -439,8 +472,10 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 // TODO: Get rid of this complexity and use the 3D API instead..
@@ -477,7 +512,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO XFB is raw yuv, but is absolutely a pain to work with..
 	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width     + r.x;
+		cc_uint32* src = Bitmap_GetRow(bmp, y)           + r.x;
 		u16* dst       = (u16*)xfb  + y * rmode->fbWidth + r.x;
 		
 		for (int x = 0; x < r.width / 2; x++) {
@@ -505,14 +540,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

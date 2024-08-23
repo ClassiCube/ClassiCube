@@ -36,7 +36,9 @@ const cc_result ReturnCode_FileNotFound     = _ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;
+
 const char* Platform_AppNameSuffix = "";
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess;
 
 
@@ -100,19 +102,22 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
+	String_EncodeUtf8(str, path);
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
 extern void interop_InitFilesystem(void);
-cc_result Directory_Create(const cc_string* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	/* Web filesystem doesn't need directories */
 	return 0;
 }
 
 extern int interop_FileExists(const char* path);
-int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	return interop_FileExists(str);
+int File_Exists(const cc_filepath* path) {
+	return interop_FileExists(path->buffer);
 }
 
 static void* enum_obj;
@@ -122,26 +127,23 @@ EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 
 	String_InitArray(path, pathBuffer);
 	String_AppendUtf8(&path, src, String_Length(src));
-	enum_callback(&path, enum_obj);
+	enum_callback(&path, enum_obj, false);
 }
 
 extern int interop_DirectoryIter(const char* path);
 cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	cc_filepath str;
+	Platform_EncodePath(&str, path);
 
 	enum_obj      = obj;
 	enum_callback = callback;
 	/* returned result is negative for error */
-	return -interop_DirectoryIter(str);
+	return -interop_DirectoryIter(str.buffer);
 }
 
 extern int interop_FileCreate(const char* path, int mode);
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	int res;
-	String_EncodeUtf8(str, path);
-	res = interop_FileCreate(str, mode);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	int res = interop_FileCreate(path, mode);
 
 	/* returned result is negative for error */
 	if (res >= 0) {
@@ -151,14 +153,14 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	}
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
 extern int interop_FileRead(int fd, void* data, int count);
@@ -263,13 +265,16 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 extern int interop_SocketCreate(void);
 extern int interop_SocketConnect(int sock, const cc_uint8* host, int port);
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	int res;
 
-	*s  = interop_SocketCreate();
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	*s = interop_SocketCreate();
+	return 0;
+}
+
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	/* size is used to store port number instead */
 	/* returned result is negative for error */
-	res = -interop_SocketConnect(*s, addr->data, addr->size);
+	int res = -interop_SocketConnect(s, addr->data, addr->size);
 
 	/* error returned when invalid address provided */
 	if (res == _EHOSTUNREACH) return ERR_INVALID_ARGUMENT;

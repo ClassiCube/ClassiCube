@@ -17,30 +17,27 @@
 #define _UNICODE
 #endif
 #include <windows.h>
+/*
+#include <winsock2.h>
 #include <ws2tcpip.h>
-
-/* === BEGIN shellapi.h === */
-#define SHELLAPI DECLSPEC_IMPORT
-SHELLAPI HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR operation, LPCWSTR file, LPCWSTR parameters, LPCWSTR directory, INT showCmd);
-SHELLAPI HINSTANCE WINAPI ShellExecuteA(HWND hwnd, LPCSTR operation,  LPCSTR file,  LPCSTR  parameters, LPCSTR  directory, INT showCmd);
-/* === END shellapi.h === */
-/* === BEGIN wincrypt.h === */
-typedef struct _CRYPTOAPI_BLOB {
-	DWORD cbData;
-	BYTE* pbData;
-} DATA_BLOB;
-
-static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
-static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
-/* === END wincrypt.h === */
+#include <shellapi.h>
+#include <wincrypt.h>
+*/
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-winsock2.h"
+#include "../misc/windows/min-shellapi.h"
+#include "../misc/windows/min-wincrypt.h"
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
+const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
+
 const char* Platform_AppNameSuffix = "";
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess;
 
 /*########################################################################################################################*
@@ -134,15 +131,24 @@ void Platform_Log(const char* msg, int len) {
 	OutputDebugStringA("\n");
 }
 
+static void (WINAPI *_GetSystemTimeAsFileTime)(LPFILETIME sysTime);
+/* Fallback support for NT 3.5 */
+static void WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
+	SYSTEMTIME curTime;
+	GetSystemTime(&curTime);
+	SystemTimeToFileTime(&curTime, sysTime);
+}
+
 #define FILETIME_EPOCH      50491123200ULL
 #define FILETIME_UNIX_EPOCH 11644473600ULL
 #define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
 #define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
+
 TimeMS DateTime_CurrentUTC(void) {
 	FILETIME ft; 
 	cc_uint64 raw;
 	
-	GetSystemTimeAsFileTime(&ft);
+	_GetSystemTimeAsFileTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
 	raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 	return FileTime_TotalSecs(raw);
@@ -169,7 +175,7 @@ cc_uint64 Stopwatch_Measure(void) {
 		QueryPerformanceCounter(&t);
 		return (cc_uint64)t.QuadPart;
 	} else {		
-		GetSystemTimeAsFileTime(&ft);
+		_GetSystemTimeAsFileTime(&ft);
 		return (cc_uint64)ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 	}
 }
@@ -180,24 +186,24 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_winstring str;
-	cc_result res;
+void Platform_EncodePath(cc_filepath* dst, const cc_string* src) {
+	Platform_EncodeString(dst, src);
+}
 
-	Platform_EncodeString(&str, path);
-	if (CreateDirectoryW(str.uni, NULL)) return 0;
+cc_result Directory_Create(const cc_filepath* path) {
+	cc_result res;
+	if (CreateDirectoryW(path->uni, NULL)) return 0;
 	/* Windows 9x does not support W API functions */
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
-	return CreateDirectoryA(str.ansi, NULL) ? 0 : GetLastError();
+	return CreateDirectoryA(path->ansi, NULL) ? 0 : GetLastError();
 }
 
-int File_Exists(const cc_string* path) {
-	cc_winstring str;
-	DWORD attribs;
-
-	Platform_EncodeString(&str, path);
-	attribs = GetFileAttributesW(str.uni);
+int File_Exists(const cc_filepath* path) {
+	DWORD attribs = GetFileAttributesW(path->uni);
+	
+	if (attribs == INVALID_FILE_ATTRIBUTES)
+		attribs = GetFileAttributesA(path->ansi);
 
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
@@ -205,6 +211,8 @@ int File_Exists(const cc_string* path) {
 static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
 									void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
+	int is_dir;
+	
 	/* ignore . and .. entry */
 	if (file->length == 1 && file->buffer[0] == '.') return 0;
 	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
@@ -212,8 +220,8 @@ static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* f
 	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "%s/%s", dirPath, file);
 
-	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
-	callback(&path, obj);
+	is_dir = attribs & FILE_ATTRIBUTE_DIRECTORY;
+	callback(&path, obj, is_dir);
 	return 0;
 }
 
@@ -222,14 +230,14 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	WIN32_FIND_DATAW eW;
 	WIN32_FIND_DATAA eA;
 	int i, ansi = false;
-	cc_winstring str;
+	cc_filepath str;
 	HANDLE find;
 	cc_result res;	
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
-	Platform_EncodeString(&str, &path);
+	Platform_EncodePath(&str, &path);
 	
 	find = FindFirstFileW(str.uni, &eW);
 	if (!find || find == INVALID_HANDLE_VALUE) {
@@ -265,41 +273,37 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
-static cc_result DoFileRaw(cc_file* file, const cc_winstring* str, DWORD access, DWORD createMode) {
+static cc_result DoFile(cc_file* file, const cc_filepath* path, DWORD access, DWORD createMode) {
 	cc_result res;
 
-	*file = CreateFileW(str->uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileW(path->uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	if (*file && *file != INVALID_HANDLE_VALUE) return 0;
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
 	/* Windows 9x does not support W API functions */
-	*file = CreateFileA(str->ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileA(path->ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	cc_winstring str;
-	Platform_EncodeString(&str, path);
-	return DoFileRaw(file, &str, access, createMode);
-}
-
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
+	/* NOTE: the (DWORD*) cast assumes that sizeof(long) is 4 */
+	BOOL success = ReadFile(file, data, count, (DWORD*)bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
+	/* NOTE: the (DWORD*) cast assumes that sizeof(long) is 4 */
+	BOOL success = WriteFile(file, data, count, (DWORD*)bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
 
@@ -394,11 +398,16 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FontDirCallback(const cc_string* path, void* obj) {
+static void FontDirCallback(const cc_string* path, void* obj, int isDirectory) {
 	static const cc_string fonExt = String_FromConst(".fon");
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
-	SysFonts_Register(path, NULL);
+	
+	if (isDirectory) {
+		Directory_Enum(path, NULL, FontDirCallback);
+	} else {
+		SysFonts_Register(path, NULL);
+	}
 }
 
 void Platform_LoadSysFonts(void) { 
@@ -420,7 +429,9 @@ void Platform_LoadSysFonts(void) {
 	}
 	String_AppendConst(&dirs[0], "/fonts");
 
-	for (i = 0; i < Array_Elems(dirs); i++) {
+	for (i = 0; i < Array_Elems(dirs); i++) 
+	{
+		Platform_Log1("Searching for fonts in %s", &dirs[i]);
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }
@@ -432,30 +443,8 @@ void Platform_LoadSysFonts(void) {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(SOCKADDR_STORAGE) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
-static int (WSAAPI *_WSAStartup)(WORD versionRequested, LPWSADATA wsaData);
-static int (WSAAPI *_WSACleanup)(void);
-static int (WSAAPI *_WSAGetLastError)(void);
-static int (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
 
-static int (WSAAPI *_socket)(int af, int type, int protocol);
-static int (WSAAPI *_closesocket)(SOCKET s);
-static int (WSAAPI *_connect)(SOCKET s, const struct sockaddr* name, int namelen);
-static int (WSAAPI *_shutdown)(SOCKET s, int how);
-
-static int (WSAAPI *_ioctlsocket)(SOCKET s, long cmd, u_long* argp);
-static int (WSAAPI *_getsockopt)(SOCKET s, int level, int optname, char* optval, int* optlen);
-static int (WSAAPI *_recv)(SOCKET s, char* buf, int len, int flags);
-static int (WSAAPI *_send)(SOCKET s, const char FAR * buf, int len, int flags);
-static int (WSAAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout);
-
-static struct hostent* (WSAAPI *_gethostbyname)(const char* name);
-static unsigned short  (WSAAPI *_htons)(u_short hostshort);
-static int  (WSAAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, PADDRINFOA* result);
-static void (WSAAPI* _freeaddrinfo)(PADDRINFOA addrInfo);
-
-
-
-static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
+static INT WINAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)address;
 	cc_uint8*    addr  = (cc_uint8*)&addr4->sin_addr;
 	cc_string ip, parts[4 + 1];
@@ -472,29 +461,6 @@ static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, 
 
 	addr4->sin_family = AF_INET;
 	return 0;
-}
-
-static void LoadWinsockFuncs(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(WSAStartup),      DynamicLib_Sym(WSACleanup),
-		DynamicLib_Sym(WSAGetLastError), DynamicLib_Sym(WSAStringToAddressW),
-		DynamicLib_Sym(socket),          DynamicLib_Sym(closesocket),
-		DynamicLib_Sym(connect),         DynamicLib_Sym(shutdown),
-		DynamicLib_Sym(ioctlsocket),     DynamicLib_Sym(getsockopt),
-		DynamicLib_Sym(gethostbyname),   DynamicLib_Sym(htons),
-		DynamicLib_Sym(getaddrinfo),     DynamicLib_Sym(freeaddrinfo),
-		DynamicLib_Sym(recv), DynamicLib_Sym(send), DynamicLib_Sym(select)
-	};
-	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
-	static const cc_string winsock2 = String_FromConst("WS2_32.DLL");
-	void* lib;
-
-	DynamicLib_LoadAll(&winsock2, funcs, Array_Elems(funcs), &lib);
-	/* Windows 95 is missing WS2_32 dll */
-	if (!_WSAStartup) DynamicLib_LoadAll(&winsock1, funcs, Array_Elems(funcs), &lib);
-
-	/* Fallback for older OS versions which lack WSAStringToAddressW */
-	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
 static cc_result ParseHostOld(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
@@ -549,7 +515,7 @@ static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* num
 	portRaw[portStr.length] = '\0';
 
 	res = _getaddrinfo(host, portRaw, &hints, &result);
-	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
+	if (res == WSAHOST_NOT_FOUND) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
 	/* Prefer IPv4 addresses first */
@@ -588,6 +554,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		return 0;
 	}
 
+#ifdef AF_INET6
 	size = sizeof(*addr6);
 	if (!_WSAStringToAddressW(str.uni, AF_INET6, NULL, addr6, &size)) {
 		addr6->sin6_port = _htons(port);
@@ -596,6 +563,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		*numValidAddrs = 1;
 		return 0;
 	}
+#endif
 
 	if (_getaddrinfo) {
 		return ParseHostNew(str.ansi, port, addrs, numValidAddrs);
@@ -604,9 +572,8 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	}
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
-	cc_result res;
 
 	*s = _socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
@@ -615,8 +582,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 		u_long blockingMode = -1; /* non-blocking mode */
 		_ioctlsocket(*s, FIONBIO, &blockingMode);
 	}
+	return 0;
+}
 
-	res = _connect(*s, raw_addr, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
+
+	int res = _connect(s, raw_addr, addr->size);
 	return res == -1 ? _WSAGetLastError() : 0;
 }
 
@@ -707,6 +679,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	cc_result res;
 	int len, i;
 
+	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
 	si.wide.cb = sizeof(STARTUPINFOW);
 	
@@ -817,7 +790,7 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 	int len;
 
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
-	if ((res = DoFileRaw(&file, &path, GENERIC_READ, OPEN_EXISTING))) return res;
+	if ((res = File_Open(&file, &path)))            return res;
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
 		raw        = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
@@ -834,10 +807,14 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 cc_result Updater_MarkExecutable(void) { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 	static const cc_string path = String_FromConst(UPDATE_FILE);
+	cc_filepath str;
 	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
-	cc_result res = File_OpenOrCreate(&file, &path);
+	cc_result res;
+	
+	Platform_EncodePath(&str, &path);
+	res = File_OpenOrCreate(&file, &str);
 	if (res) return res;
 
 	raw = 10000000 * (timestamp + FILETIME_UNIX_EPOCH);
@@ -859,10 +836,10 @@ static cc_bool loadingPlugin;
 
 void* DynamicLib_Load2(const cc_string* path) {
 	static cc_string plugins_dir = String_FromConst("plugins/");
-	cc_winstring str;
+	cc_filepath str;
 	void* lib;
 
-	Platform_EncodeString(&str, path);
+	Platform_EncodePath(&str, path);
 	loadingPlugin = String_CaselessStarts(path, &plugins_dir);
 
 	if ((lib = LoadLibraryW(str.uni))) return lib;
@@ -919,13 +896,15 @@ void Platform_EncodeString(cc_winstring* dst, const cc_string* src) {
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
 	uni = dst->uni;
-	for (i = 0; i < src->length; i++) {
+	for (i = 0; i < src->length; i++) 
+	{
 		*uni++ = Convert_CP437ToUnicode(src->buffer[i]);
 	}
 	*uni = '\0';
 
 	ansi = dst->ansi;
-	for (i = 0; i < src->length; i++) {
+	for (i = 0; i < src->length; i++) 
+	{
 		*ansi++ = (char)dst->uni[i];
 	}
 	*ansi = '\0';
@@ -946,12 +925,16 @@ static BOOL (WINAPI *_IsDebuggerPresent)(void);
 
 static void LoadKernelFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent)
+		DynamicLib_Sym(AttachConsole), 
+		DynamicLib_Sym(IsDebuggerPresent),
+		DynamicLib_Sym(GetSystemTimeAsFileTime),
 	};
 
 	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
 	void* lib;
 	DynamicLib_LoadAll(&kernel32, funcs, Array_Elems(funcs), &lib);
+	/* Not present on Windows NT 3.5 */
+	if (!_GetSystemTimeAsFileTime) _GetSystemTimeAsFileTime = Fallback_GetSystemTimeAsFileTime;
 }
 
 void Platform_Init(void) {
@@ -961,14 +944,19 @@ void Platform_Init(void) {
 	Platform_InitStopwatch();
 	heap = GetProcessHeap();
 
-	LoadWinsockFuncs();
+	Winsock_LoadDynamicFuncs();
+	/* Fallback for older OS versions which lack WSAStringToAddressW */
+	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
+	
 	res = _WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res) Logger_SysWarn(res, "starting WSA");
 
 	LoadKernelFuncs();
 	if (_IsDebuggerPresent) hasDebugger = _IsDebuggerPresent();
 	/* For when user runs from command prompt */
+#if CC_WIN_BACKEND != CC_WIN_BACKEND_TERMINAL
 	if (_AttachConsole) _AttachConsole(-1); /* ATTACH_PARENT_PROCESS */
+#endif
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;
@@ -1000,42 +988,34 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-
-static void LoadCryptFuncs(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(CryptProtectData), DynamicLib_Sym(CryptUnprotectData)
-	};
-
-	static const cc_string crypt32 = String_FromConst("CRYPT32.DLL");
-	void* lib;
-	DynamicLib_LoadAll(&crypt32, funcs, Array_Elems(funcs), &lib);
-}
-
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
 
-	if (!_CryptProtectData) LoadCryptFuncs();
+	Crypt32_LoadDynamicFuncs();
 	if (!_CryptProtectData) return ERR_NOT_SUPPORTED;
 	if (!_CryptProtectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
 
-	for (i = 0; i < output.cbData; i++) {
+	for (i = 0; i < output.cbData; i++) 
+	{
 		String_Append(dst, output.pbData[i]);
 	}
 	LocalFree(output.pbData);
 	return 0;
 }
+
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
 
-	if (!_CryptUnprotectData) LoadCryptFuncs();
+	Crypt32_LoadDynamicFuncs();
 	if (!_CryptUnprotectData) return ERR_NOT_SUPPORTED;
 	if (!_CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
 
-	for (i = 0; i < output.cbData; i++) {
+	for (i = 0; i < output.cbData; i++) 
+	{
 		String_Append(dst, output.pbData[i]);
 	}
 	LocalFree(output.pbData);
@@ -1077,8 +1057,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	cc_string cmdArgs = String_FromReadonly(GetCommandLineA());
 	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
+	if (gameHasArgs) return GetGameArgs(args);
 
-	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
+	for (i = 0; i < GAME_MAX_CMDARGS; i++) 
+	{
 		args[i] = Platform_NextArg(&cmdArgs);
 
 		if (!args[i].length) break;

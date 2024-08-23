@@ -322,7 +322,10 @@ static void RunApp(void) {
 	Platform_LogConst("App initialised");
 }
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
 void Window_Init(void) {
 	Events_Init();
 	RunApp();
@@ -349,8 +352,10 @@ static void DoCreateWindow(int width, int height) {
 	BRect frame(x, y, x + width - 1, y + height - 1);
 	win_handle = new CC_BWindow(frame);
 	
-	Window_Main.Exists = true;
-	Window_Main.Handle = win_handle;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = win_handle;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	
 	frame = win_handle->Bounds();
 	Window_Main.Width  = frame.IntegerWidth()  + 1;
@@ -371,6 +376,9 @@ void Window_Create3D(int width, int height) {
 						BGL_RGB | BGL_ALPHA | BGL_DOUBLE | BGL_DEPTH);
 	view_handle = view_3D;
 	win_handle->AddChild(view_handle);
+}
+
+void Window_Destroy(void) {
 }
 
 void Window_SetTitle(const cc_string* title) {
@@ -460,8 +468,7 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_RequestClose(void) {
-	BMessage* msg = new BMessage(B_QUIT_REQUESTED);
-	app_handle->PostMessage(msg);
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 static const cc_uint8 key_map[] = {
@@ -533,7 +540,7 @@ void Window_ProcessEvents(float delta) {
 			break;
 		case CC_WIN_QUIT:
 			Window_Main.Exists = false;
-			Event_RaiseVoid(&WindowEvents.Closing);
+			Window_RequestClose();
 			break;
 		case CC_RAW_MOUSE:
 			if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, event.v1.i32, event.v2.i32);
@@ -542,7 +549,11 @@ void Window_ProcessEvents(float delta) {
 	}
 }
 
-void Window_ProcessGamepads(float delta) { }
+void Gamepads_Init(void) {
+
+}
+
+void Gamepads_Process(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	BPoint where;
@@ -648,13 +659,15 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 static BBitmap* win_framebuffer;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	// right/bottom coordinates are inclusive of the coordinates,
 	//  so need to subtract 1 to end up with correct width/height
-	BRect bounds(0, 0, bmp->width - 1, bmp->height - 1);
+	BRect bounds(0, 0, width - 1, height - 1);
 	
 	win_framebuffer = new BBitmap(bounds, B_RGB32);
-	bmp->scan0 = (BitmapCol*)win_framebuffer->Bits();
+	bmp->scan0  = (BitmapCol*)win_framebuffer->Bits();
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -667,13 +680,10 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	delete win_framebuffer;
-	bmp->scan0 = NULL;
 }
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) {  }
 
 void Window_EnableRawMouse(void) {
@@ -699,7 +709,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static cc_bool win_vsync;
 
 void GLContext_Create(void) {
@@ -733,10 +743,10 @@ cc_bool GLContext_SwapBuffers(void) {
 	return true;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	win_vsync = vsync;
 }
 void GLContext_GetApiInfo(cc_string* info) { }
-#endif // (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !CC_BUILD_EGL
+#endif // CC_GFX_BACKEND_IS_GL() && !CC_BUILD_EGL
 
 #endif

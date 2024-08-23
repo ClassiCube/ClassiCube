@@ -274,36 +274,12 @@
 
     if ( !font->isT1 )
     {
-      FT_Service_CFFLoad  cffload = (FT_Service_CFFLoad)font->cffload;
-
-
       /* check for variation vectors */
       vstore        = cf2_getVStore( decoder );
       hasVariations = ( vstore->dataCount != 0 );
 
       if ( hasVariations )
       {
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-        /* check whether Private DICT in this subfont needs to be reparsed */
-        font->error = cf2_getNormalizedVector( decoder,
-                                               &lenNormalizedV,
-                                               &normalizedV );
-        if ( font->error )
-          return;
-
-        if ( cffload->blend_check_vector( &subFont->blend,
-                                          subFont->private_dict.vsindex,
-                                          lenNormalizedV,
-                                          normalizedV ) )
-        {
-          /* blend has changed, reparse */
-          cffload->load_private_dict( decoder->cff,
-                                      subFont,
-                                      lenNormalizedV,
-                                      normalizedV );
-          needExtraSetup = TRUE;
-        }
-#endif
 
         /* copy from subfont */
         font->blend.font = subFont->blend.font;

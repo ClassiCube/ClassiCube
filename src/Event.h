@@ -1,6 +1,8 @@
 #ifndef CC_EVENT_H
 #define CC_EVENT_H
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /* Helper methods for using events, and contains all events.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -8,6 +10,7 @@
 /* Max callbacks that can be registered for an event. */
 #define EVENT_MAX_CALLBACKS 32
 struct Stream;
+struct InputDevice;
 
 typedef void (*Event_Void_Callback)(void* obj);
 struct Event_Void {
@@ -45,7 +48,7 @@ struct Event_Chat {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Input_Callback)(void* obj, int key, cc_bool repeating);
+typedef void (*Event_Input_Callback)(void* obj, int key, cc_bool repeating, struct InputDevice* device);
 struct Event_Input {
 	Event_Input_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -108,7 +111,7 @@ void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlo
 void Event_RaiseChat(struct Event_Chat* handlers, const cc_string* msg, int msgType);
 /* Calls all registered callbacks for an event which has keyboard key/mouse button. */
 /* repeating is whether the key/button was already pressed down. (i.e. user is holding down key) */
-void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
+void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating, struct InputDevice* device);
 /* Calls all registered callbacks for an event which has a string argument. */
 void Event_RaiseString(struct Event_String* handlers, const cc_string* str);
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
@@ -127,6 +130,7 @@ void Event_UnregisterAll(void);
 /*  Version 1 - Added NetEvents.PluginMessageReceived */
 /*  Version 2 - Added WindowEvents.Redrawing */
 /*  Version 3 - Changed InputEvent.Press from code page 437 to unicode character */
+/*  Version 4 - Added InputEvents.Down2 and InputEvents.Up2 */
 /* You MUST CHECK the event API version before attempting to use the events listed above, */
 /*  as otherwise if the player is using an older client that lacks some of the above events, */
 /*  you will be calling Event_Register on random data instead of the expected EventsList struct */
@@ -197,10 +201,12 @@ CC_VAR extern struct _WindowEventsList {
 
 CC_VAR extern struct _InputEventsList {
 	struct Event_Int    Press; /* Key input character is typed. Arg is a unicode character */
-	struct Event_Input  Down;  /* Key or button is pressed. Arg is a member of Key enumeration */
-	struct Event_Int    Up;    /* Key or button is released. Arg is a member of Key enumeration */
+	struct Event_Input  _down; /* DEPRECATED. Key or button is pressed. Arg is input button state. */
+	struct Event_Input  _up;   /* DEPRECATED. Key or button is released. Arg is input button state. */
 	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 	struct Event_String TextChanged; /* Text in the on-screen input keyboard changed (for Mobile) */
+	struct Event_Input  Down2; /* Key or button is pressed. Args are input button and device state. */
+	struct Event_Input  Up2;   /* Key or button is released. Args are input button and device state. */
 } InputEvents;
 
 CC_VAR extern struct _PointerEventsList {
@@ -219,4 +225,6 @@ CC_VAR extern struct _NetEventsList {
 	struct Event_Void Disconnected; /* Connection to the server was lost */
 	struct Event_PluginMessage PluginMessageReceived; /* Received a PluginMessage packet from the server */
 } NetEvents;
+
+CC_END_HEADER
 #endif

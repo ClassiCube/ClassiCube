@@ -32,9 +32,11 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+#define SUPPORTS_GETADDRINFO 1
 
 #if defined CC_BUILD_ANDROID
 const char* Platform_AppNameSuffix = " android alpha";
@@ -44,6 +46,7 @@ const char* Platform_AppNameSuffix = " iOS alpha";
 const char* Platform_AppNameSuffix = "";
 #endif
 cc_bool Platform_SingleProcess;
+cc_bool Platform_ReadonlyFilesystem;
 
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN
@@ -105,8 +108,10 @@ void Mem_Free(void* mem) {
 /* implemented in interop_ios.m */
 #else
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	int ret;
+	/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
+	ret = write(STDOUT_FILENO, msg,  len);
+	ret = write(STDOUT_FILENO, "\n",   1);
 }
 #endif
 
@@ -189,6 +194,11 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
+	String_EncodeUtf8(str, path);
+}
+
 #if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
@@ -197,31 +207,27 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Directory_GetCachePath(cc_string* path) { }
 #endif
 
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+cc_result Directory_Create(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
-int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+int File_Exists(const cc_filepath* path) {
 	struct stat sb;
-	String_EncodeUtf8(str, path);
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	DIR* dirPtr;
 	struct dirent* entry;
 	char* src;
 	int len, res, is_dir;
 
-	String_EncodeUtf8(str, dirPath);
-	dirPtr = opendir(str);
+	Platform_EncodePath(&str, dirPath);
+	dirPtr = opendir(str.buffer);
 	if (!dirPtr) return errno;
 
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
@@ -253,12 +259,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		/* TODO: fallback to stat when this fails */
 #endif
 
-		if (is_dir) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
-		} else {
-			callback(&path, obj);
-		}
+		callback(&path, obj, is_dir);
 		errno = 0;
 	}
 
@@ -267,33 +268,30 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	*file = open(path, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 #if !defined CC_BUILD_OS2
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path->buffer, O_RDONLY);
 #else
-	return File_Do(file, path, O_RDONLY | O_BINARY);
+	return File_Do(file, path->buffer, O_RDONLY | O_BINARY);
 #endif
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 #if !defined CC_BUILD_OS2
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 #else
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
 #endif
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 #if !defined CC_BUILD_OS2
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 #else
-	return File_Do(file, path, O_RDWR | O_CREAT | O_BINARY);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_BINARY);
 #endif
 }
 
@@ -497,8 +495,12 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FontDirCallback(const cc_string* path, void* obj) {
-	SysFonts_Register(path, NULL);
+static void FontDirCallback(const cc_string* path, void* obj, int isDirectory) {
+	if (isDirectory) {
+		Directory_Enum(path, NULL, FontDirCallback);
+	} else {
+		SysFonts_Register(path, NULL);
+	}
 }
 
 void Platform_LoadSysFonts(void) {
@@ -549,7 +551,9 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/usr/local/share/fonts")
 	};
 #endif
-	for (i = 0; i < Array_Elems(dirs); i++) {
+	for (i = 0; i < Array_Elems(dirs); i++) 
+	{
+		Platform_Log1("Searching for fonts in %s", &dirs[i]);
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }
@@ -573,6 +577,7 @@ union SocketAddress {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
+#if SUPPORTS_GETADDRINFO
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
@@ -608,6 +613,33 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
+#else
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct hostent* res = gethostbyname(host);
+	struct sockaddr_in* addr4;
+	char* src_addr;
+	int i;
+	
+	// Must have at least one IPv4 address
+	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
+
+	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
+	{
+		src_addr = res->h_addr_list[i];
+		if (!src_addr) break;
+		addrs[i].size = sizeof(struct sockaddr_in);
+
+		addr4 = (struct sockaddr_in*)addrs[i].data;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		addr4->sin_addr   = *(struct in_addr*)src_addr;
+	}
+
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+}
+#endif
 
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	union SocketAddress* addr = (union SocketAddress*)addrs[0].data;
@@ -639,9 +671,8 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	cc_result res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
@@ -650,8 +681,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 		int blocking_raw = -1; /* non-blocking mode */
 		ioctl(*s, FIONBIO, &blocking_raw);
 	}
+	return 0;
+}
 
-	res = connect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	
+	int res = connect(s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 
@@ -729,10 +765,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *#########################################################################################################################*/
 cc_bool Process_OpenSupported = true;
 
-#if defined CC_BUILD_ANDROID
-/* implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
+#if defined CC_BUILD_MOBILE
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	return SetGameArgs(args, numArgs);
+}
 #else
 static cc_result Process_RawStart(const char* path, char** argv) {
 	pid_t pid = fork();
@@ -756,13 +792,16 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	char path[NATIVE_STR_LEN];
 	int i, j, len = 0;
 	char* argv[15];
+	cc_result res;
+	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
 
-	cc_result res = Process_RawGetExePath(path, &len);
+	res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 	argv[0]   = path;
 
-	for (i = 0, j = 1; i < numArgs; i++, j++) {
+	for (i = 0, j = 1; i < numArgs; i++, j++) 
+	{
 		String_EncodeUtf8(raw[i], &args[i]);
 		argv[j] = raw[i];
 	}
@@ -1126,10 +1165,10 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
 void* DynamicLib_Load2(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING |
-							NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+	cc_filepath str;
+	Platform_EncodePath(&str, path);
+	return NSAddImage(str.buffer, NSADDIMAGE_OPTION_WITH_SEARCHING |
+								NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
@@ -1168,9 +1207,9 @@ const cc_string DynamicLib_Ext = String_FromConst(".so");
 #endif
 
 void* DynamicLib_Load2(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	return dlopen(str, RTLD_NOW);
+	cc_filepath str;
+	Platform_EncodePath(&str, path);
+	return dlopen(str.buffer, RTLD_NOW);
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
@@ -1269,7 +1308,8 @@ static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
 	cc_uint32 v0 = v[0], v1 = v[1], sum = 0, delta = 0x9E3779B9;
 	int i;
 
-    for (i = 0; i < 12; i++) {
+    for (i = 0; i < 12; i++) 
+	{
         v0  += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
         sum += delta;
         v1  += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
@@ -1282,7 +1322,8 @@ static void DecipherBlock(cc_uint32* v, const cc_uint32* key) {
 	cc_uint32 v0 = v[0], v1 = v[1], delta = 0x9E3779B9, sum = delta * 12;
 	int i;
 
-    for (i = 0; i < 12; i++) {
+    for (i = 0; i < 12; i++) 
+	{
         v1  -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
         sum -= delta;
         v0  -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
@@ -1302,12 +1343,14 @@ static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 	cc_uint8* dst = (cc_uint8*)key;
 
 	/* Get each valid hex character */
-	for (i = 0, j = 0; i < len && j < MACHINEID_LEN; i++) {
+	for (i = 0, j = 0; i < len && j < MACHINEID_LEN; i++) 
+	{
 		c = PackedCol_DeHex(tmp[i]);
 		if (c != -1) hex[j++] = c;
 	}
 
-	for (i = 0; i < MACHINEID_LEN / 2; i++) {
+	for (i = 0; i < MACHINEID_LEN / 2; i++) 
+	{
 		dst[i] = (hex[i * 2] << 4) | hex[i * 2 + 1];
 	}
 }
@@ -1326,7 +1369,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 	if (res) res = Stream_OpenFile(&s, &altFile);
 	if (res) return res;
 
-	res = Stream_Read(&s, tmp, MACHINEID_LEN);
+	res = Stream_Read(&s, (cc_uint8*)tmp, MACHINEID_LEN);
 	if (!res) DecodeMachineID(tmp, MACHINEID_LEN, key);
 
 	(void)s.Close(&s);
@@ -1398,6 +1441,10 @@ static cc_result GetMachineID(cc_uint32* key) {
 /* Use SI_HW_SERIAL for the key */
 /* TODO: Should be using SMBIOS UUID for this (search it in illomos source) */
 /* NOTE: Got a '0' for serial number when running in a VM */
+#ifndef HW_HOSTID_LEN
+#define HW_HOSTID_LEN 11
+#endif
+
 static cc_result GetMachineID(cc_uint32* key) {
 	char host[HW_HOSTID_LEN] = { 0 };
 	if (sysinfo(SI_HW_SERIAL, host, sizeof(host)) == -1) return errno;
@@ -1416,6 +1463,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 }
 #elif defined CC_BUILD_IOS
 extern void GetDeviceUUID(cc_string* str);
+
 static cc_result GetMachineID(cc_uint32* key) {
     cc_string str; char strBuffer[STRING_SIZE];
     String_InitArray(str, strBuffer);
@@ -1441,13 +1489,15 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	EncipherBlock(header + 0, key, dst);
 	EncipherBlock(header + 2, key, dst);
 
-	for (; len > 0; len -= ENC_SIZE, src += ENC_SIZE) {
+	for (; len > 0; len -= ENC_SIZE, src += ENC_SIZE) 
+	{
 		header[0] = 0; header[1] = 0;
 		Mem_Copy(header, src, min(len, ENC_SIZE));
 		EncipherBlock(header, key, dst);
 	}
 	return 0;
 }
+
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;
 	cc_uint32 header[4], key[4];
@@ -1468,7 +1518,8 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	if (header[3] > len) return ERR_INVALID_ARGUMENT;
 	dataLen = header[3];
 
-	for (; dataLen > 0; len -= ENC_SIZE, src += ENC_SIZE, dataLen -= ENC_SIZE) {
+	for (; dataLen > 0; len -= ENC_SIZE, src += ENC_SIZE, dataLen -= ENC_SIZE) 
+	{
 		header[0] = 0; header[1] = 0;
 		Mem_Copy(header, src, min(len, ENC_SIZE));
 
@@ -1482,15 +1533,15 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_ANDROID
-/* implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
+#if defined CC_BUILD_MOBILE
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	return GetGameArgs(args);
+}
 #else
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
-	
+	if (gameHasArgs) return GetGameArgs(args);
 
 	#if defined CC_BUILD_MACOS
 	/* Sometimes a "-psn_0_[number]" argument is added before actual args */
@@ -1502,7 +1553,8 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	#endif
 
 	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count; i++) 
+	{
 		/* -d[directory] argument used to change directory data is stored in */
 		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
 			Logger_Abort("-d argument no longer supported - cd to desired working directory instead");
@@ -1512,6 +1564,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	}
 	return count;
 }
+
+/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
+/* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66425#c34 */
+#define IGNORE_RETURN_VALUE(func) (void)!(func)
 
 /* Detects if the game is running in $HOME directory */
 static cc_bool IsProblematicWorkingDirectory(void) {
@@ -1524,7 +1580,7 @@ static cc_bool IsProblematicWorkingDirectory(void) {
 	char path[2048] = { 0 };
 	const char* home;
 
-	getcwd(path, 2048);
+	IGNORE_RETURN_VALUE(getcwd(path, 2048));
 	curDir = String_FromReadonly(path);
 	
 	home = getenv("HOME");

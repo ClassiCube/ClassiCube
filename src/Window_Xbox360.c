@@ -19,7 +19,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 static uint32_t reg_read32(int reg)
 {
@@ -33,16 +33,15 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width   = DisplayInfo.Width;
-	Window_Main.Height  = DisplayInfo.Height;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	
-	usb_init();
-	usb_do_poll();
-	
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 	//xenon_ata_init();
 	//xenon_atapi_init();
 }
@@ -51,6 +50,8 @@ void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -73,7 +74,6 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ProcessEvents(float delta) {
-	usb_do_poll();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
@@ -86,6 +86,12 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	usb_init();
+	usb_do_poll();
+}
 /*
 struct controller_data_s
 {
@@ -102,10 +108,10 @@ static void HandleButtons(int port, struct controller_data_s* pad) {
 	Gamepad_SetButton(port, CCPAD_LSTICK, pad->lt > 100);
 	Gamepad_SetButton(port, CCPAD_RSTICK, pad->rt > 100);
 	
-	Gamepad_SetButton(port, CCPAD_A, pad->a);
-	Gamepad_SetButton(port, CCPAD_B, pad->b);
-	Gamepad_SetButton(port, CCPAD_X, pad->x);
-	Gamepad_SetButton(port, CCPAD_Y, pad->y);
+	Gamepad_SetButton(port, CCPAD_1, pad->a);
+	Gamepad_SetButton(port, CCPAD_2, pad->b);
+	Gamepad_SetButton(port, CCPAD_3, pad->x);
+	Gamepad_SetButton(port, CCPAD_4, pad->y);
 	
 	Gamepad_SetButton(port, CCPAD_START,  pad->start);
 	Gamepad_SetButton(port, CCPAD_SELECT, pad->back);
@@ -124,22 +130,27 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
+	usb_do_poll();
+	int port = Gamepad_Connect(0xB0360, PadBind_Defaults);
+
 	struct controller_data_s pad;
 	int res = get_controller_data(&pad, 0);
 	if (res == 0) return;
 	
-	HandleButtons(0, &pad);
-	HandleJoystick(0, PAD_AXIS_LEFT,  pad.s1_x, pad.s1_y, delta);
-	HandleJoystick(0, PAD_AXIS_RIGHT, pad.s2_x, pad.s2_y, delta);
+	HandleButtons(port, &pad);
+	HandleJoystick(port, PAD_AXIS_LEFT,  pad.s1_x, pad.s1_y, delta);
+	HandleJoystick(port, PAD_AXIS_RIGHT, pad.s2_x, pad.s2_y, delta);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -153,7 +164,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		cc_uint32* src = Bitmap_GetRow(bmp, y);
 		
 		for (int x = r.x; x < r.x + r.width; x++) {
 			// TODO: Can the uint be copied directly ?
@@ -181,14 +192,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

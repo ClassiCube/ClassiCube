@@ -6,6 +6,8 @@
 #include "Entity.h"
 #include "Inventory.h"
 #include "IsometricDrawer.h"
+CC_BEGIN_HEADER
+
 /* Contains all 2D widget implementations.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -28,9 +30,6 @@ CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const cc_string* text, str
 /* Shorthand for TextWidget_Set using String_FromReadonly */
 CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc* font);
 
-
-typedef void (*Button_Get)(cc_string* raw);
-typedef void (*Button_Set)(const cc_string* raw);
 /* A labelled button that can be clicked on. */
 struct ButtonWidget {
 	Widget_Body
@@ -38,8 +37,6 @@ struct ButtonWidget {
 	PackedCol color;
 	int minWidth, minHeight;
 	const char* optName;
-	Button_Get GetValue;
-	Button_Set SetValue;
 };
 #define BUTTONWIDGET_MAX 12
 
@@ -227,6 +224,7 @@ CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, co
 CC_NOINLINE void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
 CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
+CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w);
 
 
 struct ChatInputWidget {
@@ -316,4 +314,6 @@ struct ThumbstickWidget {
 void ThumbstickWidget_Init(struct ThumbstickWidget* w);
 void ThumbstickWidget_GetMovement(struct ThumbstickWidget* w, float* xMoving, float* zMoving);
 #endif
+
+CC_END_HEADER
 #endif

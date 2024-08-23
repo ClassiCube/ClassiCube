@@ -99,8 +99,9 @@ typedef struct CCFragmentProgram {
 *#########################################################################################################################*/
 #define ALIGNUP(size, a) (((size) + ((a) - 1)) & ~((a) - 1))
 
-void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid) {
-	SceUID uid;
+void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const char* memType) {
+	char buffer[128];
+	cc_string str;
 	void* addr;
 	
 	if (type == SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW) {
@@ -108,16 +109,26 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid) {
 	} else {
 		size = ALIGNUP(size, 4 * 1024);
 	}
+	String_InitArray_NT(str, buffer);
 	
 	// https://wiki.henkaku.xyz/vita/SceSysmem
-	uid = sceKernelAllocMemBlock("GPU memory", type, size, NULL);
-	if (uid < 0) Logger_Abort2(uid, "Failed to allocate GPU memory block");
+	SceUID uid = sceKernelAllocMemBlock(memType, type, size, NULL);
+	if (uid < 0) {
+		String_Format2(&str, "Failed to allocate GPU memory block for %c (%i bytes)%N", memType, &size);
+		Logger_Abort2(uid, buffer);
+	}
 		
 	int res1 = sceKernelGetMemBlockBase(uid, &addr);
-	if (res1 < 0) Logger_Abort2(res1, "Failed to get base of GPU memory block");
+	if (res1 < 0) {
+		String_Format1(&str, "Failed to get base of GPU memory block for %c%N", memType);
+		Logger_Abort2(res1, buffer);
+	}
 		
 	int res2 = sceGxmMapMemory(addr, size, gpu_access);
-	if (res1 < 0) Logger_Abort2(res2, "Failed to map memory for GPU usage");
+	if (res2 < 0) {
+		String_Format2(&str, "Failed to map memory for GPU usage for %c (%i bytes)%N", memType, &size);
+		Logger_Abort2(res2, buffer);
+	}
 	// https://wiki.henkaku.xyz/vita/GPU
 	
 	*ret_uid = uid;
@@ -335,15 +346,15 @@ void Gfx_InitGXM(void) { // called from Window_Init
 static void AllocRingBuffers(void) {
 	vdm_ring_buffer_addr = AllocGPUMemory(SCE_GXM_DEFAULT_VDM_RING_BUFFER_SIZE,
 			SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-			&vdm_ring_buffer_uid);
+			&vdm_ring_buffer_uid, "VDM ring buffer");
 
 	vertex_ring_buffer_addr = AllocGPUMemory(SCE_GXM_DEFAULT_VERTEX_RING_BUFFER_SIZE,
 			SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-			&vertex_ring_buffer_uid);
+			&vertex_ring_buffer_uid, "Vertex ring buffer");
 
 	fragment_ring_buffer_addr = AllocGPUMemory(SCE_GXM_DEFAULT_FRAGMENT_RING_BUFFER_SIZE,
 			SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-			&fragment_ring_buffer_uid);
+			&fragment_ring_buffer_uid, "Fragment ring buffer");
 
 	fragment_usse_ring_buffer_addr = AllocGPUFragmentUSSE(SCE_GXM_DEFAULT_FRAGMENT_USSE_RING_BUFFER_SIZE,
 			&fragment_ring_buffer_uid, &fragment_usse_offset);
@@ -386,7 +397,7 @@ static void AllocColorBuffer(int i) {
 	int size = ALIGNUP(4 * DISPLAY_STRIDE * DISPLAY_HEIGHT, 1 * 1024 * 1024);
 	
 	gxm_color_surfaces_addr[i] = AllocGPUMemory(size, SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
-									SCE_GXM_MEMORY_ATTRIB_RW, &gxm_color_surfaces_uid[i]);
+									SCE_GXM_MEMORY_ATTRIB_RW, &gxm_color_surfaces_uid[i], "color buffer");
 
 	sceGxmColorSurfaceInit(&gxm_color_surfaces[i],
 		SCE_GXM_COLOR_FORMAT_A8B8G8R8,
@@ -405,7 +416,7 @@ static void AllocDepthBuffer(void) {
 	int samples = width * height;
 
 	gxm_depth_stencil_surface_addr = AllocGPUMemory(4 * samples, SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
-										SCE_GXM_MEMORY_ATTRIB_RW, &gxm_depth_stencil_surface_uid);
+										SCE_GXM_MEMORY_ATTRIB_RW, &gxm_depth_stencil_surface_uid, "depth buffer");
 
 	sceGxmDepthStencilSurfaceInit(&gxm_depth_stencil_surface,
 		SCE_GXM_DEPTH_STENCIL_FORMAT_S8D24,
@@ -416,7 +427,7 @@ static void AllocDepthBuffer(void) {
 static void AllocShaderPatcherMemory(void) {
 	gxm_shader_patcher_buffer_addr = AllocGPUMemory(shader_patcher_buffer_size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-		&gxm_shader_patcher_buffer_uid);
+		&gxm_shader_patcher_buffer_uid, "shader patcher");
 
 	gxm_shader_patcher_vertex_usse_addr = AllocGPUVertexUSSE(
 		shader_patcher_vertex_usse_size, &gxm_shader_patcher_vertex_usse_uid,
@@ -615,7 +626,7 @@ struct GPUTexture* GPUTexture_Alloc(int size) {
 	
 	tex->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-		&tex->uid);
+		&tex->uid, "texture");
 	return tex;
 }
 
@@ -671,7 +682,8 @@ static void GPUTextures_DeleteUnreferenced(void) {
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	struct GPUTexture* tex = GPUTexture_Alloc(size);
-	CopyTextureData(tex->data, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->data, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
             
 	sceGxmTextureInitLinear(&tex->texture, tex->data,
 		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, bmp->width, bmp->height, 0);
@@ -686,9 +698,10 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	int texWidth = sceGxmTextureGetWidth(&tex->texture);
 	
 	// NOTE: Only valid for LINEAR textures
-	cc_uint32* dst = (tex->data + x) + y * texWidth;
+	BitmapCol* dst = (tex->data + x) + y * texWidth;
 	
-	CopyTextureData(dst, texWidth * 4, part, rowWidth << 2);
+	CopyTextureData(dst, texWidth  * BITMAPCOLOR_SIZE,
+					part, rowWidth * BITMAPCOLOR_SIZE);
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
 	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
 }
@@ -759,9 +772,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) {
@@ -805,12 +817,12 @@ void Gfx_EndFrame(void) {
 	sceGxmEndScene(gxm_context, NULL, NULL);
 
 	Gfx_NextFramebuffer();
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 
 /*########################################################################################################################*
@@ -831,7 +843,7 @@ struct GPUBuffer* GPUBuffer_Alloc(int size) {
 	
 	buffer->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, SCE_GXM_MEMORY_ATTRIB_READ,
-		&buffer->uid);
+		&buffer->uid, "buffer");
 	return buffer;
 }
 
@@ -1012,8 +1024,8 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 static struct Matrix _view, _proj;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	struct Matrix mvp __attribute__((aligned(64)));	
 	Matrix_Mul(&mvp, &_view, &_proj);
@@ -1032,8 +1044,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	VP_ReloadUniforms();
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) { 
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -1050,6 +1064,7 @@ void Gfx_DisableTextureOffset(void) {
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
@@ -1103,8 +1118,8 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	Gfx_SetDepthTest(false);
 	
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
-	Gfx_LoadIdentityMatrix(MATRIX_PROJECTION);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Matrix_Identity);
+	Gfx_LoadMatrix(MATRIX_PROJ, &Matrix_Identity);
 	Gfx_BindVb(clearVB);
 	Gfx_DrawVb_IndexedTris(4);
 	

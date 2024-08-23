@@ -643,6 +643,10 @@ void Inflate_Process(struct InflateState* s) {
 				repeatCount = Inflate_ReadBits(s, 7);
 				repeatCount += 11; repeatValue = 0;
 				break;
+
+			default:
+				Inflate_Fail(s, INF_ERR_REPEAT_END); 
+				return;
 			}
 
 			count = s->NumLits + s->NumDists;
@@ -1142,14 +1146,16 @@ void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stre
 /*########################################################################################################################*
 *--------------------------------------------------------ZipReader--------------------------------------------------------*
 *#########################################################################################################################*/
-#define ZIP_MAXNAMELEN  512
-#define ZIP_MAX_ENTRIES 1024
-
+#define ZIP_MAXNAMELEN 512
 /* Stores state for reading and processing entries in a .zip archive */
 struct ZipState {
 	struct Stream* source;
 	Zip_SelectEntry SelectEntry;
 	Zip_ProcessEntry ProcessEntry;
+	/* Data for each entry in the .zip archive */
+	struct ZipEntry* entries;
+	/* Maximum number of entries that can be stores in 'entries' buffer */
+	int maxEntries;
 
 	/* Number of entries selected by SelectEntry */
 	int usedEntries;
@@ -1157,8 +1163,6 @@ struct ZipState {
 	int totalEntries;
 	/* Offset to central directory entries */
 	cc_uint32 centralDirBeg;
-	/* Data for each entry in the .zip archive */
-	struct ZipEntry entries[ZIP_MAX_ENTRIES];
 };
 
 static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
@@ -1168,7 +1172,11 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 	cc_uint32 compressedSize, uncompressedSize;
 	int method, pathLen, extraLen;
 	struct Stream portion, compStream;
+#ifdef CC_BUILD_SMALLSTACK
+	struct InflateState* inflate;
+#else
 	struct InflateState inflate;
+#endif
 	cc_result res;
 
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
@@ -1194,16 +1202,27 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 
 	if (method == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
-		return state->ProcessEntry(&path, &portion, entry);
+		res = state->ProcessEntry(&path, &portion, entry);
 	} else if (method == 8) {
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
+
+#ifdef CC_BUILD_SMALLSTACK
+		inflate = Mem_TryAlloc(1, sizeof(struct InflateState));
+		if (!inflate) return ERR_OUT_OF_MEMORY;
+
+		Inflate_MakeStream2(&compStream, inflate, &portion);
+		res = state->ProcessEntry(&path, &compStream, entry);
+		Mem_Free(inflate);
+#else
 		Inflate_MakeStream2(&compStream, &inflate, &portion);
-		return state->ProcessEntry(&path, &compStream, entry);
+		res = state->ProcessEntry(&path, &compStream, entry);	
+#endif
 	} else {
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
 		/* TODO: Should this be an error */
+		res = 0;
 	}
-	return 0;
+	return res;
 }
 
 static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {
@@ -1229,7 +1248,7 @@ static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {
 	if ((res = stream->Skip(stream, extraLen + commentLen))) return res;
 
 	if (!state->SelectEntry(&path)) return 0;
-	if (state->usedEntries >= ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
+	if (state->usedEntries >= state->maxEntries) return ZIP_ERR_TOO_MANY_ENTRIES;
 	entry = &state->entries[state->usedEntries++];
 
 	entry->CompressedSize    = Stream_GetU32_LE(&header[16]);
@@ -1256,7 +1275,8 @@ enum ZipSig {
 	ZIP_SIG_LOCALFILEHEADER = 0x04034b50
 };
 
-cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor) {
+cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor, 
+						struct ZipEntry* entries, int maxEntries) {
 	struct ZipState state;
 	cc_uint32 stream_len;
 	cc_uint32 sig = 0;
@@ -1278,6 +1298,8 @@ cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_Proce
 	state.source       = source;
 	state.SelectEntry  = selector;
 	state.ProcessEntry = processor;
+	state.entries      = entries;
+	state.maxEntries   = maxEntries;
 
 	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
 	res = Zip_ReadEndOfCentralDirectory(&state);

@@ -83,7 +83,7 @@ SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*))) \
 				$(foreach dir,$(SHADERS),$(notdir $(wildcard $(dir)/*.gsh)))
 
-export LD	:=	$(CXX)
+export LD	:=	$(CC)
 
 export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
 export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)

@@ -4,6 +4,7 @@
 /* List of all core/standard block IDs
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
+CC_BEGIN_HEADER
 
 enum BLOCKID {
 	/* Classic blocks */
@@ -88,4 +89,6 @@ enum BLOCKID {
 #endif
 	BLOCK_COUNT = (BLOCK_MAX_DEFINED + 1)
 };
+
+CC_END_HEADER
 #endif

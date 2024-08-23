@@ -9,7 +9,7 @@ CFLAGS=-O1 -fno-math-errno
 REZ=$(RETRO68)/bin/Rez
 MakePEF=$(RETRO68)/bin/MakePEF
 
-LDFLAGS=-lRetroConsole
+LDFLAGS=-lm
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
@@ -19,7 +19,24 @@ SOURCE_DIR	:=	src
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
-$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(BUILD_DIR) $(TARGET).pef
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(C_OBJECTS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+default: $(BUILD_DIR) $(TARGET).bin
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
+$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).pef
 	$(REZ) $(REZFLAGS) \
 		"misc/macclassic/ppcAPPL.r" \
 		-t "APPL" -c "????" \
@@ -27,7 +44,7 @@ $(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(BUILD_DIR) $(TARGET).pef
 		-o $(TARGET).bin --cc $(TARGET).APPL --cc $(TARGET).dsk
 
 $(TARGET).elf: $(C_OBJECTS)
-	$(CXX) $(C_OBJECTS) -o $@ $(LDFLAGS)	# C++ used for linking because RetroConsole needs it
+	$(CC) $(C_OBJECTS) -o $@ $(LDFLAGS)
 
 $(TARGET).pef: $(TARGET).elf
 	$(MakePEF) $(TARGET).elf -o $(TARGET).pef
@@ -35,5 +52,14 @@ $(TARGET).pef: $(TARGET).elf
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+
+#---------------------------------------------------------------------------------
+# object generation
+#---------------------------------------------------------------------------------
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+# Dependency tracking
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))

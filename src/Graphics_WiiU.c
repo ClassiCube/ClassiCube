@@ -104,7 +104,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->surface.image = MEMAllocFromDefaultHeapEx(tex->surface.imageSize, tex->surface.alignment);
 	if (!tex->surface.image) { Mem_Free(tex); return NULL; }
   
-	CopyTextureData(tex->surface.image, tex->surface.pitch << 2, bmp, rowWidth << 2);
+	CopyTextureData(tex->surface.image, tex->surface.pitch << 2, 
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 	return tex;
 }
@@ -113,7 +114,8 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	GX2Texture* tex = (GX2Texture*)texId;	
 	uint32_t* dst   = (uint32_t*)tex->surface.image + (y * tex->surface.pitch) + x;
 	
-	CopyTextureData(dst, tex->surface.pitch << 2, part, rowWidth << 2);
+	CopyTextureData(dst, tex->surface.pitch << 2, 
+					part, rowWidth * BITMAPCOLOR_SIZE);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 }
 
@@ -341,8 +343,8 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 	
 	// TODO dirty uniform
 	struct Matrix mvp __attribute__((aligned(64)));	
@@ -351,8 +353,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &mvp);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -399,10 +403,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
-	
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 	// TODO GX2SetSwapInterval(1);
 }
 
@@ -452,11 +454,10 @@ void Gfx_EndFrame(void) {
 	GX2DrawDone();
 	GX2SetTVEnable(TRUE);
 	GX2SetDRCEnable(TRUE);
-
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "-- Using Wii U --\n");
@@ -468,8 +469,11 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-   GX2SetViewport(x, y, w, h, 0.0f, 1.0f);
-   GX2SetScissor( x, y, w, h);
+	GX2SetViewport(x, y, w, h, 0.0f, 1.0f);
+}
+
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	GX2SetScissor( x, y, w, h);
 }
 
 void Gfx_3DS_SetRenderScreen1(enum Screen3DS screen) {

@@ -5,13 +5,12 @@
 #include "Platform.h"
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 #define Display_CentreX(width)  (DisplayInfo.x + (DisplayInfo.Width  - width)  / 2)
 #define Display_CentreY(height) (DisplayInfo.y + (DisplayInfo.Height - height) / 2)
 
 static int cursorPrevX, cursorPrevY;
-static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates */
 static void Cursor_GetRawPos(int* x, int* y);
 /* Sets whether the cursor is visible when over this window */
@@ -21,8 +20,8 @@ static void Cursor_DoSetVisible(cc_bool visible);
 
 /* Sets whether the cursor is visible when over this window */
 static void Cursor_SetVisible(cc_bool visible) {
-	if (cursorVisible == visible) return;
-	cursorVisible = visible;
+	if (DisplayInfo.CursorVisible == visible) return;
+	DisplayInfo.CursorVisible = visible;
 	Cursor_DoSetVisible(visible);
 }
 
@@ -100,7 +99,7 @@ static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
 }
 
 /* EGL is window system agnostic, other OpenGL context backends are tied to one windowing system */
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && defined CC_BUILD_EGL
 /*########################################################################################################################*
 *-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -115,7 +114,7 @@ static EGLint ctx_numConfig;
 static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
 #else
 static void GLContext_InitSurface(void) {
-	void* window = Window_Main.Handle;
+	void* window = Window_Main.Handle.ptr;
 	if (!window) return; /* window not created or lost */
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
 
@@ -208,7 +207,7 @@ cc_bool GLContext_SwapBuffers(void) {
 	return false;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	eglSwapInterval(ctx_display, vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }

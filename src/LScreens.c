@@ -19,10 +19,10 @@
 #include "LBackend.h"
 #include "Http.h"
 #include "Game.h"
+#include "main.h"
 
 #define LAYOUTS static const struct LLayout
-#define IsEnterButton(btn) (btn == CCKEY_ENTER  || btn == CCPAD_START  || btn == CCPAD_A || btn == CCKEY_KP_ENTER)
-#define IsBackButton(btn)  (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_B)
+#define IsBackButton(btn) (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_2)
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -84,8 +84,8 @@ static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 	}
 }
 
-static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (IsEnterButton(key)) {
+static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struct InputDevice* device) {
+	if (InputDevice_IsEnter(key, device)) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
@@ -101,14 +101,14 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	
 	/* Active widget takes input priority over default behaviour */
 	if (s->selectedWidget && s->selectedWidget->VTABLE->KeyDown) {
-		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was)) return;
+		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was, device)) return;
 	}
 
-	if (key == CCKEY_TAB || key == CCPAD_X) {
+	if (key == device->tabLauncher) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
-	} else if (Input_IsUpButton(key)) {
+	} else if (key == device->upButton) {
 		LScreen_CycleSelected(s, -1);
-	} else if (Input_IsDownButton(key)) {
+	} else if (key == device->downButton) {
 		LScreen_CycleSelected(s,  1);
 	} else if (IsBackButton(key) && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
@@ -205,14 +205,16 @@ LAYOUTS mode_btnBack[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, 170 } };
 
 
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
-	Options_SetBool(OPT_CLASSIC_MODE, classic);
-	if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
+	Options_PauseSaving();
+		Options_SetBool(OPT_CLASSIC_MODE, classic);
+		if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
 
-	Options_SetBool(OPT_CUSTOM_BLOCKS,   !classic);
-	Options_SetBool(OPT_CPE,             !classic);
-	Options_SetBool(OPT_SERVER_TEXTURES, !classic);
-	Options_SetBool(OPT_CLASSIC_TABLIST, classic);
-	Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
+		Options_SetBool(OPT_CUSTOM_BLOCKS,   !classic);
+		Options_SetBool(OPT_CPE,             !classic);
+		Options_SetBool(OPT_SERVER_TEXTURES, !classic);
+		Options_SetBool(OPT_CLASSIC_TABLIST, classic);
+		Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
+	Options_ResumeSaving();
 
 	Options_SaveIfChanged();
 	Launcher_LoadTheme();
@@ -372,15 +374,16 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	ColoursScreen_TextChanged(w);
 }
 
-static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	int delta = Input_CalcDelta(key, 1, 10);
-	if (key == CCWHEEL_UP)   delta = +1;
-	if (key == CCWHEEL_DOWN) delta = -1;
+static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struct InputDevice* device) {
+	int deltaX, deltaY;
+	Input_CalcDelta(key, device, &deltaX, &deltaY);
+	if (key == CCWHEEL_UP)   deltaX = +1;
+	if (key == CCWHEEL_DOWN) deltaX = -1;
 	
-	if (delta) {
-		ColoursScreen_AdjustSelected(s, delta);
+	if (deltaX || deltaY) {
+		ColoursScreen_AdjustSelected(s, deltaY * 10 + deltaX);
 	} else {
-		LScreen_KeyDown(s, key, was);
+		LScreen_KeyDown(s, key, was, device);
 	}
 }
 
@@ -462,53 +465,45 @@ LAYOUTS dc_lblStatus[]   = { { ANCHOR_CENTRE,    0 }, { ANCHOR_CENTRE, 70 } };
 
 
 static void DirectConnectScreen_UrlFilter(cc_string* str) {
-	static const cc_string prefix = String_FromConst("mc://");
-	cc_string parts[6];
-	if (!String_CaselessStarts(str, &prefix)) return;
-	/* mc://[ip:port]/[username]/[mppass] */
-	if (String_UNSAFE_Split(str, '/', parts, 6) != 5) return;
+	cc_string addr, user, mppass;
+	if (!DirectUrl_Claims(str, &addr, &user, &mppass)) return;
 	
-	LInput_SetString(&DirectConnectScreen.iptAddress,  &parts[2]);
-	LInput_SetString(&DirectConnectScreen.iptUsername, &parts[3]);
-	LInput_SetString(&DirectConnectScreen.iptMppass,   &parts[4]);
+	LInput_SetString(&DirectConnectScreen.iptAddress,  &addr);
+	LInput_SetString(&DirectConnectScreen.iptUsername, &user);
+	LInput_SetString(&DirectConnectScreen.iptMppass,   &mppass);
 	str->length = 0;
+}
+
+static cc_bool DirectConnectScreen_ParsePort(const cc_string* str) {
+	int port;
+	return Convert_ParseInt(str, &port) && port >= 0 && port <= 65535;
 }
 
 static void DirectConnectScreen_StartClient(void* w) {
 	static const cc_string defMppass = String_FromConst("(none)");
-	static const cc_string defPort   = String_FromConst("25565");
 	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
 	const cc_string* addr   = &DirectConnectScreen.iptAddress.text;
 	const cc_string* mppass = &DirectConnectScreen.iptMppass.text;
 	struct LLabel* status   = &DirectConnectScreen.lblStatus;
 
 	cc_string ip, port;
-	cc_uint16 raw_port;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
-	int numAddrs;
+	int numAddrs, raw_port;
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index == 0 || index == addr->length - 1) {
 		LLabel_SetConst(status, "&cInvalid address"); return;
 	}
 
-	/* support either "[IP]" or "[IP]:[PORT]" */
-	if (index == -1) {
-		ip   = *addr;
-		port = defPort;
-	} else {
-		ip   = String_UNSAFE_Substring(addr, 0, index);
-		port = String_UNSAFE_SubstringAt(addr, index + 1);
-	}
-
 	if (!user->length) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
-	if (Socket_ParseAddress(&ip, 0, addrs, &numAddrs)) {
-		LLabel_SetConst(status, "&cInvalid ip"); return;
-	}
-	if (!Convert_ParseUInt16(&port, &raw_port)) {
+	DirectUrl_ExtractAddress(addr, &ip, &port);
+	if (!DirectConnectScreen_ParsePort(&port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
+	}
+	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
+		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;
 
@@ -520,7 +515,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	Options_ResumeSaving();
 
 	LLabel_SetConst(status, "");
-	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
+	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty, 1);
 }
 
 static void DirectConnectScreen_Activated(struct LScreen* s_) {
@@ -662,9 +657,7 @@ LAYOUTS sps_btnBack[]     = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
 
 static void SplitScreen_Start(int players) {
 	static const cc_string user = String_FromConst(DEFAULT_USERNAME);
-	Game_NumLocalPlayers = players;
-	
-	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
+	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty, players);
 }
 
 static void SplitScreen_Players2(void* w) { SplitScreen_Start(2); }
@@ -735,34 +728,6 @@ LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    6 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_lblUpdate_N[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
 LAYOUTS main_lblUpdate_H[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 6 } };
 
-
-struct ResumeInfo {
-	cc_string user, ip, port, server, mppass;
-	char _userBuffer[STRING_SIZE], _serverBuffer[STRING_SIZE];
-	char _ipBuffer[16], _portBuffer[16], _mppassBuffer[STRING_SIZE];
-	cc_bool valid;
-};
-
-CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool full) {
-	String_InitArray(info->server, info->_serverBuffer);
-	Options_Get(ROPT_SERVER,       &info->server, "");
-	String_InitArray(info->user,   info->_userBuffer);
-	Options_Get(ROPT_USER,         &info->user, "");
-
-	String_InitArray(info->ip,   info->_ipBuffer);
-	Options_Get(ROPT_IP,         &info->ip, "");
-	String_InitArray(info->port, info->_portBuffer);
-	Options_Get(ROPT_PORT,       &info->port, "");
-
-	if (!full) return;
-	String_InitArray(info->mppass, info->_mppassBuffer);
-	Options_GetSecure(ROPT_MPPASS, &info->mppass);
-
-	info->valid = 
-		info->user.length && info->mppass.length &&
-		info->ip.length   && info->port.length;
-}
-
 CC_NOINLINE static void MainScreen_Error(struct HttpRequest* req, const char* action) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = &MainScreen;
@@ -803,10 +768,9 @@ static void MainScreen_Register(void* w) {
 
 static void MainScreen_Resume(void* w) {
 	struct ResumeInfo info;
-	MainScreen_GetResume(&info, true);
 
-	if (!info.valid) return;
-	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server);
+	if (!Resume_Parse(&info, true)) return;
+	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server, 1);
 }
 
 static void MainScreen_Singleplayer(void* w) {
@@ -814,7 +778,7 @@ static void MainScreen_Singleplayer(void* w) {
 	const cc_string* user = &MainScreen.iptUsername.text;
 
 	if (!user->length) user = &defUser;
-	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
+	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty, 1);
 }
 
 static void MainScreen_ResumeHover(void* w) {
@@ -823,7 +787,7 @@ static void MainScreen_ResumeHover(void* w) {
 	struct ResumeInfo info;
 	if (s->signingIn) return;
 
-	MainScreen_GetResume(&info, false);
+	Resume_Parse(&info, false);
 	if (!info.user.length) return;
 	String_InitArray(str, strBuffer);
 
@@ -1308,19 +1272,19 @@ static void ServersScreen_HashFilter(cc_string* str) {
 static void ServersScreen_SearchChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ApplyFilter(&s->table);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_HashChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ShowSelected(&s->table);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_OnSelectedChanged(void) {
 	struct ServersScreen* s = &ServersScreen;
-	LBackend_MarkDirty(&s->iptHash);
-	LBackend_MarkDirty(&s->table);
+	LBackend_NeedsRedraw(&s->iptHash);
+	LBackend_NeedsRedraw(&s->table);
 }
 
 static void ServersScreen_ReloadServers(struct ServersScreen* s) {
@@ -1387,7 +1351,7 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 
 	if (FetchServersTask.Base.success) {
 		ServersScreen_ReloadServers(s);
-		LBackend_MarkDirty(&s->table);
+		LBackend_NeedsRedraw(&s->table);
 	}
 
 	LButton_SetConst(&s->btnRefresh, 
@@ -1399,12 +1363,12 @@ static void ServersScreen_MouseWheel(struct LScreen* s_, float delta) {
 	s->table.VTABLE->MouseWheel(&s->table, delta);
 }
 
-static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was) {
+static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was, struct InputDevice* device) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	if (!LTable_HandlesKey(key)) {
-		LScreen_KeyDown(s_, key, was);
+	if (!LTable_HandlesKey(key, device)) {
+		LScreen_KeyDown(s_, key, was, device);
 	} else {
-		s->table.VTABLE->KeyDown(&s->table, key, was);
+		s->table.VTABLE->KeyDown(&s->table, key, was, device);
 	}
 }
 

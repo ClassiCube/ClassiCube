@@ -14,12 +14,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <yaul.h>
+#include <mm/tlsf.h>
 
+//#define OVERRIDE_MEM_FUNCTIONS
 void* calloc(size_t num, size_t size) {
 	void* ptr = malloc(num * size);
 	if (ptr) memset(ptr, 0, num * size);
 	return ptr;
 }
+
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -28,7 +31,40 @@ const cc_result ReturnCode_DirectoryExists    = 99999;
 
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
-const char* Platform_AppNameSuffix = " Saturn";
+const cc_result ReturnCode_SocketDropped    = -1;
+
+const char* Platform_AppNameSuffix  = " Saturn";
+cc_bool Platform_ReadonlyFilesystem = true;
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Memory----------------------------------------------------------*
+*#########################################################################################################################*/
+static tlsf_t lwram_mem; // Use LWRAM for 1 MB of memory
+
+static void InitMemory(void) {
+	lwram_mem = tlsf_pool_create(LWRAM(0), LWRAM_SIZE);
+}
+
+/*void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? tlsf_malloc(&lwram_mem, size) : NULL;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	void* ptr = Mem_TryAlloc(numElems, elemsSize);
+	if (ptr) memset(ptr, 0, numElems * elemsSize);
+	return ptr;
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? tlsf_realloc(&lwram_mem, mem, size) : NULL;
+}
+
+void Mem_Free(void* mem) {
+	tlsf_free(&lwram_mem, mem);
+}*/
 
 
 /*########################################################################################################################*
@@ -85,27 +121,32 @@ static void Stopwatch_Init(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Directory_Create(const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
+	String_EncodeUtf8(str, path);
 }
 
-int File_Exists(const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+cc_result Directory_Create(const cc_filepath* path) {
+	return ReturnCode_DirectoryExists;
+}
+
+int File_Exists(const cc_filepath* path) {
+	return false;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return ReturnCode_FileNotFound;
+}
+
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -139,6 +180,12 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) {
 	// TODO sleep a bit
+	cc_uint32 cycles = 26846 * milliseconds;
+	
+	for (cc_uint32 i = 0; i < cycles; i++)
+	{
+		__asm__ volatile ("nop;");
+	}
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
@@ -188,7 +235,11 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -215,7 +266,13 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+extern void *__end;
+
 void Platform_Init(void) {
+	cc_uint32 avail = HWRAM(HWRAM_SIZE) - (uint32_t)&__end;
+	Platform_Log1("Free HWRAM: %i bytes", &avail);
+
+	InitMemory();
 	Stopwatch_Init();
 }
 
@@ -234,7 +291,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "SaturnSaturnSEGA"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

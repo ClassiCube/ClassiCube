@@ -1,7 +1,9 @@
 #ifndef CC_PACKEDCOL_H
 #define CC_PACKEDCOL_H
 #include "Core.h"
-/* Manipulates a packed 32 bit RGBA colour, in a format suitable for the native 3D graphics API.
+CC_BEGIN_HEADER
+
+/* Manipulates a packed 32 bit RGBA colour, in a format suitable for the native 3D graphics API vertex colours.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
@@ -61,4 +63,6 @@ CC_NOINLINE cc_bool PackedCol_TryParseHex(const cc_string* str, cc_uint8* rgb);
 #define PACKEDCOL_SHADE_YMIN 0.5f
 /* Retrieves shaded colours for ambient block face lighting */
 void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yMin);
+
+CC_END_HEADER
 #endif

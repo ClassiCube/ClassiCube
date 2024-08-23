@@ -184,30 +184,30 @@ int FallbackFont_TextWidth(const struct DrawTextArgs* args) {
 
 static void Fallback_DrawCell(struct Bitmap* bmp, int x, int y, 
 					int scale, const cc_uint8* rows, BitmapCol color) {
-	int dst_width  = CELL_SIZE * scale;
-	int dst_height = CELL_SIZE * scale;
 	int xx, srcX, dstX;
 	int yy, srcY, dstY;
 	BitmapCol* dst_row;
 	cc_uint8 src_row;
 
-	for (yy = 0; yy < dst_height; yy++)
+	for (srcY = 0, dstY = y; srcY < CELL_SIZE; srcY++)
 	{
-		srcY = yy / scale;
-		dstY = y + yy;
-		if (dstY < 0 || dstY >= bmp->height) continue;
-
-		dst_row = Bitmap_GetRow(bmp, dstY);
-		src_row = rows[srcY];
-
-		for (xx = 0; xx < dst_width; xx++)
+		for (yy = 0; yy < scale; yy++, dstY++)
 		{
-			srcX = xx / scale;
-			dstX = x + xx;
-			if (dstX < 0 || dstX >= bmp->width) continue;
-
-			if (src_row & (1 << srcX)) {
-				dst_row[dstX] = color;
+			if (dstY < 0 || dstY >= bmp->height) continue;
+	
+			dst_row = Bitmap_GetRow(bmp, dstY);
+			src_row = rows[srcY];
+	
+			for (srcX = 0, dstX = x; srcX < CELL_SIZE; srcX++)
+			{
+				for (xx = 0; xx < scale; xx++, dstX++)
+				{
+					if (dstX < 0 || dstX >= bmp->width) continue;
+		
+					if (src_row & (1 << srcX)) {
+						dst_row[dstX] = color;
+					}
+				}
 			}
 		}
 	}
@@ -245,6 +245,46 @@ void FallbackFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x,
 			Fallback_DrawCell(bmp, x, y, scale, rows, color);
 			x += Fallback_CellWidth(rows) * scale;
 		}
+	}
+}
+
+static void Fallback_PlotCell(int x, int scale, const cc_uint8* rows, FallbackFont_Plotter plotter, void* ctx) {
+	int xx, srcX, dstX;
+	int yy, srcY, dstY;
+	cc_uint8 src_row;
+
+	for (srcY = 0; srcY < CELL_SIZE; srcY++)
+	{
+		src_row = rows[srcY];
+
+		for (srcX = 0; srcX < CELL_SIZE; srcX++)
+		{
+			if (!(src_row & (1 << srcX))) continue;			
+			dstX = x + srcX * scale;
+			dstY = 0 + srcY * scale;
+
+			for (yy = 0; yy < scale; yy++)
+				for (xx = 0; xx < scale; xx++)
+			{
+				plotter(dstX + xx, dstY + yy, ctx);
+			}
+		}
+	}
+}
+
+void FallbackFont_Plot(cc_string* str, FallbackFont_Plotter plotter, int scale, void* ctx) {
+	const cc_uint8* rows;
+	int i, x = 0;
+
+	for (i = 0; i < str->length; i++) 
+	{
+		cc_uint8 c = str->buffer[i];
+		if (c == ' ') { x += SPACE_WIDTH * scale; continue; }
+
+		rows = FallbackFont_GetRows(c);
+
+		Fallback_PlotCell(x, scale, rows, plotter, ctx);
+		x += Fallback_CellWidth(rows) * scale;
 	}
 }
 
@@ -430,6 +470,7 @@ static void SysFont_Close(FT_Stream stream) {
 }
 
 static cc_result SysFont_Init(const cc_string* path, struct SysFont* font, FT_Open_Args* args) {
+	cc_filepath str;
 	cc_file file;
 	cc_uint32 size;
 	cc_result res;
@@ -437,7 +478,8 @@ static cc_result SysFont_Init(const cc_string* path, struct SysFont* font, FT_Op
 	cc_string filename;
 #endif
 
-	if ((res = File_Open(&file, path))) return res;
+	Platform_EncodePath(&str, path);
+	if ((res = File_Open(&file, &str))) return res;
 	if ((res = File_Length(file, &size))) { File_Close(file); return res; }
 
 	font->stream.base = NULL;
@@ -815,7 +857,9 @@ static void DrawGrayscaleGlyph(FT_Bitmap* img, struct Bitmap* bmp, int x, int y,
 
 		for (xx = 0; xx < img->width; xx++, src++, dst++) {
 			if ((unsigned)(x + xx) >= (unsigned)bmp->width) continue;
+
 			I = *src; invI = UInt8_MaxValue - I;
+			if (!I) continue;
 
 			/* TODO: Support transparent text */
 			/* dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/

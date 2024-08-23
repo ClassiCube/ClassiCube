@@ -79,29 +79,71 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index) {
 	return rec;
 }
 
+
+static void Atlas1D_Load(int index, struct Bitmap* atlas1D) {
+	int tileSize      = Atlas2D.TileSize;
+	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
+	int y, tile = index * tilesPerAtlas;
+	int atlasX, atlasY;
+	
+	for (y = 0; y < tilesPerAtlas; y++, tile++) 
+	{
+		atlasX = Atlas2D_TileX(tile) * tileSize;
+		atlasY = Atlas2D_TileY(tile) * tileSize;
+
+		Bitmap_UNSAFE_CopyBlock(atlasX, atlasY, 0, y * tileSize,
+							&Atlas2D.Bmp, atlas1D, tileSize);
+	}
+	Gfx_RecreateTexture(&Atlas1D.TexIds[index], atlas1D, TEXTURE_FLAG_MANAGED | TEXTURE_FLAG_DYNAMIC, Gfx.Mipmaps);
+}
+
+/* TODO: always do this? */
+#ifdef CC_BUILD_LOWMEM
+static void Atlas1D_LoadBlock(int index) {
+	int tileSize      = Atlas2D.TileSize;
+	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
+	struct Bitmap atlas1D;
+
+	Platform_Log2("Lazy load atlas #%i (%i per bmp)", &index, &tilesPerAtlas);
+	Bitmap_Allocate(&atlas1D, tileSize, tilesPerAtlas * tileSize);
+	
+	Atlas1D_Load(index, &atlas1D);
+	Mem_Free(atlas1D.scan0);
+}
+
+void Atlas1D_Bind(int index) {
+	if (index < Atlas1D.Count && !Atlas1D.TexIds[index])
+		Atlas1D_LoadBlock(index);
+	Gfx_BindTexture(Atlas1D.TexIds[index]);
+}
+
+static void Atlas_Convert2DTo1D(void) {
+	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
+	int atlasesCount  = Atlas1D.Count;
+	Platform_Log2("Terrain atlas: %i bmps, %i per bmp", &atlasesCount, &tilesPerAtlas);
+}
+#else
+void Atlas1D_Bind(int index) {
+	Gfx_BindTexture(Atlas1D.TexIds[index]);
+}
+
 static void Atlas_Convert2DTo1D(void) {
 	int tileSize      = Atlas2D.TileSize;
 	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
 	int atlasesCount  = Atlas1D.Count;
 	struct Bitmap atlas1D;
-	int atlasX, atlasY;
-	int tile = 0, i, y;
+	int i;
 
 	Platform_Log2("Loaded terrain atlas: %i bmps, %i per bmp", &atlasesCount, &tilesPerAtlas);
 	Bitmap_Allocate(&atlas1D, tileSize, tilesPerAtlas * tileSize);
 	
-	for (i = 0; i < atlasesCount; i++) {
-		for (y = 0; y < tilesPerAtlas; y++, tile++) {
-			atlasX = Atlas2D_TileX(tile) * tileSize;
-			atlasY = Atlas2D_TileY(tile) * tileSize;
-
-			Bitmap_UNSAFE_CopyBlock(atlasX, atlasY, 0, y * tileSize,
-								&Atlas2D.Bmp, &atlas1D, tileSize);
-		}
-		Gfx_RecreateTexture(&Atlas1D.TexIds[i], &atlas1D, TEXTURE_FLAG_MANAGED | TEXTURE_FLAG_DYNAMIC, Gfx.Mipmaps);
+	for (i = 0; i < atlasesCount; i++) 
+	{
+		Atlas1D_Load(i, &atlas1D);
 	}
 	Mem_Free(atlas1D.scan0);
 }
+#endif
 
 static void Atlas_Update1D(void) {
 	int maxAtlasHeight, maxTilesPerAtlas, maxTiles;
@@ -255,11 +297,13 @@ CC_INLINE static void HashUrl(cc_string* key, const cc_string* url) {
 static cc_bool createdCache, cacheInvalid;
 static cc_bool UseDedicatedCache(cc_string* path, const cc_string* key) {
 	cc_result res;
+	cc_filepath str;
 	Directory_GetCachePath(path);
 	if (!path->length || cacheInvalid) return false;
 
 	String_AppendConst(path, "/texturecache");
-	res = Directory_Create(path);
+	Platform_EncodePath(&str, path);
+	res = Directory_Create(&str);
 
 	/* Check if something is deleting the cache directory behind our back */
 	/*  (Several users have reported this happening on some Android devices) */
@@ -292,11 +336,16 @@ CC_NOINLINE static void MakeCachePath(cc_string* mainPath, cc_string* altPath, c
 static int IsCached(const cc_string* url) {
 	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
 	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
+	cc_filepath mainStr, altStr;
+	
 	String_InitArray(mainPath, mainBuffer);
 	String_InitArray(altPath,   altBuffer);
 
 	MakeCachePath(&mainPath, &altPath, url);
-	return File_Exists(&mainPath) || (altPath.length && File_Exists(&altPath));
+	Platform_EncodePath(&mainStr, &mainPath);
+	Platform_EncodePath(&altStr,  &altPath);
+
+	return File_Exists(&mainStr) || (altPath.length && File_Exists(&altStr));
 }
 
 /* Attempts to open the cached data stream for the given url */
@@ -432,6 +481,7 @@ static cc_result ExtractPng(struct Stream* stream) {
 
 static cc_bool needReload;
 static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
+	struct ZipEntry entries[512];
 	cc_result res;
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
@@ -443,7 +493,8 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	res = ExtractPng(stream);
 	if (res == PNG_ERR_INVALID_SIG) {
 		/* file isn't a .png image, probably a .zip archive then */
-		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry);
+		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry,
+							entries, Array_Elems(entries));
 
 		if (res) Logger_SysWarn2(res, "extracting", path);
 	} else if (res) {
@@ -452,7 +503,7 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	return res;
 }
 
-#ifdef CC_BUILD_PS1
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
 #include "../misc/ps1/classicubezip.h"
 
 static cc_result ExtractFromFile(const cc_string* path) {

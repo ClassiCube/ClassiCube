@@ -355,9 +355,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) {
@@ -387,8 +386,6 @@ void Gfx_EndFrame(void) {
 
 	while (pb_busy())     { } // Wait for frame completion
 	while (pb_finished()) { } // Swap when possible
-	
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 
@@ -572,15 +569,17 @@ static void UpdateVSConstants(void) {
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
 
 	Matrix_Mul(&_mvp, &_view, &_proj);
 	UpdateVSConstants();
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {	
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -590,25 +589,26 @@ void Gfx_DisableTextureOffset(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-    vp_scale.x  = w *  0.5f;
-    vp_scale.y  = h * -0.5f;
-    vp_offset.x = x + w * 0.5f;
-    vp_offset.y = y + h * 0.5f;
-
-	uint32_t* p;
-	p = pb_begin();
-    // NV097_SET_SURFACE_CLIP_HORIZONTAL followed by NV097_SET_SURFACE_CLIP_VERTICAL 
-    p = pb_push2(p, NV097_SET_SURFACE_CLIP_HORIZONTAL, x | (w << 16), y | (h << 16));
-    pb_end(p);
+	vp_scale.x  = w *  0.5f;
+	vp_scale.y  = h * -0.5f;
+	vp_offset.x = x + w * 0.5f;
+	vp_offset.y = y + h * 0.5f;
 }
 
-
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	uint32_t* p;
+	p = pb_begin();
+	// NV097_SET_SURFACE_CLIP_HORIZONTAL followed by NV097_SET_SURFACE_CLIP_VERTICAL 
+	p = pb_push2(p, NV097_SET_SURFACE_CLIP_HORIZONTAL, x | (w << 16), y | (h << 16));
+	pb_end(p);
+}
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 static uint32_t* PushAttrib(uint32_t* p, int index, int format, int size, int stride) {
 	return pb_push1(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT + index * 4,

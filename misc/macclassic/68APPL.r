@@ -18,6 +18,6 @@ resource 'SIZE' (-1) {
 	reserved,
 	reserved,
 	reserved,
-	3072 * 1024,
-	8192 * 1024
+	8192 * 1024, // preferred (maximum) memory size
+	3584 * 1024, // minimum memory size (enough to load launcher)
 };

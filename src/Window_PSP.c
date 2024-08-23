@@ -22,11 +22,9 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
-	sceCtrlSetSamplingCycle(0);
-	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 }
 
 void Window_Init(void) {
@@ -35,12 +33,15 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width   = SCREEN_WIDTH;
-	Window_Main.Height  = SCREEN_HEIGHT;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = SCREEN_WIDTH;
+	Window_Main.Height   = SCREEN_HEIGHT;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
@@ -48,6 +49,8 @@ void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -81,14 +84,26 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+
+	sceCtrlSetSamplingCycle(0);
+	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+	
+	Input_DisplayNames[CCPAD_1] = "CIRCLE";
+	Input_DisplayNames[CCPAD_2] = "CROSS";
+	Input_DisplayNames[CCPAD_3] = "SQUARE";
+	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
+}
+
 static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & PSP_CTRL_LTRIGGER);
 	Gamepad_SetButton(port, CCPAD_R, mods & PSP_CTRL_RTRIGGER);
 	
-	Gamepad_SetButton(port, CCPAD_A, mods & PSP_CTRL_TRIANGLE);
-	Gamepad_SetButton(port, CCPAD_B, mods & PSP_CTRL_SQUARE);
-	Gamepad_SetButton(port, CCPAD_X, mods & PSP_CTRL_CROSS);
-	Gamepad_SetButton(port, CCPAD_Y, mods & PSP_CTRL_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_1, mods & PSP_CTRL_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_2, mods & PSP_CTRL_CROSS);
+	Gamepad_SetButton(port, CCPAD_3, mods & PSP_CTRL_SQUARE);
+	Gamepad_SetButton(port, CCPAD_4, mods & PSP_CTRL_TRIANGLE);
 	
 	Gamepad_SetButton(port, CCPAD_START,  mods & PSP_CTRL_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & PSP_CTRL_SELECT);
@@ -110,23 +125,27 @@ static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0x503, PadBind_Defaults);
 	SceCtrlData pad;
+	
 	/* TODO implement */
 	int ret = sceCtrlPeekBufferPositive(&pad, 1);
 	if (ret <= 0) return;
 	// TODO: need to use cached version still? like GameCube/Wii
 
-	HandleButtons(0, pad.Buttons);
-	ProcessCircleInput(0, &pad, delta);
+	HandleButtons(port, pad.Buttons);
+	ProcessCircleInput(port, &pad, delta);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -154,20 +173,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
 	VirtualKeyboard_Open(args, launcherMode);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

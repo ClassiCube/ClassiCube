@@ -113,24 +113,34 @@ static cc_result Stream_FileLength(struct Stream* s, cc_uint32* length) {
 }
 
 cc_result Stream_OpenFile(struct Stream* s, const cc_string* path) {
+	cc_filepath str;
 	cc_file file;
-	cc_result res = File_Open(&file, path);
+	cc_result res;
+	Platform_EncodePath(&str, path);
+
+	res = File_Open(&file, &str);
 	Stream_FromFile(s, file);
 	return res;
 }
 
 cc_result Stream_CreateFile(struct Stream* s, const cc_string* path) {
+	cc_filepath str;
 	cc_file file;
-	cc_result res = File_Create(&file, path);
+	cc_result res;
+	Platform_EncodePath(&str, path);
+
+	res = File_Create(&file, &str);
 	Stream_FromFile(s, file);
 	return res;
 }
 
 cc_result Stream_AppendFile(struct Stream* s, const cc_string* path) {
+	cc_filepath str;
 	cc_file file;
 	cc_result res;
-	
-	if ((res = File_OpenOrCreate(&file, path)))        return res;
+	Platform_EncodePath(&str, path);
+
+	if ((res = File_OpenOrCreate(&file, &str)))        return res;
 	if ((res = File_Seek(file, 0, FILE_SEEKFROM_END))) return res;
 	Stream_FromFile(s, file);
 	return res;

@@ -12,7 +12,6 @@
 #include "Logger.h"
 
 struct _GfxData Gfx;
-GfxResourceID Gfx_defaultIb;
 static GfxResourceID Gfx_quadVb, Gfx_texVb;
 const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced performance mode (game minimised or hidden)");
 
@@ -23,7 +22,6 @@ static cc_bool customMipmapsLevels;
 static int gfx_stride, gfx_format = -1;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
-static float gfx_minFrameMs;
 static cc_bool gfx_rendering2D;
 
 
@@ -127,7 +125,7 @@ static void RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertic
 }
 
 static void InitDefaultResources(void) {
-	Gfx_defaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
+	Gfx.DefaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
 
 	RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
@@ -136,48 +134,13 @@ static void InitDefaultResources(void) {
 static void FreeDefaultResources(void) {
 	Gfx_DeleteDynamicVb(&Gfx_quadVb);
 	Gfx_DeleteDynamicVb(&Gfx_texVb);
-	Gfx_DeleteIb(&Gfx_defaultIb);
+	Gfx_DeleteIb(&Gfx.DefaultIb);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------FPS and context----------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
-static void LimitFPS(void) {
-	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
-	/* However this is not a problem, because GLContext_SetVsync */
-	/*  makes the web browser manage the frame timing instead */
-}
-#else
-static float gfx_targetTime, gfx_actualTime;
-
-/* Examines difference between expected and actual frame times, */
-/*  then sleeps if actual frame time is too fast */
-static void LimitFPS(void) {
-	cc_uint64 frameEnd, sleepEnd;
-	
-	frameEnd = Stopwatch_Measure();
-	gfx_actualTime += Stopwatch_ElapsedMicroseconds(Game_FrameStart, frameEnd) / 1000.0f;
-	gfx_targetTime += gfx_minFrameMs;
-
-	/* going faster than FPS limit - sleep to slow down */
-	if (gfx_actualTime < gfx_targetTime) {
-		float cooldown = gfx_targetTime - gfx_actualTime;
-		Thread_Sleep((int)(cooldown + 0.5f));
-
-		/* also accumulate Thread_Sleep duration, as actual sleep */
-		/*  duration can significantly deviate from requested time */ 
-		/*  (e.g. requested 4ms, but actually slept for 8ms) */
-		sleepEnd = Stopwatch_Measure();
-		gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameEnd, sleepEnd) / 1000.0f;
-	}
-
-	/* reset accumulated time to avoid excessive FPS drift */
-	if (gfx_targetTime >= 1000) { gfx_actualTime = 0; gfx_targetTime = 0; }
-}
-#endif
-
 void Gfx_LoseContext(const char* reason) {
 	if (Gfx.LostContext) return;
 	Gfx.LostContext = true;
@@ -280,8 +243,8 @@ void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
 	/* intentionally biased more towards positive Z to reduce 2D clipping issues on the DS */
 	Gfx_CalcOrthoMatrix(&ortho, (float)width, (float)height, -100.0f, 1000.0f);
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &ortho);
-	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
+	Gfx_LoadMatrix(MATRIX_PROJ, &ortho);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Matrix_Identity);
 
 	Gfx_SetDepthTest(false);
 	Gfx_SetDepthWrite(false);
@@ -354,7 +317,7 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
-static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
+static CC_INLINE void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
 	cc_uint8* src_ = (cc_uint8*)src->scan0;
 	cc_uint8* dst_ = (cc_uint8*)dst;
 	int y;
@@ -364,7 +327,7 @@ static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, 
 	} else {
 		/* Have to copy scanline by scanline */
 		for (y = 0; y < src->height; y++) {
-			Mem_Copy(dst_, src_, src->width << 2);
+			Mem_Copy(dst_, src_, src->width * BITMAPCOLOR_SIZE);
 			src_ += srcStride;
 			dst_ += dstStride;
 		}
@@ -524,7 +487,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	}
 }
 
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9)
+#if CC_GFX_BACKEND_IS_GL() || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9)
 /* Slightly more efficient implementations are defined in the backends */
 #else
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {

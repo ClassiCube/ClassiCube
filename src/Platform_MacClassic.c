@@ -10,7 +10,6 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
-#include <errno.h>
 #include <string.h>
 #include <sys/time.h>
 
@@ -18,22 +17,25 @@
 #undef false
 #include <MacMemory.h>
 #include <Processes.h>
+#include <Devices.h>
 #include <Files.h>
 #include <Gestalt.h>
 
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_FileShareViolation = 1000000000;
+const cc_result ReturnCode_FileNotFound     = fnfErr;
+const cc_result ReturnCode_DirectoryExists  = dupFNErr;
+const cc_result ReturnCode_SocketInProgess  = 1000000;
+const cc_result ReturnCode_SocketWouldBlock = 1000000;
+const cc_result ReturnCode_SocketDropped    = 1000000;
+static long sysVersion;
 
 #if TARGET_CPU_68K
 const char* Platform_AppNameSuffix = " MAC 68k";
 #else
 const char* Platform_AppNameSuffix = " MAC PPC";
 #endif
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess = true;
-static long sysVersion;
 
 
 /*########################################################################################################################*
@@ -55,6 +57,7 @@ static long sysVersion;
     #define MAC_FOURWORDINLINE(w1,w2,w3,w4)
 #endif
 typedef unsigned long MAC_FourCharCode;
+static const int MAC_smSystemScript = -1;
 
 // ==================================== IMPORTS FROM TIMER.H ====================================
 // Availability: in InterfaceLib 7.1 and later
@@ -102,11 +105,10 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-ssize_t _consolewrite(int fd, const void *buf, size_t count);
+void Console_Write(const char* msg, int len);
 
 void Platform_Log(const char* msg, int len) {
-	_consolewrite(0, msg,  len);
-	_consolewrite(0, "\n",   1);
+	Console_Write(msg, len);
 }
 
 // classic macOS uses an epoch of 1904
@@ -163,64 +165,162 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Directory_GetCachePath(cc_string* path) { }
+static int retrievedWD, wd_refNum, wd_dirID;
 
-cc_result Directory_Create(const cc_string* path) {
-	return 0; // TODO
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* buf = dst->buffer;
+	char* str = dst->buffer;
+	str++; // placeholder for length later
+	*str++ = ':';
+	
+	// Classic Mac OS uses : to separate directories
+	for (int i = 0; i < path->length; i++) 
+	{
+		char c = (char)path->buffer[i];
+		if (c == '/') c = ':';
+		*str++ = c;
+	}
+	*str   = '\0';
+	buf[0] = String_Length(buf + 1); // pascal strings
+
+	if (retrievedWD) return;
+	retrievedWD = true;
+
+	WDPBRec r = { 0 };
+	PBHGetVolSync(&r);
+	wd_refNum = r.ioWDVRefNum;
+	wd_dirID  = r.ioWDDirID;
+
+	int V = r.ioWDVRefNum, D = r.ioWDDirID;
+	Platform_Log2("Working directory: %i, %i", &V, &D);
 }
 
-int File_Exists(const cc_string* path) {
-	return 0;
+static int DoOpenDF(const char* name, char perm, cc_file* file) {
+    HParamBlockRec pb;
+	Mem_Set(&pb, 0, sizeof(pb));
+
+	pb.fileParam.ioVRefNum = wd_refNum;
+	pb.fileParam.ioDirID   = wd_dirID;
+	pb.fileParam.ioNamePtr = name;
+	pb.ioParam.ioPermssn   = perm;
+
+	int err = PBHOpenDFSync(&pb);
+	*file   = pb.ioParam.ioRefNum;
+	return err;
+}
+
+static int DoCreateFile(const char* name) {
+    HParamBlockRec pb;
+	Mem_Set(&pb, 0, sizeof(pb));
+
+	pb.fileParam.ioVRefNum = wd_refNum;
+	pb.fileParam.ioDirID   = wd_dirID;
+	pb.fileParam.ioNamePtr = name;
+
+    return PBHCreateSync(&pb);
+}
+
+static int DoCreateFolder(const char* name) {
+    HParamBlockRec pb;
+	Mem_Set(&pb, 0, sizeof(pb));
+
+	pb.fileParam.ioVRefNum = wd_refNum;
+	pb.fileParam.ioDirID   = wd_dirID;
+	pb.fileParam.ioNamePtr = name;
+
+    return PBDirCreateSync(&pb);
+}
+
+
+void Directory_GetCachePath(cc_string* path) { }
+
+cc_result Directory_Create(const cc_filepath* path) {
+	return DoCreateFolder(path->buffer);
+}
+
+int File_Exists(const cc_filepath* path) {
+	return false; // TODO
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return ReturnCode_FileNotFound;
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return DoOpenDF(path->buffer, fsRdPerm, file);
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	int res = DoCreateFile(path->buffer);
+	if (res && res != dupFNErr) return res;
+
+	return DoOpenDF(path->buffer, fsWrPerm, file);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	int res = DoCreateFile(path->buffer);
+	if (res && res != dupFNErr) return res;
+
+	return DoOpenDF(path->buffer, fsRdWrPerm, file);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	long cnt = count;
-    int res  = FSRead(file, &cnt, data);
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum   = file;
+	pb.ioParam.ioBuffer   = data;
+	pb.ioParam.ioReqCount = count;
+	pb.ioParam.ioPosMode  = fsAtMark;
 
-	*bytesRead = cnt;
-	return res;
+	int err = PBReadSync(&pb);
+	*bytesRead = pb.ioParam.ioActCount;
+	return err;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	long cnt = count;
-    int res  = FSWrite(file, &cnt, data);
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum   = file;
+	pb.ioParam.ioBuffer   = data;
+	pb.ioParam.ioReqCount = count;
+	pb.ioParam.ioPosMode  = fsAtMark;
 
-	*bytesWrote = cnt;
-	return res;
+	int err = PBWriteSync(&pb);
+	*bytesWrote = pb.ioParam.ioActCount;
+	return err;
 }
 
 cc_result File_Close(cc_file file) {
-	return ERR_NOT_SUPPORTED;
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum = file;
+
+	return PBCloseSync(&pb);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
 	static cc_uint8 modes[] = { fsFromStart, fsFromMark, fsFromLEOF };
-	SetFPos(file, modes[seekType], offset);
-	return 0;
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum    = file;
+	pb.ioParam.ioPosMode   = modes[seekType];
+	pb.ioParam.ioPosOffset = offset;
+
+	return PBSetFPosSync(&pb);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	return ERR_NOT_SUPPORTED;
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum = file;
+
+	int err = PBGetFPosSync(&pb);
+	*pos    = pb.ioParam.ioPosOffset;
+	return err;
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	return ERR_NOT_SUPPORTED;
+	ParamBlockRec pb;
+	pb.ioParam.ioRefNum = file;
+
+	int err = PBGetEOFSync(&pb);
+	*len    = (cc_uint32)pb.ioParam.ioMisc;
+	return err;
 }
 
 
@@ -284,33 +384,17 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-static void FontDirCallback(const cc_string* path, void* obj) {
-	SysFonts_Register(path, NULL);
-}
-
-void Platform_LoadSysFonts(void) {
-	int i;
-	static const cc_string dirs[] = {
-		String_FromConst("/usr/share/fonts"),
-		String_FromConst("/usr/local/share/fonts")
-	};
-
-	for (i = 0; i < Array_Elems(dirs); i++) {
-		Directory_Enum(&dirs[i], NULL, FontDirCallback);
-	}
-}
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -434,7 +518,13 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 void Platform_Init(void) {
 	Gestalt(gestaltSystemVersion, &sysVersion);
 	Platform_Log1("Running on Mac OS %h", &sysVersion);
-	Platform_LoadSysFonts();
+
+	cc_string path = String_FromConst("aB.txt");
+	cc_filepath str;
+	Platform_EncodePath(&str, &path);
+
+	int ERR2 = DoCreateFile(&str);
+	Platform_Log1("TEST FILE: %i", &ERR2);
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {

@@ -30,6 +30,7 @@
 #include "Picking.h"
 #include "Input.h"
 #include "Utils.h"
+#include "InputHandler.h"
 
 struct _ProtocolData Protocol;
 
@@ -62,7 +63,7 @@ static struct CpeExt
 	envColors_Ext       = { "EnvColors", 1 },
 	selectionCuboid_Ext = { "SelectionCuboid", 1 },
 	blockPerms_Ext      = { "BlockPermissions", 1 },
-	changeModel_Ext     = { "ChangeModel", 2 },
+	changeModel_Ext     = { "ChangeModel", 1 },
 	mapAppearance_Ext   = { "EnvMapAppearance", 2 },
 	weatherType_Ext     = { "EnvWeatherType", 1 },
 	messageTypes_Ext    = { "MessageTypes", 1 },
@@ -1720,8 +1721,8 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) 
 		{
 			cc_uint8 tmp = *data++;
-			part->anims[i].type = tmp & 0x3F;
-			part->anims[i].axis = tmp >> 6;
+			part->animType[i] = tmp & 0x3F;
+			part->animAxis[i] = tmp >> 6;
 
 			part->anims[i].a = GetFloat(data);
 			data += 4;

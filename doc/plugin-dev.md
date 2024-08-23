@@ -64,15 +64,6 @@ All plugins require this boilerplate, so feel free to copy and paste it.
 ---
 
 ### Writing plugins in C++
-When including headers from ClassiCube, they **must** be surrounded with `extern "C"`, i.e.
-```C
-extern "C" {
-#include "src/Chat.h"
-#include "src/Game.h"
-#include "src/String.h"
-}
-```
-Otherwise you will get obscure `Undefined reference` errors when compiling.
 
 Exported plugin functions **must** be surrounded with `extern "C"`, i.e.
 ```C

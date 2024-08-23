@@ -23,10 +23,13 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const char* Platform_AppNameSuffix = " N64";
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
+const char* Platform_AppNameSuffix  = " N64";
+cc_bool Platform_ReadonlyFilesystem = true;
 
 
 /*########################################################################################################################*
@@ -70,7 +73,8 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	// TODO temp hack
 	cc_string path_ = *path;
 	int idx = String_IndexOf(path, '/');
@@ -81,11 +85,11 @@ static void GetNativePath(char* str, const cc_string* path) {
 	String_EncodeUtf8(str, &path_);
 }
 
-cc_result Directory_Create(const cc_string* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	return false;
 }
 
@@ -93,34 +97,31 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED; // TODO add support
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
+static cc_result File_Do(cc_file* file, const char* path) {
 	//*file = -1;
 	//return ReturnCode_FileNotFound;
 	// TODO: Why does trying this code break everything
 	
-	int ret = dfs_open(str);
-	Platform_Log2("Opened %c = %i", str, &ret);
+	int ret = dfs_open(path);
+	Platform_Log2("Opened %c = %i", path, &ret);
 	if (ret < 0) { *file = -1; return ret; }
 	
 	*file = ret;
 	return 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
-	//return File_Do(file, path);
+	//return File_Do(file, path->buffer);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	*file = -1;
 	return ERR_NOT_SUPPORTED;
-	//return File_Do(file, path);
+	//return File_Do(file, path->buffer);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -217,7 +218,11 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -259,7 +264,6 @@ void Platform_Init(void) {
 	debug_init_usblog();
 	DisableFpuExceptions();
 	
-	Platform_ReadonlyFilesystem = true;
 	dfs_init(DFS_DEFAULT_LOCATION);
 	timer_init();
 	rtc_init();
@@ -292,7 +296,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "N64_N64_N64_N64_"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

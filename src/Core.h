@@ -21,8 +21,14 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	typedef unsigned __int32 cc_uintptr;
 	#endif
 	
-	#define CC_INLINE inline
+#if _MSC_VER <= 1500
+	#define CC_INLINE
+	#define CC_NOINLINE
+#else
+	#define CC_INLINE   inline
 	#define CC_NOINLINE __declspec(noinline)
+#endif
+	
 	#ifndef CC_API
 	#define CC_API __declspec(dllexport, noinline)
 	#define CC_VAR __declspec(dllexport)
@@ -58,6 +64,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	
 	#define CC_INLINE inline
 	#define CC_NOINLINE __attribute__((noinline))
+	
 	#ifndef CC_API
 	#ifdef _WIN32
 	#define CC_API __attribute__((dllexport, noinline))
@@ -67,6 +74,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 	#define CC_VAR __attribute__((visibility("default")))
 	#endif
 	#endif
+	
 	#define CC_HAS_MISC
 	#ifdef __BIG_ENDIAN__
 	#define CC_BIG_ENDIAN
@@ -117,32 +125,41 @@ typedef cc_uint8  cc_bool;
 #endif
 #endif
 
-/* Lowest 4 bits are for backends in same group */
-/* Rest of the bits indicate the unique group type */
+#define CC_WIN_BACKEND_TERMINAL 1
+#define CC_WIN_BACKEND_SDL2     2
+#define CC_WIN_BACKEND_SDL3     3
+#define CC_WIN_BACKEND_X11      4
+#define CC_WIN_BACKEND_WIN32    5
+#define CC_WIN_BACKEND_COCOA    6
+#define CC_WIN_BACKEND_BEOS     7
+#define CC_WIN_BACKEND_ANDROID  8
 
-#define CC_WIN_BACKEND_TERMINAL 0x0001
-#define CC_WIN_BACKEND_SDL_MASK 0x0010
-#define CC_WIN_BACKEND_SDL2     0x0011
-#define CC_WIN_BACKEND_SDL3     0x0012
-#define CC_WIN_BACKEND_X11      0x0021
-#define CC_WIN_BACKEND_WIN32    0x0041
-#define CC_WIN_BACKEND_COCOA    0x0081
-#define CC_WIN_BACKEND_BEOS     0x0101
-#define CC_WIN_BACKEND_ANDROID  0x0201
+#define CC_GFX_BACKEND_SOFTGPU   1
+#define CC_GFX_BACKEND_GL1       2
+#define CC_GFX_BACKEND_GL2       3
+#define CC_GFX_BACKEND_D3D9      4
+#define CC_GFX_BACKEND_D3D11     5
+#define CC_GFX_BACKEND_VULKAN    6
 
-#define CC_GFX_BACKEND_SOFTGPU   0x0001
-#define CC_GFX_BACKEND_GL_MASK   0x0010
-#define CC_GFX_BACKEND_GL1       0x0011
-#define CC_GFX_BACKEND_GL2       0x0012
-#define CC_GFX_BACKEND_D3D9      0x0021
-#define CC_GFX_BACKEND_D3D11     0x0041
-#define CC_GFX_BACKEND_VULKAN    0x0081
+#define CC_SSL_BACKEND_NONE     1
+#define CC_SSL_BACKEND_BEARSSL  2
+#define CC_SSL_BACKEND_SCHANNEL 3
+
+#define CC_NET_BACKEND_BUILTIN  1
+#define CC_NET_BACKEND_LIBCURL  2
+
+#define CC_AUD_BACKEND_OPENAL   1
+#define CC_AUD_BACKEND_WINMM    2
+#define CC_AUD_BACKEND_OPENSLES 3
+
+#define CC_GFX_BACKEND_IS_GL() (CC_GFX_BACKEND == CC_GFX_BACKEND_GL1 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL2)
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
 #define CC_BUILD_RESOURCES
 #define CC_BUILD_PLUGINS
 #define CC_BUILD_ANIMATIONS
+#define CC_BUILD_HELDBLOCK
 #define CC_BUILD_FILESYSTEM
 #define CC_BUILD_ADVLIGHTING
 /*#define CC_BUILD_GL11*/
@@ -155,9 +172,9 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined XENON
 	/* libxenon also defines __linux__ (yes, really) */
 	#define CC_BUILD_XBOX360
@@ -165,12 +182,13 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_HTTPCLIENT
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined _WIN32
 	#define CC_BUILD_WIN
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_SCHANNEL
-	#define CC_BUILD_WINMM
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_SCHANNEL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_WINMM
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_D3D9
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32
 #elif defined __ANDROID__
@@ -181,21 +199,22 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_EGL
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_OPENSLES
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENSLES
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_ANDROID
 #elif defined __serenity__
 	#define CC_BUILD_SERENITY
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_SDL2
 #elif defined __linux__
 	#define CC_BUILD_LINUX
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_XINPUT2
-	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 	#if defined CC_BUILD_RPI
 		#define CC_BUILD_GLES
@@ -215,26 +234,28 @@ typedef cc_uint8  cc_bool;
 		#define CC_BUILD_CFNETWORK
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 	#else
+		#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
 		#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_COCOA
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 		#define CC_BUILD_MACOS
-		#define CC_BUILD_CURL
 	#endif
-	#define CC_BUILD_OPENAL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 #elif defined Macintosh
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 	#define CC_BUILD_MACCLASSIC
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_NETWORKING
 #elif defined __sun__
 	#define CC_BUILD_SOLARIS
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_XINPUT2
-	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __FreeBSD__ || defined __DragonFly__
@@ -242,7 +263,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
 	#define CC_BUILD_XINPUT2
-	#define CC_BUILD_CURL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __OpenBSD__
@@ -250,8 +272,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
 	#define CC_BUILD_XINPUT2
-	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __NetBSD__
@@ -259,33 +281,33 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
 	#define CC_BUILD_XINPUT2
-	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __HAIKU__
 	#define CC_BUILD_HAIKU
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
 	#define CC_BACKTRACE_BUILTIN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_BEOS
 #elif defined __BEOS__
 	#define CC_BUILD_BEOS
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_GL11
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
 	#define CC_BACKTRACE_BUILTIN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_BEOS
 #elif defined __sgi
 	#define CC_BUILD_IRIX
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
 	#define CC_BIG_ENDIAN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __EMSCRIPTEN__
@@ -305,17 +327,17 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_OPENAL
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 #elif defined __3DS__
 	#define CC_BUILD_3DS
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_DUALSCREEN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined GEKKO
 	#define CC_BUILD_GCWII
 	#define CC_BUILD_CONSOLE
@@ -323,31 +345,32 @@ typedef cc_uint8  cc_bool;
 		#define CC_BUILD_LOWMEM
 	#endif
 	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined __vita__
 	#define CC_BUILD_PSVITA
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_OPENAL
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_TOUCH
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 #elif defined _arch_dreamcast
 	#define CC_BUILD_DREAMCAST
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define CC_BUILD_SMALLSTACK
 	#undef  CC_BUILD_RESOURCES
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_OPENAL
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 #elif defined N64
 	#define CC_BIG_ENDIAN
 	#define CC_BUILD_N64
@@ -356,6 +379,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_SMALLSTACK
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_FILESYSTEM
@@ -364,8 +388,10 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_OPENAL
-	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 #elif defined PLAT_NDS
 	#define CC_BUILD_NDS
 	#define CC_BUILD_CONSOLE
@@ -373,58 +399,64 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_TOUCH
-	#undef  CC_BUILD_RESOURCES
+	#define CC_BUILD_SMALLSTACK
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_OPENAL
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_SPLITSCREEN
 	#define CC_BUILD_TOUCH
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 #elif defined __SWITCH__
 	#define CC_BUILD_SWITCH
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_GLES
 	#define CC_BUILD_EGL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 #elif defined PLAT_PS1
 	#define CC_BUILD_PS1
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_TINYMEM
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #elif defined OS2
 	#define CC_BUILD_OS2
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_CURL
 	#define CC_BUILD_FREETYPE
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_SDL2
 #elif defined PLAT_SATURN
 	#define CC_BUILD_SATURN
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_TINYMEM
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_TINYSTACK
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #endif
@@ -436,6 +468,15 @@ typedef cc_uint8  cc_bool;
 #endif
 #if defined DEFAULT_GFX_BACKEND && !defined CC_GFX_BACKEND
 	#define CC_GFX_BACKEND DEFAULT_GFX_BACKEND
+#endif
+#if defined DEFAULT_SSL_BACKEND && !defined CC_SSL_BACKEND
+	#define CC_SSL_BACKEND DEFAULT_SSL_BACKEND
+#endif
+#if defined DEFAULT_NET_BACKEND && !defined CC_NET_BACKEND
+	#define CC_NET_BACKEND DEFAULT_NET_BACKEND
+#endif
+#if defined DEFAULT_AUD_BACKEND && !defined CC_AUD_BACKEND
+	#define CC_AUD_BACKEND DEFAULT_AUD_BACKEND
 #endif
 
 #ifdef CC_BUILD_CONSOLE
@@ -468,6 +509,7 @@ typedef cc_uint8 EntityID;
 typedef cc_uint8 Face;
 typedef cc_uint32 cc_result;
 typedef cc_uint64 TimeMS;
+typedef union cc_pointer_ { cc_uintptr val; void* ptr; } cc_pointer;
 
 typedef struct Rect2D_  { int x, y, width, height; } Rect2D;
 typedef struct TextureRec_ { float u1, v1, u2, v2; } TextureRec;
@@ -489,4 +531,14 @@ struct Texture {
 	short x, y; cc_uint16 width, height;
 	TextureRec uv;
 };
+
+#ifdef __cplusplus
+	#define CC_BEGIN_HEADER extern "C" {
+	#define CC_END_HEADER }
+#else
+	#define CC_BEGIN_HEADER
+	#define CC_END_HEADER
 #endif
+
+#endif
+

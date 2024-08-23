@@ -7,86 +7,37 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+#include "Menus.h"
+
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
+#include "../misc/opengl/GLCommon.h"
 
-#if defined CC_BUILD_WIN
-	/* Avoid pointless includes */
-	#define WIN32_LEAN_AND_MEAN
-	#define NOSERVICE
-	#define NOMCX
-	#define NOIME
-	#include <windows.h>
-	#include <GL/gl.h>
-#elif defined CC_BUILD_IOS
-	#include <OpenGLES/ES2/gl.h>
-#elif defined CC_BUILD_MACOS
-	#include <OpenGL/gl.h>
-#elif defined CC_BUILD_GLES
-	#include <GLES2/gl2.h>
-#else
-	#define GL_GLEXT_PROTOTYPES
-	#include <GL/gl.h>
-#endif
+/* e.g. GLAPI void APIENTRY glFunction(int args); */
+#define GL_FUNC(_retType, name) GLAPI _retType APIENTRY name
+#include "../misc/opengl/GL1Funcs.h"
 
-/* Windows gl.h only supplies up to OpenGL 1.1 headers */
+/* Functions must be dynamically linked on Windows */
 #ifdef CC_BUILD_WIN
-/* === BEGIN OPENGL HEADERS === */
-#define GL_ARRAY_BUFFER          0x8892
-#define GL_ELEMENT_ARRAY_BUFFER  0x8893
-#define GL_STATIC_DRAW           0x88E4
-#define GL_DYNAMIC_DRAW          0x88E8
+/* e.g. static void (APIENTRY *_glFunction)(int args); */
+#undef  GL_FUNC
+#define GL_FUNC(_retType, name) static _retType (APIENTRY *name)
+#include "../misc/opengl/GL2Funcs.h"
 
-#define GL_FRAGMENT_SHADER       0x8B30
-#define GL_VERTEX_SHADER         0x8B31
-#define GL_COMPILE_STATUS        0x8B81
-#define GL_LINK_STATUS           0x8B82
-#define GL_INFO_LOG_LENGTH       0x8B84
-
-static void (APIENTRY *glBindBuffer)(GLenum target, GLuint buffer);
-static void (APIENTRY *glDeleteBuffers)(GLsizei n, const GLuint* buffers);
-static void (APIENTRY *glGenBuffers)(GLsizei n, GLuint *buffers);
-static void (APIENTRY *glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
-static void (APIENTRY *glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
-
-static GLuint (APIENTRY* glCreateShader)(GLenum type);
-static void   (APIENTRY* glDeleteShader)(GLuint shader);
-static void   (APIENTRY* glGetShaderiv)(GLuint shader, GLenum pname, GLint* params);
-static void   (APIENTRY* glGetShaderInfoLog)(GLuint shader, GLsizei bufSize, GLsizei* length, char* infoLog);
-static void   (APIENTRY* glShaderSource)(GLuint shader, GLsizei count, const char* const* string, const GLint* length);
-
-static void (APIENTRY* glAttachShader)(GLuint program, GLuint shader);
-static void (APIENTRY* glBindAttribLocation)(GLuint program, GLuint index, const char* name);
-static void (APIENTRY* glCompileShader)(GLuint shader);
-static void (APIENTRY* glDetachShader)(GLuint program, GLuint shader);
-static void (APIENTRY* glLinkProgram)(GLuint program);
-
-static GLuint (APIENTRY* glCreateProgram)(void);
-static void   (APIENTRY* glDeleteProgram)(GLuint program);
-static void   (APIENTRY* glGetProgramiv)(GLuint program, GLenum pname, GLint* params);
-static void   (APIENTRY* glGetProgramInfoLog)(GLuint program, GLsizei bufSize, GLsizei* length, char* infoLog);
-static void   (APIENTRY* glUseProgram)(GLuint program);
-
-static void (APIENTRY *glDisableVertexAttribArray)(GLuint index);
-static void (APIENTRY *glEnableVertexAttribArray)(GLuint index);
-static void (APIENTRY *glVertexAttribPointer)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
-
-static GLint (APIENTRY *glGetUniformLocation)(GLuint program, const char* name);
-static void  (APIENTRY *glUniform1f)(GLint location, GLfloat v0);
-static void  (APIENTRY *glUniform2f)(GLint location, GLfloat v0, GLfloat v1);
-static void  (APIENTRY *glUniform3f)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-static void  (APIENTRY *glUniformMatrix4fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
-
-#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)& ## sym }
+#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&sym }
 static const struct DynamicLibSym core_funcs[] = {
 	GLSym(glBindBuffer), GLSym(glDeleteBuffers), GLSym(glGenBuffers), GLSym(glBufferData), GLSym(glBufferSubData),
-	GLSym(glCreateShader), GLSym(glDeleteShader), GLSym(glGetShaderiv), GLSym(glGetShaderInfoLog), GLSym(glShaderSource),
-	GLSym(glAttachShader), GLSym(glBindAttribLocation), GLSym(glCompileShader), GLSym(glDetachShader), GLSym(glLinkProgram),
+
+	GLSym(glCreateShader),  GLSym(glDeleteShader),  GLSym(glGetShaderiv), GLSym(glGetShaderInfoLog), GLSym(glShaderSource),
+	GLSym(glAttachShader),  GLSym(glBindAttribLocation), GLSym(glCompileShader), GLSym(glDetachShader), GLSym(glLinkProgram),
+
 	GLSym(glCreateProgram), GLSym(glDeleteProgram), GLSym(glGetProgramiv), GLSym(glGetProgramInfoLog), GLSym(glUseProgram),
+
 	GLSym(glDisableVertexAttribArray), GLSym(glEnableVertexAttribArray), GLSym(glVertexAttribPointer),
+
 	GLSym(glGetUniformLocation), GLSym(glUniform1f), GLSym(glUniform2f), GLSym(glUniform3f), GLSym(glUniformMatrix4fv),
 };
-
-/* === END OPENGL HEADERS === */
+#else
+#include "../misc/opengl/GL2Funcs.h"
 #endif
 
 #define _glBindTexture    glBindTexture
@@ -97,6 +48,9 @@ static const struct DynamicLibSym core_funcs[] = {
 
 #include "_GLShared.h"
 static GfxResourceID white_square;
+static int postProcess;
+enum PostProcess { POSTPROCESS_NONE, POSTPROCESS_GRAYSCALE };
+static const char* const postProcess_Names[2] = { "NONE", "GRAYSCALE" };
 
 
 /*########################################################################################################################*
@@ -273,6 +227,15 @@ static void GenVertexShader(const struct GLShader* shader, cc_string* dst) {
 	String_AppendConst(dst,         "}");
 }
 
+static void AddPostProcessing(cc_string* dst) {
+	switch (postProcess) {
+	case POSTPROCESS_GRAYSCALE:
+		String_AppendConst(dst, "  float gray = 0.21 * col.r + 0.71 * col.g + 0.07 * col.b;\n");
+		String_AppendConst(dst, "  col = vec4(gray, gray, gray, col.a);\n");
+		break;
+	}
+}
+
 /* Generates source code for a GLSL fragment shader, based on shader's flags */
 static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	int uv = shader->features & FTR_TEXTURE_UV;
@@ -302,6 +265,8 @@ static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	if (fl) String_AppendConst(dst, "  float f = clamp((fogEnd - depth) / fogEnd, 0.0, 1.0);\n");
 	if (fd) String_AppendConst(dst, "  float f = clamp(exp(fogDensity * depth), 0.0, 1.0);\n");
 	if (fm) String_AppendConst(dst, "  col.rgb = mix(fogCol, col.rgb, f);\n");
+	
+	if (fl || fd || fm) AddPostProcessing(dst);
 	String_AppendConst(dst,         "  gl_FragColor = col;\n");
 	String_AppendConst(dst,         "}");
 }
@@ -526,15 +491,18 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	Matrix_Mul(&_mvp, &_view, &_proj);
 	DirtyUniform(UNI_MVP_MATRIX);
 	ReloadUniforms();
 }
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -553,14 +521,19 @@ void Gfx_DisableTextureOffset(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------State setup-------------------------------------------------------*
 *#########################################################################################################################*/
+static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
+	int i;
+	for (i = 0; i < count; i++) 
+	{
+		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
+	}
+}
+
 static void GLBackend_Init(void) {
 #ifdef CC_BUILD_WIN
-	int i;
-	for (i = 0; i < Array_Elems(core_funcs); i++) 
-	{
-		core_funcs[i].symAddr = GLContext_GetAddress(core_funcs[i].name);
-	}
+	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));
 #endif
+	Gfx.BackendType = CC_GFX_BACKEND_GL2;
 
 #ifdef CC_BUILD_GLES
 	// OpenGL ES 2.0 doesn't support custom mipmaps levels, but 3.2 does
@@ -593,15 +566,19 @@ static void GLBackend_Init(void) {
 #endif
 }
 
-static void Gfx_FreeState(void) {
+static void DeleteShaders(void) {
 	int i;
-	FreeDefaultResources();
 	gfx_activeShader = NULL;
 
 	for (i = 0; i < Array_Elems(shaders); i++) {
 		glDeleteProgram(shaders[i].program);
 		shaders[i].program = 0;
 	}
+}
+
+static void Gfx_FreeState(void) {
+	FreeDefaultResources();
+	DeleteShaders();
 	Gfx_DeleteTexture(&white_square);
 }
 
@@ -622,7 +599,33 @@ static void Gfx_RestoreState(void) {
 	Bitmap_Init(bmp, 1, 1, pixels);
 	Gfx_RecreateTexture(&white_square, &bmp, 0, false);
 }
-cc_bool Gfx_WarnIfNecessary(void) { return false; }
+
+cc_bool Gfx_WarnIfNecessary(void) { 
+	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
+
+	if (String_ContainsConst(&renderer, "llvmpipe")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+		Chat_AddRaw("&cVSync may also not work.");
+		Chat_AddRaw("&cYou may need to install video card drivers.");
+		return true;
+	}
+	return false;
+}
+
+static int  GetPostProcess(void) { return postProcess; }
+static void SetPostProcess(int v) {
+	postProcess = v;
+	DeleteShaders();
+	SwitchProgram();
+	DirtyUniform(UNI_MASK_ALL);
+}
+
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) {
+	MenuOptionsScreen_AddEnum(s, "Post process", 
+		postProcess_Names, Array_Elems(postProcess_Names),
+		GetPostProcess, SetPostProcess, NULL);
+	return false;
+}
 
 
 /*########################################################################################################################*
@@ -701,7 +704,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 		GL_SetupVbTextured();
 	} else {
 		/* ICOUNT(startVertex) * 2 = startVertex * 3  */
-		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, (void*)(startVertex * 3));
+		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, uint_to_ptr(startVertex * 3));
 	}
 }
 #endif

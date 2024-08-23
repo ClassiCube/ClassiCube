@@ -1313,32 +1313,6 @@ void br_ghash_pclmul(void *y, const void *h, const void *data, size_t len);
  */
 br_ghash br_ghash_pclmul_get(void);
 
-/**
- * \brief GHASH implementation using the POWER8 opcodes.
- *
- * This implementation is available only on POWER8 platforms (and later).
- * To safely obtain a pointer to this function when supported (or 0
- * otherwise), use `br_ghash_pwr8_get()`.
- *
- * \param y      the array to update.
- * \param h      the GHASH key.
- * \param data   the input data (may be `NULL` if `len` is zero).
- * \param len    the input data length (in bytes).
- */
-void br_ghash_pwr8(void *y, const void *h, const void *data, size_t len);
-
-/**
- * \brief Obtain the `pwr8` GHASH implementation, if available.
- *
- * If the `pwr8` implementation was compiled in the library (depending
- * on the compiler abilities) _and_ the local CPU appears to support the
- * opcode, then this function will return a pointer to the
- * `br_ghash_pwr8()` function. Otherwise, it will return `0`.
- *
- * \return  the `pwr8` GHASH implementation, or `0`.
- */
-br_ghash br_ghash_pwr8_get(void);
-
 #ifdef __cplusplus
 }
 #endif

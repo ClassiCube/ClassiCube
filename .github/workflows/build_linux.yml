@@ -6,6 +6,7 @@ on:
       - main
       - master
       - ModernLighting
+      - AngledLighting
   workflow_dispatch:
 
 concurrency:
@@ -37,7 +38,7 @@ jobs:
           
           cd src
           gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -o cc-nix32-gl1 -lX11 -lXi -lpthread -lGL -lm -ldl
-          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -o cc-nix32-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
+          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-nix32-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
 
 
       - uses: ./.github/actions/notify_failure
@@ -85,8 +86,8 @@ jobs:
           
           cd src
           gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -o cc-nix64-gl1 -lX11 -lXi -lpthread -lGL -lm -ldl
-          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -o cc-nix64-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
-          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2 -o cc-sdl64-gl2 -lSDL2 -lpthread -lGL -lm -ldl
+          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-nix64-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
+          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2 -o cc-sdl64-gl2 -lSDL2 -lpthread -lGL -lm -ldl
 
 
       - uses: ./.github/actions/notify_failure

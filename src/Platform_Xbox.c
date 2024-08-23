@@ -19,10 +19,13 @@
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
 const char* Platform_AppNameSuffix = " XBox";
+cc_bool Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*
@@ -86,55 +89,46 @@ static void Stopwatch_Init(void) {
 static cc_string root_path = String_FromConst("E:\\ClassiCube\\");
 static BOOL hdd_mounted;
 
-static void GetNativePath(char* str, const cc_string* src) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	
 	// XBox kernel doesn't seem to convert /
-	for (int i = 0; i < src->length; i++) 
+	for (int i = 0; i < path->length; i++) 
 	{
-		char c = (char)src->buffer[i];
+		char c = (char)path->buffer[i];
 		if (c == '/') c = '\\';
 		*str++ = c;
 	}
 	*str = '\0';
 }
 
-cc_result Directory_Create(const cc_string* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	
-	char str[NATIVE_STR_LEN];
-	cc_result res;
-
-	GetNativePath(str, path);
-	return CreateDirectoryA(str, NULL) ? 0 : GetLastError();
+	return CreateDirectoryA(path->buffer, NULL) ? 0 : GetLastError();
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	if (!hdd_mounted) return 0;
 	
-	char str[NATIVE_STR_LEN];
-	DWORD attribs;
-
-	GetNativePath(str, path);
-	attribs = GetFileAttributesA(str);
-
+	DWORD attribs = GetFileAttributesA(path->buffer);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
+static void Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
 									void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	/* ignore . and .. entry */
-	if (file->length == 1 && file->buffer[0] == '.') return 0;
-	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
+	if (file->length == 1 && file->buffer[0] == '.') return;
+	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return;
 
 	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "%s/%s", dirPath, file);
 
-	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
-	callback(&path, obj);
-	return 0;
+	int is_dir = attribs & FILE_ATTRIBUTE_DIRECTORY;
+	callback(&path, obj, is_dir);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -142,16 +136,16 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	WIN32_FIND_DATAA eA;
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	HANDLE find;
 	cc_result res;	
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
-	GetNativePath(str, &path);
+	Platform_EncodePath(&str, &path);
 	
-	find = FindFirstFileA(str, &eA);
+	find = FindFirstFileA(str.buffer, &eA);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
@@ -160,7 +154,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		{
 			String_Append(&path, Convert_CodepointToCP437(eA.cFileName[i]));
 		}
-		if ((res = Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback))) return res;
+		Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback);
 	} while (FindNextFileA(find, &eA));
 
 	res = GetLastError(); /* return code from FindNextFile */
@@ -168,28 +162,24 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	cc_result res;
-
-	*file = CreateFileA(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+static cc_result DoFile(cc_file* file, const char* path, DWORD access, DWORD createMode) {
+	*file = CreateFileA(path, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 	if (!hdd_mounted) return ReturnCode_FileNotFound;
-	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
+	return DoFile(file, path->buffer, GENERIC_READ, OPEN_EXISTING);
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
+	return DoFile(file, path->buffer, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
+	return DoFile(file, path->buffer, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -344,9 +334,8 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
 	*s = lwip_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s == -1) return errno;
@@ -355,8 +344,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 		int blocking_raw = -1; /* non-blocking mode */
 		lwip_ioctl(*s, FIONBIO, &blocking_raw);
 	}
+	return 0;
+}
 
-	res = lwip_connect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+
+	int res = lwip_connect(s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 
@@ -420,7 +414,9 @@ static void InitHDD(void) {
 		Platform_LogConst("Failed to mount E:/ from Data partition");
 		return;
 	}
-	Directory_Create(&String_Empty); // create root ClassiCube folder
+	
+	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
+	Directory_Create(root);
 }
 
 void Platform_Init(void) {
@@ -447,7 +443,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "XboxXboxXboxXbox"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

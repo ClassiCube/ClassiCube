@@ -1,6 +1,8 @@
 #ifndef CC_LBACKEND_H
 #define CC_LBACKEND_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Abstracts the gui drawing backend for the Launcher
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -17,6 +19,9 @@ struct LSlider;
 struct LTable;
 struct Flag;
 
+typedef void (*LBackend_DrawHook)(struct Context2D* ctx);
+extern LBackend_DrawHook LBackend_Hooks[4];
+
 void LBackend_Init(void);
 void LBackend_Free(void);
 void LBackend_SetScreen(struct LScreen* s);
@@ -27,12 +32,19 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title);
 
 void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len);
 
-/* Resets pixels to default, then draws widgets of current screen over it */
+/* Marks the entire launcher contents as needing to be redrawn */
 void LBackend_Redraw(void);
+/* Marks the given widget as needing to be redrawn */
+void LBackend_NeedsRedraw(void* widget);
+/* Marks the entire window as needing to be redrawn */
+void LBackend_MarkAllDirty(void);
+/* Marks the given area/region as needing to be redrawn */
+void LBackend_MarkAreaDirty(int x, int y, int width, int height);
+
 void LBackend_ThemeChanged(void);
 void LBackend_Tick(void);
+void LBackend_AddDirtyFrames(int frames);
 void LBackend_LayoutWidget(struct LWidget* w);
-void LBackend_MarkDirty(void* widget);
 
 void LBackend_InitFramebuffer(void);
 void LBackend_FreeFramebuffer(void);
@@ -73,4 +85,6 @@ void LBackend_TableDraw(struct LTable* w);
 void LBackend_TableMouseDown(struct LTable* w, int idx);
 void LBackend_TableMouseUp(struct   LTable* w, int idx);
 void LBackend_TableMouseMove(struct LTable* w, int idx);
+
+CC_END_HEADER
 #endif

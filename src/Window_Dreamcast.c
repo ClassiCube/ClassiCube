@@ -12,16 +12,25 @@
 #include "ExtMath.h"
 #include "VirtualKeyboard.h"
 #include <kos.h>
+
 static cc_bool launcherMode;
+#include "VirtualCursor.h"
 cc_bool window_inited;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
 	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
 	vid_flip(0);
-	// TODO: Why doesn't 32 bit work on real hardware for in-game?	
+
+	int cable = vid_check_cable();
+	if (cable == CT_VGA) return;
+
+	if (flashrom_get_region() == FLASHROM_REGION_EUROPE) {
+		Platform_LogConst("Forcing 50hz for PAL region");
+		vid_set_mode(DM_640x480_PAL_IL, DEFAULT_PIXEL_MODE);
+	}
 }
 
 void Window_Init(void) {
@@ -30,12 +39,14 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width   = vid_mode->width;
-	Window_Main.Height  = vid_mode->height;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = vid_mode->width;
+	Window_Main.Height   = vid_mode->height;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 20;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
@@ -51,6 +62,8 @@ void Window_Create2D(int width, int height) {
 void Window_Create3D(int width, int height) { 
 	launcherMode = false;
 }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -189,6 +202,12 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_L, mods & MOUSE_LEFTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_R, mods & MOUSE_RIGHTBUTTON);
 	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
+	Mouse_ScrollVWheel(-state->dz * 0.5f);
+
+	if (!vc_hooked) {
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + state->dx, Pointers[0].y + state->dy);
 	
 	if (!Input.RawMode) return;	
 	float scale = (delta * 60.0) / 2.0f;
@@ -201,7 +220,9 @@ void Window_ProcessEvents(float delta) {
 	ProcessMouseInput(delta);
 }
 
-void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
+void Cursor_SetPosition(int x, int y) {
+	if (vc_hooked) VirtualCursor_SetPosition(x, y);
+}
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
@@ -211,11 +232,15 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+}
+
 static void HandleButtons(int port, int mods) {
-	Gamepad_SetButton(port, CCPAD_A, mods & CONT_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & CONT_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & CONT_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & CONT_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & CONT_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & CONT_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & CONT_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & CONT_Y);
       
 	Gamepad_SetButton(port, CCPAD_START,  mods & CONT_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & CONT_D);
@@ -226,9 +251,9 @@ static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 	
 	// Buttons not on standard controller
-	Gamepad_SetButton(port, CCPAD_C,       mods & CONT_C);
-	Gamepad_SetButton(port, CCPAD_D,       mods & CONT_D);
-	Gamepad_SetButton(port, CCPAD_Z,       mods & CONT_Z);
+	Gamepad_SetButton(port, CCPAD_6,       mods & CONT_C);
+	Gamepad_SetButton(port, CCPAD_7,       mods & CONT_D);
+	Gamepad_SetButton(port, CCPAD_5,       mods & CONT_Z);
 	Gamepad_SetButton(port, CCPAD_CLEFT,   mods & CONT_DPAD2_LEFT);
 	Gamepad_SetButton(port, CCPAD_CRIGHT,  mods & CONT_DPAD2_RIGHT);
 	Gamepad_SetButton(port, CCPAD_CUP,     mods & CONT_DPAD2_UP);
@@ -243,27 +268,38 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-static void HandleController(int port, cont_state_t* state, float delta) {
+static void HandleController(int port, bool dual_analog, cont_state_t* state, float delta) {
 	Gamepad_SetButton(port, CCPAD_L, state->ltrig > 10);
 	Gamepad_SetButton(port, CCPAD_R, state->rtrig > 10);
-	// TODO second joystick
 	// TODO: verify values are right     
-	HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
+	if(dual_analog) 
+	{
+		HandleJoystick(port, PAD_AXIS_LEFT, state->joyx, state->joyy, delta);
+		HandleJoystick(port, PAD_AXIS_RIGHT, state->joy2x, state->joy2y, delta);
+	}
+	else
+	{
+		HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
+	}
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
 	maple_device_t* cont;
 	cont_state_t*  state;
 
-	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	for (int i = 0; i < 4; i++)
 	{
-		cont  = maple_enum_type(port, MAPLE_FUNC_CONTROLLER);
+		cont  = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
 		if (!cont)  return;
 		state = (cont_state_t*)maple_dev_status(cont);
 		if (!state) return;
-		
+
+		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
+		if(dual_analog == -1) dual_analog = 0;
+
+		int port = Gamepad_Connect(0xDC + i, PadBind_Defaults);
 		HandleButtons(port, state->buttons);
-		HandleController(port, state, delta);
+		HandleController(port, dual_analog, state, delta);
 	}
 }
 
@@ -271,8 +307,10 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -310,14 +348,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	VirtualKeyboard_Display2D(r, bmp);
-}
-
-void OnscreenKeyboard_Draw3D(void) {
-	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

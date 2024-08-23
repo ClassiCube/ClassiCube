@@ -188,7 +188,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;dbghelp.lib;Winmm.lib;crypt32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;crypt32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -208,7 +208,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;crypt32.lib;dbghelp.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -230,7 +230,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;dbghelp.lib;Winmm.lib;crypt32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -252,7 +252,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;dbghelp.lib;Winmm.lib;crypt32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -281,7 +281,7 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;crypt32.lib;dbghelp.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -308,7 +308,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;crypt32.lib;dbghelp.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -338,7 +338,7 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;crypt32.lib;dbghelp.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -368,7 +368,7 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;ws2_32.lib;Wininet.lib;crypt32.lib;dbghelp.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -491,14 +491,17 @@
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />
     <ClCompile Include="Http_Worker.c" />
+    <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
     <ClCompile Include="LBackend.c" />
+    <ClCompile Include="LBackend_Android.c" />
     <ClCompile Include="LScreens.c" />
     <ClCompile Include="LWeb.c" />
     <ClCompile Include="LWidgets.c" />
     <ClCompile Include="Generator.c" />
     <ClCompile Include="Deflate.c" />
+    <ClCompile Include="MenuOptions.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
     <ClCompile Include="FancyLighting.c" />
@@ -516,6 +519,7 @@
     <ClCompile Include="Platform_PS3.c" />
     <ClCompile Include="Platform_PSP.c" />
     <ClCompile Include="Platform_PSVita.c" />
+    <ClCompile Include="Platform_Saturn.c" />
     <ClCompile Include="Platform_Switch.c" />
     <ClCompile Include="Platform_Web.c" />
     <ClCompile Include="Platform_WiiU.c" />
@@ -546,6 +550,7 @@
     <ClCompile Include="String.c" />
     <ClCompile Include="SystemFonts.c" />
     <ClCompile Include="TexturePack.c" />
+    <ClCompile Include="TouchUI.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="Vorbis.c" />
@@ -564,12 +569,13 @@
     <ClCompile Include="Window_PS3.c" />
     <ClCompile Include="Window_PSP.c" />
     <ClCompile Include="Window_PSVita.c" />
-    <ClCompile Include="Window_SDL.c" />
+    <ClCompile Include="Window_Saturn.c" />
+    <ClCompile Include="Window_SDL2.c" />
     <ClCompile Include="Window_SDL3.c" />
     <ClCompile Include="Window_Switch.c" />
     <ClCompile Include="Window_Terminal.c" />
     <ClCompile Include="Window_Web.c" />
-    <ClCompile Include="Window_WiiU.cpp" />
+    <ClCompile Include="Window_WiiU.c" />
     <ClCompile Include="Window_Win.c" />
     <ClCompile Include="Window_X11.c" />
     <ClCompile Include="Window_Xbox.c" />
@@ -594,7 +600,9 @@
     <ResourceCompile Include="..\misc\windows\CCicon.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="LBackend_ios.m" />
     <None Include="Window_cocoa.m" />
+    <None Include="Window_ios.m" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

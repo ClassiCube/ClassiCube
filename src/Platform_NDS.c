@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/time.h>
+#include <time.h>
 #include <nds/bios.h>
 #include <nds/cothread.h>
 #include <nds/interrupts.h>
@@ -29,16 +29,20 @@
 #include <dswifi9.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
+#include <dirent.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
 const char* Platform_AppNameSuffix = " NDS";
-extern cc_bool keyboardOpen;
+cc_bool Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*
@@ -108,59 +112,85 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 static cc_string root_path = String_FromConst("fat:/"); // may be overriden in InitFilesystem
 static bool fat_available;
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
+cc_result Directory_Create(const cc_filepath* path) {
 	if (!fat_available) return 0;
 
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-    Platform_Log1("mkdir %c", str);
-
-	return mkdir(str, 0) == -1 ? errno : 0;
+	Platform_Log1("mkdir %c", path->buffer);
+	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	if (!fat_available) return false;
-	
-	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	GetNativePath(str, path);
-    Platform_Log1("Check %c", str);
-
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	
+	Platform_Log1("Check %c", path->buffer);
+	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	return ERR_NOT_SUPPORTED;
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_filepath str;
+	struct dirent* entry;
+	int res;
+
+	String_EncodeUtf8(&str, dirPath);
+	DIR* dirPtr = opendir(str.buffer);
+	if (!dirPtr) return errno;
+
+	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
+	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
+	errno = 0;
+	String_InitArray(path, pathBuffer);
+
+	while ((entry = readdir(dirPtr))) {
+		path.length = 0;
+		String_Format1(&path, "%s/", dirPath);
+
+		/* ignore . and .. entry */
+		char* src = entry->d_name;
+		if (src[0] == '.' && src[1] == '\0') continue;
+		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
+
+		int len = String_Length(src);
+		String_AppendUtf8(&path, src, len);
+
+		int is_dir = entry->d_type == DT_DIR;
+		callback(&path, obj, is_dir);
+		errno = 0;
+	}
+
+	res = errno; /* return code from readdir */
+	closedir(dirPtr);
+	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode, const char* type) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	Platform_Log2("%c %c", type, str);
+static cc_result File_Do(cc_file* file, const char* path, int mode, const char* type) {
+	Platform_Log2("%c %c", type, path);
 
-	*file = open(str, mode, 0);
+	*file = open(path, mode, 0);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 	if (!fat_available) return ReturnCode_FileNotFound;
-	return File_Do(file, path, O_RDONLY, "Open");
+	return File_Do(file, path->buffer, O_RDONLY, "Open");
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC, "Create");
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC, "Create");
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT, "Update");
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT, "Update");
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -315,7 +345,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (!net_supported) return ERR_NOT_SUPPORTED;
+	if (!net_supported) return ERR_NO_NETWORKING;
 	*numValidAddrs = 1;
 
 	if (inet_aton(str, &addr4->sin_addr) > 0) {
@@ -329,10 +359,9 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
-	if (!net_supported) { *s = -1; return ERR_NOT_SUPPORTED; }
+	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
 	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return errno;
@@ -341,8 +370,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 		int blocking_raw = 1; /* non-blocking mode */
 		ioctl(*s, FIONBIO, &blocking_raw);
 	}
+	return 0;
+}
 
-	res = connect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+
+	int res = connect(s, raw, addr->size);
 	return res < 0 ? errno : 0;
 }
 
@@ -406,6 +440,7 @@ static void InitNetworking(void) {
     {
         int status = Wifi_AssocStatus();
         if (status == ASSOCSTATUS_ASSOCIATED) return;
+		Platform_Log1("STATUS: %i", &status);
 
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
             Platform_LogConst("Can't connect to WIFI"); 
@@ -457,7 +492,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "NDS_NDS_NDS_NDS_"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

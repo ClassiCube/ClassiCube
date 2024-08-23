@@ -22,18 +22,19 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Options.h"
+#include "InputHandler.h"
 
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
 #define CHAT_MAX_CLIENTSTATUS Array_Elems(Chat_ClientStatus)
 
-int Screen_FInput(void* s, int key)             { return false; }
+int Screen_FInput(void* s, int key, struct InputDevice* device) { return false; }
 int Screen_FKeyPress(void* s, char keyChar)     { return false; }
 int Screen_FText(void* s, const cc_string* str) { return false; }
 int Screen_FMouseScroll(void* s, float delta)   { return false; }
 int Screen_FPointer(void* s, int id, int x, int y) { return false; }
 
-int Screen_TInput(void* s, int key)             { return true; }
+int Screen_TInput(void* s, int key, struct InputDevice* device) { return true; }
 int Screen_TKeyPress(void* s, char keyChar)     { return true; }
 int Screen_TText(void* s, const cc_string* str) { return true; }
 int Screen_TMouseScroll(void* s, float delta)   { return true; }
@@ -147,6 +148,10 @@ static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* 
 	TextAtlas_AddInt(atlas, pos.z, &cur);
 	TextAtlas_Add(atlas,       14, &cur);
 
+	s->lastX = pos.x;
+	s->lastY = pos.y;
+	s->lastZ = pos.z;
+
 	s->posCount = (int)(cur - data);
 }
 
@@ -245,15 +250,15 @@ static void HUDScreen_Layout(void* screen) {
 	Widget_Layout(line2);
 }
 
-static int HUDScreen_KeyDown(void* screen, int key) {
+static int HUDScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	return Elem_HandlesKeyDown(&s->hotbar, key);
+	return Elem_HandlesKeyDown(&s->hotbar, key, device);
 }
 
-static void HUDScreen_InputUp(void* screen, int key) {
+static void HUDScreen_InputUp(void* screen, int key, struct InputDevice* device) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (!InventoryScreen_IsHotbarActive()) return;
-	Elem_OnInputUp(&s->hotbar, key);
+	Elem_OnInputUp(&s->hotbar, key, device);
 }
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
@@ -341,8 +346,9 @@ static void HUDScreen_Update(void* screen, float delta) {
 	}
 
 	IVec3_Floor(&pos, &Entities.CurPlayer->Base.Position);
-	if (pos.x != s->lastX || pos.y != s->lastY || pos.z != s->lastZ)
+	if (pos.x != s->lastX || pos.y != s->lastY || pos.z != s->lastZ) {
 		s->dirty = true;
+	}
 }
 
 #define CH_EXTENT 16
@@ -751,9 +757,9 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
-static void TabListOverlay_KeyUp(void* screen, int key) {
+static void TabListOverlay_KeyUp(void* screen, int key, struct InputDevice* device) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	if (!InputBind_Claims(BIND_TABLIST, key) || s->staysOpen) return;
+	if (!InputBind_Claims(BIND_TABLIST, key, device) || s->staysOpen) return;
 	Gui_Remove((struct Screen*)s);
 }
 
@@ -1310,13 +1316,13 @@ static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
 	return true;
 }
 
-static int ChatScreen_KeyDown(void* screen, int key) {
+static int ChatScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int playerListKey    = KeyBind_Mappings[BIND_TABLIST].button1;
 	cc_bool handlesList  = playerListKey != CCKEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
-	if (InputBind_Claims(BIND_TABLIST, key) && handlesList) {
+	if (InputBind_Claims(BIND_TABLIST, key, device) && handlesList) {
 		if (!tablist_active && !Server.IsSinglePlayer) {
 			TabListOverlay_Show(false);
 		}
@@ -1328,31 +1334,31 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	if (s->grabsInput) {
 #ifdef CC_BUILD_WEB
 		/* See reason for this in HandleInputUp */
-		if (InputBind_Claims(BIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER) {
+		if (InputBind_Claims(BIND_SEND_CHAT, key, device) || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (InputBind_Claims(BIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
-			ChatScreen_EnterChatInput(s, Input_IsEscapeButton(key));
+		if (InputBind_Claims(BIND_SEND_CHAT, key, device) || key == CCKEY_KP_ENTER || key == device->escapeButton) {
+			ChatScreen_EnterChatInput(s, key == device->escapeButton);
 #endif
-		} else if (key == CCKEY_PAGEUP) {
+		} else if (key == device->pageUpButton) {
 			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
-		} else if (key == CCKEY_PAGEDOWN) {
+		} else if (key == device->pageDownButton) {
 			ChatScreen_ScrollChatBy(s, +Gui.Chatlines);
 		} else if (key == CCWHEEL_UP) {
 			ChatScreen_ScrollChatBy(s, -1);
 		} else if (key == CCWHEEL_DOWN) {
 			ChatScreen_ScrollChatBy(s, +1);
 		} else {
-			Elem_HandlesKeyDown(&s->input.base, key);
+			Elem_HandlesKeyDown(&s->input.base, key, device);
 		}
 		return key < CCKEY_F1 || key > CCKEY_F24;
 	}
 
-	if (InputBind_Claims(BIND_CHAT, key)) {
+	if (InputBind_Claims(BIND_CHAT, key, device)) {
 		ChatScreen_OpenInput(&String_Empty);
 	} else if (key == CCKEY_SLASH) {
 		ChatScreen_OpenInput(&slash);
-	} else if (InputBind_Claims(BIND_INVENTORY, key)) {
+	} else if (InputBind_Claims(BIND_INVENTORY, key, device)) {
 		InventoryScreen_Show();
 	} else {
 		return false;
@@ -1365,7 +1371,7 @@ static void ChatScreen_ToggleAltInput(struct ChatScreen* s) {
 	ChatScreen_UpdateChatYOffsets(s);
 }
 
-static void ChatScreen_KeyUp(void* screen, int key) {
+static void ChatScreen_KeyUp(void* screen, int key, struct InputDevice* device) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (!s->grabsInput || (struct Screen*)s != Gui.InputGrab) return;
 
@@ -1374,7 +1380,7 @@ static void ChatScreen_KeyUp(void* screen, int key) {
 	if (key == CCKEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
 #endif
 
-	if (Server.SupportsFullCP437 && InputBind_Claims(BIND_EXT_INPUT, key)) {
+	if (Server.SupportsFullCP437 && InputBind_Claims(BIND_EXT_INPUT, key, device)) {
 		if (!Window_Main.Focused) return;
 		ChatScreen_ToggleAltInput(s);
 	}
@@ -1545,6 +1551,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
 	args.multiline   = true;
+	args.yOffset     = 30;
 	OnscreenKeyboard_Open(&args);
 
 	Widget_SetDisabled(&s->input.base, args.opaque);
@@ -1713,19 +1720,19 @@ static void InventoryScreen_Layout(void* screen) {
 	Widget_Layout(&s->title); /* Needed for yOffset */
 }
 
-static int InventoryScreen_KeyDown(void* screen, int key) {
+static int InventoryScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
 
 	/* Accuracy: Original classic doesn't close inventory menu when B is pressed */
-	if (InputBind_Claims(BIND_INVENTORY, key) && s->releasedInv && !Game_ClassicMode) {
+	if (InputBind_Claims(BIND_INVENTORY, key, device) && s->releasedInv && !Game_ClassicMode) {
 		Gui_Remove((struct Screen*)s);
-	} else if (Input_IsEnterButton(key) && table->selectedIndex != -1) {
+	} else if (InputDevice_IsEnter(key, device) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
-	} else if (Elem_HandlesKeyDown(table, key)) {
+	} else if (Elem_HandlesKeyDown(table, key, device)) {
 	} else {
-		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key);
+		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key, device);
 	}
 	return true;
 }
@@ -1736,9 +1743,9 @@ static cc_bool InventoryScreen_IsHotbarActive(void) {
 	return !grabbed || grabbed == (struct Screen*)&InventoryScreen;
 }
 
-static void InventoryScreen_KeyUp(void* screen, int key) {
+static void InventoryScreen_KeyUp(void* screen, int key, struct InputDevice* device) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	if (InputBind_Claims(BIND_INVENTORY, key)) s->releasedInv = true;
+	if (InputBind_Claims(BIND_INVENTORY, key, device)) s->releasedInv = true;
 }
 
 static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
@@ -1927,7 +1934,7 @@ static void LoadingScreen_Render(void* screen, float delta) {
 	offset = 0;
 	if (s->rows) {
 		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
-		Gfx_BindTexture(Atlas1D.TexIds[Atlas1D_Index(loc)]);
+		Atlas1D_Bind(Atlas1D_Index(loc));
 		Gfx_DrawVb_IndexedTris(s->rows * 4);
 		offset = s->rows * 4;
 	}
@@ -2111,7 +2118,10 @@ static void DisconnectScreen_OnReconnect(void* s, void* w) {
 	Gui_ShowDefault();
 	Server.BeginConnect();
 }
-static void DisconnectScreen_OnQuit(void* s, void* w) { Window_RequestClose(); }
+
+static void DisconnectScreen_OnQuit(void* s, void* w) { 
+	Window_RequestClose(); 
+}
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
@@ -2126,8 +2136,7 @@ static void DisconnectScreen_Init(void* screen) {
 	ButtonWidget_Add(s, &s->quit,      300, DisconnectScreen_OnQuit);
 	if (!s->canReconnect) s->reconnect.flags = WIDGET_FLAG_DISABLED;
 
-	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
-	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
+	Game_SetMinFrameTime(1000 / 5.0f);
 
 	s->initTime     = Game.Time;
 	s->lastSecsLeft = DISCONNECT_DELAY_SECS;

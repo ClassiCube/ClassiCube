@@ -10,14 +10,17 @@ static struct Bitmap fb_bmp;
 static float vp_hwidth, vp_hheight;
 static int fb_maxX, fb_maxY;
 
-static PackedCol* colorBuffer;
-static PackedCol clearColor;
+static BitmapCol* colorBuffer;
+static BitmapCol clearColor;
 static cc_bool colWrite = true;
+static int cb_stride;
 
 static float* depthBuffer;
-static void* gfx_vertices;
 static cc_bool depthTest  = true;
 static cc_bool depthWrite = true;
+static int db_stride;
+
+static void* gfx_vertices;
 static GfxResourceID white_square;
 
 void Gfx_RestoreState(void) {
@@ -39,6 +42,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 4096;
 	Gfx.MaxTexHeight = 4096;
 	Gfx.Created      = true;
+	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	
 	Gfx_RestoreState();
 }
@@ -89,14 +93,17 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
-	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+
+	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE,
+					part, rowWidth  * BITMAPCOLOR_SIZE);
 }
 
 void Gfx_EnableMipmaps(void)  { }
@@ -106,10 +113,10 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)    { }
+void Gfx_SetFog(cc_bool enabled)	{ }
 void Gfx_SetFogCol(PackedCol col)   { }
 void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value)     { }
+void Gfx_SetFogEnd(float value) 	{ }
 void Gfx_SetFogMode(FogFunc func)   { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -126,15 +133,30 @@ static void SetAlphaBlend(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int i, size = fb_width * fb_height;
+static void ClearColorBuffer(void) {
+	int i, x, y, size = fb_width * fb_height;
 
-	if (buffers & GFX_BUFFER_COLOR) {
+	if (cb_stride == fb_width) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
+	} else {
+		/* Slower partial buffer clear */
+		for (y = 0; y < fb_height; y++) {
+			i = y * cb_stride;
+			for (x = 0; x < fb_width; x++) {
+				colorBuffer[i + x] = clearColor;
+			}
+		}
 	}
-	if (buffers & GFX_BUFFER_DEPTH) {
-		for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
-	}
+}
+
+static void ClearDepthBuffer(void) {
+	int i, size = fb_width * fb_height;
+	for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
+}
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	if (buffers & GFX_BUFFER_COLOR) ClearColorBuffer();
+	if (buffers & GFX_BUFFER_DEPTH) ClearDepthBuffer();
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -219,17 +241,21 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static float texOffsetX, texOffsetY;
-static struct Matrix _view, _proj, mvp;
+static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&mvp, &_view, &_proj);
+	Matrix_Mul(&_mvp, &_view, &_proj);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	_view = *view;
+	_proj = *proj;
+
+	Matrix_Mul(mvp, view, proj);
+	_mvp  = *mvp;
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -306,22 +332,15 @@ static void TransformVertex2D(int index, Vertex* vertex) {
 	}
 }
 
-static void TransformVertex3D(int index, Vertex* vertex) {
+static int TransformVertex3D(int index, Vertex* vertex) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
 	Vector3* pos = (Vector3*)ptr;
 
-	struct Vec4 coord;
-	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
-	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
-	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
-	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
-
-	float invW = 1.0f / coord.w;
-	vertex->x = vp_hwidth  * (1 + coord.x * invW);
-	vertex->y = vp_hheight * (1 - coord.y * invW);
-	vertex->z = coord.z * invW;
-	vertex->w = invW;
+	vertex->x = pos->x * _mvp.row1.x + pos->y * _mvp.row2.x + pos->z * _mvp.row3.x + _mvp.row4.x;
+	vertex->y = pos->x * _mvp.row1.y + pos->y * _mvp.row2.y + pos->z * _mvp.row3.y + _mvp.row4.y;
+	vertex->z = pos->x * _mvp.row1.z + pos->y * _mvp.row2.z + pos->z * _mvp.row3.z + _mvp.row4.z;
+	vertex->w = pos->x * _mvp.row1.w + pos->y * _mvp.row2.w + pos->z * _mvp.row3.w + _mvp.row4.w;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;
@@ -330,10 +349,23 @@ static void TransformVertex3D(int index, Vertex* vertex) {
 		vertex->c = v->Col;
 	} else {
 		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		vertex->u = (v->U + texOffsetX) * invW;
-		vertex->v = (v->V + texOffsetY) * invW;
+		vertex->u = (v->U + texOffsetX);
+		vertex->v = (v->V + texOffsetY);
 		vertex->c = v->Col;
 	}
+	return vertex->z >= 0.0f;
+}
+
+static void ViewportVertex3D(Vertex* vertex) {
+	float invW = 1.0f / vertex->w;
+
+	vertex->x = vp_hwidth  * (1 + vertex->x * invW);
+	vertex->y = vp_hheight * (1 - vertex->y * invW);
+	vertex->z = vertex->z * invW;
+	vertex->w = invW;
+
+	vertex->u *= invW;
+	vertex->v *= invW;
 }
 
 // Ensure it's inlined, whereas Math_FloorF might not be
@@ -390,7 +422,7 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float ic2 = bc2 * factor;
 
 			if (ic0 < 0 || ic1 < 0 || ic2 < 0) continue;
-			int index = y * fb_width + x;
+			int cb_index = y * cb_stride + x;
 
 			int R, G, B, A;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
@@ -416,8 +448,9 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				A = PackedCol_A(color);
 			}
 
+			if (gfx_alphaTest && A < 0x80) continue;
 			if (gfx_alphaBlend) {
-				BitmapCol dst = colorBuffer[index];
+				BitmapCol dst = colorBuffer[cb_index];
 				int dstR = BitmapCol_R(dst);
 				int dstG = BitmapCol_G(dst);
 				int dstB = BitmapCol_B(dst);
@@ -426,9 +459,8 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = (G * A + dstG * (255 - A)) >> 8;
 				B = (B * A + dstB * (255 - A)) >> 8;
 			}
-			if (gfx_alphaTest && A < 0x80) continue;
 
-			colorBuffer[index] = BitmapCol_Make(R, G, B, 0xFF);
+			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
 	}
 }
@@ -461,7 +493,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	float w0 = V0->w, w1 = V1->w, w2 = V2->w;
 	
 	// TODO proper clipping
-	if (w0 <= 0 || w1 <= 0 || w2 <= 0) return;
+	if (w0 <= 0 || w1 <= 0 || w2 <= 0) {
+		return;
+	}
 
 	float z0 = V0->z, z1 = V1->z, z2 = V2->z;
 	float u0 = V0->u, u1 = V1->u, u2 = V2->u;
@@ -490,14 +524,14 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float ic1 = bc1 * factor;
 			float ic2 = bc2 * factor;
 			if (ic0 < 0 || ic1 < 0 || ic2 < 0) continue;
+			int db_index = y * db_stride + x;
 
-			int index = y * fb_width + x;
 			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
 			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
 
-			if (depthTest && (z < 0 || z > depthBuffer[index])) continue;
+			if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
 			if (!colWrite) {
-				if (depthWrite) depthBuffer[index] = z;
+				if (depthWrite) depthBuffer[db_index] = z;
 				continue;
 			}
 
@@ -525,8 +559,11 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				A = PackedCol_A(color);
 			}
 
+			if (gfx_alphaTest && A < 0x80) continue;
+			int cb_index = y * cb_stride + x;
+			
 			if (gfx_alphaBlend) {
-				BitmapCol dst = colorBuffer[index];
+				BitmapCol dst = colorBuffer[cb_index];
 				int dstR = BitmapCol_R(dst);
 				int dstG = BitmapCol_G(dst);
 				int dstB = BitmapCol_B(dst);
@@ -535,11 +572,273 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = (G * A + dstG * (255 - A)) >> 8;
 				B = (B * A + dstB * (255 - A)) >> 8;
 			}
-			if (gfx_alphaTest && A < 0x80) continue;
 
-			if (depthWrite) depthBuffer[index] = z;
-			colorBuffer[index] = BitmapCol_Make(R, G, B, 0xFF);
+			if (depthWrite) depthBuffer[db_index] = z;
+			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
+	}
+}
+
+#define V0_VIS (1 << 0)
+#define V1_VIS (1 << 1)
+#define V2_VIS (1 << 2)
+#define V3_VIS (1 << 3)
+
+// https://github.com/behindthepixels/EDXRaster/blob/master/EDXRaster/Core/Clipper.h
+static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
+	float t  = Math_AbsF(v1->z / (v2->z - v1->z));
+	float invt = 1.0f - t;
+	
+	V->x = invt * v1->x + t * v2->x;
+	V->y = invt * v1->y + t * v2->y;
+	//V->z = invt * v1->z + t * v2->z;
+	V->z = 0.0f; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
+	V->w = invt * v1->w + t * v2->w;
+	
+	V->u = invt * v1->u + t * v2->u;
+	V->v = invt * v1->v + t * v2->v;
+	V->c = v1->c;
+}
+
+// https://casual-effects.com/research/McGuire2011Clipping/clip.glsl
+static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3) {
+	Vertex tmp[2];
+	Vertex* a = &tmp[0];
+	Vertex* b = &tmp[1];
+
+    switch (mask) {
+	case V0_VIS:
+	{
+		//		   v0
+		//		  / |
+		//       /   |
+		// .....A....B...
+		//    /      |
+		//  v3--v2---v1
+		ClipLine(v3, v0, a);
+		ClipLine(v0, v1, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v0, a, b);
+	}
+    break;
+	case V1_VIS:
+	{
+		//		   v1
+		//		  / |
+		//       /   |
+		// ....A.....B...
+		//    /      |
+		//  v0--v3---v2
+		ClipLine(v0, v1, a);
+		ClipLine(v1, v2, b);
+
+		ViewportVertex3D(v1);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(a, b, v1);
+	} break;
+	case V2_VIS:
+	{
+		//		   v2
+		//		  / |
+		//       /   |
+		// ....A.....B...
+		//    /      |
+		//  v1--v0---v3
+		ClipLine(v1, v2, a);
+		ClipLine(v2, v3, b);
+
+		ViewportVertex3D(v2);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(a, b, v2);
+	} break;
+	case V3_VIS:
+	{
+		//		   v3
+		//		  / |
+		//       /   |
+		// ....A.....B...
+		//    /      |
+		//  v2--v1---v0
+		ClipLine(v2, v3, a);
+		ClipLine(v3, v0, b);
+
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+		
+		DrawTriangle3D(b, v3, a);
+	}
+	break;
+	case V0_VIS | V1_VIS:
+	{
+		//    v0-----------v1
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v3-----v2
+		ClipLine(v1, v2, a);
+		ClipLine(v3, v0, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v1);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v1, v0,  a);
+		DrawTriangle3D(a,   b, v0);
+	} break;
+	// case V0_VIS | V2_VIS: degenerate case that should never happen
+	case V0_VIS | V3_VIS:
+	{
+		//    v3-----------v0
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v2-----v1
+		ClipLine(v0, v1, a);
+		ClipLine(v2, v3, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(a, v0,  b);
+		DrawTriangle3D(b, v3, v0);
+	} break;
+	case V1_VIS | V2_VIS:
+	{
+		//    v1-----------v2
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v0-----v3
+		ClipLine(v2, v3, a);
+		ClipLine(v0, v1, b);
+
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v1,  b, v2);
+		DrawTriangle3D(v2,  a,  b);
+	} break;
+	// case V1_VIS | V3_VIS: degenerate case that should never happen
+	case V2_VIS | V3_VIS:
+	{
+		//    v2-----------v3
+		//     \		   |
+		//   ...B.........A...
+		//		 \		  |
+		//		  v1-----v0
+		ClipLine(v3, v0, a);
+		ClipLine(v1, v2, b);
+
+		ViewportVertex3D(v2);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D( b,  a, v2);
+		DrawTriangle3D(v2, v3,  a);
+	} break;
+	case V0_VIS | V1_VIS | V2_VIS:
+	{
+		//		  --v1--
+		//    v0--      --v2
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v3
+		// v1,v2,v0  v2,v0,A  v0,A,B
+		ClipLine(v2, v3, a);
+		ClipLine(v3, v0, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v1, v0, v2);
+		DrawTriangle3D(v2,  a, v0);
+		DrawTriangle3D(v0,  b,  a);
+	} break;
+	case V0_VIS | V1_VIS | V3_VIS:
+	{
+		//		  --v0--
+		//    v3--      --v1
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v2
+		// v0,v1,v3  v1,v3,A  v3,A,B
+		ClipLine(v1, v2, a);
+		ClipLine(v2, v3, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v0, v3, v1);
+		DrawTriangle3D(v1,  a, v3);
+		DrawTriangle3D(v3,  b,  a);
+	} break;
+	case V0_VIS | V2_VIS | V3_VIS:
+	{
+		//		  --v3--
+		//    v2--      --v0
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v1
+		// v3,v0,v2  v0,v2,A  v2,A,B
+		ClipLine(v0, v1, a);
+		ClipLine(v1, v2, b);
+
+		ViewportVertex3D(v0);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v3, v2, v0);
+		DrawTriangle3D(v0,  a, v2);
+		DrawTriangle3D(v2,  b,  a);
+	} break;
+	case V1_VIS | V2_VIS | V3_VIS:
+	{
+		//		  --v2--
+		//    v1--      --v3
+		//      \		 /
+		//   ....B.....A...
+		//		  \   /
+		//		    v0
+		// v2,v3,v1  v3,v1,A  v1,A,B
+		ClipLine(v3, v0, a);
+		ClipLine(v0, v1, b);
+
+		ViewportVertex3D(v1);
+		ViewportVertex3D(v2);
+		ViewportVertex3D(v3);
+		ViewportVertex3D(a);
+		ViewportVertex3D(b);
+
+		DrawTriangle3D(v2, v1, v3);
+		DrawTriangle3D(v3,  a, v1);
+		DrawTriangle3D(v1,  b,  a);
+	} break;
 	}
 }
 
@@ -563,13 +862,26 @@ void DrawQuads(int startVertex, int verticesCount) {
 		// 4 vertices = 1 quad = 2 triangles
 		for (int i = 0; i < verticesCount / 4; i++, j += 4)
 		{
-			TransformVertex3D(j + 0, &vertices[0]);
-			TransformVertex3D(j + 1, &vertices[1]);
-			TransformVertex3D(j + 2, &vertices[2]);
-			TransformVertex3D(j + 3, &vertices[3]);
+			int clip = TransformVertex3D(j + 0, &vertices[0]) << 0
+					|  TransformVertex3D(j + 1, &vertices[1]) << 1
+					|  TransformVertex3D(j + 2, &vertices[2]) << 2
+					|  TransformVertex3D(j + 3, &vertices[3]) << 3;
 
-			DrawTriangle3D(&vertices[0], &vertices[2], &vertices[1]);
-			DrawTriangle3D(&vertices[2], &vertices[0], &vertices[3]);
+			if (clip == 0) {
+				// Quad entirely clipped
+			} else if (clip == 0x0F) {
+				// Quad entirely visible
+				ViewportVertex3D(&vertices[0]);
+				ViewportVertex3D(&vertices[1]);
+				ViewportVertex3D(&vertices[2]);
+				ViewportVertex3D(&vertices[3]);
+
+				DrawTriangle3D(&vertices[0], &vertices[2], &vertices[1]);
+				DrawTriangle3D(&vertices[2], &vertices[0], &vertices[3]);
+			} else {
+				// Quad partially visible
+				DrawClipped(clip, &vertices[0], &vertices[1], &vertices[2], &vertices[3]);
+			}
 		}
 	}
 }
@@ -597,15 +909,18 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Other/Misc------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	struct Bitmap bmp;
-	Bitmap_Init(bmp, fb_width, fb_height, colorBuffer);
-	return Png_Encode(&bmp, output, NULL, false, NULL);
+static BitmapCol* CB_GetRow(struct Bitmap* bmp, int y, void* ctx) {
+	return colorBuffer + cb_stride * y;
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
+cc_result Gfx_TakeScreenshot(struct Stream* output) {
+	struct Bitmap bmp;
+	Bitmap_Init(bmp, fb_width, fb_height, NULL);
+	return Png_Encode(&bmp, output, CB_GetRow, false, NULL);
 }
+
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) { }
 
@@ -614,29 +929,37 @@ void Gfx_EndFrame(void) {
 	Window_DrawFramebuffer(r, &fb_bmp);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
+void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
 void Gfx_OnWindowResize(void) {
 	if (depthBuffer) DestroyBuffers();
 
-	fb_bmp.width  = fb_width  = Game.Width;
-	fb_bmp.height = fb_height = Game.Height;
+	fb_width   = Game.Width;
+	fb_height  = Game.Height;
 
-	vp_hwidth  = fb_width  / 2.0f;
-	vp_hheight = fb_height / 2.0f;
-
-	fb_maxX = fb_width  - 1;
-	fb_maxY = fb_height - 1;
-
-	Window_AllocFramebuffer(&fb_bmp);
-	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
+	Window_AllocFramebuffer(&fb_bmp, Game.Width, Game.Height);
 	colorBuffer = fb_bmp.scan0;
+	cb_stride   = fb_bmp.width;
+
+	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
+	db_stride   = fb_width;
+
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	vp_hwidth  = w / 2.0f;
+	vp_hheight = h / 2.0f;
+}
+
+void Gfx_SetScissor (int x, int y, int w, int h) {
+	/* TODO minX/Y */
+	fb_maxX = x + w - 1;
+	fb_maxY = y + h - 1;
+}
 
 void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;

@@ -231,13 +231,6 @@ static const br_config_option config[] = {
 	 0
 #endif
 	},
-	{ "BR_POWER8",
-#if BR_POWER8
-	 1
-#else
-	 0
-#endif
-	},
 	{ "BR_RDRAND",
 #if BR_RDRAND
 	 1

@@ -1,6 +1,8 @@
 #ifndef CC_PLATFORM_H
 #define CC_PLATFORM_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Abstracts platform specific memory management, I/O, etc
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -29,9 +31,11 @@ enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_E
 
 extern const cc_result ReturnCode_FileShareViolation;
 extern const cc_result ReturnCode_FileNotFound;
+extern const cc_result ReturnCode_DirectoryExists;
 extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
-extern const cc_result ReturnCode_DirectoryExists;
+/* Result code for when a socket connection has been dropped by the other side */
+extern const cc_result ReturnCode_SocketDropped;
 
 /* Whether the launcher and game must both be run in the same process */
 /*  (e.g. can't start a separate process on Mobile or Consoles) */
@@ -46,11 +50,20 @@ typedef struct cc_winstring_ {
 	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */
 	char ansi[NATIVE_STR_LEN]; /* String lossily represented using ANSI format */
 } cc_winstring;
-/* Encodes a string in UTF16 and ASCII format, also null terminating the string. */
+/* Encodes a string into the platform native string format */
 void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
 
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
 #endif
+
+#ifdef CC_BUILD_WIN
+typedef cc_winstring cc_filepath;
+#else
+typedef struct cc_filepath_ { char buffer[NATIVE_STR_LEN]; } cc_filepath;
+#define FILEPATH_RAW(raw) ((cc_filepath*)raw)
+#endif
+/* Converts the provided path into a platform native file path */
+void Platform_EncodePath(cc_filepath* dst, const cc_string* src);
 
 /* Initialises the platform specific state. */
 void Platform_Init(void);
@@ -183,22 +196,22 @@ CC_API cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end);
 int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
 
 /* Attempts to create a new directory. */
-CC_API cc_result Directory_Create(const cc_string* path);
+cc_result Directory_Create(const cc_filepath* path);
 /* Callback function invoked for each file found. */
-typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj);
+typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj, int isDirectory);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
 CC_API cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback);
 /* Returns non-zero if the given file exists. */
-CC_API int File_Exists(const cc_string* path);
+int File_Exists(const cc_filepath* path);
 void Directory_GetCachePath(cc_string* path);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
-cc_result File_Create(cc_file* file, const cc_string* path);
+cc_result File_Create(cc_file* file, const cc_filepath* path);
 /* Attempts to open an existing file for reading. */
-cc_result File_Open(cc_file* file, const cc_string* path);
+cc_result File_Open(cc_file* file, const cc_filepath* path);
 /* Attempts to open an existing or create a new file for reading and writing. */
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path);
 /* Attempts to read data from the file. */
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead);
 /* Attempts to write data to the file. */
@@ -265,8 +278,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
 /* Otherwise, attempts to resolve the input via DNS into one or more IP addresses */
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs);
 
-/* Allocates a new socket and then begins connecting to the given address */
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);
+/* Allocates a new socket that is capable of connecting to the given address */
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);
+/* Begins connecting to the given address */
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr);
 /* Attempts to read data from the given socket */
 /* NOTE: A closed socket may set modified to 0, but still return 'success' (i.e. 0) */
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);
@@ -337,4 +352,6 @@ void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* d
 /* Calls a static method in the activity class that returns a jobject */
 #define JavaSCall_Obj(env,  method, args) (*env)->CallStaticObjectMethodA(env,App_Class, method, args)
 #endif
+
+CC_END_HEADER
 #endif

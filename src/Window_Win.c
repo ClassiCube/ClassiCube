@@ -1,5 +1,30 @@
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_WIN32
+/*
+   The Open Toolkit Library License
+  
+   Copyright (c) 2006 - 2009 the Open Toolkit library.
+  
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   the Software, and to permit persons to whom the Software is furnished to do
+   so, subject to the following conditions:
+  
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+  
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -18,11 +43,14 @@
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501 /* Windows XP */
-/* NOTE: Functions that are not present on Windows 2000 are dynamically loaded. */
-/* Hence the actual minimum supported OS is Windows 2000. This just avoids redeclaring structs. */
+/* NOTE: Functions not present on older OS versions are dynamically loaded. */
+/* Setting WIN32_WINNT to XP just avoids redeclaring structs. */
 #endif
 #include <windows.h>
-#include <commdlg.h>
+/* #include <commdlg.h> */
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-commdlg.h"
+#include "../misc/windows/min-winuser.h"
 
 /* https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpixelformat */
 #define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
@@ -30,29 +58,9 @@
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
-#ifndef WM_XBUTTONDOWN
-/* Missing if _WIN32_WINNT isn't defined */
-#define WM_XBUTTONDOWN 0x020B
-#define WM_XBUTTONUP   0x020C
-#endif
-#ifndef WM_INPUT
-/* Missing when compiling with some older winapi SDKs */
-#define WM_INPUT       0x00FF
-#endif
-#ifndef WM_MOUSEHWHEEL
-/* Missing when compiling with some older winapi SDKs */
-#define WM_MOUSEHWHEEL 0x020E
-#endif
-
-static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
-static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
-static BOOL (WINAPI* _SetProcessDPIAware)(void);
-
 static HINSTANCE win_instance;
-static HWND win_handle;
 static HDC win_DC;
 static cc_bool suppress_resize;
-static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
 static cc_bool is_ansiWindow, grabCursor;
 static int windowX, windowY;
 
@@ -108,33 +116,39 @@ static int MapNativeKey(WPARAM vk_key, LPARAM meta) {
 	return key;
 }
 
-static void RefreshWindowBounds(void) {
+static cc_bool RefreshWindowDimensions(void) {
+	HWND hwnd = Window_Main.Handle.ptr;
 	RECT rect;
-	POINT topLeft = { 0, 0 };
+	int width = Window_Main.Width, height = Window_Main.Height;
 
-	GetWindowRect(win_handle, &rect);
-	win_totalWidth  = Rect_Width(rect);
-	win_totalHeight = Rect_Height(rect);
-
-	GetClientRect(win_handle, &rect);
+	GetClientRect(hwnd, &rect);
 	Window_Main.Width  = Rect_Width(rect);
 	Window_Main.Height = Rect_Height(rect);
 
+	return width != Window_Main.Width || height != Window_Main.Height;
+}
+
+static void RefreshWindowPosition(void) {
+	HWND hwnd = Window_Main.Handle.ptr;
+	POINT topLeft = { 0, 0 };
 	/* GetClientRect always returns 0,0 for left,top (see MSDN) */
-	ClientToScreen(win_handle, &topLeft);
+	ClientToScreen(hwnd, &topLeft);
 	windowX = topLeft.x; windowY = topLeft.y;
 }
 
 static void GrabCursor(void) {
+	HWND hwnd = Window_Main.Handle.ptr;
 	RECT rect;
 	if (!grabCursor || !Input.RawMode) return;
 
-	GetWindowRect(win_handle, &rect);
+	GetWindowRect(hwnd, &rect);
 	ClipCursor(&rect);
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	float wheelDelta;
+	cc_bool sized;
+	HWND hwnd;
 
 	switch (message) {
 	case WM_ACTIVATE:
@@ -146,23 +160,22 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 1; /* Avoid flickering */
 
 	case WM_PAINT:
-		ValidateRect(win_handle, NULL);
+		hwnd = Window_Main.Handle.ptr;
+		ValidateRect(hwnd, NULL);
 		Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 		return 0;
 
-	case WM_WINDOWPOSCHANGED:
-	{
-		WINDOWPOS* pos = (WINDOWPOS*)lParam;
-		cc_bool sized  = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
-		if (pos->hwnd != win_handle) break;
-
-		GrabCursor();
-		RefreshWindowBounds();
-		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
-	} break;
-
 	case WM_SIZE:
+		GrabCursor();
+		sized = RefreshWindowDimensions();
+
+		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
 		Event_RaiseVoid(&WindowEvents.StateChanged);
+		break;
+	
+	case WM_MOVE:
+		GrabCursor();
+		RefreshWindowPosition();
 		break;
 
 	case WM_CHAR:
@@ -283,16 +296,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_CLOSE:
-		Event_RaiseVoid(&WindowEvents.Closing);
-		if (Window_Main.Exists) DestroyWindow(win_handle);
 		Window_Main.Exists = false;
-		break;
+		Window_RequestClose();
+		return 0;
 
 	case WM_DESTROY:
-		Window_Main.Exists = false;
 		UnregisterClassW(CC_WIN_CLASSNAME, win_instance);
-
-		if (win_DC) ReleaseDC(win_handle, win_DC);
 		break;
 	}
 	return is_ansiWindow ? DefWindowProcA(handle, message, wParam, lParam)
@@ -303,18 +312,13 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-void Window_PreInit(void) { }
-void Window_Init(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(RegisterRawInputDevices),
-		DynamicLib_Sym(GetRawInputData),
-		DynamicLib_Sym(SetProcessDPIAware)
-	};
-	static const cc_string user32 = String_FromConst("USER32.DLL");
-	void* lib;
-	HDC hdc;
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
 
-	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
+void Window_Init(void) {
+	HDC hdc;
+	User32_LoadDynamicFuncs();
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	/* Enable high DPI support */
@@ -341,9 +345,9 @@ void Window_Free(void) { }
 static ATOM DoRegisterClass(void) {
 	ATOM atom;
 	WNDCLASSEXW wc = { 0 };
-	wc.cbSize     = sizeof(WNDCLASSEXW);
-	wc.style      = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
-	wc.hInstance  = win_instance;
+	wc.cbSize      = sizeof(WNDCLASSEXW);
+	wc.style       = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
+	wc.hInstance   = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
 
@@ -358,68 +362,85 @@ static ATOM DoRegisterClass(void) {
 	return RegisterClassExA((const WNDCLASSEXA*)&wc);
 }
 
-static void CreateWindowHandle(ATOM atom, int width, int height) {
+static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 	cc_result res;
+	HWND hwnd;
 	RECT r;
+	
 	/* Calculate final window rectangle after window decorations are added (titlebar, borders etc) */
 	r.left = Display_CentreX(width);  r.right  = r.left + width;
 	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
 	AdjustWindowRect(&r, CC_WIN_STYLE, false);
 
-	if ((win_handle = CreateWindowExW(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
-		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return;
+	if ((hwnd = CreateWindowExW(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return hwnd;
 	res = GetLastError();
 
 	/* Windows 9x does not support W API functions */
 	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
-		is_ansiWindow   = true;
-		if ((win_handle = CreateWindowExA(0, (LPCSTR)MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
-			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return;
+		is_ansiWindow = true;
+		if ((hwnd = CreateWindowExA(0, (LPCSTR)MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return hwnd;
 		res = GetLastError();
 	}
 	Logger_Abort2(res, "Failed to create window");
+	return NULL;
 }
 
 static void DoCreateWindow(int width, int height) {
 	ATOM atom;
+	HWND hwnd;
+
 	win_instance = GetModuleHandleA(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 	width  = Display_ScaleX(width);
 	height = Display_ScaleY(height);
 
 	atom = DoRegisterClass();
-	CreateWindowHandle(atom, width, height);
-	RefreshWindowBounds();
+	hwnd = CreateWindowHandle(atom, width, height);
+	RefreshWindowDimensions();
+	RefreshWindowPosition();
 
-	win_DC = GetDC(win_handle);
+	win_DC = GetDC(hwnd);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
 
-	Window_Main.Exists = true;
-	Window_Main.Handle = win_handle;
+	Window_Main.Exists     = true;
+	Window_Main.Handle.ptr = hwnd;
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
+	
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
+void Window_Destroy(void) {
+	HWND hwnd = Window_Main.Handle.ptr;
+	if (win_DC) ReleaseDC(hwnd, win_DC);
+	DestroyWindow(hwnd);
+}
+
 void Window_SetTitle(const cc_string* title) {
+	HWND hwnd = Window_Main.Handle.ptr;
 	cc_winstring str;
 	Platform_EncodeString(&str, title);
-	if (SetWindowTextW(win_handle, str.uni)) return;
+	if (SetWindowTextW(hwnd, str.uni)) return;
 
 	/* Windows 9x does not support W API functions */
-	SetWindowTextA(win_handle, str.ansi);
+	SetWindowTextA(hwnd, str.ansi);
 }
 
 void Clipboard_GetText(cc_string* value) {
+	HWND hwnd = Window_Main.Handle.ptr;
 	cc_bool unicode;
 	HANDLE hGlobal;
-	LPVOID src;
-	SIZE_T size;
+	_SIZE_T size;
+	void* src;
 	int i;
 
 	/* retry up to 50 times */
 	for (i = 0; i < 50; i++) {
-		if (!OpenClipboard(win_handle)) {
+		if (!OpenClipboard(hwnd)) {
 			Thread_Sleep(10);
 			continue;
 		}
@@ -440,7 +461,7 @@ void Clipboard_GetText(cc_string* value) {
 		if (unicode) {
 			String_AppendUtf16(value,  src, size - 2);
 		} else {
-			String_DecodeCP1252(value, src, size - 1);
+			String_AppendCP1252(value, src, size - 1);
 		}
 
 		GlobalUnlock(hGlobal);
@@ -450,13 +471,14 @@ void Clipboard_GetText(cc_string* value) {
 }
 
 void Clipboard_SetText(const cc_string* value) {
+	HWND hwnd = Window_Main.Handle.ptr;
 	cc_unichar* text;
 	HANDLE hGlobal;
 	int i;
 
 	/* retry up to 10 times */
 	for (i = 0; i < 10; i++) {
-		if (!OpenClipboard(win_handle)) {
+		if (!OpenClipboard(hwnd)) {
 			Thread_Sleep(100);
 			continue;
 		}
@@ -479,71 +501,77 @@ void Clipboard_SetText(const cc_string* value) {
 }
 
 int Window_GetWindowState(void) {
-	DWORD s = GetWindowLongA(win_handle, GWL_STYLE);
+	HWND hwnd = Window_Main.Handle.ptr;
+	DWORD s   = GetWindowLongA(hwnd, GWL_STYLE);
 
 	if ((s & WS_MINIMIZE))                   return WINDOW_STATE_MINIMISED;
 	if ((s & WS_MAXIMIZE) && (s & WS_POPUP)) return WINDOW_STATE_FULLSCREEN;
 	return WINDOW_STATE_NORMAL;
 }
 
-static void ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
+static void ToggleFullscreen(HWND hwnd, cc_bool fullscreen, UINT finalShow) {
 	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	style |= (fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW);
 
 	suppress_resize = true;
 	{
-		ShowWindow(win_handle, SW_RESTORE); /* reset maximised state */
-		SetWindowLongA(win_handle, GWL_STYLE, style);
-		SetWindowPos(win_handle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-		ShowWindow(win_handle, finalShow); 
+		ShowWindow(hwnd, SW_RESTORE); /* reset maximised state */
+		SetWindowLongA(hwnd, GWL_STYLE, style);
+		SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		ShowWindow(hwnd, finalShow); 
 		Window_ProcessEvents(0.0);
 	}
 	suppress_resize = false;
 
 	/* call Resized event only once */
-	RefreshWindowBounds();
+	RefreshWindowDimensions();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 static UINT win_show;
 cc_result Window_EnterFullscreen(void) {
+	HWND hwnd = Window_Main.Handle.ptr;
 	WINDOWPLACEMENT w = { 0 };
 	w.length = sizeof(WINDOWPLACEMENT);
-	GetWindowPlacement(win_handle, &w);
+	GetWindowPlacement(hwnd, &w);
 
 	win_show = w.showCmd;
-	ToggleFullscreen(true, SW_MAXIMIZE);
+	ToggleFullscreen(hwnd, true, SW_MAXIMIZE);
 	return 0;
 }
 
 cc_result Window_ExitFullscreen(void) {
-	ToggleFullscreen(false, win_show);
+	HWND hwnd = Window_Main.Handle.ptr;
+	ToggleFullscreen(hwnd, false, win_show);
 	return 0;
 }
 
 int Window_IsObscured(void) { return 0; }
 
 void Window_Show(void) {
-	ShowWindow(win_handle, SW_SHOW);
-	BringWindowToTop(win_handle);
-	SetForegroundWindow(win_handle);
+	HWND hwnd = Window_Main.Handle.ptr;
+	ShowWindow(hwnd, SW_SHOW);
+	BringWindowToTop(hwnd);
+	SetForegroundWindow(hwnd);
 }
 
 void Window_SetSize(int width, int height) {
-	DWORD style = GetWindowLongA(win_handle, GWL_STYLE);
+	HWND hwnd   = Window_Main.Handle.ptr;
+	DWORD style = GetWindowLongA(hwnd, GWL_STYLE);
 	RECT rect   = { 0, 0, width, height };
 	AdjustWindowRect(&rect, style, false);
 
-	SetWindowPos(win_handle, NULL, 0, 0, 
+	SetWindowPos(hwnd, NULL, 0, 0, 
 				Rect_Width(rect), Rect_Height(rect), SWP_NOMOVE);
 }
 
 void Window_RequestClose(void) {
-	PostMessageA(win_handle, WM_CLOSE, 0, 0);
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 void Window_ProcessEvents(float delta) {
 	HWND foreground;
+	HWND hwnd;
 	MSG msg;
 
 	if (is_ansiWindow) {
@@ -558,11 +586,16 @@ void Window_ProcessEvents(float delta) {
 
 	foreground = GetForegroundWindow();
 	if (foreground) {
-		Window_Main.Focused = foreground == win_handle;
+		hwnd = Window_Main.Handle.ptr;
+		Window_Main.Focused = foreground == hwnd;
 	}
 }
 
-void Window_ProcessGamepads(float delta) { }
+void Gamepads_Init(void) {
+
+}
+
+void Gamepads_Process(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	POINT point; 
@@ -586,7 +619,8 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 }
 
 static void ShowDialogCore(const char* title, const char* msg) {
-	MessageBoxA(win_handle, msg, title, 0);
+	HWND hwnd = Window_Main.Handle.ptr;
+	MessageBoxA(hwnd, msg, title, 0);
 }
 
 static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback callback, cc_bool load,
@@ -595,6 +629,7 @@ static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback
 		OPENFILENAMEW wide;
 		OPENFILENAMEA ansi;
 	} ofn = { 0 }; // less compiler warnings this way
+	HWND hwnd = Window_Main.Handle.ptr;
 	
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	cc_winstring str  = { 0 };
@@ -613,7 +648,7 @@ static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback
 	/*  on modern Windows versions the dialogs are altered to show an old Win 9x style appearance */
 	/* (see https://github.com/geany/geany/issues/578 for example of this problem) */
 
-	ofn.wide.hwndOwner    = win_handle;
+	ofn.wide.hwndOwner    = hwnd;
 	ofn.wide.lpstrFile    = str.uni;
 	ofn.wide.nMaxFile     = MAX_PATH;
 	ofn.wide.lpstrFilter  = filter.uni;
@@ -699,19 +734,21 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static HDC draw_DC;
 static HBITMAP draw_DIB;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	BITMAPINFO hdr = { 0 };
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
 	/* sizeof(BITMAPINFO) does not work on Windows 9x */
 	hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	hdr.bmiHeader.biWidth    =  bmp->width;
-	hdr.bmiHeader.biHeight   = -bmp->height;
+	hdr.bmiHeader.biWidth    =  width;
+	hdr.bmiHeader.biHeight   = -height;
 	hdr.bmiHeader.biBitCount = 32;
 	hdr.bmiHeader.biPlanes   = 1; 
 
 	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->scan0, NULL, 0);
 	if (!draw_DIB) Logger_Abort2(GetLastError(), "Failed to create DIB");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -726,6 +763,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static void InitRawMouse(void) {
+	HWND hwnd = Window_Main.Handle.ptr;
 	RAWINPUTDEVICE rid;
 
 	rawMouseSupported = _RegisterRawInputDevices && _GetRawInputData;
@@ -735,7 +773,7 @@ static void InitRawMouse(void) {
 	rid.usUsagePage = 1; /* HID_USAGE_PAGE_GENERIC; */
 	rid.usUsage     = 2; /* HID_USAGE_GENERIC_MOUSE; */
 	rid.dwFlags     = RIDEV_INPUTSINK;
-	rid.hwndTarget  = win_handle;
+	rid.hwndTarget  = hwnd;
 
 	if (_RegisterRawInputDevices(&rid, 1, sizeof(rid))) return;
 	Logger_SysWarn(GetLastError(), "initing raw mouse");
@@ -744,8 +782,6 @@ static void InitRawMouse(void) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { }
 
 void Window_EnableRawMouse(void) {
@@ -774,11 +810,12 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
 static FP_SWAPINTERVAL wglSwapIntervalEXT;
+static void* gl_lib;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
@@ -809,9 +846,12 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 }
 
 void GLContext_Create(void) {
+	static const cc_string glPath = String_FromConst("OPENGL32.dll");
 	struct GraphicsMode mode;
+
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
+	gl_lib = DynamicLib_Load2(&glPath);
 
 	ctx_handle = wglCreateContext(win_DC);
 	if (!ctx_handle) {
@@ -834,19 +874,20 @@ void GLContext_Free(void) {
 	ctx_handle = NULL;
 }
 
+static PROC (WINAPI *_wglGetProcAddress)(LPCSTR);
 /* https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions#Windows */
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 
 void* GLContext_GetAddress(const char* function) {
-	static const cc_string glPath = String_FromConst("OPENGL32.dll");
-	static void* lib;
-
-	void* addr = (void*)wglGetProcAddress(function);
-	if (!GLContext_IsInvalidAddress(addr)) return addr;
+	/* Not present on NT 3.5 */
+	if (!_wglGetProcAddress) _wglGetProcAddress = DynamicLib_Get2(gl_lib, "wglGetProcAddress");
+	if (_wglGetProcAddress) {
+		void* addr = (void*)_wglGetProcAddress(function);
+		if (!GLContext_IsInvalidAddress(addr)) return addr;
+	}
 
 	/* Some drivers return NULL from wglGetProcAddress for core OpenGL functions */
-	if (!lib) lib = DynamicLib_Load2(&glPath);
-	return DynamicLib_Get2(lib, function);
+	return DynamicLib_Get2(gl_lib, function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {
@@ -854,7 +895,7 @@ cc_bool GLContext_SwapBuffers(void) {
 	return true;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	if (!wglSwapIntervalEXT) return;
 	wglSwapIntervalEXT(vsync);
 }

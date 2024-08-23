@@ -331,7 +331,7 @@ static void MakeNameTexture(struct Entity* e) {
 static void DrawName(struct Entity* e) {
 	struct VertexTextured* vertices;
 	struct Model* model;
-	struct Matrix mat;
+	struct Matrix mat, transform;
 	Vec3 pos;
 	float scale;
 	Vec2 size;
@@ -345,7 +345,8 @@ static void DrawName(struct Entity* e) {
 		names_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
 
 	model = e->Model;
-	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
+	Model_GetEntityTransform(model, e, &transform);
+	Vec3_TransformY(&pos, model->GetNameY(e), &transform);
 
 	scale  = e->ModelScale.y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);

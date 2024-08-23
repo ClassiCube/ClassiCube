@@ -14,6 +14,7 @@
 #include <Dialogs.h>
 #include <Fonts.h>
 #include <Events.h>
+#include <LowMem.h>
 #ifndef M68K_INLINE
 #include <DiskInit.h>
 #include <Scrap.h>
@@ -21,6 +22,78 @@
 #include <Gestalt.h>
 static WindowPtr win;
 static cc_bool hasColorQD, useGWorld;
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Console log window-----------------------------------------------------*
+*#########################################################################################################################*/
+static int con_cellSizeX, con_cellSizeY;
+static int con_rows, con_cols;
+static int cursorX, cursorY;
+static WindowPtr con_win;
+static Rect con_bounds;
+
+static void Console_EraseLine(int y) {
+	Rect r   = con_bounds;
+	r.top    += y * con_cellSizeY;
+	r.bottom = r.top + con_cellSizeY;
+
+	MoveTo(r.left, r.bottom - 2);
+	EraseRect(&r);
+}
+
+static void Console_Init(void) {
+	Rect r = qd.screenBits.bounds;
+	r.top += 40;
+	InsetRect(&r, 5, 5);  
+
+	con_win = NewWindow(NULL, &r, "\pConsole log", true, 0, (WindowPtr)-1, true, 0);
+	GrafPtr savedPort;
+	GetPort(&savedPort);
+	SetPort(con_win);
+
+	con_bounds = con_win->portRect;
+	EraseRect(&con_bounds);
+
+	TextFont(kFontIDMonaco);
+	TextSize(9);
+
+	InsetRect(&con_bounds, 2, 2);
+	con_cellSizeX = CharWidth('M');
+	con_cellSizeY = 12;
+
+	con_rows = (con_bounds.bottom - con_bounds.top)  / con_cellSizeY;
+	con_cols = (con_bounds.right  - con_bounds.left) / con_cellSizeX;
+
+	Console_EraseLine(0);
+	cursorX = cursorY = 0;
+	SetPort(savedPort);
+}
+
+static void Console_NewLine(void) {
+	Console_EraseLine(cursorY);
+	cursorY++;
+	cursorX = 0;
+	if (cursorY >= con_rows) cursorY = 0;
+}
+
+void Console_Write(const char* msg, int len) {
+	if (!con_win) Console_Init();
+
+	GrafPtr savedPort;
+	GetPort(&savedPort);
+	SetPort(con_win);
+
+	for (int i = 0; i < len; i++) 
+	{
+		DrawChar(msg[i]);
+		cursorX++;
+		if (cursorX >= con_cols) Console_NewLine();
+	}
+	Console_NewLine();
+
+	SetPort(savedPort);
+}
 
 
 /*########################################################################################################################*
@@ -43,6 +116,15 @@ static cc_bool hasColorQD, useGWorld;
 #endif
 typedef unsigned long MAC_FourCharCode;
 typedef SInt16 MAC_WindowPartCode;
+typedef UInt16 MAC_EventMask;
+
+// Workaround issue in multiversal headers
+#if defined M68K_INLINE && TARGET_CPU_68K
+
+// Availability: in InterfaceLib 7.1 and later
+MAC_SYSAPI(void) _SetEventMask(MAC_EventMask value) MAC_TWOWORDINLINE(0x31DF, 0x0144);
+#define SetEventMask _SetEventMask
+#endif
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
@@ -79,10 +161,12 @@ void Window_PreInit(void) {
 	for (int i = 0; i < 5; i++)
 		EventAvail(everyEvent, &event);
 	FlushEvents(everyEvent, 0);
+	SetEventMask(everyEvent);
 
     long tmpLong = 0;
     Gestalt(gestaltQuickdrawVersion, &tmpLong);
     hasColorQD = tmpLong >= gestalt32BitQD;
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {
@@ -121,14 +205,19 @@ static void DoCreateWindow(int width, int height) {
 	SetPort(win);
 	r = win->portRect;
 	
-	Window_Main.Width   = r.right  - r.left;
-	Window_Main.Height  = r.bottom - r.top;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = r.right  - r.left;
+	Window_Main.Height   = r.bottom - r.top;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 }
 
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) {
 	// TODO
@@ -182,9 +271,9 @@ void Window_RequestClose(void) {
 
 static void HandleMouseDown(EventRecord* event) {
 	MAC_WindowPartCode part;
-	WindowPtr      window;
+	WindowPtr window;
 	Point localPoint;
-                    
+	long res;        
 	int x, y;
 
 	part = FindWindow(event->where, &window);
@@ -199,6 +288,7 @@ static void HandleMouseDown(EventRecord* event) {
 		case inContent:
 			SetPt(&localPoint, event->where.h, event->where.v);
 			GlobalToLocal(&localPoint);
+			if (window != win) break;
 
 			x = localPoint.h;
 			y = localPoint.v;
@@ -213,9 +303,20 @@ static void HandleMouseDown(EventRecord* event) {
  				Window_RequestClose();
 				Window_Main.Exists = false;
 			}
+			break;
+		case inGrow:
+			res = GrowWindow(window, event->where, &qd.screenBits.bounds);
+			x   = res & 0xFFFF;
+			y   = res >> 16;
+			SizeWindow(window, x, y, false);
+			if (window != win) break;
+
+			Window_Main.Width  = x;
+			Window_Main.Height = y;
+			Event_RaiseVoid(&WindowEvents.Resized);
+			break;
 	}
 }
-
 
 static void HandleMouseUp(EventRecord* event) {
 	Input_SetReleased(CCMOUSE_L);
@@ -285,8 +386,11 @@ void Window_ProcessEvents(float delta) {
 	}
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Init(void) {
+
 }
+
+void Gamepads_Process(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	Point point;
@@ -298,6 +402,10 @@ static void Cursor_GetRawPos(int* x, int* y) {
 
 void Cursor_SetPosition(int x, int y) { 
 	// TODO
+	Point where;
+	where.h = x;
+	where.v = y;
+	//LMSetRawMouseLocation(where);
 }
 
 static void Cursor_DoSetVisible(cc_bool visible) {
@@ -329,14 +437,15 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static GWorldPtr fb_world;
 static PixMapHandle fb_pixmap;
-static int fb_stride;
-static char* fb_bits;
 
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	if (!useGWorld) return;
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	if (!useGWorld) {
+		bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+		bmp->width  = width;
+		bmp->height = height;
+		return;
+	}
 
-	// TODO bmp->scan0 should be the fb_world
 	QDErr err = NewGWorld(&fb_world, 32, &win->portRect, 0, 0, 0);
 	if (err != noErr) Logger_Abort2(err, "Failed to allocate GWorld");
 	
@@ -344,28 +453,17 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!fb_pixmap) Logger_Abort("Failed to allocate pixmap");
 
 	LockPixels(fb_pixmap);
-	fb_stride = (*fb_pixmap)->rowBytes & 0x3FFF;
-	fb_bits   = (char*)GetPixBaseAddr(fb_pixmap);
+	int stride = (*fb_pixmap)->rowBytes & 0x3FFF;
+
+	bmp->scan0  = (BitmapCol*)GetPixBaseAddr(fb_pixmap);
+	bmp->width  = stride >> 2;
+	bmp->height = height;
 }
 
 static void DrawFramebufferBulk(Rect2D r, struct Bitmap* bmp) {
     GrafPtr thePort = (GrafPtr)win;
-	BitMap* memBits;
-	BitMap* winBits;
-
-	for (int y = r.y; y < r.y + r.height; y++)
-	{
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		uint32_t*  dst = (uint32_t*)(fb_bits + fb_stride * y);
-		
-		for (int x = r.x; x < r.x + r.width; x++)
-		{
-			dst[x] = src[x];
-		}
-	}
-
-	memBits = &((GrafPtr)fb_world)->portBits;
-	winBits = &thePort->portBits;
+	BitMap* memBits = &((GrafPtr)fb_world)->portBits;
+	BitMap* winBits = &thePort->portBits;
 
 	Rect update;
 	update.left   = r.x;
@@ -421,8 +519,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { }
 
 void Window_EnableRawMouse(void) {
@@ -441,7 +537,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 void GLContext_Create(void) {
 	// TODO
 }
@@ -461,7 +557,7 @@ cc_bool GLContext_SwapBuffers(void) {
 	return true;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	// TODO
 }
 void GLContext_GetApiInfo(cc_string* info) { }

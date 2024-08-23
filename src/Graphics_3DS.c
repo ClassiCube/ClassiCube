@@ -134,15 +134,30 @@ static void SetDefaultState(void) {
 	Gfx_SetDepthWrite(true);
 }
 
+static aptHookCookie hookCookie;
+static void AptEventHook(APT_HookType hookType, void* param) {
+	if (hookType == APTHOOK_ONSUSPEND) {
+		C3Di_RenderQueueWaitDone();
+		C3Di_RenderQueueDisableVBlank();
+	} else if (hookType == APTHOOK_ONRESTORE) {
+		C3Di_RenderQueueEnableVBlank();
+		C3Di_OnRestore();
+	}
+}
+
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 4);
+	aptHook(&hookCookie, AptEventHook, NULL);
 
-	C3D_RenderTargetCreate(&topTargetLeft, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
+	C3D_RenderTargetInit(&topTargetLeft,  240, 400);
+	C3D_RenderTargetColor(&topTargetLeft, GPU_RB_RGBA8);
+	C3D_RenderTargetDepth(&topTargetLeft, GPU_RB_DEPTH24);
 	C3D_RenderTargetSetOutput(&topTargetLeft, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	// Even though the bottom screen is 320 pixels wide, we use 400 here so that the same ortho matrix
 	// can be used for both screens. The output is clipped to the actual screen width, anyway.
-	C3D_RenderTargetCreate(&bottomTarget, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
+	C3D_RenderTargetInit(&bottomTarget, 240, 400);
+	C3D_RenderTargetColor(&bottomTarget, GPU_RB_RGBA8);
 	C3D_RenderTargetSetOutput(&bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	gfxSetDoubleBuffering(GFX_TOP, true);
@@ -174,6 +189,7 @@ void Gfx_Free(void) {
 
 	// FreeShaders()
 	// C3D_Fini()
+	// aptUnhook(&hookCookie);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
@@ -224,7 +240,9 @@ void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view) {
 	Calc3DProjection(+1, proj);
 
 	if (!createdTopTargetRight) {
-		C3D_RenderTargetCreate(&topTargetRight, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
+		C3D_RenderTargetInit(&topTargetRight,  240, 400);
+		C3D_RenderTargetColor(&topTargetRight, GPU_RB_RGBA8);
+		C3D_RenderTargetDepth(&topTargetRight, GPU_RB_DEPTH24);
 		C3D_RenderTargetSetOutput(&topTargetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
 		createdTopTargetRight = true;
 	}
@@ -533,9 +551,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) {
@@ -557,7 +574,6 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_DEPTH) targets |= C3D_CLEAR_DEPTH;
 	
 	C3D_RenderTargetClear(&topTargetLeft, targets, clear_color, 0);
-	C3D_RenderTargetClear(&bottomTarget,  targets,           0, 0);
 }
 
 void Gfx_EndFrame(void) {
@@ -565,8 +581,6 @@ void Gfx_EndFrame(void) {
 	C3D_FrameEnd(0);
 	//gfxFlushBuffers();
 	//gfxSwapBuffers();
-
-	if (gfx_minFrameMs) LimitFPS();
 		
 	GPUBuffers_DeleteUnreferenced();
 	GPUTextures_DeleteUnreferenced();
@@ -576,6 +590,7 @@ void Gfx_EndFrame(void) {
 void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 
 /*########################################################################################################################*
@@ -853,7 +868,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	// 
 	// This can be done by rotating the projection matrix 90 degrees around Z axis
 	// https://open.gl/transformations
-	if (type == MATRIX_PROJECTION) {
+	if (type == MATRIX_PROJ) {
 		struct Matrix rot = Matrix_Identity;
 		rot.row1.x =  0; rot.row1.y = 1;
 		rot.row2.x = -1; rot.row2.y = 0;
@@ -867,8 +882,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	ReloadUniforms();
 }*/
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -890,6 +907,7 @@ void Gfx_DisableTextureOffset(void) {
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 static void UpdateAttribFormat(VertexFormat fmt) {
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();

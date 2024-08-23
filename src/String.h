@@ -1,6 +1,8 @@
 #ifndef CC_STRING_H
 #define CC_STRING_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Provides various string related operations
    Also provides conversions betweens strings and numbers
@@ -199,16 +201,16 @@ int Convert_CP437ToUtf8(char c, cc_uint8* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf16(cc_string* str, const void* data, int numBytes);
+CC_API void String_AppendUtf16(cc_string* str, const void* data, int numBytes);
 /* Attempts to append all characters from UTF8 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf8(cc_string* str, const void* data, int numBytes);
+CC_API void String_AppendUtf8(cc_string* str, const void* data, int numBytes);
 /* Attempts to append all characters from CP-1252 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_DecodeCP1252(cc_string* str, const void* data, int numBytes);
+CC_API void String_AppendCP1252(cc_string* str, const void* data, int numBytes);
 /* Encodes a string in UTF8 format, also null terminating the string. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
-int String_EncodeUtf8(void* data, const cc_string* src);
+CC_API int String_EncodeUtf8(void* data, const cc_string* src);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 CC_API cc_bool Convert_ParseUInt8(const cc_string*  str, cc_uint8* value);
@@ -270,4 +272,6 @@ void WordWrap_GetCoords(int index, const cc_string* lines, int numLines, int* co
 int  WordWrap_GetBackLength(const cc_string* text, int index);
 /* Returns number of characters from current character to start of next word. */
 int  WordWrap_GetForwardLength(const cc_string* text, int index);
+
+CC_END_HEADER
 #endif

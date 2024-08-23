@@ -1,6 +1,8 @@
 #ifndef CC_SYSTEMFONTS_H
 #define CC_SYSTEMFONTS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /*  Manages loading and drawing platform specific system fonts
 	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -13,6 +15,8 @@ extern struct IGameComponent SystemFonts_Component;
 
 int FallbackFont_TextWidth(const struct DrawTextArgs* args);
 void FallbackFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow);
+typedef void (*FallbackFont_Plotter)(int x, int y, void* ctx);
+void FallbackFont_Plot(cc_string* str, FallbackFont_Plotter plotter, int scale, void* ctx);
 
 /* Allocates a new system font from the given arguments */
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
@@ -38,4 +42,6 @@ CC_API void SysFonts_GetNames(struct StringsBuffer* buffer);
 /*  NOTE: If this file has been decoded before (fontscache.txt), does nothing */
 cc_result SysFonts_Register(const cc_string* path, SysFont_RegisterCallback callback);
 void SysFonts_SaveCache(void);
+
+CC_END_HEADER
 #endif

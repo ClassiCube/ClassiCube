@@ -11,11 +11,11 @@ project(
 add_definitions(-DPLAT_PS1)
 file(GLOB _sources ../../src/*.c)
 
-psn00bsdk_add_executable(template GPREL ${_sources})
+psn00bsdk_add_executable(ClassiCube-PS1 GPREL ${_sources})
 
 psn00bsdk_add_cd_image(
-	iso      # Target name
-	template # Output file name (= template.bin + template.cue)
-	iso.xml  # Path to config file
-	DEPENDS template system.cnf
+	iso        # Target name
+	ClassiCube-PS1 # Output file name (= ClassiCube-PS1.bin + ClassiCube-PS1.cue)
+	iso.xml    # Path to config file
+	DEPENDS ClassiCube-PS1 system.cnf
 )

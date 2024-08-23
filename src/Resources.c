@@ -62,6 +62,7 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 *------------------------------------------------------Utility functions -------------------------------------------------*
 *#########################################################################################################################*/
 static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry selector) {
+	struct ZipEntry entries[64];
 	struct Stream stream;
 	cc_result res;
 
@@ -69,7 +70,8 @@ static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry select
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Logger_SysWarn2(res, "opening", path); return; }
 
-	res = Zip_Extract(&stream, selector, NULL);
+	res = Zip_Extract(&stream, selector, NULL, 
+						entries, Array_Elems(entries));
 	if (res) Logger_SysWarn2(res, "inspecting", path);
 
 	/* No point logging error for closing readonly file */
@@ -83,105 +85,6 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 
 	if (!e->value.data) return ERR_OUT_OF_MEMORY;
 	return Stream_Read(data, e->value.data, size);
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Sound asset writing ------------------------------------------------*
-*#########################################################################################################################*/
-#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
-#define WAV_HDR_SIZE 44
-
-/* Fixes up the .WAV header after having written all samples */
-static cc_result SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 offset, cc_uint32 len) {
-	cc_uint8 header[WAV_HDR_SIZE];
-	cc_result res = s->Seek(s, offset);
-	if (res) return res;
-
-	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(header +  4, len - 8);
-	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
-	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
-	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
-	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
-	Stream_SetU16_LE(header + 22, ctx->channels);
-	Stream_SetU32_LE(header + 24, ctx->sampleRate);
-
-	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
-	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
-	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
-	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
-	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
-
-	return Stream_Write(s, header, WAV_HDR_SIZE);
-}
-
-/* Decodes all samples, then produces a .WAV file from them */
-static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
-	cc_int16* samples;
-	cc_uint32 begOffset;
-	cc_uint32 len = WAV_HDR_SIZE;
-	cc_result res;
-	int count;
-
-	if ((res = s->Position(s, &begOffset))) return res;
-
-	/* reuse context here for a temp garbage header */
-	if ((res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE))) return res;
-	if ((res = Vorbis_DecodeHeaders(ctx))) return res;
-
-	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
-	if (!samples) return ERR_OUT_OF_MEMORY;
-
-	for (;;) {
-		res = Vorbis_DecodeFrame(ctx);
-		if (res == ERR_END_OF_STREAM) {
-			/* reached end of samples, so done */
-			res = SoundPatcher_FixupHeader(s, ctx, begOffset, len);
-			break;
-		}
-		if (res) break;
-
-		count = Vorbis_OutputFrame(ctx, samples);
-		len  += count * 2;
-
-#ifdef CC_BUILD_BIGENDIAN
-		Utils_SwapEndian16(samples, count);
-#endif
-		res = Stream_Write(s, (cc_uint8*)samples, count * 2);
-		if (res) break;
-	}
-
-	Mem_Free(samples);
-	if (!res) res = s->Seek(s, begOffset + len);
-	return res;
-}
-
-/* Converts an OGG sound to a WAV sound for faster decoding later */
-static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) {
-	struct OggState* ogg    = NULL;
-	struct VorbisState* ctx = NULL;
-	struct Stream src;
-	cc_result res;
-
-	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
-	if (!ogg) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
-
-	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
-	if (!ctx) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
-
-	Stream_ReadonlyMemory(&src, e->value.data, e->size);
-
-	Ogg_Init(ogg, &src);
-	Vorbis_Init(ctx);
-	ctx->source = ogg;
-	res = SoundPatcher_WriteWav(s, ctx);
-
-cleanup:
-	if (ctx) Vorbis_Free(ctx);
-	Mem_Free(ctx);
-	Mem_Free(ogg);
-	return res;
 }
 
 
@@ -320,6 +223,7 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 	return ZipWriter_FixupLocalFile(dst, e);
 }
 
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e);
 static cc_result ZipWriter_WriteWav(struct Stream* dst, struct ResourceZipEntry* e) {
 	cc_result res;
 	
@@ -378,6 +282,7 @@ static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entri
 }
 
 
+#ifndef CC_BUILD_NOMUSIC
 /*########################################################################################################################*
 *---------------------------------------------------------Music assets----------------------------------------------------*
 *#########################################################################################################################*/
@@ -399,6 +304,7 @@ static struct MusicAsset {
 
 static void MusicAssets_CheckExistence(void) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_filepath str;
 	int i;
 	String_InitArray(path, pathBuffer);
 
@@ -407,7 +313,8 @@ static void MusicAssets_CheckExistence(void) {
 		path.length = 0;
 		String_Format1(&path, "audio/%c", musicAssets[i].name);
 
-		musicAssets[i].downloaded = File_Exists(&path);
+		Platform_EncodePath(&str, &path);
+		musicAssets[i].downloaded = File_Exists(&str);
 	}
 }
 
@@ -497,6 +404,109 @@ static const struct AssetSet mccMusicAssetSet = {
 	MusicAssets_CheckStatus,
 	MusicAssets_ResetState
 };
+#endif
+
+
+#ifdef CC_BUILD_NOSOUNDS
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) { return ERR_NOT_SUPPORTED; }
+#else
+/*########################################################################################################################*
+*-----------------------------------------------------Sound asset writing ------------------------------------------------*
+*#########################################################################################################################*/
+#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
+#define WAV_HDR_SIZE 44
+
+/* Fixes up the .WAV header after having written all samples */
+static cc_result SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 offset, cc_uint32 len) {
+	cc_uint8 header[WAV_HDR_SIZE];
+	cc_result res = s->Seek(s, offset);
+	if (res) return res;
+
+	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
+	Stream_SetU32_LE(header +  4, len - 8);
+	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
+	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
+	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
+	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
+	Stream_SetU16_LE(header + 22, ctx->channels);
+	Stream_SetU32_LE(header + 24, ctx->sampleRate);
+
+	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
+	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
+	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
+	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
+	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
+
+	return Stream_Write(s, header, WAV_HDR_SIZE);
+}
+
+/* Decodes all samples, then produces a .WAV file from them */
+static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
+	cc_int16* samples;
+	cc_uint32 begOffset;
+	cc_uint32 len = WAV_HDR_SIZE;
+	cc_result res;
+	int count;
+
+	if ((res = s->Position(s, &begOffset))) return res;
+
+	/* reuse context here for a temp garbage header */
+	if ((res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE))) return res;
+	if ((res = Vorbis_DecodeHeaders(ctx))) return res;
+
+	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
+	if (!samples) return ERR_OUT_OF_MEMORY;
+
+	for (;;) {
+		res = Vorbis_DecodeFrame(ctx);
+		if (res == ERR_END_OF_STREAM) {
+			/* reached end of samples, so done */
+			res = SoundPatcher_FixupHeader(s, ctx, begOffset, len);
+			break;
+		}
+		if (res) break;
+
+		count = Vorbis_OutputFrame(ctx, samples);
+		len  += count * 2;
+
+#ifdef CC_BUILD_BIGENDIAN
+		Utils_SwapEndian16(samples, count);
+#endif
+		res = Stream_Write(s, (cc_uint8*)samples, count * 2);
+		if (res) break;
+	}
+
+	Mem_Free(samples);
+	if (!res) res = s->Seek(s, begOffset + len);
+	return res;
+}
+
+/* Converts an OGG sound to a WAV sound for faster decoding later */
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) {
+	struct OggState* ogg    = NULL;
+	struct VorbisState* ctx = NULL;
+	struct Stream src;
+	cc_result res;
+
+	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
+	if (!ogg) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+
+	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
+	if (!ctx) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+
+	Stream_ReadonlyMemory(&src, e->value.data, e->size);
+
+	Ogg_Init(ogg, &src);
+	Vorbis_Init(ctx);
+	ctx->source = ogg;
+	res = SoundPatcher_WriteWav(s, ctx);
+
+cleanup:
+	if (ctx) Vorbis_Free(ctx);
+	Mem_Free(ctx);
+	Mem_Free(ogg);
+	return res;
+}
 
 
 /*########################################################################################################################*
@@ -669,6 +679,7 @@ static const struct AssetSet mccSoundAssetSet = {
 	SoundAssets_CheckStatus,
 	SoundAssets_ResetState
 };
+#endif
 
 
 /*########################################################################################################################*
@@ -679,7 +690,10 @@ static cc_bool ccTexturesExist, ccTexturesDownloaded;
 static int ccTexturesReqID;
 
 static void CCTextures_CheckExistence(void) {
-	ccTexturesExist = File_Exists(&ccTexPack);
+	cc_filepath path;
+	Platform_EncodePath(&path, &ccTexPack);
+	
+	ccTexturesExist = File_Exists(&path);
 }
 
 static void CCTextures_CountMissing(void) {
@@ -723,11 +737,13 @@ static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* d
 }
 
 static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
+	struct ZipEntry entries[64];
 	struct Stream src;
 	cc_result res;
 
 	Stream_ReadonlyMemory(&src, req->data, req->size);
-	if ((res = Zip_Extract(&src, CCTextures_SelectEntry, CCTextures_ProcessEntry))) return res;
+	if ((res = Zip_Extract(&src, CCTextures_SelectEntry, CCTextures_ProcessEntry,
+							entries, Array_Elems(entries)))) return res;
 
 	return Stream_WriteAllTo(&ccTexPack, req->data, req->size);
 }
@@ -820,23 +836,35 @@ static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result TerrainPatcher_Process(struct HttpRequest* req);
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req);
-static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req);
+
+static cc_result Classic0023Patcher_OldGoldBlock(struct HttpRequest* req);
+static cc_result Classic0023Patcher_OldGoldOre(  struct HttpRequest* req);
+static cc_result Classic0023Patcher_OldBlackWool(struct HttpRequest* req);
+static cc_result Classic0023Patcher_OldGrayWool( struct HttpRequest* req);
 
 /* URLs which data is downloaded from in order to generate the entries in default.zip */
-static struct ZipfileSource {
+struct ZipfileSource {
 	const char* name;
 	const char* url;
 	cc_result (*Process)(struct HttpRequest* req);
 	short size;
 	cc_bool downloaded;
 	int reqID;
-} defaultZipSources[] = {
+};
+
+#define DEFAULTZIP_0030_ENTRIES_COUNT 4
+static struct ZipfileSource defaultZipSources_0030_0023[] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar", ClassicPatcher_ExtractFiles, 291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     ModernPatcher_ExtractFiles, 4621 },
 	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png", TerrainPatcher_Process, 7 },
 	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21 },
-	{ "classic gold", "https://classic.minecraft.net/assets/textures/gold.png", Classic0023Patcher_OldGold, 1 }, /* NOTE: this must be the last entry */
+	/* 0.0.23 textures */
+	{ "0.0.23 gold",  "https://classic.minecraft.net/assets/textures/gold.png",      Classic0023Patcher_OldGoldBlock, 1 },
+	{ "0.0.23 ore",   "https://classic.minecraft.net/assets/textures/rock_gold.png", Classic0023Patcher_OldGoldOre,   1 },
+	{ "0.0.23 black", "https://classic.minecraft.net/assets/textures/color13.png",   Classic0023Patcher_OldBlackWool, 1 },
+	{ "0.0.23 gray",  "https://classic.minecraft.net/assets/textures/color14.png",   Classic0023Patcher_OldGrayWool,  1 },
 };
+static struct ZipfileSource* defaultZipSources;
 static int numDefaultZipSources, numDefaultZipProcessed;
 
 static void MCCTextures_ResetState(void) {
@@ -881,11 +909,13 @@ static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Strea
 }
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req) {
+	struct ZipEntry entries[64];
 	struct Stream src;
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 
 	return Zip_Extract(&src, 
-			ClassicPatcher_SelectEntry, ClassicPatcher_ProcessEntry);
+			ClassicPatcher_SelectEntry, ClassicPatcher_ProcessEntry,
+			entries, Array_Elems(entries));
 }
 
 static void PatchTerrainTile(struct Bitmap* src, int srcX, int srcY, int tileX, int tileY) {
@@ -990,11 +1020,13 @@ static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream
 }
 
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
+	struct ZipEntry entries[64];
 	struct Stream src;
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 
 	return Zip_Extract(&src, 
-			ModernPatcher_SelectEntry, ModernPatcher_ProcessEntry);
+			ModernPatcher_SelectEntry, ModernPatcher_ProcessEntry,
+			entries, Array_Elems(entries));
 }
 
 
@@ -1029,7 +1061,7 @@ static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	return 0;
 }
 
-static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req) {
+static cc_result Classic0023Patcher_PatchBlocks(struct HttpRequest* req, const int* targets) {
 	struct Bitmap bmp;
 	struct Stream src;
 	cc_result res;
@@ -1037,12 +1069,38 @@ static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req) {
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	if ((res = Png_Decode(&bmp, &src))) return res;
 
-	PatchTerrainTile(&bmp, 0,0, 8,1);
-	PatchTerrainTile(&bmp, 0,0, 8,2);
-	PatchTerrainTile(&bmp, 0,0, 8,3);
+	while (*targets)
+	{
+		PatchTerrainTile(&bmp, 0,0, *targets >> 8, *targets & 0xFF);
+		targets++;
+	}
 
 	Mem_Free(bmp.scan0);
 	return 0;
+}
+
+static cc_result Classic0023Patcher_OldGoldBlock(struct HttpRequest* req) {
+	static const int targets[] = { (8 << 8) | 1, (8 << 8) | 2, (8 << 8) | 3, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
+}
+
+static cc_result Classic0023Patcher_OldGoldOre(struct HttpRequest* req) {
+	static const int targets[] = { (0 << 8) | 2, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
+}
+
+static cc_result Classic0023Patcher_OldBlackWool(struct HttpRequest* req) {
+	static const int targets[] = { (13 << 8) | 4, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
+}
+
+static cc_result Classic0023Patcher_OldGrayWool(struct HttpRequest* req) {
+	static const int targets[] = { (14 << 8) | 4, 0 };
+
+	return Classic0023Patcher_PatchBlocks(req, targets);
 }
 
 
@@ -1076,9 +1134,14 @@ static void MCCTextures_CountMissing(void) {
 	int i;
 	if (allZipEntriesExist) return;
 
-	numDefaultZipSources = Array_Elems(defaultZipSources);
 	/* old gold texture only needed in 0.0.23 and earlier */
-	if (Game_Version.Version > VERSION_0023) numDefaultZipSources--;
+	if (Game_Version.Version > VERSION_0023) {
+		numDefaultZipSources = DEFAULTZIP_0030_ENTRIES_COUNT;
+		defaultZipSources    = defaultZipSources_0030_0023;
+	} else {
+		numDefaultZipSources = Array_Elems(defaultZipSources_0030_0023);
+		defaultZipSources    = defaultZipSources_0030_0023;
+	}
 
 	for (i = 0; i < numDefaultZipSources; i++) {
 		Resources_MissingCount++;
@@ -1170,8 +1233,12 @@ FetcherErrorCallback Fetcher_ErrorCallback;
 static const struct AssetSet* const asset_sets[] = {
 	&ccTexsAssetSet,
 	&mccTexsAssetSet,
+#ifndef CC_BUILD_NOMUSIC
 	&mccMusicAssetSet,
+#endif
+#ifndef CC_BUILD_NOSOUNDS
 	&mccSoundAssetSet
+#endif
 };
 
 static void ResetState() {

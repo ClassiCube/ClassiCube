@@ -126,12 +126,11 @@ static void consoleInit(void) {
 *------------------------------------------------------General data-------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool launcherMode;
-cc_bool keyboardOpen;
 static int bg_id;
 static u16* bg_ptr;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
 	videoSetModeSub(MODE_0_2D);
@@ -147,14 +146,16 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
 	
-	Window_Main.Width   = DisplayInfo.Width;
-	Window_Main.Height  = DisplayInfo.Height;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 }
 
 void Window_Free(void) { }
@@ -172,6 +173,8 @@ void Window_Create3D(int width, int height) {
     launcherMode = false;
 	videoSetMode(MODE_0_3D);
 }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -208,7 +211,7 @@ static void ProcessTouchInput(int mods) {
 void Window_ProcessEvents(float delta) {
 	scanKeys();	
 	
-	if (keyboardOpen) {
+	if (DisplayInfo.ShowingSoftKeyboard) {
 		keyboardUpdate();
 	} else {
 		ProcessTouchInput(keysDown() | keysHeld());
@@ -224,33 +227,40 @@ void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
-*#########################################################################################################################*/
-void Window_ProcessGamepads(float delta) {
+*#########################################################################################################################*/	
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+}
+
+void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0xD5, PadBind_Defaults);
 	int mods = keysDown() | keysHeld();
 	
-	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(0, CCPAD_R, mods & KEY_R);
+	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
 	
-	Gamepad_SetButton(0, CCPAD_A, mods & KEY_A);
-	Gamepad_SetButton(0, CCPAD_B, mods & KEY_B);
-	Gamepad_SetButton(0, CCPAD_X, mods & KEY_X);
-	Gamepad_SetButton(0, CCPAD_Y, mods & KEY_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & KEY_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & KEY_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & KEY_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & KEY_Y);
 	
-	Gamepad_SetButton(0, CCPAD_START,  mods & KEY_START);
-	Gamepad_SetButton(0, CCPAD_SELECT, mods & KEY_SELECT);
+	Gamepad_SetButton(port, CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & KEY_SELECT);
 	
-	Gamepad_SetButton(0, CCPAD_LEFT,   mods & KEY_LEFT);
-	Gamepad_SetButton(0, CCPAD_RIGHT,  mods & KEY_RIGHT);
-	Gamepad_SetButton(0, CCPAD_UP,     mods & KEY_UP);
-	Gamepad_SetButton(0, CCPAD_DOWN,   mods & KEY_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & KEY_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & KEY_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & KEY_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & KEY_DOWN);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	bmp->width  = width;
+	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -263,10 +273,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		
 		for (int x = r.x; x < r.x + r.width; x++)
 		{
-			BitmapCol color = src[x];
-			// 888 to 565 (discard least significant bits)
-			// quoting libDNS: < Bitmap background with 16 bit color values of the form aBBBBBGGGGGRRRRR (if 'a' is not set, the pixel will be transparent)
-			dst[x] = 0x8000 | ((BitmapCol_B(color) & 0xF8) << 7) | ((BitmapCol_G(color) & 0xF8) << 2) | (BitmapCol_R(color) >> 3);
+			dst[x] = src[x];
 		}
 	}
 	
@@ -312,18 +319,15 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     kbd->OnKeyPressed = OnKeyPressed;
     String_InitArray(kbText, kbBuffer);
 	String_AppendString(&kbText, args->text);
-    keyboardOpen = true;
+    DisplayInfo.ShowingSoftKeyboard = true;
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) { }
 
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
-
 void OnscreenKeyboard_Close(void) {
     keyboardHide();
-	if (!keyboardOpen) return;
-    keyboardOpen = false;
+	if (!DisplayInfo.ShowingSoftKeyboard) return;
+    DisplayInfo.ShowingSoftKeyboard = false;
 
     videoBgEnableSub(0); // show console
 }

@@ -96,7 +96,8 @@ static void Gfx_RestoreState(void) {
 static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
 	void* dst = Xe_Surface_LockRect(xe, xtex, x, y, bmp->width, bmp->height, XE_LOCK_WRITE);
 
-	CopyTextureData(dst, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(dst, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth   * BITMAPCOLOR_SIZE);
 	
 	Xe_Surface_Unlock(xe, xtex);
 }
@@ -316,7 +317,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
 	
 	Matrix_Mul(&_mvp, &_view, &_proj);
@@ -324,8 +325,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	Xe_SetVertexShaderConstantF(xe, 0, (float*)&_mvp, 4);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {	
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -372,9 +375,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) { 
@@ -388,11 +390,10 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 void Gfx_EndFrame(void) {
 	Xe_Resolve(xe);
 	Xe_Sync(xe);
-	
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "-- Using XBox 360 --\n");
@@ -404,4 +405,5 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetScissor (int x, int y, int w, int h) { }
 #endif

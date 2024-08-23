@@ -1,6 +1,8 @@
 #ifndef CC_TEXPACKS_H
 #define CC_TEXPACKS_H
 #include "Bitmap.h"
+CC_BEGIN_HEADER
+
 /* 
 Contains everything relating to texture packs
   - Extracting the textures from a .zip archive
@@ -73,6 +75,7 @@ cc_bool Atlas_TryChange(struct Bitmap* bmp);
 /* That is, returns U1/U2/V1/V2 coords that make up the tile in a 1D atlas. */
 /* index is set to the index of the 1D atlas that the tile is in. */
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index);
+void Atlas1D_Bind(int index);
 
 /* Whether the given URL is in list of accepted URLs. */
 cc_bool TextureCache_HasAccepted(const cc_string* url);
@@ -112,4 +115,6 @@ struct TextureEntry {
 	struct TextureEntry* next;
 };
 void TextureEntry_Register(struct TextureEntry* entry);
+
+CC_END_HEADER
 #endif

@@ -315,10 +315,11 @@ static void MPConnection_BeginConnect(void) {
 		MPConnection_FailConnect(res); return;
 	}
 
-	res = Socket_Connect(&net_socket, &addrs[0], true);
-	if (res == ERR_INVALID_ARGUMENT) {
-		MPConnection_Fail(&invalid_reason);
-	} else if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
+	res = Socket_Create(&net_socket, &addrs[0], true);
+	if (res) { MPConnection_FailConnect(res); return; }
+	res = Socket_Connect(net_socket, &addrs[0]);
+
+	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
 	} else {
 		Server.Disconnected = false;
@@ -498,7 +499,7 @@ static void OnNewMap(void) {
 	/* wipe all existing entities */
 	for (i = 0; i < MAX_NET_PLAYERS; i++) 
 	{
-		Entities_Remove((EntityID)i);
+		Entities_Remove(i);
 	}
 }
 
