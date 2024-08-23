@@ -1,3 +1,6 @@
+/* Not available on older SDKs */
+typedef cc_uintptr _UINT_PTR;
+
 /* IP addresses */
 typedef struct sockaddr {
 	USHORT sa_family;
@@ -45,7 +48,7 @@ typedef unsigned short  u_short;
 typedef unsigned int    u_int;
 typedef unsigned long   u_long;
 
-typedef UINT_PTR SOCKET;
+typedef _UINT_PTR SOCKET;
 
 /* Constants */
 #define AF_INET   2

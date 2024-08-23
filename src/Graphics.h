@@ -99,13 +99,17 @@ void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+/*
+SUMMARY:
+	Textures are used to store a bitmap which can then later be used when drawing
+*/
 /* Texture should persist across gfx context loss (if backend supports ManagedTextures) */
 #define TEXTURE_FLAG_MANAGED  0x01
 /* Texture should allow updating via Gfx_UpdateTexture */
 #define TEXTURE_FLAG_DYNAMIC  0x02
 /* Texture is deliberately (and not accidentally) being created with non power of two dimensions */
 #define TEXTURE_FLAG_NONPOW2  0x04
-/* Texture can fallback to 16 bpp when necessary (most backends don't do this) */
+/* Texture can fallback to fewer BPP when necessary (most backends don't do this) */
 #define TEXTURE_FLAG_LOWRES   0x08
 /* Texture should be rendered using bilinear filtering if possible */
 #define TEXTURE_FLAG_BILINEAR 0x10
@@ -140,7 +144,13 @@ CC_API void Gfx_DisableMipmaps(void);
 
 /*########################################################################################################################*
 *------------------------------------------------------Frame management---------------------------------------------------*
-*#########################################################################################################################*/
+*#########################################################################################################################*//*
+SUMMARY:
+	The frame management functions manage frame related functionality
+	(beginning frames, displaying framebuffers, and resetting rendering buffers)
+USAGE NOTES:
+	There is usually no need to call these functions
+*/
 typedef enum GfxBuffers_ {
 	GFX_BUFFER_COLOR = 1,
 	GFX_BUFFER_DEPTH = 2
@@ -156,7 +166,7 @@ CC_API void Gfx_ClearColor(PackedCol color);
 void Gfx_BeginFrame(void);
 /* Finishes rendering a frame, and swaps it with the back buffer */
 void Gfx_EndFrame(void);
-/* Sets whether to synchronise with monitor refresh to avoid tearing */
+/* Sets whether to synchronise rendering with monitor refresh to avoid tearing */
 /* NOTE: VSync setting may be unsupported or just ignored */
 void Gfx_SetVSync(cc_bool vsync);
 
@@ -173,6 +183,15 @@ static CC_INLINE void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Fog state-------------------------------------------------------*
 *#########################################################################################################################*/
+/*
+SUMMARY:
+	Fog can be used to adjust the colour of pixels based on their distance from the camera
+IMPLEMENTATION NOTES:
+	Some console ports rendering backends do not support fog
+USAGE NOTES:
+	There is rarely a need to use the fog functions
+*/
+
 typedef enum FogFunc_ {
 	FOG_LINEAR, FOG_EXP, FOG_EXP2
 } FogFunc;
@@ -194,6 +213,18 @@ CC_API void Gfx_SetFogMode(FogFunc func);
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+/*
+SUMMARY:
+	The state management functions control how pixels are:
+	- potentially skipped (alpha testing, depth testing, face culling)
+	- written to the framebuffer (alpha blending, color write)
+	- written to the depth buffer (depth write)
+IMPLEMENTATION NOTES:
+	Some rendering backends do not support some state management functions
+	For example, Gfx_SetColorWrite may not be supported by the underlying GPU
+USAGE NOTES:
+	Alpha testing and blending are the main functions used
+*/
 /* Sets whether backface culling is performed */
 CC_API void Gfx_SetFaceCulling(cc_bool enabled);
 /* Sets whether pixels with an alpha of less than 128 are discarded */
@@ -217,6 +248,20 @@ CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
 /*########################################################################################################################*
 *------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
+/*
+SUMMARY:
+	Index buffers are used to select the triangle vertices from the active vertex buffer
+	  when rendering using the Gfx_DrawVb_IndexedTris/Gfx_DrawVb_IndexedTris_Range APIs
+IMPLEMENTATION NOTES:
+	All of the OpenGL and Direct3D rendering backends fully support index buffers
+	However, most console ports rendering backends do not support index buffers
+USAGE NOTES:
+	The default index buffer selects groups of 4 vertices (1 quad) to produce 2 triangles
+	  ( (0,1,2) (2,3,0)  (4,5,6) (6,7,4)  etc)
+	ClassiCube itself never uses a different index buffer, as it draws everything using quads
+	However, plugins might alter the index buffer to draw geometry that doesn't use quads
+*/
+
 /* Callback function to initialise/fill out the contents of an index buffer */
 typedef void (*Gfx_FillIBFunc)(cc_uint16* indices, int count, void* obj);
 /* Creates a new index buffer and fills out its contents */
@@ -230,6 +275,16 @@ CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
+/*
+SUMMARY:
+	Vertex buffers are used to store a group of vertices which can then latered be rendered
+IMPLEMENTATION NOTES:
+	Vertex buffers may be stored in VRAM or converted into a more efficient internal format
+	For example, the PS1 and DS ports convert XYZ floats into fixed point integers
+USAGE NOTES:
+	Static vertex buffers should be used for data that very rarely changes
+	Dynamic vertex buffers should be used for frequently changing data
+*/
 /* Creates a new vertex buffer */
 CC_API GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count);
 /* Sets the currently active vertex buffer */
@@ -270,7 +325,17 @@ CC_API void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
 
 /*########################################################################################################################*
 *------------------------------------------------------Vertex drawing-----------------------------------------------------*
-*#########################################################################################################################*/
+*#########################################################################################################################*//*
+SUMMARY:
+	Vertex drawing functions draw lines or triangles from the currently active vertex buffer
+IMPLEMENTATION NOTES:
+	Not all rendering backends support lines
+	Some rendering backends will always draw quads for the triangle drawing functions
+USAGE NOTES:
+	The appropriate vertex format must be set before drawing/rendering
+	With the triangle drawing functions, the default bound index buffer
+	  is setup to draw groups of 2 triangles from 4 vertices (1 quad)
+*/
 /* Sets the format of the rendered vertices */
 CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
 /* Renders vertices from the currently bound vertex buffer as lines */
@@ -287,6 +352,28 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex transform----------------------------------------------------*
 *#########################################################################################################################*/
+/*
+SUMMARY:
+	The vertex transform pipeline transforms 3D coordinates into 2D window coordinates
+	The vertex transform pipeline consists of the following stages
+	- transform by model matrix
+	- transform by view matrix
+	- transform by projection matrix
+	- transform by viewport
+IMPLEMENTATION NOTES:
+	The model and view matrices are combined into one matrix
+	The combined matrix can be calculated by matrix multiplication
+USAGE NOTES:
+	Most rendering code does not alter vertex transform matrices.
+	Some examples of code that does however:
+	- entities use custom model matrices
+	- sky may use a model matrix to transform coordinates upwards when you fly into the sky
+	  (this avoids needing to recreate the vertex buffer in this case)
+	- skybox uses a custom view matrix so it is always drawn at a constant distance
+	Altering the viewport (and scissor) changes which part of the window
+	  that everything is rendered to. It can be used for e.g. splitscreen mode
+*/
+
 typedef enum MatrixType_ {
 	MATRIX_PROJ, /* Projection matrix */
 	MATRIX_VIEW  /* Combined model view matrix */
