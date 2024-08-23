@@ -1,3 +1,7 @@
+#ifndef CC_WINSOCK_FUNC
+#define CC_WINSOCK_FUNC
+#endif
+
 /* Not available on older SDKs */
 typedef cc_uintptr _UINT_PTR;
 
@@ -120,26 +124,26 @@ typedef struct WSAData {
 } WSADATA;
 
 /* Function declarations */
-static int (WINAPI *_WSAStartup)(WORD versionRequested, WSADATA* wsaData);
-static int (WINAPI *_WSACleanup)(void);
-static int (WINAPI *_WSAGetLastError)(void);
-static int (WINAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
+CC_WINSOCK_FUNC int (WINAPI *_WSAStartup)(WORD versionRequested, WSADATA* wsaData);
+CC_WINSOCK_FUNC int (WINAPI *_WSACleanup)(void);
+CC_WINSOCK_FUNC int (WINAPI *_WSAGetLastError)(void);
+CC_WINSOCK_FUNC int (WINAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
 
-static int (WINAPI *_socket)(int af, int type, int protocol);
-static int (WINAPI *_closesocket)(SOCKET s);
-static int (WINAPI *_connect)(SOCKET s, const struct sockaddr* name, int namelen);
-static int (WINAPI *_shutdown)(SOCKET s, int how);
+CC_WINSOCK_FUNC int (WINAPI *_socket)(int af, int type, int protocol);
+CC_WINSOCK_FUNC int (WINAPI *_closesocket)(SOCKET s);
+CC_WINSOCK_FUNC int (WINAPI *_connect)(SOCKET s, const struct sockaddr* name, int namelen);
+CC_WINSOCK_FUNC int (WINAPI *_shutdown)(SOCKET s, int how);
 
-static int (WINAPI *_ioctlsocket)(SOCKET s, long cmd, u_long* argp);
-static int (WINAPI *_getsockopt)(SOCKET s, int level, int optname, char* optval, int* optlen);
-static int (WINAPI *_recv)(SOCKET s, char* buf, int len, int flags);
-static int (WINAPI *_send)(SOCKET s, const char FAR * buf, int len, int flags);
-static int (WINAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout);
+CC_WINSOCK_FUNC int (WINAPI *_ioctlsocket)(SOCKET s, long cmd, u_long* argp);
+CC_WINSOCK_FUNC int (WINAPI *_getsockopt)(SOCKET s, int level, int optname, char* optval, int* optlen);
+CC_WINSOCK_FUNC int (WINAPI *_recv)(SOCKET s, char* buf, int len, int flags);
+CC_WINSOCK_FUNC int (WINAPI *_send)(SOCKET s, const char FAR * buf, int len, int flags);
+CC_WINSOCK_FUNC int (WINAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout);
 
-static struct hostent* (WINAPI *_gethostbyname)(const char* name);
-static unsigned short  (WINAPI *_htons)(u_short hostshort);
-static int  (WINAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, ADDRINFOA** result);
-static void (WINAPI* _freeaddrinfo)(ADDRINFOA* addrInfo);
+CC_WINSOCK_FUNC struct hostent* (WINAPI *_gethostbyname)(const char* name);
+CC_WINSOCK_FUNC unsigned short  (WINAPI *_htons)(u_short hostshort);
+CC_WINSOCK_FUNC int  (WINAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, ADDRINFOA** result);
+CC_WINSOCK_FUNC void (WINAPI* _freeaddrinfo)(ADDRINFOA* addrInfo);
 
 static void Winsock_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {

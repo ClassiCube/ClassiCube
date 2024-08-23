@@ -27,6 +27,7 @@
 #include "../misc/windows/min-winsock2.h"
 #include "../misc/windows/min-shellapi.h"
 #include "../misc/windows/min-wincrypt.h"
+#include "../misc/windows/min-kernel32.h"
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
@@ -129,14 +130,6 @@ void Platform_Log(const char* msg, int len) {
 
 	OutputDebugStringA(tmp);
 	OutputDebugStringA("\n");
-}
-
-static void (WINAPI *_GetSystemTimeAsFileTime)(LPFILETIME sysTime);
-/* Fallback support for NT 3.5 */
-static void WINAPI Fallback_GetSystemTimeAsFileTime(LPFILETIME sysTime) {
-	SYSTEMTIME curTime;
-	GetSystemTime(&curTime);
-	SystemTimeToFileTime(&curTime, sysTime);
 }
 
 #define FILETIME_EPOCH      50491123200ULL
@@ -920,38 +913,14 @@ static void Platform_InitStopwatch(void) {
 	} else { sw_freqDiv = 10; }
 }
 
-static BOOL (WINAPI *_AttachConsole)(DWORD processId);
-static BOOL (WINAPI *_IsDebuggerPresent)(void);
-
-static void LoadKernelFuncs(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(AttachConsole), 
-		DynamicLib_Sym(IsDebuggerPresent),
-		DynamicLib_Sym(GetSystemTimeAsFileTime),
-	};
-
-	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
-	void* lib;
-	DynamicLib_LoadAll(&kernel32, funcs, Array_Elems(funcs), &lib);
-	/* Not present on Windows NT 3.5 */
-	if (!_GetSystemTimeAsFileTime) _GetSystemTimeAsFileTime = Fallback_GetSystemTimeAsFileTime;
-}
-
 void Platform_Init(void) {
 	WSADATA wsaData;
 	cc_result res;
 
 	Platform_InitStopwatch();
 	heap = GetProcessHeap();
+	Kernel32_LoadDynamicFuncs();
 
-	Winsock_LoadDynamicFuncs();
-	/* Fallback for older OS versions which lack WSAStringToAddressW */
-	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
-	
-	res = _WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (res) Logger_SysWarn(res, "starting WSA");
-
-	LoadKernelFuncs();
 	if (_IsDebuggerPresent) hasDebugger = _IsDebuggerPresent();
 	/* For when user runs from command prompt */
 #if CC_WIN_BACKEND != CC_WIN_BACKEND_TERMINAL
@@ -960,6 +929,13 @@ void Platform_Init(void) {
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;
+
+	Winsock_LoadDynamicFuncs();
+	/* Fallback for older OS versions which lack WSAStringToAddressW */
+	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
+	
+	res = _WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (res) Logger_SysWarn(res, "starting WSA");
 }
 
 void Platform_Free(void) {

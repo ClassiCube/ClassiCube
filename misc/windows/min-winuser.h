@@ -1,3 +1,7 @@
+#ifndef CC_USER32_FUNC
+#define CC_USER32_FUNC
+#endif
+
 /* Not available on older SDKs */
 typedef cc_uintptr _SIZE_T;
 
@@ -37,9 +41,9 @@ typedef cc_uintptr _SIZE_T;
 #endif
 
 
-static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
-static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
-static BOOL (WINAPI* _SetProcessDPIAware)(void);
+CC_USER32_FUNC BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
+CC_USER32_FUNC UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
+CC_USER32_FUNC BOOL (WINAPI *_SetProcessDPIAware)(void);
 
 static void User32_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {

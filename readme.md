@@ -124,9 +124,8 @@ I am assuming you used the installer from https://osdn.net/projects/mingw/
 ##### Using TCC (Tiny C Compiler)
 Setting up TCC:
 1. Download and extract `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
-2. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext` at line 554 (In between `RtlAddFunctionTable` and `RtlDeleteFunctionTable`)
-3. Download `winapi-full-for-0.9.27.zip` from https://bellard.org/tcc/ 
-4. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
+2. Download `winapi-full-for-0.9.27.zip` from https://bellard.org/tcc/ 
+3. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
 
 Compiling with TCC:
 1. Navigate to the directory with ClassiCube's source code

@@ -20,6 +20,8 @@
 	#include <imagehlp.h>
 	/* Compatibility version so compiling works on older Windows SDKs */
 	#include "../misc/windows/min-imagehlp.h"
+	#define CC_KERN32_FUNC extern /* main use is Platform_Windows.c */
+	#include "../misc/windows/min-kernel32.h"
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
 	#include <signal.h>
@@ -287,12 +289,12 @@ static void DumpFrame(cc_string* trace, void* addr) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 
-static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, DWORD_PTR addr) {
+static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, _DWORD_PTR addr) {
 	if (!_SymFunctionTableAccess) return NULL;
 	return _SymFunctionTableAccess(process, addr);
 }
 
-static DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
+static _DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, _DWORD_PTR addr) {
 	if (!_SymGetModuleBase) return 0;
 	return _SymGetModuleBase(process, addr);
 }
@@ -1202,6 +1204,7 @@ void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char*
 void Logger_Abort2(cc_result result, const char* raw_msg) {
 #endif
 	CONTEXT ctx;
+	CONTEXT* ctx_ptr;
 	#if _M_IX86 && __GNUC__
 	/* Stack frame layout on x86: */
 	/*  [ebp] is previous frame's EBP */
@@ -1219,14 +1222,16 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 		: "eax", "memory"
 	);
 	ctx.ContextFlags = CONTEXT_CONTROL;
+	ctx_ptr = &ctx;
 	#else
-	/* This method is guaranteed to exist on 64 bit windows.  */
-	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
-	/*  so an alternative is provided for MinGW above so that */
-	/*  the game can be cross-compiled for Windows 98 / 2000  */
-	RtlCaptureContext(&ctx);
+	/* This method is guaranteed to exist on 64 bit windows. */
+	/* NOTE: This is missing in 32 bit Windows 2000 however  */
+	if (_RtlCaptureContext) {
+		_RtlCaptureContext(&ctx);
+		ctx_ptr = &ctx;
+	} else { ctx_ptr = NULL; }
 	#endif
-	AbortCommon(result, raw_msg, &ctx);
+	AbortCommon(result, raw_msg, ctx_ptr);
 }
 #else
 void Logger_Abort2(cc_result result, const char* raw_msg) {
@@ -1317,7 +1322,7 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	/*  However that was not always inlined by the compiler, which resulted in a */
 	/*  useless strackframe being logged - so manually inline Logger_Backtrace call */
 	Logger_Log(&backtrace);
-	Logger_Backtrace(&msg, ctx);
+	if (ctx) Logger_Backtrace(&msg, ctx);
 
 	DumpMisc();
 	CloseLogFile();
