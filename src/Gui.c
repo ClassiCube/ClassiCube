@@ -317,7 +317,7 @@ void Gui_ShowCinematicBars() {
 	if (Gui.ApertureSize < 0.0f) Gui.ApertureSize = 0.0f;
 	if (Gui.ApertureSize > 1.0f) Gui.ApertureSize = 1.0f;
 
-	// If aperture size is over 1, just draw 1 rectangle instead of 2
+	// If aperture size is 1, just draw 1 rectangle instead of 2
 	if (Gui.ApertureSize == 1.0f) {
 		Gfx_Draw2DGradient(0, 0, screenWidth, screenHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
 	} else {

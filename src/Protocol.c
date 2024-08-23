@@ -31,6 +31,8 @@
 #include "Input.h"
 #include "Utils.h"
 #include "InputHandler.h"
+#include "HeldBlockRenderer.h"
+#include "Options.h"
 
 struct _ProtocolData Protocol;
 
@@ -1560,12 +1562,12 @@ static void CPE_LightingMode(cc_uint8* data) {
 static void CPE_CinematicGui(cc_uint8* data) {
 	cc_bool hideHand = data[0];
 	cc_bool hideHotbar = data[1];
-	float apertureSize = GetFloat(data + 6);
+	cc_uint8 apertureSize = data[6];
 
-	Gui.HideHand = hideHand;
+	HeldBlockRenderer_Show = !hideHand && Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
 	Gui.HideHotbar = hideHotbar;
 	Gui.CinematicBarColor = PackedCol_Make(data[2], data[3], data[4], data[5]);
-	Gui.ApertureSize = apertureSize;
+	Gui.ApertureSize = (float)apertureSize / 255.0;
 }
 
 static void CPE_Reset(void) {
@@ -1611,7 +1613,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
 	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
-	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 11);
+	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 8);
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {
