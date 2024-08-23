@@ -89,6 +89,7 @@ static struct CpeExt
 	pluginMessages_Ext  = { "PluginMessages", 1 },
 	extTeleport_Ext     = { "ExtEntityTeleport", 1 },
 	lightingMode_Ext    = { "LightingMode", 1 },
+	cinematicGui_Ext   = { "CinematicGui", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
 	extBlocks_Ext       = { "ExtendedBlocks", 1 };
 
@@ -98,7 +99,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&messageTypes_Ext, &hackControl_Ext, &playerClick_Ext, &fullCP437_Ext, &longerMessages_Ext, &blockDefs_Ext,
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
-	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext,
+	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
@@ -1555,6 +1556,17 @@ static void CPE_LightingMode(cc_uint8* data) {
 	Lighting_SetMode(mode, true);
 }
 
+static void CPE_CinematicGui(cc_uint8* data) {
+	cc_bool hideHand = data[0];
+	cc_bool hideHotbar = data[1];
+	float apertureSize = GetFloat(data + 6);
+
+	Gui.HideHand = hideHand;
+	Gui.HideHotbar = hideHotbar;
+	Gui.CinematicBarColor = PackedCol_Make(data[2], data[3], data[4], data[5]);
+	Gui.ApertureSize = apertureSize;
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	CPEExtensions_Reset();
@@ -1598,6 +1610,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
 	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
+	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 11);
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {

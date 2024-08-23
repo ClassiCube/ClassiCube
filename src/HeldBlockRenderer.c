@@ -9,6 +9,7 @@
 #include "Entity.h"
 #include "Model.h"
 #include "Options.h"
+#include "Gui.h"
 
 cc_bool HeldBlockRenderer_Show;
 static BlockID held_block;
@@ -39,21 +40,24 @@ static void HeldBlockRenderer_RenderModel(void) {
 	Gfx_SetDepthWrite(false);
 	/* TODO: Need to properly reallocate per model VB here */
 
-	if (Blocks.Draw[held_block] == DRAW_GAS) {
-		model = Entities.CurPlayer->Base.Model;
-		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
+	if (!Gui.HideHand) {
+		if (Blocks.Draw[held_block] == DRAW_GAS) {
+			model = Entities.CurPlayer->Base.Model;
+			SetHeldModel(model);
+			Vec3_Set(held_entity.ModelScale, 1.0f, 1.0f, 1.0f);
 
-		Model_RenderArm(model, &held_entity);
-		Gfx_SetAlphaTest(false);
-	} else {	
-		model = Models.Block;
-		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
+			Model_RenderArm(model, &held_entity);
+			Gfx_SetAlphaTest(false);
+		}
+		else {
+			model = Models.Block;
+			SetHeldModel(model);
+			Vec3_Set(held_entity.ModelScale, 0.4f, 0.4f, 0.4f);
 
-		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
-		Model_Render(model, &held_entity);
-		Gfx_RestoreAlphaState(Blocks.Draw[held_block]);
+			Gfx_SetupAlphaState(Blocks.Draw[held_block]);
+			Model_Render(model, &held_entity);
+			Gfx_RestoreAlphaState(Blocks.Draw[held_block]);
+		}
 	}
 	
 	Gfx_SetDepthTest(true);

@@ -307,6 +307,26 @@ void Gui_ShowPauseMenu(void) {
 	}
 }
 
+void Gui_ShowCinematicBars() {
+	int screenWidth = Window_Main.Width;
+	int screenHeight = Window_Main.Height;
+
+	// Ensure aperture size is clamped between 0 and 1
+	if (Gui.ApertureSize < 0.0f) Gui.ApertureSize = 0.0f;
+	if (Gui.ApertureSize > 1.0f) Gui.ApertureSize = 1.0f;
+
+	// If aperture size is over 1, just draw 1 rectangle instead of 2
+	if (Gui.ApertureSize == 1.0f) {
+		Gfx_Draw2DGradient(0, 0, screenWidth, screenHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+	} else {
+		// Calculate the height of each bar based on the aperture size
+		int barHeight = (int)(screenHeight * Gui.ApertureSize / 2.0f);
+
+		Gfx_Draw2DGradient(0, 0, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+		Gfx_Draw2DGradient(0, screenHeight - barHeight, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+	}
+}
+
 void Gui_RenderGui(float delta) {
 	struct Screen* s;
 	int i;
@@ -315,6 +335,8 @@ void Gui_RenderGui(float delta) {
 #ifdef CC_BUILD_DUALSCREEN
 	Texture_Render(&touchBgTex);
 #endif
+
+	if (Gui.ApertureSize > 0) Gui_ShowCinematicBars();
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
