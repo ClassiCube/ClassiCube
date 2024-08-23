@@ -140,3 +140,23 @@ static struct hostent* (WINAPI *_gethostbyname)(const char* name);
 static unsigned short  (WINAPI *_htons)(u_short hostshort);
 static int  (WINAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, ADDRINFOA** result);
 static void (WINAPI* _freeaddrinfo)(ADDRINFOA* addrInfo);
+
+static void Winsock_LoadDynamicFuncs(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(WSAStartup),      DynamicLib_Sym(WSACleanup),
+		DynamicLib_Sym(WSAGetLastError), DynamicLib_Sym(WSAStringToAddressW),
+		DynamicLib_Sym(socket),          DynamicLib_Sym(closesocket),
+		DynamicLib_Sym(connect),         DynamicLib_Sym(shutdown),
+		DynamicLib_Sym(ioctlsocket),     DynamicLib_Sym(getsockopt),
+		DynamicLib_Sym(gethostbyname),   DynamicLib_Sym(htons),
+		DynamicLib_Sym(getaddrinfo),     DynamicLib_Sym(freeaddrinfo),
+		DynamicLib_Sym(recv), DynamicLib_Sym(send), DynamicLib_Sym(select)
+	};
+	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
+	static const cc_string winsock2 = String_FromConst("WS2_32.DLL");
+	void* lib;
+
+	DynamicLib_LoadAll(&winsock2, funcs, Array_Elems(funcs), &lib);
+	/* Windows 95 is missing WS2_32 dll */
+	if (!_WSAStartup) DynamicLib_LoadAll(&winsock1, funcs, Array_Elems(funcs), &lib);
+}

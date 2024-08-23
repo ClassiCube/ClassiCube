@@ -1,10 +1,13 @@
-static DWORD_PTR (WINAPI *_SymGetModuleBase)(HANDLE process, DWORD_PTR addr);
-static PVOID     (WINAPI *_SymFunctionTableAccess)(HANDLE process, DWORD_PTR addr);
-static BOOL      (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
+/*Not available on older SDKs */
+typedef cc_uintptr _DWORD_PTR;
 
-static BOOL      (WINAPI *_SymGetSymFromAddr)(HANDLE process, DWORD_PTR addr, DWORD_PTR* displacement, IMAGEHLP_SYMBOL* sym);
-static BOOL      (WINAPI *_SymGetModuleInfo) (HANDLE process, DWORD_PTR addr, IMAGEHLP_MODULE* module);
-static BOOL      (WINAPI *_SymGetLineFromAddr)(HANDLE hProcess, DWORD_PTR addr, DWORD* displacement, IMAGEHLP_LINE* line); /* displacement is intentionally DWORD */
+static _DWORD_PTR (WINAPI *_SymGetModuleBase)(HANDLE process, _DWORD_PTR addr);
+static PVOID      (WINAPI *_SymFunctionTableAccess)(HANDLE process, _DWORD_PTR addr);
+static BOOL       (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
+
+static BOOL       (WINAPI *_SymGetSymFromAddr)(HANDLE process, _DWORD_PTR addr, _DWORD_PTR* displacement, IMAGEHLP_SYMBOL* sym);
+static BOOL       (WINAPI *_SymGetModuleInfo) (HANDLE process, _DWORD_PTR addr, IMAGEHLP_MODULE* module);
+static BOOL       (WINAPI *_SymGetLineFromAddr)(HANDLE hProcess, _DWORD_PTR addr, DWORD* displacement, IMAGEHLP_LINE* line); /* displacement is intentionally DWORD */
 
 static BOOL      (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
 

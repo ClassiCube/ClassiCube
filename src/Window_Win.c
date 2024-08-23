@@ -58,10 +58,6 @@
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
-static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
-static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
-static BOOL (WINAPI* _SetProcessDPIAware)(void);
-
 static HINSTANCE win_instance;
 static HDC win_DC;
 static cc_bool suppress_resize;
@@ -321,16 +317,8 @@ void Window_PreInit(void) {
 }
 
 void Window_Init(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(RegisterRawInputDevices),
-		DynamicLib_Sym(GetRawInputData),
-		DynamicLib_Sym(SetProcessDPIAware)
-	};
-	static const cc_string user32 = String_FromConst("USER32.DLL");
-	void* lib;
 	HDC hdc;
-
-	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
+	User32_LoadDynamicFuncs();
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	/* Enable high DPI support */
@@ -357,9 +345,9 @@ void Window_Free(void) { }
 static ATOM DoRegisterClass(void) {
 	ATOM atom;
 	WNDCLASSEXW wc = { 0 };
-	wc.cbSize     = sizeof(WNDCLASSEXW);
-	wc.style      = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
-	wc.hInstance  = win_instance;
+	wc.cbSize      = sizeof(WNDCLASSEXW);
+	wc.style       = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
+	wc.hInstance   = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
 
@@ -378,6 +366,7 @@ static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 	cc_result res;
 	HWND hwnd;
 	RECT r;
+	
 	/* Calculate final window rectangle after window decorations are added (titlebar, borders etc) */
 	r.left = Display_CentreX(width);  r.right  = r.left + width;
 	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
@@ -445,7 +434,7 @@ void Clipboard_GetText(cc_string* value) {
 	HWND hwnd = Window_Main.Handle.ptr;
 	cc_bool unicode;
 	HANDLE hGlobal;
-	SIZE_T size;
+	_SIZE_T size;
 	void* src;
 	int i;
 

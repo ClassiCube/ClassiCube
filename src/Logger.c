@@ -303,7 +303,7 @@ static DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
 /*  - if NULL is passed as the "ReadMemory" argument, the default callback using ReadProcessMemory is used */
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
-static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
+static BOOL WINAPI ReadMemCallback(HANDLE process, _DWORD_PTR baseAddress, PVOID buffer, DWORD size, DWORD* numBytesRead) {
 	SIZE_T numRead = 0;
 	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
 	
@@ -947,7 +947,7 @@ static void DumpStack(void) {
 	}
 }
 
-static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, void* userCtx) {
+static BOOL WINAPI DumpModule(const char* name, ULONG_PTR base, ULONG size, void* userCtx) {
 	cc_string str; char strBuffer[256];
 	cc_uintptr beg, end;
 

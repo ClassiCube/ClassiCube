@@ -1,4 +1,5 @@
-/* Compatibility so that compiling in older windows SDK versions works */
+/* Not available on older SDKs */
+typedef cc_uintptr _SIZE_T;
 
 /* Only present if WIN32_WINNT >= 0x0500 */
 #ifndef WM_XBUTTONDOWN
@@ -34,3 +35,20 @@
 	#define RIM_TYPEMOUSE 0
 	#define RIDEV_INPUTSINK 0x00000100
 #endif
+
+
+static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
+static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
+static BOOL (WINAPI* _SetProcessDPIAware)(void);
+
+static void User32_LoadDynamicFuncs(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(RegisterRawInputDevices),
+		DynamicLib_Sym(GetRawInputData),
+		DynamicLib_Sym(SetProcessDPIAware)
+	};
+	static const cc_string user32 = String_FromConst("USER32.DLL");
+	void* lib;
+
+	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
+}

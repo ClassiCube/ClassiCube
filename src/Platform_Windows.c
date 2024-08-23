@@ -463,29 +463,6 @@ static INT WINAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, 
 	return 0;
 }
 
-static void LoadWinsockFuncs(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(WSAStartup),      DynamicLib_Sym(WSACleanup),
-		DynamicLib_Sym(WSAGetLastError), DynamicLib_Sym(WSAStringToAddressW),
-		DynamicLib_Sym(socket),          DynamicLib_Sym(closesocket),
-		DynamicLib_Sym(connect),         DynamicLib_Sym(shutdown),
-		DynamicLib_Sym(ioctlsocket),     DynamicLib_Sym(getsockopt),
-		DynamicLib_Sym(gethostbyname),   DynamicLib_Sym(htons),
-		DynamicLib_Sym(getaddrinfo),     DynamicLib_Sym(freeaddrinfo),
-		DynamicLib_Sym(recv), DynamicLib_Sym(send), DynamicLib_Sym(select)
-	};
-	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
-	static const cc_string winsock2 = String_FromConst("WS2_32.DLL");
-	void* lib;
-
-	DynamicLib_LoadAll(&winsock2, funcs, Array_Elems(funcs), &lib);
-	/* Windows 95 is missing WS2_32 dll */
-	if (!_WSAStartup) DynamicLib_LoadAll(&winsock1, funcs, Array_Elems(funcs), &lib);
-
-	/* Fallback for older OS versions which lack WSAStringToAddressW */
-	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
-}
-
 static cc_result ParseHostOld(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct hostent* res;
 	cc_result wsa_res;
@@ -919,13 +896,15 @@ void Platform_EncodeString(cc_winstring* dst, const cc_string* src) {
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
 	uni = dst->uni;
-	for (i = 0; i < src->length; i++) {
+	for (i = 0; i < src->length; i++) 
+	{
 		*uni++ = Convert_CP437ToUnicode(src->buffer[i]);
 	}
 	*uni = '\0';
 
 	ansi = dst->ansi;
-	for (i = 0; i < src->length; i++) {
+	for (i = 0; i < src->length; i++) 
+	{
 		*ansi++ = (char)dst->uni[i];
 	}
 	*ansi = '\0';
@@ -946,7 +925,8 @@ static BOOL (WINAPI *_IsDebuggerPresent)(void);
 
 static void LoadKernelFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent),
+		DynamicLib_Sym(AttachConsole), 
+		DynamicLib_Sym(IsDebuggerPresent),
 		DynamicLib_Sym(GetSystemTimeAsFileTime),
 	};
 
@@ -964,7 +944,10 @@ void Platform_Init(void) {
 	Platform_InitStopwatch();
 	heap = GetProcessHeap();
 
-	LoadWinsockFuncs();
+	Winsock_LoadDynamicFuncs();
+	/* Fallback for older OS versions which lack WSAStringToAddressW */
+	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
+	
 	res = _WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res) Logger_SysWarn(res, "starting WSA");
 
@@ -1005,27 +988,17 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-
-static void LoadCryptFuncs(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(CryptProtectData), DynamicLib_Sym(CryptUnprotectData)
-	};
-
-	static const cc_string crypt32 = String_FromConst("CRYPT32.DLL");
-	void* lib;
-	DynamicLib_LoadAll(&crypt32, funcs, Array_Elems(funcs), &lib);
-}
-
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
 
-	if (!_CryptProtectData) LoadCryptFuncs();
+	Crypt32_LoadDynamicFuncs();
 	if (!_CryptProtectData) return ERR_NOT_SUPPORTED;
 	if (!_CryptProtectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
 
-	for (i = 0; i < output.cbData; i++) {
+	for (i = 0; i < output.cbData; i++) 
+	{
 		String_Append(dst, output.pbData[i]);
 	}
 	LocalFree(output.pbData);
@@ -1037,11 +1010,12 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
 
-	if (!_CryptUnprotectData) LoadCryptFuncs();
+	Crypt32_LoadDynamicFuncs();
 	if (!_CryptUnprotectData) return ERR_NOT_SUPPORTED;
 	if (!_CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
 
-	for (i = 0; i < output.cbData; i++) {
+	for (i = 0; i < output.cbData; i++) 
+	{
 		String_Append(dst, output.pbData[i]);
 	}
 	LocalFree(output.pbData);
