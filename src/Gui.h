@@ -1,6 +1,8 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
 #include "Core.h"
+#include "PackedCol.h"
+
 CC_BEGIN_HEADER
 
 /* Describes and manages 2D GUI elements on screen.
@@ -54,8 +56,16 @@ CC_VAR extern struct _GuiData {
 	struct Screen* InputGrab;
 	/* Whether chat automatically scales based on window size. */
 	cc_bool AutoScaleChat;
-	/* Whether the touch UI is currently being displayed */
+	/* Whether the touch UI is currently being displayed. */
 	cc_bool TouchUI;
+	/* Whether the player hand/block model should be hidden. */
+	cc_bool HideHand;
+	/* Whether the hotbar should be hidden. */
+	cc_bool HideHotbar;
+	/* The height of the cinematic black bars. */
+	float ApertureSize;
+	/* The color of the cinematic bars, if enabled. */
+	PackedCol CinematicBarColor;
 } Gui;
 
 #ifdef CC_BUILD_TOUCH

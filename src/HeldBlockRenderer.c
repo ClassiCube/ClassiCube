@@ -43,14 +43,15 @@ static void HeldBlockRenderer_RenderModel(void) {
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
 		model = Entities.CurPlayer->Base.Model;
 		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
+		Vec3_Set(held_entity.ModelScale, 1.0f, 1.0f, 1.0f);
 
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
-	} else {	
+	}
+	else {
 		model = Models.Block;
 		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
+		Vec3_Set(held_entity.ModelScale, 0.4f, 0.4f, 0.4f);
 
 		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
 		Model_Render(model, &held_entity);

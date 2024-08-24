@@ -405,7 +405,7 @@ static void HUDScreen_Render(void* screen, float delta) {
 
 	if (!Gui_GetBlocksWorld()) {
 		Gfx_BindDynamicVb(s->vb);
-		Widget_Render2(&s->hotbar, 12);
+		if (!Gui.HideHotbar) Widget_Render2(&s->hotbar, 12);
 
 		if (Gui.IconsTex && !tablist_active) {
 			Gfx_BindTexture(Gui.IconsTex);
