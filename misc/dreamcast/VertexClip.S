@@ -56,7 +56,6 @@
 
 .global _ClipLine
 .align 4
-.type  _ClipLine,%function
 _ClipLine:
 	mov.l    r4,@-r15 ! LS, push(r4)
 	mov.l    r5,@-r15 ! LS, push(r5)
@@ -192,3 +191,6 @@ _ClipLine:
 	mov.l   @r15+,r5  ! LS, pop(r5)
 	rts               ! CO, return after executing instruction in delay slot
 	mov.l   @r15+,r4  ! LS, pop(r4)
+
+.size _ClipLine, .-_ClipLine
+.type _ClipLine,%function

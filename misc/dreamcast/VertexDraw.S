@@ -502,7 +502,6 @@ _Case_1_1_1_1:
 
 .global _ProcessVertexList
 .align 4
-.type  _ProcessVertexList,%function
 _ProcessVertexList:
 ! STORE CPU REGISTERS
 	mov.l    r8,@-r15
@@ -574,6 +573,8 @@ NEXT_ITER:
 	mov.l   @r15+,r9
 	rts     
 	mov.l   @r15+,r8
+.size _ProcessVertexList, .-_ProcessVertexList
+.type _ProcessVertexList, %function
 
 .align 4
 .VP_1:

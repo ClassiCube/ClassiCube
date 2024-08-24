@@ -56,7 +56,6 @@
 
 .global _ClipEdge
 .align 4
-.type  _ClipEdge,%function
 _ClipEdge:
 	mov      IN1, TM1 ! MT, tmp  = &v1
 	fldi0    fr4      ! LS, fr4  = 0
@@ -188,3 +187,5 @@ _ClipEdge:
 1:
 	rts               ! CO, return after executing instruction in delay slot
 	mov.l  CLO,@OUT   ! LS, OUT->color = OUTCOLOR
+.size _ClipEdge, .-_ClipEdge
+.type _ClipEdge, %function

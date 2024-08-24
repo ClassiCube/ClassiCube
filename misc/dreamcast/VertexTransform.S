@@ -36,9 +36,8 @@
 !r4 = src pointer ARG
 !r5 = dst pointer ARG
 !r6 = quads count ARG
-!r7 = ?
-!r10  = PVR_CMD_VERTEX
-!r11  = PVR_CMD_VERTEX_EOL
+!r7 = PVR_CMD_VERTEX
+!r11 = PVR_CMD_VERTEX_EOL
 
 !fr0  = temp
 !fr1  = u
@@ -56,22 +55,19 @@
 ! =========================================================
 .macro TransformSetup
     mov r4,r3        ! MT, r3  = src
-    mov.l r10, @-r15 ! LS, push(r10)
     add #-32, r5     ! EX, r5 -= sizeof(VERTEX)
     mov.l r11, @-r15 ! LS, push(r11)
-    mov #0xE0, r10   ! EX, r10 = 0x00 00 00 E0
+    mov #0xE0, r7    ! EX, r7  = 0x00 00 00 E0
     pref @r3         ! LS, PREFETCH r3 (first vertex)
-    shll16 r10       ! EX, r10 = 0x00 E0 00 00
-    shll8  r10       ! EX, r10 = 0xE0 00 00 00 (PVR_CMD_VERTEX)
+    shll16 r7        ! EX, r7  = 0x00 E0 00 00
+    shll8  r7        ! EX, r7  = 0xE0 00 00 00 (PVR_CMD_VERTEX)
     mov #0xF0, r11   ! EX, r11 = 0x00 00 00 F0
     shll16 r11       ! EX, r11 = 0x00 F0 00 00
     shll8  r11       ! EX, r11 = 0xF0 00 00 00 (PVR_CMD_VERTEX_EOL)
-    nop              ! MT, align to even boundary
 .endm
 
 .macro TransformEnd
     mov.l @r15+, r11 ! LS, pop(r11)
-    mov.l @r15+, r10 ! LS, pop(r10)
 
     add #32, r5      ! EX, r5 += sizeof(VERTEX)
     rts              ! CO, return after executing instruction in delay slot
@@ -132,7 +128,7 @@
     fmov.s  fr6,@-r5 ! LS, dst->z = Z
     fmov.s  fr5,@-r5 ! LS, dst->y = Y
     fmov.s  fr4,@-r5 ! LS, dst->x = X
-    mov.l   r10,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
+    mov.l    r7,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex2
@@ -148,7 +144,7 @@
     fmov.s  fr5,@-r5 ! LS, dst->y = Y
     or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 1)
     fmov.s  fr4,@-r5 ! LS, dst->x = X
-    mov.l   r10,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
+    mov.l    r7,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex3
@@ -164,7 +160,7 @@
     shll2   r2       ! EX, tmp = tmp << 2
     fmov.s  fr4,@-r5 ! LS, dst->x = X
     or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 2)
-    mov.l   r10,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
+    mov.l    r7,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex4
@@ -190,7 +186,6 @@
 ! ==================== TEXTURED VERTEX TRANSFORM ==========
 ! =========================================================
 .global _DrawTexturedQuads
-.type  _DrawTexturedQuads,%function
 .align 4
 
 _DrawTexturedQuads:
@@ -230,13 +225,13 @@ _DrawTexturedQuads:
     nop
     
     TransformEnd
-
+.size _DrawTexturedQuads, .-_DrawTexturedQuads
+.type _DrawTexturedQuads, %function
 
 ! =========================================================
 ! ==================== COLOURED VERTEX TRANSFORM ==========
 ! =========================================================
 .global _DrawColouredQuads
-.type  _DrawColouredQuads,%function
 .align 4
 
 _DrawColouredQuads:
@@ -259,7 +254,7 @@ _DrawColouredQuads:
     ProcessVertex4
 
 ! CLIPFLAGS TESTING
-	and     #15,r0
+    and     #15,r0
     cmp/eq  #0,r0  ! T = r0 == 0 (all points invisible)
     bt/s    .C_NO_POINTS_VISIBLE  ! if T goto NO_POINTS_VISIBLE
     nop
@@ -278,3 +273,5 @@ _DrawColouredQuads:
     nop
     
     TransformEnd
+.size _DrawColouredQuads, .-_DrawColouredQuads
+.type _DrawColouredQuads, %function
