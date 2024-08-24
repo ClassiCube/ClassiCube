@@ -313,16 +313,16 @@ void Gui_ShowCinematicBars() {
 	int screenWidth = Window_Main.Width;
 	int screenHeight = Window_Main.Height;
 
-	// Ensure aperture size is clamped between 0 and 1
-	if (Gui.ApertureSize < 0.0f) Gui.ApertureSize = 0.0f;
-	if (Gui.ApertureSize > 1.0f) Gui.ApertureSize = 1.0f;
+	// Ensure bar size is clamped between 0 and 1
+	if (Gui.BarSize < 0.0f) Gui.BarSize = 0.0f;
+	if (Gui.BarSize > 1.0f) Gui.BarSize = 1.0f;
 
-	// If aperture size is 1, just draw 1 rectangle instead of 2
-	if (Gui.ApertureSize == 1.0f) {
+	// If bar size is 1, just draw 1 rectangle instead of 2
+	if (Gui.BarSize == 1.0f) {
 		Gfx_Draw2DGradient(0, 0, screenWidth, screenHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
 	} else {
-		// Calculate the height of each bar based on the aperture size
-		int barHeight = (int)(screenHeight * Gui.ApertureSize / 2.0f);
+		// Calculate the height of each bar based on the bar size
+		int barHeight = (int)(screenHeight * Gui.BarSize / 2.0f);
 
 		Gfx_Draw2DGradient(0, 0, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
 		Gfx_Draw2DGradient(0, screenHeight - barHeight, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
@@ -338,7 +338,7 @@ void Gui_RenderGui(float delta) {
 	Texture_Render(&touchBgTex);
 #endif
 
-	if (Gui.ApertureSize > 0) Gui_ShowCinematicBars();
+	if (Gui.BarSize > 0) Gui_ShowCinematicBars();
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 

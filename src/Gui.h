@@ -62,8 +62,8 @@ CC_VAR extern struct _GuiData {
 	cc_bool HideHand;
 	/* Whether the hotbar should be hidden. */
 	cc_bool HideHotbar;
-	/* The height of the cinematic black bars. */
-	float ApertureSize;
+	/* The height of the cinematic bars, where 0 = no bars visible and 1 = bars completely cover the screen. */
+	float BarSize;
 	/* The color of the cinematic bars, if enabled. */
 	PackedCol CinematicBarColor;
 } Gui;
