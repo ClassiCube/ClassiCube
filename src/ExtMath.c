@@ -37,6 +37,14 @@ float sqrtf(float x) {
 	}
 #elif defined __GNUC__
 	/* Defined in .h using builtins */
+#elif defined __TINYC__
+	/* Older versions of TinyC don't support fabsf or sqrtf */
+	/* Those can be used though if compiling with newer TinyC */
+	/*  versions for a very small performance improvement */
+	#include <math.h>
+
+	float Math_AbsF(float x)  { return fabs(x); }
+	float Math_SqrtF(float x) { return sqrt(x); }
 #else
 	#include <math.h>
 

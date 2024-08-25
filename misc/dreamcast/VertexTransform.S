@@ -1,77 +1,44 @@
-! =========================================================
-! ======================== PROCESSOR INFO =================
-! =========================================================
-! The SH4 can dual issue (i.e. parallel execution) two instructions
-! as long as the groups of the two instructions are different:
-! * LS - most ALU and FPU register load/stores
-! * EX - most ALU arithmetic instructions
-! * MT - TST, CMP, NOP, MOV Rm,Rn
-! * FE - most FPU arithmetic instructions
-! * CO - other instructions (NOTE: Cannot be exeucted in parallel)
+#define FLG r0 // clip flags
+#define TMP r1 // temp
+#define VTX r2 // PVR_CMD_VERTEX
+#define EOS r3 // PVR_CMD_VERTEX_EOL
+#define SRC r4 // src pointer ARG
+#define DST r5 // dst pointer ARG
+#define CNT r6 // quads count ARG
+#define PFT r7 // prefetch address
 
-! Thee following general aspects of instructions are important to note per the SH4 manual:
-! * Issue rate: Interval between the issue of an instruction and that of the next instruction
-! * Latency: Interval between the issue of an instruction and the generation of its result (completion)
-! * Latency is also the interval between the execution of two instructions with an interdependent relationship.
-!   (although different cases may either increase or decrease Latency)
+#define ZERO fr0 // 0.0
+#define F_U  fr1 // vertex.u
+#define F_V  fr2 // vertex.v
+#define F_C  fr3 // vertex.colour
+#define F_X  fr4 // vertex.x
+#define F_Y  fr5 // vertex.y
+#define F_Z  fr6 // vertex.z
+#define F_W  fr7 // vertex.w
 
-
-! =========================================================
-! ======================== REGISTER USAGES ================
-! =========================================================
-! SH4 C ABI:
-! -  R0  to  R3 are return values (can be overwritten)
-! -  R4  to  R7 are input arguments (can be overwritten)
-! -  R8  to R13 are non-volatile (must be restored at end)
-! - R14  is the frame pointer (must be restored at end)
-! - R15  is the stack pointer (must be restored at end)
-! - FR0  to FR3 are return values (can be overwritten)
-! - FR4  to FR11 are input arguments (can be overwritten)
-! - FR12 to FR13 are non-volatile (must be restored at end)
-
-!r0 = clip flags
-!r1 = GPU command
-!r2 = temp
-!r3 = prefetch address
-!r4 = src pointer ARG
-!r5 = dst pointer ARG
-!r6 = quads count ARG
-!r7 = PVR_CMD_VERTEX
-!r11 = PVR_CMD_VERTEX_EOL
-
-!fr0  = temp
-!fr1  = u
-!fr2  = v
-!fr3  = c
-!fr4  = x
-!fr5  = y
-!fr6  = z
-!fr7  = w
-!fv4  = XYZW
+#define XYZW fv4 // vertex.xyzw
 
 
 ! =========================================================
 ! ========================= TRANSFORM SETUP ===============
 ! =========================================================
 .macro TransformSetup
-    mov r4,r3        ! MT, r3  = src
-    add #-32, r5     ! EX, r5 -= sizeof(VERTEX)
-    mov.l r11, @-r15 ! LS, push(r11)
-    mov #0xE0, r7    ! EX, r7  = 0x00 00 00 E0
-    pref @r3         ! LS, PREFETCH r3 (first vertex)
-    shll16 r7        ! EX, r7  = 0x00 E0 00 00
-    shll8  r7        ! EX, r7  = 0xE0 00 00 00 (PVR_CMD_VERTEX)
-    mov #0xF0, r11   ! EX, r11 = 0x00 00 00 F0
-    shll16 r11       ! EX, r11 = 0x00 F0 00 00
-    shll8  r11       ! EX, r11 = 0xF0 00 00 00 (PVR_CMD_VERTEX_EOL)
+    mov   SRC, PFT    ! MT, pft = src
+    add  #-32, DST    ! EX, dst -= sizeof(VERTEX)
+    mov #0xE0, VTX    ! EX, VTX = 0x00 00 00 E0
+    pref  @PFT        ! LS, PREFETCH pft (first vertex)
+    shll16 VTX        ! EX, VTX = 0x00 E0 00 00
+    shll8  VTX        ! EX, VTX = 0xE0 00 00 00 (PVR_CMD_VERTEX)
+    mov #0xF0, EOS    ! EX, EOS = 0x00 00 00 F0
+    shll16 EOS        ! EX, EOS = 0x00 F0 00 00
+    shll8  EOS        ! EX, EOS = 0xF0 00 00 00 (PVR_CMD_VERTEX_EOL)
+    fldi0  ZERO       ! LS, fr0 = 0.0
 .endm
 
 .macro TransformEnd
-    mov.l @r15+, r11 ! LS, pop(r11)
-
-    add #32, r5      ! EX, r5 += sizeof(VERTEX)
-    rts              ! CO, return after executing instruction in delay slot
-    mov r5,r0        ! MT, r0 = r5
+    add #32, DST      ! EX, DST += sizeof(VERTEX)
+    rts               ! CO, return after executing instruction in delay slot
+    mov DST, r0       ! MT, r0 = DST
 .endm
 
 
@@ -80,36 +47,36 @@
 ! =========================================================
 .macro LoadColouredVertex
 ! LOAD XYZ
-    fmov @r4+, fr4   ! LS, X = src->x
-    fmov @r4+, fr5   ! LS, Y = src->y
-    fmov @r4+, fr6   ! LS, Z = src->z
-    fldi1 fr7        ! LS, W = 1.0
+    fmov @SRC+, F_X   ! LS, X = src->x
+    fmov @SRC+, F_Y   ! LS, Y = src->y
+    fmov @SRC+, F_Z   ! LS, Z = src->z
+    fldi1 F_W         ! LS, W = 1.0
 ! PREPARE NEXT VERTEX
-    add #16, r3      ! EX, r3 += VERTEX_STRIDE
-    pref @r3         ! LS, PREFETCH r3 (next vertex)
-    add #64, r5      ! EX, r5 += 2 * sizeof(VERTEX)
+    add    #16, PFT   ! EX, pft += VERTEX_STRIDE
+    pref   @PFT       ! LS, PREFETCH pft (next vertex)
+    add    #64, DST   ! EX, dst += 2 * sizeof(VERTEX)
 ! TRANSFORM VERTEX
-    ftrv xmtrx, fv4  ! FE, TRANSFORM(XYZW)
+    ftrv xmtrx, XYZW  ! FE, TRANSFORM(XYZW)
 ! LOAD ATTRIBUTES
-    fmov   @r4+,fr3  ! LS, C = src->color
+    fmov @SRC+, F_C   ! LS, C = src->color
 .endm
 
 .macro LoadTexturedVertex
 ! LOAD XYZ
-    fmov @r4+, fr4   ! LS, X = src->x
-    fmov @r4+, fr5   ! LS, Y = src->y
-    fmov @r4+, fr6   ! LS, Z = src->z
-    fldi1 fr7        ! LS, W = 1.0
+    fmov @SRC+, F_X   ! LS, X = src->x
+    fmov @SRC+, F_Y   ! LS, Y = src->y
+    fmov @SRC+, F_Z   ! LS, Z = src->z
+    fldi1 F_W         ! LS, W = 1.0
 ! PREPARE NEXT VERTEX
-    add #24, r3      ! EX, r3 += VERTEX_STRIDE
-    pref @r3         ! LS, PREFETCH r3 (next vertex)
-    add #64, r5      ! EX, r5 += 2 * sizeof(VERTEX)
+    add    #24, PFT   ! EX, pft += VERTEX_STRIDE
+    pref   @PFT       ! LS, PREFETCH pft (next vertex)
+    add    #64, DST   ! EX, dst += 2 * sizeof(VERTEX)
 ! TRANSFORM VERTEX
-    ftrv xmtrx, fv4  ! FE, TRANSFORM(XYZW)
+    ftrv xmtrx, XYZW  ! FE, TRANSFORM(XYZW)
 ! LOAD ATTRIBUTES
-    fmov    @r4+,fr3 ! LS, C = src->color
-    fmov    @r4+,fr1 ! LS, U = src->u
-    fmov    @r4+,fr2 ! LS, V = src->v
+    fmov @SRC+, F_C   ! LS, C = src->color
+    fmov @SRC+, F_U   ! LS, U = src->u
+    fmov @SRC+, F_V   ! LS, V = src->v
 .endm
 
 ! =========================================================
@@ -118,67 +85,63 @@
 ! To take advantage of SH4 dual instruction processing, 
 !  clipflag calculation and vertex output are interleaved
 .macro ProcessVertex1
-    fmov.s  fr7,@-r5 ! LS, dst->w = W
-    fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fldi0   fr0      ! LS, fr0 = 0.0
-    fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr0,fr6  ! FE, T = Z > 0
-    fmov.s  fr1,@-r5 ! LS, dst->u = U
-    movt    r0       ! EX, CLIPFLAGS = T
-    fmov.s  fr6,@-r5 ! LS, dst->z = Z
-    fmov.s  fr5,@-r5 ! LS, dst->y = Y
-    fmov.s  fr4,@-r5 ! LS, dst->x = X
-    mov.l    r7,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
+    fmov.s  F_W,@-DST ! LS, dst->w = W
+    fmov.s  F_C,@-DST ! LS, dst->c = C
+    fmov.s  F_V,@-DST ! LS, dst->v = V
+    fcmp/gt ZERO, F_Z ! FE, T = Z > 0
+    fmov.s  F_U,@-DST ! LS, dst->u = U
+    movt    FLG       ! EX, CLIPFLAGS = T
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    fmov.s  F_Y,@-DST ! LS, dst->y = Y
+    fmov.s  F_X,@-DST ! LS, dst->x = X
+    mov.l   VTX,@-DST ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex2
-    fmov.s  fr7,@-r5 ! LS, dst->w = W
-    fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fldi0   fr0      ! LS, fr0 = 0.0
-    fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr0,fr6  ! FE, T = Z > 0
-    fmov.s  fr1,@-r5 ! LS, dst->u = U
-    movt    r2       ! EX, tmp = T
-    fmov.s  fr6,@-r5 ! LS, dst->z = Z
-    add     r2,r2    ! EX, tmp = tmp + tmp
-    fmov.s  fr5,@-r5 ! LS, dst->y = Y
-    or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 1)
-    fmov.s  fr4,@-r5 ! LS, dst->x = X
-    mov.l    r7,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
+    fmov.s  F_W,@-DST ! LS, dst->w = W
+    fmov.s  F_C,@-DST ! LS, dst->c = C
+    fmov.s  F_V,@-DST ! LS, dst->v = V
+    fcmp/gt ZERO,F_Z  ! FE, T = Z > 0
+    fmov.s  F_U,@-DST ! LS, dst->u = U
+    movt    TMP       ! EX, tmp = T
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    add     TMP,TMP   ! EX, tmp = tmp + tmp
+    fmov.s  F_Y,@-DST ! LS, dst->y = Y
+    or      TMP,FLG   ! EX, CLIPFLAGS |= tmp (T << 1)
+    fmov.s  F_X,@-DST ! LS, dst->x = X
+    mov.l   VTX,@-DST ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex3
-    fmov.s  fr7,@-r5 ! LS, dst->w = W
-    fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fldi0   fr0      ! LS, fr0 = 0.0
-    fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr0,fr6  ! FE, T = Z > 0
-    fmov.s  fr1,@-r5 ! LS, dst->u = U
-    movt    r2       ! EX, tmp = T
-    fmov.s  fr6,@-r5 ! LS, dst->z = Z
-    fmov.s  fr5,@-r5 ! LS, dst->y = Y
-    shll2   r2       ! EX, tmp = tmp << 2
-    fmov.s  fr4,@-r5 ! LS, dst->x = X
-    or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 2)
-    mov.l    r7,@-r5 ! LS, dst->flags = PVR_CMD_VERTEX
+    fmov.s  F_W,@-DST ! LS, dst->w = W
+    fmov.s  F_C,@-DST ! LS, dst->c = C
+    fmov.s  F_V,@-DST ! LS, dst->v = V
+    fcmp/gt ZERO, F_Z ! FE, T = Z > 0
+    fmov.s  F_U,@-DST ! LS, dst->u = U
+    movt    TMP       ! EX, tmp = T
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    fmov.s  F_Y,@-DST ! LS, dst->y = Y
+    shll2   TMP       ! EX, tmp = tmp << 2
+    fmov.s  F_X,@-DST ! LS, dst->x = X
+    or      TMP,FLG   ! EX, CLIPFLAGS |= tmp (T << 2)
+    mov.l   VTX,@-DST ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex4
-    fmov.s  fr7,@-r5 ! LS, dst->w = W
-    or      r11,r0   ! EX, CLIPFLAGS |= PVR_CMD_VERTEX_EOL
-    fmov.s  fr3,@-r5 ! LS, dst->c = C
-    fldi0   fr0      ! LS, fr0 = 0.0
-    fmov.s  fr2,@-r5 ! LS, dst->v = V
-    fcmp/gt fr0,fr6  ! FE, T = Z > 0
-    fmov.s  fr1,@-r5 ! LS, dst->u = U
-    movt    r2       ! EX, tmp = T
-    fmov.s  fr6,@-r5 ! LS, dst->z = Z
-    shll2   r2       ! EX, tmp = tmp << 2
-    fmov.s  fr5,@-r5 ! LS, dst->y = Y
-    add     r2,r2    ! EX, tmp = (tmp << 2) + (tmp << 2) (T << 3)
-    fmov.s  fr4,@-r5 ! LS, dst->x = X
-    or      r2,r0    ! EX, CLIPFLAGS |= tmp (T << 3)
-    mov.l   r0,@-r5  ! LS, dst->flags = PVR_CMD_VERTEX_EOL | CLIPFLAGS
+    fmov.s  F_W,@-DST ! LS, dst->w = W
+    or      EOS,FLG   ! EX, CLIPFLAGS |= PVR_CMD_VERTEX_EOL
+    fmov.s  F_C,@-DST ! LS, dst->c = C
+    fmov.s  F_V,@-DST ! LS, dst->v = V
+    fcmp/gt ZERO, F_Z ! FE, T = Z > 0
+    fmov.s  F_U,@-DST ! LS, dst->u = U
+    movt    TMP       ! EX, tmp = T
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    shll2   TMP       ! EX, tmp = tmp << 2
+    fmov.s  F_Y,@-DST ! LS, dst->y = Y
+    add     TMP,TMP   ! EX, tmp = (tmp << 2) + (tmp << 2) (T << 3)
+    fmov.s  F_X,@-DST ! LS, dst->x = X
+    or      TMP,FLG   ! EX, CLIPFLAGS |= tmp (T << 3)
+    mov.l   FLG,@-DST ! LS, dst->flags = PVR_CMD_VERTEX_EOL | CLIPFLAGS
 .endm
 
 
@@ -206,21 +169,21 @@ _DrawTexturedQuads:
     ProcessVertex4
 
 ! CLIPFLAGS TESTING
-	and     #15,r0
-    cmp/eq  #0,r0  ! T = r0 == 0 (all points invisible)
-    bt/s    .T_NO_POINTS_VISIBLE ! if T goto NO_POINTS_VISIBLE
+    and     #15,FLG
+    cmp/eq   #0,FLG         ! T = CLIPFLAGS == 0 (all points invisible)
+    bt/s    .T_NONE_VISIBLE ! if T goto NONE_VISIBLE
     nop
-    bra     .T_SOME_POINTS_VISIBLE
+    bra     .T_SOME_VISIBLE
     nop
 
-.T_NO_POINTS_VISIBLE:
+.T_NONE_VISIBLE:
     bra .T_LOOP_END ! jump to loop end after executing instruction in delay slot
-    add #-128, r5   ! r5 -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
+    add #-128, DST  ! DST -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
 
-.T_SOME_POINTS_VISIBLE:
+.T_SOME_VISIBLE:
 
 .T_LOOP_END:
-    dt r6 ! r6--; T = r6 == 0
+    dt CNT               ! count--; T = count == 0
     bf .T_TRANSFORM_QUAD ! if !T then goto T_TRANSFORM_QUAD
     nop
     
@@ -236,8 +199,8 @@ _DrawTexturedQuads:
 
 _DrawColouredQuads:
 ! Setup
-    fldi0 fr1     ! U = 0
-    fldi0 fr2     ! V = 0
+    fldi0 F_U     ! U = 0
+    fldi0 F_V     ! V = 0
     TransformSetup
 
 .C_TRANSFORM_QUAD:
@@ -254,21 +217,21 @@ _DrawColouredQuads:
     ProcessVertex4
 
 ! CLIPFLAGS TESTING
-    and     #15,r0
-    cmp/eq  #0,r0  ! T = r0 == 0 (all points invisible)
-    bt/s    .C_NO_POINTS_VISIBLE  ! if T goto NO_POINTS_VISIBLE
+    and     #15,FLG
+    cmp/eq   #0,FLG         ! T = CLIPFLAGS == 0 (all points invisible)
+    bt/s    .C_NONE_VISIBLE ! if T goto NONE_VISIBLE
     nop
-    bra     .C_SOME_POINTS_VISIBLE
+    bra     .C_SOME_VISIBLE
     nop
 
-.C_NO_POINTS_VISIBLE:
+.C_NONE_VISIBLE:
     bra .C_LOOP_END ! jump to loop end after executing instruction in delay slot
-    add #-128, r5   ! r5 -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
+    add #-128, DST  ! dst -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
 
-.C_SOME_POINTS_VISIBLE:
+.C_SOME_VISIBLE:
 
 .C_LOOP_END:
-    dt r6                ! r6--; T = r6 == 0
+    dt CNT               ! count--; T = count == 0
     bf .C_TRANSFORM_QUAD ! if !T then goto TRANSFORM_QUAD
     nop
     

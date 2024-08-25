@@ -1,0 +1,31 @@
+=========================================================
+======================== PROCESSOR INFO =================
+=========================================================
+The SH4 can dual issue (i.e. parallel execution) two instructions
+as long as the groups of the two instructions are different:
+* LS - most ALU and FPU register load/stores
+* EX - most ALU arithmetic instructions
+* MT - TST, CMP, NOP, MOV Rm,Rn (NOTE: Can execute in parallel with other MT)
+* FE - most FPU arithmetic instructions
+* CO - other instructions (NOTE: Cannot never execute in parallel)
+
+The following general aspects of instructions are important to note per the SH4 manual:
+* Issue rate: Interval between the issue of an instruction and that of the next instruction
+* Latency: Interval between the issue of an instruction and the generation of its result (completion)
+* Latency is also the interval between the execution of two instructions with an interdependent relationship.
+  (although different cases may either increase or decrease Latency)
+
+
+=========================================================
+======================== REGISTER USAGES ================
+=========================================================
+SH4 C ABI:
+-  R0  to  R3 are return values (can be overwritten)
+-  R4  to  R7 are input arguments (can be overwritten)
+-  R8  to R13 are non-volatile (must be restored at end)
+- R14  is the frame pointer (must be restored at end)
+- R15  is the stack pointer (must be restored at end)
+- FR0  to FR3 are return values (can be overwritten)
+- FR4  to FR11 are input arguments (can be overwritten)
+- FR12 to FR13 are non-volatile (must be restored at end)
+
