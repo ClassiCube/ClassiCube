@@ -407,7 +407,7 @@ static void HUDScreen_Render(void* screen, float delta) {
 		Gfx_BindDynamicVb(s->vb);
 		if (!Gui.HideHotbar) Widget_Render2(&s->hotbar, 12);
 
-		if (Gui.IconsTex && !tablist_active) {
+		if (!Gui.HideCrosshair && Gui.IconsTex && !tablist_active) {
 			Gfx_BindTexture(Gui.IconsTex);
 			Gfx_BindDynamicVb(s->vb); /* Have to rebind for mobile right now... */
 			Gfx_DrawVb_IndexedTris(4);

@@ -58,6 +58,8 @@ CC_VAR extern struct _GuiData {
 	cc_bool AutoScaleChat;
 	/* Whether the touch UI is currently being displayed. */
 	cc_bool TouchUI;
+	/* Whether the first person crosshair should be hidden. */
+	cc_bool HideCrosshair;
 	/* Whether the player hand/block model should be hidden. */
 	cc_bool HideHand;
 	/* Whether the hotbar should be hidden. */
