@@ -571,7 +571,14 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-void Gamepads_Init(void) { }
+void Gamepads_Init(void) {
+	/* TODO find a better solution */
+	int count;
+	if (emscripten_sample_gamepad_data() != 0) return;
+	count = emscripten_get_num_gamepads();
+
+	if (count) Input.Sources |= INPUT_SOURCE_GAMEPAD;
+}
 
 /* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
 #define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
