@@ -762,8 +762,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	Gfx_BindIb(Gfx.DefaultIb);
 	Game.Time += deltaD;
 	Game_Vertices = 0;
-
-	if (Input.Sources & INPUT_SOURCE_GAMEPAD) Gamepad_Tick(delta);
+	Gamepad_Tick(delta);
 
 #ifdef CC_BUILD_SPLITSCREEN
 	/* TODO: find a better solution */

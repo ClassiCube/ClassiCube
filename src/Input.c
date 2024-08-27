@@ -539,6 +539,7 @@ static void Gamepad_Apply(int port, int btn, cc_bool was, int pressed) {
 static void Gamepad_Update(int port, float delta) {
 	struct GamepadDevice* pad = &Gamepad_Devices[port];
 	int btn;
+	if (!pad->deviceID) return;
 
 	for (btn = 0; btn < GAMEPAD_BTN_COUNT; btn++)
 	{
