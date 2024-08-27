@@ -5,6 +5,8 @@ android {
 
     defaultConfig {
         applicationId = 'com.classicube.android.client'
+        minSdkVersion 13
+        targetSdkVersion 26
         externalNativeBuild {
             cmake {
                 arguments '-DANDROID_STL=c++_static'
