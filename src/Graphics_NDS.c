@@ -98,6 +98,8 @@ void Gfx_EndFrame(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static int tex_width, tex_height;
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
     vramSetBankA(VRAM_A_TEXTURE);
 
@@ -130,7 +132,12 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-    glBindTexture(0, (int)texId);	
+    glBindTexture(0, (int)texId);
+
+	tex_width  = 0;
+	tex_height = 0;
+	glGetInt(GL_GET_TEXTURE_WIDTH,  &tex_width);
+	glGetInt(GL_GET_TEXTURE_HEIGHT, &tex_height);
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -459,7 +466,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
-	glBegin(GL_QUADS);
+	GFX_BEGIN = GL_QUADS;
 	for (int i = 0; i < verticesCount; i++) 
 	{
 		struct DSColouredVertex* v = (struct DSColouredVertex*)gfx_vertices + startVertex + i;
@@ -468,14 +475,12 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 		GFX_VERTEX16 = v->xy;
         GFX_VERTEX16 = v->z;
 	}
-	glEnd();
+	GFX_END = 0;
 }
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
-	glBegin(GL_QUADS);
-	int width = 0, height = 0;
-	glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
-	glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
+	GFX_BEGIN = GL_QUADS;
+	int width = tex_width, height = tex_height;
 
 	// Original code used was
 	//   U = mulf32(v->u, inttof32(width))
@@ -496,7 +501,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		GFX_VERTEX16  = v->xy;
 		GFX_VERTEX16  = v->z;
 	}
-	glEnd();
+	GFX_END = 0;
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
