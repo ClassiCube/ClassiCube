@@ -172,9 +172,9 @@ static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* lin
 #define PNG_Mask_1(i) (7  - (i & 7))
 #define PNG_Mask_2(i) ((3 - (i & 3)) * 2)
 #define PNG_Mask_4(i) ((1 - (i & 1)) * 4)
-#define PNG_Get__1(i) ((src[i >> 3] >> PNG_Mask_1(i)) & 1)
-#define PNG_Get__2(i) ((src[i >> 2] >> PNG_Mask_2(i)) & 3)
-#define PNG_Get__4(i) ((src[i >> 1] >> PNG_Mask_4(i)) & 7)
+#define PNG_Get__1(i) ((src[i >> 3] >> PNG_Mask_1(i)) & 0x01)
+#define PNG_Get__2(i) ((src[i >> 2] >> PNG_Mask_2(i)) & 0x03)
+#define PNG_Get__4(i) ((src[i >> 1] >> PNG_Mask_4(i)) & 0x0F)
 
 static void Png_Expand_GRAYSCALE_1(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i; cc_uint8 rgb; /* NOTE: not optimised*/
