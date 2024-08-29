@@ -158,8 +158,6 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_FREETYPE
 #define CC_BUILD_RESOURCES
 #define CC_BUILD_PLUGINS
-#define CC_BUILD_ANIMATIONS
-#define CC_BUILD_HELDBLOCK
 #define CC_BUILD_FILESYSTEM
 #define CC_BUILD_ADVLIGHTING
 /*#define CC_BUILD_GL11*/
@@ -402,7 +400,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_SMALLSTACK
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
-	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_BUILD_LOW_VRAM     /* Only ~640 kb of VRAM */
 	#undef  CC_BUILD_ADVLIGHTING
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
@@ -432,8 +431,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
-	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #elif defined OS2
@@ -455,8 +454,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_TINYSTACK
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
-	#undef  CC_BUILD_HELDBLOCK  /* Very costly in FPU less system */
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #endif

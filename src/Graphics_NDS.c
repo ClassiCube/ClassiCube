@@ -401,22 +401,24 @@ static int matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	if (type != lastMatrix) { 
+		lastMatrix     = type; 
+		MATRIX_CONTROL = matrix_modes[type]; 
+	}
 	
+	// loads 4x4 identity matrix
 	if (matrix == &Matrix_Identity) {
-		glLoadIdentity();
+		MATRIX_IDENTITY = 0;
 		return;
 		// TODO still scale?
 	}
 
-	m4x4 m;
+	// loads 4x4 matrix from memory
 	const float* src = (const float*)matrix;
-	
 	for (int i = 0; i < 4 * 4; i++)
 	{
-		m.m[i] = floattof32(src[i]);
+		MATRIX_LOAD4x4 = floattof32(src[i]);
 	}
-	glLoadMatrix4x4(&m);
 
     // Vertex commands are signed 16 bit values, with 12 bits fractional
     //  aka only from -8.0 to 8.0

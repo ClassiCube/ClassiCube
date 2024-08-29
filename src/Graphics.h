@@ -104,15 +104,15 @@ SUMMARY:
 	Textures are used to store a bitmap which can then later be used when drawing
 */
 /* Texture should persist across gfx context loss (if backend supports ManagedTextures) */
-#define TEXTURE_FLAG_MANAGED  0x01
+#define TEXTURE_FLAG_MANAGED     0x01
 /* Texture should allow updating via Gfx_UpdateTexture */
-#define TEXTURE_FLAG_DYNAMIC  0x02
+#define TEXTURE_FLAG_DYNAMIC     0x02
 /* Texture is deliberately (and not accidentally) being created with non power of two dimensions */
-#define TEXTURE_FLAG_NONPOW2  0x04
+#define TEXTURE_FLAG_NONPOW2     0x04
 /* Texture can fallback to fewer BPP when necessary (most backends don't do this) */
-#define TEXTURE_FLAG_LOWRES   0x08
+#define TEXTURE_FLAG_LOWRES      0x08
 /* Texture should be rendered using bilinear filtering if possible */
-#define TEXTURE_FLAG_BILINEAR 0x10
+#define TEXTURE_FLAG_BILINEAR    0x10
 
 cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags);
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */

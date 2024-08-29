@@ -122,8 +122,9 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 cc_result Directory_Create(const cc_filepath* path) {
 	if (!fat_available) return 0;
 
-	Platform_Log1("mkdir %c", path->buffer);
-	return mkdir(path->buffer, 0) == -1 ? errno : 0;
+	int ret = mkdir(path->buffer, 0) == -1 ? errno : 0;
+	Platform_Log2("mkdir %c = %i", path->buffer, &ret);
+	return ret;
 }
 
 int File_Exists(const cc_filepath* path) {

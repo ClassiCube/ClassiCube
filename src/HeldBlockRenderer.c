@@ -11,7 +11,7 @@
 #include "Options.h"
 
 cc_bool HeldBlockRenderer_Show;
-#ifdef CC_BUILD_HELDBLOCK
+#ifndef CC_DISABLE_HELDBLOCK
 static BlockID held_block;
 static struct Entity held_entity;
 static struct Matrix held_blockProj;

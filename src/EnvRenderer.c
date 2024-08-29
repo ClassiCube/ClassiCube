@@ -916,10 +916,12 @@ static void OnInit(void) {
 	EnvRenderer_Legacy  = flags & ENV_LEGACY;
 	EnvRenderer_Minimal = flags & ENV_MINIMAL;
 
+#ifndef CC_BUILD_LOW_VRAM
 	TextureEntry_Register(&clouds_entry);
 	TextureEntry_Register(&skybox_entry);
 	TextureEntry_Register(&snow_entry);
 	TextureEntry_Register(&rain_entry);
+#endif
 
 	Event_Register_(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
 	Event_Register_(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
