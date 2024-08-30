@@ -77,6 +77,7 @@ static inline int DimensionFlag(int w) {
     }
 }
 
+#define DEFAULT_MIPMAP_BIAS 4
 void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     TextureObject* tx1 = TEXTURE_ACTIVE;
 
@@ -145,14 +146,13 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
 
         dst->mode2 |= (txr_alpha                << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
         dst->mode2 |= (filter                   << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
-        dst->mode2 |= (tx1->mipmap_bias         << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
+        dst->mode2 |= (DEFAULT_MIPMAP_BIAS      << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
         dst->mode2 |= (PVR_TXRENV_MODULATEALPHA << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
 
         dst->mode2 |= (DimensionFlag(tx1->width)  << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
         dst->mode2 |= (DimensionFlag(tx1->height) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
 
-        dst->mode3  = (0          << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
-        dst->mode3 |= (tx1->color << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
+        dst->mode3  = (tx1->color << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
         dst->mode3 |= ((uint32_t)tx1->data & 0x00fffff8) >> 3;
     }
 

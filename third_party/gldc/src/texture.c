@@ -86,15 +86,12 @@ static void* yalloc_alloc_and_defrag(size_t size) {
     return ret;
 }
 
-#define GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS 4
 static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
     txr->index  = id;
     txr->width  = txr->height = 0;
-    txr->mipmap = 0;
     txr->data   = NULL;
     txr->minFilter = GL_NEAREST;
     txr->magFilter = GL_NEAREST;
-    txr->mipmap_bias = GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS;
 }
 
 void _glInitTextures() {

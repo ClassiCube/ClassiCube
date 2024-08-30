@@ -111,6 +111,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("fat:/"); // may be overriden in InitFilesystem
 static bool fat_available;
+static int fat_error;
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
@@ -225,7 +226,9 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 }
 
 static int LoadFatFilesystem(void* arg) {
+	errno = 0;
 	fat_available = fatInitDefault();
+	fat_error     = errno;
 	return 0;
 }
 
@@ -254,7 +257,10 @@ static void InitFilesystem(void) {
         root_path.buffer = dir;
         root_path.length = String_Length(dir);
     }
+	
 	Platform_ReadonlyFilesystem = !fat_available;
+	if (fat_available) return;
+	Platform_Log1("** FAILED TO MOUNT FILESYSTEM (error %i) **", &fat_error);
 }
 
 
@@ -400,20 +406,22 @@ void Socket_Close(cc_socket s) {
 	closesocket(s);
 }
 
-// libogc only implements net_select for gamecube currently
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int res; // number of 'ready' sockets
 	FD_ZERO(&set);
 	FD_SET(s, &set);
+	
 	if (mode == SOCKET_POLL_READ) {
 		res = select(s + 1, &set, NULL, NULL, &time);
 	} else {
 		res = select(s + 1, NULL, &set, NULL, &time);
 	}
+	
 	if (res < 0) { *success = false; return errno; }
-	*success = FD_ISSET(s, &set) != 0; return 0;
+	*success = FD_ISSET(s, &set) != 0; 
+	return 0;
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {

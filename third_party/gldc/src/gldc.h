@@ -56,16 +56,6 @@ typedef struct {
     //20
     GLushort width;
     GLushort height;
-    // 24
-    GLushort  mipmap;  /* Bitmask of supplied mipmap levels */
-    // 26
-    GLubyte mipmap_bias;
-    GLubyte _pad3;
-    // 28
-    GLushort _pad0;
-    // 30
-    GLubyte _pad1;
-    GLubyte _pad2;
 } __attribute__((aligned(32))) TextureObject;
 
 

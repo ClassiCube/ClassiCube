@@ -1,10 +1,3 @@
-! r1 CLOBBERS
-! r3 CLOBBERS
-! r7 CLOBBERS
-! r4 = v1
-! r5 = v2
-! r6 = OUT
-
 ! FR0  = 0
 ! FR1  = 0
 ! FR2  = A.1
@@ -18,16 +11,16 @@
 ! FR10 = invT
 ! FR11 = t
 
-#define TM1 r1
-#define TM2 r3
+#define TM1 r1 // temp register 1
+#define TM2 r3 // temp register 2
 
-#define IN1 r4
-#define IN2 r5
-#define OUT r6
+#define IN1 r4 // input vertex 1
+#define IN2 r5 // input vertex 2
+#define OUT r6 // output vertex
 
-#define CL1 r4
-#define CL2 r5
-#define CLO r7
+#define CL1 r4 // input colour 1
+#define CL2 r5 // input colour 2
+#define CLO r7 // output colour
 
 ! Calculates the near plane intersection point between two points:
 !    float t  = fabsf(v1->z) / fabsf(v2->z - v1->z)
@@ -121,11 +114,11 @@ _ClipEdge:
 	
 	mov.l  @IN1,CL1   ! LS, ACOLOR = v1->bgra
 	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
-! Bypass interpolation if unnecessary
+! Bypass RGBA interpolation if unnecessary
 	cmp/eq  CL1,CL2   ! MT, T = ACOLOR == BCOLOR
 	bt.s    1f        ! BR, if (T) goto 1;
 	mov     CL1,CLO   ! MT, OUTCOLOR = ACOLOR (branch delay instruction)
-	
+! Interpolate B
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
@@ -137,7 +130,7 @@ _ClipEdge:
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	shlr8   CL2       ! EX, BCOLOR >>= 8
 	sts     fpul,TM2  ! CO, tmp = FPUL
-	
+! Interpolate G
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.g
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
@@ -151,22 +144,7 @@ _ClipEdge:
 	mov     TM2,CLO   ! MT, OUTCOLOR.b = tmp
 	shlr8   CL2       ! EX, BCOLOR >>= 8
 	sts     fpul,TM2  ! CO, tmp = FPUL
-	
-	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, LERP(A1, B1)
-	shlr8   CL1       ! EX, ACOLOR >>= 8
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
-	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
-	shll8   TM2       ! EX, tmp <<= 8
-	or      TM2,CLO   ! EX, OUTCOLOR.r |= tmp
-	shlr8   CL2       ! EX, BCOLOR >>= 8
-	sts     fpul,TM2  ! CO, tmp = FPUL
-	
+! Interpolate R
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.r
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
@@ -174,10 +152,25 @@ _ClipEdge:
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
 	fipr    fv8, fv0  ! FE, LERP(A1, B1)
+	shlr8   CL1       ! EX, ACOLOR >>= 8
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
+	shll8   TM2       ! EX, tmp <<= 8
+	or      TM2,CLO   ! EX, OUTCOLOR.g |= tmp
+	shlr8   CL2       ! EX, BCOLOR >>= 8
+	sts     fpul,TM2  ! CO, tmp = FPUL
+	
+	extu.b  CL1,TM1   ! EX, val = ACOLOR.a
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	extu.b  CL2,TM1   ! EX, val = BCOLOR.a
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	shll16  TM2       ! EX, tmp <<= 16
-	or      TM2,CLO   ! EX, OUTCOLOR.g |= tmp
+	or      TM2,CLO   ! EX, OUTCOLOR.r |= tmp
 	sts     fpul,TM2  ! CO, tmp = FPUL
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	shll16  TM2       ! EX, tmp <<= 16
