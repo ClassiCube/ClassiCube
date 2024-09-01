@@ -166,7 +166,6 @@ int gldcAllocTexture(int w, int h, int format) {
             /* changed - free old texture memory */
             yalloc_free(YALLOC_BASE, active->data);
             active->data = NULL;
-            active->mipmap = 0;
         }
     }
 
@@ -181,9 +180,6 @@ int gldcAllocTexture(int w, int h, int format) {
         active->data = yalloc_alloc_and_defrag(bytes);
     }
     if (!active->data) return GL_OUT_OF_MEMORY;
-
-    /* Mark level 0 as set in the mipmap bitmask */
-    active->mipmap |= (1 << 0);
     return 0;
 }
 

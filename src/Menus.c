@@ -1454,13 +1454,13 @@ static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
 static int SaveLevelScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	int handled;
-	SaveLevelScreen_RemoveOverwrites(s);
 	
 	handled = Menu_DoInputDown(s, key, device);
 	/* Pressing Enter triggers save */
 	if (!handled && InputDevice_IsEnter(key, device))
 		SaveLevelScreen_Save(s, &s->save);
 
+	if (key != CCMOUSE_L) SaveLevelScreen_RemoveOverwrites(s);
 	return Screen_InputDown(s, key, device);
 }
 

@@ -68,7 +68,8 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	int x2 = x + w - 1, y2 = y + h - 1;
+	int x2 = x + w - 1;
+	int y2 = y + h - 1;
 	GFX_VIEWPORT = x | (y << 8) | (x2 << 16) | (y2 << 24);
 }
 
