@@ -772,7 +772,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
 			GrO_GetFPS,        GrO_SetFPS,
 			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
-			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
+			"&e30/60/75/120/144 FPS: &fRenders 30/60/75/120/144 frames at most each second.\n" \
 			"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 			"&cNoLimit is pointless - it wastefully renders frames that you don't even see!");
 		MenuOptionsScreen_AddInt(s, "View distance",

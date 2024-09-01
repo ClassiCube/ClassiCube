@@ -74,7 +74,7 @@ int Game_NumStates = 1;
 #endif
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
-	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
+	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit75FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
 };
 
 static struct IGameComponent* comps_head;
@@ -486,6 +486,7 @@ void Game_SetFpsLimit(int method) {
 	switch (method) {
 	case FPS_LIMIT_144: minFrameTime = 1000/144.0f; break;
 	case FPS_LIMIT_120: minFrameTime = 1000/120.0f; break;
+	case FPS_LIMIT_75:  minFrameTime = 1000 / 75.0f; break;
 	case FPS_LIMIT_60:  minFrameTime = 1000/60.0f;  break;
 	case FPS_LIMIT_30:  minFrameTime = 1000/30.0f;  break;
 	}

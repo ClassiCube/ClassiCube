@@ -84,7 +84,7 @@ extern struct GameVersion Game_Version;
 extern void GameVersion_Load(void);
 
 enum FpsLimitMethod {
-	FPS_LIMIT_VSYNC, FPS_LIMIT_30, FPS_LIMIT_60, FPS_LIMIT_120, FPS_LIMIT_144, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
+	FPS_LIMIT_VSYNC, FPS_LIMIT_30, FPS_LIMIT_60, FPS_LIMIT_75, FPS_LIMIT_120, FPS_LIMIT_144, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
 };
 extern const char* const FpsLimit_Names[FPS_LIMIT_COUNT];
 
