@@ -486,7 +486,7 @@ void Game_SetFpsLimit(int method) {
 	switch (method) {
 	case FPS_LIMIT_144: minFrameTime = 1000/144.0f; break;
 	case FPS_LIMIT_120: minFrameTime = 1000/120.0f; break;
-	case FPS_LIMIT_75:  minFrameTime = 1000 / 75.0f; break;
+	case FPS_LIMIT_75:  minFrameTime = 1000/75.0f;  break;
 	case FPS_LIMIT_60:  minFrameTime = 1000/60.0f;  break;
 	case FPS_LIMIT_30:  minFrameTime = 1000/30.0f;  break;
 	}
