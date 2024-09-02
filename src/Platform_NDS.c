@@ -232,7 +232,7 @@ static int LoadFatFilesystem(void* arg) {
 	return 0;
 }
 
-static void InitFilesystem(void) {
+static void MountFilesystem(void) {
 	cothread_t thread = cothread_create(LoadFatFilesystem, NULL, 0, 0);
 	// If running with DSi mode in melonDS and the internal SD card is enabled, then
 	//  fatInitDefault gets stuck in sdmmc_ReadSectors - because the fifoWaitValue32Async will never return
@@ -241,22 +241,28 @@ static void InitFilesystem(void) {
 	//  and then giving up if it takes too long.. not the most elegant solution, but it does work
 	if (thread == -1) {
 		LoadFatFilesystem(NULL);
-	} else {
-		for (int i = 0; i < 100; i++)
-		{
-			cothread_yield();
-			if (cothread_has_joined(thread)) break;
-			
-			swiDelay(2000);
-		}
+		return;
 	}
+	
+	for (int i = 0; i < 100; i++)
+	{
+		cothread_yield();
+		if (cothread_has_joined(thread)) break;
+		
+		swiDelay(20000);
+	}
+	Platform_LogConst("Gave up after 100 tries");
+}
 
-    char* dir = fatGetDefaultCwd();
-    if (dir) {
+static void InitFilesystem(void) {
+	MountFilesystem();
+	char* dir = fatGetDefaultCwd();
+	
+	if (dir) {
 		Platform_Log1("CWD: %c", dir);
-        root_path.buffer = dir;
-        root_path.length = String_Length(dir);
-    }
+		root_path.buffer = dir;
+		root_path.length = String_Length(dir);
+	}
 	
 	Platform_ReadonlyFilesystem = !fat_available;
 	if (fat_available) return;
