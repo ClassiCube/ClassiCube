@@ -2246,7 +2246,9 @@ static struct Widget* menuInput_widgets[2 + 1];
 void MenuInputOverlay_Close(cc_bool valid) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)&MenuInputOverlay;
 	Gui_Remove((struct Screen*)s);
-	s->onDone(&s->input.base.text, valid);
+	
+	if (s->onDone) s->onDone(&s->input.base.text, valid);
+	s->onDone = NULL;
 }
 
 static void MenuInputOverlay_EnterInput(struct MenuInputOverlay* s) {
