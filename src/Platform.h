@@ -7,43 +7,17 @@ CC_BEGIN_HEADER
 Abstracts platform specific memory management, I/O, etc
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
-struct DateTime;
 
-enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 #if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
-typedef cc_uintptr cc_socket;
-typedef void* cc_file;
 #define _NL "\r\n"
 #define NATIVE_STR_LEN 300
 #else
-typedef int cc_socket;
-typedef int cc_file;
 #define _NL "\n"
 #define NATIVE_STR_LEN 600
 #endif
-#define UPDATE_FILE "ClassiCube.update"
 
-/* Origin points for when seeking in a file. */
-/*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
-enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
-/* Number of seconds since 01/01/0001 to start of unix time. */
-#define UNIX_EPOCH_SECONDS 62135596800ULL
-
-extern const cc_result ReturnCode_FileShareViolation;
-extern const cc_result ReturnCode_FileNotFound;
-extern const cc_result ReturnCode_DirectoryExists;
-extern const cc_result ReturnCode_SocketInProgess;
-extern const cc_result ReturnCode_SocketWouldBlock;
-/* Result code for when a socket connection has been dropped by the other side */
-extern const cc_result ReturnCode_SocketDropped;
-
-/* Whether the launcher and game must both be run in the same process */
-/*  (e.g. can't start a separate process on Mobile or Consoles) */
-extern cc_bool Platform_SingleProcess;
 /* Suffix added to app name sent to the server */
 extern const char* Platform_AppNameSuffix;
-/* Whether the filesystem is readonly (i.e. cannot make chat logs, cache, etc) */
-extern cc_bool Platform_ReadonlyFilesystem;
 
 #ifdef CC_BUILD_WIN
 typedef struct cc_winstring_ {
@@ -74,14 +48,24 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv);
 /* Gets the command line arguments passed to the program. */
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args);
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Cryptographic functions------------------------------------------------*
+*#########################################################################################################################*/
 /* Encrypts data in a platform-specific manner. (may not be supported) */
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst);
 /* Decrypts data in a platform-specific manner. (may not be supported) */
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst);
-/* Outputs more detailed information about errors with operating system functions. */
-/* NOTE: This is for general functions like file I/O. If a more specific 
-describe exists (e.g. Http_DescribeError), that should be preferred. */
-cc_bool Platform_DescribeError(cc_result res, cc_string* dst);
+/* Securely generates len bytes of random data */
+cc_result Platform_GetEntropy(void* data, int len);
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Process/Shell functions------------------------------------------------*
+*#########################################################################################################################*/
+/* Whether the launcher and game must both be run in the same process */
+/*  (e.g. can't start a separate process on Mobile or Consoles) */
+extern cc_bool Platform_SingleProcess;
 
 /* Starts the game with the given arguments. */
 CC_API cc_result Process_StartGame2(const cc_string* args, int numArgs);
@@ -92,6 +76,12 @@ CC_API void Process_Exit(cc_result code);
 CC_API cc_result Process_StartOpen(const cc_string* args);
 /* Whether opening URLs is supported by the platform */
 extern cc_bool Process_OpenSupported;
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Updater functions---------------------------------------------------*
+*#########################################################################################################################*/
+#define UPDATE_FILE "ClassiCube.update"
 
 struct UpdaterBuild { 
 	const char* name; 
@@ -119,6 +109,10 @@ cc_result Updater_MarkExecutable(void);
 /* Sets the last time UPDATE_FILE file was modified, as a unix timestamp. */
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp);
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Dynamic libraries---------------------------------------------------*
+*#########################################################################################################################*/
 /* TODO: Rename _Load2 to _Load on next plugin API version */
 /* Attempts to load a native dynamic library from the given path. */
 CC_API void* DynamicLib_Load2(const cc_string* path);
@@ -148,6 +142,10 @@ struct DynamicLibSym { const char* name; void** symAddr; };
 /* Returns true if all symbols were successfully retrieved */
 cc_bool DynamicLib_LoadAll(const cc_string* path, const struct DynamicLibSym* syms, int count, void** lib);
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Memory allocation---------------------------------------------------*
+*#########################################################################################################################*/
 /* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
 CC_API void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize);
 /* Allocates a block of memory, with contents of all 0. Returns NULL on allocation failure. */
@@ -164,6 +162,10 @@ CC_API void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, con
 /* Frees an allocated a block of memory. Does nothing when passed NULL. */
 CC_API void  Mem_Free(void* mem);
 
+
+/*########################################################################################################################*
+*----------------------------------------------------Memory modification--------------------------------------------------*
+*#########################################################################################################################*/
 /* Sets the contents of a block of memory to the given value. */
 void* Mem_Set(void* dst, cc_uint8 value, unsigned numBytes);
 /* Copies a block of memory to another block of memory. */
@@ -175,6 +177,10 @@ void* Mem_Move(void* dst, const void* src, unsigned numBytes);
 /* Returns non-zero if the two given blocks of memory have equal contents. */
 int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes);
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Logging functions---------------------------------------------------*
+*#########################################################################################################################*/
 /* Logs a debug message to console. */
 void Platform_Log(const char* msg, int len);
 void Platform_LogConst(const char* message);
@@ -182,6 +188,19 @@ void Platform_Log1(const char* format, const void* a1);
 void Platform_Log2(const char* format, const void* a1, const void* a2);
 void Platform_Log3(const char* format, const void* a1, const void* a2, const void* a3);
 void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
+
+/* Outputs more detailed information about errors with operating system functions. */
+/* NOTE: This is for general functions like file I/O. If a more specific 
+describe exists (e.g. Http_DescribeError), that should be preferred. */
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst);
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Time functions-----------------------------------------------------*
+*#########################################################################################################################*/
+/* Number of seconds since 01/01/0001 to start of unix time. */
+#define UNIX_EPOCH_SECONDS 62135596800ULL
+struct DateTime;
 
 /* Returns the current UTC time, as number of seconds since 1/1/0001 */
 CC_API TimeMS DateTime_CurrentUTC(void);
@@ -194,6 +213,29 @@ CC_API cc_uint64 Stopwatch_Measure(void);
 CC_API cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end);
 /* Returns total elapsed milliseconds between two stopwatch measurements. */
 int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------File I/O--------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
+typedef void* cc_file;
+#else
+typedef int cc_file;
+#endif
+
+/* Origin points for when seeking in a file. */
+/*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
+enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
+/* Whether the filesystem is readonly (i.e. cannot make chat logs, cache, etc) */
+extern cc_bool Platform_ReadonlyFilesystem;
+
+/* Result code for when trying to open a file locked by another process */
+extern const cc_result ReturnCode_FileShareViolation;
+/* Result code for when trying to open a non-existent file */
+extern const cc_result ReturnCode_FileNotFound;
+/* Result code for when trying to create an already existent directory */
+extern const cc_result ReturnCode_DirectoryExists;
 
 /* Attempts to create a new directory. */
 cc_result Directory_Create(const cc_filepath* path);
@@ -225,6 +267,10 @@ cc_result File_Position(cc_file file, cc_uint32* pos);
 /* Attempts to retrieve the length of the given file. */
 cc_result File_Length(cc_file file, cc_uint32* len);
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Threading-------------------------------------------------------*
+*#########################################################################################################################*/
 typedef void (*Thread_StartFunc)(void);
 /* Blocks the current thread for the given number of milliseconds. */
 CC_API void Thread_Sleep(cc_uint32 milliseconds);
@@ -238,6 +284,10 @@ CC_API void Thread_Detach(void* handle);
 /* NOTE: This cannot be used on a thread that has been detached. */
 CC_API void Thread_Join(void* handle);
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------------Mutex---------------------------------------------------------*
+*#########################################################################################################################*/
 /* Allocates a new mutex. (used to synchronise access to a shared resource) */
 CC_API void* Mutex_Create(const char* name);
 /* Frees an allocated mutex. */
@@ -247,6 +297,10 @@ CC_API void  Mutex_Lock(void* handle);
 /* Unlocks the given mutex, allowing other threads to enter. */
 CC_API void  Mutex_Unlock(void* handle);
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Waitable--------------------------------------------------------*
+*#########################################################################################################################*/
 /* Allocates a new waitable. (used to conditionally wake-up a blocked thread) */
 CC_API void* Waitable_Create(const char* name);
 /* Frees an allocated waitable. */
@@ -261,6 +315,15 @@ CC_API void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds);
 /* Calls SysFonts_Register on each font that is available on this platform. */
 void Platform_LoadSysFonts(void);
 
+
+/*########################################################################################################################*
+*----------------------------------------------------------Sockets--------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
+typedef cc_uintptr cc_socket;
+#else
+typedef int cc_socket;
+#endif
 #define CC_SOCKETADDR_MAXSIZE 512
 #define SOCKET_MAX_ADDRS 5
 
@@ -268,6 +331,15 @@ typedef struct cc_sockaddr_ {
 	int size; /* Actual size of the raw socket address */
 	cc_uint8 data[CC_SOCKETADDR_MAXSIZE]; /* Raw socket address (e.g. sockaddr_in) */
 } cc_sockaddr;
+
+enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
+
+/* Result code for when a socket operation is aynchronously executing */
+extern const cc_result ReturnCode_SocketInProgess;
+/* Result code for when a socket operation would block the calling thread */
+extern const cc_result ReturnCode_SocketWouldBlock;
+/* Result code for when a socket connection has been dropped by the other side */
+extern const cc_result ReturnCode_SocketDropped;
 
 /* Checks if the given socket is currently readable (i.e. has data available to read) */
 /* NOTE: A closed socket is also considered readable */
@@ -292,12 +364,16 @@ void Socket_Close(cc_socket s);
 /* Attempts to write all data to the given socket, returning ERR_END_OF_STREAM if it could not */
 cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count);
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Platform specific---------------------------------------------------*
+*#########################################################################################################################*/
 #ifdef CC_BUILD_MOBILE
 void Platform_ShareScreenshot(const cc_string* filename);
 #endif
 
 #ifdef CC_BUILD_ANDROID
-#include <jni.h>
+#include <jni.h> /* TODO move to interop file */
 extern jclass  App_Class;
 extern jobject App_Instance;
 extern JavaVM* VM_Ptr;

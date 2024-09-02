@@ -1539,7 +1539,7 @@ void SaveLevelScreen_Show(void) {
 	s->VTABLE = &SaveLevelScreen_VTABLE;
 
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
-	TextInputWidget_OpenKeyboard(&s->input);
+	TextInputWidget_OpenKeyboard(&s->input, NULL);
 }
 
 

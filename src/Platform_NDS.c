@@ -244,14 +244,14 @@ static void MountFilesystem(void) {
 		return;
 	}
 	
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 500; i++)
 	{
 		cothread_yield();
-		if (cothread_has_joined(thread)) break;
+		if (cothread_has_joined(thread)) return;
 		
-		swiDelay(20000);
+		swiDelay(500);
 	}
-	Platform_LogConst("Gave up after 100 tries");
+	Platform_LogConst("Gave up after 500 tries");
 }
 
 static void InitFilesystem(void) {

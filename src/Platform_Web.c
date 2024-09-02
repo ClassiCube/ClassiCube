@@ -389,8 +389,15 @@ void Platform_Free(void) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) { return ERR_NOT_SUPPORTED; }
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { return ERR_NOT_SUPPORTED; }
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) { 
+	return ERR_NOT_SUPPORTED; 
+}
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { 
+	return ERR_NOT_SUPPORTED; 
+}
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
+}
 
 
 /*########################################################################################################################*

@@ -10,6 +10,8 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 
 struct Bitmap;
 struct DynamicLibSym;
+struct InputDevice;
+
 /* The states the window can be in. */
 enum WindowState  { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
 enum SoftKeyboard { SOFT_KEYBOARD_NONE, SOFT_KEYBOARD_RESIZE, SOFT_KEYBOARD_SHIFT, SOFT_KEYBOARD_VIRTUAL };
@@ -181,6 +183,7 @@ struct OpenKeyboardArgs {
 	int type, yOffset;
 	const char* placeholder; 
 	cc_bool opaque, multiline; 
+	struct InputDevice* device;
 };
 static CC_INLINE void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
 	args->text    = text;
@@ -189,6 +192,7 @@ static CC_INLINE void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRIN
 	args->placeholder = "";
 	args->opaque      = false;
 	args->multiline   = false;
+	args->device      = NULL;
 }
 
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */

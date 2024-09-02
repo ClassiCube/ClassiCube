@@ -12,6 +12,7 @@ CC_BEGIN_HEADER
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
+struct InputDevice;
 
 /* A text label. */
 struct TextWidget {
@@ -224,7 +225,7 @@ CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, co
 CC_NOINLINE void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
 CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
-CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w);
+CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w, struct InputDevice* device);
 
 
 struct ChatInputWidget {
