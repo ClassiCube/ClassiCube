@@ -615,6 +615,9 @@ static void ClassicPauseScreen_Init(void* screen) {
 	if (Server.IsSinglePlayer) return;
 	s->btns[1].flags = WIDGET_FLAG_DISABLED;
 	s->btns[3].flags = WIDGET_FLAG_DISABLED;
+
+	if (Game_ClassicHacks) return;
+	s->btns[2].flags = WIDGET_FLAG_DISABLED;
 }
 
 static const struct ScreenVTABLE ClassicPauseScreen_VTABLE = {
