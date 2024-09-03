@@ -233,6 +233,9 @@ static int LoadFatFilesystem(void* arg) {
 }
 
 static void MountFilesystem(void) {
+	LoadFatFilesystem(NULL);
+	return;
+	
 	cothread_t thread = cothread_create(LoadFatFilesystem, NULL, 0, 0);
 	// If running with DSi mode in melonDS and the internal SD card is enabled, then
 	//  fatInitDefault gets stuck in sdmmc_ReadSectors - because the fifoWaitValue32Async will never return
@@ -244,14 +247,14 @@ static void MountFilesystem(void) {
 		return;
 	}
 	
-	for (int i = 0; i < 500; i++)
+	for (int i = 0; i < 1000; i++)
 	{
 		cothread_yield();
 		if (cothread_has_joined(thread)) return;
 		
 		swiDelay(500);
 	}
-	Platform_LogConst("Gave up after 500 tries");
+	Platform_LogConst("Gave up after 1000 tries");
 }
 
 static void InitFilesystem(void) {
