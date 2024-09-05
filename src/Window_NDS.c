@@ -90,9 +90,10 @@ void consolePrintString(const char* ptr, int len) {
     consoleNewLine();
 }
 
-static void consoleLoadFont(u16* fontBgGfx) {
-    u16* palette  = BG_PALETTE_SUB;
-    conFontCurPal = 15 << 12;
+static void consoleLoadFont(int bgId, u16* palette) {
+    conFontBgMap   = (u16*)bgGetMapPtr(bgId);
+	u16* fontBgGfx = (u16*)bgGetGfxPtr(bgId);
+    conFontCurPal  = 15 << 12;
 
     for (int i = 0; i < FONT_NUM_CHARACTERS * 8; i++)
     {
@@ -113,11 +114,15 @@ static void consoleLoadFont(u16* fontBgGfx) {
     palette[0]           = RGB15( 0,  0,  0);
 }
 
-static void consoleInit(void) {
-    int bgId = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
-    conFontBgMap = (u16*)bgGetMapPtr(bgId);
+static void consoleInit(cc_bool onSub) {
+    int bgId;
+	if (onSub) {
+		bgId = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
+	} else {
+		bgId = bgInit(   0, BgType_Text4bpp, BgSize_T_256x256, 22, 2);	
+	}
 
-    consoleLoadFont((u16*)bgGetGfxPtr(bgId));
+    consoleLoadFont(bgId, onSub ? BG_PALETTE_SUB : BG_PALETTE);
     consoleClear();
 }
 
@@ -132,12 +137,31 @@ static u16* bg_ptr;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
+static void SetupVideo(cc_bool mode) {
+	if (launcherMode == mode) return;
+	launcherMode = mode;
+
+	if (launcherMode) {
+		videoSetModeSub(MODE_0_2D);
+		vramSetBankH(VRAM_H_SUB_BG);
+		vramSetBankI(VRAM_I_SUB_BG_0x06208000);
+
+		videoSetMode(MODE_5_2D);
+		vramSetBankA(VRAM_A_MAIN_BG);
+	} else {
+		videoSetModeSub(MODE_0_2D);
+		vramSetBankH(VRAM_H_SUB_BG);
+		vramSetBankI(VRAM_I_SUB_BG_0x06208000);
+
+		videoSetMode(MODE_0_3D);
+	}
+
+	consoleInit(true);
+}
+
 void Window_PreInit(void) {
-	videoSetModeSub(MODE_0_2D);
-    vramSetBankH(VRAM_H_SUB_BG);
-	vramSetBankI(VRAM_I_SUB_BG_0x06208000);
+	SetupVideo(true);
     setBrightness(2, 0);
-	consoleInit();
 }
 
 void Window_Init(void) {  
@@ -161,17 +185,13 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
-    launcherMode = true;
-	videoSetMode(MODE_5_2D);
-	vramSetBankA(VRAM_A_MAIN_BG);
-	
-	bg_id  = bgInit(2, BgType_Bmp16, BgSize_B16_256x256, 0, 0);
+    SetupVideo(true);
+	bg_id  = bgInit(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
 	bg_ptr = bgGetGfxPtr(bg_id);
 }
 
 void Window_Create3D(int width, int height) { 
-    launcherMode = false;
-	videoSetMode(MODE_0_3D);
+	SetupVideo(false);
 }
 
 void Window_Destroy(void) { }
