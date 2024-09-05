@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# SPDX-FileContributor: Antonio Niño Díaz, 2023
+export BLOCKSDS                 ?= /opt/wonderful/thirdparty/blocksds/core
+export BLOCKSDSEXT              ?= /opt/wonderful/thirdparty/blocksds/external
+export WONDERFUL_TOOLCHAIN      ?= /opt/wonderful
+ARM_NONE_EABI_PATH              ?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
+
+LIBS		:= -lc -lnds7 -ldswifi7
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds $(BLOCKSDS)/libs/dswifi
+
+BUILDDIR	:= build-nds
+NAME		:= cc-arm7
+ELF		:= $(BUILDDIR)/$(NAME).elf
+DUMP		:= $(BUILDDIR)/$(NAME).dump
+MAP		:= $(BUILDDIR)/$(NAME).map
+
+PREFIX		:= $(ARM_NONE_EABI_PATH)arm-none-eabi-
+CC		:= $(PREFIX)gcc
+CXX		:= $(PREFIX)g++
+LD		:= $(CC)
+
+DEFINES		:= -D__NDS__ -DARM7
+ARCH		:= -mcpu=arm7tdmi -mtune=arm7tdmi
+WARNFLAGS	:= -Wall
+
+
+INCLUDEFLAGS	:= $(foreach path,$(INCLUDEDIRS),-I$(path)) \
+		   $(foreach path,$(LIBDIRS),-I$(path)/include)
+
+LIBDIRSFLAGS	:= $(foreach path,$(LIBDIRS),-L$(path)/lib)
+
+ASFLAGS		+= -x assembler-with-cpp $(DEFINES) $(ARCH) \
+		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) \
+		   -ffunction-sections -fdata-sections
+
+CFLAGS		+= -std=gnu11 $(WARNFLAGS) $(DEFINES) $(ARCH) \
+		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) -O2 \
+		   -ffunction-sections -fdata-sections \
+		   -fomit-frame-pointer
+
+LDFLAGS		:= -mthumb -mthumb-interwork $(LIBDIRSFLAGS) \
+		   -Wl,-Map,$(MAP) -Wl,--gc-sections -nostdlib \
+		   -T$(BLOCKSDS)/sys/crts/ds_arm7.ld \
+		   -Wl,--no-warn-rwx-segments \
+		   -Wl,--start-group $(LIBS) -lgcc -Wl,--end-group
+
+OBJS		:= misc/ds/main_arm7.o
+
+# Targets
+# -------
+.PHONY: all clean dump
+
+all: $(ELF)
+
+$(ELF): $(OBJS)
+	$(LD) -o $@ $(OBJS) $(BLOCKSDS)/sys/crts/ds_arm7_crt0.o $(LDFLAGS)
+clean:
+	rm $(ELF) $(MAP) $(OBJS)
+
+# Rules
+# -----
+%.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
