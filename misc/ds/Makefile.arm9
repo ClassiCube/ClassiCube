@@ -6,21 +6,27 @@ export BLOCKSDSEXT		?= /opt/wonderful/thirdparty/blocksds/external
 export WONDERFUL_TOOLCHAIN	?= /opt/wonderful
 ARM_NONE_EABI_PATH		?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
 
-SOURCEDIRS      := src
+SOURCEDIRS	:= src
 INCLUDEDIRS     :=
-DEFINES         := -DPLAT_NDS
-LIBS            := -ldswifi9 -lnds9 -lc
-LIBDIRS         := $(BLOCKSDS)/libs/dswifi $(BLOCKSDS)/libs/libnds
+
+ifdef BUILD_DSI
+BUILDDIR	:= build-dsi
+DEFINES		:= -DPLAT_NDS -DBUILD_DSI
+LIBS		:= -ldswifi9 -lnds9 -lc
+LIBDIRS		:= $(BLOCKSDS)/libs/dswifi $(BLOCKSDS)/libs/libnds
+else
+BUILDDIR	:= build-nds
+DEFINES		:= -DPLAT_NDS
+LIBS		:= -ldswifi9 -lnds9 -lc
+LIBDIRS		:= $(BLOCKSDS)/libs/dswifi $(BLOCKSDS)/libs/libnds
+endif
 
 NAME		:= cc-arm9
-BUILDDIR	:= build-nds
-ELF		:= build-nds/$(NAME).elf
-DUMP		:= build-nds/$(NAME).dump
-MAP		:= build-nds/$(NAME).map
+ELF		:= $(BUILDDIR)/$(NAME).elf
+MAP		:= $(BUILDDIR)/$(NAME).map
 
 # Tools
 # -----
-
 PREFIX		:= $(ARM_NONE_EABI_PATH)arm-none-eabi-
 CC		:= $(PREFIX)gcc
 CXX		:= $(PREFIX)g++
@@ -28,9 +34,8 @@ LD		:= $(PREFIX)gcc
 
 # Source files
 # ------------
-
-SOURCES_S	:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.s))
-SOURCES_C	:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.c))
+S_FILES		:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.s))
+C_FILES		:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.c))
 
 # Compiler and linker flags
 # -------------------------
@@ -59,34 +64,37 @@ LDFLAGS		:= $(ARCH) $(LIBDIRSFLAGS) -Wl,-Map,$(MAP) $(DEFINES) \
 
 # Intermediate build files
 # ------------------------
-OBJS	:= $(addsuffix .o,$(addprefix $(BUILDDIR)/,$(SOURCES_S))) \
-		   $(addsuffix .o,$(addprefix $(BUILDDIR)/,$(SOURCES_C)))
-
+OBJS		:= $(addprefix $(BUILDDIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.s=%.o)))
 DEPS		:= $(OBJS:.o=.d)
+export VPATH	:= $(SOURCEDIRS)
 
 # Targets
 # -------
 
 .PHONY: all
 
-all: $(ELF)
+all: $(BUILDDIR) $(ELF)
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
 
 $(ELF): $(OBJS)
 	$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
+clean:
+	rm $(ELF) $(MAP) $(OBJS)
+	rm -rf $(BUILDDIR)
+
 # Rules
 # -----
 
-$(BUILDDIR)/%.s.o : %.s
-	@mkdir -p $(@D)
+$(BUILDDIR)/%.o : %.s
 	$(CC) $(ASFLAGS) -MMD -MP -c -o $@ $<
 
-$(BUILDDIR)/%.c.o : %.c
-	@mkdir -p $(@D)
+$(BUILDDIR)/%.o : %.c
 	$(CC) $(CFLAGS) -MMD -MP -c -o $@ $<
 
-$(BUILDDIR)/%.arm.c.o : %.arm.c
-	@mkdir -p $(@D)
+$(BUILDDIR)/%.arm.o : %.arm.c
 	$(CC) $(CFLAGS) -MMD -MP -marm -mlong-calls -c -o $@ $<
 
 # Include dependency files if they exist
