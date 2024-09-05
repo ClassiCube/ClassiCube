@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: CC0-1.0
 #
 # SPDX-FileContributor: Antonio Niño Díaz, 2023
-export BLOCKSDS			?= /opt/blocksds/core
-export BLOCKSDSEXT		?= /opt/blocksds/external
+export BLOCKSDS			?= /opt/wonderful/thirdparty/blocksds/core
+export BLOCKSDSEXT		?= /opt/wonderful/thirdparty/blocksds/external
 
 NAME			:= ClassiCube
 GAME_TITLE		:= ClassiCube
