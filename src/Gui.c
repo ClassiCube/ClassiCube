@@ -224,9 +224,9 @@ static int IndexOfScreen(struct Screen* s) {
 	return -1;
 }
 
-void Gui_RemoveCore(struct Screen* s) {
+static cc_bool Gui_RemoveCore(struct Screen* s) {
 	int i = IndexOfScreen(s);
-	if (i == -1) return;
+	if (i == -1) return false;
 
 	for (; i < Gui.ScreensCount - 1; i++) 
 	{
@@ -237,6 +237,7 @@ void Gui_RemoveCore(struct Screen* s) {
 
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->Free(s);
+	return true;
 }
 
 CC_NOINLINE static void Gui_OnScreensChanged(void) {
@@ -245,8 +246,8 @@ CC_NOINLINE static void Gui_OnScreensChanged(void) {
 }
 
 void Gui_Remove(struct Screen* s) {
-	Gui_RemoveCore(s);
-	Gui_OnScreensChanged();
+	cc_bool removed = Gui_RemoveCore(s);
+	if (removed) Gui_OnScreensChanged();
 }
 
 void Gui_Add(struct Screen* s, int priority) {

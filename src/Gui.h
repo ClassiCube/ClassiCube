@@ -263,9 +263,6 @@ void Gui_ShowDefault(void);
 void Gui_SetTouchUI(cc_bool enabled);
 #endif
 
-/* (internal) Removes the screen from the screens list. */
-/* NOTE: This does NOT perform the usual 'screens changed' behaviour. */
-void Gui_RemoveCore(struct Screen* s);
 /* Removes the screen from the screens list. */
 CC_API void Gui_Remove(struct Screen* screen);
 /* Inserts a screen into the screen lists with the given priority. */
