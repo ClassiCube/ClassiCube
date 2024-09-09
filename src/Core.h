@@ -475,6 +475,7 @@ typedef cc_uint8  cc_bool;
         #undef  CC_BUILD_ADVLIGHTING
         #undef  CC_BUILD_FILESYSTEM
 	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define CC_DISABLE_EXTRA_MODELS
 #endif
 #endif
 
@@ -506,7 +507,9 @@ typedef cc_uint8  cc_bool;
 #ifndef CC_BUILD_LOWMEM
 #define EXTENDED_BLOCKS
 #endif
+#ifndef CC_BUILD_TINYMEM
 #define EXTENDED_TEXTURES
+#endif
 
 #ifdef EXTENDED_BLOCKS
 typedef cc_uint16 BlockID;
