@@ -458,6 +458,23 @@ typedef cc_uint8  cc_bool;
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
+#elif defined PLAT_32X
+        #define CC_BUILD_32X
+        #define CC_BUILD_CONSOLE
+        #define CC_BUILD_LOWMEM
+        #define CC_BUILD_TINYMEM
+        #define CC_BUILD_COOPTHREADED
+        #define CC_BUILD_NOMUSIC
+        #define CC_BUILD_NOSOUNDS
+        #define CC_BUILD_SMALLSTACK
+        #define CC_BUILD_TINYSTACK
+        #undef  CC_BUILD_RESOURCES
+        #undef  CC_BUILD_NETWORKING
+        #define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+        #define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+        #undef  CC_BUILD_ADVLIGHTING
+        #undef  CC_BUILD_FILESYSTEM
+	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 #endif
 #endif
 

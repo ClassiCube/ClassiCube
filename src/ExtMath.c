@@ -10,9 +10,21 @@ static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
 static const cc_uint64 _POS_INF = 0x7FF0000000000000ULL;
 #define POS_INF *((double*)&_POS_INF)
 
+/* Sega 32x is missing these intrinsics */
+#if defined CC_BUILD_32X
+#include <stdint.h>
+extern int32_t fix16_sqrt(int32_t value);
+
+float sqrtf(float x) {
+                int32_t fp_x = (int32_t)(x * (1 << 16));
+                fp_x = fix16_sqrt(fp_x);
+                return (float)fp_x / (1 << 16);
+        }
+#endif
+
 
 /* Sega saturn is missing these intrinsics */
-#ifdef CC_BUILD_SATURN
+#if defined CC_BUILD_SATURN
 #include <stdint.h>
 extern int32_t fix16_sqrt(int32_t value);
 static int abs(int x) { return x < 0 ? -x : x; }
