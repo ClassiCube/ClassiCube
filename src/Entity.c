@@ -883,7 +883,7 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 		}
 		
 		p->SpawnYaw   = p->Base.Yaw;
-		p->SpawnPitch = p->Base.Pitch;
+		if (!Game_ClassicMode) p->SpawnPitch = p->Base.Pitch;
 	}
 	return LocalPlayer_HandleRespawn(key, device);
 }
