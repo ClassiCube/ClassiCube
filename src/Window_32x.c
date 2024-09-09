@@ -133,22 +133,7 @@ static void DrawFramebuffer(Rect2D r, struct Bitmap* bmp, int mode) {
     MARS_VDP_FBCTL = mode;
     while ((MARS_VDP_FBCTL & MARS_VDP_FS) != mode);
 
-    Hw32xSetFGColor(255,31,31,31);
-    Hw32xSetBGColor(0,0,0,0);
-
-    volatile uint16_t* vram = &MARS_FRAMEBUFFER + 0x100;
 	Platform_LogConst("DRAW");
-
-	// TODO: Partial redraws seem to produce some corrupt pixels ???
-	for (int y = r.y; y < r.y + r.height; y++) 
-	{
-		BitmapCol* row = Bitmap_GetRow(bmp, y);
-		for (int x = r.x; x < r.x + r.width; x++) 
-		{
-			// TODO optimise
-			vram[x + (y * 320)] = 0x7FFF;
-		}
-	}
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

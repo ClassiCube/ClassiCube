@@ -131,7 +131,7 @@ static void SPConnection_BeginConnect(void) {
 	Random_SeedFromCurrentTime(&rnd);
 	World_NewMap();
 
-#if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC
+#if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC || defined CC_BUILD_32X
 	horSize = 16;
 	verSize = 16;
 #elif defined CC_BUILD_LOWMEM

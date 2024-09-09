@@ -1,5 +1,6 @@
 #include "Core.h"
 #if defined PLAT_32X
+#define OVERRIDE_MEM_FUNCTIONS
 
 #include "_PlatformBase.h"
 #include "Stream.h"
@@ -27,6 +28,28 @@ const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix  = " 32x";
 cc_bool Platform_ReadonlyFilesystem = true;
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Memory----------------------------------------------------------*
+*#########################################################################################################################*/
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? malloc(size) : NULL;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	return calloc(numElems, elemsSize);
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? realloc(mem, size) : NULL;
+}
+
+void Mem_Free(void* mem) {
+	if (mem) free(mem);
+}
 
 
 /*########################################################################################################################*
