@@ -49,7 +49,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	//  (e.g. when running via some emulators)
 	if (!argc) return 0;
 
-#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_32X
 	// When running in DuckStation at least, argv was a five element array of empty strings ???
 	return 0;
 #endif

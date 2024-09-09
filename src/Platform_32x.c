@@ -14,6 +14,8 @@
 #include <string.h>
 #include <stdio.h>
 #include "_PlatformConsole.h"
+#include "../misc/32x/32x.h"
+#include "../misc/32x/hw_32x.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = 99999;
@@ -23,15 +25,22 @@ const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
 const cc_result ReturnCode_SocketDropped    = -1;
 
-const char* Platform_AppNameSuffix  = " 32X";
+const char* Platform_AppNameSuffix  = " 32x";
 cc_bool Platform_ReadonlyFilesystem = true;
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+static int logY;
 void Platform_Log(const char* msg, int len) {
-	// TODO
+	char buf[128+1];
+	len = min(len, 128);
+	Mem_Copy(buf, msg, len);
+	buf[len] = '\0';
+
+	HwMdPuts(buf, 0x0000, 1, logY);
+	logY = (logY + 1) % 26;
 }
 
 TimeMS DateTime_CurrentUTC(void) {

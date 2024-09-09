@@ -14,18 +14,17 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "../misc/32x/32x.h"
+#include "../misc/32x/hw_32x.h"
 
 // framebuffer only 128 kb
 #define SCREEN_WIDTH    320
-#define SCREEN_HEIGHT   204
+#define SCREEN_HEIGHT   200
 
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
-
-static void OnVblank(void* work) {
-}
 
 void Window_PreInit(void) { }
 void Window_Init(void) {
@@ -44,6 +43,8 @@ void Window_Init(void) {
 
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+
+	Hw32xInit(MARS_VDP_MODE_32K, 0);
 }
 
 void Window_Free(void) { }
@@ -88,9 +89,28 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0x32, PadBind_Defaults);
+	int mods = HwMdReadPad(0);
+	
+	Gamepad_SetButton(port, CCPAD_L, mods & SEGA_CTRL_X);
+	Gamepad_SetButton(port, CCPAD_R, mods & SEGA_CTRL_Y);
+	
+	Gamepad_SetButton(port, CCPAD_1, mods & SEGA_CTRL_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & SEGA_CTRL_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & SEGA_CTRL_C);
+	Gamepad_SetButton(port, CCPAD_4, mods & SEGA_CTRL_Z);
+	
+	Gamepad_SetButton(port, CCPAD_START,  mods & SEGA_CTRL_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & SEGA_CTRL_MODE);
+	
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & SEGA_CTRL_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & SEGA_CTRL_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & SEGA_CTRL_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & SEGA_CTRL_DOWN);
 }
 
 
@@ -102,13 +122,22 @@ void Window_Create2D(int width, int height) {
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = NULL; // TODO
+    volatile uint16_t* vram = &MARS_FRAMEBUFFER + 0x100;
+	bmp->scan0  = vram;
 	bmp->width  = width;
 	bmp->height = height;
 }
 
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	uint16_t* vram = NULL;
+// TODO ????
+static void DrawFramebuffer(Rect2D r, struct Bitmap* bmp, int mode) {
+    MARS_VDP_FBCTL = mode;
+    while ((MARS_VDP_FBCTL & MARS_VDP_FS) != mode);
+
+    Hw32xSetFGColor(255,31,31,31);
+    Hw32xSetBGColor(0,0,0,0);
+
+    volatile uint16_t* vram = &MARS_FRAMEBUFFER + 0x100;
+	Platform_LogConst("DRAW");
 
 	// TODO: Partial redraws seem to produce some corrupt pixels ???
 	for (int y = r.y; y < r.y + r.height; y++) 
@@ -117,10 +146,36 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		for (int x = r.x; x < r.x + r.width; x++) 
 		{
 			// TODO optimise
-			vram[x + (y * 512)] = row[x];
+			vram[x + (y * 320)] = 0x7FFF;
 		}
 	}
 }
+
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	DrawFramebuffer(r, bmp, 0);
+	DrawFramebuffer(r, bmp, 1);
+}
+/*
+    MARS_VDP_FBCTL = 1;
+    while ((MARS_VDP_FBCTL & MARS_VDP_FS) != 1);
+
+    Hw32xSetFGColor(255,31,31,31);
+    Hw32xSetBGColor(0,0,0,0);
+
+    volatile uint16_t* vram = &MARS_FRAMEBUFFER + 0x100;
+	Platform_LogConst("DRAW");
+
+	// TODO: Partial redraws seem to produce some corrupt pixels ???
+	for (int y = r.y; y < r.y + r.height; y++) 
+	{
+		BitmapCol* row = Bitmap_GetRow(bmp, y);
+		for (int x = r.x; x < r.x + r.width; x++) 
+		{
+			// TODO optimise
+			vram[x + (y * 320)] = 0x8FFF;
+		}
+	}
+}*/
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 }
