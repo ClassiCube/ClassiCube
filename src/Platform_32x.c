@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include "_PlatformConsole.h"
 #include "../misc/32x/32x.h"
 #include "../misc/32x/hw_32x.h"
@@ -35,11 +36,17 @@ cc_bool Platform_ReadonlyFilesystem = true;
 *#########################################################################################################################*/
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
+	Platform_Log1("  MALLOC: %i", &size);
+	void* ptr = size ? malloc(size) : NULL;
+	Platform_Log1("MALLOCED: %x", &ptr);
+    return ptr;
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
+	Platform_Log1("  CALLOC: %i", &numElems);
+	void* ptr = calloc(numElems, elemsSize);
+	Platform_Log1("CALLOCED: %x", &ptr);
+    return ptr;
 }
 
 void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
@@ -57,12 +64,12 @@ void Mem_Free(void* mem) {
 *#########################################################################################################################*/
 static int logY;
 void Platform_Log(const char* msg, int len) {
-	char buf[128+1];
-	len = min(len, 128);
-	Mem_Copy(buf, msg, len);
-	buf[len] = '\0';
+	for (int i = 0; i < 20; i++)
+		HwMdPutc(' ',    0x0000, 1 + i, logY);
 
-	HwMdPuts(buf, 0x0000, 1, logY);
+	for (int i = 0; i < min(len, 64); i++)
+		HwMdPutc(msg[i], 0x0000, 1 + i, logY);
+
 	logY = (logY + 1) % 26;
 }
 
@@ -84,7 +91,7 @@ cc_uint64 Stopwatch_Measure(void) {
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return 0;
+	return 1;
 }
 
 static void Stopwatch_Init(void) {

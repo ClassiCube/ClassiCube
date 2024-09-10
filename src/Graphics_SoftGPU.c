@@ -39,8 +39,14 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
+#ifdef CC_BUILD_TINYMEM
+	Gfx.MaxTexWidth  = 16;
+	Gfx.MaxTexHeight = 16;
+#else
 	Gfx.MaxTexWidth  = 4096;
 	Gfx.MaxTexHeight = 4096;
+#endif
+
 	Gfx.Created      = true;
 	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	
@@ -150,8 +156,10 @@ static void ClearColorBuffer(void) {
 }
 
 static void ClearDepthBuffer(void) {
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 	int i, size = fb_width * fb_height;
 	for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
+#endif
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -529,11 +537,15 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
 			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
 
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 			if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
 			if (!colWrite) {
 				if (depthWrite) depthBuffer[db_index] = z;
 				continue;
 			}
+#else
+			if (!colWrite) continue;
+#endif
 
 			int R, G, B, A;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
@@ -573,7 +585,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				B = (B * A + dstB * (255 - A)) >> 8;
 			}
 
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 			if (depthWrite) depthBuffer[db_index] = z;
+#endif
 			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
 	}
@@ -943,8 +957,10 @@ void Gfx_OnWindowResize(void) {
 	colorBuffer = fb_bmp.scan0;
 	cb_stride   = fb_bmp.width;
 
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
 	db_stride   = fb_width;
+#endif
 
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
