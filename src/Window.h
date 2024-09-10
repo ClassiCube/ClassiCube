@@ -40,6 +40,9 @@ CC_VAR extern struct _DisplayData {
 	cc_bool ShowingSoftKeyboard;
 	/* Whether the cursor is currently visible */
 	cc_bool CursorVisible;
+	/* Whether the framebuffer must always be entirely redrawn */
+	/* NOTE: Currently only the Sega 32X requires this */
+	cc_bool FullRedraw;
 	/* Amount to offset content near the edges of the window by */
 	/*  Mainly intended for when the game is rendered on TV displays, where */
 	/*  pixels on the edges of the screen may be hidden due to overscan */

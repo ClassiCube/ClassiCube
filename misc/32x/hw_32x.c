@@ -136,10 +136,7 @@ void Hw32xScreenClear()
 
     Hw32xSetFGColor(255,31,31,31);
     Hw32xSetBGColor(0,0,0,0);
-    X = Y = 0;
 }
-
-extern unsigned char msx[];
 
 void Hw32xDelay(int ticks)
 {

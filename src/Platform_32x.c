@@ -18,6 +18,7 @@
 #include "_PlatformConsole.h"
 #include "../misc/32x/32x.h"
 #include "../misc/32x/hw_32x.h"
+#include "../third_party/tinyalloc/tinyalloc.c"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = 99999;
@@ -37,25 +38,24 @@ cc_bool Platform_ReadonlyFilesystem = true;
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	Platform_Log1("  MALLOC: %i", &size);
-	void* ptr = size ? malloc(size) : NULL;
+	void* ptr = size ? ta_alloc(size) : NULL;
 	Platform_Log1("MALLOCED: %x", &ptr);
     return ptr;
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
 	Platform_Log1("  CALLOC: %i", &numElems);
-	void* ptr = calloc(numElems, elemsSize);
+	void* ptr = ta_calloc(numElems, elemsSize);
 	Platform_Log1("CALLOCED: %x", &ptr);
     return ptr;
 }
 
 void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
+	return NULL; // TODO
 }
 
 void Mem_Free(void* mem) {
-	if (mem) free(mem);
+	if (mem) ta_free(mem);
 }
 
 
@@ -94,8 +94,10 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return 1;
 }
 
+extern void _bss_end;
 static void Stopwatch_Init(void) {
 	// TODO
+	ta_init(&_bss_end, (void*)(0x0603FFFF - 16384), 256, 16, 4);
 }
 
 
@@ -161,6 +163,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) {
 	// TODO sleep a bit
+	Hw32xDelay(1);
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {

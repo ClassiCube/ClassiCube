@@ -304,6 +304,9 @@ void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 
 void LBackend_Tick(void) {
 	int i;
+	/* Window backend requires always redrawing entire frame - slow */
+	/* Most window backends do not require this though */
+	if (DisplayInfo.FullRedraw && pendingRedraw) pendingRedraw |= REDRAW_ALL;
 	DoRedraw();
 
 	if (pendingFullDraws) {

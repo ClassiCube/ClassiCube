@@ -143,7 +143,7 @@ static void SPConnection_BeginConnect(void) {
 #endif
 	World_SetDimensions(horSize, verSize, horSize);
 
-#if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+#if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_32X
 	Gen_Active = &FlatgrassGen;
 #else
 	Gen_Active = &NotchyGen;

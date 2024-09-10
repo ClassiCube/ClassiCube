@@ -43,6 +43,7 @@ void Window_Init(void) {
 
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.FullRedraw     = true;
 
 	Hw32xInit(MARS_VDP_MODE_32K, 0);
 }
@@ -128,39 +129,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->height = height;
 }
 
-// TODO ????
-static void DrawFramebuffer(Rect2D r, struct Bitmap* bmp, int mode) {
-    MARS_VDP_FBCTL = mode;
-    while ((MARS_VDP_FBCTL & MARS_VDP_FS) != mode);
-
-	Platform_LogConst("DRAW");
-}
-
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	DrawFramebuffer(r, bmp, 0);
-	DrawFramebuffer(r, bmp, 1);
+	Hw32xScreenFlip(true);
 }
-/*
-    MARS_VDP_FBCTL = 1;
-    while ((MARS_VDP_FBCTL & MARS_VDP_FS) != 1);
-
-    Hw32xSetFGColor(255,31,31,31);
-    Hw32xSetBGColor(0,0,0,0);
-
-    volatile uint16_t* vram = &MARS_FRAMEBUFFER + 0x100;
-	Platform_LogConst("DRAW");
-
-	// TODO: Partial redraws seem to produce some corrupt pixels ???
-	for (int y = r.y; y < r.y + r.height; y++) 
-	{
-		BitmapCol* row = Bitmap_GetRow(bmp, y);
-		for (int x = r.x; x < r.x + r.width; x++) 
-		{
-			// TODO optimise
-			vram[x + (y * 320)] = 0x8FFF;
-		}
-	}
-}*/
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 }

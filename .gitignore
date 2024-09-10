@@ -154,6 +154,11 @@ openvcl/
 *.pidb
 *.svclog
 *.scc
+*.map
+
+# Binary files
+*.bin
+*.elf
 
 # Visual C++ cache files
 ipch/
