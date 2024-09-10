@@ -412,7 +412,11 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 void Socket_Close(cc_socket s) {
 	shutdown(s, 2); // SHUT_RDWR = 2
+#ifdef BUILD_DSI
+	lwip_close(s);
+#else
 	closesocket(s);
+#endif
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -438,12 +442,17 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	int resultSize = sizeof(int);
 	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 	
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+#ifdef BUILD_DSI
+	socklen_t resultSize = sizeof(socklen_t);
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+#else
+	int resultSize = sizeof(int);
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+#endif
 	return res;
 }
 

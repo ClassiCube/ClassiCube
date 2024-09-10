@@ -12,7 +12,7 @@ DSIWIFI		:= third_party/dsiwifi
 
 ifdef BUILD_DSI
 SOURCEDIRS	+= $(DSIWIFI)/arm_iop/source $(DSIWIFI)/common/source $(DSIWIFI)/arm_iop/source/ath $(DSIWIFI)/arm_iop/source/crypto $(DSIWIFI)/arm_iop/source/ieee
-INCLUDEDIRS	+= $(DSIWIFI)/arm_iop/source $(DSIWIFI)/arm_iop/include $(DSIWIFI)/common/source $(DSIWIFI)/include $(DSIWIFI)/lwip
+INCLUDEDIRS	+= $(DSIWIFI)/arm_iop/source  $(DSIWIFI)/arm_iop/include $(DSIWIFI)/common/source $(DSIWIFI)/include $(DSIWIFI)/include/lwip
 BUILDDIR	:= build-dsi
 LIBS		:= -lc -lnds7
 LIBDIRS		:= $(BLOCKSDS)/libs/libnds

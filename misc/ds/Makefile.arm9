@@ -8,12 +8,15 @@ ARM_NONE_EABI_PATH		?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
 
 SOURCEDIRS	:= src
 INCLUDEDIRS     :=
+DSIWIFI		:= third_party/dsiwifi
 
 ifdef BUILD_DSI
+SOURCEDIRS	+= $(DSIWIFI)/arm_host/source $(DSIWIFI)/common/source $(DSIWIFI)/arm_host/source/nds $(DSIWIFI)/arm_host/source/lwip $(DSIWIFI)/arm_host/source/lwip/ipv4 $(DSIWIFI)/arm_host/source/lwip/ipv6 $(DSIWIFI)/arm_host/source/lwip/netif $(DSIWIFI)/arm_host/source/lwip/netif/ppp $(DSIWIFI)/arm_host/source/lwip/api
+INCLUDEDIRS	+= $(DSIWIFI)/arm_host/include $(DSIWIFI)/common/source $(DSIWIFI)/include $(DSIWIFI)/include/lwip
 BUILDDIR	:= build-dsi
 DEFINES		:= -DPLAT_NDS -DBUILD_DSI
-LIBS		:= -ldswifi9 -lnds9 -lc
-LIBDIRS		:= $(BLOCKSDS)/libs/dswifi $(BLOCKSDS)/libs/libnds
+LIBS		:= -lnds9 -lc
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds
 else
 BUILDDIR	:= build-nds
 DEFINES		:= -DPLAT_NDS

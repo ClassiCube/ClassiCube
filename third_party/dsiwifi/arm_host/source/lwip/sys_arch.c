@@ -6,7 +6,7 @@
 // Misc
 //
 
-int errno;
+//int errno;
 
 void __attribute__((weak)) sys_init(void)
 {

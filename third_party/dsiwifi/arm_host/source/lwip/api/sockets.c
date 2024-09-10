@@ -1287,29 +1287,6 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
 }
 
 ssize_t
-lwip_read(int s, void *mem, size_t len)
-{
-  return lwip_recvfrom(s, mem, len, 0, NULL, NULL);
-}
-
-ssize_t
-lwip_readv(int s, const struct iovec *iov, int iovcnt)
-{
-  struct msghdr msg;
-
-  msg.msg_name = NULL;
-  msg.msg_namelen = 0;
-  /* Hack: we have to cast via number to cast from 'const' pointer to non-const.
-     Blame the opengroup standard for this inconsistency. */
-  msg.msg_iov = LWIP_CONST_CAST(struct iovec *, iov);
-  msg.msg_iovlen = iovcnt;
-  msg.msg_control = NULL;
-  msg.msg_controllen = 0;
-  msg.msg_flags = 0;
-  return lwip_recvmsg(s, &msg, 0);
-}
-
-ssize_t
 lwip_recv(int s, void *mem, size_t len, int flags)
 {
   return lwip_recvfrom(s, mem, len, flags, NULL, NULL);
@@ -1778,29 +1755,6 @@ lwip_socket(int domain, int type, int protocol)
   LWIP_DEBUGF(SOCKETS_DEBUG, ("%d\n", i));
   set_errno(0);
   return i;
-}
-
-ssize_t
-lwip_write(int s, const void *data, size_t size)
-{
-  return lwip_send(s, data, size, 0);
-}
-
-ssize_t
-lwip_writev(int s, const struct iovec *iov, int iovcnt)
-{
-  struct msghdr msg;
-
-  msg.msg_name = NULL;
-  msg.msg_namelen = 0;
-  /* Hack: we have to cast via number to cast from 'const' pointer to non-const.
-     Blame the opengroup standard for this inconsistency. */
-  msg.msg_iov = LWIP_CONST_CAST(struct iovec *, iov);
-  msg.msg_iovlen = iovcnt;
-  msg.msg_control = NULL;
-  msg.msg_controllen = 0;
-  msg.msg_flags = 0;
-  return lwip_sendmsg(s, &msg, 0);
 }
 
 #if LWIP_SOCKET_SELECT || LWIP_SOCKET_POLL
@@ -4241,11 +4195,6 @@ int setsockopt (int s, int level, int optname, const void *optval, socklen_t opt
     return lwip_setsockopt(s, level, optname, optval, optlen);
 }
 
-int close(int s)
-{
-    return lwip_close(s);
-}
-
 int connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
     return lwip_connect(s, name, namelen);
@@ -4263,18 +4212,6 @@ ssize_t recv(int s, void *mem, size_t len, int flags)
     //sys_msleep((20 * (ret / 0x80)) + 10);
     //sys_msleep(10);
     
-    return ret;
-}
-
-ssize_t read(int s, void *mem, size_t len)
-{
-    ssize_t ret = lwip_read(s, mem, len);
-    return ret;
-}
-
-ssize_t readv(int s, const struct iovec *iov, int iovcnt)
-{
-    ssize_t ret = lwip_readv(s, iov, iovcnt);
     return ret;
 }
 
@@ -4312,18 +4249,6 @@ ssize_t sendto(int s, const void *dataptr, size_t size, int flags,
 int socket(int domain, int type, int protocol)
 {
     return lwip_socket(domain, type, protocol);
-}
-
-ssize_t write(int s, const void *dataptr, size_t size)
-{
-    ssize_t ret = lwip_write(s, dataptr, size);
-    
-    return ret;
-}
-
-ssize_t writev(int s, const struct iovec *iov, int iovcnt)
-{
-    return lwip_writev(s, iov, iovcnt);
 }
 
 #if LWIP_SOCKET_SELECT

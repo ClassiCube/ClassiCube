@@ -1995,7 +1995,7 @@
  * names (read, write & close). (only used if you use sockets.c)
  */
 #if !defined LWIP_POSIX_SOCKETS_IO_NAMES || defined __DOXYGEN__
-#define LWIP_POSIX_SOCKETS_IO_NAMES     1
+//#define LWIP_POSIX_SOCKETS_IO_NAMES     1
 #endif
 
 /**
