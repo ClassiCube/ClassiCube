@@ -26,7 +26,11 @@
 #include <nds/arm9/dldi.h>
 #include <nds/arm9/sdmmc.h>
 #include <fat.h>
+#ifdef BUILD_DSI
+#include "../third_party/dsiwifi/include/dsiwifi9.h"
+#else
 #include <dswifi9.h>
+#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
@@ -457,15 +461,27 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 }
 
 static void InitNetworking(void) {
+#ifdef BUILD_DSI
+    if (!DSiWifi_InitDefault(INIT_ONLY)) {
+#else
     if (!Wifi_InitDefault(INIT_ONLY)) {
+#endif
         Platform_LogConst("Initing WIFI failed"); 
 		net_supported = false; return;
     }
+#ifdef BUILD_DSI
+    DSiWifi_AutoConnect();
+#else
     Wifi_AutoConnect();
+#endif
 
     for (int i = 0; i < 300; i++)
     {
+#ifdef BUILD_DSI
+        int status = DSiWifi_AssocStatus();
+#else
         int status = Wifi_AssocStatus();
+#endif
         if (status == ASSOCSTATUS_ASSOCIATED) return;
 		Platform_Log1("STATUS: %i", &status);
 
