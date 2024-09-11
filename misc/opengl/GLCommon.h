@@ -63,6 +63,8 @@ typedef cc_uintptr GLpointer;
 #define GL_MATRIX_MODE           0x0BA0
 #define GL_VIEWPORT              0x0BA2
 #define GL_ALPHA_TEST            0x0BC0
+#define GL_SCISSOR_TEST          0x0C11
+
 #define GL_MAX_TEXTURE_SIZE      0x0D33
 #define GL_DEPTH_BITS            0x0D56
 

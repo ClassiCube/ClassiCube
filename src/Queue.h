@@ -1,7 +1,6 @@
-#include "Core.h"
-
 #ifndef CC_QUEUE_H
 #define CC_QUEUE_H
+#include "Core.h"
 
 struct Queue {
 	cc_uint8* entries;    /* Buffer holding the bytes of the queue */

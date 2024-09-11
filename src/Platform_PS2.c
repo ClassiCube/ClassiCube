@@ -13,8 +13,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <dirent.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -46,6 +44,15 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const char* Platform_AppNameSuffix = " PS2";
 
+// extern unsigned char DEV9_irx[];
+// extern unsigned int  size_DEV9_irx;
+#define STRINGIFY(a) #a
+#define SifLoadBuffer(name) \
+	extern unsigned char name[]; \
+	extern unsigned int  size_ ## name; \
+	ret = SifExecModuleBuffer(name, size_ ## name, 0, NULL, NULL); \
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer " STRINGIFY(name) " failed: %i", &ret);
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
@@ -54,8 +61,7 @@ void Platform_Log(const char* msg, int len) {
 	char tmp[2048 + 1];
 	len = min(len, 2048);
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
-	
-	_print("%s", tmp);
+	_print("%s\n", tmp);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -99,86 +105,86 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("mass:/ClassiCube/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	return fioMkdir(str);
+cc_result Directory_Create(const cc_filepath* path) {
+	return fioMkdir(path->buffer);
 }
 
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	io_stat_t sb;
-	GetNativePath(str, path);
-	return fioGetstat(str, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
+	Platform_EncodePath(&str, path);
+	return fioGetstat(str.buffer, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
+}
+
+// For some reason fioDread seems to be returning a iox_dirent_t, instead of a io_dirent_t
+// The offset of 'name' in iox_dirent_t is different to 'iox_dirent_t', so naively trying
+// to use entry.name doesn't work
+// TODO: Properly investigate why this is happening
+static char* GetEntryName(char* src) {
+	for (int i = 0; i < 256; i++)
+	{
+		if (src[i]) return &src[i];
+	}
+	return NULL;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	return ERR_NOT_SUPPORTED;
-	/*cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
-	struct dirent* entry;
-	int res;
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_filepath str;
+	io_dirent_t entry;
+	int fd, res;
 
-	GetNativePath(str, dirPath);
-	DIR* dirPtr = opendir(str);
-	if (!dirPtr) return errno;
-
-	// POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed."
-	// errno is sometimes leftover from previous calls, so always reset it before readdir gets called
-	errno = 0;
+	Platform_EncodePath(&str, dirPath);
+	fd = fioDopen(str.buffer);
+	if (fd < 0) return fd;
+	
+	res = 0;
 	String_InitArray(path, pathBuffer);
+	Mem_Set(&entry, 0, sizeof(entry));
 
-	while ((entry = readdir(dirPtr))) {
+	while ((res = fioDread(fd, &entry)) > 0) {
 		path.length = 0;
 		String_Format1(&path, "%s/", dirPath);
 
+		char* src = GetEntryName(entry.name);
+		if (!src) continue;
+
 		// ignore . and .. entry
-		char* src = entry->d_name;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
 		int len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
-		int is_dir = entry->d_type == DT_DIR;
-		// TODO: fallback to stat when this fails
 
-		if (is_dir) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
-		} else {
-			callback(&path, obj);
-		}
-		errno = 0;
+		int is_dir = FIO_SO_ISDIR(entry.stat.mode);
+		callback(&path, obj, is_dir);
 	}
 
-	res = errno; // return code from readdir
-	closedir(dirPtr);
-	return res;*/
+	fioDclose(fd);
+	return res;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int res = fioOpen(str, mode);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	int res = fioOpen(path, mode);
 	*file   = res;
 	return res < 0 ? res : 0;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, FIO_O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, FIO_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT | FIO_O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, FIO_O_RDWR | FIO_O_CREAT | FIO_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, FIO_O_RDWR | FIO_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -194,7 +200,8 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	return fioClose(file);
+	int res = fioClose(file);
+	return res < 0 ? res : 0;
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
@@ -321,7 +328,7 @@ void Waitable_Free(void* handle) {
 	int semID = (int)handle;
 	int res   = DeleteSema(semID);
 	
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res < 0) Logger_Abort2(res, "Destroying waitable");
 }
 
 void Waitable_Signal(void* handle) {
@@ -349,15 +356,6 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 *#########################################################################################################################*/
 // https://github.com/ps2dev/ps2sdk/blob/master/NETMAN.txt
 // https://github.com/ps2dev/ps2sdk/blob/master/ee/network/tcpip/samples/tcpip_dhcp/ps2ip.c
-extern unsigned char DEV9_irx[];
-extern unsigned int  size_DEV9_irx;
-
-extern unsigned char SMAP_irx[];
-extern unsigned int  size_SMAP_irx;
-
-extern unsigned char NETMAN_irx[];
-extern unsigned int  size_NETMAN_irx;
-
 static void ethStatusCheckCb(s32 alarm_id, u16 time, void *common) {
 	int threadID = *(int*)common;
 	iWakeupThread(threadID);
@@ -441,14 +439,9 @@ static void Networking_Init(void) {
 static void Networking_LoadIOPModules(void) {
 	int ret;
 	
-	ret = SifExecModuleBuffer(DEV9_irx,   size_DEV9_irx,   0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer DEV9_irx failed: %i", &ret);
-	
-	ret = SifExecModuleBuffer(NETMAN_irx, size_NETMAN_irx, 0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer NETMAN_irx failed: %i", &ret);
-	
-	ret = SifExecModuleBuffer(SMAP_irx,   size_SMAP_irx,   0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer SMAP_irx failed: %i", &ret);
+	SifLoadBuffer(DEV9_irx);
+	SifLoadBuffer(NETMAN_irx);
+	SifLoadBuffer(SMAP_irx);
 }
 
 /*########################################################################################################################*
@@ -508,20 +501,24 @@ static cc_result GetSocketError(cc_socket s) {
 	return res;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
-	
+
 	if (nonblocking) {
 		int blocking_raw = -1; // non-blocking mode
-		//ioctlsocket(*s, FIONBIO, &blocking_raw); TODO doesn't work
+							   //ioctlsocket(*s, FIONBIO, &blocking_raw); TODO doesn't work
 	}
+	return 0;
+}
 
-	res = connect(*s, raw, addr->size);
-	return res == -1 ? GetSocketError(*s) : 0;
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+
+	int res = connect(s, raw, addr->size);
+	return res == -1 ? GetSocketError(s) : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
@@ -594,41 +591,21 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *----------------------------------------------------USB mass storage-----------------------------------------------------*
 *#########################################################################################################################*/
-extern unsigned char USBD_irx[];
-extern unsigned int  size_USBD_irx;
-
-extern unsigned char BDM_irx[];
-extern unsigned int  size_BDM_irx;
-
-extern unsigned char BDMFS_FATFS_irx[];
-extern unsigned int  size_BDMFS_FATFS_irx;
-
-extern unsigned char USBMASS_BD_irx[];
-extern unsigned int  size_USBMASS_BD_irx;
-
-extern unsigned char USBHDFSD_irx[];
-extern unsigned int  size_USBHDFSD_irx;
-
 static void USBStorage_LoadIOPModules(void) {   
     int ret;
     // TODO: Seems that
     // BDM, BDMFS_FATFS, USBMASS_BD - newer ?
     // USBHDFSD - older ?
     
-	ret = SifExecModuleBuffer(USBD_irx, size_USBD_irx, 0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBD_irx failed: %i", &ret);
+	SifLoadBuffer(USBD_irx);  
+	//SifLoadBuffer(USBHDFSD_irx);
     
-	//ret = SifExecModuleBuffer(USBHDFSD_irx,  size_USBHDFSD_irx,  0, NULL, NULL);
-    //if (ret < 0) Platform_Log1("SifExecModuleBuffer USBHDFSD_irx failed: %i", &ret);
+	SifLoadBuffer(BDM_irx);
+	SifLoadBuffer(BDMFS_FATFS_irx);
     
-	ret = SifExecModuleBuffer(BDM_irx,  size_BDM_irx,  0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer BDM_irx failed: %i", &ret);
-    
-	ret = SifExecModuleBuffer(BDMFS_FATFS_irx, size_BDMFS_FATFS_irx, 0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer BDMFS_FATFS_irx failed: %i", &ret);
-    
-	ret = SifExecModuleBuffer(USBMASS_BD_irx,  size_USBMASS_BD_irx,  0, NULL, NULL);
-    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBMASS_BD_irx failed: %i", &ret);
+	SifLoadBuffer(USBMASS_BD_irx);
+	SifLoadBuffer(USBMOUSE_irx);
+	SifLoadBuffer(USBKBD_irx);
 }
 
 // TODO Maybe needed ???
@@ -704,11 +681,9 @@ void Platform_Init(void) {
 	Networking_Setup();
 	
 	// Create root directory
-	int res = fioMkdir("mass:/ClassiCube");
+	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
+	int res = Directory_Create(root);
 	Platform_Log1("ROOT CREATE %i", &res);
-	
-	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
-	dma_channel_fast_waits(DMA_CHANNEL_GIF);
 }
 
 void Platform_Free(void) { }
@@ -739,7 +714,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "PS2_PS2_PS2_PS2_"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

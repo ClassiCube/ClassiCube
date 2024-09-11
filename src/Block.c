@@ -204,12 +204,12 @@ static void Block_CalcLightOffset(BlockID block) {
 	int flags = 0xFF;
 	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
-	if (min.x != 0) flags &= ~(1 << FACE_XMIN);
-	if (max.x != 1) flags &= ~(1 << FACE_XMAX);
-	if (min.z != 0) flags &= ~(1 << FACE_ZMIN);
-	if (max.z != 1) flags &= ~(1 << FACE_ZMAX);
-	if (min.y != 0) flags &= ~(1 << FACE_YMIN);
-	if (max.y != 1) flags &= ~(1 << FACE_YMAX);
+	if (min.x != 0) flags &= ~FACE_BIT_XMIN;
+	if (max.x != 1) flags &= ~FACE_BIT_XMAX;
+	if (min.z != 0) flags &= ~FACE_BIT_ZMIN;
+	if (max.z != 1) flags &= ~FACE_BIT_ZMAX;
+	if (min.y != 0) flags &= ~FACE_BIT_YMIN;
+	if (max.y != 1) flags &= ~FACE_BIT_YMAX;
 
 	if ((min.y != 0 && max.y == 1) && Blocks.Draw[block] != DRAW_GAS) {
 		flags &= ~(1 << LIGHT_FLAG_SHADES_FROM_BELOW);
@@ -380,12 +380,12 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 	occludedY = (bMin.x >= oMin.x && bMax.x <= oMax.x) && (bMin.z >= oMin.z && bMax.z <= oMax.z);
 	occludedZ = (bMin.x >= oMin.x && bMax.x <= oMax.x) && (bMin.y >= oMin.y && bMax.y <= oMax.y);
 
-	f |= occludedX && oMax.x == 1.0f && bMin.x == 0.0f ? (1 << FACE_XMIN) : 0;
-	f |= occludedX && oMin.x == 0.0f && bMax.x == 1.0f ? (1 << FACE_XMAX) : 0;
-	f |= occludedZ && oMax.z == 1.0f && bMin.z == 0.0f ? (1 << FACE_ZMIN) : 0;
-	f |= occludedZ && oMin.z == 0.0f && bMax.z == 1.0f ? (1 << FACE_ZMAX) : 0;
-	f |= occludedY && (bothLiquid || (oMax.y == 1.0f && bMin.y == 0.0f)) ? (1 << FACE_YMIN) : 0;
-	f |= occludedY && (bothLiquid || (oMin.y == 0.0f && bMax.y == 1.0f)) ? (1 << FACE_YMAX) : 0;
+	f |= occludedX && oMax.x == 1.0f && bMin.x == 0.0f ? FACE_BIT_XMIN : 0;
+	f |= occludedX && oMin.x == 0.0f && bMax.x == 1.0f ? FACE_BIT_XMAX : 0;
+	f |= occludedZ && oMax.z == 1.0f && bMin.z == 0.0f ? FACE_BIT_ZMIN : 0;
+	f |= occludedZ && oMin.z == 0.0f && bMax.z == 1.0f ? FACE_BIT_ZMAX : 0;
+	f |= occludedY && (bothLiquid || (oMax.y == 1.0f && bMin.y == 0.0f)) ? FACE_BIT_YMIN : 0;
+	f |= occludedY && (bothLiquid || (oMin.y == 0.0f && bMax.y == 1.0f)) ? FACE_BIT_YMAX : 0;
 	Blocks.Hidden[(block * BLOCK_COUNT) + other] = f;
 }
 

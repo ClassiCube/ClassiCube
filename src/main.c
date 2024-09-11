@@ -170,7 +170,12 @@ int main(int argc, char** argv) {
 		res = RunProgram(argc, argv);
 	} while (Platform_SingleProcess && Window_Main.Exists);
 
+#ifdef CC_BUILD_WEB
+	if (res) Window_Free();
+#else
 	Window_Free();
+#endif
+
 	Process_Exit(res);
 	return res;
 }

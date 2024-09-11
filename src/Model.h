@@ -252,8 +252,6 @@ enum CustomModelAnimAxis {
 };
 
 struct CustomModelAnim {
-	cc_uint8 type;
-	cc_uint8 axis;
 	float a, b, c, d;
 };
 
@@ -269,6 +267,8 @@ struct CustomModelPart {
 	struct ModelPart modelPart;
 	Vec3 rotation; /* rotation angles */
 	struct CustomModelAnim anims[MAX_CUSTOM_MODEL_ANIMS];
+	cc_uint8 animType[MAX_CUSTOM_MODEL_ANIMS];
+	cc_uint8 animAxis[MAX_CUSTOM_MODEL_ANIMS];
 	cc_bool fullbright;
 	cc_bool firstPersonArm;
 };

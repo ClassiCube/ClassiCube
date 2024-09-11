@@ -134,8 +134,20 @@ static void SetDefaultState(void) {
 	Gfx_SetDepthWrite(true);
 }
 
+static aptHookCookie hookCookie;
+static void AptEventHook(APT_HookType hookType, void* param) {
+	if (hookType == APTHOOK_ONSUSPEND) {
+		C3Di_RenderQueueWaitDone();
+		C3Di_RenderQueueDisableVBlank();
+	} else if (hookType == APTHOOK_ONRESTORE) {
+		C3Di_RenderQueueEnableVBlank();
+		C3Di_OnRestore();
+	}
+}
+
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 4);
+	aptHook(&hookCookie, AptEventHook, NULL);
 
 	C3D_RenderTargetCreate(&topTargetLeft, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
 	C3D_RenderTargetSetOutput(&topTargetLeft, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
@@ -174,6 +186,7 @@ void Gfx_Free(void) {
 
 	// FreeShaders()
 	// C3D_Fini()
+	// aptUnhook(&hookCookie);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
@@ -576,6 +589,7 @@ void Gfx_EndFrame(void) {
 void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 
 /*########################################################################################################################*

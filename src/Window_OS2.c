@@ -6,6 +6,7 @@
 #include "Bitmap.h"
 #include "Options.h"
 #include "Errors.h"
+#include "Audio.h"
 
 #define INCL_DOSPROCESS
 #define INCL_DOSMEMMGR
@@ -334,6 +335,7 @@ void Window_Free(void) {
 	DiveFreeBuffer();
 	if (hDive != NULLHANDLE) DiveClose(hDive);
 	hDive = NULLHANDLE;
+   AudioBackend_Free();
 }
 
 void Window_ProcessEvents(float delta) {

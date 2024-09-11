@@ -489,10 +489,13 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	/* TODO: Connect in parallel instead of serial, but that's a lot of work */
 	for (i = 0; i < numValidAddrs; i++)
 	{
-		res = Socket_Connect(&conn->socket, &addrs[i], false);
-		if (!res) break;
+		res = Socket_Create(&conn->socket, &addrs[i], false);
+		if (res) { HttpConnection_Close(conn); continue; }
 
-		HttpConnection_Close(conn);
+		res = Socket_Connect(conn->socket, &addrs[i]);
+		if (res) { HttpConnection_Close(conn); continue; }
+
+		break; /* Successful connection */
 	}
 	if (res) return res;
 

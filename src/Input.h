@@ -101,7 +101,7 @@ void Input_Clear(void);
 #define Input_IsLeftButton(btn)   ((btn) == CCKEY_LEFT   || (btn) == CCPAD_LEFT)
 #define Input_IsRightButton(btn)  ((btn) == CCKEY_RIGHT  || (btn) == CCPAD_RIGHT)
 
-#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER)
+#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER || (btn) == CCPAD_A)
 #define Input_IsPauseButton(btn)  ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_START || (btn) == CCKEY_PAUSE)
 #define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
 
@@ -176,6 +176,7 @@ enum InputBind_ {
 typedef int InputBind;
 typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
 typedef cc_bool (*BindTriggered)(int key);
+typedef void    (*BindReleased)(int key);
 #define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
 
 /* The keyboard/mouse buttons that are bound to each input binding */
@@ -188,6 +189,8 @@ extern const BindMapping KeyBind_Defaults[BIND_COUNT];
 extern const BindMapping PadBind_Defaults[BIND_COUNT];
 /* Callback behaviour for when the given input binding is triggered */
 extern BindTriggered Bind_OnTriggered[BIND_COUNT];
+/* Callback behaviour for when the given input binding is released */
+extern BindReleased  Bind_OnReleased[BIND_COUNT];
 
 /* InputBind_IsPressed is what should be used, but export KeyBind_IsPressed for backwards compatibility */
 #define InputBind_IsPressed KeyBind_IsPressed

@@ -107,6 +107,7 @@ static const char* GetCCErrorDesc(cc_result res) {
 
 	case HTTP_ERR_NO_SSL: return "HTTPS URLs are not currently supported";
 	case SOCK_ERR_UNKNOWN_HOST: return "Host could not be resolved to an IP address";
+	case ERR_NO_NETWORKING: return "No working network access";
 	}
 	return NULL;
 }
@@ -378,6 +379,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 /* Implemented later at end of the file */
 #elif defined CC_BUILD_POSIX && defined _GLIBC_
 #include <execinfo.h>
+
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	void* addrs[MAX_BACKTRACE_FRAMES];
 	int i, frames = backtrace(addrs, MAX_BACKTRACE_FRAMES);

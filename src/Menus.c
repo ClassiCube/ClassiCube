@@ -1556,13 +1556,16 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	ListScreen_Reload(s);
 }
 
-static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
+static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj, int isDirectory) {
 	static const cc_string zip = String_FromConst(".zip");
 	cc_string relPath = *path;
-	if (!String_CaselessEnds(path, &zip)) return;
 
-	Utils_UNSAFE_TrimFirstDirectory(&relPath);
-	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
+	if (isDirectory) {
+		Directory_Enum(path, obj, TexturePackScreen_FilterFiles);
+	} else if (String_CaselessEnds(path, &zip)) {
+		Utils_UNSAFE_TrimFirstDirectory(&relPath);
+		StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
+	}
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
@@ -1787,13 +1790,16 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	ListScreen_Reload(s);
 }
 
-static void LoadLevelScreen_FilterFiles(const cc_string* path, void* obj) {
+static void LoadLevelScreen_FilterFiles(const cc_string* path, void* obj, int isDirectory) {
 	struct MapImporter* imp = MapImporter_Find(path);
 	cc_string relPath = *path;
-	if (!imp) return;
 
-	Utils_UNSAFE_TrimFirstDirectory(&relPath);
-	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
+	if (isDirectory) {
+		Directory_Enum(path, obj, LoadLevelScreen_FilterFiles);
+	} else if (imp) {
+		Utils_UNSAFE_TrimFirstDirectory(&relPath);
+		StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
+	}
 }
 
 static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
@@ -3702,8 +3708,9 @@ static void TexIdsOverlay_BuildMesh(void* screen) {
 
 static int TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s, int offset) {
 	int i, count = Atlas1D.TilesPerAtlas * 4;
-	for (i = 0; i < Atlas1D.Count; i++) {
-		Gfx_BindTexture(Atlas1D.TexIds[i]);
+	for (i = 0; i < Atlas1D.Count; i++) 
+	{
+		Atlas1D_Bind(i);
 
 		Gfx_DrawVb_IndexedTris_Range(count, offset);
 		offset += count;

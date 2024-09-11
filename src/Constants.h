@@ -49,12 +49,12 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 #define GUI_MAX_CHATLINES 30
 
 enum FACE_CONSTS {
-	FACE_XMIN = 0, /* Face X = 0 */
-	FACE_XMAX = 1, /* Face X = 1 */
-	FACE_ZMIN = 2, /* Face Z = 0 */
-	FACE_ZMAX = 3, /* Face Z = 1 */
-	FACE_YMIN = 4, /* Face Y = 0 */
-	FACE_YMAX = 5, /* Face Y = 1 */
+	FACE_XMIN = 0, FACE_BIT_XMIN = 1 << FACE_XMIN, /* Face X = 0 */
+	FACE_XMAX = 1, FACE_BIT_XMAX = 1 << FACE_XMAX, /* Face X = 1 */
+	FACE_ZMIN = 2, FACE_BIT_ZMIN = 1 << FACE_ZMIN, /* Face Z = 0 */
+	FACE_ZMAX = 3, FACE_BIT_ZMAX = 1 << FACE_ZMAX, /* Face Z = 1 */
+	FACE_YMIN = 4, FACE_BIT_YMIN = 1 << FACE_YMIN, /* Face Y = 0 */
+	FACE_YMAX = 5, FACE_BIT_YMAX = 1 << FACE_YMAX, /* Face Y = 1 */
 	FACE_COUNT= 6  /* Number of faces on a cube */
 };
 

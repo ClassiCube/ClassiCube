@@ -7,13 +7,10 @@ _DrawColouredQuads:
 ! Setup
     fldi0 fr1     ! U = 0
     fldi0 fr2     ! V = 0
-    mov r4,r3     ! r3  = src
-    add #-32, r5  ! r5 -= sizeof(VERTEX)
+    TransformSetup
     ViewportTransformSetup _VP_COL_HWIDTH
 
 .TRANSFORM_QUAD:
-    mov.l CMD_COL_VERT, r1 ! r1  = GPU VERT command
-
     LoadColouredVertex
     ProcessVertex1
 
@@ -24,7 +21,7 @@ _DrawColouredQuads:
     ProcessVertex3
 
     LoadColouredVertex
-    ProcessVertex4 CMD_COL_EOS
+    ProcessVertex4
 
 ! CLIPFLAGS TESTING
     cmp/eq   #0,r0 ! T = r0 == 0 (all points invisible)
@@ -44,26 +41,18 @@ _DrawColouredQuads:
     bf .TRANSFORM_QUAD ! if !T then goto TRANSFORM_QUAD
     nop
     
-    add #32, r5     ! r5 += sizeof(VERTEX)
-    rts             ! return after executing instruction in delay slot
-    mov r5,r0       ! r0 = r5
+    TransformEnd
 
-.align 2
-CMD_COL_VERT: .long 0xe0000000
-CMD_COL_EOS:  .long 0xf0000000
+.align 4
 
 .global _VP_COL_HWIDTH
-.type   _VP_COL_HWIDTH,%object
 _VP_COL_HWIDTH:  .long 0
 
 .global _VP_COL_HHEIGHT
-.type   _VP_COL_HHEIGHT,%object
 _VP_COL_HHEIGHT: .long 0
 
 .global _VP_COL_X_PLUS_HWIDTH
-.type   _VP_COL_X_PLUS_HWIDTH,%object
 _VP_COL_X_PLUS_HWIDTH:  .long 0
 
 .global _VP_COL_Y_PLUS_HHEIGHT
-.type   _VP_COL_Y_PLUS_HHEIGHT,%object
 _VP_COL_Y_PLUS_HHEIGHT: .long 0

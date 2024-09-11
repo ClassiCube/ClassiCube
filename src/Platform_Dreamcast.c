@@ -108,21 +108,94 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------VMU options file-----------------------------------------------------*
+*#########################################################################################################################*/
+static volatile int vmu_write_FD = -10000;
+static int VMUFile_Do(cc_file* file, int mode) {
+	void* data = NULL;
+	int fd, err = -1, len;
+	vmu_pkg_t pkg;
+	
+	errno = 0;
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDONLY);
+	
+	// Try to extract stored data from the VMU
+	if (fd >= 0) {
+		len  = fs_total(fd);
+		data = Mem_Alloc(len, 1, "VMU data");
+		fs_read(fd, data, len);
+		
+		err = vmu_pkg_parse(data, &pkg);
+		fs_close(fd);
+	}
+	
+	// Copy VMU data into a RAM temp file
+	errno = 0;
+	fd    = fs_open("/ram/ccopt", O_RDWR | O_CREAT | O_TRUNC);
+	if (fd < 0) return errno;
+	
+	if (err >= 0) {
+		fs_write(fd, pkg.data, pkg.data_len);
+		fs_seek(fd,  0, SEEK_SET);
+	}
+	Mem_Free(data);
+
+	if (mode != O_RDONLY) vmu_write_FD = fd;
+	*file = fd;
+	return 0;
+}
+
+static cc_result VMUFile_Close(cc_file file) {
+	void* data;
+	uint8* pkg_data;
+	int fd, err = -1, len, pkg_len;
+	vmu_pkg_t pkg = { 0 };
+	vmu_write_FD  = -10000;
+	
+	len  = fs_total(file);
+	data = Mem_Alloc(len, 1, "VMU data");
+	fs_seek(file, 0, SEEK_SET);
+	fs_read(file, data, len);
+	
+	fs_close(file);
+	fs_unlink("/ram/ccopt");
+	
+	strcpy(pkg.desc_short, "CC options file");
+	strcpy(pkg.desc_long,  "ClassiCube config/settings");
+	strcpy(pkg.app_id,     "ClassiCube");
+	pkg.eyecatch_type = VMUPKG_EC_NONE;
+	pkg.data_len      = len;
+	pkg.data          = data;
+		
+	err = vmu_pkg_build(&pkg, &pkg_data, &pkg_len);
+	if (err) { Mem_Free(data); return ERR_OUT_OF_MEMORY; }
+	
+	// Copy into VMU file
+	errno = 0;
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDWR | O_CREAT | O_TRUNC);
+	if (fd < 0) return errno;
+	
+	fs_write(fd, pkg_data, pkg_len);
+	fs_close(fd);
+	free(pkg_data);
+	return 0;
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("/cd/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int res = fs_mkdir(str);
+cc_result Directory_Create(const cc_filepath* path) {
+	int res = fs_mkdir(path->buffer);
 	int err = res == -1 ? errno : 0;
 	
 	// Filesystem returns EINVAL when operation unsupported (e.g. CD system)
@@ -132,22 +205,22 @@ cc_result Directory_Create(const cc_string* path) {
 }
 
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;;
 	struct stat sb;
-	GetNativePath(str, path);
-	return fs_stat(str, &sb, 0) == 0 && S_ISREG(sb.st_mode);
+	Platform_EncodePath(&str, path);
+	return fs_stat(str.buffer, &sb, 0) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	int res;
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
 
-	GetNativePath(str, dirPath);
-	int fd = fs_open(str, O_DIR | O_RDONLY);
+	Platform_EncodePath(&str, dirPath);
+	int fd = fs_open(str.buffer, O_DIR | O_RDONLY);
 	if (fd < 0) return errno;
 
 	String_InitArray(path, pathBuffer);
@@ -168,12 +241,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		String_AppendUtf8(&path, src, len);
 
 		// negative size indicates a directory entry
-		if (entry->size < 0) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) break;
-		} else {
-			callback(&path, obj);
-		}
+		int is_dir = entry->size < 0;
+		callback(&path, obj, is_dir);
 	}
 
 	int err = errno; // save error from fs_readdir
@@ -181,29 +250,33 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return err;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
 	// CD filesystem loader doesn't usually set errno
 	//  when it can't find the requested file
 	errno = 0;
 
-	int res = fs_open(str, mode);
+	int res = fs_open(path, mode);
 	*file   = res;
 	
 	int err = res == -1 ? errno : 0;
 	if (res == -1 && err == 0) err = ENOENT;
+
+	// Read/Write VMU for options.txt if no SD card, since that file is critical
+	cc_string raw = String_FromReadonly(path);
+	if (err && String_CaselessEqualsConst(&raw, "/cd/options.txt")) {
+		return VMUFile_Do(file, mode);
+	}
 	return err;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -219,6 +292,9 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
+	if (file == vmu_write_FD) 
+		return VMUFile_Close(file);
+	
 	int res = fs_close(file);
 	return res == -1 ? errno : 0;
 }
@@ -376,9 +452,8 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	cc_result res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
@@ -386,8 +461,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	if (nonblocking) {
 		fcntl(*s, F_SETFL, O_NONBLOCK);
 	}
+	return 0;
+}
 
-	res = connect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+
+	int res = connect(s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 
@@ -453,17 +533,17 @@ static void InitSDCard(void) {
 	
 	if (sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
 		Platform_LogConst("Unable to find first partition on SD card"); return;
-  	}
-  	
-  	if (fs_fat_init()) {
+	}
+	
+	if (fs_fat_init()) {
 		Platform_LogConst("Failed to init FAT filesystem"); return;
 	}
 	
-  	if (fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
+	if (fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
 		Platform_LogConst("Failed to mount SD card"); return;
-  	}
-  	
-  	root_path = String_FromReadonly("/sd/ClassiCube");
+	}
+
+	root_path = String_FromReadonly("/sd/ClassiCube");
 	fs_mkdir("/sd/ClassiCube");
 	Platform_ReadonlyFilesystem = false;
 }
@@ -531,7 +611,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "DreamCastKOS_PVR"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

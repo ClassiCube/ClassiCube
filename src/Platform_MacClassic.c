@@ -165,20 +165,21 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static int retrievedWD, wd_refNum, wd_dirID;
 
-static void GetNativePath(char* dst, const cc_string* src) {
-	char* str = dst;
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* buf = dst->buffer;
+	char* str = dst->buffer;
 	str++; // placeholder for length later
 	*str++ = ':';
 	
 	// Classic Mac OS uses : to separate directories
-	for (int i = 0; i < src->length; i++) 
+	for (int i = 0; i < path->length; i++) 
 	{
-		char c = (char)src->buffer[i];
+		char c = (char)path->buffer[i];
 		if (c == '/') c = ':';
 		*str++ = c;
 	}
 	*str   = '\0';
-	dst[0] = String_Length(dst + 1); // pascal strings
+	buf[0] = String_Length(buf + 1); // pascal strings
 
 	if (retrievedWD) return;
 	retrievedWD = true;
@@ -192,7 +193,7 @@ static void GetNativePath(char* dst, const cc_string* src) {
 	Platform_Log2("Working directory: %i, %i", &V, &D);
 }
 
-static int DoOpenDF(char* name, char perm, cc_file* file) {
+static int DoOpenDF(const char* name, char perm, cc_file* file) {
     HParamBlockRec pb;
 	Mem_Set(&pb, 0, sizeof(pb));
 
@@ -206,7 +207,7 @@ static int DoOpenDF(char* name, char perm, cc_file* file) {
 	return err;
 }
 
-static int DoCreateFile(char* name) {
+static int DoCreateFile(const char* name) {
     HParamBlockRec pb;
 	Mem_Set(&pb, 0, sizeof(pb));
 
@@ -217,7 +218,7 @@ static int DoCreateFile(char* name) {
     return PBHCreateSync(&pb);
 }
 
-static int DoCreateFolder(char* name) {
+static int DoCreateFolder(const char* name) {
     HParamBlockRec pb;
 	Mem_Set(&pb, 0, sizeof(pb));
 
@@ -231,15 +232,13 @@ static int DoCreateFolder(char* name) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
-	return DoCreateFolder(buffer);
+cc_result Directory_Create(const cc_filepath* path) {
+	return DoCreateFolder(path->buffer);
 }
 
 int File_Exists(const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
+	cc_filepath str;
+	Platform_EncodePath(&str, path);
 
 	return 0;
 }
@@ -248,31 +247,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
-
-	return DoOpenDF(buffer, fsRdPerm, file);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return DoOpenDF(path->buffer, fsRdPerm, file);
 }
 
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
-
-	int res = DoCreateFile(buffer);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	int res = DoCreateFile(path->buffer);
 	if (res && res != dupFNErr) return res;
 
-	return DoOpenDF(buffer, fsWrPerm, file);
+	return DoOpenDF(path->buffer, fsWrPerm, file);
 }
 
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, path);
-
-	int res = DoCreateFile(buffer);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	int res = DoCreateFile(path->buffer);
 	if (res && res != dupFNErr) return res;
 
-	return DoOpenDF(buffer, fsRdWrPerm, file);
+	return DoOpenDF(path->buffer, fsRdWrPerm, file);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -401,7 +391,11 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -527,10 +521,10 @@ void Platform_Init(void) {
 	Platform_Log1("Running on Mac OS %h", &sysVersion);
 
 	cc_string path = String_FromConst("aB.txt");
-	char buffer[NATIVE_STR_LEN];
-	GetNativePath(buffer, &path);
+	cc_filepath str;
+	Platform_EncodePath(&str, &path);
 
-	int ERR2 = DoCreateFile(buffer);
+	int ERR2 = DoCreateFile(&str);
 	Platform_Log1("TEST FILE: %i", &ERR2);
 }
 

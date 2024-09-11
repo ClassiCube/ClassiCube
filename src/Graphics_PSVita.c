@@ -99,8 +99,9 @@ typedef struct CCFragmentProgram {
 *#########################################################################################################################*/
 #define ALIGNUP(size, a) (((size) + ((a) - 1)) & ~((a) - 1))
 
-void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid) {
-	SceUID uid;
+void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const char* memType) {
+	char buffer[128];
+	cc_string str;
 	void* addr;
 	
 	if (type == SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW) {
@@ -108,16 +109,26 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid) {
 	} else {
 		size = ALIGNUP(size, 4 * 1024);
 	}
+	String_InitArray_NT(str, buffer);
 	
 	// https://wiki.henkaku.xyz/vita/SceSysmem
-	uid = sceKernelAllocMemBlock("GPU memory", type, size, NULL);
-	if (uid < 0) Logger_Abort2(uid, "Failed to allocate GPU memory block");
+	SceUID uid = sceKernelAllocMemBlock("GPU memory", type, size, NULL);
+	if (uid < 0) {
+		String_Format1(&str, "Failed to allocate GPU memory block for %c%N", memType);
+		Logger_Abort2(uid, buffer);
+	}
 		
 	int res1 = sceKernelGetMemBlockBase(uid, &addr);
-	if (res1 < 0) Logger_Abort2(res1, "Failed to get base of GPU memory block");
+	if (res1 < 0) {
+		String_Format1(&str, "Failed to get base of GPU memory block for %c%N", memType);
+		Logger_Abort2(res1, buffer);
+	}
 		
 	int res2 = sceGxmMapMemory(addr, size, gpu_access);
-	if (res1 < 0) Logger_Abort2(res2, "Failed to map memory for GPU usage");
+	if (res2 < 0) {
+		String_Format1(&str, "Failed to map memory for GPU usage for %c%N", memType);
+		Logger_Abort2(res2, buffer);
+	}
 	// https://wiki.henkaku.xyz/vita/GPU
 	
 	*ret_uid = uid;
@@ -335,15 +346,15 @@ void Gfx_InitGXM(void) { // called from Window_Init
 static void AllocRingBuffers(void) {
 	vdm_ring_buffer_addr = AllocGPUMemory(SCE_GXM_DEFAULT_VDM_RING_BUFFER_SIZE,
 			SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-			&vdm_ring_buffer_uid);
+			&vdm_ring_buffer_uid, "VDM ring buffer");
 
 	vertex_ring_buffer_addr = AllocGPUMemory(SCE_GXM_DEFAULT_VERTEX_RING_BUFFER_SIZE,
 			SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-			&vertex_ring_buffer_uid);
+			&vertex_ring_buffer_uid, "Vertex ring buffer");
 
 	fragment_ring_buffer_addr = AllocGPUMemory(SCE_GXM_DEFAULT_FRAGMENT_RING_BUFFER_SIZE,
 			SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-			&fragment_ring_buffer_uid);
+			&fragment_ring_buffer_uid, "Fragment ring buffer");
 
 	fragment_usse_ring_buffer_addr = AllocGPUFragmentUSSE(SCE_GXM_DEFAULT_FRAGMENT_USSE_RING_BUFFER_SIZE,
 			&fragment_ring_buffer_uid, &fragment_usse_offset);
@@ -386,7 +397,7 @@ static void AllocColorBuffer(int i) {
 	int size = ALIGNUP(4 * DISPLAY_STRIDE * DISPLAY_HEIGHT, 1 * 1024 * 1024);
 	
 	gxm_color_surfaces_addr[i] = AllocGPUMemory(size, SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
-									SCE_GXM_MEMORY_ATTRIB_RW, &gxm_color_surfaces_uid[i]);
+									SCE_GXM_MEMORY_ATTRIB_RW, &gxm_color_surfaces_uid[i], "color buffer");
 
 	sceGxmColorSurfaceInit(&gxm_color_surfaces[i],
 		SCE_GXM_COLOR_FORMAT_A8B8G8R8,
@@ -405,7 +416,7 @@ static void AllocDepthBuffer(void) {
 	int samples = width * height;
 
 	gxm_depth_stencil_surface_addr = AllocGPUMemory(4 * samples, SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
-										SCE_GXM_MEMORY_ATTRIB_RW, &gxm_depth_stencil_surface_uid);
+										SCE_GXM_MEMORY_ATTRIB_RW, &gxm_depth_stencil_surface_uid, "depth buffer");
 
 	sceGxmDepthStencilSurfaceInit(&gxm_depth_stencil_surface,
 		SCE_GXM_DEPTH_STENCIL_FORMAT_S8D24,
@@ -416,7 +427,7 @@ static void AllocDepthBuffer(void) {
 static void AllocShaderPatcherMemory(void) {
 	gxm_shader_patcher_buffer_addr = AllocGPUMemory(shader_patcher_buffer_size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-		&gxm_shader_patcher_buffer_uid);
+		&gxm_shader_patcher_buffer_uid, "shader patcher");
 
 	gxm_shader_patcher_vertex_usse_addr = AllocGPUVertexUSSE(
 		shader_patcher_vertex_usse_size, &gxm_shader_patcher_vertex_usse_uid,
@@ -615,7 +626,7 @@ struct GPUTexture* GPUTexture_Alloc(int size) {
 	
 	tex->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
-		&tex->uid);
+		&tex->uid, "texture");
 	return tex;
 }
 
@@ -811,6 +822,7 @@ void Gfx_EndFrame(void) {
 void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 
 /*########################################################################################################################*
@@ -831,7 +843,7 @@ struct GPUBuffer* GPUBuffer_Alloc(int size) {
 	
 	buffer->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, SCE_GXM_MEMORY_ATTRIB_READ,
-		&buffer->uid);
+		&buffer->uid, "buffer");
 	return buffer;
 }
 

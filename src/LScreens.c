@@ -21,8 +21,7 @@
 #include "Game.h"
 
 #define LAYOUTS static const struct LLayout
-#define IsEnterButton(btn) (btn == CCKEY_ENTER  || btn == CCPAD_START  || btn == CCPAD_A || btn == CCKEY_KP_ENTER)
-#define IsBackButton(btn)  (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_B)
+#define IsBackButton(btn) (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_B)
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -85,7 +84,7 @@ static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 }
 
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (IsEnterButton(key)) {
+	if (Input_IsEnterButton(key)) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 

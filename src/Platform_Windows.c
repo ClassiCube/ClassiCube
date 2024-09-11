@@ -180,23 +180,24 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_string* path) {
-	cc_winstring str;
-	cc_result res;
+void Platform_EncodePath(cc_filepath* dst, const cc_string* src) {
+	Platform_EncodeString(dst, src);
+}
 
-	Platform_EncodeString(&str, path);
-	if (CreateDirectoryW(str.uni, NULL)) return 0;
+cc_result Directory_Create(const cc_filepath* path) {
+	cc_result res;
+	if (CreateDirectoryW(path->uni, NULL)) return 0;
 	/* Windows 9x does not support W API functions */
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
-	return CreateDirectoryA(str.ansi, NULL) ? 0 : GetLastError();
+	return CreateDirectoryA(path->ansi, NULL) ? 0 : GetLastError();
 }
 
 int File_Exists(const cc_string* path) {
-	cc_winstring str;
+	cc_filepath str;
 	DWORD attribs;
 
-	Platform_EncodeString(&str, path);
+	Platform_EncodePath(&str, path);
 	attribs = GetFileAttributesW(str.uni);
 
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
@@ -205,6 +206,8 @@ int File_Exists(const cc_string* path) {
 static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
 									void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
+	int is_dir;
+	
 	/* ignore . and .. entry */
 	if (file->length == 1 && file->buffer[0] == '.') return 0;
 	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
@@ -212,8 +215,8 @@ static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* f
 	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "%s/%s", dirPath, file);
 
-	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
-	callback(&path, obj);
+	is_dir = attribs & FILE_ATTRIBUTE_DIRECTORY;
+	callback(&path, obj, is_dir);
 	return 0;
 }
 
@@ -222,14 +225,14 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	WIN32_FIND_DATAW eW;
 	WIN32_FIND_DATAA eA;
 	int i, ansi = false;
-	cc_winstring str;
+	cc_filepath str;
 	HANDLE find;
 	cc_result res;	
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
-	Platform_EncodeString(&str, &path);
+	Platform_EncodePath(&str, &path);
 	
 	find = FindFirstFileW(str.uni, &eW);
 	if (!find || find == INVALID_HANDLE_VALUE) {
@@ -265,31 +268,25 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
-static cc_result DoFileRaw(cc_file* file, const cc_winstring* str, DWORD access, DWORD createMode) {
+static cc_result DoFile(cc_file* file, const cc_filepath* path, DWORD access, DWORD createMode) {
 	cc_result res;
 
-	*file = CreateFileW(str->uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileW(path->uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	if (*file && *file != INVALID_HANDLE_VALUE) return 0;
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
 	/* Windows 9x does not support W API functions */
-	*file = CreateFileA(str->ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileA(path->ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	cc_winstring str;
-	Platform_EncodeString(&str, path);
-	return DoFileRaw(file, &str, access, createMode);
-}
-
-cc_result File_Open(cc_file* file, const cc_string* path) {
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
@@ -394,11 +391,16 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FontDirCallback(const cc_string* path, void* obj) {
+static void FontDirCallback(const cc_string* path, void* obj, int isDirectory) {
 	static const cc_string fonExt = String_FromConst(".fon");
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
-	SysFonts_Register(path, NULL);
+	
+	if (isDirectory) {
+		Directory_Enum(path, NULL, FontDirCallback);
+	} else {
+		SysFonts_Register(path, NULL);
+	}
 }
 
 void Platform_LoadSysFonts(void) { 
@@ -420,7 +422,8 @@ void Platform_LoadSysFonts(void) {
 	}
 	String_AppendConst(&dirs[0], "/fonts");
 
-	for (i = 0; i < Array_Elems(dirs); i++) {
+	for (i = 0; i < Array_Elems(dirs); i++) 
+	{
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }
@@ -604,7 +607,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	}
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
 	cc_result res;
 
@@ -615,8 +618,13 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 		u_long blockingMode = -1; /* non-blocking mode */
 		_ioctlsocket(*s, FIONBIO, &blockingMode);
 	}
+	return 0;
+}
 
-	res = _connect(*s, raw_addr, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
+
+	int res = _connect(s, raw_addr, addr->size);
 	return res == -1 ? _WSAGetLastError() : 0;
 }
 
@@ -707,6 +715,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	cc_result res;
 	int len, i;
 
+	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
 	si.wide.cb = sizeof(STARTUPINFOW);
 	
@@ -817,7 +826,7 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 	int len;
 
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
-	if ((res = DoFileRaw(&file, &path, GENERIC_READ, OPEN_EXISTING))) return res;
+	if ((res = File_Open(&file, &path)))            return res;
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
 		raw        = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
@@ -834,10 +843,14 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 cc_result Updater_MarkExecutable(void) { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 	static const cc_string path = String_FromConst(UPDATE_FILE);
+	cc_filepath str;
 	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
-	cc_result res = File_OpenOrCreate(&file, &path);
+	cc_result res;
+	
+	Platform_EncodePath(&str, &path);
+	res = File_OpenOrCreate(&file, &str);
 	if (res) return res;
 
 	raw = 10000000 * (timestamp + FILETIME_UNIX_EPOCH);
@@ -859,10 +872,10 @@ static cc_bool loadingPlugin;
 
 void* DynamicLib_Load2(const cc_string* path) {
 	static cc_string plugins_dir = String_FromConst("plugins/");
-	cc_winstring str;
+	cc_filepath str;
 	void* lib;
 
-	Platform_EncodeString(&str, path);
+	Platform_EncodePath(&str, path);
 	loadingPlugin = String_CaselessStarts(path, &plugins_dir);
 
 	if ((lib = LoadLibraryW(str.uni))) return lib;
@@ -968,7 +981,9 @@ void Platform_Init(void) {
 	LoadKernelFuncs();
 	if (_IsDebuggerPresent) hasDebugger = _IsDebuggerPresent();
 	/* For when user runs from command prompt */
+#if CC_WIN_BACKEND != CC_WIN_BACKEND_TERMINAL
 	if (_AttachConsole) _AttachConsole(-1); /* ATTACH_PARENT_PROCESS */
+#endif
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;
@@ -1077,8 +1092,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	cc_string cmdArgs = String_FromReadonly(GetCommandLineA());
 	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
+	if (gameHasArgs) return GetGameArgs(args);
 
-	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
+	for (i = 0; i < GAME_MAX_CMDARGS; i++) 
+	{
 		args[i] = Platform_NextArg(&cmdArgs);
 
 		if (!args[i].length) break;

@@ -21,43 +21,85 @@
 #include <graph.h>
 #include <draw.h>
 #include <kernel.h>
+#include <libkbd.h>
+#include <libmouse.h>
 
-static cc_bool launcherMode;
-static char padBuf[256] __attribute__((aligned(64)));
+static cc_bool launcherMode, mouseSupported, kbdSupported;
+static char padBuf0[256] __attribute__((aligned(64)));
+static char padBuf1[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
+framebuffer_t fb_colors[2];
+zbuffer_t     fb_depth;
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) {
+	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
+	dma_channel_fast_waits(DMA_CHANNEL_GIF);
+}
+
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width   = DisplayInfo.Width;
-	Window_Main.Height  = DisplayInfo.Height;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = 1.0f / Window_Main.Height;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 	
 	padInit(0);
-	padPortOpen(0, 0, padBuf);
+	padPortOpen(0, 0, padBuf0);
+	padPortOpen(1, 0, padBuf1);
+
+	if (PS2MouseInit() >= 0) {
+		PS2MouseSetReadMode(PS2MOUSE_READMODE_DIFF);
+		mouseSupported = true;
+	}
+	if (PS2KbdInit() >= 0) {
+		PS2KbdSetReadmode(PS2KBD_READMODE_RAW);
+		kbdSupported = true;
+	}
 }
 
 void Window_Free(void) { }
 
-static cc_bool hasCreated;
 static void ResetGfxState(void) {
-	if (!hasCreated) { hasCreated = true; return; }
-	
 	graph_shutdown();
 	graph_vram_clear();
-	
-	dma_channel_shutdown(DMA_CHANNEL_GIF,0);
+
+	fb_colors[0].width   = DisplayInfo.Width;
+	fb_colors[0].height  = DisplayInfo.Height;
+	fb_colors[0].mask    = 0;
+	fb_colors[0].psm     = GS_PSM_32;
+	fb_colors[0].address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_colors[1].psm, GRAPH_ALIGN_PAGE);
+
+	fb_colors[1].width   = DisplayInfo.Width;
+	fb_colors[1].height  = DisplayInfo.Height;
+	fb_colors[1].mask    = 0;
+	fb_colors[1].psm     = GS_PSM_32;
+	fb_colors[1].address = graph_vram_allocate(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm, GRAPH_ALIGN_PAGE);
+
+	fb_depth.enable  = 1;
+	fb_depth.method  = ZTEST_METHOD_ALLPASS;
+	fb_depth.mask    = 0;
+	fb_depth.zsm     = GS_ZBUF_32;
+	fb_depth.address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
+
+	graph_initialize(fb_colors[1].address, fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm, 0, 0);
+}
+
+void Window_Create2D(int width, int height) {
+	ResetGfxState();
+	launcherMode = true;
 }
 
 void Window_Create3D(int width, int height) { 
@@ -85,7 +127,36 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+static void ProcessMouseInput(float delta) {
+	if (!mouseSupported)     return;
+	if (PS2MouseEnum() == 0) return;
+
+	mouse_data mData = { 0 };
+	if (PS2MouseRead(&mData) < 0) return;
+
+	Input_SetNonRepeatable(CCMOUSE_L, mData.buttons & PS2MOUSE_BTN1);
+	Input_SetNonRepeatable(CCMOUSE_R, mData.buttons & PS2MOUSE_BTN2);
+	Input_SetNonRepeatable(CCMOUSE_M, mData.buttons & PS2MOUSE_BTN3);
+	Mouse_ScrollVWheel(mData.wheel);
+	
+	if (!Input.RawMode) return;	
+	float scale = (delta * 60.0) / 2.0f;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				mData.x * scale, mData.y * scale);
+}
+
+static void ProcessKeyboardInput(void) {
+	if (!kbdSupported) return;
+
+	PS2KbdRawKey key;
+	if (PS2KbdReadRaw(&key) <= 0) return;
+
+	Platform_Log1("%i", &key.key);
+}
+
 void Window_ProcessEvents(float delta) {
+	ProcessMouseInput(delta);
+	ProcessKeyboardInput();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -127,8 +198,8 @@ static void HandleButtons(int port, int buttons) {
 
 #define AXIS_SCALE 16.0f
 static void HandleJoystick(int port, int axis, int x, int y, float delta) {
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
@@ -142,7 +213,6 @@ static void ProcessPadInput(int port, float delta, struct padButtonStatus* pad) 
 static cc_bool setMode[INPUT_MAX_GAMEPADS];
 static void ProcessPad(int port, float delta) {
 	 struct padButtonStatus pad;
-	
 	int state = padGetState(port, 0);
 	if (state != PAD_STATE_STABLE) return;
 
@@ -157,35 +227,30 @@ static void ProcessPad(int port, float delta) {
 }
 
 void Window_ProcessGamepads(float delta) {
-	for (int port = 0; port < 2; port++)
-	{
-		ProcessPad(port, delta);
-	}
+	ProcessPad(0, delta);
+	ProcessPad(1, delta);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static framebuffer_t win_fb;
-
-void Window_Create2D(int width, int height) {
-	ResetGfxState();
-	launcherMode = true;
-	
-	win_fb.width   = DisplayInfo.Width;
-	win_fb.height  = DisplayInfo.Height;
-	win_fb.mask    = 0;
-	win_fb.psm     = GS_PSM_32;
-	win_fb.address = graph_vram_allocate(win_fb.width, win_fb.height, win_fb.psm, GRAPH_ALIGN_PAGE);
-	
-	graph_initialize(win_fb.address, win_fb.width, win_fb.height, win_fb.psm, 0, 0);
-}
-
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+
+	packet_t* packet = packet_init(100, PACKET_NORMAL);
+	qword_t* q = packet->data;
+
+	q = draw_setup_environment(q, 0, &fb_colors[1], &fb_depth);
+	q = draw_clear(q, 0, 0, 0,
+					fb_colors[1].width, fb_colors[1].height, 170, 170, 170);
+	q = draw_finish(q);
+
+	dma_channel_send_normal(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
+	dma_wait_fast();
+	packet_free(packet);
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -193,16 +258,15 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//   mode=0: Flush data cache (invalidate+writeback dirty contents to memory)
 	FlushCache(0);
 	
-	packet_t* packet = packet_init(50, PACKET_NORMAL);
+	packet_t* packet = packet_init(200, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
 	q = draw_texture_transfer(q, bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
-								 win_fb.address, win_fb.width);
+								 fb_colors[1].address, fb_colors[1].width);
 	q = draw_texture_flush(q);
 
 	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
 	dma_wait_fast();
-
 	packet_free(packet);
 }
 

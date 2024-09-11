@@ -7,6 +7,7 @@
 #include "Options.h"
 #include "Errors.h"
 #include "Utils.h"
+/*
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
@@ -14,6 +15,13 @@
 #ifdef CC_BUILD_XINPUT2
 #include <X11/extensions/XInput2.h>
 #endif
+*/
+#include <X11/Xlib.h>
+#include "../misc/linux/min-keysymdef.h"
+#include "../misc/linux/min-xutil.h"
+#include "../misc/linux/min-xkblib.h"
+#include "../misc/linux/min-xinput2.h"
+#include <X11/XF86keysym.h>
 #include <stdio.h>
 
 #ifdef X_HAVE_UTF8_STRING
@@ -371,8 +379,10 @@ static void DoCreateWindow(int width, int height) {
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 
 	RefreshWindowBounds(width, height);
-	Window_Main.Exists = true;
-	Window_Main.Handle = (void*)win_handle;
+	Window_Main.Exists   = true;
+	Window_Main.Handle   = (void*)win_handle;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 	
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
@@ -1313,7 +1323,9 @@ void Window_DisableRawMouse(void) {
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
 #if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
-#include <GL/glx.h>
+/* #include <GL/glx.h> */
+#include "../misc/linux/min-glx.h"
+
 static GLXContext ctx_handle;
 typedef int  (*FP_SWAPINTERVAL)(int interval);
 typedef Bool (*FP_QUERYRENDERER)(int attribute, unsigned int* value);
@@ -1368,7 +1380,7 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	return (void*)glXGetProcAddress((const GLubyte*)function);
+	return (void*)glXGetProcAddress(function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {

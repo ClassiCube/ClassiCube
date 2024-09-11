@@ -80,6 +80,37 @@ void Platform_LogConst(const char* message) {
 	Platform_Log(message, String_Length(message));
 }
 
+/*########################################################################################################################*
+*-----------------------------------------------------Process/Module------------------------------------------------------*
+*#########################################################################################################################*/
+static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
+static int gameNumArgs;
+static cc_bool gameHasArgs;
+
+static cc_result SetGameArgs(const cc_string* args, int numArgs) {
+	int i;
+	for (i = 0; i < numArgs; i++) 
+	{
+		String_CopyToRawArray(gameArgs[i], &args[i]);
+	}
+	
+	gameHasArgs = true;
+	gameNumArgs = numArgs;
+	return 0;
+}
+
+static int GetGameArgs(cc_string* args) {
+	int i, count = gameNumArgs;
+	for (i = 0; i < count; i++) 
+	{
+		args[i] = String_FromRawArray(gameArgs[i]);
+	}
+	
+	/* clear arguments so after game is closed, launcher is started */
+	gameNumArgs = 0;
+	return count;
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------------Misc-----------------------------------------------------------*

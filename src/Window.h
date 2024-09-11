@@ -86,7 +86,13 @@ struct _WindowData {
 	cc_bool Inactive;
 	/* Whether input should be ignored due to soft keyboard being open */
 	cc_bool SoftKeyboardFocus;
+	/* Scale factors specifically for some in-game elements (e.g. chat) */
+	/*  that vary their elements based on the window dimensions */
+	float UIScaleX, UIScaleY;
 };
+
+#define DEFAULT_UI_SCALE_X (1.0f / 640)
+#define DEFAULT_UI_SCALE_Y (1.0f / 480)
 
 /* Data for the game/launcher window */
 CC_VAR extern struct _WindowData WindowInfo; /* Named WindowInfo for backwards compatibility */

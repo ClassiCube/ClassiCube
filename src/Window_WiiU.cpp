@@ -89,10 +89,13 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width   = DisplayInfo.Width;
-	Window_Main.Height  = DisplayInfo.Height;
-	Window_Main.Focused = true;
-	Window_Main.Exists  = true;
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
+	Window_Main.Focused  = true;
+	
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
@@ -496,7 +499,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	fs_client = (FSClient *)MEMAllocFromDefaultHeap(sizeof(FSClient));
 	FSAddClient(fs_client, FS_ERROR_FLAG_NONE);
 
-	Mem_Set(&create_arg, 0, sizeof(create_arg));
 	create_arg.regionType = nn::swkbd::RegionType::Europe;
 	create_arg.workMemory = MEMAllocFromDefaultHeap(nn::swkbd::GetWorkMemorySize(0));
 	create_arg.fsClient   = fs_client;
@@ -505,9 +507,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 		Platform_LogConst("nn::swkbd::Create failed");
 		return;
 	}
-
 	nn::swkbd::MuteAllSound(false);
-	Mem_Set(&appear_arg, 0, sizeof(appear_arg));
 
 	nn::swkbd::ConfigArg* cfg = &appear_arg.keyboardArg.configArg;
 	cfg->languageType = nn::swkbd::LanguageType::English;
@@ -521,16 +521,21 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 		cfg->keyboardMode = nn::swkbd::KeyboardMode::Numpad;
 		cfg->numpadCharLeft  = '-';
 		cfg->numpadCharRight = '.';
+	} else {
+		cfg->keyboardMode = nn::swkbd::KeyboardMode::Full;
 	}
 
 	nn::swkbd::InputFormArg* ipt = &appear_arg.inputFormArg;
 	UniString_WriteConst(args->placeholder, hint);
 	UniString_WriteString(args->text, initial);
-	ipt->hintText    = hint;
-	ipt->initialText = initial;
+	ipt->hintText      = hint;
+	ipt->initialText   = initial;
+	ipt->maxTextLength = UNI_STR_LENGTH;
 	
 	if (mode == KEYBOARD_TYPE_PASSWORD)
 		ipt->passwordMode = nn::swkbd::PasswordMode::Hide;
+	else
+		ipt->passwordMode = nn::swkbd::PasswordMode::Clear;
 
 	if (!nn::swkbd::AppearInputForm(appear_arg)) {
 		Platform_LogConst("nn::swkbd::AppearInputForm failed");

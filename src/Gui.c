@@ -29,8 +29,8 @@ static struct Texture touchBgTex;
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
 static CC_NOINLINE int GetWindowScale(void) {
-	float widthScale  = Window_Main.Width  / 640.0f;
-	float heightScale = Window_Main.Height / 480.0f;
+	float widthScale  = Window_Main.Width  * Window_Main.UIScaleX;
+	float heightScale = Window_Main.Height * Window_Main.UIScaleY;
 
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
@@ -63,7 +63,8 @@ float Gui_GetChatScale(void) {
 }
 
 float Gui_GetCrosshairScale(void) {
-	return Gui_Scale((Window_Main.Height / 480.0f)) * Gui.RawCrosshairScale;
+	float heightScale = Window_Main.Height * Window_Main.UIScaleY;
+	return Gui_Scale(heightScale) * Gui.RawCrosshairScale;
 }
 
 

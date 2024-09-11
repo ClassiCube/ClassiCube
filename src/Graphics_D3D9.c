@@ -881,5 +881,26 @@ void Gfx_OnWindowResize(void) {
 	UpdateSwapchain(" (resizing window)");
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	D3DVIEWPORT9 vp;
+	vp.X      = x;
+	vp.Y      = y;
+	vp.Width  = w;
+	vp.Height = h;
+	vp.MinZ   = 0.0f;
+	vp.MaxZ   = 1.0f;
+	IDirect3DDevice9_SetViewport(device, &vp);
+}
+
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	cc_bool enabled = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
+	RECT rect;
+	rect.left   = x;
+	rect.top    = y;
+	rect.right  = x + w;
+	rect.bottom = y + h;
+
+	IDirect3DDevice9_SetRenderState(device, D3DRS_SCISSORTESTENABLE, enabled);
+	IDirect3DDevice9_SetScissorRect(device, &rect);
+}
 #endif

@@ -382,6 +382,7 @@ void Pointer_SetPosition(int idx, int x, int y) {
 BindMapping PadBind_Mappings[BIND_COUNT];
 BindMapping KeyBind_Mappings[BIND_COUNT];
 BindTriggered Bind_OnTriggered[BIND_COUNT];
+BindReleased  Bind_OnReleased[BIND_COUNT];
 
 const BindMapping PadBind_Defaults[BIND_COUNT] = {
 	{ CCPAD_UP,   0 },  { CCPAD_DOWN,  0 }, /* BIND_FORWARD, BIND_BACK */
@@ -850,6 +851,9 @@ void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const
 *#########################################################################################################################*/
 static void MouseStateUpdate(int button, cc_bool pressed) {
 	struct Entity* p;
+	input_buttonsDown[button] = pressed;
+	if (!Server.SupportsPlayerClick) return;
+
 	/* defer getting the targeted entity, as it's a costly operation */
 	if (input_pickingId == -1) {
 		p = &Entities.CurPlayer->Base;
@@ -859,31 +863,20 @@ static void MouseStateUpdate(int button, cc_bool pressed) {
 			input_pickingId = ENTITIES_SELF_ID;
 	}
 
-	input_buttonsDown[button] = pressed;
+	
 	CPE_SendPlayerClick(button, pressed, (EntityID)input_pickingId, &Game_SelectedPos);	
-}
-
-static void MouseStateChanged(int button, cc_bool pressed) {
-	if (!Server.SupportsPlayerClick) return;
-
-	if (pressed) {
-		/* Can send multiple Pressed events */
-		MouseStateUpdate(button, true);
-	} else {
-		if (!input_buttonsDown[button]) return;
-		MouseStateUpdate(button, false);
-	}
 }
 
 static void MouseStatePress(int button) {
 	input_lastClick = Game.Time;
 	input_pickingId = -1;
-	MouseStateChanged(button, true);
+	MouseStateUpdate(button, true);
 }
 
 static void MouseStateRelease(int button) {
 	input_pickingId = -1;
-	MouseStateChanged(button, false);
+	if (!input_buttonsDown[button]) return;
+	MouseStateUpdate(button, false);
 }
 
 void InputHandler_OnScreensChanged(void) {
@@ -893,9 +886,9 @@ void InputHandler_OnScreensChanged(void) {
 
 	/* If input is grabbed, then the mouse isn't used for picking blocks in world anymore. */
 	/* So release all mouse buttons, since game stops sending PlayerClick during grabbed input */
-	MouseStateChanged(MOUSE_LEFT,   false);
-	MouseStateChanged(MOUSE_RIGHT,  false);
-	MouseStateChanged(MOUSE_MIDDLE, false);
+	MouseStateRelease(MOUSE_LEFT);
+	MouseStateRelease(MOUSE_RIGHT);
+	MouseStateRelease(MOUSE_MIDDLE);
 }
 
 static cc_bool TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
@@ -1069,9 +1062,9 @@ void InputHandler_Tick(void) {
 	/*  elapsed time using DateTime_CurrentUTC_MS() instead */
 	input_lastClick = now;
 
-	left   = InputBind_IsPressed(BIND_DELETE_BLOCK);
-	middle = InputBind_IsPressed(BIND_PICK_BLOCK);
-	right  = InputBind_IsPressed(BIND_PLACE_BLOCK);
+	left   = input_buttonsDown[MOUSE_LEFT];
+	middle = input_buttonsDown[MOUSE_MIDDLE];
+	right  = input_buttonsDown[MOUSE_RIGHT];
 	
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode) {
@@ -1083,9 +1076,9 @@ void InputHandler_Tick(void) {
 
 	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
-		MouseStateChanged(MOUSE_LEFT,   left);
-		MouseStateChanged(MOUSE_RIGHT,  right);
-		MouseStateChanged(MOUSE_MIDDLE, middle);
+		if (left)   MouseStateUpdate(MOUSE_LEFT,   true);
+		if (right)  MouseStateUpdate(MOUSE_RIGHT,  true);
+		if (middle) MouseStateUpdate(MOUSE_MIDDLE, true);
 	}
 
 	if (left) {
@@ -1153,6 +1146,7 @@ static void InputHandler_CheckZoomFov(void* obj) {
 	if (!h->Enabled || !h->CanUseThirdPerson) Camera_SetFov(Camera.DefaultFov);
 }
 
+
 static cc_bool BindTriggered_DeleteBlock(int key) {
 	MouseStatePress(MOUSE_LEFT);
 	InputHandler_DeleteBlock();
@@ -1169,6 +1163,18 @@ static cc_bool BindTriggered_PickBlock(int key) {
 	MouseStatePress(MOUSE_MIDDLE);
 	InputHandler_PickBlock();
 	return true;
+}
+
+static void BindReleased_DeleteBlock(int key) {
+	MouseStateRelease(MOUSE_LEFT);
+}
+
+static void BindReleased_PlaceBlock(int key) {
+	MouseStateRelease(MOUSE_RIGHT);
+}
+
+static void BindReleased_PickBlock(int key) {
+	MouseStateRelease(MOUSE_MIDDLE);
 }
 
 
@@ -1265,6 +1271,10 @@ static void HookInputBinds(void) {
 	Bind_OnTriggered[BIND_DELETE_BLOCK] = BindTriggered_DeleteBlock;
 	Bind_OnTriggered[BIND_PLACE_BLOCK]  = BindTriggered_PlaceBlock;
 	Bind_OnTriggered[BIND_PICK_BLOCK]   = BindTriggered_PickBlock;
+
+	Bind_OnReleased[BIND_DELETE_BLOCK] = BindReleased_DeleteBlock;
+	Bind_OnReleased[BIND_PLACE_BLOCK]  = BindReleased_PlaceBlock;
+	Bind_OnReleased[BIND_PICK_BLOCK]   = BindReleased_PickBlock;
 
 	if (Game_ClassicMode) return;
 	Bind_OnTriggered[BIND_HIDE_GUI]      = BindTriggered_HideGUI;
@@ -1408,10 +1418,13 @@ static void OnInputUp(void* obj, int key) {
 		s->VTABLE->OnInputUp(s, key);
 	}
 
-	if (Gui.InputGrab) return;
-	if (InputBind_Claims(BIND_DELETE_BLOCK, key)) MouseStateRelease(MOUSE_LEFT);
-	if (InputBind_Claims(BIND_PLACE_BLOCK,  key)) MouseStateRelease(MOUSE_RIGHT);
-	if (InputBind_Claims(BIND_PICK_BLOCK,   key)) MouseStateRelease(MOUSE_MIDDLE);
+	for (i = 0; i < BIND_COUNT; i++)
+	{
+		if (!Bind_OnReleased[i])      continue;
+		if (!InputBind_Claims(i, key)) continue;
+
+		Bind_OnReleased[i](key);
+	}
 }
 
 static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }

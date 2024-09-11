@@ -430,6 +430,7 @@ static void SysFont_Close(FT_Stream stream) {
 }
 
 static cc_result SysFont_Init(const cc_string* path, struct SysFont* font, FT_Open_Args* args) {
+	cc_filepath str;
 	cc_file file;
 	cc_uint32 size;
 	cc_result res;
@@ -437,7 +438,8 @@ static cc_result SysFont_Init(const cc_string* path, struct SysFont* font, FT_Op
 	cc_string filename;
 #endif
 
-	if ((res = File_Open(&file, path))) return res;
+	Platform_EncodePath(&str, path);
+	if ((res = File_Open(&file, &str))) return res;
 	if ((res = File_Length(file, &size))) { File_Close(file); return res; }
 
 	font->stream.base = NULL;

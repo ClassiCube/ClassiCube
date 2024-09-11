@@ -25,7 +25,7 @@ static const cc_string audio_dir = String_FromConst("audio");
 
 struct Sound {
 	int channels, sampleRate;
-	void* data; cc_uint32 size;
+	struct AudioChunk chunk;
 };
 
 
@@ -92,13 +92,11 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			if ((res = Audio_AllocChunks(size, &snd->data, 1))) return res;
-
-			snd->size = size;
-			res = Stream_Read(stream, (cc_uint8*)snd->data, size);
+			if ((res = Audio_AllocChunks(size, &snd->chunk, 1))) return res;
+			res = Stream_Read(stream, snd->chunk.data, size);
 
 			#ifdef CC_BUILD_BIGENDIAN
-			Utils_SwapEndian16((cc_int16*)snd->data, size / 2);
+			Utils_SwapEndian16((cc_int16*)snd->chunk.data, size / 2);
 			#endif
 			return res;
 		}
@@ -149,9 +147,9 @@ static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName
 
 	if (res) {
 		Logger_SysWarn2(res, "decoding", file);
-		Audio_FreeChunks(&snd->data, 1);
-		snd->data = NULL;
-		snd->size = 0;
+		Audio_FreeChunks(&snd->chunk, 1);
+		snd->chunk.data = NULL;
+		snd->chunk.size = 0;
 	} else { group->count++; }
 }
 
@@ -185,8 +183,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	snd = Soundboard_PickRandom(board, type);
 	if (!snd) return;
 
-	data.data       = snd->data;
-	data.size       = snd->size;
+	data.chunk      = snd->chunk;
 	data.channels   = snd->channels;
 	data.sampleRate = snd->sampleRate;
 	data.rate       = 100;
@@ -275,7 +272,7 @@ static void InitWebSounds(void) {
 			board = &digBoard;
 		} else {
 			group = &board->groups[sounds_list[i].group];
-			group->sounds[group->count++].data = sounds_list[i].name;
+			group->sounds[group->count++].chunk.data = sounds_list[i].name;
 		}
 	}
 }
@@ -333,10 +330,11 @@ static void* music_waitable;
 static volatile cc_bool music_stopping, music_joining;
 static int music_minDelay, music_maxDelay;
 
-static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState* ctx) {
+static cc_result Music_Buffer(struct AudioChunk* chunk, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
 	cc_int16* cur;
 	cc_result res = 0, res2;
+	cc_int16* data = chunk->data;
 
 	while (samples < maxSamples) {
 		if ((res = Vorbis_DecodeFrame(ctx))) break;
@@ -345,7 +343,8 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
 
-	res2 = Audio_QueueChunk(&music_ctx, data, samples * 2);
+	chunk->size = samples * 2;
+	res2 = Audio_QueueChunk(&music_ctx, chunk);
 	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
@@ -356,7 +355,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	int channels, sampleRate, volume;
 
 	int chunkSize, samplesPerSecond;
-	void* chunks[AUDIO_MAX_BUFFERS] = { 0 };
+	struct AudioChunk chunks[AUDIO_MAX_BUFFERS] = { 0 };
 	int inUse, i, cur;
 	cc_result res;
 
@@ -381,7 +380,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) 
 	{
-		res = Music_Buffer((cc_int16*)chunks[i], samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[i], samplesPerSecond, &vorbis);
 	}
 	if (music_stopping) goto cleanup;
 
@@ -413,7 +412,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 			Thread_Sleep(10); continue;
 		}
 
-		res = Music_Buffer((cc_int16*)chunks[cur], samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[cur], samplesPerSecond, &vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 
 		/* need to specially handle last bit of audio */
@@ -439,12 +438,15 @@ cleanup:
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }
 
-static void Music_AddFile(const cc_string* path, void* obj) {
+static void Music_AddFile(const cc_string* path, void* obj, int isDirectory) {
 	struct StringsBuffer* files = (struct StringsBuffer*)obj;
 	static const cc_string ogg  = String_FromConst(".ogg");
 
-	if (!String_CaselessEnds(path, &ogg)) return;
-	StringsBuffer_Add(files, path);
+	if (isDirectory) {
+		Directory_Enum(path, obj, Music_AddFile);
+	} else if (String_CaselessEnds(path, &ogg)) {
+		StringsBuffer_Add(files, path);
+	}
 }
 
 static void Music_RunLoop(void) {

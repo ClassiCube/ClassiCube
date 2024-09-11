@@ -4,21 +4,38 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-#include "../third_party/gldc/gldc.h"
-#include "../third_party/gldc/src/draw.c"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
+#include "../third_party/gldc/src/gldc.h"
+
 static cc_bool renderingDisabled;
+#define VERTEX_BUFFER_SIZE 32 * 40000
+#define PT_ALPHA_REF 0x011c
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
+static void InitPowerVR(void) {
+	cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
+	cc_bool fsaa     = false;
+	AUTOSORT_ENABLED = autosort;
+
+	pvr_init_params_t params = {
+		// Opaque, punch through, translucent polygons with largest bin sizes
+		{ PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
+		VERTEX_BUFFER_SIZE,
+		0, fsaa,
+		(autosort) ? 0 : 1
+	};
+    pvr_init(&params);
+}
+
 static void InitGLState(void) {
-	glClearDepth(1.0f);
-	GPUSetAlphaCutOff(127);
+	pvr_set_zclip(0.0f);
+	PVR_SET(PT_ALPHA_REF, 127); // define missing from KOS
 
 	ALPHA_TEST_ENABLED = GL_FALSE;
 	CULLING_ENABLED    = GL_FALSE;
@@ -32,9 +49,9 @@ static void InitGLState(void) {
 }
 
 void Gfx_Create(void) {
+	if (!Gfx.Created) InitPowerVR();
 	if (!Gfx.Created) glKosInit();
 
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	InitGLState();
 	
 	Gfx.MinTexWidth  = 8;
@@ -318,11 +335,11 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	GLuint texId = gldcGenTexture();
 	gldcBindTexture(texId);
 	
-	gldcAllocTexture(bmp->width, bmp->height, GL_RGBA,
-				GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS);
+	int res = gldcAllocTexture(bmp->width, bmp->height, PVR_TXRFMT_ARGB4444);
+	if (res) { Platform_LogConst("Out of PVR VRAM!"); return 0; }
 				
 	void* pixels;
-	GLsizei width, height;
+	int width, height;
 	gldcGetTexture(&pixels, &width, &height);
 	ConvertTexture(pixels, bmp, rowWidth);
 	return texId;
@@ -358,7 +375,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	gldcBindTexture(texId);
 				
 	void* pixels;
-	GLsizei width, height;
+	int width, height;
 	gldcGetTexture(&pixels, &width, &height);
 	
 	ConvertSubTexture(pixels, width, height,
@@ -489,36 +506,34 @@ cc_bool Gfx_WarnIfNecessary(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
-#define VB_PTR gfx_vertices
-static const void* VERTEX_PTR;
-extern void apply_poly_header(PolyHeader* header, PolyList* activePolyList);
+extern void apply_poly_header(pvr_poly_hdr_t* header, int list_type);
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
 
-void DrawQuads(int count) {
+void DrawQuads(int count, void* src) {
 	if (!count) return;
 	PolyList* output = _glActivePolyList();
-	AlignedVectorHeader* hdr = &output->vector.hdr;
+	AlignedVector* vec = &output->vector;
 
-	uint32_t header_required = (hdr->size == 0) || STATE_DIRTY;
+	uint32_t header_required = (vec->size == 0) || STATE_DIRTY;
 	// Reserve room for the vertices and header
-	Vertex* beg = aligned_vector_reserve(&output->vector, hdr->size + (header_required) + count);
+	Vertex* beg = aligned_vector_reserve(&output->vector, vec->size + (header_required) + count);
 
 	if (header_required) {
-		apply_poly_header((PolyHeader*)beg, output);
+		apply_poly_header((pvr_poly_hdr_t*)beg, output->list_type);
 		STATE_DIRTY = GL_FALSE;
 		beg++; 
-		hdr->size += 1;
+		vec->size += 1;
 	}
 	Vertex* end;
 
 	if (TEXTURES_ENABLED) {
-		end = DrawTexturedQuads(VERTEX_PTR, beg, count >> 2);
+		end = DrawTexturedQuads(src, beg, count >> 2);
 	} else {
-		end = DrawColouredQuads(VERTEX_PTR, beg, count >> 2);
+		end = DrawColouredQuads(src, beg, count >> 2);
 	}
-	hdr->size += (end - beg);
+	vec->size += (end - beg);
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -536,28 +551,27 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	void* src;
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+		src = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
 	} else {
-		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
+		src = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
 	}
 
-	DrawQuads(verticesCount);
+	DrawQuads(verticesCount, src);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	VERTEX_PTR = gfx_vertices;
-
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	DrawQuads(verticesCount);
+	DrawQuads(verticesCount, gfx_vertices);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (renderingDisabled) return;
 	
-	VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
-	DrawQuads(verticesCount);
+	void* src = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	DrawQuads(verticesCount, src);
 }
 
 
@@ -569,8 +583,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	GLint freeMem = _glFreeTextureMemory();
-	GLint usedMem = _glUsedTextureMemory();
+	int freeMem = _glFreeTextureMemory();
+	int usedMem = _glUsedTextureMemory();
 	
 	float freeMemMB = freeMem / (1024.0 * 1024.0);
 	float usedMemMB = usedMem / (1024.0 * 1024.0);
@@ -610,20 +624,21 @@ extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
 extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
-		SCISSOR_TEST_ENABLED = GL_FALSE;
-	} else {
-		SCISSOR_TEST_ENABLED = GL_TRUE;
-	}
-	STATE_DIRTY = GL_TRUE;
-	
-	glViewport(x, y, w, h);
-	glScissor (x, y, w, h);
+	VIEWPORT.hwidth  = w *  0.5f;
+	VIEWPORT.hheight = h * -0.5f;
+	VIEWPORT.x_plus_hwidth  = x + w * 0.5f;
+	VIEWPORT.y_plus_hheight = y + h * 0.5f;
 
 	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
 	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;
 
 	VP_COL_X_PLUS_HWIDTH  = VP_TEX_X_PLUS_HWIDTH  = x + w * 0.5f;
 	VP_COL_Y_PLUS_HHEIGHT = VP_TEX_Y_PLUS_HHEIGHT = y + h * 0.5f;
+}
+
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
+	STATE_DIRTY = GL_TRUE;
+	glScissor(x, y, w, h);
 }
 #endif

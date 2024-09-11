@@ -590,19 +590,19 @@ void Gfx_DisableTextureOffset(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-    vp_scale.x  = w *  0.5f;
-    vp_scale.y  = h * -0.5f;
-    vp_offset.x = x + w * 0.5f;
-    vp_offset.y = y + h * 0.5f;
-
-	uint32_t* p;
-	p = pb_begin();
-    // NV097_SET_SURFACE_CLIP_HORIZONTAL followed by NV097_SET_SURFACE_CLIP_VERTICAL 
-    p = pb_push2(p, NV097_SET_SURFACE_CLIP_HORIZONTAL, x | (w << 16), y | (h << 16));
-    pb_end(p);
+	vp_scale.x  = w *  0.5f;
+	vp_scale.y  = h * -0.5f;
+	vp_offset.x = x + w * 0.5f;
+	vp_offset.y = y + h * 0.5f;
 }
 
-
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	uint32_t* p;
+	p = pb_begin();
+	// NV097_SET_SURFACE_CLIP_HORIZONTAL followed by NV097_SET_SURFACE_CLIP_VERTICAL 
+	p = pb_push2(p, NV097_SET_SURFACE_CLIP_HORIZONTAL, x | (w << 16), y | (h << 16));
+	pb_end(p);
+}
 
 
 /*########################################################################################################################*

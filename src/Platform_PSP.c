@@ -86,7 +86,8 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("ms0:/PSP/GAME/ClassiCube/");
 
-static void GetNativePath(char* str, const cc_string* path) {
+void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
+	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
@@ -94,28 +95,25 @@ static void GetNativePath(char* str, const cc_string* path) {
 
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int result = sceIoMkdir(str, 0777);
+cc_result Directory_Create(const cc_filepath* path) {
+	int result = sceIoMkdir(path->buffer, 0777);
 	return GetSCEResult(result);
 }
 
 int File_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	SceIoStat sb;
-	GetNativePath(str, path);
-	return sceIoGetstat(str, &sb) == 0 && (sb.st_attr & FIO_SO_IFREG) != 0;
+	Platform_EncodePath(&str, path);
+	return sceIoGetstat(str.buffer, &sb) == 0 && (sb.st_attr & FIO_SO_IFREG) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
+	cc_filepath str;
 	int res;
 
-	GetNativePath(str, dirPath);
-	SceUID uid = sceIoDopen(str);
+	Platform_EncodePath(&str, dirPath);
+	SceUID uid = sceIoDopen(str.buffer);
 	if (uid < 0) return GetSCEResult(uid); // error
 
 	String_InitArray(path, pathBuffer);
@@ -133,35 +131,28 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		int len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-		if (entry.d_stat.st_attr & FIO_SO_IFDIR) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) break;
-		} else {
-			callback(&path, obj);
-		}
+		int is_dir = entry.d_stat.st_attr & FIO_SO_IFDIR;
+		callback(&path, obj, is_dir);
 	}
 
 	sceIoDclose(uid);
 	return GetSCEResult(res);
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	GetNativePath(str, path);
-	
-	int result = sceIoOpen(str, mode, 0777);
+static cc_result File_Do(cc_file* file, const char* path, int mode) {
+	int result = sceIoOpen(path, mode, 0777);
 	*file      = result;
 	return GetSCEResult(result);
 }
 
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, PSP_O_RDONLY);
+cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, PSP_O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, PSP_O_RDWR | PSP_O_CREAT | PSP_O_TRUNC);
+cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, PSP_O_RDWR | PSP_O_CREAT | PSP_O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, PSP_O_RDWR | PSP_O_CREAT);
+cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	return File_Do(file, path->buffer, PSP_O_RDWR | PSP_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -320,19 +311,23 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	int res;
 
 	*s = sceNetInetSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return sceNetInetGetErrno();
-	
+
 	if (nonblocking) {
 		int on = 1;
 		sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
 	}
+	return 0;
+}
 
-	res = sceNetInetConnect(*s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	
+	int res = sceNetInetConnect(s, raw, addr->size);
 	return res < 0 ? sceNetInetGetErrno() : 0;
 }
 
@@ -439,8 +434,8 @@ void Platform_Init(void) {
 	// TODO: work out why this error is actually happening (inexact or underflow?) and properly fix it
 	pspSdkDisableFPUExceptions();
 	
-	// Create root directory
-	Directory_Create(&String_Empty);
+	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
+	Directory_Create(root);
 }
 void Platform_Free(void) { }
 
@@ -470,7 +465,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MACHINE_KEY "PSP_PSP_PSP_PSP_"
+
 static cc_result GetMachineID(cc_uint32* key) {
-	return ERR_NOT_SUPPORTED;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+	return 0;
 }
 #endif

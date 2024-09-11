@@ -487,6 +487,9 @@ void String_Format4(cc_string* str, const char* format, const void* a1, const vo
 		case '%':
 			String_Append(str, '%'); 
 			break;
+		case 'N':
+			str->buffer[str->length++] = '\0'; /* Assumes using String_InitArray_NT */
+			break;
 		default: 
 			Logger_Abort("Invalid type for string format");
 		}

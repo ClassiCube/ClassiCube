@@ -99,6 +99,7 @@ void Chat_DisableLogging(void) {
 
 static cc_bool CreateLogsDirectory(void) {
 	static const cc_string dir = String_FromConst("logs");
+	cc_filepath str;
 	cc_result res;
 	/* Utils_EnsureDirectory cannot be used here because it causes a stack overflow  */
 	/* when running the game and an error occurs when trying to create the directory */
@@ -111,7 +112,8 @@ static cc_bool CreateLogsDirectory(void) {
 	/*       --> Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
 	/*            --> Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog ... */
 	/* and so on, until eventually the stack overflows */
-	res = Directory_Create(&dir);
+	Platform_EncodePath(&str, &dir);
+	res = Directory_Create(&str);
 	if (!res || res == ReturnCode_DirectoryExists) return true;
 
 	Chat_DisableLogging();

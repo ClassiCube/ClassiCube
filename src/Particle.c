@@ -280,7 +280,8 @@ static void Terrain_Render(float t) {
 	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, terrain_count * 4);
 	Terrain_Update1DCounts();
-	for (i = 0; i < terrain_count; i++) {
+	for (i = 0; i < terrain_count; i++) 
+	{
 		index = Atlas1D_Index(terrain_particles[i].texLoc);
 		ptr   = data + terrain_1DIndices[index];
 
@@ -289,18 +290,20 @@ static void Terrain_Render(float t) {
 	}
 
 	Gfx_UnlockDynamicVb(particles_VB);
-	for (i = 0; i < Atlas1D.Count; i++) {
+	for (i = 0; i < Atlas1D.Count; i++) 
+	{
 		int partCount = terrain_1DCount[i];
 		if (!partCount) continue;
 
-		Gfx_BindTexture(Atlas1D.TexIds[i]);
+		Atlas1D_Bind(i);
 		Gfx_DrawVb_IndexedTris_Range(partCount, offset);
 		offset += partCount;
 	}
 }
 
 static void Terrain_RemoveAt(int i) {
-	for (; i < terrain_count - 1; i++) {
+	for (; i < terrain_count - 1; i++) 
+	{
 		terrain_particles[i] = terrain_particles[i + 1];
 	}
 	terrain_count--;
@@ -308,7 +311,8 @@ static void Terrain_RemoveAt(int i) {
 
 static void Terrain_Tick(float delta) {
 	int i;
-	for (i = 0; i < terrain_count; i++) {
+	for (i = 0; i < terrain_count; i++) 
+	{
 		if (TerrainParticle_Tick(&terrain_particles[i], delta)) {
 			Terrain_RemoveAt(i); i--;
 		}

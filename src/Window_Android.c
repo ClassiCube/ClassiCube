@@ -326,7 +326,10 @@ static void RemakeWindowSurface(void) {
 }
 
 static void DoCreateWindow(void) {
-	Window_Main.Exists = true;
+	Window_Main.Exists   = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	
 	RemakeWindowSurface();
 	/* always start as fullscreen */
 	Window_EnterFullscreen();
@@ -450,12 +453,11 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* save_args) {
     if (!save_args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
 
     // save the item to a temp file, which is then (usually) later deleted by intent callback
-    cc_string tmpDir = String_FromConst("Exported");
-    Directory_Create(&tmpDir);
+    Directory_Create(FILEPATH_RAW("Exported"));
 
     cc_string path; char pathBuffer[FILENAME_SIZE];
     String_InitArray(path, pathBuffer);
-    String_Format3(&path, "%s/%s%c", &tmpDir, &save_args->defaultName, save_args->filters[0]);
+    String_Format2(&path, "Exported/%s%c", &save_args->defaultName, save_args->filters[0]);
     save_args->Callback(&path);
     // TODO kinda ugly, maybe a better way?
     cc_string file = String_UNSAFE_SubstringAt(&path, String_IndexOf(&path, '/') + 1);

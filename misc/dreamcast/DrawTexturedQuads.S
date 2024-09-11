@@ -5,13 +5,10 @@
 
 _DrawTexturedQuads:
 ! Setup
-    mov r4,r3     ! r3  = src
-    add #-32, r5  ! r5 -= sizeof(VERTEX)
+    TransformSetup
     ViewportTransformSetup _VP_TEX_HWIDTH
 
 .TRANSFORM_QUAD:
-    mov.l CMD_TEX_VERT, r1 ! r1  = GPU VERT command
-
     LoadTexturedVertex
     ProcessVertex1
 
@@ -22,7 +19,7 @@ _DrawTexturedQuads:
     ProcessVertex3
 
     LoadTexturedVertex
-    ProcessVertex4 CMD_TEX_EOS
+    ProcessVertex4
 
 ! CLIPFLAGS TESTING
     cmp/eq  #0,r0  ! T = r0 == 0 (all points invisible)
@@ -42,26 +39,18 @@ _DrawTexturedQuads:
     bf .TRANSFORM_QUAD ! if !T then goto TRANSFORM_QUAD
     nop
     
-    add #32, r5     ! r5 += sizeof(VERTEX)
-    rts             ! return after executing instruction in delay slot
-    mov r5,r0       ! r0 = r5
+    TransformEnd
 
-.align 2
-CMD_TEX_VERT: .long 0xe0000000
-CMD_TEX_EOS:  .long 0xf0000000
+.align 4
 
 .global _VP_TEX_HWIDTH
-.type   _VP_TEX_HWIDTH,%object
 _VP_TEX_HWIDTH:  .long 0
 
 .global _VP_TEX_HHEIGHT
-.type   _VP_TEX_HHEIGHT,%object
 _VP_TEX_HHEIGHT: .long 0
 
 .global _VP_TEX_X_PLUS_HWIDTH
-.type   _VP_TEX_X_PLUS_HWIDTH,%object
 _VP_TEX_X_PLUS_HWIDTH:  .long 0
 
 .global _VP_TEX_Y_PLUS_HHEIGHT
-.type   _VP_TEX_Y_PLUS_HHEIGHT,%object
 _VP_TEX_Y_PLUS_HHEIGHT: .long 0

@@ -413,12 +413,23 @@ void Window_Init(void) {
 	interop_ForceTouchPageLayout();
 }
 
-void Window_Free(void) { }
+void Window_Free(void) {
+	/* If the game is closed while in fullscreen, the last rendered frame stays */
+	/*  shown in fullscreen, but the game can't be interacted with anymore */
+	Window_ExitFullscreen();
+
+	Window_SetSize(0, 0);
+	UnhookEvents();
+	emscripten_cancel_main_loop();
+}
 
 extern void interop_InitContainer(void);
 static void DoCreateWindow(void) {
-	Window_Main.Exists  = true;
-	Window_Main.Focused = true;
+	Window_Main.Exists   = true;
+	Window_Main.Focused  = true;
+	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
+	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
+	
 	HookEvents();
 	/* Let the webpage decide on initial bounds */
 	Window_Main.Width  = interop_CanvasWidth();
@@ -522,15 +533,6 @@ void Window_SetSize(int width, int height) {
 void Window_RequestClose(void) {
 	Window_Main.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
-	/* If the game is closed while in fullscreen, the last rendered frame stays */
-	/*  shown in fullscreen, but the game can't be interacted with anymore */
-	Window_ExitFullscreen();
-
-	Window_SetSize(0, 0);
-	UnhookEvents();
-	/* Game_DoFrame doesn't do anything when WindowExists.False is false, */
-	/*  but it's still better to cancel main loop to minimise resource usage */
-	emscripten_cancel_main_loop();
 }
 
 extern void interop_RequestCanvasResize(void);
