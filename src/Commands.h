@@ -1,6 +1,8 @@
 #ifndef CC_COMMANDS_H
 #define CC_COMMANDS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Executes actions in response to certain chat input
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -28,4 +30,6 @@ struct ChatCommand {
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */
 CC_API  void Commands_Register(      struct ChatCommand* cmd);
 typedef void (*FP_Commands_Register)(struct ChatCommand* cmd);
+
+CC_END_HEADER
 #endif

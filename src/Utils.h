@@ -1,6 +1,8 @@
 #ifndef CC_UTILS_H
 #define CC_UTILS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Provides various utility functions
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -74,4 +76,6 @@ CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const cc_string* key,
 CC_NOINLINE STRING_REF cc_string EntryList_UNSAFE_Get(struct StringsBuffer* list, const cc_string* key, char separator);
 /* Finds the index of the entry whose key caselessly equals the given key. */
 CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separator);
+
+CC_END_HEADER
 #endif

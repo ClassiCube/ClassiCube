@@ -1,6 +1,8 @@
 #ifndef CC_BLOCKPHYSICS_H
 #define CC_BLOCKPHYSICS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Implements simple block physics.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -26,4 +28,6 @@ void Physics_OnBlockChanged(int x, int y, int z, BlockID old, BlockID now);
 void Physics_Init(void);
 void Physics_Free(void);
 void Physics_Tick(void);
+
+CC_END_HEADER
 #endif

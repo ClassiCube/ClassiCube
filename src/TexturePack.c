@@ -132,7 +132,7 @@ static void Atlas_Convert2DTo1D(void) {
 	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
 	int atlasesCount  = Atlas1D.Count;
 	struct Bitmap atlas1D;
-	int tile = 0, i;
+	int i;
 
 	Platform_Log2("Loaded terrain atlas: %i bmps, %i per bmp", &atlasesCount, &tilesPerAtlas);
 	Bitmap_Allocate(&atlas1D, tileSize, tilesPerAtlas * tileSize);
@@ -336,11 +336,16 @@ CC_NOINLINE static void MakeCachePath(cc_string* mainPath, cc_string* altPath, c
 static int IsCached(const cc_string* url) {
 	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
 	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
+	cc_filepath mainStr, altStr;
+	
 	String_InitArray(mainPath, mainBuffer);
 	String_InitArray(altPath,   altBuffer);
 
 	MakeCachePath(&mainPath, &altPath, url);
-	return File_Exists(&mainPath) || (altPath.length && File_Exists(&altPath));
+	Platform_EncodePath(&mainStr, &mainPath);
+	Platform_EncodePath(&altStr,  &altPath);
+
+	return File_Exists(&mainStr) || (altPath.length && File_Exists(&altStr));
 }
 
 /* Attempts to open the cached data stream for the given url */
@@ -476,6 +481,7 @@ static cc_result ExtractPng(struct Stream* stream) {
 
 static cc_bool needReload;
 static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
+	struct ZipEntry entries[512];
 	cc_result res;
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
@@ -487,7 +493,8 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	res = ExtractPng(stream);
 	if (res == PNG_ERR_INVALID_SIG) {
 		/* file isn't a .png image, probably a .zip archive then */
-		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry);
+		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry,
+							entries, Array_Elems(entries));
 
 		if (res) Logger_SysWarn2(res, "extracting", path);
 	} else if (res) {
@@ -496,7 +503,7 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	return res;
 }
 
-#ifdef CC_BUILD_PS1
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
 #include "../misc/ps1/classicubezip.h"
 
 static cc_result ExtractFromFile(const cc_string* path) {

@@ -39,9 +39,16 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
+#ifdef CC_BUILD_TINYMEM
+	Gfx.MaxTexWidth  = 16;
+	Gfx.MaxTexHeight = 16;
+#else
 	Gfx.MaxTexWidth  = 4096;
 	Gfx.MaxTexHeight = 4096;
+#endif
+
 	Gfx.Created      = true;
+	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	
 	Gfx_RestoreState();
 }
@@ -92,14 +99,17 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
-	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+
+	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE,
+					part, rowWidth  * BITMAPCOLOR_SIZE);
 }
 
 void Gfx_EnableMipmaps(void)  { }
@@ -146,8 +156,10 @@ static void ClearColorBuffer(void) {
 }
 
 static void ClearDepthBuffer(void) {
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 	int i, size = fb_width * fb_height;
 	for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
+#endif
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -237,17 +249,21 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static float texOffsetX, texOffsetY;
-static struct Matrix _view, _proj, mvp;
+static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&mvp, &_view, &_proj);
+	Matrix_Mul(&_mvp, &_view, &_proj);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	_view = *view;
+	_proj = *proj;
+
+	Matrix_Mul(mvp, view, proj);
+	_mvp  = *mvp;
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -329,10 +345,10 @@ static int TransformVertex3D(int index, Vertex* vertex) {
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
 	Vector3* pos = (Vector3*)ptr;
 
-	vertex->x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
-	vertex->y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
-	vertex->z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
-	vertex->w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
+	vertex->x = pos->x * _mvp.row1.x + pos->y * _mvp.row2.x + pos->z * _mvp.row3.x + _mvp.row4.x;
+	vertex->y = pos->x * _mvp.row1.y + pos->y * _mvp.row2.y + pos->z * _mvp.row3.y + _mvp.row4.y;
+	vertex->z = pos->x * _mvp.row1.z + pos->y * _mvp.row2.z + pos->z * _mvp.row3.z + _mvp.row4.z;
+	vertex->w = pos->x * _mvp.row1.w + pos->y * _mvp.row2.w + pos->z * _mvp.row3.w + _mvp.row4.w;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;
@@ -440,6 +456,7 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				A = PackedCol_A(color);
 			}
 
+			if (gfx_alphaTest && A < 0x80) continue;
 			if (gfx_alphaBlend) {
 				BitmapCol dst = colorBuffer[cb_index];
 				int dstR = BitmapCol_R(dst);
@@ -450,7 +467,6 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = (G * A + dstG * (255 - A)) >> 8;
 				B = (B * A + dstB * (255 - A)) >> 8;
 			}
-			if (gfx_alphaTest && A < 0x80) continue;
 
 			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
@@ -521,11 +537,15 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
 			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
 
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 			if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
 			if (!colWrite) {
 				if (depthWrite) depthBuffer[db_index] = z;
 				continue;
 			}
+#else
+			if (!colWrite) continue;
+#endif
 
 			int R, G, B, A;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
@@ -551,7 +571,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				A = PackedCol_A(color);
 			}
 
+			if (gfx_alphaTest && A < 0x80) continue;
 			int cb_index = y * cb_stride + x;
+			
 			if (gfx_alphaBlend) {
 				BitmapCol dst = colorBuffer[cb_index];
 				int dstR = BitmapCol_R(dst);
@@ -562,9 +584,10 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = (G * A + dstG * (255 - A)) >> 8;
 				B = (B * A + dstB * (255 - A)) >> 8;
 			}
-			if (gfx_alphaTest && A < 0x80) continue;
 
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 			if (depthWrite) depthBuffer[db_index] = z;
+#endif
 			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
 	}
@@ -583,7 +606,7 @@ static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
 	V->x = invt * v1->x + t * v2->x;
 	V->y = invt * v1->y + t * v2->y;
 	//V->z = invt * v1->z + t * v2->z;
-	V->z = 0.0f; // Z will always be 0 since clipping against w=0 (near plane) anyways
+	V->z = 0.0f; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
 	V->w = invt * v1->w + t * v2->w;
 	
 	V->u = invt * v1->u + t * v2->u;
@@ -910,9 +933,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return Png_Encode(&bmp, output, CB_GetRow, false, NULL);
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
-}
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) { }
 
@@ -921,8 +943,7 @@ void Gfx_EndFrame(void) {
 	Window_DrawFramebuffer(r, &fb_bmp);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
+void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
@@ -936,8 +957,10 @@ void Gfx_OnWindowResize(void) {
 	colorBuffer = fb_bmp.scan0;
 	cb_stride   = fb_bmp.width;
 
+#ifndef SOFTGPU_DISABLE_ZBUFFER
 	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
 	db_stride   = fb_width;
+#endif
 
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	Gfx_SetScissor (0, 0, Game.Width, Game.Height);

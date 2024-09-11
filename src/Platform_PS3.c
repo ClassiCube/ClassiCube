@@ -35,11 +35,13 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
+const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
 const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
+const cc_result ReturnCode_SocketDropped    = NET_EPIPE;
 
 const char* Platform_AppNameSuffix = " PS3";
+cc_bool Platform_ReadonlyFilesystem;
 
 SYS_PROCESS_PARAM(1001, 256 * 1024); // 256kb stack size
 
@@ -108,11 +110,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return sysLv2FsMkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
+int File_Exists(const cc_filepath* path) {
 	sysFSStat sb;
-	Platform_EncodePath(&str, path);
-	return sysLv2FsStat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	return sysLv2FsStat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

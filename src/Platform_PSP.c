@@ -24,10 +24,13 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
 const char* Platform_AppNameSuffix = " PSP";
+cc_bool Platform_ReadonlyFilesystem;
 
 PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
@@ -100,11 +103,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return GetSCEResult(result);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
+int File_Exists(const cc_filepath* path) {
 	SceIoStat sb;
-	Platform_EncodePath(&str, path);
-	return sceIoGetstat(str.buffer, &sb) == 0 && (sb.st_attr & FIO_SO_IFREG) != 0;
+	return sceIoGetstat(path->buffer, &sb) == 0 && (sb.st_attr & FIO_SO_IFREG) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

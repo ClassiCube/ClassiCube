@@ -809,9 +809,13 @@ int TreeGen_Grow(int treeX, int treeY, int treeZ, int height, IVec3* coords, Blo
 		}
 	}
 
-	/* then place trunk */
+	/* place trunk */
 	for (y = 0; y < height - 1; y++) {
 		TreeGen_Place(treeX, treeY + y, treeZ, BLOCK_LOG);
 	}
+
+	/* then place dirt */
+	TreeGen_Place(treeX, treeY - 1, treeZ, BLOCK_DIRT);
+
 	return count;
 }

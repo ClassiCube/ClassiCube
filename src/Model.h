@@ -4,6 +4,8 @@
 #include "PackedCol.h"
 #include "Constants.h"
 #include "Physics.h"
+CC_BEGIN_HEADER
+
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -121,6 +123,7 @@ CC_VAR extern struct _ModelsData {
 /* Initialises fields of a model to default. */
 CC_API void Model_Init(struct Model* model);
 
+void Model_GetEntityTransform(struct Model* model, struct Entity* e, struct Matrix* transform);
 /* Whether the bounding sphere of the model is currently visible. */
 cc_bool Model_ShouldRender(struct Entity* entity);
 /* Approximately how far the given entity is away from the player. */
@@ -297,4 +300,5 @@ void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* pa
 void CustomModel_Register(struct CustomModel* cm);
 void CustomModel_Undefine(struct CustomModel* cm);
 
+CC_END_HEADER
 #endif

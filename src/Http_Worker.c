@@ -120,7 +120,7 @@ static cc_string* Http_GetUserAgent_UNSAFE(void) {
 }
 
 
-#if defined CC_BUILD_CURL
+#if CC_NET_BACKEND == CC_NET_BACKEND_LIBCURL
 /*########################################################################################################################*
 *-----------------------------------------------------libcurl backend-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -355,7 +355,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, NULL);
 	return res;
 }
-#elif defined CC_BUILD_HTTPCLIENT
+#elif CC_NET_BACKEND == CC_NET_BACKEND_BUILTIN
 #include "Errors.h"
 #include "PackedCol.h"
 #include "SSL.h"
@@ -935,6 +935,11 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 			res = HttpBackend_PerformRequest(&state);
 			retried = true;
 		}
+		if (res == ReturnCode_SocketDropped && !retried) {
+			Platform_LogConst("Resetting connection due to being dropped..");
+			res = HttpBackend_PerformRequest(&state);
+			retried = true;
+		}
 
 		if (res || !HttpClient_IsRedirect(req)) break;
 		if (redirects >= 20) return HTTP_ERR_REDIRECTS;
@@ -1346,7 +1351,7 @@ static void WorkerLoop(void) {
 			DoRequest(&request);
 		} else {
 			/* Block until another thread submits a request to do */
-			Platform_LogConst("Going back to sleep...");
+			Platform_LogConst("Download queue empty, going back to sleep...");
 			Waitable_Wait(workerWaitable);
 		}
 	}

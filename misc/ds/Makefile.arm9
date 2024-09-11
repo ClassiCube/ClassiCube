@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# SPDX-FileContributor: Antonio Niño Díaz, 2023
+export BLOCKSDS			?= /opt/wonderful/thirdparty/blocksds/core
+export BLOCKSDSEXT		?= /opt/wonderful/thirdparty/blocksds/external
+export WONDERFUL_TOOLCHAIN	?= /opt/wonderful
+ARM_NONE_EABI_PATH		?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
+
+SOURCEDIRS	:= src
+INCLUDEDIRS     :=
+DSIWIFI		:= third_party/dsiwifi
+
+ifdef BUILD_DSI
+SOURCEDIRS	+= $(DSIWIFI)/arm_host/source $(DSIWIFI)/common/source $(DSIWIFI)/arm_host/source/nds $(DSIWIFI)/arm_host/source/lwip $(DSIWIFI)/arm_host/source/lwip/ipv4 $(DSIWIFI)/arm_host/source/lwip/ipv6 $(DSIWIFI)/arm_host/source/lwip/netif $(DSIWIFI)/arm_host/source/lwip/netif/ppp $(DSIWIFI)/arm_host/source/lwip/api
+INCLUDEDIRS	+= $(DSIWIFI)/arm_host/include $(DSIWIFI)/common/source $(DSIWIFI)/include $(DSIWIFI)/include/lwip
+BUILDDIR	:= build-dsi
+DEFINES		:= -DPLAT_NDS -DBUILD_DSI
+LIBS		:= -lnds9 -lc
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds
+else
+BUILDDIR	:= build-nds
+DEFINES		:= -DPLAT_NDS
+LIBS		:= -ldswifi9 -lnds9 -lc
+LIBDIRS		:= $(BLOCKSDS)/libs/dswifi $(BLOCKSDS)/libs/libnds
+endif
+
+NAME		:= cc-arm9
+ELF		:= $(BUILDDIR)/$(NAME).elf
+MAP		:= $(BUILDDIR)/$(NAME).map
+
+# Tools
+# -----
+PREFIX		:= $(ARM_NONE_EABI_PATH)arm-none-eabi-
+CC		:= $(PREFIX)gcc
+CXX		:= $(PREFIX)g++
+LD		:= $(PREFIX)gcc
+
+# Source files
+# ------------
+S_FILES		:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.s))
+C_FILES		:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.c))
+
+# Compiler and linker flags
+# -------------------------
+
+ARCH		:= -mthumb -mcpu=arm946e-s+nofp
+
+SPECS		:= $(BLOCKSDS)/sys/crts/ds_arm9.specs
+
+WARNFLAGS	:= -Wall
+
+INCLUDEFLAGS	:= $(foreach path,$(INCLUDEDIRS),-I$(path)) \
+		   $(foreach path,$(LIBDIRS),-I$(path)/include)
+
+LIBDIRSFLAGS	:= $(foreach path,$(LIBDIRS),-L$(path)/lib)
+
+ASFLAGS		+= -x assembler-with-cpp $(DEFINES) $(INCLUDEFLAGS) \
+		   $(ARCH) -ffunction-sections -fdata-sections \
+		   -specs=$(SPECS)
+
+CFLAGS		+= -std=gnu17 $(WARNFLAGS) $(DEFINES) $(INCLUDEFLAGS) \
+		   $(ARCH) -O2 -ffunction-sections -fdata-sections \
+		   -specs=$(SPECS)
+
+LDFLAGS		:= $(ARCH) $(LIBDIRSFLAGS) -Wl,-Map,$(MAP) $(DEFINES) \
+		   -Wl,--start-group $(LIBS) -Wl,--end-group -specs=$(SPECS)
+
+# Intermediate build files
+# ------------------------
+OBJS		:= $(addprefix $(BUILDDIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.s=%.o)))
+DEPS		:= $(OBJS:.o=.d)
+export VPATH	:= $(SOURCEDIRS)
+
+# Targets
+# -------
+
+.PHONY: all
+
+all: $(BUILDDIR) $(ELF)
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
+$(ELF): $(OBJS)
+	$(LD) -o $@ $(OBJS) $(LDFLAGS)
+
+clean:
+	rm $(ELF) $(MAP) $(OBJS)
+	rm -rf $(BUILDDIR)
+
+# Rules
+# -----
+
+$(BUILDDIR)/%.o : %.s
+	$(CC) $(ASFLAGS) -MMD -MP -c -o $@ $<
+
+$(BUILDDIR)/%.o : %.c
+	$(CC) $(CFLAGS) -MMD -MP -c -o $@ $<
+
+$(BUILDDIR)/%.arm.o : %.arm.c
+	$(CC) $(CFLAGS) -MMD -MP -marm -mlong-calls -c -o $@ $<
+
+# Include dependency files if they exist
+# --------------------------------------
+
+-include $(DEPS)

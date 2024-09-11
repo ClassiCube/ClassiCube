@@ -74,7 +74,7 @@ static void CreateDeviceAndSwapChain(void) {
 	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	// RefreshRate intentionally left at 0 so display's refresh rate is used
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.OutputWindow = Window_Main.Handle;
+	desc.OutputWindow = Window_Main.Handle.ptr;
 	desc.SampleDesc.Count   = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Windowed           = TRUE;
@@ -104,6 +104,7 @@ void Gfx_Create(void) {
 	LoadD3D11Library();
 	CreateDeviceAndSwapChain();
 	Gfx.Created         = true;
+	Gfx.BackendType     = CC_GFX_BACKEND_D3D11;
 	customMipmapsLevels = true;
 	Gfx_RestoreState();
 }
@@ -178,7 +179,7 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 		if (width > 1)  width  /= 2;
 		if (height > 1) height /= 2;
 
-		cur = (BitmapCol*)Mem_Alloc(width * height, 4, "mipmaps");
+		cur = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "mipmaps");
 		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		D3D11_BOX box;
@@ -601,15 +602,17 @@ static void VS_Free(void) {
 
 static struct Matrix _view, _proj;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	Matrix_Mul(&vs_constants.mvp, &_view, &_proj);
 	VS_UpdateConstants();
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -1117,9 +1120,8 @@ finished:
 	return hr;
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 void Gfx_BeginFrame(void) { OM_UpdateTarget(); }
 
@@ -1143,10 +1145,10 @@ void Gfx_EndFrame(void) {
 	} else if (hr) {
 		Logger_Abort2(hr, "Failed to swap buffers");
 	}
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;

@@ -1,6 +1,9 @@
 #include "Core.h"
 #if defined PLAT_PS2
 
+#define LIBCGLUE_SYS_SOCKET_ALIASES 0
+#define LIBCGLUE_SYS_SOCKET_NO_ALIASES
+#define LIBCGLUE_ARPA_INET_NO_ALIASES
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -34,6 +37,7 @@
 #include <fileio.h>
 #include <io_common.h>
 #include <iox_stat.h>
+#include <libcdvd.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -42,7 +46,10 @@ const cc_result ReturnCode_DirectoryExists    = -8;
 
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
 const char* Platform_AppNameSuffix = " PS2";
+cc_bool Platform_ReadonlyFilesystem;
 
 // extern unsigned char DEV9_irx[];
 // extern unsigned int  size_DEV9_irx;
@@ -64,17 +71,39 @@ void Platform_Log(const char* msg, int len) {
 	_print("%s\n", tmp);
 }
 
+// https://stackoverflow.com/a/42340213
+static CC_INLINE int UnBCD(unsigned char bcd) {
+    return bcd - 6 * (bcd >> 4);
+}
+
+#define JST_OFFSET -9 * 60 // UTC+9 -> UTC
+static time_t CurrentUnixTime(void) {
+    sceCdCLOCK raw;
+    struct tm tim;
+    sceCdReadClock(&raw);
+
+    tim.tm_sec  = UnBCD(raw.second);
+    tim.tm_min  = UnBCD(raw.minute);
+    tim.tm_hour = UnBCD(raw.hour);
+    tim.tm_mday = UnBCD(raw.day);
+	// & 0x1F, since a user had issues with upper 3 bits being set to 1
+    tim.tm_mon  = UnBCD(raw.month & 0x1F) - 1;
+    tim.tm_year = UnBCD(raw.year) + 100;
+
+	// mktime will normalise the time anyways
+    tim.tm_min += JST_OFFSET;
+    return mktime(&tim);
+}
+
 TimeMS DateTime_CurrentUTC(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+	time_t rtc_sec = CurrentUnixTime();
+	return (cc_uint64)rtc_sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur; 
+	time_t rtc_sec = CurrentUnixTime();
 	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+	localtime_r(&rtc_sec, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;
@@ -116,11 +145,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return fioMkdir(path->buffer);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
+int File_Exists(const cc_filepath* path) {
 	io_stat_t sb;
-	Platform_EncodePath(&str, path);
-	return fioGetstat(str.buffer, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
+	return fioGetstat(path->buffer, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
 }
 
 // For some reason fioDread seems to be returning a iox_dirent_t, instead of a io_dirent_t
@@ -354,6 +381,9 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *-------------------------------------------------------Networking--------------------------------------------------------*
 *#########################################################################################################################*/
+int	ps2ip_getconfig(char* netif_name,t_ip_info* ip_info);
+int ps2ip_setconfig(const t_ip_info* ip_info);
+
 // https://github.com/ps2dev/ps2sdk/blob/master/NETMAN.txt
 // https://github.com/ps2dev/ps2sdk/blob/master/ee/network/tcpip/samples/tcpip_dhcp/ps2ip.c
 static void ethStatusCheckCb(s32 alarm_id, u16 time, void *common) {
@@ -371,14 +401,14 @@ static int WaitValidNetState(int (*checkingFunction)(void)) {
 		SetAlarm(500 * 16, &ethStatusCheckCb, &threadID);
 		SleepThread();
 
-		if (retries >= 10) // 5s = 10 * 500ms
-			return -1;
+		if (retries >= 15) return -1; // 7.5s = 15 * 500ms 
 	}
 	return 0;
 }
 
 static int ethGetNetIFLinkStatus(void) {
-	return NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0) == NETMAN_NETIF_ETH_LINK_STATE_UP;
+	int status = NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0);
+	return status == NETMAN_NETIF_ETH_LINK_STATE_UP;
 }
 
 static int ethWaitValidNetIFLinkState(void) {
@@ -410,13 +440,17 @@ static int ethEnableDHCP(void) {
 		ip_info.dhcp_enabled = 1;	
 		return ps2ip_setconfig(&ip_info);
 	}
-	return 0;
+	return 1;
 }
 
 static void Networking_Setup(void) {
+	NetManInit();
+
 	struct ip4_addr IP  = { 0 }, NM = { 0 }, GW = { 0 };
 	ps2ipInit(&IP, &NM, &GW);
-	ethEnableDHCP();
+
+	int res = ethEnableDHCP();
+	if (res < 0) Platform_Log1("Error %i enabling DHCP", &res);
 
 	Platform_LogConst("Waiting for net link connection...");
 	if(ethWaitValidNetIFLinkState() != 0) {
@@ -432,10 +466,6 @@ static void Networking_Setup(void) {
 	Platform_LogConst("Network setup done");
 }
 
-static void Networking_Init(void) {
-	NetManInit();
-}
-
 static void Networking_LoadIOPModules(void) {
 	int ret;
 	
@@ -447,6 +477,21 @@ static void Networking_LoadIOPModules(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+
+int  lwip_shutdown(int s, int how);
+int  lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen);
+int  lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
+int  lwip_close(int s);
+int  lwip_connect(int s, const struct sockaddr *name, socklen_t namelen);
+int  lwip_recv(int s, void *mem, size_t len, int flags);
+int  lwip_send(int s, const void *dataptr, size_t size, int flags);
+int  lwip_socket(int domain, int type, int protocol);
+int  lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
+int  lwip_ioctl(int s, long cmd, void *argp);
+int  lwip_getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res);
+void lwip_freeaddrinfo(struct addrinfo *ai);
+int  ip4addr_aton(const char *cp, ip4_addr_t *addr);
+
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
@@ -461,7 +506,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
 
-	res = getaddrinfo(host, portRaw, &hints, &result);
+	res = lwip_getaddrinfo(host, portRaw, &hints, &result);
 	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
@@ -470,7 +515,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
 	}
 	
-	freeaddrinfo(result);
+	lwip_freeaddrinfo(result);
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
@@ -482,7 +527,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	String_EncodeUtf8(str, address);
 	*numValidAddrs = 0;
 
-	if (inet_aton(str, &addr4->sin_addr) > 0) {
+	if (ip4addr_aton(str, (ip4_addr_t*)&addr4->sin_addr) > 0) {
 		addr4->sin_family = AF_INET;
 		addr4->sin_port   = htons(port);
 		
@@ -497,19 +542,20 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 static cc_result GetSocketError(cc_socket s) {
 	socklen_t resultSize = sizeof(socklen_t);
 	cc_result res = 0;
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	lwip_getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
 	return res;
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = socket(raw->sa_family, SOCK_STREAM, 0);
+	*s = lwip_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
 
 	if (nonblocking) {
-		int blocking_raw = -1; // non-blocking mode
-							   //ioctlsocket(*s, FIONBIO, &blocking_raw); TODO doesn't work
+		int blocking_raw = 1;
+		int res = lwip_ioctl(*s, FIONBIO, &blocking_raw);
+		//Platform_Log2("RESSS %i: %i", s, &res);
 	}
 	return 0;
 }
@@ -517,14 +563,14 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	int res = connect(s, raw, addr->size);
+	int res = lwip_connect(s, raw, addr->size);
 	return res == -1 ? GetSocketError(s) : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	Platform_Log1("PREPARE TO READ: %i", &count);
-	int recvCount = recv(s, data, count, 0);
-	Platform_Log1(" .. read %i", &recvCount);
+	//Platform_Log1("PREPARE TO READ: %i", &count);
+	int recvCount = lwip_recv(s, data, count, 0);
+	//Platform_Log1(" .. read %i", &recvCount);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	
 	int ERR = GetSocketError(s);
@@ -533,9 +579,9 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	Platform_Log1("PREPARE TO WRITE: %i", &count);
-	int sentCount = send(s, data, count, 0);
-	Platform_Log1(" .. wrote %i", &sentCount);
+	//Platform_Log1("PREPARE TO WRITE: %i", &count);
+	int sentCount = lwip_send(s, data, count, 0);
+	//Platform_Log1(" .. wrote %i", &sentCount);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	
 	int ERR = GetSocketError(s);
@@ -544,8 +590,8 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 }
 
 void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
+	lwip_shutdown(s, SHUT_RDWR);
+	lwip_close(s);
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -560,22 +606,22 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	FD_ZERO(&error_set);
 	FD_SET(s, &error_set);
 
-	selectCount = select(s + 1, &read_set, &write_set, &error_set, &time);
+	selectCount = lwip_select(s + 1, &read_set, &write_set, &error_set, &time);
 
-	Platform_Log4("SELECT %i = %h / %h / %h", &selectCount, &read_set, &write_set, &error_set);
+	//Platform_Log4("SELECT %i = %h / %h / %h", &selectCount, &read_set, &write_set, &error_set);
 	if (selectCount == -1) { *success = false; return errno; }
 	*success = FD_ISSET(s, &write_set) != 0; return 0;
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	Platform_LogConst("POLL READ");
+	//Platform_LogConst("POLL READ");
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
 }
 
 static int tries;
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	Platform_Log1("POLL WRITE: %i", &res);
+	//Platform_Log1("POLL WRITE: %i", &res);
 	if (res || *writable) return res;
 
 	// INPROGRESS error code returned if connect is still in progress
@@ -677,13 +723,11 @@ void Platform_Init(void) {
 	//USBStorage_WaitUntilDeviceReady();
 	
 	Networking_LoadIOPModules();
-	Networking_Init();
 	Networking_Setup();
 	
-	// Create root directory
 	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
 	int res = Directory_Create(root);
-	Platform_Log1("ROOT CREATE %i", &res);
+	Platform_Log1("ROOT DIRECTORY CREATE %i", &res);
 }
 
 void Platform_Free(void) { }

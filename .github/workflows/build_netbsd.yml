@@ -19,7 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install prerequisites
-        run: apt install wget unzip
+        run: |
+          apt-get update
+          apt-get -y install zip wget
       - name: Retrieve OpenGL and X11 dev files (64 bit)
         run: |
           mkdir src/netbsd64

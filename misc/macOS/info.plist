@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
 	<string>ClassiCube</string>
 	<key>CFBundleIconFile</key>
-	<string>ClassiCube</string>
+	<string>appicon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.classicube.client.mac</string>
 	<key>CFBundleInfoDictionaryVersion</key>

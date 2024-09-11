@@ -112,9 +112,9 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const 
 	String_InitArray_NT(str, buffer);
 	
 	// https://wiki.henkaku.xyz/vita/SceSysmem
-	SceUID uid = sceKernelAllocMemBlock("GPU memory", type, size, NULL);
+	SceUID uid = sceKernelAllocMemBlock(memType, type, size, NULL);
 	if (uid < 0) {
-		String_Format1(&str, "Failed to allocate GPU memory block for %c%N", memType);
+		String_Format2(&str, "Failed to allocate GPU memory block for %c (%i bytes)%N", memType, &size);
 		Logger_Abort2(uid, buffer);
 	}
 		
@@ -126,7 +126,7 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const 
 		
 	int res2 = sceGxmMapMemory(addr, size, gpu_access);
 	if (res2 < 0) {
-		String_Format1(&str, "Failed to map memory for GPU usage for %c%N", memType);
+		String_Format2(&str, "Failed to map memory for GPU usage for %c (%i bytes)%N", memType, &size);
 		Logger_Abort2(res2, buffer);
 	}
 	// https://wiki.henkaku.xyz/vita/GPU
@@ -682,7 +682,8 @@ static void GPUTextures_DeleteUnreferenced(void) {
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	struct GPUTexture* tex = GPUTexture_Alloc(size);
-	CopyTextureData(tex->data, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->data, bmp->width * BITMAPCOLOR_SIZE,
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
             
 	sceGxmTextureInitLinear(&tex->texture, tex->data,
 		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, bmp->width, bmp->height, 0);
@@ -697,9 +698,10 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	int texWidth = sceGxmTextureGetWidth(&tex->texture);
 	
 	// NOTE: Only valid for LINEAR textures
-	cc_uint32* dst = (tex->data + x) + y * texWidth;
+	BitmapCol* dst = (tex->data + x) + y * texWidth;
 	
-	CopyTextureData(dst, texWidth * 4, part, rowWidth << 2);
+	CopyTextureData(dst, texWidth  * BITMAPCOLOR_SIZE,
+					part, rowWidth * BITMAPCOLOR_SIZE);
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
 	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
 }
@@ -770,9 +772,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) {
@@ -816,7 +817,6 @@ void Gfx_EndFrame(void) {
 	sceGxmEndScene(gxm_context, NULL, NULL);
 
 	Gfx_NextFramebuffer();
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) { }
@@ -1024,8 +1024,8 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 static struct Matrix _view, _proj;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	struct Matrix mvp __attribute__((aligned(64)));	
 	Matrix_Mul(&mvp, &_view, &_proj);
@@ -1044,8 +1044,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	VP_ReloadUniforms();
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) { 
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -1062,6 +1064,7 @@ void Gfx_DisableTextureOffset(void) {
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
@@ -1115,8 +1118,8 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	Gfx_SetDepthTest(false);
 	
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
-	Gfx_LoadIdentityMatrix(MATRIX_PROJECTION);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Matrix_Identity);
+	Gfx_LoadMatrix(MATRIX_PROJ, &Matrix_Identity);
 	Gfx_BindVb(clearVB);
 	Gfx_DrawVb_IndexedTris(4);
 	

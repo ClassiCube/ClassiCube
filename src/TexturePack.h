@@ -1,6 +1,8 @@
 #ifndef CC_TEXPACKS_H
 #define CC_TEXPACKS_H
 #include "Bitmap.h"
+CC_BEGIN_HEADER
+
 /* 
 Contains everything relating to texture packs
   - Extracting the textures from a .zip archive
@@ -19,8 +21,10 @@ extern struct IGameComponent Textures_Component;
 #define ATLAS2D_MASK 15
 #define ATLAS2D_SHIFT 4
 /* Maximum supported number of rows in the atlas. */
-#ifdef EXTENDED_TEXTURES
+#if defined EXTENDED_TEXTURES
 	#define ATLAS2D_MAX_ROWS_COUNT 32
+#elif defined CC_BUILD_TINYMEM
+	#define ATLAS2D_MAX_ROWS_COUNT  8
 #else
 	#define ATLAS2D_MAX_ROWS_COUNT 16
 #endif
@@ -113,4 +117,6 @@ struct TextureEntry {
 	struct TextureEntry* next;
 };
 void TextureEntry_Register(struct TextureEntry* entry);
+
+CC_END_HEADER
 #endif

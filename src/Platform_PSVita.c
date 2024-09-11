@@ -16,12 +16,15 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = SCE_NET_ERROR_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = SCE_NET_ERROR_EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const char* Platform_AppNameSuffix = " PS Vita";
+const cc_result ReturnCode_SocketDropped    = SCE_NET_ERROR_EPIPE;
 static int epoll_id;
 static int stdout_fd;
+
+const char* Platform_AppNameSuffix = " PS Vita";
+cc_bool Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*
@@ -83,11 +86,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return GetSCEResult(result);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;;
+int File_Exists(const cc_filepath* path) {
 	SceIoStat sb;
-	Platform_EncodePath(&str, path);
-	return sceIoGetstat(str.buffer, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
+	return sceIoGetstat(path->buffer, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

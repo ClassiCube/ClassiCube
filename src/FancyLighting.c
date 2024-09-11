@@ -266,19 +266,23 @@ cc_uint8 GetBlockBrightness(BlockID curBlock, cc_bool isLamp) {
 	return Blocks.Brightness[curBlock] & FANCY_LIGHTING_MAX_LEVEL;
 }
 
+#define LightNode_Init(node, X, Y, Z, bright) \
+	node.coords.x = X; node.coords.y = Y; node.coords.z = Z; node.brightness = bright;
+
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	/* Block coordinates */
 	int chunkStartX, chunkStartY, chunkStartZ, chunkEndX, chunkEndY, chunkEndZ;
 	cc_uint8 brightness;
 	BlockID curBlock;
+	struct LightNode entry;
+
 	chunkStartX = cx * CHUNK_SIZE;
 	chunkStartY = cy * CHUNK_SIZE;
 	chunkStartZ = cz * CHUNK_SIZE;
 	chunkEndX = chunkStartX + CHUNK_SIZE;
 	chunkEndY = chunkStartY + CHUNK_SIZE;
 	chunkEndZ = chunkStartZ + CHUNK_SIZE;
-	struct LightNode entry;
 
 	if (chunkEndX > World.Width ) { chunkEndX = World.Width;  }
 	if (chunkEndY > World.Height) { chunkEndY = World.Height; }
@@ -295,14 +299,14 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 					brightness = GetBlockBrightness(curBlock, false);
 
 					if (brightness > 0) {
-						entry = (struct LightNode){ { x, y, z }, brightness };
+						LightNode_Init(entry, x, y, z, brightness);
 						Queue_Enqueue(&lightQueue, &entry);
 						FlushLightQueue(false, false);
 					}
 					else {
 						/* If no lava brightness, it must use lamp brightness */
 						brightness = Blocks.Brightness[curBlock] >> FANCY_LIGHTING_LAMP_SHIFT;
-						entry = (struct LightNode){ { x, y, z }, brightness };
+						LightNode_Init(entry, x, y, z, brightness);
 						Queue_Enqueue(&lightQueue, &entry);
 						FlushLightQueue(true, false);
 					}
@@ -364,14 +368,14 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 			neighborBlockBrightness = GetBlockBrightness(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), isLamp); \
 			/* This spot is a light caster, mark this spot as needing to be re-spread */ \
 			if (neighborBlockBrightness > 0) { \
-				otherNode = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBlockBrightness }; \
+				LightNode_Init(otherNode, neighborCoords.x, neighborCoords.y, neighborCoords.z, neighborBlockBrightness); \
 				Queue_Enqueue(&lightQueue, &otherNode); \
 			} \
 			if (neighborBrightness > 0) { \
 				/* This neighbor is darker than cur spot, darken it*/ \
 				if (neighborBrightness < curNode.brightness) { \
 					SetBrightness(0, neighborCoords.x, neighborCoords.y, neighborCoords.z, isLamp, true); \
-					otherNode = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBrightness }; \
+					LightNode_Init(otherNode, neighborCoords.x, neighborCoords.y, neighborCoords.z, neighborBrightness); \
 					Queue_Enqueue(&unlightQueue, &otherNode); \
 				} \
 				/* This neighbor is brighter or same, mark this spot as needing to be re-spread */ \
@@ -399,7 +403,7 @@ static void CalcUnlight(int x, int y, int z, cc_uint8 brightness, cc_bool isLamp
 	BlockID thisBlockTrue, thisBlock;
 
 	SetBrightness(0, x, y, z, isLamp, true);
-	curNode = (struct LightNode){ { x, y, z }, brightness };
+	LightNode_Init(curNode, x, y, z, brightness);
 	Queue_Enqueue(&unlightQueue, &curNode);
 
 	while (unlightQueue.count > 0) {
@@ -445,7 +449,7 @@ static void CalcBlockChange(int x, int y, int z, BlockID oldBlock, BlockID newBl
 	/* Cell is darker than the new block, only brighter case */
 	if (oldLightLevelHere < newBlockLightLevel) {
 		/* brighten this spot, recalculate lighting */
-		entry = (struct LightNode){ { x, y, z }, newBlockLightLevel };
+		LightNode_Init(entry, x, y, z, newBlockLightLevel);
 		Queue_Enqueue(&lightQueue, &entry);
 		FlushLightQueue(isLamp, true);
 		return;

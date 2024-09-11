@@ -913,6 +913,11 @@ public class MainActivity extends Activity
 	static byte[] readCache = new byte[8192];
 
 	public static int httpInit(String url, String method) {
+		// newer android versions block cleartext traffic by default
+		if (android.os.Build.VERSION.SDK_INT >= 26) {
+			url = url.replace("http://", "https://");
+		}
+
 		try {
 			conn = (HttpURLConnection)new URL(url).openConnection();
 			conn.setDoInput(true);

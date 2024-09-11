@@ -10,12 +10,17 @@
 #include "Game.h"
 #include "Event.h"
 
+#ifdef CC_BUILD_TINYMEM
+	#define PARTICLES_MAX 10
+#else
+	#define PARTICLES_MAX 600
+#endif
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Particle base------------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID particles_TexId, particles_VB;
-#define PARTICLES_MAX 600
 static RNGState rnd;
 static cc_bool hitTerrain;
 typedef cc_bool (*CanPassThroughFunc)(BlockID b);
@@ -503,10 +508,13 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 	struct CustomParticle* p;
 	struct CustomParticleEffect* e = &Particles_CustomEffects[effectID];
 	int i, count = e->particleCount;
-	Vec3 offset, delta;
+	Vec3 offset, delta, origin;
 	float d;
 
-	for (i = 0; i < count; i++) {
+	origin.x = originX; origin.y = originY; origin.z = originZ;
+
+	for (i = 0; i < count; i++) 
+	{
 		if (custom_count == PARTICLES_MAX) Custom_RemoveAt(0);
 		p = &custom_particles[custom_count++];
 		p->effectId = effectID;
@@ -526,7 +534,6 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		p->base.lastPos.y = y + offset.y * d;
 		p->base.lastPos.z = z + offset.z * d;
 		
-		Vec3 origin = { originX, originY, originZ };
 		Vec3_Sub(&delta, &p->base.lastPos, &origin);
 		Vec3_Normalise(&delta);
 

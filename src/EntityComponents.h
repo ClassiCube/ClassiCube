@@ -2,6 +2,8 @@
 #define CC_ENTITY_COMPONENTS_H
 #include "Vectors.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /* Various components for entities.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -38,6 +40,7 @@ void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t);
 struct HacksComp {
 	cc_bool IsOp;
 	cc_bool Floating; /* true if NoClip or Flying */
+	cc_bool _noclipping;
 	/* Speed player move at, relative to normal speed, when the 'speeding' input binding is active */
 	float SpeedMultiplier;
 	/* Whether blocks that the player places that intersect themselves, should cause the player to
@@ -132,4 +135,6 @@ void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */
 void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround);
+
+CC_END_HEADER
 #endif

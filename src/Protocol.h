@@ -1,6 +1,8 @@
 #ifndef CC_PROTOCOL_H
 #define CC_PROTOCOL_H
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /* 
 Implements network protocols for original classic, CPE, and WoM textures
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -37,7 +39,7 @@ enum OPCODE_ {
 	OPCODE_DEFINE_EFFECT,       OPCODE_SPAWN_EFFECT,
 	OPCODE_DEFINE_MODEL, OPCODE_DEFINE_MODEL_PART, OPCODE_UNDEFINE_MODEL,
 	OPCODE_PLUGIN_MESSAGE, OPCODE_ENTITY_TELEPORT_EXT,
-	OPCODE_LIGHTING_MODE,
+	OPCODE_LIGHTING_MODE, OPCODE_CINEMATIC_GUI,
 
 	OPCODE_COUNT
 };
@@ -72,4 +74,6 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 
 /* Send a PluginMessage to the server; data must contain 64 bytes. */
 CC_API void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data);
+
+CC_END_HEADER
 #endif

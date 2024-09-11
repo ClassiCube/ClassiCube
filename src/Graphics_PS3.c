@@ -133,13 +133,35 @@ static u32  depth_pitch;
 static u32  depth_offset;
 static u32* depth_buffer;
 
+#define GCM_LABEL_INDEX 255
+static u32 slabelval = 1;
+
 static void CreateContext(void) {
 	void* host_addr = memalign(1024 * 1024, HOST_SIZE);
 	rsxInit(&context, CB_SIZE, HOST_SIZE, host_addr);
 }
 
+static void WaitRSXFinish(void) {
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
+	rsxFlushBuffer(context);
+
+	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != slabelval)
+		usleep(30);
+
+	slabelval++;
+}
+
+static void WaitRSXIdle(void) {
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
+	rsxSetWaitLabel(context,         GCM_LABEL_INDEX, slabelval);
+
+	slabelval++;
+	WaitRSXFinish();
+}
+
 static void ConfigureVideo(void) {
 	videoState state;
+    WaitRSXIdle();
 	videoGetState(0, 0, &state);
 
 	videoConfiguration vconfig = { 0 };
@@ -199,7 +221,7 @@ void SetRenderTarget(u32 index) {
 	sf.depthOffset		= depth_offset;
 	sf.depthPitch		= depth_pitch;
 
-	sf.type		= GCM_SURFACE_TYPE_LINEAR;
+	sf.type		        = GCM_SURFACE_TYPE_LINEAR;
 	sf.antiAlias		= GCM_SURFACE_CENTER_1;
 
 	sf.width		= DisplayInfo.Width;
@@ -207,7 +229,7 @@ void SetRenderTarget(u32 index) {
 	sf.x			= 0;
 	sf.y			= 0;
 
-	rsxSetSurface(context,&sf);
+	rsxSetSurface(context, &sf);
 }
 
 static void InitGfxContext(void) {
@@ -246,6 +268,7 @@ void Gfx_Free(void) { Gfx_FreeState(); }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 cc_bool Gfx_WarnIfNecessary(void)   { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
@@ -272,7 +295,7 @@ u32* Gfx_AllocImage(u32* offset, s32 w, s32 h) {
 void Gfx_TransferImage(u32 offset, s32 w, s32 h) {
 	rsxSetTransferImage(context, GCM_TRANSFER_LOCAL_TO_LOCAL,
 		color_offset[cur_fb], color_pitch, 0, 0,
-		offset, w * 4, 0, 0, 
+		offset,               w * 4,       0, 0, 
 		w, h, 4);
 }
 
@@ -377,9 +400,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 static void ResetFrameState(void) {
@@ -411,15 +433,18 @@ static void ResetFrameState(void) {
 
 // https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
 static cc_bool everFlipped;
-void Gfx_BeginFrame(void) {
-	// TODO: remove everFlipped
+void Gfx_WaitFlip(void) {
 	if (everFlipped) {
 		while (gcmGetFlipStatus() != 0) usleep(200);
 	}
 	
-	ResetFrameState();
 	everFlipped = true;
 	gcmResetFlipStatus();
+}
+
+void Gfx_BeginFrame(void) {
+	Gfx_WaitFlip();
+	ResetFrameState();
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -437,8 +462,6 @@ void Gfx_EndFrame(void) {
 
 	cur_fb ^= 1;
 	SetRenderTarget(cur_fb);
-	
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) {
@@ -450,14 +473,13 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	f32 scale[4], offset[4];
 	f32 zmin = 0.0f;
 	f32 zmax = 1.0f;
-	y = Game.Height - y - h;
 	
 	scale[0]  = w *  0.5f;
 	scale[1]  = h * -0.5f;
 	scale[2]  = (zmax - zmin) * 0.5f;
 	scale[3]  = 0.0f;
 	offset[0] = x + w * 0.5f;
-	offset[1] = x + h * 0.5f;
+	offset[1] = y + h * 0.5f;
 	offset[2] = (zmax + zmin) * 0.5f;
 	offset[3] = 0.0f;
 
@@ -565,7 +587,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	return tex;
 }
 
@@ -616,8 +639,9 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	CCTexture* tex = (CCTexture*)texId;
 	
 	// NOTE: Only valid for LINEAR textures
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;	
-	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;	
+	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE, 
+					part, rowWidth  * BITMAPCOLOR_SIZE);
 	
 	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
 	/* TODO */
@@ -652,15 +676,17 @@ void Gfx_SetFogMode(FogFunc func) {/* TODO */
 static struct Matrix _view, _proj;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
 
 	Matrix_Mul(&mvp, &_view, &_proj);
 	VP_UpdateUniforms();
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {

@@ -23,10 +23,13 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const char* Platform_AppNameSuffix = " N64";
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
+const char* Platform_AppNameSuffix  = " N64";
+cc_bool Platform_ReadonlyFilesystem = true;
 
 
 /*########################################################################################################################*
@@ -86,7 +89,7 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	return false;
 }
 
@@ -261,7 +264,6 @@ void Platform_Init(void) {
 	debug_init_usblog();
 	DisableFpuExceptions();
 	
-	Platform_ReadonlyFilesystem = true;
 	dfs_init(DFS_DEFAULT_LOCATION);
 	timer_init();
 	rtc_init();

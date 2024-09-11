@@ -28,7 +28,8 @@ static void InitPowerVR(void) {
 		{ PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
 		VERTEX_BUFFER_SIZE,
 		0, fsaa,
-		(autosort) ? 0 : 1
+		(autosort) ? 0 : 1,
+		3 // extra OPBs
 	};
     pvr_init(&params);
 }
@@ -37,15 +38,15 @@ static void InitGLState(void) {
 	pvr_set_zclip(0.0f);
 	PVR_SET(PT_ALPHA_REF, 127); // define missing from KOS
 
-	ALPHA_TEST_ENABLED = GL_FALSE;
-	CULLING_ENABLED    = GL_FALSE;
-	BLEND_ENABLED      = GL_FALSE;
-	DEPTH_TEST_ENABLED = GL_FALSE;
-	DEPTH_MASK_ENABLED = GL_TRUE;
-	TEXTURES_ENABLED   = GL_FALSE;
-	FOG_ENABLED        = GL_FALSE;
+	ALPHA_TEST_ENABLED = false;
+	CULLING_ENABLED    = false;
+	BLEND_ENABLED      = false;
+	DEPTH_TEST_ENABLED = false;
+	DEPTH_MASK_ENABLED = true;
+	TEXTURES_ENABLED   = false;
+	FOG_ENABLED        = false;
 	
-	STATE_DIRTY = GL_TRUE;
+	STATE_DIRTY = true;
 }
 
 void Gfx_Create(void) {
@@ -80,12 +81,12 @@ static PackedCol gfx_clearColor;
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	CULLING_ENABLED = enabled;
-	STATE_DIRTY     = GL_TRUE;
+	STATE_DIRTY     = true;
 }
 
 static void SetAlphaBlend(cc_bool enabled) { 
 	BLEND_ENABLED = enabled;
-	STATE_DIRTY   = GL_TRUE;
+	STATE_DIRTY   = true;
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -107,19 +108,19 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	if (DEPTH_MASK_ENABLED == enabled) return;
 	
 	DEPTH_MASK_ENABLED = enabled;
-	STATE_DIRTY        = GL_TRUE;
+	STATE_DIRTY        = true;
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	if (DEPTH_TEST_ENABLED == enabled) return;
 	
 	DEPTH_TEST_ENABLED = enabled;
-	STATE_DIRTY        = GL_TRUE;
+	STATE_DIRTY        = true;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
 	ALPHA_TEST_ENABLED = enabled;
-	STATE_DIRTY        = GL_TRUE;
+	STATE_DIRTY        = true;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -132,35 +133,34 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
-	matrix->row3.z = -2.0f / (zFar - zNear);
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
 	matrix->row4.x = -1.0f;
 	matrix->row4.y =  1.0f;
-	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = Cotangent(0.5f * fov);
 
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
-	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
-	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
-	/* Calculations are simplified because of left/right and top/bottom symmetry */
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;
 	matrix->row2.y =  c;
-	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.z = zFar / (zNear - zFar);
 	matrix->row3.w = -1.0f;
-	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.z = (zNear * zFar) / (zNear - zFar);
 	matrix->row4.w =  0.0f;
 }
 
@@ -229,6 +229,7 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *#########################################################################################################################*/
 void Gfx_BindTexture(GfxResourceID texId) {
 	gldcBindTexture((GLuint)texId);
+	STATE_DIRTY = true;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -342,7 +343,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	int width, height;
 	gldcGetTexture(&pixels, &width, &height);
 	ConvertTexture(pixels, bmp, rowWidth);
-	return texId;
+	return (GfxResourceID)texId;
 }
 
 // TODO: struct GPUTexture ??
@@ -372,7 +373,7 @@ static void ConvertSubTexture(cc_uint16* dst, int texWidth, int texHeight,
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	gldcBindTexture(texId);
+	gldcBindTexture((GLuint)texId);
 				
 	void* pixels;
 	int width, height;
@@ -396,7 +397,7 @@ void Gfx_SetFog(cc_bool enabled) {
 	if (FOG_ENABLED == enabled) return;
 	
 	FOG_ENABLED = enabled;
-	STATE_DIRTY = GL_TRUE;
+	STATE_DIRTY = true;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -447,16 +448,28 @@ static matrix_t __attribute__((aligned(32))) _proj, _view;
 static float textureOffsetX, textureOffsetY;
 static int textureOffset;
 
+static float vp_scaleX, vp_scaleY, vp_offsetX, vp_offsetY;
+static matrix_t __attribute__((aligned(32))) mat_vp;
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_PROJECTION) memcpy(&_proj, matrix, sizeof(struct Matrix));
-	if (type == MATRIX_VIEW)       memcpy(&_view, matrix, sizeof(struct Matrix));
-	
-	mat_load( &_proj);
+	if (type == MATRIX_PROJ) memcpy(&_proj, matrix, sizeof(struct Matrix));
+	if (type == MATRIX_VIEW) memcpy(&_view, matrix, sizeof(struct Matrix));
+
+	memcpy(&mat_vp, &Matrix_Identity, sizeof(struct Matrix));
+	mat_vp[0][0] = vp_scaleX;
+	mat_vp[1][1] = vp_scaleY;
+	mat_vp[3][0] = vp_offsetX;
+	mat_vp[3][1] = vp_offsetY;
+
+	mat_load(&mat_vp);
+	mat_apply(&_proj);
 	mat_apply(&_view);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 
@@ -498,31 +511,47 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
-}
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
 extern void apply_poly_header(pvr_poly_hdr_t* header, int list_type);
+static cc_bool loggedNoVRAM;
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
 
+static Vertex* ReserveOutput(AlignedVector* vec, uint32_t elems) {
+	Vertex* beg;
+	for (;;)
+	{
+		if ((beg = aligned_vector_reserve(vec, elems))) return beg;
+		// Try to reduce view distance to save on RAM
+		if (Game_ReduceVRAM()) continue;
+
+		if (!loggedNoVRAM) {
+			loggedNoVRAM = true;
+			Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating temp memory");
+		}
+		return NULL;
+	}
+}
+
 void DrawQuads(int count, void* src) {
 	if (!count) return;
-	PolyList* output = _glActivePolyList();
-	AlignedVector* vec = &output->vector;
+	AlignedVector* vec = _glActivePolyList();
 
 	uint32_t header_required = (vec->size == 0) || STATE_DIRTY;
 	// Reserve room for the vertices and header
-	Vertex* beg = aligned_vector_reserve(&output->vector, vec->size + (header_required) + count);
+	Vertex* beg = ReserveOutput(vec, vec->size + (header_required) + count);
+	if (!beg) return;
 
 	if (header_required) {
-		apply_poly_header((pvr_poly_hdr_t*)beg, output->list_type);
-		STATE_DIRTY = GL_FALSE;
+		apply_poly_header((pvr_poly_hdr_t*)beg, vec->list_type);
+		STATE_DIRTY = false;
 		beg++; 
 		vec->size += 1;
 	}
@@ -542,7 +571,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	TEXTURES_ENABLED = fmt == VERTEX_FORMAT_TEXTURED;
-	STATE_DIRTY      = GL_TRUE;
+	STATE_DIRTY      = true;
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -596,9 +625,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) { }
@@ -610,35 +638,41 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 
 void Gfx_EndFrame(void) {
 	pvr_wait_ready();
+
+    pvr_scene_begin();
 	glKosSwapBuffers();
-	if (gfx_minFrameMs) LimitFPS();
+    pvr_scene_finish();
 }
 
 void Gfx_OnWindowResize(void) {
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
-extern float VP_COL_HWIDTH,  VP_TEX_HWIDTH;
-extern float VP_COL_HHEIGHT, VP_TEX_HHEIGHT;
-extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
-extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
+static void PushCommand(void* cmd) {
+    aligned_vector_push_back(&OP_LIST, cmd, 1);
+    aligned_vector_push_back(&PT_LIST, cmd, 1);
+    aligned_vector_push_back(&TR_LIST, cmd, 1);
+}
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	VIEWPORT.hwidth  = w *  0.5f;
-	VIEWPORT.hheight = h * -0.5f;
-	VIEWPORT.x_plus_hwidth  = x + w * 0.5f;
-	VIEWPORT.y_plus_hheight = y + h * 0.5f;
-
-	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
-	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;
-
-	VP_COL_X_PLUS_HWIDTH  = VP_TEX_X_PLUS_HWIDTH  = x + w * 0.5f;
-	VP_COL_Y_PLUS_HHEIGHT = VP_TEX_Y_PLUS_HHEIGHT = y + h * 0.5f;
+	vp_scaleX  = w *  0.5f; // hwidth
+	vp_scaleY  = h * -0.5f; // hheight
+	vp_offsetX = x + w * 0.5f; // x_plus_hwidth
+	vp_offsetY = y + h * 0.5f; // y_plus_hheight
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
 	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
-	STATE_DIRTY = GL_TRUE;
-	glScissor(x, y, w, h);
+	STATE_DIRTY = true;
+
+	pvr_poly_hdr_t c;
+	c.cmd = PVR_CMD_USERCLIP;
+	c.mode1 = c.mode2 = c.mode3 = 0;
+
+	c.d1 = x >> 5;
+	c.d2 = y >> 5;
+	c.d3 = ((x + w) >> 5) - 1;
+	c.d4 = ((y + h) >> 5) - 1;
+	PushCommand(&c);
 }
 #endif

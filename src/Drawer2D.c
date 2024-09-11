@@ -163,7 +163,7 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 
 	ctx->bmp.width  = width; 
 	ctx->bmp.height = height;
-	ctx->bmp.scan0  = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
+	ctx->bmp.scan0  = (BitmapCol*)Mem_AllocCleared(width * height, BITMAPCOLOR_SIZE, "bitmap data");
 }
 
 void Context2D_Wrap(struct Context2D* ctx, struct Bitmap* bmp) {
@@ -318,8 +318,9 @@ void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
 	int flags = TEXTURE_FLAG_NONPOW2 | TEXTURE_FLAG_LOWRES;
 	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, flags, false);
 	
-	tex->width  = ctx->width;
-	tex->height = ctx->height;
+	/* TODO need to find a better solution in NoUVSupport case */
+	tex->width  = Gfx.NoUVSupport ? ctx->bmp.width  : ctx->width;
+	tex->height = Gfx.NoUVSupport ? ctx->bmp.height : ctx->height;
 	
 	tex->uv.u1  = 0.0f; tex->uv.v1 = 0.0f;
 	tex->uv.u2  = (float)ctx->width  / (float)ctx->bmp.width;

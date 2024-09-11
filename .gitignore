@@ -53,9 +53,10 @@ build-ps2/
 build-ps3/
 build-psp/
 build-vita/
-eboot.pbp
-eboot.bin
+EBOOT.PBP
+PARAM.SFO
 param.sfo
+eboot.bin
 
 # Build results
 [Dd]ebug/
@@ -95,6 +96,9 @@ fontscache.txt
 # Android source files need to be included
 !android/app/src/main/java/com/classicube
 
+# Flatpak wrapper which needs to be included
+!misc/linux/flatpak/ClassiCubeLauncher
+
 # CMake files
 CMakeFiles/
 CMakeCache.txt
@@ -123,6 +127,9 @@ dlldata.c
 # Mac classic
 retro68scripts/
 
+# PS2
+openvcl/
+
 *_i.c
 *_p.c
 *_i.h
@@ -147,6 +154,11 @@ retro68scripts/
 *.pidb
 *.svclog
 *.scc
+*.map
+
+# Binary files
+*.bin
+*.elf
 
 # Visual C++ cache files
 ipch/

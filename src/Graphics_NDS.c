@@ -25,14 +25,14 @@ void Gfx_Create(void) {
     glAlphaFunc(7);
 
     glClearDepth(GL_MAX_DEPTH);
-    glViewport(0, 0, 255, 191);
+    Gfx_SetViewport(0, 0, 256, 192);
     
     vramSetBankA(VRAM_A_TEXTURE);
     vramSetBankB(VRAM_B_TEXTURE);
     vramSetBankC(VRAM_C_TEXTURE);
     vramSetBankD(VRAM_D_TEXTURE);
     
-    glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
+    Gfx_SetFaceCulling(false);
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -60,15 +60,19 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_OnWindowResize(void) { 
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	int x2 = x + w - 1;
+	int y2 = y + h - 1;
+	GFX_VIEWPORT = x | (y << 8) | (x2 << 16) | (y2 << 24);
+}
+
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 void Gfx_BeginFrame(void) {
@@ -89,36 +93,31 @@ void Gfx_EndFrame(void) {
 	glFlush(0);
 	// TODO not needed?
 	swiWaitForVBlank();
- 
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-// B8 G8 R8 A8 > R5 G5 B5 A1
-#define BGRA8_to_DS(src) \
-	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8);	
-
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
-	for (int y = 0; y < bmp->height; y++)
-	{
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
-		
-		for (int x = 0; x < bmp->width; x++, src += 4)
-		{
-			*dst++ = BGRA8_to_DS(src);
-		}
-	}
-}
+static int tex_width, tex_height;
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
     vramSetBankA(VRAM_A_TEXTURE);
 
     cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
     if (!tmp) return 0;
-    ConvertTexture(tmp, bmp, rowWidth);
+
+	// TODO: Only copy when rowWidth != bmp->width
+	for (int y = 0; y < bmp->height; y++)
+	{
+		cc_uint16* src = bmp->scan0 + y * rowWidth;
+		cc_uint16* dst = tmp        + y * bmp->width;
+
+		for (int x = 0; x < bmp->width; x++)
+		{
+			dst[x] = src[x];
+		}
+	}
 
     int textureID;
     glGenTextures(1, &textureID);
@@ -134,7 +133,12 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-    glBindTexture(0, (int)texId);	
+    glBindTexture(0, (int)texId);
+
+	tex_width  = 0;
+	tex_height = 0;
+	glGetInt(GL_GET_TEXTURE_WIDTH,  &tex_width);
+	glGetInt(GL_GET_TEXTURE_HEIGHT, &tex_height);
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -151,11 +155,11 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
     for (int yy = 0; yy < part->height; yy++)
 	{
 		cc_uint16* dst = vram_ptr + width * (y + yy) + x;
-		cc_uint8* src  = (cc_uint8*)(part->scan0 + rowWidth * yy);
+		cc_uint16* src = part->scan0 + rowWidth * yy;
 		
-		for (int xx = 0; xx < part->width; xx++, src += 4, dst++)
+		for (int xx = 0; xx < part->width; xx++)
 		{
-			*dst = BGRA8_to_DS(src);
+			*dst++ = *src++;
 		}
 	}
 }
@@ -200,6 +204,7 @@ static void Gfx_RestoreState(void) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return true; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 
 /*########################################################################################################################*
@@ -397,16 +402,24 @@ static int matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	if (type != lastMatrix) { 
+		lastMatrix     = type; 
+		MATRIX_CONTROL = matrix_modes[type]; 
+	}
 	
-	m4x4 m;
+	// loads 4x4 identity matrix
+	if (matrix == &Matrix_Identity) {
+		MATRIX_IDENTITY = 0;
+		return;
+		// TODO still scale?
+	}
+
+	// loads 4x4 matrix from memory
 	const float* src = (const float*)matrix;
-	
 	for (int i = 0; i < 4 * 4; i++)
 	{
-		m.m[i] = floattof32(src[i]);
+		MATRIX_LOAD4x4 = floattof32(src[i]);
 	}
-	glLoadMatrix4x4(&m);
 
     // Vertex commands are signed 16 bit values, with 12 bits fractional
     //  aka only from -8.0 to 8.0
@@ -416,9 +429,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
         glScalef32(floattof32(64.0f), floattof32(64.0f), floattof32(64.0f));
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadIdentity();
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 static struct Matrix texMatrix;
@@ -455,7 +469,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
-	glBegin(GL_QUADS);
+	GFX_BEGIN = GL_QUADS;
 	for (int i = 0; i < verticesCount; i++) 
 	{
 		struct DSColouredVertex* v = (struct DSColouredVertex*)gfx_vertices + startVertex + i;
@@ -464,14 +478,12 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 		GFX_VERTEX16 = v->xy;
         GFX_VERTEX16 = v->z;
 	}
-	glEnd();
+	GFX_END = 0;
 }
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
-	glBegin(GL_QUADS);
-	int width = 0, height = 0;
-	glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
-	glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
+	GFX_BEGIN = GL_QUADS;
+	int width = tex_width, height = tex_height;
 
 	// Original code used was
 	//   U = mulf32(v->u, inttof32(width))
@@ -492,7 +504,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		GFX_VERTEX16  = v->xy;
 		GFX_VERTEX16  = v->z;
 	}
-	glEnd();
+	GFX_END = 0;
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {

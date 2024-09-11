@@ -18,6 +18,9 @@
 #include <nds/system.h>
 #include <fat.h>
 
+#define LAYER_CON  0
+#define LAYER_KB   1
+
 
 /*########################################################################################################################*
 *----------------------------------------------------Onscreen console-----------------------------------------------------*
@@ -90,9 +93,10 @@ void consolePrintString(const char* ptr, int len) {
     consoleNewLine();
 }
 
-static void consoleLoadFont(u16* fontBgGfx) {
-    u16* palette  = BG_PALETTE_SUB;
-    conFontCurPal = 15 << 12;
+static void consoleLoadFont(int bgId, u16* palette) {
+	conFontBgMap   = (u16*)bgGetMapPtr(bgId);
+	u16* fontBgGfx = (u16*)bgGetGfxPtr(bgId);
+	conFontCurPal  = 15 << 12;
 
     for (int i = 0; i < FONT_NUM_CHARACTERS * 8; i++)
     {
@@ -113,11 +117,15 @@ static void consoleLoadFont(u16* fontBgGfx) {
     palette[0]           = RGB15( 0,  0,  0);
 }
 
-static void consoleInit(void) {
-    int bgId = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
-    conFontBgMap = (u16*)bgGetMapPtr(bgId);
+static void consoleInit(cc_bool onSub) {
+    int bgId;
+	if (onSub) {
+		bgId = bgInitSub(LAYER_CON, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
+	} else {
+		bgId = bgInit(   LAYER_CON, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
+	}
 
-    consoleLoadFont((u16*)bgGetGfxPtr(bgId));
+    consoleLoadFont(bgId, onSub ? BG_PALETTE_SUB : BG_PALETTE);
     consoleClear();
 }
 
@@ -126,19 +134,43 @@ static void consoleInit(void) {
 *------------------------------------------------------General data-------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool launcherMode;
-cc_bool keyboardOpen;
 static int bg_id;
 static u16* bg_ptr;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
+
+static void SetupVideo(cc_bool mode) {
+	if (launcherMode == mode) return;
+	launcherMode = mode;
+
+	vramSetBankA(VRAM_A_LCD);
+	vramSetBankB(VRAM_B_LCD);
+	vramSetBankC(VRAM_C_LCD);
+	vramSetBankD(VRAM_D_LCD);
+	vramSetBankH(VRAM_H_LCD);
+	vramSetBankI(VRAM_I_LCD);
+
+	if (launcherMode) {
+		videoSetModeSub(MODE_5_2D);
+		vramSetBankC(VRAM_C_SUB_BG);
+
+		videoSetMode(MODE_5_2D);
+		vramSetBankA(VRAM_A_MAIN_BG);
+	} else {
+		videoSetModeSub(MODE_0_2D);
+		vramSetBankH(VRAM_H_SUB_BG);
+		vramSetBankI(VRAM_I_SUB_BG_0x06208000);
+
+		videoSetMode(MODE_0_3D);
+	}
+
+	consoleInit(!launcherMode);
+}
 
 void Window_PreInit(void) {
-	videoSetModeSub(MODE_0_2D);
-    vramSetBankH(VRAM_H_SUB_BG);
-	vramSetBankI(VRAM_I_SUB_BG_0x06208000);
+	SetupVideo(true);
     setBrightness(2, 0);
-	consoleInit();
 }
 
 void Window_Init(void) {  
@@ -157,24 +189,21 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 }
 
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
-    launcherMode = true;
-	videoSetMode(MODE_5_2D);
-	vramSetBankA(VRAM_A_MAIN_BG);
-	
-	bg_id  = bgInit(2, BgType_Bmp16, BgSize_B16_256x256, 0, 0);
+   	SetupVideo(true);
+	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
 	bg_ptr = bgGetGfxPtr(bg_id);
 }
 
 void Window_Create3D(int width, int height) { 
-    launcherMode = false;
-	videoSetMode(MODE_0_3D);
+	SetupVideo(false);
 }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -211,7 +240,7 @@ static void ProcessTouchInput(int mods) {
 void Window_ProcessEvents(float delta) {
 	scanKeys();	
 	
-	if (keyboardOpen) {
+	if (DisplayInfo.ShowingSoftKeyboard) {
 		keyboardUpdate();
 	} else {
 		ProcessTouchInput(keysDown() | keysHeld());
@@ -227,25 +256,30 @@ void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
-*#########################################################################################################################*/
-void Window_ProcessGamepads(float delta) {
+*#########################################################################################################################*/	
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+}
+
+void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0xD5, PadBind_Defaults);
 	int mods = keysDown() | keysHeld();
 	
-	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(0, CCPAD_R, mods & KEY_R);
+	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
 	
-	Gamepad_SetButton(0, CCPAD_A, mods & KEY_A);
-	Gamepad_SetButton(0, CCPAD_B, mods & KEY_B);
-	Gamepad_SetButton(0, CCPAD_X, mods & KEY_X);
-	Gamepad_SetButton(0, CCPAD_Y, mods & KEY_Y);
+	Gamepad_SetButton(port, CCPAD_1, mods & KEY_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & KEY_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & KEY_X);
+	Gamepad_SetButton(port, CCPAD_4, mods & KEY_Y);
 	
-	Gamepad_SetButton(0, CCPAD_START,  mods & KEY_START);
-	Gamepad_SetButton(0, CCPAD_SELECT, mods & KEY_SELECT);
+	Gamepad_SetButton(port, CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & KEY_SELECT);
 	
-	Gamepad_SetButton(0, CCPAD_LEFT,   mods & KEY_LEFT);
-	Gamepad_SetButton(0, CCPAD_RIGHT,  mods & KEY_RIGHT);
-	Gamepad_SetButton(0, CCPAD_UP,     mods & KEY_UP);
-	Gamepad_SetButton(0, CCPAD_DOWN,   mods & KEY_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & KEY_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & KEY_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & KEY_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & KEY_DOWN);
 }
 
 
@@ -253,7 +287,7 @@ void Window_ProcessGamepads(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
 }
@@ -268,10 +302,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		
 		for (int x = r.x; x < r.x + r.width; x++)
 		{
-			BitmapCol color = src[x];
-			// 888 to 565 (discard least significant bits)
-			// quoting libDNS: < Bitmap background with 16 bit color values of the form aBBBBBGGGGGRRRRR (if 'a' is not set, the pixel will be transparent)
-			dst[x] = 0x8000 | ((BitmapCol_B(color) & 0xF8) << 7) | ((BitmapCol_G(color) & 0xF8) << 2) | (BitmapCol_R(color) >> 3);
+			dst[x] = src[x];
 		}
 	}
 	
@@ -308,29 +339,27 @@ static void OnKeyPressed(int key) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
     Keyboard* kbd = keyboardGetDefault();
-    videoBgDisableSub(0); // hide console
+    if (!launcherMode) videoBgDisableSub(LAYER_CON);
 
-    keyboardInit(kbd, 3, BgType_Text4bpp, BgSize_T_256x512,
+    keyboardInit(kbd, LAYER_KB, BgType_Text4bpp, BgSize_T_256x512,
                        14, 0, false, true);
     keyboardShow();
+    bgSetPriority(4 + LAYER_KB, BG_PRIORITY_0);
 
     kbd->OnKeyPressed = OnKeyPressed;
     String_InitArray(kbText, kbBuffer);
 	String_AppendString(&kbText, args->text);
-    keyboardOpen = true;
+    DisplayInfo.ShowingSoftKeyboard = true;
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) { }
 
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
-
 void OnscreenKeyboard_Close(void) {
     keyboardHide();
-	if (!keyboardOpen) return;
-    keyboardOpen = false;
+	if (!DisplayInfo.ShowingSoftKeyboard) return;
+    DisplayInfo.ShowingSoftKeyboard = false;
 
-    videoBgEnableSub(0); // show console
+    if (!launcherMode) videoBgEnableSub(LAYER_CON);
 }
 
 

@@ -93,19 +93,24 @@ float Model_RenderDistance(struct Entity* e) {
 	return dx * dx + dy * dy + dz * dz;
 }
 
-void Model_Render(struct Model* model, struct Entity* e) {
-	struct Matrix m;
+void Model_GetEntityTransform(struct Model* model, struct Entity* e, struct Matrix* transform) {
 	Vec3 pos = e->Position;
+
 	if (model->bobbing) pos.y += e->Anim.BobbingModel;
 	/* Original classic offsets models slightly into ground */
 	if (Game_ClassicMode && (e->Flags & ENTITY_FLAG_CLASSIC_ADJUST))
 		pos.y -= 1.5f / 16.0f;
 
+	model->GetTransform(e, pos, transform);
+}
+
+void Model_Render(struct Model* model, struct Entity* e) {
+	struct Matrix m, transform;
 	Model_SetupState(model, e);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
-	model->GetTransform(e, pos, &e->Transform);
-	Matrix_Mul(&m, &e->Transform, &Gfx.View);
+	Model_GetEntityTransform(model, e, &transform);
+	Matrix_Mul(&m, &transform, &Gfx.View);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
 	model->Draw(e);
@@ -455,6 +460,7 @@ static struct ModelTex* textures_tail;
 static void MakeModel(struct Model* model) {
 	struct Model* active = Models.Active;
 	Models.Active = model;
+	model->index  = 0;
 	model->MakeParts();
 
 	model->flags |= MODEL_FLAG_INITED;
@@ -868,8 +874,9 @@ void CustomModel_Register(struct CustomModel* cm) {
 	static struct ModelTex customDefaultTex;
 
 	CheckMaxVertices();
-	cm->model.name       = cm->name;
-	cm->model.defaultTex = &customDefaultTex;
+	cm->model.name        = cm->name;
+	cm->model.defaultTex  = &customDefaultTex;
+	cm->model.maxVertices = cm->numParts * MODEL_BOX_VERTICES;
 
 	cm->model.MakeParts = Model_NoParts;
 	cm->model.Draw      = CustomModel_Draw;
@@ -900,7 +907,9 @@ void CustomModel_Undefine(struct CustomModel* cm) {
 
 static void CustomModel_FreeAll(void) {
 	int i;
+#ifdef CC_BUILD_LOWMEM
 	if (!custom_models) return;
+#endif
 
 	for (i = 0; i < MAX_CUSTOM_MODELS; i++) 
 	{
@@ -2372,6 +2381,7 @@ static void HoldModel_Register(void) {
 *#########################################################################################################################*/
 static void RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);
+#ifndef CC_DISABLE_EXTRA_MODELS
 	Model_RegisterTexture(&chicken_tex);
 	Model_RegisterTexture(&creeper_tex);
 	Model_RegisterTexture(&pig_tex);
@@ -2381,12 +2391,14 @@ static void RegisterDefaultModels(void) {
 	Model_RegisterTexture(&spider_tex);
 	Model_RegisterTexture(&zombie_tex);
 	Model_RegisterTexture(&skinnedCube_tex);
+#endif
 
 	HumanoidModel_Register();
 	MakeModel(&human_model);
 	Models.Human = &human_model;
 	BlockModel_Register();
 
+#ifndef CC_DISABLE_EXTRA_MODELS
 	ChickenModel_Register();
 	CreeperModel_Register();
 	PigModel_Register();
@@ -2402,6 +2414,7 @@ static void RegisterDefaultModels(void) {
 	CorpseModel_Register();
 	SkinnedCubeModel_Register();
 	HoldModel_Register();
+#endif
 }
 
 static void OnContextLost(void* obj) {

@@ -73,9 +73,10 @@ And also runs on:
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
 * Classic Mac OS (System 7 and later)
-* Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
+* Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
+* Saturn - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/saturn))
 * Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
-* Wii U - unfinished, major issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_wiiu.yml)), **untested on real hardware**)
+* Wii U - unfinished, major issues, **broken on real hardware** (can [download from here](https://www.classicube.net/download/wiiu))
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
@@ -85,8 +86,8 @@ And also runs on:
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3))
 * PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
-* PS1 - unfinished, major rendering and **stability issues**
-* Xbox 360 - completely unfinished (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_xbox360.yml)), **untested on real hardware**)
+* PS1 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps1))
+* Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
 
 # Compiling 
@@ -111,26 +112,25 @@ I am assuming you used the installer from https://sourceforge.net/projects/mingw
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
+4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
 
 ##### Using MinGW
 I am assuming you used the installer from https://osdn.net/projects/mingw/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 2. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
+4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
 
 ##### Using TCC (Tiny C Compiler)
 Setting up TCC:
 1. Download and extract `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
-2. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext` at line 554 (In between `RtlAddFunctionTable` and `RtlDeleteFunctionTable`)
-3. Download `winapi-full-for-0.9.27.zip` from https://bellard.org/tcc/ 
-4. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
+2. Download `winapi-full-for-0.9.27.zip` from https://bellard.org/tcc/ 
+3. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
 
 Compiling with TCC:
 1. Navigate to the directory with ClassiCube's source code
 2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
-3. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+3. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux
@@ -139,24 +139,24 @@ Compiling with TCC:
 
 Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev and libgl1-mesa-dev
 
-```gcc -fno-math-errno *.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl```
+```gcc -fno-math-errno src/*.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl```
 
 ##### Cross compiling for Windows (32 bit):
 
-```i686-w64-mingw32-gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
+```i686-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
 
 ##### Cross compiling for Windows (64 bit):
 
-```x86_64-w64-mingw32-gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
+```x86_64-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc -fno-math-errno *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
+```gcc -fno-math-errno src/*.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
 
 ## Compiling - macOS
 
-```cc -fno-math-errno *.c Window_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+```cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
 
 Note: You may need to install Xcode before you can compile ClassiCube
 
@@ -192,7 +192,7 @@ Open the `ios/CCIOS.xcodeproj` project in Xcode, and then compile it
 
 ## Compiling - webclient
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
+```emcc src/*.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
@@ -314,37 +314,37 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 
 Install libxi, libexecinfo, curl and openal-soft package if needed
 
-```cc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+```cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### OpenBSD
 
 Install libexecinfo, curl and openal package if needed
 
-```cc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+```cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### NetBSD
 
 Install libexecinfo, curl and openal-soft package if needed
 
-```cc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo```
+```cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### DragonflyBSD
 
-```cc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+```cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### Solaris
 
-```gcc -fno-math-errno *.c -o ClassiCube -lsocket -lX11 -lXi -lGL```
+```gcc -fno-math-errno src/*.c -o ClassiCube -lsocket -lX11 -lXi -lGL```
 
 #### Haiku
 
 Install openal_devel package if needed
 
-```cc -fno-math-errno *.c interop_BeOS.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+```cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
 #### BeOS
 
-```cc -fno-math-errno *.c interop_BeOS.cpp -o ClassiCube -lGL -lbe -lgame -ltracker```
+```cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lbe -lgame -ltracker```
 
 #### IRIX
 
@@ -354,7 +354,7 @@ Install openal_devel package if needed
 
 Install SDL2 port if needed
 
-```cc *.c -o ClassiCube -lgl -lSDL2```
+```cc src/*.c -o ClassiCube -lgl -lSDL2```
 
 #### Classic Mac OS
 

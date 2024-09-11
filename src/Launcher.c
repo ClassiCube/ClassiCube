@@ -78,7 +78,7 @@ void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_s
 *--------------------------------------------------------Starter/Updater--------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint64 lastJoin;
-cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server) {
+cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server, int numStates) {
 	cc_string args[4]; int numArgs;
 	cc_uint64 now;
 	cc_result res;
@@ -110,6 +110,10 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 		numArgs = 4;
 	}
 
+#ifdef CC_BUILD_SPLITSCREEN
+	Game_NumStates = numStates;
+#endif
+
 	res = Process_StartGame2(args, numArgs);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
@@ -123,7 +127,7 @@ CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	String_InitArray(port, portBuffer);
 
 	String_AppendInt(&port, info->port);
-	Launcher_StartGame(&Launcher_Username, &info->mppass, &info->ip, &port, &info->name);
+	Launcher_StartGame(&Launcher_Username, &info->mppass, &info->ip, &port, &info->name, 1);
 }
 
 static void ConnectToServerError(struct HttpRequest* req) {
@@ -185,15 +189,19 @@ static cc_bool IsShutdown(int key) {
 #endif
 }
 
-static void OnInputDown(void* obj, int key, cc_bool was) {
-	if (Window_Main.SoftKeyboardFocus) return;
+static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* device) {
+	if (Input.DownHook) { Input.DownHook(key, device); return; }
 
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
-	Launcher_Active->KeyDown(Launcher_Active, key, was);
+	Launcher_Active->KeyDown(Launcher_Active, key, was, device);
 }
 
 static void OnMouseWheel(void* obj, float delta) {
 	Launcher_Active->MouseWheel(Launcher_Active, delta);
+}
+
+static void OnClosing(void* obj) {
+	Launcher_ShouldExit = true;
 }
 
 
@@ -203,8 +211,9 @@ static void OnMouseWheel(void* obj, float delta) {
 static void Launcher_Init(void) {
 	Event_Register_(&WindowEvents.Resized,      NULL, OnResize);
 	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
+	Event_Register_(&WindowEvents.Closing,      NULL, OnClosing);
 
-	Event_Register_(&InputEvents.Down,          NULL, OnInputDown);
+	Event_Register_(&InputEvents.Down2,         NULL, OnInputDown);
 	Event_Register_(&InputEvents.Wheel,         NULL, OnMouseWheel);
 
 	Utils_EnsureDirectory("texpacks");
@@ -246,6 +255,8 @@ void Launcher_Run(void) {
 	LBackend_InitFramebuffer();
 	Launcher_ShowEmptyServers = Options_GetBool(LOPT_SHOW_EMPTY, true);
 	Options_Get(LOPT_USERNAME, &Launcher_Username, "");
+	/* Some window backends require priming a few frames in case e.g. returning from in-game */
+	LBackend_AddDirtyFrames(4);
 
 	LWebTasks_Init();
 	Session_Load();
@@ -272,7 +283,6 @@ void Launcher_Run(void) {
 
 	for (;;) {
 		Window_ProcessEvents(10 / 1000.0f);
-		Window_ProcessGamepads(10 / 1000.0f);
 		Gamepad_Tick(10 / 1000.0f);
 		if (!Window_Main.Exists || Launcher_ShouldExit) break;
 
@@ -297,6 +307,7 @@ void Launcher_Run(void) {
 		cc_result res = Updater_Start(&action);
 		if (res) Logger_SysWarn(res, action);
 	}
+	Window_Destroy();
 }
 
 
@@ -448,6 +459,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 }
 
 static cc_result ExtractTexturePack(const cc_string* path) {
+	struct ZipEntry entries[32];
 	struct Stream stream;
 	cc_result res;
 
@@ -456,7 +468,8 @@ static cc_result ExtractTexturePack(const cc_string* path) {
 	if (res) { Logger_SysWarn(res, "opening texture pack"); return res; }
 
 	res = Zip_Extract(&stream, 
-			Launcher_SelectZipEntry, Launcher_ProcessZipEntry);
+			Launcher_SelectZipEntry, Launcher_ProcessZipEntry,
+			entries, Array_Elems(entries));
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);

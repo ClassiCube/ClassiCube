@@ -360,7 +360,7 @@ static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
 }
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
-#ifdef CC_BUILD_SATURN
+#ifdef CC_BUILD_TINYSTACK
 	/* The Saturn build only has 16 kb stack, not large enough */
 	static BlockID chunk[EXTCHUNK_SIZE_3]; 
 	static cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 

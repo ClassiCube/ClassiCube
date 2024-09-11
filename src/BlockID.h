@@ -4,6 +4,7 @@
 /* List of all core/standard block IDs
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
+CC_BEGIN_HEADER
 
 enum BLOCKID {
 	/* Classic blocks */
@@ -81,11 +82,15 @@ enum BLOCKID {
 	/* Max block ID used in original classic plus CPE blocks. */
 	BLOCK_MAX_CPE = BLOCK_STONE_BRICK,
 
-#ifdef EXTENDED_BLOCKS
+#if defined EXTENDED_BLOCKS
 	BLOCK_MAX_DEFINED = 0x2FF,
+#elif defined CC_BUILD_TINYMEM
+	BLOCK_MAX_DEFINED = BLOCK_MAX_CPE,
 #else
 	BLOCK_MAX_DEFINED = 0xFF,
 #endif
 	BLOCK_COUNT = (BLOCK_MAX_DEFINED + 1)
 };
+
+CC_END_HEADER
 #endif

@@ -33,7 +33,10 @@ const cc_result ReturnCode_DirectoryExists    = 99999;
 
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
-const char* Platform_AppNameSuffix = " PS1";
+const cc_result ReturnCode_SocketDropped    = -1;
+
+const char* Platform_AppNameSuffix  = " PS1";
+cc_bool Platform_ReadonlyFilesystem = true;
 
 
 /*########################################################################################################################*
@@ -98,8 +101,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
-int File_Exists(const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+int File_Exists(const cc_filepath* path) {
+	return false;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

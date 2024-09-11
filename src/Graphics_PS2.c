@@ -15,12 +15,23 @@
 #include <draw3d.h>
 #include <malloc.h>
 
+typedef struct Matrix VU0_MATRIX __attribute__((aligned(16)));
+typedef struct Vec4   VU0_VECTOR __attribute__((aligned(16)));
+typedef struct { int x, y, z, w; } VU0_IVECTOR __attribute__((aligned(16)));
+
 static void* gfx_vertices;
 extern framebuffer_t fb_colors[2];
 extern zbuffer_t     fb_depth;
-static float vp_hwidth, vp_hheight;
-static int vp_originX, vp_originY;
+static VU0_VECTOR vp_origin, vp_scale;
 static cc_bool stateDirty, formatDirty;
+static framebuffer_t* fb_draw;
+static framebuffer_t* fb_display;
+
+static VU0_MATRIX mvp;
+extern void LoadMvpMatrix(VU0_MATRIX* matrix);
+extern void LoadClipScaleFactors(VU0_VECTOR* scale);
+extern void LoadViewportOrigin(VU0_VECTOR* origin);
+extern void LoadViewportScale(VU0_VECTOR* scale);
 
 // double buffering
 static packet_t* packets[2];
@@ -48,17 +59,34 @@ void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
-static qword_t* SetTextureWrapping(qword_t* q, int context) {
+// TODO: Find a better way than just increasing this hardcoded size
+static void InitDMABuffers(void) {
+	packets[0] = packet_init(50000, PACKET_NORMAL);
+	packets[1] = packet_init(50000, PACKET_NORMAL);
+}
+
+static void UpdateContext(void) {
+	fb_display = &fb_colors[context];
+	fb_draw    = &fb_colors[context ^ 1];
+
+	current = packets[context];
+	
+	dma_tag = current->data;
+	// increment past the dmatag itself
+	q = dma_tag + 1;
+}
+
+
+static void SetTextureWrapping(int context) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
 	PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), 
 					GS_REG_CLAMP + context);
 	q++;
-	return q;
 }
 
-static qword_t* SetTextureSampling(qword_t* q, int context) {
+static void SetTextureSampling(int context) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
@@ -66,10 +94,9 @@ static qword_t* SetTextureSampling(qword_t* q, int context) {
 	PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), 
 					GS_REG_TEX1 + context);
 	q++;
-	return q;
 }
 
-static qword_t* SetAlphaBlending(qword_t* q, int context) {
+static void SetAlphaBlending(int context) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
@@ -82,55 +109,36 @@ static qword_t* SetAlphaBlending(qword_t* q, int context) {
 	PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
 								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA + context);
 	q++;
-	return q;
 }
 
 static void InitDrawingEnv(void) {
-	packet_t *packet = packet_init(30, PACKET_NORMAL); // TODO: is 30 too much?
-	qword_t *q = packet->data;
-	
-	q = draw_setup_environment(q, 0, &fb_colors[0], &fb_depth);
+	qword_t* beg = q;
+	q = draw_setup_environment(q, 0, fb_draw, &fb_depth);
 	// GS can render from 0 to 4096, so set primitive origin to centre of that
 	q = draw_primitive_xyoffset(q, 0, 2048 - Game.Width / 2, 2048 - Game.Height / 2);
 
-	q = SetTextureWrapping(q, 0);
-	q = SetTextureSampling(q, 0);
-	q = SetAlphaBlending(q,   0); // TODO has no effect ?
+	SetTextureWrapping(0);
+	SetTextureSampling(0);
+	SetAlphaBlending(0); // TODO has no effect ?
 	q = draw_finish(q);
 
-	dma_channel_send_normal(DMA_CHANNEL_GIF,packet->data,q - packet->data, 0, 0);
+	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, q - beg, 0, 0);
 	dma_wait_fast();
-
-	packet_free(packet);
-}
-
-// TODO: Find a better way than just increasing this hardcoded size
-static void InitDMABuffers(void) {
-	packets[0] = packet_init(50000, PACKET_NORMAL);
-	packets[1] = packet_init(50000, PACKET_NORMAL);
-}
-
-static void FlipContext(void) {
-	context ^= 1;
-	current  = packets[context];
-	
-	dma_tag = current->data;
-	// increment past the dmatag itself
 	q = dma_tag + 1;
 }
 
 static int tex_offset;
 void Gfx_Create(void) {
 	primitive_type = 0; // PRIM_POINT, which isn't used here
+
+	InitDMABuffers();
+	context = 0;
+	UpdateContext();
 	
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
-	InitDMABuffers();
 	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
-	
-	context = 1;
-	FlipContext();
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -155,7 +163,7 @@ typedef struct CCTexture_ {
 	cc_uint32 width, height;
 	cc_uint32 log2_width, log2_height;
 	cc_uint32 pad[(64 - 16)/4];
-	cc_uint32 pixels[]; // aligned to 64 bytes (only need 16?)
+	BitmapCol pixels[]; // aligned to 64 bytes (only need 16?)
 } CCTexture;
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
@@ -167,7 +175,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
 	
-	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
+	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
+					bmp, rowWidth * BITMAPCOLOR_SIZE);
 	return tex;
 }
 
@@ -219,8 +228,10 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
-	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+
+	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE, 
+					part, rowWidth  * BITMAPCOLOR_SIZE);
 }
 
 void Gfx_EnableMipmaps(void)  { }
@@ -255,14 +266,14 @@ static void UpdateState(int context) {
 	stateDirty = false;
 }
 
-static void UpdateFormat(void) {
+static void UpdateFormat(int context) {
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
 							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
-							  0, PRIM_UNFIXED), GS_REG_PRIM);
+							  context, PRIM_UNFIXED), GS_REG_PRIM);
 	q++;
 	
 	formatDirty = false;
@@ -287,7 +298,9 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	q = draw_disable_tests(q, 0, &fb_depth);
 	q = draw_clear(q, 0, 2048.0f - fb_colors[0].width / 2.0f, 2048.0f - fb_colors[0].height / 2.0f,
 					fb_colors[0].width, fb_colors[0].height, clearR, clearG, clearB);
+
 	UpdateState(0);
+	UpdateFormat(0);
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -314,10 +327,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	if (!b) mask |= 0x00FF0000;
 	if (!a) mask |= 0xFF000000;
 
-	framebuffer_t* fb = &fb_colors[context];
-	fb->mask = mask;
-	q = draw_framebuffer(q, 0, fb);
-	fb->mask = 0;
+	fb_draw->mask = mask;
+	q = draw_framebuffer(q, 0, fb_draw);
+	fb_draw->mask = 0;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -430,19 +442,21 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Matrix _view, _proj, mvp;
+static struct Matrix _view, _proj;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	Matrix_Mul(&mvp, &_view, &_proj);
-	// TODO
+	// TODO	
+	LoadMvpMatrix(&mvp);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
-	// TODO
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -493,114 +507,97 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
+typedef struct {
+	u32 rgba;
+	float q;
+	float u;
+	float v;
+	xyz_t xyz;
+} __attribute__((packed,aligned(8))) TexturedVertex;
+
+typedef struct {
+	u32 rgba;
+	float q;
+	xyz_t xyz;
+} __attribute__((packed,aligned(8))) ColouredVertex;
+
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format  = fmt;
 	gfx_stride  = strideSizes[fmt];
 	formatDirty = true;
 }
 
-typedef struct Vector4 { float x, y, z, w; } Vector4;
+extern void ViewportTransform(VU0_VECTOR* src, VU0_IVECTOR* dst);
+static xyz_t FinishVertex(VU0_VECTOR* src, float invW) {
+	src->w = invW;
+	VU0_IVECTOR tmp;
+	ViewportTransform(src, &tmp);
 
-static cc_bool NotClipped(Vector4 pos) {
-	// The code below clips to the viewport clip planes
-	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
-	//  However the guard band itself ranges from 0 to 4096
-	// To reduce need to clip, clip against guard band on X/Y axes instead
-	/*return
-		xAdj  >= -pos.w && xAdj  <= pos.w &&
-		yAdj  >= -pos.w && yAdj  <= pos.w &&
-		pos.z >= -pos.w && pos.z <= pos.w;*/	
-		
-	// Rescale clip planes to guard band extent:
-	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
-	//              X/W <= 1
-	//              X   <= W
-	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
-	//              X/W <= 2048 / vp_hwidth
-	//              X * vp_hwidth / 2048 <= W
-	float xAdj = pos.x * (vp_hwidth/2048);
-	float yAdj = pos.y * (vp_hheight/2048);
-	
-	// X/W * vp_hwidth <= 2048
-	// 
-		
-	// Clip X/Y to INSIDE the guard band regions
-	return
-		xAdj > -pos.w && xAdj < pos.w &&
-		yAdj > -pos.w && yAdj < pos.w &&
-		pos.z >= -pos.w && pos.z <= pos.w;
-}
-
-static Vector4 TransformVertex(void* raw) {
-	Vec3* pos = raw;
-	Vector4 coord;
-	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
-	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
-	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
-	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
-	return coord;
-}
-
-//#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
-static xyz_t FinishVertex(struct Vector4 src, float invW) {
-	float x = vp_hwidth  * (src.x * invW);
-	float y = vp_hheight * (src.y * invW);
-	float z = src.z * invW;
-	
-	unsigned int maxZ = 1 << (32 - 1); // TODO: half this? or << 24 instead?
-	
 	xyz_t xyz;
-	xyz.x = (short)(x *  16 + vp_originX);
-	xyz.y = (short)(y * -16 + vp_originY);
-	xyz.z = (unsigned int)((z + 1.0f) * maxZ);
+	xyz.x = (short)tmp.x;
+	xyz.y = (short)tmp.y;
+	xyz.z = tmp.z;
 	return xyz;
 }
 
-static u64* DrawColouredTriangle(u64* dw, Vector4* coords, 
+static u64* DrawColouredTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
-	struct VertexColoured* v[] = { V0, V1, V2 };
+	ColouredVertex* dst = (ColouredVertex*)dw;
+	float Q;
 
 	// TODO optimise
 	// Add the "primitives" to the GIF packet
-	for (int i = 0; i < 3; i++)
-	{
-		float Q   = 1.0f / coords[i].w;
-		xyz_t xyz = FinishVertex(coords[i], Q);
-		color_t color;
-		
-		color.rgbaq = v[i]->Col;
-		color.q     = Q;
-		
-		*dw++ = color.rgbaq;
-		*dw++ = xyz.xyz;
-	}
-	return dw;
+	Q   = 1.0f / coords[0].w;
+	dst[0].rgba  = V0->Col;
+	dst[0].q     = Q;
+	dst[0].xyz   = FinishVertex(&coords[0], Q);
+
+	Q   = 1.0f / coords[1].w;
+	dst[1].rgba  = V1->Col;
+	dst[1].q     = Q;
+	dst[1].xyz   = FinishVertex(&coords[1], Q);
+
+	Q   = 1.0f / coords[2].w;
+	dst[2].rgba  = V2->Col;
+	dst[2].q     = Q;
+	dst[2].xyz   = FinishVertex(&coords[2], Q);
+
+	return dw + 6;
 }
 
-static u64* DrawTexturedTriangle(u64* dw, Vector4* coords, 
+static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
-	struct VertexTextured* v[] = { V0, V1, V2 };
+	TexturedVertex* dst = (TexturedVertex*)dw;
+	float Q;
 
 	// TODO optimise
 	// Add the "primitives" to the GIF packet
-	for (int i = 0; i < 3; i++)
-	{
-		float Q   = 1.0f / coords[i].w;
-		xyz_t xyz = FinishVertex(coords[i], Q);
-		color_t color;
-		texel_t texel;
-		
-		color.rgbaq = v[i]->Col;
-		color.q     = Q;
-		texel.u     = v[i]->U * Q;
-		texel.v     = v[i]->V * Q;
-		
-		*dw++ = color.rgbaq;
-		*dw++ = texel.uv;
-		*dw++ = xyz.xyz;
-	}
-	return dw;
+	Q   = 1.0f / coords[0].w;
+	dst[0].rgba  = V0->Col;
+	dst[0].q     = Q;
+	dst[0].u     = V0->U * Q;
+	dst[0].v     = V0->V * Q;
+	dst[0].xyz   = FinishVertex(&coords[0], Q);
+
+	Q   = 1.0f / coords[1].w;
+	dst[1].rgba  = V1->Col;
+	dst[1].q     = Q;
+	dst[1].u     = V1->U * Q;
+	dst[1].v     = V1->V * Q;
+	dst[1].xyz   = FinishVertex(&coords[1], Q);
+
+	Q   = 1.0f / coords[2].w;
+	dst[2].rgba  = V2->Col;
+	dst[2].q     = Q;
+	dst[2].u     = V2->U * Q;
+	dst[2].v     = V2->V * Q;
+	dst[2].xyz   = FinishVertex(&coords[2], Q);
+
+	return dw + 9;
 }
+
+extern void TransformTexturedQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
+extern void TransformColouredQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
 
 static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
@@ -609,29 +606,20 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	u64* dw = (u64*)q;
 
 	unsigned numVerts = 0;
-	Vector4 V[4];
+	VU0_VECTOR V[6], tmp;
+	int clip[4];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		V[0] = TransformVertex(v + 0);
-		V[1] = TransformVertex(v + 1);
-		V[2] = TransformVertex(v + 2);
-		V[3] = TransformVertex(v + 3);
+		TransformTexturedQuad(v, V, &tmp, clip);
 		
-		// V0, V1, V2
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
 			dw = DrawTexturedTriangle(dw, V, v + 0, v + 1, v + 2);
 			numVerts += 3;
 		}
-
-		Vector4 v0 = V[0];
-		V[0] = V[2];
-		V[1] = V[3];
-		V[2] = v0;
 		
-		// V2, V3, V0
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
-			dw = DrawTexturedTriangle(dw, V, v + 2, v + 3, v + 0);
+		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
+			dw = DrawTexturedTriangle(dw, V + 3, v + 2, v + 3, v + 0);
 			numVerts += 3;
 		}
 	}
@@ -655,29 +643,20 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 	u64* dw = (u64*)q;
 
 	unsigned numVerts = 0;
-	Vector4 V[4];
+	VU0_VECTOR V[6], tmp;
+	int clip[4];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		V[0] = TransformVertex(v + 0);
-		V[1] = TransformVertex(v + 1);
-		V[2] = TransformVertex(v + 2);
-		V[3] = TransformVertex(v + 3);
+		TransformColouredQuad(v, V, &tmp, clip);
 		
-		// V0, V1, V2
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
+		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
 			dw = DrawColouredTriangle(dw, V, v + 0, v + 1, v + 2);
 			numVerts += 3;
 		}
-
-		Vector4 v0 = V[0];
-		V[0] = V[2];
-		V[1] = V[3];
-		V[2] = v0;
 		
-		// V2, V3, V0
-		if (NotClipped(V[0]) && NotClipped(V[1]) && NotClipped(V[2])) {
-			dw = DrawColouredTriangle(dw, V, v + 2, v + 3, v + 0);
+		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
+			dw = DrawColouredTriangle(dw, V + 3, v + 2, v + 3, v + 0);
 			numVerts += 3;
 		}
 	}
@@ -695,7 +674,7 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 
 static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty)  UpdateState(0);
-	if (formatDirty) UpdateFormat();
+	if (formatDirty) UpdateFormat(0);
 
 	if ((q - current->data) > 45000) {
 		DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
@@ -760,43 +739,42 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
-}
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) { 
-	Platform_LogConst("--- Frame ---");
+	//Platform_LogConst("--- Frame ---");
 }
 
 void Gfx_EndFrame(void) {
-	Platform_LogConst("--- EF1 ---");
-	// Double buffering
-	graph_set_framebuffer_filtered(fb_colors[context].address,
-                                   fb_colors[context].width,
-                                   fb_colors[context].psm, 0, 0);
+	//Platform_LogConst("--- EF1 ---");
 
-	q = draw_framebuffer(q, 0, &fb_colors[context ^ 1]);
 	q = draw_finish(q);
 	
 	// Fill out and then send DMA chain
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
 	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
-	Platform_LogConst("--- EF2 ---");
+	//Platform_LogConst("--- EF2 ---");
 		
 	draw_wait_finish();
-	Platform_LogConst("--- EF3 ---");
+	//Platform_LogConst("--- EF3 ---");
 	
 	if (gfx_vsync) graph_wait_vsync();
-	if (gfx_minFrameMs) LimitFPS();
 	
-	FlipContext();
-	Platform_LogConst("--- EF4 ---");
+	context ^= 1;
+	UpdateContext();
+
+	// Double buffering
+	q = draw_framebuffer(q, 0, fb_draw);
+	graph_set_framebuffer_filtered(fb_display->address,
+                                   fb_display->width,
+                                   fb_display->psm, 0, 0);
+	//Platform_LogConst("--- EF4 ---");
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_OnWindowResize(void) {
@@ -805,10 +783,44 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_hwidth  = w / 2;
-	vp_hheight = h / 2;
-	vp_originX =  ftoi4(2048 - (x / 2));
-	vp_originY = -ftoi4(2048 - (y / 2));
+	VU0_VECTOR clip_scale;
+	unsigned int maxZ = 1 << (24 - 1); // TODO: half this? or << 24 instead?
+
+	vp_origin.x =  ftoi4(2048 - (x / 2));
+	vp_origin.y = -ftoi4(2048 - (y / 2));
+	vp_origin.z =  maxZ / 2.0f;
+	LoadViewportOrigin(&vp_origin);
+
+	vp_scale.x =  16 * (w / 2);
+	vp_scale.y = -16 * (h / 2);
+	vp_scale.z =  maxZ / 2.0f;
+	LoadViewportScale(&vp_scale);
+
+	float hwidth  = w / 2;
+	float hheight = h / 2;
+	// The code below clips to the viewport clip planes
+	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
+	//  However the guard band itself ranges from 0 to 4096
+	// To reduce need to clip, clip against guard band on X/Y axes instead
+	/*return
+		xAdj  >= -pos.w && xAdj  <= pos.w &&
+		yAdj  >= -pos.w && yAdj  <= pos.w &&
+		pos.z >= -pos.w && pos.z <= pos.w;*/	
+		
+	// Rescale clip planes to guard band extent:
+	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
+	//              X/W <= 1
+	//              X   <= W
+	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
+	//              X/W <= 2048 / vp_hwidth
+	//              X * vp_hwidth / 2048 <= W
+	
+	clip_scale.x = hwidth  / 2048.0f;
+	clip_scale.y = hheight / 2048.0f;
+	clip_scale.z = 1.0f;
+	clip_scale.w = 1.0f;
+	
+	LoadClipScaleFactors(&clip_scale);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {

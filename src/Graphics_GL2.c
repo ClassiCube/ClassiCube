@@ -7,6 +7,7 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+#include "Menus.h"
 
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
 #include "../misc/opengl/GLCommon.h"
@@ -22,7 +23,7 @@
 #define GL_FUNC(_retType, name) static _retType (APIENTRY *name)
 #include "../misc/opengl/GL2Funcs.h"
 
-#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)& ## sym }
+#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&sym }
 static const struct DynamicLibSym core_funcs[] = {
 	GLSym(glBindBuffer), GLSym(glDeleteBuffers), GLSym(glGenBuffers), GLSym(glBufferData), GLSym(glBufferSubData),
 
@@ -47,6 +48,9 @@ static const struct DynamicLibSym core_funcs[] = {
 
 #include "_GLShared.h"
 static GfxResourceID white_square;
+static int postProcess;
+enum PostProcess { POSTPROCESS_NONE, POSTPROCESS_GRAYSCALE };
+static const char* const postProcess_Names[2] = { "NONE", "GRAYSCALE" };
 
 
 /*########################################################################################################################*
@@ -223,6 +227,15 @@ static void GenVertexShader(const struct GLShader* shader, cc_string* dst) {
 	String_AppendConst(dst,         "}");
 }
 
+static void AddPostProcessing(cc_string* dst) {
+	switch (postProcess) {
+	case POSTPROCESS_GRAYSCALE:
+		String_AppendConst(dst, "  float gray = 0.21 * col.r + 0.71 * col.g + 0.07 * col.b;\n");
+		String_AppendConst(dst, "  col = vec4(gray, gray, gray, col.a);\n");
+		break;
+	}
+}
+
 /* Generates source code for a GLSL fragment shader, based on shader's flags */
 static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	int uv = shader->features & FTR_TEXTURE_UV;
@@ -252,6 +265,8 @@ static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	if (fl) String_AppendConst(dst, "  float f = clamp((fogEnd - depth) / fogEnd, 0.0, 1.0);\n");
 	if (fd) String_AppendConst(dst, "  float f = clamp(exp(fogDensity * depth), 0.0, 1.0);\n");
 	if (fm) String_AppendConst(dst, "  col.rgb = mix(fogCol, col.rgb, f);\n");
+	
+	if (fl || fd || fm) AddPostProcessing(dst);
 	String_AppendConst(dst,         "  gl_FragColor = col;\n");
 	String_AppendConst(dst,         "}");
 }
@@ -476,15 +491,18 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
 
 	Matrix_Mul(&_mvp, &_view, &_proj);
 	DirtyUniform(UNI_MVP_MATRIX);
 	ReloadUniforms();
 }
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -515,6 +533,7 @@ static void GLBackend_Init(void) {
 #ifdef CC_BUILD_WIN
 	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));
 #endif
+	Gfx.BackendType = CC_GFX_BACKEND_GL2;
 
 #ifdef CC_BUILD_GLES
 	// OpenGL ES 2.0 doesn't support custom mipmaps levels, but 3.2 does
@@ -547,15 +566,19 @@ static void GLBackend_Init(void) {
 #endif
 }
 
-static void Gfx_FreeState(void) {
+static void DeleteShaders(void) {
 	int i;
-	FreeDefaultResources();
 	gfx_activeShader = NULL;
 
 	for (i = 0; i < Array_Elems(shaders); i++) {
 		glDeleteProgram(shaders[i].program);
 		shaders[i].program = 0;
 	}
+}
+
+static void Gfx_FreeState(void) {
+	FreeDefaultResources();
+	DeleteShaders();
 	Gfx_DeleteTexture(&white_square);
 }
 
@@ -576,7 +599,33 @@ static void Gfx_RestoreState(void) {
 	Bitmap_Init(bmp, 1, 1, pixels);
 	Gfx_RecreateTexture(&white_square, &bmp, 0, false);
 }
-cc_bool Gfx_WarnIfNecessary(void) { return false; }
+
+cc_bool Gfx_WarnIfNecessary(void) { 
+	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
+
+	if (String_ContainsConst(&renderer, "llvmpipe")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+		Chat_AddRaw("&cVSync may also not work.");
+		Chat_AddRaw("&cYou may need to install video card drivers.");
+		return true;
+	}
+	return false;
+}
+
+static int  GetPostProcess(void) { return postProcess; }
+static void SetPostProcess(int v) {
+	postProcess = v;
+	DeleteShaders();
+	SwitchProgram();
+	DirtyUniform(UNI_MASK_ALL);
+}
+
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) {
+	MenuOptionsScreen_AddEnum(s, "Post process", 
+		postProcess_Names, Array_Elems(postProcess_Names),
+		GetPostProcess, SetPostProcess, NULL);
+	return false;
+}
 
 
 /*########################################################################################################################*
@@ -655,7 +704,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 		GL_SetupVbTextured();
 	} else {
 		/* ICOUNT(startVertex) * 2 = startVertex * 3  */
-		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, (void*)(startVertex * 3));
+		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, uint_to_ptr(startVertex * 3));
 	}
 }
 #endif

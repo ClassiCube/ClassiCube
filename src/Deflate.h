@@ -1,6 +1,8 @@
 #ifndef CC_DEFLATE_H
 #define CC_DEFLATE_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Decodes data compressed using DEFLATE in a streaming manner.
    Partially based off information from
 	https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
@@ -133,5 +135,8 @@ typedef cc_result (*Zip_ProcessEntry)(const cc_string* path, struct Stream* data
 /* NOTE: returning false entirely skips the entry (avoids pointless seek to entry) */
 typedef cc_bool (*Zip_SelectEntry)(const cc_string* path);
 
-CC_API cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor);
+cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor,
+						struct ZipEntry* entries, int maxEntries);
+
+CC_END_HEADER
 #endif

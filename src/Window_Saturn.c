@@ -22,7 +22,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WindowData WindowInfo;
+struct cc_window WindowInfo;
 
 static void OnVblank(void* work) {
 	smpc_peripheral_intback_issue();
@@ -43,7 +43,6 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 
@@ -51,7 +50,6 @@ void Window_Init(void) {
 	vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(0, 0), RGB1555(1, 19, 0, 0));
 	vdp2_tvmd_display_set();
 
-	smpc_peripheral_init();
 	vdp_sync_vblank_out_set(OnVblank, NULL);
 }
 
@@ -60,6 +58,8 @@ void Window_Free(void) { }
 void Window_Create3D(int width, int height) { 
 	launcherMode = false; 
 }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -82,7 +82,6 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ProcessEvents(float delta) {
-	smpc_peripheral_process();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -95,13 +94,45 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static void ProcessButtons(int port, int mods) {
-	Gamepad_SetButton(port, CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & PERIPHERAL_DIGITAL_C);
+static const BindMapping saturn_defaults[BIND_COUNT] = {
+	[BIND_LOOK_UP]      = { CCPAD_4, CCPAD_UP },
+	[BIND_LOOK_DOWN]    = { CCPAD_4, CCPAD_DOWN },
+	[BIND_LOOK_LEFT]    = { CCPAD_4, CCPAD_LEFT },
+	[BIND_LOOK_RIGHT]   = { CCPAD_4, CCPAD_RIGHT },
+	[BIND_FORWARD]      = { CCPAD_UP,    0 },
+	[BIND_BACK]         = { CCPAD_DOWN,  0 },
+	[BIND_LEFT]         = { CCPAD_LEFT,  0 },
+	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
+	[BIND_JUMP]         = { CCPAD_1,     0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 }, 
+	[BIND_INVENTORY]    = { CCPAD_3,     0 },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L},
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3},
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_DELETE_BLOCK] = { CCPAD_L, 0 }, 
+	[BIND_PLACE_BLOCK]  = { CCPAD_R, 0 }
+};
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	smpc_peripheral_init();
 	
-	Gamepad_SetButton(port, CCPAD_Y, mods & PERIPHERAL_DIGITAL_X);
-	Gamepad_SetButton(port, CCPAD_Z, mods & PERIPHERAL_DIGITAL_Y);
+	Input_DisplayNames[CCPAD_1] = "A";
+	Input_DisplayNames[CCPAD_2] = "B";
+	Input_DisplayNames[CCPAD_3] = "C";
+	Input_DisplayNames[CCPAD_4] = "X";
+	Input_DisplayNames[CCPAD_5] = "Y";
+}
+
+static void ProcessButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_1, mods & PERIPHERAL_DIGITAL_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & PERIPHERAL_DIGITAL_B);
+	Gamepad_SetButton(port, CCPAD_3, mods & PERIPHERAL_DIGITAL_C);
+	
+	Gamepad_SetButton(port, CCPAD_4, mods & PERIPHERAL_DIGITAL_X);
+	Gamepad_SetButton(port, CCPAD_5, mods & PERIPHERAL_DIGITAL_Y);
 
 	Gamepad_SetButton(port, CCPAD_L, mods & PERIPHERAL_DIGITAL_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & PERIPHERAL_DIGITAL_R);
@@ -118,9 +149,12 @@ static void ProcessButtons(int port, int mods) {
 static smpc_peripheral_digital_t dig_state;
 static smpc_peripheral_analog_t  ana_state;
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Process(float delta) {
+	int port = Gamepad_Connect(0x5A, saturn_defaults);
+	smpc_peripheral_process();
+
 	smpc_peripheral_digital_port(1, &dig_state);
-	ProcessButtons(0, dig_state.pressed.raw | dig_state.held.raw);
+	ProcessButtons(port, dig_state.pressed.raw | dig_state.held.raw);
 	
 	smpc_peripheral_analog_port(1, &ana_state);
 }
@@ -204,11 +238,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		for (int x = r.x; x < r.x + r.width; x++) 
 		{
 			// TODO optimise
-			BitmapCol col = row[x];
-			cc_uint8 R = BitmapCol_R(col);
-			cc_uint8 G = BitmapCol_G(col);
-			cc_uint8 B = BitmapCol_B(col);
-			vram[x + (y * 512)] = RGB1555(0, R >> 3, G >> 3, B >> 3);
+			vram[x + (y * 512)].raw = row[x];
 		}
 	}
 
@@ -225,8 +255,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 

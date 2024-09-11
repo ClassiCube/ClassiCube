@@ -1,12 +1,18 @@
-SOURCE_DIR  := src
-BUILD_DIR   := build
-C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
-C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+SOURCE_DIR  = src
+BUILD_DIR   = build
+C_SOURCES   = $(wildcard $(SOURCE_DIR)/*.c)
+C_OBJECTS   = $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
-OBJECTS := $(C_OBJECTS)
-ENAME   = ClassiCube
-CFLAGS  = -g -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=maybe-uninitialized
+OBJECTS = $(C_OBJECTS)
+# Flags passed to the C compiler
+CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
+# Flags passed to the linker
 LDFLAGS = -g -rdynamic
+# Name of the main executable
+ENAME   = ClassiCube
+# Name of the final target file
+# (usually this is the executable, but e.g. is app bundle on macOS)
+TARGET := $(ENAME)
 
 ifndef RM
 	# No prefined RM variable, try to guess OS default
@@ -34,7 +40,8 @@ ifeq ($(PLAT),web)
 	CC      = emcc
 	OEXT    = .html
 	CFLAGS  = -g
-	LDFLAGS = -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library $(SOURCE_DIR)/interop_web.js
+	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library $(SOURCE_DIR)/interop_web.js
+	BUILD_DIR = build-web
 endif
 
 ifeq ($(PLAT),mingw)
@@ -42,17 +49,20 @@ ifeq ($(PLAT),mingw)
 	OEXT    =  .exe
 	CFLAGS  += -DUNICODE
 	LDFLAGS =  -g
-	LIBS    =  -mwindows -lwinmm -limagehlp
+	LIBS    =  -mwindows -lwinmm
+	BUILD_DIR = build-win
 endif
 
 ifeq ($(PLAT),linux)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
+	BUILD_DIR = build-linux
 endif
 
 ifeq ($(PLAT),sunos)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lsocket -lX11 -lXi -lGL
+	BUILD_DIR = build-solaris
 endif
 
 ifeq ($(PLAT),darwin)
@@ -60,55 +70,66 @@ ifeq ($(PLAT),darwin)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	BUILD_DIR = build-macos
+	TARGET  = $(ENAME).app
 endif
 
 ifeq ($(PLAT),freebsd)
 	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-freebsd
 endif
 
 ifeq ($(PLAT),openbsd)
 	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-openbsd
 endif
 
 ifeq ($(PLAT),netbsd)
 	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-netbsd
 endif
 
 ifeq ($(PLAT),dragonfly)
 	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
+	BUILD_DIR = build-flybsd
 endif
 
 ifeq ($(PLAT),haiku)
 	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
-	CFLAGS  = -g -pipe -fno-math-errno
+	CFLAGS  = -pipe -fno-math-errno
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	BUILD_DIR = build-haiku
 endif
 
 ifeq ($(PLAT),beos)
 	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
-	CFLAGS  = -g -pipe
+	CFLAGS  = -pipe
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	BUILD_DIR = build-beos
 	TRACK_DEPENDENCIES=0
 endif
 
 ifeq ($(PLAT),serenityos)
 	LIBS    = -lgl -lSDL2
+	BUILD_DIR = build-serenity
 endif
 
 ifeq ($(PLAT),irix)
 	CC      = gcc
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
+	BUILD_DIR = build-irix
 endif
+
 
 ifdef SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
@@ -118,49 +139,62 @@ ifdef SDL3
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
 	LIBS += -lSDL3
 endif
-
-
 ifdef TERMINAL
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
 	LIBS := $(subst mwindows,mconsole,$(LIBS))
 endif
 
+ifdef BEARSSL
+	BEARSSL_SOURCES = $(wildcard third_party/bearssl/src/*.c)
+	BEARSSL_OBJECTS = $(patsubst third_party/bearssl/src/%.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
+	OBJECTS += $(BEARSSL_OBJECTS)
+	CFLAGS  += -Ithird_party/bearssl/inc -DCC_SSL_BACKEND=CC_SSL_BACKEND_BEARSSL -DCC_NET_BACKEND=CC_NET_BACKEND_BUILTIN
+endif
+
+ifdef RELEASE
+	CFLAGS += -O1
+else
+	CFLAGS += -g
+endif
+
 default: $(PLAT)
 
 web:
-	$(MAKE) $(ENAME) PLAT=web
+	$(MAKE) $(TARGET) PLAT=web
 linux:
-	$(MAKE) $(ENAME) PLAT=linux
+	$(MAKE) $(TARGET) PLAT=linux
 mingw:
-	$(MAKE) $(ENAME) PLAT=mingw
+	$(MAKE) $(TARGET) PLAT=mingw
 sunos:
-	$(MAKE) $(ENAME) PLAT=sunos
+	$(MAKE) $(TARGET) PLAT=sunos
 darwin:
-	$(MAKE) $(ENAME) PLAT=darwin
+	$(MAKE) $(TARGET) PLAT=darwin
 freebsd:
-	$(MAKE) $(ENAME) PLAT=freebsd
+	$(MAKE) $(TARGET) PLAT=freebsd
 openbsd:
-	$(MAKE) $(ENAME) PLAT=openbsd
+	$(MAKE) $(TARGET) PLAT=openbsd
 netbsd:
-	$(MAKE) $(ENAME) PLAT=netbsd
+	$(MAKE) $(TARGET) PLAT=netbsd
 dragonfly:
-	$(MAKE) $(ENAME) PLAT=dragonfly
+	$(MAKE) $(TARGET) PLAT=dragonfly
 haiku:
-	$(MAKE) $(ENAME) PLAT=haiku
+	$(MAKE) $(TARGET) PLAT=haiku
 beos:
-	$(MAKE) $(ENAME) PLAT=beos
+	$(MAKE) $(TARGET) PLAT=beos
 serenityos:
-	$(MAKE) $(ENAME) PLAT=serenityos
+	$(MAKE) $(TARGET) PLAT=serenityos
 irix:
-	$(MAKE) $(ENAME) PLAT=irix
+	$(MAKE) $(TARGET) PLAT=irix
 
 # Default overrides
 sdl2:
-	$(MAKE) $(ENAME) SDL2=1
+	$(MAKE) $(TARGET) SDL2=1
 sdl3:
-	$(MAKE) $(ENAME) SDL3=1
+	$(MAKE) $(TARGET) SDL3=1
 terminal:
-	$(MAKE) $(ENAME) TERMINAL=1
+	$(MAKE) $(TARGET) TERMINAL=1
+release:
+	$(MAKE) $(TARGET) RELEASE=1
 
 # Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
@@ -207,11 +241,19 @@ macclassic_ppc:
 clean:
 	$(RM) $(OBJECTS)
 
-
-$(ENAME): $(BUILD_DIR) $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(LIBS)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+$(ENAME): $(BUILD_DIR) $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
+
+
+# macOS app bundle
+$(ENAME).app : $(ENAME)
+	mkdir -p $(TARGET)/Contents/MacOS
+	mkdir -p $(TARGET)/Contents/Resources
+	cp $(ENAME) $(TARGET)/Contents/MacOS/$(ENAME)
+	cp misc/macOS/Info.plist   $(TARGET)/Contents/Info.plist
+	cp misc/macOS/appicon.icns $(TARGET)/Contents/Resources/appicon.icns
 
 
 # === Compiling with dependency tracking ===
@@ -222,18 +264,24 @@ DEPFILES := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.d, $(C_SOURCES))
 $(DEPFILES):
 
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c $(BUILD_DIR)/%.d
-	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 include $(wildcard $(DEPFILES))
 # === Compiling WITHOUT dependency tracking ===
 else
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 endif
 	
 # === Platform specific file compiling ===
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.m
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 	
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+	
+$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+
+# EXTRA_CFLAGS and EXTRA_LIBS are not defined in the makefile intentionally -
+# define them on the command line as a simple way of adding CFLAGS/LIBS

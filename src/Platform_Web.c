@@ -36,7 +36,9 @@ const cc_result ReturnCode_FileNotFound     = _ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;
+
 const char* Platform_AppNameSuffix = "";
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess;
 
 
@@ -114,10 +116,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 }
 
 extern int interop_FileExists(const char* path);
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-	return interop_FileExists(str.buffer);
+int File_Exists(const cc_filepath* path) {
+	return interop_FileExists(path->buffer);
 }
 
 static void* enum_obj;
@@ -389,8 +389,15 @@ void Platform_Free(void) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) { return ERR_NOT_SUPPORTED; }
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { return ERR_NOT_SUPPORTED; }
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) { 
+	return ERR_NOT_SUPPORTED; 
+}
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { 
+	return ERR_NOT_SUPPORTED; 
+}
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
+}
 
 
 /*########################################################################################################################*

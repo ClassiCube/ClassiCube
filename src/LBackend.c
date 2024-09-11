@@ -33,8 +33,10 @@ struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 static struct Context2D framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
-Rect2D dirty_rect;
+static Rect2D dirty_rect;
+static int pendingFullDraws;
 
+LBackend_DrawHook LBackend_Hooks[4];
 static cc_uint8 pendingRedraw;
 #define REDRAW_ALL  0x02
 #define REDRAW_SOME 0x01
@@ -179,20 +181,18 @@ void LBackend_LayoutWidget(struct LWidget* w) {
 	LBackend_TableReposition((struct LTable*)w);
 }
 
-void LBackend_MarkDirty(void* widget) {
+void LBackend_NeedsRedraw(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
 	pendingRedraw |= REDRAW_SOME;
 	w->dirty = true;
 }
 
-/* Marks the entire window as needing to be redrawn. */
-static CC_NOINLINE void MarkAllDirty(void) {
+void LBackend_MarkAllDirty(void) {
 	dirty_rect.x = 0; dirty_rect.width  = framebuffer.width;
 	dirty_rect.y = 0; dirty_rect.height = framebuffer.height;
 }
 
-/* Marks the given area/region as needing to be redrawn. */
-static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
+void LBackend_MarkAreaDirty(int x, int y, int width, int height) {
 	int x1, y1, x2, y2;
 	if (!Drawer2D_Clamp(&framebuffer, &x, &y, &width, &height)) return;
 
@@ -253,7 +253,7 @@ static CC_NOINLINE void DrawWidget(struct LWidget* w) {
 
 	w->dirty = false;
 	w->VTABLE->Draw(w);
-	MarkAreaDirty(w->x, w->y, w->width, w->height);
+	LBackend_MarkAreaDirty(w->x, w->y, w->width, w->height);
 }
 
 static CC_NOINLINE void RedrawAll(void) {
@@ -264,7 +264,7 @@ static CC_NOINLINE void RedrawAll(void) {
 	for (i = 0; i < s->numWidgets; i++) {
 		DrawWidget(s->widgets[i]);
 	}
-	MarkAllDirty();
+	LBackend_MarkAllDirty();
 }
 
 static CC_NOINLINE void RedrawDirty(void) {
@@ -280,7 +280,7 @@ static CC_NOINLINE void RedrawDirty(void) {
 		if (!w->opaque || w->last.width > w->width || w->last.height > w->height) {
 			s->ResetArea(&framebuffer,
 						  w->last.x, w->last.y, w->last.width, w->last.height);
-			MarkAreaDirty(w->last.x, w->last.y, w->last.width, w->last.height);
+			LBackend_MarkAreaDirty(w->last.x, w->last.y, w->last.width, w->last.height);
 		}
 		DrawWidget(w);
 	}
@@ -298,19 +298,35 @@ static CC_NOINLINE void DoRedraw(void) {
 
 void LBackend_Redraw(void) {
 	pendingRedraw = REDRAW_ALL;
-	MarkAllDirty();
+	LBackend_MarkAllDirty();
 }
 void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 
 void LBackend_Tick(void) {
+	int i;
+	/* Window backend requires always redrawing entire frame - slow */
+	/* Most window backends do not require this though */
+	if (DisplayInfo.FullRedraw && pendingRedraw) pendingRedraw |= REDRAW_ALL;
 	DoRedraw();
+
+	if (pendingFullDraws) {
+		pendingFullDraws--;
+		LBackend_MarkAllDirty();
+	}
 	if (!dirty_rect.width) return;
 
-	OnscreenKeyboard_Draw2D(&dirty_rect, &framebuffer.bmp);
-	Window_DrawFramebuffer(dirty_rect,   &framebuffer.bmp);
+	for (i = 0; i < Array_Elems(LBackend_Hooks); i++)
+	{
+		if (LBackend_Hooks[i]) LBackend_Hooks[i](&framebuffer);
+	}
+	Window_DrawFramebuffer(dirty_rect, &framebuffer.bmp);
 
 	dirty_rect.x = 0; dirty_rect.width   = 0;
 	dirty_rect.y = 0; dirty_rect.height  = 0;
+}
+
+void LBackend_AddDirtyFrames(int frames) {
+	pendingFullDraws = frames;
 }
 
 
@@ -439,7 +455,7 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
 void LBackend_ButtonUpdate(struct LButton* w) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 
 	w->_textWidth  = Drawer2D_TextWidth(&args);
 	w->_textHeight = Drawer2D_TextHeight(&args);
@@ -471,7 +487,7 @@ void LBackend_ButtonDraw(struct LButton* w) {
 
 static void LCheckbox_OnClick(void* w) {
 	struct LCheckbox* cb = (struct LCheckbox*)w;
-	LBackend_MarkDirty(cb);
+	LBackend_NeedsRedraw(cb);
 
 	cb->value = !cb->value;
 	if (cb->ValueChanged) cb->ValueChanged(cb);
@@ -487,7 +503,7 @@ void LBackend_CheckboxInit(struct LCheckbox* w) {
 }
 
 void LBackend_CheckboxUpdate(struct LCheckbox* w) {
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 }
 
 /* Based off checkbox from original ClassiCube Launcher */
@@ -579,10 +595,26 @@ static cc_uint64 caretStart;
 static Rect2D caretRect, lastCaretRect;
 #define Rect2D_Equals(a, b) a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height
 
+static void LInput_OpenKeyboard(struct LInput* w) {
+	struct OpenKeyboardArgs args;
+	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
+	OnscreenKeyboard_Open(&args);
+}
+
+static void LInput_OnClick(void* widget) {
+	struct LInput* w = (struct LInput*)widget;
+	if (DisplayInfo.ShowingSoftKeyboard) return;
+
+	LInput_OpenKeyboard(w);
+}
+
 void LBackend_InputInit(struct LInput* w, int width) {
 	w->width    = Display_ScaleX(width);
 	w->height   = Display_ScaleY(LINPUT_HEIGHT);
 	w->minWidth = w->width;
+	
+	if (Window_Main.SoftKeyboard)
+		w->OnClick  = LInput_OnClick;
 
 	/* Text may end up being wider than minimum width */
 	if (w->text.length) LBackend_InputUpdate(w);
@@ -595,7 +627,7 @@ void LBackend_InputUpdate(struct LInput* w) {
 
 	String_InitArray(text, textBuffer);
 	LInput_UNSAFE_GetText(w, &text);
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 
 	DrawTextArgs_Make(&args, &text, &textFont, false);
 	textWidth      = Drawer2D_TextWidth(&args);
@@ -672,30 +704,28 @@ void LBackend_InputTick(struct LInput* w) {
 	
 	if (Rect2D_Equals(r, lastCaretRect)) {
 		/* Fast path, caret is blinking in same spot */
-		MarkAreaDirty(r.x, r.y, r.width, r.height);
+		LBackend_MarkAreaDirty(r.x, r.y, r.width, r.height);
 	} else {
 		/* Slow path (new widget, caret moved, etc) */
-		MarkAreaDirty(w->x, w->y, w->width, w->height);
+		LBackend_MarkAreaDirty(w->x, w->y, w->width, w->height);
 	}
 	lastCaretRect = r;
 }
 
 void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
-	struct OpenKeyboardArgs args;
 	caretStart   = Stopwatch_Measure();
 	w->caretShow = true;
 	LInput_MoveCaretToCursor(w, idx);
-	LBackend_MarkDirty(w);
-
-	if (wasSelected) return;
-	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
-	OnscreenKeyboard_Open(&args);
+	LBackend_NeedsRedraw(w);
+	
+	if (Window_Main.SoftKeyboardInstant)
+		LInput_OpenKeyboard(w);
 }
 
 void LBackend_InputUnselect(struct LInput* w) {
 	caretStart   = 0;
 	w->caretShow = false;
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 	OnscreenKeyboard_Close();
 }
 
@@ -807,7 +837,7 @@ void LBackend_LabelInit(struct LLabel* w) { }
 void LBackend_LabelUpdate(struct LLabel* w) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &w->text, LLabel_GetFont(w), true);
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 
 	w->width  = Drawer2D_TextWidth(&args);
 	w->height = Drawer2D_TextHeight(&args);
@@ -843,7 +873,7 @@ void LBackend_SliderInit(struct LSlider* w, int width, int height) {
 }
 
 void LBackend_SliderUpdate(struct LSlider* w) {
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 }
 
 static void LSlider_DrawBoxBounds(struct LSlider* w) {
@@ -919,7 +949,7 @@ void LBackend_TableReposition(struct LTable* w) {
 
 void LBackend_TableFlagAdded(struct LTable* w) {
 	/* TODO: Only redraw flags */
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 }
 
 /* Draws background behind column headers */
@@ -1073,7 +1103,7 @@ void LBackend_TableDraw(struct LTable* w) {
 	LTable_DrawHeaders(w);
 	LTable_DrawRows(w);
 	LTable_DrawScrollbar(w);
-	MarkAllDirty();
+	LBackend_MarkAllDirty();
 }
 
 
@@ -1139,7 +1169,7 @@ void LBackend_TableMouseDown(struct LTable* w, int idx) {
 	} else {
 		LTable_RowsClick(w, idx);
 	}
-	LBackend_MarkDirty(w);
+	LBackend_NeedsRedraw(w);
 }
 
 void LBackend_TableMouseMove(struct LTable* w, int idx) {
@@ -1154,7 +1184,7 @@ void LBackend_TableMouseMove(struct LTable* w, int idx) {
 
 		w->topRow = row;
 		LTable_ClampTopRow(w);
-		LBackend_MarkDirty(w);
+		LBackend_NeedsRedraw(w);
 	} else if (w->draggingColumn >= 0) {
 		col   = w->draggingColumn;
 		width = x - w->dragXStart;
@@ -1166,7 +1196,7 @@ void LBackend_TableMouseMove(struct LTable* w, int idx) {
 		Math_Clamp(width, cellMinWidth, maxW - cellMinWidth);
 		if (width == w->columns[col].width) return;
 		w->columns[col].width = width;
-		LBackend_MarkDirty(w);
+		LBackend_NeedsRedraw(w);
 	}
 }
 

@@ -5,7 +5,7 @@ TARGET 		:= ClassiCube-dc
 S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-CFLAGS	:= -g -O2 -pipe -fno-math-errno -Ithird_party/bearssl/inc
+CFLAGS	:= -g -DNDEBUG -O3 -fipa-pta -fno-pie -flto=auto -fomit-frame-pointer -fbuiltin -ffast-math -ffp-contract=fast -mfsrra -mfsca -pipe -fno-math-errno -Ithird_party/bearssl/inc
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
@@ -25,16 +25,19 @@ endif
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-default: $(GLDC_LIB) $(BUILD_DIR) $(TARGET).cdi
+default: $(BUILD_DIR) $(TARGET).cdi
 
 clean:
 	rm $(TARGET).cdi $(TARGET).iso $(TARGET).elf $(TARGET)-scr.bin $(TARGET).bin $(OBJS)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).elf: $(OBJS)
+$(TARGET).elf: $(OBJS) $(GLDC_LIB)
 	kos-cc $(LDFLAGS) $^ -o $@ $(LIBS)
 	
 $(TARGET).bin: $(TARGET).elf
@@ -66,9 +69,6 @@ $(TARGET).cdi: $(TARGET).iso
 $(GLDC_LIB): FORCE
 	$(MAKE) -C third_party/gldc
 FORCE: ;
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
 	
 $(BUILD_DIR)/%.o: src/%.c
 	kos-cc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
@@ -77,7 +77,7 @@ $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: misc/dreamcast/%.S
-	kos-cc -c $< -o $@
+	kos-cc $(DEPFLAGS) -c $< -o $@
 
 # Dependency tracking
 $(DEPFILES):

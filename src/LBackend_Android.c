@@ -81,7 +81,7 @@ void LBackend_LayoutWidget(struct LWidget* w) {
         LBackend_LayoutDimensions(w);
 }
 
-void LBackend_MarkDirty(void* widget) { }
+void LBackend_NeedsRedraw(void* widget) { }
 void LBackend_InitFramebuffer(void) { }
 void LBackend_FreeFramebuffer(void) { }
 
@@ -127,6 +127,7 @@ void LBackend_ThemeChanged(void) {
 }
 
 void LBackend_Tick(void) { }
+void LBackend_AddDirtyFrames(int frames) { }
 
 static struct LWidget* FindWidgetForView(int id) {
     struct LScreen* s = Launcher_Active;

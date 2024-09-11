@@ -25,11 +25,8 @@
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static void GL_UpdateVsync(void) {
-	GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
-}
-
 static void GLBackend_Init(void);
+
 void Gfx_Create(void) {
 	GLContext_Create();
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
@@ -40,7 +37,7 @@ void Gfx_Create(void) {
 
 	GLBackend_Init();
 	Gfx_RestoreState();
-	GL_UpdateVsync();
+	GLContext_SetVSync(gfx_vsync);
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -82,7 +79,7 @@ static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_boo
 		if (width > 1)  width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = (BitmapCol*)Mem_Alloc(width * height, 4, "mipmaps");
+		cur = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "mipmaps");
 		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		if (partial) {
@@ -110,7 +107,8 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
 	}
 
-	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
+	CopyTextureData(ptr, part->width * BITMAPCOLOR_SIZE,
+					part, rowWidth   * BITMAPCOLOR_SIZE);
 
 	if (full) {
 		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
@@ -124,7 +122,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	GfxResourceID texId = NULL;
 	_glGenTextures(1, (GLuint*)&texId);
 	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
@@ -133,7 +131,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 			glTexParameteri(GL_TEXTURE_2D, _GL_TEXTURE_MAX_LEVEL, lvls);
 		}
 	} else {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 	}
 
 	if (bmp->width == rowWidth) {
@@ -247,7 +245,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	bmp.width  = vp[2]; 
 	bmp.height = vp[3];
 
-	bmp.scan0  = (BitmapCol*)Mem_TryAlloc(bmp.width * bmp.height, 4);
+	bmp.scan0  = (BitmapCol*)Mem_TryAlloc(bmp.width * bmp.height, BITMAPCOLOR_SIZE);
 	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
 	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
 
@@ -292,10 +290,9 @@ void Gfx_GetApiInfo(cc_string* info) {
 	GLContext_GetApiInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
-	if (Gfx.Created) GL_UpdateVsync();
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
+	if (Gfx.Created) GLContext_SetVSync(gfx_vsync);
 }
 
 void Gfx_BeginFrame(void) { }
@@ -318,7 +315,6 @@ void Gfx_EndFrame(void) {
 	/* TODO always run ?? */
 
 	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) {

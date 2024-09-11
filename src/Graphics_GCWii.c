@@ -290,9 +290,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 void Gfx_BeginFrame(void) {
@@ -311,7 +310,6 @@ void Gfx_EndFrame(void) {
 	VIDEO_Flush();
 	
 	if (gfx_vsync) VIDEO_WaitVSync();
-	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) { }
@@ -325,6 +323,7 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 
 /*########################################################################################################################*
@@ -521,7 +520,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		tmp[i * 4 + 3] = m[12 + i];
 	}
 		
-	if (type == MATRIX_PROJECTION) {
+	if (type == MATRIX_PROJ) {
 		GX_LoadProjectionMtx(tmp,
 			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
@@ -529,9 +528,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	}
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
+	Gfx_LoadMatrix(MATRIX_VIEW, view);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	Matrix_Mul(mvp, view, proj);
 }
+
 static float texOffsetX, texOffsetY;
 static void UpdateTexCoordGen(void) {
 	if (texOffsetX || texOffsetY) {

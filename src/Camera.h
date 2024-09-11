@@ -1,6 +1,8 @@
 #ifndef CC_CAMERA_H
 #define CC_CAMERA_H
 #include "Vectors.h"
+CC_BEGIN_HEADER
+
 /*
 Represents a camera, may be first or third person
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -57,7 +59,7 @@ struct Camera {
 	/* Typically, this is used to adjust yaw/pitch based on accumulated mouse movement. */
 	void (*UpdateMouse)(struct LocalPlayer* p, float delta);
 	/* Called when mouse/pointer has moved. */
-	void (*OnRawMovement)(float deltaX, float deltaY);
+	void (*OnRawMovement)(float deltaX, float deltaY, int deviceIndex);
 	/* Called when user closes all menus, and is interacting with camera again. */
 	void (*AcquireFocus)(void);
 	/* Called when user is no longer interacting with camera. (e.g. opened menu) */
@@ -82,4 +84,6 @@ void Camera_CheckFocus(void);
 void Camera_UpdateProjection(void);
 void Camera_SetFov(int fov);
 void Camera_KeyLookUpdate(float delta);
+
+CC_END_HEADER
 #endif

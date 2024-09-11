@@ -13,6 +13,7 @@
 #include "Chat.h"
 #include "Model.h"
 #include "Input.h"
+#include "InputHandler.h"
 #include "Gui.h"
 #include "Stream.h"
 #include "Bitmap.h"
@@ -399,7 +400,8 @@ static cc_bool CanDeleteTexture(struct Entity* except) {
 	int i;
 	if (!except->TextureId) return false;
 
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		if (!Entities.List[i] || Entities.List[i] == except)  continue;
 		if (Entities.List[i]->TextureId == except->TextureId) return false;
 	}
@@ -482,7 +484,7 @@ static void Entities_ContextLost(void* obj) {
 }
 /* No OnContextCreated, skin textures remade when needed */
 
-void Entities_Remove(EntityID id) {
+void Entities_Remove(int id) {
 	struct Entity* e = Entities.List[id];
 	if (!e) return;
 
@@ -491,7 +493,7 @@ void Entities_Remove(EntityID id) {
 	Entities.List[id] = NULL;
 
 	/* TODO: Move to EntityEvents.Removed callback instead */
-	if (TabList_EntityLinked_Get(id)) {
+	if (id < TABLIST_MAX_NAMES && TabList_EntityLinked_Get(id)) {
 		TabList_Remove(id);
 		TabList_EntityLinked_Reset(id);
 	}
@@ -641,12 +643,7 @@ void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t) {
 static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	struct HacksComp* hacks = &p->Hacks;
 	struct LocalPlayerInput* input;
-
-	if (Gui.InputGrab) {
-		/* TODO: Don't always turn these off anytime a screen is opened, only do it on InputUp */
-		p->Physics.Jumping = false; hacks->FlyingUp = false; hacks->FlyingDown = false;
-		return;
-	}
+	if (Gui.InputGrab) return;
 
 	/* keyboard input, touch, joystick, etc */
 	for (input = sources_head; input; input = input->next) {
@@ -655,16 +652,12 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	*xMoving *= 0.98f;
 	*zMoving *= 0.98f;
 
-	p->Physics.Jumping = InputBind_IsPressed(BIND_JUMP);
-	hacks->FlyingUp    = InputBind_IsPressed(BIND_FLY_UP);
-	hacks->FlyingDown  = InputBind_IsPressed(BIND_FLY_DOWN);
-
 	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
 		if (hacks->Noclip) {
 			/* need a { } block because it's a macro */
 			Vec3_Set(p->Base.Velocity, 0,0,0);
 		}
-		HacksComp_SetNoclip(hacks, InputBind_IsPressed(BIND_NOCLIP));
+		HacksComp_SetNoclip(hacks, hacks->_noclipping);
 	}
 }
 
@@ -755,7 +748,6 @@ static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	p->index = index;
 
 	hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
-	/* p->Base.Health = 20; TODO: survival mode stuff */
 	if (Game_ClassicMode) return;
 
 	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR,  0.1f, 50.0f, 10.0f);
@@ -783,7 +775,7 @@ static void LocalPlayer_Reset(struct LocalPlayer* p) {
 
 static void LocalPlayers_Reset(void) {
 	int i;
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		LocalPlayer_Reset(&LocalPlayer_Instances[i]);
 	}
@@ -801,7 +793,7 @@ static void LocalPlayer_OnNewMap(struct LocalPlayer* p) {
 
 static void LocalPlayers_OnNewMap(void) {
 	int i;
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		LocalPlayer_OnNewMap(&LocalPlayer_Instances[i]);
 	}
@@ -854,8 +846,10 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static cc_bool LocalPlayer_HandleRespawn(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+	if (Gui.InputGrab) return false;
+	
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn(p);
 		return true;
@@ -866,8 +860,10 @@ static cc_bool LocalPlayer_HandleRespawn(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleSetSpawn(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+	if (Gui.InputGrab) return false;
+	
 	if (p->Hacks.CanRespawn) {
 
 		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
@@ -887,13 +883,14 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key) {
 		}
 		
 		p->SpawnYaw   = p->Base.Yaw;
-		p->SpawnPitch = p->Base.Pitch;
+		if (!Game_ClassicMode) p->SpawnPitch = p->Base.Pitch;
 	}
-	return LocalPlayer_HandleRespawn(key);
+	return LocalPlayer_HandleRespawn(key, device);
 }
 
-static cc_bool LocalPlayer_HandleFly(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+	if (Gui.InputGrab) return false;
 
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
@@ -905,8 +902,10 @@ static cc_bool LocalPlayer_HandleFly(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleNoclip(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+	p->Hacks._noclipping = true;
+	if (Gui.InputGrab) return false;
 
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
@@ -921,11 +920,13 @@ static cc_bool LocalPlayer_HandleNoclip(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleJump(int key) {
-	struct LocalPlayer* p = Entities.CurPlayer;
+static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
+	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
+	if (Gui.InputGrab) return false;
+	physics->Jumping = true;
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
@@ -940,26 +941,66 @@ static cc_bool LocalPlayer_HandleJump(int key) {
 	return false;
 }
 
-static cc_bool LocalPlayer_TriggerHalfSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->HalfSpeeding     = hacks->Enabled;
+
+static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+	if (Gui.InputGrab) return false;
+
+	hacks->HalfSpeeding = (!touch || !hacks->HalfSpeeding) && hacks->Enabled;
 	return true;
 }
 
-static cc_bool LocalPlayer_TriggerSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->Speeding         = hacks->Enabled;
+static cc_bool LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
+	if (Gui.InputGrab) return false;
+
+	hacks->Speeding = (!touch || !hacks->Speeding) && hacks->Enabled;
 	return true;
 }
 
-static void LocalPlayer_ReleaseHalfSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->HalfSpeeding     = false;
+static void LocalPlayer_ReleaseHalfSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	if (device->type != INPUT_DEVICE_TOUCH) hacks->HalfSpeeding = false;
 }
 
-static void LocalPlayer_ReleaseSpeed(int key) {
-	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	hacks->Speeding         = false;
+static void LocalPlayer_ReleaseSpeed(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	if (device->type != INPUT_DEVICE_TOUCH) hacks->Speeding = false;
+}
+
+
+static cc_bool LocalPlayer_TriggerFlyUp(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	if (Gui.InputGrab) return false;
+	
+	hacks->FlyingUp = true;
+	return hacks->CanFly && hacks->Enabled;
+}
+
+static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
+	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
+	if (Gui.InputGrab) return false;
+	
+	hacks->FlyingDown = true;
+	return hacks->CanFly && hacks->Enabled;
+}
+
+static void LocalPlayer_ReleaseFlyUp(int key, struct InputDevice* device) {
+	LocalPlayer_Instances[device->mappedIndex].Hacks.FlyingUp   = false;
+}
+
+static void LocalPlayer_ReleaseFlyDown(int key, struct InputDevice* device) {
+	LocalPlayer_Instances[device->mappedIndex].Hacks.FlyingDown = false;
+}
+
+static void LocalPlayer_ReleaseJump(int key, struct InputDevice* device) {
+	LocalPlayer_Instances[device->mappedIndex].Physics.Jumping = false;
+}
+
+static void LocalPlayer_ReleaseNoclip(int key, struct InputDevice* device) {
+	LocalPlayer_Instances[device->mappedIndex].Hacks._noclipping = false;
 }
 
 static void LocalPlayer_HookBinds(void) {
@@ -973,6 +1014,14 @@ static void LocalPlayer_HookBinds(void) {
 	Bind_OnTriggered[BIND_SPEED]      = LocalPlayer_TriggerSpeed;
 	Bind_OnReleased[BIND_HALF_SPEED]  = LocalPlayer_ReleaseHalfSpeed;
 	Bind_OnReleased[BIND_SPEED]       = LocalPlayer_ReleaseSpeed;
+
+	Bind_OnTriggered[BIND_FLY_UP]   = LocalPlayer_TriggerFlyUp;
+	Bind_OnTriggered[BIND_FLY_DOWN] = LocalPlayer_TriggerFlyDown;
+	Bind_OnReleased[BIND_FLY_UP]    = LocalPlayer_ReleaseFlyUp;
+	Bind_OnReleased[BIND_FLY_DOWN]  = LocalPlayer_ReleaseFlyDown;
+
+	Bind_OnReleased[BIND_JUMP]    = LocalPlayer_ReleaseJump;
+	Bind_OnReleased[BIND_NOCLIP]  = LocalPlayer_ReleaseNoclip;
 }
 
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
@@ -989,7 +1038,7 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	struct LocalPlayer* p;
 	int i;
 	
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		p = &LocalPlayer_Instances[i];
 		p->Base.VTABLE->SetLocation(&p->Base, update);
@@ -1081,10 +1130,14 @@ static void Entities_Init(void) {
 		ShadowMode_Names, Array_Elems(ShadowMode_Names));
 	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
-	for (i = 0; i < Game_NumLocalPlayers; i++)
+	for (i = 0; i < Game_NumStates; i++)
 	{
 		LocalPlayer_Init(&LocalPlayer_Instances[i], i);
 		Entities.List[MAX_NET_PLAYERS + i] = &LocalPlayer_Instances[i].Base;
+	}
+	for (; i < MAX_LOCAL_PLAYERS; i++)
+	{
+		Entities.List[MAX_NET_PLAYERS + i] = NULL;
 	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];
 	LocalPlayer_HookBinds();
@@ -1094,7 +1147,7 @@ static void Entities_Free(void) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
-		Entities_Remove((EntityID)i);
+		Entities_Remove(i);
 	}
 	sources_head = NULL;
 }

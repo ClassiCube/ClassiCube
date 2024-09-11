@@ -22,7 +22,7 @@ static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks);
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(sampleRate, playbackRate) ((sampleRate * playbackRate) / 100)
 
-#if defined CC_BUILD_OPENAL
+#if CC_AUD_BACKEND == CC_AUD_BACKEND_OPENAL
 /*########################################################################################################################*
 *------------------------------------------------------OpenAL backend-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -298,7 +298,7 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	AudioBase_FreeChunks(chunks, numChunks);
 }
-#elif defined CC_BUILD_WINMM
+#elif CC_AUD_BACKEND == CC_AUD_BACKEND_WINMM
 /*########################################################################################################################*
 *------------------------------------------------------WinMM backend------------------------------------------------------*
 *#########################################################################################################################*/
@@ -311,49 +311,11 @@ void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 #define _UNICODE
 #endif
 #include <windows.h>
-
-/* === BEGIN mmsyscom.h === */
-#define CALLBACK_NULL  0x00000000l
-typedef UINT           MMRESULT;
-#define WINMMAPI       DECLSPEC_IMPORT
-#define MMSYSERR_BADDEVICEID 2
-/* === BEGIN mmeapi.h === */
-typedef struct WAVEHDR_ {
-	LPSTR       lpData;
-	DWORD       dwBufferLength;
-	DWORD       dwBytesRecorded;
-	DWORD_PTR   dwUser;
-	DWORD       dwFlags;
-	DWORD       dwLoops;
-	struct WAVEHDR_* lpNext;
-	DWORD_PTR   reserved;
-} WAVEHDR;
-
-typedef struct WAVEFORMATEX_ {
-	WORD  wFormatTag;
-	WORD  nChannels;
-	DWORD nSamplesPerSec;
-	DWORD nAvgBytesPerSec;
-	WORD  nBlockAlign;
-	WORD  wBitsPerSample;
-	WORD  cbSize;
-} WAVEFORMATEX;
-typedef void* HWAVEOUT;
-
-#define WAVE_MAPPER     ((UINT)-1)
-#define WAVE_FORMAT_PCM 1
-#define WHDR_DONE       0x00000001
-#define WHDR_PREPARED   0x00000002
-
-WINMMAPI MMRESULT WINAPI waveOutOpen(HWAVEOUT* phwo, UINT deviceID, const WAVEFORMATEX* fmt, DWORD_PTR callback, DWORD_PTR instance, DWORD flags);
-WINMMAPI MMRESULT WINAPI waveOutClose(HWAVEOUT hwo);
-WINMMAPI MMRESULT WINAPI waveOutPrepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
-WINMMAPI MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
-WINMMAPI MMRESULT WINAPI waveOutWrite(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
-WINMMAPI MMRESULT WINAPI waveOutReset(HWAVEOUT hwo);
-WINMMAPI MMRESULT WINAPI waveOutGetErrorTextA(MMRESULT err, LPSTR text, UINT textLen);
-WINMMAPI UINT     WINAPI waveOutGetNumDevs(void);
-/* === END mmeapi.h === */
+/*
+#include <winmm.h>
+*/
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-winmm.h"
 
 struct AudioContext {
 	HWAVEOUT handle;
@@ -503,7 +465,7 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	AudioBase_FreeChunks(chunks, numChunks);
 }
-#elif defined CC_BUILD_OPENSLES
+#elif CC_AUD_BACKEND == CC_AUD_BACKEND_OPENSLES
 /*########################################################################################################################*
 *----------------------------------------------------OpenSL ES backend----------------------------------------------------*
 *#########################################################################################################################*/
@@ -1551,6 +1513,15 @@ struct AudioContext {
 CC_INLINE void getNextBuffer(int count, int *bufferIndex) {
 	(*bufferIndex)++;
 	if (*bufferIndex >= count) *bufferIndex = 0;
+}
+
+CC_INLINE void String_DecodeCP1252(cc_string* value, const void* data, int numBytes) {
+	const cc_uint8* chars = (const cc_uint8*)data;
+	int i; char c;
+
+	for (i = 0; i < numBytes; i++) {
+		if (Convert_TryCodepointToCP437(chars[i], &c)) String_Append(value, c);
+	}
 }
 
 ULONG APIENTRY kaiCallback(PVOID data, PVOID buffer, ULONG size) {

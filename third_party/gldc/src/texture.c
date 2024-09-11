@@ -86,15 +86,12 @@ static void* yalloc_alloc_and_defrag(size_t size) {
     return ret;
 }
 
-#define GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS 4
 static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
     txr->index  = id;
     txr->width  = txr->height = 0;
-    txr->mipmap = 0;
     txr->data   = NULL;
     txr->minFilter = GL_NEAREST;
     txr->magFilter = GL_NEAREST;
-    txr->mipmap_bias = GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS;
 }
 
 void _glInitTextures() {
@@ -158,8 +155,6 @@ void gldcBindTexture(GLuint id) {
 
     TEXTURE_ACTIVE = txr;
     gl_assert(TEXTURE_ACTIVE->index == id);
-
-    STATE_DIRTY = GL_TRUE;
 }
 
 int gldcAllocTexture(int w, int h, int format) {
@@ -171,7 +166,6 @@ int gldcAllocTexture(int w, int h, int format) {
             /* changed - free old texture memory */
             yalloc_free(YALLOC_BASE, active->data);
             active->data = NULL;
-            active->mipmap = 0;
         }
     }
 
@@ -186,9 +180,6 @@ int gldcAllocTexture(int w, int h, int format) {
         active->data = yalloc_alloc_and_defrag(bytes);
     }
     if (!active->data) return GL_OUT_OF_MEMORY;
-
-    /* Mark level 0 as set in the mipmap bitmask */
-    active->mipmap |= (1 << 0);
     return 0;
 }
 

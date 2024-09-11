@@ -2,40 +2,34 @@
 #include <kos.h>
 #include <dc/pvr.h>
 #include "gldc.h"
-#include "sh4_math.h"
 
-#define CLIP_DEBUG 0
-
-#define SQ_BASE_ADDRESS (void*) 0xe0000000
 #define PREFETCH(addr) __builtin_prefetch((addr))
+static volatile uint32_t* sq;
+
+// calculates 1/sqrt(x)
+GL_FORCE_INLINE float sh4_fsrra(float x) {
+  asm volatile ("fsrra %[value]\n"
+  : [value] "+f" (x) // outputs (r/w to FPU register)
+  : // no inputs
+  : // no clobbers
+  );
+  return x;
+}
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
-    return MATH_fsrra(x * x);
+    return sh4_fsrra(x * x);
 }
 
 GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     const float f = _glFastInvert(vertex->w);
 
-    /* Convert to NDC and apply viewport */
-    vertex->x = (vertex->x * f * VIEWPORT.hwidth)  + VIEWPORT.x_plus_hwidth;
-    vertex->y = (vertex->y * f * VIEWPORT.hheight) + VIEWPORT.y_plus_hheight;
+    /* Convert to NDC (viewport already applied) */
+    vertex->x = vertex->x * f;
+    vertex->y = vertex->y * f;
     vertex->z = f;
 }
 
-
-volatile uint32_t *sq = SQ_BASE_ADDRESS;
-
-static inline void _glFlushBuffer() {
-    TRACE();
-
-    /* Wait for both store queues to complete */
-    sq = (uint32_t*) 0xe0000000;
-    sq[0] = sq[8] = 0;
-}
-
 static inline void _glPushHeaderOrVertex(Vertex* v)  {
-    TRACE();
-
     uint32_t* s = (uint32_t*) v;
     sq[0] = *(s++);
     sq[1] = *(s++);
@@ -49,31 +43,11 @@ static inline void _glPushHeaderOrVertex(Vertex* v)  {
     sq += 8;
 }
 
-static void _glClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout) {
-    const float d0 = v1->w + v1->z;
-    const float d1 = v2->w + v2->z;
-    const float t = (fabsf(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
-    const float invt = 1.0f - t;
-
-    vout->x = invt * v1->x + t * v2->x;
-    vout->y = invt * v1->y + t * v2->y;
-    vout->z = invt * v1->z + t * v2->z;
-
-    vout->u = invt * v1->u + t * v2->u;
-    vout->v = invt * v1->v + t * v2->v;
-
-    vout->w = invt * v1->w + t * v2->w;
-
-    vout->bgra[0] = invt * v1->bgra[0] + t * v2->bgra[0];
-    vout->bgra[1] = invt * v1->bgra[1] + t * v2->bgra[1];
-    vout->bgra[2] = invt * v1->bgra[2] + t * v2->bgra[2];
-    vout->bgra[3] = invt * v1->bgra[3] + t * v2->bgra[3];
-}
+extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout);
 
 #define SPAN_SORT_CFG 0x005F8030
 static volatile uint32_t* PVR_LMMODE0 = (uint32_t*) 0xA05F6884;
 static volatile uint32_t* PVR_LMMODE1 = (uint32_t*) 0xA05F6888;
-static volatile uint32_t* QACR = (uint32_t*) 0xFF000038;
 
 #define V0_VIS (1 << 0)
 #define V1_VIS (1 << 1)
@@ -96,9 +70,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // .....A....B...
         //    /      |
         //  v3--v2---v1
-        _glClipEdge(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags = PVR_CMD_VERTEX_EOL;
-        _glClipEdge(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v0);
@@ -119,9 +93,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v0--v3---v2
-        _glClipEdge(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
@@ -142,9 +116,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //    /      |
         //  v1--v0---v3
 
-        _glClipEdge(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(a);
@@ -164,9 +138,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v2--v1---v0
-        _glClipEdge(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
@@ -186,9 +160,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v3-----v2
-        _glClipEdge(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
@@ -211,9 +185,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v2-----v1
-        _glClipEdge(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(a);
@@ -235,9 +209,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v0-----v3
-        _glClipEdge(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX_EOL;
-        _glClipEdge(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(v1);
@@ -260,9 +234,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v1-----v0
-        _glClipEdge(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX;
 
         _glPerspectiveDivideVertex(b);
@@ -286,9 +260,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v3
         // v1,v2,v0  v2,v0,A  v0,A,B
-        _glClipEdge(v2, v3, a);
+        ClipEdge(v2, v3, a);
         a->flags = PVR_CMD_VERTEX;
-        _glClipEdge(v3, v0, b);
+        ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
         _glPerspectiveDivideVertex(v1);
@@ -315,9 +289,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v2
         // v0,v1,v3  v1,v3,A  v3,A,B
-        _glClipEdge(v1, v2, a);
+        ClipEdge(v1, v2, a);
         a->flags  = PVR_CMD_VERTEX;
-        _glClipEdge(v2, v3, b);
+        ClipEdge(v2, v3, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
@@ -345,9 +319,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v1
         // v3,v0,v2  v0,v2,A  v2,A,B
-        _glClipEdge(v0, v1, a);
+        ClipEdge(v0, v1, a);
         a->flags  = PVR_CMD_VERTEX;
-        _glClipEdge(v1, v2, b);
+        ClipEdge(v1, v2, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
@@ -375,9 +349,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v0
         // v2,v3,v1  v3,v1,A  v1,A,B
-        _glClipEdge(v3, v0, a);
+        ClipEdge(v3, v0, a);
         a->flags  = PVR_CMD_VERTEX;
-        _glClipEdge(v0, v1, b);
+        ClipEdge(v0, v1, b);
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
@@ -399,33 +373,20 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
     }
 }
 
-void SceneListSubmit(Vertex* v3, int n) {
-    TRACE();
-    /* You need at least a header, and 3 vertices to render anything */
-    if(n < 4) return;
-
+extern void ProcessVertexList(Vertex* v3, int n, void* sq_addr);
+void SceneListSubmit(Vertex* v3, int n, int type) {
     PVR_SET(SPAN_SORT_CFG, 0x0);
 
     //Set PVR DMA registers
     *PVR_LMMODE0 = 0;
     *PVR_LMMODE1 = 0;
 
-    //Set QACR registers
-	QACR[1] = QACR[0] = 0x11;
+	sq_lock((void*)PVR_TA_INPUT);
+	sq = (uint32_t*)MEM_AREA_SQ_BASE;
+	uint8_t visible_mask = 0;
 
-#if CLIP_DEBUG
-    Vertex* vertex = (Vertex*) src;
-    for(int i = 0; i < n; ++i) {
-        fprintf(stderr, "{%f, %f, %f, %f}, // %x (%x)\n", vertex[i].xyz[0], vertex[i].xyz[1], vertex[i].xyz[2], vertex[i].w, vertex[i].flags, &vertex[i]);
-    }
-
-    fprintf(stderr, "----\n");
-#endif
-    uint8_t visible_mask = 0;
-
-    sq = SQ_BASE_ADDRESS;
-
-    for(int i = 0; i < n; ++i, ++v3) {
+    for(int i = 0; i < n; ++i, ++v3) 
+	{
         PREFETCH(v3 + 1);
         switch(v3->flags & 0xFF000000) {
         case PVR_CMD_VERTEX_EOL:
@@ -478,5 +439,6 @@ void SceneListSubmit(Vertex* v3, int n) {
         }
     }
 
-    _glFlushBuffer();
+	sq_wait();
+	sq_unlock();
 }

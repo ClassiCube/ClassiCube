@@ -1,6 +1,8 @@
 #ifndef CC_LOGGER_H
 #define CC_LOGGER_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Logs warnings/errors and also abstracts platform specific logging for fatal errors
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -55,4 +57,6 @@ void Logger_Abort(const char* raw_msg);
 /* Typically used to abort due to an unrecoverable error. (e.g. out of memory) */
 CC_NOINLINE void Logger_Abort2(cc_result result, const char* raw_msg);
 void Logger_FailToStart(const char* raw_msg);
+
+CC_END_HEADER
 #endif

@@ -11,6 +11,7 @@
 #include "Options.h"
 
 cc_bool HeldBlockRenderer_Show;
+#ifndef CC_DISABLE_HELDBLOCK
 static BlockID held_block;
 static struct Entity held_entity;
 static struct Matrix held_blockProj;
@@ -42,14 +43,15 @@ static void HeldBlockRenderer_RenderModel(void) {
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
 		model = Entities.CurPlayer->Base.Model;
 		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
+		Vec3_Set(held_entity.ModelScale, 1.0f, 1.0f, 1.0f);
 
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
-	} else {	
+	}
+	else {
 		model = Models.Block;
 		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
+		Vec3_Set(held_entity.ModelScale, 0.4f, 0.4f, 0.4f);
 
 		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
 		Model_Render(model, &held_entity);
@@ -227,7 +229,7 @@ void HeldBlockRenderer_Render(float delta) {
 	held_block  = Inventory_SelectedBlock;
 	view = Gfx.View;
 
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &held_blockProj);
+	Gfx_LoadMatrix(MATRIX_PROJ, &held_blockProj);
 	SetMatrix();
 
 	ResetHeldState();
@@ -236,7 +238,7 @@ void HeldBlockRenderer_Render(float delta) {
 	if (!Camera.Active->isThirdPerson) HeldBlockRenderer_RenderModel();
 
 	Gfx.View = view;
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_PROJ, &Gfx.Projection);
 }
 
 
@@ -261,6 +263,12 @@ static void OnInit(void) {
 	Event_Register_(&UserEvents.BlockChanged,     NULL, OnBlockChanged);
 	Event_Register_(&GfxEvents.ContextLost,       NULL, OnContextLost);
 }
+#else
+void HeldBlockRenderer_ClickAnim(cc_bool digging) { }
+void HeldBlockRenderer_Render(float delta) { }
+
+static void OnInit(void) { }
+#endif
 
 struct IGameComponent HeldBlockRenderer_Component = {
 	OnInit /* Init  */

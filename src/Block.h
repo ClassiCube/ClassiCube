@@ -8,6 +8,8 @@
    Also performs automatic rotation of directional blocks.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
+CC_BEGIN_HEADER
+
 struct IGameComponent;
 extern struct IGameComponent Blocks_Component;
 
@@ -151,4 +153,6 @@ extern cc_bool AutoRotate_Enabled;
 BlockID AutoRotate_RotateBlock(BlockID block);
 /* Returns non 0 if both blocks belong to the same autorotate group */
 cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID blockOther);
+
+CC_END_HEADER
 #endif

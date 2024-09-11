@@ -5,158 +5,81 @@
 #include <dc/pvr.h>
 #include "gldc.h"
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define CLAMP( X, _MIN, _MAX )  ( (X)<(_MIN) ? (_MIN) : ((X)>(_MAX) ? (_MAX) : (X)) )
+GLboolean STATE_DIRTY;
 
-GLboolean STATE_DIRTY = GL_TRUE;
+GLboolean DEPTH_TEST_ENABLED;
+GLboolean DEPTH_MASK_ENABLED;
 
-GLboolean DEPTH_TEST_ENABLED = GL_FALSE;
-GLboolean DEPTH_MASK_ENABLED = GL_FALSE;
+GLboolean CULLING_ENABLED;
 
-GLboolean CULLING_ENABLED = GL_FALSE;
+GLboolean FOG_ENABLED;
+GLboolean ALPHA_TEST_ENABLED;
 
-GLboolean FOG_ENABLED        = GL_FALSE;
-GLboolean ALPHA_TEST_ENABLED = GL_FALSE;
-
-GLboolean SCISSOR_TEST_ENABLED = GL_FALSE;
+GLboolean SCISSOR_TEST_ENABLED;
 GLenum SHADE_MODEL = PVR_SHADE_GOURAUD;
 
-GLboolean BLEND_ENABLED = GL_FALSE;
+GLboolean BLEND_ENABLED;
 
-GLboolean TEXTURES_ENABLED = GL_FALSE;
-GLboolean AUTOSORT_ENABLED = GL_FALSE;
+GLboolean TEXTURES_ENABLED;
+GLboolean AUTOSORT_ENABLED;
 
-PolyList OP_LIST;
-PolyList PT_LIST;
-PolyList TR_LIST;
-Viewport VIEWPORT;
-
-static struct {
-    int x;
-    int y;
-    int width;
-    int height;
-    GLboolean applied;
-} scissor_rect;
+AlignedVector OP_LIST;
+AlignedVector PT_LIST;
+AlignedVector TR_LIST;
 
 void glKosInit() {
-    scissor_rect.width  = vid_mode->width;
-    scissor_rect.height = vid_mode->height;
     _glInitTextures();
 
     OP_LIST.list_type = PVR_LIST_OP_POLY;
     PT_LIST.list_type = PVR_LIST_PT_POLY;
     TR_LIST.list_type = PVR_LIST_TR_POLY;
 
-    aligned_vector_reserve(&OP_LIST.vector, 1024 * 3);
-    aligned_vector_reserve(&PT_LIST.vector,  512 * 3);
-    aligned_vector_reserve(&TR_LIST.vector, 1024 * 3);
+    aligned_vector_reserve(&OP_LIST, 1024 * 3);
+    aligned_vector_reserve(&PT_LIST,  512 * 3);
+    aligned_vector_reserve(&TR_LIST, 1024 * 3);
 }
 
 void glKosSwapBuffers() {
-    _glApplyScissor(true);
-
-    pvr_scene_begin();   
-        if (OP_LIST.vector.size > 2) {
+        if (OP_LIST.size > 2) {
             pvr_list_begin(PVR_LIST_OP_POLY);
-            SceneListSubmit((Vertex*)OP_LIST.vector.data, OP_LIST.vector.size);
+            SceneListSubmit((Vertex*)OP_LIST.data, OP_LIST.size, 0);
             pvr_list_finish();
+    		OP_LIST.size = 0;
         }
 
-        if (PT_LIST.vector.size > 2) {
+        if (PT_LIST.size > 2) {
             pvr_list_begin(PVR_LIST_PT_POLY);
-            SceneListSubmit((Vertex*)PT_LIST.vector.data, PT_LIST.vector.size);
+            SceneListSubmit((Vertex*)PT_LIST.data, PT_LIST.size, 1);
             pvr_list_finish();
+    		PT_LIST.size = 0;
         }
 
-        if (TR_LIST.vector.size > 2) {
+        if (TR_LIST.size > 2) {
             pvr_list_begin(PVR_LIST_TR_POLY);
-            SceneListSubmit((Vertex*)TR_LIST.vector.data, TR_LIST.vector.size);
+            SceneListSubmit((Vertex*)TR_LIST.data, TR_LIST.size, 2);
             pvr_list_finish();
+    		TR_LIST.size = 0;
         }
-    pvr_scene_finish();
-    
-    OP_LIST.vector.size = 0;
-    PT_LIST.vector.size = 0;
-    TR_LIST.vector.size = 0;
 }
 
-void glScissor(int x, int y, int width, int height) {
-    scissor_rect.x = x;
-    scissor_rect.y = y;
-    scissor_rect.width = width;
-    scissor_rect.height = height;
-    scissor_rect.applied = false;
-    _glApplyScissor(false);
+static inline int DimensionFlag(int w) {
+    switch(w) {
+        case 16: return 1;
+        case 32: return 2;
+        case 64: return 3;
+        case 128: return 4;
+        case 256: return 5;
+        case 512: return 6;
+        case 1024: return 7;
+        case 8:
+        default:
+            return 0;
+    }
 }
 
-/* Setup the hardware user clip rectangle.
-
-   The minimum clip rectangle is a 32x32 area which is dependent on the tile
-   size use by the tile accelerator. The PVR swithes off rendering to tiles
-   outside or inside the defined rectangle dependant upon the 'clipmode'
-   bits in the polygon header.
-
-   Clip rectangles therefore must have a size that is some multiple of 32.
-
-    glScissor(0, 0, 32, 32) allows only the 'tile' in the lower left
-    hand corner of the screen to be modified and glScissor(0, 0, 0, 0)
-    disallows modification to all 'tiles' on the screen.
-
-    We call this in the following situations:
-
-     - glEnable(GL_SCISSOR_TEST) is called
-     - glScissor() is called
-     - After glKosSwapBuffers()
-
-    This ensures that a clip command is added to every vertex list
-    at the right place, either when enabling the scissor test, or
-    when the scissor test changes.
-*/
-void _glApplyScissor(int force) {
-    /* Don't do anyting if clipping is disabled */
-    if (!SCISSOR_TEST_ENABLED) return;
-
-    /* Don't apply if we already applied - nothing changed */
-    if (scissor_rect.applied && !force) return;
-
-    PVRTileClipCommand c;
-
-    int sx, sy, ex, ey;
-    int scissor_width  = MAX(MIN(scissor_rect.width,  vid_mode->width),  0);
-    int scissor_height = MAX(MIN(scissor_rect.height, vid_mode->height), 0);
-
-    /* force the origin to the lower left-hand corner of the screen */
-	sx = scissor_rect.x;
-    sy = (vid_mode->height - scissor_height) - scissor_rect.y;
-    ex = sx + scissor_width;
-    ey = sy + scissor_height;
-
-    /* load command structure while mapping screen coords to TA tiles */
-    c.flags = PVR_CMD_USERCLIP;
-    c.d1 = c.d2 = c.d3 = 0;
-
-    uint16_t vw = vid_mode->width  >> 5;
-    uint16_t vh = vid_mode->height >> 5;
-
-    c.sx = CLAMP(sx >> 5, 0, vw);
-    c.sy = CLAMP(sy >> 5, 0, vh);
-    c.ex = CLAMP((ex >> 5) - 1, 0, vw);
-    c.ey = CLAMP((ey >> 5) - 1, 0, vh);
-
-    aligned_vector_push_back(&OP_LIST.vector, &c, 1);
-    aligned_vector_push_back(&PT_LIST.vector, &c, 1);
-    aligned_vector_push_back(&TR_LIST.vector, &c, 1);
-
-    scissor_rect.applied = true;
-}
-
-
+#define DEFAULT_MIPMAP_BIAS 4
 void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     TextureObject* tx1 = TEXTURE_ACTIVE;
-    uint32_t txr_base;
-    int gen_color_clamp = PVR_CLRCLAMP_DISABLE;
 
     int gen_culling = CULLING_ENABLED    ? PVR_CULLING_CW : PVR_CULLING_SMALL;
     int depth_comp  = DEPTH_TEST_ENABLED ? PVR_DEPTHCMP_GEQUAL : PVR_DEPTHCMP_ALWAYS;
@@ -205,17 +128,14 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     dst->cmd |= (PVR_UVFMT_32BIT       << PVR_TA_CMD_UVFMT_SHIFT)    & PVR_TA_CMD_UVFMT_MASK;
     dst->cmd |= (gen_clip_mode         << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
 
-    /* Polygon mode 1 */
     dst->mode1  = (depth_comp  << PVR_TA_PM1_DEPTHCMP_SHIFT)   & PVR_TA_PM1_DEPTHCMP_MASK;
     dst->mode1 |= (gen_culling << PVR_TA_PM1_CULLING_SHIFT)    & PVR_TA_PM1_CULLING_MASK;
     dst->mode1 |= (depth_write << PVR_TA_PM1_DEPTHWRITE_SHIFT) & PVR_TA_PM1_DEPTHWRITE_MASK;
     dst->mode1 |= (txr_enable  << PVR_TA_PM1_TXRENABLE_SHIFT)  & PVR_TA_PM1_TXRENABLE_MASK;
 
-    /* Polygon mode 2 */
     dst->mode2  = (blend_src       << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
     dst->mode2 |= (blend_dst       << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
     dst->mode2 |= (gen_fog_type    << PVR_TA_PM2_FOG_SHIFT)      & PVR_TA_PM2_FOG_MASK;
-    dst->mode2 |= (gen_color_clamp << PVR_TA_PM2_CLAMP_SHIFT)    & PVR_TA_PM2_CLAMP_MASK;
     dst->mode2 |= (gen_alpha       << PVR_TA_PM2_ALPHA_SHIFT)    & PVR_TA_PM2_ALPHA_MASK;
 
     if (txr_enable == PVR_TEXTURE_DISABLE) {
@@ -226,20 +146,15 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
 
         dst->mode2 |= (txr_alpha                << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
         dst->mode2 |= (filter                   << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
-        dst->mode2 |= (tx1->mipmap_bias         << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
+        dst->mode2 |= (DEFAULT_MIPMAP_BIAS      << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
         dst->mode2 |= (PVR_TXRENV_MODULATEALPHA << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
 
         dst->mode2 |= (DimensionFlag(tx1->width)  << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
         dst->mode2 |= (DimensionFlag(tx1->height) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
 
-        /* Polygon mode 3 */
-        dst->mode3  = (GL_FALSE   << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
+        dst->mode3  = (0          << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
         dst->mode3 |= (tx1->color << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
-
-        /* Convert the texture address */
-        txr_base = (uint32_t)tx1->data;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
-        dst->mode3 |= txr_base;
+        dst->mode3 |= ((uint32_t)tx1->data & 0x00fffff8) >> 3;
     }
 
     dst->d1 = dst->d2 = 0xffffffff;

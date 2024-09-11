@@ -29,10 +29,13 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
 const char* Platform_AppNameSuffix = " Switch";
+cc_bool Platform_ReadonlyFilesystem;
 
 alignas(16) u8 __nx_exception_stack[0x1000];
 u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
@@ -120,11 +123,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
+int File_Exists(const cc_filepath* path) {
 	struct stat sb;
-	Platform_EncodePath(&str, path);
-	return stat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

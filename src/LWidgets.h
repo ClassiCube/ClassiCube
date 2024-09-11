@@ -2,11 +2,15 @@
 #define CC_LWIDGETS_H
 #include "Bitmap.h"
 #include "Constants.h"
+CC_BEGIN_HEADER
+
 /* Describes and manages individual 2D GUI elements in the launcher.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 struct Context2D;
+struct InputDevice;
+
 enum LWIDGET_TYPE {
 	LWIDGET_BUTTON, LWIDGET_CHECKBOX, LWIDGET_INPUT,
 	LWIDGET_LABEL,  LWIDGET_LINE, LWIDGET_SLIDER, LWIDGET_TABLE
@@ -24,7 +28,7 @@ struct LWidgetVTABLE {
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
 	/* Returns whether the key press was intercepted */
-	cc_bool (*KeyDown)(void* widget, int key, cc_bool wasDown);
+	cc_bool (*KeyDown)(void* widget, int key, cc_bool wasDown, struct InputDevice* device);
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
@@ -228,7 +232,7 @@ void LTable_Add(void* screen, struct LTable* table,
 void LTable_Reset(struct LTable* table);
 /* Whether this table would handle the given key being pressed. */
 /* e.g. used so pressing up/down works even when another widget is selected */
-cc_bool LTable_HandlesKey(int key);
+cc_bool LTable_HandlesKey(int key, struct InputDevice* device);
 /* Filters rows to only show those containing 'w->Filter' in the name. */
 void LTable_ApplyFilter(struct LTable* table);
 /* Sorts the rows in the table by current Sorter function of table */
@@ -248,4 +252,6 @@ void LTable_SetSelectedTo(struct LTable* w, int index);
 void LTable_RowClick(struct LTable* w, int row);
 /* Works out the background color of the given row */
 BitmapCol LTable_RowColor(int row, cc_bool selected, cc_bool featured);
+
+CC_END_HEADER
 #endif

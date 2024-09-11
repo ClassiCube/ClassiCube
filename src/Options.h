@@ -1,6 +1,8 @@
 #ifndef CC_OPTIONS_H
 #define CC_OPTIONS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
 Manages loading and saving options
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
@@ -155,4 +157,6 @@ void Options_SetSecure(const char* opt, const cc_string* data);
 /* Attempts to securely decode an option. */
 /* NOTE: Not all platforms support secure saving. */
 void Options_GetSecure(const char* opt, cc_string* data);
+
+CC_END_HEADER
 #endif

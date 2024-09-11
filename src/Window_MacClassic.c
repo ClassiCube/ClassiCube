@@ -166,6 +166,7 @@ void Window_PreInit(void) {
     long tmpLong = 0;
     Gestalt(gestaltQuickdrawVersion, &tmpLong);
     hasColorQD = tmpLong >= gestalt32BitQD;
+	DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {
@@ -215,6 +216,8 @@ static void DoCreateWindow(int width, int height) {
 
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
+
+void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) {
 	// TODO
@@ -383,8 +386,11 @@ void Window_ProcessEvents(float delta) {
 	}
 }
 
-void Window_ProcessGamepads(float delta) {
+void Gamepads_Init(void) {
+
 }
+
+void Gamepads_Process(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	Point point;
@@ -434,7 +440,7 @@ static PixMapHandle fb_pixmap;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	if (!useGWorld) {
-		bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, 4, "window pixels");
+		bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 		bmp->width  = width;
 		bmp->height = height;
 		return;
@@ -513,8 +519,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
 void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
 void OnscreenKeyboard_Close(void) { }
 
 void Window_EnableRawMouse(void) {
@@ -533,7 +537,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 void GLContext_Create(void) {
 	// TODO
 }
@@ -553,7 +557,7 @@ cc_bool GLContext_SwapBuffers(void) {
 	return true;
 }
 
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+void GLContext_SetVSync(cc_bool vsync) {
 	// TODO
 }
 void GLContext_GetApiInfo(cc_string* info) { }

@@ -5,6 +5,8 @@
 #include "Constants.h"
 #include "PackedCol.h"
 #include "String.h"
+CC_BEGIN_HEADER
+
 /* Represents an in-game entity.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -121,7 +123,6 @@ struct Entity {
 	cc_bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	float uScale, vScale;
-	struct Matrix Transform;
 
 	struct AnimatedComp Anim;
 	char SkinRaw[STRING_SIZE];
@@ -179,7 +180,7 @@ void Entities_Tick(struct ScheduledTask* task);
 /* Renders all entities */
 void Entities_RenderModels(float delta, float t);
 /* Removes the given entity, raising EntityEvents.Removed event */
-void Entities_Remove(EntityID id);
+void Entities_Remove(int id);
 /* Gets the ID of the closest entity to the given entity */
 /* Returns -1 if there is no other entity nearby */
 int Entities_GetClosest(struct Entity* src);
@@ -257,4 +258,6 @@ cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p);
 /* Moves local player back to spawn point. */
 void LocalPlayers_MoveToSpawn(struct LocationUpdate* update);
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update);
+
+CC_END_HEADER
 #endif

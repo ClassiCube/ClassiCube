@@ -23,17 +23,19 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000;
 const cc_result ReturnCode_FileNotFound     = fnfErr;
+const cc_result ReturnCode_DirectoryExists  = dupFNErr;
 const cc_result ReturnCode_SocketInProgess  = 1000000;
 const cc_result ReturnCode_SocketWouldBlock = 1000000;
-const cc_result ReturnCode_DirectoryExists  = dupFNErr;
+const cc_result ReturnCode_SocketDropped    = 1000000;
+static long sysVersion;
 
 #if TARGET_CPU_68K
 const char* Platform_AppNameSuffix = " MAC 68k";
 #else
 const char* Platform_AppNameSuffix = " MAC PPC";
 #endif
+cc_bool Platform_ReadonlyFilesystem;
 cc_bool Platform_SingleProcess = true;
-static long sysVersion;
 
 
 /*########################################################################################################################*
@@ -236,11 +238,8 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return DoCreateFolder(path->buffer);
 }
 
-int File_Exists(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-
-	return 0;
+int File_Exists(const cc_filepath* path) {
+	return false; // TODO
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -533,6 +532,10 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 }
 
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
 #endif

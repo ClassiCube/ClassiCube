@@ -1,20 +1,23 @@
 #ifndef CC_SCREENS_H
 #define CC_SCREENS_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* Contains all 2D non-menu screen implementations.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
+struct InputDevice;
 
 /* These always return false */
-int Screen_FInput(void* s, int key);
+int Screen_FInput(void* s, int key, struct InputDevice* device);
 int Screen_FKeyPress(void* s, char keyChar);
 int Screen_FText(void* s, const cc_string* str);
 int Screen_FMouseScroll(void* s, float delta);
 int Screen_FPointer(void* s, int id, int x, int y);
 
 /* These always return true */
-int Screen_TInput(void* s, int key);
+int Screen_TInput(void* s, int key, struct InputDevice* device);
 int Screen_TKeyPress(void* s, char keyChar);
 int Screen_TText(void* s, const cc_string* str);
 int Screen_TMouseScroll(void* s, float delta);
@@ -43,4 +46,6 @@ void ChatScreen_OpenInput(const cc_string* text);
 void ChatScreen_AppendInput(const cc_string* text);
 /* Sets number of visible lines in the main chat widget. */
 void ChatScreen_SetChatlines(int lines);
+
+CC_END_HEADER
 #endif

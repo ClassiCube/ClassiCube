@@ -1,12 +1,14 @@
 #ifndef CC_INPUT_H
 #define CC_INPUT_H
 #include "Core.h"
+CC_BEGIN_HEADER
+
 /* 
-Manages input state, raising input related events, and base input handling
+Manages input state and raising input related events
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
-struct StringsBuffer;
+struct InputDevice;
 extern struct IGameComponent Input_Component;
 
 enum InputButtons {
@@ -52,8 +54,9 @@ enum InputButtons {
 	CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP, CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME,
 	CCKEY_LAUNCH_MAIL, CCKEY_LAUNCH_MEDIA, CCKEY_LAUNCH_APP1, CCKEY_LAUNCH_CALC, 
 
-	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R, 
-	CCPAD_Z, CCPAD_C, CCPAD_D,
+	CCPAD_1, CCPAD_2, CCPAD_3, CCPAD_4, /* Primary buttons (e.g. A, B, X, Y) */
+	CCPAD_L, CCPAD_R, 
+	CCPAD_5, CCPAD_6, CCPAD_7, /* Secondary buttons (e.g. Z, C, D) */
 	CCPAD_LEFT, CCPAD_RIGHT, CCPAD_UP, CCPAD_DOWN,
 	CCPAD_START, CCPAD_SELECT, CCPAD_ZL, CCPAD_ZR,
 	CCPAD_LSTICK, CCPAD_RSTICK,
@@ -64,9 +67,10 @@ enum InputButtons {
 	INPUT_CLIPBOARD_COPY  = 1001,
 	INPUT_CLIPBOARD_PASTE = 1002
 };
-#define Input_IsPadButton(btn) ((btn) >= CCPAD_A && (btn) < INPUT_COUNT)
+#define Input_IsPadButton(btn) ((btn) >= CCPAD_1 && (btn) < INPUT_COUNT)
 
-extern const char* const Input_DisplayNames[INPUT_COUNT];
+extern const char* const Input_StorageNames[INPUT_COUNT];
+extern const char* Input_DisplayNames[INPUT_COUNT];
 
 extern struct _InputState {
 	/* Pressed state of each input button. Use Input_Set to change */
@@ -75,10 +79,9 @@ extern struct _InputState {
 	cc_bool RawMode;
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
+	/* Function that overrides all normal input handling (e.g. for virtual keyboard) */
+	void (*DownHook)(int btn, struct InputDevice* device);
 } Input;
-
-#define INPUT_SOURCE_NORMAL  (1 << 0)
-#define INPUT_SOURCE_GAMEPAD (1 << 1)
 
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
 void Input_SetPressed(int key);
@@ -90,20 +93,44 @@ void Input_SetNonRepeatable(int key, int pressed);
 /* Resets all input buttons to released state. (Input_SetReleased) */
 void Input_Clear(void);
 
+struct InputDevice;
+struct BindMapping_;
+typedef cc_bool (*InputDevice_IsPressed)(struct InputDevice* device, int key);
+
+struct InputDevice {
+	int type;
+	int rawIndex; /* Device index (i.e virtual controller port number) */
+	int mappedIndex; /* Device index after calling Game_MapState */
+	InputDevice_IsPressed IsPressed;
+	int upButton, downButton, leftButton, rightButton;
+	int enterButton1, enterButton2;
+	int pauseButton1, pauseButton2;
+	int escapeButton;
+	int pageUpButton, pageDownButton;
+	/* Buttons in launcher mode */
+	int tabLauncher;
+	/* Bindings */
+	const char* bindPrefix;
+	const struct BindMapping_* defaultBinds;
+	struct BindMapping_* currentBinds;
+};
+
+#define INPUT_SOURCE_NORMAL  (1 << 0)
+#define INPUT_SOURCE_GAMEPAD (1 << 1)
+#define INPUT_DEVICE_NORMAL   0x01
+#define INPUT_DEVICE_TOUCH    0x02
+#define INPUT_DEVICE_GAMEPAD  0x04
+
+extern struct InputDevice NormDevice;
+extern struct InputDevice TouchDevice;
+
+#define InputDevice_IsEnter(key,  dev) ((key) == (dev)->enterButton1 || (key) == (dev)->enterButton2)
+#define InputDevice_IsPause(key,  dev) ((key) == (dev)->pauseButton1 || (key) == (dev)->pauseButton2)
 
 #define Input_IsWinPressed()   (Input.Pressed[CCKEY_LWIN]   || Input.Pressed[CCKEY_RWIN])
 #define Input_IsAltPressed()   (Input.Pressed[CCKEY_LALT]   || Input.Pressed[CCKEY_RALT])
 #define Input_IsCtrlPressed()  (Input.Pressed[CCKEY_LCTRL]  || Input.Pressed[CCKEY_RCTRL])
 #define Input_IsShiftPressed() (Input.Pressed[CCKEY_LSHIFT] || Input.Pressed[CCKEY_RSHIFT])
-
-#define Input_IsUpButton(btn)     ((btn) == CCKEY_UP     || (btn) == CCPAD_UP)
-#define Input_IsDownButton(btn)   ((btn) == CCKEY_DOWN   || (btn) == CCPAD_DOWN)
-#define Input_IsLeftButton(btn)   ((btn) == CCKEY_LEFT   || (btn) == CCPAD_LEFT)
-#define Input_IsRightButton(btn)  ((btn) == CCKEY_RIGHT  || (btn) == CCPAD_RIGHT)
-
-#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER || (btn) == CCPAD_A)
-#define Input_IsPauseButton(btn)  ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_START || (btn) == CCKEY_PAUSE)
-#define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
 
 #if defined CC_BUILD_HAIKU
 	/* Haiku uses ALT instead of CTRL for clipboard and stuff */
@@ -114,7 +141,8 @@ void Input_Clear(void);
 #else
 	#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
-int Input_CalcDelta(int btn, int horDelta, int verDelta);
+void Input_CalcDelta(int btn, struct InputDevice* device, int* horDelta, int* verDelta);
+
 
 
 #ifdef CC_BUILD_TOUCH
@@ -130,6 +158,14 @@ void Input_SetTouchMode(cc_bool enabled);
 void Input_AddTouch(long id,    int x, int y);
 void Input_UpdateTouch(long id, int x, int y);
 void Input_RemoveTouch(long id, int x, int y);
+
+struct TouchPointer {
+	long id;
+	cc_uint8 type;
+	int begX, begY;
+	double start;
+}; 
+extern struct TouchPointer touches[INPUT_MAX_POINTERS];
 #else
 #define INPUT_MAX_POINTERS 1
 #define Pointers_Count 1
@@ -146,13 +182,52 @@ void Input_RemoveTouch(long id, int x, int y);
 #define TOUCH_TYPE_ALL (TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA | TOUCH_TYPE_BLOCKS)
 
 /* Data for mouse and touch */
-extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
+struct Pointer { 
+	int x, y;
+	/* Function that overrides all normal pointer input press handling */
+	void (*DownHook)(int index);
+	/* Function that overrides all normal pointer input release handling */
+	void (*UpHook)  (int index);
+};
+CC_VAR extern struct Pointer Pointers[INPUT_MAX_POINTERS];
+
 /* Raises appropriate events for a mouse vertical scroll */
 void Mouse_ScrollVWheel(float delta);
 /* Raises appropriate events for a mouse horizontal scroll */
 void Mouse_ScrollHWheel(float delta);
 /* Sets X and Y position of the given pointer, then raises appropriate events */
 void Pointer_SetPosition(int idx, int x, int y);
+
+
+/* Gamepad axes. Default behaviour is: */
+/*  - left axis:  player movement  */
+/*  - right axis: camera movement */
+enum PAD_AXIS         { PAD_AXIS_LEFT, PAD_AXIS_RIGHT };
+enum AXIS_SENSITIVITY { AXIS_SENSI_LOWER, AXIS_SENSI_LOW, AXIS_SENSI_NORMAL, AXIS_SENSI_HIGH, AXIS_SENSI_HIGHER };
+enum AXIS_BEHAVIOUR   { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
+extern int Gamepad_AxisBehaviour[2];
+extern int Gamepad_AxisSensitivity[2];
+
+/* Sets value of the given gamepad button */
+void Gamepad_SetButton(int port, int btn, int pressed);
+/* Sets value of the given axis */
+void Gamepad_SetAxis(int port, int axis, float x, float y, float delta);
+void Gamepad_Tick(float delta);
+
+#define INPUT_MAX_GAMEPADS 5
+#define GAMEPAD_BEG_BTN CCPAD_1
+#define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
+
+
+struct GamepadDevice {
+	struct InputDevice base;
+	long deviceID;
+	float axisX[2], axisY[2];
+	cc_bool pressed[GAMEPAD_BTN_COUNT];
+	float holdtime[GAMEPAD_BTN_COUNT];
+};
+extern struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
+int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults);
 
 
 /* Enumeration of all input bindings. */
@@ -175,98 +250,24 @@ enum InputBind_ {
 };
 typedef int InputBind;
 typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
-typedef cc_bool (*BindTriggered)(int key);
-typedef void    (*BindReleased)(int key);
 #define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
 
 /* The keyboard/mouse buttons that are bound to each input binding */
 extern BindMapping KeyBind_Mappings[BIND_COUNT];
-/* The gamepad buttons that are bound to each input binding */
-extern BindMapping PadBind_Mappings[BIND_COUNT];
 /* Default keyboard/mouse button that each input binding is bound to */
 extern const BindMapping KeyBind_Defaults[BIND_COUNT];
 /* Default gamepad button that each input binding is bound to */
 extern const BindMapping PadBind_Defaults[BIND_COUNT];
-/* Callback behaviour for when the given input binding is triggered */
-extern BindTriggered Bind_OnTriggered[BIND_COUNT];
-/* Callback behaviour for when the given input binding is released */
-extern BindReleased  Bind_OnReleased[BIND_COUNT];
 
-/* InputBind_IsPressed is what should be used, but export KeyBind_IsPressed for backwards compatibility */
-#define InputBind_IsPressed KeyBind_IsPressed
 /* Whether the given binding should be triggered in response to given input button being pressed */
-CC_API cc_bool InputBind_Claims(InputBind binding, int btn);
-/* Gets whether the given input binding is currently being triggered */
-CC_API cc_bool InputBind_IsPressed(InputBind binding);
+cc_bool InputBind_Claims(InputBind binding, int btn, struct InputDevice* device);
 
-/* Sets the key/mouse button that the given input binding is bound to */
-void KeyBind_Set(InputBind binding, int btn);
-/* Sets the gamepad button that the given input binding is bound to */
-void PadBind_Set(InputBind binding, int btn);
-/* Resets the key/mouse button that the given input binding is bound to */
-void KeyBind_Reset(InputBind binding);
-/* Resets the gamepad button that the given input binding is bound to*/
-void PadBind_Reset(InputBind binding);
+/* Sets the button that the given input binding is bound to */
+void InputBind_Set(InputBind binding, int btn, const struct InputDevice* device);
+/* Resets the button that the given input binding is bound to */
+void InputBind_Reset(InputBind binding, const struct InputDevice* device);
+/* Loads the bindings for the given device from either options or its defaults */
+void InputBind_Load(const struct InputDevice* device);
 
-
-/* Gamepad axes. Default behaviour is: */
-/*  - left axis:  player movement  */
-/*  - right axis: camera movement */
-enum PAD_AXIS         { PAD_AXIS_LEFT, PAD_AXIS_RIGHT };
-enum AXIS_SENSITIVITY { AXIS_SENSI_LOWER, AXIS_SENSI_LOW, AXIS_SENSI_NORMAL, AXIS_SENSI_HIGH, AXIS_SENSI_HIGHER };
-enum AXIS_BEHAVIOUR   { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
-extern int Gamepad_AxisBehaviour[2];
-extern int Gamepad_AxisSensitivity[2];
-
-/* Sets value of the given gamepad button */
-void Gamepad_SetButton(int port, int btn, int pressed);
-/* Sets value of the given axis */
-void Gamepad_SetAxis(int port, int axis, float x, float y, float delta);
-void Gamepad_Tick(float delta);
-#define INPUT_MAX_GAMEPADS 4
-
-
-/* whether to leave text input open for user to enter further input */
-#define HOTKEY_FLAG_STAYS_OPEN   0x01
-/* Whether the hotkey was auto defined (e.g. by server) */
-#define HOTKEY_FLAG_AUTO_DEFINED 0x02
-
-extern const cc_uint8 Hotkeys_LWJGL[256];
-struct HotkeyData {
-	int textIndex;     /* contents to copy directly into the input bar */
-	cc_uint8 trigger;  /* Member of Key enumeration */
-	cc_uint8 mods;     /* HotkeyModifiers bitflags */
-	cc_uint8 flags;    /* HOTKEY_FLAG flags */
-};
-
-#define HOTKEYS_MAX_COUNT 256
-extern struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
-extern struct StringsBuffer HotkeysText;
-enum HotkeyModifiers {
-	HOTKEY_MOD_CTRL = 1, HOTKEY_MOD_SHIFT = 2, HOTKEY_MOD_ALT = 4
-};
-
-/* Adds or updates a new hotkey. */
-void Hotkeys_Add(int trigger, cc_uint8 modifiers, const cc_string* text, cc_uint8 flags);
-/* Removes the given hotkey. */
-cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers);
-/* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
-/* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
-int Hotkeys_FindPartial(int key);
-
-/* Loads the given hotkey from options. (if it exists) */
-void StoredHotkeys_Load(int trigger, cc_uint8 modifiers);
-/* Removes the given hotkey from options. */
-void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers);
-/* Adds the given hotkey from options. */
-void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const cc_string* text);
-
-
-cc_bool InputHandler_SetFOV(int fov);
-cc_bool Input_HandleMouseWheel(float delta);
-void InputHandler_Tick(void);
-void InputHandler_OnScreensChanged(void);
-void InputHandler_DeleteBlock(void);
-void InputHandler_PlaceBlock(void);
-void InputHandler_PickBlock(void);
+CC_END_HEADER
 #endif

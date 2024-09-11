@@ -32,9 +32,11 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+#define SUPPORTS_GETADDRINFO 1
 
 #if defined CC_BUILD_ANDROID
 const char* Platform_AppNameSuffix = " android alpha";
@@ -44,6 +46,7 @@ const char* Platform_AppNameSuffix = " iOS alpha";
 const char* Platform_AppNameSuffix = "";
 #endif
 cc_bool Platform_SingleProcess;
+cc_bool Platform_ReadonlyFilesystem;
 
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN
@@ -210,12 +213,9 @@ cc_result Directory_Create(const cc_filepath* path) {
 	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	struct stat sb;
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-	
-	return stat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -553,6 +553,7 @@ void Platform_LoadSysFonts(void) {
 #endif
 	for (i = 0; i < Array_Elems(dirs); i++) 
 	{
+		Platform_Log1("Searching for fonts in %s", &dirs[i]);
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }
@@ -576,6 +577,7 @@ union SocketAddress {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
+#if SUPPORTS_GETADDRINFO
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
@@ -611,6 +613,33 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
+#else
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct hostent* res = gethostbyname(host);
+	struct sockaddr_in* addr4;
+	char* src_addr;
+	int i;
+	
+	// Must have at least one IPv4 address
+	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
+
+	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
+	{
+		src_addr = res->h_addr_list[i];
+		if (!src_addr) break;
+		addrs[i].size = sizeof(struct sockaddr_in);
+
+		addr4 = (struct sockaddr_in*)addrs[i].data;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		addr4->sin_addr   = *(struct in_addr*)src_addr;
+	}
+
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+}
+#endif
 
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	union SocketAddress* addr = (union SocketAddress*)addrs[0].data;
@@ -644,7 +673,6 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	cc_result res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
@@ -1341,7 +1369,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 	if (res) res = Stream_OpenFile(&s, &altFile);
 	if (res) return res;
 
-	res = Stream_Read(&s, tmp, MACHINEID_LEN);
+	res = Stream_Read(&s, (cc_uint8*)tmp, MACHINEID_LEN);
 	if (!res) DecodeMachineID(tmp, MACHINEID_LEN, key);
 
 	(void)s.Close(&s);
@@ -1469,6 +1497,7 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	}
 	return 0;
 }
+
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;
 	cc_uint32 header[4], key[4];
@@ -1498,6 +1527,10 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 		String_AppendAll(dst, header, min(dataLen, ENC_SIZE));
 	}
 	return 0;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

@@ -25,6 +25,8 @@ jobs:
           export BLOCKSDS=/opt/blocksds/core
           export BLOCKSDSEXT=/opt/blocksds/external
           make ds
+          export BUILD_DSI=1
+          make ds
 
 
       - uses: ./.github/actions/notify_failure
@@ -37,14 +39,20 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube.nds'
-          DEST_NAME: 'ClassiCube.nds'
+          SOURCE_FILE: 'ClassiCube-nds.nds'
+          DEST_NAME: 'ClassiCube-nds.nds'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'build-nds/ClassiCube.elf'
           DEST_NAME: 'ClassiCube-nds.elf'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-dsi.nds'
+          DEST_NAME: 'ClassiCube-dsi.nds'
           
           
       - uses: ./.github/actions/notify_success

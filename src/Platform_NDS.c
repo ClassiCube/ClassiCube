@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/time.h>
+#include <time.h>
 #include <nds/bios.h>
 #include <nds/cothread.h>
 #include <nds/interrupts.h>
@@ -26,20 +26,27 @@
 #include <nds/arm9/dldi.h>
 #include <nds/arm9/sdmmc.h>
 #include <fat.h>
+#ifdef BUILD_DSI
+#include "../third_party/dsiwifi/include/dsiwifi9.h"
+#else
 #include <dswifi9.h>
+#endif
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <dirent.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
+
 const char* Platform_AppNameSuffix = " NDS";
-extern cc_bool keyboardOpen;
+cc_bool Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*
@@ -108,6 +115,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("fat:/"); // may be overriden in InitFilesystem
 static bool fat_available;
+static int fat_error;
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
@@ -119,19 +127,17 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 cc_result Directory_Create(const cc_filepath* path) {
 	if (!fat_available) return 0;
 
-    Platform_Log1("mkdir %c", path->buffer);
-	return mkdir(path->buffer, 0) == -1 ? errno : 0;
+	int ret = mkdir(path->buffer, 0) == -1 ? errno : 0;
+	Platform_Log2("mkdir %c = %i", path->buffer, &ret);
+	return ret;
 }
 
-int File_Exists(const cc_string* path) {
+int File_Exists(const cc_filepath* path) {
 	if (!fat_available) return false;
-
-	cc_filepath str;
 	struct stat sb;
-	Platform_EncodePath(&str, path);
-    Platform_Log1("Check %c", str.buffer);
-
-	return stat(str.buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	
+	Platform_Log1("Check %c", path->buffer);
+	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -224,11 +230,16 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 }
 
 static int LoadFatFilesystem(void* arg) {
+	errno = 0;
 	fat_available = fatInitDefault();
+	fat_error     = errno;
 	return 0;
 }
 
-static void InitFilesystem(void) {
+static void MountFilesystem(void) {
+	LoadFatFilesystem(NULL);
+	return;
+	
 	cothread_t thread = cothread_create(LoadFatFilesystem, NULL, 0, 0);
 	// If running with DSi mode in melonDS and the internal SD card is enabled, then
 	//  fatInitDefault gets stuck in sdmmc_ReadSectors - because the fifoWaitValue32Async will never return
@@ -237,23 +248,32 @@ static void InitFilesystem(void) {
 	//  and then giving up if it takes too long.. not the most elegant solution, but it does work
 	if (thread == -1) {
 		LoadFatFilesystem(NULL);
-	} else {
-		for (int i = 0; i < 100; i++)
-		{
-			cothread_yield();
-			if (cothread_has_joined(thread)) break;
-			
-			swiDelay(2000);
-		}
+		return;
 	}
+	
+	for (int i = 0; i < 1000; i++)
+	{
+		cothread_yield();
+		if (cothread_has_joined(thread)) return;
+		
+		swiDelay(500);
+	}
+	Platform_LogConst("Gave up after 1000 tries");
+}
 
-    char* dir = fatGetDefaultCwd();
-    if (dir) {
+static void InitFilesystem(void) {
+	MountFilesystem();
+	char* dir = fatGetDefaultCwd();
+	
+	if (dir) {
 		Platform_Log1("CWD: %c", dir);
-        root_path.buffer = dir;
-        root_path.length = String_Length(dir);
-    }
+		root_path.buffer = dir;
+		root_path.length = String_Length(dir);
+	}
+	
 	Platform_ReadonlyFilesystem = !fat_available;
+	if (fat_available) return;
+	Platform_Log1("** FAILED TO MOUNT FILESYSTEM (error %i) **", &fat_error);
 }
 
 
@@ -396,23 +416,29 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 void Socket_Close(cc_socket s) {
 	shutdown(s, 2); // SHUT_RDWR = 2
+#ifdef BUILD_DSI
+	lwip_close(s);
+#else
 	closesocket(s);
+#endif
 }
 
-// libogc only implements net_select for gamecube currently
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int res; // number of 'ready' sockets
 	FD_ZERO(&set);
 	FD_SET(s, &set);
+	
 	if (mode == SOCKET_POLL_READ) {
 		res = select(s + 1, &set, NULL, NULL, &time);
 	} else {
 		res = select(s + 1, NULL, &set, NULL, &time);
 	}
+	
 	if (res < 0) { *success = false; return errno; }
-	*success = FD_ISSET(s, &set) != 0; return 0;
+	*success = FD_ISSET(s, &set) != 0; 
+	return 0;
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
@@ -420,26 +446,44 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	int resultSize = sizeof(int);
 	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 	
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+#ifdef BUILD_DSI
+	socklen_t resultSize = sizeof(socklen_t);
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+#else
+	int resultSize = sizeof(int);
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+#endif
 	return res;
 }
 
 static void InitNetworking(void) {
+#ifdef BUILD_DSI
+    if (!DSiWifi_InitDefault(INIT_ONLY)) {
+#else
     if (!Wifi_InitDefault(INIT_ONLY)) {
+#endif
         Platform_LogConst("Initing WIFI failed"); 
 		net_supported = false; return;
     }
+#ifdef BUILD_DSI
+    DSiWifi_AutoConnect();
+#else
     Wifi_AutoConnect();
+#endif
 
     for (int i = 0; i < 300; i++)
     {
+#ifdef BUILD_DSI
+        int status = DSiWifi_AssocStatus();
+#else
         int status = Wifi_AssocStatus();
+#endif
         if (status == ASSOCSTATUS_ASSOCIATED) return;
+		Platform_Log1("STATUS: %i", &status);
 
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
             Platform_LogConst("Can't connect to WIFI"); 

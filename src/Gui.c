@@ -17,6 +17,7 @@
 #include "Funcs.h"
 #include "Server.h"
 #include "TexturePack.h"
+#include "InputHandler.h"
 
 struct _GuiData Gui;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
@@ -223,9 +224,9 @@ static int IndexOfScreen(struct Screen* s) {
 	return -1;
 }
 
-void Gui_RemoveCore(struct Screen* s) {
+static cc_bool Gui_RemoveCore(struct Screen* s) {
 	int i = IndexOfScreen(s);
-	if (i == -1) return;
+	if (i == -1) return false;
 
 	for (; i < Gui.ScreensCount - 1; i++) 
 	{
@@ -236,6 +237,7 @@ void Gui_RemoveCore(struct Screen* s) {
 
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->Free(s);
+	return true;
 }
 
 CC_NOINLINE static void Gui_OnScreensChanged(void) {
@@ -244,8 +246,8 @@ CC_NOINLINE static void Gui_OnScreensChanged(void) {
 }
 
 void Gui_Remove(struct Screen* s) {
-	Gui_RemoveCore(s);
-	Gui_OnScreensChanged();
+	cc_bool removed = Gui_RemoveCore(s);
+	if (removed) Gui_OnScreensChanged();
 }
 
 void Gui_Add(struct Screen* s, int priority) {
@@ -308,6 +310,26 @@ void Gui_ShowPauseMenu(void) {
 	}
 }
 
+void Gui_ShowCinematicBars() {
+	int screenWidth = Window_Main.Width;
+	int screenHeight = Window_Main.Height;
+
+	// Ensure bar size is clamped between 0 and 1
+	if (Gui.BarSize < 0.0f) Gui.BarSize = 0.0f;
+	if (Gui.BarSize > 1.0f) Gui.BarSize = 1.0f;
+
+	// If bar size is 1, just draw 1 rectangle instead of 2
+	if (Gui.BarSize == 1.0f) {
+		Gfx_Draw2DGradient(0, 0, screenWidth, screenHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+	} else {
+		// Calculate the height of each bar based on the bar size
+		int barHeight = (int)(screenHeight * Gui.BarSize / 2.0f);
+
+		Gfx_Draw2DGradient(0, 0, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+		Gfx_Draw2DGradient(0, screenHeight - barHeight, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+	}
+}
+
 void Gui_RenderGui(float delta) {
 	struct Screen* s;
 	int i;
@@ -316,6 +338,8 @@ void Gui_RenderGui(float delta) {
 #ifdef CC_BUILD_DUALSCREEN
 	Texture_Render(&touchBgTex);
 #endif
+
+	if (Gui.BarSize > 0) Gui_ShowCinematicBars();
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
@@ -571,8 +595,8 @@ void Screen_ContextLost(void* screen) {
 	}
 }
 
-int  Screen_InputDown(void* screen, int key) { return key < CCKEY_F1 || key > CCKEY_F24; }
-void Screen_InputUp(void*   screen, int key) { }
+int  Screen_InputDown(void* screen, int key, struct InputDevice* device) { return key < CCKEY_F1 || key > CCKEY_F24; }
+void Screen_InputUp(void*   screen, int key, struct InputDevice* device) { }
 void Screen_PointerUp(void* s, int id, int x, int y) { }
 
 /*########################################################################################################################*

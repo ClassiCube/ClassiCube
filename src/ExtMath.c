@@ -3,11 +3,28 @@
 #include "Utils.h"
 /* For abs(x) function */
 #include <stdlib.h>
-
 #define PI 3.141592653589793238462643383279502884197169399
 
+static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
+#define DBL_NAN  *((double*)&_DBL_NAN)
+static const cc_uint64 _POS_INF = 0x7FF0000000000000ULL;
+#define POS_INF *((double*)&_POS_INF)
+
+/* Sega 32x is missing these intrinsics */
+#if defined CC_BUILD_32X
+#include <stdint.h>
+extern int32_t fix16_sqrt(int32_t value);
+
+float sqrtf(float x) {
+                int32_t fp_x = (int32_t)(x * (1 << 16));
+                fp_x = fix16_sqrt(fp_x);
+                return (float)fp_x / (1 << 16);
+        }
+#endif
+
+
 /* Sega saturn is missing these intrinsics */
-#ifdef CC_BUILD_SATURN
+#if defined CC_BUILD_SATURN
 #include <stdint.h>
 extern int32_t fix16_sqrt(int32_t value);
 static int abs(int x) { return x < 0 ? -x : x; }
@@ -32,6 +49,14 @@ float sqrtf(float x) {
 	}
 #elif defined __GNUC__
 	/* Defined in .h using builtins */
+#elif defined __TINYC__
+	/* Older versions of TinyC don't support fabsf or sqrtf */
+	/* Those can be used though if compiling with newer TinyC */
+	/*  versions for a very small performance improvement */
+	#include <math.h>
+
+	float Math_AbsF(float x)  { return fabs(x); }
+	float Math_SqrtF(float x) { return sqrt(x); }
 #else
 	#include <math.h>
 
@@ -146,7 +171,7 @@ float Random_Float(RNGState* seed) {
 /*########################################################################################################################*
 *--------------------------------------------------Transcendental functions-----------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_DREAMCAST
+#if defined CC_BUILD_DREAMCAST
 #include <math.h>
 
 /* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
@@ -155,8 +180,42 @@ float Random_Float(RNGState* seed) {
 
 float Math_SinF(float x)   { return sinf(x); }
 float Math_CosF(float x)   { return cosf(x); }
-double Math_Exp2(double x) { return exp2(x); }
-double Math_Log2(double x) { return log2(x); }
+#elif defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_NDS || defined CC_BUILD_32X
+
+// Source https://www.coranac.com/2009/07/sines
+#define ISIN_QN	10
+#define QA		12
+#define ISIN_B	19900
+#define	ISIN_C	3516
+
+static CC_INLINE int isin_s4(int x) {
+	int c, x2, y;
+
+	c  = x << (30 - ISIN_QN);		// Semi-circle info into carry.
+	x -= 1 << ISIN_QN;				// sine -> cosine calc
+
+	x <<= (31 - ISIN_QN);			// Mask with PI
+	x >>= (31 - ISIN_QN);			// Note: SIGNED shift! (to QN)
+	x  *= x;
+	x >>= (2 * ISIN_QN - 14);		// x=x^2 To Q14
+
+	y = ISIN_B - (x * ISIN_C >> 14);// B - x^2*C
+	y = (1 << QA) - (x * y >> 16);	// A - x^2*(B-x^2*C)
+
+	return (c >= 0) ? y : (-y);
+}
+
+float Math_SinF(float angle) {
+	int raw = (int)(angle * MATH_RAD2DEG * 4096 / 360);
+	return isin_s4(raw) / 4096.0f;
+}
+
+float Math_CosF(float angle) {
+	int raw = (int)(angle * MATH_RAD2DEG * 4096 / 360);
+	raw += (1 << ISIN_QN); // add offset to calculate cos(x) instead of sin(x)
+	return isin_s4(raw) / 4096.0f;
+}
+
 #else
 /***** Caleb's Math functions *****/
 
@@ -182,15 +241,7 @@ double Math_Log2(double x) { return log2(x); }
 /*  from the mathematical functions anyways */
 
 /* Global constants */
-static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
 #define DIV_2_PI (1.0 / (2.0 * PI))
-
-static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
-#define DBL_NAN  *((double*)&_DBL_NAN)
-static const cc_uint64 _POS_INF = 0x7FF0000000000000ULL;
-#define POS_INF *((double*)&_POS_INF)
-static const cc_uint64 _NEG_INF = 0xFFF0000000000000ULL;
-#define NEG_INF *((double*)&_NEG_INF)
 
 /* Calculates the floor of a double.
  */
@@ -290,6 +341,39 @@ float Math_CosF(float x) {
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;
 	return (float)SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
 }
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Transcendental functions-----------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_DREAMCAST
+#include <math.h>
+
+double Math_Exp2(double x) { return exp2(x); }
+double Math_Log2(double x) { return log2(x); }
+#else
+/***** Caleb's Math functions *****/
+
+/* This code implements the math functions sine, cosine, arctangent, the
+ * exponential function, and the logarithmic function. The code uses techniques
+ * exclusively described in the book "Computer Approximations" by John Fraser
+ * Hart (1st Edition). Each function approximates their associated math function
+ * the same way:
+ *
+ *   1. First, the function uses properties of the associated math function to
+ *      reduce the input range to a small finite interval,
+ *
+ *   2. Second, the function calculates a polynomial, rational, or similar
+ *      function that approximates the associated math function on that small
+ *      finite interval to the desired accuracy. These polynomial, rational, or
+ *      similar functions were calculated by the authors of "Computer
+ *      Approximations" using the Remez algorithm and exist in the book's
+ *      appendix.
+ */
+
+/* Global constants */
+static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
 
 /************
  * Math_Exp *
@@ -350,18 +434,16 @@ double Math_Exp2(double x) {
 
 	if (x == POS_INF || x == DBL_NAN)
 		return x;
-	if (x == NEG_INF)
-		return 0.0;
 
-	x_int = (int) x;
+	x_int = (int)x;
 
-	if (x < 0)
-		x_int--;
-
-	if (x_int < -1022)
+	if (x_int <= -1022)
 		return 0.0;
 	if (x_int > 1023)
 		return POS_INF;
+
+	if (x < 0)
+		x_int--;
 
 	doi.i = x_int + 1023;
 	doi.i <<= 52;
@@ -442,21 +524,24 @@ double Math_Log2(double x) {
 }
 #endif
 
+
 // Approximation of atan2f using the Remez algorithm
 //  https://math.stackexchange.com/a/1105038
 float Math_Atan2f(float x, float y) {
+	float ax, ay, a, s, r;
+
 	if (x == 0) {
 		if (y > 0) return  PI / 2.0f;
 		if (y < 0) return -PI / 2.0f;
 		return 0; /* Should probably be NaN */
 	}
 	
-	float ax = Math_AbsF(x);
-	float ay = Math_AbsF(y);
+	ax = Math_AbsF(x);
+	ay = Math_AbsF(y);
 
-	float a = (ax < ay) ? (ax / ay) : (ay / ax);
-	float s = a * a;
-	float r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;
+	a = (ax < ay) ? (ax / ay) : (ay / ax);
+	s = a * a;
+	r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;
 
 	if (ay > ax) r = 1.57079637f - r;
 	if (x < 0)   r = 3.14159274f - r;

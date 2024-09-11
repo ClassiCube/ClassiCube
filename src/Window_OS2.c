@@ -128,8 +128,8 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 	   	break;
 
 		case WM_QUIT:
-			Window_Free();
-			Window_Main.Handle = NULL;
+			Window_Destroy();
+			Window_Main.Handle.ptr = NULL;
 			Window_Main.Exists = false;
 			return (MRESULT)0;
 
@@ -314,7 +314,7 @@ void Window_Create(int width, int height) {
 	}
 	Window_SetSize(width, height);
 	Window_Main.Exists = true;
-	Window_Main.Handle = &hwndFrame;
+	Window_Main.Handle.ptr = &hwndFrame;
 	Window_Main.Focused = TRUE;
 
   WinSetVisibleRegionNotify(hwndClient, TRUE);
@@ -330,7 +330,9 @@ void Window_Create3D(int width, int height) {
 	Window_Create(width, height);
 }
 
-void Window_Free(void) {
+void Window_Free(void) { }
+
+void Window_Destroy(void) {
 	WinSetVisibleRegionNotify (hwndClient, FALSE);
 	DiveFreeBuffer();
 	if (hDive != NULLHANDLE) DiveClose(hDive);
@@ -601,6 +603,10 @@ void Window_DisableRawMouse(void) {
 	if (WinSetCapture(HWND_DESKTOP, NULLHANDLE))
 		DefaultDisableRawMouse();
 }
+
+void Gamepads_Init(void) { }
+
+void Gamepads_Process(float delta) { }
 
 void Cursor_GetRawPos(int *x, int *y) {
     POINTL  pointl;
