@@ -235,6 +235,7 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 	HacksComp_ParseFlag(hacks, "+push",        "-push",        &hacks->CanBePushed);
 	HacksComp_ParseFlag(hacks, "+thirdperson", "-thirdperson", &hacks->CanUseThirdPerson);
 	HacksComp_ParseFlag(hacks, "+names",       "-names",       &hacks->CanSeeAllNames);
+	HacksComp_ParseFlag(hacks, "+save",        "-save",        &hacks->CanSaveMap);
 
 	if (hacks->IsOp) HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
 	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);
