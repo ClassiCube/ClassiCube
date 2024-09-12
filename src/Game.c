@@ -658,7 +658,7 @@ static void LimitFPS(void) {
 		Thread_Sleep((int)(cooldown + 0.5f));
 
 		/* also accumulate Thread_Sleep duration, as actual sleep */
-		/*  duration can significantly deviate from requested time */ 
+		/*  duration can significantly deviate from requested time */
 		/*  (e.g. requested 4ms, but actually slept for 8ms) */
 		sleepEnd = Stopwatch_Measure();
 		gfx_actualTime += ElapsedMilliseconds(frameEnd, sleepEnd);
@@ -734,7 +734,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	cc_uint64 render  = Stopwatch_Measure();
 	cc_uint64 elapsed = Stopwatch_ElapsedMicroseconds(frameStart, render);
 	/* avoid large delta with suspended process */
-	if (elapsed > 5000000) elapsed = 5000000; 
+	if (elapsed > 5000000) elapsed = 5000000;
 	
 	deltaD = (int)elapsed / (1000.0 * 1000.0);
 	delta  = (float)deltaD;
@@ -789,7 +789,7 @@ static CC_INLINE void Game_RenderFrame(void) {
 	t = (float)(entTask.accumulator / entTask.interval);
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
 
-	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
+	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
 	AudioBackend_Tick();
