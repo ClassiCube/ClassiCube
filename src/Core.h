@@ -1,6 +1,6 @@
 #ifndef CC_CORE_H
 #define CC_CORE_H
-/* 
+/*
 Core fixed-size integer types, automatic platform detection, and common small structs
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -441,7 +441,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_FREETYPE
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
-	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_SDL2
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_OS2
 #elif defined PLAT_SATURN
 	#define CC_BUILD_SATURN
 	#define CC_BUILD_CONSOLE

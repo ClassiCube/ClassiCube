@@ -279,6 +279,10 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
+#elif defined CC_BUILD_OS2
+static void DumpFrame(cc_string* trace, void* addr) {
+// TBD
+}
 #else
 /* No backtrace support implemented */
 #endif
