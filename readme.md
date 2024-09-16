@@ -1,68 +1,79 @@
-ClassiCube is a custom Minecraft Classic compatible client written in C from scratch.<br>
-**It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
+Here's an improved, more formal version of the README with added emojis for a friendly touch:
 
-# What ClassiCube is
+---
 
-ClassiCube aims to replicate the 2009 Minecraft Classic client while offering **optional** enhancements to improve gameplay. ClassiCube can run on [many systems](#supported-systems), including desktop, web, mobile, and even some consoles.
+# ClassiCube 🎮
+
+**ClassiCube** is a custom Minecraft Classic-compatible client, built entirely from scratch in C.  
+It is not affiliated with Mojang AB, Minecraft, or Microsoft in any way. ⚠️
+
+## What is ClassiCube? 🧱
+
+ClassiCube aims to faithfully recreate the 2009 Minecraft Classic client while providing **optional** enhancements to improve the gameplay experience. The game can run on a wide variety of systems, including desktop, web, mobile, and even some consoles.
+
+### Key Features 🌟
 <details>
-<summary><b>Features (click to expand)</b></summary>
+<summary><strong>Click to expand</strong></summary>
 
-* Much better performance and minimal memory usage compared to original Minecraft Classic
-* Optional enhancements including custom blocks, models, and environment colors
-* Partially supports some features of Minecraft Classic versions before 0.30
-* Works with effectively all graphics cards that support OpenGL or Direct3D 9
-* Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
-* Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
-* Although in various stages of early development, also runs on various consoles
+- ⚡️ **High Performance**: Enjoy significantly better performance and lower memory usage than the original Minecraft Classic.
+- 🎨 **Customization**: Take advantage of optional features like custom blocks, models, and environment colors.
+- 🕹️ **Partial Compatibility**: Supports features from Minecraft Classic versions before 0.30.
+- 🖥️ **Wide Hardware Support**: Works with almost all graphics cards that support OpenGL or Direct3D 9.
+- 💻 **Cross-Platform**: Runs on Windows, macOS, Linux, Android, iOS, and most web browsers.
+- 🕹️ **Console Support**: Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS, and even some consoles (in varying stages of development).
 
 </details>
 
-ClassiCube is not trying to replicate modern Minecraft versions. It will never support survival, logging in with Minecraft accounts or connecting to Minecraft servers.
+Please note that **ClassiCube** does not aim to replicate modern versions of Minecraft. It will never support survival mode, Minecraft account logins, or connections to official Minecraft servers.
 
-You can **download ClassiCube** [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
+You can **download ClassiCube** [here](https://www.classicube.net/download/) and access the latest builds [here](https://www.classicube.net/nightlies/). 🚀
 
 ![classic](https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0)
-
 ![enhanced](https://github.com/ClassiCube/ClassiCube/assets/6509348/b2fe0e2b-5d76-41ab-909f-048d0ad15f37)
 
+---
 
-# We need your help
+## We Need Your Help! 🤝
 
-ClassiCube strives to replicate the original Minecraft Classic experience by **strictly following a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
+ClassiCube aims to replicate the original Minecraft Classic experience by **strictly adhering to a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
 
-If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (`unknownshadow200` on Discord)
+If you're interested in documenting or verifying the behavior of the original Minecraft Classic, please reach out to me (`unknownshadow200` on Discord). 📩
 
+---
 
-# How to play
-Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net and classicube.net.<br>
-Just click 'OK' to the dialog menu that appears when you start the launcher.
+## How to Play 🎮
 
-**Singleplayer**
-Run ClassiCube.exe, then click Singleplayer at the main menu.
+### Getting Started 🚀
+- Run `ClassiCube.exe` to download the required assets from `minecraft.net` and `classicube.net`. When the dialog menu appears, click **OK**.
 
-**Multiplayer**
-Run ClassiCube.exe. You can connect to LAN/locally hosted servers, and classicube.net servers if you have a [ClassiCube account](https://www.classicube.net/).
+### Singleplayer Mode 🏞️
+- Run `ClassiCube.exe`, then click **Singleplayer** in the main menu.
 
-**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
+### Multiplayer Mode 🌐
+- Run `ClassiCube.exe` and connect to LAN servers or classicube.net servers (you'll need a [ClassiCube account](https://www.classicube.net/)).
 
-#### *Stuck on OpenGL 1.1?*
-The most common reason for being stuck on OpenGL 1.1 is non-working GPU drivers - so if possible, you should try either installing or updating the drivers for your GPU.
+> **Note**: When using VirtualBox, disable Mouse Integration to avoid camera issues.
 
-Otherwise:
-* On Windows, you can still run the OpenGL build of ClassiCube anyways. (You can try downloading and using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
-* On other operating systems, you will have to [compile the game yourself](#Compiling). Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
+### Stuck on OpenGL 1.1? ⚙️
+The most common reason for being stuck on OpenGL 1.1 is outdated or non-functional GPU drivers. If possible, try updating your GPU drivers.
 
-# Supported systems
+- **Windows**: You can still run ClassiCube using the MESA software renderer. Download it [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for better performance.
+- **Other OS**: You may need to [compile the game yourself](#Compiling). Don’t forget to add `-DCC_BUILD_GL11` to the compilation command to support OpenGL 1.1.
 
-ClassiCube runs on:
-* Windows - 95 and later
-* macOS - 10.5 or later (but can be compiled to work with 10.3/10.4 though)
-* Linux - needs `libcurl` and `libopenal`
-* Android - 2.3 or later
-* iOS - 8.0 or later
-* Most web browsers (even runs on IE11)
+---
 
-And also runs on:
+## Supported Systems 🌍
+
+ClassiCube runs on a wide range of platforms:
+
+- **Windows** (95 and later)
+- **macOS** (10.5 or later; can be compiled for 10.3/10.4)
+- **Linux** (requires `libcurl` and `libopenal`)
+- **Android** (2.3 or later)
+- **iOS** (8.0 or later)
+- **Web browsers**, including Internet Explorer 11
+
+And also runs on various other systems such as:
 * Raspberry Pi - needs <code>libcurl</code> and <code>libopenal</code>
 * FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_freebsd.yml))
 * NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_netbsd.yml))
@@ -90,354 +101,360 @@ And also runs on:
 * Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
 
-# Compiling 
+---
 
-*Note: The various instructions below automatically compile ClassiCube with the recommended defaults for the platform. <br>
-If you (not recommended) want to override the defaults (e.g. to compile OpenGL build on Windows), see [here](doc/overriding-defaults.md) for details.*
+# Compiling Guide 🛠️
 
-## Compiling - Windows
+*Note: The instructions below automatically compile ClassiCube with recommended defaults for each platform. If you wish to override these defaults (not recommended), such as compiling the OpenGL build on Windows, refer to the [overriding defaults guide](doc/overriding-defaults.md) for further details.*
 
-##### Using Visual Studio
-Open ClassiCube.sln *(File -> Open -> Project/Solution)* and compile it *(Build -> Build Solution)*.
+## Compiling - Windows 🖥️
 
-If you get a `The Windows SDK version 5.1 was not found` compilation error, [see here for how to fix](doc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
+### Using Visual Studio
+1. Open `ClassiCube.sln` (*File -> Open -> Project/Solution*).
+2. Compile it by selecting *Build -> Build Solution*.
 
-##### Using Visual Studio (command line)
-1. Use 'Developer Tools for Visual Studio' from Start Menu
-2. Navigate to the directory with ClassiCube's source code
-3. Enter `cl.exe *.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
+If you encounter the error `The Windows SDK version 5.1 was not found`, refer to [this guide for fixing it](doc/compile-fixes.md#visual-studio-unsupported-platform-toolset).
 
-##### Using MinGW-w64
-I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
-1. Install MinGW-W64
-2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
-3. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
+### Using Visual Studio (Command Line)
+1. Open *Developer Tools for Visual Studio* from the Start Menu.
+2. Navigate to the directory containing ClassiCube's source code.
+3. Run the following command:  
+   ```cl.exe *.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe```
 
-##### Using MinGW
-I am assuming you used the installer from https://osdn.net/projects/mingw/
-1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
-2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-2. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
+### Using MinGW-w64
+Assuming you installed MinGW-w64 from [this source](https://sourceforge.net/projects/mingw-w64/):
+1. Install MinGW-w64.
+2. Open *Run Terminal* from the Start Menu or run `mingw-w64.bat` in the installation folder.
+3. Navigate to the ClassiCube source code directory.
+4. Run:  
+   ```gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm```
 
-##### Using TCC (Tiny C Compiler)
-Setting up TCC:
-1. Download and extract `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
-2. Download `winapi-full-for-0.9.27.zip` from https://bellard.org/tcc/ 
-3. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
+### Using MinGW
+Assuming you installed MinGW from [this source](https://osdn.net/projects/mingw/):
+1. Install MinGW. Make sure to include the `mingw32-base-bin` and `msys-base-bin` packages.
+2. Run `msys.bat` located in the *C:\MinGW\msys\1.0* folder.
+3. Navigate to the ClassiCube source code directory.
+4. Run:  
+   ```gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm```
 
-Compiling with TCC:
-1. Navigate to the directory with ClassiCube's source code
-2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
-3. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
-(Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
+### Using TCC (Tiny C Compiler)
+**Setting up TCC:**
+1. Download and extract `tcc-0.9.27-win64-bin.zip` from [this link](https://bellard.org/tcc/).
+2. Download `winapi-full-for-0.9.27.zip` from the same site.
+3. Copy the `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder.
 
-## Compiling - Linux
+**Compiling with TCC:**
+1. Navigate to the ClassiCube source code directory.
+2. Edit `ExtMath.c` by changing `fabsf` to `fabs` and `sqrtf` to `sqrt`.
+3. Run:  
+   ```tcc.exe -o ClassiCube.exe *.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32```  
+   *(You may need to specify the full path to `tcc.exe` if it's not in your environment variables.)*
 
-##### Using gcc/clang
+---
 
-Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev and libgl1-mesa-dev
+## Compiling - Linux 🐧
 
+### Using gcc/clang
+Install the necessary libraries. For Ubuntu, these include `libx11-dev`, `libxi-dev`, and `libgl1-mesa-dev`.  
+Then, run the following command:  
 ```gcc -fno-math-errno src/*.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl```
 
-##### Cross compiling for Windows (32 bit):
-
+### Cross Compiling for Windows
+**32-bit version:**  
 ```i686-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
 
-##### Cross compiling for Windows (64 bit):
-
+**64-bit version:**  
 ```x86_64-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
 
-##### Raspberry Pi
-Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
-
+### Raspberry Pi
+For optimal performance on Raspberry Pi hardware, use this command:  
 ```gcc -fno-math-errno src/*.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
 
-## Compiling - macOS
+---
 
-```cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+## Compiling - macOS 🍏
 
-Note: You may need to install Xcode before you can compile ClassiCube
+Run the following command to compile on macOS:  
+```cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```  
+*Note: Xcode may need to be installed prior to compiling.*
 
-##### Using Xcode GUI
+### Using Xcode GUI
+1. Open the `misc/macOS/CCMAC.xcodeproj` project in Xcode.
+2. Compile the project.
 
-Open the `misc/macOS/CCMAC.xcodeproj` project in Xcode, and then compile it
+---
 
-## Compiling - for Android
+## Compiling - Android 📱
 
-NOTE: If you are distributing a modified version, **please change the package ID from `com.classicube.android.client` to something else** - otherwise Android users won't be able to have both ClassiCube and your modified version installed at the same time on their Android device
+**Note:** If distributing a modified version, change the package ID from `com.classicube.android.client` to avoid conflicts with existing installations of ClassiCube.
 
-##### Using Android Studio GUI
+### Using Android Studio GUI
+1. Open the `android` folder in Android Studio.  
+*(TODO: Add more detailed steps)*
 
-Open `android` folder in Android Studio (TODO explain more detailed)
+### Using Command Line (Gradle)
+1. Run `gradlew` in the `android` folder.  
+*(TODO: Add more detailed steps)*
 
-##### Using command line (gradle)
+---
 
-Run `gradlew` in android folder (TODO explain more detailed)
+## Compiling - iOS 📱🍎
 
-## Compiling - for iOS
+The iOS version is incomplete and has only been tested on the iOS Simulator.
 
-iOS version will have issues as it's incomplete and only tested in iOS Simulator
+**Note:** If distributing a modified version, change the bundle ID from `com.classicube.ios.client` to avoid conflicts with existing installations of ClassiCube.
 
-NOTE: If you are distributing a modified version, **please change the bundle ID from `com.classicube.ios.client` to something else** - otherwise iOS users won't be able to have both ClassiCube and your modified version installed at the same time on their iOS device
+### Using Xcode GUI
+1. Open the `ios/CCIOS.xcodeproj` project in Xcode.
+2. Compile the project.
 
-##### Using Xcode GUI
+### Using Command Line (Xcode)
+Run the following command:  
+```xcodebuild -sdk iphoneos -configuration Debug```  
+*(TODO: Add more detailed steps)*
 
-Open the `ios/CCIOS.xcodeproj` project in Xcode, and then compile it
+## Compiling - Webclient 🌐
 
-##### Using command line (Xcode)
-
-`xcodebuild -sdk iphoneos -configuration Debug` (TODO explain more detailed)
-
-## Compiling - webclient
-
+To compile the webclient, use the following command:  
 ```emcc src/*.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
 
-The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
+Please note that the generated JavaScript file may have some issues. For instructions on how to address these issues, refer to the [fixes guide](doc/compile-fixes.md#webclient-patches).
 
-For more details on how to integrate into a website, see [here](doc/hosting-webclient.md)
-
-<details>
-<summary><h2>Compiling - consoles</h2></summary>
-
-All console ports needs assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+For more details on integrating the webclient into a website, please see the [integration guide](doc/hosting-webclient.md).
 
 <details>
-<summary><h3>Nintendo consoles (click to expand)</h3></summary>
+<summary><h2>Compiling - Consoles 🎮</h2></summary>
+
+All console ports require expertise in homebrew development. If you are interested in contributing, please contact me (`unknownshadow200` on Discord).
+
+<details>
+<summary><h3>Nintendo Consoles (Click to Expand)</h3></summary>
 
 #### Switch
+To compile for the Nintendo Switch, run:  
+```make switch```  
+You will need [libnx](https://github.com/switchbrew/libnx) and [mesa](https://github.com/devkitPro/mesa).  
 
-Run `make switch`. You'll need [libnx](https://github.com/switchbrew/libnx) and [mesa](https://github.com/devkitPro/mesa)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `switch-dev` group and the `switch-mesa switch-glm` packages)**
+**Note:** It is highly recommended to install the precompiled devkitPro packages from [here](https://devkitpro.org/wiki/Getting_Started), including the `switch-dev`, `switch-mesa`, and `switch-glm` packages.
 
 #### Wii U
+To compile for the Wii U, run:  
+```make wiiu```  
+You will need [wut](https://github.com/devkitPro/wut/).  
 
-Run `make wiiu`. You'll need [wut](https://github.com/devkitPro/wut/)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wiiu-dev` group)**
+**Note:** It is highly recommended to install the precompiled devkitPro packages from [here](https://devkitpro.org/wiki/Getting_Started), including the `wiiu-dev` group.
 
 #### 3DS
+To compile for the Nintendo 3DS, run:  
+```make 3ds```  
+You will need [libctru](https://github.com/devkitPro/libctru).  
 
-Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `3ds-dev` group)**
+**Note:** It is highly recommended to install the precompiled devkitPro packages from [here](https://devkitpro.org/wiki/Getting_Started), including the `3ds-dev` group.
 
 #### Wii
+To compile for the Wii, run:  
+```make wii```  
+You will need [libogc](https://github.com/devkitPro/libogc).  
 
-Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wii-dev` group)**
+**Note:** It is highly recommended to install the precompiled devkitPro packages from [here](https://devkitpro.org/wiki/Getting_Started), including the `wii-dev` group.
 
 #### GameCube
+To compile for the GameCube, run:  
+```make gamecube```  
+You will need [libogc](https://github.com/devkitPro/libogc).  
 
-Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
+**Note:** It is highly recommended to install the precompiled devkitPro packages from [here](https://devkitpro.org/wiki/Getting_Started), including the `gamecube-dev` group.
 
 #### Nintendo DS/DSi
-
-Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
+To compile for the Nintendo DS/DSi, run:  
+```make ds```  
+You will need [BlocksDS](https://github.com/blocksds/sdk).
 
 #### Nintendo 64
-
-Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+To compile for the Nintendo 64, run:  
+```make n64```  
+You will need the OpenGL branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl).
 
 </details>
 
-
 <details>
-<summary><h3>Sony consoles (click to expand)</h3></summary>
+<summary><h3>Sony Consoles (Click to Expand)</h3></summary>
 
 #### PlayStation Vita
-
-Run `make vita`. You'll need [vitasdk](https://vitasdk.org/)
+To compile for the PlayStation Vita, run:  
+```make vita```  
+You will need [vitasdk](https://vitasdk.org/).
 
 #### PlayStation Portable
+To compile for the PlayStation Portable, run:  
+```make psp```  
+You will need [pspsdk](https://github.com/pspdev/pspsdk).  
 
-Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
-
-**NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
+**Note:** It is recommended to install the precompiled version of pspsdk from [this link](https://github.com/pspdev/pspdev/releases).
 
 #### PlayStation 3
-
-Run `make ps3`. You'll need [PSL1GHT](https://github.com/ps3dev/PSL1GHT)
+To compile for the PlayStation 3, run:  
+```make ps3```  
+You will need [PSL1GHT](https://github.com/ps3dev/PSL1GHT).
 
 #### PlayStation 2
-
-Run `make ps2`. You'll need [ps2sdk](https://github.com/ps2dev/ps2sdk)
+To compile for the PlayStation 2, run:  
+```make ps2```  
+You will need [ps2sdk](https://github.com/ps2dev/ps2sdk).
 
 #### PlayStation 1
-
-Run `make ps1`. You'll need [PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK/)
+To compile for the PlayStation 1, run:  
+```make ps1```  
+You will need [PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK/).
 
 </details>
 
-
 <details>
-<summary><h3>Microsoft consoles (click to expand)</h3></summary>
+<summary><h3>Microsoft Consoles (Click to Expand)</h3></summary>
 
 #### Xbox 360
+To compile for the Xbox 360, run:  
+```make 360```  
+You will need [libxenon](https://github.com/Free60Project/libxenon).
 
-Run `make 360`. You'll need [libxenon](https://github.com/Free60Project/libxenon)
-
-#### Xbox (original)
-
-Run `make xbox`. You'll need [nxdk](https://github.com/XboxDev/nxdk)
+#### Xbox (Original)
+To compile for the original Xbox, run:  
+```make xbox```  
+You will need [nxdk](https://github.com/XboxDev/nxdk).
 
 </details>
 
-
 <details>
-<summary><h3>SEGA consoles (click to expand)</h3></summary>
-
-### SEGA consoles
+<summary><h3>SEGA Consoles (Click to Expand)</h3></summary>
 
 #### Dreamcast
-
-Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/KallistiOS)
+To compile for the SEGA Dreamcast, run:  
+```make dreamcast```  
+You will need [KallistiOS](https://github.com/KallistiOS/KallistiOS).
 
 #### Saturn
-
-Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
+To compile for the SEGA Saturn, run:  
+```make saturn```  
+You will need [libyaul](https://github.com/yaul-org/libyaul).
 
 </details>
-
-</details>
-
 
 <details>
-<summary><h2>Compiling - other platforms (click to expand)</h2></summary>
+<summary><h2>Compiling - Other Platforms (Click to Expand)</h2></summary>
 
 #### FreeBSD
-
-Install libxi, libexecinfo, curl and openal-soft package if needed
-
+Install the necessary packages: `libxi`, `libexecinfo`, `curl`, and `openal-soft` if needed.  
+Run:  
 ```cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### OpenBSD
-
-Install libexecinfo, curl and openal package if needed
-
+Install the necessary packages: `libexecinfo`, `curl`, and `openal` if needed.  
+Run:  
 ```cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### NetBSD
-
-Install libexecinfo, curl and openal-soft package if needed
-
-```cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo```
+Install the necessary packages: `libexecinfo`, `curl`, and `openal-soft` if needed.  
+Run:  
+```cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### DragonflyBSD
-
+Run:  
 ```cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### Solaris
-
+Run:  
 ```gcc -fno-math-errno src/*.c -o ClassiCube -lsocket -lX11 -lXi -lGL```
 
 #### Haiku
-
-Install openal_devel package if needed
-
+Install the `openal_devel` package if needed.  
+Run:  
 ```cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
 #### BeOS
-
+Run:  
 ```cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lbe -lgame -ltracker```
 
 #### IRIX
-
-```gcc -fno-math-errno -lGL -lX11 -lXi -lpthread -ldl```
+Run:  
+```gcc -fno-math-errno src/*.c -o ClassiCube -lGL -lX11 -lXi -lpthread -ldl```
 
 #### SerenityOS
-
-Install SDL2 port if needed
-
+Install the SDL2 port if needed.  
+Run:  
 ```cc src/*.c -o ClassiCube -lgl -lSDL2```
 
 #### Classic Mac OS
+Install Retro68 to compile (supports both M68k and PowerPC compiling).  
+Run:  
+```make macclassic_68k``` or ```make macclassic_ppc```  
+(Note: The PowerPC build typically performs better.)
 
-Install Retro68 to compile (supports both M68k and PowerPC compiling)
-
-```make macclassic_68k``` or ```make macclassic_ppc```
-
-The PowerPC build will usually perform much better
-
-#### Other systems
-
-You'll have to write the necessary code. You should read `portability.md` in doc folder.
+#### Other Systems
+For other systems, you will need to write the necessary code. Refer to `portability.md` in the documentation folder for guidance.
 
 </details>
 
-## Documentation
+## Documentation 📚
 
-Functions and variables in .h files are mostly documented.
+ClassiCube is well-documented, with most functions and variables detailed in the `.h` files. Additional documentation is available in the `doc` and `misc` folders.
 
-Further information (e.g. style) for ClassiCube's source code can be found in the doc and misc folders.
+For common compilation errors and tips, see the [known issues section](doc/compile-fixes.md#common-compilation-errors).
 
-#### Known compilation errors
+### Tips 💡
+- Press **Escape** to access the pause menu.
+- Toggle **vsync** in the **Options** menu for better CPU performance.
+- Press **F** to cycle view distance, which can improve performance.
 
-[Fixes for compilation errors when using musl or old glibc for C standard library](doc/compile-fixes.md#common-compilation-errors)
+---
 
-#### Tips
-* Press escape (after joining a world) or pause to switch to the pause menu.
-* Pause menu -> Options -> Controls lists all of the key combinations used by the client. 
-* Note that toggling 'vsync' to on will minimise CPU usage, while off will maximimise chunk loading speed.
-* Press F to cycle view distance. A smaller number of visible chunks can improve performance.
+## Open Source Technologies 💻
+ClassiCube leverages many open-source technologies:
+- [**curl**](https://curl.se/) 🌐 – For HTTP/HTTPS requests on Linux and macOS.
+- [**FreeType**](https://www.freetype.org/) ✍️ – Provides font rendering across all platforms.
+- [**GCC**](https://gcc.gnu.org/) 🛠️ – The GNU Compiler Collection, used to compile the client for Linux.
+- [**MinGW-w64**](http://mingw-w64.org/doku.php) 🏗️ – Toolchain to compile ClassiCube on Windows.
+- [**Clang**](https://clang.llvm.org/) 🖥️ – Another compiler for macOS and Linux.
+- [**Emscripten**](https://emscripten.org/) 🌍 – A compiler toolchain for running the client in web browsers.
+- [**RenderDoc**](https://renderdoc.org/) 🖼️ – A powerful graphics debugger used for debugging rendering issues.
+- [**BearSSL**](https://www.bearssl.org/) 🔐 – Provides SSL/TLS support for security on consoles.
+- [**libnx**](https://github.com/switchbrew/libnx) 🎮 – Backend library for Nintendo Switch.
+- [**Ryujinx**](https://github.com/Ryujinx/Ryujinx) 🕹️ – Emulator used to test the Nintendo Switch port.
+- [**wut**](https://github.com/devkitPro/wut/) 🎮 – Backend library for Wii U.
+- [**Cemu**](https://github.com/cemu-project/Cemu) 🕹️ – Emulator used to test the Wii U port.
+- [**libctru**](https://github.com/devkitPro/libctru) 🎮 – Backend library for 3DS.
+- [**citro3D**](https://github.com/devkitPro/citro3d) 🎮 – Rendering backend for 3DS.
+- [**Citra**](https://github.com/citra-emu/citra) 🕹️ – Emulator used to test the 3DS port.
+- [**libogc**](https://github.com/devkitPro/libogc) 🎮 – Backend library for the Wii and GameCube.
+- [**libfat**](https://github.com/devkitPro/libfat) 💾 – Filesystem backend for Wii and GameCube.
+- [**Dolphin**](https://github.com/dolphin-emu/dolphin) 🕹️ – Emulator used to test the Wii and GameCube ports.
+- [**libdragon**](https://github.com/DragonMinded/libdragon) 🎮 – Backend library for Nintendo 64.
+- [**ares**](https://github.com/ares-emulator/ares) 🕹️ – Emulator used to test the Nintendo 64 port.
+- [**BlocksDS**](https://github.com/blocksds/sdk) 🎮 – Backend library for Nintendo DS.
+- [**melonDS**](https://github.com/melonDS-emu/melonDS) 🕹️ – Emulator used to test the DS/DSi ports.
+- [**vitasdk**](https://github.com/vitasdk) 🎮 – Backend library for PS Vita.
+- [**Vita3K**](https://github.com/Vita3K/Vita3K) 🕹️ – Emulator used to test the PS Vita port.
+- [**pspsdk**](https://github.com/pspdev/pspsdk) 🎮 – Backend library for PSP.
+- [**PPSSPP**](https://github.com/hrydgard/ppsspp) 🕹️ – Emulator used to test the PSP port.
+- [**PSL1GHT**](https://github.com/ps3dev/PSL1GHT) 🎮 – Backend library for PS3.
+- [**RPCS3**](https://github.com/RPCS3/rpcs3) 🕹️ – Emulator used to test the PS3 port.
+- [**ps2sdk**](https://github.com/ps2dev/ps2sdk) 🎮 – Backend library for PS2.
+- [**PCSX2**](https://github.com/PCSX2/pcsx2) 🕹️ – Emulator used to test the PS2 port.
+- [**PSn00bSDK**](https://github.com/Lameguy64/PSn00bSDK/) 🎮 – Backend library for PS1.
+- [**duckstation**](https://github.com/stenzek/duckstation) 🕹️ – Emulator used to test the PS1 port.
+- [**libxenon**](https://github.com/Free60Project/libxenon) 🎮 – Backend library for Xbox 360.
+- [**nxdk**](https://github.com/XboxDev/nxdk) 🎮 – Backend library for the original Xbox.
+- [**xemu**](https://github.com/xemu-project/xemu) 🕹️ – Emulator used to test the Xbox port.
+- [**cxbx-reloaded**](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) 🕹️ – Emulator used to test the original Xbox port.
+- [**KallistiOS**](https://github.com/KallistiOS/KallistiOS) 🎮 – Backend library for the Dreamcast.
+- [**GLdc**](https://github.com/Kazade/GLdc) 🖼️ – Rendering backend for Dreamcast.
+- [**flycast**](https://github.com/flyinghead/flycast) 🕹️ – Emulator used to test the Dreamcast port.
+- [**libyaul**](https://github.com/yaul-org/libyaul) 🎮 – Backend library for SEGA Saturn.
+- [**mednafen**](https://mednafen.github.io/) 🕹️ – Emulator used to test the Saturn port.
 
-* If the server has disabled hacks, key combinations such as fly and speed will not do anything.
-* To see the list of built in commands, type `/client`.
-* To see help for a given built in command, type `/client help <command name>`.
+---
 
+## Sound Credits 🔊
+ClassiCube uses sounds from [Freesound.org](https://freesound.org).  
+For full credits, see [sound credits](doc/sound-credits.md).
 
-<details>
-<summary><h2>Open source technologies (click to expand)</h2></summary>
-
-* [curl](https://curl.se/) - HTTP/HTTPS for linux and macOS
-* [FreeType](https://www.freetype.org/) - Font handling for all platforms
-* [GCC](https://gcc.gnu.org/) - Compiles client for linux
-* [MinGW-w64](http://mingw-w64.org/doku.php) - Compiles client for windows
-* [Clang](https://clang.llvm.org/) - Compiles client for macOS
-* [Emscripten](https://emscripten.org/) - Compiles client for web
-* [RenderDoc](https://renderdoc.org/) - Graphics debugging
-* [BearSSL](https://www.bearssl.org/) - SSL/TLS support on consoles
-* [libnx](https://github.com/switchbrew/libnx) - Backend for Switch
-* [Ryujinx](https://github.com/Ryujinx/Ryujinx) - Emulator used to test Switch port
-* [wut](https://github.com/devkitPro/wut/) - Backend for Wii U
-* [Cemu](https://github.com/cemu-project/Cemu) - Emulator used to test Wii U port
-* [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
-* [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
-* [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
-* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
-* [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
-* [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
-* [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
-* [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
-* [BlocksDS](https://github.com/blocksds/sdk) - Backend for Nintendo DS
-* [melonDS](https://github.com/melonDS-emu/melonDS) - Emulator used to test Nintendo DS port
-* [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
-* [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
-* [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
-* [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test PSP port
-* [PSL1GHT](https://github.com/ps3dev/PSL1GHT) - Backend for PS3
-* [RPCS3](https://github.com/RPCS3/rpcs3) - Emulator used to test PS3 port
-* [ps2sdk](https://github.com/ps2dev/ps2sdk) - Backend for PS2
-* [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
-* [PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK/) - Backend for PS1
-* [duckstation](https://github.com/stenzek/duckstation) - Emulator used to test PS1 port
-* [libxenon](https://github.com/Free60Project/libxenon) - Backend for Xbox 360
-* [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
-* [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
-* [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
-* [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
-* [GLdc](https://github.com/Kazade/GLdc) - Basis of rendering backend for Dreamcast
-* [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
-* [libyaul](https://github.com/yaul-org/libyaul) - Backend for Saturn
-* [mednafen](https://mednafen.github.io/) - Emulator used to test Saturn port
-
-</details>
-
-## Sound Credits
-ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>
-Full credits are listed in [doc/sound-credits.md](doc/sound-credits.md)
+---
