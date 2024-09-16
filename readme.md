@@ -1,7 +1,3 @@
-Here's an improved, more formal version of the README with added emojis for a friendly touch:
-
----
-
 # ClassiCube 🎮
 
 **ClassiCube** is a custom Minecraft Classic-compatible client, built entirely from scratch in C.  
@@ -391,6 +387,8 @@ Run:
 
 #### Other Systems
 For other systems, you will need to write the necessary code. Refer to `portability.md` in the documentation folder for guidance.
+
+</details>
 
 </details>
 
