@@ -34,6 +34,11 @@ CC_BEGIN_HEADER
 float Math_Mod1(float x);
 int   Math_AbsI(int x);
 
+static CC_INLINE float Math_SafeDiv(float a, float b) {
+	if (Math_AbsF(b) < 0.000001f) return MATH_LARGENUM;
+	return a / b;
+}
+
 CC_API double Math_Sin(double x);
 CC_API double Math_Cos(double x);
 CC_API float Math_SinF(float x);

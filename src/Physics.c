@@ -76,9 +76,9 @@ cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entit
 	dir = Intersection_InverseRotate(dir, target);
 	Entity_GetPickingBounds(target, &bb);
 
-	invDir.x = 1.0f / dir.x;
-	invDir.y = 1.0f / dir.y;
-	invDir.z = 1.0f / dir.z;
+	invDir.x = Math_SafeDiv(1.0f, dir.x);
+	invDir.y = Math_SafeDiv(1.0f, dir.y);
+	invDir.z = Math_SafeDiv(1.0f, dir.z);
 	return Intersection_RayIntersectsBox(origin, invDir, bb.Min, bb.Max, tMin, tMax);
 }
 

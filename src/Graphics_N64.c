@@ -72,8 +72,15 @@ void Gfx_SetVSync(cc_bool vsync) {
 
 void Gfx_OnWindowResize(void) { }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
-void Gfx_SetScissor (int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	glViewport(x, Game.Height - h - y, w, h);
+}
+void Gfx_SetScissor (int x, int y, int w, int h) {
+	cc_bool enabled = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
+	if (enabled) { glEnable(GL_SCISSOR_TEST); } else { glDisable(GL_SCISSOR_TEST); }
+
+	glScissor(x, Game.Height - h - y, w, h);
+}
 
 
 void Gfx_BeginFrame(void) {

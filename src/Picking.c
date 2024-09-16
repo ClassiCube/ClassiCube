@@ -50,18 +50,13 @@ void RayTracer_SetInvalid(struct RayTracer* t) {
 	t->closest = FACE_COUNT;
 }
 
-static float RayTracer_Div(float a, float b) {
-	if (Math_AbsF(b) < 0.000001f) return MATH_LARGENUM;
-	return a / b;
-}
-
 void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir) {
 	IVec3 cellBoundary;
 	t->origin = *origin; t->dir = *dir;
 
-	t->invDir.x = RayTracer_Div(1.0f, dir->x);
-	t->invDir.y = RayTracer_Div(1.0f, dir->y);
-	t->invDir.z = RayTracer_Div(1.0f, dir->z);
+	t->invDir.x = Math_SafeDiv(1.0f, dir->x);
+	t->invDir.y = Math_SafeDiv(1.0f, dir->y);
+	t->invDir.z = Math_SafeDiv(1.0f, dir->z);
 
 	/* Rounds the position's X, Y and Z down to the nearest integer values. */
 	/* The cell in which the ray starts. */
@@ -78,9 +73,9 @@ void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir) {
 
 	/* NOTE: we want it so if dir.x = 0, tmax.x = positive infinity
 	Determine how far we can travel along the ray before we hit a voxel boundary. */
-	t->tMax.x = RayTracer_Div(cellBoundary.x - origin->x, dir->x); /* Boundary is a plane on the YZ axis. */
-	t->tMax.y = RayTracer_Div(cellBoundary.y - origin->y, dir->y); /* Boundary is a plane on the XZ axis. */
-	t->tMax.z = RayTracer_Div(cellBoundary.z - origin->z, dir->z); /* Boundary is a plane on the XY axis. */
+	t->tMax.x = Math_SafeDiv(cellBoundary.x - origin->x, dir->x); /* Boundary is a plane on the YZ axis. */
+	t->tMax.y = Math_SafeDiv(cellBoundary.y - origin->y, dir->y); /* Boundary is a plane on the XZ axis. */
+	t->tMax.z = Math_SafeDiv(cellBoundary.z - origin->z, dir->z); /* Boundary is a plane on the XY axis. */
 
 	/* Determine how far we must travel along the ray before we have crossed a gridcell. */
 	t->tDelta.x = (float)t->step.x * t->invDir.x;
