@@ -407,7 +407,7 @@ static void _qsort(void* v, int size, int left, int right,
 void cc_qsort(void* v, size_t count, size_t size,
 					int (*comp)(const void*, const void*)) {
 	if (!count) return;
-	_qsort(v, 0, count - 1, size, comp);
+	_qsort(v, size, 0, count - 1, comp);
 }
 
 
