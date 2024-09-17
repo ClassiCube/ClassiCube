@@ -223,13 +223,13 @@ static int MapNativeKey(SDL_Keycode k) {
 }
 
 static void OnKeyEvent(const SDL_Event* e) {
-	cc_bool pressed = e->key.state == SDL_PRESSED;
+	cc_bool pressed = e->key.down == SDL_TRUE;
 	int key = MapNativeKey(e->key.key);
 	if (key) Input_Set(key, pressed);
 }
 
 static void OnMouseEvent(const SDL_Event* e) {
-	cc_bool pressed = e->button.state == SDL_PRESSED;
+	cc_bool pressed = e->button.down == SDL_TRUE;
 	int btn;
 	switch (e->button.button) {
 		case SDL_BUTTON_LEFT:   btn = CCMOUSE_L; break;
