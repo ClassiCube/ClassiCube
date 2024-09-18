@@ -497,7 +497,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	ip4_addr_t addr;
 
 	int res = netconn_gethostbyname(host, &addr);
-	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
+	//if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
     addr4->sin_addr.s_addr = addr.addr;
