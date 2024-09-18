@@ -488,36 +488,25 @@ int  lwip_send(int s, const void *dataptr, size_t size, int flags);
 int  lwip_socket(int domain, int type, int protocol);
 int  lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
 int  lwip_ioctl(int s, long cmd, void *argp);
-int  lwip_getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res);
-void lwip_freeaddrinfo(struct addrinfo *ai);
+
 int  ip4addr_aton(const char *cp, ip4_addr_t *addr);
+int  netconn_gethostbyname(const char *name, ip4_addr_t *addr);
 
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	char portRaw[32]; cc_string portStr;
-	struct addrinfo hints = { 0 };
-	struct addrinfo* result;
-	struct addrinfo* cur;
-	int res, i = 0;
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
+	ip4_addr_t addr;
 
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	
-	String_InitArray(portStr,  portRaw);
-	String_AppendInt(&portStr, port);
-	portRaw[portStr.length] = '\0';
-
-	res = lwip_getaddrinfo(host, portRaw, &hints, &result);
+	int res = netconn_gethostbyname(host, &addr);
 	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
-	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
-	{
-		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
-	}
-	
-	lwip_freeaddrinfo(result);
-	*numValidAddrs = i;
-	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+    addr4->sin_addr.s_addr = addr.addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	addrs[0].size  = sizeof(*addr4);
+	*numValidAddrs = 1;
+	return 0;
 }
 
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
