@@ -1,0 +1,7 @@
+#!/bin/bash
+# Allow forcing GTK3/4 through $CC_DIALOG_FORCE_ZENITY_GTK{3,4}
+if [[ -z "${CC_DIALOG_FORCE_ZENITY_GTK3}" && "${XDG_CURRENT_DESKTOP}" == "GNOME" || ! -z "${CC_DIALOG_FORCE_ZENITY_GTK4}" ]]; then
+  zenity-gtk4 "$@"
+else
+  zenity-gtk3 "$@"
+fi
