@@ -252,9 +252,9 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 static void DisableFpuExceptions(void) {
     uint32_t fcr31 = C1_FCR31();
     
-    fcr31 &= ~(C1_CAUSE_OVERFLOW | C1_CAUSE_UNDERFLOW | C1_CAUSE_NOT_IMPLEMENTED | C1_CAUSE_INEXACT_OP);
+    fcr31 &= ~(C1_ENABLE_OVERFLOW | C1_ENABLE_UNDERFLOW | C1_ENABLE_INEXACT_OP);
     fcr31 |= C1_ENABLE_DIV_BY_0 | C1_ENABLE_INVALID_OP;
-    fcr31 |= C1_FCR31_FS;
+    fcr31 |= C1_FCR31_FS; // flush denormals to zero
 
     C1_WRITE_FCR31(fcr31);	
 }

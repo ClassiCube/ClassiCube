@@ -81,6 +81,7 @@ jobs:
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
           NIX64_FLAGS:  "-no-pie -fno-pie -m64 -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON"
         run: |
+          sudo apt-get -y update
           sudo apt-get -y install libx11-dev libxi-dev libgl1-mesa-dev libsdl2-dev
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"  
           

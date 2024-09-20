@@ -142,7 +142,9 @@ Compiling with TCC:
 ##### Using gcc/clang
 1. Install X11, XInput2, and OpenGL development libraries if necessary. <br>
 For Ubuntu, these are the `libx11-dev`, `libxi-dev` and `libgl1-mesa-dev` packages
-2. Run ```cc -fno-math-errno src/*.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl```
+2. Run either:
+    * `make linux` or
+    * `cc -fno-math-errno src/*.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl`
 
 ##### Cross compiling for Windows (32 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
@@ -159,7 +161,9 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ## Compiling - macOS
 1. Install a C compiler if necessary. The easiest way of obtaining one is by installing **Xcode**.
-2. Run ```cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+2. Run either:
+    * `make darwin` or
+    * `cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc`
 
 ##### Using Xcode GUI
 
@@ -196,11 +200,13 @@ NOTE: If you are distributing a modified version, **please change the bundle ID 
 ## Compiling - webclient
 
 1. Install emscripten if necessary.
-2. Run ```emcc src/*.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
+2. Run either:
+    * `make web` or
+    * `emcc src/*.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js`
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
-For more details on how to integrate into a website, see [here](doc/hosting-webclient.md)
+For details on how to integrate the webclient into a website, see [here](doc/hosting-webclient.md)
 
 <details>
 <summary><h2>Compiling - consoles</h2></summary>
@@ -317,44 +323,65 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 #### FreeBSD
 
 1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
-2. Run ```cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+2. Run either:
+    * `make freebsd` or
+    * `cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### OpenBSD
 
 1. Install `libexecinfo`, `curl` and `openal` packages if needed
-2. Run ```cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+2. Run either:
+    * `make opensd` or
+    * `cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### NetBSD
 
 1. Install `libexecinfo`, `curl` and `openal-soft` packages if needed
-2. Run ```cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo```
+2. Run either:
+    * `make netbsd` or
+    * `cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### DragonflyBSD
 
-```cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
+2. Run either:
+    * `make dragonfly` or
+    * `cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### Solaris
 
-```gcc -fno-math-errno src/*.c -o ClassiCube -lsocket -lX11 -lXi -lGL```
+1. Install required packages if needed
+2. Run either:
+    * `make sunos` or
+    * `gcc -fno-math-errno src/*.c -o ClassiCube -lsocket -lX11 -lXi -lGL`
 
 #### Haiku
 
-1. Install openal_devel packages if needed
-2. Run ```cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+1. Install `gcc`, `haiku_devel`, `openal_devel` packages if needed
+2. Run either:
+    * `make haiku` or
+    * `cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker`
 
 #### BeOS
 
 1. Install a C compiler
-2. Run ```cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lbe -lgame -ltracker```
+2. Run either:
+    * `make beos` or
+    * `cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lbe -lgame -ltracker`
 
 #### IRIX
 
-```gcc -fno-math-errno src/*.c -o ClassiCube -lGL -lX11 -lXi -lpthread -ldl```
+1. Install required packages if needed
+2. Run either:
+    * `make irix` or
+    * gcc -fno-math-errno src/*.c -o ClassiCube -lGL -lX11 -lXi -lpthread -ldl`
 
 #### SerenityOS
 
 1. Install SDL2 port if needed
-2. Run ```cc src/*.c -o ClassiCube -lgl -lSDL2```
+2. Run either:
+    * `make serenityos` or
+    * `cc src/*.c -o ClassiCube -lgl -lSDL2`
 
 #### Classic Mac OS
 
