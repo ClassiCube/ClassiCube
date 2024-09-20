@@ -14,7 +14,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 
 IOP_MODS:= DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o USBKBD_irx.o
 
-EE_BIN 	= ClassiCube-ps2.elf
+TARGET 	= ClassiCube-ps2
 EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
 EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse -lkbd
 
@@ -23,10 +23,10 @@ EE_CFLAGS 	:= -D_EE -G0 -O2 -Wall -gdwarf-2 -gz -DPLAT_PS2
 EE_LDFLAGS 	:= -L$(PS2SDK)/ee/lib -Wl,-zmax-page-size=128
 EE_LINKFILE := $(PS2SDK)/ee/startup/linkfile
 
-all: $(BUILD_DIR) $(EE_BIN)
+all: $(BUILD_DIR) $(TARGET)-min.elf
 
 clean:
-	rm -f $(EE_BIN) $(EE_OBJS)
+	rm -f $(TARGET)-min.elf $(TARGET).elf $(EE_OBJS)
 	
 $(BUILD_DIR):
 	mkdir -p $@
@@ -70,8 +70,11 @@ $(BUILD_DIR)/USBKBD_irx.c: $(PS2SDK)/iop/irx/ps2kbd.irx
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
-$(EE_BIN): $(EE_OBJS)
-	$(EE_CC) -T$(EE_LINKFILE) -O2 -o $(EE_BIN) $(EE_OBJS) $(EE_LDFLAGS) $(EE_LIBS)
+$(TARGET).elf : $(EE_OBJS)
+	$(EE_CC) -T$(EE_LINKFILE) -O2 -o $(TARGET).elf $(EE_OBJS) $(EE_LDFLAGS) $(EE_LIBS)
+	
+$(TARGET)-min.elf : $(TARGET).elf
+	$(EE_STRIP) $(TARGET).elf -o $(TARGET)-min.elf
 
 
 #---------------------------------------------------------------------------------
