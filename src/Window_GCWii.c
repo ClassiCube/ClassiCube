@@ -245,9 +245,9 @@ static void ProcessMouseInput(float delta) {
 	mouse_event event;
     if (MOUSE_GetEvent(&event) == 0) return;
 
-	Input_SetNonRepeatable(CCMOUSE_L, event.button & 4);
-	Input_SetNonRepeatable(CCMOUSE_R, event.button & 1);
-	Input_SetNonRepeatable(CCMOUSE_M, event.button & 2);
+	Input_SetNonRepeatable(CCMOUSE_L, event.button & 1);
+	Input_SetNonRepeatable(CCMOUSE_R, event.button & 2);
+	Input_SetNonRepeatable(CCMOUSE_M, event.button & 4);
 	Mouse_ScrollVWheel(event.rz * 0.5f);
 
 	if (!vc_hooked) {
