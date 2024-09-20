@@ -6,16 +6,16 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define GAME_MAX_CMDARGS 5
-#define GAME_APP_VER "1.3.6"
+#define GAME_APP_VER "1.3.7"
 #define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
-#define GAME_APP_ALT   "ClassiCube 1.3.6 web mobile"
-#define GAME_APP_NAME  "ClassiCube 1.3.6 web"
+#define GAME_APP_ALT   "ClassiCube 1.3.7 web mobile"
+#define GAME_APP_NAME  "ClassiCube 1.3.7 web"
 #define GAME_APP_TITLE "ClassiCube"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.3.6"
-#define GAME_APP_TITLE "ClassiCube 1.3.6"
+#define GAME_APP_NAME  "ClassiCube 1.3.7"
+#define GAME_APP_TITLE "ClassiCube 1.3.7"
 #endif
 
 /* Max number of characters strings can have. */
