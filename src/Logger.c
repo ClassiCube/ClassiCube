@@ -1319,7 +1319,7 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	Logger_Log(&msg);
 
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
-	String_AppendConst(&msg, "Please report this on the ClassiCube forums or to UnknownShadow200.\n\n");
+	String_AppendConst(&msg, "Please report this on the ClassiCube forums or Discord.\n\n");
 	if (ctx) DumpRegisters(ctx);
 
 	/* These two function calls used to be in a separate DumpBacktrace function */

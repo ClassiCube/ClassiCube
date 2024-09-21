@@ -97,10 +97,6 @@ jobs:
           make_unix_tar cc-rpi32.tar.gz cc-rpi-32
           make_unix_tar cc-rpi64.tar.gz cc-rpi-64
           
-          # Generate Linux builds
-          make_unix_tar cc-linux32.tar.gz cc-linux-32
-          make_unix_tar cc-linux64.tar.gz cc-linux-64
-          
           # Generate macOS builds
           make_unix_tar cc-mac32.tar.gz cc-mac-32
           make_unix_tar cc-mac64.tar.gz cc-mac-64
@@ -108,6 +104,14 @@ jobs:
           # Generate Windows builds
           make_windows_zip cc-win32.zip cc-w32.exe
           make_windows_zip cc-win64.zip cc-w64.exe
+          
+          # Generate Linux builds
+          # NOTE: Must be last since it adds linux specific file
+          cp misc/linux/install-desktop-entry.sh ClassiCube/install-desktop-entry.sh
+          chmod +x ClassiCube/install-desktop-entry.sh
+          
+          make_unix_tar cc-linux32.tar.gz cc-linux-32
+          make_unix_tar cc-linux64.tar.gz cc-linux-64
 
 
       - uses: ./.github/actions/notify_failure

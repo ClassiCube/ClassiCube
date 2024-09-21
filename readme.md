@@ -31,7 +31,7 @@ You can **download ClassiCube** [here](https://www.classicube.net/download/) and
 
 ClassiCube strives to replicate the original Minecraft Classic experience by **strictly adhering to [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
 
-If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (`unknownshadow200` on Discord)
+If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact on the [ClassiCube Discord](https://classicube.net/discord)
 
 
 # How to play
@@ -211,7 +211,7 @@ For details on how to integrate the webclient into a website, see [here](doc/hos
 <details>
 <summary><h2>Compiling - consoles</h2></summary>
 
-All console ports need assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+All console ports need assistance from someone experienced with homebrew development - if you're interested, please get in contact on the [ClassiCube Discord.](https://classicube.net/discord)
 
 <details>
 <summary><h3>Nintendo consoles (click to expand)</h3></summary>

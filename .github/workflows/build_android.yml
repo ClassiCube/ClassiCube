@@ -97,3 +97,10 @@ jobs:
         with:
           SOURCE_FILE: 'src/cc.apk'
           DEST_NAME: 'cc.apk'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'android'
