@@ -52,8 +52,8 @@ struct HacksComp {
 	cc_bool Enabled;
 
 	cc_bool CanAnyHacks, CanUseThirdPerson, CanSpeed, CanFly;
-	cc_bool CanRespawn, CanNoclip, CanPushbackBlocks,CanSeeAllNames;
-	cc_bool CanDoubleJump, CanBePushed;
+	cc_bool CanRespawn, CanNoclip, CanPushbackBlocks, CanSeeAllNames;
+	cc_bool CanDoubleJump, CanBePushed, CanSaveMap;
 	float BaseHorSpeed;
 	/* Max amount of jumps the player can perform */
 	int MaxJumps;
