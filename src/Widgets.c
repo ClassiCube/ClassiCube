@@ -2216,10 +2216,19 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	return (int)(portions - start);
 }
 
+static void TextGroupWidget_RemoveColorPrefix(cc_string* text, int i) {
+	/* Delete leading colour code if present */
+	if (i + 2 > text->length || text->buffer[i] != '&') return;
+	if (!Drawer2D_ValidColorCodeAt(text, i + 1)) return;
+
+	String_DeleteAt(text, i + 1); 
+	String_DeleteAt(text, i);
+}
+
 static void TextGroupWidget_FormatUrl(cc_string* text, const cc_string* url) {
 	char* dst;
 	int i;
-	String_AppendColorless(text, url);
+	String_AppendString(text, url);
 
 	/* Delete "> " multiline chars from URLs */
 	dst = text->buffer;
@@ -2229,7 +2238,12 @@ static void TextGroupWidget_FormatUrl(cc_string* text, const cc_string* url) {
 
 		String_DeleteAt(text, i + 1);
 		String_DeleteAt(text, i);
+		/* Delete leading multiline colour code if present */
+		TextGroupWidget_RemoveColorPrefix(text, i);
 	}
+
+	/* Delete leading colour code if present */
+	TextGroupWidget_RemoveColorPrefix(text, 0);
 }
 
 static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, cc_string* text, int index, int mouseX) {
