@@ -314,7 +314,7 @@
 				9A89D47F27F802F600FF3F80 /* interop_ios.m */,
 			);
 			name = src;
-			path = ../src;
+			path = ../../src;
 			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */

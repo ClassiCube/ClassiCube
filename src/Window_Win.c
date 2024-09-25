@@ -365,7 +365,7 @@ static ATOM DoRegisterClass(void) {
 	/* Windows NT 3.5 does not support RegisterClassExA function */
 	res = GetLastError();
 	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
-		if ((atom = RegisterClassA((const WNDCLASSA*)&wc))) return atom;
+		if ((atom = RegisterClassA((const WNDCLASSA*)&wc.style))) return atom;
 		res = GetLastError();
 	}
 	

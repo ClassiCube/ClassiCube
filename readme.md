@@ -190,7 +190,7 @@ NOTE: If you are distributing a modified version, **please change the bundle ID 
 
 ##### Using Xcode GUI
 
-1. Open the `ios/CCIOS.xcodeproj` project in Xcode
+1. Open the `misc/ios/CCIOS.xcodeproj` project in Xcode
 2. Compile the project
 
 ##### Using command line (Xcode)
