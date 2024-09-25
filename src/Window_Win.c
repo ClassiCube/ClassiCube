@@ -344,10 +344,11 @@ void Window_Free(void) { }
 
 static ATOM DoRegisterClass(void) {
 	ATOM atom;
-	WNDCLASSEXW wc = { 0 };
-	wc.cbSize      = sizeof(WNDCLASSEXW);
-	wc.style       = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
-	wc.hInstance   = win_instance;
+	cc_result res;
+	WNDCLASSEXW wc   = { 0 };
+	wc.cbSize        = sizeof(WNDCLASSEXW);
+	wc.style         = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
+	wc.hInstance     = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
 
@@ -359,7 +360,11 @@ static ATOM DoRegisterClass(void) {
 
 	if ((atom = RegisterClassExW(&wc))) return atom;
 	/* Windows 9x does not support W API functions */
-	return RegisterClassExA((const WNDCLASSEXA*)&wc);
+	if ((atom = RegisterClassExA((const WNDCLASSEXA*)&wc))) return atom;
+	
+	res = GetLastError();
+	Logger_Abort2(res, "Failed to register window class");
+	return NULL;
 }
 
 static HWND CreateWindowHandle(ATOM atom, int width, int height) {

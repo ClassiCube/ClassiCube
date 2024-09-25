@@ -43,3 +43,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-ppc.dsk'
           DEST_NAME: 'ClassiCube-ppc.dsk'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'macclassic'
