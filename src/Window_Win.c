@@ -362,7 +362,13 @@ static ATOM DoRegisterClass(void) {
 	/* Windows 9x does not support W API functions */
 	if ((atom = RegisterClassExA((const WNDCLASSEXA*)&wc))) return atom;
 	
+	/* Windows NT 3.5 does not support RegisterClassExA function */
 	res = GetLastError();
+	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
+		if ((atom = RegisterClassA((const WNDCLASSA*)&wc))) return atom;
+		res = GetLastError();
+	}
+	
 	Logger_Abort2(res, "Failed to register window class");
 	return NULL;
 }
