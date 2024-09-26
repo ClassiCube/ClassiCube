@@ -35,7 +35,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ios/build/Release-iphoneos/cc.ipa'
+          SOURCE_FILE: 'misc/ios/build/Release-iphoneos/cc.ipa'
           DEST_NAME: 'cc.ipa'
           
           

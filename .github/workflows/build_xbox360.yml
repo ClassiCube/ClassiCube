@@ -17,7 +17,7 @@ jobs:
     container:
       image: free60/libxenon
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Compile 360 build
         id: compile
         run: |
