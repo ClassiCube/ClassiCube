@@ -1003,6 +1003,10 @@ static int ChatScreen_ClampChatIndex(int index) {
 }
 
 static void ChatScreen_ScrollChatBy(struct ChatScreen* s, int delta) {
+	if (Gui.ClassicChat) {
+		return;
+	}
+
 	int newIndex = ChatScreen_ClampChatIndex(s->chatIndex + delta);
 	delta = newIndex - s->chatIndex;
 
