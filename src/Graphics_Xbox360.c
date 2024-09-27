@@ -203,23 +203,13 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	int size = count * 2;
-	struct XenosIndexBuffer* xib = Xe_CreateIndexBuffer(xe, size, XE_FMT_INDEX16);
-	
-	void* dst = Xe_IB_Lock(xe, xib, 0, size, XE_LOCK_WRITE);
-	fillFunc((cc_uint16*)dst, count, obj);
-	Xe_IB_Unlock(xe, xib);
-	return xib;
+	return (void*)1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-	struct XenosIndexBuffer* xib = (struct XenosIndexBuffer*)ib;
-	Xe_SetIndices(xe, xib);
 }
 
-void Gfx_DeleteIb(GfxResourceID* ib) { 
-	struct XenosIndexBuffer* xib = (struct XenosIndexBuffer*)(*ib);
-	if (xib) Xe_DestroyIndexBuffer(xe, xib);
+void Gfx_DeleteIb(GfxResourceID* ib) {
 	*ib = NULL;
 }
 
@@ -299,20 +289,17 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	Platform_Log1("DRAW_TRIS: %i", &verticesCount);
-	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST, // TODO QUADLIST instead?
-		0, 0, verticesCount, 0, verticesCount >> 1);
+	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, 0, verticesCount >> 2);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	Platform_Log1("DRAW_TRIS_RANGE: %i", &verticesCount);
-	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST,
-		startVertex, 0, verticesCount, 0, verticesCount >> 1);
+	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	Platform_Log1("DRAW_TRIS_MAP: %i", &verticesCount);
-	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST,
-		startVertex, 0, verticesCount, 0, verticesCount >> 1);
+	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2);
 }
 
 
