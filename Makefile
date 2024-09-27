@@ -130,6 +130,14 @@ ifeq ($(PLAT),irix)
 	BUILD_DIR = build-irix
 endif
 
+ifeq ($(PLAT),dos)
+	CC	=  i586-pc-msdosdjgpp-gcc 
+	LIBS    =
+	BUILD_DIR = build-dos
+	LDFLAGS = -g
+	OEXT    =  .exe
+endif
+
 
 ifdef SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
@@ -185,7 +193,8 @@ serenityos:
 	$(MAKE) $(TARGET) PLAT=serenityos
 irix:
 	$(MAKE) $(TARGET) PLAT=irix
-
+dos:
+	$(MAKE) $(TARGET) PLAT=dos
 # Default overrides
 sdl2:
 	$(MAKE) $(TARGET) SDL2=1
