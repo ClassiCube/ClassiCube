@@ -23,6 +23,7 @@
 #include <sys/time.h>
 #include <utime.h>
 #include <stdio.h>
+#include <io.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -31,8 +32,8 @@ const cc_result ReturnCode_SocketInProgess  = -10002;
 const cc_result ReturnCode_SocketWouldBlock = -10002;
 const cc_result ReturnCode_SocketDropped    = -10002;
 
-const char* Platform_AppNameSuffix = "DOS";
-cc_bool Platform_SingleProcess;
+const char* Platform_AppNameSuffix = " DOS";
+cc_bool Platform_SingleProcess = true;
 cc_bool Platform_ReadonlyFilesystem;
 
 
@@ -187,13 +188,13 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path->buffer, O_RDONLY);
+	return File_Do(file, path->buffer, O_RDONLY | O_BINARY);
 }
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
+	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_BINARY);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -221,9 +222,9 @@ cc_result File_Position(cc_file file, cc_uint32* pos) {
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	long raw_len = filelength(file);
+	if (raw_len == -1) { *len = -1; return errno; }
+	*len = raw_len; return 0;
 }
 
 
@@ -305,41 +306,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *#########################################################################################################################*/
 cc_bool Process_OpenSupported = false;
 
-static cc_result Process_RawStart(const char* path, char** argv) {
-	pid_t pid = fork();
-	if (pid == -1) return errno;
-
-	if (pid == 0) {
-		/* Executed in child process */
-		execvp(path, argv);
-		_exit(127); /* "command not found" */
-	} else {
-		/* Executed in parent process */
-		/* We do nothing here.. */
-		return 0;
-	}
-}
-
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	char raw[GAME_MAX_CMDARGS][NATIVE_STR_LEN];
-	const char* path;
-	int i, j, len = 0;
-	char* argv[15];
-	cc_result res;
-	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
-
-	path = "ClassiCube.exe";
-	argv[0] = (char*)path;
-
-	for (i = 0, j = 1; i < numArgs; i++, j++) 
-	{
-		String_EncodeUtf8(raw[i], &args[i]);
-		argv[j] = raw[i];
-	}
-
-	argv[j] = NULL;
-	return Process_RawStart(path, argv);
+	return SetGameArgs(args, numArgs);
 }
+
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartOpen(const cc_string* args) {
@@ -376,24 +346,18 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#include <dlfcn.h>
-const cc_string DynamicLib_Ext = String_FromConst(".so");
+const cc_string DynamicLib_Ext = String_FromConst(".dll");
 
 void* DynamicLib_Load2(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-	return dlopen(str.buffer, RTLD_NOW);
+	return NULL;
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
-	void *result = dlsym(lib, name);
-	return result;
+	return NULL;
 }
 
 cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	const char* err = dlerror();
-	if (err) String_AppendConst(dst, err);
-	return err && err[0];
+	return false;
 }
 
 
@@ -402,15 +366,6 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 void Platform_Free(void) { }
 
-#ifdef CC_BUILD_IRIX
-cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	const char* err = strerror(res);
-	if (!err || res >= 1000) return false;
-
-	String_AppendUtf8(dst, err, String_Length(err));
-	return true;
-}
-#else
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
@@ -427,12 +382,8 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	String_AppendUtf8(dst, chars, len);
 	return true;
 }
-#endif
 
 void Platform_Init(void) {
-	#ifdef CC_BUILD_MOBILE
-	Platform_SingleProcess = true;
-	#endif
 }
 
 
