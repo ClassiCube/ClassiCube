@@ -133,9 +133,9 @@ endif
 ifeq ($(PLAT),dos)
 	CC	=  i586-pc-msdosdjgpp-gcc 
 	LIBS    =
-	BUILD_DIR = build-dos
 	LDFLAGS = -g
 	OEXT    =  .exe
+	BUILD_DIR = build-dos
 endif
 
 

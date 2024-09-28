@@ -79,8 +79,8 @@ extern struct _InputState {
 	cc_bool RawMode;
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
-	/* Function that overrides all normal input handling (e.g. for virtual keyboard) */
-	void (*DownHook)(int btn, struct InputDevice* device);
+	/* Function that can override all normal input handling (e.g. for virtual keyboard) */
+	cc_bool (*DownHook)(int btn, struct InputDevice* device);
 } Input;
 
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
@@ -185,9 +185,9 @@ extern struct TouchPointer touches[INPUT_MAX_POINTERS];
 struct Pointer { 
 	int x, y;
 	/* Function that overrides all normal pointer input press handling */
-	void (*DownHook)(int index);
+	cc_bool (*DownHook)(int index);
 	/* Function that overrides all normal pointer input release handling */
-	void (*UpHook)  (int index);
+	cc_bool (*UpHook)  (int index);
 };
 CC_VAR extern struct Pointer Pointers[INPUT_MAX_POINTERS];
 

@@ -190,7 +190,7 @@ static cc_bool IsShutdown(int key) {
 }
 
 static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* device) {
-	if (Input.DownHook) { Input.DownHook(key, device); return; }
+	if (Input.DownHook && Input.DownHook(key, device)) return;
 
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
 	Launcher_Active->KeyDown(Launcher_Active, key, was, device);

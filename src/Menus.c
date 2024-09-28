@@ -1973,14 +1973,14 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	s->dirty = true;
 }
 
-static void KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
+static cc_bool KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
 	struct KeyBindsScreen* s = &KeyBindsScreen;
 	InputBind bind;
 	int idx;
-	if (device->type != bind_device->type) return;
+	if (device->type != bind_device->type) return false;
 	
 	Input.DownHook = NULL;
-	if (s->curI == -1) return;
+	if (s->curI == -1) return false;
 	bind = s->binds[s->curI];
 	
 	if (key == device->escapeButton) {
@@ -1993,6 +1993,7 @@ static void KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
 	s->curI     = -1;
 	s->closable = true;
 	KeyBindsScreen_Update(s, idx);
+	return true;
 }
 
 static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {

@@ -784,7 +784,7 @@ cc_bool KeyBind_IsPressed(InputBind binding) { return Bind_IsTriggered[binding];
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y, mask;
-	if (Pointers[idx].DownHook) { Pointers[idx].DownHook(idx); return; }
+	if (Pointers[0].DownHook && Pointers[0].DownHook(idx)) return;
 
 	/* Always set last click time, otherwise quickly tapping */
 	/* sometimes triggers a 'delete' in InputHandler_Tick, */
@@ -822,7 +822,7 @@ static void OnPointerDown(void* obj, int idx) {
 static void OnPointerUp(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y;
-	if (Pointers[idx].UpHook) { Pointers[idx].UpHook(idx); return; }
+	if (Pointers[0].UpHook && Pointers[0].UpHook(idx)) return;
 
 #ifdef CC_BUILD_TOUCH
 	CheckBlockTap(idx);
@@ -841,7 +841,7 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 	struct Screen* s;
 	cc_bool triggered;
 	int i;
-	if (Input.DownHook) { Input.DownHook(key, device); return; }
+	if (Input.DownHook && Input.DownHook(key, device)) return;
 
 #ifndef CC_BUILD_WEB
 	if (key == device->escapeButton && (s = Gui_GetClosable())) {
