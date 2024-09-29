@@ -1,56 +1,56 @@
-# ClassiCube 🎮
+# ClassiCube 
 
 **ClassiCube** is a custom Minecraft Classic-compatible client, built entirely from scratch in C.  
-It is not affiliated with Mojang AB, Minecraft, or Microsoft in any way. ⚠️
+It is not affiliated with Mojang AB, Minecraft, or Microsoft in any way. 
 
-## What is ClassiCube? 🧱
+## What is ClassiCube? 
 
 ClassiCube aims to faithfully recreate the 2009 Minecraft Classic client while providing **optional** enhancements to improve the gameplay experience. The game can run on a wide variety of systems, including desktop, web, mobile, and even some consoles.
 
-### Key Features 🌟
+### Key Features 
 <details>
 <summary><strong>Click to expand</strong></summary>
 
-- ⚡️ **High Performance**: Enjoy significantly better performance and lower memory usage than the original Minecraft Classic.
-- 🎨 **Customization**: Take advantage of optional features like custom blocks, models, and environment colors.
-- 🕹️ **Partial Compatibility**: Supports features from Minecraft Classic versions before 0.30.
-- 🖥️ **Wide Hardware Support**: Works with almost all graphics cards that support OpenGL or Direct3D 9.
-- 💻 **Cross-Platform**: Runs on Windows, macOS, Linux, Android, iOS, and most web browsers.
-- 🕹️ **Console Support**: Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS, and even some consoles (in varying stages of development).
+- **High Performance**: Enjoy significantly better performance and lower memory usage than the original Minecraft Classic.
+- **Customization**: Take advantage of optional features like custom blocks, models, and environment colors.
+- **Partial Compatibility**: Supports features from Minecraft Classic versions before 0.30.
+- **Wide Hardware Support**: Works with almost all graphics cards that support OpenGL or Direct3D 9.
+- **Cross-Platform**: Runs on Windows, macOS, Linux, Android, iOS, and most web browsers.
+- **Console Support**: Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS, and even some consoles (in varying stages of development).
 
 </details>
 
 Please note that **ClassiCube** does not aim to replicate modern versions of Minecraft. It will never support survival mode, Minecraft account logins, or connections to official Minecraft servers.
 
-You can **download ClassiCube** [here](https://www.classicube.net/download/) and access the latest builds [here](https://www.classicube.net/nightlies/). 🚀
+You can **download ClassiCube** [here](https://www.classicube.net/download/) and access the latest builds [here](https://www.classicube.net/nightlies/). 
 
 ![classic](https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0)
 ![enhanced](https://github.com/ClassiCube/ClassiCube/assets/6509348/b2fe0e2b-5d76-41ab-909f-048d0ad15f37)
 
 ---
 
-## We Need Your Help! 🤝
+## We Need Your Help! 
 
 ClassiCube aims to replicate the original Minecraft Classic experience by **strictly adhering to a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
 
-If you're interested in documenting or verifying the behavior of the original Minecraft Classic, please reach out to me (`unknownshadow200` on Discord). 📩
+If you're interested in documenting or verifying the behavior of the original Minecraft Classic, please reach out to me (`unknownshadow200` on Discord). 
 
 ---
 
 ## How to Play 🎮
 
-### Getting Started 🚀
+### Getting Started 
 - Run `ClassiCube.exe` to download the required assets from `minecraft.net` and `classicube.net`. When the dialog menu appears, click **OK**.
 
-### Singleplayer Mode 🏞️
+### Singleplayer Mode 
 - Run `ClassiCube.exe`, then click **Singleplayer** in the main menu.
 
-### Multiplayer Mode 🌐
+### Multiplayer Mode 
 - Run `ClassiCube.exe` and connect to LAN servers or classicube.net servers (you'll need a [ClassiCube account](https://www.classicube.net/)).
 
 > **Note**: When using VirtualBox, disable Mouse Integration to avoid camera issues.
 
-### Stuck on OpenGL 1.1? ⚙️
+### Stuck on OpenGL 1.1? 
 The most common reason for being stuck on OpenGL 1.1 is outdated or non-functional GPU drivers. If possible, try updating your GPU drivers.
 
 - **Windows**: You can still run ClassiCube using the MESA software renderer. Download it [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for better performance.
@@ -58,7 +58,7 @@ The most common reason for being stuck on OpenGL 1.1 is outdated or non-function
 
 ---
 
-## Supported Systems 🌍
+## Supported Systems 
 
 ClassiCube runs on a wide range of platforms:
 
@@ -99,11 +99,11 @@ And also runs on various other systems such as:
 
 ---
 
-# Compiling Guide 🛠️
+# Compiling Guide 
 
 *Note: The instructions below automatically compile ClassiCube with recommended defaults for each platform. If you wish to override these defaults (not recommended), such as compiling the OpenGL build on Windows, refer to the [overriding defaults guide](doc/overriding-defaults.md) for further details.*
 
-## Compiling - Windows 🖥️
+## Compiling - Windows 
 
 ### Using Visual Studio
 1. Open `ClassiCube.sln` (*File -> Open -> Project/Solution*).
@@ -148,7 +148,7 @@ Assuming you installed MinGW from [this source](https://osdn.net/projects/mingw/
 
 ---
 
-## Compiling - Linux 🐧
+## Compiling - Linux 
 
 ### Using gcc/clang
 Install the necessary libraries. For Ubuntu, these include `libx11-dev`, `libxi-dev`, and `libgl1-mesa-dev`.  
@@ -168,7 +168,7 @@ For optimal performance on Raspberry Pi hardware, use this command:
 
 ---
 
-## Compiling - macOS 🍏
+## Compiling - macOS 
 
 Run the following command to compile on macOS:  
 ```cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```  
@@ -180,7 +180,7 @@ Run the following command to compile on macOS:
 
 ---
 
-## Compiling - Android 📱
+## Compiling - Android 
 
 **Note:** If distributing a modified version, change the package ID from `com.classicube.android.client` to avoid conflicts with existing installations of ClassiCube.
 
@@ -194,7 +194,7 @@ Run the following command to compile on macOS:
 
 ---
 
-## Compiling - iOS 📱🍎
+## Compiling - iOS 
 
 The iOS version is incomplete and has only been tested on the iOS Simulator.
 
@@ -209,7 +209,7 @@ Run the following command:
 ```xcodebuild -sdk iphoneos -configuration Debug```  
 *(TODO: Add more detailed steps)*
 
-## Compiling - Webclient 🌐
+## Compiling - Webclient 
 
 To compile the webclient, use the following command:  
 ```emcc src/*.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
@@ -398,60 +398,60 @@ ClassiCube is well-documented, with most functions and variables detailed in the
 
 For common compilation errors and tips, see the [known issues section](doc/compile-fixes.md#common-compilation-errors).
 
-### Tips 💡
+### Tips 
 - Press **Escape** to access the pause menu.
 - Toggle **vsync** in the **Options** menu for better CPU performance.
 - Press **F** to cycle view distance, which can improve performance.
 
 ---
 
-## Open Source Technologies 💻
+## Open Source Technologies 
 ClassiCube leverages many open-source technologies:
-- [**curl**](https://curl.se/) 🌐 – For HTTP/HTTPS requests on Linux and macOS.
-- [**FreeType**](https://www.freetype.org/) ✍️ – Provides font rendering across all platforms.
-- [**GCC**](https://gcc.gnu.org/) 🛠️ – The GNU Compiler Collection, used to compile the client for Linux.
-- [**MinGW-w64**](http://mingw-w64.org/doku.php) 🏗️ – Toolchain to compile ClassiCube on Windows.
-- [**Clang**](https://clang.llvm.org/) 🖥️ – Another compiler for macOS and Linux.
-- [**Emscripten**](https://emscripten.org/) 🌍 – A compiler toolchain for running the client in web browsers.
-- [**RenderDoc**](https://renderdoc.org/) 🖼️ – A powerful graphics debugger used for debugging rendering issues.
-- [**BearSSL**](https://www.bearssl.org/) 🔐 – Provides SSL/TLS support for security on consoles.
-- [**libnx**](https://github.com/switchbrew/libnx) 🎮 – Backend library for Nintendo Switch.
-- [**Ryujinx**](https://github.com/Ryujinx/Ryujinx) 🕹️ – Emulator used to test the Nintendo Switch port.
-- [**wut**](https://github.com/devkitPro/wut/) 🎮 – Backend library for Wii U.
-- [**Cemu**](https://github.com/cemu-project/Cemu) 🕹️ – Emulator used to test the Wii U port.
-- [**libctru**](https://github.com/devkitPro/libctru) 🎮 – Backend library for 3DS.
-- [**citro3D**](https://github.com/devkitPro/citro3d) 🎮 – Rendering backend for 3DS.
-- [**Citra**](https://github.com/citra-emu/citra) 🕹️ – Emulator used to test the 3DS port.
-- [**libogc**](https://github.com/devkitPro/libogc) 🎮 – Backend library for the Wii and GameCube.
-- [**libfat**](https://github.com/devkitPro/libfat) 💾 – Filesystem backend for Wii and GameCube.
-- [**Dolphin**](https://github.com/dolphin-emu/dolphin) 🕹️ – Emulator used to test the Wii and GameCube ports.
-- [**libdragon**](https://github.com/DragonMinded/libdragon) 🎮 – Backend library for Nintendo 64.
-- [**ares**](https://github.com/ares-emulator/ares) 🕹️ – Emulator used to test the Nintendo 64 port.
-- [**BlocksDS**](https://github.com/blocksds/sdk) 🎮 – Backend library for Nintendo DS.
-- [**melonDS**](https://github.com/melonDS-emu/melonDS) 🕹️ – Emulator used to test the DS/DSi ports.
-- [**vitasdk**](https://github.com/vitasdk) 🎮 – Backend library for PS Vita.
-- [**Vita3K**](https://github.com/Vita3K/Vita3K) 🕹️ – Emulator used to test the PS Vita port.
-- [**pspsdk**](https://github.com/pspdev/pspsdk) 🎮 – Backend library for PSP.
-- [**PPSSPP**](https://github.com/hrydgard/ppsspp) 🕹️ – Emulator used to test the PSP port.
-- [**PSL1GHT**](https://github.com/ps3dev/PSL1GHT) 🎮 – Backend library for PS3.
-- [**RPCS3**](https://github.com/RPCS3/rpcs3) 🕹️ – Emulator used to test the PS3 port.
-- [**ps2sdk**](https://github.com/ps2dev/ps2sdk) 🎮 – Backend library for PS2.
-- [**PCSX2**](https://github.com/PCSX2/pcsx2) 🕹️ – Emulator used to test the PS2 port.
-- [**PSn00bSDK**](https://github.com/Lameguy64/PSn00bSDK/) 🎮 – Backend library for PS1.
-- [**duckstation**](https://github.com/stenzek/duckstation) 🕹️ – Emulator used to test the PS1 port.
-- [**libxenon**](https://github.com/Free60Project/libxenon) 🎮 – Backend library for Xbox 360.
-- [**nxdk**](https://github.com/XboxDev/nxdk) 🎮 – Backend library for the original Xbox.
-- [**xemu**](https://github.com/xemu-project/xemu) 🕹️ – Emulator used to test the Xbox port.
-- [**cxbx-reloaded**](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) 🕹️ – Emulator used to test the original Xbox port.
-- [**KallistiOS**](https://github.com/KallistiOS/KallistiOS) 🎮 – Backend library for the Dreamcast.
-- [**GLdc**](https://github.com/Kazade/GLdc) 🖼️ – Rendering backend for Dreamcast.
-- [**flycast**](https://github.com/flyinghead/flycast) 🕹️ – Emulator used to test the Dreamcast port.
-- [**libyaul**](https://github.com/yaul-org/libyaul) 🎮 – Backend library for SEGA Saturn.
-- [**mednafen**](https://mednafen.github.io/) 🕹️ – Emulator used to test the Saturn port.
+- [**curl**](https://curl.se/) – For HTTP/HTTPS requests on Linux and macOS.
+- [**FreeType**](https://www.freetype.org/) ✍– Provides font rendering across all platforms.
+- [**GCC**](https://gcc.gnu.org/) – The GNU Compiler Collection, used to compile the client for Linux.
+- [**MinGW-w64**](http://mingw-w64.org/doku.php) 🏗– Toolchain to compile ClassiCube on Windows.
+- [**Clang**](https://clang.llvm.org/)  – Another compiler for macOS and Linux.
+- [**Emscripten**](https://emscripten.org/) – A compiler toolchain for running the client in web browsers.
+- [**RenderDoc**](https://renderdoc.org/) – A powerful graphics debugger used for debugging rendering issues.
+- [**BearSSL**](https://www.bearssl.org/) – Provides SSL/TLS support for security on consoles.
+- [**libnx**](https://github.com/switchbrew/libnx) – Backend library for Nintendo Switch.
+- [**Ryujinx**](https://github.com/Ryujinx/Ryujinx) – Emulator used to test the Nintendo Switch port.
+- [**wut**](https://github.com/devkitPro/wut/) – Backend library for Wii U.
+- [**Cemu**](https://github.com/cemu-project/Cemu) – Emulator used to test the Wii U port.
+- [**libctru**](https://github.com/devkitPro/libctru) – Backend library for 3DS.
+- [**citro3D**](https://github.com/devkitPro/citro3d) – Rendering backend for 3DS.
+- [**Citra**](https://github.com/citra-emu/citra) – Emulator used to test the 3DS port.
+- [**libogc**](https://github.com/devkitPro/libogc) – Backend library for the Wii and GameCube.
+- [**libfat**](https://github.com/devkitPro/libfat) – Filesystem backend for Wii and GameCube.
+- [**Dolphin**](https://github.com/dolphin-emu/dolphin) – Emulator used to test the Wii and GameCube ports.
+- [**libdragon**](https://github.com/DragonMinded/libdragon) – Backend library for Nintendo 64.
+- [**ares**](https://github.com/ares-emulator/ares) – Emulator used to test the Nintendo 64 port.
+- [**BlocksDS**](https://github.com/blocksds/sdk) – Backend library for Nintendo DS.
+- [**melonDS**](https://github.com/melonDS-emu/melonDS) – Emulator used to test the DS/DSi ports.
+- [**vitasdk**](https://github.com/vitasdk) – Backend library for PS Vita.
+- [**Vita3K**](https://github.com/Vita3K/Vita3K) – Emulator used to test the PS Vita port.
+- [**pspsdk**](https://github.com/pspdev/pspsdk) – Backend library for PSP.
+- [**PPSSPP**](https://github.com/hrydgard/ppsspp) – Emulator used to test the PSP port.
+- [**PSL1GHT**](https://github.com/ps3dev/PSL1GHT) – Backend library for PS3.
+- [**RPCS3**](https://github.com/RPCS3/rpcs3) – Emulator used to test the PS3 port.
+- [**ps2sdk**](https://github.com/ps2dev/ps2sdk) – Backend library for PS2.
+- [**PCSX2**](https://github.com/PCSX2/pcsx2) – Emulator used to test the PS2 port.
+- [**PSn00bSDK**](https://github.com/Lameguy64/PSn00bSDK/) – Backend library for PS1.
+- [**duckstation**](https://github.com/stenzek/duckstation) – Emulator used to test the PS1 port.
+- [**libxenon**](https://github.com/Free60Project/libxenon) – Backend library for Xbox 360.
+- [**nxdk**](https://github.com/XboxDev/nxdk) – Backend library for the original Xbox.
+- [**xemu**](https://github.com/xemu-project/xemu) – Emulator used to test the Xbox port.
+- [**cxbx-reloaded**](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) – Emulator used to test the original Xbox port.
+- [**KallistiOS**](https://github.com/KallistiOS/KallistiOS) – Backend library for the Dreamcast.
+- [**GLdc**](https://github.com/Kazade/GLdc) – Rendering backend for Dreamcast.
+- [**flycast**](https://github.com/flyinghead/flycast) – Emulator used to test the Dreamcast port.
+- [**libyaul**](https://github.com/yaul-org/libyaul) – Backend library for SEGA Saturn.
+- [**mednafen**](https://mednafen.github.io/) – Emulator used to test the Saturn port.
 
 ---
 
-## Sound Credits 🔊
+## Sound Credits 
 ClassiCube uses sounds from [Freesound.org](https://freesound.org).  
 For full credits, see [sound credits](doc/sound-credits.md).
 
