@@ -219,7 +219,7 @@ Please note that the generated JavaScript file may have some issues. For instruc
 For more details on integrating the webclient into a website, please see the [integration guide](doc/hosting-webclient.md).
 
 <details>
-<summary><h2>Compiling - Consoles 🎮</h2></summary>
+<summary><h2>Compiling - Consoles</h2></summary>
 
 All console ports require expertise in homebrew development. If you are interested in contributing, please contact me (`unknownshadow200` on Discord).
 
@@ -392,7 +392,7 @@ For other systems, you will need to write the necessary code. Refer to `portabil
 
 </details>
 
-## Documentation 📚
+## Documentation
 
 ClassiCube is well-documented, with most functions and variables detailed in the `.h` files. Additional documentation is available in the `doc` and `misc` folders.
 
