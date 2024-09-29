@@ -37,7 +37,7 @@ If you're interested in documenting or verifying the behavior of the original Mi
 
 ---
 
-## How to Play 🎮
+## How to Play
 
 ### Getting Started 
 - Run `ClassiCube.exe` to download the required assets from `minecraft.net` and `classicube.net`. When the dialog menu appears, click **OK**.
