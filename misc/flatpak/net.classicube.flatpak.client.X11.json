@@ -1,0 +1,56 @@
+{
+    "id": "net.classicube.flatpak.client",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "24.08",
+    "sdk": "org.freedesktop.Sdk",
+    "command": "ClassiCubeLauncher",
+    "finish-args": [
+        "--socket=x11",
+        "--device=dri",
+        "--share=network",
+        "--share=ipc",
+        "--socket=pulseaudio"
+    ],
+    "modules": [
+    	{
+            "name": "ClassiCubeAssets",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -Dm644 classicube-texpack.zip ${FLATPAK_DEST}/share/classicube-texpack.zip",
+                "install -Dm644 classicube-audio.zip ${FLATPAK_DEST}/share/classicube-audio.zip"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "dest-filename": "classicube-texpack.zip",
+                    "url": "https://classicube.net/static/default.zip",
+                    "sha256": "55eac12a9727d209b42694d07dfdca8d50349779ab77ffc11a31d2cb66b45635"
+                },
+                {
+                    "type": "file",
+                    "dest-filename": "classicube-audio.zip",
+                    "url": "https://classicube.net/static/audio.zip",
+                    "sha256": "13562a712d1cb1de3f36dd93a03245a377f201e7934d19c17de09202b410e04b"
+                }
+            ]
+        },
+        {
+            "name": "ClassiCube",
+            "buildsystem": "simple",
+            "build-commands": [
+                "gcc -fno-math-errno src/*.c -o src/ClassiCube -O1 -DCC_BUILD_FLATPAK -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -rdynamic -lm -lpthread -lX11 -lXi -lGL -ldl",
+                "install -Dm755 src/ClassiCube -t ${FLATPAK_DEST}/bin",
+                "install -Dm755 misc/flatpak/ClassiCubeLauncher -t ${FLATPAK_DEST}/bin",
+                "install -Dm644 misc/flatpak/net.classicube.flatpak.client.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/net.classicube.flatpak.client.svg",
+                "install -Dm644 misc/flatpak/net.classicube.flatpak.client.desktop ${FLATPAK_DEST}/share/applications/net.classicube.flatpak.client.desktop",
+                "install -Dm644 misc/flatpak/net.classicube.flatpak.client.metainfo.xml ${FLATPAK_DEST}/share/metainfo/net.classicube.flatpak.client.metainfo.xml"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/ClassiCube/ClassiCube.git"
+                }
+            ]
+        }
+    ]
+}
