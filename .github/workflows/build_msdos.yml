@@ -21,7 +21,9 @@ jobs:
       - name: Compile MS dos build
         id: compile
         run: |
-          make dos RELEASE=1
+          apt-get update
+          apt-get -y install curl
+          make CC=gcc dos RELEASE=1
 
 
       - uses: ./.github/actions/notify_failure
