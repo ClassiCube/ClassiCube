@@ -1,0 +1,45 @@
+name: Build latest (MS DOS)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-msdos
+  cancel-in-progress: true
+
+jobs:
+  build-mac-classic:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/volkertb/debian-djgpp
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile MS dos build
+        id: compile
+        run: |
+          make dos RELEASE=1
+
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile MS DOS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube.exe'
+          DEST_NAME: 'ClassiCube.exe'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'msdos'
