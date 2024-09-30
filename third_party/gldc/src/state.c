@@ -141,11 +141,8 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     if (txr_enable == PVR_TEXTURE_DISABLE) {
         dst->mode3 = 0;
     } else {
-        GLuint filter = PVR_FILTER_NEAREST;
-        if (tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) filter = PVR_FILTER_BILINEAR;
-
         dst->mode2 |= (txr_alpha                << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
-        dst->mode2 |= (filter                   << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
+        dst->mode2 |= (PVR_FILTER_NEAREST       << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
         dst->mode2 |= (DEFAULT_MIPMAP_BIAS      << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
         dst->mode2 |= (PVR_TXRENV_MODULATEALPHA << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
 

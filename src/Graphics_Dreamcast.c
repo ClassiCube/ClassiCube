@@ -227,18 +227,6 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_BindTexture(GfxResourceID texId) {
-	gldcBindTexture((GLuint)texId);
-	STATE_DIRTY = true;
-}
-
-void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GLuint id = (GLuint)(*texId);
-	if (!id) return;
-	gldcDeleteTexture(id);
-	*texId = 0;
-}
-
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
 
@@ -332,18 +320,31 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
 	}
 }
 
+static TextureObject* FindFreeTexture(void) {
+    unsigned int id;
+    
+    // ID 0 is reserved for default texture
+    for (int i = 1; i < MAX_TEXTURE_COUNT; i++) 
+	{
+		TextureObject* tex = &TEXTURE_LIST[i];
+        if (tex->data == NULL) return tex;
+    }
+    return NULL;
+}
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	GLuint texId = gldcGenTexture();
-	gldcBindTexture(texId);
-	
-	int res = gldcAllocTexture(bmp->width, bmp->height, PVR_TXRFMT_ARGB4444);
-	if (res) { Platform_LogConst("Out of PVR VRAM!"); return 0; }
-				
-	void* pixels;
-	int width, height;
-	gldcGetTexture(&pixels, &width, &height);
-	ConvertTexture(pixels, bmp, rowWidth);
-	return (GfxResourceID)texId;
+	TextureObject* tex = FindFreeTexture();
+	if (!tex) return NULL;
+
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	tex->color  = PVR_TXRFMT_ARGB4444;
+
+	tex->data = texmem_alloc(bmp->width * bmp->height * 2);
+	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
+
+	ConvertTexture(tex->data, bmp, rowWidth);
+	return tex;
 }
 
 // TODO: struct GPUTexture ??
@@ -373,16 +374,29 @@ static void ConvertSubTexture(cc_uint16* dst, int texWidth, int texHeight,
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	gldcBindTexture((GLuint)texId);
-				
-	void* pixels;
-	int width, height;
-	gldcGetTexture(&pixels, &width, &height);
+	TextureObject* tex = (TextureObject*)texId;
 	
-	ConvertSubTexture(pixels, width, height,
+	ConvertSubTexture(tex->data, tex->width, tex->height,
 				x, y, part, rowWidth);
 	// TODO: Do we need to flush VRAM?
 }
+
+void Gfx_BindTexture(GfxResourceID texId) {
+	if (!texId) texId = &TEXTURE_LIST[0];
+
+    TEXTURE_ACTIVE = (TextureObject*)texId;
+	STATE_DIRTY    = true;
+}
+
+void Gfx_DeleteTexture(GfxResourceID* texId) {
+	TextureObject* tex = (TextureObject*)(*texId);
+	if (!tex) return;
+
+	texmem_free(tex->data);
+	tex->data = NULL;
+	*texId    = 0;
+}
+
 
 
 /*########################################################################################################################*

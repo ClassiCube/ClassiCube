@@ -6,24 +6,10 @@
 
 #define MAX_TEXTURE_COUNT 768
 
-#define GL_NEAREST          0x2600
-#define GL_LINEAR           0x2601
-#define GL_OUT_OF_MEMORY    0x0505
-
-#define GLushort   unsigned short
 #define GLuint     unsigned int
 #define GLenum     unsigned int
-#define GLubyte    unsigned char
 #define GLboolean  unsigned char
 
-
-GLuint gldcGenTexture(void);
-void   gldcDeleteTexture(GLuint texture);
-void   gldcBindTexture(GLuint texture);
-
-/* Loads texture from SH4 RAM into PVR VRAM */
-int  gldcAllocTexture(int w, int h, int format);
-void gldcGetTexture(void** data, int* width, int* height);
 
 void glKosInit();
 void glKosSwapBuffers();
@@ -45,24 +31,23 @@ typedef struct {
 #define GL_FORCE_INLINE static __attribute__((always_inline)) inline
 
 typedef struct {
-    //0
-    GLuint   index;
-    GLuint   color; /* This is the PVR texture format */
-    //8
-    GLenum minFilter;
-    GLenum magFilter;
-    //16
-    void *data;
-    //20
-    GLushort width;
-    GLushort height;
-} __attribute__((aligned(32))) TextureObject;
+    uint32_t color; /* This is the PVR texture format */
+    void     *data;
+    uint16_t width;
+    uint16_t height;
+} TextureObject;
 
 
 void _glInitTextures();
+void* texmem_alloc(size_t size);
+void  texmem_free(void* ptr);
+
+GLuint _glFreeTextureMemory(void);
+GLuint _glUsedTextureMemory(void);
 
 extern TextureObject* TEXTURE_ACTIVE;
 extern GLboolean TEXTURES_ENABLED;
+extern TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
 
 extern GLboolean DEPTH_TEST_ENABLED;
 extern GLboolean DEPTH_MASK_ENABLED;
@@ -88,13 +73,6 @@ GL_FORCE_INLINE AlignedVector* _glActivePolyList() {
 
     return &OP_LIST;
 }
-
-/* Memory allocation extension (GL_KOS_texture_memory_management) */
-void glDefragmentTextureMemory_KOS(void);
-
-GLuint _glFreeTextureMemory(void);
-GLuint _glUsedTextureMemory(void);
-GLuint _glFreeContiguousTextureMemory(void);
 
 extern GLboolean STATE_DIRTY;
 
