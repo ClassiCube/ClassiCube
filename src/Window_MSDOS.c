@@ -10,6 +10,7 @@
 #include <dpmi.h>
 #include <sys/nearptr.h>
 #include <pc.h>
+#include <bios.h>
 
 #define INT_VGA            0x10
 #define VGA_CMD_SETMODE  0x0000
@@ -79,6 +80,82 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	regs.x.ax = visible ? MOUSE_CMD_SHOW : MOUSE_CMD_HIDE;
 	__dpmi_int(INT_MOUSE, &regs);
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Keyboard support-----------------------------------------------------*
+*#########################################################################################################################*/
+// TODO use proper keyboard interrupts
+static float event_time;
+static float press_start[256];
+// TODO missing numpad codes
+
+static const cc_uint8 key_map[] = {
+/* 0x00 */ 0, CCKEY_ESCAPE, '1', '2',  '3', '4', '5', '6',
+/* 0x08 */ '7', '8', '9', '0',  CCKEY_MINUS, CCKEY_EQUALS, CCKEY_BACKSPACE, CCKEY_TAB,
+/* 0x10 */ 'Q', 'W', 'E', 'R',  'T', 'Y', 'U', 'I',
+/* 0x18 */ 'O', 'P', CCKEY_LBRACKET, CCKEY_RBRACKET,  CCKEY_ENTER, 0, 'A', 'S',
+/* 0x20 */ 'D', 'F', 'G', 'H',  'J', 'K', 'L', CCKEY_SEMICOLON,
+/* 0x28 */ CCKEY_QUOTE, CCKEY_TILDE, 0, CCKEY_BACKSLASH,  'Z', 'X', 'C', 'V',
+/* 0x30 */ 'B', 'N', 'M', CCKEY_COMMA,  CCKEY_PERIOD, CCKEY_SLASH, 0, 0,
+/* 0x38 */ 0, CCKEY_SPACE, 0, CCKEY_F1,  CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5,
+/* 0x40 */ CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9,  CCKEY_F10, 0, 0, CCKEY_HOME,
+/* 0x48 */ CCKEY_UP, CCKEY_PAGEUP, 0, CCKEY_LEFT,  0, CCKEY_RIGHT, 0, CCKEY_END,
+/* 0x50 */ CCKEY_DOWN, CCKEY_PAGEDOWN, 0, 0,  0, 0, 0, 0,
+/* 0x58 */ 0, 0, 0, 0,  0, 0, 0, 0,
+/* 0x60 */ 0, 0, 0, 0,  0, 0, 0, 0,
+/* 0x68 */ 0, 0, 0, 0,  0, 0, 0, 0,
+/* 0x70 */ 0, 0, 0, 0,  0, 0, 0, 0,
+/* 0x78 */ 0, 0, 0, 0,  0, 0, 0, 0,
+/* 0x80 */ 0, 0, 0, 0,  0, CCKEY_F11, CCKEY_F12, 0,
+};
+static int MapKey(unsigned key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+
+
+static void Keyboard_UpdateState(float delta) {
+	event_time += delta;
+	// Auto release keys after a while
+	for (int i = 0; i < 256; i++)
+	{
+		if (press_start[i] && (event_time - press_start[i]) > 1.0f) {
+			Input_SetReleased(MapKey(i));
+			press_start[i] = 0.0f;
+		}
+	}
+}
+
+static void Keyboard_PollInput(void) {
+	if (_bios_keybrd(_NKEYBRD_READY) == 0) return;
+	unsigned raw = _bios_keybrd(_NKEYBRD_READ);
+
+	// Lower 8 bits contain ascii code
+	unsigned code = raw & 0xFF;
+	if (code >= 32 && code < 127) {
+		Event_RaiseInt(&InputEvents.Press, code);
+	}
+
+	// Higher 8 bits contain raw code
+	raw = (raw >> 8) & 0xFF;
+	int key = MapKey(raw);
+	if (!key) return;
+
+	Input_SetPressed(key);
+	press_start[raw] = event_time;
+}
+
+static void Keyboard_UpdateModifiers(void) {
+	unsigned mods = _bios_keybrd(_KEYBRD_SHIFTSTATUS);
+
+	Input_SetNonRepeatable(CCKEY_RSHIFT, mods & 0x02);
+	Input_SetNonRepeatable(CCKEY_LCTRL,  mods & 0x04);
+	Input_SetNonRepeatable(CCKEY_LALT,   mods & 0x08);
+
+	Input_SetNonRepeatable(CCKEY_SCROLLLOCK, mods & 0x10);
+	Input_SetNonRepeatable(CCKEY_NUMLOCK,    mods & 0x20);
+	Input_SetNonRepeatable(CCKEY_CAPSLOCK,   mods & 0x40);
+	Input_SetNonRepeatable(CCKEY_INSERT,     mods & 0x80);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
@@ -156,6 +233,9 @@ void Window_RequestClose(void) {
 
 void Window_ProcessEvents(float delta) {
 	Mouse_Poll();
+	Keyboard_PollInput();
+	Keyboard_UpdateModifiers();
+	Keyboard_UpdateState(delta);
 }
 
 void Gamepads_Init(void) {
