@@ -11,24 +11,91 @@
 #include <sys/nearptr.h>
 #include <pc.h>
 
+#define INT_VGA            0x10
+#define VGA_CMD_SETMODE  0x0000
+#define VGA_MODE_320x200_8 0x13
+
+#define INT_MOUSE         0x33
+#define MOUSE_CMD_RESET 0x0000
+#define MOUSE_CMD_SHOW  0x0001
+#define MOUSE_CMD_HIDE  0x0002
+#define MOUSE_CMD_POLL  0x0003
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Mouse support------------------------------------------------------*
+*#########################################################################################################################*/
+static cc_bool mouseSupported;
+static void Mouse_Init(void) {
+	__dpmi_regs regs;
+	regs.x.ax = MOUSE_CMD_RESET;
+	__dpmi_int(INT_MOUSE, &regs);
+
+	if (regs.x.ax == 0) { mouseSupported = false; return; }
+	mouseSupported = true;
+	Cursor_DoSetVisible(true);
+}
+
+static void Mouse_Poll(void) {
+	if (!mouseSupported) return;
+
+	__dpmi_regs regs;
+	regs.x.ax = MOUSE_CMD_POLL;
+	__dpmi_int(INT_MOUSE, &regs);
+
+	int b = regs.x.bx;
+	int x = regs.x.cx;
+	int y = regs.x.dx;
+
+	Input_SetNonRepeatable(CCMOUSE_L, b & 0x01);
+	Input_SetNonRepeatable(CCMOUSE_R, b & 0x02);
+	Input_SetNonRepeatable(CCMOUSE_M, b & 0x04);
+
+	Pointer_SetPosition(0, x, y);
+}
+
+static void Cursor_GetRawPos(int* x, int* y) {
+	*x = 0;
+	*y = 0;
+	if (!mouseSupported) return;
+
+	__dpmi_regs regs;
+	regs.x.ax = MOUSE_CMD_POLL;
+	__dpmi_int(INT_MOUSE, &regs);
+
+	*x = regs.x.cx;
+	*y = regs.x.dx;
+}
+
+void Cursor_SetPosition(int x, int y) { 
+	if (!mouseSupported) return;
+
+}
+
+static void Cursor_DoSetVisible(cc_bool visible) {
+	if (!mouseSupported) return;
+
+	__dpmi_regs regs;
+	regs.x.ax = visible ? MOUSE_CMD_SHOW : MOUSE_CMD_HIDE;
+	__dpmi_int(INT_MOUSE, &regs);
+}
+
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-void Window_PreInit(void) {
-}
+void Window_PreInit(void) { }
 
 void Window_Init(void) {
 	DisplayInfo.Width  = 320;
 	DisplayInfo.Height = 200;
 
-	DisplayInfo.ScaleX = 1.0f;
-	DisplayInfo.ScaleY = 1.0f;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
 
 	// Change VGA mode to 0x13 (320x200x8bpp)
 	__dpmi_regs regs;
-	Mem_Set(&regs, 0, sizeof regs);
-	regs.x.ax = 0x13;
-	__dpmi_int(0x10, &regs);
+	regs.x.ax = VGA_CMD_SETMODE | VGA_MODE_320x200_8;
+	__dpmi_int(INT_VGA, &regs);
 
 	// Change VGA colour palette (NOTE: only lower 6 bits are used)
 	// Fake a linear RGB palette
@@ -38,6 +105,8 @@ void Window_Init(void) {
     	outportb(0x3c9, ((i >> 2) & 0x07) << 3);
     	outportb(0x3c9, ((i >> 5) & 0x07) << 3);	
 	}
+
+	Mouse_Init();
 }
 
 void Window_Free(void) { }
@@ -85,24 +154,15 @@ void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
-void Window_ProcessEvents(float delta) { }
+void Window_ProcessEvents(float delta) {
+	Mouse_Poll();
+}
 
 void Gamepads_Init(void) {
 
 }
 
 void Gamepads_Process(float delta) { }
-
-static void Cursor_GetRawPos(int* x, int* y) {
-	*x = 0;
-	*y = 0;
-}
-
-void Cursor_SetPosition(int x, int y) { 
-}
-
-static void Cursor_DoSetVisible(cc_bool visible) {
-}
 
 static void ShowDialogCore(const char* title, const char* msg) {
 	Platform_LogConst(title);
