@@ -31,6 +31,7 @@ void LBackend_UpdateTitleFont(void);
 void LBackend_DrawTitle(struct Context2D* ctx, const char* title);
 
 void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len);
+void LBackend_TableFlagAdded(struct LTable* w);
 
 /* Marks the entire launcher contents as needing to be redrawn */
 void LBackend_Redraw(void);

@@ -1347,9 +1347,8 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 
 	flagsCount = FetchFlagsTask.count;
 	LWebTask_Tick(&FetchFlagsTask.Base, NULL);
-
 	if (flagsCount != FetchFlagsTask.count) {
-		LBackend_NeedsRedraw(&s->table);
+		LBackend_TableFlagAdded(&s->table);
 	}
 
 	if (!FetchServersTask.Base.working) return;
