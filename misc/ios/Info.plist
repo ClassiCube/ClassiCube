@@ -137,5 +137,7 @@
 			</dict>
 		</dict>
 	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 </dict>
 </plist>

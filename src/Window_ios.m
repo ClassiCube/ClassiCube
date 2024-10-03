@@ -34,6 +34,7 @@ UITextField* kb_widget;
 CGContextRef win_ctx;
 UIView* view_handle;
 UIViewController* cc_controller;
+CADisplayLink *displayLink = Nil;
 
 UIColor* ToUIColor(BitmapCol color, float A);
 NSString* ToNSString(const cc_string* text);
@@ -551,7 +552,10 @@ void Window_Create3D(int width, int height) {
     Init3DLayer();
 }
 
-void Window_Destroy(void) { }
+void Window_Destroy(void) {
+    [cc_controller.view removeFromSuperview];
+    cc_controller.view = Nil;
+}
 
 
 /*########################################################################################################################*
@@ -653,6 +657,22 @@ cc_bool GLContext_SwapBuffers(void) {
     return true;
 }
 
+void Gfx_SetProMotion(bool pro_motion) {
+    /*
+     * If ProMotion is off, pause our CADisplayLink object and hence disable higher
+     * ranges of ProMotion. Otherwise, users may experience framepacing issues
+     * with other FPS limit options.
+     */
+    if (displayLink) {
+        if (pro_motion)
+            Platform_LogConst("ProMotion: ON");
+        else
+            Platform_LogConst("ProMotion: OFF");
+
+        displayLink.paused = !pro_motion;
+    }
+}
+
 void GLContext_SetVSync(cc_bool vsync) { }
 void GLContext_GetApiInfo(cc_string* info) { }
 
@@ -661,6 +681,56 @@ void GLContext_GetApiInfo(cc_string* info) { }
 
 + (Class)layerClass {
     return [CAEAGLLayer class];
+}
+
+- (void)commonInit {
+    if (@available(iOS 15.0, *)) {
+        NSInteger maxFPS = [UIScreen.mainScreen maximumFramesPerSecond];
+        displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLink:)];
+
+        /* Suggest the device to possibily increase frame-rate cap from the usual 60
+         * up to 120. Due to how quirky ProMotion is, supported iPhones in
+         * practice may achieve 80FPS at best. In other words, there is no way to
+         * force a specific refresh rate.
+         * https://developer.apple.com/documentation/quartzcore/optimizing_promotion_refresh_rates_for_iphone_13_pro_and_ipad_pro?language=objc
+         */
+        displayLink.preferredFrameRateRange = CAFrameRateRangeMake(maxFPS, maxFPS, maxFPS);
+
+        [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+
+        Platform_LogConst("CADisplayLink Initialized");
+    } else {
+        displayLink = Nil;
+    }
+}
+
+- (void)displayLink:(CADisplayLink *)sender {
+    /* Dummy display link callback */
+}
+
+- (id)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder: coder];
+    [self commonInit];
+
+    return self;
+}
+
+- (id)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    [self commonInit];
+
+    return self;
+}
+
+- (void)removeFromSuperview {
+    [super removeFromSuperview];
+
+    if (displayLink) {
+        [displayLink invalidate];
+        displayLink = Nil;
+
+        Platform_LogConst("CADisplayLink Invalidated");
+    }
 }
 
 - (void)layoutSubviews {
