@@ -60,7 +60,8 @@ static void InitGPU(void) {
 
 static void InitGLState(void) {
 	pvr_set_zclip(0.0f);
-	PVR_SET(PT_ALPHA_REF, 127); // define missing from KOS
+	PVR_SET(PT_ALPHA_REF, 127); // define missing from KOS    
+	//PVR_SET(PVR_SPANSORT_CFG, 0x0);
 
 	ALPHA_TEST_ENABLED = false;
 	CULLING_ENABLED    = false;
@@ -70,7 +71,7 @@ static void InitGLState(void) {
 	TEXTURES_ENABLED   = false;
 	FOG_ENABLED        = false;
 	
-	stateDirty        = true;
+	stateDirty       = true;
     listOP.list_type = PVR_LIST_OP_POLY;
     listPT.list_type = PVR_LIST_PT_POLY;
     listTR.list_type = PVR_LIST_TR_POLY;
@@ -683,7 +684,7 @@ static void SubmitList(AlignedVector* cmds) {
 	pvr_list_begin(cmds->list_type);
 	{
 		pvr_dr_init(&dr_state);
-		SceneListSubmit(cmds->data, cmds->size);
+		SceneListSubmit((Vertex*)cmds->data, cmds->size);
 		sq_wait();
 	}
 	pvr_list_finish();

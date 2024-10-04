@@ -66,9 +66,6 @@ typedef struct {
     float w;
 } __attribute__ ((aligned (32))) Vertex;
 
-
-#define GL_FORCE_INLINE static __attribute__((always_inline)) inline
-
 typedef struct {
     uint32_t color; /* This is the PVR texture format */
     void     *data;

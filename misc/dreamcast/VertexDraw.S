@@ -523,7 +523,7 @@ _ProcessVertexList:
 	bra     SUBMIT_LOOP
 	add    #-64,r15
 
-! Submits a PowerVR GPU command
+! Submits a PVR2 TA GPU command
 DO_CMD:
 	PushVertex REG_V0
 	bra     NEXT_ITER
@@ -543,7 +543,6 @@ SUBMIT_LOOP:
 	bf.s    DO_CMD    ! if (!T) goto DO_CMD
 ! PVR_CMD_VERTEX_EOL case
 	extu.b  r0,r1     ! EX, MASK = FLAGS & 0xFF (branch delay slot)
-	mov.l   r11,@r13  ! LS, CUR->flags = PVR_CMD_VERTEX_EOL
 
 ! Prepare and then jump to quad drawing function, based on quad clipflags
 	mova    .CASES,r0   ! LS, r0 = CASES
