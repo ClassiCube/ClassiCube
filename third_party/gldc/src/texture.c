@@ -11,7 +11,7 @@
  * issues with the allocator */
 #define PVR_MEM_BUFFER_SIZE (64 * 1024)
 
-TextureObject* TEXTURE_ACTIVE = NULL;
+TextureObject* TEXTURE_ACTIVE;
 TextureObject  TEXTURE_LIST[MAX_TEXTURE_COUNT];
 static void* YALLOC_BASE;
 static size_t YALLOC_SIZE;
@@ -20,7 +20,7 @@ static void glDefragmentTextureMemory_KOS(void) {
     yalloc_defrag_start(YALLOC_BASE);
 
     /* Replace all texture pointers */
-    for(int i = 1; i < MAX_TEXTURE_COUNT; i++)
+    for(int i = 0; i < MAX_TEXTURE_COUNT; i++)
     {
         TextureObject* txr = &TEXTURE_LIST[i];
         if (!txr->data) continue;
@@ -31,9 +31,7 @@ static void glDefragmentTextureMemory_KOS(void) {
     yalloc_defrag_commit(YALLOC_BASE);
 }
 
-void _glInitTextures() {
-    TEXTURE_ACTIVE = &TEXTURE_LIST[0];
-
+void texmem_init() {
     size_t vram_free = pvr_mem_available();
     YALLOC_SIZE = vram_free - PVR_MEM_BUFFER_SIZE; /* Take all but 64kb VRAM */
     YALLOC_BASE = pvr_mem_malloc(YALLOC_SIZE);

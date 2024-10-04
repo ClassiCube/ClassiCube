@@ -11,14 +11,38 @@
 #include "../third_party/gldc/src/gldc.h"
 
 static cc_bool renderingDisabled;
+static cc_bool stateDirty;
 #define VERTEX_BUFFER_SIZE 32 * 40000
 #define PT_ALPHA_REF 0x011c
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Vertex list-------------------------------------------------------*
+*#########################################################################################################################*/
+static void VertexList_Append(AlignedVector* list, const void* cmd) {
+    void* dst = aligned_vector_reserve(list, list->size + 1);
+    assert(dst);
+
+    memcpy(dst, cmd, VERTEX_SIZE);
+    list->size++;
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static void InitPowerVR(void) {
+static AlignedVector listOP;
+static AlignedVector listPT;
+static AlignedVector listTR;
+
+static CC_INLINE AlignedVector* ActivePolyList(void) {
+    if (gfx_alphaBlend) return &listTR;
+    if (gfx_alphaTest)  return &listPT;
+
+    return &listOP;
+}
+
+static void InitGPU(void) {
 	cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
 	cc_bool fsaa     = false;
 	AUTOSORT_ENABLED = autosort;
@@ -46,12 +70,19 @@ static void InitGLState(void) {
 	TEXTURES_ENABLED   = false;
 	FOG_ENABLED        = false;
 	
-	STATE_DIRTY = true;
+	stateDirty        = true;
+    listOP.list_type = PVR_LIST_OP_POLY;
+    listPT.list_type = PVR_LIST_PT_POLY;
+    listTR.list_type = PVR_LIST_TR_POLY;
+
+    aligned_vector_reserve(&listOP, 1024 * 3);
+    aligned_vector_reserve(&listPT,  512 * 3);
+    aligned_vector_reserve(&listTR, 1024 * 3);
 }
 
 void Gfx_Create(void) {
-	if (!Gfx.Created) InitPowerVR();
-	if (!Gfx.Created) glKosInit();
+	if (!Gfx.Created) InitGPU();
+	if (!Gfx.Created) texmem_init();
 
 	InitGLState();
 	
@@ -81,12 +112,12 @@ static PackedCol gfx_clearColor;
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	CULLING_ENABLED = enabled;
-	STATE_DIRTY     = true;
+	stateDirty      = true;
 }
 
 static void SetAlphaBlend(cc_bool enabled) { 
 	BLEND_ENABLED = enabled;
-	STATE_DIRTY   = true;
+	stateDirty    = true;
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -108,19 +139,19 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	if (DEPTH_MASK_ENABLED == enabled) return;
 	
 	DEPTH_MASK_ENABLED = enabled;
-	STATE_DIRTY        = true;
+	stateDirty         = true;
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	if (DEPTH_TEST_ENABLED == enabled) return;
 	
 	DEPTH_TEST_ENABLED = enabled;
-	STATE_DIRTY        = true;
+	stateDirty         = true;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
 	ALPHA_TEST_ENABLED = enabled;
-	STATE_DIRTY        = true;
+	stateDirty         = true;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -321,11 +352,10 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
 }
 
 static TextureObject* FindFreeTexture(void) {
-    // ID 0 is reserved for default texture
-    for (int i = 1; i < MAX_TEXTURE_COUNT; i++) 
+    for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
 	{
 		TextureObject* tex = &TEXTURE_LIST[i];
-        if (tex->data == NULL) return tex;
+        if (!tex->data) return tex;
     }
     return NULL;
 }
@@ -380,10 +410,8 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	if (!texId) texId = &TEXTURE_LIST[0];
-
     TEXTURE_ACTIVE = (TextureObject*)texId;
-	STATE_DIRTY    = true;
+	stateDirty     = true;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -409,7 +437,7 @@ void Gfx_SetFog(cc_bool enabled) {
 	if (FOG_ENABLED == enabled) return;
 	
 	FOG_ENABLED = enabled;
-	STATE_DIRTY = true;
+	stateDirty  = true;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -554,16 +582,16 @@ static Vertex* ReserveOutput(AlignedVector* vec, uint32_t elems) {
 
 void DrawQuads(int count, void* src) {
 	if (!count) return;
-	AlignedVector* vec = _glActivePolyList();
+	AlignedVector* vec = ActivePolyList();
 
-	uint32_t header_required = (vec->size == 0) || STATE_DIRTY;
+	uint32_t header_required = (vec->size == 0) || stateDirty;
 	// Reserve room for the vertices and header
 	Vertex* beg = ReserveOutput(vec, vec->size + (header_required) + count);
 	if (!beg) return;
 
 	if (header_required) {
 		apply_poly_header((pvr_poly_hdr_t*)beg, vec->list_type);
-		STATE_DIRTY = false;
+		stateDirty = false;
 		beg++; 
 		vec->size += 1;
 	}
@@ -583,7 +611,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	TEXTURES_ENABLED = fmt == VERTEX_FORMAT_TEXTURED;
-	STATE_DIRTY      = true;
+	stateDirty       = true;
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -666,20 +694,14 @@ void Gfx_EndFrame(void) {
 	pvr_wait_ready();
 
     pvr_scene_begin();
-	SubmitList(&OP_LIST);
-	SubmitList(&PT_LIST);
-	SubmitList(&TR_LIST);
+	SubmitList(&listOP);
+	SubmitList(&listPT);
+	SubmitList(&listTR);
     pvr_scene_finish();
 }
 
 void Gfx_OnWindowResize(void) {
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
-}
-
-static void PushCommand(void* cmd) {
-    aligned_vector_push_back(&OP_LIST, cmd, 1);
-    aligned_vector_push_back(&PT_LIST, cmd, 1);
-    aligned_vector_push_back(&TR_LIST, cmd, 1);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
@@ -691,7 +713,7 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
 	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
-	STATE_DIRTY = true;
+	stateDirty = true;
 
 	pvr_poly_hdr_t c;
 	c.cmd = PVR_CMD_USERCLIP;
@@ -701,6 +723,9 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 	c.d2 = y >> 5;
 	c.d3 = ((x + w) >> 5) - 1;
 	c.d4 = ((y + h) >> 5) - 1;
-	PushCommand(&c);
+
+    VertexList_Append(&listOP, &c);
+    VertexList_Append(&listPT, &c);
+    VertexList_Append(&listTR, &c);
 }
 #endif

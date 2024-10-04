@@ -1,11 +1,7 @@
-#include <stdbool.h>
 #include <string.h>
-#include <stdio.h>
 #include <kos.h>
 #include <dc/pvr.h>
 #include "gldc.h"
-
-GLboolean STATE_DIRTY;
 
 GLboolean DEPTH_TEST_ENABLED;
 GLboolean DEPTH_MASK_ENABLED;
@@ -22,22 +18,6 @@ GLboolean BLEND_ENABLED;
 
 GLboolean TEXTURES_ENABLED;
 GLboolean AUTOSORT_ENABLED;
-
-AlignedVector OP_LIST;
-AlignedVector PT_LIST;
-AlignedVector TR_LIST;
-
-void glKosInit() {
-    _glInitTextures();
-
-    OP_LIST.list_type = PVR_LIST_OP_POLY;
-    PT_LIST.list_type = PVR_LIST_PT_POLY;
-    TR_LIST.list_type = PVR_LIST_TR_POLY;
-
-    aligned_vector_reserve(&OP_LIST, 1024 * 3);
-    aligned_vector_reserve(&PT_LIST,  512 * 3);
-    aligned_vector_reserve(&TR_LIST, 1024 * 3);
-}
 
 static inline int DimensionFlag(int w) {
     switch(w) {
@@ -82,7 +62,7 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     }
 
     int txr_enable, txr_alpha;
-    if (!TEXTURES_ENABLED || !tx1 || !tx1->data) {
+    if (!TEXTURES_ENABLED || !tx1) {
         /* Disable all texturing to start with */
         txr_enable = PVR_TEXTURE_DISABLE;
     } else {

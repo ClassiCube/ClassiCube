@@ -373,6 +373,7 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
 extern void ProcessVertexList(Vertex* v3, int n, void* sq_addr);
 void SceneListSubmit(Vertex* v3, int n) {
     PVR_SET(SPAN_SORT_CFG, 0x0);
+
 	sq = (uint32_t*)MEM_AREA_SQ_BASE;
 	uint8_t visible_mask = 0;
 

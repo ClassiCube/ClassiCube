@@ -2,17 +2,56 @@
 #define PRIVATE_H
 
 #include <stdint.h>
-#include "aligned_vector.h"
+#include <assert.h>
+#include <string.h>
+#include <stdint.h>
+#include <malloc.h>
+
+#define AV_FORCE_INLINE static __attribute__((always_inline)) inline
+#define VERTEX_SIZE 32
+
+typedef struct {
+    uint32_t size;
+    uint32_t capacity;
+    uint32_t list_type;
+    uint8_t* data;
+} __attribute__((aligned(32))) AlignedVector;
+
+#define ALIGNED_VECTOR_CHUNK_SIZE 256u
+
+#define ROUND_TO_CHUNK_SIZE(v) \
+    ((((v) + ALIGNED_VECTOR_CHUNK_SIZE - 1) / ALIGNED_VECTOR_CHUNK_SIZE) * ALIGNED_VECTOR_CHUNK_SIZE)
+
+AV_FORCE_INLINE void* aligned_vector_reserve(AlignedVector* vector, uint32_t element_count) {
+    uint32_t original_byte_size = (vector->size * VERTEX_SIZE);
+
+    if(element_count < vector->capacity) {
+        return vector->data + original_byte_size;
+    }
+
+    /* We overallocate so that we don't make small allocations during push backs */
+    element_count = ROUND_TO_CHUNK_SIZE(element_count);
+
+    uint32_t new_byte_size = (element_count * VERTEX_SIZE);
+    uint8_t* original_data = vector->data;
+
+    uint8_t* data = (uint8_t*) memalign(0x20, new_byte_size);
+    if (!data) return NULL;
+
+    memcpy(data, original_data, original_byte_size);
+    free(original_data);
+
+	vector->data     = data;
+    vector->capacity = element_count;
+    return data + original_byte_size;
+}
+
 
 #define MAX_TEXTURE_COUNT 768
 
 #define GLuint     unsigned int
 #define GLenum     unsigned int
 #define GLboolean  unsigned char
-
-
-void glKosInit();
-void glKosSwapBuffers();
 
 typedef struct {
     /* Same 32 byte layout as pvr_vertex_t */
@@ -38,7 +77,7 @@ typedef struct {
 } TextureObject;
 
 
-void _glInitTextures();
+void  texmem_init(void);
 void* texmem_alloc(size_t size);
 void  texmem_free(void* ptr);
 
@@ -61,20 +100,6 @@ extern GLboolean BLEND_ENABLED;
 extern GLboolean SCISSOR_TEST_ENABLED;
 extern GLenum SHADE_MODEL;
 extern GLboolean AUTOSORT_ENABLED;
-
-
-extern AlignedVector OP_LIST;
-extern AlignedVector PT_LIST;
-extern AlignedVector TR_LIST;
-
-GL_FORCE_INLINE AlignedVector* _glActivePolyList() {
-    if (BLEND_ENABLED)      return &TR_LIST;
-    if (ALPHA_TEST_ENABLED) return &PT_LIST;
-
-    return &OP_LIST;
-}
-
-extern GLboolean STATE_DIRTY;
 
 void SceneListSubmit(Vertex* v2, int n);
 
