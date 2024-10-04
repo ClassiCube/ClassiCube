@@ -39,29 +39,6 @@ void glKosInit() {
     aligned_vector_reserve(&TR_LIST, 1024 * 3);
 }
 
-void glKosSwapBuffers() {
-        if (OP_LIST.size > 2) {
-            pvr_list_begin(PVR_LIST_OP_POLY);
-            SceneListSubmit((Vertex*)OP_LIST.data, OP_LIST.size, 0);
-            pvr_list_finish();
-    		OP_LIST.size = 0;
-        }
-
-        if (PT_LIST.size > 2) {
-            pvr_list_begin(PVR_LIST_PT_POLY);
-            SceneListSubmit((Vertex*)PT_LIST.data, PT_LIST.size, 1);
-            pvr_list_finish();
-    		PT_LIST.size = 0;
-        }
-
-        if (TR_LIST.size > 2) {
-            pvr_list_begin(PVR_LIST_TR_POLY);
-            SceneListSubmit((Vertex*)TR_LIST.data, TR_LIST.size, 2);
-            pvr_list_finish();
-    		TR_LIST.size = 0;
-        }
-}
-
 static inline int DimensionFlag(int w) {
     switch(w) {
         case 16: return 1;
@@ -98,8 +75,6 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
         blend_dst  = PVR_BLEND_ZERO;
     } else if (list_type == PVR_LIST_PT_POLY) {
         /* Punch-through polys require fixed blending and depth modes */
-        blend_src  = PVR_BLEND_SRCALPHA;
-        blend_dst  = PVR_BLEND_INVSRCALPHA;
         depth_comp = PVR_DEPTHCMP_LEQUAL;
     } else if (list_type == PVR_LIST_TR_POLY && AUTOSORT_ENABLED) {
         /* Autosort mode requires this mode for transparent polys */

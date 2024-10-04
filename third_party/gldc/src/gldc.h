@@ -76,6 +76,6 @@ GL_FORCE_INLINE AlignedVector* _glActivePolyList() {
 
 extern GLboolean STATE_DIRTY;
 
-void SceneListSubmit(Vertex* v2, int n, int type);
+void SceneListSubmit(Vertex* v2, int n);
 
 #endif // PRIVATE_H

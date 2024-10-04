@@ -321,8 +321,6 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
 }
 
 static TextureObject* FindFreeTexture(void) {
-    unsigned int id;
-    
     // ID 0 is reserved for default texture
     for (int i = 1; i < MAX_TEXTURE_COUNT; i++) 
 	{
@@ -650,11 +648,27 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	// no need to use glClear
 }
 
+static pvr_dr_state_t dr_state;
+static void SubmitList(AlignedVector* cmds) {
+	if (!cmds->size) return;
+
+	pvr_list_begin(cmds->list_type);
+	{
+		pvr_dr_init(&dr_state);
+		SceneListSubmit(cmds->data, cmds->size);
+		sq_wait();
+	}
+	pvr_list_finish();
+	cmds->size = 0;
+}
+
 void Gfx_EndFrame(void) {
 	pvr_wait_ready();
 
     pvr_scene_begin();
-	glKosSwapBuffers();
+	SubmitList(&OP_LIST);
+	SubmitList(&PT_LIST);
+	SubmitList(&TR_LIST);
     pvr_scene_finish();
 }
 

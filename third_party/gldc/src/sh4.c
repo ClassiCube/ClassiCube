@@ -46,9 +46,6 @@ static inline void _glPushHeaderOrVertex(Vertex* v)  {
 extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout);
 
 #define SPAN_SORT_CFG 0x005F8030
-static volatile uint32_t* PVR_LMMODE0 = (uint32_t*) 0xA05F6884;
-static volatile uint32_t* PVR_LMMODE1 = (uint32_t*) 0xA05F6888;
-
 #define V0_VIS (1 << 0)
 #define V1_VIS (1 << 1)
 #define V2_VIS (1 << 2)
@@ -374,14 +371,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
 }
 
 extern void ProcessVertexList(Vertex* v3, int n, void* sq_addr);
-void SceneListSubmit(Vertex* v3, int n, int type) {
+void SceneListSubmit(Vertex* v3, int n) {
     PVR_SET(SPAN_SORT_CFG, 0x0);
-
-    //Set PVR DMA registers
-    *PVR_LMMODE0 = 0;
-    *PVR_LMMODE1 = 0;
-
-	sq_lock((void*)PVR_TA_INPUT);
 	sq = (uint32_t*)MEM_AREA_SQ_BASE;
 	uint8_t visible_mask = 0;
 
@@ -438,7 +429,4 @@ void SceneListSubmit(Vertex* v3, int n, int type) {
             break;
         }
     }
-
-	sq_wait();
-	sq_unlock();
 }

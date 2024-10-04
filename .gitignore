@@ -93,6 +93,11 @@ ClassiCube*
 screenshots
 fontscache.txt
 
+# DOS files
+CWSDPMI.EXE
+CWSDPMI.SWP
+OPTIONS.TXT
+
 # Android source files need to be included
 !android/app/src/main/java/com/classicube
 
