@@ -92,7 +92,8 @@ static struct CpeExt
 	pluginMessages_Ext  = { "PluginMessages", 1 },
 	extTeleport_Ext     = { "ExtEntityTeleport", 1 },
 	lightingMode_Ext    = { "LightingMode", 1 },
-	cinematicGui_Ext   = { "CinematicGui", 1 },
+	cinematicGui_Ext    = { "CinematicGui", 1 },
+	notifyAction_Ext    = { "NotifyAction", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
 	extBlocks_Ext       = { "ExtendedBlocks", 1 };
 
@@ -102,7 +103,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&messageTypes_Ext, &hackControl_Ext, &playerClick_Ext, &fullCP437_Ext, &longerMessages_Ext, &blockDefs_Ext,
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
-	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext,
+	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext, &notifyAction_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
@@ -894,6 +895,17 @@ void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data) {
 		Mem_Copy(buffer + 2, data, 64);
 	}
 	Server.SendData(buffer, 66);
+}
+
+void CPE_SendNotifyAction(int action, int value) {
+	cc_uint8 data[4];
+
+	data[0] = OPCODE_NOTIFY_ACTION;
+	{
+		data[1] = action;
+		data[2] = value;
+	}
+	Server.SendData(data, 4);
 }
 
 static void CPE_SendExtInfo(int extsCount) {

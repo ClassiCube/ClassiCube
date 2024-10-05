@@ -36,6 +36,7 @@
 #include "SystemFonts.h"
 #include "Lighting.h"
 #include "InputHandler.h"
+#include "Protocol.h"
 
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
@@ -1408,11 +1409,15 @@ static void SaveLevelScreen_Save(void* screen, void* widget) {
 	SaveLevelScreen_RemoveOverwrites(s);
 	if ((res = SaveLevelScreen_SaveMap(&path))) return;
 	Chat_Add1("&eSaved map to: %s", &path);
+	CPE_SendNotifyAction(0, 0);
 }
 
 static void SaveLevelScreen_UploadCallback(const cc_string* path) {
 	cc_result res = SaveLevelScreen_SaveMap(path);
-	if (!res) Chat_Add1("&eSaved map to: %s", path);
+	if (!res) {
+		Chat_Add1("&eSaved map to: %s", path);
+		CPE_SendNotifyAction(0, 0);
+	}
 }
 
 static void SaveLevelScreen_File(void* screen, void* b) {
