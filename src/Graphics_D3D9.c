@@ -660,9 +660,10 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	int size = vCount * gfx_stride;
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
+	cc_result res;
+	
 	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
-
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
+	res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
 	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
 }
 
@@ -833,16 +834,19 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	DWORD targets = 0;
+	cc_result res;
+	
 	if (buffers & GFX_BUFFER_COLOR) targets |= D3DCLEAR_TARGET;
 	if (buffers & GFX_BUFFER_DEPTH) targets |= D3DCLEAR_ZBUFFER;
 	
-	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, targets, gfx_clearColor, 0.0f, 0);
+	res = IDirect3DDevice9_Clear(device, 0, NULL, targets, gfx_clearColor, 0.0f, 0);
 	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 
 void Gfx_EndFrame(void) {
+	cc_result res;
 	IDirect3DDevice9_EndScene(device);
-	cc_result res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
+	res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
 
 	if (res) {
 		if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
