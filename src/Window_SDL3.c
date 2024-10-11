@@ -243,12 +243,12 @@ static void OnMouseEvent(const SDL_Event* e) {
 }
 
 static void OnTextEvent(const SDL_Event* e) {
+	const cc_uint8* src;
 	cc_codepoint cp;
-	const char* src;
 	int i, len;
 
-	src = e->text.text;
-	len = String_Length(src);
+	src = (cc_uint8*)e->text.text;
+	len = String_Length(e->text.text);
 
 	while (len > 0) {
 		i = Convert_Utf8ToCodepoint(&cp, src, len);

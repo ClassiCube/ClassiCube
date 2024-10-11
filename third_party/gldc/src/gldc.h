@@ -46,10 +46,6 @@ AV_FORCE_INLINE void* aligned_vector_reserve(AlignedVector* vector, uint32_t ele
     return data + original_byte_size;
 }
 
-
-#define MAX_TEXTURE_COUNT 768
-
-#define GLuint     unsigned int
 #define GLenum     unsigned int
 #define GLboolean  unsigned char
 
@@ -73,17 +69,8 @@ typedef struct {
     uint16_t height;
 } TextureObject;
 
-
-void  texmem_init(void);
-void* texmem_alloc(size_t size);
-void  texmem_free(void* ptr);
-
-GLuint _glFreeTextureMemory(void);
-GLuint _glUsedTextureMemory(void);
-
 extern TextureObject* TEXTURE_ACTIVE;
 extern GLboolean TEXTURES_ENABLED;
-extern TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
 
 extern GLboolean DEPTH_TEST_ENABLED;
 extern GLboolean DEPTH_MASK_ENABLED;

@@ -14,6 +14,7 @@ static cc_bool renderingDisabled;
 static cc_bool stateDirty;
 #define VERTEX_BUFFER_SIZE 32 * 40000
 #define PT_ALPHA_REF 0x011c
+#define MAX_TEXTURE_COUNT 768
 
 
 /*########################################################################################################################*
@@ -25,6 +26,137 @@ static void VertexList_Append(AlignedVector* list, const void* cmd) {
 
     memcpy(dst, cmd, VERTEX_SIZE);
     list->size++;
+}
+
+/*########################################################################################################################*
+*-----------------------------------------------------Texture memory------------------------------------------------------*
+*#########################################################################################################################*/
+// For PVR2 GPU, highly recommended that multiple textures don't cross the same 2048 byte page alignment
+// So to avoid this, ensure that each texture is allocated at the start of a 2048 byte page
+#define TEXMEM_PAGE_SIZE 2048
+#define TEXMEM_PAGE_MASK (TEXMEM_PAGE_SIZE - 1)
+// Round up to nearest page
+#define TEXMEM_PAGE_ROUNDUP(size) (((size) + TEXMEM_PAGE_MASK) & ~TEXMEM_PAGE_MASK)
+// Leave a little bit of memory available by KOS PVR code
+#define TEXMEM_RESERVED (64 * 1024)
+#define TEXMEM_TO_PAGE(addr) ((cc_uint32)((addr) - texmem_base) / TEXMEM_PAGE_SIZE)
+
+TextureObject* TEXTURE_ACTIVE;
+static TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
+
+// Base address in VRAM for textures
+static cc_uint8* texmem_base;
+// Total number of pages in VRAM
+static cc_uint32 texmem_pages;
+// Stores which pages in VRAM are currently used
+static cc_uint8* texmem_used;
+
+void texmem_init(void) {
+    size_t vram_free = pvr_mem_available();
+    size_t tmem_size = vram_free - TEXMEM_RESERVED;
+
+    void* base   = pvr_mem_malloc(tmem_size);
+    texmem_base  = (void*)TEXMEM_PAGE_ROUNDUP((cc_uintptr)base);
+	texmem_pages = tmem_size / TEXMEM_PAGE_SIZE;
+	texmem_used  = Mem_AllocCleared(1, texmem_pages, "Page state");
+}
+
+static int texmem_move(cc_uint8* ptr, cc_uint32 size) {
+	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
+	cc_uint32 page  = TEXMEM_TO_PAGE(ptr);
+	int moved = 0;
+
+	// Try to shift downwards towards prior allocated texture
+	while (page > 0 && texmem_used[page - 1] == 0) {
+		page--; moved++;
+		texmem_used[page + pages] = 0;
+	}
+	
+	// Mark previously empty pages as now used
+	for (int i = 0; i < moved; i++) 
+	{
+		texmem_used[page + i] = 1;
+	}
+	return moved * TEXMEM_PAGE_SIZE;
+}
+
+static int texmem_defragment(void) {
+	int moved_any = false;
+	for (int i = 0; i < MAX_TEXTURE_COUNT; i++)
+	{
+		TextureObject* tex = &TEXTURE_LIST[i];
+		if (!tex->data) continue;
+
+		cc_uint32 size = tex->width * tex->height * 2;
+		int moved = texmem_move(tex->data, size);
+		if (!moved) continue;
+
+		moved_any = true;
+		memmove(tex->data - moved, tex->data, size);
+		tex->data -= moved;
+	}
+	return moved_any;
+}
+
+static int texmem_can_alloc(cc_uint32 beg, cc_uint32 pages) {
+	if (texmem_used[beg]) return false;
+
+	for (cc_uint32 page = beg; page < beg + pages; page++)
+	{
+		if (texmem_used[page]) return false;
+	}
+	return true;
+}
+
+static void* texmem_alloc_pages(cc_uint32 size) {
+	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
+	if (pages > texmem_pages) return NULL;
+
+	for (cc_uint32 page = 0; page < texmem_pages - pages; page++) 
+	{
+		if (!texmem_can_alloc(page, pages)) continue;
+
+		for (cc_uint32 i = 0; i < pages; i++) 
+			texmem_used[page + i] = 1;
+
+        return texmem_base + page * TEXMEM_PAGE_SIZE;
+    }
+	return NULL;
+}
+
+static void* texmem_alloc(cc_uint32 size) {
+    void* ptr = texmem_alloc_pages(size);
+    if (ptr) return ptr;
+
+	Platform_LogConst("Out of VRAM! Defragmenting..");
+	while (texmem_defragment()) { }
+    return texmem_alloc_pages(size);
+}
+
+static void texmem_free(cc_uint8* ptr, cc_uint32 size) {
+	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
+    cc_uint32 page  = TEXMEM_TO_PAGE(ptr);
+
+	for (cc_uint32 i = 0; i < pages; i++)
+		texmem_used[page + i] = 0;
+}
+
+static cc_uint32 texmem_total_free(void) {
+	cc_uint32 free = 0;
+    for (cc_uint32 page = 0; page < texmem_pages; page++) 
+	{
+		if (!texmem_base[page]) free += TEXMEM_PAGE_SIZE;
+    }
+	return free;
+}
+
+static cc_uint32 texmem_total_used(void) {
+	cc_uint32 used = 0;
+    for (cc_uint32 page = 0; page < texmem_pages; page++) 
+	{
+		if (texmem_base[page]) used += TEXMEM_PAGE_SIZE;
+    }
+	return used;
 }
 
 
@@ -419,7 +551,9 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	TextureObject* tex = (TextureObject*)(*texId);
 	if (!tex) return;
 
-	texmem_free(tex->data);
+	cc_uint32 size = tex->width * tex->height * 2;
+	texmem_free(tex->data, size);
+
 	tex->data = NULL;
 	*texId    = 0;
 }
@@ -565,7 +699,7 @@ static cc_bool loggedNoVRAM;
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
 
-static Vertex* ReserveOutput(AlignedVector* vec, uint32_t elems) {
+static Vertex* ReserveOutput(AlignedVector* vec, cc_uint32 elems) {
 	Vertex* beg;
 	for (;;)
 	{
@@ -585,7 +719,7 @@ void DrawQuads(int count, void* src) {
 	if (!count) return;
 	AlignedVector* vec = ActivePolyList();
 
-	uint32_t header_required = (vec->size == 0) || stateDirty;
+	cc_uint32 header_required = (vec->size == 0) || stateDirty;
 	// Reserve room for the vertices and header
 	Vertex* beg = ReserveOutput(vec, vec->size + (header_required) + count);
 	if (!beg) return;
@@ -653,8 +787,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int freeMem = _glFreeTextureMemory();
-	int usedMem = _glUsedTextureMemory();
+	int freeMem = texmem_total_free();
+	int usedMem = texmem_total_used();
 	
 	float freeMemMB = freeMem / (1024.0 * 1024.0);
 	float usedMemMB = usedMem / (1024.0 * 1024.0);
