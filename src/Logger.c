@@ -403,7 +403,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 }
 #elif defined CC_BACKTRACE_BUILTIN
 /* Implemented later at end of the file */
-#elif defined CC_BUILD_POSIX && defined _GLIBC_
+#elif defined CC_BUILD_POSIX && (defined _GLIBC_ || defined CC_BUILD_OPENBSD)
 #include <execinfo.h>
 
 void Logger_Backtrace(cc_string* trace, void* ctx) {

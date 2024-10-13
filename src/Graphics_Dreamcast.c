@@ -38,7 +38,7 @@ static void VertexList_Append(AlignedVector* list, const void* cmd) {
 // Round up to nearest page
 #define TEXMEM_PAGE_ROUNDUP(size) (((size) + TEXMEM_PAGE_MASK) & ~TEXMEM_PAGE_MASK)
 // Leave a little bit of memory available by KOS PVR code
-#define TEXMEM_RESERVED (64 * 1024)
+#define TEXMEM_RESERVED (48 * 1024)
 #define TEXMEM_TO_PAGE(addr) ((cc_uint32)((addr) - texmem_base) / TEXMEM_PAGE_SIZE)
 
 TextureObject* TEXTURE_ACTIVE;
@@ -98,7 +98,7 @@ static int texmem_defragment(void) {
 	return moved_any;
 }
 
-static int texmem_can_alloc(cc_uint32 beg, cc_uint32 pages) {
+static CC_INLINE int texmem_can_alloc(cc_uint32 beg, cc_uint32 pages) {
 	if (texmem_used[beg]) return false;
 
 	for (cc_uint32 page = beg; page < beg + pages; page++)
