@@ -144,7 +144,10 @@ int Window_GetWindowState(void) {
 cc_result Window_EnterFullscreen(void) {
 	return SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
-cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
+
+cc_result Window_ExitFullscreen(void) { 
+	return SDL_SetWindowFullscreen(win_handle, 0);
+}
 
 int Window_IsObscured(void) { return 0; }
 
