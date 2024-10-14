@@ -268,8 +268,10 @@ typedef cc_uint8  cc_bool;
 #elif defined __hpux
 	#define CC_BUILD_HPUX
 	#define CC_BUILD_POSIX
-	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
-	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
+	#define CC_BIG_ENDIAN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __FreeBSD__ || defined __DragonFly__
