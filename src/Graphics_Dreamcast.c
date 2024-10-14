@@ -166,6 +166,11 @@ static cc_uint32 texmem_total_used(void) {
 static AlignedVector listOP;
 static AlignedVector listPT;
 static AlignedVector listTR;
+// For faster performance, instead of having all 3 lists buffer everything first
+//  and then have all the buffered data submitted to the TA (i.e. drawn) at the end of the frame,
+//  instead have the most common list have data directly submitted to the TA throughout the frame
+static AlignedVector* direct = &listPT;
+static cc_bool exceeded_vram;
 
 static CC_INLINE AlignedVector* ActivePolyList(void) {
     if (gfx_alphaBlend) return &listTR;
@@ -173,6 +178,8 @@ static CC_INLINE AlignedVector* ActivePolyList(void) {
 
     return &listOP;
 }
+
+static void no_vram_handler(uint32 code, void *data) { exceeded_vram = true; }
 
 static void InitGPU(void) {
 	cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
@@ -188,6 +195,10 @@ static void InitGPU(void) {
 		3 // extra OPBs
 	};
     pvr_init(&params);
+
+	// This event will be raised when no room in VRAM for vertices anymore
+    asic_evt_set_handler(ASIC_EVT_PVR_PARAM_OUTOFMEM, no_vram_handler, NULL);
+    asic_evt_enable(ASIC_EVT_PVR_PARAM_OUTOFMEM,      ASIC_IRQ_DEFAULT);
 }
 
 static void InitGLState(void) {
@@ -299,7 +310,6 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
-	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  2.0f / width;
@@ -316,7 +326,6 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float zNear = 0.1f;
 
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
-	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
@@ -738,6 +747,10 @@ void DrawQuads(int count, void* src) {
 		end = DrawColouredQuads(src, beg, count >> 2);
 	}
 	vec->size += (end - beg);
+
+	if (vec != direct) return;
+	SceneListSubmit((Vertex*)vec->data, vec->size);
+	vec->size = 0;
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -804,31 +817,45 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_BeginFrame(void) { }
-
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	// TODO clear only some buffers
 	// no need to use glClear
 }
 
 static pvr_dr_state_t dr_state;
-static void SubmitList(AlignedVector* cmds) {
-	if (!cmds->size) return;
+static void BeginList(int list_type) {
+	pvr_list_begin(list_type);
+	pvr_dr_init(&dr_state);
+}
 
-	pvr_list_begin(cmds->list_type);
-	{
-		pvr_dr_init(&dr_state);
-		SceneListSubmit((Vertex*)cmds->data, cmds->size);
-		sq_wait();
-	}
+static void FinishList(void) {
+	sq_wait();
 	pvr_list_finish();
+}
+
+void Gfx_BeginFrame(void) {
+    pvr_scene_begin();
+	// Directly render PT list, buffer other lists first
+	BeginList(PVR_LIST_PT_POLY);
+	if (!exceeded_vram) return;
+
+	exceeded_vram = false;
+	Game_ReduceVRAM();
+}
+
+static void SubmitList(AlignedVector* cmds) {
+	if (!cmds->size || cmds == direct) return;
+
+	BeginList(cmds->list_type);
+	SceneListSubmit((Vertex*)cmds->data, cmds->size);
+	FinishList();
 	cmds->size = 0;
 }
 
 void Gfx_EndFrame(void) {
+	FinishList();
 	pvr_wait_ready();
 
-    pvr_scene_begin();
 	SubmitList(&listOP);
 	SubmitList(&listPT);
 	SubmitList(&listTR);
