@@ -54,6 +54,9 @@
 /* XIM support based off details described in */
 /* https://tedyin.com/posts/a-brief-intro-to-linux-input-method-framework/ */
 #endif
+#ifdef CC_BUILD_HPUX
+#undef CC_BUILD_XIM
+#endif
 
 #define _NET_WM_STATE_REMOVE 0
 #define _NET_WM_STATE_ADD    1

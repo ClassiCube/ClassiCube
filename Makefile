@@ -65,6 +65,15 @@ ifeq ($(PLAT),sunos)
 	BUILD_DIR = build-solaris
 endif
 
+ifeq ($(PLAT),hp-ux)
+	CC      =  gcc
+	CFLAGS  = -DCC_BUILD_ICON
+	LDFLAGS =
+	LIBS    = -lm -lX11 -lXi -L/opt/graphics/OpenGL/lib -lGL
+	BUILD_DIR = build-hpux
+	TRACK_DEPENDENCIES=0
+endif
+
 ifeq ($(PLAT),darwin)
 	OBJECTS += $(BUILD_DIR)/Window_cocoa.o
 	CFLAGS  += -DCC_BUILD_ICON
@@ -175,6 +184,8 @@ mingw:
 	$(MAKE) $(TARGET) PLAT=mingw
 sunos:
 	$(MAKE) $(TARGET) PLAT=sunos
+hp-ux:
+	$(MAKE) $(TARGET) PLAT=hp-ux
 darwin:
 	$(MAKE) $(TARGET) PLAT=darwin
 freebsd:
