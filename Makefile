@@ -69,7 +69,7 @@ ifeq ($(PLAT),hp-ux)
 	CC      =  gcc
 	CFLAGS  = -DCC_BUILD_ICON
 	LDFLAGS =
-	LIBS    = -lm -lX11 -lXi -L/opt/graphics/OpenGL/lib -lGL
+	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL
 	BUILD_DIR = build-hpux
 	TRACK_DEPENDENCIES=0
 endif
