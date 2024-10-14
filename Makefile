@@ -71,7 +71,6 @@ ifeq ($(PLAT),hp-ux)
 	LDFLAGS =
 	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL
 	BUILD_DIR = build-hpux
-	TRACK_DEPENDENCIES=0
 endif
 
 ifeq ($(PLAT),darwin)
