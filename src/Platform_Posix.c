@@ -175,7 +175,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /* "... These functions are part of the Timers option and need not be available on all implementations..." */
 cc_uint64 Stopwatch_Measure(void) {
 	struct timespec t;
-	#ifdef CC_BUILD_IRIX
+	#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
 	clock_gettime(CLOCK_REALTIME, &t);
 	#else
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
@@ -247,7 +247,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_HPUX || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
@@ -996,7 +996,7 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	Mem_Copy(path, info.name, *len);
 	return 0;
 }
-#elif defined CC_BUILD_IRIX
+#elif defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
 static cc_result Process_RawGetExePath(char* path, int* len) {
 	static cc_string file = String_FromConst("ClassiCube");
 
@@ -1235,7 +1235,7 @@ static void Platform_InitPosix(void) {
 }
 void Platform_Free(void) { }
 
-#ifdef CC_BUILD_IRIX
+#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = strerror(res);
 	if (!err || res >= 1000) return false;
