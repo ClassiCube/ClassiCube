@@ -170,17 +170,12 @@ _DrawTexturedQuads:
 
 ! CLIPFLAGS TESTING
     and     #15,FLG
-    cmp/eq   #0,FLG         ! T = CLIPFLAGS == 0 (all points invisible)
-    bt/s    .T_NONE_VISIBLE ! if T goto NONE_VISIBLE
-    nop
-    bra     .T_SOME_VISIBLE
+    cmp/eq   #0,FLG      ! T = CLIPFLAGS == 0 (all points invisible)
+    bf/s    .T_LOOP_END  ! if !T goto LOOP_END
     nop
 
-.T_NONE_VISIBLE:
-    bra .T_LOOP_END ! jump to loop end after executing instruction in delay slot
-    add #-128, DST  ! DST -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
-
-.T_SOME_VISIBLE:
+! No points visible case
+    add #-128, DST       ! DST -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
 
 .T_LOOP_END:
     dt CNT               ! count--; T = count == 0
@@ -218,17 +213,12 @@ _DrawColouredQuads:
 
 ! CLIPFLAGS TESTING
     and     #15,FLG
-    cmp/eq   #0,FLG         ! T = CLIPFLAGS == 0 (all points invisible)
-    bt/s    .C_NONE_VISIBLE ! if T goto NONE_VISIBLE
-    nop
-    bra     .C_SOME_VISIBLE
+    cmp/eq   #0,FLG      ! T = CLIPFLAGS == 0 (all points invisible)
+    bf/s    .C_LOOP_END  ! if !T goto LOOP_END
     nop
 
-.C_NONE_VISIBLE:
-    bra .C_LOOP_END ! jump to loop end after executing instruction in delay slot
-    add #-128, DST  ! dst -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
-
-.C_SOME_VISIBLE:
+! No points visible case
+    add #-128, DST       ! dst -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
 
 .C_LOOP_END:
     dt CNT               ! count--; T = count == 0

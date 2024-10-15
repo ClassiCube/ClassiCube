@@ -21,21 +21,26 @@ static GL_FORCE_INLINE float _glFastInvert(float x) {
     return sh4_fsrra(x * x);
 }
 
-#define PushVertex(vtx) \
-	_glPerspectiveDivideVertex(vtx); \
-	_glPushHeaderOrVertex(vtx);
+static GL_FORCE_INLINE void PushVertex(Vertex* v) {
+    volatile Vertex* dst = (Vertex*)(sq);
+    float f = _glFastInvert(v->w);
+    // Convert to NDC (viewport already applied)
+    float x = v->x * f;
+    float y = v->y * f;
 
-static GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
-    const float f = _glFastInvert(vertex->w);
-
-    /* Convert to NDC (viewport already applied) */
-    vertex->x = vertex->x * f;
-    vertex->y = vertex->y * f;
-    vertex->z = f;
+    dst->flags = v->flags;
+    dst->x = x;
+    dst->y = y;
+    dst->z = f;
+    dst->u = v->u;
+    dst->v = v->v;
+    dst->bgra = v->bgra;
+    __asm__("pref @%0" : : "r"(dst));
+    dst++;
 }
 
-static inline void _glPushHeaderOrVertex(Vertex* v)  {
-    uint32_t* s = (uint32_t*) v;
+static inline void PushCommand(Vertex* v)  {
+    uint32_t* s = (uint32_t*)v;
     sq[0] = *(s++);
     sq[1] = *(s++);
     sq[2] = *(s++);
@@ -304,7 +309,7 @@ void SceneListSubmit(Vertex* v3, int n) {
         case PVR_CMD_VERTEX:
             continue;
         default:
-            _glPushHeaderOrVertex(v3);
+            PushCommand(v3);
             continue;
         };
 

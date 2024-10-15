@@ -9,13 +9,9 @@ typedef struct {
     /* Same 32 byte layout as pvr_vertex_t */
     uint32_t flags;
     float x, y, z;
-    float u, v;
+    uint32_t u, v; // really floats, but stored as uint for better load/store codegen
     uint32_t bgra;
-
-    /* In the pvr_vertex_t structure, this next 4 bytes is oargb
-     * but we're not using that for now, so having W here makes the code
-     * simpler */
-    float w;
+    float w; // actually oargb, but repurposed since unused
 } __attribute__ ((aligned (32))) Vertex;
 
 typedef struct {
