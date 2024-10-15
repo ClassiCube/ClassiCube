@@ -173,6 +173,9 @@ else
 	CFLAGS += -g
 endif
 
+# link with CC by default
+LINK ?= $(CC)
+
 default: $(PLAT)
 
 web:
@@ -263,7 +266,7 @@ clean:
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 $(ENAME): $(BUILD_DIR) $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
+	$(LINK) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
 
 
 # macOS app bundle
