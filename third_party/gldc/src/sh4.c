@@ -21,9 +21,9 @@ static GL_FORCE_INLINE float _glFastInvert(float x) {
     return sh4_fsrra(x * x);
 }
 
-#define PushVertex(v) \
-	_glPerspectiveDivideVertex(v); \
-	_glPushHeaderOrVertex(v);
+#define PushVertex(vtx) \
+	_glPerspectiveDivideVertex(vtx); \
+	_glPushHeaderOrVertex(vtx);
 
 static GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     const float f = _glFastInvert(vertex->w);
@@ -282,7 +282,6 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         v3->flags = PVR_CMD_VERTEX;
 
         PushVertex(v2);
-        PushVertex(v3);
         PushVertex(v3);
         PushVertex(v1);
         PushVertex(a);
