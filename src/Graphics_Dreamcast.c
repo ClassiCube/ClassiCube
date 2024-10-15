@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include <malloc.h>
+#include <string.h>
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
@@ -12,21 +13,59 @@
 
 static cc_bool renderingDisabled;
 static cc_bool stateDirty;
+
 #define VERTEX_BUFFER_SIZE 32 * 40000
 #define PT_ALPHA_REF 0x011c
 #define MAX_TEXTURE_COUNT 768
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Vertex list-------------------------------------------------------*
+*------------------------------------------------------Commands list------------------------------------------------------*
 *#########################################################################################################################*/
-static void VertexList_Append(AlignedVector* list, const void* cmd) {
-    void* dst = aligned_vector_reserve(list, list->size + 1);
-    assert(dst);
+#define VERTEX_SIZE 32
 
-    memcpy(dst, cmd, VERTEX_SIZE);
-    list->size++;
+struct CommandsList {
+	uint32_t length;
+	uint32_t capacity;
+	uint32_t list_type;
+	uint8_t* data;
+} __attribute__((aligned(32)));
+
+// e.g. 1 -> 256, 50 -> 256, 256 -> 256
+#define ROUND_UP_256(v) (((v) + 0xFFu) & ~0xFFu)
+
+static CC_INLINE void* CommandsList_Reserve(struct CommandsList* list, cc_uint32 count) {
+    cc_uint32 cur_size = list->length * VERTEX_SIZE;
+
+    if (count < list->capacity) {
+        return list->data + cur_size;
+    }
+    /* We overallocate so that we don't make small allocations during push backs */
+    count = ROUND_UP_256(count);
+
+    cc_uint32 new_size = count * VERTEX_SIZE;
+    cc_uint8* cur_data = list->data;
+
+    cc_uint8* data = (cc_uint8*)memalign(0x20, new_size);
+    if (!data) return NULL;
+
+    memcpy(data, cur_data, cur_size);
+    free(cur_data);
+
+    list->data     = data;
+    list->capacity = count;
+    return data + cur_size;
 }
+
+static void CommandsList_Append(struct CommandsList* list, const void* cmd) {
+	void* dst = CommandsList_Reserve(list, list->length + 1);
+	if (!dst) Logger_Abort("Out of memory");
+	
+	memcpy(dst, cmd, VERTEX_SIZE);
+	list->length++;
+}
+
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Texture memory------------------------------------------------------*
@@ -163,16 +202,16 @@ static cc_uint32 texmem_total_used(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static AlignedVector listOP;
-static AlignedVector listPT;
-static AlignedVector listTR;
+static struct CommandsList listOP;
+static struct CommandsList listPT;
+static struct CommandsList listTR;
 // For faster performance, instead of having all 3 lists buffer everything first
 //  and then have all the buffered data submitted to the TA (i.e. drawn) at the end of the frame,
 //  instead have the most common list have data directly submitted to the TA throughout the frame
-static AlignedVector* direct = &listPT;
+static struct CommandsList* direct = &listPT;
 static cc_bool exceeded_vram;
 
-static CC_INLINE AlignedVector* ActivePolyList(void) {
+static CC_INLINE struct CommandsList* ActivePolyList(void) {
     if (gfx_alphaBlend) return &listTR;
     if (gfx_alphaTest)  return &listPT;
 
@@ -215,13 +254,13 @@ static void InitGLState(void) {
 	FOG_ENABLED        = false;
 	
 	stateDirty       = true;
-    listOP.list_type = PVR_LIST_OP_POLY;
-    listPT.list_type = PVR_LIST_PT_POLY;
-    listTR.list_type = PVR_LIST_TR_POLY;
+	listOP.list_type = PVR_LIST_OP_POLY;
+	listPT.list_type = PVR_LIST_PT_POLY;
+	listTR.list_type = PVR_LIST_TR_POLY;
 
-    aligned_vector_reserve(&listOP, 1024 * 3);
-    aligned_vector_reserve(&listPT,  512 * 3);
-    aligned_vector_reserve(&listTR, 1024 * 3);
+	CommandsList_Reserve(&listOP, 1024 * 3);
+	CommandsList_Reserve(&listPT,  512 * 3);
+	CommandsList_Reserve(&listTR, 1024 * 3);
 }
 
 void Gfx_Create(void) {
@@ -708,11 +747,11 @@ static cc_bool loggedNoVRAM;
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
 
-static Vertex* ReserveOutput(AlignedVector* vec, cc_uint32 elems) {
+static Vertex* ReserveOutput(struct CommandsList* list, cc_uint32 elems) {
 	Vertex* beg;
 	for (;;)
 	{
-		if ((beg = aligned_vector_reserve(vec, elems))) return beg;
+		if ((beg = CommandsList_Reserve(list, elems))) return beg;
 		// Try to reduce view distance to save on RAM
 		if (Game_ReduceVRAM()) continue;
 
@@ -726,18 +765,18 @@ static Vertex* ReserveOutput(AlignedVector* vec, cc_uint32 elems) {
 
 void DrawQuads(int count, void* src) {
 	if (!count) return;
-	AlignedVector* vec = ActivePolyList();
+	struct CommandsList* list = ActivePolyList();
 
-	cc_uint32 header_required = (vec->size == 0) || stateDirty;
+	cc_uint32 header_required = (list->length == 0) || stateDirty;
 	// Reserve room for the vertices and header
-	Vertex* beg = ReserveOutput(vec, vec->size + (header_required) + count);
+	Vertex* beg = ReserveOutput(list, list->length + (header_required) + count);
 	if (!beg) return;
 
 	if (header_required) {
-		apply_poly_header((pvr_poly_hdr_t*)beg, vec->list_type);
+		apply_poly_header((pvr_poly_hdr_t*)beg, list->list_type);
 		stateDirty = false;
-		beg++; 
-		vec->size += 1;
+		list->length++;
+		beg++;
 	}
 	Vertex* end;
 
@@ -746,11 +785,11 @@ void DrawQuads(int count, void* src) {
 	} else {
 		end = DrawColouredQuads(src, beg, count >> 2);
 	}
-	vec->size += (end - beg);
+	list->length += (end - beg);
 
-	if (vec != direct) return;
-	SceneListSubmit((Vertex*)vec->data, vec->size);
-	vec->size = 0;
+	if (list != direct) return;
+	SceneListSubmit((Vertex*)list->data, list->length);
+	list->length = 0;
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -834,7 +873,7 @@ static void FinishList(void) {
 }
 
 void Gfx_BeginFrame(void) {
-    pvr_scene_begin();
+	pvr_scene_begin();
 	// Directly render PT list, buffer other lists first
 	BeginList(PVR_LIST_PT_POLY);
 	if (!exceeded_vram) return;
@@ -843,13 +882,13 @@ void Gfx_BeginFrame(void) {
 	Game_ReduceVRAM();
 }
 
-static void SubmitList(AlignedVector* cmds) {
-	if (!cmds->size || cmds == direct) return;
+static void SubmitList(struct CommandsList* list) {
+	if (!list->length || list == direct) return;
 
-	BeginList(cmds->list_type);
-	SceneListSubmit((Vertex*)cmds->data, cmds->size);
+	BeginList(list->list_type);
+	SceneListSubmit((Vertex*)list->data, list->length);
 	FinishList();
-	cmds->size = 0;
+	list->length = 0;
 }
 
 void Gfx_EndFrame(void) {
@@ -859,7 +898,7 @@ void Gfx_EndFrame(void) {
 	SubmitList(&listOP);
 	SubmitList(&listPT);
 	SubmitList(&listTR);
-    pvr_scene_finish();
+	pvr_scene_finish();
 }
 
 void Gfx_OnWindowResize(void) {
@@ -886,8 +925,8 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 	c.d3 = ((x + w) >> 5) - 1;
 	c.d4 = ((y + h) >> 5) - 1;
 
-    VertexList_Append(&listOP, &c);
-    VertexList_Append(&listPT, &c);
-    VertexList_Append(&listTR, &c);
+	CommandsList_Append(&listOP, &c);
+	CommandsList_Append(&listPT, &c);
+	CommandsList_Append(&listTR, &c);
 }
 #endif

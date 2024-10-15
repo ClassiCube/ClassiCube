@@ -34,7 +34,6 @@ static inline int DimensionFlag(int w) {
     }
 }
 
-#define DEFAULT_MIPMAP_BIAS 4
 void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     TextureObject* tx1 = TEXTURE_ACTIVE;
 
@@ -42,8 +41,8 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     int depth_comp  = DEPTH_TEST_ENABLED ? PVR_DEPTHCMP_GEQUAL : PVR_DEPTHCMP_ALWAYS;
     int depth_write = DEPTH_MASK_ENABLED ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
 
-    int gen_clip_mode = SCISSOR_TEST_ENABLED ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
-    int gen_fog_type  = FOG_ENABLED          ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
+    int clip_mode = SCISSOR_TEST_ENABLED ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
+    int fog_type  = FOG_ENABLED          ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
 
     int gen_alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? PVR_ALPHA_ENABLE : PVR_ALPHA_DISABLE;
     int blend_src = PVR_BLEND_SRCALPHA;
@@ -81,17 +80,17 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     dst->cmd |= (PVR_CLRFMT_ARGBPACKED << PVR_TA_CMD_CLRFMT_SHIFT)   & PVR_TA_CMD_CLRFMT_MASK;
     dst->cmd |= (SHADE_MODEL           << PVR_TA_CMD_SHADE_SHIFT)    & PVR_TA_CMD_SHADE_MASK;
     dst->cmd |= (PVR_UVFMT_32BIT       << PVR_TA_CMD_UVFMT_SHIFT)    & PVR_TA_CMD_UVFMT_MASK;
-    dst->cmd |= (gen_clip_mode         << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
+    dst->cmd |= (clip_mode             << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
 
     dst->mode1  = (depth_comp  << PVR_TA_PM1_DEPTHCMP_SHIFT)   & PVR_TA_PM1_DEPTHCMP_MASK;
     dst->mode1 |= (gen_culling << PVR_TA_PM1_CULLING_SHIFT)    & PVR_TA_PM1_CULLING_MASK;
     dst->mode1 |= (depth_write << PVR_TA_PM1_DEPTHWRITE_SHIFT) & PVR_TA_PM1_DEPTHWRITE_MASK;
     dst->mode1 |= (txr_enable  << PVR_TA_PM1_TXRENABLE_SHIFT)  & PVR_TA_PM1_TXRENABLE_MASK;
 
-    dst->mode2  = (blend_src    << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
-    dst->mode2 |= (blend_dst    << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
-    dst->mode2 |= (gen_fog_type << PVR_TA_PM2_FOG_SHIFT)      & PVR_TA_PM2_FOG_MASK;
-    dst->mode2 |= (gen_alpha    << PVR_TA_PM2_ALPHA_SHIFT)    & PVR_TA_PM2_ALPHA_MASK;
+    dst->mode2  = (blend_src << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
+    dst->mode2 |= (blend_dst << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
+    dst->mode2 |= (fog_type  << PVR_TA_PM2_FOG_SHIFT)      & PVR_TA_PM2_FOG_MASK;
+    dst->mode2 |= (gen_alpha << PVR_TA_PM2_ALPHA_SHIFT)    & PVR_TA_PM2_ALPHA_MASK;
 
     if (txr_enable == PVR_TEXTURE_DISABLE) {
         dst->mode3 = 0;

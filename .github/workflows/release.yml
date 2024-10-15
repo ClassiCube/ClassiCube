@@ -23,6 +23,7 @@ jobs:
         run: |
           wget https://cdn.classicube.net/client/latest/ClassiCube.64.exe -O cc-w64.exe
           wget https://cdn.classicube.net/client/latest/ClassiCube.exe -O cc-w32.exe
+          wget https://cdn.classicube.net/client/latest/cc-w9x.exe -O cc-w9x.exe
           
       # Download Linux artifacts
       - name: Retrieve Linux binaries
@@ -161,6 +162,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-win64.zip'
           DEST_NAME: 'cc-win64.zip'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-w9x.exe'
+          DEST_NAME: 'cc-win9x.exe'
           
           
       # Generate RPI release files

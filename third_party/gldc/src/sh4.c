@@ -21,6 +21,10 @@ static GL_FORCE_INLINE float _glFastInvert(float x) {
     return sh4_fsrra(x * x);
 }
 
+#define PushVertex(v) \
+	_glPerspectiveDivideVertex(v); \
+	_glPushHeaderOrVertex(v);
+
 static GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     const float f = _glFastInvert(vertex->w);
 
@@ -72,14 +76,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(v0);
-        _glPushHeaderOrVertex(v0);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
+        PushVertex(v0);
+        PushVertex(b);
+        PushVertex(a);
     }
     break;
     case V1_VIS:
@@ -95,14 +94,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(v1);
-        _glPushHeaderOrVertex(v1);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
+        PushVertex(a);
+        PushVertex(v1);
+        PushVertex(b);
     } break;
     case V2_VIS:
     {
@@ -118,14 +112,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(v2);
-        _glPushHeaderOrVertex(v2);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
+        PushVertex(a);
+        PushVertex(v2);
+        PushVertex(b);
     } break;
     case V3_VIS:
     {
@@ -140,14 +129,9 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(v3);
-        _glPushHeaderOrVertex(v3);
+        PushVertex(b);
+        PushVertex(a);
+        PushVertex(v3);
     }
     break;
     case V0_VIS | V1_VIS:
@@ -162,17 +146,10 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
-        _glPerspectiveDivideVertex(v1);
-        _glPushHeaderOrVertex(v1);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(v0);
-        _glPushHeaderOrVertex(v0);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
+        PushVertex(v1);
+        PushVertex(a);
+        PushVertex(v0);
+        PushVertex(b);
     } break;
     // case V0_VIS | V2_VIS: degenerate case that should never happen
     case V0_VIS | V3_VIS:
@@ -187,17 +164,10 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v2, v3, b);
         b->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
-
-        _glPerspectiveDivideVertex(v0);
-        _glPushHeaderOrVertex(v0);
-
-        _glPerspectiveDivideVertex(v3);
-        _glPushHeaderOrVertex(v3);
+        PushVertex(a);
+        PushVertex(b);
+        PushVertex(v0);
+        PushVertex(v3);
     } break;
     case V1_VIS | V2_VIS:
     {
@@ -211,17 +181,10 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v0, v1, b);
         b->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(v1);
-        _glPushHeaderOrVertex(v1);
-
-        _glPerspectiveDivideVertex(v2);
-        _glPushHeaderOrVertex(v2);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
+        PushVertex(v1);
+        PushVertex(v2);
+        PushVertex(b);
+        PushVertex(a);
     } break;
     // case V1_VIS | V3_VIS: degenerate case that should never happen
     case V2_VIS | V3_VIS:
@@ -236,17 +199,10 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v1, v2, b);
         b->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
-
-        _glPerspectiveDivideVertex(v2);
-        _glPushHeaderOrVertex(v2);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(v3);
-        _glPushHeaderOrVertex(v3);
+        PushVertex(b);
+        PushVertex(v2);
+        PushVertex(a);
+        PushVertex(v3);
     } break;
     case V0_VIS | V1_VIS | V2_VIS:
     {
@@ -262,20 +218,11 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         ClipEdge(v3, v0, b);
         b->flags = PVR_CMD_VERTEX_EOL;
 
-        _glPerspectiveDivideVertex(v1);
-        _glPushHeaderOrVertex(v1);
-
-        _glPerspectiveDivideVertex(v2);
-        _glPushHeaderOrVertex(v2);
-
-        _glPerspectiveDivideVertex(v0);
-        _glPushHeaderOrVertex(v0);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
+        PushVertex(v1);
+        PushVertex(v2);
+        PushVertex(v0);
+        PushVertex(a);
+        PushVertex(b);
     } break;
     case V0_VIS | V1_VIS | V3_VIS:
     {
@@ -292,20 +239,11 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(v0);
-        _glPushHeaderOrVertex(v0);
-
-        _glPerspectiveDivideVertex(v1);
-        _glPushHeaderOrVertex(v1);
-
-        _glPerspectiveDivideVertex(v3);
-        _glPushHeaderOrVertex(v3);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
+        PushVertex(v0);
+        PushVertex(v1);
+        PushVertex(v3);
+        PushVertex(a);
+        PushVertex(b);
     } break;
     case V0_VIS | V2_VIS | V3_VIS:
     {
@@ -322,20 +260,11 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(v3);
-        _glPushHeaderOrVertex(v3);
-
-        _glPerspectiveDivideVertex(v0);
-        _glPushHeaderOrVertex(v0);
-
-        _glPerspectiveDivideVertex(v2);
-        _glPushHeaderOrVertex(v2);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
+        PushVertex(v3);
+        PushVertex(v0);
+        PushVertex(v2);
+        PushVertex(a);
+        PushVertex(b);
     } break;
     case V1_VIS | V2_VIS | V3_VIS:
     {
@@ -352,20 +281,12 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         b->flags  = PVR_CMD_VERTEX_EOL;
         v3->flags = PVR_CMD_VERTEX;
 
-        _glPerspectiveDivideVertex(v2);
-        _glPushHeaderOrVertex(v2);
-
-        _glPerspectiveDivideVertex(v3);
-        _glPushHeaderOrVertex(v3);
-
-        _glPerspectiveDivideVertex(v1);
-        _glPushHeaderOrVertex(v1);
-
-        _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(a);
-
-        _glPerspectiveDivideVertex(b);
-        _glPushHeaderOrVertex(b);
+        PushVertex(v2);
+        PushVertex(v3);
+        PushVertex(v3);
+        PushVertex(v1);
+        PushVertex(a);
+        PushVertex(b);
     } break;
     }
 }
@@ -408,17 +329,10 @@ void SceneListSubmit(Vertex* v3, int n) {
         case V0_VIS | V1_VIS | V2_VIS | V3_VIS: // All vertices visible
         {
             // Triangle strip: {1,2,0} {2,0,3}
-            _glPerspectiveDivideVertex(v1);
-            _glPushHeaderOrVertex(v1);
-
-            _glPerspectiveDivideVertex(v2);
-            _glPushHeaderOrVertex(v2);
-
-            _glPerspectiveDivideVertex(v0);
-            _glPushHeaderOrVertex(v0);
-
-            _glPerspectiveDivideVertex(v3);
-            _glPushHeaderOrVertex(v3);
+            PushVertex(v1);
+            PushVertex(v2);
+            PushVertex(v0);
+            PushVertex(v3);
         }
         break;
         
