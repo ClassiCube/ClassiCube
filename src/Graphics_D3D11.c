@@ -12,8 +12,16 @@
 #define NOIME
 #define COBJMACROS
 #include <d3d11.h>
+
 static const GUID guid_ID3D11Texture2D = { 0x6f15aaf2, 0xd208, 0x4e89, { 0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c } };
 static const GUID guid_IXDGIDevice     = { 0x54ec77fa, 0x1377, 0x44e6, { 0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c } };
+static const GUID guid_IDXGIFactory    = { 0x7b7166ec, 0x21c7, 0x44ae, { 0xb2, 0x1a, 0xc9, 0xae, 0x32, 0x1a, 0xe3, 0x69 } };
+static const GUID guid_IDXGIDevice     = { 0x54ec77fa, 0x1377, 0x44e6, { 0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c } };
+static const GUID guid_IDXGIFactory2   = { 0x50c83a1c, 0xe072, 0x4c48, { 0x87, 0xb0, 0x36, 0x30, 0xfa, 0x36, 0xa6, 0xd0 } };
+#ifdef CC_BUILD_UWP
+#include <dxgi1_2.h>
+#endif
+
 
 // some generally useful debugging links
 //   https://docs.microsoft.com/en-us/visualstudio/debugger/graphics/visual-studio-graphics-diagnostics
@@ -46,6 +54,51 @@ static void PS_UpdateShader(void);
 static void InitPipeline(void);
 static void FreePipeline(void);
 
+#ifdef CC_BUILD_UWP
+static void LoadD3D11Library(void) { }
+
+static void CreateDeviceAndSwapChain(void) {
+	// https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
+	DWORD createFlags = 0;
+	D3D_FEATURE_LEVEL fl;
+	HRESULT hr;
+#ifdef _DEBUG
+	createFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+	hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
+			createFlags, NULL, 0, D3D11_SDK_VERSION,
+			&device, &fl, &context);
+	if (hr) Logger_Abort2(hr, "Failed to create D3D11 device");
+
+	Gfx.MaxTexWidth  = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
+	Gfx.MaxTexHeight = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
+
+	DXGI_SWAP_CHAIN_DESC1 desc = { 0 };
+	desc.BufferCount  = 2; // TODO 1??
+	desc.Format       = DXGI_FORMAT_B8G8R8A8_UNORM;
+	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.SampleDesc.Count   = 1;
+	desc.SwapEffect         = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	desc.Scaling            = DXGI_SCALING_NONE;
+
+	IDXGIDevice* dxgi_device = NULL;
+	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, &dxgi_device);
+	if (FAILED(hr)) Logger_Abort2(hr, "Querying DXGI device");
+
+	IDXGIAdapter* dxgi_adapter = NULL;
+	hr = IDXGIDevice_GetAdapter(dxgi_device , &dxgi_adapter);
+	if (FAILED(hr)) Logger_Abort2(hr, "Querying DXGI adapter");
+
+	IDXGIFactory2* dxgi_factory2 = NULL;
+	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory2, &dxgi_factory2);
+	if (FAILED(hr)) Logger_Abort2(hr, "Querying DXGI factory");
+
+	void* window = Window_Main.Handle.ptr;
+	hr = IDXGIFactory2_CreateSwapChainForCoreWindow(dxgi_factory2, device, window, &desc, NULL, &swapchain);
+	if (FAILED(hr)) Logger_Abort2(hr, "Creating swap chain");
+}
+#else
 static PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN _D3D11CreateDeviceAndSwapChain;
 
 static void LoadD3D11Library(void) {
@@ -99,6 +152,7 @@ static void CreateDeviceAndSwapChain(void) {
 	Gfx.MaxTexWidth  = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
 	Gfx.MaxTexHeight = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
 }
+#endif
 
 void Gfx_Create(void) {
 	LoadD3D11Library();
