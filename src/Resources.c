@@ -92,7 +92,7 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 *------------------------------------------------------Zip entry writer---------------------------------------------------*
 *#########################################################################################################################*/
 static void GetCurrentZipDate(int* modTime, int* modDate) {
-	struct DateTime now;
+	struct cc_datetime now;
 	DateTime_CurrentLocal(&now);
 
 	*modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);

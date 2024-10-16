@@ -68,7 +68,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return secs + UNIX_EPOCH_SECONDS + WIIU_EPOCH_ADJUST;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct OSCalendarTime loc_time;
 	OSTicksToCalendarTime(OSGetTime(), &loc_time);
 

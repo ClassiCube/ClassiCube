@@ -92,7 +92,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return timestamp + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	u64 timestamp = 0;
 	TimeCalendarTime calTime = { 0 };
 	timeGetCurrentTime(TimeType_Default, &timestamp);

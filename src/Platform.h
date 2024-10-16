@@ -19,15 +19,14 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 /* Suffix added to app name sent to the server */
 extern const char* Platform_AppNameSuffix;
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 typedef struct cc_winstring_ {
 	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */
 	char ansi[NATIVE_STR_LEN]; /* String lossily represented using ANSI format */
 } cc_winstring;
+
 /* Encodes a string into the platform native string format */
 void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
-
-cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
 #endif
 
 #ifdef CC_BUILD_WIN
@@ -200,12 +199,12 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst);
 *#########################################################################################################################*/
 /* Number of seconds since 01/01/0001 to start of unix time. */
 #define UNIX_EPOCH_SECONDS 62135596800ULL
-struct DateTime;
+struct cc_datetime;
 
 /* Returns the current UTC time, as number of seconds since 1/1/0001 */
 CC_API TimeMS DateTime_CurrentUTC(void);
 /* Returns the current local Time. */
-CC_API void DateTime_CurrentLocal(struct DateTime* t);
+CC_API void DateTime_CurrentLocal(struct cc_datetime* t);
 /* Takes a platform-specific stopwatch measurement. */
 /* NOTE: The value returned is platform-specific - do NOT try to interpret the value. */
 CC_API cc_uint64 Stopwatch_Measure(void);

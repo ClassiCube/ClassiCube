@@ -586,7 +586,7 @@ static void PerformScheduledTasks(double time) {
 void Game_TakeScreenshot(void) {
 	cc_string filename; char fileBuffer[STRING_SIZE];
 	cc_string path;     char pathBuffer[FILENAME_SIZE];
-	struct DateTime now;
+	struct cc_datetime now;
 	cc_result res;
 #ifdef CC_BUILD_WEB
 	cc_filepath str;

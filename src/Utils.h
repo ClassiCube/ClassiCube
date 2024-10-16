@@ -13,7 +13,7 @@ struct StringsBuffer;
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
 /* NOTE: TimeMS and DateTime_CurrentUTC() should almost always be used instead. */
 /* This struct should only be used when actually needed. (e.g. log message time) */
-struct DateTime {
+struct cc_datetime {
 	int year;   /* Year,   ranges from 0 to 65535 */
 	int month;  /* Month,  ranges from 1 to 12 */
 	int day;    /* Day,    ranges from 1 to 31 */

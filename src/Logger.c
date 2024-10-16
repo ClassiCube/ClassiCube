@@ -18,11 +18,15 @@
 	
 	#include <windows.h>
 	#include <imagehlp.h>
+	#ifndef CC_BUILD_UWP
 	/* Compatibility version so compiling works on older Windows SDKs */
 	#include "../misc/windows/min-imagehlp.h"
 	#define CC_KERN32_FUNC extern /* main use is Platform_Windows.c */
 	#include "../misc/windows/min-kernel32.h"
+	#endif
+
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
+	static cc_uintptr spRegister;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
 	#include <signal.h>
 	/* These operating systems don't provide sys/ucontext.h */
@@ -205,7 +209,12 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 	}
 }
 
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_UWP
+static void DumpFrame(cc_string* trace, void* addr) {
+	cc_uintptr addr_ = (cc_uintptr)addr;
+	String_Format1(trace, "%x", &addr_);
+}
+#elif defined CC_BUILD_WIN
 struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
 
 static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
@@ -291,7 +300,11 @@ static void DumpFrame(cc_string* trace, void* addr) {
 /*########################################################################################################################*
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_UWP
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+}
+#elif defined CC_BUILD_WIN
 
 static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, _DWORD_PTR addr) {
 	if (!_SymFunctionTableAccess) return NULL;
@@ -316,7 +329,6 @@ static BOOL WINAPI ReadMemCallback(HANDLE process, _DWORD_PTR baseAddress, PVOID
 	*numBytesRead = (DWORD)numRead; /* DWORD always 32 bits */
 	return ok;
 }
-static cc_uintptr spRegister;
 
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
@@ -923,7 +935,10 @@ static void DumpRegisters(void* ctx) {
 /*########################################################################################################################*
 *------------------------------------------------Module/Memory map handling-----------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_UWP
+static void DumpMisc(void) { }
+
+#elif defined CC_BUILD_WIN
 static void DumpStack(void) {
 	static const cc_string stack = String_FromConst("-- stack --\r\n");
 	cc_string str; char strBuffer[128];
@@ -1121,6 +1136,7 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 void Logger_Hook(void) {
 	OSVERSIONINFOA osInfo;
 	SetUnhandledExceptionFilter(UnhandledFilter);
+#if !defined CC_BUILD_UWP
 	ImageHlp_LoadDynamicFuncs();
 
 	/* Windows 9x requires process IDs instead - see old DBGHELP docs */
@@ -1132,6 +1148,7 @@ void Logger_Hook(void) {
 	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
 		curProcess = (HANDLE)((cc_uintptr)GetCurrentProcessId());
 	}
+#endif
 }
 #elif defined CC_BUILD_POSIX
 static const char* SignalDescribe(int type) {
@@ -1200,7 +1217,11 @@ void Logger_Hook(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Deliberate crash logging------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_UWP
+void Logger_Abort2(cc_result result, const char* raw_msg) {
+	AbortCommon(result, raw_msg, NULL);
+}
+#elif defined CC_BUILD_WIN
 #if __GNUC__
 /* Don't want compiler doing anything fancy with registers */
 void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char* raw_msg) {
@@ -1270,7 +1291,7 @@ void Logger_Log(const cc_string* msg) {
 
 static void LogCrashHeader(void) {
 	cc_string msg; char msgBuffer[96];
-	struct DateTime now;
+	struct cc_datetime now;
 
 	String_InitArray(msg, msgBuffer);
 	String_AppendConst(&msg, _NL "----------------------------------------" _NL);

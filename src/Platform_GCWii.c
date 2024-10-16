@@ -85,7 +85,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return secs + UNIX_EPOCH_SECONDS + GCWII_EPOCH_ADJUST;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct timeval cur; 
 	struct tm loc_time;
 	gettimeofday(&cur, NULL);

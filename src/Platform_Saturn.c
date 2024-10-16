@@ -84,8 +84,8 @@ TimeMS DateTime_CurrentUTC(void) {
 	return 0;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
-	Mem_Set(t, 0, sizeof(struct DateTime));
+void DateTime_CurrentLocal(struct cc_datetime* t) {
+	Mem_Set(t, 0, sizeof(struct cc_datetime));
 }
 
 

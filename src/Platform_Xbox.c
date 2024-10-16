@@ -54,7 +54,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return FileTime_TotalSecs(ft.QuadPart);
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 

@@ -100,7 +100,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)rtc_sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	time_t rtc_sec = CurrentUnixTime();
 	struct tm loc_time;
 	localtime_r(&rtc_sec, &loc_time);

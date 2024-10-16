@@ -121,7 +121,7 @@ static cc_bool CreateLogsDirectory(void) {
 	return false;
 }
 
-static void OpenChatLog(struct DateTime* now) {
+static void OpenChatLog(struct cc_datetime* now) {
 	cc_result res;
 	int i;
 	if (Platform_ReadonlyFilesystem || !CreateLogsDirectory()) return;
@@ -154,7 +154,7 @@ static void OpenChatLog(struct DateTime* now) {
 
 static void AppendChatLog(const cc_string* text) {
 	cc_string str; char strBuffer[DRAWER2D_MAX_TEXT_LENGTH];
-	struct DateTime now;
+	struct cc_datetime now;
 	cc_result res;	
 
 	if (!logName.length || !Chat_Logging) return;

@@ -63,7 +63,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	ScePspDateTime curTime;
 	sceRtcGetCurrentClockLocalTime(&curTime);
 

@@ -55,7 +55,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return 0;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	rtc_time_t curTime = { 0 };
 	rtc_get(&curTime);
 

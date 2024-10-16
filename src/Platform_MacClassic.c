@@ -125,7 +125,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)secs + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct tm loc_time;
 	time_t secs = gettod();
 	localtime_r(&secs, &loc_time);

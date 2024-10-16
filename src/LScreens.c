@@ -1659,11 +1659,10 @@ static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
 }
 
 static void UpdatesScreen_UpdateHeader(struct UpdatesScreen* s, cc_string* str) {
-	const char* message;
-	if ( s->release) message = "&eFetching latest release ";
-	if (!s->release) message = "&eFetching latest dev build ";
+	const char* message = s->release ? "release " : "dev build ";
 
-	String_Format2(str, "%c%c", message, Updater_Info.builds[s->buildIndex].name);
+	String_Format2(str, "&eFetching latest %c%c", 
+					message, Updater_Info.builds[s->buildIndex].name);
 }
 
 static void UpdatesScreen_DoFetch(struct UpdatesScreen* s) {
