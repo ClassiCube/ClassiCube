@@ -209,15 +209,14 @@ void OpenFileDialog(void) {
     //Windows::Storage::StorageFile file = picker->PickSingleFileAsync();
 }
 
-struct CCApp : implements<CCApp, IFrameworkView, IFrameworkViewSource>
+struct CCApp : implements<CCApp, IFrameworkView>
 {
-public:
 	// IFrameworkView interface
-	void Initialize(const CoreApplicationView& view)
+	void Initialize(CoreApplicationView const& view)
     {
     }
 
-    void Load(const hstring& entryPoint)
+    void Load(hstring const& entryPoint)
     {
     }
 
@@ -234,19 +233,20 @@ public:
         dispatcher.ProcessEvents(CoreProcessEventsOption::ProcessUntilQuit);
     }
 
-    void SetWindow(const CoreWindow& win)
+    void SetWindow(CoreWindow const& win)
     {
     }
+};
 
-	// IFrameworkViewSource interface
-	IFrameworkView CreateView()
-	{
-		return *this;
+struct CCAppSource : implements<CCAppSource, IFrameworkViewSource> 
+{
+	IFrameworkView CreateView() {
+		return make<CCApp>();
 	}
 };
 
 int __stdcall wWinMain(void*, void*, wchar_t** argv, int argc)
 {
-	auto app = CCApp();
+	auto app = make<CCAppSource>();
     CoreApplication::Run(app);
 }
