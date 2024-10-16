@@ -20,18 +20,12 @@
 #include <shellapi.h>
 #include <wincrypt.h>
 
-using namespace Windows::ApplicationModel;
-using namespace Windows::ApplicationModel::Core;
-using namespace Windows::ApplicationModel::Activation;
-using namespace Windows::Devices::Input;
-using namespace Windows::Graphics::Display;
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.System.h>
+
+using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::System;
-using namespace Windows::UI::Core;
-using namespace Windows::UI::Input;
-using namespace Windows::Security::Cryptography;
-using namespace Windows::Security::Cryptography::DataProtection;
-using namespace Platform;
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
@@ -532,11 +526,11 @@ cc_result Process_StartOpen(const cc_string* args) {
 	cc_winstring raw;
 	Platform_EncodeString(&raw, args);
 
-	auto str = ref new String(UWP_STRING(&raw));
-	auto uri = ref new Uri(str);
+	auto str = hstring(UWP_STRING(&raw));
+	auto uri = Uri(str);
 
-	auto options = ref new Windows::System::LauncherOptions();
-	options->TreatAsUntrusted = true;
+	auto options = Windows::System::LauncherOptions();
+	options.TreatAsUntrusted(true);
 	Windows::System::Launcher::LaunchUriAsync(uri, options);
 	return 0;
 }

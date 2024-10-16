@@ -1,4 +1,16 @@
 #include "../../src/Core.h"
+
+#include <winrt/Windows.ApplicationModel.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.ApplicationModel.Activation.h>
+#include <winrt/Windows.Devices.Input.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Graphics.Display.h>
+#include <winrt/Windows.Storage.Pickers.h>
+#include <winrt/Windows.System.h>
+#include <winrt/Windows.UI.Core.h>
+
+using namespace winrt;
 using namespace Windows::ApplicationModel;
 using namespace Windows::ApplicationModel::Core;
 using namespace Windows::ApplicationModel::Activation;
@@ -8,7 +20,6 @@ using namespace Windows::Foundation;
 using namespace Windows::System;
 using namespace Windows::UI::Core;
 using namespace Windows::UI::Input;
-using namespace Platform;
 
 #include "../../src/_WindowBase.h"
 #include "../../src/String.h"
@@ -192,56 +203,50 @@ void Window_DisableRawMouse(void) {
 
 
 void OpenFileDialog(void) {
-    auto picker = ref new Windows::Storage::Pickers::FileOpenPicker();
-    picker->FileTypeFilter->Append(ref new String(L".jpg"));
-    picker->FileTypeFilter->Append(ref new String(L".jpeg"));
-    picker->FileTypeFilter->Append(ref new String(L".png"));
+    auto picker = Windows::Storage::Pickers::FileOpenPicker();
+    //picker.FileTypeFilter().Append(hstring(L".jpg"));
 
     //Windows::Storage::StorageFile file = picker->PickSingleFileAsync();
 }
 
-ref class CCApp sealed : IFrameworkView
+struct CCApp : implements<CCApp, IFrameworkView, IFrameworkViewSource>
 {
 public:
-    virtual void Initialize(CoreApplicationView^ view)
+	// IFrameworkView interface
+	void Initialize(const CoreApplicationView& view)
     {
     }
 
-    virtual void Load(String^ EntryPoint)
+    void Load(const hstring& entryPoint)
     {
     }
 
-    virtual void Uninitialize()
+    void Uninitialize()
     {
     }
 
-    virtual void Run()
+    void Run()
     {
-        CoreWindow^ window = CoreWindow::GetForCurrentThread();
-        window->Activate();
+        CoreWindow& window = CoreWindow::GetForCurrentThread();
+        window.Activate();
 
-        CoreDispatcher^ dispatcher = window->Dispatcher;
-        dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessUntilQuit);
+        CoreDispatcher& dispatcher = window.Dispatcher();
+        dispatcher.ProcessEvents(CoreProcessEventsOption::ProcessUntilQuit);
     }
 
-    virtual void SetWindow(CoreWindow^ win)
+    void SetWindow(const CoreWindow& win)
     {
     }
+
+	// IFrameworkViewSource interface
+	IFrameworkView CreateView()
+	{
+		return *this;
+	}
 };
 
-ref class CCAppSource sealed : IFrameworkViewSource
+int __stdcall wWinMain(void*, void*, wchar_t** argv, int argc)
 {
-public:
-    virtual IFrameworkView^ CreateView()
-    {
-        return ref new CCApp();
-    }
-};
-
-[MTAThread]
-int main(Array<String^>^ args)
-{
-    //init_apartment();
-    auto source = ref new CCAppSource();
-    CoreApplication::Run(source);
+	auto app = CCApp();
+    CoreApplication::Run(app);
 }
