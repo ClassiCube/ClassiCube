@@ -369,6 +369,8 @@ void Pointer_SetPosition(int idx, int x, int y) {
 	if (x == Pointers[idx].x && y == Pointers[idx].y) return;
 	/* TODO: reset to -1, -1 when pointer is removed */
 	Pointers[idx].x = x; Pointers[idx].y = y;
+
+	if (Pointers[0].DownHook && Pointers[0].DownHook(idx)) return;
 	
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
