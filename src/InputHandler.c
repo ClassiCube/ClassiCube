@@ -784,7 +784,6 @@ cc_bool KeyBind_IsPressed(InputBind binding) { return Bind_IsTriggered[binding];
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y, mask;
-	if (Pointers[0].DownHook && Pointers[0].DownHook(idx)) return;
 
 	/* Always set last click time, otherwise quickly tapping */
 	/* sometimes triggers a 'delete' in InputHandler_Tick, */

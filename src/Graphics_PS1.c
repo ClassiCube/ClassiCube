@@ -755,57 +755,92 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	}
 }
 
-static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
-	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
+static void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
+							struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level);
+
+#define CalcMidpoint(mid, p1, p2) \
+	mid.x = (p1->x + p2->x) >> 1; \
+	mid.y = (p1->y + p2->y) >> 1; \
+	mid.z = (p1->z + p2->z) >> 1; \
+	mid.u = (p1->u + p2->u) >> 1; \
+	mid.v = (p1->v + p2->v) >> 1; \
+	mid.rgbc = p1->rgbc;
+ 
+static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
+						struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
+	if (level > 2) return;
+	struct PS1VertexTextured m01, m02, m03, m12, m32;
+
+	// v0 --- m01 --- v1
+	//  |  \   | \    |
+	//  |    \ |   \  |
+	//m03 ----m02----m12
+	//  |  \   | \    |
+	//  |    \ |   \  |
+	// v3 ----m32---- v2
+
+	CalcMidpoint(m01, v0, v1);
+	CalcMidpoint(m02, v0, v2);
+	CalcMidpoint(m03, v0, v3);
+	CalcMidpoint(m12, v1, v2);
+	CalcMidpoint(m32, v3, v2);
+
+	DrawTexturedQuad(  v0, &m01, &m02, &m03, level);
+	DrawTexturedQuad(&m01,   v1, &m12, &m02, level);
+	DrawTexturedQuad(&m02, &m12,   v2, &m32, level);
+	DrawTexturedQuad(&m03, &m02, &m32,   v3, level);
+}
+
+static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
+							struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
+	IVec3 coords[4];
+	int clipped = 0;
+	clipped |= Transform(&coords[0], v0);
+	clipped |= Transform(&coords[1], v1);
+	clipped |= Transform(&coords[2], v2);
+	clipped |= Transform(&coords[3], v3);
+	if (clipped) return;//{ SubdivideQuad(v0, v1, v2, v3, level + 1); return; }
+		
+	int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
+	if (p < 0 || p >= OT_LENGTH) return;
+		
+	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
+    if (!poly) return;
+
+	setlen(poly, POLY_LEN_FT4);
+	poly->rgbc  = v0->rgbc;
+	poly->tpage = curTex->tpage;
+	poly->clut  = 0;
+
+	// TODO & instead of % 
+	poly->x0 = coords[1].x; poly->y0 = coords[1].y;
+	poly->x1 = coords[0].x; poly->y1 = coords[0].y;
+	poly->x2 = coords[2].x; poly->y2 = coords[2].y;
+	poly->x3 = coords[3].x; poly->y3 = coords[3].y;
+
+	int uOffset = curTex->xOffset;
+	int vOffset = curTex->yOffset;
 	int uShift  = 10 - curTex->width_shift;
 	int vShift  = 10 - curTex->height_shift;
+		
+	poly->u0 = (v1->u >> uShift) + uOffset;
+	poly->v0 = (v1->v >> vShift) + vOffset;
+	poly->u1 = (v0->u >> uShift) + uOffset;
+	poly->v1 = (v0->v >> vShift) + vOffset;
+	poly->u2 = (v2->u >> uShift) + uOffset;
+	poly->v2 = (v2->v >> vShift) + vOffset;
+	poly->u3 = (v3->u >> uShift) + uOffset;
+	poly->v3 = (v3->v >> vShift) + vOffset;
 
+	addPrim(&buffer->ot[p >> 2], poly);
+}
+
+static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
 
-		IVec3 coords[4];
-		int clipped = 0;
-		clipped |= Transform(&coords[0], &v[0]);
-		clipped |= Transform(&coords[1], &v[1]);
-		clipped |= Transform(&coords[2], &v[2]);
-		clipped |= Transform(&coords[3], &v[3]);
-		if (clipped) continue;
-		
-		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-        if (!poly) return;
-
-		setlen(poly, POLY_LEN_FT4);
-		poly->rgbc  = v->rgbc;
-		poly->tpage = curTex->tpage;
-		poly->clut  = 0;
-
-		// TODO & instead of % 
-		poly->x0 = coords[1].x; poly->y0 = coords[1].y;
-		poly->x1 = coords[0].x; poly->y1 = coords[0].y;
-		poly->x2 = coords[2].x; poly->y2 = coords[2].y;
-		poly->x3 = coords[3].x; poly->y3 = coords[3].y;
-		
-		if (cullingEnabled) {
-			// https://gamedev.stackexchange.com/questions/203694/how-to-make-backface-culling-work-correctly-in-both-orthographic-and-perspective
-			int signA = (coords[1].x - coords[0].x) * (coords[2].y - coords[0].y);
-			int signB = (coords[2].x - coords[0].x) * (coords[1].y - coords[0].y);
-			if (signA > signB) continue;
-		}
-		
-		poly->u0 = (v[1].u >> uShift) + uOffset;
-		poly->v0 = (v[1].v >> vShift) + vOffset;
-		poly->u1 = (v[0].u >> uShift) + uOffset;
-		poly->v1 = (v[0].v >> vShift) + vOffset;
-		poly->u2 = (v[2].u >> uShift) + uOffset;
-		poly->v2 = (v[2].v >> vShift) + vOffset;
-		poly->u3 = (v[3].u >> uShift) + uOffset;
-		poly->v3 = (v[3].v >> vShift) + vOffset;
-		
-		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
-		if (p < 0 || p >= OT_LENGTH) continue;
-
-		addPrim(&buffer->ot[p >> 2], poly);
+		DrawTexturedQuad(&v[0], &v[1], &v[2], &v[3], 0);
 	}
 }
 
