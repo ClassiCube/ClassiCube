@@ -146,6 +146,12 @@ ifeq ($(PLAT),dos)
 	BUILD_DIR = build-dos
 endif
 
+ifeq ($(PLAT),amiga_68k)
+	CC      = m68k-amiga-elf-gcc
+	CFLAGS += -DPLAT_AMIGA
+	BUILD_DIR = build-amiga_68k
+endif
+
 
 ifdef SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
@@ -208,6 +214,8 @@ irix:
 	$(MAKE) $(TARGET) PLAT=irix
 dos:
 	$(MAKE) $(TARGET) PLAT=dos
+amiga_68k:
+	$(MAKE) $(TARGET) PLAT=amiga_68k
 # Default overrides
 sdl2:
 	$(MAKE) $(TARGET) SDL2=1

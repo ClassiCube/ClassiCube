@@ -1,8 +1,7 @@
 #include "ExtMath.h"
 #include "Platform.h"
 #include "Utils.h"
-/* For abs(x) function */
-#include <stdlib.h>
+
 #define PI 3.141592653589793238462643383279502884197169399
 
 static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
@@ -10,62 +9,6 @@ static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
 static const cc_uint64 _POS_INF = 0x7FF0000000000000ULL;
 #define POS_INF *((double*)&_POS_INF)
 
-/* Sega 32x is missing these intrinsics */
-#if defined CC_BUILD_32X
-#include <stdint.h>
-extern int32_t fix16_sqrt(int32_t value);
-
-float sqrtf(float x) {
-                int32_t fp_x = (int32_t)(x * (1 << 16));
-                fp_x = fix16_sqrt(fp_x);
-                return (float)fp_x / (1 << 16);
-        }
-#endif
-
-
-/* Sega saturn is missing these intrinsics */
-#if defined CC_BUILD_SATURN
-#include <stdint.h>
-extern int32_t fix16_sqrt(int32_t value);
-static int abs(int x) { return x < 0 ? -x : x; }
-
-float sqrtf(float x) { 
-		int32_t fp_x = (int32_t)(x * (1 << 16));
-		fp_x = fix16_sqrt(fp_x);
-		return (float)fp_x / (1 << 16);
-	}
-#endif
-
-
-#if defined CC_BUILD_PS1
-	/* PS1 is missing these intrinsics */
-	#include <psxgte.h>
-	float Math_AbsF(float x)  { return __builtin_fabsf(x); }
-
-	float Math_SqrtF(float x) { 
-		int fp_x = (int)(x * (1 << 12));
-		fp_x = SquareRoot12(fp_x);
-		return (float)fp_x / (1 << 12);
-	}
-#elif defined __GNUC__
-	/* Defined in .h using builtins */
-#elif defined __TINYC__
-	/* Older versions of TinyC don't support fabsf or sqrtf */
-	/* Those can be used though if compiling with newer TinyC */
-	/*  versions for a very small performance improvement */
-	#include <math.h>
-
-	float Math_AbsF(float x)  { return fabs(x); }
-	float Math_SqrtF(float x) { return sqrt(x); }
-#else
-	#include <math.h>
-
-	float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
-	float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
-#endif
-
-float Math_Mod1(float x)  { return x - (int)x; /* fmodf(x, 1); */ }
-int   Math_AbsI(int x)    { return abs(x); /* MSVC intrinsic */ }
 
 int Math_Floor(float value) {
 	int valueI = (int)value;
@@ -125,6 +68,74 @@ cc_bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
 }
 
+float Math_Mod1(float x) { return x - (int)x; /* fmodf(x, 1); */ }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Math intrinsics---------------------------------------------------*
+*#########################################################################################################################*/
+/* For abs(x) function */
+#if defined CC_BUILD_AMIGA || defined CC_BUILD_SATURN
+static int abs(int x) { return x < 0 ? -x : x; }
+#else
+#include <stdlib.h>
+#endif
+
+/* Sega 32x is missing these intrinsics */
+#if defined CC_BUILD_32X
+#include <stdint.h>
+extern int32_t fix16_sqrt(int32_t value);
+
+float sqrtf(float x) {
+	int32_t fp_x = (int32_t)(x * (1 << 16));
+	fp_x = fix16_sqrt(fp_x);
+	return (float)fp_x / (1 << 16);
+}
+#endif
+
+
+/* Sega saturn is missing these intrinsics */
+#if defined CC_BUILD_SATURN
+#include <stdint.h>
+extern int32_t fix16_sqrt(int32_t value);
+
+float sqrtf(float x) { 
+	int32_t fp_x = (int32_t)(x * (1 << 16));
+	fp_x = fix16_sqrt(fp_x);
+	return (float)fp_x / (1 << 16);
+}
+#endif
+
+
+#if defined CC_BUILD_PS1
+	/* PS1 is missing these intrinsics */
+	#include <psxgte.h>
+	float Math_AbsF(float x)  { return __builtin_fabsf(x); }
+
+	float Math_SqrtF(float x) { 
+		int fp_x = (int)(x * (1 << 12));
+		fp_x = SquareRoot12(fp_x);
+		return (float)fp_x / (1 << 12);
+	}
+#elif defined __GNUC__
+	/* Defined in .h using builtins */
+#elif defined __TINYC__
+	/* Older versions of TinyC don't support fabsf or sqrtf */
+	/* Those can be used though if compiling with newer TinyC */
+	/*  versions for a very small performance improvement */
+	#include <math.h>
+
+	float Math_AbsF(float x)  { return fabs(x); }
+	float Math_SqrtF(float x) { return sqrt(x); }
+#else
+	#include <math.h>
+
+	float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
+	float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
+#endif
+
+int Math_AbsI(int x) { return abs(x); /* MSVC intrinsic */ }
+
 
 /*########################################################################################################################*
 *--------------------------------------------------Random number generator------------------------------------------------*
@@ -169,7 +180,7 @@ float Random_Float(RNGState* seed) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------Transcendental functions-----------------------------------------------*
+*--------------------------------------------------Trigonometric functions-----------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_DREAMCAST
 #include <math.h>
