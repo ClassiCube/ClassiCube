@@ -627,6 +627,10 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_Add2(  "   &cBlocks array size (%i) does not match volume of map (%i)", &map_volume, &volume);
 		FreeMapStates();
+	} else if (!World_CheckVolume(width, height, length)) {
+		Chat_AddRaw("&cFailed to load map, try joining a different map");
+		Chat_AddRaw("   &cAttempted to load map over 2 GB in size");
+		FreeMapStates();
 	}
 	
 #ifdef EXTENDED_BLOCKS

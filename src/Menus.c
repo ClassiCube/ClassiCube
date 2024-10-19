@@ -1061,8 +1061,7 @@ static void GenLevelScreen_Gen(void* screen, const struct MapGenerator* gen) {
 	int length = GenLevelScreen_GetInt(s, 2);
 	int seed   = GenLevelScreen_GetSeedInt(s, 3);
 
-	cc_uint64 volume = (cc_uint64)width * height * length;
-	if (volume > Int32_MaxValue) {
+	if (!World_CheckVolume(width, height, length)) {
 		Chat_AddRaw("&cThe generated map's volume is too big.");
 	} else if (!width || !height || !length) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");

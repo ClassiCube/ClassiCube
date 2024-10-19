@@ -2217,7 +2217,6 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 }
 
 static void TextGroupWidget_RemoveColorPrefix(cc_string* text, int i) {
-	/* Delete leading colour code if present */
 	if (i + 2 > text->length || text->buffer[i] != '&') return;
 	if (!Drawer2D_ValidColorCodeAt(text, i + 1)) return;
 

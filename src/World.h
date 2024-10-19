@@ -115,6 +115,11 @@ static CC_INLINE cc_bool World_ContainsXZ(int x, int z) {
 		&& (unsigned)z < (unsigned)World.Length;
 }
 
+static CC_INLINE cc_bool World_CheckVolume(int width, int height, int length) {
+	cc_uint64 volume = (cc_uint64)width * height * length;
+	return volume <= Int32_MaxValue;
+}
+
 enum EnvVar {
 	ENV_VAR_EDGE_BLOCK, ENV_VAR_SIDES_BLOCK, ENV_VAR_EDGE_HEIGHT, ENV_VAR_SIDES_OFFSET,
 	ENV_VAR_CLOUDS_HEIGHT, ENV_VAR_CLOUDS_SPEED, ENV_VAR_WEATHER_SPEED, ENV_VAR_WEATHER_FADE,
