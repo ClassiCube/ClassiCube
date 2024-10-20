@@ -26,20 +26,24 @@ xcuserdata/
 
 # Nintendo Console build results
 build-3ds/
-build-gc/
 build-nds/
+build-dsi/
 build-n64/
+build-gc/
 build-wii/
 build-wiiu/
 build-switch/
 classicube.nds
+
 # SEGA console build results
+build-32x/
+build-saturn/
 build-dc/
 IP.BIN
 ISO_FILES/
 third_party/gldc/libGLdc.a
-build-saturn/
 cd/
+
 # Microsoft console build results
 build-360/
 main.exe
@@ -48,6 +52,7 @@ misc/xbox/ps_coloured.inl
 misc/xbox/ps_textured.inl
 misc/xbox/vs_coloured.inl
 misc/xbox/vs_textured.inl
+
 # Sony console build results
 build-ps2/
 build-ps3/
@@ -58,10 +63,12 @@ PARAM.SFO
 param.sfo
 eboot.bin
 
+# Desktop build results
+build-amiga-68k/
+
 # Build results
 [Dd]ebug/
 [Rr]elease/
-[Rr]eleases/
 x64/
 x86/
 build/

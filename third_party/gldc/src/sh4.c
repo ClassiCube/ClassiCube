@@ -300,7 +300,7 @@ extern void ProcessVertexList(Vertex* v3, int n, void* sq_addr);
 void SceneListSubmit(Vertex* v3, int n) {
 	sq = (uint32_t*)MEM_AREA_SQ_BASE;
 
-    for(int i = 0; i < n; ++i, ++v3) 
+    for (int i = 0; i < n; i++, v3++) 
 	{
         PREFETCH(v3 + 1);
         switch(v3->flags & 0xFF000000) {
@@ -313,21 +313,11 @@ void SceneListSubmit(Vertex* v3, int n) {
             continue;
         };
 
-    // Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
+		// Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
         Vertex* const v0 = v3 - 3;
         Vertex* const v1 = v3 - 2;
         Vertex* const v2 = v3 - 1;
-
         uint8_t visible_mask = v3->flags & 0xFF;
-        
-        // Stats gathering found that when testing a 64x64x64 sized world, at most
-        //   ~400-500 triangles needed clipping
-        //   ~13% of the triangles in a frame needed clipping (percentage increased when less triangles overall)
-        // Based on this, the decision was made to optimise for rendering quads there 
-        //  were either entirely visible or entirely culled, at the expensive at making
-        //  partially visible quads a bit slower due to needing to be split into two triangles first
-        // Performance measuring indicated that overall FPS improved from this change
-        //  to switching to try to process 1 quad instead of 2 triangles though
 
         switch(visible_mask) {
         case V0_VIS | V1_VIS | V2_VIS | V3_VIS: // All vertices visible

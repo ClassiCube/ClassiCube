@@ -108,8 +108,7 @@ void Gfx_Create(void) {
 
 	InitGeom();
 	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
-	// Set screen depth (basically FOV control, W/2 works best)
-	gte_SetGeomScreen(Window_Main.Width / 2);
+	gte_SetGeomScreen(Window_Main.Height / 2);
 }
 
 void Gfx_Free(void) { 
@@ -523,13 +522,7 @@ static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
 #define ToFixed(v) (int)(v * (1 << 12))
 
 static void LoadTransformMatrix(struct Matrix* src) {
-	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
-	MATRIX mtx;
-
-	mtx.t[0] = (int)(src->row4.x);
-	mtx.t[1] = (int)(src->row4.y);
-	mtx.t[2] = (int)(src->row4.z);
-	
+	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati	
 	mvp_trans.x = XYZFixed(1) * ToFixed(src->row4.x);
 	mvp_trans.y = XYZFixed(1) * ToFixed(src->row4.y);
 	mvp_trans.z = XYZFixed(1) * ToFixed(src->row4.z);
@@ -550,23 +543,30 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	mvp_row3.z = ToFixed(src->row3.z);
 	mvp_row3.w = ToFixed(src->row3.w);
 
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row1.x, &src->row1.y, &src->row1.z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row2.x, &src->row2.y, &src->row2.z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row3.x, &src->row3.y, &src->row3.z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row4.x, &src->row4.y, &src->row4.z);
+	//Platform_Log4("X:  %f3, %f3, %f3, %f3", &src->row1.x, &src->row2.x, &src->row3.x, &src->row4.x);
+	//Platform_Log4("Y:  %f3, %f3, %f3, %f3", &src->row1.y, &src->row2.y, &src->row3.y, &src->row4.y);
+	//Platform_Log4("Z:  %f3, %f3, %f3, %f3", &src->row1.z, &src->row2.z, &src->row3.z, &src->row4.z);
+	//Platform_Log4("W:  %f3, %f3, %f3, %f3", &src->row1.w, &src->row2.w, &src->row3.w, &src->row4.w);
 	//Platform_LogConst("====");
+
+	// Use w instead of z
+	// (row123.z = row123.w, only difference is row4.z/w being different)
+	MATRIX mtx;
+	mtx.t[0] = (int)(src->row4.x);
+	mtx.t[1] = (int)(src->row4.y);
+	mtx.t[2] = (int)(src->row4.w);
 
 	mtx.m[0][0] = ToFixed(src->row1.x);
 	mtx.m[0][1] = ToFixed(src->row1.y);
-	mtx.m[0][2] = ToFixed(src->row1.z);
+	mtx.m[0][2] = ToFixed(src->row1.w);
 
 	mtx.m[1][0] = ToFixed(src->row2.x);
 	mtx.m[1][1] = ToFixed(src->row2.y);
-	mtx.m[1][2] = ToFixed(src->row2.z);
+	mtx.m[1][2] = ToFixed(src->row2.w);
 
 	mtx.m[2][0] = ToFixed(src->row3.x);
 	mtx.m[2][1] = ToFixed(src->row3.y);
-	mtx.m[2][2] = ToFixed(src->row3.z);
+	mtx.m[2][2] = ToFixed(src->row3.w);
 	
 	gte_SetRotMatrix(&mtx);
 	gte_SetTransMatrix(&mtx);
@@ -655,6 +655,19 @@ static int Transform(IVec3* result, struct PS1VertexTextured* a) {
 	result->x = (x *  160      / w) + 160; 
 	result->y = (y * -120      / w) + 120;
 	result->z = (z * OT_LENGTH / w);
+
+	/*SVECTOR coord;
+	POLY_FT4 poly;
+	coord.vx = a->x; coord.vy = a->y; coord.vz = a->z;
+	gte_ldv0(&coord);
+	gte_rtps();
+	gte_stsxy(&poly.x0);
+
+	int X = (short)poly.x0, Y = (short)poly.y0;
+	Platform_Log3("X: %i, %i,  %i", &x, &result->x, &X);
+	Platform_Log3("Y: %i, %i,  %i", &y, &result->y, &Y);
+	Platform_LogConst("=======");*/
+
 	return z > w;
 }
 

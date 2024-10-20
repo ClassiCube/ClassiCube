@@ -460,6 +460,25 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	return res;
 }
 
+static void LogWifiStatus(int status) {
+	switch (status) {
+		case ASSOCSTATUS_SEARCHING:
+			Platform_LogConst("Wifi: Searching.."); return;
+		case ASSOCSTATUS_AUTHENTICATING:
+			Platform_LogConst("Wifi: Authenticating.."); return;
+		case ASSOCSTATUS_ASSOCIATING:
+			Platform_LogConst("Wifi: Connecting.."); return;
+		case ASSOCSTATUS_ACQUIRINGDHCP:
+			Platform_LogConst("Wifi: Acquiring.."); return;
+		case ASSOCSTATUS_ASSOCIATED:
+			Platform_LogConst("Wifi: Connected successfully!"); return;
+		case ASSOCSTATUS_CANNOTCONNECT:
+			Platform_LogConst("Wifi: FAILED TO CONNECT"); return;
+		default: 
+			Platform_Log1("Wifi: status = %i", &status); return;
+	}
+}
+
 static void InitNetworking(void) {
 #ifdef BUILD_DSI
     if (!DSiWifi_InitDefault(INIT_ONLY)) {
@@ -481,12 +500,11 @@ static void InitNetworking(void) {
         int status = DSiWifi_AssocStatus();
 #else
         int status = Wifi_AssocStatus();
-#endif
+#endif	
+		LogWifiStatus(status);
         if (status == ASSOCSTATUS_ASSOCIATED) return;
-		Platform_Log1("STATUS: %i", &status);
 
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
-            Platform_LogConst("Can't connect to WIFI"); 
 			net_supported = false; return;
         }
         swiWaitForVBlank();
