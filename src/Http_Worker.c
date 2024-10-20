@@ -2,21 +2,25 @@
 #ifndef CC_BUILD_WEB
 #include "_HttpBase.h"
 
-/* Allocates initial data buffer to store response contents */
-static void Http_BufferInit(struct HttpRequest* req) {
-	req->progress  = 0;
-	req->_capacity = req->contentLength ? req->contentLength : 1;
-	req->data      = (cc_uint8*)Mem_Alloc(req->_capacity, 1, "http data");
-	req->size      = 0;
-}
-
-/* Ensures data buffer has enough space left to append amount bytes, reallocates if not */
-static void Http_BufferEnsure(struct HttpRequest* req, cc_uint32 amount) {
+/* Ensures data buffer has enough space left to append amount bytes */
+static cc_bool Http_BufferExpand(struct HttpRequest* req, cc_uint32 amount) {
 	cc_uint32 newSize = req->size + amount;
-	if (newSize <= req->_capacity) return;
+	cc_uint8* ptr;
+	if (newSize <= req->_capacity) return true;
 
-	req->_capacity = newSize;
-	req->data      = (cc_uint8*)Mem_Realloc(req->data, newSize, 1, "http data+");
+	if (!req->_capacity) {
+		/* Allocate initial storage */
+		req->_capacity = req->contentLength ? req->contentLength : 1;
+		ptr = (cc_uint8*)Mem_TryAlloc(req->_capacity, 1);
+	} else {
+		/* Reallocate if capacity reached */
+		req->_capacity = newSize;	
+		ptr = (cc_uint8*)Mem_TryRealloc(req->data, newSize, 1);
+	}
+
+	if (!ptr) return false;
+	req->data = ptr;
+	return true;
 }
 
 /* Increases size and updates current progress */
@@ -277,8 +281,8 @@ static size_t Http_ProcessHeader(char* buffer, size_t size, size_t nitems, void*
 static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
 
-	if (!req->_capacity) Http_BufferInit(req);
-	Http_BufferEnsure(req, nitems);
+	int ok = Http_BufferExpand(req, nitems);
+	if (!ok) Logger_Abort("Out of memory for HTTP request");
 
 	Mem_Copy(&req->data[req->size], buffer, nitems);
 	Http_BufferExpanded(req, nitems);
@@ -680,14 +684,11 @@ static int HttpClient_BeginBody(struct HttpRequest* req, struct HttpClientState*
 	if (!HttpClient_HasBody(req))
 		return HTTP_RESPONSE_STATE_DONE;
 	
-	if (state->chunked) {
-		Http_BufferInit(req);
+	if (state->chunked)
 		return HTTP_RESPONSE_STATE_CHUNK_HEADER;
-	}
-	if (req->contentLength) {
-		Http_BufferInit(req);
+	if (req->contentLength)
 		return HTTP_RESPONSE_STATE_DATA;
-	}
+
 	/* Zero length response */
 	return HTTP_RESPONSE_STATE_DONE;
 }
@@ -713,7 +714,7 @@ static int HttpClient_GetChunkLength(const cc_string* line) {
 static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer, int total) {
 	struct HttpRequest* req = state->req;
 	cc_uint32 left, avail, read;
-	int offset = 0, chunkLen;
+	int offset = 0, chunkLen, ok;
 
 	while (offset < total) {
 		switch (state->state) {
@@ -742,8 +743,9 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 
 					/* The rest of the request body is just content/data */
 					if (state->state == HTTP_RESPONSE_STATE_DATA) {
-						Http_BufferEnsure(req, req->contentLength);
 						state->dataLeft = req->contentLength;
+						ok = Http_BufferExpand(req, state->dataLeft);
+						if (!ok) return ERR_OUT_OF_MEMORY;
 					}
 					break;
 				}
@@ -762,7 +764,9 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 			read  = min(left, avail);
 
 			Mem_Copy(req->data + req->size, buffer + offset, read);
-			Http_BufferExpanded(req, read); state->dataLeft -= read;
+			Http_BufferExpanded(req, read); 
+
+			state->dataLeft -= read;
 			offset += read;
 
 			if (!state->dataLeft) {
@@ -789,8 +793,10 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 					state->state = HTTP_RESPONSE_STATE_CHUNK_TRAILERS;
 				} else {
 					state->state = HTTP_RESPONSE_STATE_DATA;
-					Http_BufferEnsure(req, chunkLen);
+
 					state->dataLeft = chunkLen;
+					ok = Http_BufferExpand(req, state->dataLeft);
+					if (!ok) return ERR_OUT_OF_MEMORY;
 				}
 				break;
 			}
@@ -1005,9 +1011,9 @@ static void JNICALL java_HttpParseHeader(JNIEnv* env, jobject o, jstring header)
 /* Processes a chunk of data downloaded from the web server */
 static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, jint len) {
 	struct HttpRequest* req = java_req;
-	if (!req->_capacity) Http_BufferInit(req);
+	int ok = Http_BufferExpand(req, len);	
+	if (!ok) Logger_Abort("Out of memory for HTTP request");
 
-	Http_BufferEnsure(req, len);
 	(*env)->GetByteArrayRegion(env, arr, 0, len, (jbyte*)(&req->data[req->size]));
 	Http_BufferExpanded(req, len);
 }
@@ -1178,8 +1184,8 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
             if ((result = ParseResponseHeaders(req, stream))) break;
         }
         
-        if (!req->_capacity) Http_BufferInit(req);
-        Http_BufferEnsure(req, read);
+        int ok = Http_BufferExpand(req, read);
+		if (!ok) { result = ERR_OUT_OF_MEMORY; break; }
         
         Mem_Copy(&req->data[req->size], buf, read);
         Http_BufferExpanded(req, read);
