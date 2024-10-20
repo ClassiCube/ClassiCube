@@ -17,6 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <nds/arm9/background.h>
 #include <nds/bios.h>
 #include <nds/cothread.h>
 #include <nds/interrupts.h>
@@ -25,6 +26,7 @@
 #include <nds/system.h>
 #include <nds/arm9/dldi.h>
 #include <nds/arm9/sdmmc.h>
+#include <nds/arm9/exceptions.h>
 #include <fat.h>
 #ifdef BUILD_DSI
 #include "../third_party/dsiwifi/include/dsiwifi9.h"
@@ -83,10 +85,11 @@ static void LogNocash(const char* msg, int len) {
 	nocashWrite(buffer, len + 2);
 }
 
-extern void consolePrintString(const char* ptr, int len);
+extern void Console_Clear(void);
+extern void Console_PrintString(const char* ptr, int len);
 void Platform_Log(const char* msg, int len) {
     LogNocash(msg, len);
-	consolePrintString(msg, len);
+	Console_PrintString(msg, len);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -107,6 +110,54 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 	t->hour   = loc_time.tm_hour;
 	t->minute = loc_time.tm_min;
 	t->second = loc_time.tm_sec;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Directory/File------------------------------------------------------*
+*#########################################################################################################################*/
+static __attribute__((noreturn)) void CrashHandler(void) {
+	Console_Clear();
+	Platform_LogConst("");
+	Platform_LogConst("");
+	Platform_LogConst("** CLASSICUBE FATALLY CRASHED **");
+	Platform_LogConst("");
+
+	cc_uint32 mode = getCPSR() & CPSR_MODE_MASK;
+	if (mode == CPSR_MODE_ABORT) {
+		Platform_LogConst("Tried to read/write invalid memory");
+	} else if (mode == CPSR_MODE_UNDEFINED) {
+		Platform_LogConst("Tried to execute invalid instruction");
+	} else {
+		Platform_Log1("Unknown error: %h", &mode);
+	}
+	Platform_LogConst("");
+
+	static const char* const regNames[] = {
+		"R0 ", "R1 ", "R2 ", "R3 ", "R4 ", "R5 ", "R6 ", "R7 ",
+		"R8 ", "R9 ", "R10", "R11", "R12", "SP ", "LR ", "PC "
+	};
+
+	for (int r = 0; r < 8; r++) {
+		Platform_Log4("%c: %h    %c: %h",
+					regNames[r],     &exceptionRegisters[r],
+					regNames[r + 8], &exceptionRegisters[r + 8]);
+	}
+
+	Platform_LogConst("");
+	Platform_LogConst("Please report this on the       ClassiCube Discord or forums");
+	Platform_LogConst("");
+	Platform_LogConst("You will need to restart your DS");
+
+	// Make the background red since game over anyways
+	BG_PALETTE_SUB[16 * 16 - 1] = RGB15(31, 0, 0);
+	BG_PALETTE    [16 * 16 - 1] = RGB15(31, 0, 0);
+
+	for (;;) { }
+}
+
+static void InstallCrashHandler(void) {
+	setExceptionHandler(CrashHandler);
 }
 
 
@@ -524,6 +575,7 @@ void Platform_Init(void) {
 #else
 	Platform_Log1("Running in %c mode with NDS wifi", dsiMode ? "DSi" : "DS");
 #endif
+	InstallCrashHandler();
 
 	InitFilesystem();
     InitNetworking();

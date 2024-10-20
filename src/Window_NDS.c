@@ -37,7 +37,7 @@ static u16* conFontBgMap;
 static int  conFontCurPal;
 static int  conCursorX, conCurrentRow;
 
-static void consoleClear(void) {
+void Console_Clear(void) {
     for (int i = 0; i < CON_WIDTH * CON_HEIGHT; i++)
     {
         conFontBgMap[i] = ' ' - FONT_ASCII_OFFSET;
@@ -47,7 +47,7 @@ static void consoleClear(void) {
     conCurrentRow = 0;
 }
 
-static void consoleNewLine(void) {
+static void Console_NewLine(void) {
     conCursorX = 0;
     conCurrentRow++;
     if (conCurrentRow < CON_HEIGHT) return;
@@ -72,28 +72,28 @@ static void consoleNewLine(void) {
     }
 }
 
-static void consolePrintChar(char c) {
+static void Console_PrintChar(char c) {
 	if (c < ' ') return; // only ASCII supported
 
     if (conCursorX >= CON_WIDTH) 
-        consoleNewLine();
+        Console_NewLine();
 
     u16 value = conFontCurPal | (c - FONT_ASCII_OFFSET);
     conFontBgMap[conCursorX + conCurrentRow * CON_WIDTH] = value;
     conCursorX++;
 }
 
-void consolePrintString(const char* ptr, int len) {
+void Console_PrintString(const char* ptr, int len) {
 	if (!conFontBgMap) return;
 
     for (int i = 0; i < len; i++)
     {
-        consolePrintChar(ptr[i]);
+        Console_PrintChar(ptr[i]);
     }
-    consoleNewLine();
+    Console_NewLine();
 }
 
-static void consoleLoadFont(int bgId, u16* palette) {
+static void Console_LoadFont(int bgId, u16* palette) {
 	conFontBgMap   = (u16*)bgGetMapPtr(bgId);
 	u16* fontBgGfx = (u16*)bgGetGfxPtr(bgId);
 	conFontCurPal  = 15 << 12;
@@ -117,7 +117,7 @@ static void consoleLoadFont(int bgId, u16* palette) {
     palette[0]           = RGB15( 0,  0,  0);
 }
 
-static void consoleInit(cc_bool onSub) {
+static void Console_Init(cc_bool onSub) {
     int bgId;
 	if (onSub) {
 		bgId = bgInitSub(LAYER_CON, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
@@ -125,8 +125,8 @@ static void consoleInit(cc_bool onSub) {
 		bgId = bgInit(   LAYER_CON, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
 	}
 
-    consoleLoadFont(bgId, onSub ? BG_PALETTE_SUB : BG_PALETTE);
-    consoleClear();
+    Console_LoadFont(bgId, onSub ? BG_PALETTE_SUB : BG_PALETTE);
+    Console_Clear();
 }
 
 
@@ -165,7 +165,7 @@ static void SetupVideo(cc_bool mode) {
 		videoSetMode(MODE_0_3D);
 	}
 
-	consoleInit(!launcherMode);
+	Console_Init(!launcherMode);
 }
 
 void Window_PreInit(void) {
