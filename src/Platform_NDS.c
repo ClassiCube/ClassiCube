@@ -501,7 +501,11 @@ static void InitNetworking(void) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	cc_bool dsiMode = isDSiMode();
-	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
+#ifdef BUILD_DSI
+	Platform_Log1("Running in %c mode with DSi networking", dsiMode ? "DSi" : "DS");
+#else
+	Platform_Log1("Running in %c mode with NDS networking", dsiMode ? "DSi" : "DS");
+#endif
 
 	InitFilesystem();
     InitNetworking();

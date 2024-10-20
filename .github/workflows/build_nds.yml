@@ -45,7 +45,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-nds/ClassiCube.elf'
+          SOURCE_FILE: 'build-nds/ClassiCube-nds.elf'
           DEST_NAME: 'ClassiCube-nds.elf'
 
       - uses: ./.github/actions/upload_build
@@ -53,6 +53,12 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-dsi.nds'
           DEST_NAME: 'ClassiCube-dsi.nds'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'build-dsi/ClassiCube-dsi.elf'
+          DEST_NAME: 'ClassiCube-dsi.elf'
           
           
       - uses: ./.github/actions/notify_success
