@@ -11,10 +11,12 @@ static cc_bool Http_BufferExpand(struct HttpRequest* req, cc_uint32 amount) {
 	if (!req->_capacity) {
 		/* Allocate initial storage */
 		req->_capacity = req->contentLength ? req->contentLength : 1;
+		req->_capacity = max(req->_capacity, newSize);
+
 		ptr = (cc_uint8*)Mem_TryAlloc(req->_capacity, 1);
 	} else {
 		/* Reallocate if capacity reached */
-		req->_capacity = newSize;	
+		req->_capacity = newSize;
 		ptr = (cc_uint8*)Mem_TryRealloc(req->data, newSize, 1);
 	}
 
