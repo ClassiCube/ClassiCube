@@ -116,6 +116,8 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
+static const char* crash_msg;
+
 static __attribute__((noreturn)) void CrashHandler(void) {
 	Console_Clear();
 	Platform_LogConst("");
@@ -124,10 +126,12 @@ static __attribute__((noreturn)) void CrashHandler(void) {
 	Platform_LogConst("");
 
 	cc_uint32 mode = getCPSR() & CPSR_MODE_MASK;
-	if (mode == CPSR_MODE_ABORT) {
-		Platform_LogConst("Tried to read/write invalid memory");
+	if (crash_msg) {
+		Platform_LogConst(crash_msg);
+	} else if (mode == CPSR_MODE_ABORT) {
+		Platform_LogConst("Read/write at invalid memory");
 	} else if (mode == CPSR_MODE_UNDEFINED) {
-		Platform_LogConst("Tried to execute invalid instruction");
+		Platform_LogConst("Executed invalid instruction");
 	} else {
 		Platform_Log1("Unknown error: %h", &mode);
 	}
@@ -161,7 +165,8 @@ void CrashHandler_Install(void) {
 }
 
 void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
+	crash_msg = raw_msg;
+	CrashHandler();
 }
 
 
