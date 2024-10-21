@@ -140,6 +140,61 @@ cc_uint64 Stopwatch_Measure(void) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+static const char* ExceptionDescribe(cc_uint32 code) {
+	switch (code) {
+	case EXCEPTION_ACCESS_VIOLATION:    return "ACCESS_VIOLATION";
+	case EXCEPTION_ILLEGAL_INSTRUCTION: return "ILLEGAL_INSTRUCTION";
+	case EXCEPTION_INT_DIVIDE_BY_ZERO:  return "DIVIDE_BY_ZERO";
+	}
+	return NULL;
+}
+
+static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
+	cc_string msg; char msgBuffer[128 + 1];
+	const char* desc;
+	cc_uint32 code;
+	cc_uintptr addr;
+
+	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
+	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
+	desc = ExceptionDescribe(code);
+
+	String_InitArray_NT(msg, msgBuffer);
+	if (desc) {
+		String_Format2(&msg, "Unhandled %c error at %x", desc, &addr);
+	} else {
+		String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
+	}
+
+	DWORD numArgs = info->ExceptionRecord->NumberParameters;
+	if (numArgs) {
+		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
+		String_AppendConst(&msg, " [");
+
+		for (DWORD i = 0; i < numArgs; i++) 
+		{
+			String_Format1(&msg, "0x%x,", &info->ExceptionRecord->ExceptionInformation[i]);
+		}
+		String_Append(&msg, ']');
+	}
+
+	msg.buffer[msg.length] = '\0';
+	Logger_DoAbort(0, msg.buffer, info->ContextRecord);
+	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
+}
+
+void CrashHandler_Install(void) {
+	SetUnhandledExceptionFilter(UnhandledFilter);
+}
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }

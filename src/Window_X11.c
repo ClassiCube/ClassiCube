@@ -315,7 +315,7 @@ static XVisualInfo GLContext_SelectVisual(void) {
 	res = XMatchVisualInfo(win_display, screen, 24, TrueColor, &info) ||
 		  XMatchVisualInfo(win_display, screen, 32, TrueColor, &info);
 
-	if (!res) Logger_Abort("Selecting visual");
+	if (!res) Process_Abort("Selecting visual");
 	return info;
 }
 #else
@@ -330,7 +330,7 @@ void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
 
-	if (!display) Logger_Abort("Failed to open the X11 display. No X server running?");
+	if (!display) Process_Abort("Failed to open the X11 display. No X server running?");
 	screen = DefaultScreen(display);
 	HookXErrors();
 
@@ -389,7 +389,7 @@ static void DoCreateWindow(int width, int height) {
 		CWColormap | CWEventMask, &attributes);
 #endif
 
-	if (!win) Logger_Abort("XCreateWindow failed");
+	if (!win) Process_Abort("XCreateWindow failed");
 
 #ifdef CC_BUILD_XIM
 	win_xim = XOpenIM(win_display, NULL, NULL, NULL);
@@ -1440,13 +1440,13 @@ void GLContext_Create(void) {
 		Platform_LogConst("Context create failed. Trying indirect...");
 		ctx_handle = glXCreateContext(win_display, &win_visual, NULL, false);
 	}
-	if (!ctx_handle) Logger_Abort("Failed to create OpenGL context");
+	if (!ctx_handle) Process_Abort("Failed to create OpenGL context");
 
 	if (!glXIsDirect(win_display, ctx_handle)) {
 		Platform_LogConst("== WARNING: Context is not direct ==");
 	}
 	if (!glXMakeCurrent(win_display, win, ctx_handle)) {
-		Logger_Abort("Failed to make OpenGL context current.");
+		Process_Abort("Failed to make OpenGL context current.");
 	}
 
 	/* GLX may return non-null function pointers that don't actually work */
@@ -1557,7 +1557,7 @@ static XVisualInfo GLContext_SelectVisual(void) {
 		GetAttribs(&mode, attribs, 16);
 		visual = glXChooseVisual(win_display, screen, attribs);
 	}
-	if (!visual) Logger_Abort("Requested GraphicsMode not available.");
+	if (!visual) Process_Abort("Requested GraphicsMode not available.");
 
 	info = *visual;
 	XFree(visual);

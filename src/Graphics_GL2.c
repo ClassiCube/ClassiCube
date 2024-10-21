@@ -287,7 +287,7 @@ static GLint CompileShader(GLint shader, const cc_string* src) {
 static void ShaderFailed(GLint shader) {
 	char logInfo[2048];
 	GLint temp;
-	if (!shader) Logger_Abort("Failed to create shader");
+	if (!shader) Process_Abort("Failed to create shader");
 
 	temp = 0;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &temp);
@@ -297,7 +297,7 @@ static void ShaderFailed(GLint shader) {
 		logInfo[2047] = '\0';
 		Window_ShowDialog("Failed to compile shader", logInfo);
 	}
-	Logger_Abort("Failed to compile shader");
+	Process_Abort("Failed to compile shader");
 }
 
 /* Tries to compile vertex and fragment shaders, then link into an OpenGL program */
@@ -330,7 +330,7 @@ static void CompileProgram(struct GLShader* shader) {
 
 
 	program  = glCreateProgram();
-	if (!program) Logger_Abort("Failed to create program");
+	if (!program) Process_Abort("Failed to create program");
 	shader->program = program;
 
 	glAttachShader(program, vs);
@@ -368,7 +368,7 @@ static void CompileProgram(struct GLShader* shader) {
 		tmpBuffer[2047] = '\0';
 		Window_ShowDialog("Failed to compile program", tmpBuffer);
 	}
-	Logger_Abort("Failed to compile program");
+	Process_Abort("Failed to compile program");
 }
 
 /* Marks a uniform as changed on all programs */

@@ -115,19 +115,19 @@ void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const 
 	SceUID uid = sceKernelAllocMemBlock(memType, type, size, NULL);
 	if (uid < 0) {
 		String_Format2(&str, "Failed to allocate GPU memory block for %c (%i bytes)%N", memType, &size);
-		Logger_Abort2(uid, buffer);
+		Process_Abort2(uid, buffer);
 	}
 		
 	int res1 = sceKernelGetMemBlockBase(uid, &addr);
 	if (res1 < 0) {
 		String_Format1(&str, "Failed to get base of GPU memory block for %c%N", memType);
-		Logger_Abort2(res1, buffer);
+		Process_Abort2(res1, buffer);
 	}
 		
 	int res2 = sceGxmMapMemory(addr, size, gpu_access);
 	if (res2 < 0) {
 		String_Format2(&str, "Failed to map memory for GPU usage for %c (%i bytes)%N", memType, &size);
-		Logger_Abort2(res2, buffer);
+		Process_Abort2(res2, buffer);
 	}
 	// https://wiki.henkaku.xyz/vita/GPU
 	
@@ -143,13 +143,13 @@ void* AllocGPUVertexUSSE(size_t size, SceUID* ret_uid, unsigned int* ret_usse_of
 
 	uid = sceKernelAllocMemBlock("GPU vertex USSE",
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, size, NULL);
-	if (uid < 0) Logger_Abort2(uid, "Failed to allocate vertex USSE block");
+	if (uid < 0) Process_Abort2(uid, "Failed to allocate vertex USSE block");
 
 	int res1 = sceKernelGetMemBlockBase(uid, &addr);
-	if (res1 < 0) Logger_Abort2(res1, "Failed to get base of vertex USSE memory block");
+	if (res1 < 0) Process_Abort2(res1, "Failed to get base of vertex USSE memory block");
 
 	int res2 = sceGxmMapVertexUsseMemory(addr, size, ret_usse_offset);
-	if (res1 < 0) Logger_Abort2(res2, "Failed to map vertex USSE memory");
+	if (res1 < 0) Process_Abort2(res2, "Failed to map vertex USSE memory");
 
 	*ret_uid = uid;
 	return addr;
@@ -163,13 +163,13 @@ void* AllocGPUFragmentUSSE(size_t size, SceUID* ret_uid, unsigned int* ret_usse_
 
 	uid = sceKernelAllocMemBlock("GPU fragment USSE",
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, size, NULL);
-	if (uid < 0) Logger_Abort2(uid, "Failed to allocate fragment USSE block");
+	if (uid < 0) Process_Abort2(uid, "Failed to allocate fragment USSE block");
 
 	int res1 = sceKernelGetMemBlockBase(uid, &addr);
-	if (res1 < 0) Logger_Abort2(res1, "Failed to get base of fragment USSE memory block");
+	if (res1 < 0) Process_Abort2(res1, "Failed to get base of fragment USSE memory block");
 
 	int res2 = sceGxmMapFragmentUsseMemory(addr, size, ret_usse_offset);
-	if (res1 < 0) Logger_Abort2(res2, "Failed to map fragment USSE memory");
+	if (res1 < 0) Process_Abort2(res2, "Failed to map fragment USSE memory");
 
 	*ret_uid = uid;
 	return addr;
@@ -219,9 +219,9 @@ static void VP_ReloadUniforms(void) {
 		void *uniform_buffer = NULL;
 		
 		ret = sceGxmReserveVertexDefaultUniformBuffer(gxm_context, &uniform_buffer);
-		if (ret) Logger_Abort2(ret, "Reserving uniform buffer");
+		if (ret) Process_Abort2(ret, "Reserving uniform buffer");
 		ret = sceGxmSetUniformDataF(uniform_buffer, VP->param_uni_mvp, 0, 4 * 4, transposed_mvp);
-		if (ret) Logger_Abort2(ret, "Updating uniform buffer");
+		if (ret) Process_Abort2(ret, "Updating uniform buffer");
 			
 		VP->dirtyUniforms &= ~VP_UNI_MATRIX;
 	}

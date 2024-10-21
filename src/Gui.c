@@ -183,7 +183,7 @@ void Gui_Refresh(struct Screen* s) {
 
 static void Gui_AddCore(struct Screen* s, int priority) {
 	int i, j;
-	if (Gui.ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
+	if (Gui.ScreensCount >= GUI_MAX_SCREENS) Process_Abort("Hit max screens");
 
 	for (i = 0; i < Gui.ScreensCount; i++) 
 	{

@@ -284,7 +284,7 @@ static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* u
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
 
 	int ok = Http_BufferExpand(req, nitems);
-	if (!ok) Logger_Abort("Out of memory for HTTP request");
+	if (!ok) Process_Abort("Out of memory for HTTP request");
 
 	Mem_Copy(&req->data[req->size], buffer, nitems);
 	Http_BufferExpanded(req, nitems);
@@ -1014,7 +1014,7 @@ static void JNICALL java_HttpParseHeader(JNIEnv* env, jobject o, jstring header)
 static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, jint len) {
 	struct HttpRequest* req = java_req;
 	int ok = Http_BufferExpand(req, len);	
-	if (!ok) Logger_Abort("Out of memory for HTTP request");
+	if (!ok) Process_Abort("Out of memory for HTTP request");
 
 	(*env)->GetByteArrayRegion(env, arr, 0, len, (jbyte*)(&req->data[req->size]));
 	Http_BufferExpanded(req, len);

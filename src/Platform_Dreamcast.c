@@ -118,6 +118,16 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------VMU options file-----------------------------------------------------*
 *#########################################################################################################################*/
 static const cc_uint8 icon_pal[] = {
@@ -409,47 +419,47 @@ void Thread_Join(void* handle) {
 void* Mutex_Create(const char* name) {
 	mutex_t* ptr = (mutex_t*)Mem_Alloc(1, sizeof(mutex_t), "mutex");
 	int res = mutex_init(ptr, MUTEX_TYPE_NORMAL);
-	if (res) Logger_Abort2(errno, "Creating mutex");
+	if (res) Process_Abort2(errno, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int res = mutex_destroy((mutex_t*)handle);
-	if (res) Logger_Abort2(errno, "Destroying mutex");
+	if (res) Process_Abort2(errno, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	int res = mutex_lock((mutex_t*)handle);
-	if (res) Logger_Abort2(errno, "Locking mutex");
+	if (res) Process_Abort2(errno, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int res = mutex_unlock((mutex_t*)handle);
-	if (res) Logger_Abort2(errno, "Unlocking mutex");
+	if (res) Process_Abort2(errno, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
 	semaphore_t* ptr = (semaphore_t*)Mem_Alloc(1, sizeof(semaphore_t), "waitable");
 	int res = sem_init(ptr, 0);
-	if (res) Logger_Abort2(errno, "Creating waitable");
+	if (res) Process_Abort2(errno, "Creating waitable");
 	return ptr;
 }
 
 void Waitable_Free(void* handle) {
 	int res = sem_destroy((semaphore_t*)handle);
-	if (res) Logger_Abort2(errno, "Destroying waitable");
+	if (res) Process_Abort2(errno, "Destroying waitable");
 	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
 	int res = sem_signal((semaphore_t*)handle);
-	if (res < 0) Logger_Abort2(errno, "Signalling event");
+	if (res < 0) Process_Abort2(errno, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	int res = sem_wait((semaphore_t*)handle);
-	if (res < 0) Logger_Abort2(errno, "Event wait");
+	if (res < 0) Process_Abort2(errno, "Event wait");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
@@ -457,7 +467,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	if (res >= 0) return;
 	
 	int err = errno;
-	if (err != ETIMEDOUT) Logger_Abort2(err, "Event timed wait");
+	if (err != ETIMEDOUT) Process_Abort2(err, "Event timed wait");
 }
 
 

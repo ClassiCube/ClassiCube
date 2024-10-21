@@ -100,6 +100,16 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
@@ -256,7 +266,7 @@ extern void interop_InitSockets(void);
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	int len = String_EncodeUtf8(addrs[0].data, address);
 	/* TODO can this ever happen */
-	if (len >= CC_SOCKETADDR_MAXSIZE) Logger_Abort("Overrun in Socket_ParseAddress");
+	if (len >= CC_SOCKETADDR_MAXSIZE) Process_Abort("Overrun in Socket_ParseAddress");
 
 	addrs[0].size  = port;
 	*numValidAddrs = 1;

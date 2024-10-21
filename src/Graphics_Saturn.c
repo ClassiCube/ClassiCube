@@ -21,7 +21,7 @@ static int tex_width = 8, tex_height = 8;
 static vdp1_gouraud_table_t* gourad_base;
 
 static vdp1_cmdt_t* NextPrimitive(void) {
-	if (cmdts_count >= CMDS_COUNT) Logger_Abort("Too many VDP1 commands");
+	if (cmdts_count >= CMDS_COUNT) Process_Abort("Too many VDP1 commands");
 	return &cmdts_all[cmdts_count++];
 }
 

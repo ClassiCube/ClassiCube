@@ -548,7 +548,7 @@ static void InitFreeTypeLibrary(void) {
 	ft_mem.realloc = FT_ReallocWrapper;
 
 	err = FT_New_Library(&ft_mem, &ft_lib);
-	if (err) Logger_Abort2(err, "Failed to init freetype");
+	if (err) Process_Abort2(err, "Failed to init freetype");
 	FT_Add_Default_Modules(ft_lib);
 }
 

@@ -614,7 +614,7 @@ int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults) {
 		return i;
 	}
 
-	Logger_Abort("Not enough controllers");
+	Process_Abort("Not enough controllers");
 	return 0;
 }
 

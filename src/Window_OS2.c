@@ -263,11 +263,11 @@ void Window_Init(void) {
 
 	habAnchor = WinInitialize(0);
 	if (habAnchor == NULLHANDLE) {
-		Logger_Abort2(LOUSHORT(WinGetLastError(0)), "Initialization failed");
+		Process_Abort2(LOUSHORT(WinGetLastError(0)), "Initialization failed");
 	}
 	msgQueue = WinCreateMsgQueue(habAnchor, 0);
 	if (msgQueue == NULLHANDLE) {
-		Logger_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Window queue creation failed");
+		Process_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Window queue creation failed");
 	}
 
 	// Init Dive
@@ -275,15 +275,15 @@ void Window_Init(void) {
   caps.ulFormatLength = 100;
   caps.ulStructLen = sizeof(DIVE_CAPS);
 	if (rc = DiveQueryCaps(&caps, DIVE_BUFFER_SCREEN)) {
-		Logger_Abort2(rc, "DIVE: Could not get capabilities.");
+		Process_Abort2(rc, "DIVE: Could not get capabilities.");
 	}
   if (caps.ulDepth < 24) {
-  	Logger_Abort2(rc, "DIVE: Too few colours");
+  	Process_Abort2(rc, "DIVE: Too few colours");
   }
 
 	rc = DiveOpen(&hDive, FALSE, NULL);
 	if (rc != DIVE_SUCCESS) {
-		Logger_Abort2(rc, "DIVE: Display engine instance open failed");
+		Process_Abort2(rc, "DIVE: Display engine instance open failed");
 	}
 	// Everything is fine, so we set infos.
 	hps = WinGetScreenPS(HWND_DESKTOP);
@@ -305,12 +305,12 @@ void Window_Create(int width, int height) {
 		| FCF_MAXBUTTON | FCF_TITLEBAR | FCF_SYSMENU;
 	
 	if (!WinRegisterClass(habAnchor, CC_WIN_CLASSNAME, ClientWndProc, 0, 0)) {
-		Logger_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Window class registration failed");
+		Process_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Window class registration failed");
 	}
 	hwndFrame = WinCreateStdWindow(HWND_DESKTOP, WS_VISIBLE | WS_SYNCPAINT, &ulFlags,
 		CC_WIN_CLASSNAME, "ClassiCube", 0L, NULLHANDLE, 0, &hwndClient);
 	if (hwndFrame == NULLHANDLE) {
-		Logger_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Failed to create window");
+		Process_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Failed to create window");
 	}
 	Window_SetSize(width, height);
 	Window_Main.Exists = true;
@@ -429,7 +429,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 			imageBuffer = NULL;
 			bufNum = 0;
 			bmp->scan0 = NULL;
-			Logger_Abort2(rc, "Dive: Could not allocate image buffer");
+			Process_Abort2(rc, "Dive: Could not allocate image buffer");
 			return;
 	}
 
@@ -441,7 +441,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 		imageBuffer = NULL;
 		bufNum = 0;
 		bmp->scan0 = NULL;
-		Logger_Abort2(rc, "Dive: Access to image buffer failed");
+		Process_Abort2(rc, "Dive: Access to image buffer failed");
 	}
 
 	bmp->scan0 = (unsigned int*)imageBuffer;

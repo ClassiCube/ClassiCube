@@ -49,7 +49,7 @@ static void Window_SDLFail(const char* place) {
 
 	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
 	str.buffer[str.length] = '\0';
-	Logger_Abort(str.buffer);
+	Process_Abort(str.buffer);
 }
 
 void Window_PreInit(void) {

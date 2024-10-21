@@ -94,7 +94,7 @@ static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
 		m->R =  2; m->G =  2; m->B =  1; break;
 	default:
 		/* mode->R = 0; mode->G = 0; mode->B = 0; */
-		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
+		Process_Abort2(bpp, "Unsupported bits per pixel"); break;
 	}
 }
 
@@ -171,7 +171,7 @@ void GLContext_Create(void) {
 	if (!ctx_config) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
-	if (!ctx_context) Logger_Abort2(eglGetError(), "Failed to create EGL context");
+	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
 	GLContext_InitSurface();
 }
 
@@ -203,7 +203,7 @@ cc_bool GLContext_SwapBuffers(void) {
 
 	err = eglGetError();
 	/* TODO: figure out what errors need to be handled here */
-	Logger_Abort2(err, "Failed to swap buffers");
+	Process_Abort2(err, "Failed to swap buffers");
 	return false;
 }
 

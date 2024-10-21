@@ -111,6 +111,7 @@ CC_NOINLINE static void WarnMissingArgs(int argsCount, const cc_string* args) {
 static void SetupProgram(int argc, char** argv) {
 	static char ipBuffer[STRING_SIZE];
 	cc_result res;
+	CrashHandler_Install();
 	Logger_Hook();
 	Window_PreInit();
 	Platform_Init();

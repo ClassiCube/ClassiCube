@@ -84,6 +84,16 @@ static void Stopwatch_Init(void) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("E:\\ClassiCube\\");
@@ -235,7 +245,7 @@ static DWORD WINAPI ExecThread(void* param) {
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
 	HANDLE thread = CreateThread(NULL, stackSize, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
+	if (!thread) Process_Abort2(GetLastError(), "Creating thread");
 
 	*handle = thread;
 	NtResumeThread(thread, NULL);
@@ -243,7 +253,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 
 void Thread_Detach(void* handle) {
 	NTSTATUS status = NtClose((HANDLE)handle);
-	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing thread handle");
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Freeing thread handle");
 }
 
 void Thread_Join(void* handle) {
@@ -274,13 +284,13 @@ void* Waitable_Create(const char* name) {
 	HANDLE handle;
 	NTSTATUS status = NtCreateEvent(&handle, NULL, SynchronizationEvent, false);
 
-	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Creating waitable");
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Creating waitable");
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
 	NTSTATUS status = NtClose((HANDLE)handle);
-	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing waitable");
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Freeing waitable");
 }
 
 void Waitable_Signal(void* handle) { 

@@ -369,8 +369,8 @@ static ATOM DoRegisterClass(void) {
 		res = GetLastError();
 	}
 	
-	Logger_Abort2(res, "Failed to register window class");
-	return NULL;
+	Process_Abort2(res, "Failed to register window class");
+	return (ATOM)0;
 }
 
 static HWND CreateWindowHandle(ATOM atom, int width, int height) {
@@ -394,7 +394,7 @@ static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return hwnd;
 		res = GetLastError();
 	}
-	Logger_Abort2(res, "Failed to create window");
+	Process_Abort2(res, "Failed to create window");
 	return NULL;
 }
 
@@ -413,7 +413,7 @@ static void DoCreateWindow(int width, int height) {
 	RefreshWindowPosition();
 
 	win_DC = GetDC(hwnd);
-	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
+	if (!win_DC) Process_Abort2(GetLastError(), "Failed to get device context");
 
 	Window_Main.Exists     = true;
 	Window_Main.Handle.ptr = hwnd;
@@ -757,7 +757,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	hdr.bmiHeader.biPlanes   = 1; 
 
 	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->scan0, NULL, 0);
-	if (!draw_DIB) Logger_Abort2(GetLastError(), "Failed to create DIB");
+	if (!draw_DIB) Process_Abort2(GetLastError(), "Failed to create DIB");
 	bmp->width  = width;
 	bmp->height = height;
 }
@@ -843,7 +843,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.cAlphaBits = mode->A; /* TODO not needed? test on Intel */
 
 	modeIndex = ChoosePixelFormat(win_DC, &pfd);
-	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
+	if (modeIndex == 0) { Process_Abort("Requested graphics mode not available"); }
 
 	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -852,7 +852,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	/* TODO DescribePixelFormat might be unnecessary? */
 	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
 	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
-		Logger_Abort2(GetLastError(), "SetPixelFormat failed");
+		Process_Abort2(GetLastError(), "SetPixelFormat failed");
 	}
 }
 
@@ -866,11 +866,11 @@ void GLContext_Create(void) {
 
 	ctx_handle = wglCreateContext(win_DC);
 	if (!ctx_handle) {
-		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
+		Process_Abort2(GetLastError(), "Failed to create OpenGL context");
 	}
 
 	if (!wglMakeCurrent(win_DC, ctx_handle)) {
-		Logger_Abort2(GetLastError(), "Failed to make OpenGL context current");
+		Process_Abort2(GetLastError(), "Failed to make OpenGL context current");
 	}
 
 	ctx_DC = wglGetCurrentDC();
@@ -902,7 +902,7 @@ void* GLContext_GetAddress(const char* function) {
 }
 
 cc_bool GLContext_SwapBuffers(void) {
-	if (!SwapBuffers(ctx_DC)) Logger_Abort2(GetLastError(), "Failed to swap buffers");
+	if (!SwapBuffers(ctx_DC)) Process_Abort2(GetLastError(), "Failed to swap buffers");
 	return true;
 }
 

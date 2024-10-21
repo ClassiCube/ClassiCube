@@ -29,7 +29,7 @@ static int  Widget_MouseScroll(void* elem, float delta) { return false; }
 static void AddWidget(void* screen, void* w) {
 	struct Screen* s = (struct Screen*)screen;
 
-	if (s->numWidgets >= s->maxWidgets) Logger_Abort("Tried to add too many widgets to screen");
+	if (s->numWidgets >= s->maxWidgets) Process_Abort("Tried to add too many widgets to screen");
 	s->widgets[s->numWidgets++] = (struct Widget*)w;
 }
 

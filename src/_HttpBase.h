@@ -68,7 +68,7 @@ static void RequestList_Append(struct RequestList* list, struct HttpRequest* ite
 
 /* Removes the request at the given index */
 static void RequestList_RemoveAt(struct RequestList* list, int i) {
-	if (i < 0 || i >= list->count) Logger_Abort("Tried to remove element at list end");
+	if (i < 0 || i >= list->count) Process_Abort("Tried to remove element at list end");
 
 	for (; i < list->count - 1; i++) 
 	{

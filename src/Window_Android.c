@@ -519,7 +519,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 	/* Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 	res  = ANativeWindow_lock(win_handle, &buffer, &b);
-	if (res) Logger_Abort2(res, "Locking window pixels");
+	if (res) Process_Abort2(res, "Locking window pixels");
 	/* Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 
 	/* In some rare cases, the returned locked region will be entire area of the surface */
@@ -537,7 +537,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		Mem_Copy(dst + y * buffer.stride, src + y * bmp->width, size);
 	}
 	res = ANativeWindow_unlockAndPost(win_handle);
-	if (res) Logger_Abort2(res, "Unlocking window pixels");
+	if (res) Process_Abort2(res, "Unlocking window pixels");
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {

@@ -23,7 +23,7 @@ CC_NOINLINE static void AbortOnAllocFailed(const char* place) {
 
 	String_Format1(&log, "Out of memory! (when allocating %c)", place);
 	log.buffer[log.length] = '\0';
-	Logger_Abort(log.buffer);
+	Process_Abort(log.buffer);
 }
 
 void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
@@ -121,7 +121,7 @@ int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end) {
 }
 
 static CC_INLINE void SocketAddr_Set(cc_sockaddr* addr, const void* src, unsigned srcLen) {
-	if (srcLen > CC_SOCKETADDR_MAXSIZE) Logger_Abort("Attempted to copy too large socket");
+	if (srcLen > CC_SOCKETADDR_MAXSIZE) Process_Abort("Attempted to copy too large socket");
 
 	Mem_Copy(addr->data, src, srcLen);
 	addr->size = srcLen;

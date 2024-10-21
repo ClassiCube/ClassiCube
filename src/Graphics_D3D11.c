@@ -69,7 +69,7 @@ static void CreateDeviceAndSwapChain(void) {
 	hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
 			createFlags, NULL, 0, D3D11_SDK_VERSION,
 			&device, &fl, &context);
-	if (hr) Logger_Abort2(hr, "Failed to create D3D11 device");
+	if (hr) Process_Abort2(hr, "Failed to create D3D11 device");
 
 	Gfx.MaxTexWidth  = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
 	Gfx.MaxTexHeight = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
@@ -84,19 +84,19 @@ static void CreateDeviceAndSwapChain(void) {
 
 	IDXGIDevice* dxgi_device = NULL;
 	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, &dxgi_device);
-	if (FAILED(hr)) Logger_Abort2(hr, "Querying DXGI device");
+	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI device");
 
 	IDXGIAdapter* dxgi_adapter = NULL;
 	hr = IDXGIDevice_GetAdapter(dxgi_device , &dxgi_adapter);
-	if (FAILED(hr)) Logger_Abort2(hr, "Querying DXGI adapter");
+	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI adapter");
 
 	IDXGIFactory2* dxgi_factory2 = NULL;
 	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory2, &dxgi_factory2);
-	if (FAILED(hr)) Logger_Abort2(hr, "Querying DXGI factory");
+	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI factory");
 
 	void* window = Window_Main.Handle.ptr;
 	hr = IDXGIFactory2_CreateSwapChainForCoreWindow(dxgi_factory2, device, window, &desc, NULL, &swapchain);
-	if (FAILED(hr)) Logger_Abort2(hr, "Creating swap chain");
+	if (FAILED(hr)) Process_Abort2(hr, "Creating swap chain");
 }
 #else
 static PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN _D3D11CreateDeviceAndSwapChain;
@@ -135,7 +135,7 @@ static void CreateDeviceAndSwapChain(void) {
 	hr = _D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
 			createFlags, NULL, 0, D3D11_SDK_VERSION,
 			&desc, &swapchain, &device, &fl, &context);
-	if (hr) Logger_Abort2(hr, "Failed to create D3D11 device");
+	if (hr) Process_Abort2(hr, "Failed to create D3D11 device");
 
 	// The fog calculation requires reading Z/W of fragment position (SV_POSITION) in pixel shader,
 	//  unfortunately this is unsupported in Direct3d9 (https://docs.microsoft.com/en-us/windows/uwp/gaming/glsl-to-hlsl-reference)
@@ -293,12 +293,12 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 			if (!Game_ReduceVRAM()) return 0;
 		} else {
 			// unknown issue, so don't even try to handle the error
-			Logger_Abort2(hr, "Failed to create texture");
+			Process_Abort2(hr, "Failed to create texture");
 		}
 	}
 
 	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
-	if (hr) Logger_Abort2(hr, "Failed to create view");
+	if (hr) Process_Abort2(hr, "Failed to create view");
 
 	if (mipmaps) Gfx_UpdateTexture(view, 0, 0, bmp, rowWidth, mipmaps);
 	return view;
@@ -361,7 +361,7 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	data.SysMemSlicePitch = 0;
 
 	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &buffer);
-	if (hr) Logger_Abort2(hr, "Failed to create index buffer");
+	if (hr) Process_Abort2(hr, "Failed to create index buffer");
 	return buffer;
 }
 
@@ -386,7 +386,7 @@ static ID3D11Buffer* CreateVertexBuffer(VertexFormat fmt, int count, cc_bool dyn
 	/* TODO set data initially */
 
 	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, NULL, &buffer);
-	if (hr) Logger_Abort2(hr, "Failed to create vertex buffer");
+	if (hr) Process_Abort2(hr, "Failed to create vertex buffer");
 	return buffer;
 }
 
@@ -434,7 +434,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	mapDesc.pData = NULL;
 
 	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
-	if (hr) Logger_Abort2(hr, "Failed to lock dynamic VB");
+	if (hr) Process_Abort2(hr, "Failed to lock dynamic VB");
 	return mapDesc.pData;
 }
 
@@ -591,7 +591,7 @@ static void VS_CreateShaders(void) {
 	for (int i = 0; i < Array_Elems(vs_shaders); i++)
 	{
 		HRESULT hr = ID3D11Device_CreateVertexShader(device, vs_descs[i].data, vs_descs[i].len, NULL, &vs_shaders[i]);
-		if (hr) Logger_Abort2(hr, "Failed to compile vertex shader");
+		if (hr) Process_Abort2(hr, "Failed to compile vertex shader");
 	}
 }
 
@@ -790,7 +790,7 @@ static void PS_CreateShaders(void) {
 	for (int i = 0; i < Array_Elems(ps_shaders); i++) 
 	{
 		HRESULT hr = ID3D11Device_CreatePixelShader(device, ps_descs[i].data, ps_descs[i].len, NULL, &ps_shaders[i]);
-		if (hr) Logger_Abort2(hr, "Failed to compile pixel shader");
+		if (hr) Process_Abort2(hr, "Failed to compile pixel shader");
 	}
 }
 
@@ -983,20 +983,20 @@ static void OM_InitTargets(void) {
 	HRESULT hr;
 
 	hr = IDXGISwapChain_GetBuffer(swapchain, 0, &guid_ID3D11Texture2D, (void**)&pBackBuffer);
-	if (hr) Logger_Abort2(hr, "Failed to get swapchain backbuffer");
+	if (hr) Process_Abort2(hr, "Failed to get swapchain backbuffer");
 
 	hr = ID3D11Device_CreateRenderTargetView(device, pBackBuffer, NULL, &backbuffer);
-	if (hr) Logger_Abort2(hr, "Failed to create render target");
+	if (hr) Process_Abort2(hr, "Failed to create render target");
 
 	ID3D11Texture2D_GetDesc(pBackBuffer, &desc);
     desc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
     desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
     hr = ID3D11Device_CreateTexture2D(device, &desc, NULL, &depthbuffer);
-	if (hr) Logger_Abort2(hr, "Failed to create depthbuffer texture");
+	if (hr) Process_Abort2(hr, "Failed to create depthbuffer texture");
 
 	hr = ID3D11Device_CreateDepthStencilView(device, depthbuffer, NULL, &depthbufferView);
-	if (hr) Logger_Abort2(hr, "Failed to create depthbuffer view");
+	if (hr) Process_Abort2(hr, "Failed to create depthbuffer view");
 
 	ID3D11Texture2D_Release(pBackBuffer);
 	OM_UpdateTarget();
@@ -1013,7 +1013,7 @@ static void OM_CreateDepthStates(void) {
 		desc.DepthWriteMask = (i & 2) != 0;
 
 		hr = ID3D11Device_CreateDepthStencilState(device, &desc, &om_depthStates[i]);
-		if (hr) Logger_Abort2(hr, "Failed to create depth state");
+		if (hr) Process_Abort2(hr, "Failed to create depth state");
 	}
 }
 
@@ -1052,7 +1052,7 @@ static void OM_CreateBlendStates(void) {
 		desc.RenderTarget[0].BlendEnable           = (i & 0x10) != 0;
 
 		hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[i]);
-		if (hr) Logger_Abort2(hr, "Failed to create blend state");
+		if (hr) Process_Abort2(hr, "Failed to create blend state");
 	}
 }
 
@@ -1197,7 +1197,7 @@ void Gfx_EndFrame(void) {
 	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
 		Gfx_LoseContext(" (Direct3D11 device lost)");
 	} else if (hr) {
-		Logger_Abort2(hr, "Failed to swap buffers");
+		Process_Abort2(hr, "Failed to swap buffers");
 	}
 }
 
@@ -1247,7 +1247,7 @@ void Gfx_OnWindowResize(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi#handling-window-resizing
 	OM_FreeTargets();
 	HRESULT hr = IDXGISwapChain_ResizeBuffers(swapchain, 0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
-	if (hr) Logger_Abort2(hr, "Failed to resize swapchain");
+	if (hr) Process_Abort2(hr, "Failed to resize swapchain");
 
 	OM_InitTargets();
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);

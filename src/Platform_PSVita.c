@@ -68,6 +68,16 @@ cc_uint64 Stopwatch_Measure(void) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("ux0:data/ClassiCube/");
@@ -217,29 +227,29 @@ void Thread_Join(void* handle) {
 void* Mutex_Create(const char* name) {
 	SceKernelLwMutexWork* ptr = (SceKernelLwMutexWork*)Mem_Alloc(1, sizeof(SceKernelLwMutexWork), "mutex");
 	int res = sceKernelCreateLwMutex(ptr, name, 0, 0, NULL);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int res = sceKernelDeleteLwMutex((SceKernelLwMutexWork*)handle);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	int res = sceKernelLockLwMutex((SceKernelLwMutexWork*)handle, 1, NULL);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int res = sceKernelUnlockLwMutex((SceKernelLwMutexWork*)handle, 1);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
 	int evid = sceKernelCreateEventFlag(name, SCE_EVENT_WAITMULTIPLE, 0, NULL);
-	if (evid < 0) Logger_Abort2(evid, "Creating waitable");
+	if (evid < 0) Process_Abort2(evid, "Creating waitable");
 	return (void*)evid;
 }
 
@@ -249,20 +259,20 @@ void Waitable_Free(void* handle) {
 
 void Waitable_Signal(void* handle) {
 	int res = sceKernelSetEventFlag((int)handle, 0x1);
-	if (res < 0) Logger_Abort2(res, "Signalling event");
+	if (res < 0) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	unsigned int match;
 	int res = sceKernelWaitEventFlag((int)handle, 0x1, SCE_EVENT_WAITAND | SCE_EVENT_WAITCLEAR, &match, NULL);
-	if (res < 0) Logger_Abort2(res, "Event wait");
+	if (res < 0) Process_Abort2(res, "Event wait");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	SceUInt timeout = milliseconds * 1000;
 	unsigned int match;
 	int res = sceKernelWaitEventFlag((int)handle, 0x1, SCE_EVENT_WAITAND | SCE_EVENT_WAITCLEAR, &match, &timeout);
-	if (res < 0) Logger_Abort2(res, "Event timed wait");
+	if (res < 0) Process_Abort2(res, "Event timed wait");
 }
 
 

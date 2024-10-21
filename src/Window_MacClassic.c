@@ -447,10 +447,10 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	}
 
 	QDErr err = NewGWorld(&fb_world, 32, &win->portRect, 0, 0, 0);
-	if (err != noErr) Logger_Abort2(err, "Failed to allocate GWorld");
+	if (err != noErr) Process_Abort2(err, "Failed to allocate GWorld");
 	
 	fb_pixmap = GetGWorldPixMap(fb_world);
-	if (!fb_pixmap) Logger_Abort("Failed to allocate pixmap");
+	if (!fb_pixmap) Process_Abort("Failed to allocate pixmap");
 
 	LockPixels(fb_pixmap);
 	int stride = (*fb_pixmap)->rowBytes & 0x3FFF;

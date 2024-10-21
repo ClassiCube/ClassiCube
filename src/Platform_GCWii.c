@@ -110,6 +110,16 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static char root_buffer[NATIVE_STR_LEN];
@@ -249,7 +259,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	*handle = thread;
 	
 	int res = LWP_CreateThread(thread, ExecThread, (void*)func, NULL, stackSize, 80);
-	if (res) Logger_Abort2(res, "Creating thread");
+	if (res) Process_Abort2(res, "Creating thread");
 }
 
 void Thread_Detach(void* handle) {
@@ -261,34 +271,34 @@ void Thread_Detach(void* handle) {
 void Thread_Join(void* handle) {
 	lwp_t* ptr = (lwp_t*)handle;
 	int res = LWP_JoinThread(*ptr, NULL);
-	if (res) Logger_Abort2(res, "Joining thread");
+	if (res) Process_Abort2(res, "Joining thread");
 	Mem_Free(ptr);
 }
 
 void* Mutex_Create(const char* name) {
 	mutex_t* ptr = (mutex_t*)Mem_Alloc(1, sizeof(mutex_t), "mutex");
 	int res = LWP_MutexInit(ptr, false);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	mutex_t* mutex = (mutex_t*)handle;
 	int res = LWP_MutexDestroy(*mutex);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	mutex_t* mutex = (mutex_t*)handle;
 	int res = LWP_MutexLock(*mutex);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	mutex_t* mutex = (mutex_t*)handle;
 	int res = LWP_MutexUnlock(*mutex);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 // should really use a semaphore with max 1.. too bad no 'TimedWait' though
@@ -303,9 +313,9 @@ void* Waitable_Create(const char* name) {
 	int res;
 	
 	res = LWP_CondInit(&ptr->cond);
-	if (res) Logger_Abort2(res, "Creating waitable");
+	if (res) Process_Abort2(res, "Creating waitable");
 	res = LWP_MutexInit(&ptr->mutex, false);
-	if (res) Logger_Abort2(res, "Creating waitable mutex");
+	if (res) Process_Abort2(res, "Creating waitable mutex");
 
 	ptr->signalled = false;
 	return ptr;
@@ -316,9 +326,9 @@ void Waitable_Free(void* handle) {
 	int res;
 	
 	res = LWP_CondDestroy(ptr->cond);
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res) Process_Abort2(res, "Destroying waitable");
 	res = LWP_MutexDestroy(ptr->mutex);
-	if (res) Logger_Abort2(res, "Destroying waitable mutex");
+	if (res) Process_Abort2(res, "Destroying waitable mutex");
 	Mem_Free(handle);
 }
 
@@ -331,7 +341,7 @@ void Waitable_Signal(void* handle) {
 	Mutex_Unlock(&ptr->mutex);
 
 	res = LWP_CondSignal(ptr->cond);
-	if (res) Logger_Abort2(res, "Signalling event");
+	if (res) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
@@ -341,7 +351,7 @@ void Waitable_Wait(void* handle) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = LWP_CondWait(ptr->cond, ptr->mutex);
-		if (res) Logger_Abort2(res, "Waitable wait");
+		if (res) Process_Abort2(res, "Waitable wait");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -358,7 +368,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = LWP_CondTimedWait(ptr->cond, ptr->mutex, &ts);
-		if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+		if (res && res != ETIMEDOUT) Process_Abort2(res, "Waitable wait for");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);

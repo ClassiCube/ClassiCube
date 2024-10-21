@@ -810,11 +810,11 @@ void GLContext_Create(void) {
 		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
 		fmt = MakePixelFormat(false);
 	}
-	if (!fmt) Logger_Abort("Choosing pixel format");
+	if (!fmt) Process_Abort("Choosing pixel format");
 
 	ctxHandle = [NSOpenGLContext alloc];
 	ctxHandle = [ctxHandle initWithFormat:fmt shareContext:Nil];
-	if (!ctxHandle) Logger_Abort("Failed to create OpenGL context");
+	if (!ctxHandle) Process_Abort("Failed to create OpenGL context");
 
 	[ctxHandle setView:viewHandle];
 	[fmt release];

@@ -159,7 +159,7 @@ void LScreen_AddWidget(void* screen, void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
 
 	if (s->numWidgets >= s->maxWidgets)
-		Logger_Abort("Can't add anymore widgets to this LScreen");
+		Process_Abort("Can't add anymore widgets to this LScreen");
 	s->widgets[s->numWidgets++] = w;
 }
 

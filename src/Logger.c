@@ -31,7 +31,7 @@
 	#include <signal.h>
 	/* These operating systems don't provide sys/ucontext.h */
 	/*  But register constants be found from includes in <signal.h> */
-	#elif defined CC_BUILD_OS2
+#elif defined CC_BUILD_OS2
 	#include <signal.h>
 	#include <386/ucontext.h>
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
@@ -50,8 +50,6 @@
 #endif
 /* Only show up to 50 frames in backtrace */
 #define MAX_BACKTRACE_FRAMES 50
-
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
 
 
 /*########################################################################################################################*
@@ -1089,54 +1087,9 @@ static void DumpMisc(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------Unhandled error logging------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-static const char* ExceptionDescribe(cc_uint32 code) {
-	switch (code) {
-	case EXCEPTION_ACCESS_VIOLATION:    return "ACCESS_VIOLATION";
-	case EXCEPTION_ILLEGAL_INSTRUCTION: return "ILLEGAL_INSTRUCTION";
-	case EXCEPTION_INT_DIVIDE_BY_ZERO:  return "DIVIDE_BY_ZERO";
-	}
-	return NULL;
-}
-
-static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
-	cc_string msg; char msgBuffer[128 + 1];
-	const char* desc;
-	cc_uint32 code;
-	cc_uintptr addr;
-	DWORD i, numArgs;
-
-	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
-	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
-	desc = ExceptionDescribe(code);
-
-	String_InitArray_NT(msg, msgBuffer);
-	if (desc) {
-		String_Format2(&msg, "Unhandled %c error at %x", desc, &addr);
-	} else {
-		String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
-	}
-
-	numArgs = info->ExceptionRecord->NumberParameters;
-	if (numArgs) {
-		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
-		String_AppendConst(&msg, " [");
-
-		for (i = 0; i < numArgs; i++) {
-			String_Format1(&msg, "0x%x,", &info->ExceptionRecord->ExceptionInformation[i]);
-		}
-		String_Append(&msg, ']');
-	}
-
-	msg.buffer[msg.length] = '\0';
-	AbortCommon(0, msg.buffer, info->ContextRecord);
-	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
-}
-
+#if defined CC_BUILD_WIN && !defined CC_BUILD_UWP
 void Logger_Hook(void) {
 	OSVERSIONINFOA osInfo;
-	SetUnhandledExceptionFilter(UnhandledFilter);
-#if !defined CC_BUILD_UWP
 	ImageHlp_LoadDynamicFuncs();
 
 	/* Windows 9x requires process IDs instead - see old DBGHELP docs */
@@ -1148,120 +1101,9 @@ void Logger_Hook(void) {
 	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
 		curProcess = (HANDLE)((cc_uintptr)GetCurrentProcessId());
 	}
-#endif
-}
-#elif defined CC_BUILD_POSIX
-static const char* SignalDescribe(int type) {
-	switch (type) {
-	case SIGSEGV: return "SIGSEGV";
-	case SIGBUS:  return "SIGBUS";
-	case SIGILL:  return "SIGILL";
-	case SIGABRT: return "SIGABRT";
-	case SIGFPE:  return "SIGFPE";
-	}
-	return NULL;
-}
-
-static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
-	cc_string msg; char msgBuffer[128 + 1];
-	const char* desc;
-	int type, code;
-	cc_uintptr addr;
-
-	/* Uninstall handler to avoid chance of infinite loop */
-	signal(SIGSEGV, SIG_DFL);
-	signal(SIGBUS,  SIG_DFL);
-	signal(SIGILL,  SIG_DFL);
-	signal(SIGABRT, SIG_DFL);
-	signal(SIGFPE,  SIG_DFL);
-
-	type = info->si_signo;
-	code = info->si_code;
-	addr = (cc_uintptr)info->si_addr;
-	desc = SignalDescribe(type);
-
-	String_InitArray_NT(msg, msgBuffer);
-	if (desc) {
-		String_Format3(&msg, "Unhandled signal %c (code %i) at %x", desc,  &code, &addr);
-	} else {
-		String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
-	}
-	msg.buffer[msg.length] = '\0';
-
-	#if defined CC_BUILD_ANDROID
-	/* deliberate Dalvik VM abort, try to log a nicer error for this */
-	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
-	#endif
-	AbortCommon(0, msg.buffer, ctx);
-}
-
-void Logger_Hook(void) {
-	struct sigaction sa, old;
-	sa.sa_sigaction = SignalHandler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART | SA_SIGINFO;
-
-	sigaction(SIGSEGV, &sa, &old);
-	sigaction(SIGBUS,  &sa, &old);
-	sigaction(SIGILL,  &sa, &old);
-	sigaction(SIGABRT, &sa, &old);
-	sigaction(SIGFPE,  &sa, &old);
 }
 #else
-void Logger_Hook(void) {
-	/* TODO can signals be supported somehow for PSP/3DS? */
-}
-#endif
-
-
-/*########################################################################################################################*
-*-------------------------------------------------Deliberate crash logging------------------------------------------------*
-*#########################################################################################################################*/
-#if defined CC_BUILD_UWP
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-	AbortCommon(result, raw_msg, NULL);
-}
-#elif defined CC_BUILD_WIN
-#if __GNUC__
-/* Don't want compiler doing anything fancy with registers */
-void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char* raw_msg) {
-#else
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-#endif
-	CONTEXT ctx;
-	CONTEXT* ctx_ptr;
-	#if _M_IX86 && __GNUC__
-	/* Stack frame layout on x86: */
-	/*  [ebp] is previous frame's EBP */
-	/*  [ebp+4] is previous frame's EIP (return address) */
-	/*  address of [ebp+8] is previous frame's ESP */
-	__asm__(
-		"mov 0(%%ebp), %%eax \n\t" /* mov eax, [ebp]     */
-		"mov %%eax, %0       \n\t" /* mov [ctx.Ebp], eax */
-		"mov 4(%%ebp), %%eax \n\t" /* mov eax, [ebp+4]   */
-		"mov %%eax, %1       \n\t" /* mov [ctx.Eip], eax */
-		"lea 8(%%ebp), %%eax \n\t" /* lea eax, [ebp+8]   */
-		"mov %%eax, %2"            /* mov [ctx.Esp], eax */
-		: "=m" (ctx.Ebp), "=m" (ctx.Eip), "=m" (ctx.Esp)
-		:
-		: "eax", "memory"
-	);
-	ctx.ContextFlags = CONTEXT_CONTROL;
-	ctx_ptr = &ctx;
-	#else
-	/* This method is guaranteed to exist on 64 bit windows. */
-	/* NOTE: This is missing in 32 bit Windows 2000 however  */
-	if (_RtlCaptureContext) {
-		_RtlCaptureContext(&ctx);
-		ctx_ptr = &ctx;
-	} else { ctx_ptr = NULL; }
-	#endif
-	AbortCommon(result, raw_msg, ctx_ptr);
-}
-#else
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-	AbortCommon(result, raw_msg, NULL);
-}
+void Logger_Hook(void) { }
 #endif
 
 
@@ -1321,7 +1163,7 @@ static void CloseLogFile(void) {
 	#define GFX_BACKEND " (Unknown)"
 #endif
 
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
+void Logger_DoAbort(cc_result result, const char* raw_msg, void* ctx) {
 	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
 	cc_string msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
@@ -1356,8 +1198,6 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	Window_ShowDialog("We're sorry", msg.buffer);
 	Process_Exit(result);
 }
-
-void Logger_Abort(const char* raw_msg) { Logger_Abort2(0, raw_msg); }
 
 void Logger_FailToStart(const char* raw_msg) {
 	cc_string msg = String_FromReadonly(raw_msg);

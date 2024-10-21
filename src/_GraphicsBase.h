@@ -431,7 +431,7 @@ GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flag
 		/* Texture is being deliberately created and can be successfully created */
 		/* with non power of two dimensions. Typically used for UI textures */
 	} else if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
+		Process_Abort("Textures must have power of two dimensions");
 	}
 
 	if (Gfx.LostContext) return 0;
@@ -471,7 +471,7 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	{
 		if ((vb = Gfx_AllocStaticVb(fmt, count))) return vb;
 
-		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating static VB)");
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (allocating static VB)");
 	}
 }
 
@@ -483,7 +483,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	{
 		if ((vb = Gfx_AllocDynamicVb(fmt, maxVertices))) return vb;
 
-		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating dynamic VB)");
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (allocating dynamic VB)");
 	}
 }
 

@@ -662,7 +662,7 @@ static cc_uint16* gfx_indices;
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	if (!gfx_indices) {
 		gfx_indices = linearAlloc(count * sizeof(cc_uint16));
-		if (!gfx_indices) Logger_Abort("Failed to allocate memory for index buffer");
+		if (!gfx_indices) Process_Abort("Failed to allocate memory for index buffer");
 	}
 
 	fillFunc(gfx_indices, count, obj);

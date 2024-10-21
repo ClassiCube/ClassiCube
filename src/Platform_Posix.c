@@ -192,6 +192,71 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+static const char* SignalDescribe(int type) {
+	switch (type) {
+	case SIGSEGV: return "SIGSEGV";
+	case SIGBUS:  return "SIGBUS";
+	case SIGILL:  return "SIGILL";
+	case SIGABRT: return "SIGABRT";
+	case SIGFPE:  return "SIGFPE";
+	}
+	return NULL;
+}
+
+static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
+	cc_string msg; char msgBuffer[128 + 1];
+	const char* desc;
+	int type, code;
+	cc_uintptr addr;
+
+	/* Uninstall handler to avoid chance of infinite loop */
+	signal(SIGSEGV, SIG_DFL);
+	signal(SIGBUS,  SIG_DFL);
+	signal(SIGILL,  SIG_DFL);
+	signal(SIGABRT, SIG_DFL);
+	signal(SIGFPE,  SIG_DFL);
+
+	type = info->si_signo;
+	code = info->si_code;
+	addr = (cc_uintptr)info->si_addr;
+	desc = SignalDescribe(type);
+
+	String_InitArray_NT(msg, msgBuffer);
+	if (desc) {
+		String_Format3(&msg, "Unhandled signal %c (code %i) at %x", desc,  &code, &addr);
+	} else {
+		String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
+	}
+	msg.buffer[msg.length] = '\0';
+
+	#if defined CC_BUILD_ANDROID
+	/* deliberate Dalvik VM abort, try to log a nicer error for this */
+	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
+	#endif
+	Logger_DoAbort(0, msg.buffer, ctx);
+}
+
+void CrashHandler_Install(void) {
+	struct sigaction sa, old;
+	sa.sa_sigaction = SignalHandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_SIGINFO;
+
+	sigaction(SIGSEGV, &sa, &old);
+	sigaction(SIGBUS,  &sa, &old);
+	sigaction(SIGILL,  &sa, &old);
+	sigaction(SIGABRT, &sa, &old);
+	sigaction(SIGFPE,  &sa, &old);
+}
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
@@ -359,7 +424,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	pthread_attr_setstacksize(&attrs, stackSize);
 	
 	res = pthread_create(ptr, &attrs, ExecThread, (void*)func);
-	if (res) Logger_Abort2(res, "Creating thread");
+	if (res) Process_Abort2(res, "Creating thread");
 	pthread_attr_destroy(&attrs);
 	
 #if defined CC_BUILD_LINUX || defined CC_BUILD_HAIKU
@@ -376,38 +441,38 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 void Thread_Detach(void* handle) {
 	pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_detach(*ptr);
-	if (res) Logger_Abort2(res, "Detaching thread");
+	if (res) Process_Abort2(res, "Detaching thread");
 	Mem_Free(ptr);
 }
 
 void Thread_Join(void* handle) {
 	pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_join(*ptr, NULL);
-	if (res) Logger_Abort2(res, "Joining thread");
+	if (res) Process_Abort2(res, "Joining thread");
 	Mem_Free(ptr);
 }
 
 void* Mutex_Create(const char* name) {
 	pthread_mutex_t* ptr = (pthread_mutex_t*)Mem_Alloc(1, sizeof(pthread_mutex_t), "mutex");
 	int res = pthread_mutex_init(ptr, NULL);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int res = pthread_mutex_destroy((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	int res = pthread_mutex_lock((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int res = pthread_mutex_unlock((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 struct WaitData {
@@ -421,9 +486,9 @@ void* Waitable_Create(const char* name) {
 	int res;
 	
 	res = pthread_cond_init(&ptr->cond, NULL);
-	if (res) Logger_Abort2(res, "Creating waitable");
+	if (res) Process_Abort2(res, "Creating waitable");
 	res = pthread_mutex_init(&ptr->mutex, NULL);
-	if (res) Logger_Abort2(res, "Creating waitable mutex");
+	if (res) Process_Abort2(res, "Creating waitable mutex");
 
 	ptr->signalled = false;
 	return ptr;
@@ -434,9 +499,9 @@ void Waitable_Free(void* handle) {
 	int res;
 	
 	res = pthread_cond_destroy(&ptr->cond);
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res) Process_Abort2(res, "Destroying waitable");
 	res = pthread_mutex_destroy(&ptr->mutex);
-	if (res) Logger_Abort2(res, "Destroying waitable mutex");
+	if (res) Process_Abort2(res, "Destroying waitable mutex");
 	Mem_Free(handle);
 }
 
@@ -449,7 +514,7 @@ void Waitable_Signal(void* handle) {
 	Mutex_Unlock(&ptr->mutex);
 
 	res = pthread_cond_signal(&ptr->cond);
-	if (res) Logger_Abort2(res, "Signalling event");
+	if (res) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
@@ -459,7 +524,7 @@ void Waitable_Wait(void* handle) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = pthread_cond_wait(&ptr->cond, &ptr->mutex);
-		if (res) Logger_Abort2(res, "Waitable wait");
+		if (res) Process_Abort2(res, "Waitable wait");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -485,7 +550,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &ts);
-		if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+		if (res && res != ETIMEDOUT) Process_Abort2(res, "Waitable wait for");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -1561,7 +1626,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	{
 		/* -d[directory] argument used to change directory data is stored in */
 		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
-			Logger_Abort("-d argument no longer supported - cd to desired working directory instead");
+			Process_Abort("-d argument no longer supported - cd to desired working directory instead");
 			continue;
 		}
 		args[i] = String_FromReadonly(argv[i]);

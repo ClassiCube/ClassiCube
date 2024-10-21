@@ -130,6 +130,16 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("mass:/ClassiCube/");
@@ -285,11 +295,11 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	thread.initial_priority = 18;
 	
 	int thdID = CreateThread(&thread);
-	if (thdID < 0) Logger_Abort2(thdID, "Creating thread");
+	if (thdID < 0) Process_Abort2(thdID, "Creating thread");
 	*handle = (void*)thdID;
 	
 	int res = StartThread(thdID, (void*)func);
-	if (res < 0) Logger_Abort2(res, "Running thread");
+	if (res < 0) Process_Abort2(res, "Running thread");
 }
 
 void Thread_Detach(void* handle) {
@@ -303,7 +313,7 @@ void Thread_Join(void* handle) {
 	for (;;)
 	{
 		int res = ReferThreadStatus(thdID, &info);
-		if (res) Logger_Abort("Checking thread status");
+		if (res) Process_Abort("Checking thread status");
 		
 		if (info.status == THS_DORMANT) break;
 		Thread_Sleep(10); // TODO better solution
@@ -316,7 +326,7 @@ void* Mutex_Create(const char* name) {
 	sema.max_count  = 1;
 	
 	int semID = CreateSema(&sema);
-	if (semID < 0) Logger_Abort2(semID, "Creating mutex");
+	if (semID < 0) Process_Abort2(semID, "Creating mutex");
 	return (void*)semID;
 }
 
@@ -324,21 +334,21 @@ void Mutex_Free(void* handle) {
 	int semID = (int)handle;
 	int res   = DeleteSema(semID);
 	
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 }
 
 void Mutex_Lock(void* handle) {
 	int semID = (int)handle;
 	int res   = WaitSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Locking mutex");
+	if (res < 0) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int semID = (int)handle;
 	int res   = SignalSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Unlocking mutex");
+	if (res < 0) Process_Abort2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
@@ -347,7 +357,7 @@ void* Waitable_Create(const char* name) {
 	sema.max_count  = 1;
 	
 	int semID = CreateSema(&sema);
-	if (semID < 0) Logger_Abort2(semID, "Creating waitable");
+	if (semID < 0) Process_Abort2(semID, "Creating waitable");
 	return (void*)semID;
 }
 
@@ -355,25 +365,25 @@ void Waitable_Free(void* handle) {
 	int semID = (int)handle;
 	int res   = DeleteSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Destroying waitable");
+	if (res < 0) Process_Abort2(res, "Destroying waitable");
 }
 
 void Waitable_Signal(void* handle) {
 	int semID = (int)handle;
 	int res   = SignalSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Signalling event");
+	if (res < 0) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	int semID = (int)handle;
 	int res   = WaitSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Signalling event");
+	if (res < 0) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	Logger_Abort("Can't wait for");
+	Process_Abort("Can't wait for");
 	// TODO implement support
 }
 

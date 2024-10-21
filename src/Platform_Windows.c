@@ -175,6 +175,94 @@ cc_uint64 Stopwatch_Measure(void) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+static const char* ExceptionDescribe(cc_uint32 code) {
+	switch (code) {
+	case EXCEPTION_ACCESS_VIOLATION:    return "ACCESS_VIOLATION";
+	case EXCEPTION_ILLEGAL_INSTRUCTION: return "ILLEGAL_INSTRUCTION";
+	case EXCEPTION_INT_DIVIDE_BY_ZERO:  return "DIVIDE_BY_ZERO";
+	}
+	return NULL;
+}
+
+static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
+	cc_string msg; char msgBuffer[128 + 1];
+	const char* desc;
+	cc_uint32 code;
+	cc_uintptr addr;
+	DWORD i, numArgs;
+
+	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
+	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
+	desc = ExceptionDescribe(code);
+
+	String_InitArray_NT(msg, msgBuffer);
+	if (desc) {
+		String_Format2(&msg, "Unhandled %c error at %x", desc, &addr);
+	} else {
+		String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
+	}
+
+	numArgs = info->ExceptionRecord->NumberParameters;
+	if (numArgs) {
+		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
+		String_AppendConst(&msg, " [");
+
+		for (i = 0; i < numArgs; i++) {
+			String_Format1(&msg, "0x%x,", &info->ExceptionRecord->ExceptionInformation[i]);
+		}
+		String_Append(&msg, ']');
+	}
+
+	msg.buffer[msg.length] = '\0';
+	Logger_DoAbort(0, msg.buffer, info->ContextRecord);
+	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
+}
+
+void CrashHandler_Install(void) {
+	SetUnhandledExceptionFilter(UnhandledFilter);
+}
+
+#if __GNUC__
+/* Don't want compiler doing anything fancy with registers */
+void __attribute__((optimize("O0"))) Process_Abort2(cc_result result, const char* raw_msg) {
+#else
+void Process_Abort2(cc_result result, const char* raw_msg) {
+#endif
+	CONTEXT ctx;
+	CONTEXT* ctx_ptr;
+	#if _M_IX86 && __GNUC__
+	/* Stack frame layout on x86: */
+	/*  [ebp] is previous frame's EBP */
+	/*  [ebp+4] is previous frame's EIP (return address) */
+	/*  address of [ebp+8] is previous frame's ESP */
+	__asm__(
+		"mov 0(%%ebp), %%eax \n\t" /* mov eax, [ebp]     */
+		"mov %%eax, %0       \n\t" /* mov [ctx.Ebp], eax */
+		"mov 4(%%ebp), %%eax \n\t" /* mov eax, [ebp+4]   */
+		"mov %%eax, %1       \n\t" /* mov [ctx.Eip], eax */
+		"lea 8(%%ebp), %%eax \n\t" /* lea eax, [ebp+8]   */
+		"mov %%eax, %2"            /* mov [ctx.Esp], eax */
+		: "=m" (ctx.Ebp), "=m" (ctx.Eip), "=m" (ctx.Esp)
+		:
+		: "eax", "memory"
+	);
+	ctx.ContextFlags = CONTEXT_CONTROL;
+	ctx_ptr = &ctx;
+	#else
+	/* This method is guaranteed to exist on 64 bit windows. */
+	/* NOTE: This is missing in 32 bit Windows 2000 however  */
+	if (_RtlCaptureContext) {
+		_RtlCaptureContext(&ctx);
+		ctx_ptr = &ctx;
+	} else { ctx_ptr = NULL; }
+	#endif
+	Logger_DoAbort(result, raw_msg, ctx_ptr);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
@@ -334,7 +422,7 @@ static DWORD WINAPI ExecThread(void* param) {
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
 	HANDLE thread = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
+	if (!thread) Process_Abort2(GetLastError(), "Creating thread");
 	
 	*handle = thread;
 	ResumeThread(thread);
@@ -342,7 +430,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 
 void Thread_Detach(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing thread handle");
+		Process_Abort2(GetLastError(), "Freeing thread handle");
 	}
 }
 
@@ -367,14 +455,14 @@ void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle
 void* Waitable_Create(const char* name) {
 	void* handle = CreateEventA(NULL, false, false, NULL);
 	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating waitable");
+		Process_Abort2(GetLastError(), "Creating waitable");
 	}
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing waitable");
+		Process_Abort2(GetLastError(), "Freeing waitable");
 	}
 }
 
@@ -886,7 +974,7 @@ void Platform_EncodeString(cc_winstring* dst, const cc_string* src) {
 	cc_unichar* uni;
 	char* ansi;
 	int i;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+	if (src->length > FILENAME_SIZE) Process_Abort("String too long to expand");
 
 	uni = dst->uni;
 	for (i = 0; i < src->length; i++) 

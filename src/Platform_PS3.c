@@ -93,6 +93,16 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("/dev_hdd0/ClassiCube/");
@@ -235,13 +245,13 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	
 	int res = sysThreadCreate(thread, ExecThread, (void*)func,
 			0, stackSize, THREAD_JOINABLE, name);
-	if (res) Logger_Abort2(res, "Creating thread");
+	if (res) Process_Abort2(res, "Creating thread");
 }
 
 void Thread_Detach(void* handle) {
 	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)handle;
 	int res = sysThreadDetach(*thread);
-	if (res) Logger_Abort2(res, "Detaching thread");
+	if (res) Process_Abort2(res, "Detaching thread");
 	Mem_Free(thread);
 }
 
@@ -249,7 +259,7 @@ void Thread_Join(void* handle) {
 	u64 retVal;
 	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)handle;
 	int res = sysThreadJoin(*thread, &retVal);
-	if (res) Logger_Abort2(res, "Joining thread");
+	if (res) Process_Abort2(res, "Joining thread");
 	Mem_Free(thread);
 }
 
@@ -259,27 +269,27 @@ void* Mutex_Create(const char* name) {
 	
 	sys_mutex_t* mutex = (sys_mutex_t*)Mem_Alloc(1, sizeof(sys_mutex_t), "mutex");
 	int res = sysMutexCreate(mutex, &attr);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return mutex;
 }
 
 void Mutex_Free(void* handle) {
 	sys_mutex_t* mutex = (sys_mutex_t*)handle;
 	int res = sysMutexDestroy(*mutex);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(mutex);
 }
 
 void Mutex_Lock(void* handle) {
 	sys_mutex_t* mutex = (sys_mutex_t*)handle;
 	int res = sysMutexLock(*mutex, 0);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	sys_mutex_t* mutex = (sys_mutex_t*)handle;
 	int res = sysMutexUnlock(*mutex);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
@@ -289,7 +299,7 @@ void* Waitable_Create(const char* name) {
 	
 	sys_sem_t* sem = (sys_sem_t*)Mem_Alloc(1, sizeof(sys_sem_t), "waitable");
 	int res = sysSemCreate(sem, &attr, 0, 1000000);
-	if (res) Logger_Abort2(res, "Creating waitable");
+	if (res) Process_Abort2(res, "Creating waitable");
 	
 	return sem;
 }
@@ -298,26 +308,26 @@ void Waitable_Free(void* handle) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 
 	int res = sysSemDestroy(*sem);
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res) Process_Abort2(res, "Destroying waitable");
 	Mem_Free(sem);
 }
 
 void Waitable_Signal(void* handle) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 	int res = sysSemPost(*sem, 1);
-	if (res) Logger_Abort2(res, "Signalling event");
+	if (res) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 	int res = sysSemWait(*sem, 0);
-	if (res) Logger_Abort2(res, "Waitable wait");
+	if (res) Process_Abort2(res, "Waitable wait");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 	int res = sysSemWait(*sem, milliseconds * 1000);
-	if (res) Logger_Abort2(res, "Waitable wait for");
+	if (res) Process_Abort2(res, "Waitable wait for");
 }
 
 

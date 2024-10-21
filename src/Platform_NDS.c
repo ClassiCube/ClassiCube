@@ -114,7 +114,7 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Directory/File------------------------------------------------------*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
 static __attribute__((noreturn)) void CrashHandler(void) {
 	Console_Clear();
@@ -156,8 +156,12 @@ static __attribute__((noreturn)) void CrashHandler(void) {
 	for (;;) { }
 }
 
-static void InstallCrashHandler(void) {
+void CrashHandler_Install(void) { 
 	setExceptionHandler(CrashHandler);
+}
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -575,7 +579,6 @@ void Platform_Init(void) {
 #else
 	Platform_Log1("Running in %c mode with NDS wifi", dsiMode ? "DSi" : "DS");
 #endif
-	InstallCrashHandler();
 
 	InitFilesystem();
     InitNetworking();

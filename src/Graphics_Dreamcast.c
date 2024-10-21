@@ -59,7 +59,7 @@ static CC_INLINE void* CommandsList_Reserve(struct CommandsList* list, cc_uint32
 
 static void CommandsList_Append(struct CommandsList* list, const void* cmd) {
 	void* dst = CommandsList_Reserve(list, list->length + 1);
-	if (!dst) Logger_Abort("Out of memory");
+	if (!dst) Process_Abort("Out of memory");
 	
 	memcpy(dst, cmd, VERTEX_SIZE);
 	list->length++;
