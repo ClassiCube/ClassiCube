@@ -1,12 +1,12 @@
-AS=m68k-amiga-elf-as
-CC=m68k-amiga-elf-gcc
-CXX=m68k-amiga-elf-g++
+AS=m68k-amigaos-as
+CC=m68k-amigaos-gcc
+CXX=m68k-amigaos-g++
 
 CFLAGS		:=-O1 -fno-math-errno -DPLAT_AMIGA -DCC_BUILD_NOFPU
 TARGET		:= ClassiCube-68k
 BUILD_DIR 	:= build-amiga-68k
 SOURCE_DIR	:= src
-LDFLAGS		:= 
+LDFLAGS		:=
 
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_ASSEMS    := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.S, $(C_SOURCES))
@@ -20,13 +20,13 @@ DEPFILES := $(C_OBJECTS:%.o=%.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-default: $(BUILD_DIR) $(TARGET).elf
+default: $(BUILD_DIR) $(TARGET).exe
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(TARGET).elf: $(C_OBJECTS)
-	$(CC) $(LDFLAGS) -o $(TARGET).elf $(C_OBJECTS)
+$(TARGET).exe: $(C_OBJECTS)
+	$(CC) $(LDFLAGS) -o $(TARGET).exe $(C_OBJECTS)
 
 
 #---------------------------------------------------------------------------------

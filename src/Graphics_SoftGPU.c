@@ -457,7 +457,9 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			}
 
 			if (gfx_alphaTest && A < 0x80) continue;
-			if (gfx_alphaBlend) {
+			if (gfx_alphaBlend && A == 0)  continue;
+
+			if (gfx_alphaBlend && A != 255) {
 				BitmapCol dst = colorBuffer[cb_index];
 				int dstR = BitmapCol_R(dst);
 				int dstG = BitmapCol_G(dst);
