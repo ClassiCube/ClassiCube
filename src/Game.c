@@ -640,6 +640,8 @@ static CC_INLINE float ElapsedMilliseconds(cc_uint64 beg, cc_uint64 end) {
 	cc_uint64 elapsed = Stopwatch_ElapsedMicroseconds(beg, end);
 	if (elapsed > 5000000) elapsed = 5000000;
 	
+	/* Avoid uint64 / float division, as that typically gets implemented */
+	/* using a library function rather than a direct CPU instruction */
 	return (int)elapsed / 1000.0f;
 }
 

@@ -1005,6 +1005,7 @@ static int ChatScreen_ClampChatIndex(int index) {
 static void ChatScreen_ScrollChatBy(struct ChatScreen* s, int delta) {
 	int newIndex = ChatScreen_ClampChatIndex(s->chatIndex + delta);
 	delta = newIndex - s->chatIndex;
+	if (Game_PureClassic) return;
 
 	while (delta) {
 		if (delta < 0) {
