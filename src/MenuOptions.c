@@ -239,7 +239,7 @@ static int MenuOptionsScreen_AddButton(struct MenuOptionsScreen* s, const char* 
 
 static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, Widget_LeftClick backClick) {
 	struct ButtonWidget* btn;
-	int i, col, row, half = s->numButtons / 2;
+	int i, col, row, half = (s->numButtons + 1) / 2;
 	int begRow = 2 - half;
 	if (s->numButtons & 1) begRow--;
 	begRow = max(-3, begRow);
