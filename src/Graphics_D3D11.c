@@ -57,7 +57,7 @@ static void FreePipeline(void);
 #ifdef CC_BUILD_UWP
 static void LoadD3D11Library(void) { }
 
-static void CreateDeviceAndSwapChain(void) {
+static void CreateDevice(void) {
 	// https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
 	DWORD createFlags = 0;
 	D3D_FEATURE_LEVEL fl;
@@ -73,6 +73,10 @@ static void CreateDeviceAndSwapChain(void) {
 
 	Gfx.MaxTexWidth  = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
 	Gfx.MaxTexHeight = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
+}
+
+static void CreateSwapChain(void) {
+	HRESULT hr;
 
 	DXGI_SWAP_CHAIN_DESC1 desc = { 0 };
 	desc.BufferCount  = 2; // TODO 1??
@@ -99,11 +103,11 @@ static void CreateDeviceAndSwapChain(void) {
 	if (FAILED(hr)) Process_Abort2(hr, "Creating swap chain");
 }
 #else
-static PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN _D3D11CreateDeviceAndSwapChain;
+static PFN_D3D11_CREATE_DEVICE _D3D11CreateDevice;
 
 static void LoadD3D11Library(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(D3D11CreateDeviceAndSwapChain)
+		DynamicLib_Sym(D3D11CreateDevice)
 	};
 	static const cc_string path = String_FromConst("d3d11.dll");
 	void* lib;
@@ -113,7 +117,7 @@ static void LoadD3D11Library(void) {
 	Logger_FailToStart("Failed to load d3d11.dll. You may need to install Direct3D11.\n\nNOTE: Direct3D11 requires Windows 7 or later\nYou may need to use the Direct3D9 version instead.\n");
 }
 
-static void CreateDeviceAndSwapChain(void) {
+static void CreateDevice(void) {
 	// https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
 	DWORD createFlags = 0;
 	D3D_FEATURE_LEVEL fl;
@@ -122,19 +126,9 @@ static void CreateDeviceAndSwapChain(void) {
 	createFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	DXGI_SWAP_CHAIN_DESC desc = { 0 };
-	desc.BufferCount = 1;
-	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	// RefreshRate intentionally left at 0 so display's refresh rate is used
-	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.OutputWindow = Window_Main.Handle.ptr;
-	desc.SampleDesc.Count   = 1;
-	desc.SampleDesc.Quality = 0;
-	desc.Windowed           = TRUE;
-
-	hr = _D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
+	hr = _D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
 			createFlags, NULL, 0, D3D11_SDK_VERSION,
-			&desc, &swapchain, &device, &fl, &context);
+			&device, &fl, &context);
 	if (hr) Process_Abort2(hr, "Failed to create D3D11 device");
 
 	// The fog calculation requires reading Z/W of fragment position (SV_POSITION) in pixel shader,
@@ -152,11 +146,44 @@ static void CreateDeviceAndSwapChain(void) {
 	Gfx.MaxTexWidth  = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
 	Gfx.MaxTexHeight = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
 }
+
+static void CreateSwapChain(void) {
+	HRESULT hr;
+
+	DXGI_SWAP_CHAIN_DESC desc = { 0 };
+	desc.BufferCount = 1;
+	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	// RefreshRate intentionally left at 0 so display's refresh rate is used
+	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.OutputWindow = Window_Main.Handle.ptr;
+	desc.SampleDesc.Count   = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Windowed           = TRUE;
+	desc.SwapEffect         = DXGI_SWAP_EFFECT_DISCARD;
+
+	IDXGIDevice* dxgi_device = NULL;
+	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, &dxgi_device);
+	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI device");
+
+	IDXGIAdapter* dxgi_adapter = NULL;
+	hr = IDXGIDevice_GetAdapter(dxgi_device , &dxgi_adapter);
+	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI adapter");
+
+	IDXGIFactory* dxgi_factory = NULL;
+	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory, &dxgi_factory);
+	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI factory");
+
+	void* window = Window_Main.Handle.ptr;
+	hr = IDXGIFactory_CreateSwapChain(dxgi_factory, device, &desc, &swapchain);
+	if (FAILED(hr)) Process_Abort2(hr, "Creating swap chain");
+}
 #endif
 
 void Gfx_Create(void) {
 	LoadD3D11Library();
-	CreateDeviceAndSwapChain();
+	CreateDevice();
+	CreateSwapChain();
+
 	Gfx.Created         = true;
 	Gfx.BackendType     = CC_GFX_BACKEND_D3D11;
 	customMipmapsLevels = true;
