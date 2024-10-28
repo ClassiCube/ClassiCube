@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macOS-12
+    runs-on: macOS-13
     steps:
       - uses: actions/checkout@v4
       - name: Compile iOS build
