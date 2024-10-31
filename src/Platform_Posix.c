@@ -416,10 +416,10 @@ static void* ExecThread(void* param) {
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
-	int res;
-	*handle = ptr;
-
 	pthread_attr_t attrs;
+	int res;
+	
+	*handle = ptr;
 	pthread_attr_init(&attrs);
 	pthread_attr_setstacksize(&attrs, stackSize);
 	

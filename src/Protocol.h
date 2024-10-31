@@ -67,7 +67,7 @@ extern struct IGameComponent Protocol_Component;
 void Protocol_Tick(void);
 
 extern cc_bool cpe_needD3Fix;
-void Classic_SendChat(const cc_string* text, cc_bool partial);\
+void Classic_SendChat(const cc_string* text, cc_bool partial);
 void Classic_SendSetBlock(int x, int y, int z, cc_bool place, BlockID block);
 void Classic_SendLogin(void);
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t);

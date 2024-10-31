@@ -360,14 +360,14 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 1. Install `gcc`, `haiku_devel`, `openal_devel` packages if needed
 2. Run either:
     * `make haiku` or
-    * `cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker`
+    * `cc -fno-math-errno src/*.c src/*.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker`
 
 #### BeOS
 
 1. Install a C compiler
 2. Run either:
     * `make beos` or
-    * `cc -fno-math-errno src/*.c interop_BeOS.cpp -o ClassiCube -lGL -lbe -lgame -ltracker`
+    * `cc -fno-math-errno src/*.c src/*.cpp -o ClassiCube -lGL -lbe -lgame -ltracker`
 
 #### IRIX
 

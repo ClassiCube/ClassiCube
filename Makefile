@@ -114,7 +114,8 @@ ifeq ($(PLAT),haiku)
 	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
 	CFLAGS  = -pipe -fno-math-errno
 	LDFLAGS = -g
-	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	LINK    = $(CXX)
+	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
 	BUILD_DIR = build-haiku
 endif
 
@@ -122,7 +123,8 @@ ifeq ($(PLAT),beos)
 	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
 	CFLAGS  = -pipe
 	LDFLAGS = -g
-	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	LINK    = $(CXX)
+	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
 	BUILD_DIR = build-beos
 	TRACK_DEPENDENCIES=0
 endif

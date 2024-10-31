@@ -196,7 +196,7 @@ static void UpdateMouseButtons(int buttons) {
 }
 
 static void HandleMouseMovement(BMessage* msg) {
-	int dx, dy;
+	int32 dx, dy;
 	float prs;
 	
 	if (msg->FindInt32("be:delta_x", &dx) == B_OK &&
