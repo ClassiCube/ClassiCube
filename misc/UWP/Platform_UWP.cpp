@@ -37,7 +37,7 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 
 const char* Platform_AppNameSuffix = "";
 cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess;
+cc_bool Platform_SingleProcess = true;
 #define UWP_STRING(str) ((wchar_t*)(str)->uni)
 
 /*########################################################################################################################*
@@ -799,46 +799,8 @@ cc_result Platform_GetEntropy(void* data, int len) {
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_string Platform_NextArg(STRING_REF cc_string* args) {
-	cc_string arg;
-	int end;
-
-	/* get rid of leading spaces before arg */
-	while (args->length && args->buffer[0] == ' ') {
-		*args = String_UNSAFE_SubstringAt(args, 1);
-	}
-
-	if (args->length && args->buffer[0] == '"') {
-		/* "xy za" is used for arg with spaces */
-		*args = String_UNSAFE_SubstringAt(args, 1);
-		end = String_IndexOf(args, '"');
-	} else {
-		end = String_IndexOf(args, ' ');
-	}
-
-	if (end == -1) {
-		arg   = *args;
-		args->length = 0;
-	} else {
-		arg   = String_UNSAFE_Substring(args, 0, end);
-		*args = String_UNSAFE_SubstringAt(args, end + 1);
-	}
-	return arg;
-}
-
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	cc_string cmdArgs = String_FromReadonly(GetCommandLineA());
-	int i;
-	Platform_NextArg(&cmdArgs); /* skip exe path */
-	if (gameHasArgs) return GetGameArgs(args);
-
-	for (i = 0; i < GAME_MAX_CMDARGS; i++) 
-	{
-		args[i] = Platform_NextArg(&cmdArgs);
-
-		if (!args[i].length) break;
-	}
-	return i;
+	return GetGameArgs(args);
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {

@@ -29,6 +29,7 @@ using namespace Windows::UI::Input;
 #include "../../src/Bitmap.h"
 #include "../../src/Options.h"
 #include "../../src/Errors.h"
+#include "../../src/Graphics.h"
 #define UWP_STRING(str) ((wchar_t*)(str)->uni)
 
 
@@ -55,6 +56,7 @@ void Window_Init(void) {
 	WindowInfo.UIScaleY = DEFAULT_UI_SCALE_Y;
 	WindowInfo.Width    = bounds.Width;
 	WindowInfo.Height   = bounds.Height;
+	WindowInfo.Exists   = true;
 }
 
 void Window_Free(void) { }
@@ -190,17 +192,56 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return OpenSaveFileDialog(&filters, args->Callback, false, fileExts, &args->defaultName);
 }
 
+static GfxResourceID fb_tex, fb_vb;
+static void AllocateVB(void) {
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&fb_vb,
+															VERTEX_FORMAT_TEXTURED, 4);
+	data[0].x = -1.0f; data[0].y = -1.0f; data[0].z = 0.0f; data[0].Col = PACKEDCOL_WHITE; data[0].U = 0.0f; data[0].V = 1.0f;
+	data[1].x =  1.0f; data[1].y = -1.0f; data[1].z = 0.0f; data[1].Col = PACKEDCOL_WHITE; data[1].U = 1.0f; data[1].V = 1.0f;
+	data[2].x =  1.0f; data[2].y =  1.0f; data[2].z = 0.0f; data[2].Col = PACKEDCOL_WHITE; data[2].U = 1.0f; data[2].V = 0.0f;
+	data[3].x = -1.0f; data[3].y =  1.0f; data[3].z = 0.0f; data[3].Col = PACKEDCOL_WHITE; data[3].U = 0.0f; data[2].V = 0.0f;
+
+	Gfx_UnlockVb(fb_vb);
+}
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "bitmap");
 	bmp->width  = width;
 	bmp->height = height;
+
+	if (!Gfx.Created) Gfx_Create();
+	fb_tex = Gfx_CreateTexture(bmp, TEXTURE_FLAG_NONPOW2, false);
+	AllocateVB();
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	struct Bitmap part;
+	part.scan0  = Bitmap_GetRow(bmp, r.y) + r.x;
+	part.width  = r.width;
+	part.height = r.height;
+
+	Gfx_BeginFrame();
+	Gfx_BindIb(Gfx.DefaultIb);
+	Gfx_UpdateTexture(fb_tex, r.x, r.y, &part, bmp->width, false);
+
+	Gfx_LoadMatrix(MATRIX_VIEW, &Matrix_Identity);
+	Gfx_LoadMatrix(MATRIX_PROJ, &Matrix_Identity);
+	Gfx_SetDepthTest(false);
+	Gfx_SetAlphaTest(false);
+	Gfx_SetAlphaBlending(false);
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindTexture(fb_tex);
+	Gfx_BindVb(fb_vb);
+	Gfx_DrawVb_IndexedTris(4);
+	Gfx_EndFrame();
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
+	Gfx_DeleteTexture(&fb_tex);
+	Gfx_DeleteVb(&fb_vb);
 }
 
 static cc_bool rawMouseInited, rawMouseSupported;
