@@ -327,7 +327,7 @@ static DWORD WINAPI ExecThread(void* param) {
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
 	HANDLE thread = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
+	if (!thread) Process_Abort2(GetLastError(), "Creating thread");
 	
 	*handle = thread;
 	ResumeThread(thread);
@@ -335,7 +335,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 
 void Thread_Detach(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing thread handle");
+		Process_Abort2(GetLastError(), "Freeing thread handle");
 	}
 }
 
@@ -360,14 +360,14 @@ void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle
 void* Waitable_Create(const char* name) {
 	void* handle = CreateEventA(NULL, false, false, NULL);
 	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating waitable");
+		Process_Abort2(GetLastError(), "Creating waitable");
 	}
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing waitable");
+		Process_Abort2(GetLastError(), "Freeing waitable");
 	}
 }
 
@@ -392,7 +392,7 @@ static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* num
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int res, i = 0;
+	int i = 0;
 
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -401,7 +401,7 @@ static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* num
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
 
-	res = getaddrinfo(host, portRaw, &hints, &result);
+	int res = getaddrinfo(host, portRaw, &hints, &result);
 	if (res == WSAHOST_NOT_FOUND) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
@@ -718,7 +718,7 @@ void Platform_EncodeString(cc_winstring* dst, const cc_string* src) {
 	cc_unichar* uni;
 	char* ansi;
 	int i;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+	if (src->length > FILENAME_SIZE) Process_Abort("String too long to expand");
 
 	uni = dst->uni;
 	for (i = 0; i < src->length; i++) 
