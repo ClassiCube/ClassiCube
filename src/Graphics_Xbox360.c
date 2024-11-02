@@ -102,7 +102,7 @@ static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct
 	Xe_Surface_Unlock(xe, xtex);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	struct XenosSurface* xtex = Xe_CreateTexture(xe, bmp->width, bmp->height, 1, XE_FMT_8888, 0);
 	SetTextureData(xtex, 0, 0, bmp, rowWidth, 0);
 	return xtex;

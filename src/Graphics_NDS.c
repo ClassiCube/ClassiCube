@@ -101,7 +101,7 @@ void Gfx_EndFrame(void) {
 *#########################################################################################################################*/
 static int tex_width, tex_height;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
     vramSetBankA(VRAM_A_TEXTURE);
 
     cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);

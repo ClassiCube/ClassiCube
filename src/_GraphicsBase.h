@@ -420,8 +420,6 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags) {
 	return maxSize == 0 || (width * height <= maxSize);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps);
-
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	return Gfx_CreateTexture2(bmp, bmp->width, flags, mipmaps);
 }

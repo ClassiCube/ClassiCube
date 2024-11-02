@@ -418,7 +418,7 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 }
 
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	struct GPUTexture* tex = GPUTexture_Alloc();
 	bool success = CreateNativeTexture(&tex->texture, bmp->width, bmp->height);
 	if (!success) return NULL;

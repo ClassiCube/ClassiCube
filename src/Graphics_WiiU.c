@@ -84,7 +84,7 @@ static void Gfx_RestoreState(void) {
 *#########################################################################################################################*/
 static GX2Texture* pendingTex;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GX2Texture* tex = Mem_TryAllocCleared(1, sizeof(GX2Texture));
 	if (!tex) return NULL;
 

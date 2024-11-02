@@ -272,7 +272,7 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	return tex;
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	for (int i = 0; i < TEXTURES_MAX_COUNT; i++)
 	{
 		if (textures[i].width) continue;

@@ -186,7 +186,6 @@ void Gfx_Create(void) {
 
 	Gfx.Created         = true;
 	Gfx.BackendType     = CC_GFX_BACKEND_D3D11;
-	Gfx.SupportsNonPowTwoTextures = true;
 	customMipmapsLevels = true;
 	Gfx_RestoreState();
 }
@@ -284,7 +283,7 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
 	HRESULT hr;

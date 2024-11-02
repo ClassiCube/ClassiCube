@@ -215,7 +215,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->height = height;
 
 	if (!Gfx.Created) Gfx_Create();
-	fb_tex = Gfx_CreateTexture(bmp, TEXTURE_FLAG_NONPOW2, false);
+	fb_tex = Gfx_AllocTexture(bmp, bmp->width, TEXTURE_FLAG_NONPOW2, false);
 	AllocateVB();
 
 	Game.Width  = Window_Main.Width;

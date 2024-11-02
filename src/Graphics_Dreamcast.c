@@ -541,7 +541,7 @@ static TextureObject* FindFreeTexture(void) {
     return NULL;
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	TextureObject* tex = FindFreeTexture();
 	if (!tex) return NULL;
 

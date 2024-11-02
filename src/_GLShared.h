@@ -118,7 +118,7 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GfxResourceID texId = NULL;
 	_glGenTextures(1, (GLuint*)&texId);
 	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
