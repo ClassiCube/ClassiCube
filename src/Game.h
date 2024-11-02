@@ -52,6 +52,7 @@ extern int Game_UserViewDistance;
 
 /* Strategy used to limit FPS (see FpsLimitMethod enum) */
 extern int     Game_FpsLimit;
+extern int     Game_MaxFps;
 extern cc_bool Game_SimpleArmsAnim;
 extern int     Game_Vertices;
 
@@ -84,7 +85,7 @@ extern struct GameVersion Game_Version;
 extern void GameVersion_Load(void);
 
 enum FpsLimitMethod {
-	FPS_LIMIT_VSYNC, FPS_LIMIT_30, FPS_LIMIT_60, FPS_LIMIT_120, FPS_LIMIT_144, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
+	FPS_LIMIT_VSYNC, FPS_LIMIT_CUSTOM, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
 };
 extern const char* const FpsLimit_Names[FPS_LIMIT_COUNT];
 
@@ -113,6 +114,8 @@ void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */
 /* See FPS_LIMIT_ for valid strategies/methods */
 void Game_SetFpsLimit(int method);
+/* Sets the FPS cap used by the FPS_LIMIT_CUSTOM method */
+void Game_SetMaxFps(int max);
 void Game_SetMinFrameTime(float frameTimeMS);
 
 cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, 
