@@ -138,6 +138,51 @@ void Window_RequestClose(void) {
 
 
 /*########################################################################################################################*
+*--------------------------------------------------Keyboard processing----------------------------------------------------*
+*#########################################################################################################################*/
+static const cc_uint8 key_map[] = {
+/* 00 */	  0,   0,   0,   0, 'A', 'B', 'C', 'D',
+/* 08 */	'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+/* 10 */	'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+/* 18 */	'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2',
+/* 20 */	'3', '4', '5', '6', '7', '8', '9', '0',
+/* 28 */	CCKEY_ENTER, CCKEY_ESCAPE, CCKEY_BACKSPACE, CCKEY_TAB, CCKEY_SPACE, CCKEY_MINUS, CCKEY_EQUALS, CCKEY_LBRACKET,
+/* 30 */	CCKEY_RBRACKET, CCKEY_BACKSLASH, 0, CCKEY_SEMICOLON, CCKEY_QUOTE, CCKEY_TILDE, CCKEY_COMMA, CCKEY_PERIOD,
+/* 38 */	CCKEY_SLASH, CCKEY_CAPSLOCK, CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, CCKEY_F6,
+/* 40 */	CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10, CCKEY_F11, CCKEY_F12, CCKEY_PRINTSCREEN, CCKEY_SCROLLLOCK,
+/* 48 */	CCKEY_PAUSE, CCKEY_INSERT, CCKEY_HOME, CCKEY_PAGEUP, CCKEY_DELETE, CCKEY_END, CCKEY_PAGEDOWN, CCKEY_RIGHT,
+/* 50 */	CCKEY_LEFT, CCKEY_DOWN, CCKEY_UP, CCKEY_NUMLOCK, CCKEY_KP_DIVIDE, CCKEY_KP_MULTIPLY, CCKEY_KP_MINUS, CCKEY_KP_PLUS,
+/* 58 */	CCKEY_KP_ENTER, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP7,
+/* 60 */	CCKEY_KP8, CCKEY_KP9, CCKEY_KP0, CCKEY_KP_DECIMAL, 0, CCKEY_SLEEP, CCKEY_LAUNCH_APP1, 0,
+/* 68 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* 70 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* 78 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* 80 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* 88 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* 98 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* A0 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* A8 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* B0 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* B8 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* C0 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* C8 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* D0 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* D8 */	0, 0, 0, 0, 0, 0, 0, 0,
+/* E0 */	CCKEY_LCTRL, CCKEY_LSHIFT, CCKEY_LALT, 0, CCKEY_RCTRL, CCKEY_RSHIFT, CCKEY_RALT, 0,
+};
+
+static void ProcessKeyboardInput(void) {
+	if (!kbdSupported) return;
+
+	PS2KbdRawKey key;
+	if (PS2KbdReadRaw(&key) <= 0) return;
+
+	Platform_Log1("%i", &key.key);
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void ProcessMouseInput(float delta) {
@@ -161,15 +206,6 @@ static void ProcessMouseInput(float delta) {
 	float scale = (delta * 60.0) / 2.0f;
 	Event_RaiseRawMove(&PointerEvents.RawMoved, 
 				mData.x * scale, mData.y * scale);
-}
-
-static void ProcessKeyboardInput(void) {
-	if (!kbdSupported) return;
-
-	PS2KbdRawKey key;
-	if (PS2KbdReadRaw(&key) <= 0) return;
-
-	Platform_Log1("%i", &key.key);
 }
 
 void Window_ProcessEvents(float delta) {
