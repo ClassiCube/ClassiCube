@@ -55,7 +55,7 @@ static struct ChatCommand* Commands_FindMatch(const cc_string* cmdName) {
 	}
 
 	if (!match) {
-		Chat_Add1("&e/client: Unrecognised command: \"&f%s&e\".", cmdName);
+		Chat_Add1("&e/client: Unrecognised command (it doesn't exist): \"&f%s&e\".", cmdName);
 		Chat_AddRaw("&e/client: Type &a/client &efor a list of commands.");
 	}
 	return match;
@@ -304,6 +304,23 @@ static struct ChatCommand MotdCommand = {
 	}
 };
 
+static void EvilCommand_Execute(const cc_string* args, int argsCount) {
+	if (Server.IsSinglePlayer) {
+		Chat_AddRaw("&eThis command can only be used in multiplayer. Pretty sure would crash the game if it worked in single player");
+		return;
+	}
+	Chat_Add1("&eName: &f%s", &Server.Name);
+	Chat_AddRaw("&eThis is command is to remind you what server your on. Thats it. Your welcome.");
+}
+
+static struct ChatCommand EvilCommand = {
+	"servername", EvilCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client servername",
+		"&eDisplays the server's name."
+	}
+};
 /*#######################################################################################################################*
 *-------------------------------------------------------PlaceCommand-----------------------------------------------------*
 *########################################################################################################################*/
@@ -600,7 +617,8 @@ static struct ChatCommand TeleportCommand = {
 	{
 		"&a/client tp [x y z]",
 		"&eMoves you to the given coordinates.",
-	}
+	        "&eIn other words it teleports you.",
+        }
 };
 
 
