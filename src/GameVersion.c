@@ -79,7 +79,7 @@ static const struct GameVersion version_0017 = {
 static const struct GameVersion version_0014 = {
 	"0.0.14a", false, VERSION_0014,
 	PROTOCOL_0019, BLOCK_GLASS, 
-	 6, sizeof(v3_inventory), v3_inventory, v3_hotbar,
+	 5, sizeof(v3_inventory), v3_inventory, v3_hotbar,
 	 "texpacks/default_0023.zip"
 };
 void GameVersion_Load(void) {
