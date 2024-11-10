@@ -827,7 +827,7 @@ static void OnInit(void) {
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&ReplaceCommand);
-        Command_Register(&EvilCommand);
+        
 }
 
 static void OnFree(void) {
