@@ -922,6 +922,8 @@ static void PatchTerrainTile(struct Bitmap* src, int srcX, int srcY, int tileX, 
 	static const cc_string terrainPng = String_FromConst("terrain.png");
 	struct ResourceZipEntry* entry    = ZipEntries_Find(&terrainPng);
 	struct Bitmap* dst = &entry->value.bmp;
+	/* Can happen sometimes happen when allocating memory for terrain.png fails */
+	if (!dst->scan0) return;
 
 	Bitmap_UNSAFE_CopyBlock(srcX, srcY, tileX * 16, tileY * 16, src, dst, 16);
 }
