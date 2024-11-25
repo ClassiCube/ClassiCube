@@ -21,6 +21,7 @@ jobs:
       - name: Compile NDS build
         id: compile
         run: |
+          apt-get update
           apt-get -y install curl
           export BLOCKSDS=/opt/blocksds/core
           export BLOCKSDSEXT=/opt/blocksds/external

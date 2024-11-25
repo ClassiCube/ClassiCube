@@ -180,7 +180,7 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path->buffer, O_RDONLY);
 }
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);

@@ -509,7 +509,8 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	const float* m = (const float*)matrix;
-	float tmp[16];
+	Mtx44 dst;
+	float* tmp = (float*)dst;
 	
 	// Transpose matrix
 	for (int i = 0; i < 4; i++)
@@ -521,10 +522,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	}
 		
 	if (type == MATRIX_PROJ) {
-		GX_LoadProjectionMtx(tmp,
+		GX_LoadProjectionMtx(dst,
 			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
-		GX_LoadPosMtxImm(tmp, GX_PNMTX0);
+		GX_LoadPosMtxImm(dst, GX_PNMTX0);
 	}
 }
 
