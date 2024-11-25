@@ -190,14 +190,17 @@ void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path) {
 /*########################################################################################################################*
 *------------------------------------------------------Frame dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, const char* symName, const char* modName) {
+static void PrintFrame(cc_string* str, cc_uintptr addr, 
+						cc_uintptr symAddr, const char* symName, 
+						cc_uintptr modBase, const char* modName) {
 	cc_string module;
+	cc_uintptr modAddr = addr - modBase;
 	int offset;
 	if (!modName) modName = "???";
 
 	module = String_FromReadonly(modName);
 	Utils_UNSAFE_GetFilename(&module);
-	String_Format2(str, "%x - %s", &addr, &module);
+	String_Format2(str, "%x - %s", &modAddr, &module);
 	
 	if (symName && symName[0]) {
 		offset = (int)(addr - symAddr);
@@ -232,7 +235,9 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	}
 
 	String_InitArray(str, strBuffer);
-	PrintFrame(&str, addr, s.symbol.Address, s.symbol.Name, m.ModuleName);
+	PrintFrame(&str, addr, 
+				s.symbol.Address, s.symbol.Name, 
+				m.BaseOfImage, m.ModuleName);
 	String_AppendString(trace, &str);
 
 	/* This function only works for .pdb debug info anyways */
@@ -255,7 +260,9 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	String_InitArray(str, strBuffer);
 	/* alas NSModuleForSymbol doesn't work with raw addresses */
 
-	PrintFrame(&str, (cc_uintptr)addr, 0, NULL, NULL);
+	PrintFrame(&str, (cc_uintptr)addr, 
+				0, NULL, 
+				0, NULL);
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
@@ -275,14 +282,14 @@ static void DumpFrame(cc_string* trace, void* addr) {
 
 static void DumpFrame(cc_string* trace, void* addr) {
 	cc_string str; char strBuffer[384];
-	Dl_info s;
+	Dl_info s = { 0 };
 
 	String_InitArray(str, strBuffer);
-	s.dli_sname = NULL;
-	s.dli_fname = NULL;
 	dladdr(addr, &s);
 
-	PrintFrame(&str, (cc_uintptr)addr, (cc_uintptr)s.dli_saddr, s.dli_sname, s.dli_fname);
+	PrintFrame(&str, (cc_uintptr)addr, 
+				(cc_uintptr)s.dli_saddr, s.dli_sname, 
+				(cc_uintptr)s.dli_fbase, s.dli_fname);
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }

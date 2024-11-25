@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <poll.h>
 #include <netdb.h>
+#include <malloc.h>
 #include <coreinit/debug.h>
 #include <coreinit/event.h>
 #include <coreinit/fastmutex.h>
@@ -237,7 +238,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	void* stack = memalign(16, stackSize);
 	
 	OSCreateThread(thread, ExecThread,
-                       1, (Thread_StartFunc)func,
+                       1, (void*)func,
                        stack + stackSize, stackSize,
                        16, OS_THREAD_ATTRIB_AFFINITY_ANY);
 
