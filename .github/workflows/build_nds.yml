@@ -45,7 +45,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-nds/ClassiCube-nds.elf'
+          SOURCE_FILE: 'build-nds/cc-arm9.elf'
           DEST_NAME: 'ClassiCube-nds.elf'
 
       - uses: ./.github/actions/upload_build
@@ -57,7 +57,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-dsi/ClassiCube-dsi.elf'
+          SOURCE_FILE: 'build-dsi/cc-arm9.elf'
           DEST_NAME: 'ClassiCube-dsi.elf'
           
           
