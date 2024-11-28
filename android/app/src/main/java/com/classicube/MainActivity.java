@@ -432,7 +432,7 @@ public class MainActivity extends Activity
 		try {
 			CCMotionListener listener = new CCMotionListener(this);
 			view.setOnGenericMotionListener(listener);
-		} catch (Exception ex) {
+		} catch {
 			// Unsupported on android 12
 		}
 	}
