@@ -207,16 +207,18 @@ static const char* SignalDescribe(int type) {
 
 static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	cc_string msg; char msgBuffer[128 + 1];
+	struct sigaction sa = { 0 };
 	const char* desc;
 	int type, code;
 	cc_uintptr addr;
 
 	/* Uninstall handler to avoid chance of infinite loop */
-	signal(SIGSEGV, SIG_DFL);
-	signal(SIGBUS,  SIG_DFL);
-	signal(SIGILL,  SIG_DFL);
-	signal(SIGABRT, SIG_DFL);
-	signal(SIGFPE,  SIG_DFL);
+	sa.sa_handler = SIG_DFL;
+	sigaction(SIGSEGV, &sa, NULL);
+	sigaction(SIGBUS,  &sa, NULL);
+	sigaction(SIGILL,  &sa, NULL);
+	sigaction(SIGABRT, &sa, NULL);
+	sigaction(SIGFPE,  &sa, NULL);
 
 	type = info->si_signo;
 	code = info->si_code;
@@ -239,16 +241,17 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 }
 
 void CrashHandler_Install(void) {
-	struct sigaction sa, old;
+	struct sigaction sa = { 0 };
+	/* sigemptyset(&sa.sa_mask); */
+	/* NOTE: Calling sigemptyset breaks when using recent Android NDK and trying to run on old devices */
 	sa.sa_sigaction = SignalHandler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART | SA_SIGINFO;
+	sa.sa_flags     = SA_RESTART | SA_SIGINFO;
 
-	sigaction(SIGSEGV, &sa, &old);
-	sigaction(SIGBUS,  &sa, &old);
-	sigaction(SIGILL,  &sa, &old);
-	sigaction(SIGABRT, &sa, &old);
-	sigaction(SIGFPE,  &sa, &old);
+	sigaction(SIGSEGV, &sa, NULL);
+	sigaction(SIGBUS,  &sa, NULL);
+	sigaction(SIGILL,  &sa, NULL);
+	sigaction(SIGABRT, &sa, NULL);
+	sigaction(SIGFPE,  &sa, NULL);
 }
 
 void Process_Abort2(cc_result result, const char* raw_msg) {
@@ -1294,9 +1297,12 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 static void Platform_InitPosix(void) {
-	signal(SIGCHLD, SIG_IGN);
+	struct sigaction sa = { 0 };
+	sa.sa_handler = SIG_IGN;
+
+	sigaction(SIGCHLD, &sa, NULL);
 	/* So writing to closed socket doesn't raise SIGPIPE */
-	signal(SIGPIPE, SIG_IGN);
+	sigaction(SIGPIPE, &sa, NULL);
 }
 void Platform_Free(void) { }
 
