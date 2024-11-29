@@ -71,12 +71,11 @@ jobs:
           echo -n "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > debug.keystore
           
           # compile the multiple .class files into one .dex file
-          $TOOLS_ROOT/dx --dex --output=obj/classes.dex ./obj
+          $TOOLS_ROOT/dx --dex --output=classes.dex ./obj
           # create initial .apk with packaged version of resources
-          $TOOLS_ROOT/aapt package -f -M AndroidManifest.xml -S res -F obj/cc-unsigned.apk -I $SDK_ROOT/android.jar
+          $TOOLS_ROOT/aapt package -f -M AndroidManifest.xml -S res -F cc-unsigned.apk -I $SDK_ROOT/android.jar
           # and add all the required files
-          cp obj/classes.dex classes.dex
-          $TOOLS_ROOT/aapt add -f obj/cc-unsigned.apk classes.dex lib/armeabi/libclassicube.so lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
+          $TOOLS_ROOT/aapt add -f cc-unsigned.apk classes.dex lib/armeabi/libclassicube.so lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
           
           # sign the apk with debug key (https://stackoverflow.com/questions/16711233/)
           # Note per https://developer.android.com/tools/zipalign
