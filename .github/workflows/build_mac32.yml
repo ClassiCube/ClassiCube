@@ -17,8 +17,8 @@ jobs:
     container:
       image: ghcr.io/classicube/minimal-osxcross:latest
       credentials:
-        username: UnknownShadow200
-        password: ${{ secrets.GHCR_ACCESS_KEY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Compile 32 bit macOS builds
@@ -48,6 +48,13 @@ jobs:
           PATH=$PATH:/usr/local/compiler/ppc/target/bin
           powerpc-apple-darwin9-base-gcc *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-ppc -mmacosx-version-min=10.2.0 -m32 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 
+      - name: Generate combined Intel + PowerPC build
+        shell: bash
+        id: gen_universal
+        run: |
+          cd src
+          PATH=$PATH:/usr/local/compiler/target/bin
+          i386-apple-darwin8-lipo -create -output cc-mac32-universal cc-mac32-gl1 cc-mac32-ppc
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -73,6 +80,12 @@ jobs:
         with:
           SOURCE_FILE: 'src/cc-mac32-ppc'
           DEST_NAME: 'ClassiCube-mac32-PPC'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.gen_universal.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-mac32-universal'
+          DEST_NAME: 'ClassiCube-mac32'
           
           
       - uses: ./.github/actions/notify_success
