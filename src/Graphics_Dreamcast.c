@@ -893,12 +893,12 @@ static void SubmitList(struct CommandsList* list) {
 
 void Gfx_EndFrame(void) {
 	FinishList();
-	pvr_wait_ready();
 
 	SubmitList(&listOP);
 	SubmitList(&listPT);
 	SubmitList(&listTR);
 	pvr_scene_finish();
+	pvr_wait_ready();
 }
 
 void Gfx_OnWindowResize(void) {
