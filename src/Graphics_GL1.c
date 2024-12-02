@@ -7,7 +7,8 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
-#ifdef CC_BUILD_WIN
+
+#if defined CC_BUILD_WIN
 	#define CC_BUILD_GL11_FALLBACK
 #endif
 
