@@ -69,7 +69,7 @@ extern cc_bool Game_ScreenshotRequested;
 extern cc_bool Game_HideGui;
 
 enum GAME_VERSION_ {
-	VERSION_0017 = 27, VERSION_0019 = 28, VERSION_0023 = 29, VERSION_0030 = 30, VERSION_CPE = 31
+	VERSION_0014 = 26, VERSION_0017 = 27, VERSION_0019 = 28, VERSION_0023 = 29, VERSION_0030 = 30, VERSION_CPE = 31
 };
 struct GameVersion {
 	const char* Name;
