@@ -193,7 +193,7 @@ static void Png_Expand_GRAYSCALE_4(int width, BitmapCol* palette, cc_uint8* src,
 
 static void Png_Expand_GRAYSCALE_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	cc_uint8 rgb;
-	src += (width - 1) * 2;
+	src += (width - 1);
 	dst += (width - 1);
 
 	for (; width >= 4; width -= 4) {
