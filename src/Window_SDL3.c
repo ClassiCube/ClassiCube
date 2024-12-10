@@ -127,10 +127,18 @@ int Window_GetWindowState(void) {
 }
 
 cc_result Window_EnterFullscreen(void) {
-	return SDL_SetWindowFullscreen(win_handle, true);
+	if (SDL_SetWindowFullscreen(win_handle, true)) {
+		return 0;
+	} else {
+		return -1;
+	}
 }
 cc_result Window_ExitFullscreen(void) { 
-	return SDL_SetWindowFullscreen(win_handle, false);
+	if (SDL_SetWindowFullscreen(win_handle, false)) {
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 int Window_IsObscured(void) {
