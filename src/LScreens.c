@@ -106,9 +106,9 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struct Inpu
 
 	if (key == device->tabLauncher) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
-	} else if (key == device->upButton) {
+	} else if (key == device->upButton || key == device->leftButton) {
 		LScreen_CycleSelected(s, -1);
-	} else if (key == device->downButton) {
+	} else if (key == device->downButton || key == device->rightButton) {
 		LScreen_CycleSelected(s,  1);
 	} else if (IsBackButton(key) && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);

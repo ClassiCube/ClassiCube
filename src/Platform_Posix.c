@@ -840,11 +840,15 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 #else
 static cc_result Process_RawStart(const char* path, char** argv) {
 	pid_t pid = fork();
+	int err;
 	if (pid == -1) return errno;
 
 	if (pid == 0) {
 		/* Executed in child process */
 		execvp(path, argv);
+
+		err = errno;
+		Platform_Log2("execv %c failed = %i", path, &err);
 		_exit(127); /* "command not found" */
 	} else {
 		/* Executed in parent process */
