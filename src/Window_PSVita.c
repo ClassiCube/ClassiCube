@@ -141,20 +141,30 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool circle_main;
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+
+	SceAppUtilInitParam init_param = { 0 };
+	SceAppUtilBootParam boot_param = { 0 };
+	sceAppUtilInit(&init_param, &boot_param);
+
+	int ret = 0;
+ 	sceAppUtilSystemParamGetInt(SCE_SYSTEM_PARAM_ID_ENTER_BUTTON, &ret);
+	circle_main = ret == 0;
 	
-	Input_DisplayNames[CCPAD_1] = "CIRCLE";
-	Input_DisplayNames[CCPAD_2] = "CROSS";
+	Input_DisplayNames[CCPAD_1] = circle_main ? "CIRCLE" : "CROSS";
+	Input_DisplayNames[CCPAD_2] = circle_main ? "CROSS" : "CIRCLE";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
 	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
 }
 
 static void HandleButtons(int port, int mods) {
-	Gamepad_SetButton(port, CCPAD_1, mods & SCE_CTRL_CIRCLE);
-	Gamepad_SetButton(port, CCPAD_2, mods & SCE_CTRL_CROSS);
+	Gamepad_SetButton(port, CCPAD_1, mods & (circle_main ? SCE_CTRL_CIRCLE : SCE_CTRL_CROSS));
+	Gamepad_SetButton(port, CCPAD_2, mods & (circle_main ? SCE_CTRL_CROSS  : SCE_CTRL_CIRCLE));
 	Gamepad_SetButton(port, CCPAD_3, mods & SCE_CTRL_SQUARE);
 	Gamepad_SetButton(port, CCPAD_4, mods & SCE_CTRL_TRIANGLE);
       
