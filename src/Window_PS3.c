@@ -274,21 +274,26 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *#########################################################################################################################*/
 static padInfo pad_info;
 static padData pad_data[MAX_PORT_NUM];
+static cc_bool circle_main;
 
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	ioPadInit(MAX_PORT_NUM);
+
+	int ret = 0;
+ 	sysUtilGetSystemParamInt(SYSUTIL_SYSTEMPARAM_ID_ENTER_BUTTON_ASSIGN, &ret);
+	circle_main = ret == 0;
 	
-	Input_DisplayNames[CCPAD_1] = "CIRCLE";
-	Input_DisplayNames[CCPAD_2] = "CROSS";
+	Input_DisplayNames[CCPAD_1] = circle_main ? "CIRCLE" : "CROSS";
+	Input_DisplayNames[CCPAD_2] = circle_main ? "CROSS" : "CIRCLE";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
 	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
 }
 
 static void HandleButtons(int port, padData* data) {
 	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
-	Gamepad_SetButton(port, CCPAD_1, data->BTN_CIRCLE);
-	Gamepad_SetButton(port, CCPAD_2, data->BTN_CROSS);
+	Gamepad_SetButton(port, CCPAD_1, circle_main ? data->BTN_CIRCLE : data->BTN_CROSS);
+	Gamepad_SetButton(port, CCPAD_2, circle_main ? data->BTN_CROSS  : data->BTN_CIRCLE);
 	Gamepad_SetButton(port, CCPAD_3, data->BTN_SQUARE);
 	Gamepad_SetButton(port, CCPAD_4, data->BTN_TRIANGLE);
       
