@@ -1074,7 +1074,11 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 
 	Http_SetRequestHeaders(req);
 	Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
-	if (req->data && (res = Http_SetData(env, req))) return res;
+	
+	if (req->data) {
+		if (res = Http_SetData(env, req)) return res;
+		HttpRequest_Free(req);
+	}
 
 	req->_capacity = 0;
 	req->progress  = HTTP_PROGRESS_FETCHING_DATA;
@@ -1160,14 +1164,11 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
     CFRelease(urlRef);
     
-    if (req->data && req->size) {
+    if (req->data) {
         CFDataRef body = CFDataCreate(NULL, req->data, req->size);
         CFHTTPMessageSetBody(request, body);
         CFRelease(body); /* TODO: ???? */
-        
-        req->data = NULL;
-        req->size = 0;
-        Mem_Free(req->data);
+		HttpRequest_Free(req);
     }
     
     CFReadStreamRef stream = CFReadStreamCreateForHTTPRequest(NULL, request);

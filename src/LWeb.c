@@ -344,8 +344,8 @@ static void SignInTask_Handle(cc_uint8* data, cc_uint32 len) {
 	cc_bool success = Json_Handle(data, len, SignInTask_OnValue, NULL, NULL);
 	if (success) return;
 	
-	SignInTask.error = err_msg.buffer;
-	Logger_WarnFunc(&err_msg);;
+	SignInTask.error = "&cError parsing response";
+	Logger_WarnFunc(&err_msg);
 }
 
 static void SignInTask_Append(cc_string* dst, const char* key, const cc_string* value) {
