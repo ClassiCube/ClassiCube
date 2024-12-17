@@ -196,6 +196,8 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return 0;
 }
 
+#ifndef CC_BUILD_3DS
 cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
+#endif

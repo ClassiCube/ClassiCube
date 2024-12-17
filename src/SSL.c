@@ -446,24 +446,13 @@ cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
 	return false; // TODO: error codes 
 }
 
-#if defined CC_BUILD_3DS
-#include <3ds.h>
 static void InjectEntropy(SSLContext* ctx) {
 	char buf[32];
-	PS_GenerateRandomBytes(buf, 32);
-	// NOTE: PS_GenerateRandomBytes isn't implemented in Citra
-	
+	cc_result res = Platform_GetEntropy(buf, 32);
+	if (res) Platform_LogConst("SSL: Using insecure uninitialised stack data for entropy");
+
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
-#else
-#warning "Using uninitialised stack data for entropy. This should be replaced with actual cryptographic RNG data"
-static void InjectEntropy(SSLContext* ctx) {
-	char buf[32];
-	// TODO: Use actual APIs to retrieve random data
-	
-	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
-}
-#endif
 
 static void SetCurrentTime(SSLContext* ctx) {
 	cc_uint64 cur = DateTime_CurrentUTC();

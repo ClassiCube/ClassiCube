@@ -459,4 +459,9 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return PS_GenerateRandomBytes(data, len);
+	// NOTE: PS_GenerateRandomBytes isn't implemented in Citra
+}
 #endif
