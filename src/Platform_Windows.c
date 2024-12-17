@@ -1084,15 +1084,15 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 static BOOL (WINAPI *_RtlGenRandom)(PVOID data, ULONG len);
 
 cc_result Platform_GetEntropy(void* data, int len) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym2("SystemFunction036", RtlGenRandom)
-	};
+	static const struct DynamicLibSym func =
+		DynamicLib_Sym2("SystemFunction036", RtlGenRandom);
 
 	if (!_RtlGenRandom) {
 		static const cc_string kernel32 = String_FromConst("ADVAPI32.DLL");
-		void* lib;
+		void* lib = DynamicLib_Load2(&kernel32);
+		if (!lib) return ERR_NOT_SUPPORTED;
 		
-		DynamicLib_LoadAll(&kernel32, funcs, Array_Elems(funcs), &lib);
+		*func.symAddr = DynamicLib_Get2(lib, func.name);
 		if (!_RtlGenRandom) return ERR_NOT_SUPPORTED;
 	}
 	

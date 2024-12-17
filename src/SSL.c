@@ -321,7 +321,7 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 			desc.pBuffers  = buffers;
 
 			sec = FP_DecryptMessage(&ctx->context, &desc, 0, NULL);
-			if (sec == SEC_E_OK) {				
+			if (sec == SEC_E_OK) {
 				/* After successful decryption the SecBuffers will be: */
 				/*   buffers[0] = headers */
 				/*   buffers[1] = content */
@@ -411,16 +411,9 @@ cc_result SSL_Free(void* ctx_) {
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
 
-static unsigned fake_minimal_end_chain(const br_x509_class** ctx) {
-	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
-	if (r == BR_ERR_X509_NOT_TRUSTED) r = 0;
-	if (r == BR_ERR_X509_EXPIRED)     r = 0;
-	return r;
-}
-
 typedef struct SSLContext {
-	br_ssl_client_context sc;
 	br_x509_minimal_context xc;
+	br_ssl_client_context sc;
 	unsigned char iobuf[BR_SSL_BUFSIZE_BIDI];
 	br_sslio_context ioc;
 	cc_result readError, writeError;
@@ -429,9 +422,19 @@ typedef struct SSLContext {
 
 static cc_bool _verifyCerts;
 
+static unsigned cc_x509_end_chain(const br_x509_class** ctx) {
+	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
+	
+	if (!_verifyCerts) {
+		if (r == BR_ERR_X509_NOT_TRUSTED) r = 0;
+		if (r == BR_ERR_X509_EXPIRED)     r = 0;
+	}
+	return r;
+}
+
 
 void SSLBackend_Init(cc_bool verifyCerts) {
-	_verifyCerts = verifyCerts; // TODO support
+	_verifyCerts = verifyCerts;
 }
 
 cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
@@ -512,12 +515,11 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	}
 	
 	/* Override default certificate chain validation */
-	if (!_verifyCerts) {
-		static br_x509_class fake_minimal_vtable;
-		fake_minimal_vtable = br_x509_minimal_vtable;
-		fake_minimal_vtable.end_chain = fake_minimal_end_chain;
-		ctx->xc.vtable = &fake_minimal_vtable;
-	}
+	static br_x509_class cc_x509_vtable;
+	ctx->xc.vtable = &cc_x509_vtable;
+	
+	cc_x509_vtable = br_x509_minimal_vtable;
+	cc_x509_vtable.end_chain = cc_x509_end_chain;
 	
 	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
 			sock_read,  ctx, 
