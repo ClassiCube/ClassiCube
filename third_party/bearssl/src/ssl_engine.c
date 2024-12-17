@@ -24,62 +24,6 @@
 
 #include "inner.h"
 
-#if 0
-/* obsolete */
-
-/*
- * If BR_USE_URANDOM is not defined, then try to autodetect its presence
- * through compiler macros.
- */
-#ifndef BR_USE_URANDOM
-
-/*
- * Macro values documented on:
- *    https://sourceforge.net/p/predef/wiki/OperatingSystems/
- *
- * Only the most common systems have been included here for now. This
- * should be enriched later on.
- */
-#if defined _AIX \
-	|| defined __ANDROID__ \
-	|| defined __FreeBSD__ \
-	|| defined __NetBSD__ \
-	|| defined __OpenBSD__ \
-	|| defined __DragonFly__ \
-	|| defined __linux__ \
-	|| (defined __sun && (defined __SVR4 || defined __svr4__)) \
-	|| (defined __APPLE__ && defined __MACH__)
-#define BR_USE_URANDOM   1
-#endif
-
-#endif
-
-/*
- * If BR_USE_WIN32_RAND is not defined, perform autodetection here.
- */
-#ifndef BR_USE_WIN32_RAND
-
-#if defined _WIN32 || defined _WIN64
-#define BR_USE_WIN32_RAND   1
-#endif
-
-#endif
-
-#if BR_USE_URANDOM
-#include <sys/types.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#endif
-
-#if BR_USE_WIN32_RAND
-#include <windows.h>
-#include <wincrypt.h>
-#pragma comment(lib, "advapi32")
-#endif
-
-#endif
-
 /* ==================================================================== */
 /*
  * This part of the file does the low-level record management.
