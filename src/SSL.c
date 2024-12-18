@@ -411,6 +411,13 @@ cc_result SSL_Free(void* ctx_) {
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
 
+struct SSLCertificate;
+typedef struct SSLCertificate {
+	struct SSLCertificate* next;
+	int dataOffset, dataLength;
+	cc_uint8 data[0];
+} SSLCertificate;
+
 typedef struct SSLContext {
 	br_x509_minimal_context xc;
 	br_ssl_client_context sc;
@@ -418,9 +425,37 @@ typedef struct SSLContext {
 	br_sslio_context ioc;
 	cc_result readError, writeError;
 	cc_socket socket;
+	struct SSLCertificate* cert_chain;
 } SSLContext;
 
 static cc_bool _verifyCerts;
+
+static void cc_x509_start_cert(const br_x509_class **ctx, uint32_t length) {
+	
+	SSLCertificate* cert = Mem_Alloc(1, sizeof(SSLCertificate) + length, "cert");
+	SSLContext* ctx_ = (SSLContext*)ctx;
+	
+	cert->next = ctx_->cert_chain;
+	cert->dataOffset = 0;
+	cert->dataLength = length;
+	ctx_->cert_chain = cert;
+	
+	br_x509_minimal_vtable.start_cert(ctx, length);
+}
+
+static void cc_x509_append_cert(const br_x509_class **ctx, const unsigned char* buf, size_t len) {
+	SSLContext* ctx_ = (SSLContext*)ctx;
+	SSLCertificate* cert = (SSLCertificate*)ctx_>cert_chain;
+	
+	Mem_Copy(cert->data + cert->dataOffset, buf, len);
+	cert->dataOffset += len;
+	
+	br_x509_minimal_vtable.append(ctx, buf, len);
+}
+
+static void cc_x509_end_cert(const br_x509_class **ctx) {
+	br_x509_minimal_vtable.end_cert(ctx);
+}
 
 static unsigned cc_x509_end_chain(const br_x509_class** ctx) {
 	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
@@ -497,7 +532,7 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	char host[NATIVE_STR_LEN];
 	String_EncodeUtf8(host, host_);
 	
-	ctx = Mem_TryAlloc(1, sizeof(SSLContext));
+	ctx = Mem_TryAllocCleared(1, sizeof(SSLContext));
 	if (!ctx) return ERR_OUT_OF_MEMORY;
 	*out_ctx = (void*)ctx;
 	
@@ -519,7 +554,10 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	ctx->xc.vtable = &cc_x509_vtable;
 	
 	cc_x509_vtable = br_x509_minimal_vtable;
-	cc_x509_vtable.end_chain = cc_x509_end_chain;
+	cc_x509_vtable.start_cert = cc_x509_start_cert;
+	cc_x509_vtable.append     = cc_x509_append_cert;
+	cc_x509_vtable.end_cert   = cc_x509_end_cert;
+	cc_x509_vtable.end_chain  = cc_x509_end_chain;
 	
 	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
 			sock_read,  ctx, 
@@ -570,8 +608,17 @@ cc_result SSL_WriteAll(void* ctx_, const cc_uint8* data, cc_uint32 count) {
 }
 
 cc_result SSL_Free(void* ctx_) {
+	struct SSLCertificate* cert;
+	struct SSLCertificate* next;
 	SSLContext* ctx = (SSLContext*)ctx_;
 	if (ctx) br_sslio_close(&ctx->ioc);
+	
+	cert = ctx->cert_chain;
+	while (cert) {
+		next = cert->next;
+		Mem_Free(cert);
+		cert = next;
+	}
 	
 	Mem_Free(ctx_);
 	return 0;
