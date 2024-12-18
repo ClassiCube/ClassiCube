@@ -821,7 +821,6 @@ static void OnPointerDown(void* obj, int idx) {
 static void OnPointerUp(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y;
-	if (Pointers[0].UpHook && Pointers[0].UpHook(idx)) return;
 
 #ifdef CC_BUILD_TOUCH
 	CheckBlockTap(idx);

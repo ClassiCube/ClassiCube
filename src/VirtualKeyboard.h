@@ -19,6 +19,7 @@ static char kb_buffer[512];
 static cc_string kb_str = String_FromArray(kb_buffer);
 static void (*KB_MarkDirty)(void);
 static int kb_yOffset;
+static cc_bool kb_clicking;
 
 #define KB_TILE_SIZE 32
 static int kb_tileWidth  = KB_TILE_SIZE;
@@ -317,9 +318,12 @@ static cc_bool VirtualKeyboard_GetPointerPosition(int idx, int* kbX, int* kbY) {
 	return true;
 }
 
-static cc_bool VirtualKeyboard_PointerDown(int idx) {
+static cc_bool VirtualKeyboard_PointerMove(int idx) {
 	int kbX, kbY;
 	if (!VirtualKeyboard_GetPointerPosition(idx, &kbX, &kbY)) return false;
+
+	if (kb_clicking) return true;
+	kb_clicking = true;
 
 	kb_curX = kbX / kb_tileWidth;
 	kb_curY = kbY / kb_tileHeight;
@@ -332,6 +336,8 @@ static cc_bool VirtualKeyboard_PointerDown(int idx) {
 
 static cc_bool VirtualKeyboard_PointerUp(int idx) {
 	int kbX, kbY;
+	kb_clicking = false;
+	kb_curX     = -1;
 	return VirtualKeyboard_GetPointerPosition(idx, &kbX, &kbY);
 }
 
@@ -431,8 +437,8 @@ static void VirtualKeyboard_Hook(void) {
 	/*  the virtual keyboard in the first place gets mistakenly processed */
 	kb_needsHook = false;
 	Event_Register_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
-	Pointers[0].DownHook = VirtualKeyboard_PointerDown;
-	Pointers[0].UpHook   = VirtualKeyboard_PointerUp;
+	PointerHooks.MoveHook = VirtualKeyboard_PointerMove;
+	PointerHooks.UpHook   = VirtualKeyboard_PointerUp;
 }
 
 static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher) {
@@ -480,8 +486,8 @@ static void VirtualKeyboard_Close(void) {
 		VirtualKeyboard_Close3D();
 		
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
-	Pointers[0].DownHook = NULL;
-	Pointers[0].UpHook   = NULL;
+	PointerHooks.MoveHook = NULL;
+	PointerHooks.UpHook   = NULL;
 	Window_Main.SoftKeyboardFocus = false;
 
 	KB_MarkDirty   = NULL;

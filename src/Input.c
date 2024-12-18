@@ -325,11 +325,16 @@ struct InputDevice TouchDevice = {
 *----------------------------------------------------------Mouse----------------------------------------------------------*
 *#########################################################################################################################*/
 struct Pointer Pointers[INPUT_MAX_POINTERS];
+struct _PointerHooks PointerHooks;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
 	if (pressed) {
+		if (PointerHooks.DownHook && PointerHooks.DownHook(idx)) return;
+
 		Event_RaiseInt(&PointerEvents.Down, idx);
 	} else {
+		if (PointerHooks.UpHook && PointerHooks.UpHook(idx)) return;
+
 		Event_RaiseInt(&PointerEvents.Up,   idx);
 	}
 }
@@ -370,7 +375,7 @@ void Pointer_SetPosition(int idx, int x, int y) {
 	/* TODO: reset to -1, -1 when pointer is removed */
 	Pointers[idx].x = x; Pointers[idx].y = y;
 
-	if (Pointers[0].DownHook && Pointers[0].DownHook(idx)) return;
+	if (PointerHooks.MoveHook && PointerHooks.MoveHook(idx)) return;
 	
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
