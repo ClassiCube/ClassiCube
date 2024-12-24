@@ -2,7 +2,8 @@ BUILD_DIR		= build-n64
 SOURCE_DIR	 	= src
 N64_ROM_TITLE 	= "ClassiCube"
 N64_ROM_RTC 	= true
-TARGET 			:= ClassiCube-n64
+TARGET			= ClassiCube-n64
+N64_MKDFS_ROOT	= "misc/n64"
 
 CFILES 	:= $(notdir $(wildcard src/*.c))
 OFILES 	:= $(CFILES:.c=.o)
