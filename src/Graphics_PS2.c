@@ -180,11 +180,11 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	return tex;
 }
 
-static void UpdateTextureBuffer(int context, texbuffer_t *texture, CCTexture* tex) {
+static void UpdateTextureBuffer(int context, CCTexture* tex, unsigned buf_addr, unsigned buf_stride) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
-	PACK_GIFTAG(q, GS_SET_TEX0(texture->address >> 6, texture->width >> 6, GS_PSM_32,
+	PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, GS_PSM_32,
 							   tex->log2_width, tex->log2_height, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
 							   0, 0, CLUT_STORAGE_MODE1, 0, CLUT_NO_LOAD), GS_REG_TEX0 + context);
 	q++;
@@ -194,9 +194,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
 	
-	texbuffer_t texbuf;
-	texbuf.width   = max(256, tex->width);
-	texbuf.address = tex_offset;
+	unsigned dst_addr   = tex_offset;
+	// GS stores stride in 64 block units
+	// (i.e. gs_stride = real_stride >> 6, so min stride is 64)
+	unsigned dst_stride = max(64, tex->width);
 	
 	// TODO terrible perf
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
@@ -207,7 +208,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 	qword_t *Q = packet->data;
 
-	Q = draw_texture_transfer(Q, tex->pixels, tex->width, tex->height, GS_PSM_32, tex_offset, max(256, tex->width));
+	Q = draw_texture_transfer(Q, tex->pixels, tex->width, tex->height, GS_PSM_32, dst_addr, dst_stride);
 	Q = draw_texture_flush(Q);
 
 	dma_channel_send_chain(DMA_CHANNEL_GIF,packet->data, Q - packet->data, 0,0);
@@ -217,7 +218,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	
 	// TODO terrible perf
 	q = dma_tag + 1;
-	UpdateTextureBuffer(0, &texbuf, tex);
+	UpdateTextureBuffer(0, tex, dst_addr, dst_stride);
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
