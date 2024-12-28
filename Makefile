@@ -222,10 +222,12 @@ release:
 
 # Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
-dreamcast:
-	$(MAKE) -f misc/dreamcast/Makefile
+32x:
+	$(MAKE) -f misc/32x/Makefile
 saturn:
 	$(MAKE) -f misc/saturn/Makefile
+dreamcast:
+	$(MAKE) -f misc/dreamcast/Makefile
 psp:
 	$(MAKE) -f misc/psp/Makefile
 vita:
