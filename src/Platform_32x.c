@@ -101,7 +101,7 @@ cc_uint64 Stopwatch_Measure(void) {
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return 1;
+	return 1000 * 1000;
 }
 
 extern void _bss_end;

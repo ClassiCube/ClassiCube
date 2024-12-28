@@ -50,7 +50,13 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-void Window_Create3D(int width, int height) { 
+void Window_Create2D(int width, int height) {
+	Hw32xScreenClear();
+	launcherMode = true;
+}
+
+void Window_Create3D(int width, int height) {
+	Hw32xScreenClear();
 	launcherMode = false; 
 }
 
@@ -118,10 +124,6 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_Create2D(int width, int height) {
-	launcherMode = true;
-}
-
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
     volatile uint16_t* vram = &MARS_FRAMEBUFFER + 0x100;
 	bmp->scan0  = vram;

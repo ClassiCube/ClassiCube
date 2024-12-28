@@ -329,6 +329,11 @@ static BitmapCol ExpandRGB(cc_uint8 bitsPerSample, int r, int g, int b) {
 	return BitmapCol_Make(r, g, b, 0);
 }
 
+#ifdef CC_BUILD_32X
+cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
+	return ERR_NOT_SUPPORTED;
+}
+#else
 cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[64];
 	cc_uint32 dataSize, fourCC;
@@ -546,6 +551,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 		if ((res = stream->Skip(stream, 4))) return res; /* Skip CRC32 */
 	}
 }
+#endif
 
 
 /*########################################################################################################################*
