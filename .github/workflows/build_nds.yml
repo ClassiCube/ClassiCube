@@ -23,8 +23,6 @@ jobs:
         run: |
           apt-get update
           apt-get -y install curl
-          export BLOCKSDS=/opt/blocksds/core
-          export BLOCKSDSEXT=/opt/blocksds/external
           make ds
           export BUILD_DSI=1
           make ds
