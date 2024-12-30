@@ -897,15 +897,15 @@ void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data) {
 	Server.SendData(buffer, 66);
 }
 
-void CPE_SendNotifyAction(int action, int value) {
-	cc_uint8 data[4];
+void CPE_SendNotifyAction(int action, cc_uint32 value) {
+	cc_uint8 data[8];
 
 	data[0] = OPCODE_NOTIFY_ACTION;
 	{
-		data[1] = action;
-		data[2] = value;
+		Stream_SetU16_BE(data + 1, action);
+		Stream_SetU32_BE(data + 3, value);
 	}
-	Server.SendData(data, 4);
+	Server.SendData(data, 8);
 }
 
 static void CPE_SendExtInfo(int extsCount) {
