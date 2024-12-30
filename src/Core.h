@@ -367,7 +367,6 @@ typedef cc_uint8  cc_bool;
 #elif defined __3DS__
 	#define CC_BUILD_3DS
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_DUALSCREEN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
