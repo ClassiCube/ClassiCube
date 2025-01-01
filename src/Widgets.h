@@ -9,7 +9,7 @@
 CC_BEGIN_HEADER
 
 /* Contains all 2D widget implementations.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 struct InputDevice;

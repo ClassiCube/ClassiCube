@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* Simple math functions and constants. Also implements a RNG algorithm, based on 
       Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 #define MATH_PI 3.1415926535897931f

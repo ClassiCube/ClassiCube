@@ -6,7 +6,7 @@ CC_BEGIN_HEADER
 
 /* 
 Represents a fixed size 3D array of blocks and associated metadata
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct AABB;
 extern struct IGameComponent World_Component;

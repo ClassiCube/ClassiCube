@@ -2,7 +2,7 @@
 #define CC_AUDIO_H
 #include "Core.h"
 /* Manages playing sound and music.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 CC_BEGIN_HEADER
 

@@ -5,7 +5,7 @@
 CC_BEGIN_HEADER
 
 /* Various components for entities.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 struct Entity;

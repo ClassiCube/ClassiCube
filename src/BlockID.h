@@ -2,7 +2,7 @@
 #define CC_BLOCKID_H
 #include "Core.h" /* TODO: Remove this include when we move to external defines */
 /* List of all core/standard block IDs
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 CC_BEGIN_HEADER
 

@@ -8,7 +8,7 @@ CC_BEGIN_HEADER
 
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct Entity;
 struct AABB;

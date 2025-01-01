@@ -6,7 +6,7 @@
 #include "BlockID.h"
 /* Stores properties and data for blocks.
    Also performs automatic rotation of directional blocks.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 CC_BEGIN_HEADER
 

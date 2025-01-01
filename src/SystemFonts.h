@@ -4,7 +4,7 @@
 CC_BEGIN_HEADER
 
 /*  Manages loading and drawing platform specific system fonts
-	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct Bitmap;
 struct FontDesc;

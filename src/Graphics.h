@@ -19,7 +19,7 @@ IMPLEMENTATION NOTES:
   * altering DEFAULT_GFX_BACKEND for the platform in Core.h
 - graphics backends are implemented in Graphics_GL1.c, Graphics_D3D9.c etc
    
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct Bitmap;
 struct Stream;

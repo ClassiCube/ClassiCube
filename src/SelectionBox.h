@@ -5,7 +5,7 @@
 CC_BEGIN_HEADER
 
 /* Describes a selection box, and contains methods related to the selection box.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Selections_Component;

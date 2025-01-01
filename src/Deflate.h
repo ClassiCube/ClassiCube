@@ -10,7 +10,7 @@ CC_BEGIN_HEADER
 	https://www.ietf.org/rfc/rfc1951.txt
 	https://github.com/nothings/stb/blob/master/stb_image.h
 	https://www.hanshq.net/zip.html
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct Stream;
 

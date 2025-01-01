@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* 
 Abstracts platform specific memory management, I/O, etc
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 #if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
