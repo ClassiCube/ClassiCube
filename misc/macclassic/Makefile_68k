@@ -4,7 +4,7 @@ RETRO68=../Retro68-build/toolchain
 PREFIX=$(RETRO68)/m68k-apple-macos
 CC=$(RETRO68)/bin/m68k-apple-macos-gcc
 CXX=$(RETRO68)/bin/m68k-apple-macos-g++
-CFLAGS=-O1 -fno-math-errno -DCC_BUILD_NOFPU
+CFLAGS=-O1 -fno-math-errno
 
 REZ=$(RETRO68)/bin/Rez
 
@@ -12,11 +12,19 @@ LDFLAGS=-lm
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
-TARGET		:=	ClassiCube-68k
-BUILD_DIR 	:=	build-68k
 SOURCE_DIR	:=	src
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+
+ifdef ARCH_68040
+	TARGET		:=	ClassiCube-68040
+	BUILD_DIR 	:=	build-68k
+	CFLAGS		+= -march=68040
+else
+	TARGET		:=	ClassiCube-68k
+	BUILD_DIR 	:=	build-68040
+	CFLAGS		+= -DCC_BUILD_NOFPU
+endif
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
