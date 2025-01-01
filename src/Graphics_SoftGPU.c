@@ -74,6 +74,7 @@ static CCTexture* curTexture;
 static BitmapCol* curTexPixels;
 static int curTexWidth, curTexHeight;
 static int texWidthMask, texHeightMask;
+static int texSinglePixel;
 		
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
@@ -84,8 +85,9 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	curTexWidth  = tex->width;
 	curTexHeight = tex->height;
 
-	texWidthMask  = (1 << Math_ilog2(tex->width))  - 1;
-	texHeightMask = (1 << Math_ilog2(tex->height)) - 1;
+	texWidthMask   = (1 << Math_ilog2(tex->width))  - 1;
+	texHeightMask  = (1 << Math_ilog2(tex->height)) - 1;
+	texSinglePixel = curTexWidth == 1 && curTexHeight == 1;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -475,6 +477,23 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	}
 }
 
+#define MultiplyColors(vColor, tColor) \
+	a1 = PackedCol_A(vColor); \
+	a2 = BitmapCol_A(tColor); \
+	A  = ( a1 * a2 ) >> 8;    \
+\
+	r1 = PackedCol_R(vColor); \
+	r2 = BitmapCol_R(tColor); \
+	R  = ( r1 * r2 ) >> 8;    \
+\
+	g1 = PackedCol_G(vColor); \
+	g2 = BitmapCol_G(tColor); \
+	G  = ( g1 * g2 ) >> 8;    \
+\
+	b1 = PackedCol_B(vColor); \
+	b2 = BitmapCol_B(tColor); \
+	B  = ( b1 * b2 ) >> 8;    \
+
 static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int x0 = (int)V0->x, y0 = (int)V0->y;
 	int x1 = (int)V1->x, y1 = (int)V1->y;
@@ -522,6 +541,22 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	float bc1_start = edgeFunction(x2,y2, x0,y0, minX+0.5f,minY+0.5f);
 	float bc2_start = edgeFunction(x0,y0, x1,y1, minX+0.5f,minY+0.5f);
 
+	int R, G, B, A;
+	int a1, r1, g1, b1;
+	int a2, r2, g2, b2;
+	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
+
+	if (!texturing) {
+		R = PackedCol_R(color);
+		G = PackedCol_G(color);
+		B = PackedCol_B(color);
+		A = PackedCol_A(color);
+	} else if (texSinglePixel) {
+		/* Don't need to calculate complicated texturing in this case */
+		MultiplyColors(color, curTexPixels[0]);
+		texturing = false;
+	}
+
 	for (int y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
 	{
 		float bc0 = bc0_start;
@@ -549,48 +584,38 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			if (!colWrite) continue;
 #endif
 
-			int R, G, B, A;
-			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+			if (texturing) {
 				float u = (ic0 * u0 + ic1 * u1 + ic2 * u2) * w;
 				float v = (ic0 * v0 + ic1 * v1 + ic2 * v2) * w;
 				int texX = ((int)(Math_AbsF(u - FastFloor(u)) * curTexWidth )) & texWidthMask;
 				int texY = ((int)(Math_AbsF(v - FastFloor(v)) * curTexHeight)) & texHeightMask;
-				int texIndex = texY * curTexWidth + texX;
 
+				int texIndex = texY * curTexWidth + texX;
 				BitmapCol tColor = curTexPixels[texIndex];
-				int a1 = PackedCol_A(color), a2 = BitmapCol_A(tColor);
-				A = ( a1 * a2 ) >> 8;
-				int r1 = PackedCol_R(color), r2 = BitmapCol_R(tColor);
-				R = ( r1 * r2 ) >> 8;
-				int g1 = PackedCol_G(color), g2 = BitmapCol_G(tColor);
-				G = ( g1 * g2 ) >> 8;
-				int b1 = PackedCol_B(color), b2 = BitmapCol_B(tColor);
-				B = ( b1 * b2 ) >> 8;
-			} else {
-				R = PackedCol_R(color);
-				G = PackedCol_G(color);
-				B = PackedCol_B(color);
-				A = PackedCol_A(color);
+
+				MultiplyColors(color, tColor);
 			}
 
 			if (gfx_alphaTest && A < 0x80) continue;
-			int cb_index = y * cb_stride + x;
-			
-			if (gfx_alphaBlend) {
-				BitmapCol dst = colorBuffer[cb_index];
-				int dstR = BitmapCol_R(dst);
-				int dstG = BitmapCol_G(dst);
-				int dstB = BitmapCol_B(dst);
-
-				R = (R * A + dstR * (255 - A)) >> 8;
-				G = (G * A + dstG * (255 - A)) >> 8;
-				B = (B * A + dstB * (255 - A)) >> 8;
-			}
-
 #ifndef SOFTGPU_DISABLE_ZBUFFER
 			if (depthWrite) depthBuffer[db_index] = z;
 #endif
-			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
+			int cb_index = y * cb_stride + x;
+			
+			if (!gfx_alphaBlend) {
+				colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
+				continue;
+			}
+
+			BitmapCol dst = colorBuffer[cb_index];
+			int dstR = BitmapCol_R(dst);
+			int dstG = BitmapCol_G(dst);
+			int dstB = BitmapCol_B(dst);
+
+			int finR = (R * A + dstR * (255 - A)) >> 8;
+			int finG = (G * A + dstG * (255 - A)) >> 8;
+			int finB = (B * A + dstB * (255 - A)) >> 8;
+			colorBuffer[cb_index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 		}
 	}
 }

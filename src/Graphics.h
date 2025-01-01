@@ -88,7 +88,7 @@ CC_VAR extern struct _GfxData {
 /* Whether the graphics backend supports U/V that don't occupy whole texture */
 /*   e.g. Saturn, 3D0 systems don't support it */
 #define GFX_LIMIT_NO_UV_SUPPORT   0x01
-/* Whether the graphics backend requires very large quads to be broken
+/* Whether the graphics backend requires very large quads to be broken */
 /*  up into smaller quads, to reduce fog interpolation artifacts */
 #define GFX_LIMIT_VERTEX_ONLY_FOG 0x02
 
