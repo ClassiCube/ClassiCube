@@ -1409,14 +1409,14 @@ static void SaveLevelScreen_Save(void* screen, void* widget) {
 	SaveLevelScreen_RemoveOverwrites(s);
 	if ((res = SaveLevelScreen_SaveMap(&path))) return;
 	Chat_Add1("&eSaved map to: %s", &path);
-	CPE_SendNotifyAction(0, 0);
+	CPE_SendNotifyAction(2, 0);
 }
 
 static void SaveLevelScreen_UploadCallback(const cc_string* path) {
 	cc_result res = SaveLevelScreen_SaveMap(path);
 	if (!res) {
 		Chat_Add1("&eSaved map to: %s", path);
-		CPE_SendNotifyAction(0, 0);
+		CPE_SendNotifyAction(2, 0);
 	}
 }
 
@@ -1561,6 +1561,8 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	TexturePack_SetDefault(&file);
 	TexturePack_Url.length = 0;
 	res = TexturePack_ExtractCurrent(true);
+
+	CPE_SendNotifyAction(5, 0);
 
 	/* FileNotFound error may be because user deleted .zips from disc */
 	if (res != ReturnCode_FileNotFound) return;
@@ -2739,6 +2741,9 @@ static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	TexturePack_Extract(&s->url);
 	if (TexPackOverlay_IsAlways(s, widget)) TextureCache_Accept(&s->url);
 	Gui_Remove((struct Screen*)s);
+
+	if (TexPackOverlay_IsAlways(s, widget)) CPE_SendNotifyAction(6, 3);
+	else CPE_SendNotifyAction(6, 2);
 }
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
@@ -2752,6 +2757,9 @@ static void TexPackOverlay_ConfirmNoClick(void* screen, void* b) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	if (s->alwaysDeny) TextureCache_Deny(&s->url);
 	Gui_Remove((struct Screen*)s);
+
+	if (s->alwaysDeny) CPE_SendNotifyAction(6, 0);
+	else CPE_SendNotifyAction(6, 1);
 }
 
 static void TexPackOverlay_GoBackClick(void* screen, void* b) {

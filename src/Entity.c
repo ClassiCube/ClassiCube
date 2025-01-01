@@ -22,6 +22,7 @@
 #include "Errors.h"
 #include "Utils.h"
 #include "EntityRenderers.h"
+#include "Protocol.h"
 
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -844,6 +845,8 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	Entity_GetBounds(&p->Base, &bb);
 	bb.Min.y -= 0.01f; bb.Max.y = bb.Min.y;
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
+
+	CPE_SendNotifyAction(3, 0);
 }
 
 static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
@@ -884,6 +887,8 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 		
 		p->SpawnYaw   = p->Base.Yaw;
 		if (!Game_ClassicMode) p->SpawnPitch = p->Base.Pitch;
+
+		CPE_SendNotifyAction(4, 0);
 	}
 	return LocalPlayer_HandleRespawn(key, device);
 }
