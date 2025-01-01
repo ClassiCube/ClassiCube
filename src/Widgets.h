@@ -23,13 +23,13 @@ struct TextWidget {
 #define TEXTWIDGET_MAX 4
 
 /* Initialises a text widget. */
-CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
+CC_API CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
 /* Initialises then adds a text widget. */
-CC_NOINLINE void TextWidget_Add(void* screen, struct TextWidget* w);
+CC_API CC_NOINLINE void TextWidget_Add(void* screen, struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
-CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font);
+CC_API CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
-CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc* font);
+CC_API CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc* font);
 
 /* A labelled button that can be clicked on. */
 struct ButtonWidget {
@@ -42,13 +42,13 @@ struct ButtonWidget {
 #define BUTTONWIDGET_MAX 12
 
 /* Initialises a button widget. */
-CC_NOINLINE void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
+CC_API CC_NOINLINE void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Initialises then adds a button widget. */
-CC_NOINLINE void ButtonWidget_Add(void* screen, struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
+CC_API CC_NOINLINE void ButtonWidget_Add(void* screen, struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
-CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font);
+CC_API CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
-CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct FontDesc* font);
+CC_API CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct FontDesc* font);
 
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {
@@ -61,7 +61,7 @@ struct ScrollbarWidget {
 	int nubsWidth, offsets[3];
 };
 /* Resets state of the given scrollbar widget to default. */
-CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width);
+CC_API CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width);
 
 #define HOTBAR_CORE_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
 /* A row of blocks with a background. */
@@ -81,9 +81,9 @@ struct HotbarWidget {
 #define HOTBAR_MAX_VERTICES (4 + 4 + HOTBAR_CORE_VERTICES)
 
 /* Resets state of the given hotbar widget to default. */
-CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
-CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
-CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, float delta);
+CC_API CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
+CC_API CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
+CC_API CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, float delta);
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 /* A table of blocks. */
@@ -109,14 +109,14 @@ struct TableWidget {
 	int verticesCount;
 };
 
-CC_NOINLINE void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth);
+CC_API CC_NOINLINE void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
-CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
-CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
-CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
-CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
-CC_NOINLINE void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force);
+CC_API CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
+CC_API CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
+CC_API CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
+CC_API CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
+CC_API CC_NOINLINE void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -150,21 +150,21 @@ struct InputWidget {
 };
 
 /* Removes all characters and then deletes the input texture. */
-CC_NOINLINE void InputWidget_Clear(struct InputWidget* w);
+CC_API CC_NOINLINE void InputWidget_Clear(struct InputWidget* w);
 /* Tries appending all characters from the given string, then update the input texture. */
-CC_NOINLINE void InputWidget_AppendText(struct InputWidget* w, const cc_string* text);
+CC_API CC_NOINLINE void InputWidget_AppendText(struct InputWidget* w, const cc_string* text);
 /* Tries appending the given character, then updates the input texture. */
-CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
+CC_API CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
 /* Redraws text and recalculates associated state. */
 /* Also calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
-CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
+CC_API CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
 /* Shorthand for InputWidget_Clear followed by InputWidget_AppendText, */
 /* then calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
-CC_NOINLINE void InputWidget_SetText(struct InputWidget* w, const cc_string* str);
+CC_API CC_NOINLINE void InputWidget_SetText(struct InputWidget* w, const cc_string* str);
 
 
 struct MenuInputDesc;
@@ -221,11 +221,11 @@ struct TextInputWidget {
 };
 #define MENUINPUTWIDGET_MAX 8
 
-CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
-CC_NOINLINE void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
+CC_API CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
+CC_API CC_NOINLINE void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
-CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
-CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w, struct InputDevice* device);
+CC_API CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
+CC_API CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w, struct InputDevice* device);
 
 
 struct ChatInputWidget {
@@ -236,8 +236,8 @@ struct ChatInputWidget {
 	char _origBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];	
 };
 
-CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w);
-CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, struct FontDesc* font);
+CC_API CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w);
+CC_API CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, struct FontDesc* font);
 
 
 /* Retrieves the text for the i'th line in the group */
@@ -256,25 +256,25 @@ struct TextGroupWidget {
 	TextGroupWidget_Get GetLine;
 };
 
-CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine);
-CC_NOINLINE void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font);
+CC_API CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine);
+CC_API CC_NOINLINE void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font);
 /* Deletes first line, then moves all other lines upwards, then redraws last line. */
 /* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */
-CC_NOINLINE void TextGroupWidget_ShiftUp(struct TextGroupWidget* w);
+CC_API CC_NOINLINE void TextGroupWidget_ShiftUp(struct TextGroupWidget* w);
 /* Deletes last line, then moves all other lines downwards, then redraws first line. */
 /* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */
-CC_NOINLINE void TextGroupWidget_ShiftDown(struct TextGroupWidget* w);
+CC_API CC_NOINLINE void TextGroupWidget_ShiftDown(struct TextGroupWidget* w);
 /* Returns height of lines, except for the first 0 or more empty lines. */
-CC_NOINLINE int  TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
+CC_API CC_NOINLINE int  TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
 /* Returns either the URL or the line underneath the given coordinates. */
-CC_NOINLINE int  TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int mouseX, int mouseY);
+CC_API CC_NOINLINE int  TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int mouseX, int mouseY);
 /* Redraws the given line, updating the texture and Y position of other lines. */
-CC_NOINLINE void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index);
+CC_API CC_NOINLINE void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index);
 /* Calls TextGroupWidget_Redraw for all lines */
-CC_NOINLINE void TextGroupWidget_RedrawAll(struct TextGroupWidget* w);
+CC_API CC_NOINLINE void TextGroupWidget_RedrawAll(struct TextGroupWidget* w);
 /* Calls TextGroupWidget_Redraw for all lines which have the given colour code. */
 /* Typically only called in response to the ChatEvents.ColCodeChanged event. */
-CC_NOINLINE void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* w, char col);
+CC_API CC_NOINLINE void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* w, char col);
 /* Gets the text for the i'th line. */
 static CC_INLINE cc_string TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(i); }
 
@@ -299,10 +299,10 @@ struct SpecialInputWidget {
 	char _colBuffer[DRAWER2D_MAX_COLORS * 4];
 };
 
-CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target);
-CC_NOINLINE void SpecialInputWidget_Redraw(struct SpecialInputWidget* w);
-CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
-CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active);
+CC_API CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target);
+CC_API CC_NOINLINE void SpecialInputWidget_Redraw(struct SpecialInputWidget* w);
+CC_API CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
+CC_API CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active);
 
 #ifdef CC_BUILD_TOUCH
 struct ThumbstickWidget {
