@@ -439,8 +439,14 @@ static void DoCreateWindow(int width, int height) {
 	XGetInputFocus(win_display, &focus, &focusRevert);
 	if (focus == win) Window_Main.Focused = true;
 }
-void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
-void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
+
+void Window_Create2D(int width, int height) { 
+	DoCreateWindow(width, height); 
+}
+
+void Window_Create3D(int width, int height) { 
+	DoCreateWindow(width, height); 
+}
 
 void Window_Destroy(void) {
 	Window win = Window_Main.Handle.val;

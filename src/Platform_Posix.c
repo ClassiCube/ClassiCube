@@ -1609,13 +1609,14 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 }
 
 cc_result Platform_GetEntropy(void* data, int len) {
+	int ret;
 	int fd = open("/dev/urandom", O_RDONLY);
 	if (fd < 0) return ERR_NOT_SUPPORTED;
 	
 	// TODO: check return code? and partial reads?
-	read(fd, data, len);
+	ret = read(fd, data, len);
 	close(fd);
-	return 0;
+	return ret == -1 ? errno : 0;
 }
 
 

@@ -68,9 +68,8 @@ CC_VAR extern struct _GfxData {
 	struct Matrix View, Projection;
 	/* Whether the graphics backend supports non power of two textures */
 	cc_bool SupportsNonPowTwoTextures;
-	/* Whether the graphics backend supports U/V that don't occupy whole texture */
-	/*   e.g. Saturn, 3D0 systems don't support it */
-	cc_bool NoUVSupport;
+	/* Limitations of the graphics backend, see GFX_LIMIT values */
+	cc_bool Limitations;
 	/* Type of the backend (e.g. OpenGL, Direct3D 9, etc)*/
 	cc_uint8 BackendType;
 	cc_bool __pad;
@@ -85,6 +84,13 @@ CC_VAR extern struct _GfxData {
 	/* Default index buffer for a triangle list representing quads */
 	GfxResourceID DefaultIb;
 } Gfx;
+
+/* Whether the graphics backend supports U/V that don't occupy whole texture */
+/*   e.g. Saturn, 3D0 systems don't support it */
+#define GFX_LIMIT_NO_UV_SUPPORT   0x01
+/* Whether the graphics backend requires very large quads to be broken
+/*  up into smaller quads, to reduce fog interpolation artifacts */
+#define GFX_LIMIT_VERTEX_ONLY_FOG 0x02
 
 extern const cc_string Gfx_LowPerfMessage;
 

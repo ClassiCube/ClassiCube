@@ -500,6 +500,8 @@ cc_bool Gfx_WarnIfNecessary(void) {
 		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
 		Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
 		Chat_AddRaw("&cYou may need to install video card drivers.");
+
+		Gfx.Limitations |= GFX_LIMIT_VERTEX_ONLY_FOG;
 		return true;
 	}
 	if (String_ContainsConst(&renderer, "Intel")) {
@@ -508,6 +510,8 @@ cc_bool Gfx_WarnIfNecessary(void) {
 		#ifdef CC_BUILD_WIN
 		Chat_AddRaw("&cTry downloading the Direct3D 9 build instead.");
 		#endif
+
+		Gfx.Limitations |= GFX_LIMIT_VERTEX_ONLY_FOG;
 		return true;
 	}
 	return false;
