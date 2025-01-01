@@ -12,19 +12,19 @@ LDFLAGS=-lm
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
-SOURCE_DIR	:=	src
-C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
-C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
-
 ifdef ARCH_68040
 	TARGET		:=	ClassiCube-68040
-	BUILD_DIR 	:=	build-68k
+	BUILD_DIR 	:=	build-68040
 	CFLAGS		+= -march=68040
 else
 	TARGET		:=	ClassiCube-68k
-	BUILD_DIR 	:=	build-68040
+	BUILD_DIR 	:=	build-68k
 	CFLAGS		+= -DCC_BUILD_NOFPU
 endif
+
+SOURCE_DIR	:=	src
+C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
+C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
