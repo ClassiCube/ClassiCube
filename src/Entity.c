@@ -22,6 +22,7 @@
 #include "Errors.h"
 #include "Utils.h"
 #include "EntityRenderers.h"
+#include "Protocol.h"
 
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -800,6 +801,7 @@ static void LocalPlayers_OnNewMap(void) {
 }
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
+
 static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	struct LocationUpdate update;
 	struct AABB bb;
@@ -828,6 +830,9 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 			bb.Min.y += 1.0f; bb.Max.y += 1.0f;
 		}
 	}
+
+	struct EntityLocation* prev = &p->Base.prev;
+	CPE_SendNotifyPositionAction(3, prev->pos.x, prev->pos.y, prev->pos.z);
 
 	/* Adjust the position to be slightly above the ground, so that */
 	/*  it's obvious to the player that they are being respawned */
@@ -884,6 +889,8 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 		
 		p->SpawnYaw   = p->Base.Yaw;
 		if (!Game_ClassicMode) p->SpawnPitch = p->Base.Pitch;
+
+		CPE_SendNotifyPositionAction(4, p->Spawn.x, p->Spawn.y, p->Spawn.z);
 	}
 	return LocalPlayer_HandleRespawn(key, device);
 }
