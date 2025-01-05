@@ -708,6 +708,10 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 		Gfx_SetTopRight();
 		Gui_RenderGui(delta);
 	}
+	for (i = 0; i < Array_Elems(Game.Draw2DHooks); i++)
+	{
+		if (Game.Draw2DHooks[i]) Game.Draw2DHooks[i](delta);
+	}
 #endif
 	Gfx_End2D();
 }
