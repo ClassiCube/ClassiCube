@@ -824,8 +824,10 @@ void Window_DisableRawMouse(void) {
 #if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static HGLRC ctx_handle;
 static HDC ctx_DC;
+
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
 static FP_SWAPINTERVAL wglSwapIntervalEXT;
+
 static void* gl_lib;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
@@ -885,7 +887,7 @@ void GLContext_Free(void) {
 	ctx_handle = NULL;
 }
 
-static PROC (WINAPI *_wglGetProcAddress)(LPCSTR);
+static PROC (WINAPI *_wglGetProcAddress)(LPCSTR func);
 /* https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions#Windows */
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 

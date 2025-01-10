@@ -95,7 +95,7 @@ BitmapCol BitmapColor_Scale(BitmapCol a, float t);
 /* A 2D array of BitmapCol pixels */
 struct Bitmap { BitmapCol* scan0; int width, height; };
 /* Returns number of bytes a bitmap consumes. */
-#define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * 4)
+#define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * BITMAPCOLOR_SIZE)
 /* Gets the yth row of the given bitmap. */
 #define Bitmap_GetRow(bmp, y) ((bmp)->scan0 + (y) * (bmp)->width)
 /* Gets the pixel at (x,y) in the given bitmap. */
