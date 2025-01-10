@@ -17,10 +17,10 @@ CC_KERN32_FUNC void (NTAPI *_RtlCaptureContext)(CONTEXT* ContextRecord);
 
 static void Kernel32_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(AttachConsole), 
-		DynamicLib_Sym(IsDebuggerPresent),
-		DynamicLib_Sym(GetSystemTimeAsFileTime),
-		DynamicLib_Sym(RtlCaptureContext)
+		DynamicLib_OptSym(AttachConsole), 
+		DynamicLib_OptSym(IsDebuggerPresent),
+		DynamicLib_OptSym(GetSystemTimeAsFileTime),
+		DynamicLib_OptSym(RtlCaptureContext)
 	};
 
 	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");

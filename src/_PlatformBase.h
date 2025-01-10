@@ -157,7 +157,9 @@ cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
 
 
 cc_bool DynamicLib_LoadAll(const cc_string* path, const struct DynamicLibSym* syms, int count, void** _lib) {
-	int i, loaded = 0;
+	cc_bool foundAllRequired = true;
+	cc_string symName;
+	int i;
 	void* addr;
 	void* lib;
 
@@ -167,8 +169,13 @@ cc_bool DynamicLib_LoadAll(const cc_string* path, const struct DynamicLibSym* sy
 
 	for (i = 0; i < count; i++) {
 		addr = DynamicLib_Get2(lib, syms[i].name);
-		if (addr) loaded++;
 		*syms[i].symAddr = addr;
+				
+		if (addr || !syms[i].required) continue;
+		symName = String_FromReadonly(syms[i].name);
+		
+		Logger_DynamicLibWarn("loading symbol", &symName);
+		foundAllRequired = false;
 	}
-	return loaded == count;
+	return foundAllRequired;
 }

@@ -1085,7 +1085,7 @@ static BOOL (WINAPI *_RtlGenRandom)(PVOID data, ULONG len);
 
 cc_result Platform_GetEntropy(void* data, int len) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym2("SystemFunction036", RtlGenRandom)
+		DynamicLib_ReqSym2("SystemFunction036", RtlGenRandom)
 	};
 
 	if (!_RtlGenRandom) {

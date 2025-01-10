@@ -105,17 +105,17 @@ static const cc_string alLib = String_FromConst("libopenal.so.1");
 
 static cc_bool LoadALFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(alcCreateContext),  DynamicLib_Sym(alcMakeContextCurrent),
-		DynamicLib_Sym(alcDestroyContext), DynamicLib_Sym(alcOpenDevice),
-		DynamicLib_Sym(alcCloseDevice),    DynamicLib_Sym(alcGetError),
+		DynamicLib_ReqSym(alcCreateContext),  DynamicLib_ReqSym(alcMakeContextCurrent),
+		DynamicLib_ReqSym(alcDestroyContext), DynamicLib_ReqSym(alcOpenDevice),
+		DynamicLib_ReqSym(alcCloseDevice),    DynamicLib_ReqSym(alcGetError),
 
-		DynamicLib_Sym(alGetError),
-		DynamicLib_Sym(alGenSources),      DynamicLib_Sym(alDeleteSources),
-		DynamicLib_Sym(alGetSourcei),      DynamicLib_Sym(alSourcef),
-		DynamicLib_Sym(alSourcePlay),      DynamicLib_Sym(alSourceStop),
-		DynamicLib_Sym(alSourceQueueBuffers), DynamicLib_Sym(alSourceUnqueueBuffers),
-		DynamicLib_Sym(alGenBuffers),      DynamicLib_Sym(alDeleteBuffers),
-		DynamicLib_Sym(alBufferData),      DynamicLib_Sym(alDistanceModel)
+		DynamicLib_ReqSym(alGetError),
+		DynamicLib_ReqSym(alGenSources),      DynamicLib_ReqSym(alDeleteSources),
+		DynamicLib_ReqSym(alGetSourcei),      DynamicLib_ReqSym(alSourcef),
+		DynamicLib_ReqSym(alSourcePlay),      DynamicLib_ReqSym(alSourceStop),
+		DynamicLib_ReqSym(alSourceQueueBuffers), DynamicLib_ReqSym(alSourceUnqueueBuffers),
+		DynamicLib_ReqSym(alGenBuffers),      DynamicLib_ReqSym(alDeleteBuffers),
+		DynamicLib_ReqSym(alBufferData),      DynamicLib_ReqSym(alDistanceModel)
 	};
 	void* lib;
 	
@@ -499,10 +499,10 @@ static const cc_string slLib = String_FromConst("libOpenSLES.so");
 
 static cc_bool LoadSLFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(slCreateEngine),     DynamicLib_Sym(SL_IID_NULL),
-		DynamicLib_Sym(SL_IID_PLAY),        DynamicLib_Sym(SL_IID_ENGINE),
-		DynamicLib_Sym(SL_IID_BUFFERQUEUE), DynamicLib_Sym(SL_IID_PLAYBACKRATE),
-		DynamicLib_Sym(SL_IID_VOLUME)
+		DynamicLib_ReqSym(slCreateEngine),     DynamicLib_ReqSym(SL_IID_NULL),
+		DynamicLib_ReqSym(SL_IID_PLAY),        DynamicLib_ReqSym(SL_IID_ENGINE),
+		DynamicLib_ReqSym(SL_IID_BUFFERQUEUE), DynamicLib_ReqSym(SL_IID_PLAYBACKRATE),
+		DynamicLib_ReqSym(SL_IID_VOLUME)
 	};
 	void* lib;
 	

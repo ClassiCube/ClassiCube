@@ -107,7 +107,7 @@ static PFN_D3D11_CREATE_DEVICE _D3D11CreateDevice;
 
 static void LoadD3D11Library(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(D3D11CreateDevice)
+		DynamicLib_ReqSym(D3D11CreateDevice)
 	};
 	static const cc_string path = String_FromConst("d3d11.dll");
 	void* lib;

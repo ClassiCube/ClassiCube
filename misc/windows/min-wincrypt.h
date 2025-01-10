@@ -12,7 +12,7 @@ CC_CRYPT32_FUNC BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dat
 
 static void Crypt32_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(CryptProtectData), DynamicLib_Sym(CryptUnprotectData)
+		DynamicLib_OptSym(CryptProtectData), DynamicLib_OptSym(CryptUnprotectData)
 	};
 
 	static const cc_string crypt32 = String_FromConst("CRYPT32.DLL");

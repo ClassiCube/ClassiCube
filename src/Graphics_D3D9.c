@@ -53,7 +53,7 @@ static IDirect3D9* (WINAPI *_Direct3DCreate9)(UINT SDKVersion);
 
 static void LoadD3D9Library(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(Direct3DCreate9)
+		DynamicLib_ReqSym(Direct3DCreate9)
 	};
 	static const cc_string path = String_FromConst("d3d9.dll");
 	void* lib;

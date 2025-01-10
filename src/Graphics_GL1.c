@@ -711,14 +711,14 @@ static void FallbackOpenGL(void) {
 
 static void GLBackend_Init(void) {
 	static const struct DynamicLibSym coreVboFuncs[] = {
-		DynamicLib_Sym2("glBindBuffer",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffers", glDeleteBuffers),
-		DynamicLib_Sym2("glGenBuffers",    glGenBuffers), DynamicLib_Sym2("glBufferData",    glBufferData),
-		DynamicLib_Sym2("glBufferSubData", glBufferSubData)
+		DynamicLib_ReqSym2("glBindBuffer",    glBindBuffer), DynamicLib_ReqSym2("glDeleteBuffers", glDeleteBuffers),
+		DynamicLib_ReqSym2("glGenBuffers",    glGenBuffers), DynamicLib_ReqSym2("glBufferData",    glBufferData),
+		DynamicLib_ReqSym2("glBufferSubData", glBufferSubData)
 	};
 	static const struct DynamicLibSym arbVboFuncs[] = {
-		DynamicLib_Sym2("glBindBufferARB",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffersARB", glDeleteBuffers),
-		DynamicLib_Sym2("glGenBuffersARB",    glGenBuffers), DynamicLib_Sym2("glBufferDataARB",    glBufferData),
-		DynamicLib_Sym2("glBufferSubDataARB", glBufferSubData)
+		DynamicLib_ReqSym2("glBindBufferARB",    glBindBuffer), DynamicLib_ReqSym2("glDeleteBuffersARB", glDeleteBuffers),
+		DynamicLib_ReqSym2("glGenBuffersARB",    glGenBuffers), DynamicLib_ReqSym2("glBufferDataARB",    glBufferData),
+		DynamicLib_ReqSym2("glBufferSubDataARB", glBufferSubData)
 	};
 	static const cc_string vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
 	cc_string extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));

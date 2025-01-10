@@ -47,9 +47,9 @@ CC_USER32_FUNC BOOL (WINAPI *_SetProcessDPIAware)(void);
 
 static void User32_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(RegisterRawInputDevices),
-		DynamicLib_Sym(GetRawInputData),
-		DynamicLib_Sym(SetProcessDPIAware)
+		DynamicLib_OptSym(RegisterRawInputDevices),
+		DynamicLib_OptSym(GetRawInputData),
+		DynamicLib_OptSym(SetProcessDPIAware)
 	};
 	static const cc_string user32 = String_FromConst("USER32.DLL");
 	void* lib;

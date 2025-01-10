@@ -147,14 +147,14 @@ CC_WINSOCK_FUNC void (WINAPI* _freeaddrinfo)(ADDRINFOA* addrInfo);
 
 static void Winsock_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(WSAStartup),      DynamicLib_Sym(WSACleanup),
-		DynamicLib_Sym(WSAGetLastError), DynamicLib_Sym(WSAStringToAddressW),
-		DynamicLib_Sym(socket),          DynamicLib_Sym(closesocket),
-		DynamicLib_Sym(connect),         DynamicLib_Sym(shutdown),
-		DynamicLib_Sym(ioctlsocket),     DynamicLib_Sym(getsockopt),
-		DynamicLib_Sym(gethostbyname),   DynamicLib_Sym(htons),
-		DynamicLib_Sym(getaddrinfo),     DynamicLib_Sym(freeaddrinfo),
-		DynamicLib_Sym(recv), DynamicLib_Sym(send), DynamicLib_Sym(select)
+		DynamicLib_ReqSym(WSAStartup),      DynamicLib_ReqSym(WSACleanup),
+		DynamicLib_ReqSym(WSAGetLastError), DynamicLib_OptSym(WSAStringToAddressW),
+		DynamicLib_ReqSym(socket),          DynamicLib_ReqSym(closesocket),
+		DynamicLib_ReqSym(connect),         DynamicLib_ReqSym(shutdown),
+		DynamicLib_ReqSym(ioctlsocket),     DynamicLib_ReqSym(getsockopt),
+		DynamicLib_ReqSym(gethostbyname),   DynamicLib_ReqSym(htons),
+		DynamicLib_OptSym(getaddrinfo),     DynamicLib_OptSym(freeaddrinfo),
+		DynamicLib_ReqSym(recv), DynamicLib_ReqSym(send), DynamicLib_ReqSym(select)
 	};
 	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
 	static const cc_string winsock2 = String_FromConst("WS2_32.DLL");
@@ -162,5 +162,5 @@ static void Winsock_LoadDynamicFuncs(void) {
 
 	DynamicLib_LoadAll(&winsock2, funcs, Array_Elems(funcs), &lib);
 	/* Windows 95 is missing WS2_32 dll */
-	if (!_WSAStartup) DynamicLib_LoadAll(&winsock1, funcs, Array_Elems(funcs), &lib);
+	if (!lib) DynamicLib_LoadAll(&winsock1, funcs, Array_Elems(funcs), &lib);
 }
