@@ -823,12 +823,17 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static HGLRC ctx_handle;
-static HDC ctx_DC;
+static HDC   ctx_DC;
+static void* gl_lib;
+
+static HGLRC (WINAPI *_wglCreateContext)(HDC dc);
+static BOOL  (WINAPI *_wglDeleteContext)(HGLRC glrc);
+static HDC   (WINAPI *_wglGetCurrentDC)(void);
+static BOOL  (WINAPI *_wglMakeCurrent)(HDC dc, HGLRC glrc);
+static PROC  (WINAPI *_wglGetProcAddress)(LPCSTR func);
 
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
-static FP_SWAPINTERVAL wglSwapIntervalEXT;
-
-static void* gl_lib;
+static FP_SWAPINTERVAL _wglSwapIntervalEXT;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
@@ -859,41 +864,47 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 }
 
 void GLContext_Create(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_ReqSym(wglCreateContext),
+		DynamicLib_ReqSym(wglDeleteContext),
+		DynamicLib_ReqSym(wglGetCurrentDC),
+		DynamicLib_ReqSym(wglMakeCurrent),
+		DynamicLib_OptSym(wglGetProcAddress)
+	};
 	static const cc_string glPath = String_FromConst("OPENGL32.dll");
 	struct GraphicsMode mode;
 
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
-	gl_lib = DynamicLib_Load2(&glPath);
+	DynamicLib_LoadAll(&glPath, funcs, Array_Elems(funcs), &gl_lib);
 
-	ctx_handle = wglCreateContext(win_DC);
+	ctx_handle = _wglCreateContext(win_DC);
 	if (!ctx_handle) {
 		Process_Abort2(GetLastError(), "Failed to create OpenGL context");
 	}
 
-	if (!wglMakeCurrent(win_DC, ctx_handle)) {
+	if (!_wglMakeCurrent(win_DC, ctx_handle)) {
 		Process_Abort2(GetLastError(), "Failed to make OpenGL context current");
 	}
 
-	ctx_DC = wglGetCurrentDC();
-	wglSwapIntervalEXT = (FP_SWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
+	ctx_DC = _wglGetCurrentDC();
+	_wglSwapIntervalEXT = (FP_SWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
 }
 
 void GLContext_Update(void) { }
 cc_bool GLContext_TryRestore(void) { return true; }
+
 void GLContext_Free(void) {
 	if (!ctx_handle) return;
-	wglDeleteContext(ctx_handle);
+	_wglDeleteContext(ctx_handle);
 	ctx_handle = NULL;
 }
 
-static PROC (WINAPI *_wglGetProcAddress)(LPCSTR func);
 /* https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions#Windows */
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 
 void* GLContext_GetAddress(const char* function) {
 	/* Not present on NT 3.5 */
-	if (!_wglGetProcAddress) _wglGetProcAddress = DynamicLib_Get2(gl_lib, "wglGetProcAddress");
 	if (_wglGetProcAddress) {
 		void* addr = (void*)_wglGetProcAddress(function);
 		if (!GLContext_IsInvalidAddress(addr)) return addr;
@@ -909,8 +920,8 @@ cc_bool GLContext_SwapBuffers(void) {
 }
 
 void GLContext_SetVSync(cc_bool vsync) {
-	if (!wglSwapIntervalEXT) return;
-	wglSwapIntervalEXT(vsync);
+	if (!_wglSwapIntervalEXT) return;
+	_wglSwapIntervalEXT(vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }
 #endif

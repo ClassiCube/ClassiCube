@@ -246,7 +246,7 @@ typedef cc_uint8  cc_bool;
 		#define CC_BUILD_EGL
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 	#else
-		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1	
+		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 	#endif
 #elif defined __APPLE__
 	#define CC_BUILD_DARWIN
