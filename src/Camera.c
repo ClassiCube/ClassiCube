@@ -307,7 +307,7 @@ void Camera_CycleActive(void) {
 	if (Camera.Active == &cam_FirstPerson) cycle = 0;
 	else if (Camera.Active == &cam_ThirdPerson) cycle = 1;
 	else if (cam_isForwardThird) cycle = 2;
-	CPE_SendNotifyAction(7, cycle);
+	CPE_SendNotifyAction(NOTIFY_ACTION_THIRD_PERSON_CHANGED, cycle);
 
 	/* reset rotation offset when changing cameras */
 	cam_rotOffset.x = 0.0f; cam_rotOffset.y = 0.0f;
