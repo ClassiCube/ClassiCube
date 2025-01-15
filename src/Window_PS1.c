@@ -20,6 +20,7 @@
 #include <psxgte.h>
 #include <psxgpu.h>
 #include <psxpad.h>
+#include "../misc/ps1/ps1defs.h"
 
 #define SCREEN_XRES	320
 #define SCREEN_YRES	240
@@ -170,10 +171,49 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+#define wait_while(cond) while (cond) { __asm__ volatile(""); }
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+}
+
+#define DMA_BLOCK_SIZE 16 // max block size per Nocash PSX docs
+static void TransferToVRAM(const RECT* r, void* pixels) {
+	unsigned num_words  = (r->w * r->h) / 2; // number of uint16s -> uint32s
+	unsigned num_blocks = num_words / DMA_BLOCK_SIZE;
+
+	// Wait until GPU is ready to receive a command
+	wait_while(!(GPU_GP1 & GPU_STATUS_CMD_READY));
+
+	GPU_GP1 = GP1_CMD_DMA_MODE | GP1_DMA_NONE;
+	GPU_GP0 = GP0_CMD_CLEAR_VRAM_CACHE;
+
+	// Write GPU command for transferring RAM to VRAM
+	GPU_GP0 = GP0_CMD_TRANSFER_TO_VRAM;
+	GPU_GP0 = r->x | (r->y << 16);
+	GPU_GP0 = r->w | (r->h << 16);
+
+	GPU_GP1 = GP1_CMD_DMA_MODE | GP1_DMA_CPU_TO_GP0;
+
+	// Wait until any prior DMA to GPU has finished
+	wait_while((DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY));
+	// Wait until GPU is ready to receive DMA data
+	wait_while(!(GPU_GP1 & GPU_STATUS_DMA_RECV_READY));
+
+	DMA_MADR(DMA_GPU) = (uint32_t)pixels;
+	DMA_BCR(DMA_GPU)  = DMA_BLOCK_SIZE | (num_blocks << 16);
+	DMA_CHCR(DMA_GPU) = CHRC_BEGIN | CHRC_MODE_SLICE | CHRC_FROM_RAM;
+}
+
+static void WaitUntilFinished(void) {
+	// Wait until DMA to GPU has finished
+	wait_while((DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY));
+	// Wait until GPU is ready to receive DMA data again
+	wait_while(!(GPU_GP1 & GPU_STATUS_DMA_RECV_READY));
+	// Wait until GPU is ready to receive commands again
+	wait_while(!(GPU_GP1 & GPU_STATUS_CMD_READY));
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -183,8 +223,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	rect.w = SCREEN_XRES;
 	rect.h = SCREEN_YRES;
 
-	LoadImage(&rect, bmp->scan0);
-	DrawSync(0);
+	TransferToVRAM(&rect, bmp->scan0);
+	WaitUntilFinished();
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
