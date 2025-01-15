@@ -12,45 +12,46 @@
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
 #include "../misc/opengl/GLCommon.h"
 
-/* e.g. GLAPI void APIENTRY glFunction(int args); */
-#define GL_FUNC(_retType, name) GLAPI _retType APIENTRY name
+/* e.g. GLAPI void APIENTRY glFunction(int value); */
+#define GL_FUNC(retType, name, args) GLAPI retType APIENTRY name args;
 #include "../misc/opengl/GL1Funcs.h"
 
 /* Functions must be dynamically linked on Windows */
 #ifdef CC_BUILD_WIN
-/* e.g. static void (APIENTRY *_glFunction)(int args); */
+/* e.g. static void (APIENTRY *_glFunction)(int value); */
 #undef  GL_FUNC
-#define GL_FUNC(_retType, name) static _retType (APIENTRY *name)
+#define GL_FUNC(retType, name, args) static retType (APIENTRY *name) args;
 #include "../misc/opengl/GL2Funcs.h"
 
-#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&sym }
 static const struct DynamicLibSym core_funcs[] = {
-	GLSym(glBindBuffer), GLSym(glDeleteBuffers), GLSym(glGenBuffers), GLSym(glBufferData), GLSym(glBufferSubData),
-
-	GLSym(glCreateShader),  GLSym(glDeleteShader),  GLSym(glGetShaderiv), GLSym(glGetShaderInfoLog), GLSym(glShaderSource),
-	GLSym(glAttachShader),  GLSym(glBindAttribLocation), GLSym(glCompileShader), GLSym(glDetachShader), GLSym(glLinkProgram),
-
-	GLSym(glCreateProgram), GLSym(glDeleteProgram), GLSym(glGetProgramiv), GLSym(glGetProgramInfoLog), GLSym(glUseProgram),
-
-	GLSym(glDisableVertexAttribArray), GLSym(glEnableVertexAttribArray), GLSym(glVertexAttribPointer),
-
-	GLSym(glGetUniformLocation), GLSym(glUniform1f), GLSym(glUniform2f), GLSym(glUniform3f), GLSym(glUniformMatrix4fv),
+	/* e.g. { DYNAMICLIB_QUOTE(name), (void**)&_ ## name }, */
+	#undef  GL_FUNC
+	#define GL_FUNC(retType, name, args) { DYNAMICLIB_QUOTE(name), (void**)&name },
+	#include "../misc/opengl/GL2Funcs.h"
 };
 #else
-#include "../misc/opengl/GL2Funcs.h"
+	#include "../misc/opengl/GL2Funcs.h"
 #endif
 
-#define _glBindTexture    glBindTexture
-#define _glDeleteTextures glDeleteTextures
-#define _glGenTextures    glGenTextures
-#define _glTexImage2D     glTexImage2D
-#define _glTexSubImage2D  glTexSubImage2D
+#include "../misc/opengl/GL1Macros.h"
 
 #include "_GLShared.h"
 static GfxResourceID white_square;
 static int postProcess;
 enum PostProcess { POSTPROCESS_NONE, POSTPROCESS_GRAYSCALE };
 static const char* const postProcess_Names[2] = { "NONE", "GRAYSCALE" };
+
+void Gfx_Create(void) {
+	GLContext_Create();
+#ifdef CC_BUILD_WIN
+	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));
+#endif
+	Gfx.BackendType = CC_GFX_BACKEND_GL2;
+	
+	GL_InitCommon();
+	Gfx_RestoreState();
+	GLContext_SetVSync(gfx_vsync);
+}
 
 
 /*########################################################################################################################*
@@ -521,20 +522,7 @@ void Gfx_DisableTextureOffset(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------State setup-------------------------------------------------------*
 *#########################################################################################################################*/
-static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
-	int i;
-	for (i = 0; i < count; i++) 
-	{
-		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
-	}
-}
-
 static void GLBackend_Init(void) {
-#ifdef CC_BUILD_WIN
-	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));
-#endif
-	Gfx.BackendType = CC_GFX_BACKEND_GL2;
-
 #ifdef CC_BUILD_GLES
 	// OpenGL ES 2.0 doesn't support custom mipmaps levels, but 3.2 does
 	// Note that GL_MAJOR_VERSION and GL_MINOR_VERSION were not actually

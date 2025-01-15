@@ -27,17 +27,20 @@
 *#########################################################################################################################*/
 static void GLBackend_Init(void);
 
-void Gfx_Create(void) {
-	GLContext_Create();
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
+static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
+	int i;
+	for (i = 0; i < count; i++) 
+	{
+		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
+	}
+}
+
+static void GL_InitCommon(void) {
+	_glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 	Gfx.Created      = true;
 	/* necessary for android which "loses" context when window is closed */
 	Gfx.LostContext  = false;
-
-	GLBackend_Init();
-	Gfx_RestoreState();
-	GLContext_SetVSync(gfx_vsync);
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -49,7 +52,6 @@ void Gfx_Free(void) {
 	GLContext_Free();
 }
 
-#define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
 static void* tmpData;
 static int tmpSize;
 
@@ -122,16 +124,16 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	GfxResourceID texId = NULL;
 	_glGenTextures(1, (GLuint*)&texId);
 	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 
 	if (mipmaps) {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		if (customMipmapsLevels) {
 			int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
-			glTexParameteri(GL_TEXTURE_2D, _GL_TEXTURE_MAX_LEVEL, lvls);
+			_glTexParameteri(GL_TEXTURE_2D, _GL_TEXTURE_MAX_LEVEL, lvls);
 		}
 	} else {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
+		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 	}
 
 	if (bmp->width == rowWidth) {
@@ -170,13 +172,19 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-static void SetAlphaBlend(cc_bool enabled) { gl_Toggle(GL_BLEND); }
+
+void Gfx_SetFaceCulling(cc_bool enabled) {
+	if (enabled) { _glEnable(GL_CULL_FACE); } else { _glDisable(GL_CULL_FACE); }
+}
+
+static void SetAlphaBlend(cc_bool enabled) { 
+	if (enabled) { _glEnable(GL_BLEND); } else { _glDisable(GL_BLEND); }
+}
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void GL_ClearColor(PackedCol color) {
-	glClearColor(PackedCol_R(color) / 255.0f, PackedCol_G(color) / 255.0f,
-				 PackedCol_B(color) / 255.0f, PackedCol_A(color) / 255.0f);
+	_glClearColor(PackedCol_R(color) / 255.0f, PackedCol_G(color) / 255.0f,
+				  PackedCol_B(color) / 255.0f, PackedCol_A(color) / 255.0f);
 }
 void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
@@ -185,11 +193,16 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	glColorMask(r, g, b, a);
+	_glColorMask(r, g, b, a);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
-void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	_glDepthMask(enabled);
+}
+
+void Gfx_SetDepthTest(cc_bool enabled) {
+	if (enabled) { _glEnable(GL_DEPTH_TEST); } else { _glDisable(GL_DEPTH_TEST); }
+}
 
 
 /*########################################################################################################################*
@@ -241,13 +254,13 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	cc_result res;
 	GLint vp[4];
 	
-	glGetIntegerv(GL_VIEWPORT, vp); /* { x, y, width, height } */
+	_glGetIntegerv(GL_VIEWPORT, vp); /* { x, y, width, height } */
 	bmp.width  = vp[2]; 
 	bmp.height = vp[3];
 
 	bmp.scan0  = (BitmapCol*)Mem_TryAlloc(bmp.width * bmp.height, BITMAPCOLOR_SIZE);
 	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
-	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
+	_glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
 
 	res = Png_Encode(&bmp, output, GL_GetRow, false, NULL);
 	Mem_Free(bmp.scan0);
@@ -260,11 +273,11 @@ static void AppendVRAMStats(cc_string* info) {
 	float total, cur;
 
 	/* NOTE: glGetString returns UTF8, but I just treat it as code page 437 */
-	cc_string exts = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
+	cc_string exts = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
 	if (!String_CaselessContains(&exts, &memExt)) return;
 
-	glGetIntegerv(0x9048, &totalKb);
-	glGetIntegerv(0x9049, &curKb);
+	_glGetIntegerv(0x9048, &totalKb);
+	_glGetIntegerv(0x9049, &curKb);
 	if (totalKb <= 0 || curKb <= 0) return;
 
 	total = totalKb / 1024.0f; cur = curKb / 1024.0f;
@@ -275,18 +288,18 @@ void Gfx_GetApiInfo(cc_string* info) {
 	GLint depthBits = 0;
 	int pointerSize = sizeof(void*) * 8;
 
-	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
+	_glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	String_Format1(info, "-- Using OpenGL Modern (%i bit) --\n", &pointerSize);
 #else
 	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
 #endif
-	String_Format1(info, "Vendor: %c\n",     glGetString(GL_VENDOR));
-	String_Format1(info, "Renderer: %c\n",   glGetString(GL_RENDERER));
-	String_Format1(info, "GL version: %c\n", glGetString(GL_VERSION));
+	String_Format1(info, "Vendor: %c\n",     _glGetString(GL_VENDOR));
+	String_Format1(info, "Renderer: %c\n",   _glGetString(GL_RENDERER));
+	String_Format1(info, "GL version: %c\n", _glGetString(GL_VERSION));
 	AppendVRAMStats(info);
 	PrintMaxTextureInfo(info);
-	String_Format1(info, "Depth buffer bits: %i\n",      &depthBits);
+	String_Format1(info, "Depth buffer bits: %i\n", &depthBits);
 	GLContext_GetApiInfo(info);
 }
 
@@ -301,7 +314,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_COLOR) targets |= GL_COLOR_BUFFER_BIT;
 	if (buffers & GFX_BUFFER_DEPTH) targets |= GL_DEPTH_BUFFER_BIT;
 	
-	glClear(targets); 
+	_glClear(targets); 
 }
 
 void Gfx_EndFrame(void) {
@@ -330,12 +343,12 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	glViewport(x, y, w, h);
+	_glViewport(x, y, w, h);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
 	cc_bool enabled = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
-	if (enabled) { glEnable(GL_SCISSOR_TEST); } else { glDisable(GL_SCISSOR_TEST); }
+	if (enabled) { _glEnable(GL_SCISSOR_TEST); } else { _glDisable(GL_SCISSOR_TEST); }
 
-	glScissor(x, Game.Height - h - y, w, h);
+	_glScissor(x, Game.Height - h - y, w, h);
 }

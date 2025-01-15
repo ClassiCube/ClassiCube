@@ -18,8 +18,8 @@
 */
 #include "../misc/opengl/GLCommon.h"
 
-/* e.g. GLAPI void APIENTRY glFunction(int args); */
-#define GL_FUNC(_retType, name) GLAPI _retType APIENTRY name
+/* e.g. GLAPI void APIENTRY glFunction(int value); */
+#define GL_FUNC(retType, name, args) GLAPI retType APIENTRY name args;
 #include "../misc/opengl/GL1Funcs.h"
 
 #if defined CC_BUILD_GL11
@@ -36,14 +36,6 @@ static void (APIENTRY *_glBufferData)(GLenum target, cc_uintptr size, const GLvo
 static void (APIENTRY *_glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
 #endif
 
-static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
-	int i;
-	for (i = 0; i < count; i++) 
-	{
-		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
-	}
-}
-
 
 #if defined CC_BUILD_GL11_FALLBACK && !defined CC_BUILD_GL11
 /* Note the following about calling OpenGL functions on Windows */
@@ -56,46 +48,24 @@ static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
 /*    call [glDrawElements]  --> opengl32.dll thunk--> GL driver thunk --> GL driver implementation */
 /*    call [_glDrawElements] --> GL driver thunk --> GL driver implementation */
 
-/* e.g. typedef void (APIENTRY *FP_glFunction)(int args); */
+/* e.g. typedef void (APIENTRY *FP_glFunction)(int value); */
 #undef  GL_FUNC
-#define GL_FUNC(_retType, name) typedef _retType (APIENTRY *FP_ ## name)
+#define GL_FUNC(retType, name, args) typedef retType (APIENTRY *FP_ ## name)args;
 #include "../misc/opengl/GL1Funcs.h"
 
-/* e.g. static void (APIENTRY *_glFunction)(int args); */
+/* e.g. static void (APIENTRY *_glFunction)(int value); */
 #undef  GL_FUNC
-#define GL_FUNC(_retType, name) static _retType (APIENTRY *_ ## name)
+#define GL_FUNC(retType, name, args) static retType (APIENTRY *_ ## name)args;
 #include "../misc/opengl/GL1Funcs.h"
 
-#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&_ ## sym }
 static const struct DynamicLibSym coreFuncs[] = {
-	GLSym(glColorPointer), GLSym(glTexCoordPointer), GLSym(glVertexPointer),
-
-	GLSym(glDrawArrays),   GLSym(glDrawElements),
-
-	GLSym(glBindTexture),  GLSym(glDeleteTextures), GLSym(glGenTextures),
-	GLSym(glTexImage2D),   GLSym(glTexSubImage2D),
-	GLSym(glDisableClientState), GLSym(glEnableClientState)
+	/* e.g. { DYNAMICLIB_QUOTE(name), (void**)&_ ## name }, */
+	#undef  GL_FUNC
+	#define GL_FUNC(retType, name, args) { DYNAMICLIB_QUOTE(name), (void**)&_ ## name },
+	#include "../misc/opengl/GL1Funcs.h"
 };
-
-static void LoadCoreFuncs(void) {
-	GLContext_GetAll(coreFuncs, Array_Elems(coreFuncs));
-}
 #else
-#define _glColorPointer    glColorPointer
-#define _glTexCoordPointer glTexCoordPointer
-#define _glVertexPointer   glVertexPointer
-
-#define _glDrawArrays      glDrawArrays
-#define _glDrawElements    glDrawElements
-
-#define _glBindTexture    glBindTexture
-#define _glDeleteTextures glDeleteTextures
-#define _glGenTextures    glGenTextures
-#define _glTexImage2D     glTexImage2D
-#define _glTexSubImage2D  glTexSubImage2D
-
-#define _glDisableClientState glDisableClientState
-#define _glEnableClientState  glEnableClientState
+	#include "../misc/opengl/GL1Macros.h"
 #endif
 
 typedef void (*GL_SetupVBFunc)(void);
@@ -103,6 +73,21 @@ typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 #include "_GLShared.h"
+
+void Gfx_Create(void) {
+	GLContext_Create();
+#ifdef CC_BUILD_GL11_FALLBACK
+	GLContext_GetAll(coreFuncs, Array_Elems(coreFuncs));
+#endif
+	customMipmapsLevels = true;
+	Gfx.BackendType     = CC_GFX_BACKEND_GL1;
+
+	GL_InitCommon();
+	GLBackend_Init();
+	Gfx_RestoreState();
+	GLContext_SetVSync(gfx_vsync);
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
@@ -322,13 +307,13 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		_glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
+		_glEnable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbTextured;
 		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
 	} else {
 		_glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisable(GL_TEXTURE_2D);
+		_glDisable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbColoured;
 		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
@@ -386,7 +371,7 @@ static int gfx_fogMode  = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
+	if (enabled) { _glEnable(GL_FOG); } else { _glDisable(GL_FOG); }
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -398,19 +383,19 @@ void Gfx_SetFogCol(PackedCol color) {
 	rgba[2] = PackedCol_B(color) / 255.0f; 
 	rgba[3] = PackedCol_A(color) / 255.0f;
 
-	glFogfv(GL_FOG_COLOR, rgba);
+	_glFogfv(GL_FOG_COLOR, rgba);
 	gfx_fogColor = color;
 }
 
 void Gfx_SetFogDensity(float value) {
 	if (value == gfx_fogDensity) return;
-	glFogf(GL_FOG_DENSITY, value);
+	_glFogf(GL_FOG_DENSITY, value);
 	gfx_fogDensity = value;
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
-	glFogf(GL_FOG_END, value);
+	_glFogf(GL_FOG_END, value);
 	gfx_fogEnd = value;
 }
 
@@ -421,38 +406,39 @@ void Gfx_SetFogMode(FogFunc func) {
 #ifdef CC_BUILD_GLES
 	/* OpenGL ES doesn't support glFogi, so use glFogf instead */
 	/*  https://www.khronos.org/registry/OpenGL-Refpages/es1.1/xhtml/ */
-	glFogf(GL_FOG_MODE, modes[func]);
+	_glFogf(GL_FOG_MODE, modes[func]);
 #else
-	glFogi(GL_FOG_MODE, modes[func]);
+	_glFogi(GL_FOG_MODE, modes[func]);
 #endif
 	gfx_fogMode = func;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
+	if (enabled) { _glEnable(GL_ALPHA_TEST); } else { _glDisable(GL_ALPHA_TEST); }
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
 	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
 				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
-	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
+	
+	if (enabled) { _glEnable(GL_TEXTURE_2D); } else { _glDisable(GL_TEXTURE_2D); }
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
+static GLenum matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	if (type != lastMatrix) { lastMatrix = type; _glMatrixMode(matrix_modes[type]); }
 
 	if (matrix == &Matrix_Identity) {
-		glLoadIdentity();
+		_glLoadIdentity();
 	} else {
-		glLoadMatrixf((const float*)matrix);
+		_glLoadMatrixf((const float*)matrix);
 	}
 }
 
@@ -481,14 +467,14 @@ static void Gfx_RestoreState(void) {
 	_glEnableClientState(GL_COLOR_ARRAY);
 	gfx_format = -1;
 
-	glHint(GL_FOG_HINT, GL_NICEST);
-	glAlphaFunc(GL_GREATER, 0.5f);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDepthFunc(GL_LEQUAL);
+	_glHint(GL_FOG_HINT, GL_NICEST);
+	_glAlphaFunc(GL_GREATER, 0.5f);
+	_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	_glDepthFunc(GL_LEQUAL);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
-	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
+	cc_string renderer = String_FromReadonly((const char*)_glGetString(GL_RENDERER));
 	
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
@@ -577,10 +563,10 @@ static struct GL10Texture* gl10_tex;
 static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
 	gl10_tex = (struct GL10Texture*)texture;
 	if (gl10_tex && gl10_tex->pixels) {
-		glTexImage2D(GL_TEXTURE_2D, 0, 4, gl10_tex->width, gl10_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gl10_tex->pixels);
+		_glTexImage2D(GL_TEXTURE_2D, 0, 4, gl10_tex->width, gl10_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gl10_tex->pixels);
 	} else {
 		BitmapCol pixel = BITMAPCOLOR_WHITE;
-		glTexImage2D(GL_TEXTURE_2D, 0, 4, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+		_glTexImage2D(GL_TEXTURE_2D, 0, 4, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
 	}
 }
 
@@ -621,27 +607,27 @@ static cc_uint8* gl10_vb;
 static void APIENTRY gl10_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
 	/* TODO */
 	int i;
-	glBegin(GL_QUADS);
+	_glBegin(GL_QUADS);
 	count = (count * 4) / 6;
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		struct VertexTextured* src = (struct VertexTextured*)gl10_vb;
 		for (i = 0; i < count; i++, src++) 
 		{
-			glColor4ub(PackedCol_R(src->Col), PackedCol_G(src->Col), PackedCol_B(src->Col), PackedCol_A(src->Col));
-			glTexCoord2f(src->U, src->V);
-			glVertex3f(src->x, src->y, src->z);
+			_glColor4ub(PackedCol_R(src->Col), PackedCol_G(src->Col), PackedCol_B(src->Col), PackedCol_A(src->Col));
+			_glTexCoord2f(src->U, src->V);
+			_glVertex3f(src->x, src->y, src->z);
 		}
 	} else {
 		struct VertexColoured* src = (struct VertexColoured*)gl10_vb;
 		for (i = 0; i < count; i++, src++) 
 		{
-			glColor4ub(PackedCol_R(src->Col), PackedCol_G(src->Col), PackedCol_B(src->Col), PackedCol_A(src->Col));
-			glVertex3f(src->x, src->y, src->z);
+			_glColor4ub(PackedCol_R(src->Col), PackedCol_G(src->Col), PackedCol_B(src->Col), PackedCol_A(src->Col));
+			_glVertex3f(src->x, src->y, src->z);
 		}
 	}
 
-	glEnd();
+	_glEnd();
 }
 static void APIENTRY gl10_colorPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
 }
@@ -721,16 +707,11 @@ static void GLBackend_Init(void) {
 		DynamicLib_ReqSym2("glBufferSubDataARB", glBufferSubData)
 	};
 	static const cc_string vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	cc_string extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
-	const GLubyte* ver   = glGetString(GL_VERSION);
+	cc_string extensions = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
+	const GLubyte* ver   = _glGetString(GL_VERSION);
 
 	/* Version string is always: x.y. (and whatever afterwards) */
 	int major = ver[0] - '0', minor = ver[2] - '0';
-#ifdef CC_BUILD_GL11_FALLBACK
-	LoadCoreFuncs();
-#endif
-	customMipmapsLevels = true;
-	Gfx.BackendType     = CC_GFX_BACKEND_GL1;
 
 	/* Supported in core since 1.5 */
 	if (major > 1 || (major == 1 && minor >= 5)) {

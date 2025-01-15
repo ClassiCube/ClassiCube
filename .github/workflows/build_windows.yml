@@ -34,11 +34,11 @@ jobs:
           cp misc/windows/CCicon_32.res src/CCicon_32.res
           cd src
           i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d9.exe  $LATEST_FLAG -lwinmm -limagehlp
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -lwinmm -limagehlp -lopengl32
+          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -lwinmm -limagehlp
           i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d11.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11 -lwinmm -limagehlp
           
           # mingw defaults to i686, but some really old CPUs only support i586
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -march=i586 -o cc-w9x-ogl.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -DCC_BUILD_NOSTDLIB -lwinmm -limagehlp -lopengl32
+          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -march=i586 -o cc-w9x-ogl.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -DCC_BUILD_NOSTDLIB -lwinmm -limagehlp
 
 
       - uses: ./.github/actions/notify_failure
@@ -100,7 +100,7 @@ jobs:
           cp misc/windows/CCicon_64.res src/CCicon_64.res
           cd src
           x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d9.exe  $LATEST_FLAG -lwinmm -limagehlp
-          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -lwinmm -limagehlp -lopengl32
+          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -lwinmm -limagehlp
           x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d11.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11 -lwinmm -limagehlp
           
           
