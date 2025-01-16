@@ -24,7 +24,7 @@ enum gp1_cmd_type {
 	GP1_CMD_DMA_MODE = 0x04000000,
 };
 
-enum gp1_dma_mode {
+enum gp1_cmd_dma_mode {
 	GP1_DMA_NONE       = 0,
 	GP1_DMA_CPU_TO_GP0 = 2,
 };
