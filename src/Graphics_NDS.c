@@ -109,6 +109,46 @@ void Gfx_EndFrame(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static int texOffsetX, texOffsetY;
+
+static void UpdateTextureMatrix(void) {
+	int width  = 0;
+	int height = 0;
+	glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
+	glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
+	
+	// Scale uvm to fit into texture size
+	MATRIX_CONTROL  = 3;
+	MATRIX_IDENTITY = 0;
+
+	MATRIX_SCALE = width  << 6; // X scale
+	MATRIX_SCALE = height << 6; // Y scale
+	MATRIX_SCALE = 0;           // Z scale
+
+	if (texOffsetX || texOffsetY) {
+		MATRIX_TRANSLATE = (texOffsetX * width ); // X
+		MATRIX_TRANSLATE = (texOffsetY * height); // Y
+		MATRIX_TRANSLATE = 0;          // Z
+	}
+
+	MATRIX_CONTROL  = matrix_modes[lastMatrix];
+}
+
+void Gfx_EnableTextureOffset(float x, float y) {
+	// Looks bad due to low uvm precision
+	// TODO: Right for negative x/y ?
+	// TODO speed probably isn't quite right
+	texOffsetX = (int)(x * 32768) & (32768 - 1);
+	texOffsetY = (int)(y * 32768) & (32768 - 1);
+	UpdateTextureMatrix();
+}
+
+void Gfx_DisableTextureOffset(void) {
+	texOffsetX = 0;
+	texOffsetY = 0;
+	UpdateTextureMatrix();
+}
+
 static int FindColorInPalette(cc_uint16* pal, int pal_size, cc_uint16 col) {
 	if ((col >> 15) == 0) return 0;
 	
@@ -205,17 +245,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	glBindTexture(0, (int)texId);
-
-	int width  = 0;
-	int height = 0;
-	glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
-	glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
-	
-	// Scale uvm to fit into texture size
-	MATRIX_CONTROL  = 3;
-	MATRIX_IDENTITY = 0;
-	glScalef32(width << 6, height << 6, 0);
-	MATRIX_CONTROL  = matrix_modes[lastMatrix];
+	UpdateTextureMatrix();
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -593,19 +623,6 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
 	Matrix_Mul(mvp, view, proj);
-}
-
-static struct Matrix texMatrix = Matrix_IdentityValue;
-
-void Gfx_EnableTextureOffset(float x, float y) {
-	// Looks bad due to low uvm precision
-	/*texMatrix.row4.x = x * 4096; texMatrix.row4.y = y * 4096;
-	Gfx_LoadMatrix(2, &texMatrix);*/
-}
-
-void Gfx_DisableTextureOffset(void) {
-	/*texMatrix.row4.x = 0; texMatrix.row4.y = 0;
-	Gfx_LoadMatrix(2, &texMatrix);*/
 }
 
 
