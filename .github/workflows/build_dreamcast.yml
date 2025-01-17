@@ -46,6 +46,12 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
+          SOURCE_FILE: 'ClassiCube-dc.iso'
+          DEST_NAME: 'ClassiCube-dc.iso'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
           SOURCE_FILE: 'ClassiCube-dc.elf'
           DEST_NAME: 'ClassiCube-dc.elf'
           
