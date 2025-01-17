@@ -184,8 +184,6 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 	}
 	
-	Platform_Log4("Texformat %i %i %i %i", &texFormat, &bmp->width, &bmp->height, &pal_size);
-	
 	// Load texture in vram
 	int textureID;
 	glGenTextures(1, &textureID);
