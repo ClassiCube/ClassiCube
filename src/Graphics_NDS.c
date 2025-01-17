@@ -187,7 +187,14 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	glGenTextures(1, &textureID);
 	glBindTexture(0, textureID);
 	glTexImage2D(0, 0, texFormat, bmp->width, bmp->height, 0, 0, tmp);
-	if (texFormat != GL_RGBA) glColorTableEXT(0, 0, 256, 0, 0, tmp_palette);
+	if (texFormat != GL_RGBA) {
+		int glPalSize;
+		if(texFormat == GL_RGB4) glPalSize = 4;
+		else if(texFormat == GL_RGB16) glPalSize = 16;
+		else glPalSize = 256;
+		
+		glColorTableEXT(0, 0, glPalSize, 0, 0, tmp_palette);
+	}
 	
 	glTexParameter(0, GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T | TEXGEN_TEXCOORD | GL_TEXTURE_COLOR0_TRANSPARENT);
 
