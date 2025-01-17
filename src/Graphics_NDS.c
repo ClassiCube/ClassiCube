@@ -130,10 +130,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	for (int y = 0; y < bmp->height; y++) {
 		cc_uint16* src = bmp->scan0 + y * rowWidth;
 		cc_uint16* dst = tmp		+ y * bmp->width;
-
-		for (int x = 0; x < bmp->width; x++) {
-			dst[x] = src[x];
-		}
+		
+		swiCopy(src, dst, bmp->width | COPY_MODE_HWORD);
 	}
 	
 	// Palettize texture if possible
