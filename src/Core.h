@@ -438,8 +438,9 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOFPU
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_BUILD_LOW_VRAM     /* Only ~640 kb of VRAM */
-	#undef  CC_BUILD_ADVLIGHTING
+	#ifndef BUILD_DSI
+		#undef CC_BUILD_ADVLIGHTING
+	#endif
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
 	#define CC_BUILD_CONSOLE
