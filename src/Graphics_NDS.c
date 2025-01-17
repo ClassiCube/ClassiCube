@@ -16,27 +16,27 @@ void Gfx_Create(void) {
 	Gfx.MinTexHeight =   8;
 	Gfx.MaxTexWidth  = 256;
 	Gfx.MaxTexHeight = 256;
-    //Gfx.MaxTexSize   = 256 * 256;
-	Gfx.Created      = true;
-    glInit();
-    
-    glClearColor(0, 15, 10, 31);
-    glClearPolyID(63);
-    glAlphaFunc(7);
+	//Gfx.MaxTexSize   = 256 * 256;
+	Gfx.Created	  = true;
+	glInit();
+	
+	glClearColor(0, 15, 10, 31);
+	glClearPolyID(63);
+	glAlphaFunc(7);
 	
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_FOG);
 
-    glClearDepth(GL_MAX_DEPTH);
-    Gfx_SetViewport(0, 0, 256, 192);
-    
-    vramSetBankA(VRAM_A_TEXTURE);
-    vramSetBankB(VRAM_B_TEXTURE);
-    vramSetBankC(VRAM_C_TEXTURE);
-    vramSetBankD(VRAM_D_TEXTURE);
+	glClearDepth(GL_MAX_DEPTH);
+	Gfx_SetViewport(0, 0, 256, 192);
+	
+	vramSetBankA(VRAM_A_TEXTURE);
+	vramSetBankB(VRAM_B_TEXTURE);
+	vramSetBankC(VRAM_C_TEXTURE);
+	vramSetBankD(VRAM_D_TEXTURE);
 	vramSetBankE(VRAM_E_TEX_PALETTE);
-    
-    Gfx_SetFaceCulling(false);
+	
+	Gfx_SetFaceCulling(false);
 	
 	// Set texture matrix to identity
 	MATRIX_CONTROL = 3;
@@ -51,9 +51,9 @@ cc_bool Gfx_TryRestoreContext(void) {
 void Gfx_Free(void) {
 	Gfx_FreeState();
 	vramSetBankA(VRAM_A_LCD);
-    vramSetBankB(VRAM_B_LCD);
-    vramSetBankC(VRAM_C_LCD);
-    vramSetBankD(VRAM_D_LCD);
+	vramSetBankB(VRAM_B_LCD);
+	vramSetBankC(VRAM_C_LCD);
+	vramSetBankD(VRAM_D_LCD);
 	vramSetBankE(VRAM_E_LCD);
 }
 
@@ -123,13 +123,13 @@ static int FindColorInPalette(cc_uint16* pal, int pal_size, cc_uint16 col) {
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-    cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
-    if (!tmp) return 0;
+	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
+	if (!tmp) return 0;
 
 	// TODO: Only copy when rowWidth != bmp->width
 	for (int y = 0; y < bmp->height; y++) {
 		cc_uint16* src = bmp->scan0 + y * rowWidth;
-		cc_uint16* dst = tmp        + y * bmp->width;
+		cc_uint16* dst = tmp		+ y * bmp->width;
 
 		for (int x = 0; x < bmp->width; x++) {
 			dst[x] = src[x];
@@ -138,8 +138,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	
 	// Palettize texture if possible
 	int pal_size = 1;
-    cc_uint16* tmp_palette = Mem_TryAlloc(256, 2);
-    if (!tmp_palette) return 0;
+	cc_uint16* tmp_palette = Mem_TryAlloc(256, 2);
+	if (!tmp_palette) return 0;
 	tmp_palette[0] = 0;
 	
 	for (int i = 0; i < bmp->width * bmp->height; i++) {
@@ -187,24 +187,24 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	Platform_Log4("Texformat %i %i %i %i", &texFormat, &bmp->width, &bmp->height, &pal_size);
 	
 	// Load texture in vram
-    int textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(0, textureID);
-    glTexImage2D(0, 0, texFormat, bmp->width, bmp->height, 0, 0, tmp);
+	int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(0, textureID);
+	glTexImage2D(0, 0, texFormat, bmp->width, bmp->height, 0, 0, tmp);
 	if (texFormat != GL_RGBA) glColorTableEXT(0, 0, 256, 0, 0, tmp_palette);
 	
-    glTexParameter(0, GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T | TEXGEN_TEXCOORD | GL_TEXTURE_COLOR0_TRANSPARENT);
+	glTexParameter(0, GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T | TEXGEN_TEXCOORD | GL_TEXTURE_COLOR0_TRANSPARENT);
 
-    cc_uint16* vram_ptr = glGetTexturePointer(textureID);
-    if (!vram_ptr) Platform_Log2("No VRAM for %i x %i texture", &bmp->width, &bmp->height);
+	cc_uint16* vram_ptr = glGetTexturePointer(textureID);
+	if (!vram_ptr) Platform_Log2("No VRAM for %i x %i texture", &bmp->width, &bmp->height);
 
-    Mem_Free(tmp);
-    Mem_Free(tmp_palette);
+	Mem_Free(tmp);
+	Mem_Free(tmp_palette);
 	return (void*)textureID;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-    glBindTexture(0, (int)texId);
+	glBindTexture(0, (int)texId);
 
 	tex_width  = 0;
 	tex_height = 0;
@@ -213,17 +213,17 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-    int texture = (int)texId;
-    glBindTexture(0, texture);
-    
-    int width = 0;
-    glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
-    cc_uint16* vram_ptr = glGetTexturePointer(texture);
-    return;
-    // TODO doesn't work without VRAM bank changing to LCD and back maybe??
-    // (see what glTeximage2D does ??)
+	int texture = (int)texId;
+	glBindTexture(0, texture);
 	
-    for (int yy = 0; yy < part->height; yy++)
+	int width = 0;
+	glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
+	cc_uint16* vram_ptr = glGetTexturePointer(texture);
+	return;
+	// TODO doesn't work without VRAM bank changing to LCD and back maybe??
+	// (see what glTeximage2D does ??)
+	
+	for (int yy = 0; yy < part->height; yy++)
 	{
 		cc_uint16* dst = vram_ptr + width * (y + yy) + x;
 		cc_uint16* src = part->scan0 + rowWidth * yy;
@@ -236,9 +236,9 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-    int texture = (int)(*texId);
-    if (texture) glDeleteTextures(1, &texture);
-    *texId = 0;
+	int texture = (int)(*texId);
+	if (texture) glDeleteTextures(1, &texture);
+	*texId = 0;
 }
 
 void Gfx_EnableMipmaps(void) { }
@@ -310,77 +310,77 @@ static int buf_count;
 static void* gfx_vertices;
 
 struct DSTexturedVertex {
-    vu32 command;
-    vu32 rgb;
-    vu32 uv;
-    vu32 xy; vu32 z;
+	vu32 command;
+	vu32 rgb;
+	vu32 uv;
+	vu32 xy; vu32 z;
 };
 
 struct DSColouredVertex {
-    vu32 command;
-    vu32 rgb;
-    vu32 xy; vu32 z;
+	vu32 command;
+	vu32 rgb;
+	vu32 xy; vu32 z;
 };
 
 // Precalculate all the expensive vertex data conversion,
 //  so that actual drawing of them is as fast as possible
 static void PreprocessTexturedVertices(void) {
-    struct   VertexTextured* src = gfx_vertices;
-    struct DSTexturedVertex* dst = gfx_vertices;
+	struct   VertexTextured* src = gfx_vertices;
+	struct DSTexturedVertex* dst = gfx_vertices;
 
-    for (int i = 0; i < buf_count; i++, src++, dst++)
-    {
-        struct VertexTextured v = *src;
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		struct VertexTextured v = *src;
 		
-        v16 x = floattov16(v.x / 64.0f);
-        v16 y = floattov16(v.y / 64.0f);
-        v16 z = floattov16(v.z / 64.0f);
-    
-        /*int uvX = (v.U * 256.0f + 0.5f); // 0.5f for rounding
-        int uvY = (v.V * 256.0f + 0.5f);*/
-        int uvX = ((int) (v.U * 4096.0f)) - 32768;
-        int uvY = ((int) (v.V * 4096.0f)) - 32768;
+		v16 x = floattov16(v.x / 64.0f);
+		v16 y = floattov16(v.y / 64.0f);
+		v16 z = floattov16(v.z / 64.0f);
+	
+		/*int uvX = (v.U * 256.0f + 0.5f); // 0.5f for rounding
+		int uvY = (v.V * 256.0f + 0.5f);*/
+		int uvX = ((int) (v.U * 4096.0f)) - 32768;
+		int uvY = ((int) (v.V * 4096.0f)) - 32768;
 
-        int r = PackedCol_R(v.Col);
-        int g = PackedCol_G(v.Col);
-        int b = PackedCol_B(v.Col);
+		int r = PackedCol_R(v.Col);
+		int g = PackedCol_G(v.Col);
+		int b = PackedCol_B(v.Col);
 		
 		dst->command = FIFO_COMMAND_PACK(FIFO_NOP, FIFO_COLOR, FIFO_TEX_COORD, FIFO_VERTEX16);
 		
-        dst->rgb = ARGB16(1, r >> 3, g >> 3, b >> 3);
+		dst->rgb = ARGB16(1, r >> 3, g >> 3, b >> 3);
 		
 		dst->uv = TEXTURE_PACK(uvX, uvY);
 		
-        dst->xy = (y << 16) | (x & 0xFFFF);
-        dst->z  = z;
-    }
+		dst->xy = (y << 16) | (x & 0xFFFF);
+		dst->z  = z;
+	}
 	
 	DC_FlushRange(gfx_vertices, buf_count * sizeof(struct DSTexturedVertex));
 }
 
 static void PreprocessColouredVertices(void) {
-    struct   VertexColoured* src = gfx_vertices;
-    struct DSColouredVertex* dst = gfx_vertices;
+	struct   VertexColoured* src = gfx_vertices;
+	struct DSColouredVertex* dst = gfx_vertices;
 
-    for (int i = 0; i < buf_count; i++, src++, dst++)
-    {
-        struct VertexColoured v = *src;
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		struct VertexColoured v = *src;
 		
-        v16 x = floattov16(v.x / 64.0f);
-        v16 y = floattov16(v.y / 64.0f);
-        v16 z = floattov16(v.z / 64.0f);
+		v16 x = floattov16(v.x / 64.0f);
+		v16 y = floattov16(v.y / 64.0f);
+		v16 z = floattov16(v.z / 64.0f);
 
-        int r = PackedCol_R(v.Col);
-        int g = PackedCol_G(v.Col);
-        int b = PackedCol_B(v.Col);
+		int r = PackedCol_R(v.Col);
+		int g = PackedCol_G(v.Col);
+		int b = PackedCol_B(v.Col);
 		
 		dst->command = FIFO_COMMAND_PACK(FIFO_NOP, FIFO_NOP, FIFO_COLOR, FIFO_VERTEX16);
 		
-        dst->rgb = ARGB16(1, r >> 3, g >> 3, b >> 3);
+		dst->rgb = ARGB16(1, r >> 3, g >> 3, b >> 3);
 		
-        dst->xy = (y << 16) | (x & 0xFFFF);
-        dst->z  = z;
-    }
+		dst->xy = (y << 16) | (x & 0xFFFF);
+		dst->z  = z;
+	}
 	
 	DC_FlushRange(gfx_vertices, buf_count * sizeof(struct DSColouredVertex));
 }
@@ -389,7 +389,7 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	return (void*)1;
 }
 
-void Gfx_BindIb(GfxResourceID ib)    { }
+void Gfx_BindIb(GfxResourceID ib)	{ }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
@@ -406,19 +406,19 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-    buf_fmt   = fmt;
-    buf_count = count;
+	buf_fmt   = fmt;
+	buf_count = count;
 	return vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-    gfx_vertices = vb;
+	gfx_vertices = vb;
 
-    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-        PreprocessTexturedVertices();
-    } else {
-        PreprocessColouredVertices();
-    }
+	if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+		PreprocessTexturedVertices();
+	} else {
+		PreprocessColouredVertices();
+	}
 }
 
 
@@ -536,11 +536,11 @@ void Gfx_SetFogMode(FogFunc func) {
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-    if (enabled) {
-        //glEnable(GL_ALPHA_TEST);
-    } else {
-        //glDisable(GL_ALPHA_TEST);
-    }
+	if (enabled) {
+		//glEnable(GL_ALPHA_TEST);
+	} else {
+		//glDisable(GL_ALPHA_TEST);
+	}
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -556,7 +556,7 @@ static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type != lastMatrix) { 
-		lastMatrix     = type; 
+		lastMatrix	 = type; 
 		MATRIX_CONTROL = matrix_modes[type]; 
 	}
 	
@@ -574,12 +574,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		MATRIX_LOAD4x4 = floattof32(src[i]);
 	}
 
-    // Vertex commands are signed 16 bit values, with 12 bits fractional
-    //  aka only from -8.0 to 8.0
-    // That's way too small to be useful, so counteract that by scaling down
-    //  vertices and then scaling up the matrix multiplication
-    if (type == MATRIX_VIEW)
-        glScalef32(floattof32(64.0f), floattof32(64.0f), floattof32(64.0f));
+	// Vertex commands are signed 16 bit values, with 12 bits fractional
+	//  aka only from -8.0 to 8.0
+	// That's way too small to be useful, so counteract that by scaling down
+	//  vertices and then scaling up the matrix multiplication
+	if (type == MATRIX_VIEW)
+		glScalef32(floattof32(64.0f), floattof32(64.0f), floattof32(64.0f));
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -615,13 +615,13 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 static void CallDrawList(void* list, u32 listSize) {
 	// Based on libnds glCallList
-    while (dmaBusy(0) || dmaBusy(1) || dmaBusy(2) || dmaBusy(3));
-    dmaSetParams(0, list, (void*) &GFX_FIFO, DMA_FIFO | listSize);
-    while (dmaBusy(0));
+	while (dmaBusy(0) || dmaBusy(1) || dmaBusy(2) || dmaBusy(3));
+	dmaSetParams(0, list, (void*) &GFX_FIFO, DMA_FIFO | listSize);
+	while (dmaBusy(0));
 }
 
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
-    glBindTexture(0, 0); // Disable texture
+	glBindTexture(0, 0); // Disable texture
 	GFX_BEGIN = GL_QUADS;
 	CallDrawList(&((struct DSColouredVertex*) gfx_vertices)[startVertex], verticesCount * 4);
 	GFX_END = 0;
