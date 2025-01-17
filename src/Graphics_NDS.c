@@ -17,7 +17,8 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 256;
 	Gfx.MaxTexHeight = 256;
 	//Gfx.MaxTexSize   = 256 * 256;
-	Gfx.Created	  = true;
+	Gfx.Created	     = true;
+	Gfx.Limitations  = GFX_LIMIT_VERTEX_ONLY_FOG;
 	glInit();
 	
 	glClearColor(0, 15, 10, 31);
@@ -445,25 +446,25 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool skipRendering;
-
-static cc_bool backfaceCullEnabled;
+static cc_bool backfaceCull;
 
 static cc_bool fogEnabled;
 static FogFunc fogMode;
 static float fogDensityEnd;
 
 static void SetPolygonMode() {
-	glPolyFmt(
+	u32 fmt =
 		POLY_ALPHA(31) | 
-		(backfaceCullEnabled ? POLY_CULL_BACK : POLY_CULL_NONE) | 
+		(backfaceCull ? POLY_CULL_BACK : POLY_CULL_NONE) | 
 		(fogEnabled ? POLY_FOG : 0) | 
 		POLY_RENDER_FAR_POLYS | 
-		POLY_RENDER_1DOT_POLYS
-	);
+		POLY_RENDER_1DOT_POLYS;
+
+	GFX_POLY_FORMAT = fmt;
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
-	backfaceCullEnabled = enabled;
+	backfaceCull = enabled;
 	SetPolygonMode();
 }
 
@@ -495,17 +496,17 @@ static void RecalculateFog() {
 		}
 		
 		glFogShift(shift);
-		glFogOffset(0);
+		GFX_FOG_OFFSET = 0;
 		
 		for (int i = 0; i < 32; i++) {
-			int distance = (i * 512 + 256) * (0x400 >> shift);
+			int distance  = (i * 512 + 256) * (0x400 >> shift);
 			int intensity = distance * 127 / fogEnd;
 			if(intensity > 127) intensity = 127;
 			
-			glFogDensity(i, intensity);
+			GFX_FOG_TABLE[i] = intensity;
 		}
 		
-		glFogDensity(31, 127);
+		GFX_FOG_TABLE[31] = 127;
 	} else {
 		// TODO?
 	}
@@ -517,11 +518,12 @@ void Gfx_SetFog(cc_bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol color) {
-	int r = PackedCol_R(color);
-	int g = PackedCol_G(color);
-	int b = PackedCol_B(color);
-	
-	glFogColor(r >> 3, g >> 3, b >> 3, 31);
+	int r = PackedCol_R(color) >> 3;
+	int g = PackedCol_G(color) >> 3;
+	int b = PackedCol_B(color) >> 3;
+	int a = 31;
+
+	GFX_FOG_COLOR = RGB15(r, g, b) | (a << 16);
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -560,7 +562,7 @@ static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type != lastMatrix) { 
-		lastMatrix	 = type; 
+		lastMatrix	   = type; 
 		MATRIX_CONTROL = matrix_modes[type]; 
 	}
 	
@@ -582,8 +584,11 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	//  aka only from -8.0 to 8.0
 	// That's way too small to be useful, so counteract that by scaling down
 	//  vertices and then scaling up the matrix multiplication
-	if (type == MATRIX_VIEW)
-		glScalef32(floattof32(64.0f), floattof32(64.0f), floattof32(64.0f));
+	if (type == MATRIX_VIEW) {
+		MATRIX_SCALE = floattof32(64.0f); // X scale
+		MATRIX_SCALE = floattof32(64.0f); // Y scale
+		MATRIX_SCALE = floattof32(64.0f); // Z scale
+	}
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
