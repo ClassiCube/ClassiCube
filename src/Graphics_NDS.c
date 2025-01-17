@@ -24,6 +24,7 @@ void Gfx_Create(void) {
 	glClearPolyID(63);
 	glAlphaFunc(7);
 	
+	glEnable(GL_ANTIALIAS);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_FOG);
 
