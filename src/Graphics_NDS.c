@@ -5,6 +5,8 @@
 #include "Logger.h"
 #include "Window.h"
 #include <nds.h>
+static int matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
+static int lastMatrix;
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
@@ -39,11 +41,6 @@ void Gfx_Create(void) {
 	vramSetBankE(VRAM_E_TEX_PALETTE);
 	
 	Gfx_SetFaceCulling(false);
-	
-	// Set texture matrix to identity
-	MATRIX_CONTROL = 3;
-	MATRIX_IDENTITY = 0;
-	MATRIX_CONTROL = 0;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -112,8 +109,6 @@ void Gfx_EndFrame(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static int tex_width, tex_height;
-
 static int FindColorInPalette(cc_uint16* pal, int pal_size, cc_uint16 col) {
 	if ((col >> 15) == 0) return 0;
 	
@@ -211,10 +206,16 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 void Gfx_BindTexture(GfxResourceID texId) {
 	glBindTexture(0, (int)texId);
 
-	tex_width  = 0;
-	tex_height = 0;
-	glGetInt(GL_GET_TEXTURE_WIDTH,  &tex_width);
-	glGetInt(GL_GET_TEXTURE_HEIGHT, &tex_height);
+	int width  = 0;
+	int height = 0;
+	glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
+	glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
+	
+	// Scale uvm to fit into texture size
+	MATRIX_CONTROL  = 3;
+	MATRIX_IDENTITY = 0;
+	glScalef32(width << 6, height << 6, 0);
+	MATRIX_CONTROL  = matrix_modes[lastMatrix];
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -343,8 +344,8 @@ static void PreprocessTexturedVertices(void) {
 	
 		/*int uvX = (v.U * 256.0f + 0.5f); // 0.5f for rounding
 		int uvY = (v.V * 256.0f + 0.5f);*/
-		int uvX = ((int) (v.U * 4096.0f)) - 32768;
-		int uvY = ((int) (v.V * 4096.0f)) - 32768;
+		int uvX = ((int) (v.U * 1024.0f)) + 0x8000;
+		int uvY = ((int) (v.V * 1024.0f)) + 0x8000;
 
 		int r = PackedCol_R(v.Col);
 		int g = PackedCol_G(v.Col);
@@ -557,9 +558,6 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static int matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
-static int lastMatrix;
-
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type != lastMatrix) { 
 		lastMatrix	   = type; 
@@ -637,19 +635,9 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 }
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
-	int width = tex_width, height = tex_height;
-	
-	// Scale uvm to fit into texture size
-	MATRIX_CONTROL = 3;
-	MATRIX_PUSH = 0;
-	glScalef32(width << 4, height << 4, 0);
-	
 	GFX_BEGIN = GL_QUADS;
 	CallDrawList(&((struct DSTexturedVertex*) gfx_vertices)[startVertex], verticesCount * 5);
 	GFX_END = 0;
-	
-	MATRIX_POP = 1;
-	MATRIX_CONTROL = matrix_modes[lastMatrix];
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
