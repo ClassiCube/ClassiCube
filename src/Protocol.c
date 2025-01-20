@@ -1966,6 +1966,8 @@ static void OnReset(void) {
 }
 #else
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) { }
+void CPE_SendNotifyAction(int action, cc_uint16 value) { }
+void CPE_SendNotifyPositionAction(int action, int x, int y, int z) { }
 
 static void OnInit(void) { }
 
