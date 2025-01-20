@@ -94,7 +94,6 @@ static struct CpeExt
 	lightingMode_Ext    = { "LightingMode", 1 },
 	cinematicGui_Ext    = { "CinematicGui", 1 },
 	notifyAction_Ext    = { "NotifyAction", 1 },
-	notifyPositionAction_Ext = { "NotifyPositionAction", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
 	extBlocks_Ext       = { "ExtendedBlocks", 1 };
 
@@ -105,7 +104,6 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
 	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext, &notifyAction_Ext,
-	&notifyPositionAction_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
@@ -905,6 +903,7 @@ void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data) {
 
 void CPE_SendNotifyAction(int action, cc_uint16 value) {
 	cc_uint8 data[5];
+	if (!Server.SupportsNotifyAction) return;
 
 	data[0] = OPCODE_NOTIFY_ACTION;
 	{
@@ -916,6 +915,7 @@ void CPE_SendNotifyAction(int action, cc_uint16 value) {
 
 void CPE_SendNotifyPositionAction(int action, int x, int y, int z) {
 	cc_uint8 data[9];
+	if (!Server.SupportsNotifyAction) return;
 
 	data[0] = OPCODE_NOTIFY_POSITION_ACTION;
 	{
@@ -1044,6 +1044,8 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (ext->serverVersion == 2) {
 			Protocol.Sizes[OPCODE_DEFINE_MODEL_PART] = 167;
 		}
+	} else if (ext == &notifyAction_Ext) {
+		Server.SupportsNotifyAction = true;
 	}
 #ifdef EXTENDED_TEXTURES
 	else if (ext == &extTextures_Ext) {
