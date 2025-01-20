@@ -25,7 +25,7 @@ void Gfx_Create(void) {
 	
 	glClearColor(0, 15, 10, 31);
 	glClearPolyID(63);
-	glAlphaFunc(7);
+	GFX_ALPHA_TEST = 7; // Alpha threshold ranges from 0 to 15
 	
 	glEnable(GL_ANTIALIAS);
 	glEnable(GL_TEXTURE_2D);
@@ -100,7 +100,7 @@ void Gfx_ClearColor(PackedCol color) {
 
 void Gfx_EndFrame(void) {
 	// W buffering is used for fog
-	glFlush(GL_WBUFFERING);
+	GFX_FLUSH = GL_WBUFFERING;
 	// TODO not needed?
 	swiWaitForVBlank();
 }
@@ -678,3 +678,4 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	Draw_TexturedTriangles(verticesCount, startVertex);
 }
 #endif
+

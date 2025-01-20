@@ -12,6 +12,7 @@
 #include <psxapi.h>
 #include <psxetc.h>
 #include <inline_c.h>
+#include "../misc/ps1/ps1defs.h"
 // Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
 
 
@@ -113,6 +114,58 @@ void Gfx_Create(void) {
 
 void Gfx_Free(void) { 
 	Gfx_FreeState();
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------VRAM transfers-----------------------------------------------------*
+*#########################################################################################################################*/
+#define wait_while(cond) while (cond) { __asm__ volatile(""); }
+
+static void WaitUntilFinished(void) {
+	// Wait until DMA to GPU has finished
+	wait_while((DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY));
+	// Wait until GPU is ready to receive DMA data again
+	wait_while(!(GPU_GP1 & GPU_STATUS_DMA_RECV_READY));
+	// Wait until GPU is ready to receive commands again
+	wait_while(!(GPU_GP1 & GPU_STATUS_CMD_READY));
+}
+
+#define DMA_BLOCK_SIZE 16 // max block size per Nocash PSX docs
+void Gfx_TransferToVRAM(int x, int y, int w, int h, void* pixels) {
+	unsigned num_words  = (w * h) / 2; // number of uint16s -> uint32s
+	unsigned num_blocks = Math_CeilDiv(num_words, DMA_BLOCK_SIZE);
+	unsigned block_size = DMA_BLOCK_SIZE;
+
+	// Special case for very small transfers
+	if (num_words < DMA_BLOCK_SIZE) {
+		num_blocks = 1;
+		block_size = num_words;
+	}
+
+	// Wait until GPU is ready to receive a command
+	wait_while(!(GPU_GP1 & GPU_STATUS_CMD_READY));
+
+	GPU_GP1 = GP1_CMD_DMA_MODE | GP1_DMA_NONE;
+	GPU_GP0 = GP0_CMD_CLEAR_VRAM_CACHE;
+
+	// Write GPU command for transferring RAM to VRAM
+	GPU_GP0 = GP0_CMD_TRANSFER_TO_VRAM;
+	GPU_GP0 = x | (y << 16);
+	GPU_GP0 = w | (h << 16);
+
+	GPU_GP1 = GP1_CMD_DMA_MODE | GP1_DMA_CPU_TO_GP0;
+
+	// Wait until any prior DMA to GPU has finished
+	wait_while((DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY));
+	// Wait until GPU is ready to receive DMA data
+	wait_while(!(GPU_GP1 & GPU_STATUS_DMA_RECV_READY));
+
+	DMA_MADR(DMA_GPU) = (uint32_t)pixels;
+	DMA_BCR(DMA_GPU)  = block_size | (num_blocks << 16);
+	DMA_CHCR(DMA_GPU) = CHRC_BEGIN | CHRC_MODE_SLICE | CHRC_FROM_RAM;
+
+	WaitUntilFinished();
 }
 
 
@@ -258,15 +311,13 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	Platform_Log3("%i x %i  = %i", &bmp->width, &bmp->height, &line);
 	Platform_Log3("  at %i (%i, %i)", &page, &pageX, &pageY);
 		
-	RECT rect;
-	rect.x = pageX * TPAGE_WIDTH  + tex->xOffset;
-	rect.y = pageY * TPAGE_HEIGHT + tex->yOffset;
-	rect.w = bmp->width;
-	rect.h = bmp->height;
+	int x = pageX * TPAGE_WIDTH  + tex->xOffset;
+	int y = pageY * TPAGE_HEIGHT + tex->yOffset;
+	int w = bmp->width;
+	int h = bmp->height;
 
-	int RX = rect.x, RY = rect.y;
-	Platform_Log2("  LOAD AT: %i, %i", &RX, &RY);
-	LoadImage2(&rect, tmp);
+	Platform_Log2("  LOAD AT: %i, %i", &x, &y);
+	Gfx_TransferToVRAM(x, y, w, h, tmp);
 	
 	Mem_Free(tmp);
 	return tex;
