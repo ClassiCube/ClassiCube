@@ -264,9 +264,9 @@ static int VRAM_CalcPage(int line) {
 #define TEXTURES_MAX_COUNT 64
 typedef struct GPUTexture {
 	cc_uint16 width, height;
-	cc_uint8 width_shift, height_shift;
+	cc_uint8  u_shift, v_shift;
 	cc_uint16 line, tpage;
-	cc_uint8 xOffset, yOffset;
+	cc_uint8  xOffset, yOffset;
 } GPUTexture;
 static GPUTexture textures[TEXTURES_MAX_COUNT];
 static GPUTexture* curTex;
@@ -290,8 +290,8 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
 	if (line == -1) { Mem_Free(tmp); return NULL; }
 	
-	tex->width  = bmp->width;  tex->width_shift  = Math_ilog2(bmp->width);
-	tex->height = bmp->height; tex->height_shift = Math_ilog2(bmp->height);
+	tex->width  = bmp->width;  tex->u_shift = 10 - Math_ilog2(bmp->width);
+	tex->height = bmp->height; tex->v_shift = 10 - Math_ilog2(bmp->height);
 	tex->line   = line;
 	
 	int page   = VRAM_CalcPage(line);
@@ -750,8 +750,7 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
-	int uShift  = 10 - curTex->width_shift;
-	int vShift  = 10 - curTex->height_shift;
+	int uShift  = curTex->u_shift, vShift  = curTex->v_shift;
 
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
@@ -884,8 +883,8 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 
 	int uOffset = curTex->xOffset;
 	int vOffset = curTex->yOffset;
-	int uShift  = 10 - curTex->width_shift;
-	int vShift  = 10 - curTex->height_shift;
+	int uShift  = curTex->u_shift;
+	int vShift  = curTex->v_shift;
 		
 	poly->u0 = (v1->u >> uShift) + uOffset;
 	poly->v0 = (v1->v >> vShift) + vOffset;
