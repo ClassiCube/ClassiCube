@@ -65,11 +65,13 @@ static void LoadD3D9Library(void) {
 
 static void CreateD3D9Instance(void) {
 	d3d = _Direct3DCreate9(D3D_SDK_VERSION);
+	/* Try to create a 9.0b instance if creating a 9.0c instance fails */
+	if (!d3d) d3d = _Direct3DCreate9(D3D_SDK_VERSION - 1);
+	if (!d3d) Process_Abort("Direct3DCreate9 returned NULL");
 
 	/* Normal Direct3D9 supports POOL_MANAGED textures */
 	/*  (Direct3D9Ex does not support them however) */
 	Gfx.ManagedTextures = true;
-	if (!d3d) Process_Abort("Direct3DCreate9 returned NULL");
 
 	fallbackRendering = Options_GetBool("fallback-rendering", false);
 	if (!fallbackRendering) return;
