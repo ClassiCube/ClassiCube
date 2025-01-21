@@ -902,6 +902,7 @@ void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data) {
 }
 
 void CPE_SendNotifyAction(int action, cc_uint16 value) {
+	return; // end this tyrrany
 	cc_uint8 data[5];
 	if (!Server.SupportsNotifyAction) return;
 
@@ -914,6 +915,7 @@ void CPE_SendNotifyAction(int action, cc_uint16 value) {
 }
 
 void CPE_SendNotifyPositionAction(int action, int x, int y, int z) {
+	return; // end this tyrrany
 	cc_uint8 data[9];
 	if (!Server.SupportsNotifyAction) return;
 
