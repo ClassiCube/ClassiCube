@@ -893,11 +893,13 @@ static void MainScreen_Activated(struct LScreen* s_) {
 	}
 #endif
 
+#ifdef CC_BUILD_NETWORKING
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;
 
 	if (CheckUpdateTask.Base.completed)
 		MainScreen_ApplyUpdateLabel(s);
+#endif
 }
 
 static void MainScreen_Load(struct LScreen* s_) {
@@ -994,10 +996,12 @@ static void MainScreen_Tick(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	LScreen_Tick(s_);
 
+#ifdef CC_BUILD_NETWORKING
 	MainScreen_TickCheckUpdates(s);
 	MainScreen_TickGetToken(s);
 	MainScreen_TickSignIn(s);
 	MainScreen_TickFetchServers(s);
+#endif
 }
 
 void MainScreen_SetActive(void) {

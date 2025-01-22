@@ -267,7 +267,9 @@ void Launcher_Run(void) {
 	Launcher_TryLoadTexturePack();
 
 	Http_Component.Init();
+#ifdef CC_BUILD_NETWORKING
 	CheckUpdateTask_Run();
+#endif
 
 #ifdef CC_BUILD_RESOURCES
 	Resources_CheckExistence();

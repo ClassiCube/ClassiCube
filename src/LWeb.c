@@ -711,6 +711,7 @@ void Flags_Free(void) {
 static cc_string sessionKey = String_FromConst("session");
 static cc_bool loadedSession;
 
+#ifdef CC_BUILD_NETWORKING
 void Session_Load(void) {
 	cc_string session; char buffer[3072];
 	if (loadedSession) return;
@@ -729,4 +730,10 @@ void Session_Save(void) {
 	if (!session.length) return;
 	Options_SetSecure(LOPT_SESSION, &session);
 }
+#else
+void Session_Load(void) { }
+
+void Session_Save(void) { }
+#endif
+
 #endif
