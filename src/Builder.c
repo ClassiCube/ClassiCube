@@ -364,11 +364,15 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	/* The Saturn build only has 16 kb stack, not large enough */
 	static BlockID chunk[EXTCHUNK_SIZE_3]; 
 	static cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
-	static int bitFlags[1];
 #else
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
 	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
+#endif
+
+#ifdef CC_BUILD_ADVLIGHTING
 	int bitFlags[EXTCHUNK_SIZE_3];
+#else
+	int bitFlags[1];
 #endif
 
 	cc_bool allAir, allSolid, onBorder;

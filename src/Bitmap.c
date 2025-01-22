@@ -358,11 +358,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	int curY;
 
 	/* idat decompressor */
-#ifdef CC_BUILD_TINYSTACK
-	static struct InflateState inflate;
-#else
 	struct InflateState inflate;
-#endif
 	struct Stream compStream, datStream;
 	struct ZLibHeader zlibHeader;
 	cc_uint8* data = NULL;
