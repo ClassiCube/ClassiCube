@@ -64,18 +64,16 @@ static void LoadD3D9Library(void) {
 }
 
 static void CreateD3D9Instance(void) {
-	d3d = _Direct3DCreate9(D3D_SDK_VERSION);
-	/* Try to create a 9.0b instance if creating a 9.0c instance fails */
-	if (!d3d) d3d = _Direct3DCreate9(D3D_SDK_VERSION - 1);
-	if (!d3d) Process_Abort("Direct3DCreate9 returned NULL");
-
-	/* Normal Direct3D9 supports POOL_MANAGED textures */
-	/*  (Direct3D9Ex does not support them however) */
-	Gfx.ManagedTextures = true;
-
-	fallbackRendering = Options_GetBool("fallback-rendering", false);
-	if (!fallbackRendering) return;
-	Platform_LogConst("WARNING: Using fallback rendering mode, which will reduce performance");
+	int ver = D3D_SDK_VERSION;
+	while (ver > 0) {
+		d3d = _Direct3DCreate9(ver);
+		if (d3d) return;
+		
+		/* Try an earlier d3d9 version instance if creating a 9.0c instance fails */
+		/* (e.g. if system only has 9.0b) */
+		ver--;
+	}
+	Process_Abort("Direct3DCreate9 returned NULL");
 }
 
 static void FindCompatibleViewFormat(void) {
@@ -178,11 +176,18 @@ void Gfx_Create(void) {
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
 	depthBits = D3D9_DepthBufferBits();
+	TryCreateDevice();
 
 	customMipmapsLevels = true;
 	Gfx.Created         = true;
 	Gfx.BackendType     = CC_GFX_BACKEND_D3D9;
-	TryCreateDevice();
+	/* Normal Direct3D9 supports POOL_MANAGED textures */
+	/*  (Direct3D9Ex does not support them however) */
+	Gfx.ManagedTextures = true;
+
+	fallbackRendering = Options_GetBool("fallback-rendering", false);
+	if (!fallbackRendering) return;
+	Platform_LogConst("WARNING: Using fallback rendering mode, which will reduce performance");
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
