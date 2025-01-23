@@ -204,6 +204,11 @@ cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) 
 	d = frustumF.a * x + frustumF.b * y + frustumF.c * z + frustumF.d;
 	if (d <= -radius) return false;
 	/* Don't test NEAR plane, it's pointless */
+
+#ifdef CC_BUILD_SATURN
+	/* Workaround a compiler bug causing the below statement to return 0 instead */
+	__asm__( "!" );
+#endif
 	return true;
 }
 
