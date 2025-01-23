@@ -19,9 +19,20 @@ static void* tex_vram_addr;
 static void* tex_vram_cur;
 static int tex_width = 8, tex_height = 8;
 static vdp1_gouraud_table_t* gourad_base;
+static cc_bool noMemWarned;
+
+// NOINLINE to avoid polluting the hot path
+static CC_NOINLINE NextPrimitive_nomem(void) {
+	if (noMemWarned) return NULL;
+	noMemWarned = true;
+	
+	Platform_LogConst("OUT OF VERTEX RAM");
+	return NULL;
+}
 
 static vdp1_cmdt_t* NextPrimitive(void) {
-	if (cmdts_count >= CMDS_COUNT) Process_Abort("Too many VDP1 commands");
+	if (cmdts_count >= CMDS_COUNT) return NextPrimitive_nomem();
+
 	return &cmdts_all[cmdts_count++];
 }
 
@@ -491,8 +502,8 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		points[3].x = Coloured2D_X(v[3].x); points[3].y = Coloured2D_Y(v[3].y);
 
 		rgb1555_t color; color.raw = v->Col;
-		vdp1_cmdt_t* cmd;
-		cmd = NextPrimitive();
+		vdp1_cmdt_t* cmd = NextPrimitive();
+		if (!cmd) return;
 
 		vdp1_cmdt_polygon_set(cmd);
 		vdp1_cmdt_color_set(cmd,     color);
@@ -515,8 +526,8 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		points[2].x = Textured2D_X(v[2].x); points[2].y = Textured2D_Y(v[2].y);
 		points[3].x = Textured2D_X(v[3].x); points[3].y = Textured2D_Y(v[3].y);
 
-		vdp1_cmdt_t* cmd;
-		cmd = NextPrimitive();
+		vdp1_cmdt_t* cmd = NextPrimitive();
+		if (!cmd) return;
 
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
@@ -548,8 +559,8 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		points[3].x = coords[3].x; points[3].y = coords[3].y;
 
 		rgb1555_t color; color.raw = v->Col;
-		vdp1_cmdt_t* cmd;
-		cmd = NextPrimitive();
+		vdp1_cmdt_t* cmd = NextPrimitive();
+		if (!cmd) return;
 
 		vdp1_cmdt_polygon_set(cmd);
 		vdp1_cmdt_color_set(cmd,     color);
@@ -577,8 +588,8 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		points[2].x = coords[2].x; points[2].y = coords[2].y;
 		points[3].x = coords[3].x; points[3].y = coords[3].y;
 
-		vdp1_cmdt_t* cmd;
-		cmd = NextPrimitive();
+		vdp1_cmdt_t* cmd = NextPrimitive();
+		if (!cmd) return;
 
 		vdp1_cmdt_distorted_sprite_set(cmd);
 		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);

@@ -734,7 +734,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v1, v0,  a);
-		DrawTriangle3D(a,   b, v0);
+		DrawTriangle3D(a,  v0,  b);
 	} break;
 	// case V0_VIS | V2_VIS: degenerate case that should never happen
 	case V0_VIS | V3_VIS:
@@ -753,7 +753,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(a, v0,  b);
-		DrawTriangle3D(b, v3, v0);
+		DrawTriangle3D(b, v0, v3);
 	} break;
 	case V1_VIS | V2_VIS:
 	{
@@ -771,7 +771,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v1,  b, v2);
-		DrawTriangle3D(v2,  a,  b);
+		DrawTriangle3D(v2,  b,  a);
 	} break;
 	// case V1_VIS | V3_VIS: degenerate case that should never happen
 	case V2_VIS | V3_VIS:
@@ -790,7 +790,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D( b,  a, v2);
-		DrawTriangle3D(v2, v3,  a);
+		DrawTriangle3D(v2,  a, v3);
 	} break;
 	case V0_VIS | V1_VIS | V2_VIS:
 	{
@@ -811,7 +811,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v1, v0, v2);
-		DrawTriangle3D(v2,  a, v0);
+		DrawTriangle3D(v2, v0,  a);
 		DrawTriangle3D(v0,  b,  a);
 	} break;
 	case V0_VIS | V1_VIS | V3_VIS:
@@ -833,7 +833,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v0, v3, v1);
-		DrawTriangle3D(v1,  a, v3);
+		DrawTriangle3D(v1, v3,  a);
 		DrawTriangle3D(v3,  b,  a);
 	} break;
 	case V0_VIS | V2_VIS | V3_VIS:
@@ -855,7 +855,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v3, v2, v0);
-		DrawTriangle3D(v0,  a, v2);
+		DrawTriangle3D(v0, v2,  a);
 		DrawTriangle3D(v2,  b,  a);
 	} break;
 	case V1_VIS | V2_VIS | V3_VIS:
@@ -877,7 +877,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v2, v1, v3);
-		DrawTriangle3D(v3,  a, v1);
+		DrawTriangle3D(v3, v1,  a);
 		DrawTriangle3D(v1,  b,  a);
 	} break;
 	}
