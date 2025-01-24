@@ -591,7 +591,7 @@ void Platform_Init(void) {
 	// So to avoid having the stack overlapping the heap when more stack space
 	//  is used, manually reduce the heap limit by 32 kb
 	extern char* fake_heap_end;
-	fake_heap_end -= 32768;
+	if (fake_heap_end) fake_heap_end -= 32768;
 
 	InitFilesystem();
     InitNetworking();
