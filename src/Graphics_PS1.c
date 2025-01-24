@@ -484,9 +484,18 @@ static void PreprocessTexturedVertices(void) {
 		dst->x = XYZFixed(src->x);
 		dst->y = XYZFixed(src->y);
 		dst->z = XYZFixed(src->z);
-
+		
 		u = src->U * 0.99f;
-		v = src->V == 1.0f ? 0.99f : src->V;
+		if(src->V == 1.0f)
+		{
+			v = 0.99f;
+		}
+		else
+		{
+			v = src->V;
+		}
+		//u = src->U * 0.99f;
+		//v = src->V == 1.0f ? 0.99f : src->V;
 
 		dst->u = UVFixed(u);
 		dst->v = UVFixed(v);
@@ -706,6 +715,26 @@ static int Transform(IVec3* result, struct PS1VertexTextured* a) {
 	result->x = (x *  160      / w) + 160; 
 	result->y = (y * -120      / w) + 120;
 	result->z = (z * OT_LENGTH / w);
+	
+	if(result->x > 640)
+	{
+		return 1;
+	}
+	else if(result->x < -320)
+	{
+		return 1;
+	}
+	
+	
+	if(result->y > 480)
+	{
+		return 1;
+	}
+	else if(result->y < -240)
+	{
+		return 1;
+	}
+	
 
 	/*SVECTOR coord;
 	POLY_FT4 poly;
@@ -719,7 +748,7 @@ static int Transform(IVec3* result, struct PS1VertexTextured* a) {
 	Platform_Log3("Y: %i, %i,  %i", &y, &result->y, &Y);
 	Platform_LogConst("=======");*/
 
-	return z > w;
+	return z>w;
 }
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
@@ -828,10 +857,32 @@ static void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextu
 	mid.u = (p1->u + p2->u) >> 1; \
 	mid.v = (p1->v + p2->v) >> 1; \
 	mid.rgbc = p1->rgbc;
- 
+
 static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
 						struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	if (level > 2) return;
+	if (level > 5) return;
+	int v1short = 0;
+	int v3short = 0;
+	int diff = v0->x - v1->x;
+	int mask = diff>>31;
+	int vertsize = (diff^mask)-mask;
+	diff = v0->y - v1->y;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	diff = v0->z - v1->z;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	if(vertsize < 128) v1short = 1;
+	diff = v0->x - v3->x;
+	mask = diff>>31;
+	vertsize = (diff^mask)-mask;
+	diff = v0->y - v3->y;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	diff = v0->z - v3->z;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	if(vertsize < 128) v3short = 1;
 	struct PS1VertexTextured m01, m02, m03, m12, m32;
 
 	// v0 --- m01 --- v1
@@ -841,17 +892,53 @@ static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1Ve
 	//  |  \   | \    |
 	//  |    \ |   \  |
 	// v3 ----m32---- v2
+	
+	if(v1short)
+	{
+		if(v3short)
+		{
+			return;
+		}
+		
+		
+		CalcMidpoint(m03, v0, v3);
+		CalcMidpoint(m12, v1, v2);
+		
+		DrawTexturedQuad(  v0,   v1, &m12, &m03, level);
+		DrawTexturedQuad(&m03, &m12,   v2,   v3, level);
+	}
+	else
+	{
+		if(v3short)
+		{
+			CalcMidpoint(m01, v0, v1);
+			CalcMidpoint(m32, v3, v2);
+			
+			DrawTexturedQuad(  v0, &m01, &m32,   v3, level);
+			DrawTexturedQuad(&m01,   v1,   v2, &m32, level);
+	
+			return;
+		}
+		
+		CalcMidpoint(m02, v0, v2);
+		CalcMidpoint(m01, v0, v1);
+		CalcMidpoint(m32, v3, v2);
+		CalcMidpoint(m03, v0, v3);
+		CalcMidpoint(m12, v1, v2);
 
-	CalcMidpoint(m01, v0, v1);
-	CalcMidpoint(m02, v0, v2);
-	CalcMidpoint(m03, v0, v3);
-	CalcMidpoint(m12, v1, v2);
-	CalcMidpoint(m32, v3, v2);
+		DrawTexturedQuad(  v0, &m01, &m02, &m03, level);
+		DrawTexturedQuad(&m01,   v1, &m12, &m02, level);
+		DrawTexturedQuad(&m02, &m12,   v2, &m32, level);
+		DrawTexturedQuad(&m03, &m02, &m32,   v3, level);
+	}
+	
+}
 
-	DrawTexturedQuad(  v0, &m01, &m02, &m03, level);
-	DrawTexturedQuad(&m01,   v1, &m12, &m02, level);
-	DrawTexturedQuad(&m02, &m12,   v2, &m32, level);
-	DrawTexturedQuad(&m03, &m02, &m32,   v3, level);
+void CrossProduct(IVec3* a, IVec3* b, IVec3* out)
+{
+	out->x = (a->y*b->z-a->z*b->y) >> 9;
+	out->y = (a->z*b->x-a->x*b->z) >> 9;
+	out->z = (a->x*b->y-a->y*b->x) >> 9;
 }
 
 static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
@@ -862,9 +949,36 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	clipped |= Transform(&coords[1], v1);
 	clipped |= Transform(&coords[2], v2);
 	clipped |= Transform(&coords[3], v3);
-	if (clipped) return;//{ SubdivideQuad(v0, v1, v2, v3, level + 1); return; }
-		
-	int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
+	
+	IVec3 crossprod[2];
+	IVec3 normal;
+	crossprod[0].x = coords[1].x-coords[0].x;
+	crossprod[0].y = coords[1].y-coords[0].y;
+	crossprod[0].z = coords[1].z-coords[0].z;
+	crossprod[1].x = coords[2].x-coords[0].x;
+	crossprod[1].y = coords[2].y-coords[0].y;
+	crossprod[1].z = coords[2].z-coords[0].z;
+	CrossProduct(&crossprod[0],&crossprod[1],&normal);
+	if((normal.x*coords[0].x+normal.y*coords[0].y+normal.z*coords[0].z) > 0) return;
+	
+	if (clipped) { SubdivideQuad(v0, v1, v2, v3, level + 1); return; }
+	//int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
+	
+	int p = coords[3].z;
+	if (p < coords[0].z)
+	{
+		p = coords[0].z;
+	}
+	if (p < coords[1].z)
+	{
+		p = coords[1].z;
+	}
+	if (p < coords[2].z)
+	{
+		p = coords[2].z;
+	}
+	
+	
 	if (p < 0 || p >= OT_LENGTH) return;
 		
 	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
