@@ -10,10 +10,17 @@
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 224
 #define CMDS_COUNT 400
+#define HDR_CMDS 2
+
+static struct {
+	vdp1_cmdt_t hdrs[HDR_CMDS];
+	vdp1_cmdt_t list[CMDS_COUNT];
+	vdp1_cmdt_t extra[1]; // extra room for 'end' command if needed
+} cmds;
+static uint16_t z_table[CMDS_COUNT];
+static int cmds_count, cmds_3DCount;
 
 static PackedCol clear_color;
-static vdp1_cmdt_t cmdts_all[CMDS_COUNT];
-static int cmdts_count;
 static vdp1_vram_partitions_t _vdp1_vram_partitions;
 static void* tex_vram_addr;
 static void* tex_vram_cur;
@@ -30,10 +37,11 @@ static CC_NOINLINE NextPrimitive_nomem(void) {
 	return NULL;
 }
 
-static vdp1_cmdt_t* NextPrimitive(void) {
-	if (cmdts_count >= CMDS_COUNT) return NextPrimitive_nomem();
+static vdp1_cmdt_t* NextPrimitive(uint16_t z) {
+	if (cmds_count >= CMDS_COUNT) return NextPrimitive_nomem();
 
-	return &cmdts_all[cmdts_count++];
+	z_table[cmds_count] = UInt16_MaxValue - z;
+	return &cmds.list[cmds_count++];
 }
 
 static const vdp1_cmdt_draw_mode_t color_draw_mode = {
@@ -502,7 +510,7 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		points[3].x = Coloured2D_X(v[3].x); points[3].y = Coloured2D_Y(v[3].y);
 
 		rgb1555_t color; color.raw = v->Col;
-		vdp1_cmdt_t* cmd = NextPrimitive();
+		vdp1_cmdt_t* cmd = NextPrimitive(0);
 		if (!cmd) return;
 
 		vdp1_cmdt_polygon_set(cmd);
@@ -526,7 +534,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		points[2].x = Textured2D_X(v[2].x); points[2].y = Textured2D_Y(v[2].y);
 		points[3].x = Textured2D_X(v[3].x); points[3].y = Textured2D_Y(v[3].y);
 
-		vdp1_cmdt_t* cmd = NextPrimitive();
+		vdp1_cmdt_t* cmd = NextPrimitive(0);
 		if (!cmd) return;
 
 		vdp1_cmdt_distorted_sprite_set(cmd);
@@ -558,8 +566,9 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		points[2].x = coords[2].x; points[2].y = coords[2].y;
 		points[3].x = coords[3].x; points[3].y = coords[3].y;
 
+		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
 		rgb1555_t color; color.raw = v->Col;
-		vdp1_cmdt_t* cmd = NextPrimitive();
+		vdp1_cmdt_t* cmd = NextPrimitive(z);
 		if (!cmd) return;
 
 		vdp1_cmdt_polygon_set(cmd);
@@ -588,7 +597,8 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		points[2].x = coords[2].x; points[2].y = coords[2].y;
 		points[3].x = coords[3].x; points[3].y = coords[3].y;
 
-		vdp1_cmdt_t* cmd = NextPrimitive();
+		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
+		vdp1_cmdt_t* cmd = NextPrimitive(z);
 		if (!cmd) return;
 
 		vdp1_cmdt_distorted_sprite_set(cmd);
@@ -638,32 +648,55 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) {
 	//Platform_LogConst("FRAME BEG");
-	cmdts_count = 0;
+	cmds_count   = 0;
+	cmds_3DCount = 0;
 
 	static const int16_vec2_t system_clip_coord  = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
 	static const int16_vec2_t local_coord_center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-
 	vdp1_cmdt_t* cmd;
 
-	cmd = NextPrimitive();
+	cmd = &cmds.hdrs[0];
 	vdp1_cmdt_system_clip_coord_set(cmd);
 	vdp1_cmdt_vtx_system_clip_coord_set(cmd, system_clip_coord);
 
-	cmd = NextPrimitive();
+	cmd = &cmds.hdrs[1];
 	vdp1_cmdt_local_coord_set(cmd);
 	vdp1_cmdt_vtx_local_coord_set(cmd, local_coord_center);
+}
+
+static void SortCommands(int left, int right) {
+	vdp1_cmdt_t* values = cmds.list, value;
+	uint16_t* keys = z_table, key;
+
+	while (left < right) {
+		int i = left, j = right;
+		int pivot = keys[(i + j) >> 1];
+
+		/* partition the list */
+		while (i <= j) {
+			while (pivot > keys[i]) i++;
+			while (pivot < keys[j]) j--;
+			QuickSort_Swap_KV_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(SortCommands)
+	}
 }
 
 void Gfx_EndFrame(void) {
 	//Platform_LogConst("FRAME END");
 	vdp1_cmdt_t* cmd;
 
-	cmd = NextPrimitive();
+	// TODO optimise Z sorting for 3D polygons
+	if (cmds_3DCount) SortCommands(0, cmds_3DCount - 1);
+
+	cmd = NextPrimitive(UInt16_MaxValue);
+	if (!cmd) { cmd = &cmds.extra[0]; cmds_count++; }
 	vdp1_cmdt_end_set(cmd);
 
 	vdp1_cmdt_list_t cmdt_list;
-	cmdt_list.cmdts = cmdts_all;
-    cmdt_list.count = cmdts_count;
+	cmdt_list.cmdts = cmds.hdrs;
+    cmdt_list.count = HDR_CMDS + cmds_count;
 	vdp1_sync_cmdt_list_put(&cmdt_list, 0);
 
 	vdp1_sync_render();
@@ -689,4 +722,15 @@ void Gfx_GetApiInfo(cc_string* info) {
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
+
+void Gfx_Begin2D(int width, int height) {
+	Gfx_SetAlphaBlending(true);
+	gfx_rendering2D = true;
+	cmds_3DCount = cmds_count;
+}
+
+void Gfx_End2D(void) {
+	Gfx_SetAlphaBlending(false);
+	gfx_rendering2D = false;
+}
 #endif
