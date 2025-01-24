@@ -273,7 +273,7 @@ static struct ChatCommand SkinCommand = {
 };
 
 static void ClearDeniedCommand_Execute(const cc_string* args, int argsCount) {
-	int count = TextureCache_ClearDenied();
+	int count = TextureUrls_ClearDenied();
 	Chat_Add1("Removed &e%i &fdenied texture pack URLs.", &count);
 }
 

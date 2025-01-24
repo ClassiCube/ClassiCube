@@ -45,9 +45,9 @@ static void Server_ResetState(void) {
 }
 
 void Server_RetrieveTexturePack(const cc_string* url) {
-	if (!Game_AllowServerTextures || TextureCache_HasDenied(url)) return;
+	if (!Game_AllowServerTextures || TextureUrls_HasDenied(url)) return;
 
-	if (!url->length || TextureCache_HasAccepted(url)) {
+	if (!url->length || TextureUrls_HasAccepted(url)) {
 		TexturePack_Extract(url);
 	} else {
 		TexPackOverlay_Show(url);
