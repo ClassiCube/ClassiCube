@@ -580,6 +580,7 @@ struct MatrixRow { int x, y, z, w; };
 static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
 
 #define ToFixed(v) (int)(v * (1 << 12))
+#define ToFixedTr(v) (int)(v * (1 << 6))
 
 static void LoadTransformMatrix(struct Matrix* src) {
 	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati	
@@ -612,22 +613,38 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
 	MATRIX mtx;
-	mtx.t[0] = (int)(src->row4.x);
-	mtx.t[1] = (int)(src->row4.y);
-	mtx.t[2] = (int)(src->row4.w);
+	mtx.t[0] = ToFixedTr(src->row4.x);
+	mtx.t[1] = ToFixedTr(-src->row4.y);
+	mtx.t[2] = ToFixedTr(src->row4.w);
+
 
 	mtx.m[0][0] = ToFixed(src->row1.x);
-	mtx.m[0][1] = ToFixed(src->row1.y);
-	mtx.m[0][2] = ToFixed(src->row1.w);
+	mtx.m[0][1] = ToFixed(src->row2.x);
+	mtx.m[0][2] = ToFixed(src->row3.x);
 
-	mtx.m[1][0] = ToFixed(src->row2.x);
-	mtx.m[1][1] = ToFixed(src->row2.y);
-	mtx.m[1][2] = ToFixed(src->row2.w);
+	mtx.m[1][0] = ToFixed(-src->row1.y);
+	mtx.m[1][1] = ToFixed(-src->row2.y);
+	mtx.m[1][2] = ToFixed(-src->row3.y);
 
-	mtx.m[2][0] = ToFixed(src->row3.x);
-	mtx.m[2][1] = ToFixed(src->row3.y);
+	mtx.m[2][0] = ToFixed(src->row1.w);
+	mtx.m[2][1] = ToFixed(src->row2.w);
 	mtx.m[2][2] = ToFixed(src->row3.w);
-	
+		
+	//Platform_Log4("W:  %f3, %f3, %f3, %f3", &src->row1.w, &src->row2.w, &src->row3.w, &src->row4.w);
+	//Platform_LogConst("====");
+	/*
+	mtx.m[0][0] = ToFixed(1.0);
+	mtx.m[0][1] = ToFixed(0.0);
+	mtx.m[0][2] = ToFixed(0.0);
+
+	mtx.m[1][0] = ToFixed(0.0);
+	mtx.m[1][1] = ToFixed(1.0);
+	mtx.m[1][2] = ToFixed(0.0);
+
+	mtx.m[2][0] = ToFixed(0.0);
+	mtx.m[2][1] = ToFixed(0.0);
+	mtx.m[2][2] = ToFixed(1.0);
+	*/
 	gte_SetRotMatrix(&mtx);
 	gte_SetTransMatrix(&mtx);
 }
@@ -684,7 +701,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
-	matrix->row1.x =  c / aspect;
+	matrix->row1.x =  c;
 	matrix->row2.y =  c;
 	matrix->row3.z = zFar / (zNear - zFar);
 	matrix->row3.w = -1.0f;
@@ -706,6 +723,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 static int Transform(IVec3* result, struct PS1VertexTextured* a) {
+	
 	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
 	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
 	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
@@ -736,19 +754,14 @@ static int Transform(IVec3* result, struct PS1VertexTextured* a) {
 	}
 	
 
-	/*SVECTOR coord;
-	POLY_FT4 poly;
-	coord.vx = a->x; coord.vy = a->y; coord.vz = a->z;
-	gte_ldv0(&coord);
-	gte_rtps();
-	gte_stsxy(&poly.x0);
-
-	int X = (short)poly.x0, Y = (short)poly.y0;
-	Platform_Log3("X: %i, %i,  %i", &x, &result->x, &X);
-	Platform_Log3("Y: %i, %i,  %i", &y, &result->y, &Y);
-	Platform_LogConst("=======");*/
-
+	
 	return z>w;
+	//int X = (short)poly.x0, Y = (short)poly.y0;
+	//Platform_Log3("X: %i, %i,  %i", &x, &result->x, &X);
+	//Platform_Log3("Y: %i, %i,  %i", &y, &result->y, &Y);
+	//Platform_LogConst("=======");
+
+	//return z>w;
 }
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
@@ -860,7 +873,7 @@ static void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextu
 
 static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
 						struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	if (level > 5) return;
+	if (level > 1) return;
 	int v1short = 0;
 	int v3short = 0;
 	int diff = v0->x - v1->x;
@@ -897,6 +910,7 @@ static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1Ve
 	{
 		if(v3short)
 		{
+			DrawTexturedQuad(  v0,   v1, v2, v3, 3);
 			return;
 		}
 		
@@ -943,13 +957,44 @@ void CrossProduct(IVec3* a, IVec3* b, IVec3* out)
 
 static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
 							struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	IVec3 coords[4];
-	int clipped = 0;
-	clipped |= Transform(&coords[0], v0);
-	clipped |= Transform(&coords[1], v1);
-	clipped |= Transform(&coords[2], v2);
-	clipped |= Transform(&coords[3], v3);
+	//IVec3 coords[4];
+	//if (level < 1) { SubdivideQuad(v0, v1, v2, v3, level + 1); return; }
 	
+	int clipped = 0;
+	SVECTOR coord[4];
+	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
+	if (!poly) return;
+
+	setlen(poly, POLY_LEN_FT4);
+	poly->rgbc  = v0->rgbc;
+	
+	coord[0].vx = v0->x; coord[0].vy = v0->y; coord[0].vz = v0->z;
+	coord[1].vx = v1->x; coord[1].vy = v1->y; coord[1].vz = v1->z;
+	coord[2].vx = v2->x; coord[2].vy = v2->y; coord[2].vz = v2->z;
+	coord[3].vx = v3->x; coord[3].vy = v3->y; coord[3].vz = v3->z;
+	gte_ldv3(&coord[0],&coord[1],&coord[3]);
+	gte_rtpt();
+	int p = 0;
+	
+	
+	
+	gte_nclip();
+	gte_stopz( &p );
+	
+	if( p > 0 )
+		return;
+	
+	gte_avsz3();
+	gte_stotz( &p );
+	if(p <= 0 || p >= OT_LENGTH) return;
+	
+	
+	
+	//clipped |= Transform(&coords[0], v0);
+	//clipped |= Transform(&coords[1], v1);
+	//clipped |= Transform(&coords[2], v2);
+	//clipped |= Transform(&coords[3], v3);
+	/*
 	IVec3 crossprod[2];
 	IVec3 normal;
 	crossprod[0].x = coords[1].x-coords[0].x;
@@ -961,7 +1006,7 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	CrossProduct(&crossprod[0],&crossprod[1],&normal);
 	if((normal.x*coords[0].x+normal.y*coords[0].y+normal.z*coords[0].z) > 0) return;
 	
-	if (clipped) { SubdivideQuad(v0, v1, v2, v3, level + 1); return; }
+	
 	//int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
 	
 	int p = coords[3].z;
@@ -979,27 +1024,31 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	}
 	
 	
-	if (p < 0 || p >= OT_LENGTH) return;
-		
+	
+	*/
+	/*
 	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-    if (!poly) return;
-
-	setlen(poly, POLY_LEN_FT4);
-	poly->rgbc  = v0->rgbc;
-	poly->tpage = curTex->tpage;
-	poly->clut  = 0;
+    
 
 	// TODO & instead of % 
 	poly->x0 = coords[1].x; poly->y0 = coords[1].y;
 	poly->x1 = coords[0].x; poly->y1 = coords[0].y;
 	poly->x2 = coords[2].x; poly->y2 = coords[2].y;
 	poly->x3 = coords[3].x; poly->y3 = coords[3].y;
-
+	*/
+	
+	gte_stsxy0( &poly->x0 );
+	gte_stsxy1( &poly->x1 );
+	gte_stsxy2( &poly->x2 );
+	gte_ldv0( &coord[2] );
+	gte_rtps();
+	gte_stsxy( &poly->x3 );
 	int uOffset = curTex->xOffset;
 	int vOffset = curTex->yOffset;
 	int uShift  = curTex->u_shift;
 	int vShift  = curTex->v_shift;
 		
+	
 	poly->u0 = (v1->u >> uShift) + uOffset;
 	poly->v0 = (v1->v >> vShift) + vOffset;
 	poly->u1 = (v0->u >> uShift) + uOffset;
@@ -1008,7 +1057,9 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	poly->v2 = (v2->v >> vShift) + vOffset;
 	poly->u3 = (v3->u >> uShift) + uOffset;
 	poly->v3 = (v3->v >> vShift) + vOffset;
-
+	
+	poly->tpage = curTex->tpage;
+	poly->clut  = 0;
 	addPrim(&buffer->ot[p >> 2], poly);
 }
 
