@@ -80,6 +80,11 @@ ifeq ($(PLAT),darwin)
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build-macos
 	TARGET  = $(ENAME).app
+	
+	MACOS_VERSION = $(shell sw_vers -productVersion | cut -d. -f1)
+	ifeq ($(shell expr $(MACOS_VERSION) \>= 12), 1)
+		LDFLAGS += -framework UniformTypeIdentifiers
+	endif
 endif
 
 ifeq ($(PLAT),freebsd)
