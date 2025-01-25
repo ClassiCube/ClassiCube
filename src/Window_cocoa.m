@@ -750,7 +750,7 @@ static void DoDrawFramebuffer(NSRect dirty) {
 	// TODO: Find a better way of doing this in cocoa..
 	if (!fb_bmp.scan0) return;
 	nsContext = [NSGraphicsContext currentContext];
-#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+#if defined MAC_OS_X_VERSION_10_14 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
 	context   = [nsContext CGContext];
 #else
 	context   = [nsContext graphicsPort];
@@ -812,8 +812,10 @@ static int SupportsModernFullscreen(void) {
 	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
 }
 
+#if defined MAC_OS_X_VERSION_10_14 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
 	// TODO: Is there a penalty for fullscreen contexts in 10.7 and later?
@@ -999,7 +1001,9 @@ cc_result Window_ExitFullscreen(void) {
 	return 0;
 }
 
+#if defined MAC_OS_X_VERSION_10_14 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
 #pragma clang diagnostic pop
+#endif
 
 #endif
 #endif
