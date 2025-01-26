@@ -20,6 +20,7 @@
 // this case. Larger values will allow for more granularity with depth (useful
 // when drawing a complex 3D scene) at the expense of RAM usage and performance.
 #define OT_LENGTH 512
+#define OCT_LENGTH 128
 
 // Size of the buffer GPU commands and primitives are written to. If the program
 // crashes due to too many primitives being drawn, increase this value.
@@ -30,6 +31,7 @@ typedef struct {
 	DRAWENV draw_env;
 
 	uint32_t ot[OT_LENGTH];
+	//uint32_t oct[OCT_LENGTH];
 	uint8_t  buffer[BUFFER_LENGTH];
 } RenderBuffer;
 
@@ -46,6 +48,7 @@ static void OnBufferUpdated(void) {
 	next_packet     = buffer->buffer;
     next_packet_end = next_packet + BUFFER_LENGTH;
 	ClearOTagR(buffer->ot, OT_LENGTH);
+	//ClearOTagR(buffer->oct, OCT_LENGTH);
 }
 
 static void SetupContexts(int w, int h, int r, int g, int b) {
@@ -58,7 +61,12 @@ static void SetupContexts(int w, int h, int r, int g, int b) {
 	setRGB0(&buffers[1].draw_env, r, g, b);
 	buffers[0].draw_env.isbg = 1;
 	buffers[1].draw_env.isbg = 1;
-
+	/*
+	buffers[0].draw_env.tw.w = 16;
+	buffers[0].draw_env.tw.h = 16;
+	buffers[1].draw_env.tw.w = 16;
+	buffers[1].draw_env.tw.h = 16;
+	*/
 	active_buffer = 0;
 	OnBufferUpdated();
 }
@@ -110,6 +118,8 @@ void Gfx_Create(void) {
 	InitGeom();
 	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
 	gte_SetGeomScreen(Window_Main.Height / 2);
+	
+	
 }
 
 void Gfx_Free(void) { 
@@ -578,7 +588,7 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 static struct Matrix _view, _proj;
 struct MatrixRow { int x, y, z, w; };
 static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
-
+MATRIX transform_matrix;
 #define ToFixed(v) (int)(v * (1 << 12))
 #define ToFixedTr(v) (int)(v * (1 << 6))
 
@@ -612,41 +622,25 @@ static void LoadTransformMatrix(struct Matrix* src) {
 
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	MATRIX mtx;
-	mtx.t[0] = ToFixedTr(src->row4.x);
-	mtx.t[1] = ToFixedTr(-src->row4.y);
-	mtx.t[2] = ToFixedTr(src->row4.w);
+	transform_matrix.t[0] = ToFixedTr(src->row4.x)<<2;
+	transform_matrix.t[1] = ToFixedTr(-src->row4.y)<<2;
+	transform_matrix.t[2] = ToFixedTr(src->row4.w)<<2;
 
 
-	mtx.m[0][0] = ToFixed(src->row1.x);
-	mtx.m[0][1] = ToFixed(src->row2.x);
-	mtx.m[0][2] = ToFixed(src->row3.x);
-
-	mtx.m[1][0] = ToFixed(-src->row1.y);
-	mtx.m[1][1] = ToFixed(-src->row2.y);
-	mtx.m[1][2] = ToFixed(-src->row3.y);
-
-	mtx.m[2][0] = ToFixed(src->row1.w);
-	mtx.m[2][1] = ToFixed(src->row2.w);
-	mtx.m[2][2] = ToFixed(src->row3.w);
-		
-	//Platform_Log4("W:  %f3, %f3, %f3, %f3", &src->row1.w, &src->row2.w, &src->row3.w, &src->row4.w);
-	//Platform_LogConst("====");
-	/*
-	mtx.m[0][0] = ToFixed(1.0);
-	mtx.m[0][1] = ToFixed(0.0);
-	mtx.m[0][2] = ToFixed(0.0);
-
-	mtx.m[1][0] = ToFixed(0.0);
-	mtx.m[1][1] = ToFixed(1.0);
-	mtx.m[1][2] = ToFixed(0.0);
-
-	mtx.m[2][0] = ToFixed(0.0);
-	mtx.m[2][1] = ToFixed(0.0);
-	mtx.m[2][2] = ToFixed(1.0);
-	*/
-	gte_SetRotMatrix(&mtx);
-	gte_SetTransMatrix(&mtx);
+	transform_matrix.m[0][0] = ToFixed(src->row1.x);
+	transform_matrix.m[0][1] = ToFixed(src->row2.x);
+	transform_matrix.m[0][2] = ToFixed(src->row3.x);
+	
+	transform_matrix.m[1][0] = ToFixed(-src->row1.y);
+	transform_matrix.m[1][1] = ToFixed(-src->row2.y);
+	transform_matrix.m[1][2] = ToFixed(-src->row3.y);
+	
+	transform_matrix.m[2][0] = ToFixed(src->row1.w);
+	transform_matrix.m[2][1] = ToFixed(src->row2.w);
+	transform_matrix.m[2][2] = ToFixed(src->row3.w);
+	
+	gte_SetRotMatrix(&transform_matrix);
+	gte_SetTransMatrix(&transform_matrix);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -696,7 +690,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	float zNear = 0.05f;
+	float zNear = 0.001f;
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
@@ -756,12 +750,6 @@ static int Transform(IVec3* result, struct PS1VertexTextured* a) {
 
 	
 	return z>w;
-	//int X = (short)poly.x0, Y = (short)poly.y0;
-	//Platform_Log3("X: %i, %i,  %i", &x, &result->x, &X);
-	//Platform_Log3("Y: %i, %i,  %i", &y, &result->y, &Y);
-	//Platform_LogConst("=======");
-
-	//return z>w;
 }
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
@@ -873,7 +861,7 @@ static void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextu
 
 static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
 						struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	if (level > 1) return;
+	if (level > 5) return;
 	int v1short = 0;
 	int v3short = 0;
 	int diff = v0->x - v1->x;
@@ -957,9 +945,6 @@ void CrossProduct(IVec3* a, IVec3* b, IVec3* out)
 
 static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
 							struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	//IVec3 coords[4];
-	//if (level < 1) { SubdivideQuad(v0, v1, v2, v3, level + 1); return; }
-	
 	int clipped = 0;
 	SVECTOR coord[4];
 	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
@@ -968,75 +953,22 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	setlen(poly, POLY_LEN_FT4);
 	poly->rgbc  = v0->rgbc;
 	
-	coord[0].vx = v0->x; coord[0].vy = v0->y; coord[0].vz = v0->z;
-	coord[1].vx = v1->x; coord[1].vy = v1->y; coord[1].vz = v1->z;
-	coord[2].vx = v2->x; coord[2].vy = v2->y; coord[2].vz = v2->z;
-	coord[3].vx = v3->x; coord[3].vy = v3->y; coord[3].vz = v3->z;
+	coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
+	coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
+	coord[2].vx = v2->x<<2; coord[2].vy = v2->y<<2; coord[2].vz = v2->z<<2;
+	coord[3].vx = v3->x<<2; coord[3].vy = v3->y<<2; coord[3].vz = v3->z<<2;
 	gte_ldv3(&coord[0],&coord[1],&coord[3]);
 	gte_rtpt();
 	int p = 0;
-	
-	
-	
 	gte_nclip();
 	gte_stopz( &p );
 	
-	if( p > 0 )
-		return;
+	if( p > 0 ) return;
+	
 	
 	gte_avsz3();
 	gte_stotz( &p );
-	if(p <= 0 || p >= OT_LENGTH) return;
-	
-	
-	
-	//clipped |= Transform(&coords[0], v0);
-	//clipped |= Transform(&coords[1], v1);
-	//clipped |= Transform(&coords[2], v2);
-	//clipped |= Transform(&coords[3], v3);
-	/*
-	IVec3 crossprod[2];
-	IVec3 normal;
-	crossprod[0].x = coords[1].x-coords[0].x;
-	crossprod[0].y = coords[1].y-coords[0].y;
-	crossprod[0].z = coords[1].z-coords[0].z;
-	crossprod[1].x = coords[2].x-coords[0].x;
-	crossprod[1].y = coords[2].y-coords[0].y;
-	crossprod[1].z = coords[2].z-coords[0].z;
-	CrossProduct(&crossprod[0],&crossprod[1],&normal);
-	if((normal.x*coords[0].x+normal.y*coords[0].y+normal.z*coords[0].z) > 0) return;
-	
-	
-	//int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
-	
-	int p = coords[3].z;
-	if (p < coords[0].z)
-	{
-		p = coords[0].z;
-	}
-	if (p < coords[1].z)
-	{
-		p = coords[1].z;
-	}
-	if (p < coords[2].z)
-	{
-		p = coords[2].z;
-	}
-	
-	
-	
-	*/
-	/*
-	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-    
-
-	// TODO & instead of % 
-	poly->x0 = coords[1].x; poly->y0 = coords[1].y;
-	poly->x1 = coords[0].x; poly->y1 = coords[0].y;
-	poly->x2 = coords[2].x; poly->y2 = coords[2].y;
-	poly->x3 = coords[3].x; poly->y3 = coords[3].y;
-	*/
-	
+	if(p == 0 || (p>>2) > OT_LENGTH) return;
 	gte_stsxy0( &poly->x0 );
 	gte_stsxy1( &poly->x1 );
 	gte_stsxy2( &poly->x2 );
@@ -1061,6 +993,8 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	poly->tpage = curTex->tpage;
 	poly->clut  = 0;
 	addPrim(&buffer->ot[p >> 2], poly);
+	
+	
 }
 
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
@@ -1192,6 +1126,7 @@ void Gfx_EndFrame(void) {
 
 	PutDispEnv(&disp_buffer->disp_env);
 	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
+	//DrawOTagEnv(&draw_buffer->oct[OCT_LENGTH - 1], &draw_buffer->draw_env);
 
 	active_buffer ^= 1;
 	OnBufferUpdated();
@@ -1205,7 +1140,36 @@ void Gfx_OnWindowResize(void) {
 	// TODO
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h)
+{ 
+	//DR_ENV *prim = &(buffers[0].draw_env.dr_env);
+	//setDrawAreaXY(&(prim->offset),x,y,x+w,y+h);
+	//prim = &(buffers[1].draw_env.dr_env);
+	//setDrawAreaXY(&(prim->offset),x,y,x+w,y+h);
+	buffers[0].draw_env.clip.x = x;
+	buffers[0].draw_env.clip.y = y;
+	buffers[0].draw_env.clip.w = w;
+	buffers[0].draw_env.clip.h = h;
+	
+	buffers[1].draw_env.clip.x = x;
+	buffers[1].draw_env.clip.y = y;
+	buffers[1].draw_env.clip.w = w;
+	buffers[1].draw_env.clip.h = h;
+	
+	buffers[0].disp_env.disp.x = x;
+	buffers[0].disp_env.disp.y = y;
+	buffers[0].disp_env.disp.w = w;
+	buffers[0].disp_env.disp.h = h;
+	
+	buffers[1].disp_env.disp.x = x;
+	buffers[1].disp_env.disp.y = y;
+	buffers[1].disp_env.disp.w = w;
+	buffers[1].disp_env.disp.h = h;
+	//SetDefDrawEnv(&buffers[0].draw_env, x, y, w, h);
+	//SetDefDispEnv(&buffers[0].disp_env, x, y, w, h);
+	//SetDefDrawEnv(&buffers[1].draw_env, x, y+h, w, h);
+	//SetDefDispEnv(&buffers[1].disp_env, x, y+h, w, h);
+}
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 void Gfx_GetApiInfo(cc_string* info) {
