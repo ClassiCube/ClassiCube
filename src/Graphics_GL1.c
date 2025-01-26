@@ -72,7 +72,9 @@ typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
+
 #include "_GLShared.h"
+static void GLBackend_Init(void);
 
 void Gfx_Create(void) {
 	GLContext_Create();

@@ -585,6 +585,14 @@ void Platform_Init(void) {
 	Platform_Log1("Running in %c mode with NDS wifi", dsiMode ? "DSi" : "DS");
 #endif
 
+	// By default, the "heap limit" is calculated in `sbrk` based on current
+	//  stack pointer value - however this does not reliably in ClassiCube's 
+	//  case as e.g. map gen and bitmap decoding use much more stack space
+	// So to avoid having the stack overlapping the heap when more stack space
+	//  is used, manually reduce the heap limit by 32 kb
+	extern char* fake_heap_end;
+	if (fake_heap_end) fake_heap_end -= 32768;
+
 	InitFilesystem();
     InitNetworking();
 	cpuStartTiming(1);

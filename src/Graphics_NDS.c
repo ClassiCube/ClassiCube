@@ -152,10 +152,10 @@ void Gfx_DisableTextureOffset(void) {
 static int FindColorInPalette(cc_uint16* pal, int pal_size, cc_uint16 col) {
 	if ((col >> 15) == 0) return 0;
 	
-	for (int i = 1; i < pal_size; i++) {
-		if(pal[i] == col) return i;
+	for (int i = 1; i < pal_size; i++) 
+	{
+		if (pal[i] == col) return i;
 	}
-	
 	return -1;
 }
 
@@ -173,8 +173,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	
 	// Palettize texture if possible
 	int pal_size = 1;
-	cc_uint16* tmp_palette = Mem_TryAlloc(256, 2);
-	if (!tmp_palette) return 0;
+	cc_uint16 tmp_palette[256];
 	tmp_palette[0] = 0;
 	
 	for (int i = 0; i < bmp->width * bmp->height; i++) {
@@ -188,58 +187,60 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			tmp_palette[pal_size - 1] = col;
 		}
 	}
-	
-	int texFormat = GL_RGBA;
-	if(pal_size <= 4) texFormat = GL_RGB4;
-	else if(pal_size <= 16) texFormat = GL_RGB16;
-	else if(pal_size <= 256) texFormat = GL_RGB256;
-	
-	if(texFormat != GL_RGBA) {
-		char* tmp_chr = (char*) tmp;
-		
-		for (int i = 0; i < bmp->width * bmp->height; i++) {
-			cc_uint16 col = tmp[i];
-			int idx = FindColorInPalette(tmp_palette, pal_size, col);
-			
-			if(texFormat == GL_RGB256) {
-				tmp_chr[i] = idx;
-			} else if(texFormat == GL_RGB16) {
-				if((i & 1) == 0) {
-					tmp_chr[i >> 1] = idx;
-				} else {
-					tmp_chr[i >> 1] |= idx << 4;
-				}
-			} else {
-				if((i & 3) == 0) {
-					tmp_chr[i >> 2] = idx;
-				} else {
-					tmp_chr[i >> 2] |= idx << (2 * (i & 3));
-				}
-			}
-		}
-	}
-	
-	// Load texture in vram
+
 	int textureID;
 	glGenTextures(1, &textureID);
 	glBindTexture(0, textureID);
-	glTexImage2D(0, 0, texFormat, bmp->width, bmp->height, 0, 0, tmp);
-	if (texFormat != GL_RGBA) {
-		int glPalSize;
-		if(texFormat == GL_RGB4) glPalSize = 4;
-		else if(texFormat == GL_RGB16) glPalSize = 16;
-		else glPalSize = 256;
-		
-		glColorTableEXT(0, 0, glPalSize, 0, 0, tmp_palette);
+	char* tmp_chr = (char*)tmp;
+
+	if (pal_size <= 4) {
+		for (int i = 0; i < bmp->width * bmp->height; i++) 
+		{
+			cc_uint16 col = tmp[i];
+			int idx = FindColorInPalette(tmp_palette, pal_size, col);
+			
+			if ((i & 3) == 0) {
+				tmp_chr[i >> 2] = idx;
+			} else {
+				tmp_chr[i >> 2] |= idx << (2 * (i & 3));
+			}
+		}
+
+		glTexImage2D(0, 0, GL_RGB4,  bmp->width, bmp->height, 0, 0, tmp);
+		glColorTableEXT(0, 0, 4, 0, 0, tmp_palette);
+	} else if (pal_size <= 16) {
+		for (int i = 0; i < bmp->width * bmp->height; i++) 
+		{
+			cc_uint16 col = tmp[i];
+			int idx = FindColorInPalette(tmp_palette, pal_size, col);
+			
+			if ((i & 1) == 0) {
+				tmp_chr[i >> 1] = idx;
+			} else {
+				tmp_chr[i >> 1] |= idx << 4;
+			}
+		}
+
+		glTexImage2D(0, 0, GL_RGB16,  bmp->width, bmp->height, 0, 0, tmp);
+		glColorTableEXT(0, 0, 16, 0, 0, tmp_palette);
+	} else if(pal_size <= 256) {
+		for (int i = 0; i < bmp->width * bmp->height; i++) 
+		{
+			cc_uint16 col = tmp[i];			
+			tmp_chr[i] = FindColorInPalette(tmp_palette, pal_size, col);
+		}
+
+		glTexImage2D(0, 0, GL_RGB256, bmp->width, bmp->height, 0, 0, tmp);
+		glColorTableEXT(0, 0, 256, 0, 0, tmp_palette);
+	} else {
+		glTexImage2D(0, 0, GL_RGBA,   bmp->width, bmp->height, 0, 0, tmp);
 	}
 	
 	glTexParameter(0, GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T | TEXGEN_TEXCOORD | GL_TEXTURE_COLOR0_TRANSPARENT);
-
 	cc_uint16* vram_ptr = glGetTexturePointer(textureID);
 	if (!vram_ptr) Platform_Log2("No VRAM for %i x %i texture", &bmp->width, &bmp->height);
 
 	Mem_Free(tmp);
-	Mem_Free(tmp_palette);
 	return (void*)textureID;
 }
 
