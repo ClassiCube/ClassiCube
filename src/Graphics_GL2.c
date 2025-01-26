@@ -36,6 +36,8 @@ static const struct DynamicLibSym core_funcs[] = {
 #include "../misc/opengl/GL1Macros.h"
 
 #include "_GLShared.h"
+static void GLBackend_Init(void);
+
 static GfxResourceID white_square;
 static int postProcess;
 enum PostProcess { POSTPROCESS_NONE, POSTPROCESS_GRAYSCALE };
@@ -49,6 +51,7 @@ void Gfx_Create(void) {
 	Gfx.BackendType = CC_GFX_BACKEND_GL2;
 	
 	GL_InitCommon();
+	GLBackend_Init();
 	Gfx_RestoreState();
 	GLContext_SetVSync(gfx_vsync);
 }
