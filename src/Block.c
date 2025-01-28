@@ -320,6 +320,10 @@ static void Block_CalcStretch(BlockID block) {
 	} else {
 		Blocks.CanStretch[block] &= 0xFC; /* ~0x03 */
 	}
+
+	#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+	Blocks.CanStretch[block] = 0;
+	#endif
 }
 
 static cc_bool Block_MightCull(BlockID block, BlockID other) {
