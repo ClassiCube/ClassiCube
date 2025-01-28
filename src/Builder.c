@@ -583,12 +583,17 @@ static PackedCol Normal_LightColor(int x, int y, int z, Face face, BlockID block
 }
 
 static cc_bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
+#ifndef CC_BUILD_PS1
 	BlockID cur = Builder_Chunk[chunkIndex];
 
 	if (cur != initial || Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)) return false;
 	if (Builder_FullBright) return true;
 
 	return Normal_LightColor(Builder_X, Builder_Y, Builder_Z, face, initial) == Normal_LightColor(x, y, z, face, cur);
+#else
+	return false;
+#endif
+
 }
 
 static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
