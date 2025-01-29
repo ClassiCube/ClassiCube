@@ -261,7 +261,11 @@ static void RefreshWindowBounds(void) {
 - (void)keyDown:(NSEvent *)event { }
 @end
 
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
 @interface CCWindowDelegate : NSObject <NSWindowDelegate> { }
+#else
+@interface CCWindowDelegate : NSObject { }
+#endif
 @end
 @implementation CCWindowDelegate
 - (void)windowDidResize:(NSNotification *)notification {
