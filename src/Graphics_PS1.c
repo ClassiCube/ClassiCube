@@ -383,7 +383,13 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 static void SetAlphaTest(cc_bool enabled) {
 }
 
+static uint32_t blend_mode;
 static void SetAlphaBlend(cc_bool enabled) {
+	// NOTE: Semitransparent polygons are simply configured
+	//   to draw all pixels as final_color = B/2 + F/2
+	// This works well enough for e.g. water and ice textures,
+	//   but not for the UI - so it's only used in 3D mode
+	blend_mode = enabled ? POLY_CMD_SEMITRNS : 0;
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -411,10 +417,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
 }
 
+static cc_bool depth_only;
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+	depth_only = depthOnly;
 }
 
 
@@ -445,8 +450,8 @@ static void* gfx_vertices;
 #define UVFixed(value)  ((int)((value) * 1024.0f) & 0x3FF) // U/V wrapping not supported
 
 
-#define POLY_CODE_F4  0x28
-#define POLY_LEN_F4      5
+#define POLY_CODE_F4 (GP0_CMD_POLYGON | POLY_CMD_QUAD)
+#define POLY_LEN_F4  5
 struct CC_POLY_F4 {
 	uint32_t tag;
 	uint32_t rgbc; // r0, g0, b0, code;
@@ -456,8 +461,8 @@ struct CC_POLY_F4 {
 	int16_t	 x3, y3;
 };
 
-#define POLY_CODE_FT4 0x2C
-#define POLY_LEN_FT4     9
+#define POLY_CODE_FT4 (GP0_CMD_POLYGON | POLY_CMD_QUAD | POLY_CMD_TEXTURED)
+#define POLY_LEN_FT4  9
 struct CC_POLY_FT4 {
 	uint32_t tag;
 	uint32_t rgbc; // r0, g0, b0, code;
@@ -515,7 +520,7 @@ static void PreprocessTexturedVertices(void) {
 		int R = PackedCol_R(src->Col) >> 1;
 		int G = PackedCol_G(src->Col) >> 1;
 		int B = PackedCol_B(src->Col) >> 1;
-		dst->rgbc = R | (G << 8) | (B << 16) | (POLY_CODE_FT4 << 24);
+		dst->rgbc = R | (G << 8) | (B << 16) | POLY_CODE_FT4;
 	}
 }
 
@@ -532,7 +537,7 @@ static void PreprocessColouredVertices(void) {
 		int R = PackedCol_R(src->Col);
 		int G = PackedCol_G(src->Col);
 		int B = PackedCol_B(src->Col);
-		dst->rgbc = R | (G << 8) | (B << 16) | (POLY_CODE_F4 << 24);
+		dst->rgbc = R | (G << 8) | (B << 16) | POLY_CODE_F4;
 	}
 }
 
@@ -951,7 +956,7 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	if (!poly) return;
 
 	setlen(poly, POLY_LEN_FT4);
-	poly->rgbc  = v0->rgbc;
+	poly->rgbc  = v0->rgbc | blend_mode;
 	
 	coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
 	coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
@@ -1098,6 +1103,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	if (depth_only) return;
 	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
