@@ -25,8 +25,8 @@
 		-->
 		<identifiers
 			system			="PLAYSTATION"
-			volume			="PSN00BSDK_TEMPLATE"
-			volume_set		="PSN00BSDK_TEMPLATE"
+			volume			="CLASSICUBE_PS1"
+			volume_set		="CLASSICUBE_PS1"
 			publisher		="MEIDOTEK"
 			data_preparer	="PSN00BSDK ${PSN00BSDK_VERSION}"
 			application		="PLAYSTATION"
