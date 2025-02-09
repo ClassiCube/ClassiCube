@@ -84,7 +84,7 @@ static void* new_primitive(int size) {
 	uint8_t* prim  = next_packet;
 	next_packet += size;
 
-	if (next_packet <= next_packet_end);
+	if (next_packet <= next_packet_end)
 		return (void*)prim;
 	return new_primitive_nomem();
 }
