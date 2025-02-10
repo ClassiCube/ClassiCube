@@ -333,7 +333,8 @@ CC_API void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
 
 /*########################################################################################################################*
 *------------------------------------------------------Vertex drawing-----------------------------------------------------*
-*#########################################################################################################################*//*
+*#########################################################################################################################*/
+/*
 SUMMARY:
 	Vertex drawing functions draw lines or triangles from the currently active vertex buffer
 IMPLEMENTATION NOTES:
@@ -344,13 +345,19 @@ USAGE NOTES:
 	With the triangle drawing functions, the default bound index buffer
 	  is setup to draw groups of 2 triangles from 4 vertices (1 quad)
 */
+
+typedef enum DrawHints_ {
+	DRAW_HINT_NONE   = 0,
+	DRAW_HINT_SPRITE = 9,
+} DrawHints;
+
 /* Sets the format of the rendered vertices */
 CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
 /* Renders vertices from the currently bound vertex buffer as lines */
 CC_API void Gfx_DrawVb_Lines(int verticesCount);
 /* Renders vertices from the currently bound vertex and index buffer as triangles */
 /* NOTE: Offsets each index by startVertex */
-CC_API void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex);
+CC_API void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints);
 /* Renders vertices from the currently bound vertex and index buffer as triangles */
 CC_API void Gfx_DrawVb_IndexedTris(int verticesCount);
 /* Special case Gfx_DrawVb_IndexedTris_Range for map renderer */

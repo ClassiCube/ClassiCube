@@ -2565,7 +2565,7 @@ static int TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s, int offset) {
 	{
 		Atlas1D_Bind(i);
 
-		Gfx_DrawVb_IndexedTris_Range(count, offset);
+		Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_NONE);
 		offset += count;
 	}
 	return offset;
@@ -2607,7 +2607,7 @@ static void TexIdsOverlay_Render(void* screen, float delta) {
 	offset = TexIdsOverlay_RenderTerrain(s, offset);
 
 	Gfx_BindTexture(s->idAtlas.tex.ID);
-	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset);
+	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset, DRAW_HINT_SPRITE);
 }
 
 static int TexIdsOverlay_KeyDown(void* screen, int key, struct InputDevice* device) {

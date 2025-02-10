@@ -984,7 +984,7 @@ static void SetVertexSource(int startVertex) {
 	// NOTE: Can't use GPUREG_VERTEX_OFFSET, it only works when drawing non-indexed arrays
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	SetVertexSource(startVertex);
 	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount));
 }

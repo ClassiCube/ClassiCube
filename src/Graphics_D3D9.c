@@ -707,7 +707,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 		0, 0, verticesCount, 0, verticesCount >> 1);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 }

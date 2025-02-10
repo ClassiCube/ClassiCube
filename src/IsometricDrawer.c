@@ -159,7 +159,7 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 
 		/* Flush previous batch */
 		Atlas1D_Bind(curIdx);
-		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
+		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg, DRAW_HINT_NONE);
 
 		/* Reset for next batch */
 		curIdx   = state[i];
@@ -168,5 +168,5 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 	}
 
 	Atlas1D_Bind(curIdx);
-	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
+	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg, DRAW_HINT_NONE);
 }

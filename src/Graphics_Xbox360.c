@@ -292,7 +292,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, 0, verticesCount >> 2);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	Platform_Log1("DRAW_TRIS_RANGE: %i", &verticesCount);
 	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2);
 }

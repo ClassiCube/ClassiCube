@@ -611,7 +611,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	}
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	if (gfx_rendering2D) {
 		if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 			DrawTexturedQuads2D(verticesCount, startVertex);

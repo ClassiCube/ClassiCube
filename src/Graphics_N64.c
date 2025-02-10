@@ -514,7 +514,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	rspq_block_t* block = VB_GetCached(gfx_vb, startVertex, verticesCount);
 
 	if (block) {

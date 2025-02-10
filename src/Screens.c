@@ -400,7 +400,7 @@ static void HUDScreen_Render(void* screen, float delta) {
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
 		Widget_Render2(&s->line2, 8);
 		Gfx_BindTexture(s->posAtlas.tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES);
+		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES, DRAW_HINT_SPRITE);
 		/* TODO swap these two lines back */
 	}
 
@@ -844,7 +844,7 @@ static void TabListOverlay_Render(void* screen, float delta) {
 		if (!s->textures[i].ID) continue;
 		Gfx_BindTexture(s->textures[i].ID);
 
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
 		offset += 4;
 	}
 
@@ -1174,7 +1174,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 			if (Chat_GetLogTime(logIdx) + 10 < now) continue;
 			
 			Gfx_BindTexture(tex.ID);
-			Gfx_DrawVb_IndexedTris_Range(4, i * 4);
+			Gfx_DrawVb_IndexedTris_Range(4, i * 4, DRAW_HINT_SPRITE);
 		}
 	}
 
@@ -1947,7 +1947,7 @@ static void LoadingScreen_Render(void* screen, float delta) {
 	if (s->rows) {
 		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 		Atlas1D_Bind(Atlas1D_Index(loc));
-		Gfx_DrawVb_IndexedTris(s->rows * 4);
+		Gfx_DrawVb_IndexedTris_Range(s->rows * 4, 0, DRAW_HINT_NONE);
 		offset = s->rows * 4;
 	}
 

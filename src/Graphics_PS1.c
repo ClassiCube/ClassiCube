@@ -1094,7 +1094,7 @@ static void DrawQuads(int verticesCount, int startVertex) {
 }
 
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	DrawQuads(verticesCount, startVertex);
 }
 

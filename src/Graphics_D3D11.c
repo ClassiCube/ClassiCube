@@ -495,7 +495,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, 0);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
 }
 

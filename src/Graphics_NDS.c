@@ -658,7 +658,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	GFX_END = 0;
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		Draw_TexturedTriangles(verticesCount, startVertex);
 	} else {

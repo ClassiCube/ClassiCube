@@ -673,7 +673,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	gfx_setupVBRangeFunc(startVertex);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 }
