@@ -72,7 +72,7 @@ static void SetupContexts(int w, int h, int r, int g, int b) {
 }
 
 // NOINLINE to avoid polluting the hot path
-static CC_NOINLINE new_primitive_nomem(void) {
+static CC_NOINLINE void* new_primitive_nomem(void) {
 	if (noMemWarned) return NULL;
 	noMemWarned = true;
 	
