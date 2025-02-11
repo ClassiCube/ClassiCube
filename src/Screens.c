@@ -1947,7 +1947,7 @@ static void LoadingScreen_Render(void* screen, float delta) {
 	if (s->rows) {
 		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 		Atlas1D_Bind(Atlas1D_Index(loc));
-		Gfx_DrawVb_IndexedTris_Range(s->rows * 4, 0, DRAW_HINT_NONE);
+		Gfx_DrawVb_IndexedTris_Range(s->rows * 4, 0, DRAW_HINT_SPRITE);
 		offset = s->rows * 4;
 	}
 

@@ -2565,7 +2565,7 @@ static int TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s, int offset) {
 	{
 		Atlas1D_Bind(i);
 
-		Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_NONE);
+		Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_SPRITE);
 		offset += count;
 	}
 	return offset;

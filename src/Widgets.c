@@ -216,11 +216,11 @@ static int ButtonWidget_Render2(void* widget, int offset) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
 	Gfx_BindTexture(Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex);
 	/* TODO: Does this 400 need to take DPI into account */
-	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset, DRAW_HINT_NONE);
+	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset, DRAW_HINT_SPRITE);
 
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset + 8, DRAW_HINT_NONE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset + 8, DRAW_HINT_SPRITE);
 	}
 	return offset + 12;
 }
@@ -452,7 +452,7 @@ static void HotbarWidget_RenderOutline(struct HotbarWidget* w, int offset) {
 	tex = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
 
 	Gfx_BindTexture(tex);
-	Gfx_DrawVb_IndexedTris_Range(8, offset, DRAW_HINT_NONE);
+	Gfx_DrawVb_IndexedTris_Range(8, offset, DRAW_HINT_SPRITE);
 }
 
 static void HotbarWidget_RenderEntries(struct HotbarWidget* w, int offset) {

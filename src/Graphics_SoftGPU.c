@@ -385,16 +385,11 @@ static CC_INLINE int FastFloor(float value) {
 }
 
 static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
-	int x0 = (int)V0->x, y0 = (int)V0->y;
-	int x1 = (int)V1->x, y1 = (int)V1->y;
-	int x2 = (int)V2->x, y2 = (int)V2->y;
-	int minX = min(x0, min(x1, x2));
-	int minY = min(y0, min(y1, y2));
-	int maxX = max(x0, max(x1, x2));
-	int maxY = max(y0, max(y1, y2));
-
-	int width  = maxX - minX;
-	int height = maxY - minY;
+	PackedCol vColor = V0->c;
+	int minX = (int)V0->x;
+	int minY = (int)V0->y;
+	int maxX = (int)V1->x;
+	int maxY = (int)V2->y;
 
 	// Reject triangles completely outside
 	if (maxX < 0 || minX > fb_maxX) return;
@@ -402,6 +397,14 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 	int begTX = (int)(V0->u * curTexWidth);
 	int begTY = (int)(V0->v * curTexHeight);
+	int delTX = (int)(V1->u * curTexWidth)  - begTX;
+	int delTY = (int)(V2->v * curTexHeight) - begTY;
+
+	int width = maxX - minX, height = maxY - minY;
+
+	int fast =  delTX == width && delTY == height && 
+				(begTX + delTX < curTexWidth ) && 
+				(begTY + delTY < curTexHeight);
 
 	// Perform scissoring
 	minX = max(minX, 0); maxX = min(maxX, fb_maxX);
@@ -409,10 +412,10 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 	for (int y = minY; y <= maxY; y++) 
 	{
-		int texY = (begTY + (y - minY)) & texHeightMask;
+		int texY = fast ? (begTY + (y - minY)) : (((begTY + delTY * (y - minY) / height)) & texHeightMask);
 		for (int x = minX; x <= maxX; x++) 
 		{
-			int texX = (begTX + (x - minX)) & texWidthMask;
+			int texX = fast ? (begTX + (x - minX)) : (((begTX + delTX * (x - minX) / width)) & texWidthMask);
 			int texIndex = texY * curTexWidth + texX;
 
 			BitmapCol color = curTexPixels[texIndex];
@@ -435,6 +438,17 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				R = (R * A + dstR * (255 - A)) >> 8;
 				G = (G * A + dstG * (255 - A)) >> 8;
 				B = (B * A + dstB * (255 - A)) >> 8;
+				color = BitmapCol_Make(R, G, B, 0xFF);
+			}
+
+			if (vColor != PACKEDCOL_WHITE) {
+				int r1 = PackedCol_R(vColor), r2 = BitmapCol_R(color);
+				R = ( r1 * r2 ) >> 8;
+				int g1 = PackedCol_G(vColor), g2 = BitmapCol_G(color);
+				G = ( g1 * g2 ) >> 8;
+				int b1 = PackedCol_B(vColor), b2 = BitmapCol_B(color);
+				B = ( b1 * b2 ) >> 8;
+
 				color = BitmapCol_Make(R, G, B, 0xFF);
 			}
 
