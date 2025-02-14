@@ -19,7 +19,7 @@ ifdef ARCH_68040
 else
 	TARGET		:=	ClassiCube-68k
 	BUILD_DIR 	:=	build-68k
-	CFLAGS		+= -DCC_BUILD_NOFPU
+	CFLAGS		+= -DCC_BUILD_NOFPU -DCC_BUILD_TINYMEM
 endif
 
 SOURCE_DIR	:=	src
