@@ -49,7 +49,7 @@ struct Builder1DPart {
 
 /* Part builder data, for both normal and translucent parts.
 The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
-static struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
+static CC_BIG_VAR struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
 static struct VertexTextured* Builder_Vertices;
 
 static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {

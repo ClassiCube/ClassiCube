@@ -79,7 +79,7 @@ static struct HUDScreen {
 	int lastFov;
 	int lastX, lastY, lastZ;
 	struct HotbarWidget hotbar;
-} HUDScreen_Instance;
+} HUDScreen_Instance CC_BIG_VAR;
 
 /* Each integer can be at most 10 digits + minus prefix */
 #define POSITION_VAL_CHARS 11
@@ -453,7 +453,7 @@ static struct TabListOverlay {
 	TabListEntryCompare compare;
 	cc_uint16 ids[TABLIST_MAX_ENTRIES];
 	struct Texture textures[TABLIST_MAX_ENTRIES];
-} TabListOverlay_Instance;
+} TabListOverlay_Instance CC_BIG_VAR;
 #define TABLIST_MAX_VERTICES (TEXTWIDGET_MAX + 4 * TABLIST_MAX_ENTRIES)
 
 static void TabListOverlay_DrawText(struct Texture* tex, struct TabListOverlay* s, const cc_string* name) {
@@ -912,7 +912,7 @@ static struct ChatScreen {
 	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
 	struct Texture chatTextures[GUI_MAX_CHATLINES];
-} ChatScreen_Instance;
+} ChatScreen_Instance CC_BIG_VAR;
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
@@ -1591,7 +1591,7 @@ static struct InventoryScreen {
 	struct TableWidget table;
 	struct TextWidget title;
 	cc_bool releasedInv, deferredSelect;
-} InventoryScreen;
+} InventoryScreen CC_BIG_VAR;
 
 static struct Widget* inventory_widgets[2];
 
@@ -1834,7 +1834,7 @@ static struct LoadingScreen {
 
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
-} LoadingScreen;
+} LoadingScreen CC_BIG_VAR;
 
 static struct Widget* loading_widgets[2];
 #define LOADING_TILE_SIZE 64
@@ -2073,7 +2073,7 @@ static struct DisconnectScreen {
 	char _titleBuffer[STRING_SIZE * 2];
 	char _messageBuffer[STRING_SIZE];
 	cc_string titleStr, messageStr;
-} DisconnectScreen;
+} DisconnectScreen CC_BIG_VAR;
 
 static struct Widget* disconnect_widgets[4];
 #define DISCONNECT_DELAY_SECS 5

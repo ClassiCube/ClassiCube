@@ -18,7 +18,10 @@
 #include <unistd.h>
 #include <time.h>
 #include "_PlatformConsole.h"
-extern int nocash_puts(const char *str);
+
+typedef volatile uint8_t   vu8;
+typedef volatile uint16_t vu16;
+typedef volatile uint32_t vu32;
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -44,6 +47,25 @@ cc_uint64 Stopwatch_Measure(void) {
 	return 0;
 }
 
+extern int nocash_puts(const char *str);
+static void Log_Nocash(char* buffer) {
+	nocash_puts(buffer);
+}
+
+#define MGBA_LOG_DEBUG 4
+#define REG_DEBUG_ENABLE (vu16*) 0x4FFF780
+#define REG_DEBUG_FLAGS  (vu16*) 0x4FFF700
+#define REG_DEBUG_STRING (char*) 0x4FFF600
+
+static void Log_mgba(char* buffer, int len) {
+	*REG_DEBUG_ENABLE = 0xC0DE;
+	// Check if actually emulated or not
+	if (*REG_DEBUG_ENABLE != 0x1DEA) return;
+
+	Mem_Copy(REG_DEBUG_STRING, buffer, len);
+	*REG_DEBUG_FLAGS = MGBA_LOG_DEBUG | 0x100;
+}
+
 void Platform_Log(const char* msg, int len) {
     // Can only be up to 120 bytes total
 	char buffer[120];
@@ -52,7 +74,8 @@ void Platform_Log(const char* msg, int len) {
 	Mem_Copy(buffer, msg, len);
 	buffer[len + 0] = '\n';
 	buffer[len + 1] = '\0';
-	nocash_puts(buffer);
+	Log_Nocash(buffer);
+	Log_mgba(buffer, len);
 }
 
 TimeMS DateTime_CurrentUTC(void) {

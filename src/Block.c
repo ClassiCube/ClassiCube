@@ -422,7 +422,7 @@ static void Block_UpdateCulling(BlockID block) {
 *---------------------------------------------------------Block-----------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint32 definedCustomBlocks[BLOCK_COUNT >> 5];
-static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
+static CC_BIG_VAR char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
 cc_bool Block_IsCustomDefined(BlockID block) {

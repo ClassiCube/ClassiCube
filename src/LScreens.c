@@ -182,7 +182,7 @@ static struct ChooseModeScreen {
 	struct LButton btnEnhanced, btnClassicHax, btnClassic, btnBack;
 	struct LLabel  lblHelp, lblEnhanced[2], lblClassicHax[2], lblClassic[2];
 	cc_bool firstTime;
-} ChooseModeScreen;
+} ChooseModeScreen CC_BIG_VAR;
 
 #define CHOOSEMODE_SCREEN_MAX_WIDGETS 12
 static struct LWidget* chooseMode_widgets[CHOOSEMODE_SCREEN_MAX_WIDGETS];
@@ -285,7 +285,7 @@ static struct ColoursScreen {
 	struct LLabel lblRGB[COLOURS_NUM_COLS];
 	struct LInput iptColours[COLOURS_NUM_ENTRIES];
 	struct LCheckbox cbClassic;
-} ColoursScreen;
+} ColoursScreen CC_BIG_VAR;
 
 #define COLOURSSCREEN_MAX_WIDGETS 25
 static struct LWidget* colours_widgets[COLOURSSCREEN_MAX_WIDGETS];
@@ -450,7 +450,7 @@ static struct DirectConnectScreen {
 	struct LButton btnConnect, btnBack;
 	struct LInput iptUsername, iptAddress, iptMppass;
 	struct LLabel lblStatus;
-} DirectConnectScreen;
+} DirectConnectScreen CC_BIG_VAR;
 
 #define DIRECTCONNECT_SCREEN_MAXWIDGETS 6
 static struct LWidget* directConnect_widgets[DIRECTCONNECT_SCREEN_MAXWIDGETS];
@@ -585,7 +585,7 @@ static struct MFAScreen {
 	struct LInput iptCode;
 	struct LButton btnSignIn, btnCancel;
 	struct LLabel  lblTitle;
-} MFAScreen;
+} MFAScreen CC_BIG_VAR;
 
 #define MFA_SCREEN_MAX_WIDGETS 4
 static struct LWidget* mfa_widgets[MFA_SCREEN_MAX_WIDGETS];
@@ -645,7 +645,7 @@ static struct SplitScreen {
 	LScreen_Layout
 	struct LButton btnPlayers[3], btnBack;
 	cc_bool signingIn;
-} SplitScreen;
+} SplitScreen CC_BIG_VAR;
 
 #define SPLITSCREEN_MAX_WIDGETS 4
 static struct LWidget* split_widgets[SPLITSCREEN_MAX_WIDGETS];
@@ -705,7 +705,7 @@ static struct MainScreen {
 	struct LInput iptUsername, iptPassword;
 	struct LLabel lblStatus, lblUpdate;
 	cc_bool signingIn;
-} MainScreen;
+} MainScreen CC_BIG_VAR;
 
 #define MAINSCREEN_MAX_WIDGETS 12
 static struct LWidget* main_widgets[MAINSCREEN_MAX_WIDGETS];
@@ -1034,7 +1034,7 @@ static struct CheckResourcesScreen {
 	LScreen_Layout
 	struct LLabel  lblLine1, lblLine2, lblStatus;
 	struct LButton btnYes, btnNo;
-} CheckResourcesScreen;
+} CheckResourcesScreen CC_BIG_VAR;
 
 #define CHECKRESOURCES_SCREEN_MAX_WIDGET 5
 static struct LWidget* checkResources_widgets[CHECKRESOURCES_SCREEN_MAX_WIDGET];
@@ -1128,7 +1128,7 @@ static struct FetchResourcesScreen {
 	struct LLabel  lblStatus;
 	struct LButton btnCancel;
 	struct LSlider sdrProgress;
-} FetchResourcesScreen;
+} FetchResourcesScreen CC_BIG_VAR;
 
 #define FETCHRESOURCES_SCREEN_MAX_WIDGETS 3
 static struct LWidget* fetchResources_widgets[FETCHRESOURCES_SCREEN_MAX_WIDGETS];
@@ -1227,7 +1227,7 @@ static struct ServersScreen {
 	struct LTable table;
 	struct FontDesc rowFont;
 	float tableAcc;
-} ServersScreen;
+} ServersScreen CC_BIG_VAR;
 
 static struct LWidget* servers_widgets[6];
 
@@ -1416,7 +1416,7 @@ static struct SettingsScreen {
 	struct LLabel  lblMode, lblColours;
 	struct LCheckbox cbExtra, cbEmpty, cbScale;
 	struct LLine sep;
-} SettingsScreen;
+} SettingsScreen CC_BIG_VAR;
 
 #define SETTINGS_SCREEN_MAX_WIDGETS 9
 static struct LWidget* settings_widgets[SETTINGS_SCREEN_MAX_WIDGETS];
@@ -1523,7 +1523,7 @@ static struct ThemesScreen {
 	LScreen_Layout
 	struct LButton btnModern, btnClassic, btnNordic;
 	struct LButton btnCustom, btnBack;
-} ThemesScreen;
+} ThemesScreen CC_BIG_VAR;
 
 #define THEME_SCREEN_MAX_WIDGETS 5
 static struct LWidget* themes_widgets[THEME_SCREEN_MAX_WIDGETS];
@@ -1591,7 +1591,7 @@ static struct UpdatesScreen {
 	struct LLabel  lblYour, lblRel, lblDev, lblInfo, lblStatus;
 	int buildProgress, buildIndex;
 	cc_bool pendingFetch, release;
-} UpdatesScreen;
+} UpdatesScreen CC_BIG_VAR;
 
 #define UPDATESSCREEN_MAX_WIDGETS 12
 static struct LWidget* updates_widgets[UPDATESSCREEN_MAX_WIDGETS];

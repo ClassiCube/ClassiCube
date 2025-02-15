@@ -303,6 +303,7 @@ int TextureUrls_ClearDenied(void) { return 0; }
 /*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
 static struct StringsBuffer etagCache, lastModCache;
 #define ETAGS_TXT    "texturecache/etags.txt"
 #define LASTMOD_TXT  "texturecache/lastmodified.txt"
@@ -446,6 +447,31 @@ static void UpdateCache(struct HttpRequest* req) {
 	res = Stream_WriteAllTo(&path, req->data, req->size);
 	if (res) { Logger_SysWarn2(res, "caching", &url); }
 }
+#else
+static void TextureCache_Init(void) {
+}
+
+/* Returns non-zero if given URL has been cached */
+static int IsCached(const cc_string* url) {
+	return false;
+}
+
+/* Attempts to open the cached data stream for the given url */
+static cc_bool OpenCachedData(const cc_string* url, struct Stream* stream) {
+	return false;
+}
+
+static cc_string GetCachedLastModified(const cc_string* url) {
+	return String_Empty;
+}
+
+static cc_string GetCachedETag(const cc_string* url) {
+	return String_Empty;
+}
+
+/* Updates cached data, ETag, and Last-Modified for the given URL */
+static void UpdateCache(struct HttpRequest* req) { }
+#endif
 
 
 /*########################################################################################################################*

@@ -242,7 +242,7 @@ static struct ListScreen {
 	const char* titleText;
 	struct TextWidget title;
 	struct StringsBuffer entries;
-} ListScreen;
+} ListScreen CC_BIG_VAR;
 
 static struct Widget* list_widgets[LIST_SCREEN_ITEMS + 4 + 1];
 #define LISTSCREEN_EMPTY "-"
@@ -472,7 +472,7 @@ static struct PauseScreen {
 	const struct SimpleButtonDesc* descs;
 	struct ButtonWidget btns[PAUSE_MAX_BTNS], quit, back;
 	struct TextWidget title;
-} PauseScreen;
+} PauseScreen CC_BIG_VAR;
 
 static void PauseScreenBase_Quit(void* a, void* b) { 
 	Window_RequestClose(); 
@@ -645,7 +645,7 @@ static struct OptionsGroupScreen {
 	struct ButtonWidget btns[8];
 	struct TextWidget desc;
 	struct ButtonWidget done;
-} OptionsGroupScreen;
+} OptionsGroupScreen CC_BIG_VAR;
 
 static struct Widget* optGroups_widgets[8 + 2];
 
@@ -769,7 +769,7 @@ static struct EditHotkeyScreen {
 	struct FontDesc titleFont, textFont;
 	struct TextInputWidget input;
 	struct ButtonWidget btns[5], cancel;
-} EditHotkeyScreen;
+} EditHotkeyScreen CC_BIG_VAR;
 
 static struct Widget* edithotkey_widgets[1 + 5 + 1];
 
@@ -1028,7 +1028,7 @@ static struct GenLevelScreen {
 	struct ButtonWidget flatgrass, vanilla, cancel;
 	struct TextInputWidget inputs[4];
 	struct TextWidget labels[4], title;
-} GenLevelScreen;
+} GenLevelScreen CC_BIG_VAR;
 #define GENLEVEL_NUM_INPUTS 4
 
 static struct Widget* gen_widgets[2 * GENLEVEL_NUM_INPUTS + 4];
@@ -1234,7 +1234,7 @@ static struct ClassicGenScreen {
 	Screen_Body
 	struct ButtonWidget btns[3], cancel;
 	struct TextWidget title;
-} ClassicGenScreen;
+} ClassicGenScreen CC_BIG_VAR;
 
 static struct Widget* classicgen_widgets[1 + 3 + 1];
 
@@ -1315,7 +1315,7 @@ static struct SaveLevelScreen {
 	struct ButtonWidget save, file, cancel;
 	struct TextInputWidget input;
 	struct TextWidget desc;
-} SaveLevelScreen;
+} SaveLevelScreen CC_BIG_VAR;
 
 static struct Widget* save_widgets[3 + 1 + 1];
 
@@ -1860,7 +1860,7 @@ void LoadLevelScreen_Show(void) {
 static struct BindsSourceScreen {
 	Screen_Body
 	struct ButtonWidget btns[2], cancel;
-} BindsSourceScreen;
+} BindsSourceScreen CC_BIG_VAR;
 static struct InputDevice* bind_device;
 
 static struct Widget* bindsSource_widgets[3];
@@ -1958,7 +1958,7 @@ static struct KeyBindsScreen {
 	struct TextWidget title, msg;
 	struct ButtonWidget back, left, right;
 	struct ButtonWidget buttons[KEYBINDS_MAX_BTNS];
-} KeyBindsScreen;
+} KeyBindsScreen CC_BIG_VAR;
 
 static struct Widget* key_widgets[KEYBINDS_MAX_BTNS + 5];
 
@@ -2248,7 +2248,7 @@ static struct MenuInputOverlay {
 	struct MenuInputDesc* desc;
 	MenuInputDone onDone;
 	cc_string value; char valueBuffer[STRING_SIZE];
-} MenuInputOverlay;
+} MenuInputOverlay CC_BIG_VAR;
 
 static struct Widget* menuInput_widgets[2 + 1];
 
@@ -2441,7 +2441,7 @@ static struct TexIdsOverlay {
 	int xOffset, yOffset, tileSize, textVertices;
 	struct TextAtlas idAtlas;
 	struct TextWidget title;
-} TexIdsOverlay;
+} TexIdsOverlay CC_BIG_VAR;
 static struct Widget* texids_widgets[1];
 
 #define TEXIDS_MAX_ROWS_PER_PAGE 16
@@ -2639,7 +2639,7 @@ static struct UrlWarningOverlay {
 	struct ButtonWidget btns[2];
 	struct TextWidget   lbls[4];
 	char _urlBuffer[STRING_SIZE * 4];
-} UrlWarningOverlay;
+} UrlWarningOverlay CC_BIG_VAR;
 
 static struct Widget* urlwarning_widgets[4 + 2];
 
@@ -2726,7 +2726,7 @@ static struct TexPackOverlay {
 	struct ButtonWidget btns[4];
 	struct TextWidget   lbls[4];
 	char _urlBuffer[URL_MAX_SIZE];
-} TexPackOverlay;
+} TexPackOverlay CC_BIG_VAR;
 
 static struct Widget* texpack_widgets[4 + 4];
 
@@ -2910,7 +2910,7 @@ static struct NostalgiaMenuScreen {
 	Screen_Body
 	struct ButtonWidget btnA, btnF, done;
 	struct TextWidget title;
-} NostalgiaMenuScreen;
+} NostalgiaMenuScreen CC_BIG_VAR;
 
 static struct Widget* nostalgiaMenu_widgets[4];
 

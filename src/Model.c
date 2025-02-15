@@ -1155,7 +1155,7 @@ static float HumanModel_GetEyeY(struct Entity* e)  { return 26.0f/16.0f; }
 static void HumanModel_GetSize(struct Entity* e)   { Model_RetSize(8.6f,28.1f,8.6f); }
 static void HumanModel_GetBounds(struct Entity* e) { Model_RetAABB(-8,0,-4, 8,32,4); }
 
-static struct ModelVertex human_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
+static CC_BIG_VAR struct ModelVertex human_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
 static struct ModelTex human_tex = { "char.png" };
 static struct Model  human_model = { 
 	"humanoid", human_vertices, &human_tex,

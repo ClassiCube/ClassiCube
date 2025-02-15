@@ -8,10 +8,11 @@
 #include "Logger.h"
 #include "PackedCol.h"
 
-struct StringsBuffer Options;
-static struct StringsBuffer changedOpts;
+CC_BIG_VAR struct StringsBuffer Options;
+static CC_BIG_VAR struct StringsBuffer changedOpts;
 cc_result Options_LoadResult;
 static cc_bool savingPaused;
+
 #if defined CC_BUILD_WEB || defined CC_BUILD_MOBILE || defined CC_BUILD_CONSOLE
 	#define OPTIONS_SAVE_IMMEDIATELY
 #endif
