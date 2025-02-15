@@ -24,6 +24,7 @@ typedef volatile uint32_t vu32;
 #define DCNT_BG2			0x0400
 
 #define MEM_IO		        0x04000000
+#define MEM_VRAM	0x06000000
 
 #define REG_DISPCNT			*(vu32*)(MEM_IO + 0x0000)
 #define REG_KEYINPUT		*(vu16*)(MEM_IO + 0x0130)
@@ -139,26 +140,13 @@ void Gamepads_Process(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	bmp->scan0  = (BitmapCol*)MEM_VRAM;
 	bmp->width  = width;
 	bmp->height = height;
 }
 
-#define MEM_VRAM	0x06000000
-
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	vu16* base = (vu16*)MEM_VRAM;
-
-	for (int y = r.y; y < r.y + r.height; y++)
-	{
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		vu16*      dst = base + SCREEN_WIDTH * y;
-		
-		for (int x = r.x; x < r.x + r.width; x++)
-		{
-			dst[x] = src[x];
-		}
-	}
+	// Draws to screen directly anyways
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
