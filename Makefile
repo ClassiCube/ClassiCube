@@ -245,6 +245,8 @@ xbox360:
 	$(MAKE) -f misc/xbox360/Makefile
 n64:
 	$(MAKE) -f misc/n64/Makefile
+gba:
+	$(MAKE) -f misc/gba/Makefile
 ds:
 	$(MAKE) -f misc/ds/Makefile
 3ds:

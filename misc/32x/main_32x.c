@@ -1,7 +1,4 @@
-#include <stdlib.h>
-
-#include "32x.h"
-#include "hw_32x.h"
+#include <stdint.h>
 
 int32_t fix16_sqrt(int32_t value)
 {

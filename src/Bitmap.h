@@ -23,7 +23,7 @@ struct Stream;
 	#define BITMAPCOLOR_G_SHIFT  5
 	#define BITMAPCOLOR_R_SHIFT 10
 	#define BITMAPCOLOR_A_SHIFT 15
-#elif defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_NDS || defined CC_BUILD_32X
+#elif defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_NDS || defined CC_BUILD_32X || defined CC_BUILD_GBA
 	#define BITMAPCOLOR_R_SHIFT  0
 	#define BITMAPCOLOR_G_SHIFT  5
 	#define BITMAPCOLOR_B_SHIFT 10
