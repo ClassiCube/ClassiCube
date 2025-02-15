@@ -25,7 +25,19 @@ typedef volatile uint32_t vu32;
 
 #define MEM_IO		        0x04000000
 
-#define REG_DISPCNT			*(vu32*)(MEM_IO+0x0000)
+#define REG_DISPCNT			*(vu32*)(MEM_IO + 0x0000)
+#define REG_KEYINPUT		*(vu16*)(MEM_IO + 0x0130)
+
+#define KEY_A			0x0001
+#define KEY_B			0x0002
+#define KEY_SELECT		0x0004
+#define KEY_START		0x0008
+#define KEY_RIGHT		0x0010
+#define KEY_LEFT		0x0020
+#define KEY_UP			0x0040
+#define KEY_DOWN		0x0080
+#define KEY_R			0x0100
+#define KEY_L			0x0200
 
 
 /*########################################################################################################################*
@@ -103,6 +115,23 @@ void Gamepads_Init(void) {
 
 void Gamepads_Process(float delta) {
 	int port = Gamepad_Connect(0x5BA, PadBind_Defaults);
+	int mods = ~REG_KEYINPUT;
+	
+	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
+	
+	Gamepad_SetButton(port, CCPAD_1, mods & KEY_A);
+	Gamepad_SetButton(port, CCPAD_2, mods & KEY_B);
+	//Gamepad_SetButton(port, CCPAD_3, mods & KEY_X);
+	//Gamepad_SetButton(port, CCPAD_4, mods & KEY_Y);
+	
+	Gamepad_SetButton(port, CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & KEY_SELECT);
+	
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & KEY_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & KEY_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & KEY_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & KEY_DOWN);
 }
 
 
