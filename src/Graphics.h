@@ -98,8 +98,7 @@ extern const cc_string Gfx_LowPerfMessage;
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
 
-void  Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
-void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
+void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 
 
 /*########################################################################################################################*

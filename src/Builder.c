@@ -420,7 +420,8 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	Builder_Vertices = (struct VertexTextured*)Gfx_RecreateAndLockVb(&info->vb,
+	info->vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, totalVerts + 1);
+	Builder_Vertices = (struct VertexTextured*)Gfx_LockVb(info->vb,
 													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #else
 	/* NOTE: Relies on assumption vb is ignored by GL11 Gfx_LockVb implementation */

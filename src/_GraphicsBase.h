@@ -455,12 +455,6 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
-	Gfx_DeleteVb(vb);
-	*vb = Gfx_CreateVb(fmt, count);
-	return Gfx_LockVb(*vb, fmt, count);
-}
-
 static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
 

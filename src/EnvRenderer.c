@@ -173,8 +173,10 @@ static CC_NOINLINE void BuildClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&clouds_vb,
+	clouds_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, clouds_vertices);
+	data = (struct VertexTextured*)Gfx_LockVb(clouds_vb,
 										VERTEX_FORMAT_TEXTURED, clouds_vertices);
+
 	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, data);
 	Gfx_UnlockVb(clouds_vb);
 }
@@ -239,8 +241,10 @@ static CC_NOINLINE void BuildSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data   = (struct VertexColoured*)Gfx_RecreateAndLockVb(&sky_vb,
+	sky_vb = Gfx_CreateVb(VERTEX_FORMAT_COLOURED, sky_vertices);
+	data   = (struct VertexColoured*)Gfx_LockVb(sky_vb,
 										VERTEX_FORMAT_COLOURED, sky_vertices);
+
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
 	DrawSkyY(x1, z1, x2, z2, height, data);
 	Gfx_UnlockVb(sky_vb);
@@ -307,8 +311,10 @@ static CC_NOINLINE void BuildSkybox(void) {
 	struct VertexTextured* data;
 	int i;
 
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&skybox_vb,
+	skybox_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	data = (struct VertexTextured*)Gfx_LockVb(skybox_vb,
 										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+
 	Mem_Copy(data, vertices, sizeof(vertices));
 	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
 	Gfx_UnlockVb(skybox_vb);
@@ -703,7 +709,9 @@ static CC_NOINLINE void BuildMapSides(void) {
 	sides_vertices +=     CalcNumVertices(World.Width, World.Length);  /* YQuads beneath map */
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&sides_vb,
+
+	sides_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, sides_vertices);
+	data = (struct VertexTextured*)Gfx_LockVb(sides_vb,
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
 	sides_fullBright = Blocks.Brightness[block];
@@ -748,7 +756,9 @@ static CC_NOINLINE void BuildMapEdges(void) {
 		r = rects[i];
 		edges_vertices += CalcNumVertices(r.width, r.height); /* YPlanes outside */
 	}
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&edges_vb,
+
+	edges_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, edges_vertices);
+	data = (struct VertexTextured*)Gfx_LockVb(edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
 	edges_fullBright = Blocks.Brightness[block];

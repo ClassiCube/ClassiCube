@@ -341,8 +341,10 @@ static void Init2DResources(void) {
 	Gfx_Create();
 	if (framebuffer_vb) return;
 
-	struct VertexTextured* data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&framebuffer_vb,
-															VERTEX_FORMAT_TEXTURED, 4);
+	framebuffer_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, 4);
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockVb(framebuffer_vb, 
+																VERTEX_FORMAT_TEXTURED, 4);
+
 	data[0].x = -1.0f; data[0].y = -1.0f; data[0].z = 0.0f; data[0].Col = PACKEDCOL_WHITE; data[0].U = 0.0f; data[0].V = 1.0f;
 	data[1].x =  1.0f; data[1].y = -1.0f; data[1].z = 0.0f; data[1].Col = PACKEDCOL_WHITE; data[1].U = 1.0f; data[1].V = 1.0f;
 	data[2].x =  1.0f; data[2].y =  1.0f; data[2].z = 0.0f; data[2].Col = PACKEDCOL_WHITE; data[2].U = 1.0f; data[2].V = 0.0f;
