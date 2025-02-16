@@ -39,7 +39,7 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
-#ifdef CC_BUILD_32X
+#if defined CC_BUILD_32X || defined CC_BUILD_GBA
 	Gfx.MaxTexWidth  = 16;
 	Gfx.MaxTexHeight = 16;
 #else

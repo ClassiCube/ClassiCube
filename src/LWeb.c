@@ -212,7 +212,7 @@ static cc_bool Json_Handle(cc_uint8* data, cc_uint32 len,
 *#########################################################################################################################*/
 static char servicesBuffer[FILENAME_SIZE];
 static cc_string servicesServer = String_FromArray(servicesBuffer);
-static struct StringsBuffer ccCookies;
+static struct StringsBuffer CC_BIG_VAR ccCookies;
 
 static void LWebTask_Reset(struct LWebTask* task) {
 	task->completed = false;
