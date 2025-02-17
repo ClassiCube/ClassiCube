@@ -1,5 +1,5 @@
 #include "LWeb.h"
-#ifndef CC_BUILD_WEB
+#ifndef CC_DISABLE_LAUNCHER
 #include "String.h"
 #include "Launcher.h"
 #include "Platform.h"

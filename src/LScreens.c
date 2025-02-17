@@ -1,5 +1,5 @@
 #include "LScreens.h"
-#ifndef CC_BUILD_WEB
+#ifndef CC_DISABLE_LAUNCHER
 #include "String.h"
 #include "LWidgets.h"
 #include "LWeb.h"

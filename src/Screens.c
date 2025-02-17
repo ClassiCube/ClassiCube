@@ -437,6 +437,7 @@ void HUDScreen_Show(void) {
 *----------------------------------------------------TabListOverlay-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_NETWORKING
+
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
 #define LIST_NAMES_PER_COLUMN 16

@@ -359,6 +359,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_PLUGINS
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
+	#define CC_DISABLE_LAUNCHER
 #elif defined __psp__
 	#define CC_BUILD_PSP
 	#define CC_BUILD_CONSOLE
@@ -444,6 +445,7 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+	#define CC_DISABLE_UI
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
@@ -538,6 +540,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_NETWORKING
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+	#define CC_DISABLE_UI
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
