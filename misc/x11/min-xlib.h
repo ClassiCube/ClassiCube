@@ -216,6 +216,34 @@ typedef struct {
     Cursor cursor;		/* cursor to be displayed (or None) */
 } XSetWindowAttributes;
 
+typedef struct {
+    int x, y;			/* location of window */
+    int width, height;		/* width and height of window */
+    int border_width;		/* border width of window */
+    int depth;          	/* depth of window */
+    Visual *visual;		/* the associated visual structure */
+    Window root;        	/* root of screen containing window */
+#if defined(__cplusplus) || defined(c_plusplus)
+    int c_class;		/* C++ InputOutput, InputOnly*/
+#else
+    int class;			/* InputOutput, InputOnly*/
+#endif
+    int bit_gravity;		/* one of bit gravity values */
+    int win_gravity;		/* one of the window gravity values */
+    int backing_store;		/* NotUseful, WhenMapped, Always */
+    unsigned long backing_planes;/* planes to be preserved if possible */
+    unsigned long backing_pixel;/* value to be used when restoring planes */
+    Bool save_under;		/* boolean, should bits under be saved? */
+    Colormap colormap;		/* color map to be associated with window */
+    Bool map_installed;		/* boolean, is color map currently installed*/
+    int map_state;		/* IsUnmapped, IsUnviewable, IsViewable */
+    long all_event_masks;	/* set of events all people have interest in*/
+    long your_event_mask;	/* my event mask */
+    long do_not_propagate_mask; /* set of events that should not propagate */
+    Bool override_redirect;	/* boolean value for override-redirect */
+    Screen *screen;		/* back pointer to correct screen */
+} XWindowAttributes;
+
 /*
  * Data structure for "image" data, used by image manipulation routines.
  */
@@ -1184,6 +1212,12 @@ extern int XChangeWindowAttributes(
     Window		/* w */,
     unsigned long	/* valuemask */,
     XSetWindowAttributes* /* attributes */
+);
+
+extern Status XGetWindowAttributes(
+    Display*		/* display */,
+    Window		/* w */,
+    XWindowAttributes*	/* window_attributes_return */
 );
 
 extern Bool XCheckIfEvent(

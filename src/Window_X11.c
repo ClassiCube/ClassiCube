@@ -1221,11 +1221,15 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 static GC fb_gc;
 static XImage* fb_image;
 static void* fb_data;
-static int fb_fast;
+static int fb_fast, fb_depth;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	Window win = Window_Main.Handle.val;
+	XWindowAttributes attribs = { 0 };
+
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win, 0, NULL);
+	XGetWindowAttributes(win_display, win, &attribs);
+	fb_depth = attribs.depth;
 
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
@@ -1234,11 +1238,11 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	/* X11 requires that the image to draw has same depth as window */
 	/* Easy for 24/32 bit case, but much trickier with other depths */
 	/*  (have to do a manual and slow second blit for other depths) */
-	fb_fast = win_visual.depth == 24 || win_visual.depth == 32;
+	fb_fast = attribs.depth == 24 || attribs.depth == 32;
 	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window blit");
 
-	fb_image = XCreateImage(win_display, win_visual.visual,
-		win_visual.depth, ZPixmap, 0, (char*)fb_data,
+	fb_image = XCreateImage(win_display, attribs.visual,
+		attribs.depth, ZPixmap, 0, (char*)fb_data,
 		width, height, 32, 0);
 }
 
@@ -1261,7 +1265,7 @@ static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap
 			B = BitmapCol_B(src);
 			A = BitmapCol_A(src);
 
-			switch (win_visual.depth)
+			switch (fb_depth)
 			{
 			case 30: /* R10 G10 B10 A2 */
 				pixel = (R << 2) | ((G << 2) << 10) | ((B << 2) << 20) | ((A >> 6) << 30);
