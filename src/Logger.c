@@ -357,9 +357,21 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 #elif defined _M_X64
 	type = IMAGE_FILE_MACHINE_AMD64;
 	frame.AddrPC.Offset    = ctx->Rip;
-	frame.AddrFrame.Offset = ctx->Rsp;
+	frame.AddrFrame.Offset = ctx->Rbp;
 	frame.AddrStack.Offset = ctx->Rsp;
 	spRegister             = ctx->Rsp;
+#elif defined _M_ARM64
+	type = IMAGE_FILE_MACHINE_ARM64;
+	frame.AddrPC.Offset    = ctx->Pc;
+	frame.AddrFrame.Offset = ctx->Fp;
+	frame.AddrStack.Offset = ctx->Sp;
+	spRegister             = ctx->Sp;
+#elif defined _M_ARM
+	type = IMAGE_FILE_MACHINE_ARM;
+	frame.AddrPC.Offset    = ctx->Pc;
+	frame.AddrFrame.Offset = ctx->R11;
+	frame.AddrStack.Offset = ctx->Sp;
+	spRegister             = ctx->Sp;
 #else
 	/* Always available after XP, so use that */
 	return RtlCaptureStackBackTrace(0, max, (void**)addrs, NULL);
@@ -549,6 +561,13 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined _M_X64
 	#define REG_GET(reg, ign) &r->R ## reg
 	Dump_X64()
+#elif defined _M_ARM64
+	#define REG_GNUM(num)     &r->X[num]
+	#define REG_GET_FP()      &r->Fp
+	#define REG_GET_LR()      &r->Lr
+	#define REG_GET_SP()      &r->Sp
+	#define REG_GET_PC()      &r->Pc
+	Dump_ARM64()
 #elif defined _M_ARM
 	#define REG_GNUM(num)     &r->R ## num
 	#define REG_GET_FP()      &r->R11
@@ -557,13 +576,6 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_LR()      &r->Lr
 	#define REG_GET_PC()      &r->Pc
 	Dump_ARM32()
-#elif defined _M_ARM64
-	#define REG_GNUM(num)     &r->X[num]
-	#define REG_GET_FP()      &r->Fp
-	#define REG_GET_LR()      &r->Lr
-	#define REG_GET_SP()      &r->Sp
-	#define REG_GET_PC()      &r->Pc
-	Dump_ARM64()
 #elif defined _M_PPC
 	#define REG_GNUM(num) &r->Gpr ## num
 	#define REG_GET_PC()  &r->Iar
