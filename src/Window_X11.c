@@ -307,21 +307,7 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_EGL || !CC_GFX_BACKEND_IS_GL()
-static XVisualInfo GLContext_SelectVisual(void) {
-	XVisualInfo info;
-	cc_result res;
-	int screen = DefaultScreen(win_display);
-
-	res = XMatchVisualInfo(win_display, screen, 24, TrueColor, &info) ||
-		  XMatchVisualInfo(win_display, screen, 32, TrueColor, &info);
-
-	if (!res) Process_Abort("Selecting visual");
-	return info;
-}
-#else
 static XVisualInfo GLContext_SelectVisual(void);
-#endif
 
 void Window_PreInit(void) { 
 	DisplayInfo.CursorVisible = true;
@@ -364,7 +350,21 @@ static void ApplyIcon(Window win) {
 static void ApplyIcon(Window win) { }
 #endif
 
-static void DoCreateWindow(int width, int height) {
+static XVisualInfo Select2DVisual(void) {
+	XVisualInfo info = { 0 };
+	cc_result res;
+	int screen = DefaultScreen(win_display);
+
+	if (XMatchVisualInfo(win_display, screen, 24, TrueColor, &info)) return info;
+	if (XMatchVisualInfo(win_display, screen, 32, TrueColor, &info)) return info;
+
+	Platform_LogConst("Can't find 24 or 32 bit visual, trying default..");
+	info.depth  = DefaultDepth(win_display, screen);
+	info.visual = DefaultVisual(win_display, screen);
+	return info;
+}
+
+static void DoCreateWindow(int width, int height, int _2d) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
 	Atom protocols[2];
@@ -375,7 +375,7 @@ static void DoCreateWindow(int width, int height) {
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
 	RegisterAtoms();
-	win_visual = GLContext_SelectVisual();
+	win_visual = _2d ? Select2DVisual() : GLContext_SelectVisual();
 
 	Platform_Log1("Created window (visual id: %h)", &win_visual.visualid);
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
@@ -441,11 +441,11 @@ static void DoCreateWindow(int width, int height) {
 }
 
 void Window_Create2D(int width, int height) { 
-	DoCreateWindow(width, height); 
+	DoCreateWindow(width, height, true); 
 }
 
 void Window_Create3D(int width, int height) { 
-	DoCreateWindow(width, height); 
+	DoCreateWindow(width, height, false); 
 }
 
 void Window_Destroy(void) {
@@ -1427,6 +1427,12 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
+#if CC_GFX_BACKEND_IS_GL() && defined CC_BUILD_EGL
+static XVisualInfo GLContext_SelectVisual(void) {
+	return Select2DVisual();
+}
+#endif
+
 #if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 /* #include <GL/glx.h> */
 #include "../misc/x11/min-glx.h"
@@ -1515,7 +1521,7 @@ void GLContext_GetApiInfo(cc_string* info) {
 		acc ? "HW accelerated" : "no HW acceleration");
 }
 
-static void GetAttribs(struct GraphicsMode* mode, int* attribs, int depth) {
+static void GetAttribs(struct GraphicsMode* mode, int* attribs, int fbCfg, int depth) {
 	int i = 0;
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
@@ -1530,6 +1536,7 @@ static void GetAttribs(struct GraphicsMode* mode, int* attribs, int depth) {
 	attribs[i++] = GLX_DEPTH_SIZE; attribs[i++] = depth;
 
 	attribs[i++] = GLX_DOUBLEBUFFER;
+	attribs[i++] = fbCfg ? True : 0;
 	attribs[i++] = 0;
 }
 
@@ -1544,7 +1551,7 @@ static XVisualInfo GLContext_SelectVisual(void) {
 	struct GraphicsMode mode;
 
 	InitGraphicsMode(&mode);
-	GetAttribs(&mode, attribs, GLCONTEXT_DEFAULT_DEPTH);
+	GetAttribs(&mode, attribs, true, GLCONTEXT_DEFAULT_DEPTH);
 	screen = DefaultScreen(win_display);
 
 	if (!glXQueryVersion(win_display, &major, &minor)) {
@@ -1561,14 +1568,15 @@ static XVisualInfo GLContext_SelectVisual(void) {
 
 	if (!visual) {
 		Platform_LogConst("Falling back to glXChooseVisual.");
+		GetAttribs(&mode, attribs, false, GLCONTEXT_DEFAULT_DEPTH);
 		visual = glXChooseVisual(win_display, screen, attribs);
 	}
 	/* Some really old devices will only supply 16 bit depths */
 	if (!visual) {
-		GetAttribs(&mode, attribs, 16);
+		GetAttribs(&mode, attribs, false, 16);
 		visual = glXChooseVisual(win_display, screen, attribs);
 	}
-	if (!visual) Process_Abort("Requested GraphicsMode not available.");
+	if (!visual) Process_Abort("Can't find an OpenGL 3D GLX visual");
 
 	info = *visual;
 	XFree(visual);
