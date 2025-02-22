@@ -1426,17 +1426,7 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if CC_GFX_BACKEND_IS_GL() && defined CC_BUILD_EGL
 static XVisualInfo GLContext_SelectVisual(void) {
-	XVisualInfo info = { 0 };
-	cc_result res;
-	int screen = DefaultScreen(win_display);
-
-	if (XMatchVisualInfo(win_display, screen, 24, TrueColor, &info)) return info;
-	if (XMatchVisualInfo(win_display, screen, 32, TrueColor, &info)) return info;
-
-	Platform_LogConst("Can't find 24 or 32 bit visual, trying default..");
-	info.depth  = DefaultDepth(win_display, screen);
-	info.visual = DefaultVisual(win_display, screen);
-	return info;
+	return Select2DVisual();
 }
 #endif
 

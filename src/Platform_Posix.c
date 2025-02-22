@@ -641,6 +641,7 @@ void Platform_LoadSysFonts(void) {
 		Platform_Log1("Searching for fonts in %s", &dirs[i]);
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
+	Platform_LogConst("Finished searching for fonts");
 }
 
 
