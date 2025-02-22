@@ -136,7 +136,7 @@ static void CreateDevice(void) {
 	// So for the sake of simplicity and since only a few old GPUs don't support feature level 10 anyways
 	//   https://walbourn.github.io/direct3d-feature-levels/
 	//   https://github.com/MonoGame/MonoGame/issues/5789
-	//  I decided to just not support GPUs that do not support at least feature level 10
+	//  Just don't support GPUs that do not support at least feature level 10
 	if (fl < D3D_FEATURE_LEVEL_10_0)
 		Logger_FailToStart("Your GPU is too old to support the Direct3D11 version.\nTry using the Direct3D9 version instead.\n");
 

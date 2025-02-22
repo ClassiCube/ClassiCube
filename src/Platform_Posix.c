@@ -72,6 +72,13 @@ cc_bool Platform_ReadonlyFilesystem;
 #include <os2.h>
 #endif
 
+#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+	/* Really old mac OS versions don't have the dlopen/dlsym API */
+	#define USE_NS_DYNLOAD_API
+#else
+	#include <dlfcn.h>
+#endif
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -430,7 +437,14 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	if (res) Process_Abort2(res, "Creating thread");
 	pthread_attr_destroy(&attrs);
 	
-#if defined CC_BUILD_LINUX || defined CC_BUILD_HAIKU
+#if defined CC_BUILD_LINUX
+	static int (*FP_pthread_setname_np)(pthread_t thread, const char* name);
+	/* Not available on old libc versions, so load it dynamically */
+	if (!FP_pthread_setname_np) {
+		FP_pthread_setname_np = dlsym(RTLD_NEXT, "pthread_setname_np");
+	}
+	if (FP_pthread_setname_np) FP_pthread_setname_np(*ptr, name);
+#elif defined CC_BUILD_HAIKU
 	extern int pthread_setname_np(pthread_t thread, const char* name);
 	pthread_setname_np(*ptr, name);
 #elif defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
@@ -1232,7 +1246,7 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+#if USE_NS_DYNLOAD_API
 /* Really old mac OS versions don't have the dlopen/dlsym API */
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
@@ -1269,7 +1283,6 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	return true;
 }
 #else
-#include <dlfcn.h>
 /* TODO: Should we use .bundle instead of .dylib? */
 
 #ifdef CC_BUILD_DARWIN
