@@ -76,6 +76,9 @@ cc_bool Platform_ReadonlyFilesystem;
 	/* Really old mac OS versions don't have the dlopen/dlsym API */
 	#define USE_NS_DYNLOAD_API
 #else
+	#ifndef __USE_GNU
+	#define __USE_GNU
+	#endif
 	#include <dlfcn.h>
 #endif
 
@@ -1246,7 +1249,7 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if USE_NS_DYNLOAD_API
+#if defined USE_NS_DYNLOAD_API
 /* Really old mac OS versions don't have the dlopen/dlsym API */
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
