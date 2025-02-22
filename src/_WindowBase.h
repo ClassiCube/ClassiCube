@@ -170,6 +170,12 @@ void GLContext_Create(void) {
 	}
 	if (!ctx_config) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
 
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_X11
+	EGLint visualID;
+	eglGetConfigAttrib(ctx_display, &ctx_config, EGL_NATIVE_VISUAL_ID, &visualID);
+	Platform_Log1("EGL visual ID: %h", &visualID);
+#endif
+
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
 	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
 	GLContext_InitSurface();

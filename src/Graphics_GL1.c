@@ -72,6 +72,7 @@ typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
+static cc_bool rgba_only;
 
 #include "_GLShared.h"
 static void GLBackend_Init(void);
@@ -359,6 +360,49 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static void ConvertRGBA(void* dst, void* src, int numPixels) {
+	cc_uint8* d = (cc_uint8*)dst;
+	cc_uint8* s = (cc_uint8*)src;
+	int i;
+
+	for (i = 0; i < numPixels; i++, d += 4, s += 4) {
+		d[0] = s[2];
+		d[1] = s[1];
+		d[2] = s[0];
+		d[3] = s[3];
+	}
+}
+
+static void CallTexSubImage2D(int lvl, int x, int y, int width, int height, void* pixels) {
+	void* tmp;
+	if (!rgba_only) {
+		_glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
+		return;
+	}
+
+	tmp = Mem_TryAlloc(width * height, 4);
+	if (!tmp) return;
+
+	ConvertRGBA(tmp, pixels, width * height);
+	_glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
+	Mem_Free(tmp);
+}
+
+static void CallTexImage2D(int lvl, int width, int height, void* pixels) {
+	void* tmp;
+	if (!rgba_only) {
+		_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
+		return;
+	}
+
+	tmp = Mem_TryAlloc(width * height, 4);
+	if (!tmp) return;
+
+	ConvertRGBA(tmp, pixels, width * height);
+	_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
+	Mem_Free(tmp);
+}
+
 void Gfx_BindTexture(GfxResourceID texId) {
 	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 }
@@ -588,13 +632,7 @@ static void APIENTRY gl10_texImage(GLenum target, GLint level, GLint internalfor
 	gl10_tex->height = height;
 	gl10_tex->pixels = Mem_Alloc(width * height, 4, "GL 1.0 pixels");
 
-	Mem_Copy(gl10_tex->pixels, pixels, width * height * 4);
-	for (i = 0; i < width * height * 4; i += 4) 
-	{
-		cc_uint8 t = gl10_tex->pixels[i + 2];
-		gl10_tex->pixels[i + 2] = gl10_tex->pixels[i + 0];
-		gl10_tex->pixels[i + 0] = t;
-	}
+	ConvertRGBA(gl10_tex->pixels, pixels, width * height);
 }
 
 static void APIENTRY gl10_texSubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels) {
@@ -708,7 +746,9 @@ static void GLBackend_Init(void) {
 		DynamicLib_ReqSym2("glGenBuffersARB",    glGenBuffers), DynamicLib_ReqSym2("glBufferDataARB",    glBufferData),
 		DynamicLib_ReqSym2("glBufferSubDataARB", glBufferSubData)
 	};
-	static const cc_string vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+
+	static const cc_string vboExt  = String_FromConst("GL_ARB_vertex_buffer_object");
+	static const cc_string bgraExt = String_FromConst("GL_EXT_bgra");
 	cc_string extensions = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
 	const GLubyte* ver   = _glGetString(GL_VERSION);
 
@@ -721,6 +761,8 @@ static void GLBackend_Init(void) {
 	} else if (String_CaselessContains(&extensions, &vboExt)) {
 		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
 	} else {
+		/* Some old IRIX cards don't support BGRA */
+		rgba_only = major == 1 && minor <= 1 && String_CaselessContains(&extensions, &bgraExt);
 		FallbackOpenGL();
 	}
 }

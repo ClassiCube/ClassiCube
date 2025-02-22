@@ -441,6 +441,14 @@ static void SwitchProgram(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static int CallTexSubImage2D(int lvl, int x, int y, int width, int height, void* pixels) {
+	glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
+}
+
+static int CallTexImage2D(int lvl, int width, int height, void* pixels) {
+	glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
+}
+
 void Gfx_BindTexture(GfxResourceID texId) {
 	/* Texture 0 has different behaviour depending on backend */
 	/*   Desktop OpenGL  - pure white 1x1 texture */

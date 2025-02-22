@@ -67,6 +67,9 @@ static void* FastAllocTempMem(int size) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static void CallTexSubImage2D(int lvl, int x, int y, int width, int height, void* pixels);
+static void CallTexImage2D(int lvl, int width, int height, void* pixels);
+
 static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_bool partial) {
 	BitmapCol* prev = bmp->scan0;
 	BitmapCol* cur;
@@ -83,9 +86,9 @@ static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_boo
 		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		if (partial) {
-			_glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
+			CallTexSubImage2D(lvl, x, y, width, height, cur);
 		} else {
-			_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
+			CallTexImage2D(lvl, width, height, cur);
 		}
 
 		if (prev != bmp->scan0) Mem_Free(prev);
@@ -111,9 +114,9 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 					part, rowWidth   * BITMAPCOLOR_SIZE);
 
 	if (full) {
-		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+		CallTexImage2D(0, part->width, part->height, ptr);
 	} else {
-		_glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+		CallTexSubImage2D(0, x, y, part->width, part->height, ptr);
 	}
 	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
 }
@@ -135,7 +138,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	}
 
 	if (bmp->width == rowWidth) {
-		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
+		CallTexImage2D(0, bmp->width, bmp->height, bmp->scan0);
 	} else {
 		UpdateTextureSlow(0, 0, bmp, rowWidth, true);
 	}
@@ -148,7 +151,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 
 	if (part->width == rowWidth) {
-		_glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
+		CallTexSubImage2D(0, x, y, part->width, part->height, part->scan0);
 	} else {
 		UpdateTextureSlow(x, y, part, rowWidth, false);
 	}
