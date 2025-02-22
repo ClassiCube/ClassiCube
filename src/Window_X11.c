@@ -352,13 +352,7 @@ static void ApplyIcon(Window win) { }
 
 static XVisualInfo Select2DVisual(void) {
 	XVisualInfo info = { 0 };
-	cc_result res;
-	int screen = DefaultScreen(win_display);
-
-	if (XMatchVisualInfo(win_display, screen, 24, TrueColor, &info)) return info;
-	if (XMatchVisualInfo(win_display, screen, 32, TrueColor, &info)) return info;
-
-	Platform_LogConst("Can't find 24 or 32 bit visual, trying default..");
+	int screen  = DefaultScreen(win_display);
 	info.depth  = DefaultDepth(win_display, screen);
 	info.visual = DefaultVisual(win_display, screen);
 	return info;
@@ -369,20 +363,23 @@ static void DoCreateWindow(int width, int height, int _2d) {
 	XSizeHints hints = { 0 };
 	Atom protocols[2];
 	int supported, x, y;
-	Window focus;
+	Window focus, win;
+	int visualID;
 	int focusRevert;
 
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
 	RegisterAtoms();
-	win_visual = _2d ? Select2DVisual() : GLContext_SelectVisual();
 
-	Platform_Log1("Created window (visual id: %h)", &win_visual.visualid);
+	win_visual = _2d ? Select2DVisual() : GLContext_SelectVisual();
+	visualID   = win_visual.visual ? win_visual.visual->visualid : 0;
+
+	Platform_Log2("Creating window (depth: %i, visual: %h)", &win_visual.depth, &visualID);
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
 	attributes.event_mask = win_eventMask;
 
-	Window win = XCreateWindow(win_display, win_rootWin, x, y, width, height,
-		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual,
+	win = XCreateWindow(win_display, win_rootWin, x, y, width, height,
+		0, win_visual.depth, InputOutput, win_visual.visual,
 #ifdef CC_BUILD_IRIX
 		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
 #else
@@ -1429,7 +1426,17 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if CC_GFX_BACKEND_IS_GL() && defined CC_BUILD_EGL
 static XVisualInfo GLContext_SelectVisual(void) {
-	return Select2DVisual();
+	XVisualInfo info = { 0 };
+	cc_result res;
+	int screen = DefaultScreen(win_display);
+
+	if (XMatchVisualInfo(win_display, screen, 24, TrueColor, &info)) return info;
+	if (XMatchVisualInfo(win_display, screen, 32, TrueColor, &info)) return info;
+
+	Platform_LogConst("Can't find 24 or 32 bit visual, trying default..");
+	info.depth  = DefaultDepth(win_display, screen);
+	info.visual = DefaultVisual(win_display, screen);
+	return info;
 }
 #endif
 
