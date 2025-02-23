@@ -108,7 +108,7 @@ static EGLDisplay ctx_display;
 static EGLContext ctx_context;
 static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
-static EGLint ctx_numConfig;
+static cc_uintptr ctx_visualID;
 
 #ifdef CC_BUILD_SWITCH
 static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
@@ -128,6 +128,22 @@ static void GLContext_FreeSurface(void) {
 	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroySurface(ctx_display, ctx_surface);
 	ctx_surface = NULL;
+}
+
+static void ChooseEGLConfig(EGLConfig* configs, EGLint num_configs) {
+	int i;
+	ctx_config = configs[0];
+	if (!ctx_visualID) return;
+
+	/* In X11 case, bad things happen if EGL visual ID != window visual ID */
+	for (i = 0; i < num_configs; i++) {
+		EGLint visualID = 0;
+		eglGetConfigAttrib(ctx_display, configs[i], EGL_NATIVE_VISUAL_ID, &visualID);
+		if (visualID != ctx_visualID) continue;
+
+		ctx_config = configs[i];
+		return;
+	}
 }
 
 void GLContext_Create(void) {
@@ -163,18 +179,23 @@ void GLContext_Create(void) {
 	eglInitialize(ctx_display, NULL, NULL);
 	eglBindAPI(EGL_OPENGL_ES_API);
 
-	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
-	if (!ctx_config) {
-		attribs[9] = 16; // some older devices only support 16 bit depth buffer
-		eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
-	}
-	if (!ctx_config) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
+	EGLConfig configs[64];
+	EGLint numConfig = 0;
 
-#if CC_WIN_BACKEND == CC_WIN_BACKEND_X11
-	EGLint visualID;
-	eglGetConfigAttrib(ctx_display, ctx_config, EGL_NATIVE_VISUAL_ID, &visualID);
-	Platform_Log1("EGL visual ID: %h", &visualID);
-#endif
+	eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
+	if (!numConfig) {
+		attribs[9] = 16; // some older devices only support 16 bit depth buffer
+		eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
+	}
+
+	if (!numConfig) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
+	ChooseEGLConfig(configs, numConfig);
+
+	if (ctx_visualID) {
+		EGLint visualID = 0;
+		eglGetConfigAttrib(ctx_display, ctx_config, EGL_NATIVE_VISUAL_ID, &visualID);
+		Platform_Log1("EGL visual ID: %h", &visualID);
+	}
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
 	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");

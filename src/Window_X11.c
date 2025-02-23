@@ -1426,7 +1426,9 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if CC_GFX_BACKEND_IS_GL() && defined CC_BUILD_EGL
 static XVisualInfo GLContext_SelectVisual(void) {
-	return Select2DVisual();
+	XVisualInfo info = Select2DVisual();
+	ctx_visualID = info.visual ? info.visual->visualid : 0;
+	return info;
 }
 #endif
 
