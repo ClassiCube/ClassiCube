@@ -1357,6 +1357,11 @@ static void InitRawMouse(void) {
 	unsigned char masks[XIMaskLen(XI_LASTEVENT)] = { 0 };
 	int ev, err, major, minor;
 
+	if (!Options_GetBool(OPT_RAW_INPUT, true)) {
+		Platform_LogConst("XInput disabled");
+		return;
+	}
+
 	if (!XQueryExtension(win_display, "XInputExtension", &xiOpcode, &ev, &err)) {
 		Platform_LogConst("XInput unsupported");
 		return;
