@@ -191,11 +191,16 @@ void GLContext_Create(void) {
 	if (!numConfig) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
 	ChooseEGLConfig(configs, numConfig);
 
-	if (ctx_visualID) {
-		EGLint visualID = 0;
-		eglGetConfigAttrib(ctx_display, ctx_config, EGL_NATIVE_VISUAL_ID, &visualID);
-		Platform_Log1("EGL visual ID: %h", &visualID);
-	}
+	EGLint red, green, blue, alpha, depth, vid;
+	eglGetConfigAttrib(ctx_display, ctx_config, EGL_RED_SIZE,         &red);
+	eglGetConfigAttrib(ctx_display, ctx_config, EGL_GREEN_SIZE,       &green);
+	eglGetConfigAttrib(ctx_display, ctx_config, EGL_BLUE_SIZE,        &blue);
+	eglGetConfigAttrib(ctx_display, ctx_config, EGL_ALPHA_SIZE,       &alpha);
+	eglGetConfigAttrib(ctx_display, ctx_config, EGL_DEPTH_SIZE,       &depth);
+	eglGetConfigAttrib(ctx_display, ctx_config, EGL_NATIVE_VISUAL_ID, &vid);
+
+	Platform_Log4("EGL R:%i, G:%i, B:%i, A:%i", &red, &green, &blue, &alpha);
+	Platform_Log2("EGL depth: %i, visual: %h",  &depth, &vid);
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
 	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
