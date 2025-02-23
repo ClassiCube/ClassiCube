@@ -72,7 +72,6 @@ typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
-static cc_bool rgba_only;
 
 #include "_GLShared.h"
 static void GLBackend_Init(void);
@@ -360,49 +359,6 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void ConvertRGBA(void* dst, void* src, int numPixels) {
-	cc_uint8* d = (cc_uint8*)dst;
-	cc_uint8* s = (cc_uint8*)src;
-	int i;
-
-	for (i = 0; i < numPixels; i++, d += 4, s += 4) {
-		d[0] = s[2];
-		d[1] = s[1];
-		d[2] = s[0];
-		d[3] = s[3];
-	}
-}
-
-static void CallTexSubImage2D(int lvl, int x, int y, int width, int height, void* pixels) {
-	void* tmp;
-	if (!rgba_only) {
-		_glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
-		return;
-	}
-
-	tmp = Mem_TryAlloc(width * height, 4);
-	if (!tmp) return;
-
-	ConvertRGBA(tmp, pixels, width * height);
-	_glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
-	Mem_Free(tmp);
-}
-
-static void CallTexImage2D(int lvl, int width, int height, void* pixels) {
-	void* tmp;
-	if (!rgba_only) {
-		_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
-		return;
-	}
-
-	tmp = Mem_TryAlloc(width * height, 4);
-	if (!tmp) return;
-
-	ConvertRGBA(tmp, pixels, width * height);
-	_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
-	Mem_Free(tmp);
-}
-
 void Gfx_BindTexture(GfxResourceID texId) {
 	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 }
@@ -762,7 +718,7 @@ static void GLBackend_Init(void) {
 		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
 	} else {
 		/* Some old IRIX cards don't support BGRA */
-		rgba_only = major == 1 && minor <= 1 && String_CaselessContains(&extensions, &bgraExt);
+		convert_rgba = major == 1 && minor <= 1 && String_CaselessContains(&extensions, &bgraExt);
 		FallbackOpenGL();
 	}
 }

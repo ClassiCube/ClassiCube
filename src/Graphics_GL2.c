@@ -441,14 +441,6 @@ static void SwitchProgram(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void CallTexSubImage2D(int lvl, int x, int y, int width, int height, void* pixels) {
-	glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
-}
-
-static void CallTexImage2D(int lvl, int width, int height, void* pixels) {
-	glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
-}
-
 void Gfx_BindTexture(GfxResourceID texId) {
 	/* Texture 0 has different behaviour depending on backend */
 	/*   Desktop OpenGL  - pure white 1x1 texture */
@@ -554,6 +546,7 @@ static void GLBackend_Init(void) {
 	cc_bool has_ext_bgra = String_CaselessContains(&extensions, &bgra_ext);
 	cc_bool has_apl_bgra = String_CaselessContains(&extensions, &bgra_apl);
 	Platform_Log2("BGRA support - Ext: %t, Apple: %t", &has_ext_bgra, &has_apl_bgra);
+	convert_rgba = !has_ext_bgra && !has_apl_bgra;
 #else
     customMipmapsLevels = true;
     const GLubyte* ver  = glGetString(GL_VERSION);
