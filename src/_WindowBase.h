@@ -172,7 +172,7 @@ void GLContext_Create(void) {
 
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_X11
 	EGLint visualID;
-	eglGetConfigAttrib(ctx_display, &ctx_config, EGL_NATIVE_VISUAL_ID, &visualID);
+	eglGetConfigAttrib(ctx_display, ctx_config, EGL_NATIVE_VISUAL_ID, &visualID);
 	Platform_Log1("EGL visual ID: %h", &visualID);
 #endif
 
