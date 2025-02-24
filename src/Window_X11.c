@@ -371,8 +371,12 @@ static void DoCreateWindow(int width, int height, int _2d) {
 	y = Display_CentreY(height);
 	RegisterAtoms();
 
+#if CC_GFX_BACKEND_IS_GL()
 	win_visual = _2d ? Select2DVisual() : GLContext_SelectVisual();
-	visualID   = win_visual.visual ? win_visual.visual->visualid : 0;
+#else
+	win_visual = Select2DVisual();
+#endif
+	visualID = win_visual.visual ? win_visual.visual->visualid : 0;
 
 	Platform_Log2("Creating window (depth: %i, visual: %h)", &win_visual.depth, &visualID);
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);

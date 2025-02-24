@@ -600,9 +600,10 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	}
 
 	float z0 = V0->z, z1 = V1->z, z2 = V2->z;
-	float u0 = V0->u, u1 = V1->u, u2 = V2->u;
-	float v0 = V0->v, v1 = V1->v, v2 = V2->v;
 	PackedCol color = V0->c;
+
+	float u0 = V0->u * curTexWidth,  u1 = V1->u * curTexWidth,  u2 = V2->u * curTexWidth;
+	float v0 = V0->v * curTexHeight, v1 = V1->v * curTexHeight, v2 = V2->v * curTexHeight;
 	
 	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
 	// Essentially these are the deltas of edge functions between X/Y and X/Y + 1 (i.e. one X/Y step)
@@ -660,8 +661,8 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			if (texturing) {
 				float u = (ic0 * u0 + ic1 * u1 + ic2 * u2) * w;
 				float v = (ic0 * v0 + ic1 * v1 + ic2 * v2) * w;
-				int texX = ((int)(Math_AbsF(u - FastFloor(u)) * curTexWidth )) & texWidthMask;
-				int texY = ((int)(Math_AbsF(v - FastFloor(v)) * curTexHeight)) & texHeightMask;
+				int texX = ((int)u) & texWidthMask;
+				int texY = ((int)v) & texHeightMask;
 
 				int texIndex = texY * curTexWidth + texX;
 				BitmapCol tColor = curTexPixels[texIndex];
