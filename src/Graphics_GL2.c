@@ -546,7 +546,7 @@ static void GLBackend_Init(void) {
 	cc_bool has_ext_bgra = String_CaselessContains(&extensions, &bgra_ext);
 	cc_bool has_apl_bgra = String_CaselessContains(&extensions, &bgra_apl);
 	Platform_Log2("BGRA support - Ext: %t, Apple: %t", &has_ext_bgra, &has_apl_bgra);
-	convert_rgba = !has_ext_bgra && !has_apl_bgra;
+	convert_rgba = PIXEL_FORMAT != GL_RGBA && !has_ext_bgra && !has_apl_bgra;
 #else
     customMipmapsLevels = true;
     const GLubyte* ver  = glGetString(GL_VERSION);
