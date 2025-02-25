@@ -718,7 +718,7 @@ static void GLBackend_Init(void) {
 		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
 	} else {
 		/* Some old IRIX cards don't support BGRA */
-		convert_rgba = major == 1 && minor <= 1 && String_CaselessContains(&extensions, &bgraExt);
+		convert_rgba = major == 1 && minor <= 1 && !String_CaselessContains(&extensions, &bgraExt);
 		FallbackOpenGL();
 	}
 }

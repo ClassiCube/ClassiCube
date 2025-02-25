@@ -75,10 +75,17 @@ static void ConvertRGBA(void* dst, void* src, int numPixels) {
 	int i;
 
 	for (i = 0; i < numPixels; i++, d += 4, s += 4) {
+#ifdef CC_BUILD_IRIX
+		d[0] = s[1];
+		d[1] = s[2];
+		d[2] = s[3];
+		d[3] = s[0];
+#else
 		d[0] = s[2];
 		d[1] = s[1];
 		d[2] = s[0];
 		d[3] = s[3];
+#endif
 	}
 }
 
