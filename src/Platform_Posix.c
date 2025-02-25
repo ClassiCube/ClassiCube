@@ -1324,6 +1324,10 @@ static void Platform_InitPosix(void) {
 	sigaction(SIGCHLD, &sa, NULL);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	sigaction(SIGPIPE, &sa, NULL);
+
+	/* Log runtime address to ease investigating crashes */
+	cc_uintptr addr = (cc_uintptr)Process_Exit;
+	Platform_Log1("Process_Exit addr: %x", &addr);
 }
 void Platform_Free(void) { }
 
