@@ -142,7 +142,7 @@ static void DumpEGLConfig(EGLConfig config) {
 	eglGetConfigAttrib(ctx_display, config, EGL_RENDERABLE_TYPE,  &mode);
 
 	Platform_Log4("EGL R:%i, G:%i, B:%i, A:%i", &red, &green, &blue, &alpha);
-	Platform_Log2("EGL D: %i, V: %h, S: %h",  &depth, &vid, &mode);
+	Platform_Log3("EGL D: %i, V: %h, S: %h",  &depth, &vid, &mode);
 }
 
 static void ChooseEGLConfig(EGLConfig* configs, EGLint num_configs) {
