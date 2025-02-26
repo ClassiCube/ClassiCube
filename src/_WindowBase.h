@@ -130,6 +130,21 @@ static void GLContext_FreeSurface(void) {
 	ctx_surface = NULL;
 }
 
+static void DumpEGLConfig(EGLConfig config) {
+	EGLint red, green, blue, alpha, depth, vid, mode;
+
+	eglGetConfigAttrib(ctx_display, config, EGL_RED_SIZE,         &red);
+	eglGetConfigAttrib(ctx_display, config, EGL_GREEN_SIZE,       &green);
+	eglGetConfigAttrib(ctx_display, config, EGL_BLUE_SIZE,        &blue);
+	eglGetConfigAttrib(ctx_display, config, EGL_ALPHA_SIZE,       &alpha);
+	eglGetConfigAttrib(ctx_display, config, EGL_DEPTH_SIZE,       &depth);
+	eglGetConfigAttrib(ctx_display, config, EGL_NATIVE_VISUAL_ID, &vid);
+	eglGetConfigAttrib(ctx_display, config, EGL_RENDERABLE_TYPE,  &mode);
+
+	Platform_Log4("EGL R:%i, G:%i, B:%i, A:%i", &red, &green, &blue, &alpha);
+	Platform_Log2("EGL D: %i, V: %h, S: %h",  &depth, &vid, &mode);
+}
+
 static void ChooseEGLConfig(EGLConfig* configs, EGLint num_configs) {
 	int i;
 	ctx_config = configs[0];
@@ -188,19 +203,19 @@ void GLContext_Create(void) {
 		eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
 	}
 
-	if (!numConfig) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
-	ChooseEGLConfig(configs, numConfig);
+	if (!numConfig) {
+		Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
+		EGLint i;
+		eglGetConfigs(ctx_display, configs, 64, &numConfig);
 
-	EGLint red, green, blue, alpha, depth, vid;
-	eglGetConfigAttrib(ctx_display, ctx_config, EGL_RED_SIZE,         &red);
-	eglGetConfigAttrib(ctx_display, ctx_config, EGL_GREEN_SIZE,       &green);
-	eglGetConfigAttrib(ctx_display, ctx_config, EGL_BLUE_SIZE,        &blue);
-	eglGetConfigAttrib(ctx_display, ctx_config, EGL_ALPHA_SIZE,       &alpha);
-	eglGetConfigAttrib(ctx_display, ctx_config, EGL_DEPTH_SIZE,       &depth);
-	eglGetConfigAttrib(ctx_display, ctx_config, EGL_NATIVE_VISUAL_ID, &vid);
-
-	Platform_Log4("EGL R:%i, G:%i, B:%i, A:%i", &red, &green, &blue, &alpha);
-	Platform_Log2("EGL depth: %i, visual: %h",  &depth, &vid);
+		for (i = 0; i < numConfig; i++) {
+			Platform_Log1("%i) ==============", &i);
+			DumpEGLConfig(configs[i]);
+		}
+	} else {
+		ChooseEGLConfig(configs, numConfig);
+		DumpEGLConfig(ctx_config);
+	}
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
 	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
