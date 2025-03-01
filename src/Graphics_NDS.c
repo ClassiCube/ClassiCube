@@ -606,7 +606,7 @@ static void PreprocessTexturedVertices(void) {
 		int g = PackedCol_G(v.Col);
 		int b = PackedCol_B(v.Col);
 		
-		dst->command = FIFO_COMMAND_PACK(FIFO_NOP, FIFO_COLOR, FIFO_TEX_COORD, FIFO_VERTEX16);
+		dst->command = FIFO_COMMAND_PACK(FIFO_COLOR, FIFO_TEX_COORD, FIFO_VERTEX16, FIFO_NOP);
 		
 		dst->rgb = ARGB16(1, r >> 3, g >> 3, b >> 3);
 		
@@ -635,7 +635,7 @@ static void PreprocessColouredVertices(void) {
 		int g = PackedCol_G(v.Col);
 		int b = PackedCol_B(v.Col);
 		
-		dst->command = FIFO_COMMAND_PACK(FIFO_NOP, FIFO_NOP, FIFO_COLOR, FIFO_VERTEX16);
+		dst->command = FIFO_COMMAND_PACK(FIFO_COLOR, FIFO_VERTEX16, FIFO_NOP, FIFO_NOP);
 		
 		dst->rgb = ARGB16(1, r >> 3, g >> 3, b >> 3);
 		
