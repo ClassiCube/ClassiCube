@@ -464,6 +464,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_TINYSTACK /* Only < 16 kb stack as it's in DTCM region */
 	#define CC_BUILD_NOFPU
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
@@ -627,6 +628,10 @@ struct Texture {
 #else
 	#define CC_BEGIN_HEADER
 	#define CC_END_HEADER
+#endif
+
+#ifdef CC_BUILD_TINYSTACK
+extern char temp_mem[40000];
 #endif
 
 #endif

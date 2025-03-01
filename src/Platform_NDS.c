@@ -188,10 +188,10 @@ cc_result Directory_Create(const cc_filepath* path) {
 
 int File_Exists(const cc_filepath* path) {
 	if (!fat_available) return false;
-	struct stat sb;
-	
 	Platform_Log1("Check %c", path->buffer);
-	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	
+	int attribs = FAT_getAttr(path->buffer);
+	return attribs >= 0 && (attribs & ATTR_DIRECTORY) == 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

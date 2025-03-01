@@ -265,7 +265,12 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 	}
 }
 
-#define STACK_FAST 8192
+#ifdef CC_BUILD_TINYSTACK
+	#define STACK_FAST 512
+#else
+	#define STACK_FAST 8192
+#endif
+
 static void NotchyGen_FloodFill(int index, BlockRaw block) {
 	int* stack;
 	int stack_default[STACK_FAST]; /* avoid allocating memory if possible */

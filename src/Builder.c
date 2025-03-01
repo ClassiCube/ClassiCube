@@ -361,8 +361,8 @@ static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
 #ifdef CC_BUILD_TINYSTACK
-	static BlockID chunk[EXTCHUNK_SIZE_3]; 
-	static cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
+	BlockID* chunk   = (cc_uint8*)temp_mem;
+	cc_uint8* counts = (cc_uint8*)temp_mem + EXTCHUNK_SIZE_3;
 #else
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
 	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
