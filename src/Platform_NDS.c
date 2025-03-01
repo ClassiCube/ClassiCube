@@ -76,13 +76,7 @@ cc_uint64 Stopwatch_Measure(void) {
 
 static void LogNocash(const char* msg, int len) {
     // Can only be up to 120 bytes total
-	char buffer[120];
-	len = min(len, 118);
-	
-	Mem_Copy(buffer, msg, len);
-	buffer[len + 0] = '\n';
-	buffer[len + 1] = '\0';
-	nocashWrite(buffer, len + 2);
+	nocashWrite(msg, min(len, 120));
 }
 
 extern void Console_Clear(void);
