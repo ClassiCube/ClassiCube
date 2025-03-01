@@ -344,7 +344,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	int pal_count = CalcPalette(palette, bmp, rowWidth);
 	int tex_size, tex_fmt;
 
-	if (false && pal_count <= 4) {
+	if (pal_count <= 4) {
 		tex_size = bmp->width * bmp->height / 4; // 2 bits per pixel
 		tex_fmt  = GL_RGB4;
 	} else if (pal_count <= 16) {
@@ -378,20 +378,21 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 	if (tex_fmt == GL_RGB4) {
 		char* buf = malloc(tex_size);
+		int i = 0;
 		if (!buf) return NULL;
 
-		for (int y = 0; y < bmp->height; y++, addr += stride)
+		for (int y = 0; y < bmp->height; y++)
 		{
 			cc_uint16* row = bmp->scan0 + y * rowWidth;
 		
-			for (int x = 0; x < bmp->width; x++) 
+			for (int x = 0; x < bmp->width; x++, i++) 
 			{
 				int idx = FindInPalette(palette, pal_count, row[x]);
 			
-				if ((x & 3) == 0) {
-					buf[x >> 2] = idx;
+				if ((i & 3) == 0) {
+					buf[i >> 2] = idx;
 				} else {
-					buf[x >> 2] |= idx << (2 * (x & 3));
+					buf[i >> 2] |= idx << (2 * (i & 3));
 				}
 			}
 		}
