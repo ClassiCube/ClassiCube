@@ -5,7 +5,13 @@
 #include "Logger.h"
 #include "Window.h"
 #include <nds.h>
-static int matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
+
+#define DS_MAT_PROJECTION 0
+#define DS_MAT_POSITION   1
+#define DS_MAT_MODELVIEW  2
+#define DS_MAT_TEXTURE    3
+
+static int matrix_modes[] = { DS_MAT_PROJECTION, DS_MAT_MODELVIEW };
 static int lastMatrix;
 
 /*########################################################################################################################*
@@ -23,15 +29,14 @@ void Gfx_Create(void) {
 	Gfx.Limitations  = GFX_LIMIT_VERTEX_ONLY_FOG;
 	glInit();
 	
-	glClearColor(0, 15, 10, 31);
-	glClearPolyID(63);
+	Gfx_ClearColor(PackedCol_Make(0, 120, 80, 255));
 	GFX_ALPHA_TEST = 7; // Alpha threshold ranges from 0 to 15
 	
-	glEnable(GL_ANTIALIAS);
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_FOG);
+	GFX_CONTROL |= GL_ANTIALIAS;
+	GFX_CONTROL |= GL_TEXTURE_2D;
+	GFX_CONTROL |= GL_FOG;
 
-	glClearDepth(GL_MAX_DEPTH);
+	GFX_CLEAR_DEPTH = GL_MAX_DEPTH;
 	Gfx_SetViewport(0, 0, 256, 192);
 	
 	vramSetBankA(VRAM_A_TEXTURE);
@@ -49,6 +54,7 @@ cc_bool Gfx_TryRestoreContext(void) {
 
 void Gfx_Free(void) {
 	Gfx_FreeState();
+
 	vramSetBankA(VRAM_A_LCD);
 	vramSetBankB(VRAM_B_LCD);
 	vramSetBankC(VRAM_C_LCD);
@@ -95,7 +101,12 @@ void Gfx_ClearColor(PackedCol color) {
 	int R = PackedCol_R(color) >> 3;
 	int G = PackedCol_G(color) >> 3;
 	int B = PackedCol_B(color) >> 3;
-	glClearColor(R, G, B, 31);
+
+	int rgb    = RGB15(R, G, B);
+	int alpha  = 31;
+	int polyID = 63; // polygon ID of clear plane
+
+	GFX_CLEAR_COLOR = rgb | ((alpha & 0x1F) << 16) | ((polyID & 0x3F) << 24);
 }
 
 void Gfx_EndFrame(void) {
@@ -118,7 +129,7 @@ static void UpdateTextureMatrix(void) {
 	glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
 	
 	// Scale uvm to fit into texture size
-	MATRIX_CONTROL  = 3;
+	MATRIX_CONTROL  = DS_MAT_TEXTURE;
 	MATRIX_IDENTITY = 0;
 
 	MATRIX_SCALE = width  << 6; // X scale
@@ -131,7 +142,7 @@ static void UpdateTextureMatrix(void) {
 		MATRIX_TRANSLATE = 0;          // Z
 	}
 
-	MATRIX_CONTROL  = matrix_modes[lastMatrix];
+	MATRIX_CONTROL = matrix_modes[lastMatrix];
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {

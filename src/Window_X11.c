@@ -1252,8 +1252,8 @@ static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap
 	BitmapCol* row;
 	BitmapCol src;
 	cc_uint32 pixel;
-	int R, G, B, A;
-	int x, y;
+	int R, G, B;
+	int x, y, depth = fb_depth;
 
 	for (y = y1; y < y1 + height; y++) {
 		row = Bitmap_GetRow(bmp, y);
@@ -1264,12 +1264,11 @@ static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap
 			R = BitmapCol_R(src);
 			G = BitmapCol_G(src);
 			B = BitmapCol_B(src);
-			A = BitmapCol_A(src);
 
-			switch (fb_depth)
+			switch (depth)
 			{
 			case 30: /* R10 G10 B10 A2 */
-				pixel = (R << 2) | ((G << 2) << 10) | ((B << 2) << 20) | ((A >> 6) << 30);
+				pixel = (R << 2) | ((G << 2) << 10) | ((B << 2) << 20) | (0x03 << 30);
 				((cc_uint32*)dst)[x] = pixel;
 				break;
 			case 16: /* B5 G6 R5 */
