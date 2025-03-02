@@ -272,8 +272,8 @@ static void UpdateTextureMatrix(void) {
 	MATRIX_CONTROL  = DS_MAT_TEXTURE;
 	MATRIX_IDENTITY = 0;
 
-	MATRIX_SCALE = width  << 6; // X scale
-	MATRIX_SCALE = height << 6; // Y scale
+	MATRIX_SCALE = width  << 8; // X scale
+	MATRIX_SCALE = height << 8; // Y scale
 	MATRIX_SCALE = 0;           // Z scale
 
 	if (texOffsetX || texOffsetY) {
@@ -597,10 +597,8 @@ static void PreprocessTexturedVertices(void) {
 		v16 y = floattov16(v.y / 64.0f);
 		v16 z = floattov16(v.z / 64.0f);
 	
-		/*int uvX = (v.U * 256.0f + 0.5f); // 0.5f for rounding
-		int uvY = (v.V * 256.0f + 0.5f);*/
-		int uvX = ((int) (v.U * 1024.0f)) + 0x8000;
-		int uvY = ((int) (v.V * 1024.0f)) + 0x8000;
+		int uvX = ((int) (v.U * 256.0f));
+		int uvY = ((int) (v.V * 256.0f));
 
 		int r = PackedCol_R(v.Col);
 		int g = PackedCol_G(v.Col);
