@@ -530,7 +530,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
 	width  /= 64.0f; 
-	height /= 64.0f; 
+	height /= 64.0f;
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;

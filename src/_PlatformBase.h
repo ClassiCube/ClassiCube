@@ -5,7 +5,7 @@
 #include "Errors.h"
 
 #ifdef CC_BUILD_TINYSTACK
-CC_BIG_VAR char temp_mem[40000];
+CC_BIG_VAR char temp_mem[45000];
 #endif
 
 /*########################################################################################################################*

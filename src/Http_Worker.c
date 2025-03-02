@@ -640,7 +640,11 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 }
 
 static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
+#ifdef CC_BUILD_TINYSTACK
+	char inputBuffer[8192];
+#else
 	char inputBuffer[16384];
+#endif
 	cc_string inputMsg;
 
 	String_InitArray(inputMsg, inputBuffer);

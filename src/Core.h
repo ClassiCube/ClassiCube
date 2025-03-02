@@ -632,7 +632,7 @@ struct Texture {
 #endif
 
 #ifdef CC_BUILD_TINYSTACK
-extern char temp_mem[40000];
+extern char temp_mem[45000];
 #endif
 
 #endif
