@@ -101,7 +101,7 @@ void ResetGPU(void) {
 
 	GFX_ALPHA_TEST = 7; // Alpha threshold ranges from 0 to 15
 	
-	GFX_CONTROL = GL_ANTIALIAS | GL_TEXTURE_2D | GL_FOG;
+	GFX_CONTROL = GL_ANTIALIAS | GL_TEXTURE_2D | GL_FOG | GL_BLEND;
 
 	GFX_CLEAR_DEPTH = GL_MAX_DEPTH;
     GFX_TEX_FORMAT  = 0;
@@ -703,14 +703,16 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *#########################################################################################################################*/
 static cc_bool skipRendering;
 static cc_bool backfaceCull;
+static cc_bool alphaBlend;
 
 static cc_bool fogEnabled;
 static FogFunc fogMode;
 static float fogDensityEnd;
 
 static void SetPolygonMode() {
+	int blend = !gfx_rendering2D && alphaBlend;
 	u32 fmt =
-		POLY_ALPHA(31) | 
+		POLY_ALPHA(blend ? 14 : 31) | 
 		(backfaceCull ? POLY_CULL_BACK : POLY_CULL_NONE) | 
 		(fogEnabled ? POLY_FOG : 0) | 
 		POLY_RENDER_FAR_POLYS | 
@@ -725,11 +727,8 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
-	/*if (enabled) {
-		glEnable(GL_BLEND);
-	} else {
-		glDisable(GL_BLEND);
-	}*/
+	alphaBlend = enabled;
+	SetPolygonMode();
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }

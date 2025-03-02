@@ -243,6 +243,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 static cc_bool gfx_hadFog;
 
 void Gfx_Begin2D(int width, int height) {
+	gfx_rendering2D = true;
 	struct Matrix ortho;
 	/* intentionally biased more towards positive Z to reduce 2D clipping issues on the DS */
 	Gfx_CalcOrthoMatrix(&ortho, (float)width, (float)height, -100.0f, 1000.0f);
@@ -255,16 +256,15 @@ void Gfx_Begin2D(int width, int height) {
 	
 	gfx_hadFog = Gfx_GetFog();
 	if (gfx_hadFog) Gfx_SetFog(false);
-	gfx_rendering2D = true;
 }
 
 void Gfx_End2D(void) {
+	gfx_rendering2D = false;
 	Gfx_SetDepthTest(true);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 	
 	if (gfx_hadFog) Gfx_SetFog(true);
-	gfx_rendering2D = false;
 }
 #endif
 
