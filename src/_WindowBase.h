@@ -108,13 +108,13 @@ static EGLDisplay ctx_display;
 static EGLContext ctx_context;
 static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
-static EGLint ctx_numConfig;
+static cc_uintptr ctx_visualID;
 
 #ifdef CC_BUILD_SWITCH
 static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
 #else
 static void GLContext_InitSurface(void) {
-	void* window = Window_Main.Handle.ptr;
+	EGLNativeWindowType window = (EGLNativeWindowType)Window_Main.Handle.ptr;
 	if (!window) return; /* window not created or lost */
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
 
@@ -128,6 +128,37 @@ static void GLContext_FreeSurface(void) {
 	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroySurface(ctx_display, ctx_surface);
 	ctx_surface = NULL;
+}
+
+static void DumpEGLConfig(EGLConfig config) {
+	EGLint red, green, blue, alpha, depth, vid, mode;
+
+	eglGetConfigAttrib(ctx_display, config, EGL_RED_SIZE,         &red);
+	eglGetConfigAttrib(ctx_display, config, EGL_GREEN_SIZE,       &green);
+	eglGetConfigAttrib(ctx_display, config, EGL_BLUE_SIZE,        &blue);
+	eglGetConfigAttrib(ctx_display, config, EGL_ALPHA_SIZE,       &alpha);
+	eglGetConfigAttrib(ctx_display, config, EGL_DEPTH_SIZE,       &depth);
+	eglGetConfigAttrib(ctx_display, config, EGL_NATIVE_VISUAL_ID, &vid);
+	eglGetConfigAttrib(ctx_display, config, EGL_RENDERABLE_TYPE,  &mode);
+
+	Platform_Log4("EGL R:%i, G:%i, B:%i, A:%i", &red, &green, &blue, &alpha);
+	Platform_Log3("EGL D: %i, V: %h, S: %h",  &depth, &vid, &mode);
+}
+
+static void ChooseEGLConfig(EGLConfig* configs, EGLint num_configs) {
+	int i;
+	ctx_config = configs[0];
+	if (!ctx_visualID) return;
+
+	/* In X11 case, bad things happen if EGL visual ID != window visual ID */
+	for (i = 0; i < num_configs; i++) {
+		EGLint visualID = 0;
+		eglGetConfigAttrib(ctx_display, configs[i], EGL_NATIVE_VISUAL_ID, &visualID);
+		if (visualID != ctx_visualID) continue;
+
+		ctx_config = configs[i];
+		return;
+	}
 }
 
 void GLContext_Create(void) {
@@ -163,12 +194,28 @@ void GLContext_Create(void) {
 	eglInitialize(ctx_display, NULL, NULL);
 	eglBindAPI(EGL_OPENGL_ES_API);
 
-	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
-	if (!ctx_config) {
+	EGLConfig configs[64];
+	EGLint numConfig = 0;
+
+	eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
+	if (!numConfig) {
 		attribs[9] = 16; // some older devices only support 16 bit depth buffer
-		eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
+		eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
 	}
-	if (!ctx_config) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
+
+	if (!numConfig) {
+		Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
+		EGLint i;
+		eglGetConfigs(ctx_display, configs, 64, &numConfig);
+
+		for (i = 0; i < numConfig; i++) {
+			Platform_Log1("%i) ==============", &i);
+			DumpEGLConfig(configs[i]);
+		}
+	} else {
+		ChooseEGLConfig(configs, numConfig);
+		DumpEGLConfig(ctx_config);
+	}
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
 	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");

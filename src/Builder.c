@@ -49,7 +49,7 @@ struct Builder1DPart {
 
 /* Part builder data, for both normal and translucent parts.
 The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
-static struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
+static CC_BIG_VAR struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
 static struct VertexTextured* Builder_Vertices;
 
 static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
@@ -361,14 +361,17 @@ static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
 #ifdef CC_BUILD_TINYSTACK
-	/* The Saturn build only has 16 kb stack, not large enough */
-	static BlockID chunk[EXTCHUNK_SIZE_3]; 
-	static cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
-	static int bitFlags[1];
+	BlockID* chunk   = (cc_uint8*)temp_mem;
+	cc_uint8* counts = (cc_uint8*)temp_mem + EXTCHUNK_SIZE_3;
 #else
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
 	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
+#endif
+
+#ifdef CC_BUILD_ADVLIGHTING
 	int bitFlags[EXTCHUNK_SIZE_3];
+#else
+	int bitFlags[1];
 #endif
 
 	cc_bool allAir, allSolid, onBorder;
@@ -417,7 +420,8 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	Builder_Vertices = (struct VertexTextured*)Gfx_RecreateAndLockVb(&info->vb,
+	info->vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, totalVerts + 1);
+	Builder_Vertices = (struct VertexTextured*)Gfx_LockVb(info->vb,
 													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #else
 	/* NOTE: Relies on assumption vb is ignored by GL11 Gfx_LockVb implementation */

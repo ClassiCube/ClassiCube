@@ -67,11 +67,11 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 	
 	#ifndef CC_API
 	#ifdef _WIN32
-	#define CC_API __attribute__((dllexport, noinline))
-	#define CC_VAR __attribute__((dllexport))
+		#define CC_API __attribute__((dllexport, noinline))
+		#define CC_VAR __attribute__((dllexport))
 	#else
-	#define CC_API __attribute__((visibility("default"), noinline))
-	#define CC_VAR __attribute__((visibility("default")))
+		#define CC_API __attribute__((visibility("default"), noinline))
+		#define CC_VAR __attribute__((visibility("default")))
 	#endif
 	#endif
 	
@@ -83,6 +83,9 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 	/* TODO: Is there actual attribute support for CC_API etc somewhere? */
 	#define CC_BIG_ENDIAN
 #endif
+
+/* Only used on GBA to store some variables in EWRAM instead of IWRAM */
+#define CC_BIG_VAR
 
 /* Unrecognised compiler, so just go with some sensible default typdefs */
 /* Don't use <stdint.h>, as good chance such a compiler doesn't support it */
@@ -356,6 +359,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_PLUGINS
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
+	#define CC_DISABLE_LAUNCHER
 #elif defined __psp__
 	#define CC_BUILD_PSP
 	#define CC_BUILD_CONSOLE
@@ -426,6 +430,32 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
+#elif defined PLAT_GBA
+	#define CC_BUILD_GBA
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_TINYMEM
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_TINYSTACK
+	#define CC_BUILD_NOFPU
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_NETWORKING
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+	#define CC_DISABLE_UI
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_FILESYSTEM
+	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define CC_DISABLE_EXTRA_MODELS
+	#define SOFTGPU_DISABLE_ZBUFFER
+	#undef  CC_VAR
+	#define CC_VAR __attribute__((visibility("default"), section(".ewram")))
+	#undef  CC_BIG_VAR
+	#define CC_BIG_VAR __attribute__((section(".ewram")))
 #elif defined PLAT_NDS
 	#define CC_BUILD_NDS
 	#define CC_BUILD_CONSOLE
@@ -435,6 +465,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_TINYSTACK /* Only < 16 kb stack as it's in DTCM region */
 	#define CC_BUILD_NOFPU
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
@@ -490,7 +521,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_SMALLSTACK
-	#define CC_BUILD_TINYSTACK
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -507,12 +537,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_SMALLSTACK
-	#define CC_BUILD_TINYSTACK
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+	#define CC_DISABLE_UI
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
@@ -599,6 +629,10 @@ struct Texture {
 #else
 	#define CC_BEGIN_HEADER
 	#define CC_END_HEADER
+#endif
+
+#ifdef CC_BUILD_TINYSTACK
+extern char temp_mem[45000];
 #endif
 
 #endif

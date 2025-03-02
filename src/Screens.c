@@ -79,7 +79,7 @@ static struct HUDScreen {
 	int lastFov;
 	int lastX, lastY, lastZ;
 	struct HotbarWidget hotbar;
-} HUDScreen_Instance;
+} HUDScreen_Instance CC_BIG_VAR;
 
 /* Each integer can be at most 10 digits + minus prefix */
 #define POSITION_VAL_CHARS 11
@@ -400,7 +400,7 @@ static void HUDScreen_Render(void* screen, float delta) {
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
 		Widget_Render2(&s->line2, 8);
 		Gfx_BindTexture(s->posAtlas.tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES);
+		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES, DRAW_HINT_SPRITE);
 		/* TODO swap these two lines back */
 	}
 
@@ -437,6 +437,7 @@ void HUDScreen_Show(void) {
 *----------------------------------------------------TabListOverlay-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_NETWORKING
+
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
 #define LIST_NAMES_PER_COLUMN 16
@@ -453,7 +454,7 @@ static struct TabListOverlay {
 	TabListEntryCompare compare;
 	cc_uint16 ids[TABLIST_MAX_ENTRIES];
 	struct Texture textures[TABLIST_MAX_ENTRIES];
-} TabListOverlay_Instance;
+} TabListOverlay_Instance CC_BIG_VAR;
 #define TABLIST_MAX_VERTICES (TEXTWIDGET_MAX + 4 * TABLIST_MAX_ENTRIES)
 
 static void TabListOverlay_DrawText(struct Texture* tex, struct TabListOverlay* s, const cc_string* name) {
@@ -844,7 +845,7 @@ static void TabListOverlay_Render(void* screen, float delta) {
 		if (!s->textures[i].ID) continue;
 		Gfx_BindTexture(s->textures[i].ID);
 
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
 		offset += 4;
 	}
 
@@ -912,7 +913,7 @@ static struct ChatScreen {
 	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
 	struct Texture chatTextures[GUI_MAX_CHATLINES];
-} ChatScreen_Instance;
+} ChatScreen_Instance CC_BIG_VAR;
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
@@ -1174,7 +1175,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 			if (Chat_GetLogTime(logIdx) + 10 < now) continue;
 			
 			Gfx_BindTexture(tex.ID);
-			Gfx_DrawVb_IndexedTris_Range(4, i * 4);
+			Gfx_DrawVb_IndexedTris_Range(4, i * 4, DRAW_HINT_SPRITE);
 		}
 	}
 
@@ -1591,7 +1592,7 @@ static struct InventoryScreen {
 	struct TableWidget table;
 	struct TextWidget title;
 	cc_bool releasedInv, deferredSelect;
-} InventoryScreen;
+} InventoryScreen CC_BIG_VAR;
 
 static struct Widget* inventory_widgets[2];
 
@@ -1834,7 +1835,7 @@ static struct LoadingScreen {
 
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
-} LoadingScreen;
+} LoadingScreen CC_BIG_VAR;
 
 static struct Widget* loading_widgets[2];
 #define LOADING_TILE_SIZE 64
@@ -1947,7 +1948,7 @@ static void LoadingScreen_Render(void* screen, float delta) {
 	if (s->rows) {
 		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 		Atlas1D_Bind(Atlas1D_Index(loc));
-		Gfx_DrawVb_IndexedTris(s->rows * 4);
+		Gfx_DrawVb_IndexedTris_Range(s->rows * 4, 0, DRAW_HINT_SPRITE);
 		offset = s->rows * 4;
 	}
 
@@ -2073,7 +2074,7 @@ static struct DisconnectScreen {
 	char _titleBuffer[STRING_SIZE * 2];
 	char _messageBuffer[STRING_SIZE];
 	cc_string titleStr, messageStr;
-} DisconnectScreen;
+} DisconnectScreen CC_BIG_VAR;
 
 static struct Widget* disconnect_widgets[4];
 #define DISCONNECT_DELAY_SECS 5

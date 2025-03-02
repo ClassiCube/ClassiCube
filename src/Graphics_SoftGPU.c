@@ -39,7 +39,7 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
-#ifdef CC_BUILD_TINYMEM
+#if defined CC_BUILD_32X || defined CC_BUILD_GBA
 	Gfx.MaxTexWidth  = 16;
 	Gfx.MaxTexHeight = 16;
 #else
@@ -384,6 +384,79 @@ static CC_INLINE int FastFloor(float value) {
 	return valueI > value ? valueI - 1 : valueI;
 }
 
+static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
+	PackedCol vColor = V0->c;
+	int minX = (int)V0->x;
+	int minY = (int)V0->y;
+	int maxX = (int)V1->x;
+	int maxY = (int)V2->y;
+
+	// Reject triangles completely outside
+	if (maxX < 0 || minX > fb_maxX) return;
+	if (maxY < 0 || minY > fb_maxY) return;
+
+	int begTX = (int)(V0->u * curTexWidth);
+	int begTY = (int)(V0->v * curTexHeight);
+	int delTX = (int)(V1->u * curTexWidth)  - begTX;
+	int delTY = (int)(V2->v * curTexHeight) - begTY;
+
+	int width = maxX - minX, height = maxY - minY;
+
+	int fast =  delTX == width && delTY == height && 
+				(begTX + delTX < curTexWidth ) && 
+				(begTY + delTY < curTexHeight);
+
+	// Perform scissoring
+	minX = max(minX, 0); maxX = min(maxX, fb_maxX);
+	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
+
+	for (int y = minY; y <= maxY; y++) 
+	{
+		int texY = fast ? (begTY + (y - minY)) : (((begTY + delTY * (y - minY) / height)) & texHeightMask);
+		for (int x = minX; x <= maxX; x++) 
+		{
+			int texX = fast ? (begTX + (x - minX)) : (((begTX + delTX * (x - minX) / width)) & texWidthMask);
+			int texIndex = texY * curTexWidth + texX;
+
+			BitmapCol color = curTexPixels[texIndex];
+			int R, G, B, A;
+
+			A = BitmapCol_A(color);
+			if (gfx_alphaBlend && A == 0) continue;
+			int cb_index = y * cb_stride + x;
+
+			if (gfx_alphaBlend && A != 255) {
+				BitmapCol dst = colorBuffer[cb_index];
+				int dstR = BitmapCol_R(dst);
+				int dstG = BitmapCol_G(dst);
+				int dstB = BitmapCol_B(dst);
+
+				R = BitmapCol_R(color);
+				G = BitmapCol_G(color);
+				B = BitmapCol_B(color);
+
+				R = (R * A + dstR * (255 - A)) >> 8;
+				G = (G * A + dstG * (255 - A)) >> 8;
+				B = (B * A + dstB * (255 - A)) >> 8;
+				color = BitmapCol_Make(R, G, B, 0xFF);
+			}
+
+			if (vColor != PACKEDCOL_WHITE) {
+				int r1 = PackedCol_R(vColor), r2 = BitmapCol_R(color);
+				R = ( r1 * r2 ) >> 8;
+				int g1 = PackedCol_G(vColor), g2 = BitmapCol_G(color);
+				G = ( g1 * g2 ) >> 8;
+				int b1 = PackedCol_B(vColor), b2 = BitmapCol_B(color);
+				B = ( b1 * b2 ) >> 8;
+
+				color = BitmapCol_Make(R, G, B, 0xFF);
+			}
+
+			colorBuffer[cb_index] = color;
+		}
+	}
+}
+
 #define edgeFunction(ax,ay, bx,by, cx,cy) (((bx) - (ax)) * ((cy) - (ay)) - ((by) - (ay)) * ((cx) - (ax)))
 
 static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
@@ -527,9 +600,10 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	}
 
 	float z0 = V0->z, z1 = V1->z, z2 = V2->z;
-	float u0 = V0->u, u1 = V1->u, u2 = V2->u;
-	float v0 = V0->v, v1 = V1->v, v2 = V2->v;
 	PackedCol color = V0->c;
+
+	float u0 = V0->u * curTexWidth,  u1 = V1->u * curTexWidth,  u2 = V2->u * curTexWidth;
+	float v0 = V0->v * curTexHeight, v1 = V1->v * curTexHeight, v2 = V2->v * curTexHeight;
 	
 	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
 	// Essentially these are the deltas of edge functions between X/Y and X/Y + 1 (i.e. one X/Y step)
@@ -587,8 +661,8 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			if (texturing) {
 				float u = (ic0 * u0 + ic1 * u1 + ic2 * u2) * w;
 				float v = (ic0 * v0 + ic1 * v1 + ic2 * v2) * w;
-				int texX = ((int)(Math_AbsF(u - FastFloor(u)) * curTexWidth )) & texWidthMask;
-				int texY = ((int)(Math_AbsF(v - FastFloor(v)) * curTexHeight)) & texHeightMask;
+				int texX = ((int)u) & texWidthMask;
+				int texY = ((int)v) & texHeightMask;
 
 				int texIndex = texY * curTexWidth + texX;
 				BitmapCol tColor = curTexPixels[texIndex];
@@ -734,7 +808,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v1, v0,  a);
-		DrawTriangle3D(a,   b, v0);
+		DrawTriangle3D(a,  v0,  b);
 	} break;
 	// case V0_VIS | V2_VIS: degenerate case that should never happen
 	case V0_VIS | V3_VIS:
@@ -753,7 +827,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(a, v0,  b);
-		DrawTriangle3D(b, v3, v0);
+		DrawTriangle3D(b, v0, v3);
 	} break;
 	case V1_VIS | V2_VIS:
 	{
@@ -771,7 +845,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v1,  b, v2);
-		DrawTriangle3D(v2,  a,  b);
+		DrawTriangle3D(v2,  b,  a);
 	} break;
 	// case V1_VIS | V3_VIS: degenerate case that should never happen
 	case V2_VIS | V3_VIS:
@@ -790,7 +864,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D( b,  a, v2);
-		DrawTriangle3D(v2, v3,  a);
+		DrawTriangle3D(v2,  a, v3);
 	} break;
 	case V0_VIS | V1_VIS | V2_VIS:
 	{
@@ -811,7 +885,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v1, v0, v2);
-		DrawTriangle3D(v2,  a, v0);
+		DrawTriangle3D(v2, v0,  a);
 		DrawTriangle3D(v0,  b,  a);
 	} break;
 	case V0_VIS | V1_VIS | V3_VIS:
@@ -833,7 +907,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v0, v3, v1);
-		DrawTriangle3D(v1,  a, v3);
+		DrawTriangle3D(v1, v3,  a);
 		DrawTriangle3D(v3,  b,  a);
 	} break;
 	case V0_VIS | V2_VIS | V3_VIS:
@@ -855,7 +929,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v3, v2, v0);
-		DrawTriangle3D(v0,  a, v2);
+		DrawTriangle3D(v0, v2,  a);
 		DrawTriangle3D(v2,  b,  a);
 	} break;
 	case V1_VIS | V2_VIS | V3_VIS:
@@ -877,17 +951,27 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 		ViewportVertex3D(b);
 
 		DrawTriangle3D(v2, v1, v3);
-		DrawTriangle3D(v3,  a, v1);
+		DrawTriangle3D(v3, v1,  a);
 		DrawTriangle3D(v1,  b,  a);
 	} break;
 	}
 }
 
-void DrawQuads(int startVertex, int verticesCount) {
+void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 	Vertex vertices[4];
 	int j = startVertex;
 
-	if (gfx_rendering2D) {
+	if (gfx_rendering2D && hints == DRAW_HINT_SPRITE) {
+		// 4 vertices = 1 quad = 2 triangles
+		for (int i = 0; i < verticesCount / 4; i++, j += 4)
+		{
+			TransformVertex2D(j + 0, &vertices[0]);
+			TransformVertex2D(j + 1, &vertices[1]);
+			TransformVertex2D(j + 2, &vertices[2]);
+
+			DrawSprite2D(&vertices[0], &vertices[1], &vertices[2]);
+		}
+	} else if (gfx_rendering2D) {
 		// 4 vertices = 1 quad = 2 triangles
 		for (int i = 0; i < verticesCount / 4; i++, j += 4)
 		{
@@ -934,16 +1018,16 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 void Gfx_DrawVb_Lines(int verticesCount) { } /* TODO */
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	DrawQuads(startVertex, verticesCount);
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
+	DrawQuads(startVertex, verticesCount, hints);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	DrawQuads(0, verticesCount);
+	DrawQuads(0, verticesCount, DRAW_HINT_NONE);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawQuads(startVertex, verticesCount);
+	DrawQuads(startVertex, verticesCount, DRAW_HINT_NONE);
 }
 
 

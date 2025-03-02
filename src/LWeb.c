@@ -1,5 +1,5 @@
 #include "LWeb.h"
-#ifndef CC_BUILD_WEB
+#ifndef CC_DISABLE_LAUNCHER
 #include "String.h"
 #include "Launcher.h"
 #include "Platform.h"
@@ -212,7 +212,7 @@ static cc_bool Json_Handle(cc_uint8* data, cc_uint32 len,
 *#########################################################################################################################*/
 static char servicesBuffer[FILENAME_SIZE];
 static cc_string servicesServer = String_FromArray(servicesBuffer);
-static struct StringsBuffer ccCookies;
+static struct StringsBuffer CC_BIG_VAR ccCookies;
 
 static void LWebTask_Reset(struct LWebTask* task) {
 	task->completed = false;
@@ -711,6 +711,7 @@ void Flags_Free(void) {
 static cc_string sessionKey = String_FromConst("session");
 static cc_bool loadedSession;
 
+#ifdef CC_BUILD_NETWORKING
 void Session_Load(void) {
 	cc_string session; char buffer[3072];
 	if (loadedSession) return;
@@ -729,4 +730,10 @@ void Session_Save(void) {
 	if (!session.length) return;
 	Options_SetSecure(LOPT_SESSION, &session);
 }
+#else
+void Session_Load(void) { }
+
+void Session_Save(void) { }
+#endif
+
 #endif

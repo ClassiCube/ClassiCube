@@ -972,9 +972,9 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	if (opaqueBody) {
 		/* human model draws the body opaque so players can't have invisible skins */
 		Gfx_SetAlphaTest(false);
-		Gfx_DrawVb_IndexedTris_Range(HUMAN_BASE_VERTICES, 0);
+		Gfx_DrawVb_IndexedTris_Range(HUMAN_BASE_VERTICES, 0, DRAW_HINT_NONE);
 		Gfx_SetAlphaTest(true);
-		Gfx_DrawVb_IndexedTris_Range(num - HUMAN_BASE_VERTICES, HUMAN_BASE_VERTICES);
+		Gfx_DrawVb_IndexedTris_Range(num - HUMAN_BASE_VERTICES, HUMAN_BASE_VERTICES, DRAW_HINT_NONE);
 	} else {
 		Gfx_DrawVb_IndexedTris(num);
 	}
@@ -1155,7 +1155,7 @@ static float HumanModel_GetEyeY(struct Entity* e)  { return 26.0f/16.0f; }
 static void HumanModel_GetSize(struct Entity* e)   { Model_RetSize(8.6f,28.1f,8.6f); }
 static void HumanModel_GetBounds(struct Entity* e) { Model_RetAABB(-8,0,-4, 8,32,4); }
 
-static struct ModelVertex human_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
+static CC_BIG_VAR struct ModelVertex human_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
 static struct ModelTex human_tex = { "char.png" };
 static struct Model  human_model = { 
 	"humanoid", human_vertices, &human_tex,
@@ -1789,7 +1789,7 @@ static void SheepModel_Draw(struct Entity* e) {
 	Model_UnlockVB();
 	Gfx_DrawVb_IndexedTris(SHEEP_BODY_VERTICES);
 	Gfx_BindTexture(fur_tex.texID);
-	Gfx_DrawVb_IndexedTris_Range(SHEEP_FUR_VERTICES, SHEEP_BODY_VERTICES);
+	Gfx_DrawVb_IndexedTris_Range(SHEEP_FUR_VERTICES, SHEEP_BODY_VERTICES, DRAW_HINT_NONE);
 }
 
 static float SheepModel_GetNameY(struct Entity* e) { return 1.48125f; }
@@ -2203,7 +2203,7 @@ static void BlockModel_DrawParts(void) {
 
 		/* Different 1D flush texture, flush current vertices */
 		Atlas1D_Bind(lastTexIndex);
-		Gfx_DrawVb_IndexedTris_Range(count, offset);
+		Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_NONE);
 		lastTexIndex = bModel_texIndices[i];
 			
 		offset += count;
@@ -2213,7 +2213,7 @@ static void BlockModel_DrawParts(void) {
 	/* Leftover vertices */
 	if (!count) return;
 	Atlas1D_Bind(lastTexIndex); 
-	Gfx_DrawVb_IndexedTris_Range(count, offset);
+	Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_NONE);
 }
 
 static void BlockModel_Draw(struct Entity* e) {

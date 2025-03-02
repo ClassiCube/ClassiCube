@@ -320,6 +320,10 @@ static void Block_CalcStretch(BlockID block) {
 	} else {
 		Blocks.CanStretch[block] &= 0xFC; /* ~0x03 */
 	}
+
+	#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+	Blocks.CanStretch[block] = 0;
+	#endif
 }
 
 static cc_bool Block_MightCull(BlockID block, BlockID other) {
@@ -418,7 +422,7 @@ static void Block_UpdateCulling(BlockID block) {
 *---------------------------------------------------------Block-----------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint32 definedCustomBlocks[BLOCK_COUNT >> 5];
-static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
+static CC_BIG_VAR char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
 cc_bool Block_IsCustomDefined(BlockID block) {

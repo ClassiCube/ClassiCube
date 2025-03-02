@@ -61,7 +61,7 @@ static int TextWidget_Render2(void* widget, int offset) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
 	}
 	return offset + 4;
 }
@@ -216,11 +216,11 @@ static int ButtonWidget_Render2(void* widget, int offset) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
 	Gfx_BindTexture(Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex);
 	/* TODO: Does this 400 need to take DPI into account */
-	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset);
+	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset, DRAW_HINT_SPRITE);
 
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset + 8);
+		Gfx_DrawVb_IndexedTris_Range(4, offset + 8, DRAW_HINT_SPRITE);
 	}
 	return offset + 12;
 }
@@ -452,7 +452,7 @@ static void HotbarWidget_RenderOutline(struct HotbarWidget* w, int offset) {
 	tex = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
 
 	Gfx_BindTexture(tex);
-	Gfx_DrawVb_IndexedTris_Range(8, offset);
+	Gfx_DrawVb_IndexedTris_Range(8, offset, DRAW_HINT_SPRITE);
 }
 
 static void HotbarWidget_RenderEntries(struct HotbarWidget* w, int offset) {
@@ -1597,12 +1597,12 @@ static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vert
 static int TextInputWidget_Render2(void* widget, int offset) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_BindTexture(w->inputTex.ID);
-	Gfx_DrawVb_IndexedTris_Range(4, offset);
+	Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
 	offset += 4;
 
 	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
 		Gfx_BindTexture(w->caretTex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
 	}
 	return offset + 4;
 }
@@ -2460,7 +2460,7 @@ static int TextGroupWidget_Render2(void* widget, int offset) {
 		if (!textures[i].ID) continue;
 
 		Gfx_BindTexture(textures[i].ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
 	}
 	return offset;
 }
@@ -2817,7 +2817,7 @@ static int ThumbstickWidget_Render2(void* widget, int offset) {
 		Gfx_BindTexture(Gui.TouchTex);
 		for (i = 0; i < 4; i++) {
 			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
-			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4));
+			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4), DRAW_HINT_NONE);
 		}
 	}
 	return offset + THUMBSTICKWIDGET_MAX;

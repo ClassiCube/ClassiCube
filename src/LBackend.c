@@ -1,6 +1,6 @@
 #include "LBackend.h"
-#if defined CC_BUILD_WEB
-/* Web backend doesn't use the launcher */
+#if defined CC_DISABLE_LAUNCHER
+/* e.g. web backend doesn't use the launcher */
 #elif defined CC_BUILD_WIN_TEST
 /* Testing windows UI backend */
 #include "LBackend_Win.c"

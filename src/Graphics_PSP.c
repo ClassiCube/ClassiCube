@@ -440,7 +440,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	sceGuDrawArray(GU_LINES, gfx_fields, verticesCount, NULL, gfx_vertices);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
 			gfx_indices, gfx_vertices + startVertex * gfx_stride);
 }

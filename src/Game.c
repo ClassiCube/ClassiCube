@@ -55,6 +55,7 @@ int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
 static cc_bool gameRunning;
 static float gfx_minFrameMs;
+static cc_bool autoPause;
 
 cc_bool Game_ClassicMode, Game_ClassicHacks;
 cc_bool Game_AllowCustomBlocks;
@@ -360,6 +361,7 @@ static void LoadOptions(void) {
 		ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 		Options.Set("skip-ssl-check", false);
 	}*/
+	autoPause = Options_GetBool(OPT_AUTO_PAUSE, true);
 }
 
 #ifdef CC_BUILD_PLUGINS
@@ -790,7 +792,8 @@ static CC_INLINE void Game_RenderFrame(void) {
 	Camera.Active->UpdateMouse(Entities.CurPlayer, delta);
 #endif
 
-	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
+	if (!Window_Main.Focused && !Gui.InputGrab && autoPause) 
+		Gui_ShowPauseMenu();
 
 	if (Bind_IsTriggered[BIND_ZOOM_SCROLL] && !Gui.InputGrab) {
 		InputHandler_SetFOV(Camera.ZoomFov);

@@ -237,9 +237,13 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	*vertices = v;
 }
 
-#ifndef CC_BUILD_PS1
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+	/* These GFX backends have specialised implementations */
+#else
 static cc_bool gfx_hadFog;
+
 void Gfx_Begin2D(int width, int height) {
+	gfx_rendering2D = true;
 	struct Matrix ortho;
 	/* intentionally biased more towards positive Z to reduce 2D clipping issues on the DS */
 	Gfx_CalcOrthoMatrix(&ortho, (float)width, (float)height, -100.0f, 1000.0f);
@@ -252,16 +256,15 @@ void Gfx_Begin2D(int width, int height) {
 	
 	gfx_hadFog = Gfx_GetFog();
 	if (gfx_hadFog) Gfx_SetFog(false);
-	gfx_rendering2D = true;
 }
 
 void Gfx_End2D(void) {
+	gfx_rendering2D = false;
 	Gfx_SetDepthTest(true);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 	
 	if (gfx_hadFog) Gfx_SetFog(true);
-	gfx_rendering2D = false;
 }
 #endif
 
@@ -452,12 +455,6 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
-	Gfx_DeleteVb(vb);
-	*vb = Gfx_CreateVb(fmt, count);
-	return Gfx_LockVb(*vb, fmt, count);
-}
-
 static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
 

@@ -20,6 +20,7 @@
 // this case. Larger values will allow for more granularity with depth (useful
 // when drawing a complex 3D scene) at the expense of RAM usage and performance.
 #define OT_LENGTH 512
+#define OCT_LENGTH 128
 
 // Size of the buffer GPU commands and primitives are written to. If the program
 // crashes due to too many primitives being drawn, increase this value.
@@ -30,6 +31,7 @@ typedef struct {
 	DRAWENV draw_env;
 
 	uint32_t ot[OT_LENGTH];
+	//uint32_t oct[OCT_LENGTH];
 	uint8_t  buffer[BUFFER_LENGTH];
 } RenderBuffer;
 
@@ -46,6 +48,7 @@ static void OnBufferUpdated(void) {
 	next_packet     = buffer->buffer;
     next_packet_end = next_packet + BUFFER_LENGTH;
 	ClearOTagR(buffer->ot, OT_LENGTH);
+	//ClearOTagR(buffer->oct, OCT_LENGTH);
 }
 
 static void SetupContexts(int w, int h, int r, int g, int b) {
@@ -58,13 +61,18 @@ static void SetupContexts(int w, int h, int r, int g, int b) {
 	setRGB0(&buffers[1].draw_env, r, g, b);
 	buffers[0].draw_env.isbg = 1;
 	buffers[1].draw_env.isbg = 1;
-
+	/*
+	buffers[0].draw_env.tw.w = 16;
+	buffers[0].draw_env.tw.h = 16;
+	buffers[1].draw_env.tw.w = 16;
+	buffers[1].draw_env.tw.h = 16;
+	*/
 	active_buffer = 0;
 	OnBufferUpdated();
 }
 
 // NOINLINE to avoid polluting the hot path
-static CC_NOINLINE new_primitive_nomem(void) {
+static CC_NOINLINE void* new_primitive_nomem(void) {
 	if (noMemWarned) return NULL;
 	noMemWarned = true;
 	
@@ -76,7 +84,7 @@ static void* new_primitive(int size) {
 	uint8_t* prim  = next_packet;
 	next_packet += size;
 
-	if (next_packet <= next_packet_end);
+	if (next_packet <= next_packet_end)
 		return (void*)prim;
 	return new_primitive_nomem();
 }
@@ -110,6 +118,8 @@ void Gfx_Create(void) {
 	InitGeom();
 	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
 	gte_SetGeomScreen(Window_Main.Height / 2);
+	
+	
 }
 
 void Gfx_Free(void) { 
@@ -373,7 +383,13 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 static void SetAlphaTest(cc_bool enabled) {
 }
 
+static uint32_t blend_mode;
 static void SetAlphaBlend(cc_bool enabled) {
+	// NOTE: Semitransparent polygons are simply configured
+	//   to draw all pixels as final_color = B/2 + F/2
+	// This works well enough for e.g. water and ice textures,
+	//   but not for the UI - so it's only used in 3D mode
+	blend_mode = enabled ? POLY_CMD_SEMITRNS : 0;
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -401,10 +417,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
 }
 
+static cc_bool depth_only;
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+	depth_only = depthOnly;
 }
 
 
@@ -435,8 +450,8 @@ static void* gfx_vertices;
 #define UVFixed(value)  ((int)((value) * 1024.0f) & 0x3FF) // U/V wrapping not supported
 
 
-#define POLY_CODE_F4  0x28
-#define POLY_LEN_F4      5
+#define POLY_CODE_F4 (GP0_CMD_POLYGON | POLY_CMD_QUAD)
+#define POLY_LEN_F4  5
 struct CC_POLY_F4 {
 	uint32_t tag;
 	uint32_t rgbc; // r0, g0, b0, code;
@@ -446,8 +461,8 @@ struct CC_POLY_F4 {
 	int16_t	 x3, y3;
 };
 
-#define POLY_CODE_FT4 0x2C
-#define POLY_LEN_FT4     9
+#define POLY_CODE_FT4 (GP0_CMD_POLYGON | POLY_CMD_QUAD | POLY_CMD_TEXTURED)
+#define POLY_LEN_FT4  9
 struct CC_POLY_FT4 {
 	uint32_t tag;
 	uint32_t rgbc; // r0, g0, b0, code;
@@ -484,9 +499,18 @@ static void PreprocessTexturedVertices(void) {
 		dst->x = XYZFixed(src->x);
 		dst->y = XYZFixed(src->y);
 		dst->z = XYZFixed(src->z);
-
+		
 		u = src->U * 0.99f;
-		v = src->V == 1.0f ? 0.99f : src->V;
+		if(src->V == 1.0f)
+		{
+			v = 0.99f;
+		}
+		else
+		{
+			v = src->V;
+		}
+		//u = src->U * 0.99f;
+		//v = src->V == 1.0f ? 0.99f : src->V;
 
 		dst->u = UVFixed(u);
 		dst->v = UVFixed(v);
@@ -496,7 +520,7 @@ static void PreprocessTexturedVertices(void) {
 		int R = PackedCol_R(src->Col) >> 1;
 		int G = PackedCol_G(src->Col) >> 1;
 		int B = PackedCol_B(src->Col) >> 1;
-		dst->rgbc = R | (G << 8) | (B << 16) | (POLY_CODE_FT4 << 24);
+		dst->rgbc = R | (G << 8) | (B << 16) | POLY_CODE_FT4;
 	}
 }
 
@@ -513,7 +537,7 @@ static void PreprocessColouredVertices(void) {
 		int R = PackedCol_R(src->Col);
 		int G = PackedCol_G(src->Col);
 		int B = PackedCol_B(src->Col);
-		dst->rgbc = R | (G << 8) | (B << 16) | (POLY_CODE_F4 << 24);
+		dst->rgbc = R | (G << 8) | (B << 16) | POLY_CODE_F4;
 	}
 }
 
@@ -569,8 +593,9 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 static struct Matrix _view, _proj;
 struct MatrixRow { int x, y, z, w; };
 static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
-
+MATRIX transform_matrix;
 #define ToFixed(v) (int)(v * (1 << 12))
+#define ToFixedTr(v) (int)(v * (1 << 6))
 
 static void LoadTransformMatrix(struct Matrix* src) {
 	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati	
@@ -602,25 +627,25 @@ static void LoadTransformMatrix(struct Matrix* src) {
 
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	MATRIX mtx;
-	mtx.t[0] = (int)(src->row4.x);
-	mtx.t[1] = (int)(src->row4.y);
-	mtx.t[2] = (int)(src->row4.w);
+	transform_matrix.t[0] = ToFixedTr(src->row4.x)<<2;
+	transform_matrix.t[1] = ToFixedTr(-src->row4.y)<<2;
+	transform_matrix.t[2] = ToFixedTr(src->row4.w)<<2;
 
-	mtx.m[0][0] = ToFixed(src->row1.x);
-	mtx.m[0][1] = ToFixed(src->row1.y);
-	mtx.m[0][2] = ToFixed(src->row1.w);
 
-	mtx.m[1][0] = ToFixed(src->row2.x);
-	mtx.m[1][1] = ToFixed(src->row2.y);
-	mtx.m[1][2] = ToFixed(src->row2.w);
-
-	mtx.m[2][0] = ToFixed(src->row3.x);
-	mtx.m[2][1] = ToFixed(src->row3.y);
-	mtx.m[2][2] = ToFixed(src->row3.w);
+	transform_matrix.m[0][0] = ToFixed(src->row1.x);
+	transform_matrix.m[0][1] = ToFixed(src->row2.x);
+	transform_matrix.m[0][2] = ToFixed(src->row3.x);
 	
-	gte_SetRotMatrix(&mtx);
-	gte_SetTransMatrix(&mtx);
+	transform_matrix.m[1][0] = ToFixed(-src->row1.y);
+	transform_matrix.m[1][1] = ToFixed(-src->row2.y);
+	transform_matrix.m[1][2] = ToFixed(-src->row3.y);
+	
+	transform_matrix.m[2][0] = ToFixed(src->row1.w);
+	transform_matrix.m[2][1] = ToFixed(src->row2.w);
+	transform_matrix.m[2][2] = ToFixed(src->row3.w);
+	
+	gte_SetRotMatrix(&transform_matrix);
+	gte_SetTransMatrix(&transform_matrix);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -670,12 +695,12 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	float zNear = 0.05f;
+	float zNear = 0.001f;
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
-	matrix->row1.x =  c / aspect;
+	matrix->row1.x =  c;
 	matrix->row2.y =  c;
 	matrix->row3.z = zFar / (zNear - zFar);
 	matrix->row3.w = -1.0f;
@@ -697,6 +722,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 static int Transform(IVec3* result, struct PS1VertexTextured* a) {
+	
 	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
 	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
 	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
@@ -706,20 +732,29 @@ static int Transform(IVec3* result, struct PS1VertexTextured* a) {
 	result->x = (x *  160      / w) + 160; 
 	result->y = (y * -120      / w) + 120;
 	result->z = (z * OT_LENGTH / w);
+	
+	if(result->x > 640)
+	{
+		return 1;
+	}
+	else if(result->x < -320)
+	{
+		return 1;
+	}
+	
+	
+	if(result->y > 480)
+	{
+		return 1;
+	}
+	else if(result->y < -240)
+	{
+		return 1;
+	}
+	
 
-	/*SVECTOR coord;
-	POLY_FT4 poly;
-	coord.vx = a->x; coord.vy = a->y; coord.vz = a->z;
-	gte_ldv0(&coord);
-	gte_rtps();
-	gte_stsxy(&poly.x0);
-
-	int X = (short)poly.x0, Y = (short)poly.y0;
-	Platform_Log3("X: %i, %i,  %i", &x, &result->x, &X);
-	Platform_Log3("Y: %i, %i,  %i", &y, &result->y, &Y);
-	Platform_LogConst("=======");*/
-
-	return z > w;
+	
+	return z>w;
 }
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
@@ -828,10 +863,32 @@ static void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextu
 	mid.u = (p1->u + p2->u) >> 1; \
 	mid.v = (p1->v + p2->v) >> 1; \
 	mid.rgbc = p1->rgbc;
- 
+
 static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
 						struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	if (level > 2) return;
+	if (level > 5) return;
+	int v1short = 0;
+	int v3short = 0;
+	int diff = v0->x - v1->x;
+	int mask = diff>>31;
+	int vertsize = (diff^mask)-mask;
+	diff = v0->y - v1->y;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	diff = v0->z - v1->z;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	if(vertsize < 128) v1short = 1;
+	diff = v0->x - v3->x;
+	mask = diff>>31;
+	vertsize = (diff^mask)-mask;
+	diff = v0->y - v3->y;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	diff = v0->z - v3->z;
+	mask = diff>>31;
+	vertsize += (diff^mask)-mask;
+	if(vertsize < 128) v3short = 1;
 	struct PS1VertexTextured m01, m02, m03, m12, m32;
 
 	// v0 --- m01 --- v1
@@ -841,51 +898,94 @@ static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1Ve
 	//  |  \   | \    |
 	//  |    \ |   \  |
 	// v3 ----m32---- v2
+	
+	if(v1short)
+	{
+		if(v3short)
+		{
+			DrawTexturedQuad(  v0,   v1, v2, v3, 3);
+			return;
+		}
+		
+		
+		CalcMidpoint(m03, v0, v3);
+		CalcMidpoint(m12, v1, v2);
+		
+		DrawTexturedQuad(  v0,   v1, &m12, &m03, level);
+		DrawTexturedQuad(&m03, &m12,   v2,   v3, level);
+	}
+	else
+	{
+		if(v3short)
+		{
+			CalcMidpoint(m01, v0, v1);
+			CalcMidpoint(m32, v3, v2);
+			
+			DrawTexturedQuad(  v0, &m01, &m32,   v3, level);
+			DrawTexturedQuad(&m01,   v1,   v2, &m32, level);
+	
+			return;
+		}
+		
+		CalcMidpoint(m02, v0, v2);
+		CalcMidpoint(m01, v0, v1);
+		CalcMidpoint(m32, v3, v2);
+		CalcMidpoint(m03, v0, v3);
+		CalcMidpoint(m12, v1, v2);
 
-	CalcMidpoint(m01, v0, v1);
-	CalcMidpoint(m02, v0, v2);
-	CalcMidpoint(m03, v0, v3);
-	CalcMidpoint(m12, v1, v2);
-	CalcMidpoint(m32, v3, v2);
+		DrawTexturedQuad(  v0, &m01, &m02, &m03, level);
+		DrawTexturedQuad(&m01,   v1, &m12, &m02, level);
+		DrawTexturedQuad(&m02, &m12,   v2, &m32, level);
+		DrawTexturedQuad(&m03, &m02, &m32,   v3, level);
+	}
+	
+}
 
-	DrawTexturedQuad(  v0, &m01, &m02, &m03, level);
-	DrawTexturedQuad(&m01,   v1, &m12, &m02, level);
-	DrawTexturedQuad(&m02, &m12,   v2, &m32, level);
-	DrawTexturedQuad(&m03, &m02, &m32,   v3, level);
+void CrossProduct(IVec3* a, IVec3* b, IVec3* out)
+{
+	out->x = (a->y*b->z-a->z*b->y) >> 9;
+	out->y = (a->z*b->x-a->x*b->z) >> 9;
+	out->z = (a->x*b->y-a->y*b->x) >> 9;
 }
 
 static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
 							struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	IVec3 coords[4];
 	int clipped = 0;
-	clipped |= Transform(&coords[0], v0);
-	clipped |= Transform(&coords[1], v1);
-	clipped |= Transform(&coords[2], v2);
-	clipped |= Transform(&coords[3], v3);
-	if (clipped) return;//{ SubdivideQuad(v0, v1, v2, v3, level + 1); return; }
-		
-	int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
-	if (p < 0 || p >= OT_LENGTH) return;
-		
+	SVECTOR coord[4];
 	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-    if (!poly) return;
+	if (!poly) return;
 
 	setlen(poly, POLY_LEN_FT4);
-	poly->rgbc  = v0->rgbc;
-	poly->tpage = curTex->tpage;
-	poly->clut  = 0;
-
-	// TODO & instead of % 
-	poly->x0 = coords[1].x; poly->y0 = coords[1].y;
-	poly->x1 = coords[0].x; poly->y1 = coords[0].y;
-	poly->x2 = coords[2].x; poly->y2 = coords[2].y;
-	poly->x3 = coords[3].x; poly->y3 = coords[3].y;
-
+	poly->rgbc  = v0->rgbc | blend_mode;
+	
+	coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
+	coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
+	coord[2].vx = v2->x<<2; coord[2].vy = v2->y<<2; coord[2].vz = v2->z<<2;
+	coord[3].vx = v3->x<<2; coord[3].vy = v3->y<<2; coord[3].vz = v3->z<<2;
+	gte_ldv3(&coord[0],&coord[1],&coord[3]);
+	gte_rtpt();
+	int p = 0;
+	gte_nclip();
+	gte_stopz( &p );
+	
+	if( p > 0 ) return;
+	
+	
+	gte_avsz3();
+	gte_stotz( &p );
+	if(p == 0 || (p>>2) > OT_LENGTH) return;
+	gte_stsxy0( &poly->x0 );
+	gte_stsxy1( &poly->x1 );
+	gte_stsxy2( &poly->x2 );
+	gte_ldv0( &coord[2] );
+	gte_rtps();
+	gte_stsxy( &poly->x3 );
 	int uOffset = curTex->xOffset;
 	int vOffset = curTex->yOffset;
 	int uShift  = curTex->u_shift;
 	int vShift  = curTex->v_shift;
 		
+	
 	poly->u0 = (v1->u >> uShift) + uOffset;
 	poly->v0 = (v1->v >> vShift) + vOffset;
 	poly->u1 = (v0->u >> uShift) + uOffset;
@@ -894,8 +994,12 @@ static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1V
 	poly->v2 = (v2->v >> vShift) + vOffset;
 	poly->u3 = (v3->u >> uShift) + uOffset;
 	poly->v3 = (v3->v >> vShift) + vOffset;
-
+	
+	poly->tpage = curTex->tpage;
+	poly->clut  = 0;
 	addPrim(&buffer->ot[p >> 2], poly);
+	
+	
 }
 
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
@@ -990,7 +1094,7 @@ static void DrawQuads(int verticesCount, int startVertex) {
 }
 
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	DrawQuads(verticesCount, startVertex);
 }
 
@@ -999,6 +1103,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	if (depth_only) return;
 	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
@@ -1027,6 +1132,7 @@ void Gfx_EndFrame(void) {
 
 	PutDispEnv(&disp_buffer->disp_env);
 	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
+	//DrawOTagEnv(&draw_buffer->oct[OCT_LENGTH - 1], &draw_buffer->draw_env);
 
 	active_buffer ^= 1;
 	OnBufferUpdated();
@@ -1040,7 +1146,36 @@ void Gfx_OnWindowResize(void) {
 	// TODO
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h)
+{ 
+	//DR_ENV *prim = &(buffers[0].draw_env.dr_env);
+	//setDrawAreaXY(&(prim->offset),x,y,x+w,y+h);
+	//prim = &(buffers[1].draw_env.dr_env);
+	//setDrawAreaXY(&(prim->offset),x,y,x+w,y+h);
+	buffers[0].draw_env.clip.x = x;
+	buffers[0].draw_env.clip.y = y;
+	buffers[0].draw_env.clip.w = w;
+	buffers[0].draw_env.clip.h = h;
+	
+	buffers[1].draw_env.clip.x = x;
+	buffers[1].draw_env.clip.y = y;
+	buffers[1].draw_env.clip.w = w;
+	buffers[1].draw_env.clip.h = h;
+	
+	buffers[0].disp_env.disp.x = x;
+	buffers[0].disp_env.disp.y = y;
+	buffers[0].disp_env.disp.w = w;
+	buffers[0].disp_env.disp.h = h;
+	
+	buffers[1].disp_env.disp.x = x;
+	buffers[1].disp_env.disp.y = y;
+	buffers[1].disp_env.disp.w = w;
+	buffers[1].disp_env.disp.h = h;
+	//SetDefDrawEnv(&buffers[0].draw_env, x, y, w, h);
+	//SetDefDispEnv(&buffers[0].disp_env, x, y, w, h);
+	//SetDefDrawEnv(&buffers[1].draw_env, x, y+h, w, h);
+	//SetDefDispEnv(&buffers[1].disp_env, x, y+h, w, h);
+}
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 void Gfx_GetApiInfo(cc_string* info) {

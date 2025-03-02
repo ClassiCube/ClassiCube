@@ -359,9 +359,10 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 	/* idat decompressor */
 #ifdef CC_BUILD_TINYSTACK
-	static struct InflateState inflate;
+	struct InflateState* inflate = (struct InflateState*)temp_mem;
 #else
-	struct InflateState inflate;
+	struct InflateState _inflate;
+	struct InflateState* inflate = &_inflate;
 #endif
 	struct Stream compStream, datStream;
 	struct ZLibHeader zlibHeader;
@@ -378,7 +379,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	trnsColor  = BITMAPCOLOR_BLACK;
 	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOLOR_BLACK; }
 
-	Inflate_MakeStream2(&compStream, &inflate, stream);
+	Inflate_MakeStream2(&compStream, inflate, stream);
 	ZLibHeader_Init(&zlibHeader);
 
 	for (;;) {
@@ -473,7 +474,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 		/* 11.2.4 IDAT Image data */
 		case PNG_FourCC('I','D','A','T'): {
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
-			inflate.Source = &datStream;
+			inflate->Source = &datStream;
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
 			while (!zlibHeader.done) {

@@ -36,6 +36,8 @@ static const struct DynamicLibSym core_funcs[] = {
 #include "../misc/opengl/GL1Macros.h"
 
 #include "_GLShared.h"
+static void GLBackend_Init(void);
+
 static GfxResourceID white_square;
 static int postProcess;
 enum PostProcess { POSTPROCESS_NONE, POSTPROCESS_GRAYSCALE };
@@ -49,6 +51,7 @@ void Gfx_Create(void) {
 	Gfx.BackendType = CC_GFX_BACKEND_GL2;
 	
 	GL_InitCommon();
+	GLBackend_Init();
 	Gfx_RestoreState();
 	GLContext_SetVSync(gfx_vsync);
 }
@@ -535,6 +538,15 @@ static void GLBackend_Init(void) {
 	glGetIntegerv(_GL_MAJOR_VERSION, &major);
 	glGetIntegerv(_GL_MINOR_VERSION, &minor);
 	customMipmapsLevels = major >= 3 && minor >= 2;
+
+	static const cc_string bgra_ext   = String_FromConst("EXT_texture_format_BGRA8888");
+	static const cc_string bgra_apl = String_FromConst("APPLE_texture_format_BGRA8888");
+	cc_string extensions = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
+	
+	cc_bool has_ext_bgra = String_CaselessContains(&extensions, &bgra_ext);
+	cc_bool has_apl_bgra = String_CaselessContains(&extensions, &bgra_apl);
+	Platform_Log2("BGRA support - Ext: %t, Apple: %t", &has_ext_bgra, &has_apl_bgra);
+	convert_rgba = PIXEL_FORMAT != GL_RGBA && !has_ext_bgra && !has_apl_bgra;
 #else
     customMipmapsLevels = true;
     const GLubyte* ver  = glGetString(GL_VERSION);
@@ -670,7 +682,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	gfx_setupVBRangeFunc(startVertex);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 }
