@@ -585,8 +585,17 @@ enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_CHUNK_TRAILERS,
 	HTTP_RESPONSE_STATE_DONE
 };
-#define HTTP_HEADER_MAX_LENGTH   4096
 #define HTTP_LOCATION_MAX_LENGTH 256
+
+#ifdef CC_BUILD_TINYSTACK
+	#define HTTP_HEADER_MAX_LENGTH 2048
+	#define INPUT_BUFFER_LEN 4096
+	#define SEND_BUFFER_LEN  4096
+#else
+	#define HTTP_HEADER_MAX_LENGTH 4096
+	#define INPUT_BUFFER_LEN  8192
+	#define SEND_BUFFER_LEN  16384
+#endif
 
 struct HttpClientState {
 	enum HTTP_RESPONSE_STATE state;
@@ -639,12 +648,9 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 	} /* TODO post redirect handling */
 }
 
+
 static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
-#ifdef CC_BUILD_TINYSTACK
-	char inputBuffer[8192];
-#else
-	char inputBuffer[16384];
-#endif
+	char inputBuffer[SEND_BUFFER_LEN];
 	cc_string inputMsg;
 
 	String_InitArray(inputMsg, inputBuffer);
@@ -849,7 +855,6 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 	return 0;
 }
 
-#define INPUT_BUFFER_LEN 8192
 static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	struct HttpRequest* req = state->req;
 	cc_uint8 buffer[INPUT_BUFFER_LEN];
