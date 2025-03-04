@@ -68,6 +68,14 @@ static void blockalloc_free(cc_uint8* table, int origin, int blocks) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
+static CC_INLINE void CopyHWords(void* src, void* dst, int len) {
+	// VRAM must be written to in 16 bit units
+	u16* src_ = src;
+	u16* dst_ = dst;
+
+	for (int i = 0; i < len; i++) dst_[i] = src_[i];
+}
+
 void ResetGPU(void) {
     powerOn(POWER_3D_CORE | POWER_MATRIX); // Enable 3D core & geometry engine
 
@@ -397,7 +405,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			}
 		}
 
-		swiCopy(buf, addr, (tex_size >> 1) | COPY_MODE_HWORD);
+		CopyHWords(buf, addr, tex_size >> 1);
 		free(buf);
 	} else if (tex_fmt == GL_RGB16) {
 		stride = bmp->width >> 2;
@@ -416,7 +424,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 					tmp[x >> 1] |= idx << 4;
 				}
 			}
-			swiCopy(tmp, addr, stride | COPY_MODE_HWORD);
+			CopyHWords(tmp, addr, stride);
 		}
 	} else if (tex_fmt == GL_RGB256) {
 		stride = bmp->width >> 1;
@@ -429,14 +437,14 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			{
 				tmp[x] = FindInPalette(palette, pal_count, row[x]);
 			}
-			swiCopy(tmp, addr, stride | COPY_MODE_HWORD);
+			CopyHWords(tmp, addr, stride);
 		}
 	} else {
 		stride = bmp->width;
 
 		for (int y = 0; y < bmp->height; y++, addr += stride) {
 			cc_uint16* src = bmp->scan0 + y * rowWidth;
-			swiCopy(src, addr, stride | COPY_MODE_HWORD);
+			CopyHWords(src, addr, stride);
 		}
 	}
 
@@ -455,7 +463,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		offset = tex->palBase * PAL_BLOCK_SIZE;
 
 		vramSetBankE(VRAM_E_LCD);
-    	swiCopy(palette, (u8*)VRAM_E + offset, pal_count | COPY_MODE_HWORD);
+    	CopyHWords(palette, (u8*)VRAM_E + offset, pal_count);
 		vramSetBankE(VRAM_E_TEX_PALETTE);
 
 		tex->palFormat = tex_fmt == GL_RGB4 ? (offset >> 3) : (offset >> 4);

@@ -304,59 +304,25 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); 
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Vertex rendering----------------------------------------------------*
-*#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-	
-	group = fmt == VERTEX_FORMAT_TEXTURED ? &textureShader : &colorShader;
-	GX2SetFetchShader(&group->fetchShader);
-	GX2SetVertexShader(group->vertexShader);
-	GX2SetPixelShader(group->pixelShader);
-}
-
-void Gfx_DrawVb_Lines(int verticesCount) {
-	BindPendingTexture();
-	GX2DrawEx(GX2_PRIMITIVE_MODE_LINES, verticesCount, 0, 1);
-}
-
-void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	BindPendingTexture();
-	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, 0, 1);
-}
-
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	BindPendingTexture();
-	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
-}
-
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	BindPendingTexture();
-	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
-}
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
+static struct Matrix _mvp __attribute__((aligned(64)));
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 	
 	// TODO dirty uniform
-	struct Matrix mvp __attribute__((aligned(64)));	
-	Matrix_Mul(&mvp, &_view, &_proj);
+	Matrix_Mul(&_mvp, &_view, &_proj);
 	if (!group) return;
-	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &mvp);
+	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &_mvp);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
-	Matrix_Mul(mvp, view, proj);
+	Mem_Copy(&_mvp, mvp, sizeof(struct Matrix));
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -393,6 +359,43 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	matrix->row3.w = -1.0f;
 	matrix->row4.z = (zNear * zFar) / (zNear - zFar);
 	matrix->row4.w =  0.0f;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Vertex rendering----------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+	
+	group = fmt == VERTEX_FORMAT_TEXTURED ? &textureShader : &colorShader;
+	GX2SetFetchShader(&group->fetchShader);
+	GX2SetVertexShader(group->vertexShader);
+	GX2SetPixelShader(group->pixelShader);
+
+	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &_mvp);
+}
+
+void Gfx_DrawVb_Lines(int verticesCount) {
+	BindPendingTexture();
+	GX2DrawEx(GX2_PRIMITIVE_MODE_LINES, verticesCount, 0, 1);
+}
+
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	BindPendingTexture();
+	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, 0, 1);
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
+	BindPendingTexture();
+	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
+}
+
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	BindPendingTexture();
+	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
 
 

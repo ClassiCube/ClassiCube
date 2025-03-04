@@ -104,6 +104,7 @@ void Window_Free(void) { }
 #define OSSCREEN_TV_HEIGHT  720
 #define OSSCREEN_DRC_WIDTH  854
 #define OSSCREEN_DRC_HEIGHT 480
+
 static void LauncherInactiveChanged(void* obj);
 static void Init2DResources(void);
 
