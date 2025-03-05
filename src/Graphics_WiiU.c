@@ -155,6 +155,7 @@ static void UpdateDepthState(void) {
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
+	GX2SetCullOnlyControl(GX2_FRONT_FACE_CCW, false, enabled);
 }
 
 void Gfx_SetFog(cc_bool enabled) {
@@ -178,6 +179,7 @@ void Gfx_SetFogMode(FogFunc func) {
 }
 
 static void SetAlphaTest(cc_bool enabled) {
+	GX2SetAlphaTest(enabled, GX2_COMPARE_FUNC_GEQUAL, 0.5f);
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
@@ -396,7 +398,7 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	WHBGfxClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	WHBGfxClearColor(clearR, clearG, clearB, 1.0f);
 }
 
 static int drc_ticks;
@@ -417,6 +419,10 @@ static void CreateDRCTest(void) {
 
 void Gfx_EndFrame(void) {
 	WHBGfxFinishRenderTV();
+	WHBGfxBeginRenderDRC();
+	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+	WHBGfxFinishRenderDRC();
+
 	WHBGfxFinishRender();
 }
 
