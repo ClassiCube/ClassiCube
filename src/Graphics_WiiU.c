@@ -152,11 +152,9 @@ static float clearR, clearG, clearB;
 static cc_bool depthWrite = true, depthTest = true;
 
 static void UpdateDepthState(void) {
-	GX2SetDepthOnlyControl(depthTest, depthWrite, GX2_COMPARE_FUNC_LEQUAL);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
-	GX2SetCullOnlyControl(GX2_FRONT_FACE_CCW, false, enabled);
 }
 
 void Gfx_SetFog(cc_bool enabled) {
@@ -180,15 +178,9 @@ void Gfx_SetFogMode(FogFunc func) {
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	GX2SetAlphaTest(enabled, GX2_COMPARE_FUNC_GEQUAL, 0.5f);
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
-	GX2SetBlendControl(GX2_RENDER_TARGET_0,
-		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
-		true,
-		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
-	GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
@@ -211,20 +203,9 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	GX2ChannelMask mask = 0;
-	if (r) mask |= GX2_CHANNEL_MASK_R;
-	if (g) mask |= GX2_CHANNEL_MASK_G;
-	if (b) mask |= GX2_CHANNEL_MASK_B;
-	if (a) mask |= GX2_CHANNEL_MASK_A;
-	
-	// TODO: use GX2SetColorControl to disable all writing ???
-	GX2SetTargetChannelMasks(mask, 0,0,0, 0,0,0,0);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -409,31 +390,13 @@ void Gfx_SetVSync(cc_bool vsync) {
 	// TODO GX2SetSwapInterval(1);
 }
 
-void Gfx_BeginFrame(void) { 
-	uint32_t swapCount, flipCount;
-	OSTime lastFlip, lastVsync;
-	
-	for (int try = 0; try < 10; try++)
-	{
-		GX2GetSwapStatus(&swapCount, &flipCount, &lastFlip, &lastVsync);
-		if (flipCount >= swapCount) break;
-		GX2WaitForVsync(); // TODO vsync
-	}
-	
-	GX2ContextState* state = WHBGfxGetTVContextState();
-	GX2SetContextState(state);
+void Gfx_BeginFrame(void) {
+	WHBGfxBeginRender();
+	WHBGfxBeginRenderTV();
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	GX2ColorBuffer* buf = WHBGfxGetTVColourBuffer();
-	GX2DepthBuffer* dph = WHBGfxGetTVDepthBuffer();
-
-	if (buffers & GFX_BUFFER_COLOR) {
-		GX2ClearColor(buf, clearR, clearG, clearB, 1.0f);
-	}
-	if (buffers & GFX_BUFFER_DEPTH) {
-		GX2ClearDepthStencilEx(dph, 1.0f, 0, GX2_CLEAR_FLAGS_DEPTH | GX2_CLEAR_FLAGS_STENCIL);
-	}
+	WHBGfxClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 }
 
 static int drc_ticks;
@@ -452,43 +415,9 @@ static void CreateDRCTest(void) {
 	Gfx_UnlockVb(drc_vb);
 }
 
-static struct Matrix drc_mat;
-static void DrawDRCTest(void) {
-	GX2ContextState* state = WHBGfxGetDRCContextState();
-	GX2SetContextState(state);
-
-	drc_ticks = (drc_ticks + 1) % 200;
-	GX2ColorBuffer* buf = WHBGfxGetDRCColourBuffer();
-	GX2ClearColor(buf, drc_ticks / 200.0f, drc_ticks / 200.0f, drc_ticks / 200.0f, 1.0f);
-
-	drc_mat = Matrix_Identity;
-	drc_mat.row1.x += Game.Time * 0.01f;
-	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &drc_mat);
-	cc_bool D = depthTest;
-	Gfx_SetDepthTest(false);
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-
-	CreateDRCTest();
-	Gfx_BindVb(drc_vb);
-	Gfx_DrawVb_IndexedTris(4);
-	Gfx_SetDepthTest(D);
-
-	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_DRC);	
-}
-
 void Gfx_EndFrame(void) {
-	GX2ColorBuffer* buf = WHBGfxGetTVColourBuffer();
-	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_TV);	
-
-	DrawDRCTest();
-	
-	GX2SwapScanBuffers();
-	GX2Flush();
-	GX2DrawDone();
-	GX2SetTVEnable(TRUE);
-	GX2SetDRCEnable(TRUE);
+	WHBGfxFinishRenderTV();
+	WHBGfxFinishRender();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
