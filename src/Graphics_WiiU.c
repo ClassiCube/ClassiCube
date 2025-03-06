@@ -152,6 +152,7 @@ static float clearR, clearG, clearB;
 static cc_bool depthWrite = true, depthTest = true;
 
 static void UpdateDepthState(void) {
+	GX2SetDepthOnlyControl(depthTest, depthWrite, GX2_COMPARE_FUNC_LEQUAL);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -183,6 +184,11 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
+	GX2SetBlendControl(GX2_RENDER_TARGET_0,
+		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
+		true,
+		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
+	GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
