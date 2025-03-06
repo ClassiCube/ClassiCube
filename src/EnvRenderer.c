@@ -253,7 +253,7 @@ static CC_NOINLINE void BuildSky(void) {
 void EnvRenderer_RenderSky(void) {
 	struct Matrix m;
 	float skyY, normY, dy;
-	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
+	if (EnvRenderer_ShouldRenderSkybox()) return;
 
 	if (!sky_vb) {
 		BuildSky();
