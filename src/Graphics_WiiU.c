@@ -211,9 +211,20 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	GX2ChannelMask mask = 0;
+	if (r) mask |= GX2_CHANNEL_MASK_R;
+	if (g) mask |= GX2_CHANNEL_MASK_G;
+	if (b) mask |= GX2_CHANNEL_MASK_B;
+	if (a) mask |= GX2_CHANNEL_MASK_A;
+	
+	// TODO: use GX2SetColorControl to disable all writing ???
+	GX2SetTargetChannelMasks(mask, 0,0,0, 0,0,0,0);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 

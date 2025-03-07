@@ -10,6 +10,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+#include "Audio.h"
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -454,6 +455,9 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 
 void Platform_Init(void) {
 	WHBProcInit();
+	// Otherwise loading sound gets stuck endlessly repeating
+	AudioBackend_Init();
+
 	mkdir("ClassiCube", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 

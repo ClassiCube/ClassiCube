@@ -1416,11 +1416,15 @@ void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 *-------------------------------------------------------Wii U backend-----------------------------------------------------*
 *#########################################################################################################################*/
 #include <sndcore2/core.h>
+static cc_bool ax_inited;
 
 struct AudioContext { int count; };
 #define AUDIO_COMMON_ALLOC
 
 cc_bool AudioBackend_Init(void) {
+	if (ax_inited) return true;
+	ax_inited = true;
+
 	AXInit();
 	return true;
 }
