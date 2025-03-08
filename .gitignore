@@ -56,12 +56,14 @@ misc/xbox/vs_textured.inl
 # Sony console build results
 build-ps2/
 build-ps3/
+build-ps4/
 build-psp/
 build-vita/
 EBOOT.PBP
 PARAM.SFO
 param.sfo
 eboot.bin
+pkg.gp4
 
 # Desktop build results
 build-amiga-68k/

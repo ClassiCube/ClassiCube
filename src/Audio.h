@@ -56,6 +56,9 @@ cc_bool AudioBackend_Init(void);
 void    AudioBackend_Tick(void);
 void    AudioBackend_Free(void);
 
+#define AUDIO_USAGE_BUFFER 0x01
+#define AUDIO_USAGE_STREAM 0x02
+
 /* Initialises an audio context. */
 cc_result Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */

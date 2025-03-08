@@ -239,6 +239,8 @@ ps2:
 	$(MAKE) -f misc/ps2/Makefile
 ps3:
 	$(MAKE) -f misc/ps3/Makefile
+ps4:
+	$(MAKE) -f misc/ps4/Makefile
 xbox:
 	$(MAKE) -f misc/xbox/Makefile
 xbox360:
