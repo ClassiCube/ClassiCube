@@ -21,8 +21,6 @@
 #include <gx2r/buffer.h>
 #include <whb/gfx.h>
 #include <coreinit/memdefaultheap.h>
-#include "../build-wiiu/coloured_gsh.h"
-#include "../build-wiiu/textured_gsh.h"
 
 /*########################################################################################################################*
 *------------------------------------------------------Fetch shaders------------------------------------------------------*
@@ -70,7 +68,11 @@ static void CompileFetchShaders(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static GX2VertexShader *texture_VS, *colour_VS;
+extern const uint8_t coloured_gsh[];
+extern const uint8_t textured_gsh[];
+extern const uint8_t textured_offset_gsh[];
+
+static GX2VertexShader *texture_VS, *colour_VS, *offset_VS;
 static GX2PixelShader  *texture_PS, *colour_PS;
 
 static GX2Sampler sampler;
@@ -87,6 +89,8 @@ static void InitGfx(void) {
 
 	texture_VS = WHBGfxLoadGFDVertexShader(0, textured_gsh);
 	texture_PS = WHBGfxLoadGFDPixelShader(0,  textured_gsh);
+
+	offset_VS = WHBGfxLoadGFDVertexShader(0, textured_offset_gsh);
 }
 
 void Gfx_Create(void) {
@@ -350,17 +354,35 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); 
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
+static Vec2 texOffset;
+
+static void UpdateVS(void) {
+	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
+		cur_VS = colour_VS;
+	} else if (texOffset.x || texOffset.y) {
+		cur_VS = offset_VS;
+	} else {
+		cur_VS = texture_VS;
+	}
+	GX2SetVertexShader(cur_VS);
+
+	if (cur_VS != offset_VS) return;
+	GX2SetVertexUniformReg(cur_VS->uniformVars[1].offset, 2, &texOffset);
+}
+
+static void UpdatePS(void) {
+	cur_PS = gfx_format == VERTEX_FORMAT_TEXTURED ? texture_PS : colour_PS;
+	GX2SetPixelShader(cur_PS);
+}
+
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
-
-	cur_VS = fmt == VERTEX_FORMAT_TEXTURED ? texture_VS : colour_VS;
-	cur_PS = fmt == VERTEX_FORMAT_TEXTURED ? texture_PS : colour_PS;
 	
 	GX2SetFetchShader(fmt == VERTEX_FORMAT_TEXTURED ? &texture_FS : &colour_FS);
-	GX2SetVertexShader(cur_VS);
-	GX2SetPixelShader(cur_PS);
+	UpdateVS();
+	UpdatePS();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -388,7 +410,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-static struct Matrix _mvp __attribute__((aligned(64)));	
+static struct Matrix _mvp __attribute__((aligned(64)));
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
@@ -407,11 +429,15 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	// TODO
+	texOffset.x = x;
+	texOffset.y = y;
+	UpdateVS();
 }
 
 void Gfx_DisableTextureOffset(void) {
-	// TODO
+	texOffset.x = 0;
+	texOffset.y = 0;
+	UpdateVS();
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {

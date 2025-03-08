@@ -12,3 +12,6 @@ https://github.com/luRaichu/recsbr/blob/163fa441712f6b25e780e914617941c2385b330e
 To generate shader assembly
 1) Get AMD ShaderAnalyzer
 2) Select Radeon HD 4670 (RV370) Assembly as the output format
+
+Then run assembler.sh to assemble all files
+
