@@ -24,25 +24,69 @@
 #include "../build-wiiu/coloured_gsh.h"
 #include "../build-wiiu/textured_gsh.h"
 
-static WHBGfxShaderGroup colorShader;
-static WHBGfxShaderGroup textureShader;
+/*########################################################################################################################*
+*------------------------------------------------------Fetch shaders------------------------------------------------------*
+*#########################################################################################################################*/
+#define VERTEX_OFFSET_POS     0
+#define VERTEX_OFFSET_COLOR  12
+#define VERTEX_OFFSET_COORDS 16
+
+static const GX2AttribStream colour_attributes[] = {
+	{ 0, 0, VERTEX_OFFSET_POS,   GX2_ATTRIB_FORMAT_FLOAT_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_1), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 1, 0, VERTEX_OFFSET_COLOR, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8,  GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_W), GX2_ENDIAN_SWAP_DEFAULT }
+};
+
+static const GX2AttribStream texture_attributes[] = {
+	{ 0, 0, VERTEX_OFFSET_POS,    GX2_ATTRIB_FORMAT_FLOAT_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_1), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 1, 0, VERTEX_OFFSET_COLOR,  GX2_ATTRIB_FORMAT_UNORM_8_8_8_8,  GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_W), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 2, 0, VERTEX_OFFSET_COORDS, GX2_ATTRIB_FORMAT_FLOAT_32_32,    GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_0, GX2_SQ_SEL_1), GX2_ENDIAN_SWAP_DEFAULT },
+};
+static GX2FetchShader colour_FS, texture_FS;
+
+static void CompileFetchShader(GX2FetchShader* shader, const GX2AttribStream* attribs, int numAttribs) {
+   uint32_t size = GX2CalcFetchShaderSizeEx(numAttribs,
+                                            GX2_FETCH_SHADER_TESSELLATION_NONE,
+                                            GX2_TESSELLATION_MODE_DISCRETE);
+   void* program = MEMAllocFromDefaultHeapEx(size, GX2_SHADER_PROGRAM_ALIGNMENT); // TODO memalign
+
+   GX2InitFetchShaderEx(shader, program, numAttribs, attribs,
+                        GX2_FETCH_SHADER_TESSELLATION_NONE,
+                        GX2_TESSELLATION_MODE_DISCRETE);
+
+   GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, program, size);
+}
+
+static void CompileFetchShaders(void) {
+	CompileFetchShader(&colour_FS,  colour_attributes,  Array_Elems(colour_attributes));
+	CompileFetchShader(&texture_FS, texture_attributes, Array_Elems(texture_attributes));
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------General---------------------------------------------------------*
+*#########################################################################################################################*/
+static GX2VertexShader *texture_VS, *colour_VS;
+static GX2PixelShader  *texture_PS, *colour_PS;
+
 static GX2Sampler sampler;
 static GfxResourceID white_square;
-static WHBGfxShaderGroup* group;
+static GX2VertexShader* cur_VS;
+static GX2PixelShader*  cur_PS;
 
 static void InitGfx(void) {
+	CompileFetchShaders();
    	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
 	
-	WHBGfxLoadGFDShaderGroup(&colorShader, 0, coloured_gsh);
-	WHBGfxInitShaderAttribute(&colorShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
-	WHBGfxInitShaderAttribute(&colorShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
-	WHBGfxInitFetchShader(&colorShader);
-	
-	WHBGfxLoadGFDShaderGroup(&textureShader, 0, textured_gsh);
-	WHBGfxInitShaderAttribute(&textureShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
-	WHBGfxInitShaderAttribute(&textureShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
-	WHBGfxInitShaderAttribute(&textureShader, "in_uv",  0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32);
-	WHBGfxInitFetchShader(&textureShader);
+	colour_VS = WHBGfxLoadGFDVertexShader(0, coloured_gsh);
+	colour_PS = WHBGfxLoadGFDPixelShader(0,  coloured_gsh);
+
+	texture_VS = WHBGfxLoadGFDVertexShader(0, textured_gsh);
+	texture_PS = WHBGfxLoadGFDPixelShader(0,  textured_gsh);
 }
 
 void Gfx_Create(void) {
@@ -128,10 +172,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 static void BindPendingTexture(void) {
-	if (!pendingTex || group != &textureShader) return;
+	if (!pendingTex || cur_VS == colour_VS) return;
 	
-	GX2SetPixelTexture(pendingTex, group->pixelShader->samplerVars[0].location);
-	GX2SetPixelSampler(&sampler,   group->pixelShader->samplerVars[0].location);
+	GX2SetPixelTexture(pendingTex, cur_PS->samplerVars[0].location);
+	GX2SetPixelSampler(&sampler,   cur_PS->samplerVars[0].location);
  	pendingTex = NULL;
 }
 
@@ -310,11 +354,13 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
+
+	cur_VS = fmt == VERTEX_FORMAT_TEXTURED ? texture_VS : colour_VS;
+	cur_PS = fmt == VERTEX_FORMAT_TEXTURED ? texture_PS : colour_PS;
 	
-	group = fmt == VERTEX_FORMAT_TEXTURED ? &textureShader : &colorShader;
-	GX2SetFetchShader(&group->fetchShader);
-	GX2SetVertexShader(group->vertexShader);
-	GX2SetPixelShader(group->pixelShader);
+	GX2SetFetchShader(fmt == VERTEX_FORMAT_TEXTURED ? &texture_FS : &colour_FS);
+	GX2SetVertexShader(cur_VS);
+	GX2SetPixelShader(cur_PS);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -350,8 +396,8 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	
 	// TODO dirty uniform
 	Matrix_Mul(&_mvp, &_view, &_proj);
-	if (!group) return;
-	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &_mvp);
+	if (!cur_VS) return;
+	GX2SetVertexUniformReg(cur_VS->uniformVars[0].offset, 16, &_mvp);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
