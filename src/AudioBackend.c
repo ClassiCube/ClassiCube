@@ -1206,8 +1206,11 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 
 cc_result Audio_Play(struct AudioContext* ctx) {
 	int format = (ctx->channels == 2) ? VOICE_STEREO_16BIT : VOICE_MONO_16BIT;
-	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, ctx->bufs[0].samples, ctx->bufs[0].size, ctx->volume, ctx->volume, (ctx->count > 1) ? MusicCallback : NULL);
-	if (ctx->count == 1) ctx->bufs[0].available = true;
+	cc_bool music = ctx->count > 1;
+
+	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, ctx->bufs[0].samples, ctx->bufs[0].size, 
+					ctx->volume, ctx->volume, music ? MusicCallback : NULL);
+	if (!music) ctx->bufs[0].available = true;
 
 	return 0;
 }

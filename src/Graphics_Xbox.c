@@ -555,11 +555,8 @@ static void UpdateVSConstants(void) {
 	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
 
 	// upload transformation matrix
-	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4 + 4 + 4);
-	Mem_Copy(p, &_mvp,     16 * 4); p += 16;
-	// Upload viewport too
-	Mem_Copy(p, &vp_scale,  4 * 4); p += 4;
-	Mem_Copy(p, &vp_offset, 4 * 4); p += 4;
+	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4);
+	Mem_Copy(p, &_mvp, 16 * 4); p += 16;
 	// Upload constants too
 	//struct Vec4 v = { 1, 1, 1, 1 };
 	//Mem_Copy(p, &v, 4 * 4); p += 4;
@@ -573,6 +570,16 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	*dst = *matrix;
 
 	Matrix_Mul(&_mvp, &_view, &_proj);
+
+	struct Matrix vp = Matrix_Identity;
+	vp.row1.x = vp_scale.x;
+	vp.row2.y = vp_scale.y;
+	vp.row3.z = 8388608;
+	vp.row4.x = vp_offset.x;
+	vp.row4.y = vp_offset.y;
+	vp.row4.z = 8388608;
+
+	Matrix_Mul(&_mvp, &_mvp, &vp);
 	UpdateVSConstants();
 }
 
