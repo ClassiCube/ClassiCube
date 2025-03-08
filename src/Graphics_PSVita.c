@@ -293,8 +293,6 @@ static void CreateFragmentPrograms(int index, const SceGxmProgram* fragProgram, 
 	{
 		FragmentProgram* FP = &FP_list[index + i];
 		sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, fragProgram, &programID);
-		
-		const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID); // TODO just use original program directly?
 
 		sceGxmShaderPatcherCreateFragmentProgram(gxm_shader_patcher,
 			programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,

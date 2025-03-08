@@ -184,8 +184,10 @@ static void BindPendingTexture(void) {
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	if (*texId == pendingTex) pendingTex = NULL;
+	GX2Texture* tex = (GX2Texture*)texId;
+	if (tex == pendingTex) pendingTex = NULL;
 	// TODO free memory ???
+	*texId = NULL;
 }
 
 void Gfx_EnableMipmaps(void) { }  // TODO
