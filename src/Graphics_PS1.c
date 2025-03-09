@@ -118,8 +118,6 @@ void Gfx_Create(void) {
 	InitGeom();
 	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
 	gte_SetGeomScreen(Window_Main.Height / 2);
-	
-	
 }
 
 void Gfx_Free(void) { 
@@ -853,161 +851,64 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	}
 }
 
-static void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
-							struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level);
-
-#define CalcMidpoint(mid, p1, p2) \
-	mid.x = (p1->x + p2->x) >> 1; \
-	mid.y = (p1->y + p2->y) >> 1; \
-	mid.z = (p1->z + p2->z) >> 1; \
-	mid.u = (p1->u + p2->u) >> 1; \
-	mid.v = (p1->v + p2->v) >> 1; \
-	mid.rgbc = p1->rgbc;
-
-static CC_NOINLINE void SubdivideQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
-						struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	if (level > 5) return;
-	int v1short = 0;
-	int v3short = 0;
-	int diff = v0->x - v1->x;
-	int mask = diff>>31;
-	int vertsize = (diff^mask)-mask;
-	diff = v0->y - v1->y;
-	mask = diff>>31;
-	vertsize += (diff^mask)-mask;
-	diff = v0->z - v1->z;
-	mask = diff>>31;
-	vertsize += (diff^mask)-mask;
-	if(vertsize < 128) v1short = 1;
-	diff = v0->x - v3->x;
-	mask = diff>>31;
-	vertsize = (diff^mask)-mask;
-	diff = v0->y - v3->y;
-	mask = diff>>31;
-	vertsize += (diff^mask)-mask;
-	diff = v0->z - v3->z;
-	mask = diff>>31;
-	vertsize += (diff^mask)-mask;
-	if(vertsize < 128) v3short = 1;
-	struct PS1VertexTextured m01, m02, m03, m12, m32;
-
-	// v0 --- m01 --- v1
-	//  |  \   | \    |
-	//  |    \ |   \  |
-	//m03 ----m02----m12
-	//  |  \   | \    |
-	//  |    \ |   \  |
-	// v3 ----m32---- v2
-	
-	if(v1short)
-	{
-		if(v3short)
-		{
-			DrawTexturedQuad(  v0,   v1, v2, v3, 3);
-			return;
-		}
-		
-		
-		CalcMidpoint(m03, v0, v3);
-		CalcMidpoint(m12, v1, v2);
-		
-		DrawTexturedQuad(  v0,   v1, &m12, &m03, level);
-		DrawTexturedQuad(&m03, &m12,   v2,   v3, level);
-	}
-	else
-	{
-		if(v3short)
-		{
-			CalcMidpoint(m01, v0, v1);
-			CalcMidpoint(m32, v3, v2);
-			
-			DrawTexturedQuad(  v0, &m01, &m32,   v3, level);
-			DrawTexturedQuad(&m01,   v1,   v2, &m32, level);
-	
-			return;
-		}
-		
-		CalcMidpoint(m02, v0, v2);
-		CalcMidpoint(m01, v0, v1);
-		CalcMidpoint(m32, v3, v2);
-		CalcMidpoint(m03, v0, v3);
-		CalcMidpoint(m12, v1, v2);
-
-		DrawTexturedQuad(  v0, &m01, &m02, &m03, level);
-		DrawTexturedQuad(&m01,   v1, &m12, &m02, level);
-		DrawTexturedQuad(&m02, &m12,   v2, &m32, level);
-		DrawTexturedQuad(&m03, &m02, &m32,   v3, level);
-	}
-	
-}
-
-void CrossProduct(IVec3* a, IVec3* b, IVec3* out)
-{
-	out->x = (a->y*b->z-a->z*b->y) >> 9;
-	out->y = (a->z*b->x-a->x*b->z) >> 9;
-	out->z = (a->x*b->y-a->y*b->x) >> 9;
-}
-
-static CC_INLINE void DrawTexturedQuad(struct PS1VertexTextured* v0, struct PS1VertexTextured* v1,
-							struct PS1VertexTextured* v2, struct PS1VertexTextured* v3, int level) {
-	int clipped = 0;
-	SVECTOR coord[4];
-	struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-	if (!poly) return;
-
-	setlen(poly, POLY_LEN_FT4);
-	poly->rgbc  = v0->rgbc | blend_mode;
-	
-	coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
-	coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
-	coord[2].vx = v2->x<<2; coord[2].vy = v2->y<<2; coord[2].vz = v2->z<<2;
-	coord[3].vx = v3->x<<2; coord[3].vy = v3->y<<2; coord[3].vz = v3->z<<2;
-	gte_ldv3(&coord[0],&coord[1],&coord[3]);
-	gte_rtpt();
-	int p = 0;
-	gte_nclip();
-	gte_stopz( &p );
-	
-	if( p > 0 ) return;
-	
-	
-	gte_avsz3();
-	gte_stotz( &p );
-	if(p == 0 || (p>>2) > OT_LENGTH) return;
-	gte_stsxy0( &poly->x0 );
-	gte_stsxy1( &poly->x1 );
-	gte_stsxy2( &poly->x2 );
-	gte_ldv0( &coord[2] );
-	gte_rtps();
-	gte_stsxy( &poly->x3 );
-	int uOffset = curTex->xOffset;
-	int vOffset = curTex->yOffset;
-	int uShift  = curTex->u_shift;
-	int vShift  = curTex->v_shift;
-		
-	
-	poly->u0 = (v1->u >> uShift) + uOffset;
-	poly->v0 = (v1->v >> vShift) + vOffset;
-	poly->u1 = (v0->u >> uShift) + uOffset;
-	poly->v1 = (v0->v >> vShift) + vOffset;
-	poly->u2 = (v2->u >> uShift) + uOffset;
-	poly->v2 = (v2->v >> vShift) + vOffset;
-	poly->u3 = (v3->u >> uShift) + uOffset;
-	poly->v3 = (v3->v >> vShift) + vOffset;
-	
-	poly->tpage = curTex->tpage;
-	poly->clut  = 0;
-	addPrim(&buffer->ot[p >> 2], poly);
-	
-	
-}
-
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
+		struct PS1VertexTextured* v  = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
+		struct PS1VertexTextured* v0 = &v[0];
+		struct PS1VertexTextured* v1 = &v[1];
+		struct PS1VertexTextured* v2 = &v[2];
+		struct PS1VertexTextured* v3 = &v[3];
 
-		DrawTexturedQuad(&v[0], &v[1], &v[2], &v[3], 0);
+		SVECTOR coord[4];
+		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
+		if (!poly) return;
+
+		setlen(poly, POLY_LEN_FT4);
+		poly->rgbc  = v0->rgbc | blend_mode;
+	
+		coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
+		coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
+		coord[2].vx = v2->x<<2; coord[2].vy = v2->y<<2; coord[2].vz = v2->z<<2;
+		coord[3].vx = v3->x<<2; coord[3].vy = v3->y<<2; coord[3].vz = v3->z<<2;
+		gte_ldv3(&coord[0], &coord[1], &coord[3]);
+		gte_rtpt();
+
+		// Check for backface culling
+		int p = 0;
+		gte_nclip();
+		gte_stopz( &p );
+		if (p > 0) continue;
+	
+		// Calculate Z depth
+		gte_avsz3();
+		gte_stotz( &p );
+		if (p == 0 || (p>>2) > OT_LENGTH) return;
+
+		gte_stsxy0( &poly->x0 );
+		gte_stsxy1( &poly->x1 );
+		gte_stsxy2( &poly->x2 );
+		gte_ldv0( &coord[2] );
+		gte_rtps();
+		gte_stsxy( &poly->x3 );
+
+		int uOffset = curTex->xOffset;
+		int vOffset = curTex->yOffset;
+		int uShift  = curTex->u_shift;
+		int vShift  = curTex->v_shift;	
+	
+		poly->u0 = (v1->u >> uShift) + uOffset;
+		poly->v0 = (v1->v >> vShift) + vOffset;
+		poly->u1 = (v0->u >> uShift) + uOffset;
+		poly->v1 = (v0->v >> vShift) + vOffset;
+		poly->u2 = (v2->u >> uShift) + uOffset;
+		poly->v2 = (v2->v >> vShift) + vOffset;
+		poly->u3 = (v3->u >> uShift) + uOffset;
+		poly->v3 = (v3->v >> vShift) + vOffset;
+	
+		poly->tpage = curTex->tpage;
+		poly->clut  = 0;
+		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
 

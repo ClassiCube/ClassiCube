@@ -48,6 +48,26 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
+static void InitScreen(void) {
+	int vid  = GetVideoMode();
+	int mode = (vid << 3) | GP1_HOR_RES_320 | GP1_VER_RES_240;
+	int yMid = vid ? 0xA3 : 0x88; // PAL has more vertical lines
+
+	int x1 = 0x260;
+	int x2 = 0x260 + 320 * 8;
+	int y1 = yMid - 120;
+	int y2 = yMid + 120;
+
+	int hor_range = (x1 & 0xFFF) | ((x2 & 0xFFF) << 12);
+	int ver_range = (y1 & 0x3FF) | ((y2 & 0x3FF) << 10);
+
+	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS  | 0;
+	GPU_GP1 = GP1_CMD_HORIZONTAL_RANGE | hor_range;
+	GPU_GP1 = GP1_CMD_VERTICAL_RANGE   | ver_range;
+	GPU_GP1 = GP1_CMD_VIDEO_MODE       | mode;
+	GPU_GP1 = GP1_CMD_DISPLAY_ACTIVE   | GP1_DISPLAY_ENABLED;
+}
+
 // Resets screen to an initial grey colour
 static void ClearScreen(void)
 {
@@ -65,9 +85,7 @@ void Window_Create2D(int width, int height) {
 	ResetGraph(0);
 	launcherMode = true;
 
-	SetDefDispEnv(&disp, 0, 0, SCREEN_XRES, SCREEN_YRES);
-	PutDispEnv(&disp);
-	SetDispMask(1);
+	InitScreen();
 	ClearScreen();
 }
 

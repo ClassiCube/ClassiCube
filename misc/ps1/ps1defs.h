@@ -28,11 +28,26 @@ enum gp0_polycmd_flags {
 };
 
 enum gp1_cmd_type {
-	GP1_CMD_DMA_MODE = 0x04000000,
+	GP1_CMD_DISPLAY_ACTIVE   = 0x03000000,
+	GP1_CMD_DMA_MODE         = 0x04000000,
+	GP1_CMD_DISPLAY_ADDRESS  = 0x05000000,
+	GP1_CMD_HORIZONTAL_RANGE = 0x06000000,
+	GP1_CMD_VERTICAL_RANGE   = 0x07000000,
+	GP1_CMD_VIDEO_MODE       = 0x08000000,
+};
+
+enum gp1_cmd_display {
+	GP1_DISPLAY_DISABLED = 1,
+	GP1_DISPLAY_ENABLED  = 0,
 };
 
 enum gp1_cmd_dma_mode {
 	GP1_DMA_NONE       = 0,
 	GP1_DMA_CPU_TO_GP0 = 2,
+};
+
+enum gp1_cmd_display_mode {
+	GP1_HOR_RES_320 = 1 << 0,
+	GP1_VER_RES_240 = 0 << 2,
 };
 
