@@ -17,7 +17,7 @@ jobs:
     container:
       image: ghcr.io/cross-rs/x86_64-unknown-netbsd:edge
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install prerequisites
         run: |
           apt-get update
