@@ -952,6 +952,17 @@ void LBackend_TableFlagAdded(struct LTable* w) {
 	LBackend_NeedsRedraw(w);
 }
 
+/* Works out top and height of the scrollbar */
+static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
+	float scale;
+	if (!w->rowsCount) { *y = 0; *height = 0; return; }
+
+	scale   = w->height / (float)w->rowsCount;
+	*y      = Math_Ceil(w->topRow * scale);
+	*height = Math_Ceil(w->visibleRows * scale);
+	*height = min(*y + *height, w->height) - *y;
+}
+
 /* Draws background behind column headers */
 static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridColor = BitmapColor_RGB(20, 20, 10);

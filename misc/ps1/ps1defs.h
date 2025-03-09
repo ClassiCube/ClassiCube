@@ -15,6 +15,7 @@ enum gpu_status_flags {
 
 
 enum gp0_cmd_type {
+	GP0_CMD_MEM_FILL         = 0x02000000,
 	GP0_CMD_CLEAR_VRAM_CACHE = 0x01000000,
 	GP0_CMD_TRANSFER_TO_VRAM = 0xA0000000,
 	GP0_CMD_POLYGON          = 0x20000000,

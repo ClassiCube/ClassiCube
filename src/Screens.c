@@ -1148,7 +1148,7 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 }
 
 static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
-	struct Texture tex;
+	GfxResourceID texID;
 	double now;
 	int i, logIdx;
 
@@ -1165,16 +1165,17 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 		Widget_Render2(&s->chat, 0);
 	} else {
 		/* Only render recent chat */
-		for (i = 0; i < s->chat.lines; i++) {
-			tex    = s->chat.textures[i];
+		for (i = 0; i < s->chat.lines; i++) 
+		{
+			texID  = s->chat.textures[i].ID;
+			if (!texID) continue;
 			logIdx = s->chatIndex + i;
-			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
 			/* Only draw chat within last 10 seconds */
 			if (Chat_GetLogTime(logIdx) + 10 < now) continue;
 			
-			Gfx_BindTexture(tex.ID);
+			Gfx_BindTexture(texID);
 			Gfx_DrawVb_IndexedTris_Range(4, i * 4, DRAW_HINT_SPRITE);
 		}
 	}

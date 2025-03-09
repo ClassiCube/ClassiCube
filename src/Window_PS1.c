@@ -16,6 +16,7 @@
 #include <psxetc.h>
 #include <psxgpu.h>
 #include <psxpad.h>
+#include "../misc/ps1/ps1defs.h"
 
 #define SCREEN_XRES	320
 #define SCREEN_YRES	240
@@ -47,6 +48,19 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
+// Resets screen to an initial grey colour
+static void ClearScreen(void)
+{
+	for (int i = 0; i < 10000; i++) 
+	{
+		if (GPU_GP1 & GPU_STATUS_CMD_READY) break;
+	}
+
+	GPU_GP0 = GP0_CMD_MEM_FILL | (0xCC << 16) | (0xCC << 8) | 0xCC;
+	GPU_GP0 =   0 | (  0 << 16);
+	GPU_GP0 = 320 | (200 << 16);
+}
+
 void Window_Create2D(int width, int height) {
 	ResetGraph(0);
 	launcherMode = true;
@@ -54,6 +68,7 @@ void Window_Create2D(int width, int height) {
 	SetDefDispEnv(&disp, 0, 0, SCREEN_XRES, SCREEN_YRES);
 	PutDispEnv(&disp);
 	SetDispMask(1);
+	ClearScreen();
 }
 
 void Window_Create3D(int width, int height) { 
