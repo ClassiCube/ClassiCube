@@ -87,7 +87,7 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_uint64 Stopwatch_Measure(void) {
-	return OSGetSystemTime(); // TODO OSGetSystemTick ??
+	return OSGetSystemTime();
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {

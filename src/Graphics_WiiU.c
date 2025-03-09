@@ -50,7 +50,7 @@ static void CompileFetchShader(GX2FetchShader* shader, const GX2AttribStream* at
    uint32_t size = GX2CalcFetchShaderSizeEx(numAttribs,
                                             GX2_FETCH_SHADER_TESSELLATION_NONE,
                                             GX2_TESSELLATION_MODE_DISCRETE);
-   void* program = MEMAllocFromDefaultHeapEx(size, GX2_SHADER_PROGRAM_ALIGNMENT); // TODO memalign
+   void* program = memalign(GX2_SHADER_PROGRAM_ALIGNMENT, size);
 
    GX2InitFetchShaderEx(shader, program, numAttribs, attribs,
                         GX2_FETCH_SHADER_TESSELLATION_NONE,

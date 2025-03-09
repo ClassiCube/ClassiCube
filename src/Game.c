@@ -685,7 +685,7 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 		Camera_KeyLookUpdate(delta);
-		InputHandler_Tick();
+		InputHandler_Tick(delta);
 
 		if (Game_Anaglyph3D) {
 			Render3D_Anaglyph(delta, t);

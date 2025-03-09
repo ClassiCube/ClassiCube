@@ -28,7 +28,7 @@
 
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
-static double input_lastClick;
+static float input_deltaAcc;
 static float input_fovIndex = -1.0f;
 #ifdef CC_BUILD_WEB
 static cc_bool suppressEscape;
@@ -273,7 +273,7 @@ static void MouseStateUpdate(int button, cc_bool pressed) {
 }
 
 static void MouseStatePress(int button) {
-	input_lastClick = Game.Time;
+	input_deltaAcc  = 0;
 	input_pickingId = -1;
 	MouseStateUpdate(button, true);
 }
@@ -285,7 +285,7 @@ static void MouseStateRelease(int button) {
 }
 
 void InputHandler_OnScreensChanged(void) {
-	input_lastClick = Game.Time;
+	input_deltaAcc  = 0;
 	input_pickingId = -1;
 	if (!Gui.InputGrab) return;
 
@@ -456,19 +456,18 @@ static void InputHandler_PickBlock(void) {
 #ifdef CC_BUILD_TOUCH
 static cc_bool AnyBlockTouches(void);
 #endif
-void InputHandler_Tick(void) {
+void InputHandler_Tick(float delta) {
 	cc_bool left, middle, right;
-	double now, delta;
 	
+	input_deltaAcc += delta;
 	if (Gui.InputGrab) return;
-	now   = Game.Time;
-	delta = now - input_lastClick;
 
-	if (delta < 0.2495) return; /* 4 times per second */
+	/* Only tick 4 times per second when held down */
+	if (input_deltaAcc < 0.2495f) return;
 	/* NOTE: 0.2495 is used instead of 0.25 to produce delta time */
 	/*  values slightly closer to the old code which measured */
 	/*  elapsed time using DateTime_CurrentUTC_MS() instead */
-	input_lastClick = now;
+	input_deltaAcc  = 0;
 
 	left   = input_buttonsDown[MOUSE_LEFT];
 	middle = input_buttonsDown[MOUSE_MIDDLE];
@@ -785,10 +784,10 @@ static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y, mask;
 
-	/* Always set last click time, otherwise quickly tapping */
+	/* Always reset held time, otherwise quickly tapping */
 	/* sometimes triggers a 'delete' in InputHandler_Tick, */
 	/* and then another 'delete' in CheckBlockTap. */
-	input_lastClick = Game.Time;
+	input_deltaAcc = 0;
 
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
