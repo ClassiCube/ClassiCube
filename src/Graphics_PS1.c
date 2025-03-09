@@ -443,8 +443,8 @@ static int buf_count;
 
 static void* gfx_vertices;
 
-#define XYZInteger(value) ((value) >> 6)
-#define XYZFixed(value) ((int)((value) * (1 << 6)))
+#define XYZInteger(value) ((value) >> 8)
+#define XYZFixed(value) ((int)((value) * (1 << 8)))
 #define UVFixed(value)  ((int)((value) * 1024.0f) & 0x3FF) // U/V wrapping not supported
 
 
@@ -589,45 +589,17 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-struct MatrixRow { int x, y, z, w; };
-static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
-MATRIX transform_matrix;
+static MATRIX transform_matrix;
+
 #define ToFixed(v) (int)(v * (1 << 12))
-#define ToFixedTr(v) (int)(v * (1 << 6))
+#define ToFixedTr(v) (int)(v * (1 << 8))
 
 static void LoadTransformMatrix(struct Matrix* src) {
-	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati	
-	mvp_trans.x = XYZFixed(1) * ToFixed(src->row4.x);
-	mvp_trans.y = XYZFixed(1) * ToFixed(src->row4.y);
-	mvp_trans.z = XYZFixed(1) * ToFixed(src->row4.z);
-	mvp_trans.w = XYZFixed(1) * ToFixed(src->row4.w);
-	
-	mvp_row1.x = ToFixed(src->row1.x);
-	mvp_row1.y = ToFixed(src->row1.y);
-	mvp_row1.z = ToFixed(src->row1.z);
-	mvp_row1.w = ToFixed(src->row1.w);
-	
-	mvp_row2.x = ToFixed(src->row2.x);
-	mvp_row2.y = ToFixed(src->row2.y);
-	mvp_row2.z = ToFixed(src->row2.z);
-	mvp_row2.w = ToFixed(src->row2.w);
-	
-	mvp_row3.x = ToFixed(src->row3.x);
-	mvp_row3.y = ToFixed(src->row3.y);
-	mvp_row3.z = ToFixed(src->row3.z);
-	mvp_row3.w = ToFixed(src->row3.w);
-
-	//Platform_Log4("X:  %f3, %f3, %f3, %f3", &src->row1.x, &src->row2.x, &src->row3.x, &src->row4.x);
-	//Platform_Log4("Y:  %f3, %f3, %f3, %f3", &src->row1.y, &src->row2.y, &src->row3.y, &src->row4.y);
-	//Platform_Log4("Z:  %f3, %f3, %f3, %f3", &src->row1.z, &src->row2.z, &src->row3.z, &src->row4.z);
-	//Platform_Log4("W:  %f3, %f3, %f3, %f3", &src->row1.w, &src->row2.w, &src->row3.w, &src->row4.w);
-	//Platform_LogConst("====");
-
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	transform_matrix.t[0] = ToFixedTr(src->row4.x)<<2;
-	transform_matrix.t[1] = ToFixedTr(-src->row4.y)<<2;
-	transform_matrix.t[2] = ToFixedTr(src->row4.w)<<2;
+	transform_matrix.t[0] = ToFixedTr(src->row4.x);
+	transform_matrix.t[1] = ToFixedTr(-src->row4.y);
+	transform_matrix.t[2] = ToFixedTr(src->row4.w);
 
 
 	transform_matrix.m[0][0] = ToFixed(src->row1.x);
@@ -719,48 +691,11 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 }
 
-static int Transform(IVec3* result, struct PS1VertexTextured* a) {
-	
-	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
-	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
-	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
-	int w = a->x * mvp_row1.w + a->y * mvp_row2.w + a->z * mvp_row3.w + mvp_trans.w;
-	if (w <= 0) return 1;
-	
-	result->x = (x *  160      / w) + 160; 
-	result->y = (y * -120      / w) + 120;
-	result->z = (z * OT_LENGTH / w);
-	
-	if(result->x > 640)
-	{
-		return 1;
-	}
-	else if(result->x < -320)
-	{
-		return 1;
-	}
-	
-	
-	if(result->y > 480)
-	{
-		return 1;
-	}
-	else if(result->y < -240)
-	{
-		return 1;
-	}
-	
-
-	
-	return z>w;
-}
-
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
+	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
 	return;
-	for (int i = 0; i < verticesCount; i += 4) 
-	{
-		struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex + i;
-		
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
+	{	
 		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
         if (!poly) return;
 
@@ -782,13 +717,12 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 }
 
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
+	struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex;	
 	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
 	int uShift  = curTex->u_shift, vShift  = curTex->v_shift;
 
-	for (int i = 0; i < verticesCount; i += 4) 
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
-		
 		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
         if (!poly) return;
 
@@ -837,10 +771,10 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		setlen(poly, POLY_LEN_F4);
 		poly->rgbc  = v0->rgbc;
 	
-		coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
-		coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
-		coord[2].vx = v2->x<<2; coord[2].vy = v2->y<<2; coord[2].vz = v2->z<<2;
-		coord[3].vx = v3->x<<2; coord[3].vy = v3->y<<2; coord[3].vz = v3->z<<2;
+		coord[0].vx = v0->x; coord[0].vy = v0->y; coord[0].vz = v0->z;
+		coord[1].vx = v1->x; coord[1].vy = v1->y; coord[1].vz = v1->z;
+		coord[2].vx = v2->x; coord[2].vy = v2->y; coord[2].vz = v2->z;
+		coord[3].vx = v3->x; coord[3].vy = v3->y; coord[3].vz = v3->z;
 		gte_ldv3(&coord[0], &coord[1], &coord[3]);
 		gte_rtpt();
 	
@@ -878,10 +812,10 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		setlen(poly, POLY_LEN_FT4);
 		poly->rgbc  = v0->rgbc | blend_mode;
 	
-		coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
-		coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
-		coord[2].vx = v2->x<<2; coord[2].vy = v2->y<<2; coord[2].vz = v2->z<<2;
-		coord[3].vx = v3->x<<2; coord[3].vy = v3->y<<2; coord[3].vz = v3->z<<2;
+		coord[0].vx = v0->x; coord[0].vy = v0->y; coord[0].vz = v0->z;
+		coord[1].vx = v1->x; coord[1].vy = v1->y; coord[1].vz = v1->z;
+		coord[2].vx = v2->x; coord[2].vy = v2->y; coord[2].vz = v2->z;
+		coord[3].vx = v3->x; coord[3].vy = v3->y; coord[3].vz = v3->z;
 		gte_ldv3(&coord[0], &coord[1], &coord[3]);
 		gte_rtpt();
 
