@@ -821,40 +821,51 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 }
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
-	{
-		struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex + i;
+	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
 
-		IVec3 coords[4];
-		int clipped = 0;
-		clipped |= Transform(&coords[0], &v[0]);
-		clipped |= Transform(&coords[1], &v[1]);
-		clipped |= Transform(&coords[2], &v[2]);
-		clipped |= Transform(&coords[3], &v[3]);
-		if (clipped) continue;
-		
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
+	{
+		struct PS1VertexColoured* v0 = &v[0];
+		struct PS1VertexColoured* v1 = &v[1];
+		struct PS1VertexColoured* v2 = &v[2];
+		struct PS1VertexColoured* v3 = &v[3];
+
+		SVECTOR coord[4];
 		struct CC_POLY_F4* poly = new_primitive(sizeof(struct CC_POLY_F4));
-        if (!poly) return;
+		if (!poly) return;
 
 		setlen(poly, POLY_LEN_F4);
-		poly->rgbc = v->rgbc;
+		poly->rgbc  = v0->rgbc;
+	
+		coord[0].vx = v0->x<<2; coord[0].vy = v0->y<<2; coord[0].vz = v0->z<<2;
+		coord[1].vx = v1->x<<2; coord[1].vy = v1->y<<2; coord[1].vz = v1->z<<2;
+		coord[2].vx = v2->x<<2; coord[2].vy = v2->y<<2; coord[2].vz = v2->z<<2;
+		coord[3].vx = v3->x<<2; coord[3].vy = v3->y<<2; coord[3].vz = v3->z<<2;
+		gte_ldv3(&coord[0], &coord[1], &coord[3]);
+		gte_rtpt();
+	
+		// Calculate Z depth
+		int p = 0;
+		gte_avsz3();
+		gte_stotz( &p );
+		if (p == 0 || (p>>2) > OT_LENGTH) continue;
 
-		poly->x0 = coords[1].x; poly->y0 = coords[1].y;
-		poly->x1 = coords[0].x; poly->y1 = coords[0].y;
-		poly->x2 = coords[2].x; poly->y2 = coords[2].y;
-		poly->x3 = coords[3].x; poly->y3 = coords[3].y;
-
-		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
-		if (p < 0 || p >= OT_LENGTH) continue;
+		gte_stsxy0( &poly->x0 );
+		gte_stsxy1( &poly->x1 );
+		gte_stsxy2( &poly->x2 );
+		gte_ldv0( &coord[2] );
+		gte_rtps();
+		gte_stsxy( &poly->x3 );
 
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
 
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
+	struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex;
+
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		struct PS1VertexTextured* v  = (struct PS1VertexTextured*)gfx_vertices + startVertex + i;
 		struct PS1VertexTextured* v0 = &v[0];
 		struct PS1VertexTextured* v1 = &v[1];
 		struct PS1VertexTextured* v2 = &v[2];
@@ -883,7 +894,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		// Calculate Z depth
 		gte_avsz3();
 		gte_stotz( &p );
-		if (p == 0 || (p>>2) > OT_LENGTH) return;
+		if (p == 0 || (p>>2) > OT_LENGTH) continue;
 
 		gte_stsxy0( &poly->x0 );
 		gte_stsxy1( &poly->x1 );
@@ -911,76 +922,6 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
-
-/*static void DrawQuads(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
-	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
-		
-		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
-        if (!poly) return;
-		setPolyF4(poly);
-
-		SVECTOR coords[4];
-		coords[0].vx = v[0].x; coords[0].vy = v[0].y; coords[0].vz = v[0].z;
-		coords[1].vx = v[1].x; coords[1].vy = v[1].y; coords[1].vz = v[1].z;
-		coords[2].vx = v[2].x; coords[2].vy = v[2].y; coords[2].vz = v[1].z;
-		coords[3].vx = v[3].x; coords[3].vy = v[3].y; coords[3].vz = v[3].z;
-
-		int X = coords[0].vx, Y = coords[0].vy, Z = coords[0].vz;
-		//Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
-		gte_ldv3(&coords[0], &coords[1], &coords[2]);
-		gte_rtpt();
-		gte_stsxy0(&poly->x0);
-
-		int p;
-		gte_avsz3();
-		gte_stotz( &p );
-
-		X = poly->x0; Y = poly->y0, Z = p;
-		//Platform_Log3("OUT: %i, %i, %i", &X, &Y, &Z);
-		if (((p >> 2) >= OT_LENGTH) || ((p >> 2) < 0))
-			continue;
-
-		gte_ldv0(&coords[3]);
-		gte_rtps();
-		gte_stsxy3(&poly->x1, &poly->x2, &poly->x3);
-
-		//poly->x0 = v[1].x; poly->y0 = v[1].y;
-		//poly->x1 = v[0].x; poly->y1 = v[0].y;
-		//poly->x2 = v[2].x; poly->y2 = v[2].y;
-		//poly->x3 = v[3].x; poly->y3 = v[3].y;
-
-		poly->r0 = PackedCol_R(v->Col);
-		poly->g0 = PackedCol_G(v->Col);
-		poly->b0 = PackedCol_B(v->Col);
-
-		addPrim(&buffer->ot[p >> 2], poly);
-	}
-}*/
-
-/*static void DrawQuads(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
-	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
-		
-		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
-        if (!poly) return;
-		setPolyF4(poly);
-
-		poly->x0 = v[1].x; poly->y0 = v[1].y;
-		poly->x1 = v[0].x; poly->y1 = v[0].y;
-		poly->x2 = v[2].x; poly->y2 = v[2].y;
-		poly->x3 = v[3].x; poly->y3 = v[3].y;
-
-		poly->r0 = PackedCol_R(v->Col);
-		poly->g0 = PackedCol_G(v->Col);
-		poly->b0 = PackedCol_B(v->Col);
-
-		int p = 0;
-		addPrim(&buffer->ot[p >> 2], poly);
-	}
-}*/
 
 static void DrawQuads(int verticesCount, int startVertex) {
 	if (gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
