@@ -26,9 +26,11 @@
 // crashes due to too many primitives being drawn, increase this value.
 #define BUFFER_LENGTH 32768
 
+#define wait_while(cond) while (cond) { __asm__ volatile(""); }
+
 typedef struct {
-	DISPENV disp_env;
 	DRAWENV draw_env;
+	uint32_t fb_pos;
 
 	uint32_t ot[OT_LENGTH];
 	//uint32_t oct[OCT_LENGTH];
@@ -43,24 +45,37 @@ static RenderBuffer* buffer;
 static void* lastPoly;
 static cc_bool cullingEnabled, noMemWarned;
 
+// Resets ordering table to reverse default order
+// TODO move wait until later
+static void ResetOTableR(uint32_t* ot) {
+	DMA_MADR(DMA_OTC) = (uint32_t)&ot[OT_LENGTH - 1];
+	DMA_BCR(DMA_OTC)  = OT_LENGTH;
+	DMA_CHCR(DMA_OTC) = CHRC_NO_DREQ_WAIT | CHRC_BEGIN_XFER | CHRC_DIR_DECREMENT;
+
+	wait_while(DMA_CHCR(DMA_OTC) & CHRC_STATUS_BUSY);
+}
+
 static void OnBufferUpdated(void) {
 	buffer          = &buffers[active_buffer];
 	next_packet     = buffer->buffer;
     next_packet_end = next_packet + BUFFER_LENGTH;
-	ClearOTagR(buffer->ot, OT_LENGTH);
-	//ClearOTagR(buffer->oct, OCT_LENGTH);
+
+	ResetOTableR(buffer->ot);
+}
+
+static void InitContext(RenderBuffer* buffer, int x, int y, int w, int h) {
+	SetDefDrawEnv(&buffer->draw_env, x, y, w, h);
+	buffer->draw_env.isbg = 1;
+
+	buffer->fb_pos = (x & 0x3ff) | ((y & 0x1ff) << 10);
 }
 
 static void SetupContexts(int w, int h, int r, int g, int b) {
-	SetDefDrawEnv(&buffers[0].draw_env, 0, 0, w, h);
-	SetDefDispEnv(&buffers[0].disp_env, 0, 0, w, h);
-	SetDefDrawEnv(&buffers[1].draw_env, 0, h, w, h);
-	SetDefDispEnv(&buffers[1].disp_env, 0, h, w, h);
+	InitContext(&buffers[0], 0, 0, w, h);
+	InitContext(&buffers[1], 0, h, w, h);
 
 	setRGB0(&buffers[0].draw_env, r, g, b);
 	setRGB0(&buffers[1].draw_env, r, g, b);
-	buffers[0].draw_env.isbg = 1;
-	buffers[1].draw_env.isbg = 1;
 	/*
 	buffers[0].draw_env.tw.w = 16;
 	buffers[0].draw_env.tw.h = 16;
@@ -110,8 +125,6 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *------------------------------------------------------VRAM transfers-----------------------------------------------------*
 *#########################################################################################################################*/
-#define wait_while(cond) while (cond) { __asm__ volatile(""); }
-
 static void WaitUntilFinished(void) {
 	// Wait until DMA to GPU has finished
 	wait_while((DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY));
@@ -147,13 +160,14 @@ void Gfx_TransferToVRAM(int x, int y, int w, int h, void* pixels) {
 	GPU_GP1 = GP1_CMD_DMA_MODE | GP1_DMA_CPU_TO_GP0;
 
 	// Wait until any prior DMA to GPU has finished
-	wait_while((DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY));
+	wait_while((DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY))
+
 	// Wait until GPU is ready to receive DMA data
 	wait_while(!(GPU_GP1 & GPU_STATUS_DMA_RECV_READY));
 
 	DMA_MADR(DMA_GPU) = (uint32_t)pixels;
 	DMA_BCR(DMA_GPU)  = block_size | (num_blocks << 16);
-	DMA_CHCR(DMA_GPU) = CHRC_BEGIN | CHRC_MODE_SLICE | CHRC_FROM_RAM;
+	DMA_CHCR(DMA_GPU) = CHRC_BEGIN_XFER | CHRC_MODE_SLICE | CHRC_FROM_RAM;
 
 	WaitUntilFinished();
 }
@@ -911,9 +925,11 @@ void Gfx_EndFrame(void) {
 	RenderBuffer* draw_buffer = &buffers[active_buffer];
 	RenderBuffer* disp_buffer = &buffers[active_buffer ^ 1];
 
-	PutDispEnv(&disp_buffer->disp_env);
+	// Use previous finished frame as display framebuffer
+	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS | disp_buffer->fb_pos;
+
+	// Start sending commands to GPU to draw this frame
 	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
-	//DrawOTagEnv(&draw_buffer->oct[OCT_LENGTH - 1], &draw_buffer->draw_env);
 
 	active_buffer ^= 1;
 	OnBufferUpdated();
@@ -942,20 +958,8 @@ void Gfx_SetViewport(int x, int y, int w, int h)
 	buffers[1].draw_env.clip.y = y;
 	buffers[1].draw_env.clip.w = w;
 	buffers[1].draw_env.clip.h = h;
-	
-	buffers[0].disp_env.disp.x = x;
-	buffers[0].disp_env.disp.y = y;
-	buffers[0].disp_env.disp.w = w;
-	buffers[0].disp_env.disp.h = h;
-	
-	buffers[1].disp_env.disp.x = x;
-	buffers[1].disp_env.disp.y = y;
-	buffers[1].disp_env.disp.w = w;
-	buffers[1].disp_env.disp.h = h;
 	//SetDefDrawEnv(&buffers[0].draw_env, x, y, w, h);
-	//SetDefDispEnv(&buffers[0].disp_env, x, y, w, h);
 	//SetDefDrawEnv(&buffers[1].draw_env, x, y+h, w, h);
-	//SetDefDispEnv(&buffers[1].disp_env, x, y+h, w, h);
 }
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 

@@ -66,6 +66,8 @@ static void InitScreen(void) {
 	GPU_GP1 = GP1_CMD_VERTICAL_RANGE   | ver_range;
 	GPU_GP1 = GP1_CMD_VIDEO_MODE       | mode;
 	GPU_GP1 = GP1_CMD_DISPLAY_ACTIVE   | GP1_DISPLAY_ENABLED;
+
+	GPU_GP1 = GP1_CMD_DMA_MODE | GP1_DMA_CPU_TO_GP0;
 }
 
 // Resets screen to an initial grey colour
@@ -91,7 +93,9 @@ void Window_Create2D(int width, int height) {
 
 void Window_Create3D(int width, int height) { 
 	ResetGraph(0);
-	launcherMode = false; 
+	launcherMode = false;
+
+	InitScreen();
 }
 
 void Window_Destroy(void) { }

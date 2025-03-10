@@ -3,9 +3,11 @@ enum dma_chrc_flags {
 };
 
 enum dma_chrc_CMD {
-	CHRC_FROM_RAM   = (1 << 0),
-	CHRC_BEGIN      = (1 << 24),
-	CHRC_MODE_SLICE = (1 << 9)
+	CHRC_FROM_RAM      = (1 << 0),
+	CHRC_DIR_DECREMENT = (1 << 1),
+	CHRC_MODE_SLICE    = (1 << 9),
+	CHRC_BEGIN_XFER    = (1 << 24),
+	CHRC_NO_DREQ_WAIT  = (1 << 28),
 };
 
 enum gpu_status_flags {
