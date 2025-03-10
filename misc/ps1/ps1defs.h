@@ -6,6 +6,7 @@ enum dma_chrc_CMD {
 	CHRC_FROM_RAM      = (1 << 0),
 	CHRC_DIR_DECREMENT = (1 << 1),
 	CHRC_MODE_SLICE    = (1 << 9),
+	CHRC_MODE_CHAIN    = (1 << 10),
 	CHRC_BEGIN_XFER    = (1 << 24),
 	CHRC_NO_DREQ_WAIT  = (1 << 28),
 };
@@ -21,12 +22,17 @@ enum gp0_cmd_type {
 	GP0_CMD_CLEAR_VRAM_CACHE = 0x01000000,
 	GP0_CMD_TRANSFER_TO_VRAM = 0xA0000000,
 	GP0_CMD_POLYGON          = 0x20000000,
+	GP0_CMD_RECTANGLE        = 0x60000000,
 };
 
 enum gp0_polycmd_flags {
 	POLY_CMD_QUAD     = 1u << 27,
 	POLY_CMD_TEXTURED = 1u << 26,
 	POLY_CMD_SEMITRNS = 1u << 25,
+};
+
+enum gp0_rectcmd_flags {
+	RECT_CMD_1x1 = 1u << 27,
 };
 
 enum gp1_cmd_type {

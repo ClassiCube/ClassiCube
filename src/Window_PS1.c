@@ -212,6 +212,10 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	// Fix not drawing in pcsx-redux software mode
+	GPU_GP0 = GP0_CMD_RECTANGLE | RECT_CMD_1x1;
+	GPU_GP0 = (0 << 16) | 0;
+
 	Gfx_TransferToVRAM(0, 0, SCREEN_XRES, SCREEN_YRES, bmp->scan0);
 }
 
