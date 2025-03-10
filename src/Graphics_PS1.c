@@ -36,9 +36,9 @@ typedef struct {
 } RenderBuffer;
 
 static RenderBuffer buffers[2];
-static uint8_t*     next_packet;
-static uint8_t*     next_packet_end;
-static int          active_buffer;
+static void*     next_packet;
+static uint8_t*  next_packet_end;
+static int       active_buffer;
 static RenderBuffer* buffer;
 static void* lastPoly;
 static cc_bool cullingEnabled, noMemWarned;
@@ -69,24 +69,6 @@ static void SetupContexts(int w, int h, int r, int g, int b) {
 	*/
 	active_buffer = 0;
 	OnBufferUpdated();
-}
-
-// NOINLINE to avoid polluting the hot path
-static CC_NOINLINE void* new_primitive_nomem(void) {
-	if (noMemWarned) return NULL;
-	noMemWarned = true;
-	
-	Platform_LogConst("OUT OF VERTEX RAM");
-	return NULL;
-}
-
-static void* new_primitive(int size) {
-	uint8_t* prim  = next_packet;
-	next_packet += size;
-
-	if (next_packet <= next_packet_end)
-		return (void*)prim;
-	return new_primitive_nomem();
 }
 
 static GfxResourceID white_square;
@@ -706,11 +688,13 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
+	struct CC_POLY_F4* poly = next_packet;
+	cc_uint8* max = next_packet_end - sizeof(*poly);
 	return;
+
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{	
-		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-        if (!poly) break;
+        if ((cc_uint8*)poly > max) break;
 
 		setlen(poly, POLY_LEN_F4);
 		poly->rgbc = v->rgbc;
@@ -726,7 +710,9 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 			addPrim(&buffer->ot[0], poly);
 		}
 		lastPoly = poly;
+		poly++;
 	}
+	next_packet = poly;
 }
 
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
@@ -734,10 +720,12 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
 	int uShift  = curTex->u_shift, vShift  = curTex->v_shift;
 
+	struct CC_POLY_FT4* poly = next_packet;
+	cc_uint8* max = next_packet_end - sizeof(*poly);
+
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-        if (!poly) break;
+        if ((cc_uint8*)poly > max) break;
 
 		setlen(poly, POLY_LEN_FT4);
 		poly->rgbc  = v->rgbc;
@@ -763,12 +751,19 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		} else {
 			addPrim(&buffer->ot[0], poly);
 		}
+
 		lastPoly = poly;
+		poly++;
 	}
+	next_packet = poly;
 }
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
+	uint32_t* ot = buffer->ot;
+
+	struct CC_POLY_F4* poly = next_packet;
+	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
@@ -776,14 +771,13 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexColoured* v1 = &v[1];
 		struct PS1VertexColoured* v2 = &v[2];
 		struct PS1VertexColoured* v3 = &v[3];
+		if ((cc_uint8*)poly > max) break;
 
-		struct CC_POLY_F4* poly = new_primitive(sizeof(struct CC_POLY_F4));
-		if (!poly) break;
-
-		setlen(poly, POLY_LEN_F4);
-		poly->rgbc = v0->rgbc;
 		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
 		gte_rtpt();
+		// rtpt takes 23 cycles
+		setlen(poly, POLY_LEN_F4);
+		poly->rgbc = v0->rgbc;
 	
 		// Calculate Z depth
 		int p = 0;
@@ -798,12 +792,24 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		gte_rtps();
 		gte_stsxy( &poly->x3 );
 
-		addPrim(&buffer->ot[p >> 2], poly);
+		addPrim(&ot[p >> 2], poly);
+		poly++;
 	}
+	next_packet = poly;
 }
 
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex;
+	int uOffset = curTex->xOffset;
+	int vOffset = curTex->yOffset;
+	int uShift  = curTex->u_shift;
+	int vShift  = curTex->v_shift;
+
+	int page = curTex->tpage;
+	uint32_t* ot = buffer->ot;
+
+	struct CC_POLY_FT4* poly = next_packet;
+	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
@@ -811,16 +817,13 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexTextured* v1 = &v[1];
 		struct PS1VertexTextured* v2 = &v[2];
 		struct PS1VertexTextured* v3 = &v[3];
-
-		SVECTOR coord[4];
-		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-		if (!poly) break;
-
-		setlen(poly, POLY_LEN_FT4);
-		poly->rgbc  = v0->rgbc | blend_mode;
+		if ((cc_uint8*)poly > max) break;
 	
 		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
 		gte_rtpt();
+		// rtpt takes 23 cycles
+		setlen(poly, POLY_LEN_FT4);
+		poly->rgbc  = v0->rgbc | blend_mode;
 
 		// Check for backface culling
 		int p = 0;
@@ -839,11 +842,6 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		gte_ldv0( &v2->xyz );
 		gte_rtps();
 		gte_stsxy( &poly->x3 );
-
-		int uOffset = curTex->xOffset;
-		int vOffset = curTex->yOffset;
-		int uShift  = curTex->u_shift;
-		int vShift  = curTex->v_shift;	
 	
 		poly->u0 = (v1->u >> uShift) + uOffset;
 		poly->v0 = (v1->v >> vShift) + vOffset;
@@ -854,10 +852,12 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		poly->u3 = (v3->u >> uShift) + uOffset;
 		poly->v3 = (v3->v >> vShift) + vOffset;
 	
-		poly->tpage = curTex->tpage;
+		poly->tpage = page;
 		poly->clut  = 0;
-		addPrim(&buffer->ot[p >> 2], poly);
+		addPrim(&ot[p >> 2], poly);
+		poly++;
 	}
+	next_packet = poly;
 }
 
 static void DrawQuads(int verticesCount, int startVertex) {
@@ -898,11 +898,13 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) {
-	lastPoly    = NULL;
-	noMemWarned = false;
+	lastPoly = NULL;
 }
 
 void Gfx_EndFrame(void) {
+	if ((cc_uint8*)next_packet >= next_packet_end - sizeof(struct CC_POLY_FT4)) {
+		Platform_LogConst("OUT OF VERTEX RAM");
+	}
 	DrawSync(0);
 	VSync(0);
 
