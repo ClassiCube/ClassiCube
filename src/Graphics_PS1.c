@@ -273,8 +273,8 @@ static int VRAM_CalcPage(int line) {
 typedef struct GPUTexture {
 	cc_uint16 width, height;
 	cc_uint8  u_shift, v_shift;
-	cc_uint16 line, tpage;
 	cc_uint8  xOffset, yOffset;
+	cc_uint16 tpage, line;
 } GPUTexture;
 static GPUTexture textures[TEXTURES_MAX_COUNT];
 static GPUTexture* curTex;
@@ -436,8 +436,9 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
 // Preprocess vertex buffers into optimised layout for PS1
-struct PS1VertexColoured { int x, y, z; unsigned rgbc; };
-struct PS1VertexTextured { int x, y, z; unsigned rgbc; int u, v; };
+// XYZ is stored in optimised form for 3D rendering and 2D rendering
+struct PS1VertexColoured { SVECTOR xyz; short xx, yy; unsigned rgbc; };
+struct PS1VertexTextured { SVECTOR xyz; short xx, yy; unsigned rgbc; int u, v; };
 static VertexFormat buf_fmt;
 static int buf_count;
 
@@ -494,9 +495,15 @@ static void PreprocessTexturedVertices(void) {
 	//  X = value * tex_size / 1024
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
-		dst->x = XYZFixed(src->x);
-		dst->y = XYZFixed(src->y);
-		dst->z = XYZFixed(src->z);
+		int x = XYZFixed(src->x);
+		int y = XYZFixed(src->y);
+		int z = XYZFixed(src->z);
+
+		dst->xyz.vx = x;
+		dst->xyz.vy = y;
+		dst->xyz.vz = z;
+		dst->xx = x >> 8;
+		dst->yy = y >> 8;
 		
 		u = src->U * 0.99f;
 		if(src->V == 1.0f)
@@ -528,9 +535,15 @@ static void PreprocessColouredVertices(void) {
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
-		dst->x = XYZFixed(src->x);
-		dst->y = XYZFixed(src->y);
-		dst->z = XYZFixed(src->z);
+		int x = XYZFixed(src->x);
+		int y = XYZFixed(src->y);
+		int z = XYZFixed(src->z);
+
+		dst->xyz.vx = x;
+		dst->xyz.vy = y;
+		dst->xyz.vz = z;
+		dst->xx = x >> 8;
+		dst->yy = y >> 8;
 
 		int R = PackedCol_R(src->Col);
 		int G = PackedCol_G(src->Col);
@@ -697,15 +710,15 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{	
 		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-        if (!poly) return;
+        if (!poly) break;
 
 		setlen(poly, POLY_LEN_F4);
 		poly->rgbc = v->rgbc;
 
-		poly->x0 = XYZInteger(v[1].x); poly->y0 = XYZInteger(v[1].y);
-		poly->x1 = XYZInteger(v[0].x); poly->y1 = XYZInteger(v[0].y);
-		poly->x2 = XYZInteger(v[2].x); poly->y2 = XYZInteger(v[2].y);
-		poly->x3 = XYZInteger(v[3].x); poly->y3 = XYZInteger(v[3].y);
+		poly->x0 = v[1].xx; poly->y0 = v[1].yy;
+		poly->x1 = v[0].xx; poly->y1 = v[0].yy;
+		poly->x2 = v[2].xx; poly->y2 = v[2].yy;
+		poly->x3 = v[3].xx; poly->y3 = v[3].yy;
 
 		if (lastPoly) { 
 			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
@@ -724,17 +737,17 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
 		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-        if (!poly) return;
+        if (!poly) break;
 
 		setlen(poly, POLY_LEN_FT4);
 		poly->rgbc  = v->rgbc;
 		poly->tpage = curTex->tpage;
 		poly->clut  = 0;
 
-		poly->x0 = XYZInteger(v[1].x); poly->y0 = XYZInteger(v[1].y);
-		poly->x1 = XYZInteger(v[0].x); poly->y1 = XYZInteger(v[0].y);
-		poly->x2 = XYZInteger(v[2].x); poly->y2 = XYZInteger(v[2].y);
-		poly->x3 = XYZInteger(v[3].x); poly->y3 = XYZInteger(v[3].y);
+		poly->x0 = v[1].xx; poly->y0 = v[1].yy;
+		poly->x1 = v[0].xx; poly->y1 = v[0].yy;
+		poly->x2 = v[2].xx; poly->y2 = v[2].yy;
+		poly->x3 = v[3].xx; poly->y3 = v[3].yy;
 		
 		poly->u0 = (v[1].u >> uShift) + uOffset;
 		poly->v0 = (v[1].v >> vShift) + vOffset;
@@ -764,18 +777,12 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexColoured* v2 = &v[2];
 		struct PS1VertexColoured* v3 = &v[3];
 
-		SVECTOR coord[4];
 		struct CC_POLY_F4* poly = new_primitive(sizeof(struct CC_POLY_F4));
-		if (!poly) return;
+		if (!poly) break;
 
 		setlen(poly, POLY_LEN_F4);
-		poly->rgbc  = v0->rgbc;
-	
-		coord[0].vx = v0->x; coord[0].vy = v0->y; coord[0].vz = v0->z;
-		coord[1].vx = v1->x; coord[1].vy = v1->y; coord[1].vz = v1->z;
-		coord[2].vx = v2->x; coord[2].vy = v2->y; coord[2].vz = v2->z;
-		coord[3].vx = v3->x; coord[3].vy = v3->y; coord[3].vz = v3->z;
-		gte_ldv3(&coord[0], &coord[1], &coord[3]);
+		poly->rgbc = v0->rgbc;
+		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
 		gte_rtpt();
 	
 		// Calculate Z depth
@@ -787,7 +794,7 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		gte_stsxy0( &poly->x0 );
 		gte_stsxy1( &poly->x1 );
 		gte_stsxy2( &poly->x2 );
-		gte_ldv0( &coord[2] );
+		gte_ldv0( &v2->xyz );
 		gte_rtps();
 		gte_stsxy( &poly->x3 );
 
@@ -807,16 +814,12 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 
 		SVECTOR coord[4];
 		struct CC_POLY_FT4* poly = new_primitive(sizeof(struct CC_POLY_FT4));
-		if (!poly) return;
+		if (!poly) break;
 
 		setlen(poly, POLY_LEN_FT4);
 		poly->rgbc  = v0->rgbc | blend_mode;
 	
-		coord[0].vx = v0->x; coord[0].vy = v0->y; coord[0].vz = v0->z;
-		coord[1].vx = v1->x; coord[1].vy = v1->y; coord[1].vz = v1->z;
-		coord[2].vx = v2->x; coord[2].vy = v2->y; coord[2].vz = v2->z;
-		coord[3].vx = v3->x; coord[3].vy = v3->y; coord[3].vz = v3->z;
-		gte_ldv3(&coord[0], &coord[1], &coord[3]);
+		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
 		gte_rtpt();
 
 		// Check for backface culling
@@ -833,7 +836,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		gte_stsxy0( &poly->x0 );
 		gte_stsxy1( &poly->x1 );
 		gte_stsxy2( &poly->x2 );
-		gte_ldv0( &coord[2] );
+		gte_ldv0( &v2->xyz );
 		gte_rtps();
 		gte_stsxy( &poly->x3 );
 
