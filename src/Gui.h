@@ -130,7 +130,7 @@ struct ScreenVTABLE {
 	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
 	int maxVertices; GfxResourceID vb; /* Vertex buffer storing the contents of the screen */ \
 	struct Widget** widgets; int numWidgets; /* The widgets/individual elements in the screen */ \
-	int selectedI, maxWidgets;
+	int selectedI, maxWidgets, widgetsPerPage;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
