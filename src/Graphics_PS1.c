@@ -20,7 +20,6 @@
 // this case. Larger values will allow for more granularity with depth (useful
 // when drawing a complex 3D scene) at the expense of RAM usage and performance.
 #define OT_LENGTH 512
-#define OCT_LENGTH 128
 
 // Size of the buffer GPU commands and primitives are written to. If the program
 // crashes due to too many primitives being drawn, increase this value.
@@ -28,12 +27,22 @@
 
 #define wait_while(cond) while (cond) { __asm__ volatile(""); }
 
+struct EnvPrimities {
+	uint32_t tag;
+	uint32_t tpage_code[1];
+	uint32_t twin_code[1];
+	uint32_t area_code[2];
+	uint32_t ofst_code[1];
+	uint32_t fill_code[3];
+};
+
 typedef struct {
-	DRAWENV draw_env;
+	struct EnvPrimities env;
+	int clipX, clipY, clipW, clipH;
+	int ofstX, ofstY;
 	uint32_t fb_pos;
 
 	uint32_t ot[OT_LENGTH];
-	//uint32_t oct[OCT_LENGTH];
 	uint8_t  buffer[BUFFER_LENGTH];
 } RenderBuffer;
 
@@ -41,14 +50,40 @@ static RenderBuffer buffers[2];
 static void*     next_packet;
 static uint8_t*  next_packet_end;
 static int       active_buffer;
-static RenderBuffer* buffer;
+static RenderBuffer* cur_buffer;
 static void* lastPoly;
 static cc_bool cullingEnabled, noMemWarned;
 
+static void BuildContext(RenderBuffer* buf) {
+	struct EnvPrimities* prim = &buf->env;
+	setaddr(&prim->tag, &buf->ot[OT_LENGTH - 1]);
+	setlen(&prim->tag, 8);
+
+	// Texture page (reset active page and set dither/mask bits)
+	prim->tpage_code[0] = GP0_CMD_TEXTURE_PAGE | (1 << 9);
+	prim->twin_code[0]  = GP0_CMD_TEXTURE_WINDOW;
+	prim->area_code[0]  = GP0_CMD_DRAW_MIN_PACK(buf->clipX, buf->clipY);
+	prim->area_code[1]  = GP0_CMD_DRAW_MAX_PACK(buf->clipX + buf->clipW - 1, buf->clipY + buf->clipH - 1);
+	prim->ofst_code[0]  = GP0_CMD_DRAW_OFFSET_PACK(buf->clipX + buf->ofstX, buf->clipY + buf->ofstY);
+	prim->fill_code[0]  = PACK_RGBC(0, 0, 0, GP0_CMD_MEM_FILL);
+	prim->fill_code[1]  = GP0_CMD_FILL_XY(buf->clipX, buf->clipY);
+	prim->fill_code[2]  = GP0_CMD_FILL_WH(buf->clipW, buf->clipH);
+}
+
+static void InitContext(RenderBuffer* buf, int x, int y, int w, int h) {
+	buf->clipX  = x;
+	buf->clipY  = y;
+	buf->clipW  = w;
+	buf->clipH  = h;
+	buf->fb_pos = GP1_CMD_DISPLAY_ADDRESS_XY(x, y);
+
+	BuildContext(buf);
+}
+
 // Resets ordering table to reverse default order
 // TODO move wait until later
-static void ResetOTableR(uint32_t* ot) {
-	DMA_MADR(DMA_OTC) = (uint32_t)&ot[OT_LENGTH - 1];
+static void ResetOTableR(RenderBuffer* buf) {
+	DMA_MADR(DMA_OTC) = (uint32_t)&buf->ot[OT_LENGTH - 1];
 	DMA_BCR(DMA_OTC)  = OT_LENGTH;
 	DMA_CHCR(DMA_OTC) = CHRC_NO_DREQ_WAIT | CHRC_BEGIN_XFER | CHRC_DIR_DECREMENT;
 
@@ -56,32 +91,17 @@ static void ResetOTableR(uint32_t* ot) {
 }
 
 static void OnBufferUpdated(void) {
-	buffer          = &buffers[active_buffer];
-	next_packet     = buffer->buffer;
+	cur_buffer      = &buffers[active_buffer];
+	next_packet     = cur_buffer->buffer;
     next_packet_end = next_packet + BUFFER_LENGTH;
 
-	ResetOTableR(buffer->ot);
+	ResetOTableR(cur_buffer);
 }
 
-static void InitContext(RenderBuffer* buffer, int x, int y, int w, int h) {
-	SetDefDrawEnv(&buffer->draw_env, x, y, w, h);
-	buffer->draw_env.isbg = 1;
-
-	buffer->fb_pos = (x & 0x3ff) | ((y & 0x1ff) << 10);
-}
-
-static void SetupContexts(int w, int h, int r, int g, int b) {
+static void SetupContexts(int w, int h) {
 	InitContext(&buffers[0], 0, 0, w, h);
 	InitContext(&buffers[1], 0, h, w, h);
 
-	setRGB0(&buffers[0].draw_env, r, g, b);
-	setRGB0(&buffers[1].draw_env, r, g, b);
-	/*
-	buffers[0].draw_env.tw.w = 16;
-	buffers[0].draw_env.tw.h = 16;
-	buffers[1].draw_env.tw.w = 16;
-	buffers[1].draw_env.tw.h = 16;
-	*/
 	active_buffer = 0;
 	OnBufferUpdated();
 }
@@ -108,9 +128,8 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	
 	Gfx_RestoreState();
-
-	SetupContexts(Window_Main.Width, Window_Main.Height, 63, 0, 127);
-	SetDispMask(1);
+	SetupContexts(Window_Main.Width, Window_Main.Height);
+	Gfx_ClearColor(PackedCol_Make(63, 0, 127, 255));
 
 	InitGeom();
 	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
@@ -396,8 +415,9 @@ void Gfx_ClearColor(PackedCol color) {
 	int g = PackedCol_G(color);
 	int b = PackedCol_B(color);
 
-	setRGB0(&buffers[0].draw_env, r, g, b);
-	setRGB0(&buffers[1].draw_env, r, g, b);
+	uint32_t packed = PACK_RGBC(r, g, b, GP0_CMD_MEM_FILL);
+	buffers[0].env.fill_code[0] = packed;
+	buffers[1].env.fill_code[0] = packed;
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
@@ -444,37 +464,6 @@ static void* gfx_vertices;
 #define XYZFixed(value) ((int)((value) * (1 << 8)))
 #define UVFixed(value)  ((int)((value) * 1024.0f) & 0x3FF) // U/V wrapping not supported
 
-
-#define POLY_CODE_F4 (GP0_CMD_POLYGON | POLY_CMD_QUAD)
-#define POLY_LEN_F4  5
-struct CC_POLY_F4 {
-	uint32_t tag;
-	uint32_t rgbc; // r0, g0, b0, code;
-	int16_t	 x0, y0;
-	int16_t	 x1, y1;
-	int16_t	 x2, y2;
-	int16_t	 x3, y3;
-};
-
-#define POLY_CODE_FT4 (GP0_CMD_POLYGON | POLY_CMD_QUAD | POLY_CMD_TEXTURED)
-#define POLY_LEN_FT4  9
-struct CC_POLY_FT4 {
-	uint32_t tag;
-	uint32_t rgbc; // r0, g0, b0, code;
-	uint16_t x0, y0;
-	uint8_t	 u0, v0;
-	uint16_t clut;
-	int16_t  x1, y1;
-	uint8_t	 u1, v1;
-	uint16_t tpage;
-	int16_t	 x2, y2;
-	uint8_t	 u2, v2;
-	uint16_t pad0;
-	int16_t	 x3, y3;
-	uint8_t	 u3, v3;
-	uint16_t pad1;
-};
-
 static void PreprocessTexturedVertices(void) {
 	struct PS1VertexTextured* dst = gfx_vertices;
 	struct VertexTextured* src    = gfx_vertices;
@@ -502,16 +491,7 @@ static void PreprocessTexturedVertices(void) {
 		dst->yy = y >> 8;
 		
 		u = src->U * 0.99f;
-		if(src->V == 1.0f)
-		{
-			v = 0.99f;
-		}
-		else
-		{
-			v = src->V;
-		}
-		//u = src->U * 0.99f;
-		//v = src->V == 1.0f ? 0.99f : src->V;
+		v = src->V == 1.0f ? 0.99f : src->V;
 
 		dst->u = UVFixed(u);
 		dst->v = UVFixed(v);
@@ -521,7 +501,7 @@ static void PreprocessTexturedVertices(void) {
 		int R = PackedCol_R(src->Col) >> 1;
 		int G = PackedCol_G(src->Col) >> 1;
 		int B = PackedCol_B(src->Col) >> 1;
-		dst->rgbc = R | (G << 8) | (B << 16) | POLY_CODE_FT4;
+		dst->rgbc = PACK_RGBC(R, G, B, POLY_CODE_FT4);
 	}
 }
 
@@ -544,7 +524,7 @@ static void PreprocessColouredVertices(void) {
 		int R = PackedCol_R(src->Col);
 		int G = PackedCol_G(src->Col);
 		int B = PackedCol_B(src->Col);
-		dst->rgbc = R | (G << 8) | (B << 16) | POLY_CODE_F4;
+		dst->rgbc = PACK_RGBC(R, G, B, POLY_CODE_F4);
 	}
 }
 
@@ -702,7 +682,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
-	struct CC_POLY_F4* poly = next_packet;
+	struct PSX_POLY_F4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 	return;
 
@@ -721,7 +701,7 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		if (lastPoly) { 
 			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
 		} else {
-			addPrim(&buffer->ot[0], poly);
+			addPrim(&cur_buffer->ot[0], poly);
 		}
 		lastPoly = poly;
 		poly++;
@@ -734,7 +714,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
 	int uShift  = curTex->u_shift, vShift  = curTex->v_shift;
 
-	struct CC_POLY_FT4* poly = next_packet;
+	struct PSX_POLY_FT4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -763,7 +743,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		if (lastPoly) { 
 			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
 		} else {
-			addPrim(&buffer->ot[0], poly);
+			addPrim(&cur_buffer->ot[0], poly);
 		}
 
 		lastPoly = poly;
@@ -774,9 +754,9 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
-	uint32_t* ot = buffer->ot;
+	uint32_t* ot = cur_buffer->ot;
 
-	struct CC_POLY_F4* poly = next_packet;
+	struct PSX_POLY_F4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -820,9 +800,9 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	int vShift  = curTex->v_shift;
 
 	int page = curTex->tpage;
-	uint32_t* ot = buffer->ot;
+	uint32_t* ot = cur_buffer->ot;
 
-	struct CC_POLY_FT4* poly = next_packet;
+	struct PSX_POLY_FT4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -915,8 +895,16 @@ void Gfx_BeginFrame(void) {
 	lastPoly = NULL;
 }
 
+static void SendDrawCommands(RenderBuffer* buf) {
+	wait_while(DMA_CHCR(DMA_GPU) & CHRC_STATUS_BUSY);
+
+	DMA_MADR(DMA_GPU) = (uint32_t)&buf->env.tag;
+	DMA_BCR(DMA_GPU)  = 0;
+	DMA_CHCR(DMA_GPU) = CHRC_BEGIN_XFER | CHRC_MODE_CHAIN | CHRC_FROM_RAM;
+}
+
 void Gfx_EndFrame(void) {
-	if ((cc_uint8*)next_packet >= next_packet_end - sizeof(struct CC_POLY_FT4)) {
+	if ((cc_uint8*)next_packet >= next_packet_end - sizeof(struct PSX_POLY_FT4)) {
 		Platform_LogConst("OUT OF VERTEX RAM");
 	}
 	DrawSync(0);
@@ -929,7 +917,7 @@ void Gfx_EndFrame(void) {
 	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS | disp_buffer->fb_pos;
 
 	// Start sending commands to GPU to draw this frame
-	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
+	SendDrawCommands(cur_buffer);
 
 	active_buffer ^= 1;
 	OnBufferUpdated();
@@ -943,24 +931,7 @@ void Gfx_OnWindowResize(void) {
 	// TODO
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h)
-{ 
-	//DR_ENV *prim = &(buffers[0].draw_env.dr_env);
-	//setDrawAreaXY(&(prim->offset),x,y,x+w,y+h);
-	//prim = &(buffers[1].draw_env.dr_env);
-	//setDrawAreaXY(&(prim->offset),x,y,x+w,y+h);
-	buffers[0].draw_env.clip.x = x;
-	buffers[0].draw_env.clip.y = y;
-	buffers[0].draw_env.clip.w = w;
-	buffers[0].draw_env.clip.h = h;
-	
-	buffers[1].draw_env.clip.x = x;
-	buffers[1].draw_env.clip.y = y;
-	buffers[1].draw_env.clip.w = w;
-	buffers[1].draw_env.clip.h = h;
-	//SetDefDrawEnv(&buffers[0].draw_env, x, y, w, h);
-	//SetDefDrawEnv(&buffers[1].draw_env, x, y+h, w, h);
-}
+void Gfx_SetViewport(int x, int y, int w, int h) { } // TODO
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 void Gfx_GetApiInfo(cc_string* info) {

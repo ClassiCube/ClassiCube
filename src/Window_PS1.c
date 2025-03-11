@@ -61,7 +61,7 @@ static void InitScreen(void) {
 	int hor_range = (x1 & 0xFFF) | ((x2 & 0xFFF) << 12);
 	int ver_range = (y1 & 0x3FF) | ((y2 & 0x3FF) << 10);
 
-	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS  | 0;
+	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS  | GP1_CMD_DISPLAY_ADDRESS_XY(0, 0);
 	GPU_GP1 = GP1_CMD_HORIZONTAL_RANGE | hor_range;
 	GPU_GP1 = GP1_CMD_VERTICAL_RANGE   | ver_range;
 	GPU_GP1 = GP1_CMD_VIDEO_MODE       | mode;
@@ -78,9 +78,9 @@ static void ClearScreen(void)
 		if (GPU_GP1 & GPU_STATUS_CMD_READY) break;
 	}
 
-	GPU_GP0 = GP0_CMD_MEM_FILL | (0xCC << 16) | (0xCC << 8) | 0xCC;
-	GPU_GP0 =   0 | (  0 << 16);
-	GPU_GP0 = 320 | (200 << 16);
+	GPU_GP0 = PACK_RGBC(0xCC, 0xCC, 0xCC, GP0_CMD_MEM_FILL);
+	GPU_GP0 = GP0_CMD_FILL_XY(0, 0);
+	GPU_GP0 = GP0_CMD_FILL_WH(320, 200);
 }
 
 void Window_Create2D(int width, int height) {
@@ -213,8 +213,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// Fix not drawing in pcsx-redux software mode
-	GPU_GP0 = GP0_CMD_RECTANGLE | RECT_CMD_1x1;
-	GPU_GP0 = (0 << 16) | 0;
+	GPU_GP0 = PACK_RGBC(0, 0, 0, GP0_CMD_MEM_FILL);
+	GPU_GP0 = GP0_CMD_FILL_XY(0, 0);
+	GPU_GP0 = GP0_CMD_FILL_WH(1, 1);
 
 	Gfx_TransferToVRAM(0, 0, SCREEN_XRES, SCREEN_YRES, bmp->scan0);
 }
