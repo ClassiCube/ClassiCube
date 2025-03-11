@@ -222,13 +222,18 @@ void Gamepad_Tick(float delta);
 #define GAMEPAD_BEG_BTN CCPAD_1
 #define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
 
-
+struct PadAxisUpdate {
+	int port, axis;
+	float x, y;
+	int xSteps, ySteps;
+};
 struct GamepadDevice {
 	struct InputDevice base;
 	long deviceID;
 	float axisX[2], axisY[2];
 	cc_bool pressed[GAMEPAD_BTN_COUNT];
 	float holdtime[GAMEPAD_BTN_COUNT];
+	float padXAcc, padYAcc;
 };
 extern struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
 int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults);

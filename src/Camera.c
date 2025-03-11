@@ -280,11 +280,11 @@ static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY, 0);
 }
 
-static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, struct PadAxisUpdate* upd) {
 	if (!Input.RawMode) return;
-	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_CAMERA) return;
+	if (Gamepad_AxisBehaviour[upd->axis] != AXIS_BEHAVIOUR_CAMERA) return;
 
-	Camera.Active->OnRawMovement(x, y, port);
+	Camera.Active->OnRawMovement(upd->x, upd->y, upd->port);
 }
 
 static void OnHacksChanged(void* obj) {

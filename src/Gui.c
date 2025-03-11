@@ -626,7 +626,7 @@ static void OnPointerMove(void* obj, int idx) {
 	}
 }
 
-static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, struct PadAxisUpdate* upd) {
 	struct Screen* s;
 	int i;
 	
@@ -635,7 +635,7 @@ static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
 		if (!s->VTABLE->HandlesPadAxis) continue;
 
 		s->dirty = true;
-		if (s->VTABLE->HandlesPadAxis(s, axis, x, y)) return;
+		if (s->VTABLE->HandlesPadAxis(s, upd)) return;
 	}
 }
 

@@ -1795,10 +1795,10 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 	return Elem_HandlesMouseScroll(&s->table, delta);
 }
 
-static int InventoryScreen_PadAxis(void* screen, int axis, float x, float y) {
+static int InventoryScreen_PadAxis(void* screen, struct PadAxisUpdate* upd) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 
-	return Elem_HandlesPadAxis(&s->table, axis, x, y);
+	return Elem_HandlesPadAxis(&s->table, upd);
 }
 
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {

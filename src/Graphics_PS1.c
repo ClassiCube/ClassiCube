@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <psxgpu.h>
 #include <psxgte.h>
-#include <psxpad.h>
 #include <psxapi.h>
 #include <psxetc.h>
 #include <inline_c.h>
@@ -907,7 +906,7 @@ void Gfx_EndFrame(void) {
 	if ((cc_uint8*)next_packet >= next_packet_end - sizeof(struct PSX_POLY_FT4)) {
 		Platform_LogConst("OUT OF VERTEX RAM");
 	}
-	DrawSync(0);
+	WaitUntilFinished();
 	VSync(0);
 
 	RenderBuffer* draw_buffer = &buffers[active_buffer];
