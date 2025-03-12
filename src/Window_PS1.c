@@ -24,9 +24,12 @@
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
-static DISPENV disp;
+static int gpu_video_mode;
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) {
+	gpu_video_mode = (GPU_GP1 >> 20) & 1;
+}
+
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_XRES;
 	DisplayInfo.Height = SCREEN_YRES;
@@ -49,7 +52,7 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void InitScreen(void) {
-	int vid  = GetVideoMode();
+	int vid  = gpu_video_mode;
 	int mode = (vid << 3) | GP1_HOR_RES_320 | GP1_VER_RES_240;
 	int yMid = vid ? 0xA3 : 0x88; // PAL has more vertical lines
 
@@ -82,9 +85,10 @@ static void ClearScreen(void)
 	GPU_GP0 = GP0_CMD_FILL_XY(0, 0);
 	GPU_GP0 = GP0_CMD_FILL_WH(320, 200);
 }
+extern void Gfx_ResetGPU(void);
 
 void Window_Create2D(int width, int height) {
-	ResetGraph(0);
+	Gfx_ResetGPU();
 	launcherMode = true;
 
 	InitScreen();
@@ -92,7 +96,7 @@ void Window_Create2D(int width, int height) {
 }
 
 void Window_Create3D(int width, int height) { 
-	ResetGraph(0);
+	Gfx_ResetGPU();
 	launcherMode = false;
 
 	InitScreen();

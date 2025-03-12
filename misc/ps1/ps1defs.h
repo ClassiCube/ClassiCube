@@ -41,6 +41,7 @@ enum gp0_rectcmd_flags {
 };
 
 enum gp1_cmd_type {
+	GP1_CMD_RESET_GPU        = 0x00000000,
 	GP1_CMD_DISPLAY_ACTIVE   = 0x03000000,
 	GP1_CMD_DMA_MODE         = 0x04000000,
 	GP1_CMD_DISPLAY_ADDRESS  = 0x05000000,

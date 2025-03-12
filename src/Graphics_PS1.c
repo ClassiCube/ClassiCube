@@ -14,7 +14,52 @@
 #include "../misc/ps1/ps1defs.h"
 // Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
 
+#define wait_while(cond) while (cond) { __asm__ volatile(""); }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------GPU management-----------------------------------------------------*
+*#########################################################################################################################*/
+static volatile cc_uint32 vblank_count;
+
+static void vblank_handler(void) { vblank_count++; }
+
+#define DMA_IDX_GPU (DMA_GPU * 4)
+#define DMA_IDX_OTC (DMA_OTC * 4)
+
+void Gfx_ResetGPU(void) {
+	int needs_exit = EnterCriticalSection();
+	InterruptCallback(IRQ_VBLANK, &vblank_handler);
+	if (needs_exit) ExitCriticalSection();
+
+	GPU_GP1 = GP1_CMD_RESET_GPU;
+	ChangeClearPAD(0);
+
+	// Enable GPU and OTC DMA channels at priority 3
+	DMA_DPCR |= (0xB << DMA_IDX_GPU) | (0xB << DMA_IDX_OTC);
+
+	// Stop pending DMA
+	DMA_CHCR(DMA_GPU) = CHRC_MODE_SLICE | CHRC_FROM_RAM;
+	DMA_CHCR(DMA_OTC) = CHRC_MODE_SLICE;
+}
+
+void Gfx_VSync(void) {
+	cc_uint32 counter = vblank_count;
+
+	for (int i = 0; i < 0x100000; i++) 
+	{
+		if (counter != vblank_count) return;
+	}
+
+	// VSync IRQ may be swallowed by BIOS, try to undo that
+	Platform_LogConst("VSync timed out");
+	ChangeClearPAD(0);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Render buffers-----------------------------------------------------*
+*#########################################################################################################################*/
 // Length of the ordering table, i.e. the range Z coordinates can have, 0-15 in
 // this case. Larger values will allow for more granularity with depth (useful
 // when drawing a complex 3D scene) at the expense of RAM usage and performance.
@@ -23,8 +68,6 @@
 // Size of the buffer GPU commands and primitives are written to. If the program
 // crashes due to too many primitives being drawn, increase this value.
 #define BUFFER_LENGTH 32768
-
-#define wait_while(cond) while (cond) { __asm__ volatile(""); }
 
 struct EnvPrimities {
 	uint32_t tag;
@@ -51,7 +94,6 @@ static uint8_t*  next_packet_end;
 static int       active_buffer;
 static RenderBuffer* cur_buffer;
 static void* lastPoly;
-static cc_bool cullingEnabled, noMemWarned;
 
 static void BuildContext(RenderBuffer* buf) {
 	struct EnvPrimities* prim = &buf->env;
@@ -105,7 +147,13 @@ static void SetupContexts(int w, int h) {
 	OnBufferUpdated();
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------------------General--------------------------------------------------------*
+*#########################################################################################################################*/
 static GfxResourceID white_square;
+static cc_bool cullingEnabled;
+
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
@@ -907,7 +955,7 @@ void Gfx_EndFrame(void) {
 		Platform_LogConst("OUT OF VERTEX RAM");
 	}
 	WaitUntilFinished();
-	VSync(0);
+	Gfx_VSync();
 
 	RenderBuffer* draw_buffer = &buffers[active_buffer];
 	RenderBuffer* disp_buffer = &buffers[active_buffer ^ 1];
