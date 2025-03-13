@@ -37,12 +37,10 @@ extern cc_string Game_Mppass;
 	#define Game_NumStates 1
 #endif
 
-#if defined CC_BUILD_N64
+#if defined CC_BUILD_N64 || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
     #define DEFAULT_VIEWDIST 20
-#elif defined CC_BUILD_NDS || defined CC_BUILD_SATURN
+#elif defined CC_BUILD_NDS
     #define DEFAULT_VIEWDIST 192
-#elif defined CC_BUILD_PS1
-    #define DEFAULT_VIEWDIST 64
 #else
     #define DEFAULT_VIEWDIST 512
 #endif

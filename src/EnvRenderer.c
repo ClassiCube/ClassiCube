@@ -22,7 +22,12 @@
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
-#define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 2048)
+static CC_INLINE int EnvRenderer_AxisSize(void) {
+	if (Gfx.Limitations & GFX_LIMIT_MAX_VERTEX_SIZE) return 8;
+
+	return EnvRenderer_Legacy ? 128 : 2048;
+}
+
 /* Returns the number of vertices needed to subdivide a quad */
 static int CalcNumVertices(int axis1Len, int axis2Len) {
 	int axisSize = EnvRenderer_AxisSize();
@@ -189,7 +194,7 @@ static CC_NOINLINE void BuildClouds(void) {
 
 void EnvRenderer_RenderClouds(void) {
 	float offset;
-	if (Env.CloudsHeight < -2000) return;
+	if (Env.CloudsHeight < -2000 || !clouds_tex) return;
 
 	if (!clouds_vb) {
 		BuildClouds();

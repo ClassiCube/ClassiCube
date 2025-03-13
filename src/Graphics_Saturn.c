@@ -9,7 +9,7 @@
 
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 224
-#define CMDS_COUNT 400
+#define CMDS_COUNT 450
 #define HDR_CMDS 2
 
 static struct {
@@ -120,7 +120,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 16; // 128
 	Gfx.Created      = true;
-	Gfx.Limitations  = GFX_LIMIT_NO_UV_SUPPORT;
+	Gfx.Limitations  = GFX_LIMIT_NO_UV_SUPPORT | GFX_LIMIT_MAX_VERTEX_SIZE;
 }
 
 void Gfx_Free(void) { 

@@ -69,7 +69,7 @@ CC_VAR extern struct _GfxData {
 	/* Whether the graphics backend supports non power of two textures */
 	cc_bool SupportsNonPowTwoTextures;
 	/* Limitations of the graphics backend, see GFX_LIMIT values */
-	cc_bool Limitations;
+	cc_uint8 Limitations;
 	/* Type of the backend (e.g. OpenGL, Direct3D 9, etc)*/
 	cc_uint8 BackendType;
 	cc_bool __pad;
@@ -91,6 +91,8 @@ CC_VAR extern struct _GfxData {
 /* Whether the graphics backend requires very large quads to be broken */
 /*  up into smaller quads, to reduce fog interpolation artifacts */
 #define GFX_LIMIT_VERTEX_ONLY_FOG 0x02
+/* Whether the graphics backend only supports a small maximum quad size */
+#define GFX_LIMIT_MAX_VERTEX_SIZE 0x04
 
 extern const cc_string Gfx_LowPerfMessage;
 

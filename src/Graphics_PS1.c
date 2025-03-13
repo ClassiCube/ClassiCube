@@ -106,6 +106,7 @@ static void BuildContext(RenderBuffer* buf) {
 	prim->area_code[0]  = GP0_CMD_DRAW_MIN_PACK(buf->clipX, buf->clipY);
 	prim->area_code[1]  = GP0_CMD_DRAW_MAX_PACK(buf->clipX + buf->clipW - 1, buf->clipY + buf->clipH - 1);
 	prim->ofst_code[0]  = GP0_CMD_DRAW_OFFSET_PACK(buf->clipX + buf->ofstX, buf->clipY + buf->ofstY);
+	// VRAM clear command
 	prim->fill_code[0]  = PACK_RGBC(0, 0, 0, GP0_CMD_MEM_FILL);
 	prim->fill_code[1]  = GP0_CMD_FILL_XY(buf->clipX, buf->clipY);
 	prim->fill_code[2]  = GP0_CMD_FILL_WH(buf->clipW, buf->clipH);
@@ -173,6 +174,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
+	Gfx.Limitations  = GFX_LIMIT_MAX_VERTEX_SIZE;
 	
 	Gfx_RestoreState();
 	SetupContexts(Window_Main.Width, Window_Main.Height);
