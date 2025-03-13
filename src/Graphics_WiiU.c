@@ -357,7 +357,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); 
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-static Vec2 texOffset;
+static struct Vec4 texOffset;
 
 static void UpdateVS(void) {
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
@@ -370,7 +370,7 @@ static void UpdateVS(void) {
 	GX2SetVertexShader(cur_VS);
 
 	if (cur_VS != offset_VS) return;
-	GX2SetVertexUniformReg(cur_VS->uniformVars[1].offset, 2, &texOffset);
+	GX2SetVertexUniformReg(cur_VS->uniformVars[1].offset, 4, &texOffset);
 }
 
 static void UpdatePS(void) {
