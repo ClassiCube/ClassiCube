@@ -69,9 +69,9 @@ static void CompileFetchShaders(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-extern const uint8_t coloured_gsh[];
-extern const uint8_t textured_gsh[];
-extern const uint8_t textured_offset_gsh[];
+extern const uint8_t coloured_none_gsh[];
+extern const uint8_t textured_none_gsh[];
+extern const uint8_t textured_ofst_gsh[];
 
 static GX2VertexShader *texture_VS, *colour_VS, *offset_VS;
 static GX2PixelShader  *texture_PS, *colour_PS;
@@ -85,13 +85,13 @@ static void InitGfx(void) {
 	CompileFetchShaders();
    	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
 	
-	colour_VS = WHBGfxLoadGFDVertexShader(0, coloured_gsh);
-	colour_PS = WHBGfxLoadGFDPixelShader(0,  coloured_gsh);
+	colour_VS = WHBGfxLoadGFDVertexShader(0, coloured_none_gsh);
+	colour_PS = WHBGfxLoadGFDPixelShader(0,  coloured_none_gsh);
 
-	texture_VS = WHBGfxLoadGFDVertexShader(0, textured_gsh);
-	texture_PS = WHBGfxLoadGFDPixelShader(0,  textured_gsh);
+	texture_VS = WHBGfxLoadGFDVertexShader(0, textured_none_gsh);
+	texture_PS = WHBGfxLoadGFDPixelShader(0,  textured_none_gsh);
 
-	offset_VS = WHBGfxLoadGFDVertexShader(0, textured_offset_gsh);
+	offset_VS = WHBGfxLoadGFDVertexShader(0, textured_ofst_gsh);
 }
 
 void Gfx_Create(void) {
