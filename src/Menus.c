@@ -1,4 +1,5 @@
 #include "Menus.h"
+#include "Strings.h"
 #include "Widgets.h"
 #include "Game.h"
 #include "Event.h"
@@ -546,7 +547,8 @@ static void PauseScreen_Layout(void* screen) {
 
 static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	static const struct SimpleButtonDesc descs[] = {
+	
+	static struct SimpleButtonDesc descs[] = {
 		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
 		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   },
@@ -554,6 +556,8 @@ static void PauseScreen_Init(void* screen) {
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
 		{  160,   50, "Save level...",          Menu_SwitchSaveLevel }
 	};
+
+	descs[0].title = ccStrings_optionsMenu[1][9];
 
 	s->widgets     = pause_widgets;
 	s->numWidgets  = 0;
@@ -614,7 +618,7 @@ static void ClassicPauseScreen_Layout(void* screen) {
 
 static void ClassicPauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	static const struct SimpleButtonDesc descs[] = {
+	static struct SimpleButtonDesc descs[] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
 		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
 		{    0,    0, "Save level..",           Menu_SwitchSaveLevel },

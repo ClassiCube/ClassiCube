@@ -20,7 +20,7 @@ int Menu_PointerDown(void* screen, int id, int x, int y);
 int Menu_PointerMove(void* screen, int id, int x, int y);
 int Menu_DoPointerMove(void* screen, int id, int x, int y);
 
-struct SimpleButtonDesc { short x, y; const char* title; Widget_LeftClick onClick; };
+struct SimpleButtonDesc { short x, y; char* title; Widget_LeftClick onClick; };
 void Menu_AddButtons(void* screen, struct ButtonWidget* btns, int width, 
 					const struct SimpleButtonDesc* descs, int count);
 void Menu_LayoutButtons(struct ButtonWidget* btns, 

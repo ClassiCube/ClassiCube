@@ -17,7 +17,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define CC_LANGUAGE_TOKIPON 2
 
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
-const char* ccStrings_optionsMenu[][8] = {
+char* ccStrings_optionsMenu[][9] = {
 	{
 	"Misc options...",
 	"Gui options...",
@@ -26,7 +26,8 @@ const char* ccStrings_optionsMenu[][8] = {
 	"Chat options...",
 	"Hacks settings...",
 	"Env settings...",
-	"Nostalgia options..."
+	"Nostalgia options...",
+	"Options..."
 	},
 
 	{
@@ -37,7 +38,8 @@ const char* ccStrings_optionsMenu[][8] = {
 	"Opciones de charlar...",
 	"Opciones de cortar...",
 	"Opciones de ambientales...",
-	"Opciones de nostalgia..."
+	"Opciones de nostalgia...",
+	"Opciones"
 	},
 
 	{
@@ -48,7 +50,8 @@ const char* ccStrings_optionsMenu[][8] = {
 	"ante e nasin toki...",
 	"ante e nasin pi jan wawa...",
 	"ante e nasin pi ma lukin...",
-	"ante e nasin pi tenpo pona pi sin ala..."
+	"ante e nasin pi tenpo pona pi sin ala...",
+	"ante e musi..."
 	},
 };
 
