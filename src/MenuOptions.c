@@ -34,6 +34,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "SystemFonts.h"
+#include <string.h>
 
 typedef void (*Button_GetText)(struct ButtonWidget* btn, cc_string* raw);
 typedef void (*Button_SetText)(struct ButtonWidget* btn, const cc_string* raw);
@@ -503,7 +504,7 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 		if (s->widgets[i]) MenuOptionsScreen_Update(s, &s->buttons[i]); 
 	}
 
-	ButtonWidget_SetConst(&s->done, "Done", &s->titleFont);
+	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &s->titleFont);
 	if (s->DoRecreateExtra) s->DoRecreateExtra(s);
 	TextGroupWidget_SetFont(&s->extHelp, &s->textFont);
 	TextGroupWidget_RedrawAll(&s->extHelp); /* TODO: SetFont should redrawall implicitly */
@@ -1114,6 +1115,25 @@ static void MiO_SetCameraMass(const cc_string* c) {
 	Options_Set(OPT_CAMERA_MASS, c);
 }
 
+static char appBuffer[STRING_SIZE];
+static void MiO_GetLanguage(cc_string* v) { String_AppendInt(v, CC_CurrentLanguage); }
+static void MiO_SetLanguage(const cc_string* c) {
+	CC_CurrentLanguage = (int)Menu_Float(c);
+	
+	char *w = "Language changed!\0";
+	char *i = "Disconnected to properly apply the language.\0";
+	cc_string warn = String_FromConst(w);
+	cc_string info = String_FromConst(i);
+
+	String_InitArray(Server.AppName, appBuffer);
+	String_AppendConst(&Server.AppName, ccStrings_GameTitle[CC_CurrentLanguage]);
+	String_AppendConst(&Server.AppName, " ");
+	String_AppendConst(&Server.AppName, GAME_APP_VER);
+	String_AppendConst(&Server.AppName, Platform_AppNameSuffix);
+	
+	Game_Disconnect(&warn, &info);
+}
+
 static void MiO_GetReach(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->ReachDistance, 2); }
 static void MiO_SetReach(const cc_string* v) { Entities.CurPlayer->ReachDistance = Menu_Float(v); }
 
@@ -1192,6 +1212,10 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 #endif
 			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
 	}
+	MenuOptionsScreen_AddNum(s, "Language",
+			0, CC_LANGUAGE_LANGCNT, 0,
+			MiO_GetLanguage, MiO_SetLanguage,
+			"&eSets game language");
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
 	/* Disable certain options */

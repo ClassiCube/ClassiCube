@@ -1,5 +1,4 @@
 #include "Menus.h"
-#include "Strings.h"
 #include "Widgets.h"
 #include "Game.h"
 #include "Event.h"
@@ -230,6 +229,7 @@ static void Menu_SwitchGfx(void* a, void* b)       { GraphicsOptionsScreen_Show(
 static void Menu_SwitchHacks(void* a, void* b)     { HacksSettingsScreen_Show(); }
 static void Menu_SwitchEnv(void* a, void* b)       { EnvSettingsScreen_Show(); }
 static void Menu_SwitchNostalgia(void* a, void* b) { NostalgiaMenuScreen_Show(); }
+static void Menu_SwitchLanguage(void* a, void* b)  { LanguageMenuScreen_Show(); }
 
 static void Menu_SwitchGenLevel(void* a, void* b)        { GenLevelScreen_Show(); }
 static void Menu_SwitchClassicGenLevel(void* a, void* b) { ClassicGenScreen_Show(); }
@@ -481,7 +481,7 @@ void MenuScreen_Render2(void* screen, float delta) {
 /*########################################################################################################################*
 *-----------------------------------------------------PauseScreenBase-----------------------------------------------------*
 *#########################################################################################################################*/
-#define PAUSE_MAX_BTNS 6
+#define PAUSE_MAX_BTNS 7
 static struct PauseScreen {
 	Screen_Body
 	int descsCount;
@@ -683,7 +683,7 @@ static struct OptionsGroupScreen {
 
 static struct Widget* optGroups_widgets[8 + 2];
 
-static const char* const optsGroup_descs[8] = {
+static const char* const optsGroup_descs[9] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eGui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
@@ -693,6 +693,7 @@ static const char* const optsGroup_descs[8] = {
 	"&eEnv colours, water level, weather, and more",
 	"&eSettings for resembling the original classic",
 };
+
 static struct SimpleButtonDesc optsGroup_btns[8] = {
 	{ -160, -100, "Misc options...",      Menu_SwitchMisc        },
 	{ -160,  -50, "Gui options...",       Menu_SwitchGui         },
@@ -737,6 +738,7 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	optsGroup_btns[5].title = ccStrings_optionsMenu[CC_CurrentLanguage][5];
 	optsGroup_btns[6].title = ccStrings_optionsMenu[CC_CurrentLanguage][6];
 	optsGroup_btns[7].title = ccStrings_optionsMenu[CC_CurrentLanguage][7];
+	optsGroup_btns[8].title = csString_LanguageNames[CC_CurrentLanguage];
 
 	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 8);
 	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &titleFont);
@@ -3022,6 +3024,11 @@ void NostalgiaMenuScreen_Show(void) {
 	s->closable   = true;
 	s->VTABLE     = &NostalgiaMenuScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
+void LanguageMenuScreen_Show(void) {
+	// TODO: Proper screen
+	CC_CurrentLanguage++;
+	CC_CurrentLanguage = CC_CurrentLanguage%CC_LANGUAGE_LANGCNT;
 }
 #else
 void TexIdsOverlay_Show(void) { }

@@ -5,6 +5,8 @@
 #include "Stream.h"
 #include "Utils.h"
 
+unsigned char CC_CurrentLanguage = CC_LANGUAGE_ENGLISH;
+
 #ifdef __cplusplus
 const cc_string String_Empty = { NULL, 0, 0 };
 #else

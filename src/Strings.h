@@ -1,6 +1,7 @@
+#pragma once
+
 #ifndef CC_STRINGS_H
 #define CC_STRINGS_H
-CC_BEGIN_HEADER
 
 /* 
 Translated menu strings
@@ -12,13 +13,14 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 /* Can be removed if causes issues */
 
-#define CC_LANGUAGE_LANGCNT 3
+#define CC_LANGUAGE_LANGCNT 4
 
 #define CC_LANGUAGE_ENGLISH 0
 #define CC_LANGUAGE_SPANISH 1
 #define CC_LANGUAGE_TOKIPON 2
+#define CC_LANGUAGE_GERMAN_ 3
 
-unsigned char CC_CurrentLanguage = CC_LANGUAGE_TOKIPON;
+extern unsigned char CC_CurrentLanguage;
 
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
 static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
@@ -76,7 +78,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
 	"ante e nasin toki...",
 	"ante e nasin pi jan wawa...",
 	"ante e nasin pi ma lukin...",
-	"ante e nasin pi tenpo pona pi sin ala...",
+	"ante e nasin pi tenpo pona...",
 
 	"ante e musi...",
 	"ante e poki sitelen...",
@@ -90,13 +92,43 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
 	"o kama musi",
 	"lipu musi"
 	},
+
+	{
+	"Verschiedene Optionen...",
+	"GUI-Optionen...",
+	"Grafikoptionen...",
+	"Steuerung...",
+	"Chat-Optionen...",
+	"Hacks-Einstellungen...",
+	"Umgebungseinstellungen...",
+	"Nostalgie-Optionen...",
+
+	"Optionen...",
+	"Texturpaket Ñndern...",
+	"Tastenkombinationen...",
+	"Neues Level generieren...",
+	"Level laden...",
+	"Level speichern...",
+
+	"Fertig",
+	"Spiel beenden",
+	"ZurÅck zum Spiel",
+	"SpielmenÅ"
+	},
 };
 
 static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube",
-	"ClassiCube",
-	"musi Kasiku"
+	"ClassiCube (en Espa§ol)",
+	"musi Kasiku",
+	"ClassiCube (auf Deutsch)"
 };
 
-CC_END_HEADER
+static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
+	"English",
+	"Espa§ol",
+	"toki pona (sitelen Lasina)",
+	"Deutsch"
+};
+
 #endif
