@@ -79,6 +79,8 @@ enum gp1_cmd_display_mode {
 
 #define PACK_RGBC(r, g, b, c) ( (r) | ((g) << 8) | ((b) << 16) | (c) )
 
+#define GP0_CMD_CLUT_XY(x, y) ( ((x) & 0x3F) | (((y) & 0x1FF) << 6) )
+
 
 // === POLYGON COMMANDS ===
 #define POLY_CODE_F4 (GP0_CMD_POLYGON | POLY_CMD_QUAD)

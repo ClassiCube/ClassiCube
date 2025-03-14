@@ -332,7 +332,7 @@ static CC_INLINE int CalcPalette(cc_uint16* palette, struct Bitmap* bmp, int row
 			int idx = FindInPalette(palette, pal_count, color);
 			if (idx >= 0) continue;
 
-			if (pal_count >= 256) return pal_count;
+			if (pal_count >= 256) return 256 + 1;
 
 			palette[pal_count] = color;
 			pal_count++;

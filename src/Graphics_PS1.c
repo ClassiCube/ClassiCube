@@ -242,9 +242,9 @@ void Gfx_TransferToVRAM(int x, int y, int w, int h, void* pixels) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Textures--------------------------------------------------------*
+*------------------------------------------------------VRAM management----------------------------------------------------*
 *#########################################################################################################################*/
-// VRAM can be divided into texture pages
+// VRAM (1024x512) can be divided into texture pages
 //   32 texture pages total - each page is 64 x 256
 //   10 texture pages are occupied by the doublebuffered display
 //   22 texture pages are usable for textures
@@ -333,6 +333,41 @@ static int VRAM_CalcPage(int line) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------Textures--------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
+	for (int i = 0; i < pal_count; i++) 
+	{
+		if (palette[i] == color) return i;
+	}
+	return -1;
+}
+
+static CC_INLINE int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
+	int pal_count = 0;
+	if (bmp->width < 16 || bmp->height < 16) return 0;
+	
+	for (int y = 0; y < bmp->height; y++)
+	{
+		BitmapCol* row = bmp->scan0 + y * rowWidth;
+		
+		for (int x = 0; x < bmp->width; x++) 
+		{
+			BitmapCol color = row[x];
+			int idx = FindInPalette(palette, pal_count, color);
+			if (idx >= 0) continue;
+
+			if (pal_count >= 16) return -1;
+
+			palette[pal_count] = color;
+			pal_count++;
+		}
+	}
+	return pal_count;
+}
+
+
 #define TEXTURES_MAX_COUNT 64
 typedef struct GPUTexture {
 	cc_uint16 width, height;
@@ -343,20 +378,54 @@ typedef struct GPUTexture {
 static GPUTexture textures[TEXTURES_MAX_COUNT];
 static GPUTexture* curTex;
 
-static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
-	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
-	if (!tmp) return NULL;
-
+static void CreateFullTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth) {
 	// TODO: Only copy when rowWidth != bmp->width
 	for (int y = 0; y < bmp->height; y++)
 	{
-		cc_uint16* src = bmp->scan0 + y * rowWidth;
-		cc_uint16* dst = tmp        + y * bmp->width;
+		BitmapCol* src = bmp->scan0 + y * rowWidth;
+		BitmapCol* dst = tmp        + y * bmp->width;
 		
-		for (int x = 0; x < bmp->width; x++) {
+		for (int x = 0; x < bmp->width; x++) 
+		{
 			dst[x] = src[x];
 		}
 	}
+}
+
+static void CreatePalettedTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
+	cc_uint8* buf = (cc_uint8*)tmp;
+
+	for (int y = 0; y < bmp->height; y++)
+	{
+		BitmapCol* row = bmp->scan0 + y * rowWidth;
+		
+		for (int x = 0; x < bmp->width; x++) 
+		{
+			int idx = FindInPalette(palette, pal_count, row[x]);
+			
+			if ((x & 1) == 0) {
+				buf[x >> 1] = idx;
+			} else {
+				buf[x >> 1] |= idx << 4;
+			}
+		}
+	}
+}
+
+static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
+	BitmapCol palette[16];
+	int pal_count = 0;//CalcPalette(palette, bmp, rowWidth); TODO fix
+
+	cc_uint16* tmp;
+	int tmp_size;
+	
+	if (pal_count > 0) {
+		tmp_size = (bmp->width * bmp->height) >> 2; // each halfword has 4 4bpp pixels
+	} else {
+		tmp_size = bmp->width * bmp->height; // each halfword has 1 16bpp pixel
+	}
+	tmp = Mem_TryAlloc(tmp_size, 2);
+	if (!tmp) return NULL;
 
 	GPUTexture* tex = &textures[i];
 	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
@@ -369,7 +438,8 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	int page   = VRAM_CalcPage(line);
 	int pageX  = (page % TPAGES_PER_HALF);
 	int pageY  = (page / TPAGES_PER_HALF);
-	tex->tpage = (2 << 7) | (pageY << 4) | pageX;
+	int mode   = pal_count > 0 ? 0 : 2;
+	tex->tpage = (mode << 7) | (pageY << 4) | pageX;
 	tex->clut  = 0;
 
 	VRAM_AllocBlock(line, bmp->width, bmp->height);
@@ -381,12 +451,24 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 		tex->yOffset = line % TPAGE_HEIGHT;
 	}
 	
-	Platform_Log3("%i x %i  = %i", &bmp->width, &bmp->height, &line);
+	Platform_Log4("%i x %i  = %i (%i)", &bmp->width, &bmp->height, &line, &pal_count);
 	Platform_Log3("  at %i (%i, %i)", &page, &pageX, &pageY);
+
+	if (pal_count > 0) {
+		// 320 wide / 16 clut entries = 20 cluts per row
+		int clutX = i % 20;
+		int clutY = i / 20 + 490;
+		tex->clut = GP0_CMD_CLUT_XY(clutX, clutY);
+		Gfx_TransferToVRAM(clutX * 16, clutY, 16, 1, palette);
+
+		CreatePalettedTexture(tmp, bmp, rowWidth, palette, pal_count);
+	} else {
+		CreateFullTexture(tmp, bmp, rowWidth);
+	}
 		
 	int x = pageX * TPAGE_WIDTH  + tex->xOffset;
 	int y = pageY * TPAGE_HEIGHT + tex->yOffset;
-	int w = bmp->width;
+	int w = pal_count > 0 ? (bmp->width / 4) : bmp->width;
 	int h = bmp->height;
 
 	Platform_Log2("  LOAD AT: %i, %i", &x, &y);
