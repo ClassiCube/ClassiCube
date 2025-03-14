@@ -158,9 +158,9 @@ static cc_bool cullingEnabled;
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
-	// 2x2 dummy white texture
+	// dummy texture (grey works better in menus than white)
 	struct Bitmap bmp;
-	BitmapCol pixels[4] = { BitmapColor_RGB(255, 0, 0), BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE };
+	BitmapCol pixels[4] = { BitmapColor_RGB(130, 130, 130), BitmapColor_RGB(130, 130, 130), BitmapColor_RGB(130, 130, 130), BitmapColor_RGB(130, 130, 130) };
 	Bitmap_Init(bmp, 2, 2, pixels);
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
@@ -171,7 +171,7 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
-	Gfx.MaxTexWidth  = 128;
+	Gfx.MaxTexWidth  = 256;
 	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
 	Gfx.Limitations  = GFX_LIMIT_MAX_VERTEX_SIZE;
@@ -338,7 +338,7 @@ typedef struct GPUTexture {
 	cc_uint16 width, height;
 	cc_uint8  u_shift, v_shift;
 	cc_uint8  xOffset, yOffset;
-	cc_uint16 tpage, line;
+	cc_uint16 tpage, clut, line;
 } GPUTexture;
 static GPUTexture textures[TEXTURES_MAX_COUNT];
 static GPUTexture* curTex;
@@ -370,6 +370,7 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	int pageX  = (page % TPAGES_PER_HALF);
 	int pageY  = (page / TPAGES_PER_HALF);
 	tex->tpage = (2 << 7) | (pageY << 4) | pageX;
+	tex->clut  = 0;
 
 	VRAM_AllocBlock(line, bmp->width, bmp->height);
 	if (bmp->height > bmp->width) {
@@ -539,8 +540,8 @@ static void PreprocessTexturedVertices(void) {
 		dst->xx = x >> 8;
 		dst->yy = y >> 8;
 		
-		u = src->U * 0.99f;
-		v = src->V == 1.0f ? 0.99f : src->V;
+		u = src->U * 0.999f;
+		v = src->V == 1.0f ? 0.999f : src->V;
 
 		dst->u = UVFixed(u);
 		dst->v = UVFixed(v);
@@ -733,14 +734,13 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
 	struct PSX_POLY_F4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
-	return;
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{	
         if ((cc_uint8*)poly > max) break;
 
 		setlen(poly, POLY_LEN_F4);
-		poly->rgbc = v->rgbc;
+		poly->rgbc = v->rgbc | POLY_CMD_SEMITRNS;
 
 		poly->x0 = v[1].xx; poly->y0 = v[1].yy;
 		poly->x1 = v[0].xx; poly->y1 = v[0].yy;
@@ -762,6 +762,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	struct PS1VertexTextured* v = (struct PS1VertexTextured*)gfx_vertices + startVertex;	
 	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
 	int uShift  = curTex->u_shift, vShift  = curTex->v_shift;
+	int tpage   = curTex->tpage,   clut    = curTex->clut;
 
 	struct PSX_POLY_FT4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
@@ -772,8 +773,8 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 
 		setlen(poly, POLY_LEN_FT4);
 		poly->rgbc  = v->rgbc;
-		poly->tpage = curTex->tpage;
-		poly->clut  = 0;
+		poly->tpage = tpage;
+		poly->clut  = clut;
 
 		poly->x0 = v[1].xx; poly->y0 = v[1].yy;
 		poly->x1 = v[0].xx; poly->y1 = v[0].yy;
@@ -848,7 +849,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	int uShift  = curTex->u_shift;
 	int vShift  = curTex->v_shift;
 
-	int page = curTex->tpage;
+	int tpage = curTex->tpage, clut = curTex->clut;
 	uint32_t* ot = cur_buffer->ot;
 
 	struct PSX_POLY_FT4* poly = next_packet;
@@ -895,8 +896,8 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		poly->u3 = (v3->u >> uShift) + uOffset;
 		poly->v3 = (v3->v >> vShift) + vOffset;
 	
-		poly->tpage = page;
-		poly->clut  = 0;
+		poly->tpage = tpage;
+		poly->clut  = clut;
 		addPrim(&ot[p >> 2], poly);
 		poly++;
 	}
