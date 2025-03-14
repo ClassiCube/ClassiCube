@@ -532,7 +532,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	PauseScreenBase_ContextRecreated(s, &titleFont);
 
-	ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
+	ButtonWidget_SetConst(&s->quit, ccStrings_optionsMenu[CC_CurrentLanguage][15], &titleFont);
 	PauseScreen_CheckHacksAllowed(s);
 	Font_Free(&titleFont);
 }

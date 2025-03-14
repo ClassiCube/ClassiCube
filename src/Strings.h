@@ -21,7 +21,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 unsigned char CC_CurrentLanguage = CC_LANGUAGE_TOKIPON;
 
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
-static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][15] = {
+static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][16] = {
 	{
 	"Misc options...",
 	"Gui options...",
@@ -39,7 +39,8 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][15] = {
 	"Load level...",
 	"Save level...",
 
-	"Done"
+	"Done",
+	"Quit game"
 	},
 
 	{
@@ -59,7 +60,8 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][15] = {
 	"Nivel de carga...",
 	"Guardar nivel...",
 
-	"Hecho"
+	"Hecho",
+	"Salir del juego"
 	},
 
 	{
@@ -79,7 +81,8 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][15] = {
 	"ante e ma...",
 	"o awen e ma...",
 
-	"ale pona"
+	"ale pona",
+	"o weka"
 	},
 };
 
