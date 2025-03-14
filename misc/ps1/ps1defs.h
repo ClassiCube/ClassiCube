@@ -1,3 +1,7 @@
+// Scratchpad memory is essentially data cache of CPU,
+//  and so takes less cycles to access
+#define SCRATCHPAD_MEM ((cc_uint8*)0x1F800000)
+
 enum dma_chrc_flags {
 	CHRC_STATUS_BUSY = (1 << 24),
 };

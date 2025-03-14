@@ -393,28 +393,31 @@ static void CreateFullTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth) 
 }
 
 static void CreatePalettedTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
-	cc_uint8* buf = (cc_uint8*)tmp;
+	cc_uint8* dst  = (cc_uint8*)tmp;
+	BitmapCol* src = bmp->scan0;
+	int stride = (bmp->width * 2) >> 2;
 
 	for (int y = 0; y < bmp->height; y++)
 	{
-		BitmapCol* row = bmp->scan0 + y * rowWidth;
-		
 		for (int x = 0; x < bmp->width; x++) 
 		{
-			int idx = FindInPalette(palette, pal_count, row[x]);
+			int idx = FindInPalette(palette, pal_count, src[x]);
 			
 			if ((x & 1) == 0) {
-				buf[x >> 1] = idx;
+				dst[x >> 1] = idx;
 			} else {
-				buf[x >> 1] |= idx << 4;
+				dst[x >> 1] |= idx << 4;
 			}
 		}
+
+		src += rowWidth;
+		dst += stride;
 	}
 }
 
 static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
-	BitmapCol palette[16];
-	int pal_count = 0;//CalcPalette(palette, bmp, rowWidth); TODO fix
+	BitmapCol palette[16]; // = (BitmapCol*)SCRATCHPAD_MEM; TODO doesn't work
+	int pal_count = CalcPalette(palette, bmp, rowWidth);
 
 	cc_uint16* tmp;
 	int tmp_size;
@@ -468,11 +471,11 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 		
 	int x = pageX * TPAGE_WIDTH  + tex->xOffset;
 	int y = pageY * TPAGE_HEIGHT + tex->yOffset;
-	int w = pal_count > 0 ? (bmp->width / 4) : bmp->width;
+	int w = pal_count > 0 ? (bmp->width >> 2) : bmp->width;
 	int h = bmp->height;
 
-	Platform_Log2("  LOAD AT: %i, %i", &x, &y);
-	Gfx_TransferToVRAM(x, y, w, h, tmp);
+	Platform_Log4("  LOAD AT: %i, %i (%i x %i)", &x, &y, &w, &h);
+	Gfx_TransferToVRAM(x, y, w, h, tmp); 
 	
 	Mem_Free(tmp);
 	return tex;

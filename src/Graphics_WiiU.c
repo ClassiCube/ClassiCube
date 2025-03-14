@@ -130,7 +130,7 @@ static void UpdatePS(void) {
 		cur_PS = texture_PS[2];
 	} else if (gfx_fogEnabled && fog_func == FOG_LINEAR) {
 		cur_PS = texture_PS[1];
-	} */else {
+	*/} else {
 		cur_PS = texture_PS[0];
 	}
 	GX2SetPixelShader(cur_PS);
