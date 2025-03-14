@@ -138,6 +138,25 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 static char pad_buff[2][34];
+static const BindMapping default_ps1[BIND_COUNT] = {
+	[BIND_FORWARD] = { CCPAD_CUP,    0 },
+	[BIND_BACK]    = { CCPAD_CDOWN,  0 },
+	[BIND_LEFT]    = { CCPAD_CLEFT,  0 },
+	[BIND_RIGHT]   = { CCPAD_CRIGHT, 0 },
+	
+	[BIND_FLY_UP]  = { CCPAD_UP,    0 },
+	[BIND_FLY_DOWN]= { CCPAD_DOWN,  0 },
+	[BIND_SPEED]   = { CCPAD_LEFT,  0 },
+	[BIND_FLY]     = { CCPAD_RIGHT, 0 },
+	
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_INVENTORY]    = { CCPAD_2, 0 },
+	[BIND_PLACE_BLOCK]  = { CCPAD_5, 0 },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_L, 0 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_R, 0 },
+	
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+};
 
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
