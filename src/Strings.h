@@ -86,7 +86,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][16] = {
 	},
 };
 
-static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] {
+static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube",
 	"ClassiCube",
 	"musi Kasiku"
