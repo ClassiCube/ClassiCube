@@ -131,4 +131,40 @@ static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"Deutsch"
 };
 
+static char* ccString_Desc[CC_LANGUAGE_LANGCNT][2] = {
+	{"&eSets the game's language",
+	 "???"
+	},
+
+	{"&eEstablece el idioma del juego.",
+	 "???"
+	},
+
+	{"&eante e musi toki",
+	 "???"
+	},
+
+	{"&eLegt die Sprache des Spiels fest",
+	 "???"
+	},
+};
+
+static char* ccString_SubOption[CC_LANGUAGE_LANGCNT][2] = {
+	{"Language",
+	 "???"
+	},
+	
+	{"Idioma",
+	 "???"
+	},
+
+	{"toki",
+	 "???"
+	},
+
+	{"Sprache",
+	 "???"
+	},
+};
+
 #endif
