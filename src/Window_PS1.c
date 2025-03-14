@@ -137,6 +137,26 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+// 1 = Circle, 2 = Cross, 3 = Square, 4 = Triangle
+static const BindMapping pad_defaults[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP,   0 },  
+	[BIND_BACK]         = { CCPAD_DOWN, 0 },
+	[BIND_LEFT]         = { CCPAD_LEFT, 0 },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+	[BIND_CHAT]         = { CCPAD_4, 0 }, 
+	[BIND_INVENTORY]    = { CCPAD_3, 0 },
+	[BIND_SEND_CHAT]    = { CCPAD_START, 0 },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R }, 
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L, 0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_R, 0 },
+};
+
 static char pad_buff[2][34];
 static const BindMapping default_ps1[BIND_COUNT] = {
 	[BIND_FORWARD] = { CCPAD_CUP,    0 },
@@ -217,7 +237,7 @@ static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
 
 void Gamepads_Process(float delta) {
 	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
-	int port = Gamepad_Connect(0x503E, PadBind_Defaults);
+	int port = Gamepad_Connect(0x503E, pad_defaults);
 	
 	if (pad->stat == 0) ProcessPadInput(port, pad, delta);
 }

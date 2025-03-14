@@ -67,33 +67,79 @@ static void CompileFetchShaders(void) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------General---------------------------------------------------------*
+*---------------------------------------------------------Shaders---------------------------------------------------------*
 *#########################################################################################################################*/
-extern const uint8_t coloured_gsh[];
-extern const uint8_t textured_gsh[];
-extern const uint8_t textured_offset_gsh[];
+extern const uint8_t coloured_none_gsh[];
+extern const uint8_t textured_none_gsh[];
+extern const uint8_t textured_lin_gsh[];
+extern const uint8_t textured_exp_gsh[];
+extern const uint8_t textured_ofst_gsh[];
+
+#define VS_UNI_OFFSET_MVP   0
+#define VS_UNI_COUNT_MVP   16
+#define VS_UNI_OFFSET_OFST 16
+#define VS_UNI_COUNT_OFST   4
+
+#define PS_UNI_OFFSET_COLOR 0
+#define PS_UNI_COUNT_COLOR  4
+#define PS_UNI_OFFSET_FOG   4
+#define PS_UNI_COUNT_FOG    4
 
 static GX2VertexShader *texture_VS, *colour_VS, *offset_VS;
-static GX2PixelShader  *texture_PS, *colour_PS;
+static GX2PixelShader  *texture_PS[3], *colour_PS[3];
 
 static GX2Sampler sampler;
 static GfxResourceID white_square;
 static GX2VertexShader* cur_VS;
 static GX2PixelShader*  cur_PS;
+static int fog_func;
 
 static void InitGfx(void) {
 	CompileFetchShaders();
    	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
 	
-	colour_VS = WHBGfxLoadGFDVertexShader(0, coloured_gsh);
-	colour_PS = WHBGfxLoadGFDPixelShader(0,  coloured_gsh);
+	colour_VS = WHBGfxLoadGFDVertexShader(0, coloured_none_gsh);
+	colour_PS[0] = WHBGfxLoadGFDPixelShader(0,  coloured_none_gsh);
 
-	texture_VS = WHBGfxLoadGFDVertexShader(0, textured_gsh);
-	texture_PS = WHBGfxLoadGFDPixelShader(0,  textured_gsh);
+	texture_VS = WHBGfxLoadGFDVertexShader(0, textured_none_gsh);
 
-	offset_VS = WHBGfxLoadGFDVertexShader(0, textured_offset_gsh);
+	offset_VS = WHBGfxLoadGFDVertexShader(0, textured_ofst_gsh);
+
+	texture_PS[0] = WHBGfxLoadGFDPixelShader(0, textured_none_gsh);
+	texture_PS[1] = WHBGfxLoadGFDPixelShader(0, textured_lin_gsh);
+	texture_PS[2] = WHBGfxLoadGFDPixelShader(0, textured_exp_gsh);
 }
 
+static struct Vec4 texOffset;
+
+static void UpdateVS(void) {
+	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
+		cur_VS = colour_VS;
+	} else if (texOffset.x || texOffset.y) {
+		cur_VS = offset_VS;
+	} else {
+		cur_VS = texture_VS;
+	}
+	GX2SetVertexShader(cur_VS);
+}
+
+static void UpdatePS(void) {
+	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
+		cur_PS = colour_PS[0];
+	/*} else if (gfx_fogEnabled && fog_func == FOG_EXP) {
+		cur_PS = texture_PS[2];
+	} else if (gfx_fogEnabled && fog_func == FOG_LINEAR) {
+		cur_PS = texture_PS[1];
+	} */else {
+		cur_PS = texture_PS[0];
+	}
+	GX2SetPixelShader(cur_PS);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------General---------------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_Create(void) {
 	if (!Gfx.Created) InitGfx();
 	
@@ -211,23 +257,36 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 }
 
 void Gfx_SetFog(cc_bool enabled) {
-	// TODO
+	gfx_fogEnabled = enabled;
+	UpdatePS();
 }
 
 void Gfx_SetFogCol(PackedCol color) {
-	// TODO
+	struct Vec4 c = {
+		PackedCol_R(color) / 255.0f,
+		PackedCol_G(color) / 255.0f,
+		PackedCol_B(color) / 255.0f,
+		1.0f
+	};
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_COLOR, PS_UNI_COUNT_COLOR, &c);
 }
 
+static struct Vec4 fogValue;
+
 void Gfx_SetFogDensity(float value) {
-	// TODO
+	fogValue.x = value;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
 }
 
 void Gfx_SetFogEnd(float value) {
+	fogValue.y = 1.0f / value;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
 	// TODO
 }
 
 void Gfx_SetFogMode(FogFunc func) {
-	// TODO
+	fog_func = func;
+	UpdatePS();
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -357,27 +416,6 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); 
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-static struct Vec4 texOffset;
-
-static void UpdateVS(void) {
-	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		cur_VS = colour_VS;
-	} else if (texOffset.x || texOffset.y) {
-		cur_VS = offset_VS;
-	} else {
-		cur_VS = texture_VS;
-	}
-	GX2SetVertexShader(cur_VS);
-
-	if (cur_VS != offset_VS) return;
-	GX2SetVertexUniformReg(cur_VS->uniformVars[1].offset, 4, &texOffset);
-}
-
-static void UpdatePS(void) {
-	cur_PS = gfx_format == VERTEX_FORMAT_TEXTURED ? texture_PS : colour_PS;
-	GX2SetPixelShader(cur_PS);
-}
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
@@ -419,10 +457,8 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 	
-	// TODO dirty uniform
 	Matrix_Mul(&_mvp, &_view, &_proj);
-	if (!cur_VS) return;
-	GX2SetVertexUniformReg(cur_VS->uniformVars[0].offset, 16, &_mvp);
+	GX2SetVertexUniformReg(VS_UNI_OFFSET_MVP, VS_UNI_COUNT_MVP, &_mvp);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -434,7 +470,9 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 void Gfx_EnableTextureOffset(float x, float y) {
 	texOffset.x = x;
 	texOffset.y = y;
+
 	UpdateVS();
+	GX2SetVertexUniformReg(VS_UNI_OFFSET_OFST, VS_UNI_COUNT_OFST, &texOffset);
 }
 
 void Gfx_DisableTextureOffset(void) {
