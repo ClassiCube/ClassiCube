@@ -441,7 +441,7 @@ static void ListScreen_ContextRecreated(void* screen) {
 
 	ButtonWidget_SetConst(&s->left,  "<",   &s->font);
 	ButtonWidget_SetConst(&s->right, ">",   &s->font);
-	ButtonWidget_SetConst(&s->done, "Done", &s->font);
+	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &s->font);
 	ListScreen_UpdatePage(s);
 
 	ButtonWidget_SetConst(&s->action, s->actionText, &s->font);
@@ -557,7 +557,12 @@ static void PauseScreen_Init(void* screen) {
 		{  160,   50, "Save level...",          Menu_SwitchSaveLevel }
 	};
 
-	descs[0].title = ccStrings_optionsMenu[1][9];
+	descs[0].title = ccStrings_optionsMenu[CC_CurrentLanguage][8];
+	descs[1].title = ccStrings_optionsMenu[CC_CurrentLanguage][9];
+	descs[2].title = ccStrings_optionsMenu[CC_CurrentLanguage][10];
+	descs[3].title = ccStrings_optionsMenu[CC_CurrentLanguage][11];
+	descs[4].title = ccStrings_optionsMenu[CC_CurrentLanguage][12];
+	descs[5].title = ccStrings_optionsMenu[CC_CurrentLanguage][13];
 
 	s->widgets     = pause_widgets;
 	s->numWidgets  = 0;
@@ -630,6 +635,12 @@ static void ClassicPauseScreen_Init(void* screen) {
 	s->maxWidgets = Array_Elems(classicPause_widgets);
 	s->descs      = descs;
 
+	descs[0].title = ccStrings_optionsMenu[CC_CurrentLanguage][8];
+	descs[1].title = ccStrings_optionsMenu[CC_CurrentLanguage][11];
+	descs[2].title = ccStrings_optionsMenu[CC_CurrentLanguage][12];
+	descs[3].title = ccStrings_optionsMenu[CC_CurrentLanguage][13];
+	descs[4].title = ccStrings_optionsMenu[CC_CurrentLanguage][7];
+
 	/* Don't show nostalgia options in classic mode */
 	s->descsCount = Game_ClassicMode ? 4 : 5;
 	PauseScreenBase_AddWidgets(s, 400);
@@ -682,7 +693,7 @@ static const char* const optsGroup_descs[8] = {
 	"&eEnv colours, water level, weather, and more",
 	"&eSettings for resembling the original classic",
 };
-static const struct SimpleButtonDesc optsGroup_btns[8] = {
+static struct SimpleButtonDesc optsGroup_btns[8] = {
 	{ -160, -100, "Misc options...",      Menu_SwitchMisc        },
 	{ -160,  -50, "Gui options...",       Menu_SwitchGui         },
 	{ -160,    0, "Graphics options...",  Menu_SwitchGfx         },
@@ -718,8 +729,17 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	Gui_MakeTitleFont(&titleFont);
 	Gui_MakeBodyFont(&s->textFont);
 
+	optsGroup_btns[0].title = ccStrings_optionsMenu[CC_CurrentLanguage][0];
+	optsGroup_btns[1].title = ccStrings_optionsMenu[CC_CurrentLanguage][1];
+	optsGroup_btns[2].title = ccStrings_optionsMenu[CC_CurrentLanguage][2];
+	optsGroup_btns[3].title = ccStrings_optionsMenu[CC_CurrentLanguage][3];
+	optsGroup_btns[4].title = ccStrings_optionsMenu[CC_CurrentLanguage][4];
+	optsGroup_btns[5].title = ccStrings_optionsMenu[CC_CurrentLanguage][5];
+	optsGroup_btns[6].title = ccStrings_optionsMenu[CC_CurrentLanguage][6];
+	optsGroup_btns[7].title = ccStrings_optionsMenu[CC_CurrentLanguage][7];
+
 	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 8);
-	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
+	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &titleFont);
 
 	if (s->selectedI >= 0) OptionsGroupScreen_UpdateDesc(s);
 	OptionsGroupScreen_CheckHacksAllowed(s);
@@ -2064,7 +2084,7 @@ static void KeyBindsScreen_ContextRecreated(void* screen) {
 
 	TextWidget_SetConst(&s->title, s->titleText, &s->titleFont);
 	TextWidget_SetConst(&s->msg,   s->msgText,   &textFont);
-	ButtonWidget_SetConst(&s->back, "Done",      &s->titleFont);
+	ButtonWidget_SetConst(&s->back, ccStrings_optionsMenu[CC_CurrentLanguage][14],      &s->titleFont);
 
 	Font_Free(&textFont);
 	if (!s->leftPage && !s->rightPage) return;	
@@ -2960,7 +2980,7 @@ static void NostalgiaMenuScreen_ContextRecreated(void* screen) {
 	TextWidget_SetConst(&s->title, "Nostalgia options", &titleFont);
 	ButtonWidget_SetConst(&s->btnA, "Appearance",       &titleFont);
 	ButtonWidget_SetConst(&s->btnF, "Functionality",    &titleFont);
-	ButtonWidget_SetConst(&s->done,    "Done",          &titleFont);
+	ButtonWidget_SetConst(&s->done,    ccStrings_optionsMenu[CC_CurrentLanguage][14],          &titleFont);
 
 	Font_Free(&titleFont);
 }

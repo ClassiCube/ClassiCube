@@ -12,12 +12,16 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 /* Can be removed if causes issues */
 
+#define CC_LANGUAGE_LANGCNT 3
+
 #define CC_LANGUAGE_ENGLISH 0
 #define CC_LANGUAGE_SPANISH 1
 #define CC_LANGUAGE_TOKIPON 2
 
+unsigned char CC_CurrentLanguage = CC_LANGUAGE_TOKIPON;
+
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
-char* ccStrings_optionsMenu[][9] = {
+static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][15] = {
 	{
 	"Misc options...",
 	"Gui options...",
@@ -27,19 +31,35 @@ char* ccStrings_optionsMenu[][9] = {
 	"Hacks settings...",
 	"Env settings...",
 	"Nostalgia options...",
-	"Options..."
+
+	"Options...",
+	"Change texture pack...",
+	"Hotkeys...",
+	"Generate new level...",
+	"Load level...",
+	"Save level...",
+
+	"Done"
 	},
 
 	{
 	"Opciones varias...",
 	"Opciones de Gui...",
-	"Opciones de gr√°ficos...",
+	"Opciones de gr†ficos...",
 	"Opciones de controles...",
 	"Opciones de charlar...",
 	"Opciones de cortar...",
 	"Opciones de ambientales...",
 	"Opciones de nostalgia...",
-	"Opciones"
+
+	"Opciones...",
+	"Paquetes de texturas...",
+	"Teclas de acceso r†pido...",
+	"Generar nuevo nivel...",
+	"Nivel de carga...",
+	"Guardar nivel...",
+
+	"Hecho"
 	},
 
 	{
@@ -51,8 +71,22 @@ char* ccStrings_optionsMenu[][9] = {
 	"ante e nasin pi jan wawa...",
 	"ante e nasin pi ma lukin...",
 	"ante e nasin pi tenpo pona pi sin ala...",
-	"ante e musi..."
+
+	"ante e musi...",
+	"ante e poki sitelen...",
+	"ante e nena wawa...",
+	"o pali ma sin...",
+	"ante e ma...",
+	"o awen e ma...",
+
+	"ale pona"
 	},
+};
+
+static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] {
+	"ClassiCube",
+	"ClassiCube",
+	"musi Kasiku"
 };
 
 CC_END_HEADER
