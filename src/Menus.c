@@ -502,8 +502,8 @@ static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontD
 	Screen_UpdateVb(s);
 	Gui_MakeTitleFont(titleFont);
 	Menu_SetButtons(s->btns, titleFont, s->descs, s->descsCount);
-	ButtonWidget_SetConst(&s->back, "Back to game", titleFont);
-	TextWidget_SetConst(&s->title,  "Game menu", titleFont);
+	ButtonWidget_SetConst(&s->back, ccStrings_optionsMenu[CC_CurrentLanguage][15], titleFont);
+	TextWidget_SetConst(&s->title,  ccStrings_optionsMenu[CC_CurrentLanguage][16], titleFont);
 }
 
 static void PauseScreenBase_AddWidgets(struct PauseScreen* s, int width) {
