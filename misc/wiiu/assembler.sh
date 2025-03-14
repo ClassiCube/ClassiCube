@@ -7,5 +7,9 @@ assemble()
 } 
 
 assemble coloured_none.gsh vs_coloured.vsh        ps_coloured_none.psh
+
 assemble textured_none.gsh vs_textured.vsh        ps_textured_none.psh
+assemble textured_lin.gsh  vs_textured.vsh        ps_textured_lin.psh
+assemble textured_exp.gsh  vs_textured.vsh        ps_textured_exp.psh
+
 assemble textured_ofst.gsh vs_textured_offset.vsh ps_textured_none.psh
