@@ -738,7 +738,6 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	optsGroup_btns[5].title = ccStrings_optionsMenu[CC_CurrentLanguage][5];
 	optsGroup_btns[6].title = ccStrings_optionsMenu[CC_CurrentLanguage][6];
 	optsGroup_btns[7].title = ccStrings_optionsMenu[CC_CurrentLanguage][7];
-	optsGroup_btns[8].title = csString_LanguageNames[CC_CurrentLanguage];
 
 	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 8);
 	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &titleFont);

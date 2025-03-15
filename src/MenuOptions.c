@@ -259,7 +259,7 @@ static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, Widget_Lef
 static void MenuOptionsScreen_BoolGet(struct ButtonWidget* btn, cc_string* v) {
 	struct MenuOptionMetaBool* meta = (struct MenuOptionMetaBool*)btn->meta.ptr;
 	cc_bool value = meta->GetValue();
-	String_AppendConst(v, value ? "ON" : "OFF");
+	String_AppendConst(v, value ? ccStrings_optionsMenu[CC_CurrentLanguage][18] : ccStrings_optionsMenu[CC_CurrentLanguage][19]);
 }
 
 static void MenuOptionsScreen_BoolClick(void* screen, void* widget) {
@@ -936,25 +936,25 @@ static void    GuO_SetUseFont(cc_bool v) {
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Show FPS",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][0],
 			GuO_GetShowFPS,   GuO_SetShowFPS, NULL);
-		MenuOptionsScreen_AddNum(s,  "Hotbar scale",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_GUI[CC_CurrentLanguage][1],
 			0.25f, 4.00f, 1,
 			GuO_GetHotbar,    GuO_SetHotbar, NULL);
-		MenuOptionsScreen_AddNum(s,  "Inventory scale",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_GUI[CC_CurrentLanguage][2],
 			0.25f, 4.00f, 1,
 			GuO_GetInventory, GuO_SetInventory, NULL);
-		MenuOptionsScreen_AddNum(s,  "Crosshair scale",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_GUI[CC_CurrentLanguage][3],
 			0.25f, 4.00f, 1,
 			GuO_GetCrosshair, GuO_SetCrosshair, NULL);
 		
-		MenuOptionsScreen_AddBool(s, "Black text shadows",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][4],
 			GuO_GetShadows,   GuO_SetShadows, NULL);
-		MenuOptionsScreen_AddBool(s, "Tab auto-complete",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][5],
 			GuO_GetTabAuto,   GuO_SetTabAuto, NULL);
-		MenuOptionsScreen_AddBool(s, "Use system font",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][6],
 			GuO_GetUseFont,   GuO_SetUseFont, NULL);
-		MenuOptionsScreen_AddButton(s, "Select system font", Menu_SwitchFont,
+		MenuOptionsScreen_AddButton(s, ccString_SubOption_GUI[CC_CurrentLanguage][7], Menu_SwitchFont,
 			NULL,             NULL, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
@@ -1184,29 +1184,29 @@ static void MiO_SetSensitivity(int v) {
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddNum(s,  "Reach distance",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][1],
 			   1, 1024, 5,
 			MiO_GetReach,    MiO_SetReach, NULL);
-		MenuOptionsScreen_AddNum(s, "Camera Mass",
+		MenuOptionsScreen_AddNum(s, ccString_SubOption_Misc[CC_CurrentLanguage][2],
 			1, 100, 20,
 			MiO_GetCameraMass, MiO_SetCameraMass,
 			"&eChange the smoothness of the smooth camera.");
-		MenuOptionsScreen_AddInt(s,  "Music volume",
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][3],
 			   0, 100,  DEFAULT_MUSIC_VOLUME,
 			MiO_GetMusic,     MiO_SetMusic, NULL);
-		MenuOptionsScreen_AddInt(s,  "Sounds volume",
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][4],
 			   0, 100,  DEFAULT_SOUNDS_VOLUME,
 			MiO_GetSounds,  MiO_SetSounds, NULL);
 
-		MenuOptionsScreen_AddBool(s, "Block physics",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][5],
 			MiO_GetPhysics, MiO_SetPhysics, NULL);
-		MenuOptionsScreen_AddBool(s, "Smooth camera",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][6],
 			MiO_GetCamera, MiO_SetCamera, NULL);
-		MenuOptionsScreen_AddBool(s, "View bobbing",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],
 			MiO_GetViewBob, MiO_SetViewBob, NULL);
-		MenuOptionsScreen_AddBool(s, "Invert mouse",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],
 			MiO_GetInvert,  MiO_SetInvert, NULL);
-		MenuOptionsScreen_AddInt(s,  "Mouse sensitivity", 
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][9], 
 #ifdef CC_BUILD_WIN
 			   1, 200, 40,
 #else
@@ -1214,7 +1214,7 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 #endif
 			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
 	}
-	MenuOptionsScreen_AddNum(s, ccString_SubOption[CC_CurrentLanguage][0],
+	MenuOptionsScreen_AddNum(s, ccString_SubOption_Misc[CC_CurrentLanguage][0],
 			0, CC_LANGUAGE_LANGCNT-1, 0,
 			MiO_GetLanguage, MiO_SetLanguage,
 			ccString_Desc[CC_CurrentLanguage][0]);

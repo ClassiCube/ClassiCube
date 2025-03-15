@@ -23,7 +23,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 extern unsigned char CC_CurrentLanguage;
 
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
-static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
+static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	{
 	"Misc options...",
 	"Gui options...",
@@ -44,7 +44,9 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
 	"Done",
 	"Quit game",
 	"Back to game",
-	"Game menu"
+	"Game menu",
+	"ON",
+	"OFF"
 	},
 
 	{
@@ -67,7 +69,9 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
 	"Hecho",
 	"Salir del juego",
 	"De vuelta al juego",
-	"Men£ del juego"
+	"Men£ del juego",
+	"En",
+	"Apagado"
 	},
 
 	{
@@ -90,7 +94,9 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
 	"ale pona",
 	"o weka",
 	"o kama musi",
-	"lipu musi"
+	"lipu musi",
+	"wile",
+	"ala"
 	},
 
 	{
@@ -113,7 +119,9 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][18] = {
 	"Fertig",
 	"Spiel beenden",
 	"ZurÅck zum Spiel",
-	"SpielmenÅ"
+	"SpielmenÅ",
+	"An",
+	"Aus"
 	},
 };
 
@@ -149,21 +157,103 @@ static char* ccString_Desc[CC_LANGUAGE_LANGCNT][2] = {
 	},
 };
 
-static char* ccString_SubOption[CC_LANGUAGE_LANGCNT][2] = {
-	{"Language",
-	 "???"
+static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
+	{
+	"Language",
+	"Reach distance",
+	"Camera Mass",
+	"Music volume",
+	"Sounds volume",
+	"Block Physics",
+	"Smooth Camera",
+	"View bobbing",
+	"Invert mouse",
+	"Mouse sensitivity"
 	},
 	
-	{"Idioma",
-	 "???"
+	{
+	"Idioma",
+	"Distancia de alcance",
+	"Masa de la c†mara",
+	"Volumen de la m£sica",
+	"Volumen de los sonidos",
+	"F°sica de bloques",
+	"Suavizar c†mara",
+	"Vista de balanceo",
+	"Invertir rat¢n",
+	"Sensibilidad del rat¢n"
 	},
 
-	{"toki",
-	 "???"
+	{
+	"toki",
+	"luka suli",
+	"lukin suli",
+	"kalama musi wawa",
+	"kalama wawa",
+	"leko tawa",
+	"lukin pona",
+	"lukin tawa",
+	"lukin pi sewi ala",
+	"lukin wawa"
 	},
 
-	{"Sprache",
-	 "???"
+	{
+	"Sprache",
+	"Reichweite",
+	"Kameramasse",
+	"MusiklautstÑrke",
+	"SoundlautstÑrke",
+	"Blockphysik",
+	"Kamera ruckelfrei",
+	"Ansichtsbewegung",
+	"Maus invertieren",
+	"Mausempfindlichkeit"
+	},
+};
+
+static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
+	{
+	"Show FPS",
+	"Hotbar scale",
+	"Inventory scale",
+	"Crosshair scale",
+	"Black text shadows",
+	"Tab auto-complete",
+	"Use system font",
+	"Select system font"
+	},
+	
+	{
+	"Mostrar FPS",
+	"Escala de la barra de objetos",
+	"Escala del inventario",
+	"Escala de la cruz",
+	"Sombras de texto negras",
+	"Autocompletar pesta§as",
+	"Usar fuente del sistema",
+	"Seleccionar fuente del sistema"
+	},
+
+	{
+	"ken sitelen FPS",
+	"suli mute ijo lili",
+	"suli mute ijo",
+	"suli ilo lukin",
+	"pimeja sitelen",
+	"sitelen pona pi nena Tab",
+	"kepeken sitelen Sisen",
+	"seme sitelen Sisen"
+	},
+
+	{
+	"FPS anzeigen",
+	"Artikelleistenskala",
+	"Inventar-Skala",
+	"Fadenkreuzskala",
+	"Schwarze Textschatten",
+	"Tab-AutovervollstÑndigung",
+	"Systemschriftart verwenden",
+	"Systemschriftart auswÑhlen"
 	},
 };
 
