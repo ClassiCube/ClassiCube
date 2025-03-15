@@ -683,7 +683,7 @@ static struct OptionsGroupScreen {
 
 static struct Widget* optGroups_widgets[8 + 2];
 
-static const char* const optsGroup_descs[9] = {
+static const char* const optsGroup_descs[8] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eGui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
@@ -691,7 +691,7 @@ static const char* const optsGroup_descs[9] = {
 	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
 	"&eEnv colours, water level, weather, and more",
-	"&eSettings for resembling the original classic",
+	"&eSettings for resembling the original classic"
 };
 
 static struct SimpleButtonDesc optsGroup_btns[8] = {
