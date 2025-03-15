@@ -723,9 +723,9 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	MATRIX transform_matrix;
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	GTE_SetTransX(ToFixedTr( src->row4.x));
-	GTE_SetTransY(ToFixedTr(-src->row4.y));
-	GTE_SetTransZ(ToFixedTr( src->row4.w));
+	GTE_Set_TransX(ToFixedTr( src->row4.x));
+	GTE_Set_TransY(ToFixedTr(-src->row4.y));
+	GTE_Set_TransZ(ToFixedTr( src->row4.w));
 
 
 	transform_matrix.m[0][0] = ToFixed(src->row1.x);
@@ -904,25 +904,24 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		if ((cc_uint8*)poly > max) break;
 
 		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
-		gte_rtpt();
-		// rtpt takes 23 cycles
+		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_F4);
 		poly->rgbc = v0->rgbc;
 	
 		// Calculate Z depth
-		int p = 0;
-		gte_avsz3();
-		gte_stotz( &p );
-		if (p == 0 || (p>>2) > OT_LENGTH) continue;
+		GTE_Exec_AVSZ3(); // 5 cycles
+		int p; GTE_Get_OTZ(p);
+		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
 		gte_stsxy0( &poly->x0 );
 		gte_stsxy1( &poly->x1 );
 		gte_stsxy2( &poly->x2 );
-		gte_ldv0( &v2->xyz );
-		gte_rtps();
-		gte_stsxy( &poly->x3 );
 
+		gte_ldv0( &v2->xyz );
+		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
+		gte_stsxy( &poly->x3 );
+		
 		poly++;
 	}
 	next_packet = poly;
@@ -950,27 +949,29 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		if ((cc_uint8*)poly > max) break;
 	
 		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
-		gte_rtpt();
-		// rtpt takes 23 cycles
+		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_FT4);
-		poly->rgbc  = v0->rgbc | blend_mode;
+		poly->rgbc = v0->rgbc | blend_mode;
 
 		// Check for backface culling
-		int p = 0;
-		gte_nclip();
-		gte_stopz( &p );
-		if (p > 0) continue;
+		GTE_Exec_NCLIP(); // 8 cycles
+		poly->tpage = tpage;
+		poly->clut  = clut;
+		int clip; GTE_Get_MAC0(clip);
+		if (clip > 0) continue;
 	
 		// Calculate Z depth
-		gte_avsz3();
-		gte_stotz( &p );
-		if (p == 0 || (p>>2) > OT_LENGTH) continue;
+		GTE_Exec_AVSZ3(); // 5 cycles
+		int p; GTE_Get_OTZ(p);
+		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
 		gte_stsxy0( &poly->x0 );
 		gte_stsxy1( &poly->x1 );
 		gte_stsxy2( &poly->x2 );
 		gte_ldv0( &v2->xyz );
-		gte_rtps();
+
+		GTE_Exec_RTPS(); // 15 cycles
+		addPrim(&ot[p >> 2], poly);
 		gte_stsxy( &poly->x3 );
 	
 		poly->u0 = (v1->u >> uShift) + uOffset;
@@ -982,9 +983,6 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		poly->u3 = (v3->u >> uShift) + uOffset;
 		poly->v3 = (v3->v >> vShift) + vOffset;
 	
-		poly->tpage = tpage;
-		poly->clut  = clut;
-		addPrim(&ot[p >> 2], poly);
 		poly++;
 	}
 	next_packet = poly;
