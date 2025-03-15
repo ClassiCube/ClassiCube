@@ -2,6 +2,12 @@
 //  and so takes less cycles to access
 #define SCRATCHPAD_MEM ((cc_uint8*)0x1F800000)
 
+// === GTE COMMANDS ===
+#define GTE_SetTransX(value) __asm__ volatile("ctc2 %0, $5;" :: "r" (value) : )
+#define GTE_SetTransY(value) __asm__ volatile("ctc2 %0, $6;" :: "r" (value) : )
+#define GTE_SetTransZ(value) __asm__ volatile("ctc2 %0, $7;" :: "r" (value) : );
+
+// === DMA REGISTERS ===
 enum dma_chrc_flags {
 	CHRC_STATUS_BUSY = (1 << 24),
 };
@@ -15,12 +21,14 @@ enum dma_chrc_CMD {
 	CHRC_NO_DREQ_WAIT  = (1 << 28),
 };
 
+// === GPU REGISTERS ===
 enum gpu_status_flags {
 	GPU_STATUS_CMD_READY      = (1 << 26),
 	GPU_STATUS_DMA_RECV_READY = (1 << 28),
 };
 
 
+// === GP0 COMMANDS ===
 enum gp0_cmd_type {
 	GP0_CMD_CLEAR_VRAM_CACHE = 0x01000000,
 	GP0_CMD_MEM_FILL         = 0x02000000,
@@ -44,6 +52,20 @@ enum gp0_rectcmd_flags {
 	RECT_CMD_1x1 = 1u << 27,
 };
 
+#define PACK_RGBC(r, g, b, c) ( (r) | ((g) << 8) | ((b) << 16) | (c) )
+
+#define GP0_CMD_DRAW_MIN_PACK(x, y) ( GP0_CMD_DRAW_AREA_MIN | ((x) & 0x3FF) | (((y) & 0x3FF) << 10) )
+#define GP0_CMD_DRAW_MAX_PACK(x, y) ( GP0_CMD_DRAW_AREA_MAX | ((x) & 0x3FF) | (((y) & 0x3FF) << 10) )
+
+#define GP0_CMD_DRAW_OFFSET_PACK(x, y) ( GP0_CMD_DRAW_AREA_OFFSET | ((x) & 0x7FF) | (((y) & 0x7FF) << 11) )
+
+#define GP0_CMD_FILL_XY(x, y) ( ((x) & 0xFFFF) | (((y) & 0xFFFF) << 16) )
+#define GP0_CMD_FILL_WH(w, h) ( ((w) & 0xFFFF) | (((h) & 0xFFFF) << 16) )
+
+#define GP0_CMD_CLUT_XY(x, y) ( ((x) & 0x3F) | (((y) & 0x1FF) << 6) )
+
+
+// === GP1 COMMANDS ===
 enum gp1_cmd_type {
 	GP1_CMD_RESET_GPU        = 0x00000000,
 	GP1_CMD_DISPLAY_ACTIVE   = 0x03000000,
@@ -69,24 +91,10 @@ enum gp1_cmd_display_mode {
 	GP1_VER_RES_240 = 0 << 2,
 };
 
-
-// === MISC COMMANDS ===
-#define GP0_CMD_DRAW_MIN_PACK(x, y) ( GP0_CMD_DRAW_AREA_MIN | ((x) & 0x3FF) | (((y) & 0x3FF) << 10) )
-#define GP0_CMD_DRAW_MAX_PACK(x, y) ( GP0_CMD_DRAW_AREA_MAX | ((x) & 0x3FF) | (((y) & 0x3FF) << 10) )
-
-#define GP0_CMD_DRAW_OFFSET_PACK(x, y) ( GP0_CMD_DRAW_AREA_OFFSET | ((x) & 0x7FF) | (((y) & 0x7FF) << 11) )
-
 #define GP1_CMD_DISPLAY_ADDRESS_XY(x, y) ( ((x) & 0x3FF) | (((y) & 0x1FF) << 10) )
 
-#define GP0_CMD_FILL_XY(x, y) ( ((x) & 0xFFFF) | (((y) & 0xFFFF) << 16) )
-#define GP0_CMD_FILL_WH(w, h) ( ((w) & 0xFFFF) | (((h) & 0xFFFF) << 16) )
 
-#define PACK_RGBC(r, g, b, c) ( (r) | ((g) << 8) | ((b) << 16) | (c) )
-
-#define GP0_CMD_CLUT_XY(x, y) ( ((x) & 0x3F) | (((y) & 0x1FF) << 6) )
-
-
-// === POLYGON COMMANDS ===
+// === GP0 POLYGON COMMANDS ===
 #define POLY_CODE_F4 (GP0_CMD_POLYGON | POLY_CMD_QUAD)
 #define POLY_LEN_F4  5
 struct PSX_POLY_F4 {

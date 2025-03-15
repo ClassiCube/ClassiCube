@@ -249,41 +249,22 @@ void Gfx_TransferToVRAM(int x, int y, int w, int h, void* pixels) {
 //   10 texture pages are occupied by the doublebuffered display
 //   22 texture pages are usable for textures
 // These 22 pages are then divided into:
-//     - 5 for 128+ wide horizontal, 6 otherwise
-//     - 11 pages for vertical textures
+//     - 4,4,3 pages for horizontal textures
+//     - 4,4,3 pages for vertical textures
 #define TPAGE_WIDTH   64
 #define TPAGE_HEIGHT 256
 #define TPAGES_PER_HALF 16
 
-// Horizontally oriented textures (first group of 16)
-#define TPAGE_START_HOR 5
-#define MAX_HOR_TEX_PAGES 11
-#define MAX_HOR_TEX_LINES (MAX_HOR_TEX_PAGES * TPAGE_HEIGHT)
+#define MAX_TEX_GROUPS    3
+#define TEX_GROUP_LINES 256
+#define MAX_TEX_LINES   (MAX_TEX_GROUPS * TEX_GROUP_LINES)
 
-// Horizontally oriented textures (second group of 16)
-#define TPAGE_START_VER (16 + 5)
-#define MAX_VER_TEX_PAGES 11
-#define MAX_VER_TEX_LINES (MAX_VER_TEX_PAGES * TPAGE_WIDTH)
-
-static cc_uint8 vram_used[(MAX_HOR_TEX_LINES + MAX_VER_TEX_LINES) / 8];
+static cc_uint8 vram_used[(MAX_TEX_LINES + MAX_TEX_LINES) / 8];
 #define VRAM_SetUsed(line) (vram_used[(line) / 8] |=  (1 << ((line) % 8)))
 #define VRAM_UnUsed(line)  (vram_used[(line) / 8] &= ~(1 << ((line) % 8)))
 #define VRAM_IsUsed(line)  (vram_used[(line) / 8] &   (1 << ((line) % 8)))
 
 #define VRAM_BoundingAxis(width, height) height > width ? width : height
-
-static void VRAM_GetBlockRange(int width, int height, int* beg, int* end) {
-	if (height > width) {
-		*beg = MAX_HOR_TEX_LINES;
-		*end = MAX_HOR_TEX_LINES + MAX_VER_TEX_LINES;
-	} else if (width >= 128) {
-		*beg = 0;
-		*end = 5 * TPAGE_HEIGHT;
-	} else {
-		*beg = 5 * TPAGE_HEIGHT;
-		*end = MAX_HOR_TEX_LINES;
-	}
-}
 
 static cc_bool VRAM_IsRangeFree(int beg, int end) {
 	for (int i = beg; i < end; i++) 
@@ -293,16 +274,33 @@ static cc_bool VRAM_IsRangeFree(int beg, int end) {
 	return true;
 }
 
-static int VRAM_FindFreeBlock(int width, int height) {
-	int beg, end;
-	VRAM_GetBlockRange(width, height, &beg, &end);
-	
+static int VRAM_FindFreeLines(int group, int lines) {
+	int beg = group * TEX_GROUP_LINES;
+	int end = beg + TEX_GROUP_LINES;
+ 
 	// TODO kinda inefficient
-	for (int i = beg; i < end - height; i++) 
+	for (int i = beg; i < end - lines; i++) 
 	{
 		if (VRAM_IsUsed(i)) continue;
 		
-		if (VRAM_IsRangeFree(i, i + height)) return i;
+		if (VRAM_IsRangeFree(i, i + lines)) return i;
+	}
+	return -1;
+}
+
+static int VRAM_FindFreeBlock(int width, int height) {
+	int l;
+
+	if (height > width) {
+		// Vertically oriented texture
+		if ((l = VRAM_FindFreeLines(3, width)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(4, width)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(5, width)) >= 0) return l;
+	} else {
+		// Horizontally oriented texture
+		if ((l = VRAM_FindFreeLines(0, height)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(1, height)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(2, height)) >= 0) return l;
 	}
 	return -1;
 }
@@ -323,11 +321,15 @@ static void VRAM_FreeBlock(int line, int width, int height) {
 	}
 }
 
+#define TPAGE_START_HOR  5
+#define TPAGE_START_VER 21
+
 static int VRAM_CalcPage(int line) {
-	if (line < MAX_HOR_TEX_LINES) {
-		return TPAGE_START_HOR + (line / TPAGE_HEIGHT);
+	if (line < TEX_GROUP_LINES * MAX_TEX_GROUPS) {
+		int group = line / TPAGE_HEIGHT;
+		return TPAGE_START_HOR + (group * 4);
 	} else {
-		line -= MAX_HOR_TEX_LINES;
+		line -= TEX_GROUP_LINES * MAX_TEX_GROUPS;
 		return TPAGE_START_VER + (line / TPAGE_WIDTH);
 	}
 }
@@ -713,17 +715,17 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-static MATRIX transform_matrix;
 
-#define ToFixed(v) (int)(v * (1 << 12))
+#define ToFixed(v)   (int)(v * (1 << 12))
 #define ToFixedTr(v) (int)(v * (1 << 8))
 
 static void LoadTransformMatrix(struct Matrix* src) {
+	MATRIX transform_matrix;
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	transform_matrix.t[0] = ToFixedTr(src->row4.x);
-	transform_matrix.t[1] = ToFixedTr(-src->row4.y);
-	transform_matrix.t[2] = ToFixedTr(src->row4.w);
+	GTE_SetTransX(ToFixedTr( src->row4.x));
+	GTE_SetTransY(ToFixedTr(-src->row4.y));
+	GTE_SetTransZ(ToFixedTr( src->row4.w));
 
 
 	transform_matrix.m[0][0] = ToFixed(src->row1.x);
@@ -739,7 +741,6 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	transform_matrix.m[2][2] = ToFixed(src->row3.w);
 	
 	gte_SetRotMatrix(&transform_matrix);
-	gte_SetTransMatrix(&transform_matrix);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {

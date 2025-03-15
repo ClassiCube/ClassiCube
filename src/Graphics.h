@@ -347,9 +347,14 @@ USAGE NOTES:
 	  is setup to draw groups of 2 triangles from 4 vertices (1 quad)
 */
 
+/* Optional draw hints used by some rendering backends to speed up 2D drawing */
 typedef enum DrawHints_ {
 	DRAW_HINT_NONE   = 0,
-	DRAW_HINT_SPRITE = 9,
+	/* Vertices are 2D rects with possible texture scaling and/or repeating */
+	DRAW_HINT_SPRITE = 0x02,
+	/* Vertices are 2D rects with no texture scaling or repeating */
+	/* Typically this is only used for textures purely containing text */
+	DRAW_HINT_RECT   = 0x04,
 } DrawHints;
 
 /* Sets the format of the rendered vertices */

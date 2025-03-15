@@ -384,7 +384,7 @@ static CC_INLINE int FastFloor(float value) {
 	return valueI > value ? valueI - 1 : valueI;
 }
 
-static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
+static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2, int hints) {
 	PackedCol vColor = V0->c;
 	int minX = (int)V0->x;
 	int minY = (int)V0->y;
@@ -961,7 +961,7 @@ void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 	Vertex vertices[4];
 	int j = startVertex;
 
-	if (gfx_rendering2D && hints == DRAW_HINT_SPRITE) {
+	if (gfx_rendering2D && (hints & (DRAW_HINT_SPRITE|DRAW_HINT_RECT))) {
 		// 4 vertices = 1 quad = 2 triangles
 		for (int i = 0; i < verticesCount / 4; i++, j += 4)
 		{

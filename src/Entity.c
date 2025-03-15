@@ -515,7 +515,7 @@ int Entities_GetClosest(struct Entity* src) {
 		if (!e || e == &Entities.CurPlayer->Base) continue;
 		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, e, &t0, &t1)) continue;
 
-		if (targetID == -1 || t0 < closestDist) {
+		if (targetID < 0 || t0 < closestDist) {
 			closestDist = t0;
 			targetID    = i;
 		}

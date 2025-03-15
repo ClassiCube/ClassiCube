@@ -2632,7 +2632,7 @@ static void TexIdsOverlay_Render(void* screen, float delta) {
 	offset = TexIdsOverlay_RenderTerrain(s, offset);
 
 	Gfx_BindTexture(s->idAtlas.tex.ID);
-	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset, DRAW_HINT_SPRITE);
+	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset, DRAW_HINT_RECT);
 }
 
 static int TexIdsOverlay_KeyDown(void* screen, int key, struct InputDevice* device) {
