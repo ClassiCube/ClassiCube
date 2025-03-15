@@ -23,6 +23,8 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 extern unsigned char CC_CurrentLanguage;
 
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
+
+/* Generalized Option Text */
 static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	{
 	"Misc options...",
@@ -125,6 +127,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	},
 };
 
+/* Game Name */
 static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube",
 	"ClassiCube (en Espa¤ol)",
@@ -132,6 +135,7 @@ static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube (auf Deutsch)"
 };
 
+/* Language */
 static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"English",
 	"Espa¤ol",
@@ -139,24 +143,7 @@ static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"Deutsch"
 };
 
-static char* ccString_Desc[CC_LANGUAGE_LANGCNT][2] = {
-	{"&eSets the game's language",
-	 "???"
-	},
-
-	{"&eEstablece el idioma del juego.",
-	 "???"
-	},
-
-	{"&eante e musi toki",
-	 "???"
-	},
-
-	{"&eLegt die Sprache des Spiels fest",
-	 "???"
-	},
-};
-
+/* Misc Options */
 static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	{
 	"Language",
@@ -211,6 +198,7 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	},
 };
 
+/* GUI Options */
 static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	{
 	"Show FPS",
@@ -254,6 +242,80 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	"Tab-Autovervollst„ndigung",
 	"Systemschriftart verwenden",
 	"Systemschriftart ausw„hlen"
+	},
+};
+
+/* Nostalgia Options (Appearance) */
+static char* ccString_SubOption_NostalgicAppearance[CC_LANGUAGE_LANGCNT][7] = {
+	{
+	"Classic hand model",
+	"Classic walk anim",
+	"Classic chat",
+	"Classic inventory",
+	"Classic GUI textures",
+	"Classic player list",
+	"Classic options"
+	},
+	
+	{
+	"Modelo de mano Cl sico",
+	"Animaci¢n de andar Cl sico",
+	"Chat Cl sico",
+	"Inventario Cl sico",
+	"Texturas de interfaz Cl sico",
+	"Lista de jugadores Cl sico",
+	"Opciones Cl sico"
+	},
+
+	{
+	"luka lukin pi tenpo Kasi",
+	"tawa lukin pi tenpo Kasi",
+	"lipu toki lukin pi tenpo Kasi",
+	"lipu toki lukin pi tenpo Kasi",
+	"suli mute ijo lukin pi tenpo Kasi",
+	"lipu jan lukin pi tenpo Kasi",
+	"ante e musi pi tenpo Kasi"
+	},
+
+	{
+	"Classic Handmodell",
+	"Classic Laufanimation",
+	"Classic Chat",
+	"Classic Inventar",
+	"Classic GUI-Texturen",
+	"Classic Spielerliste",
+	"Classic Optionen"
+	},
+};
+
+/* Render Distance Text */
+static const char* const ccString_ViewDistanceNames[CC_LANGUAGE_LANGCNT][4] = {
+	{
+	"TINY",
+	"SHORT",
+	"NORMAL",
+	"FAR"
+	},
+	
+	{
+	"PEQUE¥O",
+	"BAJO",
+	"NORMAL",
+	"LEJO"
+	},
+
+	{
+	"lili mute",
+	"lili",
+	"suli",
+	"suli mute"
+	},
+
+	{
+	"KLEIN",
+	"KURZ",
+	"NORMAL",
+	"WEIT"
 	},
 };
 

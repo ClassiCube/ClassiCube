@@ -610,7 +610,7 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClO_GetMusic,    ClO_SetMusic, NULL);
 		MenuOptionsScreen_AddBool(s, "Invert mouse",
 			ClO_GetInvert,   ClO_SetInvert, NULL);
-		MenuOptionsScreen_AddEnum(s, "Render distance", viewDistNames, VIEW_COUNT,
+		MenuOptionsScreen_AddEnum(s, "Render distance", ccString_ViewDistanceNames[CC_CurrentLanguage], VIEW_COUNT,
 			ClO_GetViewDist, ClO_SetViewDist, NULL);
 		MenuOptionsScreen_AddBool(s, "3d anaglyph",
 			ClO_GetAnaglyph, ClO_SetAnaglyph, NULL);
@@ -1217,7 +1217,7 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_AddNum(s, ccString_SubOption_Misc[CC_CurrentLanguage][0],
 			0, CC_LANGUAGE_LANGCNT-1, 0,
 			MiO_GetLanguage, MiO_SetLanguage,
-			ccString_Desc[CC_CurrentLanguage][0]);
+			NULL);
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
 
 	/* Disable certain options */
@@ -1278,20 +1278,20 @@ static void    NA_SetOpts(cc_bool v) {
 static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Classic hand model",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][0],
 			NA_GetHand,        NA_SetHand, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic walk anim",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][1],
 			NA_GetAnim,        NA_SetAnim, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic chat",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][2],
 			NA_GetClassicChat, NA_SetClassicChat, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic inventory",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][3],
 			NA_GetClassicInv,  NA_SetClassicInv, NULL);
 			
-		MenuOptionsScreen_AddBool(s, "Classic GUI textures",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][4],
 			NA_GetGui,   NA_SetGui, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic player list",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][5],
 			NA_GetList,  NA_SetList, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic options",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][6],
 			NA_GetOpts,  NA_SetOpts, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
