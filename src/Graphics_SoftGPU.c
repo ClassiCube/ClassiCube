@@ -961,7 +961,7 @@ void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 	Vertex vertices[4];
 	int j = startVertex;
 
-	if (gfx_rendering2D && hints == DRAW_HINT_SPRITE) {
+	if (gfx_rendering2D && (hints & (DRAW_HINT_SPRITE|DRAW_HINT_RECT))) {
 		// 4 vertices = 1 quad = 2 triangles
 		for (int i = 0; i < verticesCount / 4; i++, j += 4)
 		{

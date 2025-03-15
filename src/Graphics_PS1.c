@@ -242,48 +242,29 @@ void Gfx_TransferToVRAM(int x, int y, int w, int h, void* pixels) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Textures--------------------------------------------------------*
+*------------------------------------------------------VRAM management----------------------------------------------------*
 *#########################################################################################################################*/
-// VRAM can be divided into texture pages
+// VRAM (1024x512) can be divided into texture pages
 //   32 texture pages total - each page is 64 x 256
 //   10 texture pages are occupied by the doublebuffered display
 //   22 texture pages are usable for textures
 // These 22 pages are then divided into:
-//     - 5 for 128+ wide horizontal, 6 otherwise
-//     - 11 pages for vertical textures
+//     - 4,4,3 pages for horizontal textures
+//     - 4,4,3 pages for vertical textures
 #define TPAGE_WIDTH   64
 #define TPAGE_HEIGHT 256
 #define TPAGES_PER_HALF 16
 
-// Horizontally oriented textures (first group of 16)
-#define TPAGE_START_HOR 5
-#define MAX_HOR_TEX_PAGES 11
-#define MAX_HOR_TEX_LINES (MAX_HOR_TEX_PAGES * TPAGE_HEIGHT)
+#define MAX_TEX_GROUPS    3
+#define TEX_GROUP_LINES 256
+#define MAX_TEX_LINES   (MAX_TEX_GROUPS * TEX_GROUP_LINES)
 
-// Horizontally oriented textures (second group of 16)
-#define TPAGE_START_VER (16 + 5)
-#define MAX_VER_TEX_PAGES 11
-#define MAX_VER_TEX_LINES (MAX_VER_TEX_PAGES * TPAGE_WIDTH)
-
-static cc_uint8 vram_used[(MAX_HOR_TEX_LINES + MAX_VER_TEX_LINES) / 8];
+static cc_uint8 vram_used[(MAX_TEX_LINES + MAX_TEX_LINES) / 8];
 #define VRAM_SetUsed(line) (vram_used[(line) / 8] |=  (1 << ((line) % 8)))
 #define VRAM_UnUsed(line)  (vram_used[(line) / 8] &= ~(1 << ((line) % 8)))
 #define VRAM_IsUsed(line)  (vram_used[(line) / 8] &   (1 << ((line) % 8)))
 
 #define VRAM_BoundingAxis(width, height) height > width ? width : height
-
-static void VRAM_GetBlockRange(int width, int height, int* beg, int* end) {
-	if (height > width) {
-		*beg = MAX_HOR_TEX_LINES;
-		*end = MAX_HOR_TEX_LINES + MAX_VER_TEX_LINES;
-	} else if (width >= 128) {
-		*beg = 0;
-		*end = 5 * TPAGE_HEIGHT;
-	} else {
-		*beg = 5 * TPAGE_HEIGHT;
-		*end = MAX_HOR_TEX_LINES;
-	}
-}
 
 static cc_bool VRAM_IsRangeFree(int beg, int end) {
 	for (int i = beg; i < end; i++) 
@@ -293,16 +274,33 @@ static cc_bool VRAM_IsRangeFree(int beg, int end) {
 	return true;
 }
 
-static int VRAM_FindFreeBlock(int width, int height) {
-	int beg, end;
-	VRAM_GetBlockRange(width, height, &beg, &end);
-	
+static int VRAM_FindFreeLines(int group, int lines) {
+	int beg = group * TEX_GROUP_LINES;
+	int end = beg + TEX_GROUP_LINES;
+ 
 	// TODO kinda inefficient
-	for (int i = beg; i < end - height; i++) 
+	for (int i = beg; i < end - lines; i++) 
 	{
 		if (VRAM_IsUsed(i)) continue;
 		
-		if (VRAM_IsRangeFree(i, i + height)) return i;
+		if (VRAM_IsRangeFree(i, i + lines)) return i;
+	}
+	return -1;
+}
+
+static int VRAM_FindFreeBlock(int width, int height) {
+	int l;
+
+	if (height > width) {
+		// Vertically oriented texture
+		if ((l = VRAM_FindFreeLines(3, width)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(4, width)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(5, width)) >= 0) return l;
+	} else {
+		// Horizontally oriented texture
+		if ((l = VRAM_FindFreeLines(0, height)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(1, height)) >= 0) return l;
+		if ((l = VRAM_FindFreeLines(2, height)) >= 0) return l;
 	}
 	return -1;
 }
@@ -323,13 +321,52 @@ static void VRAM_FreeBlock(int line, int width, int height) {
 	}
 }
 
+#define TPAGE_START_HOR  5
+#define TPAGE_START_VER 21
+
 static int VRAM_CalcPage(int line) {
-	if (line < MAX_HOR_TEX_LINES) {
-		return TPAGE_START_HOR + (line / TPAGE_HEIGHT);
+	if (line < TEX_GROUP_LINES * MAX_TEX_GROUPS) {
+		int group = line / TPAGE_HEIGHT;
+		return TPAGE_START_HOR + (group * 4);
 	} else {
-		line -= MAX_HOR_TEX_LINES;
+		line -= TEX_GROUP_LINES * MAX_TEX_GROUPS;
 		return TPAGE_START_VER + (line / TPAGE_WIDTH);
 	}
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Textures--------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
+	for (int i = 0; i < pal_count; i++) 
+	{
+		if (palette[i] == color) return i;
+	}
+	return -1;
+}
+
+static CC_INLINE int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
+	int pal_count = 0;
+	if (bmp->width < 16 || bmp->height < 16) return 0;
+	
+	for (int y = 0; y < bmp->height; y++)
+	{
+		BitmapCol* row = bmp->scan0 + y * rowWidth;
+		
+		for (int x = 0; x < bmp->width; x++) 
+		{
+			BitmapCol color = row[x];
+			int idx = FindInPalette(palette, pal_count, color);
+			if (idx >= 0) continue;
+
+			if (pal_count >= 16) return -1;
+
+			palette[pal_count] = color;
+			pal_count++;
+		}
+	}
+	return pal_count;
 }
 
 
@@ -343,20 +380,57 @@ typedef struct GPUTexture {
 static GPUTexture textures[TEXTURES_MAX_COUNT];
 static GPUTexture* curTex;
 
-static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
-	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
-	if (!tmp) return NULL;
-
+static void CreateFullTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth) {
 	// TODO: Only copy when rowWidth != bmp->width
 	for (int y = 0; y < bmp->height; y++)
 	{
-		cc_uint16* src = bmp->scan0 + y * rowWidth;
-		cc_uint16* dst = tmp        + y * bmp->width;
+		BitmapCol* src = bmp->scan0 + y * rowWidth;
+		BitmapCol* dst = tmp        + y * bmp->width;
 		
-		for (int x = 0; x < bmp->width; x++) {
+		for (int x = 0; x < bmp->width; x++) 
+		{
 			dst[x] = src[x];
 		}
 	}
+}
+
+static void CreatePalettedTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
+	cc_uint8* dst  = (cc_uint8*)tmp;
+	BitmapCol* src = bmp->scan0;
+	int stride = (bmp->width * 2) >> 2;
+
+	for (int y = 0; y < bmp->height; y++)
+	{
+		for (int x = 0; x < bmp->width; x++) 
+		{
+			int idx = FindInPalette(palette, pal_count, src[x]);
+			
+			if ((x & 1) == 0) {
+				dst[x >> 1] = idx;
+			} else {
+				dst[x >> 1] |= idx << 4;
+			}
+		}
+
+		src += rowWidth;
+		dst += stride;
+	}
+}
+
+static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
+	BitmapCol palette[16]; // = (BitmapCol*)SCRATCHPAD_MEM; TODO doesn't work
+	int pal_count = CalcPalette(palette, bmp, rowWidth);
+
+	cc_uint16* tmp;
+	int tmp_size;
+	
+	if (pal_count > 0) {
+		tmp_size = (bmp->width * bmp->height) >> 2; // each halfword has 4 4bpp pixels
+	} else {
+		tmp_size = bmp->width * bmp->height; // each halfword has 1 16bpp pixel
+	}
+	tmp = Mem_TryAlloc(tmp_size, 2);
+	if (!tmp) return NULL;
 
 	GPUTexture* tex = &textures[i];
 	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
@@ -369,7 +443,8 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	int page   = VRAM_CalcPage(line);
 	int pageX  = (page % TPAGES_PER_HALF);
 	int pageY  = (page / TPAGES_PER_HALF);
-	tex->tpage = (2 << 7) | (pageY << 4) | pageX;
+	int mode   = pal_count > 0 ? 0 : 2;
+	tex->tpage = (mode << 7) | (pageY << 4) | pageX;
 	tex->clut  = 0;
 
 	VRAM_AllocBlock(line, bmp->width, bmp->height);
@@ -381,16 +456,28 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 		tex->yOffset = line % TPAGE_HEIGHT;
 	}
 	
-	Platform_Log3("%i x %i  = %i", &bmp->width, &bmp->height, &line);
+	Platform_Log4("%i x %i  = %i (%i)", &bmp->width, &bmp->height, &line, &pal_count);
 	Platform_Log3("  at %i (%i, %i)", &page, &pageX, &pageY);
+
+	if (pal_count > 0) {
+		// 320 wide / 16 clut entries = 20 cluts per row
+		int clutX = i % 20;
+		int clutY = i / 20 + 490;
+		tex->clut = GP0_CMD_CLUT_XY(clutX, clutY);
+		Gfx_TransferToVRAM(clutX * 16, clutY, 16, 1, palette);
+
+		CreatePalettedTexture(tmp, bmp, rowWidth, palette, pal_count);
+	} else {
+		CreateFullTexture(tmp, bmp, rowWidth);
+	}
 		
 	int x = pageX * TPAGE_WIDTH  + tex->xOffset;
 	int y = pageY * TPAGE_HEIGHT + tex->yOffset;
-	int w = bmp->width;
+	int w = pal_count > 0 ? (bmp->width >> 2) : bmp->width;
 	int h = bmp->height;
 
-	Platform_Log2("  LOAD AT: %i, %i", &x, &y);
-	Gfx_TransferToVRAM(x, y, w, h, tmp);
+	Platform_Log4("  LOAD AT: %i, %i (%i x %i)", &x, &y, &w, &h);
+	Gfx_TransferToVRAM(x, y, w, h, tmp); 
 	
 	Mem_Free(tmp);
 	return tex;
@@ -628,17 +715,17 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-static MATRIX transform_matrix;
 
-#define ToFixed(v) (int)(v * (1 << 12))
+#define ToFixed(v)   (int)(v * (1 << 12))
 #define ToFixedTr(v) (int)(v * (1 << 8))
 
 static void LoadTransformMatrix(struct Matrix* src) {
+	MATRIX transform_matrix;
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	transform_matrix.t[0] = ToFixedTr(src->row4.x);
-	transform_matrix.t[1] = ToFixedTr(-src->row4.y);
-	transform_matrix.t[2] = ToFixedTr(src->row4.w);
+	GTE_SetTransX(ToFixedTr( src->row4.x));
+	GTE_SetTransY(ToFixedTr(-src->row4.y));
+	GTE_SetTransZ(ToFixedTr( src->row4.w));
 
 
 	transform_matrix.m[0][0] = ToFixed(src->row1.x);
@@ -654,7 +741,6 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	transform_matrix.m[2][2] = ToFixed(src->row3.w);
 	
 	gte_SetRotMatrix(&transform_matrix);
-	gte_SetTransMatrix(&transform_matrix);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {

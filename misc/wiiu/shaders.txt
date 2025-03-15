@@ -8,6 +8,7 @@ https://github.com/rw-r-r-0644/gx2-texture/blob/83d7707e8d4b33ec7ba63d5c7dfe62c3
 https://github.com/yawut/ntrview-wiiu/blob/45b1c7f05cfd9917b8b171f3db08dc63293fc5c5/gfx/gx2_shaders/main.psh
 https://github.com/Hydr8gon/NooDS/blob/b41cb3b9b889481c998e7e83db1ab3ef9d97b838/src/console/shaders/shader_wiiu.vsh
 https://github.com/luRaichu/recsbr/blob/163fa441712f6b25e780e914617941c2385b330e/src/Backends/Rendering/WiiUShaders/shader%20sources/wtf%20is%20this.txt
+https://github.com/comex/quiet_/blob/4b55e8c9585e336ad3e09628d951a4d7321e70f7/qmod/shader2.psh#L4
 
 To generate shader assembly
 1) Get AMD ShaderAnalyzer

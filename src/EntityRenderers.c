@@ -11,6 +11,7 @@
 #include "World.h"
 #include "Particle.h"
 #include "Drawer2D.h"
+#include "Server.h"
 
 /*########################################################################################################################*
 *------------------------------------------------------Entity Shadow------------------------------------------------------*
@@ -385,6 +386,8 @@ void EntityNames_Render(void) {
 	int i;
 
 	if (Entities.NamesMode == NAME_MODE_NONE) return;
+	if (Server.IsSinglePlayer && Game_NumStates == 1) return;
+
 	closestEntityId = Entities_GetClosest(&p->Base);
 	if (!p->Hacks.CanSeeAllNames || Entities.NamesMode != NAME_MODE_ALL) return;
 
@@ -410,6 +413,8 @@ void EntityNames_RenderHovered(void) {
 	int i;
 
 	if (Entities.NamesMode == NAME_MODE_NONE) return;
+	if (Server.IsSinglePlayer && Game_NumStates == 1) return;
+
 	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
 		&& p->Hacks.CanSeeAllNames;
 

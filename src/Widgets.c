@@ -61,7 +61,7 @@ static int TextWidget_Render2(void* widget, int offset) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset + 4;
 }
@@ -1592,12 +1592,12 @@ static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vert
 static int TextInputWidget_Render2(void* widget, int offset) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_BindTexture(w->inputTex.ID);
-	Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+	Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	offset += 4;
 
 	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
 		Gfx_BindTexture(w->caretTex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset + 4;
 }
@@ -2455,7 +2455,7 @@ static int TextGroupWidget_Render2(void* widget, int offset) {
 		if (!textures[i].ID) continue;
 
 		Gfx_BindTexture(textures[i].ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset;
 }
