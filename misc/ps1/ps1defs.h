@@ -3,9 +3,17 @@
 #define SCRATCHPAD_MEM ((cc_uint8*)0x1F800000)
 
 // === GTE COMMANDS ===
-#define GTE_SetTransX(value) __asm__ volatile("ctc2 %0, $5;" :: "r" (value) : )
-#define GTE_SetTransY(value) __asm__ volatile("ctc2 %0, $6;" :: "r" (value) : )
-#define GTE_SetTransZ(value) __asm__ volatile("ctc2 %0, $7;" :: "r" (value) : );
+#define GTE_Set_TransX(value) __asm__ volatile("ctc2 %0, $5;" :: "r" (value) : )
+#define GTE_Set_TransY(value) __asm__ volatile("ctc2 %0, $6;" :: "r" (value) : )
+#define GTE_Set_TransZ(value) __asm__ volatile("ctc2 %0, $7;" :: "r" (value) : )
+
+#define GTE_Get_OTZ(dst)  __asm__ volatile("mfc2 %0, $7;  nop;" : "=r" (dst) :: )
+#define GTE_Get_MAC0(dst) __asm__ volatile("mfc2 %0, $24; nop;" : "=r" (dst) :: )
+
+#define GTE_Exec_RTPT()  __asm__ volatile ("nop; nop; cop2 0x00280030;")
+#define GTE_Exec_NCLIP() __asm__ volatile ("nop; nop; cop2 0x01400006;")
+#define GTE_Exec_AVSZ3() __asm__ volatile ("nop; nop; cop2 0x0158002D;")
+#define GTE_Exec_RTPS()  __asm__ volatile ("nop; nop; cop2 0x00180001;")
 
 // === DMA REGISTERS ===
 enum dma_chrc_flags {
