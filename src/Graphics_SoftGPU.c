@@ -384,7 +384,7 @@ static CC_INLINE int FastFloor(float value) {
 	return valueI > value ? valueI - 1 : valueI;
 }
 
-static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2, int hints) {
+static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	PackedCol vColor = V0->c;
 	int minX = (int)V0->x;
 	int minY = (int)V0->y;
