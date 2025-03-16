@@ -1,11 +1,12 @@
 #include "String.h"
+#include "Strings.h"
 #include "Funcs.h"
 #include "Logger.h"
 #include "Platform.h"
 #include "Stream.h"
 #include "Utils.h"
 
-unsigned char CC_CurrentLanguage = CC_LANGUAGE_ENGLISH;
+unsigned char CC_CurrentLanguage = 0;
 
 #ifdef __cplusplus
 const cc_string String_Empty = { NULL, 0, 0 };

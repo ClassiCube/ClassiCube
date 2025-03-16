@@ -54,7 +54,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	{
 	"Opciones varias...",
 	"Opciones de Gui...",
-	"Opciones de gr†ficos...",
+	"Opciones de grÔøΩficos...",
 	"Opciones de controles...",
 	"Opciones de charlar...",
 	"Opciones de cortar...",
@@ -63,7 +63,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 
 	"Opciones...",
 	"Paquetes de texturas...",
-	"Teclas de acceso r†pido...",
+	"Teclas de acceso rÔøΩpido...",
 	"Generar nuevo nivel...",
 	"Nivel de carga...",
 	"Guardar nivel...",
@@ -71,7 +71,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"Hecho",
 	"Salir del juego",
 	"De vuelta al juego",
-	"Men£ del juego",
+	"MenÔøΩ del juego",
 	"En",
 	"Apagado"
 	},
@@ -112,7 +112,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"Nostalgie-Optionen...",
 
 	"Optionen...",
-	"Texturpaket Ñndern...",
+	"Texturpaket ÔøΩndern...",
 	"Tastenkombinationen...",
 	"Neues Level generieren...",
 	"Level laden...",
@@ -120,8 +120,8 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 
 	"Fertig",
 	"Spiel beenden",
-	"ZurÅck zum Spiel",
-	"SpielmenÅ",
+	"ZurÔøΩck zum Spiel",
+	"SpielmenÔøΩ",
 	"An",
 	"Aus"
 	},
@@ -130,7 +130,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 /* Game Name */
 static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube",
-	"ClassiCube (en Espa§ol)",
+	"ClassiCube (en EspaÔøΩol)",
 	"musi Kasiku",
 	"ClassiCube (auf Deutsch)"
 };
@@ -138,7 +138,7 @@ static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 /* Language */
 static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"English",
-	"Espa§ol",
+	"EspaÔøΩol",
 	"toki pona (sitelen Lasina)",
 	"Deutsch"
 };
@@ -161,14 +161,14 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	{
 	"Idioma",
 	"Distancia de alcance",
-	"Masa de la c†mara",
-	"Volumen de la m£sica",
+	"Masa de la cÔøΩmara",
+	"Volumen de la mÔøΩsica",
 	"Volumen de los sonidos",
-	"F°sica de bloques",
-	"Suavizar c†mara",
+	"FÔøΩsica de bloques",
+	"Suavizar cÔøΩmara",
 	"Vista de balanceo",
-	"Invertir rat¢n",
-	"Sensibilidad del rat¢n"
+	"Invertir ratÔøΩn",
+	"Sensibilidad del ratÔøΩn"
 	},
 
 	{
@@ -188,8 +188,8 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"Sprache",
 	"Reichweite",
 	"Kameramasse",
-	"MusiklautstÑrke",
-	"SoundlautstÑrke",
+	"MusiklautstÔøΩrke",
+	"SoundlautstÔøΩrke",
 	"Blockphysik",
 	"Kamera ruckelfrei",
 	"Ansichtsbewegung",
@@ -217,7 +217,7 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	"Escala del inventario",
 	"Escala de la cruz",
 	"Sombras de texto negras",
-	"Autocompletar pesta§as",
+	"Autocompletar pestaÔøΩas",
 	"Usar fuente del sistema",
 	"Seleccionar fuente del sistema"
 	},
@@ -239,9 +239,9 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	"Inventar-Skala",
 	"Fadenkreuzskala",
 	"Schwarze Textschatten",
-	"Tab-AutovervollstÑndigung",
+	"Tab-AutovervollstÔøΩndigung",
 	"Systemschriftart verwenden",
-	"Systemschriftart auswÑhlen"
+	"Systemschriftart auswÔøΩhlen"
 	},
 };
 
@@ -258,13 +258,13 @@ static char* ccString_SubOption_NostalgicAppearance[CC_LANGUAGE_LANGCNT][7] = {
 	},
 	
 	{
-	"Modelo de mano Cl†sico",
-	"Animaci¢n de andar Cl†sico",
-	"Chat Cl†sico",
-	"Inventario Cl†sico",
-	"Texturas de interfaz Cl†sico",
-	"Lista de jugadores Cl†sico",
-	"Opciones Cl†sico"
+	"Modelo de mano ClÔøΩsico",
+	"AnimaciÔøΩn de andar ClÔøΩsico",
+	"Chat ClÔøΩsico",
+	"Inventario ClÔøΩsico",
+	"Texturas de interfaz ClÔøΩsico",
+	"Lista de jugadores ClÔøΩsico",
+	"Opciones ClÔøΩsico"
 	},
 
 	{
@@ -298,7 +298,7 @@ static const char* const ccString_ViewDistanceNames[CC_LANGUAGE_LANGCNT][4] = {
 	},
 	
 	{
-	"PEQUE•O",
+	"PEQUEÔøΩO",
 	"BAJO",
 	"NORMAL",
 	"LEJO"

@@ -1126,14 +1126,16 @@ static void MiO_SetLanguage(const cc_string* c) {
 	String_AppendConst(&Server.AppName, GAME_APP_VER);
 	String_AppendConst(&Server.AppName, Platform_AppNameSuffix);
 
-	if (!Server.IsSinglePlayer) {	/* Only kick player on Multiplayer */
+	/*if (!Server.IsSinglePlayer) {
 		char *w = "Language changed!\0";
 		char *i = "Disconnected to properly apply the language.\0";
 		cc_string warn = String_FromConst(w);
 		cc_string info = String_FromConst(i);
 
-		Game_Disconnect(&warn, &info);		/* TODO: Make this unneded period, else at least fix the text. */
-	}
+		Game_Disconnect(&warn, &info);
+	}*/
+
+	Options_SetInt(OPT_SELECTED_LANGUAGE, CC_CurrentLanguage);
 }
 
 static void MiO_GetReach(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->ReachDistance, 2); }
