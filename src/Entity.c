@@ -707,7 +707,6 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	AnimatedComp_GetCurrent(e, t);
-	TiltComp_GetCurrent(p, &p->Tilt, t);
 
 	if (!Camera.Active->isThirdPerson && p == Entities.CurPlayer) return;
 	Model_Render(e->Model, e);
