@@ -54,27 +54,27 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 
 	{
 	"Opciones varias...",
-	"Opciones de Gui...",
-	"Opciones de gr?ficos...",
-	"Opciones de controles...",
-	"Opciones de charlar...",
-	"Opciones de cortar...",
-	"Opciones de ambientales...",
+	"Opciones de interfaz...",
+	"Opciones gr†ficas...",
+	"Controles...",
+	"Opciones de chat...",
+	"Configuraci¢n de hacks...",
+	"Configuraci¢n de entorno...",
 	"Opciones de nostalgia...",
-
+	
 	"Opciones...",
-	"Paquetes de texturas...",
-	"Teclas de acceso r?pido...",
+	"Cambiar paquete de texturas...",
+	"Teclas de acceso r†pido...",
 	"Generar nuevo nivel...",
-	"Nivel de carga...",
+	"Cargar nivel...",
 	"Guardar nivel...",
-
-	"Hecho",
+	
+	"Listo",
 	"Salir del juego",
-	"De vuelta al juego",
-	"Men? del juego",
-	"En",
-	"Apagado"
+	"Volver al juego",
+	"Men£ del juego",
+	"Activado",
+	"Desactivado"
 	},
 
 	{
@@ -111,27 +111,27 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"Hacks-Einstellungen...",
 	"Umgebungseinstellungen...",
 	"Nostalgie-Optionen...",
-
+	
 	"Optionen...",
-	"Texturpaket ?ndern...",
-	"Tastenkombinationen...",
+	"Texturpaket Ñndern...",
+	"Hotkeys...",
 	"Neues Level generieren...",
 	"Level laden...",
 	"Level speichern...",
-
+	
 	"Fertig",
 	"Spiel beenden",
-	"Zur?ck zum Spiel",
-	"Spielmen?",
-	"An",
+	"ZurÅck zum Spiel",
+	"SpielmenÅ",
+	"Ein",
 	"Aus"
-	},
+	}
 };
 
 /* Game Name */
 static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube",
-	"ClassiCube (en Espa?ol)",
+	"ClassiCube (en Espa§ol)",
 	"musi Kasiku",
 	"ClassiCube (auf Deutsch)"
 };
@@ -162,14 +162,14 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	{
 	"Idioma",
 	"Distancia de alcance",
-	"Masa de la c?mara",
-	"Volumen de la m?sica",
+	"Masa de la c†mara",
+	"Volumen de la m£sica",
 	"Volumen de los sonidos",
-	"F?sica de bloques",
-	"Suavizar c?mara",
+	"F°sica de bloques",
+	"Suavizar c†mara",
 	"Vista de balanceo",
-	"Invertir rat?n",
-	"Sensibilidad del rat?n"
+	"Invertir rat¢n",
+	"Sensibilidad del rat¢n"
 	},
 
 	{
@@ -189,12 +189,12 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"Sprache",
 	"Reichweite",
 	"Kameramasse",
-	"Musiklautst?rke",
-	"Soundlautst?rke",
+	"MusiklautstÑrke",
+	"SoundlautstÑrke",
 	"Blockphysik",
 	"Kamera ruckelfrei",
-	"Ansichtsbewegung",
-	"Maus invertieren",
+	"Ansicht wackeln",
+	"Maus umkehren",
 	"Mausempfindlichkeit"
 	},
 };
@@ -214,11 +214,11 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	
 	{
 	"Mostrar FPS",
-	"Escala de la barra de objetos",
+	"Escala de la barra de acceso r†pido",
 	"Escala del inventario",
-	"Escala de la cruz",
-	"Sombras de texto negras",
-	"Autocompletar pesta?as",
+	"Escala de la mira",
+	"Sombras de texto negro",
+	"Autocompletar pesta§as",
 	"Usar fuente del sistema",
 	"Seleccionar fuente del sistema"
 	},
@@ -236,13 +236,13 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 
 	{
 	"FPS anzeigen",
-	"Artikelleistenskala",
-	"Inventar-Skala",
-	"Fadenkreuzskala",
+	"Hotbar-Skalierung",
+	"Inventar-Skalierung",
+	"Fadenkreuz-Skalierung",
 	"Schwarze Textschatten",
-	"Tab-Autovervollst?ndigung",
+	"Tab-AutovervollstÑndigung",
 	"Systemschriftart verwenden",
-	"Systemschriftart ausw?hlen"
+	"Systemschriftart auswÑhlen"
 	},
 };
 
@@ -259,13 +259,13 @@ static char* ccString_SubOption_NostalgicAppearance[CC_LANGUAGE_LANGCNT][7] = {
 	},
 	
 	{
-	"Modelo de mano Cl?sico",
-	"Animaci?n de andar Cl?sico",
-	"Chat Cl?sico",
-	"Inventario Cl?sico",
-	"Texturas de interfaz Cl?sico",
-	"Lista de jugadores Cl?sico",
-	"Opciones Cl?sico"
+	"Modelo de mano cl†sico",
+	"Animaci¢n de andar cl†sico",
+	"Chat cl†sico",
+	"Inventario cl†sico",
+	"Texturas de interfaz cl†sico",
+	"Lista de jugadores cl†sico",
+	"Opciones cl†sico"
 	},
 
 	{
@@ -286,7 +286,7 @@ static char* ccString_SubOption_NostalgicAppearance[CC_LANGUAGE_LANGCNT][7] = {
 	"Classic GUI-Texturen",
 	"Classic Spielerliste",
 	"Classic Optionen"
-	},
+	}
 };
 
 /* Render Distance Text */
@@ -299,7 +299,7 @@ static const char* const ccString_ViewDistanceNames[CC_LANGUAGE_LANGCNT][4] = {
 	},
 	
 	{
-	"PEQUE?O",
+	"PEQUE•O",
 	"BAJO",
 	"NORMAL",
 	"LEJO"
