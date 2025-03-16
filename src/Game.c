@@ -5,7 +5,6 @@
 #include "MapRenderer.h"
 #include "Graphics.h"
 #include "Camera.h"
-#include "Strings.h"
 #include "Options.h"
 #include "Funcs.h"
 #include "ExtMath.h"

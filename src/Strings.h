@@ -21,6 +21,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define CC_LANGUAGE_GERMAN_ 3
 
 extern unsigned char CC_CurrentLanguage;
+extern void applyLanguageToGame();
 
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
 
@@ -54,7 +55,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	{
 	"Opciones varias...",
 	"Opciones de Gui...",
-	"Opciones de gr�ficos...",
+	"Opciones de gr?ficos...",
 	"Opciones de controles...",
 	"Opciones de charlar...",
 	"Opciones de cortar...",
@@ -63,7 +64,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 
 	"Opciones...",
 	"Paquetes de texturas...",
-	"Teclas de acceso r�pido...",
+	"Teclas de acceso r?pido...",
 	"Generar nuevo nivel...",
 	"Nivel de carga...",
 	"Guardar nivel...",
@@ -71,7 +72,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"Hecho",
 	"Salir del juego",
 	"De vuelta al juego",
-	"Men� del juego",
+	"Men? del juego",
 	"En",
 	"Apagado"
 	},
@@ -112,7 +113,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"Nostalgie-Optionen...",
 
 	"Optionen...",
-	"Texturpaket �ndern...",
+	"Texturpaket ?ndern...",
 	"Tastenkombinationen...",
 	"Neues Level generieren...",
 	"Level laden...",
@@ -120,8 +121,8 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 
 	"Fertig",
 	"Spiel beenden",
-	"Zur�ck zum Spiel",
-	"Spielmen�",
+	"Zur?ck zum Spiel",
+	"Spielmen?",
 	"An",
 	"Aus"
 	},
@@ -130,7 +131,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 /* Game Name */
 static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube",
-	"ClassiCube (en Espa�ol)",
+	"ClassiCube (en Espa?ol)",
 	"musi Kasiku",
 	"ClassiCube (auf Deutsch)"
 };
@@ -138,7 +139,7 @@ static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 /* Language */
 static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"English",
-	"Espa�ol",
+	"Espa?ol",
 	"toki pona (sitelen Lasina)",
 	"Deutsch"
 };
@@ -161,14 +162,14 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	{
 	"Idioma",
 	"Distancia de alcance",
-	"Masa de la c�mara",
-	"Volumen de la m�sica",
+	"Masa de la c?mara",
+	"Volumen de la m?sica",
 	"Volumen de los sonidos",
-	"F�sica de bloques",
-	"Suavizar c�mara",
+	"F?sica de bloques",
+	"Suavizar c?mara",
 	"Vista de balanceo",
-	"Invertir rat�n",
-	"Sensibilidad del rat�n"
+	"Invertir rat?n",
+	"Sensibilidad del rat?n"
 	},
 
 	{
@@ -188,8 +189,8 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"Sprache",
 	"Reichweite",
 	"Kameramasse",
-	"Musiklautst�rke",
-	"Soundlautst�rke",
+	"Musiklautst?rke",
+	"Soundlautst?rke",
 	"Blockphysik",
 	"Kamera ruckelfrei",
 	"Ansichtsbewegung",
@@ -217,7 +218,7 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	"Escala del inventario",
 	"Escala de la cruz",
 	"Sombras de texto negras",
-	"Autocompletar pesta�as",
+	"Autocompletar pesta?as",
 	"Usar fuente del sistema",
 	"Seleccionar fuente del sistema"
 	},
@@ -239,9 +240,9 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	"Inventar-Skala",
 	"Fadenkreuzskala",
 	"Schwarze Textschatten",
-	"Tab-Autovervollst�ndigung",
+	"Tab-Autovervollst?ndigung",
 	"Systemschriftart verwenden",
-	"Systemschriftart ausw�hlen"
+	"Systemschriftart ausw?hlen"
 	},
 };
 
@@ -258,13 +259,13 @@ static char* ccString_SubOption_NostalgicAppearance[CC_LANGUAGE_LANGCNT][7] = {
 	},
 	
 	{
-	"Modelo de mano Cl�sico",
-	"Animaci�n de andar Cl�sico",
-	"Chat Cl�sico",
-	"Inventario Cl�sico",
-	"Texturas de interfaz Cl�sico",
-	"Lista de jugadores Cl�sico",
-	"Opciones Cl�sico"
+	"Modelo de mano Cl?sico",
+	"Animaci?n de andar Cl?sico",
+	"Chat Cl?sico",
+	"Inventario Cl?sico",
+	"Texturas de interfaz Cl?sico",
+	"Lista de jugadores Cl?sico",
+	"Opciones Cl?sico"
 	},
 
 	{
@@ -298,7 +299,7 @@ static const char* const ccString_ViewDistanceNames[CC_LANGUAGE_LANGCNT][4] = {
 	},
 	
 	{
-	"PEQUE�O",
+	"PEQUE?O",
 	"BAJO",
 	"NORMAL",
 	"LEJO"

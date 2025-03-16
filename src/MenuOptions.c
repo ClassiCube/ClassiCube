@@ -1115,25 +1115,11 @@ static void MiO_SetCameraMass(const cc_string* c) {
 	Options_Set(OPT_CAMERA_MASS, c);
 }
 
-static char appBuffer[STRING_SIZE];
 static void MiO_GetLanguage(cc_string* v) { String_AppendInt(v, CC_CurrentLanguage); }
 static void MiO_SetLanguage(const cc_string* c) {
 	CC_CurrentLanguage = (int)Menu_Float(c);
 	
-	String_InitArray(Server.AppName, appBuffer);
-	String_AppendConst(&Server.AppName, ccStrings_GameTitle[CC_CurrentLanguage]);
-	String_AppendConst(&Server.AppName, " ");
-	String_AppendConst(&Server.AppName, GAME_APP_VER);
-	String_AppendConst(&Server.AppName, Platform_AppNameSuffix);
-
-	/*if (!Server.IsSinglePlayer) {
-		char *w = "Language changed!\0";
-		char *i = "Disconnected to properly apply the language.\0";
-		cc_string warn = String_FromConst(w);
-		cc_string info = String_FromConst(i);
-
-		Game_Disconnect(&warn, &info);
-	}*/
+	applyLanguageToGame();
 
 	Options_SetInt(OPT_SELECTED_LANGUAGE, CC_CurrentLanguage);
 }
