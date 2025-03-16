@@ -132,7 +132,7 @@ Listed below are all of the options supported in options.txt
 |Name|Default|Description|
 |--|--|--|
 `gfx-mipmaps`|`false`|Whether to use mipmaps to reduce faraway texture noise
-`fpslimit`|`LimitVSync`|Strategy used to limit FPS<br>Strategies: LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, Limit144FPS, LimitNone
+`fpslimit`|`LimitVSync`|Strategy used to limit FPS<br>Strategies: LimitVSync, Limit30FPS, Limit60FPS, Limit75FPS, Limit120FPS, Limit144FPS, LimitNone
 `normal`|`normal`|Environmental effects render mode<br>Modes: normal, normalfast, legacy, legacyfast<br>- legacy improves appearance on some older GPUs<br>- fast disables clouds, fog and overhead sky
 
 ## Other rendering options
