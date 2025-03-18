@@ -425,7 +425,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SPLITSCREEN
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#undef  CC_BUILD_FILESYSTEM
 #elif defined PLAT_PS2
 	#define CC_BUILD_PS2
 	#define CC_BUILD_CONSOLE
