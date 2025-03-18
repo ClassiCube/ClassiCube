@@ -715,6 +715,12 @@ void EnvSettingsScreen_Show(void) {
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
 
+static void GraphicsOptionsScreen_SetScale(const cc_string* v, float* target, const char* optKey) {
+	*target = Menu_Float(v);
+	Options_Set(optKey, v);
+	Gui_LayoutAll();
+}
+
 /* bunabyte: Similar to other SetScale methods, but "inverts" the result by subtracting it from 1.0 */
 static void GraphicsOptionsScreen_SetScaleInverse(const cc_string* v, float* target, const char* optKey) {
 	float fv = Menu_Float(v);
@@ -808,10 +814,10 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"&eFancy: &fBright blocks cast a much wider range of light\n" \
 			"    May heavily reduce performance.\n" \
 			"&cNote: &eIn multiplayer, this option may be changed or locked by the server.");
-		MenuOptionsScreen_AddNum(s, "AO strength",
-			0.0f, 1.0f, 0.5f,
+		MenuOptionsScreen_AddNum(s, "Corner shading",
+			0.0F, 1.0F, 0.5F,
 			GrO_GetAOStrength,   GrO_SetAOStrength,
-			"Controls the darkness of corner shading when Fancy lighting is enabled.\n" \
+			"How dark corners are when Fancy lighting is enabled.\n" \
 			"1 is full intensity, 0 is barely visible.");
 			
 		MenuOptionsScreen_AddEnum(s, "Names",   NameMode_Names,   NAME_MODE_COUNT,

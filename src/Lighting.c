@@ -20,7 +20,7 @@ cc_bool  Lighting_ModeLockedByServer;
 cc_bool  Lighting_ModeSetByServer;
 cc_uint8 Lighting_ModeUserCached;
 
-float    Lighting_AOStrength;
+float Lighting_AOStrength;
 
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
