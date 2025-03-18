@@ -27,7 +27,6 @@ extern cc_uint8 Lighting_ModeUserCached;
 void Lighting_SetMode(cc_uint8 mode, cc_bool fromServer);
 
 extern float Lighting_AOStrength;
-void Lighting_SetAOStrength(float strength);
 
 
 /* How much ambient occlusion to apply in fancy lighting where 1.0f = none and 0.0f = maximum*/
@@ -78,8 +77,6 @@ CC_VAR extern struct _Lighting {
 	PackedCol (*Color_YMin_Fast)(int x, int y, int z);
 	PackedCol (*Color_XSide_Fast)(int x, int y, int z);
 	PackedCol (*Color_ZSide_Fast)(int x, int y, int z);
-
-	float AOStrength;
 } Lighting;
 
 void FancyLighting_SetActive(void);

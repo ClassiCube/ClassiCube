@@ -32,10 +32,6 @@ void Lighting_SetMode(cc_uint8 mode, cc_bool fromServer) {
 	Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, fromServer);
 }
 
-void Lighting_SetAOStrength(float strength) {
-	Lighting_AOStrength = strength;
-}
-
 
 /*########################################################################################################################*
 *----------------------------------------------------Classic lighting-----------------------------------------------------*
