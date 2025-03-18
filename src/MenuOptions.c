@@ -714,6 +714,17 @@ void EnvSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
+
+/* bunabyte: Similar to other SetScale methods, but "inverts" the result by subtracting it from 1.0 */
+static void GraphicsOptionsScreen_SetScaleInverse(const cc_string* v, float* target, const char* optKey) {
+	float fv = Menu_Float(v);
+	float fvInverse = 1.0F - fv;
+
+	*target = fvInverse;
+	Options_Set(optKey, v);
+	Gui_LayoutAll();
+}
+
 static void GrO_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
 	Widget_SetDisabled(s->widgets[3], Lighting_ModeLockedByServer);
 }
@@ -743,6 +754,14 @@ static void GrO_SetLighting(int v) {
 
 	Lighting_ModeSetByServer = false;
 	Lighting_SetMode(v, false);
+}
+
+static void GrO_GetAOStrength(cc_string* v) { String_AppendFloat(v, 1.0F - Lighting_AOStrength, 2); }
+static void GrO_SetAOStrength(const cc_string* v) { 
+	GraphicsOptionsScreen_SetScaleInverse(v, &Lighting_AOStrength, OPT_AO_STRENGTH); 
+
+	Builder_ApplyActive();
+	MapRenderer_Refresh();
 }
 
 static int  GrO_GetNames(void) { return Entities.NamesMode; }
@@ -789,6 +808,11 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"&eFancy: &fBright blocks cast a much wider range of light\n" \
 			"    May heavily reduce performance.\n" \
 			"&cNote: &eIn multiplayer, this option may be changed or locked by the server.");
+		MenuOptionsScreen_AddNum(s, "AO strength",
+			0.0f, 1.0f, 0.5f,
+			GrO_GetAOStrength,   GrO_SetAOStrength,
+			"Controls the darkness of corner shading when Fancy lighting is enabled.\n" \
+			"1 is full intensity, 0 is barely visible.");
 			
 		MenuOptionsScreen_AddEnum(s, "Names",   NameMode_Names,   NAME_MODE_COUNT,
 			GrO_GetNames,      GrO_SetNames,
@@ -800,7 +824,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddEnum(s, "Shadows", ShadowMode_Names, SHADOW_MODE_COUNT,
 			GrO_GetShadows,    GrO_SetShadows,
 			"&eNone: &fNo entity shadows are drawn.\n" \
-			"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
+			"&eSnapToBlock: &fA square shadow is shown on the block you are directly above.\n" \
 			"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
 			"&eCircleAll: &fA circular shadow is shown underneath all entities.");
 

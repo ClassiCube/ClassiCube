@@ -19,6 +19,9 @@ cc_uint8 Lighting_Mode;
 cc_bool  Lighting_ModeLockedByServer;
 cc_bool  Lighting_ModeSetByServer;
 cc_uint8 Lighting_ModeUserCached;
+
+float    Lighting_AOStrength;
+
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
 
@@ -27,6 +30,10 @@ void Lighting_SetMode(cc_uint8 mode, cc_bool fromServer) {
 	Lighting_Mode    = mode;
 
 	Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, fromServer);
+}
+
+void Lighting_SetAOStrength(float strength) {
+	Lighting_AOStrength = strength;
 }
 
 
@@ -457,6 +464,8 @@ static void OnInit(void) {
 	Lighting_ModeLockedByServer = false;
 	Lighting_ModeSetByServer    = false;
 	Lighting_ModeUserCached = Lighting_Mode;
+
+	Lighting_AOStrength = Options_GetFloat(OPT_AO_STRENGTH, 0.0F, 1.0F, 0.5F);
 
 	FancyLighting_OnInit();
 	Lighting_ApplyActive();

@@ -1322,9 +1322,9 @@ static PackedCol Modern_GetColorX(PackedCol orig, int x, int y, int z, int oY, i
 	cc_bool zOccluded =  Modern_IsOccluded(x, y     , z + oZ);
 	cc_bool xzOccluded = Modern_IsOccluded(x, y + oY, z + oZ);
 
-	PackedCol CoX = xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_XSide_Fast(x, y + oY, z     );
-	PackedCol CoZ = zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_XSide_Fast(x, y     , z + oZ);
-	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_XSide_Fast(x, y + oY, z + oZ);
+	PackedCol CoX = xOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_XSide_Fast(x, y + oY, z     );
+	PackedCol CoZ = zOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_XSide_Fast(x, y     , z + oZ);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_XSide_Fast(x, y + oY, z + oZ);
 
 	PackedCol ab = AVERAGE(CoX, CoZ);
 	PackedCol cd = AVERAGE(CoXoZ, orig);
@@ -1401,9 +1401,9 @@ static PackedCol Modern_GetColorZ(PackedCol orig, int x, int y, int z, int oX, i
 	cc_bool zOccluded  = Modern_IsOccluded(x,      y + oY, z);
 	cc_bool xzOccluded = Modern_IsOccluded(x + oX, y + oY, z);
 
-	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_ZSide_Fast(x + oX, y     , z);
-	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_ZSide_Fast(x     , y + oY, z);
-	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_ZSide_Fast(x + oX, y + oY, z);
+	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_ZSide_Fast(x + oX, y     , z);
+	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_ZSide_Fast(x     , y + oY, z);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_ZSide_Fast(x + oX, y + oY, z);
 
 	PackedCol ab = AVERAGE(CoX, CoZ);
 	PackedCol cd = AVERAGE(CoXoZ, orig);
@@ -1480,9 +1480,9 @@ static PackedCol Modern_GetColorYMin(PackedCol orig, int x, int y, int z, int oX
 	cc_bool zOccluded  = Modern_IsOccluded(x,      y, z + oZ);
 	cc_bool xzOccluded = Modern_IsOccluded(x + oX, y, z + oZ);
 
-	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_YMin_Fast(x + oX, y, z     );
-	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_YMin_Fast(x     , y, z + oZ);
-	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_YMin_Fast(x + oX, y, z + oZ);
+	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_YMin_Fast(x + oX, y, z     );
+	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_YMin_Fast(x     , y, z + oZ);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color_YMin_Fast(x + oX, y, z + oZ);
 
 	PackedCol ab = AVERAGE(CoX, CoZ);
 	PackedCol cd = AVERAGE(CoXoZ, orig);
@@ -1526,9 +1526,9 @@ static PackedCol Modern_GetColorYMax(PackedCol orig, int x, int y, int z, int oX
 	cc_bool zOccluded  = Modern_IsOccluded(x,      y, z + oZ);
 	cc_bool xzOccluded = Modern_IsOccluded(x + oX, y, z + oZ);
 
-	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color(x + oX, y, z     );
-	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color(x     , y, z + oZ);
-	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color(x + oX, y, z + oZ);
+	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color(x + oX, y, z     );
+	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color(x     , y, z + oZ);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, Lighting_AOStrength) : Lighting.Color(x + oX, y, z + oZ);
 
 	PackedCol ab = AVERAGE(CoX, CoZ);
 	PackedCol cd = AVERAGE(CoXoZ, orig);
