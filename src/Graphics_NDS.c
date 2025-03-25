@@ -377,11 +377,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	u16* tmp_u16[128]; // 256 bytes
 	char* tmp = (char*)tmp_u16;
 
-	u32 banks = VRAM_CR;
-	vramSetBankA(VRAM_A_LCD);
-	vramSetBankB(VRAM_B_LCD);
-	vramSetBankC(VRAM_C_LCD);
-	vramSetBankD(VRAM_D_LCD);
+	u32 banks = vramSetPrimaryBanks(VRAM_A_LCD, VRAM_B_LCD, VRAM_C_LCD, VRAM_D_LCD);
+
 	int stride;
 
 	if (tex_fmt == GL_RGB4) {
@@ -448,9 +445,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 	}
 
-	// Ensure anything in data cache is flushed to VRAM
-	DC_FlushRange((u8*)VRAM_A + offset, tex_size);
-	VRAM_CR = banks;
+	vramRestorePrimaryBanks(banks);
 
 	int sSize  = (Math_ilog2(tex->width)  - 3) << 20;
 	int tSize  = (Math_ilog2(tex->height) - 3) << 23;
