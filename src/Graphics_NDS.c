@@ -448,8 +448,6 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 	}
 
-	// Ensure anything in data cache is flushed to VRAM
-	DC_FlushRange((u8*)VRAM_A + offset, tex_size);
 	VRAM_CR = banks;
 
 	int sSize  = (Math_ilog2(tex->width)  - 3) << 20;
