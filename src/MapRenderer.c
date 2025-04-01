@@ -490,7 +490,6 @@ void MapRenderer_Refresh(void) {
 
 	if (mapChunks && World.Blocks) {
 		DeleteChunks();
-		RefreshChunks();
 
 		oldCount = MapRenderer_1DUsedCount;
 		MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
@@ -750,7 +749,7 @@ static void OnTerrainAtlasChanged(void* obj) {
 }
 
 static void OnBlockDefinitionChanged(void* obj) {
-	RefreshChunks();
+	MapRenderer_Refresh();
 	MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
 	ResetPartFlags();
 }

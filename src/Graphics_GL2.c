@@ -266,7 +266,7 @@ static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	else    String_AppendConst(dst, "  vec4 col = out_col;\n");
 	if (al) String_AppendConst(dst, "  if (col.a < 0.5) discard;\n");
 	if (fm) String_AppendConst(dst, "  float depth = 1.0 / gl_FragCoord.w;\n");
-	if (fl) String_AppendConst(dst, "  float f = clamp((fogEnd - depth) / fogEnd, 0.0, 1.0);\n");
+	if (fl) String_AppendConst(dst, "  float f = clamp(1.0 - depth * fogEnd, 0.0, 1.0);\n");
 	if (fd) String_AppendConst(dst, "  float f = clamp(exp(fogDensity * depth), 0.0, 1.0);\n");
 	if (fm) String_AppendConst(dst, "  col.rgb = mix(fogCol, col.rgb, f);\n");
 	
@@ -402,7 +402,7 @@ static void ReloadUniforms(void) {
 		s->uniforms &= ~UNI_FOG_COL;
 	}
 	if ((s->uniforms & UNI_FOG_END) && (s->features & FTR_LINEAR_FOG)) {
-		glUniform1f(s->locations[3], gfx_fogEnd);
+		glUniform1f(s->locations[3], 1.0f / gfx_fogEnd);
 		s->uniforms &= ~UNI_FOG_END;
 	}
 	if ((s->uniforms & UNI_FOG_DENS) && (s->features & FTR_DENSIT_FOG)) {
