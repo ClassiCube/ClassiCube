@@ -101,8 +101,7 @@ static void LoadProgram(struct ShaderProgram* prog, const cc_uint8* gsh) {
 
 static GX2Sampler sampler;
 static GfxResourceID white_square;
-static GX2VertexShader* cur_VS;
-static GX2PixelShader*  cur_PS;
+static struct ShaderProgram* cur_PG;
 static int fog_func;
 
 static void InitGfx(void) {
@@ -122,28 +121,27 @@ static void InitGfx(void) {
 
 static struct Vec4 texOffset;
 
-static void UpdateVS(void) {
-	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		cur_VS = colour_PG.vs;
-	} else if (texOffset.x || texOffset.y) {
-		cur_VS = offset_PG[0].vs;
-	} else {
-		cur_VS = texture_PG[0].vs;
-	}
-	GX2SetVertexShader(cur_VS);
+static int CalcPSIndex(void) {
+	if (gfx_fogEnabled && fog_func == FOG_EXP)    return 2;
+	if (gfx_fogEnabled && fog_func == FOG_LINEAR) return 1;
+
+	return 0;
 }
 
-static void UpdatePS(void) {
+static void UpdateProgram(void) {
+	struct ShaderProgram* prog;
+
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		cur_PS = colour_PG.ps;
-	/*} else if (gfx_fogEnabled && fog_func == FOG_EXP) {
-		cur_PS = texture_PG[2].ps;
-	} else if (gfx_fogEnabled && fog_func == FOG_LINEAR) {
-		cur_PS = texture_PG[1].ps;*/
+		prog = &colour_PG;
+	} else if (texOffset.x || texOffset.y) {
+		prog = &offset_PG[CalcPSIndex()];
 	} else {
-		cur_PS = texture_PG[0].ps;
+		prog = &texture_PG[CalcPSIndex()];
 	}
-	GX2SetPixelShader(cur_PS);
+
+	cur_PG = prog;
+	GX2SetPixelShader(prog->ps);
+	GX2SetVertexShader(prog->vs);
 }
 
 
@@ -233,10 +231,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 static void BindPendingTexture(void) {
-	if (!pendingTex || cur_VS == colour_PG.vs) return;
+	if (!pendingTex || cur_PG == &colour_PG) return;
 	
-	GX2SetPixelTexture(pendingTex, cur_PS->samplerVars[0].location);
-	GX2SetPixelSampler(&sampler,   cur_PS->samplerVars[0].location);
+	GX2SetPixelTexture(pendingTex, cur_PG->ps->samplerVars[0].location);
+	GX2SetPixelSampler(&sampler,   cur_PG->ps->samplerVars[0].location);
  	pendingTex = NULL;
 }
 
@@ -268,7 +266,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	UpdatePS();
+	UpdateProgram();
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -282,9 +280,10 @@ void Gfx_SetFogCol(PackedCol color) {
 }
 
 static struct Vec4 fogValue;
+#define LOG2_E 1.44269504089f
 
 void Gfx_SetFogDensity(float value) {
-	fogValue.x = value;
+	fogValue.x = value * LOG2_E;
 	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
 }
 
@@ -296,7 +295,7 @@ void Gfx_SetFogEnd(float value) {
 
 void Gfx_SetFogMode(FogFunc func) {
 	fog_func = func;
-	UpdatePS();
+	UpdateProgram();
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -432,8 +431,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 	
 	GX2SetFetchShader(fmt == VERTEX_FORMAT_TEXTURED ? &texture_FS : &colour_FS);
-	UpdateVS();
-	UpdatePS();
+	UpdateProgram();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -481,14 +479,14 @@ void Gfx_EnableTextureOffset(float x, float y) {
 	texOffset.x = x;
 	texOffset.y = y;
 
-	UpdateVS();
+	UpdateProgram();
 	GX2SetVertexUniformReg(VS_UNI_OFFSET_OFST, VS_UNI_COUNT_OFST, &texOffset);
 }
 
 void Gfx_DisableTextureOffset(void) {
 	texOffset.x = 0;
 	texOffset.y = 0;
-	UpdateVS();
+	UpdateProgram();
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
