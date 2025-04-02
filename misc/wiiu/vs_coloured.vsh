@@ -24,18 +24,18 @@
 ; --------  Disassembly --------------------
 00 CALL_FS NO_BARRIER 
 01 ALU: ADDR(32) CNT(12)
-      0  x: MULADD      R127.x,  R1.z,  C2.x,  C3.x
-         y: MULADD      R127.y,  R1.z,  C2.y,  C3.y
-         z: MULADD      R127.z,  R1.z,  C2.z,  C3.z
-         w: MULADD      R127.w,  R1.z,  C2.w,  C3.w
-      1  x: MULADD      R127.x,  R1.y,  C1.x,  PV0.x
-         y: MULADD      R127.y,  R1.y,  C1.y,  PV0.y
-         z: MULADD      R127.z,  R1.y,  C1.z,  PV0.z
-         w: MULADD      R127.w,  R1.y,  C1.w,  PV0.w
-      2  x: MULADD      R1.x,    R1.x,  C0.x,  PV1.x
-         y: MULADD      R1.y,    R1.x,  C0.y,  PV1.y
-         z: MULADD      R1.z,    R1.x,  C0.z,  PV1.z
-         w: MULADD      R1.w,    R1.x,  C0.w,  PV1.w      
+      0  x: MULADD      R4.x,  R1.z,  C2.x,  C3.x
+         y: MULADD      R4.y,  R1.z,  C2.y,  C3.y
+         z: MULADD      R4.z,  R1.z,  C2.z,  C3.z
+         w: MULADD      R4.w,  R1.z,  C2.w,  C3.w
+      1  x: MULADD      R4.x,  R1.y,  C1.x,  PV0.x
+         y: MULADD      R4.y,  R1.y,  C1.y,  PV0.y
+         z: MULADD      R4.z,  R1.y,  C1.z,  PV0.z
+         w: MULADD      R4.w,  R1.y,  C1.w,  PV0.w
+      2  x: MULADD      R1.x,  R1.x,  C0.x,  PV1.x
+         y: MULADD      R1.y,  R1.x,  C0.y,  PV1.y
+         z: MULADD      R1.z,  R1.x,  C0.z,  PV1.z
+         w: MULADD      R1.w,  R1.x,  C0.w,  PV1.w  
 02 EXP_DONE: POS0, R1
 03 EXP_DONE: PARAM0, R2  NO_BARRIER 
 END_OF_PROGRAM

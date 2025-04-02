@@ -39,7 +39,7 @@
          y: ADD            R1.y,  PV1.x, -C0.x      
          w: ADD            R0.w,  PV1.y, -C0.z      
          t: RECIP_IEEE     ____,  PS1      
-      3  z: MULADD       R127.z,  -PS2,  C1.y,   1.0f      CLAMP 
+      3  z: MULADD         R4.z,  -PS2,  C1.y,   1.0f      CLAMP 
       4  x: MULADD         R2.x,  R1.y,  PV3.z,  C0.x      
          y: MULADD         R2.y,  R1.x,  PV3.z,  C0.y      
          z: MULADD         R2.z,  R0.w,  PV3.z,  C0.z      

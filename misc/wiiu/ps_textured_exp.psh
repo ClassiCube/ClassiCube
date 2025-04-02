@@ -40,7 +40,7 @@
          w: ADD               R0.w,  PV1.z, -C0.z      
          t: RCP_e             ____,  PS1      
       3  w: MUL               ____,  PS2,    C1.x      
-      4  t: EXP_e             ____,  PV3.w      CLAMP 
+      4  t: EXP_e             ____,  PV3.w              CLAMP 
       5  x: MULADD            R2.x,  R1.y,  PS4,  C0.x      
          y: MULADD            R2.y,  R1.x,  PS4,  C0.y      
          z: MULADD            R2.z,  R0.w,  PS4,  C0.z      

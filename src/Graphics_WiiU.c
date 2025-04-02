@@ -137,10 +137,10 @@ static void UpdatePS(void) {
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		cur_PS = colour_PG.ps;
 	/*} else if (gfx_fogEnabled && fog_func == FOG_EXP) {
-		cur_PS = texture_PS[2];
+		cur_PS = texture_PG[2].ps;
 	} else if (gfx_fogEnabled && fog_func == FOG_LINEAR) {
-		cur_PS = texture_PS[1];
-	*/} else {
+		cur_PS = texture_PG[1].ps;*/
+	} else {
 		cur_PS = texture_PG[0].ps;
 	}
 	GX2SetPixelShader(cur_PS);
