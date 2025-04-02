@@ -73,7 +73,9 @@ extern const uint8_t coloured_none_gsh[];
 extern const uint8_t textured_none_gsh[];
 extern const uint8_t textured_lin_gsh[];
 extern const uint8_t textured_exp_gsh[];
-extern const uint8_t textured_ofst_gsh[];
+extern const uint8_t offset_none_gsh[];
+extern const uint8_t offset_lin_gsh[];
+extern const uint8_t offset_exp_gsh[];
 
 #define VS_UNI_OFFSET_MVP   0
 #define VS_UNI_COUNT_MVP   16
@@ -85,8 +87,17 @@ extern const uint8_t textured_ofst_gsh[];
 #define PS_UNI_OFFSET_FOG   4
 #define PS_UNI_COUNT_FOG    4
 
-static GX2VertexShader *texture_VS, *colour_VS, *offset_VS;
-static GX2PixelShader  *texture_PS[3], *colour_PS[3];
+struct ShaderProgram {
+	GX2VertexShader* vs;
+	GX2PixelShader*  ps;
+};
+
+static struct ShaderProgram colour_PG, texture_PG[3], offset_PG[3];
+
+static void LoadProgram(struct ShaderProgram* prog, const cc_uint8* gsh) {
+	prog->vs = WHBGfxLoadGFDVertexShader(0, gsh);
+	prog->ps = WHBGfxLoadGFDPixelShader(0,  gsh);
+}
 
 static GX2Sampler sampler;
 static GfxResourceID white_square;
@@ -98,40 +109,39 @@ static void InitGfx(void) {
 	CompileFetchShaders();
    	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
 	
-	colour_VS = WHBGfxLoadGFDVertexShader(0, coloured_none_gsh);
-	colour_PS[0] = WHBGfxLoadGFDPixelShader(0,  coloured_none_gsh);
+	LoadProgram(&colour_PG, coloured_none_gsh);
 
-	texture_VS = WHBGfxLoadGFDVertexShader(0, textured_none_gsh);
+	LoadProgram(&texture_PG[0], textured_none_gsh);
+	LoadProgram(&texture_PG[1], textured_lin_gsh);
+	LoadProgram(&texture_PG[2], textured_exp_gsh);
 
-	offset_VS = WHBGfxLoadGFDVertexShader(0, textured_ofst_gsh);
-
-	texture_PS[0] = WHBGfxLoadGFDPixelShader(0, textured_none_gsh);
-	texture_PS[1] = WHBGfxLoadGFDPixelShader(0, textured_lin_gsh);
-	texture_PS[2] = WHBGfxLoadGFDPixelShader(0, textured_exp_gsh);
+	LoadProgram(&offset_PG[0], offset_none_gsh);
+	LoadProgram(&offset_PG[1], offset_lin_gsh);
+	LoadProgram(&offset_PG[2], offset_exp_gsh);
 }
 
 static struct Vec4 texOffset;
 
 static void UpdateVS(void) {
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		cur_VS = colour_VS;
+		cur_VS = colour_PG.vs;
 	} else if (texOffset.x || texOffset.y) {
-		cur_VS = offset_VS;
+		cur_VS = offset_PG[0].vs;
 	} else {
-		cur_VS = texture_VS;
+		cur_VS = texture_PG[0].vs;
 	}
 	GX2SetVertexShader(cur_VS);
 }
 
 static void UpdatePS(void) {
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		cur_PS = colour_PS[0];
+		cur_PS = colour_PG.ps;
 	/*} else if (gfx_fogEnabled && fog_func == FOG_EXP) {
 		cur_PS = texture_PS[2];
 	} else if (gfx_fogEnabled && fog_func == FOG_LINEAR) {
 		cur_PS = texture_PS[1];
 	*/} else {
-		cur_PS = texture_PS[0];
+		cur_PS = texture_PG[0].ps;
 	}
 	GX2SetPixelShader(cur_PS);
 }
@@ -223,7 +233,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 static void BindPendingTexture(void) {
-	if (!pendingTex || cur_VS == colour_VS) return;
+	if (!pendingTex || cur_VS == colour_PG.vs) return;
 	
 	GX2SetPixelTexture(pendingTex, cur_PS->samplerVars[0].location);
 	GX2SetPixelSampler(&sampler,   cur_PS->samplerVars[0].location);
