@@ -31,20 +31,20 @@
 
 ; --------  Disassembly --------------------
 00 TEX: ADDR(48) CNT(1) VALID_PIX 
-      0  SAMPLE R2, R2.xy0x, t0, s0
+      0  SAMPLE R1, R1.xy0x, t0, s0
 01 ALU: ADDR(32) CNT(13) 
-      1  x: MUL               ____,  R0.x,  R1.x      
-         y: MUL               ____,  R0.z,  R1.z      
-         z: MUL               ____,  R0.y,  R1.y      
-         w: MUL               R0.w,  R0.w,  R1.w     
-         t: RECIP_IEEE        ____,  R2.W  
-      2  x: ADD               R1.x,  PV1.x, -C0.y      
-         y: ADD               R1.y,  PV1.y, -C0.x      
-         z: ADD               R1.z,  PV1.z, -C0.z
-         w: MUL               ____,  PS1,   C1.x      
-      3  t: EXP_e             ____,  PV2.w              CLAMP 
-      4  x: MULADD            R0.x,  R1.y,  PS3,  C0.x      
-         y: MULADD            R0.y,  R1.x,  PS3,  C0.y      
-         z: MULADD            R0.z,  R1.z,  PS3,  C0.z      
+      1  x: MUL            ____,  R0.x,  R1.x      
+         y: MUL            ____,  R0.z,  R1.z      
+         z: MUL            ____,  R0.y,  R1.y      
+         w: MUL            R0.w,  R0.w,  R1.w     
+         t: RECIP_IEEE     ____,  R2.W  
+      2  x: ADD            R1.x,  PV1.z, -C0.y      
+         y: ADD            R1.y,  PV1.x, -C0.x      
+         z: ADD            R1.z,  PV1.y, -C0.z
+         w: MUL            ____,  PS1,   C1.x      
+      3  t: EXP_e          ____,  PV2.w              CLAMP 
+      4  x: MULADD         R0.x,  R1.y,  PS3,  C0.x      
+         y: MULADD         R0.y,  R1.x,  PS3,  C0.y      
+         z: MULADD         R0.z,  R1.z,  PS3,  C0.z      
 02 EXP_DONE: PIX0, R0
 END_OF_PROGRAM

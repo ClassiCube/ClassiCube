@@ -283,7 +283,7 @@ static struct Vec4 fogValue;
 #define LOG2_E 1.44269504089f
 
 void Gfx_SetFogDensity(float value) {
-	fogValue.x = value * LOG2_E;
+	fogValue.x = -value * LOG2_E;
 	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
 }
 
