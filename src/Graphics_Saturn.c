@@ -476,7 +476,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 // Calculates v->x * col1 + v->y * col2 + v->z * col3 + trans
-static int __attribute__((always_inline)) TransformVector(struct SATVertexTextured* v, struct MatrixCol* col) {
+static inline int __attribute__((always_inline)) TransformVector(struct SATVertexTextured* v, struct MatrixCol* col) {
     int res;
 
     __asm__("lds.l @%[col]+, MACL     \n"
@@ -515,24 +515,21 @@ int Transform(IVec3* result, struct SATVertexTextured* a) {
 #define Coloured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
+	struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex;
+
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex + i;
-
-		int16_vec2_t points[4];
-		points[0].x = Coloured2D_X(v[0].x); points[0].y = Coloured2D_Y(v[0].y);
-		points[1].x = Coloured2D_X(v[1].x); points[1].y = Coloured2D_Y(v[1].y);
-		points[2].x = Coloured2D_X(v[2].x); points[2].y = Coloured2D_Y(v[2].y);
-		points[3].x = Coloured2D_X(v[3].x); points[3].y = Coloured2D_Y(v[3].y);
-
-		rgb1555_t color; color.raw = v->Col;
 		vdp1_cmdt_t* cmd = NextPrimitive(0);
 		if (!cmd) return;
 
-		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     color);
-		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		cmd->cmd_ctrl = VDP1_CMDT_POLYGON;
+		cmd->cmd_colr = v->Col;
+		cmd->cmd_pmod = 0xC0 | color_draw_mode.raw;
+
+		cmd->cmd_xa = Coloured2D_X(v[0].x); cmd->cmd_ya = Coloured2D_Y(v[0].y);
+		cmd->cmd_xb = Coloured2D_X(v[1].x); cmd->cmd_yb = Coloured2D_Y(v[1].y);
+		cmd->cmd_xc = Coloured2D_X(v[2].x); cmd->cmd_yc = Coloured2D_Y(v[2].y);
+		cmd->cmd_xd = Coloured2D_X(v[3].x); cmd->cmd_yd = Coloured2D_Y(v[3].y);
 	}
 }
 
@@ -540,34 +537,34 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 #define Textured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
 
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
+	uint16_t char_size = (((tex_width >> 3) << 8) | tex_height) & 0x3FFF;
+	uint16_t char_base = ((vdp1_vram_t)tex_vram_cur >> 3) & 0xFFFF;
+	uint16_t gour_base = ((vdp1_vram_t)gourad_base  >> 3);
+	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
+
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex + i;
-
-		int16_vec2_t points[4];
-		points[0].x = Textured2D_X(v[0].x); points[0].y = Textured2D_Y(v[0].y);
-		points[1].x = Textured2D_X(v[1].x); points[1].y = Textured2D_Y(v[1].y);
-		points[2].x = Textured2D_X(v[2].x); points[2].y = Textured2D_Y(v[2].y);
-		points[3].x = Textured2D_X(v[3].x); points[3].y = Textured2D_Y(v[3].y);
-
 		vdp1_cmdt_t* cmd = NextPrimitive(0);
 		if (!cmd) return;
 
-		vdp1_cmdt_distorted_sprite_set(cmd);
-		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
-		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
-		vdp1_cmdt_char_flip_set(cmd, v->flip);
-		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
-		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		cmd->cmd_ctrl = VDP1_CMDT_DISTORTED_SPRITE | v->flip;
+		cmd->cmd_size = char_size;
+		cmd->cmd_srca = char_base;
+		cmd->cmd_pmod = (v->Col == 1023 ? color_draw_mode : shaded_draw_mode).raw;
+		cmd->cmd_grda = (gour_base + v->Col) & 0xFFFF;
+
+		cmd->cmd_xa = Textured2D_X(v[0].x); cmd->cmd_ya = Textured2D_Y(v[0].y);
+		cmd->cmd_xb = Textured2D_X(v[1].x); cmd->cmd_yb = Textured2D_Y(v[1].y);
+		cmd->cmd_xc = Textured2D_X(v[2].x); cmd->cmd_yc = Textured2D_Y(v[2].y);
+		cmd->cmd_xd = Textured2D_X(v[3].x); cmd->cmd_yd = Textured2D_Y(v[3].y);
 	}
 }
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
-	{
-		struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex + i;
+	struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex;
 
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
+	{
 		IVec3 coords[4];
 		int clipped = 0;
 		clipped |= Transform(&coords[0], &v[0]);
@@ -576,29 +573,29 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		clipped |= Transform(&coords[3], &v[3]);
 		if (clipped) continue;
 
-		int16_vec2_t points[4];
-		points[0].x = coords[0].x; points[0].y = coords[0].y;
-		points[1].x = coords[1].x; points[1].y = coords[1].y;
-		points[2].x = coords[2].x; points[2].y = coords[2].y;
-		points[3].x = coords[3].x; points[3].y = coords[3].y;
-
 		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
-		rgb1555_t color; color.raw = v->Col;
 		vdp1_cmdt_t* cmd = NextPrimitive(z);
 		if (!cmd) return;
 
-		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     color);
-		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		cmd->cmd_ctrl = VDP1_CMDT_POLYGON;
+		cmd->cmd_colr = v->Col;
+		cmd->cmd_pmod = 0xC0 | color_draw_mode.raw;
+
+		cmd->cmd_xa = coords[0].x; cmd->cmd_ya = coords[0].y;
+		cmd->cmd_xb = coords[1].x; cmd->cmd_yb = coords[1].y;
+		cmd->cmd_xc = coords[2].x; cmd->cmd_yc = coords[2].y;
+		cmd->cmd_xd = coords[3].x; cmd->cmd_yd = coords[3].y;
 	}
 }
 
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
-	{
-		struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex + i;
+	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
+	uint16_t char_size = (((tex_width >> 3) << 8) | tex_height) & 0x3FFF;
+	uint16_t char_base = ((vdp1_vram_t)tex_vram_cur >> 3) & 0xFFFF;
+	uint16_t gour_base = ((vdp1_vram_t)gourad_base  >> 3);
 
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
+	{
 		IVec3 coords[4];
 		int clipped = 0;
 		clipped |= Transform(&coords[0], &v[0]);
@@ -607,23 +604,20 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		clipped |= Transform(&coords[3], &v[3]);
 		if (clipped) continue;
 
-		int16_vec2_t points[4];
-		points[0].x = coords[0].x; points[0].y = coords[0].y;
-		points[1].x = coords[1].x; points[1].y = coords[1].y;
-		points[2].x = coords[2].x; points[2].y = coords[2].y;
-		points[3].x = coords[3].x; points[3].y = coords[3].y;
-
 		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
 		vdp1_cmdt_t* cmd = NextPrimitive(z);
 		if (!cmd) return;
 
-		vdp1_cmdt_distorted_sprite_set(cmd);
-		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
-		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
-		vdp1_cmdt_char_flip_set(cmd, v->flip);
-		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
-		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		cmd->cmd_ctrl = VDP1_CMDT_DISTORTED_SPRITE | v->flip;
+		cmd->cmd_size = char_size;
+		cmd->cmd_srca = char_base;
+		cmd->cmd_pmod = (v->Col == 1023 ? color_draw_mode : shaded_draw_mode).raw;
+		cmd->cmd_grda = (gour_base + v->Col) & 0xFFFF;
+
+		cmd->cmd_xa = coords[0].x; cmd->cmd_ya = coords[0].y;
+		cmd->cmd_xb = coords[1].x; cmd->cmd_yb = coords[1].y;
+		cmd->cmd_xc = coords[2].x; cmd->cmd_yc = coords[2].y;
+		cmd->cmd_xd = coords[3].x; cmd->cmd_yd = coords[3].y;
 	}
 }
 
