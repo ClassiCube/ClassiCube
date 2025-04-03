@@ -374,32 +374,32 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-struct MatrixRow { int x, y, z, w; };
-struct MatrixMVP { struct MatrixRow row1, row2, row3, trans; };
+struct MatrixCol { int trans, col1, col2, col3; };
+struct MatrixMVP { struct MatrixCol w, x, y, z; };
 static struct MatrixMVP mvp_;
 
 #define ToFixed(v) (int)(v * (1 << 12))
 
 static void LoadTransformMatrix(struct Matrix* src) {
-	mvp_.trans.x = XYZFixed(1) * ToFixed(src->row4.x);
-	mvp_.trans.y = XYZFixed(1) * ToFixed(src->row4.y);
-	mvp_.trans.z = XYZFixed(1) * ToFixed(src->row4.z);
-	mvp_.trans.w = XYZFixed(1) * ToFixed(src->row4.w);
+	mvp_.x.trans = XYZFixed(1) * ToFixed(src->row4.x);
+	mvp_.y.trans = XYZFixed(1) * ToFixed(src->row4.y);
+	mvp_.z.trans = XYZFixed(1) * ToFixed(src->row4.z);
+	mvp_.w.trans = XYZFixed(1) * ToFixed(src->row4.w);
 	
-	mvp_.row1.x = ToFixed(src->row1.x);
-	mvp_.row1.y = ToFixed(src->row1.y);
-	mvp_.row1.z = ToFixed(src->row1.z);
-	mvp_.row1.w = ToFixed(src->row1.w);
+	mvp_.x.col1 = ToFixed(src->row1.x);
+	mvp_.y.col1 = ToFixed(src->row1.y);
+	mvp_.z.col1 = ToFixed(src->row1.z);
+	mvp_.w.col1 = ToFixed(src->row1.w);
 	
-	mvp_.row2.x = ToFixed(src->row2.x);
-	mvp_.row2.y = ToFixed(src->row2.y);
-	mvp_.row2.z = ToFixed(src->row2.z);
-	mvp_.row2.w = ToFixed(src->row2.w);
+	mvp_.x.col2 = ToFixed(src->row2.x);
+	mvp_.y.col2 = ToFixed(src->row2.y);
+	mvp_.z.col2 = ToFixed(src->row2.z);
+	mvp_.w.col2 = ToFixed(src->row2.w);
 	
-	mvp_.row3.x = ToFixed(src->row3.x);
-	mvp_.row3.y = ToFixed(src->row3.y);
-	mvp_.row3.z = ToFixed(src->row3.z);
-	mvp_.row3.w = ToFixed(src->row3.w);
+	mvp_.x.col3 = ToFixed(src->row3.x);
+	mvp_.y.col3 = ToFixed(src->row3.y);
+	mvp_.z.col3 = ToFixed(src->row3.z);
+	mvp_.w.col3 = ToFixed(src->row3.w);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -475,18 +475,33 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 }
 
-static int Transform(IVec3* result, struct SATVertexTextured* a) {
-	int w = a->x * mvp_.row1.w + a->y * mvp_.row2.w + a->z * mvp_.row3.w + mvp_.trans.w;
+// Calculates v->x * col1 + v->y * col2 + v->z * col3 + trans
+static int __attribute__((always_inline)) TransformVector(struct SATVertexTextured* v, struct MatrixCol* col) {
+    int res;
+
+    __asm__("lds.l @%[col]+, MACL     \n"
+			"mac.l @%[col]+, @%[vec]+ \n"
+			"mac.l @%[col]+, @%[vec]+ \n"
+			"mac.l @%[col]+, @%[vec]+ \n"
+ 			"sts       macl,  %[res]  \n"
+ 			: [col] "+r" (col), [vec] "+r" (v), [res] "=r" (res)
+ 			: "m" (*v), "m" (*col)
+ 			: "mach", "macl", "memory");
+    return res;
+}
+
+int Transform(IVec3* result, struct SATVertexTextured* a) {
+	int w = TransformVector(a, &mvp_.w);
 	if (w <= 0) return 1;
 
-	int x = a->x * mvp_.row1.x + a->y * mvp_.row2.x + a->z * mvp_.row3.x + mvp_.trans.x;
+	int x = TransformVector(a, &mvp_.x);
 	cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
 
-	int y = a->x * mvp_.row1.y + a->y * mvp_.row2.y + a->z * mvp_.row3.y + mvp_.trans.y;
+	int y = TransformVector(a, &mvp_.y);
 	result->x = cpu_divu_quotient_get();
 	cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
-	int z = a->x * mvp_.row1.z + a->y * mvp_.row2.z + a->z * mvp_.row3.z + mvp_.trans.z;
+	int z = TransformVector(a, &mvp_.z);
 	result->y = cpu_divu_quotient_get();
 	cpu_divu_32_32_set(z * 512, w);
 
