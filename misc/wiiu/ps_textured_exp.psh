@@ -23,7 +23,7 @@
 ; $UNIFORM_VARS[0].block = -1
 ; $UNIFORM_VARS[0].offset = 0
 ; C1
-; $UNIFORM_VARS[1].name = "fogEnd"
+; $UNIFORM_VARS[1].name = "fogValue"
 ; $UNIFORM_VARS[1].type = "vec2"
 ; $UNIFORM_VARS[1].count = 1
 ; $UNIFORM_VARS[1].block = -1

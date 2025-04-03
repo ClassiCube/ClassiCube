@@ -375,30 +375,31 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
 struct MatrixRow { int x, y, z, w; };
-static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
+struct MatrixMVP { struct MatrixRow row1, row2, row3, trans; };
+static struct MatrixMVP mvp_;
 
 #define ToFixed(v) (int)(v * (1 << 12))
 
 static void LoadTransformMatrix(struct Matrix* src) {
-	mvp_trans.x = XYZFixed(1) * ToFixed(src->row4.x);
-	mvp_trans.y = XYZFixed(1) * ToFixed(src->row4.y);
-	mvp_trans.z = XYZFixed(1) * ToFixed(src->row4.z);
-	mvp_trans.w = XYZFixed(1) * ToFixed(src->row4.w);
+	mvp_.trans.x = XYZFixed(1) * ToFixed(src->row4.x);
+	mvp_.trans.y = XYZFixed(1) * ToFixed(src->row4.y);
+	mvp_.trans.z = XYZFixed(1) * ToFixed(src->row4.z);
+	mvp_.trans.w = XYZFixed(1) * ToFixed(src->row4.w);
 	
-	mvp_row1.x = ToFixed(src->row1.x);
-	mvp_row1.y = ToFixed(src->row1.y);
-	mvp_row1.z = ToFixed(src->row1.z);
-	mvp_row1.w = ToFixed(src->row1.w);
+	mvp_.row1.x = ToFixed(src->row1.x);
+	mvp_.row1.y = ToFixed(src->row1.y);
+	mvp_.row1.z = ToFixed(src->row1.z);
+	mvp_.row1.w = ToFixed(src->row1.w);
 	
-	mvp_row2.x = ToFixed(src->row2.x);
-	mvp_row2.y = ToFixed(src->row2.y);
-	mvp_row2.z = ToFixed(src->row2.z);
-	mvp_row2.w = ToFixed(src->row2.w);
+	mvp_.row2.x = ToFixed(src->row2.x);
+	mvp_.row2.y = ToFixed(src->row2.y);
+	mvp_.row2.z = ToFixed(src->row2.z);
+	mvp_.row2.w = ToFixed(src->row2.w);
 	
-	mvp_row3.x = ToFixed(src->row3.x);
-	mvp_row3.y = ToFixed(src->row3.y);
-	mvp_row3.z = ToFixed(src->row3.z);
-	mvp_row3.w = ToFixed(src->row3.w);
+	mvp_.row3.x = ToFixed(src->row3.x);
+	mvp_.row3.y = ToFixed(src->row3.y);
+	mvp_.row3.z = ToFixed(src->row3.z);
+	mvp_.row3.w = ToFixed(src->row3.w);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -475,17 +476,17 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 static int Transform(IVec3* result, struct SATVertexTextured* a) {
-	int w = a->x * mvp_row1.w + a->y * mvp_row2.w + a->z * mvp_row3.w + mvp_trans.w;
+	int w = a->x * mvp_.row1.w + a->y * mvp_.row2.w + a->z * mvp_.row3.w + mvp_.trans.w;
 	if (w <= 0) return 1;
 
-	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
+	int x = a->x * mvp_.row1.x + a->y * mvp_.row2.x + a->z * mvp_.row3.x + mvp_.trans.x;
 	cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
 
-	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
+	int y = a->x * mvp_.row1.y + a->y * mvp_.row2.y + a->z * mvp_.row3.y + mvp_.trans.y;
 	result->x = cpu_divu_quotient_get();
 	cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
-	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
+	int z = a->x * mvp_.row1.z + a->y * mvp_.row2.z + a->z * mvp_.row3.z + mvp_.trans.z;
 	result->y = cpu_divu_quotient_get();
 	cpu_divu_32_32_set(z * 512, w);
 

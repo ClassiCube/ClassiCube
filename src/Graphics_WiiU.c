@@ -290,7 +290,6 @@ void Gfx_SetFogDensity(float value) {
 void Gfx_SetFogEnd(float value) {
 	fogValue.y = 1.0f / value;
 	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
-	// TODO
 }
 
 void Gfx_SetFogMode(FogFunc func) {
