@@ -10,39 +10,23 @@
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 224
 #define CMDS_COUNT 450
-#define HDR_CMDS 2
+#define HDR_CMDS     2
 
 static struct {
 	vdp1_cmdt_t hdrs[HDR_CMDS];
 	vdp1_cmdt_t list[CMDS_COUNT];
-	vdp1_cmdt_t extra[1]; // extra room for 'end' command if needed
+	vdp1_cmdt_t extra; // extra room for 'end' command if needed
 } cmds;
 static uint16_t z_table[CMDS_COUNT];
-static int cmds_count, cmds_3DCount;
+static int cmds_3DCount;
+
+static vdp1_cmdt_t* cmds_cur;
+static uint16_t* z_cur;
 
 static PackedCol clear_color;
 static vdp1_vram_partitions_t _vdp1_vram_partitions;
 static void* tex_vram_addr;
-static void* tex_vram_cur;
-static int tex_width = 8, tex_height = 8;
 static vdp1_gouraud_table_t* gourad_base;
-static cc_bool noMemWarned;
-
-// NOINLINE to avoid polluting the hot path
-static CC_NOINLINE vdp1_cmdt_t* NextPrimitive_nomem(void) {
-	if (noMemWarned) return NULL;
-	noMemWarned = true;
-	
-	Platform_LogConst("OUT OF VERTEX RAM");
-	return NULL;
-}
-
-static vdp1_cmdt_t* NextPrimitive(uint16_t z) {
-	if (cmds_count >= CMDS_COUNT) return NextPrimitive_nomem();
-
-	z_table[cmds_count] = UInt16_MaxValue - z;
-	return &cmds.list[cmds_count++];
-}
 
 static const vdp1_cmdt_draw_mode_t color_draw_mode = {
 	.cc_mode    = VDP1_CMDT_CC_REPLACE,
@@ -99,6 +83,20 @@ void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
+static void SetupHeaderCommands(void) {
+	static const int16_vec2_t system_clip_coord  = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
+	static const int16_vec2_t local_coord_center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+	vdp1_cmdt_t* cmd;
+
+	cmd = &cmds.hdrs[0];
+	vdp1_cmdt_system_clip_coord_set(cmd);
+	vdp1_cmdt_vtx_system_clip_coord_set(cmd, system_clip_coord);
+
+	cmd = &cmds.hdrs[1];
+	vdp1_cmdt_local_coord_set(cmd);
+	vdp1_cmdt_vtx_local_coord_set(cmd, local_coord_center);
+}
+
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
         vdp1_vram_partitions_get(&_vdp1_vram_partitions);
@@ -108,7 +106,6 @@ void Gfx_Create(void) {
         vdp2_sprite_priority_set(0, 6);
 
 		tex_vram_addr = _vdp1_vram_partitions.texture_base;
-		tex_vram_cur  = _vdp1_vram_partitions.texture_base;
 		gourad_base   = _vdp1_vram_partitions.gouraud_base;
 
 		UpdateVDP1Env();
@@ -121,6 +118,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexHeight = 16; // 128
 	Gfx.Created      = true;
 	Gfx.Limitations  = GFX_LIMIT_NO_UV_SUPPORT | GFX_LIMIT_MAX_VERTEX_SIZE;
+	SetupHeaderCommands();
 }
 
 void Gfx_Free(void) { 
@@ -131,6 +129,9 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static uint16_t cur_char_size;
+static uint16_t cur_char_base;
+
 typedef struct CCTexture {
 	int width, height;
 	void* addr;
@@ -180,9 +181,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
 
-	tex_vram_cur = tex->addr;
-	tex_width    = tex->width;
-	tex_height   = tex->height;
+	cur_char_size = (((tex->width >> 3) << 8) | tex->height) & 0x3FFF;
+	cur_char_base = ((vdp1_vram_t)tex->addr >> 3) & 0xFFFF;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -476,7 +476,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 // Calculates v->x * col1 + v->y * col2 + v->z * col3 + trans
-static inline int __attribute__((always_inline)) TransformVector(struct SATVertexTextured* v, struct MatrixCol* col) {
+static inline int __attribute__((always_inline)) TransformVector(void* v, struct MatrixCol* col) {
     int res;
 
     __asm__("lds.l @%[col]+, MACL     \n"
@@ -490,27 +490,6 @@ static inline int __attribute__((always_inline)) TransformVector(struct SATVerte
     return res;
 }
 
-int Transform(IVec3* result, struct SATVertexTextured* a) {
-	int w = TransformVector(a, &mvp_.w);
-	if (w <= 0) return 1;
-
-	int x = TransformVector(a, &mvp_.x);
-	cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
-
-	int y = TransformVector(a, &mvp_.y);
-	result->x = cpu_divu_quotient_get();
-	cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
-
-	int z = TransformVector(a, &mvp_.z);
-	result->y = cpu_divu_quotient_get();
-	cpu_divu_32_32_set(z * 512, w);
-
-	if (result->x < -2048 || result->x > 2048 || result->y < -2048 || result->y > 2048) return 1;
-
-	result->z = cpu_divu_quotient_get();
-	return result->z < 0 || result->z > 512;
-}
-
 #define Coloured2D_X(value) XYZInteger(value) - SCREEN_WIDTH  / 2
 #define Coloured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
 
@@ -519,8 +498,8 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		vdp1_cmdt_t* cmd = NextPrimitive(0);
-		if (!cmd) return;
+		if (cmds_cur >= &cmds.extra) return;
+		vdp1_cmdt_t* cmd = cmds_cur++;
 
 		cmd->cmd_ctrl = VDP1_CMDT_POLYGON;
 		cmd->cmd_colr = v->Col;
@@ -537,15 +516,15 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 #define Textured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
 
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
-	uint16_t char_size = (((tex_width >> 3) << 8) | tex_height) & 0x3FFF;
-	uint16_t char_base = ((vdp1_vram_t)tex_vram_cur >> 3) & 0xFFFF;
+	uint16_t char_size = cur_char_size;
+	uint16_t char_base = cur_char_base;
 	uint16_t gour_base = ((vdp1_vram_t)gourad_base  >> 3);
 	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		vdp1_cmdt_t* cmd = NextPrimitive(0);
-		if (!cmd) return;
+		if (cmds_cur >= &cmds.extra) return;
+		vdp1_cmdt_t* cmd = cmds_cur++;
 
 		cmd->cmd_ctrl = VDP1_CMDT_DISTORTED_SPRITE | v->flip;
 		cmd->cmd_size = char_size;
@@ -560,22 +539,45 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	}
 }
 
+static int TransformColoured(struct SATVertexColoured* a, IVec3* dst) {
+	for (int i = 0; i < 4; i++, a++, dst++)
+	{
+		int w = TransformVector(a, &mvp_.w);
+		if (w <= 0) return 1;
+
+		int x = TransformVector(a, &mvp_.x);
+		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
+
+		int y = TransformVector(a, &mvp_.y);
+		dst->x = cpu_divu_quotient_get();
+		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
+
+		int z = TransformVector(a, &mvp_.z);
+		dst->y = cpu_divu_quotient_get();
+		cpu_divu_32_32_set(z * 512, w);
+
+		if (dst->x < -2048 || dst->x > 2048 || dst->y < -2048 || dst->y > 2048) return 1;
+
+		dst->z = cpu_divu_quotient_get();
+		if (dst->z < 0 || dst->z > 512) return 1;
+	}
+	return 0;
+}
+
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex;
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
 		IVec3 coords[4];
-		int clipped = 0;
-		clipped |= Transform(&coords[0], &v[0]);
-		clipped |= Transform(&coords[1], &v[1]);
-		clipped |= Transform(&coords[2], &v[2]);
-		clipped |= Transform(&coords[3], &v[3]);
+		int clipped = TransformColoured(v, coords);
 		if (clipped) continue;
 
 		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
-		vdp1_cmdt_t* cmd = NextPrimitive(z);
-		if (!cmd) return;
+
+		if (cmds_cur >= &cmds.extra) return;
+		vdp1_cmdt_t* cmd = cmds_cur++;
+		*z_cur++ = UInt16_MaxValue - z;
 
 		cmd->cmd_ctrl = VDP1_CMDT_POLYGON;
 		cmd->cmd_colr = v->Col;
@@ -588,25 +590,49 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	}
 }
 
+static int TransformTextured(struct SATVertexTextured* a, IVec3* dst) {
+	for (int i = 0; i < 4; i++, a++, dst++)
+	{
+		int w = TransformVector(a, &mvp_.w);
+		if (w <= 0) return 1;
+
+		int x = TransformVector(a, &mvp_.x);
+		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
+
+		int y = TransformVector(a, &mvp_.y);
+		dst->x = cpu_divu_quotient_get();
+		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
+
+		int z = TransformVector(a, &mvp_.z);
+		dst->y = cpu_divu_quotient_get();
+		cpu_divu_32_32_set(z * 512, w);
+
+		if (dst->x < -2048 || dst->x > 2048 || dst->y < -2048 || dst->y > 2048) return 1;
+
+		dst->z = cpu_divu_quotient_get();
+		if (dst->z < 0 || dst->z > 512) return 1;
+	}
+	return 0;
+}
+
+
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
-	uint16_t char_size = (((tex_width >> 3) << 8) | tex_height) & 0x3FFF;
-	uint16_t char_base = ((vdp1_vram_t)tex_vram_cur >> 3) & 0xFFFF;
+	uint16_t char_size = cur_char_size;
+	uint16_t char_base = cur_char_base;
 	uint16_t gour_base = ((vdp1_vram_t)gourad_base  >> 3);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
 		IVec3 coords[4];
-		int clipped = 0;
-		clipped |= Transform(&coords[0], &v[0]);
-		clipped |= Transform(&coords[1], &v[1]);
-		clipped |= Transform(&coords[2], &v[2]);
-		clipped |= Transform(&coords[3], &v[3]);
+		int clipped = TransformTextured(v, coords);
 		if (clipped) continue;
 
 		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
-		vdp1_cmdt_t* cmd = NextPrimitive(z);
-		if (!cmd) return;
+
+		if (cmds_cur >= &cmds.extra) return;
+		vdp1_cmdt_t* cmd = cmds_cur++;
+		*z_cur++ = UInt16_MaxValue - z;
 
 		cmd->cmd_ctrl = VDP1_CMDT_DISTORTED_SPRITE | v->flip;
 		cmd->cmd_size = char_size;
@@ -658,20 +684,9 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) {
 	//Platform_LogConst("FRAME BEG");
-	cmds_count   = 0;
+	cmds_cur = cmds.list;
+	z_cur    = z_table;
 	cmds_3DCount = 0;
-
-	static const int16_vec2_t system_clip_coord  = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
-	static const int16_vec2_t local_coord_center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-	vdp1_cmdt_t* cmd;
-
-	cmd = &cmds.hdrs[0];
-	vdp1_cmdt_system_clip_coord_set(cmd);
-	vdp1_cmdt_vtx_system_clip_coord_set(cmd, system_clip_coord);
-
-	cmd = &cmds.hdrs[1];
-	vdp1_cmdt_local_coord_set(cmd);
-	vdp1_cmdt_vtx_local_coord_set(cmd, local_coord_center);
 }
 
 static void SortCommands(int left, int right) {
@@ -694,19 +709,23 @@ static void SortCommands(int left, int right) {
 }
 
 void Gfx_EndFrame(void) {
+	if (cmds_cur >= &cmds.extra) Platform_LogConst("OUT OF VERTEX RAM");
 	//Platform_LogConst("FRAME END");
 	vdp1_cmdt_t* cmd;
 
 	// TODO optimise Z sorting for 3D polygons
 	if (cmds_3DCount) SortCommands(0, cmds_3DCount - 1);
 
-	cmd = NextPrimitive(UInt16_MaxValue);
-	if (!cmd) { cmd = &cmds.extra[0]; cmds_count++; }
+	// cmds.extra is 1 past end of main command array
+	cmd = cmds_cur < &cmds.extra ? cmds_cur : &cmds.extra;
 	vdp1_cmdt_end_set(cmd);
+
+	int poly_cmds  = (int)(cmds_cur - cmds.list);
+	int cmds_count = HDR_CMDS + poly_cmds + 1; // +1 for end command
 
 	vdp1_cmdt_list_t cmdt_list;
 	cmdt_list.cmdts = cmds.hdrs;
-    cmdt_list.count = HDR_CMDS + cmds_count;
+    cmdt_list.count = cmds_count;
 	vdp1_sync_cmdt_list_put(&cmdt_list, 0);
 
 	vdp1_sync_render();
@@ -736,7 +755,7 @@ cc_bool Gfx_TryRestoreContext(void) { return true; }
 void Gfx_Begin2D(int width, int height) {
 	Gfx_SetAlphaBlending(true);
 	gfx_rendering2D = true;
-	cmds_3DCount = cmds_count;
+	cmds_3DCount = (int)(cmds_cur - cmds.list);
 }
 
 void Gfx_End2D(void) {
