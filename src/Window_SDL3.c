@@ -426,7 +426,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	
 	dlgCallback  = args->Callback;
 	save_filters = filters;
-	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, 1, defName);
+	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, i, defName);
 	return 0;
 }
 
