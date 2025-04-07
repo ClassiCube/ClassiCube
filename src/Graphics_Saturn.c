@@ -518,7 +518,7 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	uint16_t char_size = cur_char_size;
 	uint16_t char_base = cur_char_base;
-	uint16_t gour_base = ((vdp1_vram_t)gourad_base  >> 3);
+	uint16_t gour_base = ((vdp1_vram_t)gourad_base >> 3);
 	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -540,10 +540,12 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 }
 
 static int TransformColoured(struct SATVertexColoured* a, IVec3* dst) {
+	int aveZ = 0;
+
 	for (int i = 0; i < 4; i++, a++, dst++)
 	{
 		int w = TransformVector(a, &mvp_.w);
-		if (w <= 0) return 1;
+		if (w <= 0) return -1;
 
 		int x = TransformVector(a, &mvp_.x);
 		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
@@ -552,16 +554,16 @@ static int TransformColoured(struct SATVertexColoured* a, IVec3* dst) {
 		dst->x = cpu_divu_quotient_get();
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
-		int z = TransformVector(a, &mvp_.z);
+		if (dst->x < -2048 || dst->x > 2048) return -1;
+
+		int z = w >> 6;
+		if (z < 0 || z > 50000) return -1;
+		aveZ += z;
+
 		dst->y = cpu_divu_quotient_get();
-		cpu_divu_32_32_set(z * 512, w);
-
-		if (dst->x < -2048 || dst->x > 2048 || dst->y < -2048 || dst->y > 2048) return 1;
-
-		dst->z = cpu_divu_quotient_get();
-		if (dst->z < 0 || dst->z > 512) return 1;
+		if (dst->y < -2048 || dst->y > 2048) return -1;
 	}
-	return 0;
+	return aveZ >> 2;
 }
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
@@ -570,10 +572,8 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
 		IVec3 coords[4];
-		int clipped = TransformColoured(v, coords);
-		if (clipped) continue;
-
-		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
+		int z = TransformColoured(v, coords);
+		if (z < 0) continue;
 
 		if (cmds_cur >= &cmds.extra) return;
 		vdp1_cmdt_t* cmd = cmds_cur++;
@@ -591,10 +591,12 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 }
 
 static int TransformTextured(struct SATVertexTextured* a, IVec3* dst) {
+	int aveZ = 0;
+
 	for (int i = 0; i < 4; i++, a++, dst++)
 	{
 		int w = TransformVector(a, &mvp_.w);
-		if (w <= 0) return 1;
+		if (w <= 0) return -1;
 
 		int x = TransformVector(a, &mvp_.x);
 		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
@@ -603,16 +605,16 @@ static int TransformTextured(struct SATVertexTextured* a, IVec3* dst) {
 		dst->x = cpu_divu_quotient_get();
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
-		int z = TransformVector(a, &mvp_.z);
+		if (dst->x < -2048 || dst->x > 2048) return -1;
+
+		int z = w >> 6;
+		if (z < 0 || z > 50000) return -1;
+		aveZ += z;
+
 		dst->y = cpu_divu_quotient_get();
-		cpu_divu_32_32_set(z * 512, w);
-
-		if (dst->x < -2048 || dst->x > 2048 || dst->y < -2048 || dst->y > 2048) return 1;
-
-		dst->z = cpu_divu_quotient_get();
-		if (dst->z < 0 || dst->z > 512) return 1;
+		if (dst->y < -2048 || dst->y > 2048) return -1;
 	}
-	return 0;
+	return aveZ >> 2;
 }
 
 
@@ -625,10 +627,8 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
 		IVec3 coords[4];
-		int clipped = TransformTextured(v, coords);
-		if (clipped) continue;
-
-		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
+		int z = TransformTextured(v, coords);
+		if (z < 0) continue;
 
 		if (cmds_cur >= &cmds.extra) return;
 		vdp1_cmdt_t* cmd = cmds_cur++;
@@ -723,10 +723,7 @@ void Gfx_EndFrame(void) {
 	int poly_cmds  = (int)(cmds_cur - cmds.list);
 	int cmds_count = HDR_CMDS + poly_cmds + 1; // +1 for end command
 
-	vdp1_cmdt_list_t cmdt_list;
-	cmdt_list.cmdts = cmds.hdrs;
-    cmdt_list.count = cmds_count;
-	vdp1_sync_cmdt_list_put(&cmdt_list, 0);
+	vdp1_sync_cmdt_put(cmds.hdrs, cmds_count, 0);
 
 	vdp1_sync_render();
 	vdp1_sync();
