@@ -442,95 +442,84 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
 
+// Twiddled index looks like this (highest numbered bits are leftmost):
+//   - w = h: xyxy xyxy
+//   - w > h: xxxx xyxy
+//   - h > w: yyyy xyxy
+// And can therefore be broken down into two components:
+//  1) X and Y interleaved lower bits
+//  2) X or Y linear higher bits
+	
+// For example, in the case of W=4 and H=8
+//  the bit pattern is Y_yx_yx_yx
+//  - lower 3 Y bits are interleaved
+//  - upper 1 Y bit is linear
+	
+// By calculating appropriate values, can increment X/Y
+//   in "interleaved one" and then a "linear one" at the end
+// For example, consider XX XY XY
+// - oneX = 00 01 10  maskX = 11 10 10
+// - oneY = 00 10 11  maskY = 00 01 01
 
-static unsigned Interleave(unsigned x) {
-	// Simplified "Interleave bits by Binary Magic Numbers" from
-	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+// Working through:
+// X = 00 00 00 (x=0)
+// X + 00 01 10 > 00 01 10
+//              & 11 10 10 > 00 00 10
+// X = 00 00 10 (x=1)
+// X + 00 01 10 > 00 10 00
+// 				& 11 10 10 > 00 10 00
+// X = 00 10 00 (x=2)
+// X + 00 01 10 > 00 11 10
+//				& 11 10 10 > 00 10 10
+// X = 00 10 10 (x=3)
+// X + 00 01 10 > 01 00 00
+//				& 11 10 10 > 01 00 00
+// X = 01 00 00 (x=4)
+// X + 00 01 10 > 01 01 10
+//				& 11 10 10 > 01 00 10
+// X = 01 00 10 (x=5)
+// X + 00 01 10 > 01 10 00
+//				& 11 10 10 > 01 10 00
+// X = 01 10 00 (x=6)
+// X + 00 01 10 > 01 11 10
+//				& 11 10 10 > 01 10 10
+// X = 01 10 10 (x=7)
+// X + 00 01 10 > 10 00 00
+//				& 11 10 10 > 10 00 00
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+					unsigned* oneX, unsigned* oneY, unsigned* maskX, unsigned* maskY) {
+	*oneX  = 0;
+	*oneY  = 0;
+	*maskX = 0;
+	*maskY = 0;
+	int shift = 0;
 
-	x = (x | (x << 8)) & 0x00FF00FF;
-	x = (x | (x << 4)) & 0x0F0F0F0F;
-	x = (x | (x << 2)) & 0x33333333;
-	x = (x | (x << 1)) & 0x55555555;
-	return x;
+	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
+	{
+		if (w > 1 && h > 1) {
+			// Add interleaved X and Y bits
+			*oneX  += 0x01 << shift;
+			*maskX += 0x02 << shift;
+			*oneY  += 0x02 << shift;
+			*maskY += 0x01 << shift;
+			shift  += 2;
+		} else if (w > 1) {
+			// Add a linear X bit
+			*maskX += 0x01 << shift;
+			shift  += 1;		
+		} else if (h > 1) {
+			// Add a linear Y bit
+			*maskY += 0x01 << shift;
+			shift  += 1;		
+		}
+	}
+	*oneX += 1;
+	*oneY += 1;
 }
-
-/*static int CalcTwiddledIndex(int x, int y, int w, int h) {
-	// Twiddled index looks like this (lowest numbered bits are leftmost):
-	//   - w = h: yxyx yxyx
-	//   - w > h: yxyx xxxx
-	//   - h > w: yxyx yyyy
-	// And can therefore be broken down into two components:
-	//  1) interleaved lower bits
-	//  2) masked and then shifted higher bits
-	
-	int min_dimension    = Math.Min(w, h);
-	
-	int interleave_mask  = min_dimension - 1;
-	int interleaved_bits = Math_ilog2(min_dimension);
-	
-	int shifted_mask = (~0) & ~interleave_mask;
-	// as lower interleaved bits contain both X and Y, need to adjust the
-	//  higher bit shift by number of interleaved bits used by other axis
-	int shift_bits   = interleaved_bits;
-	
-	// For example, in the case of W=4 and H=8
-	//  the bit pattern is yx_yx_yx_Y
-	//  - lower 3 Y bits are interleaved
-	//  - upper 1 Y bit must be shifted right 3 bits
-	
-	int lo_Y = Interleave(y & interleave_mask);
-	int hi_Y = (y & shifted_mask) << shift_bits;
-	int Y    = lo_Y | hi_Y;
-	
-	int lo_X  = Interleave(x & interleave_mask) << 1;
-	int hi_X  = (x & shifted_mask) << shift_bits;
-	int X     = lo_X | hi_X;
-
-	return X | Y;
-}*/
-
-#define Twiddle_CalcFactors(w, h) \
-	min_dimension    = min(w, h); \
-	interleave_mask  = min_dimension - 1; \
-	interleaved_bits = Math_ilog2(min_dimension); \
-	shifted_mask     = ~interleave_mask; \
-	shift_bits       = interleaved_bits;
-	
-#define Twiddle_CalcY(y) \
-	lo_Y = Interleave(y & interleave_mask); \
-	hi_Y = (y & shifted_mask) << shift_bits; \
-	Y    = lo_Y | hi_Y;
-	
-#define Twiddle_CalcX(x) \
-	lo_X  = Interleave(x & interleave_mask) << 1; \
-	hi_X  = (x & shifted_mask) << shift_bits; \
-	X     = lo_X | hi_X;
-	
 	
 // B8 G8 R8 A8 > B4 G4 R4 A4
 #define BGRA8_to_BGRA4(src) \
 	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
-
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
-	unsigned min_dimension;
-	unsigned interleave_mask, interleaved_bits;
-	unsigned shifted_mask, shift_bits;
-	unsigned lo_Y, hi_Y, Y;
-	unsigned lo_X, hi_X, X;	
-	Twiddle_CalcFactors(bmp->width, bmp->height);
-	
-	for (int y = 0; y < bmp->height; y++)
-	{
-		Twiddle_CalcY(y);
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
-		
-		for (int x = 0; x < bmp->width; x++, src += 4)
-		{
-			Twiddle_CalcX(x);
-			dst[X | Y] = BGRA8_to_BGRA4(src);
-		}
-	}
-}
 
 static TextureObject* FindFreeTexture(void) {
     for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
@@ -551,42 +540,52 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 	tex->data = texmem_alloc(bmp->width * bmp->height * 2);
 	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
+	cc_uint16* dst = tex->data;
 
-	ConvertTexture(tex->data, bmp, rowWidth);
-	return tex;
-}
-
-// TODO: struct GPUTexture ??
-static void ConvertSubTexture(cc_uint16* dst, int texWidth, int texHeight,
-				int originX, int originY, 
-				struct Bitmap* bmp, int rowWidth) {
-	unsigned min_dimension;
-	unsigned interleave_mask, interleaved_bits;
-	unsigned shifted_mask, shift_bits;
-	unsigned lo_Y, hi_Y, Y;
-	unsigned lo_X, hi_X, X;
-	Twiddle_CalcFactors(texWidth, texHeight);
+	unsigned oneX, oneY, maskX, maskY;
+	TwiddleCalcFactors(bmp->width, bmp->height, &oneX, &oneY, &maskX, &maskY);
+	unsigned X = 0, Y = 0;
 	
 	for (int y = 0; y < bmp->height; y++)
 	{
-		int dstY = y + originY;
-		Twiddle_CalcY(dstY);
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + rowWidth * y);
+		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
+		X = 0;
 		
 		for (int x = 0; x < bmp->width; x++, src += 4)
 		{
-			int dstX = x + originX;
-			Twiddle_CalcX(dstX);
 			dst[X | Y] = BGRA8_to_BGRA4(src);
+			X = (X + oneX) & maskX;
 		}
+		Y = (Y + oneY) & maskY;
 	}
+	return tex;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	TextureObject* tex = (TextureObject*)texId;
 	
-	ConvertSubTexture(tex->data, tex->width, tex->height,
-				x, y, part, rowWidth);
+	unsigned oneX, oneY, maskX, maskY;
+	TwiddleCalcFactors(tex->width, tex->height, &oneX, &oneY, &maskX, &maskY);
+	unsigned X = 0, Y = 0;
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X + oneX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y + oneY) & maskY; }
+	unsigned startX = X;
+	cc_uint16* dst = tex->data;
+	
+	for (int y = 0; y < part->height; y++)
+	{
+		cc_uint8* src = (cc_uint8*)(part->scan0 + rowWidth * y);
+		X = startX;
+		
+		for (int x = 0; x < part->width; x++, src += 4)
+		{
+			dst[X | Y] = BGRA8_to_BGRA4(src);
+			X = (X + oneX) & maskX;
+		}
+		Y = (Y + oneY) & maskY;
+	}
 	// TODO: Do we need to flush VRAM?
 }
 

@@ -556,7 +556,7 @@ static int TransformColoured(struct SATVertexColoured* a, IVec3* dst) {
 
 		if (dst->x < -2048 || dst->x > 2048) return -1;
 
-		int z = w >> 6;
+		int z = (unsigned)w >> 6; // signed >> 6 generates call to ___ashiftrt_r4_6 function
 		if (z < 0 || z > 50000) return -1;
 		aveZ += z;
 
