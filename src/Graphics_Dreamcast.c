@@ -486,10 +486,17 @@ void Gfx_DisableMipmaps(void) { }
 // X = 01 10 10 (x=7)
 // X + 00 01 10 > 10 00 00
 //				& 11 10 10 > 10 00 00
+//
+// As a further optimisation, note the bit patterns
+//   oneX = 00 01 10    oneY = -- 10 11 
+//  maskX = 11 10 10   maskY = -- 01 01
+//  oneX = ~maskX + 1   oneY = ~maskY + 1
+// And then using the following bitwise equivalence:
+//    x - y    =   x + (~y + 1) 
+//  idx - mask = idx + (~mask + 1)
+//  idx - mask = idx + one
 static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
-					unsigned* oneX, unsigned* oneY, unsigned* maskX, unsigned* maskY) {
-	*oneX  = 0;
-	*oneY  = 0;
+										unsigned* maskX, unsigned* maskY) {
 	*maskX = 0;
 	*maskY = 0;
 	int shift = 0;
@@ -498,9 +505,7 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	{
 		if (w > 1 && h > 1) {
 			// Add interleaved X and Y bits
-			*oneX  += 0x01 << shift;
 			*maskX += 0x02 << shift;
-			*oneY  += 0x02 << shift;
 			*maskY += 0x01 << shift;
 			shift  += 2;
 		} else if (w > 1) {
@@ -513,8 +518,6 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 			shift  += 1;		
 		}
 	}
-	*oneX += 1;
-	*oneY += 1;
 }
 	
 // B8 G8 R8 A8 > B4 G4 R4 A4
@@ -542,8 +545,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
 	cc_uint16* dst = tex->data;
 
-	unsigned oneX, oneY, maskX, maskY;
-	TwiddleCalcFactors(bmp->width, bmp->height, &oneX, &oneY, &maskX, &maskY);
+	unsigned maskX, maskY;
+	TwiddleCalcFactors(bmp->width, bmp->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
 	
 	for (int y = 0; y < bmp->height; y++)
@@ -554,9 +557,9 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		for (int x = 0; x < bmp->width; x++, src += 4)
 		{
 			dst[X | Y] = BGRA8_to_BGRA4(src);
-			X = (X + oneX) & maskX;
+			X = (X - maskX) & maskX;
 		}
-		Y = (Y + oneY) & maskY;
+		Y = (Y - maskY) & maskY;
 	}
 	return tex;
 }
@@ -564,13 +567,13 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	TextureObject* tex = (TextureObject*)texId;
 	
-	unsigned oneX, oneY, maskX, maskY;
-	TwiddleCalcFactors(tex->width, tex->height, &oneX, &oneY, &maskX, &maskY);
+	unsigned maskX, maskY;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
 
 	// Calculate start twiddled X and Y values
-	for (int x = 0; x < originX; x++) { X = (X + oneX) & maskX; }
-	for (int y = 0; y < originY; y++) { Y = (Y + oneY) & maskY; }
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
 	unsigned startX = X;
 	cc_uint16* dst = tex->data;
 	
@@ -582,9 +585,9 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 		for (int x = 0; x < part->width; x++, src += 4)
 		{
 			dst[X | Y] = BGRA8_to_BGRA4(src);
-			X = (X + oneX) & maskX;
+			X = (X - maskX) & maskX;
 		}
-		Y = (Y + oneY) & maskY;
+		Y = (Y - maskY) & maskY;
 	}
 	// TODO: Do we need to flush VRAM?
 }

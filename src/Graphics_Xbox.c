@@ -148,9 +148,7 @@ typedef struct CCTexture_ {
 // See Graphics_Dreamcast.c for twiddling explanation
 // (only difference is dreamcast is XY while xbox is YX)
 static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
-					unsigned* oneX, unsigned* oneY, unsigned* maskX, unsigned* maskY) {
-	*oneX  = 0;
-	*oneY  = 0;
+										unsigned* maskX, unsigned* maskY) {
 	*maskX = 0;
 	*maskY = 0;
 	int shift = 0;
@@ -159,9 +157,7 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	{
 		if (w > 1 && h > 1) {
 			// Add interleaved X and Y bits
-			*oneY  += 0x01 << shift;
 			*maskY += 0x02 << shift;
-			*oneX  += 0x02 << shift;
 			*maskX += 0x01 << shift;
 			shift  += 2;
 		} else if (w > 1) {
@@ -174,8 +170,6 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 			shift  += 1;		
 		}
 	}
-	*oneX += 1;
-	*oneY += 1;
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
@@ -187,8 +181,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->height = bmp->height;
 	cc_uint32* dst = tex->pixels;
 
-	unsigned oneX, oneY, maskX, maskY;
-	TwiddleCalcFactors(bmp->width, bmp->height, &oneX, &oneY, &maskX, &maskY);
+	unsigned maskX, maskY;
+	TwiddleCalcFactors(bmp->width, bmp->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
 	
 	for (int y = 0; y < bmp->height; y++)
@@ -199,9 +193,9 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		for (int x = 0; x < bmp->width; x++, src++)
 		{
 			dst[X | Y] = *src;
-			X = (X + oneX) & maskX;
+			X = (X - maskX) & maskX;
 		}
-		Y = (Y + oneY) & maskY;
+		Y = (Y - maskY) & maskY;
 	}
 	return tex;
 }
@@ -210,13 +204,13 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	CCTexture* tex = (CCTexture*)texId;
 	cc_uint32* dst = tex->pixels;
 	
-	unsigned oneX, oneY, maskX, maskY;
-	TwiddleCalcFactors(tex->width, tex->height, &oneX, &oneY, &maskX, &maskY);
+	unsigned maskX, maskY;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
 
 	// Calculate start twiddled X and Y values
-	for (int x = 0; x < originX; x++) { X = (X + oneX) & maskX; }
-	for (int y = 0; y < originY; y++) { Y = (Y + oneY) & maskY; }
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
 	unsigned startX = X;
 	
 	for (int y = 0; y < part->height; y++)
@@ -227,9 +221,9 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 		for (int x = 0; x < part->width; x++, src++)
 		{
 			dst[X | Y] = *src;
-			X = (X + oneX) & maskX;
+			X = (X - maskX) & maskX;
 		}
-		Y = (Y + oneY) & maskY;
+		Y = (Y - maskY) & maskY;
 	}
 }
 
