@@ -181,16 +181,17 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->height = bmp->height;
 	cc_uint32* dst = tex->pixels;
 
+	int width = bmp->width, height = bmp->height;
 	unsigned maskX, maskY;
-	TwiddleCalcFactors(bmp->width, bmp->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
 	
-	for (int y = 0; y < bmp->height; y++)
+	for (int y = 0; y < height; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * rowWidth;
 		X = 0;
 		
-		for (int x = 0; x < bmp->width; x++, src++)
+		for (int x = 0; x < width; x++, src++)
 		{
 			dst[X | Y] = *src;
 			X = (X - maskX) & maskX;
@@ -204,21 +205,22 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	CCTexture* tex = (CCTexture*)texId;
 	cc_uint32* dst = tex->pixels;
 	
+	int width = part->width, height = part->height;
 	unsigned maskX, maskY;
-	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
 
 	// Calculate start twiddled X and Y values
 	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
 	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
 	unsigned startX = X;
 	
-	for (int y = 0; y < part->height; y++)
+	for (int y = 0; y < height; y++)
 	{
 		cc_uint32* src = part->scan0 + rowWidth * y;
 		X = startX;
 		
-		for (int x = 0; x < part->width; x++, src++)
+		for (int x = 0; x < width; x++, src++)
 		{
 			dst[X | Y] = *src;
 			X = (X - maskX) & maskX;

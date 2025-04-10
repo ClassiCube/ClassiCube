@@ -673,6 +673,32 @@ static void GPUTextures_DeleteUnreferenced(void) {
 	}
 }
 
+// See Graphics_Dreamcast.c for twiddling explanation
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0;
+	*maskY = 0;
+	int shift = 0;
+
+	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
+	{
+		if (w > 1 && h > 1) {
+			// Add interleaved X and Y bits
+			*maskY += 0x01 << shift;
+			*maskX += 0x02 << shift;
+			shift  += 2;
+		} else if (w > 1) {
+			// Add a linear X bit
+			*maskX += 0x01 << shift;
+			shift  += 1;		
+		} else if (h > 1) {
+			// Add a linear Y bit
+			*maskY += 0x01 << shift;
+			shift  += 1;		
+		}
+	}
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
@@ -680,27 +706,64 @@ static void GPUTextures_DeleteUnreferenced(void) {
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	struct GPUTexture* tex = GPUTexture_Alloc(size);
-	CopyTextureData(tex->data, bmp->width * BITMAPCOLOR_SIZE,
-					bmp, rowWidth * BITMAPCOLOR_SIZE);
+	cc_uint32* dst = tex->data;
+
+	int width = bmp->width, height = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
             
-	sceGxmTextureInitLinear(&tex->texture, tex->data,
-		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, bmp->width, bmp->height, 0);
+	sceGxmTextureInitSwizzled(&tex->texture, dst,
+		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, width, height, 0);
 		
 	sceGxmTextureSetUAddrMode(&tex->texture, SCE_GXM_TEXTURE_ADDR_REPEAT);
 	sceGxmTextureSetVAddrMode(&tex->texture, SCE_GXM_TEXTURE_ADDR_REPEAT);
 	return tex;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	struct GPUTexture* tex = (struct GPUTexture*)texId;
-	int texWidth = sceGxmTextureGetWidth(&tex->texture);
+	int texWidth   = sceGxmTextureGetWidth(&tex->texture);
+	int texHeight  = sceGxmTextureGetHeight(&tex->texture);
+	cc_uint32* dst = tex->data;
 	
-	// NOTE: Only valid for LINEAR textures
-	BitmapCol* dst = (tex->data + x) + y * texWidth;
+	int width = part->width, height = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(texWidth, texHeight, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
 	
-	CopyTextureData(dst, texWidth  * BITMAPCOLOR_SIZE,
-					part, rowWidth * BITMAPCOLOR_SIZE);
-	// TODO: Do line by line and only invalidate the actually changed parts of lines?
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint32* src = part->scan0 + rowWidth * y;
+		X = startX;
+		
+		for (int x = 0; x < width; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+
+	// TODO: is it necessary to invalidate? probably just everything?
 	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
 }
 

@@ -545,16 +545,17 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
 	cc_uint16* dst = tex->data;
 
+	int width = bmp->width, height = bmp->height;
 	unsigned maskX, maskY;
-	TwiddleCalcFactors(bmp->width, bmp->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
 	
-	for (int y = 0; y < bmp->height; y++)
+	for (int y = 0; y < height; y++)
 	{
 		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
 		X = 0;
 		
-		for (int x = 0; x < bmp->width; x++, src += 4)
+		for (int x = 0; x < width; x++, src += 4)
 		{
 			dst[X | Y] = BGRA8_to_BGRA4(src);
 			X = (X - maskX) & maskX;
@@ -567,9 +568,10 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	TextureObject* tex = (TextureObject*)texId;
 	
+	int width = part->width, height = part->height;
 	unsigned maskX, maskY;
-	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
 	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
 
 	// Calculate start twiddled X and Y values
 	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
@@ -577,12 +579,12 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	unsigned startX = X;
 	cc_uint16* dst = tex->data;
 	
-	for (int y = 0; y < part->height; y++)
+	for (int y = 0; y < height; y++)
 	{
 		cc_uint8* src = (cc_uint8*)(part->scan0 + rowWidth * y);
 		X = startX;
 		
-		for (int x = 0; x < part->width; x++, src += 4)
+		for (int x = 0; x < width; x++, src += 4)
 		{
 			dst[X | Y] = BGRA8_to_BGRA4(src);
 			X = (X - maskX) & maskX;
