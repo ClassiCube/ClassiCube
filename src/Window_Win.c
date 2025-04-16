@@ -745,8 +745,13 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static HDC draw_DC;
 static HBITMAP draw_DIB;
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	BITMAPINFO hdr = { 0 };
+	cc_result res;
+
+	bmp->width  = width;
+	bmp->height = height;
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
 	/* sizeof(BITMAPINFO) does not work on Windows 9x */
@@ -757,19 +762,39 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	hdr.bmiHeader.biPlanes   = 1; 
 
 	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->scan0, NULL, 0);
-	if (!draw_DIB) Process_Abort2(GetLastError(), "Failed to create DIB");
-	bmp->width  = width;
-	bmp->height = height;
+	if (draw_DIB) return;
+
+	res = GetLastError();
+	/* ERROR_CALL_NOT_IMPLEMENTED occurs with win32s */
+	if (res != ERROR_CALL_NOT_IMPLEMENTED) Process_Abort2(res, "Failed to create DIB");
+
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
-	BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
-	SelectObject(draw_DC, oldSrc);
+	BITMAPINFO hdr = { 0 };
+
+	if (draw_DIB) {
+		HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
+		BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
+		SelectObject(draw_DC, oldSrc);
+	} else {
+		/* TODO partial update */
+		hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		hdr.bmiHeader.biWidth    =  bmp->width;
+		hdr.bmiHeader.biHeight   = -bmp->height;
+		hdr.bmiHeader.biBitCount = 32;
+		hdr.bmiHeader.biPlanes   = 1; 
+
+		if (SetDIBitsToDevice(win_DC, 0, 0, bmp->width, bmp->height, 0, 0, 
+							0, bmp->height, bmp->scan0, &hdr, DIB_RGB_COLORS)) return;
+		 Process_Abort2(GetLastError(), "Failed to set DIB bits");
+	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	DeleteObject(draw_DIB);
+	if (draw_DIB) DeleteObject(draw_DIB);
+	draw_DIB = NULL;
 }
 
 static cc_bool rawMouseInited, rawMouseSupported;

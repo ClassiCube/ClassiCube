@@ -84,17 +84,17 @@ void Gfx_FreeState(void) {
 }
 
 static void SetupHeaderCommands(void) {
-	static const int16_vec2_t system_clip_coord  = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
-	static const int16_vec2_t local_coord_center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
 	vdp1_cmdt_t* cmd;
 
 	cmd = &cmds.hdrs[0];
-	vdp1_cmdt_system_clip_coord_set(cmd);
-	vdp1_cmdt_vtx_system_clip_coord_set(cmd, system_clip_coord);
+	cmd->cmd_ctrl = VDP1_CMDT_SYSTEM_CLIP_COORD;
+	cmd->cmd_xc   = SCREEN_WIDTH  - 1;
+	cmd->cmd_yc   = SCREEN_HEIGHT - 1;
 
 	cmd = &cmds.hdrs[1];
-	vdp1_cmdt_local_coord_set(cmd);
-	vdp1_cmdt_vtx_local_coord_set(cmd, local_coord_center);
+	cmd->cmd_ctrl = VDP1_CMDT_LOCAL_COORD;
+	cmd->cmd_xa   = SCREEN_WIDTH  / 2;
+	cmd->cmd_ya   = SCREEN_HEIGHT / 2;
 }
 
 void Gfx_Create(void) {
@@ -718,7 +718,7 @@ void Gfx_EndFrame(void) {
 
 	// cmds.extra is 1 past end of main command array
 	cmd = cmds_cur < &cmds.extra ? cmds_cur : &cmds.extra;
-	vdp1_cmdt_end_set(cmd);
+	cmd->cmd_ctrl  = 0x8000; // end command bit
 
 	int poly_cmds  = (int)(cmds_cur - cmds.list);
 	int cmds_count = HDR_CMDS + poly_cmds + 1; // +1 for end command

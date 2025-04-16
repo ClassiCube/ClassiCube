@@ -420,23 +420,29 @@ static DWORD WINAPI ExecThread(void* param) {
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+#ifndef CC_BUILD_COOPTHREADED
 	DWORD threadID;
 	HANDLE thread = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
 	if (!thread) Process_Abort2(GetLastError(), "Creating thread");
 	
 	*handle = thread;
 	ResumeThread(thread);
+#endif
 }
 
 void Thread_Detach(void* handle) {
+#ifndef CC_BUILD_COOPTHREADED
 	if (!CloseHandle((HANDLE)handle)) {
 		Process_Abort2(GetLastError(), "Freeing thread handle");
 	}
+#endif
 }
 
 void Thread_Join(void* handle) {
+#ifndef CC_BUILD_COOPTHREADED
 	WaitForSingleObject((HANDLE)handle, INFINITE);
 	Thread_Detach(handle);
+#endif
 }
 
 void* Mutex_Create(const char* name) {
@@ -453,26 +459,41 @@ void Mutex_Lock(void* handle)   { EnterCriticalSection((CRITICAL_SECTION*)handle
 void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle); }
 
 void* Waitable_Create(const char* name) {
+#ifndef CC_BUILD_COOPTHREADED
 	void* handle = CreateEventA(NULL, false, false, NULL);
 	if (!handle) {
 		Process_Abort2(GetLastError(), "Creating waitable");
 	}
 	return handle;
+#else
+	return NULL;
+#endif
 }
 
 void Waitable_Free(void* handle) {
+#ifndef CC_BUILD_COOPTHREADED
 	if (!CloseHandle((HANDLE)handle)) {
 		Process_Abort2(GetLastError(), "Freeing waitable");
 	}
+#endif
 }
 
-void Waitable_Signal(void* handle) { SetEvent((HANDLE)handle); }
+void Waitable_Signal(void* handle) {
+#ifndef CC_BUILD_COOPTHREADED
+	SetEvent((HANDLE)handle);
+#endif
+}
+
 void Waitable_Wait(void* handle) {
+#ifndef CC_BUILD_COOPTHREADED
 	WaitForSingleObject((HANDLE)handle, INFINITE);
+#endif
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
+#ifndef CC_BUILD_COOPTHREADED
 	WaitForSingleObject((HANDLE)handle, milliseconds);
+#endif
 }
 
 
