@@ -771,24 +771,45 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 }
 
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+/* Used by Win32s on windows 3.1 */
+static void DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp) {
+	char buffer[640 * 3];
 	BITMAPINFO hdr = { 0 };
+	int x, y, width;
 
+	/* TODO partial update */
+	/* Have to use 24 bpp row by row, 32 bpp (and negative height) doesn't work */
+	hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	hdr.bmiHeader.biWidth    = bmp->width;
+	hdr.bmiHeader.biHeight   = 1;
+	hdr.bmiHeader.biBitCount = 24;
+	hdr.bmiHeader.biPlanes   = 1; 
+
+	for (y = r.y; y < r.y + r.height; y++) 
+	{
+		BitmapCol* row = Bitmap_GetRow(bmp, y);
+		width = bmp->width;
+
+		for (x = 0; x < width; x++) 
+		{
+			BitmapCol rgb = row[x];
+			buffer[x * 3 + 0] = BitmapCol_B(rgb);
+			buffer[x * 3 + 1] = BitmapCol_G(rgb);
+			buffer[x * 3 + 2] = BitmapCol_R(rgb);
+		}
+
+		SetDIBitsToDevice(win_DC, 0, y, width, 1, 0, 0, 
+						0, 1, buffer, &hdr, DIB_RGB_COLORS);
+	}
+}
+
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	if (draw_DIB) {
 		HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
 		BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
 		SelectObject(draw_DC, oldSrc);
 	} else {
-		/* TODO partial update */
-		hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-		hdr.bmiHeader.biWidth    =  bmp->width;
-		hdr.bmiHeader.biHeight   = -bmp->height;
-		hdr.bmiHeader.biBitCount = 32;
-		hdr.bmiHeader.biPlanes   = 1; 
-
-		if (SetDIBitsToDevice(win_DC, 0, 0, bmp->width, bmp->height, 0, 0, 
-							0, bmp->height, bmp->scan0, &hdr, DIB_RGB_COLORS)) return;
-		 Process_Abort2(GetLastError(), "Failed to set DIB bits");
+		DrawFramebufferSlow(r, bmp);
 	}
 }
 
