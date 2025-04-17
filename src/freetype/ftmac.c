@@ -1,3 +1,4 @@
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /***************************************************************************/
 /*                                                                         */
 /*  ftmac.c                                                                */
