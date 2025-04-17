@@ -229,6 +229,7 @@ static void Menu_SwitchGfx(void* a, void* b)       { GraphicsOptionsScreen_Show(
 static void Menu_SwitchHacks(void* a, void* b)     { HacksSettingsScreen_Show(); }
 static void Menu_SwitchEnv(void* a, void* b)       { EnvSettingsScreen_Show(); }
 static void Menu_SwitchNostalgia(void* a, void* b) { NostalgiaMenuScreen_Show(); }
+static void Menu_SwitchLanguage(void* a, void* b)  { LanguageMenuScreen_Show(); }
 
 static void Menu_SwitchGenLevel(void* a, void* b)        { GenLevelScreen_Show(); }
 static void Menu_SwitchClassicGenLevel(void* a, void* b) { ClassicGenScreen_Show(); }
@@ -440,7 +441,7 @@ static void ListScreen_ContextRecreated(void* screen) {
 
 	ButtonWidget_SetConst(&s->left,  "<",   &s->font);
 	ButtonWidget_SetConst(&s->right, ">",   &s->font);
-	ButtonWidget_SetConst(&s->done, "Done", &s->font);
+	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &s->font);
 	ListScreen_UpdatePage(s);
 
 	ButtonWidget_SetConst(&s->action, s->actionText, &s->font);
@@ -480,7 +481,7 @@ void MenuScreen_Render2(void* screen, float delta) {
 /*########################################################################################################################*
 *-----------------------------------------------------PauseScreenBase-----------------------------------------------------*
 *#########################################################################################################################*/
-#define PAUSE_MAX_BTNS 6
+#define PAUSE_MAX_BTNS 7
 static struct PauseScreen {
 	Screen_Body
 	int descsCount;
@@ -501,8 +502,8 @@ static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontD
 	Screen_UpdateVb(s);
 	Gui_MakeTitleFont(titleFont);
 	Menu_SetButtons(s->btns, titleFont, s->descs, s->descsCount);
-	ButtonWidget_SetConst(&s->back, "Back to game", titleFont);
-	TextWidget_SetConst(&s->title,  "Game menu", titleFont);
+	ButtonWidget_SetConst(&s->back, ccStrings_optionsMenu[CC_CurrentLanguage][16], titleFont);
+	TextWidget_SetConst(&s->title,  ccStrings_optionsMenu[CC_CurrentLanguage][17], titleFont);
 }
 
 static void PauseScreenBase_AddWidgets(struct PauseScreen* s, int width) {
@@ -531,7 +532,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	PauseScreenBase_ContextRecreated(s, &titleFont);
 
-	ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
+	ButtonWidget_SetConst(&s->quit, ccStrings_optionsMenu[CC_CurrentLanguage][15], &titleFont);
 	PauseScreen_CheckHacksAllowed(s);
 	Font_Free(&titleFont);
 }
@@ -546,7 +547,8 @@ static void PauseScreen_Layout(void* screen) {
 
 static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	static const struct SimpleButtonDesc descs[] = {
+	
+	static struct SimpleButtonDesc descs[] = {
 		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
 		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   },
@@ -554,6 +556,13 @@ static void PauseScreen_Init(void* screen) {
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
 		{  160,   50, "Save level...",          Menu_SwitchSaveLevel }
 	};
+
+	descs[0].title = ccStrings_optionsMenu[CC_CurrentLanguage][8];
+	descs[1].title = ccStrings_optionsMenu[CC_CurrentLanguage][9];
+	descs[2].title = ccStrings_optionsMenu[CC_CurrentLanguage][10];
+	descs[3].title = ccStrings_optionsMenu[CC_CurrentLanguage][11];
+	descs[4].title = ccStrings_optionsMenu[CC_CurrentLanguage][12];
+	descs[5].title = ccStrings_optionsMenu[CC_CurrentLanguage][13];
 
 	s->widgets     = pause_widgets;
 	s->numWidgets  = 0;
@@ -614,7 +623,7 @@ static void ClassicPauseScreen_Layout(void* screen) {
 
 static void ClassicPauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	static const struct SimpleButtonDesc descs[] = {
+	static struct SimpleButtonDesc descs[] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
 		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
 		{    0,    0, "Save level..",           Menu_SwitchSaveLevel },
@@ -625,6 +634,12 @@ static void ClassicPauseScreen_Init(void* screen) {
 	s->numWidgets = 0;
 	s->maxWidgets = Array_Elems(classicPause_widgets);
 	s->descs      = descs;
+
+	descs[0].title = ccStrings_optionsMenu[CC_CurrentLanguage][8];
+	descs[1].title = ccStrings_optionsMenu[CC_CurrentLanguage][11];
+	descs[2].title = ccStrings_optionsMenu[CC_CurrentLanguage][12];
+	descs[3].title = ccStrings_optionsMenu[CC_CurrentLanguage][13];
+	descs[4].title = ccStrings_optionsMenu[CC_CurrentLanguage][7];
 
 	/* Don't show nostalgia options in classic mode */
 	s->descsCount = Game_ClassicMode ? 4 : 5;
@@ -676,9 +691,10 @@ static const char* const optsGroup_descs[8] = {
 	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
 	"&eEnv colours, water level, weather, and more",
-	"&eSettings for resembling the original classic",
+	"&eSettings for resembling the original classic"
 };
-static const struct SimpleButtonDesc optsGroup_btns[8] = {
+
+static struct SimpleButtonDesc optsGroup_btns[8] = {
 	{ -160, -100, "Misc options...",      Menu_SwitchMisc        },
 	{ -160,  -50, "Gui options...",       Menu_SwitchGui         },
 	{ -160,    0, "Graphics options...",  Menu_SwitchGfx         },
@@ -714,8 +730,17 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	Gui_MakeTitleFont(&titleFont);
 	Gui_MakeBodyFont(&s->textFont);
 
+	optsGroup_btns[0].title = ccStrings_optionsMenu[CC_CurrentLanguage][0];
+	optsGroup_btns[1].title = ccStrings_optionsMenu[CC_CurrentLanguage][1];
+	optsGroup_btns[2].title = ccStrings_optionsMenu[CC_CurrentLanguage][2];
+	optsGroup_btns[3].title = ccStrings_optionsMenu[CC_CurrentLanguage][3];
+	optsGroup_btns[4].title = ccStrings_optionsMenu[CC_CurrentLanguage][4];
+	optsGroup_btns[5].title = ccStrings_optionsMenu[CC_CurrentLanguage][5];
+	optsGroup_btns[6].title = ccStrings_optionsMenu[CC_CurrentLanguage][6];
+	optsGroup_btns[7].title = ccStrings_optionsMenu[CC_CurrentLanguage][7];
+
 	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 8);
-	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
+	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &titleFont);
 
 	if (s->selectedI >= 0) OptionsGroupScreen_UpdateDesc(s);
 	OptionsGroupScreen_CheckHacksAllowed(s);
@@ -2060,7 +2085,7 @@ static void KeyBindsScreen_ContextRecreated(void* screen) {
 
 	TextWidget_SetConst(&s->title, s->titleText, &s->titleFont);
 	TextWidget_SetConst(&s->msg,   s->msgText,   &textFont);
-	ButtonWidget_SetConst(&s->back, "Done",      &s->titleFont);
+	ButtonWidget_SetConst(&s->back, ccStrings_optionsMenu[CC_CurrentLanguage][14],      &s->titleFont);
 
 	Font_Free(&textFont);
 	if (!s->leftPage && !s->rightPage) return;	
@@ -2956,7 +2981,7 @@ static void NostalgiaMenuScreen_ContextRecreated(void* screen) {
 	TextWidget_SetConst(&s->title, "Nostalgia options", &titleFont);
 	ButtonWidget_SetConst(&s->btnA, "Appearance",       &titleFont);
 	ButtonWidget_SetConst(&s->btnF, "Functionality",    &titleFont);
-	ButtonWidget_SetConst(&s->done,    "Done",          &titleFont);
+	ButtonWidget_SetConst(&s->done,    ccStrings_optionsMenu[CC_CurrentLanguage][14],          &titleFont);
 
 	Font_Free(&titleFont);
 }
@@ -2998,6 +3023,11 @@ void NostalgiaMenuScreen_Show(void) {
 	s->closable   = true;
 	s->VTABLE     = &NostalgiaMenuScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
+void LanguageMenuScreen_Show(void) {
+	// TODO: Proper screen
+	CC_CurrentLanguage++;
+	CC_CurrentLanguage = CC_CurrentLanguage%CC_LANGUAGE_LANGCNT;
 }
 #else
 void TexIdsOverlay_Show(void) { }
