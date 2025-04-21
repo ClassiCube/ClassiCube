@@ -375,7 +375,7 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
 struct MatrixCol { int trans, col1, col2, col3; };
-struct MatrixMVP { struct MatrixCol w, x, y, z; };
+struct MatrixMVP { struct MatrixCol w, x, y; };
 static struct MatrixMVP mvp_;
 
 #define ToFixed(v) (int)(v * (1 << 12))
@@ -383,22 +383,18 @@ static struct MatrixMVP mvp_;
 static void LoadTransformMatrix(struct Matrix* src) {
 	mvp_.x.trans = XYZFixed(1) * ToFixed(src->row4.x);
 	mvp_.y.trans = XYZFixed(1) * ToFixed(src->row4.y);
-	mvp_.z.trans = XYZFixed(1) * ToFixed(src->row4.z);
 	mvp_.w.trans = XYZFixed(1) * ToFixed(src->row4.w);
 	
 	mvp_.x.col1 = ToFixed(src->row1.x);
 	mvp_.y.col1 = ToFixed(src->row1.y);
-	mvp_.z.col1 = ToFixed(src->row1.z);
 	mvp_.w.col1 = ToFixed(src->row1.w);
 	
 	mvp_.x.col2 = ToFixed(src->row2.x);
 	mvp_.y.col2 = ToFixed(src->row2.y);
-	mvp_.z.col2 = ToFixed(src->row2.z);
 	mvp_.w.col2 = ToFixed(src->row2.w);
 	
 	mvp_.x.col3 = ToFixed(src->row3.x);
 	mvp_.y.col3 = ToFixed(src->row3.y);
-	mvp_.z.col3 = ToFixed(src->row3.z);
 	mvp_.w.col3 = ToFixed(src->row3.w);
 }
 
@@ -495,6 +491,7 @@ static inline int __attribute__((always_inline)) TransformVector(void* v, struct
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex;
+	return; // TODO menus invisible otherwise
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
@@ -539,10 +536,11 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	}
 }
 
-static int TransformColoured(struct SATVertexColoured* a, IVec3* dst) {
+static int TransformColoured(struct SATVertexColoured* a, vdp1_cmdt_t* cmd) {
+	short* dst = &cmd->cmd_xa;
 	int aveZ = 0;
 
-	for (int i = 0; i < 4; i++, a++, dst++)
+	for (int i = 0; i < 4; i++, a++)
 	{
 		int w = TransformVector(a, &mvp_.w);
 		if (w <= 0) return -1;
@@ -551,17 +549,19 @@ static int TransformColoured(struct SATVertexColoured* a, IVec3* dst) {
 		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
 
 		int y = TransformVector(a, &mvp_.y);
-		dst->x = cpu_divu_quotient_get();
+		x = cpu_divu_quotient_get();
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
-		if (dst->x < -2048 || dst->x > 2048) return -1;
+		*dst++ = x;
+		if (x < -2048 || x > 2048) return -1;
 
-		int z = (unsigned)w >> 6; // signed >> 6 generates call to ___ashiftrt_r4_6 function
+		int z = (unsigned)w >> 6;
 		if (z < 0 || z > 50000) return -1;
 		aveZ += z;
 
-		dst->y = cpu_divu_quotient_get();
-		if (dst->y < -2048 || dst->y > 2048) return -1;
+		y = cpu_divu_quotient_get();
+		if (y < -2048 || y > 2048) return -1;
+		*dst++ = y;
 	}
 	return aveZ >> 2;
 }
@@ -571,29 +571,26 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		IVec3 coords[4];
-		int z = TransformColoured(v, coords);
-		if (z < 0) continue;
+		vdp1_cmdt_t* cmd = cmds_cur;
+		if (cmd >= &cmds.extra) return;
 
-		if (cmds_cur >= &cmds.extra) return;
-		vdp1_cmdt_t* cmd = cmds_cur++;
+		int z = TransformColoured(v, cmd);
+		if (z < 0) continue;
+	
+		cmds_cur++;
 		*z_cur++ = UInt16_MaxValue - z;
 
 		cmd->cmd_ctrl = VDP1_CMDT_POLYGON;
 		cmd->cmd_colr = v->Col;
 		cmd->cmd_pmod = 0xC0 | color_draw_mode.raw;
-
-		cmd->cmd_xa = coords[0].x; cmd->cmd_ya = coords[0].y;
-		cmd->cmd_xb = coords[1].x; cmd->cmd_yb = coords[1].y;
-		cmd->cmd_xc = coords[2].x; cmd->cmd_yc = coords[2].y;
-		cmd->cmd_xd = coords[3].x; cmd->cmd_yd = coords[3].y;
 	}
 }
 
-static int TransformTextured(struct SATVertexTextured* a, IVec3* dst) {
+static int TransformTextured(struct SATVertexTextured* a, vdp1_cmdt_t* cmd) {
+	short* dst = &cmd->cmd_xa;
 	int aveZ = 0;
 
-	for (int i = 0; i < 4; i++, a++, dst++)
+	for (int i = 0; i < 4; i++, a++)
 	{
 		int w = TransformVector(a, &mvp_.w);
 		if (w <= 0) return -1;
@@ -602,21 +599,22 @@ static int TransformTextured(struct SATVertexTextured* a, IVec3* dst) {
 		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
 
 		int y = TransformVector(a, &mvp_.y);
-		dst->x = cpu_divu_quotient_get();
+		x = cpu_divu_quotient_get();
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
-		if (dst->x < -2048 || dst->x > 2048) return -1;
+		*dst++ = x;
+		if (x < -2048 || x > 2048) return -1;
 
-		int z = w >> 6;
+		int z = (unsigned)w >> 6;
 		if (z < 0 || z > 50000) return -1;
 		aveZ += z;
 
-		dst->y = cpu_divu_quotient_get();
-		if (dst->y < -2048 || dst->y > 2048) return -1;
+		y = cpu_divu_quotient_get();
+		if (y < -2048 || y > 2048) return -1;
+		*dst++ = y;
 	}
 	return aveZ >> 2;
 }
-
 
 static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
@@ -626,12 +624,13 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		IVec3 coords[4];
-		int z = TransformTextured(v, coords);
-		if (z < 0) continue;
+		vdp1_cmdt_t* cmd = cmds_cur;
+		if (cmd >= &cmds.extra) return;
 
-		if (cmds_cur >= &cmds.extra) return;
-		vdp1_cmdt_t* cmd = cmds_cur++;
+		int z = TransformTextured(v, cmd);
+		if (z < 0) continue;
+	
+		cmds_cur++;
 		*z_cur++ = UInt16_MaxValue - z;
 
 		cmd->cmd_ctrl = VDP1_CMDT_DISTORTED_SPRITE | v->flip;
@@ -639,11 +638,6 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		cmd->cmd_srca = char_base;
 		cmd->cmd_pmod = (v->Col == 1023 ? color_draw_mode : shaded_draw_mode).raw;
 		cmd->cmd_grda = (gour_base + v->Col) & 0xFFFF;
-
-		cmd->cmd_xa = coords[0].x; cmd->cmd_ya = coords[0].y;
-		cmd->cmd_xb = coords[1].x; cmd->cmd_yb = coords[1].y;
-		cmd->cmd_xc = coords[2].x; cmd->cmd_yc = coords[2].y;
-		cmd->cmd_xd = coords[3].x; cmd->cmd_yd = coords[3].y;
 	}
 }
 
@@ -723,10 +717,11 @@ void Gfx_EndFrame(void) {
 	int poly_cmds  = (int)(cmds_cur - cmds.list);
 	int cmds_count = HDR_CMDS + poly_cmds + 1; // +1 for end command
 
+	//vdp1_sync_wait();
 	vdp1_sync_cmdt_put(cmds.hdrs, cmds_count, 0);
-
 	vdp1_sync_render();
 	vdp1_sync();
+
 	vdp2_sync();
 	vdp2_sync_wait();
 }
