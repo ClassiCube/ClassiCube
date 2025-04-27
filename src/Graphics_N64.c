@@ -9,10 +9,6 @@
 #include <rspq_profile.h>
 #include "../misc/n64/gpu.c"
 
-typedef void (*GL_SetupVBFunc)(void);
-static GL_SetupVBFunc gfx_setupVBFunc;
-
-
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
@@ -34,7 +30,7 @@ void Gfx_Create(void) {
 	// Set alpha compare threshold
 	rdpq_set_blend_color(RGBA32(0,0,0, 127));
 
-    gl_init();
+    gpu_init();
     zbuffer = surface_alloc(FMT_RGBA16, display_get_width(), display_get_height());
     
 	Gfx.MaxTexWidth  = 256;
@@ -60,10 +56,8 @@ cc_bool Gfx_TryRestoreContext(void) {
 
 void Gfx_Free(void) {
 	Gfx_FreeState();
-	gl_close();
+	gpu_close();
 }
-
-#define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
 
 
 /*########################################################################################################################*
@@ -89,7 +83,7 @@ void Gfx_SetVSync(cc_bool vsync) {
 void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	glViewport(x, y, w, h);
+	gpuViewport(x, y, w, h);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
@@ -146,7 +140,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 
 	rspq_block_run(tex->upload_block);
-	glTexSizeN64(tex->surface.width, tex->surface.height);
+	gpuSetTexSize(tex->surface.width, tex->surface.height);
 }
 
 #define ALIGNUP8(size) (((size) + 7) & ~0x07)
@@ -207,10 +201,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	// TODO: Just memcpying doesn't actually work. maybe due to glSurfaceTexImageN64 caching the RSQ upload block?
-	// TODO: Is there a more optimised approach than just calling glSurfaceTexImageN64
 	CCTexture* tex = (CCTexture*)texId;
-	
 	surface_t* fb  = &tex->surface;
 	cc_uint32* src = (cc_uint32*)part->scan0 + x;
 	cc_uint8*  dst = (cc_uint8*)fb->buffer  + (x * 4) + (y * fb->stride);
@@ -250,7 +241,7 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFaceCulling(cc_bool enabled) { 
-	glCullFace(enabled ? GL_BACK : 0);
+	gpuSetCullFace(enabled);
 }
 
 static void SetAlphaBlend(cc_bool enabled) { 
@@ -265,7 +256,7 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	//glColorMask(r, g, b, a); TODO
+	//gpuColorMask(r, g, b, a); TODO
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) { 
@@ -275,14 +266,12 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_COMPARE, enabled ? SOM_Z_COMPARE : 0);
 
-	gl_Toggle(GL_DEPTH_TEST); 
+	gpuSetFlag(GPU_ATTR_Z, enabled); 
 }
 
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
 	gfx_format = -1;
 	
 	// 1x1 dummy white texture
@@ -379,8 +368,8 @@ static rspq_block_t* VB_GetCached(struct VertexBuffer* vb, int offset, int count
 		if (vb->cache.blocks[i]) continue;
 
 		rspq_block_begin();
-		gfx_setupVBFunc();
-		glDrawArrays(GL_QUADS, offset, count);
+		gpu_pointer = gfx_vb->vertices;
+		gpuDrawArrays(offset, count);
 		rspq_block_t* block = rspq_block_end();
 
 		vb->cache.blocks[i] = block;
@@ -469,9 +458,10 @@ void Gfx_SetFogMode(FogFunc func) {
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	depthOnlyRendering = depthOnly; // TODO: Better approach? maybe using glBlendFunc instead?
 	cc_bool enabled    = !depthOnly;
+
 	//SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
 	//			  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
-	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
+	gpuSetFlag(GPU_ATTR_TEX, enabled);
 }
 
 
@@ -486,7 +476,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 
 	struct Matrix mvp __attribute__((aligned(64)));	
 	Matrix_Mul(&mvp, &_view, &_proj);
-	glLoadMatrixf((const float*)&mvp);
+	gpuLoadMatrix((const float*)&mvp);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -494,7 +484,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 	_view = *view;
 
 	Matrix_Mul(mvp, view, proj);
-	glLoadMatrixf((const float*)mvp);
+	gpuLoadMatrix((const float*)mvp);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -507,35 +497,20 @@ void Gfx_DisableTextureOffset(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------Rendering--------------------------------------------------------*
 *#########################################################################################################################*/
-static void GL_SetupVbColoured(void) {
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(gfx_vb->vertices + 12));
-}
-
-static void GL_SetupVbTextured(void) {
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 12));
-	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 16));
-}
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
+	gpu_stride = gfx_stride;
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-
-		gfx_setupVBFunc = GL_SetupVbTextured;
 		rdpq_mode_combiner(RDPQ_COMBINER_TEX_SHADE);
 	} else {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisable(GL_TEXTURE_2D);
-
-		gfx_setupVBFunc = GL_SetupVbColoured;
 		rdpq_mode_combiner(RDPQ_COMBINER_SHADE);
 	}
+
+	gpu_texturing = fmt == VERTEX_FORMAT_TEXTURED;
+	gpuSetFlag(GPU_ATTR_TEX, gpu_texturing);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -547,8 +522,8 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 	if (block) {
 		rspq_block_run(block);
 	} else {
-		gfx_setupVBFunc();
-		glDrawArrays(GL_QUADS, startVertex, verticesCount);
+		gpu_pointer = gfx_vb->vertices;
+		gpuDrawArrays(startVertex, verticesCount);
 	}
 }
 
@@ -558,8 +533,8 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (block) {
 		rspq_block_run(block);
 	} else {
-		gfx_setupVBFunc();
-		glDrawArrays(GL_QUADS, 0, verticesCount);
+		gpu_pointer = gfx_vb->vertices;
+		gpuDrawArrays(0, verticesCount);
 	}
 }
 
@@ -570,10 +545,8 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (block) {
 		rspq_block_run(block);
 	} else {
-		glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices));
-		glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 12));
-		glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(gfx_vb->vertices + 16));
-		glDrawArrays(GL_QUADS, startVertex, verticesCount);
+		gpu_pointer = gfx_vb->vertices;
+		gpuDrawArrays(startVertex, verticesCount);
 	}
 }
 #endif

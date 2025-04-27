@@ -1,4 +1,3 @@
-#include "GL/gl.h"
 #include "rspq.h"
 #include "rdpq.h"
 #include "rdpq_rect.h"
@@ -6,14 +5,11 @@
 #include "rdpq_debug.h"
 #include "display.h"
 #include "rdp.h"
-#include <string.h>
-#include <math.h>
-#include <malloc.h>
 #include "gl_constants.h"
 
 // This is a severely cutdown version of libdragon's OpenGL implementation
 
-static uint32_t glp_id;
+static uint32_t gpup_id;
 //DEFINE_RSP_UCODE(rsp_gpu);
 extern uint8_t _binary_build_n64_rsp_gpu_text_bin_start[];
 extern uint8_t _binary_build_n64_rsp_gpu_data_bin_start[];
@@ -46,23 +42,16 @@ enum {
     GPU_CMD_PRE_INIT_PIPE    = 0x8,
 };
 
-enum {
-    ATTRIB_VERTEX,
-    ATTRIB_COLOR,
-    ATTRIB_TEXCOORD,
-    ATTRIB_COUNT
-};
-
 typedef struct {
-    GLfloat scale[3];
-    GLfloat offset[3];
-} gl_viewport_t;
+    float scale[3];
+    float offset[3];
+} gpu_viewport_t;
 
 typedef struct {
     int16_t  i[4][4];
     uint16_t f[4][4];
-} gl_matrix_srv_t;
-_Static_assert(sizeof(gl_matrix_srv_t) == MATRIX_SIZE, "Matrix size does not match");
+} gpu_matrix_srv_t;
+_Static_assert(sizeof(gpu_matrix_srv_t) == MATRIX_SIZE, "Matrix size does not match");
 
 typedef struct {
     rspq_write_t w;
@@ -71,16 +60,10 @@ typedef struct {
         uint32_t word;
     };
     uint32_t buffer_head;
-} gl_cmd_stream_t;
+} gpu_cmd_stream_t;
 
 typedef struct {
-    GLsizei stride;
-    const GLvoid *pointer;
-    bool enabled;
-} gl_array_t;
-
-typedef struct {
-    gl_matrix_srv_t mvp_matrix;
+    gpu_matrix_srv_t mvp_matrix;
     int16_t viewport_scale[4];
     int16_t viewport_offset[4];
     uint32_t flags;
@@ -88,134 +71,111 @@ typedef struct {
     uint16_t tex_offset[2];
     uint16_t tri_cmd;
     uint16_t tri_cull;
-} __attribute__((aligned(8), packed)) gl_server_state_t;
+} __attribute__((aligned(8), packed)) gpu_state;
 
-static inline const void *gl_get_attrib_element(const gl_array_t *src, uint32_t index)
+static inline gpu_cmd_stream_t gpu_cmd_stream_begin(uint32_t ovl_id, uint32_t cmd_id, int size)
 {
-    return src->pointer + index * src->stride;
-}
-
-static inline gl_cmd_stream_t gl_cmd_stream_begin(uint32_t ovl_id, uint32_t cmd_id, int size)
-{
-    return (gl_cmd_stream_t) {
+    return (gpu_cmd_stream_t) {
         .w = rspq_write_begin(ovl_id, cmd_id, size),
         .buffer_head = 2,
     };
 }
 
-static inline void gl_cmd_stream_commit(gl_cmd_stream_t *s)
+static inline void gpu_cmd_stream_commit(gpu_cmd_stream_t *s)
 {
     rspq_write_arg(&s->w, s->word);
     s->buffer_head = 0;
     s->word = 0;
 }
 
-static inline void gl_cmd_stream_put_half(gl_cmd_stream_t *s, uint16_t v)
+static inline void gpu_cmd_stream_put_half(gpu_cmd_stream_t *s, uint16_t v)
 {
     s->bytes[s->buffer_head++] = v >> 8;
     s->bytes[s->buffer_head++] = v & 0xFF;
     
     if (s->buffer_head == sizeof(uint32_t)) {
-        gl_cmd_stream_commit(s);
+        gpu_cmd_stream_commit(s);
     }
 }
 
-static inline void gl_cmd_stream_end(gl_cmd_stream_t *s)
+static inline void gpu_cmd_stream_end(gpu_cmd_stream_t *s)
 {
     if (s->buffer_head > 0) {
-        gl_cmd_stream_commit(s);
+        gpu_cmd_stream_commit(s);
     }
 
     rspq_write_end(&s->w);
 }
 
 __attribute__((always_inline))
-static inline void gl_set_flag_raw(uint32_t offset, uint32_t flag, bool value)
+static inline void gpu_set_flag_raw(uint32_t offset, uint32_t flag, bool value)
 {
-    rspq_write(glp_id, GPU_CMD_SET_FLAG, offset | value, value ? flag : ~flag);
+    rspq_write(gpup_id, GPU_CMD_SET_FLAG, offset | value, value ? flag : ~flag);
 }
 
 __attribute__((always_inline))
-static inline void gl_set_flag(uint32_t flag, bool value)
+static inline void gpu_set_flag(uint32_t flag, bool value)
 {
-    gl_set_flag_raw(offsetof(gl_server_state_t, flags), flag, value);
+    gpu_set_flag_raw(offsetof(gpu_state, flags), flag, value);
 }
 
 __attribute__((always_inline))
-static inline void gl_set_byte(uint32_t offset, uint8_t value)
+static inline void gpu_set_byte(uint32_t offset, uint8_t value)
 {
-    rspq_write(glp_id, GPU_CMD_SET_BYTE, offset, value);
+    rspq_write(gpup_id, GPU_CMD_SET_BYTE, offset, value);
 }
 
 __attribute__((always_inline))
-static inline void gl_set_short(uint32_t offset, uint16_t value)
+static inline void gpu_set_short(uint32_t offset, uint16_t value)
 {
-    rspq_write(glp_id, GPU_CMD_SET_SHORT, offset, value);
+    rspq_write(gpup_id, GPU_CMD_SET_SHORT, offset, value);
 }
 
 __attribute__((always_inline))
-static inline void gl_set_word(uint32_t offset, uint32_t value)
+static inline void gpu_set_word(uint32_t offset, uint32_t value)
 {
-    rspq_write(glp_id, GPU_CMD_SET_WORD, offset, value);
+    rspq_write(gpup_id, GPU_CMD_SET_WORD, offset, value);
 }
 
 __attribute__((always_inline))
-static inline void gl_set_long(uint32_t offset, uint64_t value)
+static inline void gpu_set_long(uint32_t offset, uint64_t value)
 {
-    rspq_write(glp_id, GPU_CMD_SET_LONG, offset, value >> 32, value & 0xFFFFFFFF);
+    rspq_write(gpup_id, GPU_CMD_SET_LONG, offset, value >> 32, value & 0xFFFFFFFF);
 }
 
-static inline void glpipe_draw_triangle(int i0, int i1, int i2)
+static inline void gpupipe_draw_triangle(int i0, int i1, int i2)
 {
     // We pass -1 because the triangle can be clipped and split into multiple
     // triangles.
-    rdpq_write(-1, glp_id, GPU_CMD_DRAW_TRI,
+    rdpq_write(-1, gpup_id, GPU_CMD_DRAW_TRI,
         (i0*PRIM_VTX_SIZE),
         ((i1*PRIM_VTX_SIZE)<<16) | (i2*PRIM_VTX_SIZE)
     );
 }
 
 
-static gl_viewport_t state_viewport;
-static gl_array_t    state_arrays[ATTRIB_COUNT];
+static gpu_viewport_t state_viewport;
+static bool  gpu_texturing;
+static void* gpu_pointer;
+static int   gpu_stride;
 
-void gl_init()
-{
-    glp_id = rspq_overlay_register(&rsp_gpu);
-    glDepthRange(0, 1);
-}
-
-void gl_close()
-{
-    rspq_wait();
-    rspq_overlay_unregister(glp_id);
-}
-
-void gl_set_flag2(GLenum target, bool value)
+#define GPU_ATTR_Z   0
+#define GPU_ATTR_TEX 1
+static void gpuSetFlag(int target, bool value)
 {
     switch (target) {
-    case GL_DEPTH_TEST:
-        gl_set_flag(FLAG_DEPTH_TEST, value);
+    case GPU_ATTR_Z:
+        gpu_set_flag(FLAG_DEPTH_TEST, value);
         break;
-    case GL_TEXTURE_2D:
-        gl_set_flag(FLAG_TEXTURE_ACTIVE, value);
+    case GPU_ATTR_TEX:
+        gpu_set_flag(FLAG_TEXTURE_ACTIVE, value);
         break;
     }
 }
 
-void glEnable(GLenum target)
+static void gpuSetTexSize(uint16_t width, uint16_t height)
 {
-    gl_set_flag2(target, true);
-}
-
-void glDisable(GLenum target)
-{
-    gl_set_flag2(target, false);
-}
-
-void glTexSizeN64(uint16_t width, uint16_t height)
-{
-    gl_set_word(offsetof(gl_server_state_t, tex_size[0]), (width << 16) | height);
+    gpu_set_word(offsetof(gpu_state, tex_size[0]), (width << 16) | height);
 }
 
 
@@ -228,7 +188,7 @@ static inline void write_shorts(rspq_write_t *w, const uint16_t *s, uint32_t cou
     }
 }
 
-static inline void gl_matrix_write(rspq_write_t *w, const GLfloat *m)
+static inline void gpu_matrix_write(rspq_write_t* w, const float* m)
 {
     uint16_t integer[16];
     uint16_t fraction[16];
@@ -244,125 +204,80 @@ static inline void gl_matrix_write(rspq_write_t *w, const GLfloat *m)
     write_shorts(w, fraction, 16);
 }
 
-void glLoadMatrixf(const GLfloat *m)
+static void gpuLoadMatrix(const float* m)
 {
-    rspq_write_t w = rspq_write_begin(glp_id, GPU_CMD_MATRIX_LOAD, 17);
+    rspq_write_t w = rspq_write_begin(gpup_id, GPU_CMD_MATRIX_LOAD, 17);
     rspq_write_arg(&w, false); // no multiply
-    gl_matrix_write(&w, m);
+    gpu_matrix_write(&w, m);
     rspq_write_end(&w);
 }
 
-static void upload_vertex(const gl_array_t *arrays, uint32_t index, uint8_t cache_index)
+static void upload_vertex(uint32_t index, uint8_t cache_index)
 {
-    gl_cmd_stream_t s = gl_cmd_stream_begin(glp_id, GPU_CMD_UPLOAD_VTX, 6);
-    gl_cmd_stream_put_half(&s, cache_index * PRIM_VTX_SIZE);
+    gpu_cmd_stream_t s = gpu_cmd_stream_begin(gpup_id, GPU_CMD_UPLOAD_VTX, 6);
+    gpu_cmd_stream_put_half(&s, cache_index * PRIM_VTX_SIZE);
+	char* ptr = gpu_pointer + index * gpu_stride;
 
-	const float* vtx = gl_get_attrib_element(&arrays[ATTRIB_VERTEX], index);
-	gl_cmd_stream_put_half(&s, vtx[0] * (1<<VTX_SHIFT));
-	gl_cmd_stream_put_half(&s, vtx[1] * (1<<VTX_SHIFT));
-	gl_cmd_stream_put_half(&s, vtx[2] * (1<<VTX_SHIFT));
-	gl_cmd_stream_put_half(&s, 1.0f   * (1<<VTX_SHIFT));
+	float* vtx = (float*)(ptr + 0);
+	gpu_cmd_stream_put_half(&s, vtx[0] * (1<<VTX_SHIFT));
+	gpu_cmd_stream_put_half(&s, vtx[1] * (1<<VTX_SHIFT));
+	gpu_cmd_stream_put_half(&s, vtx[2] * (1<<VTX_SHIFT));
+	gpu_cmd_stream_put_half(&s, 1.0f   * (1<<VTX_SHIFT));
 
-	const uint8_t* col = gl_get_attrib_element(&arrays[ATTRIB_COLOR], index);
-	gl_cmd_stream_put_half(&s, col[0] << 7); // TODO put_byte ?
-	gl_cmd_stream_put_half(&s, col[1] << 7); // TODO put_byte ?
-	gl_cmd_stream_put_half(&s, col[2] << 7); // TODO put_byte ?
-	gl_cmd_stream_put_half(&s, col[3] << 7); // TODO put_byte ?
+	uint8_t* col = (uint8_t*)(ptr + 12);
+	gpu_cmd_stream_put_half(&s, col[0] << 7); // TODO put_byte ?
+	gpu_cmd_stream_put_half(&s, col[1] << 7); // TODO put_byte ?
+	gpu_cmd_stream_put_half(&s, col[2] << 7); // TODO put_byte ?
+	gpu_cmd_stream_put_half(&s, col[3] << 7); // TODO put_byte ?
 
-	if (arrays[ATTRIB_TEXCOORD].enabled) {
-		const float* tex = gl_get_attrib_element(&arrays[ATTRIB_TEXCOORD], index);
-		gl_cmd_stream_put_half(&s, tex[0] * (1<<TEX_SHIFT));
-		gl_cmd_stream_put_half(&s, tex[1] * (1<<TEX_SHIFT));
+	if (gpu_texturing) {
+		float* tex = (float*)(ptr + 16);
+		gpu_cmd_stream_put_half(&s, tex[0] * (1<<TEX_SHIFT));
+		gpu_cmd_stream_put_half(&s, tex[1] * (1<<TEX_SHIFT));
 	} else {
-		gl_cmd_stream_put_half(&s, 0);
-		gl_cmd_stream_put_half(&s, 0);
+		gpu_cmd_stream_put_half(&s, 0);
+		gpu_cmd_stream_put_half(&s, 0);
     }
-    gl_cmd_stream_end(&s);
+    gpu_cmd_stream_end(&s);
 }
 
-static void gl_rsp_draw_arrays(uint32_t first, uint32_t count)
+static void gpu_rsp_draw_arrays(uint32_t first, uint32_t count)
 {
     for (uint32_t i = 0; i < count; i++)
     {
         uint8_t cache_index = i % VERTEX_CACHE_SIZE;
-        upload_vertex(state_arrays, first + i, cache_index);
+        upload_vertex(first + i, cache_index);
 
 		// Last vertex of quad?
 		if ((i & 3) != 3) continue;
 
 		// Add two triangles
 		uint8_t idx = cache_index - 3;
-		glpipe_draw_triangle(idx + 0, idx + 1, idx + 2);
-		glpipe_draw_triangle(idx + 0, idx + 2, idx + 3);
+		gpupipe_draw_triangle(idx + 0, idx + 1, idx + 2);
+		gpupipe_draw_triangle(idx + 0, idx + 2, idx + 3);
     }
 }
 
-int gl_array_type_from_enum(GLenum array)
+static void gpuDrawArrays(int first, int count)
 {
-    switch (array) {
-    case GL_VERTEX_ARRAY:        return ATTRIB_VERTEX;
-    case GL_TEXTURE_COORD_ARRAY: return ATTRIB_TEXCOORD;
-    case GL_COLOR_ARRAY:         return ATTRIB_COLOR;
-    default:                     return -1;
-    }
+    rspq_write(gpup_id, GPU_CMD_PRE_INIT_PIPE);
+    gpu_rsp_draw_arrays(first, count);
 }
 
-void glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-{
-    gl_array_t *array = &state_arrays[ATTRIB_VERTEX];
-    array->stride = stride;
-    array->pointer = pointer;
-}
-
-void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-{
-    gl_array_t *array = &state_arrays[ATTRIB_TEXCOORD];
-    array->stride = stride;
-    array->pointer = pointer;
-}
-
-void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-{
-    gl_array_t *array = &state_arrays[ATTRIB_COLOR];
-    array->stride = stride;
-    array->pointer = pointer;
-}
-
-void gl_set_array_enabled(int array_type, bool enabled)
-{
-    state_arrays[array_type].enabled = enabled;
-}
-
-void glEnableClientState(GLenum array)
-{
-    gl_set_array_enabled(gl_array_type_from_enum(array), true);
-}
-
-void glDisableClientState(GLenum array)
-{
-    gl_set_array_enabled(gl_array_type_from_enum(array), false);
-}
-
-void glDrawArrays(GLenum mode, GLint first, GLsizei count)
-{
-    rspq_write(glp_id, GPU_CMD_PRE_INIT_PIPE);
-    gl_rsp_draw_arrays(first, count);
-}
-
-void glDepthRange(GLclampd n, GLclampd f)
+static void gpuDepthRange(float n, float f)
 {
     state_viewport.scale[2]  = (f - n) * 0.5f;
     state_viewport.offset[2] = n + (f - n) * 0.5f;
 
-    gl_set_short( 
-        offsetof(gl_server_state_t, viewport_scale) + sizeof(int16_t) * 2, 
+    gpu_set_short( 
+        offsetof(gpu_state, viewport_scale) + sizeof(int16_t) * 2, 
         state_viewport.scale[2] * 4);
-    gl_set_short( 
-        offsetof(gl_server_state_t, viewport_offset) + sizeof(int16_t) * 2, 
+    gpu_set_short( 
+        offsetof(gpu_state, viewport_offset) + sizeof(int16_t) * 2, 
         state_viewport.offset[2] * 4);
 }
 
-void glViewport(GLint x, GLint y, GLsizei w, GLsizei h)
+static void gpuViewport(int x, int y, int w, int h)
 {
     state_viewport.scale[0]  = w * 0.5f;
     state_viewport.scale[1]  = h * -0.5f;
@@ -382,17 +297,29 @@ void glViewport(GLint x, GLint y, GLsizei w, GLsizei h)
     uint16_t offset_y = state_viewport.offset[1] * SCREEN_XY_SCALE;
     uint16_t offset_z = state_viewport.offset[2] * SCREEN_Z_SCALE;
 
-    gl_set_long( 
-        offsetof(gl_server_state_t, viewport_scale), 
+    gpu_set_long( 
+        offsetof(gpu_state, viewport_scale), 
         ((uint64_t)scale_x << 48) | ((uint64_t)scale_y << 32) | ((uint64_t)scale_z << 16));
-    gl_set_long( 
-        offsetof(gl_server_state_t, viewport_offset), 
+    gpu_set_long( 
+        offsetof(gpu_state, viewport_offset), 
         ((uint64_t)offset_x << 48) | ((uint64_t)offset_y << 32) | ((uint64_t)offset_z << 16));
 }
 
-void glCullFace(GLenum mode)
+static void gpuSetCullFace(bool enabled)
 {
 	// 1 = cull backfaces
 	// 2 = don't cull
-    gl_set_short(offsetof(gl_server_state_t, tri_cull), mode ? 1 : 2);
+    gpu_set_short(offsetof(gpu_state, tri_cull), enabled ? 1 : 2);
+}
+
+void gpu_init()
+{
+    gpup_id = rspq_overlay_register(&rsp_gpu);
+    gpuDepthRange(0, 1);
+}
+
+void gpu_close()
+{
+    rspq_wait();
+    rspq_overlay_unregister(gpup_id);
 }
