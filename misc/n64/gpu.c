@@ -73,40 +73,6 @@ typedef struct {
     uint16_t tri_cull;
 } __attribute__((aligned(8), packed)) gpu_state;
 
-static inline gpu_cmd_stream_t gpu_cmd_stream_begin(uint32_t ovl_id, uint32_t cmd_id, int size)
-{
-    return (gpu_cmd_stream_t) {
-        .w = rspq_write_begin(ovl_id, cmd_id, size),
-        .buffer_head = 2,
-    };
-}
-
-static inline void gpu_cmd_stream_commit(gpu_cmd_stream_t *s)
-{
-    rspq_write_arg(&s->w, s->word);
-    s->buffer_head = 0;
-    s->word = 0;
-}
-
-static inline void gpu_cmd_stream_put_half(gpu_cmd_stream_t *s, uint16_t v)
-{
-    s->bytes[s->buffer_head++] = v >> 8;
-    s->bytes[s->buffer_head++] = v & 0xFF;
-    
-    if (s->buffer_head == sizeof(uint32_t)) {
-        gpu_cmd_stream_commit(s);
-    }
-}
-
-static inline void gpu_cmd_stream_end(gpu_cmd_stream_t *s)
-{
-    if (s->buffer_head > 0) {
-        gpu_cmd_stream_commit(s);
-    }
-
-    rspq_write_end(&s->w);
-}
-
 __attribute__((always_inline))
 static inline void gpu_set_flag_raw(uint32_t offset, uint32_t flag, bool value)
 {
@@ -143,7 +109,7 @@ static inline void gpu_set_long(uint32_t offset, uint64_t value)
     rspq_write(gpup_id, GPU_CMD_SET_LONG, offset, value >> 32, value & 0xFFFFFFFF);
 }
 
-static inline void gpupipe_draw_triangle(int i0, int i1, int i2)
+static inline void gpu_draw_triangle(int i0, int i1, int i2)
 {
     // We pass -1 because the triangle can be clipped and split into multiple
     // triangles.
@@ -212,37 +178,43 @@ static void gpuLoadMatrix(const float* m)
     rspq_write_end(&w);
 }
 
+static inline void put_word(rspq_write_t* s, uint16_t v1, uint16_t v2)
+{
+	rspq_write_arg(s, v2 | (v1 << 16));
+}
+
 static void upload_vertex(uint32_t index, uint8_t cache_index)
 {
-    gpu_cmd_stream_t s = gpu_cmd_stream_begin(gpup_id, GPU_CMD_UPLOAD_VTX, 6);
-    gpu_cmd_stream_put_half(&s, cache_index * PRIM_VTX_SIZE);
+    rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_UPLOAD_VTX, 6);
+    rspq_write_arg(&s, cache_index * PRIM_VTX_SIZE);
 	char* ptr = gpu_pointer + index * gpu_stride;
 
 	float* vtx = (float*)(ptr + 0);
-	gpu_cmd_stream_put_half(&s, vtx[0] * (1<<VTX_SHIFT));
-	gpu_cmd_stream_put_half(&s, vtx[1] * (1<<VTX_SHIFT));
-	gpu_cmd_stream_put_half(&s, vtx[2] * (1<<VTX_SHIFT));
-	gpu_cmd_stream_put_half(&s, 1.0f   * (1<<VTX_SHIFT));
+	put_word(&s, vtx[0] * (1<<VTX_SHIFT),
+				 vtx[1] * (1<<VTX_SHIFT));
+	put_word(&s, vtx[2] * (1<<VTX_SHIFT),
+				 1.0f   * (1<<VTX_SHIFT));
 
-	uint8_t* col = (uint8_t*)(ptr + 12);
-	gpu_cmd_stream_put_half(&s, col[0] << 7); // TODO put_byte ?
-	gpu_cmd_stream_put_half(&s, col[1] << 7); // TODO put_byte ?
-	gpu_cmd_stream_put_half(&s, col[2] << 7); // TODO put_byte ?
-	gpu_cmd_stream_put_half(&s, col[3] << 7); // TODO put_byte ?
+	uint8_t* col = (uint8_t*)(ptr + 12); // TODO put_byte ?
+	put_word(&s, col[0] << 7,
+				 col[1] << 7);
+	put_word(&s, col[2] << 7,
+				 col[3] << 7);
 
 	if (gpu_texturing) {
 		float* tex = (float*)(ptr + 16);
-		gpu_cmd_stream_put_half(&s, tex[0] * (1<<TEX_SHIFT));
-		gpu_cmd_stream_put_half(&s, tex[1] * (1<<TEX_SHIFT));
+		put_word(&s, tex[0] * (1<<TEX_SHIFT),
+					 tex[1] * (1<<TEX_SHIFT));
 	} else {
-		gpu_cmd_stream_put_half(&s, 0);
-		gpu_cmd_stream_put_half(&s, 0);
+		put_word(&s, 0,
+					 0);
     }
-    gpu_cmd_stream_end(&s);
+    rspq_write_end(&s);
 }
 
-static void gpu_rsp_draw_arrays(uint32_t first, uint32_t count)
+static void gpuDrawArrays(uint32_t first, uint32_t count)
 {
+    rspq_write(gpup_id, GPU_CMD_PRE_INIT_PIPE);
     for (uint32_t i = 0; i < count; i++)
     {
         uint8_t cache_index = i % VERTEX_CACHE_SIZE;
@@ -253,15 +225,9 @@ static void gpu_rsp_draw_arrays(uint32_t first, uint32_t count)
 
 		// Add two triangles
 		uint8_t idx = cache_index - 3;
-		gpupipe_draw_triangle(idx + 0, idx + 1, idx + 2);
-		gpupipe_draw_triangle(idx + 0, idx + 2, idx + 3);
+		gpu_draw_triangle(idx + 0, idx + 1, idx + 2);
+		gpu_draw_triangle(idx + 0, idx + 2, idx + 3);
     }
-}
-
-static void gpuDrawArrays(int first, int count)
-{
-    rspq_write(gpup_id, GPU_CMD_PRE_INIT_PIPE);
-    gpu_rsp_draw_arrays(first, count);
 }
 
 static void gpuDepthRange(float n, float f)
@@ -269,12 +235,8 @@ static void gpuDepthRange(float n, float f)
     state_viewport.scale[2]  = (f - n) * 0.5f;
     state_viewport.offset[2] = n + (f - n) * 0.5f;
 
-    gpu_set_short( 
-        offsetof(gpu_state, viewport_scale) + sizeof(int16_t) * 2, 
-        state_viewport.scale[2] * 4);
-    gpu_set_short( 
-        offsetof(gpu_state, viewport_offset) + sizeof(int16_t) * 2, 
-        state_viewport.offset[2] * 4);
+    gpu_set_short(offsetof(gpu_state, viewport_scale[2]),  state_viewport.scale[2]  * 4);
+    gpu_set_short(offsetof(gpu_state, viewport_offset[2]), state_viewport.offset[2] * 4);
 }
 
 static void gpuViewport(int x, int y, int w, int h)
@@ -305,21 +267,18 @@ static void gpuViewport(int x, int y, int w, int h)
         ((uint64_t)offset_x << 48) | ((uint64_t)offset_y << 32) | ((uint64_t)offset_z << 16));
 }
 
-static void gpuSetCullFace(bool enabled)
-{
+static void gpuSetCullFace(bool enabled) {
 	// 1 = cull backfaces
 	// 2 = don't cull
     gpu_set_short(offsetof(gpu_state, tri_cull), enabled ? 1 : 2);
 }
 
-void gpu_init()
-{
+static void gpu_init() {
     gpup_id = rspq_overlay_register(&rsp_gpu);
     gpuDepthRange(0, 1);
 }
 
-void gpu_close()
-{
+static void gpu_close() {
     rspq_wait();
     rspq_overlay_unregister(gpup_id);
 }
