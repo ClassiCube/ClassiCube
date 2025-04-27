@@ -5,9 +5,9 @@
 #include "Logger.h"
 #include "Window.h"
 #include <libdragon.h>
-#include <GL/gl.h>
-#include <GL/gl_integration.h>
 #include <malloc.h>
+#include <rspq_profile.h>
+#include "../misc/n64/gpu.c"
 
 typedef void (*GL_SetupVBFunc)(void);
 static GL_SetupVBFunc gfx_setupVBFunc;
@@ -20,16 +20,21 @@ static surface_t zbuffer;
 static GfxResourceID white_square;
 
 void Gfx_Create(void) {
+	rspq_init();
+	//rspq_profile_start();
     rdpq_init();
+    //rdpq_debug_start(); // TODO debug
+    //rdpq_debug_log(true);
 
 	rdpq_set_mode_standard();
 	__rdpq_mode_change_som(SOM_TEXTURE_PERSP, SOM_TEXTURE_PERSP);
 	__rdpq_mode_change_som(SOM_ZMODE_MASK,    SOM_ZMODE_OPAQUE);
 	rdpq_mode_dithering(DITHER_SQUARE_SQUARE);
 
+	// Set alpha compare threshold
+	rdpq_set_blend_color(RGBA32(0,0,0, 127));
+
     gl_init();
-    //rdpq_debug_start(); // TODO debug
-    //rdpq_debug_log(true);
     zbuffer = surface_alloc(FMT_RGBA16, display_get_width(), display_get_height());
     
 	Gfx.MaxTexWidth  = 256;
@@ -121,7 +126,10 @@ void Gfx_ClearColor(PackedCol color) {
 void Gfx_EndFrame(void) {
 	Platform_LogConst("GFX ctx end");
     rdpq_detach_show();
-//Platform_LogConst("GFX END");
+	//Platform_LogConst("GFX END");
+
+	//rspq_profile_dump();
+	//rspq_profile_next_frame();
 }
 
 
@@ -253,7 +261,7 @@ static void SetAlphaBlend(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void SetAlphaTest(cc_bool enabled) {
-	rdpq_mode_alphacompare(enabled ? 127 : 0);
+	__rdpq_mode_change_som(SOM_ALPHACOMPARE_MASK, enabled ? SOM_ALPHACOMPARE_THRESHOLD : 0);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
