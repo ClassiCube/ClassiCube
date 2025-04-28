@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/dragonminded/libdragon:latest
+      image: ghcr.io/dragonminded/libdragon:preview
     steps:
       - uses: actions/checkout@v4
       - name: Compile N64 build
