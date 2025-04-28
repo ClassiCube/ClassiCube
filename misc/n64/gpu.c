@@ -4,7 +4,6 @@
 #include "rdpq_mode.h"
 #include "rdpq_debug.h"
 #include "display.h"
-#include "rdp.h"
 #include "gl_constants.h"
 
 // This is a severely cutdown version of libdragon's OpenGL implementation
@@ -43,29 +42,15 @@ enum {
 };
 
 typedef struct {
-    float scale[3];
-    float offset[3];
-} gpu_viewport_t;
-
-typedef struct {
     int16_t  i[4][4];
     uint16_t f[4][4];
 } gpu_matrix_srv_t;
 _Static_assert(sizeof(gpu_matrix_srv_t) == MATRIX_SIZE, "Matrix size does not match");
 
 typedef struct {
-    rspq_write_t w;
-    union {
-        uint8_t  bytes[4];
-        uint32_t word;
-    };
-    uint32_t buffer_head;
-} gpu_cmd_stream_t;
-
-typedef struct {
     gpu_matrix_srv_t mvp_matrix;
-    int16_t viewport_scale[4];
-    int16_t viewport_offset[4];
+    int16_t vp_scale[4];
+    int16_t vp_offset[4];
     uint32_t flags;
     uint16_t tex_size[2];
     uint16_t tex_offset[2];
@@ -120,7 +105,8 @@ static inline void gpu_draw_triangle(int i0, int i1, int i2)
 }
 
 
-static gpu_viewport_t state_viewport;
+static float gpu_vp_scale[3];
+static float gpu_vp_offset[3];
 static bool  gpu_texturing;
 static void* gpu_pointer;
 static int   gpu_stride;
@@ -232,38 +218,38 @@ static void gpuDrawArrays(uint32_t first, uint32_t count)
 
 static void gpuDepthRange(float n, float f)
 {
-    state_viewport.scale[2]  = (f - n) * 0.5f;
-    state_viewport.offset[2] = n + (f - n) * 0.5f;
+    gpu_vp_scale[2]  = (f - n) * 0.5f;
+    gpu_vp_offset[2] = n + (f - n) * 0.5f;
 
-    gpu_set_short(offsetof(gpu_state, viewport_scale[2]),  state_viewport.scale[2]  * 4);
-    gpu_set_short(offsetof(gpu_state, viewport_offset[2]), state_viewport.offset[2] * 4);
+    gpu_set_short(offsetof(gpu_state, vp_scale[2]),  gpu_vp_scale[2]  * 4);
+    gpu_set_short(offsetof(gpu_state, vp_offset[2]), gpu_vp_offset[2] * 4);
 }
 
 static void gpuViewport(int x, int y, int w, int h)
 {
-    state_viewport.scale[0]  = w * 0.5f;
-    state_viewport.scale[1]  = h * -0.5f;
-    state_viewport.offset[0] = x + w * 0.5f;
-    state_viewport.offset[1] = y + h * 0.5f;
+    gpu_vp_scale[0]  = w * 0.5f;
+    gpu_vp_scale[1]  = h * -0.5f;
+    gpu_vp_offset[0] = x + w * 0.5f;
+    gpu_vp_offset[1] = y + h * 0.5f;
 
     // Screen coordinates are s13.2
     #define SCREEN_XY_SCALE   4.0f
     #define SCREEN_Z_SCALE    32767.0f
 
     // * 2.0f to compensate for RSP reciprocal missing 1 bit
-    uint16_t scale_x  = state_viewport.scale[0] * SCREEN_XY_SCALE * 2.0f;
-    uint16_t scale_y  = state_viewport.scale[1] * SCREEN_XY_SCALE * 2.0f;
-    uint16_t scale_z  = state_viewport.scale[2] * SCREEN_Z_SCALE  * 2.0f;
+    uint16_t scale_x  = gpu_vp_scale[0] * SCREEN_XY_SCALE * 2.0f;
+    uint16_t scale_y  = gpu_vp_scale[1] * SCREEN_XY_SCALE * 2.0f;
+    uint16_t scale_z  = gpu_vp_scale[2] * SCREEN_Z_SCALE  * 2.0f;
 
-    uint16_t offset_x = state_viewport.offset[0] * SCREEN_XY_SCALE;
-    uint16_t offset_y = state_viewport.offset[1] * SCREEN_XY_SCALE;
-    uint16_t offset_z = state_viewport.offset[2] * SCREEN_Z_SCALE;
+    uint16_t offset_x = gpu_vp_offset[0] * SCREEN_XY_SCALE;
+    uint16_t offset_y = gpu_vp_offset[1] * SCREEN_XY_SCALE;
+    uint16_t offset_z = gpu_vp_offset[2] * SCREEN_Z_SCALE;
 
     gpu_set_long( 
-        offsetof(gpu_state, viewport_scale), 
+        offsetof(gpu_state, vp_scale), 
         ((uint64_t)scale_x << 48) | ((uint64_t)scale_y << 32) | ((uint64_t)scale_z << 16));
     gpu_set_long( 
-        offsetof(gpu_state, viewport_offset), 
+        offsetof(gpu_state, vp_offset), 
         ((uint64_t)offset_x << 48) | ((uint64_t)offset_y << 32) | ((uint64_t)offset_z << 16));
 }
 
