@@ -137,7 +137,7 @@ GPUCmd_UploadVertex:
     addi vtx, %lo(VERTEX_CACHE)
     sdv vpos, PRIM_VTX_X     ,vtx
     sdv vcol, PRIM_VTX_R     ,vtx
-    sdv vtex, PRIM_VTX_TEX_S ,vtx
+    slv vtex, PRIM_VTX_TEX_S ,vtx
 
 # == matrix multiply ==
     li mtx_ptr, %lo(GL_MATRIX_MVP)
@@ -343,41 +343,36 @@ GL_TnL:
 
     #define vtexsize     $v06
     #define vtexoffset   $v07
-    #define vstrq        $v08
+    #define vst          $v08
 
-    ldv vstrq,  PRIM_VTX_TEX_S,vtx     # S + T + R + Q
+    llv vst,    PRIM_VTX_TEX_S,vtx     # S + T
     suv vrgba,  SCREEN_VTX_RGBA,vtx
 
     li s1, %lo(GL_STATE_TEX_SIZE)
     llv vtexsize.s,   0,s1
     llv vtexoffset.s, 4,s1
 
-    #define vinvq_i $v26
-    #define vinvq_f $v27
-    #define vstrq_i $v28
-    #define vstrq_f $v29
-    #define q       e3
+    #define vst_i $v28
+    #define vst_f $v29
 
     # Scale texcoord by texsize and subtract offset (to correct for bilinear sampling if active)
-    #vmudn v___,  vstrq, vtexsize
-    # vmadh vstrq, vtexoffset, K1
+    #vmudn v___,  vst, vtexsize
+    # vmadh vst, vtexoffset, K1
 
-    #vmudn v___,  vstrq, vtexsize
-    #vmadh vstrq, vtexoffset, K1
-    #vmudl vstrq, vstrq, vtexsize
+    #vmudn v___,  vst, vtexsize
+    #vmadh vst,   vtexoffset, K1
+    #vmudl vst,   vst, vtexsize
 
-  vmudh v___, vstrq, vtexsize
-  vsar vstrq_i, COP2_ACC_HI
-  vsar vstrq_f, COP2_ACC_MD
+	vmudh v___,  vst, vtexsize
+	vsar  vst_i, COP2_ACC_HI
+	vsar  vst_f, COP2_ACC_MD
 
-  vmudl vstrq_f, vstrq_f, K8192
-  vmadm vstrq_i, vstrq_i, K8192
-  vmadn vstrq, vzero, vzero
+	vmudl vst_f, vst_f, K8192
+	vmadm vst_i, vst_i, K8192
+	vmadn vst,   vzero, vzero
 
-    #undef vinvq_i
-    #undef vinvq_f
-    #undef vstrq_i
-    #undef vstrq_f
+    #undef vst_i
+    #undef vst_f
     #undef q
 
     lbu t0, PRIM_VTX_TRCODE(vtx)
@@ -393,7 +388,7 @@ GL_TnL:
     sb t0, PRIM_VTX_TRCODE(vtx)
 
     jal GL_CalcScreenSpace
-    slv vstrq.s,  SCREEN_VTX_S,vtx
+    slv vst.s,  SCREEN_VTX_S,vtx
 
     j GL_CalcClipCodes
     move ra, ra2
