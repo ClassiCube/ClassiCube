@@ -52,8 +52,7 @@ CLIP_CODE_FACTORS:      .half 1, 1, GUARD_BAND_FACTOR, GUARD_BAND_FACTOR
 #define SCREEN_VTX_CLIP_CODE       22
 #define SCREEN_VTX_PADDING         23
 #define SCREEN_VTX_RGBA            24
-#define SCREEN_VTX_S               28
-#define SCREEN_VTX_T               30
+#define SCREEN_VTX_S_T             28     // 28 S, 30 T
 #define SCREEN_VTX_W               32     // FIXME: this is duplicated in CS_POS
 #define SCREEN_VTX_INVW            36     // 32-bit
 #define SCREEN_VTX_SIZE            40
@@ -135,9 +134,8 @@ GPUCmd_UploadVertex:
 	llv vtex, 12, cmd_ptr # Load U, V
 
     addi vtx, %lo(VERTEX_CACHE)
-    sdv vpos, PRIM_VTX_X     ,vtx
-    slv vcol, PRIM_VTX_RGBA  ,vtx
-    slv vtex, PRIM_VTX_TEX_S ,vtx
+    slv vcol, SCREEN_VTX_RGBA, vtx
+    slv vtex, SCREEN_VTX_S_T,  vtx
 
 # == matrix multiply ==
     li mtx_ptr, %lo(GL_MATRIX_MVP)
@@ -165,8 +163,8 @@ GPUCmd_UploadVertex:
     vmudm vcspos_i, vcspos_i, vshift8.e4
     vmadl vcspos_f, vcspos_f, vshift8.e4
 
-    sdv vcspos_i, PRIM_VTX_CS_POSi,vtx
-    sdv vcspos_f, PRIM_VTX_CS_POSf,vtx
+    sdv vcspos_i, SCREEN_VTX_CS_POSi,vtx
+    sdv vcspos_f, SCREEN_VTX_CS_POSf,vtx
 
     # Calculate and store clipping flags against CS.W.
     # These will be used for trivial rejections.
@@ -330,26 +328,23 @@ GL_CalcClipCodes:
     ################################################################
     .func GL_TnL
 GL_TnL:
-    #define tmp_ptr      s2
     #define vtx          s3
-    #define s            e0
 
     #define v___         $v01
-    #define vrgba        $v04
+    #define vcspos_f     $v02
+    #define vcspos_i     $v03
     #define vtexsize     $v06
     #define vtexoffset   $v07
     #define vst          $v08
+    #define vst_i        $v28
+    #define vst_f        $v29
     move ra2, ra
 
-    llv vrgba,  PRIM_VTX_RGBA, vtx  # RGBA
-    llv vst,    PRIM_VTX_TEX_S,vtx  # S + T
+    llv vst, SCREEN_VTX_S_T, vtx  # S + T
 
-    li s1, %lo(GL_STATE_TEX_SIZE)
-    llv vtexsize.s,   0,s1
-    llv vtexoffset.s, 4,s1
-
-    #define vst_i $v28
-    #define vst_f $v29
+    li t0, %lo(GL_STATE_TEX_SIZE)
+    llv vtexsize,   0,t0
+    llv vtexoffset, 4,t0
 
     # Scale texcoord by texsize and subtract offset (to correct for bilinear sampling if active)
     #vmudn v___,  vst, vtexsize
@@ -369,17 +364,12 @@ GL_TnL:
 
     #undef vst_i
     #undef vst_f
-    #undef q
 
     lbu t0,    PRIM_VTX_TRCODE(vtx)
-    slv vrgba, SCREEN_VTX_RGBA,vtx
-    slv vst,   SCREEN_VTX_S,vtx
+    slv vst,   SCREEN_VTX_S_T, vtx
 
-    #define vcspos_f     $v02
-    #define vcspos_i     $v03
-
-    ldv vcspos_f, PRIM_VTX_CS_POSf,vtx
-    ldv vcspos_i, PRIM_VTX_CS_POSi,vtx
+    ldv vcspos_f, SCREEN_VTX_CS_POSf,vtx
+    ldv vcspos_i, SCREEN_VTX_CS_POSi,vtx
 
     # Mark this vertex as having T&L applied
     ori t0, 0x80
@@ -426,7 +416,7 @@ GPUCmd_DrawTriangle:
 
     addi vtx3, a1, %lo(VERTEX_CACHE)
     srl  vtx2, a1, 16
-    addi vtx2, %lo(VERTEX_CACHE)
+    addi vtx2,     %lo(VERTEX_CACHE)
     addi vtx1, a0, %lo(VERTEX_CACHE)
 
     # Trivial reject: if all the vertices are out of the same plane (at least one),

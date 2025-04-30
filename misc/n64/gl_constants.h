@@ -24,19 +24,7 @@
 
 #define BILINEAR_TEX_OFFSET_SHIFT   9
 
-#define TRICMD_ATTR_MASK        0x300
-
-#define PRIM_VTX_CS_POSi           0     // X, Y, Z, W (all 32-bit)
-#define PRIM_VTX_CS_POSf           8     // X, Y, Z, W (all 32-bit)
-#define PRIM_VTX_X                 16    // Object space position (16-bit)
-#define PRIM_VTX_Y                 18    // Object space position (16-bit)
-#define PRIM_VTX_Z                 20    // Object space position (16-bit)
-#define PRIM_VTX_W                 22    // Object space position (16-bit)
-#define PRIM_VTX_RGBA              24
-// 28,29,30,31 pad
-#define PRIM_VTX_TEX_S             32
-#define PRIM_VTX_TEX_T             34
-//36,37,38,39 pad
+//0-39 same as screenvtx
 #define PRIM_VTX_TRCODE            40    // trivial-reject clipping flags (against -w/+w)
 #define PRIM_VTX_SIZE              42
 

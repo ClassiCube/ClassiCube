@@ -175,11 +175,11 @@ gl_clip_no_swap:
 
     # vattr0: r0  g0  b0  a0  s0  t0
     luv vattr0.e0,  SCREEN_VTX_RGBA   ,p0
-    llv vattr0.e4,  SCREEN_VTX_S      ,p0
+    llv vattr0.e4,  SCREEN_VTX_S_T    ,p0
 
     # vattr1: r1  g1  b1  a1  s1  t1
     luv vattr1.e0,  SCREEN_VTX_RGBA   ,p1
-    llv vattr1.e4,  SCREEN_VTX_S      ,p1
+    llv vattr1.e4,  SCREEN_VTX_S_T    ,p1
 
     # Find first free slot in clip cache
 
@@ -275,7 +275,7 @@ gl_clip_no_swap:
     sdv vint_f.e0,  SCREEN_VTX_CS_POSf,intersection
     suv vattr0.e0,  SCREEN_VTX_RGBA   ,intersection
     jal GL_CalcClipCodes
-    slv vattr0.e4,  SCREEN_VTX_S      ,intersection
+    slv vattr0.e4,  SCREEN_VTX_S_T    ,intersection
 
     # Add intersection to the output list
     add t0, out_list, out_count
