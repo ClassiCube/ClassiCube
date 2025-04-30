@@ -32,14 +32,11 @@
 #define PRIM_VTX_Y                 18    // Object space position (16-bit)
 #define PRIM_VTX_Z                 20    // Object space position (16-bit)
 #define PRIM_VTX_W                 22    // Object space position (16-bit)
-#define PRIM_VTX_R                 24
-#define PRIM_VTX_G                 26
-#define PRIM_VTX_B                 28
-#define PRIM_VTX_A                 30
+#define PRIM_VTX_RGBA              24
+// 28,29,30,31 pad
 #define PRIM_VTX_TEX_S             32
 #define PRIM_VTX_TEX_T             34
-#define PRIM_VTX_TEX_R             36
-#define PRIM_VTX_TEX_Q             38
+//36,37,38,39 pad
 #define PRIM_VTX_TRCODE            40    // trivial-reject clipping flags (against -w/+w)
 #define PRIM_VTX_SIZE              42
 

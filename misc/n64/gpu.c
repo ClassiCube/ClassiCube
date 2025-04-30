@@ -157,7 +157,7 @@ static inline void put_word(rspq_write_t* s, uint16_t v1, uint16_t v2)
 
 static void upload_vertex(uint32_t index, uint8_t cache_index)
 {
-    rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_UPLOAD_VTX, 6);
+    rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_UPLOAD_VTX, 5);
     rspq_write_arg(&s, cache_index * PRIM_VTX_SIZE);
 	char* ptr = gpu_pointer + index * gpu_stride;
 
@@ -167,11 +167,8 @@ static void upload_vertex(uint32_t index, uint8_t cache_index)
 	put_word(&s, vtx[2] * (1<<VTX_SHIFT),
 				 1.0f   * (1<<VTX_SHIFT));
 
-	uint8_t* col = (uint8_t*)(ptr + 12); // TODO put_byte ?
-	put_word(&s, col[0] << 7,
-				 col[1] << 7);
-	put_word(&s, col[2] << 7,
-				 col[3] << 7);
+	uint32_t* col = (uint32_t*)(ptr + 12); // TODO put_byte ?
+	rspq_write_arg(&s, *col);
 
 	if (gpu_texturing) {
 		float* tex = (float*)(ptr + 16);

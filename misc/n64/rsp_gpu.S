@@ -10,7 +10,7 @@
         RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x3
 
         RSPQ_DefineCommand GPUCmd_DrawTriangle,  8   # 0x4
-        RSPQ_DefineCommand GPUCmd_UploadVertex,  24  # 0x5
+        RSPQ_DefineCommand GPUCmd_UploadVertex,  20  # 0x5
         RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x6
     RSPQ_EndOverlayHeader
 
@@ -131,12 +131,12 @@ GPUCmd_UploadVertex:
     sub cmd_ptr,  rspq_cmd_size
 
 	ldv vpos,  0, cmd_ptr # Load X, Y, Z, W
-	ldv vcol,  8, cmd_ptr # Load R, G, B, A
-	llv vtex, 16, cmd_ptr # Load U, V
+	llv vcol,  8, cmd_ptr # Load RGBA
+	llv vtex, 12, cmd_ptr # Load U, V
 
     addi vtx, %lo(VERTEX_CACHE)
     sdv vpos, PRIM_VTX_X     ,vtx
-    sdv vcol, PRIM_VTX_R     ,vtx
+    slv vcol, PRIM_VTX_RGBA  ,vtx
     slv vtex, PRIM_VTX_TEX_S ,vtx
 
 # == matrix multiply ==
@@ -333,20 +333,16 @@ GL_TnL:
     #define tmp_ptr      s2
     #define vtx          s3
     #define s            e0
-    move ra2, ra
 
     #define v___         $v01
     #define vrgba        $v04
-
-    ldv vrgba.e0, PRIM_VTX_R, vtx     # R + G + B + A
-    ldv vrgba.e4, PRIM_VTX_R, vtx     # R + G + B + A
-
     #define vtexsize     $v06
     #define vtexoffset   $v07
     #define vst          $v08
+    move ra2, ra
 
-    llv vst,    PRIM_VTX_TEX_S,vtx     # S + T
-    suv vrgba,  SCREEN_VTX_RGBA,vtx
+    llv vrgba,  PRIM_VTX_RGBA, vtx  # RGBA
+    llv vst,    PRIM_VTX_TEX_S,vtx  # S + T
 
     li s1, %lo(GL_STATE_TEX_SIZE)
     llv vtexsize.s,   0,s1
@@ -375,7 +371,9 @@ GL_TnL:
     #undef vst_f
     #undef q
 
-    lbu t0, PRIM_VTX_TRCODE(vtx)
+    lbu t0,    PRIM_VTX_TRCODE(vtx)
+    slv vrgba, SCREEN_VTX_RGBA,vtx
+    slv vst,   SCREEN_VTX_S,vtx
 
     #define vcspos_f     $v02
     #define vcspos_i     $v03
@@ -385,10 +383,9 @@ GL_TnL:
 
     # Mark this vertex as having T&L applied
     ori t0, 0x80
-    sb t0, PRIM_VTX_TRCODE(vtx)
 
     jal GL_CalcScreenSpace
-    slv vst.s,  SCREEN_VTX_S,vtx
+    sb t0, PRIM_VTX_TRCODE(vtx)
 
     j GL_CalcClipCodes
     move ra, ra2
