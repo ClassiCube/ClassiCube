@@ -4,17 +4,14 @@
     .data
 
     RSPQ_BeginOverlayHeader
-        RSPQ_DefineCommand GLCmd_SetFlag,       8   # 0x0
-        RSPQ_DefineCommand GLCmd_SetByte,       8   # 0x1
-        RSPQ_DefineCommand GLCmd_SetShort,      8   # 0x2
-        RSPQ_DefineCommand GLCmd_SetWord,       8   # 0x3
-        RSPQ_DefineCommand GLCmd_SetLong,       12  # 0x4
+        RSPQ_DefineCommand GPUCmd_SetByte,       8   # 0x0
+        RSPQ_DefineCommand GPUCmd_SetShort,      8   # 0x1
+        RSPQ_DefineCommand GPUCmd_SetWord,       8   # 0x2
+        RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x3
 
-        RSPQ_DefineCommand GLCmd_DrawTriangle,  8   # 0x5
-        RSPQ_DefineCommand GLCmd_UploadVertex, 24   # 0x6
-
-        RSPQ_DefineCommand GLCmd_MatrixLoad,    68  # 0x7
-        RSPQ_DefineCommand GLCmd_PreInitPipe,   4   # 0x8
+        RSPQ_DefineCommand GPUCmd_DrawTriangle,  8   # 0x4
+        RSPQ_DefineCommand GPUCmd_UploadVertex,  24  # 0x5
+        RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x6
     RSPQ_EndOverlayHeader
 
     .align 4
@@ -28,7 +25,6 @@ GL_STATE:
     GL_MATRIX_MVP:          .ds.b   MATRIX_SIZE
     GL_VIEWPORT_SCALE:      .half   0,0,0,0
     GL_VIEWPORT_OFFSET:     .half   0,0,0,0
-    GL_STATE_FLAGS:         .word   0
     GL_STATE_TEX_SIZE:      .half   0,0
     GL_STATE_TEX_OFFSET:    .half   0,0
     GL_TRI_CMD:             .half   0
@@ -64,52 +60,26 @@ CLIP_CODE_FACTORS:      .half 1, 1, GUARD_BAND_FACTOR, GUARD_BAND_FACTOR
 
     .text
 
-    #############################################################
-    # GLCmd_SetFlag
-    #
-    # Sets or clears a flag
-    #
-    # ARGS:
-    #   a0: Bit 31..24: Command id
-    #       Bit 11..2: Offset of flag value in GL_STATE
-    #       Bit 0:     If 1, set the flag, otherwise clear it
-    #   a1: flag mask (inverted if clearing)
-    #############################################################
-    .func GLCmd_SetFlag
-GLCmd_SetFlag:
-    li t0, ~0x3
-    and t0, a0, t0
-    andi t1, a0, 1
-    lw t2, %lo(GL_STATE)(t0)
-    beqz t1, 1f
-    and t3, t2, a1
-    or t3, t2, a1
-
-1:
-    jr ra
-    sw t3, %lo(GL_STATE)(t0)
-    .endfunc
-
-    .func GLCmd_SetByte
-GLCmd_SetByte:
+    .func GPUCmd_SetByte
+GPUCmd_SetByte:
     jr ra
     sb a1, %lo(GL_STATE)(a0)
     .endfunc
 
-    .func GLCmd_SetShort
-GLCmd_SetShort:
+    .func GPUCmd_SetShort
+GPUCmd_SetShort:
     jr ra
     sh a1, %lo(GL_STATE)(a0)
     .endfunc
 
-    .func GLCmd_SetWord
-GLCmd_SetWord:
+    .func GPUCmd_SetWord
+GPUCmd_SetWord:
     jr ra
     sw a1, %lo(GL_STATE) + 0(a0)
     .endfunc
 
-    .func GLCmd_SetLong
-GLCmd_SetLong:
+    .func GPUCmd_SetLong
+GPUCmd_SetLong:
     sw a2, %lo(GL_STATE) + 4(a0)
     jr ra
     sw a1, %lo(GL_STATE) + 0(a0)
@@ -117,7 +87,7 @@ GLCmd_SetLong:
 
 
     ########################################
-    # GLCmd_UploadVertex
+    # GPUCmd_UploadVertex
     #
     # Arguments:
     # * 0x00 (a0): offset within VERTEX_CACHE
@@ -129,8 +99,8 @@ GLCmd_SetLong:
     #
     ########################################
     .align 3
-    .func GLCmd_UploadVertex
-GLCmd_UploadVertex:
+    .func GPUCmd_UploadVertex
+GPUCmd_UploadVertex:
     #define vtx         a0
     #define mtx_ptr     s0
     #define cmd_ptr     s4
@@ -444,7 +414,7 @@ GL_TnL:
 
 
     ################################################################
-    # GLCmd_DrawTriangle
+    # GPUCmd_DrawTriangle
     #
     # Arguments:
     #   a0: Bit 31..24: Command id
@@ -453,8 +423,8 @@ GL_TnL:
     #       Bit 11..0:  Offset into vertex cache of vtx3
     #
     ################################################################
-    .func GLCmd_DrawTriangle
-GLCmd_DrawTriangle:
+    .func GPUCmd_DrawTriangle
+GPUCmd_DrawTriangle:
     #define vtx1        a1
     #define vtx2        a2
     #define vtx3        a3
@@ -539,7 +509,7 @@ gl_draw_triangle_end:
     .endfunc
 
 
-GLCmd_MatrixLoad:
+GPUCmd_MatrixLoad:
     #define src         s6
     #define dst         s7
 
@@ -566,20 +536,6 @@ GLCmd_MatrixLoad:
     sqv vrhs01_f, 0x20,dst
     jr ra
     sqv vrhs23_f, 0x30,dst
-
-    .func GLCmd_PreInitPipe
-GLCmd_PreInitPipe:
-    #define state_flags  k1
-    #define tri_cmd      t4
-
-    lw   tri_cmd, %lo(GL_STATE_FLAGS)
-    ori  tri_cmd, 0xCC00
-	jr   ra
-    sh   tri_cmd, %lo(GL_TRI_CMD)
-
-    #undef tri_cmd
-    #undef state_flags
-    .endfunc
 
 #include "rsp_gpu_clipping.inc"
 #include <rsp_rdpq.inc>

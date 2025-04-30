@@ -266,7 +266,8 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_COMPARE, enabled ? SOM_Z_COMPARE : 0);
 
-	gpuSetFlag(GPU_ATTR_Z, enabled); 
+	gpu_attr_z = enabled;
+	gpuUpdateFormat();
 }
 
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
@@ -461,7 +462,8 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 
 	//SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
 	//			  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
-	gpuSetFlag(GPU_ATTR_TEX, enabled);
+	gpu_attr_tex = enabled;
+	gpuUpdateFormat();
 }
 
 
@@ -510,7 +512,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	}
 
 	gpu_texturing = fmt == VERTEX_FORMAT_TEXTURED;
-	gpuSetFlag(GPU_ATTR_TEX, gpu_texturing);
+	gpu_attr_tex = gpu_texturing;
+	gpuUpdateFormat();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {

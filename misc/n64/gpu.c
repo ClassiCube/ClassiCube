@@ -28,17 +28,14 @@ static rsp_ucode_t rsp_gpu = (rsp_ucode_t){
 };
 
 enum {
-    GPU_CMD_SET_FLAG         = 0x0,
-    GPU_CMD_SET_BYTE         = 0x1,
-    GPU_CMD_SET_SHORT        = 0x2,
-    GPU_CMD_SET_WORD         = 0x3,
-    GPU_CMD_SET_LONG         = 0x4,
+    GPU_CMD_SET_BYTE         = 0x0,
+    GPU_CMD_SET_SHORT        = 0x1,
+    GPU_CMD_SET_WORD         = 0x2,
+    GPU_CMD_SET_LONG         = 0x3,
 
-    GPU_CMD_DRAW_TRI         = 0x5,
-    GPU_CMD_UPLOAD_VTX       = 0x6,
-
-    GPU_CMD_MATRIX_LOAD      = 0x7,
-    GPU_CMD_PRE_INIT_PIPE    = 0x8,
+    GPU_CMD_DRAW_TRI         = 0x4,
+    GPU_CMD_UPLOAD_VTX       = 0x5,
+    GPU_CMD_MATRIX_LOAD      = 0x6,
 };
 
 typedef struct {
@@ -51,24 +48,11 @@ typedef struct {
     gpu_matrix_srv_t mvp_matrix;
     int16_t vp_scale[4];
     int16_t vp_offset[4];
-    uint32_t flags;
     uint16_t tex_size[2];
     uint16_t tex_offset[2];
     uint16_t tri_cmd;
     uint16_t tri_cull;
 } __attribute__((aligned(8), packed)) gpu_state;
-
-__attribute__((always_inline))
-static inline void gpu_set_flag_raw(uint32_t offset, uint32_t flag, bool value)
-{
-    rspq_write(gpup_id, GPU_CMD_SET_FLAG, offset | value, value ? flag : ~flag);
-}
-
-__attribute__((always_inline))
-static inline void gpu_set_flag(uint32_t flag, bool value)
-{
-    gpu_set_flag_raw(offsetof(gpu_state, flags), flag, value);
-}
 
 __attribute__((always_inline))
 static inline void gpu_set_byte(uint32_t offset, uint8_t value)
@@ -111,18 +95,20 @@ static bool  gpu_texturing;
 static void* gpu_pointer;
 static int   gpu_stride;
 
-#define GPU_ATTR_Z   0
-#define GPU_ATTR_TEX 1
-static void gpuSetFlag(int target, bool value)
+#define GPU_ATTR_Z     (1 <<  8)
+#define GPU_ATTR_TEX   (1 <<  9)
+#define GPU_ATTR_SHADE (1 << 10)
+#define GPU_ATTR_EDGE  (1 << 11)
+static bool gpu_attr_z, gpu_attr_tex;
+
+static void gpuUpdateFormat(void)
 {
-    switch (target) {
-    case GPU_ATTR_Z:
-        gpu_set_flag(FLAG_DEPTH_TEST, value);
-        break;
-    case GPU_ATTR_TEX:
-        gpu_set_flag(FLAG_TEXTURE_ACTIVE, value);
-        break;
-    }
+	uint16_t cmd = 0xC000 | GPU_ATTR_SHADE | GPU_ATTR_EDGE;
+
+	if (gpu_attr_z)   cmd |= GPU_ATTR_Z;
+	if (gpu_attr_tex) cmd |= GPU_ATTR_TEX;
+
+	gpu_set_short(offsetof(gpu_state, tri_cmd), cmd);
 }
 
 static void gpuSetTexSize(uint16_t width, uint16_t height)
@@ -200,7 +186,6 @@ static void upload_vertex(uint32_t index, uint8_t cache_index)
 
 static void gpuDrawArrays(uint32_t first, uint32_t count)
 {
-    rspq_write(gpup_id, GPU_CMD_PRE_INIT_PIPE);
     for (uint32_t i = 0; i < count; i++)
     {
         uint8_t cache_index = i % VERTEX_CACHE_SIZE;

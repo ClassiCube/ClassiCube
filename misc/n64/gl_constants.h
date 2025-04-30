@@ -12,9 +12,6 @@
 #define VTX_SHIFT 5
 #define TEX_SHIFT 8
 
-#define FLAG_DEPTH_TEST         (1 << 8)
-#define FLAG_TEXTURE_ACTIVE     (1 << 9)
-
 #define GUARD_BAND_FACTOR 2
 
 #define ASSERT_INVALID_VTX_ID   0x2001
