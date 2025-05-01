@@ -12,6 +12,8 @@
         RSPQ_DefineCommand GPUCmd_DrawTriangle,  8   # 0x4
         RSPQ_DefineCommand GPUCmd_UploadVertex,  20  # 0x5
         RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x6
+
+        RSPQ_DefineCommand GPUCmd_PushRDP,       12  # 0x7
     RSPQ_EndOverlayHeader
 
     .align 4
@@ -85,6 +87,16 @@ GPUCmd_SetLong:
     .endfunc
 
 
+    .func GPUCmd_PushRDP
+GPUCmd_PushRDP:
+	# RDP command is expected in a0 and a1
+    move a0, a1
+	move a1, a2
+
+    jal_and_j RDPQ_Write8, RDPQ_Finalize
+    .endfunc
+
+
     ########################################
     # GPUCmd_UploadVertex
     #
@@ -94,7 +106,6 @@ GPUCmd_SetLong:
     # * 0x08 (a2): object space Z, W (16-bit)
     # * 0x0C (a3): RGBA (8-bit each one)
     # * 0x10:      S, T (16-bit)
-    # * 0x14:      normal X, Y, Z (8-bit each one) (LSB must be 0)
     #
     ########################################
     .align 3
@@ -102,7 +113,7 @@ GPUCmd_SetLong:
 GPUCmd_UploadVertex:
     #define vtx         a0
     #define mtx_ptr     s0
-    #define cmd_ptr     s4
+    #define src_ptr     s4
 
     #define v___        $v01
 
@@ -126,12 +137,11 @@ GPUCmd_UploadVertex:
     #define z  e2
     #define w  e3
 
-    addi cmd_ptr, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) + 4
-    sub cmd_ptr,  rspq_cmd_size
+    addi src_ptr, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 16
 
-	ldv vpos,  0, cmd_ptr # Load X, Y, Z, W
-	llv vcol,  8, cmd_ptr # Load RGBA
-	llv vtex, 12, cmd_ptr # Load U, V
+	ldv vpos,  0, src_ptr # Load X, Y, Z, W
+	llv vcol,  8, src_ptr # Load RGBA
+	llv vtex, 12, src_ptr # Load U, V
 
     addi vtx, %lo(VERTEX_CACHE)
     slv vcol, SCREEN_VTX_RGBA, vtx
@@ -180,12 +190,8 @@ GPUCmd_UploadVertex:
     jr ra
     sb t0, PRIM_VTX_TRCODE(vtx)
 
-    #undef cmd_ptr
+    #undef src_ptr
     #undef vtx
-    #undef in_xy   
-    #undef in_zw   
-    #undef in_rgba 
-    #undef vtx_id
 
     #undef x
     #undef y

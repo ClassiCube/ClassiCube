@@ -36,6 +36,8 @@ enum {
     GPU_CMD_DRAW_TRI         = 0x4,
     GPU_CMD_UPLOAD_VTX       = 0x5,
     GPU_CMD_MATRIX_LOAD      = 0x6,
+
+	GPU_CMD_PUSH_RDP         = 0x7,
 };
 
 typedef struct {
@@ -86,6 +88,15 @@ static inline void gpu_draw_triangle(int i0, int i1, int i2)
         (i0*PRIM_VTX_SIZE),
         ((i1*PRIM_VTX_SIZE)<<16) | (i2*PRIM_VTX_SIZE)
     );
+}
+
+#define RDP_CMD_SYNC_PIPE       0xE7000000
+#define RDP_CMD_SET_BLEND_COLOR 0xF9000000
+
+__attribute__((always_inline))
+static inline void gpu_push_rdp(uint32_t a1, uint64_t a2)
+{
+    rdpq_write(2, gpup_id, GPU_CMD_PUSH_RDP, 0, a1, a2);
 }
 
 

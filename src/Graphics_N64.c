@@ -27,10 +27,12 @@ void Gfx_Create(void) {
 	__rdpq_mode_change_som(SOM_ZMODE_MASK,    SOM_ZMODE_OPAQUE);
 	rdpq_mode_dithering(DITHER_SQUARE_SQUARE);
 
-	// Set alpha compare threshold
-	rdpq_set_blend_color(RGBA32(0,0,0, 127));
-
     gpu_init();
+
+	// Set alpha compare threshold
+	gpu_push_rdp(RDP_CMD_SYNC_PIPE, 0);
+	gpu_push_rdp(RDP_CMD_SET_BLEND_COLOR, (0 << 24) | (0 << 16) | (0 << 8) | 127);
+
     zbuffer = surface_alloc(FMT_RGBA16, display_get_width(), display_get_height());
     
 	Gfx.MaxTexWidth  = 256;
