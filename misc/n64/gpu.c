@@ -34,7 +34,7 @@ enum {
     GPU_CMD_SET_LONG         = 0x3,
 
     GPU_CMD_DRAW_QUAD        = 0x4,
-    GPU_CMD_UPLOAD_VTX       = 0x5,
+    GPU_CMD_UPLOAD_QUAD      = 0x5,
     GPU_CMD_MATRIX_LOAD      = 0x6,
 
 	GPU_CMD_PUSH_RDP         = 0x7,
@@ -156,41 +156,40 @@ static inline void put_word(rspq_write_t* s, uint16_t v1, uint16_t v2)
 	rspq_write_arg(s, v2 | (v1 << 16));
 }
 
-static void upload_vertex(uint32_t index, uint8_t cache_index)
+static void upload_vertex(rspq_write_t* s, uint32_t index)
 {
-    rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_UPLOAD_VTX, 5);
-    rspq_write_arg(&s, cache_index * PRIM_VTX_SIZE);
 	char* ptr = gpu_pointer + index * gpu_stride;
 
 	float* vtx = (float*)(ptr + 0);
-	put_word(&s, vtx[0] * (1<<VTX_SHIFT),
-				 vtx[1] * (1<<VTX_SHIFT));
-	put_word(&s, vtx[2] * (1<<VTX_SHIFT),
-				 1.0f   * (1<<VTX_SHIFT));
+	put_word(s, vtx[0] * (1<<VTX_SHIFT),
+				vtx[1] * (1<<VTX_SHIFT));
+	put_word(s, vtx[2] * (1<<VTX_SHIFT),
+				1.0f   * (1<<VTX_SHIFT));
 
-	uint32_t* col = (uint32_t*)(ptr + 12); // TODO put_byte ?
-	rspq_write_arg(&s, *col);
+	uint32_t* col = (uint32_t*)(ptr + 12);
+	rspq_write_arg(s, *col);
 
 	if (gpu_texturing) {
 		float* tex = (float*)(ptr + 16);
-		put_word(&s, tex[0] * (1<<TEX_SHIFT),
-					 tex[1] * (1<<TEX_SHIFT));
+		put_word(s, tex[0] * (1<<TEX_SHIFT),
+					tex[1] * (1<<TEX_SHIFT));
 	} else {
-		put_word(&s, 0,
-					 0);
+		put_word(s, 0,
+					0);
     }
-    rspq_write_end(&s);
 }
 
 static void gpuDrawArrays(uint32_t first, uint32_t count)
 {
-    for (uint32_t i = 0; i < count; i++)
+    for (uint32_t i = 0; i < count; i += 4)
     {
-        uint8_t cache_index = i & 3;
-        upload_vertex(first + i, cache_index);
-
-		// Last vertex of quad?
-		if ((i & 3) != 3) continue;
+    	rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_UPLOAD_QUAD, 17);
+    	rspq_write_arg(&s, 0);
+       	for (uint32_t j = 0; j < 4; j++)
+		{
+        	upload_vertex(&s, first + i + j);
+		}
+    	rspq_write_end(&s);
 
 		// We pass -1 because the triangle can be clipped and split into multiple
     	// triangles.

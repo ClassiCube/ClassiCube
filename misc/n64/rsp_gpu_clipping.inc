@@ -1,3 +1,6 @@
+#define CLIPPING_PLANE_COUNT  6
+#define CLIPPING_CACHE_SIZE   9
+#define CLIPPING_PLANE_SIZE   8
 
     .section .data.gl_clipping
 
@@ -9,6 +12,9 @@ CLIP_PLANES:
     .half 1, 0, 0, -GUARD_BAND_FACTOR
     .half 0, 1, 0, -GUARD_BAND_FACTOR
     .half 0, 0, 1, -1
+
+    .align 4
+CACHE_OFFSETS: .half 2,4,6,8,10,12,14,16,18
 
     .section .bss.gl_clipping
 

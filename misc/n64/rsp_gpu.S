@@ -10,7 +10,7 @@
         RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x3
 
         RSPQ_DefineCommand GPUCmd_DrawQuad,      4   # 0x4
-        RSPQ_DefineCommand GPUCmd_UploadVertex,  20  # 0x5
+        RSPQ_DefineCommand GPUCmd_UploadQuad,    68  # 0x5
         RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x6
 
         RSPQ_DefineCommand GPUCmd_PushRDP,       12  # 0x7
@@ -38,14 +38,8 @@ VERTEX_CACHE:   .dcb.b      PRIM_VTX_SIZE * VERTEX_CACHE_SIZE
     RSPQ_EndSavedState
 
     .align 4
-CACHE_OFFSETS:          .half 2,4,6,8,10,12,14,16,18
-
 CLIP_CODE_FACTORS:      .half 1, 1, GUARD_BAND_FACTOR, GUARD_BAND_FACTOR
 DRAW_TRI_RA:            .word 0
-
-#define CLIPPING_PLANE_COUNT  6
-#define CLIPPING_CACHE_SIZE   9
-#define CLIPPING_PLANE_SIZE   8
 
 #define SCREEN_VTX_CS_POSi          0     // X, Y, Z, W (all 32-bit)
 #define SCREEN_VTX_CS_POSf          8     // X, Y, Z, W (all 32-bit)
@@ -131,23 +125,13 @@ GPUCmd_MatrixLoad:
 #undef dst
     .endfunc
 
-    ########################################
-    # GPUCmd_UploadVertex
-    #
-    # Arguments:
-    # * 0x00 (a0): offset within VERTEX_CACHE
-    # * 0x04 (a1): object space X, Y (16-bit)
-    # * 0x08 (a2): object space Z, W (16-bit)
-    # * 0x0C (a3): RGBA (8-bit each one)
-    # * 0x10:      S, T (16-bit)
-    #
-    ########################################
     .align 3
-    .func GPUCmd_UploadVertex
-GPUCmd_UploadVertex:
+    .func GPUCmd_UploadQuad
+GPUCmd_UploadQuad:
     #define vtx         a0
     #define mtx_ptr     s0
     #define src_ptr     s4
+	#define vcount      s3
 
     #define v___        $v01
 
@@ -171,17 +155,10 @@ GPUCmd_UploadVertex:
     #define z  e2
     #define w  e3
 
-    addi src_ptr, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 16
+    addi src_ptr, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 64
+    li vtx, %lo(VERTEX_CACHE)
+	li vcount, 4
 
-	ldv vpos,  0, src_ptr # Load X, Y, Z, W
-	llv vcol,  8, src_ptr # Load RGBA
-	llv vtex, 12, src_ptr # Load U, V
-
-    addi vtx, %lo(VERTEX_CACHE)
-    slv vcol, SCREEN_VTX_RGBA, vtx
-    slv vtex, SCREEN_VTX_S_T,  vtx
-
-# == matrix multiply ==
     li mtx_ptr, %lo(GL_MATRIX_MVP)
     ldv vmtx0_i.e0,  0x00,mtx_ptr
     ldv vmtx1_i.e0,  0x08,mtx_ptr
@@ -192,6 +169,12 @@ GPUCmd_UploadVertex:
     ldv vmtx2_f.e0,  0x30,mtx_ptr
     ldv vmtx3_f.e0,  0x38,mtx_ptr
 
+upload_vertex:
+	ldv vpos,  0, src_ptr # Load X, Y, Z, W
+	llv vcol,  8, src_ptr # Load RGBA
+	llv vtex, 12, src_ptr # Load U, V
+
+	# matrix multiply
     vmudn v___,      vmtx0_f, vpos.h0
     vmadh v___,      vmtx0_i, vpos.h0
     vmadn v___,      vmtx1_f, vpos.h1
@@ -201,11 +184,16 @@ GPUCmd_UploadVertex:
     vmadn v___,      vmtx3_f, vpos.h3
     vmadh vcspos_i,  vmtx3_i, vpos.h3
     vmadn vcspos_f,  vzero,   vzero
-# == end matrix multiply ==
+
+    slv vcol, SCREEN_VTX_RGBA, vtx
+    slv vtex, SCREEN_VTX_S_T,  vtx
 
     # 32-bit right shift by 5, to keep the clip space coordinates unscaled
     vmudm vcspos_i, vcspos_i, vshift8.e4
     vmadl vcspos_f, vcspos_f, vshift8.e4
+
+	addi vcount,  -1
+	addi src_ptr, 16
 
     sdv vcspos_i, SCREEN_VTX_CS_POSi,vtx
     sdv vcspos_f, SCREEN_VTX_CS_POSf,vtx
@@ -221,9 +209,13 @@ GPUCmd_UploadVertex:
     srl t1, t0, 5
     andi t0, 0x7
     or t0, t1
-    jr ra
     sb t0, PRIM_VTX_TRCODE(vtx)
 
+	bnez vcount, upload_vertex
+	addi vtx, PRIM_VTX_SIZE
+
+	jr ra
+	nop
     #undef src_ptr
     #undef vtx
 
