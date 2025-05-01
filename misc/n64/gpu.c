@@ -33,7 +33,7 @@ enum {
     GPU_CMD_SET_WORD         = 0x2,
     GPU_CMD_SET_LONG         = 0x3,
 
-    GPU_CMD_DRAW_TRI         = 0x4,
+    GPU_CMD_DRAW_QUAD        = 0x4,
     GPU_CMD_UPLOAD_VTX       = 0x5,
     GPU_CMD_MATRIX_LOAD      = 0x6,
 
@@ -78,16 +78,6 @@ __attribute__((always_inline))
 static inline void gpu_set_long(uint32_t offset, uint64_t value)
 {
     rspq_write(gpup_id, GPU_CMD_SET_LONG, offset, value >> 32, value & 0xFFFFFFFF);
-}
-
-static inline void gpu_draw_triangle(int i0, int i1, int i2)
-{
-    // We pass -1 because the triangle can be clipped and split into multiple
-    // triangles.
-    rdpq_write(-1, gpup_id, GPU_CMD_DRAW_TRI,
-        (i0*PRIM_VTX_SIZE),
-        ((i1*PRIM_VTX_SIZE)<<16) | (i2*PRIM_VTX_SIZE)
-    );
 }
 
 #define RDP_CMD_SYNC_PIPE       0xE7000000
@@ -196,16 +186,15 @@ static void gpuDrawArrays(uint32_t first, uint32_t count)
 {
     for (uint32_t i = 0; i < count; i++)
     {
-        uint8_t cache_index = i % VERTEX_CACHE_SIZE;
+        uint8_t cache_index = i & 3;
         upload_vertex(first + i, cache_index);
 
 		// Last vertex of quad?
 		if ((i & 3) != 3) continue;
 
-		// Add two triangles
-		uint8_t idx = cache_index - 3;
-		gpu_draw_triangle(idx + 0, idx + 1, idx + 2);
-		gpu_draw_triangle(idx + 0, idx + 2, idx + 3);
+		// We pass -1 because the triangle can be clipped and split into multiple
+    	// triangles.
+    	rdpq_write(-1, gpup_id, GPU_CMD_DRAW_QUAD);
     }
 }
 

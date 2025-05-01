@@ -1,7 +1,7 @@
 #ifndef __GL_CONSTANTS
 #define __GL_CONSTANTS
 
-#define VERTEX_CACHE_SIZE     16
+#define VERTEX_CACHE_SIZE     4
 
 #define MATRIX_SIZE           64
 

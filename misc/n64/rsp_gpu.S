@@ -9,7 +9,7 @@
         RSPQ_DefineCommand GPUCmd_SetWord,       8   # 0x2
         RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x3
 
-        RSPQ_DefineCommand GPUCmd_DrawTriangle,  8   # 0x4
+        RSPQ_DefineCommand GPUCmd_DrawQuad,      4   # 0x4
         RSPQ_DefineCommand GPUCmd_UploadVertex,  20  # 0x5
         RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x6
 
@@ -41,6 +41,7 @@ VERTEX_CACHE:   .dcb.b      PRIM_VTX_SIZE * VERTEX_CACHE_SIZE
 CACHE_OFFSETS:          .half 2,4,6,8,10,12,14,16,18
 
 CLIP_CODE_FACTORS:      .half 1, 1, GUARD_BAND_FACTOR, GUARD_BAND_FACTOR
+DRAW_TRI_RA:            .word 0
 
 #define CLIPPING_PLANE_COUNT  6
 #define CLIPPING_CACHE_SIZE   9
@@ -96,6 +97,39 @@ GPUCmd_PushRDP:
     jal_and_j RDPQ_Write8, RDPQ_Finalize
     .endfunc
 
+
+    .func GPUCmd_MatrixLoad
+GPUCmd_MatrixLoad:
+    #define src         s6
+    #define dst         s7
+
+    #define vrhs01_i     $v02
+    #define vrhs01_f     $v03
+    #define vrhs23_i     $v04
+    #define vrhs23_f     $v05
+
+    addi src, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 64
+    addi dst, zero, %lo(GL_MATRIX_MVP)
+
+    # Load the matrix from command parameters (misaligned)
+    lqv vrhs01_i, 0x00,src
+    lrv vrhs01_i, 0x10,src
+    lqv vrhs23_i, 0x10,src
+    lrv vrhs23_i, 0x20,src
+    lqv vrhs01_f, 0x20,src
+    lrv vrhs01_f, 0x30,src
+    lqv vrhs23_f, 0x30,src
+    lrv vrhs23_f, 0x40,src
+
+    sqv vrhs01_i, 0x00,dst
+    sqv vrhs23_i, 0x10,dst
+    sqv vrhs01_f, 0x20,dst
+    jr ra
+    sqv vrhs23_f, 0x30,dst
+
+#undef src
+#undef dst
+    .endfunc
 
     ########################################
     # GPUCmd_UploadVertex
@@ -401,16 +435,6 @@ GL_TnL:
     .endfunc
 
 
-    ################################################################
-    # GPUCmd_DrawTriangle
-    #
-    # Arguments:
-    #   a0: Bit 31..24: Command id
-    #       Bit 11..0:  Offset into vertex cache of vtx1
-    #   a1: Bit 27..16: Offset into vertex cache of vtx2
-    #       Bit 11..0:  Offset into vertex cache of vtx3
-    #
-    ################################################################
     .func GPUCmd_DrawTriangle
 GPUCmd_DrawTriangle:
     #define vtx1        a1
@@ -419,11 +443,7 @@ GPUCmd_DrawTriangle:
     #define trcode1     t6
     #define trcode2     t7
     #define trcode3     t8
-
-    addi vtx3, a1, %lo(VERTEX_CACHE)
-    srl  vtx2, a1, 16
-    addi vtx2,     %lo(VERTEX_CACHE)
-    addi vtx1, a0, %lo(VERTEX_CACHE)
+    sw ra, %lo(DRAW_TRI_RA) # TODO find a register for this
 
     # Trivial reject: if all the vertices are out of the same plane (at least one),
     # the triangle is out of the viewport.
@@ -487,43 +507,31 @@ gl_draw_single_triangle:
     addi s1, 2
 
 gl_draw_triangle_end:
-    j RSPQ_Loop
+	lw ra, %lo(DRAW_TRI_RA)
+    jr ra
     nop
 
     #undef vtx1
     #undef vtx2
     #undef vtx3
-
     .endfunc
 
 
-GPUCmd_MatrixLoad:
-    #define src         s6
-    #define dst         s7
+    .func GPUCmd_DrawQuad
+GPUCmd_DrawQuad:
+	li a1, %lo(VERTEX_CACHE) + 0*PRIM_VTX_SIZE
+	li a2, %lo(VERTEX_CACHE) + 1*PRIM_VTX_SIZE
+	jal GPUCmd_DrawTriangle
+	li a3, %lo(VERTEX_CACHE) + 2*PRIM_VTX_SIZE
 
-    #define vrhs01_i     $v02
-    #define vrhs01_f     $v03
-    #define vrhs23_i     $v04
-    #define vrhs23_f     $v05
+	li a1, %lo(VERTEX_CACHE) + 0*PRIM_VTX_SIZE
+	li a2, %lo(VERTEX_CACHE) + 2*PRIM_VTX_SIZE
+	jal GPUCmd_DrawTriangle
+	li a3, %lo(VERTEX_CACHE) + 3*PRIM_VTX_SIZE
 
-    addi src, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 64
-    addi dst, zero, %lo(GL_MATRIX_MVP)
-
-    # Load the matrix from command parameters (misaligned)
-    lqv vrhs01_i, 0x00,src
-    lrv vrhs01_i, 0x10,src
-    lqv vrhs23_i, 0x10,src
-    lrv vrhs23_i, 0x20,src
-    lqv vrhs01_f, 0x20,src
-    lrv vrhs01_f, 0x30,src
-    lqv vrhs23_f, 0x30,src
-    lrv vrhs23_f, 0x40,src
-
-    sqv vrhs01_i, 0x00,dst
-    sqv vrhs23_i, 0x10,dst
-    sqv vrhs01_f, 0x20,dst
-    jr ra
-    sqv vrhs23_f, 0x30,dst
+    j RSPQ_Loop
+    nop
+    .endfunc
 
 #include "rsp_gpu_clipping.inc"
 #include <rsp_rdpq.inc>
