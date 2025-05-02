@@ -4,9 +4,10 @@
 #include "rdpq_mode.h"
 #include "rdpq_debug.h"
 #include "display.h"
-#include "gl_constants.h"
 
 // This is a severely cutdown version of libdragon's OpenGL implementation
+#define VTX_SHIFT 5
+#define TEX_SHIFT 8
 
 static uint32_t gpup_id;
 //DEFINE_RSP_UCODE(rsp_gpu);
@@ -34,20 +35,14 @@ enum {
     GPU_CMD_SET_LONG         = 0x3,
 
     GPU_CMD_DRAW_QUAD        = 0x4,
-    GPU_CMD_UPLOAD_QUAD      = 0x5,
-    GPU_CMD_MATRIX_LOAD      = 0x6,
+    GPU_CMD_MATRIX_LOAD      = 0x5,
 
-	GPU_CMD_PUSH_RDP         = 0x7,
+	GPU_CMD_PUSH_RDP         = 0x6,
 };
 
 typedef struct {
-    int16_t  i[4][4];
-    uint16_t f[4][4];
-} gpu_matrix_srv_t;
-_Static_assert(sizeof(gpu_matrix_srv_t) == MATRIX_SIZE, "Matrix size does not match");
-
-typedef struct {
-    gpu_matrix_srv_t mvp_matrix;
+	int16_t  mvp_matrix_i[4][4];
+    uint16_t mvp_matrix_f[4][4];
     int16_t vp_scale[4];
     int16_t vp_offset[4];
     uint16_t tex_size[2];
@@ -146,7 +141,7 @@ static inline void gpu_matrix_write(rspq_write_t* w, const float* m)
 static void gpuLoadMatrix(const float* m)
 {
     rspq_write_t w = rspq_write_begin(gpup_id, GPU_CMD_MATRIX_LOAD, 17);
-    rspq_write_arg(&w, false); // no multiply
+    rspq_write_arg(&w, 0); // padding
     gpu_matrix_write(&w, m);
     rspq_write_end(&w);
 }
@@ -183,17 +178,13 @@ static void gpuDrawArrays(uint32_t first, uint32_t count)
 {
     for (uint32_t i = 0; i < count; i += 4)
     {
-    	rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_UPLOAD_QUAD, 17);
-    	rspq_write_arg(&s, 0);
+    	rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_DRAW_QUAD, 17);
+    	rspq_write_arg(&s, 0); // padding
        	for (uint32_t j = 0; j < 4; j++)
 		{
         	upload_vertex(&s, first + i + j);
 		}
     	rspq_write_end(&s);
-
-		// We pass -1 because the triangle can be clipped and split into multiple
-    	// triangles.
-    	rdpq_write(-1, gpup_id, GPU_CMD_DRAW_QUAD);
     }
 }
 

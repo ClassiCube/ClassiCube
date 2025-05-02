@@ -1,6 +1,8 @@
 #include <rsp_queue.inc>
 #include <rdpq_macros.h>
-#include "gl_constants.h"
+#define MATRIX_SIZE           64
+#define GUARD_BAND_FACTOR 2
+
     .data
 
     RSPQ_BeginOverlayHeader
@@ -9,11 +11,10 @@
         RSPQ_DefineCommand GPUCmd_SetWord,       8   # 0x2
         RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x3
 
-        RSPQ_DefineCommand GPUCmd_DrawQuad,      4   # 0x4
-        RSPQ_DefineCommand GPUCmd_UploadQuad,    68  # 0x5
-        RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x6
+        RSPQ_DefineCommand GPUCmd_DrawQuad,      68  # 0x4
+        RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x5
 
-        RSPQ_DefineCommand GPUCmd_PushRDP,       12  # 0x7
+        RSPQ_DefineCommand GPUCmd_PushRDP,       12  # 0x6
     RSPQ_EndOverlayHeader
 
     .align 4
@@ -31,9 +32,6 @@ GL_STATE:
     GL_STATE_TEX_OFFSET:    .half   0,0
     GL_TRI_CMD:             .half   0
     GL_TRI_CULL:            .half   0
-
-    .align 3
-VERTEX_CACHE:   .dcb.b      PRIM_VTX_SIZE * VERTEX_CACHE_SIZE
 
     RSPQ_EndSavedState
 
@@ -53,6 +51,15 @@ DRAW_TRI_RA:            .word 0
 #define SCREEN_VTX_W               32     // FIXME: this is duplicated in CS_POS
 #define SCREEN_VTX_INVW            36     // 32-bit
 #define SCREEN_VTX_SIZE            40
+
+	.bss
+    .align 3
+#define VERTEX_CACHE_SIZE     4
+//0-39 same as screenvtx
+#define PRIM_VTX_TRCODE            40    // trivial-reject clipping flags (against -w/+w)
+#define PRIM_VTX_SIZE              42
+
+VERTEX_CACHE:   .dcb.b      PRIM_VTX_SIZE * VERTEX_CACHE_SIZE
 
     .text
 
@@ -126,8 +133,8 @@ GPUCmd_MatrixLoad:
     .endfunc
 
     .align 3
-    .func GPUCmd_UploadQuad
-GPUCmd_UploadQuad:
+    .func GPUCmd_DrawQuad
+GPUCmd_DrawQuad:
     #define vtx         a0
     #define mtx_ptr     s0
     #define src_ptr     s4
@@ -214,8 +221,20 @@ upload_vertex:
 	bnez vcount, upload_vertex
 	addi vtx, PRIM_VTX_SIZE
 
-	jr ra
-	nop
+	
+	# now do the actual drawing
+	li a1, %lo(VERTEX_CACHE) + 0*PRIM_VTX_SIZE
+	li a2, %lo(VERTEX_CACHE) + 1*PRIM_VTX_SIZE
+	jal GPUCmd_DrawTriangle
+	li a3, %lo(VERTEX_CACHE) + 2*PRIM_VTX_SIZE
+
+	li a1, %lo(VERTEX_CACHE) + 0*PRIM_VTX_SIZE
+	li a2, %lo(VERTEX_CACHE) + 2*PRIM_VTX_SIZE
+	jal GPUCmd_DrawTriangle
+	li a3, %lo(VERTEX_CACHE) + 3*PRIM_VTX_SIZE
+
+    j RSPQ_Loop
+    nop
     #undef src_ptr
     #undef vtx
 
@@ -506,23 +525,6 @@ gl_draw_triangle_end:
     #undef vtx1
     #undef vtx2
     #undef vtx3
-    .endfunc
-
-
-    .func GPUCmd_DrawQuad
-GPUCmd_DrawQuad:
-	li a1, %lo(VERTEX_CACHE) + 0*PRIM_VTX_SIZE
-	li a2, %lo(VERTEX_CACHE) + 1*PRIM_VTX_SIZE
-	jal GPUCmd_DrawTriangle
-	li a3, %lo(VERTEX_CACHE) + 2*PRIM_VTX_SIZE
-
-	li a1, %lo(VERTEX_CACHE) + 0*PRIM_VTX_SIZE
-	li a2, %lo(VERTEX_CACHE) + 2*PRIM_VTX_SIZE
-	jal GPUCmd_DrawTriangle
-	li a3, %lo(VERTEX_CACHE) + 3*PRIM_VTX_SIZE
-
-    j RSPQ_Loop
-    nop
     .endfunc
 
 #include "rsp_gpu_clipping.inc"
