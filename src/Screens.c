@@ -1086,6 +1086,9 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 	s->dirty = true;
 
 	if (type == MSG_TYPE_NORMAL) {
+		/* Check if the chatIndex isn't located at the bottom of the chat log, that means that the user has scrolled.  */
+		if (Chat_Log.count - s->chatIndex != Gui.Chatlines + 1) return;
+
 		s->chatIndex++;
 		if (!Gui.Chatlines) return;
 		TextGroupWidget_ShiftUp(&s->chat);
