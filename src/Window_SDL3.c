@@ -127,10 +127,10 @@ int Window_GetWindowState(void) {
 }
 
 cc_result Window_EnterFullscreen(void) {
-	return SDL_SetWindowFullscreen(win_handle, true);
+	return SDL_SetWindowFullscreen(win_handle, true) ? 0 : -1;
 }
 cc_result Window_ExitFullscreen(void) { 
-	return SDL_SetWindowFullscreen(win_handle, false);
+	return SDL_SetWindowFullscreen(win_handle, false) ? 0 : -1;
 }
 
 int Window_IsObscured(void) {
