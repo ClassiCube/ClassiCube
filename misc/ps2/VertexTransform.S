@@ -9,57 +9,44 @@
 # vf7 = viewport scale
 # NOTE: vclipw.xyz takes 4 cycles to produce result, which must be accounted for
 
+.macro FUNC name
+	.global \name
+	.type   \name,%function
+	\name:
+.endm
+
+# mips ISA has explicit delay slots
+# (i.e. instruction after branches/jumps are always unconditionally executed)
+.set noreorder
+
+
 .align 4
-
-.global LoadMvpMatrix
-.type   LoadMvpMatrix,%function
-.global LoadClipScaleFactors
-.type   LoadClipScaleFactors,%function
-.global LoadViewportOrigin
-.type   LoadViewportOrigin,%function
-.global LoadViewportScale
-.type   LoadViewportScale,%function
-
-.global TransformTexturedQuad
-.type   TransformTexturedQuad,%function
-.global TransformColouredQuad
-.type   TransformColouredQuad,%function
-.global ViewportTransform
-.type   ViewportTransform,%function
-
 # Loads matrix into VU0 registers
 #	$a0 = addresss of mvp
-LoadMvpMatrix:
+FUNC LoadMvpMatrix
 	lqc2 	$vf1, 0x00($a0) # vf1 = mvp.row1
 	lqc2 	$vf2, 0x10($a0) # vf2 = mvp.row2
 	lqc2 	$vf3, 0x20($a0) # vf3 = mvp.row3
-	lqc2 	$vf4, 0x30($a0) # vf4 = mvp.row4
 	jr		$ra
-	nop
-
+	lqc2 	$vf4, 0x30($a0) # vf4 = mvp.row4
 
 # Loads clipping scaling factors into VU0 registers
 #	$a0 = addresss of factors
-LoadClipScaleFactors:
+FUNC LoadClipScaleFactors
 	lqc2 	$vf5, 0x00($a0) # vf5 = factors
 	jr		$ra
-	nop
-
 
 # Loads viewport origin into VU0 registers
 #	$a0 = addresss of origin
-LoadViewportOrigin:
-	lqc2 	$vf6, 0x00($a0) # vf6 = origin
+FUNC LoadViewportOrigin
 	jr		$ra
-	nop
-
+	lqc2 	$vf6, 0x00($a0) # vf6 = origin
 
 # Loads viewport scale into VU0 registers
 #	$a0 = addresss of scale
-LoadViewportScale:
-	lqc2 	$vf7, 0x00($a0) # vf7 = scale
+FUNC LoadViewportScale
 	jr		$ra
-	nop
+	lqc2 	$vf7, 0x00($a0) # vf7 = scale
 
 
 .macro TransformVertex1
@@ -141,6 +128,7 @@ LoadViewportScale:
 
 	# STORE CLIP FLAGS 4 RESULT
 	cfc2	$t0, $18	  	   # t0 = VP0_REGS[CLIP_FLAGS]
+	jr		$ra
 	sw		$t0,0x0C($a3)      # clip_flags[3] = t0
 .endm
 
@@ -150,7 +138,7 @@ LoadViewportScale:
 #	$a1 = addresss of dst  vertices
 #   $a2 = address of  tmp  vertex
 #   $a3 = address of clip flags
-TransformTexturedQuad:
+FUNC TransformTexturedQuad
 	# LOAD 1.0 into W
 	lw		$t0,ONE_VALUE # t0 = 1.0f
 	sw		$t0,0x0C($a2) # tmp.w = f5
@@ -184,15 +172,13 @@ TransformTexturedQuad:
 	TransformVertex4
 
 	TransformFinish
-	jr		$ra
-	nop
 
 # Transforms 4 vertices with size of 16 bytes
 #	$a0 = addresss of src  vertices
 #	$a1 = addresss of dst  vertices
 #   $a2 = address of  tmp  vertex
 #   $a3 = address of clip flags
-TransformColouredQuad:
+FUNC TransformColouredQuad
 	# LOAD 1.0 into W
 	lw		$t0,ONE_VALUE # t0 = 1.0f
 	sw		$t0,0x0C($a2) # tmp.w = f5
@@ -226,8 +212,6 @@ TransformColouredQuad:
 	TransformVertex4
 
 	TransformFinish
-	jr		$ra
-	nop
 
 .global ONE_VALUE
 ONE_VALUE:  .float 1.0
@@ -235,12 +219,11 @@ ONE_VALUE:  .float 1.0
 
 #	$a0 = addresss of src
 #	$a1 = addresss of dst
-ViewportTransform:
+FUNC ViewportTransform
 	lqc2	$vf16, 0x00($a0)    # IN = src
 	vmulw	$vf17, $vf16, $vf16 # TMP = IN[xyzw] * IN.w (inverse W)
 	vmul	$vf18, $vf17, $vf7  # TMP = TMP * viewport_scale
 	vadd	$vf19, $vf18, $vf6  # TMP = TMP + viewport_origin
 	vftoi0  $vf19, $vf19	    # TMP = int(TMP)
-	sqc2	$vf19, 0x00($a1)    # dst = TMP
 	jr		$ra
-	nop
+	sqc2	$vf19, 0x00($a1)    # dst = TMP
