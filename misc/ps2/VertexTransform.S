@@ -33,8 +33,8 @@ FUNC LoadMvpMatrix
 # Loads clipping scaling factors into VU0 registers
 #	$a0 = addresss of factors
 FUNC LoadClipScaleFactors
-	lqc2 	$vf5, 0x00($a0) # vf5 = factors
 	jr		$ra
+	lqc2 	$vf5, 0x00($a0) # vf5 = factors
 
 # Loads viewport origin into VU0 registers
 #	$a0 = addresss of origin
@@ -139,10 +139,6 @@ FUNC LoadViewportScale
 #   $a2 = address of  tmp  vertex
 #   $a3 = address of clip flags
 FUNC TransformTexturedQuad
-	# LOAD 1.0 into W
-	lw		$t0,ONE_VALUE # t0 = 1.0f
-	sw		$t0,0x0C($a2) # tmp.w = f5
-
 	# LOAD VERTEX 1
 	ld		$t0,0x00($a0) # t0 = src[0].x,y
 	sd		$t0,0x00($a2) # tmp.x,y = t0
@@ -179,10 +175,6 @@ FUNC TransformTexturedQuad
 #   $a2 = address of  tmp  vertex
 #   $a3 = address of clip flags
 FUNC TransformColouredQuad
-	# LOAD 1.0 into W
-	lw		$t0,ONE_VALUE # t0 = 1.0f
-	sw		$t0,0x0C($a2) # tmp.w = f5
-
 	# LOAD VERTEX 1
 	ld		$t0,0x00($a0) # t0 = src[0].x,y
 	sd		$t0,0x00($a2) # tmp.x,y = t0
@@ -212,9 +204,6 @@ FUNC TransformColouredQuad
 	TransformVertex4
 
 	TransformFinish
-
-.global ONE_VALUE
-ONE_VALUE:  .float 1.0
 
 
 #	$a0 = addresss of src
