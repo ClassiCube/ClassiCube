@@ -599,14 +599,16 @@ static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords,
 
 extern void TransformTexturedQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
 extern void TransformColouredQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
+extern u64* DrawColouredQuad(void* src, u64* dst, VU0_VECTOR* tmp);
 
 static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
 	qword_t* base = q;
 	q++; // skip over GIF tag (will be filled in later)
-	u64* dw = (u64*)q;
 
-	unsigned numVerts = 0;
+	u64* dw  = (u64*)q;
+	u64* beg = dw;
+
 	VU0_VECTOR V[6], tmp;
 	int clip[4];
 
@@ -616,15 +618,14 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 		
 		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
 			dw = DrawTexturedTriangle(dw, V, v + 0, v + 1, v + 2);
-			numVerts += 3;
 		}
 		
 		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
 			dw = DrawTexturedTriangle(dw, V + 3, v + 2, v + 3, v + 0);
-			numVerts += 3;
 		}
 	}
 
+	unsigned numVerts = (unsigned)(dw - beg) / 3;
 	if (numVerts == 0) {
 		q--; // No GIF tag was added
 	} else {
@@ -641,9 +642,10 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 	struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex;
 	qword_t* base = q;
 	q++; // skip over GIF tag (will be filled in later)
-	u64* dw = (u64*)q;
 
-	unsigned numVerts = 0;
+	u64* dw  = (u64*)q;
+	u64* beg = dw;
+
 	VU0_VECTOR V[6], tmp;
 	int clip[4];
 
@@ -653,15 +655,14 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 		
 		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
 			dw = DrawColouredTriangle(dw, V, v + 0, v + 1, v + 2);
-			numVerts += 3;
 		}
 		
 		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
 			dw = DrawColouredTriangle(dw, V + 3, v + 2, v + 3, v + 0);
-			numVerts += 3;
 		}
 	}
 
+	unsigned numVerts = (unsigned)(dw - beg) / 2;
 	if (numVerts == 0) {
 		q--; // No GIF tag was added
 	} else {
