@@ -574,6 +574,7 @@ static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords,
 
 extern void TransformTexturedQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
 extern void TransformColouredQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
+extern u64* DrawTexturedQuad(void* src, u64* dst, VU0_VECTOR* tmp);
 extern u64* DrawColouredQuad(void* src, u64* dst, VU0_VECTOR* tmp);
 
 static void DrawTexturedTriangles(int verticesCount, int startVertex) {
@@ -583,21 +584,11 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 
 	u64* dw  = (u64*)q;
 	u64* beg = dw;
-
-	VU0_VECTOR V[6], tmp;
-	int clip[4];
+	VU0_VECTOR tmp[6];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		TransformTexturedQuad(v, V, &tmp, clip);
-		
-		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
-			dw = DrawTexturedTriangle(dw, V, v + 0, v + 1, v + 2);
-		}
-		
-		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
-			dw = DrawTexturedTriangle(dw, V + 3, v + 2, v + 3, v + 0);
-		}
+		dw = DrawTexturedQuad(v, dw, tmp);
 	}
 
 	unsigned numVerts = (unsigned)(dw - beg) / 3;
@@ -726,7 +717,6 @@ void Gfx_EndFrame(void) {
 		
 	draw_wait_finish();
 	//Platform_LogConst("--- EF3 ---");
-	
 	if (gfx_vsync) graph_wait_vsync();
 	
 	context ^= 1;
