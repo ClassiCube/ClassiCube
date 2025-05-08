@@ -105,12 +105,7 @@
 FUNC DrawTexturedQuad
 
 ### VERTEX 1 ###
-	# LOAD VERTEX 1
-	ld			$t0,0x00(SRC) # t0 = src[0].x,y
-	sd			$t0,0x00(TMP) # tmp.x,y = t0
-	lw			$t0,0x08(SRC) # t0 = src[0].z
-	sw			$t0,0x08(TMP) # tmp.z = t0
-	lqc2		POS_1, 0x00(TMP) # V1 = tmp
+	lqc2		POS_1, 0x00(SRC)
 
 	TransformVertex POS_1
 	lwc1		COL1, 0x0C(SRC)
@@ -131,22 +126,19 @@ FUNC DrawTexturedQuad
 	lwc1		COL2,  0x24(SRC)
 	lwc1		U_2,   0x28(SRC)
 	lwc1		V_2,   0x2C(SRC)
+
 	vmulq.w 	POS_1, V0001, $Q
 	vdiv	 	$Q,    _one, POS2w
 	BeginClip POS_2
 
 ### VERTEX 3 ###
-	# LOAD VERTEX 3
-	ld			$t0,0x30(SRC) # t0 = src[2].x,y
-	sd			$t0,0x00(TMP) # tmp.x,y = t0
-	lw			$t0,0x38(SRC) # t0 = src[2].z
-	sw			$t0,0x08(TMP) # tmp.z = t0
-	lqc2		POS_3, 0x00(TMP) # V3 = tmp
+	lqc2		POS_3, 0x30(SRC)
 
 	TransformVertex POS_3
 	lwc1		COL3,  0x3C(SRC)
 	lwc1		U_3,   0x40(SRC)
 	lwc1		V_3,   0x44(SRC)
+
 	vmulq.w 	POS_2, V0001, $Q
 	vdiv 		$Q,    _one, POS3w
 	BeginClip POS_3
@@ -163,6 +155,7 @@ FUNC DrawTexturedQuad
 	lwc1		COL4,  0x54(SRC)
 	lwc1		U_4,   0x58(SRC)
 	lwc1		V_4,   0x5C(SRC)
+
 	vmulq.w 	POS_3, V0001, $Q
 	vdiv 		$Q,    _one, POS4w
 	BeginClip POS_4

@@ -397,7 +397,10 @@ static void PreprocessColouredVertices(void) {
 }
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	return Mem_TryAlloc(count, strideSizes[fmt]);
+	//return Mem_TryAlloc(count, strideSizes[fmt]);
+	return memalign(16,count * strideSizes[fmt]);
+	// align to 16 bytes, so DrawTexturedQuad/DrawColouredQuad can
+	//  load vertices using the "load quad (16 bytes)" instruction
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }

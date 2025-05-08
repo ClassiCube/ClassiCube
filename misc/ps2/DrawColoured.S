@@ -95,12 +95,7 @@
 FUNC DrawColouredQuad
 
 ### VERTEX 1 ###
-	# LOAD VERTEX 1
-	ld			$t0,0x00(SRC) # t0 = src[0].x,y
-	sd			$t0,0x00(TMP) # tmp.x,y = t0
-	lw			$t0,0x08(SRC) # t0 = src[0].z
-	sw			$t0,0x08(TMP) # tmp.z = t0
-	lqc2		POS_1, 0x00(TMP) # V1 = tmp
+	lqc2		POS_1, 0x00(SRC)
 
 	TransformVertex POS_1
 	lwc1		COL1, 0x0C(SRC)
@@ -108,12 +103,7 @@ FUNC DrawColouredQuad
 	BeginClip POS_1
 
 ### VERTEX 2 ###
-	# LOAD VERTEX 2
-	ld			$t0,0x10(SRC) # t0 = src[1].x,y
-	sd			$t0,0x00(TMP) # tmp.x,y = t0
-	lw			$t0,0x18(SRC) # t0 = src[1].z
-	sw			$t0,0x08(TMP) # tmp.z = t0
-	lqc2		POS_2, 0x00(TMP) # V2 = tmp
+	lqc2		POS_2, 0x10(SRC)
 
 	TransformVertex POS_2
 	lwc1		COL2,  0x1C(SRC)
@@ -122,12 +112,7 @@ FUNC DrawColouredQuad
 	BeginClip POS_2
 
 ### VERTEX 3 ###
-	# LOAD VERTEX 3
-	ld			$t0,0x20(SRC) # t0 = src[2].x,y
-	sd			$t0,0x00(TMP) # tmp.x,y = t0
-	lw			$t0,0x28(SRC) # t0 = src[2].z
-	sw			$t0,0x08(TMP) # tmp.z = t0
-	lqc2		POS_3, 0x00(TMP) # V3 = tmp
+	lqc2		POS_3, 0x20(SRC)
 
 	TransformVertex POS_3
 	lwc1		COL3,  0x2C(SRC)
@@ -136,12 +121,7 @@ FUNC DrawColouredQuad
 	BeginClip POS_3
 
 ### VERTEX 4 ###
-	# LOAD VERTEX 4
-	ld			$t0,0x30(SRC) # t0 = src[3].x,y
-	sd			$t0,0x00(TMP) # tmp.x,y = t0
-	lw			$t0,0x38(SRC) # t0 = src[3].z
-	sw			$t0,0x08(TMP) # tmp.z = t0
-	lqc2		POS_4, 0x00(TMP) # V4 = tmp
+	lqc2		POS_4, 0x30(SRC)
 
 	TransformVertex POS_4
 	lwc1		COL4,  0x3C(SRC)
