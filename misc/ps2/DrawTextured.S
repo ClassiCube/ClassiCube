@@ -115,7 +115,7 @@ FUNC DrawTexturedQuad
 	BeginClip POS_1
 
 ### VERTEX 2 ###
-	# LOAD VERTEX 2
+	# LOAD VERTEX 2 (todo rearrange vertices for efficient loading)
 	ld			$t0,0x18(SRC) # t0 = src[1].x,y
 	sd			$t0,0x00(TMP) # tmp.x,y = t0
 	lw			$t0,0x20(SRC) # t0 = src[1].z

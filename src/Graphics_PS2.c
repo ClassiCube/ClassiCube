@@ -37,7 +37,7 @@ extern void LoadViewportScale(VU0_VECTOR* scale);
 static packet_t* packets[2];
 static packet_t* current;
 static int context;
-static qword_t* dma_tag;
+static qword_t* dma_beg;
 static qword_t* q;
 
 static GfxResourceID white_square;
@@ -71,9 +71,9 @@ static void UpdateContext(void) {
 
 	current = packets[context];
 	
-	dma_tag = current->data;
+	dma_beg = current->data;
 	// increment past the dmatag itself
-	q = dma_tag + 1;
+	q = dma_beg + 1;
 }
 
 
@@ -124,7 +124,7 @@ static void InitDrawingEnv(void) {
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, q - beg, 0, 0);
 	dma_wait_fast();
-	q = dma_tag + 1;
+	q = dma_beg + 1;
 }
 
 static int tex_offset;
@@ -153,6 +153,13 @@ void Gfx_Create(void) {
 
 void Gfx_Free(void) { 
 	Gfx_FreeState();
+}
+
+static CC_INLINE void DMAFlushBuffer(void) {
+	if (q == dma_beg) return;
+
+	DMATAG_END(dma_beg, (q - dma_beg) - 1, 0, 0, 0);
+	dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, q - dma_beg, 0, 0);
 }
 
 
@@ -200,8 +207,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	unsigned dst_stride = max(64, tex->width);
 	
 	// TODO terrible perf
-	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+	DMAFlushBuffer();
 	dma_wait_fast();
 	
 	packet_t *packet = packet_init(200, PACKET_NORMAL);
@@ -217,7 +223,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	packet_free(packet);
 	
 	// TODO terrible perf
-	q = dma_tag + 1;
+	q = dma_beg + 1;
 	UpdateTextureBuffer(0, tex, dst_addr, dst_stride);
 }
 		
@@ -638,11 +644,10 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 	if (formatDirty) UpdateFormat(0);
 
 	if ((q - current->data) > 45000) {
-		DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
-		dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+		DMAFlushBuffer();
 		dma_wait_fast();
-		q = dma_tag + 1;
-		Platform_LogConst("Too much geometry!!!");
+		q = dma_beg + 1;
+		Platform_LogConst("Too much geometry!!");
 	}
 
 	while (verticesCount)
@@ -712,10 +717,8 @@ void Gfx_EndFrame(void) {
 
 	q = draw_finish(q);
 	
-	// Fill out and then send DMA chain
-	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
 	dma_wait_fast();
-	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+	DMAFlushBuffer();
 	//Platform_LogConst("--- EF2 ---");
 		
 	draw_wait_finish();
