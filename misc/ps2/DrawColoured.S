@@ -10,6 +10,10 @@
 # (i.e. instruction after branches/jumps are always unconditionally executed)
 .set noreorder
 
+# Note that registers are numbered for N32 ABI, but when disassembling
+#   in ghidra or PCSX2, they are disassembled as O32 ABI ?
+# https://github.com/ps2dev/binutils-gdb/blob/e9cf3691bfa140469d52815a2307b00eecf7917c/gas/config/tc-mips.c#L2786
+
 # global registers
 	#define V0001 $vf0 // hardware coded to (0,0,0,1)
 	#define MVP1  $vf1 // mvp.row1
@@ -37,20 +41,30 @@
 	#define DST $a1
 	#define TMP $a2
 
-	#define CL1 $t1 // clip flags for vertex 1
-	#define CL2 $t2 // clip flags for vertex 2
-	#define CL3 $t3 // clip flags for vertex 3
-	#define CL4 $t4 // clip flags for vertex 4
+	#define COL1 $f12
+	#define COL2 $f13
+	#define COL3 $f14
+	#define COL4 $f15
 
-	#define COL0 $f12
-	#define COL1 $f13
-	#define COL2 $f14
-	#define COL3 $f15
+	#define Z_1 $f0
+	#define Z_2 $f1
+	#define Z_3 $f3
+	#define Z_4 $f4
 
-	#define XY_0 $t1
-	#define XY_1 $t2
-	#define XY_2 $t3
-	#define XY_3 $t4
+	#define W_1 $f16
+	#define W_2 $f17
+	#define W_3 $f18
+	#define W_4 $f19
+
+	#define XY_1 $t1
+	#define XY_2 $t2
+	#define XY_3 $t3
+	#define XY_4 $a3
+
+	#define Y_1 $a4
+	#define Y_2 $a5
+	#define Y_3 $a6
+	#define Y_4 $a7
 
 
 .macro TransformVertex vpos
@@ -67,7 +81,7 @@
 .endm
 
 .macro VPTransform vpos
-	vmulw.xyz	\vpos, \vpos, POS_1 # TMP.xyz = IN.xyz * IN.w (inverse W)
+	vmulw.xyz	\vpos, \vpos, \vpos # TMP.xyz = IN.xyz * IN.w (inverse W)
 	vmul.xyz	\vpos, \vpos, VP_S  # TMP.xyz = TMP * viewport_scale
 	vadd.xyz	\vpos, \vpos, VP_O  # TMP.xyz = TMP + viewport_origin
 	vftoi0.xyz	\vpos, \vpos	    # TMP.xyz = int(TMP)
@@ -89,7 +103,8 @@ FUNC DrawColouredQuad
 	lqc2		POS_1, 0x00(TMP) # V1 = tmp
 
 	TransformVertex POS_1
-	vdiv	 	$Q, _one, POS1w
+	lwc1		COL1, 0x0C(SRC)
+	vdiv	 	$Q,   _one, POS1w
 	BeginClip POS_1
 
 ### VERTEX 2 ###
@@ -101,8 +116,9 @@ FUNC DrawColouredQuad
 	lqc2		POS_2, 0x00(TMP) # V2 = tmp
 
 	TransformVertex POS_2
+	lwc1		COL2,  0x1C(SRC)
 	vmulq.w 	POS_1, V0001, $Q
-	vdiv	 	$Q, _one, POS2w
+	vdiv	 	$Q,    _one, POS2w
 	BeginClip POS_2
 
 ### VERTEX 3 ###
@@ -114,8 +130,9 @@ FUNC DrawColouredQuad
 	lqc2		POS_3, 0x00(TMP) # V3 = tmp
 
 	TransformVertex POS_3
+	lwc1		COL3,  0x2C(SRC)
 	vmulq.w 	POS_2, V0001, $Q
-	vdiv 		$Q, _one, POS3w
+	vdiv 		$Q,    _one, POS3w
 	BeginClip POS_3
 
 ### VERTEX 4 ###
@@ -127,8 +144,9 @@ FUNC DrawColouredQuad
 	lqc2		POS_4, 0x00(TMP) # V4 = tmp
 
 	TransformVertex POS_4
+	lwc1		COL4,  0x3C(SRC)
 	vmulq.w 	POS_3, V0001, $Q
-	vdiv 		$Q, _one, POS4w
+	vdiv 		$Q,    _one, POS4w
 	BeginClip POS_4
 
 	vnop # adjust for delay
@@ -149,6 +167,75 @@ FUNC DrawColouredQuad
 	VPTransform POS_2
 	VPTransform POS_3
 	VPTransform POS_4
+
+	# Convert to register format
+	sqc2		POS_1, 0x00(TMP)
+	sqc2		POS_2, 0x10(TMP)
+	sqc2		POS_3, 0x20(TMP)
+	sqc2		POS_4, 0x30(TMP)
+
+	lhu			XY_1, 0x00(TMP)
+	lhu			 Y_1, 0x04(TMP)
+	lwc1		 Z_1, 0x08(TMP)
+	lwc1		 W_1, 0x0C(TMP)
+
+	lhu			XY_2, 0x10(TMP)
+	lhu			 Y_2, 0x14(TMP)
+	lwc1		 Z_2, 0x18(TMP)
+	lwc1		 W_2, 0x1C(TMP)
+
+	lhu			XY_3, 0x20(TMP)
+	lhu			 Y_3, 0x24(TMP)
+	lwc1		 Z_3, 0x28(TMP)
+	lwc1		 W_3, 0x2C(TMP)
+
+	lhu			XY_4, 0x30(TMP)
+	lhu			 Y_4, 0x34(TMP)
+	lwc1		 Z_4, 0x38(TMP)
+	lwc1		 W_4, 0x3C(TMP)
+
+	sll 		Y_1, Y_1, 16
+	sll			Y_2, Y_2, 16
+	sll 		Y_3, Y_3, 16
+	sll 		Y_4, Y_4, 16
+
+	or			XY_1, XY_1, Y_1
+	or			XY_2, XY_2, Y_2
+	or			XY_3, XY_3, Y_3
+	or			XY_4, XY_4, Y_4
+
+	# write 1,2,3 3,4,1
+	swc1 COL1, 0x00(DST)
+	swc1  W_1, 0x04(DST)
+	sw   XY_1, 0x08(DST)
+	swc1  Z_1, 0x0C(DST)
+
+	swc1 COL2, 0x10(DST)
+	swc1  W_2, 0x14(DST)
+	sw   XY_2, 0x18(DST)
+	swc1  Z_2, 0x1C(DST)
+
+	swc1 COL3, 0x20(DST)
+	swc1  W_3, 0x24(DST)
+	sw   XY_3, 0x28(DST)
+	swc1  Z_3, 0x2C(DST)
+
+	swc1 COL3, 0x30(DST)
+	swc1  W_3, 0x34(DST)
+	sw   XY_3, 0x38(DST)
+	swc1  Z_3, 0x3C(DST)
+
+	swc1 COL4, 0x40(DST)
+	swc1  W_4, 0x44(DST)
+	sw   XY_4, 0x48(DST)
+	swc1  Z_4, 0x4C(DST)
+
+	swc1 COL1, 0x50(DST)
+	swc1  W_1, 0x54(DST)
+	sw   XY_1, 0x58(DST)
+	swc1  Z_1, 0x5C(DST)
+
+	addi DST, 16*6
 
 	# TODO clipping
 any_clipped_vertices:

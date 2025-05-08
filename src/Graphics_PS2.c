@@ -541,31 +541,6 @@ static xyz_t FinishVertex(VU0_VECTOR* src, float invW) {
 	return xyz;
 }
 
-static u64* DrawColouredTriangle(u64* dw, VU0_VECTOR* coords, 
-								struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
-	ColouredVertex* dst = (ColouredVertex*)dw;
-	float Q;
-
-	// TODO optimise
-	// Add the "primitives" to the GIF packet
-	Q   = 1.0f / coords[0].w;
-	dst[0].rgba  = V0->Col;
-	dst[0].q     = Q;
-	dst[0].xyz   = FinishVertex(&coords[0], Q);
-
-	Q   = 1.0f / coords[1].w;
-	dst[1].rgba  = V1->Col;
-	dst[1].q     = Q;
-	dst[1].xyz   = FinishVertex(&coords[1], Q);
-
-	Q   = 1.0f / coords[2].w;
-	dst[2].rgba  = V2->Col;
-	dst[2].q     = Q;
-	dst[2].xyz   = FinishVertex(&coords[2], Q);
-
-	return dw + 6;
-}
-
 static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
 	TexturedVertex* dst = (TexturedVertex*)dw;
@@ -645,21 +620,11 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 
 	u64* dw  = (u64*)q;
 	u64* beg = dw;
-
-	VU0_VECTOR V[6], tmp;
-	int clip[4];
+	VU0_VECTOR tmp[6];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		TransformColouredQuad(v, V, &tmp, clip);
-		
-		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
-			dw = DrawColouredTriangle(dw, V, v + 0, v + 1, v + 2);
-		}
-		
-		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
-			dw = DrawColouredTriangle(dw, V + 3, v + 2, v + 3, v + 0);
-		}
+		dw = DrawColouredQuad(v, dw, tmp);
 	}
 
 	unsigned numVerts = (unsigned)(dw - beg) / 2;
