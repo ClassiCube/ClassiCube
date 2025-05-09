@@ -28,6 +28,7 @@ static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks);
 *#########################################################################################################################*/
 /* Simpler to just include subset of OpenAL actually use here instead of including */
 /* === BEGIN OPENAL HEADERS === */
+#if !defined CC_BUILD_PSVITA
 #if defined _WIN32
 #define APIENTRY __cdecl
 #else
@@ -76,6 +77,31 @@ static void*     (APIENTRY *_alcOpenDevice)(const char* devicename);
 static ALboolean (APIENTRY *_alcCloseDevice)(void* device);
 static ALenum    (APIENTRY *_alcGetError)(void* device);
 /* === END OPENAL HEADERS === */
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+
+#define _alGetError alGetError
+#define _alGenSources alGenSources
+#define _alDeleteSources alDeleteSources
+#define _alGetSourcei alGetSourcei
+#define _alSourcef alSourcef
+#define _alSourcePlay alSourcePlay
+#define _alSourceStop alSourceStop
+#define _alSourceQueueBuffers alSourceQueueBuffers
+#define _alSourceUnqueueBuffers alSourceUnqueueBuffers
+#define _alGenBuffers alGenBuffers
+#define _alDeleteBuffers alDeleteBuffers
+#define _alBufferData alBufferData
+
+#define _alDistanceModel alDistanceModel
+#define _alcCreateContext alcCreateContext
+#define _alcMakeContextCurrent alcMakeContextCurrent
+#define _alcDestroyContext alcDestroyContext
+#define _alcOpenDevice alcOpenDevice
+#define _alcCloseDevice alcCloseDevice
+#define _alcGetError alcGetError
+#endif
 
 struct AudioContext {
 	ALuint source;
@@ -104,6 +130,7 @@ static const cc_string alLib = String_FromConst("libopenal.so.1");
 #endif
 
 static cc_bool LoadALFuncs(void) {
+#if !defined CC_BUILD_PSVITA
 	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_ReqSym(alcCreateContext),  DynamicLib_ReqSym(alcMakeContextCurrent),
 		DynamicLib_ReqSym(alcDestroyContext), DynamicLib_ReqSym(alcOpenDevice),
@@ -120,6 +147,9 @@ static cc_bool LoadALFuncs(void) {
 	void* lib;
 	
 	return DynamicLib_LoadAll(&alLib, funcs, Array_Elems(funcs), &lib);
+#else
+	return true;
+#endif
 }
 
 static cc_result CreateALContext(void) {
