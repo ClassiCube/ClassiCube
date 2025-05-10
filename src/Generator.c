@@ -265,7 +265,7 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 	}
 }
 
-#ifdef CC_BUILD_TINYSTACK
+#if CC_BUILD_MAXSTACK <= (32 * 1024)
 	#define STACK_FAST 512
 #else
 	#define STACK_FAST 8192
@@ -311,7 +311,7 @@ static void NotchyGen_CreateHeightmap(void) {
 	int hIndex = 0, adjHeight;
 	int x, z;
 
-#ifdef CC_BUILD_TINYSTACK
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
 	struct NoiseBuffer { 
 		struct CombinedNoise n1, n2;
 		struct OctaveNoise n3;

@@ -360,7 +360,7 @@ static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
 }
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
-#ifdef CC_BUILD_TINYSTACK
+#ifdef CC_BUILD_MAXSTACK <= (32 * 1024)
 	BlockID* chunk   = (cc_uint8*)temp_mem;
 	cc_uint8* counts = (cc_uint8*)temp_mem + EXTCHUNK_SIZE_3;
 #else

@@ -402,7 +402,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_SPLITSCREEN
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#undef  CC_BUILD_RESOURCES
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
@@ -421,7 +421,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#define CC_BUILD_SPLITSCREEN
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -442,8 +442,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
-	#define CC_BUILD_TINYSTACK
+	#define CC_BUILD_MAXSTACK (8 * 1024) /* TODO verify */
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -468,8 +467,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_TOUCH
-	#define CC_BUILD_SMALLSTACK
-	#define CC_BUILD_TINYSTACK /* Only < 16 kb stack as it's in DTCM region */
+	#define CC_BUILD_MAXSTACK (16 * 1024) /* Only < 16 kb stack as it's in DTCM region */
 	#define CC_BUILD_NOFPU
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
@@ -523,7 +521,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -539,7 +537,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -577,13 +575,17 @@ typedef cc_uint8  cc_bool;
 #endif
 
 #ifdef CC_BUILD_NETWORKING
-#define CUSTOM_MODELS
+	#define CUSTOM_MODELS
 #endif
 #ifndef CC_BUILD_LOWMEM
-#define EXTENDED_BLOCKS
+	#define EXTENDED_BLOCKS
 #endif
 #ifndef CC_BUILD_TINYMEM
-#define EXTENDED_TEXTURES
+	#define EXTENDED_TEXTURES
+#endif
+
+#ifndef CC_BUILD_MAXSTACK
+	#define CC_BUILD_MAXSTACK (128 * 1024)
 #endif
 
 #ifdef EXTENDED_BLOCKS
@@ -634,7 +636,7 @@ struct Texture {
 	#define CC_END_HEADER
 #endif
 
-#ifdef CC_BUILD_TINYSTACK
+#if CC_BUILD_MAXSTACK < (64 * 1024)
 extern char temp_mem[45000];
 #endif
 

@@ -4,7 +4,7 @@
 #include "Constants.h"
 #include "Errors.h"
 
-#ifdef CC_BUILD_TINYSTACK
+#if CC_BUILD_MAXSTACK < (64 * 1024)
 CC_BIG_VAR char temp_mem[45000];
 #endif
 
