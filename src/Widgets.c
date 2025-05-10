@@ -684,9 +684,11 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 	w->verticesCount = 0;
 
 #ifdef CC_BUILD_TOUCH
-	int i;
-	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR - 1; i++) {
-		w->touchId[i] = -1;
+	{
+		int i;
+		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR - 1; i++) {
+			w->touchId[i] = -1;
+		}
 	}
 #endif
 }

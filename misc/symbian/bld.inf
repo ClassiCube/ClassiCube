@@ -1,0 +1,6 @@
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_MMPFILES
+gnumakefile Icons_scalable_dc.mk
+ClassiCube.mmp

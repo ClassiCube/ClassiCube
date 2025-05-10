@@ -1,0 +1,20 @@
+&EN
+
+#{"ClassiCube"},(0xE212A5C2),1,0,0
+
+[0x101F7961], 0, 0, 0, {"S60ProductID"}
+[0x1028315F], 0, 0, 0, {"S60ProductID"}
+[0x20022E6D], 0, 0, 0, {"S60ProductID"}
+
+%{""}
+:""
+
+; Check OpenC versions
+IF( version(0x20009a80, <, 1, 5, 0) ) AND NOT (EXISTS("Z:\sys\bin\libc.dll") OR EXISTS("C:\sys\bin\libc.dll"))
+    "incompatible_openc.txt"-"", FT, FORCEABORT
+ENDIF
+
+"$(EPOCROOT)Epoc32\release\$(PLATFORM)\$(TARGET)\ClassiCube.exe"-"!:\sys\bin\ClassiCube.exe"
+"$(EPOCROOT)\epoc32\data\z\private\10003a3f\import\apps\classicube_reg.rsc" - "!:\private\10003a3f\import\apps\classicube_reg.rsc"
+"$(EPOCROOT)\epoc32\data\z\resource\apps\classicube.rsc" - "!:\resource\apps\classicube.rsc"
+"$(EPOCROOT)\epoc32\data\z\resource\apps\classicube_icon.mif" - "!:\resource\apps\classicube_icon.mif"

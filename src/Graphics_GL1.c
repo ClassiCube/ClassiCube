@@ -21,6 +21,9 @@
 /* e.g. GLAPI void APIENTRY glFunction(int value); */
 #define GL_FUNC(retType, name, args) GLAPI retType APIENTRY name args;
 #include "../misc/opengl/GL1Funcs.h"
+#ifdef CC_BUILD_SYMBIAN
+#include "../misc/opengl/GL2Funcs.h"
+#endif
 
 #if defined CC_BUILD_GL11
 static GLuint activeList;
@@ -28,6 +31,9 @@ static GLuint activeList;
 static void* dynamicListData;
 static cc_uint16 gl_indices[GFX_MAX_INDICES];
 #else
+#ifdef CC_BUILD_SMALLSTACK
+static cc_uint16 gl_indices[GFX_MAX_INDICES];
+#endif
 /* OpenGL functions use stdcall instead of cdecl on Windows */
 static void (APIENTRY *_glBindBuffer)(GLenum target, GfxResourceID buffer); /* NOTE: buffer is actually a GLuint in OpenGL */
 static void (APIENTRY *_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
@@ -96,14 +102,16 @@ void Gfx_Create(void) {
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	cc_uint16 indices[GFX_MAX_INDICES];
+#ifndef CC_BUILD_SMALLSTACK
+	cc_uint16* gl_indices[GFX_MAX_INDICES];
+#endif
 	GfxResourceID id = NULL;
 	cc_uint32 size   = count * sizeof(cc_uint16);
 
 	_glGenBuffers(1, (GLuint*)&id);
-	fillFunc(indices, count, obj);
+	fillFunc(gl_indices, count, obj);
 	_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, gl_indices, GL_STATIC_DRAW);
 	return id;
 }
 
@@ -692,6 +700,14 @@ static void FallbackOpenGL(void) {
 #endif
 
 static void GLBackend_Init(void) {
+#if defined CC_BUILD_SYMBIAN
+	_glGenBuffers    = glGenBuffers;
+	_glDeleteBuffers = glDeleteBuffers;
+	_glBindBuffer    = glBindBuffer;
+	_glBufferData    = glBufferData;
+	_glBufferSubData = glBufferSubData;
+	convert_rgba = true;
+#else
 	static const struct DynamicLibSym coreVboFuncs[] = {
 		DynamicLib_ReqSym2("glBindBuffer",    glBindBuffer), DynamicLib_ReqSym2("glDeleteBuffers", glDeleteBuffers),
 		DynamicLib_ReqSym2("glGenBuffers",    glGenBuffers), DynamicLib_ReqSym2("glBufferData",    glBufferData),
@@ -721,6 +737,7 @@ static void GLBackend_Init(void) {
 		convert_rgba = major == 1 && minor <= 1 && !String_CaselessContains(&extensions, &bgraExt);
 		FallbackOpenGL();
 	}
+#endif
 }
 #endif
 #endif

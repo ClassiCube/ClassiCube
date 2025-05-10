@@ -529,25 +529,46 @@ static cc_result ExtractPng(struct Stream* stream) {
 
 static cc_bool needReload;
 static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
+#ifdef CC_BUILD_SMALLSTACK
+	struct ZipEntry* entries = Mem_TryAllocCleared(512, sizeof(struct ZipEntry));
+#else
 	struct ZipEntry entries[512];
+#endif
 	cc_result res;
+#ifdef CC_BUILD_SMALLSTACK
+	if (!entries) return ERR_OUT_OF_MEMORY;
+#endif
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
 	/* If context is lost, then trying to load textures will just fail */
 	/* So defer loading the texture pack until context is restored */
-	if (Gfx.LostContext) { needReload = true; return 0; }
+	if (Gfx.LostContext) {
+		needReload = true;
+		res = 0;
+		goto ret;
+	}
 	needReload = false;
 
 	res = ExtractPng(stream);
 	if (res == PNG_ERR_INVALID_SIG) {
 		/* file isn't a .png image, probably a .zip archive then */
+
+#ifdef CC_BUILD_SMALLSTACK
+		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry,
+							entries, 512);
+#else
 		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry,
 							entries, Array_Elems(entries));
+#endif
 
 		if (res) Logger_SysWarn2(res, "extracting", path);
 	} else if (res) {
 		Logger_SysWarn2(res, "decoding", path);
 	}
+	ret:
+#ifdef CC_BUILD_SMALLSTACK
+	Mem_Free(entries);
+#endif
 	return res;
 }
 

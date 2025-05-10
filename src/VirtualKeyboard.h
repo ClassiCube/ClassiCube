@@ -431,6 +431,7 @@ static void VirtualKeyboard_Hook(void) {
 	/*  the virtual keyboard in the first place gets mistakenly processed */
 	kb_needsHook = false;
 	Event_Register_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
+	PointerHooks.DownHook = VirtualKeyboard_PointerMove;
 	PointerHooks.MoveHook = VirtualKeyboard_PointerMove;
 	PointerHooks.UpHook   = VirtualKeyboard_PointerUp;
 }
@@ -478,6 +479,7 @@ static void VirtualKeyboard_Close(void) {
 		VirtualKeyboard_Close3D();
 		
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
+	PointerHooks.DownHook = NULL;
 	PointerHooks.MoveHook = NULL;
 	PointerHooks.UpHook   = NULL;
 	Window_Main.SoftKeyboardFocus = false;

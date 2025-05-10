@@ -242,6 +242,11 @@ int main(int argc, char** argv) {
 	return 0;
 }
 #else
+
+#ifdef CC_BUILD_SYMBIAN
+extern void Symbian_Init(void);
+#endif
+
 /* NOTE: main_real is used for when compiling with MinGW without linking to startup files. */
 /*  Normally, the final code produced for "main" is our "main" combined with crt's main */
 /*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
@@ -251,10 +256,13 @@ int main_real(int argc, char** argv) {
 #elif defined CC_BUILD_WEB
 /* webclient does some asynchronous initialisation first, then kickstarts the game after that */
 int web_main(int argc, char** argv) {
-#else 
+#else
 int main(int argc, char** argv) {
 #endif
 	cc_result res;
+#ifdef CC_BUILD_SYMBIAN
+	Symbian_Init();
+#endif
 	SetupProgram(argc, argv);
 
 	/* If single process mode, then the loop is launcher -> game -> launcher etc */

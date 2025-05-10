@@ -2,7 +2,7 @@
 #define _GL_BGRA_EXT                 0x80E1
 #define _GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
 
-#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
+#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_SYMBIAN
 #define PIXEL_FORMAT GL_RGBA
 #else
 #define PIXEL_FORMAT _GL_BGRA_EXT

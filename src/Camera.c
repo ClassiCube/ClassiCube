@@ -306,6 +306,7 @@ static void OnHacksChanged(void* obj) {
 }
 
 void Camera_CycleActive(void) {
+	int cycle;
 	struct LocalPlayer* p = &LocalPlayer_Instances[0];
 	if (Game_ClassicMode) return;
 	Camera.Active = Camera.Active->next;
@@ -315,7 +316,7 @@ void Camera_CycleActive(void) {
 	}
 	cam_isForwardThird = Camera.Active == &cam_ForwardThird;
 
-	int cycle = 0;
+	cycle = 0;
 	if (Camera.Active == &cam_FirstPerson) cycle = 0;
 	else if (Camera.Active == &cam_ThirdPerson) cycle = 1;
 	else if (cam_isForwardThird) cycle = 2;
@@ -354,6 +355,7 @@ void Camera_SetFov(int fov) {
 }
 
 void Camera_UpdateProjection(void) {
+	if (!Camera.Active) return;
 	Camera.Active->GetProjection(&Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_PROJ,  &Gfx.Projection);
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
