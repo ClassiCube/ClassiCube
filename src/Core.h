@@ -585,7 +585,7 @@ typedef cc_uint8  cc_bool;
 #endif
 
 #ifndef CC_BUILD_MAXSTACK
-	#define CC_BUILD_MAXSTACK (128 * 1024)
+	#define CC_BUILD_MAXSTACK (256 * 1024)
 #endif
 
 #ifdef EXTENDED_BLOCKS
