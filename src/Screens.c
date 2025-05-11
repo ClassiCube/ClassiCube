@@ -1819,6 +1819,12 @@ void InventoryScreen_Show(void) {
 	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 1);
 }
 
+void InventoryScreen_Hide(void) {
+	struct InventoryScreen* s = &InventoryScreen;
+	Gui_Remove((struct Screen*)s);
+	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------LoadingScreen------------------------------------------------------*

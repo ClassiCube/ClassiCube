@@ -33,6 +33,7 @@
 #include "InputHandler.h"
 #include "HeldBlockRenderer.h"
 #include "Options.h"
+#include "Screens.h"
 
 struct _ProtocolData Protocol;
 
@@ -1605,6 +1606,17 @@ static void CPE_CinematicGui(cc_uint8* data) {
 	Gui.BarSize = (float)barSize / UInt16_MaxValue;
 }
 
+static void CPE_ToggleBlockList(cc_uint8* data) {
+	cc_bool closeBlockList = data[0];
+
+	if (closeBlockList) {
+		InventoryScreen_Hide();
+	}
+	else {
+		InventoryScreen_Show();
+	}
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	CPEExtensions_Reset();
@@ -1649,6 +1661,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
 	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 10);
+	Net_Set(OPCODE_TOGGLE_BLOCK_LIST, CPE_ToggleBlockList, 2);
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {
