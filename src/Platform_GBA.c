@@ -1,5 +1,6 @@
 #include "Core.h"
 #if defined CC_BUILD_GBA
+
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -256,14 +257,15 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
+	return ERR_NOT_SUPPORTED;
+}
 
-/*########################################################################################################################*
-*-------------------------------------------------------Encryption--------------------------------------------------------*
-*#########################################################################################################################*/
-#define MACHINE_KEY "GBA_GBA_GBA_GBA_"
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
+	return ERR_NOT_SUPPORTED;
+}
 
-static cc_result GetMachineID(cc_uint32* key) {
-	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
-	return 0;
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }
 #endif

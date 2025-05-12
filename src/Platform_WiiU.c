@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_WIIU
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"

@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_XBOX
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "Funcs.h"

@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined PLAT_PS1
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
