@@ -802,6 +802,7 @@ static void LocalPlayers_OnNewMap(void) {
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 
 static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
+	struct EntityLocation* prev;
 	struct LocationUpdate update;
 	struct AABB bb;
 	Vec3 spawn = p->Spawn;
@@ -830,7 +831,7 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 		}
 	}
 
-	struct EntityLocation* prev = &p->Base.prev;
+	prev = &p->Base.prev;
 	CPE_SendNotifyPositionAction(3, prev->pos.x, prev->pos.y, prev->pos.z);
 
 	/* Adjust the position to be slightly above the ground, so that */

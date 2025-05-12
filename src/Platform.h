@@ -91,7 +91,7 @@ extern const struct UpdaterInfo {
 	/* Number of compiled builds available for this platform */
 	int numBuilds;
 	/* Metadata for the compiled builds available for this platform */
-	const struct UpdaterBuild builds[2]; // TODO name and path
+	const struct UpdaterBuild builds[2]; /* TODO name and path */
 } Updater_Info;
 /* Whether updating is supported by the platform */
 extern cc_bool Updater_Supported;

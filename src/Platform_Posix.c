@@ -1320,14 +1320,16 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 static void Platform_InitPosix(void) {
 	struct sigaction sa = { 0 };
+	cc_uintptr addr;
 	sa.sa_handler = SIG_IGN;
 
 	sigaction(SIGCHLD, &sa, NULL);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	sigaction(SIGPIPE, &sa, NULL);
 
-	/* Log runtime address to ease investigating crashes */
-	cc_uintptr addr = (cc_uintptr)Process_Exit;
+	/* Log runtime address of a known function to ease investigating crashes */
+	/* (on platforms with ASLR, function addresses change every time when run) */
+	addr = (cc_uintptr)Process_Exit;
 	Platform_Log1("Process_Exit addr: %x", &addr);
 }
 void Platform_Free(void) { }
