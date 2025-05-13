@@ -30,8 +30,8 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #endif
 	
 	#ifndef CC_API
-	#define CC_API __declspec(dllexport, noinline)
-	#define CC_VAR __declspec(dllexport)
+		#define CC_API __declspec(dllexport, noinline)
+		#define CC_VAR __declspec(dllexport)
 	#endif
 	
 	#define CC_HAS_TYPES
@@ -62,9 +62,11 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 	#define CC_HAS_TYPES
 	#endif
 	
-	#define CC_INLINE inline
-	#define CC_NOINLINE __attribute__((noinline))
-	
+	#ifndef CC_INLINE
+		#define CC_INLINE inline
+		#define CC_NOINLINE __attribute__((noinline))
+	#endif
+
 	#ifndef CC_API
 	#ifdef _WIN32
 		#define CC_API __attribute__((dllexport, noinline))
