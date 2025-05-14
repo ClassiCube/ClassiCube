@@ -3,6 +3,7 @@
 #include "Server.h"
 #include "String.h"
 #include "Strings.h"
+#include "Block.h"
 
 unsigned char CC_CurrentLanguage = 0;
 cc_string gameName;
@@ -16,4 +17,6 @@ void applyLanguageToGame() {
 	String_AppendConst(&Server.AppName, GAME_APP_VER);
 	String_AppendConst(&Server.AppName, Platform_AppNameSuffix);
     gameName = Server.AppName;
+
+	Language_UpdateBlockNames();
 }

@@ -436,4 +436,74 @@ static char* ccString_SubOption_ClassicOptions[CC_LANGUAGE_LANGCNT][6] = {
 	},
 };
 
+/* Classic GUI */
+static char* ccString_SubOption_ClassicGUI[CC_LANGUAGE_LANGCNT][1] = {
+	{
+		"Select block"
+	},
+	{
+		"Seleccionar bloque"
+	},
+	{
+		"leko seme?"
+	},
+	{
+		"Block ausw„hlen"
+	}
+};
+
+/* Blocks */
+static char* ccString_SubOption_Blocks[CC_LANGUAGE_LANGCNT][66] = {
+	{
+	"Air",		"Stone",		"Grass", 	"Dirt",			"Cobblestone",	"Wood",		"Sapling",		"Bedrock",
+	"Water",	"Still water",	"Lava", 	"Still lava",	"Sand",			"Gravel",	"Gold ore",		"Iron ore",
+	"Coal ore",	"Log",			"Leaves",	"Sponge",		"Glass",		"Red",		"Orange",		"Yellow",
+	"Lime",		"Green",		"Teal",		"Aqua",			"Cyan",			"Blue",		"Indigo",		"Violet",	
+	
+	"Magenta",			"Pink",		"Black",	"Gray",			"White",		"Dandelion",	"Rose",	"Brown mushroom",
+	"Red mushroom",		"Gold",		"Iron",		"Double slab",	"Slab",			"Brick",		"TNT",	"Bookshelf",
+	"Mossy rocks",		"Obsidian",	"Cobblestone slab", "Rope", "Sandstone",	"Snow",			"Fire",	"Light pink",
+	"Forest green",		"Brown",	"Deep blue",	"Turquoise", "Ice",			"Ceramic tile","Magma",	"Pillar",
+	"Crate",			"Stone brick"
+	},
+	
+	{
+	"Aire", "Piedra", "Hierba", "Tierra", "Adoqu¡n", "Madera", "?rbol joven", "Roca madre",
+	"Agua", "Agua estancada", "Lava", "Lava estancada", "Arena", "Grava", "Mena de oro", "Mena de hierro",
+	"Mena de carb¢n", "Tronco", "Hojas", "Esponja", "Vidrio", "Rojo", "Naranja", "Amarillo",
+	"Lima", "Verde", "Verde azulado", "Aguamarina", "Cian", "Azul", "?ndigo", "Violeta",
+
+	"Magenta", "Rosa", "Negro", "Gris", "Blanco", "Diente de le¢n", "Rosa", "Hongo marr¢n",
+	"Hongo rojo", "Oro", "Hierro", "Losa doble", "Losa", "Ladrillo", "TNT", "Estanter¡a",
+	"Rocas musgosas", "Obsidiana", "Losa de adoqu¡n", "Cuerda", "Arenisca", "Nieve", "Fuego", "Rosa claro",
+	"Verde bosque", "Marr¢n", "Azul oscuro", "Turquesa", "Hielo", "Azulejo cer mico", "Magma", "Pilar",
+	"Caja", "Ladrillo de piedra"
+	},
+
+	{
+	"kon",						"kiwen",		"kasi",			"ma",					"kiwen nena",		"kiwen kipisi pi kasi kiwen",		"kasi lili",					"kiwen pi pakala ala",
+	"telo",						"telo li awen",	"telo moli",	"telo moli li awen",	"ko",				"kiwen lili mute",					"kiwen jelo lon insa kiwen",	"kiwen walo lon insa kiwen",
+	"ko pimeja lon insa kiwen",	"sijelo pi kasi kili",			"lipu pi kasi kili",	"ko pi weka telo",	"kiwen lukin",						"loje",		"loje jelo",		"jelo",
+	"jelo laso",		"laso",		"laso suno",		"laso telo suno",			"laso sewi",			"laso",		"laso loje pimeja",		"laso loje",	
+	
+	"loje pimeja",		"loje suno",	"pimeja",				"pimeja suno",	"suno",							"kasi jelo",		"kasi loje",		"soko",
+	"soko loje",		"leko mani",	"leko kiwen",			"supa",			"supa tu",						"leko",				"ilo pakala",		"poki pi lipu mute",
+	"Mossy rocks",		"telo moli kiwen lete",		"supa pi kiwen nena",	 "linja",		"ko kiwen",					"ko pi telo lete",	"seli",				"loje suno mute",
+	"laso kasi",		"pimeja ma",	"laso telo pimeja",		"laso pimeja",	"leko pi telo lete",			"ko kiwen mute",	"telo moli kiwen",	"palisa",
+	"poki",				"kiwen leko"
+	},
+
+	{
+	"Air",		"Stone",		"Grass", 	"Dirt",			"Cobblestone",	"Wood",		"Sapling",		"Bedrock",
+	"Water",	"Still water",	"Lava", 	"Still lava",	"Sand",			"Gravel",	"Gold ore",		"Iron ore",
+	"Coal ore",	"Log",			"Leaves",	"Sponge",		"Glass",		"Red",		"Orange",		"Yellow",
+	"Lime",		"Green",		"Teal",		"Aqua",			"Cyan",			"Blue",		"Indigo",		"Violet",	
+	
+	"Magenta",			"Pink",		"Black",	"Gray",			"White",		"Dandelion",	"Rose",	"Brown mushroom",
+	"Red mushroom",		"Gold",		"Iron",		"Double slab",	"Slab",			"Brick",		"TNT",	"Bookshelf",
+	"Mossy rocks",		"Obsidian",	"Cobblestone slab", "Rope", "Sandstone",	"Snow",			"Fire",	"Light pink",
+	"Forest green",		"Brown",	"Deep blue",	"Turquoise", "Ice",			"Ceramic tile","Magma",	"Pillar",
+	"Crate",			"Stone brick"
+	}
+};
 #endif

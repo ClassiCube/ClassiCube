@@ -29,7 +29,7 @@ const char* const Sound_Names[SOUND_COUNT] = {
 #define BRIT_MAGM 10
 
 struct SimpleBlockDef {
-	const char* name;
+	char* name;
 	cc_uint8 topTexture, sideTexture, bottomTexture, height;
 	PackedCol fogColor; cc_uint8 fogDensity;
 	cc_uint8 brightness, blocksLight; cc_uint8 gravity;
@@ -40,7 +40,7 @@ static const struct SimpleBlockDef invalid_blockDef = {
 };
 
 /* Properties for all built-in blocks (Classic and CPE blocks) */
-static const struct SimpleBlockDef core_blockDefs[] = {
+static struct SimpleBlockDef core_blockDefs[] = {
 /*NAME                TOP SID BOT HEI FOG_COLOR  DENS  BRIT      BLOCKS GRAV DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
 { "Air",               0,  0,  0, 16, FOG_NONE ,   0, BRIT_NONE, false, 100, DRAW_GAS,    COLLIDE_NONE,  SOUND_NONE,   SOUND_NONE   },
 { "Stone",             1,  1,  1, 16, FOG_NONE ,   0, BRIT_NONE,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
@@ -129,6 +129,14 @@ static cc_uint8 DefaultSet_MapOldCollide(BlockID b, cc_uint8 collide) {
 	if ((b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  && collide == COLLIDE_LIQUID)
 		return COLLIDE_LAVA;
 	return collide;
+}
+
+/* Updates block names for multi-lingual support. */
+void Language_UpdateBlockNames() {
+	unsigned int i;
+	for (i = 0; i < 66; i++) {
+		core_blockDefs[i].name = ccString_SubOption_Blocks[CC_CurrentLanguage][i];
+	}
 }
 
 

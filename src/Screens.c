@@ -1601,7 +1601,7 @@ static struct Widget* inventory_widgets[2];
 static void InventoryScreen_GetTitleText(cc_string* desc, BlockID block) {
 	cc_string name;
 	int block_ = block;
-	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
+	if (Game_PureClassic) { String_AppendConst(desc, ccString_SubOption_ClassicGUI[CC_CurrentLanguage][0]); return; }
 	if (block == BLOCK_AIR) return;
 
 	name = Block_UNSAFE_GetName(block);
