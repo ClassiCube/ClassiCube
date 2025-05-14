@@ -600,30 +600,30 @@ static void    ClO_SetHacks(cc_bool v) {
 }
 
 static void ClassicOptionsScreen_RecreateExtra(struct MenuOptionsScreen* s) {
-	ButtonWidget_SetConst(&s->buttons[9], "Controls...", &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[9], ccStrings_optionsMenu[CC_CurrentLanguage][3], &s->titleFont);
 }
 
 static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Music",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][0],
 			ClO_GetMusic,    ClO_SetMusic, NULL);
-		MenuOptionsScreen_AddBool(s, "Invert mouse",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],
 			ClO_GetInvert,   ClO_SetInvert, NULL);
-		MenuOptionsScreen_AddEnum(s, "Render distance", ccString_ViewDistanceNames[CC_CurrentLanguage], VIEW_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][4], ccString_ViewDistanceNames[CC_CurrentLanguage], VIEW_COUNT,
 			ClO_GetViewDist, ClO_SetViewDist, NULL);
-		MenuOptionsScreen_AddBool(s, "3d anaglyph",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][2],
 			ClO_GetAnaglyph, ClO_SetAnaglyph, NULL);
 		
-		MenuOptionsScreen_AddBool(s, "Sound",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][3],
 			ClO_GetSounds,   ClO_SetSounds, NULL);
-		MenuOptionsScreen_AddBool(s, "Show FPS",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][0],
 			ClO_GetShowFPS,  ClO_SetShowFPS, NULL);
-		MenuOptionsScreen_AddBool(s, "View bobbing",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],
 			ClO_GetViewBob,  ClO_SetViewBob, NULL);
-		MenuOptionsScreen_AddBool(s, "Limit framerate",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][1],
 			ClO_GetFPS,      ClO_SetFPS, NULL);
-		MenuOptionsScreen_AddBool(s, "Hacks enabled",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][5],
 			ClO_GetHacks,    ClO_SetHacks, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, Menu_SwitchPause);

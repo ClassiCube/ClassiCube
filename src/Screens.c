@@ -1235,7 +1235,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	Gui_MakeTitleFont(&font);
 	ButtonWidget_SetConst(&s->more,   "More",   &font);
 	ButtonWidget_SetConst(&s->send,   "Send",   &font);
-	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
+	ButtonWidget_SetConst(&s->cancel, ccStrings_optionsMenu[CC_CurrentLanguage][20], &font);
 	Font_Free(&font);
 #endif
 }

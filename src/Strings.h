@@ -26,7 +26,7 @@ extern void applyLanguageToGame();
 /* TODO (if this makes it into the CC Codebase: convince the other devs to make all UI text use strings that use longs/shorts (longs perfered) for storing text.) */
 
 /* Generalized Option Text */
-static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
+static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
 	{
 	"Misc options...",
 	"Gui options...",
@@ -49,7 +49,16 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"Back to game",
 	"Game menu",
 	"ON",
-	"OFF"
+	"OFF",
+	"Cancel",
+
+	"Load file...",
+	"Save file...",
+	"Upload",
+	"Download",
+	
+	"Save",
+	"Load"
 	},
 
 	{
@@ -74,7 +83,16 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"Volver al juego",
 	"Men£ del juego",
 	"Activado",
-	"Desactivado"
+	"Desactivado",
+	"Cancelar",
+
+	"Cargar archivo...",
+	"Guardar archivo...",
+	"Subir",
+	"Descargar",
+	
+	"Guardar",
+	"Cargar"
 	},
 
 	{
@@ -94,12 +112,21 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"ante e ma...",
 	"o awen e ma...",
 
-	"ale pona",
+	"o pini",
 	"o weka",
 	"o kama musi",
 	"lipu musi",
 	"wile",
-	"ala"
+	"ala",
+	"o pali ala",
+
+	"o alasa lipu",
+	"o awen lipu",
+	"o pana lipu",
+	"o awen lipu",
+	
+	"o awen",
+	"o alasa"
 	},
 
 	{
@@ -124,7 +151,16 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][20] = {
 	"ZurÅck zum Spiel",
 	"SpielmenÅ",
 	"Ein",
-	"Aus"
+	"Aus",
+	"Stornieren",
+
+	"Datei laden?",
+	"Datei speichern?",
+	"Hochladen",
+	"Herunterladen",
+	
+	"Speichern",
+	"Laden"
 	}
 };
 
@@ -317,6 +353,86 @@ static const char* const ccString_ViewDistanceNames[CC_LANGUAGE_LANGCNT][4] = {
 	"KURZ",
 	"NORMAL",
 	"WEIT"
+	},
+};
+
+/* Texture Options */
+static char* ccString_SubOption_TexturePack[CC_LANGUAGE_LANGCNT][1] = {
+	{
+	"Select a texture pack"
+	},
+	{
+	"Seleccione un paquete de texturas"
+	},
+	{
+	"poki sitelen seme?"
+	},
+	{
+	"WÑhlen Sie ein Texturpaket"
+	}
+};
+
+/* Worldgen Options */
+static char* ccString_SubOption_WorldGen[CC_LANGUAGE_LANGCNT][4] = {
+	{
+	"Generate new level",
+	"Small",
+	"Normal",
+	"Huge"
+	},
+	{
+	"Generar nuevo nivel",
+	"Peque§o",
+	"Promedio",
+	"Enorme"
+	},
+	{
+	"o pali ma sin",
+	"lili",
+	"meso",
+	"suli"
+	},
+	{
+	"Neues Level generieren",
+	"Klein",
+	"RegulÑr",
+	"Riesig"
+	}
+};
+
+/* Classic Options */
+static char* ccString_SubOption_ClassicOptions[CC_LANGUAGE_LANGCNT][6] = {
+	{
+	"Music",
+	"Limit framerate",
+	"3D anaglyph",
+	"Sound",
+	"Render distance",
+	"Hacks enabled"
+	},
+	{
+	"M£sica",
+	"Limitar velocidad de fotogramas",
+	"Anaglifo 3D",
+	"Sonido",
+	"Distancia de visi¢n",
+	"Hacks habilitados"
+	},
+	{
+	"kalama musi",
+	"wan supa sinpin",
+	"lukin 3D",
+	"kalama",
+	"lukin wawa",
+	"nasin wawa"
+	},
+	{
+	"Musik",
+	"Framerate begrenzen",
+	"3D-Anaglyphen",
+	"Klang",
+	"Sichtweite",
+	"Hacks aktiviert"
 	},
 };
 

@@ -988,9 +988,9 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	EditHotkeyScreen_UpdateLeaveOpen(s);
 
 	ButtonWidget_SetConst(&s->btns[3], existed ? "Save changes" : "Add hotkey", &s->titleFont);
-	ButtonWidget_SetConst(&s->btns[4], existed ? "Remove hotkey" : "Cancel",    &s->titleFont);
+	ButtonWidget_SetConst(&s->btns[4], existed ? "Remove hotkey" : ccStrings_optionsMenu[CC_CurrentLanguage][20],    &s->titleFont);
 	TextInputWidget_SetFont(&s->input, &s->textFont);
-	ButtonWidget_SetConst(&s->cancel, "Cancel", &s->titleFont);
+	ButtonWidget_SetConst(&s->cancel, ccStrings_optionsMenu[CC_CurrentLanguage][20], &s->titleFont);
 }
 
 static void EditHotkeyScreen_Update(void* screen, float delta) {
@@ -1206,7 +1206,7 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	TextWidget_SetConst(&s->title,       "Generate new level", &s->textFont);
 	ButtonWidget_SetConst(&s->flatgrass, "Flatgrass",          &titleFont);
 	ButtonWidget_SetConst(&s->vanilla,   "Vanilla",            &titleFont);
-	ButtonWidget_SetConst(&s->cancel,    "Cancel",             &titleFont);
+	ButtonWidget_SetConst(&s->cancel,    ccStrings_optionsMenu[CC_CurrentLanguage][20],             &titleFont);
 	Font_Free(&titleFont);
 }
 
@@ -1304,12 +1304,12 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 
 	Screen_UpdateVb(screen);
 	Gui_MakeTitleFont(&titleFont);
-	TextWidget_SetConst(&s->title, "Generate new level", &titleFont);
+	TextWidget_SetConst(&s->title, ccString_SubOption_WorldGen[CC_CurrentLanguage][0], &titleFont);
 
-	ButtonWidget_SetConst(&s->btns[0], "Small",  &titleFont);
-	ButtonWidget_SetConst(&s->btns[1], "Normal", &titleFont);
-	ButtonWidget_SetConst(&s->btns[2], "Huge",   &titleFont);
-	ButtonWidget_SetConst(&s->cancel,  "Cancel", &titleFont);
+	ButtonWidget_SetConst(&s->btns[0], ccString_SubOption_WorldGen[CC_CurrentLanguage][1],  &titleFont);
+	ButtonWidget_SetConst(&s->btns[1], ccString_SubOption_WorldGen[CC_CurrentLanguage][2], &titleFont);
+	ButtonWidget_SetConst(&s->btns[2], ccString_SubOption_WorldGen[CC_CurrentLanguage][3],   &titleFont);
+	ButtonWidget_SetConst(&s->cancel,  ccStrings_optionsMenu[CC_CurrentLanguage][20], &titleFont);
 	Font_Free(&titleFont);
 }
 
@@ -1369,7 +1369,7 @@ static struct Widget* save_widgets[3 + 1 + 1];
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
-		s->save.optName ? "&cOverwrite existing?" : "Save", &s->titleFont);
+		s->save.optName ? "&cOverwrite existing?" : ccStrings_optionsMenu[CC_CurrentLanguage][25], &s->titleFont);
 }
 
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
@@ -1534,11 +1534,11 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	SaveLevelScreen_UpdateSave(s);
 
 	TextInputWidget_SetFont(&s->input,                &s->textFont);
-	ButtonWidget_SetConst(&s->cancel, "Cancel",       &s->titleFont);
+	ButtonWidget_SetConst(&s->cancel, ccStrings_optionsMenu[CC_CurrentLanguage][20],       &s->titleFont);
 #ifdef CC_BUILD_WEB
-	ButtonWidget_SetConst(&s->file,   "Download",     &s->titleFont);
+	ButtonWidget_SetConst(&s->file,   ccStrings_optionsMenu[CC_CurrentLanguage][24],     &s->titleFont);
 #else
-	ButtonWidget_SetConst(&s->file,   "Save file...", &s->titleFont);
+	ButtonWidget_SetConst(&s->file,   ccStrings_optionsMenu[CC_CurrentLanguage][22], &s->titleFont);
 #endif
 }
 
@@ -1664,11 +1664,11 @@ static void TexturePackScreen_ActionFunc(void* s, void* w) {
 
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
-	s->titleText   = "Select a texture pack";
+	s->titleText   = ccString_SubOption_TexturePack[CC_CurrentLanguage][0];
 #ifdef CC_BUILD_WEB
-	s->actionText = "Upload";
+	s->actionText = ccStrings_optionsMenu[CC_CurrentLanguage][23];
 #else
-	s->actionText = "Load file...";
+	s->actionText = ccStrings_optionsMenu[CC_CurrentLanguage][21];
 #endif
 
 	s->ActionClick = TexturePackScreen_ActionFunc;
@@ -1888,9 +1888,9 @@ void LoadLevelScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Load level";
 #ifdef CC_BUILD_WEB
-	s->actionText = "Upload";
+	s->actionText = ccStrings_optionsMenu[CC_CurrentLanguage][23];
 #else
-	s->actionText = "Load file...";
+	s->actionText = ccStrings_optionsMenu[CC_CurrentLanguage][21];
 #endif
 	
 	s->ActionClick = LoadLevelScreen_ActionFunc;
@@ -1931,7 +1931,7 @@ static void BindsSourceScreen_ContextRecreated(void* screen) {
 
 	ButtonWidget_SetConst(&s->btns[0], "Keyboard/Mouse",     &font);
 	ButtonWidget_SetConst(&s->btns[1], "Gamepad/Controller", &font);
-	ButtonWidget_SetConst(&s->cancel,  "Cancel",             &font);
+	ButtonWidget_SetConst(&s->cancel,  ccStrings_optionsMenu[CC_CurrentLanguage][20],             &font);
 	Font_Free(&font);
 }
 
