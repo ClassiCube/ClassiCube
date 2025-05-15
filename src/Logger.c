@@ -778,6 +778,9 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_LR()      &r->__gregs[_REG_LR]
 	#define REG_GET_CTR()     &r->__gregs[_REG_CTR]
 	Dump_PPC()
+#elif defined __sparc__
+	#define REG_GET(ign, reg) &r->__gregs[_REG_##reg]
+	Dump_SPARC()
 #elif defined __mips__
 	#define REG_GNUM(num)     &r->__gregs[num]
 	#define REG_GET_PC()      &r->__gregs[_REG_EPC]
