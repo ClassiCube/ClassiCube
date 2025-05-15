@@ -301,7 +301,9 @@ static cc_result EnsurePow2Skin(struct Entity* e, struct Bitmap* bmp) {
 	height = Math_NextPowOf2(bmp->height);
 	if (width == bmp->width && height == bmp->height) return 0;
 
-	Bitmap_TryAllocate(&scaled, width, height);
+	scaled.width  = width; 
+	scaled.height = height;
+	scaled.scan0  = (BitmapCol*)Mem_TryAllocCleared(width * height, BITMAPCOLOR_SIZE);
 	if (!scaled.scan0) return ERR_OUT_OF_MEMORY;
 
 	e->uScale = (float)bmp->width  / width;

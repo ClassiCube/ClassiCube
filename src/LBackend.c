@@ -115,7 +115,10 @@ static void LBackend_ScaleFlag(struct Bitmap* bmp) {
 	/* at default DPI don't need to rescale it */
 	if (width == bmp->width && height == bmp->height) return;
 
-	Bitmap_TryAllocate(&scaled, width, height);
+	scaled.width  = width;
+	scaled.height = height;
+	scaled.scan0  = (BitmapCol*)Mem_TryAlloc(width * height, BITMAPCOLOR_SIZE);
+
 	if (!scaled.scan0) {
 		Logger_SysWarn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
 	}
