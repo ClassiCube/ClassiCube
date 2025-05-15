@@ -941,8 +941,8 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	int type, num;
 	Model_ApplyTexture(e);
 
-	type = Models.skinType;
-	set  = &model->limbs[type & 0x3];
+	type = Models.skinType & 0x3;
+	set  = &model->limbs[type];
 	num  = HUMAN_BASE_VERTICES + (type == SKIN_64x32 ? HUMAN_HAT32_VERTICES : HUMAN_HAT64_VERTICES);
 	Model_LockVB(e, num);
 
