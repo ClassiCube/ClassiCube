@@ -251,7 +251,7 @@ int main_real(int argc, char** argv) {
 #elif defined CC_BUILD_WEB
 /* webclient does some asynchronous initialisation first, then kickstarts the game after that */
 int web_main(int argc, char** argv) {
-#else 
+#else
 int main(int argc, char** argv) {
 #endif
 	cc_result res;

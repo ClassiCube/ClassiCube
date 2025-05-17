@@ -21,13 +21,21 @@
 /* e.g. GLAPI void APIENTRY glFunction(int value); */
 #define GL_FUNC(retType, name, args) GLAPI retType APIENTRY name args;
 #include "../misc/opengl/GL1Funcs.h"
+#if defined CC_BUILD_SYMBIAN
+#include "../misc/opengl/GL2Funcs.h"
+#endif
 
 #if defined CC_BUILD_GL11
 static GLuint activeList;
 #define gl_DYNAMICLISTID 1234567891
 static void* dynamicListData;
 static cc_uint16 gl_indices[GFX_MAX_INDICES];
+#define GL_INDICES
 #else
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+static cc_uint16 gl_indices[GFX_MAX_INDICES];
+#define GL_INDICES
+#endif
 /* OpenGL functions use stdcall instead of cdecl on Windows */
 static void (APIENTRY *_glBindBuffer)(GLenum target, GfxResourceID buffer); /* NOTE: buffer is actually a GLuint in OpenGL */
 static void (APIENTRY *_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
@@ -96,14 +104,16 @@ void Gfx_Create(void) {
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	cc_uint16 indices[GFX_MAX_INDICES];
+#ifndef GL_INDICES
+	cc_uint16* gl_indices[GFX_MAX_INDICES];
+#endif
 	GfxResourceID id = NULL;
 	cc_uint32 size   = count * sizeof(cc_uint16);
 
 	_glGenBuffers(1, (GLuint*)&id);
-	fillFunc(indices, count, obj);
+	fillFunc(gl_indices, count, obj);
 	_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, gl_indices, GL_STATIC_DRAW);
 	return id;
 }
 
@@ -470,6 +480,9 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	_glHint(GL_FOG_HINT, GL_NICEST);
+#if defined CC_BUILD_SYMBIAN
+	_glHint(0x0C50 /*GL_PERSPECTIVE_CORRECTION_HINT*/, GL_NICEST);
+#endif
 	_glAlphaFunc(GL_GREATER, 0.5f);
 	_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	_glDepthFunc(GL_LEQUAL);
@@ -692,6 +705,22 @@ static void FallbackOpenGL(void) {
 #endif
 
 static void GLBackend_Init(void) {
+#if defined CC_BUILD_SYMBIAN
+	static const cc_string bgra_ext = String_FromConst("EXT_texture_format_BGRA8888");
+	static const cc_string bgra_sym = String_FromConst("GL_IMG_texture_format_BGRA8888");
+	cc_string extensions = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
+	
+	cc_bool has_ext_bgra = String_CaselessContains(&extensions, &bgra_ext);
+	cc_bool has_sym_bgra = String_CaselessContains(&extensions, &bgra_sym);
+	
+	_glGenBuffers    = glGenBuffers;
+	_glDeleteBuffers = glDeleteBuffers;
+	_glBindBuffer    = glBindBuffer;
+	_glBufferData    = glBufferData;
+	_glBufferSubData = glBufferSubData;
+	
+	convert_rgba = PIXEL_FORMAT != GL_RGBA && !has_ext_bgra && !has_sym_bgra;
+#else
 	static const struct DynamicLibSym coreVboFuncs[] = {
 		DynamicLib_ReqSym2("glBindBuffer",    glBindBuffer), DynamicLib_ReqSym2("glDeleteBuffers", glDeleteBuffers),
 		DynamicLib_ReqSym2("glGenBuffers",    glGenBuffers), DynamicLib_ReqSym2("glBufferData",    glBufferData),
@@ -721,6 +750,7 @@ static void GLBackend_Init(void) {
 		convert_rgba = major == 1 && minor <= 1 && !String_CaselessContains(&extensions, &bgraExt);
 		FallbackOpenGL();
 	}
+#endif
 }
 #endif
 #endif

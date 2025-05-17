@@ -536,6 +536,16 @@ static cc_string font_candidates[] = {
 	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
 	String_FromConst("Geneva"), /* for ancient macOS versions */
 	String_FromConst("Droid Sans"), /* for old Android versions */
+#if defined CC_BUILD_SYMBIAN
+	String_FromConst("Nokia Sans TitleSmBd S60"),
+	String_FromConst("Nokia Sans S60"),
+	String_FromConst("Nokia Hindi S60"),
+	String_FromConst("Series 60 Sans TitleSmBd"),
+	String_FromConst("Series 60 Sans"),
+	String_FromConst("Series 60 Hindi"),
+	String_FromConst("Series 60 Korean"),
+	String_FromConst("Heisei Kaku Gothic S60"),
+#endif
 	String_FromConst("Google Sans") /* Droid Sans is now known as Google Sans on some Android devices (e.g. a Pixel 6) */
 };
 

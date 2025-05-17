@@ -161,7 +161,7 @@ typedef int CURLcode;
 
 #define CURL_HTTP_VERSION_1_1   2L /* stick to HTTP 1.1 */
 
-#if defined _WIN32
+#if defined _WIN32 && !defined __WINSCW__
 #define APIENTRY __cdecl
 #else
 #define APIENTRY

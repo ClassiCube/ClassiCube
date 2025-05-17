@@ -299,13 +299,17 @@ static const unsigned char TA6_EC_Q[] = {
 	0x8A
 };
 
-static const br_x509_trust_anchor TAs[7] = {
+static
+#ifndef CC_BUILD_SYMBIAN
+const
+#endif
+br_x509_trust_anchor TAs[7] = {
 	{
 		{ (unsigned char *)TA0_DN, sizeof TA0_DN },
 		BR_X509_TA_CA,
 		{
 			BR_KEYTYPE_RSA,
-			{ .rsa = {
+			{ {
 				(unsigned char *)TA0_RSA_N, sizeof TA0_RSA_N,
 				(unsigned char *)TA0_RSA_E, sizeof TA0_RSA_E,
 			} }
@@ -316,7 +320,7 @@ static const br_x509_trust_anchor TAs[7] = {
 		BR_X509_TA_CA,
 		{
 			BR_KEYTYPE_RSA,
-			{ .rsa = {
+			{ {
 				(unsigned char *)TA1_RSA_N, sizeof TA1_RSA_N,
 				(unsigned char *)TA1_RSA_E, sizeof TA1_RSA_E,
 			} }
@@ -327,7 +331,7 @@ static const br_x509_trust_anchor TAs[7] = {
 		BR_X509_TA_CA,
 		{
 			BR_KEYTYPE_RSA,
-			{ .rsa = {
+			{ {
 				(unsigned char *)TA2_RSA_N, sizeof TA2_RSA_N,
 				(unsigned char *)TA2_RSA_E, sizeof TA2_RSA_E,
 			} }
@@ -337,11 +341,17 @@ static const br_x509_trust_anchor TAs[7] = {
 		{ (unsigned char *)TA3_DN, sizeof TA3_DN },
 		BR_X509_TA_CA,
 		{
+			
+#if defined CC_BUILD_SYMBIAN
+			BR_KEYTYPE_EC
+			/* set in SSL.c */
+#else
 			BR_KEYTYPE_EC,
 			{ .ec = {
 				BR_EC_secp384r1,
 				(unsigned char *)TA3_EC_Q, sizeof TA3_EC_Q,
 			} }
+#endif
 		}
 	},
 	{
@@ -349,7 +359,7 @@ static const br_x509_trust_anchor TAs[7] = {
 		BR_X509_TA_CA,
 		{
 			BR_KEYTYPE_RSA,
-			{ .rsa = {
+			{ {
 				(unsigned char *)TA4_RSA_N, sizeof TA4_RSA_N,
 				(unsigned char *)TA4_RSA_E, sizeof TA4_RSA_E,
 			} }
@@ -360,7 +370,7 @@ static const br_x509_trust_anchor TAs[7] = {
 		BR_X509_TA_CA,
 		{
 			BR_KEYTYPE_RSA,
-			{ .rsa = {
+			{ {
 				(unsigned char *)TA5_RSA_N, sizeof TA5_RSA_N,
 				(unsigned char *)TA5_RSA_E, sizeof TA5_RSA_E,
 			} }
@@ -370,11 +380,16 @@ static const br_x509_trust_anchor TAs[7] = {
 		{ (unsigned char *)TA6_DN, sizeof TA6_DN },
 		BR_X509_TA_CA,
 		{
+#if defined CC_BUILD_SYMBIAN
+			BR_KEYTYPE_EC
+			/* set in SSL.c */
+#else
 			BR_KEYTYPE_EC,
 			{ .ec = {
 				BR_EC_secp384r1,
 				(unsigned char *)TA6_EC_Q, sizeof TA6_EC_Q,
 			} }
+#endif
 		}
 	}
 };

@@ -25,7 +25,11 @@
 #ifndef INNER_H__
 #define INNER_H__
 
+#ifdef __SYMBIAN32__
+#include <stdapis/string.h>
+#else
 #include <string.h>
+#endif
 #include <limits.h>
 
 #include "config.h"

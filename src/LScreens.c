@@ -839,7 +839,7 @@ static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
 	}
 }
 
-#ifdef CC_BUILD_CONSOLE
+#if defined CC_BUILD_CONSOLE || defined CC_BUILD_SYMBIAN
 static void MainScreen_ExitApp(void* w) {
 	Window_Main.Exists = false;
 }
@@ -880,7 +880,7 @@ static void MainScreen_Activated(struct LScreen* s_) {
 	LButton_Add(s, &s->btnOptions, 100, 35, "Options", 
 				SwitchToSettings, main_btnOptions);
 
-#ifdef CC_BUILD_CONSOLE
+#if defined CC_BUILD_CONSOLE || defined CC_BUILD_SYMBIAN
 	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
 	LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
 				MainScreen_ExitApp, main_btnUpdates);
