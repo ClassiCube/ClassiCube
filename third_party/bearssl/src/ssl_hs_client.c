@@ -68,7 +68,11 @@ void br_ssl_hs_client_run(void *t0ctx);
 
 
 #include <stddef.h>
+#ifdef __SYMBIAN32__
+#include <stdapis/string.h>
+#else
 #include <string.h>
+#endif
 
 #include "inner.h"
 

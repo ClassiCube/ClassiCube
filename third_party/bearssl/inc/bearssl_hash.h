@@ -27,7 +27,11 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#ifdef __SYMBIAN32__
+#include <stdapis/string.h>
+#else
 #include <string.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -563,10 +563,21 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 	int hIndex = 0, index;
 	BlockRaw above;
 	int x, y, z;
-	struct OctaveNoise n1, n2;
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	struct NoiseBuffer { 
+		struct OctaveNoise n1, n2;
+	};
+	struct NoiseBuffer* buf  = (struct NoiseBuffer*)temp_mem;
+	struct OctaveNoise* n1 = &buf->n1;
+	struct OctaveNoise* n2 = &buf->n2;
+#else
+	struct OctaveNoise _n1, _n2;
+	struct OctaveNoise* n1 = &_n1;
+	struct OctaveNoise* n2 = &_n2;
+#endif
 
-	OctaveNoise_Init(&n1, &rnd, 8);
-	OctaveNoise_Init(&n2, &rnd, 8);
+	OctaveNoise_Init(n1, &rnd, 8);
+	OctaveNoise_Init(n2, &rnd, 8);
 
 	Gen_CurrentState = "Creating surface";
 	for (z = 0; z < World.Length; z++) {
@@ -580,10 +591,10 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 			above = y >= World.MaxY ? BLOCK_AIR : Gen_Blocks[index + World.OneY];
 
 			/* TODO: update heightmap */
-			if (above == BLOCK_STILL_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
+			if (above == BLOCK_STILL_WATER && (OctaveNoise_Calc(n2, (float)x, (float)z) > 12)) {
 				Gen_Blocks[index] = BLOCK_GRAVEL;
 			} else if (above == BLOCK_AIR) {
-				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(&n1, (float)x, (float)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;
+				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(n1, (float)x, (float)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;
 			}
 		}
 	}

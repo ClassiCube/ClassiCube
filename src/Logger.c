@@ -27,7 +27,7 @@
 
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 	static cc_uintptr spRegister;
-#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
+#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY || defined CC_BUILD_SYMBIAN
 	#include <signal.h>
 	/* These operating systems don't provide sys/ucontext.h */
 	/*  But register constants be found from includes in <signal.h> */
@@ -276,7 +276,7 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	cc_uintptr addr_ = (cc_uintptr)addr;
 	String_Format1(trace, "%x", &addr_);
 }
-#elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
+#elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2 && !defined CC_BUILD_SYMBIAN
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
 #define __USE_GNU
@@ -445,6 +445,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
+}
+#elif defined CC_BUILD_SYMBIAN
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+	/* There is no dladdr on Symbian */
 }
 #elif defined CC_BUILD_POSIX
 /* musl etc - rely on unwind from GCC instead */

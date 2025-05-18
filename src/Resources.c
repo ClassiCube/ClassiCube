@@ -62,16 +62,26 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 *------------------------------------------------------Utility functions -------------------------------------------------*
 *#########################################################################################################################*/
 static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry selector) {
-	struct ZipEntry entries[64];
 	struct Stream stream;
 	cc_result res;
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	struct ZipEntry* entries = (struct ZipEntry*)Mem_TryAllocCleared(64, sizeof(struct ZipEntry));
+	if (!entries) { Logger_SysWarn2(ERR_OUT_OF_MEMORY, "allocating", path); return; }
+#else
+	struct ZipEntry entries[64];
+#endif
 
 	res = Stream_OpenFile(&stream, path);
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Logger_SysWarn2(res, "opening", path); return; }
 
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	res = Zip_Extract(&stream, selector, NULL, 
+						entries, 64);
+#else
 	res = Zip_Extract(&stream, selector, NULL, 
 						entries, Array_Elems(entries));
+#endif
 	if (res) Logger_SysWarn2(res, "inspecting", path);
 
 	/* No point logging error for closing readonly file */
@@ -80,7 +90,7 @@ static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry select
 
 static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source) {
 	cc_uint32 size = source->UncompressedSize;
-	e->value.data  = Mem_TryAlloc(size, 1);
+	e->value.data  = (cc_uint8*)Mem_TryAlloc(size, 1);
 	e->size        = size;
 
 	if (!e->value.data) return ERR_OUT_OF_MEMORY;
@@ -737,13 +747,22 @@ static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* d
 }
 
 static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
-	struct ZipEntry entries[64];
 	struct Stream src;
 	cc_result res;
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	struct ZipEntry* entries = (struct ZipEntry*)Mem_TryAllocCleared(64, sizeof(struct ZipEntry));
+	if (!entries) return ERR_OUT_OF_MEMORY;
+#else
+	struct ZipEntry entries[64];
+#endif
 
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	if ((res = Zip_Extract(&src, CCTextures_SelectEntry, CCTextures_ProcessEntry,
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+							entries, 64))) return res;
+#else
 							entries, Array_Elems(entries)))) return res;
+#endif
 
 	return Stream_WriteAllTo(&ccTexPack, req->data, req->size);
 }
@@ -909,13 +928,27 @@ static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Strea
 }
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req) {
-	struct ZipEntry entries[64];
 	struct Stream src;
+	cc_result res;
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	struct ZipEntry* entries = (struct ZipEntry*)Mem_TryAllocCleared(64, sizeof(struct ZipEntry));
+	if (!entries) return ERR_OUT_OF_MEMORY;
+#else
+	struct ZipEntry entries[64];
+#endif
 	Stream_ReadonlyMemory(&src, req->data, req->size);
-
+	
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	res = Zip_Extract(&src, 
+			ClassicPatcher_SelectEntry, ClassicPatcher_ProcessEntry,
+			entries, 16);
+	Mem_Free(entries);
+	return res;
+#else
 	return Zip_Extract(&src, 
 			ClassicPatcher_SelectEntry, ClassicPatcher_ProcessEntry,
 			entries, Array_Elems(entries));
+#endif
 }
 
 static void PatchTerrainTile(struct Bitmap* src, int srcX, int srcY, int tileX, int tileY) {
@@ -1022,13 +1055,22 @@ static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream
 }
 
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
-	struct ZipEntry entries[64];
 	struct Stream src;
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	struct ZipEntry* entries = (struct ZipEntry*)Mem_TryAllocCleared(64, sizeof(struct ZipEntry));
+	if (!entries) return ERR_OUT_OF_MEMORY;
+#else
+	struct ZipEntry entries[64];
+#endif
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 
 	return Zip_Extract(&src, 
 			ModernPatcher_SelectEntry, ModernPatcher_ProcessEntry,
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+			entries, 64);
+#else
 			entries, Array_Elems(entries));
+#endif
 }
 
 

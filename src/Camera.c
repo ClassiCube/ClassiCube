@@ -355,6 +355,7 @@ void Camera_SetFov(int fov) {
 }
 
 void Camera_UpdateProjection(void) {
+	if (!Camera.Active) return;
 	Camera.Active->GetProjection(&Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_PROJ,  &Gfx.Projection);
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
@@ -377,6 +378,8 @@ static void OnInit(void) {
 
 #ifdef CC_BUILD_WIN
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);
+#elif defined CC_BUILD_SYMBIAN && defined CC_BUILD_TOUCH
+	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 70);
 #else
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 30);
 #endif

@@ -14,11 +14,26 @@
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <utime.h>
+#include <signal.h>
+#include <stdio.h>
+#if defined CC_BUILD_SYMBIAN
+#include <stdapis/string.h>
+#include <stdapis/arpa/inet.h>
+#include <stdapis/netinet/in.h>
+#include <stdapis/sys/socket.h>
+#include <stdapis/sys/ioctl.h>
+#include <stdapis/sys/types.h>
+#include <stdapis/sys/stat.h>
+#include <stdapis/sys/time.h>
+#include <stdapis/sys/select.h>
+#include <stdapis/netdb.h>
+#else
+#include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -26,10 +41,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <utime.h>
-#include <signal.h>
-#include <stdio.h>
 #include <netdb.h>
+#endif
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -87,10 +100,13 @@ cc_bool Platform_ReadonlyFilesystem;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*) memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*) memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*) memmove(dst, src,   numBytes); }
 
+#if defined CC_BUILD_SYMBIAN
+/* implemented in Platform_Symbian.cpp */
+#else
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? malloc(size) : NULL;
@@ -108,6 +124,7 @@ void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
 void Mem_Free(void* mem) {
 	if (mem) free(mem);
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -135,8 +152,11 @@ TimeMS DateTime_CurrentUTC(void) {
 void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct timeval cur;
 	struct tm loc_time;
+	time_t s;
+	
 	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+	s = cur.tv_sec;
+	localtime_r(&s, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;
@@ -154,6 +174,8 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 
 #if defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
 /* Implemented in interop_BeOS.cpp */
+#elif defined CC_BUILD_SYMBIAN
+/* Implemented in Platform_Symbian.cpp */
 #elif defined CC_BUILD_DARWIN
 static cc_uint64 sw_freqMul, sw_freqDiv;
 static void Stopwatch_Init(void) {
@@ -251,6 +273,9 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	Logger_DoAbort(0, msg.buffer, ctx);
 }
 
+#if defined CC_BUILD_SYMBIAN
+/* implemented in Platform_Symbian.cpp */
+#else
 void CrashHandler_Install(void) {
 	struct sigaction sa = { 0 };
 	/* sigemptyset(&sa.sa_mask); */
@@ -264,6 +289,7 @@ void CrashHandler_Install(void) {
 	sigaction(SIGABRT, &sa, NULL);
 	sigaction(SIGFPE,  &sa, NULL);
 }
+#endif
 
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	Logger_DoAbort(result, raw_msg, NULL);
@@ -326,7 +352,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_HPUX || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_HPUX || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS || defined CC_BUILD_SYMBIAN
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
@@ -435,6 +461,11 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	
 	*handle = ptr;
 	pthread_attr_init(&attrs);
+#if defined CC_BUILD_SYMBIAN
+	if (stackSize >= 64 * 1024) {
+		stackSize = 64 * 1024;
+	}
+#endif
 	pthread_attr_setstacksize(&attrs, stackSize);
 	
 	res = pthread_create(ptr, &attrs, ExecThread, (void*)func);
@@ -631,6 +662,11 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/@unixroot/usr/share/fonts"),
 		String_FromConst("/@unixroot/usr/local/share/fonts")
 	};
+#elif defined CC_BUILD_SYMBIAN
+	static const cc_string dirs[] = {
+		String_FromConst("Z:\\resource\\fonts"),
+		String_FromConst("C:\\resource\\fonts")
+	};
 #else
 	static const cc_string dirs[] = {
 		String_FromConst("/usr/share/fonts"),
@@ -649,7 +685,7 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_OS2
+#if defined CC_BUILD_OS2 || defined CC_BUILD_SYMBIAN
 #undef AF_INET6
 #endif
 
@@ -766,7 +802,16 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 
 	if (nonblocking) {
 		int blocking_raw = -1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
+#if defined CC_BUILD_SYMBIAN
+		int res = fcntl(*s, F_GETFL, 0);
+		if (res < 0) return errno;
+		
+		res = fcntl(*s, F_SETFL, res | O_NONBLOCK);
+		if (res < 0) return errno;
+#else
+		int err = ioctl(*s, FIONBIO, &blocking_raw);
+		if (err == -1) return errno;
+#endif
 	}
 	return 0;
 }
@@ -795,7 +840,7 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-#if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS
+#if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS || defined CC_BUILD_SYMBIAN
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
 /* BeOS lacks support for poll */
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -908,6 +953,8 @@ void Process_Exit(cc_result code) { exit(code); }
 /* Implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
+#elif defined CC_BUILD_SYMBIAN
+/* implemented in Window_Symbian.cpp */
 #elif defined CC_BUILD_MACOS
 cc_result Process_StartOpen(const cc_string* args) {
 	UInt8 str[NATIVE_STR_LEN];
@@ -1123,6 +1170,7 @@ cc_bool Updater_Supported = true;
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
+#elif defined CC_BUILD_SYMBIAN
 #else
 cc_bool Updater_Clean(void) { return true; }
 
@@ -1292,6 +1340,8 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 
 #ifdef CC_BUILD_DARWIN
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
+#elif defined CC_BUILD_SYMBIAN
+const cc_string DynamicLib_Ext = String_FromConst(".dll");
 #else
 const cc_string DynamicLib_Ext = String_FromConst(".so");
 #endif
@@ -1334,7 +1384,7 @@ static void Platform_InitPosix(void) {
 }
 void Platform_Free(void) { }
 
-#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
+#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX || defined CC_BUILD_SYMBIAN
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = strerror(res);
 	if (!err || res >= 1000) return false;
@@ -1387,12 +1437,20 @@ void Platform_Init(void) {
 	Platform_InitPosix();
 	Platform_InitSpecific();
 }
+#elif defined CC_BUILD_SYMBIAN
+
+extern void Symbian_Stopwatch_Init(void);
+void Platform_Init(void) {
+	Platform_SingleProcess = true;
+	Symbian_Stopwatch_Init();
+	Platform_InitPosix();
+}
 #else
 void Platform_Init(void) {
 	#ifdef CC_BUILD_MOBILE
 	Platform_SingleProcess = true;
 	#endif
-	
+
 	Platform_InitPosix();
 }
 #endif
@@ -1542,11 +1600,28 @@ static cc_result GetMachineID(cc_uint32* key) {
     DecodeMachineID(strBuffer, str.length, key);
     return 0;
 }
+#elif defined CC_BUILD_SYMBIAN
+
+extern cc_result Symbian_GetMachineID(cc_uint32* key);
+
+static cc_result GetMachineID(cc_uint32* key) {
+	return Symbian_GetMachineID(key);
+}
 #else
 static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
 #endif
 
 cc_result Platform_GetEntropy(void* data, int len) {
+#if defined CC_BUILD_SYMBIAN
+    cc_uint32 rnd = 0, i;
+    for (i = 0; i < len; ++i) {
+        if (i % 4 == 0)
+            rnd = rand();
+        ((cc_uint8*) data)[i] = rnd;
+        rnd >>= 8;
+    }
+    return 0;
+#else
 	int ret;
 	int fd = open("/dev/urandom", O_RDONLY);
 	if (fd < 0) return ERR_NOT_SUPPORTED;
@@ -1555,6 +1630,7 @@ cc_result Platform_GetEntropy(void* data, int len) {
 	ret = read(fd, data, len);
 	close(fd);
 	return ret == -1 ? errno : 0;
+#endif
 }
 
 

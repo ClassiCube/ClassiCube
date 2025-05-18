@@ -254,7 +254,7 @@ void Gfx_Begin2D(int width, int height) {
 	Gfx_SetDepthTest(false);
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
-	
+
 	gfx_hadFog = Gfx_GetFog();
 	if (gfx_hadFog) Gfx_SetFog(false);
 }

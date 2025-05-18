@@ -35,6 +35,11 @@ static const struct DynamicLibSym core_funcs[] = {
 
 #include "../misc/opengl/GL1Macros.h"
 
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+static cc_uint16 gl_indices[GFX_MAX_INDICES];
+#define GL_INDICES
+#endif
+
 #include "_GLShared.h"
 static void GLBackend_Init(void);
 
@@ -68,12 +73,14 @@ static GLuint GL_GenAndBind(GLenum target) {
 }
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	cc_uint16 indices[GFX_MAX_INDICES];
+#ifndef GL_INDICES
+	cc_uint16 gl_indices[GFX_MAX_INDICES];
+#endif
 	GLuint id      = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
 	cc_uint32 size = count * sizeof(cc_uint16);
 
-	fillFunc(indices, count, obj);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+	fillFunc(gl_indices, count, obj);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, gl_indices, GL_STATIC_DRAW);
 	return uint_to_ptr(id);
 }
 
@@ -533,20 +540,24 @@ static void GLBackend_Init(void) {
 	//  don't try and set a value even when it's unsupported
 	#define _GL_MAJOR_VERSION 33307
 	#define _GL_MINOR_VERSION 33308
-	
-	GLint major = 0, minor = 0;
-	glGetIntegerv(_GL_MAJOR_VERSION, &major);
-	glGetIntegerv(_GL_MINOR_VERSION, &minor);
-	customMipmapsLevels = major >= 3 && minor >= 2;
 
-	static const cc_string bgra_ext   = String_FromConst("EXT_texture_format_BGRA8888");
+	GLint major = 0, minor = 0;
+
+	static const cc_string bgra_ext = String_FromConst("EXT_texture_format_BGRA8888");
 	static const cc_string bgra_apl = String_FromConst("APPLE_texture_format_BGRA8888");
+	static const cc_string bgra_sym = String_FromConst("GL_IMG_texture_format_BGRA8888");
 	cc_string extensions = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
 	
 	cc_bool has_ext_bgra = String_CaselessContains(&extensions, &bgra_ext);
 	cc_bool has_apl_bgra = String_CaselessContains(&extensions, &bgra_apl);
+	cc_bool has_sym_bgra = String_CaselessContains(&extensions, &bgra_sym);
+	
+	glGetIntegerv(_GL_MAJOR_VERSION, &major);
+	glGetIntegerv(_GL_MINOR_VERSION, &minor);
+	customMipmapsLevels = major >= 3 && minor >= 2;
+
 	Platform_Log2("BGRA support - Ext: %t, Apple: %t", &has_ext_bgra, &has_apl_bgra);
-	convert_rgba = PIXEL_FORMAT != GL_RGBA && !has_ext_bgra && !has_apl_bgra;
+	convert_rgba = PIXEL_FORMAT != GL_RGBA && !has_ext_bgra && !has_apl_bgra && !has_sym_bgra;
 #else
     customMipmapsLevels = true;
     const GLubyte* ver  = glGetString(GL_VERSION);
@@ -583,6 +594,9 @@ static void Gfx_FreeState(void) {
 }
 
 static void Gfx_RestoreState(void) {
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
+	
 	InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -594,8 +608,6 @@ static void Gfx_RestoreState(void) {
 	glDepthFunc(GL_LEQUAL);
 
 	/* 1x1 dummy white texture */
-	struct Bitmap bmp;
-	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
 	Bitmap_Init(bmp, 1, 1, pixels);
 	Gfx_RecreateTexture(&white_square, &bmp, 0, false);
 }

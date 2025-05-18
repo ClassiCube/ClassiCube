@@ -494,9 +494,21 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	char host[NATIVE_STR_LEN];
 	String_EncodeUtf8(host, host_);
 	
-	ctx = Mem_TryAlloc(1, sizeof(SSLContext));
+	ctx = (SSLContext*)Mem_TryAlloc(1, sizeof(SSLContext));
 	if (!ctx) return ERR_OUT_OF_MEMORY;
 	*out_ctx = (void*)ctx;
+	
+#if defined CC_BUILD_SYMBIAN
+	{
+		TAs[3].pkey.key.ec.curve = BR_EC_secp384r1;
+		TAs[3].pkey.key.ec.q = (unsigned char *)TA3_EC_Q;
+		TAs[3].pkey.key.ec.qlen = sizeof TA3_EC_Q;
+		
+		TAs[6].pkey.key.ec.curve = BR_EC_secp384r1;
+		TAs[6].pkey.key.ec.q = (unsigned char *)TA6_EC_Q;
+		TAs[6].pkey.key.ec.qlen = sizeof TA6_EC_Q;
+	}
+#endif
 	
 	br_ssl_client_init_full(&ctx->sc, &ctx->xc, TAs, TAs_NUM);
 	InjectEntropy(ctx);
@@ -557,10 +569,12 @@ cc_result SSL_WriteAll(void* ctx_, const cc_uint8* data, cc_uint32 count) {
 	int res = br_sslio_write_all(&ctx->ioc, data, count);
 	
 	if (res < 0) {
-		if (ctx->writeError) return ctx->writeError;
-		
-		int err = br_ssl_engine_last_error(&ctx->sc.eng);
-		return SSL_ERROR_SHIFT | (err & 0xFFFF);
+		if (ctx->writeError) {
+			return ctx->writeError;
+		} else {
+			int err = br_ssl_engine_last_error(&ctx->sc.eng);
+			return SSL_ERROR_SHIFT | (err & 0xFFFF);
+		}
 	}
 	
 	br_sslio_flush(&ctx->ioc);

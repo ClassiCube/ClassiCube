@@ -1207,7 +1207,7 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 
 #if CC_BUILD_MAXSTACK <= (64 * 1024)
-		inflate = Mem_TryAlloc(1, sizeof(struct InflateState));
+		inflate = (struct InflateState*)Mem_TryAlloc(1, sizeof(struct InflateState));
 		if (!inflate) return ERR_OUT_OF_MEMORY;
 
 		Inflate_MakeStream2(&compStream, inflate, &portion);
