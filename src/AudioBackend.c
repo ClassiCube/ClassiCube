@@ -28,11 +28,12 @@ static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks);
 *#########################################################################################################################*/
 /* Simpler to just include subset of OpenAL actually use here instead of including */
 /* === BEGIN OPENAL HEADERS === */
-#if defined _WIN32
-#define APIENTRY __cdecl
+#if defined CC_BUILD_WIN
+	#define APIENTRY __cdecl
 #else
-#define APIENTRY
+	#define APIENTRY
 #endif
+
 #define AL_NONE              0
 #define AL_GAIN              0x100A
 #define AL_SOURCE_STATE      0x1010

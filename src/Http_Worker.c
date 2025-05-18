@@ -161,10 +161,10 @@ typedef int CURLcode;
 
 #define CURL_HTTP_VERSION_1_1   2L /* stick to HTTP 1.1 */
 
-#if defined _WIN32
-#define APIENTRY __cdecl
+#if defined CC_BUILD_WIN
+	#define APIENTRY __cdecl
 #else
-#define APIENTRY
+	#define APIENTRY
 #endif
 
 static CURLcode (APIENTRY *_curl_global_init)(long flags);
