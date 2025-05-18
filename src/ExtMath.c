@@ -20,12 +20,6 @@ int Math_Ceil(float value) {
 	return valueI < value ? valueI + 1 : valueI;
 }
 
-int Math_ilog2(cc_uint32 value) {
-	cc_uint32 r = 0;
-	while (value >>= 1) r++;
-	return r;
-}
-
 int Math_ilog2(cc_uint32 x) {
 	cc_uint32 r = 0;
 	#if defined(__i386__) || defined(__x86_64__)
