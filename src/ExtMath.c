@@ -26,10 +26,10 @@ int Math_ilog2(cc_uint32 value) {
 	return r;
 }
 
-static inline cc_uint32 Math_ilog2(cc_uint32 x) {
+int Math_ilog2(cc_uint32 x) {
 	cc_uint32 r = 0;
-	if (x == 0) return 0;
 	#if defined(__i386__) || defined(__x86_64__)
+	if (x == 0) return 0;
 	__asm__ volatile ("bsr %1, %0" : "=r"(r) : "r"(x));
 	#else
 	while (x >>= 1) r++;
