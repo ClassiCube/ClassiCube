@@ -359,7 +359,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 	/* idat decompressor */
 #if CC_BUILD_MAXSTACK <= (50 * 1024)
-	struct InflateState* inflate = (struct InflateState*)temp_mem;
+	void* mem = TempMem_Alloc(sizeof(struct InflateState));
+	struct InflateState* inflate = (struct InflateState*)mem;
 #else
 	struct InflateState _inflate;
 	struct InflateState* inflate = &_inflate;

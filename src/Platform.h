@@ -18,6 +18,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 /* Suffix added to app name sent to the server */
 extern const char* Platform_AppNameSuffix;
+void* TempMem_Alloc(int size);
 
 #if defined CC_BUILD_WIN
 typedef struct cc_winstring_ {
