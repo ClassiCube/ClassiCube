@@ -316,7 +316,9 @@ static void NotchyGen_CreateHeightmap(void) {
 		struct CombinedNoise n1, n2;
 		struct OctaveNoise n3;
 	};
-	struct NoiseBuffer* buf  = (struct NoiseBuffer*)temp_mem;
+	void* mem = TempMem_Alloc(sizeof(struct NoiseBuffer));
+
+	struct NoiseBuffer* buf  = (struct NoiseBuffer*)mem;
 	struct CombinedNoise* n1 = &buf->n1;
 	struct CombinedNoise* n2 = &buf->n2;
 	struct OctaveNoise*   n3 = &buf->n3;
@@ -567,7 +569,7 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 	struct NoiseBuffer { 
 		struct OctaveNoise n1, n2;
 	};
-	struct NoiseBuffer* buf  = (struct NoiseBuffer*)temp_mem;
+	struct NoiseBuffer* buf = TempMem_Alloc(sizeof(struct NoiseBuffer));
 	struct OctaveNoise* n1 = &buf->n1;
 	struct OctaveNoise* n2 = &buf->n2;
 #else

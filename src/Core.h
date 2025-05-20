@@ -659,9 +659,5 @@ struct Texture {
 	#define CC_END_HEADER
 #endif
 
-#if CC_BUILD_MAXSTACK < (64 * 1024)
-extern char temp_mem[45000];
-#endif
-
 #endif
 

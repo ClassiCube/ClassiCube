@@ -6,7 +6,13 @@
 #include "Funcs.h"
 
 #if CC_BUILD_MAXSTACK < (64 * 1024)
-CC_BIG_VAR char temp_mem[45000];
+static CC_BIG_VAR int temp_mem[45000 / 4];
+
+void* TempMem_Alloc(int size) {
+	if (size > sizeof(temp_mem)) Process_Abort("TempMem overflow");
+
+	return (void*)temp_mem;
+}
 #endif
 
 /*########################################################################################################################*
