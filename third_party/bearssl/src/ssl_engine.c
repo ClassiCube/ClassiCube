@@ -1284,10 +1284,11 @@ br_ssl_engine_compute_master(br_ssl_engine_context *cc,
 	int prf_id, const void *pms, size_t pms_len)
 {
 	br_tls_prf_impl iprf;
-	br_tls_prf_seed_chunk seed[2] = {
-		{ cc->client_random, sizeof cc->client_random },
-		{ cc->server_random, sizeof cc->server_random }
-	};
+	br_tls_prf_seed_chunk seed[2];
+	seed[0].data = cc->client_random;
+	seed[0].len = sizeof cc->client_random;
+	seed[1].data = cc->server_random;
+	seed[1].len = sizeof cc->server_random;
 
 	iprf = br_ssl_engine_get_PRF(cc, prf_id);
 	iprf(cc->session.master_secret, sizeof cc->session.master_secret,
@@ -1302,10 +1303,11 @@ compute_key_block(br_ssl_engine_context *cc, int prf_id,
 	size_t half_len, unsigned char *kb)
 {
 	br_tls_prf_impl iprf;
-	br_tls_prf_seed_chunk seed[2] = {
-		{ cc->server_random, sizeof cc->server_random },
-		{ cc->client_random, sizeof cc->client_random }
-	};
+	br_tls_prf_seed_chunk seed[2];
+	seed[0].data = cc->server_random;
+	seed[0].len = sizeof cc->server_random;
+	seed[1].data = cc->client_random;
+	seed[1].len = sizeof cc->client_random;
 
 	iprf = br_ssl_engine_get_PRF(cc, prf_id);
 	iprf(kb, half_len << 1,

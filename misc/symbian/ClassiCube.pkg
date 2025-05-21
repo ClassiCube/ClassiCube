@@ -1,0 +1,30 @@
+&EN
+
+#{"ClassiCube"},(0xE212A5C2),1,0,0
+
+[0x101F7961], 0, 0, 0, {"S60ProductID"}
+[0x1028315F], 0, 0, 0, {"S60ProductID"}
+[0x20022E6D], 0, 0, 0, {"S60ProductID"}
+
+%{"ClassiCube"}
+:"ClassiCube"
+
+; Check OpenC versions
+IF( version(0x20009a80, <, 1, 5, 0) ) AND NOT (EXISTS("Z:\sys\bin\libc.dll") OR EXISTS("C:\sys\bin\libc.dll"))
+    "incompatible_openc.txt"-"", FT, FORCEABORT
+ENDIF
+
+IF exists("z:\system\install\Series60v5.2.sis") ; Symbian^3
+	"$(EPOCROOT)Epoc32\release\$(PLATFORM)\$(TARGET)\ClassiCube_sym3.exe" - "!:\sys\bin\ClassiCube.exe"
+ELSE
+	IF exists("z:\system\install\Series60v5.0.sis") ; Symbian 9.4
+		"$(EPOCROOT)Epoc32\release\$(PLATFORM)\$(TARGET)\ClassiCube_s60v5.exe" - "!:\sys\bin\ClassiCube.exe"
+	ELSE ; Symbian 9.2-9.3
+		"$(EPOCROOT)Epoc32\release\$(PLATFORM)\$(TARGET)\ClassiCube_s60v3.exe" - "!:\sys\bin\ClassiCube.exe"
+	ENDIF
+ENDIF
+
+"$(EPOCROOT)\epoc32\data\z\private\10003a3f\import\apps\classicube_reg.rsc" - "!:\private\10003a3f\import\apps\classicube_reg.rsc"
+"$(EPOCROOT)\epoc32\data\z\resource\apps\classicube.rsc" - "!:\resource\apps\classicube.rsc"
+"$(EPOCROOT)\epoc32\data\z\resource\apps\classicube_icon.mif" - "!:\resource\apps\classicube_icon.mif"
+;"$(EPOCROOT)\epoc32\winscw\c\private\e212a5c2\texpacks\classicube.zip" - "!:\private\e212a5c2\texpacks\classicube.zip"

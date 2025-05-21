@@ -103,7 +103,9 @@ static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
 /*########################################################################################################################*
 *-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
+#if !defined CC_BUILD_SYMBIAN
 #include <EGL/egl.h>
+#endif
 static EGLDisplay ctx_display;
 static EGLContext ctx_context;
 static EGLSurface ctx_surface;
@@ -114,7 +116,11 @@ static cc_uintptr ctx_visualID;
 static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
 #else
 static void GLContext_InitSurface(void) {
+#if defined EGLNativeWindowType
 	EGLNativeWindowType window = (EGLNativeWindowType)Window_Main.Handle.ptr;
+#else
+	NativeWindowType window = (NativeWindowType)Window_Main.Handle.ptr;
+#endif
 	if (!window) return; /* window not created or lost */
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
 
@@ -139,7 +145,10 @@ static void DumpEGLConfig(EGLConfig config) {
 	eglGetConfigAttrib(ctx_display, config, EGL_ALPHA_SIZE,       &alpha);
 	eglGetConfigAttrib(ctx_display, config, EGL_DEPTH_SIZE,       &depth);
 	eglGetConfigAttrib(ctx_display, config, EGL_NATIVE_VISUAL_ID, &vid);
+#if defined EGL_RENDERABLE_TYPE
+	/* e.g Symbian 9.2-9.4 only support EGL 1.1 */
 	eglGetConfigAttrib(ctx_display, config, EGL_RENDERABLE_TYPE,  &mode);
+#endif
 
 	Platform_Log4("EGL R:%i, G:%i, B:%i, A:%i", &red, &green, &blue, &alpha);
 	Platform_Log3("EGL D: %i, V: %h, S: %h",  &depth, &vid, &mode);
@@ -161,6 +170,9 @@ static void ChooseEGLConfig(EGLConfig* configs, EGLint num_configs) {
 	}
 }
 
+#if defined CC_BUILD_SYMBIAN && CC_GFX_BACKEND != CC_GFX_BACKEND_GL2
+/* Implemented in Window_Symbian.cpp */
+#else
 void GLContext_Create(void) {
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
@@ -221,6 +233,7 @@ void GLContext_Create(void) {
 	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
 	GLContext_InitSurface();
 }
+#endif
 
 void GLContext_Update(void) {
 	GLContext_FreeSurface();
@@ -240,14 +253,18 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	return eglGetProcAddress(function);
+	return (void*) eglGetProcAddress(function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {
 	EGLint err;
 	if (!ctx_surface) return false;
 	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
-
+#if defined CC_BUILD_SYMBIAN
+	if (GLContext_TryRestore() && eglSwapBuffers(ctx_display, ctx_surface)) {
+		return true;
+	}
+#endif
 	err = eglGetError();
 	/* TODO: figure out what errors need to be handled here */
 	Process_Abort2(err, "Failed to swap buffers");

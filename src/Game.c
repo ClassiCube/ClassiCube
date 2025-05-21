@@ -809,8 +809,10 @@ static CC_INLINE void Game_RenderFrame(void) {
 	EnvRenderer_UpdateFog();
 	AudioBackend_Tick();
 
+#if !defined CC_BUILD_SYMBIAN
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
 	if (Window_Main.Inactive) return;
+#endif
 	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 	
 #ifdef CC_BUILD_SPLITSCREEN
