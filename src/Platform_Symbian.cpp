@@ -735,3 +735,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 	return 0;
 }
 #endif
+
