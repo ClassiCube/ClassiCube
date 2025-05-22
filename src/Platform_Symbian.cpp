@@ -285,9 +285,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 #define NS_PER_SEC 1000000000ULL
 
-void Thread_Sleep(cc_uint32 milliseconds) { 
-	User::After(milliseconds * 1000); 
-}
+void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 
 static void* ExecThread(void* param) {
 	((Thread_StartFunc)param)();
@@ -329,66 +327,107 @@ void Thread_Join(void* handle) {
 }
 
 void* Mutex_Create(const char* name) {
-	RMutex* mutex = new RMutex;
-	if (!mutex) Process_Abort("Creating mutex");
-	
-	mutex->CreateLocal();
-	return mutex;
+	pthread_mutex_t* ptr = (pthread_mutex_t*)Mem_Alloc(1, sizeof(pthread_mutex_t), "mutex");
+	int res = pthread_mutex_init(ptr, NULL);
+	if (res) Process_Abort2(res, "Creating mutex");
+	return ptr;
 }
 
 void Mutex_Free(void* handle) {
-	RMutex* mutex = (RMutex*)handle;
-	
-	mutex->Close();
-	delete mutex;
+	int res = pthread_mutex_destroy((pthread_mutex_t*)handle);
+	if (res) Process_Abort2(res, "Destroying mutex");
+	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
-	RMutex* mutex = (RMutex*)handle;
-	mutex->Wait();
+	int res = pthread_mutex_lock((pthread_mutex_t*)handle);
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
-	RMutex* mutex = (RMutex*)handle;
-	mutex->Signal();
+	int res = pthread_mutex_unlock((pthread_mutex_t*)handle);
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
+struct WaitData {
+	pthread_cond_t  cond;
+	pthread_mutex_t mutex;
+	int signalled; /* For when Waitable_Signal is called before Waitable_Wait */
+};
+
 void* Waitable_Create(const char* name) {
-	RSemaphore* sem = new RSemaphore;
-	TInt res;
-	if (!sem) Process_Abort("Creating waitable");
+	struct WaitData* ptr = (struct WaitData*)Mem_Alloc(1, sizeof(struct WaitData), "waitable");
+	int res;
 	
-	res = sem->CreateLocal(0);
+	res = pthread_cond_init(&ptr->cond, NULL);
 	if (res) Process_Abort2(res, "Creating waitable");
-	return sem;
+	res = pthread_mutex_init(&ptr->mutex, NULL);
+	if (res) Process_Abort2(res, "Creating waitable mutex");
+
+	ptr->signalled = false;
+	return ptr;
 }
 
 void Waitable_Free(void* handle) {
-	RSemaphore* sem = (RSemaphore*)handle;
+	struct WaitData* ptr = (struct WaitData*)handle;
+	int res;
 	
-	sem->Close();
-	delete sem;
+	res = pthread_cond_destroy(&ptr->cond);
+	if (res) Process_Abort2(res, "Destroying waitable");
+	res = pthread_mutex_destroy(&ptr->mutex);
+	if (res) Process_Abort2(res, "Destroying waitable mutex");
+	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
-	RSemaphore* sem = (RSemaphore*)handle;
-	
-	sem->Signal();
-	delete sem;
+	struct WaitData* ptr = (struct WaitData*)handle;
+	int res;
+
+	Mutex_Lock(&ptr->mutex);
+	ptr->signalled = true;
+	Mutex_Unlock(&ptr->mutex);
+
+	res = pthread_cond_signal(&ptr->cond);
+	if (res) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
-	RSemaphore* sem = (RSemaphore*)handle;
-	
-	sem->Wait();
-	delete sem;
+	struct WaitData* ptr = (struct WaitData*)handle;
+	int res;
+
+	Mutex_Lock(&ptr->mutex);
+	if (!ptr->signalled) {
+		res = pthread_cond_wait(&ptr->cond, &ptr->mutex);
+		if (res) Process_Abort2(res, "Waitable wait");
+	}
+	ptr->signalled = false;
+	Mutex_Unlock(&ptr->mutex);
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	RSemaphore* sem = (RSemaphore*)handle;
-	
-	sem->Wait(milliseconds * 1000);
-	delete sem;
+	struct WaitData* ptr = (struct WaitData*)handle;
+	struct timeval tv;
+	struct timespec ts;
+	int res;
+	gettimeofday(&tv, NULL);
+
+	/* absolute time for some silly reason */
+	ts.tv_sec  = tv.tv_sec + milliseconds / 1000;
+	ts.tv_nsec = 1000 * (tv.tv_usec + 1000 * (milliseconds % 1000));
+
+	/* statement above might exceed max nsec, so adjust for that */
+	while (ts.tv_nsec >= NS_PER_SEC) {
+		ts.tv_sec++;
+		ts.tv_nsec -= NS_PER_SEC;
+	}
+
+	Mutex_Lock(&ptr->mutex);
+	if (!ptr->signalled) {
+		res = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &ts);
+		if (res && res != ETIMEDOUT) Process_Abort2(res, "Waitable wait for");
+	}
+	ptr->signalled = false;
+	Mutex_Unlock(&ptr->mutex);
 }
 
 
