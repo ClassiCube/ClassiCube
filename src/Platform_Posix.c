@@ -123,9 +123,6 @@ void Platform_Log(const char* msg, int len) {
 	/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
 	ret = write(STDOUT_FILENO, msg,  len);
 	ret = write(STDOUT_FILENO, "\n",   1);
-	
-	cc_string str = String_Init(msg, len, len);
-	Logger_Log(&str);
 }
 #endif
 
