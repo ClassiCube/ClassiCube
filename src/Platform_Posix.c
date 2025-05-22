@@ -1,6 +1,10 @@
 #include "Core.h"
-#if defined CC_BUILD_POSIX
-
+#if defined CC_BUILD_SYMBIAN
+extern "C" {
+#include "Errors.h"
+#include "Platform.h"
+#include "Logger.h"
+#include "String.h"
 #define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
@@ -11,6 +15,8 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+
+#include <unistd.h>
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -21,7 +27,7 @@
 #include <utime.h>
 #include <signal.h>
 #include <stdio.h>
-#if defined CC_BUILD_SYMBIAN
+
 #include <stdapis/string.h>
 #include <stdapis/arpa/inet.h>
 #include <stdapis/netinet/in.h>
@@ -32,17 +38,9 @@
 #include <stdapis/sys/time.h>
 #include <stdapis/sys/select.h>
 #include <stdapis/netdb.h>
-#else
-#include <string.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <netdb.h>
-#endif
+}
+#include <e32base.h>
+#include <hal.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -52,61 +50,23 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
 #define SUPPORTS_GETADDRINFO 1
 
-#if defined CC_BUILD_ANDROID
-const char* Platform_AppNameSuffix = " android alpha";
-#elif defined CC_BUILD_IOS
-const char* Platform_AppNameSuffix = " iOS alpha";
-#else
 const char* Platform_AppNameSuffix = "";
-#endif
-cc_bool Platform_SingleProcess;
+cc_bool Platform_SingleProcess = true;
 cc_bool Platform_ReadonlyFilesystem;
 
-/* Operating system specific include files */
-#if defined CC_BUILD_DARWIN
-#include <mach/mach_time.h>
-#include <mach-o/dyld.h>
-#if defined CC_BUILD_MACOS
-#include <ApplicationServices/ApplicationServices.h>
+#ifndef __USE_GNU
+#define __USE_GNU
 #endif
-#elif defined CC_BUILD_SOLARIS
-#include <sys/filio.h>
-#include <sys/systeminfo.h>
-#elif defined CC_BUILD_BSD
-#include <sys/sysctl.h>
-#elif defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
-/* TODO: Use load_image/resume_thread instead of fork */
-/* Otherwise opening browser never works because fork fails */
-#include <kernel/image.h>
-#elif defined CC_BUILD_OS2
-#include <libcx/net.h>
-#define INCL_DOS
-#define INCL_DOSERRORS
-#define INCL_PM
-#include <os2.h>
-#endif
-
-#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
-	/* Really old mac OS versions don't have the dlopen/dlsym API */
-	#define USE_NS_DYNLOAD_API
-#else
-	#ifndef __USE_GNU
-	#define __USE_GNU
-	#endif
-	#include <dlfcn.h>
-#endif
+#include <dlfcn.h>
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*) memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*) memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*) memmove(dst, src,   numBytes); }
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*)memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*)memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*)memmove(dst, src,   numBytes); }
 
-#if defined CC_BUILD_SYMBIAN
-/* implemented in Platform_Symbian.cpp */
-#else
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? malloc(size) : NULL;
@@ -124,24 +84,20 @@ void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
 void Mem_Free(void* mem) {
 	if (mem) free(mem);
 }
-#endif
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_ANDROID
-/* implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
-#else
 void Platform_Log(const char* msg, int len) {
 	int ret;
 	/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
 	ret = write(STDOUT_FILENO, msg,  len);
 	ret = write(STDOUT_FILENO, "\n",   1);
+	
+	cc_string str = String_Init(msg, len, len);
+	Logger_Log(&str);
 }
-#endif
 
 TimeMS DateTime_CurrentUTC(void) {
 	struct timeval cur;
@@ -170,126 +126,44 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 /*########################################################################################################################*
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
-#define NS_PER_SEC 1000000000ULL
+static TInt tickPeriod;
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
-/* Implemented in interop_BeOS.cpp */
-#elif defined CC_BUILD_SYMBIAN
-/* Implemented in Platform_Symbian.cpp */
-#elif defined CC_BUILD_DARWIN
-static cc_uint64 sw_freqMul, sw_freqDiv;
 static void Stopwatch_Init(void) {
-	mach_timebase_info_data_t tb = { 0 };
-	mach_timebase_info(&tb);
-
-	sw_freqMul = tb.numer;
-	/* tb.denom may be large, so multiplying by 1000 overflows 32 bits */
-	/* (one powerpc system had tb.denom of 33329426) */
-	sw_freqDiv = (cc_uint64)tb.denom * 1000;
+	if (HAL::Get(HAL::ENanoTickPeriod, tickPeriod) != KErrNone) {
+		User::Panic(_L("Could not init timer"), 0);
+	}
 }
 
-cc_uint64 Stopwatch_Measure(void) { return mach_absolute_time(); }
-
-cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
-	if (end < beg) return 0;
-	return ((end - beg) * sw_freqMul) / sw_freqDiv;
-}
-#elif defined CC_BUILD_SOLARIS
-/* https://docs.oracle.com/cd/E86824_01/html/E54766/gethrtime-3c.html */
-/* The gethrtime() function returns the current high-resolution real time. Time is expressed as nanoseconds since some arbitrary time in the past */
-cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
-
-cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
-	if (end < beg) return 0;
-	return (end - beg) / 1000;
-}
-#else
-/* clock_gettime is optional, see http://pubs.opengroup.org/onlinepubs/009696899/functions/clock_getres.html */
-/* "... These functions are part of the Timers option and need not be available on all implementations..." */
 cc_uint64 Stopwatch_Measure(void) {
-	struct timespec t;
-	#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
-	clock_gettime(CLOCK_REALTIME, &t);
-	#else
-	/* TODO: CLOCK_MONOTONIC_RAW ?? */
-	clock_gettime(CLOCK_MONOTONIC, &t);
-	#endif
-	return (cc_uint64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
+	return (cc_uint64)User::NTickCount();
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return (end - beg) / 1000;
+	return (end - beg) * tickPeriod;
 }
-#endif
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
-static const char* SignalDescribe(int type) {
-	switch (type) {
-	case SIGSEGV: return "SIGSEGV";
-	case SIGBUS:  return "SIGBUS";
-	case SIGILL:  return "SIGILL";
-	case SIGABRT: return "SIGABRT";
-	case SIGFPE:  return "SIGFPE";
-	}
-	return NULL;
-}
-
-static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
-	cc_string msg; char msgBuffer[128 + 1];
-	struct sigaction sa = { 0 };
-	const char* desc;
-	int type, code;
-	cc_uintptr addr;
-
-	/* Uninstall handler to avoid chance of infinite loop */
-	sa.sa_handler = SIG_DFL;
-	sigaction(SIGSEGV, &sa, NULL);
-	sigaction(SIGBUS,  &sa, NULL);
-	sigaction(SIGILL,  &sa, NULL);
-	sigaction(SIGABRT, &sa, NULL);
-	sigaction(SIGFPE,  &sa, NULL);
-
-	type = info->si_signo;
-	code = info->si_code;
-	addr = (cc_uintptr)info->si_addr;
-	desc = SignalDescribe(type);
-
-	String_InitArray_NT(msg, msgBuffer);
-	if (desc) {
-		String_Format3(&msg, "Unhandled signal %c (code %i) at %x", desc,  &code, &addr);
-	} else {
-		String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
-	}
+static void ExceptionHandler(TExcType type) {
+	cc_string msg; char msgB[64];
+	String_InitArray(msg, msgB);
+	String_AppendConst(&msg, "Exception: ");
+	String_AppendInt(&msg, (int) type);
 	msg.buffer[msg.length] = '\0';
-
-	#if defined CC_BUILD_ANDROID
-	/* deliberate Dalvik VM abort, try to log a nicer error for this */
-	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
-	#endif
-	Logger_DoAbort(0, msg.buffer, ctx);
+	
+	Logger_DoAbort(0, msg.buffer, 0);
+	
+	User::HandleException((TUint32*) &type);
 }
 
-#if defined CC_BUILD_SYMBIAN
-/* implemented in Platform_Symbian.cpp */
-#else
 void CrashHandler_Install(void) {
-	struct sigaction sa = { 0 };
-	/* sigemptyset(&sa.sa_mask); */
-	/* NOTE: Calling sigemptyset breaks when using recent Android NDK and trying to run on old devices */
-	sa.sa_sigaction = SignalHandler;
-	sa.sa_flags     = SA_RESTART | SA_SIGINFO;
-
-	sigaction(SIGSEGV, &sa, NULL);
-	sigaction(SIGBUS,  &sa, NULL);
-	sigaction(SIGILL,  &sa, NULL);
-	sigaction(SIGABRT, &sa, NULL);
-	sigaction(SIGFPE,  &sa, NULL);
-}
+#if !defined _DEBUG
+	User::SetExceptionHandler(ExceptionHandler, 0xffffffff);
 #endif
+}
 
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	Logger_DoAbort(result, raw_msg, NULL);
@@ -304,13 +178,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
-#if defined CC_BUILD_ANDROID
-/* implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
-#else
 void Directory_GetCachePath(cc_string* path) { }
-#endif
 
 cc_result Directory_Create(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
@@ -352,7 +220,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_HPUX || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS || defined CC_BUILD_SYMBIAN
+#if defined CC_BUILD_SYMBIAN
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
@@ -379,25 +247,15 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-#if !defined CC_BUILD_OS2
 	return File_Do(file, path->buffer, O_RDONLY);
-#else
-	return File_Do(file, path->buffer, O_RDONLY | O_BINARY);
-#endif
 }
+
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-#if !defined CC_BUILD_OS2
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
-#else
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
-#endif
 }
+
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-#if !defined CC_BUILD_OS2
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
-#else
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_BINARY);
-#endif
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -434,25 +292,14 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
+#define NS_PER_SEC 1000000000ULL
+
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 
-#ifdef CC_BUILD_ANDROID
-/* All threads using JNI must detach BEFORE they exit */
-/* (see https://developer.android.com/training/articles/perf-jni#threads */
-static void* ExecThread(void* param) {
-	JNIEnv* env;
-	JavaGetCurrentEnv(env);
-
-	((Thread_StartFunc)param)();
-	(*VM_Ptr)->DetachCurrentThread(VM_Ptr);
-	return NULL;
-}
-#else
 static void* ExecThread(void* param) {
 	((Thread_StartFunc)param)();
 	return NULL;
 }
-#endif
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
@@ -461,33 +308,17 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	
 	*handle = ptr;
 	pthread_attr_init(&attrs);
-#if defined CC_BUILD_SYMBIAN
+	
+	/* Symbian only supports up to 64 KB stack size */
 	if (stackSize >= 64 * 1024) {
 		stackSize = 64 * 1024;
 	}
-#endif
+	
 	pthread_attr_setstacksize(&attrs, stackSize);
 	
 	res = pthread_create(ptr, &attrs, ExecThread, (void*)func);
 	if (res) Process_Abort2(res, "Creating thread");
 	pthread_attr_destroy(&attrs);
-	
-#if defined CC_BUILD_LINUX
-	static int (*FP_pthread_setname_np)(pthread_t thread, const char* name);
-	/* Not available on old libc versions, so load it dynamically */
-	if (!FP_pthread_setname_np) {
-		FP_pthread_setname_np = dlsym(RTLD_NEXT, "pthread_setname_np");
-	}
-	if (FP_pthread_setname_np) FP_pthread_setname_np(*ptr, name);
-#elif defined CC_BUILD_HAIKU
-	extern int pthread_setname_np(pthread_t thread, const char* name);
-	pthread_setname_np(*ptr, name);
-#elif defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
-	extern int pthread_set_name_np(pthread_t thread, const char* name);
-	pthread_set_name_np(*ptr, name);
-#elif defined CC_BUILD_NETBSD
-	pthread_setname_np(*ptr, "%s", name);
-#endif
 }
 
 void Thread_Detach(void* handle) {
@@ -622,57 +453,11 @@ static void FontDirCallback(const cc_string* path, void* obj, int isDirectory) {
 
 void Platform_LoadSysFonts(void) {
 	int i;
-#if defined CC_BUILD_ANDROID
-	static const cc_string dirs[] = {
-		String_FromConst("/system/fonts"),
-		String_FromConst("/system/font"),
-		String_FromConst("/data/fonts"),
-	};
-#elif defined CC_BUILD_NETBSD
-	static const cc_string dirs[] = {
-		String_FromConst("/usr/X11R7/lib/X11/fonts"),
-		String_FromConst("/usr/pkg/lib/X11/fonts"),
-		String_FromConst("/usr/pkg/share/fonts")
-	};
-#elif defined CC_BUILD_OPENBSD
-	static const cc_string dirs[] = {
-		String_FromConst("/usr/X11R6/lib/X11/fonts"),
-		String_FromConst("/usr/share/fonts"),
-		String_FromConst("/usr/local/share/fonts")
-	};
-#elif defined CC_BUILD_HAIKU
-	static const cc_string dirs[] = {
-		String_FromConst("/system/data/fonts")
-	};
-#elif defined CC_BUILD_BEOS
-	static const cc_string dirs[] = {
-		String_FromConst("/boot/beos/etc/fonts")
-	};
-#elif defined CC_BUILD_DARWIN
-	static const cc_string dirs[] = {
-		String_FromConst("/System/Library/Fonts"),
-		String_FromConst("/Library/Fonts")
-	};
-#elif defined CC_BUILD_SERENITY
-	static const cc_string dirs[] = {
-		String_FromConst("/res/fonts")
-	};
-#elif defined CC_BUILD_OS2
-	static const cc_string dirs[] = {
-		String_FromConst("/@unixroot/usr/share/fonts"),
-		String_FromConst("/@unixroot/usr/local/share/fonts")
-	};
-#elif defined CC_BUILD_SYMBIAN
 	static const cc_string dirs[] = {
 		String_FromConst("Z:\\resource\\fonts"),
 		String_FromConst("C:\\resource\\fonts")
 	};
-#else
-	static const cc_string dirs[] = {
-		String_FromConst("/usr/share/fonts"),
-		String_FromConst("/usr/local/share/fonts")
-	};
-#endif
+	
 	for (i = 0; i < Array_Elems(dirs); i++) 
 	{
 		Platform_Log1("Searching for fonts in %s", &dirs[i]);
@@ -685,17 +470,9 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_OS2 || defined CC_BUILD_SYMBIAN
-#undef AF_INET6
-#endif
-
 union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in  v4;
-	#ifdef AF_INET6
-	struct sockaddr_in6 v6;
-	struct sockaddr_storage total;
-	#endif
+	struct sockaddr   raw;
+	struct sockaddr_in v4;
 };
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
@@ -780,17 +557,6 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		return 0;
 	}
 	
-	#ifdef AF_INET6
-	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) {
-		addr->v6.sin6_family = AF_INET6;
-		addr->v6.sin6_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v6);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	#endif
-	
 	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
@@ -801,17 +567,11 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	if (*s == -1) return errno;
 
 	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
-#if defined CC_BUILD_SYMBIAN
 		int res = fcntl(*s, F_GETFL, 0);
 		if (res < 0) return errno;
 		
 		res = fcntl(*s, F_SETFL, res | O_NONBLOCK);
 		if (res < 0) return errno;
-#else
-		int err = ioctl(*s, FIONBIO, &blocking_raw);
-		if (err == -1) return errno;
-#endif
 	}
 	return 0;
 }
@@ -897,454 +657,46 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *#########################################################################################################################*/
 cc_bool Process_OpenSupported = true;
 
-#if defined CC_BUILD_MOBILE
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
-#else
-static cc_result Process_RawStart(const char* path, char** argv) {
-	pid_t pid = fork();
-	int err;
-	if (pid == -1) return errno;
-
-	if (pid == 0) {
-		/* Executed in child process */
-		execvp(path, argv);
-
-		err = errno;
-		Platform_Log2("execv %c failed = %i", path, &err);
-		_exit(127); /* "command not found" */
-	} else {
-		/* Executed in parent process */
-		/* We do nothing here.. */
-		return 0;
-	}
-}
-
-static cc_result Process_RawGetExePath(char* path, int* len);
-
-cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	char raw[GAME_MAX_CMDARGS][NATIVE_STR_LEN];
-	char path[NATIVE_STR_LEN];
-	int i, j, len = 0;
-	char* argv[15];
-	cc_result res;
-	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
-
-	res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-	argv[0]   = path;
-
-	for (i = 0, j = 1; i < numArgs; i++, j++) 
-	{
-		String_EncodeUtf8(raw[i], &args[i]);
-		argv[j] = raw[i];
-	}
-
-	argv[j] = NULL;
-	return Process_RawStart(path, argv);
-}
-#endif
 void Process_Exit(cc_result code) { exit(code); }
 
-/* Opening browser/starting shell is not really standardised */
-#if defined CC_BUILD_ANDROID
-/* Implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
-#elif defined CC_BUILD_SYMBIAN
 /* implemented in Window_Symbian.cpp */
-#elif defined CC_BUILD_MACOS
-cc_result Process_StartOpen(const cc_string* args) {
-	UInt8 str[NATIVE_STR_LEN];
-	CFURLRef urlCF;
-	int len;
-	
-	len   = String_EncodeUtf8(str, args);
-	urlCF = CFURLCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, NULL);
-	LSOpenCFURLRef(urlCF, NULL);
-	CFRelease(urlCF);
-	return 0;
-}
-#elif defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
-/* Implemented in interop_BeOS.cpp */
-#elif defined CC_BUILD_OS2
-inline static void ShowErrorMessage(const char *url) {
-	static char errorMsg[] = "Could not open browser. Please go to: ";
-	cc_string message = String_Init(errorMsg, strlen(errorMsg), 500);
-	String_AppendConst(&message, url);
-	Logger_DialogWarn(&message);
-}
-
-cc_result Process_StartOpen(const cc_string* args) {
-	char str[NATIVE_STR_LEN];
-	APIRET rc;
-	UCHAR path[CCHMAXPATH], params[100], parambuffer[500], *paramptr;
-	UCHAR userPath[CCHMAXPATH], sysPath[CCHMAXPATH];
-	PRFPROFILE profile = { sizeof(userPath), userPath, sizeof(sysPath), sysPath };
-	HINI os2Ini;
-	HAB hAnchor = WinQueryAnchorBlock(WinQueryActiveWindow(HWND_DESKTOP));
-	RESULTCODES result = { 0 };
-   PROGDETAILS details;
-	
-	// We get URL
-	String_EncodeUtf8(str, args);
-	
-	// Initialize buffers
-	Mem_Set(path, 0, sizeof(path));
-	Mem_Set(parambuffer, 0, sizeof(parambuffer));
-	Mem_Set(params, 0, sizeof(params));
-
-	// We have to look in the OS/2 configuration for the default browser.
-	// First step: Find the configuration files
- 	if (!PrfQueryProfile(hAnchor, &profile)) {
-		ShowErrorMessage(str);
-		return 0;
-	}
-	
-	// Second step: Open the configuration files and read exe path and parameters
-	os2Ini = PrfOpenProfile(hAnchor, userPath);
-	if (os2Ini == NULLHANDLE) {
-		ShowErrorMessage(str);
-		return 0;
-	}
-	if (!PrfQueryProfileString(os2Ini, "WPURLDEFAULTSETTINGS", "DefaultBrowserExe",
-		  NULL, path, sizeof(path))) {
-		PrfCloseProfile(os2Ini);
-		ShowErrorMessage(str);
-		return 0;
-	}
-
-	PrfQueryProfileString(os2Ini, "WPURLDEFAULTSETTINGS", "DefaultBrowserParameters",
-		NULL, params, sizeof(params));
-	PrfCloseProfile(os2Ini);
-
-	// concat arguments
-	if (strlen(params) > 0) strncat(params, " ", 20);
-	strncat(params, str, sizeof(str));
-
-	// Build parameter buffer
-	strcpy(parambuffer, "Browser");
-	paramptr = &parambuffer[strlen(parambuffer)+1];
-	// copy params to buffer
-	strcpy(paramptr, params);
-	printf("params %p %p %s\n", parambuffer, paramptr, paramptr);
-	paramptr += strlen(params) + 1;
-	// To be sure: Terminate parameter list with NULL
-	*paramptr = '\0';
-
-	// Last step: Execute detached browser
-   rc = DosExecPgm(userPath, sizeof(userPath), EXEC_ASYNC,
-		parambuffer, NULL, &result, path);
-	if (rc != NO_ERROR) {
-		ShowErrorMessage(str);
-		return 0;
-	}
-	
-	return 0;
-}
-#else
-cc_result Process_StartOpen(const cc_string* args) {
-	char str[NATIVE_STR_LEN];
-	char* cmd[3];
-	String_EncodeUtf8(str, args);
-
-	/* TODO: Can xdg-open be used on original Solaris, or is it just an OpenIndiana thing */
-	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;
-	Process_RawStart("xdg-open", cmd);
-	return 0;
-}
-#endif
-
-/* Retrieving exe path is completely OS dependant */
-#if defined CC_BUILD_MACOS
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	Mem_Set(path, '\0', NATIVE_STR_LEN);
-	cc_uint32 size = NATIVE_STR_LEN;
-	if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
-
-	/* despite what you'd assume, size is NOT changed to length of path */
-	*len = String_CalcLen(path, NATIVE_STR_LEN);
-	return 0;
-}
-#elif defined CC_BUILD_LINUX || defined CC_BUILD_SERENITY
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	*len = readlink("/proc/self/exe", path, NATIVE_STR_LEN);
-	return *len == -1 ? errno : 0;
-}
-#elif defined CC_BUILD_FREEBSD
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	static int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
-	size_t size       = NATIVE_STR_LEN;
-
-	if (sysctl(mib, 4, path, &size, NULL, 0) == -1) return errno;
-	*len = String_CalcLen(path, NATIVE_STR_LEN);
-	return 0;
-}
-#elif defined CC_BUILD_OPENBSD
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
-	char tmp[NATIVE_STR_LEN];
-	size_t size;
-	char* argv[100];
-	char* str;
-
-	/* NOTE: OpenBSD doesn't seem to let us get executable's location, so fallback to argv[0] */
-	/* See OpenBSD sysctl manpage for why argv array is so large: */
-	/* "... The buffer pointed to by oldp is filled with an array of char pointers followed by the strings themselves..." */
-	mib[2] = getpid();
-	size   = 100 * sizeof(char*);
-	if (sysctl(mib, 4, argv, &size, NULL, 0) == -1) return errno;
-
-	str = argv[0];
-	if (str[0] != '/') {
-		/* relative path */
-		if (!realpath(str, tmp)) return errno;
-		str = tmp;
-	}
-
-	*len = String_CalcLen(str, NATIVE_STR_LEN);
-	Mem_Copy(path, str, *len);
-	return 0;
-}
-#elif defined CC_BUILD_NETBSD
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
-	size_t size       = NATIVE_STR_LEN;
-
-	if (sysctl(mib, 4, path, &size, NULL, 0) == -1) return errno;
-	*len = String_CalcLen(path, NATIVE_STR_LEN);
-	return 0;
-}
-#elif defined CC_BUILD_SOLARIS
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	*len = readlink("/proc/self/path/a.out", path, NATIVE_STR_LEN);
-	return *len == -1 ? errno : 0;
-}
-#elif defined CC_BUILD_HAIKU
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	image_info info;
-	int32 cookie = 0;
-
-	cc_result res = get_next_image_info(B_CURRENT_TEAM, &cookie, &info);
-	if (res != B_OK) return res;
-
-	*len = String_CalcLen(info.name, NATIVE_STR_LEN);
-	Mem_Copy(path, info.name, *len);
-	return 0;
-}
-#elif defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	static cc_string file = String_FromConst("ClassiCube");
-
-	/* TODO properly get exe path */
-	/* Maybe use PIOCOPENM from https://nixdoc.net/man-pages/IRIX/man4/proc.4.html */
-	Mem_Copy(path, file.buffer, file.length);
-	*len = file.length;
-	return 0;
-}
-#elif defined CC_BUILD_OS2
-static cc_result Process_RawGetExePath(char* path, int* len) {
-	PPIB pib;
-	DosGetInfoBlocks(NULL, &pib);
-	if (pib && pib->pib_pchcmd) {
-		Mem_Copy(path, pib->pib_pchcmd, strlen(pib->pib_pchcmd));
-		*len = strlen(pib->pib_pchcmd);
-	}
-	return 0;
-}
-#endif
+/* cc_result Process_StartOpen(const cc_string* args) */
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_FLATPAK
-cc_bool Updater_Supported = false;
-#else
 cc_bool Updater_Supported = true;
-#endif
 
-#if defined CC_BUILD_ANDROID
-/* implemented in Platform_Android.c */
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
-#elif defined CC_BUILD_SYMBIAN
-#else
+const struct UpdaterInfo Updater_Info = {
+	"&eRedownload and reinstall to update", 0, NULL
+};
+
 cc_bool Updater_Clean(void) { return true; }
-
-#if defined CC_BUILD_RPI
-	#if __aarch64__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL ES", "cc-rpi64" } } };
-	#else
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL ES", "ClassiCube.rpi" } } };
-	#endif
-#elif defined CC_BUILD_LINUX
-	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = {
-		"&eModernGL is recommended for newer machines (2015 or later)", 2,
-		{
-			{ "ModernGL", "cc-nix64-gl2" },
-			{ "OpenGL",   "ClassiCube" }
-		}
-	};
-	#elif __i386__
-	const struct UpdaterInfo Updater_Info = {
-		"&eModernGL is recommended for newer machines (2015 or later)", 2,
-		{
-			{ "ModernGL", "cc-nix32-gl2" },
-			{ "OpenGL",   "ClassiCube.32" }
-		}
-	};
-	#else
-	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-	#endif
-#elif defined CC_BUILD_MACOS
-	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = {
-		"&eModernGL is recommended for newer machines (2015 or later)", 2,
-		{
-			{ "ModernGL", "cc-osx64-gl2" },
-			{ "OpenGL",   "ClassiCube.64.osx" }
-		}
-	};
-	#elif __i386__
-	const struct UpdaterInfo Updater_Info = {
-		"&eModernGL is recommended for newer machines (2015 or later)", 2,
-		{
-			{ "ModernGL", "cc-osx32-gl2" },
-			{ "OpenGL",   "ClassiCube.osx" }
-		}
-	};
-	#else
-	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-	#endif
-#elif defined CC_BUILD_HAIKU
-	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-haiku-64" } } };
-	#else
-	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-	#endif
-#elif defined CC_BUILD_FREEBSD
-	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-freebsd-64" } } };
-	#elif __i386__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-freebsd-32" } } };
-	#else
-	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-	#endif
-#elif defined CC_BUILD_NETBSD
-	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-netbsd-64" } } };
-	#else
-	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-	#endif
-#else
-	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-#endif
-
 cc_result Updater_Start(const char** action) {
-	char path[NATIVE_STR_LEN + 1];
-	char* argv[2];
-	cc_result res;
-	int len = 0;
-
-	*action = "Getting executable path";
-	if ((res = Process_RawGetExePath(path, &len))) return res;
-	path[len] = '\0';
-	
-	/* Because the process is only referenced by inode, we can */
-	/* just unlink current filename and rename updated file to it */
-	*action = "Deleting executable";
-	if (unlink(path) == -1) return errno;
-	*action = "Replacing executable";
-	if (rename(UPDATE_FILE, path) == -1) return errno;
-
-	argv[0] = path; argv[1] = NULL;
-	*action = "Restarting game";
-	return Process_RawStart(path, argv);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
-	char path[NATIVE_STR_LEN + 1];
-	struct stat sb;
-	int len = 0;
-
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-
-	if (stat(path, &sb) == -1) return errno;
-	*timestamp = (cc_uint64)sb.st_mtime;
-	return 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result Updater_MarkExecutable(void) {
-	struct stat st;
-	if (stat(UPDATE_FILE, &st) == -1) return errno;
-
-	st.st_mode |= S_IXUSR;
-	return chmod(UPDATE_FILE, st.st_mode) == -1 ? errno : 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
-	struct utimbuf times = { 0 };
-	times.modtime = timestamp;
-	return utime(UPDATE_FILE, &times) == -1 ? errno : 0;
+	return ERR_NOT_SUPPORTED;
 }
-#endif
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined USE_NS_DYNLOAD_API
-/* Really old mac OS versions don't have the dlopen/dlsym API */
-const cc_string DynamicLib_Ext = String_FromConst(".dylib");
-
-void* DynamicLib_Load2(const cc_string* path) {
-	cc_filepath str;
-	Platform_EncodePath(&str, path);
-	return NSAddImage(str.buffer, NSADDIMAGE_OPTION_WITH_SEARCHING |
-								NSADDIMAGE_OPTION_RETURN_ON_ERROR);
-}
-
-void* DynamicLib_Get2(void* lib, const char* name) {
-	cc_string tmp; char tmpBuffer[128];
-	NSSymbol sym;
-	String_InitArray_NT(tmp, tmpBuffer);
-
-	/* NS linker api rquires symbols to have a _ prefix */
-	String_Append(&tmp, '_');
-	String_AppendConst(&tmp, name);
-	tmp.buffer[tmp.length] = '\0';
-
-	sym = NSLookupSymbolInImage(lib, tmp.buffer, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW |
-												NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
-	return sym ? NSAddressOfSymbol(sym) : NULL;
-}
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	NSLinkEditErrors err = 0;
-	const char* name = "";
-	const char* msg  = "";
-	int errNum = 0;
-
-	NSLinkEditError(&err, &errNum, &name, &msg);
-	String_Format4(dst, "%c in %c (%i, sys %i)", msg, name, &err, &errNum);
-	return true;
-}
-#else
-/* TODO: Should we use .bundle instead of .dylib? */
-
-#ifdef CC_BUILD_DARWIN
-const cc_string DynamicLib_Ext = String_FromConst(".dylib");
-#elif defined CC_BUILD_SYMBIAN
 const cc_string DynamicLib_Ext = String_FromConst(".dll");
-#else
-const cc_string DynamicLib_Ext = String_FromConst(".so");
-#endif
 
 void* DynamicLib_Load2(const cc_string* path) {
 	cc_filepath str;
@@ -1362,29 +714,26 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	if (err) String_AppendConst(dst, err);
 	return err && err[0];
 }
-#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-static void Platform_InitPosix(void) {
-	struct sigaction sa = { 0 };
+void Platform_Init(void) {
 	cc_uintptr addr;
-	sa.sa_handler = SIG_IGN;
-
-	sigaction(SIGCHLD, &sa, NULL);
+	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
-	sigaction(SIGPIPE, &sa, NULL);
+	signal(SIGPIPE, SIG_IGN);
 
 	/* Log runtime address of a known function to ease investigating crashes */
 	/* (on platforms with ASLR, function addresses change every time when run) */
 	addr = (cc_uintptr)Process_Exit;
 	Platform_Log1("Process_Exit addr: %x", &addr);
+	
+	Stopwatch_Init();
 }
 void Platform_Free(void) { }
 
-#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX || defined CC_BUILD_SYMBIAN
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = strerror(res);
 	if (!err || res >= 1000) return false;
@@ -1392,343 +741,45 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	String_AppendUtf8(dst, err, String_Length(err));
 	return true;
 }
-#else
-cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	char chars[NATIVE_STR_LEN];
-	int len;
-
-	/* For unrecognised error codes, strerror_r might return messages */
-	/*  such as 'No error information', which is not very useful */
-	/* (could check errno here but quicker just to skip entirely) */
-	if (res >= 1000) return false;
-
-	len = strerror_r(res, chars, NATIVE_STR_LEN);
-	if (len == -1) return false;
-
-	len = String_CalcLen(chars, NATIVE_STR_LEN);
-	String_AppendUtf8(dst, chars, len);
-	return true;
-}
-#endif
-
-#if defined CC_BUILD_DARWIN
-
-#if defined CC_BUILD_MACOS
-static void Platform_InitSpecific(void) {
-	ProcessSerialNumber psn = { 0, kCurrentProcess };
-	#ifdef __ppc__
-	/* TransformProcessType doesn't work with kCurrentProcess on older macOS */
-	GetCurrentProcess(&psn);
-	#endif
-
-	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes or create windows */
-	/* NOTE: TransformProcessType is macOS 10.3 or later */
-	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
-}
-#else
-static void Platform_InitSpecific(void) {
-	Platform_SingleProcess = true;
-	/* Always foreground process on iOS */
-}
-#endif
-
-void Platform_Init(void) {
-	Stopwatch_Init();
-	Platform_InitPosix();
-	Platform_InitSpecific();
-}
-#elif defined CC_BUILD_SYMBIAN
-
-extern void Symbian_Stopwatch_Init(void);
-void Platform_Init(void) {
-	Platform_SingleProcess = true;
-	Symbian_Stopwatch_Init();
-	Platform_InitPosix();
-}
-#else
-void Platform_Init(void) {
-	#ifdef CC_BUILD_MOBILE
-	Platform_SingleProcess = true;
-	#endif
-
-	Platform_InitPosix();
-}
-#endif
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Encryption--------------------------------------------------------*
-*#########################################################################################################################*/
-/* "b3 c5a-0d9" --> 0xB3C5A0D9 */
-static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
-	int hex[MACHINEID_LEN] = { 0 }, i, j, c;
-	cc_uint8* dst = (cc_uint8*)key;
-
-	/* Get each valid hex character */
-	for (i = 0, j = 0; i < len && j < MACHINEID_LEN; i++) 
-	{
-		c = PackedCol_DeHex(tmp[i]);
-		if (c != -1) hex[j++] = c;
-	}
-
-	for (i = 0; i < MACHINEID_LEN / 2; i++) 
-	{
-		dst[i] = (hex[i * 2] << 4) | hex[i * 2 + 1];
-	}
-}
-
-#if defined CC_BUILD_LINUX
-/* Read /var/lib/dbus/machine-id or /etc/machine-id for the key */
-static cc_result GetMachineID(cc_uint32* key) {
-	const cc_string idFile  = String_FromConst("/var/lib/dbus/machine-id");
-	const cc_string altFile = String_FromConst("/etc/machine-id");
-	char tmp[MACHINEID_LEN];
-	struct Stream s;
-	cc_result res;
-
-	/* Some machines only have dbus id, others only have etc id */
-	res = Stream_OpenFile(&s, &idFile);
-	if (res) res = Stream_OpenFile(&s, &altFile);
-	if (res) return res;
-
-	res = Stream_Read(&s, (cc_uint8*)tmp, MACHINEID_LEN);
-	if (!res) DecodeMachineID(tmp, MACHINEID_LEN, key);
-
-	(void)s.Close(&s);
-	return res;
-}
-#elif defined CC_BUILD_MACOS
-/* kIOMasterPortDefault is deprecated since macOS 12.0 (replaced with kIOMainPortDefault) */
-/* And since kIOMasterPortDefault is just 0/NULL anyways, just manually declare it */
-static const mach_port_t masterPortDefault = 0;
-
-/* Read kIOPlatformUUIDKey from I/O registry for the key */
-static cc_result GetMachineID(cc_uint32* key) {
-	io_registry_entry_t registry;
-	CFStringRef devID = NULL;
-	char tmp[256] = { 0 };
-
-#ifdef kIOPlatformUUIDKey
-    registry = IORegistryEntryFromPath(masterPortDefault, "IOService:/");
-    if (!registry) return ERR_NOT_SUPPORTED;
-
-	devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
-	if (devID && CFStringGetCString(devID, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
-		DecodeMachineID(tmp, String_Length(tmp), key);	
-	}
-#else
-    registry = IOServiceGetMatchingService(masterPortDefault,
-                                           IOServiceMatching("IOPlatformExpertDevice"));
-
-    devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
-    if (devID && CFStringGetCString(devID, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
-        Mem_Copy(key, tmp, MACHINEID_LEN / 2);
-    }
-#endif
-
-	if (devID) CFRelease(devID);
-	IOObjectRelease(registry);
-	return tmp[0] ? 0 : ERR_NOT_SUPPORTED;
-}
-#elif defined CC_BUILD_FREEBSD
-/* Use kern.hostuuid sysctl for the key */
-/* Possible alternatives: kenv("smbios.system.uuid"), /etc/hostid */
-static cc_result GetMachineID(cc_uint32* key) {
-	static int mib[2] = { CTL_KERN, KERN_HOSTUUID };
-	char buf[128];
-	size_t size = 128;
-
-	if (sysctl(mib, 2, buf, &size, NULL, 0) == -1) return errno;
-	DecodeMachineID(buf, size, key);
-	return 0;
-}
-#elif defined CC_BUILD_OPENBSD
-/* Use hw.uuid sysctl for the key */
-static cc_result GetMachineID(cc_uint32* key) {
-	static int mib[2] = { CTL_HW, HW_UUID };
-	char buf[128];
-	size_t size = 128;
-
-	if (sysctl(mib, 2, buf, &size, NULL, 0) == -1) return errno;
-	DecodeMachineID(buf, size, key);
-	return 0;
-}
-#elif defined CC_BUILD_NETBSD
-/* Use hw.uuid for the key */
-static cc_result GetMachineID(cc_uint32* key) {
-	char buf[128];
-	size_t size = 128;
-
-	if (sysctlbyname("machdep.dmi.system-uuid", buf, &size, NULL, 0) == -1) return errno;
-	DecodeMachineID(buf, size, key);
-	return 0;
-}
-#elif defined CC_BUILD_SOLARIS
-/* Use SI_HW_SERIAL for the key */
-/* TODO: Should be using SMBIOS UUID for this (search it in illomos source) */
-/* NOTE: Got a '0' for serial number when running in a VM */
-#ifndef HW_HOSTID_LEN
-#define HW_HOSTID_LEN 11
-#endif
-
-static cc_result GetMachineID(cc_uint32* key) {
-	char host[HW_HOSTID_LEN] = { 0 };
-	if (sysinfo(SI_HW_SERIAL, host, sizeof(host)) == -1) return errno;
-
-	DecodeMachineID(host, HW_HOSTID_LEN, key);
-	return 0;
-}
-#elif defined CC_BUILD_ANDROID
-static cc_result GetMachineID(cc_uint32* key) {
-	cc_string dir; char dirBuffer[STRING_SIZE];
-	String_InitArray(dir, dirBuffer);
-
-	JavaCall_Void_String("getUUID", &dir);
-	DecodeMachineID(dirBuffer, dir.length, key);
-	return 0;
-}
-#elif defined CC_BUILD_IOS
-extern void GetDeviceUUID(cc_string* str);
-
-static cc_result GetMachineID(cc_uint32* key) {
-    cc_string str; char strBuffer[STRING_SIZE];
-    String_InitArray(str, strBuffer);
-
-    GetDeviceUUID(&str);
-    if (!str.length) return ERR_NOT_SUPPORTED;
-
-    DecodeMachineID(strBuffer, str.length, key);
-    return 0;
-}
-#elif defined CC_BUILD_SYMBIAN
-
-extern cc_result Symbian_GetMachineID(cc_uint32* key);
-
-static cc_result GetMachineID(cc_uint32* key) {
-	return Symbian_GetMachineID(key);
-}
-#else
-static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
-#endif
-
-cc_result Platform_GetEntropy(void* data, int len) {
-#if defined CC_BUILD_SYMBIAN
-    cc_uint32 rnd = 0, i;
-    for (i = 0; i < len; ++i) {
-        if (i % 4 == 0)
-            rnd = rand();
-        ((cc_uint8*) data)[i] = rnd;
-        rnd >>= 8;
-    }
-    return 0;
-#else
-	int ret;
-	int fd = open("/dev/urandom", O_RDONLY);
-	if (fd < 0) return ERR_NOT_SUPPORTED;
-	
-	// TODO: check return code? and partial reads?
-	ret = read(fd, data, len);
-	close(fd);
-	return ret == -1 ? errno : 0;
-#endif
-}
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_MOBILE
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	return GetGameArgs(args);
 }
-#else
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
-	argc--; argv++; /* skip executable path argument */
-	if (gameHasArgs) return GetGameArgs(args);
-
-	#if defined CC_BUILD_MACOS
-	/* Sometimes a "-psn_0_[number]" argument is added before actual args */
-	if (argc) {
-		static const cc_string psn = String_FromConst("-psn_0_");
-		cc_string arg0 = String_FromReadonly(argv[0]);
-		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
-	}
-	#endif
-
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) 
-	{
-		/* -d[directory] argument used to change directory data is stored in */
-		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
-			Process_Abort("-d argument no longer supported - cd to desired working directory instead");
-			continue;
-		}
-		args[i] = String_FromReadonly(argv[i]);
-	}
-	return count;
-}
-
-/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
-/* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66425#c34 */
-#define IGNORE_RETURN_VALUE(func) (void)!(func)
-
-/* Detects if the game is running in $HOME directory */
-static cc_bool IsProblematicWorkingDirectory(void) {
-	#ifdef CC_BUILD_MACOS
-	/* TODO: Only change working directory when necessary */
-	/* When running from bundle, working directory is "/" */
-	return true;
-	#else
-	cc_string curDir, homeDir;
-	char path[2048] = { 0 };
-	const char* home;
-
-	IGNORE_RETURN_VALUE(getcwd(path, 2048));
-	curDir = String_FromReadonly(path);
-	
-	home = getenv("HOME");
-	if (!home) return false;
-	homeDir = String_FromReadonly(home);
-	
-	if (String_Equals(&curDir, &homeDir)) {
-		Platform_LogConst("Working directory is $HOME! Changing to executable directory..");
-		return true;
-	}
-	return false;
-	#endif
-}
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	char path[NATIVE_STR_LEN];
-	int i, len = 0;
-	cc_result res;
-	if (!IsProblematicWorkingDirectory()) return 0;
+	// Directory is already set by platform: !:/private/e212a5c2
+	return 0;
+}
+
+void Platform_ShareScreenshot(const cc_string* filename) {
 	
-	res = Process_RawGetExePath(path, &len);
-	if (res) return res;
+}
 
-	/* get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/') break;
+
+/*########################################################################################################################*
+*-------------------------------------------------------Encryption--------------------------------------------------------*
+*#########################################################################################################################*/
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
+}
+
+#define MACHINE_KEY "Symbian_Symbian_"
+
+static cc_result GetMachineID(cc_uint32* key) {
+	TInt res;
+	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
+
+	if (HAL::Get(HAL::ESerialNumber, res) == KErrNone) {
+		key[0] = res;
 	}
-
-	#ifdef CC_BUILD_MACOS
-	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
-	cc_string raw = String_Init(path, len, 0);
-
-	/* If running from within a bundle, set data folder to folder containing bundle */
-	if (String_CaselessEnds(&raw, &bundle)) {
-		len -= bundle.length;
-
-		for (i = len - 1; i >= 0; i--, len--) {
-			if (path[i] == '/') break;
-		}
+	if (HAL::Get(HAL::EMachineUid, res) == KErrNone) {
+		key[1] = res;
 	}
-	#endif
-
-	path[len] = '\0';
-	return chdir(path) == -1 ? errno : 0;
+	return 0;
 }
 #endif
-#endif
+

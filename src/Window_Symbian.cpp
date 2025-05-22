@@ -534,7 +534,6 @@ void CWindow::ProcessEvents(float delta) {
 }
 
 void CWindow::RequestClose() {
-	WindowInfo.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
