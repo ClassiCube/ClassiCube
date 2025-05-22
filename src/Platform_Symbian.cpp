@@ -64,20 +64,21 @@ void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*)me
 
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
+	return size ? User::Alloc(size) : NULL;
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? User::AllocZ(size) : NULL;
 }
 
 void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
+	return size ? User::ReAlloc(mem, size) : NULL;
 }
 
 void Mem_Free(void* mem) {
-	if (mem) free(mem);
+	if (mem) User::Free(mem);
 }
 
 
@@ -98,20 +99,18 @@ TimeMS DateTime_CurrentUTC(void) {
 }
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
-	struct timeval cur;
-	struct tm loc_time;
-	time_t s;
+	TTime cur;
+	TDateTime dt;
 	
-	gettimeofday(&cur, NULL);
-	s = cur.tv_sec;
-	localtime_r(&s, &loc_time);
+	cur.HomeTime();
+	dt = cur.DateTime();
 
-	t->year   = loc_time.tm_year + 1900;
-	t->month  = loc_time.tm_mon  + 1;
-	t->day    = loc_time.tm_mday;
-	t->hour   = loc_time.tm_hour;
-	t->minute = loc_time.tm_min;
-	t->second = loc_time.tm_sec;
+	t->year   = dt.Year();
+	t->month  = dt.Month() + 1;
+	t->day    = dt.Day()   + 1;
+	t->hour   = dt.Hour();
+	t->minute = dt.Minute();
+	t->second = dt.Second();
 }
 
 
