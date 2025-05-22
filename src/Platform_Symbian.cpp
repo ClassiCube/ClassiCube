@@ -280,7 +280,9 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 #define NS_PER_SEC 1000000000ULL
 
-void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
+void Thread_Sleep(cc_uint32 milliseconds) {
+	User::After(milliseconds * 1000); 
+}
 
 static void* ExecThread(void* param) {
 	((Thread_StartFunc)param)();
