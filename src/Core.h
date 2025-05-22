@@ -554,7 +554,6 @@ typedef cc_uint8  cc_bool;
 #elif defined __SYMBIAN32__
 	#define CC_BUILD_SYMBIAN
 	#define CC_BUILD_MOBILE
-	#define CC_BUILD_POSIX
 	#define CC_BUILD_GLES
 	#define CC_BUILD_EGL
 	#define CC_BUILD_MAXSTACK (16 * 1024)

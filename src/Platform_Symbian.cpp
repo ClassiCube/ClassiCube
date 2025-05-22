@@ -40,6 +40,7 @@ extern "C" {
 #include <stdapis/netdb.h>
 }
 #include <e32base.h>
+#include <e32debug.h>
 #include <hal.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
@@ -86,10 +87,15 @@ void Mem_Free(void* mem) {
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	int ret;
-	/* Avoid "ignoring return value of 'write' declared with attribute 'warn_unused_result'" warning */
-	ret = write(STDOUT_FILENO, msg,  len);
-	ret = write(STDOUT_FILENO, "\n",   1);
+	TPtrC8 ptr((const TUint8*)msg, len);
+	cc_string str;
+	
+	str = String_Init(msg, len, len);
+	Logger_Log(&str);
+	str = String_FromReadonly("\r\n");
+	Logger_Log(&str);
+	
+	RDebug::RawPrint(ptr);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -372,23 +378,17 @@ void Waitable_Free(void* handle) {
 
 void Waitable_Signal(void* handle) {
 	RSemaphore* sem = (RSemaphore*)handle;
-	
 	sem->Signal();
-	delete sem;
 }
 
 void Waitable_Wait(void* handle) {
 	RSemaphore* sem = (RSemaphore*)handle;
-	
 	sem->Wait();
-	delete sem;
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	RSemaphore* sem = (RSemaphore*)handle;
-	
 	sem->Wait(milliseconds * 1000);
-	delete sem;
 }
 
 
