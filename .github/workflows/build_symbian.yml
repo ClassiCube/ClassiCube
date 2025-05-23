@@ -33,8 +33,8 @@ jobs:
           $Env:ARMLMD_LICENSE_FILE = "$pwd/ARM/Licenses/license.dat;$pwd/ARM/Licenses/License.lic"
           cmd /c "$SDK/epoc32/tools/sbs\bin\sbs.bat -b misc/symbian/bld.inf -c armv5_urel -f - -m $SDK/epoc32/build/ClassiCube/makefile -j 4"
           
-          (Get-Content misc/symbian/ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv5').Replace('$(TARGET)', 'urel') | Set-Content misc/symbian/ClassiCube.pkg
           cd misc/symbian
+          (Get-Content ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv5').Replace('$(TARGET)', 'urel') | Set-Content ClassiCube.pkg
           cmd /c "$SDK/epoc32/tools/makesis.exe ClassiCube.pkg ClassiCube.sis"
           
       - uses: ./.github/actions/upload_build
