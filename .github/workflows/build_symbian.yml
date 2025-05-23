@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download Symbian SDK
-        run: Invoke-WebRequest https://nnp.nnchan.ru/dl/symbiansr1_rvct4_workflow.zip -OutFile symbiansdk.zip
+        run: Invoke-WebRequest https://nnp.nnchan.ru/dl/symbiansr1_gcce_workflow.zip -OutFile symbiansdk.zip
       - name: Extract Symbian SDK
         run: Expand-Archive symbiansdk.zip -DestinationPath .
       - name: Compile Symbian build
@@ -27,11 +27,8 @@ jobs:
         run: |
           $SDK = "$pwd/SDK/"
           $Env:EPOCROOT = "$SDK".Substring(2)
-          $Env:RVCT40BIN = "$pwd/ARM/RVCT/Programs/4.0/400/win_32-pentium"
-          $Env:RVCT40INC = "$pwd/ARM/RVCT/Data/4.0/400/include/windows"
-          $Env:RVCT40LIB = "$pwd/ARM/RVCT/Data/4.0/400/lib"
-          $Env:ARMLMD_LICENSE_FILE = "$pwd/ARM/Licenses/license.dat;$pwd/ARM/Licenses/License.lic"
-          cmd /c "$SDK/epoc32/tools/sbs\bin\sbs.bat -b misc/symbian/bld.inf -c armv5_urel -f - -m $SDK/epoc32/build/ClassiCube/makefile -j 4"
+          $Env:SBS_GCCE441BIN = "$pwd/GCCE/bin"
+          cmd /c "$SDK/epoc32/tools/sbs\bin\sbs.bat -b misc/symbian/bld.inf -c armv5_urel_gcce -f - -m $SDK/epoc32/build/ClassiCube/makefile -j 4"
           
           cd misc/symbian
           (Get-Content ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv5').Replace('$(TARGET)', 'urel') | Set-Content ClassiCube.pkg
