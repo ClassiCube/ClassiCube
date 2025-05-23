@@ -35,8 +35,6 @@ LIBRARY libpthread.lib
 
 STATICLIBRARY libcrt0.lib
 
-OPTION GCCE -O2 -std=c99
-
 OPTION ARMCC -Otime --diag_suppress 1296 --diag_suppress 1293 --diag_suppress 66
 OPTION_REPLACE ARMCC --cpu 6
 OPTION_REPLACE ARMCC --fpu softvfp+vfpv2 --fpmode fast
