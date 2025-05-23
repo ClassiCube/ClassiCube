@@ -217,17 +217,12 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_SYMBIAN
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
 			String_EncodeUtf8(full_path, &path);
 			is_dir = stat(full_path, &sb) == 0 && S_ISDIR(sb.st_mode);
 		}
-#else
-		is_dir = entry->d_type == DT_DIR;
-		/* TODO: fallback to stat when this fails */
-#endif
 
 		callback(&path, obj, is_dir);
 		errno = 0;
@@ -552,9 +547,6 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-#if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS || defined CC_BUILD_SYMBIAN
-/* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-/* BeOS lacks support for poll */
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
@@ -572,22 +564,6 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	if (selectCount == -1) { *success = false; return errno; }
 	*success = FD_ISSET(s, &set) != 0; return 0;
 }
-#else
-#include <poll.h>
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	struct pollfd pfd;
-	int flags;
-
-	pfd.fd     = s;
-	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
-	
-	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
-	return 0;
-}
-#endif
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);

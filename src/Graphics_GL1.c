@@ -480,9 +480,8 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	_glHint(GL_FOG_HINT, GL_NICEST);
-#if defined CC_BUILD_SYMBIAN
-	_glHint(0x0C50 /*GL_PERSPECTIVE_CORRECTION_HINT*/, GL_NICEST);
-#endif
+	_glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
 	_glAlphaFunc(GL_GREATER, 0.5f);
 	_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	_glDepthFunc(GL_LEQUAL);

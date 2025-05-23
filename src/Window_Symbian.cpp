@@ -615,7 +615,7 @@ cc_result CWindow::OpenBrowser(const cc_string* url) {
 }
 
 void Window_PreInit(void) {
-	NormDevice.defaultBinds = symbian_binds;
+	//NormDevice.defaultBinds = symbian_binds; TODO only use on devices with limited hardware
 	
 	CCoeEnv* env = new (ELeave) CCoeEnv();
 	TRAPD(err, env->ConstructL(ETrue, 0));
