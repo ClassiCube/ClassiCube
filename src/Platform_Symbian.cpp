@@ -90,7 +90,7 @@ void Platform_Log(const char* msg, int len) {
 	TPtrC8 ptr((const TUint8*)msg, len);
 	cc_string str;
 	
-	str = String_Init(msg, len, len);
+	str = String_Init((char*)msg, len, len);
 	Logger_Log(&str);
 	str = String_FromReadonly("\r\n");
 	Logger_Log(&str);

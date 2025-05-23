@@ -25,6 +25,47 @@ extern "C" {
 }
 
 static cc_bool launcherMode;
+static const BindMapping symbian_binds[BIND_COUNT] = {
+	{ CCKEY_UP, 0 },    // BIND_FORWARD
+	{ CCKEY_DOWN, 0 },  // BIND_BACKWARDS
+	{ CCKEY_LEFT, 0 },  // BIND_LEFT
+	{ CCKEY_RIGHT, 0 }, // BIND_RIGHT
+	{ CCKEY_SPACE, 0 }, // BIND_JUMP  
+	{ 'R', 0 }, // BIND_RESPAWN
+	{ CCKEY_ENTER, 0 }, // BIND_SET_SPAWN
+	{ 'T', 0 }, // BIND_CHAT
+	{ 'B', 0 }, // BIND_INVENTORY
+	{ 'F', 0 }, // BIND_FOG
+	{ CCKEY_ENTER, 0 }, // BIND_SEND_CHAT
+	{ CCKEY_TAB, 0 }, // BIND_TABLIST
+	{ '7', 0 }, // BIND_SPEED
+	{ '8', 0 }, // BIND_NOCLIP
+	{ '9', 0 }, // BIND_FLY 
+	{ CCKEY_Q, 0 }, // BIND_FLY_UP
+	{ CCKEY_E, 0 }, // BIND_FLY_DOWN
+	{ CCKEY_LALT, 0 }, // BIND_EXT_INPUT
+	{ 0, 0 }, // BIND_HIDE_FPS
+	{ CCKEY_F12, 0 }, // BIND_SCREENSHOT
+	{ 0, 0 }, // BIND_FULLSCREEN
+	{ CCKEY_F5, 0 }, // BIND_THIRD_PERSON
+	{ 0, 0 }, // BIND_HIDE_GUI
+	{ CCKEY_F7, 0 }, // BIND_AXIS_LINES
+	{ 'C', 0 }, // BIND_ZOOM_SCROLL
+	{ CCKEY_LCTRL, 0 },// BIND_HALF_SPEED
+	{ '4', 0 }, // BIND_DELETE_BLOCK
+	{ '5', 0 }, // BIND_PICK_BLOCK
+	{ '6', 0 }, // BIND_PLACE_BLOCK
+	
+	{ 0, 0 }, { 0, 0 },         /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH */
+	{ 0, 0 }, { 0, 0 },                  /* BIND_SMOOTH_CAMERA, BIND_DROP_BLOCK */
+	{ 0, 0 }, { 0, 0 },                  /* BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },         /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },             /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },             /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },             /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
+	{ '1', 0 }, { '3', 0 }                              /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
+};
+
 
 class CWindow;
 
@@ -573,9 +614,9 @@ cc_result CWindow::OpenBrowser(const cc_string* url) {
 	return ERR_NOT_SUPPORTED;
 }
 
-//
-
 void Window_PreInit(void) {
+	NormDevice.defaultBinds = symbian_binds;
+	
 	CCoeEnv* env = new (ELeave) CCoeEnv();
 	TRAPD(err, env->ConstructL(ETrue, 0));
 	
