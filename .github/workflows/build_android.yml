@@ -19,11 +19,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Retrieve dependencies
+        shell: bash
+        run: |
+          mkdir build-tools
+          wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/build-tools.zip
+          unzip build-tools.zip -d build-tools
+          chmod +x build-tools/aapt
+          chmod +x build-tools/dx
+          chmod +x build-tools/zipalign
+
       - name: Compile android builds
         shell: bash
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           DROID_FLAGS: "-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
           DROID_LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
         run: |
@@ -36,13 +46,6 @@ jobs:
           NDK_ROOT="/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"
           TOOLS_ROOT=$ROOT_DIR/build-tools
           SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
-          
-          mkdir build-tools
-          wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/build-tools.zip
-          unzip build-tools.zip -d build-tools
-          chmod +x build-tools/aapt
-          chmod +x build-tools/dx
-          chmod +x build-tools/zipalign
 
           cd $ROOT_DIR/src
           $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_16

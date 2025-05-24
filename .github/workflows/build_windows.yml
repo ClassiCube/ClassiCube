@@ -21,6 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install packages
+        shell: bash
+        run: |
+          sudo apt-get -y install gcc-mingw-w64-i686
+
       - name: Compile 32 bit Windows builds
         shell: bash
         id: compile
@@ -28,7 +34,6 @@ jobs:
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
           WIN32_FLAGS:  "-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN CCicon_32.res"
         run: |
-          sudo apt-get -y install gcc-mingw-w64-i686
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"  
           
           cp misc/windows/CCicon_32.res src/CCicon_32.res
@@ -87,6 +92,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install packages
+        shell: bash
+        run: |
+          sudo apt-get -y install gcc-mingw-w64-x86-64
+
       - name: Compile 64 bit Windows builds
         shell: bash
         id: compile
@@ -94,7 +105,6 @@ jobs:
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
           WIN64_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN CCicon_64.res"
         run: |
-          sudo apt-get -y install gcc-mingw-w64-x86-64
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"  
           
           cp misc/windows/CCicon_64.res src/CCicon_64.res
