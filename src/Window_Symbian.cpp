@@ -71,20 +71,19 @@ class CWindow;
 
 CWindow* window;
 
-static bool ConvertToUnicode(TDes& dst, const char* src, size_t length) {
-	if (src) {
-		cc_unichar* uni = reinterpret_cast <cc_unichar*> (const_cast <TUint16*> (dst.Ptr()));
-		for (int i = 0; i < length; i++) {
-			*uni++ = Convert_CP437ToUnicode(src[i]);
-		}
-		*uni = '\0';
-		dst.SetLength(length);
+static void ConvertToUnicode(TDes& dst, const char* src, size_t length) {
+	if (!src) return;
+
+	cc_unichar* uni = reinterpret_cast <cc_unichar*> (const_cast <TUint16*> (dst.Ptr()));
+	for (int i = 0; i < length; i++) {
+		*uni++ = Convert_CP437ToUnicode(src[i]);
 	}
-	return false;
+	*uni = '\0';
+	dst.SetLength(length);
 }
 
-static bool ConvertToUnicode(TDes& dst, const cc_string* src) {
-	return ConvertToUnicode(dst, src->buffer, (size_t)src->length);
+static void ConvertToUnicode(TDes& dst, const cc_string* src) {
+	ConvertToUnicode(dst, src->buffer, (size_t)src->length);
 }
 
 class CWindow : public CBase
