@@ -71,6 +71,21 @@ class CWindow;
 
 CWindow* window;
 
+static void ConvertToUnicode(TDes& dst, const char* src, size_t length) {
+	if (!src) return;
+
+	cc_unichar* uni = reinterpret_cast <cc_unichar*> (const_cast <TUint16*> (dst.Ptr()));
+	for (int i = 0; i < length; i++) {
+		*uni++ = Convert_CP437ToUnicode(src[i]);
+	}
+	*uni = '\0';
+	dst.SetLength(length);
+}
+
+static void ConvertToUnicode(TDes& dst, const cc_string* src) {
+	ConvertToUnicode(dst, src->buffer, (size_t)src->length);
+}
+
 class CWindow : public CBase
 {
 public:
@@ -82,7 +97,7 @@ public:
 	void ProcessEvents(float delta);
 	void RequestClose();
 	void InitEvents();
-	cc_result OpenBrowser(const cc_string* url);
+	cc_result OpenBrowserL(const cc_string* url);
 	~CWindow();
 	
 	TWsEvent iWsEvent;
@@ -184,8 +199,8 @@ CWindow::~CWindow() {
 }
 
 void CWindow::ConstructL() {
-	delete CActiveScheduler::Current();            
-	CActiveScheduler* actScheduler = new (ELeave) CActiveScheduler();    
+	delete CActiveScheduler::Current();
+	CActiveScheduler* actScheduler = new (ELeave) CActiveScheduler();
 	CActiveScheduler::Install(actScheduler);
 	
 	CCoeEnv* env = CCoeEnv::Static();
@@ -464,6 +479,7 @@ void CWindow::HandleWsEvent(const TWsEvent& aWsEvent) {
 	}
 	// shutdown request from task manager
 	case KAknShutOrHideApp: {
+		WindowInfo.Exists = false;
 		RequestClose();
 		break;
 	}
@@ -471,6 +487,7 @@ void CWindow::HandleWsEvent(const TWsEvent& aWsEvent) {
 	case EEventUser: {
 		TApaSystemEvent apaSystemEvent = *(TApaSystemEvent*) aWsEvent.EventData();
 		if (apaSystemEvent == EApaSystemEventShutdown) {
+			WindowInfo.Exists = false;
 			RequestClose();
 		}
 		break;
@@ -590,28 +607,31 @@ void CWindow::InitEvents() {
 	iWsSession.EventReady(&iWsEventStatus);
 }
 
-cc_result CWindow::OpenBrowser(const cc_string* url) {
-#if 0
-	TUid browserUid = {0x1020724d};
+cc_result CWindow::OpenBrowserL(const cc_string* url) {
+#if defined CC_BUILD_SYMBIAN_3 || defined CC_BUILD_SYMBIAN_S60V5
+	TUid browserUid = {0x10008D39};
+#else
+	TUid browserUid = {0x1020724D};
+#endif
 	TApaTaskList tasklist(window->iWsSession);
 	TApaTask task = tasklist.FindApp(browserUid);
-	TPtrC des;
-	// TODO convert url to utf16
 	
 	if (task.Exists()) {
 		task.BringToForeground();
-		
-		
+		task.SendMessage(TUid::Uid(0), TPtrC8((TUint8 *)url->buffer, (TInt)url->length));
 	} else {
 		RApaLsSession ls;
-		if (!ls.Connect()) {
-			TThreadId tid;
-			ls.StartDocument(des, browserUid, tid);
-			ls.Close();
+		if (!ls.Handle()) {
+			User::LeaveIfError(ls.Connect());
 		}
+		
+		TThreadId tid;
+		TBuf<FILENAME_SIZE> buf;
+		ConvertToUnicode(buf, url);
+		ls.StartDocument(buf, browserUid, tid);
+		ls.Close();
 	}
-#endif
-	return ERR_NOT_SUPPORTED;
+	return 0;
 }
 
 void Window_PreInit(void) {
@@ -779,7 +799,7 @@ void GLContext_Create(void) {
 
 cc_result Process_StartOpen(const cc_string* args) {
 	TInt err = 0;
-	TRAP(err, err = window->OpenBrowser(args));
+	TRAP(err, err = window->OpenBrowserL(args));
 	return (cc_result) err;
 }
 
