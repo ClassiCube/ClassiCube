@@ -105,7 +105,7 @@ void Gfx_Create(void) {
 #ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 #ifndef GL_INDICES
-	cc_uint16* gl_indices[GFX_MAX_INDICES];
+	cc_uint16 gl_indices[GFX_MAX_INDICES];
 #endif
 	GfxResourceID id = NULL;
 	cc_uint32 size   = count * sizeof(cc_uint16);
