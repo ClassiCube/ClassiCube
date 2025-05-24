@@ -1086,7 +1086,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
 	
 	if (req->data) {
-		if (res = Http_SetData(env, req)) return res;
+		if ((res = Http_SetData(env, req))) return res;
 		HttpRequest_Free(req);
 	}
 

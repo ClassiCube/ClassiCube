@@ -458,7 +458,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	extern int pthread_set_name_np(pthread_t thread, const char* name);
 	pthread_set_name_np(*ptr, name);
 #elif defined CC_BUILD_NETBSD
-	pthread_setname_np(*ptr, "%s", name);
+	pthread_setname_np(*ptr, "%s", (void*)name);
 #endif
 }
 

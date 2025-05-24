@@ -34,7 +34,7 @@ jobs:
         id: compile
         env: 
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
-          DROID_FLAGS: "-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+          DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
           DROID_LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
@@ -48,11 +48,11 @@ jobs:
           SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
 
           cd $ROOT_DIR/src
-          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_16
-          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_32
-          $NDK_ROOT/aarch64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_64
-          $NDK_ROOT/i686-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_32
-          $NDK_ROOT/x86_64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_64
+          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $COMMON_FLAGS $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_16
+          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_32
+          $NDK_ROOT/aarch64-linux-android21-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_64
+          $NDK_ROOT/i686-linux-android21-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_32
+          $NDK_ROOT/x86_64-linux-android21-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_64
           
           cd $ROOT_DIR/android/app/src/main
           # copy required native libraries
