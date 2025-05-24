@@ -71,20 +71,20 @@ class CWindow;
 
 CWindow* window;
 
-static bool ConvertToUnicode(const char* str, size_t length, TDes& destBuf) {
-	if (str) {
-		wchar_t* dest = reinterpret_cast <wchar_t*> (const_cast <TUint16*> (destBuf.Ptr()));
-		TInt len = mbstowcs(dest, str, length);
-		if (len > 0) {
-			destBuf.SetLength(len);
-			return true;
+static bool ConvertToUnicode(TDes& dst, const char* src, size_t length) {
+	if (src) {
+		cc_unichar* uni = reinterpret_cast <cc_unichar*> (const_cast <TUint16*> (dst.Ptr()));
+		for (int i = 0; i < length; i++) {
+			*uni++ = Convert_CP437ToUnicode(src[i]);
 		}
+		*uni = '\0';
+		dst.SetLength(length);
 	}
 	return false;
 }
 
-static bool ConvertToUnicode(const cc_string* str, TDes& destBuf) {
-	return ConvertToUnicode(str->buffer, (size_t)str->length, destBuf);
+static bool ConvertToUnicode(TDes& dst, const cc_string* src) {
+	return ConvertToUnicode(dst, src->buffer, (size_t)src->length);
 }
 
 class CWindow : public CBase
@@ -628,7 +628,7 @@ cc_result CWindow::OpenBrowserL(const cc_string* url) {
 		
 		TThreadId tid;
 		TBuf<FILENAME_SIZE> buf;
-		ConvertToUnicode(url, buf);
+		ConvertToUnicode(buf, url);
 		ls.StartDocument(buf, browserUid, tid);
 		ls.Close();
 	}
