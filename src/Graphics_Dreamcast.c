@@ -920,14 +920,19 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
 	stateDirty = true;
 
-	pvr_poly_hdr_t c;
+	struct pvr_clip_command {
+		uint32_t cmd; // TA command
+		uint32_t mode1, mode2, mode3; // not used in USERCLIP command
+		uint32_t sx, sy, ex, ey; // 4 corners of the region
+	} __attribute__((aligned(32))) c;
+
 	c.cmd = PVR_CMD_USERCLIP;
 	c.mode1 = c.mode2 = c.mode3 = 0;
 
-	c.d1 = x >> 5;
-	c.d2 = y >> 5;
-	c.d3 = ((x + w) >> 5) - 1;
-	c.d4 = ((y + h) >> 5) - 1;
+	c.sx = x >> 5;
+	c.sy = y >> 5;
+	c.ex = ((x + w) >> 5) - 1;
+	c.ey = ((y + h) >> 5) - 1;
 
 	CommandsList_Append(&listOP, &c);
 	CommandsList_Append(&listPT, &c);
