@@ -246,6 +246,7 @@ static void VirtualKeyboard_ClickSelected(void) {
 		VirtualKeyboard_Backspace();
 		break;
 	case KB_B_ENTER:
+		kb_curX = -1;
 		Input_SetPressed(CCKEY_ENTER);
 		Input_SetReleased(CCKEY_ENTER);
 		OnscreenKeyboard_Close();
