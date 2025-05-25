@@ -1,5 +1,7 @@
 TARGET		  ClassiCube_s60v3.exe
 
+ARMFPU softvfp
+
 LIBRARY libgles_cm.lib
 
 SOURCEPATH .

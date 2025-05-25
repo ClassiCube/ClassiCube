@@ -35,11 +35,13 @@ LIBRARY libpthread.lib
 
 STATICLIBRARY libcrt0.lib
 
+#ifdef ARMCC
 ALWAYS_BUILD_AS_ARM
 OPTION ARMCC -Otime --diag_suppress 1296 --diag_suppress 1293 --diag_suppress 66
 OPTION_REPLACE ARMCC --cpu 6
 OPTION_REPLACE ARMCC --fpu softvfp+vfpv2 --fpmode fast
 OPTION_REPLACE ARMCC -O2 -O3
+#endif
 
 SOURCEPATH ../../src
 SOURCE Animations.c Audio.c AudioBackend.c AxisLinesRenderer.c Bitmap.c Block.c BlockPhysics.c Builder.c Camera.c Chat.c Commands.c Deflate.c Drawer.c Drawer2D.c Entity.c EntityComponents.c EntityRenderers.c EnvRenderer.c Event.c ExtMath.c FancyLighting.c Formats.c Game.c GameVersion.c Generator.c Graphics_GL1.c Graphics_SoftGPU.c Gui.c HeldBlockRenderer.c Http_Web.c Http_Worker.c Input.c InputHandler.c Inventory.c IsometricDrawer.c LBackend.c LScreens.c LWeb.c LWidgets.c Launcher.c Lighting.c Logger.c MapRenderer.c MenuOptions.c Menus.c Model.c Options.c PackedCol.c Particle.c Physics.c Picking.c Platform_Posix.c Protocol.c Queue.c Resources.c SSL.c Screens.c SelOutlineRenderer.c SelectionBox.c Server.c Stream.c String.c SystemFonts.c TexturePack.c TouchUI.c Utils.c Vectors.c Widgets.c World.c _autofit.c _cff.c _ftbase.c _ftbitmap.c _ftglyph.c _ftinit.c _ftsynth.c _psaux.c _pshinter.c _psmodule.c _sfnt.c _smooth.c _truetype.c _type1.c Vorbis.c main.c Platform_Symbian.cpp Graphics_GL2.c Window_Symbian.cpp

@@ -2,6 +2,8 @@ TARGET		  ClassiCube_s60v5.exe
 
 MACRO CC_BUILD_SYMBIAN_S60V5
 
+ARMFPU softvfp
+
 LIBRARY libgles_cm.lib
 
 SOURCEPATH .
