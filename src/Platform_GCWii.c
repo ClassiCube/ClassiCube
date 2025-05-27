@@ -397,7 +397,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	return false;
 }
 
-static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 #ifdef HW_RVL
 	struct hostent* res = net_gethostbyname(host);
 	struct sockaddr_in* addr4;

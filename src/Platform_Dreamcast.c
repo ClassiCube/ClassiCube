@@ -543,7 +543,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	return false;
 }
 
-static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;

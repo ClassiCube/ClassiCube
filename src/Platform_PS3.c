@@ -352,7 +352,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	return false;
 }
 
-static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct net_hostent* res = netGetHostByName(host);
 	struct sockaddr_in* addr4;
 	if (!res) return net_h_errno;
