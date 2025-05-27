@@ -335,10 +335,23 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in v4;
-};
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
 static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct net_hostent* res = netGetHostByName(host);
 	struct sockaddr_in* addr4;
@@ -350,39 +363,22 @@ static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numVal
 	
 	// each address pointer is only 4 bytes long
 	u32* addr_list = (u32*)res->h_addr_list;
-	char* src_addr;
 	int i;
 	
 	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
 	{
-		src_addr = (char*)addr_list[i];
+		char* src_addr = (char*)addr_list[i];
 		if (!src_addr) break;
 		addrs[i].size = sizeof(struct sockaddr_in);
+
 		addr4 = (struct sockaddr_in*)addrs[i].data;
 		addr4->sin_family = AF_INET;
 		addr4->sin_port   = htons(port);
 		addr4->sin_addr   = *(struct in_addr*)src_addr;
 	}
+
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-}
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-
-	if (inet_aton(str, &addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(*addr4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {

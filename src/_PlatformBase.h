@@ -285,3 +285,54 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 }
 #endif
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Socket----------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
+/* Parses IPv4 addresses in the form a.b.c.d */
+static CC_INLINE cc_bool ParseIPv4Address(const cc_string* addr, cc_uint32* ip) {
+	cc_string parts[5];
+	int i;
+
+	union ipv4_addr_raw {
+		cc_uint8 bytes[4];
+		cc_uint32 value;
+	} raw;
+	
+	/* 4+1 in case user tries '1.1.1.1.1' */
+	if (String_UNSAFE_Split(addr, '.', parts, 4 + 1) != 4) return false;
+
+	for (i = 0; i < 4; i++) 
+	{
+		if (!Convert_ParseUInt8(&parts[i], &raw.bytes[i])) return false;
+	}
+
+	*ip = raw.value;
+	return true;
+}
+
+
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst);
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst);
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs);
+
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	char str[NATIVE_STR_LEN];
+
+	if (ParseIPv4(address, port, &addrs[0])) {
+		*numValidAddrs = 1;
+		return 0;
+	}
+
+	String_EncodeUtf8(str, address);
+	if (ParseIPv6(str, port, &addrs[0])) {
+		*numValidAddrs = 1;
+		return 0;
+	}
+
+	*numValidAddrs = 0;
+	return ParseHost(str, port, addrs, numValidAddrs);
+}
+#endif
+

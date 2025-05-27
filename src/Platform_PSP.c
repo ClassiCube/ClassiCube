@@ -298,29 +298,41 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
 	char buf[1024];
-	int rid, ret;
-	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 1;
+	int rid;
 
-	if (sceNetInetInetPton(AF_INET, str, &addr4->sin_addr) <= 0) {
-		/* Fallback to resolving as DNS name */
-		if (sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0) 
-			return ERR_INVALID_ARGUMENT;
+	/* Fallback to resolving as DNS name */
+	if (sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0) 
+		return ERR_INVALID_ARGUMENT;
 
-		ret = sceNetResolverStartNtoA(rid, str, &addr4->sin_addr, 1 /* timeout */, 5 /* retries */);
-		sceNetResolverDelete(rid);
-		if (ret < 0) return ret;
-	}
+	int ret = sceNetResolverStartNtoA(rid, host, &addr4->sin_addr, 1 /* timeout */, 5 /* retries */);
+	sceNetResolverDelete(rid);
+	if (ret < 0) return ret;
 	
 	addr4->sin_family = AF_INET;
 	addr4->sin_port   = htons(port);
 		
-	addrs[0].size = sizeof(*addr4);
+	addrs[0].size  = sizeof(*addr4);
+	*numValidAddrs = 1;
 	return 0;
 }
 

@@ -667,6 +667,36 @@ union SocketAddress {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+#ifdef AF_INET6
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	union SocketAddress* addr = (union SocketAddress*)dst->data;
+	if (inet_pton(AF_INET6, ip, &addr->v6.sin6_addr) <= 0) return false;
+	
+	addr->v6.sin6_family = AF_INET6;
+	addr->v6.sin6_port   = htons(port);
+		
+	dst->size  = sizeof(addr->v6);
+	return true;
+}
+#else
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+#endif
+
 #if SUPPORTS_GETADDRINFO
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
@@ -730,36 +760,6 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 #endif
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	union SocketAddress* addr = (union SocketAddress*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) {
-		addr->v4.sin_family = AF_INET;
-		addr->v4.sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	
-	#ifdef AF_INET6
-	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) {
-		addr->v6.sin6_family = AF_INET6;
-		addr->v6.sin6_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v6);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	#endif
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
-}
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
