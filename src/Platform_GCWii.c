@@ -549,9 +549,6 @@ static void InitSockets(void) {
 	char localip[16] = {0};
 	char netmask[16] = {0};
 	char gateway[16] = {0};
-
-	u32 addr = inet_addr(localip);
-	Platform_Log1("ADDR: %h", &addr);
 	
 	int ret = if_config(localip, netmask, gateway, TRUE, 20);
 	if (ret >= 0) {

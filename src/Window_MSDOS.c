@@ -22,6 +22,9 @@
 #define MOUSE_CMD_HIDE  0x0002
 #define MOUSE_CMD_POLL  0x0003
 
+#define MOUSE_X(x) ((x) / 2)
+#define MOUSE_Y(y) (y)
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Mouse support------------------------------------------------------*
@@ -45,8 +48,8 @@ static void Mouse_Poll(void) {
 	__dpmi_int(INT_MOUSE, &regs);
 
 	int b = regs.x.bx;
-	int x = regs.x.cx;
-	int y = regs.x.dx;
+	int x = MOUSE_X(regs.x.cx);
+	int y = MOUSE_Y(regs.x.dx);
 
 	Input_SetNonRepeatable(CCMOUSE_L, b & 0x01);
 	Input_SetNonRepeatable(CCMOUSE_R, b & 0x02);
@@ -64,8 +67,8 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	regs.x.ax = MOUSE_CMD_POLL;
 	__dpmi_int(INT_MOUSE, &regs);
 
-	*x = regs.x.cx;
-	*y = regs.x.dx;
+	*x = MOUSE_X(regs.x.cx);
+	*y = MOUSE_Y(regs.x.dx);
 }
 
 void Cursor_SetPosition(int x, int y) { 
