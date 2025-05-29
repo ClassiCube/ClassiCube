@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kos-builds/kos-dc:sha-20149ee-14.2.0

@@ -18,6 +18,7 @@ jobs:
 # =============== 32 BIT LINUX ==============
 # ===========================================
   build-32:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
@@ -80,6 +81,7 @@ jobs:
 # =============== 64 BIT LINUX ==============
 # ===========================================
   build-64:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04

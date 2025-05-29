@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-PSP:
+  build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: pspdev/pspdev:latest

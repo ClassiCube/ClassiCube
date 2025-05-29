@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-haiku:
+  build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: haiku/cross-compiler:x86_64-r1beta4

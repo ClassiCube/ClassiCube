@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/cross-rs/x86_64-unknown-netbsd:edge

@@ -16,6 +16,7 @@ jobs:
 # ================ 32 BIT RPI ===============
 # ===========================================
   build-RPI32:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: dockcross/linux-armv6-lts
@@ -66,6 +67,7 @@ jobs:
 # ================ 64 BIT RPI ===============
 # ===========================================
   build-RPI64:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: dockcross/linux-arm64-lts
