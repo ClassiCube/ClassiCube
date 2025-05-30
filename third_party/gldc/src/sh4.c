@@ -1,14 +1,12 @@
-#include <math.h>
 #include <kos.h>
 #include <dc/pvr.h>
 #include "gldc.h"
 
 #define PREFETCH(addr) __builtin_prefetch((addr))
 static volatile uint32_t* sq;
-#define GL_FORCE_INLINE __attribute__((always_inline)) inline
 
 // calculates 1/sqrt(x)
-static GL_FORCE_INLINE float sh4_fsrra(float x) {
+static GLDC_FORCE_INLINE float sh4_fsrra(float x) {
   asm volatile ("fsrra %[value]\n"
   : [value] "+f" (x) // outputs (r/w to FPU register)
   : // no inputs
@@ -17,11 +15,11 @@ static GL_FORCE_INLINE float sh4_fsrra(float x) {
   return x;
 }
 
-static GL_FORCE_INLINE float _glFastInvert(float x) {
+static GLDC_FORCE_INLINE float _glFastInvert(float x) {
     return sh4_fsrra(x * x);
 }
 
-static GL_FORCE_INLINE void PushVertex(Vertex* v) {
+static GLDC_FORCE_INLINE void PushVertex(Vertex* v) {
     volatile Vertex* dst = (Vertex*)(sq);
     float f = _glFastInvert(v->w);
     // Convert to NDC (viewport already applied)
@@ -63,7 +61,7 @@ extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vou
 
 // https://casual-effects.com/research/McGuire2011Clipping/clip.glsl
 static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_t visible_mask) {
-    Vertex __attribute__((aligned(32))) scratch[4];
+    Vertex __attribute__((aligned(32))) scratch[2];
     Vertex* a = &scratch[0];
     Vertex* b = &scratch[1];
 

@@ -1,7 +1,4 @@
-SOURCE_DIRS		:= src src/yalloc
-
-C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(notdir $(C_FILES:%.c=%.o))
+OBJS 	:= sh4.o
 
 C_FLAGS = -O3 -DNDEBUG -mfsrra -mfsca -fno-math-errno -ffp-contract=fast -ffast-math -O3 -mpretend-cmove -fexpensive-optimizations -fomit-frame-pointer -finline-functions -ml -m4-single-only -ffunction-sections -fdata-sections -std=gnu99
 
@@ -17,9 +14,6 @@ default: $(TARGET)
 
 %.o: src/%.c
 	kos-cc $(C_DEFINES) $(C_FLAGS)  -c $< -o $@
-
-%.o: src/yalloc/%.c
-	kos-cc $(C_DEFINES) $(C_FLAGS) -c $< -o $@
 
 $(TARGET): $(OBJS)
 	kos-ar cr $@ $^

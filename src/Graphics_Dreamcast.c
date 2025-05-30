@@ -10,6 +10,7 @@
 #include <dc/matrix.h>
 #include <dc/pvr.h>
 #include "../third_party/gldc/src/gldc.h"
+#include "../third_party/gldc/src/state.c"
 
 static cc_bool renderingDisabled;
 static cc_bool stateDirty;
@@ -80,7 +81,6 @@ static void CommandsList_Append(struct CommandsList* list, const void* cmd) {
 #define TEXMEM_RESERVED (48 * 1024)
 #define TEXMEM_TO_PAGE(addr) ((cc_uint32)((addr) - texmem_base) / TEXMEM_PAGE_SIZE)
 
-TextureObject* TEXTURE_ACTIVE;
 static TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
 
 // Base address in VRAM for textures
@@ -672,21 +672,14 @@ void Gfx_SetFogMode(FogFunc func) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static matrix_t __attribute__((aligned(32))) _proj, _view;
+static matrix_t __attribute__((aligned(32))) mat_vp;
+
 static float textureOffsetX, textureOffsetY;
 static int textureOffset;
-
-static float vp_scaleX, vp_scaleY, vp_offsetX, vp_offsetY;
-static matrix_t __attribute__((aligned(32))) mat_vp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_PROJ) memcpy(&_proj, matrix, sizeof(struct Matrix));
 	if (type == MATRIX_VIEW) memcpy(&_view, matrix, sizeof(struct Matrix));
-
-	memcpy(&mat_vp, &Matrix_Identity, sizeof(struct Matrix));
-	mat_vp[0][0] = vp_scaleX;
-	mat_vp[1][1] = vp_scaleY;
-	mat_vp[3][0] = vp_offsetX;
-	mat_vp[3][1] = vp_offsetY;
 
 	mat_load(&mat_vp);
 	mat_apply(&_proj);
@@ -745,7 +738,6 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
-extern void apply_poly_header(pvr_poly_hdr_t* header, int list_type);
 static cc_bool loggedNoVRAM;
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
@@ -910,10 +902,17 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_scaleX  = w *  0.5f; // hwidth
-	vp_scaleY  = h * -0.5f; // hheight
-	vp_offsetX = x + w * 0.5f; // x_plus_hwidth
-	vp_offsetY = y + h * 0.5f; // y_plus_hheight
+	float scaleX  = w *  0.5f; // hwidth
+	float scaleY  = h * -0.5f; // hheight
+	float offsetX = x + w * 0.5f; // x_plus_hwidth
+	float offsetY = y + h * 0.5f; // y_plus_hheight
+
+	memcpy(&mat_vp, &Matrix_Identity, sizeof(struct Matrix));
+	mat_vp[0][0] = scaleX;
+	mat_vp[1][1] = scaleY;
+	mat_vp[3][0] = offsetX;
+	mat_vp[3][1] = offsetY;
+	// TODO load matrix now?
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {

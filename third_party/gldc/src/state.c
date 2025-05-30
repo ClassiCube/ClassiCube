@@ -1,23 +1,23 @@
-#include <string.h>
-#include <kos.h>
 #include <dc/pvr.h>
 #include "gldc.h"
 
-GLboolean DEPTH_TEST_ENABLED;
-GLboolean DEPTH_MASK_ENABLED;
+static TextureObject* TEXTURE_ACTIVE;
 
-GLboolean CULLING_ENABLED;
+static GLboolean DEPTH_TEST_ENABLED;
+static GLboolean DEPTH_MASK_ENABLED;
 
-GLboolean FOG_ENABLED;
-GLboolean ALPHA_TEST_ENABLED;
+static GLboolean CULLING_ENABLED;
 
-GLboolean SCISSOR_TEST_ENABLED;
-GLenum SHADE_MODEL = PVR_SHADE_GOURAUD;
+static GLboolean FOG_ENABLED;
+static GLboolean ALPHA_TEST_ENABLED;
 
-GLboolean BLEND_ENABLED;
+static GLboolean SCISSOR_TEST_ENABLED;
+static GLenum SHADE_MODEL = PVR_SHADE_GOURAUD;
 
-GLboolean TEXTURES_ENABLED;
-GLboolean AUTOSORT_ENABLED;
+static GLboolean BLEND_ENABLED;
+
+static GLboolean TEXTURES_ENABLED;
+static GLboolean AUTOSORT_ENABLED;
 
 static inline int DimensionFlag(int w) {
     switch(w) {
@@ -34,7 +34,7 @@ static inline int DimensionFlag(int w) {
     }
 }
 
-void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
+static GLDC_NO_INLINE void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     TextureObject* tx1 = TEXTURE_ACTIVE;
 
     int gen_culling = CULLING_ENABLED    ? PVR_CULLING_CW : PVR_CULLING_SMALL;
@@ -107,7 +107,4 @@ void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
         dst->mode3 |= (tx1->color << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
         dst->mode3 |= ((uint32_t)tx1->data & 0x00fffff8) >> 3;
     }
-
-    dst->d1 = dst->d2 = 0xffffffff;
-    dst->d3 = dst->d4 = 0xffffffff;
 }
