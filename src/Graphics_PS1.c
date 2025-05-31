@@ -181,8 +181,10 @@ void Gfx_Create(void) {
 	Gfx_ClearColor(PackedCol_Make(63, 0, 127, 255));
 
 	InitGeom();
-	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
-	gte_SetGeomScreen(Window_Main.Height / 2);
+	GTE_Set_ScreenOffsetX((Window_Main.Width  / 2) << 16);
+	GTE_Set_ScreenOffsetY((Window_Main.Height / 2) << 16);
+
+	GTE_Set_ScreenDistance(Window_Main.Height / 2);
 }
 
 void Gfx_Free(void) { 
@@ -590,8 +592,18 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *#########################################################################################################################*/
 // Preprocess vertex buffers into optimised layout for PS1
 // XYZ is stored in optimised form for 3D rendering and 2D rendering
-struct PS1VertexColoured { SVECTOR xyz; short xx, yy; unsigned rgbc; };
-struct PS1VertexTextured { SVECTOR xyz; short xx, yy; unsigned rgbc; int u, v; };
+struct PS1VertexColoured { 
+	short vx, vy, vz, pad;
+	short xx, yy;
+	unsigned rgbc;
+};
+struct PS1VertexTextured { 
+	short vx, vy, vz, pad;
+	short xx, yy;
+	unsigned rgbc;
+	int u, v; 
+};
+
 static VertexFormat buf_fmt;
 static int buf_count;
 
@@ -621,9 +633,9 @@ static void PreprocessTexturedVertices(void) {
 		int y = XYZFixed(src->y);
 		int z = XYZFixed(src->z);
 
-		dst->xyz.vx = x;
-		dst->xyz.vy = y;
-		dst->xyz.vz = z;
+		dst->vx = x;
+		dst->vy = y;
+		dst->vz = z;
 		dst->xx = x >> 8;
 		dst->yy = y >> 8;
 		
@@ -652,9 +664,9 @@ static void PreprocessColouredVertices(void) {
 		int y = XYZFixed(src->y);
 		int z = XYZFixed(src->z);
 
-		dst->xyz.vx = x;
-		dst->xyz.vy = y;
-		dst->xyz.vz = z;
+		dst->vx = x;
+		dst->vy = y;
+		dst->vz = z;
 		dst->xx = x >> 8;
 		dst->yy = y >> 8;
 
@@ -727,7 +739,6 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	GTE_Set_TransY(ToFixedTr(-src->row4.y));
 	GTE_Set_TransZ(ToFixedTr( src->row4.w));
 
-
 	transform_matrix.m[0][0] = ToFixed(src->row1.x);
 	transform_matrix.m[0][1] = ToFixed(src->row2.x);
 	transform_matrix.m[0][2] = ToFixed(src->row3.x);
@@ -740,7 +751,7 @@ static void LoadTransformMatrix(struct Matrix* src) {
 	transform_matrix.m[2][1] = ToFixed(src->row2.w);
 	transform_matrix.m[2][2] = ToFixed(src->row3.w);
 	
-	gte_SetRotMatrix(&transform_matrix);
+	GTE_Load_RotMatrix(&transform_matrix);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -903,7 +914,9 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexColoured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
 
-		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
+		GTE_Load_XYZ0(&v0->vx);
+		GTE_Load_XYZ1(&v1->vx);
+		GTE_Load_XYZ2(&v3->vx);
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_F4);
 		poly->rgbc = v0->rgbc;
@@ -913,14 +926,14 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		int p; GTE_Get_OTZ(p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		gte_stsxy0( &poly->x0 );
-		gte_stsxy1( &poly->x1 );
-		gte_stsxy2( &poly->x2 );
+		GTE_Store_XY0(&poly->x0, 0);
+		GTE_Store_XY1(&poly->x1, 0);
+		GTE_Store_XY2(&poly->x2, 0);
 
-		gte_ldv0( &v2->xyz );
+		GTE_Load_XYZ0(&v2->vx);
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
-		gte_stsxy( &poly->x3 );
+		GTE_Store_XY2(&poly->x3, 0);
 		
 		poly++;
 	}
@@ -948,7 +961,9 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexTextured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
 	
-		gte_ldv3(&v0->xyz, &v1->xyz, &v3->xyz);
+		GTE_Load_XYZ0(&v0->vx);
+		GTE_Load_XYZ1(&v1->vx);
+		GTE_Load_XYZ2(&v3->vx);
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_FT4);
 		poly->rgbc = v0->rgbc | blend_mode;
@@ -965,14 +980,14 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		int p; GTE_Get_OTZ(p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		gte_stsxy0( &poly->x0 );
-		gte_stsxy1( &poly->x1 );
-		gte_stsxy2( &poly->x2 );
-		gte_ldv0( &v2->xyz );
+		GTE_Store_XY0(&poly->x0, 0);
+		GTE_Store_XY1(&poly->x1, 0);
+		GTE_Store_XY2(&poly->x2, 0);
+		GTE_Load_XYZ0(&v2->vx);
 
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
-		gte_stsxy( &poly->x3 );
+		GTE_Store_XY2(&poly->x3, 0);
 	
 		poly->u0 = (v1->u >> uShift) + uOffset;
 		poly->v0 = (v1->v >> vShift) + vOffset;
