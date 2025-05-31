@@ -41,7 +41,7 @@ extern "C" {
 enum CCEventType {
 	CC_NONE,
 	CC_KEY_DOWN, CC_KEY_UP,
-	CC_WIN_RESIZED, CC_WIN_FOCUS, CC_WIN_REDRAW, CC_WIN_QUIT,
+	CC_WIN_RESIZED, CC_WIN_INACTIVE, CC_WIN_REDRAW, CC_WIN_QUIT,
 	CC_TOUCH_ADD, CC_TOUCH_REMOVE
 };
 struct CCEvent {
@@ -210,6 +210,7 @@ private:
 	void DynInitMenuPaneL(TInt aResourceId, CEikMenuPane* aMenuPane);
 	void HandleCommandL(TInt aCommand);
 	virtual TKeyResponse HandleKeyEventL(const TKeyEvent& aKeyEvent, TEventCode aType);
+	virtual void HandleForegroundEventL(TBool aForeground);
 
 private:
 	CClassiCubeContainer* iAppContainer;
@@ -278,6 +279,13 @@ TKeyResponse CClassiCubeAppUi::HandleKeyEventL(const TKeyEvent& aKeyEvent, TEven
 	default:
 		return EKeyWasNotConsumed;
 	}
+}
+
+void CClassiCubeAppUi::HandleForegroundEventL(TBool aForeground) {
+	CCEvent event = { 0 };
+	event.type = CC_WIN_INACTIVE;
+	event.i1 = !aForeground;
+	Events_Push(&event);
 }
 
 void CClassiCubeAppUi::HandleCommandL(TInt aCommand)
@@ -446,9 +454,6 @@ void CClassiCubeContainer::SizeChanged()
 	
 	DisplayInfo.Width = size.iWidth;
 	DisplayInfo.Height = size.iHeight;
-
-	WindowInfo.Width = size.iWidth;
-	WindowInfo.Height = size.iHeight;
 
 	CCEvent event = { 0 };
 	event.type = CC_WIN_RESIZED;
@@ -702,9 +707,9 @@ void Window_ProcessEvents(float delta) {
 			Window_Main.Height = event.i2;
 			Event_RaiseVoid(&WindowEvents.Resized);
 			break;
-		case CC_WIN_FOCUS:
-			Window_Main.Focused = event.i1;
-			Event_RaiseVoid(&WindowEvents.FocusChanged);
+		case CC_WIN_INACTIVE:
+			Window_Main.Inactive = event.i1;
+			Event_RaiseVoid(&WindowEvents.InactiveChanged);
 			break;
 		case CC_WIN_REDRAW:
 			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
