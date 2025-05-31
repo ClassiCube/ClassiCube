@@ -11,13 +11,14 @@
 ! FR10 = invT
 ! FR11 = t
 
-#define TM1 r1 // temp register 1
-#define TM2 r3 // temp register 2
-
+! INPUT ARGUMENTS
 #define IN1 r4 // input vertex 1
 #define IN2 r5 // input vertex 2
 #define OUT r6 // output vertex
+#define TYP r7 // type/flags for output vertex
 
+#define TM1 r1 // temp register 1
+#define TM2 r3 // temp register 2
 #define CL1 r4 // input colour 1
 #define CL2 r5 // input colour 2
 #define CLO r7 // output colour
@@ -60,6 +61,7 @@ _ClipEdge:
 	fmov.s  @TM1,fr11 ! LS, fr11 = v2->z
 	fsub     fr2,fr11 ! FE, fr11 = v2->z - v1->z
 	fldi0    fr8      ! LS, fr8  = 0
+	mov.l  TYP,@OUT   ! LS, OUT->flags = TYPE
 	fmul    fr11,fr11 ! FE, fr11 = (v2->z - v1->z) * (v2->z * v1->z)
 	fldi0    fr9      ! LS, fr9  = 0
 	fldi0    fr0      ! LS, fr0  = 0
@@ -118,6 +120,7 @@ _ClipEdge:
 	cmp/eq  CL1,CL2   ! MT, T = ACOLOR == BCOLOR
 	bt.s    1f        ! BR, if (T) goto 1;
 	mov     CL1,CLO   ! MT, OUTCOLOR = ACOLOR (branch delay instruction)
+
 ! Interpolate B
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
@@ -130,6 +133,7 @@ _ClipEdge:
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	shlr8   CL2       ! EX, BCOLOR >>= 8
 	sts     fpul,TM2  ! CO, tmp = FPUL
+
 ! Interpolate G
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.g
 	lds     TM1,fpul  ! CO, FPUL = val
@@ -144,6 +148,7 @@ _ClipEdge:
 	mov     TM2,CLO   ! MT, OUTCOLOR.b = tmp
 	shlr8   CL2       ! EX, BCOLOR >>= 8
 	sts     fpul,TM2  ! CO, tmp = FPUL
+
 ! Interpolate R
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.r
 	lds     TM1,fpul  ! CO, FPUL = val
@@ -160,6 +165,7 @@ _ClipEdge:
 	shlr8   CL2       ! EX, BCOLOR >>= 8
 	sts     fpul,TM2  ! CO, tmp = FPUL
 	
+! Interpolate A
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.a
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)

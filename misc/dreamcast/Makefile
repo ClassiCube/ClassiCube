@@ -11,9 +11,8 @@ CFLAGS	:= -g -DNDEBUG -O3 -fipa-pta -fno-pie -flto=auto -fomit-frame-pointer -fb
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(OBJS:%.o=%.d)
 
-GLDC_LIB	= third_party/gldc/libGLdc.a
 LDFLAGS		= -g
-LIBS		= -lm $(GLDC_LIB) -lppp -lkosfat
+LIBS		= -lm -lppp -lkosfat
 
 ifeq ($(strip $(KOS_BASE)),)
 $(warning Please set KOS variables in your environment. For example:)
@@ -37,7 +36,7 @@ $(BUILD_DIR):
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).elf: $(OBJS) $(GLDC_LIB)
+$(TARGET).elf: $(OBJS)
 	kos-cc $(LDFLAGS) $^ -o $@ $(LIBS)
 	
 $(TARGET).bin: $(TARGET).elf
@@ -66,10 +65,6 @@ $(TARGET).cdi: $(TARGET).iso
 #---------------------------------------------------------------------------------
 # object generation
 #---------------------------------------------------------------------------------
-$(GLDC_LIB): FORCE
-	$(MAKE) -C third_party/gldc
-FORCE: ;
-	
 $(BUILD_DIR)/%.o: src/%.c
 	kos-cc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 

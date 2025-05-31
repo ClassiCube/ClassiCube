@@ -2,9 +2,6 @@
 #define PRIVATE_H
 #include <stdint.h>
 
-#define GLenum     unsigned int
-#define GLboolean  unsigned char
-
 #define GLDC_FORCE_INLINE __attribute__((always_inline)) inline
 #define GLDC_NO_INLINE    __attribute__((noinline))
 
@@ -24,6 +21,6 @@ typedef struct {
     uint16_t height;
 } TextureObject;
 
-void SceneListSubmit(Vertex* v2, int n);
+void GLDC_NO_INLINE SceneListSubmit(Vertex* v2, int n);
 
 #endif // PRIVATE_H

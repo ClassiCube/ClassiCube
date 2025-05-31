@@ -9,8 +9,8 @@
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
-#include "../third_party/gldc/src/gldc.h"
-#include "../third_party/gldc/src/state.c"
+#include "../third_party/gldc/state.c"
+#include "../third_party/gldc/sh4.c"
 
 static cc_bool renderingDisabled;
 static cc_bool stateDirty;

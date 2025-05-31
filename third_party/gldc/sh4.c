@@ -15,24 +15,21 @@ static GLDC_FORCE_INLINE float sh4_fsrra(float x) {
   return x;
 }
 
-static GLDC_FORCE_INLINE float _glFastInvert(float x) {
-    return sh4_fsrra(x * x);
-}
-
 static GLDC_FORCE_INLINE void PushVertex(Vertex* v) {
     volatile Vertex* dst = (Vertex*)(sq);
-    float f = _glFastInvert(v->w);
-    // Convert to NDC (viewport already applied)
-    float x = v->x * f;
-    float y = v->y * f;
-
+	float ww   = v->w * v->w;
     dst->flags = v->flags;
-    dst->x = x;
-    dst->y = y;
-    dst->z = f;
-    dst->u = v->u;
-    dst->v = v->v;
-    dst->bgra = v->bgra;
+    float f    = sh4_fsrra(ww); // 1/sqrt(w^2) ~ 1/w
+    // Convert to NDC (viewport already applied)
+    float x    = v->x * f;
+    float y    = v->y * f;
+
+    dst->x     = x;
+    dst->y     = y;
+    dst->z     = f;
+    dst->u     = v->u;
+    dst->v     = v->v;
+    dst->bgra  = v->bgra;
     __asm__("pref @%0" : : "r"(dst));
     dst++;
 }
@@ -51,7 +48,7 @@ static inline void PushCommand(Vertex* v)  {
     sq += 8;
 }
 
-extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout);
+extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout, int type);
 
 #define V0_VIS (1 << 0)
 #define V1_VIS (1 << 1)
@@ -74,10 +71,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // .....A....B...
         //    /      |
         //  v3--v2---v1
-        ClipEdge(v3, v0, a);
-        a->flags = PVR_CMD_VERTEX_EOL;
-        ClipEdge(v0, v1, b);
-        b->flags = PVR_CMD_VERTEX;
+        ClipEdge(v3, v0, a, PVR_CMD_VERTEX_EOL);
+        ClipEdge(v0, v1, b, PVR_CMD_VERTEX);
 
         PushVertex(v0);
         PushVertex(b);
@@ -92,10 +87,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v0--v3---v2
-        ClipEdge(v0, v1, a);
-        a->flags = PVR_CMD_VERTEX;
-        ClipEdge(v1, v2, b);
-        b->flags = PVR_CMD_VERTEX_EOL;
+        ClipEdge(v0, v1, a, PVR_CMD_VERTEX);
+        ClipEdge(v1, v2, b, PVR_CMD_VERTEX_EOL);
 
         PushVertex(a);
         PushVertex(v1);
@@ -109,11 +102,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v1--v0---v3
-
-        ClipEdge(v1, v2, a);
-        a->flags = PVR_CMD_VERTEX;
-        ClipEdge(v2, v3, b);
-        b->flags = PVR_CMD_VERTEX_EOL;
+        ClipEdge(v1, v2, a, PVR_CMD_VERTEX);
+        ClipEdge(v2, v3, b, PVR_CMD_VERTEX_EOL);
 
         PushVertex(a);
         PushVertex(v2);
@@ -127,10 +117,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         // ....A.....B...
         //    /      |
         //  v2--v1---v0
-        ClipEdge(v2, v3, a);
-        a->flags = PVR_CMD_VERTEX;
-        ClipEdge(v3, v0, b);
-        b->flags = PVR_CMD_VERTEX;
+        ClipEdge(v2, v3, a, PVR_CMD_VERTEX);
+        ClipEdge(v3, v0, b, PVR_CMD_VERTEX);
 
         PushVertex(b);
         PushVertex(a);
@@ -144,10 +132,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v3-----v2
-        ClipEdge(v1, v2, a);
-        a->flags = PVR_CMD_VERTEX;
-        ClipEdge(v3, v0, b);
-        b->flags = PVR_CMD_VERTEX_EOL;
+        ClipEdge(v1, v2, a, PVR_CMD_VERTEX);
+        ClipEdge(v3, v0, b, PVR_CMD_VERTEX_EOL);
 
         PushVertex(v1);
         PushVertex(a);
@@ -162,10 +148,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v2-----v1
-        ClipEdge(v0, v1, a);
-        a->flags = PVR_CMD_VERTEX;
-        ClipEdge(v2, v3, b);
-        b->flags = PVR_CMD_VERTEX;
+        ClipEdge(v0, v1, a, PVR_CMD_VERTEX);
+        ClipEdge(v2, v3, b, PVR_CMD_VERTEX);
 
         PushVertex(a);
         PushVertex(b);
@@ -179,10 +163,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v0-----v3
-        ClipEdge(v2, v3, a);
-        a->flags = PVR_CMD_VERTEX_EOL;
-        ClipEdge(v0, v1, b);
-        b->flags = PVR_CMD_VERTEX;
+        ClipEdge(v2, v3, a, PVR_CMD_VERTEX_EOL);
+        ClipEdge(v0, v1, b, PVR_CMD_VERTEX);
 
         PushVertex(v1);
         PushVertex(v2);
@@ -197,10 +179,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //   ....B..........A...
         //         \        |
         //          v1-----v0
-        ClipEdge(v3, v0, a);
-        a->flags = PVR_CMD_VERTEX;
-        ClipEdge(v1, v2, b);
-        b->flags = PVR_CMD_VERTEX;
+        ClipEdge(v3, v0, a, PVR_CMD_VERTEX);
+        ClipEdge(v1, v2, b, PVR_CMD_VERTEX);
 
         PushVertex(b);
         PushVertex(v2);
@@ -216,10 +196,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v3
         // v1,v2,v0  v2,v0,A  v0,A,B
-        ClipEdge(v2, v3, a);
-        a->flags = PVR_CMD_VERTEX;
-        ClipEdge(v3, v0, b);
-        b->flags = PVR_CMD_VERTEX_EOL;
+        ClipEdge(v2, v3, a, PVR_CMD_VERTEX);
+        ClipEdge(v3, v0, b, PVR_CMD_VERTEX_EOL);
 
         PushVertex(v1);
         PushVertex(v2);
@@ -236,10 +214,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v2
         // v0,v1,v3  v1,v3,A  v3,A,B
-        ClipEdge(v1, v2, a);
-        a->flags  = PVR_CMD_VERTEX;
-        ClipEdge(v2, v3, b);
-        b->flags  = PVR_CMD_VERTEX_EOL;
+        ClipEdge(v1, v2, a, PVR_CMD_VERTEX);
+        ClipEdge(v2, v3, b, PVR_CMD_VERTEX_EOL);
         v3->flags = PVR_CMD_VERTEX;
 
         PushVertex(v0);
@@ -257,10 +233,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v1
         // v3,v0,v2  v0,v2,A  v2,A,B
-        ClipEdge(v0, v1, a);
-        a->flags  = PVR_CMD_VERTEX;
-        ClipEdge(v1, v2, b);
-        b->flags  = PVR_CMD_VERTEX_EOL;
+        ClipEdge(v0, v1, a, PVR_CMD_VERTEX);
+        ClipEdge(v1, v2, b, PVR_CMD_VERTEX_EOL);
         v3->flags = PVR_CMD_VERTEX;
 
         PushVertex(v3);
@@ -278,10 +252,8 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v0
         // v2,v3,v1  v3,v1,A  v1,A,B
-        ClipEdge(v3, v0, a);
-        a->flags  = PVR_CMD_VERTEX;
-        ClipEdge(v0, v1, b);
-        b->flags  = PVR_CMD_VERTEX_EOL;
+        ClipEdge(v3, v0, a, PVR_CMD_VERTEX);
+        ClipEdge(v0, v1, b, PVR_CMD_VERTEX_EOL);
         v3->flags = PVR_CMD_VERTEX;
 
         PushVertex(v2);

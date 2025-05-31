@@ -3,21 +3,21 @@
 
 static TextureObject* TEXTURE_ACTIVE;
 
-static GLboolean DEPTH_TEST_ENABLED;
-static GLboolean DEPTH_MASK_ENABLED;
+static uint8_t  DEPTH_TEST_ENABLED;
+static uint8_t  DEPTH_MASK_ENABLED;
 
-static GLboolean CULLING_ENABLED;
+static uint8_t  CULLING_ENABLED;
 
-static GLboolean FOG_ENABLED;
-static GLboolean ALPHA_TEST_ENABLED;
+static uint8_t  FOG_ENABLED;
+static uint8_t  ALPHA_TEST_ENABLED;
 
-static GLboolean SCISSOR_TEST_ENABLED;
-static GLenum SHADE_MODEL = PVR_SHADE_GOURAUD;
+static uint8_t  SCISSOR_TEST_ENABLED;
+static uint32_t SHADE_MODEL = PVR_SHADE_GOURAUD;
 
-static GLboolean BLEND_ENABLED;
+static uint8_t  BLEND_ENABLED;
 
-static GLboolean TEXTURES_ENABLED;
-static GLboolean AUTOSORT_ENABLED;
+static uint8_t  TEXTURES_ENABLED;
+static uint8_t  AUTOSORT_ENABLED;
 
 static inline int DimensionFlag(int w) {
     switch(w) {
