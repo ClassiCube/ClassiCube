@@ -21,6 +21,6 @@ typedef struct {
     uint16_t height;
 } TextureObject;
 
-void GLDC_NO_INLINE SceneListSubmit(Vertex* v2, int n);
+void GLDC_NO_INLINE SubmitCommands(Vertex* v3, int n);
 
 #endif // PRIVATE_H

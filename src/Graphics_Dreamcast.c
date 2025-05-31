@@ -787,7 +787,7 @@ void DrawQuads(int count, void* src) {
 	list->length += (end - beg);
 
 	if (list != direct) return;
-	SceneListSubmit((Vertex*)list->data, list->length);
+	SubmitCommands((Vertex*)list->data, list->length);
 	list->length = 0;
 }
 
@@ -885,7 +885,7 @@ static void SubmitList(struct CommandsList* list) {
 	if (!list->length || list == direct) return;
 
 	BeginList(list->list_type);
-	SceneListSubmit((Vertex*)list->data, list->length);
+	SubmitCommands((Vertex*)list->data, list->length);
 	FinishList();
 	list->length = 0;
 }
