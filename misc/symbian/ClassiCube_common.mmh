@@ -27,13 +27,15 @@ LIBRARY avkon.lib
 LIBRARY fbscli.lib
 LIBRARY ws32.lib
 LIBRARY hal.lib
+LIBRARY efsrv.lib
+LIBRARY apparc.lib
+LIBRARY eikcore.lib
+LIBRARY eikdlg.lib
 
 LIBRARY libc.lib
 LIBRARY libm.lib
 LIBRARY libdl.lib
 LIBRARY libpthread.lib
-
-STATICLIBRARY libcrt0.lib
 
 #ifdef ARMCC
 ALWAYS_BUILD_AS_ARM
