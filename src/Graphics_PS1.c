@@ -926,14 +926,14 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		int p; GTE_Get_OTZ(p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		GTE_Store_XY0(&poly->x0, 0);
-		GTE_Store_XY1(&poly->x1, 0);
-		GTE_Store_XY2(&poly->x2, 0);
+		GTE_Store_XY0(poly,  8); // &poly->x0
+		GTE_Store_XY1(poly, 12); // &poly->x1
+		GTE_Store_XY2(poly, 16); // &poly->x2
 
 		GTE_Load_XYZ0(&v2->vx);
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(&poly->x3, 0);
+		GTE_Store_XY2(poly, 20); // &poly->x3
 		
 		poly++;
 	}
@@ -980,14 +980,14 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		int p; GTE_Get_OTZ(p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		GTE_Store_XY0(&poly->x0, 0);
-		GTE_Store_XY1(&poly->x1, 0);
-		GTE_Store_XY2(&poly->x2, 0);
-		GTE_Load_XYZ0(&v2->vx);
+		GTE_Store_XY0(poly,  8); // &poly->x0
+		GTE_Store_XY1(poly, 16); // &poly->x1
+		GTE_Store_XY2(poly, 24); // &poly->x2
 
+		GTE_Load_XYZ0(&v2->vx);
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(&poly->x3, 0);
+		GTE_Store_XY2(poly, 32); // &poly->x3
 	
 		poly->u0 = (v1->u >> uShift) + uOffset;
 		poly->v0 = (v1->v >> vShift) + vOffset;

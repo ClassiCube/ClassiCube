@@ -48,7 +48,7 @@ static inline void PushCommand(Vertex* v)  {
     sq += 8;
 }
 
-extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout, int type);
+extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, volatile void* vout, int type);
 
 #define V0_VIS (1 << 0)
 #define V1_VIS (1 << 1)
@@ -58,137 +58,106 @@ extern void ClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vou
 
 // https://casual-effects.com/research/McGuire2011Clipping/clip.glsl
 static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_t visible_mask) {
-    Vertex __attribute__((aligned(32))) scratch[2];
-    Vertex* a = &scratch[0];
-    Vertex* b = &scratch[1];
-
     switch(visible_mask) {
     case V0_VIS:
-    {
         //          v0
         //         / |
         //       /   |
         // .....A....B...
         //    /      |
         //  v3--v2---v1
-        ClipEdge(v3, v0, a, PVR_CMD_VERTEX_EOL);
-        ClipEdge(v0, v1, b, PVR_CMD_VERTEX);
-
         PushVertex(v0);
-        PushVertex(b);
-        PushVertex(a);
-    }
-    break;
+        ClipEdge(v0, v1, sq, PVR_CMD_VERTEX);     // B
+        ClipEdge(v3, v0, sq, PVR_CMD_VERTEX_EOL); // A
+    	break;
+
     case V1_VIS:
-    {
         //          v1
         //         / |
         //       /   |
         // ....A.....B...
         //    /      |
         //  v0--v3---v2
-        ClipEdge(v0, v1, a, PVR_CMD_VERTEX);
-        ClipEdge(v1, v2, b, PVR_CMD_VERTEX_EOL);
+        ClipEdge(v0, v1, sq, PVR_CMD_VERTEX);     // A
+        PushVertex(v1);                           // v1
+        ClipEdge(v1, v2, sq, PVR_CMD_VERTEX_EOL); // B
+    	break;
 
-        PushVertex(a);
-        PushVertex(v1);
-        PushVertex(b);
-    } break;
     case V2_VIS:
-    {
         //          v2
         //         / |
         //       /   |
         // ....A.....B...
         //    /      |
         //  v1--v0---v3
-        ClipEdge(v1, v2, a, PVR_CMD_VERTEX);
-        ClipEdge(v2, v3, b, PVR_CMD_VERTEX_EOL);
+        ClipEdge(v1, v2, sq, PVR_CMD_VERTEX);     // A
+        PushVertex(v2);                           // v2
+        ClipEdge(v2, v3, sq, PVR_CMD_VERTEX_EOL); // B
+		break;
 
-        PushVertex(a);
-        PushVertex(v2);
-        PushVertex(b);
-    } break;
     case V3_VIS:
-    {
         //          v3
         //         / |
         //       /   |
         // ....A.....B...
         //    /      |
         //  v2--v1---v0
-        ClipEdge(v2, v3, a, PVR_CMD_VERTEX);
-        ClipEdge(v3, v0, b, PVR_CMD_VERTEX);
+        ClipEdge(v3, v0, sq, PVR_CMD_VERTEX);     // B
+        ClipEdge(v2, v3, sq, PVR_CMD_VERTEX_EOL); // A
+        PushVertex(v3);                           // v3
+    	break;
 
-        PushVertex(b);
-        PushVertex(a);
-        PushVertex(v3);
-    }
-    break;
     case V0_VIS | V1_VIS:
-    {
         //    v0-----------v1
         //      \           |
         //   ....B..........A...
         //         \        |
         //          v3-----v2
-        ClipEdge(v1, v2, a, PVR_CMD_VERTEX);
-        ClipEdge(v3, v0, b, PVR_CMD_VERTEX_EOL);
+        PushVertex(v1);                           // v1
+        ClipEdge(v1, v2, sq, PVR_CMD_VERTEX);     // A
+        PushVertex(v0);                           // v0
+        ClipEdge(v3, v0, sq, PVR_CMD_VERTEX_EOL); // B
+    	break;
 
-        PushVertex(v1);
-        PushVertex(a);
-        PushVertex(v0);
-        PushVertex(b);
-    } break;
     // case V0_VIS | V2_VIS: degenerate case that should never happen
     case V0_VIS | V3_VIS:
-    {
         //    v3-----------v0
         //      \           |
         //   ....B..........A...
         //         \        |
         //          v2-----v1
-        ClipEdge(v0, v1, a, PVR_CMD_VERTEX);
-        ClipEdge(v2, v3, b, PVR_CMD_VERTEX);
+        ClipEdge(v0, v1, sq, PVR_CMD_VERTEX);     // A
+        ClipEdge(v2, v3, sq, PVR_CMD_VERTEX);     // B
+        PushVertex(v0);                           // v0
+        PushVertex(v3);                           // v3
+    	break;
 
-        PushVertex(a);
-        PushVertex(b);
-        PushVertex(v0);
-        PushVertex(v3);
-    } break;
     case V1_VIS | V2_VIS:
-    {
         //    v1-----------v2
         //      \           |
         //   ....B..........A...
         //         \        |
         //          v0-----v3
-        ClipEdge(v2, v3, a, PVR_CMD_VERTEX_EOL);
-        ClipEdge(v0, v1, b, PVR_CMD_VERTEX);
+        PushVertex(v1);                           // v1
+        PushVertex(v2);                           // v2
+        ClipEdge(v0, v1, sq, PVR_CMD_VERTEX);     // B
+        ClipEdge(v2, v3, sq, PVR_CMD_VERTEX_EOL); // A
+    	break;
 
-        PushVertex(v1);
-        PushVertex(v2);
-        PushVertex(b);
-        PushVertex(a);
-    } break;
     // case V1_VIS | V3_VIS: degenerate case that should never happen
     case V2_VIS | V3_VIS:
-    {
         //    v2-----------v3
         //      \           |
         //   ....B..........A...
         //         \        |
         //          v1-----v0
-        ClipEdge(v3, v0, a, PVR_CMD_VERTEX);
-        ClipEdge(v1, v2, b, PVR_CMD_VERTEX);
+        ClipEdge(v1, v2, sq, PVR_CMD_VERTEX);     // B
+        PushVertex(v2);                           // v2
+        ClipEdge(v3, v0, sq, PVR_CMD_VERTEX);     // A
+        PushVertex(v3);                           // v3
+    	break;
 
-        PushVertex(b);
-        PushVertex(v2);
-        PushVertex(a);
-        PushVertex(v3);
-    } break;
     case V0_VIS | V1_VIS | V2_VIS:
-    {
         //        --v1--
         //    v0--      --v2
         //      \        |
@@ -196,17 +165,14 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v3
         // v1,v2,v0  v2,v0,A  v0,A,B
-        ClipEdge(v2, v3, a, PVR_CMD_VERTEX);
-        ClipEdge(v3, v0, b, PVR_CMD_VERTEX_EOL);
+        PushVertex(v1);                           // v1
+        PushVertex(v2);                           // v2
+        PushVertex(v0);                           // v0
+        ClipEdge(v2, v3, sq, PVR_CMD_VERTEX);     // A
+        ClipEdge(v3, v0, sq, PVR_CMD_VERTEX_EOL); // B
+    	break;
 
-        PushVertex(v1);
-        PushVertex(v2);
-        PushVertex(v0);
-        PushVertex(a);
-        PushVertex(b);
-    } break;
     case V0_VIS | V1_VIS | V3_VIS:
-    {
         //        --v0--
         //    v3--      --v1
         //      \        |
@@ -214,18 +180,15 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v2
         // v0,v1,v3  v1,v3,A  v3,A,B
-        ClipEdge(v1, v2, a, PVR_CMD_VERTEX);
-        ClipEdge(v2, v3, b, PVR_CMD_VERTEX_EOL);
         v3->flags = PVR_CMD_VERTEX;
+        PushVertex(v0);                           // v0
+        PushVertex(v1);                           // v1
+        PushVertex(v3);                           // v3
+        ClipEdge(v1, v2, sq, PVR_CMD_VERTEX);     // A
+        ClipEdge(v2, v3, sq, PVR_CMD_VERTEX_EOL); // B
+    	break;
 
-        PushVertex(v0);
-        PushVertex(v1);
-        PushVertex(v3);
-        PushVertex(a);
-        PushVertex(b);
-    } break;
     case V0_VIS | V2_VIS | V3_VIS:
-    {
         //        --v3--
         //    v2--      --v0
         //      \        |
@@ -233,18 +196,15 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v1
         // v3,v0,v2  v0,v2,A  v2,A,B
-        ClipEdge(v0, v1, a, PVR_CMD_VERTEX);
-        ClipEdge(v1, v2, b, PVR_CMD_VERTEX_EOL);
         v3->flags = PVR_CMD_VERTEX;
+        PushVertex(v3);                           // v3
+        PushVertex(v0);                           // v0
+        PushVertex(v2);                           // v2
+        ClipEdge(v0, v1, sq, PVR_CMD_VERTEX);     // A
+        ClipEdge(v1, v2, sq, PVR_CMD_VERTEX_EOL); // B
+    	break;
 
-        PushVertex(v3);
-        PushVertex(v0);
-        PushVertex(v2);
-        PushVertex(a);
-        PushVertex(b);
-    } break;
     case V1_VIS | V2_VIS | V3_VIS:
-    {
         //        --v2--
         //    v1--      --v3
         //      \        |
@@ -252,16 +212,13 @@ static void SubmitClipped(Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3, uint8_
         //          \   |
         //            v0
         // v2,v3,v1  v3,v1,A  v1,A,B
-        ClipEdge(v3, v0, a, PVR_CMD_VERTEX);
-        ClipEdge(v0, v1, b, PVR_CMD_VERTEX_EOL);
         v3->flags = PVR_CMD_VERTEX;
-
-        PushVertex(v2);
-        PushVertex(v3);
-        PushVertex(v1);
-        PushVertex(a);
-        PushVertex(b);
-    } break;
+        PushVertex(v2);                           // v2
+        PushVertex(v3);                           // v3
+        PushVertex(v1);                           // v1
+        ClipEdge(v3, v0, sq, PVR_CMD_VERTEX);     // A
+        ClipEdge(v0, v1, sq, PVR_CMD_VERTEX_EOL); // B
+    	break;
     }
 }
 

@@ -361,8 +361,11 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 }
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
+extern float NEAR_CLIP_W;
+
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
+	NEAR_CLIP_W = 1.0f / zNear;
 
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	float c = Cotangent(0.5f * fov);

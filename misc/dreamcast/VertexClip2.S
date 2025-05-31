@@ -33,7 +33,7 @@
 !    
 !    out->u = invt * v1->u + t * v2->u;
 !    out->v = invt * v1->v + t * v2->v;
-!    out->w = invt * v1->w + t * v2->w;
+!    out->w = zNear // invt * v1->w + t * v2->w;, always ends up being zNear
 !    
 !    out->b = invt * v1->b + t * v2->b;
 !    out->g = invt * v1->g + t * v2->g;
@@ -61,7 +61,7 @@ _ClipEdge:
 	fmov.s  @TM1,fr11 ! LS, fr11 = v2->z
 	fsub     fr2,fr11 ! FE, fr11 = v2->z - v1->z
 	fldi0    fr8      ! LS, fr8  = 0
-	mov.l  TYP,@OUT   ! LS, OUT->flags = TYPE
+	mov.l  TYP,@OUT   ! LS, OUT->cmd = TYPE
 	fmul    fr11,fr11 ! FE, fr11 = (v2->z - v1->z) * (v2->z * v1->z)
 	fldi0    fr9      ! LS, fr9  = 0
 	fldi0    fr0      ! LS, fr0  = 0
@@ -74,117 +74,137 @@ _ClipEdge:
 	add       #4, IN2 ! EX, v2   += 4
 	add       #4, OUT ! EX, OUT  += 4
 	fsub    fr11,fr10 ! FE, fr10 = 1.0 - t  --> invT
-	
+
+! Load X components	
 	fmov.s @IN1+, fr2 ! LS, A1 = v1->x, v1 += 4
 	fmov.s @IN2+, fr3 ! LS, B1 = v2->x, v2 += 4
+
+! Start interpolating X
 	fipr     fv8, fv0 ! FE, LERP(A1, B1)
+! Load Y components
 	fmov.s @IN1+, fr6 ! LS, A2 = v1->y, v1 += 4
 	fmov.s @IN2+, fr7 ! LS, B2 = v2->y, v2 += 4
-
-	fmov.s   fr3,@OUT ! LS, OUT->x = LERP
+! Load W
+	mov.l _NEAR_CLIP_W,TM1 ! tmp = zNear
+	lds 	 TM1,fpul ! LS, FPUL = zNear
+	fsts     fpul,fr2 ! LS, fr2  = FPUL
+! Store interpolated X
+	fmul	 fr2,fr3  ! EX, fr7 = LERP * invW
+	fmov.s   fr3,@OUT ! LS, OUT->x = LERP * invW
 	add       #4, OUT ! EX, OUT += 4
+
+! Start interpolating Y
 	fipr     fv8, fv4 ! FE, LERP(A2, B2)
+! Skip Z of input vertices
 	add       #4, IN1 ! EX, v1 += 4
 	add       #4, IN2 ! EX, v2 += 4
 
-	fmov.s   fr7,@OUT ! LS, OUT->y = LERP
+! Store interpolated Y
+	fmul	 fr2,fr7  ! EX, fr7 = LERP * invW
+	fmov.s   fr7,@OUT ! LS, OUT->y = LERP * invW
 	add       #4, OUT ! EX, OUT += 4
-	fmov.s   fr1,@OUT ! LS, OUT->z = 0
+! Store W
+	fmov.s   fr2,@OUT ! LS, OUT->w = 1/zNear
 	add       #4, OUT ! EX, OUT += 4
 	
+! Load U components
 	fmov.s @IN1+, fr2 ! LS, A1 = v1->u, v1 += 4
 	fmov.s @IN2+, fr3 ! LS, B1 = v2->u, v2 += 4
+
+! Start interpolating U
 	fipr     fv8, fv0 ! FE, LERP(A1, B1)
+! Load V components
 	fmov.s @IN1+, fr6 ! LS, A2 = v1->v, v1 += 4
 	fmov.s @IN2+, fr7 ! LS, B2 = v2->v, v2 += 4
-
+! Store interpolated U
 	fmov.s   fr3,@OUT ! LS, OUT->u = LERP
 	add       #4, OUT ! EX, OUT += 4
+
+! Start interpolating V
 	fipr     fv8, fv4 ! FE, LERP(A2, B2)
-	add       #4, IN1 ! EX, v1 += 4
-	add       #4, IN2 ! EX, v2 += 4
-	fmov.s  @IN1,fr2  ! LS, A1 = v1->w
-	fmov.s  @IN2,fr3  ! LS, B1 = v2->w
-	fmov.s   fr7,@OUT ! LS, OUT->v = LERP
-	add       #8, OUT ! EX, OUT += 8
-	
-	fipr     fv8, fv0 ! FE, LERP(A1, B1)
-	add      #-4, IN1 ! EX, v1 -= 4
-	add      #-4, IN2 ! EX, v2 -= 4
-	fmov.s   fr3,@OUT ! LS, OUT->w = lerp
-	add      #-4, OUT ! EX, OUT -= 4
-	
+! Load colours and check if equal
 	mov.l  @IN1,CL1   ! LS, ACOLOR = v1->bgra
 	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
-! Bypass RGBA interpolation if unnecessary
 	cmp/eq  CL1,CL2   ! MT, T = ACOLOR == BCOLOR
+! Store V
+	fmov.s   fr7,@OUT ! LS, OUT->v = LERP
+	add       #4, OUT ! EX, OUT += 4
+	
+! Bypass RGBA interpolation if unnecessary
 	bt.s    1f        ! BR, if (T) goto 1;
 	mov     CL1,CLO   ! MT, OUTCOLOR = ACOLOR (branch delay instruction)
 
 ! Interpolate B
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr2  ! FE, fr2 = float(FPUL)
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr3  ! FE, fr3 = float(FPUL)
 	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	shlr8   CL1       ! EX, ACOLOR >>= 8
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	shlr8   CL2       ! EX, BCOLOR >>= 8
-	sts     fpul,TM2  ! CO, tmp = FPUL
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	sts     fpul,TM2  ! LS, tmp = FPUL
 
 ! Interpolate G
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.g
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr2  ! FE, fr2 = float(FPUL)
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.g
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr3  ! FE, fr3 = float(FPUL)
 	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	shlr8   CL1       ! EX, ACOLOR >>= 8
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	mov     TM2,CLO   ! MT, OUTCOLOR.b = tmp
 	shlr8   CL2       ! EX, BCOLOR >>= 8
-	sts     fpul,TM2  ! CO, tmp = FPUL
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	sts     fpul,TM2  ! LS, tmp = FPUL
 
 ! Interpolate R
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.r
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr2  ! FE, fr2 = float(FPUL)
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.r
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr3  ! FE, fr3 = float(FPUL)
 	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	shlr8   CL1       ! EX, ACOLOR >>= 8
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	shll8   TM2       ! EX, tmp <<= 8
 	or      TM2,CLO   ! EX, OUTCOLOR.g |= tmp
 	shlr8   CL2       ! EX, BCOLOR >>= 8
-	sts     fpul,TM2  ! CO, tmp = FPUL
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	sts     fpul,TM2  ! LS, tmp = FPUL
 	
 ! Interpolate A
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.a
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr2  ! FE, fr2 = float(FPUL)
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.a
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	lds     TM1,fpul  ! LS, FPUL = val
+	float   fpul,fr3  ! FE, fr3 = float(FPUL)
 	fipr    fv8, fv0  ! FE, LERP(A1, B1)
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	shll16  TM2       ! EX, tmp <<= 16
 	or      TM2,CLO   ! EX, OUTCOLOR.r |= tmp
-	sts     fpul,TM2  ! CO, tmp = FPUL
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	sts     fpul,TM2  ! LS, tmp = FPUL
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	shll16  TM2       ! EX, tmp <<= 16
 	shll8   TM2       ! EX, tmp <<= 8
 	or      TM2,CLO   ! EX, OUTCOLOR.a |= tmp
 
 1:
-	rts               ! CO, return after executing instruction in delay slot
 	mov.l  CLO,@OUT   ! LS, OUT->color = OUTCOLOR
+	add   #-24, OUT   ! EX, OUT += 8
+	rts               ! CO, return after executing instruction in delay slot
+	pref   @OUT       ! LS, trigger store queue flush
 .size _ClipEdge, .-_ClipEdge
 .type _ClipEdge, %function
+
+.align 4
+_NEAR_CLIP_W:
+        .float 0
+.global _NEAR_CLIP_W
