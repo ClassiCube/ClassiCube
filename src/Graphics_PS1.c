@@ -818,6 +818,9 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
+#define VERTEX_TEX_SIZE sizeof(struct PS1VertexTextured)
+#define VERTEX_COL_SIZE sizeof(struct PS1VertexColoured)
+
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
@@ -829,7 +832,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
-	struct PSX_POLY_F4* poly = next_packet;
+	psx_poly_F4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -861,7 +864,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	int uShift  = curTex->u_shift, vShift  = curTex->v_shift;
 	int tpage   = curTex->tpage,   clut    = curTex->clut;
 
-	struct PSX_POLY_FT4* poly = next_packet;
+	psx_poly_FT4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -903,7 +906,7 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
 	uint32_t* ot = cur_buffer->ot;
 
-	struct PSX_POLY_F4* poly = next_packet;
+	psx_poly_F4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -914,9 +917,13 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexColoured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
 
-		GTE_Load_XYZ0(&v0->vx);
-		GTE_Load_XYZ1(&v1->vx);
-		GTE_Load_XYZ2(&v3->vx);
+		GTE_Load_XY0(v, 0 * VERTEX_COL_SIZE); // GTE_XY0 = v0->xy
+		GTE_Load__Z0(v, 0 * VERTEX_COL_SIZE); // GTE__Z0 = v0->z
+		GTE_Load_XY1(v, 1 * VERTEX_COL_SIZE); // GTE_XY1 = v1->xy
+		GTE_Load__Z1(v, 1 * VERTEX_COL_SIZE); // GTE__Z1 = v1->z
+		GTE_Load_XY2(v, 3 * VERTEX_COL_SIZE); // GTE_XY2 = v3->xy
+		GTE_Load__Z2(v, 3 * VERTEX_COL_SIZE); // GTE__Z2 = v3->z
+
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_F4);
 		poly->rgbc = v0->rgbc;
@@ -926,14 +933,16 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		int p; GTE_Get_OTZ(p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		GTE_Store_XY0(poly,  8); // &poly->x0
-		GTE_Store_XY1(poly, 12); // &poly->x1
-		GTE_Store_XY2(poly, 16); // &poly->x2
+		GTE_Store_XY0(poly, offsetof(psx_poly_F4, x0));
+		GTE_Store_XY1(poly, offsetof(psx_poly_F4, x1));
+		GTE_Store_XY2(poly, offsetof(psx_poly_F4, x2));
 
-		GTE_Load_XYZ0(&v2->vx);
+		GTE_Load_XY0(v, 2 * VERTEX_COL_SIZE); // GTE_XY2 = v2->xy
+		GTE_Load__Z0(v, 2 * VERTEX_COL_SIZE); // GTE__Z2 = v2->z
+
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(poly, 20); // &poly->x3
+		GTE_Store_XY2(poly, offsetof(psx_poly_F4, x3));
 		
 		poly++;
 	}
@@ -948,9 +957,10 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	int vShift  = curTex->v_shift;
 
 	int tpage = curTex->tpage, clut = curTex->clut;
+	int bmode = blend_mode;
 	uint32_t* ot = cur_buffer->ot;
 
-	struct PSX_POLY_FT4* poly = next_packet;
+	psx_poly_FT4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
 
 	for (int i = 0; i < verticesCount; i += 4, v += 4) 
@@ -961,12 +971,17 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexTextured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
 	
-		GTE_Load_XYZ0(&v0->vx);
-		GTE_Load_XYZ1(&v1->vx);
-		GTE_Load_XYZ2(&v3->vx);
+		GTE_Load_XY0(v, 0 * VERTEX_TEX_SIZE); // GTE_XY0 = v0->xy
+		GTE_Load__Z0(v, 0 * VERTEX_TEX_SIZE); // GTE__Z0 = v0->z
+		GTE_Load_XY1(v, 1 * VERTEX_TEX_SIZE); // GTE_XY1 = v1->xy
+		GTE_Load__Z1(v, 1 * VERTEX_TEX_SIZE); // GTE__Z1 = v1->z
+		GTE_Load_XY2(v, 3 * VERTEX_TEX_SIZE); // GTE_XY2 = v3->xy
+		GTE_Load__Z2(v, 3 * VERTEX_TEX_SIZE); // GTE__Z2 = v3->z
+
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_FT4);
-		poly->rgbc = v0->rgbc | blend_mode;
+		poly->rgbc = v0->rgbc | bmode;
+		poly->u0   = (v1->u >> uShift) + uOffset;
 
 		// Check for backface culling
 		GTE_Exec_NCLIP(); // 8 cycles
@@ -980,16 +995,17 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		int p; GTE_Get_OTZ(p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		GTE_Store_XY0(poly,  8); // &poly->x0
-		GTE_Store_XY1(poly, 16); // &poly->x1
-		GTE_Store_XY2(poly, 24); // &poly->x2
+		GTE_Store_XY0(poly, offsetof(psx_poly_FT4, x0));
+		GTE_Store_XY1(poly, offsetof(psx_poly_FT4, x1));
+		GTE_Store_XY2(poly, offsetof(psx_poly_FT4, x2));
 
-		GTE_Load_XYZ0(&v2->vx);
+		GTE_Load_XY0(v, 2 * VERTEX_TEX_SIZE); // GTE_XY2 = v2->xy
+		GTE_Load__Z0(v, 2 * VERTEX_TEX_SIZE); // GTE__Z2 = v2->z
+
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(poly, 32); // &poly->x3
+		GTE_Store_XY2(poly, offsetof(psx_poly_FT4, x3));
 	
-		poly->u0 = (v1->u >> uShift) + uOffset;
 		poly->v0 = (v1->v >> vShift) + vOffset;
 		poly->u1 = (v0->u >> uShift) + uOffset;
 		poly->v1 = (v0->v >> vShift) + vOffset;
@@ -1053,7 +1069,7 @@ static void SendDrawCommands(RenderBuffer* buf) {
 }
 
 void Gfx_EndFrame(void) {
-	if ((cc_uint8*)next_packet >= next_packet_end - sizeof(struct PSX_POLY_FT4)) {
+	if ((cc_uint8*)next_packet >= next_packet_end - sizeof(psx_poly_FT4)) {
 		Platform_LogConst("OUT OF VERTEX RAM");
 	}
 	WaitUntilFinished();

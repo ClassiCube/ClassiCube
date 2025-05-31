@@ -23,13 +23,16 @@
 #define GTE_Exec_RTPS()  __asm__ volatile ("nop; nop; cop2 0x00180001;")
 
 // e.g. expands to "swc2 $14, 8(%0);"
-#define GTE_Store_XY0(dst, off) __asm__ volatile ("swc2 $12, " #off "(%0);" :: "r" (dst) : "memory" )
-#define GTE_Store_XY1(dst, off) __asm__ volatile ("swc2 $13, " #off "(%0);" :: "r" (dst) : "memory" )
-#define GTE_Store_XY2(dst, off) __asm__ volatile ("swc2 $14, " #off "(%0);" :: "r" (dst) : "memory" )
+#define GTE_Store_XY0(dst, off) __asm__ volatile ("swc2 $12, %1(%0);" :: "r" (dst), "i" (off) : "memory" )
+#define GTE_Store_XY1(dst, off) __asm__ volatile ("swc2 $13, %1(%0);" :: "r" (dst), "i" (off) : "memory" )
+#define GTE_Store_XY2(dst, off) __asm__ volatile ("swc2 $14, %1(%0);" :: "r" (dst), "i" (off) : "memory" )
 
-#define GTE_Load_XYZ0(src) __asm__ volatile ("lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" :: "r" (src) : )
-#define GTE_Load_XYZ1(src) __asm__ volatile ("lwc2 $2, 0(%0);" "lwc2 $3, 4(%0);" :: "r" (src) : )
-#define GTE_Load_XYZ2(src) __asm__ volatile ("lwc2 $4, 0(%0);" "lwc2 $5, 4(%0);" :: "r" (src) : )
+#define GTE_Load_XY0(src,  off) __asm__ volatile ("lwc2 $0, 0 + %1(%0);" :: "r" (src), "i" (off) : )
+#define GTE_Load__Z0(src,  off) __asm__ volatile ("lwc2 $1, 4 + %1(%0);" :: "r" (src), "i" (off) : )
+#define GTE_Load_XY1(src,  off) __asm__ volatile ("lwc2 $2, 0 + %1(%0);" :: "r" (src), "i" (off) : )
+#define GTE_Load__Z1(src,  off) __asm__ volatile ("lwc2 $3, 4 + %1(%0);" :: "r" (src), "i" (off) : )
+#define GTE_Load_XY2(src,  off) __asm__ volatile ("lwc2 $4, 0 + %1(%0);" :: "r" (src), "i" (off) : )
+#define GTE_Load__Z2(src,  off) __asm__ volatile ("lwc2 $5, 4 + %1(%0);" :: "r" (src), "i" (off) : )
 
 #define GTE_Load_RotMatrix(mat) __asm__ volatile ( \
 	"lw		$t0,  0(%0);\n" \
@@ -134,18 +137,18 @@ enum gp1_cmd_display_mode {
 // === GP0 POLYGON COMMANDS ===
 #define POLY_CODE_F4 (GP0_CMD_POLYGON | POLY_CMD_QUAD)
 #define POLY_LEN_F4  5
-struct PSX_POLY_F4 {
+typedef struct psx_poly_F4 {
 	uint32_t tag;
 	uint32_t rgbc; // r0, g0, b0, code;
 	int16_t	 x0, y0;
 	int16_t	 x1, y1;
 	int16_t	 x2, y2;
 	int16_t	 x3, y3;
-};
+} psx_poly_F4;
 
 #define POLY_CODE_FT4 (GP0_CMD_POLYGON | POLY_CMD_QUAD | POLY_CMD_TEXTURED)
 #define POLY_LEN_FT4  9
-struct PSX_POLY_FT4 {
+typedef struct psx_poly_FT4 {
 	uint32_t tag;
 	uint32_t rgbc; // r0, g0, b0, code;
 	uint16_t x0, y0;
@@ -160,4 +163,4 @@ struct PSX_POLY_FT4 {
 	int16_t	 x3, y3;
 	uint8_t	 u3, v3;
 	uint16_t pad1;
-};
+} psx_poly_FT4;
