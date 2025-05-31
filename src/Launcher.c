@@ -220,7 +220,10 @@ static void Launcher_Init(void) {
 	Utils_EnsureDirectory("audio");
 }
 
-static void Launcher_Free(void) {
+#ifndef CC_BUILD_SYMBIAN
+static
+#endif
+void Launcher_Free(void) {
 	Event_UnregisterAll();
 	LBackend_Free();
 	Flags_Free();
@@ -283,6 +286,7 @@ void Launcher_Run(void) {
 	MainScreen_SetActive();
 #endif
 
+#ifndef CC_BUILD_SYMBIAN
 	for (;;) {
 		Window_ProcessEvents(10 / 1000.0f);
 		Gamepad_Tick(10 / 1000.0f);
@@ -310,6 +314,7 @@ void Launcher_Run(void) {
 		if (res) Logger_SysWarn(res, action);
 	}
 	Window_Destroy();
+#endif
 }
 
 

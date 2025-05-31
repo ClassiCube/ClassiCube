@@ -11,6 +11,14 @@
 #include <apgwgnam.h>
 #include <stdlib.h>
 #include <apgcli.h>
+#include <aknapp.h>
+#include <coecntrl.h>
+#include <akndef.h>
+#include <akndoc.h>
+#include <aknappui.h>
+#include <avkon.hrh>
+#include <AknUtils.h>
+#include <eikstart.h>
 extern "C" {
 #include <stdapis/string.h>
 #include <gles/egl.h>
@@ -22,9 +30,79 @@ extern "C" {
 #include "Graphics.h"
 #include "Game.h"
 #include "VirtualKeyboard.h"
+#include "Platform.h"
+#include "Options.h"
+#include "Server.h"
+#include "LScreens.h"
+#include "Http.h"
+}
+
+// Event management
+enum CCEventType {
+	CC_NONE,
+	CC_KEY_DOWN, CC_KEY_UP,
+	CC_WIN_RESIZED, CC_WIN_FOCUS, CC_WIN_REDRAW, CC_WIN_QUIT,
+	CC_TOUCH_ADD, CC_TOUCH_REMOVE
+};
+struct CCEvent {
+	int type;
+	int i1, i2, i3;
+};
+
+#define EVENTS_DEFAULT_MAX 30
+static void* events_mutex;
+static int events_count, events_capacity;
+static CCEvent* events_list, events_default[EVENTS_DEFAULT_MAX];
+
+static void Events_Init(void) {
+	events_mutex    = Mutex_Create("Symbian events");
+	events_capacity = EVENTS_DEFAULT_MAX;
+	events_list     = events_default;
+}
+
+static void Events_Push(const CCEvent* event) {
+	if (!events_mutex) return;
+	Mutex_Lock(events_mutex);
+	{
+		if (events_count >= events_capacity) {
+			Utils_Resize((void**)&events_list, &events_capacity,
+						sizeof(CCEvent), EVENTS_DEFAULT_MAX, 20);
+		}
+		events_list[events_count++] = *event;
+	}
+	Mutex_Unlock(events_mutex);
+}
+
+static cc_bool Events_Pull(CCEvent* event) {
+	cc_bool found = false;
+	
+	Mutex_Lock(events_mutex);
+	{
+		if (events_count) {
+			*event = events_list[0];
+			for (int i = 1; i < events_count; i++) {
+				events_list[i - 1] = events_list[i];
+			}
+			events_count--;
+			found = true;
+		}
+	}
+	Mutex_Unlock(events_mutex);
+	return found;
 }
 
 static cc_bool launcherMode;
+static cc_bool gameInitialized;
+
+static void ConvertToUnicode(TDes& dst, const char* src, size_t length);
+static void ConvertToUnicode(TDes& dst, const cc_string* src);
+static int ConvertKey(TInt aScanCode);
+
+const TUid KUidClassiCube = {0xE212A5C2};
+
+class CClassiCubeContainer;
+static CClassiCubeContainer* container;
+
 static const BindMapping symbian_binds[BIND_COUNT] = {
 	{ CCKEY_UP, 0 },    // BIND_FORWARD
 	{ CCKEY_DOWN, 0 },  // BIND_BACKWARDS
@@ -66,189 +144,259 @@ static const BindMapping symbian_binds[BIND_COUNT] = {
 	{ '1', 0 }, { '3', 0 }                              /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
 };
 
+class CClassiCubeApp: public CAknApplication
+{
+private:
+	CApaDocument* CreateDocumentL();
+	TUid AppDllUid() const;
+};
+LOCAL_C CApaApplication* NewApplication();
 
-class CWindow;
+GLDEF_C TInt E32Main();
 
-CWindow* window;
+//
 
-static void ConvertToUnicode(TDes& dst, const char* src, size_t length) {
-	if (!src) return;
-
-	cc_unichar* uni = reinterpret_cast <cc_unichar*> (const_cast <TUint16*> (dst.Ptr()));
-	for (int i = 0; i < length; i++) {
-		*uni++ = Convert_CP437ToUnicode(src[i]);
-	}
-	*uni = '\0';
-	dst.SetLength(length);
-}
-
-static void ConvertToUnicode(TDes& dst, const cc_string* src) {
-	ConvertToUnicode(dst, src->buffer, (size_t)src->length);
-}
-
-class CWindow : public CBase
+class CClassiCubeContainer: public CCoeControl, MCoeControlObserver
 {
 public:
-	static CWindow* NewL();
-	void HandleWsEvent(const TWsEvent& aEvent);
-	void AllocFrameBuffer(int width, int height);
-	void DrawFramebuffer(Rect2D r, struct Bitmap* bmp);
-	void FreeFrameBuffer();
-	void ProcessEvents(float delta);
-	void RequestClose();
-	void InitEvents();
-	cc_result OpenBrowserL(const cc_string* url);
-	~CWindow();
+	void ConstructL(const TRect& aRect, CAknAppUi* aAppUi);
+	virtual ~CClassiCubeContainer();
 	
-	TWsEvent iWsEvent;
-	TRequestStatus iWsEventStatus;
-	RWindow* iWindow;
+	void DrawFramebuffer(Rect2D r, struct Bitmap* bmp);
+	static TInt DrawCallBack(TAny* aInstance);
 
 private:
-	CWindow();
-	void ConstructL();
-	void CreateWindowL();
+	void SizeChanged();
+	void HandleResourceChange(TInt aType);
+	TInt CountComponentControls() const;
+	CCoeControl* ComponentControl(TInt aIndex) const;
+	void Draw(const TRect& aRect) const;
+	virtual void HandleControlEventL(CCoeControl*, TCoeEvent);
+	virtual void HandlePointerEventL(const TPointerEvent& aPointerEvent);
 
-	RWsSession iWsSession;
-	RWindowGroup iWindowGroup;
-	CWsScreenDevice* iWsScreenDevice;
-	CWindowGc* iWindowGc;
+public:
+	CAknAppUi*  iAppUi;
 	CFbsBitmap* iBitmap;
-	CApaWindowGroupName* iWindowGroupName;
-
-	TBool iEventsInitialized;
+	CPeriodic*  iPeriodic;
 };
 
 //
 
-CWindow* CWindow::NewL() {
-	CWindow* self = new (ELeave) CWindow();
-	CleanupStack::PushL(self);
-	self->ConstructL();
-	CleanupStack::Pop(self);
-	return self;
+class CClassiCubeDocument: public CAknDocument
+{
+public:
+	static CClassiCubeDocument* NewL(CEikApplication& aApp);
+	virtual ~CClassiCubeDocument();
+
+protected:
+	void ConstructL();
+
+public:
+	CClassiCubeDocument(CEikApplication& aApp);
+
+private:
+	CEikAppUi* CreateAppUiL();
+};
+
+//
+
+class CClassiCubeAppUi: public CAknAppUi
+{
+public:
+	void ConstructL();
+	virtual ~CClassiCubeAppUi();
+
+private:
+	void DynInitMenuPaneL(TInt aResourceId, CEikMenuPane* aMenuPane);
+	void HandleCommandL(TInt aCommand);
+	virtual TKeyResponse HandleKeyEventL(const TKeyEvent& aKeyEvent, TEventCode aType);
+
+private:
+	CClassiCubeContainer* iAppContainer;
+};
+
+// CClassiCubeApp implementation
+
+TUid CClassiCubeApp::AppDllUid() const
+{
+	return KUidClassiCube;
 }
 
-void CWindow::CreateWindowL() {
-	TPixelsTwipsAndRotation pixnrot;
-	iWsScreenDevice->GetScreenModeSizeAndRotation(iWsScreenDevice->CurrentScreenMode(), pixnrot);
+CApaDocument* CClassiCubeApp::CreateDocumentL()
+{
+	return CClassiCubeDocument::NewL(*this);
+}
 
-	iWindow->SetExtent(TPoint(0, 0), pixnrot.iPixelSize);
-	iWindow->SetRequiredDisplayMode(iWsScreenDevice->DisplayMode());
-#ifdef CC_BUILD_SYMBIAN_3
-	iWindow->EnableAdvancedPointers();
-#endif
-	iWindow->Activate();
-	iWindow->SetVisible(ETrue);
-	iWindow->SetNonFading(ETrue);
-	iWindow->SetShadowDisabled(ETrue);
-	iWindow->EnableRedrawStore(EFalse);
-	iWindow->EnableVisibilityChangeEvents();
-	iWindow->SetNonTransparent();
-	iWindow->SetBackgroundColor();
-	iWindow->SetOrdinalPosition(0);
-	// Enable drag events
-	iWindow->PointerFilter(EPointerFilterDrag, 0);
+CApaApplication* NewApplication()
+{
+	return new CClassiCubeApp;
+}
 
+TInt E32Main()
+{
+	return EikStart::RunApplication(NewApplication);
+}
+
+// CClassiCubeAppUi implementation
+
+void CClassiCubeAppUi::ConstructL()
+{
+	BaseConstructL();
+	iAppContainer = new (ELeave) CClassiCubeContainer;
+	iAppContainer->SetMopParent(this);
+	iAppContainer->ConstructL(ClientRect(), this);
+	AddToStackL(iAppContainer);
+}
+
+CClassiCubeAppUi::~CClassiCubeAppUi()
+{
+	if (iAppContainer) {
+		RemoveFromStack(iAppContainer);
+		delete iAppContainer;
+	}
+}
+
+void CClassiCubeAppUi::DynInitMenuPaneL(TInt /*aResourceId*/, CEikMenuPane* /*aMenuPane*/)
+{
+}
+
+TKeyResponse CClassiCubeAppUi::HandleKeyEventL(const TKeyEvent& aKeyEvent, TEventCode aType)
+{
+	if (!events_mutex) return EKeyWasNotConsumed;
+	
+	CCEvent event = { 0 };
+	event.i1 = aKeyEvent.iScanCode;
+	switch (aType) {
+	case EEventKeyDown:
+		event.type = CC_KEY_DOWN;
+		Events_Push(&event);
+		return EKeyWasConsumed;
+	case EEventKeyUp:
+		event.type = CC_KEY_UP;
+		Events_Push(&event);
+		return EKeyWasConsumed;
+	default:
+		return EKeyWasNotConsumed;
+	}
+}
+
+void CClassiCubeAppUi::HandleCommandL(TInt aCommand)
+{	
+	switch (aCommand) {
+	case EAknSoftkeyBack:
+	case EEikCmdExit:
+	{
+		if (events_mutex) {
+			CCEvent event = { 0 };
+			event.type = CC_WIN_QUIT;
+			Events_Push(&event);
+		}
+		Exit();
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+// CClassiCubeContainer implementation
+
+extern "C" void Launcher_Run(void);
+extern "C" struct LScreen* Launcher_Active;
+extern "C" cc_bool Launcher_ShouldExit;
+extern "C" void Launcher_Free(void);
+extern "C" void Game_DoFrame(void);
+
+TInt CClassiCubeContainer::DrawCallBack(TAny* aInstance)
+{
+	if (launcherMode) {
+		Window_ProcessEvents(10 / 1000.0f);
+		Gamepad_Tick(10 / 1000.0f);
+		
+		if (Window_Main.Exists && !Launcher_ShouldExit) {
+			Launcher_Active->Tick(Launcher_Active);
+			LBackend_Tick();
+			Thread_Sleep(10);
+			return 0;
+		}
+
+		Launcher_Free();
+		Launcher_ShouldExit = false;
+		launcherMode = false;
+		
+		Drawer2D_Component.Free();
+		Http_Component.Free();
+	}
+	if (!Window_Main.Exists) {
+		Window_RequestClose();
+		return 0;
+	}
+	// init game
+	if (!gameInitialized) {
+		// trigger relayout to clear launcher contents
+		((CClassiCubeContainer*) aInstance)->SetExtentToWholeScreen();
+		Game_Run(WindowInfo.Width, WindowInfo.Height, NULL);
+		gameInitialized = true;
+	}
+	Game_DoFrame();
+	return 0;
+}
+
+void CClassiCubeContainer::ConstructL(const TRect& aRect, CAknAppUi* aAppUi)
+{
+	iAppUi = aAppUi;
+	
+	// create window
+
+	CreateWindowL();
+	SetExtentToWholeScreen();
+	
+	// enable multi touch and drag events
+	Window().EnableAdvancedPointers();
+	EnableDragEvents();
+	
+	ActivateL();
+	
+	container = this;
+	
+	// init classicube (from main.c)
+	
+	static char ipBuffer[STRING_SIZE];
+	CrashHandler_Install();
+	Logger_Hook();
+	Window_PreInit();
+	Platform_Init();
+	Options_Load();
+	Window_Init();
+	Gamepads_Init();
+	Platform_LogConst("Starting " GAME_APP_NAME " ..");
+	String_InitArray(Server.Address, ipBuffer);
+
+	TSize size = Size();
 	WindowInfo.Focused = true;
 	WindowInfo.Exists = true;
-	WindowInfo.Handle.ptr = (void*) iWindow;
+	WindowInfo.Handle.ptr = (void*) &Window();
 #ifdef CC_BUILD_TOUCH
 	WindowInfo.SoftKeyboard = SOFT_KEYBOARD_VIRTUAL;
 #endif
-	
-	TInt w = pixnrot.iPixelSize.iWidth,
-		h = pixnrot.iPixelSize.iHeight;
-	
-	DisplayInfo.Width = w;
-	DisplayInfo.Height = h;
-	
-	WindowInfo.Width = w;
-	WindowInfo.Height = h;
+
+	DisplayInfo.Width = size.iWidth;
+	DisplayInfo.Height = size.iHeight;
+
+	WindowInfo.Width = size.iWidth;
+	WindowInfo.Height = size.iHeight;
 
 	WindowInfo.UIScaleX = DEFAULT_UI_SCALE_X;
 	WindowInfo.UIScaleY = DEFAULT_UI_SCALE_Y;
-	if (w <= 360) {
+	if (size.iWidth <= 360) {
 		DisplayInfo.ScaleX = 0.5f;
 		DisplayInfo.ScaleY = 0.5f;
 	} else {
 		DisplayInfo.ScaleX = 1;
 		DisplayInfo.ScaleY = 1;
 	}
-}
-
-CWindow::CWindow() {
 	
-}
-
-CWindow::~CWindow() {
-	if (iWindowGc) {
-		delete iWindowGc;
-		iWindowGc = NULL;
-	}
-	if (iWindow) {
-		iWindow->SetOrdinalPosition(KOrdinalPositionSwitchToOwningWindow);
-		iWindow->Close();
-		delete iWindow;
-		iWindow = NULL;
-	}
-	if (iWsScreenDevice) {
-		delete iWsScreenDevice;
-		iWsScreenDevice = NULL;
-	}
-}
-
-void CWindow::ConstructL() {
-	delete CActiveScheduler::Current();
-	CActiveScheduler* actScheduler = new (ELeave) CActiveScheduler();
-	CActiveScheduler::Install(actScheduler);
-	
-	CCoeEnv* env = CCoeEnv::Static();
-	if (!env) {
-		User::Panic(_L("CoeEnv::Static not initialized"), 0);
-	}
-	
-	iWsSession = env->WsSession();
-	iWsScreenDevice = new (ELeave) CWsScreenDevice(iWsSession);
-	User::LeaveIfError(iWsScreenDevice->Construct());
-
-	iWindowGroup = RWindowGroup(iWsSession);
-	User::LeaveIfError(iWindowGroup.Construct(reinterpret_cast<TUint32>(this) - 1));
-	iWindowGroup.SetOrdinalPosition(0);
-	iWindowGroup.EnableScreenChangeEvents();
-#ifdef CC_BUILD_TOUCH
-	iWindowGroup.EnableReceiptOfFocus(EFalse);
-#else
-	iWindowGroup.EnableReceiptOfFocus(ETrue);
-#endif
-
-	iWindowGroupName = CApaWindowGroupName::NewL(iWsSession, iWindowGroup.Identifier());
-	iWindowGroupName->SetAppUid(TUid::Uid(0xE212A5C2));
-	iWindowGroupName->SetCaptionL(_L("ClassiCube"));
-	iWindowGroupName->SetHidden(EFalse);
-	iWindowGroupName->SetSystem(EFalse);
-	iWindowGroupName->SetRespondsToShutdownEvent(ETrue);
-	iWindowGroupName->SetWindowGroupName(iWindowGroup);
-
-	iWindow = new (ELeave) RWindow(iWsSession);
-
-	TInt err = iWindow->Construct(iWindowGroup, reinterpret_cast<TUint32>(this));
-	User::LeaveIfError(err);
-
-	TRAP(err, CreateWindowL());
-	if (err) {
-		User::Panic(_L("Window creation failed"), err);
-	}
-
-	RWindowGroup rootWin = CCoeEnv::Static()->RootWin();
-	CApaWindowGroupName* rootWindGroupName = 0;
-	TRAP_IGNORE(rootWindGroupName = CApaWindowGroupName::NewL(iWsSession, rootWin.Identifier()));
-	if (rootWindGroupName) {
-		rootWindGroupName->SetHidden(ETrue);
-		rootWindGroupName->SetWindowGroupName(rootWin);
-	}
-	
-	TDisplayMode displayMode = iWindow->DisplayMode();
+	TDisplayMode displayMode = Window().DisplayMode();
 	TInt bufferSize = 0;
 
 	switch (displayMode) {
@@ -268,13 +416,458 @@ void CWindow::ConstructL() {
 	default:
 		break;
 	}
-	
 	DisplayInfo.Depth = bufferSize;
 	
-	iWsSession.EventReadyCancel();
+	// run launcher
+	
+	Launcher_Run();
+	
+	iPeriodic = CPeriodic::NewL( CActive::EPriorityIdle );
+	iPeriodic->Start(100, 100, TCallBack( CClassiCubeContainer::DrawCallBack, this));
 }
 
-static int ConvertKey(TInt aScanCode) {
+CClassiCubeContainer::~CClassiCubeContainer()
+{
+	delete iPeriodic;
+}
+
+void CClassiCubeContainer::SizeChanged()
+{
+	TSize size = Size();
+	if (iBitmap) {
+		delete iBitmap;
+		iBitmap = NULL;
+	}
+	iBitmap = new CFbsBitmap();
+	TInt err = iBitmap->Create(size, EColor16MA);
+	if (err) {
+		User::Panic(_L("Bitmap"), err);
+	}
+	
+	DisplayInfo.Width = size.iWidth;
+	DisplayInfo.Height = size.iHeight;
+
+	WindowInfo.Width = size.iWidth;
+	WindowInfo.Height = size.iHeight;
+
+	CCEvent event = { 0 };
+	event.type = CC_WIN_RESIZED;
+	event.i1 = size.iWidth;
+	event.i2 = size.iHeight;
+	Events_Push(&event);
+	DrawNow();
+}
+
+void CClassiCubeContainer::HandleResourceChange(TInt aType)
+{
+	switch (aType) {
+	case KEikDynamicLayoutVariantSwitch:
+		SetExtentToWholeScreen();
+		break;
+	}
+}
+
+TInt CClassiCubeContainer::CountComponentControls() const
+{
+	return 0;
+}
+
+CCoeControl* CClassiCubeContainer::ComponentControl(TInt /*aIndex*/) const
+{
+	return NULL;
+}
+
+void CClassiCubeContainer::Draw(const TRect& aRect) const
+{
+	if (iBitmap && launcherMode) {
+		SystemGc().BitBlt(TPoint(0, 0), iBitmap);
+	}
+	// do nothing in gl mode
+}
+
+void CClassiCubeContainer::DrawFramebuffer(Rect2D r, struct Bitmap* bmp)
+{
+	if (iBitmap) {
+		iBitmap->LockHeap();
+		TUint8* data = (TUint8*) iBitmap->DataAddress();
+		if (!data) {
+			User::Panic(_L("DataAddress"), 0);
+		}
+		const TUint8* src = (TUint8*) bmp->scan0;
+		for (TInt row = bmp->height - 1; row >= 0; --row) {
+			memcpy(data, src, bmp->width * BITMAPCOLOR_SIZE);
+			src += bmp->width * BITMAPCOLOR_SIZE;
+			data += iBitmap->DataStride();
+		}
+		iBitmap->UnlockHeap();
+	}
+	DrawDeferred();
+}
+
+void CClassiCubeContainer::HandleControlEventL(CCoeControl*, TCoeEvent) {
+	
+}
+
+void CClassiCubeContainer::HandlePointerEventL(const TPointerEvent& aPointerEvent)
+{
+#ifdef CC_BUILD_TOUCH
+	CCEvent event = { 0 };
+#ifdef CC_BUILD_SYMBIAN_3
+	const TAdvancedPointerEvent* advpointer = aPointerEvent.AdvancedPointerEvent();
+	event.i1 = advpointer != NULL ? advpointer->PointerNumber() : 0;
+#else
+	event.i1 = 0;
+#endif
+	TPoint pos = aPointerEvent.iPosition;
+	event.i2 = pos.iX;
+	event.i3 = pos.iY;
+	switch (aPointerEvent.iType) {
+	case TPointerEvent::EButton1Down:
+		event.type = CC_TOUCH_ADD;
+		break;
+	case TPointerEvent::EDrag:
+		event.type = CC_TOUCH_ADD;
+		break;
+	case TPointerEvent::EButton1Up:
+		event.type = CC_TOUCH_REMOVE;
+		break;
+	default:
+		break;
+	}
+	if (event.type) Events_Push(&event);
+#endif
+	CCoeControl::HandlePointerEventL(aPointerEvent);
+}
+
+// CClassiCubeDocument implementation
+
+CClassiCubeDocument::CClassiCubeDocument(CEikApplication& aApp) :
+	CAknDocument(aApp)
+{
+}
+
+CClassiCubeDocument::~CClassiCubeDocument()
+{
+}
+
+void CClassiCubeDocument::ConstructL()
+{
+}
+
+CClassiCubeDocument* CClassiCubeDocument::NewL(CEikApplication& aApp)
+{
+	CClassiCubeDocument* self = new (ELeave) CClassiCubeDocument(aApp);
+	CleanupStack::PushL(self);
+	self->ConstructL();
+	CleanupStack::Pop();
+
+	return self;
+}
+
+CEikAppUi* CClassiCubeDocument::CreateAppUiL()
+{
+	return new (ELeave) CClassiCubeAppUi;
+}
+
+//
+
+cc_result OpenBrowserL(const cc_string* url)
+{
+#if defined CC_BUILD_SYMBIAN_3 || defined CC_BUILD_SYMBIAN_S60V5
+	TUid browserUid = {0x10008D39};
+#else
+	TUid browserUid = {0x1020724D};
+#endif
+	TApaTaskList tasklist(CEikonEnv::Static()->WsSession());
+	TApaTask task = tasklist.FindApp(browserUid);
+
+	if (task.Exists()) {
+		task.BringToForeground();
+		task.SendMessage(TUid::Uid(0), TPtrC8((TUint8 *) url->buffer, (TInt) url->length));
+	}
+	else {
+		RApaLsSession ls;
+		if (!ls.Handle()) {
+			User::LeaveIfError(ls.Connect());
+		}
+
+		TThreadId tid;
+		TBuf<FILENAME_SIZE> buf;
+		ConvertToUnicode(buf, url);
+		ls.StartDocument(buf, browserUid, tid);
+		ls.Close();
+	}
+	return 0;
+}
+
+void Window_PreInit(void)
+{
+	//NormDevice.defaultBinds = symbian_binds; TODO only use on devices with limited hardware
+}
+
+void Window_Init(void)
+{
+	Events_Init();
+#ifdef CC_BUILD_TOUCH
+	//TBool touch = AknLayoutUtils::PenEnabled();
+
+	bool touch = true;
+	Input_SetTouchMode(touch);
+	Gui_SetTouchUI(touch);
+#endif
+}
+
+void Window_Free(void)
+{
+}
+
+void Window_Create2D(int width, int height)
+{
+	launcherMode = true;
+}
+void Window_Create3D(int width, int height)
+{
+	launcherMode = false;
+}
+
+void Window_Destroy(void)
+{
+}
+
+void Window_SetTitle(const cc_string* title)
+{
+}
+
+void Clipboard_GetText(cc_string* value)
+{
+}
+
+void Clipboard_SetText(const cc_string* value)
+{
+}
+
+int Window_GetWindowState(void)
+{
+	return WINDOW_STATE_FULLSCREEN;
+}
+
+cc_result Window_EnterFullscreen(void)
+{
+	return 0;
+}
+
+cc_result Window_ExitFullscreen(void)
+{
+	return 0;
+}
+
+int Window_IsObscured(void)
+{
+	return WindowInfo.Inactive;
+}
+
+void Window_Show(void)
+{
+}
+
+void Window_SetSize(int width, int height)
+{
+}
+
+void Window_RequestClose(void)
+{
+	WindowInfo.Exists = false;
+	Event_RaiseVoid(&WindowEvents.Closing);
+	container->iAppUi->Exit();
+}
+
+void Window_ProcessEvents(float delta) {
+	CCEvent event;
+	int key;
+	
+	while (Events_Pull(&event))
+	{
+		switch (event.type)
+		{
+		case CC_KEY_DOWN:
+			key = ConvertKey(event.i1);
+			if (key) Input_SetPressed(key);
+			break; 
+		case CC_KEY_UP:
+			key = ConvertKey(event.i1);
+			if (key) Input_SetReleased(key);
+			break;
+		case CC_WIN_RESIZED:
+			Window_Main.Width  = event.i1;
+			Window_Main.Height = event.i2;
+			Event_RaiseVoid(&WindowEvents.Resized);
+			break;
+		case CC_WIN_FOCUS:
+			Window_Main.Focused = event.i1;
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
+			break;
+		case CC_WIN_REDRAW:
+			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
+			break;
+		case CC_WIN_QUIT:
+			Window_Main.Exists = false;
+			Window_RequestClose();
+			break;
+#ifdef CC_BUILD_TOUCH
+		case CC_TOUCH_ADD:
+			Input_AddTouch(static_cast<long>(event.i1), event.i2, event.i3);
+			break;
+		case CC_TOUCH_REMOVE:
+			Input_RemoveTouch(static_cast<long>(event.i1), event.i2, event.i3);
+			break;
+#endif
+		}
+	}
+}
+
+void Window_EnableRawMouse(void)
+{
+	Input.RawMode = true;
+}
+
+void Window_UpdateRawMouse(void)
+{
+}
+
+void Window_DisableRawMouse(void)
+{
+	Input.RawMode = false;
+}
+
+void Gamepads_Init(void)
+{
+
+}
+
+void Gamepads_Process(float delta)
+{
+
+}
+
+static void ShowDialogL(const char* title, const char* msg) {
+	CAknInformationNote* note = new CAknInformationNote();
+	TBuf<512> titleBuf;
+	ConvertToUnicode(titleBuf, title, String_Length(title));
+	note->SetTitleL(titleBuf);
+	
+	TBuf<512> msgBuf;
+	ConvertToUnicode(msgBuf, msg, String_Length(msg));
+	note->ExecuteLD(msgBuf);
+}
+
+void ShowDialogCore(const char* title, const char* msg)
+{
+	TRAP_IGNORE(ShowDialogL(title, msg));
+}
+
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args)
+{
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text)
+{
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Close(void)
+{
+	VirtualKeyboard_Close();
+}
+
+void Window_LockLandscapeOrientation(cc_bool lock)
+{
+	container->iAppUi->SetOrientationL(lock ? CAknAppUiBase::EAppUiOrientationLandscape : CAknAppUiBase::EAppUiOrientationAutomatic);
+}
+
+static void Cursor_GetRawPos(int* x, int* y)
+{
+	*x = 0;
+	*y = 0;
+}
+void Cursor_SetPosition(int x, int y)
+{
+}
+static void Cursor_DoSetVisible(cc_bool visible)
+{
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args)
+{
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args)
+{
+	return ERR_NOT_SUPPORTED;
+}
+
+void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height)
+{
+	bmp->scan0 = (BitmapCol*) Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "bitmap");
+	bmp->width = width;
+	bmp->height = height;
+}
+
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp)
+{
+	container->DrawFramebuffer(r, bmp);
+}
+
+void Window_FreeFramebuffer(struct Bitmap* bmp)
+{
+	Mem_Free(bmp->scan0);
+}
+
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
+void GLContext_Create(void) {
+	static EGLint attribs[] = {
+		EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+		EGL_BUFFER_SIZE, DisplayInfo.Depth,
+		EGL_DEPTH_SIZE, 16,
+		EGL_NONE
+	};
+
+	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(ctx_display, NULL, NULL);
+	EGLint numConfigs;
+
+	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &numConfigs);
+	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, NULL);
+	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
+	GLContext_InitSurface();
+}
+#endif
+
+cc_result Process_StartOpen(const cc_string* args)
+{
+	TInt err = 0;
+	TRAP(err, err = OpenBrowserL(args));
+	return (cc_result) err;
+}
+
+static void ConvertToUnicode(TDes& dst, const char* src, size_t length) {
+	if (!src) return;
+
+	cc_unichar* uni = reinterpret_cast<cc_unichar*>(const_cast <TUint16*> (dst.Ptr()));
+	for (int i = 0; i < length; i++) {
+		*uni++ = Convert_CP437ToUnicode(src[i]);
+	}
+	*uni = '\0';
+	dst.SetLength(length);
+}
+
+static void ConvertToUnicode(TDes& dst, const cc_string* src) {
+	ConvertToUnicode(dst, src->buffer, (size_t)src->length);
+}
+
+static int ConvertKey(TInt aScanCode)
+{
 	// TODO array?
 	switch (aScanCode) {
 	case EStdKeyBackspace:
@@ -413,7 +1006,7 @@ static int ConvertKey(TInt aScanCode) {
 		return CCKEY_VOLUME_UP;
 	case EStdKeyDecVolume:
 		return CCKEY_VOLUME_DOWN;
-		
+
 // softkeys
 	case EStdKeyDevice0: // left soft
 		return CCKEY_F1;
@@ -422,385 +1015,8 @@ static int ConvertKey(TInt aScanCode) {
 	case EStdKeyDevice3: // d-pad center
 		return CCKEY_ENTER;
 	}
-	
+
 	return aScanCode;
-}
-
-void CWindow::HandleWsEvent(const TWsEvent& aWsEvent) {
-	TInt eventType = aWsEvent.Type();
-	switch (eventType) {
-	case EEventKeyDown: {
-		Input_Set(ConvertKey(aWsEvent.Key()->iScanCode), true);
-		break;
-	}
-	case EEventKeyUp: {
-		Input_Set(ConvertKey(aWsEvent.Key()->iScanCode), false);
-		break;
-	}
-	case EEventScreenDeviceChanged:
-	//case 27: /* EEventDisplayChanged */
-	{
-		TPixelsTwipsAndRotation pixnrot;
-		iWsScreenDevice->GetScreenModeSizeAndRotation(iWsScreenDevice->CurrentScreenMode(), pixnrot);
-		if (pixnrot.iPixelSize != iWindow->Size()) {
-			iWindow->SetExtent(TPoint(0, 0), pixnrot.iPixelSize);
-			
-			TInt w = pixnrot.iPixelSize.iWidth,
-				h = pixnrot.iPixelSize.iHeight;
-			
-			DisplayInfo.Width = w;
-			DisplayInfo.Height = h;
-			
-			WindowInfo.Width = w;
-			WindowInfo.Height = h;
-			
-			Event_RaiseVoid(&WindowEvents.Resized);
-		}
-		Event_RaiseVoid(&WindowEvents.RedrawNeeded);
-		break;
-	}
-	case EEventFocusLost: {
-#if 0 // TODO
-		if (!WindowInfo.Focused) break;
-		WindowInfo.Focused = false;
-		
-		Event_RaiseVoid(&WindowEvents.FocusChanged);
-#endif
-		break;
-	}
-	case EEventFocusGained: {
-		if (!WindowInfo.Focused) {
-			WindowInfo.Focused = true;
-			
-			Event_RaiseVoid(&WindowEvents.FocusChanged);
-		}
-		Event_RaiseVoid(&WindowEvents.RedrawNeeded);
-		break;
-	}
-	// shutdown request from task manager
-	case KAknShutOrHideApp: {
-		WindowInfo.Exists = false;
-		RequestClose();
-		break;
-	}
-	// shutdown request from system (out of memory)
-	case EEventUser: {
-		TApaSystemEvent apaSystemEvent = *(TApaSystemEvent*) aWsEvent.EventData();
-		if (apaSystemEvent == EApaSystemEventShutdown) {
-			WindowInfo.Exists = false;
-			RequestClose();
-		}
-		break;
-	}
-	case EEventWindowVisibilityChanged: {
-		if (aWsEvent.Handle() == reinterpret_cast<TUint32>(this)) {
-			WindowInfo.Inactive = (aWsEvent.VisibilityChanged()->iFlags & TWsVisibilityChangedEvent::EFullyVisible) == 0;
-			Event_RaiseVoid(&WindowEvents.InactiveChanged);
-		}
-		break;
-	}
-#ifdef CC_BUILD_TOUCH
-	case EEventPointer: {
-#ifdef CC_BUILD_SYMBIAN_3
-		TAdvancedPointerEvent* pointer = aWsEvent.Pointer();
-		long num = pointer->IsAdvancedPointerEvent() ? pointer->PointerNumber() : 0;
-#else
-		TPointerEvent* pointer = aWsEvent.Pointer();
-		long num = 0;
-#endif
-		TPoint pos = pointer->iPosition;
-		switch (pointer->iType) {
-		case TPointerEvent::EButton1Down:
-			Input_AddTouch(num, pos.iX, pos.iY);
-			break;
-		case TPointerEvent::EDrag:
-			Input_AddTouch(num, pos.iX, pos.iY);
-			break;
-		case TPointerEvent::EButton1Up:
-			Input_RemoveTouch(num, pos.iX, pos.iY);
-			break;
-		default:
-			break;
-		}
-		break;
-	}
-#endif
-	}
-}
-
-void CWindow::AllocFrameBuffer(int width, int height) {
-	FreeFrameBuffer();
-	if (!iWindowGc) {
-		iWindowGc = new (ELeave) CWindowGc(iWsScreenDevice);
-		iWindowGc->Construct();
-	}
-	iBitmap = new CFbsBitmap();
-	iBitmap->Create(TSize(width, height), EColor16MA);
-}
-
-void CWindow::FreeFrameBuffer() {
-	if (iWindowGc != NULL) {
-		delete iWindowGc;
-		iWindowGc = NULL;
-	}
-	if (iBitmap != NULL) {
-		delete iBitmap;
-		iBitmap = NULL;
-	}
-}
-
-void CWindow::DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	if (!iWindowGc) return;
-	iWindow->Invalidate(/*TRect(r.x, r.y, r.width, r.height)*/);
-	iWindow->BeginRedraw();
-	iWindowGc->Activate(*iWindow);
-
-	if (iBitmap) {
-//		iBitmap->BeginDataAccess();
-		iBitmap->LockHeap();
-		TUint8* data = (TUint8*) iBitmap->DataAddress();
-		const TUint8* src = (TUint8*) bmp->scan0;
-		for (TInt row = bmp->height - 1; row >= 0; --row) {
-			memcpy(data, src, bmp->width * BITMAPCOLOR_SIZE);
-			src += bmp->width * BITMAPCOLOR_SIZE;
-			data += iBitmap->DataStride();
-		}
-//		iBitmap->EndDataAccess();
-		iBitmap->UnlockHeap();
-		
-		iWindowGc->BitBlt(TPoint(0, 0), iBitmap/*, TRect(r.x, r.y, r.width, r.height)*/);
-	}
-	iWindowGc->Deactivate();
-	iWindow->EndRedraw();
-	iWsSession.Flush();
-}
-
-void CWindow::ProcessEvents(float delta) {
-	RThread thread;
-	TInt error = KErrNone;
-	while (thread.RequestCount()) {
-		CActiveScheduler::RunIfReady(error, CActive::EPriorityIdle);
-		User::WaitForAnyRequest();
-	}
-	
-	while (iWsEventStatus != KRequestPending) {
-		iWsSession.GetEvent(window->iWsEvent);
-		HandleWsEvent(window->iWsEvent);
-		iWsEventStatus = KRequestPending;
-		iWsSession.EventReady(&iWsEventStatus);
-	}
-}
-
-void CWindow::RequestClose() {
-	Event_RaiseVoid(&WindowEvents.Closing);
-}
-
-void CWindow::InitEvents() {
-	iWindow->Invalidate();
-	iWindow->BeginRedraw();
-	iWindow->EndRedraw();
-	iWsSession.Flush();
-	if (iEventsInitialized)
-		return;
-	iEventsInitialized = ETrue;
-	iWsEventStatus = KRequestPending;
-	iWsSession.EventReady(&iWsEventStatus);
-}
-
-cc_result CWindow::OpenBrowserL(const cc_string* url) {
-#if defined CC_BUILD_SYMBIAN_3 || defined CC_BUILD_SYMBIAN_S60V5
-	TUid browserUid = {0x10008D39};
-#else
-	TUid browserUid = {0x1020724D};
-#endif
-	TApaTaskList tasklist(window->iWsSession);
-	TApaTask task = tasklist.FindApp(browserUid);
-	
-	if (task.Exists()) {
-		task.BringToForeground();
-		task.SendMessage(TUid::Uid(0), TPtrC8((TUint8 *)url->buffer, (TInt)url->length));
-	} else {
-		RApaLsSession ls;
-		if (!ls.Handle()) {
-			User::LeaveIfError(ls.Connect());
-		}
-		
-		TThreadId tid;
-		TBuf<FILENAME_SIZE> buf;
-		ConvertToUnicode(buf, url);
-		ls.StartDocument(buf, browserUid, tid);
-		ls.Close();
-	}
-	return 0;
-}
-
-void Window_PreInit(void) {
-	//NormDevice.defaultBinds = symbian_binds; TODO only use on devices with limited hardware
-	
-	CCoeEnv* env = new (ELeave) CCoeEnv();
-	TRAPD(err, env->ConstructL(ETrue, 0));
-	
-	if (err != KErrNone) {
-		User::Panic(_L("Failed to create CoeEnv"), 0);
-	}
-}
-
-void Window_Init(void) {
-	TRAPD(err, window = CWindow::NewL());
-	if (err) {
-		User::Panic(_L("Failed to initialize CWindow"), err);
-	}
-	
-#ifdef CC_BUILD_TOUCH
-	//TBool touch = AknLayoutUtils::PenEnabled();
-	
-	bool touch = true;
-	Input_SetTouchMode(touch);
-	Gui_SetTouchUI(touch);
-#endif
-}
-
-void Window_Free(void) {
-	if (window) {
-		delete window;
-		window = NULL;
-	}
-	
-	CCoeEnv::Static()->DestroyEnvironment();
-	delete CCoeEnv::Static();
-}
-
-void Window_Create2D(int width, int height) {
-	launcherMode = true;
-	window->InitEvents();
-}
-void Window_Create3D(int width, int height) {
-	launcherMode = false;
-	window->InitEvents();
-}
-
-void Window_Destroy(void) {
-}
-
-void Window_SetTitle(const cc_string* title) { }
-
-void Clipboard_GetText(cc_string* value) { }
-
-void Clipboard_SetText(const cc_string* value) { }
-
-int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
-
-cc_result Window_EnterFullscreen(void) { return 0; }
-
-cc_result Window_ExitFullscreen(void)  { return 0; }
-
-int Window_IsObscured(void) {
-	return WindowInfo.Inactive;
-}
-
-void Window_Show(void) { }
-
-void Window_SetSize(int width, int height) { }
-
-void Window_RequestClose(void) {
-	window->RequestClose();
-}
-
-void Window_ProcessEvents(float delta) {
-	window->ProcessEvents(delta);
-}
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true; }
-
-void Window_UpdateRawMouse(void)  {  }
-
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-
-void Gamepads_Init(void) {
-	
-}
-
-void Gamepads_Process(float delta) {
-	
-}
-
-void ShowDialogCore(const char* title, const char* msg) {
-	// TODO
-	static const cc_string t2 = String_Init((char*) title, String_Length(title), String_Length(title));
-	Logger_Log(&t2);
-	static const cc_string msg2 = String_Init((char*) msg, String_Length(msg), String_Length(msg));
-	Logger_Log(&msg2);
-	
-}
-
-void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-	VirtualKeyboard_Open(args, launcherMode);
-}
-
-void OnscreenKeyboard_SetText(const cc_string* text) {
-	VirtualKeyboard_SetText(text);
-}
-
-void OnscreenKeyboard_Close(void) {
-	VirtualKeyboard_Close();
-}
-
-void Window_LockLandscapeOrientation(cc_bool lock) {
-	// TODO
-}
-
-static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-void Cursor_SetPosition(int x, int y) { }
-static void Cursor_DoSetVisible(cc_bool visible) { }
-
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "bitmap");
-	bmp->width  = width;
-	bmp->height = height;
-	window->AllocFrameBuffer(width, height);
-}
-
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	window->DrawFramebuffer(r, bmp);
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	window->FreeFrameBuffer();
-	Mem_Free(bmp->scan0);
-}
-
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
-void GLContext_Create(void) {
-	static EGLint attribs[] = {
-		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
-		EGL_BUFFER_SIZE,       DisplayInfo.Depth,
-		EGL_DEPTH_SIZE,        16,
-		EGL_NONE
-	};
-
-	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-	eglInitialize(ctx_display, NULL, NULL);
-	EGLint numConfigs;
-	
-	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &numConfigs);
-	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, NULL);
-	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
-	GLContext_InitSurface();
-}
-#endif
-
-cc_result Process_StartOpen(const cc_string* args) {
-	TInt err = 0;
-	TRAP(err, err = window->OpenBrowserL(args));
-	return (cc_result) err;
 }
 
 #endif

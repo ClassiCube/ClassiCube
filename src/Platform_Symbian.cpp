@@ -303,9 +303,9 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	*handle = ptr;
 	pthread_attr_init(&attrs);
 	
-	/* Symbian only supports up to 64 KB stack size */
-	if (stackSize >= 64 * 1024) {
-		stackSize = 64 * 1024;
+	/* Symbian only supports up to 80 KB stack size */
+	if (stackSize >= 80 * 1024) {
+		stackSize = 80 * 1024;
 	}
 	
 	pthread_attr_setstacksize(&attrs, stackSize);
