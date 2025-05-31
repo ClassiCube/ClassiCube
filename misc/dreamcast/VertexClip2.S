@@ -52,10 +52,11 @@
 .global _ClipEdge
 .align 4
 _ClipEdge:
-	add      #12, IN1 ! EX, IN1  = &v1->z
+	fschg             ! FE (swap to 32 bit FPU loads/stores)
+	add      #28, IN1 ! EX, IN1  = &v1->z
 	fldi0    fr4      ! LS, fr4  = 0
 	fmov.s  @IN1, fr2 ! LS, fr2  = v1->z
-	add      #12, IN2 ! EX, IN   = &v2->z
+	add      #28, IN2 ! EX, IN   = &v2->z
 	fldi0    fr5      ! LS, fr5  = 0
 	fmov.s  @IN2,fr11 ! LS, fr11 = v2->z
 	fsub     fr2,fr11 ! FE, fr11 = v2->z - v1->z
@@ -70,9 +71,9 @@ _ClipEdge:
 	fabs     fr2      ! LS, fr2  = abs(v1->z)
 	mov.l  TYP,@OUT   ! LS, dst->cmd = TYPE
 	fmul     fr2,fr11 ! FE, fr11 = abs(v1->Z) / abs(v2->z - v1->z)  --> t
-	add      #-8, IN1 ! EX, IN1  = &v1->x
+	add     #-24, IN1 ! EX, IN1  = &v1->x
 	fldi1   fr10      ! LS, fr10 = 1
-	add      #-8, IN2 ! EX, IN2  = &v2->x
+	add     #-24, IN2 ! EX, IN2  = &v2->x
 	add       #4, OUT ! EX, OUT  = &dst->x
 	fsub    fr11,fr10 ! FE, invT = 1.0 - t  --> invT
 
@@ -200,6 +201,7 @@ _ClipEdge:
 1:
 	mov.l  CLO,@OUT   ! LS, OUT->color = OUTCOLOR
 	add   #-24, OUT   ! EX, OUT += 8
+	fschg             ! FE (swap to 64 bit FPU loads/stores)
 	rts               ! CO, return after executing instruction in delay slot
 	pref   @OUT       ! LS, trigger store queue flush
 .size _ClipEdge, .-_ClipEdge

@@ -2,46 +2,46 @@
 #include <dc/pvr.h>
 #include "gldc.h"
 
-// calculates 1/sqrt(x)
-static GLDC_FORCE_INLINE float sh4_fsrra(float x) {
-  asm volatile ("fsrra %[value]\n"
-  : [value] "+f" (x) // outputs (r/w to FPU register)
-  : // no inputs
-  : // no clobbers
-  );
-  return x;
-}
-
 static GLDC_FORCE_INLINE void PushVertex(Vertex* v, volatile Vertex* dst) {
-	float ww   = v->w * v->w;
-	dst->flags = v->flags;
-	float f	= sh4_fsrra(ww); // 1/sqrt(w^2) ~ 1/w
-	// Convert to NDC (viewport already applied)
-	float x	= v->x * f;
-	float y	= v->y * f;
-
-	dst->x	 = x;
-	dst->y	 = y;
-	dst->z	 = f;
-	dst->u	 = v->u;
-	dst->v	 = v->v;
-	dst->bgra  = v->bgra;
-	__asm__("pref @%0" : : "r"(dst));
+	asm volatile (
+"fmov.d    @%0+, dr0\n" // LS, FX  = *src, src += 8
+"fmov.d    @%0+, dr2\n" // LS, YW  = *src, src += 8
+"add        #32, %1 \n" // EX, dst += 32
+"fmul       fr3, fr3\n" // FE, W   = W * W 
+"fmov.d    @%0+, dr4\n" // LS, UV  = *src, src += 8
+"fmov.d    @%0+, dr6\n" // LS, C?  = *src, src += 8
+"fsrra           fr3\n" // FE, W   = 1/sqrt(W*W) ~ 1/W
+"fmov.d    dr6, @-%1\n" // LS, dst -= 8, *dst = C?
+"fmov.d    dr4, @-%1\n" // LS, dst -= 8, *dst = UV
+"fmul      fr3,  fr2\n" // FE, Y = W * Y
+"add      #-32,  %0 \n" // EX, src -= 32
+"fmov.d    dr2, @-%1\n" // LS, dst -= 8, *dst = YW
+"fmul      fr3,  fr1\n" // FE, Y = X * X
+"fmov.d    dr0, @-%1\n" // LS, dst -= 8, *dst = FX
+"pref      @%1      \n" // LS, flush store queue
+  :
+  : "r" (v), "r" (dst)
+  : "memory", "fr0", "fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7"
+  );
 }
 
 static inline void PushCommand(Vertex* v, volatile Vertex* dst)  {
-	uint32_t* s = (uint32_t*)v;
-	volatile uint32_t* sq = (volatile uint32_t*)dst;
-
-	sq[0] = *(s++);
-	sq[1] = *(s++);
-	sq[2] = *(s++);
-	sq[3] = *(s++);
-	sq[4] = *(s++);
-	sq[5] = *(s++);
-	sq[6] = *(s++);
-	sq[7] = *(s++);
-	__asm__("pref @%0" : : "r"(sq));
+	asm volatile (
+"add       #32, %1  \n" // EX, dst += 32
+"fmov.d    @%0+, dr0\n" // LS, fr0_fr1 = *src, src += 8
+"fmov.d    @%0+, dr2\n" // LS, fr2_fr3 = *src, src += 8
+"fmov.d    @%0+, dr4\n" // LS, fr4_fr5 = *src, src += 8
+"fmov.d    @%0+, dr6\n" // LS, fr6_fr7 = *src, src += 8
+"fmov.d    dr6, @-%1\n" // LS, dst -= 8, *dst = fr6_fr7
+"fmov.d    dr4, @-%1\n" // LS, dst -= 8, *dst = fr4_fr5
+"fmov.d    dr2, @-%1\n" // LS, dst -= 8, *dst = fr2_fr3
+"fmov.d    dr0, @-%1\n" // LS, dst -= 8, *dst = fr0_fr1
+"pref      @%1      \n" // LS, flush store queue
+"add       #-32, %0 \n" // EX, src -= 32
+  :
+  : "r" (v), "r" (dst)
+  : "memory", "fr0", "fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7"
+  );
 }
 
 extern void ClipEdge(Vertex* const v1, Vertex* const v2, volatile Vertex* vout, char type);
@@ -58,6 +58,7 @@ extern void ProcessVertexList(Vertex* v3, int n, void* sq_addr);
 
 void SceneListSubmit(Vertex* v3, int n) {
 	volatile Vertex* dst = (volatile Vertex*)MEM_AREA_SQ_BASE;
+	asm volatile ("fschg"); // swap to 64 bit loads/stores
 
 	for (int i = 0; i < n; i++, v3++) 
 	{
@@ -256,4 +257,5 @@ void SceneListSubmit(Vertex* v3, int n) {
 			break;
 		}
 	}
+	asm volatile ("fschg"); // swap back to 32 bit loads/stores
 }
