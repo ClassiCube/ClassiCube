@@ -10,6 +10,7 @@
 #include "Server.h"
 #include "Options.h"
 #include "main.h"
+#include "Strings.h"
 
 /*########################################################################################################################*
 *-------------------------------------------------Complex argument parsing------------------------------------------------*
@@ -77,6 +78,8 @@ static void RunGame(void) {
 		if (DisplayInfo.Width < 854) width = 640;
 	}
 
+	CC_CurrentLanguage = Options_GetInt(OPT_SELECTED_LANGUAGE, 0, CC_LANGUAGE_LANGCNT-1, 0);
+	applyLanguageToGame();
 	String_InitArray(title, titleBuffer);
 	String_Format2(&title, "%c (%s)", GAME_APP_TITLE, &Game_Username);
 	Game_Run(width, height, &title);
