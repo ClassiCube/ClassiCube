@@ -11,7 +11,6 @@ RESOURCE TBUF { buf="ClassiCube"; }
 
 RESOURCE EIK_APP_INFO
 {
-	cba = R_AVKON_SOFTKEYS_OPTIONS_BACK;
 }
 
 rls_string STRING_app_caption_string "ClassiCube"

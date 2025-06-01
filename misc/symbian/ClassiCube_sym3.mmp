@@ -5,6 +5,10 @@ MACRO CC_BUILD_SYMBIAN_LIBGLESV2
 
 ARMFPU vfpv2
 
+#ifdef ARMCC
+ALWAYS_BUILD_AS_ARM
+#endif
+
 LIBRARY libglesv2.lib
 LIBRARY libegl.lib
 

@@ -38,7 +38,6 @@ LIBRARY libdl.lib
 LIBRARY libpthread.lib
 
 #ifdef ARMCC
-ALWAYS_BUILD_AS_ARM
 OPTION ARMCC -Otime --diag_suppress 1296 --diag_suppress 1293 --diag_suppress 66
 OPTION_REPLACE ARMCC --cpu 6
 OPTION_REPLACE ARMCC --fpu softvfp+vfpv2 --fpmode fast
