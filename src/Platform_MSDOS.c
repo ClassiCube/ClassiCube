@@ -33,7 +33,7 @@ const cc_result ReturnCode_SocketWouldBlock = -10002;
 const cc_result ReturnCode_SocketDropped    = -10002;
 
 const char* Platform_AppNameSuffix = " DOS";
-cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 cc_bool  Platform_ReadonlyFilesystem;
 
 /*########################################################################################################################*

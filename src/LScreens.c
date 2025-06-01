@@ -839,11 +839,9 @@ static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
 	}
 }
 
-#if defined CC_BUILD_CONSOLE || defined CC_BUILD_SYMBIAN
 static void MainScreen_ExitApp(void* w) {
 	Window_Main.Exists = false;
 }
-#endif
 
 static void MainScreen_Activated(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
@@ -880,18 +878,18 @@ static void MainScreen_Activated(struct LScreen* s_) {
 	LButton_Add(s, &s->btnOptions, 100, 35, "Options", 
 				SwitchToSettings, main_btnOptions);
 
-#if defined CC_BUILD_CONSOLE || defined CC_BUILD_SYMBIAN
-	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
-	LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
-				MainScreen_ExitApp, main_btnUpdates);
-#else
-	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
-				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
-	if (Updater_Supported) {
-		LButton_Add(s, &s->btnUpdates,  100, 35, "Updates", 
-					SwitchToUpdates, main_btnUpdates);
+	if (Platform_Flags & PLAT_FLAG_APP_EXIT) {
+		LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
+		LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
+					MainScreen_ExitApp, main_btnUpdates);
+	} else {
+		LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
+					Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
+		if (Updater_Supported) {
+			LButton_Add(s, &s->btnUpdates,  100, 35, "Updates", 
+						SwitchToUpdates, main_btnUpdates);
+		}
 	}
-#endif
 
 #ifdef CC_BUILD_NETWORKING
 	s->btnResume.OnHover   = MainScreen_ResumeHover;

@@ -1,4 +1,4 @@
-cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 
 
 /*########################################################################################################################*

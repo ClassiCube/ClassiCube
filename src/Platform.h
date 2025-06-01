@@ -66,6 +66,9 @@ cc_result Platform_GetEntropy(void* data, int len);
 /* Whether the launcher and game must both be run in the same process */
 /*  (e.g. can't start a separate process on Mobile or Consoles) */
 #define PLAT_FLAG_SINGLE_PROCESS 0x01
+/* Whether button in the launcher should be available to exit the app */
+/*  (e.g. necessary in MS DOS, game consoles ) */
+#define PLAT_FLAG_APP_EXIT       0x02
 
 /* Platform specific runtime behaviour flags (See PLAT_FLAG members) */
 extern cc_uint8 Platform_Flags;

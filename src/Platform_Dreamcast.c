@@ -236,7 +236,7 @@ static int VMUFile_Do(cc_file* file, int mode) {
 		data = Mem_Alloc(len, 1, "VMU data");
 		fs_read(fd, data, len);
 		
-		err = vmu_pkg_parse(data, len, &pkg);
+		err = vmu_pkg_parse(data, &pkg);
 		fs_close(fd);
 	}
 	

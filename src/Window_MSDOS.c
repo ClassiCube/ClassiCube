@@ -192,7 +192,15 @@ void Window_Init(void) {
 	Mouse_Init();
 }
 
-void Window_Free(void) { }
+void Window_Free(void) {
+	if (__djgpp_nearptr_enable() == 0) return;
+
+	char* screen = (char*)0xa0000 + __djgpp_conventional_base;
+	Mem_Set(screen, 0, DISP_WIDTH * DISP_HEIGHT);
+
+	__djgpp_nearptr_disable();
+	// TODO restore VGA mode and palette?
+}
 
 static void DoCreateWindow(int width, int height) {
 	Window_Main.Width    = 320;
