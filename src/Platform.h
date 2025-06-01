@@ -65,7 +65,11 @@ cc_result Platform_GetEntropy(void* data, int len);
 *#########################################################################################################################*/
 /* Whether the launcher and game must both be run in the same process */
 /*  (e.g. can't start a separate process on Mobile or Consoles) */
-extern cc_bool Platform_SingleProcess;
+#define PLAT_FLAG_SINGLE_PROCESS 0x01
+
+/* Platform specific runtime behaviour flags (See PLAT_FLAG members) */
+extern cc_uint8 Platform_Flags;
+#define Platform_IsSingleProcess() (Platform_Flags & PLAT_FLAG_SINGLE_PROCESS)
 
 /* Starts the game with the given arguments. */
 CC_API cc_result Process_StartGame2(const cc_string* args, int numArgs);

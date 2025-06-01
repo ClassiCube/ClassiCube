@@ -38,8 +38,8 @@ const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 
 const char* Platform_AppNameSuffix = "";
-cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess;
+cc_uint8 Platform_Flags;
+cc_bool  Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*

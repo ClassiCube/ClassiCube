@@ -38,8 +38,8 @@ const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 
 const char* Platform_AppNameSuffix = "";
-cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess;
+cc_bool  Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags;
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -762,7 +762,8 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	cc_result res;
 	int len, i;
 
-	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
+	if (Platform_IsSingleProcess()) return SetGameArgs(args, numArgs);
+
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
 	si.wide.cb = sizeof(STARTUPINFOW);
 	

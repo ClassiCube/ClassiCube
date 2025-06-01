@@ -52,8 +52,8 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 #define SUPPORTS_GETADDRINFO 1
 
 const char* Platform_AppNameSuffix = "";
-cc_bool Platform_SingleProcess = true;
-cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+cc_bool  Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*

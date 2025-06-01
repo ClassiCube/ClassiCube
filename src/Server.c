@@ -136,7 +136,7 @@ static void SPConnection_BeginConnect(void) {
 	horSize = 16;
 	verSize = 16;
 #elif defined CC_BUILD_LOWMEM
-	horSize = 64;
+	horSize = 128;
 	verSize = 64;
 #else
 	horSize = Game_ClassicMode ? 256 : 128;
@@ -150,7 +150,7 @@ static void SPConnection_BeginConnect(void) {
 	Gen_Active = &NotchyGen;
 #endif
 
-	Gen_Seed   = Random_Next(&rnd, Int32_MaxValue);
+	Gen_Seed   = 6789;;//Random_Next(&rnd, Int32_MaxValue);
 	Gen_Start();
 
 	GeneratingScreen_Show();

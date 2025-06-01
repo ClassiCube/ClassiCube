@@ -1,4 +1,4 @@
-cc_bool Platform_SingleProcess = true;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 
 
 /*########################################################################################################################*

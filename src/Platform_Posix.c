@@ -46,8 +46,13 @@ const char* Platform_AppNameSuffix = " iOS alpha";
 #else
 const char* Platform_AppNameSuffix = "";
 #endif
-cc_bool Platform_SingleProcess;
-cc_bool Platform_ReadonlyFilesystem;
+
+#ifdef CC_BUILD_MOBILE
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+#else
+cc_uint8 Platform_Flags;
+#endif
+cc_bool  Platform_ReadonlyFilesystem;
 
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN
@@ -888,7 +893,8 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	int i, j, len = 0;
 	char* argv[15];
 	cc_result res;
-	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
+
+	if (Platform_IsSingleProcess()) return SetGameArgs(args, numArgs);
 
 	res = Process_RawGetExePath(path, &len);
 	if (res) return res;
@@ -1381,7 +1387,6 @@ static void Platform_InitSpecific(void) {
 }
 #else
 static void Platform_InitSpecific(void) {
-	Platform_SingleProcess = true;
 	/* Always foreground process on iOS */
 }
 #endif
@@ -1393,10 +1398,6 @@ void Platform_Init(void) {
 }
 #else
 void Platform_Init(void) {
-	#ifdef CC_BUILD_MOBILE
-	Platform_SingleProcess = true;
-	#endif
-
 	Platform_InitPosix();
 }
 #endif

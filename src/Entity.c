@@ -1062,12 +1062,12 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 }
 
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
-	float x = (World.Width  / 2) + 0.5f;
-	float z = (World.Length / 2) + 0.5f;
+	float x = 0;//(World.Width  / 2) + 0.5f;
+	float z = 0;//(World.Length / 2) + 0.5f;
 
 	update->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
 	update->pos   = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-	update->yaw   = 0.0f;
+	update->yaw   = 45.0f;
 	update->pitch = 0.0f;
 }
 
