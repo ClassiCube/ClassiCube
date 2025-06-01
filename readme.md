@@ -92,6 +92,7 @@ And also runs on:
 * PS1 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps1))
 * Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
+* Symbian (S60 3rd Edition FP1 and later) - unfinished, but usable
 
 # Compiling 
 
@@ -391,6 +392,10 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
     * ```make macclassic_ppc``` (For a PPC build)
 
 The PowerPC build will usually perform much better
+
+#### Symbian S60
+
+[Guide for Carbide.c++](misc/symbian/readme.md)
 
 #### Other systems
 
