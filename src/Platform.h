@@ -18,6 +18,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 /* Suffix added to app name sent to the server */
 extern const char* Platform_AppNameSuffix;
+void* TempMem_Alloc(int size);
 
 #if defined CC_BUILD_WIN
 typedef struct cc_winstring_ {
@@ -64,7 +65,14 @@ cc_result Platform_GetEntropy(void* data, int len);
 *#########################################################################################################################*/
 /* Whether the launcher and game must both be run in the same process */
 /*  (e.g. can't start a separate process on Mobile or Consoles) */
-extern cc_bool Platform_SingleProcess;
+#define PLAT_FLAG_SINGLE_PROCESS 0x01
+/* Whether button in the launcher should be available to exit the app */
+/*  (e.g. necessary in MS DOS, game consoles ) */
+#define PLAT_FLAG_APP_EXIT       0x02
+
+/* Platform specific runtime behaviour flags (See PLAT_FLAG members) */
+extern cc_uint8 Platform_Flags;
+#define Platform_IsSingleProcess() (Platform_Flags & PLAT_FLAG_SINGLE_PROCESS)
 
 /* Starts the game with the given arguments. */
 CC_API cc_result Process_StartGame2(const cc_string* args, int numArgs);
@@ -91,7 +99,7 @@ extern const struct UpdaterInfo {
 	/* Number of compiled builds available for this platform */
 	int numBuilds;
 	/* Metadata for the compiled builds available for this platform */
-	const struct UpdaterBuild builds[2]; // TODO name and path
+	const struct UpdaterBuild builds[2]; /* TODO name and path */
 } Updater_Info;
 /* Whether updating is supported by the platform */
 extern cc_bool Updater_Supported;

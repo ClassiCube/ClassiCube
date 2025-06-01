@@ -32,7 +32,8 @@ CC_BEGIN_HEADER
 #endif
 
 float Math_Mod1(float x);
-int   Math_AbsI(int x);
+
+static CC_INLINE int Math_AbsI(int x) { return x < 0 ? -x : x; }
 
 static CC_INLINE float Math_SafeDiv(float a, float b) {
 	if (Math_AbsF(b) < 0.000001f) return MATH_LARGENUM;

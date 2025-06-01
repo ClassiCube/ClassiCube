@@ -13,34 +13,38 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: empterdose/freebsd-cross-build:11.4
     steps:
       - uses: actions/checkout@v4
+
       - name: Install prerequisites
-        run: apk add bash wget
+        run: apk add bash wget curl
+
       - name: Retrieve OpenGL and X11 dev files (64 bit)
         run: |
           mkdir src/freebsd64
           cd src/freebsd64
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/freebsd64.zip
           unzip freebsd64.zip
+
       - name: Retrieve OpenGL and X11 dev files (32 bit)
         run: |
           mkdir src/freebsd32
           cd src/freebsd32
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/freebsd32.zip
           unzip freebsd32.zip  
+
       - name: Compile FreeBSD builds
         id: compile
         shell: bash
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           PLAT32_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I freebsd32/include -L freebsd32/lib"
           PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I freebsd64/include -L freebsd64/lib"
         run: |
-          apk add curl
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
           cd src

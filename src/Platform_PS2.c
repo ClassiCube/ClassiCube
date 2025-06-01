@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined PLAT_PS2
 
+#define CC_XTEA_ENCRYPTION
 #define LIBCGLUE_SYS_SOCKET_ALIASES 0
 #define LIBCGLUE_SYS_SOCKET_NO_ALIASES
 #define LIBCGLUE_ARPA_INET_NO_ALIASES
@@ -487,20 +488,35 @@ static void Networking_LoadIOPModules(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+int lwip_shutdown(int s, int how);
+int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen);
+int lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
+int lwip_close(int s);
+int lwip_connect(int s, const struct sockaddr *name, socklen_t namelen);
+int lwip_recv(int s, void *mem, size_t len, int flags);
+int lwip_send(int s, const void *dataptr, size_t size, int flags);
+int lwip_socket(int domain, int type, int protocol);
+int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
+int lwip_ioctl(int s, long cmd, void *argp);
 
-int  lwip_shutdown(int s, int how);
-int  lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen);
-int  lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
-int  lwip_close(int s);
-int  lwip_connect(int s, const struct sockaddr *name, socklen_t namelen);
-int  lwip_recv(int s, void *mem, size_t len, int flags);
-int  lwip_send(int s, const void *dataptr, size_t size, int flags);
-int  lwip_socket(int domain, int type, int protocol);
-int  lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
-int  lwip_ioctl(int s, long cmd, void *argp);
+int netconn_gethostbyname(const char *name, ip4_addr_t *addr);
 
-int  ip4addr_aton(const char *cp, ip4_addr_t *addr);
-int  netconn_gethostbyname(const char *name, ip4_addr_t *addr);
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
 
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
@@ -517,25 +533,6 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	addrs[0].size  = sizeof(*addr4);
 	*numValidAddrs = 1;
 	return 0;
-}
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-
-	if (ip4addr_aton(str, (ip4_addr_t*)&addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(*addr4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
 static cc_result GetSocketError(cc_socket s) {

@@ -251,7 +251,7 @@ int main_real(int argc, char** argv) {
 #elif defined CC_BUILD_WEB
 /* webclient does some asynchronous initialisation first, then kickstarts the game after that */
 int web_main(int argc, char** argv) {
-#else 
+#else
 int main(int argc, char** argv) {
 #endif
 	cc_result res;
@@ -260,7 +260,7 @@ int main(int argc, char** argv) {
 	/* If single process mode, then the loop is launcher -> game -> launcher etc */
 	do {
 		res = RunProgram(argc, argv);
-	} while (Platform_SingleProcess && Window_Main.Exists);
+	} while (Platform_IsSingleProcess() && Window_Main.Exists);
 
 #ifdef CC_BUILD_WEB
 	if (res) Window_Free();

@@ -37,7 +37,7 @@ extern void LoadViewportScale(VU0_VECTOR* scale);
 static packet_t* packets[2];
 static packet_t* current;
 static int context;
-static qword_t* dma_tag;
+static qword_t* dma_beg;
 static qword_t* q;
 
 static GfxResourceID white_square;
@@ -71,9 +71,9 @@ static void UpdateContext(void) {
 
 	current = packets[context];
 	
-	dma_tag = current->data;
+	dma_beg = current->data;
 	// increment past the dmatag itself
-	q = dma_tag + 1;
+	q = dma_beg + 1;
 }
 
 
@@ -124,7 +124,7 @@ static void InitDrawingEnv(void) {
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, q - beg, 0, 0);
 	dma_wait_fast();
-	q = dma_tag + 1;
+	q = dma_beg + 1;
 }
 
 static int tex_offset;
@@ -153,6 +153,13 @@ void Gfx_Create(void) {
 
 void Gfx_Free(void) { 
 	Gfx_FreeState();
+}
+
+static CC_INLINE void DMAFlushBuffer(void) {
+	if (q == dma_beg) return;
+
+	DMATAG_END(dma_beg, (q - dma_beg) - 1, 0, 0, 0);
+	dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, q - dma_beg, 0, 0);
 }
 
 
@@ -200,8 +207,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	unsigned dst_stride = max(64, tex->width);
 	
 	// TODO terrible perf
-	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+	DMAFlushBuffer();
 	dma_wait_fast();
 	
 	packet_t *packet = packet_init(200, PACKET_NORMAL);
@@ -217,7 +223,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	packet_free(packet);
 	
 	// TODO terrible perf
-	q = dma_tag + 1;
+	q = dma_beg + 1;
 	UpdateTextureBuffer(0, tex, dst_addr, dst_stride);
 }
 		
@@ -397,7 +403,10 @@ static void PreprocessColouredVertices(void) {
 }
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	return Mem_TryAlloc(count, strideSizes[fmt]);
+	//return Mem_TryAlloc(count, strideSizes[fmt]);
+	return memalign(16,count * strideSizes[fmt]);
+	// align to 16 bytes, so DrawTexturedQuad/DrawColouredQuad can
+	//  load vertices using the "load quad (16 bytes)" instruction
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
@@ -541,31 +550,6 @@ static xyz_t FinishVertex(VU0_VECTOR* src, float invW) {
 	return xyz;
 }
 
-static u64* DrawColouredTriangle(u64* dw, VU0_VECTOR* coords, 
-								struct VertexColoured* V0, struct VertexColoured* V1, struct VertexColoured* V2) {
-	ColouredVertex* dst = (ColouredVertex*)dw;
-	float Q;
-
-	// TODO optimise
-	// Add the "primitives" to the GIF packet
-	Q   = 1.0f / coords[0].w;
-	dst[0].rgba  = V0->Col;
-	dst[0].q     = Q;
-	dst[0].xyz   = FinishVertex(&coords[0], Q);
-
-	Q   = 1.0f / coords[1].w;
-	dst[1].rgba  = V1->Col;
-	dst[1].q     = Q;
-	dst[1].xyz   = FinishVertex(&coords[1], Q);
-
-	Q   = 1.0f / coords[2].w;
-	dst[2].rgba  = V2->Col;
-	dst[2].q     = Q;
-	dst[2].xyz   = FinishVertex(&coords[2], Q);
-
-	return dw + 6;
-}
-
 static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords, 
 								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
 	TexturedVertex* dst = (TexturedVertex*)dw;
@@ -599,32 +583,24 @@ static u64* DrawTexturedTriangle(u64* dw, VU0_VECTOR* coords,
 
 extern void TransformTexturedQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
 extern void TransformColouredQuad(void* src, VU0_VECTOR* dst, VU0_VECTOR* tmp, int* clip_flags);
+extern u64* DrawTexturedQuad(void* src, u64* dst, VU0_VECTOR* tmp);
+extern u64* DrawColouredQuad(void* src, u64* dst, VU0_VECTOR* tmp);
 
 static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
 	qword_t* base = q;
 	q++; // skip over GIF tag (will be filled in later)
-	u64* dw = (u64*)q;
 
-	unsigned numVerts = 0;
-	VU0_VECTOR V[6], tmp;
-	int clip[4];
+	u64* dw  = (u64*)q;
+	u64* beg = dw;
+	VU0_VECTOR tmp[6];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		TransformTexturedQuad(v, V, &tmp, clip);
-		
-		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
-			dw = DrawTexturedTriangle(dw, V, v + 0, v + 1, v + 2);
-			numVerts += 3;
-		}
-		
-		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
-			dw = DrawTexturedTriangle(dw, V + 3, v + 2, v + 3, v + 0);
-			numVerts += 3;
-		}
+		dw = DrawTexturedQuad(v, dw, tmp);
 	}
 
+	unsigned numVerts = (unsigned)(dw - beg) / 3;
 	if (numVerts == 0) {
 		q--; // No GIF tag was added
 	} else {
@@ -641,27 +617,17 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 	struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex;
 	qword_t* base = q;
 	q++; // skip over GIF tag (will be filled in later)
-	u64* dw = (u64*)q;
 
-	unsigned numVerts = 0;
-	VU0_VECTOR V[6], tmp;
-	int clip[4];
+	u64* dw  = (u64*)q;
+	u64* beg = dw;
+	VU0_VECTOR tmp[6];
 
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
 	{
-		TransformColouredQuad(v, V, &tmp, clip);
-		
-		if (((clip[0] | clip[1] | clip[2]) & 0x3F) == 0) {
-			dw = DrawColouredTriangle(dw, V, v + 0, v + 1, v + 2);
-			numVerts += 3;
-		}
-		
-		if (((clip[2] | clip[3] | clip[0]) & 0x3F) == 0) {
-			dw = DrawColouredTriangle(dw, V + 3, v + 2, v + 3, v + 0);
-			numVerts += 3;
-		}
+		dw = DrawColouredQuad(v, dw, tmp);
 	}
 
+	unsigned numVerts = (unsigned)(dw - beg) / 2;
 	if (numVerts == 0) {
 		q--; // No GIF tag was added
 	} else {
@@ -678,11 +644,10 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 	if (formatDirty) UpdateFormat(0);
 
 	if ((q - current->data) > 45000) {
-		DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
-		dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+		DMAFlushBuffer();
 		dma_wait_fast();
-		q = dma_tag + 1;
-		Platform_LogConst("Too much geometry!!!");
+		q = dma_beg + 1;
+		Platform_LogConst("Too much geometry!!");
 	}
 
 	while (verticesCount)
@@ -752,15 +717,12 @@ void Gfx_EndFrame(void) {
 
 	q = draw_finish(q);
 	
-	// Fill out and then send DMA chain
-	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
 	dma_wait_fast();
-	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+	DMAFlushBuffer();
 	//Platform_LogConst("--- EF2 ---");
 		
 	draw_wait_finish();
 	//Platform_LogConst("--- EF3 ---");
-	
 	if (gfx_vsync) graph_wait_vsync();
 	
 	context ^= 1;

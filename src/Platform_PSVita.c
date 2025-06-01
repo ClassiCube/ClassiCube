@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_PSVITA
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -279,29 +281,40 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = SCE_NET_AF_INET;
+	addr4->sin_port        = sceNetHtons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
 	char buf[1024];
-	int rid, ret;
 	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 1;
+	/* Fallback to resolving as DNS name */
+	int rid = sceNetResolverCreate("CC resolver", NULL, 0);
+	if (rid < 0) return ERR_INVALID_ARGUMENT;
 
-	if (sceNetInetPton(SCE_NET_AF_INET, str, &addr4->sin_addr) <= 0) {
-		/* Fallback to resolving as DNS name */
-		rid = sceNetResolverCreate("CC resolver", NULL, 0);
-		if (rid < 0) return ERR_INVALID_ARGUMENT;
-
-		ret = sceNetResolverStartNtoa(rid, str, &addr4->sin_addr, 0, 0, 0);
-		sceNetResolverDestroy(rid);
-		if (ret) return ret;
-	}
+	int ret = sceNetResolverStartNtoa(rid, host, &addr4->sin_addr, 0, 0, 0);
+	sceNetResolverDestroy(rid);
+	if (ret) return ret;
 	
 	addr4->sin_family = SCE_NET_AF_INET;
 	addr4->sin_port   = sceNetHtons(port);
 		
-	addrs[0].size = sizeof(*addr4);
+	addrs[0].size  = sizeof(*addr4);
+	*numValidAddrs = 1;
 	return 0;
 }
 

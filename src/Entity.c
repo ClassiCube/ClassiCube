@@ -301,7 +301,9 @@ static cc_result EnsurePow2Skin(struct Entity* e, struct Bitmap* bmp) {
 	height = Math_NextPowOf2(bmp->height);
 	if (width == bmp->width && height == bmp->height) return 0;
 
-	Bitmap_TryAllocate(&scaled, width, height);
+	scaled.width  = width; 
+	scaled.height = height;
+	scaled.scan0  = (BitmapCol*)Mem_TryAllocCleared(width * height, BITMAPCOLOR_SIZE);
 	if (!scaled.scan0) return ERR_OUT_OF_MEMORY;
 
 	e->uScale = (float)bmp->width  / width;
@@ -515,7 +517,7 @@ int Entities_GetClosest(struct Entity* src) {
 		if (!e || e == &Entities.CurPlayer->Base) continue;
 		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, e, &t0, &t1)) continue;
 
-		if (targetID == -1 || t0 < closestDist) {
+		if (targetID < 0 || t0 < closestDist) {
 			closestDist = t0;
 			targetID    = i;
 		}
@@ -707,7 +709,6 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	AnimatedComp_GetCurrent(e, t);
-	TiltComp_GetCurrent(p, &p->Tilt, t);
 
 	if (!Camera.Active->isThirdPerson && p == Entities.CurPlayer) return;
 	Model_Render(e->Model, e);
@@ -803,6 +804,7 @@ static void LocalPlayers_OnNewMap(void) {
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 
 static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
+	struct EntityLocation* prev;
 	struct LocationUpdate update;
 	struct AABB bb;
 	Vec3 spawn = p->Spawn;
@@ -831,7 +833,7 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 		}
 	}
 
-	struct EntityLocation* prev = &p->Base.prev;
+	prev = &p->Base.prev;
 	CPE_SendNotifyPositionAction(3, prev->pos.x, prev->pos.y, prev->pos.z);
 
 	/* Adjust the position to be slightly above the ground, so that */

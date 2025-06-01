@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-mac-classic:
+  build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/autc04/retro68

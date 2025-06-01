@@ -74,13 +74,6 @@ float Math_Mod1(float x) { return x - (int)x; /* fmodf(x, 1); */ }
 /*########################################################################################################################*
 *-------------------------------------------------------Math intrinsics---------------------------------------------------*
 *#########################################################################################################################*/
-/* For abs(x) function */
-#if defined CC_BUILD_AMIGA || defined CC_BUILD_SATURN
-static int abs(int x) { return x < 0 ? -x : x; }
-#else
-#include <stdlib.h>
-#endif
-
 /* 32x/Saturn/GBA is missing these intrinsics */
 #if defined CC_BUILD_32X || defined CC_BUILD_SATURN || defined CC_BUILD_GBA
 #include "../third_party/fix16_sqrt.c"
@@ -119,8 +112,6 @@ float sqrtf(float x) {
 	float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
 	float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
 #endif
-
-int Math_AbsI(int x) { return abs(x); /* MSVC intrinsic */ }
 
 
 /*########################################################################################################################*

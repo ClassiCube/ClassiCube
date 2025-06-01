@@ -14,6 +14,7 @@
 
 #define INT_VGA            0x10
 #define VGA_CMD_SETMODE  0x0000
+#define VGA_MODE_TEXT_BW   0x02
 #define VGA_MODE_320x200_8 0x13
 
 #define INT_MOUSE         0x33
@@ -21,6 +22,9 @@
 #define MOUSE_CMD_SHOW  0x0001
 #define MOUSE_CMD_HIDE  0x0002
 #define MOUSE_CMD_POLL  0x0003
+
+#define MOUSE_X(x) ((x) / 2)
+#define MOUSE_Y(y) (y)
 
 
 /*########################################################################################################################*
@@ -45,8 +49,8 @@ static void Mouse_Poll(void) {
 	__dpmi_int(INT_MOUSE, &regs);
 
 	int b = regs.x.bx;
-	int x = regs.x.cx;
-	int y = regs.x.dx;
+	int x = MOUSE_X(regs.x.cx);
+	int y = MOUSE_Y(regs.x.dx);
 
 	Input_SetNonRepeatable(CCMOUSE_L, b & 0x01);
 	Input_SetNonRepeatable(CCMOUSE_R, b & 0x02);
@@ -64,8 +68,8 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	regs.x.ax = MOUSE_CMD_POLL;
 	__dpmi_int(INT_MOUSE, &regs);
 
-	*x = regs.x.cx;
-	*y = regs.x.dx;
+	*x = MOUSE_X(regs.x.cx);
+	*y = MOUSE_Y(regs.x.dx);
 }
 
 void Cursor_SetPosition(int x, int y) { 
@@ -162,9 +166,12 @@ static void Keyboard_UpdateModifiers(void) {
 *#########################################################################################################################*/
 void Window_PreInit(void) { }
 
+#define DISP_WIDTH  320
+#define DISP_HEIGHT 200
+
 void Window_Init(void) {
-	DisplayInfo.Width  = 320;
-	DisplayInfo.Height = 200;
+	DisplayInfo.Width  = DISP_WIDTH;
+	DisplayInfo.Height = DISP_HEIGHT;
 
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
@@ -186,7 +193,19 @@ void Window_Init(void) {
 	Mouse_Init();
 }
 
-void Window_Free(void) { }
+void Window_Free(void) {
+	if (__djgpp_nearptr_enable() == 0) return;
+
+	char* screen = (char*)0xa0000 + __djgpp_conventional_base;
+	Mem_Set(screen, 0, DISP_WIDTH * DISP_HEIGHT);
+
+	__djgpp_nearptr_disable();
+
+	// Restore VGA to text mode
+	__dpmi_regs regs;
+	regs.x.ax = VGA_CMD_SETMODE | VGA_MODE_TEXT_BW;
+	__dpmi_int(INT_VGA, &regs);
+}
 
 static void DoCreateWindow(int width, int height) {
 	Window_Main.Width    = 320;
@@ -263,11 +282,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->height = height;
 }
 
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	char *screen;
-	if (__djgpp_nearptr_enable() == 0) return;
-
-	screen = (char*)0xa0000 + __djgpp_conventional_base;
+static CC_INLINE void DrawFramebuffer(Rect2D r, struct Bitmap* bmp, char* screen) {
     for (int y = r.y; y < r.y + r.height; ++y) 
 	{
         BitmapCol* row = Bitmap_GetRow(bmp, y);
@@ -279,9 +294,36 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			cc_uint8 G = BitmapCol_G(col);
 			cc_uint8 B = BitmapCol_B(col);
 
-            screen[y*320+x] = (R >> 6) | ((G >> 5) << 2) | ((B >> 5) << 5);
+			screen[y*320+x] = (R >> 6) | ((G >> 5) << 2) | ((B >> 5) << 5);
         }
     }
+}
+
+static CC_INLINE void DrawDirect(struct Bitmap* bmp, char* screen) {
+	BitmapCol* src = bmp->scan0;
+
+	for (int i = 0; i < DISP_WIDTH * DISP_HEIGHT; i++) 
+	{
+		BitmapCol col = src[i];
+		cc_uint8 R = BitmapCol_R(col);
+		cc_uint8 G = BitmapCol_G(col);
+		cc_uint8 B = BitmapCol_B(col);
+
+		screen[i] = (R >> 6) | ((G >> 5) << 2) | ((B >> 5) << 5);
+	}
+}
+
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	char *screen;
+	if (__djgpp_nearptr_enable() == 0) return;
+
+	screen = (char*)0xa0000 + __djgpp_conventional_base;
+
+	if (r.x == 0 && r.y == 0 && r.width == DISP_WIDTH && r.height == DISP_HEIGHT && bmp->width == DISP_WIDTH) {
+		DrawDirect(bmp, screen);
+	} else {
+		DrawFramebuffer(r, bmp, screen);
+	}
 
 	__djgpp_nearptr_disable();
 }

@@ -97,7 +97,6 @@ struct TableWidget {
 	GfxResourceID vb;
 	cc_bool pendingClose, everCreated;
 	float scale;
-	float padXAcc, padYAcc;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;

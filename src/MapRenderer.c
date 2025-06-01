@@ -47,7 +47,7 @@ static int maxChunkUpdates;
 /* Cached number of chunks in the world */
 static int chunksCount;
 
-static void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
+static void ChunkInfo_Init(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->centreX = x + HALF_CHUNK_SIZE; chunk->centreY = y + HALF_CHUNK_SIZE; 
 	chunk->centreZ = z + HALF_CHUNK_SIZE;
 #ifndef CC_BUILD_GL11
@@ -56,15 +56,22 @@ static void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 
 	chunk->visible = true;  
 	chunk->empty   = false;
-	chunk->dirty   = false; 
 	chunk->allAir  = false;
 	chunk->noData  = true;
+	chunk->dirty   = true;
 
 	chunk->drawXMin = false; chunk->drawXMax = false; chunk->drawZMin = false;
 	chunk->drawZMax = false; chunk->drawYMin = false; chunk->drawYMax = false;
 
 	chunk->normalParts      = NULL;
 	chunk->translucentParts = NULL;
+}
+
+static CC_INLINE void ChunkInfo_Refresh(struct ChunkInfo* chunk) {
+	if (chunk->allAir) return; /* do not recreate chunks completely air */
+
+	chunk->empty = false;
+	chunk->dirty = true;
 }
 
 /* Index of maximum used 1D atlas + 1 */
@@ -324,6 +331,8 @@ static void DeleteChunk(struct ChunkInfo* info) {
 	info->empty  = false; 
 	info->allAir = false;
 	info->noData = true;
+	info->dirty  = true;
+
 #ifdef OCCLUSION
 	info.OcclusionFlags = 0;
 	info.OccludedFlags = 0;
@@ -444,7 +453,7 @@ static void InitChunks(void) {
 	for (z = 0; z < World.Length; z += CHUNK_SIZE) {
 		for (y = 0; y < World.Height; y += CHUNK_SIZE) {
 			for (x = 0; x < World.Width; x += CHUNK_SIZE) {
-				ChunkInfo_Reset(&mapChunks[index], x, y, z);
+				ChunkInfo_Init(&mapChunks[index], x, y, z);
 				sortedChunks[index] = &mapChunks[index];
 				renderChunks[index] = &mapChunks[index];
 				distances[index]    = 0;
@@ -454,15 +463,13 @@ static void InitChunks(void) {
 	}
 }
 
-static void ResetChunks(void) {
-	int x, y, z, index = 0;
-	for (z = 0; z < World.Length; z += CHUNK_SIZE) {
-		for (y = 0; y < World.Height; y += CHUNK_SIZE) {
-			for (x = 0; x < World.Width; x += CHUNK_SIZE) {
-				ChunkInfo_Reset(&mapChunks[index], x, y, z);
-				index++;
-			}
-		}
+static void RefreshChunks(void) {
+	int i;
+	if (!mapChunks) return;
+
+	for (i = 0; i < chunksCount; i++) 
+	{
+		ChunkInfo_Refresh(&mapChunks[i]);
 	}
 }
 
@@ -470,7 +477,8 @@ static void DeleteChunks(void) {
 	int i;
 	if (!mapChunks) return;
 
-	for (i = 0; i < chunksCount; i++) {
+	for (i = 0; i < chunksCount; i++) 
+	{
 		DeleteChunk(&mapChunks[i]);
 	}
 	ResetPartCounts();
@@ -482,7 +490,6 @@ void MapRenderer_Refresh(void) {
 
 	if (mapChunks && World.Blocks) {
 		DeleteChunks();
-		ResetChunks();
 
 		oldCount = MapRenderer_1DUsedCount;
 		MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
@@ -548,22 +555,19 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 
 	struct ChunkInfo* info;
 	int i, j = 0, distSqr;
-	cc_bool noData;
 
-	for (i = 0; i < chunksCount; i++) {
+	for (i = 0; i < chunksCount; i++) 
+	{
 		info = sortedChunks[i];
 		if (info->empty) continue;
-
 		distSqr = distances[i];
-		noData  = info->noData;
 		
 		/* Auto unload chunks far away chunks */
-		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
+		if (!info->noData && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(info); continue;
 		}
-		noData |= info->dirty;
 
-		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
+		if (info->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(info);
 			BuildChunk(info, chunkUpdates);
 		}
@@ -581,22 +585,19 @@ static int UpdateChunksStill(int* chunkUpdates) {
 
 	struct ChunkInfo* info;
 	int i, j = 0, distSqr;
-	cc_bool noData;
 
-	for (i = 0; i < chunksCount; i++) {
+	for (i = 0; i < chunksCount; i++) 
+	{
 		info = sortedChunks[i];
 		if (info->empty) continue;
-
 		distSqr = distances[i];
-		noData  = info->noData;
 
 		/* Auto unload chunks far away chunks */
-		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
+		if (!info->noData && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(info); continue;
 		}
-		noData |= info->dirty;
 
-		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
+		if (info->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(info);
 			BuildChunk(info, chunkUpdates);
 
@@ -705,13 +706,11 @@ void MapRenderer_Update(float delta) {
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
 void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
-	struct ChunkInfo* info;
+	struct ChunkInfo* chunk;
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= World.ChunksX || cy >= World.ChunksY || cz >= World.ChunksZ) return;
 
-	info = &mapChunks[World_ChunkPack(cx, cy, cz)];
-	if (info->allAir) return; /* do not recreate chunks completely air */
-	info->empty = false;
-	info->dirty = true;
+	chunk = &mapChunks[World_ChunkPack(cx, cy, cz)];
+	ChunkInfo_Refresh(chunk);
 }
 
 void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
@@ -721,12 +720,12 @@ void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
 	chunk = &mapChunks[World_ChunkPack(cx, cy, cz)];
 	chunk->allAir &= Blocks.Draw[block] == DRAW_GAS;
 	/* TODO: Don't lookup twice, refresh directly using chunk pointer */
-	MapRenderer_RefreshChunk(cx, cy, cz);
+	ChunkInfo_Refresh(chunk);
 }
 
 static void OnEnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_SUN_COLOR || envVar == ENV_VAR_SHADOW_COLOR) {
-		MapRenderer_Refresh();
+		RefreshChunks();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		int oldClip        = Builder_EdgeLevel;
 		Builder_SidesLevel = max(0, Env_SidesHeight);

@@ -22,6 +22,7 @@ struct VertexTextured;
 struct FontDesc;
 struct Widget;
 struct InputDevice;
+struct PadAxisUpdate;
 extern struct IGameComponent Gui_Component;
 
 CC_VAR extern struct _GuiData {
@@ -120,7 +121,7 @@ struct ScreenVTABLE {
 	/* Allocates graphics resources. (textures, vertex buffers, etc) */
 	void (*ContextRecreated)(void* elem);
 	/* Returns non-zero if a pad axis update is handled. */
-	int (*HandlesPadAxis)(void* elem, int axis, float x, float y);
+	int (*HandlesPadAxis)(void* elem, struct PadAxisUpdate* upd);
 };
 #define Screen_Body const struct ScreenVTABLE* VTABLE; \
 	cc_bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
@@ -129,7 +130,7 @@ struct ScreenVTABLE {
 	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
 	int maxVertices; GfxResourceID vb; /* Vertex buffer storing the contents of the screen */ \
 	struct Widget** widgets; int numWidgets; /* The widgets/individual elements in the screen */ \
-	int selectedI, maxWidgets;
+	int selectedI, maxWidgets, widgetsPerPage;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
@@ -188,7 +189,7 @@ struct WidgetVTABLE {
 	/* Returns the maximum number of vertices this widget may use */
 	int  (*GetMaxVertices)(void* elem);
 	/* Returns non-zero if a pad axis update is handled. */
-	int (*HandlesPadAxis)(void* elem, int axis, float x, float y);
+	int (*HandlesPadAxis)(void* elem, struct PadAxisUpdate* upd);
 };
 
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
@@ -310,7 +311,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Elem_OnPointerUp(elem,        id, x, y) (elem)->VTABLE->OnPointerUp(elem,        id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
-#define Elem_HandlesPadAxis(elem, axis, x, y) (elem)->VTABLE->HandlesPadAxis(elem, axis, x, y)
+#define Elem_HandlesPadAxis(elem, upd) (elem)->VTABLE->HandlesPadAxis(elem, upd)
 
 #define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
 #define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)

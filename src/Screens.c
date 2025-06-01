@@ -400,7 +400,7 @@ static void HUDScreen_Render(void* screen, float delta) {
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
 		Widget_Render2(&s->line2, 8);
 		Gfx_BindTexture(s->posAtlas.tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES, DRAW_HINT_RECT);
 		/* TODO swap these two lines back */
 	}
 
@@ -845,7 +845,7 @@ static void TabListOverlay_Render(void* screen, float delta) {
 		if (!s->textures[i].ID) continue;
 		Gfx_BindTexture(s->textures[i].ID);
 
-		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 		offset += 4;
 	}
 
@@ -1148,7 +1148,7 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 }
 
 static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
-	struct Texture tex;
+	GfxResourceID texID;
 	double now;
 	int i, logIdx;
 
@@ -1165,17 +1165,18 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 		Widget_Render2(&s->chat, 0);
 	} else {
 		/* Only render recent chat */
-		for (i = 0; i < s->chat.lines; i++) {
-			tex    = s->chat.textures[i];
+		for (i = 0; i < s->chat.lines; i++) 
+		{
+			texID  = s->chat.textures[i].ID;
+			if (!texID) continue;
 			logIdx = s->chatIndex + i;
-			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
 			/* Only draw chat within last 10 seconds */
 			if (Chat_GetLogTime(logIdx) + 10 < now) continue;
 			
-			Gfx_BindTexture(tex.ID);
-			Gfx_DrawVb_IndexedTris_Range(4, i * 4, DRAW_HINT_SPRITE);
+			Gfx_BindTexture(texID);
+			Gfx_DrawVb_IndexedTris_Range(4, i * 4, DRAW_HINT_RECT);
 		}
 	}
 
@@ -1794,10 +1795,10 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 	return Elem_HandlesMouseScroll(&s->table, delta);
 }
 
-static int InventoryScreen_PadAxis(void* screen, int axis, float x, float y) {
+static int InventoryScreen_PadAxis(void* screen, struct PadAxisUpdate* upd) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 
-	return Elem_HandlesPadAxis(&s->table, axis, x, y);
+	return Elem_HandlesPadAxis(&s->table, upd);
 }
 
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {
@@ -1816,6 +1817,12 @@ void InventoryScreen_Show(void) {
 	s->VTABLE = &InventoryScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_INVENTORY);
 	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 1);
+}
+
+void InventoryScreen_Hide(void) {
+	struct InventoryScreen* s = &InventoryScreen;
+	Gui_Remove((struct Screen*)s);
+	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 }
 
 
@@ -1948,7 +1955,7 @@ static void LoadingScreen_Render(void* screen, float delta) {
 	if (s->rows) {
 		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 		Atlas1D_Bind(Atlas1D_Index(loc));
-		Gfx_DrawVb_IndexedTris_Range(s->rows * 4, 0, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(s->rows * 4, 0, 0);
 		offset = s->rows * 4;
 	}
 

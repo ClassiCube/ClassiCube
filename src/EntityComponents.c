@@ -54,7 +54,7 @@ static void AnimatedComp_CalcHumanAnim(struct AnimatedComp* anim, float idleXRot
 
 void AnimatedComp_Init(struct AnimatedComp* anim) {
 	Mem_Set(anim, 0, sizeof(struct AnimatedComp));
-	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
+	anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
 void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, float delta) {
@@ -90,9 +90,8 @@ void AnimatedComp_GetCurrent(struct Entity* e, float t) {
 	float idleXRot = Math_SinF(idleTime * ANIM_IDLE_XPERIOD) * ANIM_IDLE_MAX;
 	float idleZRot = Math_CosF(idleTime * ANIM_IDLE_ZPERIOD) * ANIM_IDLE_MAX + ANIM_IDLE_MAX;
 
-	anim->Swing       = Math_Lerp(anim->SwingO,       anim->SwingN,       t);
-	anim->WalkTime    = Math_Lerp(anim->WalkTimeO,    anim->WalkTimeN,    t);
-	anim->BobStrength = Math_Lerp(anim->BobStrengthO, anim->BobStrengthN, t);
+	anim->Swing    = Math_Lerp(anim->SwingO,    anim->SwingN,    t);
+	anim->WalkTime = Math_Lerp(anim->WalkTimeO, anim->WalkTimeN, t);
 
 	anim->LeftArmX =  (Math_CosF(anim->WalkTime) * anim->Swing * ANIM_ARM_MAX) - idleXRot;
 	anim->LeftArmZ = -idleZRot;
@@ -102,8 +101,7 @@ void AnimatedComp_GetCurrent(struct Entity* e, float t) {
 	anim->RightLegX = -anim->LeftLegX; anim->RightLegZ = -anim->LeftLegZ;
 	anim->RightArmX = -anim->LeftArmX; anim->RightArmZ = -anim->LeftArmZ;
 
-	anim->BobbingHor   = Math_CosF(anim->WalkTime)            * anim->Swing * (2.5f/16.0f);
-	anim->BobbingVer   = Math_AbsF(Math_SinF(anim->WalkTime)) * anim->Swing * (2.5f/16.0f);
+	// See BobbingHor/BobbingVer in PerspectiveCamera_CalcViewBobbing
 	anim->BobbingModel = Math_AbsF(Math_CosF(anim->WalkTime)) * anim->Swing * (4.0f/16.0f);
 
 	if (e->Model->calcHumanAnims && !Game_SimpleArmsAnim) {
@@ -116,8 +114,8 @@ void AnimatedComp_GetCurrent(struct Entity* e, float t) {
 *------------------------------------------------------TiltComponent------------------------------------------------------*
 *#########################################################################################################################*/
 void TiltComp_Init(struct TiltComp* anim) {
-	anim->TiltX = 0.0f; anim->TiltY = 0.0f; anim->VelTiltStrength = 1.0f;
-	anim->VelTiltStrengthO = 1.0f; anim->VelTiltStrengthN = 1.0f;
+	anim->VelTiltStrengthO = 1.0f; 
+	anim->VelTiltStrengthN = 1.0f;
 }
 
 void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, float delta) {
@@ -128,14 +126,6 @@ void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, float delta) 
 	for (i = 0; i < 3; i++) {
 		AnimatedComp_DoTilt(&anim->VelTiltStrengthN, p->Hacks.Floating);
 	}
-}
-
-void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t) {
-	struct AnimatedComp* pAnim = &p->Base.Anim;
-
-	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
-	anim->TiltX = Math_CosF(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
-	anim->TiltY = Math_SinF(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
 
 

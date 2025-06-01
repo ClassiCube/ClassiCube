@@ -7,7 +7,6 @@
 #include <malloc.h>
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
-static cc_bool renderingDisabled;
 
 static gcmContextData* context;
 static u32 cur_fb;
@@ -581,14 +580,58 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[];
 } CCTexture;
 
+// See Graphics_Dreamcast.c for twiddling explanation
+// (only difference is dreamcast is XY while xbox is YX)
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0;
+	*maskY = 0;
+	int shift = 0;
+
+	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
+	{
+		if (w > 1 && h > 1) {
+			// Add interleaved X and Y bits
+			*maskY += 0x02 << shift;
+			*maskX += 0x01 << shift;
+			shift  += 2;
+		} else if (w > 1) {
+			// Add a linear X bit
+			*maskX += 0x01 << shift;
+			shift  += 1;		
+		} else if (h > 1) {
+			// Add a linear Y bit
+			*maskY += 0x01 << shift;
+			shift  += 1;		
+		}
+	}
+}
+
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)rsxMemalign(128, 128 + size);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
-					bmp, rowWidth * BITMAPCOLOR_SIZE);
+	cc_uint32* dst = tex->pixels;
+
+	int width = bmp->width, height = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
 	return tex;
 }
 
@@ -601,7 +644,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	rsxAddressToOffset(tex->pixels, &offset);
 	gcmTexture texture;
 
-	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_LIN;
+	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_SWZ;
 	texture.mipmap		= 1;
 	texture.dimension	= GCM_TEXTURE_DIMS_2D;
 	texture.cubemap	= GCM_FALSE;
@@ -620,7 +663,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	texture.pitch		= tex->width * 4;
 	texture.offset		= offset;
 	
-	rsxInvalidateTextureCache(context,GCM_INVALIDATE_TEXTURE); // TODO needed
+	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE); // TODO needed
 	
 	rsxLoadTexture(context,    0, &texture);
 	rsxTextureControl(context, 0, GCM_TRUE, 0<<8, 12<<8, GCM_TEXTURE_MAX_ANISO_1);
@@ -635,13 +678,32 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)texId;
+void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	CCTexture* tex = (CCTexture*)texId;	
+	cc_uint32* dst = tex->pixels;
 	
-	// NOTE: Only valid for LINEAR textures
-	BitmapCol* dst = (tex->pixels + x) + y * tex->width;	
-	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE, 
-					part, rowWidth  * BITMAPCOLOR_SIZE);
+	int width = part->width, height = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint32* src = part->scan0 + rowWidth * y;
+		X = startX;
+		
+		for (int x = 0; x < width; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
 	
 	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
 	/* TODO */

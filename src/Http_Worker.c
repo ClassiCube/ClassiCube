@@ -161,10 +161,10 @@ typedef int CURLcode;
 
 #define CURL_HTTP_VERSION_1_1   2L /* stick to HTTP 1.1 */
 
-#if defined _WIN32
-#define APIENTRY __cdecl
+#if defined CC_BUILD_WIN
+	#define APIENTRY __cdecl
 #else
-#define APIENTRY
+	#define APIENTRY
 #endif
 
 static CURLcode (APIENTRY *_curl_global_init)(long flags);
@@ -587,7 +587,7 @@ enum HTTP_RESPONSE_STATE {
 };
 #define HTTP_LOCATION_MAX_LENGTH 256
 
-#ifdef CC_BUILD_TINYSTACK
+#if CC_BUILD_MAXSTACK <= (48 * 1024)
 	#define HTTP_HEADER_MAX_LENGTH 2048
 	#define INPUT_BUFFER_LEN 4096
 	#define SEND_BUFFER_LEN  4096
@@ -1086,7 +1086,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
 	
 	if (req->data) {
-		if (res = Http_SetData(env, req)) return res;
+		if ((res = Http_SetData(env, req))) return res;
 		HttpRequest_Free(req);
 	}
 

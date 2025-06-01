@@ -612,7 +612,6 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 		GX_Position3f32(v->x, v->y, v->z);
 		GX_Color1u32(v->Col);
 	}
-	GX_End();
 }
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
@@ -625,7 +624,6 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		GX_Color1u32(v->Col);
 		GX_TexCoord2f32(v->U, v->V);
 	}
-	GX_End();
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {

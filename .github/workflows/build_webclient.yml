@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: trzeci/emscripten-fastcomp:1.39.0

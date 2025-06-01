@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_3DS
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -273,26 +275,29 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	char str[NATIVE_STR_LEN];
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
 	int i = 0;
-	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	if (inet_aton(str, &addr4->sin_addr) > 0) {
-		// TODO eliminate this path?
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(*addr4);
-		*numValidAddrs = 1;
-		return 0;
-	}
 
 	hints.ai_family   = AF_INET; // TODO: you need this, otherwise resolving dl.dropboxusercontent.com crashes in Citra. probably something to do with IPv6 addresses
 	hints.ai_socktype = SOCK_STREAM;
@@ -302,7 +307,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
 
-	int res = getaddrinfo(str, portRaw, &hints, &result);
+	int res = getaddrinfo(host, portRaw, &hints, &result);
 	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 

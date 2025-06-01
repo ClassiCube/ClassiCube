@@ -1,7 +1,7 @@
 {
     "id": "net.classicube.flatpak.client",
     "runtime": "org.gnome.Platform",
-    "runtime-version": "47",
+    "runtime-version": "48",
     "sdk": "org.gnome.Sdk",
     "command": "ClassiCubeLauncher",
     "finish-args": [

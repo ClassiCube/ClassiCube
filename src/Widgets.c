@@ -61,7 +61,7 @@ static int TextWidget_Render2(void* widget, int offset) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset + 4;
 }
@@ -684,9 +684,11 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 	w->verticesCount = 0;
 
 #ifdef CC_BUILD_TOUCH
-	int i;
-	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR - 1; i++) {
-		w->touchId[i] = -1;
+	{
+		int i;
+		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR - 1; i++) {
+			w->touchId[i] = -1;
+		}
 	}
 #endif
 }
@@ -976,16 +978,12 @@ static int TableWidget_KeyDown(void* widget, int key, struct InputDevice* device
 	return false;
 }
 
-static int TableWidget_PadAxis(void* widget, int axis, float x, float y) {
+static int TableWidget_PadAxis(void* widget, struct PadAxisUpdate* upd) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	int xSteps, ySteps;
 	if (w->selectedIndex == -1) return false;
 
-	xSteps = Utils_AccumulateWheelDelta(&w->padXAcc, x / 100.0f);
-	if (xSteps) TableWidget_ScrollRelative(w, xSteps > 0 ? 1 : -1);
-
-	ySteps = Utils_AccumulateWheelDelta(&w->padYAcc, y / 100.0f);
-	if (ySteps) TableWidget_ScrollRelative(w, ySteps > 0 ? w->blocksPerRow : -w->blocksPerRow);
+	if (upd->xSteps) TableWidget_ScrollRelative(w, upd->xSteps > 0 ? 1 : -1);
+	if (upd->ySteps) TableWidget_ScrollRelative(w, upd->ySteps > 0 ? w->blocksPerRow : -w->blocksPerRow);
 
 	return true;
 }
@@ -1008,7 +1006,6 @@ void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth) {
 	w->verAnchor = ANCHOR_CENTRE;
 	w->lastX = -20; w->lastY = -20;
 	w->scale = 1;
-	w->padXAcc = 0; w->padYAcc = 0;
 
 	if (!w->everCreated) {
 		w->everCreated   = true;
@@ -1597,12 +1594,12 @@ static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vert
 static int TextInputWidget_Render2(void* widget, int offset) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_BindTexture(w->inputTex.ID);
-	Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+	Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	offset += 4;
 
 	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
 		Gfx_BindTexture(w->caretTex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset + 4;
 }
@@ -2460,7 +2457,7 @@ static int TextGroupWidget_Render2(void* widget, int offset) {
 		if (!textures[i].ID) continue;
 
 		Gfx_BindTexture(textures[i].ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_SPRITE);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset;
 }

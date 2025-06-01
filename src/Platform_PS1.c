@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined PLAT_PS1
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -246,8 +247,11 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+extern void Gfx_ResetGPU(void);
+
 void Platform_Init(void) {
-	ResetGraph(0);
+	ResetCallback();
+	Gfx_ResetGPU();
 	Stopwatch_Init();
 }
 

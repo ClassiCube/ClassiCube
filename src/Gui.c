@@ -124,7 +124,11 @@ static void LoadOptions(void) {
 	Gui.ShowFPS          = Options_GetBool(OPT_SHOW_FPS, true);
 	
 	Gui.RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
+#if defined CC_BUILD_SYMBIAN && defined CC_BUILD_TOUCH
+	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 2.0f);
+#else
 	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
+#endif
 	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.25f, 5.0f, 1.0f);
 	Gui.RawCrosshairScale = Options_GetFloat(OPT_CROSSHAIR_SCALE, 0.25f, 5.0f, 1.0f);
 	Gui.RawTouchScale     = Options_GetFloat(OPT_TOUCH_SCALE,     0.25f, 5.0f, 1.0f);
@@ -626,7 +630,7 @@ static void OnPointerMove(void* obj, int idx) {
 	}
 }
 
-static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, struct PadAxisUpdate* upd) {
 	struct Screen* s;
 	int i;
 	
@@ -635,7 +639,7 @@ static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
 		if (!s->VTABLE->HandlesPadAxis) continue;
 
 		s->dirty = true;
-		if (s->VTABLE->HandlesPadAxis(s, axis, x, y)) return;
+		if (s->VTABLE->HandlesPadAxis(s, upd)) return;
 	}
 }
 

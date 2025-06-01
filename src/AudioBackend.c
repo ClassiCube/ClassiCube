@@ -28,11 +28,12 @@ static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks);
 *#########################################################################################################################*/
 /* Simpler to just include subset of OpenAL actually use here instead of including */
 /* === BEGIN OPENAL HEADERS === */
-#if defined _WIN32
-#define APIENTRY __cdecl
+#if defined CC_BUILD_WIN
+	#define APIENTRY __cdecl
 #else
-#define APIENTRY
+	#define APIENTRY
 #endif
+
 #define AL_NONE              0
 #define AL_GAIN              0x100A
 #define AL_SOURCE_STATE      0x1010
@@ -1206,8 +1207,11 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 
 cc_result Audio_Play(struct AudioContext* ctx) {
 	int format = (ctx->channels == 2) ? VOICE_STEREO_16BIT : VOICE_MONO_16BIT;
-	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, ctx->bufs[0].samples, ctx->bufs[0].size, ctx->volume, ctx->volume, (ctx->count > 1) ? MusicCallback : NULL);
-	if (ctx->count == 1) ctx->bufs[0].available = true;
+	cc_bool music = ctx->count > 1;
+
+	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, ctx->bufs[0].samples, ctx->bufs[0].size, 
+					ctx->volume, ctx->volume, music ? MusicCallback : NULL);
+	if (!music) ctx->bufs[0].available = true;
 
 	return 0;
 }
@@ -1409,6 +1413,80 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	free(chunks[0].data);
+}
+
+#elif defined CC_BUILD_WIIU
+/*########################################################################################################################*
+*-------------------------------------------------------Wii U backend-----------------------------------------------------*
+*#########################################################################################################################*/
+#include <sndcore2/core.h>
+static cc_bool ax_inited;
+
+struct AudioContext { int count; };
+#define AUDIO_COMMON_ALLOC
+
+cc_bool AudioBackend_Init(void) {
+	if (ax_inited) return true;
+	ax_inited = true;
+
+	AXInit();
+	return true;
+}
+
+void AudioBackend_Tick(void) { }
+
+void AudioBackend_Free(void) {
+	AXQuit();
+}
+
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
+	ctx->count = buffers;
+	return ERR_NOT_SUPPORTED;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	ctx->count = 0; // TODO
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	// TODO
+	return ERR_NOT_SUPPORTED;
+}
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	// TODO
+}
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	// TODO
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) {
+	// TODO
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	// TODO
+	return ERR_NOT_SUPPORTED;
+}
+
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	/* Channels/Sample rate is per buffer, not a per source property */
+	return true;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
+	return AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
 }
 
 #elif defined CC_BUILD_WEBAUDIO

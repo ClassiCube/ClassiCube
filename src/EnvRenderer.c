@@ -22,14 +22,12 @@
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
-static float CalcBlendFactor(float x) {
-	float blend = -0.13f + 0.28f * ((float)Math_Log2(x) * 0.17329f);
-	if (blend < 0.0f) blend = 0.0f;
-	if (blend > 1.0f) blend = 1.0f;
-	return blend;
+static CC_INLINE int EnvRenderer_AxisSize(void) {
+	if (Gfx.Limitations & GFX_LIMIT_MAX_VERTEX_SIZE) return 8;
+
+	return EnvRenderer_Legacy ? 128 : 2048;
 }
 
-#define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 2048)
 /* Returns the number of vertices needed to subdivide a quad */
 static int CalcNumVertices(int axis1Len, int axis2Len) {
 	int axisSize = EnvRenderer_AxisSize();
@@ -40,6 +38,21 @@ static int CalcNumVertices(int axis1Len, int axis2Len) {
 /*########################################################################################################################*
 *------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
+static PackedCol fog_color;
+
+static float CalcBlendFactor(float x) {
+	float blend = -0.13f + 0.28f * ((float)Math_Log2(x) * 0.17329f);
+	if (blend < 0.0f) blend = 0.0f;
+	if (blend > 1.0f) blend = 1.0f;
+	return blend;
+}
+
+static CC_INLINE void UpdateFogBlend(void) {
+	float blend = CalcBlendFactor((float)Game_ViewDistance);
+	/* Blend fog and sky together */
+	fog_color   = PackedCol_Lerp(Env.FogCol, Env.SkyCol, blend);
+}
+
 static cc_bool CameraInsideBlock(BlockID block, IVec3* coords) {
 	struct AABB blockBB;
 	Vec3 pos;
@@ -50,7 +63,7 @@ static cc_bool CameraInsideBlock(BlockID block, IVec3* coords) {
 	return AABB_ContainsPoint(&blockBB, &Camera.CurrentPos);
 }
 
-static void CalcFog(float* density, PackedCol* color) {
+static PackedCol CalcFog(float* density) {
 	IVec3 coords;
 	BlockID block;
 	float blend;
@@ -60,12 +73,10 @@ static void CalcFog(float* density, PackedCol* color) {
 
 	if (Blocks.FogDensity[block] && CameraInsideBlock(block, &coords)) {
 		*density = Blocks.FogDensity[block];
-		*color   = Blocks.FogCol[block];
+		return Blocks.FogCol[block];
 	} else {
 		*density = 0.0f;
-		/* Blend fog and sky together */
-		blend    = CalcBlendFactor((float)Game_ViewDistance);
-		*color   = PackedCol_Lerp(Env.FogCol, Env.SkyCol, blend);
+		return fog_color;
 	}
 }
 
@@ -117,7 +128,7 @@ void EnvRenderer_UpdateFog(void) {
 	PackedCol fogColor;
 	if (!World.Loaded) return;
 
-	CalcFog(&fogDensity, &fogColor);
+	fogColor = CalcFog(&fogDensity);
 	Gfx_ClearColor(fogColor);
 
 	if (EnvRenderer_Minimal) {
@@ -183,7 +194,7 @@ static CC_NOINLINE void BuildClouds(void) {
 
 void EnvRenderer_RenderClouds(void) {
 	float offset;
-	if (Env.CloudsHeight < -2000) return;
+	if (Env.CloudsHeight < -2000 || !clouds_tex) return;
 
 	if (!clouds_vb) {
 		BuildClouds();
@@ -253,7 +264,7 @@ static CC_NOINLINE void BuildSky(void) {
 void EnvRenderer_RenderSky(void) {
 	struct Matrix m;
 	float skyY, normY, dy;
-	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
+	if (EnvRenderer_ShouldRenderSkybox()) return;
 
 	if (!sky_vb) {
 		BuildSky();
@@ -864,6 +875,7 @@ static void OnContextLost(void* obj) {
 
 static void UpdateAll(void) {
 	DeleteStaticVbs();
+	UpdateFogBlend();
 	EnvRenderer_UpdateFog();
 
 	DeleteWeatherVB();
@@ -918,8 +930,10 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 	} else if (envVar == ENV_VAR_SHADOW_COLOR) {
 		DeleteSidesVB();
 	} else if (envVar == ENV_VAR_SKY_COLOR) {
+		UpdateFogBlend();
 		DeleteSkyVB();
 	} else if (envVar == ENV_VAR_FOG_COLOR) {
+		UpdateFogBlend();
 		EnvRenderer_UpdateFog();
 	} else if (envVar == ENV_VAR_CLOUDS_COLOR) {
 		DeleteCloudsVB();

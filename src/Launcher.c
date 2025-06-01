@@ -117,7 +117,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	res = Process_StartGame2(args, numArgs);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
-	Launcher_ShouldExit = Platform_SingleProcess || Options_GetBool(LOPT_AUTO_CLOSE, false);
+	Launcher_ShouldExit = Platform_IsSingleProcess() || Options_GetBool(LOPT_AUTO_CLOSE, false);
 
 	return true;
 }

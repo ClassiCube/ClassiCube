@@ -9,7 +9,8 @@
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
-#include "../third_party/gldc/src/gldc.h"
+#include "../third_party/gldc/state.c"
+#include "../third_party/gldc/sh4.c"
 
 static cc_bool renderingDisabled;
 static cc_bool stateDirty;
@@ -88,7 +89,6 @@ static CC_INLINE cc_uint32 TextureSize(TextureObject* tex) {
 #define TEXMEM_RESERVED (48 * 1024)
 #define TEXMEM_TO_PAGE(addr) ((cc_uint32)((addr) - texmem_base) / TEXMEM_PAGE_SIZE)
 
-TextureObject* TEXTURE_ACTIVE;
 static TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
 
 // Base address in VRAM for textures
@@ -204,6 +204,14 @@ static cc_uint32 texmem_total_used(void) {
 		if (texmem_base[page]) used += TEXMEM_PAGE_SIZE;
     }
 	return used;
+}
+
+static CC_INLINE cc_uint32 TextureSize(TextureObject* tex) {Add commentMore actions
+	// 16 bpp = 1 pixel in 2 bytes
+	if (tex->format == PVR_TXRFMT_ARGB4444) return tex->width * tex->height * 2;
+
+	// 4bpp = 2 pixels in 1 byte
+	return tex->width * tex->height / 2;
 }
 
 
@@ -370,8 +378,11 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 }
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
+extern float NEAR_CLIP_W;
+
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
+	NEAR_CLIP_W = 1.0f / zNear;
 
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	float c = Cotangent(0.5f * fov);
@@ -442,11 +453,11 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	//dcache_flush_range(vb, vb_size);
 }
 
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }Add commentMore actions
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Textures--------------------------------------------------------*
+*---------------------------------------------------------Palettees--------------------------------------------------------*
 *#########################################################################################################################*/
 // PVR hardware only allows addressing the 1024 palette entries in either 16 entry or 256 entry groups
 #define MAX_PALETTES (1024 / 16)
@@ -517,156 +528,89 @@ static int FindFreePalette(cc_uint8 flags) {
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
 
-static unsigned Interleave(unsigned x) {
-	// Simplified "Interleave bits by Binary Magic Numbers" from
-	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+// Twiddled index looks like this (highest numbered bits are leftmost):
+//   - w = h: xyxy xyxy
+//   - w > h: xxxx xyxy
+//   - h > w: yyyy xyxy
+// And can therefore be broken down into two components:
+//  1) X and Y interleaved lower bits
+//  2) X or Y linear higher bits
+	
+// For example, in the case of W=4 and H=8
+//  the bit pattern is Y_yx_yx_yx
+//  - lower 3 Y bits are interleaved
+//  - upper 1 Y bit is linear
+	
+// By calculating appropriate values, can increment X/Y
+//   in "interleaved one" and then a "linear one" at the end
+// For example, consider XX XY XY
+// - oneX = 00 01 10  maskX = 11 10 10
+// - oneY = 00 10 11  maskY = 00 01 01
 
-	x = (x | (x << 8)) & 0x00FF00FF;
-	x = (x | (x << 4)) & 0x0F0F0F0F;
-	x = (x | (x << 2)) & 0x33333333;
-	x = (x | (x << 1)) & 0x55555555;
-	return x;
+// Working through:
+// X = 00 00 00 (x=0)
+// X + 00 01 10 > 00 01 10
+//              & 11 10 10 > 00 00 10
+// X = 00 00 10 (x=1)
+// X + 00 01 10 > 00 10 00
+// 				& 11 10 10 > 00 10 00
+// X = 00 10 00 (x=2)
+// X + 00 01 10 > 00 11 10
+//				& 11 10 10 > 00 10 10
+// X = 00 10 10 (x=3)
+// X + 00 01 10 > 01 00 00
+//				& 11 10 10 > 01 00 00
+// X = 01 00 00 (x=4)
+// X + 00 01 10 > 01 01 10
+//				& 11 10 10 > 01 00 10
+// X = 01 00 10 (x=5)
+// X + 00 01 10 > 01 10 00
+//				& 11 10 10 > 01 10 00
+// X = 01 10 00 (x=6)
+// X + 00 01 10 > 01 11 10
+//				& 11 10 10 > 01 10 10
+// X = 01 10 10 (x=7)
+// X + 00 01 10 > 10 00 00
+//				& 11 10 10 > 10 00 00
+//
+// As a further optimisation, note the bit patterns
+//   oneX = 00 01 10    oneY = -- 10 11 
+//  maskX = 11 10 10   maskY = -- 01 01
+//  oneX = ~maskX + 1   oneY = ~maskY + 1
+// And then using the following bitwise equivalence:
+//    x - y    =   x + (~y + 1) 
+//  idx - mask = idx + (~mask + 1)
+//  idx - mask = idx + one
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0;
+	*maskY = 0;
+	int shift = 0;
+
+	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
+	{
+		if (w > 1 && h > 1) {
+			// Add interleaved X and Y bits
+			*maskX += 0x02 << shift;
+			*maskY += 0x01 << shift;
+			shift  += 2;
+		} else if (w > 1) {
+			// Add a linear X bit
+			*maskX += 0x01 << shift;
+			shift  += 1;		
+		} else if (h > 1) {
+			// Add a linear Y bit
+			*maskY += 0x01 << shift;
+			shift  += 1;		
+		}
+	}
 }
+	
 
-/*static int CalcTwiddledIndex(int x, int y, int w, int h) {
-	// Twiddled index looks like this (lowest numbered bits are leftmost):
-	//   - w = h: yxyx yxyx
-	//   - w > h: yxyx xxxx
-	//   - h > w: yxyx yyyy
-	// And can therefore be broken down into two components:
-	//  1) interleaved lower bits
-	//  2) masked and then shifted higher bits
-	
-	int min_dimension    = Math.Min(w, h);
-	
-	int interleave_mask  = min_dimension - 1;
-	int interleaved_bits = Math_ilog2(min_dimension);
-	
-	int shifted_mask = (~0) & ~interleave_mask;
-	// as lower interleaved bits contain both X and Y, need to adjust the
-	//  higher bit shift by number of interleaved bits used by other axis
-	int shift_bits   = interleaved_bits;
-	
-	// For example, in the case of W=4 and H=8
-	//  the bit pattern is yx_yx_yx_Y
-	//  - lower 3 Y bits are interleaved
-	//  - upper 1 Y bit must be shifted right 3 bits
-	
-	int lo_Y = Interleave(y & interleave_mask);
-	int hi_Y = (y & shifted_mask) << shift_bits;
-	int Y    = lo_Y | hi_Y;
-	
-	int lo_X  = Interleave(x & interleave_mask) << 1;
-	int hi_X  = (x & shifted_mask) << shift_bits;
-	int X     = lo_X | hi_X;
-
-	return X | Y;
-}*/
-
-#define Twiddle_CalcFactors(w, h) \
-	min_dimension    = min(w, h); \
-	interleave_mask  = min_dimension - 1; \
-	interleaved_bits = Math_ilog2(min_dimension); \
-	shifted_mask     = ~interleave_mask; \
-	shift_bits       = interleaved_bits;
-	
-#define Twiddle_CalcY(y) \
-	lo_Y = Interleave(y & interleave_mask); \
-	hi_Y = (y & shifted_mask) << shift_bits; \
-	Y    = lo_Y | hi_Y;
-	
-#define Twiddle_CalcX(x) \
-	lo_X  = Interleave(x & interleave_mask) << 1; \
-	hi_X  = (x & shifted_mask) << shift_bits; \
-	X     = lo_X | hi_X;
-	
 	
 // B8 G8 R8 A8 > B4 G4 R4 A4
 #define BGRA8_to_BGRA4(src) \
 	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
-
-static void ConvertTexture_4444(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
-	unsigned min_dimension;
-	unsigned interleave_mask, interleaved_bits;
-	unsigned shifted_mask, shift_bits;
-	unsigned lo_Y, hi_Y, Y;
-	unsigned lo_X, hi_X, X;	
-	Twiddle_CalcFactors(bmp->width, bmp->height);
-	
-	for (int y = 0; y < bmp->height; y++)
-	{
-		Twiddle_CalcY(y);
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
-		
-		for (int x = 0; x < bmp->width; x++, src += 4)
-		{
-			Twiddle_CalcX(x);
-			dst[X | Y] = BGRA8_to_BGRA4(src);
-		}
-	}
-}
-
-// TODO: struct GPUTexture ??
-static void ConvertSubTexture_4444(cc_uint16* dst, int texWidth, int texHeight,
-				int originX, int originY, 
-				struct Bitmap* bmp, int rowWidth) {
-	unsigned min_dimension;
-	unsigned interleave_mask, interleaved_bits;
-	unsigned shifted_mask, shift_bits;
-	unsigned lo_Y, hi_Y, Y;
-	unsigned lo_X, hi_X, X;
-	Twiddle_CalcFactors(texWidth, texHeight);
-	
-	for (int y = 0; y < bmp->height; y++)
-	{
-		int dstY = y + originY;
-		Twiddle_CalcY(dstY);
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + rowWidth * y);
-		
-		for (int x = 0; x < bmp->width; x++, src += 4)
-		{
-			int dstX = x + originX;
-			Twiddle_CalcX(dstX);
-			dst[X | Y] = BGRA8_to_BGRA4(src);
-		}
-	}
-}
-
-static CC_INLINE int FindInPalette2(BitmapCol* palette, int pal_count, BitmapCol color) {
-	for (int i = 0; i < pal_count; i++) 
-	{
-		if (palette[i] == color) return i;
-	}
-	return -1;
-}
-
-static void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
-	unsigned min_dimension;
-	unsigned interleave_mask, interleaved_bits;
-	unsigned shifted_mask, shift_bits;
-	unsigned lo_Y, hi_Y, Y;
-	unsigned lo_X, hi_X, X;	
-	Twiddle_CalcFactors(bmp->width >> 1, bmp->height >> 1);
-	
-	for (int y = 0; y < bmp->height >> 1; y++)
-	{
-		Twiddle_CalcY(y);
-		BitmapCol* src  = bmp->scan0 + (y * 2) * rowWidth;
-		BitmapCol* next = src + rowWidth;
-		
-		for (int x = 0; x < bmp->width >> 1; x++, src += 2, next += 2)
-		{
-			int pal_00 = FindInPalette2(palette, pal_count,  src[0]);
-			int pal_10 = FindInPalette2(palette, pal_count,  src[1]);
-			int pal_01 = FindInPalette2(palette, pal_count, next[0]);
-			int pal_11 = FindInPalette2(palette, pal_count, next[1]);
-
-			Twiddle_CalcX(x);
-			dst[X | Y] = pal_00 | (pal_01 << 4) | (pal_11 << 8) | (pal_11 << 12);
-		}
-	}
-}
-
 
 static TextureObject* FindFreeTexture(void) {
     for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
@@ -681,41 +625,65 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	TextureObject* tex = FindFreeTexture();
 	if (!tex) return NULL;
 
-	BitmapCol palette[MAX_PAL_ENTRIES];
-	int pal_count = 0;
-	int pal_index = FindFreePalette(flags);
-
-	if (pal_index >= 0) {
-		pal_count = CalcPalette(palette, bmp, rowWidth);
-		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
-	}
-	Platform_Log2("%i, %i", &pal_index, &pal_count);
-
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	tex->format = pal_count > 0 ? (PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index)) : PVR_TXRFMT_ARGB4444;
+	tex->color  = PVR_TXRFMT_ARGB4444;
 
 	tex->data = texmem_alloc(TextureSize(tex));
 	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
+	cc_uint16* dst = tex->data;
 
-	if (tex->format == PVR_TXRFMT_ARGB4444) {
-		ConvertTexture_4444(tex->data, bmp, rowWidth);
-	} else {
-		ConvertTexture_Palette(tex->data, bmp, rowWidth, palette, pal_count);
+	int width = bmp->width, height = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src += 4)
+		{
+			dst[X | Y] = BGRA8_to_BGRA4(src);
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
 	}
 	return tex;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	TextureObject* tex = (TextureObject*)texId;
 	
-	ConvertSubTexture_4444(tex->data, tex->width, tex->height,
-							x, y, part, rowWidth);
+	int width = part->width, height = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
+	cc_uint16* dst = tex->data;
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint8* src = (cc_uint8*)(part->scan0 + rowWidth * y);
+		X = startX;
+		
+		for (int x = 0; x < width; x++, src += 4)
+		{
+			dst[X | Y] = BGRA8_to_BGRA4(src);
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
 	// TODO: Do we need to flush VRAM?
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-    TEXTURE_ACTIVE = (TextureObject*)texId;
+	TEXTURE_ACTIVE = (TextureObject*)texId;
 	stateDirty     = true;
 }
 
@@ -797,21 +765,14 @@ void Gfx_SetFogMode(FogFunc func) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static matrix_t __attribute__((aligned(32))) _proj, _view;
+static matrix_t __attribute__((aligned(32))) mat_vp;
+
 static float textureOffsetX, textureOffsetY;
 static int textureOffset;
-
-static float vp_scaleX, vp_scaleY, vp_offsetX, vp_offsetY;
-static matrix_t __attribute__((aligned(32))) mat_vp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_PROJ) memcpy(&_proj, matrix, sizeof(struct Matrix));
 	if (type == MATRIX_VIEW) memcpy(&_view, matrix, sizeof(struct Matrix));
-
-	memcpy(&mat_vp, &Matrix_Identity, sizeof(struct Matrix));
-	mat_vp[0][0] = vp_scaleX;
-	mat_vp[1][1] = vp_scaleY;
-	mat_vp[3][0] = vp_offsetX;
-	mat_vp[3][1] = vp_offsetY;
 
 	mat_load(&mat_vp);
 	mat_apply(&_proj);
@@ -870,7 +831,6 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
-extern void apply_poly_header(pvr_poly_hdr_t* header, int list_type);
 static cc_bool loggedNoVRAM;
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
@@ -917,7 +877,7 @@ void DrawQuads(int count, void* src) {
 	list->length += (end - beg);
 
 	if (list != direct) return;
-	SceneListSubmit((Vertex*)list->data, list->length);
+	SubmitCommands((Vertex*)list->data, list->length);
 	list->length = 0;
 }
 
@@ -1015,7 +975,7 @@ static void SubmitList(struct CommandsList* list) {
 	if (!list->length || list == direct) return;
 
 	BeginList(list->list_type);
-	SceneListSubmit((Vertex*)list->data, list->length);
+	SubmitCommands((Vertex*)list->data, list->length);
 	FinishList();
 	list->length = 0;
 }
@@ -1035,24 +995,36 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_scaleX  = w *  0.5f; // hwidth
-	vp_scaleY  = h * -0.5f; // hheight
-	vp_offsetX = x + w * 0.5f; // x_plus_hwidth
-	vp_offsetY = y + h * 0.5f; // y_plus_hheight
+	float scaleX  = w *  0.5f; // hwidth
+	float scaleY  = h * -0.5f; // hheight
+	float offsetX = x + w * 0.5f; // x_plus_hwidth
+	float offsetY = y + h * 0.5f; // y_plus_hheight
+
+	memcpy(&mat_vp, &Matrix_Identity, sizeof(struct Matrix));
+	mat_vp[0][0] = scaleX;
+	mat_vp[1][1] = scaleY;
+	mat_vp[3][0] = offsetX;
+	mat_vp[3][1] = offsetY;
+	// TODO load matrix now?
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
 	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
 	stateDirty = true;
 
-	pvr_poly_hdr_t c;
+	struct pvr_clip_command {
+		uint32_t cmd; // TA command
+		uint32_t mode1, mode2, mode3; // not used in USERCLIP command
+		uint32_t sx, sy, ex, ey; // 4 corners of the region
+	} __attribute__((aligned(32))) c;
+
 	c.cmd = PVR_CMD_USERCLIP;
 	c.mode1 = c.mode2 = c.mode3 = 0;
 
-	c.d1 = x >> 5;
-	c.d2 = y >> 5;
-	c.d3 = ((x + w) >> 5) - 1;
-	c.d4 = ((y + h) >> 5) - 1;
+	c.sx = x >> 5;
+	c.sy = y >> 5;
+	c.ex = ((x + w) >> 5) - 1;
+	c.ey = ((y + h) >> 5) - 1;
 
 	CommandsList_Append(&listOP, &c);
 	CommandsList_Append(&listPT, &c);

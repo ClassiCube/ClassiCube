@@ -69,7 +69,7 @@ CC_VAR extern struct _GfxData {
 	/* Whether the graphics backend supports non power of two textures */
 	cc_bool SupportsNonPowTwoTextures;
 	/* Limitations of the graphics backend, see GFX_LIMIT values */
-	cc_bool Limitations;
+	cc_uint8 Limitations;
 	/* Type of the backend (e.g. OpenGL, Direct3D 9, etc)*/
 	cc_uint8 BackendType;
 	cc_bool __pad;
@@ -91,6 +91,8 @@ CC_VAR extern struct _GfxData {
 /* Whether the graphics backend requires very large quads to be broken */
 /*  up into smaller quads, to reduce fog interpolation artifacts */
 #define GFX_LIMIT_VERTEX_ONLY_FOG 0x02
+/* Whether the graphics backend only supports a small maximum quad size */
+#define GFX_LIMIT_MAX_VERTEX_SIZE 0x04
 
 extern const cc_string Gfx_LowPerfMessage;
 
@@ -345,9 +347,14 @@ USAGE NOTES:
 	  is setup to draw groups of 2 triangles from 4 vertices (1 quad)
 */
 
+/* Optional draw hints used by some rendering backends to speed up 2D drawing */
 typedef enum DrawHints_ {
 	DRAW_HINT_NONE   = 0,
-	DRAW_HINT_SPRITE = 9,
+	/* Vertices are 2D rects with possible texture scaling and/or repeating */
+	DRAW_HINT_SPRITE = 0x02,
+	/* Vertices are 2D rects with no texture scaling or repeating */
+	/* Typically this is only used for textures purely containing text */
+	DRAW_HINT_RECT   = 0x04,
 } DrawHints;
 
 /* Sets the format of the rendered vertices */

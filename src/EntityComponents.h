@@ -14,8 +14,8 @@ struct LocalPlayer;
 
 /* Entity component that performs model animation depending on movement speed and time */
 struct AnimatedComp {
-	float BobbingHor, BobbingVer, BobbingModel;
-	float WalkTime, Swing, BobStrength;
+	float BobbingModel;
+	float WalkTime, Swing;
 	float WalkTimeO, WalkTimeN, SwingO, SwingN, BobStrengthO, BobStrengthN;
 
 	float LeftLegX, LeftLegZ, RightLegX, RightLegZ;
@@ -28,13 +28,11 @@ void AnimatedComp_GetCurrent(struct Entity* entity, float t);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
 struct TiltComp {
-	float TiltX, TiltY, VelTiltStrength;
 	float VelTiltStrengthO, VelTiltStrengthN;
 };
 
 void TiltComp_Init(struct TiltComp* anim);
 void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, float delta);
-void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */
 struct HacksComp {

@@ -576,16 +576,26 @@ void Gamepad_SetButton(int port, int btn, int pressed) {
 }
 
 void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
+	struct GamepadDevice* dev = &Gamepad_Devices[port];
+	struct PadAxisUpdate upd;
 	float scale;
 	int sensi;
 
-	Gamepad_Devices[port].axisX[axis] = x;
-	Gamepad_Devices[port].axisY[axis] = y;
+	dev->axisX[axis] = x;
+	dev->axisY[axis] = y;
 	if (x == 0 && y == 0) return;
 
-	sensi = Gamepad_AxisSensitivity[axis];
-	scale = delta * 60.0f * axis_sensiFactor[sensi];
-	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
+	sensi  = Gamepad_AxisSensitivity[axis];
+	scale  = delta * 60.0f * axis_sensiFactor[sensi];
+
+	upd.port = port;
+	upd.axis = axis;
+	upd.x    = x * scale;
+	upd.y    = y * scale;
+	upd.xSteps = Utils_AccumulateWheelDelta(&dev->padXAcc, upd.x / 100.0f);
+	upd.ySteps = Utils_AccumulateWheelDelta(&dev->padYAcc, upd.y / 100.0f);
+
+	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, &upd);
 }
 
 void Gamepad_Tick(float delta) {

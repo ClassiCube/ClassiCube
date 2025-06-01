@@ -685,7 +685,7 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 		Camera_KeyLookUpdate(delta);
-		InputHandler_Tick();
+		InputHandler_Tick(delta);
 
 		if (Game_Anaglyph3D) {
 			Render3D_Anaglyph(delta, t);
@@ -809,8 +809,10 @@ static CC_INLINE void Game_RenderFrame(void) {
 	EnvRenderer_UpdateFog();
 	AudioBackend_Tick();
 
+#if !defined CC_BUILD_SYMBIAN
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
 	if (Window_Main.Inactive) return;
+#endif
 	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 	
 #ifdef CC_BUILD_SPLITSCREEN

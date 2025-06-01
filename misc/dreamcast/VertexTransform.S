@@ -85,26 +85,26 @@
 ! To take advantage of SH4 dual instruction processing, 
 !  clipflag calculation and vertex output are interleaved
 .macro ProcessVertex1
-    fmov.s  F_W,@-DST ! LS, dst->w = W
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
     fmov.s  F_C,@-DST ! LS, dst->c = C
     fmov.s  F_V,@-DST ! LS, dst->v = V
     fcmp/gt ZERO, F_Z ! FE, T = Z > 0
     fmov.s  F_U,@-DST ! LS, dst->u = U
     movt    FLG       ! EX, CLIPFLAGS = T
-    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    fmov.s  F_W,@-DST ! LS, dst->w = W
     fmov.s  F_Y,@-DST ! LS, dst->y = Y
     fmov.s  F_X,@-DST ! LS, dst->x = X
     mov.l   VTX,@-DST ! LS, dst->flags = PVR_CMD_VERTEX
 .endm
 
 .macro ProcessVertex2
-    fmov.s  F_W,@-DST ! LS, dst->w = W
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
     fmov.s  F_C,@-DST ! LS, dst->c = C
     fmov.s  F_V,@-DST ! LS, dst->v = V
     fcmp/gt ZERO,F_Z  ! FE, T = Z > 0
     fmov.s  F_U,@-DST ! LS, dst->u = U
     movt    TMP       ! EX, tmp = T
-    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    fmov.s  F_W,@-DST ! LS, dst->w = W
     add     TMP,TMP   ! EX, tmp = tmp + tmp
     fmov.s  F_Y,@-DST ! LS, dst->y = Y
     or      TMP,FLG   ! EX, CLIPFLAGS |= tmp (T << 1)
@@ -113,13 +113,13 @@
 .endm
 
 .macro ProcessVertex3
-    fmov.s  F_W,@-DST ! LS, dst->w = W
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
     fmov.s  F_C,@-DST ! LS, dst->c = C
     fmov.s  F_V,@-DST ! LS, dst->v = V
     fcmp/gt ZERO, F_Z ! FE, T = Z > 0
     fmov.s  F_U,@-DST ! LS, dst->u = U
     movt    TMP       ! EX, tmp = T
-    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    fmov.s  F_W,@-DST ! LS, dst->w = W
     fmov.s  F_Y,@-DST ! LS, dst->y = Y
     shll2   TMP       ! EX, tmp = tmp << 2
     fmov.s  F_X,@-DST ! LS, dst->x = X
@@ -128,14 +128,14 @@
 .endm
 
 .macro ProcessVertex4
-    fmov.s  F_W,@-DST ! LS, dst->w = W
+    fmov.s  F_Z,@-DST ! LS, dst->z = Z
     or      EOS,FLG   ! EX, CLIPFLAGS |= PVR_CMD_VERTEX_EOL
     fmov.s  F_C,@-DST ! LS, dst->c = C
     fmov.s  F_V,@-DST ! LS, dst->v = V
     fcmp/gt ZERO, F_Z ! FE, T = Z > 0
     fmov.s  F_U,@-DST ! LS, dst->u = U
     movt    TMP       ! EX, tmp = T
-    fmov.s  F_Z,@-DST ! LS, dst->z = Z
+    fmov.s  F_W,@-DST ! LS, dst->w = W
     shll2   TMP       ! EX, tmp = tmp << 2
     fmov.s  F_Y,@-DST ! LS, dst->y = Y
     add     TMP,TMP   ! EX, tmp = (tmp << 2) + (tmp << 2) (T << 3)

@@ -16,6 +16,7 @@ jobs:
 # ============== ARM32 WINDOWS ==============
 # ===========================================
   build-32:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: dockcross/windows-armv7
@@ -49,6 +50,7 @@ jobs:
 # ============== ARM64 WINDOWS ==============
 # ===========================================
   build-64:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: dockcross/windows-arm64

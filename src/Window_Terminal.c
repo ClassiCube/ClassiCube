@@ -419,7 +419,7 @@ void Window_Init(void) {
 	HookTerminal();
 	UpdateDimensions();
 	HookSignals();
-	Platform_SingleProcess = true;
+	Platform_Flags |= PLAT_FLAG_SINGLE_PROCESS;
 }
 
 void Window_Free(void) {

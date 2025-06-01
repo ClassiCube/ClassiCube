@@ -136,25 +136,37 @@ static void PerspectiveCamera_UpdateMouse(struct LocalPlayer* p, float delta) {
 static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, float velTiltScale) {
 	struct Entity* e = &p->Base;
 	struct Matrix tiltY, velX;
-	float vel, fall;
+
+	float vel, fall, xTilt, yTilt;
+	float bobStrength, bobbingHor, bobbingVer;
+	float velTiltStrength;
 	
-	if (!Game_ViewBobbing) { 
+	if (!Game_ViewBobbing) {
 		Camera.TiltM     = Matrix_Identity;
 		Camera.TiltPitch = 0.0f;
-		return; 
+		return;
 	}
+	
+	bobStrength = Math_Lerp(e->Anim.BobStrengthO, e->Anim.BobStrengthN, t);
+	// See BobbingModel in AnimatedComp_GetCurrent
+	bobbingHor  = Math_CosF(e->Anim.WalkTime)            * e->Anim.Swing * (2.5f/16.0f);
+	bobbingVer  = Math_AbsF(Math_SinF(e->Anim.WalkTime)) * e->Anim.Swing * (2.5f/16.0f);
 
-	Matrix_RotateZ(&Camera.TiltM, -p->Tilt.TiltX                  * e->Anim.BobStrength);
-	Matrix_RotateX(&tiltY,        Math_AbsF(p->Tilt.TiltY) * 3.0f * e->Anim.BobStrength);
+	xTilt = Math_CosF(e->Anim.WalkTime) * e->Anim.Swing * (0.15f * MATH_DEG2RAD);
+	yTilt = Math_SinF(e->Anim.WalkTime) * e->Anim.Swing * (0.15f * MATH_DEG2RAD);
+
+	Matrix_RotateZ(&Camera.TiltM, -xTilt                  * bobStrength);
+	Matrix_RotateX(&tiltY,        Math_AbsF(yTilt) * 3.0f * bobStrength);
 	Matrix_MulBy(&Camera.TiltM, &tiltY);
 
-	Camera.BobbingHor = (e->Anim.BobbingHor * 0.3f) * e->Anim.BobStrength;
-	Camera.BobbingVer = (e->Anim.BobbingVer * 0.6f) * e->Anim.BobStrength;
+	Camera.BobbingHor = (bobbingHor * 0.3f) * bobStrength;
+	Camera.BobbingVer = (bobbingVer * 0.6f) * bobStrength;
+	velTiltStrength   = Math_Lerp(p->Tilt.VelTiltStrengthO, p->Tilt.VelTiltStrengthN, t);
 
 	/* When standing on the ground, velocity.y is -0.08 (-gravity) */
 	/* So add 0.08 to counteract that, so that vel is 0 when standing on ground */
 	vel  = 0.08f + Math_Lerp(p->OldVelocity.y, e->Velocity.y, t);
-	fall = -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale;
+	fall = -vel * 0.05f * velTiltStrength / velTiltScale;
 
 	Matrix_RotateX(&velX, fall);
 	Matrix_MulBy(&Camera.TiltM, &velX);
@@ -280,11 +292,11 @@ static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY, 0);
 }
 
-static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, struct PadAxisUpdate* upd) {
 	if (!Input.RawMode) return;
-	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_CAMERA) return;
+	if (Gamepad_AxisBehaviour[upd->axis] != AXIS_BEHAVIOUR_CAMERA) return;
 
-	Camera.Active->OnRawMovement(x, y, port);
+	Camera.Active->OnRawMovement(upd->x, upd->y, upd->port);
 }
 
 static void OnHacksChanged(void* obj) {
@@ -295,6 +307,8 @@ static void OnHacksChanged(void* obj) {
 
 void Camera_CycleActive(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[0];
+	int cycle = 0;
+
 	if (Game_ClassicMode) return;
 	Camera.Active = Camera.Active->next;
 
@@ -303,7 +317,6 @@ void Camera_CycleActive(void) {
 	}
 	cam_isForwardThird = Camera.Active == &cam_ForwardThird;
 
-	int cycle = 0;
 	if (Camera.Active == &cam_FirstPerson) cycle = 0;
 	else if (Camera.Active == &cam_ThirdPerson) cycle = 1;
 	else if (cam_isForwardThird) cycle = 2;
@@ -342,6 +355,7 @@ void Camera_SetFov(int fov) {
 }
 
 void Camera_UpdateProjection(void) {
+	if (!Camera.Active) return;
 	Camera.Active->GetProjection(&Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_PROJ,  &Gfx.Projection);
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
@@ -364,6 +378,8 @@ static void OnInit(void) {
 
 #ifdef CC_BUILD_WIN
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);
+#elif defined CC_BUILD_SYMBIAN && defined CC_BUILD_TOUCH
+	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 70);
 #else
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 30);
 #endif

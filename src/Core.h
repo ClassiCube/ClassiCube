@@ -30,8 +30,8 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #endif
 	
 	#ifndef CC_API
-	#define CC_API __declspec(dllexport, noinline)
-	#define CC_VAR __declspec(dllexport)
+		#define CC_API __declspec(dllexport, noinline)
+		#define CC_VAR __declspec(dllexport)
 	#endif
 	
 	#define CC_HAS_TYPES
@@ -62,9 +62,11 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 	#define CC_HAS_TYPES
 	#endif
 	
-	#define CC_INLINE inline
-	#define CC_NOINLINE __attribute__((noinline))
-	
+	#ifndef CC_INLINE
+		#define CC_INLINE inline
+		#define CC_NOINLINE __attribute__((noinline))
+	#endif
+
 	#ifndef CC_API
 	#ifdef _WIN32
 		#define CC_API __attribute__((dllexport, noinline))
@@ -184,17 +186,23 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#undef  CC_BUILD_NETWORKING /* TODO broken */
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+#elif defined PLAT_PS4
+	#define CC_BUILD_PS4
+	#define CC_BUILD_CONSOLE
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 #elif defined __WRL_NO_DEFAULT_LIB__
 	#undef  CC_BUILD_FREETYPE
 	#define CC_BUILD_WIN
 	#define CC_BUILD_UWP
-	#define CC_BUILD_NOMUSIC
-	#define CC_BUILD_NOSOUNDS
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_D3D11
-#elif defined _WIN32
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
+#elif defined _WIN32 && !defined __WINSCW__
 	#define CC_BUILD_WIN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_SCHANNEL
@@ -226,6 +234,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#undef  CC_BUILD_NETWORKING
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 #elif defined PLAT_AMIGA
@@ -397,7 +406,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_SPLITSCREEN
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#undef  CC_BUILD_RESOURCES
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
@@ -416,11 +425,10 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#define CC_BUILD_SPLITSCREEN
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#undef  CC_BUILD_FILESYSTEM
 #elif defined PLAT_PS2
 	#define CC_BUILD_PS2
 	#define CC_BUILD_CONSOLE
@@ -438,8 +446,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
-	#define CC_BUILD_TINYSTACK
+	#define CC_BUILD_MAXSTACK (8 * 1024) /* TODO verify */
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -464,8 +471,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_TOUCH
-	#define CC_BUILD_SMALLSTACK
-	#define CC_BUILD_TINYSTACK /* Only < 16 kb stack as it's in DTCM region */
+	#define CC_BUILD_MAXSTACK (16 * 1024) /* Only < 16 kb stack as it's in DTCM region */
 	#define CC_BUILD_NOFPU
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
@@ -480,7 +486,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_TOUCH
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 #elif defined __SWITCH__
 	#define CC_BUILD_SWITCH
 	#define CC_BUILD_CONSOLE
@@ -520,7 +525,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -536,7 +541,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_SMALLSTACK
+	#define CC_BUILD_MAXSTACK (64 * 1024)
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
@@ -548,6 +553,26 @@ typedef cc_uint8  cc_bool;
 	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 	#define CC_DISABLE_EXTRA_MODELS
 	#define SOFTGPU_DISABLE_ZBUFFER
+#elif defined __SYMBIAN32__
+	#define CC_BUILD_SYMBIAN
+	#define CC_BUILD_MOBILE
+	#define CC_BUILD_GLES
+	#define CC_BUILD_EGL
+	#define CC_BUILD_MAXSTACK (16 * 1024)
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_NOMUSIC 
+	#define CC_BUILD_NOSOUNDS
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+#if defined CC_BUILD_SYMBIAN_LIBGLESV2
+#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
+#else
+#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
+#endif
+
+#if defined CC_BUILD_SYMBIAN_3 || defined CC_BUILD_SYMBIAN_S60V5
+	#define CC_BUILD_TOUCH
+#endif
 #endif
 #endif
 
@@ -574,13 +599,17 @@ typedef cc_uint8  cc_bool;
 #endif
 
 #ifdef CC_BUILD_NETWORKING
-#define CUSTOM_MODELS
+	#define CUSTOM_MODELS
 #endif
 #ifndef CC_BUILD_LOWMEM
-#define EXTENDED_BLOCKS
+	#define EXTENDED_BLOCKS
 #endif
 #ifndef CC_BUILD_TINYMEM
-#define EXTENDED_TEXTURES
+	#define EXTENDED_TEXTURES
+#endif
+
+#ifndef CC_BUILD_MAXSTACK
+	#define CC_BUILD_MAXSTACK (256 * 1024)
 #endif
 
 #ifdef EXTENDED_BLOCKS
@@ -629,10 +658,6 @@ struct Texture {
 #else
 	#define CC_BEGIN_HEADER
 	#define CC_END_HEADER
-#endif
-
-#ifdef CC_BUILD_TINYSTACK
-extern char temp_mem[45000];
 #endif
 
 #endif

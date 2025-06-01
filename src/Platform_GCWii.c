@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_GCWII
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -378,6 +380,25 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool net_supported = true;
+
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 #ifdef HW_RVL
 	struct hostent* res = net_gethostbyname(host);
@@ -409,27 +430,29 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 #else
 	// DNS resolution not implemented in gamecube libbba
-	return ERR_NOT_SUPPORTED;
-#endif
-}
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 1;
-	if (inet_aton(str, &addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size = sizeof(*addr4);
+	static struct fixed_dns_map {
+		const cc_string host, ip;
+	} mappings[] = {
+		{ String_FromConst("cdn.classicube.net"), String_FromConst("104.20.90.158") },
+		{ String_FromConst("www.classicube.net"), String_FromConst("104.20.90.158") }
+	};
+	if (!net_supported) return ERR_NO_NETWORKING;
+
+	for (int i = 0; i < Array_Elems(mappings); i++) 
+	{
+		if (!String_CaselessEqualsConst(&mappings[i].host, host)) continue;
+
+		ParseIPv4(&mappings[i].ip, port, &addrs[0]);
+		*numValidAddrs = 1;
 		return 0;
 	}
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
+	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
 	*s = net_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
@@ -516,6 +539,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &res, resultSize);
 	return res;
 }
+
 static void InitSockets(void) {
 #ifdef HW_RVL
 	int ret = net_init();
@@ -531,6 +555,7 @@ static void InitSockets(void) {
 		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
 	} else {
 		Platform_Log1("Network setup failed: %i", &ret);
+		net_supported = false;
 	}
 #endif
 }
