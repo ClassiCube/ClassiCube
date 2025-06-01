@@ -650,7 +650,7 @@ static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp,
 			int pal_01 = FindInPalette2(palette, pal_count, next[0]);
 			int pal_11 = FindInPalette2(palette, pal_count, next[1]);
 
-			dst[X | Y] = pal_00 | (pal_01 << 4) | (pal_11 << 8) | (pal_11 << 12);
+			dst[X | Y] = pal_00 | (pal_01 << 4) | (pal_10 << 8) | (pal_11 << 12);
 
 			X = (X - maskX) & maskX;
 		}
