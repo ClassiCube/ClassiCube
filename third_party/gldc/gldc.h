@@ -15,7 +15,7 @@ typedef struct {
 } __attribute__ ((aligned (32))) Vertex;
 
 typedef struct {
-    uint32_t color; /* This is the PVR texture format */
+    uint32_t format; /* This is the PVR texture format */
     void     *data;
     uint16_t width;
     uint16_t height;

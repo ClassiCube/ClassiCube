@@ -75,7 +75,6 @@ static CC_INLINE cc_uint32 TextureSize(TextureObject* tex) {
 }
 
 
-
 /*########################################################################################################################*
 *-----------------------------------------------------Texture memory------------------------------------------------------*
 *#########################################################################################################################*/
@@ -204,14 +203,6 @@ static cc_uint32 texmem_total_used(void) {
 		if (texmem_base[page]) used += TEXMEM_PAGE_SIZE;
     }
 	return used;
-}
-
-static CC_INLINE cc_uint32 TextureSize(TextureObject* tex) {Add commentMore actions
-	// 16 bpp = 1 pixel in 2 bytes
-	if (tex->format == PVR_TXRFMT_ARGB4444) return tex->width * tex->height * 2;
-
-	// 4bpp = 2 pixels in 1 byte
-	return tex->width * tex->height / 2;
 }
 
 
@@ -453,7 +444,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	//dcache_flush_range(vb, vb_size);
 }
 
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }Add commentMore actions
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -612,27 +603,7 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 #define BGRA8_to_BGRA4(src) \
 	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
 
-static TextureObject* FindFreeTexture(void) {
-    for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
-	{
-		TextureObject* tex = &TEXTURE_LIST[i];
-        if (!tex->data) return tex;
-    }
-    return NULL;
-}
-
-GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	TextureObject* tex = FindFreeTexture();
-	if (!tex) return NULL;
-
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
-	tex->color  = PVR_TXRFMT_ARGB4444;
-
-	tex->data = texmem_alloc(TextureSize(tex));
-	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
-	cc_uint16* dst = tex->data;
-
+static CC_INLINE void ConvertTexture_4444(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
 	int width = bmp->width, height = bmp->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
@@ -649,6 +620,78 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			X = (X - maskX) & maskX;
 		}
 		Y = (Y - maskY) & maskY;
+	}
+}
+
+static CC_INLINE int FindInPalette2(BitmapCol* palette, int pal_count, BitmapCol color) {
+	for (int i = 0; i < pal_count; i++) 
+	{
+		if (palette[i] == color) return i;
+	}
+	return -1;
+}
+
+static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
+	int width = bmp->width >> 1, height = bmp->height >> 1;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		BitmapCol* src  = bmp->scan0 + (y * 2) * rowWidth;
+		BitmapCol* next = src + rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src += 2, next += 2)
+		{
+			int pal_00 = FindInPalette2(palette, pal_count,  src[0]);
+			int pal_10 = FindInPalette2(palette, pal_count,  src[1]);
+			int pal_01 = FindInPalette2(palette, pal_count, next[0]);
+			int pal_11 = FindInPalette2(palette, pal_count, next[1]);
+
+			dst[X | Y] = pal_00 | (pal_01 << 4) | (pal_11 << 8) | (pal_11 << 12);
+
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+static TextureObject* FindFreeTexture(void) {
+    for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
+	{
+		TextureObject* tex = &TEXTURE_LIST[i];
+		if (!tex->data) return tex;
+    }
+    return NULL;
+}
+
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+	TextureObject* tex = FindFreeTexture();
+	if (!tex) return NULL;
+
+	BitmapCol palette[MAX_PAL_ENTRIES];
+	int pal_count = 0;
+	int pal_index = FindFreePalette(flags);
+
+	if (pal_index >= 0) {
+		pal_count = CalcPalette(palette, bmp, rowWidth);
+		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
+	}
+	Platform_Log2("%i, %i", &pal_index, &pal_count);
+
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	tex->format = pal_count > 0 ? (PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index)) : PVR_TXRFMT_ARGB4444;
+
+	tex->data = texmem_alloc(TextureSize(tex));
+	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
+
+	if (tex->format == PVR_TXRFMT_ARGB4444) {
+		ConvertTexture_4444(tex->data, bmp, rowWidth);
+	} else {
+		ConvertTexture_Palette(tex->data, bmp, rowWidth, palette, pal_count);
 	}
 	return tex;
 }
