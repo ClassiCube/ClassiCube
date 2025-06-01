@@ -4,6 +4,10 @@ MACRO CC_BUILD_SYMBIAN_S60V5
 
 ARMFPU softvfp
 
+#ifdef ARMCC
+ALWAYS_BUILD_AS_ARM
+#endif
+
 LIBRARY libgles_cm.lib
 
 SOURCEPATH .
