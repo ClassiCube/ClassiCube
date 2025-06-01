@@ -14,6 +14,7 @@
 
 #define INT_VGA            0x10
 #define VGA_CMD_SETMODE  0x0000
+#define VGA_MODE_TEXT_BW   0x02
 #define VGA_MODE_320x200_8 0x13
 
 #define INT_MOUSE         0x33
@@ -199,7 +200,11 @@ void Window_Free(void) {
 	Mem_Set(screen, 0, DISP_WIDTH * DISP_HEIGHT);
 
 	__djgpp_nearptr_disable();
-	// TODO restore VGA mode and palette?
+
+	// Restore VGA to text mode
+	__dpmi_regs regs;
+	regs.x.ax = VGA_CMD_SETMODE | VGA_MODE_TEXT_BW;
+	__dpmi_int(INT_VGA, &regs);
 }
 
 static void DoCreateWindow(int width, int height) {
