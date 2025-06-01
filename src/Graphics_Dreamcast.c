@@ -191,7 +191,7 @@ static cc_uint32 texmem_total_free(void) {
 	cc_uint32 free = 0;
     for (cc_uint32 page = 0; page < texmem_pages; page++) 
 	{
-		if (!texmem_base[page]) free += TEXMEM_PAGE_SIZE;
+		if (!texmem_used[page]) free += TEXMEM_PAGE_SIZE;
     }
 	return free;
 }
@@ -200,7 +200,7 @@ static cc_uint32 texmem_total_used(void) {
 	cc_uint32 used = 0;
     for (cc_uint32 page = 0; page < texmem_pages; page++) 
 	{
-		if (texmem_base[page]) used += TEXMEM_PAGE_SIZE;
+		if (texmem_used[page]) used += TEXMEM_PAGE_SIZE;
     }
 	return used;
 }
@@ -673,13 +673,20 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 	BitmapCol palette[MAX_PAL_ENTRIES];
 	int pal_count = 0;
-	int pal_index = FindFreePalette(flags);
+	int pal_index = -1;//FindFreePalette(flags);
 
 	if (pal_index >= 0) {
 		pal_count = CalcPalette(palette, bmp, rowWidth);
 		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
 	}
 	Platform_Log2("%i, %i", &pal_index, &pal_count);
+
+	int freeMem = texmem_total_free();
+	int usedMem = texmem_total_used();
+	
+	float freeMemMB = freeMem / (1024.0 * 1024.0);
+	float usedMemMB = usedMem / (1024.0 * 1024.0);
+	Platform_Log2("Texture memory: %f2 MB used, %f2 MB free\n", &usedMemMB, &freeMemMB);
 
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
