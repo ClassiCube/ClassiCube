@@ -600,7 +600,14 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+
 	gfx_format = -1;
+
+	gfx_clearColor = 0;
+	gfx_fogColor   = 0;
+	gfx_fogEnd     = -1.0f;
+	gfx_fogDensity = -1.0f;
+	gfx_fogMode    = -1;
 
 	DirtyUniform(UNI_MASK_ALL);
 	GL_ClearColor(gfx_clearColor);
@@ -637,6 +644,13 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) {
 		postProcess_Names, Array_Elems(postProcess_Names),
 		GetPostProcess, SetPostProcess, NULL);
 	return false;
+}
+
+void Gfx_GetApiInfo(cc_string* info) {
+	int pointerSize = sizeof(void*) * 8;
+
+	String_Format1(info, "-- Using OpenGL Modern (%i bit) --\n", &pointerSize);
+	GetGLApiInfo(info);
 }
 
 

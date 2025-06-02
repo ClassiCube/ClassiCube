@@ -378,8 +378,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
-static int gfx_fogMode  = -1;
+static float gfx_fogEnd, gfx_fogDensity;
+static int gfx_fogMode;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
@@ -477,7 +477,15 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	_glEnableClientState(GL_VERTEX_ARRAY);
 	_glEnableClientState(GL_COLOR_ARRAY);
+
 	gfx_format = -1;
+	lastMatrix = -1;
+
+	gfx_clearColor = 0;
+	gfx_fogColor   = 0;
+	gfx_fogEnd     = -1.0f;
+	gfx_fogDensity = -1.0f;
+	gfx_fogMode    = -1;
 
 	_glHint(GL_FOG_HINT, GL_NICEST);
 #if defined CC_BUILD_SYMBIAN
@@ -518,7 +526,15 @@ cc_bool Gfx_WarnIfNecessary(void) {
 	}
 	return false;
 }
+
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
+
+void Gfx_GetApiInfo(cc_string* info) {
+	int pointerSize = sizeof(void*) * 8;
+
+	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
+	GetGLApiInfo(info);
+}
 
 
 /*########################################################################################################################*

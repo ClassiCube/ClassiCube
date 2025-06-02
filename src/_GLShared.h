@@ -352,16 +352,10 @@ static void AppendVRAMStats(cc_string* info) {
 	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &total, &cur);
 }
 
-void Gfx_GetApiInfo(cc_string* info) {
+static void GetGLApiInfo(cc_string* info) {
 	GLint depthBits = 0;
-	int pointerSize = sizeof(void*) * 8;
-
 	_glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
-	String_Format1(info, "-- Using OpenGL Modern (%i bit) --\n", &pointerSize);
-#else
-	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
-#endif
+
 	String_Format1(info, "Vendor: %c\n",     _glGetString(GL_VENDOR));
 	String_Format1(info, "Renderer: %c\n",   _glGetString(GL_RENDERER));
 	String_Format1(info, "GL version: %c\n", _glGetString(GL_VERSION));
