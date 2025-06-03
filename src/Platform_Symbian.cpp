@@ -291,7 +291,16 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 }
 
 static void* ExecThread(void* param) {
+	CTrapCleanup* cleanup = CTrapCleanup::New();
+	CActiveScheduler* scheduler = new (ELeave) CActiveScheduler();
+	CActiveScheduler::Install(scheduler);
+	
 	((Thread_StartFunc)param)();
+	
+	CActiveScheduler::Install(NULL);
+	delete scheduler;
+	delete cleanup;
+	
 	return NULL;
 }
 

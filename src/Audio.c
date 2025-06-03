@@ -13,7 +13,7 @@
 #include "Utils.h"
 #include "Options.h"
 #include "Deflate.h"
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 /* TODO: Refactor maybe to not rely on checking WinInfo.Handle != NULL */
 #include "Window.h"
 #endif
@@ -353,27 +353,34 @@ static cc_result Music_Buffer(struct AudioChunk* chunk, int maxSamples, struct V
 }
 
 static cc_result Music_PlayOgg(struct Stream* source) {
-	struct OggState ogg;
-	struct VorbisState vorbis;
 	int channels, sampleRate, volume;
-
 	int chunkSize, samplesPerSecond;
 	struct AudioChunk chunks[AUDIO_MAX_BUFFERS] = { 0 };
 	int inUse, i, cur;
 	cc_result res;
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	struct VorbisState* vorbis = (struct VorbisState*)Mem_TryAllocCleared(1, sizeof(struct VorbisState));
+	struct OggState* ogg = (struct OggState*)Mem_TryAllocCleared(1, sizeof(struct OggState));
+	if (!vorbis || !ogg) return ERR_OUT_OF_MEMORY;
+#else
+	struct OggState _ogg;
+	struct OggState* ogg = &ogg;
+	struct VorbisState _vorbis;
+	struct VorbisState* vorbis = &vorbis;
+#endif
 
-	Ogg_Init(&ogg, source);
-	Vorbis_Init(&vorbis);
-	vorbis.source = &ogg;
-	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
+	Ogg_Init(ogg, source);
+	Vorbis_Init(vorbis);
+	vorbis->source = ogg;
+	if ((res = Vorbis_DecodeHeaders(vorbis))) goto cleanup;
 	
-	channels   = vorbis.channels;
-	sampleRate = vorbis.sampleRate;
+	channels   = vorbis->channels;
+	sampleRate = vorbis->sampleRate;
 	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate, 100))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
 	/*  so can end up decoding slightly over a second of audio */
-	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
+	chunkSize        = channels * (sampleRate + vorbis->blockSizes[1]);
 	samplesPerSecond = channels * sampleRate;
 
 	if ((res = Audio_AllocChunks(chunkSize * 2, chunks, AUDIO_MAX_BUFFERS))) goto cleanup;
@@ -383,7 +390,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) 
 	{
-		res = Music_Buffer(&chunks[i], samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[i], samplesPerSecond, vorbis);
 	}
 	if (music_stopping) goto cleanup;
 
@@ -392,12 +399,12 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	cur  = 0;
 
 	while (!music_stopping) {
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 		/* Don't play music while in the background on Android */
     	/* TODO: Not use such a terrible approach */
-    	if (!Window_Main.Handle.ptr) {
+    	if (!Window_Main.Handle.ptr || Window_Main.Inactive) {
     		Audio_Pause(&music_ctx);
-    		while (!Window_Main.Handle.ptr && !music_stopping) {
+    		while ((!Window_Main.Handle.ptr || Window_Main.Inactive) && !music_stopping) {
     			Thread_Sleep(10); continue;
     		}
     		Audio_Play(&music_ctx);
@@ -415,7 +422,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 			Thread_Sleep(10); continue;
 		}
 
-		res = Music_Buffer(&chunks[cur], samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[cur], samplesPerSecond, vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 
 		/* need to specially handle last bit of audio */
@@ -437,7 +444,11 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 
 cleanup:
 	Audio_FreeChunks(chunks, AUDIO_MAX_BUFFERS);
-	Vorbis_Free(&vorbis);
+	Vorbis_Free(vorbis);
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	Mem_Free(ogg);
+	Mem_Free(vorbis);
+#endif
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }
 
