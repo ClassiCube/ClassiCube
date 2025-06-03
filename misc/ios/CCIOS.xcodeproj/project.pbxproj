@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9A4D0C642BDD168800E1695D /* TouchUI.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A4D0C632BDD168800E1695D /* TouchUI.c */; };
-		9A57ECEE2BCD1408006A89F0 /* AudioBackend.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECED2BCD1408006A89F0 /* AudioBackend.c */; };
+		9A57ECEE2BCD1408006A89F0 /* Audio_OpenAL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECED2BCD1408006A89F0 /* Audio_OpenAL.c */; };
 		9A57ECF02BCD1413006A89F0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECEF2BCD1412006A89F0 /* main.c */; };
 		9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A62ADF4286D906F00E5E3DE /* Assets.xcassets */; };
 		9A6C79652BFDDEF200676D27 /* FancyLighting.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79642BFDDEF100676D27 /* FancyLighting.c */; };
@@ -100,7 +100,7 @@
 
 /* Begin PBXFileReference section */
 		9A4D0C632BDD168800E1695D /* TouchUI.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TouchUI.c; sourceTree = "<group>"; };
-		9A57ECED2BCD1408006A89F0 /* AudioBackend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AudioBackend.c; sourceTree = "<group>"; };
+		9A57ECED2BCD1408006A89F0 /* Audio_OpenAL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Audio_OpenAL.c; sourceTree = "<group>"; };
 		9A57ECEF2BCD1412006A89F0 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ClassiCube/Assets.xcassets; sourceTree = "<group>"; };
 		9A6C79642BFDDEF100676D27 /* FancyLighting.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FancyLighting.c; sourceTree = "<group>"; };
@@ -232,7 +232,7 @@
 				9A6C79642BFDDEF100676D27 /* FancyLighting.c */,
 				9A4D0C632BDD168800E1695D /* TouchUI.c */,
 				9A57ECEF2BCD1412006A89F0 /* main.c */,
-				9A57ECED2BCD1408006A89F0 /* AudioBackend.c */,
+				9A57ECED2BCD1408006A89F0 /* Audio_OpenAL.c */,
 				9A7401DA2B7384060040E575 /* SSL.c */,
 				9A7401D82B737D5B0040E575 /* Commands.c */,
 				9AC543412AE264B90086C85F /* EntityRenderers.c */,
@@ -428,7 +428,7 @@
 				9A89D55F27F802F600FF3F80 /* _sfnt.c in Sources */,
 				9A89D55527F802F600FF3F80 /* HeldBlockRenderer.c in Sources */,
 				9A89D4FD27F802F600FF3F80 /* ExtMath.c in Sources */,
-				9A57ECEE2BCD1408006A89F0 /* AudioBackend.c in Sources */,
+				9A57ECEE2BCD1408006A89F0 /* Audio_OpenAL.c in Sources */,
 				9A89D56427F802F600FF3F80 /* String.c in Sources */,
 				9A89D57D27F802F600FF3F80 /* _smooth.c in Sources */,
 				9AC543402AE264AC0086C85F /* GameVersion.c in Sources */,

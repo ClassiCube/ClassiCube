@@ -100,7 +100,7 @@ add_library(classicube SHARED
         ../../src/SystemFonts.c
         ../../src/Commands.c
         ../../src/EntityRenderers.c
-        ../../src/AudioBackend.c
+        ../../src/Audio_SLES.c
         ../../src/TouchUI.c
         ../../src/LBackend_Android.c
         ../../src/InputHandler.c

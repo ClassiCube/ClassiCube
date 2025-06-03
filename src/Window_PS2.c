@@ -77,7 +77,7 @@ static void ResetDisplay(void) {
 	fb_colors[0].width   = DisplayInfo.Width;
 	fb_colors[0].height  = DisplayInfo.Height;
 	fb_colors[0].mask    = 0;
-	fb_colors[0].psm     = GS_PSM_32;
+	fb_colors[0].psm     = GS_PSM_24;
 	fb_colors[0].address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm, GRAPH_ALIGN_PAGE);
 
 	fb_depth.enable      = 1;
@@ -89,7 +89,7 @@ static void ResetDisplay(void) {
 	fb_colors[1].width   = DisplayInfo.Width;
 	fb_colors[1].height  = DisplayInfo.Height;
 	fb_colors[1].mask    = 0;
-	fb_colors[1].psm     = GS_PSM_32;
+	fb_colors[1].psm     = GS_PSM_24;
 	fb_colors[1].address = graph_vram_allocate(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm, GRAPH_ALIGN_PAGE);
 }
 
