@@ -11,15 +11,15 @@ extern struct IGameComponent Audio_Component;
 struct AudioContext;
 
 #ifdef CC_BUILD_WEBAUDIO
-#define DEFAULT_SOUNDS_VOLUME   0
+	#define DEFAULT_SOUNDS_VOLUME   0
 #else
-#define DEFAULT_SOUNDS_VOLUME 100
+	#define DEFAULT_SOUNDS_VOLUME 100
 #endif
 
 #ifdef CC_BUILD_NOMUSIC
-#define DEFAULT_MUSIC_VOLUME   0
+	#define DEFAULT_MUSIC_VOLUME   0
 #else
-#define DEFAULT_MUSIC_VOLUME 100
+	#define DEFAULT_MUSIC_VOLUME 100
 #endif
 
 union AudioChunkMeta { void* ptr; cc_uintptr val; };
