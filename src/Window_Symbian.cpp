@@ -423,6 +423,10 @@ static int ConvertKey(TInt aScanCode) {
 		return CCKEY_ENTER;
 	}
 	
+	if (aScanCode >= INPUT_COUNT) {
+		return INPUT_NONE;
+	}
+
 	return aScanCode;
 }
 
