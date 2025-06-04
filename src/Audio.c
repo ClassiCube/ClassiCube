@@ -358,15 +358,16 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	struct AudioChunk chunks[AUDIO_MAX_BUFFERS] = { 0 };
 	int inUse, i, cur;
 	cc_result res;
+
 #if CC_BUILD_MAXSTACK <= (64 * 1024)
 	struct VorbisState* vorbis = (struct VorbisState*)Mem_TryAllocCleared(1, sizeof(struct VorbisState));
 	struct OggState* ogg = (struct OggState*)Mem_TryAllocCleared(1, sizeof(struct OggState));
 	if (!vorbis || !ogg) return ERR_OUT_OF_MEMORY;
 #else
 	struct OggState _ogg;
-	struct OggState* ogg = &ogg;
+	struct OggState* ogg = &_ogg;
 	struct VorbisState _vorbis;
-	struct VorbisState* vorbis = &vorbis;
+	struct VorbisState* vorbis = &_vorbis;
 #endif
 
 	Ogg_Init(ogg, source);
