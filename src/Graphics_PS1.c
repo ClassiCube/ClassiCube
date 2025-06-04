@@ -340,6 +340,8 @@ static int VRAM_CalcPage(int line) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+#define MAX_PALETTE_ENTRIES 16
+
 static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
 	for (int i = 0; i < pal_count; i++) 
 	{
@@ -349,20 +351,21 @@ static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol 
 }
 
 static CC_INLINE int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
-	int pal_count = 0;
-	if (bmp->width < 16 || bmp->height < 16) return 0;
+	int width = bmp->width, height = bmp->height;
+	if (width < 16 || height < 16) return 0;
+
+	BitmapCol* row = bmp->scan0;
+	int pal_count  = 0;
 	
-	for (int y = 0; y < bmp->height; y++)
+	for (int y = 0; y < height; y++, row += rowWidth)
 	{
-		BitmapCol* row = bmp->scan0 + y * rowWidth;
-		
-		for (int x = 0; x < bmp->width; x++) 
+		for (int x = 0; x < width; x++) 
 		{
 			BitmapCol color = row[x];
 			int idx = FindInPalette(palette, pal_count, color);
 			if (idx >= 0) continue;
 
-			if (pal_count >= 16) return -1;
+			if (pal_count >= MAX_PALETTE_ENTRIES) return -1;
 
 			palette[pal_count] = color;
 			pal_count++;
@@ -399,11 +402,14 @@ static void CreateFullTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth) 
 static void CreatePalettedTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
 	cc_uint8* dst  = (cc_uint8*)tmp;
 	BitmapCol* src = bmp->scan0;
-	int stride = (bmp->width * 2) >> 2;
 
-	for (int y = 0; y < bmp->height; y++)
+	int stride = (bmp->width * 2) >> 2;
+	int width  = bmp->width;
+	int height = bmp->height;
+
+	for (int y = 0; y < height; y++)
 	{
-		for (int x = 0; x < bmp->width; x++) 
+		for (int x = 0; x < width; x++) 
 		{
 			int idx = FindInPalette(palette, pal_count, src[x]);
 			
@@ -420,7 +426,9 @@ static void CreatePalettedTexture(BitmapCol* tmp, struct Bitmap* bmp, int rowWid
 }
 
 static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
-	BitmapCol palette[16]; // = (BitmapCol*)SCRATCHPAD_MEM; TODO doesn't work
+	// Store palette in scratchpad memory, as it's faster to read from
+	// https://jsgroth.dev/blog/posts/ps1-cpu/#timings
+	BitmapCol* palette = (BitmapCol*)SCRATCHPAD_MEM;
 	int pal_count = CalcPalette(palette, bmp, rowWidth);
 
 	cc_uint16* tmp;
@@ -466,7 +474,11 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 		int clutX = i % 20;
 		int clutY = i / 20 + 490;
 		tex->clut = GP0_CMD_CLUT_XY(clutX, clutY);
-		Gfx_TransferToVRAM(clutX * 16, clutY, 16, 1, palette);
+
+		// DMA cannot copy data from scratchpad memory, so copy palette onto stack
+		BitmapCol pal[16]; 
+		Mem_Copy(pal, palette, sizeof(pal));
+		Gfx_TransferToVRAM(clutX * 16, clutY, 16, 1, pal);
 
 		CreatePalettedTexture(tmp, bmp, rowWidth, palette, pal_count);
 	} else {
