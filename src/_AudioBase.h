@@ -84,8 +84,8 @@ static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, struct Aud
 }
 #endif
 
-#ifdef AUDIO_COMMON_ALLOC
-static cc_result AudioBase_AllocChunks(int size, struct AudioChunk* chunks, int numChunks) {
+#ifndef AUDIO_OVERRIDE_ALLOC
+cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
 	cc_uint8* dst = (cc_uint8*)Mem_TryAlloc(numChunks, size);
 	int i;
 	if (!dst) return ERR_OUT_OF_MEMORY;
@@ -98,7 +98,7 @@ static cc_result AudioBase_AllocChunks(int size, struct AudioChunk* chunks, int 
 	return 0;
 }
 
-static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks) {
+void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	Mem_Free(chunks[0].data);
 }
 #endif

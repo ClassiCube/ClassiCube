@@ -6,7 +6,6 @@ static cc_bool ax_inited;
 
 struct AudioContext { int count; };
 
-#define AUDIO_COMMON_ALLOC
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) {
@@ -63,14 +62,6 @@ static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) 
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	return false;
-}
-
-cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	return AudioBase_AllocChunks(size, chunks, numChunks);
-}
-
-void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 

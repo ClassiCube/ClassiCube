@@ -19,6 +19,7 @@ struct AudioContext {
 	int channels, sampleRate, volume;
 	cc_bool makeAvailable;
 };
+#define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) {

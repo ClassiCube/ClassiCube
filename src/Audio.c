@@ -20,14 +20,14 @@
 
 int Audio_SoundsVolume, Audio_MusicVolume;
 
+const char* const Sound_Names[SOUND_COUNT] = {
+	"none", "wood", "gravel", "grass", "stone",
+	"metal", "glass", "cloth", "sand", "snow",
+};
+
 const cc_string Sounds_ZipPathMC = String_FromConst("audio/default.zip");
 const cc_string Sounds_ZipPathCC = String_FromConst("audio/classicube.zip");
 static const cc_string audio_dir = String_FromConst("audio");
-
-struct Sound {
-	int channels, sampleRate;
-	struct AudioChunk chunk;
-};
 
 
 /*########################################################################################################################*
@@ -46,14 +46,6 @@ static void Sounds_Start(void) {
 void Audio_PlayDigSound(cc_uint8 type)  { }
 void Audio_PlayStepSound(cc_uint8 type) { }
 #else
-#define AUDIO_MAX_SOUNDS 10
-
-struct SoundGroup {
-	int count;
-	struct Sound sounds[AUDIO_MAX_SOUNDS];
-};
-struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
-
 static struct Soundboard digBoard, stepBoard;
 static RNGState sounds_rnd;
 

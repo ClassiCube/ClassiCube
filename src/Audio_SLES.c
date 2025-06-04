@@ -4,6 +4,7 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 #include "ExtMath.h"
+
 static SLObjectItf slEngineObject;
 static SLEngineItf slEngineEngine;
 static SLObjectItf slOutputObject;
@@ -18,7 +19,6 @@ struct AudioContext {
 	SLVolumeItf       playerVolume;
 };
 
-#define AUDIO_COMMON_ALLOC
 #include "_AudioBase.h"
 
 static SLresult (SLAPIENTRY *_slCreateEngine)(SLObjectItf* engine, SLuint32 numOptions, const SLEngineOption* engineOptions,
@@ -253,14 +253,6 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = GetError(res);
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
-}
-
-cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	return AudioBase_AllocChunks(size, chunks, numChunks);
-}
-
-void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 

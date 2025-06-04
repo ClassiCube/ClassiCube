@@ -34,6 +34,7 @@
 #include "HeldBlockRenderer.h"
 #include "Options.h"
 #include "Screens.h"
+#include "Audio.h"
 
 struct _ProtocolData Protocol;
 

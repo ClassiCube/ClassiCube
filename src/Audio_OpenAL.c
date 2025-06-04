@@ -37,8 +37,9 @@ static void   (APIENTRY *_alGenSources)(ALsizei n, ALuint* sources);
 static void   (APIENTRY *_alDeleteSources)(ALsizei n, const ALuint* sources);
 static void   (APIENTRY *_alGetSourcei)(ALuint source, ALenum param, ALint* value);
 static void   (APIENTRY *_alSourcef)(ALuint source, ALenum param, float value);
-static void   (APIENTRY *_alSourcePlay)(ALuint source);
-static void   (APIENTRY *_alSourceStop)(ALuint source);
+static void   (APIENTRY *_alSourcePlay) (ALuint source);
+static void   (APIENTRY *_alSourcePause)(ALuint source);
+static void   (APIENTRY *_alSourceStop) (ALuint source);
 static void   (APIENTRY *_alSourceQueueBuffers)(ALuint source, ALsizei nb, const ALuint* buffers);
 static void   (APIENTRY *_alSourceUnqueueBuffers)(ALuint source, ALsizei nb, ALuint* buffers);
 static void   (APIENTRY *_alGenBuffers)(ALsizei n, ALuint* buffers);
@@ -95,7 +96,8 @@ static cc_bool LoadALFuncs(void) {
 		DynamicLib_ReqSym(alSourcePlay),      DynamicLib_ReqSym(alSourceStop),
 		DynamicLib_ReqSym(alSourceQueueBuffers), DynamicLib_ReqSym(alSourceUnqueueBuffers),
 		DynamicLib_ReqSym(alGenBuffers),      DynamicLib_ReqSym(alDeleteBuffers),
-		DynamicLib_ReqSym(alBufferData),      DynamicLib_ReqSym(alDistanceModel)
+		DynamicLib_ReqSym(alBufferData),      DynamicLib_ReqSym(alDistanceModel),
+		DynamicLib_OptSym(alSourcePlay)
 	};
 	void* lib;
 	
@@ -226,6 +228,13 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return _alGetError();
 }
 
+cc_result Audio_Pause(struct AudioContext* ctx) {
+	if (!_alSourcePause) return ERR_NOT_SUPPORTED;
+
+	_alSourcePause(ctx->source);
+	return _alGetError();
+}
+
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	ALint processed = 0;
 	ALuint buffer;
@@ -269,14 +278,6 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = GetError(res);
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
-}
-
-cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	return AudioBase_AllocChunks(size, chunks, numChunks);
-}
-
-void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 

@@ -11,6 +11,7 @@ struct AudioContext {
 	AudioDriverWaveBuf bufs[AUDIO_MAX_BUFFERS];
 	int channels, sampleRate;
 };
+#define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
 static int channelIDs;

@@ -2,6 +2,8 @@
 
 #if CC_AUD_BACKEND == CC_AUD_BACKEND_NULL
 struct AudioContext { int count; };
+
+#define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) { return false; }

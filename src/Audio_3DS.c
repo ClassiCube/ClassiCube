@@ -10,6 +10,7 @@ struct AudioContext {
 	int sampleRate;
 	cc_bool stereo;
 };
+#define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
 static int channelIDs;

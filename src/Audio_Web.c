@@ -3,7 +3,7 @@
 #if defined CC_BUILD_WEBAUDIO
 struct AudioContext { int contextID, count, rate; void* data; };
 
-#define AUDIO_COMMON_ALLOC
+#define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
 extern int  interop_InitAudio(void);
@@ -68,14 +68,6 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 
 	String_AppendUtf8(dst, buffer, len);
 	return len > 0;
-}
-
-cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	return AudioBase_AllocChunks(size, chunks, numChunks);
-}
-
-void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 

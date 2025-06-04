@@ -26,7 +26,6 @@ struct AudioContext {
 };
 
 #define AUDIO_COMMON_VOLUME
-#define AUDIO_COMMON_ALLOC
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) { return true; }
@@ -158,14 +157,6 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	if (!buffer[0]) return false;
 	String_AppendConst(dst, buffer);
 	return true;
-}
-
-cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	return AudioBase_AllocChunks(size, chunks, numChunks);
-}
-
-void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 

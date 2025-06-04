@@ -19,6 +19,7 @@ struct AudioContext {
 	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
 	int count, sampleRate;
 };
+#define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) {

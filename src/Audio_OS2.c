@@ -5,7 +5,6 @@
 #include <string.h>
 #include <kai.h>
 
-#define AUDIO_COMMON_ALLOC
 #include "_AudioBase.h"
 
 struct AudioContext {
@@ -186,14 +185,6 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 		// TODO Query more error messages.
 		*dst = String_FromReadonly("Unknown Error");
 	return true;
-}
-
-cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	return AudioBase_AllocChunks(size, chunks, numChunks);
-}
-
-void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 
