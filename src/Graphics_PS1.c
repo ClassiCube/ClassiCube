@@ -446,8 +446,8 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
 	if (line == -1) { Mem_Free(tmp); return NULL; }
 	
-	tex->width  = bmp->width;  tex->u_shift = 10 - Math_ilog2(bmp->width);
-	tex->height = bmp->height; tex->v_shift = 10 - Math_ilog2(bmp->height);
+	tex->width  = bmp->width;  tex->u_shift = 8 - Math_ilog2(bmp->width);
+	tex->height = bmp->height; tex->v_shift = 8 - Math_ilog2(bmp->height);
 	tex->line   = line;
 	
 	int page   = VRAM_CalcPage(line);
@@ -613,7 +613,7 @@ struct PS1VertexTextured {
 	short vx, vy, vz, pad;
 	short xx, yy;
 	unsigned rgbc;
-	int u, v; 
+	short u, v; 
 };
 
 static VertexFormat buf_fmt;
@@ -623,7 +623,7 @@ static void* gfx_vertices;
 
 #define XYZInteger(value) ((value) >> 8)
 #define XYZFixed(value) ((int)((value) * (1 << 8)))
-#define UVFixed(value)  ((int)((value) * 1024.0f) & 0x3FF) // U/V wrapping not supported
+#define UVFixed(value)  ((int)((value) * 256.0f) & 0xFF) // U/V wrapping not supported
 
 static void PreprocessTexturedVertices(void) {
 	struct PS1VertexTextured* dst = gfx_vertices;
@@ -634,11 +634,11 @@ static void PreprocessTexturedVertices(void) {
 	//   i.e. U = (src->U * tex->width) % tex->width
 	// To avoid expensive floating point conversions,
 	//  convert the U coordinates to fixed point
-	//  (using 10 bits for the fractional coordinate)
-	// Converting from fixed point using 1024 as base
+	//  (using 8 bits for the fractional coordinate)
+	// Converting from fixed point using 256 as base
 	//  to tex->width/height as base is relatively simple:
-	//  value / 1024 = X / tex_size
-	//  X = value * tex_size / 1024
+	//  value / 256 = X / tex_size
+	//  X = value * tex_size / 256
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
 		int x = XYZFixed(src->x);

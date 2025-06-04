@@ -233,8 +233,7 @@ psp:
 vita:
 	$(MAKE) -f misc/vita/Makefile
 ps1:
-	cmake --preset default misc/ps1
-	cmake --build misc/ps1/build
+	$(MAKE) -f misc/ps1/Makefile
 ps2:
 	$(MAKE) -f misc/ps2/Makefile
 ps3:

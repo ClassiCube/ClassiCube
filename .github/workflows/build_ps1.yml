@@ -24,9 +24,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y curl
-          export PSNOOB=/usr/local/psnoob
-          export PATH=$PATH:$PSNOOB/bin
-          export PSN00BSDK_LIBS=$PSNOOB/lib/libpsn00b
+          export PSN00BSDK_ROOT=/usr/local/psnoob
           make ps1
 
 
@@ -40,25 +38,25 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'misc/ps1/build/ClassiCube-PS1.elf'
+          SOURCE_FILE: 'build-ps1/ClassiCube-PS1.elf'
           DEST_NAME: 'ClassiCube-PS1.elf'
 
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'misc/ps1/build/ClassiCube-PS1.exe'
+          SOURCE_FILE: 'ClassiCube-ps1.exe'
           DEST_NAME: 'ClassiCube-PS1.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'misc/ps1/build/ClassiCube-PS1.bin'
+          SOURCE_FILE: 'ClassiCube-ps1.bin'
           DEST_NAME: 'ClassiCube-PS1.bin'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'misc/ps1/build/ClassiCube-PS1.cue'
+          SOURCE_FILE: 'ClassiCube-ps1.cue'
           DEST_NAME: 'ClassiCube-PS1.cue'
           
           
