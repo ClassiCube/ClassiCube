@@ -31,6 +31,10 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return ERR_NOT_SUPPORTED;
 }
 
+cc_result Audio_Pause(struct AudioContext* ctx) {
+	return ERR_NOT_SUPPORTED;
+}
+
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return ERR_NOT_SUPPORTED;
 }
