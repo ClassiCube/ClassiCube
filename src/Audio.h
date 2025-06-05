@@ -55,6 +55,7 @@ void Audio_PlayStepSound(cc_uint8 type);
 cc_bool AudioBackend_Init(void);
 void    AudioBackend_Tick(void);
 void    AudioBackend_Free(void);
+void    AudioBackend_LoadSounds();
 
 #define AUDIO_USAGE_BUFFER 0x01
 #define AUDIO_USAGE_STREAM 0x02
@@ -114,6 +115,9 @@ struct SoundGroup {
 	struct Sound sounds[AUDIO_MAX_SOUNDS];
 };
 struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
+
+extern struct Soundboard digBoard, stepBoard;
+void Sounds_LoadDefault(void);
 
 CC_END_HEADER
 #endif

@@ -3,6 +3,7 @@
 #if CC_AUD_BACKEND == CC_AUD_BACKEND_NULL
 struct AudioContext { int count; };
 
+#define AUDIO_OVERRIDE_SOUNDS
 #define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
@@ -43,5 +44,8 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 }
 
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) { }
+
+
+void AudioBackend_LoadSounds(void) { }
 #endif
 
