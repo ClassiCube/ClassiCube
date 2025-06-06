@@ -465,13 +465,14 @@ static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol 
 }
 
 static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
-	int pal_count = 0;
+	int width = bmp->width, height = bmp->height;
+
+	BitmapCol* row = bmp->scan0;
+	int pal_count  = 0;
 	
-	for (int y = 0; y < bmp->height; y++)
+	for (int y = 0; y < height; y++, row += rowWidth)
 	{
-		BitmapCol* row = bmp->scan0 + y * rowWidth;
-		
-		for (int x = 0; x < bmp->width; x++) 
+		for (int x = 0; x < width; x++) 
 		{
 			BitmapCol color = row[x];
 			int idx = FindInPalette(palette, pal_count, color);

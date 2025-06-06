@@ -168,7 +168,8 @@ static CC_INLINE void DMAFlushBuffer(void) {
 *#########################################################################################################################*/
 typedef struct CCTexture_ {
 	cc_uint32 width, height;
-	cc_uint32 log2_width, log2_height;
+	cc_uint16 log2_width, log2_height;
+	cc_uint16 format, pal_index;
 	cc_uint32 pad[(64 - 16)/4];
 	BitmapCol pixels[]; // aligned to 64 bytes (only need 16?)
 } CCTexture;
@@ -181,6 +182,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->height      = bmp->height;
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
+	tex->format      = GS_PSM_32;
+	tex->pal_index   = 0;
 	
 	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
 					bmp, rowWidth * BITMAPCOLOR_SIZE);
@@ -191,7 +194,7 @@ static void UpdateTextureBuffer(int context, CCTexture* tex, unsigned buf_addr, 
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
-	PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, GS_PSM_32,
+	PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
 							   tex->log2_width, tex->log2_height, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
 							   0, 0, CLUT_STORAGE_MODE1, 0, CLUT_NO_LOAD), GS_REG_TEX0 + context);
 	q++;
@@ -214,10 +217,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 	qword_t *Q = packet->data;
 
-	Q = draw_texture_transfer(Q, tex->pixels, tex->width, tex->height, GS_PSM_32, dst_addr, dst_stride);
+	Q = draw_texture_transfer(Q, tex->pixels, tex->width, tex->height, tex->buffer, dst_addr, dst_stride);
 	Q = draw_texture_flush(Q);
 
-	dma_channel_send_chain(DMA_CHANNEL_GIF,packet->data, Q - packet->data, 0,0);
+	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, Q - packet->data, 0,0);
 	dma_wait_fast();
 
 	packet_free(packet);
