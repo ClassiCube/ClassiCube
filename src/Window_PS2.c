@@ -328,21 +328,16 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	packet_free(packet);
 }
 
+extern void Gfx_TransferPixels(void* src, int src_width, int src_height, 
+								int format, unsigned dst_addr, unsigned dst_stride);
+
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// FlushCache bios call https://psi-rockin.github.io/ps2tek/
 	//   mode=0: Flush data cache (invalidate+writeback dirty contents to memory)
 	FlushCache(0);
 	
-	packet_t* packet = packet_init(200, PACKET_NORMAL);
-	qword_t* q = packet->data;
-
-	q = draw_texture_transfer(q, bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
-								 fb_colors[0].address, fb_colors[0].width);
-	q = draw_texture_flush(q);
-
-	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
-	dma_wait_fast();
-	packet_free(packet);
+	Gfx_TransferPixels(bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
+						fb_colors[0].address, fb_colors[0].width);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
