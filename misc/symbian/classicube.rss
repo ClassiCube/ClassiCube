@@ -9,6 +9,8 @@ NAME	CUBE
 RESOURCE RSS_SIGNATURE { }
 RESOURCE TBUF { buf="ClassiCube"; }
 
+RESOURCE EIK_APP_INFO { }
+
 rls_string STRING_app_caption_string "ClassiCube"
 rls_string STRING_app_short_caption_string "ClassiCube"
 

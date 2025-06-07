@@ -228,7 +228,59 @@ static void Launcher_Free(void) {
 
 	CloseActiveScreen();
 	LBackend_FreeFramebuffer();
+	Launcher_ShouldExit = false;
+
+#ifdef CC_BUILD_MOBILE
+	/* Reset components */
+	Platform_LogConst("undoing components");
+	Drawer2D_Component.Free();
+	Http_Component.Free();
+#endif
+
+	if (Launcher_ShouldUpdate) {
+		const char* action;
+		cc_result res = Updater_Start(&action);
+		if (res) Logger_SysWarn(res, action);
+	}
 }
+
+static CC_INLINE cc_bool Launcher_DrawFrame() {
+	Window_ProcessEvents(10 / 1000.0f);
+	Gamepad_Tick(10 / 1000.0f);
+	
+	if (!Window_Main.Exists || Launcher_ShouldExit) {
+		return false;
+	}
+
+	Launcher_Active->Tick(Launcher_Active);
+	LBackend_Tick();
+	Thread_Sleep(10);
+	
+	return true;
+}
+
+#if defined CC_BUILD_SYMBIAN
+cc_bool Launcher_DoFrame() {
+	if (!Launcher_DrawFrame()) {
+		Options_SaveIfChanged();
+		Launcher_Free();
+		return false;
+	}
+	
+	return true;
+}
+
+static void Launcher_RunLoop(void) {
+	/* Implemented in Window_Symbian.cpp */
+}
+#else
+static void Launcher_RunLoop(void) {
+	while (Launcher_DrawFrame());
+
+	Options_SaveIfChanged();
+	Launcher_Free();
+}
+#endif
 
 void Launcher_Run(void) {
 	static const cc_string title = String_FromConst(GAME_APP_TITLE);
@@ -283,32 +335,7 @@ void Launcher_Run(void) {
 	MainScreen_SetActive();
 #endif
 
-	for (;;) {
-		Window_ProcessEvents(10 / 1000.0f);
-		Gamepad_Tick(10 / 1000.0f);
-		if (!Window_Main.Exists || Launcher_ShouldExit) break;
-
-		Launcher_Active->Tick(Launcher_Active);
-		LBackend_Tick();
-		Thread_Sleep(10);
-	}
-
-	Options_SaveIfChanged();
-	Launcher_Free();
-	Launcher_ShouldExit = false;
-
-#ifdef CC_BUILD_MOBILE
-	/* Reset components */
-	Platform_LogConst("undoing components");
-	Drawer2D_Component.Free();
-	Http_Component.Free();
-#endif
-
-	if (Launcher_ShouldUpdate) {
-		const char* action;
-		cc_result res = Updater_Start(&action);
-		if (res) Logger_SysWarn(res, action);
-	}
+	Launcher_RunLoop();
 	Window_Destroy();
 }
 
