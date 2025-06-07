@@ -55,7 +55,7 @@ void Audio_PlayStepSound(cc_uint8 type);
 cc_bool AudioBackend_Init(void);
 void    AudioBackend_Tick(void);
 void    AudioBackend_Free(void);
-void    AudioBackend_LoadSounds();
+void    AudioBackend_LoadSounds(void);
 
 #define AUDIO_USAGE_BUFFER 0x01
 #define AUDIO_USAGE_STREAM 0x02
@@ -93,6 +93,13 @@ void Audio_Warn(cc_result res, const char* action);
 
 cc_result AudioPool_Play(struct AudioData* data);
 void AudioPool_Close(void);
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+/* Plays the given audio sound sample */
+cc_result SoundContext_Play(struct AudioContext* ctx, struct AudioData* data);
 
 
 /*########################################################################################################################*

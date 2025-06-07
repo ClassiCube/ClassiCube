@@ -108,6 +108,24 @@ void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 void AudioBackend_LoadSounds(void) { Sounds_LoadDefault(); }
 #endif
 
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+#ifndef CC_BUILD_NOSOUNDS
+cc_result SoundContext_Play(struct AudioContext* ctx, struct AudioData* data) {
+    cc_result res;
+    Audio_SetVolume(ctx, data->volume);
+
+	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
+	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
+	if ((res = Audio_Play(ctx))) return res;
+
+	return 0;
+}
+#endif
+
+
 /*########################################################################################################################*
 *---------------------------------------------------Audio context code----------------------------------------------------*
 *#########################################################################################################################*/
@@ -116,16 +134,6 @@ struct AudioContext music_ctx;
 static struct AudioContext context_pool[POOL_MAX_CONTEXTS];
 
 #ifndef CC_BUILD_NOSOUNDS
-static cc_result PlayAudio(struct AudioContext* ctx, struct AudioData* data) {
-    cc_result res;
-    Audio_SetVolume(ctx, data->volume);
-
-	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
-	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
-	return 0;
-}
-
 cc_result AudioPool_Play(struct AudioData* data) {
 	struct AudioContext* ctx;
 	int inUse, i;
@@ -140,7 +148,7 @@ cc_result AudioPool_Play(struct AudioData* data) {
 		if (inUse > 0) continue;
 		
 		if (!Audio_FastPlay(ctx, data)) continue;
-		return PlayAudio(ctx, data);
+		return SoundContext_Play(ctx, data);
 	}
 
 	/* Try again with all contexts, even if need to recreate one (expensive) */
@@ -151,7 +159,7 @@ cc_result AudioPool_Play(struct AudioData* data) {
 		if (res) return res;
 		if (inUse > 0) continue;
 
-		return PlayAudio(ctx, data);
+		return SoundContext_Play(ctx, data);
 	}
 	return 0;
 }

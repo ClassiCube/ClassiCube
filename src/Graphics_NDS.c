@@ -308,7 +308,7 @@ void Gfx_DisableTextureOffset(void) {
 	UpdateTextureMatrix();
 }
 
-static CC_INLINE int FindInPalette(cc_uint16* pal, int pal_size, cc_uint16 color) {
+static CC_INLINE int FindInPalette(BitmapCol* pal, int pal_size, BitmapCol color) {
 	if ((color >> 15) == 0) return 0;
 	
 	for (int i = 1; i < pal_size; i++) 
@@ -320,7 +320,7 @@ static CC_INLINE int FindInPalette(cc_uint16* pal, int pal_size, cc_uint16 color
 
 static CC_INLINE int CalcPalette(cc_uint16* palette, struct Bitmap* bmp, int rowWidth) {
 	int width = bmp->width, height = bmp->height;
-	cc_uint16* row = bmp->scan0;
+	BitmapCol* row = bmp->scan0;
 
 	int pal_count = 1;
 	palette[0]    = 0; // entry 0 is transparent colour
@@ -329,7 +329,7 @@ static CC_INLINE int CalcPalette(cc_uint16* palette, struct Bitmap* bmp, int row
 	{
 		for (int x = 0; x < width; x++) 
 		{
-			cc_uint16 color = row[x];
+			BitmapCol color = row[x];
 			int idx = FindInPalette(palette, pal_count, color);
 			if (idx >= 0) continue;
 
@@ -349,7 +349,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
 
-	cc_uint16 palette[256];
+	BitmapCol palette[256];
 	int pal_count = CalcPalette(palette, bmp, rowWidth);
 	int tex_size, tex_fmt;
 
@@ -374,7 +374,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	}
 
 	int offset = tex->texBase * TEX_BLOCK_SIZE;
-	u16* addr  = (u16*) ((u8*)VRAM_A + offset);
+	u16* addr  = (u16*)((u8*)VRAM_A + offset);
 	u16* tmp_u16[128]; // 256 bytes
 	char* tmp = (char*)tmp_u16;
 
@@ -382,7 +382,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	int stride;
 
 	int width = bmp->width, height = bmp->height;
-	cc_uint16* row = bmp->scan0;
+	BitmapCol* row = bmp->scan0;
 
 	if (tex_fmt == GL_RGB4) {
 		stride = width >> 3;

@@ -152,7 +152,7 @@ void Gfx_Create(void) {
 	Gfx.MinTexHeight = 4;	
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
-	Gfx.MaxTexSize   = 512 * 512;
+	Gfx.MaxTexSize   = 256 * 256;
 	Gfx.Created      = true;
 	
 	Gfx_RestoreState();
