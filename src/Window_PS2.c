@@ -328,8 +328,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	packet_free(packet);
 }
 
-extern void Gfx_TransferPixels(void* src, int src_width, int src_height, 
-								int format, unsigned dst_addr, unsigned dst_stride);
+extern void Gfx_TransferPixels(void* src, int width, int height, 
+								int format, unsigned dst_base, unsigned dst_stride);
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// FlushCache bios call https://psi-rockin.github.io/ps2tek/
