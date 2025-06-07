@@ -10,9 +10,6 @@ void Audio_Warn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
 
-/* Whether the given audio data can be played without recreating the underlying audio device */
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
-
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(sampleRate, playbackRate) ((sampleRate * playbackRate) / 100)
 
@@ -112,8 +109,8 @@ void AudioBackend_LoadSounds(void) { Sounds_LoadDefault(); }
 /*########################################################################################################################*
 *------------------------------------------------------Sound context------------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef CC_BUILD_NOSOUNDS
-cc_result SoundContext_Play(struct AudioContext* ctx, struct AudioData* data) {
+#ifndef AUDIO_OVERRIDE_SOUNDPLAY
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
     cc_result res;
     Audio_SetVolume(ctx, data->volume);
 
@@ -140,33 +137,36 @@ cc_result AudioPool_Play(struct AudioData* data) {
 	cc_result res;
 
 	/* Try to play on a context that doesn't need to be recreated */
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
+	{
 		ctx = &context_pool[i];
 		if (!ctx->count && (res = Audio_Init(ctx, 1))) return res;
 
 		if ((res = Audio_Poll(ctx, &inUse))) return res;
 		if (inUse > 0) continue;
 		
-		if (!Audio_FastPlay(ctx, data)) continue;
-		return SoundContext_Play(ctx, data);
+		if (!SoundContext_FastPlay(ctx, data)) continue;
+		return SoundContext_PlayData(ctx, data);
 	}
 
 	/* Try again with all contexts, even if need to recreate one (expensive) */
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
+	{
 		ctx = &context_pool[i];
 		res = Audio_Poll(ctx, &inUse);
 
 		if (res) return res;
 		if (inUse > 0) continue;
 
-		return SoundContext_Play(ctx, data);
+		return SoundContext_PlayData(ctx, data);
 	}
 	return 0;
 }
 
 void AudioPool_Close(void) {
 	int i;
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++)
+	{
 		Audio_Close(&context_pool[i]);
 	}
 }

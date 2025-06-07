@@ -256,11 +256,19 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = ctx->count - ctx->free; return 0;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 static const char* GetError(cc_result res) {
 	switch (res) {
 	case AL_ERR_INIT_CONTEXT:  return "Failed to init OpenAL context";

@@ -58,11 +58,19 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return interop_AudioPoll(ctx->contextID, inUse);
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	char buffer[NATIVE_STR_LEN];
 	int len = interop_AudioDescribe(res, buffer, NATIVE_STR_LEN);
@@ -72,6 +80,9 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------------Sounds---------------------------------------------------------*
+*#########################################################################################################################*/
 static const struct SoundID { int group; const char* name; } sounds_list[] =
 {
 	{ SOUND_CLOTH,  "step_cloth1"  }, { SOUND_CLOTH,  "step_cloth2"  }, { SOUND_CLOTH,  "step_cloth3"  }, { SOUND_CLOTH,  "step_cloth4"  },

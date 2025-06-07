@@ -223,10 +223,18 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return res;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return !ctx->channels || (ctx->channels == data->channels && ctx->sampleRate == data->sampleRate);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 static const char* GetError(cc_result res) {
 	switch (res) {
 	case SL_RESULT_PRECONDITIONS_VIOLATED: return "Preconditions violated";

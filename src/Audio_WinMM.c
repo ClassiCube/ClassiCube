@@ -144,12 +144,19 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 }
 
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	int channels   = data->channels;
 	int sampleRate = Audio_AdjustSampleRate(data->sampleRate, data->rate);
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	char buffer[NATIVE_STR_LEN] = { 0 };
 	waveOutGetErrorTextA(res, buffer, NATIVE_STR_LEN);

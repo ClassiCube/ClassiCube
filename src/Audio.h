@@ -98,8 +98,10 @@ void AudioPool_Close(void);
 /*########################################################################################################################*
 *------------------------------------------------------Sound context------------------------------------------------------*
 *#########################################################################################################################*/
-/* Plays the given audio sound sample */
-cc_result SoundContext_Play(struct AudioContext* ctx, struct AudioData* data);
+/* Whether the given audio data can be played without recreating the underlying audio device */
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data);
+/* Plays the given audio data */
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data);
 
 
 /*########################################################################################################################*

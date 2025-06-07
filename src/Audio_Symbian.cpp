@@ -260,10 +260,6 @@ void AudioBackend_Tick(void) { }
 
 void AudioBackend_Free(void) { }
 
-cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
-	return false;
-}
-
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	TRAPD(err, ctx->stream = CAudioStream::NewL(ctx));
 	if (err != KErrNone) {
@@ -361,10 +357,22 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return 0;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	int channels   = data->channels;
 	int sampleRate = Audio_AdjustSampleRate(data->sampleRate, data->rate);
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
 }
 #endif
 

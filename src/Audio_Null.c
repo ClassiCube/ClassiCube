@@ -5,6 +5,7 @@ struct AudioContext { int count; };
 
 #define AUDIO_OVERRIDE_SOUNDS
 #define AUDIO_OVERRIDE_ALLOC
+#define AUDIO_OVERRIDE_SOUNDPLAY
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) { return false; }
@@ -39,8 +40,20 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return ERR_NOT_SUPPORTED;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
 
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
+
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	return ERR_NOT_SUPPORTED;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) { return false; }
 
 cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
@@ -50,6 +63,9 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) { }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------------Sounds---------------------------------------------------------*
+*#########################################################################################################################*/
 void AudioBackend_LoadSounds(void) { }
 #endif
 
