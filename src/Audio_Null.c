@@ -5,7 +5,6 @@ struct AudioContext { int count; };
 
 #define AUDIO_OVERRIDE_SOUNDS
 #define AUDIO_OVERRIDE_ALLOC
-#define AUDIO_OVERRIDE_SOUNDPLAY
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) { return false; }
@@ -47,6 +46,10 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
 
 cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
 	return ERR_NOT_SUPPORTED;
 }
 

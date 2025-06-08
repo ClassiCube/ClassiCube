@@ -107,23 +107,6 @@ void AudioBackend_LoadSounds(void) { Sounds_LoadDefault(); }
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Sound context------------------------------------------------------*
-*#########################################################################################################################*/
-#ifndef AUDIO_OVERRIDE_SOUNDPLAY
-cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-    cc_result res;
-    Audio_SetVolume(ctx, data->volume);
-
-	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
-	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
-
-	return 0;
-}
-#endif
-
-
-/*########################################################################################################################*
 *---------------------------------------------------Audio context code----------------------------------------------------*
 *#########################################################################################################################*/
 struct AudioContext music_ctx;
@@ -133,8 +116,9 @@ static struct AudioContext context_pool[POOL_MAX_CONTEXTS];
 #ifndef CC_BUILD_NOSOUNDS
 cc_result AudioPool_Play(struct AudioData* data) {
 	struct AudioContext* ctx;
-	int inUse, i;
+	cc_bool isBusy;
 	cc_result res;
+	int i;
 
 	/* Try to play on a context that doesn't need to be recreated */
 	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
@@ -142,8 +126,8 @@ cc_result AudioPool_Play(struct AudioData* data) {
 		ctx = &context_pool[i];
 		if (!ctx->count && (res = Audio_Init(ctx, 1))) return res;
 
-		if ((res = Audio_Poll(ctx, &inUse))) return res;
-		if (inUse > 0) continue;
+		if ((res = SoundContext_PollBusy(ctx, &isBusy))) return res;
+		if (isBusy) continue;
 		
 		if (!SoundContext_FastPlay(ctx, data)) continue;
 		return SoundContext_PlayData(ctx, data);
@@ -153,10 +137,10 @@ cc_result AudioPool_Play(struct AudioData* data) {
 	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
 	{
 		ctx = &context_pool[i];
-		res = Audio_Poll(ctx, &inUse);
+		res = SoundContext_PollBusy(ctx, &isBusy);
 
 		if (res) return res;
-		if (inUse > 0) continue;
+		if (isBusy) continue;
 
 		return SoundContext_PlayData(ctx, data);
 	}
