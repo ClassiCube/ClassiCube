@@ -41,6 +41,30 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Stream context-----------------------------------------------------*
+*#########################################################################################################################*/
+cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	return Audio_SetFormat(ctx, channels, sampleRate, playbackRate);
+}
+
+cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	return Audio_QueueChunk(ctx, chunk); 
+}
+
+cc_result StreamContext_Play(struct AudioContext* ctx) {
+	return Audio_Play(ctx);
+}
+
+cc_result StreamContext_Pause(struct AudioContext* ctx) {
+	return Audio_Pause(ctx);
+}
+
+cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
+	return Audio_Poll(ctx, inUse);
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Sound context------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }

@@ -13,6 +13,12 @@ void Audio_Warn(cc_result res, const char* action) {
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(sampleRate, playbackRate) ((sampleRate * playbackRate) / 100)
 
+static cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate);
+static cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk);
+static cc_result Audio_Play(struct AudioContext* ctx);
+static cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
+static cc_result Audio_Pause(struct AudioContext* ctx);
+
 
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
@@ -128,8 +134,9 @@ cc_result AudioPool_Play(struct AudioData* data) {
 
 		if ((res = SoundContext_PollBusy(ctx, &isBusy))) return res;
 		if (isBusy) continue;
-		
 		if (!SoundContext_FastPlay(ctx, data)) continue;
+
+		Audio_SetVolume(ctx, data->volume);
 		return SoundContext_PlayData(ctx, data);
 	}
 
@@ -142,6 +149,7 @@ cc_result AudioPool_Play(struct AudioData* data) {
 		if (res) return res;
 		if (isBusy) continue;
 
+		Audio_SetVolume(ctx, data->volume);
 		return SoundContext_PlayData(ctx, data);
 	}
 	return 0;
