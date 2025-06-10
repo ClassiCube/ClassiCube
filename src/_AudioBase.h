@@ -1,7 +1,6 @@
 #include "Audio.h"
 #include "String.h"
 #include "Logger.h"
-#include "Funcs.h"
 #include "Errors.h"
 #include "Utils.h"
 #include "Platform.h"
@@ -10,11 +9,13 @@ void Audio_Warn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
 
-/* Whether the given audio data can be played without recreating the underlying audio device */
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
-
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(sampleRate, playbackRate) ((sampleRate * playbackRate) / 100)
+
+static cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate);
+static cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk);
+static cc_result Audio_Play(struct AudioContext* ctx);
+static cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 
 
 /*########################################################################################################################*
@@ -110,23 +111,6 @@ void AudioBackend_LoadSounds(void) { Sounds_LoadDefault(); }
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Sound context------------------------------------------------------*
-*#########################################################################################################################*/
-#ifndef CC_BUILD_NOSOUNDS
-cc_result SoundContext_Play(struct AudioContext* ctx, struct AudioData* data) {
-    cc_result res;
-    Audio_SetVolume(ctx, data->volume);
-
-	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
-	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
-
-	return 0;
-}
-#endif
-
-
-/*########################################################################################################################*
 *---------------------------------------------------Audio context code----------------------------------------------------*
 *#########################################################################################################################*/
 struct AudioContext music_ctx;
@@ -136,37 +120,43 @@ static struct AudioContext context_pool[POOL_MAX_CONTEXTS];
 #ifndef CC_BUILD_NOSOUNDS
 cc_result AudioPool_Play(struct AudioData* data) {
 	struct AudioContext* ctx;
-	int inUse, i;
+	cc_bool isBusy;
 	cc_result res;
+	int i;
 
 	/* Try to play on a context that doesn't need to be recreated */
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
+	{
 		ctx = &context_pool[i];
 		if (!ctx->count && (res = Audio_Init(ctx, 1))) return res;
 
-		if ((res = Audio_Poll(ctx, &inUse))) return res;
-		if (inUse > 0) continue;
-		
-		if (!Audio_FastPlay(ctx, data)) continue;
-		return SoundContext_Play(ctx, data);
+		if ((res = SoundContext_PollBusy(ctx, &isBusy))) return res;
+		if (isBusy) continue;
+		if (!SoundContext_FastPlay(ctx, data)) continue;
+
+		Audio_SetVolume(ctx, data->volume);
+		return SoundContext_PlayData(ctx, data);
 	}
 
 	/* Try again with all contexts, even if need to recreate one (expensive) */
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
+	{
 		ctx = &context_pool[i];
-		res = Audio_Poll(ctx, &inUse);
+		res = SoundContext_PollBusy(ctx, &isBusy);
 
 		if (res) return res;
-		if (inUse > 0) continue;
+		if (isBusy) continue;
 
-		return SoundContext_Play(ctx, data);
+		Audio_SetVolume(ctx, data->volume);
+		return SoundContext_PlayData(ctx, data);
 	}
 	return 0;
 }
 
 void AudioPool_Close(void) {
 	int i;
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++)
+	{
 		Audio_Close(&context_pool[i]);
 	}
 }
