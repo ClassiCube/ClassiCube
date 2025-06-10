@@ -136,9 +136,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	{
 		buf = &ctx->bufs[i];
 		cc_uint32 endOffset = chunk->size / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
-
-		if (AudioBuf_InUse(buf->state))
-			continue;
+		if (AudioBuf_InUse(buf)) continue;
 
 		buf->data_pcm16 = chunk->data;
 		buf->size       = chunk->size;

@@ -21,6 +21,7 @@ struct AudioContext {
 };
 #define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
+#include "Funcs.h"
 
 cc_bool AudioBackend_Init(void) {
 	return snd_stream_init() == 0;
