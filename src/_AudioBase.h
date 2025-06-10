@@ -1,7 +1,6 @@
 #include "Audio.h"
 #include "String.h"
 #include "Logger.h"
-#include "Funcs.h"
 #include "Errors.h"
 #include "Utils.h"
 #include "Platform.h"
@@ -17,7 +16,6 @@ static cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sam
 static cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk);
 static cc_result Audio_Play(struct AudioContext* ctx);
 static cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
-static cc_result Audio_Pause(struct AudioContext* ctx);
 
 
 /*########################################################################################################################*

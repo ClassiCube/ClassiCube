@@ -151,7 +151,7 @@ cc_result StreamContext_Play(struct AudioContext* ctx) {
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {

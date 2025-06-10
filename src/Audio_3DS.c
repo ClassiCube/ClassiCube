@@ -14,6 +14,9 @@ struct AudioContext {
 #include "_AudioBase.h"
 
 static int channelIDs;
+#define MAX_AUDIO_VOICES 24
+
+#define AudioBuf_InUse(buf) ((buf)->status == NDSP_WBUF_QUEUED || (buf)->status == NDSP_WBUF_PLAYING)
 
 // See https://github.com/devkitPro/3ds-examples/blob/master/audio/README.md
 // To get audio to work in Citra, just create a 0 byte file in sdmc/3ds named dspfirm.cdca
@@ -39,7 +42,7 @@ void AudioBackend_Free(void) { }
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int chanID = -1;
 	
-	for (int i = 0; i < 24; i++)
+	for (int i = 0; i < MAX_AUDIO_VOICES; i++)
 	{
 		// channel in use
 		if (channelIDs & (1 << i)) continue;
@@ -96,7 +99,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	for (int i = 0; i < ctx->count; i++)
 	{
 		buf = &ctx->bufs[i];
-		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
+		if (AudioBuf_InUse(buf))
 			continue;
 
 		buf->data_pcm16 = chunk->data;
@@ -109,8 +112,6 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return ERR_INVALID_ARGUMENT;
 }
 
-cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
-
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	ndspWaveBuf* buf;
 	int count = 0;
@@ -118,7 +119,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	for (int i = 0; i < ctx->count; i++)
 	{
 		buf = &ctx->bufs[i];
-		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING) {
+		if (AudioBuf_InUse(buf)) {
 			count++; continue;
 		}
 	}
@@ -140,35 +141,11 @@ cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chu
 }
 
 cc_result StreamContext_Play(struct AudioContext* ctx) {
-	return Audio_Play(ctx);
+	return 0;
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
-}
-
-cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
-	return Audio_Poll(ctx, inUse);
-}
-
-
-/*########################################################################################################################*
-*------------------------------------------------------Stream context-----------------------------------------------------*
-*#########################################################################################################################*/
-cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-	return Audio_SetFormat(ctx, channels, sampleRate, playbackRate);
-}
-
-cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
-	return Audio_QueueChunk(ctx, chunk); 
-}
-
-cc_result StreamContext_Play(struct AudioContext* ctx) {
-	return Audio_Play(ctx);
-}
-
-cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
@@ -188,17 +165,14 @@ cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data
 
 	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
 	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
 
 	return 0;
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
-	int inUse = 1;
-	cc_result res;
-	if ((res = Audio_Poll(ctx, &inUse))) return res;
-
-	*isBusy = inUse > 0;
+	ndspWaveBuf* buf = &ctx->bufs[0];
+	
+	*isBusy = AudioBuf_InUse(buf);
 	return 0;
 }
 

@@ -19,6 +19,10 @@ AudioDriver drv;
 bool switchAudio = false;
 void* audrv_mutex;
 
+#define MAX_AUDIO_VOICES 24
+
+#define AudioBuf_InUse(buf) ((buf)->state == AudioDriverWaveBufState_Queued || (buf)->state == AudioDriverWaveBufState_Playing || (buf)->state == AudioDriverWaveBufState_Waiting)
+
 cc_bool AudioBackend_Init(void) {
 	if (switchAudio) return true;
 	switchAudio = true;
@@ -28,7 +32,7 @@ cc_bool AudioBackend_Init(void) {
 	static const AudioRendererConfig arConfig =
     {
         .output_rate     = AudioRendererOutputRate_48kHz,
-        .num_voices      = 24,
+        .num_voices      = MAX_AUDIO_VOICES,
         .num_effects     = 0,
         .num_sinks       = 1,
         .num_mix_objs    = 1,
@@ -55,7 +59,8 @@ void AudioBackend_Tick(void) {
 }
 
 void AudioBackend_Free(void) {
-	for (int i = 0; i < 24; i++) {
+	for (int i = 0; i < MAX_AUDIO_VOICES; i++) 
+	{
 		audrvVoiceStop(&drv, i);
 	}
 	audrvUpdate(&drv);
@@ -64,7 +69,7 @@ void AudioBackend_Free(void) {
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int chanID = -1;
 	
-	for (int i = 0; i < 24; i++)
+	for (int i = 0; i < MAX_AUDIO_VOICES; i++)
 	{
 		// channel in use
 		if (channelIDs & (1 << i)) continue;
@@ -130,10 +135,9 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	for (int i = 0; i < ctx->count; i++)
 	{
 		buf = &ctx->bufs[i];
-		int state = buf->state;
 		cc_uint32 endOffset = chunk->size / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
 
-		if (state == AudioDriverWaveBufState_Queued || state == AudioDriverWaveBufState_Playing || state == AudioDriverWaveBufState_Waiting)
+		if (AudioBuf_InUse(buf->state))
 			continue;
 
 		buf->data_pcm16 = chunk->data;
@@ -152,11 +156,6 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return ERR_INVALID_ARGUMENT;
 }
 
-cc_result Audio_Play(struct AudioContext* ctx) {
-	audrvVoiceStart(&drv, ctx->chanID);
-	return 0;
-}
-
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	AudioDriverWaveBuf* buf;
 	int count = 0;
@@ -164,7 +163,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	for (int i = 0; i < ctx->count; i++)
 	{
 		buf = &ctx->bufs[i];
-		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing || buf->state == AudioDriverWaveBufState_Waiting) {
+		if (AudioBuf_InUse(buf)) {
 			count++; continue;
 		}
 	}
@@ -186,11 +185,12 @@ cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chu
 }
 
 cc_result StreamContext_Play(struct AudioContext* ctx) {
-	return Audio_Play(ctx);
+	audrvVoiceStart(&drv, ctx->chanID);
+	return 0;
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
@@ -210,17 +210,15 @@ cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data
 
 	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
 	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
 
+	audrvVoiceStart(&drv, ctx->chanID);
 	return 0;
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
-	int inUse = 1;
-	cc_result res;
-	if ((res = Audio_Poll(ctx, &inUse))) return res;
-
-	*isBusy = inUse > 0;
+	AudioDriverWaveBuf* buf = &ctx->bufs[0];
+	
+	*isBusy = AudioBuf_InUse(buf);
 	return 0;
 }
 

@@ -66,6 +66,7 @@ struct AudioContext {
 
 #define AUDIO_COMMON_ALLOC
 #include "_AudioBase.h"
+#include "Funcs.h"
 
 static void* audio_device;
 static void* audio_context;
@@ -223,18 +224,6 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return 0;
 }
 
-cc_result Audio_Play(struct AudioContext* ctx) {
-	_alSourcePlay(ctx->source);
-	return _alGetError();
-}
-
-cc_result Audio_Pause(struct AudioContext* ctx) {
-	if (!_alSourcePause) return ERR_NOT_SUPPORTED;
-
-	_alSourcePause(ctx->source);
-	return _alGetError();
-}
-
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	ALint processed = 0;
 	ALuint buffer;
@@ -269,11 +258,15 @@ cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chu
 }
 
 cc_result StreamContext_Play(struct AudioContext* ctx) {
-	return Audio_Play(ctx);
+	_alSourcePlay(ctx->source);
+	return _alGetError();
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
+	if (!_alSourcePause) return ERR_NOT_SUPPORTED;
+
+	_alSourcePause(ctx->source);
+	return _alGetError();
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
@@ -294,9 +287,9 @@ cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data
 
 	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
 	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
+	_alSourcePlay(ctx->source);
 
-	return 0;
+	return _alGetError();
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {

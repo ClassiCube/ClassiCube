@@ -564,7 +564,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	INT size = sizeof(*addr6);
 	if (!_WSAStringToAddressA) return false;
 
-	if (!_WSAStringToAddressA(ip, AF_INET6, NULL, addr6, &size)) {
+	if (!_WSAStringToAddressA((char*)ip, AF_INET6, NULL, addr6, &size)) {
 		addr6->sin6_port = _htons(port);
 
 		dst->size = size;

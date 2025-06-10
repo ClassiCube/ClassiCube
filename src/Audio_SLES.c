@@ -4,6 +4,7 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 #include "ExtMath.h"
+#include "Funcs.h"
 
 static SLObjectItf slEngineObject;
 static SLEngineItf slEngineEngine;
@@ -204,14 +205,6 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, chunk->data, chunk->size);
 }
 
-cc_result Audio_Pause(struct AudioContext* ctx) {
-	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PAUSED);
-}
-
-cc_result Audio_Play(struct AudioContext* ctx) {
-	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PLAYING);
-}
-
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	SLBufferQueueState state = { 0 };
 	cc_result res = 0;
@@ -236,11 +229,11 @@ cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chu
 }
 
 cc_result StreamContext_Play(struct AudioContext* ctx) {
-	return Audio_Play(ctx);
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PLAYING);
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PAUSED);
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
@@ -257,13 +250,11 @@ cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) 
 
 cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
     cc_result res;
-    Audio_SetVolume(ctx, data->volume);
 
 	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
 	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
 
-	return 0;
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PLAYING);
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {

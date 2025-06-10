@@ -123,8 +123,6 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return ERR_INVALID_ARGUMENT;
 }
 
-cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
-
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	cc_result res = 0;
 	WAVEHDR* hdr;
@@ -156,11 +154,11 @@ cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chu
 }
 
 cc_result StreamContext_Play(struct AudioContext* ctx) {
-	return Audio_Play(ctx);
+	return 0;
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {

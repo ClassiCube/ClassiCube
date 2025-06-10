@@ -312,35 +312,6 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return err;
 }
 
-cc_result Audio_Pause(struct AudioContext* ctx) {
-	ctx->stream->Stop();
-	return 0;
-}
-
-cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	struct AudioBuffer* buf;
-	int count = 0;
-	
-	// FIXME: music thread check
-	if (ctx->count == AUDIO_MAX_BUFFERS) {
-		// Process background tasks in music thread
-		RThread thread;
-		TInt error = KErrNone;
-		while (thread.RequestCount()) {
-			CActiveScheduler::RunIfReady(error, CActive::EPriorityIdle);
-			User::WaitForAnyRequest();
-		}
-	}
-
-	for (int i = 0; i < ctx->count; i++) {
-		buf = &ctx->bufs[i];
-		if (!buf->available) count++;
-	}
-
-	*inUse = count;
-	return 0;
-}
-
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
 	int sampleRateNew = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	
@@ -374,11 +345,30 @@ cc_result StreamContext_Play(struct AudioContext* ctx) {
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
-	return Audio_Pause(ctx);
+	ctx->stream->Stop();
+	return 0;
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
-	return Audio_Poll(ctx, inUse);
+	struct AudioBuffer* buf;
+	int i, count = 0;
+	
+	// Process background tasks in music thread
+	RThread thread;
+	TInt error = KErrNone;
+	while (thread.RequestCount()) {
+		CActiveScheduler::RunIfReady(error, CActive::EPriorityIdle);
+		User::WaitForAnyRequest();
+	}
+
+	for (i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		if (!buf->available) count++;
+	}
+
+	*inUse = count;
+	return 0;
 }
 
 
@@ -402,11 +392,7 @@ cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
-	int inUse = 1;
-	cc_result res;
-	if ((res = Audio_Poll(ctx, &inUse))) return res;
-
-	*isBusy = inUse > 0;
+	*isBusy = !&ctx->bufs[0].available;
 	return 0;
 }
 
