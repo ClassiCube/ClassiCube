@@ -145,7 +145,10 @@ static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName
 		Audio_FreeChunks(&snd->chunk, 1);
 		snd->chunk.data = NULL;
 		snd->chunk.size = 0;
-	} else { group->count++; }
+	} else {
+		SoundContext_Prepare(snd);
+		group->count++; 
+	}
 }
 
 static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {

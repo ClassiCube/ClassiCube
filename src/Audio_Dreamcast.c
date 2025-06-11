@@ -2,10 +2,11 @@
 
 #if defined CC_BUILD_DREAMCAST
 #include <kos.h>
+#include <dc/spu.h>
+#include <dc/sound/sound.h>
+#include <dc/sound/sfxmgr.h>
+#include <dc/sound/aica_comm.h>
 #include "Audio.h"
-
-/* TODO needs way more testing, especially with sounds */
-static cc_bool valid_handles[SND_STREAM_MAX];
 
 struct AudioBuffer {
 	int available;
@@ -14,125 +15,61 @@ struct AudioBuffer {
 };
 
 struct AudioContext {
-	int bufHead, channels;
-	snd_stream_hnd_t hnd;
-	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
-	int count, sampleRate;
+	int volume, count;
+	int chan_ids[2];
 };
 #define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 #include "Funcs.h"
 
 cc_bool AudioBackend_Init(void) {
-	return snd_stream_init() == 0;
+	return snd_init() == 0;
 }
 
 void AudioBackend_Tick(void) {
-	// TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
-	for (int i = 0; i < SND_STREAM_MAX; i++)
-	{
-		if (valid_handles[i]) snd_stream_poll(i);
-	}
 }
 
 void AudioBackend_Free(void) {
-	snd_stream_shutdown();
-}
-
-static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
-	struct AudioContext* ctx = snd_stream_get_userdata(hnd);
-	struct AudioBuffer* buf  = &ctx->bufs[ctx->bufHead];
 	
-	int samples = min(buf->bytesLeft, smp_req);
-	*smp_recv   = samples;
-	void* ptr   = buf->samples;
-	
-	buf->samples   += samples;
-	buf->bytesLeft -= samples;
-	
-	if (buf->bytesLeft == 0) {
-		ctx->bufHead   = (ctx->bufHead + 1) % ctx->count;
-		buf->samples   = NULL;
-		buf->available = true;
-
-		// special case to fix sounds looping
-		if (samples == 0 && ptr == NULL) *smp_recv = smp_req;
-	}
-	return ptr;
 }
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
-	ctx->hnd = snd_stream_alloc(AudioCallback, SND_STREAM_BUFFER_MAX);
-	if (ctx->hnd == SND_STREAM_INVALID) return ERR_NOT_SUPPORTED;
-	snd_stream_set_userdata(ctx->hnd, ctx);
+	ctx->chan_ids[0] = snd_sfx_chn_alloc();
+	ctx->chan_ids[1] = snd_sfx_chn_alloc();
 	
-	Mem_Set(ctx->bufs, 0, sizeof(ctx->bufs));
-	for (int i = 0; i < buffers; i++) {
-		ctx->bufs[i].available = true;
-	}
-	
-	ctx->count   = buffers;
-	ctx->bufHead = 0;
-	valid_handles[ctx->hnd] = true;
+	ctx->count = buffers;
 	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->count) {
-		snd_stream_stop(ctx->hnd);
-		snd_stream_destroy(ctx->hnd);
-		valid_handles[ctx->hnd] = false;
+		snd_sfx_stop(ctx->chan_ids[0]);
+		snd_sfx_stop(ctx->chan_ids[1]);
+
+		snd_sfx_chn_free(ctx->chan_ids[0]);
+		snd_sfx_chn_free(ctx->chan_ids[1]);
 	}
-	
-	ctx->hnd   = SND_STREAM_INVALID;
 	ctx->count = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
-	ctx->channels   = channels;
-	ctx->sampleRate = sampleRate;
-	return 0;
+static void SetChannelVolume(int ch, int volume) {
+	AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
+
+	cmd->cmd    = AICA_CMD_CHAN;
+	cmd->timestamp = 0;
+	cmd->size   = AICA_CMDSTR_CHANNEL_SIZE;
+	cmd->cmd_id = ch;
+
+	chan->cmd   = AICA_CH_CMD_UPDATE | AICA_CH_UPDATE_SET_VOL;
+	chan->vol   = volume;
+
+	snd_sh4_to_aica(tmp, cmd->size);
 }
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) {
-	snd_stream_volume(ctx->hnd, volume);
-}
-
-cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
-	struct AudioBuffer* buf;
-
-	for (int i = 0; i < ctx->count; i++)
-	{
-		buf = &ctx->bufs[i];
-		if (!buf->available) continue;
-
-		buf->samples   = chunk->data;
-		buf->bytesLeft = chunk->size;
-		buf->available = false;
-		return 0;
-	}
-	// tried to queue data without polling for free buffers first
-	return ERR_INVALID_ARGUMENT;
-}
-
-cc_result Audio_Play(struct AudioContext* ctx) {
-	snd_stream_start(ctx->hnd, ctx->sampleRate, ctx->channels == 2);
-	return 0;
-}
-
-cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	struct AudioBuffer* buf;
-	int count = 0;
-
-	for (int i = 0; i < ctx->count; i++)
-	{
-		buf = &ctx->bufs[i];
-		if (!buf->available) count++;
-	}
-
-	*inUse = count;
-	return 0;
+	ctx->volume = volume;
+	SetChannelVolume(ctx->chan_ids[0], volume);
+	SetChannelVolume(ctx->chan_ids[1], volume);
 }
 
 
@@ -140,15 +77,15 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 *------------------------------------------------------Stream context-----------------------------------------------------*
 *#########################################################################################################################*/
 cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-	return Audio_SetFormat(ctx, channels, sampleRate, playbackRate);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
-	return Audio_QueueChunk(ctx, chunk); 
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result StreamContext_Play(struct AudioContext* ctx) {
-	return Audio_Play(ctx);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result StreamContext_Pause(struct AudioContext* ctx) {
@@ -156,7 +93,7 @@ cc_result StreamContext_Pause(struct AudioContext* ctx) {
 }
 
 cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
-	return Audio_Poll(ctx, inUse);
+	return ERR_NOT_SUPPORTED;
 }
 
 
@@ -167,23 +104,70 @@ cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) 
 	return true;
 }
 
-cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-    cc_result res;
+static void PlaySound(struct AudioContext* ctx, int ch, int freq, struct AudioChunk* chunk) {
+    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
-	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
-	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
+    int samples = chunk->size; // altered in SoundContext_Prepare
+    if (samples >= 65535) samples = 65534;
+
+	cmd->cmd = AICA_CMD_CHAN;
+    cmd->timestamp  = 0;
+    cmd->size       = AICA_CMDSTR_CHANNEL_SIZE;
+    cmd->cmd_id     = ctx->chan_ids[ch];
+
+    chan->cmd       = AICA_CH_CMD_START;
+    chan->base      = chunk->meta.val + (ch * (samples * 2));
+    chan->type      = AICA_SM_16BIT;
+    chan->length    = samples;
+    chan->loop      = 0;
+    chan->loopstart = 0;
+    chan->loopend   = samples;
+    chan->freq      = freq;
+    chan->vol       = ctx->volume;
+
+	// TODO panning
+	Platform_Log2("Playing %i samples to %i", &samples, &ctx->chan_ids[ch]);
+	snd_sh4_to_aica(tmp, cmd->size);
+}
+
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	Platform_Log3("???? %h.%h.%h", &data->chunk.data, &data->chunk.size, &data->chunk.meta);
+	if (!data->chunk.meta.val) return ERR_NOT_SUPPORTED;
+	int freq = Audio_AdjustSampleRate(data->sampleRate, data->rate);
+    
+	snd_sh4_to_aica_stop();
+
+	if (data->channels > 0) PlaySound(ctx, 0, freq, &data->chunk);
+	if (data->channels > 1) PlaySound(ctx, 1, freq, &data->chunk);
+
+	snd_sh4_to_aica_start();
 
 	return 0;
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
-	int inUse = 1;
-	cc_result res;
-	if ((res = Audio_Poll(ctx, &inUse))) return res;
-
-	*isBusy = inUse > 0;
+	*isBusy = false; // TODO
 	return 0;
+}
+
+void SoundContext_Prepare(struct Sound* snd) {
+	int size = snd->chunk.size;
+	uint32_t aram = snd_mem_malloc(size);
+
+	snd->chunk.meta.val = aram;
+	if (!aram) { Platform_LogConst("out of memory?"); return; }
+
+	if (snd->channels == 2) {
+		Platform_Log2("stereo %i to %h", &size, &aram);
+		snd_pcm16_split_sq(snd->chunk.data, aram, aram + size / 2, size);
+	} else {
+		Platform_Log2("mono %i to %h", &size, &aram);
+		spu_memload_sq(aram, snd->chunk.data, size);
+	}
+
+	free(snd->chunk.data);
+	snd->chunk.data = NULL;
+	snd->chunk.size = size / (2 * snd->channels); // store number of samples instead 
 }
 
 

@@ -112,6 +112,9 @@ cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data
 /* Returns whether the audio context is currently playing audio */
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy);
 
+struct Sound;
+void SoundContext_Prepare(struct Sound* snd);
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Sounds---------------------------------------------------------*
