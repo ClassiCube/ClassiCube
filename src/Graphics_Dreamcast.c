@@ -870,6 +870,7 @@ static cc_bool loggedNoVRAM;
 
 extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+extern void    SubmitQuads(const void* src, int numQuads);
 
 static Vertex* ReserveOutput(struct CommandsList* list, cc_uint32 elems) {
 	Vertex* beg;
@@ -903,6 +904,17 @@ void DrawQuads(int count, void* src) {
 		beg++;
 	}
 	Vertex* end;
+
+	// TODO avoid calling SubmitCommands at all when list == direct
+	if (TEXTURES_ENABLED && list == direct) {
+		if (list->length) {
+			SubmitCommands((Vertex*)list->data, list->length);
+			list->length = 0;
+		}
+
+		SubmitQuads(src, count >> 2);
+		return;
+	}
 
 	if (TEXTURES_ENABLED) {
 		end = DrawTexturedQuads(src, beg, count >> 2);

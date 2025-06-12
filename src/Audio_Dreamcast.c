@@ -131,7 +131,7 @@ static void PlaySound(struct AudioContext* ctx, int ch, int freq, struct AudioCh
 }
 
 cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	Platform_Log3("???? %h.%h.%h", &data->chunk.data, &data->chunk.size, &data->chunk.meta);
+	Platform_Log3("???? %h %h %h", &data->chunk.data, &data->chunk.size, &data->chunk.meta);
 	if (!data->chunk.meta.val) return ERR_NOT_SUPPORTED;
 	int freq = Audio_AdjustSampleRate(data->sampleRate, data->rate);
     
