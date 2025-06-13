@@ -85,17 +85,16 @@ _SubmitQuads:
     pref   @SRC         ! LS, prefetch 32..63 (last 16 bytes of v2, first 16 bytes v3)
 ! TRANSFORM VERTEX 1
     ftrv xmtrx, F1_XYZW ! FE, TRANSFORM(v1.XYZW)
-! MISC OPERATIONS
+! LOAD VERTEX 1 ATTRIBUTES + MISC OPERATIONS
 	add   #-20, SRC		! EX, src -= 20 (offset now 12)
-    fldi0 F4_W          ! LS, v4.W = 0.0
-! LOAD VERTEX 1 ATTRIBUTES
     mov.l @SRC+, V1_C   ! LS, v1.C = src->color
+    fldi0 F4_W          ! LS, v4.W = 0.0
     mov.l @SRC+, V1_U   ! LS, v1.U = src->u
     mov.l @SRC+, V1_V   ! LS, v1.V = src->v
 ! PROCESS VERTEX 1
     fcmp/gt F4_W, F1_Z  ! FE, T = v1.Z > 0
-    movt    FLG         ! EX, CLIPFLAGS = T (00 00 00 V1)
 	fmul    F1_W, F1_W  ! FE, v1.W = v1.W * v1.W
+    movt    FLG         ! EX, CLIPFLAGS = T (00 00 00 V1)
 
 
 ! LOAD VERTEX 2 XYZW
@@ -108,11 +107,10 @@ _SubmitQuads:
     pref   @SRC         ! LS, prefetch 64..96 (last 8 bytes of v3, first 24 bytes v4)
 ! TRANSFORM VERTEX 2
     ftrv xmtrx, F2_XYZW ! FE, TRANSFORM(v2.XYZW)
-! MISC OPERATIONS
+! LOAD VERTEX 2 ATTRIBUTES + MISC OPERATIONS
 	add   #-28, SRC		! EX, src -= 28 (offset now 36)
-    shll    FLG         ! EX, CLIPFLAGS <<= 1  (00 00 V1 00)
-! LOAD VERTEX 2 ATTRIBUTES
     mov.l @SRC+, V2_C   ! LS, v2.C = src->color
+    shll    FLG         ! EX, CLIPFLAGS <<= 1  (00 00 V1 00)
     mov.l @SRC+, V2_U   ! LS, v2.U = src->u
     mov.l @SRC+, V2_V   ! LS, v2.V = src->v
 ! PROCESS VERTEX 2    
@@ -131,11 +129,10 @@ _SubmitQuads:
     flds F1_Z, fpul     ! LS, ftmp = v1.Z
 ! TRANSFORM VERTEX 3
     ftrv xmtrx, F3_XYZW ! FE, TRANSFORM(v3.XYZW)
-! MISC OPERATIONS
+! LOAD VERTEX 3 ATTRIBUTES + MISC OPERATIONS
     or      TMP,FLG     ! EX, CLIPFLAGS |= tmp (00 00 V1 V2)
-    shll    FLG         ! EX, CLIPFLAGS <<= 1  (00 V1 V2 00)
-! LOAD VERTEX 3 ATTRIBUTES
     mov.l @SRC+, V3_C   ! LS, v3.C = src->color
+    shll    FLG         ! EX, CLIPFLAGS <<= 1  (00 V1 V2 00)
     mov.l @SRC+, V3_U   ! LS, v3.U = src->u
     mov.l @SRC+, V3_V   ! LS, v3.V = src->v
 ! PROCESS VERTEX 3
@@ -151,14 +148,16 @@ _SubmitQuads:
     fmov @SRC+, F4_Z    ! LS, v4.Z = src->z
     fldi1 F4_W          ! LS, v4.W = 1.0
 ! MISC OPERATIONS
-    fldi0 F1_Z          ! LS, v1.Z = 0.0
+    add    #12, SRC     ! EX, src += 12 (offset now 96)
+    pref  @SRC          ! LS, prefetch next 0..31 (all 24 bytes v1, first 8 bytes v2)
 ! TRANSFORM VERTEX 4
     ftrv xmtrx, F4_XYZW ! FE, TRANSFORM(v4.XYZW)
-! MISC OPERATIONS
+! LOAD VERTEX 4 ATTRIBUTES + MISC OPERATIONS
+    add   #-12, SRC     ! EX, src -= 12 (offset now 84)
+    fldi0 F1_Z          ! LS, v1.Z = 0.0
     or      TMP,FLG     ! EX, CLIPFLAGS |= tmp (00 V1 V2 V3)
-    shll    FLG         ! EX, CLIPFLAGS <<= 1  (V1 V2 V3 00)
-! LOAD VERTEX 4 ATTRIBUTES
     mov.l @SRC+, V4_C   ! LS, v4.C = src->color
+    shll    FLG         ! EX, CLIPFLAGS <<= 1  (V1 V2 V3 00)
     mov.l @SRC+, V4_U   ! LS, v4.U = src->u
     mov.l @SRC+, V4_V   ! LS, v4.V = src->v
 ! PROCESS VERTEX 4
