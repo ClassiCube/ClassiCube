@@ -775,9 +775,8 @@ void Window_PreInit(void) {
 void Window_Init(void) {
 	Events_Init();
 #ifdef CC_BUILD_TOUCH
-	//TBool touch = AknLayoutUtils::PenEnabled();
+	bool touch = AknLayoutUtils::PenEnabled();
 
-	bool touch = true;
 	Input_SetTouchMode(touch);
 	Gui_SetTouchUI(touch);
 #endif
