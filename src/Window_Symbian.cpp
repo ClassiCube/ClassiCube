@@ -760,6 +760,7 @@ static cc_result OpenBrowserL(const cc_string* url) {
 }
 
 static void ShowDialogL(const char* title, const char* msg) {
+	// TODO: use text box or something instead to fix line breaks
 	CAknInformationNote* note = new (ELeave) CAknInformationNote(true);
 	TBuf<512> msgBuf;
 	ConvertToUnicode(msgBuf, msg, String_Length(msg));
@@ -893,6 +894,7 @@ void OnscreenKeyboard_Close(void) {
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
 	container->iAppUi->SetOrientationL(lock ? CAknAppUiBase::EAppUiOrientationLandscape : CAknAppUiBase::EAppUiOrientationAutomatic);
+	container->SetExtentToWholeScreen();
 }
 
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
