@@ -4,4 +4,4 @@ ARMFPU softvfp
 
 LIBRARY libgles_cm.lib
 
-#include "ClassiCube_common.mmh"
+#include "ClassiCube.mmh"

@@ -10,4 +10,4 @@ ALWAYS_BUILD_AS_ARM
 
 LIBRARY libgles_cm.lib
 
-#include "ClassiCube_common.mmh"
+#include "ClassiCube.mmh"

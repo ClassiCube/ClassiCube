@@ -12,4 +12,4 @@ ALWAYS_BUILD_AS_ARM
 LIBRARY libglesv2.lib
 LIBRARY libegl.lib
 
-#include "ClassiCube_common.mmh"
+#include "ClassiCube.mmh"
