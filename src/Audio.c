@@ -305,7 +305,7 @@ static cc_result Music_Buffer(struct AudioChunk* chunk, int maxSamples, struct V
 	}
 
 	chunk->size = samples * 2;
-	res2 = Audio_QueueChunk(&music_ctx, chunk);
+	res2 = StreamContext_Enqueue(&music_ctx, chunk);
 	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
@@ -335,7 +335,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	
 	channels   = vorbis->channels;
 	sampleRate = vorbis->sampleRate;
-	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate, 100))) goto cleanup;
+	if ((res = StreamContext_SetFormat(&music_ctx, channels, sampleRate, 100))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
 	/*  so can end up decoding slightly over a second of audio */
@@ -353,7 +353,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	}
 	if (music_stopping) goto cleanup;
 
-	res  = Audio_Play(&music_ctx);
+	res  = StreamContext_Play(&music_ctx);
 	if (res) goto cleanup;
 	cur  = 0;
 
@@ -362,11 +362,11 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		/* Don't play music while in the background on Android */
     	/* TODO: Not use such a terrible approach */
     	if (!Window_Main.Handle.ptr || Window_Main.Inactive) {
-    		Audio_Pause(&music_ctx);
+    		StreamContext_Pause(&music_ctx);
     		while ((!Window_Main.Handle.ptr || Window_Main.Inactive) && !music_stopping) {
     			Thread_Sleep(10); continue;
     		}
-    		Audio_Play(&music_ctx);
+    		StreamContext_Play(&music_ctx);
     	}
 #endif
         if (volume != Audio_MusicVolume) {
@@ -374,7 +374,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
             Audio_SetVolume(&music_ctx, volume);
         }
 
-		res = Audio_Poll(&music_ctx, &inUse);
+		res = StreamContext_Update(&music_ctx, &inUse);
 		if (res) { music_stopping = true; break; }
 
 		if (inUse >= AUDIO_MAX_BUFFERS) {
@@ -396,7 +396,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	} else {
 		/* Wait until the buffers finished playing */
 		for (;;) {
-			if (Audio_Poll(&music_ctx, &inUse) || inUse == 0) break;
+			if (StreamContext_Update(&music_ctx, &inUse) || inUse == 0) break;
 			Thread_Sleep(10);
 		}
 	}
