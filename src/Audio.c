@@ -170,30 +170,35 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
+	Sounds_PlayVolume(type, board, Audio_SoundsVolume);
+}
+
+void Sounds_PlayVolume(cc_uint8 type, struct Soundboard* board, cc_uint32 volume) {
 	const struct Sound* snd;
 	struct AudioData data;
 	cc_result res;
 
-	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
+	if (type == SOUND_NONE || !volume) return;
 	snd = Soundboard_PickRandom(board, type);
 	if (!snd) return;
 
-	data.chunk      = snd->chunk;
-	data.channels   = snd->channels;
+	data.chunk = snd->chunk;
+	data.channels = snd->channels;
 	data.sampleRate = snd->sampleRate;
-	data.rate       = 100;
-	data.volume     = Audio_SoundsVolume;
+	data.rate = 100;
+	data.volume = volume;
 
 	/* https://minecraft.wiki/w/Block_of_Gold#Sounds */
 	/* https://minecraft.wiki/w/Grass#Sounds */
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) data.rate = 120;
 		else data.rate = 80;
-	} else {
+	}
+	else {
 		data.volume /= 2;
 		if (type == SOUND_METAL) data.rate = 140;
 	}
-	
+
 	res = AudioPool_Play(&data);
 	if (res) Sounds_Fail(res);
 }
