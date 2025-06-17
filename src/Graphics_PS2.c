@@ -51,11 +51,11 @@ static int primitive_type;
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
-	// 16x16 dummy white texture
+	// 4x4 dummy white texture
 	struct Bitmap bmp;
-	BitmapCol pixels[16 * 16];
+	BitmapCol pixels[4 * 4];
 	Mem_Set(pixels, 0xFF, sizeof(pixels));
-	Bitmap_Init(bmp, 16, 16, pixels);
+	Bitmap_Init(bmp, 4, 4, pixels);
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
@@ -169,29 +169,29 @@ static CC_INLINE void DMAFlushBuffer(void) {
 	dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
 }
 
-static int CalculateQWords(int width, int height, int psm) {
+static int CalcTransferWords(int width, int height, int psm) {
 	switch (psm)
 	{
 	case GS_PSM_32:
 	case GS_PSM_24:
 	case GS_PSMZ_32:
 	case GS_PSMZ_24:
-		return (width * height) >> 2;
+		return (width * height);
 
 	case GS_PSM_16:
 	case GS_PSM_16S:
 	case GS_PSMZ_16:
 	case GS_PSMZ_16S:
-		return (width * height) >> 3;
+		return (width * height) >> 1;
 
 	case GS_PSM_8:
 	case GS_PSM_8H:
-		return (width * height) >> 4;
+		return (width * height) >> 2;
 
 	case GS_PSM_4:
 	case GS_PSM_4HL:
 	case GS_PSM_4HH:
-		return (width * height) >> 5;
+		return (width * height) >> 3;
 	}
 	return 0;
 }
@@ -199,43 +199,53 @@ static int CalculateQWords(int width, int height, int psm) {
 static qword_t* BuildTransfer(qword_t* q, u8* src, int width, int height, int psm, 
 								int dst_base, int dst_width)
 {
-	int qwords = CalculateQWords(width, height, psm);
+	int  words = CalcTransferWords(width, height, psm); // 4 words = 1 qword
+	int qwords = (words + 3) / 4; // ceiling division by 4
 
 	// Parameters for RAM -> GS transfer
 	DMATAG_CNT(q,5,0,0,0);
-	q++;
-	PACK_GIFTAG(q, GIF_SET_TAG(4,0,0,0,GIF_FLG_PACKED,1), GIF_REG_AD);
-	q++;
-	PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF);
-	q++;
-	PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0), GS_REG_TRXPOS);
-	q++;
-	PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG);
-	q++;
-	PACK_GIFTAG(q, GS_SET_TRXDIR(0), GS_REG_TRXDIR);
-	q++;
+	{
+		q++;
+		PACK_GIFTAG(q, GIF_SET_TAG(4,0,0,0,GIF_FLG_PACKED,1), GIF_REG_AD);
+		q++;
+		PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF);
+		q++;
+		PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0), GS_REG_TRXPOS);
+		q++;
+		PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG);
+		q++;
+		PACK_GIFTAG(q, GS_SET_TRXDIR(0), GS_REG_TRXDIR);
+		q++;
+	}
 
 	while (qwords)
 	{
 		int num_qwords = min(qwords, GIF_BLOCK_SIZE);
 
 		DMATAG_CNT(q,1,0,0,0);
-		q++;
-		PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0);
-		q++;
+		{
+			q++;
+			PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0);
+			q++;
+		}
+
 		DMATAG_REF(q, num_qwords, (unsigned int)src, 0,0,0);
-		q++;
+		{
+			q++;
+		}
 
 		src    += num_qwords * 16;
 		qwords -= num_qwords;
 	}
 
 	DMATAG_END(q,2,0,0,0);
-	q++;
-	PACK_GIFTAG(q,GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1),GIF_REG_AD);
-	q++;
-	PACK_GIFTAG(q,1,GS_REG_TEXFLUSH);
-	q++;
+	{
+		q++;
+		PACK_GIFTAG(q,GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1),GIF_REG_AD);
+		q++;
+		PACK_GIFTAG(q,1,GS_REG_TEXFLUSH);
+		q++;
+	}
 
 	return q;
 }
