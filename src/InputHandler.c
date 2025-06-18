@@ -632,71 +632,69 @@ static void BindReleased_PickBlock(int key, struct InputDevice* device) {
 }
 
 
-static cc_bool BindTriggered_HideFPS(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_HideFPS(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	Gui.ShowFPS = !Gui.ShowFPS;
-	return true;
+	return KEY_HANDLED;
 }
 
-static cc_bool BindTriggered_Fullscreen(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
-	
-	Game_ToggleFullscreen();
-	return true;
+static cc_key_flags BindTriggered_Fullscreen(int key, struct InputDevice* device) {
+   Game_ToggleFullscreen();
+   return KEY_HANDLED | KEY_SUPPRESS_UI;
 }
 
-static cc_bool BindTriggered_Fog(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_Fog(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	Game_CycleViewDistance();
-	return true;
+	return KEY_HANDLED;
 }
 
 
-static cc_bool BindTriggered_HideGUI(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_HideGUI(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	Game_HideGui = !Game_HideGui;
-	return true;
+	return KEY_HANDLED;
 }
 
-static cc_bool BindTriggered_SmoothCamera(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_SmoothCamera(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	InputHandler_Toggle(key, &Camera.Smooth,
 		"  &eSmooth camera is &aenabled",
 		"  &eSmooth camera is &cdisabled");
-	return true;
+	return KEY_HANDLED;
 }
 
-static cc_bool BindTriggered_AxisLines(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_AxisLines(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
 		"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 		"  &eAxis lines no longer show");
-	return true;
+	return KEY_HANDLED;
 } 
 
-static cc_bool BindTriggered_AutoRotate(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_AutoRotate(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	InputHandler_Toggle(key, &AutoRotate_Enabled,
 		"  &eAuto rotate is &aenabled",
 		"  &eAuto rotate is &cdisabled");
-	return true;
+	return KEY_HANDLED;
 }
 
-static cc_bool BindTriggered_ThirdPerson(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_ThirdPerson(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	Camera_CycleActive();
-	return true;
+	return KEY_HANDLED;
 }
 
-static cc_bool BindTriggered_DropBlock(int key, struct InputDevice* device) {
-	if (Gui.InputGrab) return false;
+static cc_key_flags BindTriggered_DropBlock(int key, struct InputDevice* device) {
+	if (Gui.InputGrab) return KEY_NONE;
 	
 	if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 		/* Don't assign SelectedIndex directly, because we don't want held block
@@ -704,17 +702,17 @@ static cc_bool BindTriggered_DropBlock(int key, struct InputDevice* device) {
 		Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
 		Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 	}
-	return true;
+	return KEY_HANDLED;
 }
 
-static cc_bool BindTriggered_IDOverlay(int key, struct InputDevice* device) {
+static cc_key_flags BindTriggered_IDOverlay(int key, struct InputDevice* device) {
 	struct Screen* s = Gui_GetScreen(GUI_PRIORITY_TEXIDS);
 	if (s) {
 		Gui_Remove(s);
 	} else {
 		TexIdsOverlay_Show();
 	}
-	return true;
+	return KEY_HANDLED;
 }
 
 static cc_bool BindTriggered_BreakLiquids(int key, struct InputDevice* device) {
@@ -836,7 +834,7 @@ static void OnPointerUp(void* obj, int idx) {
 
 static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* device) {
 	struct Screen* s;
-	cc_bool triggered;
+	cc_key_flags triggered_flags;
 	int i;
 	if (Input.DownHook && Input.DownHook(key, device)) return;
 
@@ -854,23 +852,24 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 		Game_ScreenshotRequested = true; return;
 	}
 	
-	triggered = false;
+	triggered_flags = KEY_NONE;
 	for (i = 0; !was && i < BIND_COUNT; i++)
 	{
 		if (!InputBind_Claims(i, key, device)) continue;
 		Bind_IsTriggered[i] |= device->type;
 
 		if (!Bind_OnTriggered[i])              continue;
-		triggered |= Bind_OnTriggered[i](key, device);
+		triggered_flags |= Bind_OnTriggered[i](key, device);
 	}
-	
-	for (i = 0; i < Gui.ScreensCount; i++) 
-	{
-		s = Gui_Screens[i];
-		s->dirty = true;
-		if (s->VTABLE->HandlesInputDown(s, key, device)) return;
+	if (!(triggered_flags & KEY_SUPPRESS_UI)) { //if key is supressing gui's key handling skip it
+		for (i = 0; i < Gui.ScreensCount; i++) 
+		{
+			s = Gui_Screens[i];
+			s->dirty = true;
+			if (s->VTABLE->HandlesInputDown(s, key, device)) return;
+		}
+		if (Gui.InputGrab) return;
 	}
-	if (Gui.InputGrab) return;
 
 	if (InputDevice_IsPause(key, device)) {
 #ifdef CC_BUILD_WEB
@@ -887,7 +886,7 @@ static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* dev
 	/* Hotkeys should not be triggered multiple times when holding down */
 	if (was) return;
 
-	if (triggered) {
+	if (triggered_flags & KEY_HANDLED) {
 	} else if (key == CCKEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
