@@ -328,11 +328,10 @@ static int FindFreePalette(cc_uint8 flags) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 typedef struct CCTexture_ {
-	cc_uint32 width, height;
-	cc_uint16 log2_width, log2_height;
-	cc_uint16 format, pal_index;
-	cc_uint32 pad[(64 - 16)/4];
-	BitmapCol pixels[]; // aligned to 64 bytes (only need 16?)
+	cc_uint32 width, height;           // 8 bytes
+	cc_uint16 log2_width, log2_height; // 4 bytes
+	cc_uint16 format, pal_index;       // 4 bytes
+	BitmapCol pixels[]; // must be aligned to 16 bytes
 } CCTexture;
 
 static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {

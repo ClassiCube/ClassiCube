@@ -411,10 +411,26 @@ cc_result SSL_Free(void* ctx_) {
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
 
-static unsigned fake_minimal_end_chain(const br_x509_class** ctx) {
+static br_x509_class cert_verifier_vtable;
+static cc_bool _verifyCerts;
+
+static unsigned cert_verifier_end_chain(const br_x509_class** ctx) {
 	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
-	if (r == BR_ERR_X509_NOT_TRUSTED) r = 0;
-	if (r == BR_ERR_X509_EXPIRED)     r = 0;
+
+	/* User selected to not care about certificate authenticity */
+	if (r == BR_ERR_X509_NOT_TRUSTED && !_verifyCerts) return 0;
+
+	/* It's fairly common for RTC on older consoles to not be set correctly */
+#ifdef CC_BUILD_CONSOLE
+	if (r != BR_ERR_X509_EXPIRED) return r;
+
+	cc_uint64 cur = DateTime_CurrentUTC();
+	uint32_t days = (uint32_t)(cur / 86400) + 366;
+
+	/* Time earlier than August 2024 usually mean an improperly calibrated RTC */
+	if (days < 739464) return 0;
+#endif
+
 	return r;
 }
 
@@ -427,11 +443,11 @@ typedef struct SSLContext {
 	cc_socket socket;
 } SSLContext;
 
-static cc_bool _verifyCerts;
-
-
 void SSLBackend_Init(cc_bool verifyCerts) {
-	_verifyCerts = verifyCerts; // TODO support
+	_verifyCerts = verifyCerts;
+	
+	cert_verifier_vtable = br_x509_minimal_vtable;
+	cert_verifier_vtable.end_chain = cert_verifier_end_chain;
 }
 
 cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
@@ -458,10 +474,6 @@ static void SetCurrentTime(SSLContext* ctx) {
 	cc_uint64 cur = DateTime_CurrentUTC();
 	uint32_t days = (uint32_t)(cur / 86400) + 366;
 	uint32_t secs = (uint32_t)(cur % 86400);
-	
-	/* clamp min system time from RTC to start of August 2024 */
-	/* Times earlier than that usually mean an improperly calibrated RTC */
-	if (days < 739464) days = 739464;
 		
 	br_x509_minimal_set_time(&ctx->xc, days, secs);
 	/* This matches bearssl's default time calculation
@@ -517,18 +529,11 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);
 	br_ssl_client_reset(&ctx->sc, host, 0);
+	ctx->xc.vtable = &cert_verifier_vtable;
 	
 	/* Account login must be done over TLS 1.2 */
 	if (String_CaselessEqualsConst(host_, "www.classicube.net")) {
 		br_ssl_engine_set_versions(&ctx->sc.eng, BR_TLS12, BR_TLS12);
-	}
-	
-	/* Override default certificate chain validation */
-	if (!_verifyCerts) {
-		static br_x509_class fake_minimal_vtable;
-		fake_minimal_vtable = br_x509_minimal_vtable;
-		fake_minimal_vtable.end_chain = fake_minimal_end_chain;
-		ctx->xc.vtable = &fake_minimal_vtable;
 	}
 	
 	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
