@@ -10,15 +10,4 @@ ALWAYS_BUILD_AS_ARM
 
 LIBRARY libgles_cm.lib
 
-SOURCEPATH .
-START RESOURCE classicube.rss
-HEADER
-TARGETPATH \resource\apps
-LANG SC
-END
-
-START RESOURCE classicube_reg.rss
-TARGETPATH \private\10003a3f\import\apps
-END
-
-#include "ClassiCube_common.mmh"
+#include "ClassiCube.mmh"
