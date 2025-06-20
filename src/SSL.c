@@ -435,8 +435,8 @@ static unsigned cert_verifier_end_chain(const br_x509_class** ctx) {
 }
 
 typedef struct SSLContext {
-	br_ssl_client_context sc;
 	br_x509_minimal_context xc;
+	br_ssl_client_context sc;
 	unsigned char iobuf[BR_SSL_BUFSIZE_BIDI];
 	br_sslio_context ioc;
 	cc_result readError, writeError;
