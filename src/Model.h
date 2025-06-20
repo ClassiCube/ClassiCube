@@ -78,8 +78,6 @@ struct Model {
 	cc_bool bobbing;
 	cc_bool usesSkin, calcHumanAnims, usesHumanSkin, pushes;
 
-	float gravity; Vec3 drag, groundFriction;
-
 	/* Returns the transformation matrix applied to the model when rendering. */
 	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */
 	void (*GetTransform)(struct Entity* entity, Vec3 pos, struct Matrix* m);
