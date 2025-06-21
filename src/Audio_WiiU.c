@@ -55,11 +55,62 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return ERR_NOT_SUPPORTED;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Stream context-----------------------------------------------------*
+*#########################################################################################################################*/
+cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	return Audio_SetFormat(ctx, channels, sampleRate, playbackRate);
+}
+
+cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	return Audio_QueueChunk(ctx, chunk); 
+}
+
+cc_result StreamContext_Play(struct AudioContext* ctx) {
+	return Audio_Play(ctx);
+}
+
+cc_result StreamContext_Pause(struct AudioContext* ctx) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
+	return Audio_Poll(ctx, inUse);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
 
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+    cc_result res;
+
+	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
+	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
+	if ((res = Audio_Play(ctx))) return res;
+
+	return 0;
+}
+
+cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
+	int inUse = 1;
+	cc_result res;
+	if ((res = Audio_Poll(ctx, &inUse))) return res;
+
+	*isBusy = inUse > 0;
+	return 0;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }

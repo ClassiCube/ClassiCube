@@ -260,10 +260,6 @@ void AudioBackend_Tick(void) { }
 
 void AudioBackend_Free(void) { }
 
-cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
-	return false;
-}
-
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	TRAPD(err, ctx->stream = CAudioStream::NewL(ctx));
 	if (err != KErrNone) {
@@ -316,35 +312,6 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return err;
 }
 
-cc_result Audio_Pause(struct AudioContext* ctx) {
-	ctx->stream->Stop();
-	return 0;
-}
-
-cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	struct AudioBuffer* buf;
-	int count = 0;
-	
-	// FIXME: music thread check
-	if (ctx->count == AUDIO_MAX_BUFFERS) {
-		// Process background tasks in music thread
-		RThread thread;
-		TInt error = KErrNone;
-		while (thread.RequestCount()) {
-			CActiveScheduler::RunIfReady(error, CActive::EPriorityIdle);
-			User::WaitForAnyRequest();
-		}
-	}
-
-	for (int i = 0; i < ctx->count; i++) {
-		buf = &ctx->bufs[i];
-		if (!buf->available) count++;
-	}
-
-	*inUse = count;
-	return 0;
-}
-
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
 	int sampleRateNew = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	
@@ -361,10 +328,80 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return 0;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Stream context-----------------------------------------------------*
+*#########################################################################################################################*/
+cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	return Audio_SetFormat(ctx, channels, sampleRate, playbackRate);
+}
+
+cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	return Audio_QueueChunk(ctx, chunk); 
+}
+
+cc_result StreamContext_Play(struct AudioContext* ctx) {
+	return Audio_Play(ctx);
+}
+
+cc_result StreamContext_Pause(struct AudioContext* ctx) {
+	ctx->stream->Stop();
+	return 0;
+}
+
+cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
+	struct AudioBuffer* buf;
+	int i, count = 0;
+	
+	// Process background tasks in music thread
+	RThread thread;
+	TInt error = KErrNone;
+	while (thread.RequestCount()) {
+		CActiveScheduler::RunIfReady(error, CActive::EPriorityIdle);
+		User::WaitForAnyRequest();
+	}
+
+	for (i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		if (!buf->available) count++;
+	}
+
+	*inUse = count;
+	return 0;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	int channels   = data->channels;
 	int sampleRate = Audio_AdjustSampleRate(data->sampleRate, data->rate);
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
+}
+
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+    cc_result res;
+
+	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
+	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
+	if ((res = Audio_Play(ctx))) return res;
+
+	return 0;
+}
+
+cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
+	*isBusy = !&ctx->bufs[0].available;
+	return 0;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
 }
 #endif
 

@@ -4,6 +4,7 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 #include "ExtMath.h"
+#include "Funcs.h"
 
 static SLObjectItf slEngineObject;
 static SLEngineItf slEngineEngine;
@@ -204,14 +205,6 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, chunk->data, chunk->size);
 }
 
-cc_result Audio_Pause(struct AudioContext* ctx) {
-	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PAUSED);
-}
-
-cc_result Audio_Play(struct AudioContext* ctx) {
-	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PLAYING);
-}
-
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	SLBufferQueueState state = { 0 };
 	cc_result res = 0;
@@ -223,10 +216,60 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return res;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Stream context-----------------------------------------------------*
+*#########################################################################################################################*/
+cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	return Audio_SetFormat(ctx, channels, sampleRate, playbackRate);
+}
+
+cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	return Audio_QueueChunk(ctx, chunk); 
+}
+
+cc_result StreamContext_Play(struct AudioContext* ctx) {
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PLAYING);
+}
+
+cc_result StreamContext_Pause(struct AudioContext* ctx) {
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PAUSED);
+}
+
+cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
+	return Audio_Poll(ctx, inUse);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return !ctx->channels || (ctx->channels == data->channels && ctx->sampleRate == data->sampleRate);
 }
 
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+    cc_result res;
+
+	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
+	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
+
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PLAYING);
+}
+
+cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
+	int inUse = 1;
+	cc_result res;
+	if ((res = Audio_Poll(ctx, &inUse))) return res;
+
+	*isBusy = inUse > 0;
+	return 0;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 static const char* GetError(cc_result res) {
 	switch (res) {
 	case SL_RESULT_PRECONDITIONS_VIOLATED: return "Preconditions violated";
