@@ -170,10 +170,24 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
-	Sounds_PlayVolume(type, board, Audio_SoundsVolume);
+	cc_uint32 rate = 100;
+	cc_uint32 volume = Audio_SoundsVolume;
+
+	/* https://minecraft.wiki/w/Block_of_Gold#Sounds */
+	/* https://minecraft.wiki/w/Grass#Sounds */
+	if (board == &digBoard) {
+		if (type == SOUND_METAL) rate = 120;
+		else rate = 80;
+	}
+	else {
+		volume /= 2;
+		if (type == SOUND_METAL) rate = 140;
+	}
+	Sounds_PlayAdvanced(type, board, volume, rate);
 }
 
-void Sounds_PlayVolume(cc_uint8 type, struct Soundboard* board, cc_uint32 volume) {
+void Sounds_PlayAdvanced(cc_uint8 type, struct Soundboard* board, cc_uint32 volume, cc_uint32 rate) {
+
 	const struct Sound* snd;
 	struct AudioData data;
 	cc_result res;
@@ -185,19 +199,8 @@ void Sounds_PlayVolume(cc_uint8 type, struct Soundboard* board, cc_uint32 volume
 	data.chunk = snd->chunk;
 	data.channels = snd->channels;
 	data.sampleRate = snd->sampleRate;
-	data.rate = 100;
+	data.rate = rate;
 	data.volume = volume;
-
-	/* https://minecraft.wiki/w/Block_of_Gold#Sounds */
-	/* https://minecraft.wiki/w/Grass#Sounds */
-	if (board == &digBoard) {
-		if (type == SOUND_METAL) data.rate = 120;
-		else data.rate = 80;
-	}
-	else {
-		data.volume /= 2;
-		if (type == SOUND_METAL) data.rate = 140;
-	}
 
 	res = AudioPool_Play(&data);
 	if (res) Sounds_Fail(res);
