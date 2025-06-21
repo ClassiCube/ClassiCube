@@ -715,6 +715,10 @@ void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity) {
 	comp->JumpVel       = 0.42f;
 	comp->UserJumpVel   = 0.42f;
 	comp->ServerJumpVel = 0.42f;
+
+	comp->gravity = 0.08f;
+	Vec3_Set(comp->drag,           0.91f, 0.98f, 0.91f);
+	Vec3_Set(comp->groundFriction, 0.6f,   1.0f,  0.6f);
 }
 
 static cc_bool PhysicsComp_TouchesLiquid(BlockID block) { return Blocks.Collide[block] == COLLIDE_LIQUID; }
@@ -961,12 +965,12 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * 1.7f, ropeDrag, ROPE_GRAVITY, verSpeed);
 	} else {
 		factor  = hacks->Floating || entity->OnGround ? 0.1f : 0.02f;
-		gravity = comp->UseLiquidGravity ? LIQUID_GRAVITY : entity->Model->gravity;
+		gravity = comp->UseLiquidGravity ? LIQUID_GRAVITY : comp->gravity;
 
 		if (hacks->Floating) {
-			PhysicsComp_MoveFlying(comp, vel, factor * horSpeed, entity->Model->drag, gravity, verSpeed);
+			PhysicsComp_MoveFlying(comp, vel, factor * horSpeed, comp->drag, gravity, verSpeed);
 		} else {
-			PhysicsComp_MoveNormal(comp, vel, factor * horSpeed, entity->Model->drag, gravity, verSpeed);
+			PhysicsComp_MoveNormal(comp, vel, factor * horSpeed, comp->drag, gravity, verSpeed);
 		}
 
 		if (PhysicsComp_OnIce(entity) && !hacks->Floating) {
@@ -980,7 +984,7 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 				entity->Velocity.z *= scale;
 			}
 		} else if (entity->OnGround || hacks->Flying) {
-			Vec3_Mul3By(&entity->Velocity, &entity->Model->groundFriction); /* air drag or ground friction */
+			Vec3_Mul3By(&entity->Velocity, &comp->groundFriction); /* air drag or ground friction */
 		}
 	}
 
