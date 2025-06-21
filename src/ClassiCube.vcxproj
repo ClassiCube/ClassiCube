@@ -460,7 +460,42 @@
     <ClCompile Include="Graphics_GCWii.c" />
     <ClCompile Include="Graphics_GL1.c" />
     <ClCompile Include="Audio.c" />
-    <ClCompile Include="AudioBackend.c" />
+	 <ClCompile Include="Audio_3DS.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_Dreamcast.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_GCWii.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_Null.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_OpenAL.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_OS2.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_SLES.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_Switch.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_Symbian.cpp">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_Web.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_WiiU.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_WinMM.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />

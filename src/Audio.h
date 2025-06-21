@@ -46,6 +46,8 @@ extern int Audio_MusicVolume;
 extern const cc_string Sounds_ZipPathMC;
 extern const cc_string Sounds_ZipPathCC;
 
+void Sounds_PlayAdvanced(cc_uint8 type, struct Soundboard* board, cc_uint32 volume, cc_int32 rate);
+
 void Audio_SetMusic(int volume);
 void Audio_SetSounds(int volume);
 void Audio_PlayDigSound(cc_uint8 type);

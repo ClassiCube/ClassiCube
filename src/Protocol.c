@@ -97,7 +97,8 @@ static struct CpeExt
 	cinematicGui_Ext    = { "CinematicGui", 1 },
 	notifyAction_Ext    = { "NotifyAction", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
-	extBlocks_Ext       = { "ExtendedBlocks", 1 };
+	extBlocks_Ext       = { "ExtendedBlocks", 1 },
+	extPlaySound_Ext	= { "PlaySound", 1 };
 
 static struct CpeExt* cpe_clientExtensions[] = {
 	&clickDist_Ext, &customBlocks_Ext, &heldBlock_Ext, &emoteFix_Ext, &textHotKey_Ext, &extPlayerList_Ext,
@@ -106,6 +107,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
 	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext, &notifyAction_Ext,
+	&extPlaySound_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
@@ -1618,6 +1620,78 @@ static void CPE_ToggleBlockList(cc_uint8* data) {
 	}
 }
 
+static void CPE_PlaySoundBase(cc_uint8 channel, cc_uint32 volume, cc_uint8 rate, cc_uint16 id)
+{
+	// Skip a sound that's played at zero volume or when the sound is zero
+	if (!volume) 
+		return;
+
+	// Currently we're only playing sounds, not music with this packet, so skip when sound is zero
+	if (!Audio_SoundsVolume) 
+		return;
+
+	// Avoid playing an ID outside of supported sounds
+	if (channel <= 1 && id >= SOUND_COUNT)
+		return;
+
+	// Ensure we're not going to play a sound at zero rate
+	if (!rate)
+		rate = 100;
+
+	// Play sound relative to volume
+	cc_uint32 volume_calculated = volume == 255 ? Audio_SoundsVolume : (cc_uint32)((float)Audio_SoundsVolume * (float)volume / 255);
+
+	switch (channel)
+	{
+		case 0: // Dig Soundboard
+			Sounds_PlayAdvanced(id, &digBoard, volume_calculated, rate);
+			break;
+		case 1: // Step Soundboard
+			Sounds_PlayAdvanced(id, &stepBoard, volume_calculated, rate);
+			break;
+		// Music and other categories could be implemented in future
+	}
+}
+
+static void CPE_PlaySound(cc_uint8* data)
+{
+	cc_uint8 channel = data[0]; // 0 = dig sounds, 1 = step sounds
+	cc_uint8 volume = data[1]; // 0 - 255
+	cc_uint8 rate = data[2]; // 100 = default
+	cc_uint16 id = Stream_GetU16_BE(data + 3);
+	
+	CPE_PlaySoundBase(channel, volume , rate, id);
+}
+
+static void CPE_PlaySound3D(cc_int8* data)
+{
+	cc_uint8 channel = data[0]; // 0 = dig sounds, 1 = step sounds
+	cc_uint8 volume = data[1]; // 0 - 255
+	cc_uint8 rate = data[2]; // 100 = default
+	cc_uint16 id = Stream_GetU16_BE(data + 3);
+
+	cc_uint16 pos_x = Stream_GetU16_BE(data + 5);
+	cc_uint16 pos_y = Stream_GetU16_BE(data + 7);
+	cc_uint16 pos_z = Stream_GetU16_BE(data + 9);
+
+	if (!volume) return; // We'll just add these checks here as well just to avoid expensive distance calculation
+	if (!Audio_SoundsVolume) return;
+
+	struct Entity* e = &Entities.CurPlayer->Base;
+	cc_int32 dx = (e->Position.x - pos_x);
+	cc_int32 dy = (e->Position.y - pos_y);
+	cc_int32 dz = (e->Position.z - pos_z);
+	cc_uint32 distance= ((dx * dx) + (dy * dy) + (dz * dz));
+
+	if (distance >= 65025) return;
+
+	cc_uint32 volume_calculated = distance == 0 ? 255 : ((volume * volume) / distance);
+	if (volume_calculated > 255) volume_calculated = 255;
+	CPE_PlaySoundBase(channel, volume_calculated, rate, id);
+}
+
+
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	CPEExtensions_Reset();
@@ -1663,6 +1737,9 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
 	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 10);
 	Net_Set(OPCODE_TOGGLE_BLOCK_LIST, CPE_ToggleBlockList, 2);
+
+	Net_Set(OPCODE_SOUND_PLAY, CPE_PlaySound, 6)
+	Net_Set(OPCODE_SOUND_PLAY3D, CPE_PlaySound3D, 12)
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {
