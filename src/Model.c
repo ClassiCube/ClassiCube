@@ -41,10 +41,6 @@ void Model_Init(struct Model* model) {
 	model->usesHumanSkin  = false;
 	model->pushes = true;
 
-	model->gravity     = 0.08f;
-	Vec3_Set(model->drag,           0.91f, 0.98f, 0.91f);
-	Vec3_Set(model->groundFriction, 0.6f,   1.0f,  0.6f);
-
 	model->maxScale    = 2.0f;
 	model->shadowScale = 1.0f;
 	model->armX = 6; model->armY = 12;
@@ -200,7 +196,7 @@ void Model_LockVB(struct Entity* entity, int verticesCount) {
 #endif
 
 	real_vertices   = Models.Vertices;
-	Models.Vertices = Gfx_LockDynamicVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
+	Models.Vertices = (struct VertexTextured*)Gfx_LockDynamicVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
 }
 
 void Model_UnlockVB(void) {
@@ -530,7 +526,7 @@ struct CustomModel* CustomModel_Get(int id) {
 
 	/* TODO log message if allocation fails? */
 	if (!custom_models)
-		custom_models = Mem_TryAlloc(MAX_CUSTOM_MODELS, sizeof(struct CustomModel));
+		custom_models = (struct CustomModel*)Mem_TryAlloc(MAX_CUSTOM_MODELS, sizeof(struct CustomModel));
 
 	if (!custom_models) return NULL;
 	return &custom_models[id];
@@ -874,8 +870,9 @@ void CustomModel_Register(struct CustomModel* cm) {
 	static struct ModelTex customDefaultTex;
 
 	CheckMaxVertices();
-	cm->model.name       = cm->name;
-	cm->model.defaultTex = &customDefaultTex;
+	cm->model.name        = cm->name;
+	cm->model.defaultTex  = &customDefaultTex;
+	cm->model.maxVertices = cm->numParts * MODEL_BOX_VERTICES;
 
 	cm->model.MakeParts = Model_NoParts;
 	cm->model.Draw      = CustomModel_Draw;
@@ -940,8 +937,8 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	int type, num;
 	Model_ApplyTexture(e);
 
-	type = Models.skinType;
-	set  = &model->limbs[type & 0x3];
+	type = Models.skinType & 0x3;
+	set  = &model->limbs[type];
 	num  = HUMAN_BASE_VERTICES + (type == SKIN_64x32 ? HUMAN_HAT32_VERTICES : HUMAN_HAT64_VERTICES);
 	Model_LockVB(e, num);
 
@@ -971,9 +968,9 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	if (opaqueBody) {
 		/* human model draws the body opaque so players can't have invisible skins */
 		Gfx_SetAlphaTest(false);
-		Gfx_DrawVb_IndexedTris_Range(HUMAN_BASE_VERTICES, 0);
+		Gfx_DrawVb_IndexedTris_Range(HUMAN_BASE_VERTICES, 0, DRAW_HINT_NONE);
 		Gfx_SetAlphaTest(true);
-		Gfx_DrawVb_IndexedTris_Range(num - HUMAN_BASE_VERTICES, HUMAN_BASE_VERTICES);
+		Gfx_DrawVb_IndexedTris_Range(num - HUMAN_BASE_VERTICES, HUMAN_BASE_VERTICES, DRAW_HINT_NONE);
 	} else {
 		Gfx_DrawVb_IndexedTris(num);
 	}
@@ -1154,7 +1151,7 @@ static float HumanModel_GetEyeY(struct Entity* e)  { return 26.0f/16.0f; }
 static void HumanModel_GetSize(struct Entity* e)   { Model_RetSize(8.6f,28.1f,8.6f); }
 static void HumanModel_GetBounds(struct Entity* e) { Model_RetAABB(-8,0,-4, 8,32,4); }
 
-static struct ModelVertex human_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
+static CC_BIG_VAR struct ModelVertex human_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
 static struct ModelTex human_tex = { "char.png" };
 static struct Model  human_model = { 
 	"humanoid", human_vertices, &human_tex,
@@ -1788,7 +1785,7 @@ static void SheepModel_Draw(struct Entity* e) {
 	Model_UnlockVB();
 	Gfx_DrawVb_IndexedTris(SHEEP_BODY_VERTICES);
 	Gfx_BindTexture(fur_tex.texID);
-	Gfx_DrawVb_IndexedTris_Range(SHEEP_FUR_VERTICES, SHEEP_BODY_VERTICES);
+	Gfx_DrawVb_IndexedTris_Range(SHEEP_FUR_VERTICES, SHEEP_BODY_VERTICES, DRAW_HINT_NONE);
 }
 
 static float SheepModel_GetNameY(struct Entity* e) { return 1.48125f; }
@@ -2202,7 +2199,7 @@ static void BlockModel_DrawParts(void) {
 
 		/* Different 1D flush texture, flush current vertices */
 		Atlas1D_Bind(lastTexIndex);
-		Gfx_DrawVb_IndexedTris_Range(count, offset);
+		Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_NONE);
 		lastTexIndex = bModel_texIndices[i];
 			
 		offset += count;
@@ -2212,7 +2209,7 @@ static void BlockModel_DrawParts(void) {
 	/* Leftover vertices */
 	if (!count) return;
 	Atlas1D_Bind(lastTexIndex); 
-	Gfx_DrawVb_IndexedTris_Range(count, offset);
+	Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_NONE);
 }
 
 static void BlockModel_Draw(struct Entity* e) {
@@ -2380,6 +2377,7 @@ static void HoldModel_Register(void) {
 *#########################################################################################################################*/
 static void RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);
+#ifndef CC_DISABLE_EXTRA_MODELS
 	Model_RegisterTexture(&chicken_tex);
 	Model_RegisterTexture(&creeper_tex);
 	Model_RegisterTexture(&pig_tex);
@@ -2389,12 +2387,14 @@ static void RegisterDefaultModels(void) {
 	Model_RegisterTexture(&spider_tex);
 	Model_RegisterTexture(&zombie_tex);
 	Model_RegisterTexture(&skinnedCube_tex);
+#endif
 
 	HumanoidModel_Register();
 	MakeModel(&human_model);
 	Models.Human = &human_model;
 	BlockModel_Register();
 
+#ifndef CC_DISABLE_EXTRA_MODELS
 	ChickenModel_Register();
 	CreeperModel_Register();
 	PigModel_Register();
@@ -2410,6 +2410,7 @@ static void RegisterDefaultModels(void) {
 	CorpseModel_Register();
 	SkinnedCubeModel_Register();
 	HoldModel_Register();
+#endif
 }
 
 static void OnContextLost(void* obj) {

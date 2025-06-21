@@ -21,30 +21,133 @@
 #include <gx2r/buffer.h>
 #include <whb/gfx.h>
 #include <coreinit/memdefaultheap.h>
-#include "../build-wiiu/coloured_gsh.h"
-#include "../build-wiiu/textured_gsh.h"
+#include <malloc.h>
 
-static WHBGfxShaderGroup colorShader;
-static WHBGfxShaderGroup textureShader;
-static GX2Sampler sampler;
-static GfxResourceID white_square;
-static WHBGfxShaderGroup* group;
+/*########################################################################################################################*
+*------------------------------------------------------Fetch shaders------------------------------------------------------*
+*#########################################################################################################################*/
+#define VERTEX_OFFSET_POS     0
+#define VERTEX_OFFSET_COLOR  12
+#define VERTEX_OFFSET_COORDS 16
 
-static void InitGfx(void) {
-   	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
-	
-	WHBGfxLoadGFDShaderGroup(&colorShader, 0, coloured_gsh);
-	WHBGfxInitShaderAttribute(&colorShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
-	WHBGfxInitShaderAttribute(&colorShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
-	WHBGfxInitFetchShader(&colorShader);
-	
-	WHBGfxLoadGFDShaderGroup(&textureShader, 0, textured_gsh);
-	WHBGfxInitShaderAttribute(&textureShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
-	WHBGfxInitShaderAttribute(&textureShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
-	WHBGfxInitShaderAttribute(&textureShader, "in_uv",  0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32);
-	WHBGfxInitFetchShader(&textureShader);
+static const GX2AttribStream colour_attributes[] = {
+	{ 0, 0, VERTEX_OFFSET_POS,   GX2_ATTRIB_FORMAT_FLOAT_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_1), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 1, 0, VERTEX_OFFSET_COLOR, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8,  GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_W), GX2_ENDIAN_SWAP_DEFAULT }
+};
+
+static const GX2AttribStream texture_attributes[] = {
+	{ 0, 0, VERTEX_OFFSET_POS,    GX2_ATTRIB_FORMAT_FLOAT_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_1), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 1, 0, VERTEX_OFFSET_COLOR,  GX2_ATTRIB_FORMAT_UNORM_8_8_8_8,  GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_Z, GX2_SQ_SEL_W), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 2, 0, VERTEX_OFFSET_COORDS, GX2_ATTRIB_FORMAT_FLOAT_32_32,    GX2_ATTRIB_INDEX_PER_VERTEX, 
+		0, GX2_SEL_MASK(GX2_SQ_SEL_X, GX2_SQ_SEL_Y, GX2_SQ_SEL_0, GX2_SQ_SEL_1), GX2_ENDIAN_SWAP_DEFAULT },
+};
+static GX2FetchShader colour_FS, texture_FS;
+
+static void CompileFetchShader(GX2FetchShader* shader, const GX2AttribStream* attribs, int numAttribs) {
+   uint32_t size = GX2CalcFetchShaderSizeEx(numAttribs,
+                                            GX2_FETCH_SHADER_TESSELLATION_NONE,
+                                            GX2_TESSELLATION_MODE_DISCRETE);
+   void* program = memalign(GX2_SHADER_PROGRAM_ALIGNMENT, size);
+
+   GX2InitFetchShaderEx(shader, program, numAttribs, attribs,
+                        GX2_FETCH_SHADER_TESSELLATION_NONE,
+                        GX2_TESSELLATION_MODE_DISCRETE);
+
+   GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, program, size);
 }
 
+static void CompileFetchShaders(void) {
+	CompileFetchShader(&colour_FS,  colour_attributes,  Array_Elems(colour_attributes));
+	CompileFetchShader(&texture_FS, texture_attributes, Array_Elems(texture_attributes));
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Shaders---------------------------------------------------------*
+*#########################################################################################################################*/
+extern const uint8_t coloured_none_gsh[];
+extern const uint8_t textured_none_gsh[];
+extern const uint8_t textured_lin_gsh[];
+extern const uint8_t textured_exp_gsh[];
+extern const uint8_t offset_none_gsh[];
+extern const uint8_t offset_lin_gsh[];
+extern const uint8_t offset_exp_gsh[];
+
+#define VS_UNI_OFFSET_MVP   0
+#define VS_UNI_COUNT_MVP   16
+#define VS_UNI_OFFSET_OFST 16
+#define VS_UNI_COUNT_OFST   4
+
+#define PS_UNI_OFFSET_COLOR 0
+#define PS_UNI_COUNT_COLOR  4
+#define PS_UNI_OFFSET_FOG   4
+#define PS_UNI_COUNT_FOG    4
+
+struct ShaderProgram {
+	GX2VertexShader* vs;
+	GX2PixelShader*  ps;
+};
+
+static struct ShaderProgram colour_PG, texture_PG[3], offset_PG[3];
+
+static void LoadProgram(struct ShaderProgram* prog, const cc_uint8* gsh) {
+	prog->vs = WHBGfxLoadGFDVertexShader(0, gsh);
+	prog->ps = WHBGfxLoadGFDPixelShader(0,  gsh);
+}
+
+static GX2Sampler sampler;
+static GfxResourceID white_square;
+static struct ShaderProgram* cur_PG;
+static int fog_func;
+
+static void InitGfx(void) {
+	CompileFetchShaders();
+   	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
+	
+	LoadProgram(&colour_PG, coloured_none_gsh);
+
+	LoadProgram(&texture_PG[0], textured_none_gsh);
+	LoadProgram(&texture_PG[1], textured_lin_gsh);
+	LoadProgram(&texture_PG[2], textured_exp_gsh);
+
+	LoadProgram(&offset_PG[0], offset_none_gsh);
+	LoadProgram(&offset_PG[1], offset_lin_gsh);
+	LoadProgram(&offset_PG[2], offset_exp_gsh);
+}
+
+static struct Vec4 texOffset;
+
+static int CalcPSIndex(void) {
+	if (gfx_fogEnabled && fog_func == FOG_EXP)    return 2;
+	if (gfx_fogEnabled && fog_func == FOG_LINEAR) return 1;
+
+	return 0;
+}
+
+static void UpdateProgram(void) {
+	struct ShaderProgram* prog;
+
+	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
+		prog = &colour_PG;
+	} else if (texOffset.x || texOffset.y) {
+		prog = &offset_PG[CalcPSIndex()];
+	} else {
+		prog = &texture_PG[CalcPSIndex()];
+	}
+
+	cur_PG = prog;
+	GX2SetPixelShader(prog->ps);
+	GX2SetVertexShader(prog->vs);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------General---------------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_Create(void) {
 	if (!Gfx.Created) InitGfx();
 	
@@ -84,7 +187,7 @@ static void Gfx_RestoreState(void) {
 *#########################################################################################################################*/
 static GX2Texture* pendingTex;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GX2Texture* tex = Mem_TryAllocCleared(1, sizeof(GX2Texture));
 	if (!tex) return NULL;
 
@@ -128,16 +231,18 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 static void BindPendingTexture(void) {
-	if (!pendingTex || group != &textureShader) return;
+	if (!pendingTex || cur_PG == &colour_PG) return;
 	
-	GX2SetPixelTexture(pendingTex, group->pixelShader->samplerVars[0].location);
-	GX2SetPixelSampler(&sampler,   group->pixelShader->samplerVars[0].location);
+	GX2SetPixelTexture(pendingTex, cur_PG->ps->samplerVars[0].location);
+	GX2SetPixelSampler(&sampler,   cur_PG->ps->samplerVars[0].location);
  	pendingTex = NULL;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	if (*texId == pendingTex) pendingTex = NULL;
+	GX2Texture* tex = (GX2Texture*)texId;
+	if (tex == pendingTex) pendingTex = NULL;
 	// TODO free memory ???
+	*texId = NULL;
 }
 
 void Gfx_EnableMipmaps(void) { }  // TODO
@@ -160,23 +265,36 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 }
 
 void Gfx_SetFog(cc_bool enabled) {
-	// TODO
+	gfx_fogEnabled = enabled;
+	UpdateProgram();
 }
 
 void Gfx_SetFogCol(PackedCol color) {
-	// TODO
+	struct Vec4 c = {
+		PackedCol_R(color) / 255.0f,
+		PackedCol_G(color) / 255.0f,
+		PackedCol_B(color) / 255.0f,
+		1.0f
+	};
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_COLOR, PS_UNI_COUNT_COLOR, &c);
 }
 
+static struct Vec4 fogValue;
+#define LOG2_E 1.44269504089f
+
 void Gfx_SetFogDensity(float value) {
-	// TODO
+	fogValue.x = -value * LOG2_E;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
 }
 
 void Gfx_SetFogEnd(float value) {
-	// TODO
+	fogValue.y = 1.0f / value;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
 }
 
 void Gfx_SetFogMode(FogFunc func) {
-	// TODO
+	fog_func = func;
+	UpdateProgram();
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -311,10 +429,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 	
-	group = fmt == VERTEX_FORMAT_TEXTURED ? &textureShader : &colorShader;
-	GX2SetFetchShader(&group->fetchShader);
-	GX2SetVertexShader(group->vertexShader);
-	GX2SetPixelShader(group->pixelShader);
+	GX2SetFetchShader(fmt == VERTEX_FORMAT_TEXTURED ? &texture_FS : &colour_FS);
+	UpdateProgram();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -327,7 +443,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, 0, 1);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	BindPendingTexture();
 	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
@@ -342,15 +458,14 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
+static struct Matrix _mvp __attribute__((aligned(64)));
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 	
-	// TODO dirty uniform
-	struct Matrix mvp __attribute__((aligned(64)));	
-	Matrix_Mul(&mvp, &_view, &_proj);
-	if (!group) return;
-	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &mvp);
+	Matrix_Mul(&_mvp, &_view, &_proj);
+	GX2SetVertexUniformReg(VS_UNI_OFFSET_MVP, VS_UNI_COUNT_MVP, &_mvp);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -360,11 +475,17 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	// TODO
+	texOffset.x = x;
+	texOffset.y = y;
+
+	UpdateProgram();
+	GX2SetVertexUniformReg(VS_UNI_OFFSET_OFST, VS_UNI_COUNT_OFST, &texOffset);
 }
 
 void Gfx_DisableTextureOffset(void) {
-	// TODO
+	texOffset.x = 0;
+	texOffset.y = 0;
+	UpdateProgram();
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
@@ -408,52 +529,38 @@ void Gfx_SetVSync(cc_bool vsync) {
 	// TODO GX2SetSwapInterval(1);
 }
 
-void Gfx_BeginFrame(void) { 
-	uint32_t swapCount, flipCount;
-	OSTime lastFlip, lastVsync;
-	
-	for (int try = 0; try < 10; try++)
-	{
-		GX2GetSwapStatus(&swapCount, &flipCount, &lastFlip, &lastVsync);
-		if (flipCount >= swapCount) break;
-		GX2WaitForVsync(); // TODO vsync
-	}
-	
-	GX2ContextState* state = WHBGfxGetTVContextState();
-	GX2SetContextState(state);
+void Gfx_BeginFrame(void) {
+	WHBGfxBeginRender();
+	WHBGfxBeginRenderTV();
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	GX2ColorBuffer* buf = WHBGfxGetTVColourBuffer();
-	GX2DepthBuffer* dph = WHBGfxGetTVDepthBuffer();
-
-	if (buffers & GFX_BUFFER_COLOR) {
-		GX2ClearColor(buf, clearR, clearG, clearB, 1.0f);
-	}
-	if (buffers & GFX_BUFFER_DEPTH) {
-		GX2ClearDepthStencilEx(dph, 1.0f, 0, GX2_CLEAR_FLAGS_DEPTH | GX2_CLEAR_FLAGS_STENCIL);
-	}
+	WHBGfxClearColor(clearR, clearG, clearB, 1.0f);
 }
 
 static int drc_ticks;
-void Gfx_EndFrame(void) {
-	GX2ColorBuffer* buf;
-	
-	buf = WHBGfxGetTVColourBuffer();
-	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_TV);	
+static GfxResourceID drc_vb;
+static void CreateDRCTest(void) {
+	if (drc_vb) return;
 
-	GX2ContextState* state = WHBGfxGetDRCContextState();
-	GX2SetContextState(state);
-	drc_ticks = (drc_ticks + 1) % 200;
-	buf = WHBGfxGetDRCColourBuffer();
-	GX2ClearColor(buf, drc_ticks / 200.0f, drc_ticks / 200.0f, drc_ticks / 200.0f, 1.0f);
-	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_DRC);	
-	
-	GX2SwapScanBuffers();
-	GX2Flush();
-	GX2DrawDone();
-	GX2SetTVEnable(TRUE);
-	GX2SetDRCEnable(TRUE);
+	drc_vb = Gfx_CreateVb(VERTEX_FORMAT_COLOURED, 4);
+	struct VertexColoured* data = (struct VertexColoured*)Gfx_LockVb(drc_vb, VERTEX_FORMAT_COLOURED, 4);
+
+	data[0].x = -0.5f; data[0].y = -0.5f; data[0].z = 0.0f; data[0].Col = PACKEDCOL_WHITE;
+	data[1].x =  0.5f; data[1].y = -0.5f; data[1].z = 0.0f; data[1].Col = PACKEDCOL_WHITE; 
+	data[2].x =  0.5f; data[2].y =  0.5f; data[2].z = 0.0f; data[2].Col = PACKEDCOL_WHITE;
+	data[3].x = -0.5f; data[3].y =  0.5f; data[3].z = 0.0f; data[3].Col = PACKEDCOL_WHITE;
+
+	Gfx_UnlockVb(drc_vb);
+}
+
+void Gfx_EndFrame(void) {
+	WHBGfxFinishRenderTV();
+	WHBGfxBeginRenderDRC();
+	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+	WHBGfxFinishRenderDRC();
+
+	WHBGfxFinishRender();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }

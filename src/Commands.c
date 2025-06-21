@@ -17,6 +17,7 @@
 #include "TexturePack.h"
 #include "Options.h"
 #include "Drawer2D.h"
+#include "Audio.h"
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
@@ -253,8 +254,27 @@ static struct ChatCommand ModelCommand = {
 	}
 };
 
+static void SkinCommand_Execute(const cc_string* args, int argsCount) {
+	if (argsCount) {
+		Entity_SetSkin(&Entities.CurPlayer->Base, args);
+	} else {
+		Chat_AddRaw("&e/client skin: &cYou didn't specify a skin name.");
+	}
+}
+
+static struct ChatCommand SkinCommand = {
+	"Skin", SkinCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client skin [name]",
+		"&eChanges to the skin to the given player",
+		"&a/client skin [url]",
+		"&eChanges skin to a URL linking directly to a .PNG",
+	}
+};
+
 static void ClearDeniedCommand_Execute(const cc_string* args, int argsCount) {
-	int count = TextureCache_ClearDenied();
+	int count = TextureUrls_ClearDenied();
 	Chat_Add1("Removed &e%i &fdenied texture pack URLs.", &count);
 }
 
@@ -282,6 +302,64 @@ static struct ChatCommand MotdCommand = {
 	{
 		"&a/client motd",
 		"&eDisplays the server's name and MOTD."
+	}
+};
+
+/*#######################################################################################################################*
+*-------------------------------------------------------PlaceCommand-----------------------------------------------------*
+*########################################################################################################################*/
+
+static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
+	cc_string name;
+	cc_uint8 off;
+	int block;
+	IVec3 pos;
+	
+	if (argsCount == 2) {
+		Chat_AddRaw("&eToo few arguments.");
+		return;
+	}
+	
+	block = !argsCount || argsCount == 3 ? Inventory_SelectedBlock : Block_Parse(&args[0]);
+	
+	if (block == -1) {
+		Chat_AddRaw("&eCould not parse block.");
+		return;
+	}
+	if (block > Game_Version.MaxCoreBlock && !Block_IsCustomDefined(block)) {
+		Chat_Add1("&eThere is no block with id \"%i\".", &block); 
+		return;
+	}
+	
+	if (argsCount > 2) {
+		off = argsCount == 4;
+		if (!Convert_ParseInt(&args[0 + off], &pos.x) || !Convert_ParseInt(&args[1 + off], &pos.y) || !Convert_ParseInt(&args[2 + off], &pos.z)) {
+			Chat_AddRaw("&eCould not parse coordinates.");
+			return;
+		}
+	} else {
+		IVec3_Floor(&pos, &Entities.CurPlayer->Base.Position);
+	}
+	
+	if (!World_Contains(pos.x, pos.y, pos.z)) {
+		Chat_AddRaw("&eCoordinates are outside the world boundaries.");
+		return;
+	}
+	
+	Game_ChangeBlock(pos.x, pos.y, pos.z, block);
+	name = Block_UNSAFE_GetName(block);
+	Chat_Add4("&eSuccessfully placed %s block at (%i, %i, %i).", &name, &pos.x, &pos.y, &pos.z);
+}
+
+static struct ChatCommand PlaceCommand = {
+	"Place", PlaceCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY,
+	{
+		"&a/client place [block] [x y z]",
+		"&ePlaces block at [x y z].",
+		"&eIf no block is provided, held block is used.",
+		"&eIf no coordinates are provided, current",
+		"&e coordinates are used."
 	}
 };
 
@@ -724,9 +802,11 @@ static void OnInit(void) {
 	Commands_Register(&RenderTypeCommand);
 	Commands_Register(&ResolutionCommand);
 	Commands_Register(&ModelCommand);
+	Commands_Register(&SkinCommand);
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
 	Commands_Register(&MotdCommand);
+	Commands_Register(&PlaceCommand);
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&ReplaceCommand);

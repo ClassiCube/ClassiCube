@@ -5,7 +5,7 @@
 CC_BEGIN_HEADER
 
 /*  Performs a variety of drawing operations on bitmaps, and converts bitmaps into textures.
-	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 enum FONT_FLAGS { FONT_FLAGS_NONE = 0x00, FONT_FLAGS_BOLD = 0x01, FONT_FLAGS_UNDERLINE = 0x02, FONT_FLAGS_PADDING = 0x04 };

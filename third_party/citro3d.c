@@ -242,7 +242,6 @@ typedef struct
 	u16 height;
 	GPU_COLORBUF colorFmt;
 	GPU_DEPTHBUF depthFmt;
-	bool block32;
 	u8 colorMask : 4;
 	u8 depthMask : 4;
 } C3D_FrameBuf;
@@ -262,13 +261,6 @@ static C3D_FrameBuf* C3D_GetFrameBuf(void);
 static void C3D_SetFrameBuf(C3D_FrameBuf* fb);
 static void C3D_FrameBufClear(C3D_FrameBuf* fb, C3D_ClearBits clearBits, u32 clearColor, u32 clearDepth);
 static void C3D_FrameBufTransfer(C3D_FrameBuf* fb, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
-
-static inline void C3D_FrameBufAttrib(C3D_FrameBuf* fb, u16 width, u16 height, bool block32)
-{
-	fb->width   = width;
-	fb->height  = height;
-	fb->block32 = block32;
-}
 
 static inline void C3D_FrameBufColor(C3D_FrameBuf* fb, void* buf, GPU_COLORBUF fmt)
 {
@@ -860,7 +852,7 @@ static void C3Di_FrameBufBind(C3D_FrameBuf* fb)
 	GPUCMD_AddWrite(GPUREG_RENDERBUF_DIM,       param[2]);
 	GPUCMD_AddWrite(GPUREG_DEPTHBUFFER_FORMAT,  fb->depthFmt);
 	GPUCMD_AddWrite(GPUREG_COLORBUFFER_FORMAT,  colorFmtSizes[fb->colorFmt] | ((u32)fb->colorFmt << 16));
-	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_BLOCK32, fb->block32 ? 1 : 0);
+	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_BLOCK32, 0);
 
 	// Enable or disable color/depth buffers
 	param[0] = param[1] = fb->colorBuf ? fb->colorMask : 0;
@@ -1147,7 +1139,8 @@ static void C3D_RenderTargetInit(C3D_RenderTarget* target, int width, int height
 	memset(target, 0, sizeof(C3D_RenderTarget));
 
 	C3D_FrameBuf* fb = &target->frameBuf;
-	C3D_FrameBufAttrib(fb, width, height, false);
+	fb->width   = width;
+	fb->height  = height;
 }
 
 static void C3D_RenderTargetColor(C3D_RenderTarget* target, GPU_COLORBUF colorFmt)

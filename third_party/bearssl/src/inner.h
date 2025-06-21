@@ -25,7 +25,11 @@
 #ifndef INNER_H__
 #define INNER_H__
 
+#ifdef __SYMBIAN32__
+#include <stdapis/string.h>
+#else
 #include <string.h>
+#endif
 #include <limits.h>
 
 #include "config.h"
@@ -1911,19 +1915,6 @@ unsigned br_aes_x86ni_keysched_enc(unsigned char *skni,
  * Key size MUST be 16, 24 or 32 bytes; otherwise, 0 is returned.
  */
 unsigned br_aes_x86ni_keysched_dec(unsigned char *skni,
-	const void *key, size_t len);
-
-/*
- * Test support for AES POWER8 opcodes.
- */
-int br_aes_pwr8_supported(void);
-
-/*
- * AES key schedule, using POWER8 instructions. This yields the
- * subkeys in the encryption direction. Number of rounds is returned.
- * Key size MUST be 16, 24 or 32 bytes; otherwise, 0 is returned.
- */
-unsigned br_aes_pwr8_keysched(unsigned char *skni,
 	const void *key, size_t len);
 
 /* ==================================================================== */

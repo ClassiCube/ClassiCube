@@ -18,12 +18,20 @@
 	
 	#include <windows.h>
 	#include <imagehlp.h>
+	#ifndef CC_BUILD_UWP
+	/* Compatibility version so compiling works on older Windows SDKs */
+	#include "../misc/windows/min-imagehlp.h"
+	#define CC_KERN32_FUNC extern /* main use is Platform_Windows.c */
+	#include "../misc/windows/min-kernel32.h"
+	#endif
+
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
+	static cc_uintptr spRegister;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
 	#include <signal.h>
 	/* These operating systems don't provide sys/ucontext.h */
 	/*  But register constants be found from includes in <signal.h> */
-	#elif defined CC_BUILD_OS2
+#elif defined CC_BUILD_OS2
 	#include <signal.h>
 	#include <386/ucontext.h>
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
@@ -31,6 +39,10 @@
 	#define _GNU_SOURCE
 	#include <sys/ucontext.h>
 	#include <signal.h>
+#elif defined CC_BUILD_SOLARIS
+	#include <signal.h>
+	#include <sys/ucontext.h>
+	#include <sys/regset.h>
 #elif defined CC_BUILD_POSIX
 	#include <signal.h>
 	#include <sys/ucontext.h>
@@ -42,8 +54,6 @@
 #endif
 /* Only show up to 50 frames in backtrace */
 #define MAX_BACKTRACE_FRAMES 50
-
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
 
 
 /*########################################################################################################################*
@@ -184,14 +194,17 @@ void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path) {
 /*########################################################################################################################*
 *------------------------------------------------------Frame dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, const char* symName, const char* modName) {
+static void PrintFrame(cc_string* str, cc_uintptr addr, 
+						cc_uintptr symAddr, const char* symName, 
+						cc_uintptr modBase, const char* modName) {
 	cc_string module;
+	cc_uintptr modAddr = addr - modBase;
 	int offset;
 	if (!modName) modName = "???";
 
 	module = String_FromReadonly(modName);
 	Utils_UNSAFE_GetFilename(&module);
-	String_Format2(str, "%x - %s", &addr, &module);
+	String_Format2(str, "%x - %s", &modAddr, &module);
 	
 	if (symName && symName[0]) {
 		offset = (int)(addr - symAddr);
@@ -201,10 +214,13 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 	}
 }
 
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_UWP
+static void DumpFrame(cc_string* trace, void* addr) {
+	cc_uintptr addr_ = (cc_uintptr)addr;
+	String_Format1(trace, "%x", &addr_);
+}
+#elif defined CC_BUILD_WIN
 struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
-static BOOL (WINAPI *_SymGetSymFromAddr)(HANDLE process, DWORD_PTR addr, DWORD_PTR* displacement, IMAGEHLP_SYMBOL* sym);
-static BOOL (WINAPI *_SymGetModuleInfo) (HANDLE process, DWORD_PTR addr, IMAGEHLP_MODULE* module);
 
 static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	char strBuffer[512]; cc_string str;
@@ -223,7 +239,9 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	}
 
 	String_InitArray(str, strBuffer);
-	PrintFrame(&str, addr, s.symbol.Address, s.symbol.Name, m.ModuleName);
+	PrintFrame(&str, addr, 
+				s.symbol.Address, s.symbol.Name, 
+				m.BaseOfImage, m.ModuleName);
 	String_AppendString(trace, &str);
 
 	/* This function only works for .pdb debug info anyways */
@@ -232,7 +250,7 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	{
 		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-		if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
+		if (_SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
 			String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
 		}
 	}
@@ -246,7 +264,9 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	String_InitArray(str, strBuffer);
 	/* alas NSModuleForSymbol doesn't work with raw addresses */
 
-	PrintFrame(&str, (cc_uintptr)addr, 0, NULL, NULL);
+	PrintFrame(&str, (cc_uintptr)addr, 
+				0, NULL, 
+				0, NULL);
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
@@ -266,16 +286,20 @@ static void DumpFrame(cc_string* trace, void* addr) {
 
 static void DumpFrame(cc_string* trace, void* addr) {
 	cc_string str; char strBuffer[384];
-	Dl_info s;
+	Dl_info s = { 0 };
 
 	String_InitArray(str, strBuffer);
-	s.dli_sname = NULL;
-	s.dli_fname = NULL;
 	dladdr(addr, &s);
 
-	PrintFrame(&str, (cc_uintptr)addr, (cc_uintptr)s.dli_saddr, s.dli_sname, s.dli_fname);
+	PrintFrame(&str, (cc_uintptr)addr, 
+				(cc_uintptr)s.dli_saddr, s.dli_sname, 
+				(cc_uintptr)s.dli_fbase, s.dli_fname);
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
+}
+#elif defined CC_BUILD_OS2
+static void DumpFrame(cc_string* trace, void* addr) {
+// TBD
 }
 #else
 /* No backtrace support implemented */
@@ -285,17 +309,18 @@ static void DumpFrame(cc_string* trace, void* addr) {
 /*########################################################################################################################*
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-static DWORD_PTR (WINAPI *_SymGetModuleBase)(HANDLE process, DWORD_PTR addr);
-static PVOID     (WINAPI *_SymFunctionTableAccess)(HANDLE process, DWORD_PTR addr);
-static BOOL      (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
+#if defined CC_BUILD_UWP
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+}
+#elif defined CC_BUILD_WIN
 
-static PVOID FunctionTableAccessCallback(HANDLE process, DWORD_PTR addr) {
+static PVOID WINAPI FunctionTableAccessCallback(HANDLE process, _DWORD_PTR addr) {
 	if (!_SymFunctionTableAccess) return NULL;
 	return _SymFunctionTableAccess(process, addr);
 }
 
-static DWORD_PTR GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
+static _DWORD_PTR WINAPI GetModuleBaseCallback(HANDLE process, _DWORD_PTR addr) {
 	if (!_SymGetModuleBase) return 0;
 	return _SymGetModuleBase(process, addr);
 }
@@ -306,14 +331,13 @@ static DWORD_PTR GetModuleBaseCallback(HANDLE process, DWORD_PTR addr) {
 /*  - if NULL is passed as the "ReadMemory" argument, the default callback using ReadProcessMemory is used */
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
-static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
+static BOOL WINAPI ReadMemCallback(HANDLE process, _DWORD_PTR baseAddress, PVOID buffer, DWORD size, DWORD* numBytesRead) {
 	SIZE_T numRead = 0;
 	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
 	
 	*numBytesRead = (DWORD)numRead; /* DWORD always 32 bits */
 	return ok;
 }
-static cc_uintptr spRegister;
 
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
@@ -329,22 +353,32 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	frame.AddrPC.Offset    = ctx->Eip;
 	frame.AddrFrame.Offset = ctx->Ebp;
 	frame.AddrStack.Offset = ctx->Esp;
-	spRegister             = ctx->Esp;
 #elif defined _M_X64
 	type = IMAGE_FILE_MACHINE_AMD64;
 	frame.AddrPC.Offset    = ctx->Rip;
-	frame.AddrFrame.Offset = ctx->Rsp;
+	frame.AddrFrame.Offset = ctx->Rbp;
 	frame.AddrStack.Offset = ctx->Rsp;
-	spRegister             = ctx->Rsp;
+#elif defined _M_ARM64
+	type = IMAGE_FILE_MACHINE_ARM64;
+	frame.AddrPC.Offset    = ctx->Pc;
+	frame.AddrFrame.Offset = ctx->Fp;
+	frame.AddrStack.Offset = ctx->Sp;
+#elif defined _M_ARM
+	type = IMAGE_FILE_MACHINE_ARM;
+	frame.AddrPC.Offset    = ctx->Pc;
+	frame.AddrFrame.Offset = ctx->R11;
+	frame.AddrStack.Offset = ctx->Sp;
 #else
 	/* Always available after XP, so use that */
 	return RtlCaptureStackBackTrace(0, max, (void**)addrs, NULL);
 #endif
-	thread = GetCurrentThread();
+	spRegister = frame.AddrStack.Offset;
+	thread     = GetCurrentThread();
+	if (!_StackWalk) return 0;
 
 	for (count = 0; count < max; count++) 
 	{
-		if (!StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, 
+		if (!_StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, 
 						FunctionTableAccessCallback, GetModuleBaseCallback, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
 		addrs[count] = frame.AddrPC.Offset;
@@ -399,7 +433,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 }
 #elif defined CC_BACKTRACE_BUILTIN
 /* Implemented later at end of the file */
-#elif defined CC_BUILD_POSIX && defined _GLIBC_
+#elif defined CC_BUILD_POSIX && (defined __GLIBC__ || defined CC_BUILD_OPENBSD)
 #include <execinfo.h>
 
 void Logger_Backtrace(cc_string* trace, void* ctx) {
@@ -411,6 +445,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
+}
+#elif defined CC_BUILD_SYMBIAN
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+	/* There is no dladdr on Symbian */
 }
 #elif defined CC_BUILD_POSIX
 /* musl etc - rely on unwind from GCC instead */
@@ -524,6 +563,13 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined _M_X64
 	#define REG_GET(reg, ign) &r->R ## reg
 	Dump_X64()
+#elif defined _M_ARM64
+	#define REG_GNUM(num)     &r->X[num]
+	#define REG_GET_FP()      &r->Fp
+	#define REG_GET_LR()      &r->Lr
+	#define REG_GET_SP()      &r->Sp
+	#define REG_GET_PC()      &r->Pc
+	Dump_ARM64()
 #elif defined _M_ARM
 	#define REG_GNUM(num)     &r->R ## num
 	#define REG_GET_FP()      &r->R11
@@ -532,13 +578,6 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_LR()      &r->Lr
 	#define REG_GET_PC()      &r->Pc
 	Dump_ARM32()
-#elif defined _M_ARM64
-	#define REG_GNUM(num)     &r->X[num]
-	#define REG_GET_FP()      &r->Fp
-	#define REG_GET_LR()      &r->Lr
-	#define REG_GET_SP()      &r->Sp
-	#define REG_GET_PC()      &r->Pc
-	Dump_ARM64()
 #elif defined _M_PPC
 	#define REG_GNUM(num) &r->Gpr ## num
 	#define REG_GET_PC()  &r->Iar
@@ -744,6 +783,9 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_LR()      &r->__gregs[_REG_LR]
 	#define REG_GET_CTR()     &r->__gregs[_REG_CTR]
 	Dump_PPC()
+#elif defined __sparc__
+	#define REG_GET(ign, reg) &r->__gregs[_REG_##reg]
+	Dump_SPARC()
 #elif defined __mips__
 	#define REG_GNUM(num)     &r->__gregs[num]
 	#define REG_GET_PC()      &r->__gregs[_REG_EPC]
@@ -919,7 +961,10 @@ static void DumpRegisters(void* ctx) {
 /*########################################################################################################################*
 *------------------------------------------------Module/Memory map handling-----------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_UWP
+static void DumpMisc(void) { }
+
+#elif defined CC_BUILD_WIN
 static void DumpStack(void) {
 	static const cc_string stack = String_FromConst("-- stack --\r\n");
 	cc_string str; char strBuffer[128];
@@ -949,7 +994,7 @@ static void DumpStack(void) {
 	}
 }
 
-static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, void* userCtx) {
+static BOOL WINAPI DumpModule(const char* name, ULONG_PTR base, ULONG size, void* userCtx) {
 	cc_string str; char strBuffer[256];
 	cc_uintptr beg, end;
 
@@ -960,7 +1005,7 @@ static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, vo
 	Logger_Log(&str);
 	return true;
 }
-static BOOL  (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
+
 static void DumpMisc(void) {
 	static const cc_string modules = String_FromConst("-- modules --\r\n");
 	if (spRegister >= 0xFFFF) DumpStack();
@@ -1070,74 +1115,10 @@ static void DumpMisc(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------Unhandled error logging------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-static const char* ExceptionDescribe(cc_uint32 code) {
-	switch (code) {
-	case EXCEPTION_ACCESS_VIOLATION:    return "ACCESS_VIOLATION";
-	case EXCEPTION_ILLEGAL_INSTRUCTION: return "ILLEGAL_INSTRUCTION";
-	case EXCEPTION_INT_DIVIDE_BY_ZERO:  return "DIVIDE_BY_ZERO";
-	}
-	return NULL;
-}
-
-static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
-	cc_string msg; char msgBuffer[128 + 1];
-	const char* desc;
-	cc_uint32 code;
-	cc_uintptr addr;
-	DWORD i, numArgs;
-
-	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
-	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
-	desc = ExceptionDescribe(code);
-
-	String_InitArray_NT(msg, msgBuffer);
-	if (desc) {
-		String_Format2(&msg, "Unhandled %c error at %x", desc, &addr);
-	} else {
-		String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
-	}
-
-	numArgs = info->ExceptionRecord->NumberParameters;
-	if (numArgs) {
-		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
-		String_AppendConst(&msg, " [");
-
-		for (i = 0; i < numArgs; i++) {
-			String_Format1(&msg, "0x%x,", &info->ExceptionRecord->ExceptionInformation[i]);
-		}
-		String_Append(&msg, ']');
-	}
-
-	msg.buffer[msg.length] = '\0';
-	AbortCommon(0, msg.buffer, info->ContextRecord);
-	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
-}
-
+#if defined CC_BUILD_WIN && !defined CC_BUILD_UWP
 void Logger_Hook(void) {
-	static const struct DynamicLibSym funcs[] = {
-	#ifdef _IMAGEHLP64
-		{ "EnumerateLoadedModules64", (void**)&_EnumerateLoadedModules},
-		{ "SymFunctionTableAccess64", (void**)&_SymFunctionTableAccess},
-		{ "SymGetModuleBase64",       (void**)&_SymGetModuleBase },
-		{ "SymGetModuleInfo64",       (void**)&_SymGetModuleInfo },
-		{ "SymGetSymFromAddr64",      (void**)&_SymGetSymFromAddr },
-		{ "SymInitialize",            (void**)&_SymInitialize },
-	#else
-		{ "EnumerateLoadedModules",   (void**)&_EnumerateLoadedModules },
-		{ "SymFunctionTableAccess",   (void**)&_SymFunctionTableAccess },
-		{ "SymGetModuleBase",         (void**)&_SymGetModuleBase },
-		{ "SymGetModuleInfo",         (void**)&_SymGetModuleInfo },
-		{ "SymGetSymFromAddr",        (void**)&_SymGetSymFromAddr },
-		{ "SymInitialize",            (void**)&_SymInitialize },
-	#endif
-	};
-	static const cc_string imagehlp = String_FromConst("IMAGEHLP.DLL");
 	OSVERSIONINFOA osInfo;
-	void* lib;
-
-	SetUnhandledExceptionFilter(UnhandledFilter);
-	DynamicLib_LoadAll(&imagehlp, funcs, Array_Elems(funcs), &lib);
+	ImageHlp_LoadDynamicFuncs();
 
 	/* Windows 9x requires process IDs instead - see old DBGHELP docs */
 	/*   https://documentation.help/DbgHelp/documentation.pdf */
@@ -1149,111 +1130,8 @@ void Logger_Hook(void) {
 		curProcess = (HANDLE)((cc_uintptr)GetCurrentProcessId());
 	}
 }
-#elif defined CC_BUILD_POSIX
-static const char* SignalDescribe(int type) {
-	switch (type) {
-	case SIGSEGV: return "SIGSEGV";
-	case SIGBUS:  return "SIGBUS";
-	case SIGILL:  return "SIGILL";
-	case SIGABRT: return "SIGABRT";
-	case SIGFPE:  return "SIGFPE";
-	}
-	return NULL;
-}
-
-static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
-	cc_string msg; char msgBuffer[128 + 1];
-	const char* desc;
-	int type, code;
-	cc_uintptr addr;
-
-	/* Uninstall handler to avoid chance of infinite loop */
-	signal(SIGSEGV, SIG_DFL);
-	signal(SIGBUS,  SIG_DFL);
-	signal(SIGILL,  SIG_DFL);
-	signal(SIGABRT, SIG_DFL);
-	signal(SIGFPE,  SIG_DFL);
-
-	type = info->si_signo;
-	code = info->si_code;
-	addr = (cc_uintptr)info->si_addr;
-	desc = SignalDescribe(type);
-
-	String_InitArray_NT(msg, msgBuffer);
-	if (desc) {
-		String_Format3(&msg, "Unhandled signal %c (code %i) at %x", desc,  &code, &addr);
-	} else {
-		String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
-	}
-	msg.buffer[msg.length] = '\0';
-
-	#if defined CC_BUILD_ANDROID
-	/* deliberate Dalvik VM abort, try to log a nicer error for this */
-	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
-	#endif
-	AbortCommon(0, msg.buffer, ctx);
-}
-
-void Logger_Hook(void) {
-	struct sigaction sa, old;
-	sa.sa_sigaction = SignalHandler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART | SA_SIGINFO;
-
-	sigaction(SIGSEGV, &sa, &old);
-	sigaction(SIGBUS,  &sa, &old);
-	sigaction(SIGILL,  &sa, &old);
-	sigaction(SIGABRT, &sa, &old);
-	sigaction(SIGFPE,  &sa, &old);
-}
 #else
-void Logger_Hook(void) {
-	/* TODO can signals be supported somehow for PSP/3DS? */
-}
-#endif
-
-
-/*########################################################################################################################*
-*-------------------------------------------------Deliberate crash logging------------------------------------------------*
-*#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-#if __GNUC__
-/* Don't want compiler doing anything fancy with registers */
-void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char* raw_msg) {
-#else
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-#endif
-	CONTEXT ctx;
-	#if _M_IX86 && __GNUC__
-	/* Stack frame layout on x86: */
-	/*  [ebp] is previous frame's EBP */
-	/*  [ebp+4] is previous frame's EIP (return address) */
-	/*  address of [ebp+8] is previous frame's ESP */
-	__asm__(
-		"mov 0(%%ebp), %%eax \n\t" /* mov eax, [ebp]     */
-		"mov %%eax, %0       \n\t" /* mov [ctx.Ebp], eax */
-		"mov 4(%%ebp), %%eax \n\t" /* mov eax, [ebp+4]   */
-		"mov %%eax, %1       \n\t" /* mov [ctx.Eip], eax */
-		"lea 8(%%ebp), %%eax \n\t" /* lea eax, [ebp+8]   */
-		"mov %%eax, %2"            /* mov [ctx.Esp], eax */
-		: "=m" (ctx.Ebp), "=m" (ctx.Eip), "=m" (ctx.Esp)
-		:
-		: "eax", "memory"
-	);
-	ctx.ContextFlags = CONTEXT_CONTROL;
-	#else
-	/* This method is guaranteed to exist on 64 bit windows.  */
-	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
-	/*  so an alternative is provided for MinGW above so that */
-	/*  the game can be cross-compiled for Windows 98 / 2000  */
-	RtlCaptureContext(&ctx);
-	#endif
-	AbortCommon(result, raw_msg, &ctx);
-}
-#else
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-	AbortCommon(result, raw_msg, NULL);
-}
+void Logger_Hook(void) { }
 #endif
 
 
@@ -1283,7 +1161,7 @@ void Logger_Log(const cc_string* msg) {
 
 static void LogCrashHeader(void) {
 	cc_string msg; char msgBuffer[96];
-	struct DateTime now;
+	struct cc_datetime now;
 
 	String_InitArray(msg, msgBuffer);
 	String_AppendConst(&msg, _NL "----------------------------------------" _NL);
@@ -1313,7 +1191,7 @@ static void CloseLogFile(void) {
 	#define GFX_BACKEND " (Unknown)"
 #endif
 
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
+void Logger_DoAbort(cc_result result, const char* raw_msg, void* ctx) {
 	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
 	cc_string msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
@@ -1332,14 +1210,14 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	Logger_Log(&msg);
 
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
-	String_AppendConst(&msg, "Please report this on the ClassiCube forums or to UnknownShadow200.\n\n");
+	String_AppendConst(&msg, "Please report this on the ClassiCube forums or Discord.\n\n");
 	if (ctx) DumpRegisters(ctx);
 
 	/* These two function calls used to be in a separate DumpBacktrace function */
 	/*  However that was not always inlined by the compiler, which resulted in a */
 	/*  useless strackframe being logged - so manually inline Logger_Backtrace call */
 	Logger_Log(&backtrace);
-	Logger_Backtrace(&msg, ctx);
+	if (ctx) Logger_Backtrace(&msg, ctx);
 
 	DumpMisc();
 	CloseLogFile();
@@ -1348,8 +1226,6 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	Window_ShowDialog("We're sorry", msg.buffer);
 	Process_Exit(result);
 }
-
-void Logger_Abort(const char* raw_msg) { Logger_Abort2(0, raw_msg); }
 
 void Logger_FailToStart(const char* raw_msg) {
 	cc_string msg = String_FromReadonly(raw_msg);

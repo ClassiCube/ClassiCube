@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_POSIX
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -13,11 +14,14 @@
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <utime.h>
+#include <signal.h>
+#include <stdio.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -25,16 +29,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <utime.h>
-#include <signal.h>
-#include <stdio.h>
 #include <netdb.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 #define SUPPORTS_GETADDRINFO 1
 
 #if defined CC_BUILD_ANDROID
@@ -44,8 +46,13 @@ const char* Platform_AppNameSuffix = " iOS alpha";
 #else
 const char* Platform_AppNameSuffix = "";
 #endif
-cc_bool Platform_SingleProcess;
-cc_bool Platform_ReadonlyFilesystem;
+
+#ifdef CC_BUILD_MOBILE
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+#else
+cc_uint8 Platform_Flags;
+#endif
+cc_bool  Platform_ReadonlyFilesystem;
 
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN
@@ -71,13 +78,23 @@ cc_bool Platform_ReadonlyFilesystem;
 #include <os2.h>
 #endif
 
+#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+	/* Really old mac OS versions don't have the dlopen/dlsym API */
+	#define USE_NS_DYNLOAD_API
+#else
+	#ifndef __USE_GNU
+	#define __USE_GNU
+	#endif
+	#include <dlfcn.h>
+#endif
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*) memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*) memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*) memmove(dst, src,   numBytes); }
 
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
@@ -120,11 +137,14 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct timeval cur;
 	struct tm loc_time;
+	time_t s;
+	
 	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+	s = cur.tv_sec;
+	localtime_r(&s, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;
@@ -174,7 +194,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /* "... These functions are part of the Timers option and need not be available on all implementations..." */
 cc_uint64 Stopwatch_Measure(void) {
 	struct timespec t;
-	#ifdef CC_BUILD_IRIX
+	#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
 	clock_gettime(CLOCK_REALTIME, &t);
 	#else
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
@@ -188,6 +208,74 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return (end - beg) / 1000;
 }
 #endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+static const char* SignalDescribe(int type) {
+	switch (type) {
+	case SIGSEGV: return "SIGSEGV";
+	case SIGBUS:  return "SIGBUS";
+	case SIGILL:  return "SIGILL";
+	case SIGABRT: return "SIGABRT";
+	case SIGFPE:  return "SIGFPE";
+	}
+	return NULL;
+}
+
+static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
+	cc_string msg; char msgBuffer[128 + 1];
+	struct sigaction sa = { 0 };
+	const char* desc;
+	int type, code;
+	cc_uintptr addr;
+
+	/* Uninstall handler to avoid chance of infinite loop */
+	sa.sa_handler = SIG_DFL;
+	sigaction(SIGSEGV, &sa, NULL);
+	sigaction(SIGBUS,  &sa, NULL);
+	sigaction(SIGILL,  &sa, NULL);
+	sigaction(SIGABRT, &sa, NULL);
+	sigaction(SIGFPE,  &sa, NULL);
+
+	type = info->si_signo;
+	code = info->si_code;
+	addr = (cc_uintptr)info->si_addr;
+	desc = SignalDescribe(type);
+
+	String_InitArray_NT(msg, msgBuffer);
+	if (desc) {
+		String_Format3(&msg, "Unhandled signal %c (code %i) at %x", desc,  &code, &addr);
+	} else {
+		String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
+	}
+	msg.buffer[msg.length] = '\0';
+
+	#if defined CC_BUILD_ANDROID
+	/* deliberate Dalvik VM abort, try to log a nicer error for this */
+	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
+	#endif
+	Logger_DoAbort(0, msg.buffer, ctx);
+}
+
+void CrashHandler_Install(void) {
+	struct sigaction sa = { 0 };
+	/* sigemptyset(&sa.sa_mask); */
+	/* NOTE: Calling sigemptyset breaks when using recent Android NDK and trying to run on old devices */
+	sa.sa_sigaction = SignalHandler;
+	sa.sa_flags     = SA_RESTART | SA_SIGINFO;
+
+	sigaction(SIGSEGV, &sa, NULL);
+	sigaction(SIGBUS,  &sa, NULL);
+	sigaction(SIGILL,  &sa, NULL);
+	sigaction(SIGABRT, &sa, NULL);
+	sigaction(SIGFPE,  &sa, NULL);
+}
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
 
 
 /*########################################################################################################################*
@@ -246,7 +334,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_HPUX || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
@@ -350,63 +438,70 @@ static void* ExecThread(void* param) {
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
-	int res;
-	*handle = ptr;
-
 	pthread_attr_t attrs;
+	int res;
+	
+	*handle = ptr;
 	pthread_attr_init(&attrs);
 	pthread_attr_setstacksize(&attrs, stackSize);
 	
 	res = pthread_create(ptr, &attrs, ExecThread, (void*)func);
-	if (res) Logger_Abort2(res, "Creating thread");
+	if (res) Process_Abort2(res, "Creating thread");
 	pthread_attr_destroy(&attrs);
 	
-#if defined CC_BUILD_LINUX || defined CC_BUILD_HAIKU
+#if defined CC_BUILD_LINUX
+	static int (*FP_pthread_setname_np)(pthread_t thread, const char* name);
+	/* Not available on old libc versions, so load it dynamically */
+	if (!FP_pthread_setname_np) {
+		FP_pthread_setname_np = dlsym(RTLD_NEXT, "pthread_setname_np");
+	}
+	if (FP_pthread_setname_np) FP_pthread_setname_np(*ptr, name);
+#elif defined CC_BUILD_HAIKU
 	extern int pthread_setname_np(pthread_t thread, const char* name);
 	pthread_setname_np(*ptr, name);
 #elif defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
 	extern int pthread_set_name_np(pthread_t thread, const char* name);
 	pthread_set_name_np(*ptr, name);
 #elif defined CC_BUILD_NETBSD
-	pthread_setname_np(*ptr, "%s", name);
+	pthread_setname_np(*ptr, "%s", (void*)name);
 #endif
 }
 
 void Thread_Detach(void* handle) {
 	pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_detach(*ptr);
-	if (res) Logger_Abort2(res, "Detaching thread");
+	if (res) Process_Abort2(res, "Detaching thread");
 	Mem_Free(ptr);
 }
 
 void Thread_Join(void* handle) {
 	pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_join(*ptr, NULL);
-	if (res) Logger_Abort2(res, "Joining thread");
+	if (res) Process_Abort2(res, "Joining thread");
 	Mem_Free(ptr);
 }
 
 void* Mutex_Create(const char* name) {
 	pthread_mutex_t* ptr = (pthread_mutex_t*)Mem_Alloc(1, sizeof(pthread_mutex_t), "mutex");
 	int res = pthread_mutex_init(ptr, NULL);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int res = pthread_mutex_destroy((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	int res = pthread_mutex_lock((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int res = pthread_mutex_unlock((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 struct WaitData {
@@ -420,9 +515,9 @@ void* Waitable_Create(const char* name) {
 	int res;
 	
 	res = pthread_cond_init(&ptr->cond, NULL);
-	if (res) Logger_Abort2(res, "Creating waitable");
+	if (res) Process_Abort2(res, "Creating waitable");
 	res = pthread_mutex_init(&ptr->mutex, NULL);
-	if (res) Logger_Abort2(res, "Creating waitable mutex");
+	if (res) Process_Abort2(res, "Creating waitable mutex");
 
 	ptr->signalled = false;
 	return ptr;
@@ -433,9 +528,9 @@ void Waitable_Free(void* handle) {
 	int res;
 	
 	res = pthread_cond_destroy(&ptr->cond);
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res) Process_Abort2(res, "Destroying waitable");
 	res = pthread_mutex_destroy(&ptr->mutex);
-	if (res) Logger_Abort2(res, "Destroying waitable mutex");
+	if (res) Process_Abort2(res, "Destroying waitable mutex");
 	Mem_Free(handle);
 }
 
@@ -448,7 +543,7 @@ void Waitable_Signal(void* handle) {
 	Mutex_Unlock(&ptr->mutex);
 
 	res = pthread_cond_signal(&ptr->cond);
-	if (res) Logger_Abort2(res, "Signalling event");
+	if (res) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
@@ -458,7 +553,7 @@ void Waitable_Wait(void* handle) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = pthread_cond_wait(&ptr->cond, &ptr->mutex);
-		if (res) Logger_Abort2(res, "Waitable wait");
+		if (res) Process_Abort2(res, "Waitable wait");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -484,7 +579,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &ts);
-		if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+		if (res && res != ETIMEDOUT) Process_Abort2(res, "Waitable wait for");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -555,6 +650,7 @@ void Platform_LoadSysFonts(void) {
 		Platform_Log1("Searching for fonts in %s", &dirs[i]);
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
+	Platform_LogConst("Finished searching for fonts");
 }
 
 
@@ -575,6 +671,36 @@ union SocketAddress {
 };
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
+
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+#ifdef AF_INET6
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	union SocketAddress* addr = (union SocketAddress*)dst->data;
+	if (inet_pton(AF_INET6, ip, &addr->v6.sin6_addr) <= 0) return false;
+	
+	addr->v6.sin6_family = AF_INET6;
+	addr->v6.sin6_port   = htons(port);
+		
+	dst->size  = sizeof(addr->v6);
+	return true;
+}
+#else
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+#endif
 
 #if SUPPORTS_GETADDRINFO
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
@@ -640,46 +766,16 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 }
 #endif
 
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	union SocketAddress* addr = (union SocketAddress*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) {
-		addr->v4.sin_family = AF_INET;
-		addr->v4.sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	
-	#ifdef AF_INET6
-	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) {
-		addr->v6.sin6_family = AF_INET6;
-		addr->v6.sin6_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v6);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	#endif
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
-}
-
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	cc_result res;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 
 	if (nonblocking) {
 		int blocking_raw = -1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
+		int err = ioctl(*s, FIONBIO, &blocking_raw);
+		if (err == -1) return errno;
 	}
 	return 0;
 }
@@ -772,11 +868,15 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 #else
 static cc_result Process_RawStart(const char* path, char** argv) {
 	pid_t pid = fork();
+	int err;
 	if (pid == -1) return errno;
 
 	if (pid == 0) {
 		/* Executed in child process */
 		execvp(path, argv);
+
+		err = errno;
+		Platform_Log2("execv %c failed = %i", path, &err);
 		_exit(127); /* "command not found" */
 	} else {
 		/* Executed in parent process */
@@ -793,7 +893,8 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	int i, j, len = 0;
 	char* argv[15];
 	cc_result res;
-	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
+
+	if (Platform_IsSingleProcess()) return SetGameArgs(args, numArgs);
 
 	res = Process_RawGetExePath(path, &len);
 	if (res) return res;
@@ -996,7 +1097,7 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	Mem_Copy(path, info.name, *len);
 	return 0;
 }
-#elif defined CC_BUILD_IRIX
+#elif defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
 static cc_result Process_RawGetExePath(char* path, int* len) {
 	static cc_string file = String_FromConst("ClassiCube");
 
@@ -1089,15 +1190,15 @@ cc_bool Updater_Clean(void) { return true; }
 	#endif
 #elif defined CC_BUILD_FREEBSD
 	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-fbsd64-gl1" } } };
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-freebsd-64" } } };
 	#elif __i386__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-fbsd32-gl1" } } };
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-freebsd-32" } } };
 	#else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 	#endif
 #elif defined CC_BUILD_NETBSD
 	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-netbsd64-gl1" } } };
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-netbsd-64" } } };
 	#else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 	#endif
@@ -1160,7 +1261,7 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+#if defined USE_NS_DYNLOAD_API
 /* Really old mac OS versions don't have the dlopen/dlsym API */
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
@@ -1197,7 +1298,6 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	return true;
 }
 #else
-#include <dlfcn.h>
 /* TODO: Should we use .bundle instead of .dylib? */
 
 #ifdef CC_BUILD_DARWIN
@@ -1229,13 +1329,22 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 static void Platform_InitPosix(void) {
-	signal(SIGCHLD, SIG_IGN);
+	struct sigaction sa = { 0 };
+	cc_uintptr addr;
+	sa.sa_handler = SIG_IGN;
+
+	sigaction(SIGCHLD, &sa, NULL);
 	/* So writing to closed socket doesn't raise SIGPIPE */
-	signal(SIGPIPE, SIG_IGN);
+	sigaction(SIGPIPE, &sa, NULL);
+
+	/* Log runtime address of a known function to ease investigating crashes */
+	/* (on platforms with ASLR, function addresses change every time when run) */
+	addr = (cc_uintptr)Process_Exit;
+	Platform_Log1("Process_Exit addr: %x", &addr);
 }
 void Platform_Free(void) { }
 
-#ifdef CC_BUILD_IRIX
+#if defined CC_BUILD_IRIX || defined CC_BUILD_HPUX
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = strerror(res);
 	if (!err || res >= 1000) return false;
@@ -1278,7 +1387,6 @@ static void Platform_InitSpecific(void) {
 }
 #else
 static void Platform_InitSpecific(void) {
-	Platform_SingleProcess = true;
 	/* Always foreground process on iOS */
 }
 #endif
@@ -1290,10 +1398,6 @@ void Platform_Init(void) {
 }
 #else
 void Platform_Init(void) {
-	#ifdef CC_BUILD_MOBILE
-	Platform_SingleProcess = true;
-	#endif
-	
 	Platform_InitPosix();
 }
 #endif
@@ -1302,41 +1406,6 @@ void Platform_Init(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-/* Encrypts data using XTEA block cipher, with OS specific method to get machine-specific key */
-
-static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
-	cc_uint32 v0 = v[0], v1 = v[1], sum = 0, delta = 0x9E3779B9;
-	int i;
-
-    for (i = 0; i < 12; i++) 
-	{
-        v0  += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
-        sum += delta;
-        v1  += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
-    }
-    v[0] = v0; v[1] = v1;
-	String_AppendAll(dst, v, 8);
-}
-
-static void DecipherBlock(cc_uint32* v, const cc_uint32* key) {
-	cc_uint32 v0 = v[0], v1 = v[1], delta = 0x9E3779B9, sum = delta * 12;
-	int i;
-
-    for (i = 0; i < 12; i++) 
-	{
-        v1  -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
-        sum -= delta;
-        v0  -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
-    }
-    v[0] = v0; v[1] = v1;
-}
-
-#define ENC1 0xCC005EC0
-#define ENC2 0x0DA4A0DE
-#define ENC3 0xC0DED000
-#define MACHINEID_LEN 32
-#define ENC_SIZE 8 /* 2 32 bit ints per block */
-
 /* "b3 c5a-0d9" --> 0xB3C5A0D9 */
 static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 	int hex[MACHINEID_LEN] = { 0 }, i, j, c;
@@ -1376,6 +1445,10 @@ static cc_result GetMachineID(cc_uint32* key) {
 	return res;
 }
 #elif defined CC_BUILD_MACOS
+/* kIOMasterPortDefault is deprecated since macOS 12.0 (replaced with kIOMainPortDefault) */
+/* And since kIOMasterPortDefault is just 0/NULL anyways, just manually declare it */
+static const mach_port_t masterPortDefault = 0;
+
 /* Read kIOPlatformUUIDKey from I/O registry for the key */
 static cc_result GetMachineID(cc_uint32* key) {
 	io_registry_entry_t registry;
@@ -1383,7 +1456,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 	char tmp[256] = { 0 };
 
 #ifdef kIOPlatformUUIDKey
-    registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+    registry = IORegistryEntryFromPath(masterPortDefault, "IOService:/");
     if (!registry) return ERR_NOT_SUPPORTED;
 
 	devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
@@ -1391,7 +1464,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 		DecodeMachineID(tmp, String_Length(tmp), key);	
 	}
 #else
-    registry = IOServiceGetMatchingService(kIOMasterPortDefault,
+    registry = IOServiceGetMatchingService(masterPortDefault,
                                            IOServiceMatching("IOPlatformExpertDevice"));
 
     devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
@@ -1478,55 +1551,15 @@ static cc_result GetMachineID(cc_uint32* key) {
 static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
 #endif
 
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	const cc_uint8* src = (const cc_uint8*)data;
-	cc_uint32 header[4], key[4];
-	cc_result res;
-	if ((res = GetMachineID(key))) return res;
-
-	header[0] = ENC1; header[1] = ENC2;
-	header[2] = ENC3; header[3] = len;
-	EncipherBlock(header + 0, key, dst);
-	EncipherBlock(header + 2, key, dst);
-
-	for (; len > 0; len -= ENC_SIZE, src += ENC_SIZE) 
-	{
-		header[0] = 0; header[1] = 0;
-		Mem_Copy(header, src, min(len, ENC_SIZE));
-		EncipherBlock(header, key, dst);
-	}
-	return 0;
-}
-
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	const cc_uint8* src = (const cc_uint8*)data;
-	cc_uint32 header[4], key[4];
-	cc_result res;
-	int dataLen;
-
-	/* Total size must be >= header size */
-	if (len < 16) return ERR_END_OF_STREAM;
-	if ((res = GetMachineID(key))) return res;
-
-	Mem_Copy(header, src, 16);
-	DecipherBlock(header + 0, key);
-	DecipherBlock(header + 2, key);
-
-	if (header[0] != ENC1 || header[1] != ENC2 || header[2] != ENC3) return ERR_INVALID_ARGUMENT;
-	len -= 16; src += 16;
-
-	if (header[3] > len) return ERR_INVALID_ARGUMENT;
-	dataLen = header[3];
-
-	for (; dataLen > 0; len -= ENC_SIZE, src += ENC_SIZE, dataLen -= ENC_SIZE) 
-	{
-		header[0] = 0; header[1] = 0;
-		Mem_Copy(header, src, min(len, ENC_SIZE));
-
-		DecipherBlock(header, key);
-		String_AppendAll(dst, header, min(dataLen, ENC_SIZE));
-	}
-	return 0;
+cc_result Platform_GetEntropy(void* data, int len) {
+	int ret;
+	int fd = open("/dev/urandom", O_RDONLY);
+	if (fd < 0) return ERR_NOT_SUPPORTED;
+	
+	// TODO: check return code? and partial reads?
+	ret = read(fd, data, len);
+	close(fd);
+	return ret == -1 ? errno : 0;
 }
 
 
@@ -1557,7 +1590,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	{
 		/* -d[directory] argument used to change directory data is stored in */
 		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
-			Logger_Abort("-d argument no longer supported - cd to desired working directory instead");
+			Process_Abort("-d argument no longer supported - cd to desired working directory instead");
 			continue;
 		}
 		args[i] = String_FromReadonly(argv[i]);

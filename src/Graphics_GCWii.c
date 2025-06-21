@@ -145,7 +145,7 @@ static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp,
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(32, 32 + size);
 	if (!tex) return NULL;
@@ -509,7 +509,8 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	const float* m = (const float*)matrix;
-	float tmp[16];
+	Mtx44 dst;
+	float* tmp = (float*)dst;
 	
 	// Transpose matrix
 	for (int i = 0; i < 4; i++)
@@ -521,10 +522,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	}
 		
 	if (type == MATRIX_PROJ) {
-		GX_LoadProjectionMtx(tmp,
+		GX_LoadProjectionMtx(dst,
 			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
-		GX_LoadPosMtxImm(tmp, GX_PNMTX0);
+		GX_LoadPosMtxImm(dst, GX_PNMTX0);
 	}
 }
 
@@ -611,7 +612,6 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 		GX_Position3f32(v->x, v->y, v->z);
 		GX_Color1u32(v->Col);
 	}
-	GX_End();
 }
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
@@ -624,10 +624,9 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		GX_Color1u32(v->Col);
 		GX_TexCoord2f32(v->U, v->V);
 	}
-	GX_End();
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		Draw_TexturedTriangles(verticesCount, startVertex);
 	} else {

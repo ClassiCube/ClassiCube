@@ -132,7 +132,7 @@ static void Atlas_Convert2DTo1D(void) {
 	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
 	int atlasesCount  = Atlas1D.Count;
 	struct Bitmap atlas1D;
-	int tile = 0, i;
+	int i;
 
 	Platform_Log2("Loaded terrain atlas: %i bmps, %i per bmp", &atlasesCount, &tilesPerAtlas);
 	Bitmap_Allocate(&atlas1D, tileSize, tilesPerAtlas * tileSize);
@@ -255,39 +255,62 @@ cc_bool Atlas_TryChange(struct Bitmap* atlas) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------TextureCache-------------------------------------------------------*
+*------------------------------------------------------TextureUrls--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct StringsBuffer acceptedList, deniedList, etagCache, lastModCache;
+#ifdef CC_BUILD_NETWORKING
+static struct StringsBuffer acceptedList, deniedList;
 #define ACCEPTED_TXT "texturecache/acceptedurls.txt"
 #define DENIED_TXT   "texturecache/deniedurls.txt"
-#define ETAGS_TXT    "texturecache/etags.txt"
-#define LASTMOD_TXT  "texturecache/lastmodified.txt"
 
-/* Initialises cache state (loading various lists) */
-static void TextureCache_Init(void) {
+static void TextureUrls_Init(void) {
 	EntryList_UNSAFE_Load(&acceptedList, ACCEPTED_TXT);
 	EntryList_UNSAFE_Load(&deniedList,   DENIED_TXT);
-	EntryList_UNSAFE_Load(&etagCache,    ETAGS_TXT);
-	EntryList_UNSAFE_Load(&lastModCache, LASTMOD_TXT);
 }
 
-cc_bool TextureCache_HasAccepted(const cc_string* url) { return EntryList_Find(&acceptedList, url, ' ') >= 0; }
-cc_bool TextureCache_HasDenied(const cc_string* url)   { return EntryList_Find(&deniedList,   url, ' ') >= 0; }
+cc_bool TextureUrls_HasAccepted(const cc_string* url) { return EntryList_Find(&acceptedList, url, ' ') >= 0; }
+cc_bool TextureUrls_HasDenied(const cc_string* url)   { return EntryList_Find(&deniedList,   url, ' ') >= 0; }
 
-void TextureCache_Accept(const cc_string* url) {
+void TextureUrls_Accept(const cc_string* url) {
 	EntryList_Set(&acceptedList, url, &String_Empty, ' '); 
 	EntryList_Save(&acceptedList, ACCEPTED_TXT);
 }
-void TextureCache_Deny(const cc_string* url) {
+
+void TextureUrls_Deny(const cc_string* url) {
 	EntryList_Set(&deniedList,  url, &String_Empty, ' '); 
 	EntryList_Save(&deniedList, DENIED_TXT);
 }
 
-int TextureCache_ClearDenied(void) {
+int TextureUrls_ClearDenied(void) {
 	int count = deniedList.count;
 	StringsBuffer_Clear(&deniedList);
 	EntryList_Save(&deniedList, DENIED_TXT);
 	return count;
+}
+#else
+static void TextureUrls_Init(void) { }
+
+cc_bool TextureUrls_HasAccepted(const cc_string* url) { return false; }
+cc_bool TextureUrls_HasDenied(const cc_string* url)   { return false; }
+
+void TextureUrls_Accept(const cc_string* url) { }
+
+void TextureUrls_Deny(const cc_string* url) { }
+
+int TextureUrls_ClearDenied(void) { return 0; }
+#endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------------TextureCache-------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
+static struct StringsBuffer etagCache, lastModCache;
+#define ETAGS_TXT    "texturecache/etags.txt"
+#define LASTMOD_TXT  "texturecache/lastmodified.txt"
+
+static void TextureCache_Init(void) {
+	EntryList_UNSAFE_Load(&etagCache,    ETAGS_TXT);
+	EntryList_UNSAFE_Load(&lastModCache, LASTMOD_TXT);
 }
 
 CC_INLINE static void HashUrl(cc_string* key, const cc_string* url) {
@@ -424,6 +447,31 @@ static void UpdateCache(struct HttpRequest* req) {
 	res = Stream_WriteAllTo(&path, req->data, req->size);
 	if (res) { Logger_SysWarn2(res, "caching", &url); }
 }
+#else
+static void TextureCache_Init(void) {
+}
+
+/* Returns non-zero if given URL has been cached */
+static int IsCached(const cc_string* url) {
+	return false;
+}
+
+/* Attempts to open the cached data stream for the given url */
+static cc_bool OpenCachedData(const cc_string* url, struct Stream* stream) {
+	return false;
+}
+
+static cc_string GetCachedLastModified(const cc_string* url) {
+	return String_Empty;
+}
+
+static cc_string GetCachedETag(const cc_string* url) {
+	return String_Empty;
+}
+
+/* Updates cached data, ETag, and Last-Modified for the given URL */
+static void UpdateCache(struct HttpRequest* req) { }
+#endif
 
 
 /*########################################################################################################################*
@@ -481,25 +529,46 @@ static cc_result ExtractPng(struct Stream* stream) {
 
 static cc_bool needReload;
 static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
+#if CC_BUILD_MAXSTACK <= (32 * 1024)
+	struct ZipEntry* entries = (struct ZipEntry*)Mem_TryAllocCleared(512, sizeof(struct ZipEntry));
+#else
 	struct ZipEntry entries[512];
+#endif
 	cc_result res;
+#if CC_BUILD_MAXSTACK <= (32 * 1024)
+	if (!entries) return ERR_OUT_OF_MEMORY;
+#endif
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
 	/* If context is lost, then trying to load textures will just fail */
 	/* So defer loading the texture pack until context is restored */
-	if (Gfx.LostContext) { needReload = true; return 0; }
+	if (Gfx.LostContext) {
+		needReload = true;
+		res = 0;
+		goto ret;
+	}
 	needReload = false;
 
 	res = ExtractPng(stream);
 	if (res == PNG_ERR_INVALID_SIG) {
 		/* file isn't a .png image, probably a .zip archive then */
+
+#if CC_BUILD_MAXSTACK <= (32 * 1024)
+		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry,
+							entries, 512);
+#else
 		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry,
 							entries, Array_Elems(entries));
+#endif
 
 		if (res) Logger_SysWarn2(res, "extracting", path);
 	} else if (res) {
 		Logger_SysWarn2(res, "decoding", path);
 	}
+	ret:
+#if CC_BUILD_MAXSTACK <= (32 * 1024)
+	Mem_Free(entries);
+#endif
 	return res;
 }
 
@@ -696,6 +765,7 @@ static void OnInit(void) {
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
 	TextureCache_Init();
+	TextureUrls_Init();
 }
 
 static void OnReset(void) {

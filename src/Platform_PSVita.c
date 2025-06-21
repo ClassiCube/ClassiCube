@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_PSVITA
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -16,9 +18,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = SCE_NET_ERROR_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = SCE_NET_ERROR_EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = SCE_NET_ERROR_EPIPE;
 static int epoll_id;
 static int stdout_fd;
 
@@ -45,7 +48,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)cur.sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	SceDateTime curTime;
 	sceRtcGetCurrentClockLocalTime(&curTime);
 
@@ -63,6 +66,16 @@ cc_uint64 Stopwatch_Measure(void) {
 	struct SceKernelTimeval cur;
 	sceKernelLibcGettimeofday(&cur, NULL);
 	return (cc_uint64)cur.sec * US_PER_SEC + cur.usec;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -216,29 +229,29 @@ void Thread_Join(void* handle) {
 void* Mutex_Create(const char* name) {
 	SceKernelLwMutexWork* ptr = (SceKernelLwMutexWork*)Mem_Alloc(1, sizeof(SceKernelLwMutexWork), "mutex");
 	int res = sceKernelCreateLwMutex(ptr, name, 0, 0, NULL);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int res = sceKernelDeleteLwMutex((SceKernelLwMutexWork*)handle);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	int res = sceKernelLockLwMutex((SceKernelLwMutexWork*)handle, 1, NULL);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int res = sceKernelUnlockLwMutex((SceKernelLwMutexWork*)handle, 1);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
 	int evid = sceKernelCreateEventFlag(name, SCE_EVENT_WAITMULTIPLE, 0, NULL);
-	if (evid < 0) Logger_Abort2(evid, "Creating waitable");
+	if (evid < 0) Process_Abort2(evid, "Creating waitable");
 	return (void*)evid;
 }
 
@@ -248,49 +261,60 @@ void Waitable_Free(void* handle) {
 
 void Waitable_Signal(void* handle) {
 	int res = sceKernelSetEventFlag((int)handle, 0x1);
-	if (res < 0) Logger_Abort2(res, "Signalling event");
+	if (res < 0) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	unsigned int match;
 	int res = sceKernelWaitEventFlag((int)handle, 0x1, SCE_EVENT_WAITAND | SCE_EVENT_WAITCLEAR, &match, NULL);
-	if (res < 0) Logger_Abort2(res, "Event wait");
+	if (res < 0) Process_Abort2(res, "Event wait");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	SceUInt timeout = milliseconds * 1000;
 	unsigned int match;
 	int res = sceKernelWaitEventFlag((int)handle, 0x1, SCE_EVENT_WAITAND | SCE_EVENT_WAITCLEAR, &match, &timeout);
-	if (res < 0) Logger_Abort2(res, "Event timed wait");
+	if (res < 0) Process_Abort2(res, "Event timed wait");
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = SCE_NET_AF_INET;
+	addr4->sin_port        = sceNetHtons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
 	char buf[1024];
-	int rid, ret;
 	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 1;
+	/* Fallback to resolving as DNS name */
+	int rid = sceNetResolverCreate("CC resolver", NULL, 0);
+	if (rid < 0) return ERR_INVALID_ARGUMENT;
 
-	if (sceNetInetPton(SCE_NET_AF_INET, str, &addr4->sin_addr) <= 0) {
-		/* Fallback to resolving as DNS name */
-		rid = sceNetResolverCreate("CC resolver", NULL, 0);
-		if (rid < 0) return ERR_INVALID_ARGUMENT;
-
-		ret = sceNetResolverStartNtoa(rid, str, &addr4->sin_addr, 0, 0, 0);
-		sceNetResolverDestroy(rid);
-		if (ret) return ret;
-	}
+	int ret = sceNetResolverStartNtoa(rid, host, &addr4->sin_addr, 0, 0, 0);
+	sceNetResolverDestroy(rid);
+	if (ret) return ret;
 	
 	addr4->sin_family = SCE_NET_AF_INET;
 	addr4->sin_port   = sceNetHtons(port);
 		
-	addrs[0].size = sizeof(*addr4);
+	addrs[0].size  = sizeof(*addr4);
+	*numValidAddrs = 1;
 	return 0;
 }
 

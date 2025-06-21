@@ -8,7 +8,7 @@ Contains everything relating to texture packs
   - Extracting the textures from a .zip archive
   - Caching terrain atlases and texture packs to avoid redundant downloads
   - Terrain atlas (including breaking it down into multiple 1D atlases)
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 struct Stream;
@@ -21,8 +21,10 @@ extern struct IGameComponent Textures_Component;
 #define ATLAS2D_MASK 15
 #define ATLAS2D_SHIFT 4
 /* Maximum supported number of rows in the atlas. */
-#ifdef EXTENDED_TEXTURES
+#if defined EXTENDED_TEXTURES
 	#define ATLAS2D_MAX_ROWS_COUNT 32
+#elif defined CC_BUILD_TINYMEM
+	#define ATLAS2D_MAX_ROWS_COUNT  8
 #else
 	#define ATLAS2D_MAX_ROWS_COUNT 16
 #endif
@@ -78,17 +80,17 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index);
 void Atlas1D_Bind(int index);
 
 /* Whether the given URL is in list of accepted URLs. */
-cc_bool TextureCache_HasAccepted(const cc_string* url);
+cc_bool TextureUrls_HasAccepted(const cc_string* url);
 /* Whether the given URL is in list of denied URLs. */
-cc_bool TextureCache_HasDenied(const cc_string* url);
+cc_bool TextureUrls_HasDenied(const cc_string* url);
 /* Adds the given URL to list of accepted URLs, then saves it. */
 /* Accepted URLs are loaded without prompting the user. */
-void TextureCache_Accept(const cc_string* url);
+void TextureUrls_Accept(const cc_string* url);
 /* Adds the given URL to list of denied URLs, then saves it. */
 /* Denied URLs are never loaded. */
-void TextureCache_Deny(const cc_string* url);
+void TextureUrls_Deny(const cc_string* url);
 /* Clears the list of denied URLs, returning number removed. */
-int TextureCache_ClearDenied(void);
+int TextureUrls_ClearDenied(void);
 
 /* Request ID of texture pack currently being downloaded */
 extern int TexturePack_ReqID;

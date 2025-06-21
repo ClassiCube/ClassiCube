@@ -22,6 +22,7 @@
 #include "Errors.h"
 #include "Utils.h"
 #include "EntityRenderers.h"
+#include "Protocol.h"
 
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -99,7 +100,7 @@ static void Entity_ParseScale(struct Entity* e, const cc_string* scale) {
 	/* local player doesn't allow giant model scales */
 	/* (can't climb stairs, extremely CPU intensive collisions) */
 	if (e->Flags & ENTITY_FLAG_MODEL_RESTRICTED_SCALE) {
-		value = min(value, e->Model->maxScale); 
+		value = min(value, e->Model->maxScale);
 	}
 	Vec3_Set(e->ModelScale, value,value,value);
 }
@@ -300,7 +301,9 @@ static cc_result EnsurePow2Skin(struct Entity* e, struct Bitmap* bmp) {
 	height = Math_NextPowOf2(bmp->height);
 	if (width == bmp->width && height == bmp->height) return 0;
 
-	Bitmap_TryAllocate(&scaled, width, height);
+	scaled.width  = width; 
+	scaled.height = height;
+	scaled.scan0  = (BitmapCol*)Mem_TryAllocCleared(width * height, BITMAPCOLOR_SIZE);
 	if (!scaled.scan0) return ERR_OUT_OF_MEMORY;
 
 	e->uScale = (float)bmp->width  / width;
@@ -330,7 +333,7 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 	if (!Gfx_CheckTextureSize(bmp->width, bmp->height, 0)) {
 		Chat_Add1("&cSkin %s is too large", skin);
 	} else {
-		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT) 
+		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT)
 			Entity_ClearHat(bmp, e->SkinType);
 
 		e->TextureId = Gfx_CreateTexture(bmp, TEXTURE_FLAG_MANAGED, false);
@@ -382,7 +385,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!Http_GetResult(e->_skinReqID, &item)) return;
 
-	if (!item.success) { 
+	if (!item.success) {
 		Entity_SetSkinAll(e, true);
 	} else {
 		Stream_ReadonlyMemory(&mem, item.data, item.size);
@@ -400,7 +403,7 @@ static cc_bool CanDeleteTexture(struct Entity* except) {
 	int i;
 	if (!except->TextureId) return false;
 
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		if (!Entities.List[i] || Entities.List[i] == except)  continue;
 		if (Entities.List[i]->TextureId == except->TextureId) return false;
@@ -447,7 +450,7 @@ struct _EntitiesData Entities;
 
 void Entities_Tick(struct ScheduledTask* task) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->interval);
@@ -458,7 +461,7 @@ void Entities_RenderModels(float delta, float t) {
 	int i;
 	Gfx_SetAlphaTest(true);
 	
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
@@ -470,7 +473,7 @@ static void Entities_ContextLost(void* obj) {
 	struct Entity* entity;
 	int i;
 
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		entity = Entities.List[i];
 		if (!entity) continue;
@@ -478,7 +481,7 @@ static void Entities_ContextLost(void* obj) {
 		if (entity->Flags & ENTITY_FLAG_HAS_MODELVB)
 			Gfx_DeleteDynamicVb(&entity->ModelVB);
 
-		if (!Gfx.ManagedTextures) 
+		if (!Gfx.ManagedTextures)
 			DeleteSkin(entity);
 	}
 }
@@ -514,7 +517,7 @@ int Entities_GetClosest(struct Entity* src) {
 		if (!e || e == &Entities.CurPlayer->Base) continue;
 		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, e, &t0, &t1)) continue;
 
-		if (targetID == -1 || t0 < closestDist) {
+		if (targetID < 0 || t0 < closestDist) {
 			closestDist = t0;
 			targetID    = i;
 		}
@@ -649,7 +652,7 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	for (input = sources_head; input; input = input->next) {
 		input->GetMovement(p, xMoving, zMoving);
 	}
-	*xMoving *= 0.98f; 
+	*xMoving *= 0.98f;
 	*zMoving *= 0.98f;
 
 	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
@@ -706,7 +709,6 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	AnimatedComp_GetCurrent(e, t);
-	TiltComp_GetCurrent(p, &p->Tilt, t);
 
 	if (!Camera.Active->isThirdPerson && p == Entities.CurPlayer) return;
 	Model_Render(e->Model, e);
@@ -800,7 +802,9 @@ static void LocalPlayers_OnNewMap(void) {
 }
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
+
 static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
+	struct EntityLocation* prev;
 	struct LocationUpdate update;
 	struct AABB bb;
 	Vec3 spawn = p->Spawn;
@@ -828,6 +832,9 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 			bb.Min.y += 1.0f; bb.Max.y += 1.0f;
 		}
 	}
+
+	prev = &p->Base.prev;
+	CPE_SendNotifyPositionAction(3, prev->pos.x, prev->pos.y, prev->pos.z);
 
 	/* Adjust the position to be slightly above the ground, so that */
 	/*  it's obvious to the player that they are being respawned */
@@ -883,7 +890,9 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 		}
 		
 		p->SpawnYaw   = p->Base.Yaw;
-		p->SpawnPitch = p->Base.Pitch;
+		if (!Game_ClassicMode) p->SpawnPitch = p->Base.Pitch;
+
+		CPE_SendNotifyPositionAction(4, p->Spawn.x, p->Spawn.y, p->Spawn.z);
 	}
 	return LocalPlayer_HandleRespawn(key, device);
 }
@@ -1053,7 +1062,7 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 }
 
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
-	float x = (World.Width  / 2) + 0.5f; 
+	float x = (World.Width  / 2) + 0.5f;
 	float z = (World.Length / 2) + 0.5f;
 
 	update->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
@@ -1145,7 +1154,7 @@ static void Entities_Init(void) {
 
 static void Entities_Free(void) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		Entities_Remove(i);
 	}

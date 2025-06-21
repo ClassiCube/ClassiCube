@@ -146,90 +146,86 @@ typedef struct CCTexture_ {
 } CCTexture;
 
 // See Graphics_Dreamcast.c for twiddling explanation
-static unsigned Interleave(unsigned x) {
-	// Simplified "Interleave bits by Binary Magic Numbers" from
-	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+// (only difference is dreamcast is XY while xbox is YX)
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0;
+	*maskY = 0;
+	int shift = 0;
 
-	x = (x | (x << 8)) & 0x00FF00FF;
-	x = (x | (x << 4)) & 0x0F0F0F0F;
-	x = (x | (x << 2)) & 0x33333333;
-	x = (x | (x << 1)) & 0x55555555;
-	return x;
-}
-
-#define Twiddle_CalcFactors(w, h) \
-	min_dimension    = min(w, h); \
-	interleave_mask  = min_dimension - 1; \
-	interleaved_bits = Math_ilog2(min_dimension); \
-	shifted_mask     = 0xFFFFFFFFU & ~interleave_mask; \
-	shift_bits       = interleaved_bits;
-	
-#define Twiddle_CalcY(y) \
-	lo_Y = Interleave(y & interleave_mask) << 1; \
-	hi_Y = (y & shifted_mask) << shift_bits; \
-	Y    = lo_Y | hi_Y;
-	
-#define Twiddle_CalcX(x) \
-	lo_X  = Interleave(x & interleave_mask); \
-	hi_X  = (x & shifted_mask) << shift_bits; \
-	X     = lo_X | hi_X;
-
-static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp, int rowWidth) {
-	unsigned min_dimension;
-	unsigned interleave_mask, interleaved_bits;
-	unsigned shifted_mask, shift_bits;
-	unsigned lo_Y, hi_Y, Y;
-	unsigned lo_X, hi_X, X;	
-	Twiddle_CalcFactors(bmp->width, bmp->height);
-	
-	for (int y = 0; y < bmp->height; y++)
+	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
 	{
-		Twiddle_CalcY(y);
-		cc_uint32* src = bmp->scan0 + y * rowWidth;
-		
-		for (int x = 0; x < bmp->width; x++, src++)
-		{
-			Twiddle_CalcX(x);
-			dst[X | Y] = *src;
+		if (w > 1 && h > 1) {
+			// Add interleaved X and Y bits
+			*maskY += 0x02 << shift;
+			*maskX += 0x01 << shift;
+			shift  += 2;
+		} else if (w > 1) {
+			// Add a linear X bit
+			*maskX += 0x01 << shift;
+			shift  += 1;		
+		} else if (h > 1) {
+			// Add a linear Y bit
+			*maskY += 0x01 << shift;
+			shift  += 1;		
 		}
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "GPU texture");
 	tex->pixels    = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	ConvertTexture(tex->pixels, bmp, rowWidth);
+	cc_uint32* dst = tex->pixels;
+
+	int width = bmp->width, height = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
 	return tex;
 }
-
 
 void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
 	cc_uint32* dst = tex->pixels;
 	
-	unsigned min_dimension;
-	unsigned interleave_mask, interleaved_bits;
-	unsigned shifted_mask, shift_bits;
-	unsigned lo_Y, hi_Y, Y;
-	unsigned lo_X, hi_X, X;
-	Twiddle_CalcFactors(tex->width, tex->height);
+	int width = part->width, height = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
 	
-	for (int y = 0; y < part->height; y++)
+	for (int y = 0; y < height; y++)
 	{
-		int dstY = y + originY;
-		Twiddle_CalcY(dstY);
-		cc_uint32* src = part->scan0 + y * rowWidth;
+		cc_uint32* src = part->scan0 + rowWidth * y;
+		X = startX;
 		
-		for (int x = 0; x < part->width; x++)
+		for (int x = 0; x < width; x++, src++)
 		{
-			int dstX = x + originX;
-			Twiddle_CalcX(dstX);
-			dst[X | Y] = *src++;
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
 		}
+		Y = (Y - maskY) & maskY;
 	}
 }
 
@@ -555,11 +551,8 @@ static void UpdateVSConstants(void) {
 	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
 
 	// upload transformation matrix
-	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4 + 4 + 4);
-	Mem_Copy(p, &_mvp,     16 * 4); p += 16;
-	// Upload viewport too
-	Mem_Copy(p, &vp_scale,  4 * 4); p += 4;
-	Mem_Copy(p, &vp_offset, 4 * 4); p += 4;
+	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4);
+	Mem_Copy(p, &_mvp, 16 * 4); p += 16;
 	// Upload constants too
 	//struct Vec4 v = { 1, 1, 1, 1 };
 	//Mem_Copy(p, &v, 4 * 4); p += 4;
@@ -573,6 +566,16 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	*dst = *matrix;
 
 	Matrix_Mul(&_mvp, &_view, &_proj);
+
+	struct Matrix vp = Matrix_Identity;
+	vp.row1.x = vp_scale.x;
+	vp.row2.y = vp_scale.y;
+	vp.row3.z = 8388608;
+	vp.row4.x = vp_offset.x;
+	vp.row4.y = vp_offset.y;
+	vp.row4.z = 8388608;
+
+	Matrix_Mul(&_mvp, &_mvp, &vp);
 	UpdateVSConstants();
 }
 
@@ -687,7 +690,7 @@ static void DrawIndexedVertices(int verticesCount, int startVertex) {
 	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	DrawIndexedVertices(verticesCount, startVertex);
 }
 

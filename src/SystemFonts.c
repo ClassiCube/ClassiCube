@@ -407,7 +407,7 @@ static void _qsort(void* v, int size, int left, int right,
 void cc_qsort(void* v, size_t count, size_t size,
 					int (*comp)(const void*, const void*)) {
 	if (!count) return;
-	_qsort(v, 0, count - 1, size, comp);
+	_qsort(v, size, 0, count - 1, comp);
 }
 
 
@@ -536,6 +536,16 @@ static cc_string font_candidates[] = {
 	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
 	String_FromConst("Geneva"), /* for ancient macOS versions */
 	String_FromConst("Droid Sans"), /* for old Android versions */
+#if defined CC_BUILD_SYMBIAN
+	String_FromConst("Nokia Sans TitleSmBd S60"),
+	String_FromConst("Nokia Sans S60"),
+	String_FromConst("Nokia Hindi S60"),
+	String_FromConst("Series 60 Sans TitleSmBd"),
+	String_FromConst("Series 60 Sans"),
+	String_FromConst("Series 60 Hindi"),
+	String_FromConst("Series 60 Korean"),
+	String_FromConst("Heisei Kaku Gothic S60"),
+#endif
 	String_FromConst("Google Sans") /* Droid Sans is now known as Google Sans on some Android devices (e.g. a Pixel 6) */
 };
 
@@ -548,7 +558,7 @@ static void InitFreeTypeLibrary(void) {
 	ft_mem.realloc = FT_ReallocWrapper;
 
 	err = FT_New_Library(&ft_mem, &ft_lib);
-	if (err) Logger_Abort2(err, "Failed to init freetype");
+	if (err) Process_Abort2(err, "Failed to init freetype");
 	FT_Add_Default_Modules(ft_lib);
 }
 

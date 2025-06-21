@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_DREAMCAST
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -30,9 +32,10 @@ KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " Dreamcast";
 cc_bool Platform_ReadonlyFilesystem;
@@ -52,7 +55,10 @@ cc_uint64 Stopwatch_Measure(void) {
 }
 
 static uint32 str_offset;
+static cc_bool log_debugger  = true;
+static cc_bool log_timestamp = true;
 extern cc_bool window_inited;
+
 #define MAX_ONSCREEN_LINES 17
 #define ONSCREEN_LINE_HEIGHT (24 + 2) // 8 * 3 text, plus 2 pixel padding
 #define Onscreen_LineOffset(y) ((10 + y + (str_offset * ONSCREEN_LINE_HEIGHT)) * vid_mode->width)
@@ -71,17 +77,23 @@ static void LogOnscreen(const char* msg, int len) {
 	timer_ms_gettime(&secs, &ms);
 	
 	String_InitArray(str, buffer);
-	String_Format2(&str, "[%p2.%p3] ", &secs, &ms);
+	if (log_timestamp) String_Format2(&str, "[%p2.%p3] ", &secs, &ms);
 	String_AppendAll(&str, msg, len);
 
-	sq_set16(vram_s + Onscreen_LineOffset(0), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
+	short* dst     = vram_s + Onscreen_LineOffset(0);
+	int num_pixels = ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width;
+	for (int i = 0; i < num_pixels; i++) dst[i] = 0;
+	//sq_set16(vram_s + Onscreen_LineOffset(0), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
+	
 	FallbackFont_Plot(&str, PlotOnscreen, 3, NULL);
 	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
 }
 
 void Platform_Log(const char* msg, int len) {
-	dbgio_write_buffer_xlat(msg,  len);
-	dbgio_write_buffer_xlat("\n",   1);
+	if (log_debugger) {
+		dbgio_write_buffer_xlat(msg,  len);
+		dbgio_write_buffer_xlat("\n",   1);
+	}
 	
 	if (window_inited) return;
 	// Log details on-screen for initial modem initing etc
@@ -98,7 +110,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return curSecs + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	uint32 secs, ms;
 	time_t total_secs;
 	struct tm loc_time;
@@ -113,6 +125,57 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 	t->hour   = loc_time.tm_hour;
 	t->minute = loc_time.tm_min;
 	t->second = loc_time.tm_sec;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleCrash(irq_t evt, irq_context_t* ctx, void* data) {
+	uint32_t code = evt;
+	log_timestamp = false;
+	window_inited = false;
+	str_offset    = 0;
+
+	for (;;)
+	{
+		Platform_LogConst("** CLASSICUBE FATALLY CRASHED **");
+		Platform_Log2("PC: %h, error: %h",
+						&ctx->pc, &code);
+		Platform_LogConst("");
+	
+		static const char* const regNames[] = {
+			"R0 ", "R1 ", "R2 ", "R3 ", "R4 ", "R5 ", "R6 ", "R7 ",
+			"R8 ", "R9 ", "R10", "R11", "R12", "R13", "R14", "R15"
+		};
+	
+		for (int i = 0; i < 8; i++) {
+			Platform_Log4("    %c: %h    %c: %h",
+						regNames[i],     &ctx->r[i],
+						regNames[i + 8], &ctx->r[i + 8]);
+		}
+	
+		Platform_Log4("    %c : %h    %c : %h",
+					"SR", &ctx->sr,
+					"PR", &ctx->pr);
+	
+		Platform_LogConst("");
+		Platform_LogConst("Please report on ClassiCube Discord or forums");
+		Platform_LogConst("");
+		Platform_LogConst("You will need to restart your Dreamcast");
+		Platform_LogConst("");
+		
+		// Only log to serial/emu console first time
+		log_debugger = false;
+	}
+}
+
+void CrashHandler_Install(void) {
+	irq_set_handler(EXC_UNHANDLED_EXC, HandleCrash, NULL);
+}
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -165,7 +228,7 @@ static int VMUFile_Do(cc_file* file, int mode) {
 	vmu_pkg_t pkg;
 	
 	errno = 0;
-	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDONLY);
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDONLY | O_META);
 	
 	// Try to extract stored data from the VMU
 	if (fd >= 0) {
@@ -224,7 +287,7 @@ static cc_result VMUFile_Close(cc_file file) {
 	
 	// Copy into VMU file
 	errno = 0;
-	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDWR | O_CREAT | O_TRUNC);
+	fd    = fs_open("/vmu/a1/CCOPT.txt", O_RDWR | O_CREAT | O_TRUNC | O_META);
 	if (fd < 0) return errno;
 	
 	fs_write(fd, pkg_data, pkg_len);
@@ -408,47 +471,47 @@ void Thread_Join(void* handle) {
 void* Mutex_Create(const char* name) {
 	mutex_t* ptr = (mutex_t*)Mem_Alloc(1, sizeof(mutex_t), "mutex");
 	int res = mutex_init(ptr, MUTEX_TYPE_NORMAL);
-	if (res) Logger_Abort2(errno, "Creating mutex");
+	if (res) Process_Abort2(errno, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int res = mutex_destroy((mutex_t*)handle);
-	if (res) Logger_Abort2(errno, "Destroying mutex");
+	if (res) Process_Abort2(errno, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	int res = mutex_lock((mutex_t*)handle);
-	if (res) Logger_Abort2(errno, "Locking mutex");
+	if (res) Process_Abort2(errno, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int res = mutex_unlock((mutex_t*)handle);
-	if (res) Logger_Abort2(errno, "Unlocking mutex");
+	if (res) Process_Abort2(errno, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
 	semaphore_t* ptr = (semaphore_t*)Mem_Alloc(1, sizeof(semaphore_t), "waitable");
 	int res = sem_init(ptr, 0);
-	if (res) Logger_Abort2(errno, "Creating waitable");
+	if (res) Process_Abort2(errno, "Creating waitable");
 	return ptr;
 }
 
 void Waitable_Free(void* handle) {
 	int res = sem_destroy((semaphore_t*)handle);
-	if (res) Logger_Abort2(errno, "Destroying waitable");
+	if (res) Process_Abort2(errno, "Destroying waitable");
 	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
 	int res = sem_signal((semaphore_t*)handle);
-	if (res < 0) Logger_Abort2(errno, "Signalling event");
+	if (res < 0) Process_Abort2(errno, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	int res = sem_wait((semaphore_t*)handle);
-	if (res < 0) Logger_Abort2(errno, "Event wait");
+	if (res < 0) Process_Abort2(errno, "Event wait");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
@@ -456,24 +519,35 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	if (res >= 0) return;
 	
 	int err = errno;
-	if (err != ETIMEDOUT) Logger_Abort2(err, "Event timed wait");
+	if (err != ETIMEDOUT) Process_Abort2(err, "Event timed wait");
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	char str[NATIVE_STR_LEN];
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
 
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int res, i = 0;
-	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
 
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -481,24 +555,12 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	String_InitArray(portStr,  portRaw);
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
-	
-	// getaddrinfo IP address resolution was only added in Nov 2023
-	//   https://github.com/KallistiOS/KallistiOS/pull/358
-	// So include this special case for backwards compatibility
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	if (inet_pton(AF_INET, str, &addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(struct sockaddr_in);
-		*numValidAddrs = 1;
-		return 0;
-	}
 
-	res = getaddrinfo(str, portRaw, &hints, &result);
+	int res = getaddrinfo(host, portRaw, &hints, &result);
 	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
+	int i = 0;
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
 	{
 		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
@@ -680,3 +742,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 	return 0;
 }
 #endif
+

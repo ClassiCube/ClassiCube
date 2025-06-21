@@ -14,12 +14,14 @@
 #include "VirtualKeyboard.h"
 #include <gccore.h>
 #if defined HW_RVL
+#include <ogc/usbmouse.h>
 #include <wiiuse/wpad.h>
 #include <wiikeyboard/keyboard.h>
 #endif
 
 static cc_bool needsFBUpdate;
 static cc_bool launcherMode;
+static int mouseSupported;
 #include "VirtualCursor.h"
 static void* xfb;
 static GXRModeObj* rmode;
@@ -86,6 +88,7 @@ void Window_Init(void) {
 
 	#if defined HW_RVL
 	KEYBOARD_Init(NULL);
+	mouseSupported = MOUSE_Init() >= 0;
 	#endif
 }
 
@@ -168,7 +171,7 @@ static void ProcessPADInputs(float delta) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------Kebyaord processing----------------------------------------------------*
+*--------------------------------------------------Keyboard processing----------------------------------------------------*
 *#########################################################################################################################*/
 #if defined HW_RVL
 static const cc_uint8 key_map[] = {
@@ -232,6 +235,35 @@ static void ProcessKeyboardInput(void) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------Mouse processing------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined HW_RVL
+static void ProcessMouseInput(float delta) {
+	if (!mouseSupported)      return;
+	if (!MOUSE_IsConnected()) return;
+
+	mouse_event event;
+    if (MOUSE_GetEvent(&event) == 0) return;
+
+	Input_SetNonRepeatable(CCMOUSE_L, event.button & 1);
+	Input_SetNonRepeatable(CCMOUSE_R, event.button & 2);
+	Input_SetNonRepeatable(CCMOUSE_M, event.button & 4);
+	Mouse_ScrollVWheel(event.rz * 0.5f);
+
+	if (!vc_hooked) {
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + event.rx, Pointers[0].y + event.ry);
+	
+	if (!Input.RawMode) return;	
+	float scale = (delta * 60.0) / 2.0f;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				event.rx * scale, event.ry * scale);
+}
+#endif
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 #if defined HW_RVL
@@ -241,6 +273,7 @@ static cc_bool dragActive;
 
 void Window_ProcessEvents(float delta) {
 	ProcessKeyboardInput();
+    ProcessMouseInput(delta);
 }
 
 static void GetIRPos(int res, int* x, int* y) {

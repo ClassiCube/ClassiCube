@@ -1,5 +1,6 @@
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_SDL2
+#undef CC_BUILD_EGL /* eglCreateWindowSurface can't use an SDL window */
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"
@@ -48,7 +49,7 @@ static void Window_SDLFail(const char* place) {
 
 	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
 	str.buffer[str.length] = '\0';
-	Logger_Abort(str.buffer);
+	Process_Abort(str.buffer);
 }
 
 void Window_PreInit(void) {
@@ -143,7 +144,10 @@ int Window_GetWindowState(void) {
 cc_result Window_EnterFullscreen(void) {
 	return SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
-cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
+
+cc_result Window_ExitFullscreen(void) { 
+	return SDL_SetWindowFullscreen(win_handle, 0);
+}
 
 int Window_IsObscured(void) { return 0; }
 
@@ -534,7 +538,7 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL()
 static SDL_GLContext win_ctx;
 
 void GLContext_Create(void) {
@@ -550,6 +554,8 @@ void GLContext_Create(void) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
 #ifdef CC_BUILD_GLES
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
 	win_ctx = SDL_GL_CreateContext(win_handle);

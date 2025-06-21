@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_GCWII
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -30,9 +32,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = -EINPROGRESS; // net_XYZ error results are negative
 const cc_result ReturnCode_SocketWouldBlock = -EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = -EPIPE;
 
 #ifdef HW_RVL
 const char* Platform_AppNameSuffix = " Wii";
@@ -84,7 +87,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return secs + UNIX_EPOCH_SECONDS + GCWII_EPOCH_ADJUST;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct timeval cur; 
 	struct tm loc_time;
 	gettimeofday(&cur, NULL);
@@ -105,6 +108,16 @@ cc_uint64 Stopwatch_Measure(void) {
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return ticks_to_microsecs(end - beg);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -248,7 +261,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	*handle = thread;
 	
 	int res = LWP_CreateThread(thread, ExecThread, (void*)func, NULL, stackSize, 80);
-	if (res) Logger_Abort2(res, "Creating thread");
+	if (res) Process_Abort2(res, "Creating thread");
 }
 
 void Thread_Detach(void* handle) {
@@ -260,34 +273,34 @@ void Thread_Detach(void* handle) {
 void Thread_Join(void* handle) {
 	lwp_t* ptr = (lwp_t*)handle;
 	int res = LWP_JoinThread(*ptr, NULL);
-	if (res) Logger_Abort2(res, "Joining thread");
+	if (res) Process_Abort2(res, "Joining thread");
 	Mem_Free(ptr);
 }
 
 void* Mutex_Create(const char* name) {
 	mutex_t* ptr = (mutex_t*)Mem_Alloc(1, sizeof(mutex_t), "mutex");
 	int res = LWP_MutexInit(ptr, false);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	mutex_t* mutex = (mutex_t*)handle;
 	int res = LWP_MutexDestroy(*mutex);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	mutex_t* mutex = (mutex_t*)handle;
 	int res = LWP_MutexLock(*mutex);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	mutex_t* mutex = (mutex_t*)handle;
 	int res = LWP_MutexUnlock(*mutex);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 // should really use a semaphore with max 1.. too bad no 'TimedWait' though
@@ -302,9 +315,9 @@ void* Waitable_Create(const char* name) {
 	int res;
 	
 	res = LWP_CondInit(&ptr->cond);
-	if (res) Logger_Abort2(res, "Creating waitable");
+	if (res) Process_Abort2(res, "Creating waitable");
 	res = LWP_MutexInit(&ptr->mutex, false);
-	if (res) Logger_Abort2(res, "Creating waitable mutex");
+	if (res) Process_Abort2(res, "Creating waitable mutex");
 
 	ptr->signalled = false;
 	return ptr;
@@ -315,9 +328,9 @@ void Waitable_Free(void* handle) {
 	int res;
 	
 	res = LWP_CondDestroy(ptr->cond);
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res) Process_Abort2(res, "Destroying waitable");
 	res = LWP_MutexDestroy(ptr->mutex);
-	if (res) Logger_Abort2(res, "Destroying waitable mutex");
+	if (res) Process_Abort2(res, "Destroying waitable mutex");
 	Mem_Free(handle);
 }
 
@@ -330,7 +343,7 @@ void Waitable_Signal(void* handle) {
 	Mutex_Unlock(&ptr->mutex);
 
 	res = LWP_CondSignal(ptr->cond);
-	if (res) Logger_Abort2(res, "Signalling event");
+	if (res) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
@@ -340,7 +353,7 @@ void Waitable_Wait(void* handle) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = LWP_CondWait(ptr->cond, ptr->mutex);
-		if (res) Logger_Abort2(res, "Waitable wait");
+		if (res) Process_Abort2(res, "Waitable wait");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -357,7 +370,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
 		res = LWP_CondTimedWait(ptr->cond, ptr->mutex, &ts);
-		if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+		if (res && res != ETIMEDOUT) Process_Abort2(res, "Waitable wait for");
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -367,6 +380,25 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool net_supported = true;
+
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 #ifdef HW_RVL
 	struct hostent* res = net_gethostbyname(host);
@@ -398,27 +430,29 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 #else
 	// DNS resolution not implemented in gamecube libbba
-	return ERR_NOT_SUPPORTED;
-#endif
-}
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 1;
-	if (inet_aton(str, &addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size = sizeof(*addr4);
+	static struct fixed_dns_map {
+		const cc_string host, ip;
+	} mappings[] = {
+		{ String_FromConst("cdn.classicube.net"), String_FromConst("104.20.90.158") },
+		{ String_FromConst("www.classicube.net"), String_FromConst("104.20.90.158") }
+	};
+	if (!net_supported) return ERR_NO_NETWORKING;
+
+	for (int i = 0; i < Array_Elems(mappings); i++) 
+	{
+		if (!String_CaselessEqualsConst(&mappings[i].host, host)) continue;
+
+		ParseIPv4(&mappings[i].ip, port, &addrs[0]);
+		*numValidAddrs = 1;
 		return 0;
 	}
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
+	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
 	*s = net_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
@@ -505,6 +539,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &res, resultSize);
 	return res;
 }
+
 static void InitSockets(void) {
 #ifdef HW_RVL
 	int ret = net_init();
@@ -520,6 +555,7 @@ static void InitSockets(void) {
 		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
 	} else {
 		Platform_Log1("Network setup failed: %i", &ret);
+		net_supported = false;
 	}
 #endif
 }

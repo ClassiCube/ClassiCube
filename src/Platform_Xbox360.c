@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_XBOX360
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "Funcs.h"
@@ -21,13 +23,15 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <libfat/fat.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " XBox 360";
 cc_bool Platform_ReadonlyFilesystem;
@@ -50,7 +54,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct timeval cur; 
 	struct tm loc_time;
 	gettimeofday(&cur, NULL);
@@ -75,10 +79,21 @@ cc_uint64 Stopwatch_Measure(void) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static char root_buffer[NATIVE_STR_LEN];
 static cc_string root_path = String_FromArray(root_buffer);
+static bool fat_available;
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
@@ -88,15 +103,21 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 }
 
 cc_result Directory_Create(const cc_filepath* path) {
+	if (!fat_available) return ENOSYS;
+
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_filepath* path) {
+	if (!fat_available) return 0;
+
 	struct stat sb;
 	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+	if (!fat_available) return ENOSYS;
+
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_filepath str;
 	struct dirent* entry;
@@ -140,12 +161,17 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
+	if (!fat_available) return ReturnCode_FileNotFound;
 	return File_Do(file, path->buffer, O_RDONLY);
 }
+
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
+	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
+
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
+	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
@@ -263,10 +289,39 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+extern int bdev_enum(int handle, const char** name);
+
+static void FindRootDirectory(void) {
+	const char* dev = NULL;
+    int handle = bdev_enum(-1, &dev);
+    if (handle < 0) { fat_available = false; return; }
+	
+	root_path.length = 0;
+	String_Format1(&root_path, "%c:/ClassiCube", dev);
+}
+
+static void CreateRootDirectory(void) {
+	if (!fat_available) return;
+	root_buffer[root_path.length] = '\0';
+	
+	int res = mkdir(root_buffer, 0);
+	int err = res == -1 ? errno : 0;
+	Platform_Log1("Created root directory: %i", &err);
+}
+
 void Platform_Init(void) {
 	xenos_init(VIDEO_MODE_AUTO);
 	console_init();
 	//network_init();
+	
+	xenon_ata_init();
+	xenon_atapi_init();
+
+	fat_available = fatInitDefault();
+	Platform_ReadonlyFilesystem = !fat_available;
+
+	FindRootDirectory();
+	CreateRootDirectory();
 }
 
 void Platform_Free(void) {

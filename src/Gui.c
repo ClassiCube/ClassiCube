@@ -124,7 +124,11 @@ static void LoadOptions(void) {
 	Gui.ShowFPS          = Options_GetBool(OPT_SHOW_FPS, true);
 	
 	Gui.RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
+#if defined CC_BUILD_SYMBIAN && defined CC_BUILD_TOUCH
+	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 2.0f);
+#else
 	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
+#endif
 	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.25f, 5.0f, 1.0f);
 	Gui.RawCrosshairScale = Options_GetFloat(OPT_CROSSHAIR_SCALE, 0.25f, 5.0f, 1.0f);
 	Gui.RawTouchScale     = Options_GetFloat(OPT_TOUCH_SCALE,     0.25f, 5.0f, 1.0f);
@@ -183,7 +187,7 @@ void Gui_Refresh(struct Screen* s) {
 
 static void Gui_AddCore(struct Screen* s, int priority) {
 	int i, j;
-	if (Gui.ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
+	if (Gui.ScreensCount >= GUI_MAX_SCREENS) Process_Abort("Hit max screens");
 
 	for (i = 0; i < Gui.ScreensCount; i++) 
 	{
@@ -224,9 +228,9 @@ static int IndexOfScreen(struct Screen* s) {
 	return -1;
 }
 
-void Gui_RemoveCore(struct Screen* s) {
+static cc_bool Gui_RemoveCore(struct Screen* s) {
 	int i = IndexOfScreen(s);
-	if (i == -1) return;
+	if (i == -1) return false;
 
 	for (; i < Gui.ScreensCount - 1; i++) 
 	{
@@ -237,6 +241,7 @@ void Gui_RemoveCore(struct Screen* s) {
 
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->Free(s);
+	return true;
 }
 
 CC_NOINLINE static void Gui_OnScreensChanged(void) {
@@ -245,8 +250,8 @@ CC_NOINLINE static void Gui_OnScreensChanged(void) {
 }
 
 void Gui_Remove(struct Screen* s) {
-	Gui_RemoveCore(s);
-	Gui_OnScreensChanged();
+	cc_bool removed = Gui_RemoveCore(s);
+	if (removed) Gui_OnScreensChanged();
 }
 
 void Gui_Add(struct Screen* s, int priority) {
@@ -302,10 +307,32 @@ void Gui_UpdateInputGrab(void) {
 }
 
 void Gui_ShowPauseMenu(void) {
+#ifndef CC_DISABLE_UI
 	if (Gui.ClassicMenu) {
 		ClassicPauseScreen_Show();
 	} else {
 		PauseScreen_Show();
+	}
+#endif
+}
+
+void Gui_ShowCinematicBars() {
+	int screenWidth = Window_Main.Width;
+	int screenHeight = Window_Main.Height;
+
+	// Ensure bar size is clamped between 0 and 1
+	if (Gui.BarSize < 0.0f) Gui.BarSize = 0.0f;
+	if (Gui.BarSize > 1.0f) Gui.BarSize = 1.0f;
+
+	// If bar size is 1, just draw 1 rectangle instead of 2
+	if (Gui.BarSize == 1.0f) {
+		Gfx_Draw2DGradient(0, 0, screenWidth, screenHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+	} else {
+		// Calculate the height of each bar based on the bar size
+		int barHeight = (int)(screenHeight * Gui.BarSize / 2.0f);
+
+		Gfx_Draw2DGradient(0, 0, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+		Gfx_Draw2DGradient(0, screenHeight - barHeight, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
 	}
 }
 
@@ -317,6 +344,8 @@ void Gui_RenderGui(float delta) {
 #ifdef CC_BUILD_DUALSCREEN
 	Texture_Render(&touchBgTex);
 #endif
+
+	if (Gui.BarSize > 0) Gui_ShowCinematicBars();
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
@@ -601,7 +630,7 @@ static void OnPointerMove(void* obj, int idx) {
 	}
 }
 
-static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, struct PadAxisUpdate* upd) {
 	struct Screen* s;
 	int i;
 	
@@ -610,7 +639,7 @@ static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
 		if (!s->VTABLE->HandlesPadAxis) continue;
 
 		s->dirty = true;
-		if (s->VTABLE->HandlesPadAxis(s, axis, x, y)) return;
+		if (s->VTABLE->HandlesPadAxis(s, upd)) return;
 	}
 }
 
@@ -637,7 +666,9 @@ static void IconsPngProcess(struct Stream* stream, const cc_string* name) {
 static struct TextureEntry icons_entry = { "icons.png", IconsPngProcess };
 
 static void TouchPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL, NULL);
+	if (!Gui.TouchUI) return;
+
+	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL, NULL);	
 }
 static struct TextureEntry touch_entry = { "touch.png", TouchPngProcess };
 

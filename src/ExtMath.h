@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* Simple math functions and constants. Also implements a RNG algorithm, based on 
       Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 #define MATH_PI 3.1415926535897931f
@@ -16,18 +16,29 @@ CC_BEGIN_HEADER
 #define Math_Deg2Packed(x) ((cc_uint8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
-#if defined __GNUC__ && !defined CC_PLAT_PS1
-/* fabsf/sqrtf are single intrinsic instructions in gcc/clang */
-/* (sqrtf is only when -fno-math-errno though) */
-#define Math_AbsF(x) __builtin_fabsf(x)
-#define Math_SqrtF(x) __builtin_sqrtf(x)
+#if defined __GNUC__ && defined __APPLE__ && defined _ARCH_PPC
+	/* fabsf is single intrinsic instructions in gcc/clang */
+	/* (sqrtf doesn't seem to exist in 10.3 and earlier SDKs) */
+	#define Math_AbsF(x)  __builtin_fabsf(x)
+	#define Math_SqrtF(x) __builtin_sqrt(x)
+#elif defined __GNUC__ && !defined CC_PLAT_PS1
+	/* fabsf/sqrtf are single intrinsic instructions in gcc/clang */
+	/* (sqrtf is only when -fno-math-errno though) */
+	#define Math_AbsF(x)  __builtin_fabsf(x)
+	#define Math_SqrtF(x) __builtin_sqrtf(x)
 #else
-float Math_AbsF(float x);
-float Math_SqrtF(float x);
+	float Math_AbsF(float x);
+	float Math_SqrtF(float x);
 #endif
 
 float Math_Mod1(float x);
-int   Math_AbsI(int x);
+
+static CC_INLINE int Math_AbsI(int x) { return x < 0 ? -x : x; }
+
+static CC_INLINE float Math_SafeDiv(float a, float b) {
+	if (Math_AbsF(b) < 0.000001f) return MATH_LARGENUM;
+	return a / b;
+}
 
 CC_API double Math_Sin(double x);
 CC_API double Math_Cos(double x);

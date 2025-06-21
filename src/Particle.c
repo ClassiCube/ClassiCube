@@ -301,7 +301,7 @@ static void Terrain_Render(float t) {
 		if (!partCount) continue;
 
 		Atlas1D_Bind(i);
-		Gfx_DrawVb_IndexedTris_Range(partCount, offset);
+		Gfx_DrawVb_IndexedTris_Range(partCount, offset, DRAW_HINT_NONE);
 		offset += partCount;
 	}
 }

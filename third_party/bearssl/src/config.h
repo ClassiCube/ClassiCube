@@ -42,6 +42,11 @@
 #undef _WIN32
 #endif
 
+/* Rely on ClassiCube's implementation for RNG */
+#define BR_USE_WIN32_RAND 0
+#define BR_USE_URANDOM 0
+#define BR_USE_GETENTROPY 0
+
 /*
  * When BR_64 is enabled, 64-bit integer types are assumed to be
  * efficient (i.e. the architecture has 64-bit registers and can

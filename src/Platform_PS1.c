@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined PLAT_PS1
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -33,6 +34,7 @@ const cc_result ReturnCode_DirectoryExists    = 99999;
 
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
+const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix  = " PS1";
 cc_bool Platform_ReadonlyFilesystem = true;
@@ -53,8 +55,18 @@ TimeMS DateTime_CurrentUTC(void) {
 	return 0;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
-	Mem_Set(t, 0, sizeof(struct DateTime));
+void DateTime_CurrentLocal(struct cc_datetime* t) {
+	Mem_Set(t, 0, sizeof(struct cc_datetime));
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -149,8 +161,12 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) {
-	// TODO sleep a bit
-	VSync(0);
+	// Simulate sleep with a busy loop
+	cc_uint64 delay  = (cc_uint64)milliseconds * F_CPU / (8 * 1000);
+	cc_uint32 delay_ = (cc_uint32)delay;
+
+	for (cc_uint32 i = 0; i < delay_; i++) { __asm__ volatile(""); }
+	ChangeClearPAD(0);
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
@@ -231,8 +247,11 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+extern void Gfx_ResetGPU(void);
+
 void Platform_Init(void) {
-	ResetGraph(0);
+	ResetCallback();
+	Gfx_ResetGPU();
 	Stopwatch_Init();
 }
 

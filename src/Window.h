@@ -5,36 +5,13 @@ CC_BEGIN_HEADER
 
 /* 
 Abstracts interaction with a windowing system (creating window, moving cursor, etc)
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
-*/
-
-/*
-   The Open Toolkit Library License
-  
-   Copyright (c) 2006 - 2009 the Open Toolkit library.
-  
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights to
-   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-   the Software, and to permit persons to whom the Software is furnished to do
-   so, subject to the following conditions:
-  
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-  
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-   OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 struct Bitmap;
 struct DynamicLibSym;
+struct InputDevice;
+
 /* The states the window can be in. */
 enum WindowState  { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
 enum SoftKeyboard { SOFT_KEYBOARD_NONE, SOFT_KEYBOARD_RESIZE, SOFT_KEYBOARD_SHIFT, SOFT_KEYBOARD_VIRTUAL };
@@ -63,6 +40,9 @@ CC_VAR extern struct _DisplayData {
 	cc_bool ShowingSoftKeyboard;
 	/* Whether the cursor is currently visible */
 	cc_bool CursorVisible;
+	/* Whether the framebuffer must always be entirely redrawn */
+	/* NOTE: Currently only the Sega 32X requires this */
+	cc_bool FullRedraw;
 	/* Amount to offset content near the edges of the window by */
 	/*  Mainly intended for when the game is rendered on TV displays, where */
 	/*  pixels on the edges of the screen may be hidden due to overscan */
@@ -201,13 +181,21 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
-struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque, multiline; };
+struct OpenKeyboardArgs { 
+	const cc_string* text; 
+	int type, yOffset;
+	const char* placeholder; 
+	cc_bool opaque, multiline; 
+	struct InputDevice* device;
+};
 static CC_INLINE void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
-	args->text   = text;
-	args->type   = type;
+	args->text    = text;
+	args->type    = type;
+	args->yOffset = 0;
 	args->placeholder = "";
 	args->opaque      = false;
 	args->multiline   = false;
+	args->device      = NULL;
 }
 
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */

@@ -1,5 +1,6 @@
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_SDL3
+#undef CC_BUILD_EGL /* eglCreateWindowSurface can't use an SDL window */
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"
@@ -21,7 +22,7 @@ static void Window_SDLFail(const char* place) {
 
 	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
 	str.buffer[str.length] = '\0';
-	Logger_Abort(str.buffer);
+	Process_Abort(str.buffer);
 }
 
 void Window_PreInit(void) {
@@ -53,8 +54,9 @@ void Window_Free(void) { }
 #include "../misc/sdl/CCIcon_SDL.h"
 
 static void ApplyIcon(void) {
-	SDL_Surface* surface = SDL_CreateSurfaceFrom((void*)CCIcon_Data, CCIcon_Width, CCIcon_Height, 
-												CCIcon_Pitch, SDL_PIXELFORMAT_BGRA8888);
+	SDL_Surface* surface = SDL_CreateSurfaceFrom(CCIcon_Width, CCIcon_Height, SDL_PIXELFORMAT_BGRA8888,
+												 (void*)CCIcon_Data, CCIcon_Pitch);
+
 	SDL_SetWindowIcon(win_handle, surface);
 }
 #else
@@ -67,7 +69,7 @@ static void DoCreateWindow(int width, int height, int flags) {
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER,  width);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
-	SDL_SetNumberProperty(props, "flags", flags | SDL_WINDOW_RESIZABLE);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags | SDL_WINDOW_RESIZABLE);
 
 	win_handle = SDL_CreateWindowWithProperties(props);
 	if (!win_handle) Window_SDLFail("creating window");
@@ -221,13 +223,13 @@ static int MapNativeKey(SDL_Keycode k) {
 }
 
 static void OnKeyEvent(const SDL_Event* e) {
-	cc_bool pressed = e->key.state == SDL_PRESSED;
+	cc_bool pressed = e->key.down == true;
 	int key = MapNativeKey(e->key.key);
 	if (key) Input_Set(key, pressed);
 }
 
 static void OnMouseEvent(const SDL_Event* e) {
-	cc_bool pressed = e->button.state == SDL_PRESSED;
+	cc_bool pressed = e->button.down == true;
 	int btn;
 	switch (e->button.button) {
 		case SDL_BUTTON_LEFT:   btn = CCMOUSE_L; break;
@@ -241,12 +243,12 @@ static void OnMouseEvent(const SDL_Event* e) {
 }
 
 static void OnTextEvent(const SDL_Event* e) {
+	const cc_uint8* src;
 	cc_codepoint cp;
-	const char* src;
 	int i, len;
 
-	src = e->text.text;
-	len = String_Length(src);
+	src = (cc_uint8*)e->text.text;
+	len = String_Length(e->text.text);
 
 	while (len > 0) {
 		i = Convert_Utf8ToCodepoint(&cp, src, len);
@@ -424,7 +426,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	
 	dlgCallback  = args->Callback;
 	save_filters = filters;
-	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, 1, defName);
+	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, i, defName);
 	return 0;
 }
 
@@ -481,14 +483,14 @@ void OnscreenKeyboard_Close(void) { SDL_StopTextInput(win_handle); }
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
-	SDL_SetRelativeMouseMode(true);
+	SDL_SetWindowRelativeMouseMode(win_handle, true);
 	Input.RawMode = true;
 }
 void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 
 void Window_DisableRawMouse(void) {
 	RegrabMouse();
-	SDL_SetRelativeMouseMode(false);
+	SDL_SetWindowRelativeMouseMode(win_handle, false);
 	Input.RawMode = false;
 }
 
@@ -566,7 +568,7 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
+#if CC_GFX_BACKEND_IS_GL()
 static SDL_GLContext win_ctx;
 
 void GLContext_Create(void) {
@@ -582,6 +584,8 @@ void GLContext_Create(void) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
 #ifdef CC_BUILD_GLES
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
 	win_ctx = SDL_GL_CreateContext(win_handle);

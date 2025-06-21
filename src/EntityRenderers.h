@@ -4,7 +4,7 @@
 CC_BEGIN_HEADER
 
 /* Renders supporting objects for entities (shadows and names)
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent EntityRenderers_Component;

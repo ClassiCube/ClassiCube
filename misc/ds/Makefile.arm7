@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# SPDX-FileContributor: Antonio Niño Díaz, 2023
+export BLOCKSDS			?= /opt/wonderful/thirdparty/blocksds/core
+export BLOCKSDSEXT		?= /opt/wonderful/thirdparty/blocksds/external
+export WONDERFUL_TOOLCHAIN	?= /opt/wonderful
+ARM_NONE_EABI_PATH		?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
+
+SOURCEDIRS	:= misc/ds
+INCLUDEDIRS	:=
+DSIWIFI		:= third_party/dsiwifi
+
+ifdef BUILD_DSI
+SOURCEDIRS	+= $(DSIWIFI)/arm_iop/source $(DSIWIFI)/common/source $(DSIWIFI)/arm_iop/source/ath $(DSIWIFI)/arm_iop/source/crypto $(DSIWIFI)/arm_iop/source/ieee
+INCLUDEDIRS	+= $(DSIWIFI)/arm_iop/source  $(DSIWIFI)/arm_iop/include $(DSIWIFI)/common/source $(DSIWIFI)/include $(DSIWIFI)/include/lwip
+BUILDDIR	:= build-dsi
+LIBS		:= -lc -lnds7
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds
+else
+BUILDDIR	:= build-nds
+LIBS		:= -lc -lnds7 -ldswifi7
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds $(BLOCKSDS)/libs/dswifi
+endif
+
+NAME		:= cc-arm7
+ELF		:= $(BUILDDIR)/$(NAME).elf
+MAP		:= $(BUILDDIR)/$(NAME).map
+
+PREFIX		:= $(ARM_NONE_EABI_PATH)arm-none-eabi-
+CC		:= $(PREFIX)gcc
+CXX		:= $(PREFIX)g++
+LD		:= $(CC)
+
+DEFINES		:= -D__NDS__ -DARM7
+ARCH		:= -mcpu=arm7tdmi -mtune=arm7tdmi
+WARNFLAGS	:= -Wall
+
+# Source files
+# ------------
+S_FILES		:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.s))
+C_FILES		:= $(foreach dir,$(SOURCEDIRS),$(wildcard $(dir)/*.c))
+
+
+INCLUDEFLAGS	:= $(foreach path,$(INCLUDEDIRS),-I$(path)) \
+		   $(foreach path,$(LIBDIRS),-I$(path)/include)
+
+LIBDIRSFLAGS	:= $(foreach path,$(LIBDIRS),-L$(path)/lib)
+
+ASFLAGS		+= -x assembler-with-cpp $(DEFINES) $(ARCH) \
+		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) \
+		   -ffunction-sections -fdata-sections
+
+CFLAGS		+= -std=gnu11 $(WARNFLAGS) $(DEFINES) $(ARCH) \
+		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) -O2 \
+		   -ffunction-sections -fdata-sections \
+		   -fomit-frame-pointer
+
+LDFLAGS		:= -mthumb -mthumb-interwork $(LIBDIRSFLAGS) \
+		   -Wl,-Map,$(MAP) -Wl,--gc-sections -nostdlib \
+		   -T$(BLOCKSDS)/sys/crts/ds_arm7.ld \
+		   -Wl,--no-warn-rwx-segments \
+		   -Wl,--start-group $(LIBS) -lgcc -Wl,--end-group
+
+
+# Intermediate build files
+# ------------------------
+OBJS		:= $(addprefix $(BUILDDIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.s=%.o)))
+DEPS		:= $(OBJS:.o=.d)
+export VPATH	:= $(SOURCEDIRS)
+
+# Targets
+# -------
+.PHONY: all clean
+
+all: $(BUILDDIR) $(ELF)
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
+$(ELF): $(OBJS)
+	$(LD) -o $@ $(OBJS) $(BLOCKSDS)/sys/crts/ds_arm7_crt0.o $(LDFLAGS)
+clean:
+	rm $(ELF) $(MAP) $(OBJS)
+
+# Rules
+# -----
+$(BUILDDIR)/%.o : %.s
+	$(CC) $(ASFLAGS) -MMD -MP -c -o $@ $<
+
+$(BUILDDIR)/%.o : %.c
+	$(CC) $(CFLAGS) -MMD -MP -c -o $@ $<
+
+# Include dependency files if they exist
+# --------------------------------------
+
+-include $(DEPS)

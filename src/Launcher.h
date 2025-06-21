@@ -4,7 +4,7 @@
 CC_BEGIN_HEADER
 
 /* Implements the launcher part of the game.
-	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
 struct FontDesc;
@@ -76,7 +76,7 @@ cc_bool Launcher_ConnectToServer(const cc_string* hash);
 /* Launcher main loop. */
 void Launcher_Run(void);
 /* Starts the game from the given arguments. */
-cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server);
+cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server, int numStates);
 /* Prints information about a http error to dst. (for status widget) */
 /* If req->result is non-zero, also displays a dialog box on-screen. */
 void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_string* dst);

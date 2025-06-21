@@ -172,9 +172,9 @@ static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* lin
 #define PNG_Mask_1(i) (7  - (i & 7))
 #define PNG_Mask_2(i) ((3 - (i & 3)) * 2)
 #define PNG_Mask_4(i) ((1 - (i & 1)) * 4)
-#define PNG_Get__1(i) ((src[i >> 3] >> PNG_Mask_1(i)) & 1)
-#define PNG_Get__2(i) ((src[i >> 2] >> PNG_Mask_2(i)) & 3)
-#define PNG_Get__4(i) ((src[i >> 1] >> PNG_Mask_4(i)) & 7)
+#define PNG_Get__1(i) ((src[i >> 3] >> PNG_Mask_1(i)) & 0x01)
+#define PNG_Get__2(i) ((src[i >> 2] >> PNG_Mask_2(i)) & 0x03)
+#define PNG_Get__4(i) ((src[i >> 1] >> PNG_Mask_4(i)) & 0x0F)
 
 static void Png_Expand_GRAYSCALE_1(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i; cc_uint8 rgb; /* NOTE: not optimised*/
@@ -193,7 +193,7 @@ static void Png_Expand_GRAYSCALE_4(int width, BitmapCol* palette, cc_uint8* src,
 
 static void Png_Expand_GRAYSCALE_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	cc_uint8 rgb;
-	src += (width - 1) * 2;
+	src += (width - 1);
 	dst += (width - 1);
 
 	for (; width >= 4; width -= 4) {
@@ -329,6 +329,11 @@ static BitmapCol ExpandRGB(cc_uint8 bitsPerSample, int r, int g, int b) {
 	return BitmapCol_Make(r, g, b, 0);
 }
 
+#ifdef CC_BUILD_32X
+cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
+	return ERR_NOT_SUPPORTED;
+}
+#else
 cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[64];
 	cc_uint32 dataSize, fourCC;
@@ -353,10 +358,12 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	int curY;
 
 	/* idat decompressor */
-#ifdef CC_BUILD_TINYSTACK
-	static struct InflateState inflate;
+#if CC_BUILD_MAXSTACK <= (50 * 1024)
+	void* mem = TempMem_Alloc(sizeof(struct InflateState));
+	struct InflateState* inflate = (struct InflateState*)mem;
 #else
-	struct InflateState inflate;
+	struct InflateState _inflate;
+	struct InflateState* inflate = &_inflate;
 #endif
 	struct Stream compStream, datStream;
 	struct ZLibHeader zlibHeader;
@@ -373,7 +380,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	trnsColor  = BITMAPCOLOR_BLACK;
 	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOLOR_BLACK; }
 
-	Inflate_MakeStream2(&compStream, &inflate, stream);
+	Inflate_MakeStream2(&compStream, inflate, stream);
 	ZLibHeader_Init(&zlibHeader);
 
 	for (;;) {
@@ -468,7 +475,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 		/* 11.2.4 IDAT Image data */
 		case PNG_FourCC('I','D','A','T'): {
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
-			inflate.Source = &datStream;
+			inflate->Source = &datStream;
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
 			while (!zlibHeader.done) {
@@ -546,6 +553,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 		if ((res = stream->Skip(stream, 4))) return res; /* Skip CRC32 */
 	}
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -659,7 +667,12 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	cc_uint8*  curLine = buffer + (bmp->width * 4) * 1;
 	cc_uint8* bestLine = buffer + (bmp->width * 4) * 2;
 
-	struct ZLibState zlState;
+#if CC_BUILD_MAXSTACK <= (50 * 1024)
+	struct ZLibState* zlState = (struct ZLibState*)Mem_TryAlloc(1, sizeof(struct ZLibState));
+#else
+	struct ZLibState _zlState;
+	struct ZLibState* zlState = &_zlState;
+#endif
 	struct Stream chunk, zlStream;
 	cc_uint32 stream_end, stream_beg;
 	int y, lineSize;
@@ -692,7 +705,7 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	Stream_SetU32_BE(&tmp[0], PNG_FourCC('I','D','A','T'));
 	if ((res = Stream_Write(&chunk, tmp, 4))) return res;
 
-	ZLib_MakeStream(&zlStream, &zlState, &chunk); 
+	ZLib_MakeStream(&zlStream, zlState, &chunk); 
 	lineSize = bmp->width * (alpha ? 4 : 3);
 	Mem_Set(prevLine, 0, lineSize);
 

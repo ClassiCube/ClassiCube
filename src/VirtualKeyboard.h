@@ -14,10 +14,11 @@
 static cc_bool kb_inited, kb_shift, kb_needsHook;
 static struct FontDesc kb_font;
 static int kb_curX, kb_curY;
-static float kb_padXAcc, kb_padYAcc;
 static char kb_buffer[512];
 static cc_string kb_str = String_FromArray(kb_buffer);
 static void (*KB_MarkDirty)(void);
+static int kb_yOffset;
+static cc_bool kb_clicking;
 
 #define KB_TILE_SIZE 32
 static int kb_tileWidth  = KB_TILE_SIZE;
@@ -173,11 +174,27 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 
 static void VirtualKeyboard_CalcPosition(int* x, int* y, int width, int height) {
 	/* Draw virtual keyboard at centre of window bottom */
-	*y = height - 1 - VirtualKeyboard_Height();
+	*y = height - 1 - VirtualKeyboard_Height() - kb_yOffset;
 	if (*y < 0) *y = 0;
 
 	*x = (width - VirtualKeyboard_Width()) / 2;
 	if (*x < 0) *x = 0;
+}
+
+static int VirtualKeyboard_WindowWidth(void) {
+#ifdef CC_BUILD_DUALSCREEN
+	return launcherMode ? Window_Main.Width : Window_Alt.Width;
+#else
+	return Window_Main.Width;
+#endif
+}
+
+static int VirtualKeyboard_WindowHeight(void) {
+#ifdef CC_BUILD_DUALSCREEN
+	return launcherMode ? Window_Main.Height : Window_Alt.Height;
+#else
+	return Window_Main.Height;
+#endif
 }
 
 /*########################################################################################################################*
@@ -229,6 +246,7 @@ static void VirtualKeyboard_ClickSelected(void) {
 		VirtualKeyboard_Backspace();
 		break;
 	case KB_B_ENTER:
+		kb_curX = -1;
 		Input_SetPressed(CCKEY_ENTER);
 		Input_SetReleased(CCKEY_ENTER);
 		OnscreenKeyboard_Close();
@@ -254,15 +272,15 @@ static void VirtualKeyboard_ClickSelected(void) {
 	}
 }
 
-static void VirtualKeyboard_ProcessDown(int key, struct InputDevice* device) {
+static cc_bool VirtualKeyboard_OnInputDown(int key, struct InputDevice* device) {
 	int deltaX, deltaY;
 	Input_CalcDelta(key, device, &deltaX, &deltaY);
 
 	if (deltaX || deltaY) {
 		VirtualKeyboard_Scroll(deltaX, deltaY);
-	} else if (key == CCPAD_START  || key == CCPAD_1) {
+	} else if (key == CCPAD_START  || key == CCPAD_1 || key == CCKEY_ENTER) {
 		VirtualKeyboard_ClickSelected();
-	} else if (key == CCPAD_SELECT || key == CCPAD_2) {
+	} else if (key == CCPAD_SELECT || key == CCPAD_2 || key == CCKEY_ESCAPE) {
 		VirtualKeyboard_Close();
 	} else if (key == CCPAD_3) {
 		VirtualKeyboard_Backspace();
@@ -273,33 +291,49 @@ static void VirtualKeyboard_ProcessDown(int key, struct InputDevice* device) {
 	} else if (key == CCPAD_R) {
 		VirtualKeyboard_AppendChar('/');
 	}
+	return true;
 }
 
-static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, float y) {
-	int xSteps, ySteps;
-
-	xSteps = Utils_AccumulateWheelDelta(&kb_padXAcc, x / 100.0f);
-	if (xSteps) VirtualKeyboard_Scroll(xSteps > 0 ? 1 : -1, 0);
-
-	ySteps = Utils_AccumulateWheelDelta(&kb_padYAcc, y / 100.0f);
-	if (ySteps) VirtualKeyboard_Scroll(0, ySteps > 0 ? 1 : -1);
+static void VirtualKeyboard_PadAxis(void* obj, struct PadAxisUpdate* upd) {
+	if (upd->xSteps) VirtualKeyboard_Scroll(upd->xSteps > 0 ? 1 : -1, 0);
+	if (upd->ySteps) VirtualKeyboard_Scroll(0, upd->ySteps > 0 ? 1 : -1);
 }
 
-static void VirtualKeyboard_PointerDown(void* obj, int idx) {
+static cc_bool VirtualKeyboard_GetPointerPosition(int idx, int* kbX, int* kbY) {
 	int width  = VirtualKeyboard_Width();
 	int height = VirtualKeyboard_Height();
-	int kbX, kbY;
-	VirtualKeyboard_CalcPosition(&kbX, &kbY, Window_Main.Width, Window_Main.Height);
+	int originX, originY;
+	VirtualKeyboard_CalcPosition(&originX, &originY, VirtualKeyboard_WindowWidth(), VirtualKeyboard_WindowHeight());
 
 	int x = Pointers[idx].x, y = Pointers[idx].y;
-	if (x < kbX || y < kbY || x >= kbX + width || y >= kbY + height) return;
+	if (x < originX || y < originY || x >= originX + width || y >= originY + height) return false;
 
-	kb_curX = (x - kbX) / kb_tileWidth;
-	kb_curY = (y - kbY) / kb_tileHeight;
+	*kbX = x - originX;
+	*kbY = y - originY;
+	return true;
+}
+
+static cc_bool VirtualKeyboard_PointerMove(int idx) {
+	int kbX, kbY;
+	if (!VirtualKeyboard_GetPointerPosition(idx, &kbX, &kbY)) return false;
+
+	if (kb_clicking) return true;
+	kb_clicking = true;
+
+	kb_curX = kbX / kb_tileWidth;
+	kb_curY = kbY / kb_tileHeight;
 	if (kb_curX >= kb->cellsPerRow) kb_curX = kb->cellsPerRow - 1;
 
 	VirtualKeyboard_Clamp();
 	VirtualKeyboard_ClickSelected();
+	return true;
+}
+
+static cc_bool VirtualKeyboard_PointerUp(int idx) {
+	int kbX, kbY;
+	kb_clicking = false;
+	kb_curX     = -1;
+	return VirtualKeyboard_GetPointerPosition(idx, &kbX, &kbY);
 }
 
 
@@ -360,7 +394,7 @@ static void VirtualKeyboard_MakeTexture(void) {
 	Context2D_Free(&ctx);
 	
 	int x, y;
-	VirtualKeyboard_CalcPosition(&x, &y, Window_Main.Width, Window_Main.Height);
+	VirtualKeyboard_CalcPosition(&x, &y, VirtualKeyboard_WindowWidth(), VirtualKeyboard_WindowHeight());
 	kb_texture.x = x; kb_texture.y = y;
 }
 
@@ -378,6 +412,7 @@ static void VirtualKeyboard_Display3D(float delta) {
 		if (!kb_texture.ID) return;
 	}
 	
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindTexture(kb_texture.ID);
 	
@@ -386,6 +421,7 @@ static void VirtualKeyboard_Display3D(float delta) {
 	Gfx_Make2DQuad(&kb_texture, PACKEDCOL_WHITE, ptr);
 	Gfx_UnlockDynamicVb(kb_vb);
 	Gfx_DrawVb_IndexedTris(4);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 }
 
 /*########################################################################################################################*
@@ -396,7 +432,9 @@ static void VirtualKeyboard_Hook(void) {
 	/*  the virtual keyboard in the first place gets mistakenly processed */
 	kb_needsHook = false;
 	Event_Register_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
-	Event_Register_(&PointerEvents.Down,          NULL, VirtualKeyboard_PointerDown);
+	PointerHooks.DownHook = VirtualKeyboard_PointerMove;
+	PointerHooks.MoveHook = VirtualKeyboard_PointerMove;
+	PointerHooks.UpHook   = VirtualKeyboard_PointerUp;
 }
 
 static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher) {
@@ -407,9 +445,8 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	kb_needsHook = true;
 	kb_curX      = -1;
 	kb_curY      = 0;
-	kb_padXAcc   = 0;
-	kb_padYAcc   = 0;
 	kb_shift     = false;
+	kb_yOffset   = args->yOffset;
 
 	int mode = args->type & 0xFF;
 	int num  = mode == KEYBOARD_TYPE_INTEGER || mode == KEYBOARD_TYPE_NUMBER;
@@ -425,7 +462,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	}
 
 	Window_Main.SoftKeyboardFocus = true;
-	Input.DownHook = VirtualKeyboard_ProcessDown;
+	Input.DownHook = VirtualKeyboard_OnInputDown;
 	LBackend_Hooks[0]   = VirtualKeyboard_Display2D;
 	Game.Draw2DHooks[0] = VirtualKeyboard_Display3D;
 }
@@ -443,7 +480,9 @@ static void VirtualKeyboard_Close(void) {
 		VirtualKeyboard_Close3D();
 		
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
-	Event_Unregister_(&PointerEvents.Down,          NULL, VirtualKeyboard_PointerDown);
+	PointerHooks.DownHook = NULL;
+	PointerHooks.MoveHook = NULL;
+	PointerHooks.UpHook   = NULL;
 	Window_Main.SoftKeyboardFocus = false;
 
 	KB_MarkDirty   = NULL;

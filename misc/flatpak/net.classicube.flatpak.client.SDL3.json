@@ -1,0 +1,136 @@
+{
+    "id": "net.classicube.flatpak.client",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "48",
+    "sdk": "org.gnome.Sdk",
+    "command": "ClassiCubeLauncher",
+    "finish-args": [
+        "--socket=wayland",
+        "--socket=fallback-x11",
+        "--device=dri",
+        "--share=network",
+        "--share=ipc",
+        "--socket=pulseaudio"
+    ],
+    "modules": [
+        {
+            "name": "SDL3",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/libsdl-org/SDL.git",
+                    "branch": "main"
+                }
+            ],
+            "cleanup": [
+                "/bin/sdl3-config",
+                "/include",
+                "/lib/libSDL3.la",
+                "/lib/libSDL3main.a",
+                "/lib/libSDL3main.la",
+                "/lib/libSDL3_test.a",
+                "/lib/libSDL3_test.la",
+                "/lib/cmake",
+                "/share/aclocal",
+                "/lib/pkgconfig"
+            ],
+            "modules": [
+                {
+                    "name": "libdecor",
+                    "buildsystem": "meson",
+                    "config-opts": [
+                        "-Ddemo=false"
+                    ],
+                    "sources": [
+                        {
+                            "type": "git",
+                            "url": "https://gitlab.freedesktop.org/libdecor/libdecor.git"
+                        }
+                    ],
+                    "cleanup": [
+                        "/include",
+                        "/lib/pkgconfig"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "zenity-gtk3",
+            "buildsystem": "meson",
+            "build-commands": [
+            	"mkdir -p ${FLATPAK_DEST}/share/icons/hicolor"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://gitlab.gnome.org/GNOME/zenity/-/archive/3.44.4/zenity-3.44.4.tar.gz",
+                    "sha256": "e7b334867d4e11053e6e52e5d51b7a983dc549f93cb3fda757e40309b16bc57b"
+                }
+            ],
+            "post-install": [
+            	"mv ${FLATPAK_DEST}/bin/zenity ${FLATPAK_DEST}/bin/zenity-gtk3"
+            ]
+        },
+        {
+            "name": "zenity-gtk4",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://gitlab.gnome.org/GNOME/zenity/-/archive/4.0.2/zenity-4.0.2.tar.gz",
+                    "sha256": "fdbb74e882a6a56bb2f1a2381b81e08b06c627cc7e944edb71d107092c70dd80",
+                    "x-checker-data": {
+                        "type": "gnome",
+                        "name": "zenity"
+                    }
+                }
+            ],
+            "post-install": [
+            	"mv ${FLATPAK_DEST}/bin/zenity ${FLATPAK_DEST}/bin/zenity-gtk4"
+            ]
+        },
+        {
+            "name": "ClassiCubeAssets",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -Dm644 classicube-texpack.zip ${FLATPAK_DEST}/share/classicube-texpack.zip",
+                "install -Dm644 classicube-audio.zip ${FLATPAK_DEST}/share/classicube-audio.zip"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "dest-filename": "classicube-texpack.zip",
+                    "url": "https://classicube.net/static/default.zip",
+                    "sha256": "55eac12a9727d209b42694d07dfdca8d50349779ab77ffc11a31d2cb66b45635"
+                },
+                {
+                    "type": "file",
+                    "dest-filename": "classicube-audio.zip",
+                    "url": "https://classicube.net/static/audio.zip",
+                    "sha256": "13562a712d1cb1de3f36dd93a03245a377f201e7934d19c17de09202b410e04b"
+                }
+            ]
+        },
+        {
+            "name": "ClassiCube",
+            "buildsystem": "simple",
+            "build-commands": [
+                "gcc -fno-math-errno src/*.c -o src/ClassiCube -rdynamic -lpthread -lGL -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3 -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -DCC_BUILD_FLATPAK -L /app/lib -lSDL3",
+                "install -Dm755 src/ClassiCube -t ${FLATPAK_DEST}/bin",
+                "install -Dm755 misc/flatpak/ClassiCubeLauncher -t ${FLATPAK_DEST}/bin",
+                "install -Dm755 misc/flatpak/zenity-wrapper ${FLATPAK_DEST}/bin/zenity",
+                "install -Dm644 misc/flatpak/net.classicube.flatpak.client.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/net.classicube.flatpak.client.svg",
+                "install -Dm644 misc/flatpak/net.classicube.flatpak.client.desktop ${FLATPAK_DEST}/share/applications/net.classicube.flatpak.client.desktop",
+                "install -Dm644 misc/flatpak/net.classicube.flatpak.client.metainfo.xml ${FLATPAK_DEST}/share/metainfo/net.classicube.flatpak.client.metainfo.xml"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/ClassiCube/ClassiCube.git"
+                }
+            ]
+        }
+    ]
+}

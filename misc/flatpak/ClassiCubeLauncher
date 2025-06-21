@@ -1,0 +1,7 @@
+#!/bin/sh
+# Fallback Texture Pack and Audio
+mkdir -p ${XDG_DATA_HOME}/ClassiCube/texpacks ${XDG_DATA_HOME}/ClassiCube/audio
+test -f ${XDG_DATA_HOME}/ClassiCube/texpacks/classicube.zip || cp /app/share/classicube-texpack.zip ${XDG_DATA_HOME}/ClassiCube/texpacks/classicube.zip
+test -f ${XDG_DATA_HOME}/ClassiCube/audio/classicube.zip || cp /app/share/classicube-audio.zip ${XDG_DATA_HOME}/ClassiCube/audio/classicube.zip
+
+cd ${XDG_DATA_HOME}/ClassiCube && exec ClassiCube "$@"

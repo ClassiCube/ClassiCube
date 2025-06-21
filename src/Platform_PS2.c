@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined PLAT_PS2
 
+#define CC_XTEA_ENCRYPTION
 #define LIBCGLUE_SYS_SOCKET_ALIASES 0
 #define LIBCGLUE_SYS_SOCKET_NO_ALIASES
 #define LIBCGLUE_ARPA_INET_NO_ALIASES
@@ -46,6 +47,7 @@ const cc_result ReturnCode_DirectoryExists    = -8;
 
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " PS2";
 cc_bool Platform_ReadonlyFilesystem;
@@ -99,7 +101,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)rtc_sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	time_t rtc_sec = CurrentUnixTime();
 	struct tm loc_time;
 	localtime_r(&rtc_sec, &loc_time);
@@ -125,6 +127,16 @@ cc_uint64 Stopwatch_Measure(void) {
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return (end - beg) * US_PER_SEC / kBUSCLK;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -284,11 +296,11 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	thread.initial_priority = 18;
 	
 	int thdID = CreateThread(&thread);
-	if (thdID < 0) Logger_Abort2(thdID, "Creating thread");
+	if (thdID < 0) Process_Abort2(thdID, "Creating thread");
 	*handle = (void*)thdID;
 	
 	int res = StartThread(thdID, (void*)func);
-	if (res < 0) Logger_Abort2(res, "Running thread");
+	if (res < 0) Process_Abort2(res, "Running thread");
 }
 
 void Thread_Detach(void* handle) {
@@ -302,7 +314,7 @@ void Thread_Join(void* handle) {
 	for (;;)
 	{
 		int res = ReferThreadStatus(thdID, &info);
-		if (res) Logger_Abort("Checking thread status");
+		if (res) Process_Abort("Checking thread status");
 		
 		if (info.status == THS_DORMANT) break;
 		Thread_Sleep(10); // TODO better solution
@@ -315,7 +327,7 @@ void* Mutex_Create(const char* name) {
 	sema.max_count  = 1;
 	
 	int semID = CreateSema(&sema);
-	if (semID < 0) Logger_Abort2(semID, "Creating mutex");
+	if (semID < 0) Process_Abort2(semID, "Creating mutex");
 	return (void*)semID;
 }
 
@@ -323,21 +335,21 @@ void Mutex_Free(void* handle) {
 	int semID = (int)handle;
 	int res   = DeleteSema(semID);
 	
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 }
 
 void Mutex_Lock(void* handle) {
 	int semID = (int)handle;
 	int res   = WaitSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Locking mutex");
+	if (res < 0) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int semID = (int)handle;
 	int res   = SignalSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Unlocking mutex");
+	if (res < 0) Process_Abort2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
@@ -346,7 +358,7 @@ void* Waitable_Create(const char* name) {
 	sema.max_count  = 1;
 	
 	int semID = CreateSema(&sema);
-	if (semID < 0) Logger_Abort2(semID, "Creating waitable");
+	if (semID < 0) Process_Abort2(semID, "Creating waitable");
 	return (void*)semID;
 }
 
@@ -354,25 +366,25 @@ void Waitable_Free(void* handle) {
 	int semID = (int)handle;
 	int res   = DeleteSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Destroying waitable");
+	if (res < 0) Process_Abort2(res, "Destroying waitable");
 }
 
 void Waitable_Signal(void* handle) {
 	int semID = (int)handle;
 	int res   = SignalSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Signalling event");
+	if (res < 0) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	int semID = (int)handle;
 	int res   = WaitSema(semID);
 	
-	if (res < 0) Logger_Abort2(res, "Signalling event");
+	if (res < 0) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	Logger_Abort("Can't wait for");
+	Process_Abort("Can't wait for");
 	// TODO implement support
 }
 
@@ -476,66 +488,51 @@ static void Networking_LoadIOPModules(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+int lwip_shutdown(int s, int how);
+int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen);
+int lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
+int lwip_close(int s);
+int lwip_connect(int s, const struct sockaddr *name, socklen_t namelen);
+int lwip_recv(int s, void *mem, size_t len, int flags);
+int lwip_send(int s, const void *dataptr, size_t size, int flags);
+int lwip_socket(int domain, int type, int protocol);
+int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
+int lwip_ioctl(int s, long cmd, void *argp);
 
-int  lwip_shutdown(int s, int how);
-int  lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen);
-int  lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
-int  lwip_close(int s);
-int  lwip_connect(int s, const struct sockaddr *name, socklen_t namelen);
-int  lwip_recv(int s, void *mem, size_t len, int flags);
-int  lwip_send(int s, const void *dataptr, size_t size, int flags);
-int  lwip_socket(int domain, int type, int protocol);
-int  lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
-int  lwip_ioctl(int s, long cmd, void *argp);
-int  lwip_getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res);
-void lwip_freeaddrinfo(struct addrinfo *ai);
-int  ip4addr_aton(const char *cp, ip4_addr_t *addr);
+int netconn_gethostbyname(const char *name, ip4_addr_t *addr);
 
-static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	char portRaw[32]; cc_string portStr;
-	struct addrinfo hints = { 0 };
-	struct addrinfo* result;
-	struct addrinfo* cur;
-	int res, i = 0;
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
 
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	
-	String_InitArray(portStr,  portRaw);
-	String_AppendInt(&portStr, port);
-	portRaw[portStr.length] = '\0';
-
-	res = lwip_getaddrinfo(host, portRaw, &hints, &result);
-	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
-	if (res) return res;
-
-	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
-	{
-		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
-	}
-	
-	lwip_freeaddrinfo(result);
-	*numValidAddrs = i;
-	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
 }
 
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
 
-	if (ip4addr_aton(str, (ip4_addr_t*)&addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
+	ip4_addr_t addr;
+
+	int res = netconn_gethostbyname(host, &addr);
+	//if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
+	if (res) return res;
+
+    addr4->sin_addr.s_addr = addr.addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
 		
-		addrs[0].size  = sizeof(*addr4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
+	addrs[0].size  = sizeof(*addr4);
+	*numValidAddrs = 1;
+	return 0;
 }
 
 static cc_result GetSocketError(cc_socket s) {

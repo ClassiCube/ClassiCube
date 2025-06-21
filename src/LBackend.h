@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* 
 Abstracts the gui drawing backend for the Launcher
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct Context2D;
 struct LScreen;
@@ -31,6 +31,7 @@ void LBackend_UpdateTitleFont(void);
 void LBackend_DrawTitle(struct Context2D* ctx, const char* title);
 
 void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len);
+void LBackend_TableFlagAdded(struct LTable* w);
 
 /* Marks the entire launcher contents as needing to be redrawn */
 void LBackend_Redraw(void);

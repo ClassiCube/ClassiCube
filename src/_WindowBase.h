@@ -94,7 +94,7 @@ static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
 		m->R =  2; m->G =  2; m->B =  1; break;
 	default:
 		/* mode->R = 0; mode->G = 0; mode->B = 0; */
-		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
+		Process_Abort2(bpp, "Unsupported bits per pixel"); break;
 	}
 }
 
@@ -103,18 +103,24 @@ static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
 /*########################################################################################################################*
 *-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
+#if !defined CC_BUILD_SYMBIAN
 #include <EGL/egl.h>
+#endif
 static EGLDisplay ctx_display;
 static EGLContext ctx_context;
 static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
-static EGLint ctx_numConfig;
+static cc_uintptr ctx_visualID;
 
 #ifdef CC_BUILD_SWITCH
 static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
 #else
 static void GLContext_InitSurface(void) {
-	void* window = Window_Main.Handle.ptr;
+#if defined EGLNativeWindowType
+	EGLNativeWindowType window = (EGLNativeWindowType)Window_Main.Handle.ptr;
+#else
+	NativeWindowType window = (NativeWindowType)Window_Main.Handle.ptr;
+#endif
 	if (!window) return; /* window not created or lost */
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
 
@@ -130,6 +136,43 @@ static void GLContext_FreeSurface(void) {
 	ctx_surface = NULL;
 }
 
+static void DumpEGLConfig(EGLConfig config) {
+	EGLint red, green, blue, alpha, depth, vid, mode;
+
+	eglGetConfigAttrib(ctx_display, config, EGL_RED_SIZE,         &red);
+	eglGetConfigAttrib(ctx_display, config, EGL_GREEN_SIZE,       &green);
+	eglGetConfigAttrib(ctx_display, config, EGL_BLUE_SIZE,        &blue);
+	eglGetConfigAttrib(ctx_display, config, EGL_ALPHA_SIZE,       &alpha);
+	eglGetConfigAttrib(ctx_display, config, EGL_DEPTH_SIZE,       &depth);
+	eglGetConfigAttrib(ctx_display, config, EGL_NATIVE_VISUAL_ID, &vid);
+#if defined EGL_RENDERABLE_TYPE
+	/* e.g Symbian 9.2-9.4 only support EGL 1.1 */
+	eglGetConfigAttrib(ctx_display, config, EGL_RENDERABLE_TYPE,  &mode);
+#endif
+
+	Platform_Log4("EGL R:%i, G:%i, B:%i, A:%i", &red, &green, &blue, &alpha);
+	Platform_Log3("EGL D: %i, V: %h, S: %h",  &depth, &vid, &mode);
+}
+
+static void ChooseEGLConfig(EGLConfig* configs, EGLint num_configs) {
+	int i;
+	ctx_config = configs[0];
+	if (!ctx_visualID) return;
+
+	/* In X11 case, bad things happen if EGL visual ID != window visual ID */
+	for (i = 0; i < num_configs; i++) {
+		EGLint visualID = 0;
+		eglGetConfigAttrib(ctx_display, configs[i], EGL_NATIVE_VISUAL_ID, &visualID);
+		if (visualID != ctx_visualID) continue;
+
+		ctx_config = configs[i];
+		return;
+	}
+}
+
+#if defined CC_BUILD_SYMBIAN && CC_GFX_BACKEND != CC_GFX_BACKEND_GL2
+/* Implemented in Window_Symbian.cpp */
+#else
 void GLContext_Create(void) {
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
@@ -163,17 +206,34 @@ void GLContext_Create(void) {
 	eglInitialize(ctx_display, NULL, NULL);
 	eglBindAPI(EGL_OPENGL_ES_API);
 
-	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
-	if (!ctx_config) {
+	EGLConfig configs[64];
+	EGLint numConfig = 0;
+
+	eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
+	if (!numConfig) {
 		attribs[9] = 16; // some older devices only support 16 bit depth buffer
-		eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
+		eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
 	}
-	if (!ctx_config) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
+
+	if (!numConfig) {
+		Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
+		EGLint i;
+		eglGetConfigs(ctx_display, configs, 64, &numConfig);
+
+		for (i = 0; i < numConfig; i++) {
+			Platform_Log1("%i) ==============", &i);
+			DumpEGLConfig(configs[i]);
+		}
+	} else {
+		ChooseEGLConfig(configs, numConfig);
+		DumpEGLConfig(ctx_config);
+	}
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
-	if (!ctx_context) Logger_Abort2(eglGetError(), "Failed to create EGL context");
+	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
 	GLContext_InitSurface();
 }
+#endif
 
 void GLContext_Update(void) {
 	GLContext_FreeSurface();
@@ -193,17 +253,21 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	return eglGetProcAddress(function);
+	return (void*) eglGetProcAddress(function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {
 	EGLint err;
 	if (!ctx_surface) return false;
 	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
-
+#if defined CC_BUILD_SYMBIAN
+	if (GLContext_TryRestore() && eglSwapBuffers(ctx_display, ctx_surface)) {
+		return true;
+	}
+#endif
 	err = eglGetError();
 	/* TODO: figure out what errors need to be handled here */
-	Logger_Abort2(err, "Failed to swap buffers");
+	Process_Abort2(err, "Failed to swap buffers");
 	return false;
 }
 

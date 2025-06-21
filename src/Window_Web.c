@@ -571,7 +571,9 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-void Gamepads_Init(void) { }
+void Gamepads_Init(void) {
+	/* Devices can't be detected until first time a button is pressed */
+}
 
 /* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
 #define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0

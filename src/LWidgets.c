@@ -1,5 +1,5 @@
 #include "LWidgets.h"
-#ifndef CC_BUILD_WEB
+#ifndef CC_DISABLE_LAUNCHER
 #include "String.h"
 #include "Gui.h"
 #include "Drawer2D.h"
@@ -554,16 +554,6 @@ void LTable_FormatUptime(cc_string* dst, int uptime) {
 		uptime /= SECS_PER_MIN;  unit = 'm';
 	}
 	String_Format2(dst, "%i%r", &uptime, &unit);
-}
-
-void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
-	float scale;
-	if (!w->rowsCount) { *y = 0; *height = 0; return; }
-
-	scale   = w->height / (float)w->rowsCount;
-	*y      = Math_Ceil(w->topRow * scale);
-	*height = Math_Ceil(w->visibleRows * scale);
-	*height = min(*y + *height, w->height) - *y;
 }
 
 void LTable_ClampTopRow(struct LTable* w) { 

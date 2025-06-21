@@ -4,7 +4,7 @@
 CC_BEGIN_HEADER
 
 /* Manipulates a packed 32 bit RGBA colour, in a format suitable for the native 3D graphics API vertex colours.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 typedef cc_uint32 PackedCol;

@@ -193,6 +193,15 @@ typedef struct {
 #define VisualBitsPerRGBMask	0x100
 #define VisualAllMask		0x1FF
 
+/*
+ * Compose sequence status structure, used in calling XLookupString.
+ */
+typedef struct _XComposeStatus {
+    XPointer compose_ptr;       /* state table pointer */
+    int chars_matched;          /* match state */
+} XComposeStatus;
+
+
 _XFUNCPROTOBEGIN
 
 /* The following declarations are alphabetized. */
@@ -235,6 +244,14 @@ extern void XSetWMSizeHints(
     Window		/* w */,
     XSizeHints*		/* hints */,
     Atom		/* property */
+);
+
+extern int XLookupString(
+    XKeyEvent*          /* event_struct */,
+    char*               /* buffer_return */,
+    int                 /* bytes_buffer */,
+    KeySym*             /* keysym_return */,
+    XComposeStatus*     /* status_in_out */
 );
 
 #ifdef __clang__

@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/ps2dev/ps2sdk:latest
@@ -37,6 +38,12 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-ps2.elf'
           DEST_NAME: 'ClassiCube-ps2.elf'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-ps2-min.elf'
+          DEST_NAME: 'ClassiCube-ps2-min.elf'
           
           
       - uses: ./.github/actions/notify_success

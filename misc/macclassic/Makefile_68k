@@ -12,8 +12,16 @@ LDFLAGS=-lm
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
-TARGET		:=	ClassiCube-68k
-BUILD_DIR 	:=	build-68k
+ifdef ARCH_68040
+	TARGET		:=	ClassiCube-68040
+	BUILD_DIR 	:=	build-68040
+	CFLAGS		+= -march=68040
+else
+	TARGET		:=	ClassiCube-68k
+	BUILD_DIR 	:=	build-68k
+	CFLAGS		+= -DCC_BUILD_NOFPU -DCC_BUILD_TINYMEM
+endif
+
 SOURCE_DIR	:=	src
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))

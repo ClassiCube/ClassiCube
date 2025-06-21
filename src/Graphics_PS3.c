@@ -7,7 +7,6 @@
 #include <malloc.h>
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
-static cc_bool renderingDisabled;
 
 static gcmContextData* context;
 static u32 cur_fb;
@@ -133,13 +132,35 @@ static u32  depth_pitch;
 static u32  depth_offset;
 static u32* depth_buffer;
 
+#define GCM_LABEL_INDEX 255
+static u32 slabelval = 1;
+
 static void CreateContext(void) {
 	void* host_addr = memalign(1024 * 1024, HOST_SIZE);
 	rsxInit(&context, CB_SIZE, HOST_SIZE, host_addr);
 }
 
+static void WaitRSXFinish(void) {
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
+	rsxFlushBuffer(context);
+
+	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != slabelval)
+		usleep(30);
+
+	slabelval++;
+}
+
+static void WaitRSXIdle(void) {
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
+	rsxSetWaitLabel(context,         GCM_LABEL_INDEX, slabelval);
+
+	slabelval++;
+	WaitRSXFinish();
+}
+
 static void ConfigureVideo(void) {
 	videoState state;
+    WaitRSXIdle();
 	videoGetState(0, 0, &state);
 
 	videoConfiguration vconfig = { 0 };
@@ -199,7 +220,7 @@ void SetRenderTarget(u32 index) {
 	sf.depthOffset		= depth_offset;
 	sf.depthPitch		= depth_pitch;
 
-	sf.type		= GCM_SURFACE_TYPE_LINEAR;
+	sf.type		        = GCM_SURFACE_TYPE_LINEAR;
 	sf.antiAlias		= GCM_SURFACE_CENTER_1;
 
 	sf.width		= DisplayInfo.Width;
@@ -207,7 +228,7 @@ void SetRenderTarget(u32 index) {
 	sf.x			= 0;
 	sf.y			= 0;
 
-	rsxSetSurface(context,&sf);
+	rsxSetSurface(context, &sf);
 }
 
 static void InitGfxContext(void) {
@@ -273,7 +294,7 @@ u32* Gfx_AllocImage(u32* offset, s32 w, s32 h) {
 void Gfx_TransferImage(u32 offset, s32 w, s32 h) {
 	rsxSetTransferImage(context, GCM_TRANSFER_LOCAL_TO_LOCAL,
 		color_offset[cur_fb], color_pitch, 0, 0,
-		offset, w * 4, 0, 0, 
+		offset,               w * 4,       0, 0, 
 		w, h, 4);
 }
 
@@ -411,15 +432,18 @@ static void ResetFrameState(void) {
 
 // https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
 static cc_bool everFlipped;
-void Gfx_BeginFrame(void) {
-	// TODO: remove everFlipped
+void Gfx_WaitFlip(void) {
 	if (everFlipped) {
 		while (gcmGetFlipStatus() != 0) usleep(200);
 	}
 	
-	ResetFrameState();
 	everFlipped = true;
 	gcmResetFlipStatus();
+}
+
+void Gfx_BeginFrame(void) {
+	Gfx_WaitFlip();
+	ResetFrameState();
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -448,14 +472,13 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	f32 scale[4], offset[4];
 	f32 zmin = 0.0f;
 	f32 zmax = 1.0f;
-	y = Game.Height - y - h;
 	
 	scale[0]  = w *  0.5f;
 	scale[1]  = h * -0.5f;
 	scale[2]  = (zmax - zmin) * 0.5f;
 	scale[3]  = 0.0f;
 	offset[0] = x + w * 0.5f;
-	offset[1] = x + h * 0.5f;
+	offset[1] = y + h * 0.5f;
 	offset[2] = (zmax + zmin) * 0.5f;
 	offset[3] = 0.0f;
 
@@ -557,14 +580,58 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[];
 } CCTexture;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+// See Graphics_Dreamcast.c for twiddling explanation
+// (only difference is dreamcast is XY while xbox is YX)
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0;
+	*maskY = 0;
+	int shift = 0;
+
+	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
+	{
+		if (w > 1 && h > 1) {
+			// Add interleaved X and Y bits
+			*maskY += 0x02 << shift;
+			*maskX += 0x01 << shift;
+			shift  += 2;
+		} else if (w > 1) {
+			// Add a linear X bit
+			*maskX += 0x01 << shift;
+			shift  += 1;		
+		} else if (h > 1) {
+			// Add a linear Y bit
+			*maskY += 0x01 << shift;
+			shift  += 1;		
+		}
+	}
+}
+
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)rsxMemalign(128, 128 + size);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	CopyTextureData(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
-					bmp, rowWidth * BITMAPCOLOR_SIZE);
+	cc_uint32* dst = tex->pixels;
+
+	int width = bmp->width, height = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
 	return tex;
 }
 
@@ -577,7 +644,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	rsxAddressToOffset(tex->pixels, &offset);
 	gcmTexture texture;
 
-	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_LIN;
+	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_SWZ;
 	texture.mipmap		= 1;
 	texture.dimension	= GCM_TEXTURE_DIMS_2D;
 	texture.cubemap	= GCM_FALSE;
@@ -596,7 +663,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	texture.pitch		= tex->width * 4;
 	texture.offset		= offset;
 	
-	rsxInvalidateTextureCache(context,GCM_INVALIDATE_TEXTURE); // TODO needed
+	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE); // TODO needed
 	
 	rsxLoadTexture(context,    0, &texture);
 	rsxTextureControl(context, 0, GCM_TRUE, 0<<8, 12<<8, GCM_TEXTURE_MAX_ANISO_1);
@@ -611,13 +678,32 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)texId;
+void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	CCTexture* tex = (CCTexture*)texId;	
+	cc_uint32* dst = tex->pixels;
 	
-	// NOTE: Only valid for LINEAR textures
-	BitmapCol* dst = (tex->pixels + x) + y * tex->width;	
-	CopyTextureData(dst, tex->width * BITMAPCOLOR_SIZE, 
-					part, rowWidth  * BITMAPCOLOR_SIZE);
+	int width = part->width, height = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint32* src = part->scan0 + rowWidth * y;
+		X = startX;
+		
+		for (int x = 0; x < width; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
 	
 	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
 	/* TODO */
@@ -686,25 +772,25 @@ void Gfx_DisableTextureOffset(void) {
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];/* TODO */
+	gfx_stride = strideSizes[fmt];
 	
 	VP_SwitchActive();
 	FP_SwitchActive();
 }
 
-void Gfx_DrawVb_Lines(int verticesCount) {/* TODO */
+void Gfx_DrawVb_Lines(int verticesCount) {
 	rsxDrawVertexArray(context, GCM_TYPE_LINES, 0, verticesCount);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {/* TODO */
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, startVertex, verticesCount);
 }
 
-void Gfx_DrawVb_IndexedTris(int verticesCount) {/* TODO */
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, 0, verticesCount);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {/* TODO */
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, startVertex, verticesCount);
 }
 #endif

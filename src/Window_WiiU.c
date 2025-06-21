@@ -104,6 +104,7 @@ void Window_Free(void) { }
 #define OSSCREEN_TV_HEIGHT  720
 #define OSSCREEN_DRC_WIDTH  854
 #define OSSCREEN_DRC_HEIGHT 480
+
 static void LauncherInactiveChanged(void* obj);
 static void Init2DResources(void);
 
@@ -257,7 +258,30 @@ static void ProcessKPAD(float delta, int i) {
 }
 
 
-#define AXIS_SCALE 4.0f
+// 1 = A, 2 = B, 3 = X, 4 = Y
+static const BindMapping vpad_defaults[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP,   0 },  
+	[BIND_BACK]         = { CCPAD_DOWN, 0 },
+	[BIND_LEFT]         = { CCPAD_LEFT, 0 },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+	[BIND_CHAT]         = { CCPAD_4, 0 }, 
+	[BIND_INVENTORY]    = { CCPAD_3, 0 },
+	[BIND_SEND_CHAT]    = { CCPAD_START, 0 },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R }, 
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	// Match Wii U edition controls
+	[BIND_PLACE_BLOCK]  = { CCPAD_ZL, 0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_ZR, 0 }, 
+	[BIND_HOTBAR_LEFT]  = { CCPAD_L,  0 }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_R,  0 }
+};
+
+#define AXIS_SCALE 8.0f
 static void ProcessVpadStick(int port, int axis, float x, float y, float delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsF(x) <= 0.1f) x = 0;
@@ -310,7 +334,7 @@ static void ProcessVPAD(float delta) {
 	VPADReadError error = VPAD_READ_SUCCESS;
 	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
 	if (error != VPAD_READ_SUCCESS) return;
-	int port = Gamepad_Connect(0xDC, PadBind_Defaults);
+	int port = Gamepad_Connect(0xDC, vpad_defaults);
 	
 	VPADGetTPCalibratedPoint(VPAD_CHAN_0, &vpadStatus.tpNormal, &vpadStatus.tpNormal);
 	ProcessVpadButtons(port, vpadStatus.hold);
@@ -341,8 +365,10 @@ static void Init2DResources(void) {
 	Gfx_Create();
 	if (framebuffer_vb) return;
 
-	struct VertexTextured* data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&framebuffer_vb,
-															VERTEX_FORMAT_TEXTURED, 4);
+	framebuffer_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, 4);
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockVb(framebuffer_vb, 
+																VERTEX_FORMAT_TEXTURED, 4);
+
 	data[0].x = -1.0f; data[0].y = -1.0f; data[0].z = 0.0f; data[0].Col = PACKEDCOL_WHITE; data[0].U = 0.0f; data[0].V = 1.0f;
 	data[1].x =  1.0f; data[1].y = -1.0f; data[1].z = 0.0f; data[1].Col = PACKEDCOL_WHITE; data[1].U = 1.0f; data[1].V = 1.0f;
 	data[2].x =  1.0f; data[2].y =  1.0f; data[2].z = 0.0f; data[2].Col = PACKEDCOL_WHITE; data[2].U = 1.0f; data[2].V = 0.0f;

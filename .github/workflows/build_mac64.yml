@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: macOS-latest
     steps:
       - uses: actions/checkout@v4

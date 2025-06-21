@@ -23,6 +23,7 @@
 #include "Utils.h"
 #include "Options.h"
 #include "InputHandler.h"
+#include "Protocol.h"
 
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
@@ -78,7 +79,7 @@ static struct HUDScreen {
 	int lastFov;
 	int lastX, lastY, lastZ;
 	struct HotbarWidget hotbar;
-} HUDScreen_Instance;
+} HUDScreen_Instance CC_BIG_VAR;
 
 /* Each integer can be at most 10 digits + minus prefix */
 #define POSITION_VAL_CHARS 11
@@ -399,15 +400,15 @@ static void HUDScreen_Render(void* screen, float delta) {
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
 		Widget_Render2(&s->line2, 8);
 		Gfx_BindTexture(s->posAtlas.tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES);
+		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES, DRAW_HINT_RECT);
 		/* TODO swap these two lines back */
 	}
 
 	if (!Gui_GetBlocksWorld()) {
 		Gfx_BindDynamicVb(s->vb);
-		Widget_Render2(&s->hotbar, 12);
+		if (!Gui.HideHotbar) Widget_Render2(&s->hotbar, 12);
 
-		if (Gui.IconsTex && !tablist_active) {
+		if (!Gui.HideCrosshair && Gui.IconsTex && !tablist_active) {
 			Gfx_BindTexture(Gui.IconsTex);
 			Gfx_BindDynamicVb(s->vb); /* Have to rebind for mobile right now... */
 			Gfx_DrawVb_IndexedTris(4);
@@ -435,6 +436,8 @@ void HUDScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------TabListOverlay-----------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
+
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
 #define LIST_NAMES_PER_COLUMN 16
@@ -451,7 +454,7 @@ static struct TabListOverlay {
 	TabListEntryCompare compare;
 	cc_uint16 ids[TABLIST_MAX_ENTRIES];
 	struct Texture textures[TABLIST_MAX_ENTRIES];
-} TabListOverlay_Instance;
+} TabListOverlay_Instance CC_BIG_VAR;
 #define TABLIST_MAX_VERTICES (TEXTWIDGET_MAX + 4 * TABLIST_MAX_ENTRIES)
 
 static void TabListOverlay_DrawText(struct Texture* tex, struct TabListOverlay* s, const cc_string* name) {
@@ -842,7 +845,7 @@ static void TabListOverlay_Render(void* screen, float delta) {
 		if (!s->textures[i].ID) continue;
 		Gfx_BindTexture(s->textures[i].ID);
 
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 		offset += 4;
 	}
 
@@ -883,6 +886,9 @@ void TabListOverlay_Show(cc_bool staysOpen) {
 	s->staysOpen = staysOpen;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TABLIST);
 }
+#else
+void TabListOverlay_Show(cc_bool staysOpen) { }
+#endif
 
 
 /*########################################################################################################################*
@@ -907,7 +913,7 @@ static struct ChatScreen {
 	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
 	struct Texture chatTextures[GUI_MAX_CHATLINES];
-} ChatScreen_Instance;
+} ChatScreen_Instance CC_BIG_VAR;
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
@@ -1001,6 +1007,7 @@ static int ChatScreen_ClampChatIndex(int index) {
 static void ChatScreen_ScrollChatBy(struct ChatScreen* s, int delta) {
 	int newIndex = ChatScreen_ClampChatIndex(s->chatIndex + delta);
 	delta = newIndex - s->chatIndex;
+	if (Game_PureClassic) return;
 
 	while (delta) {
 		if (delta < 0) {
@@ -1141,7 +1148,7 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 }
 
 static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
-	struct Texture tex;
+	GfxResourceID texID;
 	double now;
 	int i, logIdx;
 
@@ -1158,17 +1165,18 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 		Widget_Render2(&s->chat, 0);
 	} else {
 		/* Only render recent chat */
-		for (i = 0; i < s->chat.lines; i++) {
-			tex    = s->chat.textures[i];
+		for (i = 0; i < s->chat.lines; i++) 
+		{
+			texID  = s->chat.textures[i].ID;
+			if (!texID) continue;
 			logIdx = s->chatIndex + i;
-			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
 			/* Only draw chat within last 10 seconds */
 			if (Chat_GetLogTime(logIdx) + 10 < now) continue;
 			
-			Gfx_BindTexture(tex.ID);
-			Gfx_DrawVb_IndexedTris_Range(4, i * 4);
+			Gfx_BindTexture(texID);
+			Gfx_DrawVb_IndexedTris_Range(4, i * 4, DRAW_HINT_RECT);
 		}
 	}
 
@@ -1551,6 +1559,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
 	args.multiline   = true;
+	args.yOffset     = 30;
 	OnscreenKeyboard_Open(&args);
 
 	Widget_SetDisabled(&s->input.base, args.opaque);
@@ -1584,7 +1593,7 @@ static struct InventoryScreen {
 	struct TableWidget table;
 	struct TextWidget title;
 	cc_bool releasedInv, deferredSelect;
-} InventoryScreen;
+} InventoryScreen CC_BIG_VAR;
 
 static struct Widget* inventory_widgets[2];
 
@@ -1726,9 +1735,11 @@ static int InventoryScreen_KeyDown(void* screen, int key, struct InputDevice* de
 	/* Accuracy: Original classic doesn't close inventory menu when B is pressed */
 	if (InputBind_Claims(BIND_INVENTORY, key, device) && s->releasedInv && !Game_ClassicMode) {
 		Gui_Remove((struct Screen*)s);
+		CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 	} else if (InputDevice_IsEnter(key, device) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
+		CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 	} else if (Elem_HandlesKeyDown(table, key, device)) {
 	} else {
 		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key, device);
@@ -1758,7 +1769,10 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 
 	if (!handled || table->pendingClose) {
 		hotbar = Input_IsCtrlPressed() || Input_IsShiftPressed();
-		if (!hotbar) Gui_Remove((struct Screen*)s);
+		if (!hotbar) {
+			Gui_Remove((struct Screen*)s);
+			CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
+		}
 	}
 	return TOUCH_TYPE_GUI;
 }
@@ -1781,10 +1795,10 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 	return Elem_HandlesMouseScroll(&s->table, delta);
 }
 
-static int InventoryScreen_PadAxis(void* screen, int axis, float x, float y) {
+static int InventoryScreen_PadAxis(void* screen, struct PadAxisUpdate* upd) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 
-	return Elem_HandlesPadAxis(&s->table, axis, x, y);
+	return Elem_HandlesPadAxis(&s->table, upd);
 }
 
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {
@@ -1802,6 +1816,13 @@ void InventoryScreen_Show(void) {
 
 	s->VTABLE = &InventoryScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_INVENTORY);
+	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 1);
+}
+
+void InventoryScreen_Hide(void) {
+	struct InventoryScreen* s = &InventoryScreen;
+	Gui_Remove((struct Screen*)s);
+	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 }
 
 
@@ -1821,7 +1842,7 @@ static struct LoadingScreen {
 
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
-} LoadingScreen;
+} LoadingScreen CC_BIG_VAR;
 
 static struct Widget* loading_widgets[2];
 #define LOADING_TILE_SIZE 64
@@ -1934,7 +1955,7 @@ static void LoadingScreen_Render(void* screen, float delta) {
 	if (s->rows) {
 		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 		Atlas1D_Bind(Atlas1D_Index(loc));
-		Gfx_DrawVb_IndexedTris(s->rows * 4);
+		Gfx_DrawVb_IndexedTris_Range(s->rows * 4, 0, 0);
 		offset = s->rows * 4;
 	}
 
@@ -2060,7 +2081,7 @@ static struct DisconnectScreen {
 	char _titleBuffer[STRING_SIZE * 2];
 	char _messageBuffer[STRING_SIZE];
 	cc_string titleStr, messageStr;
-} DisconnectScreen;
+} DisconnectScreen CC_BIG_VAR;
 
 static struct Widget* disconnect_widgets[4];
 #define DISCONNECT_DELAY_SECS 5

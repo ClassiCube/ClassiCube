@@ -1,0 +1,6 @@
+arm_iop/debug
+arm_iop/release
+arm_host/debug
+arm_host/release
+lib
+*.bz2

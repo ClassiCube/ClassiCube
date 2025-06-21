@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-	This file is processed by CMake and used by mkpsxiso to build the CD image.
+	This file is used by mkpsxiso to build the CD image.
 
-	NOTE: all paths are relative to the build directory; if you want to include
-	a file from the source tree, you'll have to prepend its path with
-	${PROJECT_SOURCE_DIR}.
+	NOTE: all paths are relative to the misc/ps1 directory.
 -->
 <iso_project>
 	<track type="data">
@@ -25,10 +23,10 @@
 		-->
 		<identifiers
 			system			="PLAYSTATION"
-			volume			="PSN00BSDK_TEMPLATE"
-			volume_set		="PSN00BSDK_TEMPLATE"
-			publisher		="MEIDOTEK"
-			data_preparer	="PSN00BSDK ${PSN00BSDK_VERSION}"
+			volume			="CLASSICUBE_PS1"
+			volume_set		="CLASSICUBE_PS1"
+			publisher		="CLASSICUBE"
+			data_preparer	="PSN00BSDK"
 			application		="PLAYSTATION"
 			copyright		="README.TXT;1"
 		/>
@@ -59,18 +57,72 @@
 			contain any number of files.
 		-->
 		<directory_tree>
-			<file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
-			<file name="CCUBEPS1.EXE"	type="data" source="ClassiCube-PS1.exe" />
-			<!--
-				This file is only required if you are using dynamic linking
-				(see the system/dynlink example). It contains the executable's
-				symbol map and can be used to obtain the address of a function
-				or global variable by its name.
-			-->
-			<!--<file name="TEMPLATE.MAP"	type="data" source="template.map" />-->
+			<file name="SYSTEM.CNF"		type="data" source="system.cnf" />
+			<file name="CCUBEPS1.EXE"	type="data" source="../../ClassiCube-ps1.exe" />
 
+			<dir name="audio">
+				<file name="DCLOTH1.SND"  type="data" source="sounds/dig_cloth1.snd" />
+				<file name="DCLOTH2.SND"  type="data" source="sounds/dig_cloth2.snd" />
+				<file name="DCLOTH3.SND"  type="data" source="sounds/dig_cloth3.snd" />
+				<file name="DCLOTH4.SND"  type="data" source="sounds/dig_cloth4.snd" />
+				<file name="DGLASS1.SND"  type="data" source="sounds/dig_glass1.snd" />
+				<file name="DGLASS2.SND"  type="data" source="sounds/dig_glass2.snd" />
+				<file name="DGLASS3.SND"  type="data" source="sounds/dig_glass3.snd" />
+				<file name="DGRASS1.SND"  type="data" source="sounds/dig_grass1.snd" />
+				<file name="DGRASS2.SND"  type="data" source="sounds/dig_grass2.snd" />
+				<file name="DGRASS3.SND"  type="data" source="sounds/dig_grass3.snd" />
+				<file name="DGRASS4.SND"  type="data" source="sounds/dig_grass4.snd" /> 
+				<file name="DGRAVEL1.SND" type="data" source="sounds/dig_gravel1.snd" />
+				<file name="DGRAVEL2.SND" type="data" source="sounds/dig_gravel2.snd" />
+				<file name="DGRAVEL3.SND" type="data" source="sounds/dig_gravel3.snd" />
+				<file name="DGRAVEL4.SND" type="data" source="sounds/dig_gravel4.snd" />
+				<file name="DSAND1.SND"   type="data" source="sounds/dig_sand1.snd" />
+				<file name="DSAND2.SND"   type="data" source="sounds/dig_sand2.snd" />
+				<file name="DSAND3.SND"   type="data" source="sounds/dig_sand3.snd" />
+				<file name="DSAND4.SND"   type="data" source="sounds/dig_sand4.snd" />
+				<file name="DSNOW1.SND"   type="data" source="sounds/dig_snow1.snd" />
+				<file name="DSNOW2.SND"   type="data" source="sounds/dig_snow2.snd" />
+				<file name="DSNOW3.SND"   type="data" source="sounds/dig_snow3.snd" />
+				<file name="DSNOW4.SND"   type="data" source="sounds/dig_snow4.snd" />
+				<file name="DSTONE1.SND"  type="data" source="sounds/dig_stone1.snd" />
+				<file name="DSTONE2.SND"  type="data" source="sounds/dig_stone2.snd" />
+				<file name="DSTONE3.SND"  type="data" source="sounds/dig_stone3.snd" />
+				<file name="DSTONE4.SND"  type="data" source="sounds/dig_stone4.snd" />
+				<file name="DWOOD1.SND"   type="data" source="sounds/dig_wood1.snd" />
+				<file name="DWOOD2.SND"   type="data" source="sounds/dig_wood2.snd" />
+				<file name="DWOOD3.SND"   type="data" source="sounds/dig_wood3.snd" />
+				<file name="DWOOD4.SND"   type="data" source="sounds/dig_wood4.snd" />
+				<file name="SCLOTH1.SND"  type="data" source="sounds/step_cloth1.snd" />
+				<file name="SCLOTH2.SND"  type="data" source="sounds/step_cloth2.snd" />
+				<file name="SCLOTH3.SND"  type="data" source="sounds/step_cloth3.snd" />
+				<file name="SCLOTH4.SND"  type="data" source="sounds/step_cloth4.snd" />
+				<file name="SGRASS1.SND"  type="data" source="sounds/step_grass1.snd" />
+				<file name="SGRASS2.SND"  type="data" source="sounds/step_grass2.snd" />
+				<file name="SGRASS3.SND"  type="data" source="sounds/step_grass3.snd" />
+				<file name="SGRASS4.SND"  type="data" source="sounds/step_grass4.snd" />
+				<file name="SGRAVEL1.SND" type="data" source="sounds/step_gravel1.snd" />
+				<file name="SGRAVEL2.SND" type="data" source="sounds/step_gravel2.snd" />
+				<file name="SGRAVEL3.SND" type="data" source="sounds/step_gravel3.snd" />
+				<file name="SGRAVEL4.SND" type="data" source="sounds/step_gravel4.snd" />
+				<file name="SSAND1.SND"   type="data" source="sounds/step_sand1.snd" />
+				<file name="SSAND2.SND"   type="data" source="sounds/step_sand2.snd" />
+				<file name="SSAND3.SND"   type="data" source="sounds/step_sand3.snd" />
+				<file name="SSAND4.SND"   type="data" source="sounds/step_sand4.snd" />
+				<file name="SSNOW1.SND"   type="data" source="sounds/step_snow1.snd" />
+				<file name="SSNOW2.SND"   type="data" source="sounds/step_snow2.snd" />
+				<file name="SSNOW3.SND"   type="data" source="sounds/step_snow3.snd" />
+				<file name="SSNOW4.SND"   type="data" source="sounds/step_snow4.snd" />
+				<file name="SSTONE1.SND"  type="data" source="sounds/step_stone1.snd" />
+				<file name="SSTONE2.SND"  type="data" source="sounds/step_stone2.snd" />
+				<file name="SSTONE3.SND"  type="data" source="sounds/step_stone3.snd" />
+				<file name="SSTONE4.SND"  type="data" source="sounds/step_stone4.snd" />
+				<file name="SWOOD1.SND"   type="data" source="sounds/step_wood1.snd" />
+				<file name="SWOOD2.SND"   type="data" source="sounds/step_wood2.snd" />
+				<file name="SWOOD3.SND"   type="data" source="sounds/step_wood3.snd" />
+				<file name="SWOOD4.SND"   type="data" source="sounds/step_wood4.snd" />
+			</dir>
 			<dir name="texpacks">
-				<file name="default.zip" type="data" source="../classicube.zip" />
+				<file name="default.zip" type="data" source="classicube.zip" />
 			</dir>
 			<dummy sectors="1024"/>
 		</directory_tree>

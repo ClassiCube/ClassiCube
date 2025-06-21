@@ -4,7 +4,7 @@
 CC_BEGIN_HEADER
 
 /* Implements simple block physics.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 typedef void (*PhysicsHandler)(int index, BlockID block);
 

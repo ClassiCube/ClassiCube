@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Contains everything relating to texture animations (including default water/lava ones)
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 CC_BEGIN_HEADER
 

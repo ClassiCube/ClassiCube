@@ -366,35 +366,3 @@ int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separa
 	return -1;
 }
 
-
-/*########################################################################################################################*
-*--------------------------------------------------------Direct URL-------------------------------------------------------*
-*#########################################################################################################################*/
-cc_bool DirectUrl_Claims(const cc_string* input, cc_string* addr, cc_string* user, cc_string* mppass) {
-	static const cc_string prefix = String_FromConst("mc://");
-	cc_string parts[6];
-	if (!String_CaselessStarts(input, &prefix)) return false;
-
-	/* mc://[ip:port]/[username]/[mppass] */
-	if (String_UNSAFE_Split(input, '/', parts, 6) != 5) return false;
-
-	*addr   = parts[2];
-	*user   = parts[3];
-	*mppass = parts[4];
-	return true;
-}
-
-cc_bool DirectUrl_ExtractAddress(const cc_string* addr, cc_string* ip, cc_string* port, int* portNum) {
-	static const cc_string defPort   = String_FromConst("25565");
-	int index = String_LastIndexOf(addr, ':');
-
-	/* support either "[IP]" or "[IP]:[PORT]" */
-	if (index == -1) {
-		*ip   = *addr;
-		*port = defPort;
-	} else {
-		*ip   = String_UNSAFE_Substring(addr, 0, index);
-		*port = String_UNSAFE_SubstringAt(addr, index + 1);
-	}
-	return Convert_ParseInt(port, portNum) && *portNum >= 0 && *portNum <= 65535;
-}

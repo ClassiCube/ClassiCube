@@ -16,6 +16,7 @@
 #include "Chat.h"
 #include "TexturePack.h"
 #include "Utils.h"
+#include "Audio.h"
 
 #ifdef CC_BUILD_FILESYSTEM
 static struct LocationUpdate* spawn_point;
@@ -1209,7 +1210,7 @@ static cc_result Java_ReadObject(struct Stream* stream, struct JUnion* object) {
 }
 
 static int Java_I32(struct JFieldDesc* field) {
-	if (field->Type != JFIELD_I32) Logger_Abort("Field type must be Int32");
+	if (field->Type != JFIELD_I32) Process_Abort("Field type must be Int32");
 	return field->Value.I32;
 }
 
@@ -1321,7 +1322,7 @@ static cc_result Dat_LoadFormat2(struct Stream* stream) {
 		} else if (String_CaselessEqualsConst(&fieldName, "depth")) {
 			World.Height = Java_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
-			if (field->Type != JFIELD_ARRAY) Logger_Abort("Blocks field must be Array");
+			if (field->Type != JFIELD_ARRAY) Process_Abort("Blocks field must be Array");
 			World.Blocks = field->Value.Array.Ptr;
 			World.Volume = field->Value.Array.Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {

@@ -18,8 +18,6 @@
 #include <sysutil/video.h>
 
 static cc_bool launcherMode;
-static padInfo  pad_info;
-static padData  pad_data;
 static KbInfo   kb_info;
 static KbData   kb_data;
 static KbConfig kb_config;
@@ -274,20 +272,28 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static padInfo pad_info;
+static padData pad_data[MAX_PORT_NUM];
+static cc_bool circle_main;
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	ioPadInit(MAX_PORT_NUM);
+
+	int ret = 0;
+ 	sysUtilGetSystemParamInt(SYSUTIL_SYSTEMPARAM_ID_ENTER_BUTTON_ASSIGN, &ret);
+	circle_main = ret == 0;
 	
-	Input_DisplayNames[CCPAD_1] = "CIRCLE";
-	Input_DisplayNames[CCPAD_2] = "CROSS";
+	Input_DisplayNames[CCPAD_1] = circle_main ? "CIRCLE" : "CROSS";
+	Input_DisplayNames[CCPAD_2] = circle_main ? "CROSS" : "CIRCLE";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
 	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
 }
 
 static void HandleButtons(int port, padData* data) {
 	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
-	Gamepad_SetButton(port, CCPAD_1, data->BTN_CIRCLE);
-	Gamepad_SetButton(port, CCPAD_2, data->BTN_CROSS);
+	Gamepad_SetButton(port, CCPAD_1, circle_main ? data->BTN_CIRCLE : data->BTN_CROSS);
+	Gamepad_SetButton(port, CCPAD_2, circle_main ? data->BTN_CROSS  : data->BTN_CIRCLE);
 	Gamepad_SetButton(port, CCPAD_3, data->BTN_SQUARE);
 	Gamepad_SetButton(port, CCPAD_4, data->BTN_TRIANGLE);
       
@@ -307,7 +313,7 @@ static void HandleButtons(int port, padData* data) {
 	Gamepad_SetButton(port, CCPAD_ZR, data->BTN_R2);
 }
 
-#define AXIS_SCALE 32.0f
+#define AXIS_SCALE 16.0f
 static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	if (Math_AbsI(x) <= 32) x = 0;
 	if (Math_AbsI(y) <= 32) y = 0;	
@@ -326,10 +332,10 @@ void Gamepads_Process(float delta) {
 	for (int i = 0; i < MAX_PORT_NUM; i++)
 	{
 		if (!pad_info.status[i]) continue;
-		ioPadGetData(i, &pad_data);
+		ioPadGetData(i, &pad_data[i]);
 
 		int port = Gamepad_Connect(0x503 + i, PadBind_Defaults);
-		ProcessPadInput(port, delta, &pad_data);
+		ProcessPadInput(port, delta, &pad_data[i]);
 	}
 }
 
@@ -339,6 +345,7 @@ void Gamepads_Process(float delta) {
 *#########################################################################################################################*/
 static u32 fb_offset;
 
+extern void Gfx_WaitFlip(void);
 extern u32* Gfx_AllocImage(u32* offset, s32 w, s32 h);
 extern void Gfx_TransferImage(u32 offset, s32 w, s32 h);
 
@@ -353,8 +360,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO test
-	Gfx_BeginFrame();
-	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
+	Gfx_WaitFlip();
 	// TODO: Only transfer dirty region instead of the entire bitmap
 	Gfx_TransferImage(fb_offset, bmp->width, bmp->height);
 	Gfx_EndFrame();

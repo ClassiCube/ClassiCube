@@ -4,6 +4,7 @@
 #include "Block.h"
 #include "Event.h"
 #include "Chat.h"
+#include "Protocol.h"
 
 struct _InventoryData Inventory;
 
@@ -45,6 +46,7 @@ void Inventory_SetSelectedBlock(BlockID block) {
 
 	Inventory_Set(Inventory.SelectedIndex, block);
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
+	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_SELECTED, block);
 }
 
 void Inventory_PickBlock(BlockID block) {

@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   build-PS3:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/classicube/minimal-psl1ght:latest

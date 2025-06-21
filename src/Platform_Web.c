@@ -38,8 +38,8 @@ const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 
 const char* Platform_AppNameSuffix = "";
-cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess;
+cc_uint8 Platform_Flags;
+cc_bool  Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*
@@ -93,9 +93,19 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
-extern void interop_GetLocalTime(struct DateTime* t);
-void DateTime_CurrentLocal(struct DateTime* t) {
+extern void interop_GetLocalTime(struct cc_datetime* t);
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	interop_GetLocalTime(t);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -253,14 +263,22 @@ void Platform_LoadSysFonts(void) { }
 *#########################################################################################################################*/
 extern void interop_InitSockets(void);
 
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	int len = String_EncodeUtf8(addrs[0].data, address);
+// not actually ipv4 address, just copies across hostname
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	int len = String_EncodeUtf8(dst->data, ip);
 	/* TODO can this ever happen */
-	if (len >= CC_SOCKETADDR_MAXSIZE) Logger_Abort("Overrun in Socket_ParseAddress");
+	if (len >= CC_SOCKETADDR_MAXSIZE) Process_Abort("Overrun in Socket_ParseAddress");
 
-	addrs[0].size  = port;
-	*numValidAddrs = 1;
-	return 0;
+	dst->size = port;
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	return 1;
 }
 
 extern int interop_SocketCreate(void);
@@ -389,8 +407,15 @@ void Platform_Free(void) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) { return ERR_NOT_SUPPORTED; }
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { return ERR_NOT_SUPPORTED; }
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) { 
+	return ERR_NOT_SUPPORTED; 
+}
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { 
+	return ERR_NOT_SUPPORTED; 
+}
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
+}
 
 
 /*########################################################################################################################*

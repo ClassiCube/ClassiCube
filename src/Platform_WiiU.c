@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_WIIU
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -10,6 +11,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+#include "Audio.h"
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -30,6 +32,7 @@
 #include <stdio.h>
 #include <poll.h>
 #include <netdb.h>
+#include <malloc.h>
 #include <coreinit/debug.h>
 #include <coreinit/event.h>
 #include <coreinit/fastmutex.h>
@@ -41,9 +44,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " Wii U";
 cc_bool Platform_ReadonlyFilesystem;
@@ -67,7 +71,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return secs + UNIX_EPOCH_SECONDS + WIIU_EPOCH_ADJUST;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct OSCalendarTime loc_time;
 	OSTicksToCalendarTime(OSGetTime(), &loc_time);
 
@@ -84,12 +88,22 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_uint64 Stopwatch_Measure(void) {
-	return OSGetSystemTime(); // TODO OSGetSystemTick ??
+	return OSGetSystemTime();
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return OSTicksToMicroseconds(end - beg);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -169,7 +183,7 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path->buffer, O_RDONLY);
 }
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
@@ -226,7 +240,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	void* stack = memalign(16, stackSize);
 	
 	OSCreateThread(thread, ExecThread,
-                       1, (Thread_StartFunc)func,
+                       1, (void*)func,
                        stack + stackSize, stackSize,
                        16, OS_THREAD_ATTRIB_AFFINITY_ANY);
 
@@ -299,6 +313,23 @@ union SocketAddress {
 	struct sockaddr_storage total;
 };
 
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
@@ -334,24 +365,6 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	freeaddrinfo(result);
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-}
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	union SocketAddress* addr = (union SocketAddress*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) {
-		addr->v4.sin_family = AF_INET;
-		addr->v4.sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
@@ -442,6 +455,9 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 
 void Platform_Init(void) {
 	WHBProcInit();
+	// Otherwise loading sound gets stuck endlessly repeating
+	AudioBackend_Init();
+
 	mkdir("ClassiCube", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 

@@ -1,6 +1,6 @@
 #include "LBackend.h"
-#if defined CC_BUILD_WEB
-/* Web backend doesn't use the launcher */
+#if defined CC_DISABLE_LAUNCHER
+/* e.g. web backend doesn't use the launcher */
 #elif defined CC_BUILD_WIN_TEST
 /* Testing windows UI backend */
 #include "LBackend_Win.c"
@@ -115,7 +115,10 @@ static void LBackend_ScaleFlag(struct Bitmap* bmp) {
 	/* at default DPI don't need to rescale it */
 	if (width == bmp->width && height == bmp->height) return;
 
-	Bitmap_TryAllocate(&scaled, width, height);
+	scaled.width  = width;
+	scaled.height = height;
+	scaled.scan0  = (BitmapCol*)Mem_TryAlloc(width * height, BITMAPCOLOR_SIZE);
+
 	if (!scaled.scan0) {
 		Logger_SysWarn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
 	}
@@ -304,6 +307,9 @@ void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 
 void LBackend_Tick(void) {
 	int i;
+	/* Window backend requires always redrawing entire frame - slow */
+	/* Most window backends do not require this though */
+	if (DisplayInfo.FullRedraw && pendingRedraw) pendingRedraw |= REDRAW_ALL;
 	DoRedraw();
 
 	if (pendingFullDraws) {
@@ -947,6 +953,17 @@ void LBackend_TableReposition(struct LTable* w) {
 void LBackend_TableFlagAdded(struct LTable* w) {
 	/* TODO: Only redraw flags */
 	LBackend_NeedsRedraw(w);
+}
+
+/* Works out top and height of the scrollbar */
+static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
+	float scale;
+	if (!w->rowsCount) { *y = 0; *height = 0; return; }
+
+	scale   = w->height / (float)w->rowsCount;
+	*y      = Math_Ceil(w->topRow * scale);
+	*height = Math_Ceil(w->visibleRows * scale);
+	*height = min(*y + *height, w->height) - *y;
 }
 
 /* Draws background behind column headers */

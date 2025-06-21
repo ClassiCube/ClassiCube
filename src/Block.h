@@ -6,19 +6,12 @@
 #include "BlockID.h"
 /* Stores properties and data for blocks.
    Also performs automatic rotation of directional blocks.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 CC_BEGIN_HEADER
 
 struct IGameComponent;
 extern struct IGameComponent Blocks_Component;
-
-enum SoundType {
-	SOUND_NONE,  SOUND_WOOD,  SOUND_GRAVEL, SOUND_GRASS, 
-	SOUND_STONE, SOUND_METAL, SOUND_GLASS,  SOUND_CLOTH, 
-	SOUND_SAND,  SOUND_SNOW,  SOUND_COUNT
-};
-extern const char* const Sound_Names[SOUND_COUNT];
 
 /* Describes how a block is rendered in the world. */
 enum DrawType {

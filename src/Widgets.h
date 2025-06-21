@@ -9,9 +9,10 @@
 CC_BEGIN_HEADER
 
 /* Contains all 2D widget implementations.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
+struct InputDevice;
 
 /* A text label. */
 struct TextWidget {
@@ -96,7 +97,6 @@ struct TableWidget {
 	GfxResourceID vb;
 	cc_bool pendingClose, everCreated;
 	float scale;
-	float padXAcc, padYAcc;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
@@ -224,7 +224,7 @@ CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, co
 CC_NOINLINE void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
 CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
-CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w);
+CC_NOINLINE void TextInputWidget_OpenKeyboard(struct TextInputWidget* w, struct InputDevice* device);
 
 
 struct ChatInputWidget {

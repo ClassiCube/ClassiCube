@@ -18,16 +18,16 @@
 ! FR10 = invT
 ! FR11 = t
 
-#define TM1 r0
-#define TM2 r4
-#define CLO r5
+#define TM1 r0 // CLOBBERED, temp register 1
+#define TM2 r4 // PRESERVED, temp register 2
+#define CLO r5 // PRESERVED, output colour
 
-#define IN1 r1
-#define IN2 r2
-#define OUT r3
+#define IN1 r1 // CLOBBERED, input vertex 1
+#define IN2 r2 // CLOBBERED, input vertex 2
+#define OUT r3 // CLOBBERED, output vertex
 
-#define CL1 r1
-#define CL2 r2
+#define CL1 r1 // CLOBBERED, input colour 1
+#define CL2 r2 // CLOBBERED, input colour 2
 
 ! Calculates the near plane intersection point between two points:
 !    float t  = fabsf(v1->z) / fabsf(v2->z - v1->z)
@@ -47,7 +47,7 @@
 !    out->a = invt * v1->a + t * v2->a;
 ! To optimise these calculations, FIPR is used:
 !   FIPR = FVm.x*FVn.x + FVm.y*FVn.x + FVm.z*FVn.z + FVm.w*FVn.w --> FVn.w
-! FIPR can be used to accomplish "vout->Q invt * v1->Q + t * v2->Q" by:
+! FIPR can be used to accomplish "vout->Q = invt * v1->Q + t * v2->Q" by:
 !   - assigning x/y components to 0 for both vectors
 !   - assigning t and invT to z/w of FVm vector
 !   - assigning v1 and v2  to z/w  of FVn vector
@@ -56,7 +56,6 @@
 
 .global _ClipLine
 .align 4
-.type  _ClipLine,%function
 _ClipLine:
 	mov.l    r4,@-r15 ! LS, push(r4)
 	mov.l    r5,@-r15 ! LS, push(r5)
@@ -123,10 +122,15 @@ _ClipLine:
 	add      #-4, OUT ! EX, OUT -= 4
 	
 	mov.l  @IN1,CL1   ! LS, ACOLOR = v1->bgra
+	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
+! Bypass interpolation if unnecessary
+	cmp/eq  CL1,CL2   ! MT, T = ACOLOR == BCOLOR
+	bt.s    1f        ! BR, if (T) goto 1;
+	mov     CL1,CLO   ! MT, OUTCOLOR = ACOLOR (branch delay instruction)
+! Interpolate B
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	mov.l  @IN2,CL2   ! LS, BCOLOR = v2->bgra
 	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
@@ -135,7 +139,7 @@ _ClipLine:
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	shlr8   CL2       ! EX, BCOLOR >>= 8
 	sts     fpul,TM2  ! CO, tmp = FPUL
-	
+! Interpolate G
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.g
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
@@ -149,22 +153,7 @@ _ClipLine:
 	mov     TM2,CLO   ! MT, OUTCOLOR.b = tmp
 	shlr8   CL2       ! EX, BCOLOR >>= 8
 	sts     fpul,TM2  ! CO, tmp = FPUL
-	
-	extu.b  CL1,TM1   ! EX, val = ACOLOR.b
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr2  ! EX, fr2 = float(FPUL)
-	extu.b  CL2,TM1   ! EX, val = BCOLOR.b
-	lds     TM1,fpul  ! CO, FPUL = val
-	float   fpul,fr3  ! EX, fr3 = float(FPUL)
-	fipr    fv8, fv0  ! FE, LERP(A1, B1)
-	shlr8   CL1       ! EX, ACOLOR >>= 8
-	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
-	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
-	shll8   TM2       ! EX, tmp <<= 8
-	or      TM2,CLO   ! EX, OUTCOLOR.r |= tmp
-	shlr8   CL2       ! EX, BCOLOR >>= 8
-	sts     fpul,TM2  ! CO, tmp = FPUL
-	
+! Interpolate R
 	extu.b  CL1,TM1   ! EX, val = ACOLOR.r
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr2  ! EX, fr2 = float(FPUL)
@@ -172,17 +161,36 @@ _ClipLine:
 	lds     TM1,fpul  ! CO, FPUL = val
 	float   fpul,fr3  ! EX, fr3 = float(FPUL)
 	fipr    fv8, fv0  ! FE, LERP(A1, B1)
+	shlr8   CL1       ! EX, ACOLOR >>= 8
+	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
+	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
+	shll8   TM2       ! EX, tmp <<= 8
+	or      TM2,CLO   ! EX, OUTCOLOR.g |= tmp
+	shlr8   CL2       ! EX, BCOLOR >>= 8
+	sts     fpul,TM2  ! CO, tmp = FPUL
+! Interpolate A
+	extu.b  CL1,TM1   ! EX, val = ACOLOR.a
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr2  ! EX, fr2 = float(FPUL)
+	extu.b  CL2,TM1   ! EX, val = BCOLOR.a
+	lds     TM1,fpul  ! CO, FPUL = val
+	float   fpul,fr3  ! EX, fr3 = float(FPUL)
+	fipr    fv8, fv0  ! FE, LERP(A1, B1)
 	ftrc    fr3,fpul  ! FE, FPUL = int(lerp)
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	shll16  TM2       ! EX, tmp <<= 16
-	or      TM2,CLO   ! EX, OUTCOLOR.g |= tmp
+	or      TM2,CLO   ! EX, OUTCOLOR.r |= tmp
 	sts     fpul,TM2  ! CO, tmp = FPUL
 	extu.b  TM2,TM2   ! EX, tmp = (uint8)tmp
 	shll16  TM2       ! EX, tmp <<= 16
 	shll8   TM2       ! EX, tmp <<= 8
 	or      TM2,CLO   ! EX, OUTCOLOR.a |= tmp
-	mov.l  CLO,@OUT   ! LS, OUT->color = OUTCOLOR
 
+1:
+	mov.l  CLO,@OUT   ! LS, OUT->color = OUTCOLOR
 	mov.l   @r15+,r5  ! LS, pop(r5)
 	rts               ! CO, return after executing instruction in delay slot
 	mov.l   @r15+,r4  ! LS, pop(r4)
+
+.size _ClipLine, .-_ClipLine
+.type _ClipLine,%function

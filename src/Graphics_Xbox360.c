@@ -102,7 +102,7 @@ static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct
 	Xe_Surface_Unlock(xe, xtex);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	struct XenosSurface* xtex = Xe_CreateTexture(xe, bmp->width, bmp->height, 1, XE_FMT_8888, 0);
 	SetTextureData(xtex, 0, 0, bmp, rowWidth, 0);
 	return xtex;
@@ -203,23 +203,13 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	int size = count * 2;
-	struct XenosIndexBuffer* xib = Xe_CreateIndexBuffer(xe, size, XE_FMT_INDEX16);
-	
-	void* dst = Xe_IB_Lock(xe, xib, 0, size, XE_LOCK_WRITE);
-	fillFunc((cc_uint16*)dst, count, obj);
-	Xe_IB_Unlock(xe, xib);
-	return xib;
+	return (void*)1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-	struct XenosIndexBuffer* xib = (struct XenosIndexBuffer*)ib;
-	Xe_SetIndices(xe, xib);
 }
 
-void Gfx_DeleteIb(GfxResourceID* ib) { 
-	struct XenosIndexBuffer* xib = (struct XenosIndexBuffer*)(*ib);
-	if (xib) Xe_DestroyIndexBuffer(xe, xib);
+void Gfx_DeleteIb(GfxResourceID* ib) {
 	*ib = NULL;
 }
 
@@ -278,6 +268,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); 
 *#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
+	Platform_LogConst("CHANGE FORMAT");
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 	
@@ -292,22 +283,23 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
+	Platform_Log1("DRAW_LINES: %i", &verticesCount);
 	Xe_DrawPrimitive(xe, XE_PRIMTYPE_LINELIST, 0, verticesCount >> 1);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST, // TODO QUADLIST instead?
-		0, 0, verticesCount, 0, verticesCount >> 1);
+	Platform_Log1("DRAW_TRIS: %i", &verticesCount);
+	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, 0, verticesCount >> 2);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST,
-		startVertex, 0, verticesCount, 0, verticesCount >> 1);
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
+	Platform_Log1("DRAW_TRIS_RANGE: %i", &verticesCount);
+	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST,
-		startVertex, 0, verticesCount, 0, verticesCount >> 1);
+	Platform_Log1("DRAW_TRIS_MAP: %i", &verticesCount);
+	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2);
 }
 
 
@@ -319,6 +311,7 @@ static struct Matrix _view, _proj, _mvp;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
+	Platform_LogConst("LOAD MATRIX");
 	
 	Matrix_Mul(&_mvp, &_view, &_proj);
 	// TODO: Is this a global uniform, or does it need to be reloaded on shader change?
@@ -380,6 +373,7 @@ void Gfx_SetVSync(cc_bool vsync) {
 }
 
 void Gfx_BeginFrame(void) { 
+	Platform_LogConst("BEGIN FRAME");
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -388,8 +382,10 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
+	Platform_LogConst("END FRAME A");
 	Xe_Resolve(xe);
 	Xe_Sync(xe);
+	Platform_LogConst("END FRAME B");
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }

@@ -36,6 +36,7 @@
 #include "SystemFonts.h"
 #include "Lighting.h"
 #include "InputHandler.h"
+#include "Protocol.h"
 
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
@@ -166,11 +167,13 @@ static int Menu_InputSelected(struct Screen* s, int key, struct InputDevice* dev
 
 static int Menu_DoInputDown(void* screen, int key, struct InputDevice* device) {
 	struct Screen* s = (struct Screen*)screen;
-	
-	if (key == device->upButton) {
-		return Menu_CycleSelected(s, -1);
-	} else if (key == device->downButton) {
-		return Menu_CycleSelected(s, +1);
+	int horDelta, verDelta;
+	Input_CalcDelta(key, device, &horDelta, &verDelta);
+
+	if (verDelta) {
+		return Menu_CycleSelected(s, verDelta);
+	} else if (horDelta && s->widgetsPerPage) {
+		return Menu_CycleSelected(s, horDelta * s->widgetsPerPage);
 	} else {
 		return Menu_InputSelected(s, key, device);
 	}
@@ -181,10 +184,23 @@ int Menu_InputDown(void* screen, int key, struct InputDevice* device) {
 	return Screen_InputDown(screen, key, device);
 }
 
+static int Menu_PadAxis(void* screen, struct PadAxisUpdate* upd) {
+	struct Screen* s = (struct Screen*)screen;
+
+	if (upd->ySteps) {
+		return Menu_CycleSelected(s, upd->ySteps);
+	} else if (upd->xSteps && s->widgetsPerPage) {
+		return Menu_CycleSelected(s, upd->xSteps * s->widgetsPerPage);
+	} else {
+		return 0;
+	}
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Menu utilities-----------------------------------------------------*
 *#########################################################################################################################*/
+#ifndef CC_DISABLE_UI
 static void Menu_BeginGen(int width, int height, int length) {
 	World_NewMap();
 	World_SetDimensions(width, height, length);
@@ -538,9 +554,11 @@ static void PauseScreen_Init(void* screen) {
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
 		{  160,   50, "Save level...",          Menu_SwitchSaveLevel }
 	};
+
 	s->widgets     = pause_widgets;
 	s->numWidgets  = 0;
 	s->maxWidgets  = Array_Elems(pause_widgets);
+	s->widgetsPerPage = 3;
 	Event_Register_(&UserEvents.HackPermsChanged, s, PauseScreen_CheckHacksAllowed);
 
 	s->descs      = descs;
@@ -563,7 +581,8 @@ static const struct ScreenVTABLE PauseScreen_VTABLE = {
 	MenuScreen_Render2, Screen_BuildMesh,
 	Menu_InputDown,     Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,   Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
-	PauseScreen_Layout, Screen_ContextLost, PauseScreen_ContextRecreated
+	PauseScreen_Layout, Screen_ContextLost, PauseScreen_ContextRecreated,
+	Menu_PadAxis
 };
 void PauseScreen_Show(void) {
 	struct PauseScreen* s = &PauseScreen;
@@ -615,6 +634,8 @@ static void ClassicPauseScreen_Init(void* screen) {
 	if (Server.IsSinglePlayer) return;
 	s->btns[1].flags = WIDGET_FLAG_DISABLED;
 	s->btns[3].flags = WIDGET_FLAG_DISABLED;
+
+	if (Game_PureClassic) s->btns[2].flags = WIDGET_FLAG_DISABLED;
 }
 
 static const struct ScreenVTABLE ClassicPauseScreen_VTABLE = {
@@ -622,7 +643,8 @@ static const struct ScreenVTABLE ClassicPauseScreen_VTABLE = {
 	MenuScreen_Render2,        Screen_BuildMesh,
 	Menu_InputDown,            Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
-	ClassicPauseScreen_Layout, Screen_ContextLost, ClassicPauseScreen_ContextRecreated
+	ClassicPauseScreen_Layout, Screen_ContextLost, ClassicPauseScreen_ContextRecreated,
+	Menu_PadAxis
 };
 void ClassicPauseScreen_Show(void) {
 	struct PauseScreen* s = &PauseScreen;
@@ -715,6 +737,7 @@ static void OptionsGroupScreen_Init(void* screen) {
 	s->numWidgets  = 0;
 	s->maxWidgets  = Array_Elems(optGroups_widgets);
 	s->selectedI   = -1;
+	s->widgetsPerPage = 4;
 
 	Menu_AddButtons(s,  s->btns, 300, optsGroup_btns, 8);
 	TextWidget_Add(s,   &s->desc);
@@ -744,7 +767,8 @@ static const struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
 	MenuScreen_Render2,        Screen_BuildMesh,
 	Menu_InputDown,            Screen_InputUp,    Screen_TKeyPress,               Screen_TText,
 	Menu_PointerDown,          Screen_PointerUp,  OptionsGroupScreen_PointerMove, Screen_TMouseScroll,
-	OptionsGroupScreen_Layout, OptionsGroupScreen_ContextLost, OptionsGroupScreen_ContextRecreated
+	OptionsGroupScreen_Layout, OptionsGroupScreen_ContextLost, OptionsGroupScreen_ContextRecreated,
+	Menu_PadAxis
 };
 void OptionsGroupScreen_Show(void) {
 	struct OptionsGroupScreen* s = &OptionsGroupScreen;
@@ -1059,8 +1083,7 @@ static void GenLevelScreen_Gen(void* screen, const struct MapGenerator* gen) {
 	int length = GenLevelScreen_GetInt(s, 2);
 	int seed   = GenLevelScreen_GetSeedInt(s, 3);
 
-	cc_uint64 volume = (cc_uint64)width * height * length;
-	if (volume > Int32_MaxValue) {
+	if (!World_CheckVolume(width, height, length)) {
 		Chat_AddRaw("&cThe generated map's volume is too big.");
 	} else if (!width || !height || !length) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");
@@ -1214,7 +1237,8 @@ static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	MenuScreen_Render2,         Screen_BuildMesh,
 	Menu_InputDown,             Screen_InputUp,    GenLevelScreen_KeyPress, GenLevelScreen_TextChanged,
 	GenLevelScreen_PointerDown, Screen_PointerUp,  Menu_PointerMove,        Screen_TMouseScroll,
-	GenLevelScreen_Layout,      GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
+	GenLevelScreen_Layout,      GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated,
+	Menu_PadAxis
 };
 void GenLevelScreen_Show(void) {	
 	struct GenLevelScreen* s = &GenLevelScreen;
@@ -1293,7 +1317,8 @@ static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
 	MenuScreen_Render2,      Screen_BuildMesh,
 	Menu_InputDown,          Screen_InputUp,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,        Screen_PointerUp,   Menu_PointerMove, Screen_TMouseScroll,
-	ClassicGenScreen_Layout, Screen_ContextLost, ClassicGenScreen_ContextRecreated
+	ClassicGenScreen_Layout, Screen_ContextLost, ClassicGenScreen_ContextRecreated,
+	Menu_PadAxis
 };
 void ClassicGenScreen_Show(void) {
 	struct ClassicGenScreen* s = &ClassicGenScreen;
@@ -1366,7 +1391,7 @@ static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
 	struct GZipState* state;
 	cc_result res;
 
-	state = Mem_TryAlloc(1, sizeof(struct GZipState));
+	state = (struct GZipState*)Mem_TryAlloc(1, sizeof(struct GZipState));
 	res   = ERR_OUT_OF_MEMORY;
 	if (!state) { Logger_SysWarn(res, "allocating temp memory"); return res; }
 
@@ -1406,11 +1431,15 @@ static void SaveLevelScreen_Save(void* screen, void* widget) {
 	SaveLevelScreen_RemoveOverwrites(s);
 	if ((res = SaveLevelScreen_SaveMap(&path))) return;
 	Chat_Add1("&eSaved map to: %s", &path);
+	CPE_SendNotifyAction(NOTIFY_ACTION_LEVEL_SAVED, 0);
 }
 
 static void SaveLevelScreen_UploadCallback(const cc_string* path) {
 	cc_result res = SaveLevelScreen_SaveMap(path);
-	if (!res) Chat_Add1("&eSaved map to: %s", path);
+	if (!res) {
+		Chat_Add1("&eSaved map to: %s", path);
+		CPE_SendNotifyAction(NOTIFY_ACTION_LEVEL_SAVED, 0);
+	}
 }
 
 static void SaveLevelScreen_File(void* screen, void* b) {
@@ -1454,13 +1483,13 @@ static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
 static int SaveLevelScreen_KeyDown(void* screen, int key, struct InputDevice* device) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	int handled;
-	SaveLevelScreen_RemoveOverwrites(s);
 	
 	handled = Menu_DoInputDown(s, key, device);
 	/* Pressing Enter triggers save */
 	if (!handled && InputDevice_IsEnter(key, device))
 		SaveLevelScreen_Save(s, &s->save);
 
+	if (key != CCMOUSE_L) SaveLevelScreen_RemoveOverwrites(s);
 	return Screen_InputDown(s, key, device);
 }
 
@@ -1539,7 +1568,7 @@ void SaveLevelScreen_Show(void) {
 	s->VTABLE = &SaveLevelScreen_VTABLE;
 
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
-	TextInputWidget_OpenKeyboard(&s->input);
+	TextInputWidget_OpenKeyboard(&s->input, NULL);
 }
 
 
@@ -1554,6 +1583,8 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	TexturePack_SetDefault(&file);
 	TexturePack_Url.length = 0;
 	res = TexturePack_ExtractCurrent(true);
+
+	CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PACK_CHANGED, 0);
 
 	/* FileNotFound error may be because user deleted .zips from disc */
 	if (res != ReturnCode_FileNotFound) return;
@@ -1906,7 +1937,8 @@ static const struct ScreenVTABLE BindsSourceScreen_VTABLE = {
 	MenuScreen_Render2,        Screen_BuildMesh,
 	Menu_InputDown,            Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
-	BindsSourceScreen_Layout,  Screen_ContextLost, BindsSourceScreen_ContextRecreated
+	BindsSourceScreen_Layout,  Screen_ContextLost, BindsSourceScreen_ContextRecreated,
+	Menu_PadAxis
 };
 void BindsSourceScreen_Show(void) {
 	struct BindsSourceScreen* s = &BindsSourceScreen;
@@ -1971,14 +2003,14 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	s->dirty = true;
 }
 
-static void KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
+static cc_bool KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
 	struct KeyBindsScreen* s = &KeyBindsScreen;
 	InputBind bind;
 	int idx;
-	if (device->type != bind_device->type) return;
+	if (device->type != bind_device->type) return false;
 	
 	Input.DownHook = NULL;
-	if (s->curI == -1) return;
+	if (s->curI == -1) return false;
 	bind = s->binds[s->curI];
 	
 	if (key == device->escapeButton) {
@@ -1991,6 +2023,7 @@ static void KeyBindsScreen_TriggerBinding(int key, struct InputDevice* device) {
 	s->curI     = -1;
 	s->closable = true;
 	KeyBindsScreen_Update(s, idx);
+	return true;
 }
 
 static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
@@ -2096,7 +2129,8 @@ static const struct ScreenVTABLE KeyBindsScreen_VTABLE = {
 	MenuScreen_Render2,     Screen_BuildMesh,
 	Menu_InputDown,         Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,       Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
-	KeyBindsScreen_Layout,  KeyBindsScreen_ContextLost, KeyBindsScreen_ContextRecreated
+	KeyBindsScreen_Layout,  KeyBindsScreen_ContextLost, KeyBindsScreen_ContextRecreated,
+	Menu_PadAxis
 };
 
 static void KeyBindsScreen_Reset(Widget_LeftClick left, Widget_LeftClick right, int btnWidth) {
@@ -2246,7 +2280,9 @@ static struct Widget* menuInput_widgets[2 + 1];
 void MenuInputOverlay_Close(cc_bool valid) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)&MenuInputOverlay;
 	Gui_Remove((struct Screen*)s);
-	s->onDone(&s->input.base.text, valid);
+	
+	if (s->onDone) s->onDone(&s->input.base.text, valid);
+	s->onDone = NULL;
 }
 
 static void MenuInputOverlay_EnterInput(struct MenuInputOverlay* s) {
@@ -2554,7 +2590,7 @@ static int TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s, int offset) {
 	{
 		Atlas1D_Bind(i);
 
-		Gfx_DrawVb_IndexedTris_Range(count, offset);
+		Gfx_DrawVb_IndexedTris_Range(count, offset, DRAW_HINT_SPRITE);
 		offset += count;
 	}
 	return offset;
@@ -2596,7 +2632,7 @@ static void TexIdsOverlay_Render(void* screen, float delta) {
 	offset = TexIdsOverlay_RenderTerrain(s, offset);
 
 	Gfx_BindTexture(s->idAtlas.tex.ID);
-	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset);
+	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset, DRAW_HINT_RECT);
 }
 
 static int TexIdsOverlay_KeyDown(void* screen, int key, struct InputDevice* device) {
@@ -2688,7 +2724,8 @@ static const struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
 	MenuScreen_Render2,       Screen_BuildMesh,
 	Menu_InputDown,           Screen_InputUp,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,         Screen_PointerUp,   Menu_PointerMove, Screen_TMouseScroll,
-	UrlWarningOverlay_Layout, Screen_ContextLost, UrlWarningOverlay_ContextRecreated
+	UrlWarningOverlay_Layout, Screen_ContextLost, UrlWarningOverlay_ContextRecreated,
+	Menu_PadAxis
 };
 void UrlWarningOverlay_Show(const cc_string* url) {
 	struct UrlWarningOverlay* s = &UrlWarningOverlay;
@@ -2727,8 +2764,11 @@ static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) {
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	TexturePack_Extract(&s->url);
-	if (TexPackOverlay_IsAlways(s, widget)) TextureCache_Accept(&s->url);
+	if (TexPackOverlay_IsAlways(s, widget)) TextureUrls_Accept(&s->url);
 	Gui_Remove((struct Screen*)s);
+
+	if (TexPackOverlay_IsAlways(s, widget)) CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 3);
+	else CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 2);
 }
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
@@ -2740,8 +2780,11 @@ static void TexPackOverlay_NoClick(void* screen, void* widget) {
 
 static void TexPackOverlay_ConfirmNoClick(void* screen, void* b) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	if (s->alwaysDeny) TextureCache_Deny(&s->url);
+	if (s->alwaysDeny) TextureUrls_Deny(&s->url);
 	Gui_Remove((struct Screen*)s);
+
+	if (s->alwaysDeny) CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 0);
+	else CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 1);
 }
 
 static void TexPackOverlay_GoBackClick(void* screen, void* b) {
@@ -2946,7 +2989,8 @@ static const struct ScreenVTABLE NostalgiaMenuScreen_VTABLE = {
 	MenuScreen_Render2,        Screen_BuildMesh,
 	Menu_InputDown,            Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
-	NostalgiaMenuScreen_Layout, Screen_ContextLost, NostalgiaMenuScreen_ContextRecreated
+	NostalgiaMenuScreen_Layout, Screen_ContextLost, NostalgiaMenuScreen_ContextRecreated,
+	Menu_PadAxis
 };
 void NostalgiaMenuScreen_Show(void) {
 	struct NostalgiaMenuScreen* s = &NostalgiaMenuScreen;
@@ -2955,3 +2999,7 @@ void NostalgiaMenuScreen_Show(void) {
 	s->VTABLE     = &NostalgiaMenuScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
+#else
+void TexIdsOverlay_Show(void) { }
+void UrlWarningOverlay_Show(const cc_string* url) { }
+#endif

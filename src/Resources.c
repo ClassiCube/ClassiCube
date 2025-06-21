@@ -62,9 +62,9 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 *------------------------------------------------------Utility functions -------------------------------------------------*
 *#########################################################################################################################*/
 static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry selector) {
-	struct ZipEntry entries[64];
 	struct Stream stream;
 	cc_result res;
+	struct ZipEntry entries[64];
 
 	res = Stream_OpenFile(&stream, path);
 	if (res == ReturnCode_FileNotFound) return;
@@ -80,7 +80,7 @@ static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry select
 
 static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source) {
 	cc_uint32 size = source->UncompressedSize;
-	e->value.data  = Mem_TryAlloc(size, 1);
+	e->value.data  = (cc_uint8*)Mem_TryAlloc(size, 1);
 	e->size        = size;
 
 	if (!e->value.data) return ERR_OUT_OF_MEMORY;
@@ -92,7 +92,7 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 *------------------------------------------------------Zip entry writer---------------------------------------------------*
 *#########################################################################################################################*/
 static void GetCurrentZipDate(int* modTime, int* modDate) {
-	struct DateTime now;
+	struct cc_datetime now;
 	DateTime_CurrentLocal(&now);
 
 	*modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);
@@ -737,9 +737,9 @@ static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* d
 }
 
 static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
-	struct ZipEntry entries[64];
 	struct Stream src;
 	cc_result res;
+	struct ZipEntry entries[64];
 
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	if ((res = Zip_Extract(&src, CCTextures_SelectEntry, CCTextures_ProcessEntry,
@@ -909,10 +909,11 @@ static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Strea
 }
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req) {
-	struct ZipEntry entries[64];
 	struct Stream src;
+	cc_result res;
+	struct ZipEntry entries[64];
 	Stream_ReadonlyMemory(&src, req->data, req->size);
-
+	
 	return Zip_Extract(&src, 
 			ClassicPatcher_SelectEntry, ClassicPatcher_ProcessEntry,
 			entries, Array_Elems(entries));
@@ -922,6 +923,8 @@ static void PatchTerrainTile(struct Bitmap* src, int srcX, int srcY, int tileX, 
 	static const cc_string terrainPng = String_FromConst("terrain.png");
 	struct ResourceZipEntry* entry    = ZipEntries_Find(&terrainPng);
 	struct Bitmap* dst = &entry->value.bmp;
+	/* Can happen sometimes happen when allocating memory for terrain.png fails */
+	if (!dst->scan0) return;
 
 	Bitmap_UNSAFE_CopyBlock(srcX, srcY, tileX * 16, tileY * 16, src, dst, 16);
 }
@@ -1020,8 +1023,8 @@ static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream
 }
 
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
-	struct ZipEntry entries[64];
 	struct Stream src;
+	struct ZipEntry entries[64];
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 
 	return Zip_Extract(&src, 

@@ -6,7 +6,7 @@ CC_BEGIN_HEADER
 
 /* 
 Represents a fixed size 3D array of blocks and associated metadata
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct AABB;
 extern struct IGameComponent World_Component;
@@ -113,6 +113,11 @@ static CC_INLINE cc_bool World_Contains(int x, int y, int z) {
 static CC_INLINE cc_bool World_ContainsXZ(int x, int z) {
 	return (unsigned)x < (unsigned)World.Width 
 		&& (unsigned)z < (unsigned)World.Length;
+}
+
+static CC_INLINE cc_bool World_CheckVolume(int width, int height, int length) {
+	cc_uint64 volume = (cc_uint64)width * height * length;
+	return volume <= Int32_MaxValue;
 }
 
 enum EnvVar {

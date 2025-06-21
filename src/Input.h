@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* 
 Manages input state and raising input related events
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct InputDevice;
@@ -51,7 +51,8 @@ enum InputButtons {
 	
 	CCKEY_VOLUME_MUTE, CCKEY_VOLUME_UP, CCKEY_VOLUME_DOWN, CCKEY_SLEEP,
 	CCKEY_MEDIA_NEXT, CCKEY_MEDIA_PREV, CCKEY_MEDIA_PLAY, CCKEY_MEDIA_STOP,
-	CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP, CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME,
+	CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP,
+	CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME,
 	CCKEY_LAUNCH_MAIL, CCKEY_LAUNCH_MEDIA, CCKEY_LAUNCH_APP1, CCKEY_LAUNCH_CALC, 
 
 	CCPAD_1, CCPAD_2, CCPAD_3, CCPAD_4, /* Primary buttons (e.g. A, B, X, Y) */
@@ -79,8 +80,8 @@ extern struct _InputState {
 	cc_bool RawMode;
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
-	/* Function that overrides all normal input handling (e.g. for virtual keyboard) */
-	void (*DownHook)(int btn, struct InputDevice* device);
+	/* Function that can override all normal input handling (e.g. for virtual keyboard) */
+	cc_bool (*DownHook)(int btn, struct InputDevice* device);
 } Input;
 
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
@@ -182,7 +183,18 @@ extern struct TouchPointer touches[INPUT_MAX_POINTERS];
 #define TOUCH_TYPE_ALL (TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA | TOUCH_TYPE_BLOCKS)
 
 /* Data for mouse and touch */
-extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
+struct Pointer { int x, y; };
+CC_VAR extern struct Pointer Pointers[INPUT_MAX_POINTERS];
+
+CC_VAR extern struct _PointerHooks {
+	/* Function that overrides all normal pointer input press handling */
+	cc_bool (*DownHook)(int index);
+	/* Function that overrides all normal pointer input release handling */
+	cc_bool (*UpHook)  (int index);
+	/* Function that overrides all normal pointer input press handling */
+	cc_bool (*MoveHook)(int index);
+} PointerHooks;
+
 /* Raises appropriate events for a mouse vertical scroll */
 void Mouse_ScrollVWheel(float delta);
 /* Raises appropriate events for a mouse horizontal scroll */
@@ -210,13 +222,18 @@ void Gamepad_Tick(float delta);
 #define GAMEPAD_BEG_BTN CCPAD_1
 #define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
 
-
+struct PadAxisUpdate {
+	int port, axis;
+	float x, y;
+	int xSteps, ySteps;
+};
 struct GamepadDevice {
 	struct InputDevice base;
 	long deviceID;
 	float axisX[2], axisY[2];
 	cc_bool pressed[GAMEPAD_BTN_COUNT];
 	float holdtime[GAMEPAD_BTN_COUNT];
+	float padXAcc, padYAcc;
 };
 extern struct GamepadDevice Gamepad_Devices[INPUT_MAX_GAMEPADS];
 int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults);

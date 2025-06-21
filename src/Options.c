@@ -8,10 +8,11 @@
 #include "Logger.h"
 #include "PackedCol.h"
 
-struct StringsBuffer Options;
-static struct StringsBuffer changedOpts;
+CC_BIG_VAR struct StringsBuffer Options;
+static CC_BIG_VAR struct StringsBuffer changedOpts;
 cc_result Options_LoadResult;
 static cc_bool savingPaused;
+
 #if defined CC_BUILD_WEB || defined CC_BUILD_MOBILE || defined CC_BUILD_CONSOLE
 	#define OPTIONS_SAVE_IMMEDIATELY
 #endif
@@ -204,7 +205,7 @@ void Options_SetSecure(const char* opt, const cc_string* src) {
 	if (res) { Platform_Log2("Error %e encrypting option %c", &res, opt); return; }
 
 	/* base64 encode the data, as user might edit options.txt with a text editor */
-	if (enc.length > 1500) Logger_Abort("too large to base64");
+	if (enc.length > 1500) Process_Abort("too large to base64");
 	tmp.buffer   = data;
 	tmp.length   = Convert_ToBase64(enc.buffer, enc.length, data);
 	tmp.capacity = tmp.length;
@@ -219,7 +220,7 @@ void Options_GetSecure(const char* opt, cc_string* dst) {
 
 	Options_UNSAFE_Get(opt, &raw);
 	if (!raw.length) return;
-	if (raw.length > 2000) Logger_Abort("too large to base64");
+	if (raw.length > 2000) Process_Abort("too large to base64");
 
 	dataLen = Convert_FromBase64(raw.buffer, raw.length, data);
 	res = Platform_Decrypt(data, dataLen, dst);

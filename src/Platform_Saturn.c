@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined PLAT_SATURN
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -31,6 +32,7 @@ const cc_result ReturnCode_DirectoryExists    = 99999;
 
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
+const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix  = " Saturn";
 cc_bool Platform_ReadonlyFilesystem = true;
@@ -83,8 +85,8 @@ TimeMS DateTime_CurrentUTC(void) {
 	return 0;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
-	Mem_Set(t, 0, sizeof(struct DateTime));
+void DateTime_CurrentLocal(struct cc_datetime* t) {
+	Mem_Set(t, 0, sizeof(struct cc_datetime));
 }
 
 
@@ -114,6 +116,16 @@ static void Stopwatch_Init(void) {
 
 	cpu_frt_interrupt_priority_set(15);
 	cpu_frt_count_set(0);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 

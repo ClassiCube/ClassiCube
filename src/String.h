@@ -8,7 +8,7 @@ Provides various string related operations
    Also provides conversions betweens strings and numbers
    Also provides converting code page 437 indices to/from unicode
    Also provides wrapping a single line of text into multiple lines
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 #define STRING_INT_CHARS 24
@@ -201,16 +201,16 @@ int Convert_CP437ToUtf8(char c, cc_uint8* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf16(cc_string* str, const void* data, int numBytes);
+CC_API void String_AppendUtf16(cc_string* str, const void* data, int numBytes);
 /* Attempts to append all characters from UTF8 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf8(cc_string* str, const void* data, int numBytes);
+CC_API void String_AppendUtf8(cc_string* str, const void* data, int numBytes);
 /* Attempts to append all characters from CP-1252 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_DecodeCP1252(cc_string* str, const void* data, int numBytes);
+CC_API void String_AppendCP1252(cc_string* str, const void* data, int numBytes);
 /* Encodes a string in UTF8 format, also null terminating the string. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
-int String_EncodeUtf8(void* data, const cc_string* src);
+CC_API int String_EncodeUtf8(void* data, const cc_string* src);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 CC_API cc_bool Convert_ParseUInt8(const cc_string*  str, cc_uint8* value);

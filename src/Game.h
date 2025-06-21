@@ -4,7 +4,7 @@
 CC_BEGIN_HEADER
 
 /* Represents the game and related structures.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 struct Bitmap;
@@ -37,9 +37,9 @@ extern cc_string Game_Mppass;
 	#define Game_NumStates 1
 #endif
 
-#if defined CC_BUILD_N64
+#if defined CC_BUILD_N64 || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
     #define DEFAULT_VIEWDIST 20
-#elif defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+#elif defined CC_BUILD_NDS
     #define DEFAULT_VIEWDIST 192
 #else
     #define DEFAULT_VIEWDIST 512

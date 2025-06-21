@@ -47,20 +47,20 @@ void String_CopyToRaw(char* dst, int capacity, const cc_string* src) {
 
 cc_string String_UNSAFE_Substring(STRING_REF const cc_string* str, int offset, int length) {
 	if (offset < 0 || offset > str->length) {
-		Logger_Abort("Offset for substring out of range");
+		Process_Abort("Offset for substring out of range");
 	}
 	if (length < 0 || length > str->length) {
-		Logger_Abort("Length for substring out of range");
+		Process_Abort("Length for substring out of range");
 	}
 	if (offset + length > str->length) {
-		Logger_Abort("Result substring is out of range");
+		Process_Abort("Result substring is out of range");
 	}
 	return String_Init(str->buffer + offset, length, length);
 }
 
 cc_string String_UNSAFE_SubstringAt(STRING_REF const cc_string* str, int offset) {
 	cc_string sub;
-	if (offset < 0 || offset > str->length) Logger_Abort("Sub offset out of range");
+	if (offset < 0 || offset > str->length) Process_Abort("Sub offset out of range");
 
 	sub.buffer   = str->buffer + offset;
 	sub.length   = str->length - offset;
@@ -151,7 +151,7 @@ void String_Append(cc_string* str, char c) {
 	/* So if a string is being passed with CC in all its fields, then it's probably invalid */
 #if _MSC_VER && _DEBUG
 	if (str->length == 0xCCCC && str->capacity == 0xCCCC) 
-		Logger_Abort("String must be initialised before calling String_Append");
+		Process_Abort("String must be initialised before calling String_Append");
 #endif
 
 	if (str->length == str->capacity) return;
@@ -303,10 +303,10 @@ void String_InsertAt(cc_string* str, int offset, char c) {
 	int i;
 
 	if (offset < 0 || offset > str->length) {
-		Logger_Abort("Offset for InsertAt out of range");
+		Process_Abort("Offset for InsertAt out of range");
 	}
 	if (str->length == str->capacity) {
-		Logger_Abort("Cannot insert character into full string");
+		Process_Abort("Cannot insert character into full string");
 	}
 	
 	for (i = str->length; i > offset; i--) {
@@ -320,7 +320,7 @@ void String_DeleteAt(cc_string* str, int offset) {
 	int i;
 
 	if (offset < 0 || offset >= str->length) {
-		Logger_Abort("Offset for DeleteAt out of range");
+		Process_Abort("Offset for DeleteAt out of range");
 	}
 	
 	for (i = offset; i < str->length - 1; i++) {
@@ -491,7 +491,7 @@ void String_Format4(cc_string* str, const char* format, const void* a1, const vo
 			str->buffer[str->length++] = '\0'; /* Assumes using String_InitArray_NT */
 			break;
 		default: 
-			Logger_Abort("Invalid type for string format");
+			Process_Abort("Invalid type for string format");
 		}
 	}
 }
@@ -638,7 +638,7 @@ void String_AppendUtf8(cc_string* value, const void* data, int numBytes) {
 	}
 }
 
-void String_DecodeCP1252(cc_string* value, const void* data, int numBytes) {
+void String_AppendCP1252(cc_string* value, const void* data, int numBytes) {
 	const cc_uint8* chars = (const cc_uint8*)data;
 	int i; char c;
 
@@ -651,7 +651,7 @@ int String_EncodeUtf8(void* data, const cc_string* src) {
 	cc_uint8* dst = (cc_uint8*)data;
 	cc_uint8* cur;
 	int i, len = 0;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+	if (src->length > FILENAME_SIZE) Process_Abort("String too long to expand");
 
 	for (i = 0; i < src->length; i++) {
 		cur = dst + len;
@@ -845,7 +845,7 @@ void StringsBuffer_Clear(struct StringsBuffer* buffer) {
 
 cc_string StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i) {
 	cc_uint32 flags, offset, len;
-	if (i < 0 || i >= buffer->count) Logger_Abort("Tried to get String past StringsBuffer end");
+	if (i < 0 || i >= buffer->count) Process_Abort("Tried to get String past StringsBuffer end");
 
 	flags  = buffer->flagsBuffer[i];
 	offset = StringsBuffer_GetOffset(flags);
@@ -871,7 +871,7 @@ void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str) {
 	}
 
 	if (str->length > buffer->_lenMask) {
-		Logger_Abort("String too big to insert into StringsBuffer");
+		Process_Abort("String too big to insert into StringsBuffer");
 	}
 
 	textOffset = buffer->totalLength;
@@ -890,7 +890,7 @@ void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str) {
 void StringsBuffer_Remove(struct StringsBuffer* buffer, int index) {
 	cc_uint32 flags, offset, len;
 	cc_uint32 i, offsetAdj;
-	if (index < 0 || index >= buffer->count) Logger_Abort("Tried to remove String past StringsBuffer end");
+	if (index < 0 || index >= buffer->count) Process_Abort("Tried to remove String past StringsBuffer end");
 
 	flags  = buffer->flagsBuffer[index];
 	offset = StringsBuffer_GetOffset(flags);
@@ -1006,7 +1006,7 @@ void WordWrap_GetCoords(int index, const cc_string* lines, int numLines, int* co
 int WordWrap_GetBackLength(const cc_string* text, int index) {
 	int start = index;
 	if (index <= 0) return 0;
-	if (index >= text->length) Logger_Abort("WordWrap_GetBackLength - index past end of string");
+	if (index >= text->length) Process_Abort("WordWrap_GetBackLength - index past end of string");
 	
 	/* Go backward to the end of the previous word */
 	while (index > 0 && text->buffer[index] == ' ') index--;
@@ -1019,7 +1019,7 @@ int WordWrap_GetBackLength(const cc_string* text, int index) {
 int WordWrap_GetForwardLength(const cc_string* text, int index) {
 	int start = index, length = text->length;
 	if (index == -1) return 0;
-	if (index >= text->length) Logger_Abort("WordWrap_GetForwardLength - index past end of string");
+	if (index >= text->length) Process_Abort("WordWrap_GetForwardLength - index past end of string");
 
 	/* Go forward to the end of the word 'index' is currently in */
 	while (index < length && text->buffer[index] != ' ') index++;

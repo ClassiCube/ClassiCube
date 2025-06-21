@@ -41,12 +41,13 @@ static void Server_ResetState(void) {
 	Server.SupportsPlayerClick     = false;
 	Server.SupportsPartialMessages = false;
 	Server.SupportsFullCP437       = false;
+	Server.SupportsNotifyAction    = false;
 }
 
 void Server_RetrieveTexturePack(const cc_string* url) {
-	if (!Game_AllowServerTextures || TextureCache_HasDenied(url)) return;
+	if (!Game_AllowServerTextures || TextureUrls_HasDenied(url)) return;
 
-	if (!url->length || TextureCache_HasAccepted(url)) {
+	if (!url->length || TextureUrls_HasAccepted(url)) {
 		TexturePack_Extract(url);
 	} else {
 		TexPackOverlay_Show(url);
@@ -131,7 +132,7 @@ static void SPConnection_BeginConnect(void) {
 	Random_SeedFromCurrentTime(&rnd);
 	World_NewMap();
 
-#if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC
+#if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC || defined CC_BUILD_32X || defined CC_BUILD_GBA
 	horSize = 16;
 	verSize = 16;
 #elif defined CC_BUILD_LOWMEM
@@ -143,7 +144,7 @@ static void SPConnection_BeginConnect(void) {
 #endif
 	World_SetDimensions(horSize, verSize, horSize);
 
-#if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+#if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_32X || defined CC_BUILD_GBA
 	Gen_Active = &FlatgrassGen;
 #else
 	Gen_Active = &NotchyGen;
@@ -240,7 +241,7 @@ static double net_lastPacket;
 static cc_uint8 lastOpcode;
 
 static cc_bool net_connecting;
-static double net_connectTimeout;
+static float net_connectElapsed;
 #define NET_TIMEOUT_SECS 15
 
 static void MPConnection_FinishConnect(void) {
@@ -275,20 +276,20 @@ static void MPConnection_FailConnect(cc_result result) {
 	MPConnection_Fail(&reason);
 }
 
-static void MPConnection_TickConnect(void) {
+static void MPConnection_TickConnect(struct ScheduledTask* task) {
 	cc_bool writable;
-	double now    = Game.Time;
 	cc_result res = Socket_CheckWritable(net_socket, &writable);
+	net_connectElapsed += task->interval;
 
 	if (res) {
 		MPConnection_FailConnect(res);
 	} else if (writable) {
 		MPConnection_FinishConnect();
-	} else if (now > net_connectTimeout) {
+	} else if (net_connectElapsed > NET_TIMEOUT_SECS) {
 		MPConnection_FailConnect(0);
 	} else {
-		double left = net_connectTimeout - now;
-		Event_RaiseFloat(&WorldEvents.Loading, (float)left / NET_TIMEOUT_SECS);
+		float left = NET_TIMEOUT_SECS - net_connectElapsed;
+		Event_RaiseFloat(&WorldEvents.Loading, left / NET_TIMEOUT_SECS);
 	}
 }
 
@@ -324,7 +325,7 @@ static void MPConnection_BeginConnect(void) {
 	} else {
 		Server.Disconnected = false;
 		net_connecting      = true;
-		net_connectTimeout  = Game.Time + NET_TIMEOUT_SECS;
+		net_connectElapsed  = 0;
 
 		String_Format2(&title, "Connecting to %s:%i..", &Server.Address, &Server.Port);
 		LoadingScreen_Show(&title, &String_Empty);
@@ -385,7 +386,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	cc_result res;
 
 	if (Server.Disconnected) return;
-	if (net_connecting) { MPConnection_TickConnect(); return; }
+	if (net_connecting) { MPConnection_TickConnect(task); return; }
 
 	/* NOTE: using a read call that is a multiple of 4096 (appears to?) improve read performance */	
 	res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &read);

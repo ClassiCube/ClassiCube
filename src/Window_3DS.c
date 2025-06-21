@@ -16,6 +16,7 @@
 static cc_bool launcherMode;
 static u16 top_width, top_height;
 static u16 btm_width, btm_height;
+#include "VirtualKeyboard.h"
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -235,55 +236,19 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-static void OnscreenTextChanged(const char* text) {
-	char tmpBuffer[NATIVE_STR_LEN];
-	cc_string tmp = String_FromArray(tmpBuffer);
-	String_AppendUtf8(&tmp, text, String_Length(text));
-    
-	Event_RaiseString(&InputEvents.TextChanged, &tmp);
-	Input_SetPressed(CCKEY_ENTER);
-	Input_SetReleased(CCKEY_ENTER);
-}
-
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-	const char* btnText = args->type & KEYBOARD_FLAG_SEND ? "Send" : "Enter";
-	char input[NATIVE_STR_LEN]  = { 0 };
-	char output[NATIVE_STR_LEN] = { 0 };
-	SwkbdState swkbd;
-	String_EncodeUtf8(input, args->text);
-	
-	int mode = args->type & 0xFF;
-	int type = (mode == KEYBOARD_TYPE_INTEGER || mode == KEYBOARD_TYPE_NUMBER) ? SWKBD_TYPE_NUMPAD : SWKBD_TYPE_WESTERN;
-	
-	swkbdInit(&swkbd, type, 3, -1);
-	swkbdSetInitialText(&swkbd, input);
-	swkbdSetHintText(&swkbd, args->placeholder);
-	//swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
-	//swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, btnText, true);
-	swkbdSetButton(&swkbd, SWKBD_BUTTON_CONFIRM, btnText, true);
-	
-	if (mode == KEYBOARD_TYPE_INTEGER) {
-		swkbdSetNumpadKeys(&swkbd, '-', 0);
-	} else if (mode == KEYBOARD_TYPE_NUMBER) {
-		swkbdSetNumpadKeys(&swkbd, '-', '.');
-	}
-	DisplayInfo.ShowingSoftKeyboard = true;
-	
-	if (mode == KEYBOARD_TYPE_PASSWORD)
-		swkbdSetPasswordMode(&swkbd, SWKBD_PASSWORD_HIDE_DELAY);
-	if (args->multiline)
-		swkbdSetFeatures(&swkbd, SWKBD_MULTILINE);
-		
-	// TODO filter callbacks and OnscreenKeyboard_SetText ??
-	int btn = swkbdInputText(&swkbd, output, sizeof(output));
-	if (btn != SWKBD_BUTTON_CONFIRM) return;
-	OnscreenTextChanged(output);
-}
-void OnscreenKeyboard_SetText(const cc_string* text) { }
+	kb_tileWidth  = 20;
+	kb_tileHeight = 20;
 
-void OnscreenKeyboard_Close(void) { 
-	DisplayInfo.ShowingSoftKeyboard = false;
-	/* TODO implement */ 
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
 }
 
 

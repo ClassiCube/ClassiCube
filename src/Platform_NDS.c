@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_NDS
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -17,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <nds/arm9/background.h>
 #include <nds/bios.h>
 #include <nds/cothread.h>
 #include <nds/interrupts.h>
@@ -25,8 +28,13 @@
 #include <nds/system.h>
 #include <nds/arm9/dldi.h>
 #include <nds/arm9/sdmmc.h>
+#include <nds/arm9/exceptions.h>
 #include <fat.h>
+#ifdef BUILD_DSI
+#include "../third_party/dsiwifi/include/dsiwifi9.h"
+#else
 #include <dswifi9.h>
+#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
@@ -36,9 +44,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " NDS";
 cc_bool Platform_ReadonlyFilesystem;
@@ -70,18 +79,18 @@ cc_uint64 Stopwatch_Measure(void) {
 static void LogNocash(const char* msg, int len) {
     // Can only be up to 120 bytes total
 	char buffer[120];
-	len = min(len, 118);
+	len = min(len, 119);
 	
 	Mem_Copy(buffer, msg, len);
-	buffer[len + 0] = '\n';
-	buffer[len + 1] = '\0';
-	nocashWrite(buffer, len + 2);
+	buffer[len] = '\0';
+	nocashWrite(buffer, len + 1);
 }
 
-extern void consolePrintString(const char* ptr, int len);
+extern void Console_Clear(void);
+extern void Console_PrintString(const char* ptr, int len);
 void Platform_Log(const char* msg, int len) {
     LogNocash(msg, len);
-	consolePrintString(msg, len);
+	Console_PrintString(msg, len);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -90,7 +99,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct timeval cur; 
 	struct tm loc_time;
 	gettimeofday(&cur, NULL);
@@ -106,10 +115,68 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+static const char* crash_msg;
+
+static __attribute__((noreturn)) void CrashHandler(void) {
+	Console_Clear();
+	Platform_LogConst("");
+	Platform_LogConst("");
+	Platform_LogConst("** CLASSICUBE FATALLY CRASHED **");
+	Platform_LogConst("");
+
+	cc_uint32 mode = getCPSR() & CPSR_MODE_MASK;
+	if (crash_msg) {
+		Platform_LogConst(crash_msg);
+	} else if (mode == CPSR_MODE_ABORT) {
+		Platform_LogConst("Read/write at invalid memory");
+	} else if (mode == CPSR_MODE_UNDEFINED) {
+		Platform_LogConst("Executed invalid instruction");
+	} else {
+		Platform_Log1("Unknown error: %h", &mode);
+	}
+	Platform_LogConst("");
+
+	static const char* const regNames[] = {
+		"R0 ", "R1 ", "R2 ", "R3 ", "R4 ", "R5 ", "R6 ", "R7 ",
+		"R8 ", "R9 ", "R10", "R11", "R12", "SP ", "LR ", "PC "
+	};
+
+	for (int r = 0; r < 8; r++) {
+		Platform_Log4("%c: %h    %c: %h",
+					regNames[r],     &exceptionRegisters[r],
+					regNames[r + 8], &exceptionRegisters[r + 8]);
+	}
+
+	Platform_LogConst("");
+	Platform_LogConst("Please report this on the       ClassiCube Discord or forums");
+	Platform_LogConst("");
+	Platform_LogConst("You will need to restart your DS");
+
+	// Make the background red since game over anyways
+	BG_PALETTE_SUB[16 * 16 - 1] = RGB15(31, 0, 0);
+	BG_PALETTE    [16 * 16 - 1] = RGB15(31, 0, 0);
+
+	for (;;) { }
+}
+
+void CrashHandler_Install(void) { 
+	setExceptionHandler(CrashHandler);
+}
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	crash_msg = raw_msg;
+	CrashHandler();
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("fat:/"); // may be overriden in InitFilesystem
 static bool fat_available;
+static int fat_error;
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
@@ -121,16 +188,17 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 cc_result Directory_Create(const cc_filepath* path) {
 	if (!fat_available) return 0;
 
-	Platform_Log1("mkdir %c", path->buffer);
-	return mkdir(path->buffer, 0) == -1 ? errno : 0;
+	int ret = mkdir(path->buffer, 0) == -1 ? errno : 0;
+	Platform_Log2("mkdir %c = %i", path->buffer, &ret);
+	return ret;
 }
 
 int File_Exists(const cc_filepath* path) {
 	if (!fat_available) return false;
-	struct stat sb;
-	
 	Platform_Log1("Check %c", path->buffer);
-	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	
+	int attribs = FAT_getAttr(path->buffer);
+	return attribs >= 0 && (attribs & ATTR_DIRECTORY) == 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -223,11 +291,16 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 }
 
 static int LoadFatFilesystem(void* arg) {
+	errno = 0;
 	fat_available = fatInitDefault();
+	fat_error     = errno;
 	return 0;
 }
 
-static void InitFilesystem(void) {
+static void MountFilesystem(void) {
+	LoadFatFilesystem(NULL);
+	return;
+	
 	cothread_t thread = cothread_create(LoadFatFilesystem, NULL, 0, 0);
 	// If running with DSi mode in melonDS and the internal SD card is enabled, then
 	//  fatInitDefault gets stuck in sdmmc_ReadSectors - because the fifoWaitValue32Async will never return
@@ -236,23 +309,32 @@ static void InitFilesystem(void) {
 	//  and then giving up if it takes too long.. not the most elegant solution, but it does work
 	if (thread == -1) {
 		LoadFatFilesystem(NULL);
-	} else {
-		for (int i = 0; i < 100; i++)
-		{
-			cothread_yield();
-			if (cothread_has_joined(thread)) break;
-			
-			swiDelay(2000);
-		}
+		return;
 	}
+	
+	for (int i = 0; i < 1000; i++)
+	{
+		cothread_yield();
+		if (cothread_has_joined(thread)) return;
+		
+		swiDelay(500);
+	}
+	Platform_LogConst("Gave up after 1000 tries");
+}
 
-    char* dir = fatGetDefaultCwd();
-    if (dir) {
+static void InitFilesystem(void) {
+	MountFilesystem();
+	char* dir = fatGetDefaultCwd();
+	
+	if (dir) {
 		Platform_Log1("CWD: %c", dir);
-        root_path.buffer = dir;
-        root_path.length = String_Length(dir);
-    }
+		root_path.buffer = dir;
+		root_path.length = String_Length(dir);
+	}
+	
 	Platform_ReadonlyFilesystem = !fat_available;
+	if (fat_available) return;
+	Platform_Log1("** FAILED TO MOUNT FILESYSTEM (error %i) **", &fat_error);
 }
 
 
@@ -309,12 +391,31 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 *#########################################################################################################################*/
 static cc_bool net_supported = true;
 
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+
+	if (!net_supported) return false; // TODO still accept?
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct hostent* res = gethostbyname(host);
 	struct sockaddr_in* addr4;
-	char* src_addr;
 	int i;
 	
+	if (!net_supported) return ERR_NO_NETWORKING;
 	// avoid confusion with SSL error codes
 	// e.g. FFFF FFF7 > FF00 FFF7
 	if (!res) return -0xFF0000 + errno;
@@ -325,7 +426,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
 	{
-		src_addr = res->h_addr_list[i];
+		char* src_addr = res->h_addr_list[i];
 		if (!src_addr) break;
 		addrs[i].size = sizeof(struct sockaddr_in);
 
@@ -337,25 +438,6 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-}
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, address);
-
-	if (!net_supported) return ERR_NO_NETWORKING;
-	*numValidAddrs = 1;
-
-	if (inet_aton(str, &addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size = sizeof(*addr4);
-		return 0;
-	}
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
@@ -395,23 +477,29 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 void Socket_Close(cc_socket s) {
 	shutdown(s, 2); // SHUT_RDWR = 2
+#ifdef BUILD_DSI
+	lwip_close(s);
+#else
 	closesocket(s);
+#endif
 }
 
-// libogc only implements net_select for gamecube currently
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int res; // number of 'ready' sockets
 	FD_ZERO(&set);
 	FD_SET(s, &set);
+	
 	if (mode == SOCKET_POLL_READ) {
 		res = select(s + 1, &set, NULL, NULL, &time);
 	} else {
 		res = select(s + 1, NULL, &set, NULL, &time);
 	}
+	
 	if (res < 0) { *success = false; return errno; }
-	*success = FD_ISSET(s, &set) != 0; return 0;
+	*success = FD_ISSET(s, &set) != 0; 
+	return 0;
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
@@ -419,29 +507,65 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	int resultSize = sizeof(int);
 	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 	
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+#ifdef BUILD_DSI
+	socklen_t resultSize = sizeof(socklen_t);
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+#else
+	int resultSize = sizeof(int);
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+#endif
 	return res;
 }
 
+static void LogWifiStatus(int status) {
+	switch (status) {
+		case ASSOCSTATUS_SEARCHING:
+			Platform_LogConst("Wifi: Searching.."); return;
+		case ASSOCSTATUS_AUTHENTICATING:
+			Platform_LogConst("Wifi: Authenticating.."); return;
+		case ASSOCSTATUS_ASSOCIATING:
+			Platform_LogConst("Wifi: Connecting.."); return;
+		case ASSOCSTATUS_ACQUIRINGDHCP:
+			Platform_LogConst("Wifi: Acquiring.."); return;
+		case ASSOCSTATUS_ASSOCIATED:
+			Platform_LogConst("Wifi: Connected successfully!"); return;
+		case ASSOCSTATUS_CANNOTCONNECT:
+			Platform_LogConst("Wifi: FAILED TO CONNECT"); return;
+		default: 
+			Platform_Log1("Wifi: status = %i", &status); return;
+	}
+}
+
 static void InitNetworking(void) {
+#ifdef BUILD_DSI
+    if (!DSiWifi_InitDefault(INIT_ONLY)) {
+#else
     if (!Wifi_InitDefault(INIT_ONLY)) {
+#endif
         Platform_LogConst("Initing WIFI failed"); 
 		net_supported = false; return;
     }
+#ifdef BUILD_DSI
+    DSiWifi_AutoConnect();
+#else
     Wifi_AutoConnect();
+#endif
 
     for (int i = 0; i < 300; i++)
     {
+#ifdef BUILD_DSI
+        int status = DSiWifi_AssocStatus();
+#else
         int status = Wifi_AssocStatus();
+#endif	
+		LogWifiStatus(status);
         if (status == ASSOCSTATUS_ASSOCIATED) return;
 
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
-            Platform_LogConst("Can't connect to WIFI"); 
 			net_supported = false; return;
         }
         swiWaitForVBlank();
@@ -456,7 +580,11 @@ static void InitNetworking(void) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	cc_bool dsiMode = isDSiMode();
-	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
+#ifdef BUILD_DSI
+	Platform_Log1("Running in %c mode with DSi wifi", dsiMode ? "DSi" : "DS");
+#else
+	Platform_Log1("Running in %c mode with NDS wifi", dsiMode ? "DSi" : "DS");
+#endif
 
 	InitFilesystem();
     InitNetworking();

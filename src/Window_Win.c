@@ -1,5 +1,30 @@
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_WIN32
+/*
+   The Open Toolkit Library License
+  
+   Copyright (c) 2006 - 2009 the Open Toolkit library.
+  
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   the Software, and to permit persons to whom the Software is furnished to do
+   so, subject to the following conditions:
+  
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+  
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -18,35 +43,20 @@
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501 /* Windows XP */
-/* NOTE: Functions that are not present on Windows 2000 are dynamically loaded. */
-/* Hence the actual minimum supported OS is Windows 2000. This just avoids redeclaring structs. */
+/* NOTE: Functions not present on older OS versions are dynamically loaded. */
+/* Setting WIN32_WINNT to XP just avoids redeclaring structs. */
 #endif
 #include <windows.h>
-#include <commdlg.h>
+/* #include <commdlg.h> */
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-commdlg.h"
+#include "../misc/windows/min-winuser.h"
 
 /* https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpixelformat */
 #define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
 #define CC_WIN_CLASSNAME TEXT("ClassiCube_Window")
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
-
-#ifndef WM_XBUTTONDOWN
-/* Missing if _WIN32_WINNT isn't defined */
-#define WM_XBUTTONDOWN 0x020B
-#define WM_XBUTTONUP   0x020C
-#endif
-#ifndef WM_INPUT
-/* Missing when compiling with some older winapi SDKs */
-#define WM_INPUT       0x00FF
-#endif
-#ifndef WM_MOUSEHWHEEL
-/* Missing when compiling with some older winapi SDKs */
-#define WM_MOUSEHWHEEL 0x020E
-#endif
-
-static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
-static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
-static BOOL (WINAPI* _SetProcessDPIAware)(void);
 
 static HINSTANCE win_instance;
 static HDC win_DC;
@@ -307,16 +317,8 @@ void Window_PreInit(void) {
 }
 
 void Window_Init(void) {
-	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(RegisterRawInputDevices),
-		DynamicLib_Sym(GetRawInputData),
-		DynamicLib_Sym(SetProcessDPIAware)
-	};
-	static const cc_string user32 = String_FromConst("USER32.DLL");
-	void* lib;
 	HDC hdc;
-
-	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
+	User32_LoadDynamicFuncs();
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	/* Enable high DPI support */
@@ -342,10 +344,11 @@ void Window_Free(void) { }
 
 static ATOM DoRegisterClass(void) {
 	ATOM atom;
-	WNDCLASSEXW wc = { 0 };
-	wc.cbSize     = sizeof(WNDCLASSEXW);
-	wc.style      = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
-	wc.hInstance  = win_instance;
+	cc_result res;
+	WNDCLASSEXW wc   = { 0 };
+	wc.cbSize        = sizeof(WNDCLASSEXW);
+	wc.style         = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
+	wc.hInstance     = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
 
@@ -357,13 +360,24 @@ static ATOM DoRegisterClass(void) {
 
 	if ((atom = RegisterClassExW(&wc))) return atom;
 	/* Windows 9x does not support W API functions */
-	return RegisterClassExA((const WNDCLASSEXA*)&wc);
+	if ((atom = RegisterClassExA((const WNDCLASSEXA*)&wc))) return atom;
+	
+	/* Windows NT 3.5 does not support RegisterClassExA function */
+	res = GetLastError();
+	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
+		if ((atom = RegisterClassA((const WNDCLASSA*)&wc.style))) return atom;
+		res = GetLastError();
+	}
+	
+	Process_Abort2(res, "Failed to register window class");
+	return (ATOM)0;
 }
 
 static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 	cc_result res;
 	HWND hwnd;
 	RECT r;
+	
 	/* Calculate final window rectangle after window decorations are added (titlebar, borders etc) */
 	r.left = Display_CentreX(width);  r.right  = r.left + width;
 	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
@@ -380,7 +394,7 @@ static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return hwnd;
 		res = GetLastError();
 	}
-	Logger_Abort2(res, "Failed to create window");
+	Process_Abort2(res, "Failed to create window");
 	return NULL;
 }
 
@@ -399,7 +413,7 @@ static void DoCreateWindow(int width, int height) {
 	RefreshWindowPosition();
 
 	win_DC = GetDC(hwnd);
-	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
+	if (!win_DC) Process_Abort2(GetLastError(), "Failed to get device context");
 
 	Window_Main.Exists     = true;
 	Window_Main.Handle.ptr = hwnd;
@@ -431,8 +445,8 @@ void Clipboard_GetText(cc_string* value) {
 	HWND hwnd = Window_Main.Handle.ptr;
 	cc_bool unicode;
 	HANDLE hGlobal;
-	LPVOID src;
-	SIZE_T size;
+	_SIZE_T size;
+	void* src;
 	int i;
 
 	/* retry up to 50 times */
@@ -458,7 +472,7 @@ void Clipboard_GetText(cc_string* value) {
 		if (unicode) {
 			String_AppendUtf16(value,  src, size - 2);
 		} else {
-			String_DecodeCP1252(value, src, size - 1);
+			String_AppendCP1252(value, src, size - 1);
 		}
 
 		GlobalUnlock(hGlobal);
@@ -731,8 +745,13 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static HDC draw_DC;
 static HBITMAP draw_DIB;
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	BITMAPINFO hdr = { 0 };
+	cc_result res;
+
+	bmp->width  = width;
+	bmp->height = height;
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
 	/* sizeof(BITMAPINFO) does not work on Windows 9x */
@@ -743,19 +762,60 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	hdr.bmiHeader.biPlanes   = 1; 
 
 	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->scan0, NULL, 0);
-	if (!draw_DIB) Logger_Abort2(GetLastError(), "Failed to create DIB");
-	bmp->width  = width;
-	bmp->height = height;
+	if (draw_DIB) return;
+
+	res = GetLastError();
+	/* ERROR_CALL_NOT_IMPLEMENTED occurs with win32s */
+	if (res != ERROR_CALL_NOT_IMPLEMENTED) Process_Abort2(res, "Failed to create DIB");
+
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+}
+
+/* Used by Win32s on windows 3.1 */
+static void DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp) {
+	char buffer[640 * 3];
+	BITMAPINFO hdr = { 0 };
+	int x, y, width;
+
+	/* TODO partial update */
+	/* Have to use 24 bpp row by row, 32 bpp (and negative height) doesn't work */
+	hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	hdr.bmiHeader.biWidth    = bmp->width;
+	hdr.bmiHeader.biHeight   = 1;
+	hdr.bmiHeader.biBitCount = 24;
+	hdr.bmiHeader.biPlanes   = 1; 
+
+	for (y = r.y; y < r.y + r.height; y++) 
+	{
+		BitmapCol* row = Bitmap_GetRow(bmp, y);
+		width = bmp->width;
+
+		for (x = 0; x < width; x++) 
+		{
+			BitmapCol rgb = row[x];
+			buffer[x * 3 + 0] = BitmapCol_B(rgb);
+			buffer[x * 3 + 1] = BitmapCol_G(rgb);
+			buffer[x * 3 + 2] = BitmapCol_R(rgb);
+		}
+
+		SetDIBitsToDevice(win_DC, 0, y, width, 1, 0, 0, 
+						0, 1, buffer, &hdr, DIB_RGB_COLORS);
+	}
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
-	BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
-	SelectObject(draw_DC, oldSrc);
+	if (draw_DIB) {
+		HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
+		BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
+		SelectObject(draw_DC, oldSrc);
+	} else {
+		DrawFramebufferSlow(r, bmp);
+	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	DeleteObject(draw_DIB);
+	if (draw_DIB) DeleteObject(draw_DIB);
+	draw_DIB = NULL;
 }
 
 static cc_bool rawMouseInited, rawMouseSupported;
@@ -809,9 +869,17 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if CC_GFX_BACKEND_IS_GL() && !defined CC_BUILD_EGL
 static HGLRC ctx_handle;
-static HDC ctx_DC;
+static HDC   ctx_DC;
+static void* gl_lib;
+
+static HGLRC (WINAPI *_wglCreateContext)(HDC dc);
+static BOOL  (WINAPI *_wglDeleteContext)(HGLRC glrc);
+static HDC   (WINAPI *_wglGetCurrentDC)(void);
+static BOOL  (WINAPI *_wglMakeCurrent)(HDC dc, HGLRC glrc);
+static PROC  (WINAPI *_wglGetProcAddress)(LPCSTR func);
+
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
-static FP_SWAPINTERVAL wglSwapIntervalEXT;
+static FP_SWAPINTERVAL _wglSwapIntervalEXT;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
@@ -828,7 +896,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.cAlphaBits = mode->A; /* TODO not needed? test on Intel */
 
 	modeIndex = ChoosePixelFormat(win_DC, &pfd);
-	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
+	if (modeIndex == 0) { Process_Abort("Requested graphics mode not available"); }
 
 	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -837,33 +905,44 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	/* TODO DescribePixelFormat might be unnecessary? */
 	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
 	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
-		Logger_Abort2(GetLastError(), "SetPixelFormat failed");
+		Process_Abort2(GetLastError(), "SetPixelFormat failed");
 	}
 }
 
 void GLContext_Create(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_ReqSym(wglCreateContext),
+		DynamicLib_ReqSym(wglDeleteContext),
+		DynamicLib_ReqSym(wglGetCurrentDC),
+		DynamicLib_ReqSym(wglMakeCurrent),
+		DynamicLib_OptSym(wglGetProcAddress)
+	};
+	static const cc_string glPath = String_FromConst("OPENGL32.dll");
 	struct GraphicsMode mode;
+
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
+	DynamicLib_LoadAll(&glPath, funcs, Array_Elems(funcs), &gl_lib);
 
-	ctx_handle = wglCreateContext(win_DC);
+	ctx_handle = _wglCreateContext(win_DC);
 	if (!ctx_handle) {
-		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
+		Process_Abort2(GetLastError(), "Failed to create OpenGL context");
 	}
 
-	if (!wglMakeCurrent(win_DC, ctx_handle)) {
-		Logger_Abort2(GetLastError(), "Failed to make OpenGL context current");
+	if (!_wglMakeCurrent(win_DC, ctx_handle)) {
+		Process_Abort2(GetLastError(), "Failed to make OpenGL context current");
 	}
 
-	ctx_DC = wglGetCurrentDC();
-	wglSwapIntervalEXT = (FP_SWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
+	ctx_DC = _wglGetCurrentDC();
+	_wglSwapIntervalEXT = (FP_SWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
 }
 
 void GLContext_Update(void) { }
 cc_bool GLContext_TryRestore(void) { return true; }
+
 void GLContext_Free(void) {
 	if (!ctx_handle) return;
-	wglDeleteContext(ctx_handle);
+	_wglDeleteContext(ctx_handle);
 	ctx_handle = NULL;
 }
 
@@ -871,25 +950,24 @@ void GLContext_Free(void) {
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 
 void* GLContext_GetAddress(const char* function) {
-	static const cc_string glPath = String_FromConst("OPENGL32.dll");
-	static void* lib;
-
-	void* addr = (void*)wglGetProcAddress(function);
-	if (!GLContext_IsInvalidAddress(addr)) return addr;
+	/* Not present on NT 3.5 */
+	if (_wglGetProcAddress) {
+		void* addr = (void*)_wglGetProcAddress(function);
+		if (!GLContext_IsInvalidAddress(addr)) return addr;
+	}
 
 	/* Some drivers return NULL from wglGetProcAddress for core OpenGL functions */
-	if (!lib) lib = DynamicLib_Load2(&glPath);
-	return DynamicLib_Get2(lib, function);
+	return DynamicLib_Get2(gl_lib, function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {
-	if (!SwapBuffers(ctx_DC)) Logger_Abort2(GetLastError(), "Failed to swap buffers");
+	if (!SwapBuffers(ctx_DC)) Process_Abort2(GetLastError(), "Failed to swap buffers");
 	return true;
 }
 
 void GLContext_SetVSync(cc_bool vsync) {
-	if (!wglSwapIntervalEXT) return;
-	wglSwapIntervalEXT(vsync);
+	if (!_wglSwapIntervalEXT) return;
+	_wglSwapIntervalEXT(vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }
 #endif

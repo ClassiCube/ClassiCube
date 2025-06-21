@@ -53,7 +53,7 @@ static IDirect3D9* (WINAPI *_Direct3DCreate9)(UINT SDKVersion);
 
 static void LoadD3D9Library(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(Direct3DCreate9)
+		DynamicLib_ReqSym(Direct3DCreate9)
 	};
 	static const cc_string path = String_FromConst("d3d9.dll");
 	void* lib;
@@ -64,16 +64,16 @@ static void LoadD3D9Library(void) {
 }
 
 static void CreateD3D9Instance(void) {
-	d3d = _Direct3DCreate9(D3D_SDK_VERSION);
-
-	/* Normal Direct3D9 supports POOL_MANAGED textures */
-	/*  (Direct3D9Ex does not support them however) */
-	Gfx.ManagedTextures = true;
-	if (!d3d) Logger_Abort("Direct3DCreate9 returned NULL");
-
-	fallbackRendering = Options_GetBool("fallback-rendering", false);
-	if (!fallbackRendering) return;
-	Platform_LogConst("WARNING: Using fallback rendering mode, which will reduce performance");
+	int ver = D3D_SDK_VERSION;
+	while (ver > 0) {
+		d3d = _Direct3DCreate9(ver);
+		if (d3d) return;
+		
+		/* Try an earlier d3d9 version instance if creating a 9.0c instance fails */
+		/* (e.g. if system only has 9.0b) */
+		ver--;
+	}
+	Process_Abort("Direct3DCreate9 returned NULL");
 }
 
 static void FindCompatibleViewFormat(void) {
@@ -159,9 +159,9 @@ static void TryCreateDevice(void) {
 	/* Not enough memory? Try again later in a bit */
 	if (res == D3DERR_OUTOFVIDEOMEMORY) { Gfx.LostContext = true; return; }
 
-	if (res) Logger_Abort2(res, "Creating Direct3D9 device");
+	if (res) Process_Abort2(res, "Creating Direct3D9 device");
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
-	if (res) Logger_Abort2(res, "Getting Direct3D9 capabilities");
+	if (res) Process_Abort2(res, "Getting Direct3D9 capabilities");
 
 	D3D9_UpdateCachedDimensions();
 	deviceCreated    = true;
@@ -176,11 +176,18 @@ void Gfx_Create(void) {
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
 	depthBits = D3D9_DepthBufferBits();
+	TryCreateDevice();
 
 	customMipmapsLevels = true;
 	Gfx.Created         = true;
 	Gfx.BackendType     = CC_GFX_BACKEND_D3D9;
-	TryCreateDevice();
+	/* Normal Direct3D9 supports POOL_MANAGED textures */
+	/*  (Direct3D9Ex does not support them however) */
+	Gfx.ManagedTextures = true;
+
+	fallbackRendering = Options_GetBool("fallback-rendering", false);
+	if (!fallbackRendering) return;
+	Platform_LogConst("WARNING: Using fallback rendering mode, which will reduce performance");
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -207,7 +214,7 @@ cc_bool Gfx_TryRestoreContext(void) {
 	/* So try to workaround this by only crashing after 50 failures */
 	if (res == D3DERR_NOTAVAILABLE && availFails++ < 50) return false;
 
-	if (res) Logger_Abort2(res, "Error recreating D3D9 context");
+	if (res) Process_Abort2(res, "Error recreating D3D9 context");
 	D3D9_UpdateCachedDimensions();
 	return true;
 }
@@ -251,12 +258,12 @@ static void Gfx_RestoreState(void) {
 static void D3D9_SetTextureData(IDirect3DTexture9* texture, struct Bitmap* bmp, int rowWidth, int lvl) {
 	D3DLOCKED_RECT rect;
 	cc_result res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
-	if (res) Logger_Abort2(res, "D3D9_LockTextureData");
+	if (res) Process_Abort2(res, "D3D9_LockTextureData");
 
 	CopyTextureData(rect.pBits, rect.Pitch, bmp, rowWidth * BITMAPCOLOR_SIZE);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
-	if (res) Logger_Abort2(res, "D3D9_UnlockTextureData");
+	if (res) Process_Abort2(res, "D3D9_UnlockTextureData");
 }
 
 static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
@@ -267,12 +274,12 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, co
 	part.top  = y; part.bottom = y + bmp->height;
 
 	res = IDirect3DTexture9_LockRect(texture, lvl, &rect, &part, 0);
-	if (res) Logger_Abort2(res, "D3D9_LockTexturePartData");
+	if (res) Process_Abort2(res, "D3D9_LockTexturePartData");
 
 	CopyTextureData(rect.pBits, rect.Pitch, bmp, rowWidth * BITMAPCOLOR_SIZE);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
-	if (res) Logger_Abort2(res, "D3D9_UnlockTexturePartData");
+	if (res) Process_Abort2(res, "D3D9_UnlockTexturePartData");
 }
 
 static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitmap* bmp, int rowWidth, cc_bool partial) {
@@ -309,9 +316,9 @@ static cc_bool D3D9_CheckResult(cc_result res, const char* func) {
 	if (!res) return true;
 
 	if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY) {
-		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory!");
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory!");
 	} else {
-		Logger_Abort2(res, func);
+		Process_Abort2(res, func);
 	}
 	return false;
 }
@@ -328,7 +335,7 @@ static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int po
 	return tex;
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
 	cc_result res;
@@ -346,7 +353,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 				if (!Game_ReduceVRAM()) return 0;
 			} else {
 				/* unknown issue, so don't even try to handle the error */
-				Logger_Abort2(res, "D3D9_CreateManagedTexture failed");
+				Process_Abort2(res, "D3D9_CreateManagedTexture failed");
 			}
 		}
 
@@ -361,7 +368,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 		
 	tex = DoCreateTexture(bmp, levels, D3DPOOL_DEFAULT);
 	res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
-	if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
+	if (res) Process_Abort2(res, "D3D9_CreateTexture - Update");
 
 	D3D9_FreeResource(sys);
 	return tex;
@@ -375,7 +382,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	cc_result res = IDirect3DDevice9_SetTexture(device, 0, (IDirect3DBaseTexture9*)texId);
-	if (res) Logger_Abort2(res, "D3D9_BindTexture");
+	if (res) Process_Abort2(res, "D3D9_BindTexture");
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(*texId); *texId = NULL; }
@@ -546,18 +553,18 @@ static void D3D9_RestoreRenderStates(void) {
 static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	void* dst = NULL;
 	cc_result res = IDirect3DIndexBuffer9_Lock(buffer, 0, count * 2, &dst, 0);
-	if (res) Logger_Abort2(res, "D3D9_LockIb");
+	if (res) Process_Abort2(res, "D3D9_LockIb");
 
 	fillFunc((cc_uint16*)dst, count, obj);
 	res = IDirect3DIndexBuffer9_Unlock(buffer);
-	if (res) Logger_Abort2(res, "D3D9_UnlockIb");
+	if (res) Process_Abort2(res, "D3D9_UnlockIb");
 }
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	int size = count * 2;
 	IDirect3DIndexBuffer9* ibuffer;
 	cc_result res = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ibuffer, NULL);
-	if (res) Logger_Abort2(res, "D3D9_CreateIb");
+	if (res) Process_Abort2(res, "D3D9_CreateIb");
 
 	D3D9_SetIbData(ibuffer, count, fillFunc, obj);
 	return ibuffer;
@@ -566,7 +573,7 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 void Gfx_BindIb(GfxResourceID ib) {
 	IDirect3DIndexBuffer9* ibuffer = (IDirect3DIndexBuffer9*)ib;
 	cc_result res = IDirect3DDevice9_SetIndices(device, ibuffer);
-	if (res) Logger_Abort2(res, "D3D9_BindIb");
+	if (res) Process_Abort2(res, "D3D9_BindIb");
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(*ib); *ib = NULL; }
@@ -586,18 +593,18 @@ static IDirect3DVertexBuffer9* D3D9_AllocVertexBuffer(VertexFormat fmt, int coun
 	if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY)
 		return NULL;
 
-	if (res) Logger_Abort2(res, "D3D9_AllocVertexBuffer failed");
+	if (res) Process_Abort2(res, "D3D9_AllocVertexBuffer failed");
 	return vbuffer;
 }
 
 static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size, int lockFlags) {
 	void* dst = NULL;
 	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
-	if (res) Logger_Abort2(res, "D3D9_LockVb");
+	if (res) Process_Abort2(res, "D3D9_LockVb");
 
 	Mem_Copy(dst, data, size);
 	res = IDirect3DVertexBuffer9_Unlock(buffer);
-	if (res) Logger_Abort2(res, "D3D9_UnlockVb");
+	if (res) Process_Abort2(res, "D3D9_UnlockVb");
 }
 
 static void* D3D9_LockVb(GfxResourceID vb, VertexFormat fmt, int count, int lockFlags) {
@@ -606,7 +613,7 @@ static void* D3D9_LockVb(GfxResourceID vb, VertexFormat fmt, int count, int lock
 	int size  = count * strideSizes[fmt];
 
 	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
-	if (res) Logger_Abort2(res, "D3D9_LockVb");
+	if (res) Process_Abort2(res, "D3D9_LockVb");
 	return dst;
 }
 
@@ -619,7 +626,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(*vb); *vb = NULL; }
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
 	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_stride);
-	if (res) Logger_Abort2(res, "D3D9_BindVb");
+	if (res) Process_Abort2(res, "D3D9_BindVb");
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
@@ -629,7 +636,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
 	cc_result res = IDirect3DVertexBuffer9_Unlock(buffer);
-	if (res) Logger_Abort2(res, "Gfx_UnlockVb");
+	if (res) Process_Abort2(res, "Gfx_UnlockVb");
 }
 
 
@@ -645,7 +652,7 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { D3D9_FreeResource(*vb); *vb = NULL
 void Gfx_BindDynamicVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
 	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_stride);
-	if (res) Logger_Abort2(res, "D3D9_BindDynamicVb");
+	if (res) Process_Abort2(res, "D3D9_BindDynamicVb");
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
@@ -660,10 +667,11 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	int size = vCount * gfx_stride;
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
+	cc_result res;
+	
 	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
-
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
-	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
+	res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
+	if (res) Process_Abort2(res, "D3D9_SetDynamicVbData - Bind");
 }
 
 
@@ -685,7 +693,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	}
 
 	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
-	if (res) Logger_Abort2(res, "D3D9_SetVertexFormat");
+	if (res) Process_Abort2(res, "D3D9_SetVertexFormat");
 	gfx_stride = strideSizes[fmt];
 }
 
@@ -699,7 +707,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 		0, 0, verticesCount, 0, verticesCount >> 1);
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 }
@@ -833,19 +841,22 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	DWORD targets = 0;
+	cc_result res;
+	
 	if (buffers & GFX_BUFFER_COLOR) targets |= D3DCLEAR_TARGET;
 	if (buffers & GFX_BUFFER_DEPTH) targets |= D3DCLEAR_ZBUFFER;
 	
-	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, targets, gfx_clearColor, 0.0f, 0);
-	if (res) Logger_Abort2(res, "D3D9_Clear");
+	res = IDirect3DDevice9_Clear(device, 0, NULL, targets, gfx_clearColor, 0.0f, 0);
+	if (res) Process_Abort2(res, "D3D9_Clear");
 }
 
 void Gfx_EndFrame(void) {
+	cc_result res;
 	IDirect3DDevice9_EndScene(device);
-	cc_result res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
+	res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
 
 	if (res) {
-		if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
+		if (res != D3DERR_DEVICELOST) Process_Abort2(res, "D3D9_EndFrame");
 		/* TODO: Make sure this actually works on all graphics cards. */
 		Gfx_LoseContext(" (Direct3D9 device lost)");
 	}

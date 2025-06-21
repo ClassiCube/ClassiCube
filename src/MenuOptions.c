@@ -34,7 +34,6 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "SystemFonts.h"
-#include "Lighting.h"
 
 typedef void (*Button_GetText)(struct ButtonWidget* btn, cc_string* raw);
 typedef void (*Button_SetText)(struct ButtonWidget* btn, const cc_string* raw);
@@ -132,13 +131,6 @@ static struct MenuOptionsScreen {
 
 static union  MenuOptionMeta menuOpts_meta[MENUOPTS_MAX_OPTS];
 static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 1];
-
-static int  MeO_GetFPS(void) { return Game_FpsLimit; }
-static void MeO_SetFPS(int v) {
-	cc_string str = String_FromReadonly(FpsLimit_Names[v]);
-	Options_Set(OPT_FPS_LIMIT, &str);
-	Game_SetFpsLimit(v);
-}
 
 static void MenuOptionsScreen_Update(struct MenuOptionsScreen* s, struct ButtonWidget* btn) {
 	struct MenuOptionMetaBool* meta = (struct MenuOptionMetaBool*)btn->meta.ptr;
@@ -245,10 +237,13 @@ static int MenuOptionsScreen_AddButton(struct MenuOptionsScreen* s, const char* 
 	return i;
 }
 
-static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, Widget_LeftClick backClick) {
+static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, int half, Widget_LeftClick backClick) {
 	struct ButtonWidget* btn;
-	int i, col, row, half = s->numButtons / 2;
-	int begRow = 2 - half;
+	int i, col, row, begRow;
+	/* Auto calculate half/dividing count */
+	if (half < 0) half = (s->numButtons + 1) / 2;
+
+	begRow = 2 - half;
 	if (s->numButtons & 1) begRow--;
 	begRow = max(-3, begRow);
 	
@@ -479,9 +474,9 @@ static void MenuOptionsScreen_Render(void* screen, float delta) {
 }
 
 static void MenuOptionsScreen_Free(void* screen) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	Event_Unregister_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Unregister_(&UserEvents.HackPermsChanged,     screen, MenuOptionsScreen_OnHacksChanged);
 	Event_Unregister_(&WorldEvents.LightingModeChanged, screen, MenuOptionsScreen_OnLightingModeServerChanged);
+	MenuInputOverlay_Close(false);
 }
 
 static void MenuOptionsScreen_Layout(void* screen) {
@@ -591,6 +586,14 @@ static void    ClO_SetViewBob(cc_bool v) {
 	Options_SetBool(OPT_VIEW_BOBBING, v); 
 }
 
+static cc_bool ClO_GetFPS(void) { return Game_FpsLimit == FPS_LIMIT_VSYNC; }
+static void ClO_SetFPS(cc_bool v) {
+	int method    = v ? FPS_LIMIT_VSYNC : FPS_LIMIT_NONE;
+	cc_string str = String_FromReadonly(FpsLimit_Names[method]);
+	Options_Set(OPT_FPS_LIMIT, &str);
+	Game_SetFpsLimit(method);
+}
+
 static cc_bool ClO_GetHacks(void) { return Entities.CurPlayer->Hacks.Enabled; }
 static void    ClO_SetHacks(cc_bool v) {
 	Entities.CurPlayer->Hacks.Enabled = v;
@@ -620,20 +623,18 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClO_GetShowFPS,  ClO_SetShowFPS, NULL);
 		MenuOptionsScreen_AddBool(s, "View bobbing",
 			ClO_GetViewBob,  ClO_SetViewBob, NULL);
-		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			MeO_GetFPS,      MeO_SetFPS, NULL);
-		MenuOptionsScreen_AddBool(s, "Hacks enabled",
-			ClO_GetHacks,    ClO_SetHacks, NULL);
+		MenuOptionsScreen_AddBool(s, "Limit framerate",
+			ClO_GetFPS,      ClO_SetFPS, NULL);
+		if (Game_ClassicHacks) {
+			MenuOptionsScreen_AddBool(s, "Hacks enabled",
+				ClO_GetHacks,ClO_SetHacks, NULL);
+		}
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchPause);
+	MenuOptionsScreen_EndButtons(s, 4, Menu_SwitchPause);
 	s->DoRecreateExtra = ClassicOptionsScreen_RecreateExtra;
 
 	ButtonWidget_Add(s, &s->buttons[9], 400, Menu_SwitchBindsClassic);
 	Widget_SetLocation(&s->buttons[9],  ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
-
-	/* Disable certain options */
-	if (!Server.IsSinglePlayer) Menu_Remove(s, 3);
-	if (!Game_ClassicHacks)     Menu_Remove(s, 8);
 }
 
 void ClassicOptionsScreen_Show(void) {
@@ -703,7 +704,7 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			-2048, 2048, World.Height / 2,
 			ES_GetEdgeHeight,   ES_SetEdgeHeight, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 }
 
 void EnvSettingsScreen_Show(void) {
@@ -715,7 +716,14 @@ void EnvSettingsScreen_Show(void) {
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
 static void GrO_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
-	Widget_SetDisabled(s->widgets[4], Lighting_ModeLockedByServer);
+	Widget_SetDisabled(s->widgets[3], Lighting_ModeLockedByServer);
+}
+
+static int  GrO_GetFPS(void) { return Game_FpsLimit; }
+static void GrO_SetFPS(int v) {
+	cc_string str = String_FromReadonly(FpsLimit_Names[v]);
+	Options_Set(OPT_FPS_LIMIT, &str);
+	Game_SetFpsLimit(v);
 }
 
 static int  GrO_GetViewDist(void) { return Game_ViewDistance; }
@@ -763,7 +771,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			MeO_GetFPS,        MeO_SetFPS,
+			GrO_GetFPS,        GrO_SetFPS,
 			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 			"&eNoLimit: &fRenders as many frames as possible each second.\n" \
@@ -805,8 +813,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddBool(s, "3D anaglyph",
 			ClO_GetAnaglyph,   ClO_SetAnaglyph, NULL);
 	};
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
-
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 	s->OnLightingModeServerChanged = GrO_CheckLightingModeAllowed;
 	GrO_CheckLightingModeAllowed(s);
 }
@@ -874,7 +881,7 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddBool(s, "Clickable chat",
 			ChO_GetClickable,     ChO_SetClickable, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 }
 
 void ChatOptionsScreen_Show(void) {
@@ -950,7 +957,7 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddButton(s, "Select system font", Menu_SwitchFont,
 			NULL,             NULL, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 }
 
 void GuiOptionsScreen_Show(void) {
@@ -1088,7 +1095,7 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			1,  179, 70,
 			HS_GetFOV,      HS_SetFOV, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 
 	s->OnHacksChanged = HacksSettingsScreen_CheckHacksAllowed;
 	HacksSettingsScreen_CheckHacksAllowed(s);
@@ -1156,26 +1163,26 @@ static void MiO_SetSensitivity(int v) {
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
+		MenuOptionsScreen_AddNum(s,  "Reach distance",
+			   1, 1024, 5,
+			MiO_GetReach,    MiO_SetReach, NULL);
 		MenuOptionsScreen_AddNum(s, "Camera Mass",
 			1, 100, 20,
 			MiO_GetCameraMass, MiO_SetCameraMass,
 			"&eChange the smoothness of the smooth camera.");
-		MenuOptionsScreen_AddNum(s,  "Reach distance",
-			   1, 1024, 5,
-			MiO_GetReach,    MiO_SetReach, NULL);
 		MenuOptionsScreen_AddInt(s,  "Music volume",
 			   0, 100,  DEFAULT_MUSIC_VOLUME,
 			MiO_GetMusic,     MiO_SetMusic, NULL);
 		MenuOptionsScreen_AddInt(s,  "Sounds volume",
 			   0, 100,  DEFAULT_SOUNDS_VOLUME,
 			MiO_GetSounds,  MiO_SetSounds, NULL);
-		MenuOptionsScreen_AddBool(s, "Smooth camera",
-			MiO_GetCamera,     MiO_SetCamera, NULL);
-		
-		MenuOptionsScreen_AddBool(s, "View bobbing",
-			MiO_GetViewBob, MiO_SetViewBob, NULL);
+
 		MenuOptionsScreen_AddBool(s, "Block physics",
 			MiO_GetPhysics, MiO_SetPhysics, NULL);
+		MenuOptionsScreen_AddBool(s, "Smooth camera",
+			MiO_GetCamera, MiO_SetCamera, NULL);
+		MenuOptionsScreen_AddBool(s, "View bobbing",
+			MiO_GetViewBob, MiO_SetViewBob, NULL);
 		MenuOptionsScreen_AddBool(s, "Invert mouse",
 			MiO_GetInvert,  MiO_SetInvert, NULL);
 		MenuOptionsScreen_AddInt(s,  "Mouse sensitivity", 
@@ -1186,7 +1193,7 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 #endif
 			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 
 	/* Disable certain options */
 	if (!Server.IsSinglePlayer) Menu_Remove(s, 0);
@@ -1262,7 +1269,7 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddBool(s, "Classic options",
 			NA_GetOpts,  NA_SetOpts, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchNostalgia);
 }
 
 void NostalgiaAppearanceScreen_Show(void) {
@@ -1335,7 +1342,7 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 			"\n" \
 			"&cNote that some servers only support 0.30 game version");
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchNostalgia);
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	TextWidget_Add(s, &nostalgia_desc);

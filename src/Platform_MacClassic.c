@@ -23,9 +23,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000;
 const cc_result ReturnCode_FileNotFound     = fnfErr;
+const cc_result ReturnCode_DirectoryExists  = dupFNErr;
 const cc_result ReturnCode_SocketInProgess  = 1000000;
 const cc_result ReturnCode_SocketWouldBlock = 1000000;
-const cc_result ReturnCode_DirectoryExists  = dupFNErr;
+const cc_result ReturnCode_SocketDropped    = 1000000;
 static long sysVersion;
 
 #if TARGET_CPU_68K
@@ -33,8 +34,9 @@ const char* Platform_AppNameSuffix = " MAC 68k";
 #else
 const char* Platform_AppNameSuffix = " MAC PPC";
 #endif
-cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess = true;
+
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+cc_bool  Platform_ReadonlyFilesystem;
 
 
 /*########################################################################################################################*
@@ -124,7 +126,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return (cc_uint64)secs + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct tm loc_time;
 	time_t secs = gettod();
 	localtime_r(&secs, &loc_time);
@@ -139,16 +141,26 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
-#define MS_PER_SEC 1000000ULL
+#define US_PER_SEC 1000000ULL
 
 cc_uint64 Stopwatch_Measure(void) {
 	cc_uint64 count;
 	if (sysVersion < 0x7000) {
 		// 60 ticks a second
 		count = TickCount();
-		return count * MS_PER_SEC / 60;
+		return count * US_PER_SEC / 60;
 	}
 
 	Microseconds(&count);
@@ -531,6 +543,10 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 }
 
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
 #endif

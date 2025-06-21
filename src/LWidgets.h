@@ -5,7 +5,7 @@
 CC_BEGIN_HEADER
 
 /* Describes and manages individual 2D GUI elements in the launcher.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 struct Context2D;
@@ -241,8 +241,6 @@ void LTable_Sort(struct LTable* table);
 void LTable_ShowSelected(struct LTable* table);
 
 void LTable_FormatUptime(cc_string* dst, int uptime);
-/* Works out top and height of the scrollbar */
-void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height);
 /* Ensures top/first visible row index lies within table */
 void LTable_ClampTopRow(struct LTable* w);
 /* Returns index of selected row in currently visible rows */

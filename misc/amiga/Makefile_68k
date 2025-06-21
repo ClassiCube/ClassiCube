@@ -1,0 +1,44 @@
+AS=m68k-amigaos-as
+CC=m68k-amigaos-gcc
+CXX=m68k-amigaos-g++
+
+CFLAGS		:=-O1 -fno-math-errno -DPLAT_AMIGA -DCC_BUILD_NOFPU
+TARGET		:= ClassiCube-68k
+BUILD_DIR 	:= build-amiga-68k
+SOURCE_DIR	:= src
+LDFLAGS		:=
+
+C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
+C_ASSEMS    := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.S, $(C_SOURCES))
+C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(C_OBJECTS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+default: $(BUILD_DIR) $(TARGET).exe
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(TARGET).exe: $(C_OBJECTS)
+	$(CC) $(LDFLAGS) -o $(TARGET).exe $(C_OBJECTS)
+
+
+#---------------------------------------------------------------------------------
+# object generation
+#---------------------------------------------------------------------------------
+$(C_OBJECTS): $(BUILD_DIR)/%.o : $(BUILD_DIR)/%.S
+	$(AS) $< -o $@
+
+$(C_ASSEMS): $(BUILD_DIR)/%.S : $(SOURCE_DIR)/%.c
+	$(CC) $(CFLAGS) $(DEPFLAGS) -S -c $< -o $@
+
+# Dependency tracking
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))

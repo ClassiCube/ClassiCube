@@ -571,7 +571,7 @@ static void UpdateColorbuffer(void) {
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     
     if (![ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer])
-        Logger_Abort("Failed to link renderbuffer to window");
+        Process_Abort("Failed to link renderbuffer to window");
 }
 
 static void UpdateDepthbuffer(void) {
@@ -604,7 +604,7 @@ static void CreateFramebuffer(void) {
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
-        Logger_Abort2(status, "Failed to create renderbuffer");
+        Process_Abort2(status, "Failed to create renderbuffer");
     
     fb_width  = Window_Main.Width;
     fb_height = Window_Main.Height;

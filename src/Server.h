@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* 
 Represents a connection to either a multiplayer or an internal singleplayer server
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;
@@ -65,6 +65,9 @@ CC_VAR extern struct _ServerConnectionData {
 	cc_string Address;
 	/* Port of the server if multiplayer, 0 if singleplayer */
 	int Port;
+
+	/* Whether the server supports NotifyAction CPE */
+	cc_bool SupportsNotifyAction;
 } Server;
 
 /* If user hasn't previously accepted url, displays a dialog asking to confirm downloading it */

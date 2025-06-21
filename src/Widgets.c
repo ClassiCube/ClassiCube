@@ -29,7 +29,7 @@ static int  Widget_MouseScroll(void* elem, float delta) { return false; }
 static void AddWidget(void* screen, void* w) {
 	struct Screen* s = (struct Screen*)screen;
 
-	if (s->numWidgets >= s->maxWidgets) Logger_Abort("Tried to add too many widgets to screen");
+	if (s->numWidgets >= s->maxWidgets) Process_Abort("Tried to add too many widgets to screen");
 	s->widgets[s->numWidgets++] = (struct Widget*)w;
 }
 
@@ -61,7 +61,7 @@ static int TextWidget_Render2(void* widget, int offset) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset + 4;
 }
@@ -216,11 +216,11 @@ static int ButtonWidget_Render2(void* widget, int offset) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
 	Gfx_BindTexture(Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex);
 	/* TODO: Does this 400 need to take DPI into account */
-	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset);
+	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset, DRAW_HINT_SPRITE);
 
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset + 8);
+		Gfx_DrawVb_IndexedTris_Range(4, offset + 8, DRAW_HINT_SPRITE);
 	}
 	return offset + 12;
 }
@@ -452,7 +452,7 @@ static void HotbarWidget_RenderOutline(struct HotbarWidget* w, int offset) {
 	tex = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
 
 	Gfx_BindTexture(tex);
-	Gfx_DrawVb_IndexedTris_Range(8, offset);
+	Gfx_DrawVb_IndexedTris_Range(8, offset, DRAW_HINT_SPRITE);
 }
 
 static void HotbarWidget_RenderEntries(struct HotbarWidget* w, int offset) {
@@ -684,9 +684,11 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 	w->verticesCount = 0;
 
 #ifdef CC_BUILD_TOUCH
-	int i;
-	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR - 1; i++) {
-		w->touchId[i] = -1;
+	{
+		int i;
+		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR - 1; i++) {
+			w->touchId[i] = -1;
+		}
 	}
 #endif
 }
@@ -976,16 +978,12 @@ static int TableWidget_KeyDown(void* widget, int key, struct InputDevice* device
 	return false;
 }
 
-static int TableWidget_PadAxis(void* widget, int axis, float x, float y) {
+static int TableWidget_PadAxis(void* widget, struct PadAxisUpdate* upd) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	int xSteps, ySteps;
 	if (w->selectedIndex == -1) return false;
 
-	xSteps = Utils_AccumulateWheelDelta(&w->padXAcc, x / 100.0f);
-	if (xSteps) TableWidget_ScrollRelative(w, xSteps > 0 ? 1 : -1);
-
-	ySteps = Utils_AccumulateWheelDelta(&w->padYAcc, y / 100.0f);
-	if (ySteps) TableWidget_ScrollRelative(w, ySteps > 0 ? w->blocksPerRow : -w->blocksPerRow);
+	if (upd->xSteps) TableWidget_ScrollRelative(w, upd->xSteps > 0 ? 1 : -1);
+	if (upd->ySteps) TableWidget_ScrollRelative(w, upd->ySteps > 0 ? w->blocksPerRow : -w->blocksPerRow);
 
 	return true;
 }
@@ -1008,7 +1006,6 @@ void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth) {
 	w->verAnchor = ANCHOR_CENTRE;
 	w->lastX = -20; w->lastY = -20;
 	w->scale = 1;
-	w->padXAcc = 0; w->padYAcc = 0;
 
 	if (!w->everCreated) {
 		w->everCreated   = true;
@@ -1597,12 +1594,12 @@ static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vert
 static int TextInputWidget_Render2(void* widget, int offset) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_BindTexture(w->inputTex.ID);
-	Gfx_DrawVb_IndexedTris_Range(4, offset);
+	Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	offset += 4;
 
 	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
 		Gfx_BindTexture(w->caretTex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset + 4;
 }
@@ -1678,11 +1675,12 @@ static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
 	return valid;
 }
 
-void TextInputWidget_OpenKeyboard(struct TextInputWidget* w) {
+void TextInputWidget_OpenKeyboard(struct TextInputWidget* w, struct InputDevice* device) {
 	struct OpenKeyboardArgs args;
 
 	OpenKeyboardArgs_Init(&args, &w->base.text, w->onscreenType);
 	args.placeholder = w->onscreenPlaceholder;
+	args.device      = device;
 	OnscreenKeyboard_Open(&args);
 }
 
@@ -1691,7 +1689,7 @@ static int TextInputWidget_KeyDown(void* widget, int key, struct InputDevice* de
 	struct MenuInputDesc* desc = &w->desc;
 
 	if (Window_Main.SoftKeyboard && !DisplayInfo.ShowingSoftKeyboard && InputDevice_IsEnter(key, device)) { 
-		TextInputWidget_OpenKeyboard(w); return true; 
+		TextInputWidget_OpenKeyboard(w, device); return true; 
 	}
 	if (InputWidget_KeyDown(&w->base, key, device)) return true;
 
@@ -1701,7 +1699,7 @@ static int TextInputWidget_KeyDown(void* widget, int key, struct InputDevice* de
 static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct TextInputWidget* w = (struct TextInputWidget*)widget;
 
-	TextInputWidget_OpenKeyboard(w);
+	TextInputWidget_OpenKeyboard(w, NULL);
 	w->base.showCaret = true;
 	return InputWidget_PointerDown(widget, id, x, y);
 }
@@ -2215,10 +2213,18 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	return (int)(portions - start);
 }
 
+static void TextGroupWidget_RemoveColorPrefix(cc_string* text, int i) {
+	if (i + 2 > text->length || text->buffer[i] != '&') return;
+	if (!Drawer2D_ValidColorCodeAt(text, i + 1)) return;
+
+	String_DeleteAt(text, i + 1); 
+	String_DeleteAt(text, i);
+}
+
 static void TextGroupWidget_FormatUrl(cc_string* text, const cc_string* url) {
 	char* dst;
 	int i;
-	String_AppendColorless(text, url);
+	String_AppendString(text, url);
 
 	/* Delete "> " multiline chars from URLs */
 	dst = text->buffer;
@@ -2228,7 +2234,12 @@ static void TextGroupWidget_FormatUrl(cc_string* text, const cc_string* url) {
 
 		String_DeleteAt(text, i + 1);
 		String_DeleteAt(text, i);
+		/* Delete leading multiline colour code if present */
+		TextGroupWidget_RemoveColorPrefix(text, i);
 	}
+
+	/* Delete leading colour code if present */
+	TextGroupWidget_RemoveColorPrefix(text, 0);
 }
 
 static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, cc_string* text, int index, int mouseX) {
@@ -2446,7 +2457,7 @@ static int TextGroupWidget_Render2(void* widget, int offset) {
 		if (!textures[i].ID) continue;
 
 		Gfx_BindTexture(textures[i].ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, offset, DRAW_HINT_RECT);
 	}
 	return offset;
 }
@@ -2803,7 +2814,7 @@ static int ThumbstickWidget_Render2(void* widget, int offset) {
 		Gfx_BindTexture(Gui.TouchTex);
 		for (i = 0; i < 4; i++) {
 			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
-			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4));
+			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4), DRAW_HINT_NONE);
 		}
 	}
 	return offset + THUMBSTICKWIDGET_MAX;

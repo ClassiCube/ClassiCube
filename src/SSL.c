@@ -1,7 +1,7 @@
 #include "SSL.h"
 #include "Errors.h"
 
-#if defined CC_BUILD_SCHANNEL
+#if CC_SSL_BACKEND == CC_SSL_BACKEND_SCHANNEL
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -48,7 +48,7 @@ void SSLBackend_Init(cc_bool verifyCerts) {
 	/*  then it DOES work. (and on later Windows versions, those functions */
 	/*  exported from schannel.dll are just DLL forwards to secur32.dll */
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(InitSecurityInterfaceA)
+		DynamicLib_ReqSym(InitSecurityInterfaceA)
 	};
 	static const cc_string schannel = String_FromConst("schannel.dll");
 	_verifyCerts = verifyCerts;
@@ -404,27 +404,50 @@ cc_result SSL_Free(void* ctx_) {
 	Mem_Free(ctx);
 	return 0; 
 }
-#elif defined CC_BUILD_BEARSSL
+#elif CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
 #include "String.h"
 #include "bearssl.h"
 #include "../misc/certs/certs.h"
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
 
+static br_x509_class cert_verifier_vtable;
+static cc_bool _verifyCerts;
+
+static unsigned cert_verifier_end_chain(const br_x509_class** ctx) {
+	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
+
+	/* User selected to not care about certificate authenticity */
+	if (r == BR_ERR_X509_NOT_TRUSTED && !_verifyCerts) return 0;
+
+	/* It's fairly common for RTC on older consoles to not be set correctly */
+#ifdef CC_BUILD_CONSOLE
+	if (r != BR_ERR_X509_EXPIRED) return r;
+
+	cc_uint64 cur = DateTime_CurrentUTC();
+	uint32_t days = (uint32_t)(cur / 86400) + 366;
+
+	/* Time earlier than August 2024 usually mean an improperly calibrated RTC */
+	if (days < 739464) return 0;
+#endif
+
+	return r;
+}
+
 typedef struct SSLContext {
-	br_ssl_client_context sc;
 	br_x509_minimal_context xc;
+	br_ssl_client_context sc;
 	unsigned char iobuf[BR_SSL_BUFSIZE_BIDI];
 	br_sslio_context ioc;
 	cc_result readError, writeError;
 	cc_socket socket;
 } SSLContext;
 
-static cc_bool _verifyCerts;
-
-
 void SSLBackend_Init(cc_bool verifyCerts) {
-	_verifyCerts = verifyCerts; // TODO support
+	_verifyCerts = verifyCerts;
+	
+	cert_verifier_vtable = br_x509_minimal_vtable;
+	cert_verifier_vtable.end_chain = cert_verifier_end_chain;
 }
 
 cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
@@ -439,31 +462,16 @@ cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
 	return false; // TODO: error codes 
 }
 
-#if defined CC_BUILD_3DS
-#include <3ds.h>
 static void InjectEntropy(SSLContext* ctx) {
 	char buf[32];
-	PS_GenerateRandomBytes(buf, 32);
-	// NOTE: PS_GenerateRandomBytes isn't implemented in Citra
-	
+	cc_result res = Platform_GetEntropy(buf, 32);
+	if (res) Platform_LogConst("SSL: Using insecure uninitialised stack data for entropy");
+
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
-#else
-#warning "Using uninitialised stack data for entropy. This should be replaced with actual cryptographic RNG data"
-static void InjectEntropy(SSLContext* ctx) {
-	char buf[32];
-	// TODO: Use actual APIs to retrieve random data
-	
-	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
-}
-#endif
 
 static void SetCurrentTime(SSLContext* ctx) {
 	cc_uint64 cur = DateTime_CurrentUTC();
-	/* clamp min system time from RTC to start of 2024 */
-	/* Times earlier than that usually mean an improperly calibrated RTC */
-	if (cur < 63839664000ull) cur = 63839664000ull;
-
 	uint32_t days = (uint32_t)(cur / 86400) + 366;
 	uint32_t secs = (uint32_t)(cur % 86400);
 		
@@ -498,21 +506,35 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	char host[NATIVE_STR_LEN];
 	String_EncodeUtf8(host, host_);
 	
-	ctx = Mem_TryAlloc(1, sizeof(SSLContext));
+	ctx = (SSLContext*)Mem_TryAlloc(1, sizeof(SSLContext));
 	if (!ctx) return ERR_OUT_OF_MEMORY;
 	*out_ctx = (void*)ctx;
 	
+#if defined CC_BUILD_SYMBIAN
+	{
+		TAs[3].pkey.key.ec.curve = BR_EC_secp384r1;
+		TAs[3].pkey.key.ec.q = (unsigned char *)TA3_EC_Q;
+		TAs[3].pkey.key.ec.qlen = sizeof TA3_EC_Q;
+		
+		TAs[6].pkey.key.ec.curve = BR_EC_secp384r1;
+		TAs[6].pkey.key.ec.q = (unsigned char *)TA6_EC_Q;
+		TAs[6].pkey.key.ec.qlen = sizeof TA6_EC_Q;
+	}
+#endif
+	
 	br_ssl_client_init_full(&ctx->sc, &ctx->xc, TAs, TAs_NUM);
-	/*if (!_verify_certs) {
-		br_x509_minimal_set_rsa(&ctx->xc,   &br_rsa_i31_pkcs1_vrfy);
-		br_x509_minimal_set_ecdsa(&ctx->xc, &br_ec_prime_i31, &br_ecdsa_i31_vrfy_asn1);
-	}*/
 	InjectEntropy(ctx);
 	SetCurrentTime(ctx);
 	ctx->socket = socket;
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);
 	br_ssl_client_reset(&ctx->sc, host, 0);
+	ctx->xc.vtable = &cert_verifier_vtable;
+	
+	/* Account login must be done over TLS 1.2 */
+	if (String_CaselessEqualsConst(host_, "www.classicube.net")) {
+		br_ssl_engine_set_versions(&ctx->sc.eng, BR_TLS12, BR_TLS12);
+	}
 	
 	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
 			sock_read,  ctx, 
@@ -537,7 +559,8 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 		err = br_ssl_engine_last_error(&ctx->sc.eng);
 		if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
 			return SSL_ERR_CONTEXT_DEAD;
-		return SSL_ERROR_SHIFT + err;
+		
+		return SSL_ERROR_SHIFT | (err & 0xFFFF);
 	}
 	
 	br_sslio_flush(&ctx->ioc);
@@ -551,8 +574,12 @@ cc_result SSL_WriteAll(void* ctx_, const cc_uint8* data, cc_uint32 count) {
 	int res = br_sslio_write_all(&ctx->ioc, data, count);
 	
 	if (res < 0) {
-		if (ctx->writeError) return ctx->writeError;
-		return SSL_ERROR_SHIFT + br_ssl_engine_last_error(&ctx->sc.eng);
+		if (ctx->writeError) {
+			return ctx->writeError;
+		} else {
+			int err = br_ssl_engine_last_error(&ctx->sc.eng);
+			return SSL_ERROR_SHIFT | (err & 0xFFFF);
+		}
 	}
 	
 	br_sslio_flush(&ctx->ioc);

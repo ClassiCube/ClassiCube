@@ -13,12 +13,13 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/classicube/minimal-osxcross:latest
       credentials:
-        username: UnknownShadow200
-        password: ${{ secrets.GHCR_ACCESS_KEY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Compile 32 bit macOS builds
@@ -34,6 +35,27 @@ jobs:
           i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -lgcc_s.1
           i386-apple-darwin8-clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-mac32-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc -lgcc_s.1
 
+      - name: Compile 32 bit macOS builds (PowerPC)
+        shell: bash
+        id: compile_ppc
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -static-libgcc -Wl,-no_compact_unwind -DCC_BUILD_ICON -isystem /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk -Wl,-syslibroot /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk"
+        run: |
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+ 
+          mkdir -p /home/minty/repos/osxcross-ppc-test/target/bin
+          ln -s /usr/local/compiler/ppc/target/bin/powerpc64-apple-darwin9-as /home/minty/repos/osxcross-ppc-test/target/bin/powerpc64-apple-darwin9-as
+          cd src
+          PATH=$PATH:/usr/local/compiler/ppc/target/bin
+          powerpc-apple-darwin9-base-gcc *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} $LATEST_FLAG -o cc-mac32-ppc -mmacosx-version-min=10.2.0 -m32 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+
+      - name: Generate combined Intel + PowerPC build
+        shell: bash
+        id: gen_universal
+        run: |
+          cd src
+          PATH=$PATH:/usr/local/compiler/target/bin
+          i386-apple-darwin8-lipo -create -output cc-mac32-universal cc-mac32-gl1 cc-mac32-ppc
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -53,6 +75,18 @@ jobs:
         with:
           SOURCE_FILE: 'src/cc-mac32-gl2'
           DEST_NAME: 'ClassiCube-mac32-ModernGL'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile_ppc.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-mac32-ppc'
+          DEST_NAME: 'ClassiCube-mac32-PPC'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.gen_universal.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-mac32-universal'
+          DEST_NAME: 'ClassiCube-mac32'
           
           
       - uses: ./.github/actions/notify_success

@@ -2,7 +2,7 @@
 #define CC_BITMAP_H
 #include "Core.h"
 /* Represents a 2D array of pixels.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 CC_BEGIN_HEADER
 
@@ -23,7 +23,7 @@ struct Stream;
 	#define BITMAPCOLOR_G_SHIFT  5
 	#define BITMAPCOLOR_R_SHIFT 10
 	#define BITMAPCOLOR_A_SHIFT 15
-#elif defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_NDS
+#elif defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_NDS || defined CC_BUILD_32X || defined CC_BUILD_GBA
 	#define BITMAPCOLOR_R_SHIFT  0
 	#define BITMAPCOLOR_G_SHIFT  5
 	#define BITMAPCOLOR_B_SHIFT 10
@@ -95,7 +95,7 @@ BitmapCol BitmapColor_Scale(BitmapCol a, float t);
 /* A 2D array of BitmapCol pixels */
 struct Bitmap { BitmapCol* scan0; int width, height; };
 /* Returns number of bytes a bitmap consumes. */
-#define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * 4)
+#define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * BITMAPCOLOR_SIZE)
 /* Gets the yth row of the given bitmap. */
 #define Bitmap_GetRow(bmp, y) ((bmp)->scan0 + (y) * (bmp)->width)
 /* Gets the pixel at (x,y) in the given bitmap. */

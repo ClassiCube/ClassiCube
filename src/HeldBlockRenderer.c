@@ -11,7 +11,7 @@
 #include "Options.h"
 
 cc_bool HeldBlockRenderer_Show;
-#ifdef CC_BUILD_HELDBLOCK
+#ifndef CC_DISABLE_HELDBLOCK
 static BlockID held_block;
 static struct Entity held_entity;
 static struct Matrix held_blockProj;
@@ -43,14 +43,15 @@ static void HeldBlockRenderer_RenderModel(void) {
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
 		model = Entities.CurPlayer->Base.Model;
 		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
+		Vec3_Set(held_entity.ModelScale, 1.0f, 1.0f, 1.0f);
 
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
-	} else {	
+	}
+	else {
 		model = Models.Block;
 		SetHeldModel(model);
-		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
+		Vec3_Set(held_entity.ModelScale, 0.4f, 0.4f, 0.4f);
 
 		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
 		Model_Render(model, &held_entity);
@@ -117,7 +118,7 @@ static void OnProjectionChanged(void* obj) {
 	https://dl.dropboxusercontent.com/s/pdq79gkzntquld1/slowBreakRotate2.gif
 	https://dl.dropboxusercontent.com/s/w1ego7cy7e5nrk1/slowBreakFull.gif
 
-	https://github.com/UnknownShadow200/ClassicalSharp/wiki/Dig-animation-details
+	https://github.com/ClassiCube/ClassicalSharp/wiki/Dig-animation-details
 */
 static void HeldBlockRenderer_DigAnimation(void) {
 	float sinHalfCircle, sinHalfCircleWeird;

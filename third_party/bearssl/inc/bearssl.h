@@ -124,6 +124,10 @@
  * BearSSL source archive also comes with sample code.
  */
 
+#if defined __ARMCC__ && defined __SYMBIAN32__
+#define inline __inline
+#endif
+
 #include "bearssl_hash.h"
 #include "bearssl_hmac.h"
 #include "bearssl_kdf.h"

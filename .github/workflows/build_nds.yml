@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-DS:
+  build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: skylyrac/blocksds:dev-latest
@@ -21,9 +22,10 @@ jobs:
       - name: Compile NDS build
         id: compile
         run: |
+          apt-get update
           apt-get -y install curl
-          export BLOCKSDS=/opt/blocksds/core
-          export BLOCKSDSEXT=/opt/blocksds/external
+          make ds
+          export BUILD_DSI=1
           make ds
 
 
@@ -37,14 +39,26 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube.nds'
-          DEST_NAME: 'ClassiCube.nds'
+          SOURCE_FILE: 'ClassiCube-nds.nds'
+          DEST_NAME: 'ClassiCube-nds.nds'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-nds/ClassiCube.elf'
+          SOURCE_FILE: 'build-nds/cc-arm9.elf'
           DEST_NAME: 'ClassiCube-nds.elf'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-dsi.nds'
+          DEST_NAME: 'ClassiCube-dsi.nds'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'build-dsi/cc-arm9.elf'
+          DEST_NAME: 'ClassiCube-dsi.elf'
           
           
       - uses: ./.github/actions/notify_success

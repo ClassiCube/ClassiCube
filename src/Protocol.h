@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* 
 Implements network protocols for original classic, CPE, and WoM textures
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct RayTracer;
 
@@ -39,7 +39,8 @@ enum OPCODE_ {
 	OPCODE_DEFINE_EFFECT,       OPCODE_SPAWN_EFFECT,
 	OPCODE_DEFINE_MODEL, OPCODE_DEFINE_MODEL_PART, OPCODE_UNDEFINE_MODEL,
 	OPCODE_PLUGIN_MESSAGE, OPCODE_ENTITY_TELEPORT_EXT,
-	OPCODE_LIGHTING_MODE,
+	OPCODE_LIGHTING_MODE, OPCODE_CINEMATIC_GUI, OPCODE_NOTIFY_ACTION,
+	OPCODE_NOTIFY_POSITION_ACTION, OPCODE_TOGGLE_BLOCK_LIST,
 
 	OPCODE_COUNT
 };
@@ -49,6 +50,11 @@ enum PROTOCOL_VERSION_ {
 	PROTOCOL_0020 = 6, PROTOCOL_0030 = 7,
 };
 
+enum NOTIFY_ACTION_TYPE {
+	NOTIFY_ACTION_BLOCK_LIST_SELECTED = 0, NOTIFY_ACTION_BLOCK_LIST_TOGGLED = 1, NOTIFY_ACTION_LEVEL_SAVED = 2,
+	NOTIFY_ACTION_RESPAWNED = 3, NOTIFY_ACTION_SPAWN_UPDATED = 4, NOTIFY_ACTION_TEXTURE_PACK_CHANGED = 5,
+	NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED = 6, NOTIFY_ACTION_THIRD_PERSON_CHANGED = 7
+};
 
 typedef void (*Net_Handler)(cc_uint8* data);
 #define Net_Set(opcode, handler, size) Protocol.Handlers[opcode] = handler; Protocol.Sizes[opcode] = size;
@@ -67,10 +73,12 @@ extern struct IGameComponent Protocol_Component;
 void Protocol_Tick(void);
 
 extern cc_bool cpe_needD3Fix;
-void Classic_SendChat(const cc_string* text, cc_bool partial);\
+void Classic_SendChat(const cc_string* text, cc_bool partial);
 void Classic_SendSetBlock(int x, int y, int z, cc_bool place, BlockID block);
 void Classic_SendLogin(void);
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t);
+void CPE_SendNotifyAction(int action, cc_uint16 value);
+void CPE_SendNotifyPositionAction(int action, int x, int y, int z);
 
 /* Send a PluginMessage to the server; data must contain 64 bytes. */
 CC_API void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data);

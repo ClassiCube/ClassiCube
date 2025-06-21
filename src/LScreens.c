@@ -1,5 +1,5 @@
 #include "LScreens.h"
-#ifndef CC_BUILD_WEB
+#ifndef CC_DISABLE_LAUNCHER
 #include "String.h"
 #include "LWidgets.h"
 #include "LWeb.h"
@@ -19,6 +19,7 @@
 #include "LBackend.h"
 #include "Http.h"
 #include "Game.h"
+#include "main.h"
 
 #define LAYOUTS static const struct LLayout
 #define IsBackButton(btn) (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_2)
@@ -105,9 +106,9 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struct Inpu
 
 	if (key == device->tabLauncher) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
-	} else if (key == device->upButton) {
+	} else if (key == device->upButton || key == device->leftButton) {
 		LScreen_CycleSelected(s, -1);
-	} else if (key == device->downButton) {
+	} else if (key == device->downButton || key == device->rightButton) {
 		LScreen_CycleSelected(s,  1);
 	} else if (IsBackButton(key) && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
@@ -158,7 +159,7 @@ void LScreen_AddWidget(void* screen, void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
 
 	if (s->numWidgets >= s->maxWidgets)
-		Logger_Abort("Can't add anymore widgets to this LScreen");
+		Process_Abort("Can't add anymore widgets to this LScreen");
 	s->widgets[s->numWidgets++] = w;
 }
 
@@ -181,7 +182,7 @@ static struct ChooseModeScreen {
 	struct LButton btnEnhanced, btnClassicHax, btnClassic, btnBack;
 	struct LLabel  lblHelp, lblEnhanced[2], lblClassicHax[2], lblClassic[2];
 	cc_bool firstTime;
-} ChooseModeScreen;
+} ChooseModeScreen CC_BIG_VAR;
 
 #define CHOOSEMODE_SCREEN_MAX_WIDGETS 12
 static struct LWidget* chooseMode_widgets[CHOOSEMODE_SCREEN_MAX_WIDGETS];
@@ -284,7 +285,7 @@ static struct ColoursScreen {
 	struct LLabel lblRGB[COLOURS_NUM_COLS];
 	struct LInput iptColours[COLOURS_NUM_ENTRIES];
 	struct LCheckbox cbClassic;
-} ColoursScreen;
+} ColoursScreen CC_BIG_VAR;
 
 #define COLOURSSCREEN_MAX_WIDGETS 25
 static struct LWidget* colours_widgets[COLOURSSCREEN_MAX_WIDGETS];
@@ -449,7 +450,7 @@ static struct DirectConnectScreen {
 	struct LButton btnConnect, btnBack;
 	struct LInput iptUsername, iptAddress, iptMppass;
 	struct LLabel lblStatus;
-} DirectConnectScreen;
+} DirectConnectScreen CC_BIG_VAR;
 
 #define DIRECTCONNECT_SCREEN_MAXWIDGETS 6
 static struct LWidget* directConnect_widgets[DIRECTCONNECT_SCREEN_MAXWIDGETS];
@@ -473,6 +474,11 @@ static void DirectConnectScreen_UrlFilter(cc_string* str) {
 	str->length = 0;
 }
 
+static cc_bool DirectConnectScreen_ParsePort(const cc_string* str) {
+	int port;
+	return Convert_ParseInt(str, &port) && port >= 0 && port <= 65535;
+}
+
 static void DirectConnectScreen_StartClient(void* w) {
 	static const cc_string defMppass = String_FromConst("(none)");
 	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
@@ -492,7 +498,8 @@ static void DirectConnectScreen_StartClient(void* w) {
 	if (!user->length) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
-	if (!DirectUrl_ExtractAddress(addr, &ip, &port, &raw_port)) {
+	DirectUrl_ExtractAddress(addr, &ip, &port);
+	if (!DirectConnectScreen_ParsePort(&port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
@@ -508,7 +515,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	Options_ResumeSaving();
 
 	LLabel_SetConst(status, "");
-	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
+	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty, 1);
 }
 
 static void DirectConnectScreen_Activated(struct LScreen* s_) {
@@ -578,7 +585,7 @@ static struct MFAScreen {
 	struct LInput iptCode;
 	struct LButton btnSignIn, btnCancel;
 	struct LLabel  lblTitle;
-} MFAScreen;
+} MFAScreen CC_BIG_VAR;
 
 #define MFA_SCREEN_MAX_WIDGETS 4
 static struct LWidget* mfa_widgets[MFA_SCREEN_MAX_WIDGETS];
@@ -638,7 +645,7 @@ static struct SplitScreen {
 	LScreen_Layout
 	struct LButton btnPlayers[3], btnBack;
 	cc_bool signingIn;
-} SplitScreen;
+} SplitScreen CC_BIG_VAR;
 
 #define SPLITSCREEN_MAX_WIDGETS 4
 static struct LWidget* split_widgets[SPLITSCREEN_MAX_WIDGETS];
@@ -650,9 +657,7 @@ LAYOUTS sps_btnBack[]     = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
 
 static void SplitScreen_Start(int players) {
 	static const cc_string user = String_FromConst(DEFAULT_USERNAME);
-	Game_NumStates = players;
-	
-	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
+	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty, players);
 }
 
 static void SplitScreen_Players2(void* w) { SplitScreen_Start(2); }
@@ -700,7 +705,7 @@ static struct MainScreen {
 	struct LInput iptUsername, iptPassword;
 	struct LLabel lblStatus, lblUpdate;
 	cc_bool signingIn;
-} MainScreen;
+} MainScreen CC_BIG_VAR;
 
 #define MAINSCREEN_MAX_WIDGETS 12
 static struct LWidget* main_widgets[MAINSCREEN_MAX_WIDGETS];
@@ -722,34 +727,6 @@ LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    6 }, { ANCHOR_MAX,  6 } };
 
 LAYOUTS main_lblUpdate_N[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
 LAYOUTS main_lblUpdate_H[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 6 } };
-
-
-struct ResumeInfo {
-	cc_string user, ip, port, server, mppass;
-	char _userBuffer[STRING_SIZE], _serverBuffer[STRING_SIZE];
-	char _ipBuffer[16], _portBuffer[16], _mppassBuffer[STRING_SIZE];
-	cc_bool valid;
-};
-
-CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool full) {
-	String_InitArray(info->server, info->_serverBuffer);
-	Options_Get(ROPT_SERVER,       &info->server, "");
-	String_InitArray(info->user,   info->_userBuffer);
-	Options_Get(ROPT_USER,         &info->user, "");
-
-	String_InitArray(info->ip,   info->_ipBuffer);
-	Options_Get(ROPT_IP,         &info->ip, "");
-	String_InitArray(info->port, info->_portBuffer);
-	Options_Get(ROPT_PORT,       &info->port, "");
-
-	if (!full) return;
-	String_InitArray(info->mppass, info->_mppassBuffer);
-	Options_GetSecure(ROPT_MPPASS, &info->mppass);
-
-	info->valid = 
-		info->user.length && info->mppass.length &&
-		info->ip.length   && info->port.length;
-}
 
 CC_NOINLINE static void MainScreen_Error(struct HttpRequest* req, const char* action) {
 	cc_string str; char strBuffer[STRING_SIZE];
@@ -791,10 +768,9 @@ static void MainScreen_Register(void* w) {
 
 static void MainScreen_Resume(void* w) {
 	struct ResumeInfo info;
-	MainScreen_GetResume(&info, true);
 
-	if (!info.valid) return;
-	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server);
+	if (!Resume_Parse(&info, true)) return;
+	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server, 1);
 }
 
 static void MainScreen_Singleplayer(void* w) {
@@ -802,7 +778,7 @@ static void MainScreen_Singleplayer(void* w) {
 	const cc_string* user = &MainScreen.iptUsername.text;
 
 	if (!user->length) user = &defUser;
-	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
+	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty, 1);
 }
 
 static void MainScreen_ResumeHover(void* w) {
@@ -811,7 +787,7 @@ static void MainScreen_ResumeHover(void* w) {
 	struct ResumeInfo info;
 	if (s->signingIn) return;
 
-	MainScreen_GetResume(&info, false);
+	Resume_Parse(&info, false);
 	if (!info.user.length) return;
 	String_InitArray(str, strBuffer);
 
@@ -863,11 +839,9 @@ static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
 	}
 }
 
-#ifdef CC_BUILD_CONSOLE
 static void MainScreen_ExitApp(void* w) {
 	Window_Main.Exists = false;
 }
-#endif
 
 static void MainScreen_Activated(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
@@ -904,24 +878,26 @@ static void MainScreen_Activated(struct LScreen* s_) {
 	LButton_Add(s, &s->btnOptions, 100, 35, "Options", 
 				SwitchToSettings, main_btnOptions);
 
-#ifdef CC_BUILD_CONSOLE
-	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
-	LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
-				MainScreen_ExitApp, main_btnUpdates);
-#else
-	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
-				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
-	if (Updater_Supported) {
-		LButton_Add(s, &s->btnUpdates,  100, 35, "Updates", 
-					SwitchToUpdates, main_btnUpdates);
+	if (Platform_Flags & PLAT_FLAG_APP_EXIT) {
+		LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
+		LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
+					MainScreen_ExitApp, main_btnUpdates);
+	} else {
+		LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
+					Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
+		if (Updater_Supported) {
+			LButton_Add(s, &s->btnUpdates,  100, 35, "Updates", 
+						SwitchToUpdates, main_btnUpdates);
+		}
 	}
-#endif
 
+#ifdef CC_BUILD_NETWORKING
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;
 
 	if (CheckUpdateTask.Base.completed)
 		MainScreen_ApplyUpdateLabel(s);
+#endif
 }
 
 static void MainScreen_Load(struct LScreen* s_) {
@@ -1018,10 +994,12 @@ static void MainScreen_Tick(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	LScreen_Tick(s_);
 
+#ifdef CC_BUILD_NETWORKING
 	MainScreen_TickCheckUpdates(s);
 	MainScreen_TickGetToken(s);
 	MainScreen_TickSignIn(s);
 	MainScreen_TickFetchServers(s);
+#endif
 }
 
 void MainScreen_SetActive(void) {
@@ -1054,7 +1032,7 @@ static struct CheckResourcesScreen {
 	LScreen_Layout
 	struct LLabel  lblLine1, lblLine2, lblStatus;
 	struct LButton btnYes, btnNo;
-} CheckResourcesScreen;
+} CheckResourcesScreen CC_BIG_VAR;
 
 #define CHECKRESOURCES_SCREEN_MAX_WIDGET 5
 static struct LWidget* checkResources_widgets[CHECKRESOURCES_SCREEN_MAX_WIDGET];
@@ -1148,7 +1126,7 @@ static struct FetchResourcesScreen {
 	struct LLabel  lblStatus;
 	struct LButton btnCancel;
 	struct LSlider sdrProgress;
-} FetchResourcesScreen;
+} FetchResourcesScreen CC_BIG_VAR;
 
 #define FETCHRESOURCES_SCREEN_MAX_WIDGETS 3
 static struct LWidget* fetchResources_widgets[FETCHRESOURCES_SCREEN_MAX_WIDGETS];
@@ -1247,7 +1225,7 @@ static struct ServersScreen {
 	struct LTable table;
 	struct FontDesc rowFont;
 	float tableAcc;
-} ServersScreen;
+} ServersScreen CC_BIG_VAR;
 
 static struct LWidget* servers_widgets[6];
 
@@ -1366,8 +1344,14 @@ static void ServersScreen_Activated(struct LScreen* s_) {
 
 static void ServersScreen_Tick(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
+	int flagsCount;
 	LScreen_Tick(s_);
+
+	flagsCount = FetchFlagsTask.count;
 	LWebTask_Tick(&FetchFlagsTask.Base, NULL);
+	if (flagsCount != FetchFlagsTask.count) {
+		LBackend_TableFlagAdded(&s->table);
+	}
 
 	if (!FetchServersTask.Base.working) return;
 	LWebTask_Tick(&FetchServersTask.Base, NULL);
@@ -1430,7 +1414,7 @@ static struct SettingsScreen {
 	struct LLabel  lblMode, lblColours;
 	struct LCheckbox cbExtra, cbEmpty, cbScale;
 	struct LLine sep;
-} SettingsScreen;
+} SettingsScreen CC_BIG_VAR;
 
 #define SETTINGS_SCREEN_MAX_WIDGETS 9
 static struct LWidget* settings_widgets[SETTINGS_SCREEN_MAX_WIDGETS];
@@ -1537,7 +1521,7 @@ static struct ThemesScreen {
 	LScreen_Layout
 	struct LButton btnModern, btnClassic, btnNordic;
 	struct LButton btnCustom, btnBack;
-} ThemesScreen;
+} ThemesScreen CC_BIG_VAR;
 
 #define THEME_SCREEN_MAX_WIDGETS 5
 static struct LWidget* themes_widgets[THEME_SCREEN_MAX_WIDGETS];
@@ -1605,7 +1589,7 @@ static struct UpdatesScreen {
 	struct LLabel  lblYour, lblRel, lblDev, lblInfo, lblStatus;
 	int buildProgress, buildIndex;
 	cc_bool pendingFetch, release;
-} UpdatesScreen;
+} UpdatesScreen CC_BIG_VAR;
 
 #define UPDATESSCREEN_MAX_WIDGETS 12
 static struct LWidget* updates_widgets[UPDATESSCREEN_MAX_WIDGETS];
@@ -1677,11 +1661,10 @@ static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
 }
 
 static void UpdatesScreen_UpdateHeader(struct UpdatesScreen* s, cc_string* str) {
-	const char* message;
-	if ( s->release) message = "&eFetching latest release ";
-	if (!s->release) message = "&eFetching latest dev build ";
+	const char* message = s->release ? "release " : "dev build ";
 
-	String_Format2(str, "%c%c", message, Updater_Info.builds[s->buildIndex].name);
+	String_Format2(str, "&eFetching latest %c%c", 
+					message, Updater_Info.builds[s->buildIndex].name);
 }
 
 static void UpdatesScreen_DoFetch(struct UpdatesScreen* s) {

@@ -237,10 +237,15 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	*vertices = v;
 }
 
-#ifndef CC_BUILD_PS1
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+	/* These GFX backends have specialised implementations */
+#else
 static cc_bool gfx_hadFog;
+
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
+	gfx_rendering2D = true;
+
 	/* intentionally biased more towards positive Z to reduce 2D clipping issues on the DS */
 	Gfx_CalcOrthoMatrix(&ortho, (float)width, (float)height, -100.0f, 1000.0f);
 	Gfx_LoadMatrix(MATRIX_PROJ, &ortho);
@@ -249,19 +254,18 @@ void Gfx_Begin2D(int width, int height) {
 	Gfx_SetDepthTest(false);
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
-	
+
 	gfx_hadFog = Gfx_GetFog();
 	if (gfx_hadFog) Gfx_SetFog(false);
-	gfx_rendering2D = true;
 }
 
 void Gfx_End2D(void) {
+	gfx_rendering2D = false;
 	Gfx_SetDepthTest(true);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 	
 	if (gfx_hadFog) Gfx_SetFog(true);
-	gfx_rendering2D = false;
 }
 #endif
 
@@ -420,8 +424,6 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags) {
 	return maxSize == 0 || (width * height <= maxSize);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps);
-
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	return Gfx_CreateTexture2(bmp, bmp->width, flags, mipmaps);
 }
@@ -431,7 +433,7 @@ GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flag
 		/* Texture is being deliberately created and can be successfully created */
 		/* with non power of two dimensions. Typically used for UI textures */
 	} else if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
+		Process_Abort("Textures must have power of two dimensions");
 	}
 
 	if (Gfx.LostContext) return 0;
@@ -454,12 +456,6 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
-	Gfx_DeleteVb(vb);
-	*vb = Gfx_CreateVb(fmt, count);
-	return Gfx_LockVb(*vb, fmt, count);
-}
-
 static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
 
@@ -471,7 +467,7 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	{
 		if ((vb = Gfx_AllocStaticVb(fmt, count))) return vb;
 
-		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating static VB)");
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (allocating static VB)");
 	}
 }
 
@@ -483,7 +479,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	{
 		if ((vb = Gfx_AllocDynamicVb(fmt, maxVertices))) return vb;
 
-		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating dynamic VB)");
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (allocating dynamic VB)");
 	}
 }
 

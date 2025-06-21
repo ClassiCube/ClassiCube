@@ -157,6 +157,13 @@ static void ImprovedNoise_Init(cc_uint8* p, RNGState* rnd) {
 	}
 }
 
+/* Normally, calculating Grad involves a function call + switch. However, the table combinations
+  can be directly packed into a set of bit flags (where each 2 bit combination indicates either -1, 0 1).
+  This avoids needing to call another function that performs branching */
+#define X_FLAGS 0x46552222
+#define Y_FLAGS 0x2222550A
+#define Grad(hash, x, y) (((X_FLAGS >> (hash)) & 3) - 1) * (x) + (((Y_FLAGS >> (hash)) & 3) - 1) * (y);
+
 static float ImprovedNoise_Calc(const cc_uint8* p, float x, float y) {
 	int xFloor, yFloor, X, Y;
 	float u, v;
@@ -173,22 +180,16 @@ static float ImprovedNoise_Calc(const cc_uint8* p, float x, float y) {
 	v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
 	A = p[X] + Y; B = p[X + 1] + Y;
 
-	/* Normally, calculating Grad involves a function call. However, we can directly pack this table
-	(since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing
-	to call another function that performs branching */
-#define xFlags 0x46552222
-#define yFlags 0x2222550A
-
 	hash = (p[p[A]] & 0xF) << 1;
-	g22  = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
+	g22  = Grad(hash, x,     y); /* Grad(p[p[A], x,     y) */
 	hash = (p[p[B]] & 0xF) << 1;
-	g12  = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
+	g12  = Grad(hash, x - 1, y); /* Grad(p[p[B], x - 1, y) */
 	c1   = g22 + u * (g12 - g22);
 
 	hash = (p[p[A + 1]] & 0xF) << 1;
-	g21  = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
+	g21  = Grad(hash, x,     y - 1); /* Grad(p[p[A + 1], x,     y - 1) */
 	hash = (p[p[B + 1]] & 0xF) << 1;
-	g11  = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
+	g11  = Grad(hash, x - 1, y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
 	c2   = g21 + u * (g11 - g21);
 
 	return c1 + v * (c2 - c1);
@@ -264,7 +265,12 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 	}
 }
 
-#define STACK_FAST 8192
+#if CC_BUILD_MAXSTACK <= (32 * 1024)
+	#define STACK_FAST 512
+#else
+	#define STACK_FAST 8192
+#endif
+
 static void NotchyGen_FloodFill(int index, BlockRaw block) {
 	int* stack;
 	int stack_default[STACK_FAST]; /* avoid allocating memory if possible */
@@ -304,23 +310,38 @@ static void NotchyGen_CreateHeightmap(void) {
 	float hLow, hHigh, height;
 	int hIndex = 0, adjHeight;
 	int x, z;
-	struct CombinedNoise n1, n2;
-	struct OctaveNoise n3;
 
-	CombinedNoise_Init(&n1, &rnd, 8, 8);
-	CombinedNoise_Init(&n2, &rnd, 8, 8);	
-	OctaveNoise_Init(&n3, &rnd, 6);
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	struct NoiseBuffer { 
+		struct CombinedNoise n1, n2;
+		struct OctaveNoise n3;
+	};
+	void* mem = TempMem_Alloc(sizeof(struct NoiseBuffer));
+
+	struct NoiseBuffer* buf  = (struct NoiseBuffer*)mem;
+	struct CombinedNoise* n1 = &buf->n1;
+	struct CombinedNoise* n2 = &buf->n2;
+	struct OctaveNoise*   n3 = &buf->n3;
+#else
+	struct CombinedNoise _n1, *n1 = &_n1;
+	struct CombinedNoise _n2, *n2 = &_n2;
+	struct OctaveNoise   _n3, *n3 = &_n3;
+#endif
+
+	CombinedNoise_Init(n1, &rnd, 8, 8);
+	CombinedNoise_Init(n2, &rnd, 8, 8);	
+	OctaveNoise_Init(n3,   &rnd, 6);
 
 	Gen_CurrentState = "Building heightmap";
 	for (z = 0; z < World.Length; z++) {
 		Gen_CurrentProgress = (float)z / World.Length;
 
 		for (x = 0; x < World.Width; x++) {
-			hLow   = CombinedNoise_Calc(&n1, x * 1.3f, z * 1.3f) / 6 - 4;
+			hLow   = CombinedNoise_Calc(n1, x * 1.3f, z * 1.3f) / 6 - 4;
 			height = hLow;
 
-			if (OctaveNoise_Calc(&n3, (float)x, (float)z) <= 0) {
-				hHigh = CombinedNoise_Calc(&n2, x * 1.3f, z * 1.3f) / 5 + 6;
+			if (OctaveNoise_Calc(n3, (float)x, (float)z) <= 0) {
+				hHigh = CombinedNoise_Calc(n2, x * 1.3f, z * 1.3f) / 5 + 6;
 				height = max(hLow, hHigh);
 			}
 
@@ -544,10 +565,21 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 	int hIndex = 0, index;
 	BlockRaw above;
 	int x, y, z;
-	struct OctaveNoise n1, n2;
+#if CC_BUILD_MAXSTACK <= (16 * 1024)
+	struct NoiseBuffer { 
+		struct OctaveNoise n1, n2;
+	};
+	struct NoiseBuffer* buf = TempMem_Alloc(sizeof(struct NoiseBuffer));
+	struct OctaveNoise* n1 = &buf->n1;
+	struct OctaveNoise* n2 = &buf->n2;
+#else
+	struct OctaveNoise _n1, _n2;
+	struct OctaveNoise* n1 = &_n1;
+	struct OctaveNoise* n2 = &_n2;
+#endif
 
-	OctaveNoise_Init(&n1, &rnd, 8);
-	OctaveNoise_Init(&n2, &rnd, 8);
+	OctaveNoise_Init(n1, &rnd, 8);
+	OctaveNoise_Init(n2, &rnd, 8);
 
 	Gen_CurrentState = "Creating surface";
 	for (z = 0; z < World.Length; z++) {
@@ -561,10 +593,10 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 			above = y >= World.MaxY ? BLOCK_AIR : Gen_Blocks[index + World.OneY];
 
 			/* TODO: update heightmap */
-			if (above == BLOCK_STILL_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
+			if (above == BLOCK_STILL_WATER && (OctaveNoise_Calc(n2, (float)x, (float)z) > 12)) {
 				Gen_Blocks[index] = BLOCK_GRAVEL;
 			} else if (above == BLOCK_AIR) {
-				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(&n1, (float)x, (float)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;
+				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(n1, (float)x, (float)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;
 			}
 		}
 	}
@@ -809,9 +841,13 @@ int TreeGen_Grow(int treeX, int treeY, int treeZ, int height, IVec3* coords, Blo
 		}
 	}
 
-	/* then place trunk */
+	/* place trunk */
 	for (y = 0; y < height - 1; y++) {
 		TreeGen_Place(treeX, treeY + y, treeZ, BLOCK_LOG);
 	}
+
+	/* then place dirt */
+	TreeGen_Place(treeX, treeY - 1, treeZ, BLOCK_DIRT);
+
 	return count;
 }

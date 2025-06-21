@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* 
 Implements all of the screens/menus in the launcher
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct LWidget;
 struct LScreen;

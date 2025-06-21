@@ -4,7 +4,7 @@
 CC_BEGIN_HEADER
 
 /* Contains all 2D non-menu screen implementations.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
 struct InputDevice;
@@ -27,6 +27,7 @@ void Screen_NullFunc(void* screen);
 void Screen_NullUpdate(void* screen, float delta);
 
 void InventoryScreen_Show(void);
+void InventoryScreen_Hide(void);
 void HUDScreen_Show(void);
 void LoadingScreen_Show(const cc_string* title, const cc_string* message);
 void GeneratingScreen_Show(void);

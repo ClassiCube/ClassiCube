@@ -5,7 +5,7 @@ CC_BEGIN_HEADER
 
 /* 
 Provides various utility functions
-Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 struct Bitmap;
@@ -13,7 +13,7 @@ struct StringsBuffer;
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
 /* NOTE: TimeMS and DateTime_CurrentUTC() should almost always be used instead. */
 /* This struct should only be used when actually needed. (e.g. log message time) */
-struct DateTime {
+struct cc_datetime {
 	int year;   /* Year,   ranges from 0 to 65535 */
 	int month;  /* Month,  ranges from 1 to 12 */
 	int day;    /* Day,    ranges from 1 to 31 */
@@ -76,9 +76,6 @@ CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const cc_string* key,
 CC_NOINLINE STRING_REF cc_string EntryList_UNSAFE_Get(struct StringsBuffer* list, const cc_string* key, char separator);
 /* Finds the index of the entry whose key caselessly equals the given key. */
 CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separator);
-
-cc_bool DirectUrl_Claims(const cc_string* STRING_REF input, cc_string* addr, cc_string* user, cc_string* mppass);
-cc_bool DirectUrl_ExtractAddress(const cc_string* STRING_REF addr, cc_string* ip, cc_string* port, int* portNum);
 
 CC_END_HEADER
 #endif

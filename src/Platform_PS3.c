@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined PLAT_PS3
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -35,9 +36,10 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
+const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
 const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
+const cc_result ReturnCode_SocketDropped    = NET_EPIPE;
 
 const char* Platform_AppNameSuffix = " PS3";
 cc_bool Platform_ReadonlyFilesystem;
@@ -59,7 +61,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return sec + UNIX_EPOCH_SECONDS;
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct timeval cur; 
 	struct tm loc_time;
 	gettimeofday(&cur, NULL);
@@ -88,6 +90,16 @@ cc_uint64 Stopwatch_Measure(void) {
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return (end - beg) / 1000;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -234,13 +246,13 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	
 	int res = sysThreadCreate(thread, ExecThread, (void*)func,
 			0, stackSize, THREAD_JOINABLE, name);
-	if (res) Logger_Abort2(res, "Creating thread");
+	if (res) Process_Abort2(res, "Creating thread");
 }
 
 void Thread_Detach(void* handle) {
 	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)handle;
 	int res = sysThreadDetach(*thread);
-	if (res) Logger_Abort2(res, "Detaching thread");
+	if (res) Process_Abort2(res, "Detaching thread");
 	Mem_Free(thread);
 }
 
@@ -248,7 +260,7 @@ void Thread_Join(void* handle) {
 	u64 retVal;
 	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)handle;
 	int res = sysThreadJoin(*thread, &retVal);
-	if (res) Logger_Abort2(res, "Joining thread");
+	if (res) Process_Abort2(res, "Joining thread");
 	Mem_Free(thread);
 }
 
@@ -258,27 +270,27 @@ void* Mutex_Create(const char* name) {
 	
 	sys_mutex_t* mutex = (sys_mutex_t*)Mem_Alloc(1, sizeof(sys_mutex_t), "mutex");
 	int res = sysMutexCreate(mutex, &attr);
-	if (res) Logger_Abort2(res, "Creating mutex");
+	if (res) Process_Abort2(res, "Creating mutex");
 	return mutex;
 }
 
 void Mutex_Free(void* handle) {
 	sys_mutex_t* mutex = (sys_mutex_t*)handle;
 	int res = sysMutexDestroy(*mutex);
-	if (res) Logger_Abort2(res, "Destroying mutex");
+	if (res) Process_Abort2(res, "Destroying mutex");
 	Mem_Free(mutex);
 }
 
 void Mutex_Lock(void* handle) {
 	sys_mutex_t* mutex = (sys_mutex_t*)handle;
 	int res = sysMutexLock(*mutex, 0);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	if (res) Process_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	sys_mutex_t* mutex = (sys_mutex_t*)handle;
 	int res = sysMutexUnlock(*mutex);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(const char* name) {
@@ -288,7 +300,7 @@ void* Waitable_Create(const char* name) {
 	
 	sys_sem_t* sem = (sys_sem_t*)Mem_Alloc(1, sizeof(sys_sem_t), "waitable");
 	int res = sysSemCreate(sem, &attr, 0, 1000000);
-	if (res) Logger_Abort2(res, "Creating waitable");
+	if (res) Process_Abort2(res, "Creating waitable");
 	
 	return sem;
 }
@@ -297,37 +309,50 @@ void Waitable_Free(void* handle) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 
 	int res = sysSemDestroy(*sem);
-	if (res) Logger_Abort2(res, "Destroying waitable");
+	if (res) Process_Abort2(res, "Destroying waitable");
 	Mem_Free(sem);
 }
 
 void Waitable_Signal(void* handle) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 	int res = sysSemPost(*sem, 1);
-	if (res) Logger_Abort2(res, "Signalling event");
+	if (res) Process_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 	int res = sysSemWait(*sem, 0);
-	if (res) Logger_Abort2(res, "Waitable wait");
+	if (res) Process_Abort2(res, "Waitable wait");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	sys_sem_t* sem = (sys_sem_t*)handle;
 	int res = sysSemWait(*sem, milliseconds * 1000);
-	if (res) Logger_Abort2(res, "Waitable wait for");
+	if (res) Process_Abort2(res, "Waitable wait for");
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in v4;
-};
-static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct net_hostent* res = netGetHostByName(host);
 	struct sockaddr_in* addr4;
 	if (!res) return net_h_errno;
@@ -338,39 +363,22 @@ static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numVal
 	
 	// each address pointer is only 4 bytes long
 	u32* addr_list = (u32*)res->h_addr_list;
-	char* src_addr;
 	int i;
 	
 	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
 	{
-		src_addr = (char*)addr_list[i];
+		char* src_addr = (char*)addr_list[i];
 		if (!src_addr) break;
 		addrs[i].size = sizeof(struct sockaddr_in);
+
 		addr4 = (struct sockaddr_in*)addrs[i].data;
 		addr4->sin_family = AF_INET;
 		addr4->sin_port   = htons(port);
 		addr4->sin_addr   = *(struct in_addr*)src_addr;
 	}
+
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-}
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-
-	if (inet_aton(str, &addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(*addr4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {

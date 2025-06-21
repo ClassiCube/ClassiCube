@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_XBOX
+
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "Funcs.h"
@@ -19,9 +21,10 @@
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
+const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " XBox";
 cc_bool Platform_ReadonlyFilesystem;
@@ -53,7 +56,7 @@ TimeMS DateTime_CurrentUTC(void) {
 	return FileTime_TotalSecs(ft.QuadPart);
 }
 
-void DateTime_CurrentLocal(struct DateTime* t) {
+void DateTime_CurrentLocal(struct cc_datetime* t) {
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 
@@ -79,6 +82,16 @@ cc_uint64 Stopwatch_Measure(void) {
 static void Stopwatch_Init(void) {
 	ULONGLONG freq = KeQueryPerformanceFrequency();
 	sw_freqDiv     = freq;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Crash handling----------------------------------------------------*
+*#########################################################################################################################*/
+void CrashHandler_Install(void) { }
+
+void Process_Abort2(cc_result result, const char* raw_msg) {
+	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -234,7 +247,7 @@ static DWORD WINAPI ExecThread(void* param) {
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
 	HANDLE thread = CreateThread(NULL, stackSize, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
+	if (!thread) Process_Abort2(GetLastError(), "Creating thread");
 
 	*handle = thread;
 	NtResumeThread(thread, NULL);
@@ -242,7 +255,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 
 void Thread_Detach(void* handle) {
 	NTSTATUS status = NtClose((HANDLE)handle);
-	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing thread handle");
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Freeing thread handle");
 }
 
 void Thread_Join(void* handle) {
@@ -273,13 +286,13 @@ void* Waitable_Create(const char* name) {
 	HANDLE handle;
 	NTSTATUS status = NtCreateEvent(&handle, NULL, SynchronizationEvent, false);
 
-	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Creating waitable");
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Creating waitable");
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
 	NTSTATUS status = NtClose((HANDLE)handle);
-	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing waitable");
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Freeing waitable");
 }
 
 void Waitable_Signal(void* handle) { 
@@ -301,16 +314,29 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	char str[NATIVE_STR_LEN];
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
 	int i = 0;
-	
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
 
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -319,7 +345,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
 
-	int res = lwip_getaddrinfo(str, portRaw, &hints, &result);
+	int res = lwip_getaddrinfo(host, portRaw, &hints, &result);
 	if (res == EAI_FAIL) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 

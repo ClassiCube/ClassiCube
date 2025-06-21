@@ -11,14 +11,12 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Logger.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "VirtualKeyboard.h"
 #include <psxapi.h>
 #include <psxetc.h>
-#include <psxgte.h>
 #include <psxgpu.h>
 #include <psxpad.h>
+#include "../misc/ps1/ps1defs.h"
 
 #define SCREEN_XRES	320
 #define SCREEN_YRES	240
@@ -26,9 +24,12 @@
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
-static DISPENV disp;
+static int gpu_video_mode;
 
-void Window_PreInit(void) { }
+void Window_PreInit(void) {
+	gpu_video_mode = (GPU_GP1 >> 20) & 1;
+}
+
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_XRES;
 	DisplayInfo.Height = SCREEN_YRES;
@@ -45,22 +46,60 @@ void Window_Init(void) {
 
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 }
 
 void Window_Free(void) { }
 
+static void InitScreen(void) {
+	int vid  = gpu_video_mode;
+	int mode = (vid << 3) | GP1_HOR_RES_320 | GP1_VER_RES_240;
+	int yMid = vid ? 0xA3 : 0x88; // PAL has more vertical lines
+
+	int x1 = 0x260;
+	int x2 = 0x260 + 320 * 8;
+	int y1 = yMid - 120;
+	int y2 = yMid + 120;
+
+	int hor_range = (x1 & 0xFFF) | ((x2 & 0xFFF) << 12);
+	int ver_range = (y1 & 0x3FF) | ((y2 & 0x3FF) << 10);
+
+	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS  | GP1_CMD_DISPLAY_ADDRESS_XY(0, 0);
+	GPU_GP1 = GP1_CMD_HORIZONTAL_RANGE | hor_range;
+	GPU_GP1 = GP1_CMD_VERTICAL_RANGE   | ver_range;
+	GPU_GP1 = GP1_CMD_VIDEO_MODE       | mode;
+	GPU_GP1 = GP1_CMD_DISPLAY_ACTIVE   | GP1_DISPLAY_ENABLED;
+
+	GPU_GP1 = GP1_CMD_DMA_MODE | GP1_DMA_CPU_TO_GP0;
+}
+
+// Resets screen to an initial grey colour
+static void ClearScreen(void)
+{
+	for (int i = 0; i < 10000; i++) 
+	{
+		if (GPU_GP1 & GPU_STATUS_CMD_READY) break;
+	}
+
+	GPU_GP0 = PACK_RGBC(0xCC, 0xCC, 0xCC, GP0_CMD_MEM_FILL);
+	GPU_GP0 = GP0_CMD_FILL_XY(0, 0);
+	GPU_GP0 = GP0_CMD_FILL_WH(320, 200);
+}
+extern void Gfx_ResetGPU(void);
+
 void Window_Create2D(int width, int height) {
-	ResetGraph(0);
+	Gfx_ResetGPU();
 	launcherMode = true;
 
-	SetDefDispEnv(&disp, 0, 0, SCREEN_XRES, SCREEN_YRES);
-	PutDispEnv(&disp);
-	SetDispMask(1);
+	InitScreen();
+	ClearScreen();
 }
 
 void Window_Create3D(int width, int height) { 
-	ResetGraph(0);
-	launcherMode = false; 
+	Gfx_ResetGPU();
+	launcherMode = false;
+
+	InitScreen();
 }
 
 void Window_Destroy(void) { }
@@ -98,6 +137,30 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+// 1 = Circle, 2 = Cross, 3 = Square, 4 = Triangle
+static const BindMapping pad_defaults[BIND_COUNT] = {
+	[BIND_LOOK_UP]      = { CCPAD_4, CCPAD_UP },
+	[BIND_LOOK_DOWN]    = { CCPAD_4, CCPAD_DOWN },
+	[BIND_LOOK_LEFT]    = { CCPAD_4, CCPAD_LEFT },
+	[BIND_LOOK_RIGHT]   = { CCPAD_4, CCPAD_RIGHT },
+	[BIND_FORWARD]      = { CCPAD_UP,   0 },  
+	[BIND_BACK]         = { CCPAD_DOWN, 0 },
+	[BIND_LEFT]         = { CCPAD_LEFT, 0 },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+	[BIND_INVENTORY]    = { CCPAD_3, 0 },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R }, 
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L,  0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_R,  0 },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL, 0 }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR, 0 }
+};
+
 static char pad_buff[2][34];
 
 void Gamepads_Init(void) {
@@ -159,7 +222,7 @@ static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
 
 void Gamepads_Process(float delta) {
 	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
-	int port = Gamepad_Connect(0x503, PadBind_Defaults);
+	int port = Gamepad_Connect(0x503E, pad_defaults);
 	
 	if (pad->stat == 0) ProcessPadInput(port, pad, delta);
 }
@@ -168,6 +231,8 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+extern void Gfx_TransferToVRAM(int x, int y, int w, int h, void* pixels);
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
@@ -175,14 +240,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	RECT rect;
-	rect.x = 0;
-	rect.y = 0;
-	rect.w = SCREEN_XRES;
-	rect.h = SCREEN_YRES;
+	// Fix not drawing in pcsx-redux software mode
+	GPU_GP0 = PACK_RGBC(0, 0, 0, GP0_CMD_MEM_FILL);
+	GPU_GP0 = GP0_CMD_FILL_XY(0, 0);
+	GPU_GP0 = GP0_CMD_FILL_WH(1, 1);
 
-	LoadImage(&rect, bmp->scan0);
-	DrawSync(0);
+	Gfx_TransferToVRAM(0, 0, SCREEN_XRES, SCREEN_YRES, bmp->scan0);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
@@ -193,9 +256,19 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Close(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	kb_tileWidth  = KB_TILE_SIZE / 2;
+	kb_tileHeight = KB_TILE_SIZE / 2;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

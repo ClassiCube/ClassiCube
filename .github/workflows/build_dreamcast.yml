@@ -13,9 +13,10 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/kos-builds/kos-dc:sha-656a397-14.1.0
+      image: ghcr.io/kos-builds/kos-dc:sha-20149ee-14.2.0
     steps:
       - uses: actions/checkout@v4
       - name: Compile Dreamcast build
@@ -42,6 +43,12 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-dc.cdi'
           DEST_NAME: 'ClassiCube-dc.cdi'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-dc.iso'
+          DEST_NAME: 'ClassiCube-dc.iso'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}

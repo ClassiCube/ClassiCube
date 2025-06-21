@@ -8,7 +8,7 @@ CC_BEGIN_HEADER
 
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
-   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 struct Entity;
 struct AABB;
@@ -77,8 +77,6 @@ struct Model {
 	/* e.g. for HumanoidModel, when legs are at the peak of their swing, whole model is moved slightly down */
 	cc_bool bobbing;
 	cc_bool usesSkin, calcHumanAnims, usesHumanSkin, pushes;
-
-	float gravity; Vec3 drag, groundFriction;
 
 	/* Returns the transformation matrix applied to the model when rendering. */
 	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */

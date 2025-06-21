@@ -1,5 +1,11 @@
 name: Build latest (Android2)
-on: [push]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-android
@@ -7,19 +13,29 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
     container:
       image: ghcr.io/saschpe/android-ndk:34-jdk17.0.8_7-ndk25.2.9519653-cmake3.22.1
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Retrieve dependencies
+        shell: bash
+        run: |
+          mkdir build-tools
+          wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/build-tools.zip
+          unzip build-tools.zip -d build-tools
+          chmod +x build-tools/aapt
+          chmod +x build-tools/dx
+          chmod +x build-tools/zipalign
 
       - name: Compile android builds
         shell: bash
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
-          DROID_FLAGS: "-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
+          DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
           DROID_LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
@@ -31,20 +47,13 @@ jobs:
           NDK_ROOT="/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"
           TOOLS_ROOT=$ROOT_DIR/build-tools
           SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
-          
-          mkdir build-tools
-          wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/build-tools.zip
-          unzip build-tools.zip -d build-tools
-          chmod +x build-tools/aapt
-          chmod +x build-tools/dx
-          chmod +x build-tools/zipalign
 
           cd $ROOT_DIR/src
-          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS -march=armv5 $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_16
-          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_32
-          $NDK_ROOT/aarch64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_64
-          $NDK_ROOT/i686-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_32
-          $NDK_ROOT/x86_64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_64
+          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $COMMON_FLAGS $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_16
+          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_32
+          $NDK_ROOT/aarch64-linux-android21-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_64
+          $NDK_ROOT/i686-linux-android21-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_32
+          $NDK_ROOT/x86_64-linux-android21-clang *.c $COMMON_FLAGS $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_64
           
           cd $ROOT_DIR/android/app/src/main
           # copy required native libraries
@@ -71,18 +80,26 @@ jobs:
           echo -n "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > debug.keystore
           
           # compile the multiple .class files into one .dex file
-          $TOOLS_ROOT/dx --dex --output=obj/classes.dex ./obj
+          $TOOLS_ROOT/dx --dex --output=classes.dex ./obj
           # create initial .apk with packaged version of resources
-          $TOOLS_ROOT/aapt package -f -M AndroidManifest.xml -S res -F obj/cc-unsigned.apk -I $SDK_ROOT/android.jar
+          $TOOLS_ROOT/aapt package -f -M AndroidManifest.xml -S res -F cc-unsigned.apk -I $SDK_ROOT/android.jar
           # and add all the required files
-          cp obj/classes.dex classes.dex
-          $TOOLS_ROOT/aapt add -f obj/cc-unsigned.apk classes.dex lib/armeabi/libclassicube.so lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
+          $TOOLS_ROOT/aapt add -f cc-unsigned.apk classes.dex lib/armeabi/libclassicube.so lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
+          
           # sign the apk with debug key (https://stackoverflow.com/questions/16711233/)
-          cp obj/cc-unsigned.apk obj/cc-signed.apk
-          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore debug.keystore -storepass android -keypass android obj/cc-signed.apk androiddebugkey
+          # Note per https://developer.android.com/tools/zipalign
+          # - if using apksigner, zipalign must be called before apksigner
+          # - if using jarsigner, zipalign must be called after jarsigner
+          $TOOLS_ROOT/zipalign -f 4 cc-unsigned.apk cc-signed.apk
+          $TOOLS_ROOT/apksigner sign --ks debug.keystore --ks-pass pass:android cc-signed.apk
+          cp cc-signed.apk $ROOT_DIR/src/cc.apk
+
+          # old v1 only version (doesn't work properly now)
+          #cp cc-unsigned.apk cc-signed.apk
+          #jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore debug.keystore -storepass android -keypass android cc-signed.apk androiddebugkey
           # jarsigner -verbose
           # create aligned .apk file
-          $TOOLS_ROOT/zipalign -f 4 obj/cc-signed.apk $ROOT_DIR/src/cc.apk
+          #$TOOLS_ROOT/zipalign -f 4 cc-signed.apk $ROOT_DIR/src/cc.apk
 
 
       - uses: ./.github/actions/notify_failure
@@ -96,4 +113,11 @@ jobs:
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'src/cc.apk'
-          DEST_NAME: 'ClassiCube.apk'
+          DEST_NAME: 'cc.apk'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'android'

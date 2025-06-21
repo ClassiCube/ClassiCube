@@ -22,14 +22,12 @@
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
-static float CalcBlendFactor(float x) {
-	float blend = -0.13f + 0.28f * ((float)Math_Log2(x) * 0.17329f);
-	if (blend < 0.0f) blend = 0.0f;
-	if (blend > 1.0f) blend = 1.0f;
-	return blend;
+static CC_INLINE int EnvRenderer_AxisSize(void) {
+	if (Gfx.Limitations & GFX_LIMIT_MAX_VERTEX_SIZE) return 8;
+
+	return EnvRenderer_Legacy ? 128 : 2048;
 }
 
-#define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 2048)
 /* Returns the number of vertices needed to subdivide a quad */
 static int CalcNumVertices(int axis1Len, int axis2Len) {
 	int axisSize = EnvRenderer_AxisSize();
@@ -40,6 +38,21 @@ static int CalcNumVertices(int axis1Len, int axis2Len) {
 /*########################################################################################################################*
 *------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
+static PackedCol fog_color;
+
+static float CalcBlendFactor(float x) {
+	float blend = -0.13f + 0.28f * ((float)Math_Log2(x) * 0.17329f);
+	if (blend < 0.0f) blend = 0.0f;
+	if (blend > 1.0f) blend = 1.0f;
+	return blend;
+}
+
+static CC_INLINE void UpdateFogBlend(void) {
+	float blend = CalcBlendFactor((float)Game_ViewDistance);
+	/* Blend fog and sky together */
+	fog_color   = PackedCol_Lerp(Env.FogCol, Env.SkyCol, blend);
+}
+
 static cc_bool CameraInsideBlock(BlockID block, IVec3* coords) {
 	struct AABB blockBB;
 	Vec3 pos;
@@ -50,7 +63,7 @@ static cc_bool CameraInsideBlock(BlockID block, IVec3* coords) {
 	return AABB_ContainsPoint(&blockBB, &Camera.CurrentPos);
 }
 
-static void CalcFog(float* density, PackedCol* color) {
+static PackedCol CalcFog(float* density) {
 	IVec3 coords;
 	BlockID block;
 	float blend;
@@ -60,12 +73,10 @@ static void CalcFog(float* density, PackedCol* color) {
 
 	if (Blocks.FogDensity[block] && CameraInsideBlock(block, &coords)) {
 		*density = Blocks.FogDensity[block];
-		*color   = Blocks.FogCol[block];
+		return Blocks.FogCol[block];
 	} else {
 		*density = 0.0f;
-		/* Blend fog and sky together */
-		blend    = CalcBlendFactor((float)Game_ViewDistance);
-		*color   = PackedCol_Lerp(Env.FogCol, Env.SkyCol, blend);
+		return fog_color;
 	}
 }
 
@@ -117,7 +128,7 @@ void EnvRenderer_UpdateFog(void) {
 	PackedCol fogColor;
 	if (!World.Loaded) return;
 
-	CalcFog(&fogDensity, &fogColor);
+	fogColor = CalcFog(&fogDensity);
 	Gfx_ClearColor(fogColor);
 
 	if (EnvRenderer_Minimal) {
@@ -133,21 +144,6 @@ void EnvRenderer_UpdateFog(void) {
 *#########################################################################################################################*/
 static GfxResourceID clouds_vb, clouds_tex;
 static int clouds_vertices;
-
-void EnvRenderer_RenderClouds(void) {
-	float offset;
-	if (!clouds_vb || Env.CloudsHeight < -2000) return;
-	offset = (float)(Game.Time / 2048.0f * 0.6f * Env.CloudsSpeed);
-
-	Gfx_EnableTextureOffset(offset, 0);
-	Gfx_SetAlphaTest(true);
-	Gfx_BindTexture(clouds_tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_BindVb(clouds_vb);
-	Gfx_DrawVb_IndexedTris(clouds_vertices);
-	Gfx_SetAlphaTest(false);
-	Gfx_DisableTextureOffset();
-}
 
 static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, struct VertexTextured* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
@@ -176,24 +172,45 @@ static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, struct VertexText
 	}
 }
 
-static void UpdateClouds(void) {
+static CC_NOINLINE void BuildClouds(void) {
 	struct VertexTextured* data;
 	int extent;
 	int x1, z1, x2, z2;
-	
-	Gfx_DeleteVb(&clouds_vb);
-	if (!World.Loaded || Gfx.LostContext) return;
-	if (EnvRenderer_Minimal) return;
+
+	if (!World.Loaded || EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
 	x1 = -extent; x2 = World.Width  + extent;
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&clouds_vb,
+	clouds_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, clouds_vertices);
+	data = (struct VertexTextured*)Gfx_LockVb(clouds_vb,
 										VERTEX_FORMAT_TEXTURED, clouds_vertices);
+
 	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, data);
 	Gfx_UnlockVb(clouds_vb);
+}
+
+void EnvRenderer_RenderClouds(void) {
+	float offset;
+	if (Env.CloudsHeight < -2000 || !clouds_tex) return;
+
+	if (!clouds_vb) {
+		BuildClouds();
+		if (!clouds_vb) return;
+	}
+	
+	offset = (float)(Game.Time / 2048.0f * 0.6f * Env.CloudsSpeed);
+
+	Gfx_EnableTextureOffset(offset, 0);
+	Gfx_SetAlphaTest(true);
+	Gfx_BindTexture(clouds_tex);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindVb(clouds_vb);
+	Gfx_DrawVb_IndexedTris(clouds_vertices);
+	Gfx_SetAlphaTest(false);
+	Gfx_DisableTextureOffset();
 }
 
 
@@ -202,31 +219,6 @@ static void UpdateClouds(void) {
 *#########################################################################################################################*/
 static GfxResourceID sky_vb;
 static int sky_vertices;
-
-void EnvRenderer_RenderSky(void) {
-	struct Matrix m;
-	float skyY, normY, dy;
-	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
-
-	normY = (float)World.Height + 8.0f;
-	skyY  = max(Camera.CurrentPos.y + 8.0f, normY);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_BindVb(sky_vb);
-
-	if (skyY == normY) {
-		Gfx_DrawVb_IndexedTris(sky_vertices);
-	} else {
-		m  = Gfx.View;
-		dy = skyY - normY; 
-		/* inlined Y translation matrix multiply */
-		m.row4.x += dy * m.row2.x; m.row4.y += dy * m.row2.y;
-		m.row4.z += dy * m.row2.z; m.row4.w += dy * m.row2.w;
-
-		Gfx_LoadMatrix(MATRIX_VIEW, &m);
-		Gfx_DrawVb_IndexedTris(sky_vertices);
-		Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
-	}
-}
 
 static void DrawSkyY(int x1, int z1, int x2, int z2, int y, struct VertexColoured* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
@@ -248,25 +240,55 @@ static void DrawSkyY(int x1, int z1, int x2, int z2, int y, struct VertexColoure
 	}
 }
 
-static void UpdateSky(void) {
+static CC_NOINLINE void BuildSky(void) {
 	struct VertexColoured* data;
 	int extent, height;
 	int x1, z1, x2, z2;
 
-	Gfx_DeleteVb(&sky_vb);
-	if (!World.Loaded || Gfx.LostContext) return;
-	if (EnvRenderer_Minimal) return;
+	if (!World.Loaded || EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
 	x1 = -extent; x2 = World.Width  + extent;
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data   = (struct VertexColoured*)Gfx_RecreateAndLockVb(&sky_vb,
+	sky_vb = Gfx_CreateVb(VERTEX_FORMAT_COLOURED, sky_vertices);
+	data   = (struct VertexColoured*)Gfx_LockVb(sky_vb,
 										VERTEX_FORMAT_COLOURED, sky_vertices);
+
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
 	DrawSkyY(x1, z1, x2, z2, height, data);
 	Gfx_UnlockVb(sky_vb);
+}
+
+void EnvRenderer_RenderSky(void) {
+	struct Matrix m;
+	float skyY, normY, dy;
+	if (EnvRenderer_ShouldRenderSkybox()) return;
+
+	if (!sky_vb) {
+		BuildSky();
+		if (!sky_vb) return;
+	}
+
+	normY = (float)World.Height + 8.0f;
+	skyY  = max(Camera.CurrentPos.y + 8.0f, normY);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	Gfx_BindVb(sky_vb);
+
+	if (skyY == normY) {
+		Gfx_DrawVb_IndexedTris(sky_vertices);
+	} else {
+		m  = Gfx.View;
+		dy = skyY - normY; 
+		/* inlined Y translation matrix multiply */
+		m.row4.x += dy * m.row2.x; m.row4.y += dy * m.row2.y;
+		m.row4.z += dy * m.row2.z; m.row4.w += dy * m.row2.w;
+
+		Gfx_LoadMatrix(MATRIX_VIEW, &m);
+		Gfx_DrawVb_IndexedTris(sky_vertices);
+		Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
+	}
 }
 
 /*########################################################################################################################*
@@ -276,7 +298,7 @@ static GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 cc_bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
-static void AllocateSkyboxVB(void) {
+static CC_NOINLINE void BuildSkybox(void) {
 	static const struct VertexTextured vertices[SKYBOX_COUNT] = {
 		/* Front quad */
 		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
@@ -300,8 +322,10 @@ static void AllocateSkyboxVB(void) {
 	struct VertexTextured* data;
 	int i;
 
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&skybox_vb,
+	skybox_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	data = (struct VertexTextured*)Gfx_LockVb(skybox_vb,
 										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+
 	Mem_Copy(data, vertices, sizeof(vertices));
 	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
 	Gfx_UnlockVb(skybox_vb);
@@ -311,7 +335,11 @@ void EnvRenderer_RenderSkybox(void) {
 	struct Matrix m, rotX, rotY, view;
 	float rotTime;
 	Vec3 pos;
-	if (!skybox_vb) AllocateSkyboxVB();
+
+	if (!skybox_vb) {
+		BuildSkybox();
+		if (!skybox_vb) return;
+	}
 
 	Gfx_SetDepthWrite(false);
 	Gfx_BindTexture(skybox_tex);
@@ -567,34 +595,6 @@ static int sides_vertices, edges_vertices;
 static cc_bool sides_fullBright, edges_fullBright;
 static TextureLoc edges_lastTexLoc, sides_lastTexLoc;
 
-static void RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, int count) {
-	if (!vb) return;
-
-	Gfx_SetupAlphaState(Blocks.Draw[block]);
-	Gfx_EnableMipmaps();
-
-	Gfx_BindTexture(tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_BindVb(vb);
-	Gfx_DrawVb_IndexedTris(count);
-
-	Gfx_DisableMipmaps();
-	Gfx_RestoreAlphaState(Blocks.Draw[block]);
-}
-
-void EnvRenderer_RenderMapSides(void) {
-	RenderBorders(Env.SidesBlock, sides_vb, sides_tex, sides_vertices);
-}
-
-void EnvRenderer_RenderMapEdges(void) {
-	/* Do not draw water when player cannot see it */
-	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps */
-	int yVisible = min(0, Env_SidesHeight);
-	if (Camera.CurrentPos.y < yVisible && sides_vb) return;
-
-	RenderBorders(Env.EdgeBlock, edges_vb, edges_tex, edges_vertices);
-}
-
 static void MakeBorderTex(GfxResourceID* texId, BlockID block) {
 	TextureLoc loc = Block_Tex(block, FACE_YMAX);
 	if (Gfx.LostContext) return;
@@ -696,7 +696,7 @@ static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol color
 	*vertices = v;
 }
 
-static void UpdateMapSides(void) {
+static CC_NOINLINE void BuildMapSides(void) {
 	Rect2D rects[4], r;
 	BlockID block;
 	PackedCol color;
@@ -704,8 +704,7 @@ static void UpdateMapSides(void) {
 	int i;
 	struct VertexTextured* data;
 
-	Gfx_DeleteVb(&sides_vb);
-	if (!World.Loaded || Gfx.LostContext) return;
+	if (!World.Loaded) return;
 	block = Env.SidesBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
@@ -721,7 +720,9 @@ static void UpdateMapSides(void) {
 	sides_vertices +=     CalcNumVertices(World.Width, World.Length);  /* YQuads beneath map */
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&sides_vb,
+
+	sides_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, sides_vertices);
+	data = (struct VertexTextured*)Gfx_LockVb(sides_vb,
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
 	sides_fullBright = Blocks.Brightness[block];
@@ -747,7 +748,7 @@ static void UpdateMapSides(void) {
 	Gfx_UnlockVb(sides_vb);
 }
 
-static void UpdateMapEdges(void) {
+static CC_NOINLINE void BuildMapEdges(void) {
 	Rect2D rects[4], r;
 	BlockID block;
 	PackedCol color;
@@ -755,8 +756,7 @@ static void UpdateMapEdges(void) {
 	int i;
 	struct VertexTextured* data;
 
-	Gfx_DeleteVb(&edges_vb);
-	if (!World.Loaded || Gfx.LostContext) return;
+	if (!World.Loaded) return;
 	block = Env.EdgeBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
@@ -767,7 +767,9 @@ static void UpdateMapEdges(void) {
 		r = rects[i];
 		edges_vertices += CalcNumVertices(r.width, r.height); /* YPlanes outside */
 	}
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&edges_vb,
+
+	edges_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, edges_vertices);
+	data = (struct VertexTextured*)Gfx_LockVb(edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
 	edges_fullBright = Blocks.Brightness[block];
@@ -781,6 +783,41 @@ static void UpdateMapEdges(void) {
 			Borders_HorOffset(block), Borders_YOffset(block), &data);
 	}
 	Gfx_UnlockVb(edges_vb);
+}
+
+static void RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, int count) {
+	Gfx_SetupAlphaState(Blocks.Draw[block]);
+	Gfx_EnableMipmaps();
+
+	Gfx_BindTexture(tex);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindVb(vb);
+	Gfx_DrawVb_IndexedTris(count);
+
+	Gfx_DisableMipmaps();
+	Gfx_RestoreAlphaState(Blocks.Draw[block]);
+}
+
+void EnvRenderer_RenderMapSides(void) {
+	if (!sides_vb) {
+		BuildMapSides();
+		if (!sides_vb) return;
+	}
+
+	RenderBorders(Env.SidesBlock, sides_vb, sides_tex, sides_vertices);
+}
+
+void EnvRenderer_RenderMapEdges(void) {
+	/* Do not draw water when player cannot see it */
+	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps */
+	int yVisible = min(0, Env_SidesHeight);
+	if (Camera.CurrentPos.y < yVisible && sides_vb) return;
+
+	if (!edges_vb) {
+		BuildMapEdges();
+		if (!edges_vb) return;
+	}
+	RenderBorders(Env.EdgeBlock, edges_vb, edges_tex, edges_vertices);
 }
 
 
@@ -808,17 +845,24 @@ static void RainPngProcess(struct Stream* stream, const cc_string* name) {
 static struct TextureEntry rain_entry = { "rain.png", RainPngProcess };
 
 
-static void DeleteVbs(void) {
-	Gfx_DeleteVb(&sky_vb);
-	Gfx_DeleteVb(&clouds_vb);
-	Gfx_DeleteVb(&skybox_vb);
-	Gfx_DeleteVb(&sides_vb);
-	Gfx_DeleteVb(&edges_vb);
-	Gfx_DeleteDynamicVb(&weather_vb);
+static void DeleteSkyVB(void)     { Gfx_DeleteVb(&sky_vb); }
+static void DeleteCloudsVB(void)  { Gfx_DeleteVb(&clouds_vb); }
+static void DeleteSkyboxVB(void)  { Gfx_DeleteVb(&skybox_vb); }
+static void DeleteSidesVB(void)   { Gfx_DeleteVb(&sides_vb); }
+static void DeleteEdgesVB(void)   { Gfx_DeleteVb(&edges_vb); }
+static void DeleteWeatherVB(void) { Gfx_DeleteDynamicVb(&weather_vb); }
+
+static void DeleteStaticVbs(void) {
+	DeleteSkyVB();
+	DeleteCloudsVB();
+	DeleteSkyboxVB();
+	DeleteSidesVB();
+	DeleteEdgesVB();
 }
 
 static void OnContextLost(void* obj) {
-	DeleteVbs();
+	DeleteStaticVbs();
+	DeleteWeatherVB();
 	Gfx_DeleteTexture(&sides_tex);
 	Gfx_DeleteTexture(&edges_tex);
 
@@ -830,14 +874,11 @@ static void OnContextLost(void* obj) {
 }
 
 static void UpdateAll(void) {
-	UpdateMapSides();
-	UpdateMapEdges();
-	UpdateClouds();
-	UpdateSky();
-	Gfx_DeleteVb(&skybox_vb);
+	DeleteStaticVbs();
+	UpdateFogBlend();
 	EnvRenderer_UpdateFog();
 
-	Gfx_DeleteDynamicVb(&weather_vb);
+	DeleteWeatherVB();
 	/* TODO: Unnecessary to delete the weather VB? */
 	if (Gfx.LostContext) return;
 	/* TODO: Don't need to do this on every new map */
@@ -877,28 +918,30 @@ static void OnViewDistanceChanged(void* obj) { UpdateAll(); }
 static void OnEnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_EDGE_BLOCK) {
 		MakeBorderTex(&edges_tex, Env.EdgeBlock);
-		UpdateMapEdges();
+		DeleteEdgesVB();
 	} else if (envVar == ENV_VAR_SIDES_BLOCK) {
 		MakeBorderTex(&sides_tex, Env.SidesBlock);
-		UpdateMapSides();
+		DeleteSidesVB();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
-		UpdateMapEdges();
-		UpdateMapSides();
+		DeleteEdgesVB();
+		DeleteSidesVB();
 	} else if (envVar == ENV_VAR_SUN_COLOR) {
-		UpdateMapEdges();
+		DeleteEdgesVB();
 	} else if (envVar == ENV_VAR_SHADOW_COLOR) {
-		UpdateMapSides();
+		DeleteSidesVB();
 	} else if (envVar == ENV_VAR_SKY_COLOR) {
-		UpdateSky();
+		UpdateFogBlend();
+		DeleteSkyVB();
 	} else if (envVar == ENV_VAR_FOG_COLOR) {
+		UpdateFogBlend();
 		EnvRenderer_UpdateFog();
 	} else if (envVar == ENV_VAR_CLOUDS_COLOR) {
-		UpdateClouds();
+		DeleteCloudsVB();
 	} else if (envVar == ENV_VAR_CLOUDS_HEIGHT) {
-		UpdateSky();
-		UpdateClouds();
+		DeleteSkyVB();
+		DeleteCloudsVB();
 	} else if (envVar == ENV_VAR_SKYBOX_COLOR) {
-		Gfx_DeleteVb(&skybox_vb);
+		DeleteSkyboxVB();
 	}
 }
 
@@ -940,7 +983,8 @@ static void OnFree(void) {
 
 static void OnReset(void) {
 	Gfx_SetFog(false);
-	DeleteVbs();
+	DeleteStaticVbs();
+	DeleteWeatherVB();
 
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;

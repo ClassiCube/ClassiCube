@@ -316,11 +316,12 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 
 void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
 	int flags = TEXTURE_FLAG_NONPOW2 | TEXTURE_FLAG_LOWRES;
+	int nouv  = Gfx.Limitations & GFX_LIMIT_NO_UV_SUPPORT;
 	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, flags, false);
 	
 	/* TODO need to find a better solution in NoUVSupport case */
-	tex->width  = Gfx.NoUVSupport ? ctx->bmp.width  : ctx->width;
-	tex->height = Gfx.NoUVSupport ? ctx->bmp.height : ctx->height;
+	tex->width  = nouv ? ctx->bmp.width  : ctx->width;
+	tex->height = nouv ? ctx->bmp.height : ctx->height;
 	
 	tex->uv.u1  = 0.0f; tex->uv.v1 = 0.0f;
 	tex->uv.u2  = (float)ctx->width  / (float)ctx->bmp.width;

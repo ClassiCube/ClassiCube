@@ -100,9 +100,13 @@ add_library(classicube SHARED
         ../../src/SystemFonts.c
         ../../src/Commands.c
         ../../src/EntityRenderers.c
-        ../../src/AudioBackend.c
+        ../../src/Audio_SLES.c
         ../../src/TouchUI.c
         ../../src/LBackend_Android.c
+        ../../src/InputHandler.c
+        ../../src/MenuOptions.c
+        ../../src/FancyLighting.c
+        ../../src/Queue.c
         )
 
 # add lib dependencies
