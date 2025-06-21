@@ -208,7 +208,10 @@ void Gfx_ClearColor(PackedCol color) {
 
 void Gfx_EndFrame(void) {
 	// W buffering is used for fog
-	GFX_FLUSH = GL_WBUFFERING;
+	// Unfortunately this results in 2D UI clipping into the world
+	//GFX_FLUSH = GL_WBUFFERING;
+
+	GFX_FLUSH = 0;
 	// TODO not needed?
 	swiWaitForVBlank();
 }
@@ -708,7 +711,7 @@ static void SetPolygonMode() {
 	u32 fmt =
 		POLY_ALPHA(blend ? 14 : 31) | 
 		(backfaceCull ? POLY_CULL_BACK : POLY_CULL_NONE) | 
-		(fogEnabled ? POLY_FOG : 0) | 
+		//(fogEnabled ? POLY_FOG : 0) | fog breaks UI
 		POLY_RENDER_FAR_POLYS | 
 		POLY_RENDER_1DOT_POLYS;
 
@@ -747,10 +750,11 @@ static void RecalculateFog() {
 		glFogShift(shift);
 		GFX_FOG_OFFSET = 0;
 		
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < 32; i++) 
+		{
 			int distance  = (i * 512 + 256) * (0x400 >> shift);
 			int intensity = distance * 127 / fogEnd;
-			if(intensity > 127) intensity = 127;
+			if (intensity > 127) intensity = 127;
 			
 			GFX_FOG_TABLE[i] = intensity;
 		}
