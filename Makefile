@@ -1,9 +1,9 @@
 SOURCE_DIR  = src
 BUILD_DIR   = build
 C_SOURCES   = $(wildcard $(SOURCE_DIR)/*.c)
-C_OBJECTS   = $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+OBJECTS   	= $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+BUILD_DIRS	= $(BUILD_DIR) $(BUILD_DIR)/src
 
-OBJECTS = $(C_OBJECTS)
 # Flags passed to the C compiler
 CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
 # Flags passed to the linker
@@ -41,7 +41,7 @@ ifeq ($(PLAT),web)
 	OEXT    = .html
 	CFLAGS  = -g
 	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library $(SOURCE_DIR)/interop_web.js
-	BUILD_DIR = build-web
+	BUILD_DIR = build/web
 endif
 
 ifeq ($(PLAT),mingw)
@@ -50,19 +50,19 @@ ifeq ($(PLAT),mingw)
 	CFLAGS  += -DUNICODE
 	LDFLAGS =  -g
 	LIBS    =  -mwindows -lwinmm
-	BUILD_DIR = build-win
+	BUILD_DIR = build/win
 endif
 
 ifeq ($(PLAT),linux)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
-	BUILD_DIR = build-linux
+	BUILD_DIR = build/linux
 endif
 
 ifeq ($(PLAT),sunos)
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lsocket -lX11 -lXi -lGL
-	BUILD_DIR = build-solaris
+	BUILD_DIR = build/solaris
 endif
 
 ifeq ($(PLAT),hp-ux)
@@ -70,15 +70,15 @@ ifeq ($(PLAT),hp-ux)
 	CFLAGS  = -DCC_BUILD_ICON
 	LDFLAGS =
 	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL -lpthread
-	BUILD_DIR = build-hpux
+	BUILD_DIR = build/hpux
 endif
 
 ifeq ($(PLAT),darwin)
-	OBJECTS += $(BUILD_DIR)/Window_cocoa.o
+	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
 	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
-	BUILD_DIR = build-macos
+	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
 endif
 
@@ -86,58 +86,58 @@ ifeq ($(PLAT),freebsd)
 	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-freebsd
+	BUILD_DIR = build/freebsd
 endif
 
 ifeq ($(PLAT),openbsd)
 	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-openbsd
+	BUILD_DIR = build/openbsd
 endif
 
 ifeq ($(PLAT),netbsd)
 	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-netbsd
+	BUILD_DIR = build/netbsd
 endif
 
 ifeq ($(PLAT),dragonfly)
 	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-flybsd
+	BUILD_DIR = build/flybsd
 endif
 
 ifeq ($(PLAT),haiku)
-	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
+	OBJECTS += $(BUILD_DIR)/src/Platform_BeOS.o $(BUILD_DIR)/src/Window_BeOS.o
 	CFLAGS  = -pipe -fno-math-errno
 	LDFLAGS = -g
 	LINK    = $(CXX)
 	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
-	BUILD_DIR = build-haiku
+	BUILD_DIR = build/haiku
 endif
 
 ifeq ($(PLAT),beos)
-	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
+	OBJECTS += $(BUILD_DIR)/src/Platform_BeOS.o $(BUILD_DIR)/src/Window_BeOS.o
 	CFLAGS  = -pipe
 	LDFLAGS = -g
 	LINK    = $(CXX)
 	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
-	BUILD_DIR = build-beos
+	BUILD_DIR = build/beos
 	TRACK_DEPENDENCIES=0
 endif
 
 ifeq ($(PLAT),serenityos)
 	LIBS    = -lgl -lSDL2
-	BUILD_DIR = build-serenity
+	BUILD_DIR = build/serenity
 endif
 
 ifeq ($(PLAT),irix)
 	CC      = gcc
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
-	BUILD_DIR = build-irix
+	BUILD_DIR = build/irix
 endif
 
 ifeq ($(PLAT),dos)
@@ -145,7 +145,7 @@ ifeq ($(PLAT),dos)
 	LIBS    =
 	LDFLAGS = -g
 	OEXT    =  .exe
-	BUILD_DIR = build-dos
+	BUILD_DIR = build/dos
 endif
 
 
@@ -163,8 +163,9 @@ ifdef TERMINAL
 endif
 
 ifdef BEARSSL
+	BUILD_DIRS += $(BUILD_DIR)/third_party/bearssl/src
 	BEARSSL_SOURCES = $(wildcard third_party/bearssl/src/*.c)
-	BEARSSL_OBJECTS = $(patsubst third_party/bearssl/src/%.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
+	BEARSSL_OBJECTS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
 	OBJECTS += $(BEARSSL_OBJECTS)
 	CFLAGS  += -Ithird_party/bearssl/inc -DCC_SSL_BACKEND=CC_SSL_BACKEND_BEARSSL -DCC_NET_BACKEND=CC_NET_BACKEND_BUILTIN
 endif
@@ -274,9 +275,10 @@ amiga_ppc:
 clean:
 	$(RM) $(OBJECTS)
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-$(ENAME): $(BUILD_DIR) $(OBJECTS)
+$(BUILD_DIRS):
+	mkdir -p $@
+
+$(ENAME): $(BUILD_DIRS) $(OBJECTS)
 	$(LINK) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
 
 
@@ -293,28 +295,25 @@ $(ENAME).app : $(ENAME)
 # NOTE: Tracking dependencies might not work on older systems - disable this if so
 ifeq ($(TRACK_DEPENDENCIES), 1)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.d, $(C_SOURCES))
+DEPFILES := $(patsubst %.o, %.d, $(OBJECTS))
 $(DEPFILES):
 
-$(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c $(BUILD_DIR)/%.d
+$(BUILD_DIR)/%.o : %.c $(BUILD_DIR)/%.d
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 include $(wildcard $(DEPFILES))
 # === Compiling WITHOUT dependency tracking ===
 else
-$(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
+$(BUILD_DIR)/%.o : %.c
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 endif
 	
 # === Platform specific file compiling ===
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.m
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: %.m $(BUILD_DIR)/%.d
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 	
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
-	
-$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: %.cpp $(BUILD_DIR)/%.d
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 # EXTRA_CFLAGS and EXTRA_LIBS are not defined in the makefile intentionally -
 # define them on the command line as a simple way of adding CFLAGS/LIBS
