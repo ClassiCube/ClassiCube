@@ -36,7 +36,7 @@ jobs:
         shell: bash
         env: 
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
-          PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I netbsd64/include -L netbsd64/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -I netbsd64/include -L netbsd64/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           echo $LATEST_FLAG

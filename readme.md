@@ -332,7 +332,7 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 
 1. Install `libexecinfo`, `curl` and `openal` packages if needed
 2. Run either:
-    * `make opensd` or
+    * `make openbsd` or
     * `cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### NetBSD

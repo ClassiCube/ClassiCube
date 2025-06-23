@@ -4,6 +4,9 @@ C_SOURCES   = $(wildcard $(SOURCE_DIR)/*.c)
 OBJECTS   	= $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 BUILD_DIRS	= $(BUILD_DIR) $(BUILD_DIR)/src
 
+##############################
+# Configurable flags and names
+##############################
 # Flags passed to the C compiler
 CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
 # Flags passed to the linker
@@ -11,9 +14,20 @@ LDFLAGS = -g -rdynamic
 # Name of the main executable
 ENAME   = ClassiCube
 # Name of the final target file
-# (usually this is the executable, but e.g. is app bundle on macOS)
+# (usually this is the executable, but e.g. is the app bundle on macOS)
 TARGET := $(ENAME)
 
+# Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
+# This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
+# On older systems the required GCC options may not be supported - in which case just change TRACK_DEPENDENCIES to 0
+TRACK_DEPENDENCIES=1
+# link using C Compiler by default
+LINK = $(CC)
+
+
+#################################################################
+# Determine shell command used to remove files (for "make clean")
+#################################################################
 ifndef RM
 	# No prefined RM variable, try to guess OS default
 	ifeq ($(OS),Windows_NT)
@@ -23,11 +37,10 @@ ifndef RM
 	endif
 endif
 
-# Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
-# This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
-# On older systems the required GCC options may not be supported - in which case just change TRACK_DEPENDENCIES to 0
-TRACK_DEPENDENCIES=1
 
+###########################################################
+# If target platform isn't specified, default to current OS
+###########################################################
 ifndef $(PLAT)
 	ifeq ($(OS),Windows_NT)
 		PLAT = mingw
@@ -36,6 +49,10 @@ ifndef $(PLAT)
 	endif
 endif
 
+
+#########################################################
+# Setup environment appropriate for the specific platform
+#########################################################
 ifeq ($(PLAT),web)
 	CC      = emcc
 	OEXT    = .html
@@ -54,20 +71,17 @@ ifeq ($(PLAT),mingw)
 endif
 
 ifeq ($(PLAT),linux)
-	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
 	BUILD_DIR = build/linux
 endif
 
 ifeq ($(PLAT),sunos)
-	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lsocket -lX11 -lXi -lGL
 	BUILD_DIR = build/solaris
 endif
 
 ifeq ($(PLAT),hp-ux)
 	CC      = gcc
-	CFLAGS  = -DCC_BUILD_ICON
 	LDFLAGS =
 	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL -lpthread
 	BUILD_DIR = build/hpux
@@ -75,7 +89,6 @@ endif
 
 ifeq ($(PLAT),darwin)
 	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
-	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build/macos
@@ -83,28 +96,28 @@ ifeq ($(PLAT),darwin)
 endif
 
 ifeq ($(PLAT),freebsd)
-	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
+	CFLAGS  += -I /usr/local/include
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/freebsd
 endif
 
 ifeq ($(PLAT),openbsd)
-	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include -DCC_BUILD_ICON
+	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include
 	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/openbsd
 endif
 
 ifeq ($(PLAT),netbsd)
-	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include -DCC_BUILD_ICON
+	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include
 	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/netbsd
 endif
 
 ifeq ($(PLAT),dragonfly)
-	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
+	CFLAGS  += -I /usr/local/include
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/flybsd
@@ -176,11 +189,9 @@ else
 	CFLAGS += -g
 endif
 
-# link with CC by default
-LINK ?= $(CC)
-
 default: $(PLAT)
 
+# Build for the specified platform
 web:
 	$(MAKE) $(TARGET) PLAT=web
 linux:
@@ -272,12 +283,19 @@ amiga_68k:
 amiga_ppc:
 	$(MAKE) -f misc/amiga/Makefile_ppc
 
+# Cleans up all build .o files
 clean:
 	$(RM) $(OBJECTS)
 
+
+#################################################
+# Source files and executable compilation section
+#################################################
+# Auto creates directories for build files (.o and .d files)
 $(BUILD_DIRS):
 	mkdir -p $@
 
+# Main executable (typically just 'ClassiCube' or 'ClassiCube.exe')
 $(ENAME): $(BUILD_DIRS) $(OBJECTS)
 	$(LINK) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
 
@@ -294,26 +312,27 @@ $(ENAME).app : $(ENAME)
 # === Compiling with dependency tracking ===
 # NOTE: Tracking dependencies might not work on older systems - disable this if so
 ifeq ($(TRACK_DEPENDENCIES), 1)
+
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(patsubst %.o, %.d, $(OBJECTS))
 $(DEPFILES):
 
 $(BUILD_DIR)/%.o : %.c $(BUILD_DIR)/%.d
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.cpp $(BUILD_DIR)/%.d
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.m $(BUILD_DIR)/%.d
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 include $(wildcard $(DEPFILES))
 # === Compiling WITHOUT dependency tracking ===
 else
+
 $(BUILD_DIR)/%.o : %.c
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.cpp
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 endif
-	
-# === Platform specific file compiling ===
-$(BUILD_DIR)/%.o: %.m $(BUILD_DIR)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
-	
-$(BUILD_DIR)/%.o: %.cpp $(BUILD_DIR)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 # EXTRA_CFLAGS and EXTRA_LIBS are not defined in the makefile intentionally -
 # define them on the command line as a simple way of adding CFLAGS/LIBS
