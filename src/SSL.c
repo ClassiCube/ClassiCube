@@ -408,13 +408,22 @@ cc_result SSL_Free(void* ctx_) {
 #include "String.h"
 #include "bearssl.h"
 #include "../misc/certs/certs.h"
+
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
 
-static br_x509_class cert_verifier_vtable;
+typedef struct SSLContext {
+	br_x509_minimal_context xc;
+	br_ssl_client_context sc;
+	struct X509CertContext x509;
+	unsigned char iobuf[BR_SSL_BUFSIZE_BIDI];
+	br_sslio_context ioc;
+	cc_result readError, writeError;
+	cc_socket socket;
+} SSLContext;
 static cc_bool _verifyCerts;
 
-static unsigned cert_verifier_end_chain(const br_x509_class** ctx) {
+static unsigned x509_end_chain(const br_x509_class** ctx) {
 	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
 
 	/* User selected to not care about certificate authenticity */
@@ -434,20 +443,19 @@ static unsigned cert_verifier_end_chain(const br_x509_class** ctx) {
 	return r;
 }
 
-typedef struct SSLContext {
-	br_x509_minimal_context xc;
-	br_ssl_client_context sc;
-	unsigned char iobuf[BR_SSL_BUFSIZE_BIDI];
-	br_sslio_context ioc;
-	cc_result readError, writeError;
-	cc_socket socket;
-} SSLContext;
+static const br_x509_class cert_verifier_vtable = {
+	sizeof(br_x509_minimal_context),
+	x509_start_chain,
+	x509_start_cert,
+	x509_append,
+	x509_end_cert,
+	x509_end_chain,
+	x509_get_pkey
+};
 
 void SSLBackend_Init(cc_bool verifyCerts) {
 	_verifyCerts = verifyCerts;
-	
-	cert_verifier_vtable = br_x509_minimal_vtable;
-	cert_verifier_vtable.end_chain = cert_verifier_end_chain;
+	CertsBackend_Init();
 }
 
 cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
