@@ -1,4 +1,4 @@
-BUILD_DIR	:= build-dc
+BUILD_DIR	:= build/dc
 SOURCE_DIRS	:= src third_party/bearssl/src misc/dreamcast
 TARGET 		:= ClassiCube-dc
 

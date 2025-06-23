@@ -38,14 +38,14 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 TARGET		:=	ClassiCube-switch
-BUILD		:=	build-switch
+BUILD		:=	build/switch
 SOURCES		:=	src misc/switch third_party/bearssl/src
 DATA		:=	data
 INCLUDES	:=	third_party/bearssl/inc
 #ROMFS	:=	romfs
 
 APP_TITLE 	:= ClassiCube
-APP_AUTHOR 	:= UnknownShadow200
+APP_AUTHOR 	:= ClassiCube team
 ICON        := misc/switch/icon.jpg
 
 #---------------------------------------------------------------------------------

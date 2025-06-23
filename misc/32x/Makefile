@@ -32,7 +32,7 @@ RM = rm -f
 
 TARGET = ClassiCube-32x
 LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
-BUILD_DIR = build-32x
+BUILD_DIR = build/32x
 
 SOURCE_DIRS = src misc/32x
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))

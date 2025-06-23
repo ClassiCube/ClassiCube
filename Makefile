@@ -298,7 +298,9 @@ $(BUILD_DIRS):
 # Main executable (typically just 'ClassiCube' or 'ClassiCube.exe')
 $(ENAME): $(BUILD_DIRS) $(OBJECTS)
 	$(LINK) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
-
+	@echo "----------------------------------------------------"
+	@echo "Successfully compiled executable file: $(ENAME)"
+	@echo "----------------------------------------------------"
 
 # macOS app bundle
 $(ENAME).app : $(ENAME)

@@ -1,4 +1,4 @@
-BUILD_DIR	:= build-ps1
+BUILD_DIR	:= build/ps1
 SOURCE_DIRS	:= src
 TARGET 		:= ClassiCube-ps1
 

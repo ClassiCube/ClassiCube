@@ -2,7 +2,7 @@ TARGET 			= ClassiCube-psp
 PSP_EBOOT_TITLE = ClassiCube
 PSP_EBOOT_ICON	= misc/psp/ICON0.png
 
-BUILD_DIR		:= build-psp
+BUILD_DIR		:= build/psp
 SOURCE_DIRS		:= src third_party/bearssl/src
 
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))

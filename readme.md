@@ -340,7 +340,7 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 1. Install `libexecinfo`, `curl` and `openal-soft` packages if needed
 2. Run either:
     * `make netbsd` or
-    * `cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### DragonflyBSD
 
