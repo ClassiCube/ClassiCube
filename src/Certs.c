@@ -1,8 +1,15 @@
 #include "Certs.h"
 #include "Platform.h"
+#include "String.h"
+#include "Stream.h"
+#include <openssl/x509.h>
+static X509_STORE* store;
 
 void CertsBackend_Init(void) {
 	Platform_LogConst("BKEND");
+
+	store = X509_STORE_new();
+	X509_STORE_set_default_paths(store);
 }
 
 void Certs_BeginChain(struct X509CertContext* ctx) {
@@ -31,8 +38,6 @@ void Certs_AppendCert(struct X509CertContext* ctx, const void* data, int len) {
 	ctx->offset += len;
 }
 
-#include "String.h"
-#include "Stream.h"
 void Certs_FinishCert(struct X509CertContext* ctx) {
 
 	Platform_LogConst("CERT"); static int counter;
@@ -42,6 +47,9 @@ void Certs_FinishCert(struct X509CertContext* ctx) {
 	String_Format1(&buf, "cert_%i.der", &counter); counter++;
 
 	//Stream_WriteAllTo(&buf, ctx->cert, ctx->offset);
+
+	const unsigned char* data = ctx->cert;
+	X509* cert = d2i_X509(NULL, &data, ctx->offset);
 
 	Mem_Free(ctx->cert);
 	ctx->cert = NULL;
