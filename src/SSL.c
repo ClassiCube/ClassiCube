@@ -406,6 +406,7 @@ cc_result SSL_Free(void* ctx_) {
 }
 #elif CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
 #include "String.h"
+#include "Certs.h"
 #include "bearssl.h"
 #include "../misc/certs/certs.h"
 
@@ -423,9 +424,35 @@ typedef struct SSLContext {
 } SSLContext;
 static cc_bool _verifyCerts;
 
-static unsigned x509_end_chain(const br_x509_class** ctx) {
-	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
+static void x509_start_cert(const br_x509_class** ctx, uint32_t length) {
+	struct SSLContext* ssl = (struct SSLContext*)ctx;
 
+	br_x509_minimal_vtable.start_cert(ctx, length);
+	Certs_BeginCert(&ssl->x509, length);
+}
+
+static void x509_append(const br_x509_class** ctx, const unsigned char* buf, size_t len) {
+	struct SSLContext* ssl = (struct SSLContext*)ctx;
+
+	br_x509_minimal_vtable.append(ctx, buf, len);
+	Certs_AppendCert(&ssl->x509, buf, len);
+}
+
+static void x509_end_cert(const br_x509_class** ctx) {
+	struct SSLContext* ssl = (struct SSLContext*)ctx;
+
+	br_x509_minimal_vtable.end_cert(ctx);
+	Certs_FinishCert(&ssl->x509);
+}
+
+static void x509_start_chain(const br_x509_class** ctx, const char* server_name) {
+	struct SSLContext* ssl = (struct SSLContext*)ctx;
+
+	br_x509_minimal_vtable.start_chain(ctx, server_name);
+	Certs_BeginChain(&ssl->x509);
+}
+
+static unsigned x509_maybe_skip_verify(unsigned r) {
 	/* User selected to not care about certificate authenticity */
 	if (r == BR_ERR_X509_NOT_TRUSTED && !_verifyCerts) return 0;
 
@@ -441,6 +468,23 @@ static unsigned x509_end_chain(const br_x509_class** ctx) {
 #endif
 
 	return r;
+}
+
+static unsigned x509_end_chain(const br_x509_class** ctx) {
+	struct SSLContext* ssl = (struct SSLContext*)ctx;
+
+	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
+	r = x509_maybe_skip_verify(r);
+
+	/* Fallback to system specific certificate validation */
+	if (r == BR_ERR_X509_NOT_TRUSTED && Certs_VerifyChain(&ssl->x509) == 0) r = 0;
+
+	Certs_FreeChain(&ssl->x509);
+	return r;
+}
+
+static const br_x509_pkey* x509_get_pkey(const br_x509_class*const* ctx, unsigned* usages) {
+	return br_x509_minimal_vtable.get_pkey(ctx, usages);
 }
 
 static const br_x509_class cert_verifier_vtable = {

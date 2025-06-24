@@ -1,6 +1,6 @@
-#ifndef CC_SSL_H
-#define CC_SSL_H
-#include "Platform.h"
+#ifndef CC_CERT_H
+#define CC_CERT_H
+#include "Core.h"
 CC_BEGIN_HEADER
 
 /* 
@@ -14,14 +14,15 @@ struct X509CertContext {
 	void* ctx;
 	void* chain;
 	void* cert;
+	int offset;
 };
 
-cc_result Certs_BeginChain( struct X509CertContext* ctx);
-cc_result Certs_FreeChain(  struct X509CertContext* ctx);
-cc_result Certs_VerifyChain(struct X509CertContext* ctx);
+void Certs_BeginChain( struct X509CertContext* ctx);
+void Certs_FreeChain(  struct X509CertContext* ctx);
+int  Certs_VerifyChain(struct X509CertContext* ctx);
 
 void Certs_BeginCert( struct X509CertContext* ctx, int size);
-void Certs_AppendCert(struct X509CertContext* ctx, void* data, int len);
+void Certs_AppendCert(struct X509CertContext* ctx, const void* data, int len);
 void Certs_FinishCert(struct X509CertContext* ctx);
 
 CC_END_HEADER
