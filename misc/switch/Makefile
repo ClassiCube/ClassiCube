@@ -35,7 +35,7 @@ INCLUDES	:=	third_party/bearssl/inc
 
 APP_TITLE 	:= ClassiCube
 APP_AUTHOR 	:= ClassiCube team
-APP_ICON    := misc/switch/icon.jpg
+APP_ICON    := $(TOPDIR)/misc/switch/icon.jpg
 
 #---------------------------------------------------------------------------------
 # options for code generation
