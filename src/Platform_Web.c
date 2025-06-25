@@ -437,7 +437,7 @@ static int    _argc;
 static char** _argv;
 
 /* webclient does some asynchronous initialisation first, then kickstarts the game after that */
-static void web_main(int argc, char** argv) {
+static void web_main(void) {
 	SetupProgram(_argc, _argv);
 	cc_result res = RunProgram(_argc, _argv);
 
