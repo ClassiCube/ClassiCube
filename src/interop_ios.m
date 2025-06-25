@@ -46,9 +46,12 @@ void LogUnhandledNSErrors(NSException* ex);
 
 @implementation CCAppDelegate
 
+#include "main_impl.h"
 - (void)runMainLoop {
-    extern int ios_main(int argc, char** argv);
-    ios_main(1, NULL);
+	/* ClassiCube is sort of and sort of not the executable */
+	/*  on iOS - UIKit is responsible for kickstarting the game. */
+	SetupProgram(1, NULL);
+	for (;;) { RunProgram(1, NULL); }
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {

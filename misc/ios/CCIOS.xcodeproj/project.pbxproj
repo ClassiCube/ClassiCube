@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		9A4D0C642BDD168800E1695D /* TouchUI.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A4D0C632BDD168800E1695D /* TouchUI.c */; };
 		9A57ECEE2BCD1408006A89F0 /* Audio_OpenAL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECED2BCD1408006A89F0 /* Audio_OpenAL.c */; };
-		9A57ECF02BCD1413006A89F0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECEF2BCD1412006A89F0 /* main.c */; };
 		9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A62ADF4286D906F00E5E3DE /* Assets.xcassets */; };
 		9A6C79652BFDDEF200676D27 /* FancyLighting.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79642BFDDEF100676D27 /* FancyLighting.c */; };
 		9A6C79672BFDDF0700676D27 /* Queue.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79662BFDDF0600676D27 /* Queue.c */; };
@@ -101,7 +100,6 @@
 /* Begin PBXFileReference section */
 		9A4D0C632BDD168800E1695D /* TouchUI.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TouchUI.c; sourceTree = "<group>"; };
 		9A57ECED2BCD1408006A89F0 /* Audio_OpenAL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Audio_OpenAL.c; sourceTree = "<group>"; };
-		9A57ECEF2BCD1412006A89F0 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ClassiCube/Assets.xcassets; sourceTree = "<group>"; };
 		9A6C79642BFDDEF100676D27 /* FancyLighting.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FancyLighting.c; sourceTree = "<group>"; };
 		9A6C79662BFDDF0600676D27 /* Queue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Queue.c; sourceTree = "<group>"; };
@@ -231,7 +229,6 @@
 				9A6C79662BFDDF0600676D27 /* Queue.c */,
 				9A6C79642BFDDEF100676D27 /* FancyLighting.c */,
 				9A4D0C632BDD168800E1695D /* TouchUI.c */,
-				9A57ECEF2BCD1412006A89F0 /* main.c */,
 				9A57ECED2BCD1408006A89F0 /* Audio_OpenAL.c */,
 				9A7401DA2B7384060040E575 /* SSL.c */,
 				9A7401D82B737D5B0040E575 /* Commands.c */,
@@ -457,7 +454,6 @@
 				9AC5433E2AE2649F0086C85F /* SystemFonts.c in Sources */,
 				9A89D57F27F802F600FF3F80 /* LWeb.c in Sources */,
 				9A89D56627F802F600FF3F80 /* Drawer2D.c in Sources */,
-				9A57ECF02BCD1413006A89F0 /* main.c in Sources */,
 				9A89D57427F802F600FF3F80 /* MapRenderer.c in Sources */,
 				9A89D57627F802F600FF3F80 /* _pshinter.c in Sources */,
 				9A89D56A27F802F600FF3F80 /* Physics.c in Sources */,
