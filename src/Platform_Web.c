@@ -431,6 +431,8 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
 	return count;
 }
+
+#include "main_impl.h"
 static int    _argc;
 static char** _argv;
 
@@ -443,6 +445,11 @@ static void web_main(int argc, char** argv) {
 	Window_Free();
 	Process_Exit(res);
 }
+
+
+extern void interop_FS_Init(void);
+extern void interop_DirectorySetWorking(const char* path);
+extern void interop_AsyncDownloadTexturePack(const char* path);
 
 int main(int argc, char** argv) {
 	_argc = argc; _argv = argv;
