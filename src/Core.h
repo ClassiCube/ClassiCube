@@ -153,6 +153,9 @@ typedef cc_uint8  cc_bool;
 #define CC_NET_BACKEND_BUILTIN  1
 #define CC_NET_BACKEND_LIBCURL  2
 
+#define CC_CRT_BACKEND_NONE     1
+#define CC_CRT_BACKEND_OPENSSL  2
+
 #define CC_AUD_BACKEND_OPENAL   1
 #define CC_AUD_BACKEND_WINMM    2
 #define CC_AUD_BACKEND_OPENSLES 3
@@ -258,6 +261,7 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
+	#define DEFAULT_CRT_BACKEND CC_CRT_BACKEND_OPENSSL
 	#if defined CC_BUILD_RPI
 		#define CC_BUILD_GLES
 		#define CC_BUILD_EGL
@@ -596,6 +600,9 @@ typedef cc_uint8  cc_bool;
 #endif
 #if defined DEFAULT_SSL_BACKEND && !defined CC_SSL_BACKEND
 	#define CC_SSL_BACKEND DEFAULT_SSL_BACKEND
+#endif
+#if defined DEFAULT_CRT_BACKEND && !defined CC_CRT_BACKEND
+	#define CC_CRT_BACKEND DEFAULT_CRT_BACKEND
 #endif
 #if defined DEFAULT_NET_BACKEND && !defined CC_NET_BACKEND
 	#define CC_NET_BACKEND DEFAULT_NET_BACKEND

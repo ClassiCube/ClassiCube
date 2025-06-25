@@ -10,11 +10,16 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 void CertsBackend_Init(void);
 
-struct X509CertContext {
-	void* ctx;
-	void* chain;
-	void* cert;
+#define X509_MAX_CERTS 10
+struct X509Cert {
+	void* data;
 	int offset;
+};
+
+struct X509CertContext {
+	struct X509Cert certs[X509_MAX_CERTS];
+	struct X509Cert* cert;
+	int numCerts;
 };
 
 void Certs_BeginChain( struct X509CertContext* ctx);
