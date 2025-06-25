@@ -26,6 +26,9 @@ CC_BEGIN_HEADER
 	/* (sqrtf is only when -fno-math-errno though) */
 	#define Math_AbsF(x)  __builtin_fabsf(x)
 	#define Math_SqrtF(x) __builtin_sqrtf(x)
+#elif defined NXDK
+	#define Math_AbsF(x)  __builtin_fabsf(x)
+	#define Math_SqrtF(x) __builtin_sqrtf(x)
 #else
 	float Math_AbsF(float x);
 	float Math_SqrtF(float x);

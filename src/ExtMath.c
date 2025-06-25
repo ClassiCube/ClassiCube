@@ -96,7 +96,7 @@ float sqrtf(float x) {
 		fp_x = SquareRoot12(fp_x);
 		return (float)fp_x / (1 << 12);
 	}
-#elif defined __GNUC__
+#elif defined __GNUC__ || defined NXDK
 	/* Defined in .h using builtins */
 #elif defined __TINYC__
 	/* Older versions of TinyC don't support fabsf or sqrtf */

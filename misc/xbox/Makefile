@@ -19,7 +19,7 @@ S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
-CFLAGS = -Ithird_party/bearssl/inc -O1 \
+CFLAGS = -Ithird_party/bearssl/inc -O1 -fno-math-errno -Wno-builtin-macro-redefined \
 	-I$(NXDK_DIR)/lib/net/lwip/src/include \
 	-I$(NXDK_DIR)/lib/net/nforceif/include \
 	-I$(NXDK_DIR)/lib/net/nvnetdrv \
@@ -44,16 +44,10 @@ DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------
-# Tools finder
+# Tools
 #---------------------------------------------------------------------------------
-UNAME_M := $(shell uname -m)
-
-ifneq ($(UNAME_M),x86_64)
-CGC          = $(NXDK_DIR)/tools/cg/linux/cgc.i386
-else
-CGC          = $(NXDK_DIR)/tools/cg/linux/cgc
-endif
-# NOTE: Linux only. Will need to modify for other platforms
+CGC = $(NXDK_DIR)/tools/cg/linux/cgc
+# NOTE: Linux only. Would need changing for other platforms
 
 CXBE         = $(NXDK_DIR)/tools/cxbe/cxbe
 VP20COMPILER = $(NXDK_DIR)/tools/vp20compiler/vp20compiler

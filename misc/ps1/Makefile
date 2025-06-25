@@ -1,16 +1,24 @@
-BUILD_DIR	:= build/ps1
-SOURCE_DIRS	:= src
-TARGET 		:= ClassiCube-ps1
-
-S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
-C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-
 ifeq ($(strip $(PSN00BSDK_ROOT)),)
 $(warning Please set PSN00BSDK_ROOT path in your environment. For example:)
 $(warning export PSN00BSDK_ROOT=/usr/local/lib/psn00bsdk)
 $(error   Failed to find PSN00BSDK installation path)
 endif
+
+
+#---------------------------------------------------------------------------------
+# Configurable options
+#---------------------------------------------------------------------------------
+BUILD_DIR	:= build/ps1
+SOURCE_DIRS	:= src
+TARGET 		:= ClassiCube-ps1
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
+S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
 CINCLUDES := -I$(PSN00BSDK_ROOT)/include/libpsn00b
 
@@ -59,7 +67,10 @@ $(TARGET).bin: $(TARGET).exe
 $(BUILD_DIR)/%.o: src/%.c
 	$(PSN00BSDK_ROOT)/bin/mipsel-none-elf-gcc $(CFLAGS) $(CINCLUDES) $(DEPFLAGS) -c $< -o $@
 
+
+#---------------------------------------------------------------------------------
 # Dependency tracking
+#---------------------------------------------------------------------------------
 $(DEPFILES):
 
 include $(wildcard $(DEPFILES))
