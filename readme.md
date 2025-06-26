@@ -144,8 +144,8 @@ Compiling with TCC:
 1. Install X11, XInput2, and OpenGL development libraries if necessary. <br>
 For Ubuntu, these are the `libx11-dev`, `libxi-dev` and `libgl1-mesa-dev` packages
 2. Run either:
-    * `make linux` or
-    * `cc -fno-math-errno src/*.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl`
+    * `make linux` - produces a simple non-optimised executable, easier to debug
+    * `make linux RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Cross compiling for Windows (32 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
@@ -163,8 +163,8 @@ Although the regular linux compiliation flags will work fine, to take full advan
 ## Compiling - macOS
 1. Install a C compiler if necessary. The easiest way of obtaining one is by installing **Xcode**.
 2. Run either:
-    * `make darwin` or
-    * `cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc`
+    * `make darwin` - produces a simple non-optimised executable, easier to debug
+    * `make darwin RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using Xcode GUI
 
@@ -325,64 +325,64 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 
 1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
 2. Run either:
-    * `make freebsd` or
-    * `cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `make freebsd` - produces a simple non-optimised executable, easier to debug
+    * `make freebsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### OpenBSD
 
 1. Install `libexecinfo`, `curl` and `openal` packages if needed
 2. Run either:
-    * `make openbsd` or
-    * `cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `make openbsd` - produces a simple non-optimised executable, easier to debug
+    * `make openbsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### NetBSD
 
 1. Install `libexecinfo`, `curl` and `openal-soft` packages if needed
 2. Run either:
-    * `make netbsd` or
-    * `cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `make netbsd` - produces a simple non-optimised executable, easier to debug
+    * `make netbsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### DragonflyBSD
 
 1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
 2. Run either:
-    * `make dragonfly` or
-    * `cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `make dragonfly` - produces a simple non-optimised executable, easier to debug
+    * `make dragonfly RELEASE=1` - produces an optimised executable, harder to debug
 
 #### Solaris
 
 1. Install required packages if needed
 2. Run either:
-    * `make sunos` or
-    * `gcc -fno-math-errno src/*.c -o ClassiCube -lsocket -lX11 -lXi -lGL`
+    * `make sunos` - produces a simple non-optimised executable, easier to debug
+    * `make sunos RELEASE=1` - produces an optimised executable, harder to debug
 
 #### Haiku
 
 1. Install `gcc`, `haiku_devel`, `openal_devel` packages if needed
 2. Run either:
-    * `make haiku` or
-    * `cc -fno-math-errno src/*.c src/*.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker`
+    * `make haiku` - produces a simple non-optimised executable, easier to debug
+    * `make haiku RELEASE=1` - produces an optimised executable, harder to debug
 
 #### BeOS
 
 1. Install a C compiler
 2. Run either:
-    * `make beos` or
-    * `cc -fno-math-errno src/*.c src/*.cpp -o ClassiCube -lGL -lbe -lgame -ltracker`
+    * `make beos` - produces a simple non-optimised executable, easier to debug
+    * `make beos RELEASE=1` - produces an optimised executable, harder to debug
 
 #### IRIX
 
 1. Install required packages if needed
 2. Run either:
-    * `make irix` or
-    * gcc -fno-math-errno src/*.c -o ClassiCube -lGL -lX11 -lXi -lpthread -ldl`
+    * `make irix` - produces a simple non-optimised executable, easier to debug
+    * `make irix RELEASE=1` - produces an optimised executable, harder to debug
 
 #### SerenityOS
 
 1. Install SDL2 port if needed
 2. Run either:
-    * `make serenityos` or
-    * `cc src/*.c -o ClassiCube -lgl -lSDL2`
+    * `make serenityos` - produces a simple non-optimised executable, easier to debug
+    * `make serenityos RELEASE=1` - produces an optimised executable, harder to debug
 
 #### Classic Mac OS
 

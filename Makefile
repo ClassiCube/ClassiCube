@@ -73,6 +73,7 @@ endif
 ifeq ($(PLAT),linux)
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
 	BUILD_DIR = build/linux
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),sunos)

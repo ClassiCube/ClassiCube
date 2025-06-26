@@ -42,10 +42,6 @@ void Certs_AppendCert(struct X509CertContext* ctx, const void* data, int len) {
 }
 
 void Certs_FinishCert(struct X509CertContext* ctx) {
-	//char buffer[128];
-	//cc_string buf = String_FromArray(buffer);
-	//String_Format1(&buf, "cert_%i.der", &ctx->numCerts);
-	//Stream_WriteAllTo(&buf, ctx->cert->data, ctx->cert->offset);
 }
 
 void Certs_BeginChain(struct X509CertContext* ctx) {
@@ -62,22 +58,66 @@ void Certs_FreeChain( struct X509CertContext* ctx) {
 	ctx->numCerts = 0;
 }
 
-#if CC_CRT_BACKEND_OPENSSL
+#if CC_CRT_BACKEND == CC_CRT_BACKEND_OPENSSL
 #include <openssl/x509.h>
+#include "Errors.h"
 static X509_STORE* store;
 
 void CertsBackend_Init(void) {
-	Platform_LogConst("BKEND");
-
-	store = X509_STORE_new();
-	X509_STORE_set_default_paths(store);
 }
 
-int Certs_VerifyChain(struct X509CertContext* ctx) {
-	
+static X509* ToOpenSSLCert(struct X509Cert* cert) {
+	const unsigned char* data = cert->data;
+	return d2i_X509(NULL, &data, cert->offset);
+}
 
-	//const unsigned char* data = ctx->cert->data;
-	//X509* cert = d2i_X509(NULL, &data, ctx->cert->offset);
+int Certs_VerifyChain(struct X509CertContext* chain) {
+	STACK_OF(X509)* inter;
+	X509_STORE_CTX* ctx;
+	X509* cur;
+	X509* cert;
+	int i;
+
+	/* Delay creating X509 store until necessary */
+	if (!store) {
+		store = X509_STORE_new();
+		if (!store) return;
+
+		X509_STORE_set_default_paths(store);
+	}
+
+	Platform_Log1("VERIFY CHAIN: %i", &chain->numCerts);
+	if (!chain->numCerts) return ERR_NOT_SUPPORTED;
+
+	/* End/Leaf certificate */
+	cert = ToOpenSSLCert(&chain->certs[0]);
+	if (!cert) return ERR_OUT_OF_MEMORY;
+
+	inter = sk_X509_new_null();
+	if (!inter) return ERR_OUT_OF_MEMORY;
+
+	/* Intermediate certificates */
+	for (i = 1; i < chain->numCerts; i++)
+	{
+		cur = ToOpenSSLCert(&chain->certs[i]);
+		if (cur) sk_X509_push(inter, cur);
+	}
+
+	ctx = X509_STORE_CTX_new();
+	X509_STORE_CTX_init(ctx, store, cert, inter);
+
+    int status = X509_verify_cert(ctx);
+    if (status == 1) {
+        Platform_LogConst("Certificate verified");
+    } else {
+		int err = X509_STORE_CTX_get_error(ctx);
+        Platform_LogConst(X509_verify_cert_error_string(err));
+    }
+
+	X509_STORE_CTX_free(ctx);
+	sk_X509_pop_free(inter, X509_free);
+	X509_free(cert);
+
 	return 0;
 }
 #endif

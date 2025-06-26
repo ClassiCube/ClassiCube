@@ -475,7 +475,6 @@ static unsigned x509_end_chain(const br_x509_class** ctx) {
 
 	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
 	r = x509_maybe_skip_verify(r);
-Certs_VerifyChain(&ssl->x509); // TODO remove later
 
 	/* Fallback to system specific certificate validation */
 	if (r == BR_ERR_X509_NOT_TRUSTED && Certs_VerifyChain(&ssl->x509) == 0) r = 0;
