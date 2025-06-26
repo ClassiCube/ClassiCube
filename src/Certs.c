@@ -59,66 +59,121 @@ void Certs_FreeChain( struct X509CertContext* ctx) {
 }
 
 #if CC_CRT_BACKEND == CC_CRT_BACKEND_OPENSSL
-#include <openssl/x509.h>
 #include "Errors.h"
+#include "Funcs.h"
+/* === BEGIN OPENSSL HEADERS === */
+#include <openssl/x509.h>
+
+static OPENSSL_STACK* (*_OPENSSL_sk_new_null)(void);
+int                   (*_OPENSSL_sk_push)(OPENSSL_STACK* st, const void* data);
+void                  (*_OPENSSL_sk_pop_free)(OPENSSL_STACK* st, void (*func) (void*));
+
+static X509* (*_d2i_X509)(X509** px, const unsigned char** in, int len);
+
+static X509* (*_X509_new)(void);
+static void  (*_X509_free)(X509* a);
+
+static X509_STORE* (*_X509_STORE_new)(void);
+static int (*_X509_STORE_set_default_paths)(X509_STORE* ctx);
+
+static int (*_X509_verify_cert)(X509_STORE_CTX* ctx);
+static const char* (*_X509_verify_cert_error_string)(long n);
+
+static X509_STORE_CTX* (*_X509_STORE_CTX_new)(void);
+static void            (*_X509_STORE_CTX_free)(X509_STORE_CTX* ctx);
+
+static int (*_X509_STORE_CTX_get_error)(X509_STORE_CTX* ctx);
+static int (*_X509_STORE_CTX_init)(X509_STORE_CTX* ctx, X509_STORE* store,
+                        X509* x509, OPENSSL_STACK* chain);
+/* === END OPENSSL HEADERS === */
+
+#if defined CC_BUILD_WIN
+static const cc_string cryptoLib = String_FromConst("libcrypto.dll");
+#else
+static const cc_string cryptoLib = String_FromConst("libcrypto.so");
+#endif
+
 static X509_STORE* store;
+static cc_bool ossl_loaded;
 
 void CertsBackend_Init(void) {
+	static const struct DynamicLibSym funcs[] = {		
+		DynamicLib_ReqSym(OPENSSL_sk_new_null),
+		DynamicLib_ReqSym(OPENSSL_sk_push),
+		DynamicLib_ReqSym(OPENSSL_sk_pop_free),
+		DynamicLib_ReqSym(d2i_X509),
+		DynamicLib_ReqSym(X509_new),
+		DynamicLib_ReqSym(X509_free),
+		DynamicLib_ReqSym(X509_STORE_new),
+		DynamicLib_ReqSym(X509_STORE_set_default_paths),
+		DynamicLib_ReqSym(X509_STORE_CTX_new),
+		DynamicLib_ReqSym(X509_STORE_CTX_free),
+		DynamicLib_ReqSym(X509_STORE_CTX_get_error),
+		DynamicLib_ReqSym(X509_STORE_CTX_init),
+		DynamicLib_ReqSym(X509_verify_cert),
+		DynamicLib_ReqSym(X509_verify_cert_error_string),
+	};
+	void* lib;
+
+	ossl_loaded = DynamicLib_LoadAll(&cryptoLib, funcs, Array_Elems(funcs), &lib);
 }
 
 static X509* ToOpenSSLCert(struct X509Cert* cert) {
 	const unsigned char* data = cert->data;
-	return d2i_X509(NULL, &data, cert->offset);
+	return _d2i_X509(NULL, &data, cert->offset);
 }
 
 int Certs_VerifyChain(struct X509CertContext* chain) {
-	STACK_OF(X509)* inter;
+	OPENSSL_STACK* inter;
 	X509_STORE_CTX* ctx;
+	int i, status, ret;
 	X509* cur;
 	X509* cert;
-	int i;
+	if (!ossl_loaded) return ERR_NOT_SUPPORTED;
 
 	/* Delay creating X509 store until necessary */
 	if (!store) {
-		store = X509_STORE_new();
-		if (!store) return;
+		store = _X509_STORE_new();
+		if (!store) return ERR_OUT_OF_MEMORY;
 
-		X509_STORE_set_default_paths(store);
+		_X509_STORE_set_default_paths(store);
 	}
 
 	Platform_Log1("VERIFY CHAIN: %i", &chain->numCerts);
-	if (!chain->numCerts) return ERR_NOT_SUPPORTED;
+	if (!chain->numCerts) return ERR_INVALID_ARGUMENT;
 
 	/* End/Leaf certificate */
 	cert = ToOpenSSLCert(&chain->certs[0]);
 	if (!cert) return ERR_OUT_OF_MEMORY;
 
-	inter = sk_X509_new_null();
+	inter = _OPENSSL_sk_new_null();
 	if (!inter) return ERR_OUT_OF_MEMORY;
 
 	/* Intermediate certificates */
 	for (i = 1; i < chain->numCerts; i++)
 	{
 		cur = ToOpenSSLCert(&chain->certs[i]);
-		if (cur) sk_X509_push(inter, cur);
+		if (cur) _OPENSSL_sk_push(inter, cur);
 	}
 
-	ctx = X509_STORE_CTX_new();
-	X509_STORE_CTX_init(ctx, store, cert, inter);
+	ctx = _X509_STORE_CTX_new();
+	_X509_STORE_CTX_init(ctx, store, cert, inter);
 
-    int status = X509_verify_cert(ctx);
+    status = _X509_verify_cert(ctx);
     if (status == 1) {
         Platform_LogConst("Certificate verified");
+		ret = 0;
     } else {
-		int err = X509_STORE_CTX_get_error(ctx);
-        Platform_LogConst(X509_verify_cert_error_string(err));
+		int err = _X509_STORE_CTX_get_error(ctx);
+        Platform_LogConst(_X509_verify_cert_error_string(err));
+		ret = -1;
     }
 
-	X509_STORE_CTX_free(ctx);
-	sk_X509_pop_free(inter, X509_free);
-	X509_free(cert);
+	_X509_STORE_CTX_free(ctx);
+	_OPENSSL_sk_pop_free(inter, _X509_free);
+	_X509_free(cert);
 
-	return 0;
+	return ret;
 }
 #endif
 
