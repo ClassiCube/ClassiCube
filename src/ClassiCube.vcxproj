@@ -402,6 +402,7 @@
     <ClInclude Include="LScreens.h" />
     <ClInclude Include="LWeb.h" />
     <ClInclude Include="LWidgets.h" />
+    <ClInclude Include="main.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Menus.h" />
@@ -551,7 +552,6 @@
     <ClCompile Include="Queue.c" />
     <ClCompile Include="SelOutlineRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="main.c" />
     <ClCompile Include="Resources.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
