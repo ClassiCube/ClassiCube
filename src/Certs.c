@@ -62,11 +62,15 @@ void Certs_FreeChain( struct X509CertContext* ctx) {
 #include "Errors.h"
 #include "Funcs.h"
 /* === BEGIN OPENSSL HEADERS === */
-#include <openssl/x509.h>
+typedef struct X509_           X509;
+typedef struct X509_STORE_     X509_STORE;
+typedef struct X509_STORE_CTX_ X509_STORE_CTX;
+typedef struct OPENSSL_STACK_  OPENSSL_STACK;
+typedef void (*OPENSSL_PopFunc)(void* data);
 
 static OPENSSL_STACK* (*_OPENSSL_sk_new_null)(void);
 int                   (*_OPENSSL_sk_push)(OPENSSL_STACK* st, const void* data);
-void                  (*_OPENSSL_sk_pop_free)(OPENSSL_STACK* st, void (*func) (void*));
+void                  (*_OPENSSL_sk_pop_free)(OPENSSL_STACK* st, OPENSSL_PopFunc func);
 
 static X509* (*_d2i_X509)(X509** px, const unsigned char** in, int len);
 
@@ -170,7 +174,7 @@ int Certs_VerifyChain(struct X509CertContext* chain) {
     }
 
 	_X509_STORE_CTX_free(ctx);
-	_OPENSSL_sk_pop_free(inter, _X509_free);
+	_OPENSSL_sk_pop_free(inter, (OPENSSL_PopFunc)_X509_free);
 	_X509_free(cert);
 
 	return ret;
