@@ -93,8 +93,12 @@ static int (*_X509_STORE_CTX_init)(X509_STORE_CTX* ctx, X509_STORE* store,
 
 #if defined CC_BUILD_WIN
 static const cc_string cryptoLib = String_FromConst("libcrypto.dll");
+#elif defined CC_BUILD_HAIKU
+static const cc_string cryptoLib = String_FromConst("libcrypto.so.3");
+static const cc_string cryptoAlt = String_FromConst("libcrypto.so");
 #else
 static const cc_string cryptoLib = String_FromConst("libcrypto.so");
+static const cc_string cryptoAlt = String_FromConst("libcrypto.so.3");
 #endif
 
 static X509_STORE* store;
@@ -119,7 +123,10 @@ void CertsBackend_Init(void) {
 	};
 	void* lib;
 
-	ossl_loaded = DynamicLib_LoadAll(&cryptoLib, funcs, Array_Elems(funcs), &lib);
+	ossl_loaded = DynamicLib_LoadAll(&cryptoLib,     funcs, Array_Elems(funcs), &lib);
+	if (!lib) { 
+		ossl_loaded = DynamicLib_LoadAll(&cryptoAlt, funcs, Array_Elems(funcs), &lib);
+	}
 }
 
 static X509* ToOpenSSLCert(struct X509Cert* cert) {
