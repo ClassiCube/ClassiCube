@@ -323,31 +323,31 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 
 #### FreeBSD
 
-1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
+1. Install `gmake`, `libxi`, `libexecinfo`, `openssl` and `openal-soft` packages if needed
 2. Run either:
-    * `make freebsd` - produces a simple non-optimised executable, easier to debug
-    * `make freebsd RELEASE=1` - produces an optimised executable, harder to debug
+    * `gmake freebsd` - produces a simple non-optimised executable, easier to debug
+    * `gmake freebsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### OpenBSD
 
-1. Install `libexecinfo`, `curl` and `openal` packages if needed
+1. Install `gmake`, `libexecinfo`, `openssl` and `openal` packages if needed
 2. Run either:
-    * `make openbsd` - produces a simple non-optimised executable, easier to debug
-    * `make openbsd RELEASE=1` - produces an optimised executable, harder to debug
+    * `gmake openbsd` - produces a simple non-optimised executable, easier to debug
+    * `gmake openbsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### NetBSD
 
-1. Install `libexecinfo`, `curl` and `openal-soft` packages if needed
+1. Install `gmake`, `libexecinfo`, `openssl` and `openal-soft` packages if needed
 2. Run either:
-    * `make netbsd` - produces a simple non-optimised executable, easier to debug
-    * `make netbsd RELEASE=1` - produces an optimised executable, harder to debug
+    * `gmake netbsd` - produces a simple non-optimised executable, easier to debug
+    * `gmake netbsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### DragonflyBSD
 
-1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
+1. Install `gmake`, `libxi`, `libexecinfo`, `openssl` and `openal-soft` packages if needed
 2. Run either:
-    * `make dragonfly` - produces a simple non-optimised executable, easier to debug
-    * `make dragonfly RELEASE=1` - produces an optimised executable, harder to debug
+    * `gmake dragonfly` - produces a simple non-optimised executable, easier to debug
+    * `gmake dragonfly RELEASE=1` - produces an optimised executable, harder to debug
 
 #### Solaris
 
