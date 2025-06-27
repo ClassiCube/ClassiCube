@@ -15,7 +15,7 @@ include $(DEVKITARM)/3ds_rules
 APP_ICON	:= $(TOPDIR)/misc/3ds/icon.png
 APP_TITLE 	:= ClassiCube
 APP_DESCRIPTION := Simple block building sandbox
-APP_AUTHOR 	:= UnknownShadow200
+APP_AUTHOR 	:= ClassiCube team
 TARGET 		:= ClassiCube-3ds
 
 #---------------------------------------------------------------------------------

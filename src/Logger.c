@@ -52,9 +52,10 @@
 /* Need this to detect macOS < 10.4, and switch to NS* api instead if so */
 #include <AvailabilityMacros.h>
 #endif
+
 /* Only show up to 50 frames in backtrace */
 #define MAX_BACKTRACE_FRAMES 50
-
+static cc_bool cefCrash;
 
 /*########################################################################################################################*
 *----------------------------------------------------------Warning--------------------------------------------------------*
@@ -212,6 +213,9 @@ static void PrintFrame(cc_string* str, cc_uintptr addr,
 	} else {
 		String_AppendConst(str, _NL);
 	}
+
+	/* Check if crash is most likely caused by third party plugins */
+	cefCrash |= String_ContainsConst(&module, "classicube_cef");
 }
 
 #if defined CC_BUILD_UWP
@@ -1209,8 +1213,12 @@ void Logger_DoAbort(cc_result result, const char* raw_msg, void* ctx) {
 	LogCrashHeader();
 	Logger_Log(&msg);
 
-	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
-	String_AppendConst(&msg, "Please report this on the ClassiCube forums or Discord.\n\n");
+	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n\n");
+	if (cefCrash) {
+		String_AppendConst(&msg, "The crash may have been caused by the CEF plugin.\nYou may want to try completely reinstalling it.\n\n");
+	} else {
+		String_AppendConst(&msg, "Please report this on the ClassiCube forums or Discord.\n\n");
+	}
 	if (ctx) DumpRegisters(ctx);
 
 	/* These two function calls used to be in a separate DumpBacktrace function */

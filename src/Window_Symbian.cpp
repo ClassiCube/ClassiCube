@@ -35,6 +35,7 @@ extern "C" {
 #include "Server.h"
 #include "LScreens.h"
 #include "Http.h"
+#include "main_impl.h"
 }
 
 class CCContainer;
@@ -494,7 +495,7 @@ TInt CCContainer::LoopCallBack(TAny*) {
 		return EFalse;
 	}
 	
-	// launcher -> game -> launcher -> ... loop (like in main.c)
+	// launcher -> game -> launcher -> ... loop
 	if (!gameRunning) {
 		if (Launcher_DoFrame()) {
 			return ETrue;
@@ -525,17 +526,7 @@ void CCContainer::ConstructL(const TRect& aRect, CAknAppUi* aAppUi) {
 	ActivateL();
 	container = this;
 	
-	// initialize (copied from main.c)
-	static char ipBuffer[STRING_SIZE];
-	CrashHandler_Install();
-	Logger_Hook();
-	Window_PreInit();
-	Platform_Init();
-	Options_Load();
-	Window_Init();
-	Gamepads_Init();
-	Platform_LogConst("Starting " GAME_APP_NAME " ..");
-	String_InitArray(Server.Address, ipBuffer);
+	SetupProgram(0, 0);
 
 	TSize size = Size();
 	WindowInfo.Focused = true;

@@ -465,13 +465,14 @@ static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol 
 }
 
 static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
-	int pal_count = 0;
+	int width = bmp->width, height = bmp->height;
+
+	BitmapCol* row = bmp->scan0;
+	int pal_count  = 0;
 	
-	for (int y = 0; y < bmp->height; y++)
+	for (int y = 0; y < height; y++, row += rowWidth)
 	{
-		BitmapCol* row = bmp->scan0 + y * rowWidth;
-		
-		for (int x = 0; x < bmp->width; x++) 
+		for (int x = 0; x < width; x++) 
 		{
 			BitmapCol color = row[x];
 			int idx = FindInPalette(palette, pal_count, color);
@@ -623,14 +624,6 @@ static CC_INLINE void ConvertTexture_4444(cc_uint16* dst, struct Bitmap* bmp, in
 	}
 }
 
-static CC_INLINE int FindInPalette2(BitmapCol* palette, int pal_count, BitmapCol color) {
-	for (int i = 0; i < pal_count; i++) 
-	{
-		if (palette[i] == color) return i;
-	}
-	return -1;
-}
-
 static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
 	int width = bmp->width >> 1, height = bmp->height >> 1;
 	unsigned maskX, maskY;
@@ -645,10 +638,10 @@ static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp,
 		
 		for (int x = 0; x < width; x++, src += 2, next += 2)
 		{
-			int pal_00 = FindInPalette2(palette, pal_count,  src[0]);
-			int pal_10 = FindInPalette2(palette, pal_count,  src[1]);
-			int pal_01 = FindInPalette2(palette, pal_count, next[0]);
-			int pal_11 = FindInPalette2(palette, pal_count, next[1]);
+			int pal_00 = FindInPalette(palette, pal_count,  src[0]);
+			int pal_10 = FindInPalette(palette, pal_count,  src[1]);
+			int pal_01 = FindInPalette(palette, pal_count, next[0]);
+			int pal_11 = FindInPalette(palette, pal_count, next[1]);
 
 			dst[X | Y] = pal_00 | (pal_01 << 4) | (pal_10 << 8) | (pal_11 << 12);
 
@@ -736,7 +729,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	cc_uint32 size = TextureSize(tex);
 	texmem_free(tex->data, size);
 
-	if (tex->format != PVR_TXRFMT_PAL4BPP) {
+	if (tex->format != PVR_TXRFMT_ARGB4444) {
 		int index = (tex->format & PVR_TXRFMT_4BPP_PAL(63)) >> 21;
 		palettes_used[index] = false;
 	}

@@ -121,6 +121,9 @@ struct PhysicsComp {
 	float JumpVel, UserJumpVel, ServerJumpVel;
 	struct HacksComp* Hacks;
 	struct CollisionsComp* Collisions;
+
+	float gravity;
+	Vec3 drag, groundFriction;
 };
 
 void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity);

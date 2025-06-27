@@ -518,7 +518,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 	uint16_t gour_base = ((vdp1_vram_t)gourad_base >> 3);
 	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
 
-	for (int i = 0; i < verticesCount; i += 4, v += 4) 
+	for (int i = 0; i < verticesCount; i += 4, v += 4)
 	{
 		if (cmds_cur >= &cmds.extra) return;
 		vdp1_cmdt_t* cmd = cmds_cur++;

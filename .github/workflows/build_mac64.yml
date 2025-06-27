@@ -24,8 +24,8 @@ jobs:
         id: compile
         env: 
           COMMON_FLAGS:      "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
-          MAC_ARM64_FLAGS:   "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -arch arm64"
-          MAC_INTEL64_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -arch x86_64"
+          MAC_ARM64_FLAGS:   "-fvisibility=hidden -rdynamic -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -arch arm64"
+          MAC_INTEL64_FLAGS: "-fvisibility=hidden -rdynamic -arch x86_64"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"
           cd src

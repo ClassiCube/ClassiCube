@@ -666,7 +666,9 @@ static void IconsPngProcess(struct Stream* stream, const cc_string* name) {
 static struct TextureEntry icons_entry = { "icons.png", IconsPngProcess };
 
 static void TouchPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL, NULL);
+	if (!Gui.TouchUI) return;
+
+	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL, NULL);	
 }
 static struct TextureEntry touch_entry = { "touch.png", TouchPngProcess };
 

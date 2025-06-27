@@ -10,5 +10,6 @@ Compiling with Carbide C++
 - In PKG File drop down list, select `misc\symbian\ClassiCube.pkg`.
 - Check `Don't sign sis file`, click OK.
 - Apply and close properties.
+- Project > Build
 
 (Based off comments from https://github.com/ClassiCube/ClassiCube/pull/1360)

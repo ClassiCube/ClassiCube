@@ -1,7 +1,6 @@
 #include "Audio.h"
 #include "String.h"
 #include "Logger.h"
-#include "Funcs.h"
 #include "Errors.h"
 #include "Utils.h"
 #include "Platform.h"
@@ -10,11 +9,13 @@ void Audio_Warn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
 
-/* Whether the given audio data can be played without recreating the underlying audio device */
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
-
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(sampleRate, playbackRate) ((sampleRate * playbackRate) / 100)
+
+static cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate);
+static cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk);
+static cc_result Audio_Play(struct AudioContext* ctx);
+static cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 
 
 /*########################################################################################################################*
@@ -84,8 +85,8 @@ static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, struct Aud
 }
 #endif
 
-#ifdef AUDIO_COMMON_ALLOC
-static cc_result AudioBase_AllocChunks(int size, struct AudioChunk* chunks, int numChunks) {
+#ifndef AUDIO_OVERRIDE_ALLOC
+cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
 	cc_uint8* dst = (cc_uint8*)Mem_TryAlloc(numChunks, size);
 	int i;
 	if (!dst) return ERR_OUT_OF_MEMORY;
@@ -98,9 +99,14 @@ static cc_result AudioBase_AllocChunks(int size, struct AudioChunk* chunks, int 
 	return 0;
 }
 
-static void AudioBase_FreeChunks(struct AudioChunk* chunks, int numChunks) {
+void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	Mem_Free(chunks[0].data);
 }
+#endif
+
+
+#ifndef AUDIO_OVERRIDE_SOUNDS
+void AudioBackend_LoadSounds(void) { Sounds_LoadDefault(); }
 #endif
 
 
@@ -112,49 +118,45 @@ struct AudioContext music_ctx;
 static struct AudioContext context_pool[POOL_MAX_CONTEXTS];
 
 #ifndef CC_BUILD_NOSOUNDS
-static cc_result PlayAudio(struct AudioContext* ctx, struct AudioData* data) {
-    cc_result res;
-    Audio_SetVolume(ctx, data->volume);
-
-	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
-	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
-	if ((res = Audio_Play(ctx))) return res;
-	return 0;
-}
-
 cc_result AudioPool_Play(struct AudioData* data) {
 	struct AudioContext* ctx;
-	int inUse, i;
+	cc_bool isBusy;
 	cc_result res;
+	int i;
 
 	/* Try to play on a context that doesn't need to be recreated */
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
+	{
 		ctx = &context_pool[i];
 		if (!ctx->count && (res = Audio_Init(ctx, 1))) return res;
 
-		if ((res = Audio_Poll(ctx, &inUse))) return res;
-		if (inUse > 0) continue;
-		
-		if (!Audio_FastPlay(ctx, data)) continue;
-		return PlayAudio(ctx, data);
+		if ((res = SoundContext_PollBusy(ctx, &isBusy))) return res;
+		if (isBusy) continue;
+		if (!SoundContext_FastPlay(ctx, data)) continue;
+
+		Audio_SetVolume(ctx, data->volume);
+		return SoundContext_PlayData(ctx, data);
 	}
 
 	/* Try again with all contexts, even if need to recreate one (expensive) */
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++) 
+	{
 		ctx = &context_pool[i];
-		res = Audio_Poll(ctx, &inUse);
+		res = SoundContext_PollBusy(ctx, &isBusy);
 
 		if (res) return res;
-		if (inUse > 0) continue;
+		if (isBusy) continue;
 
-		return PlayAudio(ctx, data);
+		Audio_SetVolume(ctx, data->volume);
+		return SoundContext_PlayData(ctx, data);
 	}
 	return 0;
 }
 
 void AudioPool_Close(void) {
 	int i;
-	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
+	for (i = 0; i < POOL_MAX_CONTEXTS; i++)
+	{
 		Audio_Close(&context_pool[i]);
 	}
 }

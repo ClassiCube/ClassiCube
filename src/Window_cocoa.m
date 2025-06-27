@@ -328,7 +328,6 @@ static void MakeContentView(void) {
 	[winHandle setContentView:viewHandle];
 }
 
-#ifdef CC_BUILD_ICON
 // See misc/macOS/mac_icon_gen.cs for how to generate this file
 #include "../misc/macOS/CCIcon_mac.h"
 
@@ -352,9 +351,6 @@ static void ApplyIcon(void) {
 	[appHandle setApplicationIconImage:img];
 	//[img release];
 }
-#else
-static void ApplyIcon(void) { }
-#endif
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
 	Window_RequestClose();

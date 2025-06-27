@@ -92,6 +92,7 @@ And also runs on:
 * PS1 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps1))
 * Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
+* Symbian (S60 3rd Edition FP1 and later) - unfinished, but usable
 
 # Compiling 
 
@@ -331,7 +332,7 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 
 1. Install `libexecinfo`, `curl` and `openal` packages if needed
 2. Run either:
-    * `make opensd` or
+    * `make openbsd` or
     * `cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### NetBSD
@@ -339,7 +340,7 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 1. Install `libexecinfo`, `curl` and `openal-soft` packages if needed
 2. Run either:
     * `make netbsd` or
-    * `cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib -lpthread -lX11 -lXi -lGL -lexecinfo`
 
 #### DragonflyBSD
 
@@ -391,6 +392,10 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
     * ```make macclassic_ppc``` (For a PPC build)
 
 The PowerPC build will usually perform much better
+
+#### Symbian S60
+
+[Guide for Carbide.c++](misc/symbian/readme.md)
 
 #### Other systems
 

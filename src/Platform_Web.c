@@ -403,6 +403,8 @@ void Platform_Init(void) {
 }
 void Platform_Free(void) { }
 
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) { return 0; }
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
@@ -430,10 +432,20 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) { return 0; }
-static int _argc;
+#include "main_impl.h"
+static int    _argc;
 static char** _argv;
+
+/* webclient does some asynchronous initialisation first, then kickstarts the game after that */
+static void web_main(void) {
+	SetupProgram(_argc, _argv);
+	cc_result res = RunProgram(_argc, _argv);
+
+	if (!res) return;
+	Window_Free();
+	Process_Exit(res);
+}
+
 
 extern void interop_FS_Init(void);
 extern void interop_DirectorySetWorking(const char* path);
@@ -454,15 +466,13 @@ int main(int argc, char** argv) {
 
 extern void interop_LoadIndexedDB(void);
 extern void interop_AsyncLoadIndexedDB(void);
+
 /* Asynchronous callback after texture pack is downloaded */
 EMSCRIPTEN_KEEPALIVE void main_phase1(void) {
 	interop_LoadIndexedDB(); /* legacy compatibility */
 	interop_AsyncLoadIndexedDB();
 }
 
-extern int web_main(int argc, char** argv);
 /* Asynchronous callback after IndexedDB is loaded */
-EMSCRIPTEN_KEEPALIVE void main_phase2(void) {
-	web_main(_argc, _argv);
-}
+EMSCRIPTEN_KEEPALIVE void main_phase2(void) { web_main(); }
 #endif

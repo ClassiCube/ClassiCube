@@ -208,7 +208,10 @@ void Gfx_ClearColor(PackedCol color) {
 
 void Gfx_EndFrame(void) {
 	// W buffering is used for fog
-	GFX_FLUSH = GL_WBUFFERING;
+	// Unfortunately this results in 2D UI clipping into the world
+	//GFX_FLUSH = GL_WBUFFERING;
+
+	GFX_FLUSH = 0;
 	// TODO not needed?
 	swiWaitForVBlank();
 }
@@ -308,7 +311,7 @@ void Gfx_DisableTextureOffset(void) {
 	UpdateTextureMatrix();
 }
 
-static CC_INLINE int FindInPalette(cc_uint16* pal, int pal_size, cc_uint16 color) {
+static CC_INLINE int FindInPalette(BitmapCol* pal, int pal_size, BitmapCol color) {
 	if ((color >> 15) == 0) return 0;
 	
 	for (int i = 1; i < pal_size; i++) 
@@ -319,16 +322,17 @@ static CC_INLINE int FindInPalette(cc_uint16* pal, int pal_size, cc_uint16 color
 }
 
 static CC_INLINE int CalcPalette(cc_uint16* palette, struct Bitmap* bmp, int rowWidth) {
+	int width = bmp->width, height = bmp->height;
+	BitmapCol* row = bmp->scan0;
+
 	int pal_count = 1;
 	palette[0]    = 0; // entry 0 is transparent colour
 	
-	for (int y = 0; y < bmp->height; y++)
+	for (int y = 0; y < height; y++, row += rowWidth)
 	{
-		cc_uint16* row = bmp->scan0 + y * rowWidth;
-		
-		for (int x = 0; x < bmp->width; x++) 
+		for (int x = 0; x < width; x++) 
 		{
-			cc_uint16 color = row[x];
+			BitmapCol color = row[x];
 			int idx = FindInPalette(palette, pal_count, color);
 			if (idx >= 0) continue;
 
@@ -348,7 +352,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
 
-	cc_uint16 palette[256];
+	BitmapCol palette[256];
 	int pal_count = CalcPalette(palette, bmp, rowWidth);
 	int tex_size, tex_fmt;
 
@@ -373,45 +377,39 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	}
 
 	int offset = tex->texBase * TEX_BLOCK_SIZE;
-	u16* addr  = (u16*) ((u8*)VRAM_A + offset);
+	u16* addr  = (u16*)((u8*)VRAM_A + offset);
 	u16* tmp_u16[128]; // 256 bytes
 	char* tmp = (char*)tmp_u16;
 
 	u32 banks = vramSetPrimaryBanks(VRAM_A_LCD, VRAM_B_LCD, VRAM_C_LCD, VRAM_D_LCD);
-
 	int stride;
 
-	if (tex_fmt == GL_RGB4) {
-		char* buf = malloc(tex_size);
-		int i = 0;
-		if (!buf) return NULL;
+	int width = bmp->width, height = bmp->height;
+	BitmapCol* row = bmp->scan0;
 
-		for (int y = 0; y < bmp->height; y++)
+	if (tex_fmt == GL_RGB4) {
+		stride = width >> 3;
+
+		for (int y = 0; y < height; y++, row += rowWidth)
 		{
-			cc_uint16* row = bmp->scan0 + y * rowWidth;
-		
-			for (int x = 0; x < bmp->width; x++, i++) 
+			for (int x = 0; x < width; x++) 
 			{
 				int idx = FindInPalette(palette, pal_count, row[x]);
 			
-				if ((i & 3) == 0) {
-					buf[i >> 2] = idx;
+				if ((x & 3) == 0) {
+					tmp[x >> 2] = idx;
 				} else {
-					buf[i >> 2] |= idx << (2 * (i & 3));
+					tmp[x >> 2] |= idx << (2 * (x & 3));
 				}
 			}
+			CopyHWords(tmp, addr + stride * y, stride);
 		}
-
-		CopyHWords(buf, addr, tex_size >> 1);
-		free(buf);
 	} else if (tex_fmt == GL_RGB16) {
-		stride = bmp->width >> 2;
+		stride = width >> 2;
 
-		for (int y = 0; y < bmp->height; y++, addr += stride)
+		for (int y = 0; y < height; y++, addr += stride, row += rowWidth)
 		{
-			cc_uint16* row = bmp->scan0 + y * rowWidth;
-		
-			for (int x = 0; x < bmp->width; x++) 
+			for (int x = 0; x < width; x++) 
 			{
 				int idx = FindInPalette(palette, pal_count, row[x]);
 			
@@ -424,24 +422,22 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			CopyHWords(tmp, addr, stride);
 		}
 	} else if (tex_fmt == GL_RGB256) {
-		stride = bmp->width >> 1;
+		stride = width >> 1;
 
-		for (int y = 0; y < bmp->height; y++, addr += stride)
+		for (int y = 0; y < height; y++, addr += stride, row += rowWidth)
 		{
-			cc_uint16* row = bmp->scan0 + y * rowWidth;
-		
-			for (int x = 0; x < bmp->width; x++) 
+			for (int x = 0; x < width; x++) 
 			{
 				tmp[x] = FindInPalette(palette, pal_count, row[x]);
 			}
 			CopyHWords(tmp, addr, stride);
 		}
 	} else {
-		stride = bmp->width;
+		stride = width;
 
-		for (int y = 0; y < bmp->height; y++, addr += stride) {
-			cc_uint16* src = bmp->scan0 + y * rowWidth;
-			CopyHWords(src, addr, stride);
+		for (int y = 0; y < height; y++, addr += stride, row += rowWidth) 
+		{
+			CopyHWords(row, addr, stride);
 		}
 	}
 
@@ -715,7 +711,7 @@ static void SetPolygonMode() {
 	u32 fmt =
 		POLY_ALPHA(blend ? 14 : 31) | 
 		(backfaceCull ? POLY_CULL_BACK : POLY_CULL_NONE) | 
-		(fogEnabled ? POLY_FOG : 0) | 
+		//(fogEnabled ? POLY_FOG : 0) | fog breaks UI
 		POLY_RENDER_FAR_POLYS | 
 		POLY_RENDER_1DOT_POLYS;
 
@@ -754,10 +750,11 @@ static void RecalculateFog() {
 		glFogShift(shift);
 		GFX_FOG_OFFSET = 0;
 		
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < 32; i++) 
+		{
 			int distance  = (i * 512 + 256) * (0x400 >> shift);
 			int intensity = distance * 127 / fogEnd;
-			if(intensity > 127) intensity = 127;
+			if (intensity > 127) intensity = 127;
 			
 			GFX_FOG_TABLE[i] = intensity;
 		}

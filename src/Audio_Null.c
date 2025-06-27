@@ -2,6 +2,9 @@
 
 #if CC_AUD_BACKEND == CC_AUD_BACKEND_NULL
 struct AudioContext { int count; };
+
+#define AUDIO_OVERRIDE_SOUNDS
+#define AUDIO_OVERRIDE_ALLOC
 #include "_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) { return false; }
@@ -14,26 +17,50 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 
 void Audio_Close(struct AudioContext* ctx) { }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Audio_SetVolume(struct AudioContext* ctx, int volume) { }
 
-cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Stream context-----------------------------------------------------*
+*#########################################################################################################################*/
+cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Audio_Play(struct AudioContext* ctx) {
+cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+cc_result StreamContext_Play(struct AudioContext* ctx) {
 	return ERR_NOT_SUPPORTED;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
+cc_result StreamContext_Pause(struct AudioContext* ctx) {
+	return ERR_NOT_SUPPORTED;
+}
 
+cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
+	return ERR_NOT_SUPPORTED;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
+
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
+	return ERR_NOT_SUPPORTED;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) { return false; }
 
 cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
@@ -41,5 +68,11 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 }
 
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) { }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Sounds---------------------------------------------------------*
+*#########################################################################################################################*/
+void AudioBackend_LoadSounds(void) { }
 #endif
 

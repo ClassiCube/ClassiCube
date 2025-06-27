@@ -1,3 +1,12 @@
+/* 
+NOTE: This file contains the common entrypoint code for ClassiCube.
+
+This file is included by platform backend files (e.g. see Platform_Windows.c, Platform_Posix.c)
+This separation is necessary because some platforms require special 'main' functions.
+
+Eg. the webclient 'main' function loads IndexedDB, and when that has asynchronously finished, 
+  then calls the 'web_main' callback - which actually runs ClassiCube
+*/
 #include "Logger.h"
 #include "String.h"
 #include "Platform.h"
@@ -212,63 +221,3 @@ static int RunProgram(int argc, char** argv) {
 	return 0;
 }
 
-#if defined CC_BUILD_IOS
-/* ClassiCube is sort of and sort of not the executable */
-/*  on iOS - UIKit is responsible for kickstarting the game. */
-/* (this is handled in interop_ios.m as the code is Objective C) */
-int ios_main(int argc, char** argv) {
-	SetupProgram(argc, argv);
-	for (;;) { RunProgram(argc, argv); }
-	return 0;
-}
-#elif defined CC_BUILD_ANDROID
-/* ClassiCube is just a native library on android, */
-/*  unlike other platforms where it is the executable. */
-/* (activity java class is responsible for kickstarting the game,
-    see Platform_Android.c for the code that actually calls this) */
-void android_main(void) {
-	Platform_LogConst("Main loop started!");
-	SetupProgram(0, NULL);
-	for (;;) { RunProgram(0, NULL); }
-}
-#elif defined CC_BUILD_CONSOLE
-int main(int argc, char** argv) {
-	SetupProgram(argc, argv);
-	while (Window_Main.Exists) { 
-		RunProgram(argc, argv); 
-	}
-	
-	Window_Free();
-	return 0;
-}
-#else
-/* NOTE: main_real is used for when compiling with MinGW without linking to startup files. */
-/*  Normally, the final code produced for "main" is our "main" combined with crt's main */
-/*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
-/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
-#if defined CC_NOMAIN
-int main_real(int argc, char** argv) {
-#elif defined CC_BUILD_WEB
-/* webclient does some asynchronous initialisation first, then kickstarts the game after that */
-int web_main(int argc, char** argv) {
-#else
-int main(int argc, char** argv) {
-#endif
-	cc_result res;
-	SetupProgram(argc, argv);
-
-	/* If single process mode, then the loop is launcher -> game -> launcher etc */
-	do {
-		res = RunProgram(argc, argv);
-	} while (Platform_IsSingleProcess() && Window_Main.Exists);
-
-#ifdef CC_BUILD_WEB
-	if (res) Window_Free();
-#else
-	Window_Free();
-#endif
-
-	Process_Exit(res);
-	return res;
-}
-#endif

@@ -8,13 +8,9 @@
 #include "Event.h"
 #include "Picking.h"
 #include "Lighting.h"
+#include "Audio.h"
 
 struct _BlockLists Blocks;
-
-const char* const Sound_Names[SOUND_COUNT] = {
-	"none", "wood", "gravel", "grass", "stone",
-	"metal", "glass", "cloth", "sand", "snow",
-};
 
 /*########################################################################################################################*
 *---------------------------------------------------Default properties----------------------------------------------------*

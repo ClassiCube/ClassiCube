@@ -42,8 +42,8 @@ jobs:
         shell: bash
         env: 
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
-          PLAT32_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I freebsd32/include -L freebsd32/lib"
-          PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I freebsd64/include -L freebsd64/lib"
+          PLAT32_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -I freebsd32/include -L freebsd32/lib"
+          PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -I freebsd64/include -L freebsd64/lib"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           

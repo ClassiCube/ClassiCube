@@ -2,7 +2,7 @@ PROJECT_TITLE 	:= ClassiCube
 PROJECT_TITLEID := CUBE00200
 TARGET 			:= ClassiCube-vita
 
-BUILD_DIR		:= build-vita
+BUILD_DIR		:= build/vita
 SOURCE_DIRS		:= src third_party/bearssl/src
 
 CFLAGS += -Wl,-q -Ithird_party/bearssl/inc -O1

@@ -10,6 +10,20 @@
 #include <unistd.h>
 #include <android/log.h>
 
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "main_impl.h"
+
+// ClassiCube is just a native library on android,
+//   unlike most other platforms where it is the executable.
+// The activity java class is responsible for kickstarting the game
+void android_main(void) {
+	Platform_LogConst("Main loop started!");
+	SetupProgram(0, NULL);
+	for (;;) { RunProgram(0, NULL); }
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
@@ -214,7 +228,6 @@ void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* d
 /*########################################################################################################################*
 *----------------------------------------------------Initialisation-------------------------------------------------------*
 *#########################################################################################################################*/
-extern void android_main(void);
 static void JNICALL java_updateInstance(JNIEnv* env, jobject instance) {
 	Platform_LogConst("App instance updated!");
 	App_Instance = (*env)->NewGlobalRef(env, instance);

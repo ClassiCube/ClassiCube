@@ -13,6 +13,7 @@
 #include "Logger.h"
 #include "Vectors.h"
 #include "Chat.h"
+#include "Audio.h"
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {

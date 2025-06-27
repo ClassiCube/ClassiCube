@@ -37,8 +37,9 @@ static void   (APIENTRY *_alGenSources)(ALsizei n, ALuint* sources);
 static void   (APIENTRY *_alDeleteSources)(ALsizei n, const ALuint* sources);
 static void   (APIENTRY *_alGetSourcei)(ALuint source, ALenum param, ALint* value);
 static void   (APIENTRY *_alSourcef)(ALuint source, ALenum param, float value);
-static void   (APIENTRY *_alSourcePlay)(ALuint source);
-static void   (APIENTRY *_alSourceStop)(ALuint source);
+static void   (APIENTRY *_alSourcePlay) (ALuint source);
+static void   (APIENTRY *_alSourcePause)(ALuint source);
+static void   (APIENTRY *_alSourceStop) (ALuint source);
 static void   (APIENTRY *_alSourceQueueBuffers)(ALuint source, ALsizei nb, const ALuint* buffers);
 static void   (APIENTRY *_alSourceUnqueueBuffers)(ALuint source, ALsizei nb, ALuint* buffers);
 static void   (APIENTRY *_alGenBuffers)(ALsizei n, ALuint* buffers);
@@ -65,6 +66,7 @@ struct AudioContext {
 
 #define AUDIO_COMMON_ALLOC
 #include "_AudioBase.h"
+#include "Funcs.h"
 
 static void* audio_device;
 static void* audio_context;
@@ -95,7 +97,8 @@ static cc_bool LoadALFuncs(void) {
 		DynamicLib_ReqSym(alSourcePlay),      DynamicLib_ReqSym(alSourceStop),
 		DynamicLib_ReqSym(alSourceQueueBuffers), DynamicLib_ReqSym(alSourceUnqueueBuffers),
 		DynamicLib_ReqSym(alGenBuffers),      DynamicLib_ReqSym(alDeleteBuffers),
-		DynamicLib_ReqSym(alBufferData),      DynamicLib_ReqSym(alDistanceModel)
+		DynamicLib_ReqSym(alBufferData),      DynamicLib_ReqSym(alDistanceModel),
+		DynamicLib_OptSym(alSourcePlay)
 	};
 	void* lib;
 	
@@ -221,11 +224,6 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 	return 0;
 }
 
-cc_result Audio_Play(struct AudioContext* ctx) {
-	_alSourcePlay(ctx->source);
-	return _alGetError();
-}
-
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	ALint processed = 0;
 	ALuint buffer;
@@ -247,11 +245,66 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = ctx->count - ctx->free; return 0;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Stream context-----------------------------------------------------*
+*#########################################################################################################################*/
+cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	return Audio_SetFormat(ctx, channels, sampleRate, playbackRate);
+}
+
+cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk) {
+	return Audio_QueueChunk(ctx, chunk); 
+}
+
+cc_result StreamContext_Play(struct AudioContext* ctx) {
+	_alSourcePlay(ctx->source);
+	return _alGetError();
+}
+
+cc_result StreamContext_Pause(struct AudioContext* ctx) {
+	if (!_alSourcePause) return ERR_NOT_SUPPORTED;
+
+	_alSourcePause(ctx->source);
+	return _alGetError();
+}
+
+cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
+	return Audio_Poll(ctx, inUse);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
 
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+    cc_result res;
+
+	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
+	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
+	_alSourcePlay(ctx->source);
+
+	return _alGetError();
+}
+
+cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
+	int inUse = 1;
+	cc_result res;
+	if ((res = Audio_Poll(ctx, &inUse))) return res;
+
+	*isBusy = inUse > 0;
+	return 0;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Audio misc-------------------------------------------------------*
+*#########################################################################################################################*/
 static const char* GetError(cc_result res) {
 	switch (res) {
 	case AL_ERR_INIT_CONTEXT:  return "Failed to init OpenAL context";
@@ -269,14 +322,6 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = GetError(res);
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
-}
-
-cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	return AudioBase_AllocChunks(size, chunks, numChunks);
-}
-
-void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 
