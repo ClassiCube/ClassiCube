@@ -25,7 +25,6 @@ jobs:
           apk add curl curl-dev
           eval $(/usr/src/nxdk/bin/activate -s)
           make xbox
-          cp bin/default.xbe ClassiCube-xbox.xbe
           
 
       - uses: ./.github/actions/notify_failure

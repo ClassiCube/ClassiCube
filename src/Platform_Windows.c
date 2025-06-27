@@ -42,6 +42,34 @@ cc_bool  Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags;
 
 /*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "main_impl.h"
+
+/* NOTE: main_real is used for when compiling with MinGW without linking to startup files. */
+/*  Normally, the final code produced for "main" is our "main" combined with crt's main */
+/*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
+/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
+#if defined CC_NOMAIN
+int main_real(int argc, char** argv) {
+#else
+int main(int argc, char** argv) {
+#endif
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	/* If single process mode, then the loop is launcher -> game -> launcher etc */
+	do {
+		res = RunProgram(argc, argv);
+	} while (Platform_IsSingleProcess() && Window_Main.Exists);
+
+	Window_Free();
+	Process_Exit(res);
+	return res;
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_NOSTDLIB

@@ -26,7 +26,7 @@ jobs:
         shell: bash
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -rdynamic"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
  

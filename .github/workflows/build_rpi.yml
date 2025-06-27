@@ -34,7 +34,7 @@ jobs:
         id: compile
         env: 
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
-          RPI32_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          RPI32_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           
@@ -85,7 +85,7 @@ jobs:
         id: compile
         env: 
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
-          RPI64_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          RPI64_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           

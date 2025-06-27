@@ -6,7 +6,7 @@ export BLOCKSDSEXT		?= /opt/wonderful/thirdparty/blocksds/external
 
 GAME_TITLE	:= ClassiCube
 GAME_SUBTITLE	:= Built with BlocksDS
-GAME_AUTHOR	:= UnknownShadow200
+GAME_AUTHOR	:= ClassiCube team
 GAME_ICON	:= misc/ds/icon.bmp
 GAME_FULL_TITLE := $(GAME_TITLE);$(GAME_SUBTITLE);$(GAME_AUTHOR)
 
@@ -22,10 +22,10 @@ SDIMAGE		:= image.bin
 # Build artfacts
 # --------------
 ifdef BUILD_DSI
-BUILDDIR	:= build-dsi
+BUILDDIR	:= build/dsi
 ROM			:= ClassiCube-dsi.nds
 else
-BUILDDIR	:= build-nds
+BUILDDIR	:= build/nds
 ROM			:= ClassiCube-nds.nds
 endif
 

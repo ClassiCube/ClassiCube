@@ -88,6 +88,29 @@ cc_bool  Platform_ReadonlyFilesystem;
 	#include <dlfcn.h>
 #endif
 
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_IOS || defined CC_BUILD_ANDROID
+/* Implemented in interop_ios.m or Platform_Android.c */
+#else
+#include "main_impl.h"
+
+int main(int argc, char** argv) {
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	/* If single process mode, then the loop is launcher -> game -> launcher etc */
+	do {
+		res = RunProgram(argc, argv);
+	} while (Platform_IsSingleProcess() && Window_Main.Exists);
+
+	Window_Free();
+	Process_Exit(res);
+	return res;
+}
+#endif
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
