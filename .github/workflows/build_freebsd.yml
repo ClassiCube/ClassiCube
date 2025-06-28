@@ -25,8 +25,8 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files (64 bit)
         run: |
-          mkdir src/freebsd64
-          cd src/freebsd64
+          mkdir freebsd64
+          cd freebsd64
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/freebsd64.zip
           unzip freebsd64.zip
 

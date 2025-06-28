@@ -1,18 +1,16 @@
 #include "Certs.h"
 
 #ifndef CC_CRT_BACKEND
+#include "Errors.h"
+
 void CertsBackend_Init(void) { }
 
 void Certs_BeginChain(struct X509CertContext* ctx) { }
-
 void Certs_FreeChain( struct X509CertContext* ctx) { }
-
 int Certs_VerifyChain(struct X509CertContext* ctx) { return ERR_NOT_SUPPORTED; }
 
 void Certs_BeginCert( struct X509CertContext* ctx, int size) { }
-
 void Certs_AppendCert(struct X509CertContext* ctx, const void* data, int len) { }
-
 void Certs_FinishCert(struct X509CertContext* ctx) { }
 #else
 #include "Platform.h"
