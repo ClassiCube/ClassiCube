@@ -23,11 +23,11 @@ jobs:
       - name: Compile haiku build
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
+          LIBS: "-lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker"
+          SRCS: "src/*.c src/Platform_BeOS.cpp src/Window_BeOS.cpp third_party/bearssl/src/*.c"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Ithird_party/bearssl/inc"
         run: |
-          cd src        
-          x86_64-unknown-haiku-gcc *.c Platform_BeOS.cpp Window_BeOS.cpp -o ClassiCube-haiku ${{ env.COMMON_FLAGS }} -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
-          
+          x86_64-unknown-haiku-gcc ${{ env.SRCS }} -o ClassiCube-haiku ${{ env.COMMON_FLAGS }} ${{ env.LIBS }}
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -39,7 +39,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome  == 'success' }}
         with:
-          SOURCE_FILE: 'src/ClassiCube-haiku'
+          SOURCE_FILE: 'ClassiCube-haiku'
           DEST_NAME: 'ClassiCube-haiku'
           
           

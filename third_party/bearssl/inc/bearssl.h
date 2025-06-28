@@ -39,7 +39,6 @@
  * | :-------------- | :------------------------------------------------ |
  * | bearssl_hash.h  | Hash functions                                    |
  * | bearssl_hmac.h  | HMAC                                              |
- * | bearssl_kdf.h   | Key Derivation Functions                          |
  * | bearssl_rand.h  | Pseudorandom byte generators                      |
  * | bearssl_prf.h   | PRF implementations (for SSL/TLS)                 |
  * | bearssl_block.h | Symmetric encryption                              |
@@ -48,7 +47,6 @@
  * | bearssl_ec.h    | Elliptic curves support (including ECDSA)         |
  * | bearssl_ssl.h   | SSL/TLS engine interface                          |
  * | bearssl_x509.h  | X.509 certificate decoding and validation         |
- * | bearssl_pem.h   | Base64/PEM decoding support functions             |
  *
  * Applications using BearSSL are supposed to simply include `bearssl.h`
  * as follows:
@@ -130,7 +128,6 @@
 
 #include "bearssl_hash.h"
 #include "bearssl_hmac.h"
-#include "bearssl_kdf.h"
 #include "bearssl_rand.h"
 #include "bearssl_prf.h"
 #include "bearssl_block.h"
@@ -139,6 +136,5 @@
 #include "bearssl_ec.h"
 #include "bearssl_ssl.h"
 #include "bearssl_x509.h"
-#include "bearssl_pem.h"
 
 #endif

@@ -41,15 +41,17 @@ jobs:
         id: compile
         shell: bash
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
+          LIBS: "-lm -lpthread -lX11 -lXi -lGL -lexecinfo"
+          SRCS: "src/*.c third_party/bearssl/src/*.c"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Ithird_party/bearssl/inc"
           PLAT32_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -I freebsd32/include -L freebsd32/lib"
           PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -I freebsd64/include -L freebsd64/lib"
+
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
-          cd src
-          i386-freebsd11-clang *.c ${{ env.COMMON_FLAGS }} ${{ env.PLAT32_FLAGS }} $LATEST_FLAG -o cc-fbsd32-gl1 -lm -lpthread -lX11 -lXi -lGL -lexecinfo
-          x86_64-freebsd11-clang *.c ${{ env.COMMON_FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-fbsd64-gl1 -lm -lpthread -lX11 -lXi -lGL -lexecinfo
+          i386-freebsd11-clang ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.PLAT32_FLAGS }} $LATEST_FLAG -o cc-fbsd32-gl1 ${{ env.LIBS }}
+          x86_64-freebsd11-clang ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-fbsd64-gl1 ${{ env.LIBS }}
 
 
       # otherwise notify_failure doesn't work
@@ -67,13 +69,13 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-fbsd32-gl1'
+          SOURCE_FILE: 'cc-fbsd32-gl1'
           DEST_NAME: 'ClassiCube-FreeBSD-32'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-fbsd64-gl1'
+          SOURCE_FILE: 'cc-fbsd64-gl1'
           DEST_NAME: 'ClassiCube-FreeBSD-64'
           
           
