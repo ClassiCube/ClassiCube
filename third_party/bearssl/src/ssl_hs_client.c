@@ -1714,7 +1714,7 @@ br_ssl_hs_client_run(void *t0ctx)
 	prf_id = T0_POP();
 	is_client = T0_POP();
 	br_ssl_engine_switch_cbc_in(ENG, is_client, prf_id, mac_id,
-		aes ? ENG->iaes_cbcdec : ENG->ides_cbcdec, cipher_key_len);
+		ENG->iaes_cbcdec, cipher_key_len);
 
 				}
 				break;
@@ -1730,7 +1730,7 @@ br_ssl_hs_client_run(void *t0ctx)
 	prf_id = T0_POP();
 	is_client = T0_POP();
 	br_ssl_engine_switch_cbc_out(ENG, is_client, prf_id, mac_id,
-		aes ? ENG->iaes_cbcenc : ENG->ides_cbcenc, cipher_key_len);
+		ENG->iaes_cbcenc, cipher_key_len);
 
 				}
 				break;
