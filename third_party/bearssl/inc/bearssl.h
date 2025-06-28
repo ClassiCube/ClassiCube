@@ -39,7 +39,6 @@
  * | :-------------- | :------------------------------------------------ |
  * | bearssl_hash.h  | Hash functions                                    |
  * | bearssl_hmac.h  | HMAC                                              |
- * | bearssl_kdf.h   | Key Derivation Functions                          |
  * | bearssl_rand.h  | Pseudorandom byte generators                      |
  * | bearssl_prf.h   | PRF implementations (for SSL/TLS)                 |
  * | bearssl_block.h | Symmetric encryption                              |
@@ -48,7 +47,6 @@
  * | bearssl_ec.h    | Elliptic curves support (including ECDSA)         |
  * | bearssl_ssl.h   | SSL/TLS engine interface                          |
  * | bearssl_x509.h  | X.509 certificate decoding and validation         |
- * | bearssl_pem.h   | Base64/PEM decoding support functions             |
  *
  * Applications using BearSSL are supposed to simply include `bearssl.h`
  * as follows:
@@ -130,7 +128,6 @@
 
 #include "bearssl_hash.h"
 #include "bearssl_hmac.h"
-#include "bearssl_kdf.h"
 #include "bearssl_rand.h"
 #include "bearssl_prf.h"
 #include "bearssl_block.h"
@@ -139,49 +136,5 @@
 #include "bearssl_ec.h"
 #include "bearssl_ssl.h"
 #include "bearssl_x509.h"
-#include "bearssl_pem.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** \brief Type for a configuration option.
- *
- * A "configuration option" is a value that is selected when the BearSSL
- * library itself is compiled. Most options are boolean; their value is
- * then either 1 (option is enabled) or 0 (option is disabled). Some
- * values have other integer values. Option names correspond to macro
- * names. Some of the options can be explicitly set in the internal
- * `"config.h"` file.
- */
-typedef struct {
-	/** \brief Configurable option name. */
-	const char *name;
-	/** \brief Configurable option value. */
-	long value;
-} br_config_option;
-
-/** \brief Get configuration report.
- *
- * This function returns compiled configuration options, each as a
- * 'long' value. Names match internal macro names, in particular those
- * that can be set in the `"config.h"` inner file. For boolean options,
- * the numerical value is 1 if enabled, 0 if disabled. For maximum
- * key sizes, values are expressed in bits.
- *
- * The returned array is terminated by an entry whose `name` is `NULL`.
- *
- * \return  the configuration report.
- */
-const br_config_option *br_get_config(void);
-
-/* ======================================================================= */
-
-/** \brief Version feature: support for time callback. */
-#define BR_FEATURE_X509_TIME_CALLBACK   1
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

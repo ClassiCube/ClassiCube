@@ -61,9 +61,7 @@ br_ssl_engine_set_default_aes_gcm(br_ssl_engine_context *cc)
 		return;
 	}
 #endif
-#if BR_LOMUL
-	br_ssl_engine_set_ghash(cc, &br_ghash_ctmul32);
-#elif BR_64
+#if BR_64
 	br_ssl_engine_set_ghash(cc, &br_ghash_ctmul64);
 #else
 	br_ssl_engine_set_ghash(cc, &br_ghash_ctmul);

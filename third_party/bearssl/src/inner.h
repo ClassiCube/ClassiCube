@@ -126,15 +126,6 @@
 #endif
 
 /*
- * Set BR_LOMUL on platforms where it makes sense.
- */
-#ifndef BR_LOMUL
-#if BR_ARMEL_CORTEXM_GCC
-#define BR_LOMUL   1
-#endif
-#endif
-
-/*
  * Architecture detection.
  */
 #ifndef BR_i386

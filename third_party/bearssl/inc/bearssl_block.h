@@ -299,13 +299,6 @@ extern "C" {
  * | aes_ct    | AES      |        16          | 16, 24 and 32       |
  * | aes_ct64  | AES      |        16          | 16, 24 and 32       |
  * | aes_x86ni | AES      |        16          | 16, 24 and 32       |
- * | des_ct    | DES/3DES |         8          | 8, 16 and 24        |
- * | des_tab   | DES/3DES |         8          | 8, 16 and 24        |
- *
- * **Note:** DES/3DES nominally uses keys of 64, 128 and 192 bits (i.e. 8,
- * 16 and 24 bytes), but some of the bits are ignored by the algorithm, so
- * the _effective_ key lengths, from a security point of view, are 56,
- * 112 and 168 bits, respectively.
  *
  * `aes_big` is a "classical" AES implementation, using tables. It
  * is fast but not constant-time, since it makes data-dependent array
@@ -334,12 +327,6 @@ extern "C" {
  * `aes_x86ni` exists only on x86 architectures (32-bit and 64-bit). It
  * uses the AES-NI opcodes when available.
  *
- * `des_tab` is a classic, table-based implementation of DES/3DES. It
- * is not constant-time.
- *
- * `des_ct` is an constant-time implementation of DES/3DES. It is
- * substantially slower than `des_tab`.
- *
  * ## ChaCha20 and Poly1305
  *
  * ChaCha20 is a stream cipher. Poly1305 is a MAC algorithm. They
@@ -364,19 +351,9 @@ extern "C" {
  * construction, where the Poly1305 part is performed with mixed 32-bit
  * multiplications (operands are 32-bit, result is 64-bit).
  *
- * `poly1305_ctmul32` implements ChaCha20+Poly1305 using pure 32-bit
- * multiplications (32-bit operands, 32-bit result). It is slower than
- * `poly1305_ctmul`, except on some specific architectures such as
- * the ARM Cortex M0+.
- *
  * `poly1305_ctmulq` implements ChaCha20+Poly1305 with mixed 64-bit
  * multiplications (operands are 64-bit, result is 128-bit) on 64-bit
  * platforms that support such operations.
- *
- * `poly1305_i15` implements ChaCha20+Poly1305 with the generic "i15"
- * big integer implementation. It is meant mostly for testing purposes,
- * although it can help with saving a few hundred bytes of code footprint
- * on systems where code size is scarce.
  */
 
 /**
@@ -1908,215 +1885,6 @@ typedef union {
 	br_aes_x86ni_ctrcbc_keys c_x86ni;
 } br_aes_gen_ctrcbc_keys;
 
-/*
- * Traditional, table-based implementation for DES/3DES. Since tables are
- * used, cache-timing attacks are conceptually possible.
- */
-
-/** \brief DES/3DES block size (8 bytes). */
-#define br_des_tab_BLOCK_SIZE   8
-
-/**
- * \brief Context for DES subkeys (`des_tab` implementation, CBC encryption).
- *
- * First field is a pointer to the vtable; it is set by the initialisation
- * function. Other fields are not supposed to be accessed by user code.
- */
-typedef struct {
-	/** \brief Pointer to vtable for this context. */
-	const br_block_cbcenc_class *vtable;
-#ifndef BR_DOXYGEN_IGNORE
-	uint32_t skey[96];
-	unsigned num_rounds;
-#endif
-} br_des_tab_cbcenc_keys;
-
-/**
- * \brief Context for DES subkeys (`des_tab` implementation, CBC decryption).
- *
- * First field is a pointer to the vtable; it is set by the initialisation
- * function. Other fields are not supposed to be accessed by user code.
- */
-typedef struct {
-	/** \brief Pointer to vtable for this context. */
-	const br_block_cbcdec_class *vtable;
-#ifndef BR_DOXYGEN_IGNORE
-	uint32_t skey[96];
-	unsigned num_rounds;
-#endif
-} br_des_tab_cbcdec_keys;
-
-/**
- * \brief Class instance for DES CBC encryption (`des_tab` implementation).
- */
-extern const br_block_cbcenc_class br_des_tab_cbcenc_vtable;
-
-/**
- * \brief Class instance for DES CBC decryption (`des_tab` implementation).
- */
-extern const br_block_cbcdec_class br_des_tab_cbcdec_vtable;
-
-/**
- * \brief Context initialisation (key schedule) for DES CBC encryption
- * (`des_tab` implementation).
- *
- * \param ctx   context to initialise.
- * \param key   secret key.
- * \param len   secret key length (in bytes).
- */
-void br_des_tab_cbcenc_init(br_des_tab_cbcenc_keys *ctx,
-	const void *key, size_t len);
-
-/**
- * \brief Context initialisation (key schedule) for DES CBC decryption
- * (`des_tab` implementation).
- *
- * \param ctx   context to initialise.
- * \param key   secret key.
- * \param len   secret key length (in bytes).
- */
-void br_des_tab_cbcdec_init(br_des_tab_cbcdec_keys *ctx,
-	const void *key, size_t len);
-
-/**
- * \brief CBC encryption with DES (`des_tab` implementation).
- *
- * \param ctx    context (already initialised).
- * \param iv     IV (updated).
- * \param data   data to encrypt (updated).
- * \param len    data length (in bytes, MUST be multiple of 8).
- */
-void br_des_tab_cbcenc_run(const br_des_tab_cbcenc_keys *ctx, void *iv,
-	void *data, size_t len);
-
-/**
- * \brief CBC decryption with DES (`des_tab` implementation).
- *
- * \param ctx    context (already initialised).
- * \param iv     IV (updated).
- * \param data   data to decrypt (updated).
- * \param len    data length (in bytes, MUST be multiple of 8).
- */
-void br_des_tab_cbcdec_run(const br_des_tab_cbcdec_keys *ctx, void *iv,
-	void *data, size_t len);
-
-/*
- * Constant-time implementation for DES/3DES. It is substantially slower
- * (by a factor of about 4x), but also immune to cache-timing attacks.
- */
-
-/** \brief DES/3DES block size (8 bytes). */
-#define br_des_ct_BLOCK_SIZE   8
-
-/**
- * \brief Context for DES subkeys (`des_ct` implementation, CBC encryption).
- *
- * First field is a pointer to the vtable; it is set by the initialisation
- * function. Other fields are not supposed to be accessed by user code.
- */
-typedef struct {
-	/** \brief Pointer to vtable for this context. */
-	const br_block_cbcenc_class *vtable;
-#ifndef BR_DOXYGEN_IGNORE
-	uint32_t skey[96];
-	unsigned num_rounds;
-#endif
-} br_des_ct_cbcenc_keys;
-
-/**
- * \brief Context for DES subkeys (`des_ct` implementation, CBC decryption).
- *
- * First field is a pointer to the vtable; it is set by the initialisation
- * function. Other fields are not supposed to be accessed by user code.
- */
-typedef struct {
-	/** \brief Pointer to vtable for this context. */
-	const br_block_cbcdec_class *vtable;
-#ifndef BR_DOXYGEN_IGNORE
-	uint32_t skey[96];
-	unsigned num_rounds;
-#endif
-} br_des_ct_cbcdec_keys;
-
-/**
- * \brief Class instance for DES CBC encryption (`des_ct` implementation).
- */
-extern const br_block_cbcenc_class br_des_ct_cbcenc_vtable;
-
-/**
- * \brief Class instance for DES CBC decryption (`des_ct` implementation).
- */
-extern const br_block_cbcdec_class br_des_ct_cbcdec_vtable;
-
-/**
- * \brief Context initialisation (key schedule) for DES CBC encryption
- * (`des_ct` implementation).
- *
- * \param ctx   context to initialise.
- * \param key   secret key.
- * \param len   secret key length (in bytes).
- */
-void br_des_ct_cbcenc_init(br_des_ct_cbcenc_keys *ctx,
-	const void *key, size_t len);
-
-/**
- * \brief Context initialisation (key schedule) for DES CBC decryption
- * (`des_ct` implementation).
- *
- * \param ctx   context to initialise.
- * \param key   secret key.
- * \param len   secret key length (in bytes).
- */
-void br_des_ct_cbcdec_init(br_des_ct_cbcdec_keys *ctx,
-	const void *key, size_t len);
-
-/**
- * \brief CBC encryption with DES (`des_ct` implementation).
- *
- * \param ctx    context (already initialised).
- * \param iv     IV (updated).
- * \param data   data to encrypt (updated).
- * \param len    data length (in bytes, MUST be multiple of 8).
- */
-void br_des_ct_cbcenc_run(const br_des_ct_cbcenc_keys *ctx, void *iv,
-	void *data, size_t len);
-
-/**
- * \brief CBC decryption with DES (`des_ct` implementation).
- *
- * \param ctx    context (already initialised).
- * \param iv     IV (updated).
- * \param data   data to decrypt (updated).
- * \param len    data length (in bytes, MUST be multiple of 8).
- */
-void br_des_ct_cbcdec_run(const br_des_ct_cbcdec_keys *ctx, void *iv,
-	void *data, size_t len);
-
-/*
- * These structures are large enough to accommodate subkeys for all
- * DES/3DES implementations.
- */
-
-/**
- * \brief Aggregate structure large enough to be used as context for
- * subkeys (CBC encryption) for all DES implementations.
- */
-typedef union {
-	const br_block_cbcenc_class *vtable;
-	br_des_tab_cbcenc_keys tab;
-	br_des_ct_cbcenc_keys ct;
-} br_des_gen_cbcenc_keys;
-
-/**
- * \brief Aggregate structure large enough to be used as context for
- * subkeys (CBC decryption) for all DES implementations.
- */
-typedef union {
-	const br_block_cbcdec_class *vtable;
-	br_des_tab_cbcdec_keys c_tab;
-	br_des_ct_cbcdec_keys c_ct;
-} br_des_gen_cbcdec_keys;
-
 /**
  * \brief Type for a ChaCha20 implementation.
  *
@@ -2231,50 +1999,6 @@ typedef void (*br_poly1305_run)(const void *key, const void *iv,
  * \param encrypt   non-zero for encryption, zero for decryption.
  */
 void br_poly1305_ctmul_run(const void *key, const void *iv,
-	void *data, size_t len, const void *aad, size_t aad_len,
-	void *tag, br_chacha20_run ichacha, int encrypt);
-
-/**
- * \brief ChaCha20+Poly1305 AEAD implementation (pure 32-bit multiplications).
- *
- * \see br_poly1305_run
- *
- * \param key       secret key (32 bytes).
- * \param iv        nonce (12 bytes).
- * \param data      data to encrypt or decrypt.
- * \param len       data length (in bytes).
- * \param aad       additional authenticated data.
- * \param aad_len   length of additional authenticated data (in bytes).
- * \param tag       output buffer for the authentication tag.
- * \param ichacha   implementation of ChaCha20.
- * \param encrypt   non-zero for encryption, zero for decryption.
- */
-void br_poly1305_ctmul32_run(const void *key, const void *iv,
-	void *data, size_t len, const void *aad, size_t aad_len,
-	void *tag, br_chacha20_run ichacha, int encrypt);
-
-/**
- * \brief ChaCha20+Poly1305 AEAD implementation (i15).
- *
- * This implementation relies on the generic big integer code "i15"
- * (which uses pure 32-bit multiplications). As such, it may save a
- * little code footprint in a context where "i15" is already included
- * (e.g. for elliptic curves or for RSA); however, it is also
- * substantially slower than the ctmul and ctmul32 implementations.
- *
- * \see br_poly1305_run
- *
- * \param key       secret key (32 bytes).
- * \param iv        nonce (12 bytes).
- * \param data      data to encrypt or decrypt.
- * \param len       data length (in bytes).
- * \param aad       additional authenticated data.
- * \param aad_len   length of additional authenticated data (in bytes).
- * \param tag       output buffer for the authentication tag.
- * \param ichacha   implementation of ChaCha20.
- * \param encrypt   non-zero for encryption, zero for decryption.
- */
-void br_poly1305_i15_run(const void *key, const void *iv,
 	void *data, size_t len, const void *aad, size_t aad_len,
 	void *tag, br_chacha20_run ichacha, int encrypt);
 
