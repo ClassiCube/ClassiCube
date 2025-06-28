@@ -1,12 +1,10 @@
-#include "Core.h"
-#if defined CC_BUILD_XBOX
-
+#include "../Core.h"
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "Funcs.h"
-#include "Utils.h"
-#include "Errors.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../Funcs.h"
+#include "../Utils.h"
+#include "../Errors.h"
 
 #include <windows.h>
 #include <hal/debug.h>
@@ -474,4 +472,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
-#endif
+

@@ -1,8 +1,8 @@
-#include "Core.h"
-#if defined CC_BUILD_PS2
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Window.h"
+#include "../Core.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Window.h"
+
 #include <packet.h>
 #include <dma_tags.h>
 #include <gif_tags.h>
@@ -1000,4 +1000,4 @@ void Gfx_GetApiInfo(cc_string* info) {
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
-#endif
+

@@ -1,9 +1,9 @@
-#include "Core.h"
-#if defined CC_BUILD_GCWII
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../Core.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
+
 #include <malloc.h>
 #include <string.h>
 #include <gccore.h>
@@ -645,4 +645,4 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	Draw_TexturedTriangles(verticesCount, startVertex);
 }
-#endif
+

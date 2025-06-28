@@ -1,16 +1,16 @@
-#include "Core.h"
-#if defined CC_BUILD_XBOX
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "VirtualKeyboard.h"
+#include "../Core.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../VirtualKeyboard.h"
+
 #include <hal/video.h>
 #include <usbh_lib.h>
 #include <xid_driver.h>
@@ -253,4 +253,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

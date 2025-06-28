@@ -263,7 +263,6 @@ for (yy = -1; yy < 17; ++yy) {\
 
 static cc_bool ReadChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
 	BlockRaw* blocks = World.Blocks;
-	BlockRaw* blocks2;
 	cc_bool allAir = true, allSolid = true;
 	int index, cIndex;
 	BlockID block;
@@ -272,6 +271,8 @@ static cc_bool ReadChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
 #ifndef EXTENDED_BLOCKS
 	ReadChunkBody(blocks[index]);
 #else
+	BlockRaw* blocks2;
+
 	if (World.IDMask <= 0xFF) {
 		ReadChunkBody(blocks[index]);
 	} else {

@@ -1,17 +1,17 @@
-#include "Core.h"
-#if defined CC_BUILD_GCWII
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "InputHandler.h"
-#include "Event.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Graphics.h"
-#include "VirtualKeyboard.h"
+#include "../Core.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../InputHandler.h"
+#include "../Event.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Graphics.h"
+#include "../VirtualKeyboard.h"
+
 #include <gccore.h>
 #if defined HW_RVL
 #include <ogc/usbmouse.h>
@@ -609,4 +609,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

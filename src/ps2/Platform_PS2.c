@@ -1,18 +1,18 @@
-#include "Core.h"
-#if defined PLAT_PS2
-
+#include "../Core.h"
 #define CC_XTEA_ENCRYPTION
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../PackedCol.h"
+#include "../_PlatformConsole.h"
+
 #define LIBCGLUE_SYS_SOCKET_ALIASES 0
 #define LIBCGLUE_SYS_SOCKET_NO_ALIASES
 #define LIBCGLUE_ARPA_INET_NO_ALIASES
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "PackedCol.h"
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -39,7 +39,6 @@
 #include <io_common.h>
 #include <iox_stat.h>
 #include <libcdvd.h>
-#include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = -4;
@@ -760,4 +759,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
-#endif
+

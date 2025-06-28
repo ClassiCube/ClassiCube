@@ -1,11 +1,10 @@
-#include "Core.h"
+#include "../Core.h"
+#include "../Audio.h"
 
-#if defined CC_BUILD_GCWII
 #include <asndlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include "Audio.h"
 
 struct AudioBuffer {
 	int available;
@@ -20,7 +19,7 @@ struct AudioContext {
 	cc_bool makeAvailable;
 };
 #define AUDIO_OVERRIDE_ALLOC
-#include "_AudioBase.h"
+#include "../_AudioBase.h"
 
 cc_bool AudioBackend_Init(void) {
 	ASND_Init();
@@ -216,5 +215,4 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	free(chunks[0].data);
 }
-#endif
 

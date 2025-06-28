@@ -1,15 +1,14 @@
-#include "Core.h"
-#if defined CC_BUILD_GCWII
-
+#include "../Core.h"
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "PackedCol.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../PackedCol.h"
+#include "../_PlatfromConsole.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -28,7 +27,6 @@
 #ifdef HW_RVL
 #include <ogc/wiilaunch.h>
 #endif
-#include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -646,4 +644,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
-#endif
+

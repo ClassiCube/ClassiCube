@@ -1,9 +1,9 @@
-#include "Core.h"
-#if defined CC_BUILD_XBOX
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../Core.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
+
 #include <pbkit/pbkit.h>
 
 #define MAX_RAM_ADDR 0x03FFAFFF
@@ -701,4 +701,4 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	DrawIndexedVertices(verticesCount, startVertex);
 }
-#endif
+
