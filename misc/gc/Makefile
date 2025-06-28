@@ -11,7 +11,7 @@ include $(DEVKITPPC)/gamecube_rules
 # Directory where object files are placed
 BUILD_DIR	:= build/gc
 # List of directories containing source code
-SOURCE_DIRS	:= src third_party/bearssl/src
+SOURCE_DIRS	:= src src/gcwii third_party/bearssl/src
 # Name of the final output
 TARGET 		:= ClassiCube-gc
 # Additional libraries to link against
@@ -60,6 +60,9 @@ $(TARGET).dol: $(TARGET).elf
 # Object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/gcwii/%.c
 	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c

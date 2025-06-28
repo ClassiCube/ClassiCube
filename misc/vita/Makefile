@@ -1,3 +1,10 @@
+ifeq ($(strip $(VITASDK)),)
+$(warning "Please set VITASDK variables in your environment. For example:")
+$(warning   export VITASDK=/usr/local/vitasdk)
+$(warning   export PATH=$$VITASDK/bin:$$PATH)
+$(error   Failed to find VitaSDK installation)
+endif
+
 PROJECT_TITLE 	:= ClassiCube
 PROJECT_TITLEID := CUBE00200
 TARGET 			:= ClassiCube-vita
@@ -14,13 +21,6 @@ LIBS += -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSce
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(OBJS:%.o=%.d)
-
-ifeq ($(strip $(VITASDK)),)
-$(warning "Please set VITASDK variables in your environment. For example:")
-$(warning   export VITASDK=/usr/local/vitasdk)
-$(warning   export PATH=$$VITASDK/bin:$$PATH)
-$(error   Failed to find VitaSDK installation)
-endif
 
 
 #---------------------------------------------------------------------------------

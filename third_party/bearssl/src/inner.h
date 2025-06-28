@@ -1909,14 +1909,6 @@ unsigned br_aes_x86ni_keysched_dec(unsigned char *skni,
  */
 
 /*
- * Apply proper PKCS#1 v1.5 padding (for signatures). 'hash_oid' is
- * the encoded hash function OID, or NULL.
- */
-uint32_t br_rsa_pkcs1_sig_pad(const unsigned char *hash_oid,
-	const unsigned char *hash, size_t hash_len,
-	uint32_t n_bitlen, unsigned char *x);
-
-/*
  * Check PKCS#1 v1.5 padding (for signatures). 'hash_oid' is the encoded
  * hash function OID, or NULL. The provided 'sig' value is _after_ the
  * modular exponentiation, i.e. it should be the padded hash. On
@@ -1925,13 +1917,6 @@ uint32_t br_rsa_pkcs1_sig_pad(const unsigned char *hash_oid,
 uint32_t br_rsa_pkcs1_sig_unpad(const unsigned char *sig, size_t sig_len,
 	const unsigned char *hash_oid, size_t hash_len,
 	unsigned char *hash_out);
-
-/*
- * Compute MGF1 for a given seed, and XOR the output into the provided
- * buffer.
- */
-void br_mgf1_xor(void *data, size_t len,
-	const br_hash_class *dig, const void *seed, size_t seed_len);
 
 /*
  * Inner function for RSA key generation; used by the "i31" and "i62"

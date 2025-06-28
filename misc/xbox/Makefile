@@ -7,7 +7,7 @@ endif
 #---------------------------------------------------------------------------------
 TARGET		= ClassiCube-xbox
 XBE_TITLE 	= ClassiCube
-SOURCE_DIRS = src third_party/bearssl/src
+SOURCE_DIRS = src src/xbox third_party/bearssl/src
 SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
 BUILD_DIR   = build/xbox
 
@@ -90,7 +90,10 @@ $(TARGET).exe : $(OBJS)
 $(BUILD_DIR)/%.o: src/%.c
 	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: src/%.S
+$(BUILD_DIR)/%.o: src/xbox/%.c
+	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/xbox/%.S
 	nxdk-as $(NXDK_ASFLAGS) $(ASFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c

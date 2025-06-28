@@ -6,7 +6,7 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-SOURCE_DIRS	:= src third_party/bearssl/src misc/ps2
+SOURCE_DIRS	:= src src/ps2 third_party/bearssl/src
 BUILD_DIR = build-ps2
 TARGET 	= ClassiCube-ps2
 
@@ -100,10 +100,13 @@ $(TARGET)-min.elf : $(TARGET).elf
 $(BUILD_DIR)/%.o: src/%.c
 	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
+$(BUILD_DIR)/%.o: src/ps2/%.c
+	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: misc/ps2/%.S
+$(BUILD_DIR)/%.o: src/ps2/%.S
 	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
