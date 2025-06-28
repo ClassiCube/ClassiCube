@@ -2477,53 +2477,6 @@ struct br_ssl_client_certificate_class_ {
 };
 
 /**
- * \brief A single-chain RSA client certificate handler.
- *
- * This handler uses a single certificate chain, with a RSA
- * signature. The list of trust anchor DN is ignored.
- *
- * Apart from the first field (vtable pointer), its contents are
- * opaque and shall not be accessed directly.
- */
-typedef struct {
-	/** \brief Pointer to vtable. */
-	const br_ssl_client_certificate_class *vtable;
-#ifndef BR_DOXYGEN_IGNORE
-	const br_x509_certificate *chain;
-	size_t chain_len;
-	const br_rsa_private_key *sk;
-	br_rsa_pkcs1_sign irsasign;
-#endif
-} br_ssl_client_certificate_rsa_context;
-
-/**
- * \brief A single-chain EC client certificate handler.
- *
- * This handler uses a single certificate chain, with a RSA
- * signature. The list of trust anchor DN is ignored.
- *
- * This handler may support both static ECDH, and ECDSA signatures
- * (either usage may be selectively disabled).
- *
- * Apart from the first field (vtable pointer), its contents are
- * opaque and shall not be accessed directly.
- */
-typedef struct {
-	/** \brief Pointer to vtable. */
-	const br_ssl_client_certificate_class *vtable;
-#ifndef BR_DOXYGEN_IGNORE
-	const br_x509_certificate *chain;
-	size_t chain_len;
-	const br_ec_private_key *sk;
-	unsigned allowed_usages;
-	unsigned issuer_key_type;
-	const br_multihash_context *mhash;
-	const br_ec_impl *iec;
-	br_ecdsa_sign iecdsa;
-#endif
-} br_ssl_client_certificate_ec_context;
-
-/**
  * \brief Context structure for a SSL client.
  *
  * The first field (called `eng`) is the SSL engine; all functions that
@@ -2579,8 +2532,6 @@ struct br_ssl_client_context_ {
 	 */
 	union {
 		const br_ssl_client_certificate_class *vtable;
-		br_ssl_client_certificate_rsa_context single_rsa;
-		br_ssl_client_certificate_ec_context single_ec;
 	} client_auth;
 
 	/*
@@ -2791,73 +2742,6 @@ br_ssl_client_forget_session(br_ssl_client_context *cc)
 {
 	cc->eng.session.session_id_len = 0;
 }
-
-/**
- * \brief Set client certificate chain and key (single RSA case).
- *
- * This function sets a client certificate chain, that the client will
- * send to the server whenever a client certificate is requested. This
- * certificate uses an RSA public key; the corresponding private key is
- * invoked for authentication. Trust anchor names sent by the server are
- * ignored.
- *
- * The provided chain and private key are linked in the client context;
- * they must remain valid as long as they may be used, i.e. normally
- * for the duration of the connection, since they might be invoked
- * again upon renegotiations.
- *
- * \param cc          SSL client context.
- * \param chain       client certificate chain (SSL order: EE comes first).
- * \param chain_len   client chain length (number of certificates).
- * \param sk          client private key.
- * \param irsasign    RSA signature implementation (PKCS#1 v1.5).
- */
-void br_ssl_client_set_single_rsa(br_ssl_client_context *cc,
-	const br_x509_certificate *chain, size_t chain_len,
-	const br_rsa_private_key *sk, br_rsa_pkcs1_sign irsasign);
-
-/*
- * \brief Set the client certificate chain and key (single EC case).
- *
- * This function sets a client certificate chain, that the client will
- * send to the server whenever a client certificate is requested. This
- * certificate uses an EC public key; the corresponding private key is
- * invoked for authentication. Trust anchor names sent by the server are
- * ignored.
- *
- * The provided chain and private key are linked in the client context;
- * they must remain valid as long as they may be used, i.e. normally
- * for the duration of the connection, since they might be invoked
- * again upon renegotiations.
- *
- * The `allowed_usages` is a combination of usages, namely
- * `BR_KEYTYPE_KEYX` and/or `BR_KEYTYPE_SIGN`. The `BR_KEYTYPE_KEYX`
- * value allows full static ECDH, while the `BR_KEYTYPE_SIGN` value
- * allows ECDSA signatures. If ECDSA signatures are used, then an ECDSA
- * signature implementation must be provided; otherwise, the `iecdsa`
- * parameter may be 0.
- *
- * The `cert_issuer_key_type` value is either `BR_KEYTYPE_RSA` or
- * `BR_KEYTYPE_EC`; it is the type of the public key used the the CA
- * that issued (signed) the client certificate. That value is used with
- * full static ECDH: support of the certificate by the server depends
- * on how the certificate was signed. (Note: when using TLS 1.2, this
- * parameter is ignored; but its value matters for TLS 1.0 and 1.1.)
- *
- * \param cc                     server context.
- * \param chain                  server certificate chain to send.
- * \param chain_len              chain length (number of certificates).
- * \param sk                     server private key (EC).
- * \param allowed_usages         allowed private key usages.
- * \param cert_issuer_key_type   issuing CA's key type.
- * \param iec                    EC core implementation.
- * \param iecdsa                 ECDSA signature implementation ("asn1" format).
- */
-void br_ssl_client_set_single_ec(br_ssl_client_context *cc,
-	const br_x509_certificate *chain, size_t chain_len,
-	const br_ec_private_key *sk, unsigned allowed_usages,
-	unsigned cert_issuer_key_type,
-	const br_ec_impl *iec, br_ecdsa_sign iecdsa);
 
 /* ===================================================================== */
 

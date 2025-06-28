@@ -566,20 +566,6 @@ extern const br_ec_impl br_ec_all_m31;
 const br_ec_impl *br_ec_get_default(void);
 
 /**
- * \brief Convert a signature from "raw" to "asn1".
- *
- * Conversion is done "in place" and the new length is returned.
- * Conversion may enlarge the signature, but by no more than 9 bytes at
- * most. On error, 0 is returned (error conditions include an odd raw
- * signature length, or an oversized integer).
- *
- * \param sig       signature to convert.
- * \param sig_len   signature length (in bytes).
- * \return  the new signature length, or 0 on error.
- */
-size_t br_ecdsa_raw_to_asn1(void *sig, size_t sig_len);
-
-/**
  * \brief Convert a signature from "asn1" to "raw".
  *
  * Conversion is done "in place" and the new length is returned.
@@ -593,39 +579,6 @@ size_t br_ecdsa_raw_to_asn1(void *sig, size_t sig_len);
  * \return  the new signature length, or 0 on error.
  */
 size_t br_ecdsa_asn1_to_raw(void *sig, size_t sig_len);
-
-/**
- * \brief Type for an ECDSA signer function.
- *
- * A pointer to the EC implementation is provided. The hash value is
- * assumed to have the length inferred from the designated hash function
- * class.
- *
- * Signature is written in the buffer pointed to by `sig`, and the length
- * (in bytes) is returned. On error, nothing is written in the buffer,
- * and 0 is returned. This function returns 0 if the specified curve is
- * not supported by the provided EC implementation.
- *
- * The signature format is either "raw" or "asn1", depending on the
- * implementation; maximum length is predictable from the implemented
- * curve:
- *
- * | curve      | raw | asn1 |
- * | :--------- | --: | ---: |
- * | NIST P-256 |  64 |   72 |
- * | NIST P-384 |  96 |  104 |
- * | NIST P-521 | 132 |  139 |
- *
- * \param impl         EC implementation to use.
- * \param hf           hash function used to process the data.
- * \param hash_value   signed data (hashed).
- * \param sk           EC private key.
- * \param sig          destination buffer.
- * \return  the signature length (in bytes), or 0 on error.
- */
-typedef size_t (*br_ecdsa_sign)(const br_ec_impl *impl,
-	const br_hash_class *hf, const void *hash_value,
-	const br_ec_private_key *sk, void *sig);
 
 /**
  * \brief Type for an ECDSA signature verification function.
@@ -652,38 +605,6 @@ typedef size_t (*br_ecdsa_sign)(const br_ec_impl *impl,
 typedef uint32_t (*br_ecdsa_vrfy)(const br_ec_impl *impl,
 	const void *hash, size_t hash_len,
 	const br_ec_public_key *pk, const void *sig, size_t sig_len);
-
-/**
- * \brief ECDSA signature generator, "i31" implementation, "asn1" format.
- *
- * \see br_ecdsa_sign()
- *
- * \param impl         EC implementation to use.
- * \param hf           hash function used to process the data.
- * \param hash_value   signed data (hashed).
- * \param sk           EC private key.
- * \param sig          destination buffer.
- * \return  the signature length (in bytes), or 0 on error.
- */
-size_t br_ecdsa_i31_sign_asn1(const br_ec_impl *impl,
-	const br_hash_class *hf, const void *hash_value,
-	const br_ec_private_key *sk, void *sig);
-
-/**
- * \brief ECDSA signature generator, "i31" implementation, "raw" format.
- *
- * \see br_ecdsa_sign()
- *
- * \param impl         EC implementation to use.
- * \param hf           hash function used to process the data.
- * \param hash_value   signed data (hashed).
- * \param sk           EC private key.
- * \param sig          destination buffer.
- * \return  the signature length (in bytes), or 0 on error.
- */
-size_t br_ecdsa_i31_sign_raw(const br_ec_impl *impl,
-	const br_hash_class *hf, const void *hash_value,
-	const br_ec_private_key *sk, void *sig);
 
 /**
  * \brief ECDSA signature verifier, "i31" implementation, "asn1" format.
@@ -720,26 +641,6 @@ uint32_t br_ecdsa_i31_vrfy_raw(const br_ec_impl *impl,
 	const br_ec_public_key *pk, const void *sig, size_t sig_len);
 
 /**
- * \brief Get "default" ECDSA implementation (signer, asn1 format).
- *
- * This returns the preferred implementation of ECDSA signature generation
- * ("asn1" output format) on the current system.
- *
- * \return  the default implementation.
- */
-br_ecdsa_sign br_ecdsa_sign_asn1_get_default(void);
-
-/**
- * \brief Get "default" ECDSA implementation (signer, raw format).
- *
- * This returns the preferred implementation of ECDSA signature generation
- * ("raw" output format) on the current system.
- *
- * \return  the default implementation.
- */
-br_ecdsa_sign br_ecdsa_sign_raw_get_default(void);
-
-/**
  * \brief Get "default" ECDSA implementation (verifier, asn1 format).
  *
  * This returns the preferred implementation of ECDSA signature verification
@@ -758,83 +659,6 @@ br_ecdsa_vrfy br_ecdsa_vrfy_asn1_get_default(void);
  * \return  the default implementation.
  */
 br_ecdsa_vrfy br_ecdsa_vrfy_raw_get_default(void);
-
-/**
- * \brief Maximum size for EC private key element buffer.
- *
- * This is the largest number of bytes that `br_ec_keygen()` may need or
- * ever return.
- */
-#define BR_EC_KBUF_PRIV_MAX_SIZE   72
-
-/**
- * \brief Maximum size for EC public key element buffer.
- *
- * This is the largest number of bytes that `br_ec_compute_public()` may
- * need or ever return.
- */
-#define BR_EC_KBUF_PUB_MAX_SIZE    145
-
-/**
- * \brief Generate a new EC private key.
- *
- * If the specified `curve` is not supported by the elliptic curve
- * implementation (`impl`), then this function returns zero.
- *
- * The `sk` structure fields are set to the new private key data. In
- * particular, `sk.x` is made to point to the provided key buffer (`kbuf`),
- * in which the actual private key data is written. That buffer is assumed
- * to be large enough. The `BR_EC_KBUF_PRIV_MAX_SIZE` defines the maximum
- * size for all supported curves.
- *
- * The number of bytes used in `kbuf` is returned. If `kbuf` is `NULL`, then
- * the private key is not actually generated, and `sk` may also be `NULL`;
- * the minimum length for `kbuf` is still computed and returned.
- *
- * If `sk` is `NULL` but `kbuf` is not `NULL`, then the private key is
- * still generated and stored in `kbuf`.
- *
- * \param rng_ctx   source PRNG context (already initialized).
- * \param impl      the elliptic curve implementation.
- * \param sk        the private key structure to fill, or `NULL`.
- * \param kbuf      the key element buffer, or `NULL`.
- * \param curve     the curve identifier.
- * \return  the key data length (in bytes), or zero.
- */
-size_t br_ec_keygen(const br_prng_class **rng_ctx,
-	const br_ec_impl *impl, br_ec_private_key *sk,
-	void *kbuf, int curve);
-
-/**
- * \brief Compute EC public key from EC private key.
- *
- * This function uses the provided elliptic curve implementation (`impl`)
- * to compute the public key corresponding to the private key held in `sk`.
- * The public key point is written into `kbuf`, which is then linked from
- * the `*pk` structure. The size of the public key point, i.e. the number
- * of bytes used in `kbuf`, is returned.
- *
- * If `kbuf` is `NULL`, then the public key point is NOT computed, and
- * the public key structure `*pk` is unmodified (`pk` may be `NULL` in
- * that case). The size of the public key point is still returned.
- *
- * If `pk` is `NULL` but `kbuf` is not `NULL`, then the public key
- * point is computed and stored in `kbuf`, and its size is returned.
- *
- * If the curve used by the private key is not supported by the curve
- * implementation, then this function returns zero.
- *
- * The private key MUST be valid. An off-range private key value is not
- * necessarily detected, and leads to unpredictable results.
- *
- * \param impl   the elliptic curve implementation.
- * \param pk     the public key structure to fill (or `NULL`).
- * \param kbuf   the public key point buffer (or `NULL`).
- * \param sk     the source private key.
- * \return  the public key point length (in bytes), or zero.
- */
-size_t br_ec_compute_pub(const br_ec_impl *impl, br_ec_public_key *pk,
-	void *kbuf, const br_ec_private_key *sk);
 
 #ifdef __cplusplus
 }
