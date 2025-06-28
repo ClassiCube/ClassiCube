@@ -8,7 +8,6 @@
 #include "../Utils.h"
 #include "../Errors.h"
 #include "../PackedCol.h"
-#include "../_PlatformConsole.h"
 
 #define LIBCGLUE_SYS_SOCKET_ALIASES 0
 #define LIBCGLUE_SYS_SOCKET_NO_ALIASES
@@ -39,6 +38,7 @@
 #include <io_common.h>
 #include <iox_stat.h>
 #include <libcdvd.h>
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = -4;

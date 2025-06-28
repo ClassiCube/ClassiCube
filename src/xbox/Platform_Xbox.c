@@ -15,7 +15,7 @@
 #include <lwip/sockets.h>
 #include <nxdk/net.h>
 #include <nxdk/mount.h>
-#include "_PlatformConsole.h"
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;

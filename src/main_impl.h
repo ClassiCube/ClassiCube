@@ -77,18 +77,10 @@ void DirectUrl_ExtractAddress(const cc_string* addr, cc_string* ip, cc_string* p
 *#########################################################################################################################*/
 static void RunGame(void) {
 	cc_string title; char titleBuffer[STRING_SIZE];
-	int width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, DisplayInfo.Width,  0);
-	int height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, DisplayInfo.Height, 0);
-
-	/* No custom resolution has been set */
-	if (width == 0 || height == 0) {
-		width = 854; height = 480;
-		if (DisplayInfo.Width < 854) width = 640;
-	}
-
 	String_InitArray(title, titleBuffer);
+
 	String_Format2(&title, "%c (%s)", GAME_APP_TITLE, &Game_Username);
-	Game_Run(width, height, &title);
+	Game_Run(&title);
 }
 
 /* Shows a warning dialog due to an invalid command line argument */

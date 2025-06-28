@@ -1,22 +1,22 @@
-#include "Core.h"
-#if defined CC_BUILD_PS1
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Logger.h"
-#include "VirtualKeyboard.h"
+#include "../Core.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Logger.h"
+#include "../VirtualKeyboard.h"
+
 #include <psxapi.h>
 #include <psxetc.h>
 #include <psxgpu.h>
 #include <psxpad.h>
-#include "../misc/ps1/ps1defs.h"
+#include "ps1defs.h"
 
 #define SCREEN_XRES	320
 #define SCREEN_YRES	240
@@ -287,4 +287,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

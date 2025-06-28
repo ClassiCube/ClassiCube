@@ -9,7 +9,7 @@ endif
 # Configurable options
 #---------------------------------------------------------------------------------
 BUILD_DIR	:= build/ps1
-SOURCE_DIRS	:= src
+SOURCE_DIRS	:= src src/ps1
 TARGET 		:= ClassiCube-ps1
 
 
@@ -65,6 +65,9 @@ $(TARGET).bin: $(TARGET).exe
 # object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
+	$(PSN00BSDK_ROOT)/bin/mipsel-none-elf-gcc $(CFLAGS) $(CINCLUDES) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/ps1/%.c
 	$(PSN00BSDK_ROOT)/bin/mipsel-none-elf-gcc $(CFLAGS) $(CINCLUDES) $(DEPFLAGS) -c $< -o $@
 
 

@@ -18,8 +18,6 @@ LIBTONC := $(DEVKITPRO)/libtonc
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
-# DATA is a list of directories containing binary data
-# GRAPHICS is a list of directories containing files to be processed by grit
 #
 # All directories are specified relative to the project directory where
 # the makefile is found
@@ -29,9 +27,6 @@ TARGET		:= ClassiCube-gba
 BUILD		:= build-gba
 SOURCES		:= src
 INCLUDES	:= include
-DATA		:=
-MUSIC		:=
-GRAPHICS	:= graphics
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -73,8 +68,7 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -88,9 +82,7 @@ export OFILES_BIN := $(addsuffix .o,$(BINFILES))
 
 export OFILES_SOURCES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
-export OFILES_GRAPHICS := $(PNGFILES:.png=.o)
-
-export OFILES := $(OFILES_BIN) $(OFILES_SOURCES) $(OFILES_GRAPHICS)
+export OFILES := $(OFILES_BIN) $(OFILES_SOURCES)
 
 export HFILES := $(addsuffix .h,$(subst .,_,$(BINFILES))) $(PNGFILES:.png=.h)
 

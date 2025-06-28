@@ -8,7 +8,6 @@
 #include "../Utils.h"
 #include "../Errors.h"
 #include "../PackedCol.h"
-#include "../_PlatfromConsole.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -27,6 +26,7 @@
 #ifdef HW_RVL
 #include <ogc/wiilaunch.h>
 #endif
+#include "../_PlatfromConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;

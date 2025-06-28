@@ -1,8 +1,8 @@
-#include "Core.h"
-#if defined CC_BUILD_PS1
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Window.h"
+#include "../Core.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Window.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -11,7 +11,7 @@
 #include <psxapi.h>
 #include <psxetc.h>
 #include <inline_c.h>
-#include "../misc/ps1/ps1defs.h"
+#include "ps1defs.h"
 // Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
 
 #define wait_while(cond) while (cond) { __asm__ volatile(""); }
@@ -1127,4 +1127,4 @@ void Gfx_End2D(void) {
 	gfx_rendering2D = false;
 	Gfx_SetAlphaBlending(false);
 }
-#endif
+

@@ -1,16 +1,15 @@
-#include "Core.h"
-#if defined PLAT_PS1
-
+#include "../Core.h"
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "Options.h"
-#include "PackedCol.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../Options.h"
+#include "../PackedCol.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -26,7 +25,7 @@ void* calloc(size_t num, size_t size) {
 	if (ptr) memset(ptr, 0, num * size);
 	return ptr;
 }
-#include "_PlatformConsole.h"
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = 99999;
@@ -276,4 +275,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
-#endif
+

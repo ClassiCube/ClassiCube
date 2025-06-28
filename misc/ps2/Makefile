@@ -7,7 +7,7 @@ endif
 # Configurable options
 #---------------------------------------------------------------------------------
 SOURCE_DIRS	:= src src/ps2 third_party/bearssl/src
-BUILD_DIR = build-ps2
+BUILD_DIR = build/ps2
 TARGET 	= ClassiCube-ps2
 
 
