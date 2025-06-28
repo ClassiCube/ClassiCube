@@ -638,11 +638,6 @@ br_dec64be(const void *src)
 /*
  * Range decoding and encoding (for several successive values).
  */
-void br_range_dec16le(uint16_t *v, size_t num, const void *src);
-void br_range_dec16be(uint16_t *v, size_t num, const void *src);
-void br_range_enc16le(void *dst, const uint16_t *v, size_t num);
-void br_range_enc16be(void *dst, const uint16_t *v, size_t num);
-
 void br_range_dec32le(uint32_t *v, size_t num, const void *src);
 void br_range_dec32be(uint32_t *v, size_t num, const void *src);
 void br_range_enc32le(void *dst, const uint32_t *v, size_t num);
