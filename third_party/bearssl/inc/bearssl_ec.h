@@ -424,25 +424,6 @@ typedef struct {
 extern const br_ec_impl br_ec_prime_i31;
 
 /**
- * \brief EC implementation "i15".
- *
- * This implementation internally uses generic code for modular integers,
- * with a representation as sequences of 15-bit words. It supports secp256r1,
- * secp384r1 and secp521r1 (aka NIST curves P-256, P-384 and P-521).
- */
-extern const br_ec_impl br_ec_prime_i15;
-
-/**
- * \brief EC implementation "m15" for P-256.
- *
- * This implementation uses specialised code for curve secp256r1 (also
- * known as NIST P-256), with optional Karatsuba decomposition, and fast
- * modular reduction thanks to the field modulus special format. Only
- * 32-bit multiplications are used (with 32-bit results, not 64-bit).
- */
-extern const br_ec_impl br_ec_p256_m15;
-
-/**
  * \brief EC implementation "m31" for P-256.
  *
  * This implementation uses specialised code for curve secp256r1 (also
@@ -488,20 +469,6 @@ extern const br_ec_impl br_ec_p256_m64;
 const br_ec_impl *br_ec_p256_m64_get(void);
 
 /**
- * \brief EC implementation "i15" (generic code) for Curve25519.
- *
- * This implementation uses the generic code for modular integers (with
- * 15-bit words) to support Curve25519. Due to the specificities of the
- * curve definition, the following applies:
- *
- *   - `muladd()` is not implemented (the function returns 0 systematically).
- *   - `order()` returns 2^255-1, since the point multiplication algorithm
- *     accepts any 32-bit integer as input (it clears the top bit and low
- *     three bits systematically).
- */
-extern const br_ec_impl br_ec_c25519_i15;
-
-/**
  * \brief EC implementation "i31" (generic code) for Curve25519.
  *
  * This implementation uses the generic code for modular integers (with
@@ -514,20 +481,6 @@ extern const br_ec_impl br_ec_c25519_i15;
  *     three bits systematically).
  */
 extern const br_ec_impl br_ec_c25519_i31;
-
-/**
- * \brief EC implementation "m15" (specialised code) for Curve25519.
- *
- * This implementation uses custom code relying on multiplication of
- * integers up to 15 bits. Due to the specificities of the curve
- * definition, the following applies:
- *
- *   - `muladd()` is not implemented (the function returns 0 systematically).
- *   - `order()` returns 2^255-1, since the point multiplication algorithm
- *     accepts any 32-bit integer as input (it clears the top bit and low
- *     three bits systematically).
- */
-extern const br_ec_impl br_ec_c25519_m15;
 
 /**
  * \brief EC implementation "m31" (specialised code) for Curve25519.
@@ -590,17 +543,6 @@ extern const br_ec_impl br_ec_c25519_m64;
  * \return  the implementation, or 0.
  */
 const br_ec_impl *br_ec_c25519_m64_get(void);
-
-/**
- * \brief Aggregate EC implementation "m15".
- *
- * This implementation is a wrapper for:
- *
- *   - `br_ec_c25519_m15` for Curve25519
- *   - `br_ec_p256_m15` for NIST P-256
- *   - `br_ec_prime_i15` for other curves (NIST P-384 and NIST-P512)
- */
-extern const br_ec_impl br_ec_all_m15;
 
 /**
  * \brief Aggregate EC implementation "m31".
@@ -774,72 +716,6 @@ uint32_t br_ecdsa_i31_vrfy_asn1(const br_ec_impl *impl,
  * \return  1 on success, 0 on error.
  */
 uint32_t br_ecdsa_i31_vrfy_raw(const br_ec_impl *impl,
-	const void *hash, size_t hash_len,
-	const br_ec_public_key *pk, const void *sig, size_t sig_len);
-
-/**
- * \brief ECDSA signature generator, "i15" implementation, "asn1" format.
- *
- * \see br_ecdsa_sign()
- *
- * \param impl         EC implementation to use.
- * \param hf           hash function used to process the data.
- * \param hash_value   signed data (hashed).
- * \param sk           EC private key.
- * \param sig          destination buffer.
- * \return  the signature length (in bytes), or 0 on error.
- */
-size_t br_ecdsa_i15_sign_asn1(const br_ec_impl *impl,
-	const br_hash_class *hf, const void *hash_value,
-	const br_ec_private_key *sk, void *sig);
-
-/**
- * \brief ECDSA signature generator, "i15" implementation, "raw" format.
- *
- * \see br_ecdsa_sign()
- *
- * \param impl         EC implementation to use.
- * \param hf           hash function used to process the data.
- * \param hash_value   signed data (hashed).
- * \param sk           EC private key.
- * \param sig          destination buffer.
- * \return  the signature length (in bytes), or 0 on error.
- */
-size_t br_ecdsa_i15_sign_raw(const br_ec_impl *impl,
-	const br_hash_class *hf, const void *hash_value,
-	const br_ec_private_key *sk, void *sig);
-
-/**
- * \brief ECDSA signature verifier, "i15" implementation, "asn1" format.
- *
- * \see br_ecdsa_vrfy()
- *
- * \param impl       EC implementation to use.
- * \param hash       signed data (hashed).
- * \param hash_len   hash value length (in bytes).
- * \param pk         EC public key.
- * \param sig        signature.
- * \param sig_len    signature length (in bytes).
- * \return  1 on success, 0 on error.
- */
-uint32_t br_ecdsa_i15_vrfy_asn1(const br_ec_impl *impl,
-	const void *hash, size_t hash_len,
-	const br_ec_public_key *pk, const void *sig, size_t sig_len);
-
-/**
- * \brief ECDSA signature verifier, "i15" implementation, "raw" format.
- *
- * \see br_ecdsa_vrfy()
- *
- * \param impl       EC implementation to use.
- * \param hash       signed data (hashed).
- * \param hash_len   hash value length (in bytes).
- * \param pk         EC public key.
- * \param sig        signature.
- * \param sig_len    signature length (in bytes).
- * \return  1 on success, 0 on error.
- */
-uint32_t br_ecdsa_i15_vrfy_raw(const br_ec_impl *impl,
 	const void *hash, size_t hash_len,
 	const br_ec_public_key *pk, const void *sig, size_t sig_len);
 

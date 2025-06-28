@@ -364,19 +364,9 @@ extern "C" {
  * construction, where the Poly1305 part is performed with mixed 32-bit
  * multiplications (operands are 32-bit, result is 64-bit).
  *
- * `poly1305_ctmul32` implements ChaCha20+Poly1305 using pure 32-bit
- * multiplications (32-bit operands, 32-bit result). It is slower than
- * `poly1305_ctmul`, except on some specific architectures such as
- * the ARM Cortex M0+.
- *
  * `poly1305_ctmulq` implements ChaCha20+Poly1305 with mixed 64-bit
  * multiplications (operands are 64-bit, result is 128-bit) on 64-bit
  * platforms that support such operations.
- *
- * `poly1305_i15` implements ChaCha20+Poly1305 with the generic "i15"
- * big integer implementation. It is meant mostly for testing purposes,
- * although it can help with saving a few hundred bytes of code footprint
- * on systems where code size is scarce.
  */
 
 /**
@@ -2231,50 +2221,6 @@ typedef void (*br_poly1305_run)(const void *key, const void *iv,
  * \param encrypt   non-zero for encryption, zero for decryption.
  */
 void br_poly1305_ctmul_run(const void *key, const void *iv,
-	void *data, size_t len, const void *aad, size_t aad_len,
-	void *tag, br_chacha20_run ichacha, int encrypt);
-
-/**
- * \brief ChaCha20+Poly1305 AEAD implementation (pure 32-bit multiplications).
- *
- * \see br_poly1305_run
- *
- * \param key       secret key (32 bytes).
- * \param iv        nonce (12 bytes).
- * \param data      data to encrypt or decrypt.
- * \param len       data length (in bytes).
- * \param aad       additional authenticated data.
- * \param aad_len   length of additional authenticated data (in bytes).
- * \param tag       output buffer for the authentication tag.
- * \param ichacha   implementation of ChaCha20.
- * \param encrypt   non-zero for encryption, zero for decryption.
- */
-void br_poly1305_ctmul32_run(const void *key, const void *iv,
-	void *data, size_t len, const void *aad, size_t aad_len,
-	void *tag, br_chacha20_run ichacha, int encrypt);
-
-/**
- * \brief ChaCha20+Poly1305 AEAD implementation (i15).
- *
- * This implementation relies on the generic big integer code "i15"
- * (which uses pure 32-bit multiplications). As such, it may save a
- * little code footprint in a context where "i15" is already included
- * (e.g. for elliptic curves or for RSA); however, it is also
- * substantially slower than the ctmul and ctmul32 implementations.
- *
- * \see br_poly1305_run
- *
- * \param key       secret key (32 bytes).
- * \param iv        nonce (12 bytes).
- * \param data      data to encrypt or decrypt.
- * \param len       data length (in bytes).
- * \param aad       additional authenticated data.
- * \param aad_len   length of additional authenticated data (in bytes).
- * \param tag       output buffer for the authentication tag.
- * \param ichacha   implementation of ChaCha20.
- * \param encrypt   non-zero for encryption, zero for decryption.
- */
-void br_poly1305_i15_run(const void *key, const void *iv,
 	void *data, size_t len, const void *aad, size_t aad_len,
 	void *tag, br_chacha20_run ichacha, int encrypt);
 
