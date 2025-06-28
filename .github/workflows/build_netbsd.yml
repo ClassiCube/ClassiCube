@@ -26,8 +26,8 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files (64 bit)
         run: |
-          mkdir src/netbsd64
-          cd src/netbsd64
+          mkdir netbsd64
+          cd netbsd64
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/netbsd64.zip
           unzip netbsd64.zip
 

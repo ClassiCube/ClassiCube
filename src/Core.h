@@ -153,8 +153,7 @@ typedef cc_uint8  cc_bool;
 #define CC_NET_BACKEND_BUILTIN  1
 #define CC_NET_BACKEND_LIBCURL  2
 
-#define CC_CRT_BACKEND_NONE     1
-#define CC_CRT_BACKEND_OPENSSL  2
+#define CC_CRT_BACKEND_OPENSSL  1
 
 #define CC_AUD_BACKEND_OPENAL   1
 #define CC_AUD_BACKEND_WINMM    2

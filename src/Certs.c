@@ -1,6 +1,6 @@
 #include "Certs.h"
 
-#if CC_CTX_BACKEND == CC_CRT_BACKEND_NONE
+#ifndef CC_CRT_BACKEND
 void CertsBackend_Init(void) { }
 
 void Certs_BeginChain(struct X509CertContext* ctx) { }

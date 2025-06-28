@@ -32,8 +32,8 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files (32 bit)
         run: |
-          mkdir src/freebsd32
-          cd src/freebsd32
+          mkdir freebsd32
+          cd freebsd32
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/freebsd32.zip
           unzip freebsd32.zip  
 
