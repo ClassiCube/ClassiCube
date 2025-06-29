@@ -455,20 +455,6 @@ br_ssl_engine_init_rand(br_ssl_engine_context *cc)
 		return 0;
 	}
 
-	/*
-	 * We always try OS/hardware seeding once. If it works, then
-	 * we assume proper seeding. If not, then external entropy must
-	 * have been injected; otherwise, we report an error.
-	 */
-	if (!cc->rng_os_rand_done) {
-		br_prng_seeder sd;
-
-		sd = br_prng_seeder_system(NULL);
-		if (sd != 0 && sd(&cc->rng.vtable)) {
-			cc->rng_init_done = 2;
-		}
-		cc->rng_os_rand_done = 1;
-	}
 	if (cc->rng_init_done < 2) {
 		br_ssl_engine_fail(cc, BR_ERR_NO_RANDOM);
 		return 0;

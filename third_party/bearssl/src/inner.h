@@ -126,15 +126,6 @@
 #endif
 
 /*
- * Set BR_LOMUL on platforms where it makes sense.
- */
-#ifndef BR_LOMUL
-#if BR_ARMEL_CORTEXM_GCC
-#define BR_LOMUL   1
-#endif
-#endif
-
-/*
  * Architecture detection.
  */
 #ifndef BR_i386
@@ -647,11 +638,6 @@ br_dec64be(const void *src)
 /*
  * Range decoding and encoding (for several successive values).
  */
-void br_range_dec16le(uint16_t *v, size_t num, const void *src);
-void br_range_dec16be(uint16_t *v, size_t num, const void *src);
-void br_range_enc16le(void *dst, const uint16_t *v, size_t num);
-void br_range_enc16be(void *dst, const uint16_t *v, size_t num);
-
 void br_range_dec32le(uint32_t *v, size_t num, const void *src);
 void br_range_dec32be(uint32_t *v, size_t num, const void *src);
 void br_range_enc32le(void *dst, const uint32_t *v, size_t num);
@@ -1923,14 +1909,6 @@ unsigned br_aes_x86ni_keysched_dec(unsigned char *skni,
  */
 
 /*
- * Apply proper PKCS#1 v1.5 padding (for signatures). 'hash_oid' is
- * the encoded hash function OID, or NULL.
- */
-uint32_t br_rsa_pkcs1_sig_pad(const unsigned char *hash_oid,
-	const unsigned char *hash, size_t hash_len,
-	uint32_t n_bitlen, unsigned char *x);
-
-/*
  * Check PKCS#1 v1.5 padding (for signatures). 'hash_oid' is the encoded
  * hash function OID, or NULL. The provided 'sig' value is _after_ the
  * modular exponentiation, i.e. it should be the padded hash. On
@@ -1939,52 +1917,6 @@ uint32_t br_rsa_pkcs1_sig_pad(const unsigned char *hash_oid,
 uint32_t br_rsa_pkcs1_sig_unpad(const unsigned char *sig, size_t sig_len,
 	const unsigned char *hash_oid, size_t hash_len,
 	unsigned char *hash_out);
-
-/*
- * Apply proper PSS padding. The 'x' buffer is output only: it
- * receives the value that is to be exponentiated.
- */
-uint32_t br_rsa_pss_sig_pad(const br_prng_class **rng,
-	const br_hash_class *hf_data, const br_hash_class *hf_mgf1,
-	const unsigned char *hash, size_t salt_len,
-	uint32_t n_bitlen, unsigned char *x);
-
-/*
- * Check PSS padding. The provided value is the one _after_
- * the modular exponentiation; it is modified by this function.
- * This function infers the signature length from the public key
- * size, i.e. it assumes that this has already been verified (as
- * part of the exponentiation).
- */
-uint32_t br_rsa_pss_sig_unpad(
-	const br_hash_class *hf_data, const br_hash_class *hf_mgf1,
-	const unsigned char *hash, size_t salt_len,
-	const br_rsa_public_key *pk, unsigned char *x);
-
-/*
- * Apply OAEP padding. Returned value is the actual padded string length,
- * or zero on error.
- */
-size_t br_rsa_oaep_pad(const br_prng_class **rnd, const br_hash_class *dig,
-	const void *label, size_t label_len, const br_rsa_public_key *pk,
-	void *dst, size_t dst_nax_len, const void *src, size_t src_len);
-
-/*
- * Unravel and check OAEP padding. If the padding is correct, then 1 is
- * returned, '*len' is adjusted to the length of the message, and the
- * data is moved to the start of the 'data' buffer. If the padding is
- * incorrect, then 0 is returned and '*len' is untouched. Either way,
- * the complete buffer contents are altered.
- */
-uint32_t br_rsa_oaep_unpad(const br_hash_class *dig,
-	const void *label, size_t label_len, void *data, size_t *len);
-
-/*
- * Compute MGF1 for a given seed, and XOR the output into the provided
- * buffer.
- */
-void br_mgf1_xor(void *data, size_t len,
-	const br_hash_class *dig, const void *seed, size_t seed_len);
 
 /*
  * Inner function for RSA key generation; used by the "i31" and "i62"

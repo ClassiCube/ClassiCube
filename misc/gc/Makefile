@@ -1,23 +1,19 @@
-ifeq ($(strip $(DEVKITPPC)),)
-$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
+ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
 endif
-
-include $(DEVKITPPC)/gamecube_rules
 
 
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-# Directory where object files are placed
-BUILD_DIR	:= build/gc
-# List of directories containing source code
-SOURCE_DIRS	:= src third_party/bearssl/src
 # Name of the final output
-TARGET 		:= ClassiCube-gc
-# Additional libraries to link against
-LIBS		= -lasnd -lbba -lfat -logc -lm
+TARGET 		= ClassiCube-gc
+# List of directories containing source code
+SOURCE_DIRS	= src src/gcwii third_party/bearssl/src
 # List of directories containing more header files
 INCLUDES	= -Ithird_party/bearssl/inc
+# Directory where object files are placed
+BUILD_DIR	= build/gc
 
 
 #---------------------------------------------------------------------------------
@@ -26,12 +22,28 @@ INCLUDES	= -Ithird_party/bearssl/inc
 S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(LIBOGC_INC)
-LDFLAGS	= -g $(MACHDEP) -L$(LIBOGC_LIB)
+
+MACHDEP = -DGEKKO -mogc -mcpu=750 -meabi -mhard-float
+CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc/include
+
+LDFLAGS	= -g $(MACHDEP) -L$(DEVKITPRO)/libogc/lib/cube
+# Additional libraries to link against
+LIBS	= -lasnd -lbba -lfat -logc -lm
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+PREFIX	:= $(DEVKITPRO)/devkitPPC/bin/powerpc-eabi-
+PPC_AS	:= $(PREFIX)as
+PPC_CC	:= $(PREFIX)gcc
+PPC_CXX	:= $(PREFIX)g++
+
+ELF2DOL := $(DEVKITPRO)/tools/bin/elf2dol
 
 
 #---------------------------------------------------------------------------------
@@ -50,20 +62,23 @@ $(BUILD_DIR):
 # Executable generation
 #---------------------------------------------------------------------------------
 $(TARGET).elf: $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(PPC_CC) $(LDFLAGS) $^ -o $@ $(LIBS)
 	
 $(TARGET).dol: $(TARGET).elf
-	elf2dol $< $@
+	$(ELF2DOL) $< $@
 
 
 #---------------------------------------------------------------------------------
 # Object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/gcwii/%.c
+	$(PPC_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 
 #---------------------------------------------------------------------------------

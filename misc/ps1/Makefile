@@ -8,9 +8,12 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-BUILD_DIR	:= build/ps1
-SOURCE_DIRS	:= src
+# Name of the final output
 TARGET 		:= ClassiCube-ps1
+# List of directories containing source code
+SOURCE_DIRS	:= src src/ps1
+# Directory where object files are placed
+BUILD_DIR	:= build/ps1
 
 
 #---------------------------------------------------------------------------------
@@ -28,6 +31,7 @@ CFLAGS	:= -DPLAT_PS1 -DPSN00BSDK=1 -g -Wa,--strip-local-absolute -ffreestanding 
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(OBJS:%.o=%.d)
 
+# Additional libraries to link against
 # libpsxgpu -> $(PSN00BSDK_ROOT)/lib/libpsn00b/debug/libpsxgpu_exe_gprel.a
 PS1LIBS	:= libpsxgpu libpsxgte libpsxspu libpsxcd libpsxpress libpsxsio libpsxetc libpsxapi libsmd liblzp libc
 PS1LIBS := $(addprefix $(PSN00BSDK_ROOT)/lib/libpsn00b/debug/, $(PS1LIBS))
@@ -65,6 +69,9 @@ $(TARGET).bin: $(TARGET).exe
 # object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
+	$(PSN00BSDK_ROOT)/bin/mipsel-none-elf-gcc $(CFLAGS) $(CINCLUDES) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/ps1/%.c
 	$(PSN00BSDK_ROOT)/bin/mipsel-none-elf-gcc $(CFLAGS) $(CINCLUDES) $(DEPFLAGS) -c $< -o $@
 
 

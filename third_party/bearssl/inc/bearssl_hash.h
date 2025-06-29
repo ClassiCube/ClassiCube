@@ -1257,22 +1257,6 @@ typedef void (*br_ghash)(void *y, const void *h, const void *data, size_t len);
 void br_ghash_ctmul(void *y, const void *h, const void *data, size_t len);
 
 /**
- * \brief GHASH implementation using multiplications (strict 32-bit).
- *
- * This implementation uses multiplications of 32-bit values, with a
- * 32-bit result. It is usually somewhat slower than `br_ghash_ctmul()`,
- * but it is expected to be faster on architectures for which the
- * 32-bit multiplication opcode does not yield the upper 32 bits of the
- * product. It is constant-time (if multiplications are constant-time).
- *
- * \param y      the array to update.
- * \param h      the GHASH key.
- * \param data   the input data (may be `NULL` if `len` is zero).
- * \param len    the input data length (in bytes).
- */
-void br_ghash_ctmul32(void *y, const void *h, const void *data, size_t len);
-
-/**
  * \brief GHASH implementation using multiplications (64-bit).
  *
  * This implementation uses multiplications of 64-bit values, with a

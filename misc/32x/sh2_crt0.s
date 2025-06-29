@@ -6,11 +6,11 @@
 
 ! Standard MD Header at 0x000
 
-        .incbin "m68k_crt0.bin", 0, 0x3C0
+        .incbin "build/32x/m68k_crt0.bin", 0, 0x3C0
 
 ! Standard Mars Header at 0x3C0
 
-        .ascii  "32X Example     "              /* module name (16 chars) */
+        .ascii  "ClassiCube 32X  "              /* module name (16 chars) */
         .long   0x00000000                      /* version */
         .long   __text_end-0x02000000           /* Source (in ROM) */
         .long   0x00000000                      /* Destination (in SDRAM) */
@@ -22,7 +22,7 @@
 
 ! Standard MD startup code at 0x3F0
 
-        .incbin "m68k_crt1.bin"
+        .incbin "build/32x/m68k_crt1.bin"
 
 
         .data

@@ -54,11 +54,7 @@ br_ssl_engine_set_default_chapol(br_ssl_engine_context *cc)
 		br_ssl_engine_set_poly1305(cc, bp);
 	} else {
 #endif
-#if BR_LOMUL
-		br_ssl_engine_set_poly1305(cc, &br_poly1305_ctmul32_run);
-#else
 		br_ssl_engine_set_poly1305(cc, &br_poly1305_ctmul_run);
-#endif
 #if BR_INT128 || BR_UMUL128
 	}
 #endif

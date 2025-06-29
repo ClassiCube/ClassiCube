@@ -73,11 +73,13 @@ endif
 ifeq ($(PLAT),linux)
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
 	BUILD_DIR = build/linux
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),sunos)
 	LIBS    =  -lsocket -lX11 -lXi -lGL
 	BUILD_DIR = build/solaris
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),hp-ux)
@@ -85,6 +87,7 @@ ifeq ($(PLAT),hp-ux)
 	LDFLAGS =
 	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL -lpthread
 	BUILD_DIR = build/hpux
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),darwin)
@@ -100,6 +103,7 @@ ifeq ($(PLAT),freebsd)
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/freebsd
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),openbsd)
@@ -107,13 +111,15 @@ ifeq ($(PLAT),openbsd)
 	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/openbsd
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),netbsd)
 	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include
-	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
+	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic -Wl,-R/usr/X11R7/lib
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/netbsd
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),dragonfly)
@@ -121,6 +127,7 @@ ifeq ($(PLAT),dragonfly)
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/flybsd
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),haiku)
@@ -130,6 +137,7 @@ ifeq ($(PLAT),haiku)
 	LINK    = $(CXX)
 	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
 	BUILD_DIR = build/haiku
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),beos)
@@ -145,12 +153,14 @@ endif
 ifeq ($(PLAT),serenityos)
 	LIBS    = -lgl -lSDL2
 	BUILD_DIR = build/serenity
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),irix)
 	CC      = gcc
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
 	BUILD_DIR = build/irix
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),dos)

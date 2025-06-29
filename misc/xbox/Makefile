@@ -5,10 +5,15 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
+# Name of the final output
 TARGET		= ClassiCube-xbox
+# Application name/title
 XBE_TITLE 	= ClassiCube
-SOURCE_DIRS = src third_party/bearssl/src
+# List of directories containing source code
+SOURCE_DIRS = src src/xbox third_party/bearssl/src
+# Shader objects
 SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
+# Directory where object files are placed
 BUILD_DIR   = build/xbox
 
 
@@ -90,7 +95,10 @@ $(TARGET).exe : $(OBJS)
 $(BUILD_DIR)/%.o: src/%.c
 	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: src/%.S
+$(BUILD_DIR)/%.o: src/xbox/%.c
+	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/xbox/%.S
 	nxdk-as $(NXDK_ASFLAGS) $(ASFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c

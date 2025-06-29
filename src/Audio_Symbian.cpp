@@ -392,7 +392,7 @@ cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
-	*isBusy = !&ctx->bufs[0].available;
+	*isBusy = !ctx->bufs[0].available;
 	return 0;
 }
 

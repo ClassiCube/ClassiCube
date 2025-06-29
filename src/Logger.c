@@ -1249,7 +1249,7 @@ void Logger_FailToStart(const char* raw_msg) {
 #include <unwind.h>
 
 static _Unwind_Reason_Code UnwindFrame(struct _Unwind_Context* ctx, void* arg) {
-	cc_uintptr addr = _Unwind_GetIP(ctx);
+	cc_uintptr addr = (cc_uintptr)_Unwind_GetIP(ctx);
 	if (!addr) return _URC_END_OF_STACK;
 
 	DumpFrame((cc_string*)arg, (void*)addr);

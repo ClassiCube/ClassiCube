@@ -502,7 +502,7 @@ TInt CCContainer::LoopCallBack(TAny*) {
 		}
 
 		gameRunning = true;
-		Game_Run(WindowInfo.Width, WindowInfo.Height, NULL);
+		Game_Run(NULL);
 	}
 	
 	Game_DoFrame();

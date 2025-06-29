@@ -41,19 +41,12 @@ br_ssl_engine_set_default_aes_gcm(br_ssl_engine_context *cc)
 	if (ictr != NULL) {
 		br_ssl_engine_set_aes_ctr(cc, ictr);
 	} else {
-#if BR_64
-		br_ssl_engine_set_aes_ctr(cc, &br_aes_ct64_ctr_vtable);
-#else
-		br_ssl_engine_set_aes_ctr(cc, &br_aes_ct_ctr_vtable);
-#endif
+		br_ssl_engine_set_aes_ctr(cc, &br_aes_big_ctr_vtable);
 	}
 #else
-#if BR_64
-	br_ssl_engine_set_aes_ctr(cc, &br_aes_ct64_ctr_vtable);
-#else
-	br_ssl_engine_set_aes_ctr(cc, &br_aes_ct_ctr_vtable);
+	br_ssl_engine_set_aes_ctr(cc, &br_aes_big_ctr_vtable);
 #endif
-#endif
+
 #if BR_AES_X86NI
 	ighash = br_ghash_pclmul_get();
 	if (ighash != 0) {
@@ -61,9 +54,7 @@ br_ssl_engine_set_default_aes_gcm(br_ssl_engine_context *cc)
 		return;
 	}
 #endif
-#if BR_LOMUL
-	br_ssl_engine_set_ghash(cc, &br_ghash_ctmul32);
-#elif BR_64
+#if BR_64
 	br_ssl_engine_set_ghash(cc, &br_ghash_ctmul64);
 #else
 	br_ssl_engine_set_ghash(cc, &br_ghash_ctmul);

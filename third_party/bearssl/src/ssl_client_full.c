@@ -36,7 +36,6 @@ br_ssl_client_init_full(br_ssl_client_context *cc,
 	 * Rationale for suite order, from most important to least
 	 * important rule:
 	 *
-	 * -- Don't use 3DES if AES or ChaCha20 is available.
 	 * -- Try to have Forward Secrecy (ECDHE suite) if possible.
 	 * -- When not using Forward Secrecy, ECDH key exchange is
 	 *    better than RSA key exchange (slightly more expensive on the
@@ -89,12 +88,7 @@ br_ssl_client_init_full(br_ssl_client_context *cc,
 		BR_TLS_RSA_WITH_AES_128_CBC_SHA256,
 		BR_TLS_RSA_WITH_AES_256_CBC_SHA256,
 		BR_TLS_RSA_WITH_AES_128_CBC_SHA,
-		BR_TLS_RSA_WITH_AES_256_CBC_SHA,
-		BR_TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
-		BR_TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		BR_TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
-		BR_TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
-		BR_TLS_RSA_WITH_3DES_EDE_CBC_SHA
+		BR_TLS_RSA_WITH_AES_256_CBC_SHA
 	};
 
 	/*
@@ -174,6 +168,5 @@ br_ssl_client_init_full(br_ssl_client_context *cc,
 	br_ssl_engine_set_default_aes_cbc(&cc->eng);
 	br_ssl_engine_set_default_aes_ccm(&cc->eng);
 	br_ssl_engine_set_default_aes_gcm(&cc->eng);
-	br_ssl_engine_set_default_des_cbc(&cc->eng);
 	br_ssl_engine_set_default_chapol(&cc->eng);
 }

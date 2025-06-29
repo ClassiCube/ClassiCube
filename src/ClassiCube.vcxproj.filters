@@ -354,6 +354,15 @@
     <ClInclude Include="Queue.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="main_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="_AudioBase.h">
+      <Filter>Header Files\Audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -400,9 +409,6 @@
     </ClCompile>
     <ClCompile Include="Builder.c">
       <Filter>Source Files\MeshBuilder</Filter>
-    </ClCompile>
-    <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Entity.c">
       <Filter>Source Files\Entities</Filter>
@@ -560,12 +566,6 @@
     <ClCompile Include="Animations.c">
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
-    <ClCompile Include="Platform_Web.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Posix.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="LBackend.c">
       <Filter>Source Files\Launcher</Filter>
     </ClCompile>
@@ -580,9 +580,6 @@
     </ClCompile>
     <ClCompile Include="Graphics_D3D11.c">
       <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Android.c">
-      <Filter>Source Files\Platform</Filter>
     </ClCompile>
     <ClCompile Include="Graphics_GL1.c">
       <Filter>Source Files\Graphics</Filter>
@@ -599,155 +596,17 @@
     <ClCompile Include="SSL.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
-    <ClCompile Include="Platform_PSP.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_GCWii.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_3DS.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Windows.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_3DS.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_PSP.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_GCWii.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_Dreamcast.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Dreamcast.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Android.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Dreamcast.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_GCWii.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_PSP.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_3DS.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Web.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
     <ClCompile Include="Window_Win.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_X11.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_PSVita.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Xbox.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Xbox.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_PSVita.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_Xbox.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_PSVita.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_PS3.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_PS3.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_PS3.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
     <ClCompile Include="EntityRenderers.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics_N64.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_N64.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_N64.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics_SoftGPU.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_PS2.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_PS2.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_PS2.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Commands.c">
       <Filter>Source Files\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Xbox360.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Xbox360.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_Xbox360.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioBackend.c">
-      <Filter>Source Files\Audio</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_NDS.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_PS1.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Switch.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_SDL3.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_NDS.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_PS1.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_WiiU.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Switch.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_NDS.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_PS1.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics_WiiU.c">
-      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="FancyLighting.c">
       <Filter>Source Files\Map</Filter>
@@ -755,35 +614,11 @@
     <ClCompile Include="Queue.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Platform_MacClassic.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_MacClassic.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_BeOS.cpp">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_BeOS.cpp">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Window_Terminal.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
-    <ClCompile Include="Window_Saturn.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform_Saturn.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="TouchUI.c">
       <Filter>Source Files\2D</Filter>
-    </ClCompile>
-    <ClCompile Include="LBackend_Android.c">
-      <Filter>Source Files\Launcher</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_SDL2.c">
-      <Filter>Source Files\Window</Filter>
     </ClCompile>
     <ClCompile Include="InputHandler.c">
       <Filter>Source Files\Game</Filter>
@@ -791,24 +626,19 @@
     <ClCompile Include="MenuOptions.c">
       <Filter>Source Files\2D</Filter>
     </ClCompile>
-    <ClCompile Include="Window_WiiU.c">
-      <Filter>Source Files\Window</Filter>
+    <ClCompile Include="Audio_WinMM.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio_OpenAL.c">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Windows.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Window_cocoa.m">
-      <Filter>Source Files\Window</Filter>
-    </None>
-    <None Include="Window_ios.m">
-      <Filter>Source Files\Window</Filter>
-    </None>
-    <None Include="LBackend_ios.m">
-      <Filter>Source Files\Launcher</Filter>
-    </None>
   </ItemGroup>
 </Project>

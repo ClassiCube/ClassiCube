@@ -56,16 +56,6 @@
  */
 
 /*
- * When BR_LOMUL is enabled, then multiplications of 32-bit values whose
- * result are truncated to the low 32 bits are assumed to be
- * substantially more efficient than 32-bit multiplications that yield
- * 64-bit results. This is typically the case on low-end ARM Cortex M
- * systems (M0, M0+, M1, and arguably M3 and M4 as well).
- *
-#define BR_LOMUL   1
- */
-
-/*
  * When BR_SLOW_MUL is enabled, multiplications are assumed to be
  * substantially slow with regards to other integer operations, thus
  * making it worth to make more operations for a given task if it allows
