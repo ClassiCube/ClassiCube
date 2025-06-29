@@ -54,11 +54,6 @@ jobs:
           x86_64-freebsd11-clang ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-fbsd64-gl1 ${{ env.LIBS }}
 
 
-      # otherwise notify_failure doesn't work
-      - name: Install curl when necessary
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        run: apk add curl
-
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:

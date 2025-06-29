@@ -39,18 +39,8 @@ br_ssl_engine_set_default_aes_ccm(br_ssl_engine_context *cc)
 	ictrcbc = br_aes_x86ni_ctrcbc_get_vtable();
 	if (ictrcbc != NULL) {
 		br_ssl_engine_set_aes_ctrcbc(cc, ictrcbc);
-	} else {
-#if BR_64
-		br_ssl_engine_set_aes_ctrcbc(cc, &br_aes_ct64_ctrcbc_vtable);
-#else
-		br_ssl_engine_set_aes_ctrcbc(cc, &br_aes_ct_ctrcbc_vtable);
-#endif
+		return;
 	}
-#else
-#if BR_64
-	br_ssl_engine_set_aes_ctrcbc(cc, &br_aes_ct64_ctrcbc_vtable);
-#else
-	br_ssl_engine_set_aes_ctrcbc(cc, &br_aes_ct_ctrcbc_vtable);
 #endif
-#endif
+	br_ssl_engine_set_aes_ctrcbc(cc, &br_aes_big_ctrcbc_vtable);
 }

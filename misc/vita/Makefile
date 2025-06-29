@@ -87,6 +87,9 @@ $(TARGET).elf: $(OBJS)
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o : src/%.c
 	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o : src/psvita/%.c
+	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	
 $(BUILD_DIR)/%.o : third_party/bearssl/src/%.c
 	$(VITA_CC) $(CFLAGS) -c $< -o $@
@@ -95,7 +98,6 @@ $(BUILD_DIR)/%.o : third_party/bearssl/src/%.c
 #---------------------------------------------------------------------------------
 # Dependency tracking
 #---------------------------------------------------------------------------------
-# Dependency tracking
 $(DEPFILES):
 
 include $(wildcard $(DEPFILES))

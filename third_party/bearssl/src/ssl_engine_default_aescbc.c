@@ -44,13 +44,7 @@ br_ssl_engine_set_default_aes_cbc(br_ssl_engine_context *cc)
 		return;
 	}
 #endif
-#if BR_64
 	br_ssl_engine_set_aes_cbc(cc,
-		&br_aes_ct64_cbcenc_vtable,
-		&br_aes_ct64_cbcdec_vtable);
-#else
-	br_ssl_engine_set_aes_cbc(cc,
-		&br_aes_ct_cbcenc_vtable,
-		&br_aes_ct_cbcdec_vtable);
-#endif
+		&br_aes_big_cbcenc_vtable,
+		&br_aes_big_cbcdec_vtable);
 }
