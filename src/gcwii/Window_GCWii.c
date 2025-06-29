@@ -22,7 +22,7 @@
 static cc_bool needsFBUpdate;
 static cc_bool launcherMode;
 static int mouseSupported;
-#include "VirtualCursor.h"
+#include "../VirtualCursor.h"
 static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;

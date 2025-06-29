@@ -1,18 +1,18 @@
-#include "Core.h"
-#if defined CC_BUILD_SWITCH
-#include "_WindowBase.h"
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Input.h"
-#include "Gui.h"
+#include "../Core.h"
+#include "../_WindowBase.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Input.h"
+#include "../Gui.h"
+
 #include <switch.h>
 
 static cc_bool launcherMode;
@@ -312,4 +312,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

@@ -1,22 +1,22 @@
-#include "Core.h"
-#if defined CC_BUILD_3DS
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Gui.h"
+#include "../Core.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Gui.h"
+
 #include <3ds.h>
 
 static cc_bool launcherMode;
 static u16 top_width, top_height;
 static u16 btm_width, btm_height;
-#include "VirtualKeyboard.h"
+#include "../VirtualKeyboard.h"
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -268,4 +268,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

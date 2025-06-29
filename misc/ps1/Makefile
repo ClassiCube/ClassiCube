@@ -8,9 +8,12 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-BUILD_DIR	:= build/ps1
-SOURCE_DIRS	:= src src/ps1
+# Name of the final output
 TARGET 		:= ClassiCube-ps1
+# List of directories containing source code
+SOURCE_DIRS	:= src src/ps1
+# Directory where object files are placed
+BUILD_DIR	:= build/ps1
 
 
 #---------------------------------------------------------------------------------
@@ -28,12 +31,13 @@ CFLAGS	:= -DPLAT_PS1 -DPSN00BSDK=1 -g -Wa,--strip-local-absolute -ffreestanding 
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(OBJS:%.o=%.d)
 
+# Additional libraries to link against
 # libpsxgpu -> $(PSN00BSDK_ROOT)/lib/libpsn00b/debug/libpsxgpu_exe_gprel.a
 PS1LIBS	:= libpsxgpu libpsxgte libpsxspu libpsxcd libpsxpress libpsxsio libpsxetc libpsxapi libsmd liblzp libc
 PS1LIBS := $(addprefix $(PSN00BSDK_ROOT)/lib/libpsn00b/debug/, $(PS1LIBS))
 PS1LIBS := $(addsuffix _exe_gprel.a, $(PS1LIBS))
 
-LDFLAGS		= -g -T$(PSN00BSDK_ROOT)/lib/libpsn00b/ldscripts/exe.ld -nostdlib -Wl,-gc-sections -G8 -static
+LDFLAGS		= -g -T$(PSN00BSDK_ROOT)/lib/libpsn00b/ldscripts/exe.ld -nostdlib -Wl,-gc-sections -G8 -static \
 LIBS		= -lgcc $(PS1LIBS)
 
 #---------------------------------------------------------------------------------

@@ -1,24 +1,19 @@
-#include "Core.h"
-#if defined CC_BUILD_GBA
-
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "Options.h"
-#include "Animations.h"
+#include "../Core.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../Options.h"
+#include "../Animations.h"
 
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <time.h>
-#include "_PlatformConsole.h"
+#include "../_PlatformConsole.h"
 
 typedef volatile uint8_t   vu8;
 typedef volatile uint16_t vu16;
@@ -27,9 +22,9 @@ typedef volatile uint32_t vu32;
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = EPIPE;
+const cc_result ReturnCode_SocketInProgess  = -1000;
+const cc_result ReturnCode_SocketWouldBlock = -1000;
+const cc_result ReturnCode_SocketDropped    = -1000;
 
 const char* Platform_AppNameSuffix = " GBA";
 cc_bool Platform_ReadonlyFilesystem;
@@ -54,9 +49,9 @@ static void Log_Nocash(char* buffer) {
 }
 
 #define MGBA_LOG_DEBUG 4
-#define REG_DEBUG_ENABLE (vu16*) 0x4FFF780
-#define REG_DEBUG_FLAGS  (vu16*) 0x4FFF700
-#define REG_DEBUG_STRING (char*) 0x4FFF600
+#define REG_DEBUG_ENABLE (vu16*)0x4FFF780
+#define REG_DEBUG_FLAGS  (vu16*)0x4FFF700
+#define REG_DEBUG_STRING (char*)0x4FFF600
 
 static void Log_mgba(char* buffer, int len) {
 	*REG_DEBUG_ENABLE = 0xC0DE;
@@ -264,5 +259,4 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
 

@@ -26,7 +26,7 @@
 #ifdef HW_RVL
 #include <ogc/wiilaunch.h>
 #endif
-#include "../_PlatfromConsole.h"
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;

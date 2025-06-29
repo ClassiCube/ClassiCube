@@ -1,33 +1,33 @@
-#include "Core.h"
-#if defined CC_BUILD_GBA
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Camera.h"
+#include "../Core.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Camera.h"
+
 #include <stdint.h>
 
 typedef volatile uint8_t   vu8;
 typedef volatile uint16_t vu16;
 typedef volatile uint32_t vu32;
 
-#define SCREEN_WIDTH		240
-#define SCREEN_HEIGHT		160
+#define SCREEN_WIDTH	240
+#define SCREEN_HEIGHT	160
 
-#define DCNT_MODE3			0x0003
-#define DCNT_BG2			0x0400
+#define DCNT_MODE3		0x0003
+#define DCNT_BG2		0x0400
 
-#define MEM_IO		        0x04000000
-#define MEM_VRAM	0x06000000
+#define MEM_IO		    0x04000000
+#define MEM_VRAM		0x06000000
 
-#define REG_DISPCNT			*(vu32*)(MEM_IO + 0x0000)
-#define REG_KEYINPUT		*(vu16*)(MEM_IO + 0x0130)
+#define REG_DISPCNT		*(vu32*)(MEM_IO + 0x0000)
+#define REG_KEYINPUT	*(vu16*)(MEM_IO + 0x0130)
 
 #define KEY_A			0x0001
 #define KEY_B			0x0002
@@ -182,4 +182,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

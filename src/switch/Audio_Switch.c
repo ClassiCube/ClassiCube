@@ -1,43 +1,69 @@
-#include "Core.h"
+#include "../Core.h"
+#include "../Audio.h"
 
-#if defined CC_BUILD_3DS
-#include <3ds.h>
-#include "Audio.h"
+#include <switch.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct AudioContext {
 	int chanID, count;
-	ndspWaveBuf bufs[AUDIO_MAX_BUFFERS];
-	int sampleRate;
-	cc_bool stereo;
+	AudioDriverWaveBuf bufs[AUDIO_MAX_BUFFERS];
+	int channels, sampleRate;
 };
 #define AUDIO_OVERRIDE_ALLOC
-#include "_AudioBase.h"
+#include "../_AudioBase.h"
 
 static int channelIDs;
+AudioDriver drv;
+bool switchAudio = false;
+void* audrv_mutex;
+
 #define MAX_AUDIO_VOICES 24
 
-#define AudioBuf_InUse(buf) ((buf)->status == NDSP_WBUF_QUEUED || (buf)->status == NDSP_WBUF_PLAYING)
+#define AudioBuf_InUse(buf) ((buf)->state == AudioDriverWaveBufState_Queued || (buf)->state == AudioDriverWaveBufState_Playing || (buf)->state == AudioDriverWaveBufState_Waiting)
 
-// See https://github.com/devkitPro/3ds-examples/blob/master/audio/README.md
-// To get audio to work in Citra, just create a 0 byte file in sdmc/3ds named dspfirm.cdca
 cc_bool AudioBackend_Init(void) {
-	int result = ndspInit();
-	Platform_Log2("NDSP_INIT: %i, %h", &result, &result);
+	if (switchAudio) return true;
+	switchAudio = true;
 
-	if (result == MAKERESULT(RL_PERMANENT, RS_NOTFOUND, RM_DSP, RD_NOT_FOUND)) {
-		static const cc_string msg = String_FromConst("/3ds/dspfirm.cdc not found on SD card, therefore no audio will play");
-		Logger_WarnFunc(&msg);
-	} else if (result) {
-		Audio_Warn(result, "initing DSP for playing audio");
-	}
+	if (!audrv_mutex) audrv_mutex = Mutex_Create("Audio sync");
 
-	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-	return result == 0;
+	static const AudioRendererConfig arConfig =
+    {
+        .output_rate     = AudioRendererOutputRate_48kHz,
+        .num_voices      = MAX_AUDIO_VOICES,
+        .num_effects     = 0,
+        .num_sinks       = 1,
+        .num_mix_objs    = 1,
+        .num_mix_buffers = 2,
+    };
+
+	audrenInitialize(&arConfig);
+	audrvCreate(&drv, &arConfig, 2);
+
+	static const u8 sink_channels[] = { 0, 1 };
+	/*int sink =*/ audrvDeviceSinkAdd(&drv, AUDREN_DEFAULT_DEVICE_NAME, 2, sink_channels);
+
+	audrvUpdate(&drv);
+
+	Result res = audrenStartAudioRenderer();
+	
+	return R_SUCCEEDED(res);
 }
 
-void AudioBackend_Tick(void) { }
+void AudioBackend_Tick(void) {
+	Mutex_Lock(audrv_mutex);
+	if (switchAudio) audrvUpdate(&drv);
+	Mutex_Unlock(audrv_mutex);
+}
 
-void AudioBackend_Free(void) { }
+void AudioBackend_Free(void) {
+	for (int i = 0; i < MAX_AUDIO_VOICES; i++) 
+	{
+		audrvVoiceStop(&drv, i);
+	}
+	audrvUpdate(&drv);
+}
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int chanID = -1;
@@ -54,66 +80,81 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	channelIDs |= (1 << chanID);
 	ctx->count  = buffers;
 	ctx->chanID = chanID;
-
-	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);
 	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->count) {
-		ndspChnWaveBufClear(ctx->chanID);
+		audrvVoiceStop(&drv, ctx->chanID);
 		channelIDs &= ~(1 << ctx->chanID);
 	}
 	ctx->count = 0;
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-	ctx->stereo = (channels == 2);
-	int fmt = ctx->stereo ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16;
-
 	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
-	ndspChnSetFormat(ctx->chanID, fmt);
-	ndspChnSetRate(ctx->chanID, sampleRate);
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
+
+	audrvVoiceStop(&drv, ctx->chanID);
+	audrvVoiceInit(&drv, ctx->chanID, ctx->channels, PcmFormat_Int16, ctx->sampleRate);
+	audrvVoiceSetDestinationMix(&drv, ctx->chanID, AUDREN_FINAL_MIX_ID);
+
+	if (channels == 1) {
+		// mono
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
+	} else {
+		// stereo
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 0.0f, 0, 1);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 0.0f, 1, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 1, 1);
+	}
+
 	return 0;
 }
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) {
-	float mix[12] = { 0 };
- 	mix[0] = volume / 100.0f;
- 	mix[1] = volume / 100.0f;
- 	
- 	ndspChnSetMix(ctx->chanID, mix);
+	audrvVoiceSetVolume(&drv, ctx->chanID, volume / 100.0f);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
-	ndspWaveBuf* buf;
+	AudioDriverWaveBuf* buf;
 
-	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
-	if (((uintptr_t)chunk->data & 0x7F) != 0) {
+	// Audio buffers must be aligned to a multiple of 0x1000, according to libnx example code
+	if (((uintptr_t)chunk->data & 0xFFF) != 0) {
 		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk->data);
 	}
-	if ((chunk->size & 0x7F) != 0) {
+	if ((chunk->size & 0xFFF) != 0) {
 		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &chunk->size);
 	}
+
 
 	for (int i = 0; i < ctx->count; i++)
 	{
 		buf = &ctx->bufs[i];
-		if (AudioBuf_InUse(buf))
-			continue;
+		cc_uint32 endOffset = chunk->size / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
+		if (AudioBuf_InUse(buf)) continue;
 
 		buf->data_pcm16 = chunk->data;
-		buf->nsamples   = chunk->size / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
-		DSP_FlushDataCache(buf->data_pcm16, chunk->size);
-		ndspChnWaveBufAdd(ctx->chanID, buf);
+		buf->size       = chunk->size;
+		buf->start_sample_offset = 0;
+		buf->end_sample_offset   = endOffset;
+
+		Mutex_Lock(audrv_mutex);
+		audrvVoiceAddWaveBuf(&drv, ctx->chanID, buf);
+		Mutex_Unlock(audrv_mutex);
+
 		return 0;
 	}
+
 	// tried to queue data without polling for free buffers first
 	return ERR_INVALID_ARGUMENT;
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	ndspWaveBuf* buf;
+	AudioDriverWaveBuf* buf;
 	int count = 0;
 
 	for (int i = 0; i < ctx->count; i++)
@@ -141,6 +182,7 @@ cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chu
 }
 
 cc_result StreamContext_Play(struct AudioContext* ctx) {
+	audrvVoiceStart(&drv, ctx->chanID);
 	return 0;
 }
 
@@ -166,11 +208,12 @@ cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data
 	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
 	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
 
+	audrvVoiceStart(&drv, ctx->chanID);
 	return 0;
 }
 
 cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
-	ndspWaveBuf* buf = &ctx->bufs[0];
+	AudioDriverWaveBuf* buf = &ctx->bufs[0];
 	
 	*isBusy = AudioBuf_InUse(buf);
 	return 0;
@@ -185,20 +228,31 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 }
 
 cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numChunks) {
-	size = (size + 0x7F) & ~0x7F;  // round up to nearest multiple of 0x80
-	cc_uint8* dst = linearAlloc(size * numChunks);
+	size = (size + 0xFFF) & ~0xFFF;  // round up to nearest multiple of 0x1000
+	void* dst = aligned_alloc(0x1000, size * numChunks);
 	if (!dst) return ERR_OUT_OF_MEMORY;
 
 	for (int i = 0; i < numChunks; i++)
 	{
 		chunks[i].data = dst + size * i;
 		chunks[i].size = size;
+
+		int mpid = audrvMemPoolAdd(&drv, chunks[i].data, size);
+		audrvMemPoolAttach(&drv, mpid);
+		chunks[i].meta.val = mpid;
 	}
 	return 0;
 }
 
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
-	linearFree(chunks[0].data);
+	for (int i = 0; i < numChunks; i++)
+	{
+		if (!chunks[i].data) continue;
+		int mpid = chunks[i].meta.val;
+
+		audrvMemPoolDetach(&drv, mpid);
+		audrvMemPoolRemove(&drv, mpid);
+	}
+	free(chunks[0].data);
 }
-#endif
 
