@@ -37,7 +37,7 @@ PS1LIBS	:= libpsxgpu libpsxgte libpsxspu libpsxcd libpsxpress libpsxsio libpsxet
 PS1LIBS := $(addprefix $(PSN00BSDK_ROOT)/lib/libpsn00b/debug/, $(PS1LIBS))
 PS1LIBS := $(addsuffix _exe_gprel.a, $(PS1LIBS))
 
-LDFLAGS		= -g -T$(PSN00BSDK_ROOT)/lib/libpsn00b/ldscripts/exe.ld -nostdlib -Wl,-gc-sections -G8 -static \
+LDFLAGS		= -g -T$(PSN00BSDK_ROOT)/lib/libpsn00b/ldscripts/exe.ld -nostdlib -Wl,-gc-sections -G8 -static
 LIBS		= -lgcc $(PS1LIBS)
 
 #---------------------------------------------------------------------------------

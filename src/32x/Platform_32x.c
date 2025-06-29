@@ -1,24 +1,23 @@
-#include "Core.h"
-#if defined PLAT_32X
-
 #define OVERRIDE_MEM_FUNCTIONS
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "Options.h"
-#include "PackedCol.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../Options.h"
+#include "../PackedCol.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
-#include "_PlatformConsole.h"
-#include "../misc/32x/32x.h"
-#include "../misc/32x/hw_32x.h"
-#include "../third_party/tinyalloc/tinyalloc.c"
+#include "../_PlatformConsole.h"
+
+#include "../../misc/32x/32x.h"
+#include "../../misc/32x/hw_32x.h"
+#include "../../third_party/tinyalloc/tinyalloc.c"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = 99999;
@@ -276,5 +275,4 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
 

@@ -1,4 +1,3 @@
-#include "../Core.h"
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"

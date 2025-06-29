@@ -2,8 +2,6 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
 endif
 
-include $(DEVKITPRO)/devkitPPC/base_tools
-
 
 #---------------------------------------------------------------------------------
 # Configurable options
@@ -38,6 +36,17 @@ DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+PREFIX	:= $(DEVKITPRO)/devkitPPC/bin/powerpc-eabi-
+PPC_AS	:= $(PREFIX)as
+PPC_CC	:= $(PREFIX)gcc
+PPC_CXX	:= $(PREFIX)g++
+
+ELF2DOL := $(DEVKITPRO)/tools/bin/elf2dol
+
+
+#---------------------------------------------------------------------------------
 # Main targets
 #---------------------------------------------------------------------------------
 default: $(BUILD_DIR) $(TARGET).dol
@@ -53,23 +62,23 @@ $(BUILD_DIR):
 # Executable generation
 #---------------------------------------------------------------------------------
 $(TARGET).elf: $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(PPC_CC) $(LDFLAGS) $^ -o $@ $(LIBS)
 	
 $(TARGET).dol: $(TARGET).elf
-	elf2dol $< $@
+	$(ELF2DOL) $< $@
 
 
 #---------------------------------------------------------------------------------
 # Object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: src/gcwii/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 
 #---------------------------------------------------------------------------------

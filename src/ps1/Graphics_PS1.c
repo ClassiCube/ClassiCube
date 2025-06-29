@@ -1,4 +1,3 @@
-#include "../Core.h"
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"

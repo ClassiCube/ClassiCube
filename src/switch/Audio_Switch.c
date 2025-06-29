@@ -1,4 +1,3 @@
-#include "../Core.h"
 #include "../Audio.h"
 
 #include <switch.h>

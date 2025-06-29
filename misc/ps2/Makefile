@@ -6,9 +6,12 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-SOURCE_DIRS	:= src src/ps2 third_party/bearssl/src
-BUILD_DIR = build/ps2
+# Name of the final output
 TARGET 	= ClassiCube-ps2
+# List of directories containing source code
+SOURCE_DIRS	:= src src/ps2 third_party/bearssl/src
+# Directory where object files are placed
+BUILD_DIR = build/ps2
 
 
 #---------------------------------------------------------------------------------
@@ -17,10 +20,6 @@ TARGET 	= ClassiCube-ps2
 S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 IOP_MODS := DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o USBKBD_irx.o
 
@@ -31,6 +30,17 @@ EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -Ithird_party/bear
 EE_CFLAGS 	:= -D_EE -G0 -O2 -Wall -gdwarf-2 -gz -DPLAT_PS2
 EE_LDFLAGS 	:= -L$(PS2SDK)/ee/lib -Wl,-zmax-page-size=128
 EE_LINKFILE := $(PS2SDK)/ee/startup/linkfile
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+EE_CC 	 = mips64r5900el-ps2-elf-gcc
+EE_STRIP = mips64r5900el-ps2-elf-strip
 
 
 #---------------------------------------------------------------------------------
@@ -43,8 +53,6 @@ clean:
 	
 $(BUILD_DIR):
 	mkdir -p $@
-
-include $(PS2SDK)/samples/Makefile.pref
 
 
 #---------------------------------------------------------------------------------

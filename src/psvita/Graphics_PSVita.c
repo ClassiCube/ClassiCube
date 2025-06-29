@@ -1,9 +1,8 @@
-#include "Core.h"
-#if defined CC_BUILD_PSVITA
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
+
 #include <vitasdk.h>
 
 // TODO track last frame used on
@@ -1186,4 +1185,4 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	
 	Gfx_SetDepthTest(true);
 }
-#endif
+

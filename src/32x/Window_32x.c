@@ -1,21 +1,20 @@
-#include "Core.h"
-#if defined CC_BUILD_32X
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Logger.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Logger.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../misc/32x/32x.h"
-#include "../misc/32x/hw_32x.h"
+#include "../../misc/32x/32x.h"
+#include "../../misc/32x/hw_32x.h"
 
 // framebuffer only 128 kb
 #define SCREEN_WIDTH    320
@@ -163,4 +162,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

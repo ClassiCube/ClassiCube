@@ -1,4 +1,3 @@
-#include "../Core.h"
 #include "../_WindowBase.h"
 #include "../Window.h"
 #include "../Platform.h"

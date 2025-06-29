@@ -1,17 +1,16 @@
-#include "Core.h"
-#if defined CC_BUILD_PSVITA
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Logger.h"
-#include "VirtualKeyboard.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Logger.h"
+#include "../VirtualKeyboard.h"
+
 #include <vitasdk.h>
 
 static cc_bool launcherMode;
@@ -308,4 +307,4 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 void OnscreenKeyboard_Close(void) {
 	VirtualKeyboard_Close();
 }
-#endif
+

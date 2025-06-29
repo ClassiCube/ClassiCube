@@ -2,8 +2,6 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
 endif
 
-include $(DEVKITPRO)/devkitARM/base_tools
-
 
 #---------------------------------------------------------------------------------
 # Configurable options
@@ -56,6 +54,20 @@ DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+PREFIX	:= $(DEVKITPRO)/devkitARM/bin/arm-none-eabi-
+ARM_AS	:= $(PREFIX)as
+ARM_CC	:= $(PREFIX)gcc
+ARM_CXX	:= $(PREFIX)g++
+
+_DSXTOOL := $(DEVKITPRO)/tools/bin/3dsxtool
+SMDHTOOL := $(DEVKITPRO)/tools/bin/smdhtool
+PICASSO	 := $(DEVKITPRO)/tools/bin/picasso
+BIN2S	 := $(DEVKITPRO)/tools/bin/bin2s
+
+
+#---------------------------------------------------------------------------------
 # Main targets
 #---------------------------------------------------------------------------------
 default: $(BUILD_DIR) $(TARGET).cia
@@ -71,13 +83,13 @@ $(BUILD_DIR):
 # Executable generation
 #---------------------------------------------------------------------------------
 $(TARGET).elf: $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(ARM_CC) $(LDFLAGS) $^ -o $@ $(LIBS)
 
 $(BUILD_DIR).smdh: $(APP_ICON)
-	smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(APP_ICON) $@
+	$(SMDHTOOL) --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(APP_ICON) $@
 
 $(TARGET).3dsx: $(TARGET).elf $(BUILD_DIR).smdh
-	3dsxtool $< $@ --smdh=$(BUILD_DIR).smdh
+	$(_DSXTOOL) $< $@ --smdh=$(BUILD_DIR).smdh
 
 $(BUILD_DIR)/makerom:
 	wget https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.3/makerom-v0.18.3-ubuntu_x86_64.zip -O $(BUILD_DIR)/makerom.zip
@@ -92,19 +104,19 @@ $(TARGET).cia : $(TARGET).3dsx $(BUILD_DIR)/makerom
 # Object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: src/3ds/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(BUILD_DIR)/%.shbin: misc/3ds/%.v.pica
-	picasso $< -o $@
+	$(PICASSO) $< -o $@
 
 $(BUILD_DIR)/%.shbin.o: $(BUILD_DIR)/%.shbin
-	bin2s $< | $(AS) -o $@
+	$(BIN2S) $< | $(ARM_AS) -o $@
 
 
 #---------------------------------------------------------------------------------

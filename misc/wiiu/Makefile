@@ -13,9 +13,9 @@ TOPDIR ?= $(CURDIR)
 # APP_SHORTNAME sets the short name of the application
 # APP_AUTHOR sets the author of the application
 #-------------------------------------------------------------------------------
-#APP_NAME	:= Application Name
-#APP_SHORTNAME	:= App Name
-#APP_AUTHOR	:= Built with devkitPPC & wut
+APP_NAME		:= ClassiCube
+APP_SHORTNAME	:= ClassiCube
+APP_AUTHOR		:= ClassiCube team
 
 include $(DEVKITPRO)/wut/share/wut_rules
 

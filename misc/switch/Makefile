@@ -2,8 +2,6 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
 endif
 
-include $(DEVKITPRO)/devkitA64/base_tools
-
 
 #---------------------------------------------------------------------------------
 # Configurable options
@@ -41,13 +39,25 @@ LIBNX		= $(DEVKITPRO)/libnx
 INCLUDES 	+= $(foreach dir, $(LIBNX), -I$(dir)/include)
 LDFLAGS 	+= $(foreach dir, $(LIBNX), -L$(dir)/lib)
 
-PORTLIBS	= $(PORTLIBS_PATH)/switch
+PORTLIBS	= $(DEVKITPRO)/portlibs/switch
 INCLUDES 	+= $(foreach dir, $(PORTLIBS), -I$(dir)/include)
 LDFLAGS 	+= $(foreach dir, $(PORTLIBS), -L$(dir)/lib)
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+PREFIX	:= $(DEVKITPRO)/devkitA64/bin/aarch64-none-elf-
+A64_AS	:= $(PREFIX)as
+A64_CC	:= $(PREFIX)gcc
+A64_CXX	:= $(PREFIX)g++
+
+ELF2NRO := $(DEVKITPRO)/tools/bin/elf2nro
+NACPTOOL := $(DEVKITPRO)/tools/bin/nacptool
 
 
 #---------------------------------------------------------------------------------
@@ -66,26 +76,26 @@ $(BUILD_DIR):
 # Executable generation
 #---------------------------------------------------------------------------------
 $(TARGET).elf: $(OBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(A64_CXX) $(LDFLAGS) $^ -o $@ $(LIBS)
 
 $(BUILD_DIR)/$(TARGET).nacp:
-	nacptool --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ --titleid=$(APP_TITLEID)
+	$(NACPTOOL) --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ --titleid=$(APP_TITLEID)
 
 $(TARGET).nro: $(TARGET).elf $(BUILD_DIR)/$(TARGET).nacp
-	elf2nro $< $@ --icon=$(APP_ICON) --nacp=$(BUILD_DIR)/$(TARGET).nacp
+	$(ELF2NRO) $< $@ --icon=$(APP_ICON) --nacp=$(BUILD_DIR)/$(TARGET).nacp
 
 
 #---------------------------------------------------------------------------------
 # Object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(A64_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: src/switch/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(A64_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(A64_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 
 #---------------------------------------------------------------------------------

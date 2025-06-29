@@ -1,4 +1,3 @@
-#include "../Core.h"
 #include "../Window.h"
 #include "../Platform.h"
 #include "../Input.h"

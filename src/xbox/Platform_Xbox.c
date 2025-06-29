@@ -1,4 +1,3 @@
-#include "../Core.h"
 #define CC_XTEA_ENCRYPTION
 #include "../_PlatformBase.h"
 #include "../Stream.h"
