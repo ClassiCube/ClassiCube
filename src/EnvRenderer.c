@@ -66,7 +66,6 @@ static cc_bool CameraInsideBlock(BlockID block, IVec3* coords) {
 static PackedCol CalcFog(float* density) {
 	IVec3 coords;
 	BlockID block;
-	float blend;
 
 	IVec3_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
 	block = World_SafeGetBlock(coords.x, coords.y, coords.z);

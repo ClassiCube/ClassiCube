@@ -402,6 +402,8 @@
     <ClInclude Include="LScreens.h" />
     <ClInclude Include="LWeb.h" />
     <ClInclude Include="LWidgets.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="main_impl.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Menus.h" />
@@ -441,6 +443,7 @@
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="_AudioBase.h" />
     <ClInclude Include="_GLShared.h" />
     <ClInclude Include="_GraphicsBase.h" />
     <ClInclude Include="_HttpBase.h" />
@@ -450,17 +453,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animations.c" />
+    <ClCompile Include="Audio_OpenAL.c" />
+    <ClCompile Include="Audio_WinMM.c" />
     <ClCompile Include="Commands.c" />
     <ClCompile Include="EntityRenderers.c" />
     <ClCompile Include="GameVersion.c" />
-    <ClCompile Include="Graphics_3DS.c" />
     <ClCompile Include="Graphics_D3D11.c" />
     <ClCompile Include="Graphics_D3D9.c" />
-    <ClCompile Include="Graphics_Dreamcast.c" />
-    <ClCompile Include="Graphics_GCWii.c" />
     <ClCompile Include="Graphics_GL1.c" />
     <ClCompile Include="Audio.c" />
-    <ClCompile Include="AudioBackend.c" />
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
@@ -476,17 +477,7 @@
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
-    <ClCompile Include="Graphics_N64.c" />
-    <ClCompile Include="Graphics_NDS.c" />
-    <ClCompile Include="Graphics_PS1.c" />
-    <ClCompile Include="Graphics_PS2.c" />
-    <ClCompile Include="Graphics_PS3.c" />
-    <ClCompile Include="Graphics_PSP.c" />
-    <ClCompile Include="Graphics_PSVita.c" />
     <ClCompile Include="Graphics_SoftGPU.c" />
-    <ClCompile Include="Graphics_WiiU.c" />
-    <ClCompile Include="Graphics_Xbox.c" />
-    <ClCompile Include="Graphics_Xbox360.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />
@@ -495,7 +486,6 @@
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
     <ClCompile Include="LBackend.c" />
-    <ClCompile Include="LBackend_Android.c" />
     <ClCompile Include="LScreens.c" />
     <ClCompile Include="LWeb.c" />
     <ClCompile Include="LWidgets.c" />
@@ -505,27 +495,7 @@
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
     <ClCompile Include="FancyLighting.c" />
-    <ClCompile Include="Platform_3DS.c" />
-    <ClCompile Include="Platform_Android.c" />
-    <ClCompile Include="Platform_BeOS.cpp" />
-    <ClCompile Include="Platform_Dreamcast.c" />
-    <ClCompile Include="Platform_GCWii.c" />
-    <ClCompile Include="Platform_MacClassic.c" />
-    <ClCompile Include="Platform_N64.c" />
-    <ClCompile Include="Platform_NDS.c" />
-    <ClCompile Include="Platform_Posix.c" />
-    <ClCompile Include="Platform_PS1.c" />
-    <ClCompile Include="Platform_PS2.c" />
-    <ClCompile Include="Platform_PS3.c" />
-    <ClCompile Include="Platform_PSP.c" />
-    <ClCompile Include="Platform_PSVita.c" />
-    <ClCompile Include="Platform_Saturn.c" />
-    <ClCompile Include="Platform_Switch.c" />
-    <ClCompile Include="Platform_Web.c" />
-    <ClCompile Include="Platform_WiiU.c" />
     <ClCompile Include="Platform_Windows.c" />
-    <ClCompile Include="Platform_Xbox.c" />
-    <ClCompile Include="Platform_Xbox360.c" />
     <ClCompile Include="Protocol.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="IsometricDrawer.c" />
@@ -540,7 +510,6 @@
     <ClCompile Include="Queue.c" />
     <ClCompile Include="SelOutlineRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="main.c" />
     <ClCompile Include="Resources.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
@@ -556,30 +525,8 @@
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="Logger.c" />
-    <ClCompile Include="Window_3DS.c" />
-    <ClCompile Include="Window_Android.c" />
-    <ClCompile Include="Window_BeOS.cpp" />
-    <ClCompile Include="Window_Dreamcast.c" />
-    <ClCompile Include="Window_GCWii.c" />
-    <ClCompile Include="Window_MacClassic.c" />
-    <ClCompile Include="Window_N64.c" />
-    <ClCompile Include="Window_NDS.c" />
-    <ClCompile Include="Window_PS1.c" />
-    <ClCompile Include="Window_PS2.c" />
-    <ClCompile Include="Window_PS3.c" />
-    <ClCompile Include="Window_PSP.c" />
-    <ClCompile Include="Window_PSVita.c" />
-    <ClCompile Include="Window_Saturn.c" />
-    <ClCompile Include="Window_SDL2.c" />
-    <ClCompile Include="Window_SDL3.c" />
-    <ClCompile Include="Window_Switch.c" />
     <ClCompile Include="Window_Terminal.c" />
-    <ClCompile Include="Window_Web.c" />
-    <ClCompile Include="Window_WiiU.c" />
     <ClCompile Include="Window_Win.c" />
-    <ClCompile Include="Window_X11.c" />
-    <ClCompile Include="Window_Xbox.c" />
-    <ClCompile Include="Window_Xbox360.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="_autofit.c" />
     <ClCompile Include="_cff.c" />
@@ -598,11 +545,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="LBackend_ios.m" />
-    <None Include="Window_cocoa.m" />
-    <None Include="Window_ios.m" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
