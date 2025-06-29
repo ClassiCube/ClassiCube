@@ -8,25 +8,58 @@
 #include "../Options.h"
 #include "../Animations.h"
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#define OVERRIDE_MEM_FUNCTIONS
 #include "../_PlatformConsole.h"
+
+#include "../../third_party/tinyalloc/tinyalloc.c"
 
 typedef volatile uint8_t   vu8;
 typedef volatile uint16_t vu16;
 typedef volatile uint32_t vu32;
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = -1000;
-const cc_result ReturnCode_SocketWouldBlock = -1000;
-const cc_result ReturnCode_SocketDropped    = -1000;
+const cc_result ReturnCode_FileNotFound     = -1;
+const cc_result ReturnCode_DirectoryExists  = -1;
+const cc_result ReturnCode_SocketInProgess  = -1;
+const cc_result ReturnCode_SocketWouldBlock = -1;
+const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix = " GBA";
 cc_bool Platform_ReadonlyFilesystem;
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Memory----------------------------------------------------------*
+*#########################################################################################################################*/
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	Platform_Log1("  MALLOC: %i", &size);
+	void* ptr = size ? ta_alloc(size) : NULL;
+	Platform_Log1("MALLOCED: %x", &ptr);
+    return ptr;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	Platform_Log1("  CALLOC: %i", &size);
+	void* ptr = size ? ta_alloc(size) : NULL;
+	Platform_Log1("CALLOCED: %x", &ptr);
+
+	if (ptr) Mem_Set(ptr, 0, size);
+    return ptr;
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	return NULL; // TODO
+}
+
+void Mem_Free(void* mem) {
+	if (mem) ta_free(mem);
+}
 
 
 /*########################################################################################################################*
@@ -78,7 +111,7 @@ TimeMS DateTime_CurrentUTC(void) {
 }
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
-	memset(t, 0, sizeof(*t));
+	Mem_Set(t, 0, sizeof(*t));
 }
 
 
@@ -237,9 +270,18 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_Init(void) {
+extern void __ewram_end; // end of USED ewram
+#define EWRAM_END 0x0203FFFF
 
+void Platform_Init(void) {
+	void* heap_beg = &__ewram_end;
+	void* heap_end = (void*)EWRAM_END;
+	ta_init(heap_beg, heap_end, 256, 16, 4);
+
+	int size = (int)(heap_end - heap_beg);
+	Platform_Log3("HEAP SIZE: %i bytes (%x -> %x)", &size, &heap_beg, &heap_end);
 }
+
 void Platform_Free(void) { }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {

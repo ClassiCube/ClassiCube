@@ -11,8 +11,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <errno.h>
 #include "../_PlatformConsole.h"
 
 #include "../../misc/32x/32x.h"
@@ -43,9 +41,12 @@ void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	Platform_Log1("  CALLOC: %i", &numElems);
-	void* ptr = ta_calloc(numElems, elemsSize);
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	Platform_Log1("  CALLOC: %i", &size);
+	void* ptr = size ? ta_alloc(size) : NULL;
 	Platform_Log1("CALLOCED: %x", &ptr);
+
+	if (ptr) Mem_Set(ptr, 0, size);
     return ptr;
 }
 
@@ -101,12 +102,6 @@ cc_uint64 Stopwatch_Measure(void) {
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return 1000 * 1000;
-}
-
-extern void _bss_end;
-static void Stopwatch_Init(void) {
-	// TODO
-	ta_init(&_bss_end, (void*)(0x0603FFFF - 16384), 256, 16, 4);
 }
 
 
@@ -253,8 +248,17 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+extern void _bss_end;
+#define SDRAM_END 0x0603FFFF
+
 void Platform_Init(void) {
-	Stopwatch_Init();
+	// TODO
+	void* heap_beg = &_bss_end;
+	void* heap_end = (void*)(SDRAM_END - 16384); // leave 16 KB for stack
+	ta_init(heap_beg, heap_end, 256, 16, 4);
+
+	int size = (int)(heap_end - heap_beg);
+	Platform_Log3("HEAP SIZE: %i bytes (%x -> %x)", &size, &heap_beg, &heap_end);
 }
 
 void Platform_Free(void) { }

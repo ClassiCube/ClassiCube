@@ -32,7 +32,7 @@ CFLAGS	= -g -Wall -O2 -DPLAT_GBA -ffunction-sections -fdata-sections -mcpu=arm7t
 ASFLAGS	= -g $(ARCH)
 
 LDFLAGS	= -specs=gba.specs -g $(ARCH)
-LIBS	= -lmm -ltonc
+LIBS	= -ltonc
 
 LIBGBA		:= $(DEVKITPRO)/libgba
 INCLUDES 	+= $(foreach dir, $(LIBGBA), -I$(dir)/include)
