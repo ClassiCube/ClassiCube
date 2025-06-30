@@ -23,7 +23,7 @@ jobs:
         shell: bash
         id: compile
         env: 
-          LIBS: "-framework Cocoa -framework OpenGL -framework IOKit -lobjc"
+          LIBS: "-framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc"
           SRCS: "src/*.c src/Window_cocoa.m third_party/bearssl/src/*.c"
           COMMON_FLAGS:  "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Ithird_party/bearssl/inc"
           ARM64_FLAGS:   "-fvisibility=hidden -rdynamic -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -arch arm64"
