@@ -12,6 +12,11 @@ extern "C" {
 }
 
 #define AUDIO_COMMON_ALLOC
+#if defined CC_BUILD_SYMBIAN_3
+#define POOL_MAX_CONTEXTS 8
+#else
+#define POOL_MAX_CONTEXTS 2
+#endif
 
 struct AudioBuffer {
 	int available;
@@ -49,9 +54,7 @@ public:
 	void MaoscPlayComplete(TInt aError);
 	void Open();
 	void Stop();
-	void Close();
 	void Start();
-	void Write(struct AudioChunk* chunk);
 	void Request();
 	
 
@@ -65,10 +68,10 @@ private:
 	TMdaAudioDataSettings iAudioSettings;
 	struct AudioContext* iContext;
 	TPtrC8 iPtr;
-	TBuf8<256> iSilence;
 };
 
 CAudioStream::CAudioStream(struct AudioContext* ctx) :
+	iState(STATE_STOPPED),
 	iContext(ctx) { }
 
 CAudioStream::~CAudioStream() {
@@ -89,8 +92,6 @@ CAudioStream* CAudioStream::NewL(struct AudioContext* ctx) {
 
 void CAudioStream::ConstructL() {
 	iOutputStream = CMdaAudioOutputStream::NewL(*this);
-	iSilence.SetMax();
-	iSilence.FillZ();
 }
 
 void CAudioStream::Open() {
@@ -101,15 +102,15 @@ void CAudioStream::Open() {
 
 void CAudioStream::Stop() {
 	if (iState & (STATE_STARTED | STATE_INITIALIZED)) {
-		Close();
+		iState &= ~STATE_INITIALIZED;
+		iOutputStream->Stop();
+		iState &= ~STATE_STARTED;
 		iState |= STATE_STOPPED;
 	}
-}
-
-void CAudioStream::Close() {
-	iState &= ~STATE_INITIALIZED;
-	iOutputStream->Stop();
-	iState &= ~STATE_STARTED;
+	
+	for (int i = 0; i < iContext->count; i++) {
+		iContext->bufs[i].available = true;
+	}
 }
 
 void CAudioStream::Start() {
@@ -171,14 +172,19 @@ void CAudioStream::MaoscOpenComplete(TInt aError) {
 			Request();
 		}
 	} else {
-		Audio_Warn(aError, "Failed to open audio stream");
+		Audio_Warn(aError, "opening audio stream");
 	}
 }
 
 void CAudioStream::MaoscBufferCopied(TInt aError, const TDesC8& aBuffer) {
 	iPtr.Set(KNullDesC8);
 
+	// MaoscPlayComplete() is not called in older versions
+#if defined CC_BUILD_SYMBIAN_3
+	if (iContext->count > 1) {
+#else
 	if (iContext->count) {
+#endif
 		struct AudioBuffer* buf = &iContext->bufs[iContext->bufHead];
 		iContext->bufHead = (iContext->bufHead + 1) % iContext->count;
 		buf->available = true;
@@ -197,18 +203,15 @@ void CAudioStream::MaoscPlayComplete(TInt aError) {
 	iPtr.Set(KNullDesC8);
 	iState &= ~STATE_STARTED;
 	
-	if (aError != KErrNone) {
-//		Audio_Warn(aError, "MaoscPlayComplete");
+	for (int i = 0; i < iContext->count; i++) {
+		iContext->bufs[i].available = true;
 	}
-}
-
-void CAudioStream::Write(struct AudioChunk* chunk) {
-	iPtr.Set((const TUint8*)chunk->data, (TInt)chunk->size);
 }
 
 void CAudioStream::Request() {
 	if (iState & STATE_INITIALIZED) {
 		iPtr.Set(KNullDesC8);
+		TInt err = 0;
 		
 		if (iState & STATE_CHANGE_FORMAT) {
 			iState &= ~STATE_CHANGE_FORMAT;
@@ -223,7 +226,12 @@ void CAudioStream::Request() {
 				channels = TMdaAudioDataSettings::EChannelsStereo;
 				break;
 			}
-			iOutputStream->SetAudioPropertiesL(sampleRate, channels);
+			TRAP(err, iOutputStream->SetAudioPropertiesL(sampleRate, channels));
+			if (err != 0) {
+				Audio_Warn(err, "setting audio properties");
+				Stop();
+				return;
+			}
 		}
 		
 		if (iState & STATE_CHANGE_VOLUME) {
@@ -232,7 +240,7 @@ void CAudioStream::Request() {
 		}
 		
 		if (iState & STATE_STARTED) {
-			struct AudioBuffer* buf  = &iContext->bufs[iContext->bufHead];
+			struct AudioBuffer* buf = &iContext->bufs[iContext->bufHead];
 			if (buf->size == 0 && buf->samples == NULL) {
 				return;
 			}
@@ -242,12 +250,12 @@ void CAudioStream::Request() {
 		}
 		
 		if (iPtr.Length() == 0) {
-			iPtr.Set(iSilence);
+			return;
 		}
 		
-		TRAPD(err, iOutputStream->WriteL(iPtr));
+		TRAP(err, iOutputStream->WriteL(iPtr));
 		if (err != KErrNone) {
-			Audio_Warn(err, "Failed to write to audio stream");
+			Audio_Warn(err, "writing to audio stream");
 		}
 	}
 }
@@ -299,7 +307,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 		if (!buf->available) continue;
 
 		buf->samples   = chunk->data;
-		buf->size = chunk->size;
+		buf->size      = chunk->size;
 		buf->available = false;
 		return 0;
 	}
@@ -313,16 +321,16 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-	int sampleRateNew = Audio_AdjustSampleRate(sampleRate, playbackRate);
+	// playbackRate not supported
+	int sampleRateNew = /* Audio_AdjustSampleRate(sampleRate, playbackRate) */ sampleRate;
 	
 	if (ctx->channels != channels || ctx->sampleRate != sampleRateNew) {
-		ctx->stream->Stop();
 		ctx->channels = channels;
 		ctx->sampleRate = sampleRateNew;
 		ctx->stream->iState |= STATE_CHANGE_FORMAT;
 	}
 	
-	if (!(ctx->stream->iState & STATE_INITIALIZED)) {
+	if (ctx->stream->iState & STATE_STOPPED) {
 		ctx->stream->Open();
 	}
 	return 0;
@@ -376,9 +384,7 @@ cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse) {
 *------------------------------------------------------Sound context------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
-	int channels   = data->channels;
-	int sampleRate = Audio_AdjustSampleRate(data->sampleRate, data->rate);
-	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
+	return !ctx->channels || (ctx->channels == data->channels && ctx->sampleRate == data->sampleRate);
 }
 
 cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {

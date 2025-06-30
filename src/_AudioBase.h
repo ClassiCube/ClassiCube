@@ -114,7 +114,9 @@ void AudioBackend_LoadSounds(void) { Sounds_LoadDefault(); }
 *---------------------------------------------------Audio context code----------------------------------------------------*
 *#########################################################################################################################*/
 struct AudioContext music_ctx;
+#ifndef POOL_MAX_CONTEXTS
 #define POOL_MAX_CONTEXTS 8
+#endif
 static struct AudioContext context_pool[POOL_MAX_CONTEXTS];
 
 #ifndef CC_BUILD_NOSOUNDS
