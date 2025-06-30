@@ -11,34 +11,10 @@
 #include "../Camera.h"
 
 #include <stdint.h>
-
-typedef volatile uint8_t   vu8;
-typedef volatile uint16_t vu16;
-typedef volatile uint32_t vu32;
+#include "gbadefs.h"
 
 #define SCREEN_WIDTH	240
 #define SCREEN_HEIGHT	160
-
-#define DCNT_MODE3		0x0003
-#define DCNT_BG2		0x0400
-
-#define MEM_IO		    0x04000000
-#define MEM_VRAM		0x06000000
-
-#define REG_DISPCNT		*(vu32*)(MEM_IO + 0x0000)
-#define REG_KEYINPUT	*(vu16*)(MEM_IO + 0x0130)
-
-#define KEY_A			0x0001
-#define KEY_B			0x0002
-#define KEY_SELECT		0x0004
-#define KEY_START		0x0008
-#define KEY_RIGHT		0x0010
-#define KEY_LEFT		0x0020
-#define KEY_UP			0x0040
-#define KEY_DOWN		0x0080
-#define KEY_R			0x0100
-#define KEY_L			0x0200
-
 
 /*########################################################################################################################*
 *------------------------------------------------------General data-------------------------------------------------------*
@@ -47,7 +23,7 @@ struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
-	REG_DISPCNT = DCNT_MODE3 | DCNT_BG2;
+	REG_DISP_CTRL = DCTRL_MODE3 | DCTRL_BG2;
 }
 
 void Window_Init(void) {  

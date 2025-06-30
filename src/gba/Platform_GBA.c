@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "gbadefs.h"
 
 #define OVERRIDE_MEM_FUNCTIONS
 #include "../_PlatformConsole.h"
@@ -65,14 +66,58 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+static uint32_t GetTimerValues(void) {
+	uint16_t lo = REG_TMR2_DATA;
+    uint16_t hi = REG_TMR3_DATA;
+
+	// Did lo timer possibly overflow between reading lo and hi?
+	uint16_t lo_again = REG_TMR2_DATA;
+	uint16_t hi_again = REG_TMR3_DATA;
+
+	if (lo_again < lo) {
+		// If so, use known safe timer read values instead
+		lo = lo_again;
+		hi = hi_again;
+	}
+	return lo | (hi << 16);
+}
+
+static void Stopwatch_Init(void) {
+	// Turn off both timers
+	REG_TMR2_CTRL = 0;
+	REG_TMR3_CTRL = 0;
+
+	// Reset timer values to 0
+	REG_TMR2_DATA = 0;
+	REG_TMR3_DATA = 0;
+
+	// Turn on timer 3, with timer 3 incrementing timer 2 on overflow
+	REG_TMR3_CTRL = TMR_CASCADE | TMR_ENABLE;
+	REG_TMR2_CTRL = TMR_ENABLE;
+}
+
+static uint32_t last_raw;
+static uint64_t base_time;
+
+#define US_PER_SEC 1000000
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 
-	return 1000 * 1000 * 2;//end - beg;
+	cc_uint64 delta = end - beg;
+	return (delta * US_PER_SEC) / SYS_CLOCK;
 }
 
 cc_uint64 Stopwatch_Measure(void) {
-	return 1;
+	uint32_t raw = GetTimerValues();
+	// Since counter is only a 32 bit integer, it overflows after a minute or two
+	// TODO use IRQ instead
+	// TODO lower frequency ?
+	if (last_raw > 0xF0000000 && raw < 0x10000000) {
+		base_time += 0x100000000ULL;
+	}
+
+	last_raw = raw;
+	return base_time + raw;
 }
 
 extern int nocash_puts(const char *str);
@@ -189,6 +234,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 // !!! NOTE: PSP uses cooperative multithreading (not preemptive multithreading) !!!
 void Thread_Sleep(cc_uint32 milliseconds) { 
+	Stopwatch_Measure();
 	//swiDelay(8378 * milliseconds); // TODO probably wrong
 }
 
@@ -280,6 +326,7 @@ void Platform_Init(void) {
 
 	int size = (int)(heap_end - heap_beg);
 	Platform_Log3("HEAP SIZE: %i bytes (%x -> %x)", &size, &heap_beg, &heap_end);
+	Stopwatch_Init();
 }
 
 void Platform_Free(void) { }
