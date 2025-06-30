@@ -135,7 +135,8 @@ static X509* ToOpenSSLCert(struct X509Cert* cert) {
 int Certs_VerifyChain(struct X509CertContext* chain) {
 	OPENSSL_STACK* inter;
 	X509_STORE_CTX* ctx;
-	int i, status, ret;
+	int err, result;
+	int i, status;
 	X509* cur;
 	X509* cert;
 	if (!ossl_loaded) return ERR_NOT_SUPPORTED;
@@ -147,8 +148,6 @@ int Certs_VerifyChain(struct X509CertContext* chain) {
 
 		_X509_STORE_set_default_paths(store);
 	}
-
-	Platform_Log1("VERIFY CHAIN: %i", &chain->numCerts);
 	if (!chain->numCerts) return ERR_INVALID_ARGUMENT;
 
 	/* End/Leaf certificate */
@@ -168,23 +167,78 @@ int Certs_VerifyChain(struct X509CertContext* chain) {
 	ctx = _X509_STORE_CTX_new();
 	_X509_STORE_CTX_init(ctx, store, cert, inter);
 
-    status = _X509_verify_cert(ctx);
-    if (status == 1) {
-        Platform_LogConst("Certificate verified");
-		ret = 0;
-    } else {
-		int err = _X509_STORE_CTX_get_error(ctx);
+	status = _X509_verify_cert(ctx);
+	result = 0;
+	
+    if (status != 1) {
+		err = _X509_STORE_CTX_get_error(ctx);
         Platform_LogConst(_X509_verify_cert_error_string(err));
-		ret = -1;
+		result = -1;
     }
 
 	_X509_STORE_CTX_free(ctx);
 	_OPENSSL_sk_pop_free(inter, (OPENSSL_PopFunc)_X509_free);
 	_X509_free(cert);
 
-	return ret;
+	return result;
+}
+#elif CC_CRT_BACKEND == CC_CRT_BACKEND_APPLESEC
+#include <Security/SecPolicy.h>
+#include <Security/SecTrust.h>
+#include <Security/SecCertificate.h>
+#include "Errors.h"
+
+void CertsBackend_Init(void) {
+	
+}
+
+static SecPolicyRef policy;
+
+static void CreateChain(struct X509CertContext* x509, CFMutableArrayRef chain) {
+	struct X509Cert* certs = x509->certs;
+	for (int i = 0; i < x509->numCerts; i++)
+	{
+		CFDataRef data = CFDataCreateWithBytesNoCopy(NULL, certs[i].data, certs[i].offset, kCFAllocatorNull);
+		
+		SecCertificateRef cert = SecCertificateCreateWithData(NULL, data);
+		if (cert) CFArrayAppendValue(chain, cert);
+		CFRelease(data);
+	}
+}
+
+static void CreateX509Policy(void) {
+	policy = SecPolicyCreateBasicX509();
+}
+
+int Certs_VerifyChain(struct X509CertContext* x509) {
+	CFMutableArrayRef chain;
+	SecTrustRef trust;
+	int res;
+	
+	if (!policy) CreateX509Policy();
+	if (!policy) return ERR_OUT_OF_MEMORY;
+	
+	if (!x509->numCerts) return ERR_NOT_SUPPORTED;
+	
+	chain = CFArrayCreateMutable(NULL, x509->numCerts, &kCFTypeArrayCallBacks);
+	if (!chain) return ERR_OUT_OF_MEMORY;
+	
+	CreateChain(x509, chain);
+	res = SecTrustCreateWithCertificates(chain, policy, &trust);
+	
+	if (!res) {
+		SecTrustResultType result;
+		res = SecTrustEvaluate(trust, &result);
+		
+		int is_trusted = result == kSecTrustResultUnspecified || result == kSecTrustResultProceed;
+		if (!res && !is_trusted) res = -1;
+		if (res) Platform_Log1("Cert validation failed: %i", &result);
+	}
+	
+	CFRelease(trust);
+	CFRelease(chain);
+	return res;
 }
 #endif
 
 #endif
-
