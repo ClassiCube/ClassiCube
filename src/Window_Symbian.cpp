@@ -445,13 +445,17 @@ TKeyResponse CCAppUi::HandleKeyEventL(const TKeyEvent& aKeyEvent, TEventCode aTy
 		break;
 	}
 	case EEventKeyDown: {
-		event.type = CC_KEY_DOWN;
-		Events_Push(&event);
+		if (event.i1 != INPUT_NONE) {
+			event.type = CC_KEY_DOWN;
+			Events_Push(&event);
+		}
 		return EKeyWasConsumed;
 	}
 	case EEventKeyUp: {
-		event.type = CC_KEY_UP;
-		Events_Push(&event);
+		if (event.i1 != INPUT_NONE) {
+			event.type = CC_KEY_UP;
+			Events_Push(&event);
+		}
 		return EKeyWasConsumed;
 	}
 	}
