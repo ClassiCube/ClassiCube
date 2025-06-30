@@ -82,7 +82,6 @@ HTTP, HTTPS, and setting request/getting response headers
 
 Define:
 - ```DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN``` - use built in simple HTTP backend
-- ```DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL``` - use libcurl for HTTP
 
 Supporting connection reuse is highly recommended. (but not required)
 

@@ -53,7 +53,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-rpi32'
+          SOURCE_FILE: 'cc-rpi32'
           DEST_NAME: 'cc-rpi32'
           
           
@@ -105,7 +105,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-rpi64'
+          SOURCE_FILE: 'cc-rpi64'
           DEST_NAME: 'cc-rpi64'
           
           

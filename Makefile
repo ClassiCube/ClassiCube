@@ -96,6 +96,7 @@ ifeq ($(PLAT),darwin)
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
+	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),freebsd)
