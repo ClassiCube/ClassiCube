@@ -865,7 +865,7 @@ static void Game_Free(void) {
 	Window_DisableRawMouse();
 }
 
-#ifdef CC_BUILD_WEB
+#if defined CC_BUILD_WEB || defined CC_BUILD_SYMBIAN
 void Game_DoFrame(void) {
 	if (gameRunning) {
 		Game_RenderFrame();
