@@ -186,6 +186,10 @@ int Certs_VerifyChain(struct X509CertContext* chain) {
 #include <Security/SecPolicy.h>
 #include <Security/SecTrust.h>
 #include <Security/SecCertificate.h>
+#ifdef CC_BUILD_MACOS
+#include <Security/SecPolicySearch.h>
+#include <Security/oidsalg.h>
+#endif
 #include "Errors.h"
 
 void CertsBackend_Init(void) {
@@ -196,7 +200,22 @@ static SecPolicyRef policy;
 
 static void CreateChain(struct X509CertContext* x509, CFMutableArrayRef chain) {
 	struct X509Cert* certs = x509->certs;
-	for (int i = 0; i < x509->numCerts; i++)
+	int i;
+	
+#ifdef CC_BUILD_MACOS
+	/* Use older APIs that work on macOS earlier than 10.6 */
+	for (i = 0; i < x509->numCerts; i++)
+	{
+		CSSM_DATA data;
+		data.Data   = certs[i].data;
+		data.Length = certs[i].offset;
+		
+		SecCertificateRef cert = NULL;
+		int res = SecCertificateCreateFromData(&data, CSSM_CERT_X_509v3, CSSM_CERT_ENCODING_DER, &cert);
+		if (!res && cert) CFArrayAppendValue(chain, cert);
+	}
+#else
+	for (i = 0; i < x509->numCerts; i++)
 	{
 		CFDataRef data = CFDataCreateWithBytesNoCopy(NULL, certs[i].data, certs[i].offset, kCFAllocatorNull);
 		
@@ -204,10 +223,21 @@ static void CreateChain(struct X509CertContext* x509, CFMutableArrayRef chain) {
 		if (cert) CFArrayAppendValue(chain, cert);
 		CFRelease(data);
 	}
+#endif
 }
 
 static void CreateX509Policy(void) {
+#ifdef CC_BUILD_MACOS
+	SecPolicySearchRef search;
+	int err = SecPolicySearchCreate(CSSM_CERT_X_509v3, &CSSMOID_APPLE_X509_BASIC, NULL, &search);
+	if (err) return;
+	
+	err = SecPolicySearchCopyNext(search, &policy);
+	CFRelease(search);
+#else
+	/* Use older APIs that work on macOS earlier than 10.6 */
 	policy = SecPolicyCreateBasicX509();
+#endif
 }
 
 int Certs_VerifyChain(struct X509CertContext* x509) {

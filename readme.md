@@ -60,20 +60,20 @@ Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that th
 ClassiCube runs on:
 * Windows - 95 and later
 * macOS - 10.5 or later (can be compiled for 10.3/10.4 though)
-* Linux - needs `libcurl` and `libopenal`
+* Linux - needs `libopenal`
 * Android - 2.3 or later
 * iOS - 8.0 or later
 * Most web browsers (even runs on IE11)
 
 And also runs on:
-* Raspberry Pi - needs <code>libcurl</code> and <code>libopenal</code>
-* FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-fbsd))
-* NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-nbsd))
-* OpenBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal</code> packages
-* Solaris - needs <code>curl</code> and <code>openal</code> packages
+* Raspberry Pi - needs <code>libopenal</code>
+* FreeBSD - needs <code>libexecinfo</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-fbsd))
+* NetBSD - needs <code>libexecinfo</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-nbsd))
+* OpenBSD - needs <code>libexecinfo</code> and <code>openal</code> packages
+* Solaris - needs <code>openal</code> packages
 * Haiku - needs <code>openal</code> package (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_haiku.yml))
 * BeOS - untested on actual hardware
-* IRIX - needs <code>curl</code> and <code>openal</code> packages
+* IRIX - needs <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
 * Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
@@ -427,7 +427,6 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 <details>
 <summary><h2>Open source technologies (click to expand)</h2></summary>
 
-* [curl](https://curl.se/) - HTTP/HTTPS for linux and macOS
 * [FreeType](https://www.freetype.org/) - Font handling for all platforms
 * [GCC](https://gcc.gnu.org/) - Compiles client for linux
 * [MinGW-w64](http://mingw-w64.org/doku.php) - Compiles client for windows
