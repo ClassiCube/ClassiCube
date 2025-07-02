@@ -130,8 +130,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexHeight = 256;
 	//Gfx.MaxTexSize   = 256 * 256;
 	Gfx.Created	     = true;
-	//Gfx.Limitations  = GFX_LIMIT_VERTEX_ONLY_FOG;
-	Gfx.Limitations  = GFX_LIMIT_NO_FOG;
+	Gfx.Limitations  = GFX_LIMIT_VERTEX_ONLY_FOG;
 
 	ResetGPU();
 	Gfx_ClearColor(PackedCol_Make(0, 120, 80, 255));

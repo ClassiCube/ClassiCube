@@ -49,7 +49,7 @@ void Gfx_Create(void) {
 
 	Gfx.Created      = true;
 	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
-	Gfx.Limitations  = GFX_LIMIT_NO_FOG;
+	Gfx.Limitations  = GFX_LIMIT_MINIMAL;
 	
 	Gfx_RestoreState();
 }
@@ -88,7 +88,11 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 	texWidthMask   = (1 << Math_ilog2(tex->width))  - 1;
 	texHeightMask  = (1 << Math_ilog2(tex->height)) - 1;
-	texSinglePixel = curTexWidth == 1 && curTexHeight == 1;
+
+	/* Technically the optimisation should only apply if width and height is 1 */
+	/* But it's worth sacrificing this, so that rendering the world when */
+	/*   no texture pack can use the more optimised rendering path */
+	texSinglePixel = curTexWidth == 1;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -469,7 +473,6 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int maxX = max(x0, max(x1, x2));
 	int maxY = max(y0, max(y1, y2));
 
-	int area = edgeFunction(x0,y0, x1,y1, x2,y2);
 	// Reject triangles completely outside
 	if (maxX < 0 || minX > fb_maxX) return;
 	if (maxY < 0 || minY > fb_maxY) return;
@@ -477,11 +480,13 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	// Perform scissoring
 	minX = max(minX, 0); maxX = min(maxX, fb_maxX);
 	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
-	float factor = 1.0f / area;
 
 	float u0 = V0->u * curTexWidth,  u1 = V1->u * curTexWidth,  u2 = V2->u * curTexWidth;
 	float v0 = V0->v * curTexHeight, v1 = V1->v * curTexHeight, v2 = V2->v * curTexHeight;
 	PackedCol color = V0->c;
+
+	int area = edgeFunction(x0,y0, x1,y1, x2,y2);
+	float factor = 1.0f / area;
 	
 	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
 	// Essentially these are the deltas of edge functions between X/Y and X/Y + 1 (i.e. one X/Y step)
@@ -628,7 +633,12 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 		A = PackedCol_A(color);
 	} else if (texSinglePixel) {
 		/* Don't need to calculate complicated texturing in this case */
-		MultiplyColors(color, curTexPixels[0]);
+		float rawY0 = v0 / w0;
+		float rawY1 = v1 / w1;
+
+		float rawY = min(rawY0, rawY1);
+		int texY   = (int)(rawY + 0.01f) & texHeightMask;
+		MultiplyColors(color, curTexPixels[texY * curTexWidth]);
 		texturing = false;
 	}
 

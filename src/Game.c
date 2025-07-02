@@ -481,7 +481,7 @@ static void Game_Load(void) {
 
 	if (Gfx.Limitations & GFX_LIMIT_VERTEX_ONLY_FOG)
 		EnvRenderer_SetMode(EnvRenderer_Minimal | ENV_LEGACY);
-	if (Gfx.Limitations & GFX_LIMIT_NO_FOG)
+	if (Gfx.Limitations & GFX_LIMIT_MINIMAL)
 		EnvRenderer_SetMode(ENV_MINIMAL);
 
 	Server.BeginConnect();
