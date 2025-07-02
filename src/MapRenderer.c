@@ -50,7 +50,7 @@ static int chunksCount;
 static void ChunkInfo_Init(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->centreX = x + HALF_CHUNK_SIZE; chunk->centreY = y + HALF_CHUNK_SIZE; 
 	chunk->centreZ = z + HALF_CHUNK_SIZE;
-#ifndef CC_BUILD_GL11
+#if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 	chunk->vb = 0;
 #endif
 
@@ -106,12 +106,12 @@ static void CheckWeather(float delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
-#ifdef CC_BUILD_GL11
-#define DrawFace(face, ign)    Gfx_BindVb(part.vbs[face]); Gfx_DrawIndexedTris_T2fC4b(0, 0);
-#define DrawFaces(f1, f2, ign) DrawFace(f1, ign); DrawFace(f2, ign);
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
+	#define DrawFace(face, ign)    Gfx_BindVb(part.vbs[face]); Gfx_DrawIndexedTris_T2fC4b(0, 0);
+	#define DrawFaces(f1, f2, ign) DrawFace(f1, ign); DrawFace(f2, ign);
 #else
-#define DrawFace(face, offset)    Gfx_DrawIndexedTris_T2fC4b(part.counts[face], offset);
-#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedTris_T2fC4b(part.counts[f1] + part.counts[f2], offset);
+	#define DrawFace(face, offset)    Gfx_DrawIndexedTris_T2fC4b(part.counts[face], offset);
+	#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedTris_T2fC4b(part.counts[f1] + part.counts[f2], offset);
 #endif
 
 #define DrawNormalFaces(minFace, maxFace) \
@@ -143,7 +143,7 @@ static void RenderNormalBatch(int batch) {
 		if (part.offset < 0) continue;
 		hasNormParts[batch] = true;
 
-#ifndef CC_BUILD_GL11
+#if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 		Gfx_BindVb_Textured(info->vb);
 #endif
 
@@ -168,7 +168,7 @@ static void RenderNormalBatch(int batch) {
 
 		Gfx_SetFaceCulling(true);
 		/* TODO: fix to not render them all */
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 		Gfx_BindVb(part.vbs[FACE_COUNT]);
 		Gfx_DrawIndexedTris_T2fC4b(0, 0);
 		Game_Vertices += count * 4;
@@ -247,7 +247,7 @@ static void RenderTranslucentBatch(int batch) {
 		if (part.offset < 0) continue;
 		hasTranParts[batch] = true;
 
-#ifndef CC_BUILD_GL11
+#if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 		Gfx_BindVb_Textured(info->vb);
 #endif
 
@@ -322,7 +322,7 @@ void MapRenderer_RenderTranslucent(float delta) {
 static void DeleteChunk(struct ChunkInfo* info) {
 	struct ChunkPartInfo* ptr;
 	int i;
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 	int j;
 #else
 	Gfx_DeleteVb(&info->vb);
@@ -343,7 +343,7 @@ static void DeleteChunk(struct ChunkInfo* info) {
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset < 0) continue; 
 			normPartsCount[i]--;
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
@@ -355,7 +355,7 @@ static void DeleteChunk(struct ChunkInfo* info) {
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset < 0) continue;
 			tranPartsCount[i]--;
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}

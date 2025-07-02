@@ -306,7 +306,7 @@ CC_API void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count);
 CC_API void  Gfx_UnlockVb(GfxResourceID vb);
 
 /* TODO: How to make LockDynamicVb work with OpenGL 1.1 Builder stupidity. */
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 /* Special case of Gfx_Create/LockVb for building chunks in Builder.c */
 GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count);
 #endif

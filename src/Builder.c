@@ -102,7 +102,7 @@ static void AddVertices(BlockID block, Face face) {
 	part->faces.count[face] += 4;
 }
 
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 static void BuildPartVbs(struct ChunkPartInfo* info) {
 	/* Sprites vertices are stored before chunk face sides */
 	int i, count, offset = info->offset + info->spriteCount;
@@ -420,7 +420,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 		info.occlusionFlags = (cc_uint8)ComputeOcclusion();
 #endif
 
-#ifndef CC_BUILD_GL11
+#if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 	/* add an extra element to fix crashing on some GPUs */
 	info->vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 	Builder_Vertices = (struct VertexTextured*)Gfx_LockVb(info->vb,
@@ -448,7 +448,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 		}
 	}
 
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 	cIndex = World_ChunkPack(x1 >> CHUNK_SHIFT, y1 >> CHUNK_SHIFT, z1 >> CHUNK_SHIFT);
 
 	for (index = 0; index < MapRenderer_1DUsedCount; index++) {
