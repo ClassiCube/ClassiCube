@@ -93,6 +93,8 @@ CC_VAR extern struct _GfxData {
 #define GFX_LIMIT_VERTEX_ONLY_FOG 0x02
 /* Whether the graphics backend only supports a small maximum quad size */
 #define GFX_LIMIT_MAX_VERTEX_SIZE 0x04
+/* Whether the graphics backend doesn't support fog at all */
+#define GFX_LIMIT_NO_FOG          0x08
 
 extern const cc_string Gfx_LowPerfMessage;
 

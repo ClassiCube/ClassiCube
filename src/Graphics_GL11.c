@@ -32,10 +32,8 @@ static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 void Gfx_Create(void) {
 	GLContext_Create();
-	customMipmapsLevels = true;
-	Gfx.BackendType     = CC_GFX_BACKEND_GL1;
-
 	GL_InitCommon();
+
 	MakeIndices(gl_indices, GFX_MAX_INDICES, NULL);
 	Gfx_RestoreState();
 	GLContext_SetVSync(gfx_vsync);
@@ -137,27 +135,29 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 #define VB_PTR ((cc_uint8*)dynamicListData)
 
 static void GL_SetupVbColoured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR +  0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR + 12));
+	GLpointer ptr = (GLpointer)VB_PTR;
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, ptr +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, ptr + 12);
 }
 
 static void GL_SetupVbTextured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR +  0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + 12));
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + 16));
+	GLpointer ptr = (GLpointer)VB_PTR;
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, ptr +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, ptr + 12);
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, ptr + 16);
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR + offset +  0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR + offset + 12));
+	GLpointer ptr = (GLpointer)VB_PTR + startVertex * SIZEOF_VERTEX_COLOURED;
+	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, ptr +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, ptr + 12);
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset +  0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset + 12));
-	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset + 16));
+	GLpointer ptr = (GLpointer)VB_PTR + startVertex * SIZEOF_VERTEX_TEXTURED;
+	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, ptr +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, ptr + 12);
+	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, ptr + 16);
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {

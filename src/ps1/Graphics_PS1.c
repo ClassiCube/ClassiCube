@@ -173,7 +173,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 256;
 	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
-	Gfx.Limitations  = GFX_LIMIT_MAX_VERTEX_SIZE;
+	Gfx.Limitations  = GFX_LIMIT_MAX_VERTEX_SIZE | GFX_LIMIT_NO_FOG;
 	
 	Gfx_RestoreState();
 	SetupContexts(Window_Main.Width, Window_Main.Height);
