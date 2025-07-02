@@ -23,7 +23,8 @@ static cc_bool launcherMode;
 static int mouseSupported;
 #include "../VirtualCursor.h"
 static void* xfb;
-static GXRModeObj* rmode;
+
+GXRModeObj* cur_mode;
 void* Window_XFB;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -34,28 +35,24 @@ static void OnPowerOff(void) {
 	Window_RequestClose();
 }
 static void InitVideo(void) {
-	// Initialise the video system
 	VIDEO_Init();
 
 	// Obtain the preferred video mode from the system
 	// This will correspond to the settings in the Wii menu
-	rmode = VIDEO_GetPreferredMode(NULL);
-	// Allocate memory for the display in the uncached region
-	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
-	
-	Window_XFB = xfb;	
-	//console_init(xfb,20,20,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+	cur_mode = VIDEO_GetPreferredMode(NULL);
 
-	// Set up the video registers with the chosen mode
-	VIDEO_Configure(rmode);
-	// Tell the video hardware where our display memory is
+	// Allocate memory for the display in the uncached region
+	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(cur_mode));
+	Window_XFB = xfb;	
+
+	VIDEO_Configure(cur_mode);
 	VIDEO_SetNextFramebuffer(xfb);
 
-	// Make the display visible
 	VIDEO_SetBlack(FALSE);
-	// Flush the video register changes to the hardware
 	VIDEO_Flush();
-	// Wait for Video setup to complete
+	VIDEO_WaitVSync();
+
+	VIDEO_ClearFrameBuffer(cur_mode, xfb, COLOR_GRAY);
 	VIDEO_WaitVSync();
 }
 
@@ -68,13 +65,13 @@ void Window_PreInit(void) {
 }
 
 void Window_Init(void) {
-	DisplayInfo.Width  = rmode->fbWidth;
-	DisplayInfo.Height = rmode->xfbHeight;
+	DisplayInfo.Width  = cur_mode->fbWidth;
+	DisplayInfo.Height = cur_mode->xfbHeight;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width    = rmode->fbWidth;
-	Window_Main.Height   = rmode->xfbHeight;
+	Window_Main.Width    = cur_mode->fbWidth;
+	Window_Main.Height   = cur_mode->xfbHeight;
 	Window_Main.Focused  = true;
 	
 	Window_Main.Exists   = true;
@@ -544,8 +541,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO XFB is raw yuv, but is absolutely a pain to work with..
 	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		cc_uint32* src = Bitmap_GetRow(bmp, y)           + r.x;
-		u16* dst       = (u16*)xfb  + y * rmode->fbWidth + r.x;
+		cc_uint32* src = Bitmap_GetRow(bmp, y)              + r.x;
+		u16* dst       = (u16*)xfb  + y * cur_mode->fbWidth + r.x;
 		
 		for (int x = 0; x < r.width / 2; x++) {
 			cc_uint32 rgb0 = src[(x<<1) + 0];

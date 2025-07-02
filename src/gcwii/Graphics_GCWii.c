@@ -9,8 +9,11 @@
 
 static void* fifo_buffer;
 #define FIFO_SIZE (256 * 1024)
+
+extern GXRModeObj* cur_mode;
 extern void* Window_XFB;
 static void* xfbs[2];
+
 static  int curFB;
 static GfxResourceID white_square;
 static GXTexRegionCallback regionCB;
@@ -22,7 +25,7 @@ static GXTexRegionCallback regionCB;
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
 static void InitGX(void) {
-	GXRModeObj* mode = VIDEO_GetPreferredMode(NULL);
+	GXRModeObj* mode = cur_mode;
 	fifo_buffer = MEM_K0_TO_K1(memalign(32, FIFO_SIZE));
 	memset(fifo_buffer, 0, FIFO_SIZE);
 
@@ -242,7 +245,8 @@ static BitmapCol* GCWii_GetRow(struct Bitmap* bmp, int y, void* ctx) {
 	int blockXStride = (4 * 4) * 4; // 16 pixels per tile
 
 	// Do the inverse of converting from 4x4 tiled to linear
-	for (u32 x = 0; x < bmp->width; x++){
+	for (u32 x = 0; x < bmp->width; x++)
+	{
 		int tileY = y >> 2, tileX = x >> 2;
 		int locY  = y & 0x3, locX = x & 0x3;
 		int idx   = (tileY * blockYStride) + (tileX * blockXStride) + ((locY << 2) + locX) * 2; 
@@ -260,9 +264,8 @@ static BitmapCol* GCWii_GetRow(struct Bitmap* bmp, int y, void* ctx) {
 
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	BitmapCol tmp[1024];
-	GXRModeObj* vmode = VIDEO_GetPreferredMode(NULL);
-	int width  = vmode->fbWidth;
-	int height = vmode->efbHeight;
+	int width  = cur_mode->fbWidth;
+	int height = cur_mode->efbHeight;
 
 	u8* buffer = memalign(32, width * height * 4);
 	if (!buffer) return ERR_OUT_OF_MEMORY;
