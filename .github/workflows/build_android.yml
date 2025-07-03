@@ -34,7 +34,7 @@ jobs:
         shell: bash
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Ithird_party/bearssl/inc"
           DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
           LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
           SRCS: "src/*.c third_party/bearssl/src/*.c"
