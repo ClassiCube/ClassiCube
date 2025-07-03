@@ -34,10 +34,10 @@ jobs:
         shell: bash
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Ithird_party/bearssl/inc"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
           LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
-          SRCS: "src/*.c third_party/bearssl/src/*.c"
+          SRCS: "src/*.c third_party/bearssl/*.c"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           

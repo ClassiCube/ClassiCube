@@ -34,13 +34,13 @@ jobs:
         id: compile
         env: 
           LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
-          SRCS: "src/*.c third_party/bearssl/src/*.c"
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Ithird_party/bearssl/inc"
-          RPI32_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          SRCS: "src/*.c third_party/bearssl/*.c"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          RPI32_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           
-          $CC ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.RPI32_FLAGS }} $LATEST_FLAG -o cc-rpi32 ${{ env.LIBS }}
+          $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI32_FLAGS }} $LATEST_FLAG -o cc-rpi32 ${{ env.LIBS }}
 
 
       - uses: ./.github/actions/notify_failure
@@ -86,13 +86,13 @@ jobs:
         id: compile
         env: 
           LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
-          SRCS: "src/*.c third_party/bearssl/src/*.c"
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Ithird_party/bearssl/inc"
-          RPI64_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          SRCS: "src/*.c third_party/bearssl/*.c"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          RPI64_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           
-          $CC ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.RPI64_FLAGS }} $LATEST_FLAG -o cc-rpi64 ${{ env.LIBS }}
+          $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI64_FLAGS }} $LATEST_FLAG -o cc-rpi64 ${{ env.LIBS }}
 
 
       - uses: ./.github/actions/notify_failure

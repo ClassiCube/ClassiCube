@@ -24,8 +24,8 @@ jobs:
         id: compile
         env: 
           LIBS: "-lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker"
-          SRCS: "src/*.c src/Platform_BeOS.cpp src/Window_BeOS.cpp third_party/bearssl/src/*.c"
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Ithird_party/bearssl/inc"
+          SRCS: "src/*.c src/Platform_BeOS.cpp src/Window_BeOS.cpp third_party/bearssl/*.c"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
         run: |
           x86_64-unknown-haiku-gcc ${{ env.SRCS }} -o ClassiCube-haiku ${{ env.COMMON_FLAGS }} ${{ env.LIBS }}
 
