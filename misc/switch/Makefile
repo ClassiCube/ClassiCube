@@ -9,9 +9,9 @@ endif
 # Name of the final output
 TARGET 		= ClassiCube-switch
 # List of directories containing source code
-SOURCE_DIRS	= src src/switch third_party/bearssl/src
+SOURCE_DIRS	= src src/switch third_party/bearssl
 # List of directories containing more header files
-INCLUDES	= -Ithird_party/bearssl/inc
+INCLUDES	= 
 # Directory where object files are placed
 BUILD_DIR	= build/switch
 
@@ -94,7 +94,7 @@ $(BUILD_DIR)/%.o: src/%.c
 $(BUILD_DIR)/%.o: src/switch/%.c
 	$(A64_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	$(A64_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 

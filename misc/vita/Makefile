@@ -11,7 +11,7 @@ endif
 # Name of the final output
 TARGET 			:= ClassiCube-vita
 # List of directories containing source code
-SOURCE_DIRS		:= src src/psvita third_party/bearssl/src
+SOURCE_DIRS		:= src src/psvita third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR		:= build/vita
 
@@ -25,7 +25,7 @@ PROJECT_TITLEID := CUBE00200
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
 
-CFLAGS 	= -Ithird_party/bearssl/inc -O1
+CFLAGS 	= -O1
 
 LDFLAGS = -Wl,-q
 LIBS 	= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
@@ -91,7 +91,7 @@ $(BUILD_DIR)/%.o : src/%.c
 $(BUILD_DIR)/%.o : src/psvita/%.c
 	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	
-$(BUILD_DIR)/%.o : third_party/bearssl/src/%.c
+$(BUILD_DIR)/%.o : third_party/bearssl/%.c
 	$(VITA_CC) $(CFLAGS) -c $< -o $@
 
 

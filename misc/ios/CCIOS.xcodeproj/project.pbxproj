@@ -681,7 +681,7 @@
 				9AC3D0AA2E1166AB00A38E91 /* i31_moddiv.c */,
 			);
 			name = src;
-			path = ../../third_party/bearssl/src;
+			path = ../../third_party/bearssl;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1081,7 +1081,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = ../../third_party/bearssl/inc;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1099,7 +1098,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = ../../third_party/bearssl/inc;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				LD_RUNPATH_SEARCH_PATHS = (

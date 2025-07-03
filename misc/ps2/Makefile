@@ -9,7 +9,7 @@ endif
 # Name of the final output
 TARGET 	= ClassiCube-ps2
 # List of directories containing source code
-SOURCE_DIRS	:= src src/ps2 third_party/bearssl/src
+SOURCE_DIRS	:= src src/ps2 third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR = build/ps2
 
@@ -26,7 +26,7 @@ IOP_MODS := DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_
 EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
 EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse -lkbd
 
-EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -Ithird_party/bearssl/inc
+EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include
 EE_CFLAGS 	:= -D_EE -G0 -O2 -Wall -gdwarf-2 -gz -DPLAT_PS2
 EE_LDFLAGS 	:= -L$(PS2SDK)/ee/lib -Wl,-zmax-page-size=128
 EE_LINKFILE := $(PS2SDK)/ee/startup/linkfile
@@ -111,7 +111,7 @@ $(BUILD_DIR)/%.o: src/%.c
 $(BUILD_DIR)/%.o: src/ps2/%.c
 	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	$(EE_CC) $(DEPFLAGS) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: src/ps2/%.S

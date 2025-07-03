@@ -9,11 +9,11 @@ endif
 # Name of the final output
 TARGET 		= ClassiCube-3ds
 # List of directories containing source code
-SOURCE_DIRS	= src src/3ds third_party/bearssl/src
+SOURCE_DIRS	= src src/3ds third_party/bearssl
 # List of directories containing shader files
 SHDR_DIRS   = misc/3ds
 # List of directories containing more header files
-INCLUDES	= -Ithird_party/bearssl/inc
+INCLUDES	= 
 # Directory where object files are placed
 BUILD_DIR	= build/3ds
 
@@ -109,7 +109,7 @@ $(BUILD_DIR)/%.o: src/%.c
 $(BUILD_DIR)/%.o: src/3ds/%.c
 	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	$(ARM_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(BUILD_DIR)/%.shbin: misc/3ds/%.v.pica

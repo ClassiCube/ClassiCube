@@ -10,7 +10,7 @@ endif
 # Name of the final output
 TARGET 			= ClassiCube-psp
 # List of directories containing source code
-SOURCE_DIRS		= src third_party/bearssl/src
+SOURCE_DIRS		= src third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR		= build/psp
 
@@ -24,7 +24,7 @@ PSP_EBOOT_ICON	= misc/psp/ICON0.png
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
 
-INCDIR   = third_party/bearssl/inc
+INCDIR   = third_party/bearssl
 CFLAGS   = -g -O1 -fno-math-errno
 ASFLAGS  = $(CFLAGS)
 
@@ -55,7 +55,7 @@ $(BUILD_DIR):
 $(BUILD_DIR)/%.o : src/%.c
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	
-$(BUILD_DIR)/%.o : third_party/bearssl/src/%.c
+$(BUILD_DIR)/%.o : third_party/bearssl/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 

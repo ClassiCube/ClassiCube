@@ -407,7 +407,7 @@ cc_result SSL_Free(void* ctx_) {
 #elif CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
 #include "String.h"
 #include "Certs.h"
-#include "bearssl.h"
+#include "../third_party/bearssl/bearssl.h"
 #include "../misc/certs/certs.h"
 
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283

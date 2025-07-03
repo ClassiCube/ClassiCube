@@ -690,7 +690,7 @@
 				9AC3D45C2E12921400A38E91 /* x509_minimal.c */,
 			);
 			name = src;
-			path = ../../third_party/bearssl/src;
+			path = ../../third_party/bearssl;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1079,7 +1079,6 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = ../../third_party/bearssl/inc;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1090,7 +1089,6 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = ../../third_party/bearssl/inc;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

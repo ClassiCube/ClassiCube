@@ -187,11 +187,11 @@ ifdef TERMINAL
 endif
 
 ifdef BEARSSL
-	BUILD_DIRS += $(BUILD_DIR)/third_party/bearssl/src
-	BEARSSL_SOURCES = $(wildcard third_party/bearssl/src/*.c)
+	BUILD_DIRS += $(BUILD_DIR)/third_party/bearssl
+	BEARSSL_SOURCES = $(wildcard third_party/bearssl/*.c)
 	BEARSSL_OBJECTS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
 	OBJECTS += $(BEARSSL_OBJECTS)
-	CFLAGS  += -Ithird_party/bearssl/inc -DCC_SSL_BACKEND=CC_SSL_BACKEND_BEARSSL -DCC_NET_BACKEND=CC_NET_BACKEND_BUILTIN
+	CFLAGS  += -DCC_SSL_BACKEND=CC_SSL_BACKEND_BEARSSL -DCC_NET_BACKEND=CC_NET_BACKEND_BUILTIN
 endif
 
 ifdef RELEASE

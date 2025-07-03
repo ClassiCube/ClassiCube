@@ -15,8 +15,7 @@ SYSTEMINCLUDE /epoc32/include/stdapis/sys
 
 USERINCLUDE ../../src
 USERINCLUDE ../../src/freetype
-USERINCLUDE ../../third_party/bearssl/inc
-USERINCLUDE ../../third_party/bearssl/src
+USERINCLUDE ../../third_party/bearssl
 
 MACRO SYMBIAN_OE_POSIX_SIGNALS
 
@@ -46,7 +45,7 @@ OPTION_REPLACE ARMCC -O2 -O3
 SOURCEPATH ../../src
 SOURCE Animations.c Audio.c Audio_Null.c AxisLinesRenderer.c Bitmap.c Block.c BlockPhysics.c Builder.c Camera.c Certs.c Chat.c Commands.c Deflate.c Drawer.c Drawer2D.c Entity.c EntityComponents.c EntityRenderers.c EnvRenderer.c Event.c ExtMath.c FancyLighting.c Formats.c Game.c GameVersion.c Generator.c Graphics_GL1.c Graphics_SoftGPU.c Gui.c HeldBlockRenderer.c Http_Web.c Http_Worker.c Input.c InputHandler.c Inventory.c IsometricDrawer.c LBackend.c LScreens.c LWeb.c LWidgets.c Launcher.c Lighting.c Logger.c MapRenderer.c MenuOptions.c Menus.c Model.c Options.c PackedCol.c Particle.c Physics.c Picking.c Platform_Posix.c Protocol.c Queue.c Resources.c SSL.c Screens.c SelOutlineRenderer.c SelectionBox.c Server.c Stream.c String.c SystemFonts.c TexturePack.c TouchUI.c Utils.c Vectors.c Widgets.c World.c _autofit.c _cff.c _ftbase.c _ftbitmap.c _ftglyph.c _ftinit.c _ftsynth.c _psaux.c _pshinter.c _psmodule.c _sfnt.c _smooth.c _truetype.c _type1.c Vorbis.c Platform_Symbian.cpp Graphics_GL2.c Window_Symbian.cpp Audio_Symbian.cpp
 
-SOURCEPATH ../../third_party/bearssl/src
+SOURCEPATH ../../third_party/bearssl
 SOURCE aes_big_cbcdec.c aes_big_cbcenc.c aes_big_ctr.c aes_big_ctrcbc.c aes_big_dec.c aes_big_enc.c aes_common.c aesctr_drbg.c aes_x86ni.c aes_x86ni_cbcdec.c aes_x86ni_cbcenc.c aes_x86ni_ctr.c aes_x86ni_ctrcbc.c asn1enc.c ccm.c ccopy.c chacha20_ct.c chacha20_sse2.c dec32be.c dec32le.c dec64be.c dec64le.c dig_oid.c dig_size.c ec_all_m31.c ec_c25519_i31.c ec_c25519_m31.c ec_c25519_m62.c ec_c25519_m64.c ec_curve25519.c ec_default.c ecdsa_atr.c ecdsa_default_vrfy_asn1.c ecdsa_default_vrfy_raw.c ecdsa_i31_bits.c ecdsa_i31_vrfy_asn1.c ecdsa_i31_vrfy_raw.c ec_p256_m31.c ec_p256_m62.c ec_p256_m64.c ec_prime_i31.c ec_secp256r1.c ec_secp384r1.c ec_secp521r1.c enc32be.c enc32le.c enc64be.c enc64le.c gcm.c ghash_ctmul64.c ghash_ctmul.c ghash_pclmul.c hmac.c hmac_ct.c hmac_drbg.c i31_add.c i31_bitlen.c i31_decmod.c i31_decode.c i31_decred.c i31_encode.c i31_fmont.c i31_iszero.c i31_moddiv.c i31_modpow2.c i31_modpow.c i31_montmul.c i31_mulacc.c i31_muladd.c i31_ninv31.c i31_reduce.c i31_rshift.c i31_sub.c i31_tmont.c i32_div32.c i62_modpow2.c md5.c md5sha1.c multihash.c poly1305_ctmul.c poly1305_ctmulq.c prf.c prf_md5sha1.c prf_sha256.c prf_sha384.c rsa_default_pkcs1_vrfy.c rsa_default_priv.c rsa_default_pub.c rsa_i31_pkcs1_vrfy.c rsa_i31_priv.c rsa_i31_pub.c rsa_i62_pkcs1_vrfy.c rsa_i62_priv.c rsa_i62_pub.c rsa_pkcs1_sig_unpad.c sha1.c sha2big.c sha2small.c ssl_client.c ssl_client_default_rsapub.c ssl_client_full.c ssl_engine.c ssl_engine_default_aescbc.c ssl_engine_default_aesccm.c ssl_engine_default_aesgcm.c ssl_engine_default_chapol.c ssl_engine_default_ec.c ssl_engine_default_ecdsa.c ssl_engine_default_rsavrfy.c ssl_hashes.c ssl_hs_client.c ssl_io.c ssl_rec_cbc.c ssl_rec_ccm.c ssl_rec_chapol.c ssl_rec_gcm.c x509_minimal.c x509_minimal_full.c
 
 CAPABILITY NetworkServices ReadUserData UserEnvironment WriteUserData

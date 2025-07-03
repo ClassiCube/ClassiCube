@@ -10,7 +10,7 @@ TARGET		= ClassiCube-xbox
 # Application name/title
 XBE_TITLE 	= ClassiCube
 # List of directories containing source code
-SOURCE_DIRS = src src/xbox third_party/bearssl/src
+SOURCE_DIRS = src src/xbox third_party/bearssl
 # Shader objects
 SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
 # Directory where object files are placed
@@ -24,7 +24,7 @@ S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
-CFLAGS = -Ithird_party/bearssl/inc -O1 -fno-math-errno -Wno-builtin-macro-redefined \
+CFLAGS = -O1 -fno-math-errno -Wno-builtin-macro-redefined \
 	-I$(NXDK_DIR)/lib/net/lwip/src/include \
 	-I$(NXDK_DIR)/lib/net/nforceif/include \
 	-I$(NXDK_DIR)/lib/net/nvnetdrv \
@@ -101,7 +101,7 @@ $(BUILD_DIR)/%.o: src/xbox/%.c
 $(BUILD_DIR)/%.o: src/xbox/%.S
 	nxdk-as $(NXDK_ASFLAGS) $(ASFLAGS) $(DEPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) -c $< -o $@
 
 %.inl: %.vs.cg

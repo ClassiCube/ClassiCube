@@ -32,10 +32,10 @@ include $(DEVKITPRO)/wut/share/wut_rules
 #-------------------------------------------------------------------------------
 TARGET		:=	ClassiCube-wiiu
 BUILD		:=	build-wiiu
-SOURCES		:=	src third_party/bearssl/src
+SOURCES		:=	src third_party/bearssl
 SHADERS		:=	misc/wiiu
 DATA		:=	data
-INCLUDES	:=	third_party/bearssl/inc
+INCLUDES	:=
 CONTENT		:=
 ICON		:=
 TV_SPLASH	:=
