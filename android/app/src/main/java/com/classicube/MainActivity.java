@@ -1,14 +1,16 @@
 package com.classicube;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -28,24 +30,22 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.provider.Settings.Secure;
-import android.text.Editable;
 import android.text.InputType;
-import android.text.Selection;
-import android.text.SpannableStringBuilder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.view.View;
 import android.view.Window;
-import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places 
@@ -1016,4 +1016,68 @@ public class MainActivity extends Activity
 
 	native static void httpParseHeader(String header);
 	native static void httpAppendData(byte[] data, int len);
+
+
+	// ======================================================================
+	// -------------------------------- SSL ---------------------------------
+	// ======================================================================
+	static X509TrustManager trust;
+	static CertificateFactory certFactory;
+	static ArrayList<X509Certificate> chain = new ArrayList<X509Certificate>();
+
+	static X509TrustManager CreateTrust() throws Exception {
+		TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		// Load default Trust Anchor certificates
+		factory.init((KeyStore)null);
+
+		TrustManager[] trustManagers = factory.getTrustManagers();
+		for (int i = 0; i < trustManagers.length; i++)
+		{
+			// Should be first entry, e.g. X509TrustManagerImpl
+			if (trustManagers[i] instanceof X509TrustManager)
+				return (X509TrustManager)trustManagers[i];
+		}
+		return null;
+	}
+
+	public static int sslCreateTrust() {
+		try {
+			trust = CreateTrust();
+			return 1;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return 0;
+		}
+	}
+
+	public static void sslAddCert(byte[] data) {
+		try {
+			if (certFactory == null) certFactory = CertificateFactory.getInstance("X.509");
+			if (certFactory == null) return;
+
+			InputStream in = new ByteArrayInputStream(data);
+			X509Certificate cert = (X509Certificate) certFactory.generateCertificate(in);
+			chain.add(cert);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public static int sslVerifyChain() {
+		int result = -200;
+		try {
+			X509Certificate[] certs = new X509Certificate[chain.size()];
+			for (int i = 0; i < chain.size(); i++) certs[i] = chain.get(i);
+
+			trust.checkServerTrusted(certs, "INV");
+			// standard java checks auth type, but android doesn't
+			// See https://issues.chromium.org/issues/40955801
+			result = 0;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		chain.clear();
+		return result;
+	}
 }

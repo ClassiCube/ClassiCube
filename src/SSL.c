@@ -470,14 +470,22 @@ static unsigned x509_maybe_skip_verify(unsigned r) {
 	return r;
 }
 
+static unsigned x509_maybe_system_verify(struct SSLContext* ssl, unsigned r) {
+	/* Only fallback to system verification for potentially untrusted certificate case */
+	/* This ensures consistent validation behaviour in other cases between all platforms */
+	if (r != BR_ERR_X509_NOT_TRUSTED) return r;
+	if (!ssl->x509.numCerts)          return r;
+
+	if (Certs_VerifyChain(&ssl->x509) == 0) r = 0;
+	return r;
+}
+
 static unsigned x509_end_chain(const br_x509_class** ctx) {
 	struct SSLContext* ssl = (struct SSLContext*)ctx;
-
+	
 	unsigned r = br_x509_minimal_vtable.end_chain(ctx);
 	r = x509_maybe_skip_verify(r);
-
-	/* Fallback to system specific certificate validation */
-	if (r == BR_ERR_X509_NOT_TRUSTED && Certs_VerifyChain(&ssl->x509) == 0) r = 0;
+	r = x509_maybe_system_verify(ssl, r);
 
 	Certs_FreeChain(&ssl->x509);
 	return r;
