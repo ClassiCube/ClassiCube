@@ -152,6 +152,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 256 * 256;
+	Gfx.MaxLowResTexSize = 512 * 512; // TODO better fix, needed for onscreen keyboard
 	Gfx.Created      = true;
 	
 	Gfx_RestoreState();
