@@ -288,6 +288,36 @@ int Certs_VerifyChain(struct X509CertContext* x509) {
 
 	return JavaSCall_Int(env, JAVA_sslVerifyChain, NULL);
 }
+#elif CC_CRT_BACKEND == CC_CRT_BACKEND_WINCRYPTO
+#define CC_CRYPT32_FUNC extern
+#include "Funcs.h"
+
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+#include <windows.h>
+/*
+#include <wincrypt.h>
+*/
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-wincrypt.h"
+
+void CertsBackend_Init(void) {
+	Crypt32_LoadDynamicFuncs();
+}
+
+int Certs_VerifyChain(struct X509CertContext* x509) {
+	if (!_CertGetCertificateChain) return ERR_NOT_SUPPORTED;
+
+	//_CertGetCertificateChain(NULL, PCCERT_CONTEXT certContext, NULL, HCERTSTORE additionalStore, PCERT_CHAIN_PARA chainPara, DWORD flags, PVOID reserved, PCCERT_CHAIN_CONTEXT* chainContext);
+	return ERR_NOT_SUPPORTED;
+}
+
 #endif
 
 #endif
