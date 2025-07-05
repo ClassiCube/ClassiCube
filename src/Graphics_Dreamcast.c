@@ -274,6 +274,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexSize   = 512 * 512; // reasonable cap as Dreamcast only has 8MB VRAM
 	Gfx.Created      = true;
 	
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	Gfx_RestoreState();
 }
 
@@ -568,6 +569,9 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	*maskX = 0;
 	*maskY = 0;
 	int shift = 0;
+
+	w = Math_NextPowOf2(w);
+	h = Math_NextPowOf2(h);
 
 	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
 	{
