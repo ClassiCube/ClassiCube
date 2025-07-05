@@ -1,15 +1,12 @@
-#include "Core.h"
-#if defined CC_BUILD_DREAMCAST
-
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "SystemFonts.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../SystemFonts.h"
 
 #include <errno.h>
 #include <netdb.h>
@@ -25,7 +22,7 @@
 #include <dc/sd.h>
 #include <fat/fs_fat.h>
 #include <kos/dbgio.h>
-#include "_PlatformConsole.h"
+#include "../_PlatformConsole.h"
 
 KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
                INIT_VMU        | INIT_CDROM    | INIT_NET);
@@ -741,5 +738,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
-#endif
 

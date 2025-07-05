@@ -139,8 +139,8 @@ void Gfx_FreeState(void) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Texturing-------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct CCTexture_ {
-	cc_uint32 width, height;
+typedef struct {
+	cc_uint8 log2_w, log2_h;
 	cc_uint32* pixels;
 } CCTexture;
 
@@ -171,13 +171,15 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	}
 }
 
+static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
+
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "GPU texture");
 	tex->pixels    = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->log2_w = Log2Dimension(bmp->width);
+	tex->log2_h = Log2Dimension(bmp->height);
 	cc_uint32* dst = tex->pixels;
 
 	int width = bmp->width, height = bmp->height;
@@ -207,7 +209,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	int width = part->width, height = part->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+	TwiddleCalcFactors(1 << tex->log2_w, 1 << tex->log2_h, &maskX, &maskY);
 
 	// Calculate start twiddled X and Y values
 	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
@@ -244,8 +246,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square;
 	
-	unsigned log_u = Math_ilog2(tex->width);
-	unsigned log_v = Math_ilog2(tex->height);
+	unsigned log_u = tex->log2_w;
+	unsigned log_v = tex->log2_h;
 	uint32_t* p;
 
 	p = pb_begin();

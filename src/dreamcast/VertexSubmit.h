@@ -1,6 +1,13 @@
-#include <kos.h>
-#include <dc/pvr.h>
-#include "gldc.h"
+typedef struct {
+    // Same layout as a PVR vertex
+    uint32_t flags;
+    float x, y, w;
+    uint32_t u, v; // really floats, but stored as uint for better load/store codegen
+    uint32_t bgra;
+    float z; // actually oargb, but repurposed since unused
+} __attribute__ ((aligned (32))) Vertex;
+
+void CC_NOINLINE SubmitCommands(Vertex* v3, int n);
 
 #define PushVertex(src, dst) __asm__ volatile ( \
 "fmov.d    @%1+, dr0 ! LS, FX  = *src, src += 8\n"    \
@@ -73,9 +80,9 @@ void SubmitCommands(Vertex* v3, int n) {
 		};
 
 		// Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
-		Vertex* const v0 = v3 - 3;
-		Vertex* const v1 = v3 - 2;
-		Vertex* const v2 = v3 - 1;
+		Vertex* v0 = v3 - 3;
+		Vertex* v1 = v3 - 2;
+		Vertex* v2 = v3 - 1;
 		uint8_t mask = v3->flags & 0xFF;
 
 		// Check if all vertices visible

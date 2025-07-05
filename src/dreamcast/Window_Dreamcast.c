@@ -1,20 +1,18 @@
-#include "Core.h"
-#if defined CC_BUILD_DREAMCAST
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "VirtualKeyboard.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../VirtualKeyboard.h"
 #include <kos.h>
 
 static cc_bool launcherMode;
-#include "VirtualCursor.h"
+#include "../VirtualCursor.h"
 cc_bool window_inited;
 
 struct _DisplayData DisplayInfo;
@@ -363,4 +361,3 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif

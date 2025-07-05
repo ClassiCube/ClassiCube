@@ -11,7 +11,7 @@ endif
 # Directory where object files are placed
 BUILD_DIR	:= build/dc
 # List of directories containing source code
-SOURCE_DIRS	:= src third_party/bearssl misc/dreamcast
+SOURCE_DIRS	:= src third_party/bearssl src/dreamcast
 # Name of the final output
 TARGET 		:= ClassiCube-dc
 # Additional libraries to link against
@@ -81,10 +81,13 @@ $(TARGET).cdi: $(TARGET).iso
 $(BUILD_DIR)/%.o: src/%.c
 	kos-cc $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/%.o: src/dreamcast/%.c
+	kos-cc $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+
 $(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	kos-cc $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(BUILD_DIR)/%.o: misc/dreamcast/%.S
+$(BUILD_DIR)/%.o: src/dreamcast/%.S
 	kos-cc $(DEPFLAGS) -c $< -o $@
 
 

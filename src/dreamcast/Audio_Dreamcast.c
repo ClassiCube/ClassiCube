@@ -1,8 +1,5 @@
-#include "Core.h"
-
-#if defined CC_BUILD_DREAMCAST
 #include <kos.h>
-#include "Audio.h"
+#include "../Audio.h"
 
 /* TODO needs way more testing, especially with sounds */
 static cc_bool valid_handles[SND_STREAM_MAX];
@@ -20,8 +17,8 @@ struct AudioContext {
 	int count, sampleRate;
 };
 #define AUDIO_OVERRIDE_ALLOC
-#include "_AudioBase.h"
-#include "Funcs.h"
+#include "../_AudioBase.h"
+#include "../Funcs.h"
 
 cc_bool AudioBackend_Init(void) {
 	return snd_stream_init() == 0;
@@ -213,5 +210,4 @@ cc_result Audio_AllocChunks(cc_uint32 size, struct AudioChunk* chunks, int numCh
 void Audio_FreeChunks(struct AudioChunk* chunks, int numChunks) {
 	free(chunks[0].data);
 }
-#endif
 
