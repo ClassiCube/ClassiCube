@@ -66,8 +66,8 @@ CC_VAR extern struct _GfxData {
 	/* Whether graphics context has been created */
 	cc_bool Created;
 	struct Matrix View, Projection;
-	/* Whether the graphics backend supports non power of two textures */
-	cc_bool SupportsNonPowTwoTextures;
+	/* Level of support for non power of two textures */
+	cc_uint8 NonPowTwoTexturesSupport;
 	/* Limitations of the graphics backend, see GFX_LIMIT values */
 	cc_uint8 Limitations;
 	/* Type of the backend (e.g. OpenGL, Direct3D 9, etc)*/
@@ -84,6 +84,14 @@ CC_VAR extern struct _GfxData {
 	/* Default index buffer for a triangle list representing quads */
 	GfxResourceID DefaultIb;
 } Gfx;
+
+/* Backend has no support at all for non power of two textures */
+#define GFX_NONPOW2_NONE   0x00
+/* Backend only supports uploading non power of two textures */
+/* E.g. 64x20 texture may only occupy 64x20 in VRAM, but is addressed as if it was 64x32 */
+#define GFX_NONPOW2_UPLOAD 0x01
+/* Backend fully supports uploading and addressing non power of two textures */
+#define GFX_NONPOW2_FULL   0x02
 
 /* Whether the graphics backend supports U/V that don't occupy whole texture */
 /*   e.g. Saturn, 3D0 systems don't support it */

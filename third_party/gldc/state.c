@@ -19,21 +19,6 @@ static uint8_t  BLEND_ENABLED;
 static uint8_t  TEXTURES_ENABLED;
 static uint8_t  AUTOSORT_ENABLED;
 
-static inline int DimensionFlag(int w) {
-    switch(w) {
-        case 16: return 1;
-        case 32: return 2;
-        case 64: return 3;
-        case 128: return 4;
-        case 256: return 5;
-        case 512: return 6;
-        case 1024: return 7;
-        case 8:
-        default:
-            return 0;
-    }
-}
-
 static GLDC_NO_INLINE void apply_poly_header(pvr_poly_hdr_t* dst, int list_type) {
     TextureObject* tx1 = TEXTURE_ACTIVE;
 
@@ -100,8 +85,8 @@ static GLDC_NO_INLINE void apply_poly_header(pvr_poly_hdr_t* dst, int list_type)
         dst->mode2 |= (PVR_MIPBIAS_NORMAL       << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
         dst->mode2 |= (PVR_TXRENV_MODULATEALPHA << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
 
-        dst->mode2 |= (DimensionFlag(tx1->width)  << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
-        dst->mode2 |= (DimensionFlag(tx1->height) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
+        dst->mode2 |= ((tx1->log2_width - 3)  << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
+        dst->mode2 |= ((tx1->log2_height - 3) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
 
         dst->mode3  = (0           << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
         dst->mode3 |= (tx1->format << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;

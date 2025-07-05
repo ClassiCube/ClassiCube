@@ -152,7 +152,7 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 	ctx->height = height;
 	ctx->meta   = NULL;
 
-	if (!Gfx.SupportsNonPowTwoTextures) {
+	if (Gfx.NonPowTwoTexturesSupport != GFX_NONPOW2_FULL) {
 		/* Allocate power-of-2 sized bitmap equal to or greater than the given size */
 		width  = Math_NextPowOf2(width);
 		height = Math_NextPowOf2(height);

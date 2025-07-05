@@ -66,15 +66,6 @@ static void CommandsList_Append(struct CommandsList* list, const void* cmd) {
 	list->length++;
 }
 
-static CC_INLINE cc_uint32 TextureSize(TextureObject* tex) {
-	// 16 bpp = 1 pixel in 2 bytes
-	if (tex->format == PVR_TXRFMT_ARGB4444) return tex->width * tex->height * 2;
-
-	// 4bpp = 2 pixels in 1 byte
-	return tex->width * tex->height / 2;
-}
-
-
 /*########################################################################################################################*
 *-----------------------------------------------------Texture memory------------------------------------------------------*
 *#########################################################################################################################*/
@@ -133,12 +124,11 @@ static int texmem_defragment(void) {
 		TextureObject* tex = &TEXTURE_LIST[i];
 		if (!tex->data) continue;
 
-		cc_uint32 size = TextureSize(tex);
-		int moved = texmem_move(tex->data, size);
+		int moved = texmem_move(tex->data, tex->size);
 		if (!moved) continue;
 
 		moved_any = true;
-		memmove(tex->data - moved, tex->data, size);
+		memmove(tex->data - moved, tex->data, tex->size);
 		tex->data -= moved;
 	}
 	return moved_any;
@@ -660,6 +650,8 @@ static TextureObject* FindFreeTexture(void) {
     return NULL;
 }
 
+static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
+
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	TextureObject* tex = FindFreeTexture();
 	if (!tex) return NULL;
@@ -673,11 +665,20 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
 	}
 
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
-	tex->format = pal_count > 0 ? (PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index)) : PVR_TXRFMT_ARGB4444;
+	tex->log2_width  = Log2Dimension(bmp->width);
+	tex->log2_height = Log2Dimension(bmp->height);
 
-	tex->data = texmem_alloc(TextureSize(tex));
+	if (pal_count > 0) {
+		tex->format = PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index);
+		// 4bpp     = 2 pixels in 1 byte
+		tex->size   = bmp->width * bmp->height / 2;
+	} else {
+		tex->format = PVR_TXRFMT_ARGB4444;
+		// 16 bpp   = 1 pixel in 2 bytes
+		tex->size   = bmp->width * bmp->height * 2;
+	}
+	
+	tex->data = texmem_alloc(tex->size);
 	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
 
 	if (tex->format == PVR_TXRFMT_ARGB4444) {
@@ -694,7 +695,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	int width = part->width, height = part->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+	TwiddleCalcFactors(1 << tex->log2_width, 1 << tex->log2_height, &maskX, &maskY);
 
 	// Calculate start twiddled X and Y values
 	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
@@ -726,8 +727,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	TextureObject* tex = (TextureObject*)(*texId);
 	if (!tex) return;
 
-	cc_uint32 size = TextureSize(tex);
-	texmem_free(tex->data, size);
+	texmem_free(tex->data, tex->size);
 
 	if (tex->format != PVR_TXRFMT_ARGB4444) {
 		int index = (tex->format & PVR_TXRFMT_4BPP_PAL(63)) >> 21;

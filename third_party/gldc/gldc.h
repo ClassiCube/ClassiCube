@@ -17,8 +17,9 @@ typedef struct {
 typedef struct {
     uint32_t format;
     void     *data;
-    uint16_t width;
-    uint16_t height;
+	uint32_t log2_width:  4;
+	uint32_t log2_height: 4;
+	uint32_t size:       24;
 } TextureObject;
 
 void GLDC_NO_INLINE SubmitCommands(Vertex* v3, int n);

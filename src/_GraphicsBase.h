@@ -429,9 +429,9 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 }
 
 GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	if (Gfx.SupportsNonPowTwoTextures && (flags & TEXTURE_FLAG_NONPOW2)) {
+	if (Gfx.NonPowTwoTexturesSupport && (flags & TEXTURE_FLAG_NONPOW2)) {
 		/* Texture is being deliberately created and can be successfully created */
-		/* with non power of two dimensions. Typically used for UI textures */
+		/* with non power of two dimensions. Typically only used for UI textures */
 	} else if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Process_Abort("Textures must have power of two dimensions");
 	}
