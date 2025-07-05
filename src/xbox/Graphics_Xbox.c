@@ -118,6 +118,7 @@ void Gfx_Create(void) {
 	SetupShaders();
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	ResetState();
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 		
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -174,25 +175,28 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+	int size  = dst_w * dst_h * 4;
+
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "GPU texture");
 	tex->pixels    = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
-	tex->log2_w = Log2Dimension(bmp->width);
-	tex->log2_h = Log2Dimension(bmp->height);
+	tex->log2_w = Math_ilog2(dst_w);
+	tex->log2_h = Math_ilog2(dst_h);
 	cc_uint32* dst = tex->pixels;
 
-	int width = bmp->width, height = bmp->height;
+	int src_w = bmp->width, src_h = bmp->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
 	
-	for (int y = 0; y < height; y++)
+	for (int y = 0; y < src_h; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * rowWidth;
 		X = 0;
 		
-		for (int x = 0; x < width; x++, src++)
+		for (int x = 0; x < src_w; x++, src++)
 		{
 			dst[X | Y] = *src;
 			X = (X - maskX) & maskX;

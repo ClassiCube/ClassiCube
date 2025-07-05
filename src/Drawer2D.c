@@ -157,8 +157,7 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 		width  = Math_NextPowOf2(width);
 		height = Math_NextPowOf2(height);
 	} else if (Gfx.NonPowTwoTexturesSupport == GFX_NONPOW2_UPLOAD) {
-		/* Can upload texture without needing to pad up to power of two height */
-		width  = Math_NextPowOf2(width);
+		/* Can upload texture without needing to pad up to power of two */
 	}
 	
 	if (Gfx.MinTexWidth)  { width  = max(width,  Gfx.MinTexWidth);  }
@@ -326,16 +325,17 @@ void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
 	tex->width  = nouv ? ctx->bmp.width  : ctx->width;
 	tex->height = nouv ? ctx->bmp.height : ctx->height;
 	
-	tex->uv.u1  = 0.0f; tex->uv.v1 = 0.0f;
-	if (Gfx.NonPowTwoTexturesSupport == GFX_NONPOW2_FULL) {
-		tex->uv.u2 = 1.0f;
-		tex->uv.v2 = 1.0f;
-	} else if (Gfx.NonPowTwoTexturesSupport == GFX_NONPOW2_UPLOAD) {
-		tex->uv.u2 = (float)ctx->width  / (float)ctx->bmp.width;
-		tex->uv.v2 = (float)ctx->height / (float)Math_NextPowOf2(ctx->bmp.height);
+	tex->uv.u1  = 0.0f; 
+	tex->uv.v1  = 0.0f;
+	tex->uv.u2  = Context2D_CalcUV(ctx->width,  ctx->bmp.width);
+	tex->uv.v2  = Context2D_CalcUV(ctx->height, ctx->bmp.height);
+}
+
+float Context2D_CalcUV(int pixels, int axisLen) {
+	if (Gfx.NonPowTwoTexturesSupport == GFX_NONPOW2_UPLOAD) {
+		return (float)pixels / (float)Math_NextPowOf2(axisLen);
 	} else {
-		tex->uv.u2 = (float)ctx->width  / (float)ctx->bmp.width;
-		tex->uv.v2 = (float)ctx->height / (float)ctx->bmp.height;
+		return (float)pixels / (float)axisLen;
 	}
 }
 

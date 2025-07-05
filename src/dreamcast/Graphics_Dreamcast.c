@@ -754,17 +754,20 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
 	}
 
-	tex->log2_w = Log2Dimension(bmp->width);
-	tex->log2_h = Log2Dimension(bmp->height);
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	tex->log2_w = Math_ilog2(dst_w);
+	tex->log2_h = Math_ilog2(dst_h);
 
 	if (pal_count > 0) {
 		tex->format = PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index);
 		// 4bpp     = 2 pixels in 1 byte
-		tex->size   = bmp->width * bmp->height / 2;
+		tex->size   = dst_w * dst_h / 2;
 	} else {
 		tex->format = PVR_TXRFMT_ARGB4444;
 		// 16 bpp   = 1 pixel in 2 bytes
-		tex->size   = bmp->width * bmp->height * 2;
+		tex->size   = dst_w * dst_h * 2;
 	}
 	
 	tex->data = texmem_alloc(tex->size);

@@ -260,6 +260,7 @@ void Gfx_Create(void) {
 	
 	Gfx_RestoreState();
 	gfx_format = -1;
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 }
 
 void Gfx_Free(void) { Gfx_FreeState(); }
@@ -608,24 +609,27 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+	int size  = dst_w * dst_h * 4;
+
 	CCTexture* tex = (CCTexture*)rsxMemalign(128, 128 + size);
 	
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->width  = dst_w;
+	tex->height = dst_h;
 	cc_uint32* dst = tex->pixels;
 
-	int width = bmp->width, height = bmp->height;
+	int src_w = bmp->width, src_h = bmp->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
 	
-	for (int y = 0; y < height; y++)
+	for (int y = 0; y < src_h; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * rowWidth;
 		X = 0;
 		
-		for (int x = 0; x < width; x++, src++)
+		for (int x = 0; x < src_w; x++, src++)
 		{
 			dst[X | Y] = *src;
 			X = (X - maskX) & maskX;
