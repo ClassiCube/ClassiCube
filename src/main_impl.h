@@ -80,7 +80,19 @@ static void RunGame(void) {
 	String_InitArray(title, titleBuffer);
 
 	String_Format2(&title, "%c (%s)", GAME_APP_TITLE, &Game_Username);
-	Game_Run(&title);
+	Game_Setup(&title);
+	Game_Run();
+}
+
+static void RunLauncher(void) {
+#ifdef CC_BUILD_WEB
+	String_AppendConst(&Game_Username, DEFAULT_USERNAME);
+	RunGame();
+#else
+	Launcher_Setup();
+	Launcher_Run();
+	Launcher_Finish();
+#endif
 }
 
 /* Shows a warning dialog due to an invalid command line argument */
@@ -162,16 +174,13 @@ static int RunProgram(int argc, char** argv) {
 #endif
 
 	if (argsCount == 0) {
-#ifdef CC_BUILD_WEB
-		String_AppendConst(&Game_Username, DEFAULT_USERNAME);
-		RunGame();
-#else
-		Launcher_Run();
+		RunLauncher();
+#ifndef CC_BUILD_WEB
 	/* :[hash] - auto join server with the given hash */
 	} else if (argsCount == 1 && args[0].buffer[0] == ':') {
 		args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
 		String_Copy(&Launcher_AutoHash, &args[0]);
-		Launcher_Run();
+		RunLauncher();
 	/* --resume - try to resume to last server */
 	} else if (argsCount == 1 && String_CaselessEqualsConst(&args[0], DEFAULT_RESUME_ARG)) {
 		if (!Resume_Parse(&r, true)) {

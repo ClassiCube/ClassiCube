@@ -415,10 +415,11 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	minX = max(minX, 0); maxX = min(maxX, fb_maxX);
 	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
 
-	for (int y = minY; y <= maxY; y++) 
+	int x, y;
+	for (y = minY; y <= maxY; y++) 
 	{
 		int texY = fast ? (begTY + (y - minY)) : (((begTY + delTY * (y - minY) / height)) & texHeightMask);
-		for (int x = minX; x <= maxX; x++) 
+		for (x = minX; x <= maxX; x++) 
 		{
 			int texX = fast ? (begTX + (x - minX)) : (((begTX + delTX * (x - minX) / width)) & texWidthMask);
 			int texIndex = texY * curTexWidth + texX;
@@ -487,6 +488,7 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 	int area = edgeFunction(x0,y0, x1,y1, x2,y2);
 	float factor = 1.0f / area;
+	int x, y;
 	
 	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
 	// Essentially these are the deltas of edge functions between X/Y and X/Y + 1 (i.e. one X/Y step)
@@ -498,13 +500,13 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	float bc1_start = edgeFunction(x2,y2, x0,y0, minX+0.5f,minY+0.5f);
 	float bc2_start = edgeFunction(x0,y0, x1,y1, minX+0.5f,minY+0.5f);
 
-	for (int y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
+	for (y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
 	{
 		float bc0 = bc0_start;
 		float bc1 = bc1_start;
 		float bc2 = bc2_start;
 
-		for (int x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
+		for (x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
 		{
 			float ic0 = bc0 * factor;
 			float ic1 = bc1 * factor;
@@ -621,7 +623,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	float bc1_start = edgeFunction(x2,y2, x0,y0, minX+0.5f,minY+0.5f);
 	float bc2_start = edgeFunction(x0,y0, x1,y1, minX+0.5f,minY+0.5f);
 
-	int R, G, B, A;
+	int R, G, B, A, x, y;
 	int a1, r1, g1, b1;
 	int a2, r2, g2, b2;
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
@@ -642,13 +644,13 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 		texturing = false;
 	}
 
-	for (int y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
+	for (y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
 	{
 		float bc0 = bc0_start;
 		float bc1 = bc1_start;
 		float bc2 = bc2_start;
 
-		for (int x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
+		for (x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
 		{
 			float ic0 = bc0 * factor;
 			float ic1 = bc1 * factor;
@@ -970,11 +972,11 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 
 void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 	Vertex vertices[4];
-	int j = startVertex;
+	int i, j = startVertex;
 
 	if (gfx_rendering2D && (hints & (DRAW_HINT_SPRITE|DRAW_HINT_RECT))) {
 		// 4 vertices = 1 quad = 2 triangles
-		for (int i = 0; i < verticesCount / 4; i++, j += 4)
+		for (i = 0; i < verticesCount / 4; i++, j += 4)
 		{
 			TransformVertex2D(j + 0, &vertices[0]);
 			TransformVertex2D(j + 1, &vertices[1]);
@@ -984,7 +986,7 @@ void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 		}
 	} else if (gfx_rendering2D) {
 		// 4 vertices = 1 quad = 2 triangles
-		for (int i = 0; i < verticesCount / 4; i++, j += 4)
+		for (i = 0; i < verticesCount / 4; i++, j += 4)
 		{
 			TransformVertex2D(j + 0, &vertices[0]);
 			TransformVertex2D(j + 1, &vertices[1]);
@@ -996,7 +998,7 @@ void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 		}
 	} else {
 		// 4 vertices = 1 quad = 2 triangles
-		for (int i = 0; i < verticesCount / 4; i++, j += 4)
+		for (i = 0; i < verticesCount / 4; i++, j += 4)
 		{
 			int clip = TransformVertex3D(j + 0, &vertices[0]) << 0
 					|  TransformVertex3D(j + 1, &vertices[1]) << 1

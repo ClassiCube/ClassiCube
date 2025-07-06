@@ -1737,7 +1737,7 @@ static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 
 	if (!FetchUpdateTask.Base.success) return;
 	/* FetchUpdateTask handles saving the updated file for us */
-	Launcher_ShouldExit   = true;
+	Launcher_ShouldStop   = true;
 	Launcher_ShouldUpdate = true;
 }
 
