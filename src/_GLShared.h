@@ -69,7 +69,7 @@ static void* FastAllocTempMem(int size) {
 *#########################################################################################################################*/
 static cc_bool convert_rgba;
 
-static void ConvertRGBA(void* dst, void* src, int numPixels) {
+static void ConvertRGBA(void* dst, const void* src, int numPixels) {
 	cc_uint8* d = (cc_uint8*)dst;
 	cc_uint8* s = (cc_uint8*)src;
 	int i;
