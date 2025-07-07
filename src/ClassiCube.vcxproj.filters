@@ -127,6 +127,9 @@
     <Filter Include="Source Files\Window">
       <UniqueIdentifier>{cd88d7cb-c252-4b8f-8f90-c776cfc1e6b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BearSSL">
+      <UniqueIdentifier>{dec80279-6e40-46a8-b024-ee04e8931638}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform.h">
@@ -634,6 +637,363 @@
     </ClCompile>
     <ClCompile Include="Platform_Windows.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Certs.c">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_big_cbcdec.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_big_cbcenc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_big_ctr.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_big_ctrcbc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_big_dec.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_big_enc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_common.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_cbcdec.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_cbcenc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_ctr.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_ctrcbc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\aesctr_drbg.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\asn1enc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ccm.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ccopy.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\chacha20_ct.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\chacha20_sse2.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\dec32be.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\dec32le.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\dec64be.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\dec64le.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\dig_oid.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\dig_size.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_all_m31.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_i31.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_m31.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_m62.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_m64.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_curve25519.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_default.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_p256_m31.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_p256_m62.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_p256_m64.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_prime_i31.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_secp256r1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_secp384r1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ec_secp521r1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ecdsa_atr.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ecdsa_default_vrfy_asn1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ecdsa_default_vrfy_raw.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ecdsa_i31_bits.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ecdsa_i31_vrfy_asn1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ecdsa_i31_vrfy_raw.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\enc32be.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\enc32le.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\enc64be.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\enc64le.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\gcm.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ghash_ctmul.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ghash_ctmul64.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ghash_pclmul.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\hmac.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\hmac_ct.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\hmac_drbg.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_add.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_bitlen.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_decmod.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_decode.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_decred.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_encode.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_fmont.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_iszero.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_moddiv.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_modpow.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_modpow2.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_montmul.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_mulacc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_muladd.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_ninv31.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_reduce.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_rshift.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_sub.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i31_tmont.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i32_div32.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\i62_modpow2.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\md5.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\md5sha1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\multihash.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\poly1305_ctmul.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\poly1305_ctmulq.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\prf.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\prf_md5sha1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\prf_sha256.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\prf_sha384.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_default_pkcs1_vrfy.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_default_priv.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_default_pub.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_i31_pkcs1_vrfy.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_i31_priv.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_i31_pub.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_i62_pkcs1_vrfy.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_i62_priv.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_i62_pub.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\rsa_pkcs1_sig_unpad.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\sha1.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\sha2big.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\sha2small.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_client.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_client_default_rsapub.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_client_full.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_aescbc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_aesccm.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_aesgcm.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_chapol.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_ec.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_ecdsa.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_rsavrfy.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_hashes.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_hs_client.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_io.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_cbc.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_ccm.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_chapol.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_gcm.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\x509_minimal.c">
+      <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third_party\bearssl\x509_minimal_full.c">
+      <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

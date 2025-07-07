@@ -312,7 +312,7 @@ void CertsBackend_Init(void) {
 }
 
 int Certs_VerifyChain(struct X509CertContext* x509) {
-	if (!_CertGetCertificateChain) return ERR_NOT_SUPPORTED;
+	//if (!_CertGetCertificateChain) return ERR_NOT_SUPPORTED;
 
 	//_CertGetCertificateChain(NULL, PCCERT_CONTEXT certContext, NULL, HCERTSTORE additionalStore, PCERT_CHAIN_PARA chainPara, DWORD flags, PVOID reserved, PCCERT_CHAIN_CONTEXT* chainContext);
 	return ERR_NOT_SUPPORTED;
