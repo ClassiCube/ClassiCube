@@ -139,7 +139,7 @@ Setting up TCC:
 Compiling with TCC:
 1. Navigate to the directory with ClassiCube's source code
 2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
-3. Run `tcc.exe -o ClassiCube.exe *.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+3. Run `tcc.exe -o ClassiCube.exe src/*.c third_party/bearssl/*.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux

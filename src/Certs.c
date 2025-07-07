@@ -315,30 +315,21 @@ static const LPCSTR const usage[] = {
 	szOID_SGC_NETSCAPE
 };
 
-int Certs_VerifyChain(struct X509CertContext* x509) {
-	struct X509Cert* cert = &x509->certs[0];
+static BOOL BuildChain(struct X509CertContext* x509, HCERTSTORE store, PCCERT_CONTEXT* end_cert, PCCERT_CHAIN_CONTEXT* chain) {
+	struct X509Cert* cert;
 	CERT_CHAIN_PARA para = { 0 };
-	PCCERT_CHAIN_CONTEXT chain;
-	PCCERT_CONTEXT end_cert;
-	HCERTSTORE store;
-	BOOL ok;
 	int i;
 
-	if (!_CertOpenStore) return ERR_NOT_SUPPORTED;
-	store = _CertOpenStore(CERT_STORE_PROV_MEMORY, 0, NULL, 0, NULL);
-	if (!store) return ERR_NOT_SUPPORTED;
-
-	end_cert = NULL;
-	ok = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
-											CERT_STORE_ADD_ALWAYS, &end_cert);
-	if (!ok || !end_cert)
-		return -1;
+	BOOL ok = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
+												CERT_STORE_ADD_ALWAYS, end_cert);
+	if (!ok || !(*end_cert)) return FALSE;
 
 	for (i = 1; i < x509->numCerts; i++)
 	{
 		cert = &x509->certs[i];
-		ok = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
+		ok   = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
 												CERT_STORE_ADD_ALWAYS, NULL);
+
 	}
 
 	para.cbSize = sizeof(para);
@@ -346,13 +337,30 @@ int Certs_VerifyChain(struct X509CertContext* x509) {
 	para.RequestedUsage.Usage.cUsageIdentifier     = Array_Elems(usage);
 	para.RequestedUsage.Usage.rgpszUsageIdentifier = (LPSTR*)usage;
 
-	chain = NULL;
-	ok = _CertGetCertificateChain(NULL, end_cert, NULL, NULL, &para, 0, NULL, &chain);
-	// TODO look at dwErrorStatus
+	return _CertGetCertificateChain(NULL, *end_cert, NULL, NULL, &para, 0, NULL, chain);
+}
+
+int Certs_VerifyChain(struct X509CertContext* x509) {
+	struct X509Cert* cert = &x509->certs[0];
+	PCCERT_CHAIN_CONTEXT chain = NULL;
+	PCCERT_CONTEXT end_cert = NULL;
+	HCERTSTORE store;
+	DWORD res = 200;
+	BOOL ok;
+
+	if (!_CertOpenStore) return ERR_NOT_SUPPORTED;
+	store = _CertOpenStore(CERT_STORE_PROV_MEMORY, 0, NULL, 0, NULL);
+	if (!store) return ERR_NOT_SUPPORTED;
+
+	ok = BuildChain(x509, store, &end_cert, &chain);
+	if (ok) {
+		res = chain->TrustStatus.dwErrorStatus;
+		if (res) Platform_Log1("Cert validation failed: %h", &res);
+	}
 	
 	_CertFreeCertificateChain(chain);
 	ok = _CertFreeCertificateContext(end_cert);
-	ok = _CertCloseStore(store, 0); // TODO check memory all released
+	ok = _CertCloseStore(store, 0);
 	return ERR_NOT_SUPPORTED;
 }
 #endif

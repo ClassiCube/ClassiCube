@@ -4,7 +4,6 @@
 
 typedef void* HCERTSTORE;
 typedef void* PCCERT_CONTEXT;
-typedef void* PCCERT_CHAIN_CONTEXT;
 
 #define szOID_PKIX_KP_SERVER_AUTH "1.3.6.1.5.5.7.3.1"
 #define szOID_SERVER_GATED_CRYPTO "1.3.6.1.4.1.311.10.3.3"
@@ -36,6 +35,25 @@ typedef struct _CERT_CHAIN_PARA {
     DWORD cbSize;
     CERT_USAGE_MATCH RequestedUsage;
 } CERT_CHAIN_PARA;
+
+typedef struct _CERT_TRUST_STATUS {
+	DWORD dwErrorStatus;
+	DWORD dwInfoStatus;
+} CERT_TRUST_STATUS, *PCERT_TRUST_STATUS;
+
+typedef struct _CERT_CHAIN_CONTEXT {
+	DWORD                cbSize;
+	CERT_TRUST_STATUS    TrustStatus;
+	DWORD                cChain;
+	void*                rgpChain;
+	DWORD                cLowerQualityChainContext;
+	void*                rgpLowerQualityChainContext;
+	BOOL                 fHasRevocationFreshnessTime;
+	DWORD                dwRevocationFreshnessTime;
+	DWORD                dwCreateFlags;
+	GUID                 ChainId;
+} CERT_CHAIN_CONTEXT, *PCERT_CHAIN_CONTEXT;
+typedef const CERT_CHAIN_CONTEXT* PCCERT_CHAIN_CONTEXT;
 
 
 CC_CRYPT32_FUNC BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
