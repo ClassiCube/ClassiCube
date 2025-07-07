@@ -1,23 +1,30 @@
-#include "Core.h"
-#if defined CC_BUILD_DREAMCAST
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
 #include <malloc.h>
 #include <string.h>
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
-#include "../third_party/gldc/state.c"
-#include "../third_party/gldc/sh4.c"
+#include "VertexSubmit.h"
 
 static cc_bool renderingDisabled;
 static cc_bool stateDirty;
 
 #define VERTEX_BUFFER_SIZE 32 * 50000
 #define PT_ALPHA_REF 0x011c
+
+typedef struct {
+    uint32_t format;
+    void     *data;
+	uint32_t log2_w: 4;
+	uint32_t log2_h: 4;
+	uint32_t size:  24;
+} GPUTexture;
+
 #define MAX_TEXTURE_COUNT 768
+static GPUTexture tex_list[MAX_TEXTURE_COUNT];
 
 
 /*########################################################################################################################*
@@ -66,15 +73,6 @@ static void CommandsList_Append(struct CommandsList* list, const void* cmd) {
 	list->length++;
 }
 
-static CC_INLINE cc_uint32 TextureSize(TextureObject* tex) {
-	// 16 bpp = 1 pixel in 2 bytes
-	if (tex->format == PVR_TXRFMT_ARGB4444) return tex->width * tex->height * 2;
-
-	// 4bpp = 2 pixels in 1 byte
-	return tex->width * tex->height / 2;
-}
-
-
 /*########################################################################################################################*
 *-----------------------------------------------------Texture memory------------------------------------------------------*
 *#########################################################################################################################*/
@@ -87,8 +85,6 @@ static CC_INLINE cc_uint32 TextureSize(TextureObject* tex) {
 // Leave a little bit of memory available by KOS PVR code
 #define TEXMEM_RESERVED (48 * 1024)
 #define TEXMEM_TO_PAGE(addr) ((cc_uint32)((addr) - texmem_base) / TEXMEM_PAGE_SIZE)
-
-static TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
 
 // Base address in VRAM for textures
 static cc_uint8* texmem_base;
@@ -130,15 +126,14 @@ static int texmem_defragment(void) {
 	int moved_any = false;
 	for (int i = 0; i < MAX_TEXTURE_COUNT; i++)
 	{
-		TextureObject* tex = &TEXTURE_LIST[i];
+		GPUTexture* tex = &tex_list[i];
 		if (!tex->data) continue;
 
-		cc_uint32 size = TextureSize(tex);
-		int moved = texmem_move(tex->data, size);
+		int moved = texmem_move(tex->data, tex->size);
 		if (!moved) continue;
 
 		moved_any = true;
-		memmove(tex->data - moved, tex->data, size);
+		memmove(tex->data - moved, tex->data, tex->size);
 		tex->data -= moved;
 	}
 	return moved_any;
@@ -218,6 +213,14 @@ static struct CommandsList listTR;
 static struct CommandsList* direct = &listPT;
 static cc_bool exceeded_vram;
 
+static const cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
+static const cc_bool fsaa     = false;
+
+static cc_uint8 gfx_depthTest;
+static cc_uint8 gfx_depthWrite;
+static cc_uint8 gfx_culling;
+static cc_uint8 gfx_scissor;
+
 static CC_INLINE struct CommandsList* ActivePolyList(void) {
     if (gfx_alphaBlend) return &listTR;
     if (gfx_alphaTest)  return &listPT;
@@ -228,16 +231,12 @@ static CC_INLINE struct CommandsList* ActivePolyList(void) {
 static void no_vram_handler(uint32 code, void *data) { exceeded_vram = true; }
 
 static void InitGPU(void) {
-	cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
-	cc_bool fsaa     = false;
-	AUTOSORT_ENABLED = autosort;
-
 	pvr_init_params_t params = {
 		// Opaque, punch through, translucent polygons with largest bin sizes
 		{ PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
 		VERTEX_BUFFER_SIZE,
 		0, fsaa,
-		(autosort) ? 0 : 1,
+		autosort ? 0 : 1,
 		3 // extra OPBs
 	};
     pvr_init(&params);
@@ -253,13 +252,12 @@ static void InitGLState(void) {
 	PVR_SET(PT_ALPHA_REF, 127); // define missing from KOS    
 	//PVR_SET(PVR_SPANSORT_CFG, 0x0);
 
-	ALPHA_TEST_ENABLED = false;
-	CULLING_ENABLED    = false;
-	BLEND_ENABLED      = false;
-	DEPTH_TEST_ENABLED = false;
-	DEPTH_MASK_ENABLED = true;
-	TEXTURES_ENABLED   = false;
-	FOG_ENABLED        = false;
+	gfx_alphaTest  = false;
+	gfx_culling    = false;
+	gfx_alphaBlend = false;
+	gfx_depthTest  = false;
+	gfx_depthWrite = true;
+	gfx_fogEnabled = false;
 	
 	stateDirty       = true;
 	listOP.list_type = PVR_LIST_OP_POLY;
@@ -284,6 +282,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexSize   = 512 * 512; // reasonable cap as Dreamcast only has 8MB VRAM
 	Gfx.Created      = true;
 	
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	Gfx_RestoreState();
 }
 
@@ -297,18 +296,97 @@ void Gfx_Free(void) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Polygon state------------------------------------------------------*
+*#########################################################################################################################*/
+static GPUTexture* tex_active;
+static uint32_t SHADE_MODEL = PVR_SHADE_GOURAUD;
+
+static CC_NOINLINE void BuildPolyContext(pvr_poly_hdr_t* dst, int list_type) {
+	GPUTexture* tex = tex_active;
+
+	int gen_culling = gfx_culling    ? PVR_CULLING_CW : PVR_CULLING_SMALL;
+	int depth_comp  = gfx_depthTest  ? PVR_DEPTHCMP_GEQUAL : PVR_DEPTHCMP_ALWAYS;
+	int depth_write = gfx_depthWrite ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
+
+	int clip_mode = gfx_scissor    ? PVR_USERCLIP_INSIDE : PVR_USERCLIP_DISABLE;
+	int fog_type  = gfx_fogEnabled ? PVR_FOG_TABLE : PVR_FOG_DISABLE;
+
+	int use_alpha = gfx_alphaBlend || gfx_alphaTest;
+	int gen_alpha = use_alpha ? PVR_ALPHA_ENABLE : PVR_ALPHA_DISABLE;
+	int blend_src = PVR_BLEND_SRCALPHA;
+	int blend_dst = PVR_BLEND_INVSRCALPHA;
+
+	if (list_type == PVR_LIST_OP_POLY) {
+		// Opaque polygons require src=one dst=zero blend mode
+		blend_src  = PVR_BLEND_ONE;
+		blend_dst  = PVR_BLEND_ZERO;
+	} else if (list_type == PVR_LIST_PT_POLY) {
+		// Punch-through polygons require <= depth mode
+		depth_comp = PVR_DEPTHCMP_LEQUAL;
+	} else if (list_type == PVR_LIST_TR_POLY && autosort) {
+		// Autosort requires >= depth mode for translucent polygons
+		depth_comp = PVR_DEPTHCMP_GEQUAL;
+	}
+
+	int tex_enable;
+	if (tex && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		tex_enable = PVR_TEXTURE_ENABLE;
+	} else {
+		tex_enable = PVR_TEXTURE_DISABLE;
+	}
+
+	dst->cmd = PVR_CMD_POLYHDR | (tex_enable << 3);
+	// Force bits 18 and 19 on to switch to 6 triangle strips
+	dst->cmd |= 0xC0000;
+
+	dst->cmd |= (list_type             << PVR_TA_CMD_TYPE_SHIFT)     & PVR_TA_CMD_TYPE_MASK;
+	dst->cmd |= (PVR_CLRFMT_ARGBPACKED << PVR_TA_CMD_CLRFMT_SHIFT)   & PVR_TA_CMD_CLRFMT_MASK;
+	dst->cmd |= (SHADE_MODEL           << PVR_TA_CMD_SHADE_SHIFT)    & PVR_TA_CMD_SHADE_MASK;
+	dst->cmd |= (PVR_UVFMT_32BIT       << PVR_TA_CMD_UVFMT_SHIFT)    & PVR_TA_CMD_UVFMT_MASK;
+	dst->cmd |= (clip_mode             << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
+
+	dst->mode1  = (depth_comp  << PVR_TA_PM1_DEPTHCMP_SHIFT)   & PVR_TA_PM1_DEPTHCMP_MASK;
+	dst->mode1 |= (gen_culling << PVR_TA_PM1_CULLING_SHIFT)    & PVR_TA_PM1_CULLING_MASK;
+	dst->mode1 |= (depth_write << PVR_TA_PM1_DEPTHWRITE_SHIFT) & PVR_TA_PM1_DEPTHWRITE_MASK;
+	dst->mode1 |= (tex_enable  << PVR_TA_PM1_TXRENABLE_SHIFT)  & PVR_TA_PM1_TXRENABLE_MASK;
+
+	dst->mode2  = (blend_src << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
+	dst->mode2 |= (blend_dst << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
+	dst->mode2 |= (fog_type  << PVR_TA_PM2_FOG_SHIFT)      & PVR_TA_PM2_FOG_MASK;
+	dst->mode2 |= (gen_alpha << PVR_TA_PM2_ALPHA_SHIFT)    & PVR_TA_PM2_ALPHA_MASK;
+
+	if (tex_enable == PVR_TEXTURE_DISABLE) {
+		dst->mode3 = 0;
+		return;
+	}
+	int tex_alpha = use_alpha ? PVR_TXRALPHA_ENABLE : PVR_TXRALPHA_DISABLE;
+
+	dst->mode2 |= (tex_alpha                << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
+	dst->mode2 |= (PVR_FILTER_NEAREST       << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
+	dst->mode2 |= (PVR_MIPBIAS_NORMAL       << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
+	dst->mode2 |= (PVR_TXRENV_MODULATEALPHA << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
+
+	dst->mode2 |= ((tex->log2_w - 3) << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
+	dst->mode2 |= ((tex->log2_h - 3) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
+
+	dst->mode3  = (0           << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
+	dst->mode3 |= (tex->format << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
+	dst->mode3 |= ((uint32_t)tex->data & 0x00fffff8) >> 3;
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
-	CULLING_ENABLED = enabled;
-	stateDirty      = true;
+	gfx_culling = enabled;
+	stateDirty  = true;
 }
 
-static void SetAlphaBlend(cc_bool enabled) { 
-	BLEND_ENABLED = enabled;
-	stateDirty    = true;
+static void SetAlphaBlend(cc_bool enabled) {
+	stateDirty  = true;
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -327,22 +405,21 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) { 
-	if (DEPTH_MASK_ENABLED == enabled) return;
+	if (gfx_depthWrite == enabled) return;
 	
-	DEPTH_MASK_ENABLED = enabled;
-	stateDirty         = true;
+	gfx_depthWrite = enabled;
+	stateDirty     = true;
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) { 
-	if (DEPTH_TEST_ENABLED == enabled) return;
+	if (gfx_depthTest == enabled) return;
 	
-	DEPTH_TEST_ENABLED = enabled;
-	stateDirty         = true;
+	gfx_depthTest = enabled;
+	stateDirty    = true;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	ALPHA_TEST_ENABLED = enabled;
-	stateDirty         = true;
+	stateDirty    = true;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -575,6 +652,9 @@ void Gfx_DisableMipmaps(void) { }
 //  idx - mask = idx + one
 static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
 										unsigned* maskX, unsigned* maskY) {
+	w = Math_NextPowOf2(w);
+	h = Math_NextPowOf2(h);
+
 	*maskX = 0;
 	*maskY = 0;
 	int shift = 0;
@@ -597,7 +677,6 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 		}
 	}
 }
-	
 
 	
 // B8 G8 R8 A8 > B4 G4 R4 A4
@@ -651,17 +730,19 @@ static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp,
 	}
 }
 
-static TextureObject* FindFreeTexture(void) {
+static GPUTexture* FindFreeTexture(void) {
     for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
 	{
-		TextureObject* tex = &TEXTURE_LIST[i];
+		GPUTexture* tex = &tex_list[i];
 		if (!tex->data) return tex;
     }
     return NULL;
 }
 
+static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
+
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	TextureObject* tex = FindFreeTexture();
+	GPUTexture* tex = FindFreeTexture();
 	if (!tex) return NULL;
 
 	BitmapCol palette[MAX_PAL_ENTRIES];
@@ -673,11 +754,23 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
 	}
 
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
-	tex->format = pal_count > 0 ? (PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index)) : PVR_TXRFMT_ARGB4444;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
 
-	tex->data = texmem_alloc(TextureSize(tex));
+	tex->log2_w = Math_ilog2(dst_w);
+	tex->log2_h = Math_ilog2(dst_h);
+
+	if (pal_count > 0) {
+		tex->format = PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index);
+		// 4bpp     = 2 pixels in 1 byte
+		tex->size   = dst_w * dst_h / 2;
+	} else {
+		tex->format = PVR_TXRFMT_ARGB4444;
+		// 16 bpp   = 1 pixel in 2 bytes
+		tex->size   = dst_w * dst_h * 2;
+	}
+	
+	tex->data = texmem_alloc(tex->size);
 	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
 
 	if (tex->format == PVR_TXRFMT_ARGB4444) {
@@ -689,18 +782,19 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	TextureObject* tex = (TextureObject*)texId;
+	GPUTexture* tex = (GPUTexture*)texId;
 	
 	int width = part->width, height = part->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+	TwiddleCalcFactors(1 << tex->log2_w, 1 << tex->log2_h, &maskX, &maskY);
 
 	// Calculate start twiddled X and Y values
 	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
 	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+
 	unsigned startX = X;
-	cc_uint16* dst = tex->data;
+	cc_uint16* dst  = tex->data;
 	
 	for (int y = 0; y < height; y++)
 	{
@@ -718,16 +812,15 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	TEXTURE_ACTIVE = (TextureObject*)texId;
-	stateDirty     = true;
+	tex_active = (GPUTexture*)texId;
+	stateDirty = true;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	TextureObject* tex = (TextureObject*)(*texId);
+	GPUTexture* tex = (GPUTexture*)(*texId);
 	if (!tex) return;
 
-	cc_uint32 size = TextureSize(tex);
-	texmem_free(tex->data, size);
+	texmem_free(tex->data, tex->size);
 
 	if (tex->format != PVR_TXRFMT_ARGB4444) {
 		int index = (tex->format & PVR_TXRFMT_4BPP_PAL(63)) >> 21;
@@ -739,7 +832,6 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
 
-
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
@@ -748,11 +840,10 @@ static float gfx_fogEnd = 16.0f, gfx_fogDensity = 1.0f;
 static FogFunc gfx_fogMode = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
-	gfx_fogEnabled = enabled;
-	if (FOG_ENABLED == enabled) return;
+	if (gfx_fogEnabled == enabled) return;
 	
-	FOG_ENABLED = enabled;
-	stateDirty  = true;
+	gfx_fogEnabled = enabled;
+	stateDirty     = true;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -897,14 +988,14 @@ void DrawQuads(int count, void* src) {
 	if (!beg) return;
 
 	if (header_required) {
-		apply_poly_header((pvr_poly_hdr_t*)beg, list->list_type);
+		BuildPolyContext((pvr_poly_hdr_t*)beg, list->list_type);
 		stateDirty = false;
 		list->length++;
 		beg++;
 	}
 	Vertex* end;
 
-	if (TEXTURES_ENABLED) {
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		end = DrawTexturedQuads(src, beg, count >> 2);
 	} else {
 		end = DrawColouredQuads(src, beg, count >> 2);
@@ -920,9 +1011,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
-
-	TEXTURES_ENABLED = fmt == VERTEX_FORMAT_TEXTURED;
-	stateDirty       = true;
+	stateDirty = true;
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -971,7 +1060,6 @@ void Gfx_GetApiInfo(cc_string* info) {
 	
 	String_AppendConst(info, "-- Using Dreamcast --\n");
 	String_AppendConst(info, "GPU: PowerVR2 CLX2 100mHz\n");
-	String_AppendConst(info, "T&L: GLdc library (KallistiOS / Kazade)\n");
 	String_Format2(info,     "Texture memory: %f2 MB used, %f2 MB free\n", &usedMemMB, &freeMemMB);
 	PrintMaxTextureInfo(info);
 }
@@ -1044,8 +1132,8 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	SCISSOR_TEST_ENABLED = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
-	stateDirty = true;
+	gfx_scissor = x != 0 || y != 0 || w != Game.Width || h != Game.Height;
+	stateDirty  = true;
 
 	struct pvr_clip_command {
 		uint32_t cmd; // TA command
@@ -1065,4 +1153,4 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 	CommandsList_Append(&listPT, &c);
 	CommandsList_Append(&listTR, &c);
 }
-#endif
+

@@ -162,6 +162,12 @@ ifeq ($(PLAT),rpi)
 	BUILD_DIR = build/rpi
 endif
 
+ifeq ($(PLAT),riscos)
+	LIBS    =
+	LDFLAGS = -g
+	BUILD_DIR = build/riscos
+endif
+
 ifeq ($(PLAT),dos)
 	CC	=  i586-pc-msdosdjgpp-gcc 
 	LIBS    =
@@ -229,6 +235,8 @@ serenityos:
 	$(MAKE) $(TARGET) PLAT=serenityos
 irix:
 	$(MAKE) $(TARGET) PLAT=irix
+riscos:
+	$(MAKE) $(TARGET) PLAT=riscos
 dos:
 	$(MAKE) $(TARGET) PLAT=dos
 # Default overrides

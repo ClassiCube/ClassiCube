@@ -118,6 +118,7 @@ void Gfx_Create(void) {
 	SetupShaders();
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	ResetState();
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 		
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -139,8 +140,8 @@ void Gfx_FreeState(void) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Texturing-------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct CCTexture_ {
-	cc_uint32 width, height;
+typedef struct {
+	cc_uint8 log2_w, log2_h;
 	cc_uint32* pixels;
 } CCTexture;
 
@@ -171,26 +172,31 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	}
 }
 
+static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
+
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+	int size  = dst_w * dst_h * 4;
+
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "GPU texture");
 	tex->pixels    = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->log2_w = Math_ilog2(dst_w);
+	tex->log2_h = Math_ilog2(dst_h);
 	cc_uint32* dst = tex->pixels;
 
-	int width = bmp->width, height = bmp->height;
+	int src_w = bmp->width, src_h = bmp->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
 	
-	for (int y = 0; y < height; y++)
+	for (int y = 0; y < src_h; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * rowWidth;
 		X = 0;
 		
-		for (int x = 0; x < width; x++, src++)
+		for (int x = 0; x < src_w; x++, src++)
 		{
 			dst[X | Y] = *src;
 			X = (X - maskX) & maskX;
@@ -207,7 +213,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	int width = part->width, height = part->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(tex->width, tex->height, &maskX, &maskY);
+	TwiddleCalcFactors(1 << tex->log2_w, 1 << tex->log2_h, &maskX, &maskY);
 
 	// Calculate start twiddled X and Y values
 	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
@@ -244,8 +250,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square;
 	
-	unsigned log_u = Math_ilog2(tex->width);
-	unsigned log_v = Math_ilog2(tex->height);
+	unsigned log_u = tex->log2_w;
+	unsigned log_v = tex->log2_h;
 	uint32_t* p;
 
 	p = pb_begin();

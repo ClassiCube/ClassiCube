@@ -143,6 +143,7 @@ void Gfx_Create(void) {
 	vramSetBankE(VRAM_E_TEX_PALETTE);
 	
 	Gfx_SetFaceCulling(false);
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -349,24 +350,27 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	CCTexture* tex = Mem_TryAllocCleared(1, sizeof(CCTexture));
 	if (!tex) return 0;
 
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	tex->width  = dst_w;
+	tex->height = dst_h;
 
 	BitmapCol palette[256];
 	int pal_count = CalcPalette(palette, bmp, rowWidth);
 	int tex_size, tex_fmt;
 
 	if (pal_count <= 4) {
-		tex_size = bmp->width * bmp->height / 4; // 2 bits per pixel
+		tex_size = dst_w * dst_h / 4; // 2 bits per pixel
 		tex_fmt  = GL_RGB4;
 	} else if (pal_count <= 16) {
-		tex_size = bmp->width * bmp->height / 2; // 4 bits per pixel
+		tex_size = dst_w * dst_h / 2; // 4 bits per pixel
 		tex_fmt  = GL_RGB16;
 	} else if (pal_count <= 256) {
-		tex_size = bmp->width * bmp->height;     // 8 bits per pixel
+		tex_size = dst_w * dst_h;     // 8 bits per pixel
 		tex_fmt  = GL_RGB256;
 	} else {
-		tex_size = bmp->width * bmp->height * 2; // 16 bits per pixel
+		tex_size = dst_w * dst_h * 2; // 16 bits per pixel
 		tex_fmt  = GL_RGBA;
 	}
 
@@ -384,15 +388,15 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	u32 banks = vramSetPrimaryBanks(VRAM_A_LCD, VRAM_B_LCD, VRAM_C_LCD, VRAM_D_LCD);
 	int stride;
 
-	int width = bmp->width, height = bmp->height;
+	int src_w = bmp->width, src_h = bmp->height;
 	BitmapCol* row = bmp->scan0;
 
 	if (tex_fmt == GL_RGB4) {
-		stride = width >> 3;
+		stride = dst_w >> 3;
 
-		for (int y = 0; y < height; y++, row += rowWidth)
+		for (int y = 0; y < src_h; y++, row += rowWidth)
 		{
-			for (int x = 0; x < width; x++) 
+			for (int x = 0; x < src_w; x++) 
 			{
 				int idx = FindInPalette(palette, pal_count, row[x]);
 			
@@ -405,11 +409,11 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			CopyHWords(tmp, addr + stride * y, stride);
 		}
 	} else if (tex_fmt == GL_RGB16) {
-		stride = width >> 2;
+		stride = dst_w >> 2;
 
-		for (int y = 0; y < height; y++, addr += stride, row += rowWidth)
+		for (int y = 0; y < src_h; y++, addr += stride, row += rowWidth)
 		{
-			for (int x = 0; x < width; x++) 
+			for (int x = 0; x < src_w; x++) 
 			{
 				int idx = FindInPalette(palette, pal_count, row[x]);
 			
@@ -422,20 +426,20 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			CopyHWords(tmp, addr, stride);
 		}
 	} else if (tex_fmt == GL_RGB256) {
-		stride = width >> 1;
+		stride = dst_w >> 1;
 
-		for (int y = 0; y < height; y++, addr += stride, row += rowWidth)
+		for (int y = 0; y < src_h; y++, addr += stride, row += rowWidth)
 		{
-			for (int x = 0; x < width; x++) 
+			for (int x = 0; x < src_w; x++) 
 			{
 				tmp[x] = FindInPalette(palette, pal_count, row[x]);
 			}
 			CopyHWords(tmp, addr, stride);
 		}
 	} else {
-		stride = width;
+		stride = dst_w;
 
-		for (int y = 0; y < height; y++, addr += stride, row += rowWidth) 
+		for (int y = 0; y < src_h; y++, addr += stride, row += rowWidth) 
 		{
 			CopyHWords(row, addr, stride);
 		}
@@ -443,8 +447,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 	vramRestorePrimaryBanks(banks);
 
-	int sSize  = (Math_ilog2(tex->width)  - 3) << 20;
-	int tSize  = (Math_ilog2(tex->height) - 3) << 23;
+	int sSize  = (Math_ilog2(dst_w) - 3) << 20;
+	int tSize  = (Math_ilog2(dst_h) - 3) << 23;
 
 	tex->texFormat = (offset >> 3) | sSize | tSize | (tex_fmt << 26) | 
 						GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T | TEXGEN_TEXCOORD | GL_TEXTURE_COLOR0_TRANSPARENT;

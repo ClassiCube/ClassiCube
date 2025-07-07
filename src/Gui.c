@@ -401,7 +401,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 	}	
 	Context2D_Free(&ctx);
 
-	atlas->uScale = 1.0f / (float)ctx.bmp.width;
+	atlas->uScale = Context2D_CalcUV(1, ctx.bmp.width);
 	atlas->tex.uv.u2 = atlas->offset * atlas->uScale;
 	atlas->tex.width = atlas->offset;	
 }

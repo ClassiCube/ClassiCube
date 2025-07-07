@@ -45,6 +45,7 @@ CC_API void Context2D_Wrap(struct Context2D* ctx, struct Bitmap* bmp);
 CC_API void Context2D_Free(struct Context2D* ctx);
 /* Creates a texture consisting of the pixels from the backing bitmap of the given 2D context */
 CC_API void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx);
+float Context2D_CalcUV(int pixels, int axisLen);
 
 /* Draws text using the given font at the given coordinates */
 CC_API void Context2D_DrawText(struct Context2D* ctx, struct DrawTextArgs* args, int x, int y);

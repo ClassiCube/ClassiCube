@@ -45,7 +45,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexSize       = 1024;
 	Gfx.MaxLowResTexSize = 2048;
 
-	Gfx.SupportsNonPowTwoTextures = true;
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_FULL;
 	Gfx_RestoreState();
 
 	Gfx_SetFaceCulling(false);

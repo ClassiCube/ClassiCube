@@ -124,8 +124,10 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp);
 /*   NOTE: Game_ValidateBitmap should nearly always be used instead of this */
 cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp);
 
+/* Initialises and loads state, and creates the main window */
+void Game_Setup(const cc_string* title);
 /* Runs the main game loop until the window is closed. */
-void Game_Run(const cc_string* title);
+void Game_Run(void);
 /* Whether the game should be allowed to automatically close */
 cc_bool Game_ShouldClose(void);
 
