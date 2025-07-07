@@ -117,14 +117,18 @@ Assuming that you used the installer from https://sourceforge.net/projects/mingw
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to the directory with ClassiCube's source code
-4. Run `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
+4. Run either:
+    * `make mingw` - produces a simple non-optimised executable, easier to debug
+    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using MinGW
 Assuming that you used the installer from https://osdn.net/projects/mingw/ :
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-2. Navigate to the directory with ClassiCube's source code
-4. Run `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
+3. Navigate to the directory with ClassiCube's source code
+4. Run either:
+    * `make mingw` - produces a simple non-optimised executable, easier to debug
+    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using TCC (Tiny C Compiler)
 Setting up TCC:
@@ -135,7 +139,7 @@ Setting up TCC:
 Compiling with TCC:
 1. Navigate to the directory with ClassiCube's source code
 2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
-3. Run `tcc.exe -o ClassiCube.exe *.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+3. Run `tcc.exe -o ClassiCube.exe src/*.c third_party/bearssl/*.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux
@@ -149,16 +153,16 @@ For Ubuntu, these are the `libx11-dev`, `libxi-dev` and `libgl1-mesa-dev` packag
 
 ##### Cross compiling for Windows (32 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```i686-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
+2. Run ```make mingw CC=i686-w64-mingw32-gcc```
 
 ##### Cross compiling for Windows (64 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```x86_64-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
+2. Run ```make mingw CC=x86_64-w64-mingw32-gcc```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc -fno-math-errno src/*.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
+```make rpi```
 
 ## Compiling - macOS
 1. Install a C compiler if necessary. The easiest way of obtaining one is by installing **Xcode**.

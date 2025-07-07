@@ -23,6 +23,8 @@ TARGET := $(ENAME)
 TRACK_DEPENDENCIES=1
 # link using C Compiler by default
 LINK = $(CC)
+# Whether to add BearSSL source files to list of files to compile
+BEARSSL=1
 
 
 #################################################################
@@ -73,13 +75,11 @@ endif
 ifeq ($(PLAT),linux)
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
 	BUILD_DIR = build/linux
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),sunos)
 	LIBS    =  -lsocket -lX11 -lXi -lGL
 	BUILD_DIR = build/solaris
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),hp-ux)
@@ -87,7 +87,6 @@ ifeq ($(PLAT),hp-ux)
 	LDFLAGS =
 	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL -lpthread
 	BUILD_DIR = build/hpux
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),darwin)
@@ -96,7 +95,6 @@ ifeq ($(PLAT),darwin)
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),freebsd)
@@ -104,7 +102,6 @@ ifeq ($(PLAT),freebsd)
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/freebsd
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),openbsd)
@@ -112,7 +109,6 @@ ifeq ($(PLAT),openbsd)
 	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/openbsd
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),netbsd)
@@ -120,7 +116,6 @@ ifeq ($(PLAT),netbsd)
 	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic -Wl,-R/usr/X11R7/lib
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/netbsd
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),dragonfly)
@@ -128,7 +123,6 @@ ifeq ($(PLAT),dragonfly)
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
 	BUILD_DIR = build/flybsd
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),haiku)
@@ -138,7 +132,6 @@ ifeq ($(PLAT),haiku)
 	LINK    = $(CXX)
 	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
 	BUILD_DIR = build/haiku
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),beos)
@@ -148,20 +141,25 @@ ifeq ($(PLAT),beos)
 	LINK    = $(CXX)
 	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
 	BUILD_DIR = build/beos
-	TRACK_DEPENDENCIES=0
+	TRACK_DEPENDENCIES = 0
+	BEARSSL = 0
 endif
 
 ifeq ($(PLAT),serenityos)
 	LIBS    = -lgl -lSDL2
 	BUILD_DIR = build/serenity
-	BEARSSL = 1
 endif
 
 ifeq ($(PLAT),irix)
 	CC      = gcc
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
 	BUILD_DIR = build/irix
-	BEARSSL = 1
+endif
+
+ifeq ($(PLAT),rpi)
+	CFLAGS += -DCC_BUILD_RPI
+	LIBS    =  -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl
+	BUILD_DIR = build/rpi
 endif
 
 ifeq ($(PLAT),riscos)
@@ -176,6 +174,7 @@ ifeq ($(PLAT),dos)
 	LDFLAGS = -g
 	OEXT    =  .exe
 	BUILD_DIR = build/dos
+	BEARSSL = 0
 endif
 
 
@@ -192,12 +191,11 @@ ifdef TERMINAL
 	LIBS := $(subst mwindows,mconsole,$(LIBS))
 endif
 
-ifdef BEARSSL
+ifeq ($(BEARSSL),1)
 	BUILD_DIRS += $(BUILD_DIR)/third_party/bearssl
 	BEARSSL_SOURCES = $(wildcard third_party/bearssl/*.c)
 	BEARSSL_OBJECTS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
 	OBJECTS += $(BEARSSL_OBJECTS)
-	CFLAGS  += -DCC_SSL_BACKEND=CC_SSL_BACKEND_BEARSSL -DCC_NET_BACKEND=CC_NET_BACKEND_BUILTIN
 endif
 
 ifdef RELEASE

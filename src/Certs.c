@@ -288,6 +288,78 @@ int Certs_VerifyChain(struct X509CertContext* x509) {
 
 	return JavaSCall_Int(env, JAVA_sslVerifyChain, NULL);
 }
+#elif CC_CRT_BACKEND == CC_CRT_BACKEND_WINCRYPTO
+#define CC_CRYPT32_FUNC extern
+#include "Funcs.h"
+
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+
+#include <windows.h>
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-wincrypt.h" /* #include <wincrypt.h> */
+
+void CertsBackend_Init(void) {
+	Crypt32_LoadDynamicFuncs();
+}
+
+static const LPCSTR const usage[] = {
+	szOID_PKIX_KP_SERVER_AUTH,
+	szOID_SERVER_GATED_CRYPTO,
+	szOID_SGC_NETSCAPE
+};
+
+static BOOL BuildChain(struct X509CertContext* x509, HCERTSTORE store, PCCERT_CONTEXT* end_cert, PCCERT_CHAIN_CONTEXT* chain) {
+	struct X509Cert* cert = &x509->certs[0];
+	CERT_CHAIN_PARA para  = { 0 };
+	int i;
+
+	BOOL ok = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
+												CERT_STORE_ADD_ALWAYS, end_cert);
+	if (!ok || !(*end_cert)) return FALSE;
+
+	for (i = 1; i < x509->numCerts; i++)
+	{
+		cert = &x509->certs[i];
+		ok   = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
+												CERT_STORE_ADD_ALWAYS, NULL);
+
+	}
+
+	para.cbSize = sizeof(para);
+	para.RequestedUsage.dwType = USAGE_MATCH_TYPE_OR;
+	para.RequestedUsage.Usage.cUsageIdentifier     = Array_Elems(usage);
+	para.RequestedUsage.Usage.rgpszUsageIdentifier = (LPSTR*)usage;
+
+	return _CertGetCertificateChain(NULL, *end_cert, NULL, NULL, &para, 0, NULL, chain);
+}
+
+int Certs_VerifyChain(struct X509CertContext* x509) {
+	PCCERT_CHAIN_CONTEXT chain = NULL;
+	PCCERT_CONTEXT end_cert = NULL;
+	HCERTSTORE store;
+	DWORD res = 200;
+
+	if (!_CertOpenStore) return ERR_NOT_SUPPORTED;
+	store = _CertOpenStore(CERT_STORE_PROV_MEMORY, 0, NULL, 0, NULL);
+	if (!store) return ERR_NOT_SUPPORTED;
+
+	if (BuildChain(x509, store, &end_cert, &chain)) {
+		res = chain->TrustStatus.dwErrorStatus;
+		if (res) Platform_Log1("Cert validation failed: %h", &res);
+	}
+	
+	_CertFreeCertificateChain(chain);
+	_CertFreeCertificateContext(end_cert);
+	_CertCloseStore(store, 0);
+	return res;
+}
 #endif
 
 #endif

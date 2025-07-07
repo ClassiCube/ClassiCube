@@ -17,16 +17,10 @@
 #define _UNICODE
 #endif
 #include <windows.h>
-/*
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <shellapi.h>
-#include <wincrypt.h>
-*/
-/* Compatibility versions so compiling works on older Windows SDKs */
-#include "../misc/windows/min-winsock2.h"
-#include "../misc/windows/min-shellapi.h"
-#include "../misc/windows/min-wincrypt.h"
+/* Use own minimal versions of WinAPI headers so that compiling works on older Windows SDKs */
+#include "../misc/windows/min-winsock2.h" /* #include <winsock2.h> #include <ws2tcpip.h> */
+#include "../misc/windows/min-shellapi.h" /* #include <shellapi.h> */
+#include "../misc/windows/min-wincrypt.h" /* #include <wincrypt.h> */
 #include "../misc/windows/min-kernel32.h"
 
 static HANDLE heap;
