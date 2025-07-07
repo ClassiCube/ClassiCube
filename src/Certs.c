@@ -300,64 +300,61 @@ int Certs_VerifyChain(struct X509CertContext* x509) {
 #define UNICODE
 #define _UNICODE
 #endif
-#include <windows.h>
-/*
-#include <wincrypt.h>
-*/
-/* Compatibility versions so compiling works on older Windows SDKs */
-//#include "../misc/windows/min-wincrypt.h"
 
-#include <wincrypt.h>
+#include <windows.h>
+/* Compatibility versions so compiling works on older Windows SDKs */
+#include "../misc/windows/min-wincrypt.h" /* #include <wincrypt.h> */
 
 void CertsBackend_Init(void) {
-	//Crypt32_LoadDynamicFuncs();
+	Crypt32_LoadDynamicFuncs();
 }
+
+static const LPCSTR const usage[] = {
+	szOID_PKIX_KP_SERVER_AUTH,
+	szOID_SERVER_GATED_CRYPTO,
+	szOID_SGC_NETSCAPE
+};
 
 int Certs_VerifyChain(struct X509CertContext* x509) {
 	struct X509Cert* cert = &x509->certs[0];
+	CERT_CHAIN_PARA para = { 0 };
+	PCCERT_CHAIN_CONTEXT chain;
+	PCCERT_CONTEXT end_cert;
+	HCERTSTORE store;
+	BOOL ok;
 	int i;
 
-	HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, NULL,
-									CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG, NULL);
+	if (!_CertOpenStore) return ERR_NOT_SUPPORTED;
+	store = _CertOpenStore(CERT_STORE_PROV_MEMORY, 0, NULL, 0, NULL);
 	if (!store) return ERR_NOT_SUPPORTED;
 
-	PCCERT_CONTEXT primary_cert = NULL;
-	BOOL ok = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
-												CERT_STORE_ADD_ALWAYS, &primary_cert);
-	if (!ok || !primary_cert)
+	end_cert = NULL;
+	ok = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
+											CERT_STORE_ADD_ALWAYS, &end_cert);
+	if (!ok || !end_cert)
 		return -1;
 
 	for (i = 1; i < x509->numCerts; i++)
 	{
 		cert = &x509->certs[i];
-		ok = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
+		ok = _CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, cert->data, cert->offset,
 												CERT_STORE_ADD_ALWAYS, NULL);
 	}
-	//if (!_CertGetCertificateChain) return ERR_NOT_SUPPORTED;
 
-	static const LPCSTR usage[] = {
-		szOID_PKIX_KP_SERVER_AUTH,
-		szOID_SERVER_GATED_CRYPTO,
-		szOID_SGC_NETSCAPE
-	};
-
-	CERT_CHAIN_PARA para = { 0 };
 	para.cbSize = sizeof(para);
-
 	para.RequestedUsage.dwType = USAGE_MATCH_TYPE_OR;
 	para.RequestedUsage.Usage.cUsageIdentifier     = Array_Elems(usage);
-	para.RequestedUsage.Usage.rgpszUsageIdentifier = usage;
+	para.RequestedUsage.Usage.rgpszUsageIdentifier = (LPSTR*)usage;
 
-	PCCERT_CHAIN_CONTEXT chain = NULL;
-	ok = CertGetCertificateChain(NULL, primary_cert, NULL, NULL, &para, 0, NULL, &chain);
-	//_CertGetCertificateChain(NULL, PCCERT_CONTEXT certContext, NULL, HCERTSTORE additionalStore, PCERT_CHAIN_PARA chainPara, DWORD flags, PVOID reserved, PCCERT_CHAIN_CONTEXT* chainContext);
+	chain = NULL;
+	ok = _CertGetCertificateChain(NULL, end_cert, NULL, NULL, &para, 0, NULL, &chain);
+	// TODO look at dwErrorStatus
 	
-	CertFreeCertificateChain(chain);
-	ok = CertFreeCertificateContext(primary_cert);
-	ok = CertCloseStore(store, CERT_CLOSE_STORE_CHECK_FLAG);
+	_CertFreeCertificateChain(chain);
+	ok = _CertFreeCertificateContext(end_cert);
+	ok = _CertCloseStore(store, 0); // TODO check memory all released
 	return ERR_NOT_SUPPORTED;
 }
-
 #endif
 
 #endif
