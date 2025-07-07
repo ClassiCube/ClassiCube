@@ -32,19 +32,20 @@ jobs:
         shell: bash
         id: compile
         env: 
+          LIBS: "-lwinmm -limagehlp"
+          SRCS: "src/*.c third_party/bearssl/*.c"
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
-          WIN32_FLAGS:  "-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN CCicon_32.res"
+          WIN32_FLAGS:  "-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN src/CCicon_32.res"
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"  
-          
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"          
           cp misc/windows/CCicon_32.res src/CCicon_32.res
-          cd src
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d9.exe  $LATEST_FLAG -lwinmm -limagehlp
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -lwinmm -limagehlp
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d11.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11 -lwinmm -limagehlp
+
+          i686-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d9.exe  $LATEST_FLAG ${{ env.LIBS }}
+          i686-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 ${{ env.LIBS }}
+          i686-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d11.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11 ${{ env.LIBS }}
           
           # mingw defaults to i686, but some really old CPUs only support i586
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -march=i586 -o cc-w9x-ogl.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -DCC_BUILD_NOSTDLIB -lwinmm -limagehlp
+          i686-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -march=i586 -o cc-w9x-ogl.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -DCC_BUILD_NOSTDLIB ${{ env.LIBS }}
 
 
       - uses: ./.github/actions/notify_failure
@@ -57,25 +58,25 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-w32-d3d9.exe'
+          SOURCE_FILE: 'cc-w32-d3d9.exe'
           DEST_NAME: 'ClassiCube-Win32-Direct3D9.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-w32-ogl.exe'
+          SOURCE_FILE: 'cc-w32-ogl.exe'
           DEST_NAME: 'ClassiCube-Win32-OpenGL.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-w32-d3d11.exe'
+          SOURCE_FILE: 'cc-w32-d3d11.exe'
           DEST_NAME: 'ClassiCube-Win32-Direct3D11.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-w9x-ogl.exe'
+          SOURCE_FILE: 'cc-w9x-ogl.exe'
           DEST_NAME: 'ClassiCube-Win9x.exe'
           
           
@@ -104,16 +105,17 @@ jobs:
         shell: bash
         id: compile
         env: 
+          LIBS: "-lwinmm -limagehlp"
+          SRCS: "src/*.c third_party/bearssl/*.c"
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
-          WIN64_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN CCicon_64.res"
+          WIN64_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN src/CCicon_64.res"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"  
           
           cp misc/windows/CCicon_64.res src/CCicon_64.res
-          cd src
-          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d9.exe  $LATEST_FLAG -lwinmm -limagehlp
-          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -lwinmm -limagehlp
-          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d11.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11 -lwinmm -limagehlp
+          x86_64-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d9.exe  $LATEST_FLAG ${{ env.LIBS }}
+          x86_64-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-ogl.exe   $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 ${{ env.LIBS }}
+          x86_64-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d11.exe $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11 ${{ env.LIBS }}
           
           
       - uses: ./.github/actions/notify_failure
@@ -126,19 +128,19 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-w64-d3d9.exe'
+          SOURCE_FILE: 'cc-w64-d3d9.exe'
           DEST_NAME: 'ClassiCube-Win64-Direct3D9.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-w64-ogl.exe'
+          SOURCE_FILE: 'cc-w64-ogl.exe'
           DEST_NAME: 'ClassiCube-Win64-OpenGL.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-w64-d3d11.exe'
+          SOURCE_FILE: 'cc-w64-d3d11.exe'
           DEST_NAME: 'ClassiCube-Win64-Direct3D11.exe'
           
           
