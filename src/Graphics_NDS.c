@@ -213,7 +213,7 @@ static void palette_alloc(CCTexture* tex, int size) {
 }
 
 static void palette_release(CCTexture* tex) {
-	blockalloc_free(pal_table, tex->palBase, tex->palBlocks);
+	blockalloc_dealloc(pal_table, tex->palBase, tex->palBlocks);
 }
 
 
