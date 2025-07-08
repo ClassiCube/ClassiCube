@@ -353,9 +353,8 @@ cc_bool Process_OpenSupported = true;
 
 void Process_Exit(cc_result code) {
 	/* 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited */
-	if (code) Window_RequestClose();
-	/* game normally calls exit with code = 0 due to async IndexedDB loading */
-	if (code) exit(code);
+	Window_Free();
+	exit(code);
 }
 
 extern int interop_OpenTab(const char* url);
@@ -439,11 +438,20 @@ static char** _argv;
 /* webclient does some asynchronous initialisation first, then kickstarts the game after that */
 static void web_main(void) {
 	SetupProgram(_argc, _argv);
-	cc_result res = RunProgram(_argc, _argv);
 
-	if (!res) return;
-	Window_Free();
-	Process_Exit(res);
+	switch (ProcessProgramArgs(_argc, _argv))
+	{
+	case ARG_RESULT_RUN_LAUNCHER:
+		String_AppendConst(&Game_Username, DEFAULT_USERNAME);
+		/* fallthrough */
+	case ARG_RESULT_RUN_GAME:
+		Game_Setup();
+		Game_Run();
+		return;
+
+	default:
+		Process_Exit(1);
+	}
 }
 
 
@@ -451,7 +459,7 @@ extern void interop_FS_Init(void);
 extern void interop_DirectorySetWorking(const char* path);
 extern void interop_AsyncDownloadTexturePack(const char* path);
 
-int main(int argc, char** argv) {
+EMSCRIPTEN_KEEPALIVE int main(int argc, char** argv) {
 	_argc = argc; _argv = argv;
 
 	/* Game loads resources asynchronously, then actually starts itself */

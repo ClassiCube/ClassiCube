@@ -61,6 +61,7 @@ ifeq ($(PLAT),web)
 	CFLAGS  = -g
 	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library $(SOURCE_DIR)/interop_web.js
 	BUILD_DIR = build/web
+	BEARSSL = 0
 endif
 
 ifeq ($(PLAT),mingw)

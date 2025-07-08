@@ -76,22 +76,18 @@ void DirectUrl_ExtractAddress(const cc_string* addr, cc_string* ip, cc_string* p
 *------------------------------------------------------Game setup/run-----------------------------------------------------*
 *#########################################################################################################################*/
 static void RunGame(void) {
-	cc_string title; char titleBuffer[STRING_SIZE];
-	String_InitArray(title, titleBuffer);
-
-	String_Format2(&title, "%c (%s)", GAME_APP_TITLE, &Game_Username);
-	Game_Setup(&title);
+	Game_Setup();
 	Game_Run();
+	Game_Free();
+	Window_Destroy();
 }
 
 static void RunLauncher(void) {
-#ifdef CC_BUILD_WEB
-	String_AppendConst(&Game_Username, DEFAULT_USERNAME);
-	RunGame();
-#else
+#ifndef CC_BUILD_WEB
 	Launcher_Setup();
 	Launcher_Run();
 	Launcher_Finish();
+	Window_Destroy();
 #endif
 }
 
@@ -160,8 +156,12 @@ static int ParseMPArgs(const cc_string* user, const cc_string* mppass, const cc_
 	return true;
 }
 
-static int RunProgram(int argc, char** argv) {
-	cc_string args[GAME_MAX_CMDARGS];
+#define ARG_RESULT_RUN_LAUNCHER 1
+#define ARG_RESULT_RUN_GAME     2
+#define ARG_RESULT_INVALID_ARGS 3
+
+static int ProcessProgramArgs(int argc, char** argv) {
+cc_string args[GAME_MAX_CMDARGS];
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	struct ResumeInfo r;
 	cc_string host;
@@ -173,52 +173,81 @@ static int RunProgram(int argc, char** argv) {
 	//argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4);
 #endif
 
-	if (argsCount == 0) {
-		RunLauncher();
+	if (argsCount == 0)
+		return ARG_RESULT_RUN_LAUNCHER;
+
 #ifndef CC_BUILD_WEB
 	/* :[hash] - auto join server with the given hash */
-	} else if (argsCount == 1 && args[0].buffer[0] == ':') {
+	if (argsCount == 1 && args[0].buffer[0] == ':') {
 		args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
 		String_Copy(&Launcher_AutoHash, &args[0]);
-		RunLauncher();
+		return ARG_RESULT_RUN_LAUNCHER;
+	}
+
 	/* --resume - try to resume to last server */
-	} else if (argsCount == 1 && String_CaselessEqualsConst(&args[0], DEFAULT_RESUME_ARG)) {
+	if (argsCount == 1 && String_CaselessEqualsConst(&args[0], DEFAULT_RESUME_ARG)) {
 		if (!Resume_Parse(&r, true)) {
 			WarnInvalidArg("No server to resume to", &args[0]);
-			return 1;
+			return ARG_RESULT_INVALID_ARGS;
 		}
 	
-		if (!ParseMPArgs(&r.user, &r.mppass, &r.ip, &r.port)) return 1;
-		RunGame();
+		if (!ParseMPArgs(&r.user, &r.mppass, &r.ip, &r.port)) 
+			return ARG_RESULT_INVALID_ARGS;
+		return ARG_RESULT_RUN_GAME;
+	}
+
 	/* --singleplayer' - run singleplayer with default user */
-	} else if (argsCount == 1 && String_CaselessEqualsConst(&args[0], DEFAULT_SINGLEPLAYER_ARG)) {
+	if (argsCount == 1 && String_CaselessEqualsConst(&args[0], DEFAULT_SINGLEPLAYER_ARG)) {
 		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
-		RunGame();
+		return ARG_RESULT_RUN_GAME;
+	}
+
 	/* [file path] - run singleplayer with auto loaded map */
-	} else if (argsCount == 1 && IsOpenableFile(&args[0])) {
+	if (argsCount == 1 && IsOpenableFile(&args[0])) {
 		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
 		String_Copy(&SP_AutoloadMap, &args[0]); /* TODO: don't copy args? */
-		RunGame();
+		return ARG_RESULT_RUN_GAME;
+	}
 #endif
+
 	/* mc://[addr]:[port]/[user]/[mppass] - run multiplayer using direct URL form arguments */
-	} else if (argsCount == 1 && DirectUrl_Claims(&args[0], &host, &r.user, &r.mppass)) {
+	if (argsCount == 1 && DirectUrl_Claims(&args[0], &host, &r.user, &r.mppass)) {
 		DirectUrl_ExtractAddress(&host, &r.ip, &r.port);
 
-		if (!ParseMPArgs(&r.user, &r.mppass, &r.ip, &r.port)) return 1;
-		RunGame();
-	/* [user] - run multiplayer using explicit username */
-	} else if (argsCount == 1) {
-		String_Copy(&Game_Username, &args[0]);
-		RunGame();
-	/* 2 to 3 arguments - unsupported at present */
-	} else if (argsCount < 4) {
-		WarnMissingArgs(argsCount, args);
-		return 1;
-	/* [user] [mppass] [address] [port] - run multiplayer using explicit arguments */
-	} else {
-		if (!ParseMPArgs(&args[0], &args[1], &args[2], &args[3])) return 1;
-		RunGame();
+		if (!ParseMPArgs(&r.user, &r.mppass, &r.ip, &r.port))
+			return ARG_RESULT_INVALID_ARGS;
+		return ARG_RESULT_RUN_GAME;
 	}
-	return 0;
+
+	/* [user] - run multiplayer using explicit username */
+	if (argsCount == 1) {
+		String_Copy(&Game_Username, &args[0]);
+		return ARG_RESULT_RUN_GAME;
+	}
+	
+	/* 2 to 3 arguments - unsupported at present */
+	if (argsCount < 4) {
+		WarnMissingArgs(argsCount, args);
+		return ARG_RESULT_INVALID_ARGS;
+	}
+
+	/* [user] [mppass] [address] [port] - run multiplayer using explicit arguments */
+	if (!ParseMPArgs(&args[0], &args[1], &args[2], &args[3]))
+		return ARG_RESULT_INVALID_ARGS;
+	return ARG_RESULT_RUN_GAME;
+}
+
+static int RunProgram(int argc, char** argv) {
+	switch (ProcessProgramArgs(argc, argv))
+	{
+	case ARG_RESULT_RUN_LAUNCHER:
+		RunLauncher();
+		return 0;
+	case ARG_RESULT_RUN_GAME:
+		RunGame();
+		return 0;
+	default:
+		return 1;
+	}
 }
 
