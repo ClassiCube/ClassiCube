@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include <nds.h>
+#include "_BlockAlloc.h"
 
 #define DS_MAT_PROJECTION 0
 #define DS_MAT_POSITION   1
@@ -13,56 +14,6 @@
 
 static int matrix_modes[] = { DS_MAT_PROJECTION, DS_MAT_MODELVIEW };
 static int lastMatrix;
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Memory alloc------------------------------------------------------*
-*#########################################################################################################################*/
-#define blockalloc_page(block) ((block) >> 3)
-#define blockalloc_bit(block)  (1 << ((block) & 0x07))
-#define BLOCKS_PER_PAGE 8
-
-static CC_INLINE int blockalloc_can_alloc(cc_uint8* table, int beg, int blocks) {
-	for (int i = beg; i < beg + blocks; i++)
-	{
-		cc_uint8 page = table[blockalloc_page(i)];
-		if (page & blockalloc_bit(i)) return false;
-	}
-	return true;
-}
-
-static int blockalloc_alloc(cc_uint8* table, int maxBlocks, int blocks) {
-	if (blocks > maxBlocks) return -1;
-
-	for (int i = 0; i < maxBlocks - blocks;) 
-	{
-		cc_uint8 page = table[blockalloc_page(i)];
-
-		// If entire page is used, skip entirely over it
-		if ((i & 0x07) == 0 && page == 0xFF) { i += 8; continue; }
-
-		// If block is used, move onto trying next block
- 		if (page & blockalloc_bit(i)) { i++; continue; }
-		
-		// If can't be allocated starting at block, try next
-		if (!blockalloc_can_alloc(table, i, blocks)) { i++; continue; }
-
-		for (int j = i; j < i + blocks; j++) 
-		{
-			table[blockalloc_page(j)] |= blockalloc_bit(j);
-        }
-        return i;
-    }
-	return -1;
-}
-
-static void blockalloc_free(cc_uint8* table, int origin, int blocks) {
-	// Mark the used blocks as free again
-	for (int i = origin; i < origin + blocks; i++) 
-	{
-		table[blockalloc_page(i)] &= ~blockalloc_bit(i);
-    }
-}
 
 
 /*########################################################################################################################*
@@ -76,30 +27,26 @@ static CC_INLINE void CopyHWords(void* src, void* dst, int len) {
 	for (int i = 0; i < len; i++) dst_[i] = src_[i];
 }
 
+static void WaitForGPUDone(void) {
+	if (!GFX_BUSY) return;
+
+	// Geometry engine still busy from before, give it some time
+	swiWaitForVBlank();
+	swiWaitForVBlank();
+	swiWaitForVBlank();
+	if (!GFX_BUSY) return;
+
+	// The geometry engine may still have some leftover state, try to recover
+	for (int i = 0; i < 8 && GFX_BUSY; i++)
+	{
+		GFX_VERTEX16 = 0;
+		swiDelay(0x400);
+    }
+}
+
 void ResetGPU(void) {
     powerOn(POWER_3D_CORE | POWER_MATRIX); // Enable 3D core & geometry engine
-
-    if (GFX_BUSY) {
-        // Geometry engine sill busy from before, give it some time
-        swiWaitForVBlank();
-		swiWaitForVBlank();
-		swiWaitForVBlank();
-
-        if (GFX_BUSY) {
-            // The geometry engine is still busy. This can happen due to a
-            // partial vertex upload by the previous homebrew application (=>
-            // ARM7->ARM9 forced reset).  So long as the buffer wasn't flushed,
-            // this is recoverable, so we attempt to do so.
-            for (int i = 0; i < 8; i++)
-            {
-                GFX_VERTEX16 = 0;
-
-                // TODO: Do we need such a high arbitrary delay value?
-                swiDelay(0x400);
-                if (!GFX_BUSY) break;
-            }
-        }
-    }
+	WaitForGPUDone();
 
     // Clear the FIFO
     GFX_STATUS |= (1 << 29);
@@ -245,7 +192,7 @@ static void texture_alloc(CCTexture* tex, int size) {
 }
 
 static void texture_release(CCTexture* tex) {
-	blockalloc_free(tex_table, tex->texBase, tex->texBlocks);
+	blockalloc_dealloc(tex_table, tex->texBase, tex->texBlocks);
 }
 
 // Palette VRAM banks - Bank E (64 kb)

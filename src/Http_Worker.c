@@ -672,7 +672,6 @@ static cc_result HttpClient_HandleRedirect(struct HttpClientState* state) {
 *#########################################################################################################################*/
 static void HttpBackend_Init(void) {
 	SSLBackend_Init(httpsVerify);
-	//httpOnly = true; // TODO: insecure
 }
 
 static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) {
