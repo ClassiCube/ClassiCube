@@ -9,14 +9,14 @@ endif
 # Configurable options
 #---------------------------------------------------------------------------------
 # Name of the final output
-TARGET 			:= ClassiCube-vita
+TARGET 			= ClassiCube-vita
 # List of directories containing source code
-SOURCE_DIRS		:= src src/psvita third_party/bearssl
+SOURCE_DIRS		= src src/psvita third_party/bearssl
 # Directory where object files are placed
-BUILD_DIR		:= build/vita
+BUILD_DIR		= build/vita
 
-PROJECT_TITLE 	:= ClassiCube
-PROJECT_TITLEID := CUBE00200
+PROJECT_TITLE 	= ClassiCube
+PROJECT_TITLEID = CUBE00200
 
 
 #---------------------------------------------------------------------------------

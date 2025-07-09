@@ -274,16 +274,15 @@ void Launcher_Setup(void) {
 #endif
 }
 
-void Launcher_Run(void) {
-	for (;;) {
-		Window_ProcessEvents(10 / 1000.0f);
-		Gamepad_Tick(10 / 1000.0f);
-		if (!Window_Main.Exists || Launcher_ShouldStop) break;
+cc_bool Launcher_Tick(void) {
+	/* NOTE: Make sure to keep delay same as hardcoded delay in RunLauncher in main_impl.h */
+	Window_ProcessEvents(10 / 1000.0f);
+	Gamepad_Tick(10 / 1000.0f);
+	if (!Window_Main.Exists || Launcher_ShouldStop) return false;
 
-		Launcher_Active->Tick(Launcher_Active);
-		LBackend_Tick();
-		Thread_Sleep(10);
-	}
+	Launcher_Active->Tick(Launcher_Active);
+	LBackend_Tick();
+	return true;
 }
 
 void Launcher_Finish(void) {

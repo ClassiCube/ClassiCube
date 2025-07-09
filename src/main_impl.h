@@ -86,7 +86,9 @@ static void RunGame(void) {
 static void RunLauncher(void) {
 #ifndef CC_BUILD_WEB
 	Launcher_Setup();
-	Launcher_Run();
+	/* NOTE: Make sure to keep delay same as hardcoded delay in Launcher_Tick */
+	while (Launcher_Tick()) { Thread_Sleep(10); }
+
 	Launcher_Finish();
 	Window_Destroy();
 #endif
