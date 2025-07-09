@@ -77,7 +77,8 @@ void DirectUrl_ExtractAddress(const cc_string* addr, cc_string* ip, cc_string* p
 *#########################################################################################################################*/
 static void RunGame(void) {
 	Game_Setup();
-	Game_Run();
+	while (Game_Running) { Game_RenderFrame(); }
+
 	Game_Free();
 	Window_Destroy();
 }

@@ -739,7 +739,7 @@ int Game_MapState(int deviceIndex) {
 }
 #endif
 
-static CC_INLINE void Game_RenderFrame(void) {
+void Game_RenderFrame(void) {
 	struct ScheduledTask entTask;
 	double deltaD;
 	float t, delta;
@@ -864,20 +864,6 @@ void Game_Free(void) {
 }
 
 #ifdef CC_BUILD_WEB
-void Game_DoFrame(void) {
-	if (Game_Running) {
-		Game_RenderFrame();
-	} else if (tasksCount) {
-		Game_Free();
-		Window_Free();
-	}	
-}
-
-static void Game_RunLoop(void) {
-	/* Window_Web.c sets Game_DoFrame as the main loop callback function */
-	/* (i.e. web browser is in charge of calling Game_DoFrame, not us) */
-}
-
 cc_bool Game_ShouldClose(void) {
 	if (!Game_Running) return true;
 
@@ -890,13 +876,6 @@ cc_bool Game_ShouldClose(void) {
 	if (Input_IsCtrlPressed() || Input_IsWinPressed()) return false;
 	/* Also try to intercept mouse back button (Mouse4) */
 	return !Input.Pressed[CCMOUSE_X1];
-}
-#else
-static void Game_RunLoop(void) {
-	while (Game_Running)
-	{
-		Game_RenderFrame();
-	}
 }
 #endif
 
@@ -923,9 +902,5 @@ void Game_Setup(void) {
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents.Resized);
 	frameStart = Stopwatch_Measure();
-}
-
-void Game_Run(void) {
-	Game_RunLoop();
 }
 

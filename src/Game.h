@@ -126,9 +126,9 @@ cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp);
 
 /* Initialises and loads state, and creates the main game window */
 void Game_Setup(void);
-/* Runs the main game loop until the game loop is finished. */
-/* (e.g. by the user pressing Quit Game, or closing the game window) */
-void Game_Run(void);
+/* Renders/Does the next frame of the game */
+/* NOTE: Shouldn't be called after Game_Running is set to false */
+void Game_RenderFrame(void);
 void Game_Free(void);
 /* Whether the game should be allowed to automatically close */
 cc_bool Game_ShouldClose(void);

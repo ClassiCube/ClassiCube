@@ -382,9 +382,7 @@ extern int interop_IsIOS(void);
 extern void interop_AddClipboardListeners(void);
 extern void interop_ForceTouchPageLayout(void);
 
-extern void Game_DoFrame(void);
 void Window_PreInit(void) {
-	emscripten_set_main_loop(Game_DoFrame, 0, false);
 	DisplayInfo.CursorVisible = true;
 }
 
@@ -421,7 +419,6 @@ void Window_Free(void) {
 
 	Window_SetSize(0, 0);
 	UnhookEvents();
-	emscripten_cancel_main_loop();
 }
 
 extern void interop_InitContainer(void);

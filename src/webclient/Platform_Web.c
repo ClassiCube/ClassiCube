@@ -6,6 +6,7 @@
 #include "../Window.h"
 #include "../Utils.h"
 #include "../Errors.h"
+#include "../Game.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -349,8 +350,8 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 cc_bool Process_OpenSupported = true;
 
 void Process_Exit(cc_result code) {
-	/* 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited */
-	Window_Free();
+	Window_Free(); // 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited
+	emscripten_cancel_main_loop();
 	exit(code);
 }
 
@@ -419,9 +420,20 @@ cc_result Platform_GetEntropy(void* data, int len) {
 /*########################################################################################################################*
 *------------------------------------------------------Main driver--------------------------------------------------------*
 *#########################################################################################################################*/
+static void DoNextFrame(void) {
+	if (Game_Running) {
+		Game_RenderFrame();
+		return;
+	}
+
+	Game_Free();
+	Window_Free();
+	emscripten_cancel_main_loop();
+}
+
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
-	argc--; argv++; // skip executable path argument //
+	argc--; argv++; // skip executable path argument
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
@@ -442,8 +454,12 @@ static void web_main(void) {
 		String_AppendConst(&Game_Username, DEFAULT_USERNAME);
 		/* fallthrough */
 	case ARG_RESULT_RUN_GAME:
+		// This needs to be called before Game_Setup, as that
+		//  in turn calls Game_Load -> Gfx_Create -> GLContext_SetVSync
+		// (which requires a main loop to already be running)
+		emscripten_set_main_loop(DoNextFrame, 0, false);
+
 		Game_Setup();
-		Game_Run();
 		return;
 
 	default:
