@@ -59,9 +59,12 @@ ifeq ($(PLAT),web)
 	CC      = emcc
 	OEXT    = .html
 	CFLAGS  = -g
-	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library $(SOURCE_DIR)/interop_web.js
+	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library $(SOURCE_DIR)/webclient/interop_web.js
 	BUILD_DIR = build/web
 	BEARSSL = 0
+
+	BUILD_DIRS += $(BUILD_DIR)/src/webclient
+	C_SOURCES  += $(wildcard src/webclient/*.c)
 endif
 
 ifeq ($(PLAT),mingw)
@@ -176,6 +179,9 @@ ifeq ($(PLAT),dos)
 	OEXT    =  .exe
 	BUILD_DIR = build/dos
 	BEARSSL = 0
+
+	BUILD_DIRS += $(BUILD_DIR)/src/msdos
+	C_SOURCES  += $(wildcard src/msdos/*.c)
 endif
 
 
@@ -194,9 +200,7 @@ endif
 
 ifeq ($(BEARSSL),1)
 	BUILD_DIRS += $(BUILD_DIR)/third_party/bearssl
-	BEARSSL_SOURCES = $(wildcard third_party/bearssl/*.c)
-	BEARSSL_OBJECTS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
-	OBJECTS += $(BEARSSL_OBJECTS)
+	C_SOURCES  += $(wildcard third_party/bearssl/*.c)
 endif
 
 ifdef RELEASE

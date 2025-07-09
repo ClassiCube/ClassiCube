@@ -1,12 +1,10 @@
-#include "Core.h"
-#if defined CC_BUILD_MSDOS
+#include "../_WindowBase.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Options.h"
+#include "../Errors.h"
 
-#include "_WindowBase.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Options.h"
-#include "Errors.h"
 #include <dpmi.h>
 #include <sys/nearptr.h>
 #include <pc.h>
@@ -347,4 +345,4 @@ void Window_UpdateRawMouse(void) {
 void Window_DisableRawMouse(void) { 
 	DefaultDisableRawMouse();
 }
-#endif
+

@@ -206,8 +206,8 @@ NOTE: If you are distributing a modified version, **please change the bundle ID 
 
 1. Install emscripten if necessary.
 2. Run either:
-    * `make web` or
-    * `emcc src/*.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js`
+    * `make web` - produces simple non-optimised output, easier to debug
+    * `make web RELEASE=1` - produces optimised output, harder to debug
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 

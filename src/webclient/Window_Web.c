@@ -1,13 +1,13 @@
-#include "Core.h"
-#if defined CC_BUILD_WEB && !defined CC_BUILD_SDL
-#include "_WindowBase.h"
-#include "Game.h"
-#include "String.h"
-#include "Funcs.h"
-#include "ExtMath.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "Gui.h"
+#include "../Core.h"
+#include "../_WindowBase.h"
+#include "../Game.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../ExtMath.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../Gui.h"
+
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
@@ -754,7 +754,7 @@ void Window_DisableRawMouse(void) {
 *------------------------------------------------Emscripten WebGL context-------------------------------------------------*
 *#########################################################################################################################*/
 #if CC_GFX_BACKEND_IS_GL()
-#include "Graphics.h"
+#include "../Graphics.h"
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx_handle;
 
 static EM_BOOL GLContext_OnLost(int eventType, const void *reserved, void *userData) {
@@ -819,4 +819,4 @@ void GLContext_GetApiInfo(cc_string* info) {
 	String_AppendUtf8(info, buffer, len);
 }
 #endif
-#endif
+

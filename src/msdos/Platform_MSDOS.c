@@ -1,15 +1,13 @@
-#include "Core.h"
-#if defined CC_BUILD_MSDOS
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../SystemFonts.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../PackedCol.h"
 
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "SystemFonts.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "PackedCol.h"
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -39,7 +37,7 @@ cc_bool  Platform_ReadonlyFilesystem;
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
-#include "main_impl.h"
+#include "../main_impl.h"
 
 int main(int argc, char** argv) {
 	cc_result res;
@@ -450,4 +448,4 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0;
 }
-#endif
+

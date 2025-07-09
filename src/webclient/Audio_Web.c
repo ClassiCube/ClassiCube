@@ -1,12 +1,9 @@
-#include "Core.h"
-
-#if defined CC_BUILD_WEBAUDIO
 struct AudioContext { int contextID, count; void* data; };
 
 #define AUDIO_OVERRIDE_SOUNDS
 #define AUDIO_OVERRIDE_ALLOC
-#include "_AudioBase.h"
-#include "Funcs.h"
+#include "../_AudioBase.h"
+#include "../Funcs.h"
 
 extern int  interop_InitAudio(void);
 extern int  interop_AudioCreate(void);
@@ -140,5 +137,4 @@ void AudioBackend_LoadSounds(void) {
 		}
 	}
 }
-#endif
 

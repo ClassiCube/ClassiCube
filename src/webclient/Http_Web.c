@@ -1,10 +1,10 @@
-#include "Core.h"
-#ifdef CC_BUILD_WEB
-#include "_HttpBase.h"
+#include "../_HttpBase.h"
+#include "../Errors.h"
 #include <emscripten/emscripten.h>
-#include "Errors.h"
+
 extern int interop_DownloadAsync(const char* url, int method, int reqID);
 extern int interop_IsHttpsOnly(void);
+
 static struct RequestList workingReqs, queuedReqs;
 static cc_uint64 startTime;
 
@@ -21,7 +21,7 @@ cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 }
 
 cc_bool Http_GetCurrent(int* reqID, int* progress) {
-	/* TODO: Stubbed as this isn't required at the moment */
+	// TODO: Stubbed as this isn't required at the moment
 	*progress = 0;
 	return 0;
 }
@@ -59,7 +59,7 @@ static void Http_StartNextDownload(void) {
 	struct HttpRequest* req;
 	cc_result res;
 
-	/* Avoid making too many requests at once */
+	// Avoid making too many requests at once
 	if (workingReqs.count >= HTTP_MAX_CONCURRENCY) return;
 	if (!queuedReqs.count) return;
 	String_InitArray(url, urlBuffer);
@@ -72,11 +72,11 @@ static void Http_StartNextDownload(void) {
 	res = interop_DownloadAsync(urlStr, req->requestType, req->id);
 
 	if (res) {
-		/* interop error code -> ClassiCube error code */
+		// interop error code -> ClassiCube error code
 		if (res == 1) res = ERR_INVALID_DATA_URL;
 		req->result = res;
 		
-		/* Invalid URL so move onto next request */
+		// Invalid URL so move onto next request
 		Http_FinishRequest(req);
 		RequestList_RemoveAt(&queuedReqs, 0);
 		Http_StartNextDownload();
@@ -98,7 +98,7 @@ EMSCRIPTEN_KEEPALIVE void Http_OnFinishedAsync(int reqID, void* data, int len, i
 	int idx = RequestList_Find(&workingReqs, reqID);
 
 	if (idx == -1) {
-		/* Shouldn't ever happen, but log a warning anyways */
+		// Shouldn't ever happen, but log a warning anyways
 		Mem_Free(data); 
 		Platform_Log1("Ignoring invalid request (%i)", &reqID);
 	} else {
@@ -108,7 +108,7 @@ EMSCRIPTEN_KEEPALIVE void Http_OnFinishedAsync(int reqID, void* data, int len, i
 		req->statusCode    = status;
 		req->contentLength = len;
 
-		/* Usually this happens when denied by CORS */
+		// Usually this happens when denied by CORS
 		if (!status && !data) req->result = ERR_DOWNLOAD_INVALID;
 
 		if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
@@ -118,9 +118,9 @@ EMSCRIPTEN_KEEPALIVE void Http_OnFinishedAsync(int reqID, void* data, int len, i
 	Http_StartNextDownload();
 }
 
-/* Adds a req to the list of pending requests, waking up worker thread if needed */
+// Adds a req to the list of pending requests, waking up worker thread if needed
 static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
-	/* Add time based query string parameter to bypass browser cache */
+	// Add time based query string parameter to bypass browser cache
 	if (flags & HTTP_FLAG_NOCACHE) {
 		cc_string url = String_FromRawArray(req->url);
 		int lo = (int)(startTime), hi = (int)(startTime >> 32);
@@ -137,7 +137,7 @@ static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
 *#########################################################################################################################*/
 static void Http_Init(void) {
 	Http_InitCommon();
-	/* If this webpage is https://, browsers deny any http:// downloading */
+	// If this webpage is https://, browsers deny any http:// downloading
 	httpsOnly = interop_IsHttpsOnly();
 	startTime = DateTime_CurrentUTC();
 
@@ -145,4 +145,4 @@ static void Http_Init(void) {
 	RequestList_Init(&workingReqs);
 	RequestList_Init(&processedReqs);
 }
-#endif
+

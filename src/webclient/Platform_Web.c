@@ -1,14 +1,11 @@
-#include "Core.h"
-#if defined CC_BUILD_WEB
-
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "SystemFonts.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../SystemFonts.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,16 +19,16 @@
 #define O_EXCL   0x080
 #define O_TRUNC  0x200
 
-/* Unfortunately, errno constants are different in some older emscripten versions */
-/*  (linux errno numbers compared to WASI errno numbers) */
-/* So just use the same errono numbers as interop_web.js */
+// Unfortunately, errno constants are different in some older emscripten versions
+//  (linux errno numbers compared to WASI errno numbers)
+// So just use the same errono numbers as interop_web.js
 #define _ENOENT        2
-#define _EAGAIN        6 /* same as EWOULDBLOCK */
+#define _EAGAIN        6 // same as EWOULDBLOCK
 #define _EEXIST       17
 #define _EHOSTUNREACH 23
 #define _EINPROGRESS  26
 
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* Not used in web filesystem backend */
+const cc_result ReturnCode_FileShareViolation = 1000000000; // Not used in web filesystem backend
 const cc_result ReturnCode_FileNotFound     = _ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
@@ -424,18 +421,18 @@ cc_result Platform_GetEntropy(void* data, int len) {
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
-	argc--; argv++; /* skip executable path argument */
+	argc--; argv++; // skip executable path argument //
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
 	return count;
 }
 
-#include "main_impl.h"
+#include "../main_impl.h"
 static int    _argc;
 static char** _argv;
 
-/* webclient does some asynchronous initialisation first, then kickstarts the game after that */
+// webclient does some asynchronous initialisation first, then kickstarts the game after that
 static void web_main(void) {
 	SetupProgram(_argc, _argv);
 
@@ -462,11 +459,11 @@ extern void interop_AsyncDownloadTexturePack(const char* path);
 EMSCRIPTEN_KEEPALIVE int main(int argc, char** argv) {
 	_argc = argc; _argv = argv;
 
-	/* Game loads resources asynchronously, then actually starts itself */
-	/* main */
-	/*  > texture pack download (async) */
-	/*     > load indexedDB (async) */
-	/*        > web_main (game actually starts) */
+	// Game loads resources asynchronously, then actually starts itself:
+	// main
+	//  > texture pack download (async)
+	//     > load indexedDB (async)
+	//        > web_main (game actually starts)
 	interop_FS_Init();
 	interop_DirectorySetWorking("/classicube");
 	interop_AsyncDownloadTexturePack("texpacks/default.zip");
@@ -475,12 +472,12 @@ EMSCRIPTEN_KEEPALIVE int main(int argc, char** argv) {
 extern void interop_LoadIndexedDB(void);
 extern void interop_AsyncLoadIndexedDB(void);
 
-/* Asynchronous callback after texture pack is downloaded */
+// Asynchronous callback after texture pack is downloaded
 EMSCRIPTEN_KEEPALIVE void main_phase1(void) {
-	interop_LoadIndexedDB(); /* legacy compatibility */
+	interop_LoadIndexedDB(); // legacy compatibility
 	interop_AsyncLoadIndexedDB();
 }
 
-/* Asynchronous callback after IndexedDB is loaded */
+// Asynchronous callback after IndexedDB is loaded
 EMSCRIPTEN_KEEPALIVE void main_phase2(void) { web_main(); }
-#endif
+
