@@ -607,6 +607,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_EGL
 	#define CC_BUILD_MAXSTACK (16 * 1024)
 	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_TOUCH
+	#define CC_NOMAIN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 
@@ -614,9 +616,6 @@ typedef cc_uint8  cc_bool;
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 	#else
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
-	#endif
-	#if defined CC_BUILD_SYMBIAN_3 || defined CC_BUILD_SYMBIAN_S60V5
-		#define CC_BUILD_TOUCH
 	#endif
 #endif
 #endif
