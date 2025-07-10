@@ -6,6 +6,9 @@
 	#define NOIME
 	#include <windows.h>
 	#define GLAPI WINGDIAPI
+#elif defined CC_BUILD_SYMBIAN && !defined __WINSCW__
+	#define GLAPI IMPORT_C
+	#define APIENTRY
 #else
 	#define GLAPI extern
 	#define APIENTRY
@@ -68,6 +71,7 @@ typedef cc_uintptr GLpointer;
 #define GL_MAX_TEXTURE_SIZE      0x0D33
 #define GL_DEPTH_BITS            0x0D56
 
+#define GL_PERSPECTIVE_CORRECTION_HINT 0x0C50
 #define GL_FOG_HINT              0x0C54
 #define GL_NICEST                0x1102
 #define GL_COMPILE               0x1300

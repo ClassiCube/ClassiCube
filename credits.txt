@@ -12,6 +12,7 @@
 * Hemsindor - testing ClassicalSharp on macOS.
 * headshotnoby - developing the Switch port.
 * Beyond_5D - identifying many differences from original Classic
+* shinovon - developing the Symbian port.
 
 And a big thanks to everyone else in the ClassiCube community (who I didn't mention here),
 who in the past have provided many suggestions and assisted in identifying bugs.

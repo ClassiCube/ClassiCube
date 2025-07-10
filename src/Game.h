@@ -24,7 +24,7 @@ CC_VAR extern struct _GameData {
 } Game;
 
 extern struct RayTracer Game_SelectedPos;
-extern cc_bool Game_UseCPEBlocks;
+extern cc_bool Game_UseCPEBlocks, Game_Running;
 
 extern cc_string Game_Username;
 extern cc_string Game_Mppass;
@@ -124,8 +124,12 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp);
 /*   NOTE: Game_ValidateBitmap should nearly always be used instead of this */
 cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp);
 
-/* Runs the main game loop until the window is closed. */
-void Game_Run(int width, int height, const cc_string* title);
+/* Initialises and loads state, and creates the main game window */
+void Game_Setup(void);
+/* Renders/Does the next frame of the game */
+/* NOTE: Shouldn't be called after Game_Running is set to false */
+void Game_RenderFrame(void);
+void Game_Free(void);
 /* Whether the game should be allowed to automatically close */
 cc_bool Game_ShouldClose(void);
 

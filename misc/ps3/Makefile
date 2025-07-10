@@ -20,8 +20,8 @@ include $(PS3DEV)/ppu_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	ClassiCube-PS3
 BUILD		:=	build-ps3
-SOURCES		:=	src third_party/bearssl/src
-INCLUDES	:= third_party/bearssl/inc
+SOURCES		:=	src third_party/bearssl
+INCLUDES	:= 
 SHADERS		:=	misc/ps3
 
 TITLE		:=	ClassiCube

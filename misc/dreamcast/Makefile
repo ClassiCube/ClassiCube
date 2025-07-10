@@ -1,20 +1,3 @@
-BUILD_DIR	:= build-dc
-SOURCE_DIRS	:= src third_party/bearssl/src misc/dreamcast
-TARGET 		:= ClassiCube-dc
-
-S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
-C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-CFLAGS	:= -g -DNDEBUG -O3 -fipa-pta -fno-pie -flto=auto -fomit-frame-pointer -fbuiltin -ffast-math -ffp-contract=fast -mfsrra -mfsca -pipe -fno-math-errno -Ithird_party/bearssl/inc
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
-
-GLDC_LIB	= third_party/gldc/libGLdc.a
-LDFLAGS		= -g
-LIBS		= -lm $(GLDC_LIB) -lppp -lkosfat
-
 ifeq ($(strip $(KOS_BASE)),)
 $(warning Please set KOS variables in your environment. For example:)
 $(warning source /opt/toolchains/dc/kos/environ.sh)
@@ -23,7 +6,36 @@ endif
 
 
 #---------------------------------------------------------------------------------
-# main targets
+# Configurable options
+#---------------------------------------------------------------------------------
+# Directory where object files are placed
+BUILD_DIR	:= build/dc
+# List of directories containing source code
+SOURCE_DIRS	:= src third_party/bearssl src/dreamcast
+# Name of the final output
+TARGET 		:= ClassiCube-dc
+# Additional libraries to link against
+LIBS		= -lm -lppp -lkosfat
+# List of directories containing more header files
+INCLUDES	= 
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
+S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+CFLAGS	:= -g -DNDEBUG -O3 -fipa-pta -fno-pie -flto=auto -fomit-frame-pointer -fbuiltin -ffast-math -ffp-contract=fast -mfsrra -mfsca -pipe -fno-math-errno
+LDFLAGS	= -g
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Main targets
 #---------------------------------------------------------------------------------
 default: $(BUILD_DIR) $(TARGET).cdi
 
@@ -35,9 +47,9 @@ $(BUILD_DIR):
 
 
 #---------------------------------------------------------------------------------
-# executable generation
+# Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).elf: $(OBJS) $(GLDC_LIB)
+$(TARGET).elf: $(OBJS)
 	kos-cc $(LDFLAGS) $^ -o $@ $(LIBS)
 	
 $(TARGET).bin: $(TARGET).elf
@@ -64,22 +76,24 @@ $(TARGET).cdi: $(TARGET).iso
 
 
 #---------------------------------------------------------------------------------
-# object generation
+# Object generation
 #---------------------------------------------------------------------------------
-$(GLDC_LIB): FORCE
-	$(MAKE) -C third_party/gldc
-FORCE: ;
-	
 $(BUILD_DIR)/%.o: src/%.c
-	kos-cc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+	kos-cc $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
-	kos-cc $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: src/dreamcast/%.c
+	kos-cc $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: misc/dreamcast/%.S
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
+	kos-cc $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/dreamcast/%.S
 	kos-cc $(DEPFLAGS) -c $< -o $@
 
+
+#---------------------------------------------------------------------------------
 # Dependency tracking
+#---------------------------------------------------------------------------------
 $(DEPFILES):
 
 include $(wildcard $(DEPFILES))

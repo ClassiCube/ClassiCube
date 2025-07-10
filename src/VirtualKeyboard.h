@@ -246,6 +246,7 @@ static void VirtualKeyboard_ClickSelected(void) {
 		VirtualKeyboard_Backspace();
 		break;
 	case KB_B_ENTER:
+		kb_curX = -1;
 		Input_SetPressed(CCKEY_ENTER);
 		Input_SetReleased(CCKEY_ENTER);
 		OnscreenKeyboard_Close();
@@ -277,9 +278,9 @@ static cc_bool VirtualKeyboard_OnInputDown(int key, struct InputDevice* device) 
 
 	if (deltaX || deltaY) {
 		VirtualKeyboard_Scroll(deltaX, deltaY);
-	} else if (key == CCPAD_START  || key == CCPAD_1) {
+	} else if (key == CCPAD_START  || key == CCPAD_1 || key == CCKEY_ENTER) {
 		VirtualKeyboard_ClickSelected();
-	} else if (key == CCPAD_SELECT || key == CCPAD_2) {
+	} else if (key == CCPAD_SELECT || key == CCPAD_2 || key == CCKEY_ESCAPE) {
 		VirtualKeyboard_Close();
 	} else if (key == CCPAD_3) {
 		VirtualKeyboard_Backspace();
@@ -431,6 +432,7 @@ static void VirtualKeyboard_Hook(void) {
 	/*  the virtual keyboard in the first place gets mistakenly processed */
 	kb_needsHook = false;
 	Event_Register_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
+	PointerHooks.DownHook = VirtualKeyboard_PointerMove;
 	PointerHooks.MoveHook = VirtualKeyboard_PointerMove;
 	PointerHooks.UpHook   = VirtualKeyboard_PointerUp;
 }
@@ -478,6 +480,7 @@ static void VirtualKeyboard_Close(void) {
 		VirtualKeyboard_Close3D();
 		
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
+	PointerHooks.DownHook = NULL;
 	PointerHooks.MoveHook = NULL;
 	PointerHooks.UpHook   = NULL;
 	Window_Main.SoftKeyboardFocus = false;

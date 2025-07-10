@@ -13,31 +13,34 @@
 #endif
 
 /* The OpenGL backend is a bit of a mess, since it's really 2 backends in one:
- * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
+ * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
+
+  NOTE: Make sure when changing this or Graphics_GL11.c, to keep things in sync
 */
 #include "../misc/opengl/GLCommon.h"
 
 /* e.g. GLAPI void APIENTRY glFunction(int value); */
 #define GL_FUNC(retType, name, args) GLAPI retType APIENTRY name args;
 #include "../misc/opengl/GL1Funcs.h"
+#if defined CC_BUILD_SYMBIAN
+#include "../misc/opengl/GL2Funcs.h"
+#endif
 
-#if defined CC_BUILD_GL11
-static GLuint activeList;
-#define gl_DYNAMICLISTID 1234567891
-static void* dynamicListData;
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
 static cc_uint16 gl_indices[GFX_MAX_INDICES];
-#else
+#define GL_INDICES
+#endif
+
 /* OpenGL functions use stdcall instead of cdecl on Windows */
 static void (APIENTRY *_glBindBuffer)(GLenum target, GfxResourceID buffer); /* NOTE: buffer is actually a GLuint in OpenGL */
 static void (APIENTRY *_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
 static void (APIENTRY *_glGenBuffers)(GLsizei n, GLuint *buffers);
 static void (APIENTRY *_glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
 static void (APIENTRY *_glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
-#endif
 
 
-#if defined CC_BUILD_GL11_FALLBACK && !defined CC_BUILD_GL11
+#if defined CC_BUILD_GL11_FALLBACK
 /* Note the following about calling OpenGL functions on Windows */
 /*  1) wglGetProcAddress returns a context specific address */
 /*  2) dllimport functions are implemented using indirect function pointers */
@@ -94,16 +97,17 @@ void Gfx_Create(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	cc_uint16 indices[GFX_MAX_INDICES];
+#ifndef GL_INDICES
+	cc_uint16 gl_indices[GFX_MAX_INDICES];
+#endif
 	GfxResourceID id = NULL;
 	cc_uint32 size   = count * sizeof(cc_uint16);
 
 	_glGenBuffers(1, (GLuint*)&id);
-	fillFunc(indices, count, obj);
+	fillFunc(gl_indices, count, obj);
 	_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, gl_indices, GL_STATIC_DRAW);
 	return id;
 }
 
@@ -116,17 +120,11 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 	_glDeleteBuffers(1, (GLuint*)&id);
 	*ib = 0;
 }
-#else
-GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) { return 0; }
-void Gfx_BindIb(GfxResourceID ib) { }
-void Gfx_DeleteIb(GfxResourceID* ib) { }
-#endif
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef CC_BUILD_GL11
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	GfxResourceID id = NULL;
 	_glGenBuffers(1, (GLuint*)&id);
@@ -151,60 +149,11 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockVb(GfxResourceID vb) {
 	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
-#else
-static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) { 
-	return glGenLists(1); 
-}
-void Gfx_BindVb(GfxResourceID vb) { activeList = ptr_to_uint(vb); }
-
-void Gfx_DeleteVb(GfxResourceID* vb) {
-	GLuint id = ptr_to_uint(*vb);
-	if (id) glDeleteLists(id, 1);
-	*vb = 0;
-}
-
-static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
-	/* We need to restore client state afer building the list */
-	int realFormat = gfx_format;
-	void* dyn_data = dynamicListData;
-	Gfx_SetVertexFormat(fmt);
-	dynamicListData = vertices;
-
-	glNewList(list, GL_COMPILE);
-	gfx_setupVBFunc();
-	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gl_indices);
-	glEndList();
-
-	Gfx_SetVertexFormat(realFormat);
-	dynamicListData = dyn_data;
-}
-
-/* NOTE! Building chunk in Builder.c relies on vb being ignored */
-/* If that changes, you must fix Builder.c to properly call Gfx_LockVb */
-static VertexFormat tmpFormat;
-static int tmpCount;
-void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	tmpFormat = fmt;
-	tmpCount  = count;
-	return FastAllocTempMem(count * strideSizes[fmt]);
-}
-
-void Gfx_UnlockVb(GfxResourceID vb) {
-	UpdateDisplayList((GLuint)vb, tmpData, tmpFormat, tmpCount);
-}
-
-GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
-	GLuint list = glGenLists(1);
-	UpdateDisplayList(list, vertices, fmt, count);
-	return list;
-}
-#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef CC_BUILD_GL11
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	GfxResourceID id = NULL;
 	cc_uint32 size   = maxVertices * strideSizes[fmt];
@@ -239,44 +188,14 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	_glBindBuffer(GL_ARRAY_BUFFER, vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
-#else
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return (GfxResourceID)Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) {
-	activeList      = gl_DYNAMICLISTID;
-	dynamicListData = vb;
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
-	void* addr = *vb;
-	if (addr) Mem_Free(addr);
-	*vb = 0;
-}
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
-void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	Gfx_BindDynamicVb(vb);
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-}
-#endif
 
 
 /*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_GL11
-	/* point to client side dynamic array */
-	#define VB_PTR ((cc_uint8*)dynamicListData)
-	#define IB_PTR gl_indices
-#else
-	/* no client side array, use vertex buffer object */
-	#define VB_PTR 0
-	#define IB_PTR NULL
-#endif
+/* no client side array, use vertex buffer object */
+#define VB_PTR 0
+#define IB_PTR NULL
 
 static void GL_SetupVbColoured(void) {
 	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, VB_PTR +  0);
@@ -328,24 +247,15 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-#ifdef CC_BUILD_GL11
-	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
-#endif
 	gfx_setupVBRangeFunc(startVertex);
 	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-#ifdef CC_BUILD_GL11
-	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
-#endif
 	gfx_setupVBFunc();
 	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
-#ifdef CC_BUILD_GL11
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList(activeList); }
-#else
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
 	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR + offset +  0);
@@ -353,7 +263,6 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 16);
 	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),  GL_UNSIGNED_SHORT, IB_PTR);
 }
-#endif /* !CC_BUILD_GL11 */
 
 
 /*########################################################################################################################*
@@ -368,8 +277,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
-static int gfx_fogMode  = -1;
+static float gfx_fogEnd, gfx_fogDensity;
+static int gfx_fogMode;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
@@ -467,9 +376,21 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	_glEnableClientState(GL_VERTEX_ARRAY);
 	_glEnableClientState(GL_COLOR_ARRAY);
+
 	gfx_format = -1;
+	lastMatrix = -1;
+
+	gfx_clearColor = 0;
+	gfx_fogColor   = 0;
+	gfx_fogEnd     = -1.0f;
+	gfx_fogDensity = -1.0f;
+	gfx_fogMode    = -1;
 
 	_glHint(GL_FOG_HINT, GL_NICEST);
+#if defined CC_BUILD_SYMBIAN
+	_glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+#endif
+
 	_glAlphaFunc(GL_GREATER, 0.5f);
 	_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	_glDepthFunc(GL_LEQUAL);
@@ -477,12 +398,6 @@ static void Gfx_RestoreState(void) {
 
 cc_bool Gfx_WarnIfNecessary(void) {
 	cc_string renderer = String_FromReadonly((const char*)_glGetString(GL_RENDERER));
-	
-#ifdef CC_BUILD_GL11
-	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
-	Chat_AddRaw("&cAs such you may experience poor performance.");
-	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
-#endif
 
 	if (String_ContainsConst(&renderer, "llvmpipe")) {
 		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
@@ -504,16 +419,20 @@ cc_bool Gfx_WarnIfNecessary(void) {
 	}
 	return false;
 }
+
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
+
+void Gfx_GetApiInfo(cc_string* info) {
+	int pointerSize = sizeof(void*) * 8;
+
+	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
+	GetGLApiInfo(info);
+}
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Compatibility-----------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_GL11
-static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES, NULL); }
-#else
-
 #ifdef CC_BUILD_GL11_FALLBACK
 static FP_glDrawElements    _realDrawElements;
 static FP_glColorPointer    _realColorPointer;
@@ -692,6 +611,22 @@ static void FallbackOpenGL(void) {
 #endif
 
 static void GLBackend_Init(void) {
+#if defined CC_BUILD_SYMBIAN
+	static const cc_string bgra_ext = String_FromConst("EXT_texture_format_BGRA8888");
+	static const cc_string bgra_sym = String_FromConst("GL_IMG_texture_format_BGRA8888");
+	cc_string extensions = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
+	
+	cc_bool has_ext_bgra = String_CaselessContains(&extensions, &bgra_ext);
+	cc_bool has_sym_bgra = String_CaselessContains(&extensions, &bgra_sym);
+	
+	_glGenBuffers    = glGenBuffers;
+	_glDeleteBuffers = glDeleteBuffers;
+	_glBindBuffer    = glBindBuffer;
+	_glBufferData    = glBufferData;
+	_glBufferSubData = glBufferSubData;
+	
+	convert_rgba = PIXEL_FORMAT != GL_RGBA && !has_ext_bgra && !has_sym_bgra;
+#else
 	static const struct DynamicLibSym coreVboFuncs[] = {
 		DynamicLib_ReqSym2("glBindBuffer",    glBindBuffer), DynamicLib_ReqSym2("glDeleteBuffers", glDeleteBuffers),
 		DynamicLib_ReqSym2("glGenBuffers",    glGenBuffers), DynamicLib_ReqSym2("glBufferData",    glBufferData),
@@ -721,6 +656,7 @@ static void GLBackend_Init(void) {
 		convert_rgba = major == 1 && minor <= 1 && !String_CaselessContains(&extensions, &bgraExt);
 		FallbackOpenGL();
 	}
+#endif
 }
 #endif
-#endif
+

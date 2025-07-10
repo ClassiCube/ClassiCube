@@ -3,19 +3,19 @@
 #define _GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
 
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-#define PIXEL_FORMAT GL_RGBA
+	#define PIXEL_FORMAT GL_RGBA
 #else
-#define PIXEL_FORMAT _GL_BGRA_EXT
+	#define PIXEL_FORMAT _GL_BGRA_EXT
 #endif
 
 #if defined CC_BIG_ENDIAN
-/* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
-/* So use GL_UNSIGNED_INT_8_8_8_8_REV instead to remedy this */
-#define TRANSFER_FORMAT _GL_UNSIGNED_INT_8_8_8_8_REV
+	/* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
+	/* So use GL_UNSIGNED_INT_8_8_8_8_REV instead to remedy this */
+	#define TRANSFER_FORMAT _GL_UNSIGNED_INT_8_8_8_8_REV
 #else
-/* Pixels are stored in memory as B,G,R,A and GL_UNSIGNED_BYTE will interpret as B,G,R,A */
-/* So fine to just use GL_UNSIGNED_BYTE here */
-#define TRANSFER_FORMAT GL_UNSIGNED_BYTE
+	/* Pixels are stored in memory as B,G,R,A and GL_UNSIGNED_BYTE will interpret as B,G,R,A */
+	/* So fine to just use GL_UNSIGNED_BYTE here */
+	#define TRANSFER_FORMAT GL_UNSIGNED_BYTE
 #endif
 
 #define uint_to_ptr(raw) ((void*)((cc_uintptr)(raw)))
@@ -69,7 +69,7 @@ static void* FastAllocTempMem(int size) {
 *#########################################################################################################################*/
 static cc_bool convert_rgba;
 
-static void ConvertRGBA(void* dst, void* src, int numPixels) {
+static void ConvertRGBA(void* dst, const void* src, int numPixels) {
 	cc_uint8* d = (cc_uint8*)dst;
 	cc_uint8* s = (cc_uint8*)src;
 	int i;
@@ -107,7 +107,11 @@ static void CallTexSubImage2D(int lvl, int x, int y, int width, int height, void
 static void CallTexImage2D(int lvl, int width, int height, void* pixels) {
 	void* tmp;
 	if (!convert_rgba) {
+#if defined CC_BUILD_SYMBIAN
+		_glTexImage2D(GL_TEXTURE_2D, lvl, _GL_BGRA_EXT, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
+#else
 		_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, pixels);
+#endif
 		return;
 	}
 
@@ -310,7 +314,21 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 	bmp.scan0  = (BitmapCol*)Mem_TryAlloc(bmp.width * bmp.height, BITMAPCOLOR_SIZE);
 	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
+#if defined CC_BUILD_SYMBIAN
+	_glReadPixels(0, 0, bmp.width, bmp.height, GL_RGBA, TRANSFER_FORMAT, bmp.scan0);
+	/* ??? */
+	if (convert_rgba) {
+		BitmapCol* tmp = (BitmapCol*)Mem_TryAlloc(bmp.width * bmp.height, BITMAPCOLOR_SIZE);
+		if (!tmp) return ERR_OUT_OF_MEMORY;
+		
+		ConvertRGBA(tmp, bmp.scan0, bmp.width * bmp.height);
+		
+		Mem_Free(bmp.scan0);
+		bmp.scan0 = tmp;
+	}
+#else
 	_glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
+#endif
 
 	res = Png_Encode(&bmp, output, GL_GetRow, false, NULL);
 	Mem_Free(bmp.scan0);
@@ -334,16 +352,10 @@ static void AppendVRAMStats(cc_string* info) {
 	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &total, &cur);
 }
 
-void Gfx_GetApiInfo(cc_string* info) {
+static void GetGLApiInfo(cc_string* info) {
 	GLint depthBits = 0;
-	int pointerSize = sizeof(void*) * 8;
-
 	_glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
-	String_Format1(info, "-- Using OpenGL Modern (%i bit) --\n", &pointerSize);
-#else
-	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
-#endif
+
 	String_Format1(info, "Vendor: %c\n",     _glGetString(GL_VENDOR));
 	String_Format1(info, "Renderer: %c\n",   _glGetString(GL_RENDERER));
 	String_Format1(info, "GL version: %c\n", _glGetString(GL_VERSION));
@@ -371,6 +383,10 @@ void Gfx_EndFrame(void) {
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
 	if (Window_IsObscured()) {
 		TickReducedPerformance();
+#if defined CC_BUILD_SYMBIAN
+		/* eglSwapBuffers on Symbian 9.2 renders on top of everything */
+		return;
+#endif
 	} else {
 		EndReducedPerformance();
 	}

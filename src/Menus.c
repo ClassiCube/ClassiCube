@@ -1416,7 +1416,7 @@ static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
 	struct GZipState* state;
 	cc_result res;
 
-	state = Mem_TryAlloc(1, sizeof(struct GZipState));
+	state = (struct GZipState*)Mem_TryAlloc(1, sizeof(struct GZipState));
 	res   = ERR_OUT_OF_MEMORY;
 	if (!state) { Logger_SysWarn(res, "allocating temp memory"); return res; }
 

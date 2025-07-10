@@ -745,8 +745,13 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static HDC draw_DC;
 static HBITMAP draw_DIB;
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	BITMAPINFO hdr = { 0 };
+	cc_result res;
+
+	bmp->width  = width;
+	bmp->height = height;
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
 	/* sizeof(BITMAPINFO) does not work on Windows 9x */
@@ -757,19 +762,60 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	hdr.bmiHeader.biPlanes   = 1; 
 
 	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->scan0, NULL, 0);
-	if (!draw_DIB) Process_Abort2(GetLastError(), "Failed to create DIB");
-	bmp->width  = width;
-	bmp->height = height;
+	if (draw_DIB) return;
+
+	res = GetLastError();
+	/* ERROR_CALL_NOT_IMPLEMENTED occurs with win32s */
+	if (res != ERROR_CALL_NOT_IMPLEMENTED) Process_Abort2(res, "Failed to create DIB");
+
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+}
+
+/* Used by Win32s on windows 3.1 */
+static void DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp) {
+	char buffer[640 * 3];
+	BITMAPINFO hdr = { 0 };
+	int x, y, width;
+
+	/* TODO partial update */
+	/* Have to use 24 bpp row by row, 32 bpp (and negative height) doesn't work */
+	hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	hdr.bmiHeader.biWidth    = bmp->width;
+	hdr.bmiHeader.biHeight   = 1;
+	hdr.bmiHeader.biBitCount = 24;
+	hdr.bmiHeader.biPlanes   = 1; 
+
+	for (y = r.y; y < r.y + r.height; y++) 
+	{
+		BitmapCol* row = Bitmap_GetRow(bmp, y);
+		width = bmp->width;
+
+		for (x = 0; x < width; x++) 
+		{
+			BitmapCol rgb = row[x];
+			buffer[x * 3 + 0] = BitmapCol_B(rgb);
+			buffer[x * 3 + 1] = BitmapCol_G(rgb);
+			buffer[x * 3 + 2] = BitmapCol_R(rgb);
+		}
+
+		SetDIBitsToDevice(win_DC, 0, y, width, 1, 0, 0, 
+						0, 1, buffer, &hdr, DIB_RGB_COLORS);
+	}
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
-	BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
-	SelectObject(draw_DC, oldSrc);
+	if (draw_DIB) {
+		HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
+		BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
+		SelectObject(draw_DC, oldSrc);
+	} else {
+		DrawFramebufferSlow(r, bmp);
+	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	DeleteObject(draw_DIB);
+	if (draw_DIB) DeleteObject(draw_DIB);
+	draw_DIB = NULL;
 }
 
 static cc_bool rawMouseInited, rawMouseSupported;
@@ -835,19 +881,19 @@ static PROC  (WINAPI *_wglGetProcAddress)(LPCSTR func);
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
 static FP_SWAPINTERVAL _wglSwapIntervalEXT;
 
-static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
+static void GLContext_SelectPixelFormat(void) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
-	int modeIndex;
+	int modeIndex, bpp = DisplayInfo.Depth;
 
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 	pfd.dwFlags  = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
 
-	pfd.cColorBits = mode->R + mode->G + mode->B;
+	pfd.cColorBits = bpp == 32 ? 24 : bpp; /* number of R + G + B bits */
 	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
 	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cAlphaBits = mode->A; /* TODO not needed? test on Intel */
+	pfd.cAlphaBits = bpp == 32 ? 8 : 0; /* TODO not needed? test on Intel */
 
 	modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) { Process_Abort("Requested graphics mode not available"); }
@@ -872,11 +918,8 @@ void GLContext_Create(void) {
 		DynamicLib_OptSym(wglGetProcAddress)
 	};
 	static const cc_string glPath = String_FromConst("OPENGL32.dll");
-	struct GraphicsMode mode;
-
-	InitGraphicsMode(&mode);
-	GLContext_SelectGraphicsMode(&mode);
 	DynamicLib_LoadAll(&glPath, funcs, Array_Elems(funcs), &gl_lib);
+	GLContext_SelectPixelFormat();
 
 	ctx_handle = _wglCreateContext(win_DC);
 	if (!ctx_handle) {

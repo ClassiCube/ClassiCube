@@ -37,7 +37,7 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 
 const char* Platform_AppNameSuffix = "";
 cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess = true;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 #define UWP_STRING(str) ((wchar_t*)(str)->uni)
 
 /*########################################################################################################################*
@@ -550,7 +550,8 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	cc_result res;
 	int len, i;
 
-	if (Platform_SingleProcess) return SetGameArgs(args, numArgs);
+	if (Platform_IsSingleProcess()) return SetGameArgs(args, numArgs);
+
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
 	si.wide.cb = sizeof(STARTUPINFOW);
 	

@@ -127,7 +127,7 @@ typedef struct WSAData {
 CC_WINSOCK_FUNC int (WINAPI *_WSAStartup)(WORD versionRequested, WSADATA* wsaData);
 CC_WINSOCK_FUNC int (WINAPI *_WSACleanup)(void);
 CC_WINSOCK_FUNC int (WINAPI *_WSAGetLastError)(void);
-CC_WINSOCK_FUNC int (WINAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
+CC_WINSOCK_FUNC int (WINAPI *_WSAStringToAddressA)(LPSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
 
 CC_WINSOCK_FUNC int (WINAPI *_socket)(int af, int type, int protocol);
 CC_WINSOCK_FUNC int (WINAPI *_closesocket)(SOCKET s);
@@ -148,7 +148,7 @@ CC_WINSOCK_FUNC void (WINAPI* _freeaddrinfo)(ADDRINFOA* addrInfo);
 static void Winsock_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_ReqSym(WSAStartup),      DynamicLib_ReqSym(WSACleanup),
-		DynamicLib_ReqSym(WSAGetLastError), DynamicLib_OptSym(WSAStringToAddressW),
+		DynamicLib_ReqSym(WSAGetLastError), DynamicLib_OptSym(WSAStringToAddressA),
 		DynamicLib_ReqSym(socket),          DynamicLib_ReqSym(closesocket),
 		DynamicLib_ReqSym(connect),         DynamicLib_ReqSym(shutdown),
 		DynamicLib_ReqSym(ioctlsocket),     DynamicLib_ReqSym(getsockopt),

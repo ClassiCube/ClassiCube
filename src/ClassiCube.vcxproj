@@ -188,7 +188,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;crypt32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;crypt32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -208,7 +208,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -230,7 +230,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -252,7 +252,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -281,7 +281,7 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -308,7 +308,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -338,7 +338,7 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -368,7 +368,7 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>opengl32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -402,6 +402,8 @@
     <ClInclude Include="LScreens.h" />
     <ClInclude Include="LWeb.h" />
     <ClInclude Include="LWidgets.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="main_impl.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Menus.h" />
@@ -441,6 +443,7 @@
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="_AudioBase.h" />
     <ClInclude Include="_GLShared.h" />
     <ClInclude Include="_GraphicsBase.h" />
     <ClInclude Include="_HttpBase.h" />
@@ -449,18 +452,135 @@
     <ClInclude Include="_WindowBase.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\third_party\bearssl\aesctr_drbg.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_big_cbcdec.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_big_cbcenc.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_big_ctr.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_big_ctrcbc.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_big_dec.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_big_enc.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_common.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_cbcdec.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_cbcenc.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_ctr.c" />
+    <ClCompile Include="..\third_party\bearssl\aes_x86ni_ctrcbc.c" />
+    <ClCompile Include="..\third_party\bearssl\asn1enc.c" />
+    <ClCompile Include="..\third_party\bearssl\ccm.c" />
+    <ClCompile Include="..\third_party\bearssl\ccopy.c" />
+    <ClCompile Include="..\third_party\bearssl\chacha20_ct.c" />
+    <ClCompile Include="..\third_party\bearssl\chacha20_sse2.c" />
+    <ClCompile Include="..\third_party\bearssl\dec32be.c" />
+    <ClCompile Include="..\third_party\bearssl\dec32le.c" />
+    <ClCompile Include="..\third_party\bearssl\dec64be.c" />
+    <ClCompile Include="..\third_party\bearssl\dec64le.c" />
+    <ClCompile Include="..\third_party\bearssl\dig_oid.c" />
+    <ClCompile Include="..\third_party\bearssl\dig_size.c" />
+    <ClCompile Include="..\third_party\bearssl\ecdsa_atr.c" />
+    <ClCompile Include="..\third_party\bearssl\ecdsa_default_vrfy_asn1.c" />
+    <ClCompile Include="..\third_party\bearssl\ecdsa_default_vrfy_raw.c" />
+    <ClCompile Include="..\third_party\bearssl\ecdsa_i31_bits.c" />
+    <ClCompile Include="..\third_party\bearssl\ecdsa_i31_vrfy_asn1.c" />
+    <ClCompile Include="..\third_party\bearssl\ecdsa_i31_vrfy_raw.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_all_m31.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_i31.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_m31.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_m62.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_c25519_m64.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_curve25519.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_default.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_p256_m31.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_p256_m62.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_p256_m64.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_prime_i31.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_secp256r1.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_secp384r1.c" />
+    <ClCompile Include="..\third_party\bearssl\ec_secp521r1.c" />
+    <ClCompile Include="..\third_party\bearssl\enc32be.c" />
+    <ClCompile Include="..\third_party\bearssl\enc32le.c" />
+    <ClCompile Include="..\third_party\bearssl\enc64be.c" />
+    <ClCompile Include="..\third_party\bearssl\enc64le.c" />
+    <ClCompile Include="..\third_party\bearssl\gcm.c" />
+    <ClCompile Include="..\third_party\bearssl\ghash_ctmul.c" />
+    <ClCompile Include="..\third_party\bearssl\ghash_ctmul64.c" />
+    <ClCompile Include="..\third_party\bearssl\ghash_pclmul.c" />
+    <ClCompile Include="..\third_party\bearssl\hmac.c" />
+    <ClCompile Include="..\third_party\bearssl\hmac_ct.c" />
+    <ClCompile Include="..\third_party\bearssl\hmac_drbg.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_add.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_bitlen.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_decmod.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_decode.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_decred.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_encode.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_fmont.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_iszero.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_moddiv.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_modpow.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_modpow2.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_montmul.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_mulacc.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_muladd.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_ninv31.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_reduce.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_rshift.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_sub.c" />
+    <ClCompile Include="..\third_party\bearssl\i31_tmont.c" />
+    <ClCompile Include="..\third_party\bearssl\i32_div32.c" />
+    <ClCompile Include="..\third_party\bearssl\i62_modpow2.c" />
+    <ClCompile Include="..\third_party\bearssl\md5.c" />
+    <ClCompile Include="..\third_party\bearssl\md5sha1.c" />
+    <ClCompile Include="..\third_party\bearssl\multihash.c" />
+    <ClCompile Include="..\third_party\bearssl\poly1305_ctmul.c" />
+    <ClCompile Include="..\third_party\bearssl\poly1305_ctmulq.c" />
+    <ClCompile Include="..\third_party\bearssl\prf.c" />
+    <ClCompile Include="..\third_party\bearssl\prf_md5sha1.c" />
+    <ClCompile Include="..\third_party\bearssl\prf_sha256.c" />
+    <ClCompile Include="..\third_party\bearssl\prf_sha384.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_default_pkcs1_vrfy.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_default_priv.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_default_pub.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_i31_pkcs1_vrfy.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_i31_priv.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_i31_pub.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_i62_pkcs1_vrfy.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_i62_priv.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_i62_pub.c" />
+    <ClCompile Include="..\third_party\bearssl\rsa_pkcs1_sig_unpad.c" />
+    <ClCompile Include="..\third_party\bearssl\sha1.c" />
+    <ClCompile Include="..\third_party\bearssl\sha2big.c" />
+    <ClCompile Include="..\third_party\bearssl\sha2small.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_client.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_client_default_rsapub.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_client_full.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_aescbc.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_aesccm.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_aesgcm.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_chapol.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_ec.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_ecdsa.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_engine_default_rsavrfy.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_hashes.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_hs_client.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_io.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_cbc.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_ccm.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_chapol.c" />
+    <ClCompile Include="..\third_party\bearssl\ssl_rec_gcm.c" />
+    <ClCompile Include="..\third_party\bearssl\x509_minimal.c" />
+    <ClCompile Include="..\third_party\bearssl\x509_minimal_full.c" />
     <ClCompile Include="Animations.c" />
+    <ClCompile Include="Audio_OpenAL.c" />
+    <ClCompile Include="Audio_WinMM.c" />
+    <ClCompile Include="Certs.c" />
     <ClCompile Include="Commands.c" />
     <ClCompile Include="EntityRenderers.c" />
     <ClCompile Include="GameVersion.c" />
-    <ClCompile Include="Graphics_3DS.c" />
     <ClCompile Include="Graphics_D3D11.c" />
     <ClCompile Include="Graphics_D3D9.c" />
-    <ClCompile Include="Graphics_Dreamcast.c" />
-    <ClCompile Include="Graphics_GCWii.c" />
     <ClCompile Include="Graphics_GL1.c" />
     <ClCompile Include="Audio.c" />
-    <ClCompile Include="AudioBackend.c" />
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
@@ -476,17 +596,7 @@
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
-    <ClCompile Include="Graphics_N64.c" />
-    <ClCompile Include="Graphics_NDS.c" />
-    <ClCompile Include="Graphics_PS1.c" />
-    <ClCompile Include="Graphics_PS2.c" />
-    <ClCompile Include="Graphics_PS3.c" />
-    <ClCompile Include="Graphics_PSP.c" />
-    <ClCompile Include="Graphics_PSVita.c" />
     <ClCompile Include="Graphics_SoftGPU.c" />
-    <ClCompile Include="Graphics_WiiU.c" />
-    <ClCompile Include="Graphics_Xbox.c" />
-    <ClCompile Include="Graphics_Xbox360.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />
@@ -495,7 +605,6 @@
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
     <ClCompile Include="LBackend.c" />
-    <ClCompile Include="LBackend_Android.c" />
     <ClCompile Include="LScreens.c" />
     <ClCompile Include="LWeb.c" />
     <ClCompile Include="LWidgets.c" />
@@ -505,27 +614,7 @@
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
     <ClCompile Include="FancyLighting.c" />
-    <ClCompile Include="Platform_3DS.c" />
-    <ClCompile Include="Platform_Android.c" />
-    <ClCompile Include="Platform_BeOS.cpp" />
-    <ClCompile Include="Platform_Dreamcast.c" />
-    <ClCompile Include="Platform_GCWii.c" />
-    <ClCompile Include="Platform_MacClassic.c" />
-    <ClCompile Include="Platform_N64.c" />
-    <ClCompile Include="Platform_NDS.c" />
-    <ClCompile Include="Platform_Posix.c" />
-    <ClCompile Include="Platform_PS1.c" />
-    <ClCompile Include="Platform_PS2.c" />
-    <ClCompile Include="Platform_PS3.c" />
-    <ClCompile Include="Platform_PSP.c" />
-    <ClCompile Include="Platform_PSVita.c" />
-    <ClCompile Include="Platform_Saturn.c" />
-    <ClCompile Include="Platform_Switch.c" />
-    <ClCompile Include="Platform_Web.c" />
-    <ClCompile Include="Platform_WiiU.c" />
     <ClCompile Include="Platform_Windows.c" />
-    <ClCompile Include="Platform_Xbox.c" />
-    <ClCompile Include="Platform_Xbox360.c" />
     <ClCompile Include="Protocol.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="IsometricDrawer.c" />
@@ -540,7 +629,6 @@
     <ClCompile Include="Queue.c" />
     <ClCompile Include="SelOutlineRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="main.c" />
     <ClCompile Include="Resources.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
@@ -556,30 +644,8 @@
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="Logger.c" />
-    <ClCompile Include="Window_3DS.c" />
-    <ClCompile Include="Window_Android.c" />
-    <ClCompile Include="Window_BeOS.cpp" />
-    <ClCompile Include="Window_Dreamcast.c" />
-    <ClCompile Include="Window_GCWii.c" />
-    <ClCompile Include="Window_MacClassic.c" />
-    <ClCompile Include="Window_N64.c" />
-    <ClCompile Include="Window_NDS.c" />
-    <ClCompile Include="Window_PS1.c" />
-    <ClCompile Include="Window_PS2.c" />
-    <ClCompile Include="Window_PS3.c" />
-    <ClCompile Include="Window_PSP.c" />
-    <ClCompile Include="Window_PSVita.c" />
-    <ClCompile Include="Window_Saturn.c" />
-    <ClCompile Include="Window_SDL2.c" />
-    <ClCompile Include="Window_SDL3.c" />
-    <ClCompile Include="Window_Switch.c" />
     <ClCompile Include="Window_Terminal.c" />
-    <ClCompile Include="Window_Web.c" />
-    <ClCompile Include="Window_WiiU.c" />
     <ClCompile Include="Window_Win.c" />
-    <ClCompile Include="Window_X11.c" />
-    <ClCompile Include="Window_Xbox.c" />
-    <ClCompile Include="Window_Xbox360.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="_autofit.c" />
     <ClCompile Include="_cff.c" />
@@ -598,11 +664,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="LBackend_ios.m" />
-    <None Include="Window_cocoa.m" />
-    <None Include="Window_ios.m" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

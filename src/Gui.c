@@ -124,7 +124,11 @@ static void LoadOptions(void) {
 	Gui.ShowFPS          = Options_GetBool(OPT_SHOW_FPS, true);
 	
 	Gui.RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
+#if defined CC_BUILD_SYMBIAN && defined CC_BUILD_TOUCH
+	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 2.0f);
+#else
 	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
+#endif
 	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.25f, 5.0f, 1.0f);
 	Gui.RawCrosshairScale = Options_GetFloat(OPT_CROSSHAIR_SCALE, 0.25f, 5.0f, 1.0f);
 	Gui.RawTouchScale     = Options_GetFloat(OPT_TOUCH_SCALE,     0.25f, 5.0f, 1.0f);
@@ -397,7 +401,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 	}	
 	Context2D_Free(&ctx);
 
-	atlas->uScale = 1.0f / (float)ctx.bmp.width;
+	atlas->uScale = Context2D_CalcUV(1, ctx.bmp.width);
 	atlas->tex.uv.u2 = atlas->offset * atlas->uScale;
 	atlas->tex.width = atlas->offset;	
 }
@@ -662,7 +666,9 @@ static void IconsPngProcess(struct Stream* stream, const cc_string* name) {
 static struct TextureEntry icons_entry = { "icons.png", IconsPngProcess };
 
 static void TouchPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL, NULL);
+	if (!Gui.TouchUI) return;
+
+	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL, NULL);	
 }
 static struct TextureEntry touch_entry = { "touch.png", TouchPngProcess };
 

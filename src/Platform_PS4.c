@@ -1,6 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_PS4
 
+#define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -386,15 +387,36 @@ void Platform_LoadSysFonts(void) { }
 union SocketAddress {
 	struct sockaddr raw;
 	struct sockaddr_in  v4;
-	#ifdef AF_INET6
 	struct sockaddr_in6 v6;
 	struct sockaddr_storage total;
-	#endif
 };
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
-#if SUPPORTS_GETADDRINFO
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr = 0;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	union SocketAddress* addr = (union SocketAddress*)dst->data;
+	if (inet_pton(AF_INET6, ip, &addr->v6.sin6_addr) <= 0) return false;
+	
+	addr->v6.sin6_family = AF_INET6;
+	addr->v6.sin6_port   = htons(port);
+		
+	dst->size  = sizeof(addr->v6);
+	return true;
+}
+
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
@@ -429,63 +451,6 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	freeaddrinfo(result);
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-}
-#else
-static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	struct hostent* res = gethostbyname(host);
-	struct sockaddr_in* addr4;
-	char* src_addr;
-	int i;
-	
-	// Must have at least one IPv4 address
-	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
-	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
-
-	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
-	{
-		src_addr = res->h_addr_list[i];
-		if (!src_addr) break;
-		addrs[i].size = sizeof(struct sockaddr_in);
-
-		addr4 = (struct sockaddr_in*)addrs[i].data;
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		addr4->sin_addr   = *(struct in_addr*)src_addr;
-	}
-
-	*numValidAddrs = i;
-	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-}
-#endif
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	union SocketAddress* addr = (union SocketAddress*)addrs[0].data;
-	char str[NATIVE_STR_LEN];
-
-	String_EncodeUtf8(str, address);
-	*numValidAddrs = 0;
-
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) {
-		addr->v4.sin_family = AF_INET;
-		addr->v4.sin_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v4);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	
-	#ifdef AF_INET6
-	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) {
-		addr->v6.sin6_family = AF_INET6;
-		addr->v6.sin6_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v6);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	#endif
-	
-	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {

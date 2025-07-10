@@ -238,10 +238,13 @@ static int MenuOptionsScreen_AddButton(struct MenuOptionsScreen* s, const char* 
 	return i;
 }
 
-static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, Widget_LeftClick backClick) {
+static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, int half, Widget_LeftClick backClick) {
 	struct ButtonWidget* btn;
-	int i, col, row, half = (s->numButtons + 1) / 2;
-	int begRow = 2 - half;
+	int i, col, row, begRow;
+	/* Auto calculate half/dividing count */
+	if (half < 0) half = (s->numButtons + 1) / 2;
+
+	begRow = 2 - half;
 	if (s->numButtons & 1) begRow--;
 	begRow = max(-3, begRow);
 	
@@ -623,18 +626,16 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClO_GetViewBob,  ClO_SetViewBob, NULL);
 		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][1],
 			ClO_GetFPS,      ClO_SetFPS, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][5],
-			ClO_GetHacks,    ClO_SetHacks, NULL);
+		if (Game_ClassicHacks) {
+			MenuOptionsScreen_AddBool(s, "Hacks enabled",
+				ClO_GetHacks,ClO_SetHacks, NULL);
+		}
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchPause);
+	MenuOptionsScreen_EndButtons(s, 4, Menu_SwitchPause);
 	s->DoRecreateExtra = ClassicOptionsScreen_RecreateExtra;
 
 	ButtonWidget_Add(s, &s->buttons[9], 400, Menu_SwitchBindsClassic);
 	Widget_SetLocation(&s->buttons[9],  ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
-
-	/* Disable certain options */
-	if (!Server.IsSinglePlayer) Menu_Remove(s, 3);
-	if (!Game_ClassicHacks)     Menu_Remove(s, 8);
 }
 
 void ClassicOptionsScreen_Show(void) {
@@ -704,7 +705,7 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			-2048, 2048, World.Height / 2,
 			ES_GetEdgeHeight,   ES_SetEdgeHeight, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 }
 
 void EnvSettingsScreen_Show(void) {
@@ -813,7 +814,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddBool(s, "3D anaglyph",
 			ClO_GetAnaglyph,   ClO_SetAnaglyph, NULL);
 	};
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 	s->OnLightingModeServerChanged = GrO_CheckLightingModeAllowed;
 	GrO_CheckLightingModeAllowed(s);
 }
@@ -881,7 +882,7 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddBool(s, "Clickable chat",
 			ChO_GetClickable,     ChO_SetClickable, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 }
 
 void ChatOptionsScreen_Show(void) {
@@ -957,7 +958,7 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddButton(s, ccString_SubOption_GUI[CC_CurrentLanguage][7], Menu_SwitchFont,
 			NULL,             NULL, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 }
 
 void GuiOptionsScreen_Show(void) {
@@ -1095,7 +1096,7 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			1,  179, 70,
 			HS_GetFOV,      HS_SetFOV, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 
 	s->OnHacksChanged = HacksSettingsScreen_CheckHacksAllowed;
 	HacksSettingsScreen_CheckHacksAllowed(s);
@@ -1202,11 +1203,7 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 #endif
 			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
 	}
-	MenuOptionsScreen_AddNum(s, ccString_SubOption_Misc[CC_CurrentLanguage][0],
-			0, CC_LANGUAGE_LANGCNT-1, 0,
-			MiO_GetLanguage, MiO_SetLanguage,
-			NULL);
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchOptions);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 
 	/* Disable certain options */
 	if (!Server.IsSinglePlayer) Menu_Remove(s, 0);
@@ -1282,7 +1279,7 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][6],
 			NA_GetOpts,  NA_SetOpts, NULL);
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchNostalgia);
 }
 
 void NostalgiaAppearanceScreen_Show(void) {
@@ -1355,7 +1352,7 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 			"\n" \
 			"&cNote that some servers only support 0.30 game version");
 	}
-	MenuOptionsScreen_EndButtons(s, Menu_SwitchNostalgia);
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchNostalgia);
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	TextWidget_Add(s, &nostalgia_desc);

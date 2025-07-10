@@ -1,0 +1,26 @@
+TARGET		  ClassiCube_sym3.exe
+
+MACRO CC_BUILD_SYMBIAN_3
+MACRO CC_BUILD_SYMBIAN_LIBGLESV2
+
+ARMFPU vfpv2
+
+#ifdef ARMCC
+ALWAYS_BUILD_AS_ARM
+#endif
+
+LIBRARY libglesv2.lib
+LIBRARY libegl.lib
+
+SOURCEPATH .
+START RESOURCE classicube.rss
+HEADER
+TARGETPATH \resource\apps
+LANG SC
+END
+
+START RESOURCE classicube_reg.rss
+TARGETPATH \private\10003a3f\import\apps
+END
+
+#include "ClassiCube_common.mmh"

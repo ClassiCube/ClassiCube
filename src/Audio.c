@@ -13,20 +13,21 @@
 #include "Utils.h"
 #include "Options.h"
 #include "Deflate.h"
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 /* TODO: Refactor maybe to not rely on checking WinInfo.Handle != NULL */
 #include "Window.h"
 #endif
 
 int Audio_SoundsVolume, Audio_MusicVolume;
+
+const char* const Sound_Names[SOUND_COUNT] = {
+	"none", "wood", "gravel", "grass", "stone",
+	"metal", "glass", "cloth", "sand", "snow",
+};
+
 const cc_string Sounds_ZipPathMC = String_FromConst("audio/default.zip");
 const cc_string Sounds_ZipPathCC = String_FromConst("audio/classicube.zip");
 static const cc_string audio_dir = String_FromConst("audio");
-
-struct Sound {
-	int channels, sampleRate;
-	struct AudioChunk chunk;
-};
 
 
 /*########################################################################################################################*
@@ -44,16 +45,10 @@ static void Sounds_Start(void) {
 
 void Audio_PlayDigSound(cc_uint8 type)  { }
 void Audio_PlayStepSound(cc_uint8 type) { }
+
+void Sounds_LoadDefault(void) { }
 #else
-#define AUDIO_MAX_SOUNDS 10
-
-struct SoundGroup {
-	int count;
-	struct Sound sounds[AUDIO_MAX_SOUNDS];
-};
-struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
-
-static struct Soundboard digBoard, stepBoard;
+struct Soundboard digBoard, stepBoard;
 static RNGState sounds_rnd;
 
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
@@ -240,49 +235,14 @@ static cc_result Sounds_ExtractZip(const cc_string* path) {
 	return res;
 }
 
-/* TODO this is a pretty terrible solution */
-#ifdef CC_BUILD_WEBAUDIO
-static const struct SoundID { int group; const char* name; } sounds_list[] =
-{
-	{ SOUND_CLOTH,  "step_cloth1"  }, { SOUND_CLOTH,  "step_cloth2"  }, { SOUND_CLOTH,  "step_cloth3"  }, { SOUND_CLOTH,  "step_cloth4"  },
-	{ SOUND_GRASS,  "step_grass1"  }, { SOUND_GRASS,  "step_grass2"  }, { SOUND_GRASS,  "step_grass3"  }, { SOUND_GRASS,  "step_grass4"  },
-	{ SOUND_GRAVEL, "step_gravel1" }, { SOUND_GRAVEL, "step_gravel2" }, { SOUND_GRAVEL, "step_gravel3" }, { SOUND_GRAVEL, "step_gravel4" },
-	{ SOUND_SAND,   "step_sand1"   }, { SOUND_SAND,   "step_sand2"   }, { SOUND_SAND,   "step_sand3"   }, { SOUND_SAND,   "step_sand4"   },
-	{ SOUND_SNOW,   "step_snow1"   }, { SOUND_SNOW,   "step_snow2"   }, { SOUND_SNOW,   "step_snow3"   }, { SOUND_SNOW,   "step_snow4"   },
-	{ SOUND_STONE,  "step_stone1"  }, { SOUND_STONE,  "step_stone2"  }, { SOUND_STONE,  "step_stone3"  }, { SOUND_STONE,  "step_stone4"  },
-	{ SOUND_WOOD,   "step_wood1"   }, { SOUND_WOOD,   "step_wood2"   }, { SOUND_WOOD,   "step_wood3"   }, { SOUND_WOOD,   "step_wood4"   },
-	{ SOUND_NONE, NULL },
-
-	{ SOUND_CLOTH,  "dig_cloth1"   }, { SOUND_CLOTH,  "dig_cloth2"   }, { SOUND_CLOTH,  "dig_cloth3"   }, { SOUND_CLOTH,  "dig_cloth4"   },
-	{ SOUND_GRASS,  "dig_grass1"   }, { SOUND_GRASS,  "dig_grass2"   }, { SOUND_GRASS,  "dig_grass3"   }, { SOUND_GRASS,  "dig_grass4"   },
-	{ SOUND_GLASS,  "dig_glass1"   }, { SOUND_GLASS,  "dig_glass2"   }, { SOUND_GLASS,  "dig_glass3"   },
-	{ SOUND_GRAVEL, "dig_gravel1"  }, { SOUND_GRAVEL, "dig_gravel2"  }, { SOUND_GRAVEL, "dig_gravel3"  }, { SOUND_GRAVEL, "dig_gravel4"  },
-	{ SOUND_SAND,   "dig_sand1"    }, { SOUND_SAND,   "dig_sand2"    }, { SOUND_SAND,   "dig_sand3"    }, { SOUND_SAND,   "dig_sand4"    },
-	{ SOUND_SNOW,   "dig_snow1"    }, { SOUND_SNOW,   "dig_snow2"    }, { SOUND_SNOW,   "dig_snow3"    }, { SOUND_SNOW,   "dig_snow4"    },
-	{ SOUND_STONE,  "dig_stone1"   }, { SOUND_STONE,  "dig_stone2"   }, { SOUND_STONE,  "dig_stone3"   }, { SOUND_STONE,  "dig_stone4"   },
-	{ SOUND_WOOD,   "dig_wood1"    }, { SOUND_WOOD,   "dig_wood2"    }, { SOUND_WOOD,   "dig_wood3"    }, { SOUND_WOOD,   "dig_wood4"    },
-};
-
-/* TODO this is a terrible solution */
-static void InitWebSounds(void) {
-	struct Soundboard* board = &stepBoard;
-	struct SoundGroup* group;
-	int i;
-
-	for (i = 0; i < Array_Elems(sounds_list); i++) {
-		if (sounds_list[i].group == SOUND_NONE) {
-			board = &digBoard;
-		} else {
-			group = &board->groups[sounds_list[i].group];
-			group->sounds[group->count++].chunk.data = sounds_list[i].name;
-		}
-	}
+void Sounds_LoadDefault(void) {
+	cc_result res = Sounds_ExtractZip(&Sounds_ZipPathMC);
+	if (res == ReturnCode_FileNotFound)
+		Sounds_ExtractZip(&Sounds_ZipPathCC);
 }
-#endif
 
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
-	cc_result res;
 	if (!AudioBackend_Init()) { 
 		AudioBackend_Free(); 
 		Audio_SoundsVolume = 0; 
@@ -291,13 +251,7 @@ static void Sounds_Start(void) {
 
 	if (sounds_loaded) return;
 	sounds_loaded = true;
-#ifdef CC_BUILD_WEBAUDIO
-	InitWebSounds();
-#else
-	res = Sounds_ExtractZip(&Sounds_ZipPathMC);
-	if (res == ReturnCode_FileNotFound)
-		Sounds_ExtractZip(&Sounds_ZipPathCC);
-#endif
+	AudioBackend_LoadSounds();
 }
 
 static void Sounds_Stop(void) { AudioPool_Close(); }
@@ -346,33 +300,41 @@ static cc_result Music_Buffer(struct AudioChunk* chunk, int maxSamples, struct V
 	}
 
 	chunk->size = samples * 2;
-	res2 = Audio_QueueChunk(&music_ctx, chunk);
+	res2 = StreamContext_Enqueue(&music_ctx, chunk);
 	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
 
 static cc_result Music_PlayOgg(struct Stream* source) {
-	struct OggState ogg;
-	struct VorbisState vorbis;
 	int channels, sampleRate, volume;
-
 	int chunkSize, samplesPerSecond;
 	struct AudioChunk chunks[AUDIO_MAX_BUFFERS] = { 0 };
 	int inUse, i, cur;
 	cc_result res;
 
-	Ogg_Init(&ogg, source);
-	Vorbis_Init(&vorbis);
-	vorbis.source = &ogg;
-	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	struct VorbisState* vorbis = (struct VorbisState*)Mem_TryAllocCleared(1, sizeof(struct VorbisState));
+	struct OggState* ogg = (struct OggState*)Mem_TryAllocCleared(1, sizeof(struct OggState));
+	if (!vorbis || !ogg) return ERR_OUT_OF_MEMORY;
+#else
+	struct OggState _ogg;
+	struct OggState* ogg = &_ogg;
+	struct VorbisState _vorbis;
+	struct VorbisState* vorbis = &_vorbis;
+#endif
+
+	Ogg_Init(ogg, source);
+	Vorbis_Init(vorbis);
+	vorbis->source = ogg;
+	if ((res = Vorbis_DecodeHeaders(vorbis))) goto cleanup;
 	
-	channels   = vorbis.channels;
-	sampleRate = vorbis.sampleRate;
-	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate, 100))) goto cleanup;
+	channels   = vorbis->channels;
+	sampleRate = vorbis->sampleRate;
+	if ((res = StreamContext_SetFormat(&music_ctx, channels, sampleRate, 100))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
 	/*  so can end up decoding slightly over a second of audio */
-	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
+	chunkSize        = channels * (sampleRate + vorbis->blockSizes[1]);
 	samplesPerSecond = channels * sampleRate;
 
 	if ((res = Audio_AllocChunks(chunkSize * 2, chunks, AUDIO_MAX_BUFFERS))) goto cleanup;
@@ -382,24 +344,24 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) 
 	{
-		res = Music_Buffer(&chunks[i], samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[i], samplesPerSecond, vorbis);
 	}
 	if (music_stopping) goto cleanup;
 
-	res  = Audio_Play(&music_ctx);
+	res  = StreamContext_Play(&music_ctx);
 	if (res) goto cleanup;
 	cur  = 0;
 
 	while (!music_stopping) {
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 		/* Don't play music while in the background on Android */
     	/* TODO: Not use such a terrible approach */
-    	if (!Window_Main.Handle.ptr) {
-    		Audio_Pause(&music_ctx);
-    		while (!Window_Main.Handle.ptr && !music_stopping) {
+    	if (!Window_Main.Handle.ptr || Window_Main.Inactive) {
+    		StreamContext_Pause(&music_ctx);
+    		while ((!Window_Main.Handle.ptr || Window_Main.Inactive) && !music_stopping) {
     			Thread_Sleep(10); continue;
     		}
-    		Audio_Play(&music_ctx);
+    		StreamContext_Play(&music_ctx);
     	}
 #endif
         if (volume != Audio_MusicVolume) {
@@ -407,14 +369,14 @@ static cc_result Music_PlayOgg(struct Stream* source) {
             Audio_SetVolume(&music_ctx, volume);
         }
 
-		res = Audio_Poll(&music_ctx, &inUse);
+		res = StreamContext_Update(&music_ctx, &inUse);
 		if (res) { music_stopping = true; break; }
 
 		if (inUse >= AUDIO_MAX_BUFFERS) {
 			Thread_Sleep(10); continue;
 		}
 
-		res = Music_Buffer(&chunks[cur], samplesPerSecond, &vorbis);
+		res = Music_Buffer(&chunks[cur], samplesPerSecond, vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 
 		/* need to specially handle last bit of audio */
@@ -429,14 +391,18 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	} else {
 		/* Wait until the buffers finished playing */
 		for (;;) {
-			if (Audio_Poll(&music_ctx, &inUse) || inUse == 0) break;
+			if (StreamContext_Update(&music_ctx, &inUse) || inUse == 0) break;
 			Thread_Sleep(10);
 		}
 	}
 
 cleanup:
 	Audio_FreeChunks(chunks, AUDIO_MAX_BUFFERS);
-	Vorbis_Free(&vorbis);
+	Vorbis_Free(vorbis);
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	Mem_Free(ogg);
+	Mem_Free(vorbis);
+#endif
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }
 

@@ -1,32 +1,62 @@
-PROJECT_TITLE 	:= ClassiCube
-PROJECT_TITLEID := CUBE00200
-TARGET 			:= ClassiCube-vita
+ifeq ($(strip $(VITASDK)),)
+$(warning "Please set VITASDK variables in your environment. For example:")
+$(warning   export VITASDK=/usr/local/vitasdk)
+$(error   Failed to find VitaSDK installation)
+endif
 
-BUILD_DIR		:= build-vita
-SOURCE_DIRS		:= src third_party/bearssl/src
 
-CFLAGS += -Wl,-q -Ithird_party/bearssl/inc -O1
-C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
+#---------------------------------------------------------------------------------
+# Configurable options
+#---------------------------------------------------------------------------------
+# Name of the final output
+TARGET 			= ClassiCube-vita
+# List of directories containing source code
+SOURCE_DIRS		= src src/psvita third_party/bearssl
+# Directory where object files are placed
+BUILD_DIR		= build/vita
 
-LIBS += -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
+PROJECT_TITLE 	= ClassiCube
+PROJECT_TITLEID = CUBE00200
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
+C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
+
+CFLAGS 	= -O1
+
+LDFLAGS = -Wl,-q
+LIBS 	= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(OBJS:%.o=%.d)
 
-ifeq ($(strip $(VITASDK)),)
-$(warning "Please set VITASDK variables in your environment. For example:")
-$(warning   export VITASDK=/usr/local/vitasdk)
-$(warning   export PATH=$$VITASDK/bin:$$PATH)
-$(error   Failed to find VitaSDK installation)
-endif
+
+#---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+PREFIX	:= $(VITASDK)/bin/arm-vita-eabi-
+VITA_AS	:= $(PREFIX)as
+VITA_CC	:= $(PREFIX)gcc
+VITA_CXX:= $(PREFIX)g++
+VITA_STRIP := $(PREFIX)strip
+
+PACK_VPK 	:= $(VITASDK)/bin/vita-pack-vpk
+MAKE_FSELF	:= $(VITASDK)/bin/vita-make-fself
+MKSOFEX		:= $(VITASDK)/bin/vita-mksfoex
+ELF_CREATE	:= $(VITASDK)/bin/vita-elf-create
 
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
 default: $(BUILD_DIR) $(TARGET).vpk
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 clean:
 	rm $(TARGET).velf $(TARGET).elf $(TARGET).vpk param.sfo eboot.bin $(OBJS)
@@ -36,35 +66,38 @@ clean:
 # executable generation
 #---------------------------------------------------------------------------------
 $(TARGET).vpk: eboot.bin param.sfo
-	vita-pack-vpk -s param.sfo -b eboot.bin -a misc/vita/sce_sys/ICON0.png=sce_sys/ICON0.png $(TARGET).vpk
+	$(PACK_VPK) -s param.sfo -b eboot.bin -a misc/vita/sce_sys/ICON0.png=sce_sys/ICON0.png $(TARGET).vpk
 
 eboot.bin: $(TARGET).velf
-	vita-make-fself $(TARGET).velf eboot.bin
+	$(MAKE_FSELF) $(TARGET).velf eboot.bin
 
 param.sfo:
-	vita-mksfoex -s TITLE_ID="$(PROJECT_TITLEID)" "$(PROJECT_TITLE)" param.sfo
+	$(MKSOFEX) -s TITLE_ID="$(PROJECT_TITLEID)" "$(PROJECT_TITLE)" param.sfo
 
 $(TARGET).velf: $(TARGET).elf
-	arm-vita-eabi-strip -g $<
-	vita-elf-create $< $@
+	$(VITA_STRIP) -g $<
+	$(ELF_CREATE) $< $@
 
 $(TARGET).elf: $(OBJS)
-	arm-vita-eabi-gcc $(CFLAGS) $^ $(LIBS) -o $@
+	$(VITA_CC) $(LDFLAGS) $^ $(LIBS) -o $@
 
 
 #---------------------------------------------------------------------------------
 # object generation
 #---------------------------------------------------------------------------------
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
 $(BUILD_DIR)/%.o : src/%.c
-	arm-vita-eabi-gcc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-	
-$(BUILD_DIR)/%.o : third_party/bearssl/src/%.c
-	arm-vita-eabi-gcc $(CFLAGS) -c $< -o $@
+	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/%.o : src/psvita/%.c
+	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+	
+$(BUILD_DIR)/%.o : third_party/bearssl/%.c
+	$(VITA_CC) $(CFLAGS) -c $< -o $@
+
+
+#---------------------------------------------------------------------------------
 # Dependency tracking
+#---------------------------------------------------------------------------------
 $(DEPFILES):
 
 include $(wildcard $(DEPFILES))

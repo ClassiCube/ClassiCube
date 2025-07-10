@@ -26,10 +26,28 @@ const cc_result ReturnCode_SocketWouldBlock = 1000000;
 const cc_result ReturnCode_SocketDropped    = 1000000;
 
 const char* Platform_AppNameSuffix = " Amiga";
-cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess = true;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+cc_bool  Platform_ReadonlyFilesystem;
 
 static const char __attribute__((used)) min_stack[] = "$STACK:102400";
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "main_impl.h"
+
+int main(int argc, char** argv) {
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	do {
+		res = RunProgram(argc, argv);
+	} while (Window_Main.Exists);
+
+	Window_Free();
+	Process_Exit(res);
+	return res;
+}
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*

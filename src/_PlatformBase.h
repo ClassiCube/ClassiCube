@@ -3,9 +3,21 @@
 #include "Logger.h"
 #include "Constants.h"
 #include "Errors.h"
+#include "Funcs.h"
 
-#ifdef CC_BUILD_TINYSTACK
-CC_BIG_VAR char temp_mem[45000];
+#if CC_BUILD_MAXSTACK < (64 * 1024)
+
+#if defined CC_BUILD_32X || defined CC_BUILD_GBA
+static CC_BIG_VAR int temp_mem[31000 / 4];
+#else
+static CC_BIG_VAR int temp_mem[45000 / 4];
+#endif
+
+void* TempMem_Alloc(int size) {
+	if (size > sizeof(temp_mem)) Process_Abort("TempMem overflow");
+
+	return (void*)temp_mem;
+}
 #endif
 
 /*########################################################################################################################*
@@ -183,3 +195,149 @@ cc_bool DynamicLib_LoadAll(const cc_string* path, const struct DynamicLibSym* sy
 	}
 	return foundAllRequired;
 }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Encryption--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_XTEA_ENCRYPTION
+
+/* Encrypts data using XTEA block cipher, with OS specific method to get machine-specific key */
+static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
+	cc_uint32 v0 = v[0], v1 = v[1], sum = 0, delta = 0x9E3779B9;
+	int i;
+
+	for (i = 0; i < 12; i++) 
+	{
+		v0  += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
+		sum += delta;
+		v1  += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
+	}
+	v[0] = v0; v[1] = v1;
+	String_AppendAll(dst, v, 8);
+}
+
+static void DecipherBlock(cc_uint32* v, const cc_uint32* key) {
+	cc_uint32 v0 = v[0], v1 = v[1], delta = 0x9E3779B9, sum = delta * 12;
+	int i;
+
+	for (i = 0; i < 12; i++) 
+	{
+		v1  -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
+		sum -= delta;
+		v0  -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
+	}
+	v[0] = v0; v[1] = v1;
+}
+
+#define ENC1 0xCC005EC0
+#define ENC2 0x0DA4A0DE 
+#define ENC3 0xC0DED000
+#define MACHINEID_LEN 32
+#define ENC_SIZE 8 /* 2 32 bit ints per block */
+
+static cc_result GetMachineID(cc_uint32* key);
+
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
+	const cc_uint8* src = (const cc_uint8*)data;
+	cc_uint32 header[4], key[4] = { 0 };
+	cc_result res;
+	if ((res = GetMachineID(key))) return res;
+
+	header[0] = ENC1; header[1] = ENC2;
+	header[2] = ENC3; header[3] = len;
+	EncipherBlock(header + 0, key, dst);
+	EncipherBlock(header + 2, key, dst);
+
+	for (; len > 0; len -= ENC_SIZE, src += ENC_SIZE) 
+	{
+		header[0] = 0; header[1] = 0;
+		Mem_Copy(header, src, min(len, ENC_SIZE));
+		EncipherBlock(header, key, dst);
+	}
+	return 0;
+}
+
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
+	const cc_uint8* src = (const cc_uint8*)data;
+	cc_uint32 header[4], key[4] = { 0 };
+	cc_result res;
+	int dataLen;
+
+	/* Total size must be >= header size */
+	if (len < 16) return ERR_END_OF_STREAM;
+	if ((res = GetMachineID(key))) return res;
+
+	Mem_Copy(header, src, 16);
+	DecipherBlock(header + 0, key);
+	DecipherBlock(header + 2, key);
+
+	if (header[0] != ENC1 || header[1] != ENC2 || header[2] != ENC3) return ERR_INVALID_ARGUMENT;
+	len -= 16; src += 16;
+
+	if (header[3] > len) return ERR_INVALID_ARGUMENT;
+	dataLen = header[3];
+
+	for (; dataLen > 0; len -= ENC_SIZE, src += ENC_SIZE, dataLen -= ENC_SIZE) 
+	{
+		header[0] = 0; header[1] = 0;
+		Mem_Copy(header, src, min(len, ENC_SIZE));
+
+		DecipherBlock(header, key);
+		String_AppendAll(dst, header, min(dataLen, ENC_SIZE));
+	}
+	return 0;
+}
+#endif
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Socket----------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
+/* Parses IPv4 addresses in the form a.b.c.d */
+static CC_INLINE cc_bool ParseIPv4Address(const cc_string* addr, cc_uint32* ip) {
+	cc_string parts[5];
+	int i;
+
+	union ipv4_addr_raw {
+		cc_uint8 bytes[4];
+		cc_uint32 value;
+	} raw;
+	
+	/* 4+1 in case user tries '1.1.1.1.1' */
+	if (String_UNSAFE_Split(addr, '.', parts, 4 + 1) != 4) return false;
+
+	for (i = 0; i < 4; i++) 
+	{
+		if (!Convert_ParseUInt8(&parts[i], &raw.bytes[i])) return false;
+	}
+
+	*ip = raw.value;
+	return true;
+}
+
+
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst);
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst);
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs);
+
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	char str[NATIVE_STR_LEN];
+
+	if (ParseIPv4(address, port, &addrs[0])) {
+		*numValidAddrs = 1;
+		return 0;
+	}
+
+	String_EncodeUtf8(str, address);
+	if (ParseIPv6(str, port, &addrs[0])) {
+		*numValidAddrs = 1;
+		return 0;
+	}
+
+	*numValidAddrs = 0;
+	return ParseHost(str, port, addrs, numValidAddrs);
+}
+#endif
+

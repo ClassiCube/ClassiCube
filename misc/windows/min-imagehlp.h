@@ -5,6 +5,10 @@
 /*Not available on older SDKs */
 typedef cc_uintptr _DWORD_PTR;
 
+typedef PVOID      (WINAPI *_PFUNCTION_TABLE_ACCESS_ROUTINE)(HANDLE process, _DWORD_PTR addrBase);
+typedef _DWORD_PTR (WINAPI *_PGET_MODULE_BASE_ROUTINE)(HANDLE process,       _DWORD_PTR address);
+typedef BOOL       (WINAPI *_PREAD_PROCESS_MEMORY_ROUTINE)(HANDLE process,   _DWORD_PTR baseAddress, PVOID buffer, DWORD size, DWORD* numRead);
+
 CC_IMAGEHLP_FUNC _DWORD_PTR (WINAPI *_SymGetModuleBase)(HANDLE process, _DWORD_PTR addr);
 CC_IMAGEHLP_FUNC PVOID      (WINAPI *_SymFunctionTableAccess)(HANDLE process, _DWORD_PTR addr);
 CC_IMAGEHLP_FUNC BOOL       (WINAPI *_SymInitialize)(HANDLE process, PCSTR userSearchPath, BOOL fInvadeProcess);
@@ -16,8 +20,8 @@ CC_IMAGEHLP_FUNC BOOL       (WINAPI *_SymGetLineFromAddr)(HANDLE hProcess, _DWOR
 CC_IMAGEHLP_FUNC BOOL      (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
 
 CC_IMAGEHLP_FUNC BOOL      (WINAPI *_StackWalk)(DWORD machineType, HANDLE process, HANDLE thread, STACKFRAME* stackFrame, PVOID contextRecord,
-									PREAD_PROCESS_MEMORY_ROUTINE ReadMemoryRoutine, PFUNCTION_TABLE_ACCESS_ROUTINE FunctionTableAccessRoutine,
-									PGET_MODULE_BASE_ROUTINE GetModuleBaseRoutine, PTRANSLATE_ADDRESS_ROUTINE TranslateAddress);
+									_PREAD_PROCESS_MEMORY_ROUTINE readMemory, _PFUNCTION_TABLE_ACCESS_ROUTINE functionTableAccess,
+									_PGET_MODULE_BASE_ROUTINE getModuleBase, PTRANSLATE_ADDRESS_ROUTINE translateAddress);
 
 static void ImageHlp_LoadDynamicFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {

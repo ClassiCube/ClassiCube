@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/cross-rs/x86_64-unknown-netbsd:edge
@@ -22,24 +23,26 @@ jobs:
         run: |
           apt-get update
           apt-get -y install zip wget
+
       - name: Retrieve OpenGL and X11 dev files (64 bit)
         run: |
-          mkdir src/netbsd64
-          cd src/netbsd64
+          mkdir netbsd64
+          cd netbsd64
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/netbsd64.zip
           unzip netbsd64.zip
+
       - name: Compile NetBSD builds
         id: compile
         shell: bash
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
-          PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I netbsd64/include -L netbsd64/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          LIBS: "-lm -lpthread -lX11 -lXi -lGL -lexecinfo"
+          SRCS: "src/*.c third_party/bearssl/*.c"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Wl,-R/usr/X11R7/lib -fvisibility=hidden -rdynamic"
+          PLAT64_FLAGS: "-fno-pie -fcf-protection=none -I netbsd64/include -L netbsd64/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
-          echo $LATEST_FLAG
-          
-          cd src
-          x86_64-unknown-netbsd-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-netbsd64-gl1 -lm -lpthread -lX11 -lXi -lGL -lexecinfo
+
+          x86_64-unknown-netbsd-gcc ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-netbsd64-gl1 ${{ env.LIBS }}
 
 
       - uses: ./.github/actions/notify_failure
@@ -52,7 +55,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-netbsd64-gl1'
+          SOURCE_FILE: 'cc-netbsd64-gl1'
           DEST_NAME: 'ClassiCube-NetBSD-64'
           
           

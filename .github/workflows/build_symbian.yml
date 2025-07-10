@@ -1,0 +1,55 @@
+name: Build latest (Symbian)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+      - ModernLighting
+      - AngledLighting
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-symbian
+  cancel-in-progress: true
+
+jobs:
+  build:
+    timeout-minutes: 10
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Symbian SDK
+        run: Invoke-WebRequest https://nnp.nnchan.ru/dl/symbiansr1_gcce_workflow.zip -OutFile symbiansdk.zip
+      - name: Extract Symbian SDK
+        run: Expand-Archive symbiansdk.zip -DestinationPath .
+      - name: Compile Symbian build
+        id: compile
+        run: |
+          $SDK = "$pwd/SDK/"
+          $Env:EPOCROOT = "$SDK".Substring(2)
+          $Env:SBS_GCCE441BIN = "$pwd/GCCE/bin"
+          cmd /c "$SDK/epoc32/tools/sbs\bin\sbs.bat -b misc/symbian/bld.inf -c armv5_urel_gcce -f - -m $SDK/epoc32/build/ClassiCube/makefile -j 4"
+          
+          cd misc/symbian
+          (Get-Content ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv5').Replace('$(TARGET)', 'urel') | Set-Content ClassiCube.pkg
+          cmd /c "$SDK/epoc32/tools/makesis.exe ClassiCube.pkg ClassiCube.sis"
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'misc/symbian/ClassiCube.sis'
+          DEST_NAME: 'ClassiCube-Symbian.sis'
+          
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Symbian build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'symbian'

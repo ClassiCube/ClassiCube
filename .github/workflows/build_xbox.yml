@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-Xbox:
+  build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/xboxdev/nxdk:git-e955705a
@@ -24,7 +25,6 @@ jobs:
           apk add curl curl-dev
           eval $(/usr/src/nxdk/bin/activate -s)
           make xbox
-          cp bin/default.xbe ClassiCube-xbox.xbe
           
 
       - uses: ./.github/actions/notify_failure

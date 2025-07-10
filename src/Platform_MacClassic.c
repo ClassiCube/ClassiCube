@@ -34,8 +34,27 @@ const char* Platform_AppNameSuffix = " MAC 68k";
 #else
 const char* Platform_AppNameSuffix = " MAC PPC";
 #endif
-cc_bool Platform_ReadonlyFilesystem;
-cc_bool Platform_SingleProcess = true;
+
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+cc_bool  Platform_ReadonlyFilesystem;
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "main_impl.h"
+
+int main(int argc, char** argv) {
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	do {
+		res = RunProgram(argc, argv);
+	} while (Window_Main.Exists);
+
+	Window_Free();
+	Process_Exit(res);
+	return res;
+}
 
 
 /*########################################################################################################################*

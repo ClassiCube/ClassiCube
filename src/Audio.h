@@ -11,15 +11,15 @@ extern struct IGameComponent Audio_Component;
 struct AudioContext;
 
 #ifdef CC_BUILD_WEBAUDIO
-#define DEFAULT_SOUNDS_VOLUME   0
+	#define DEFAULT_SOUNDS_VOLUME   0
 #else
-#define DEFAULT_SOUNDS_VOLUME 100
+	#define DEFAULT_SOUNDS_VOLUME 100
 #endif
 
 #ifdef CC_BUILD_NOMUSIC
-#define DEFAULT_MUSIC_VOLUME   0
+	#define DEFAULT_MUSIC_VOLUME   0
 #else
-#define DEFAULT_MUSIC_VOLUME 100
+	#define DEFAULT_MUSIC_VOLUME 100
 #endif
 
 union AudioChunkMeta { void* ptr; cc_uintptr val; };
@@ -55,6 +55,7 @@ void Audio_PlayStepSound(cc_uint8 type);
 cc_bool AudioBackend_Init(void);
 void    AudioBackend_Tick(void);
 void    AudioBackend_Free(void);
+void    AudioBackend_LoadSounds(void);
 
 #define AUDIO_USAGE_BUFFER 0x01
 #define AUDIO_USAGE_STREAM 0x02
@@ -63,22 +64,8 @@ void    AudioBackend_Free(void);
 cc_result Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
 void Audio_Close(struct AudioContext* ctx);
-/* Sets the format of the audio data to be played. */
-/* NOTE: Changing the format can be expensive, depending on the backend. */
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate);
 /* Sets the volume audio data is played at */
 void Audio_SetVolume(struct AudioContext* ctx, int volume);
-/* Queues the given audio chunk for playing. */
-/* NOTE: You MUST ensure Audio_Poll indicates a buffer is free before calling this. */
-/* NOTE: Some backends directly read from the chunk data - therefore you MUST NOT modify it */
-cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk);
-/* Begins playing audio. Audio_QueueChunk must have been used before this. */
-cc_result Audio_Play(struct AudioContext* ctx);
-/* Polls the audio context and then potentially unqueues buffer */
-/* Returns the number of buffers being played or queued */
-/* (e.g. if inUse is 0, no audio buffers are being played or queued) */
-cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
-cc_result Audio_Pause(struct AudioContext* ctx); /* Only implemented with OpenSL ES backend */
 
 /* Outputs more detailed information about errors with audio. */
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
@@ -92,6 +79,63 @@ void Audio_Warn(cc_result res, const char* action);
 
 cc_result AudioPool_Play(struct AudioData* data);
 void AudioPool_Close(void);
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Stream context-----------------------------------------------------*
+*#########################################################################################################################*/
+/* Sets the format of the audio data to be played. */
+/* NOTE: Changing the format can be expensive, depending on the backend. */
+cc_result StreamContext_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate);
+/* Queues the given audio chunk for playing. */
+/* NOTE: You MUST ensure StreamContext_Update indicates a buffer is free before calling this. */
+/* NOTE: Some backends directly read from the chunk data - therefore you MUST NOT modify it */
+cc_result StreamContext_Enqueue(struct AudioContext* ctx, struct AudioChunk* chunk);
+/* Begins playing audio. StreamContext_Enqueue must have been used before this. */
+cc_result StreamContext_Play(struct AudioContext* ctx);
+/* Temporarily pauses playing audio. Can be resumed again using StreamContext_Play. */
+cc_result StreamContext_Pause(struct AudioContext* ctx);
+/* Updates the audio context and then potentially unqueues buffer */
+/* Returns the number of buffers in use (i.e. being played or queued to play) */
+/*   (e.g. if inUse is 0, no audio buffers are being played or queued) */
+cc_result StreamContext_Update(struct AudioContext* ctx, int* inUse);
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Sound context------------------------------------------------------*
+*#########################################################################################################################*/
+/* Whether the given audio data can be played without recreating the underlying audio device */
+cc_bool   SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data);
+/* Plays the given audio data */
+cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data);
+/* Polls the audio context and then potentially unqueues internal buffers */
+/* Returns whether the audio context is currently playing audio */
+cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy);
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Sounds---------------------------------------------------------*
+*#########################################################################################################################*/
+enum SoundType {
+	SOUND_NONE,  SOUND_WOOD,  SOUND_GRAVEL, SOUND_GRASS, 
+	SOUND_STONE, SOUND_METAL, SOUND_GLASS,  SOUND_CLOTH, 
+	SOUND_SAND,  SOUND_SNOW,  SOUND_COUNT
+};
+extern const char* const Sound_Names[SOUND_COUNT];
+
+#define AUDIO_MAX_SOUNDS 10
+struct Sound {
+	int channels, sampleRate;
+	struct AudioChunk chunk;
+};
+struct SoundGroup {
+	int count;
+	struct Sound sounds[AUDIO_MAX_SOUNDS];
+};
+struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
+
+extern struct Soundboard digBoard, stepBoard;
+void Sounds_LoadDefault(void);
 
 CC_END_HEADER
 #endif

@@ -5,44 +5,25 @@
 #include "Window.h"
 #include <stdint.h>
 #include <yaul.h>
-#include <stdlib.h>
+#include "_BlockAlloc.h"
 
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 224
 #define CMDS_COUNT 450
-#define HDR_CMDS 2
+#define HDR_CMDS     2
 
 static struct {
 	vdp1_cmdt_t hdrs[HDR_CMDS];
 	vdp1_cmdt_t list[CMDS_COUNT];
-	vdp1_cmdt_t extra[1]; // extra room for 'end' command if needed
+	vdp1_cmdt_t extra; // extra room for 'end' command if needed
 } cmds;
 static uint16_t z_table[CMDS_COUNT];
-static int cmds_count, cmds_3DCount;
+static int cmds_3DCount;
+
+static vdp1_cmdt_t* cmds_cur;
+static uint16_t* z_cur;
 
 static PackedCol clear_color;
-static vdp1_vram_partitions_t _vdp1_vram_partitions;
-static void* tex_vram_addr;
-static void* tex_vram_cur;
-static int tex_width = 8, tex_height = 8;
-static vdp1_gouraud_table_t* gourad_base;
-static cc_bool noMemWarned;
-
-// NOINLINE to avoid polluting the hot path
-static CC_NOINLINE vdp1_cmdt_t* NextPrimitive_nomem(void) {
-	if (noMemWarned) return NULL;
-	noMemWarned = true;
-	
-	Platform_LogConst("OUT OF VERTEX RAM");
-	return NULL;
-}
-
-static vdp1_cmdt_t* NextPrimitive(uint16_t z) {
-	if (cmds_count >= CMDS_COUNT) return NextPrimitive_nomem();
-
-	z_table[cmds_count] = UInt16_MaxValue - z;
-	return &cmds.list[cmds_count++];
-}
 
 static const vdp1_cmdt_draw_mode_t color_draw_mode = {
 	.cc_mode    = VDP1_CMDT_CC_REPLACE,
@@ -52,6 +33,39 @@ static const vdp1_cmdt_draw_mode_t shaded_draw_mode = {
 	.cc_mode    = VDP1_CMDT_CC_GOURAUD,
 	.color_mode = VDP1_CMDT_CM_RGB_32768
 };
+
+#define CMDT_REGION_COUNT    2048
+#define TEXTURE_REGION_SIZE  442000
+#define GOURAUD_REGION_COUNT 1024
+#define CLUT_REGION_COUNT    256
+
+static vdp1_gouraud_table_t* gouraud_base;
+static vdp1_clut_t* clut_base;
+static vdp1_cmdt_t* cmdt_base;
+static void* texture_base;
+
+static void InitVRAM(void) {
+    vdp1_vram_t ptr = VDP1_VRAM(0);
+
+    cmdt_base = (vdp1_cmdt_t*)ptr;
+    ptr += CMDT_REGION_COUNT * sizeof(vdp1_cmdt_t);
+
+    texture_base = (void*)ptr;
+    ptr += TEXTURE_REGION_SIZE;
+
+    gouraud_base = (vdp1_gouraud_table_t*)ptr;
+    ptr += GOURAUD_REGION_COUNT * sizeof(vdp1_gouraud_table_t);
+
+    clut_base = (vdp1_clut_t*)ptr;
+    ptr += CLUT_REGION_COUNT * sizeof(vdp1_clut_t);
+
+	int S = (int)(ptr - VDP1_VRAM(sizeof(vdp1_cmdt_t)));
+	int T = VDP1_VRAM_SIZE;
+	Platform_Log2("VRAM ALLOC: %i of %i", &S, &T);
+
+	if (ptr <= VDP1_VRAM(VDP1_VRAM_SIZE)) return;
+	Process_Abort("Invalid VRAM allocations");
+}
 
 static void UpdateVDP1Env(void) {
 	vdp1_env_t env;
@@ -74,7 +88,7 @@ static void CalcGouraudColours(void) {
 		int b_idx = (i & 0x380) >> 7, B = b_idx << (5 - 3);
 		rgb1555_t gouraud = RGB1555(1, R, G, B);
 		
-		vdp1_gouraud_table_t* cur = &_vdp1_vram_partitions.gouraud_base[i];
+		vdp1_gouraud_table_t* cur = &gouraud_base[i];
 		cur->colors[0] = gouraud;
 		cur->colors[1] = gouraud;
 		cur->colors[2] = gouraud;
@@ -99,18 +113,28 @@ void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
+static void SetupHeaderCommands(void) {
+	vdp1_cmdt_t* cmd;
+
+	cmd = &cmds.hdrs[0];
+	cmd->cmd_ctrl = VDP1_CMDT_SYSTEM_CLIP_COORD;
+	cmd->cmd_xc   = SCREEN_WIDTH  - 1;
+	cmd->cmd_yc   = SCREEN_HEIGHT - 1;
+
+	cmd = &cmds.hdrs[1];
+	cmd->cmd_ctrl = VDP1_CMDT_LOCAL_COORD;
+	cmd->cmd_xa   = SCREEN_WIDTH  / 2;
+	cmd->cmd_ya   = SCREEN_HEIGHT / 2;
+}
+
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
-        vdp1_vram_partitions_get(&_vdp1_vram_partitions);
-		// TODO less ram for gourad base
+		// TODO less ram for gouraud base
         vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(3, 0x01FFFE),
             RGB1555(1, 0, 3, 15));
         vdp2_sprite_priority_set(0, 6);
 
-		tex_vram_addr = _vdp1_vram_partitions.texture_base;
-		tex_vram_cur  = _vdp1_vram_partitions.texture_base;
-		gourad_base   = _vdp1_vram_partitions.gouraud_base;
-
+		InitVRAM();
 		UpdateVDP1Env();
 		CalcGouraudColours();
 	}
@@ -121,6 +145,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexHeight = 16; // 128
 	Gfx.Created      = true;
 	Gfx.Limitations  = GFX_LIMIT_NO_UV_SUPPORT | GFX_LIMIT_MAX_VERTEX_SIZE;
+	SetupHeaderCommands();
 }
 
 void Gfx_Free(void) { 
@@ -131,69 +156,79 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static uint16_t cur_char_size;
+static uint16_t cur_char_base;
+
 typedef struct CCTexture {
-	int width, height;
-	void* addr;
+	short width, height;
+	unsigned offset, blocks;
 } CCTexture;
+#define CCTexture_Addr(tex) (texture_base + (tex)->offset * TEX_BLOCK_SIZE)
+
+#define TEX_BLOCK_SIZE 256
+#define TEX_TOTAL_BLOCKS (TEXTURE_REGION_SIZE / TEX_BLOCK_SIZE)
+static cc_uint8 tex_table[TEX_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
+
+static cc_bool texture_alloc(CCTexture* tex, int width, int height) {
+	int size   = width * height * 2;
+
+	int blocks = (size + (TEX_BLOCK_SIZE - 1)) / TEX_BLOCK_SIZE;
+	int addr   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
+	if (addr == -1) return false;
+
+	tex->width  = width;
+	tex->height = height;
+	tex->offset = addr;
+	tex->blocks = blocks;
+	return true;
+}
+
+static void texture_release(CCTexture* tex) {
+	blockalloc_dealloc(tex_table, tex->offset, tex->blocks);
+}
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	CCTexture* tex = Mem_TryAlloc(1, sizeof(CCTexture));
 	if (!tex) return NULL;
 
-	// use malloc to ensure tmp is in HRAM (can't DMA from LRAM))
-	cc_uint16* tmp = malloc(bmp->width * bmp->height * 2);
-	if (!tmp) return NULL;
-
-	tex->addr   = tex_vram_addr;
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
-
-	tex_vram_addr += tex->width * tex->height * 2;
-	int avail = (char*)gourad_base - (char*)tex_vram_addr;
-	if (avail <= 0) {
+	if (!texture_alloc(tex, bmp->width, bmp->height)) {
 		Platform_LogConst("OUT OF VRAM");
-		Mem_Free(tmp); 
+		Mem_Free(tex);
 		return NULL; 
-	} else {
-		Platform_Log1("VRAM: %i bytes left", &avail);	
 	}
 
-	// TODO: Only copy when rowWidth != bmp->width
-	for (int y = 0; y < bmp->height; y++)
+	int vram_free = blockalloc_total_free(tex_table, TEX_TOTAL_BLOCKS) * TEX_BLOCK_SIZE;
+	Platform_Log1("VRAM left: %i bytes", &vram_free);
+
+	int width = bmp->width, height = bmp->height;
+	cc_uint8*  tmp = CCTexture_Addr(tex);
+	cc_uint16* src = bmp->scan0;
+	cc_uint16* dst = (cc_uint16*)tmp;
+
+	for (int y = 0; y < height; y++)
 	{
-		cc_uint16* src = bmp->scan0 + y * rowWidth;
-		cc_uint16* dst = tmp        + y * bmp->width;
-
-		for (int x = 0; x < bmp->width; x++)
+		for (int x = 0; x < width; x++)
 		{
-			dst[x] = src[x];
+			*dst++ = src[x];
 		}
+		src += rowWidth;
 	}
-
-	scu_dma_transfer(0, tex->addr, tmp, tex->width * tex->height * 2);
-	scu_dma_transfer_wait(0);
-	free(tmp);
 	return tex;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
+	cc_uint8* addr = CCTexture_Addr(tex);
 
-	tex_vram_cur = tex->addr;
-	tex_width    = tex->width;
-	tex_height   = tex->height;
+	cur_char_size  = (((tex->width >> 3) << 8) | tex->height) & 0x3FFF;
+	cur_char_base  = ((vdp1_vram_t)addr >> 3) & 0xFFFF;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = *texId;
-	// TODO properly free vram
 	if (tex) {
-		// This is mainly to avoid leak with text in top left
-		int size = tex->width * tex->height * 2;
-		if (tex_vram_addr == tex->addr + size)
-			tex_vram_addr -= size;
-
+		texture_release(tex);
 		Mem_Free(tex);
 	}
 	*texId = NULL;
@@ -374,31 +409,28 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-struct MatrixRow { int x, y, z, w; };
-static struct MatrixRow mvp_row1, mvp_row2, mvp_row3, mvp_trans;
+struct MatrixCol { int trans, col1, col2, col3; };
+struct MatrixMVP { struct MatrixCol w, x, y; };
+static struct MatrixMVP mvp_;
 
 #define ToFixed(v) (int)(v * (1 << 12))
 
 static void LoadTransformMatrix(struct Matrix* src) {
-	mvp_trans.x = XYZFixed(1) * ToFixed(src->row4.x);
-	mvp_trans.y = XYZFixed(1) * ToFixed(src->row4.y);
-	mvp_trans.z = XYZFixed(1) * ToFixed(src->row4.z);
-	mvp_trans.w = XYZFixed(1) * ToFixed(src->row4.w);
+	mvp_.x.trans = XYZFixed(1) * ToFixed(src->row4.x);
+	mvp_.y.trans = XYZFixed(1) * ToFixed(src->row4.y);
+	mvp_.w.trans = XYZFixed(1) * ToFixed(src->row4.w);
 	
-	mvp_row1.x = ToFixed(src->row1.x);
-	mvp_row1.y = ToFixed(src->row1.y);
-	mvp_row1.z = ToFixed(src->row1.z);
-	mvp_row1.w = ToFixed(src->row1.w);
+	mvp_.x.col1 = ToFixed(src->row1.x);
+	mvp_.y.col1 = ToFixed(src->row1.y);
+	mvp_.w.col1 = ToFixed(src->row1.w);
 	
-	mvp_row2.x = ToFixed(src->row2.x);
-	mvp_row2.y = ToFixed(src->row2.y);
-	mvp_row2.z = ToFixed(src->row2.z);
-	mvp_row2.w = ToFixed(src->row2.w);
+	mvp_.x.col2 = ToFixed(src->row2.x);
+	mvp_.y.col2 = ToFixed(src->row2.y);
+	mvp_.w.col2 = ToFixed(src->row2.w);
 	
-	mvp_row3.x = ToFixed(src->row3.x);
-	mvp_row3.y = ToFixed(src->row3.y);
-	mvp_row3.z = ToFixed(src->row3.z);
-	mvp_row3.w = ToFixed(src->row3.w);
+	mvp_.x.col3 = ToFixed(src->row3.x);
+	mvp_.y.col3 = ToFixed(src->row3.y);
+	mvp_.w.col3 = ToFixed(src->row3.w);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -474,49 +506,42 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 }
 
-static int Transform(IVec3* result, struct SATVertexTextured* a) {
-	int w = a->x * mvp_row1.w + a->y * mvp_row2.w + a->z * mvp_row3.w + mvp_trans.w;
-	if (w <= 0) return 1;
+// Calculates v->x * col1 + v->y * col2 + v->z * col3 + trans
+static inline int __attribute__((always_inline)) TransformVector(void* v, struct MatrixCol* col) {
+    int res;
 
-	int x = a->x * mvp_row1.x + a->y * mvp_row2.x + a->z * mvp_row3.x + mvp_trans.x;
-	cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
-
-	int y = a->x * mvp_row1.y + a->y * mvp_row2.y + a->z * mvp_row3.y + mvp_trans.y;
-	result->x = cpu_divu_quotient_get();
-	cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
-
-	int z = a->x * mvp_row1.z + a->y * mvp_row2.z + a->z * mvp_row3.z + mvp_trans.z;
-	result->y = cpu_divu_quotient_get();
-	cpu_divu_32_32_set(z * 512, w);
-
-	if (result->x < -2048 || result->x > 2048 || result->y < -2048 || result->y > 2048) return 1;
-
-	result->z = cpu_divu_quotient_get();
-	return result->z < 0 || result->z > 512;
+    __asm__("clrmac                   \n"
+			"lds.l @%[col]+, MACL     \n"
+			"mac.l @%[col]+, @%[vec]+ \n"
+			"mac.l @%[col]+, @%[vec]+ \n"
+			"mac.l @%[col]+, @%[vec]+ \n"
+ 			"sts       macl,  %[res]  \n"
+ 			: [col] "+r" (col), [vec] "+r" (v), [res] "=r" (res)
+ 			: "m" (*v), "m" (*col)
+ 			: "mach", "macl", "memory");
+    return res;
 }
 
 #define Coloured2D_X(value) XYZInteger(value) - SCREEN_WIDTH  / 2
 #define Coloured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
 
 static void DrawColouredQuads2D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
+	struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex;
+	return; // TODO menus invisible otherwise
+
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex + i;
+		if (cmds_cur >= &cmds.extra) return;
+		vdp1_cmdt_t* cmd = cmds_cur++;
 
-		int16_vec2_t points[4];
-		points[0].x = Coloured2D_X(v[0].x); points[0].y = Coloured2D_Y(v[0].y);
-		points[1].x = Coloured2D_X(v[1].x); points[1].y = Coloured2D_Y(v[1].y);
-		points[2].x = Coloured2D_X(v[2].x); points[2].y = Coloured2D_Y(v[2].y);
-		points[3].x = Coloured2D_X(v[3].x); points[3].y = Coloured2D_Y(v[3].y);
+		cmd->cmd_ctrl = VDP1_CMDT_POLYGON;
+		cmd->cmd_colr = v->Col;
+		cmd->cmd_pmod = 0xC0 | color_draw_mode.raw;
 
-		rgb1555_t color; color.raw = v->Col;
-		vdp1_cmdt_t* cmd = NextPrimitive(0);
-		if (!cmd) return;
-
-		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     color);
-		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		cmd->cmd_xa = Coloured2D_X(v[0].x); cmd->cmd_ya = Coloured2D_Y(v[0].y);
+		cmd->cmd_xb = Coloured2D_X(v[1].x); cmd->cmd_yb = Coloured2D_Y(v[1].y);
+		cmd->cmd_xc = Coloured2D_X(v[2].x); cmd->cmd_yc = Coloured2D_Y(v[2].y);
+		cmd->cmd_xd = Coloured2D_X(v[3].x); cmd->cmd_yd = Coloured2D_Y(v[3].y);
 	}
 }
 
@@ -524,90 +549,131 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 #define Textured2D_Y(value) XYZInteger(value) - SCREEN_HEIGHT / 2
 
 static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
+	uint16_t char_size = cur_char_size;
+	uint16_t char_base = cur_char_base;
+	uint16_t gour_base = ((vdp1_vram_t)gouraud_base >> 3);
+	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
+
+	for (int i = 0; i < verticesCount; i += 4, v += 4)
 	{
-		struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex + i;
+		if (cmds_cur >= &cmds.extra) return;
+		vdp1_cmdt_t* cmd = cmds_cur++;
 
-		int16_vec2_t points[4];
-		points[0].x = Textured2D_X(v[0].x); points[0].y = Textured2D_Y(v[0].y);
-		points[1].x = Textured2D_X(v[1].x); points[1].y = Textured2D_Y(v[1].y);
-		points[2].x = Textured2D_X(v[2].x); points[2].y = Textured2D_Y(v[2].y);
-		points[3].x = Textured2D_X(v[3].x); points[3].y = Textured2D_Y(v[3].y);
+		cmd->cmd_ctrl = VDP1_CMDT_DISTORTED_SPRITE | v->flip;
+		cmd->cmd_size = char_size;
+		cmd->cmd_srca = char_base;
+		cmd->cmd_pmod = (v->Col == 1023 ? color_draw_mode : shaded_draw_mode).raw;
+		cmd->cmd_grda = (gour_base + v->Col) & 0xFFFF;
 
-		vdp1_cmdt_t* cmd = NextPrimitive(0);
-		if (!cmd) return;
-
-		vdp1_cmdt_distorted_sprite_set(cmd);
-		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
-		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
-		vdp1_cmdt_char_flip_set(cmd, v->flip);
-		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
-		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		cmd->cmd_xa = Textured2D_X(v[0].x); cmd->cmd_ya = Textured2D_Y(v[0].y);
+		cmd->cmd_xb = Textured2D_X(v[1].x); cmd->cmd_yb = Textured2D_Y(v[1].y);
+		cmd->cmd_xc = Textured2D_X(v[2].x); cmd->cmd_yc = Textured2D_Y(v[2].y);
+		cmd->cmd_xd = Textured2D_X(v[3].x); cmd->cmd_yd = Textured2D_Y(v[3].y);
 	}
+}
+
+static int TransformColoured(struct SATVertexColoured* a, vdp1_cmdt_t* cmd) {
+	short* dst = &cmd->cmd_xa;
+	int aveZ = 0;
+
+	for (int i = 0; i < 4; i++, a++)
+	{
+		int w = TransformVector(a, &mvp_.w);
+		if (w <= 0) return -1;
+
+		int x = TransformVector(a, &mvp_.x);
+		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
+
+		int y = TransformVector(a, &mvp_.y);
+		x = cpu_divu_quotient_get();
+		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
+
+		*dst++ = x;
+		if (x < -2048 || x > 2048) return -1;
+
+		int z = (unsigned)w >> 6;
+		if (z < 0 || z > 50000) return -1;
+		aveZ += z;
+
+		y = cpu_divu_quotient_get();
+		if (y < -2048 || y > 2048) return -1;
+		*dst++ = y;
+	}
+	return aveZ >> 2;
 }
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
+	struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex;
+
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
 	{
-		struct SATVertexColoured* v = (struct SATVertexColoured*)gfx_vertices + startVertex + i;
+		vdp1_cmdt_t* cmd = cmds_cur;
+		if (cmd >= &cmds.extra) return;
 
-		IVec3 coords[4];
-		int clipped = 0;
-		clipped |= Transform(&coords[0], &v[0]);
-		clipped |= Transform(&coords[1], &v[1]);
-		clipped |= Transform(&coords[2], &v[2]);
-		clipped |= Transform(&coords[3], &v[3]);
-		if (clipped) continue;
+		int z = TransformColoured(v, cmd);
+		if (z < 0) continue;
+	
+		cmds_cur++;
+		*z_cur++ = UInt16_MaxValue - z;
 
-		int16_vec2_t points[4];
-		points[0].x = coords[0].x; points[0].y = coords[0].y;
-		points[1].x = coords[1].x; points[1].y = coords[1].y;
-		points[2].x = coords[2].x; points[2].y = coords[2].y;
-		points[3].x = coords[3].x; points[3].y = coords[3].y;
-
-		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
-		rgb1555_t color; color.raw = v->Col;
-		vdp1_cmdt_t* cmd = NextPrimitive(z);
-		if (!cmd) return;
-
-		vdp1_cmdt_polygon_set(cmd);
-		vdp1_cmdt_color_set(cmd,     color);
-		vdp1_cmdt_draw_mode_set(cmd, color_draw_mode);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		cmd->cmd_ctrl = VDP1_CMDT_POLYGON;
+		cmd->cmd_colr = v->Col;
+		cmd->cmd_pmod = 0xC0 | color_draw_mode.raw;
 	}
 }
 
-static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
-	for (int i = 0; i < verticesCount; i += 4) 
+static int TransformTextured(struct SATVertexTextured* a, vdp1_cmdt_t* cmd) {
+	short* dst = &cmd->cmd_xa;
+	int aveZ = 0;
+
+	for (int i = 0; i < 4; i++, a++)
 	{
-		struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex + i;
+		int w = TransformVector(a, &mvp_.w);
+		if (w <= 0) return -1;
 
-		IVec3 coords[4];
-		int clipped = 0;
-		clipped |= Transform(&coords[0], &v[0]);
-		clipped |= Transform(&coords[1], &v[1]);
-		clipped |= Transform(&coords[2], &v[2]);
-		clipped |= Transform(&coords[3], &v[3]);
-		if (clipped) continue;
+		int x = TransformVector(a, &mvp_.x);
+		cpu_divu_32_32_set(x * (SCREEN_WIDTH/2), w);
 
-		int16_vec2_t points[4];
-		points[0].x = coords[0].x; points[0].y = coords[0].y;
-		points[1].x = coords[1].x; points[1].y = coords[1].y;
-		points[2].x = coords[2].x; points[2].y = coords[2].y;
-		points[3].x = coords[3].x; points[3].y = coords[3].y;
+		int y = TransformVector(a, &mvp_.y);
+		x = cpu_divu_quotient_get();
+		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
-		int z = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) >> 2;
-		vdp1_cmdt_t* cmd = NextPrimitive(z);
-		if (!cmd) return;
+		*dst++ = x;
+		if (x < -2048 || x > 2048) return -1;
 
-		vdp1_cmdt_distorted_sprite_set(cmd);
-		vdp1_cmdt_char_size_set(cmd, tex_width, tex_height);
-		vdp1_cmdt_char_base_set(cmd, (vdp1_vram_t)tex_vram_cur);
-		vdp1_cmdt_char_flip_set(cmd, v->flip);
-		vdp1_cmdt_draw_mode_set(cmd, v->Col == 1023 ? color_draw_mode : shaded_draw_mode);
-		vdp1_cmdt_gouraud_base_set(cmd, (vdp1_vram_t)&gourad_base[v->Col]);
-		vdp1_cmdt_vtx_set(cmd, 		 points);
+		int z = (unsigned)w >> 6;
+		if (z < 0 || z > 50000) return -1;
+		aveZ += z;
+
+		y = cpu_divu_quotient_get();
+		if (y < -2048 || y > 2048) return -1;
+		*dst++ = y;
+	}
+	return aveZ >> 2;
+}
+
+static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
+	struct SATVertexTextured* v = (struct SATVertexTextured*)gfx_vertices + startVertex;
+	uint16_t char_size = cur_char_size;
+	uint16_t char_base = cur_char_base;
+	uint16_t gour_base = ((vdp1_vram_t)gouraud_base  >> 3);
+
+	for (int i = 0; i < verticesCount; i += 4, v += 4) 
+	{
+		vdp1_cmdt_t* cmd = cmds_cur;
+		if (cmd >= &cmds.extra) return;
+
+		int z = TransformTextured(v, cmd);
+		if (z < 0) continue;
+	
+		cmds_cur++;
+		*z_cur++ = UInt16_MaxValue - z;
+
+		cmd->cmd_ctrl = VDP1_CMDT_DISTORTED_SPRITE | v->flip;
+		cmd->cmd_size = char_size;
+		cmd->cmd_srca = char_base;
+		cmd->cmd_pmod = (v->Col == 1023 ? color_draw_mode : shaded_draw_mode).raw;
+		cmd->cmd_grda = (gour_base + v->Col) & 0xFFFF;
 	}
 }
 
@@ -648,20 +714,9 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
 void Gfx_BeginFrame(void) {
 	//Platform_LogConst("FRAME BEG");
-	cmds_count   = 0;
+	cmds_cur = cmds.list;
+	z_cur    = z_table;
 	cmds_3DCount = 0;
-
-	static const int16_vec2_t system_clip_coord  = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
-	static const int16_vec2_t local_coord_center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-	vdp1_cmdt_t* cmd;
-
-	cmd = &cmds.hdrs[0];
-	vdp1_cmdt_system_clip_coord_set(cmd);
-	vdp1_cmdt_vtx_system_clip_coord_set(cmd, system_clip_coord);
-
-	cmd = &cmds.hdrs[1];
-	vdp1_cmdt_local_coord_set(cmd);
-	vdp1_cmdt_vtx_local_coord_set(cmd, local_coord_center);
 }
 
 static void SortCommands(int left, int right) {
@@ -684,23 +739,25 @@ static void SortCommands(int left, int right) {
 }
 
 void Gfx_EndFrame(void) {
+	if (cmds_cur >= &cmds.extra) Platform_LogConst("OUT OF VERTEX RAM");
 	//Platform_LogConst("FRAME END");
 	vdp1_cmdt_t* cmd;
 
 	// TODO optimise Z sorting for 3D polygons
 	if (cmds_3DCount) SortCommands(0, cmds_3DCount - 1);
 
-	cmd = NextPrimitive(UInt16_MaxValue);
-	if (!cmd) { cmd = &cmds.extra[0]; cmds_count++; }
-	vdp1_cmdt_end_set(cmd);
+	// cmds.extra is 1 past end of main command array
+	cmd = cmds_cur < &cmds.extra ? cmds_cur : &cmds.extra;
+	cmd->cmd_ctrl  = 0x8000; // end command bit
 
-	vdp1_cmdt_list_t cmdt_list;
-	cmdt_list.cmdts = cmds.hdrs;
-    cmdt_list.count = HDR_CMDS + cmds_count;
-	vdp1_sync_cmdt_list_put(&cmdt_list, 0);
+	int poly_cmds  = (int)(cmds_cur - cmds.list);
+	int cmds_count = HDR_CMDS + poly_cmds + 1; // +1 for end command
 
+	//vdp1_sync_wait();
+	vdp1_sync_cmdt_put(cmds.hdrs, cmds_count, 0);
 	vdp1_sync_render();
 	vdp1_sync();
+
 	vdp2_sync();
 	vdp2_sync_wait();
 }
@@ -726,7 +783,7 @@ cc_bool Gfx_TryRestoreContext(void) { return true; }
 void Gfx_Begin2D(int width, int height) {
 	Gfx_SetAlphaBlending(true);
 	gfx_rendering2D = true;
-	cmds_3DCount = cmds_count;
+	cmds_3DCount = (int)(cmds_cur - cmds.list);
 }
 
 void Gfx_End2D(void) {

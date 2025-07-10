@@ -1,5 +1,11 @@
 name: Build latest (Android2)
-on: [push]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-android
@@ -7,31 +13,16 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref_name == github.event.repository.default_branch
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/saschpe/android-ndk:34-jdk17.0.8_7-ndk25.2.9519653-cmake3.22.1
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compile android builds
+      - name: Retrieve dependencies
         shell: bash
-        id: compile
-        env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
-          DROID_FLAGS: "-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
-          DROID_LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
-          
-          DROID_FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
-          DROID_LIBS="-lGLESv2 -lEGL -lm -landroid -llog"
-          
-          ROOT_DIR=$PWD
-          NDK_ROOT="/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          TOOLS_ROOT=$ROOT_DIR/build-tools
-          SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
-          
           mkdir build-tools
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/build-tools.zip
           unzip build-tools.zip -d build-tools
@@ -39,21 +30,38 @@ jobs:
           chmod +x build-tools/dx
           chmod +x build-tools/zipalign
 
-          cd $ROOT_DIR/src
-          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_16
-          $NDK_ROOT/armv7a-linux-androideabi19-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_32
-          $NDK_ROOT/aarch64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-arm_64
-          $NDK_ROOT/i686-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_32
-          $NDK_ROOT/x86_64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS $LATEST_FLAG -o cc-droid-x86_64
+      - name: Compile android builds
+        shell: bash
+        id: compile
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
+          DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
+          LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
+          SRCS: "src/*.c third_party/bearssl/*.c"
+        run: |
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          
+          DROID_FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+          
+          ROOT_DIR=$PWD
+          NDK_ROOT="/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          TOOLS_ROOT=$ROOT_DIR/build-tools
+          SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
+
+          $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_16
+          $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_32
+          $NDK_ROOT/aarch64-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_64
+          $NDK_ROOT/i686-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-x86_32
+          $NDK_ROOT/x86_64-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-x86_64
           
           cd $ROOT_DIR/android/app/src/main
           # copy required native libraries
           mkdir lib lib/armeabi lib/armeabi-v7a lib/arm64-v8a lib/x86 lib/x86_64
-          cp $ROOT_DIR/src/cc-droid-arm_16 lib/armeabi/libclassicube.so
-          cp $ROOT_DIR/src/cc-droid-arm_32 lib/armeabi-v7a/libclassicube.so
-          cp $ROOT_DIR/src/cc-droid-arm_64 lib/arm64-v8a/libclassicube.so
-          cp $ROOT_DIR/src/cc-droid-x86_32 lib/x86/libclassicube.so
-          cp $ROOT_DIR/src/cc-droid-x86_64 lib/x86_64/libclassicube.so
+          cp $ROOT_DIR/cc-droid-arm_16 lib/armeabi/libclassicube.so
+          cp $ROOT_DIR/cc-droid-arm_32 lib/armeabi-v7a/libclassicube.so
+          cp $ROOT_DIR/cc-droid-arm_64 lib/arm64-v8a/libclassicube.so
+          cp $ROOT_DIR/cc-droid-x86_32 lib/x86/libclassicube.so
+          cp $ROOT_DIR/cc-droid-x86_64 lib/x86_64/libclassicube.so
           
           # The following commands are for manually building an .apk, see
           #  https://spin.atomicobject.com/2011/08/22/building-android-application-bundles-apks-by-hand/

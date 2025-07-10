@@ -6,12 +6,15 @@
 ; Set position field enabled 
 ;   https://github.com/DirectFB/mesa/blob/01e637114914453451becc0dc8afe60faff48d84/src/gallium/drivers/r600/r600_state.c#L2925
 ; $SPI_PS_IN_CONTROL_0.POSITION_ENA = true
+; $SPI_PS_IN_CONTROL_0.POSITION_ADDR = 2
 
-; $NUM_SPI_PS_INPUT_CNTL = 2
+; $NUM_SPI_PS_INPUT_CNTL = 3
 ; $SPI_PS_INPUT_CNTL[0].semantic = 0
 ; $SPI_PS_INPUT_CNTL[0].default_val = 1
 ; $SPI_PS_INPUT_CNTL[1].semantic = 1
 ; $SPI_PS_INPUT_CNTL[1].default_val = 1
+; $SPI_PS_INPUT_CNTL[2].semantic = 2
+; $SPI_PS_INPUT_CNTL[2].default_val = 1
 
 ; C0
 ; $UNIFORM_VARS[0].name = "fogColor"
@@ -20,7 +23,7 @@
 ; $UNIFORM_VARS[0].block = -1
 ; $UNIFORM_VARS[0].offset = 0
 ; C1
-; $UNIFORM_VARS[1].name = "fogEnd"
+; $UNIFORM_VARS[1].name = "fogValue"
 ; $UNIFORM_VARS[1].type = "vec2"
 ; $UNIFORM_VARS[1].count = 1
 ; $UNIFORM_VARS[1].block = -1
@@ -28,21 +31,20 @@
 
 ; --------  Disassembly --------------------
 00 TEX: ADDR(48) CNT(1) VALID_PIX 
-      0  SAMPLE R2, R2.xy0x, t0, s0
-01 ALU: ADDR(32) CNT(14) 
-      1  x: MUL               ____,  R1.y,  R2.y      
-         y: MUL               ____,  R1.x,  R2.x      
-         z: MUL               ____,  R1.z,  R2.z      
-         w: MUL               R2.w,  R1.w,  R2.w      
-         t: RECIP_CLAMPED     ____,  R0.w      
-      2  x: ADD               R1.x,  PV1.x, -C0.y      
-         y: ADD               R1.y,  PV1.y, -C0.x      
-         w: ADD               R0.w,  PV1.z, -C0.z      
-         t: RCP_e             ____,  PS1      
-      3  w: MUL               ____,  PS2,    C1.x      
-      4  t: EXP_e             ____,  PV3.w      CLAMP 
-      5  x: MULADD            R2.x,  R1.y,  PS4,  C0.x      
-         y: MULADD            R2.y,  R1.x,  PS4,  C0.y      
-         z: MULADD            R2.z,  R0.w,  PS4,  C0.z      
-02 EXP_DONE: PIX0, R2
+      0  SAMPLE R1, R1.xy0x, t0, s0
+01 ALU: ADDR(32) CNT(13) 
+      1  x: MUL            ____,  R0.x,  R1.x      
+         y: MUL            ____,  R0.z,  R1.z      
+         z: MUL            ____,  R0.y,  R1.y      
+         w: MUL            R0.w,  R0.w,  R1.w     
+         t: RECIP_IEEE     ____,  R2.W  
+      2  x: ADD            R1.x,  PV1.z, -C0.y      
+         y: ADD            R1.y,  PV1.x, -C0.x      
+         z: ADD            R1.z,  PV1.y, -C0.z
+         w: MUL            ____,  PS1,   C1.x      
+      3  t: EXP_e          ____,  PV2.w              CLAMP 
+      4  x: MULADD         R0.x,  R1.y,  PS3,  C0.x      
+         y: MULADD         R0.y,  R1.x,  PS3,  C0.y      
+         z: MULADD         R0.z,  R1.z,  PS3,  C0.z      
+02 EXP_DONE: PIX0, R0
 END_OF_PROGRAM

@@ -19,6 +19,7 @@ void HttpRequest_Free(struct HttpRequest* request) {
 	request->data  = NULL;
 	request->size  = 0;
 	request->error = NULL;
+	request->_capacity = 0;
 }
 #define HttpRequest_Copy(dst, src) Mem_Copy(dst, src, sizeof(struct HttpRequest))
 

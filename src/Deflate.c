@@ -1172,7 +1172,7 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 	cc_uint32 compressedSize, uncompressedSize;
 	int method, pathLen, extraLen;
 	struct Stream portion, compStream;
-#ifdef CC_BUILD_SMALLSTACK
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
 	struct InflateState* inflate;
 #else
 	struct InflateState inflate;
@@ -1206,8 +1206,8 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 	} else if (method == 8) {
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 
-#ifdef CC_BUILD_SMALLSTACK
-		inflate = Mem_TryAlloc(1, sizeof(struct InflateState));
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+		inflate = (struct InflateState*)Mem_TryAlloc(1, sizeof(struct InflateState));
 		if (!inflate) return ERR_OUT_OF_MEMORY;
 
 		Inflate_MakeStream2(&compStream, inflate, &portion);

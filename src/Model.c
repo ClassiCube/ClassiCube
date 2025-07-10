@@ -41,10 +41,6 @@ void Model_Init(struct Model* model) {
 	model->usesHumanSkin  = false;
 	model->pushes = true;
 
-	model->gravity     = 0.08f;
-	Vec3_Set(model->drag,           0.91f, 0.98f, 0.91f);
-	Vec3_Set(model->groundFriction, 0.6f,   1.0f,  0.6f);
-
 	model->maxScale    = 2.0f;
 	model->shadowScale = 1.0f;
 	model->armX = 6; model->armY = 12;
@@ -200,7 +196,7 @@ void Model_LockVB(struct Entity* entity, int verticesCount) {
 #endif
 
 	real_vertices   = Models.Vertices;
-	Models.Vertices = Gfx_LockDynamicVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
+	Models.Vertices = (struct VertexTextured*)Gfx_LockDynamicVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
 }
 
 void Model_UnlockVB(void) {
@@ -530,7 +526,7 @@ struct CustomModel* CustomModel_Get(int id) {
 
 	/* TODO log message if allocation fails? */
 	if (!custom_models)
-		custom_models = Mem_TryAlloc(MAX_CUSTOM_MODELS, sizeof(struct CustomModel));
+		custom_models = (struct CustomModel*)Mem_TryAlloc(MAX_CUSTOM_MODELS, sizeof(struct CustomModel));
 
 	if (!custom_models) return NULL;
 	return &custom_models[id];
@@ -941,8 +937,8 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	int type, num;
 	Model_ApplyTexture(e);
 
-	type = Models.skinType;
-	set  = &model->limbs[type & 0x3];
+	type = Models.skinType & 0x3;
+	set  = &model->limbs[type];
 	num  = HUMAN_BASE_VERTICES + (type == SKIN_64x32 ? HUMAN_HAT32_VERTICES : HUMAN_HAT64_VERTICES);
 	Model_LockVB(e, num);
 

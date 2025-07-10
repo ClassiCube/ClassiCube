@@ -25,7 +25,7 @@
 #include "Gui.h"
 
 struct LScreen* Launcher_Active;
-cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
+cc_bool Launcher_ShouldStop, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE], userBuffer[STRING_SIZE];
 cc_string Launcher_AutoHash = String_FromArray(hashBuffer);
 cc_string Launcher_Username = String_FromArray(userBuffer);
@@ -117,7 +117,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	res = Process_StartGame2(args, numArgs);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
-	Launcher_ShouldExit = Platform_SingleProcess || Options_GetBool(LOPT_AUTO_CLOSE, false);
+	Launcher_ShouldStop = Platform_IsSingleProcess() || Options_GetBool(LOPT_AUTO_CLOSE, false);
 
 	return true;
 }
@@ -192,7 +192,7 @@ static cc_bool IsShutdown(int key) {
 static void OnInputDown(void* obj, int key, cc_bool was, struct InputDevice* device) {
 	if (Input.DownHook && Input.DownHook(key, device)) return;
 
-	if (IsShutdown(key)) Launcher_ShouldExit = true;
+	if (IsShutdown(key)) Launcher_ShouldStop = true;
 	Launcher_Active->KeyDown(Launcher_Active, key, was, device);
 }
 
@@ -201,7 +201,7 @@ static void OnMouseWheel(void* obj, float delta) {
 }
 
 static void OnClosing(void* obj) {
-	Launcher_ShouldExit = true;
+	Launcher_ShouldStop = true;
 }
 
 
@@ -220,17 +220,7 @@ static void Launcher_Init(void) {
 	Utils_EnsureDirectory("audio");
 }
 
-static void Launcher_Free(void) {
-	Event_UnregisterAll();
-	LBackend_Free();
-	Flags_Free();
-	hasBitmappedFont = false;
-
-	CloseActiveScreen();
-	LBackend_FreeFramebuffer();
-}
-
-void Launcher_Run(void) {
+void Launcher_Setup(void) {
 	static const cc_string title = String_FromConst(GAME_APP_TITLE);
 	Window_Create2D(640, 400);
 #ifdef CC_BUILD_MOBILE
@@ -282,20 +272,31 @@ void Launcher_Run(void) {
 #else
 	MainScreen_SetActive();
 #endif
+}
 
-	for (;;) {
-		Window_ProcessEvents(10 / 1000.0f);
-		Gamepad_Tick(10 / 1000.0f);
-		if (!Window_Main.Exists || Launcher_ShouldExit) break;
+cc_bool Launcher_Tick(void) {
+	/* NOTE: Make sure to keep delay same as hardcoded delay in RunLauncher in main_impl.h */
+	Window_ProcessEvents(10 / 1000.0f);
+	Gamepad_Tick(10 / 1000.0f);
+	if (!Window_Main.Exists || Launcher_ShouldStop) return false;
 
-		Launcher_Active->Tick(Launcher_Active);
-		LBackend_Tick();
-		Thread_Sleep(10);
-	}
+	Launcher_Active->Tick(Launcher_Active);
+	LBackend_Tick();
+	return true;
+}
 
+void Launcher_Finish(void) {
 	Options_SaveIfChanged();
-	Launcher_Free();
-	Launcher_ShouldExit = false;
+	
+	Event_UnregisterAll();
+	LBackend_Free();
+	Flags_Free();
+
+	CloseActiveScreen();
+	LBackend_FreeFramebuffer();
+
+	hasBitmappedFont    = false;
+	Launcher_ShouldStop = false;
 
 #ifdef CC_BUILD_MOBILE
 	/* Reset components */
@@ -309,7 +310,6 @@ void Launcher_Run(void) {
 		cc_result res = Updater_Start(&action);
 		if (res) Logger_SysWarn(res, action);
 	}
-	Window_Destroy();
 }
 
 
