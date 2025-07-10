@@ -1,9 +1,7 @@
-#include "Core.h"
-#if defined CC_BUILD_PSP
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
 
 #include <malloc.h>
 #include <pspkernel.h>
@@ -454,4 +452,3 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
 			gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
 }
-#endif

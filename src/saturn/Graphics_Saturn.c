@@ -1,11 +1,10 @@
-#include "Core.h"
-#if defined CC_BUILD_SATURN
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Window.h"
+#include "../_BlockAlloc.h"
+
 #include <stdint.h>
 #include <yaul.h>
-#include "_BlockAlloc.h"
 
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 224
@@ -790,4 +789,3 @@ void Gfx_End2D(void) {
 	Gfx_SetAlphaBlending(false);
 	gfx_rendering2D = false;
 }
-#endif
