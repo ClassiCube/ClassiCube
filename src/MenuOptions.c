@@ -262,7 +262,7 @@ static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, int half, 
 static void MenuOptionsScreen_BoolGet(struct ButtonWidget* btn, cc_string* v) {
 	struct MenuOptionMetaBool* meta = (struct MenuOptionMetaBool*)btn->meta.ptr;
 	cc_bool value = meta->GetValue();
-	String_AppendConst(v, value ? ccStrings_optionsMenu[CC_CurrentLanguage][18] : ccStrings_optionsMenu[CC_CurrentLanguage][19]);
+	String_AppendConst(v, value ? ccStrings_optionsMenu[CC_CurrentLanguage][18] : ccStrings_optionsMenu[CC_CurrentLanguage][19]);	/* True/False booleans (ON/OFF) */
 }
 
 static void MenuOptionsScreen_BoolClick(void* screen, void* widget) {
@@ -609,25 +609,25 @@ static void ClassicOptionsScreen_RecreateExtra(struct MenuOptionsScreen* s) {
 static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][0],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][0],		/* Toggle Music */
 			ClO_GetMusic,    ClO_SetMusic, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],				/* Invert Looking */
 			ClO_GetInvert,   ClO_SetInvert, NULL);
-		MenuOptionsScreen_AddEnum(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][4], ccString_ViewDistanceNames[CC_CurrentLanguage], VIEW_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][4], ccString_ViewDistanceNames[CC_CurrentLanguage], VIEW_COUNT, /* View Distance */
 			ClO_GetViewDist, ClO_SetViewDist, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][2],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][2],		/* 3D Anaglyph */
 			ClO_GetAnaglyph, ClO_SetAnaglyph, NULL);
 		
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][3],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][3],		/* Toggle Sounds */
 			ClO_GetSounds,   ClO_SetSounds, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][0],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][0],					/* Show FPS */
 			ClO_GetShowFPS,  ClO_SetShowFPS, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],				/* Toggle view bob */
 			ClO_GetViewBob,  ClO_SetViewBob, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][1],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][1],		/* Limit framerate */
 			ClO_GetFPS,      ClO_SetFPS, NULL);
 		if (Game_ClassicHacks) {
-			MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][5],
+			MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][5],	/* Hax toggle */
 				ClO_GetHacks,ClO_SetHacks, NULL);
 		}
 	}
@@ -817,7 +817,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 				}
 			#endif
 
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][8],	/* 3D Anaglyph mode */
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][8],			/* 3D Anaglyph mode */
 			ClO_GetAnaglyph,   ClO_SetAnaglyph, NULL);
 	};
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
@@ -1179,29 +1179,29 @@ static void MiO_SetSensitivity(int v) {
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][1],
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][1],	/* Reach distance */
 			   1, 1024, 5,
 			MiO_GetReach,    MiO_SetReach, NULL);
-		MenuOptionsScreen_AddNum(s, ccString_SubOption_Misc[CC_CurrentLanguage][2],
+		MenuOptionsScreen_AddNum(s, ccString_SubOption_Misc[CC_CurrentLanguage][2],		/* Smooth camera strength */
 			1, 100, 20,
 			MiO_GetCameraMass, MiO_SetCameraMass,
 			"&eChange the smoothness of the smooth camera.");
-		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][3],
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][3],	/* Music volume*/
 			   0, 100,  DEFAULT_MUSIC_VOLUME,
 			MiO_GetMusic,     MiO_SetMusic, NULL);
-		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][4],
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][4],	/* Sound volume */
 			   0, 100,  DEFAULT_SOUNDS_VOLUME,
 			MiO_GetSounds,  MiO_SetSounds, NULL);
 
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][5],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][5],	/* Block physics */
 			MiO_GetPhysics, MiO_SetPhysics, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][6],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][6],	/* Cinematic aim */
 			MiO_GetCamera, MiO_SetCamera, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],	/* View bobbing */
 			MiO_GetViewBob, MiO_SetViewBob, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],	/* Mouse inverted? */
 			MiO_GetInvert,  MiO_SetInvert, NULL);
-		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][9], 
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][9], 	/* Mouse sensitivity */
 #ifdef CC_BUILD_WIN
 			   1, 200, 40,
 #else
@@ -1209,7 +1209,7 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 #endif
 			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
 
-			MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][0],
+			MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][0], /* Current Language */
 			   0, CC_LANGUAGE_LANGCNT, 0,
 			MiO_GetLanguage,    MiO_SetLanguage, NULL);
 	}
@@ -1273,20 +1273,20 @@ static void    NA_SetOpts(cc_bool v) {
 static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][0],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][0], /* Toggle Hand Rendering Style */
 			NA_GetHand,        NA_SetHand, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][1],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][1],	/* Classic Animations */
 			NA_GetAnim,        NA_SetAnim, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][2],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][2],	/* Classic Chat Style*/
 			NA_GetClassicChat, NA_SetClassicChat, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][3],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][3],	/* Classic Inventory*/
 			NA_GetClassicInv,  NA_SetClassicInv, NULL);
 			
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][4],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][4],	/* Classic Button Style */
 			NA_GetGui,   NA_SetGui, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][5],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][5], /* Classic player list*/
 			NA_GetList,  NA_SetList, NULL);
-		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][6],
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][6], /* Classic Options */
 			NA_GetOpts,  NA_SetOpts, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchNostalgia);
