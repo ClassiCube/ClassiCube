@@ -159,6 +159,13 @@ static void InitCitro3D(void) {
 	C3D_RenderTargetColor(&bottomTarget, GPU_RB_RGBA8);
 	C3D_RenderTargetSetOutput(&bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
+	// Allocate right framebuffer (for stereoscopic 3D) in advance even when it doesn't actually used
+	//  Although this means a bit less VRAM available for textures, this ensures that if the user later 
+	//  turns on stereoscopic 3D, don't have to try handling the case when insufficient VRAM for it
+	C3D_RenderTargetInit(&topTargetRight,  240, 400);
+	C3D_RenderTargetColor(&topTargetRight, GPU_RB_RGBA8);
+	C3D_RenderTargetDepth(&topTargetRight, GPU_RB_DEPTH24);
+
 	gfxSetDoubleBuffering(GFX_TOP, true);
 	SetDefaultState();
 	AllocShaders();
@@ -178,6 +185,7 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	Gfx_RestoreState();
 }
 
@@ -239,9 +247,6 @@ void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view) {
 	Calc3DProjection(+1, proj);
 
 	if (!createdTopTargetRight) {
-		C3D_RenderTargetInit(&topTargetRight,  240, 400);
-		C3D_RenderTargetColor(&topTargetRight, GPU_RB_RGBA8);
-		C3D_RenderTargetDepth(&topTargetRight, GPU_RB_DEPTH24);
 		C3D_RenderTargetSetOutput(&topTargetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
 		createdTopTargetRight = true;
 	}
@@ -292,7 +297,13 @@ static void GPUTexture_Unref(GfxResourceID* resource) {
 }
 
 static void GPUTexture_Free(struct GPUTexture* tex) {
-	C3D_TexDelete(&tex->texture);
+	void* addr = tex->texture.data;
+	if (addrIsVRAM(addr)) {
+		vramFree(addr);
+	} else {
+		linearFree(addr);
+	}
+
 	Mem_Free(tex);
 }
 
@@ -330,10 +341,13 @@ static void GPUTextures_DeleteUnreferenced(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static bool CreateNativeTexture(C3D_Tex* tex, u32 width, u32 height) {
+static bool CreateNativeTexture(C3D_Tex* tex, u32 width, u32 height, int vram) {
+	width    = Math_NextPowOf2(width);
+	height   = Math_NextPowOf2(height);
 	u32 size = width * height * 4;
-	//tex->data = p.onVram ? vramAlloc(total_size) : linearAlloc(total_size);
-	tex->data = linearAlloc(size);
+
+	tex->data = vram ? vramAlloc(size) : NULL;
+	if (!tex->data) tex->data = linearAlloc(size);
 	if (!tex->data) return false;
 
 	tex->width  = width;
@@ -351,29 +365,6 @@ static bool CreateNativeTexture(C3D_Tex* tex, u32 width, u32 height) {
 	return true;
 }
 
-static void TryTransferToVRAM(C3D_Tex* tex) {
-	return;
-	// NOTE: the linearFree below results in broken texture. maybe no DMA?
-	void* vram = vramAlloc(tex->size);
-	if (!vram) return;
-
-	C3D_SyncTextureCopy((u32*)tex->data, 0, (u32*)vram, 0, tex->size, 8);
-	linearFree(tex->data);
-	tex->data = vram;
-}
-
-/*static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
-	// Simplified "Interleave bits by Binary Magic Numbers" from
-	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveTableObvious
-	// TODO: Simplify to array lookup?
-    	x = (x | (x << 2)) & 0x33;
-    	x = (x | (x << 1)) & 0x55;
-
-    	y = (y | (y << 2)) & 0x33;
-    	y = (y | (y << 1)) & 0x55;
-
-    return x | (y << 1);
-}*/
 static inline cc_uint32 CalcZOrder(cc_uint32 a) {
 	// Simplified "Interleave bits by Binary Magic Numbers" from
 	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
@@ -390,28 +381,29 @@ static inline cc_uint32 CalcZOrder(cc_uint32 a) {
 //  four 4x4 subtiles, which are in turn composed of four 2x2 subtiles
 static void ToMortonTexture(C3D_Tex* tex, int originX, int originY, 
 				struct Bitmap* bmp, int rowWidth) {
-	unsigned int pixel, mortonX, mortonY;
+	unsigned int mortonX, mortonY;
 	unsigned int dstX, dstY, tileX, tileY;
 	
-	int width = bmp->width, height = bmp->height;
+	int src_w = bmp->width,  dst_w = tex->width;
+	int src_h = bmp->height, dst_h = tex->height;
 	cc_uint32* dst = tex->data;
 	cc_uint32* src = bmp->scan0;
 
-	for (int y = 0; y < height; y++)
+	for (int y = 0; y < src_h; y++)
 	{
-		dstY    = tex->height - 1 - (y + originY);
+		dstY    = dst_h - 1 - (y + originY);
 		tileY   = dstY & ~0x07;
 		mortonY = CalcZOrder(dstY & 0x07) << 1;
 
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < src_w; x++)
 		{
 			dstX    = x + originX;
 			tileX   = dstX & ~0x07;
 			mortonX = CalcZOrder(dstX & 0x07);
-			pixel   = src[x + (y * rowWidth)];
 
-			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * tex->width)] = pixel;
+			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * dst_w)] = src[x];
 		}
+		src += rowWidth;
 	}
 	// TODO flush data cache GSPGPU_FlushDataCache
 }
@@ -419,11 +411,11 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	struct GPUTexture* tex = GPUTexture_Alloc();
-	bool success = CreateNativeTexture(&tex->texture, bmp->width, bmp->height);
+	int can_vram = !(flags & TEXTURE_FLAG_DYNAMIC);
+	bool success = CreateNativeTexture(&tex->texture, bmp->width, bmp->height, can_vram);
 	if (!success) return NULL;
 	
 	ToMortonTexture(&tex->texture, 0, 0, bmp, rowWidth);
-	if (!(flags & TEXTURE_FLAG_DYNAMIC)) TryTransferToVRAM(&tex->texture);
     return tex;
 }
 

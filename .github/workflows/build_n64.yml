@@ -19,11 +19,14 @@ jobs:
       image: ghcr.io/dragonminded/libdragon:preview
     steps:
       - uses: actions/checkout@v4
-      - name: Compile N64 build
-        id: compile
+      - name: Install prerequisites
         run: |
           apt-get update
           apt-get -y install curl
+
+      - name: Compile N64 build
+        id: compile
+        run: |
           REAL_DIR=`pwd`
           cd /tmp
           git clone -b opengl https://github.com/DragonMinded/libdragon.git --depth=1

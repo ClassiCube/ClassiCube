@@ -23,7 +23,6 @@ jobs:
         id: compile
         run: |
           make wii
-          make clean
           make gamecube
           
       - name: Create Wii homebrew

@@ -19,10 +19,13 @@ jobs:
       image: ghcr.io/ps2dev/ps2sdk:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: |
+          apk add make mpc1 curl
+
       - name: Compile PS2 build
         id: compile
         run: |
-          apk add make mpc1 curl
           make ps2
           
 

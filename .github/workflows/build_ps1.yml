@@ -19,11 +19,14 @@ jobs:
       image: ghcr.io/classicube/minimal-psn00b:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile PS1 build
-        id: compile
+      - name: Install prerequisites
         run: |
           apt-get update
           apt-get install -y curl
+
+      - name: Compile PS1 build
+        id: compile
+        run: |
           export PSN00BSDK_ROOT=/usr/local/psnoob
           make ps1
 
