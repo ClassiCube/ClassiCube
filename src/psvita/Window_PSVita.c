@@ -142,10 +142,6 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 static const BindMapping vita_padbinds[BIND_COUNT] = {
-	[BIND_FORWARD]   = { CCPAD_UP },  
-	[BIND_BACK]      = { CCPAD_DOWN },
-	[BIND_LEFT]      = { CCPAD_LEFT },  
-	[BIND_RIGHT]     = { CCPAD_RIGHT },
 	[BIND_JUMP]      = { CCPAD_1 },     
 	[BIND_SET_SPAWN] = { CCPAD_START }, 
 	[BIND_CHAT]      = { CCPAD_4 },
@@ -154,10 +150,12 @@ static const BindMapping vita_padbinds[BIND_COUNT] = {
 	[BIND_SPEED]     = { CCPAD_2, CCPAD_L },
 	[BIND_NOCLIP]    = { CCPAD_2, CCPAD_3 },
 	[BIND_FLY]       = { CCPAD_2, CCPAD_R },
-	[BIND_FLY_UP]    = { CCPAD_2, CCPAD_UP },
-	[BIND_FLY_DOWN]  = { CCPAD_2, CCPAD_DOWN },
 	[BIND_PLACE_BLOCK]  = { CCPAD_L },
 	[BIND_DELETE_BLOCK] = { CCPAD_R },
+	[BIND_FLY_UP]       = { CCPAD_UP },  
+	[BIND_FLY_DOWN]     = { CCPAD_DOWN },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_LEFT },  
+	[BIND_HOTBAR_RIGHT] = { CCPAD_RIGHT },
 	
 };
 static cc_bool circle_main;

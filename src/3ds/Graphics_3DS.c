@@ -365,44 +365,57 @@ static bool CreateNativeTexture(C3D_Tex* tex, u32 width, u32 height, int vram) {
 	return true;
 }
 
-static inline cc_uint32 CalcZOrder(cc_uint32 a) {
-	// Simplified "Interleave bits by Binary Magic Numbers" from
-	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
-	// TODO: Simplify to array lookup?
-    	a = (a | (a << 2)) & 0x33;
-    	a = (a | (a << 1)) & 0x55;
-    	return a;
-    	// equivalent to return (a & 1) | ((a & 2) << 1) | (a & 4) << 2;
-    	//  but compiles to less instructions
-}
-
 // Pixels are arranged in a recursive Z-order curve / Morton offset
 // They are arranged into 8x8 tiles, where each 8x8 tile is composed of
 //  four 4x4 subtiles, which are in turn composed of four 2x2 subtiles
+// http://problemkaputt.de/gbatek-3ds-video-texture-swizzling.htm
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0b010101; // 3 interleaved X bits
+	*maskY = 0b101010; // 3 interleaved Y bits
+
+	// Lower 3 X and Y bits are always interleaved
+	w >>= 4;
+	h >>= 4;
+	int shift = 6;
+
+	for (; w > 0; w >>= 1) {
+		*maskX += 0x01 << shift;
+		shift  += 1;
+	}
+
+	for (; h > 0; h >>= 1) {
+		*maskY += 0x01 << shift;
+		shift  += 1;
+	}
+}
+
 static void ToMortonTexture(C3D_Tex* tex, int originX, int originY, 
-				struct Bitmap* bmp, int rowWidth) {
-	unsigned int mortonX, mortonY;
-	unsigned int dstX, dstY, tileX, tileY;
-	
+							struct Bitmap* bmp, int rowWidth) {
 	int src_w = bmp->width,  dst_w = tex->width;
 	int src_h = bmp->height, dst_h = tex->height;
 	cc_uint32* dst = tex->data;
 	cc_uint32* src = bmp->scan0;
 
+	unsigned maskX, maskY;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+
+	unsigned begX = 0, begY = 0;
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { begX = (begX - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { begY = (begY - maskY) & maskY; }
+
+	unsigned Y = begY;
 	for (int y = 0; y < src_h; y++)
 	{
-		dstY    = dst_h - 1 - (y + originY);
-		tileY   = dstY & ~0x07;
-		mortonY = CalcZOrder(dstY & 0x07) << 1;
-
+		unsigned X = begX;
 		for (int x = 0; x < src_w; x++)
 		{
-			dstX    = x + originX;
-			tileX   = dstX & ~0x07;
-			mortonX = CalcZOrder(dstX & 0x07);
-
-			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * dst_w)] = src[x];
+			// need to flip image vertically
+			dst[X | (maskY - Y)] = src[x];
+			X = (X - maskX) & maskX;
 		}
+		Y = (Y - maskY) & maskY;
 		src += rowWidth;
 	}
 	// TODO flush data cache GSPGPU_FlushDataCache
