@@ -627,7 +627,7 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][1],
 			ClO_GetFPS,      ClO_SetFPS, NULL);
 		if (Game_ClassicHacks) {
-			MenuOptionsScreen_AddBool(s, "Hacks enabled",
+			MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][5],
 				ClO_GetHacks,ClO_SetHacks, NULL);
 		}
 	}
@@ -771,20 +771,20 @@ static void    GrO_SetMipmaps(cc_bool v) {
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][0], FpsLimit_Names, FPS_LIMIT_COUNT,			/* FPS Mode */
 			GrO_GetFPS,        GrO_SetFPS,
 			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 			"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 			"&cNoLimit is pointless - it wastefully renders frames that you don't even see!");
-		MenuOptionsScreen_AddInt(s, "View distance",
+		MenuOptionsScreen_AddInt(s, ccString_SubOption_Graphics[CC_CurrentLanguage][1],												/* View distance */
 			8, 4096, 512,
 			GrO_GetViewDist,   GrO_SetViewDist, NULL);
-		MenuOptionsScreen_AddBool(s, "Smooth lighting",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][2],											/* Fancy lighting */
 			GrO_GetSmooth,     GrO_SetSmooth,
 			"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
 			"&cNote: &eThis setting may reduce performance.");
-		MenuOptionsScreen_AddEnum(s, "Lighting mode", LightingMode_Names, LIGHTING_MODE_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][3], LightingMode_Names, LIGHTING_MODE_COUNT,	/* Light mode */
 			GrO_GetLighting,   GrO_SetLighting,
 			"&eClassic: &fTwo levels of light, sun and shadow.\n" \
 			"    Good for performance.\n" \
@@ -792,14 +792,14 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"    May heavily reduce performance.\n" \
 			"&cNote: &eIn multiplayer, this option may be changed or locked by the server.");
 			
-		MenuOptionsScreen_AddEnum(s, "Names",   NameMode_Names,   NAME_MODE_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][4],   NameMode_Names,   NAME_MODE_COUNT,	/* Name render mode*/
 			GrO_GetNames,      GrO_SetNames,
 			"&eNone: &fNo names of players are drawn.\n" \
 			"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 			"&eAll: &fNames of all other players are drawn normally.\n" \
 			"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 			"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.");
-		MenuOptionsScreen_AddEnum(s, "Shadows", ShadowMode_Names, SHADOW_MODE_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][5], ShadowMode_Names, SHADOW_MODE_COUNT,	/* Shadow Mode */
 			GrO_GetShadows,    GrO_SetShadows,
 			"&eNone: &fNo entity shadows are drawn.\n" \
 			"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
@@ -807,11 +807,17 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"&eCircleAll: &fA circular shadow is shown underneath all entities.");
 
 		if (!Gfx_GetUIOptions(s)) {
-		MenuOptionsScreen_AddBool(s, "Mipmaps",
-			GrO_GetMipmaps,    GrO_SetMipmaps, NULL);
-		}
+			#ifndef CC_BUILD_N64
+				MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][6],	/* Mipmapping/Texture Filtering (On N64) */
+					GrO_GetMipmaps,    GrO_SetMipmaps, NULL);
+				}
+			#else
+				MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][7],	/* Mipmapping/Texture Filtering (On N64) */
+					GrO_GetMipmaps,    GrO_SetMipmaps, NULL);
+				}
+			#endif
 
-		MenuOptionsScreen_AddBool(s, "3D anaglyph",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][8],	/* 3D Anaglyph mode */
 			ClO_GetAnaglyph,   ClO_SetAnaglyph, NULL);
 	};
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
@@ -868,18 +874,18 @@ static void    ChO_SetClickable(cc_bool v) {
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Scale with window",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Chat[CC_CurrentLanguage][0],
 			ChO_GetAutoScaleChat, ChO_SetAutoScaleChat, NULL);
-		MenuOptionsScreen_AddNum(s, "Chat scale",
+		MenuOptionsScreen_AddNum(s, ccString_SubOption_Chat[CC_CurrentLanguage][1],
 			0.25f, 4.00f, 1,
 			ChO_GetChatScale,     ChO_SetChatScale, NULL);
-		MenuOptionsScreen_AddInt(s, "Chat lines",
+		MenuOptionsScreen_AddInt(s, ccString_SubOption_Chat[CC_CurrentLanguage][2],
 			    0,    30, Gui.DefaultLines,
 			ChO_GetChatlines,     ChO_SetChatlines, NULL);
 
-		MenuOptionsScreen_AddBool(s, "Log to disk",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Chat[CC_CurrentLanguage][3],
 			ChO_GetLogging,       ChO_SetLogging, NULL);
-		MenuOptionsScreen_AddBool(s, "Clickable chat",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Chat[CC_CurrentLanguage][4],
 			ChO_GetClickable,     ChO_SetClickable, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
@@ -1202,6 +1208,10 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			   1, 200, 30,
 #endif
 			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
+
+			MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][0],
+			   0, CC_LANGUAGE_LANGCNT, 0,
+			MiO_GetLanguage,    MiO_SetLanguage, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 

@@ -180,6 +180,54 @@ static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"Deutsch"
 };
 
+/* Graphics Options */
+static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
+	{
+		"FPS mode",
+		"View distance",
+		"Smooth lighting",
+		"Lighting mode",
+		"Names",
+		"Shadows",
+		"Mipmaps",
+		"Texture filtering", /* Filter textures on Nintendo 64. */
+		"3D anaglyph"
+	},
+	{
+		"FPS mode",
+		"View distance",
+		"Smooth lighting",
+		"Lighting mode",
+		"Names",
+		"Shadows",
+		"Mipmaps",
+		"Texture filtering", /* Filter textures on Nintendo 64. */
+		"3D anaglyph"
+	},
+	{
+		"nasin pi sitelen FPS",
+		"lukin wawa",
+		"pimeja pona",
+		"nasin pimeja",
+		"nimi",
+		"pimeja soweli",
+		"sitelen lili",
+		"sitelen pona", /* Filter textures on Nintendo 64. */
+		"sitelen tu"
+	},
+	{
+		"FPS mode",
+		"View distance",
+		"Smooth lighting",
+		"Lighting mode",
+		"Names",
+		"Shadows",
+		"Mipmaps",
+		"Texture filtering", /* Filter textures on Nintendo 64. */
+		"3D anaglyph"
+	},
+};
+
 /* Misc Options */
 static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	{
@@ -280,6 +328,38 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	"Systemschriftart verwenden",
 	"Systemschriftart ausw„hlen"
 	},
+};
+
+/* Chat Options */
+static char* ccString_SubOption_Chat[CC_LANGUAGE_LANGCNT][5] = {
+	{
+		"Scale with window",
+		"Chat scale",
+		"Chat lines",
+		"Log to disk",
+		"Clickable chat"
+	},
+	{
+		"Scale with window",
+		"Chat scale",
+		"Chat lines",
+		"Log to disk",
+		"Clickable chat"
+	},
+	{
+		"suli tawa sitelen",
+		"toki suli",
+		"lipu nanpa",
+		"o awen tawa lipu sina",
+		"sina ken luka toki"
+	},
+	{
+		"Scale with window",
+		"Chat scale",
+		"Chat lines",
+		"Log to disk",
+		"Clickable chat"
+	}
 };
 
 /* Nostalgia Options (Appearance) */
