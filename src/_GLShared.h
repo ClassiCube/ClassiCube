@@ -163,8 +163,9 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
 	}
 
-	CopyTextureData(ptr, part->width * BITMAPCOLOR_SIZE,
-					part, rowWidth   * BITMAPCOLOR_SIZE);
+	CopyPixels(ptr,         part->width * BITMAPCOLOR_SIZE,
+			   part->scan0, rowWidth    * BITMAPCOLOR_SIZE,
+			   part->width, part->height);
 
 	if (full) {
 		CallTexImage2D(0, part->width, part->height, ptr);
