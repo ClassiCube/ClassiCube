@@ -13,6 +13,13 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 /* Can be removed if causes issues */
 
+/*
+
+	OPEN AND SAVE WITH DOS/CP-437 ENCODING.
+		NOT DOING SO WILL BREAK TEXT.
+
+*/
+
 #define CC_LANGUAGE_LANGCNT 4
 
 #define CC_LANGUAGE_ENGLISH 0
@@ -108,7 +115,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
 	"ante e musi...",
 	"ante e poki sitelen...",
 	"ante e nena wawa...",
-	"o pali ma sin...",
+	"o pali e ma sin...",
 	"ante e ma...",
 	"o awen e ma...",
 
@@ -178,6 +185,47 @@ static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"Espa?ol",
 	"toki pona (sitelen Lasina)",
 	"Deutsch"
+};
+
+/* Worldgen */
+static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
+	{
+		"Generate new level",
+		"Width: ",
+		"Height: ",
+		"Length: ",
+		"Seed: ",
+		"Flatgrass",
+		"Vanilla"
+	},
+	{
+		"Generate new level",
+		"Width: ",
+		"Height: ",
+		"Length: ",
+		"Seed: ",
+		"Flatgrass",
+		"Vanilla"
+	},
+	{
+		"o pali e ma sin",
+		"suli poka: ",
+		"suli sinpin: ",
+		"suli insa: ",
+		"nanpa nasa: ",
+		"ma supa",
+		"ma pi supa ala"
+	},
+	{
+		"Generate new level",
+		"Width: ",
+		"Height: ",
+		"Length: ",
+		"Seed: ",
+		"Flatgrass",
+		"Vanilla"
+	}
+	
 };
 
 /* Graphics Options */
@@ -467,7 +515,7 @@ static char* ccString_SubOption_WorldGen[CC_LANGUAGE_LANGCNT][4] = {
 	"Enorme"
 	},
 	{
-	"o pali ma sin",
+	"o pali e ma sin",
 	"lili",
 	"meso",
 	"suli"

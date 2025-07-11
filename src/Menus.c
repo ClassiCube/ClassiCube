@@ -1198,15 +1198,15 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	TextInputWidget_SetFont(&s->inputs[2], &s->textFont);
 	TextInputWidget_SetFont(&s->inputs[3], &s->textFont);
 
-	TextWidget_SetConst(&s->labels[0], "Width:",  &s->textFont);
-	TextWidget_SetConst(&s->labels[1], "Height:", &s->textFont);
-	TextWidget_SetConst(&s->labels[2], "Length:", &s->textFont);
-	TextWidget_SetConst(&s->labels[3], "Seed:",   &s->textFont);
+	TextWidget_SetConst(&s->labels[0], ccString_SubOption_Worldgen[CC_CurrentLanguage][1],		&s->textFont); /* Width */
+	TextWidget_SetConst(&s->labels[1], ccString_SubOption_Worldgen[CC_CurrentLanguage][2],		&s->textFont); /* Height */
+	TextWidget_SetConst(&s->labels[2], ccString_SubOption_Worldgen[CC_CurrentLanguage][3],		&s->textFont); /* Depth */
+	TextWidget_SetConst(&s->labels[3], ccString_SubOption_Worldgen[CC_CurrentLanguage][4],		&s->textFont); /* Seed */
 	
-	TextWidget_SetConst(&s->title,       "Generate new level", &s->textFont);
-	ButtonWidget_SetConst(&s->flatgrass, "Flatgrass",          &titleFont);
-	ButtonWidget_SetConst(&s->vanilla,   "Vanilla",            &titleFont);
-	ButtonWidget_SetConst(&s->cancel,    ccStrings_optionsMenu[CC_CurrentLanguage][20],             &titleFont);
+	TextWidget_SetConst(&s->title,       ccString_SubOption_Worldgen[CC_CurrentLanguage][0],	&s->textFont); /* "Generate new level" */
+	ButtonWidget_SetConst(&s->flatgrass, ccString_SubOption_Worldgen[CC_CurrentLanguage][5],	&titleFont);   /* Flatgrass */
+	ButtonWidget_SetConst(&s->vanilla,   ccString_SubOption_Worldgen[CC_CurrentLanguage][6],	&titleFont);   /* Vanilla */
+	ButtonWidget_SetConst(&s->cancel,    ccStrings_optionsMenu[CC_CurrentLanguage][20],			&titleFont);   /* Cancel */
 	Font_Free(&titleFont);
 }
 
