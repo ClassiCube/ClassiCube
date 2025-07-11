@@ -19,8 +19,8 @@ void Gfx_Create(void) {
 	rspq_init();
 	//rspq_profile_start();
     rdpq_init();
-    //rdpq_debug_start(); // TODO debug
-    //rdpq_debug_log(true);
+	//rdpq_debug_start(); // TODO debug
+	//rdpq_debug_log(true);
 
 	rdpq_set_mode_standard();
 	__rdpq_mode_change_som(SOM_TEXTURE_PERSP, SOM_TEXTURE_PERSP);
@@ -96,7 +96,7 @@ void Gfx_BeginFrame(void) {
 	surface_t* disp = display_get();
     rdpq_attach(disp, &zbuffer);
     
-	Platform_LogConst("== BEGIN frame");
+	//Platform_LogConst("== BEGIN frame");
 }
 
 extern void __rdpq_autosync_change(int mode);
@@ -251,14 +251,21 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	//gpuColorMask(r, g, b, a); TODO
 }
 
+#define FLAG_Z_WRITE 0x02
 void Gfx_SetDepthWrite(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_WRITE, enabled ? SOM_Z_WRITE : 0);
+
+	gpu_attr_z &= ~FLAG_Z_WRITE;
+	gpu_attr_z |= enabled ? FLAG_Z_WRITE : 0;
+	gpuUpdateFormat();
 }
 
+#define FLAG_Z_READ 0x01
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_COMPARE, enabled ? SOM_Z_COMPARE : 0);
 
-	gpu_attr_z = enabled;
+	gpu_attr_z &= ~FLAG_Z_READ;
+	gpu_attr_z |= enabled ? FLAG_Z_READ : 0;
 	gpuUpdateFormat();
 }
 

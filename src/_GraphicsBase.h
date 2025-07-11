@@ -332,7 +332,8 @@ static CC_INLINE void CopyPixels(void* dst,       int dstStride,
 		Mem_Copy(dst_, src_, Bitmap_DataSize(pixelsPerRow, rows));
 	} else {
 		/* Have to copy scanline by scanline */
-		for (y = 0; y < rows; y++) {
+		for (y = 0; y < rows; y++) 
+		{
 			Mem_Copy(dst_, src_, pixelsPerRow * BITMAPCOLOR_SIZE);
 			src_ += srcStride;
 			dst_ += dstStride;

@@ -95,7 +95,7 @@ static int   gpu_stride;
 #define GPU_ATTR_TEX   (1 <<  9)
 #define GPU_ATTR_SHADE (1 << 10)
 #define GPU_ATTR_EDGE  (1 << 11)
-static bool gpu_attr_z, gpu_attr_tex;
+static uint8_t gpu_attr_z, gpu_attr_tex;
 
 static void gpuUpdateFormat(void)
 {

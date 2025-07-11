@@ -119,7 +119,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 
 	CopyPixels(dst,         tex->width * BITMAPCOLOR_SIZE,
 			   part->scan0, rowWidth   * BITMAPCOLOR_SIZE,
-			   bmp->width,  bmp->height);
+			   part->width, part->height);
 }
 
 void Gfx_EnableMipmaps(void)  { }
