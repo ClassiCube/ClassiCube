@@ -19,11 +19,14 @@ jobs:
       image: ghcr.io/volkertb/debian-djgpp
     steps:
       - uses: actions/checkout@v4
-      - name: Compile MS dos build
-        id: compile
+      - name: Install prerequisites
         run: |
           apt-get update
           apt-get -y install curl
+
+      - name: Compile MS dos build
+        id: compile
+        run: |
           make CC=gcc dos RELEASE=1
 
 

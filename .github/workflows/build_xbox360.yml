@@ -19,12 +19,15 @@ jobs:
       image: free60/libxenon
     steps:
       - uses: actions/checkout@v4
-      - name: Compile 360 build
-        id: compile
+      - name: Install prerequisites
         run: |
           sed -i -e 's/archive.ubuntu.com\|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
           apt-get update
           apt-get install -y curl
+
+      - name: Compile 360 build
+        id: compile
+        run: |
           export DEVKITXENON=/usr/local/xenon
           export PATH=$PATH:$DEVKITXENON/bin:$DEVKITXENON/usr/bin
           make xbox360

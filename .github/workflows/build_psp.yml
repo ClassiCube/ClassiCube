@@ -19,11 +19,13 @@ jobs:
       image: pspdev/pspdev:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: |
+          apk add curl curl-dev
+
       - name: Compile PSP build
         id: compile
         run: |
-          apk add curl curl-dev
-          export PSPSDK=$(psp-config --pspsdk-path)
           make psp
           
 

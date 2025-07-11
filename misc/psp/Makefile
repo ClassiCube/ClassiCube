@@ -1,11 +1,9 @@
-ifeq ($(strip $(PSPSDK)),)
-$(warning "Please set PSPSDK variables in your environment. For example:")
-$(warning   export PSPSDK=/usr/local/pspsk/psp/sdk)
-$(warning   export PATH=/usr/local/pspsk/bin:$$PATH)
-$(warning Or)
-$(warning   export PSPSDK=$$(shell psp-config --pspsdk-path))
+ifeq ($(strip $(PSPDEV)),)
+$(warning "Please set PSPDEV variables in your environment. For example:")
+$(warning   export PSPDEV=/usr/local/pspsdk)
 $(error   Failed to find PSPSDK installation)
 endif
+PSPSDK=$(PSPDEV)/psp/sdk
 
 
 #---------------------------------------------------------------------------------
@@ -36,13 +34,10 @@ S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
-INCDIR   := $(PSPDEV)/psp/include $(PSPSDK)/include
-LIBDIR   := $(PSPDEV)/psp/lib $(PSPSDK)/lib
+CFLAGS   := -I$(PSPSDK)/include -g -O1 -fno-math-errno -D_PSP_FW_VERSION=600
+ASFLAGS  := -I$(PSPSDK)/include -g
 
-CFLAGS   := $(addprefix -I,$(INCDIR)) -g -O1 -fno-math-errno -D_PSP_FW_VERSION=600
-ASFLAGS  := $(addprefix -I,$(INCDIR)) -g
-
-LDFLAGS  := $(addprefix -L,$(LIBDIR)) -specs=$(PSPSDK)/lib/prxspecs -Wl,-q,-T$(PSPSDK)/lib/linkfile.prx -Wl,-zmax-page-size=128
+LDFLAGS  := -L$(PSPSDK)/lib -specs=$(PSPSDK)/lib/prxspecs -Wl,-q,-T$(PSPSDK)/lib/linkfile.prx -Wl,-zmax-page-size=128
 LIBS 	 := -lm -lpspgum -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspdebug -lpspnet -lpspnet_apctl
 
 # Dependency tracking
@@ -53,12 +48,13 @@ DEPFILES := $(OBJS:%.o=%.d)
 #---------------------------------------------------------------------------------
 # Compiler tools
 #---------------------------------------------------------------------------------
-CC       = psp-gcc
-AS       = psp-gcc
-LD       = psp-gcc
-MKSFO    = mksfoex
-PACK_PBP = pack-pbp
-FIXUP    = psp-fixup-imports
+CC       = $(PSPDEV)/bin/psp-gcc
+AS       = $(PSPDEV)/bin/psp-gcc
+LD       = $(PSPDEV)/bin/psp-gcc
+MKSFO    = $(PSPDEV)/bin/mksfoex
+PACK_PBP = $(PSPDEV)/bin/pack-pbp
+FIXUP    = $(PSPDEV)/bin/psp-fixup-imports
+PRXGEN   = $(PSPDEV)/bin/psp-prxgen
 
 
 #---------------------------------------------------------------------------------
@@ -81,7 +77,7 @@ $(TARGET).elf: $(OBJS)
 	$(FIXUP) $@
 
 $(TARGET).prx: $(TARGET).elf
-	psp-prxgen $< $@
+	$(PRXGEN) $< $@
 
 $(PSP_EBOOT_SFO): 
 	$(MKSFO) -d MEMSIZE=1 '$(PSP_EBOOT_TITLE)' $@
@@ -99,7 +95,7 @@ $(BUILD_DIR)/%.o : src/%.c
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o : src/psp/%.c
-	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	
 $(BUILD_DIR)/%.o : third_party/bearssl/%.c
 	$(CC) $(CFLAGS) -c $< -o $@

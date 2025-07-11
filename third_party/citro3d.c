@@ -97,66 +97,7 @@ typedef struct
 	};
 } C3D_Tex;
 
-static void C3D_TexLoadImage(C3D_Tex* tex, const void* data, GPU_TEXFACE face, int level);
-static void C3D_TexGenerateMipmap(C3D_Tex* tex, GPU_TEXFACE face);
 static void C3D_TexBind(int unitId, C3D_Tex* tex);
-static void C3D_TexFlush(C3D_Tex* tex);
-static void C3D_TexDelete(C3D_Tex* tex);
-
-static inline int C3D_TexCalcMaxLevel(u32 width, u32 height)
-{
-	return (31-__builtin_clz(width < height ? width : height)) - 3; // avoid sizes smaller than 8
-}
-
-static inline u32 C3D_TexCalcLevelSize(u32 size, int level)
-{
-	return size >> (2*level);
-}
-
-static inline u32 C3D_TexCalcTotalSize(u32 size, int maxLevel)
-{
-	/*
-	S  = s + sr + sr^2 + sr^3 + ... + sr^n
-	Sr = sr + sr^2 + sr^3 + ... + sr^(n+1)
-	S-Sr = s - sr^(n+1)
-	S(1-r) = s(1 - r^(n+1))
-	S = s (1 - r^(n+1)) / (1-r)
-
-	r = 1/4
-	1-r = 3/4
-
-	S = 4s (1 - (1/4)^(n+1)) / 3
-	S = 4s (1 - 1/4^(n+1)) / 3
-	S = (4/3) (s - s/4^(n+1))
-	S = (4/3) (s - s/(1<<(2n+2)))
-	S = (4/3) (s - s>>(2n+2))
-	*/
-	return (size - C3D_TexCalcLevelSize(size,maxLevel+1)) * 4 / 3;
-}
-
-static inline void* C3D_TexGetImagePtr(C3D_Tex* tex, void* data, int level, u32* size)
-{
-	if (size) *size = level >= 0 ? C3D_TexCalcLevelSize(tex->size, level) : C3D_TexCalcTotalSize(tex->size, tex->maxLevel);
-	if (!level) return data;
-	return (u8*)data + (level > 0 ? C3D_TexCalcTotalSize(tex->size, level-1) : 0);
-}
-
-static inline void* C3D_Tex2DGetImagePtr(C3D_Tex* tex, int level, u32* size)
-{
-	return C3D_TexGetImagePtr(tex, tex->data, level, size);
-}
-
-static inline void C3D_TexUpload(C3D_Tex* tex, const void* data)
-{
-	C3D_TexLoadImage(tex, data, GPU_TEXFACE_2D, 0);
-}
-
-
-
-
-
-
-
 
 
 static void C3D_DepthMap(bool bIsZBuffer, float zScale, float zOffset);
@@ -257,7 +198,6 @@ typedef enum
 static u32 C3D_CalcColorBufSize(u32 width, u32 height, GPU_COLORBUF fmt);
 static u32 C3D_CalcDepthBufSize(u32 width, u32 height, GPU_DEPTHBUF fmt);
 
-static C3D_FrameBuf* C3D_GetFrameBuf(void);
 static void C3D_SetFrameBuf(C3D_FrameBuf* fb);
 static void C3D_FrameBufClear(C3D_FrameBuf* fb, C3D_ClearBits clearBits, u32 clearColor, u32 clearDepth);
 static void C3D_FrameBufTransfer(C3D_FrameBuf* fb, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
@@ -336,8 +276,6 @@ static inline void C3D_RenderTargetClear(C3D_RenderTarget* target, C3D_ClearBits
 {
 	C3D_FrameBufClear(&target->frameBuf, clearBits, clearColor, clearDepth);
 }
-
-static void C3D_SyncTextureCopy(u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 size, u32 flags);
 
 
 
@@ -818,14 +756,6 @@ static u32 C3D_CalcDepthBufSize(u32 width, u32 height, GPU_DEPTHBUF fmt)
 	return size*(2+depthFmtSizes[fmt]);
 }
 
-static C3D_FrameBuf* C3D_GetFrameBuf(void)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	ctx->flags |= C3DiF_FrameBuf;
-	return &ctx->fb;
-}
-
 static void C3D_SetFrameBuf(C3D_FrameBuf* fb)
 {
 	C3D_Context* ctx = C3Di_GetContext();
@@ -1205,32 +1135,6 @@ static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t scre
 	}
 }
 
-static void C3Di_SafeTextureCopy(u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 size, u32 flags)
-{
-	C3Di_WaitAndClearQueue(-1);
-	inSafeTransfer = true;
-	GX_TextureCopy(inadr, indim, outadr, outdim, size, flags);
-	gxCmdQueueRun(&C3Di_GetContext()->gxQueue);
-}
-
-static void C3D_SyncTextureCopy(u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 size, u32 flags)
-{
-	if (inFrame)
-	{
-		C3D_FrameSplit(0);
-		GX_TextureCopy(inadr, indim, outadr, outdim, size, flags);
-	} else
-	{
-		C3Di_SafeTextureCopy(inadr, indim, outadr, outdim, size, flags);
-		gspWaitForPPF();
-	}
-}
-
-
-
-
-
-
 
 static void C3Di_TexEnvBind(int id, C3D_TexEnv* env)
 {
@@ -1241,39 +1145,12 @@ static void C3Di_TexEnvBind(int id, C3D_TexEnv* env)
 
 
 
-
-static void C3D_TexLoadImage(C3D_Tex* tex, const void* data, GPU_TEXFACE face, int level)
-{
-	u32 size = 0;
-	void* out = C3D_TexGetImagePtr(tex, tex->data, level, &size);
-
-	if (!addrIsVRAM(out))
-		memcpy(out, data, size);
-	else
-		C3D_SyncTextureCopy((u32*)data, 0, (u32*)out, 0, size, 8);
-}
-
 static void C3D_TexBind(int unitId, C3D_Tex* tex)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 
 	ctx->flags |= C3DiF_Tex(unitId);
 	ctx->tex[unitId] = tex;
-}
-
-static void C3D_TexFlush(C3D_Tex* tex)
-{
-	if (!addrIsVRAM(tex->data))
-		GSPGPU_FlushDataCache(tex->data, C3D_TexCalcTotalSize(tex->size, tex->maxLevel));
-}
-
-static void C3D_TexDelete(C3D_Tex* tex)
-{
-	void* addr = tex->data;
-	if (addrIsVRAM(addr))
-		vramFree(addr);
-	else
-		linearFree(addr);
 }
 
 static void C3Di_SetTex(int unit, C3D_Tex* tex)
