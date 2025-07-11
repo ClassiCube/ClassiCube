@@ -210,7 +210,7 @@ static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
 	{
 		"o pali e ma sin",
 		"suli poka: ",
-		"suli sinpin: ",
+		"suli sewi: ",
 		"suli insa: ",
 		"nanpa nasa: ",
 		"ma supa",
