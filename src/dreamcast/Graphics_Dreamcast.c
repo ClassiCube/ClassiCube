@@ -182,22 +182,13 @@ static void texmem_free(cc_uint8* ptr, cc_uint32 size) {
 		texmem_used[page + i] = 0;
 }
 
-static cc_uint32 texmem_total_free(void) {
-	cc_uint32 free = 0;
+static int texmem_total_free(void) {
+	int free = 0;
     for (cc_uint32 page = 0; page < texmem_pages; page++) 
 	{
-		if (!texmem_used[page]) free += TEXMEM_PAGE_SIZE;
+		if (!texmem_used[page]) free++;
     }
 	return free;
-}
-
-static cc_uint32 texmem_total_used(void) {
-	cc_uint32 used = 0;
-    for (cc_uint32 page = 0; page < texmem_pages; page++) 
-	{
-		if (texmem_used[page]) used += TEXMEM_PAGE_SIZE;
-    }
-	return used;
 }
 
 
@@ -1053,10 +1044,13 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 void Gfx_GetApiInfo(cc_string* info) {
 	int freeMem = texmem_total_free();
-	int usedMem = texmem_total_used();
+	int usedMem = texmem_pages - freeMem;
+
+	freeMem *= TEXMEM_PAGE_SIZE;
+	usedMem *= TEXMEM_PAGE_SIZE;
 	
-	float freeMemMB = freeMem / (1024.0 * 1024.0);
-	float usedMemMB = usedMem / (1024.0 * 1024.0);
+	float freeMemMB = freeMem / (1024.0f * 1024.0f);
+	float usedMemMB = usedMem / (1024.0f * 1024.0f);
 	
 	String_AppendConst(info, "-- Using Dreamcast --\n");
 	String_AppendConst(info, "GPU: PowerVR2 CLX2 100mHz\n");

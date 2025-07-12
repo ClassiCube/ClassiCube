@@ -2,6 +2,8 @@
 #define blockalloc_bit(block)  (1 << ((block) & 0x07))
 #define BLOCKS_PER_PAGE 8
 
+#define SIZE_TO_BLOCKS(size, blockSize) (((size) + ((blockSize) - 1)) / (blockSize))
+
 static CC_INLINE int blockalloc_can_alloc(cc_uint8* table, int beg, int blocks) {
 	for (int i = beg; i < beg + blocks; i++)
 	{
@@ -44,10 +46,11 @@ static void blockalloc_dealloc(cc_uint8* table, int origin, int blocks) {
     }
 }
 
-// TODO: is this worth optimising to look at entire page in 0x00 and 0xFF case?
-static int blockalloc_total_free(cc_uint8* table, int maxBlocks) {
+static CC_INLINE int blockalloc_total_free(cc_uint8* table, int maxBlocks) {
 	int free_blocks = 0, i, used;
 	cc_uint8 page;
+	// could be optimised to look at entire page in 0x00 and 0xFF case
+	// but this method is called so infrequently, not really worth it
 
 	for (i = 0; i < maxBlocks; i++) 
 	{
@@ -55,7 +58,6 @@ static int blockalloc_total_free(cc_uint8* table, int maxBlocks) {
 		used = page & blockalloc_bit(i);
 
  		if (!used) free_blocks++;
-		i++;
     }
 	return free_blocks;
 }

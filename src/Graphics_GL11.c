@@ -136,28 +136,28 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 
 static void GL_SetupVbColoured(void) {
 	GLpointer ptr = (GLpointer)VB_PTR;
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, ptr +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, ptr + 12);
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, ptr +  0);
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, ptr + 12);
 }
 
 static void GL_SetupVbTextured(void) {
 	GLpointer ptr = (GLpointer)VB_PTR;
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, ptr +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, ptr + 12);
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, ptr + 16);
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, ptr +  0);
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, ptr + 12);
+	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, ptr + 16);
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
 	GLpointer ptr = (GLpointer)VB_PTR + startVertex * SIZEOF_VERTEX_COLOURED;
-	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, ptr +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, ptr + 12);
+	glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, ptr +  0);
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, ptr + 12);
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
 	GLpointer ptr = (GLpointer)VB_PTR + startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, ptr +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, ptr + 12);
-	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, ptr + 16);
+	glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, ptr +  0);
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, ptr + 12);
+	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, ptr + 16);
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -166,14 +166,14 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		_glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		_glEnable(GL_TEXTURE_2D);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbTextured;
 		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
 	} else {
-		_glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		_glDisable(GL_TEXTURE_2D);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisable(GL_TEXTURE_2D);
 
 		gfx_setupVBFunc      = GL_SetupVbColoured;
 		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
@@ -182,21 +182,21 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 	gfx_setupVBFunc();
-	_glDrawArrays(GL_LINES, 0, verticesCount);
+	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
 
 	gfx_setupVBRangeFunc(startVertex);
-	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gl_indices);
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gl_indices);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
 
 	gfx_setupVBFunc();
-	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gl_indices);
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gl_indices);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { 
@@ -208,7 +208,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_BindTexture(GfxResourceID texId) {
-	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
+	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 }
 
 
@@ -221,7 +221,7 @@ static int gfx_fogMode;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	if (enabled) { _glEnable(GL_FOG); } else { _glDisable(GL_FOG); }
+	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -233,19 +233,19 @@ void Gfx_SetFogCol(PackedCol color) {
 	rgba[2] = PackedCol_B(color) / 255.0f; 
 	rgba[3] = PackedCol_A(color) / 255.0f;
 
-	_glFogfv(GL_FOG_COLOR, rgba);
+	glFogfv(GL_FOG_COLOR, rgba);
 	gfx_fogColor = color;
 }
 
 void Gfx_SetFogDensity(float value) {
 	if (value == gfx_fogDensity) return;
-	_glFogf(GL_FOG_DENSITY, value);
+	glFogf(GL_FOG_DENSITY, value);
 	gfx_fogDensity = value;
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
-	_glFogf(GL_FOG_END, value);
+	glFogf(GL_FOG_END, value);
 	gfx_fogEnd = value;
 }
 
@@ -253,12 +253,12 @@ void Gfx_SetFogMode(FogFunc func) {
 	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
 	if (func == gfx_fogMode) return;
 
-	_glFogi(GL_FOG_MODE, modes[func]);
+	glFogi(GL_FOG_MODE, modes[func]);
 	gfx_fogMode = func;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	if (enabled) { _glEnable(GL_ALPHA_TEST); } else { _glDisable(GL_ALPHA_TEST); }
+	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -266,7 +266,7 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
 				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 	
-	if (enabled) { _glEnable(GL_TEXTURE_2D); } else { _glDisable(GL_TEXTURE_2D); }
+	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
 
 
@@ -277,12 +277,12 @@ static GLenum matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type != lastMatrix) { lastMatrix = type; _glMatrixMode(matrix_modes[type]); }
+	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
 
 	if (matrix == &Matrix_Identity) {
-		_glLoadIdentity();
+		glLoadIdentity();
 	} else {
-		_glLoadMatrixf((const float*)matrix);
+		glLoadMatrixf((const float*)matrix);
 	}
 }
 
@@ -307,8 +307,8 @@ void Gfx_DisableTextureOffset(void) { Gfx_LoadMatrix(2, &Matrix_Identity); }
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
-	_glEnableClientState(GL_VERTEX_ARRAY);
-	_glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
 
 	gfx_format = -1;
 	lastMatrix = -1;
@@ -319,9 +319,9 @@ static void Gfx_RestoreState(void) {
 	gfx_fogDensity = -1.0f;
 	gfx_fogMode    = -1;
 
-	_glAlphaFunc(GL_GREATER, 0.5f);
-	_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	_glDepthFunc(GL_LEQUAL);
+	glAlphaFunc(GL_GREATER, 0.5f);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDepthFunc(GL_LEQUAL);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {

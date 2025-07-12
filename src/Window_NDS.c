@@ -100,7 +100,7 @@ static void Console_LoadFont(int bgId, u16* palette) {
 
     for (int i = 0; i < FONT_NUM_CHARACTERS * 8; i++)
     {
-        u8 row  = default_fontTiles[i];
+		u8 row  = default_fontTiles[i];
         u32 gfx = 0;
         if (row & 0x01) gfx |= 0x0000000F;
         if (row & 0x02) gfx |= 0x000000F0;

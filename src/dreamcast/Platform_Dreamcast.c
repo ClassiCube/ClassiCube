@@ -58,10 +58,15 @@ extern cc_bool window_inited;
 
 #define MAX_ONSCREEN_LINES 17
 #define ONSCREEN_LINE_HEIGHT (24 + 2) // 8 * 3 text, plus 2 pixel padding
-#define Onscreen_LineOffset(y) ((10 + y + (str_offset * ONSCREEN_LINE_HEIGHT)) * vid_mode->width)
+#define Onscreen_LineOffset(y) ((y) * vid_mode->width)
 
+struct LogPosition { int x, y; };
 static void PlotOnscreen(int x, int y, void* ctx) {
+	struct LogPosition* pos = ctx;
+
+	x += pos->x;
 	if (x >= vid_mode->width) return;
+	y += pos->y;
 	
 	uint32 line_offset = Onscreen_LineOffset(y);
 	vram_s[line_offset + x] = 0xFFFF;
@@ -77,13 +82,21 @@ static void LogOnscreen(const char* msg, int len) {
 	if (log_timestamp) String_Format2(&str, "[%p2.%p3] ", &secs, &ms);
 	String_AppendAll(&str, msg, len);
 
-	short* dst     = vram_s + Onscreen_LineOffset(0);
+	struct LogPosition pos;
+	pos.x =  0;
+	pos.y = 10 + (str_offset * ONSCREEN_LINE_HEIGHT);
+
+	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
+
+	short* dst     = vram_s + Onscreen_LineOffset(pos.y);
 	int num_pixels = ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width;
 	for (int i = 0; i < num_pixels; i++) dst[i] = 0;
-	//sq_set16(vram_s + Onscreen_LineOffset(0), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
+	//sq_set16(vram_s + Onscreen_LineOffset(pos.y), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
 	
-	FallbackFont_Plot(&str, PlotOnscreen, 3, NULL);
-	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
+	for (int i = 0; i < str.length; i++)
+	{
+		pos.x += FallbackFont_Plot((cc_uint8)str.buffer[i], PlotOnscreen, 3, &pos);
+	}
 }
 
 void Platform_Log(const char* msg, int len) {

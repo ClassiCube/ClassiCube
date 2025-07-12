@@ -182,19 +182,6 @@ typedef struct CCTexture_ {
 #define TEX_TOTAL_BLOCKS (TEX_TOTAL_SIZE / TEX_BLOCK_SIZE)
 static cc_uint8 tex_table[TEX_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
 
-static void texture_alloc(CCTexture* tex, int size) {
-	int blocks = (size + (TEX_BLOCK_SIZE - 1)) / TEX_BLOCK_SIZE;
-	int addr   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
-	if (addr == -1) return;
-
-	tex->texBase   = addr;
-	tex->texBlocks = blocks;
-}
-
-static void texture_release(CCTexture* tex) {
-	blockalloc_dealloc(tex_table, tex->texBase, tex->texBlocks);
-}
-
 // Palette VRAM banks - Bank E (64 kb)
 #define PAL_TOTAL_SIZE (64 * 1024)
 // Use 16 hwords for size of each block
@@ -202,19 +189,6 @@ static void texture_release(CCTexture* tex) {
 
 #define PAL_TOTAL_BLOCKS (PAL_TOTAL_SIZE / PAL_BLOCK_SIZE)
 static cc_uint8 pal_table[PAL_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
-
-static void palette_alloc(CCTexture* tex, int size) {
-	int blocks = (size + (PAL_BLOCK_SIZE - 1)) / PAL_BLOCK_SIZE;
-	int addr   = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, blocks);
-	if (addr == -1) return;
-
-	tex->palBase   = addr;
-	tex->palBlocks = blocks;
-}
-
-static void palette_release(CCTexture* tex) {
-	blockalloc_dealloc(pal_table, tex->palBase, tex->palBlocks);
-}
 
 
 /*########################################################################################################################*
@@ -294,8 +268,8 @@ static CC_INLINE int CalcPalette(cc_uint16* palette, struct Bitmap* bmp, int row
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	CCTexture* tex = Mem_TryAllocCleared(1, sizeof(CCTexture));
-	if (!tex) return 0;
+	CCTexture* tex = Mem_TryAlloc(1, sizeof(CCTexture));
+	if (!tex) return NULL;
 
 	int dst_w = Math_NextPowOf2(bmp->width);
 	int dst_h = Math_NextPowOf2(bmp->height);
@@ -321,11 +295,16 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		tex_fmt  = GL_RGBA;
 	}
 
-	texture_alloc(tex, tex_size);
-	if (!tex->texBlocks) {
+	int blocks = SIZE_TO_BLOCKS(tex_size, TEX_BLOCK_SIZE);
+	int base   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
+	if (base < 0) {
 		Platform_Log2("No VRAM for %i x %i texture", &bmp->width, &bmp->height);
+		Mem_Free(tex);
 		return NULL;
 	}
+
+	tex->texBase   = base;
+	tex->texBlocks = blocks;
 
 	int offset = tex->texBase * TEX_BLOCK_SIZE;
 	u16* addr  = (u16*)((u8*)VRAM_A + offset);
@@ -394,14 +373,18 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 	vramRestorePrimaryBanks(banks);
 
-	int sSize  = (Math_ilog2(dst_w) - 3) << 20;
-	int tSize  = (Math_ilog2(dst_h) - 3) << 23;
+	int sSize = (Math_ilog2(dst_w) - 3) << 20;
+	int tSize = (Math_ilog2(dst_h) - 3) << 23;
 
 	tex->texFormat = (offset >> 3) | sSize | tSize | (tex_fmt << 26) | 
 						GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T | TEXGEN_TEXCOORD | GL_TEXTURE_COLOR0_TRANSPARENT;
 
 	if (tex_fmt != GL_RGBA) {
-		palette_alloc(tex, pal_count * 2);
+		blocks = SIZE_TO_BLOCKS(pal_count * 2, PAL_BLOCK_SIZE);
+		base   = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, blocks);
+
+		tex->palBase   = base < 0 ? 0 : base; // TODO probably not correct, but shouldn't happen in practice
+		tex->palBlocks = blocks;
 		offset = tex->palBase * PAL_BLOCK_SIZE;
 
 		vramSetBankE(VRAM_E_LCD);
@@ -424,7 +407,6 @@ void Gfx_BindTexture(GfxResourceID texId) {
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
 	
-	int width = tex->width;
 	return;
 	// TODO doesn't work without VRAM bank changing to LCD and back maybe??
 	// (see what glTeximage2D does ??)
@@ -445,8 +427,8 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = (CCTexture*)(*texId);
 
 	if (tex) {
-		texture_release(tex);
-		palette_release(tex);
+		blockalloc_dealloc(tex_table, tex->texBase, tex->texBlocks);
+		blockalloc_dealloc(pal_table, tex->palBase, tex->palBlocks);
 		Mem_Free(tex);
 	}
 	*texId = NULL;

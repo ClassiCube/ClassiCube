@@ -168,38 +168,28 @@ typedef struct CCTexture {
 #define TEX_TOTAL_BLOCKS (TEXTURE_REGION_SIZE / TEX_BLOCK_SIZE)
 static cc_uint8 tex_table[TEX_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
 
-static cc_bool texture_alloc(CCTexture* tex, int width, int height) {
-	int size   = width * height * 2;
-
-	int blocks = (size + (TEX_BLOCK_SIZE - 1)) / TEX_BLOCK_SIZE;
-	int addr   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
-	if (addr == -1) return false;
-
-	tex->width  = width;
-	tex->height = height;
-	tex->offset = addr;
-	tex->blocks = blocks;
-	return true;
-}
-
-static void texture_release(CCTexture* tex) {
-	blockalloc_dealloc(tex_table, tex->offset, tex->blocks);
-}
-
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	CCTexture* tex = Mem_TryAlloc(1, sizeof(CCTexture));
 	if (!tex) return NULL;
 
-	if (!texture_alloc(tex, bmp->width, bmp->height)) {
+	int width  = bmp->width, height = bmp->height;
+	int blocks = SIZE_TO_BLOCKS(width * height * 2, TEX_BLOCK_SIZE);
+	int addr   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
+
+	if (addr == -1) {
 		Platform_LogConst("OUT OF VRAM");
 		Mem_Free(tex);
 		return NULL; 
 	}
 
+	tex->width  = width;
+	tex->height = height;
+	tex->offset = addr;
+	tex->blocks = blocks;
+
 	int vram_free = blockalloc_total_free(tex_table, TEX_TOTAL_BLOCKS) * TEX_BLOCK_SIZE;
 	Platform_Log1("VRAM left: %i bytes", &vram_free);
 
-	int width = bmp->width, height = bmp->height;
 	cc_uint8*  tmp = CCTexture_Addr(tex);
 	cc_uint16* src = bmp->scan0;
 	cc_uint16* dst = (cc_uint16*)tmp;
@@ -226,10 +216,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = *texId;
-	if (tex) {
-		texture_release(tex);
-		Mem_Free(tex);
-	}
+	if (!tex) return;
+
+	blockalloc_dealloc(tex_table, tex->offset, tex->blocks);
+	Mem_Free(tex);
 	*texId = NULL;
 }
 
