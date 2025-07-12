@@ -24,9 +24,9 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 #define CC_LANGUAGE_ENGLISH 0
 #define CC_LANGUAGE_SPANISH 1
-#define CC_LANGUAGE_TOKIPON 2
+#define CC_LANGUAGE_TOKIPON 2 /* ma pona pi toki pona helped, Digi-Space Productions made translation.*/
 #define CC_LANGUAGE_GERMAN_ 3
-#define CC_LANGUAGE_JP_DSP_ 4
+#define CC_LANGUAGE_JP_DSP_ 4 /* @ryokuogreen on twitter helped with this translation */
 
 extern unsigned char CC_CurrentLanguage;
 extern void applyLanguageToGame();
@@ -35,6 +35,7 @@ extern void applyLanguageToGame();
 
 /* Generalized Option Text */
 static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
+	/* English */
 	{
 	"Misc options...",
 	"Gui options...",
@@ -69,6 +70,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
 	"Load"
 	},
 
+	/* Spanish */
 	{
 	"Opciones varias...",
 	"Opciones de interfaz...",
@@ -103,6 +105,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
 	"Cargar"
 	},
 
+	/* Toki Pona */
 	{
 	"ante e nasin pi nasin ala...",
 	"ante e nasin pi ilo sitelen...",
@@ -137,6 +140,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
 	"o alasa"
 	},
 
+	/* German */
 	{
 	"Verschiedene Optionen...",
 	"GUI-Optionen...",
@@ -171,6 +175,7 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
 	"Laden"
 	},
 
+	/* Japanese */
 	{
 	"\x1D\x8E\x1F\x8E\xB5\xCC\xDF\xBC\xAE\xDD",
 	"GUI\xB5\xCC\xDF\xBC\xAE\xDD",
@@ -226,6 +231,7 @@ static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 
 /* Worldgen */
 static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
+	/* English */
 	{
 	 "Generate new level",
 	 "Width: ",
@@ -235,6 +241,8 @@ static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
 	 "Flatgrass",
 	 "Vanilla"
 	},
+
+	/* Spanish */
 	{
 	 "Generate new level",
 	 "Width: ",
@@ -244,6 +252,8 @@ static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
 	 "Flatgrass",
 	 "Vanilla"
 	},
+
+	/* Toki Pona */
 	{
 	 "o pali e ma sin",
 	 "suli poka: ",
@@ -253,6 +263,8 @@ static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
 	 "ma supa",
 	 "ma pi supa ala"
 	},
+
+	/* German */
 	{
 	 "Generate new level",
 	 "Width: ",
@@ -262,6 +274,8 @@ static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
 	 "Flatgrass",
 	 "Vanilla"
 	},
+
+	/* Japanese */
 	{
 	"\x02\x1F\xE9\x17\x04\xDA\xCD\xDE\xD9\xFA\x1B\x04\x1B\x04\x19\xEB",
 	"\x8F\x8F\xDE: ",
@@ -275,6 +289,7 @@ static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
 
 /* Graphics Options */
 static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
+	/* English */
 	{
 	 "FPS mode",
 	 "View distance",
@@ -287,6 +302,7 @@ static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
 	 "3D anaglyph"
 	},
 
+	/* Spanish */
 	{
 	 "FPS mode",
 	 "View distance",
@@ -299,6 +315,7 @@ static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
 	 "3D anaglyph"
 	},
 
+	/* Toki Pona */
 	{
 	 "nasin pi sitelen FPS",
 	 "lukin wawa",
@@ -311,6 +328,7 @@ static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
 	 "sitelen tu"
 	},
 
+	/* German */
 	{
 	 "FPS mode",
 	 "View distance",
@@ -323,6 +341,7 @@ static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
 	 "3D anaglyph"
 	},
 	
+	/* Japanese */
 	{
 	 "FPS mode",
 	 "View distance",
@@ -338,6 +357,7 @@ static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
 
 /* Misc Options */
 static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
+	/* English */
 	{
 	"Language",
 	"Reach distance",
@@ -351,6 +371,7 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"Mouse sensitivity"
 	},
 	
+	/* Spanish */
 	{
 	"Idioma",
 	"Distancia de alcance",
@@ -364,6 +385,7 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"Sensibilidad del rat¢n"
 	},
 
+	/* Toki Pona */
 	{
 	"toki",
 	"luka suli",
@@ -377,6 +399,7 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"lukin wawa"
 	},
 
+	/* German */
 	{
 	"Sprache",
 	"Reichweite",
@@ -390,6 +413,7 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"Mausempfindlichkeit"
 	},
 
+	/* Japanese */
 	{
 	"Language",
 	"Reach distance",
