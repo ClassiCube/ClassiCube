@@ -5,9 +5,9 @@
 
 /* 
 Translated menu strings
-   Also provides conversions betweens strings and numbers
-   Also provides converting code page 437 indices to/from unicode
-   Also provides wrapping a single line of text into multiple lines
+	 Also provides conversions betweens strings and numbers
+	 Also provides converting code page 437 indices to/from unicode
+	 Also provides wrapping a single line of text into multiple lines
 Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
@@ -20,12 +20,13 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 */
 
-#define CC_LANGUAGE_LANGCNT 4
+#define CC_LANGUAGE_LANGCNT 5
 
 #define CC_LANGUAGE_ENGLISH 0
 #define CC_LANGUAGE_SPANISH 1
 #define CC_LANGUAGE_TOKIPON 2
 #define CC_LANGUAGE_GERMAN_ 3
+#define CC_LANGUAGE_JP_DSP_ 4
 
 extern unsigned char CC_CurrentLanguage;
 extern void applyLanguageToGame();
@@ -168,6 +169,40 @@ static char* ccStrings_optionsMenu[CC_LANGUAGE_LANGCNT][27] = {
 	
 	"Speichern",
 	"Laden"
+	},
+
+	{
+	"\x1D\x8E\x1F\x8E\xB5\xCC\xDF\xBC\xAE\xDD",
+	"GUI\xB5\xCC\xDF\xBC\xAE\xDD",
+	"\xB8\xDE\xD7\xCC\xA8\xAF\xB8",
+	"\x1D\x06\x15\x1B\x83\x86\x04",
+	"\xC1\xAC\xAF\xC4\xB5\xCC\xDF\xBC\xAE\xDD",
+	"\xCA\xAF\xB8\x1B\x83\x86\x04",
+	"\x0B\xFB\x0D\xE7\x06\x1B\x83\x86\x04",
+	"\x8A\x84\x0B\x17\x04\x1B\x83\x86\x04",
+
+	"\xB5\xCC\xDF\xBC\xAE\xDD",
+	"\xC3\xB8\xBD\xC1\xAC\xCA\xDF\xAF\xB8\x98\xFB\x13\x06",
+	"\xCE\xAF\xC4\xB7\xB0",
+	"\x02\x1F\xE9\x17\x04\xDA\xCD\xDE\xD9\xFA\x1B\x04\x1B\x04\x19\xEB",
+	"\xDA\xCD\xDE\xD9\xE8\x9F\x13\x9F",
+	"\xDA\xCD\xDE\xD9\xFA\x9B\x1D\xDE\xFB",
+
+	"\x0B\xFB\xEA\xE7\x06",
+	"\xB9\xDE\xB0\xD1\xFA\xE4\xE1\xEB",
+	"\xB9\xDE\xB0\xD1\x8B\xE2\x88\xDE\xEB",
+	"\xB9\xDE\xB0\xD1\xD2\xC6\xAD\xB0",
+	"\xB5\xDD",
+	"\xB5\xCC",
+	"\xB7\xAC\xDD\xBE\xD9",
+
+	"\xCC\xA7\xB2\xD9\xFA\xDB\xB0\xC4\xDE",
+	"\xCC\xA7\xB2\xD9\xFA\x9B\x1D\xDE\xFB",
+	"\xB1\xAF\xCC\xDF\xDB\xB0\xC4\xDE",
+	"\xC0\xDE\xB3\xDD\xDB\xB0\xC4\xDE",
+	
+	"\xBE\xB0\xCC\xDE",
+	"\xDB\xB0\xC4\xDE"
 	}
 };
 
@@ -176,7 +211,8 @@ static char* ccStrings_GameTitle[CC_LANGUAGE_LANGCNT] = {
 	"ClassiCube",
 	"ClassiCube (en Espa§ol)",
 	"musi Kasiku",
-	"ClassiCube (auf Deutsch)"
+	"ClassiCube (auf Deutsch)",
+	"\xB8\xD7\xBC\xB7\xAD\xB0\xCC\xDE"
 };
 
 /* Language */
@@ -184,95 +220,119 @@ static char* csString_LanguageNames[CC_LANGUAGE_LANGCNT] = {
 	"English",
 	"Espa?ol",
 	"toki pona (sitelen Lasina)",
-	"Deutsch"
+	"Deutsch",
+	"\x8B\x83\x9B\xDF\xFB\x13\xDE"
 };
 
 /* Worldgen */
 static char* ccString_SubOption_Worldgen[CC_LANGUAGE_LANGCNT][7] = {
 	{
-		"Generate new level",
-		"Width: ",
-		"Height: ",
-		"Length: ",
-		"Seed: ",
-		"Flatgrass",
-		"Vanilla"
+	 "Generate new level",
+	 "Width: ",
+	 "Height: ",
+	 "Length: ",
+	 "Seed: ",
+	 "Flatgrass",
+	 "Vanilla"
 	},
 	{
-		"Generate new level",
-		"Width: ",
-		"Height: ",
-		"Length: ",
-		"Seed: ",
-		"Flatgrass",
-		"Vanilla"
+	 "Generate new level",
+	 "Width: ",
+	 "Height: ",
+	 "Length: ",
+	 "Seed: ",
+	 "Flatgrass",
+	 "Vanilla"
 	},
 	{
-		"o pali e ma sin",
-		"suli poka: ",
-		"suli sewi: ",
-		"suli insa: ",
-		"nanpa nasa: ",
-		"ma supa",
-		"ma pi supa ala"
+	 "o pali e ma sin",
+	 "suli poka: ",
+	 "suli sewi: ",
+	 "suli insa: ",
+	 "nanpa nasa: ",
+	 "ma supa",
+	 "ma pi supa ala"
 	},
 	{
-		"Generate new level",
-		"Width: ",
-		"Height: ",
-		"Length: ",
-		"Seed: ",
-		"Flatgrass",
-		"Vanilla"
-	}
-	
+	 "Generate new level",
+	 "Width: ",
+	 "Height: ",
+	 "Length: ",
+	 "Seed: ",
+	 "Flatgrass",
+	 "Vanilla"
+	},
+	{
+	"\x02\x1F\xE9\x17\x04\xDA\xCD\xDE\xD9\xFA\x1B\x04\x1B\x04\x19\xEB",
+	"\x8F\x8F\xDE: ",
+	"\x1F\x0B\x2D\x15: ",
+	"\x8A\x0B\xDE\x2D\x15: ",
+	"\xBC\xB0\xC4\xDE: ",
+	"\x1F\x04\xE9",
+	"\x95\x84\x06"
+	},
 };
 
 /* Graphics Options */
 static char* ccString_SubOption_Graphics[CC_LANGUAGE_LANGCNT][11] = {
 	{
-		"FPS mode",
-		"View distance",
-		"Smooth lighting",
-		"Lighting mode",
-		"Names",
-		"Shadows",
-		"Mipmaps",
-		"Texture filtering", /* Filter textures on Nintendo 64. */
-		"3D anaglyph"
+	 "FPS mode",
+	 "View distance",
+	 "Smooth lighting",
+	 "Lighting mode",
+	 "Names",
+	 "Shadows",
+	 "Mipmaps",
+	 "Texture filtering", /* Filter textures on Nintendo 64. */
+	 "3D anaglyph"
 	},
+
 	{
-		"FPS mode",
-		"View distance",
-		"Smooth lighting",
-		"Lighting mode",
-		"Names",
-		"Shadows",
-		"Mipmaps",
-		"Texture filtering", /* Filter textures on Nintendo 64. */
-		"3D anaglyph"
+	 "FPS mode",
+	 "View distance",
+	 "Smooth lighting",
+	 "Lighting mode",
+	 "Names",
+	 "Shadows",
+	 "Mipmaps",
+	 "Texture filtering", /* Filter textures on Nintendo 64. */
+	 "3D anaglyph"
 	},
+
 	{
-		"nasin pi sitelen FPS",
-		"lukin wawa",
-		"pimeja pona",
-		"nasin pimeja",
-		"nimi",
-		"pimeja soweli",
-		"sitelen lili",
-		"sitelen pona", /* Filter textures on Nintendo 64. */
-		"sitelen tu"
+	 "nasin pi sitelen FPS",
+	 "lukin wawa",
+	 "pimeja pona",
+	 "nasin pimeja",
+	 "nimi",
+	 "pimeja soweli",
+	 "sitelen lili",
+	 "sitelen pona", /* Filter textures on Nintendo 64. */
+	 "sitelen tu"
 	},
+
 	{
-		"FPS mode",
-		"View distance",
-		"Smooth lighting",
-		"Lighting mode",
-		"Names",
-		"Shadows",
-		"Mipmaps",
-		"Texture filtering", /* Filter textures on Nintendo 64. */
-		"3D anaglyph"
+	 "FPS mode",
+	 "View distance",
+	 "Smooth lighting",
+	 "Lighting mode",
+	 "Names",
+	 "Shadows",
+	 "Mipmaps",
+	 "Texture filtering", /* Filter textures on Nintendo 64. */
+	 "3D anaglyph"
+	},
+	
+	{
+	 "FPS mode",
+	 "View distance",
+	 "Smooth lighting",
+	 "Lighting mode",
+	 "Names",
+	 "Shadows",
+	 "Mipmaps",
+	 "Texture filtering", /* Filter textures on Nintendo 64. */
+	 "3D anaglyph"
 	},
 };
 
@@ -329,6 +389,19 @@ static char* ccString_SubOption_Misc[CC_LANGUAGE_LANGCNT][11] = {
 	"Maus umkehren",
 	"Mausempfindlichkeit"
 	},
+
+	{
+	"Language",
+	"Reach distance",
+	"Camera Mass",
+	"Music volume",
+	"Sounds volume",
+	"Block Physics",
+	"Smooth Camera",
+	"View bobbing",
+	"Invert mouse",
+	"Mouse sensitivity"
+	},
 };
 
 /* GUI Options */
@@ -376,38 +449,60 @@ static char* ccString_SubOption_GUI[CC_LANGUAGE_LANGCNT][8] = {
 	"Systemschriftart verwenden",
 	"Systemschriftart auswÑhlen"
 	},
+
+	{
+	"Show FPS",
+	"Hotbar scale",
+	"Inventory scale",
+	"Crosshair scale",
+	"Black text shadows",
+	"Tab auto-complete",
+	"Use system font",
+	"Select system font"
+	},
 };
 
 /* Chat Options */
 static char* ccString_SubOption_Chat[CC_LANGUAGE_LANGCNT][5] = {
 	{
-		"Scale with window",
-		"Chat scale",
-		"Chat lines",
-		"Log to disk",
-		"Clickable chat"
+	 "Scale with window",
+	 "Chat scale",
+	 "Chat lines",
+	 "Log to disk",
+	 "Clickable chat"
 	},
+
 	{
-		"Scale with window",
-		"Chat scale",
-		"Chat lines",
-		"Log to disk",
-		"Clickable chat"
+	 "Scale with window",
+	 "Chat scale",
+	 "Chat lines",
+	 "Log to disk",
+	 "Clickable chat"
 	},
+
 	{
-		"suli tawa sitelen",
-		"toki suli",
-		"lipu nanpa",
-		"o awen tawa lipu sina",
-		"sina ken luka toki"
+	 "suli tawa sitelen",
+	 "toki suli",
+	 "lipu nanpa",
+	 "o awen tawa lipu sina",
+	 "sina ken luka toki"
 	},
+
 	{
-		"Scale with window",
-		"Chat scale",
-		"Chat lines",
-		"Log to disk",
-		"Clickable chat"
-	}
+	 "Scale with window",
+	 "Chat scale",
+	 "Chat lines",
+	 "Log to disk",
+	 "Clickable chat"
+	},
+
+	{
+	 "Scale with window",
+	 "Chat scale",
+	 "Chat lines",
+	 "Log to disk",
+	 "Clickable chat"
+	},
 };
 
 /* Nostalgia Options (Appearance) */
@@ -450,7 +545,17 @@ static char* ccString_SubOption_NostalgicAppearance[CC_LANGUAGE_LANGCNT][7] = {
 	"Classic GUI-Texturen",
 	"Classic Spielerliste",
 	"Classic Optionen"
-	}
+	},
+
+	{
+	"Classic hand model",
+	"Classic walk anim",
+	"Classic chat",
+	"Classic inventory",
+	"Classic GUI textures",
+	"Classic player list",
+	"Classic options"
+	},
 };
 
 /* Render Distance Text */
@@ -482,6 +587,13 @@ static const char* const ccString_ViewDistanceNames[CC_LANGUAGE_LANGCNT][4] = {
 	"NORMAL",
 	"WEIT"
 	},
+
+	{
+	"TINY",
+	"SHORT",
+	"NORMAL",
+	"FAR"
+	},
 };
 
 /* Texture Options */
@@ -497,7 +609,10 @@ static char* ccString_SubOption_TexturePack[CC_LANGUAGE_LANGCNT][1] = {
 	},
 	{
 	"WÑhlen Sie ein Texturpaket"
-	}
+	},
+	{
+	"Select a texture pack"
+	},
 };
 
 /* Worldgen Options */
@@ -525,7 +640,13 @@ static char* ccString_SubOption_WorldGen[CC_LANGUAGE_LANGCNT][4] = {
 	"Klein",
 	"RegulÑr",
 	"Riesig"
-	}
+	},
+	{
+	"Generate new level",
+	"Small",
+	"Normal",
+	"Huge"
+	},
 };
 
 /* Classic Options */
@@ -562,76 +683,103 @@ static char* ccString_SubOption_ClassicOptions[CC_LANGUAGE_LANGCNT][6] = {
 	"Sichtweite",
 	"Hacks aktiviert"
 	},
+	{
+	"Music",
+	"Limit framerate",
+	"3D anaglyph",
+	"Sound",
+	"Render distance",
+	"Hacks enabled"
+	},
 };
 
 /* Classic GUI */
 static char* ccString_SubOption_ClassicGUI[CC_LANGUAGE_LANGCNT][1] = {
 	{
-		"Select block"
+	 "Select block"
 	},
 	{
-		"Seleccionar bloque"
+	 "Seleccionar bloque"
 	},
 	{
-		"leko seme?"
+	 "leko seme?"
 	},
 	{
-		"Block auswÑhlen"
-	}
+	 "Block auswÑhlen"
+	},
+	{
+	 "Select block"
+	},
 };
 
 /* Blocks */
 static char* ccString_SubOption_Blocks[CC_LANGUAGE_LANGCNT][66] = {
 	{
-	"Air",		"Stone",		"Grass", 	"Dirt",			"Cobblestone",	"Wood",		"Sapling",		"Bedrock",
-	"Water",	"Still water",	"Lava", 	"Still lava",	"Sand",			"Gravel",	"Gold ore",		"Iron ore",
-	"Coal ore",	"Log",			"Leaves",	"Sponge",		"Glass",		"Red",		"Orange",		"Yellow",
-	"Lime",		"Green",		"Teal",		"Aqua",			"Cyan",			"Blue",		"Indigo",		"Violet",	
-	
-	"Magenta",			"Pink",		"Black",	"Gray",			"White",		"Dandelion",	"Rose",	"Brown mushroom",
-	"Red mushroom",		"Gold",		"Iron",		"Double slab",	"Slab",			"Brick",		"TNT",	"Bookshelf",
-	"Mossy rocks",		"Obsidian",	"Cobblestone slab", "Rope", "Sandstone",	"Snow",			"Fire",	"Light pink",
-	"Forest green",		"Brown",	"Deep blue",	"Turquoise", "Ice",			"Ceramic tile","Magma",	"Pillar",
-	"Crate",			"Stone brick"
+		"Air", "Stone", "Grass", 	"Dirt", "Cobblestone",	"Wood", "Sapling", "Bedrock",
+		"Water",	"Still water",	"Lava", 	"Still lava",	"Sand", "Gravel",	"Gold ore", "Iron ore",
+		"Coal ore",	"Log", "Leaves",	"Sponge", "Glass", "Red", "Orange", "Yellow",
+		"Lime", "Green", "Teal", "Aqua", "Cyan", "Blue", "Indigo", "Violet",	
+		
+		"Magenta", "Pink", "Black",	"Gray", "White", "Dandelion",	"Rose",	"Brown mushroom",
+		"Red mushroom", "Gold", "Iron", "Double slab",	"Slab", "Brick", "TNT",	"Bookshelf",
+		"Mossy rocks", "Obsidian",	"Cobblestone slab", "Rope", "Sandstone",	"Snow", "Fire",	"Light pink",
+		"Forest green", "Brown",	"Deep blue",	"Turquoise", "Ice", "Ceramic tile","Magma",	"Pillar",
+		"Crate", "Stone brick"
 	},
 	
 	{
-	"Aire", "Piedra", "Hierba", "Tierra", "Adoqu°n", "Madera", "?rbol joven", "Roca madre",
-	"Agua", "Agua estancada", "Lava", "Lava estancada", "Arena", "Grava", "Mena de oro", "Mena de hierro",
-	"Mena de carb¢n", "Tronco", "Hojas", "Esponja", "Vidrio", "Rojo", "Naranja", "Amarillo",
-	"Lima", "Verde", "Verde azulado", "Aguamarina", "Cian", "Azul", "?ndigo", "Violeta",
+		"Aire",			"Piedra",    "Hierba", "Tierra",   "Adoqu°n",  "Madera",  "Brote",    "Roca madre",
+		"Agua",			"Agua quieta",      "Lava",   "Lava quieta",     "Arena",    "Grava",   "Mineral de oro",  "Mineral de hierro",
+		"Mineral de carb¢n","Tronco",    "Hojas",  "Esponja",  "Vidrio",   "Rojo",    "Naranja",  "Amarillo",
+		"Verde lima",	"Verde",     "Azul verdoso",  "Aguamarina",      "Cian",     "Azul",    "Indigo",   "Violeta",
+		
+		"Magenta",		"Rosa", "Negro",  "Gris",     "Blanco",   "Diente de le¢n",  "Rosa",     "Hongo marr¢n",
+		"Hongo rojo",	"Oro", "Hierro", "Loseta doble",    "Loseta",   "Ladrillo", "Dinamita",	"Estanter°a",
+		"Rocas musgosas",	"Obsidiana", "Loseta de adoqu°n","Cuerda", "Arenisca", "Nieve",    "Fuego",    "Rosa claro",
+		"Verde bosque",	"Marr¢n", "Azul oscuro",   "Turquesa", "Hielo",    "Baldosa cer†mica","Magma",    "Pilar",
+		"Caja",			"Ladrillo de piedra"
+    },
 
-	"Magenta", "Rosa", "Negro", "Gris", "Blanco", "Diente de le¢n", "Rosa", "Hongo marr¢n",
-	"Hongo rojo", "Oro", "Hierro", "Losa doble", "Losa", "Ladrillo", "TNT", "Estanter°a",
-	"Rocas musgosas", "Obsidiana", "Losa de adoqu°n", "Cuerda", "Arenisca", "Nieve", "Fuego", "Rosa claro",
-	"Verde bosque", "Marr¢n", "Azul oscuro", "Turquesa", "Hielo", "Azulejo cer†mico", "Magma", "Pilar",
-	"Caja", "Ladrillo de piedra"
+	{
+		"kon",			"kiwen", "kasi", "ma", "kiwen nena", "kiwen kipisi pi kasi kiwen", "kasi lili", "kiwen pi pakala ala",
+		"telo",			"telo li awen",	"telo moli", "telo moli li awen", "ko", "kiwen lili mute", "kiwen jelo lon insa kiwen",	"kiwen walo lon insa kiwen",
+		"ko pimeja lon insa kiwen",	"sijelo pi kasi kili", "lipu pi kasi kili", "ko pi weka telo", "kiwen lukin", "loje", "loje jelo", "jelo",
+		"jelo laso",	"laso", "laso suno", "laso telo suno", "laso sewi", "laso", "laso loje pimeja", "laso loje",	
+		
+		"loje pimeja",	"loje suno", "pimeja", "pimeja suno", "suno", "kasi jelo", "kasi loje", "soko",
+		"soko loje",	"leko mani", "leko kiwen", "supa", "supa tu", "leko", "ilo pakala", "poki pi lipu mute",
+		"Mossy rocks",	"telo moli kiwen lete", "supa pi kiwen nena", "linja", "ko kiwen", "ko pi telo lete", "seli", "loje suno mute",
+		"laso kasi",	"pimeja ma", "laso telo pimeja", "laso pimeja", "leko pi telo lete", "ko kiwen mute", "telo moli kiwen", "palisa",
+		"poki",			"kiwen leko"
 	},
 
 	{
-	"kon",						"kiwen",		"kasi",			"ma",					"kiwen nena",		"kiwen kipisi pi kasi kiwen",		"kasi lili",					"kiwen pi pakala ala",
-	"telo",						"telo li awen",	"telo moli",	"telo moli li awen",	"ko",				"kiwen lili mute",					"kiwen jelo lon insa kiwen",	"kiwen walo lon insa kiwen",
-	"ko pimeja lon insa kiwen",	"sijelo pi kasi kili",			"lipu pi kasi kili",	"ko pi weka telo",	"kiwen lukin",						"loje",		"loje jelo",		"jelo",
-	"jelo laso",		"laso",		"laso suno",		"laso telo suno",			"laso sewi",			"laso",		"laso loje pimeja",		"laso loje",	
-	
-	"loje pimeja",		"loje suno",	"pimeja",				"pimeja suno",	"suno",							"kasi jelo",		"kasi loje",		"soko",
-	"soko loje",		"leko mani",	"leko kiwen",			"supa",			"supa tu",						"leko",				"ilo pakala",		"poki pi lipu mute",
-	"Mossy rocks",		"telo moli kiwen lete",		"supa pi kiwen nena",	 "linja",		"ko kiwen",					"ko pi telo lete",	"seli",				"loje suno mute",
-	"laso kasi",		"pimeja ma",	"laso telo pimeja",		"laso pimeja",	"leko pi telo lete",			"ko kiwen mute",	"telo moli kiwen",	"palisa",
-	"poki",				"kiwen leko"
+		"Luft",			"Stein", "Gras", "Erde",			 "Pflasterstein", "Holz", "Setzling", "Grundgestein",
+		"Wasser",		"Stilles Wasser", "Lava", "Stilles Lava", "Sand", "Kies", "Golderz", "Eisenerz",
+		"Kohleerz",		"Stamm", "BlÑtter", "Schwamm", "Glas", "Rot", "Orange", "Gelb",
+		"LimettengrÅn",	"GrÅn", "BlaugrÅn",	"Aqua",			 "Zyan", "Blau", "Indigo", "Violett",
+		
+		"Magenta",		"Rosa", "Schwarz", "Grau",			 "Wei·", "Lîwenzahn", "Rose",		 "Brauner Pilz",
+		"Roter Pilz",	"Gold", "Eisen", "Doppelplatte", "Platte",			 "Ziegel", "TNT",		 "BÅcherregal",
+		"Moosige Felsen","Obsidian", "Pflastersteinplatte", "Seil",	"Sandstein", "Schnee", "Feuer", "Hellrosa",
+		"WaldgrÅn",		"Braun", "Dunkelblau", "TÅrkis", "Eis", "Keramikfliese","Magma", "SÑule",
+		"Kiste",		"Steinziegel"
 	},
 
 	{
-	"Air",		"Stone",		"Grass", 	"Dirt",			"Cobblestone",	"Wood",		"Sapling",		"Bedrock",
-	"Water",	"Still water",	"Lava", 	"Still lava",	"Sand",			"Gravel",	"Gold ore",		"Iron ore",
-	"Coal ore",	"Log",			"Leaves",	"Sponge",		"Glass",		"Red",		"Orange",		"Yellow",
-	"Lime",		"Green",		"Teal",		"Aqua",			"Cyan",			"Blue",		"Indigo",		"Violet",	
-	
-	"Magenta",			"Pink",		"Black",	"Gray",			"White",		"Dandelion",	"Rose",	"Brown mushroom",
-	"Red mushroom",		"Gold",		"Iron",		"Double slab",	"Slab",			"Brick",		"TNT",	"Bookshelf",
-	"Mossy rocks",		"Obsidian",	"Cobblestone slab", "Rope", "Sandstone",	"Snow",			"Fire",	"Light pink",
-	"Forest green",		"Brown",	"Deep blue",	"Turquoise", "Ice",			"Ceramic tile","Magma",	"Pillar",
-	"Crate",			"Stone brick"
-	}
+		"\x0F\x06\x0D", "\x04\x17", "\x0F\x15\xCC\xDE\xDB\xAF\xB8", "\x84\x81", "\x9E\xEB\x04\x17", "\x04\x1F\x15\xDE\x04", "\x8A\x08\x0D\xDE", "\x0B\xDE\xFB\x8F\xDE\xFB",
+		"\x9F\x19\xDE", "\x1B\x04\x17\x17\x1F\x9F\x19\xDE", "\xE8\x06\x0B\xDE\xFB", "\x1B\x04\x17\x17\x1F\xE8\x06\x0B\xDE\xFB", "\x19\x8A", "\x17\xDE\xE3\xEA", "\x0D\xFB\x13\x06\x1B\x0D", "\x86\x83\x13\x06\x1B\x0D",
+		"\x1B\x0D\x1F\xFB\x13\x06\x1B\x0D", "\x0D", "\x8F",	"\xBD\xCE\xDF\xDD\xBC\xDE", "\xB6\xDE\xD7\xBD", "\x02\x0B\x04\xED\x8E\xE8\x06\xE2\x06","\x1F\xDE\x04\x1F\xDE\x04\x04\xED\x8E\xE8\x06\xE2\x06","\x0D\x04\xED\x8E\xE8\x06\xE2\x06",
+		"\x0D\x9F\x88\xDE\xEA\x04\xED\x8E\xE8\x06\xE2\x06","\x9F\x88\xDE\xEA\x04\xED\x8E\xE8\x06\xE2\x06","\x17\xFB\xEA\xE7\x0F\x17\xE7\x0F\x8E\xE8\x06\xE2\x06","\x02\x0A\x9F\x88\xDE\xEA\x04\xED\x8E\xE8\x06\xE2\x06","\x9F\x19\xDE\x04\xED\x8E\xE8\x06\xE2\x06","\x0F\xDE\xFB\x17\xDE\xE7\x06\x17\xE7\x0F\x8E\xE8\x06\xE2\x06","\x19\x9F\xEC\x04\xED\x8E\xE8\x06\xE2\x06","\xE0\xE9\x15\x0D\x04\xED\x8E\xE8\x06\xE2\x06",	
+		
+		"\x02\x0B\xE0\xE9\x15\x0D\x04\xED\x8E\xE8\x06\xE2\x06","\x8F\xDE\xE9\x04\xED\x8E\xE8\x06\xE2\x06","\x8E\x06\x8F\x04\x04\xED\x8E\xE8\x06\xE2\x06","\x06\x19\x8F\x04\x04\xED\x8E\xE8\x06\xE2\x06","\x8F\x0F\x17\xE7\x0F\x8E\xE8\x06\xE2\x06", "\xC0\xDD\xCE\xDF\xCE\xDF","\xCA\xDE\xD7","\x81\xE3\x04\xED\x8E\xB7\xC9\xBA",
+		"\x02\x0B\x04\xED\x8E\xB7\xC9\xBA","\x0D\xFB\xCC\xDE\xDB\xAF\xB8","\x86\x84\xCC\xDE\xDB\xAF\xB8","\x0B\x15\x8D\x1F\xCA\xB0\xCC\xCC\xDE\xDB\xAF\xB8","\xCA\xB0\xCC\xCC\xDE\xDB\xAF\xB8","\xDA\xDD\xB6\xDE","TNT","\x9B\xFB\x1F\xDE\x8A",
+		
+		"\x13\x11\xE0\x17\x1F\x9E\xEB\x04\x17","\x13\x0F\xE8\x06\x1B\x0D",
+		"\x9E\xEB\x04\x17\x8E\xCA\xB0\xCC\xCC\xDE\xDB\xAF\xB8","\xDB\xB0\xCC\xDF","\x15\x0B\xDE\xFB","\x13\x8A\xE6\x0D","\x08\xFB","\x02\x0B\xEB\x04\xCB\xDF\xDD\xB8\xE8\x06\xE2\x06",
+		"\x95\x0B\x04\x9F\x88\xDE\xEA\xE8\x06\xE2\x06","\x81\xE3\x04\xED\xE8\x06\xE2\x06","\x13\x04\x02\x0A\x04\xED\xE8\x06\xE2\x06","\xC0\xB0\xBA\xB2\xBD\xDE\xE8\x06\xE2\x06","\x13\x0A\xEA","\x1F\xDE\x04\xEA\x1B\x0D\xC0\xB2\xD9","\xCF\xB8\xDE\xCF\xCC\xDE\xDB\xAF\xB8","\x1F\xDE\x04\xEA\x1B\x0D\x8E\x8F\x17\xE9",
+		"\x8F\x13","\x04\x17\xDA\xDD\xB6\xDE"
+	},
+
 };
 #endif
