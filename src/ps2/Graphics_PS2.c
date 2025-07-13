@@ -155,6 +155,7 @@ void Gfx_Create(void) {
 	Gfx.MaxLowResTexSize = 512 * 512; // TODO better fix, needed for onscreen keyboard
 	Gfx.Created      = true;
 	
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	Gfx_RestoreState();
 }
 
@@ -317,7 +318,8 @@ typedef struct CCTexture_ {
 } CCTexture;
 
 static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
-	int width = bmp->width >> 1, height = bmp->height;
+	int width  = (bmp->width + 1) >> 1;
+	int height = bmp->height;
 	
 	for (int y = 0; y < height; y++)
 	{
@@ -333,14 +335,16 @@ static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWid
 	}
 }
 
+static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
+
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(16, 32 + size);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	tex->log2_w = draw_log2(bmp->width);
-	tex->log2_h = draw_log2(bmp->height);
+	tex->log2_w = Log2Dimension(bmp->width);
+	tex->log2_h = Log2Dimension(bmp->height);
 
 	BitmapCol palette[MAX_PAL_4BPP_ENTRIES] QWORD_ALIGNED;
 	int pal_count =  0;
@@ -356,7 +360,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			ApplyPalette(palette, pal_index);
 		}
 	}
-	//Platform_Log4("%i, %i (%i x %i)", &pal_index, &pal_count, &bmp->width, &bmp->height);
+	//Platform_Log4("%i, c%i (%i x %i)", &pal_index, &pal_count, &bmp->width, &bmp->height);
 	
 	if (pal_index >= 0) {
 		tex->format    = GS_PSM_4;
@@ -391,16 +395,21 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
 	
+	unsigned dst_width  = 1 << tex->log2_w;
 	unsigned dst_addr   = tex_offset;
 	// GS stores stride in 64 block units
 	// (i.e. gs_stride = real_stride >> 6, so min stride is 64)
-	unsigned dst_stride = max(64, tex->width);
+	unsigned dst_stride = max(64, dst_width);
 	
 	// TODO terrible perf
 	DMAFlushBuffer();
 	dma_wait_fast();
-	
-	Gfx_TransferPixels(tex->pixels, tex->width, tex->height, 
+
+	// 4bpp has extra garbage pixels when odd rows
+	int src_w = tex->width, src_h = tex->height;
+	if (tex->format != GS_PSM_32 && (src_w & 1)) src_w++;
+
+	Gfx_TransferPixels(tex->pixels, src_w, src_h, 
 						tex->format, dst_addr, dst_stride);
 	
 	// TODO terrible perf

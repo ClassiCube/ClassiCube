@@ -384,7 +384,9 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
 
 static CC_INLINE void ConvertTexture_4444(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
-	int width = bmp->width, height = bmp->height;
+	int width  = bmp->width;
+	int height = bmp->height;
+
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
 	TwiddleCalcFactors(width, height, &maskX, &maskY);
@@ -404,7 +406,9 @@ static CC_INLINE void ConvertTexture_4444(cc_uint16* dst, struct Bitmap* bmp, in
 }
 
 static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
-	int width = bmp->width >> 1, height = bmp->height >> 1;
+	int width  = (bmp->width  + 1) >> 1;
+	int height = (bmp->height + 1) >> 1;
+
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
 	TwiddleCalcFactors(width, height, &maskX, &maskY);
