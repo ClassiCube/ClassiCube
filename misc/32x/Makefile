@@ -14,12 +14,20 @@ SOURCE_DIRS = src src/32x misc/32x
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 S_FILES = misc/32x/sh2_crt0.s
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.s=%.o)))
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
 
@@ -43,10 +51,6 @@ SHOBJC = $(SHPREFIX)objcopy
 MDPREFIX = $(ROOTDIR)/m68k-elf/bin/m68k-elf-
 MDAS = $(MDPREFIX)as
 MDLD = $(MDPREFIX)ld
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------

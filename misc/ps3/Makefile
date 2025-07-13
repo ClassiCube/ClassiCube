@@ -16,12 +16,10 @@ include $(PS3DEV)/ppu_rules
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
-# INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
 TARGET		:=	ClassiCube-PS3
 BUILD		:=	build-ps3
 SOURCES		:=	src third_party/bearssl
-INCLUDES	:= 
 SHADERS		:=	misc/ps3
 
 TITLE		:=	ClassiCube
@@ -87,8 +85,7 @@ export OFILES	:=	$(CFILES:.c=.o) $(sFILES:.s=.o) $(SFILES:.S=.o) \
 #---------------------------------------------------------------------------------
 # build a list of include paths
 #---------------------------------------------------------------------------------
-export INCLUDE	:=	$(foreach dir,$(INCLUDES), -I$(CURDIR)/$(dir)) \
-					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+export INCLUDE	:=	$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					$(LIBPSL1GHT_INC) \
 					-I$(CURDIR)/$(BUILD)
 

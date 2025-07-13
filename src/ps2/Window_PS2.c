@@ -69,27 +69,30 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
+extern void Gfx_VRAM_Reset(void);
+extern int  Gfx_VRAM_AllocPaged(int width, int height, int psm);
+
 static void ResetDisplay(void) {
 	graph_shutdown();
-	graph_vram_clear();
+	Gfx_VRAM_Reset();
 
 	fb_colors[0].width   = DisplayInfo.Width;
 	fb_colors[0].height  = DisplayInfo.Height;
 	fb_colors[0].mask    = 0;
 	fb_colors[0].psm     = GS_PSM_24;
-	fb_colors[0].address = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm, GRAPH_ALIGN_PAGE);
-
-	fb_depth.enable      = 1;
-	fb_depth.method      = ZTEST_METHOD_ALLPASS;
-	fb_depth.mask        = 0;
-	fb_depth.zsm         = GS_ZBUF_24;
-	fb_depth.address     = graph_vram_allocate(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
+	fb_colors[0].address = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm);
 
 	fb_colors[1].width   = DisplayInfo.Width;
 	fb_colors[1].height  = DisplayInfo.Height;
 	fb_colors[1].mask    = 0;
 	fb_colors[1].psm     = GS_PSM_24;
-	fb_colors[1].address = graph_vram_allocate(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm, GRAPH_ALIGN_PAGE);
+	fb_colors[1].address = Gfx_VRAM_AllocPaged(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm);
+
+	fb_depth.enable      = 1;
+	fb_depth.method      = ZTEST_METHOD_ALLPASS;
+	fb_depth.mask        = 0;
+	fb_depth.zsm         = GS_ZBUF_24;
+	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
 }
 
 static void InitDisplay(framebuffer_t* fb) {

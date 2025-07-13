@@ -18,12 +18,20 @@ BUILD_DIR   = build/xbox
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 CFLAGS = -O1 -fno-math-errno -Wno-builtin-macro-redefined \
 	-I$(NXDK_DIR)/lib/net/lwip/src/include \
 	-I$(NXDK_DIR)/lib/net/nforceif/include \
@@ -42,10 +50,6 @@ LDFLAGS = -stack:196608 \
 	$(NXDK_DIR)/lib/libwinapi.lib \
 	$(NXDK_DIR)/lib/nxdk_usb.lib \
 	$(NXDK_DIR)/lib/xboxkrnl/libxboxkrnl.lib
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------
@@ -85,7 +89,7 @@ $(TARGET).iso: $(TARGET).xbe
 $(TARGET).xbe: $(TARGET).exe
 	$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $<
 
-$(TARGET).exe : $(OBJS)
+$(TARGET).exe: $(OBJS)
 	nxdk-link $(NXDK_LDFLAGS) $(LDFLAGS) -out:$@ $^
 
 

@@ -20,19 +20,23 @@ PROJECT_TITLEID = CUBE00200
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 CFLAGS 	= -O1
 
 LDFLAGS = -Wl,-q
 LIBS 	= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------

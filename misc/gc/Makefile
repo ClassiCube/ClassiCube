@@ -10,18 +10,25 @@ endif
 TARGET 		= ClassiCube-gc
 # List of directories containing source code
 SOURCE_DIRS	= src src/gcwii third_party/bearssl
-# List of directories containing more header files
-INCLUDES	= 
 # Directory where object files are placed
 BUILD_DIR	= build/gc
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 
 MACHDEP = -DGEKKO -mogc -mcpu=750 -meabi -mhard-float
 CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc/include
@@ -29,10 +36,6 @@ CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc/include
 LDFLAGS	= -g $(MACHDEP) -L$(DEVKITPRO)/libogc/lib/cube
 # Additional libraries to link against
 LIBS	= -lasnd -lbba -lfat -logc -lm
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------
@@ -72,13 +75,13 @@ $(TARGET).dol: $(TARGET).elf
 # Object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
-	$(PPC_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: src/gcwii/%.c
-	$(PPC_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/%.c
-	$(PPC_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(PPC_CC) $(CFLAGS) -c $< -o $@
 
 
 #---------------------------------------------------------------------------------

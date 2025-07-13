@@ -12,8 +12,6 @@ TARGET 		= ClassiCube-3ds
 SOURCE_DIRS	= src src/3ds third_party/bearssl
 # List of directories containing shader files
 SHDR_DIRS   = misc/3ds
-# List of directories containing more header files
-INCLUDES	= 
 # Directory where object files are placed
 BUILD_DIR	= build/3ds
 
@@ -28,7 +26,7 @@ CIA_SPEC_RSF	= misc/3ds/spec.rsf
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
@@ -37,20 +35,25 @@ OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o
 PICAFILES 	:= $(foreach dir,$(SHDR_DIRS),$(notdir $(wildcard $(dir)/*.v.pica)))
 OBJS		+= $(addprefix $(BUILD_DIR)/, $(PICAFILES:.v.pica=.shbin.o))
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 ARCH	= -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS	= -g -Wall -O2 -mword-relocations -ffunction-sections $(ARCH) $(INCLUDE) -D__3DS__
 ASFLAGS	= -g $(ARCH)
 
 LDFLAGS	= -specs=3dsx.specs -g $(ARCH)
 LIBS	= -lctru -lm
+INCLUDES= 
 
 CTRULIB		= $(DEVKITPRO)/libctru
 INCLUDES 	+= $(foreach dir, $(CTRULIB), -I$(dir)/include)
-LDFLAGS 	+= $(foreach dir, $(CTRULIB), -L$(dir)/lib)
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
+LDFLAGS 	+= $(foreach dir,$(CTRULIB), -L$(dir)/lib)
 
 
 #---------------------------------------------------------------------------------

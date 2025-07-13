@@ -1,15 +1,13 @@
-#include "Core.h"
-#if defined CC_BUILD_XBOX360
-
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "Funcs.h"
-#include "Utils.h"
-#include "Errors.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../Funcs.h"
+#include "../Utils.h"
+#include "../Errors.h"
 
 #define LWIP_SOCKET 1
 #include <lwip/sockets.h>
+#include <diskio/ata.h>
 #include <xenos/xe.h>
 #include <xenos/xenos.h>
 #include <xenos/edram.h>
@@ -24,7 +22,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <libfat/fat.h>
-#include "_PlatformConsole.h"
+
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -346,4 +345,3 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
-#endif

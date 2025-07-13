@@ -10,8 +10,6 @@ endif
 TARGET 		= ClassiCube-switch
 # List of directories containing source code
 SOURCE_DIRS	= src src/switch third_party/bearssl
-# List of directories containing more header files
-INCLUDES	= 
 # Directory where object files are placed
 BUILD_DIR	= build/switch
 
@@ -22,18 +20,27 @@ APP_VERSION	= 1.3.7
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 ARCH	= -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS	= -g -Wall -O2 -ffunction-sections $(ARCH) -D__SWITCH__
 ASFLAGS	= -g $(ARCH)
 
 LDFLAGS	= -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH)
 LIBS	= -lGLESv2 -lEGL -lglapi -ldrm_nouveau -lnx -lm
+INCLUDES= 
 
 LIBNX		= $(DEVKITPRO)/libnx
 INCLUDES 	+= $(foreach dir, $(LIBNX), -I$(dir)/include)
@@ -42,10 +49,6 @@ LDFLAGS 	+= $(foreach dir, $(LIBNX), -L$(dir)/lib)
 PORTLIBS	= $(DEVKITPRO)/portlibs/switch
 INCLUDES 	+= $(foreach dir, $(PORTLIBS), -I$(dir)/include)
 LDFLAGS 	+= $(foreach dir, $(PORTLIBS), -L$(dir)/lib)
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------

@@ -30,12 +30,21 @@ IMAGE_1ST_READ_BIN		= A.BIN
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 SH_OBJS := $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(SH_OBJS:%.o=%.d)
+
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 SH_CFLAGS = -Os -DPLAT_SATURN -Wstrict-aliasing \
 	-I$(YAUL_INSTALL_ROOT)/$(YAUL_ARCH_SH_PREFIX)/include/yaul
 
@@ -44,10 +53,6 @@ SH_LDFLAGS = -static -Wl,--gc-sections \
 	-Wl,--defsym=___slave_stack=$(IP_SLAVE_STACK_ADDR)
 
 SH_SPECS = yaul.specs yaul-main.specs
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(SH_OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------

@@ -131,7 +131,8 @@ static void InitDrawingEnv(void) {
 }
 
 static void InitPalette(void);
-static unsigned tex_offset;
+static void InitTextureMem(void);
+
 void Gfx_Create(void) {
 	primitive_type = 0; // PRIM_POINT, which isn't used here
 
@@ -144,7 +145,7 @@ void Gfx_Create(void) {
 	InitDrawingEnv();
 
 	InitPalette();
-	tex_offset  = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
+	InitTextureMem();
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -168,6 +169,62 @@ static CC_INLINE void DMAFlushBuffer(void) {
 
 	DMATAG_END(dma_beg, (Q - dma_beg) - 1, 0, 0, 0);
 	dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------VRAM transfer/memory---------------------------------------------------*
+*#########################################################################################################################*/
+#define ALIGNUP(val, alignment) (((val) + (alignment - 1)) & -alignment)
+static int vram_pointer;
+
+void Gfx_VRAM_Reset(void) {
+	vram_pointer = 0;
+}
+
+static int AllocVRAM(int width, int height, int psm) {
+	width = ALIGNUP(width, 64);
+
+	// Returns size in words
+	// TODO move the >> out ?
+	switch (psm)
+	{
+		case GS_PSM_4:		
+			return width * (height >> 3);
+		case GS_PSM_8:		
+			return width * (height >> 2);
+		case GS_PSM_16:
+		case GS_PSM_16S:
+		case GS_PSMZ_16:
+		case GS_PSMZ_16S:	
+			return width * (height >> 1);
+		case GS_PSM_24:
+		case GS_PSM_32:
+		case GS_PSM_8H:
+		case GS_PSM_4HL:
+		case GS_PSM_4HH:
+		case GS_PSMZ_24:
+		case GS_PSMZ_32:	
+			return width * height;
+	}
+	return 0;
+}
+
+int Gfx_VRAM_Alloc(int width, int height, int psm) {
+	int size = AllocVRAM(width, height, psm);
+	int addr = vram_pointer;
+
+	vram_pointer += size;
+	return addr;
+}
+
+int Gfx_VRAM_AllocPaged(int width, int height, int psm) {
+	int size = AllocVRAM(width, height, psm);
+	int addr = vram_pointer;
+
+	// Align to 2048 words / 8192 bytes (VRAM page alignment)
+	vram_pointer += ALIGNUP(size, 2048);
+	return addr;
 }
 
 static int CalcTransferBytes(int width, int height, int psm) {
@@ -263,7 +320,7 @@ static unsigned clut_offset;
 #define PaletteAddr(index) (clut_offset + (index) * 64)
 
 static void InitPalette(void) {
-	clut_offset = graph_vram_allocate(PAL_TOTAL_ENTRIES, 1, GS_PSM_32, GRAPH_ALIGN_BLOCK);
+	clut_offset = Gfx_VRAM_Alloc(PAL_TOTAL_ENTRIES, 1, GS_PSM_32);
 }
 
 static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
@@ -303,6 +360,27 @@ static void ApplyPalette(BitmapCol* palette, int pal_index) {
 	// psm8, w=16 h=16
 	// psm4, w=8  h=2
 	Gfx_TransferPixels(palette, 8, 2, GS_PSM_32, PaletteAddr(pal_index), 64);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Texture memory-----------------------------------------------------*
+*#########################################################################################################################*/
+#define VRAM_SIZE_WORDS (1024 * 1024)
+
+// PS2 textures are always 64 word aligned minimum
+#define TEXMEM_BLOCK_SIZE 64
+
+#define TEXMEM_MAX_BLOCKS (VRAM_SIZE_WORDS / TEXMEM_BLOCK_SIZE)
+static cc_uint8 tex_4hl_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
+static cc_uint8 tex_4hh_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
+static int texmem_4bpp_blocks;
+
+static unsigned tex_offset;
+static void InitTextureMem(void) {
+	tex_offset = Gfx_VRAM_Alloc(256, 256, GS_PSM_32);
+
+	texmem_4bpp_blocks = fb_colors[1].address / TEXMEM_BLOCK_SIZE;
 }
 
 

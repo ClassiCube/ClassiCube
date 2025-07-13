@@ -21,12 +21,20 @@ MAKER_CODE	= 00
 
 
 #---------------------------------------------------------------------------------
-# Code generation
+# Compilable files
 #---------------------------------------------------------------------------------
 S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
 ARCH	= -mthumb -mthumb-interwork
 CFLAGS	= -g -Wall -O2 -DPLAT_GBA -ffunction-sections -fdata-sections -mcpu=arm7tdmi -mtune=arm7tdmi $(ARCH)
 ASFLAGS	= -g $(ARCH)
@@ -41,10 +49,6 @@ LDFLAGS 	+= $(foreach dir, $(LIBGBA), -L$(dir)/lib)
 LIBTONC		= $(DEVKITPRO)/libtonc
 INCLUDES 	+= $(foreach dir, $(LIBTONC), -I$(dir)/include)
 LDFLAGS 	+= $(foreach dir, $(LIBTONC), -L$(dir)/lib)
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------
