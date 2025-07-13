@@ -4,6 +4,8 @@ $(warning export PSN00BSDK_ROOT=/usr/local/lib/psn00bsdk)
 $(error   Failed to find PSN00BSDK installation path)
 endif
 
+.SUFFIXES:
+
 
 #---------------------------------------------------------------------------------
 # Configurable options

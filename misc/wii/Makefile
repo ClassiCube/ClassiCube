@@ -2,6 +2,8 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
 endif
 
+.SUFFIXES:
+
 
 #---------------------------------------------------------------------------------
 # Configurable options

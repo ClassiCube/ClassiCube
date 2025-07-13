@@ -2,7 +2,7 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
 endif
 
-include $(DEVKITPRO)/devkitARM/gba_rules
+.SUFFIXES:
 
 
 #---------------------------------------------------------------------------------
@@ -52,6 +52,17 @@ LDFLAGS 	+= $(foreach dir, $(LIBTONC), -L$(dir)/lib)
 
 
 #---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+PREFIX	= $(DEVKITPRO)/devkitARM/bin/arm-none-eabi-
+ARM_AS	= $(PREFIX)as
+ARM_CC	= $(PREFIX)gcc
+ARM_OBJCOPY = $(PREFIX)objcopy
+
+GBAFIX = $(DEVKITPRO)/tools/bin/gbafix
+
+
+#---------------------------------------------------------------------------------
 # Main targets
 #---------------------------------------------------------------------------------
 default: $(BUILD_DIR) $(TARGET).gba
@@ -67,21 +78,21 @@ $(BUILD_DIR):
 # Executable generation
 #---------------------------------------------------------------------------------
 $(TARGET).elf: $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+	$(ARM_CC) $(LDFLAGS) $^ -o $@ $(LIBS)
 
 $(TARGET).gba: $(TARGET).elf
-	$(OBJCOPY) -O binary $< $@
-	gbafix $@ -t$(GAME_TITLE) -c$(GAME_CODE) -m$(MAKER_CODE)
+	$(ARM_OBJCOPY) -O binary $< $@
+	$(GBAFIX) $@ -t$(GAME_TITLE) -c$(GAME_CODE) -m$(MAKER_CODE)
 
 
 #---------------------------------------------------------------------------------
 # Object generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: src/gba/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 
 #---------------------------------------------------------------------------------

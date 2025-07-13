@@ -5,6 +5,8 @@ $(error   Failed to find PSPSDK installation)
 endif
 PSPSDK=$(PSPDEV)/psp/sdk
 
+.SUFFIXES:
+
 
 #---------------------------------------------------------------------------------
 # Configurable options

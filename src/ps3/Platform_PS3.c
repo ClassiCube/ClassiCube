@@ -1,15 +1,13 @@
-#include "Core.h"
-#if defined PLAT_PS3
-
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "PackedCol.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../PackedCol.h"
+
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -32,7 +30,7 @@
 #include <sys/systime.h>
 #include <sys/tty.h>
 #include <sys/process.h>
-#include "_PlatformConsole.h"
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
@@ -494,4 +492,3 @@ static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
 }
-#endif

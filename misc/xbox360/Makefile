@@ -2,6 +2,9 @@ ifeq ($(strip $(DEVKITXENON)),)
 $(error "Please set DEVKITXENON in your environment. export DEVKITXENON=<path to>devkitPPC")
 endif
 
+.SUFFIXES:
+
+
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
@@ -32,7 +35,7 @@ MACHDEP = -DXENON -m32 -maltivec -fno-pic -mpowerpc64 -mhard-float -L$(DEVKITXEN
 LDSCRIPT = $(DEVKITXENON)/app.lds
 
 CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-LDFLAGS	= -g $(MACHDEP) -Wl,--gc-sections -Wl,-Map,$(notdir $@).map
+LDFLAGS	= -g $(MACHDEP) -Wl,--gc-sections
 LIBS	= -lxenon -lm -lfat
 
 CFLAGS  += -I$(DEVKITXENON)/usr/include

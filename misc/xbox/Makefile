@@ -2,6 +2,9 @@ ifeq ($(strip $(NXDK_DIR)),)
 $(error "Please set NXDK_DIR in your environment")
 endif
 
+.SUFFIXES:
+
+
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------

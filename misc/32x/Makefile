@@ -4,6 +4,8 @@ else
 ROOTDIR = /opt/toolchains/sega
 endif
 
+.SUFFIXES:
+
 
 #---------------------------------------------------------------------------------
 # Configurable options
@@ -42,6 +44,10 @@ SHASFLAGS = --big
 MDLDFLAGS = -T $(LDSCRIPTSDIR)/md.ld --oformat binary
 MDASFLAGS = -m68000 --register-prefix-optional
 
+
+#---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
 SHPREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
 SHCC = $(SHPREFIX)gcc
 SHAS = $(SHPREFIX)as

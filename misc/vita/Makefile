@@ -4,6 +4,8 @@ $(warning   export VITASDK=/usr/local/vitasdk)
 $(error   Failed to find VitaSDK installation)
 endif
 
+.SUFFIXES:
+
 
 #---------------------------------------------------------------------------------
 # Configurable options

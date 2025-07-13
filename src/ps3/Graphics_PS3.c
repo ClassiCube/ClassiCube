@@ -1,9 +1,8 @@
-#include "Core.h"
-#if defined CC_BUILD_PS3
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
+
 #include <malloc.h>
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
@@ -797,4 +796,3 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, startVertex, verticesCount);
 }
-#endif

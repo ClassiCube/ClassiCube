@@ -2,6 +2,8 @@ ifeq ($(strip $(PS2SDK)),)
 $(error "PS2SDK must be set in your environment")
 endif
 
+.SUFFIXES:
+
 
 #---------------------------------------------------------------------------------
 # Configurable options
