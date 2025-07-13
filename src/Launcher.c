@@ -480,6 +480,7 @@ static cc_result ExtractTexturePack(const cc_string* path) {
 
 void Launcher_TryLoadTexturePack(void) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
+	const char* default_path;
 	cc_string texPack;
 
 	/* TODO: Not duplicate TexturePack functionality */
@@ -490,8 +491,9 @@ void Launcher_TryLoadTexturePack(void) {
 	}
 
 	/* user selected texture pack is missing some required .png files */
-	if (!hasBitmappedFont || dirtBmp.scan0 == NULL)
-		TexturePack_ExtractDefault(ExtractTexturePack);
+	if (!hasBitmappedFont || dirtBmp.scan0 == NULL) {
+		TexturePack_ExtractDefault(ExtractTexturePack, &default_path);
+	}
 
 	LBackend_UpdateTitleFont();
 }

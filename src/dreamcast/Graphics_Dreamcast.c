@@ -16,17 +16,7 @@ static cc_bool stateDirty;
 #define VERTEX_BUFFER_SIZE 32 * 50000
 #define PT_ALPHA_REF 0x011c
 
-typedef struct {
-    uint32_t format;
-    int32_t  base;
-	uint32_t log2_w: 4;
-	uint32_t log2_h: 4;
-	uint32_t size:  24;
-} GPUTexture;
-
-#define MAX_TEXTURE_COUNT 768
-static GPUTexture tex_list[MAX_TEXTURE_COUNT];
-
+struct GPUTexture;
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands list------------------------------------------------------*
@@ -72,126 +62,6 @@ static void CommandsList_Append(struct CommandsList* list, const void* cmd) {
 	
 	memcpy(dst, cmd, VERTEX_SIZE);
 	list->length++;
-}
-
-/*########################################################################################################################*
-*-----------------------------------------------------Texture memory------------------------------------------------------*
-*#########################################################################################################################*/
-// For PVR2 GPU, highly recommended that multiple textures don't cross the same 2048 byte page alignment
-// So to avoid this, ensure that each texture is allocated at the start of a 2048 byte page
-#define TEXMEM_PAGE_SIZE 2048
-#define TEXMEM_PAGE_MASK (TEXMEM_PAGE_SIZE - 1)
-// Round up to nearest page
-#define TEXMEM_PAGE_ROUNDUP(size) (((size) + TEXMEM_PAGE_MASK) & ~TEXMEM_PAGE_MASK)
-// Leave a little bit of memory available by KOS PVR code
-#define TEXMEM_RESERVED (48 * 1024)
-
-#define PAGE_TO_TEXMEM(page) (cc_uint16*)(texmem_base + (page) * TEXMEM_PAGE_SIZE)
-
-// Base address in VRAM for textures
-static cc_uint8* texmem_base;
-// Total number of pages in VRAM
-static cc_uint32 texmem_pages;
-// Stores which pages in VRAM are currently used
-static cc_uint8* texmem_used;
-
-void texmem_init(void) {
-    size_t vram_free = pvr_mem_available();
-    size_t tmem_size = vram_free - TEXMEM_RESERVED;
-
-    void* base   = pvr_mem_malloc(tmem_size);
-    texmem_base  = (void*)TEXMEM_PAGE_ROUNDUP((cc_uintptr)base);
-	texmem_pages = tmem_size / TEXMEM_PAGE_SIZE;
-	texmem_used  = Mem_AllocCleared(1, texmem_pages, "Page state");
-}
-
-static int texmem_move(cc_uint32 page, cc_uint32 size) {
-	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
-	int moved = 0;
-
-	// Try to shift downwards towards prior allocated texture
-	while (page > 0 && texmem_used[page - 1] == 0) {
-		page--; moved++;
-		texmem_used[page + pages] = 0;
-	}
-	
-	// Mark previously empty pages as now used
-	for (int i = 0; i < moved; i++) 
-	{
-		texmem_used[page + i] = 1;
-	}
-	return moved;
-}
-
-static int texmem_defragment(void) {
-	int moved_any = false;
-	for (int i = 0; i < MAX_TEXTURE_COUNT; i++)
-	{
-		GPUTexture* tex = &tex_list[i];
-		if (!tex->size) continue;
-
-		int moved = texmem_move(tex->base, tex->size);
-		if (!moved) continue;
-		moved_any = true;
-
-		cc_uint16* dst = PAGE_TO_TEXMEM(tex->base - moved);
-		cc_uint16* src = PAGE_TO_TEXMEM(tex->base);
-		memmove(dst, src, tex->size);
-		tex->base -= moved;
-	}
-	return moved_any;
-}
-
-static CC_INLINE int texmem_can_alloc(cc_uint32 beg, cc_uint32 pages) {
-	if (texmem_used[beg]) return false;
-
-	for (cc_uint32 page = beg; page < beg + pages; page++)
-	{
-		if (texmem_used[page]) return false;
-	}
-	return true;
-}
-
-static int texmem_alloc_pages(cc_uint32 size) {
-	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
-	if (pages > texmem_pages) return -1;
-
-	for (cc_uint32 page = 0; page < texmem_pages - pages; page++) 
-	{
-		if (!texmem_can_alloc(page, pages)) continue;
-
-		for (cc_uint32 i = 0; i < pages; i++) 
-			texmem_used[page + i] = 1;
-
-        return page;
-    }
-	return -1;
-}
-
-static int texmem_alloc(cc_uint32 size) {
-    int base = texmem_alloc_pages(size);
-    if (base >= 0) return base;
-
-	Platform_LogConst("Out of VRAM! Defragmenting..");
-	while (texmem_defragment()) { }
-
-    return texmem_alloc_pages(size);
-}
-
-static void texmem_free(cc_uint32 page, cc_uint32 size) {
-	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
-
-	for (cc_uint32 i = 0; i < pages; i++)
-		texmem_used[page + i] = 0;
-}
-
-static int texmem_total_free(void) {
-	int free = 0;
-    for (cc_uint32 page = 0; page < texmem_pages; page++) 
-	{
-		if (!texmem_used[page]) free++;
-    }
-	return free;
 }
 
 
@@ -263,9 +133,10 @@ static void InitGLState(void) {
 	CommandsList_Reserve(&listTR, 1024 * 3);
 }
 
+static void InitTexMemory(void);
 void Gfx_Create(void) {
 	if (!Gfx.Created) InitGPU();
-	if (!Gfx.Created) texmem_init();
+	if (!Gfx.Created) InitTexMemory();
 
 	InitGLState();
 	
@@ -290,13 +161,392 @@ void Gfx_Free(void) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Texture memory------------------------------------------------------*
+*#########################################################################################################################*/
+struct GPUTexture {
+    uint32_t format;    // PVR texture format
+    uint16_t base;      // VRAM block number
+	uint16_t blocks;    // VRAM blocks used
+	uint32_t log2_w: 4; // log2(width)
+	uint32_t log2_h: 4; // log2(height)
+	uint32_t size:  24; // Size in bytes
+};
+
+#define MAX_TEXTURE_COUNT 768
+static struct GPUTexture tex_list[MAX_TEXTURE_COUNT];
+static struct GPUTexture* tex_active;
+
+// For PVR2 GPU, highly recommended that multiple textures don't cross the same 2048 byte VRAM page alignment
+// So to avoid this, ensure that each texture is allocated at the start of a 2048 byte VRAM page
+#define TEXMEM_BLOCK_SIZE 2048
+#define TEXMEM_BLOCK_MASK (TEXMEM_BLOCK_SIZE - 1)
+// Round up to nearest block
+#define TEXMEM_BLOCK_ROUNDUP(size) (((size) + TEXMEM_BLOCK_MASK) & ~TEXMEM_BLOCK_MASK)
+// Leave a little bit of memory available by KOS PVR code
+#define TEXMEM_RESERVED (48 * 1024)
+
+#define BLOCK_TO_TEXMEM(block) (cc_uint16*)(texmem_base + (block) * TEXMEM_BLOCK_SIZE)
+
+#define TEXMEM_MAX_BLOCKS (PVR_RAM_SIZE / TEXMEM_BLOCK_SIZE)
+// Base address in VRAM for textures
+static cc_uint8* texmem_base;
+// Total number of blocks available for textures in VRAM
+static cc_uint32 texmem_blocks;
+// Stores which blocks in VRAM are currently used
+static cc_uint8 tex_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
+
+static void InitTexMemory(void) {
+    size_t vram_free  = pvr_mem_available();
+    size_t tmem_avail = vram_free - TEXMEM_RESERVED;
+
+    void* base    = pvr_mem_malloc(tmem_avail);
+    texmem_base   = (void*)TEXMEM_BLOCK_ROUNDUP((cc_uintptr)base);
+	texmem_blocks = tmem_avail / TEXMEM_BLOCK_SIZE;
+}
+
+static int DefragTexMemory(void) {
+	int moved_any = false;
+	for (int i = 0; i < MAX_TEXTURE_COUNT; i++)
+	{
+		struct GPUTexture* tex = &tex_list[i];
+		if (!tex->size) continue;
+
+		int moved = blockalloc_shift(tex_table, tex->base, tex->blocks);
+		if (!moved) continue;
+		moved_any = true;
+
+		cc_uint16* dst = BLOCK_TO_TEXMEM(tex->base - moved);
+		cc_uint16* src = BLOCK_TO_TEXMEM(tex->base);
+		memmove(dst, src, tex->size);
+		tex->base -= moved;
+	}
+	return moved_any;
+}
+
+static int AllocTexMemory(int blocks) {
+    int base   = blockalloc_alloc(tex_table, texmem_blocks, blocks);
+    if (base >= 0) return base;
+
+	Platform_LogConst("Out of VRAM! Defragmenting..");
+	while (DefragTexMemory()) { }
+
+    return blockalloc_alloc(tex_table, texmem_blocks, blocks);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Palettes--------------------------------------------------------*
+*#########################################################################################################################*/
+// PVR hardware only allows addressing the 1024 palette entries in either 16 entry or 256 entry groups
+// Only 16 entry groups are supported (64 groups, relatively quick texture loading)
+#define PAL_TOTAL_ENTRIES    1024
+#define MAX_PAL_4BPP_ENTRIES 16
+
+#define PAL_TOTAL_BLOCKS (PAL_TOTAL_ENTRIES / MAX_PAL_4BPP_ENTRIES)
+static cc_uint8 pal_table[PAL_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
+
+static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
+	for (int i = 0; i < pal_count; i++) 
+	{
+		if (palette[i] == color) return i;
+	}
+	return -1;
+}
+
+static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
+	int width = bmp->width, height = bmp->height;
+
+	BitmapCol* row = bmp->scan0;
+	int pal_count  = 0;
+	
+	for (int y = 0; y < height; y++, row += rowWidth)
+	{
+		for (int x = 0; x < width; x++) 
+		{
+			BitmapCol color = row[x];
+			int idx = FindInPalette(palette, pal_count, color);
+			if (idx >= 0) continue;
+
+			// Too many distinct colours
+			if (pal_count >= MAX_PAL_4BPP_ENTRIES) return 0;
+
+			palette[pal_count] = color;
+			pal_count++;
+		}
+	}
+	return pal_count;
+}
+
+static void ApplyPalette(BitmapCol* palette, int pal_count, int pal_index) {
+	for (int i = 0; i < pal_count; i++) 
+	{
+		int R = BitmapCol_R(palette[i]) >> 4;
+		int G = BitmapCol_G(palette[i]) >> 4;
+		int B = BitmapCol_B(palette[i]) >> 4;
+		int A = BitmapCol_A(palette[i]) >> 4;
+
+		cc_uint32 entry = (A << 12) | (R << 8) | (G << 4) | B;
+		pvr_set_pal_entry(pal_index * 16 + i, entry);
+	}
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Textures--------------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_EnableMipmaps(void)  { }
+void Gfx_DisableMipmaps(void) { }
+
+// Twiddled index looks like this (highest numbered bits are leftmost):
+//   - w = h: xyxy xyxy
+//   - w > h: xxxx xyxy
+//   - h > w: yyyy xyxy
+// And can therefore be broken down into two components:
+//  1) X and Y interleaved lower bits
+//  2) X or Y linear higher bits
+	
+// For example, in the case of W=4 and H=8
+//  the bit pattern is Y_yx_yx_yx
+//  - lower 3 Y bits are interleaved
+//  - upper 1 Y bit is linear
+	
+// By calculating appropriate values, can increment X/Y
+//   in "interleaved one" and then a "linear one" at the end
+// For example, consider XX XY XY
+// - oneX = 00 01 10  maskX = 11 10 10
+// - oneY = 00 10 11  maskY = 00 01 01
+
+// Working through:
+// X = 00 00 00 (x=0)
+// X + 00 01 10 > 00 01 10
+//              & 11 10 10 > 00 00 10
+// X = 00 00 10 (x=1)
+// X + 00 01 10 > 00 10 00
+// 				& 11 10 10 > 00 10 00
+// X = 00 10 00 (x=2)
+// X + 00 01 10 > 00 11 10
+//				& 11 10 10 > 00 10 10
+// X = 00 10 10 (x=3)
+// X + 00 01 10 > 01 00 00
+//				& 11 10 10 > 01 00 00
+// X = 01 00 00 (x=4)
+// X + 00 01 10 > 01 01 10
+//				& 11 10 10 > 01 00 10
+// X = 01 00 10 (x=5)
+// X + 00 01 10 > 01 10 00
+//				& 11 10 10 > 01 10 00
+// X = 01 10 00 (x=6)
+// X + 00 01 10 > 01 11 10
+//				& 11 10 10 > 01 10 10
+// X = 01 10 10 (x=7)
+// X + 00 01 10 > 10 00 00
+//				& 11 10 10 > 10 00 00
+//
+// As a further optimisation, note the bit patterns
+//   oneX = 00 01 10    oneY = -- 10 11 
+//  maskX = 11 10 10   maskY = -- 01 01
+//  oneX = ~maskX + 1   oneY = ~maskY + 1
+// And then using the following bitwise equivalence:
+//    x - y    =   x + (~y + 1) 
+//  idx - mask = idx + (~mask + 1)
+//  idx - mask = idx + one
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	w = Math_NextPowOf2(w);
+	h = Math_NextPowOf2(h);
+
+	*maskX = 0;
+	*maskY = 0;
+	int shift = 0;
+
+	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
+	{
+		if (w > 1 && h > 1) {
+			// Add interleaved X and Y bits
+			*maskX += 0x02 << shift;
+			*maskY += 0x01 << shift;
+			shift  += 2;
+		} else if (w > 1) {
+			// Add a linear X bit
+			*maskX += 0x01 << shift;
+			shift  += 1;		
+		} else if (h > 1) {
+			// Add a linear Y bit
+			*maskY += 0x01 << shift;
+			shift  += 1;		
+		}
+	}
+}
+
+	
+// B8 G8 R8 A8 > B4 G4 R4 A4
+#define BGRA8_to_BGRA4(src) \
+	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
+
+static CC_INLINE void ConvertTexture_4444(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
+	int width = bmp->width, height = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src += 4)
+		{
+			dst[X | Y] = BGRA8_to_BGRA4(src);
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
+	int width = bmp->width >> 1, height = bmp->height >> 1;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(width, height, &maskX, &maskY);
+	
+	for (int y = 0; y < height; y++)
+	{
+		BitmapCol* src  = bmp->scan0 + (y * 2) * rowWidth;
+		BitmapCol* next = src + rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < width; x++, src += 2, next += 2)
+		{
+			int pal_00 = FindInPalette(palette, pal_count,  src[0]);
+			int pal_10 = FindInPalette(palette, pal_count,  src[1]);
+			int pal_01 = FindInPalette(palette, pal_count, next[0]);
+			int pal_11 = FindInPalette(palette, pal_count, next[1]);
+
+			dst[X | Y] = pal_00 | (pal_01 << 4) | (pal_10 << 8) | (pal_11 << 12);
+
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+static struct GPUTexture* FindFreeTexture(void) {
+    for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
+	{
+		struct GPUTexture* tex = &tex_list[i];
+		if (!tex->size) return tex;
+    }
+    return NULL;
+}
+
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+	struct GPUTexture* tex = FindFreeTexture();
+	if (!tex) return NULL;
+
+	BitmapCol palette[MAX_PAL_4BPP_ENTRIES];
+	int pal_count =  0;
+	int pal_index = -1;
+
+	if (!(flags & TEXTURE_FLAG_DYNAMIC)) {
+		pal_count = CalcPalette(palette, bmp, rowWidth);
+
+		if (pal_count > 0) {
+			pal_index = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, 1);
+		}
+		if (pal_index >= 0) {
+			ApplyPalette(palette, pal_count, pal_index);
+		}
+	}
+
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	tex->log2_w = Math_ilog2(dst_w);
+	tex->log2_h = Math_ilog2(dst_h);
+
+	if (pal_index >= 0) {
+		tex->format = PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index);
+		// 4bpp     = 2 pixels in 1 byte
+		tex->size   = dst_w * dst_h / 2;
+	} else {
+		tex->format = PVR_TXRFMT_ARGB4444;
+		// 16 bpp   = 1 pixel in 2 bytes
+		tex->size   = dst_w * dst_h * 2;
+	}
+	
+	int blocks = SIZE_TO_BLOCKS(tex->size, TEXMEM_BLOCK_SIZE);
+	int base   = AllocTexMemory(blocks);
+	if (base < 0) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
+
+	tex->base   = base;
+	tex->blocks = blocks;
+	cc_uint16* dst = BLOCK_TO_TEXMEM(base);
+
+	if (pal_index >= 0) {
+		ConvertTexture_Palette(dst, bmp, rowWidth, palette, pal_count);
+	} else {
+		ConvertTexture_4444(dst, bmp, rowWidth);
+	}
+	return tex;
+}
+
+void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	struct GPUTexture* tex = (struct GPUTexture*)texId;
+	
+	int width = part->width, height = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(1 << tex->log2_w, 1 << tex->log2_h, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+
+	unsigned startX = X;
+	cc_uint16* dst  = BLOCK_TO_TEXMEM(tex->base);
+	
+	for (int y = 0; y < height; y++)
+	{
+		cc_uint8* src = (cc_uint8*)(part->scan0 + rowWidth * y);
+		X = startX;
+		
+		for (int x = 0; x < width; x++, src += 4)
+		{
+			dst[X | Y] = BGRA8_to_BGRA4(src);
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+	// TODO: Do we need to flush VRAM?
+}
+
+void Gfx_BindTexture(GfxResourceID texId) {
+	tex_active = (struct GPUTexture*)texId;
+	stateDirty = true;
+}
+
+void Gfx_DeleteTexture(GfxResourceID* texId) {
+	struct GPUTexture* tex = (struct GPUTexture*)(*texId);
+	if (!tex) return;
+    blockalloc_dealloc(tex_table, tex->base, tex->blocks);
+
+	if (tex->format != PVR_TXRFMT_ARGB4444) {
+		int index = (tex->format & PVR_TXRFMT_4BPP_PAL(63)) >> 21;
+		blockalloc_dealloc(pal_table, index, 1);
+	}
+
+	tex->size = 0;
+	*texId    = 0;
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Polygon state------------------------------------------------------*
 *#########################################################################################################################*/
-static GPUTexture* tex_active;
 static uint32_t SHADE_MODEL = PVR_SHADE_GOURAUD;
 
 static CC_NOINLINE void BuildPolyContext(pvr_poly_hdr_t* dst, int list_type) {
-	GPUTexture* tex = tex_active;
+	struct GPUTexture* tex = tex_active;
 
 	int gen_culling = gfx_culling    ? PVR_CULLING_CW : PVR_CULLING_SMALL;
 	int depth_comp  = gfx_depthTest  ? PVR_DEPTHCMP_GEQUAL : PVR_DEPTHCMP_ALWAYS;
@@ -354,7 +604,7 @@ static CC_NOINLINE void BuildPolyContext(pvr_poly_hdr_t* dst, int list_type) {
 		return;
 	}
 	int tex_alpha = use_alpha ? PVR_TXRALPHA_ENABLE : PVR_TXRALPHA_DISABLE;
-	cc_uint16* tex_ptr = PAGE_TO_TEXMEM(tex->base);
+	cc_uint16* tex_ptr = BLOCK_TO_TEXMEM(tex->base);
 
 	dst->mode2 |= (tex_alpha                << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
 	dst->mode2 |= (PVR_FILTER_NEAREST       << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
@@ -517,309 +767,6 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Palettees--------------------------------------------------------*
-*#########################################################################################################################*/
-// PVR hardware only allows addressing the 1024 palette entries in either 16 entry or 256 entry groups
-// Only 16 entry groups are supported (64 groups, relatively quick texture loading)
-#define MAX_PAL_ENTRIES 16
-#define PAL_TOTAL_BLOCKS (1024 / MAX_PAL_ENTRIES)
-static cc_uint8 pal_table[PAL_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
-
-static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
-	for (int i = 0; i < pal_count; i++) 
-	{
-		if (palette[i] == color) return i;
-	}
-	return -1;
-}
-
-static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
-	int width = bmp->width, height = bmp->height;
-
-	BitmapCol* row = bmp->scan0;
-	int pal_count  = 0;
-	
-	for (int y = 0; y < height; y++, row += rowWidth)
-	{
-		for (int x = 0; x < width; x++) 
-		{
-			BitmapCol color = row[x];
-			int idx = FindInPalette(palette, pal_count, color);
-			if (idx >= 0) continue;
-
-			// Too many distinct colours
-			if (pal_count >= MAX_PAL_ENTRIES) return 0;
-
-			palette[pal_count] = color;
-			pal_count++;
-		}
-	}
-	return pal_count;
-}
-
-static void ApplyPalette(BitmapCol* palette, int pal_count, int pal_index) {
-	for (int i = 0; i < pal_count; i++) 
-	{
-		int R = BitmapCol_R(palette[i]) >> 4;
-		int G = BitmapCol_G(palette[i]) >> 4;
-		int B = BitmapCol_B(palette[i]) >> 4;
-		int A = BitmapCol_A(palette[i]) >> 4;
-
-		cc_uint32 entry = (A << 12) | (R << 8) | (G << 4) | B;
-		pvr_set_pal_entry(pal_index * 16 + i, entry);
-	}
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Textures--------------------------------------------------------*
-*#########################################################################################################################*/
-void Gfx_EnableMipmaps(void)  { }
-void Gfx_DisableMipmaps(void) { }
-
-// Twiddled index looks like this (highest numbered bits are leftmost):
-//   - w = h: xyxy xyxy
-//   - w > h: xxxx xyxy
-//   - h > w: yyyy xyxy
-// And can therefore be broken down into two components:
-//  1) X and Y interleaved lower bits
-//  2) X or Y linear higher bits
-	
-// For example, in the case of W=4 and H=8
-//  the bit pattern is Y_yx_yx_yx
-//  - lower 3 Y bits are interleaved
-//  - upper 1 Y bit is linear
-	
-// By calculating appropriate values, can increment X/Y
-//   in "interleaved one" and then a "linear one" at the end
-// For example, consider XX XY XY
-// - oneX = 00 01 10  maskX = 11 10 10
-// - oneY = 00 10 11  maskY = 00 01 01
-
-// Working through:
-// X = 00 00 00 (x=0)
-// X + 00 01 10 > 00 01 10
-//              & 11 10 10 > 00 00 10
-// X = 00 00 10 (x=1)
-// X + 00 01 10 > 00 10 00
-// 				& 11 10 10 > 00 10 00
-// X = 00 10 00 (x=2)
-// X + 00 01 10 > 00 11 10
-//				& 11 10 10 > 00 10 10
-// X = 00 10 10 (x=3)
-// X + 00 01 10 > 01 00 00
-//				& 11 10 10 > 01 00 00
-// X = 01 00 00 (x=4)
-// X + 00 01 10 > 01 01 10
-//				& 11 10 10 > 01 00 10
-// X = 01 00 10 (x=5)
-// X + 00 01 10 > 01 10 00
-//				& 11 10 10 > 01 10 00
-// X = 01 10 00 (x=6)
-// X + 00 01 10 > 01 11 10
-//				& 11 10 10 > 01 10 10
-// X = 01 10 10 (x=7)
-// X + 00 01 10 > 10 00 00
-//				& 11 10 10 > 10 00 00
-//
-// As a further optimisation, note the bit patterns
-//   oneX = 00 01 10    oneY = -- 10 11 
-//  maskX = 11 10 10   maskY = -- 01 01
-//  oneX = ~maskX + 1   oneY = ~maskY + 1
-// And then using the following bitwise equivalence:
-//    x - y    =   x + (~y + 1) 
-//  idx - mask = idx + (~mask + 1)
-//  idx - mask = idx + one
-static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
-										unsigned* maskX, unsigned* maskY) {
-	w = Math_NextPowOf2(w);
-	h = Math_NextPowOf2(h);
-
-	*maskX = 0;
-	*maskY = 0;
-	int shift = 0;
-
-	for (; w > 1 || h > 1; w >>= 1, h >>= 1)
-	{
-		if (w > 1 && h > 1) {
-			// Add interleaved X and Y bits
-			*maskX += 0x02 << shift;
-			*maskY += 0x01 << shift;
-			shift  += 2;
-		} else if (w > 1) {
-			// Add a linear X bit
-			*maskX += 0x01 << shift;
-			shift  += 1;		
-		} else if (h > 1) {
-			// Add a linear Y bit
-			*maskY += 0x01 << shift;
-			shift  += 1;		
-		}
-	}
-}
-
-	
-// B8 G8 R8 A8 > B4 G4 R4 A4
-#define BGRA8_to_BGRA4(src) \
-	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
-
-static CC_INLINE void ConvertTexture_4444(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
-	int width = bmp->width, height = bmp->height;
-	unsigned maskX, maskY;
-	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(width, height, &maskX, &maskY);
-	
-	for (int y = 0; y < height; y++)
-	{
-		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
-		X = 0;
-		
-		for (int x = 0; x < width; x++, src += 4)
-		{
-			dst[X | Y] = BGRA8_to_BGRA4(src);
-			X = (X - maskX) & maskX;
-		}
-		Y = (Y - maskY) & maskY;
-	}
-}
-
-static CC_INLINE void ConvertTexture_Palette(cc_uint16* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
-	int width = bmp->width >> 1, height = bmp->height >> 1;
-	unsigned maskX, maskY;
-	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(width, height, &maskX, &maskY);
-	
-	for (int y = 0; y < height; y++)
-	{
-		BitmapCol* src  = bmp->scan0 + (y * 2) * rowWidth;
-		BitmapCol* next = src + rowWidth;
-		X = 0;
-		
-		for (int x = 0; x < width; x++, src += 2, next += 2)
-		{
-			int pal_00 = FindInPalette(palette, pal_count,  src[0]);
-			int pal_10 = FindInPalette(palette, pal_count,  src[1]);
-			int pal_01 = FindInPalette(palette, pal_count, next[0]);
-			int pal_11 = FindInPalette(palette, pal_count, next[1]);
-
-			dst[X | Y] = pal_00 | (pal_01 << 4) | (pal_10 << 8) | (pal_11 << 12);
-
-			X = (X - maskX) & maskX;
-		}
-		Y = (Y - maskY) & maskY;
-	}
-}
-
-static GPUTexture* FindFreeTexture(void) {
-    for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
-	{
-		GPUTexture* tex = &tex_list[i];
-		if (!tex->size) return tex;
-    }
-    return NULL;
-}
-
-GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	GPUTexture* tex = FindFreeTexture();
-	if (!tex) return NULL;
-
-	BitmapCol palette[MAX_PAL_ENTRIES];
-	int pal_count = 0;
-	int pal_index = -1;
-
-	if (!(flags & TEXTURE_FLAG_DYNAMIC)) {
-		pal_count = CalcPalette(palette, bmp, rowWidth);
-
-		if (pal_count > 0) {
-			pal_index = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, 1);
-		}
-		if (pal_index >= 0) {
-			ApplyPalette(palette, pal_count, pal_index);
-		}
-	}
-
-	int dst_w = Math_NextPowOf2(bmp->width);
-	int dst_h = Math_NextPowOf2(bmp->height);
-
-	tex->log2_w = Math_ilog2(dst_w);
-	tex->log2_h = Math_ilog2(dst_h);
-
-	if (pal_index >= 0) {
-		tex->format = PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index);
-		// 4bpp     = 2 pixels in 1 byte
-		tex->size   = dst_w * dst_h / 2;
-	} else {
-		tex->format = PVR_TXRFMT_ARGB4444;
-		// 16 bpp   = 1 pixel in 2 bytes
-		tex->size   = dst_w * dst_h * 2;
-	}
-	
-	int base = texmem_alloc(tex->size);
-	if (base < 0) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
-
-	tex->base = base;
-	cc_uint16* dst = PAGE_TO_TEXMEM(base);
-
-	if (pal_index >= 0) {
-		ConvertTexture_Palette(dst, bmp, rowWidth, palette, pal_count);
-	} else {
-		ConvertTexture_4444(dst, bmp, rowWidth);
-	}
-	return tex;
-}
-
-void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	GPUTexture* tex = (GPUTexture*)texId;
-	
-	int width = part->width, height = part->height;
-	unsigned maskX, maskY;
-	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(1 << tex->log2_w, 1 << tex->log2_h, &maskX, &maskY);
-
-	// Calculate start twiddled X and Y values
-	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
-	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
-
-	unsigned startX = X;
-	cc_uint16* dst  = PAGE_TO_TEXMEM(tex->base);
-	
-	for (int y = 0; y < height; y++)
-	{
-		cc_uint8* src = (cc_uint8*)(part->scan0 + rowWidth * y);
-		X = startX;
-		
-		for (int x = 0; x < width; x++, src += 4)
-		{
-			dst[X | Y] = BGRA8_to_BGRA4(src);
-			X = (X - maskX) & maskX;
-		}
-		Y = (Y - maskY) & maskY;
-	}
-	// TODO: Do we need to flush VRAM?
-}
-
-void Gfx_BindTexture(GfxResourceID texId) {
-	tex_active = (GPUTexture*)texId;
-	stateDirty = true;
-}
-
-void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GPUTexture* tex = (GPUTexture*)(*texId);
-	if (!tex) return;
-
-	texmem_free(tex->base, tex->size);
-
-	if (tex->format != PVR_TXRFMT_ARGB4444) {
-		int index = (tex->format & PVR_TXRFMT_4BPP_PAL(63)) >> 21;
-		blockalloc_dealloc(pal_table, index, 1);
-	}
-
-	tex->size = 0;
-	*texId    = 0;
-}
 
 
 /*########################################################################################################################*
@@ -1042,11 +989,11 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int freeMem = texmem_total_free();
-	int usedMem = texmem_pages - freeMem;
+	int freeMem = blockalloc_total_free(tex_table, texmem_blocks);
+	int usedMem = texmem_blocks - freeMem;
 
-	freeMem *= TEXMEM_PAGE_SIZE;
-	usedMem *= TEXMEM_PAGE_SIZE;
+	freeMem *= TEXMEM_BLOCK_SIZE;
+	usedMem *= TEXMEM_BLOCK_SIZE;
 	
 	float freeMemMB = freeMem / (1024.0f * 1024.0f);
 	float usedMemMB = usedMem / (1024.0f * 1024.0f);

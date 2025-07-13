@@ -1,6 +1,7 @@
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
+#include "../_BlockAlloc.h"
 
 #include <packet.h>
 #include <dma_tags.h>
@@ -13,8 +14,6 @@
 #include <draw.h>
 #include <draw3d.h>
 #include <malloc.h>
-
-#define MAX_PALETTE_ENTRIES 2048
 
 #define QWORD_ALIGNED __attribute__((aligned(16)))
 
@@ -131,7 +130,8 @@ static void InitDrawingEnv(void) {
 	Q = dma_beg + 1;
 }
 
-static unsigned clut_offset, tex_offset;
+static void InitPalette(void);
+static unsigned tex_offset;
 void Gfx_Create(void) {
 	primitive_type = 0; // PRIM_POINT, which isn't used here
 
@@ -143,7 +143,7 @@ void Gfx_Create(void) {
 	formatDirty = true;
 	InitDrawingEnv();
 
-	clut_offset = graph_vram_allocate(MAX_PALETTE_ENTRIES, 1, GS_PSM_32, GRAPH_ALIGN_BLOCK);
+	InitPalette();
 	tex_offset  = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
 	
 // TODO maybe Min not actually needed?
@@ -169,29 +169,29 @@ static CC_INLINE void DMAFlushBuffer(void) {
 	dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
 }
 
-static int CalcTransferWords(int width, int height, int psm) {
+static int CalcTransferBytes(int width, int height, int psm) {
 	switch (psm)
 	{
 	case GS_PSM_32:
 	case GS_PSM_24:
 	case GS_PSMZ_32:
 	case GS_PSMZ_24:
-		return (width * height);
+		return (width * height) << 2;
 
 	case GS_PSM_16:
 	case GS_PSM_16S:
 	case GS_PSMZ_16:
 	case GS_PSMZ_16S:
-		return (width * height) >> 1;
+		return (width * height) << 1;
 
 	case GS_PSM_8:
 	case GS_PSM_8H:
-		return (width * height) >> 2;
+		return (width * height);
 
 	case GS_PSM_4:
 	case GS_PSM_4HL:
 	case GS_PSM_4HH:
-		return (width * height) >> 3;
+		return (width * height) >> 1;
 	}
 	return 0;
 }
@@ -199,52 +199,38 @@ static int CalcTransferWords(int width, int height, int psm) {
 static qword_t* BuildTransfer(qword_t* q, u8* src, int width, int height, int psm, 
 								int dst_base, int dst_width)
 {
-	int  words = CalcTransferWords(width, height, psm); // 4 words = 1 qword
-	int qwords = (words + 3) / 4; // ceiling division by 4
+	int  bytes = CalcTransferBytes(width, height, psm);
+	int qwords = (bytes + 15) / 16; // ceiling division by 16
 
 	// Parameters for RAM -> GS transfer
-	DMATAG_CNT(q,5,0,0,0);
+	DMATAG_CNT(q, 5, 0,0,0); q++;
 	{
-		q++;
-		PACK_GIFTAG(q, GIF_SET_TAG(4,0,0,0,GIF_FLG_PACKED,1), GIF_REG_AD);
-		q++;
-		PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF);
-		q++;
-		PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0), GS_REG_TRXPOS);
-		q++;
-		PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG);
-		q++;
-		PACK_GIFTAG(q, GS_SET_TRXDIR(0), GS_REG_TRXDIR);
-		q++;
+		PACK_GIFTAG(q, GIF_SET_TAG(4,0,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+		PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF); q++;
+		PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0),     GS_REG_TRXPOS); q++;
+		PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG); q++;
+		PACK_GIFTAG(q, GS_SET_TRXDIR(0),             GS_REG_TRXDIR); q++;
 	}
 
 	while (qwords)
 	{
 		int num_qwords = min(qwords, GIF_BLOCK_SIZE);
 
-		DMATAG_CNT(q,1,0,0,0);
+		DMATAG_CNT(q, 1, 0,0,0); q++;
 		{
-			q++;
-			PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0);
-			q++;
+			PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0); q++;
 		}
 
-		DMATAG_REF(q, num_qwords, (unsigned int)src, 0,0,0);
-		{
-			q++;
-		}
+		DMATAG_REF(q, num_qwords, (unsigned int)src, 0,0,0); q++;
 
 		src    += num_qwords * 16;
 		qwords -= num_qwords;
 	}
 
-	DMATAG_END(q,2,0,0,0);
+	DMATAG_END(q, 2, 0,0,0); q++;
 	{
-		q++;
-		PACK_GIFTAG(q,GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1),GIF_REG_AD);
-		q++;
-		PACK_GIFTAG(q,1,GS_REG_TEXFLUSH);
-		q++;
+		PACK_GIFTAG(q, GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+		PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
 	}
 
 	return q;
@@ -264,12 +250,20 @@ void Gfx_TransferPixels(void* src, int width, int height,
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Palettees--------------------------------------------------------*
+*---------------------------------------------------------Palettes--------------------------------------------------------*
 *#########################################################################################################################*/
-#define MAX_PALETTES (MAX_PALETTE_ENTRIES / 64)
-#define MAX_PAL_ENTRIES 8 // Could be 16, but 8 for balance between texture load speed and VRAM usage
+#define PAL_TOTAL_ENTRIES    2048
+#define MAX_PAL_4BPP_ENTRIES 16
 
-static cc_uint8 palettes_used[MAX_PALETTES];
+#define PAL_TOTAL_BLOCKS (PAL_TOTAL_ENTRIES / MAX_PAL_4BPP_ENTRIES)
+static cc_uint8 pal_table[PAL_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
+
+static unsigned clut_offset;
+#define PaletteAddr(index) (clut_offset + (index) * 64)
+
+static void InitPalette(void) {
+	clut_offset = graph_vram_allocate(PAL_TOTAL_ENTRIES, 1, GS_PSM_32, GRAPH_ALIGN_BLOCK);
+}
 
 static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
 	for (int i = 0; i < pal_count; i++) 
@@ -294,7 +288,7 @@ static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
 			if (idx >= 0) continue;
 
 			// Too many distinct colours
-			if (pal_count >= MAX_PAL_ENTRIES) return 0;
+			if (pal_count >= MAX_PAL_4BPP_ENTRIES) return 0;
 
 			palette[pal_count] = color;
 			pal_count++;
@@ -303,24 +297,11 @@ static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
 	return pal_count;
 }
 
-#define PaletteAddr(index) (clut_offset + (index) * 64)
-
-static void ApplyPalette(BitmapCol* palette, int pal_count, int pal_index) {
-	palettes_used[pal_index] = true;
-
+static void ApplyPalette(BitmapCol* palette, int pal_index) {
 	dma_wait_fast();
-// psm8, w=16 h=16
+	// psm8, w=16 h=16
+	// psm4, w=8  h=2
 	Gfx_TransferPixels(palette, 8, 2, GS_PSM_32, PaletteAddr(pal_index), 64);
-}
-
-static int FindFreePalette(cc_uint8 flags) {
-	if (flags & TEXTURE_FLAG_DYNAMIC) return -1;
-
-	for (int i = 0; i < MAX_PALETTES; i++)
-	{
-		if (!palettes_used[i]) return i;
-	}
-	return -1;
 }
 
 
@@ -328,9 +309,10 @@ static int FindFreePalette(cc_uint8 flags) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 typedef struct CCTexture_ {
-	cc_uint32 width, height;           // 8 bytes
-	cc_uint16 log2_width, log2_height; // 4 bytes
-	cc_uint16 format, pal_index;       // 4 bytes
+	cc_uint16 width, height;     // 4 bytes
+	cc_uint32 padding;           // 4 bytes
+	cc_uint16 log2_w, log2_h;    // 4 bytes
+	cc_uint16 format, pal_index; // 4 bytes
 	BitmapCol pixels[]; // must be aligned to 16 bytes
 } CCTexture;
 
@@ -353,25 +335,30 @@ static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWid
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
-	CCTexture* tex = (CCTexture*)memalign(16, 64 + size);
+	CCTexture* tex = (CCTexture*)memalign(16, 32 + size);
 	
-	tex->width       = bmp->width;
-	tex->height      = bmp->height;
-	tex->log2_width  = draw_log2(bmp->width);
-	tex->log2_height = draw_log2(bmp->height);
-	tex->pal_index   = 0;
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	tex->log2_w = draw_log2(bmp->width);
+	tex->log2_h = draw_log2(bmp->height);
 
-	BitmapCol palette[MAX_PAL_ENTRIES] QWORD_ALIGNED;
-	int pal_count = 0;
-	int pal_index = FindFreePalette(flags);
+	BitmapCol palette[MAX_PAL_4BPP_ENTRIES] QWORD_ALIGNED;
+	int pal_count =  0;
+	int pal_index = -1;
 
-	if (pal_index >= 0) {
+	if (!(flags & TEXTURE_FLAG_DYNAMIC)) {
 		pal_count = CalcPalette(palette, bmp, rowWidth);
-		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
+
+		if (pal_count > 0) {
+			pal_index = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, 1);
+		}
+		if (pal_index >= 0) {
+			ApplyPalette(palette, pal_index);
+		}
 	}
-	//Platform_Log2("%i, %i", &pal_index, &pal_count);
+	//Platform_Log4("%i, %i (%i x %i)", &pal_index, &pal_count, &bmp->width, &bmp->height);
 	
-	if (pal_count > 0) {
+	if (pal_index >= 0) {
 		tex->format    = GS_PSM_4;
 		tex->pal_index = pal_index;
 		ConvertTexture_Palette((cc_uint8*)tex->pixels, bmp, rowWidth, palette, pal_count);
@@ -395,7 +382,7 @@ static void UpdateTextureBuffer(int context, CCTexture* tex, unsigned buf_addr, 
 	unsigned clut_mode  = tex->format == GS_PSM_32 ? CLUT_NO_LOAD : CLUT_LOAD;
 
 	PACK_GIFTAG(Q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
-							   tex->log2_width, tex->log2_height, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
+							   tex->log2_w, tex->log2_h, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
 							   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0 + context);
 	Q++;
 }
@@ -426,7 +413,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	if (!tex) return;
 
 	if (tex->format != GS_PSM_32) {
-		palettes_used[tex->pal_index] = false;
+		blockalloc_dealloc(pal_table, tex->pal_index, 1);
 	}
 
 	Mem_Free(tex);
