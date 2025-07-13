@@ -182,22 +182,21 @@ void Gfx_VRAM_Reset(void) {
 	vram_pointer = 0;
 }
 
-static int AllocVRAM(int width, int height, int psm) {
+// Returns size in words
+static int VRAM_Size(int width, int height, int psm) {
 	width = ALIGNUP(width, 64);
 
-	// Returns size in words
-	// TODO move the >> out ?
 	switch (psm)
 	{
-		case GS_PSM_4:		
-			return width * (height >> 3);
-		case GS_PSM_8:		
-			return width * (height >> 2);
+		case GS_PSM_4:
+			return (width * height) >> 3;
+		case GS_PSM_8:
+			return (width * height) >> 2;
 		case GS_PSM_16:
 		case GS_PSM_16S:
 		case GS_PSMZ_16:
-		case GS_PSMZ_16S:	
-			return width * (height >> 1);
+		case GS_PSMZ_16S:
+			return (width * height) >> 1;
 		case GS_PSM_24:
 		case GS_PSM_32:
 		case GS_PSM_8H:
@@ -211,7 +210,7 @@ static int AllocVRAM(int width, int height, int psm) {
 }
 
 int Gfx_VRAM_Alloc(int width, int height, int psm) {
-	int size = AllocVRAM(width, height, psm);
+	int size = VRAM_Size(width, height, psm);
 	int addr = vram_pointer;
 
 	vram_pointer += size;
@@ -219,7 +218,7 @@ int Gfx_VRAM_Alloc(int width, int height, int psm) {
 }
 
 int Gfx_VRAM_AllocPaged(int width, int height, int psm) {
-	int size = AllocVRAM(width, height, psm);
+	int size = VRAM_Size(width, height, psm);
 	int addr = vram_pointer;
 
 	// Align to 2048 words / 8192 bytes (VRAM page alignment)
@@ -372,11 +371,13 @@ static void ApplyPalette(BitmapCol* palette, int pal_index) {
 #define TEXMEM_BLOCK_SIZE 64
 
 #define TEXMEM_MAX_BLOCKS (VRAM_SIZE_WORDS / TEXMEM_BLOCK_SIZE)
-static cc_uint8 tex_4hl_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
-static cc_uint8 tex_4hh_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
+static cc_uint8 tex_4HL_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
+static cc_uint8 tex_4HH_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
 static int texmem_4bpp_blocks;
 
 static unsigned tex_offset;
+#define TEXMEM_4BPP_TO_VRAM(block) ((block) * TEXMEM_BLOCK_SIZE)
+
 static void InitTextureMem(void) {
 	tex_offset = Gfx_VRAM_Alloc(256, 256, GS_PSM_32);
 
@@ -387,13 +388,31 @@ static void InitTextureMem(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct CCTexture_ {
+struct GPUTexture {
 	cc_uint16 width, height;     // 4 bytes
-	cc_uint32 padding;           // 4 bytes
+	cc_uint16 base, blocks;      // 4 bytes
 	cc_uint16 log2_w, log2_h;    // 4 bytes
 	cc_uint16 format, pal_index; // 4 bytes
 	BitmapCol pixels[]; // must be aligned to 16 bytes
-} CCTexture;
+};
+#define GS_TEXTURE_STRIDE(tex) max(64, 1 << (tex)->log2_w)
+
+static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
+	// TODO terrible perf
+	DMAFlushBuffer();
+	dma_wait_fast();
+
+	// 4bpp has extra garbage pixels when odd rows
+	int src_w = tex->width, src_h = tex->height;
+	if (tex->format != GS_PSM_32 && (src_w & 1)) src_w++;
+
+	int dst_stride = GS_TEXTURE_STRIDE(tex);
+	Gfx_TransferPixels(tex->pixels, src_w, src_h, 
+						tex->format, dst_addr, dst_stride);
+	
+	// TODO terrible perf
+	Q = dma_beg + 1;
+}
 
 static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
 	int width  = (bmp->width + 1) >> 1;
@@ -417,7 +436,7 @@ static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
-	CCTexture* tex = (CCTexture*)memalign(16, 32 + size);
+	struct GPUTexture* tex = (struct GPUTexture*)memalign(16, 32 + size);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
@@ -444,6 +463,32 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		tex->format    = GS_PSM_4;
 		tex->pal_index = pal_index;
 		ConvertTexture_Palette((cc_uint8*)tex->pixels, bmp, rowWidth, palette, pal_count);
+
+		int size    = VRAM_Size(1 << tex->log2_w, max(64, 1 << tex->log2_h), GS_PSM_4HH);
+		// TODO fix properly. alignup instead
+		int blocks  = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE);
+		tex->blocks = blocks;
+
+		// Try to store entirely in VRAM in upper bits of colour framebuffers
+		int base = blockalloc_alloc(tex_4HL_table, texmem_4bpp_blocks, blocks);
+		if (base >= 0) {
+			tex->base   = base;
+			tex->format = GS_PSM_4HL;
+
+			//Platform_Log4("ALLOC to 4HL: %i @ %i (%i X %i)", &base, &blocks, &bmp->width, &bmp->height);
+			UploadToVRAM(tex, TEXMEM_4BPP_TO_VRAM(base));
+			return realloc(tex, sizeof(struct GPUTexture));
+		}
+
+		base = blockalloc_alloc(tex_4HH_table, texmem_4bpp_blocks, blocks);
+		if (base >= 0) {
+			tex->base   = base;
+			tex->format = GS_PSM_4HH;
+
+			//Platform_Log4("ALLOC to 4HH: %i @ %i (%i X %i)", &base, &blocks, &bmp->width, &bmp->height);
+			UploadToVRAM(tex, TEXMEM_4BPP_TO_VRAM(base));
+			return realloc(tex, sizeof(struct GPUTexture));
+		}
 	} else {
 		tex->format = GS_PSM_32;
 		CopyPixels(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
@@ -453,7 +498,9 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	return tex;
 }
 
-static void UpdateTextureBuffer(int context, CCTexture* tex, unsigned buf_addr, unsigned buf_stride) {
+static void UpdateTextureBuffer(int context, struct GPUTexture* tex, unsigned buf_addr) {
+	unsigned buf_stride = GS_TEXTURE_STRIDE(tex);
+
 	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	Q++;
 
@@ -471,33 +518,29 @@ static void UpdateTextureBuffer(int context, CCTexture* tex, unsigned buf_addr, 
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
-	CCTexture* tex = (CCTexture*)texId;
+	struct GPUTexture* tex = (struct GPUTexture*)texId;
 	
-	unsigned dst_width  = 1 << tex->log2_w;
-	unsigned dst_addr   = tex_offset;
-	// GS stores stride in 64 block units
-	// (i.e. gs_stride = real_stride >> 6, so min stride is 64)
-	unsigned dst_stride = max(64, dst_width);
+	int dst_addr = tex_offset;
 	
-	// TODO terrible perf
-	DMAFlushBuffer();
-	dma_wait_fast();
-
-	// 4bpp has extra garbage pixels when odd rows
-	int src_w = tex->width, src_h = tex->height;
-	if (tex->format != GS_PSM_32 && (src_w & 1)) src_w++;
-
-	Gfx_TransferPixels(tex->pixels, src_w, src_h, 
-						tex->format, dst_addr, dst_stride);
-	
-	// TODO terrible perf
-	Q = dma_beg + 1;
-	UpdateTextureBuffer(0, tex, dst_addr, dst_stride);
+	if (tex->format == GS_PSM_4HH || tex->format == GS_PSM_4HL) {
+		// No need to upload to vram
+		dst_addr = TEXMEM_4BPP_TO_VRAM(tex->base);
+	} else {
+		UploadToVRAM(tex, dst_addr);
+	}
+	UpdateTextureBuffer(0, tex, dst_addr);
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	CCTexture* tex = (CCTexture*)(*texId);
+	struct GPUTexture* tex = (struct GPUTexture*)(*texId);
 	if (!tex) return;
+
+	if (tex->format == GS_PSM_4HH) {
+		blockalloc_dealloc(tex_4HH_table, tex->base, tex->blocks);
+	}
+	if (tex->format == GS_PSM_4HL) {
+		blockalloc_dealloc(tex_4HL_table, tex->base, tex->blocks);
+	}
 
 	if (tex->format != GS_PSM_32) {
 		blockalloc_dealloc(pal_table, tex->pal_index, 1);
@@ -508,7 +551,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)texId;
+	struct GPUTexture* tex = (struct GPUTexture*)texId;
 	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
 
 	CopyPixels(dst,        tex->width * BITMAPCOLOR_SIZE, 
