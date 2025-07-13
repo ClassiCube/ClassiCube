@@ -2,7 +2,8 @@
 #include "../Errors.h"
 #include "../Logger.h"
 #include "../Window.h"
-#include <malloc.h>
+#include "../_BlockAlloc.h"
+
 #include <string.h>
 #include <kos.h>
 #include <dc/matrix.h>
@@ -17,7 +18,7 @@ static cc_bool stateDirty;
 
 typedef struct {
     uint32_t format;
-    void     *data;
+    int32_t  base;
 	uint32_t log2_w: 4;
 	uint32_t log2_h: 4;
 	uint32_t size:  24;
@@ -84,7 +85,8 @@ static void CommandsList_Append(struct CommandsList* list, const void* cmd) {
 #define TEXMEM_PAGE_ROUNDUP(size) (((size) + TEXMEM_PAGE_MASK) & ~TEXMEM_PAGE_MASK)
 // Leave a little bit of memory available by KOS PVR code
 #define TEXMEM_RESERVED (48 * 1024)
-#define TEXMEM_TO_PAGE(addr) ((cc_uint32)((addr) - texmem_base) / TEXMEM_PAGE_SIZE)
+
+#define PAGE_TO_TEXMEM(page) (cc_uint16*)(texmem_base + (page) * TEXMEM_PAGE_SIZE)
 
 // Base address in VRAM for textures
 static cc_uint8* texmem_base;
@@ -103,9 +105,8 @@ void texmem_init(void) {
 	texmem_used  = Mem_AllocCleared(1, texmem_pages, "Page state");
 }
 
-static int texmem_move(cc_uint8* ptr, cc_uint32 size) {
+static int texmem_move(cc_uint32 page, cc_uint32 size) {
 	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
-	cc_uint32 page  = TEXMEM_TO_PAGE(ptr);
 	int moved = 0;
 
 	// Try to shift downwards towards prior allocated texture
@@ -119,7 +120,7 @@ static int texmem_move(cc_uint8* ptr, cc_uint32 size) {
 	{
 		texmem_used[page + i] = 1;
 	}
-	return moved * TEXMEM_PAGE_SIZE;
+	return moved;
 }
 
 static int texmem_defragment(void) {
@@ -127,14 +128,16 @@ static int texmem_defragment(void) {
 	for (int i = 0; i < MAX_TEXTURE_COUNT; i++)
 	{
 		GPUTexture* tex = &tex_list[i];
-		if (!tex->data) continue;
+		if (!tex->size) continue;
 
-		int moved = texmem_move(tex->data, tex->size);
+		int moved = texmem_move(tex->base, tex->size);
 		if (!moved) continue;
-
 		moved_any = true;
-		memmove(tex->data - moved, tex->data, tex->size);
-		tex->data -= moved;
+
+		cc_uint16* dst = PAGE_TO_TEXMEM(tex->base - moved);
+		cc_uint16* src = PAGE_TO_TEXMEM(tex->base);
+		memmove(dst, src, tex->size);
+		tex->base -= moved;
 	}
 	return moved_any;
 }
@@ -149,9 +152,9 @@ static CC_INLINE int texmem_can_alloc(cc_uint32 beg, cc_uint32 pages) {
 	return true;
 }
 
-static void* texmem_alloc_pages(cc_uint32 size) {
+static int texmem_alloc_pages(cc_uint32 size) {
 	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
-	if (pages > texmem_pages) return NULL;
+	if (pages > texmem_pages) return -1;
 
 	for (cc_uint32 page = 0; page < texmem_pages - pages; page++) 
 	{
@@ -160,23 +163,23 @@ static void* texmem_alloc_pages(cc_uint32 size) {
 		for (cc_uint32 i = 0; i < pages; i++) 
 			texmem_used[page + i] = 1;
 
-        return texmem_base + page * TEXMEM_PAGE_SIZE;
+        return page;
     }
-	return NULL;
+	return -1;
 }
 
-static void* texmem_alloc(cc_uint32 size) {
-    void* ptr = texmem_alloc_pages(size);
-    if (ptr) return ptr;
+static int texmem_alloc(cc_uint32 size) {
+    int base = texmem_alloc_pages(size);
+    if (base >= 0) return base;
 
 	Platform_LogConst("Out of VRAM! Defragmenting..");
 	while (texmem_defragment()) { }
+
     return texmem_alloc_pages(size);
 }
 
-static void texmem_free(cc_uint8* ptr, cc_uint32 size) {
+static void texmem_free(cc_uint32 page, cc_uint32 size) {
 	cc_uint32 pages = TEXMEM_PAGE_ROUNDUP(size) / TEXMEM_PAGE_SIZE;
-    cc_uint32 page  = TEXMEM_TO_PAGE(ptr);
 
 	for (cc_uint32 i = 0; i < pages; i++)
 		texmem_used[page + i] = 0;
@@ -351,6 +354,7 @@ static CC_NOINLINE void BuildPolyContext(pvr_poly_hdr_t* dst, int list_type) {
 		return;
 	}
 	int tex_alpha = use_alpha ? PVR_TXRALPHA_ENABLE : PVR_TXRALPHA_DISABLE;
+	cc_uint16* tex_ptr = PAGE_TO_TEXMEM(tex->base);
 
 	dst->mode2 |= (tex_alpha                << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
 	dst->mode2 |= (PVR_FILTER_NEAREST       << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
@@ -362,7 +366,7 @@ static CC_NOINLINE void BuildPolyContext(pvr_poly_hdr_t* dst, int list_type) {
 
 	dst->mode3  = (0           << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
 	dst->mode3 |= (tex->format << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
-	dst->mode3 |= ((uint32_t)tex->data & 0x00fffff8) >> 3;
+	dst->mode3 |= ((uint32_t)tex_ptr & 0x00fffff8) >> 3;
 }
 
 
@@ -519,10 +523,10 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Palettees--------------------------------------------------------*
 *#########################################################################################################################*/
 // PVR hardware only allows addressing the 1024 palette entries in either 16 entry or 256 entry groups
-#define MAX_PALETTES (1024 / 16)
-#define MAX_PAL_ENTRIES 8 // Could be 16, but 8 for balance between texture load speed and VRAM usage
-
-static cc_uint8 palettes_used[MAX_PALETTES];
+// Only 16 entry groups are supported (64 groups, relatively quick texture loading)
+#define MAX_PAL_ENTRIES 16
+#define PAL_TOTAL_BLOCKS (1024 / MAX_PAL_ENTRIES)
+static cc_uint8 pal_table[PAL_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
 
 static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
 	for (int i = 0; i < pal_count; i++) 
@@ -557,8 +561,6 @@ static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
 }
 
 static void ApplyPalette(BitmapCol* palette, int pal_count, int pal_index) {
-	palettes_used[pal_index] = true;
-
 	for (int i = 0; i < pal_count; i++) 
 	{
 		int R = BitmapCol_R(palette[i]) >> 4;
@@ -569,16 +571,6 @@ static void ApplyPalette(BitmapCol* palette, int pal_count, int pal_index) {
 		cc_uint32 entry = (A << 12) | (R << 8) | (G << 4) | B;
 		pvr_set_pal_entry(pal_index * 16 + i, entry);
 	}
-}
-
-static int FindFreePalette(cc_uint8 flags) {
-	if (flags & TEXTURE_FLAG_DYNAMIC) return -1;
-
-	for (int i = 0; i < MAX_PALETTES; i++)
-	{
-		if (!palettes_used[i]) return i;
-	}
-	return -1;
 }
 
 
@@ -725,12 +717,10 @@ static GPUTexture* FindFreeTexture(void) {
     for (int i = 0; i < MAX_TEXTURE_COUNT; i++) 
 	{
 		GPUTexture* tex = &tex_list[i];
-		if (!tex->data) return tex;
+		if (!tex->size) return tex;
     }
     return NULL;
 }
-
-static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GPUTexture* tex = FindFreeTexture();
@@ -738,11 +728,17 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 	BitmapCol palette[MAX_PAL_ENTRIES];
 	int pal_count = 0;
-	int pal_index = FindFreePalette(flags);
+	int pal_index = -1;
 
-	if (pal_index >= 0) {
+	if (!(flags & TEXTURE_FLAG_DYNAMIC)) {
 		pal_count = CalcPalette(palette, bmp, rowWidth);
-		if (pal_count > 0) ApplyPalette(palette, pal_count, pal_index);
+
+		if (pal_count > 0) {
+			pal_index = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, 1);
+		}
+		if (pal_index >= 0) {
+			ApplyPalette(palette, pal_count, pal_index);
+		}
 	}
 
 	int dst_w = Math_NextPowOf2(bmp->width);
@@ -751,7 +747,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->log2_w = Math_ilog2(dst_w);
 	tex->log2_h = Math_ilog2(dst_h);
 
-	if (pal_count > 0) {
+	if (pal_index >= 0) {
 		tex->format = PVR_TXRFMT_PAL4BPP | PVR_TXRFMT_4BPP_PAL(pal_index);
 		// 4bpp     = 2 pixels in 1 byte
 		tex->size   = dst_w * dst_h / 2;
@@ -761,13 +757,16 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		tex->size   = dst_w * dst_h * 2;
 	}
 	
-	tex->data = texmem_alloc(tex->size);
-	if (!tex->data) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
+	int base = texmem_alloc(tex->size);
+	if (base < 0) { Platform_LogConst("Out of PVR VRAM!"); return NULL; }
 
-	if (tex->format == PVR_TXRFMT_ARGB4444) {
-		ConvertTexture_4444(tex->data, bmp, rowWidth);
+	tex->base = base;
+	cc_uint16* dst = PAGE_TO_TEXMEM(base);
+
+	if (pal_index >= 0) {
+		ConvertTexture_Palette(dst, bmp, rowWidth, palette, pal_count);
 	} else {
-		ConvertTexture_Palette(tex->data, bmp, rowWidth, palette, pal_count);
+		ConvertTexture_4444(dst, bmp, rowWidth);
 	}
 	return tex;
 }
@@ -785,7 +784,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
 
 	unsigned startX = X;
-	cc_uint16* dst  = tex->data;
+	cc_uint16* dst  = PAGE_TO_TEXMEM(tex->base);
 	
 	for (int y = 0; y < height; y++)
 	{
@@ -811,14 +810,14 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GPUTexture* tex = (GPUTexture*)(*texId);
 	if (!tex) return;
 
-	texmem_free(tex->data, tex->size);
+	texmem_free(tex->base, tex->size);
 
 	if (tex->format != PVR_TXRFMT_ARGB4444) {
 		int index = (tex->format & PVR_TXRFMT_4BPP_PAL(63)) >> 21;
-		palettes_used[index] = false;
+		blockalloc_dealloc(pal_table, index, 1);
 	}
 
-	tex->data = NULL;
+	tex->size = 0;
 	*texId    = 0;
 }
 
