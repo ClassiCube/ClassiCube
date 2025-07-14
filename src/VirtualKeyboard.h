@@ -157,7 +157,7 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 			w = kb_tileWidth * KB_GetCellWidth(i);
 			h = kb_tileHeight;
 
-			Gradient_Noise(ctx, i == selected ? KB_SELECTED_COLOR : KB_NORMAL_COLOR, 4, x, y, w, h);
+			Gradient_Noise(ctx, i == selected ? KB_SELECTED_COLOR : KB_NORMAL_COLOR, 2, x, y, w, h);
 			LWidget_DrawBorder(ctx, KB_BACKGROUND_COLOR, 1, 1, x, y, w, h);
 
 			dx = (w - Drawer2D_TextWidth (&args)) / 2;

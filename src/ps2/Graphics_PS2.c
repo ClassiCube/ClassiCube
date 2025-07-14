@@ -464,7 +464,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		tex->pal_index = pal_index;
 		ConvertTexture_Palette((cc_uint8*)tex->pixels, bmp, rowWidth, palette, pal_count);
 
-		int size    = VRAM_Size(tex->width, max(32, 1 << tex->log2_h), GS_PSM_4HH);		
+		int size    = VRAM_Size(tex->width, ALIGNUP(tex->height, 32), GS_PSM_4HH);		
 		// TODO fix properly. alignup instead
 		int blocks  = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE);
 		tex->blocks = blocks;
