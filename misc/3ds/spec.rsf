@@ -73,10 +73,10 @@ AccessControlInfo:
   
   # Virtual Address Mappings
   IORegisterMapping: 
-   - 1ff50000-1ff57fff   # DSP memory
+   - 1ff50000-1ff57fff # DSP memory
    - 1ff70000-1ff77fff
   MemoryMapping: 
-   - 1f000000-1f5fffff:r # VRAM
+   - 1f000000-1f5fffff # VRAM
    
   SystemCallAccess: 
     ArbitrateAddress: 34
