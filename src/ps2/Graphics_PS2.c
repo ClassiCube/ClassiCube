@@ -395,7 +395,7 @@ struct GPUTexture {
 	cc_uint16 format, pal_index; // 4 bytes
 	BitmapCol pixels[]; // must be aligned to 16 bytes
 };
-#define GS_TEXTURE_STRIDE(tex) max(64, 1 << (tex)->log2_w)
+#define GS_TEXTURE_STRIDE(tex) ALIGNUP((tex)->width, 64)
 
 static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
 	// TODO terrible perf
@@ -464,10 +464,11 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		tex->pal_index = pal_index;
 		ConvertTexture_Palette((cc_uint8*)tex->pixels, bmp, rowWidth, palette, pal_count);
 
-		int size    = VRAM_Size(1 << tex->log2_w, max(64, 1 << tex->log2_h), GS_PSM_4HH);
+		int size    = VRAM_Size(1 << tex->log2_w, max(32, 1 << tex->log2_h), GS_PSM_4HH);		
 		// TODO fix properly. alignup instead
 		int blocks  = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE);
 		tex->blocks = blocks;
+		//Platform_Log4("ALLOC to 4: %i / %i (%i X %i)", &size, &blocks, &bmp->width, &bmp->height);
 
 		// Try to store entirely in VRAM in upper bits of colour framebuffers
 		int base = blockalloc_alloc(tex_4HL_table, texmem_4bpp_blocks, blocks);
