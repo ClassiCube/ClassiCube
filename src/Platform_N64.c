@@ -24,11 +24,6 @@
 #include <sys/fcntl.h>
 #include "_PlatformConsole.h"
 
-// These functions are private in libdragon. FatFs functions are instead recommanded.
-int open( const char *file, int flags, ... );
-int stat( const char *file, struct stat *st );
-int mkdir( const char * path, mode_t mode );
-
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
@@ -95,6 +90,7 @@ static cc_string root_path_rom = String_FromConst("rom:/");
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
 	cc_string path_ = *path;
+
 	if (Platform_ReadonlyFilesystem) { // read from rom root
 		int idx = String_IndexOf(path, '/');
 		if (idx >= 0) path_ = String_UNSAFE_SubstringAt(&path_, idx + 1);
@@ -297,6 +293,7 @@ void Platform_Init(void) {
 	dfs_init(DFS_DEFAULT_LOCATION);
 	timer_init();
 	rtc_init();
+
 	if (!debug_init_sdfs("sd:/", -1)) {
 		String_Copy(&root_path, &root_path_rom);
 		Platform_ReadonlyFilesystem = true;

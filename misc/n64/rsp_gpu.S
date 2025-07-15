@@ -196,8 +196,8 @@ upload_vertex:
     slv vtex, SCREEN_VTX_S_T,  vtx
 
     # 32-bit right shift by 5, to keep the clip space coordinates unscaled
-    vmudm vcspos_i, vcspos_i, vshift8.e4
-    vmadl vcspos_f, vcspos_f, vshift8.e4
+    vmudm vcspos_i, vcspos_i, K2048
+    vmadl vcspos_f, vcspos_f, K2048
 
 	addi vcount,  -1
 	addi src_ptr, 16
@@ -405,13 +405,11 @@ GL_TnL:
     #vmadh vst,   vtexoffset, K1
     #vmudl vst,   vst, vtexsize
 
-	vmudh v___,  vst, vtexsize
-	vsar  vst_i, COP2_ACC_HI
-	vsar  vst_f, COP2_ACC_MD
+	vmudn vst_f, vst,   vtexsize # ACC  = vst * vtexsize, VST_F = ACC & 0xFFFF
+	vmadh vst_i, vzero, vzero    # ACC += zero * zero,    VST_I = ACC >> 16
 
-	vmudl vst_f, vst_f, K8192
-	vmadm vst_i, vst_i, K8192
-	vmadn vst,   vzero, vzero
+	vmudm v___,  vst_i, K8192    # ACC  = (vst_i * 8192)
+	vmadl vst,   vst_f, K8192    # ACC += (vst_f * 8192) >> 16, VST = ACC & 0xFFFF
 
     #undef vst_i
     #undef vst_f
