@@ -41,8 +41,6 @@ enum {
 };
 
 typedef struct {
-	int16_t  mvp_matrix_i[4][4];
-    uint16_t mvp_matrix_f[4][4];
     int16_t vp_scale[4];
     int16_t vp_offset[4];
     uint16_t tex_size[2];
