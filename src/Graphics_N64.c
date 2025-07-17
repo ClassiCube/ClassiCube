@@ -225,8 +225,26 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 
-void Gfx_EnableMipmaps(void) { }
-void Gfx_DisableMipmaps(void) { }
+static cc_bool bilinear_mode;
+static void SetFilterMode(cc_bool bilinear) {
+	if (bilinear_mode == bilinear) return;
+	bilinear_mode = bilinear;
+
+	uint64_t mode = bilinear ? FILTER_BILINEAR : FILTER_POINT;
+	__rdpq_mode_change_som(SOM_SAMPLE_MASK, mode << SOM_SAMPLE_SHIFT);
+
+	int offset = bilinear ? -((1 << TEX_SHIFT) / 2) : 0;
+	gpuSetTexOffset(offset, offset);
+}
+
+void Gfx_EnableMipmaps(void) {
+	// TODO move back to texture instead?
+	SetFilterMode(Gfx.Mipmaps);
+}
+
+void Gfx_DisableMipmaps(void) {
+	SetFilterMode(FILTER_POINT);
+}
 
 
 /*########################################################################################################################*

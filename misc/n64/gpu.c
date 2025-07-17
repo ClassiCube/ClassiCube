@@ -110,6 +110,11 @@ static void gpuSetTexSize(uint16_t width, uint16_t height)
     gpu_set_word(offsetof(gpu_state, tex_size[0]), (width << 16) | height);
 }
 
+static void gpuSetTexOffset(uint16_t width, uint16_t height)
+{
+    gpu_set_word(offsetof(gpu_state, tex_offset[0]), (width << 16) | height);
+}
+
 
 static inline void write_shorts(rspq_write_t *w, const uint16_t *s, uint32_t count)
 {
