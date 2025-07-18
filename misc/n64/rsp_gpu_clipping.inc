@@ -1,5 +1,5 @@
 #define CLIPPING_PLANE_COUNT  6
-#define CLIPPING_CACHE_SIZE   9
+#define CLIPPING_CACHE_SIZE   10
 #define CLIPPING_PLANE_SIZE   8
 
     .section .data.gl_clipping
@@ -14,7 +14,7 @@ CLIP_PLANES:
     .half 0, 0, 1, -1
 
     .align 4
-CACHE_OFFSETS: .half 2,4,6,8,10,12,14,16,18
+CACHE_OFFSETS: .half 2,4,6,8, 10,12,14,16, 18,20
 
     .section .bss.gl_clipping
 
@@ -33,8 +33,8 @@ CLIP_LISTS:
     #   Clip a triangle against the view-frustum by using the Sutherland-Hodgman algorithm
     #   https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
     # Args:
-    #   a1-a3 = Vertices
-    #   t5    = OR'd clip flags of the triangle's vertices
+    #   a1-a3,a0 = Vertices
+    #   t5       = OR'd clip flags of the triangle's vertices
     # Returns:
     #   s1    = Pointer to list of output vertices
     #   s2    = Pointer to end of list
@@ -59,6 +59,7 @@ GL_ClipTriangle:
     #define vtx1            a1
     #define vtx2            a2
     #define vtx3            a3
+    #define vtx4            a0
 
     #define vplane          $v01
     #define vint_f          $v02
@@ -85,13 +86,14 @@ GL_ClipTriangle:
     li in_list, %lo(CLIP_LIST0)
     move in_count, zero
 
-    # Put three original vertices in the out_list
+    # Put four original vertices in the out_list
     # (So after the initial swap they will be in the in_list)
     li out_list, %lo(CLIP_LIST1)
     sh vtx1, 0(out_list)
     sh vtx2, 2(out_list)
     sh vtx3, 4(out_list)
-    li out_count, 3*2
+    sh vtx4, 6(out_list)
+    li out_count, 4*2
 
     li plane, %lo(CLIP_PLANES)
     li plane_flag, 1
@@ -100,7 +102,7 @@ GL_ClipTriangle:
     li t0, %lo(CACHE_OFFSETS)
     vxor voff1, voff1
     lqv voff0,  0,t0
-    lsv voff1, 16,t0
+    ldv voff1, 16,t0
 
     # Temporarily use the RDP staging area as a map of which cache slots are used
     # Init to zero
@@ -201,6 +203,7 @@ gl_clip_no_swap:
     vlt vcache0, vcache0.h2
     vlt vcache0, vcache0.e4
     vlt vcache0, vcache1.e0
+    vlt vcache0, vcache1.e1
 
     mfc2 t0, vcache0.e0
 

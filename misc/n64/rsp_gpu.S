@@ -543,21 +543,14 @@ GPUCmd_DrawQuad:
 	#undef v2_cflags
 	#undef v3_cflags
 
-// ########################
-// Clipped triangle path
-// ########################
-	// If not, go with slow clipping path
-	
-	# now do the actual drawing
+// ###########################
+// Slow clipped triangle path
+// ###########################
 	li a1, %lo(VERTEX_CACHE) + V0_OFFSET
 	li a2, %lo(VERTEX_CACHE) + V1_OFFSET
-	jal DrawClippedTriangle
 	li a3, %lo(VERTEX_CACHE) + V2_OFFSET
-
-	li a1, %lo(VERTEX_CACHE) + V0_OFFSET
-	li a2, %lo(VERTEX_CACHE) + V2_OFFSET
-	jal DrawClippedTriangle
-	li a3, %lo(VERTEX_CACHE) + V3_OFFSET
+	jal DrawClippedQuad
+	li a0, %lo(VERTEX_CACHE) + V3_OFFSET
 
     j RSPQ_Loop
     nop
@@ -566,15 +559,17 @@ GPUCmd_DrawQuad:
     ################################################################
     # DrawClippedTriangle - Breaks a triangle into one or more clipped tris
     ################################################################
-.func DrawClippedTriangle
-DrawClippedTriangle:
+.func DrawClippedQuad
+DrawClippedQuad:
     sw ra, %lo(DRAW_TRI_RA) // TODO find a register for this
 
     lbu t0, SCREEN_VTX_CLIP_CODE(vtx1)
     lbu t1, SCREEN_VTX_CLIP_CODE(vtx2)
     lbu t2, SCREEN_VTX_CLIP_CODE(vtx3)
+    lbu t3, SCREEN_VTX_CLIP_CODE(vtx4)
     or t5, t0, t1
     or t5, t2
+    or t5, t3
 
     move s1, zero
     jal GL_ClipTriangle
