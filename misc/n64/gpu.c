@@ -7,7 +7,7 @@
 
 // This is a severely cutdown version of libdragon's OpenGL implementation
 #define VTX_SHIFT 5
-#define TEX_SHIFT 8
+#define TEX_SHIFT 10
 
 static uint32_t gpup_id;
 //DEFINE_RSP_UCODE(rsp_gpu);

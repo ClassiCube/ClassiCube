@@ -311,8 +311,9 @@ GL_TnL:
 	vmudn vst_f, vst,   vtexsize # ACC  = vst * vtexsize, VST_F = ACC & 0xFFFF
 	vmadh vst_i, vzero, vzero    # ACC += zero * zero,    VST_I = ACC >> 16
 
-	vmudm v___,  vst_i, K8192    # ACC  = (vst_i * 8192)
-	vmadl vst,   vst_f, K8192    # ACC += (vst_f * 8192) >> 16, VST = ACC & 0xFFFF
+	// Shift texture coords 5 bits right
+	vmudm v___,  vst_i, K2048    # ACC  = (vst_i << 11)
+	vmadl vst,   vst_f, K2048    # ACC += (vst_f << 11) >> 16, VST = ACC & 0xFFFF
 
     #undef vst_i
     #undef vst_f
