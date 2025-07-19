@@ -66,7 +66,6 @@ GL_STATE:
 
     .align 4
 CLIP_CODE_FACTORS:      .half 1, 1, GUARD_BAND_FACTOR, GUARD_BAND_FACTOR
-DRAW_TRI_RA:            .word 0
 
 .bss
     .align 3
@@ -371,6 +370,7 @@ GPUCmd_DrawQuad:
 	#define v1_cflags   t2
 	#define v2_cflags   t3
 	#define v3_cflags   t4
+	// t5 is used by GL_ClipTriangle
 
     addi src_ptr, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 64
     li vtx, %lo(VERTEX_CACHE)
@@ -491,12 +491,7 @@ GPUCmd_DrawQuad:
 
     #undef vpos      
     #undef vcspos_i  
-    #undef vcspos_f  
-
-    #define vtx1 a1
-    #define vtx2 a2
-    #define vtx3 a3
-	#define vtx4 a0
+    #undef vcspos_f
 
 // ########################
 // Trivial rejection check
@@ -534,54 +529,41 @@ GPUCmd_DrawQuad:
     or tmp, v2_cflags
     or tmp, v3_cflags
 
-    beqz tmp, DrawQuadForRDP
-	nop
-
-	#undef tmp
 	#undef v0_cflags
 	#undef v1_cflags
 	#undef v2_cflags
 	#undef v3_cflags
 
+	// If all 4 vertices are inside guardband, no need to clip
+    beqz tmp, DrawQuadForRDP
+	move t5,  tmp // GL_ClipTriangle expects this in t5 instead
+	#undef tmp
+
 // ###########################
-// Slow clipped triangle path
+// Slow clipped triangles path
 // ###########################
-	li a1, %lo(VERTEX_CACHE) + V0_OFFSET
-	li a2, %lo(VERTEX_CACHE) + V1_OFFSET
-	li a3, %lo(VERTEX_CACHE) + V2_OFFSET
-	jal DrawClippedQuad
-	li a0, %lo(VERTEX_CACHE) + V3_OFFSET
+    #define vtx1 a1
+    #define vtx2 a2
+    #define vtx3 a3
+	#define vtx4 a0
 
-    j RSPQ_Loop
-    nop
-.endfunc
+	li vtx1, %lo(VERTEX_CACHE) + V0_OFFSET
+	li vtx2, %lo(VERTEX_CACHE) + V1_OFFSET
+	li vtx3, %lo(VERTEX_CACHE) + V2_OFFSET
+	li vtx4, %lo(VERTEX_CACHE) + V3_OFFSET
 
-    ################################################################
-    # DrawClippedTriangle - Breaks a triangle into one or more clipped tris
-    ################################################################
-.func DrawClippedQuad
-DrawClippedQuad:
-    sw ra, %lo(DRAW_TRI_RA) // TODO find a register for this
-
-    lbu t0, SCREEN_VTX_CLIP_CODE(vtx1)
-    lbu t1, SCREEN_VTX_CLIP_CODE(vtx2)
-    lbu t2, SCREEN_VTX_CLIP_CODE(vtx3)
-    lbu t3, SCREEN_VTX_CLIP_CODE(vtx4)
-    or t5, t0, t1
-    or t5, t2
-    or t5, t3
-
+	// t5 = which guardband planes need to be clipped against
     move s1, zero
     jal GL_ClipTriangle
     move s2, zero
 
     beqz v1, gl_draw_triangle_end
     addi s2, -6
-    lhu s5, 0(s1)
+    lhu  s5, 0(s1)
 gl_draw_clipped_triangles_loop:
     move vtx1, s5
-    lhu vtx2, 2(s1)
-    lhu vtx3, 4(s1)
+    lhu  vtx2, 2(s1)
+    lhu  vtx3, 4(s1)
 
 gl_draw_single_triangle:
     addi vtx1, SCREEN_VTX_X
@@ -591,17 +573,16 @@ gl_draw_single_triangle:
     lhu a0, %lo(GL_TRI_CMD)
     lh  v0, %lo(GL_TRI_CULL)
     jal RDPQ_Triangle
-    li s3, %lo(RDPQ_CMD_STAGING)
+    li  s3, %lo(RDPQ_CMD_STAGING)
 
     jal RDPQ_Send
-    li s4, %lo(RDPQ_CMD_STAGING)
+    li  s4, %lo(RDPQ_CMD_STAGING)
 
-    blt s1, s2, gl_draw_clipped_triangles_loop
+    blt  s1, s2, gl_draw_clipped_triangles_loop
     addi s1, 2
 
 gl_draw_triangle_end:
-	lw ra, %lo(DRAW_TRI_RA)
-    jr ra
+    j RSPQ_Loop
     nop
 .endfunc
 
