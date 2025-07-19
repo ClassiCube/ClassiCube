@@ -30,7 +30,7 @@ static rsp_ucode_t rsp_gpu = (rsp_ucode_t){
 
 enum {
     GPU_CMD_SET_SHORT        = 0x0,
-    GPU_CMD_SET_WORD         = 0x1,
+    GPU_CMD_SET_TEX_WORD     = 0x1,
     GPU_CMD_SET_LONG         = 0x2,
 
     GPU_CMD_DRAW_QUAD        = 0x3,
@@ -42,8 +42,8 @@ enum {
 typedef struct {
     int16_t vp_scale[4];
     int16_t vp_offset[4];
-    uint16_t tex_size[2];
-    uint16_t tex_offset[2];
+    uint16_t tex_size[8];
+    uint16_t tex_offset[8];
     uint16_t tri_cmd;
     uint16_t tri_cull;
 } __attribute__((aligned(8), packed)) gpu_state;
@@ -55,9 +55,9 @@ static inline void gpu_set_short(uint32_t offset, uint16_t value)
 }
 
 __attribute__((always_inline))
-static inline void gpu_set_word(uint32_t offset, uint32_t value)
+static inline void gpu_set_tex_word(uint32_t offset, uint32_t value)
 {
-    rspq_write(gpup_id, GPU_CMD_SET_WORD, offset, value);
+    rspq_write(gpup_id, GPU_CMD_SET_TEX_WORD, offset, value);
 }
 
 __attribute__((always_inline))
@@ -97,12 +97,12 @@ static void gpuUpdateFormat(void)
 
 static void gpuSetTexSize(uint16_t width, uint16_t height)
 {
-    gpu_set_word(offsetof(gpu_state, tex_size[0]), (width << 16) | height);
+    gpu_set_tex_word(offsetof(gpu_state, tex_size[0]), (width << 16) | height);
 }
 
 static void gpuSetTexOffset(uint16_t width, uint16_t height)
 {
-    gpu_set_word(offsetof(gpu_state, tex_offset[0]), (width << 16) | height);
+    gpu_set_tex_word(offsetof(gpu_state, tex_offset[0]), (width << 16) | height);
 }
 
 

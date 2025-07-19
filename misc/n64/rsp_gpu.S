@@ -36,7 +36,7 @@
 
     RSPQ_BeginOverlayHeader
         RSPQ_DefineCommand GPUCmd_SetShort,      8   # 0x0
-        RSPQ_DefineCommand GPUCmd_SetWord,       8   # 0x1
+        RSPQ_DefineCommand GPUCmd_SetTexWord,    8   # 0x1
         RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x2
 
         RSPQ_DefineCommand GPUCmd_DrawQuad,      68  # 0x3
@@ -56,8 +56,8 @@ GL_STATE:
     # This is the GL state that is updated by CPU via GPUCmd_Set commands
     GL_VIEWPORT_SCALE:      .half   0,0,0,0
     GL_VIEWPORT_OFFSET:     .half   0,0,0,0
-    GL_STATE_TEX_SIZE:      .half   0,0
-    GL_STATE_TEX_OFFSET:    .half   0,0
+    GL_STATE_TEX_SIZE:      .half   0,0, 0,0, 0,0, 0,0
+    GL_STATE_TEX_OFFSET:    .half   0,0, 0,0, 0,0, 0,0
     GL_TRI_CMD:             .half   0
     GL_TRI_CULL:            .half   0
 
@@ -79,10 +79,14 @@ GPUCmd_SetShort:
     sh a1, %lo(GL_STATE)(a0)
     .endfunc
 
-    .func GPUCmd_SetWord
-GPUCmd_SetWord:
+// Store 4 times, so can be transformed by 4 vertices later
+    .func GPUCmd_SetTexWord
+GPUCmd_SetTexWord:
+    sw a1, %lo(GL_STATE) +  0(a0)
+    sw a1, %lo(GL_STATE) +  4(a0)
+    sw a1, %lo(GL_STATE) +  8(a0)
     jr ra
-    sw a1, %lo(GL_STATE) + 0(a0)
+    sw a1, %lo(GL_STATE) + 12(a0)
     .endfunc
 
     .func GPUCmd_SetLong
@@ -279,38 +283,7 @@ GL_TnL:
     #define v___         $v01
     #define vcspos_f     $v02
     #define vcspos_i     $v03
-    #define vtexsize     $v06
-    #define vtexoffset   $v07
-    #define vst          $v08
-    #define vst_i        $v28
-    #define vst_f        $v29
     move ra2, ra
-
-    llv vst, SCREEN_VTX_S_T, vtx  # S + T
-
-    li t0, %lo(GL_STATE_TEX_SIZE)
-    llv vtexsize,   0,t0
-    llv vtexoffset, 4,t0
-
-    # Scale texcoord by texsize and subtract offset (to correct for bilinear sampling if active)
-    #vmudn v___,  vst, vtexsize
-    # vmadh vst, vtexoffset, K1
-
-    #vmudn v___,  vst, vtexsize
-    #vmudl vst,   vst, vtexsize
-
-	vmudn vst_f, vst,   vtexsize # ACC  = vst * vtexsize, VST_F = ACC & 0xFFFF
-    #####vmadn vst_f,   vtexoffset, K1
-	vmadh vst_i, vzero, vzero    # ACC += zero * zero,    VST_I = ACC >> 16
-
-	// Shift texture coords right 5 bits
-	vmudm v___,  vst_i, K2048    # ACC  = (vst_i << 11)
-	vmadl vst,   vst_f, K2048    # ACC += (vst_f << 11) >> 16, VST = ACC & 0xFFFF
-
-    #undef vst_i
-    #undef vst_f
-
-    slv vst,   SCREEN_VTX_S_T, vtx
 
     ldv vcspos_f, SCREEN_VTX_CS_POSf,vtx
     jal GL_CalcScreenSpace
@@ -321,14 +294,11 @@ GL_TnL:
 
     #undef vcspos_f
     #undef vcspos_i
-    #undef vtexsize
-    #undef vtexoffset
 
     #undef vtx
 
     #undef v___
     #undef vrgba
-    #undef vst
     #undef s
 
     .endfunc
@@ -342,6 +312,11 @@ GPUCmd_DrawQuad:
     #define src_ptr     s4
 
     #define v___        $v01
+
+    #define vst_i       $v12
+    #define vst_f       $v13
+    #define vtexsize    $v14
+    #define vtexoffset  $v15
 
     #define vmtx0_i     $v16       //  m00 m01 m02 m03
     #define vmtx0_f     $v17
@@ -404,10 +379,11 @@ GPUCmd_DrawQuad:
     vmudm vcspos_i, vcspos_i, K2048
     vmadl vcspos_f, vcspos_f, K2048
 
+    li t6, %lo(GL_STATE_TEX_SIZE)
+    lqv vtexsize,   0x00, t6
     slv vcol.e0, SCREEN_VTX_RGBA + V0_OFFSET, vtx_ptr
-    slv vtex.e0, SCREEN_VTX_S_T  + V0_OFFSET, vtx_ptr
+    lqv vtexoffset, 0x10, t6
     slv vcol.e2, SCREEN_VTX_RGBA + V1_OFFSET, vtx_ptr
-    slv vtex.e2, SCREEN_VTX_S_T  + V1_OFFSET, vtx_ptr
 
     // Calculate and store clipping flags against CS.W.
     // These will be used for trivial rejections.
@@ -450,10 +426,13 @@ GPUCmd_DrawQuad:
     vmudm vcspos_i, vcspos_i, K2048
     vmadl vcspos_f, vcspos_f, K2048
 
+    // Scale texcoord by texsize and subtract offset (to correct for bilinear sampling if active)
+	vmudn vst_f, vtex,   vtexsize # ACC  = vtex * vtexsize, VST_F = ACC & 0xFFFF
+    #vmadn vst_f,vtexoffset, K1
+	vmadh vst_i, vzero, vzero     # ACC += zero * zero,    VST_I = ACC >> 16
+
     slv vcol.e4, SCREEN_VTX_RGBA + V2_OFFSET, vtx_ptr
-    slv vtex.e4, SCREEN_VTX_S_T  + V2_OFFSET, vtx_ptr
     slv vcol.e6, SCREEN_VTX_RGBA + V3_OFFSET, vtx_ptr
-    slv vtex.e6, SCREEN_VTX_S_T  + V3_OFFSET, vtx_ptr
 
     // Calculate and store clipping flags against CS.W.
     // These will be used for trivial rejections.
@@ -466,13 +445,19 @@ GPUCmd_DrawQuad:
     sdv vcspos_i.e4, SCREEN_VTX_CS_POSi + V3_OFFSET, vtx_ptr
     sdv vcspos_f.e4, SCREEN_VTX_CS_POSf + V3_OFFSET, vtx_ptr
 
+	// Shift texture coords right 5 bits
+	vmudm v___,  vst_i, K2048    # ACC  = (vst_i << 11)
+	vmadl vtex,  vst_f, K2048    # ACC += (vst_f << 11) >> 16, vtex = ACC & 0xFFFF
+
     andi v2_cflags, tmp, XYZ_CLIP_FLAGS
 	srl  tmp, tmp, 4
     andi v3_cflags, tmp, XYZ_CLIP_FLAGS
 
     #undef src_ptr
-    #undef vtx_ptr
-    #undef v___     
+    #undef vst_i
+    #undef vst_f
+    #undef vtexsize
+    #undef vtexoffset
 
     #undef vmtx0_i   
     #undef vmtx0_f  
@@ -487,20 +472,24 @@ GPUCmd_DrawQuad:
     #undef vcspos_i  
     #undef vcspos_f
 
-// ########################
-// Trivial rejection check
-// ########################
+	// ### Trivial rejection check ###
 	// If for any plane, all 4 vertices are outside the plane,
 	//  then the quad is out of the viewport and can be trivially rejected
     and tmp, v0_cflags, v1_cflags
     and tmp, v2_cflags
     and tmp, v3_cflags
-    bnez tmp, JrRa
-    nop
+    bnez tmp, JrRa // slv is delay  slot
 
-// ########################
-// Perform rest of T&L
-// ########################
+	// ### Perform rest of T&L ###
+    slv vtex.e0, SCREEN_VTX_S_T + V0_OFFSET, vtx_ptr
+    slv vtex.e2, SCREEN_VTX_S_T + V1_OFFSET, vtx_ptr
+    slv vtex.e4, SCREEN_VTX_S_T + V2_OFFSET, vtx_ptr
+    slv vtex.e6, SCREEN_VTX_S_T + V3_OFFSET, vtx_ptr
+
+    #undef vtx_ptr
+    #undef v___ 
+    #undef vtex   
+
     jal GL_TnL
     li s3, %lo(VERTEX_CACHE) + V0_OFFSET
     jal GL_TnL
