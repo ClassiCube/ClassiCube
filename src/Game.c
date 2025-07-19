@@ -51,7 +51,7 @@ int Game_ViewDistance     = DEFAULT_VIEWDIST;
 int Game_UserViewDistance = DEFAULT_VIEWDIST;
 int Game_MaxViewDistance  = DEFAULT_MAX_VIEWDIST;
 
-int     Game_FpsLimit, Game_Vertices;
+int     Game_FpsLimit, Game_MaxFps, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
 static float gfx_minFrameMs;
 static cc_bool autoPause;
@@ -74,7 +74,7 @@ int Game_NumStates = 1;
 #endif
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
-	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
+	"LimitVSync", "LimitCustom", "LimitNone",
 };
 
 static struct IGameComponent* comps_head;
@@ -317,6 +317,7 @@ static void HandleInactiveChanged(void* obj) {
 	} else {
 		Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);
 		Game_SetFpsLimit(Game_FpsLimit);
+		Game_SetMaxFps(Game_MaxFps);
 
 		Gfx.ReducedPerfMode         = false;
 		Gfx.ReducedPerfModeCooldown = 2;
@@ -414,6 +415,7 @@ static void Game_Load(void) {
 	struct IGameComponent* comp;
 	Game_UpdateDimensions();
 	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
+	Game_SetMaxFps(Options_GetInt(OPT_MAX_FPS, 10, 1000, 60));
 	Gfx_Create();
 	
 	Logger_WarnFunc = Game_WarnFunc;
@@ -487,17 +489,14 @@ static void Game_Load(void) {
 }
 
 void Game_SetFpsLimit(int method) {
-	float minFrameTime = 0;
 	Game_FpsLimit = method;
-
-	switch (method) {
-	case FPS_LIMIT_144: minFrameTime = 1000/144.0f; break;
-	case FPS_LIMIT_120: minFrameTime = 1000/120.0f; break;
-	case FPS_LIMIT_60:  minFrameTime = 1000/60.0f;  break;
-	case FPS_LIMIT_30:  minFrameTime = 1000/30.0f;  break;
-	}
 	Gfx_SetVSync(method == FPS_LIMIT_VSYNC);
-	Game_SetMinFrameTime(minFrameTime);
+	Game_SetMinFrameTime(method == FPS_LIMIT_CUSTOM ? 1000.0f / Game_MaxFps : 0);
+}
+
+void Game_SetMaxFps(int max) {
+	Game_MaxFps = max;
+	if (Game_FpsLimit == FPS_LIMIT_CUSTOM) Game_SetMinFrameTime(1000.0f / max);
 }
 
 #ifdef CC_BUILD_WEB
