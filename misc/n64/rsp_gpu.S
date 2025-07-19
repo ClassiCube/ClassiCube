@@ -35,15 +35,14 @@
 .data
 
     RSPQ_BeginOverlayHeader
-        RSPQ_DefineCommand GPUCmd_SetByte,       8   # 0x0
-        RSPQ_DefineCommand GPUCmd_SetShort,      8   # 0x1
-        RSPQ_DefineCommand GPUCmd_SetWord,       8   # 0x2
-        RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x3
+        RSPQ_DefineCommand GPUCmd_SetShort,      8   # 0x0
+        RSPQ_DefineCommand GPUCmd_SetWord,       8   # 0x1
+        RSPQ_DefineCommand GPUCmd_SetLong,       12  # 0x2
 
-        RSPQ_DefineCommand GPUCmd_DrawQuad,      68  # 0x4
-        RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x5
+        RSPQ_DefineCommand GPUCmd_DrawQuad,      68  # 0x3
+        RSPQ_DefineCommand GPUCmd_MatrixLoad,    68  # 0x4
 
-        RSPQ_DefineCommand GPUCmd_PushRDP,       12  # 0x6
+        RSPQ_DefineCommand GPUCmd_PushRDP,       12  # 0x5
     RSPQ_EndOverlayHeader
 
     .align 4
@@ -73,12 +72,6 @@ CLIP_CODE_FACTORS:      .half 1, 1, GUARD_BAND_FACTOR, GUARD_BAND_FACTOR
 VERTEX_CACHE:   .dcb.b      SCREEN_VTX_SIZE * 4
 
 .text
-
-    .func GPUCmd_SetByte
-GPUCmd_SetByte:
-    jr ra
-    sb a1, %lo(GL_STATE)(a0)
-    .endfunc
 
     .func GPUCmd_SetShort
 GPUCmd_SetShort:
@@ -344,7 +337,7 @@ GL_TnL:
     .align 3
     .func GPUCmd_DrawQuad
 GPUCmd_DrawQuad:
-    #define vtx         a0
+    #define vtx_ptr     a0
     #define mtx_ptr     s0
     #define src_ptr     s4
 
@@ -373,9 +366,12 @@ GPUCmd_DrawQuad:
 	// t5 is used by GL_ClipTriangle
 
     addi src_ptr, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 64
-    li vtx, %lo(VERTEX_CACHE)
+    li vtx_ptr,   %lo(VERTEX_CACHE)
+    li mtx_ptr,   %lo(GPU_MATRIX_MVP)
 
-    li mtx_ptr, %lo(GPU_MATRIX_MVP)
+	ldv vpos.e0,  0, src_ptr // Load v0 X, Y, Z
+	ldv vpos.e4, 16, src_ptr // Load v1 X, Y, Z
+
     lqv vmtx0_i, 0x00,mtx_ptr // [m00.I m01.I m02.I m03.I  m00.I m01.I m02.I m03.I]
     lqv vmtx1_i, 0x10,mtx_ptr // etc
     lqv vmtx2_i, 0x20,mtx_ptr
@@ -388,9 +384,6 @@ GPUCmd_DrawQuad:
 // ########################
 // Vertex 0 and 1 transform
 // ########################
-	ldv vpos.e0,  0, src_ptr // Load v0 X, Y, Z
-	ldv vpos.e4, 16, src_ptr // Load v1 X, Y, Z
-
 	// matrix multiply
     vmudn v___,      vmtx0_f, vpos.xxxxXXXX
     vmadh v___,      vmtx0_i, vpos.xxxxXXXX
@@ -407,25 +400,25 @@ GPUCmd_DrawQuad:
 	llv vcol.e2, 24, src_ptr // Load v1 RGBA
 	llv vtex.e2, 28, src_ptr // Load v1 U, V
 
-    # 32-bit right shift by 5, to keep the clip space coordinates unscaled
+    // 32-bit right shift by 5, to keep the clip space coordinates unscaled
     vmudm vcspos_i, vcspos_i, K2048
     vmadl vcspos_f, vcspos_f, K2048
 
-    slv vcol.e0, SCREEN_VTX_RGBA + V0_OFFSET, vtx
-    slv vtex.e0, SCREEN_VTX_S_T  + V0_OFFSET, vtx
-    slv vcol.e2, SCREEN_VTX_RGBA + V1_OFFSET, vtx
-    slv vtex.e2, SCREEN_VTX_S_T  + V1_OFFSET, vtx
+    slv vcol.e0, SCREEN_VTX_RGBA + V0_OFFSET, vtx_ptr
+    slv vtex.e0, SCREEN_VTX_S_T  + V0_OFFSET, vtx_ptr
+    slv vcol.e2, SCREEN_VTX_RGBA + V1_OFFSET, vtx_ptr
+    slv vtex.e2, SCREEN_VTX_S_T  + V1_OFFSET, vtx_ptr
 
-    # Calculate and store clipping flags against CS.W.
-    # These will be used for trivial rejections.
+    // Calculate and store clipping flags against CS.W.
+    // These will be used for trivial rejections.
     vch v___, vcspos_i, vcspos_i.wwwwWWWW
     vcl v___, vcspos_f, vcspos_f.wwwwWWWW
 
     cfc2 tmp, COP2_CTRL_VCC
-    sdv vcspos_i.e0, SCREEN_VTX_CS_POSi + V0_OFFSET, vtx
-    sdv vcspos_f.e0, SCREEN_VTX_CS_POSf + V0_OFFSET, vtx
-    sdv vcspos_i.e4, SCREEN_VTX_CS_POSi + V1_OFFSET, vtx
-    sdv vcspos_f.e4, SCREEN_VTX_CS_POSf + V1_OFFSET, vtx
+    sdv vcspos_i.e0, SCREEN_VTX_CS_POSi + V0_OFFSET, vtx_ptr
+    sdv vcspos_f.e0, SCREEN_VTX_CS_POSf + V0_OFFSET, vtx_ptr
+    sdv vcspos_i.e4, SCREEN_VTX_CS_POSi + V1_OFFSET, vtx_ptr
+    sdv vcspos_f.e4, SCREEN_VTX_CS_POSf + V1_OFFSET, vtx_ptr
 
 // ########################
 // Vertex 2 and 3 transform
@@ -437,7 +430,7 @@ GPUCmd_DrawQuad:
 	srl  tmp, tmp, 4
     andi v1_cflags, tmp, XYZ_CLIP_FLAGS
 
-	# matrix multiply
+	// matrix multiply
     vmudn v___,      vmtx0_f, vpos.xxxxXXXX
     vmadh v___,      vmtx0_i, vpos.xxxxXXXX
     vmadn v___,      vmtx1_f, vpos.yyyyYYYY
@@ -453,31 +446,32 @@ GPUCmd_DrawQuad:
 	llv vcol.e6, 56, src_ptr # Load v3 RGBA
 	llv vtex.e6, 60, src_ptr # Load v3 U, V
 
-    # 32-bit right shift by 5, to keep the clip space coordinates unscaled
+    // 32-bit right shift by 5, to keep the clip space coordinates unscaled
     vmudm vcspos_i, vcspos_i, K2048
     vmadl vcspos_f, vcspos_f, K2048
 
-    slv vcol.e4, SCREEN_VTX_RGBA + V2_OFFSET, vtx
-    slv vtex.e4, SCREEN_VTX_S_T  + V2_OFFSET, vtx
-    slv vcol.e6, SCREEN_VTX_RGBA + V3_OFFSET, vtx
-    slv vtex.e6, SCREEN_VTX_S_T  + V3_OFFSET, vtx
+    slv vcol.e4, SCREEN_VTX_RGBA + V2_OFFSET, vtx_ptr
+    slv vtex.e4, SCREEN_VTX_S_T  + V2_OFFSET, vtx_ptr
+    slv vcol.e6, SCREEN_VTX_RGBA + V3_OFFSET, vtx_ptr
+    slv vtex.e6, SCREEN_VTX_S_T  + V3_OFFSET, vtx_ptr
 
-    # Calculate and store clipping flags against CS.W.
-    # These will be used for trivial rejections.
+    // Calculate and store clipping flags against CS.W.
+    // These will be used for trivial rejections.
     vch v___, vcspos_i, vcspos_i.wwwwWWWW
     vcl v___, vcspos_f, vcspos_f.wwwwWWWW
 
     cfc2 tmp, COP2_CTRL_VCC
-    sdv vcspos_i.e0, SCREEN_VTX_CS_POSi + V2_OFFSET, vtx
-    sdv vcspos_f.e0, SCREEN_VTX_CS_POSf + V2_OFFSET, vtx
-    sdv vcspos_i.e4, SCREEN_VTX_CS_POSi + V3_OFFSET, vtx
-    sdv vcspos_f.e4, SCREEN_VTX_CS_POSf + V3_OFFSET, vtx
+    sdv vcspos_i.e0, SCREEN_VTX_CS_POSi + V2_OFFSET, vtx_ptr
+    sdv vcspos_f.e0, SCREEN_VTX_CS_POSf + V2_OFFSET, vtx_ptr
+    sdv vcspos_i.e4, SCREEN_VTX_CS_POSi + V3_OFFSET, vtx_ptr
+    sdv vcspos_f.e4, SCREEN_VTX_CS_POSf + V3_OFFSET, vtx_ptr
 
     andi v2_cflags, tmp, XYZ_CLIP_FLAGS
 	srl  tmp, tmp, 4
     andi v3_cflags, tmp, XYZ_CLIP_FLAGS
+
     #undef src_ptr
-    #undef vtx
+    #undef vtx_ptr
     #undef v___     
 
     #undef vmtx0_i   

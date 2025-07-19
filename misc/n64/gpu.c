@@ -29,15 +29,14 @@ static rsp_ucode_t rsp_gpu = (rsp_ucode_t){
 };
 
 enum {
-    GPU_CMD_SET_BYTE         = 0x0,
-    GPU_CMD_SET_SHORT        = 0x1,
-    GPU_CMD_SET_WORD         = 0x2,
-    GPU_CMD_SET_LONG         = 0x3,
+    GPU_CMD_SET_SHORT        = 0x0,
+    GPU_CMD_SET_WORD         = 0x1,
+    GPU_CMD_SET_LONG         = 0x2,
 
-    GPU_CMD_DRAW_QUAD        = 0x4,
-    GPU_CMD_MATRIX_LOAD      = 0x5,
+    GPU_CMD_DRAW_QUAD        = 0x3,
+    GPU_CMD_MATRIX_LOAD      = 0x4,
 
-	GPU_CMD_PUSH_RDP         = 0x6,
+	GPU_CMD_PUSH_RDP         = 0x5,
 };
 
 typedef struct {
@@ -48,12 +47,6 @@ typedef struct {
     uint16_t tri_cmd;
     uint16_t tri_cull;
 } __attribute__((aligned(8), packed)) gpu_state;
-
-__attribute__((always_inline))
-static inline void gpu_set_byte(uint32_t offset, uint8_t value)
-{
-    rspq_write(gpup_id, GPU_CMD_SET_BYTE, offset, value);
-}
 
 __attribute__((always_inline))
 static inline void gpu_set_short(uint32_t offset, uint16_t value)
@@ -82,9 +75,6 @@ static inline void gpu_push_rdp(uint32_t a1, uint64_t a2)
     rdpq_write(2, gpup_id, GPU_CMD_PUSH_RDP, 0, a1, a2);
 }
 
-
-static float gpu_vp_scale[3];
-static float gpu_vp_offset[3];
 static bool  gpu_texturing;
 static void* gpu_pointer;
 static int   gpu_stride;
@@ -191,34 +181,28 @@ static void gpuDrawArrays(uint32_t first, uint32_t count)
     }
 }
 
-static void gpuDepthRange(float n, float f)
-{
-    gpu_vp_scale[2]  = (f - n) * 0.5f;
-    gpu_vp_offset[2] = n + (f - n) * 0.5f;
-
-    gpu_set_short(offsetof(gpu_state, vp_scale[2]),  gpu_vp_scale[2]  * 4);
-    gpu_set_short(offsetof(gpu_state, vp_offset[2]), gpu_vp_offset[2] * 4);
-}
-
 static void gpuViewport(int x, int y, int w, int h)
 {
-    gpu_vp_scale[0]  = w * 0.5f;
-    gpu_vp_scale[1]  = h * -0.5f;
-    gpu_vp_offset[0] = x + w * 0.5f;
-    gpu_vp_offset[1] = y + h * 0.5f;
+    float vp_scale_x  = w * 0.5f;
+    float vp_scale_y  = h * -0.5f;
+    float vp_scale_z  = 0.5f;
+
+    float vp_offset_x = x + w * 0.5f;
+    float vp_offset_y = y + h * 0.5f;
+    float vp_offset_z = 0.5f;
 
     // Screen coordinates are s13.2
     #define SCREEN_XY_SCALE   4.0f
     #define SCREEN_Z_SCALE    32767.0f
 
     // * 2.0f to compensate for RSP reciprocal missing 1 bit
-    uint16_t scale_x  = gpu_vp_scale[0] * SCREEN_XY_SCALE * 2.0f;
-    uint16_t scale_y  = gpu_vp_scale[1] * SCREEN_XY_SCALE * 2.0f;
-    uint16_t scale_z  = gpu_vp_scale[2] * SCREEN_Z_SCALE  * 2.0f;
+    uint16_t scale_x  = vp_scale_x * SCREEN_XY_SCALE * 2.0f;
+    uint16_t scale_y  = vp_scale_y * SCREEN_XY_SCALE * 2.0f;
+    uint16_t scale_z  = vp_scale_z * SCREEN_Z_SCALE  * 2.0f;
 
-    uint16_t offset_x = gpu_vp_offset[0] * SCREEN_XY_SCALE;
-    uint16_t offset_y = gpu_vp_offset[1] * SCREEN_XY_SCALE;
-    uint16_t offset_z = gpu_vp_offset[2] * SCREEN_Z_SCALE;
+    uint16_t offset_x = vp_offset_x * SCREEN_XY_SCALE;
+    uint16_t offset_y = vp_offset_y * SCREEN_XY_SCALE;
+    uint16_t offset_z = vp_offset_z * SCREEN_Z_SCALE;
 
     gpu_set_long( 
         offsetof(gpu_state, vp_scale), 
@@ -236,7 +220,6 @@ static void gpuSetCullFace(bool enabled) {
 
 static void gpu_init() {
     gpup_id = rspq_overlay_register(&rsp_gpu);
-    gpuDepthRange(0, 1);
 }
 
 static void gpu_close() {
