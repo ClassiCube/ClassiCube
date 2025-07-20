@@ -32,6 +32,8 @@
 #define V2_OFFSET 2 * SCREEN_VTX_SIZE
 #define V3_OFFSET 3 * SCREEN_VTX_SIZE
 
+#define MAX_TRI_CMD_SIZE 0xB0
+
 .macro compressClipCodes
 	andi t2, t0, 0x707 // Isolate X/Y/Z clipping flags
 	srl  t1, t2, 5     // Shift hi flags to be aligned next to lo flags
@@ -76,7 +78,12 @@ CLIP_CODE_FACTORS:      .half 1, 1, GUARD_BAND_FACTOR, GUARD_BAND_FACTOR
 .bss
     .align 3
 
-VERTEX_CACHE:   .dcb.b      SCREEN_VTX_SIZE * 4
+VERTEX_CACHE:   .ds.b      SCREEN_VTX_SIZE * 4
+
+	.align 4
+// Enough for all 10 triangle commands in worse case quad clipped scenario
+TRI_CMD_BUFFER: .ds.b      (MAX_TRI_CMD_SIZE * 10)
+
 
 .text
 
@@ -211,8 +218,10 @@ GL_CalcScreenSpace:
     ssv vcspos_f.w,   SCREEN_VTX_W+2   ,dst 
     ssv vinvw_i.w,    SCREEN_VTX_INVW+0,dst
     ssv vinvw_f.w,    SCREEN_VTX_INVW+2,dst
+
+	li t0,            0x3F
     jr ra
-    sb zero,          SCREEN_VTX_PADDING(dst)
+    sb t0,            SCREEN_VTX_PADDING(dst)
 
     #undef dst
     #undef vcspos_f
@@ -221,46 +230,6 @@ GL_CalcScreenSpace:
     #undef vinvw_i
     #undef vscreenpos_i
     #undef vscreenpos_f
-    #undef v___
-    #undef w
-
-    .endfunc
-
-    ################################################################
-    # GL_CalcClipCodes
-    #
-    # Args:
-    #   s3   = Destination vertex address
-    #   $v02 = Clip space position (fractional part)
-    #   $v03 = Clip space position (integer part)
-    #
-    ################################################################
-    .func GL_CalcClipCodes
-GL_CalcClipCodes:
-    #define dst          s3
-    #define vcspos_f     $v02
-    #define vcspos_i     $v03
-    #define vguard_f     $v27
-    #define vguard_i     $v28
-    #define v___         $v29
-    #define w            e3
-
-    vmudn vguard_f, vcspos_f, vguardscale
-    vmadh vguard_i, vcspos_i, vguardscale
-    
-    vch v___, vguard_i, vguard_i.w
-    vcl v___, vguard_f, vguard_f.w
-
-    cfc2 t0, COP2_CTRL_VCC
-    compressClipCodes
-    jr ra
-    sb t2,  SCREEN_VTX_CLIP_CODE(dst)
-
-    #undef dst
-    #undef vcspos_i
-    #undef vcspos_f
-    #undef vguard_i
-    #undef vguard_f
     #undef v___
     #undef w
 
@@ -321,20 +290,21 @@ GL_TnL:
     vmudn vscreenpos_f, vscreenpos_f, vviewscale
     vmadh vscreenpos_i, vscreenpos_i, vviewscale
     vadd  vscreenpos_i, vviewoff
+	li t0,              0x3F
 
     sdv vscreenpos_i.e0, SCREEN_VTX_X     ,vtx1
     ssv vcspos_i.w,      SCREEN_VTX_W+0   ,vtx1
     ssv vcspos_f.w,      SCREEN_VTX_W+2   ,vtx1
     ssv vinvw_i.w,       SCREEN_VTX_INVW+0,vtx1
     ssv vinvw_f.w,       SCREEN_VTX_INVW+2,vtx1
-    sb zero,             SCREEN_VTX_PADDING(vtx1)
+    sb t0,               SCREEN_VTX_PADDING(vtx1)
 
     sdv vscreenpos_i.e4, SCREEN_VTX_X     ,vtx2
     ssv vcspos_i.W,      SCREEN_VTX_W+0   ,vtx2
     ssv vcspos_f.W,      SCREEN_VTX_W+2   ,vtx2
     ssv vinvw_i.W,       SCREEN_VTX_INVW+0,vtx2
     ssv vinvw_f.W,       SCREEN_VTX_INVW+2,vtx2
-    sb zero,             SCREEN_VTX_PADDING(vtx2)
+    sb t0,               SCREEN_VTX_PADDING(vtx2)
 
     cfc2 t0, COP2_CTRL_VCC
     compressClipCodes
@@ -608,6 +578,7 @@ GPUCmd_DrawQuad:
     jal GL_ClipTriangle
     move s2, zero
 
+    li   s3, %lo(TRI_CMD_BUFFER)
     beqz v1, gl_draw_triangle_end
     addi s2, -6
     lhu  s5, 0(s1)
@@ -622,17 +593,16 @@ gl_draw_single_triangle:
     addi vtx3, SCREEN_VTX_X
     
     lhu a0, %lo(GL_TRI_CMD)
+    jal RDPQ_Triangle_Send_Async
     lh  v0, %lo(GL_TRI_CULL)
-    jal RDPQ_Triangle
-    li  s3, %lo(RDPQ_CMD_STAGING)
-
-    jal RDPQ_Send
-    li  s4, %lo(RDPQ_CMD_STAGING)
 
     blt  s1, s2, gl_draw_clipped_triangles_loop
     addi s1, 2
 
 gl_draw_triangle_end:
+    jal RDPQ_Triangle_Send_End
+    nop 
+
     j RSPQ_Loop
     nop
 .endfunc
@@ -642,28 +612,26 @@ gl_draw_triangle_end:
     ################################################################
 .func DrawQuadForRDP
 DrawQuadForRDP:
-    lhu a0, %lo(GL_TRI_CMD)
-    lh  v0, %lo(GL_TRI_CULL)
+    li  s3, %lo(TRI_CMD_BUFFER)
 	li  a1, %lo(VERTEX_CACHE) + V0_OFFSET + SCREEN_VTX_X
 	li  a2, %lo(VERTEX_CACHE) + V1_OFFSET + SCREEN_VTX_X
 	li  a3, %lo(VERTEX_CACHE) + V2_OFFSET + SCREEN_VTX_X
-    jal RDPQ_Triangle
-    li  s3, %lo(RDPQ_CMD_STAGING)
-
-    jal RDPQ_Send
-    li s4, %lo(RDPQ_CMD_STAGING)
-
-    lhu a0, %lo(GL_TRI_CMD)
     lh  v0, %lo(GL_TRI_CULL)
+    jal RDPQ_Triangle_Send_Async
+    lhu a0, %lo(GL_TRI_CMD)
+
 	li  a1, %lo(VERTEX_CACHE) + V2_OFFSET + SCREEN_VTX_X
 	li  a2, %lo(VERTEX_CACHE) + V3_OFFSET + SCREEN_VTX_X
 	li  a3, %lo(VERTEX_CACHE) + V0_OFFSET + SCREEN_VTX_X
-    jal RDPQ_Triangle
-    li  s3, %lo(RDPQ_CMD_STAGING)
+    lh  v0, %lo(GL_TRI_CULL)
+    jal RDPQ_Triangle_Send_Async
+    lhu a0, %lo(GL_TRI_CMD)
 
-    jal RDPQ_Send
-    li s4, %lo(RDPQ_CMD_STAGING)
+    jal RDPQ_Triangle_Send_End
+    nop
 
+RDPQ_Triangle_Cull:
+RDPQ_Triangle_Clip:
 	j RSPQ_Loop
 	nop
 .endfunc
