@@ -32,6 +32,13 @@
 #define V2_OFFSET 2 * SCREEN_VTX_SIZE
 #define V3_OFFSET 3 * SCREEN_VTX_SIZE
 
+.macro compressClipCodes
+	andi t2, t0, 0x707 // Isolate X/Y/Z clipping flags
+	srl  t1, t2, 5     // Shift hi flags to be aligned next to lo flags
+	andi t2, t2, 0x7   // Isolate lo clip flags
+	or   t2, t1        // Merge clip flags (compressed to 6 bits)
+.endm
+
 .data
 
     RSPQ_BeginOverlayHeader
@@ -158,6 +165,11 @@ GPUCmd_MatrixLoad:
 #undef dst
     .endfunc
 
+// these persist across more than one function
+#define vviewscale   $v18
+#define vviewoff     $v19
+#define vguardscale  $v20
+
     ################################################################
     # GL_CalcScreenSpace
     #
@@ -174,8 +186,6 @@ GL_CalcScreenSpace:
     #define vcspos_i     $v03
     #define vinvw_f      $v23
     #define vinvw_i      $v24
-    #define vviewscale   $v25
-    #define vviewoff     $v26
     #define vscreenpos_i $v27
     #define vscreenpos_f $v28
     #define v___         $v29
@@ -186,11 +196,6 @@ GL_CalcScreenSpace:
     vrcph vinvw_i.w, vcspos_i.w
     vrcpl vinvw_f.w, vcspos_f.w
     vrcph vinvw_i.w, vzero.e0
-
-    # Calculate screenspace coords
-    li t0, %lo(GL_VIEWPORT_SCALE)
-    ldv vviewscale, 0,t0
-    ldv vviewoff,   8,t0
 
     vmudl v___,         vcspos_f, vinvw_f.w
     vmadm v___,         vcspos_i, vinvw_f.w
@@ -214,8 +219,6 @@ GL_CalcScreenSpace:
     #undef vcspos_i
     #undef vinvw_f
     #undef vinvw_i
-    #undef vviewscale
-    #undef vviewoff
     #undef vscreenpos_i
     #undef vscreenpos_f
     #undef v___
@@ -242,20 +245,14 @@ GL_CalcClipCodes:
     #define v___         $v29
     #define w            e3
 
-    li t0, %lo(CLIP_CODE_FACTORS)
-    ldv vguard_i,  0,t0
-
-    vmudn vguard_f, vcspos_f, vguard_i
-    vmadh vguard_i, vcspos_i, vguard_i
+    vmudn vguard_f, vcspos_f, vguardscale
+    vmadh vguard_i, vcspos_i, vguardscale
     
     vch v___, vguard_i, vguard_i.w
     vcl v___, vguard_f, vguard_f.w
 
     cfc2 t0, COP2_CTRL_VCC
-    andi t2, t0, 0x707 // Isolate X/Y/Z clipping flags
-    srl  t1, t2, 5     // Shift hi flags to be aligned next to lo flags
-    andi t2, t2, 0x7   // Isolate lo clip flags
-    or   t2, t1        // Merge clip flags (compressed to 6 bits)
+    compressClipCodes
     jr ra
     sb t2,  SCREEN_VTX_CLIP_CODE(dst)
 
@@ -273,39 +270,100 @@ GL_CalcClipCodes:
     # GL_TnL
     #
     # Args:
+    #   s2 = address of the vertex in DMEM (usually within VERTEX_CACHE)
     #   s3 = address of the vertex in DMEM (usually within VERTEX_CACHE)
     #
     ################################################################
-    .func GL_TnL
+.func GL_TnL
 GL_TnL:
-    #define vtx          s3
+    #define vtx1         s2
+    #define vtx2         s3
+    #define w            e3
+    #define W            e7
 
-    #define v___         $v01
+    #define v___         $v29
     #define vcspos_f     $v02
     #define vcspos_i     $v03
-    move ra2, ra
 
-    ldv vcspos_f, SCREEN_VTX_CS_POSf,vtx
-    jal GL_CalcScreenSpace
-    ldv vcspos_i, SCREEN_VTX_CS_POSi,vtx
+    #define vinvw_f      $v23
+    #define vinvw_i      $v24
+    #define vguard_f     $v25
+    #define vguard_i     $v26
+    #define vscreenpos_i $v27
+    #define vscreenpos_f $v28
 
-    j GL_CalcClipCodes
-    move ra, ra2
+    ldv vcspos_i.e0, SCREEN_VTX_CS_POSi,vtx1
+    ldv vcspos_i.e4, SCREEN_VTX_CS_POSi,vtx2
+    ldv vcspos_f.e0, SCREEN_VTX_CS_POSf,vtx1
+    ldv vcspos_f.e4, SCREEN_VTX_CS_POSf,vtx2
 
+    # Calculate 32-bit inverse W
+    vrcph vinvw_i.w, vcspos_i.w
+    vrcpl vinvw_f.w, vcspos_f.w
+    vrcph vinvw_i.w, vzero.e0
+
+    vmudn vguard_f, vcspos_f, vguardscale
+    vmadh vguard_i, vcspos_i, vguardscale
+
+    # Calculate 32-bit inverse W
+    vrcph vinvw_i.W, vcspos_i.W
+    vrcpl vinvw_f.W, vcspos_f.W
+    vrcph vinvw_i.W, vzero.e0
+
+    vmudl v___,         vcspos_f, vinvw_f.wwwwWWWW
+    vmadm v___,         vcspos_i, vinvw_f.wwwwWWWW
+    vmadn vscreenpos_f, vcspos_f, vinvw_i.wwwwWWWW
+    vmadh vscreenpos_i, vcspos_i, vinvw_i.wwwwWWWW
+    
+    vch v___, vguard_i, vguard_i.wwwwWWWW
+    vcl v___, vguard_f, vguard_f.wwwwWWWW
+
+    vmudn vscreenpos_f, vscreenpos_f, vviewscale
+    vmadh vscreenpos_i, vscreenpos_i, vviewscale
+    vadd  vscreenpos_i, vviewoff
+
+    sdv vscreenpos_i.e0, SCREEN_VTX_X     ,vtx1
+    ssv vcspos_i.w,      SCREEN_VTX_W+0   ,vtx1
+    ssv vcspos_f.w,      SCREEN_VTX_W+2   ,vtx1
+    ssv vinvw_i.w,       SCREEN_VTX_INVW+0,vtx1
+    ssv vinvw_f.w,       SCREEN_VTX_INVW+2,vtx1
+    sb zero,             SCREEN_VTX_PADDING(vtx1)
+
+    sdv vscreenpos_i.e4, SCREEN_VTX_X     ,vtx2
+    ssv vcspos_i.W,      SCREEN_VTX_W+0   ,vtx2
+    ssv vcspos_f.W,      SCREEN_VTX_W+2   ,vtx2
+    ssv vinvw_i.W,       SCREEN_VTX_INVW+0,vtx2
+    ssv vinvw_f.W,       SCREEN_VTX_INVW+2,vtx2
+    sb zero,             SCREEN_VTX_PADDING(vtx2)
+
+    cfc2 t0, COP2_CTRL_VCC
+    compressClipCodes
+    sb t2,  SCREEN_VTX_CLIP_CODE(vtx1)
+
+	srl  t0, t0, 4
+    compressClipCodes
+    jr ra
+    sb t2,  SCREEN_VTX_CLIP_CODE(vtx2)
+
+    #undef vinvw_f
+    #undef vinvw_i
+    #undef vscreenpos_i
+    #undef vscreenpos_f
+
+    #undef vguard_i
+    #undef vguard_f
     #undef vcspos_f
     #undef vcspos_i
 
-    #undef vtx
-
+    #undef vtx1
+    #undef vtx2
     #undef v___
-    #undef vrgba
-    #undef s
-
-    .endfunc
+    #undef w
+.endfunc
 
 
     .align 3
-    .func GPUCmd_DrawQuad
+.func GPUCmd_DrawQuad
 GPUCmd_DrawQuad:
     #define vtx_ptr     a0
     #define mtx_ptr     s0
@@ -427,9 +485,9 @@ GPUCmd_DrawQuad:
     vmadl vcspos_f, vcspos_f, K2048
 
     // Scale texcoord by texsize and subtract offset (to correct for bilinear sampling if active)
-	vmudn vst_f, vtex,   vtexsize # ACC  = vtex * vtexsize, VST_F = ACC & 0xFFFF
+	vmudn vst_f, vtex,   vtexsize // ACC  = vtex * vtexsize, VST_F = ACC & 0xFFFF
     #vmadn vst_f,vtexoffset, K1
-	vmadh vst_i, vzero, vzero     # ACC += zero * zero,    VST_I = ACC >> 16
+	vmadh vst_i, vzero, vzero     // ACC += zero * zero,     VST_I = ACC >> 16
 
     slv vcol.e4, SCREEN_VTX_RGBA + V2_OFFSET, vtx_ptr
     slv vcol.e6, SCREEN_VTX_RGBA + V3_OFFSET, vtx_ptr
@@ -490,12 +548,22 @@ GPUCmd_DrawQuad:
     #undef v___ 
     #undef vtex   
 
-    jal GL_TnL
-    li s3, %lo(VERTEX_CACHE) + V0_OFFSET
+    // Load viewport factors
+    li t0, %lo(GL_VIEWPORT_SCALE)
+    ldv vviewscale.e0, 0, t0
+    ldv vviewoff.e0,   8, t0
+    ldv vviewscale.e4, 0, t0
+    ldv vviewoff.e4,   8, t0
+
+    li t0, %lo(CLIP_CODE_FACTORS)
+    ldv vguardscale.e0, 0, t0
+    ldv vguardscale.e4, 0, t0
+
+    li s2, %lo(VERTEX_CACHE) + V0_OFFSET
     jal GL_TnL
     li s3, %lo(VERTEX_CACHE) + V1_OFFSET
-    jal GL_TnL
-    li s3, %lo(VERTEX_CACHE) + V2_OFFSET
+
+    li s2, %lo(VERTEX_CACHE) + V2_OFFSET
     jal GL_TnL
     li s3, %lo(VERTEX_CACHE) + V3_OFFSET
 

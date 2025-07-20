@@ -78,6 +78,10 @@ GL_ClipTriangle:
     #define voff1           $v15
     #define vcache0         $v16
     #define vcache1         $v17
+	// v18,v19 - reserved for viewport
+	// v20,v21 - reserved for vguard
+    #define vguard_f        $v27
+    #define vguard_i        $v28
     #define v__             $v29
 
     move ra2, ra
@@ -283,8 +287,18 @@ gl_clip_no_swap:
     sdv vint_i.e0,  SCREEN_VTX_CS_POSi,intersection
     sdv vint_f.e0,  SCREEN_VTX_CS_POSf,intersection
     suv vattr0.e0,  SCREEN_VTX_RGBA   ,intersection
-    jal GL_CalcClipCodes
     slv vattr0.e4,  SCREEN_VTX_S_T    ,intersection
+
+	# Update clip flags
+	vmudn vguard_f, vint_f, vguardscale // vint_f is vcspos_f
+    vmadh vguard_i, vint_i, vguardscale // vint_i is vcspos_i
+    
+    vch v__, vguard_i, vguard_i.e3 // w
+    vcl v__, vguard_f, vguard_f.e3 // w
+
+    cfc2 t0, COP2_CTRL_VCC
+    compressClipCodes
+    sb t2, SCREEN_VTX_CLIP_CODE(intersection)
 
     # Add intersection to the output list
     add t0, out_list, out_count
@@ -379,5 +393,7 @@ gl_clip_return:
     #undef vattr0
     #undef vattr1
     #undef v__
+    #undef vguard_i
+    #undef vguard_f
 
     .endfunc
