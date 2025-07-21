@@ -356,7 +356,7 @@ struct VertexBuffer {
 };
 
 static struct VertexBuffer* gfx_vb;
-static int vb_size;
+static int vb_count, vb_fmt;
 
 static void VB_ClearCache(struct VertexBuffer* vb) {
 	for (int i = 0; i < MAX_CACHED_CALLS; i++)
@@ -430,13 +430,23 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
+	vb_count = count;
+	vb_fmt   = fmt;
 	return ((struct VertexBuffer*)vb)->vertices;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
 	VB_ClearCache(vb); // data may have changed
 	gfx_vb = vb;
+
+	void* ptr = ((struct VertexBuffer*)vb)->vertices;
+	if (vb_fmt == VERTEX_FORMAT_COLOURED) {
+		convert_coloured_vertices(ptr, vb_count);
+		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+	} else {
+		convert_textured_vertices(ptr, vb_count);
+		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+	}
 }
 
 

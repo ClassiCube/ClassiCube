@@ -144,38 +144,87 @@ static inline void put_word(rspq_write_t* s, uint16_t v1, uint16_t v2)
 	rspq_write_arg(s, v2 | (v1 << 16));
 }
 
-static void upload_vertex(rspq_write_t* s, uint32_t index)
-{
-	char* ptr = gpu_pointer + index * gpu_stride;
 
-	float* vtx = (float*)(ptr + 0);
-	put_word(s, vtx[0] * (1<<VTX_SHIFT),
-				vtx[1] * (1<<VTX_SHIFT));
-	put_word(s, vtx[2] * (1<<VTX_SHIFT),
-				1.0f   * (1<<VTX_SHIFT));
 
-	uint32_t* col = (uint32_t*)(ptr + 12);
-	rspq_write_arg(s, *col);
 
-	if (gpu_texturing) {
-		float* tex = (float*)(ptr + 16);
-		put_word(s, tex[0] * (1<<TEX_SHIFT),
-					tex[1] * (1<<TEX_SHIFT));
-	} else {
-		put_word(s, 0,
-					0);
-    }
+struct rsp_vertex {
+	uint16_t x, y;
+	uint16_t z, w; // w ignored
+	uint32_t rgba;
+	uint16_t u, v;
+};
+
+#define FLT_EXPONENT_BIAS  127
+#define FLT_EXPONENT_SHIFT 23
+#define FLT_EXPONENT_MASK  0x7F800000
+
+static int F2I(float value, int scale) {
+	union IntAndFloat raw;
+	int e;
+	raw.f = value;
+
+	e  = (raw.i & FLT_EXPONENT_MASK) >> FLT_EXPONENT_SHIFT;
+
+	// Ignore denormal, infinity, or large exponents
+	if (e <= 0 || e >= 160) return 0;
+	
+	return value * scale;
 }
+
+static void convert_textured_vertices(GfxResourceID vb, int count) {
+	struct VertexTextured* src = (struct VertexTextured*)vb;
+	struct rsp_vertex* dst     = (struct rsp_vertex*)vb;
+	
+	for (int i = 0; i < count; i++, src++, dst++)
+	{
+		float x = src->x, y = src->y, z = src->z;
+		float u = src->U, v = src->V;
+		PackedCol rgba = src->Col;
+	
+		dst->x = F2I(x, 1<<VTX_SHIFT);
+		dst->y = F2I(y, 1<<VTX_SHIFT);
+		dst->z = F2I(z, 1<<VTX_SHIFT);
+
+		dst->u = F2I(u, 1<<TEX_SHIFT);
+		dst->v = F2I(v, 1<<TEX_SHIFT);
+		dst->rgba = rgba;
+	}
+}
+
+static void convert_coloured_vertices(GfxResourceID vb, int count) {
+	struct VertexColoured* src = (struct VertexColoured*)vb;
+	struct rsp_vertex* dst     = (struct rsp_vertex*)vb;
+	
+	for (int i = 0; i < count; i++, src++, dst++)
+	{
+		float x = src->x, y = src->y, z = src->z;
+		PackedCol rgba = src->Col;
+	
+		dst->x = F2I(x, 1<<VTX_SHIFT);
+		dst->y = F2I(y, 1<<VTX_SHIFT);
+		dst->z = F2I(z, 1<<VTX_SHIFT);
+
+		dst->u = 0;
+		dst->v = 0;
+		dst->rgba = rgba;
+	}
+}
+
 
 static void gpuDrawArrays(uint32_t first, uint32_t count)
 {
+	uint32_t* ptr = (uint32_t*)(gpu_pointer + first * sizeof(struct rsp_vertex));
     for (uint32_t i = 0; i < count; i += 4)
     {
     	rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_DRAW_QUAD, 17);
     	rspq_write_arg(&s, 0); // padding
+
        	for (uint32_t j = 0; j < 4; j++)
 		{
-        	upload_vertex(&s, first + i + j);
+			rspq_write_arg(&s, *ptr++);
+			rspq_write_arg(&s, *ptr++);
+			rspq_write_arg(&s, *ptr++);
+			rspq_write_arg(&s, *ptr++);
 		}
     	rspq_write_end(&s);
     }

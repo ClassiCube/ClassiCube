@@ -18,6 +18,7 @@ CACHE_OFFSETS: .half 2,4,6,8, 10,12,14,16, 18,20
 
     .section .bss.gl_clipping
 
+    .align 4
 CLIP_CACHE: .dcb.b     SCREEN_VTX_SIZE * CLIPPING_CACHE_SIZE
 CLIP_CACHE_END:
 
@@ -50,10 +51,10 @@ GL_ClipTriangle:
     #define out_list        s1
     #define plane           s2
     #define intersection    s3
-    #define cur_ptr         s4
-    #define prev_ptr        s5
-    #define cur_vtx         s6
-    #define prev_vtx        s7
+    #define cur_ptr         a0
+    #define prev_ptr        a1
+    #define cur_vtx         a2
+    #define prev_vtx        a3
     #define p0              k0
     #define p1              k1
     #define vtx1            a1
@@ -98,6 +99,11 @@ GL_ClipTriangle:
     sh vtx3, 4(out_list)
     sh vtx4, 6(out_list)
     li out_count, 4*2
+
+#undef vtx1
+#undef vtx2
+#undef vtx3
+#undef vtx4
 
     li plane, %lo(CLIP_PLANES)
     li plane_flag, 1
@@ -377,9 +383,6 @@ gl_clip_return:
     #undef prev_vtx
     #undef p0
     #undef p1
-    #undef vtx1
-    #undef vtx2
-    #undef vtx3
     #undef vplane
     #undef vpos_i
     #undef vpos_f

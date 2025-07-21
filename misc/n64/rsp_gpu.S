@@ -123,9 +123,8 @@ GPUCmd_PushRDP:
 
     .func GPUCmd_MatrixLoad
 GPUCmd_MatrixLoad:
-    #define src         s6
-    #define dst         s7
-
+    #define src        t0
+    #define dst        t1
     #define vmat0_i  $v02
     #define vmat1_i  $v03
     #define vmat2_i  $v04
@@ -239,14 +238,14 @@ GL_CalcScreenSpace:
     # GL_TnL
     #
     # Args:
-    #   s2 = address of the vertex in DMEM (usually within VERTEX_CACHE)
-    #   s3 = address of the vertex in DMEM (usually within VERTEX_CACHE)
+    #   a1 = address of the vertex in DMEM (usually within VERTEX_CACHE)
+    #   a2 = address of the vertex in DMEM (usually within VERTEX_CACHE)
     #
     ################################################################
 .func GL_TnL
 GL_TnL:
-    #define vtx1         s2
-    #define vtx2         s3
+    #define vtx1         a1
+    #define vtx2         a2
     #define w            e3
     #define W            e7
 
@@ -335,10 +334,6 @@ GL_TnL:
     .align 3
 .func GPUCmd_DrawQuad
 GPUCmd_DrawQuad:
-    #define vtx_ptr     a0
-    #define mtx_ptr     s0
-    #define src_ptr     s4
-
     #define v___        $v01
 
     #define vst_i       $v12
@@ -366,7 +361,9 @@ GPUCmd_DrawQuad:
 	#define v1_cflags   t2
 	#define v2_cflags   t3
 	#define v3_cflags   t4
-	// t5 is used by GL_ClipTriangle
+    #define mtx_ptr     t5 // t5 is also used by GL_ClipTriangle
+    #define vtx_ptr     t6 
+    #define src_ptr     t7
 
     addi src_ptr, rspq_dmem_buf_ptr, %lo(RSPQ_DMEM_BUFFER) - 64
     li vtx_ptr,   %lo(VERTEX_CACHE)
@@ -383,6 +380,7 @@ GPUCmd_DrawQuad:
     lqv vmtx1_f, 0x50,mtx_ptr
     lqv vmtx2_f, 0x60,mtx_ptr
     lqv vmtx3_f, 0x70,mtx_ptr
+	#undef mtx_ptr
 
 // ########################
 // Vertex 0 and 1 transform
@@ -407,10 +405,10 @@ GPUCmd_DrawQuad:
     vmudm vcspos_i, vcspos_i, K2048
     vmadl vcspos_f, vcspos_f, K2048
 
-    li t6, %lo(GL_STATE_TEX_SIZE)
-    lqv vtexsize,   0x00, t6
+    li tmp, %lo(GL_STATE_TEX_SIZE)
+    lqv vtexsize,   0x00, tmp
     slv vcol.e0, SCREEN_VTX_RGBA + V0_OFFSET, vtx_ptr
-    lqv vtexoffset, 0x10, t6
+    lqv vtexoffset, 0x10, tmp
     slv vcol.e2, SCREEN_VTX_RGBA + V1_OFFSET, vtx_ptr
 
     // Calculate and store clipping flags against CS.W.
@@ -529,13 +527,13 @@ GPUCmd_DrawQuad:
     ldv vguardscale.e0, 0, t0
     ldv vguardscale.e4, 0, t0
 
-    li s2, %lo(VERTEX_CACHE) + V0_OFFSET
+    li a1, %lo(VERTEX_CACHE) + V0_OFFSET
     jal GL_TnL
-    li s3, %lo(VERTEX_CACHE) + V1_OFFSET
+    li a2, %lo(VERTEX_CACHE) + V1_OFFSET
 
-    li s2, %lo(VERTEX_CACHE) + V2_OFFSET
+    li a1, %lo(VERTEX_CACHE) + V2_OFFSET
     jal GL_TnL
-    li s3, %lo(VERTEX_CACHE) + V3_OFFSET
+    li a2, %lo(VERTEX_CACHE) + V3_OFFSET
 
 // ########################
 // Guardband check
@@ -586,6 +584,7 @@ gl_draw_clipped_triangles_loop:
     move vtx1, s5
     lhu  vtx2, 2(s1)
     lhu  vtx3, 4(s1)
+	# TODO do VP transform here
 
 gl_draw_single_triangle:
     addi vtx1, SCREEN_VTX_X
