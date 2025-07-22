@@ -91,8 +91,9 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return FastAllocTempMem(count * strideSizes[fmt]);
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) {
+static cc_bool UnlockVb(GfxResourceID vb) {
 	UpdateDisplayList(ptr_to_uint(vb), tmpData, tmpFormat, tmpCount);
+	return true;
 }
 
 GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {

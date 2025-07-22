@@ -106,3 +106,5 @@ typedef cc_uintptr GLpointer;
 #define GL_COMPILE_STATUS        0x8B81
 #define GL_LINK_STATUS           0x8B82
 #define GL_INFO_LOG_LENGTH       0x8B84
+
+#define GL_OUT_OF_MEMORY         0x0505

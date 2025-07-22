@@ -419,3 +419,13 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 
 	_glScissor(x, Game.Height - h - y, w, h);
 }
+
+static cc_bool UnlockVb(GfxResourceID vb);
+
+void Gfx_UnlockVb(GfxResourceID vb) {
+	for (;;) {
+		if (UnlockVb(vb)) return;
+		
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (updating static VB)");
+	}
+}
