@@ -18,7 +18,6 @@ CACHE_OFFSETS: .half 2,4,6,8, 10,12,14,16, 18,20
 
     .section .bss.gl_clipping
 
-    .align 4
 CLIP_CACHE: .dcb.b     SCREEN_VTX_SIZE * CLIPPING_CACHE_SIZE
 CLIP_CACHE_END:
 
@@ -342,32 +341,11 @@ gl_clip_plane_loop_end:
     blt plane_flag, (1<<CLIPPING_PLANE_COUNT), gl_clip_plane_loop
     addi plane, CLIPPING_PLANE_SIZE
 
-    #define cache_vtx s3
-    #define cache_end s5
-
-    # Calculate screen space values for new vertices (in the clip cache)
-    # TODO: maybe iterate over out_list instead
-    li cache_vtx, %lo(CLIP_CACHE)
-    li cache_end, %lo(CLIP_CACHE_END) - SCREEN_VTX_SIZE
-gl_clip_finalize_loop:
-    lbu t0, SCREEN_VTX_PADDING(cache_vtx)
-    neg t0
-
-    # Only calculate screen space values if the vertex is actually used
-    ldv vint_i,  SCREEN_VTX_CS_POSi,cache_vtx
-    bltzal t0, GL_CalcScreenSpace
-    ldv vint_f,  SCREEN_VTX_CS_POSf,cache_vtx
-
-    blt cache_vtx, cache_end, gl_clip_finalize_loop
-    addi cache_vtx, SCREEN_VTX_SIZE
-
 gl_clip_return:
     # Done!
     jr ra2
     add s2, out_list, out_count
 
-    #undef cache_vtx
-    #undef cache_end
     #undef clip_flags
     #undef plane_flag
     #undef in_count

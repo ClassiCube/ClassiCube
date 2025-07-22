@@ -166,7 +166,7 @@ static int F2I(float value, int scale) {
 	e  = (raw.i & FLT_EXPONENT_MASK) >> FLT_EXPONENT_SHIFT;
 
 	// Ignore denormal, infinity, or large exponents
-	if (e <= 0 || e >= 160) return 0;
+	if (e <= 0 || e >= 146) return 0;
 	
 	return value * scale;
 }
