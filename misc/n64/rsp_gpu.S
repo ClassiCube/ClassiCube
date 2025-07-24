@@ -123,8 +123,8 @@ GPUCmd_PushRDP:
 
     .func GPUCmd_MatrixLoad
 GPUCmd_MatrixLoad:
-    #define src         s6
-    #define dst         s7
+    #define src        t4
+    #define dst        t5
 
     #define vmat0_i  $v02
     #define vmat1_i  $v03
@@ -348,8 +348,8 @@ GL_TnL:
 .func GPUCmd_DrawQuad
 GPUCmd_DrawQuad:
     #define vtx_ptr     a0
-    #define mtx_ptr     s2
-    #define src_ptr     s3
+    #define mtx_ptr     v0
+    #define src_ptr     v1
 
     #define v___        $v01
 

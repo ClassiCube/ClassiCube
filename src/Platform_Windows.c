@@ -199,8 +199,16 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
-static const char* ExceptionDescribe(cc_uint32 code) {
-	switch (code) {
+/* In EXCEPTION_ACCESS_VIOLATION case, arg 1 is access type and arg 2 is virtual address */
+/* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record */
+#define IsNullReadException(r)  (r->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && r->ExceptionInformation[1] == 0 && r->ExceptionInformation[0] == 0) 
+#define IsNullWriteException(r) (r->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && r->ExceptionInformation[1] == 0 && r->ExceptionInformation[0] == 1)
+
+static const char* ExceptionDescribe(struct _EXCEPTION_RECORD* rec) {
+	if (IsNullReadException(rec))  return "NULL_POINTER_READ";
+	if (IsNullWriteException(rec)) return "NULL_POINTER_WRITE";
+
+	switch (rec->ExceptionCode) {
 	case EXCEPTION_ACCESS_VIOLATION:    return "ACCESS_VIOLATION";
 	case EXCEPTION_ILLEGAL_INSTRUCTION: return "ILLEGAL_INSTRUCTION";
 	case EXCEPTION_INT_DIVIDE_BY_ZERO:  return "DIVIDE_BY_ZERO";
@@ -210,14 +218,16 @@ static const char* ExceptionDescribe(cc_uint32 code) {
 
 static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	cc_string msg; char msgBuffer[128 + 1];
+	struct _EXCEPTION_RECORD* rec;
 	const char* desc;
 	cc_uint32 code;
 	cc_uintptr addr;
 	DWORD i, numArgs;
 
-	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
-	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
-	desc = ExceptionDescribe(code);
+	rec  = info->ExceptionRecord;
+	code = (cc_uint32)rec->ExceptionCode;
+	addr = (cc_uintptr)rec->ExceptionAddress;
+	desc = ExceptionDescribe(rec);
 
 	String_InitArray_NT(msg, msgBuffer);
 	if (desc) {
@@ -226,13 +236,15 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 		String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
 	}
 
-	numArgs = info->ExceptionRecord->NumberParameters;
-	if (numArgs) {
+	numArgs = rec->NumberParameters;
+	if (IsNullReadException(rec) || IsNullWriteException(rec)) {
+		/* Pointless to log exception arguments in this case */
+	} else if (numArgs) {
 		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
 		String_AppendConst(&msg, " [");
 
 		for (i = 0; i < numArgs; i++) {
-			String_Format1(&msg, "0x%x,", &info->ExceptionRecord->ExceptionInformation[i]);
+			String_Format1(&msg, "0x%x,", &rec->ExceptionInformation[i]);
 		}
 		String_Append(&msg, ']');
 	}

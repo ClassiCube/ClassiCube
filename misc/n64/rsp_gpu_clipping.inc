@@ -46,7 +46,7 @@ GL_ClipTriangle:
     #define plane_flag      t6
     #define in_count        t7
     #define in_end          t8
-    #define in_list         s0
+    #define in_list         v0
     #define out_list        s1
     #define plane           s2
     #define intersection    s3
@@ -147,11 +147,11 @@ gl_clip_edge_loop:
     #define prev_flag t4
 
     # Check which side of the plane the two vertices are on
-    lhu cur_vtx, 0(cur_ptr)
-    lhu prev_vtx, 0(prev_ptr)
-    lbu cur_flag, SCREEN_VTX_CLIP_CODE(cur_vtx)
+    lhu cur_vtx,   0(cur_ptr)
+    lhu prev_vtx,  0(prev_ptr)
+    lbu cur_flag,  SCREEN_VTX_CLIP_CODE(cur_vtx)
     lbu prev_flag, SCREEN_VTX_CLIP_CODE(prev_vtx)
-    and cur_flag, plane_flag
+    and cur_flag,  plane_flag
     and prev_flag, plane_flag
 
     # If they are on opposite sides, there is an intersection
