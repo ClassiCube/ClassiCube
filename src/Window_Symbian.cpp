@@ -485,35 +485,41 @@ void CCAppUi::HandleCommandL(TInt aCommand) {
 
 // CCContainer implementation
 TInt CCContainer::LoopCallBack(TAny*) {
-	if (!WindowInfo.Exists) {
-		Window_RequestClose();
-		container->iAppUi->Exit();
-		return EFalse;
-	}
-	
-	// launcher -> game -> launcher -> ... loop
-	launcher:
-	if (!gameRunning) {
-		if (Launcher_Tick()) {
-			return ETrue;
+	cc_bool run = false;
+	for (;;) {
+		if (!WindowInfo.Exists) {
+			Window_RequestClose();
+			container->iAppUi->Exit();
+			return EFalse;
 		}
-		Launcher_Finish();
-
-		// run game
-		gameRunning = true;
-		Game_Setup();
-		container->RestartTimerL(100);
+		
+		if (run) {
+			run = false;
+			ProcessProgramArgs(0, 0);
+			Game_Setup();
+			gameRunning = true;
+			container->RestartTimerL(100);
+		}
+		
+		if (!gameRunning) {
+			if (Launcher_Tick()) break;
+			Launcher_Finish();
+			run = true;
+			continue;
+		}
+		
+		if (!Game_Running) {
+			gameRunning = false;
+			Game_Free();
+//			Launcher_Setup();
+//			container->RestartTimerL(10000);
+			WindowInfo.Exists = false;
+			continue;
+		}
+		
+		Game_RenderFrame();
+		break;
 	}
-	
-	if (!Game_Running) {
-		// return to launcher
-		gameRunning = false;
-		Game_Free();
-		Launcher_Setup();
-		container->RestartTimerL(10000);
-		goto launcher;
-	}
-	Game_RenderFrame();
 	return ETrue;
 }
 
