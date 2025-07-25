@@ -853,29 +853,29 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static cc_key_flags LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
+static cc_ipt_flags LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
-	if (Gui.InputGrab) return KEY_NONE;
+	if (Gui.InputGrab) return IPT_NONE;
 	
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn(p);
-		return KEY_HANDLED;
+		return IPT_HANDLED;
 	} else if (!p->_warnedRespawn) {
 		p->_warnedRespawn = true;
 		if (hackPermMsgs) Chat_AddRaw("&cRespawning is currently disabled");
 	}
-	return KEY_NONE;
+	return IPT_NONE;
 }
 
-static cc_key_flags LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
+static cc_ipt_flags LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
-	if (Gui.InputGrab) return KEY_NONE;
+	if (Gui.InputGrab) return IPT_NONE;
 	
 	if (p->Hacks.CanRespawn) {
 
 		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
 			Chat_AddRaw("&cCannot set spawn midair when noclip is disabled");
-			return KEY_NONE;
+			return IPT_NONE;
 		}
 
 		/* Spawn is normally centered to match vanilla Minecraft classic */
@@ -897,44 +897,44 @@ static cc_key_flags LocalPlayer_HandleSetSpawn(int key, struct InputDevice* devi
 	return LocalPlayer_HandleRespawn(key, device);
 }
 
-static cc_key_flags LocalPlayer_HandleFly(int key, struct InputDevice* device) {
+static cc_ipt_flags LocalPlayer_HandleFly(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
-	if (Gui.InputGrab) return KEY_NONE;
+	if (Gui.InputGrab) return IPT_NONE;
 
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
-		return KEY_HANDLED;
+		return IPT_HANDLED;
 	} else if (!p->_warnedFly) {
 		p->_warnedFly = true;
 		if (hackPermMsgs) Chat_AddRaw("&cFlying is currently disabled");
 	}
-	return KEY_NONE;
+	return IPT_NONE;
 }
 
-static cc_key_flags LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
+static cc_ipt_flags LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	p->Hacks._noclipping = true;
-	if (Gui.InputGrab) return KEY_NONE;
+	if (Gui.InputGrab) return IPT_NONE;
 
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
-		if (p->Hacks.WOMStyleHacks) return KEY_HANDLED; /* don't handle this here */
+		if (p->Hacks.WOMStyleHacks) return IPT_HANDLED; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.y = 0;
 
 		HacksComp_SetNoclip(&p->Hacks, !p->Hacks.Noclip);
-		return KEY_HANDLED;
+		return IPT_HANDLED;
 	} else if (!p->_warnedNoclip) {
 		p->_warnedNoclip = true;
 		if (hackPermMsgs) Chat_AddRaw("&cNoclip is currently disabled");
 	}
-	return KEY_NONE;
+	return IPT_NONE;
 }
 
-static cc_key_flags LocalPlayer_HandleJump(int key, struct InputDevice* device) {
+static cc_ipt_flags LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
-	if (Gui.InputGrab) return KEY_NONE;
+	if (Gui.InputGrab) return IPT_NONE;
 	physics->Jumping = true;
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
@@ -945,28 +945,28 @@ static cc_key_flags LocalPlayer_HandleJump(int key, struct InputDevice* device) 
 			PhysicsComp_DoNormalJump(physics);
 			physics->MultiJumps++;
 		}
-		return KEY_HANDLED;
+		return IPT_HANDLED;
 	}
-	return KEY_NONE;
+	return IPT_NONE;
 }
 
 
-static cc_key_flags LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
+static cc_ipt_flags LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
 	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
-	if (Gui.InputGrab) return KEY_NONE;
+	if (Gui.InputGrab) return IPT_NONE;
 
 	hacks->HalfSpeeding = (!touch || !hacks->HalfSpeeding) && hacks->Enabled;
-	return KEY_HANDLED;
+	return IPT_HANDLED;
 }
 
-static cc_key_flags LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
+static cc_ipt_flags LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
 	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
-	if (Gui.InputGrab) return KEY_NONE;
+	if (Gui.InputGrab) return IPT_NONE;
 
 	hacks->Speeding = (!touch || !hacks->Speeding) && hacks->Enabled;
-	return KEY_HANDLED;
+	return IPT_HANDLED;
 }
 
 static void LocalPlayer_ReleaseHalfSpeed(int key, struct InputDevice* device) {
