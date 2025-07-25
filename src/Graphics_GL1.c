@@ -440,7 +440,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 #if defined CC_BUILD_SYMBIAN
 	if (String_ContainsConst(&renderer, "SGX")) {
 	} else if (String_ContainsConst(&renderer, "MBX")) {
-		Gfx.Limitations |= GFX_LIMIT_VERTEX_ONLY_FOG;
+		Gfx.Limitations |= GFX_LIMIT_MINIMAL;
 		mbx = true;
 	} else if (!String_ContainsConst(&renderer, "HW")) {
 		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
