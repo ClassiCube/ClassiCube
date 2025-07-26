@@ -321,17 +321,20 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
-static CC_INLINE void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
-	cc_uint8* src_ = (cc_uint8*)src->scan0;
+static CC_INLINE void CopyPixels(void* dst,       int dstStride, 
+								const void* src,  int srcStride,
+								int pixelsPerRow, int rows) {
+	cc_uint8* src_ = (cc_uint8*)src;
 	cc_uint8* dst_ = (cc_uint8*)dst;
 	int y;
 
 	if (srcStride == dstStride) {
-		Mem_Copy(dst_, src_, Bitmap_DataSize(src->width, src->height));
+		Mem_Copy(dst_, src_, Bitmap_DataSize(pixelsPerRow, rows));
 	} else {
 		/* Have to copy scanline by scanline */
-		for (y = 0; y < src->height; y++) {
-			Mem_Copy(dst_, src_, src->width * BITMAPCOLOR_SIZE);
+		for (y = 0; y < rows; y++) 
+		{
+			Mem_Copy(dst_, src_, pixelsPerRow * BITMAPCOLOR_SIZE);
 			src_ += srcStride;
 			dst_ += dstStride;
 		}
@@ -429,9 +432,9 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 }
 
 GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	if (Gfx.SupportsNonPowTwoTextures && (flags & TEXTURE_FLAG_NONPOW2)) {
+	if (Gfx.NonPowTwoTexturesSupport && (flags & TEXTURE_FLAG_NONPOW2)) {
 		/* Texture is being deliberately created and can be successfully created */
-		/* with non power of two dimensions. Typically used for UI textures */
+		/* with non power of two dimensions. Typically only used for UI textures */
 	} else if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Process_Abort("Textures must have power of two dimensions");
 	}

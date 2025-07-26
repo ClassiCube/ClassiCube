@@ -19,11 +19,14 @@ jobs:
       image: ijacquez/yaul:1.0.10
     steps:
       - uses: actions/checkout@v4
-      - name: Compile Saturn build
-        id: compile
+      - name: Install prerequisites
         run: |
           apt-get update
           apt-get -y install curl
+
+      - name: Compile Saturn build
+        id: compile
+        run: |
           make saturn
 
       - uses: ./.github/actions/notify_failure

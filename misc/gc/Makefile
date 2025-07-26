@@ -1,102 +1,94 @@
-#---------------------------------------------------------------------------------
-# Clear the implicit built in rules
-#---------------------------------------------------------------------------------
+ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
+endif
+
 .SUFFIXES:
-.SECONDARY:
 
-ifeq ($(strip $(DEVKITPPC)),)
-$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
-endif
-
-include $(DEVKITPPC)/gamecube_rules
 
 #---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# INCLUDES is a list of directories containing extra header files
+# Configurable options
 #---------------------------------------------------------------------------------
-TARGET		:=	ClassiCube-gc
-BUILD		:=	build-gc
-SOURCES		:= src third_party/bearssl/src
-INCLUDES	:= third_party/bearssl/inc
+# Name of the final output
+TARGET 		= ClassiCube-gc
+# List of directories containing source code
+SOURCE_DIRS	= src src/gcwii third_party/bearssl
+# Directory where object files are placed
+BUILD_DIR	= build/gc
+
 
 #---------------------------------------------------------------------------------
-# options for code generation
+# Compilable files
 #---------------------------------------------------------------------------------
+S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
-CFLAGS		= -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-CXXFLAGS	= $(CFLAGS)
-LDFLAGS		= -g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
 
-#---------------------------------------------------------------------------------
-# any extra libraries we wish to link with the project
-#---------------------------------------------------------------------------------
-LIBS	:=	-lasnd -lbba -lfat -logc -lm
-
-#---------------------------------------------------------------------------------
-# no real need to edit anything past this point unless you need to add additional
-# rules for different file extensions
-#---------------------------------------------------------------------------------
-ifneq ($(BUILD),$(notdir $(CURDIR)))
-#---------------------------------------------------------------------------------
-
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
-					
-
-export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 #---------------------------------------------------------------------------------
-# automatically build a list of object files for our project
+# Code generation
 #---------------------------------------------------------------------------------
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
 
-export LD	:=	$(CC)
+MACHDEP = -DGEKKO -mogc -mcpu=750 -meabi -mhard-float
+CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc/include
 
-export OFILES	:=	$(CFILES:.c=.o) $(sFILES:.s=.o) $(SFILES:.S=.o)
+LDFLAGS	= -g $(MACHDEP) -L$(DEVKITPRO)/libogc/lib/cube
+# Additional libraries to link against
+LIBS	= -lasnd -lbba -lfat -logc -lm
 
-#---------------------------------------------------------------------------------
-# build a list of include paths
-#---------------------------------------------------------------------------------
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-					-I$(CURDIR)/$(BUILD) \
-					-I$(LIBOGC_INC)
 
 #---------------------------------------------------------------------------------
-# build a list of library paths
+# Compiler tools
 #---------------------------------------------------------------------------------
-export LIBPATHS	:=	-L$(LIBOGC_LIB)
+PREFIX	:= $(DEVKITPRO)/devkitPPC/bin/powerpc-eabi-
+PPC_AS	:= $(PREFIX)as
+PPC_CC	:= $(PREFIX)gcc
+PPC_CXX	:= $(PREFIX)g++
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-.PHONY: $(BUILD) clean
+ELF2DOL := $(DEVKITPRO)/tools/bin/elf2dol
 
-#---------------------------------------------------------------------------------
-all: $(BUILD)
-	$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/misc/gc/Makefile
-	
-$(BUILD):
-	mkdir -p $@
 
 #---------------------------------------------------------------------------------
+# Main targets
+#---------------------------------------------------------------------------------
+default: $(BUILD_DIR) $(TARGET).dol
+
 clean:
-	echo clean ...
-	rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	rm $(TARGET).dol $(TARGET).elf $(OBJS)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
 
 #---------------------------------------------------------------------------------
-else
+# Executable generation
+#---------------------------------------------------------------------------------
+$(TARGET).elf: $(OBJS)
+	$(PPC_CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+	
+$(TARGET).dol: $(TARGET).elf
+	$(ELF2DOL) $< $@
+
 
 #---------------------------------------------------------------------------------
-# main targets
+# Object generation
 #---------------------------------------------------------------------------------
-$(OUTPUT).dol: $(OUTPUT).elf
-$(OUTPUT).elf: $(OFILES)
+$(BUILD_DIR)/%.o: src/%.c
+	$(PPC_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
--include $(DEPSDIR)/*.d
+$(BUILD_DIR)/%.o: src/gcwii/%.c
+	$(PPC_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
+	$(PPC_CC) $(CFLAGS) -c $< -o $@
+
 
 #---------------------------------------------------------------------------------
-endif
+# Dependency tracking
 #---------------------------------------------------------------------------------
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))

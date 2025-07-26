@@ -207,8 +207,9 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->surface.image = MEMAllocFromDefaultHeapEx(tex->surface.imageSize, tex->surface.alignment);
 	if (!tex->surface.image) { Mem_Free(tex); return NULL; }
   
-	CopyTextureData(tex->surface.image, tex->surface.pitch << 2, 
-					bmp, rowWidth * BITMAPCOLOR_SIZE);
+	CopyPixels(tex->surface.image, tex->surface.pitch << 2, 
+			   bmp->scan0,         rowWidth * BITMAPCOLOR_SIZE,
+			   bmp->width,         bmp->height);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 	return tex;
 }
@@ -217,8 +218,9 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	GX2Texture* tex = (GX2Texture*)texId;	
 	uint32_t* dst   = (uint32_t*)tex->surface.image + (y * tex->surface.pitch) + x;
 	
-	CopyTextureData(dst, tex->surface.pitch << 2, 
-					part, rowWidth * BITMAPCOLOR_SIZE);
+	CopyPixels(dst,         tex->surface.pitch << 2, 
+			   part->scan0, rowWidth * BITMAPCOLOR_SIZE,
+			   part->width, part->height);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 }
 

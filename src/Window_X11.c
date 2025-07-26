@@ -335,7 +335,6 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-#ifdef CC_BUILD_ICON
 /* See misc/x11/x11_icon_gen.cs for how to generate this file */
 #include "../misc/x11/CCIcon_X11.h"
 
@@ -346,9 +345,6 @@ static void ApplyIcon(Window win) {
 	XChangeProperty(win_display, win, net_wm_icon, xa_cardinal, 32, PropModeReplace, 
 					(unsigned char*)CCIcon_Data, CCIcon_Size);
 }
-#else
-static void ApplyIcon(Window win) { }
-#endif
 
 static XVisualInfo Select2DVisual(void) {
 	XVisualInfo info = { 0 };

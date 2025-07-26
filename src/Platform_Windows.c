@@ -17,16 +17,10 @@
 #define _UNICODE
 #endif
 #include <windows.h>
-/*
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <shellapi.h>
-#include <wincrypt.h>
-*/
-/* Compatibility versions so compiling works on older Windows SDKs */
-#include "../misc/windows/min-winsock2.h"
-#include "../misc/windows/min-shellapi.h"
-#include "../misc/windows/min-wincrypt.h"
+/* Use own minimal versions of WinAPI headers so that compiling works on older Windows SDKs */
+#include "../misc/windows/min-winsock2.h" /* #include <winsock2.h> #include <ws2tcpip.h> */
+#include "../misc/windows/min-shellapi.h" /* #include <shellapi.h> */
+#include "../misc/windows/min-wincrypt.h" /* #include <wincrypt.h> */
 #include "../misc/windows/min-kernel32.h"
 
 static HANDLE heap;
@@ -40,6 +34,34 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 const char* Platform_AppNameSuffix = "";
 cc_bool  Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags;
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "main_impl.h"
+
+/* NOTE: main_real is used for when compiling with MinGW without linking to startup files. */
+/*  Normally, the final code produced for "main" is our "main" combined with crt's main */
+/*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
+/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
+#if defined CC_NOMAIN
+int main_real(int argc, char** argv) {
+#else
+int main(int argc, char** argv) {
+#endif
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	/* If single process mode, then the loop is launcher -> game -> launcher etc */
+	do {
+		res = RunProgram(argc, argv);
+	} while (Platform_IsSingleProcess() && Window_Main.Exists);
+
+	Window_Free();
+	Process_Exit(res);
+	return res;
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -177,8 +199,16 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
-static const char* ExceptionDescribe(cc_uint32 code) {
-	switch (code) {
+/* In EXCEPTION_ACCESS_VIOLATION case, arg 1 is access type and arg 2 is virtual address */
+/* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record */
+#define IsNullReadException(r)  (r->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && r->ExceptionInformation[1] == 0 && r->ExceptionInformation[0] == 0) 
+#define IsNullWriteException(r) (r->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && r->ExceptionInformation[1] == 0 && r->ExceptionInformation[0] == 1)
+
+static const char* ExceptionDescribe(struct _EXCEPTION_RECORD* rec) {
+	if (IsNullReadException(rec))  return "NULL_POINTER_READ";
+	if (IsNullWriteException(rec)) return "NULL_POINTER_WRITE";
+
+	switch (rec->ExceptionCode) {
 	case EXCEPTION_ACCESS_VIOLATION:    return "ACCESS_VIOLATION";
 	case EXCEPTION_ILLEGAL_INSTRUCTION: return "ILLEGAL_INSTRUCTION";
 	case EXCEPTION_INT_DIVIDE_BY_ZERO:  return "DIVIDE_BY_ZERO";
@@ -188,14 +218,16 @@ static const char* ExceptionDescribe(cc_uint32 code) {
 
 static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	cc_string msg; char msgBuffer[128 + 1];
+	struct _EXCEPTION_RECORD* rec;
 	const char* desc;
 	cc_uint32 code;
 	cc_uintptr addr;
 	DWORD i, numArgs;
 
-	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
-	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
-	desc = ExceptionDescribe(code);
+	rec  = info->ExceptionRecord;
+	code = (cc_uint32)rec->ExceptionCode;
+	addr = (cc_uintptr)rec->ExceptionAddress;
+	desc = ExceptionDescribe(rec);
 
 	String_InitArray_NT(msg, msgBuffer);
 	if (desc) {
@@ -204,13 +236,15 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 		String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
 	}
 
-	numArgs = info->ExceptionRecord->NumberParameters;
-	if (numArgs) {
+	numArgs = rec->NumberParameters;
+	if (IsNullReadException(rec) || IsNullWriteException(rec)) {
+		/* Pointless to log exception arguments in this case */
+	} else if (numArgs) {
 		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
 		String_AppendConst(&msg, " [");
 
 		for (i = 0; i < numArgs; i++) {
-			String_Format1(&msg, "0x%x,", &info->ExceptionRecord->ExceptionInformation[i]);
+			String_Format1(&msg, "0x%x,", &rec->ExceptionInformation[i]);
 		}
 		String_Append(&msg, ']');
 	}

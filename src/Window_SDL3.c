@@ -49,7 +49,6 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-#ifdef CC_BUILD_ICON
 /* See misc/sdl/sdl_icon_gen.cs for how to generate this file */
 #include "../misc/sdl/CCIcon_SDL.h"
 
@@ -59,9 +58,6 @@ static void ApplyIcon(void) {
 
 	SDL_SetWindowIcon(win_handle, surface);
 }
-#else
-static void ApplyIcon(void) { }
-#endif
 
 static void DoCreateWindow(int width, int height, int flags) {
 	SDL_PropertiesID props = SDL_CreateProperties();

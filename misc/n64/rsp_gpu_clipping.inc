@@ -1,5 +1,5 @@
 #define CLIPPING_PLANE_COUNT  6
-#define CLIPPING_CACHE_SIZE   9
+#define CLIPPING_CACHE_SIZE   10
 #define CLIPPING_PLANE_SIZE   8
 
     .section .data.gl_clipping
@@ -14,7 +14,7 @@ CLIP_PLANES:
     .half 0, 0, 1, -1
 
     .align 4
-CACHE_OFFSETS: .half 2,4,6,8,10,12,14,16,18
+CACHE_OFFSETS: .half 2,4,6,8, 10,12,14,16, 18,20
 
     .section .bss.gl_clipping
 
@@ -33,8 +33,8 @@ CLIP_LISTS:
     #   Clip a triangle against the view-frustum by using the Sutherland-Hodgman algorithm
     #   https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
     # Args:
-    #   a1-a3 = Vertices
-    #   t5    = OR'd clip flags of the triangle's vertices
+    #   a1-a3,a0 = Vertices
+    #   t5       = OR'd clip flags of the triangle's vertices
     # Returns:
     #   s1    = Pointer to list of output vertices
     #   s2    = Pointer to end of list
@@ -46,19 +46,20 @@ GL_ClipTriangle:
     #define plane_flag      t6
     #define in_count        t7
     #define in_end          t8
-    #define in_list         s0
+    #define in_list         v0
     #define out_list        s1
     #define plane           s2
     #define intersection    s3
-    #define cur_ptr         s4
-    #define prev_ptr        s5
-    #define cur_vtx         s6
-    #define prev_vtx        s7
+    #define cur_ptr         a0
+    #define prev_ptr        a1
+    #define cur_vtx         a2
+    #define prev_vtx        a3
     #define p0              k0
     #define p1              k1
     #define vtx1            a1
     #define vtx2            a2
     #define vtx3            a3
+    #define vtx4            a0
 
     #define vplane          $v01
     #define vint_f          $v02
@@ -77,6 +78,10 @@ GL_ClipTriangle:
     #define voff1           $v15
     #define vcache0         $v16
     #define vcache1         $v17
+	// v18,v19 - reserved for viewport
+	// v20,v21 - reserved for vguard
+    #define vguard_f        $v27
+    #define vguard_i        $v28
     #define v__             $v29
 
     move ra2, ra
@@ -85,13 +90,19 @@ GL_ClipTriangle:
     li in_list, %lo(CLIP_LIST0)
     move in_count, zero
 
-    # Put three original vertices in the out_list
+    # Put four original vertices in the out_list
     # (So after the initial swap they will be in the in_list)
     li out_list, %lo(CLIP_LIST1)
     sh vtx1, 0(out_list)
     sh vtx2, 2(out_list)
     sh vtx3, 4(out_list)
-    li out_count, 3*2
+    sh vtx4, 6(out_list)
+    li out_count, 4*2
+
+#undef vtx1
+#undef vtx2
+#undef vtx3
+#undef vtx4
 
     li plane, %lo(CLIP_PLANES)
     li plane_flag, 1
@@ -100,7 +111,7 @@ GL_ClipTriangle:
     li t0, %lo(CACHE_OFFSETS)
     vxor voff1, voff1
     lqv voff0,  0,t0
-    lsv voff1, 16,t0
+    ldv voff1, 16,t0
 
     # Temporarily use the RDP staging area as a map of which cache slots are used
     # Init to zero
@@ -136,11 +147,11 @@ gl_clip_edge_loop:
     #define prev_flag t4
 
     # Check which side of the plane the two vertices are on
-    lhu cur_vtx, 0(cur_ptr)
-    lhu prev_vtx, 0(prev_ptr)
-    lbu cur_flag, SCREEN_VTX_CLIP_CODE(cur_vtx)
+    lhu cur_vtx,   0(cur_ptr)
+    lhu prev_vtx,  0(prev_ptr)
+    lbu cur_flag,  SCREEN_VTX_CLIP_CODE(cur_vtx)
     lbu prev_flag, SCREEN_VTX_CLIP_CODE(prev_vtx)
-    and cur_flag, plane_flag
+    and cur_flag,  plane_flag
     and prev_flag, plane_flag
 
     # If they are on opposite sides, there is an intersection
@@ -201,6 +212,7 @@ gl_clip_no_swap:
     vlt vcache0, vcache0.h2
     vlt vcache0, vcache0.e4
     vlt vcache0, vcache1.e0
+    vlt vcache0, vcache1.e1
 
     mfc2 t0, vcache0.e0
 
@@ -280,8 +292,18 @@ gl_clip_no_swap:
     sdv vint_i.e0,  SCREEN_VTX_CS_POSi,intersection
     sdv vint_f.e0,  SCREEN_VTX_CS_POSf,intersection
     suv vattr0.e0,  SCREEN_VTX_RGBA   ,intersection
-    jal GL_CalcClipCodes
     slv vattr0.e4,  SCREEN_VTX_S_T    ,intersection
+
+	# Update clip flags
+	vmudn vguard_f, vint_f, vguardscale // vint_f is vcspos_f
+    vmadh vguard_i, vint_i, vguardscale // vint_i is vcspos_i
+    
+    vch v__, vguard_i, vguard_i.e3 // w
+    vcl v__, vguard_f, vguard_f.e3 // w
+
+    cfc2 t0, COP2_CTRL_VCC
+    compressClipCodes
+    sb t2, SCREEN_VTX_CLIP_CODE(intersection)
 
     # Add intersection to the output list
     add t0, out_list, out_count
@@ -319,32 +341,11 @@ gl_clip_plane_loop_end:
     blt plane_flag, (1<<CLIPPING_PLANE_COUNT), gl_clip_plane_loop
     addi plane, CLIPPING_PLANE_SIZE
 
-    #define cache_vtx s3
-    #define cache_end s5
-
-    # Calculate screen space values for new vertices (in the clip cache)
-    # TODO: maybe iterate over out_list instead
-    li cache_vtx, %lo(CLIP_CACHE)
-    li cache_end, %lo(CLIP_CACHE_END) - SCREEN_VTX_SIZE
-gl_clip_finalize_loop:
-    lbu t0, SCREEN_VTX_PADDING(cache_vtx)
-    neg t0
-
-    # Only calculate screen space values if the vertex is actually used
-    ldv vint_i,  SCREEN_VTX_CS_POSi,cache_vtx
-    bltzal t0, GL_CalcScreenSpace
-    ldv vint_f,  SCREEN_VTX_CS_POSf,cache_vtx
-
-    blt cache_vtx, cache_end, gl_clip_finalize_loop
-    addi cache_vtx, SCREEN_VTX_SIZE
-
 gl_clip_return:
     # Done!
     jr ra2
     add s2, out_list, out_count
 
-    #undef cache_vtx
-    #undef cache_end
     #undef clip_flags
     #undef plane_flag
     #undef in_count
@@ -360,9 +361,6 @@ gl_clip_return:
     #undef prev_vtx
     #undef p0
     #undef p1
-    #undef vtx1
-    #undef vtx2
-    #undef vtx3
     #undef vplane
     #undef vpos_i
     #undef vpos_f
@@ -376,5 +374,7 @@ gl_clip_return:
     #undef vattr0
     #undef vattr1
     #undef v__
+    #undef vguard_i
+    #undef vguard_f
 
     .endfunc

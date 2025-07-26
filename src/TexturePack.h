@@ -108,7 +108,7 @@ void TexturePack_CheckPending(void);
 CC_API void TexturePack_Extract(const cc_string* url);
 
 typedef cc_result (*DefaultZipCallback)(const cc_string* path);
-cc_result TexturePack_ExtractDefault(DefaultZipCallback callback);
+cc_result TexturePack_ExtractDefault(DefaultZipCallback callback, const char** default_path);
 
 struct TextureEntry;
 struct TextureEntry {

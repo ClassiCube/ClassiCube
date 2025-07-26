@@ -1,9 +1,12 @@
 SOURCE_DIR  = src
 BUILD_DIR   = build
 C_SOURCES   = $(wildcard $(SOURCE_DIR)/*.c)
-C_OBJECTS   = $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+OBJECTS   	= $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+BUILD_DIRS	= $(BUILD_DIR) $(BUILD_DIR)/src
 
-OBJECTS = $(C_OBJECTS)
+##############################
+# Configurable flags and names
+##############################
 # Flags passed to the C compiler
 CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
 # Flags passed to the linker
@@ -11,9 +14,22 @@ LDFLAGS = -g -rdynamic
 # Name of the main executable
 ENAME   = ClassiCube
 # Name of the final target file
-# (usually this is the executable, but e.g. is app bundle on macOS)
+# (usually this is the executable, but e.g. is the app bundle on macOS)
 TARGET := $(ENAME)
 
+# Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
+# This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
+# On older systems the required GCC options may not be supported - in which case just change TRACK_DEPENDENCIES to 0
+TRACK_DEPENDENCIES=1
+# link using C Compiler by default
+LINK = $(CC)
+# Whether to add BearSSL source files to list of files to compile
+BEARSSL=1
+
+
+#################################################################
+# Determine shell command used to remove files (for "make clean")
+#################################################################
 ifndef RM
 	# No prefined RM variable, try to guess OS default
 	ifeq ($(OS),Windows_NT)
@@ -23,11 +39,10 @@ ifndef RM
 	endif
 endif
 
-# Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
-# This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
-# On older systems the required GCC options may not be supported - in which case just change TRACK_DEPENDENCIES to 0
-TRACK_DEPENDENCIES=1
 
+###########################################################
+# If target platform isn't specified, default to current OS
+###########################################################
 ifndef $(PLAT)
 	ifeq ($(OS),Windows_NT)
 		PLAT = mingw
@@ -36,12 +51,20 @@ ifndef $(PLAT)
 	endif
 endif
 
+
+#########################################################
+# Setup environment appropriate for the specific platform
+#########################################################
 ifeq ($(PLAT),web)
 	CC      = emcc
 	OEXT    = .html
 	CFLAGS  = -g
-	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library $(SOURCE_DIR)/interop_web.js
-	BUILD_DIR = build-web
+	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library $(SOURCE_DIR)/webclient/interop_web.js
+	BUILD_DIR = build/web
+	BEARSSL = 0
+
+	BUILD_DIRS += $(BUILD_DIR)/src/webclient
+	C_SOURCES  += $(wildcard src/webclient/*.c)
 endif
 
 ifeq ($(PLAT),mingw)
@@ -50,94 +73,103 @@ ifeq ($(PLAT),mingw)
 	CFLAGS  += -DUNICODE
 	LDFLAGS =  -g
 	LIBS    =  -mwindows -lwinmm
-	BUILD_DIR = build-win
+	BUILD_DIR = build/win
 endif
 
 ifeq ($(PLAT),linux)
-	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
-	BUILD_DIR = build-linux
+	BUILD_DIR = build/linux
 endif
 
 ifeq ($(PLAT),sunos)
-	CFLAGS  += -DCC_BUILD_ICON
 	LIBS    =  -lsocket -lX11 -lXi -lGL
-	BUILD_DIR = build-solaris
+	BUILD_DIR = build/solaris
 endif
 
 ifeq ($(PLAT),hp-ux)
 	CC      = gcc
-	CFLAGS  = -DCC_BUILD_ICON
 	LDFLAGS =
 	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL -lpthread
-	BUILD_DIR = build-hpux
+	BUILD_DIR = build/hpux
 endif
 
 ifeq ($(PLAT),darwin)
-	OBJECTS += $(BUILD_DIR)/Window_cocoa.o
-	CFLAGS  += -DCC_BUILD_ICON
+	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
-	BUILD_DIR = build-macos
+	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
 endif
 
 ifeq ($(PLAT),freebsd)
-	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
+	CFLAGS  += -I /usr/local/include
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-freebsd
+	BUILD_DIR = build/freebsd
 endif
 
 ifeq ($(PLAT),openbsd)
-	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include -DCC_BUILD_ICON
+	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include
 	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-openbsd
+	BUILD_DIR = build/openbsd
 endif
 
 ifeq ($(PLAT),netbsd)
-	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include -DCC_BUILD_ICON
-	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
+	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include
+	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic -Wl,-R/usr/X11R7/lib
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-netbsd
+	BUILD_DIR = build/netbsd
 endif
 
 ifeq ($(PLAT),dragonfly)
-	CFLAGS  += -I /usr/local/include -DCC_BUILD_ICON
+	CFLAGS  += -I /usr/local/include
 	LDFLAGS =  -L /usr/local/lib -rdynamic
 	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build-flybsd
+	BUILD_DIR = build/flybsd
 endif
 
 ifeq ($(PLAT),haiku)
-	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
+	OBJECTS += $(BUILD_DIR)/src/Platform_BeOS.o $(BUILD_DIR)/src/Window_BeOS.o
 	CFLAGS  = -pipe -fno-math-errno
 	LDFLAGS = -g
 	LINK    = $(CXX)
 	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
-	BUILD_DIR = build-haiku
+	BUILD_DIR = build/haiku
 endif
 
 ifeq ($(PLAT),beos)
-	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
+	OBJECTS += $(BUILD_DIR)/src/Platform_BeOS.o $(BUILD_DIR)/src/Window_BeOS.o
 	CFLAGS  = -pipe
 	LDFLAGS = -g
 	LINK    = $(CXX)
 	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
-	BUILD_DIR = build-beos
-	TRACK_DEPENDENCIES=0
+	BUILD_DIR = build/beos
+	TRACK_DEPENDENCIES = 0
+	BEARSSL = 0
 endif
 
 ifeq ($(PLAT),serenityos)
 	LIBS    = -lgl -lSDL2
-	BUILD_DIR = build-serenity
+	BUILD_DIR = build/serenity
 endif
 
 ifeq ($(PLAT),irix)
 	CC      = gcc
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
-	BUILD_DIR = build-irix
+	BUILD_DIR = build/irix
+endif
+
+ifeq ($(PLAT),rpi)
+	CFLAGS += -DCC_BUILD_RPI
+	LIBS    =  -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl
+	BUILD_DIR = build/rpi
+endif
+
+ifeq ($(PLAT),riscos)
+	LIBS    =
+	LDFLAGS = -g
+	BUILD_DIR = build/riscos
 endif
 
 ifeq ($(PLAT),dos)
@@ -145,7 +177,11 @@ ifeq ($(PLAT),dos)
 	LIBS    =
 	LDFLAGS = -g
 	OEXT    =  .exe
-	BUILD_DIR = build-dos
+	BUILD_DIR = build/dos
+	BEARSSL = 0
+
+	BUILD_DIRS += $(BUILD_DIR)/src/msdos
+	C_SOURCES  += $(wildcard src/msdos/*.c)
 endif
 
 
@@ -162,11 +198,9 @@ ifdef TERMINAL
 	LIBS := $(subst mwindows,mconsole,$(LIBS))
 endif
 
-ifdef BEARSSL
-	BEARSSL_SOURCES = $(wildcard third_party/bearssl/src/*.c)
-	BEARSSL_OBJECTS = $(patsubst third_party/bearssl/src/%.c, $(BUILD_DIR)/%.o, $(BEARSSL_SOURCES))
-	OBJECTS += $(BEARSSL_OBJECTS)
-	CFLAGS  += -Ithird_party/bearssl/inc -DCC_SSL_BACKEND=CC_SSL_BACKEND_BEARSSL -DCC_NET_BACKEND=CC_NET_BACKEND_BUILTIN
+ifeq ($(BEARSSL),1)
+	BUILD_DIRS += $(BUILD_DIR)/third_party/bearssl
+	C_SOURCES  += $(wildcard third_party/bearssl/*.c)
 endif
 
 ifdef RELEASE
@@ -175,11 +209,9 @@ else
 	CFLAGS += -g
 endif
 
-# link with CC by default
-LINK ?= $(CC)
-
 default: $(PLAT)
 
+# Build for the specified platform
 web:
 	$(MAKE) $(TARGET) PLAT=web
 linux:
@@ -208,6 +240,8 @@ serenityos:
 	$(MAKE) $(TARGET) PLAT=serenityos
 irix:
 	$(MAKE) $(TARGET) PLAT=irix
+riscos:
+	$(MAKE) $(TARGET) PLAT=riscos
 dos:
 	$(MAKE) $(TARGET) PLAT=dos
 # Default overrides
@@ -271,14 +305,24 @@ amiga_68k:
 amiga_ppc:
 	$(MAKE) -f misc/amiga/Makefile_ppc
 
+# Cleans up all build .o files
 clean:
 	$(RM) $(OBJECTS)
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-$(ENAME): $(BUILD_DIR) $(OBJECTS)
-	$(LINK) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
 
+#################################################
+# Source files and executable compilation section
+#################################################
+# Auto creates directories for build files (.o and .d files)
+$(BUILD_DIRS):
+	mkdir -p $@
+
+# Main executable (typically just 'ClassiCube' or 'ClassiCube.exe')
+$(ENAME): $(BUILD_DIRS) $(OBJECTS)
+	$(LINK) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
+	@echo "----------------------------------------------------"
+	@echo "Successfully compiled executable file: $(ENAME)"
+	@echo "----------------------------------------------------"
 
 # macOS app bundle
 $(ENAME).app : $(ENAME)
@@ -292,29 +336,27 @@ $(ENAME).app : $(ENAME)
 # === Compiling with dependency tracking ===
 # NOTE: Tracking dependencies might not work on older systems - disable this if so
 ifeq ($(TRACK_DEPENDENCIES), 1)
+
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.d, $(C_SOURCES))
+DEPFILES := $(patsubst %.o, %.d, $(OBJECTS))
 $(DEPFILES):
 
-$(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c $(BUILD_DIR)/%.d
+$(BUILD_DIR)/%.o : %.c $(BUILD_DIR)/%.d
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.cpp $(BUILD_DIR)/%.d
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.m $(BUILD_DIR)/%.d
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 include $(wildcard $(DEPFILES))
 # === Compiling WITHOUT dependency tracking ===
 else
-$(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
+
+$(BUILD_DIR)/%.o : %.c
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.cpp
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 endif
-	
-# === Platform specific file compiling ===
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.m
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
-	
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
-	
-$(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
 
 # EXTRA_CFLAGS and EXTRA_LIBS are not defined in the makefile intentionally -
 # define them on the command line as a simple way of adding CFLAGS/LIBS

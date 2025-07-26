@@ -7,7 +7,7 @@
 
 // This is a severely cutdown version of libdragon's OpenGL implementation
 #define VTX_SHIFT 5
-#define TEX_SHIFT 8
+#define TEX_SHIFT 10
 
 static uint32_t gpup_id;
 //DEFINE_RSP_UCODE(rsp_gpu);
@@ -29,33 +29,24 @@ static rsp_ucode_t rsp_gpu = (rsp_ucode_t){
 };
 
 enum {
-    GPU_CMD_SET_BYTE         = 0x0,
-    GPU_CMD_SET_SHORT        = 0x1,
-    GPU_CMD_SET_WORD         = 0x2,
-    GPU_CMD_SET_LONG         = 0x3,
+    GPU_CMD_SET_SHORT        = 0x0,
+    GPU_CMD_SET_TEX_WORD     = 0x1,
+    GPU_CMD_SET_LONG         = 0x2,
 
-    GPU_CMD_DRAW_QUAD        = 0x4,
-    GPU_CMD_MATRIX_LOAD      = 0x5,
+    GPU_CMD_DRAW_QUAD        = 0x3,
+    GPU_CMD_MATRIX_LOAD      = 0x4,
 
-	GPU_CMD_PUSH_RDP         = 0x6,
+	GPU_CMD_PUSH_RDP         = 0x5,
 };
 
 typedef struct {
-	int16_t  mvp_matrix_i[4][4];
-    uint16_t mvp_matrix_f[4][4];
     int16_t vp_scale[4];
     int16_t vp_offset[4];
-    uint16_t tex_size[2];
-    uint16_t tex_offset[2];
+    uint16_t tex_size[8];
+    uint16_t tex_offset[8];
     uint16_t tri_cmd;
     uint16_t tri_cull;
 } __attribute__((aligned(8), packed)) gpu_state;
-
-__attribute__((always_inline))
-static inline void gpu_set_byte(uint32_t offset, uint8_t value)
-{
-    rspq_write(gpup_id, GPU_CMD_SET_BYTE, offset, value);
-}
 
 __attribute__((always_inline))
 static inline void gpu_set_short(uint32_t offset, uint16_t value)
@@ -64,9 +55,9 @@ static inline void gpu_set_short(uint32_t offset, uint16_t value)
 }
 
 __attribute__((always_inline))
-static inline void gpu_set_word(uint32_t offset, uint32_t value)
+static inline void gpu_set_tex_word(uint32_t offset, uint32_t value)
 {
-    rspq_write(gpup_id, GPU_CMD_SET_WORD, offset, value);
+    rspq_write(gpup_id, GPU_CMD_SET_TEX_WORD, offset, value);
 }
 
 __attribute__((always_inline))
@@ -84,9 +75,6 @@ static inline void gpu_push_rdp(uint32_t a1, uint64_t a2)
     rdpq_write(2, gpup_id, GPU_CMD_PUSH_RDP, 0, a1, a2);
 }
 
-
-static float gpu_vp_scale[3];
-static float gpu_vp_offset[3];
 static bool  gpu_texturing;
 static void* gpu_pointer;
 static int   gpu_stride;
@@ -95,7 +83,7 @@ static int   gpu_stride;
 #define GPU_ATTR_TEX   (1 <<  9)
 #define GPU_ATTR_SHADE (1 << 10)
 #define GPU_ATTR_EDGE  (1 << 11)
-static bool gpu_attr_z, gpu_attr_tex;
+static uint8_t gpu_attr_z, gpu_attr_tex;
 
 static void gpuUpdateFormat(void)
 {
@@ -109,7 +97,12 @@ static void gpuUpdateFormat(void)
 
 static void gpuSetTexSize(uint16_t width, uint16_t height)
 {
-    gpu_set_word(offsetof(gpu_state, tex_size[0]), (width << 16) | height);
+    gpu_set_tex_word(offsetof(gpu_state, tex_size[0]), (width << 16) | height);
+}
+
+static void gpuSetTexOffset(uint16_t width, uint16_t height)
+{
+    gpu_set_tex_word(offsetof(gpu_state, tex_offset[0]), (width << 16) | height);
 }
 
 
@@ -151,71 +144,114 @@ static inline void put_word(rspq_write_t* s, uint16_t v1, uint16_t v2)
 	rspq_write_arg(s, v2 | (v1 << 16));
 }
 
-static void upload_vertex(rspq_write_t* s, uint32_t index)
-{
-	char* ptr = gpu_pointer + index * gpu_stride;
 
-	float* vtx = (float*)(ptr + 0);
-	put_word(s, vtx[0] * (1<<VTX_SHIFT),
-				vtx[1] * (1<<VTX_SHIFT));
-	put_word(s, vtx[2] * (1<<VTX_SHIFT),
-				1.0f   * (1<<VTX_SHIFT));
 
-	uint32_t* col = (uint32_t*)(ptr + 12);
-	rspq_write_arg(s, *col);
 
-	if (gpu_texturing) {
-		float* tex = (float*)(ptr + 16);
-		put_word(s, tex[0] * (1<<TEX_SHIFT),
-					tex[1] * (1<<TEX_SHIFT));
-	} else {
-		put_word(s, 0,
-					0);
-    }
+struct rsp_vertex {
+	uint16_t x, y;
+	uint16_t z, w; // w ignored
+	uint32_t rgba;
+	uint16_t u, v;
+};
+
+#define FLT_EXPONENT_BIAS  127
+#define FLT_EXPONENT_SHIFT 23
+#define FLT_EXPONENT_MASK  0x7F800000
+
+static int F2I(float value, int scale) {
+	union IntAndFloat raw;
+	int e;
+	raw.f = value;
+
+	e  = (raw.i & FLT_EXPONENT_MASK) >> FLT_EXPONENT_SHIFT;
+
+	// Ignore denormal, infinity, or large exponents
+	if (e <= 0 || e >= 146) return 0;
+	
+	return value * scale;
 }
+
+static void convert_textured_vertices(GfxResourceID vb, int count) {
+	struct VertexTextured* src = (struct VertexTextured*)vb;
+	struct rsp_vertex* dst     = (struct rsp_vertex*)vb;
+	
+	for (int i = 0; i < count; i++, src++, dst++)
+	{
+		float x = src->x, y = src->y, z = src->z;
+		float u = src->U, v = src->V;
+		PackedCol rgba = src->Col;
+	
+		dst->x = F2I(x, 1<<VTX_SHIFT);
+		dst->y = F2I(y, 1<<VTX_SHIFT);
+		dst->z = F2I(z, 1<<VTX_SHIFT);
+
+		dst->u = F2I(u, 1<<TEX_SHIFT);
+		dst->v = F2I(v, 1<<TEX_SHIFT);
+		dst->rgba = rgba;
+	}
+}
+
+static void convert_coloured_vertices(GfxResourceID vb, int count) {
+	struct VertexColoured* src = (struct VertexColoured*)vb;
+	struct rsp_vertex* dst     = (struct rsp_vertex*)vb;
+	
+	for (int i = 0; i < count; i++, src++, dst++)
+	{
+		float x = src->x, y = src->y, z = src->z;
+		PackedCol rgba = src->Col;
+	
+		dst->x = F2I(x, 1<<VTX_SHIFT);
+		dst->y = F2I(y, 1<<VTX_SHIFT);
+		dst->z = F2I(z, 1<<VTX_SHIFT);
+
+		dst->u = 0;
+		dst->v = 0;
+		dst->rgba = rgba;
+	}
+}
+
 
 static void gpuDrawArrays(uint32_t first, uint32_t count)
 {
+	uint32_t* ptr = (uint32_t*)(gpu_pointer + first * sizeof(struct rsp_vertex));
     for (uint32_t i = 0; i < count; i += 4)
     {
     	rspq_write_t s = rspq_write_begin(gpup_id, GPU_CMD_DRAW_QUAD, 17);
     	rspq_write_arg(&s, 0); // padding
+
        	for (uint32_t j = 0; j < 4; j++)
 		{
-        	upload_vertex(&s, first + i + j);
+			rspq_write_arg(&s, *ptr++);
+			rspq_write_arg(&s, *ptr++);
+			rspq_write_arg(&s, *ptr++);
+			rspq_write_arg(&s, *ptr++);
 		}
     	rspq_write_end(&s);
     }
 }
 
-static void gpuDepthRange(float n, float f)
-{
-    gpu_vp_scale[2]  = (f - n) * 0.5f;
-    gpu_vp_offset[2] = n + (f - n) * 0.5f;
-
-    gpu_set_short(offsetof(gpu_state, vp_scale[2]),  gpu_vp_scale[2]  * 4);
-    gpu_set_short(offsetof(gpu_state, vp_offset[2]), gpu_vp_offset[2] * 4);
-}
-
 static void gpuViewport(int x, int y, int w, int h)
 {
-    gpu_vp_scale[0]  = w * 0.5f;
-    gpu_vp_scale[1]  = h * -0.5f;
-    gpu_vp_offset[0] = x + w * 0.5f;
-    gpu_vp_offset[1] = y + h * 0.5f;
+    float vp_scale_x  = w * 0.5f;
+    float vp_scale_y  = h * -0.5f;
+    float vp_scale_z  = 0.5f;
+
+    float vp_offset_x = x + w * 0.5f;
+    float vp_offset_y = y + h * 0.5f;
+    float vp_offset_z = 0.5f;
 
     // Screen coordinates are s13.2
     #define SCREEN_XY_SCALE   4.0f
     #define SCREEN_Z_SCALE    32767.0f
 
     // * 2.0f to compensate for RSP reciprocal missing 1 bit
-    uint16_t scale_x  = gpu_vp_scale[0] * SCREEN_XY_SCALE * 2.0f;
-    uint16_t scale_y  = gpu_vp_scale[1] * SCREEN_XY_SCALE * 2.0f;
-    uint16_t scale_z  = gpu_vp_scale[2] * SCREEN_Z_SCALE  * 2.0f;
+    uint16_t scale_x  = vp_scale_x * SCREEN_XY_SCALE * 2.0f;
+    uint16_t scale_y  = vp_scale_y * SCREEN_XY_SCALE * 2.0f;
+    uint16_t scale_z  = vp_scale_z * SCREEN_Z_SCALE  * 2.0f;
 
-    uint16_t offset_x = gpu_vp_offset[0] * SCREEN_XY_SCALE;
-    uint16_t offset_y = gpu_vp_offset[1] * SCREEN_XY_SCALE;
-    uint16_t offset_z = gpu_vp_offset[2] * SCREEN_Z_SCALE;
+    uint16_t offset_x = vp_offset_x * SCREEN_XY_SCALE;
+    uint16_t offset_y = vp_offset_y * SCREEN_XY_SCALE;
+    uint16_t offset_z = vp_offset_z * SCREEN_Z_SCALE;
 
     gpu_set_long( 
         offsetof(gpu_state, vp_scale), 
@@ -233,7 +269,6 @@ static void gpuSetCullFace(bool enabled) {
 
 static void gpu_init() {
     gpup_id = rspq_overlay_register(&rsp_gpu);
-    gpuDepthRange(0, 1);
 }
 
 static void gpu_close() {

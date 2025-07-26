@@ -19,14 +19,18 @@ jobs:
       image: ghcr.io/kos-builds/kos-dc:sha-20149ee-14.2.0
     steps:
       - uses: actions/checkout@v4
-      - name: Compile Dreamcast build
-        id: compile
+      - name: Install prerequisites
         shell: bash
         run: |
           apt-get update
           apt-get -y install genisoimage
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/cdi4dc -O /opt/toolchains/dc/kos/utils/cdi4dc
           chmod +x /opt/toolchains/dc/kos/utils/cdi4dc
+
+      - name: Compile Dreamcast build
+        id: compile
+        shell: bash
+        run: |
           export PATH=/opt/toolchains/dc/kos/utils/:$PATH
           make dreamcast
           

@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include <nds.h>
+#include "_BlockAlloc.h"
 
 #define DS_MAT_PROJECTION 0
 #define DS_MAT_POSITION   1
@@ -13,56 +14,6 @@
 
 static int matrix_modes[] = { DS_MAT_PROJECTION, DS_MAT_MODELVIEW };
 static int lastMatrix;
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Memory alloc------------------------------------------------------*
-*#########################################################################################################################*/
-#define blockalloc_page(block) ((block) >> 3)
-#define blockalloc_bit(block)  (1 << ((block) & 0x07))
-#define BLOCKS_PER_PAGE 8
-
-static CC_INLINE int blockalloc_can_alloc(cc_uint8* table, int beg, int blocks) {
-	for (int i = beg; i < beg + blocks; i++)
-	{
-		cc_uint8 page = table[blockalloc_page(i)];
-		if (page & blockalloc_bit(i)) return false;
-	}
-	return true;
-}
-
-static int blockalloc_alloc(cc_uint8* table, int maxBlocks, int blocks) {
-	if (blocks > maxBlocks) return -1;
-
-	for (int i = 0; i < maxBlocks - blocks;) 
-	{
-		cc_uint8 page = table[blockalloc_page(i)];
-
-		// If entire page is used, skip entirely over it
-		if ((i & 0x07) == 0 && page == 0xFF) { i += 8; continue; }
-
-		// If block is used, move onto trying next block
- 		if (page & blockalloc_bit(i)) { i++; continue; }
-		
-		// If can't be allocated starting at block, try next
-		if (!blockalloc_can_alloc(table, i, blocks)) { i++; continue; }
-
-		for (int j = i; j < i + blocks; j++) 
-		{
-			table[blockalloc_page(j)] |= blockalloc_bit(j);
-        }
-        return i;
-    }
-	return -1;
-}
-
-static void blockalloc_free(cc_uint8* table, int origin, int blocks) {
-	// Mark the used blocks as free again
-	for (int i = origin; i < origin + blocks; i++) 
-	{
-		table[blockalloc_page(i)] &= ~blockalloc_bit(i);
-    }
-}
 
 
 /*########################################################################################################################*
@@ -76,30 +27,26 @@ static CC_INLINE void CopyHWords(void* src, void* dst, int len) {
 	for (int i = 0; i < len; i++) dst_[i] = src_[i];
 }
 
+static void WaitForGPUDone(void) {
+	if (!GFX_BUSY) return;
+
+	// Geometry engine still busy from before, give it some time
+	swiWaitForVBlank();
+	swiWaitForVBlank();
+	swiWaitForVBlank();
+	if (!GFX_BUSY) return;
+
+	// The geometry engine may still have some leftover state, try to recover
+	for (int i = 0; i < 8 && GFX_BUSY; i++)
+	{
+		GFX_VERTEX16 = 0;
+		swiDelay(0x400);
+    }
+}
+
 void ResetGPU(void) {
     powerOn(POWER_3D_CORE | POWER_MATRIX); // Enable 3D core & geometry engine
-
-    if (GFX_BUSY) {
-        // Geometry engine sill busy from before, give it some time
-        swiWaitForVBlank();
-		swiWaitForVBlank();
-		swiWaitForVBlank();
-
-        if (GFX_BUSY) {
-            // The geometry engine is still busy. This can happen due to a
-            // partial vertex upload by the previous homebrew application (=>
-            // ARM7->ARM9 forced reset).  So long as the buffer wasn't flushed,
-            // this is recoverable, so we attempt to do so.
-            for (int i = 0; i < 8; i++)
-            {
-                GFX_VERTEX16 = 0;
-
-                // TODO: Do we need such a high arbitrary delay value?
-                swiDelay(0x400);
-                if (!GFX_BUSY) break;
-            }
-        }
-    }
+	WaitForGPUDone();
 
     // Clear the FIFO
     GFX_STATUS |= (1 << 29);
@@ -143,6 +90,7 @@ void Gfx_Create(void) {
 	vramSetBankE(VRAM_E_TEX_PALETTE);
 	
 	Gfx_SetFaceCulling(false);
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -234,19 +182,6 @@ typedef struct CCTexture_ {
 #define TEX_TOTAL_BLOCKS (TEX_TOTAL_SIZE / TEX_BLOCK_SIZE)
 static cc_uint8 tex_table[TEX_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
 
-static void texture_alloc(CCTexture* tex, int size) {
-	int blocks = (size + (TEX_BLOCK_SIZE - 1)) / TEX_BLOCK_SIZE;
-	int addr   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
-	if (addr == -1) return;
-
-	tex->texBase   = addr;
-	tex->texBlocks = blocks;
-}
-
-static void texture_release(CCTexture* tex) {
-	blockalloc_free(tex_table, tex->texBase, tex->texBlocks);
-}
-
 // Palette VRAM banks - Bank E (64 kb)
 #define PAL_TOTAL_SIZE (64 * 1024)
 // Use 16 hwords for size of each block
@@ -254,19 +189,6 @@ static void texture_release(CCTexture* tex) {
 
 #define PAL_TOTAL_BLOCKS (PAL_TOTAL_SIZE / PAL_BLOCK_SIZE)
 static cc_uint8 pal_table[PAL_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
-
-static void palette_alloc(CCTexture* tex, int size) {
-	int blocks = (size + (PAL_BLOCK_SIZE - 1)) / PAL_BLOCK_SIZE;
-	int addr   = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, blocks);
-	if (addr == -1) return;
-
-	tex->palBase   = addr;
-	tex->palBlocks = blocks;
-}
-
-static void palette_release(CCTexture* tex) {
-	blockalloc_free(pal_table, tex->palBase, tex->palBlocks);
-}
 
 
 /*########################################################################################################################*
@@ -346,35 +268,43 @@ static CC_INLINE int CalcPalette(cc_uint16* palette, struct Bitmap* bmp, int row
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	CCTexture* tex = Mem_TryAllocCleared(1, sizeof(CCTexture));
-	if (!tex) return 0;
+	CCTexture* tex = Mem_TryAlloc(1, sizeof(CCTexture));
+	if (!tex) return NULL;
 
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	tex->width  = dst_w;
+	tex->height = dst_h;
 
 	BitmapCol palette[256];
 	int pal_count = CalcPalette(palette, bmp, rowWidth);
 	int tex_size, tex_fmt;
 
 	if (pal_count <= 4) {
-		tex_size = bmp->width * bmp->height / 4; // 2 bits per pixel
+		tex_size = dst_w * dst_h / 4; // 2 bits per pixel
 		tex_fmt  = GL_RGB4;
 	} else if (pal_count <= 16) {
-		tex_size = bmp->width * bmp->height / 2; // 4 bits per pixel
+		tex_size = dst_w * dst_h / 2; // 4 bits per pixel
 		tex_fmt  = GL_RGB16;
 	} else if (pal_count <= 256) {
-		tex_size = bmp->width * bmp->height;     // 8 bits per pixel
+		tex_size = dst_w * dst_h;     // 8 bits per pixel
 		tex_fmt  = GL_RGB256;
 	} else {
-		tex_size = bmp->width * bmp->height * 2; // 16 bits per pixel
+		tex_size = dst_w * dst_h * 2; // 16 bits per pixel
 		tex_fmt  = GL_RGBA;
 	}
 
-	texture_alloc(tex, tex_size);
-	if (!tex->texBlocks) {
+	int blocks = SIZE_TO_BLOCKS(tex_size, TEX_BLOCK_SIZE);
+	int base   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
+	if (base < 0) {
 		Platform_Log2("No VRAM for %i x %i texture", &bmp->width, &bmp->height);
+		Mem_Free(tex);
 		return NULL;
 	}
+
+	tex->texBase   = base;
+	tex->texBlocks = blocks;
 
 	int offset = tex->texBase * TEX_BLOCK_SIZE;
 	u16* addr  = (u16*)((u8*)VRAM_A + offset);
@@ -384,15 +314,15 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	u32 banks = vramSetPrimaryBanks(VRAM_A_LCD, VRAM_B_LCD, VRAM_C_LCD, VRAM_D_LCD);
 	int stride;
 
-	int width = bmp->width, height = bmp->height;
+	int src_w = bmp->width, src_h = bmp->height;
 	BitmapCol* row = bmp->scan0;
 
 	if (tex_fmt == GL_RGB4) {
-		stride = width >> 3;
+		stride = dst_w >> 3;
 
-		for (int y = 0; y < height; y++, row += rowWidth)
+		for (int y = 0; y < src_h; y++, row += rowWidth)
 		{
-			for (int x = 0; x < width; x++) 
+			for (int x = 0; x < src_w; x++) 
 			{
 				int idx = FindInPalette(palette, pal_count, row[x]);
 			
@@ -405,11 +335,11 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			CopyHWords(tmp, addr + stride * y, stride);
 		}
 	} else if (tex_fmt == GL_RGB16) {
-		stride = width >> 2;
+		stride = dst_w >> 2;
 
-		for (int y = 0; y < height; y++, addr += stride, row += rowWidth)
+		for (int y = 0; y < src_h; y++, addr += stride, row += rowWidth)
 		{
-			for (int x = 0; x < width; x++) 
+			for (int x = 0; x < src_w; x++) 
 			{
 				int idx = FindInPalette(palette, pal_count, row[x]);
 			
@@ -422,20 +352,20 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			CopyHWords(tmp, addr, stride);
 		}
 	} else if (tex_fmt == GL_RGB256) {
-		stride = width >> 1;
+		stride = dst_w >> 1;
 
-		for (int y = 0; y < height; y++, addr += stride, row += rowWidth)
+		for (int y = 0; y < src_h; y++, addr += stride, row += rowWidth)
 		{
-			for (int x = 0; x < width; x++) 
+			for (int x = 0; x < src_w; x++) 
 			{
 				tmp[x] = FindInPalette(palette, pal_count, row[x]);
 			}
 			CopyHWords(tmp, addr, stride);
 		}
 	} else {
-		stride = width;
+		stride = dst_w;
 
-		for (int y = 0; y < height; y++, addr += stride, row += rowWidth) 
+		for (int y = 0; y < src_h; y++, addr += stride, row += rowWidth) 
 		{
 			CopyHWords(row, addr, stride);
 		}
@@ -443,14 +373,18 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 	vramRestorePrimaryBanks(banks);
 
-	int sSize  = (Math_ilog2(tex->width)  - 3) << 20;
-	int tSize  = (Math_ilog2(tex->height) - 3) << 23;
+	int sSize = (Math_ilog2(dst_w) - 3) << 20;
+	int tSize = (Math_ilog2(dst_h) - 3) << 23;
 
 	tex->texFormat = (offset >> 3) | sSize | tSize | (tex_fmt << 26) | 
 						GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T | TEXGEN_TEXCOORD | GL_TEXTURE_COLOR0_TRANSPARENT;
 
 	if (tex_fmt != GL_RGBA) {
-		palette_alloc(tex, pal_count * 2);
+		blocks = SIZE_TO_BLOCKS(pal_count * 2, PAL_BLOCK_SIZE);
+		base   = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, blocks);
+
+		tex->palBase   = base < 0 ? 0 : base; // TODO probably not correct, but shouldn't happen in practice
+		tex->palBlocks = blocks;
 		offset = tex->palBase * PAL_BLOCK_SIZE;
 
 		vramSetBankE(VRAM_E_LCD);
@@ -473,7 +407,6 @@ void Gfx_BindTexture(GfxResourceID texId) {
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
 	
-	int width = tex->width;
 	return;
 	// TODO doesn't work without VRAM bank changing to LCD and back maybe??
 	// (see what glTeximage2D does ??)
@@ -494,8 +427,8 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = (CCTexture*)(*texId);
 
 	if (tex) {
-		texture_release(tex);
-		palette_release(tex);
+		blockalloc_dealloc(tex_table, tex->texBase, tex->texBlocks);
+		blockalloc_dealloc(pal_table, tex->palBase, tex->palBlocks);
 		Mem_Free(tex);
 	}
 	*texId = NULL;

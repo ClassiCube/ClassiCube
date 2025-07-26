@@ -11,6 +11,7 @@
 *.VC.VC.opendb
 
 # Android build results
+android/app/.cxx/
 android/.cxx/
 android/.idea/
 android/.gradle/

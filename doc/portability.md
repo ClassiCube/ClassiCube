@@ -2,6 +2,8 @@ Although most of the code is platform-independent, some per-platform functionali
 
 By default `Core.h` tries to automatically define appropriate backends for your system. Define ```CC_BUILD_MANUAL``` to disable this.
 
+Note: Updating doesn't work properly in Windows 95 or Windows 98
+
 ## Before you start
 * IEEE floating-point support is required. (Can be emulated in software, but will affect performance)
 * The `int` data type must be 32-bits.
@@ -11,39 +13,6 @@ By default `Core.h` tries to automatically define appropriate backends for your 
 * At least 128 kb for main thread stack size
 
 In summary, the codebase can theroetically be ported to any modern-ish hardware, but not stuff like a UNIVAC machine, the SuperFX chip on the SNES, or an 8-bit microcontroller.
-
-## Supported platforms
-
-#### Tier 1 support
-These platforms are regularly tested on and have executables automatically compiled for.
-
-|Platform|Testing|Support|
-|--------|-------|-----|
-|Windows x86/x64 | Mostly tested on 7+ | Should work in all Windows versions
-|macOS x86/x64 | Mostly tested on 10.12 | Should work in all macOS versions since 10.3
-|Linux x86/x64 | Mostly tested on Linux Mint | Should work in most Linux distributions
-|Web client | Mostly tested in Chrome | Should work in all browsers with WebGL (including IE)
-
-Note: Updating doesn't work properly in Windows 95 or Windows 98
-
-#### Tier 2 support
-The game has been compiled and run on these platforms before. It may or may not still compile for them.
-
-I don't really test these platforms at all, only when I suspect some changes to the code might impact them.
-
-|Platform|Machine|Notes|
-|--------|-------|-----|
-|macOS x86 | macOS 10.4 |
-|FreeBSD x86 | FreeBSD | x64 should work too |
-|NetBSD x86 | NetBSD | x64 should work too |
-|OpenBSD x86 | OpenBSD | x64 should work too |
-|Solaris x86 | OpenIndiana | x64 should work too |
-|macOS PPC | macOS 10.3 | PPC64 completely untested |
-|Linux PPC | Debian | Issues with colour channels incorrectly swapped? |
-|Linux ARM | Raspberry pi | ARM64 should work too |
-|Linux SPARC | Debian | Didn't really work due to lack of 24-bit colours |
-|Linux Alpha | Debian | 
-|HaikuOS | Nightly | 
 
 ## Porting
 
@@ -113,6 +82,11 @@ HTTP, HTTPS, and setting request/getting response headers
 
 Define:
 - ```DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN``` - use built in simple HTTP backend
-- ```DEFAULT_NET_BACKEND CC_NET_BACKEND_LIBCURL``` - use libcurl for HTTP
 
 Supporting connection reuse is highly recommended. (but not required)
+
+### SSL
+SSL and TLS support, plus basic certificate validation
+
+Define:
+- ```DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL``` - use BearSSL for SSL/TLS

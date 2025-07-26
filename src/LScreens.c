@@ -24,6 +24,12 @@
 #define LAYOUTS static const struct LLayout
 #define IsBackButton(btn) (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_2)
 
+static cc_bool IsValidPort(const cc_string* str) {
+	int port;
+	return Convert_ParseInt(str, &port) && port >= 0 && port <= 65535;
+}
+
+
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -474,11 +480,6 @@ static void DirectConnectScreen_UrlFilter(cc_string* str) {
 	str->length = 0;
 }
 
-static cc_bool DirectConnectScreen_ParsePort(const cc_string* str) {
-	int port;
-	return Convert_ParseInt(str, &port) && port >= 0 && port <= 65535;
-}
-
 static void DirectConnectScreen_StartClient(void* w) {
 	static const cc_string defMppass = String_FromConst("(none)");
 	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
@@ -488,7 +489,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 
 	cc_string ip, port;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
-	int numAddrs, raw_port;
+	int numAddrs;
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index == 0 || index == addr->length - 1) {
@@ -499,7 +500,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
 	DirectUrl_ExtractAddress(addr, &ip, &port);
-	if (!DirectConnectScreen_ParsePort(&port)) {
+	if (!IsValidPort(&port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
@@ -1736,7 +1737,7 @@ static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 
 	if (!FetchUpdateTask.Base.success) return;
 	/* FetchUpdateTask handles saving the updated file for us */
-	Launcher_ShouldExit   = true;
+	Launcher_ShouldStop   = true;
 	Launcher_ShouldUpdate = true;
 }
 

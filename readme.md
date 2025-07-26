@@ -60,20 +60,20 @@ Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that th
 ClassiCube runs on:
 * Windows - 95 and later
 * macOS - 10.5 or later (can be compiled for 10.3/10.4 though)
-* Linux - needs `libcurl` and `libopenal`
+* Linux - needs `libopenal`
 * Android - 2.3 or later
 * iOS - 8.0 or later
 * Most web browsers (even runs on IE11)
 
 And also runs on:
-* Raspberry Pi - needs <code>libcurl</code> and <code>libopenal</code>
-* FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-fbsd))
-* NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-nbsd))
-* OpenBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal</code> packages
-* Solaris - needs <code>curl</code> and <code>openal</code> packages
+* Raspberry Pi - needs <code>libopenal</code>
+* FreeBSD - needs <code>libexecinfo</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-fbsd))
+* NetBSD - needs <code>libexecinfo</code> and <code>openal-soft</code> packages (can [download from here](https://www.classicube.net/download/#dl-nbsd))
+* OpenBSD - needs <code>libexecinfo</code> and <code>openal</code> packages
+* Solaris - needs <code>openal</code> packages
 * Haiku - needs <code>openal</code> package (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_haiku.yml))
 * BeOS - untested on actual hardware
-* IRIX - needs <code>curl</code> and <code>openal</code> packages
+* IRIX - needs <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
 * Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
@@ -117,14 +117,18 @@ Assuming that you used the installer from https://sourceforge.net/projects/mingw
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to the directory with ClassiCube's source code
-4. Run `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
+4. Run either:
+    * `make mingw` - produces a simple non-optimised executable, easier to debug
+    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using MinGW
 Assuming that you used the installer from https://osdn.net/projects/mingw/ :
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-2. Navigate to the directory with ClassiCube's source code
-4. Run `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm`
+3. Navigate to the directory with ClassiCube's source code
+4. Run either:
+    * `make mingw` - produces a simple non-optimised executable, easier to debug
+    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using TCC (Tiny C Compiler)
 Setting up TCC:
@@ -135,7 +139,7 @@ Setting up TCC:
 Compiling with TCC:
 1. Navigate to the directory with ClassiCube's source code
 2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
-3. Run `tcc.exe -o ClassiCube.exe *.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+3. Run `tcc.exe -o ClassiCube.exe src/*.c third_party/bearssl/*.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux
@@ -144,27 +148,27 @@ Compiling with TCC:
 1. Install X11, XInput2, and OpenGL development libraries if necessary. <br>
 For Ubuntu, these are the `libx11-dev`, `libxi-dev` and `libgl1-mesa-dev` packages
 2. Run either:
-    * `make linux` or
-    * `cc -fno-math-errno src/*.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl`
+    * `make linux` - produces a simple non-optimised executable, easier to debug
+    * `make linux RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Cross compiling for Windows (32 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```i686-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
+2. Run ```make mingw CC=i686-w64-mingw32-gcc```
 
 ##### Cross compiling for Windows (64 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```x86_64-w64-mingw32-gcc -fno-math-errno src/*.c -o ClassiCube.exe -mwindows -lwinmm```
+2. Run ```make mingw CC=x86_64-w64-mingw32-gcc```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc -fno-math-errno src/*.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
+```make rpi```
 
 ## Compiling - macOS
 1. Install a C compiler if necessary. The easiest way of obtaining one is by installing **Xcode**.
 2. Run either:
-    * `make darwin` or
-    * `cc -fno-math-errno src/*.c src/*.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc`
+    * `make darwin` - produces a simple non-optimised executable, easier to debug
+    * `make darwin RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using Xcode GUI
 
@@ -202,8 +206,8 @@ NOTE: If you are distributing a modified version, **please change the bundle ID 
 
 1. Install emscripten if necessary.
 2. Run either:
-    * `make web` or
-    * `emcc src/*.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js`
+    * `make web` - produces simple non-optimised output, easier to debug
+    * `make web RELEASE=1` - produces optimised output, harder to debug
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
@@ -323,66 +327,66 @@ Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
 
 #### FreeBSD
 
-1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
+1. Install `gmake`, `libxi`, `libexecinfo`, `openssl` and `openal-soft` packages if needed
 2. Run either:
-    * `make freebsd` or
-    * `cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `gmake freebsd` - produces a simple non-optimised executable, easier to debug
+    * `gmake freebsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### OpenBSD
 
-1. Install `libexecinfo`, `curl` and `openal` packages if needed
+1. Install `gmake`, `libexecinfo`, `openssl` and `openal` packages if needed
 2. Run either:
-    * `make opensd` or
-    * `cc src/*.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `gmake openbsd` - produces a simple non-optimised executable, easier to debug
+    * `gmake openbsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### NetBSD
 
-1. Install `libexecinfo`, `curl` and `openal-soft` packages if needed
+1. Install `gmake`, `libexecinfo`, `openssl` and `openal-soft` packages if needed
 2. Run either:
-    * `make netbsd` or
-    * `cc src/*.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `gmake netbsd` - produces a simple non-optimised executable, easier to debug
+    * `gmake netbsd RELEASE=1` - produces an optimised executable, harder to debug
 
 #### DragonflyBSD
 
-1. Install `libxi`, `libexecinfo`, `curl` and `openal-soft` packages if needed
+1. Install `gmake`, `libxi`, `libexecinfo`, `openssl` and `openal-soft` packages if needed
 2. Run either:
-    * `make dragonfly` or
-    * `cc src/*.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo`
+    * `gmake dragonfly` - produces a simple non-optimised executable, easier to debug
+    * `gmake dragonfly RELEASE=1` - produces an optimised executable, harder to debug
 
 #### Solaris
 
 1. Install required packages if needed
 2. Run either:
-    * `make sunos` or
-    * `gcc -fno-math-errno src/*.c -o ClassiCube -lsocket -lX11 -lXi -lGL`
+    * `make sunos` - produces a simple non-optimised executable, easier to debug
+    * `make sunos RELEASE=1` - produces an optimised executable, harder to debug
 
 #### Haiku
 
 1. Install `gcc`, `haiku_devel`, `openal_devel` packages if needed
 2. Run either:
-    * `make haiku` or
-    * `cc -fno-math-errno src/*.c src/*.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker`
+    * `make haiku` - produces a simple non-optimised executable, easier to debug
+    * `make haiku RELEASE=1` - produces an optimised executable, harder to debug
 
 #### BeOS
 
 1. Install a C compiler
 2. Run either:
-    * `make beos` or
-    * `cc -fno-math-errno src/*.c src/*.cpp -o ClassiCube -lGL -lbe -lgame -ltracker`
+    * `make beos` - produces a simple non-optimised executable, easier to debug
+    * `make beos RELEASE=1` - produces an optimised executable, harder to debug
 
 #### IRIX
 
 1. Install required packages if needed
 2. Run either:
-    * `make irix` or
-    * gcc -fno-math-errno src/*.c -o ClassiCube -lGL -lX11 -lXi -lpthread -ldl`
+    * `make irix` - produces a simple non-optimised executable, easier to debug
+    * `make irix RELEASE=1` - produces an optimised executable, harder to debug
 
 #### SerenityOS
 
 1. Install SDL2 port if needed
 2. Run either:
-    * `make serenityos` or
-    * `cc src/*.c -o ClassiCube -lgl -lSDL2`
+    * `make serenityos` - produces a simple non-optimised executable, easier to debug
+    * `make serenityos RELEASE=1` - produces an optimised executable, harder to debug
 
 #### Classic Mac OS
 
@@ -427,7 +431,6 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 <details>
 <summary><h2>Open source technologies (click to expand)</h2></summary>
 
-* [curl](https://curl.se/) - HTTP/HTTPS for linux and macOS
 * [FreeType](https://www.freetype.org/) - Font handling for all platforms
 * [GCC](https://gcc.gnu.org/) - Compiles client for linux
 * [MinGW-w64](http://mingw-w64.org/doku.php) - Compiles client for windows

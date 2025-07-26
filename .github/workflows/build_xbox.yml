@@ -19,13 +19,15 @@ jobs:
       image: ghcr.io/xboxdev/nxdk:git-e955705a
     steps:
       - uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: |
+          apk add curl curl-dev
+
       - name: Compile Xbox build
         id: compile
         run: |
-          apk add curl curl-dev
           eval $(/usr/src/nxdk/bin/activate -s)
           make xbox
-          cp bin/default.xbe ClassiCube-xbox.xbe
           
 
       - uses: ./.github/actions/notify_failure

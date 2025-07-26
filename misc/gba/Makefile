@@ -1,138 +1,103 @@
-#---------------------------------------------------------------------------------
+ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
+endif
+
 .SUFFIXES:
-#---------------------------------------------------------------------------------
-
-ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
-endif
-
-include $(DEVKITARM)/gba_rules
-
-#---------------------------------------------------------------------------------
-# the LIBGBA path is defined in gba_rules, but we have to define LIBTONC ourselves
-#---------------------------------------------------------------------------------
-LIBTONC := $(DEVKITPRO)/libtonc
-
-#---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# INCLUDES is a list of directories containing extra header files
-# DATA is a list of directories containing binary data
-# GRAPHICS is a list of directories containing files to be processed by grit
-#
-# All directories are specified relative to the project directory where
-# the makefile is found
-#
-#---------------------------------------------------------------------------------
-TARGET		:= ClassiCube-gba
-BUILD		:= build-gba
-SOURCES		:= src
-INCLUDES	:= include
-DATA		:=
-MUSIC		:=
-GRAPHICS	:= graphics
-
-#---------------------------------------------------------------------------------
-# options for code generation
-#---------------------------------------------------------------------------------
-ARCH	:=	-mthumb -mthumb-interwork
-
-CFLAGS	:=	-g -Wall -O2 -DPLAT_GBA -ffunction-sections -fdata-sections\
-		-mcpu=arm7tdmi -mtune=arm7tdmi\
-		$(ARCH)
-
-CFLAGS	+=	$(INCLUDE)
-
-CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
-
-ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-g $(ARCH) -Wl,-Map,$(notdir $*.map)
-
-#---------------------------------------------------------------------------------
-# any extra libraries we wish to link with the project
-#---------------------------------------------------------------------------------
-LIBS	:= -lmm -ltonc
 
 
 #---------------------------------------------------------------------------------
-# list of directories containing libraries, this must be the top level containing
-# include and lib.
-# the LIBGBA path should remain in this list if you want to use maxmod
+# Configurable options
 #---------------------------------------------------------------------------------
-LIBDIRS	:=	$(LIBGBA) $(LIBTONC)
+# Name of the final output
+TARGET 		= ClassiCube-gba
+# List of directories containing source code
+SOURCE_DIRS	= src src/gba
+# Directory where object files are placed
+BUILD_DIR	= build/gba
 
-#---------------------------------------------------------------------------------
-# no real need to edit anything past this point unless you need to add additional
-# rules for different file extensions
-#---------------------------------------------------------------------------------
+GAME_TITLE	= ClassiCube
+GAME_CODE	= 0000
+MAKER_CODE	= 00
 
-
-ifneq ($(BUILD),$(notdir $(CURDIR)))
-#---------------------------------------------------------------------------------
-
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
-
-export DEPSDIR	:=	$(CURDIR)/$(BUILD)
-
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-
-export LD	:=	$(CC)
-
-export OFILES_BIN := $(addsuffix .o,$(BINFILES))
-
-export OFILES_SOURCES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-
-export OFILES_GRAPHICS := $(PNGFILES:.png=.o)
-
-export OFILES := $(OFILES_BIN) $(OFILES_SOURCES) $(OFILES_GRAPHICS)
-
-export HFILES := $(addsuffix .h,$(subst .,_,$(BINFILES))) $(PNGFILES:.png=.h)
-
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-iquote $(CURDIR)/$(dir)) \
-					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-					-I$(CURDIR)/$(BUILD)
-
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-
-.PHONY: $(BUILD) clean
-
-all: $(BUILD)
-	$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/misc/gba/Makefile
 
 #---------------------------------------------------------------------------------
-$(BUILD):
-	mkdir -p $@
+# Compilable files
+#---------------------------------------------------------------------------------
+S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
 
 #---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
+ARCH	= -mthumb -mthumb-interwork
+CFLAGS	= -g -Wall -O2 -DPLAT_GBA -ffunction-sections -fdata-sections -mcpu=arm7tdmi -mtune=arm7tdmi $(ARCH)
+ASFLAGS	= -g $(ARCH)
+
+LDFLAGS	= -specs=gba.specs -g $(ARCH)
+LIBS	= -ltonc
+
+LIBGBA		:= $(DEVKITPRO)/libgba
+INCLUDES 	+= $(foreach dir, $(LIBGBA), -I$(dir)/include)
+LDFLAGS 	+= $(foreach dir, $(LIBGBA), -L$(dir)/lib)
+
+LIBTONC		= $(DEVKITPRO)/libtonc
+INCLUDES 	+= $(foreach dir, $(LIBTONC), -I$(dir)/include)
+LDFLAGS 	+= $(foreach dir, $(LIBTONC), -L$(dir)/lib)
+
+
+#---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+PREFIX	= $(DEVKITPRO)/devkitARM/bin/arm-none-eabi-
+ARM_AS	= $(PREFIX)as
+ARM_CC	= $(PREFIX)gcc
+ARM_OBJCOPY = $(PREFIX)objcopy
+
+GBAFIX = $(DEVKITPRO)/tools/bin/gbafix
+
+
+#---------------------------------------------------------------------------------
+# Main targets
+#---------------------------------------------------------------------------------
+default: $(BUILD_DIR) $(TARGET).gba
+
 clean:
-	echo clean ...
-	rm -fr $(BUILD) $(TARGET).elf $(TARGET).gba
+	rm $(TARGET).gba $(TARGET).elf $(OBJS)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 
 #---------------------------------------------------------------------------------
-else
+# Executable generation
+#---------------------------------------------------------------------------------
+$(TARGET).elf: $(OBJS)
+	$(ARM_CC) $(LDFLAGS) $^ -o $@ $(LIBS)
+
+$(TARGET).gba: $(TARGET).elf
+	$(ARM_OBJCOPY) -O binary $< $@
+	$(GBAFIX) $@ -t$(GAME_TITLE) -c$(GAME_CODE) -m$(MAKER_CODE)
+
 
 #---------------------------------------------------------------------------------
-# main targets
+# Object generation
 #---------------------------------------------------------------------------------
+$(BUILD_DIR)/%.o: src/%.c
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
-$(OUTPUT).gba	:	$(OUTPUT).elf
+$(BUILD_DIR)/%.o: src/gba/%.c
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
-$(OUTPUT).elf	:	$(OFILES)
 
-$(OFILES_SOURCES) : $(HFILES)
+#---------------------------------------------------------------------------------
+# Dependency tracking
+#---------------------------------------------------------------------------------
+$(DEPFILES):
 
-# make likes to delete intermediate files. This prevents it from deleting the
-# files generated by grit after building the GBA ROM.
-.SECONDARY:
-
--include $(DEPSDIR)/*.d
-#---------------------------------------------------------------------------------------
-endif
-#---------------------------------------------------------------------------------------
+include $(wildcard $(DEPFILES))

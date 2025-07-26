@@ -88,6 +88,29 @@ cc_bool  Platform_ReadonlyFilesystem;
 	#include <dlfcn.h>
 #endif
 
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_IOS || defined CC_BUILD_ANDROID
+/* Implemented in interop_ios.m or Platform_Android.c */
+#else
+#include "main_impl.h"
+
+int main(int argc, char** argv) {
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	/* If single process mode, then the loop is launcher -> game -> launcher etc */
+	do {
+		res = RunProgram(argc, argv);
+	} while (Platform_IsSingleProcess() && Window_Main.Exists);
+
+	Window_Free();
+	Process_Exit(res);
+	return res;
+}
+#endif
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -213,6 +236,8 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
+#define IsNullDerefException(info) (info->si_signo == SIGSEGV && info->si_addr == 0)
+
 static const char* SignalDescribe(int type) {
 	switch (type) {
 	case SIGSEGV: return "SIGSEGV";
@@ -245,8 +270,10 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	desc = SignalDescribe(type);
 
 	String_InitArray_NT(msg, msgBuffer);
-	if (desc) {
-		String_Format3(&msg, "Unhandled signal %c (code %i) at %x", desc,  &code, &addr);
+	if (IsNullDerefException(info)) {
+		String_Format1(&msg, "Unhandled NULL_POINTER_DEREF (code %i)", &code);
+	} else if (desc) {
+		String_Format3(&msg, "Unhandled %c (code %i) at %x", desc, &code, &addr);
 	} else {
 		String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
 	}

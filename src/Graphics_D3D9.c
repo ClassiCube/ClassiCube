@@ -260,7 +260,9 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, struct Bitmap* bmp, 
 	cc_result res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	if (res) Process_Abort2(res, "D3D9_LockTextureData");
 
-	CopyTextureData(rect.pBits, rect.Pitch, bmp, rowWidth * BITMAPCOLOR_SIZE);
+	CopyPixels(rect.pBits, rect.Pitch, 
+			   bmp->scan0, rowWidth * BITMAPCOLOR_SIZE,
+			   bmp->width, bmp->height);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
 	if (res) Process_Abort2(res, "D3D9_UnlockTextureData");
@@ -276,7 +278,9 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, co
 	res = IDirect3DTexture9_LockRect(texture, lvl, &rect, &part, 0);
 	if (res) Process_Abort2(res, "D3D9_LockTexturePartData");
 
-	CopyTextureData(rect.pBits, rect.Pitch, bmp, rowWidth * BITMAPCOLOR_SIZE);
+	CopyPixels(rect.pBits, rect.Pitch, 
+			   bmp->scan0, rowWidth * BITMAPCOLOR_SIZE,
+			   bmp->width, bmp->height);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
 	if (res) Process_Abort2(res, "D3D9_UnlockTexturePartData");

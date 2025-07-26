@@ -66,8 +66,8 @@ CC_VAR extern struct _GfxData {
 	/* Whether graphics context has been created */
 	cc_bool Created;
 	struct Matrix View, Projection;
-	/* Whether the graphics backend supports non power of two textures */
-	cc_bool SupportsNonPowTwoTextures;
+	/* Level of support for non power of two textures */
+	cc_uint8 NonPowTwoTexturesSupport;
 	/* Limitations of the graphics backend, see GFX_LIMIT values */
 	cc_uint8 Limitations;
 	/* Type of the backend (e.g. OpenGL, Direct3D 9, etc)*/
@@ -85,6 +85,14 @@ CC_VAR extern struct _GfxData {
 	GfxResourceID DefaultIb;
 } Gfx;
 
+/* Backend has no support at all for non power of two textures */
+#define GFX_NONPOW2_NONE   0x00
+/* Backend only supports uploading non power of two textures */
+/* E.g. 64x20 texture may only occupy 64x20 in VRAM, but is addressed as if it was 64x32 */
+#define GFX_NONPOW2_UPLOAD 0x01
+/* Backend fully supports uploading and addressing non power of two textures */
+#define GFX_NONPOW2_FULL   0x02
+
 /* Whether the graphics backend supports U/V that don't occupy whole texture */
 /*   e.g. Saturn, 3D0 systems don't support it */
 #define GFX_LIMIT_NO_UV_SUPPORT   0x01
@@ -93,6 +101,8 @@ CC_VAR extern struct _GfxData {
 #define GFX_LIMIT_VERTEX_ONLY_FOG 0x02
 /* Whether the graphics backend only supports a small maximum quad size */
 #define GFX_LIMIT_MAX_VERTEX_SIZE 0x04
+/* Whether the graphics backend is minimal (no fog, clouds, sky) */
+#define GFX_LIMIT_MINIMAL         0x08
 
 extern const cc_string Gfx_LowPerfMessage;
 
@@ -306,7 +316,7 @@ CC_API void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count);
 CC_API void  Gfx_UnlockVb(GfxResourceID vb);
 
 /* TODO: How to make LockDynamicVb work with OpenGL 1.1 Builder stupidity. */
-#ifdef CC_BUILD_GL11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 /* Special case of Gfx_Create/LockVb for building chunks in Builder.c */
 GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count);
 #endif

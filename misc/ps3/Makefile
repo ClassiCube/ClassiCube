@@ -1,8 +1,3 @@
-#---------------------------------------------------------------------------------
-# Clear the implicit built in rules
-#---------------------------------------------------------------------------------
-.SUFFIXES:
-#---------------------------------------------------------------------------------
 ifeq ($(strip $(PS3DEV)),)
 $(error "Please set PS3DEV in your environment. export PS3DEV=<path>")
 endif
@@ -10,135 +5,154 @@ ifeq ($(strip $(PSL1GHT)),)
 $(error "Please set PSL1GHT in your environment. export PSL1GHT=<path>")
 endif
 
-include $(PS3DEV)/ppu_rules
+.SUFFIXES:
+
 
 #---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# INCLUDES is a list of directories containing extra header files
+# Configurable options
 #---------------------------------------------------------------------------------
-TARGET		:=	ClassiCube-PS3
-BUILD		:=	build-ps3
-SOURCES		:=	src third_party/bearssl/src
-INCLUDES	:= third_party/bearssl/inc
-SHADERS		:=	misc/ps3
+# Name of the final output
+TARGET		= ClassiCube-PS3
+# Directory where object files are placed
+BUILD_DIR	= build/ps3
+# List of directories containing source code
+SOURCE_DIRS = src src/ps3 third_party/bearssl
+SHADERS		= misc/ps3
 
-TITLE		:=	ClassiCube
-APPID		:=	CUBE00200
-CONTENTID	:=	UP0001-$(APPID)_00-0000000000000000
-ICON0		:=	../misc/ps3/ICON0.png
-#---------------------------------------------------------------------------------
-# options for code generation
-#---------------------------------------------------------------------------------
+TITLE		= ClassiCube
+APPID		= CUBE00200
+CONTENTID	= UP0001-$(APPID)_00-0000000000000000
+ICON0		= misc/ps3/ICON0.png
+SFOXML		= misc/ps3/sfo.xml
 
-CFLAGS		=	-O2 -DPLAT_PS3 -Wall -mcpu=cell -fno-math-errno $(MACHDEP) $(INCLUDE)
-CXXFLAGS	=	$(CFLAGS)
-
-LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map -fno-use-linker-plugin
 
 #---------------------------------------------------------------------------------
-# any extra libraries we wish to link with the project
+# Compilable files
 #---------------------------------------------------------------------------------
-LIBS	:=	-lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm -lnet -lsysmodule 
+S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+# Shaders
+VCGFILES	:= $(notdir $(wildcard $(SHADERS)/*.vcg))
+FCGFILES	:= $(notdir $(wildcard $(SHADERS)/*.fcg))
+VPOFILES	:= $(addprefix $(BUILD_DIR)/, $(VCGFILES:.vcg=.vpo))
+FPOFILES	:= $(addprefix $(BUILD_DIR)/, $(FCGFILES:.fcg=.fpo))
+
+OBJS 		+= $(addsuffix .o, $(VPOFILES))
+OBJS 		+= $(addsuffix .o, $(FPOFILES))
+
 
 #---------------------------------------------------------------------------------
-# list of directories containing libraries, this must be the top level containing
-# include and lib
-#---------------------------------------------------------------------------------
-LIBDIRS	:=
+# Code generation
+#--------------------------------------------------------------------------------
+MACHDEP	= -mhard-float -fmodulo-sched -ffunction-sections -fdata-sections
+
+CFLAGS	= -O2 -DPLAT_PS3 -Wall -mcpu=cell -fno-math-errno $(MACHDEP) $(INCLUDE)
+LDFLAGS	= $(MACHDEP) -Wl,-Map,$(notdir $@).map -fno-use-linker-plugin
+LIBS	= -lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm -lnet -lsysmodule 
+
+INCLUDE = -I$(PSL1GHT)/ppu/include -I$(PSL1GHT)/ppu/include/simdmath
+LIBPATHS = -L$(PSL1GHT)/ppu/lib
+
 
 #---------------------------------------------------------------------------------
-# no real need to edit anything past this point unless you need to add additional
-# rules for different file extensions
+# Compiler tools
 #---------------------------------------------------------------------------------
-ifneq ($(BUILD),$(notdir $(CURDIR)))
-#---------------------------------------------------------------------------------
+AS		:=	$(PS3DEV)/ppu/bin/ppu-as
+CC		:=	$(PS3DEV)/ppu/bin/ppu-gcc
+LD		:=	$(PS3DEV)/ppu/bin/ppu-gcc
+STRIP	:=	$(PS3DEV)/ppu/bin/ppu-strip
+OBJCOPY	:=	$(PS3DEV)/ppu/bin/ppu-objcopy
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
+PKG		:=	$(PS3DEV)/bin/pkg.py
+SFO		:=	$(PS3DEV)/bin/sfo.py
 
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(SHADERS),$(CURDIR)/$(dir))
+SPRX	:=	$(PS3DEV)/bin/sprxlinker
+CGCOMP	:=	$(PS3DEV)/bin/cgcomp
 
-export DEPSDIR	:=	$(CURDIR)/$(BUILD)
+# fake SELF type4 / type8 tools
+FSELF			:=	$(PS3DEV)/bin/fself
+FSELF_NPDRM		:=	$(PS3DEV)/bin/fself -n
 
-export BUILDDIR	:=	$(CURDIR)/$(BUILD)
+# signed SELF type4 / type8 tools
+SELF			:=	$(PS3DEV)/bin/make_self
+SELF_NPDRM		:=	$(PS3DEV)/bin/make_self_npdrm
 
-#---------------------------------------------------------------------------------
-# automatically build a list of object files for our project
-#---------------------------------------------------------------------------------
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
-VCGFILES	:=	$(notdir $(wildcard misc/ps3/*.vcg))
-FCGFILES	:=	$(notdir $(wildcard misc/ps3/*.fcg))
-
-VPOFILES	:=	$(VCGFILES:.vcg=.vpo)
-FPOFILES	:=	$(FCGFILES:.fcg=.fpo)
+# NPDRM pkg tool
+PACKAGE_FINALIZE :=	$(PS3DEV)/bin/package_finalize
 
 #---------------------------------------------------------------------------------
-# use CXX for linking C++ projects, CC for standard C
+# Main targets
 #---------------------------------------------------------------------------------
-export LD	:=	$(CC)
-export OFILES	:=	$(CFILES:.c=.o) $(sFILES:.s=.o) $(SFILES:.S=.o) \
-			$(addsuffix .o,$(VPOFILES)) \
-			$(addsuffix .o,$(FPOFILES))
-			
-#---------------------------------------------------------------------------------
-# build a list of include paths
-#---------------------------------------------------------------------------------
-export INCLUDE	:=	$(foreach dir,$(INCLUDES), -I$(CURDIR)/$(dir)) \
-					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-					$(LIBPSL1GHT_INC) \
-					-I$(CURDIR)/$(BUILD)
+default: $(BUILD_DIR) $(TARGET).pkg $(TARGET).fake.self
 
-#---------------------------------------------------------------------------------
-# build a list of library paths
-#---------------------------------------------------------------------------------
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
-					$(LIBPSL1GHT_LIB)
-
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-.PHONY: $(BUILD) clean
-
-#---------------------------------------------------------------------------------
-$(BUILD):
-	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/misc/ps3/Makefile
-
-#---------------------------------------------------------------------------------
 clean:
-	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).self
+	rm -f $(TARGET).elf $(TARGET).fake.self $(TARGET).sprx $(TARGET).self $(TARGET).pkg $(OBJS) $(DEPFILES)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
 
 #---------------------------------------------------------------------------------
-else
+# Executable generation
+#---------------------------------------------------------------------------------
+$(TARGET).elf: $(OBJS)
+	$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -o $@
 
-DEPENDS	:=	$(OFILES:.o=.d)
+$(TARGET).fake.self: $(TARGET).elf
+	$(FSELF) $< $@
+
+$(TARGET).sprx: $(TARGET).elf
+	$(STRIP) $< -o $@
+	$(SPRX) $@
+
+$(TARGET).self: $(TARGET).sprx
+	$(SELF) $< $@
+
+$(TARGET).pkg: $(TARGET).self
+	mkdir -p $(BUILD_DIR)/pkg/USRDIR
+	cp $(ICON0) $(BUILD_DIR)/pkg/ICON0.PNG
+	$(SELF_NPDRM) $(TARGET).sprx $(BUILD_DIR)/pkg/USRDIR/EBOOT.BIN $(CONTENTID) >> /dev/null
+	$(SFO) --title "$(TITLE)" --appid "$(APPID)" -f $(SFOXML) $(BUILD_DIR)/pkg/PARAM.SFO
+	$(PKG) --contentid $(CONTENTID) $(BUILD_DIR)/pkg/ $@ >> /dev/null
+	cp $@ $(TARGET).gnpdrm.pkg
+	$(PACKAGE_FINALIZE) $(TARGET).gnpdrm.pkg
+
 
 #---------------------------------------------------------------------------------
-# main targets
+# Object generation
 #---------------------------------------------------------------------------------
-$(OUTPUT).pkg: $(OUTPUT).self
-$(OUTPUT).self: $(OUTPUT).elf
-$(OUTPUT).elf:	$(OFILES)
+$(BUILD_DIR)/%.o: src/%.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/ps3/%.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/ps3/%.S
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+
+$(BUILD_DIR)/%.vpo: $(SHADERS)/%.vcg
+	$(CGCOMP) -v $(CGCFLAGS) $^ $@
+$(BUILD_DIR)/%.fpo: $(SHADERS)/%.fcg
+	$(CGCOMP) -f $(CGCFLAGS) $^ $@
+
+$(BUILD_DIR)/%.vpo.o: $(BUILD_DIR)/%.vpo
+	bin2s -a 64 $< | $(AS) -o $@
+$(BUILD_DIR)/%.fpo.o: $(BUILD_DIR)/%.fpo
+	bin2s -a 64 $< | $(AS) -o $@
+
 
 #---------------------------------------------------------------------------------
-# This rule links in binary data with the .bin extension
-%.bin.o : %.bin
-	@echo $(notdir $<)
-	@$(bin2o)
-	
-%.vpo.o : %.vpo
-	@echo $(notdir $<)
-	@$(bin2o)
-
-%.fpo.o : %.fpo
-	@echo $(notdir $<)
-	@$(bin2o)
-
--include $(DEPENDS)
-
+# Dependency tracking
 #---------------------------------------------------------------------------------
-endif
-#---------------------------------------------------------------------------------
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))

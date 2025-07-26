@@ -23,17 +23,18 @@ jobs:
         shell: bash
         id: compile
         env: 
-          COMMON_FLAGS:      "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
-          MAC_ARM64_FLAGS:   "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -arch arm64"
-          MAC_INTEL64_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -arch x86_64"
+          LIBS: "-framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc"
+          SRCS: "src/*.c src/Window_cocoa.m third_party/bearssl/*.c"
+          FLAGS:  "-O1 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -rdynamic"
+          ARM64_FLAGS:   "-DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -arch arm64"
+          INTEL64_FLAGS: "-arch x86_64"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"
-          cd src
           
-          MACOSX_DEPLOYMENT_TARGET=10.5 clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_INTEL64_FLAGS }} $LATEST_FLAG -o cc-mac64-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
-          MACOSX_DEPLOYMENT_TARGET=10.5 clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_INTEL64_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-mac64-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          MACOSX_DEPLOYMENT_TARGET=10.5 clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.INTEL64_FLAGS }} $LATEST_FLAG -o cc-mac64-gl1 ${{ env.LIBS }}
+          MACOSX_DEPLOYMENT_TARGET=10.5 clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.INTEL64_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-mac64-gl2 ${{ env.LIBS }}
           
-          clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_ARM64_FLAGS }} $LATEST_FLAG -o cc-mac-arm64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          clang ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.ARM64_FLAGS }} $LATEST_FLAG -o cc-mac-arm64 ${{ env.LIBS }}
           # https://wiki.freepascal.org/Code_Signing_for_macOS#Ad_hoc_signing
 
       - uses: ./.github/actions/notify_failure
@@ -46,19 +47,19 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-mac64-gl1'
+          SOURCE_FILE: 'cc-mac64-gl1'
           DEST_NAME: 'ClassiCube-mac64-OpenGL'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-mac64-gl2'
+          SOURCE_FILE: 'cc-mac64-gl2'
           DEST_NAME: 'ClassiCube-mac64-ModernGL'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-mac-arm64'
+          SOURCE_FILE: 'cc-mac-arm64'
           DEST_NAME: 'ClassiCube-mac-ARM64'
           
           

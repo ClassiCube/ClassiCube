@@ -25,21 +25,22 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files
         run: |
-          mkdir src/rpi
-          cd src/rpi
+          mkdir rpi
+          cd rpi
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/rpi32.zip
           unzip rpi32.zip
 
       - name: Compile RPI 32 bit build
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
-          RPI32_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
+          SRCS: "src/*.c third_party/bearssl/*.c"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          RPI32_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           
-          cd src
-          $CC *.c ${{ env.COMMON_FLAGS }} ${{ env.RPI32_FLAGS }} $LATEST_FLAG -o cc-rpi32 -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt
+          $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI32_FLAGS }} $LATEST_FLAG -o cc-rpi32 ${{ env.LIBS }}
 
 
       - uses: ./.github/actions/notify_failure
@@ -52,7 +53,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-rpi32'
+          SOURCE_FILE: 'cc-rpi32'
           DEST_NAME: 'cc-rpi32'
           
           
@@ -76,21 +77,22 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files
         run: |
-          mkdir src/rpi
-          cd src/rpi
+          mkdir rpi
+          cd rpi
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/rpi64.zip
           unzip rpi64.zip     
 
       - name: Compile RPI 64 bit build
         id: compile
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
-          RPI64_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
+          SRCS: "src/*.c third_party/bearssl/*.c"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          RPI64_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           
-          cd src
-          $CC *.c ${{ env.COMMON_FLAGS }} ${{ env.RPI64_FLAGS }} $LATEST_FLAG -o cc-rpi64 -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt
+          $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI64_FLAGS }} $LATEST_FLAG -o cc-rpi64 ${{ env.LIBS }}
 
 
       - uses: ./.github/actions/notify_failure
@@ -103,7 +105,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-rpi64'
+          SOURCE_FILE: 'cc-rpi64'
           DEST_NAME: 'cc-rpi64'
           
           

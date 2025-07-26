@@ -1,0 +1,46 @@
+TARGETTYPE	  exe
+UID			 0x100039CE 0xE212A5C2
+
+USERINCLUDE ../../src
+USERINCLUDE ../../src/freetype
+
+LIBRARY euser.lib
+LIBRARY apgrfx.lib
+LIBRARY cone.lib
+LIBRARY avkon.lib
+LIBRARY fbscli.lib
+LIBRARY ws32.lib
+LIBRARY hal.lib
+LIBRARY efsrv.lib
+LIBRARY apparc.lib
+LIBRARY eikcore.lib
+LIBRARY eikdlg.lib
+LIBRARY mediaclientaudiostream.lib
+
+LIBRARY libc.lib
+LIBRARY libm.lib
+LIBRARY libdl.lib
+LIBRARY libpthread.lib
+
+STATICLIBRARY ClassiCube_bearssl.lib
+
+SOURCEPATH ../../src
+SOURCE Animations.c Audio.c Audio_Null.c AxisLinesRenderer.c Bitmap.c Block.c BlockPhysics.c Builder.c Camera.c Chat.c Commands.c Deflate.c Drawer.c Drawer2D.c Entity.c EntityComponents.c EntityRenderers.c EnvRenderer.c Event.c ExtMath.c FancyLighting.c Formats.c Game.c GameVersion.c Generator.c Graphics_GL1.c Graphics_SoftGPU.c Gui.c HeldBlockRenderer.c Http_Worker.c Input.c InputHandler.c Inventory.c IsometricDrawer.c LBackend.c LScreens.c LWeb.c LWidgets.c Launcher.c Lighting.c Logger.c MapRenderer.c MenuOptions.c Menus.c Model.c Options.c PackedCol.c Particle.c Physics.c Picking.c Platform_Posix.c Protocol.c Queue.c Resources.c SSL.c Screens.c SelOutlineRenderer.c SelectionBox.c Server.c Stream.c String.c SystemFonts.c TexturePack.c TouchUI.c Utils.c Vectors.c Widgets.c World.c _autofit.c _cff.c _ftbase.c _ftbitmap.c _ftglyph.c _ftinit.c _ftsynth.c _psaux.c _pshinter.c _psmodule.c _sfnt.c _smooth.c _truetype.c _type1.c Vorbis.c Platform_Symbian.cpp Graphics_GL2.c Window_Symbian.cpp Audio_Symbian.cpp Certs.c
+
+SOURCEPATH .
+START RESOURCE classicube.rss
+HEADER
+TARGETPATH \resource\apps
+LANG SC
+END
+
+START RESOURCE classicube_reg.rss
+TARGETPATH \private\10003a3f\import\apps
+END
+
+CAPABILITY NetworkServices ReadUserData UserEnvironment WriteUserData
+
+EPOCSTACKSIZE 0x14000
+EPOCHEAPSIZE 0x80000 0x4000000
+
+#include "common.mmh"

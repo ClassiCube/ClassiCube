@@ -1,0 +1,30 @@
+MACRO SYMBIAN_OE_POSIX_SIGNALS
+
+SYSTEMINCLUDE /epoc32
+SYSTEMINCLUDE /epoc32/include
+SYSTEMINCLUDE /epoc32/include/mw
+SYSTEMINCLUDE /epoc32/include/app
+SYSTEMINCLUDE /epoc32/include/platform
+SYSTEMINCLUDE /epoc32/include/platform/mw
+SYSTEMINCLUDE /epoc32/include/platform/app
+SYSTEMINCLUDE /epoc32/include/gles
+SYSTEMINCLUDE /epoc32/include/stdapis
+
+SYSTEMINCLUDE .
+
+USERINCLUDE ../../third_party/bearssl/inc
+USERINCLUDE ../../third_party/bearssl/src
+
+#ifdef ARMCC
+OPTION ARMCC -Otime --diag_suppress 1296 --diag_suppress 1293 --diag_suppress 66
+#ifndef ARMV5
+OPTION_REPLACE ARMCC --cpu 6
+OPTION_REPLACE ARMCC --fpu softvfp+vfpv2 --fpmode fast
+OPTION_REPLACE ARMCC -O2 -O3
+#endif
+#endif
+
+DEBUGGABLE_UDEBONLY
+#ifdef _DEBUG
+SRCDBG
+#endif

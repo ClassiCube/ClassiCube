@@ -709,5 +709,21 @@ static cc_result GetMachineID(cc_uint32* key) {
 	}
 	return 0;
 }
+
+#ifndef __ARMCC_4_0__
+extern "C" {
+extern int __aeabi_uidivmod(unsigned int a, unsigned int b);
+extern int __aeabi_idivmod(int a, int b);
+int __aeabi_idiv(int a, int b)
+{
+	return __aeabi_idivmod(a, b);
+}
+
+int __aeabi_uidiv(unsigned int a, unsigned int b)
+{
+	return __aeabi_uidivmod(a, b);
+}
+}
 #endif
 
+#endif

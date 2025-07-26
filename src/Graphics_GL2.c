@@ -118,8 +118,13 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return FastAllocTempMem(count * strideSizes[fmt]);
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) {
+static cc_bool UnlockVb(GfxResourceID vb) {
 	glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
+#if defined CC_BUILD_SYMBIAN
+	return glGetError() != GL_OUT_OF_MEMORY;
+#else
+	return true;
+#endif
 }
 
 

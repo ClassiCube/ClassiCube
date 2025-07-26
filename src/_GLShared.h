@@ -69,7 +69,7 @@ static void* FastAllocTempMem(int size) {
 *#########################################################################################################################*/
 static cc_bool convert_rgba;
 
-static void ConvertRGBA(void* dst, void* src, int numPixels) {
+static void ConvertRGBA(void* dst, const void* src, int numPixels) {
 	cc_uint8* d = (cc_uint8*)dst;
 	cc_uint8* s = (cc_uint8*)src;
 	int i;
@@ -163,8 +163,9 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
 	}
 
-	CopyTextureData(ptr, part->width * BITMAPCOLOR_SIZE,
-					part, rowWidth   * BITMAPCOLOR_SIZE);
+	CopyPixels(ptr,         part->width * BITMAPCOLOR_SIZE,
+			   part->scan0, rowWidth    * BITMAPCOLOR_SIZE,
+			   part->width, part->height);
 
 	if (full) {
 		CallTexImage2D(0, part->width, part->height, ptr);
@@ -417,4 +418,14 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 	if (enabled) { _glEnable(GL_SCISSOR_TEST); } else { _glDisable(GL_SCISSOR_TEST); }
 
 	_glScissor(x, Game.Height - h - y, w, h);
+}
+
+static cc_bool UnlockVb(GfxResourceID vb);
+
+void Gfx_UnlockVb(GfxResourceID vb) {
+	for (;;) {
+		if (UnlockVb(vb)) return;
+		
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (updating static VB)");
+	}
 }

@@ -19,11 +19,14 @@ jobs:
       image: skylyrac/blocksds:dev-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile NDS build
-        id: compile
+      - name: Install prerequisites
         run: |
           apt-get update
           apt-get -y install curl
+
+      - name: Compile NDS build
+        id: compile
+        run: |
           make ds
           export BUILD_DSI=1
           make ds

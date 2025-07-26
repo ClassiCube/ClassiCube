@@ -22,7 +22,6 @@ set(${CMAKE_C_FLAGS}, "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Werror")
 
 add_library(classicube SHARED
-        ../../src/main.c
         ../../src/IsometricDrawer.c
         ../../src/Builder.c
         ../../src/ExtMath.c
@@ -107,9 +106,128 @@ add_library(classicube SHARED
         ../../src/MenuOptions.c
         ../../src/FancyLighting.c
         ../../src/Queue.c
+        ../../src/SSL.c
+        ../../src/Certs.c
+        ../../third_party/bearssl/aes_big_cbcdec.c
+        ../../third_party/bearssl/aes_big_cbcenc.c
+        ../../third_party/bearssl/aes_big_ctr.c
+        ../../third_party/bearssl/aes_big_ctrcbc.c
+        ../../third_party/bearssl/aes_big_dec.c
+        ../../third_party/bearssl/aes_big_enc.c
+        ../../third_party/bearssl/aes_common.c
+        ../../third_party/bearssl/aesctr_drbg.c
+        ../../third_party/bearssl/aes_x86ni.c
+        ../../third_party/bearssl/aes_x86ni_cbcdec.c
+        ../../third_party/bearssl/aes_x86ni_cbcenc.c
+        ../../third_party/bearssl/aes_x86ni_ctr.c
+        ../../third_party/bearssl/aes_x86ni_ctrcbc.c
+        ../../third_party/bearssl/asn1enc.c
+        ../../third_party/bearssl/ccm.c
+        ../../third_party/bearssl/ccopy.c
+        ../../third_party/bearssl/chacha20_ct.c
+        ../../third_party/bearssl/chacha20_sse2.c
+        ../../third_party/bearssl/dec32be.c
+        ../../third_party/bearssl/dec32le.c
+        ../../third_party/bearssl/dec64be.c
+        ../../third_party/bearssl/dec64le.c
+        ../../third_party/bearssl/dig_oid.c
+        ../../third_party/bearssl/dig_size.c
+        ../../third_party/bearssl/ec_all_m31.c
+        ../../third_party/bearssl/ec_c25519_i31.c
+        ../../third_party/bearssl/ec_c25519_m31.c
+        ../../third_party/bearssl/ec_c25519_m62.c
+        ../../third_party/bearssl/ec_c25519_m64.c
+        ../../third_party/bearssl/ec_curve25519.c
+        ../../third_party/bearssl/ec_default.c
+        ../../third_party/bearssl/ecdsa_atr.c
+        ../../third_party/bearssl/ecdsa_default_vrfy_asn1.c
+        ../../third_party/bearssl/ecdsa_default_vrfy_raw.c
+        ../../third_party/bearssl/ecdsa_i31_bits.c
+        ../../third_party/bearssl/ecdsa_i31_vrfy_asn1.c
+        ../../third_party/bearssl/ecdsa_i31_vrfy_raw.c
+        ../../third_party/bearssl/ec_p256_m31.c
+        ../../third_party/bearssl/ec_p256_m62.c
+        ../../third_party/bearssl/ec_p256_m64.c
+        ../../third_party/bearssl/ec_prime_i31.c
+        ../../third_party/bearssl/ec_secp256r1.c
+        ../../third_party/bearssl/ec_secp384r1.c
+        ../../third_party/bearssl/ec_secp521r1.c
+        ../../third_party/bearssl/enc32be.c
+        ../../third_party/bearssl/enc32le.c
+        ../../third_party/bearssl/enc64be.c
+        ../../third_party/bearssl/enc64le.c
+        ../../third_party/bearssl/gcm.c
+        ../../third_party/bearssl/ghash_ctmul64.c
+        ../../third_party/bearssl/ghash_ctmul.c
+        ../../third_party/bearssl/ghash_pclmul.c
+        ../../third_party/bearssl/hmac.c
+        ../../third_party/bearssl/hmac_ct.c
+        ../../third_party/bearssl/hmac_drbg.c
+        ../../third_party/bearssl/i31_add.c
+        ../../third_party/bearssl/i31_bitlen.c
+        ../../third_party/bearssl/i31_decmod.c
+        ../../third_party/bearssl/i31_decode.c
+        ../../third_party/bearssl/i31_decred.c
+        ../../third_party/bearssl/i31_encode.c
+        ../../third_party/bearssl/i31_fmont.c
+        ../../third_party/bearssl/i31_iszero.c
+        ../../third_party/bearssl/i31_moddiv.c
+        ../../third_party/bearssl/i31_modpow2.c
+        ../../third_party/bearssl/i31_modpow.c
+        ../../third_party/bearssl/i31_montmul.c
+        ../../third_party/bearssl/i31_mulacc.c
+        ../../third_party/bearssl/i31_muladd.c
+        ../../third_party/bearssl/i31_ninv31.c
+        ../../third_party/bearssl/i31_reduce.c
+        ../../third_party/bearssl/i31_rshift.c
+        ../../third_party/bearssl/i31_sub.c
+        ../../third_party/bearssl/i31_tmont.c
+        ../../third_party/bearssl/i32_div32.c
+        ../../third_party/bearssl/i62_modpow2.c
+        ../../third_party/bearssl/md5.c
+        ../../third_party/bearssl/md5sha1.c
+        ../../third_party/bearssl/multihash.c
+        ../../third_party/bearssl/poly1305_ctmul.c
+        ../../third_party/bearssl/poly1305_ctmulq.c
+        ../../third_party/bearssl/prf.c
+        ../../third_party/bearssl/prf_md5sha1.c
+        ../../third_party/bearssl/prf_sha256.c
+        ../../third_party/bearssl/prf_sha384.c
+        ../../third_party/bearssl/rsa_default_pkcs1_vrfy.c
+        ../../third_party/bearssl/rsa_default_priv.c
+        ../../third_party/bearssl/rsa_default_pub.c
+        ../../third_party/bearssl/rsa_i31_pkcs1_vrfy.c
+        ../../third_party/bearssl/rsa_i31_priv.c
+        ../../third_party/bearssl/rsa_i31_pub.c
+        ../../third_party/bearssl/rsa_i62_pkcs1_vrfy.c
+        ../../third_party/bearssl/rsa_i62_priv.c
+        ../../third_party/bearssl/rsa_i62_pub.c
+        ../../third_party/bearssl/rsa_pkcs1_sig_unpad.c
+        ../../third_party/bearssl/sha1.c
+        ../../third_party/bearssl/sha2big.c
+        ../../third_party/bearssl/sha2small.c
+        ../../third_party/bearssl/ssl_client.c
+        ../../third_party/bearssl/ssl_client_default_rsapub.c
+        ../../third_party/bearssl/ssl_client_full.c
+        ../../third_party/bearssl/ssl_engine.c
+        ../../third_party/bearssl/ssl_engine_default_aescbc.c
+        ../../third_party/bearssl/ssl_engine_default_aesccm.c
+        ../../third_party/bearssl/ssl_engine_default_aesgcm.c
+        ../../third_party/bearssl/ssl_engine_default_chapol.c
+        ../../third_party/bearssl/ssl_engine_default_ec.c
+        ../../third_party/bearssl/ssl_engine_default_ecdsa.c
+        ../../third_party/bearssl/ssl_engine_default_rsavrfy.c
+        ../../third_party/bearssl/ssl_hashes.c
+        ../../third_party/bearssl/ssl_hs_client.c
+        ../../third_party/bearssl/ssl_io.c
+        ../../third_party/bearssl/ssl_rec_cbc.c
+        ../../third_party/bearssl/ssl_rec_ccm.c
+        ../../third_party/bearssl/ssl_rec_chapol.c
+        ../../third_party/bearssl/ssl_rec_gcm.c
+        ../../third_party/bearssl/x509_minimal.c
+        ../../third_party/bearssl/x509_minimal_full.c
         )
 
-# add lib dependencies
 target_link_libraries(classicube
     android
     EGL

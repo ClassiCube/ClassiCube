@@ -23,6 +23,7 @@ jobs:
         run: Invoke-WebRequest https://nnp.nnchan.ru/dl/symbiansr1_gcce_workflow.zip -OutFile symbiansdk.zip
       - name: Extract Symbian SDK
         run: Expand-Archive symbiansdk.zip -DestinationPath .
+
       - name: Compile Symbian build
         id: compile
         run: |

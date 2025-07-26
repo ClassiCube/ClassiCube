@@ -1,113 +1,89 @@
-#---------------------------------------------------------------------------------
-# Clear the implicit built in rules
-#---------------------------------------------------------------------------------
-.SUFFIXES:
-
-#---------------------------------------------------------------------------------
 ifeq ($(strip $(DEVKITXENON)),)
 $(error "Please set DEVKITXENON in your environment. export DEVKITXENON=<path to>devkitPPC")
 endif
 
-#---------------------------------------------------------------------------------
-export LIBXENON_INC	:= $(DEVKITXENON)/usr/include
-export LIBXENON_LIB	:= $(DEVKITXENON)/usr/lib
-LDSCRIPT 			:= $(DEVKITXENON)/app.lds
-
-MACHDEP = -DXENON -m32 -maltivec -fno-pic -mpowerpc64 -mhard-float -L$(DEVKITXENON)/xenon/lib/32
-
-export AS		:= xenon-as
-export CC		:= xenon-gcc
-export CXX		:= xenon-g++
-export AR       := xenon-ar
+.SUFFIXES:
 
 
 #---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# INCLUDES is a list of directories containing extra header files
+# Configurable options
 #---------------------------------------------------------------------------------
+# Name of the final output
 TARGET		:=	ClassiCube-xbox360
-BUILD		:=	build-360
-SOURCES		:=	src third_party/bearssl/src
+# Directory where object files are placed
+BUILD_DIR	:=	build/xbox360
+# List of directories containing source code
+SOURCE_DIRS	:=	src src/xbox360 third_party/bearssl
+
 
 #---------------------------------------------------------------------------------
-# options for code generation
+# Compilable files
 #---------------------------------------------------------------------------------
+S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+
+# Dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(OBJS:%.o=%.d)
+
+
+#---------------------------------------------------------------------------------
+# Code generation
+#---------------------------------------------------------------------------------
+MACHDEP = -DXENON -m32 -maltivec -fno-pic -mpowerpc64 -mhard-float -L$(DEVKITXENON)/xenon/lib/32
+LDSCRIPT = $(DEVKITXENON)/app.lds
 
 CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-CXXFLAGS=	$(CFLAGS)
+LDFLAGS	= -g $(MACHDEP) -Wl,--gc-sections
+LIBS	= -lxenon -lm -lfat
 
-LDFLAGS	=	-g $(MACHDEP) -Wl,--gc-sections -Wl,-Map,$(notdir $@).map
+CFLAGS  += -I$(DEVKITXENON)/usr/include
+LDFLAGS += -L$(DEVKITXENON)/usr/lib
 
-#---------------------------------------------------------------------------------
-# any extra libraries we wish to link with the project
-#---------------------------------------------------------------------------------
-LIBS	:=	-lxenon -lm -lfat
 
 #---------------------------------------------------------------------------------
-# list of directories containing libraries, this must be the top level containing
-# include and lib
+# Main targets
 #---------------------------------------------------------------------------------
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
+default: $(BUILD_DIR) $(TARGET).elf32
 
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
+clean:
+	rm -f $(TARGET).elf $(TARGET).elf32 $(OBJS) $(DEPFILES)
 
-export DEPSDIR	:=	$(CURDIR)/$(BUILD)
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-#---------------------------------------------------------------------------------
-# automatically build a list of object files for our project
-#---------------------------------------------------------------------------------
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
-
-export LD		:=	$(CC)
-export OFILES	:=	$(CFILES:.c=.o) $(sFILES:.s=.o) $(SFILES:.S=.o)
 
 #---------------------------------------------------------------------------------
-# build a list of include paths
+# Executable generation
 #---------------------------------------------------------------------------------
-export INCLUDE	:= -I$(LIBXENON_INC) -Ithird_party/bearssl/inc
-
-#---------------------------------------------------------------------------------
-# build a list of library paths
-#---------------------------------------------------------------------------------
-export LIBPATHS	:= -L$(LIBXENON_LIB)
-
-#---------------------------------------------------------------------------------
-# main targets
-#---------------------------------------------------------------------------------
-default: $(BUILD) $(TARGET).elf32
+$(TARGET).elf: $(OBJS)
+	xenon-gcc $^ $(LDFLAGS) $(LIBS) -n -T $(LDSCRIPT) -o $@
 
 $(TARGET).elf32: $(TARGET).elf
-$(TARGET).elf: $(OFILES)
-
-
-#---------------------------------------------------------------------------------
-$(BUILD):
-	[ -d $@ ] || mkdir -p $@
-
-#---------------------------------------------------------------------------------
-clean:
-	echo clean ...
-	rm -fr $(BUILD) $(TARGET).elf $(TARGET).elf32
-	
-#---------------------------------------------------------------------------------
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-%.o: %.s
-	$(CC) -x assembler-with-cpp $(ASFLAGS) -c $< -o $@
-
-%.o: %.S
-	$(CC) -x assembler-with-cpp $(ASFLAGS) -c $< -o $@
-
-%.elf:
-	echo linking ... $(notdir $@)
-	$(LD)  $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -n -T $(LDSCRIPT) -o $@
-
-%.elf32: %.elf
-	echo converting and stripping ... $(notdir $@)
 	xenon-objcopy -O elf32-powerpc --adjust-vma 0x80000000 $< $@
 	xenon-strip $@
+
+
+#---------------------------------------------------------------------------------
+# Object generation
+#---------------------------------------------------------------------------------
+$(BUILD_DIR)/%.o: src/%.c
+	xenon-gcc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/xbox360/%.c
+	xenon-gcc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/xbox360/%.S
+	xenon-gcc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: third_party/bearssl/%.c
+	xenon-gcc $(CFLAGS) -c $< -o $@
+
+
+#---------------------------------------------------------------------------------
+# Dependency tracking
+#---------------------------------------------------------------------------------
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))

@@ -881,19 +881,19 @@ static PROC  (WINAPI *_wglGetProcAddress)(LPCSTR func);
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
 static FP_SWAPINTERVAL _wglSwapIntervalEXT;
 
-static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
+static void GLContext_SelectPixelFormat(void) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
-	int modeIndex;
+	int modeIndex, bpp = DisplayInfo.Depth;
 
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 	pfd.dwFlags  = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
 
-	pfd.cColorBits = mode->R + mode->G + mode->B;
+	pfd.cColorBits = bpp == 32 ? 24 : bpp; /* number of R + G + B bits */
 	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
 	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cAlphaBits = mode->A; /* TODO not needed? test on Intel */
+	pfd.cAlphaBits = bpp == 32 ? 8 : 0; /* TODO not needed? test on Intel */
 
 	modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) { Process_Abort("Requested graphics mode not available"); }
@@ -918,11 +918,8 @@ void GLContext_Create(void) {
 		DynamicLib_OptSym(wglGetProcAddress)
 	};
 	static const cc_string glPath = String_FromConst("OPENGL32.dll");
-	struct GraphicsMode mode;
-
-	InitGraphicsMode(&mode);
-	GLContext_SelectGraphicsMode(&mode);
 	DynamicLib_LoadAll(&glPath, funcs, Array_Elems(funcs), &gl_lib);
+	GLContext_SelectPixelFormat();
 
 	ctx_handle = _wglCreateContext(win_DC);
 	if (!ctx_handle) {

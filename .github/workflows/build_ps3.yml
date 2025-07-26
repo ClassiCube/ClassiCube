@@ -19,11 +19,14 @@ jobs:
       image: ghcr.io/classicube/minimal-psl1ght:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile PS3 build
-        id: compile
+      - name: Install prerequisites
         run: |
           apt-get update
           apt-get install -y curl
+
+      - name: Compile PS3 build
+        id: compile
+        run: |
           export PS3DEV=/usr/local/ps3dev
           export PSL1GHT=/usr/local/ps3dev
           export PATH=$PATH:$PS3DEV/bin

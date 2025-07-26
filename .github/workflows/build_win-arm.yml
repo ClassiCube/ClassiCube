@@ -25,14 +25,15 @@ jobs:
       - name: Compile ARM32 Windows builds
         shell: bash
         id: compile
-        env: 
+        env:
+          LIBS: "-lwinmm -limagehlp"
+          SRCS: "src/*.c third_party/bearssl/*.c"
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
           WIN32_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
-          cd src
-          armv7-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-arm32-d3d11.exe $LATEST_FLAG -lwinmm -limagehlp
+          armv7-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-arm32-d3d11.exe $LATEST_FLAG ${{ env.LIBS }}
           
           
       - uses: ./.github/actions/notify_failure
@@ -44,7 +45,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-arm32-d3d11.exe'
+          SOURCE_FILE: 'cc-arm32-d3d11.exe'
           DEST_NAME: 'ClassiCube-arm32-Direct3D11.exe'
 #============================================
 # ============== ARM64 WINDOWS ==============
@@ -60,13 +61,14 @@ jobs:
         shell: bash
         id: compile
         env: 
+          LIBS: "-lwinmm -limagehlp"
+          SRCS: "src/*.c third_party/bearssl/*.c"
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
           WIN64_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
-          cd src
-          aarch64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-arm64-d3d11.exe $LATEST_FLAG -lwinmm -limagehlp
+          aarch64-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-arm64-d3d11.exe $LATEST_FLAG ${{ env.LIBS }}
           
           
       - uses: ./.github/actions/notify_failure
@@ -78,5 +80,5 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/cc-arm64-d3d11.exe'
+          SOURCE_FILE: 'cc-arm64-d3d11.exe'
           DEST_NAME: 'ClassiCube-arm64-Direct3D11.exe'

@@ -19,8 +19,8 @@ void Gfx_Create(void) {
 	rspq_init();
 	//rspq_profile_start();
     rdpq_init();
-    //rdpq_debug_start(); // TODO debug
-    //rdpq_debug_log(true);
+	//rdpq_debug_start(); // TODO debug
+	//rdpq_debug_log(true);
 
 	rdpq_set_mode_standard();
 	__rdpq_mode_change_som(SOM_TEXTURE_PERSP, SOM_TEXTURE_PERSP);
@@ -45,7 +45,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexSize       = 1024;
 	Gfx.MaxLowResTexSize = 2048;
 
-	Gfx.SupportsNonPowTwoTextures = true;
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_FULL;
 	Gfx_RestoreState();
 
 	Gfx_SetFaceCulling(false);
@@ -96,7 +96,7 @@ void Gfx_BeginFrame(void) {
 	surface_t* disp = display_get();
     rdpq_attach(disp, &zbuffer);
     
-	Platform_LogConst("GFX ctx beg");
+	//Platform_LogConst("== BEGIN frame");
 }
 
 extern void __rdpq_autosync_change(int mode);
@@ -120,9 +120,7 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 void Gfx_EndFrame(void) {
-	Platform_LogConst("GFX ctx end");
     rdpq_detach_show();
-	//Platform_LogConst("GFX END");
 
 	//rspq_profile_dump();
 	//rspq_profile_next_frame();
@@ -154,9 +152,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 static void UploadTexture(CCTexture* tex, rdpq_texparms_t* params) {
 	rspq_block_begin();
 
-	rdpq_tex_multi_begin();
 	rdpq_tex_upload(TILE0, &tex->surface, params);
-	rdpq_tex_multi_end();
 
 	tex->upload_block = rspq_block_end();
 }
@@ -189,8 +185,9 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 	} else {
 		// 32 bpp can just be copied straight across
-		CopyTextureData(fb->buffer, fb->stride, 
-						bmp, rowWidth * BITMAPCOLOR_SIZE);
+		CopyPixels(fb->buffer, fb->stride, 
+				   bmp->scan0, rowWidth * BITMAPCOLOR_SIZE,
+				   bmp->width, bmp->height);
 	}
 	
 	rdpq_texparms_t params =
@@ -205,6 +202,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
 	surface_t* fb  = &tex->surface;
+
 	cc_uint32* src = (cc_uint32*)part->scan0 + x;
 	cc_uint8*  dst = (cc_uint8*)fb->buffer  + (x * 4) + (y * fb->stride);
 
@@ -214,14 +212,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 				 src + srcY * rowWidth,
 				 part->width * 4);
 	}
-	
-	rdpq_texparms_t params = (rdpq_texparms_t){
-        .s.repeats = REPEAT_INFINITE,
-        .t.repeats = REPEAT_INFINITE,
-    };
-
-	rdpq_call_deferred((void (*)(void*))rspq_block_free, tex->upload_block);
-	UploadTexture(tex, &params);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -235,8 +225,26 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 
-void Gfx_EnableMipmaps(void) { }
-void Gfx_DisableMipmaps(void) { }
+static cc_bool bilinear_mode;
+static void SetFilterMode(cc_bool bilinear) {
+	if (bilinear_mode == bilinear) return;
+	bilinear_mode = bilinear;
+
+	uint64_t mode = bilinear ? FILTER_BILINEAR : FILTER_POINT;
+	__rdpq_mode_change_som(SOM_SAMPLE_MASK, mode << SOM_SAMPLE_SHIFT);
+
+	int offset = bilinear ? -((1 << TEX_SHIFT) / 2) : 0;
+	gpuSetTexOffset(offset, offset);
+}
+
+void Gfx_EnableMipmaps(void) {
+	// TODO move back to texture instead?
+	SetFilterMode(Gfx.Mipmaps);
+}
+
+void Gfx_DisableMipmaps(void) {
+	SetFilterMode(FILTER_POINT);
+}
 
 
 /*########################################################################################################################*
@@ -261,14 +269,21 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	//gpuColorMask(r, g, b, a); TODO
 }
 
+#define FLAG_Z_WRITE 0x02
 void Gfx_SetDepthWrite(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_WRITE, enabled ? SOM_Z_WRITE : 0);
+
+	gpu_attr_z &= ~FLAG_Z_WRITE;
+	gpu_attr_z |= enabled ? FLAG_Z_WRITE : 0;
+	gpuUpdateFormat();
 }
 
+#define FLAG_Z_READ 0x01
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_COMPARE, enabled ? SOM_Z_COMPARE : 0);
 
-	gpu_attr_z = enabled;
+	gpu_attr_z &= ~FLAG_Z_READ;
+	gpu_attr_z |= enabled ? FLAG_Z_READ : 0;
 	gpuUpdateFormat();
 }
 
@@ -341,7 +356,7 @@ struct VertexBuffer {
 };
 
 static struct VertexBuffer* gfx_vb;
-static int vb_size;
+static int vb_count, vb_fmt;
 
 static void VB_ClearCache(struct VertexBuffer* vb) {
 	for (int i = 0; i < MAX_CACHED_CALLS; i++)
@@ -415,13 +430,23 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
+	vb_count = count;
+	vb_fmt   = fmt;
 	return ((struct VertexBuffer*)vb)->vertices;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
 	VB_ClearCache(vb); // data may have changed
 	gfx_vb = vb;
+
+	void* ptr = ((struct VertexBuffer*)vb)->vertices;
+	if (vb_fmt == VERTEX_FORMAT_COLOURED) {
+		convert_coloured_vertices(ptr, vb_count);
+		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+	} else {
+		convert_textured_vertices(ptr, vb_count);
+		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+	}
 }
 
 

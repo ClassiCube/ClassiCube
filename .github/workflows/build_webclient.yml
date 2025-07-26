@@ -21,9 +21,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compiles webclient
         id: compile
+        env:
+          SRCS: "src/*.c src/webclient/*.c"
         run: |
-          cd src
-          emcc *.c -o ClassiCube.js -s WASM=0 -s NO_EXIT_RUNTIME=1 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web -s TOTAL_STACK=256Kb --js-library interop_web.js -Os -g2 -s SINGLE_FILE
+          emcc ${{ env.SRCS }} -o ClassiCube.js -s WASM=0 -s NO_EXIT_RUNTIME=1 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web -s TOTAL_STACK=256Kb --js-library src/webclient/interop_web.js -Os -g2 -s SINGLE_FILE
           sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' ClassiCube.js
 
       - uses: ./.github/actions/notify_failure
@@ -35,7 +36,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'src/ClassiCube.js'
+          SOURCE_FILE: 'ClassiCube.js'
           DEST_NAME: 'ClassiCube.js'
           
           

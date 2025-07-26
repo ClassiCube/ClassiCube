@@ -72,7 +72,6 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 
-#ifdef CC_BUILD_ICON
 /* See misc/sdl/sdl_icon_gen.cs for how to generate this file */
 #include "../misc/sdl/CCIcon_SDL.h"
 
@@ -81,9 +80,6 @@ static void ApplyIcon(void) {
 													0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 	SDL_SetWindowIcon(win_handle, surface);
 }
-#else
-static void ApplyIcon(void) { }
-#endif
 
 static void DoCreateWindow(int width, int height, int flags) {
 	win_handle = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 
