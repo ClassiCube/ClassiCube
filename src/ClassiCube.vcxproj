@@ -599,7 +599,6 @@
     <ClCompile Include="Graphics_SoftGPU.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
-    <ClCompile Include="Http_Web.c" />
     <ClCompile Include="Http_Worker.c" />
     <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
