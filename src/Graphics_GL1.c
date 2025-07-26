@@ -25,6 +25,8 @@
 #include "../misc/opengl/GL1Funcs.h"
 #if defined CC_BUILD_SYMBIAN
 #include "../misc/opengl/GL2Funcs.h"
+
+static cc_bool mbx;
 #endif
 
 #if CC_BUILD_MAXSTACK <= (64 * 1024)
@@ -84,7 +86,9 @@ void Gfx_Create(void) {
 #ifdef CC_BUILD_GL11_FALLBACK
 	GLContext_GetAll(coreFuncs, Array_Elems(coreFuncs));
 #endif
+#ifndef CC_BUILD_GLES
 	customMipmapsLevels = true;
+#endif
 	Gfx.BackendType     = CC_GFX_BACKEND_GL1;
 
 	GL_InitCommon();
@@ -335,6 +339,17 @@ static void SetAlphaTest(cc_bool enabled) {
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
+#ifdef CC_BUILD_SYMBIAN
+	if (mbx) {
+		if (depthOnly) {
+			_glBlendFunc(GL_ZERO, GL_ONE);
+			Gfx_SetAlphaBlending(true);
+		} else {
+			_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		return;
+	}
+#endif
 	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
 				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 	
@@ -422,6 +437,18 @@ cc_bool Gfx_WarnIfNecessary(void) {
 		Gfx.Limitations |= GFX_LIMIT_VERTEX_ONLY_FOG;
 		return true;
 	}
+#if defined CC_BUILD_SYMBIAN
+	if (String_ContainsConst(&renderer, "SGX")) {
+	} else if (String_ContainsConst(&renderer, "MBX")) {
+		Gfx.Limitations |= GFX_LIMIT_MINIMAL;
+		mbx = true;
+	} else if (!String_ContainsConst(&renderer, "HW")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+
+		Gfx.Limitations |= GFX_LIMIT_MINIMAL;
+		return true;
+	}
+#endif
 	return false;
 }
 
