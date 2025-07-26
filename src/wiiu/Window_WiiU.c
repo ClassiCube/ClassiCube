@@ -1,18 +1,17 @@
-#include "Core.h"
-#if defined CC_BUILD_WIIU
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Graphics.h"
-#include "Launcher.h"
-#include "LBackend.h"
-#include "VirtualKeyboard.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Graphics.h"
+#include "../Launcher.h"
+#include "../LBackend.h"
+#include "../VirtualKeyboard.h"
+
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -488,4 +487,3 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 void OnscreenKeyboard_Close(void) {
 	VirtualKeyboard_Close();
 }
-#endif

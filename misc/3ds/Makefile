@@ -121,7 +121,7 @@ $(BUILD_DIR)/%.shbin: misc/3ds/%.v.pica
 	$(PICASSO) $< -o $@
 
 $(BUILD_DIR)/%.shbin.o: $(BUILD_DIR)/%.shbin
-	$(BIN2S) $< | $(ARM_AS) -o $@
+	$(BIN2S) $< | $(ARM_CC) -x assembler-with-cpp -c - -o $@
 
 
 #---------------------------------------------------------------------------------

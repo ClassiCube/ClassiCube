@@ -1,12 +1,9 @@
-#include "Core.h"
-
-#if defined CC_BUILD_WIIU
 #include <sndcore2/core.h>
-static cc_bool ax_inited;
 
 struct AudioContext { int count; };
 
-#include "_AudioBase.h"
+#include "../_AudioBase.h"
+static cc_bool ax_inited;
 
 cc_bool AudioBackend_Init(void) {
 	if (ax_inited) return true;
@@ -114,5 +111,4 @@ cc_result SoundContext_PollBusy(struct AudioContext* ctx, cc_bool* isBusy) {
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
-#endif
 

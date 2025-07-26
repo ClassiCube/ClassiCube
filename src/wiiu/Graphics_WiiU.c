@@ -1,8 +1,7 @@
-#include "Core.h"
-#ifdef CC_BUILD_WIIU
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Window.h"
+
 #include <gx2/clear.h>
 #include <gx2/context.h>
 #include <gx2/display.h>
@@ -591,4 +590,3 @@ void Gfx_3DS_SetRenderScreen1(enum Screen3DS screen) {
 	
 	GX2SetContextState(screen == TOP_SCREEN ? tv_state : drc_state);
 }
-#endif
