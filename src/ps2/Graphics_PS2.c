@@ -434,15 +434,14 @@ static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWid
 
 static int Log2Dimension(int len) { return Math_ilog2(Math_NextPowOf2(len)); }
 
-GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
-	struct GPUTexture* tex = (struct GPUTexture*)memalign(16, 32 + size);
-	
+static void GPUTexture_Init(struct GPUTexture* tex, struct Bitmap* bmp) {
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
 	tex->log2_w = Log2Dimension(bmp->width);
 	tex->log2_h = Log2Dimension(bmp->height);
+}
 
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	BitmapCol palette[MAX_PAL_4BPP_ENTRIES] QWORD_ALIGNED;
 	int pal_count =  0;
 	int pal_index = -1;
@@ -460,6 +459,10 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	//Platform_Log4("%i, c%i (%i x %i)", &pal_index, &pal_count, &bmp->width, &bmp->height);
 	
 	if (pal_index >= 0) {
+		struct GPUTexture* tex = memalign(16, 32 + bmp->width * bmp->height);
+		if (!tex) return 0;
+		GPUTexture_Init(tex, bmp);
+
 		tex->format    = GS_PSM_4;
 		tex->pal_index = pal_index;
 		ConvertTexture_Palette((cc_uint8*)tex->pixels, bmp, rowWidth, palette, pal_count);
@@ -490,7 +493,12 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 			UploadToVRAM(tex, TEXMEM_4BPP_TO_VRAM(base));
 			return realloc(tex, sizeof(struct GPUTexture));
 		}
+		return tex;
 	} else {
+		struct GPUTexture* tex = memalign(16, 32 + bmp->width * bmp->height * 4);
+		if (!tex) return 0;
+		GPUTexture_Init(tex, bmp);
+
 		tex->format = GS_PSM_32;
 		CopyPixels(tex->pixels, bmp->width * BITMAPCOLOR_SIZE, 
 				   bmp->scan0,  rowWidth * BITMAPCOLOR_SIZE,
@@ -500,8 +508,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		// TODO fix properly. alignup instead
 		//int blocks  = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE); size = blocks / (2048 / 64);
 		//Platform_Log4("32BPP: b %i / p %i (%i X %i)", &size, &blocks, &bmp->width, &bmp->height);
+		return tex;
 	}
-	return tex;
 }
 
 static void UpdateTextureBuffer(int context, struct GPUTexture* tex, unsigned buf_addr) {
