@@ -616,6 +616,7 @@ typedef cc_uint8  cc_bool;
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 	#else
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
+		#define CC_DISABLE_ANIMATIONS
 	#endif
 #endif
 #endif
