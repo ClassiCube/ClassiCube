@@ -341,6 +341,10 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
 #ifdef CC_BUILD_SYMBIAN
 	if (mbx) {
+		/* On PowerVR MBX cards, glColorMask appears to be unimplemented in hardware */
+		/*  and thus any usage of it significantly hurts performance. */
+		/* So instead, draw with blending of 'new_RGB = current_RGB' - that way */
+		/*  depth buffer is updated while the colour buffer remain unchanged. */
 		if (depthOnly) {
 			_glBlendFunc(GL_ZERO, GL_ONE);
 			Gfx_SetAlphaBlending(true);

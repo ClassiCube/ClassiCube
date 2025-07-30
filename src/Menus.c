@@ -196,6 +196,11 @@ static int Menu_PadAxis(void* screen, struct PadAxisUpdate* upd) {
 	}
 }
 
+static void AddPrimaryButton(void* screen, struct ButtonWidget* btn, Widget_LeftClick click) {
+	int width = Game_ClassicMode ? 400 : (Window_Main.Width < 300 ? 200 : 400);
+	ButtonWidget_Add(screen, btn, width, click);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Menu utilities-----------------------------------------------------*
@@ -508,7 +513,7 @@ static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontD
 static void PauseScreenBase_AddWidgets(struct PauseScreen* s, int width) {
 	TextWidget_Add(s,   &s->title);
 	Menu_AddButtons(s,  s->btns, width, s->descs, s->descsCount);
-	ButtonWidget_Add(s, &s->back, 400, PauseScreenBase_Game);
+	AddPrimaryButton(s, &s->back, PauseScreenBase_Game);
 }
 
 
@@ -741,7 +746,7 @@ static void OptionsGroupScreen_Init(void* screen) {
 
 	Menu_AddButtons(s,  s->btns, 300, optsGroup_btns, 8);
 	TextWidget_Add(s,   &s->desc);
-	ButtonWidget_Add(s, &s->done, 400, Menu_SwitchPause);
+	AddPrimaryButton(s, &s->done, Menu_SwitchPause);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -1016,7 +1021,7 @@ static void EditHotkeyScreen_Init(void* screen) {
 	} else { text = String_Empty; }
 
 	TextInputWidget_Add(s, &s->input, 500, &text, &desc);
-	ButtonWidget_Add(s,    &s->cancel, 400, Menu_SwitchHotkeys);
+	AddPrimaryButton(s,    &s->cancel, Menu_SwitchHotkeys);
 	s->input.onscreenPlaceholder = "Hotkey text";
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
@@ -1227,7 +1232,7 @@ static void GenLevelScreen_Init(void* screen) {
 	TextWidget_Add(s,   &s->title);
 	ButtonWidget_Add(s, &s->flatgrass, 200, GenLevelScreen_Flatgrass);
 	ButtonWidget_Add(s, &s->vanilla,   200, GenLevelScreen_Notchy);
-	ButtonWidget_Add(s, &s->cancel,    400, Menu_SwitchPause);
+	AddPrimaryButton(s, &s->cancel,         Menu_SwitchPause);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -1307,7 +1312,7 @@ static void ClassicGenScreen_Init(void* screen) {
 	ButtonWidget_Add(s, &s->btns[0], 400, ClassicGenScreen_Small);
 	ButtonWidget_Add(s, &s->btns[1], 400, ClassicGenScreen_Medium);
 	ButtonWidget_Add(s, &s->btns[2], 400, ClassicGenScreen_Huge);
-	ButtonWidget_Add(s, &s->cancel,  400, Menu_SwitchPause);
+	AddPrimaryButton(s, &s->cancel,       Menu_SwitchPause);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -1544,7 +1549,7 @@ static void SaveLevelScreen_Init(void* screen) {
 	ButtonWidget_Add(s, &s->save, 400, SaveLevelScreen_Save);
 	ButtonWidget_Add(s, &s->file, 400, SaveLevelScreen_File);
 
-	ButtonWidget_Add(s, &s->cancel, 400, Menu_SwitchPause);
+	AddPrimaryButton(s, &s->cancel, Menu_SwitchPause);
 	TextInputWidget_Add(s, &s->input, 400, &World.Name, &desc);	
 	Menu_SelectWidget((struct Screen*)s, 3); /* s->input */
 
@@ -1927,7 +1932,7 @@ static void BindsSourceScreen_Init(void* screen) {
 
 	ButtonWidget_Add(s, &s->btns[0], 300, BindsSourceScreen_ModeNormal);
 	ButtonWidget_Add(s, &s->btns[1], 300, BindsSourceScreen_ModeGamepad);
-	ButtonWidget_Add(s, &s->cancel,  400, Menu_SwitchPause);
+	AddPrimaryButton(s, &s->cancel,       Menu_SwitchPause);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -2108,7 +2113,7 @@ static void KeyBindsScreen_Init(void* screen) {
 
 	TextWidget_Add(s,   &s->title);
 	TextWidget_Add(s,   &s->msg);
-	ButtonWidget_Add(s, &s->back, 400, Gui.ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions);
+	AddPrimaryButton(s, &s->back, Gui.ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions);
 
 	if (s->leftPage || s->rightPage) {
 		ButtonWidget_Add(s, &s->left,  40, s->leftPage);
