@@ -47,6 +47,11 @@
 #define BR_USE_URANDOM 0
 #define BR_USE_GETENTROPY 0
 
+/* intrin.h doesn't exist in older TinyC */
+#if defined __TINYC__
+#define BR_INT128 0
+#endif
+
 /*
  * When BR_64 is enabled, 64-bit integer types are assumed to be
  * efficient (i.e. the architecture has 64-bit registers and can
