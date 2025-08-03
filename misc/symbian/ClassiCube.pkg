@@ -10,7 +10,7 @@
 :"ClassiCube"
 
 ; Check OpenC versions
-IF( version(0x20009a80, <, 1, 5, 0) ) AND NOT (EXISTS("Z:\sys\bin\libc.dll") OR EXISTS("C:\sys\bin\libc.dll"))
+IF version(0x20009a80, <, 1, 5, 0) AND NOT EXISTS("C:\sys\bin\libc.dll")
     "incompatible_openc.txt"-"", FT, FORCEABORT
 ENDIF
 
