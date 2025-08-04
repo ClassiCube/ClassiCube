@@ -840,7 +840,7 @@ void Game_RenderFrame(void) {
 
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 	Gfx_EndFrame();
-	if (gfx_minFrameMs) LimitFPS();
+	if (gfx_minFrameMs != 0.0f) LimitFPS();
 }
 
 void Game_Free(void) {

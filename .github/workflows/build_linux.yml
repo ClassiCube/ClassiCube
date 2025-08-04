@@ -43,7 +43,7 @@ jobs:
         env: 
           LIBS: "-lX11 -lXi -lpthread -lGL -lm -ldl"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic -Werror"
           NIX32_FLAGS:  "-no-pie -fno-pie -m32 -fcf-protection=none -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
@@ -107,7 +107,7 @@ jobs:
         env:
           LIBS: "-lX11 -lXi -lpthread -lGL -lm -ldl"
           SRCS: "src/*.c third_party/bearssl/*.c" 
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic -Werror"
           NIX64_FLAGS:  "-no-pie -fno-pie -m64 -fcf-protection=none -rdynamic -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"

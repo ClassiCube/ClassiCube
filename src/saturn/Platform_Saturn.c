@@ -113,7 +113,6 @@ static void Stopwatch_Init(void) {
 	cpu_frt_ovi_set(ovf_handler);
 
 	cpu_frt_interrupt_priority_set(15);
-	cpu_frt_count_set(0);
 }
 
 

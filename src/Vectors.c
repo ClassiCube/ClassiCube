@@ -14,7 +14,7 @@ void Vec3_Normalise(Vec3* v) {
 	float scale, lenSquared;
 	lenSquared = v->x * v->x + v->y * v->y + v->z * v->z;
 	/* handle zero vector */
-	if (!lenSquared) return;
+	if (lenSquared == 0.0f) return;
 
 	scale = 1.0f / Math_SqrtF(lenSquared);
 	v->x  = v->x * scale;

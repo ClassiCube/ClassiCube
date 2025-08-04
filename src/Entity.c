@@ -66,15 +66,15 @@ void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* 
 	struct Matrix tmp;
 	Matrix_Scale(m, scale.x, scale.y, scale.z);
 
-	if (e->RotZ) {
+	if (e->RotZ != 0.0f) {
 		Matrix_RotateZ( &tmp, -e->RotZ * MATH_DEG2RAD);
 		Matrix_MulBy(m, &tmp);
 	}
-	if (e->RotX) {
+	if (e->RotX != 0.0f) {
 		Matrix_RotateX( &tmp, -e->RotX * MATH_DEG2RAD);
 		Matrix_MulBy(m, &tmp);
 	}
-	if (e->RotY) {
+	if (e->RotY != 0.0f) {
 		Matrix_RotateY( &tmp, -e->RotY * MATH_DEG2RAD);
 		Matrix_MulBy(m, &tmp);
 	}

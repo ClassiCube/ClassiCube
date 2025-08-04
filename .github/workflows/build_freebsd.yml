@@ -43,7 +43,7 @@ jobs:
         env: 
           LIBS: "-lm -lpthread -lX11 -lXi -lGL -lexecinfo"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic -Werror"
           PLAT32_FLAGS: "-fno-pie -fcf-protection=none -I freebsd32/include -L freebsd32/lib"
           PLAT64_FLAGS: "-fno-pie -fcf-protection=none -I freebsd64/include -L freebsd64/lib"
 
