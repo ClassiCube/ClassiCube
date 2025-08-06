@@ -103,6 +103,8 @@ CC_VAR extern struct _GfxData {
 #define GFX_LIMIT_MAX_VERTEX_SIZE 0x04
 /* Whether the graphics backend is minimal (no fog, clouds, sky) */
 #define GFX_LIMIT_MINIMAL         0x08
+/* Whether the graphics backend shouldn't have horizon/border drawn */
+#define GFX_LIMIT_WORLD_ONLY      0x10
 
 extern const cc_string Gfx_LowPerfMessage;
 

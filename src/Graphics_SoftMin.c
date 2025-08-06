@@ -1,5 +1,5 @@
 #include "Core.h"
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTGPU
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTMIN
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -16,8 +16,6 @@ static cc_bool colWrite = true;
 static int cb_stride;
 
 static float* depthBuffer;
-static cc_bool depthTest  = true;
-static cc_bool depthWrite = true;
 static int db_stride;
 
 static void* gfx_vertices;
@@ -39,24 +37,18 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
-	Gfx.MaxTexWidth  = 4096;
-	Gfx.MaxTexHeight = 4096;
+	Gfx.MaxTexWidth  = 16;
+	Gfx.MaxTexHeight = 16;
 	Gfx.Created      = true;
 	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
-	Gfx.Limitations  = GFX_LIMIT_MINIMAL;
+	Gfx.Limitations  = GFX_LIMIT_MINIMAL | GFX_LIMIT_WORLD_ONLY;
 	
 	Gfx_RestoreState();
 }
 
-static void DestroyBuffers(void) {
-	Window_FreeFramebuffer(&fb_bmp);
-	Mem_Free(depthBuffer);
-	depthBuffer = NULL;
-}
-
 void Gfx_Free(void) { 
 	Gfx_FreeState();
-	DestroyBuffers();
+	Window_FreeFramebuffer(&fb_bmp);
 }
 
 
@@ -69,7 +61,6 @@ static CCTexture* curTexture;
 static BitmapCol* curTexPixels;
 static int curTexWidth, curTexHeight;
 static int texWidthMask, texHeightMask;
-static int texSinglePixel;
 		
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
@@ -82,11 +73,6 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 	texWidthMask   = (1 << Math_ilog2(tex->width))  - 1;
 	texHeightMask  = (1 << Math_ilog2(tex->height)) - 1;
-
-	/* Technically the optimisation should only apply if width and height is 1 */
-	/* But it's worth sacrificing this, so that rendering the world when */
-	/*   no texture pack can use the more optimised rendering path */
-	texSinglePixel = curTexWidth == 1;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -159,14 +145,8 @@ static void ClearColorBuffer(void) {
 	}
 }
 
-static void ClearDepthBuffer(void) {
-	int i, size = fb_width * fb_height;
-	for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
-}
-
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_COLOR) ClearColorBuffer();
-	if (buffers & GFX_BUFFER_DEPTH) ClearDepthBuffer();
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -179,11 +159,9 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
-	depthTest = enabled;
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	depthWrite = enabled;
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -373,15 +351,6 @@ static void ViewportVertex3D(Vertex* vertex) {
 	vertex->y = vp_hheight * (1 - vertex->y * invW);
 	vertex->z = vertex->z * invW;
 	vertex->w = invW;
-
-	vertex->u *= invW;
-	vertex->v *= invW;
-}
-
-// Ensure it's inlined, whereas Math_FloorF might not be
-static CC_INLINE int FastFloor(float value) {
-	int valueI = (int)value;
-	return valueI > value ? valueI - 1 : valueI;
 }
 
 static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
@@ -628,16 +597,20 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 		G = PackedCol_G(color);
 		B = PackedCol_B(color);
 		A = PackedCol_A(color);
-	} else if (texSinglePixel) {
-		/* Don't need to calculate complicated texturing in this case */
-		float rawY0 = v0 / w0;
-		float rawY1 = v1 / w1;
+	} else {
+		/* Always use a single pixel */
+		float rawY0 = v0;
+		float rawY1 = v1;
 
 		float rawY = min(rawY0, rawY1);
 		int texY   = (int)(rawY + 0.01f) & texHeightMask;
 		MultiplyColors(color, curTexPixels[texY * curTexWidth]);
 		texturing = false;
 	}
+
+	if (!colWrite) return;
+	if (gfx_alphaTest && A < 0x80) return;
+	color = BitmapCol_Make(R, G, B, 0xFF);
 
 	for (y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
 	{
@@ -651,35 +624,11 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float ic1 = bc1 * factor;
 			float ic2 = bc2 * factor;
 			if (ic0 < 0 || ic1 < 0 || ic2 < 0) continue;
-			int db_index = y * db_stride + x;
 
-			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
-			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
-
-			if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
-			if (!colWrite) {
-				if (depthWrite) depthBuffer[db_index] = z;
-				continue;
-			}
-
-			if (texturing) {
-				float u = (ic0 * u0 + ic1 * u1 + ic2 * u2) * w;
-				float v = (ic0 * v0 + ic1 * v1 + ic2 * v2) * w;
-				int texX = ((int)u) & texWidthMask;
-				int texY = ((int)v) & texHeightMask;
-
-				int texIndex = texY * curTexWidth + texX;
-				BitmapCol tColor = curTexPixels[texIndex];
-
-				MultiplyColors(color, tColor);
-			}
-
-			if (gfx_alphaTest && A < 0x80) continue;
-			if (depthWrite) depthBuffer[db_index] = z;
 			int cb_index = y * cb_stride + x;
 			
 			if (!gfx_alphaBlend) {
-				colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
+				colorBuffer[cb_index] = color;
 				continue;
 			}
 
@@ -1061,7 +1010,8 @@ void Gfx_SetVSync(cc_bool vsync) {
 }
 
 void Gfx_OnWindowResize(void) {
-	if (depthBuffer) DestroyBuffers();
+	// TODO ??????
+	//Window_FreeFramebuffer(&fb_bmp);
 
 	fb_width   = Game.Width;
 	fb_height  = Game.Height;
@@ -1069,9 +1019,6 @@ void Gfx_OnWindowResize(void) {
 	Window_AllocFramebuffer(&fb_bmp, Game.Width, Game.Height);
 	colorBuffer = fb_bmp.scan0;
 	cb_stride   = fb_bmp.width;
-
-	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
-	db_stride   = fb_width;
 
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
@@ -1089,9 +1036,7 @@ void Gfx_SetScissor (int x, int y, int w, int h) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-	String_Format1(info, "-- Using software (%i bit) --\n", &pointerSize);
-	PrintMaxTextureInfo(info);
+	String_AppendConst(info, "-- Using software --\n");
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }

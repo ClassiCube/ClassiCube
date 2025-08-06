@@ -146,6 +146,7 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_D3D11     5
 #define CC_GFX_BACKEND_VULKAN    6
 #define CC_GFX_BACKEND_GL11      7
+#define CC_GFX_BACKEND_SOFTMIN   8
 
 #define CC_SSL_BACKEND_NONE      1
 #define CC_SSL_BACKEND_BEARSSL   2
@@ -490,20 +491,19 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_FILESYSTEM
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
-	#undef  CC_BUILD_ADVLIGHTING
-	#undef  CC_BUILD_FILESYSTEM
 	#define CC_DISABLE_EXTRA_MODELS
-	#define SOFTGPU_DISABLE_ZBUFFER
 	#undef  CC_VAR
 	#define CC_VAR __attribute__((visibility("default"), section(".ewram")))
 	#undef  CC_BIG_VAR
 	#define CC_BIG_VAR __attribute__((section(".ewram")))
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
-	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
 #elif defined PLAT_NDS
 	#define CC_BUILD_NDS
 	#define CC_BUILD_CONSOLE
@@ -591,14 +591,13 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_FILESYSTEM
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
-	#undef  CC_BUILD_ADVLIGHTING
-	#undef  CC_BUILD_FILESYSTEM
 	#define CC_DISABLE_EXTRA_MODELS
-	#define SOFTGPU_DISABLE_ZBUFFER
-	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 #elif defined __SYMBIAN32__
 	#define CC_BUILD_SYMBIAN
