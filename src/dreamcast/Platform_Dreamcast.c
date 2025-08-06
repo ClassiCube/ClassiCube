@@ -692,7 +692,7 @@ static void InitModem(void) {
 	ppp_init();
 	
 	Platform_LogConst("Dialling modem.. (can take ~20 seconds)");
-	err = ppp_modem_init("111111111111", 0, NULL);
+	err = ppp_modem_init("111111111111", 1, NULL);
 	if (err) {
 		Platform_Log1("Establishing link failed (%i)", &err); return;
 	}

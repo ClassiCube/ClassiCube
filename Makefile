@@ -185,15 +185,15 @@ ifeq ($(PLAT),dos)
 endif
 
 
-ifdef SDL2
+ifdef BUILD_SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
 	LIBS += -lSDL2
 endif
-ifdef SDL3
+ifdef BUILD_SDL3
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
 	LIBS += -lSDL3
 endif
-ifdef TERMINAL
+ifdef BUILD_TERMINAL
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
 	LIBS := $(subst mwindows,mconsole,$(LIBS))
 endif
@@ -246,11 +246,11 @@ dos:
 	$(MAKE) $(TARGET) PLAT=dos
 # Default overrides
 sdl2:
-	$(MAKE) $(TARGET) SDL2=1
+	$(MAKE) $(TARGET) BUILD_SDL2=1
 sdl3:
-	$(MAKE) $(TARGET) SDL3=1
+	$(MAKE) $(TARGET) BUILD_SDL3=1
 terminal:
-	$(MAKE) $(TARGET) TERMINAL=1
+	$(MAKE) $(TARGET) BUILD_TERMINAL=1
 release:
 	$(MAKE) $(TARGET) RELEASE=1
 
