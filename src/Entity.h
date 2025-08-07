@@ -108,6 +108,7 @@ struct Entity {
 	Vec3 Position;
 	/* NOTE: Do NOT change order of yaw/pitch, this will break models in plugins */
 	float Pitch, Yaw, RotX, RotY, RotZ;
+	float PushStrength;
 	Vec3 Velocity;
 
 	struct Model* Model;

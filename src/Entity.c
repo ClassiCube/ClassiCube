@@ -43,6 +43,7 @@ void Entity_Init(struct Entity* e) {
 	e->Flags      = ENTITY_FLAG_HAS_MODELVB;
 	e->uScale     = 1.0f;
 	e->vScale     = 1.0f;
+	e->PushStrength = 1.0f;
 	e->_skinReqID = 0;
 	e->SkinRaw[0] = '\0';
 	e->NameRaw[0] = '\0';
