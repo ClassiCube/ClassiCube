@@ -107,8 +107,8 @@ struct Entity {
 	const struct EntityVTABLE* VTABLE;
 	Vec3 Position;
 	/* NOTE: Do NOT change order of yaw/pitch, this will break models in plugins */
+	/* When adding a new field to structs that plugins can access, add them to the end to avoid breaking compatibility. */
 	float Pitch, Yaw, RotX, RotY, RotZ;
-	float PushStrength;
 	Vec3 Velocity;
 
 	struct Model* Model;
@@ -134,6 +134,8 @@ struct Entity {
 	/*  Current state is linearly interpolated between prev and next */
 	struct EntityLocation prev, next;
 	GfxResourceID ModelVB;
+
+	float PushStrength;
 };
 typedef cc_bool (*Entity_TouchesCondition)(BlockID block);
 

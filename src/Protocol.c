@@ -1429,9 +1429,11 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 		Entity_UpdateModelBounds(e);
 		return;
 	case 6:
-		if (value < -1024.0f) value = -1024.0f;
-		if (value > 1024.0f) value = 1024.0f;
-		e->PushStrength = (float)value; return;
+		scale = value / 1000.0f;
+		if (scale < -1024.0f) scale = -1024.0f;
+		if (scale >  1024.0f) scale =  1024.0f;
+		e->PushStrength = scale;
+		return;
 	default:
 		return;
 	}
