@@ -70,12 +70,13 @@ static uint32_t GetTimerValues(void) {
 	uint16_t lo = REG_TMR2_DATA;
     uint16_t hi = REG_TMR3_DATA;
 
-	// Did lo timer possibly overflow between reading lo and hi?
+	// Lo timer can possibly overflow between reading lo and hi
 	uint16_t lo_again = REG_TMR2_DATA;
 	uint16_t hi_again = REG_TMR3_DATA;
 
+	// Check if lo timer has overflowed
 	if (lo_again < lo) {
-		// If so, use known safe timer read values instead
+		// If so, use known stable timer read values instead
 		lo = lo_again;
 		hi = hi_again;
 	}

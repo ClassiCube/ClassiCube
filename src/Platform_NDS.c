@@ -56,8 +56,25 @@ cc_bool Platform_ReadonlyFilesystem;
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-static u32 last_raw;
-static u64 base_time;
+static uint32_t last_raw;
+static uint64_t base_time;
+
+static uint32_t GetTimerValues(void) {
+	uint16_t lo = TIMER_DATA(0);
+	uint16_t hi = TIMER_DATA(1);
+
+	// Lo timer can possibly overflow between reading lo and hi
+	uint16_t lo_again = TIMER_DATA(0);
+	uint16_t hi_again = TIMER_DATA(1);
+
+	// Check if lo timer has overflowed
+	if (lo_again < lo) {
+		// If so, use known stable timer read values instead
+		lo = lo_again;
+		hi = hi_again;
+	}
+	return lo | (hi << 16);
+}
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
@@ -66,7 +83,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 }
 
 cc_uint64 Stopwatch_Measure(void) {
-	u32 raw = cpuGetTiming();
+	uint32_t raw = GetTimerValues();
 	// Since counter is only a 32 bit integer, it overflows after a minute or two
 	if (last_raw > 0xF0000000 && raw < 0x10000000) {
 		base_time += 0x100000000ULL;
@@ -74,6 +91,20 @@ cc_uint64 Stopwatch_Measure(void) {
 
 	last_raw = raw;
 	return base_time + raw;
+}
+
+static void Stopwatch_Init(void) {
+	// Turn off both timers
+	TIMER_CR(0) = 0;
+	TIMER_CR(1) = 0;
+
+	// Reset timer values to 0
+	TIMER_DATA(0) = 0;
+	TIMER_DATA(1) = 0;
+
+	// Turn on timer 1, with timer 1 incrementing timer 0 on overflow
+	TIMER_CR(1) = TIMER_CASCADE | TIMER_ENABLE;
+	TIMER_CR(0) = TIMER_ENABLE;
 }
 
 static void LogNocash(const char* msg, int len) {
@@ -588,7 +619,7 @@ void Platform_Init(void) {
 
 	InitFilesystem();
     InitNetworking();
-	cpuStartTiming(1);
+	Stopwatch_Init();
 }
 void Platform_Free(void) { }
 

@@ -34,7 +34,7 @@
 	#define OutputConsole(buf, len) WriteConsoleA(hStdout, buf, len, NULL, NULL)
 	#define BOX_CHAR "\xE2\x96\x84"
 #else
-	#define OutputConsole(buf, len) write(STDOUT_FILENO, buf, len)
+	#define OutputConsole(buf, len) !!write(STDOUT_FILENO, buf, len)
 	#define BOX_CHAR "\xE2\x96\x84"
 #endif
 
@@ -146,7 +146,7 @@ static void HookTerminal(void) {
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 	
 	// https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Normal-tracking-mode
-	OutputConst(DEC_PM_SET("1049")); // Use Normal Screen Buffer and restore cursor as in DECRC, xterm.
+	OutputConst(DEC_PM_SET("1049"));
 	OutputConst(CSI "0m");
 	OutputConst(ERASE_CMD("2")); // Ps = 2  ⇒  Erase All.
 	OutputConst(DEC_PM_SET("1003")); // Ps = 1 0 0 3  ⇒  Use All Motion Mouse Tracking, xterm.  See
@@ -161,7 +161,7 @@ static void UnhookTerminal(void) {
 	//ioctl(STDIN_FILENO, KDSKBMODE, orig_KB);	
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio);
 	
-	OutputConst(DEC_PM_RESET("1049"));
+	OutputConst(DEC_PM_RESET("1049")); // Return to Normal Screen Buffer and restore cursor
 	OutputConst(CSI "0m");
 	OutputConst(ERASE_CMD("2")); // Ps = 2  ⇒  Erase All.
 	OutputConst(DEC_PM_SET("25"));
