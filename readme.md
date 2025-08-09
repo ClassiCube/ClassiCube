@@ -110,7 +110,7 @@ If you get a `The Windows SDK version 5.1 was not found` compilation error, [see
 ##### Using Visual Studio (command line)
 1. Use 'Developer Tools for Visual Studio' from Start Menu
 2. Navigate to the directory with ClassiCube's source code
-3. Run `cl.exe *.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
+3. Run `cl.exe src\*.c third_party\bearssl\*.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
 
 ##### Using MinGW-w64
 Assuming that you used the installer from https://sourceforge.net/projects/mingw-w64/ :
