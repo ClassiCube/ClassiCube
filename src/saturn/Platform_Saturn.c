@@ -100,12 +100,15 @@ cc_uint64 Stopwatch_Measure(void) {
 	return cpu_frt_count_get() | (overflow_count << 16);
 }
 
+#define US_PER_SEC     1000000
+#define NTSC_320_CLOCK 26846588
+
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	cc_uint32 delta = end - beg;
+	cc_uint64 delta = end - beg;
 
-	// TODO still wrong?? and overflows?? and PAL detection ???
-	return (delta * 1000) / CPU_FRT_NTSC_320_128_COUNT_1MS;
+	// TODO still wrong?? PAL detection ???
+	return (delta * US_PER_SEC) / (NTSC_320_CLOCK / 128);
 }
 
 static void Stopwatch_Init(void) {
@@ -114,7 +117,7 @@ static void Stopwatch_Init(void) {
 	cpu_frt_ovi_set(ovf_handler);
 	cpu_frt_interrupt_priority_set(15);
 
-	//pu_wdt_init(CPU_WDT_CLOCK_DIV_4096);
+	//cpu_wdt_init(CPU_WDT_CLOCK_DIV_4096);
 	//cpu_wdt_interrupt_priority_set(15);
 	//cpu_wdt_timer_mode_set(CPU_WDT_MODE_INTERVAL, wdt_handler);
 	//cpu_wdt_enable();
