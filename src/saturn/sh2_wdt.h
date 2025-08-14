@@ -48,7 +48,7 @@ static CC_INLINE void wdt_set_irq_priority(uint8_t pri) {
 }
 
 
-static void __interrupt_handler wdt_handler(void) {
+void __attribute__((interrupt_handler)) wdt_handler(void) {
     uint8_t wtcr = *SH2_REG_WTCSR_R & ~SH2_WTCSR_OVF_FLG;
 
     *SH2_REG_WTCSR_W = SH2_CMD_WTCSR(wtcr);

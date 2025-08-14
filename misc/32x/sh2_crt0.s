@@ -29,19 +29,19 @@
 
 ! Master Vector Base Table at 0x06000000
 
-        .long   mstart      /* Cold Start PC */
-        .long   0x0603FC00  /* Cold Start SP */
-        .long   mstart      /* Manual Reset PC */
-        .long   0x0603FC00  /* Manual Reset SP */
-        .long   main_err    /* Illegal instruction */
-        .long   0x00000000  /* reserved */
-        .long   main_err    /* Invalid slot instruction */
-        .long   0x20100400  /* reserved */
-        .long   0x20100420  /* reserved */
-        .long   main_err    /* CPU address error */
-        .long   main_err    /* DMA address error */
-        .long   main_err    /* NMI vector */
-        .long   main_err    /* User break vector */
+        .long   mstart      /*  0, Cold Start PC */
+        .long   0x0603FC00  /*  1, Cold Start SP */
+        .long   mstart      /*  2, Manual Reset PC */
+        .long   0x0603FC00  /*  3, Manual Reset SP */
+        .long   main_err    /*  4, Illegal instruction */
+        .long   _wdt_handler/*  5, reserved - repurposed for WDT */
+        .long   main_err    /*  6, Invalid slot instruction */
+        .long   0x20100400  /*  7, reserved */
+        .long   0x20100420  /*  8, reserved */
+        .long   main_err    /*  9, CPU address error */
+        .long   main_err    /* 10, DMA address error */
+        .long   main_err    /* 11, NMI vector */
+        .long   main_err    /* 12, User break vector */
         .space  76          /* reserved */
         .long   main_err    /* TRAPA #32 */
         .long   main_err    /* TRAPA #33 */
@@ -636,81 +636,6 @@ _CacheControl:
 
 _sh2_cctl:
         .long   0xFFFFFE92
-
-! void ScreenStretch(int src, int width, int height, int interp);
-! On entry: r4 = src pointer, r5 = width, r6 = height, r7 = interpolate
-
-        .align  4
-        .global _ScreenStretch
-_ScreenStretch:
-        cmp/pl  r7
-        bt      ss_interp
-
-! stretch screen without interpolation
-
-0:
-        mov     r5,r3
-        shll    r3
-        mov     r3,r2
-        shll    r2
-        add     r4,r3
-        add     r4,r2
-1:
-        add     #-2,r3
-        mov.w   @r3,r0
-        extu.w  r0,r1
-        shll16  r0
-        or      r1,r0
-        mov.l   r0,@-r2
-        cmp/eq  r3,r4
-        bf      1b
-
-        /* next line */
-        mov.w   ss_pitch,r0
-        dt      r6
-        bf/s    0b
-        add     r0,r4
-        rts
-        nop
-
-ss_interp:
-
-! stretch screen with interpolation
-
-0:
-        mov     r5,r3
-        shll    r3
-        mov     r3,r2
-        shll    r2
-        add     r4,r3
-        add     r4,r2
-        mov     #0,r7
-1:
-        add     #-2,r3
-        mov.w   @r3,r0
-        mov.w   ss_mask,r1
-        and     r0,r1               /* masked curr pixel */
-        shll16  r0
-        add     r1,r7               /* add to masked prev pixel */
-        shlr    r7                  /* blended pixel */
-        or      r7,r0               /* curr pixel << 16 | blended pixel */
-        mov     r1,r7               /* masked prev pixel = masked curr pixel */
-        mov.l   r0,@-r2
-        cmp/eq  r3,r4
-        bf      1b
-
-        /* next line */
-        mov.w   ss_pitch,r0
-        dt      r6
-        bf/s    0b
-        add     r0,r4
-        rts
-        nop
-
-ss_mask:
-        .word   0x7BDE
-ss_pitch:
-        .word   640
 
         .align  2
 

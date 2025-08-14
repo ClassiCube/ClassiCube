@@ -95,13 +95,30 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
 /*########################################################################################################################*
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_uint64 Stopwatch_Measure(void) {
-	return 0;
+#include "../saturn/sh2_wdt.h"
+
+static void Stopwatch_Init(void) {
+	wdt_stop();
+
+	wdt_set_irq_number(5); // hardcoded in sh2_crt0.s
+	wdt_set_irq_priority(15);
+
+	wdt_enable();
 }
+
+cc_uint64 Stopwatch_Measure(void) {
+	return wdt_total_ticks();
+}
+
+#define US_PER_SEC      1000000
+#define NTSC_CPU_CLOCK 23011360 // TODO
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return 1000 * 1000;
+	cc_uint64 delta = end - beg;
+
+	// TODO still completely wrong?? PAL detection ???
+	return (delta * US_PER_SEC) / (NTSC_CPU_CLOCK / 1024);
 }
 
 
@@ -259,6 +276,8 @@ void Platform_Init(void) {
 
 	int size = (int)(heap_end - heap_beg);
 	Platform_Log3("HEAP SIZE: %i bytes (%x -> %x)", &size, &heap_beg, &heap_end);
+
+	Stopwatch_Init();
 }
 
 void Platform_Free(void) { }
