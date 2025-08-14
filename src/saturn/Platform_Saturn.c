@@ -91,36 +91,31 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 /*########################################################################################################################*
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
-static volatile cc_uint32 overflow_count, wdt_overflows;
+#include "sh2_wdt.h"
 
-static void wdt_handler(void) { wdt_overflows++; }
-static void ovf_handler(void) { overflow_count++; }
+static void Stopwatch_Init(void) {
+	wdt_stop();
+
+	wdt_set_irq_number(CPU_INTC_INTERRUPT_WDT_ITI);
+	wdt_set_irq_priority(15);
+    cpu_intc_ihr_set(CPU_INTC_INTERRUPT_WDT_ITI, wdt_handler);
+
+	wdt_enable();
+}
 
 cc_uint64 Stopwatch_Measure(void) {
-	return cpu_frt_count_get() | (overflow_count << 16);
+	return wdt_total_ticks();
 }
 
 #define US_PER_SEC     1000000
-#define NTSC_320_CLOCK 26846588
+#define NTSC_320_CLOCK 26846587
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	cc_uint64 delta = end - beg;
 
 	// TODO still wrong?? PAL detection ???
-	return (delta * US_PER_SEC) / (NTSC_320_CLOCK / 128);
-}
-
-static void Stopwatch_Init(void) {
-	//cpu_frt_init(CPU_FRT_CLOCK_DIV_8);
-	cpu_frt_init(CPU_FRT_CLOCK_DIV_128);
-	cpu_frt_ovi_set(ovf_handler);
-	cpu_frt_interrupt_priority_set(15);
-
-	//cpu_wdt_init(CPU_WDT_CLOCK_DIV_4096);
-	//cpu_wdt_interrupt_priority_set(15);
-	//cpu_wdt_timer_mode_set(CPU_WDT_MODE_INTERVAL, wdt_handler);
-	//cpu_wdt_enable();
+	return (delta * US_PER_SEC) / (NTSC_320_CLOCK / 1024);
 }
 
 
