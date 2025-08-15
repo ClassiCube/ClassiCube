@@ -389,27 +389,10 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			int texIndex = texY * curTexWidth + texX;
 
 			BitmapCol color = curTexPixels[texIndex];
-			int R, G, B, A;
+			int R, G, B;
 
-			A = BitmapCol_A(color);
-			if (gfx_alphaBlend && A == 0) continue;
+			if ((color & BITMAPCOLOR_A_MASK) == 0) continue;
 			int cb_index = y * cb_stride + x;
-
-			if (gfx_alphaBlend && A != 255) {
-				BitmapCol dst = colorBuffer[cb_index];
-				int dstR = BitmapCol_R(dst);
-				int dstG = BitmapCol_G(dst);
-				int dstB = BitmapCol_B(dst);
-
-				R = BitmapCol_R(color);
-				G = BitmapCol_G(color);
-				B = BitmapCol_B(color);
-
-				R = (R * A + dstR * (255 - A)) >> 8;
-				G = (G * A + dstG * (255 - A)) >> 8;
-				B = (B * A + dstB * (255 - A)) >> 8;
-				color = BitmapCol_Make(R, G, B, 0xFF);
-			}
 
 			if (vColor != PACKEDCOL_WHITE) {
 				int r1 = PackedCol_R(vColor), r2 = BitmapCol_R(color);
