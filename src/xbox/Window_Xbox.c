@@ -13,6 +13,7 @@
 #include <hal/video.h>
 #include <usbh_lib.h>
 #include <xid_driver.h>
+#include <pbkit/pbkit.h>
 
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
@@ -20,6 +21,8 @@ struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT); // TODO not call
+	pb_init();
+	pb_show_debug_screen();
 }
 
 void Window_Init(void) {

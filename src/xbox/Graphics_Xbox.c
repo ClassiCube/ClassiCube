@@ -5,7 +5,7 @@
 
 #include <pbkit/pbkit.h>
 
-#define _NV_ALPHAKILL_EN (1 << 4)
+#define _NV_ALPHAKILL_EN (1 << 2)
 
 #define MAX_RAM_ADDR 0x03FFAFFF
 #define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
@@ -113,8 +113,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexHeight = 512; // TODO: 1024?
 	Gfx.Created      = true;
 
-	InitDefaultResources();	
-	pb_init();
+	InitDefaultResources();
 	pb_show_front_screen();
 
 	SetupShaders();
@@ -130,8 +129,8 @@ void Gfx_Create(void) {
 }
 
 void Gfx_Free(void) { 
-	FreeDefaultResources(); 
-	pb_kill();
+	FreeDefaultResources();
+	pb_show_debug_screen();
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }

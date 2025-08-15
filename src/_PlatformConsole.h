@@ -8,7 +8,7 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 int main(int argc, char** argv) {
 	SetupProgram(argc, argv);
 	while (Window_Main.Exists) { 
-		RunProgram(argc, argv); 
+		RunProgram(argc, argv);
 	}
 	
 	Window_Free();
