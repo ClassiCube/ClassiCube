@@ -94,12 +94,29 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping pad_defaults[BIND_COUNT] = {
+	[BIND_LOOK_UP]      = { CCPAD_2, CCPAD_UP },
+	[BIND_LOOK_DOWN]    = { CCPAD_2, CCPAD_DOWN },
+	[BIND_LOOK_LEFT]    = { CCPAD_2, CCPAD_LEFT },
+	[BIND_LOOK_RIGHT]   = { CCPAD_2, CCPAD_RIGHT },
+	[BIND_FORWARD]      = { CCPAD_UP,   0 },  
+	[BIND_BACK]         = { CCPAD_DOWN, 0 },
+	[BIND_LEFT]         = { CCPAD_LEFT, 0 },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
+	[BIND_JUMP]         = { CCPAD_1,  0 },
+	[BIND_INVENTORY]    = { CCPAD_3,  0 },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L,  0 },
+	[BIND_DELETE_BLOCK] = { CCPAD_R,  0 },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_4, CCPAD_LEFT }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_4, CCPAD_RIGHT }
+};
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 void Gamepads_Process(float delta) {
-	int port = Gamepad_Connect(0x32, PadBind_Defaults);
+	int port = Gamepad_Connect(0x32, pad_defaults);
 	int mods = HwMdReadPad(0);
 	
 	Gamepad_SetButton(port, CCPAD_L, mods & SEGA_CTRL_X);
