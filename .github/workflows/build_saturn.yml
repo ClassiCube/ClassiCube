@@ -21,10 +21,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install prerequisites
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78DBA3BC47EF2265
-          apt-get update
-          apt-get -y install curl
+          apt-get --allow-unauthenticated update
+          apt-get --allow-unauthenticated -y install curl
 
       - name: Compile Saturn build
         id: compile

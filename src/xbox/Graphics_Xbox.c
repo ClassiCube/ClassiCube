@@ -5,6 +5,8 @@
 
 #include <pbkit/pbkit.h>
 
+#define _NV_ALPHAKILL_EN (1 << 4)
+
 #define MAX_RAM_ADDR 0x03FFAFFF
 #define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
@@ -267,7 +269,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V, log_v) |
 					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P,    0)); // log2(1) slice = 0
 	p = pb_push1(p, NV097_SET_TEXTURE_CONTROL0, 
-					NV097_SET_TEXTURE_CONTROL0_ENABLE | 
+					NV097_SET_TEXTURE_CONTROL0_ENABLE |
+					(gfx_alphaTest ? _NV_ALPHAKILL_EN : 0) |
 					MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
 					MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
 	p = pb_push1(p, NV097_SET_TEXTURE_ADDRESS, 
@@ -309,6 +312,13 @@ static void SetAlphaBlend(cc_bool enabled) {
 static void SetAlphaTest(cc_bool enabled) {
 	uint32_t* p = pb_begin();
 	p = pb_push1(p, NV097_SET_ALPHA_TEST_ENABLE, enabled);
+
+	// TODO not duplicate with Gfx_BindTexture
+	p = pb_push1(p, NV097_SET_TEXTURE_CONTROL0, 
+					NV097_SET_TEXTURE_CONTROL0_ENABLE |
+					(gfx_alphaTest ? _NV_ALPHAKILL_EN : 0) |
+					MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
+					MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
 	pb_end(p);
 }
 
