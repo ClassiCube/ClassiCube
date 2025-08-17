@@ -15,9 +15,6 @@ static BitmapCol clearColor;
 static cc_bool colWrite = true;
 static int cb_stride;
 
-static float* depthBuffer;
-static int db_stride;
-
 static void* gfx_vertices;
 static GfxResourceID white_square;
 
@@ -556,9 +553,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 	float z0 = V0->z, z1 = V1->z, z2 = V2->z;
 	PackedCol color = V0->c;
-
-	float u0 = V0->u * curTexWidth,  u1 = V1->u * curTexWidth,  u2 = V2->u * curTexWidth;
-	float v0 = V0->v * curTexHeight, v1 = V1->v * curTexHeight, v2 = V2->v * curTexHeight;
+	float v0 = V0->v * curTexHeight, v1 = V1->v * curTexHeight;
 	
 	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
 	// Essentially these are the deltas of edge functions between X/Y and X/Y + 1 (i.e. one X/Y step)
@@ -603,10 +598,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 		for (x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
 		{
-			float ic0 = bc0 * factor;
-			float ic1 = bc1 * factor;
-			float ic2 = bc2 * factor;
-			if (ic0 < 0 || ic1 < 0 || ic2 < 0) continue;
+			if (bc0 < 0 || bc1 < 0 || bc2 < 0) continue;
 
 			int cb_index = y * cb_stride + x;
 			
