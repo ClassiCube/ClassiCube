@@ -212,14 +212,17 @@ void Model_DrawPart(struct ModelPart* part) {
 
 	struct ModelVertex v;
 	int i, count = part->count;
+	float uScale = Models.uScale;
+	float vScale = Models.vScale;
 
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count; i++) 
+	{
 		v = *src;
 		dst->x = v.x; dst->y = v.y; dst->z = v.z;
 		dst->Col = Models.Cols[i >> 2];
 
-		dst->U = (v.u & UV_POS_MASK) * Models.uScale - (v.u >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
-		dst->V = (v.v & UV_POS_MASK) * Models.vScale - (v.v >> UV_MAX_SHIFT) * 0.01f * Models.vScale;
+		dst->U = (v.u & UV_POS_MASK) * uScale - (v.u >> UV_MAX_SHIFT) * 0.01f * uScale;
+		dst->V = (v.v & UV_POS_MASK) * vScale - (v.v >> UV_MAX_SHIFT) * 0.01f * vScale;
 		src++; dst++;
 	}
 	model->index += count;

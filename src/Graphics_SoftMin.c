@@ -542,8 +542,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	minX = max(minX, 0); maxX = min(maxX, fb_maxX);
 	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
 
-	// NOTE: W in frag variables below is actually 1/W 
-	float factor = 1.0f / area;
+	// NOTE: W in frag variables below is actually 1/W
 	float w0 = V0->w, w1 = V1->w, w2 = V2->w;
 	
 	// TODO proper clipping
@@ -561,9 +560,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int dx12  = y1 - y2, dy12 = x2 - x1;
 	int dx20  = y2 - y0, dy20 = x0 - x2;
 
-	float bc0_start = edgeFunction(x1,y1, x2,y2, minX+0.5f,minY+0.5f);
-	float bc1_start = edgeFunction(x2,y2, x0,y0, minX+0.5f,minY+0.5f);
-	float bc2_start = edgeFunction(x0,y0, x1,y1, minX+0.5f,minY+0.5f);
+	int bc0_start = edgeFunction(x1,y1, x2,y2, minX, minY);
+	int bc1_start = edgeFunction(x2,y2, x0,y0, minX, minY);
+	int bc2_start = edgeFunction(x0,y0, x1,y1, minX, minY);
 
 	int R, G, B, A, x, y;
 	int a1, r1, g1, b1;
@@ -592,13 +591,13 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 	for (y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
 	{
-		float bc0 = bc0_start;
-		float bc1 = bc1_start;
-		float bc2 = bc2_start;
+		int bc0 = bc0_start;
+		int bc1 = bc1_start;
+		int bc2 = bc2_start;
 
 		for (x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
 		{
-			if (bc0 < 0 || bc1 < 0 || bc2 < 0) continue;
+			if ((bc0 | bc1 | bc2) < 0) continue;
 
 			int cb_index = y * cb_stride + x;
 			
