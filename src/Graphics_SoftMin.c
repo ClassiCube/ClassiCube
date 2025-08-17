@@ -620,9 +620,10 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			int dstG = BitmapCol_G(dst);
 			int dstB = BitmapCol_B(dst);
 
-			int finR = (R * A + dstR * (255 - A)) >> 8;
-			int finG = (G * A + dstG * (255 - A)) >> 8;
-			int finB = (B * A + dstB * (255 - A)) >> 8;
+			// Hardcode for alpha of 128
+			int finR = (R + dstR) >> 1;
+			int finG = (G + dstG) >> 1;
+			int finB = (B + dstB) >> 1;
 			colorBuffer[cb_index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 		}
 	}
