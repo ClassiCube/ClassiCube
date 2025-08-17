@@ -704,7 +704,7 @@ static CC_NOINLINE void BuildMapSides(void) {
 	struct VertexTextured* data;
 
 	if (!World.Loaded) return;
-	/*if (Gfx.Limitations & GFX_LIMIT_WORLD_ONLY) return;*/
+	if (Gfx.Limitations & GFX_LIMIT_WORLD_ONLY) return;
 	block = Env.SidesBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
@@ -757,7 +757,7 @@ static CC_NOINLINE void BuildMapEdges(void) {
 	struct VertexTextured* data;
 
 	if (!World.Loaded) return;
-	/*if (Gfx.Limitations & GFX_LIMIT_WORLD_ONLY) return;*/
+	if (Gfx.Limitations & GFX_LIMIT_WORLD_ONLY) return;
 	block = Env.EdgeBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
