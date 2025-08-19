@@ -102,7 +102,7 @@ static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
 static cc_bool gameHasArgs;
 
-static cc_result SetGameArgs(const cc_string* args, int numArgs) {
+static CC_INLINE cc_result SetGameArgs(const cc_string* args, int numArgs) {
 	int i;
 	for (i = 0; i < numArgs; i++) 
 	{
@@ -114,7 +114,7 @@ static cc_result SetGameArgs(const cc_string* args, int numArgs) {
 	return 0;
 }
 
-static int GetGameArgs(cc_string* args) {
+static CC_INLINE int GetGameArgs(cc_string* args) {
 	int i, count = gameNumArgs;
 	for (i = 0; i < count; i++) 
 	{

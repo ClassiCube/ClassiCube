@@ -14,7 +14,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "../_PlatformConsole.h"
 
 #include "../../misc/32x/32x.h"
 #include "../../misc/32x/hw_32x.h"
@@ -30,24 +29,43 @@ const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix  = " 32x";
 cc_bool Platform_ReadonlyFilesystem = true;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) {
+		RunGame();
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
+
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	Platform_Log1("  MALLOC: %i", &size);
 	void* ptr = size ? ta_alloc(size) : NULL;
-	Platform_Log1("MALLOCED: %x", &ptr);
+	Platform_Log2("MALLOCED: %x (%i bytes)", &ptr, &size);
     return ptr;
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	Platform_Log1("  CALLOC: %i", &size);
 	void* ptr = size ? ta_alloc(size) : NULL;
-	Platform_Log1("CALLOCED: %x", &ptr);
+	Platform_Log2("CALLOCED: %x (%i bytes)", &ptr, &size);
 
 	if (ptr) Mem_Set(ptr, 0, size);
     return ptr;
@@ -303,4 +321,22 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Process/Module------------------------------------------------------*
+*#########################################################################################################################*/
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	return 0;
+}
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	return 0;
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) { 
+	return 0; 
+}
+
+void Process_Exit(cc_result code) { _exit(code); }
 
