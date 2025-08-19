@@ -96,7 +96,7 @@ endif
 ifeq ($(PLAT),darwin)
 	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
 	LIBS    =
-	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	LDFLAGS =  -rdynamic -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
 endif
