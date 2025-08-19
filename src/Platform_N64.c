@@ -1,5 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_N64
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
 
 #define CC_XTEA_ENCRYPTION
 #include "_PlatformBase.h"
@@ -100,6 +102,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	str += root_path.length;
 	String_EncodeUtf8(str, &path_);
 }
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
@@ -333,5 +337,9 @@ cc_result Process_StartOpen(const cc_string* args) {
 static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }
 #endif

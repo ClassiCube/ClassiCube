@@ -341,3 +341,38 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 }
 #endif
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Updater----------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_NO_UPDATER
+cc_bool Updater_Supported = false;
+cc_bool Updater_Clean(void) { return true; }
+
+const struct UpdaterInfo Updater_Info = { "&eRedownload or recompile to update", 0 };
+
+cc_result Updater_Start(const char** action) {
+	*action = "Starting game";
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Updater_GetBuildTime(cc_uint64* timestamp) { return ERR_NOT_SUPPORTED; }
+
+cc_result Updater_MarkExecutable(void) { return ERR_NOT_SUPPORTED; }
+
+cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTED; }
+#endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_NO_DYNLIB
+const cc_string DynamicLib_Ext = String_FromConst(".so");
+
+void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
+void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
+
+cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
+#endif
+

@@ -45,12 +45,6 @@ void Mem_Free(void* mem) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Directory/File------------------------------------------------------*
-*#########################################################################################################################*/
-void Directory_GetCachePath(cc_string* path) { }
-
-
-/*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -87,49 +81,4 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_bool Updater_Supported = false;
-cc_bool Updater_Clean(void) { return true; }
-
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-
-cc_result Updater_Start(const char** action) {
-	*action = "Starting game";
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) { return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_MarkExecutable(void) { return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTED; }
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-// TODO can this actually be supported somehow
-const cc_string DynamicLib_Ext = String_FromConst(".so");
-
-void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	String_AppendConst(dst, "Dynamic linking unsupported");
-	return true;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Encryption--------------------------------------------------------*
-*#########################################################################################################################*/
-#ifndef CC_BUILD_3DS
-cc_result Platform_GetEntropy(void* data, int len) {
-	return ERR_NOT_SUPPORTED;
-}
-#endif
 
