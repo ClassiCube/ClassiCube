@@ -16,5 +16,7 @@
 	<string>APPL</string>
 	<key>CFBundleDisplayName</key>
 	<string>ClassiCube</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
 </dict>
 </plist>
