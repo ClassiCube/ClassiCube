@@ -101,6 +101,24 @@ ifeq ($(PLAT),darwin)
 	TARGET  = $(ENAME).app
 endif
 
+ifeq ($(PLAT),darwin_i)
+	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
+	CFLAGS  += -target x86_64-apple-macos10.12
+	LIBS    =
+	LDFLAGS =  -arch x86_64 -rdynamic -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	BUILD_DIR = build/macos_i
+	TARGET  = $(ENAME)_i
+endif
+
+ifeq ($(PLAT),darwin_a)
+	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
+	CFLAGS  += -target arm64-apple-macos11
+	LIBS    =
+	LDFLAGS =  -arch arm64 -rdynamic -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	BUILD_DIR = build/macos_a
+	TARGET  = $(ENAME)_a
+endif
+
 ifeq ($(PLAT),freebsd)
 	CFLAGS  += -I /usr/local/include
 	LDFLAGS =  -L /usr/local/lib -rdynamic
@@ -224,6 +242,23 @@ hp-ux:
 	$(MAKE) $(TARGET) PLAT=hp-ux
 darwin:
 	$(MAKE) $(TARGET) PLAT=darwin
+darwin_i:
+	$(MAKE) $(TARGET) PLAT=darwin_i
+	rm -r $(ENAME)_i
+	mv $(ENAME) $(ENAME)_i
+darwin_a:
+	$(MAKE) $(TARGET) PLAT=darwin_a
+	rm -r $(ENAME)_a
+	mv $(ENAME) $(ENAME)_a
+darwin_u: darwin_i darwin_a
+	lipo -create -output $(ENAME) $(ENAME)_i $(ENAME)_a
+	rm -r $(ENAME)_i
+	rm -r $(ENAME)_a
+	mkdir -p $(TARGET)/Contents/MacOS
+	mkdir -p $(TARGET)/Contents/Resources
+	cp $(ENAME) $(TARGET)/Contents/MacOS/$(ENAME)
+	cp misc/macOS/Info.plist   $(TARGET)/Contents/Info.plist
+	cp misc/macOS/appicon.icns $(TARGET)/Contents/Resources/appicon.icns
 freebsd:
 	$(MAKE) $(TARGET) PLAT=freebsd
 openbsd:
