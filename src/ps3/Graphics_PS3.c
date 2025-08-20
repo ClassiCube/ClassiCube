@@ -483,12 +483,6 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	offset[3] = 0.0f;
 
 	rsxSetViewport(context, x, y, w, h, zmin, zmax, scale, offset);
-	
-	// TODO: even needed?
-	for (int i = 0; i < 8; i++)
-	{
-		rsxSetViewportClip(context, i, w, h);
-	}
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {

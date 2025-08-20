@@ -20,6 +20,10 @@
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
+	<key>GCSupportsGameMode</key>
+	<true/>
+	<key>LSSupportsGameMode</key>
+	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<false/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
