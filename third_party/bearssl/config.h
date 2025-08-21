@@ -35,17 +35,10 @@
  
 /* The x86 intrinsics seem to be incomplete compared to what aes_x86ni expects when compiling with NXDK */
 #ifdef NXDK
-#define BR_AES_X86NI 0
-#define BR_ENABLE_INTRINSICS 0
-#define BR_SSE2 0
-#define BR_RDRAND 0
-#undef _WIN32
+	#define BR_AES_X86NI 0
+	#define BR_ENABLE_INTRINSICS 0
+	#define BR_SSE2 0
 #endif
-
-/* Rely on ClassiCube's implementation for RNG */
-#define BR_USE_WIN32_RAND 0
-#define BR_USE_URANDOM 0
-#define BR_USE_GETENTROPY 0
 
 /* intrin.h doesn't exist in older TinyC */
 #if defined __TINYC__
@@ -108,54 +101,6 @@
  */
 
 /*
- * When BR_RDRAND is enabled, the SSL engine will use the RDRAND opcode
- * to automatically obtain quality randomness for seeding its internal
- * PRNG. Since that opcode is present only in recent x86 CPU, its
- * support is dynamically tested; if the current CPU does not support
- * it, then another random source will be used, such as /dev/urandom or
- * CryptGenRandom().
- *
-#define BR_RDRAND   1
- */
-
-/*
- * When BR_USE_GETENTROPY is enabled, the SSL engine will use the
- * getentropy() function to obtain quality randomness for seeding its
- * internal PRNG. On Linux and FreeBSD, getentropy() is implemented by
- * the standard library with the system call getrandom(); on OpenBSD,
- * getentropy() is the system call, and there is no getrandom() wrapper,
- * hence the use of the getentropy() function for maximum portability.
- *
- * If the getentropy() call fails, and BR_USE_URANDOM is not explicitly
- * disabled, then /dev/urandom will be used as a fallback mechanism. On
- * FreeBSD and OpenBSD, this does not change much, since /dev/urandom
- * will block if not enough entropy has been obtained since last boot.
- * On Linux, /dev/urandom might not block, which can be troublesome in
- * early boot stages, which is why getentropy() is preferred.
- *
-#define BR_USE_GETENTROPY   1
- */
-
-/*
- * When BR_USE_URANDOM is enabled, the SSL engine will use /dev/urandom
- * to automatically obtain quality randomness for seeding its internal
- * PRNG.
- *
-#define BR_USE_URANDOM   1
- */
-
-/*
- * When BR_USE_WIN32_RAND is enabled, the SSL engine will use the Win32
- * (CryptoAPI) functions (CryptAcquireContext(), CryptGenRandom()...) to
- * automatically obtain quality randomness for seeding its internal PRNG.
- *
- * Note: if both BR_USE_URANDOM and BR_USE_WIN32_RAND are defined, the
- * former takes precedence.
- *
-#define BR_USE_WIN32_RAND   1
- */
-
-/*
  * When BR_ARMEL_CORTEXM_GCC is enabled, some operations are replaced with
  * inline assembly which is shorter and/or faster. This should be used
  * only when all of the following are true:
@@ -188,16 +133,6 @@
  * not be compiled at all.
  *
 #define BR_SSE2   1
- */
-
-/*
- * When BR_POWER8 is enabled, the AES implementation using the POWER ISA
- * 2.07 opcodes (available on POWER8 processors and later) is compiled.
- * If this is not enabled explicitly, then that implementation will be
- * compiled only if a compatible compiler is detected, _and_ the target
- * architecture is POWER8 or later.
- *
-#define BR_POWER8   1
  */
 
 /*
