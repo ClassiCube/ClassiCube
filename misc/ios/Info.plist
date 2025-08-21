@@ -24,6 +24,8 @@
 	<true/>
 	<key>LSSupportsGameMode</key>
 	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<false/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
