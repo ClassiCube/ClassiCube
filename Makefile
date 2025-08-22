@@ -305,6 +305,9 @@ amiga_68k:
 amiga_ppc:
 	$(MAKE) -f misc/amiga/Makefile_ppc
 
+# Opens ./ClassiCube
+open:
+	./ClassiCube
 # Cleans up all build .o files
 clean:
 	$(RM) $(OBJECTS)
