@@ -15,13 +15,28 @@ cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 int Http_AsyncGetSkin(const cc_string* skinName, cc_uint8 flags) {
 	return -1;
 }
+int Http_AsyncGetData(const cc_string* url, cc_uint8 flags) {
+	return -1;
+}
+int Http_AsyncGetHeaders(const cc_string* url, cc_uint8 flags) {
+	return -1;
+}
+int Http_AsyncPostData(const cc_string* url, cc_uint8 flags, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
+	return -1;
+}
+int Http_AsyncGetDataEx(const cc_string* url, cc_uint8 flags, const cc_string* lastModified, const cc_string* etag, struct StringsBuffer* cookies) {
+	return -1;
+}
 
 int Http_CheckProgress(int reqID) {
 	return -1;
 }
 
-void Http_LogError(const char* action, const struct HttpRequest* item) {
-}
+void Http_LogError(const char* action, const struct HttpRequest* item) { }
+
+void Http_TryCancel(int reqID) { }
+
+void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) { }
 
 static void Http_NullInit(void) { }
 
