@@ -34,8 +34,8 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
-	Gfx.MaxTexWidth  = 16;
-	Gfx.MaxTexHeight = 16;
+	Gfx.MaxTexWidth  = 256;
+	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
 	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	Gfx.Limitations  = GFX_LIMIT_MINIMAL | GFX_LIMIT_WORLD_ONLY;

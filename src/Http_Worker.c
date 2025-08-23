@@ -12,6 +12,10 @@ cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 	return false;
 }
 
+cc_bool Http_GetCurrent(int* reqID, int* progress) {
+	return false;
+}
+
 int Http_AsyncGetSkin(const cc_string* skinName, cc_uint8 flags) {
 	return -1;
 }
@@ -28,15 +32,15 @@ int Http_AsyncGetDataEx(const cc_string* url, cc_uint8 flags, const cc_string* l
 	return -1;
 }
 
-int Http_CheckProgress(int reqID) {
-	return -1;
-}
+int Http_CheckProgress(int reqID) { return -1; }
 
 void Http_LogError(const char* action, const struct HttpRequest* item) { }
 
 void Http_TryCancel(int reqID) { }
 
 void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) { }
+
+void Http_ClearPending(void) { }
 
 static void Http_NullInit(void) { }
 
