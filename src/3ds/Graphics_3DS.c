@@ -201,7 +201,7 @@ void Gfx_Free(void) {
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 
-void Gfx_RestoreState(void) {
+static void Gfx_RestoreState(void) {
 	InitDefaultResources();
  	
 	// 8x8 dummy white texture
@@ -213,7 +213,7 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) {
+static void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }

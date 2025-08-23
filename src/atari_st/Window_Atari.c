@@ -10,11 +10,9 @@
 #include "../ExtMath.h"
 #include "../Camera.h"
 
-#include <stdint.h>
-#include "gbadefs.h"
-
-#define SCREEN_WIDTH	240
-#define SCREEN_HEIGHT	160
+#include <tos.h>
+#define SCREEN_WIDTH	320
+#define SCREEN_HEIGHT	200
 
 /*########################################################################################################################*
 *------------------------------------------------------General data-------------------------------------------------------*
@@ -22,8 +20,20 @@
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
+// TODO backup palette
 void Window_PreInit(void) {
-	REG_DISP_CTRL = DCTRL_MODE3 | DCTRL_BG2;
+	for (int i = 0; i < 16; i++) 
+	{
+		int R = (i & 0x1) >> 0;
+		int G = (i & 0x2) >> 1;
+		int B = (i & 0xC) >> 2;
+
+		R = R ? ((R << 3) | 0x07) : 0;
+		G = G ? ((G << 3) | 0x07) : 0;
+		B = B ? ((B << 2) | 0x03) : 0;
+
+		Setcolor(i, (R << 8) | (G << 4) | B);
+	}
 }
 
 void Window_Init(void) {  
@@ -85,63 +95,82 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/	
-static const BindMapping pad_defaults[BIND_COUNT] = {
-	[BIND_LOOK_UP]      = { CCPAD_2, CCPAD_UP },
-	[BIND_LOOK_DOWN]    = { CCPAD_2, CCPAD_DOWN },
-	[BIND_LOOK_LEFT]    = { CCPAD_2, CCPAD_LEFT },
-	[BIND_LOOK_RIGHT]   = { CCPAD_2, CCPAD_RIGHT },
-	[BIND_FORWARD]      = { CCPAD_UP,    0 },  
-	[BIND_BACK]         = { CCPAD_DOWN,  0 },
-	[BIND_LEFT]         = { CCPAD_LEFT,  0 },  
-	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
-	[BIND_JUMP]         = { CCPAD_1, 0 },
-	[BIND_INVENTORY]    = { CCPAD_R, CCPAD_UP },
-	[BIND_PLACE_BLOCK]  = { CCPAD_L, 0 },
-	[BIND_DELETE_BLOCK] = { CCPAD_R, 0 },
-	[BIND_HOTBAR_LEFT]  = { CCPAD_L, CCPAD_LEFT }, 
-	[BIND_HOTBAR_RIGHT] = { CCPAD_L, CCPAD_RIGHT }
-};
+void Gamepads_Init(void) { }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
-
-void Gamepads_Process(float delta) {
-	int port = Gamepad_Connect(0x5BA, pad_defaults);
-	int mods = ~REG_KEYINPUT;
-	
-	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
-	
-	Gamepad_SetButton(port, CCPAD_1, mods & KEY_A);
-	Gamepad_SetButton(port, CCPAD_2, mods & KEY_B);
-	//Gamepad_SetButton(port, CCPAD_3, mods & KEY_X);
-	//Gamepad_SetButton(port, CCPAD_4, mods & KEY_Y);
-	
-	Gamepad_SetButton(port, CCPAD_START,  mods & KEY_START);
-	Gamepad_SetButton(port, CCPAD_SELECT, mods & KEY_SELECT);
-	
-	Gamepad_SetButton(port, CCPAD_LEFT,   mods & KEY_LEFT);
-	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & KEY_RIGHT);
-	Gamepad_SetButton(port, CCPAD_UP,     mods & KEY_UP);
-	Gamepad_SetButton(port, CCPAD_DOWN,   mods & KEY_DOWN);
-}
+void Gamepads_Process(float delta) { }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)MEM_VRAM;
+	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
 }
 
+// TODO should be done in assembly.. search up 'chunky to planar atari ST'
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// Draws to screen directly anyways
+	// TODO
+	UWORD* ptr = Physbase();
+	Mem_Set(ptr, 0, 32000);
+	int idx = 0;
+	
+	UWORD* plane1 = ptr +     0;
+	UWORD* plane2 = ptr +  4000;
+	UWORD* plane3 = ptr +  8000;
+	UWORD* plane4 = ptr + 12000;
+
+	for (int y = 0; y < r.height; y++) 
+	{
+        BitmapCol* row = Bitmap_GetRow(bmp, y);
+
+        for (int x = 0; x < r.width; x++, idx++) 
+		{
+            // TODO optimise
+            BitmapCol col = row[x];
+			cc_uint8 R = BitmapCol_R(col) >> 7;
+			cc_uint8 G = BitmapCol_G(col) >> 7;
+			cc_uint8 B = BitmapCol_B(col) >> 6;
+
+            //int pal = R | (G << 1) | (B << 2);
+			int b1 = B & 0x01, b2 = (B >> 1);
+
+			plane1[idx >> 4] |= R << (idx & 0x0F);
+			plane2[idx >> 4] |= G << (idx & 0x0F);
+			plane3[idx >> 4] |= b1<< (idx & 0x0F);
+			plane4[idx >> 4] |= b2<< (idx & 0x0F);
+        }
+    }
 }
+/*
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	// TODO
+	UWORD* ptr = Physbase();
+
+	for (int y = 0; y < r.height; ++y) 
+	{
+        BitmapCol* row = Bitmap_GetRow(bmp, y);
+		UWORD* src = ptr + 80 * y;
+		Mem_Set(src, 0, sizeof(UWORD) * 80);
+
+        for (int x = 0; x < r.width; ++x) 
+		{
+            // TODO optimise
+            BitmapCol col = row[x];
+			cc_uint8 R = BitmapCol_R(col) >> 7;
+			cc_uint8 G = BitmapCol_G(col) >> 7;
+			cc_uint8 B = BitmapCol_B(col) >> 6;
+
+            int idx = R | (G << 1) | (B << 2);
+			src[x] |= idx << ((x & 0x03) * 4);
+        }
+    }
+}
+*/
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
+	Mem_Free(bmp->scan0);
 }
 
 
@@ -162,8 +191,8 @@ void OnscreenKeyboard_Close(void) {
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	//Platform_LogConst(title);
+	//Platform_LogConst(msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

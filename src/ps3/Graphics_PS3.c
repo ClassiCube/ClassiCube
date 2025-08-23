@@ -269,7 +269,7 @@ cc_bool Gfx_TryRestoreContext(void) { return true; }
 cc_bool Gfx_WarnIfNecessary(void)   { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
-void Gfx_RestoreState(void) {
+static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
 	// 1x1 dummy white texture
@@ -279,7 +279,7 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) {
+static void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }

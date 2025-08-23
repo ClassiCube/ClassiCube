@@ -327,7 +327,7 @@ struct InputDevice TouchDevice = {
 struct Pointer Pointers[INPUT_MAX_POINTERS];
 struct _PointerHooks PointerHooks;
 
-void Pointer_SetPressed(int idx, cc_bool pressed) {
+static void Pointer_SetPressed(int idx, cc_bool pressed) {
 	if (pressed) {
 		if (PointerHooks.DownHook && PointerHooks.DownHook(idx)) return;
 

@@ -304,6 +304,8 @@ amiga_68k:
 	$(MAKE) -f misc/amiga/Makefile_68k
 amiga_ppc:
 	$(MAKE) -f misc/amiga/Makefile_ppc
+atari_st:
+	$(MAKE) -f misc/atari_st/Makefile
 
 # Cleans up all build .o files
 clean:

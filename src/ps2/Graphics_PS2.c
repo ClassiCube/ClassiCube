@@ -46,7 +46,7 @@ static qword_t* Q;
 static GfxResourceID white_square;
 static int primitive_type;
 
-void Gfx_RestoreState(void) {
+static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
 	// 4x4 dummy white texture
@@ -57,7 +57,7 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) {
+static void Gfx_FreeState(void) {
 	FreeDefaultResources();
 	Gfx_DeleteTexture(&white_square);
 }

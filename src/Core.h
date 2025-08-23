@@ -171,6 +171,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_PLUGINS
 #define CC_BUILD_FILESYSTEM
 #define CC_BUILD_ADVLIGHTING
+#define CC_BUILD_COMPRESSION
 /*#define CC_BUILD_GL11*/
 
 #ifndef CC_BUILD_MANUAL
@@ -269,6 +270,25 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+#elif defined PLAT_ATARIOS
+	#undef  CC_BUILD_FREETYPE
+	#define CC_BUILD_ATARIOS
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_NOFPU
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_FILESYSTEM
+	#undef  CC_BUILD_COMPRESSION
+	#define CC_BUILD_MAXSTACK (32 * 1024)
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
 #elif defined __linux__
 	#define CC_BUILD_LINUX
 	#define CC_BUILD_POSIX
@@ -493,6 +513,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
+	#undef  CC_BUILD_COMPRESSION
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
@@ -593,6 +614,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
+	#undef  CC_BUILD_COMPRESSION
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI

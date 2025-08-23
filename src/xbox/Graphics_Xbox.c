@@ -134,8 +134,8 @@ void Gfx_Free(void) {
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
-void Gfx_RestoreState(void) { }
-void Gfx_FreeState(void) { }
+static void Gfx_RestoreState(void) { }
+static void Gfx_FreeState(void) { }
 
 
 /*########################################################################################################################*
