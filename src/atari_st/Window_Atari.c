@@ -109,17 +109,16 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->height = height;
 }
 
+// Each group of 16 pixels is interleaved across 4 bitplanes
+struct GRWORD { UWORD plane1, plane2, plane3, plane4; };
+
 // TODO should be done in assembly.. search up 'chunky to planar atari ST'
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO
 	UWORD* ptr = Physbase();
 	Mem_Set(ptr, 0, 32000);
 	int idx = 0;
-	
-	UWORD* plane1 = ptr +     0;
-	UWORD* plane2 = ptr +  4000;
-	UWORD* plane3 = ptr +  8000;
-	UWORD* plane4 = ptr + 12000;
+	struct GRWORD* planes = (struct GRWORD*)ptr;
 
 	for (int y = 0; y < r.height; y++) 
 	{
@@ -136,10 +135,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
             //int pal = R | (G << 1) | (B << 2);
 			int b1 = B & 0x01, b2 = (B >> 1);
 
-			plane1[idx >> 4] |= R << (idx & 0x0F);
-			plane2[idx >> 4] |= G << (idx & 0x0F);
-			plane3[idx >> 4] |= b1<< (idx & 0x0F);
-			plane4[idx >> 4] |= b2<< (idx & 0x0F);
+			int word = idx >> 4, bit = 15 - (idx & 0x0F);
+
+			planes[word].plane1 |= R << bit;
+			planes[word].plane2 |= G << bit;
+			planes[word].plane3 |= b1<< bit;
+			planes[word].plane4 |= b2<< bit;
         }
     }
 }
