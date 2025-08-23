@@ -35,6 +35,30 @@
 #include "config.h"
 #include "bearssl.h"
 
+/* ==== BEG ClassiCube specific ==== */
+static size_t br_strlen(const char* a) {
+	int i = 0;
+	while (*a++) i++;
+	return i;
+}
+
+#define br_memcpy  memcpy
+#define br_memset  memset
+#define br_memmove memmove
+ 
+/* The x86 intrinsics seem to be incomplete compared to what aes_x86ni expects when compiling with NXDK */
+#ifdef NXDK
+	#define BR_AES_X86NI 0
+	#define BR_ENABLE_INTRINSICS 0
+	#define BR_SSE2 0
+#endif
+
+/* intrin.h doesn't exist in older TinyC */
+#if defined __TINYC__
+	#define BR_INT128 0
+#endif
+/* ==== END ClassiCube specific ==== */
+
 /*
  * On MSVC, disable the warning about applying unary minus on an
  * unsigned type: it is standard, we do it all the time, and for

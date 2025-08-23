@@ -64,7 +64,7 @@ br_ssl_client_reset(br_ssl_client_context *cc,
 	if (server_name == NULL) {
 		cc->eng.server_name[0] = 0;
 	} else {
-		n = strlen(server_name) + 1;
+		n = br_strlen(server_name) + 1;
 		if (n > sizeof cc->eng.server_name) {
 			br_ssl_engine_fail(&cc->eng, BR_ERR_BAD_PARAM);
 			return 0;

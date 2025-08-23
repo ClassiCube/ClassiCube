@@ -578,6 +578,7 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 }
 
 #if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
+/* Load hardcoded texture pack */
 #include "../misc/ps1/classicubezip.h"
 
 static cc_result ExtractFromFile(const cc_string* path) {
@@ -585,6 +586,11 @@ static cc_result ExtractFromFile(const cc_string* path) {
 	Stream_ReadonlyMemory(&stream, ccTextures, ccTextures_length);
 
 	return ExtractFrom(&stream, path);
+}
+#elif !defined CC_BUILD_FILESYSTEM
+/* E.g. GBA/32X don't support textures at all */
+static cc_result ExtractFromFile(const cc_string* path) {
+	return ERR_NOT_SUPPORTED;
 }
 #else
 static cc_result ExtractFromFile(const cc_string* path) {

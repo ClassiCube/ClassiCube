@@ -1246,7 +1246,7 @@ br_ssl_hs_client_run(void *t0ctx)
 				/* copy-protocol-name */
 
 	size_t idx = T0_POP();
-	size_t len = strlen(ENG->protocol_names[idx]);
+	size_t len = br_strlen(ENG->protocol_names[idx]);
 	memcpy(ENG->pad, ENG->protocol_names[idx], len);
 	T0_PUSH(len);
 
@@ -1346,7 +1346,7 @@ br_ssl_hs_client_run(void *t0ctx)
 	}
 	len = 6;
 	for (u = 0; u < ENG->protocol_names_num; u ++) {
-		len += 1 + strlen(ENG->protocol_names[u]);
+		len += 1 + br_strlen(ENG->protocol_names[u]);
 	}
 	T0_PUSH(len);
 
@@ -1591,10 +1591,10 @@ br_ssl_hs_client_run(void *t0ctx)
 				}
 				break;
 			case 63: {
-				/* strlen */
+				/* br_strlen */
 
 	void *str = (unsigned char *)ENG + (size_t)T0_POP();
-	T0_PUSH((uint32_t)strlen(str));
+	T0_PUSH((uint32_t)br_strlen(str));
 
 				}
 				break;
@@ -1766,7 +1766,7 @@ br_ssl_hs_client_run(void *t0ctx)
 		const char *name;
 
 		name = ENG->protocol_names[u];
-		if (len == strlen(name) && memcmp(ENG->pad, name, len) == 0) {
+		if (len == br_strlen(name) && memcmp(ENG->pad, name, len) == 0) {
 			T0_PUSH(u);
 			T0_RET();
 		}

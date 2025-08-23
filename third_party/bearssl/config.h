@@ -32,18 +32,6 @@
  * non-zero integer (normally 1). If the macro is not defined, then
  * autodetection applies.
  */
- 
-/* The x86 intrinsics seem to be incomplete compared to what aes_x86ni expects when compiling with NXDK */
-#ifdef NXDK
-	#define BR_AES_X86NI 0
-	#define BR_ENABLE_INTRINSICS 0
-	#define BR_SSE2 0
-#endif
-
-/* intrin.h doesn't exist in older TinyC */
-#if defined __TINYC__
-#define BR_INT128 0
-#endif
 
 /*
  * When BR_64 is enabled, 64-bit integer types are assumed to be

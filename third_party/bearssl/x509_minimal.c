@@ -1440,7 +1440,7 @@ br_x509_minimal_run(void *t0ctx)
 		T0_PUSH(0);
 		T0_RET();
 	}
-	n1 = strlen(CTX->server_name);
+	n1 = br_strlen(CTX->server_name);
 	n2 = CTX->pad[0];
 	if (n1 == n2 && eqnocase(&CTX->pad[1], CTX->server_name, n1)) {
 		T0_PUSHi(-1);
