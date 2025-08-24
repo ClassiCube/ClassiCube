@@ -1,5 +1,5 @@
 TARGET		:=	ClassiCube-amiga
-BUILD_DIR 	:=	build/amiga_68k
+BUILD_DIR 	:=	build/amiga
 SOURCE_DIRS	:= src src/amiga
 
 S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
@@ -10,41 +10,33 @@ OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-AS		:= m68k-amigaos-as
-CC		:= m68k-amigaos-gcc
-CXX		:= m68k-amigaos-g++
-CFLAGS 	:= -O1 -fno-math-errno -DPLAT_AMIGA -DCC_BUILD_NOFPU
+CC = vc +aos68k
+CFLAGS = -rmcfg-amiga-softfloat -O1 -DPLAT_AMIGA
 
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
+AS = vasmm68k_mot
+ASFLAGS = -Fvobj -m68000 -no-fpu
+
+LDFLAGS = $(CFLAGS)
+LDLIBS  = -lamiga -lmsoft
 
 
 #---------------------------------------------------------------------------------
-# main targets
+# Main targets
 #---------------------------------------------------------------------------------
-default: $(BUILD_DIR) $(TARGET).exe
+default: $(BUILD_DIR) $(TARGET)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(TARGET).exe: $(C_OBJECTS)
-	$(CC) $(LDFLAGS) -o $(TARGET).exe $(C_OBJECTS)
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -final -o $@ $^ $(LDLIBS)
 
 
 #---------------------------------------------------------------------------------
 # object generation
 #---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o : src/amiga/%.S
-	$(AS) $< -o $@
-
 $(BUILD_DIR)/%.o : src/%.c
-	$(CC) $(CFLAGS) $(DEPFLAGS) -S -c $< -o $@
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/%.S : src/amiga/%.c
-	$(CC) $(CFLAGS) $(DEPFLAGS) -S -c $< -o $@
-
-# Dependency tracking
-$(DEPFILES):
-
-include $(wildcard $(DEPFILES))
+$(BUILD_DIR)/%.o : src/amiga/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<

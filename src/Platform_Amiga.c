@@ -31,7 +31,11 @@ const char* Platform_AppNameSuffix = " Amiga";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 cc_bool  Platform_ReadonlyFilesystem;
 
+#ifdef __GNUC__
 static const char __attribute__((used)) min_stack[] = "$STACK:102400";
+#else
+size_t __stack = 65536; // vbcc
+#endif
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
@@ -87,9 +91,10 @@ void Platform_Log(const char* msg, int len) {
 
 TimeMS DateTime_CurrentUTC(void) {
 	ULONG secs, micro;
-	CurrentTime(&secs, &micro);
+	//CurrentTime(&secs, &micro);
 	// TODO epoch adjustment
-	return secs;
+	//return secs;
+	return 0;
 }
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
@@ -113,9 +118,14 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
 #define US_PER_SEC 1000000ULL
 
 cc_uint64 Stopwatch_Measure(void) {
+#ifdef __GNUC__
 	ULONG secs, micro;
 	CurrentTime(&secs, &micro);
 	return secs * US_PER_SEC + micro;
+#else
+	// TODO
+	return 10;
+#endif
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {

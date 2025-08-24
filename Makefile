@@ -300,10 +300,10 @@ macclassic_68k:
 	$(MAKE) -f misc/macclassic/Makefile_68k
 macclassic_ppc:
 	$(MAKE) -f misc/macclassic/Makefile_ppc
-amiga_68k:
+amiga_gcc:
 	$(MAKE) -f misc/amiga/Makefile_68k
-amiga_ppc:
-	$(MAKE) -f misc/amiga/Makefile_ppc
+amiga:
+	$(MAKE) -f misc/amiga/Makefile
 atari_st:
 	$(MAKE) -f misc/atari_st/Makefile
 
