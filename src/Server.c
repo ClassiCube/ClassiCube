@@ -132,7 +132,7 @@ static void SPConnection_BeginConnect(void) {
 	Random_SeedFromCurrentTime(&rnd);
 	World_NewMap();
 
-#if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC || defined CC_BUILD_32X || defined CC_BUILD_GBA
+#if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC || defined CC_BUILD_TINYMEM
 	horSize = 16;
 	verSize = 16;
 #elif defined CC_BUILD_LOWMEM
@@ -144,7 +144,7 @@ static void SPConnection_BeginConnect(void) {
 #endif
 	World_SetDimensions(horSize, verSize, horSize);
 
-#if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_32X || defined CC_BUILD_GBA
+#if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_TINYMEM
 	Gen_Active = &FlatgrassGen;
 #else
 	Gen_Active = &NotchyGen;

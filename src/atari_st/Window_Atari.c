@@ -25,12 +25,12 @@ void Window_PreInit(void) {
 	for (int i = 0; i < 16; i++) 
 	{
 		int R = (i & 0x1) >> 0;
-		int G = (i & 0x2) >> 1;
-		int B = (i & 0xC) >> 2;
+		int B = (i & 0x2) >> 1;
+		int G = (i & 0xC) >> 2;
 
 		R = R ? ((R << 3) | 0x07) : 0;
-		G = G ? ((G << 3) | 0x07) : 0;
-		B = B ? ((B << 2) | 0x03) : 0;
+		B = B ? ((B << 3) | 0x07) : 0;
+		G = G ? ((G << 2) | 0x03) : 0;
 
 		Setcolor(i, (R << 8) | (G << 4) | B);
 	}
@@ -129,18 +129,18 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
             // TODO optimise
             BitmapCol col = row[x];
 			cc_uint8 R = BitmapCol_R(col) >> 7;
-			cc_uint8 G = BitmapCol_G(col) >> 7;
-			cc_uint8 B = BitmapCol_B(col) >> 6;
+			cc_uint8 G = BitmapCol_G(col) >> 6;
+			cc_uint8 B = BitmapCol_B(col) >> 7;
 
             //int pal = R | (G << 1) | (B << 2);
-			int b1 = B & 0x01, b2 = (B >> 1);
+			int g1 = G & 0x01, g2 = (G >> 1);
 
 			int word = idx >> 4, bit = 15 - (idx & 0x0F);
 
 			planes[word].plane1 |= R << bit;
-			planes[word].plane2 |= G << bit;
-			planes[word].plane3 |= b1<< bit;
-			planes[word].plane4 |= b2<< bit;
+			planes[word].plane2 |= B << bit;
+			planes[word].plane3 |= g1<< bit;
+			planes[word].plane4 |= g2<< bit;
         }
     }
 }
@@ -192,8 +192,8 @@ void OnscreenKeyboard_Close(void) {
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */
-	//Platform_LogConst(title);
-	//Platform_LogConst(msg);
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

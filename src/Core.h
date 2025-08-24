@@ -274,6 +274,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_FREETYPE
 	#define CC_BUILD_ATARIOS
 	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_TINYMEM
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS

@@ -41,8 +41,8 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 int main(int argc, char** argv) {
 	SetupProgram(argc, argv);
 	while (Window_Main.Exists) { 
-		//RunGame();
-		RunProgram(argc, argv);
+		RunGame();
+		//RunProgram(argc, argv);
 	}
 	
 	Window_Free();
@@ -84,15 +84,21 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+// Number of ticks 200 HZ system timer
+// Must be called when in supervisor mode
+static LONG Read_200HZ(void) { return *((LONG*)0x04BA); }
+
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 
-	cc_uint64 delta = end - beg;
-	return 1; // TODO implement
+	// 200 ticks a second
+	// 1,000,000 microseconds a second
+	// > one tick = 10^6/200 = 5000 microseconds
+	return (end - beg) * 5000;
 }
 
 cc_uint64 Stopwatch_Measure(void) {
-	return 1; // TODO implement
+	return Supexec(Read_200HZ);
 }
 
 void Platform_Log(const char* msg, int len) {
@@ -270,7 +276,6 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-
 void Platform_Init(void) {
 	LONG size = (LONG)Malloc(-1);
 	char* ptr = Malloc(size);
@@ -280,7 +285,6 @@ void Platform_Init(void) {
 	ta_init(heap_beg, heap_end, 256, 16, 4);
 
 	int size_ = (int)(heap_end - heap_beg);
-	Platform_Log3("HEAP: %i bytes (%x -> %x)", &size_, &heap_beg, &heap_end);
 }
 
 void Platform_Free(void) { }
