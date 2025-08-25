@@ -8,7 +8,7 @@ CC_BEGIN_HEADER
 */
 
 typedef cc_uint32 PackedCol;
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || defined CC_BUILD_XBOX || defined CC_BUILD_DREAMCAST
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || defined CC_BUILD_XBOX || defined CC_BUILD_DREAMCAST || defined CC_BUILD_XBOX360
 	#define PACKEDCOL_B_SHIFT  0
 	#define PACKEDCOL_G_SHIFT  8
 	#define PACKEDCOL_R_SHIFT 16
@@ -17,12 +17,6 @@ typedef cc_uint32 PackedCol;
 	#define PACKEDCOL_R_SHIFT 24
 	#define PACKEDCOL_G_SHIFT 16
 	#define PACKEDCOL_B_SHIFT  8
-	#define PACKEDCOL_A_SHIFT  0
-#elif defined CC_BUILD_XBOX360
-	/* TODO verify */
-	#define PACKEDCOL_B_SHIFT 24
-	#define PACKEDCOL_G_SHIFT 16
-	#define PACKEDCOL_R_SHIFT  8
 	#define PACKEDCOL_A_SHIFT  0
 #else
 	#define PACKEDCOL_R_SHIFT  0
