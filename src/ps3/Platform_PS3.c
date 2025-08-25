@@ -63,10 +63,14 @@ TimeMS DateTime_CurrentUTC(void) {
 }
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
-	struct timeval cur; 
+	time_t cur_sec; 
 	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+
+	u64 sec, nsec;
+	sysGetCurrentTime(&sec, &nsec);
+
+	cur_sec = sec;
+	localtime_r(&cur_sec, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;

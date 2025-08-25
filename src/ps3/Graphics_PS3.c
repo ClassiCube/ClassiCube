@@ -101,7 +101,7 @@ static void FP_Load(FragmentProgram* fp, const u8* source) {
 	
 	fp->buffer = (u32*)rsxMemalign(128, size);
 	Mem_Copy(fp->buffer, fp->ucode, size);
-	rsxAddressToOffset(fp->buffer, &fp->offset);
+	gcmAddressToOffset(fp->buffer, &fp->offset);
 }
 
 static void LoadFragmentPrograms(void) {
@@ -132,7 +132,7 @@ static u32  depth_offset;
 static u32* depth_buffer;
 
 #define GCM_LABEL_INDEX 255
-static u32 slabelval = 1;
+static u32 labelID = 1;
 
 static void CreateContext(void) {
 	void* host_addr = memalign(1024 * 1024, HOST_SIZE);
@@ -140,26 +140,27 @@ static void CreateContext(void) {
 }
 
 static void WaitRSXFinish(void) {
-	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, labelID);
 	rsxFlushBuffer(context);
 
-	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != slabelval)
+	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != labelID)
 		usleep(30);
 
-	slabelval++;
+	labelID++;
 }
 
 static void WaitRSXIdle(void) {
-	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
-	rsxSetWaitLabel(context,         GCM_LABEL_INDEX, slabelval);
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, labelID);
+	rsxSetWaitLabel(context,         GCM_LABEL_INDEX, labelID);
 
-	slabelval++;
+	labelID++;
 	WaitRSXFinish();
 }
 
 static void ConfigureVideo(void) {
-	videoState state;
     WaitRSXIdle();
+
+	videoState state;
 	videoGetState(0, 0, &state);
 
 	videoConfiguration vconfig = { 0 };
@@ -179,7 +180,7 @@ static void AllocColorSurface(u32 i) {
 	color_pitch     = DisplayInfo.Width * 4;
 	color_buffer[i] = (u32*)rsxMemalign(64, DisplayInfo.Height * color_pitch);
 	
-	rsxAddressToOffset(color_buffer[i], &color_offset[i]);
+	gcmAddressToOffset(color_buffer[i], &color_offset[i]);
 	gcmSetDisplayBuffer(i, color_offset[i], color_pitch,
 		DisplayInfo.Width, DisplayInfo.Height);
 }
@@ -188,7 +189,7 @@ static void AllocDepthSurface(void) {
 	depth_pitch  = DisplayInfo.Width * 4;
 	depth_buffer = (u32*)rsxMemalign(64, DisplayInfo.Height * depth_pitch);
 	
-	rsxAddressToOffset(depth_buffer, &depth_offset);
+	gcmAddressToOffset(depth_buffer, &depth_offset);
 }
 
 
@@ -287,7 +288,7 @@ static void Gfx_FreeState(void) {
 
 u32* Gfx_AllocImage(u32* offset, s32 w, s32 h) {
 	u32* pixels = (u32*)rsxMemalign(64, w * h * 4);
-	rsxAddressToOffset(pixels, offset);
+	gcmAddressToOffset(pixels, offset);
 	return pixels;
 }
 
@@ -512,7 +513,7 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 
 void Gfx_BindVb(GfxResourceID vb) { 
 	u32 offset;
-	rsxAddressToOffset(vb, &offset);
+	gcmAddressToOffset(vb, &offset);
 	
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_POS,    0, offset, 
@@ -638,7 +639,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	/* TODO */
 	
 	u32 offset;
-	rsxAddressToOffset(tex->pixels, &offset);
+	gcmAddressToOffset(tex->pixels, &offset);
 	gcmTexture texture;
 
 	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_SWZ;
