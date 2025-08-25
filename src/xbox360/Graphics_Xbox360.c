@@ -177,7 +177,7 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_ClearColor(PackedCol color) { 
+void Gfx_ClearColor(PackedCol color) {
 	Xe_SetClearColor(xe, color);
 }
 

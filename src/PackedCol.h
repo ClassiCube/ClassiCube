@@ -18,6 +18,12 @@ typedef cc_uint32 PackedCol;
 	#define PACKEDCOL_G_SHIFT 16
 	#define PACKEDCOL_B_SHIFT  8
 	#define PACKEDCOL_A_SHIFT  0
+#elif defined CC_BUILD_XBOX360
+	/* TODO verify */
+	#define PACKEDCOL_B_SHIFT 24
+	#define PACKEDCOL_G_SHIFT 16
+	#define PACKEDCOL_R_SHIFT  8
+	#define PACKEDCOL_A_SHIFT  0
 #else
 	#define PACKEDCOL_R_SHIFT  0
 	#define PACKEDCOL_G_SHIFT  8
