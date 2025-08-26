@@ -126,9 +126,9 @@ br_ecdsa_asn1_to_raw(void *sig, size_t sig_len)
 	 */
 	zlen = rlen > slen ? rlen : slen;
 	sig_len = zlen << 1;
-	memset(tmp, 0, sig_len);
-	memcpy(tmp + zlen - rlen, r, rlen);
-	memcpy(tmp + sig_len - slen, s, slen);
-	memcpy(sig, tmp, sig_len);
+	br_memset(tmp, 0, sig_len);
+	br_memcpy(tmp + zlen - rlen, r, rlen);
+	br_memcpy(tmp + sig_len - slen, s, slen);
+	br_memcpy(sig, tmp, sig_len);
 	return sig_len;
 }

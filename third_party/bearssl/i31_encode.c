@@ -35,7 +35,7 @@ br_i31_encode(void *dst, size_t len, const uint32_t *x)
 
 	xlen = (x[0] + 31) >> 5;
 	if (xlen == 0) {
-		memset(dst, 0, len);
+		br_memset(dst, 0, len);
 		return;
 	}
 	buf = (unsigned char *)dst + len;

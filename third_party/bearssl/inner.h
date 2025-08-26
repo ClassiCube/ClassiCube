@@ -36,15 +36,7 @@
 #include "bearssl.h"
 
 /* ==== BEG ClassiCube specific ==== */
-static size_t br_strlen(const char* a) {
-	int i = 0;
-	while (*a++) i++;
-	return i;
-}
-
-#define br_memcpy  memcpy
-#define br_memset  memset
-#define br_memmove memmove
+#include "bearssl_stdlib.h"
  
 /* The x86 intrinsics seem to be incomplete compared to what aes_x86ni expects when compiling with NXDK */
 #ifdef NXDK
@@ -627,7 +619,7 @@ static inline void
 br_multihash_copyimpl(br_multihash_context *dst,
 	const br_multihash_context *src)
 {
-	memcpy((void *)dst->impl, src->impl, sizeof src->impl);
+	br_memcpy((void *)dst->impl, src->impl, sizeof src->impl);
 }
 
 /* ==================================================================== */
@@ -1137,7 +1129,7 @@ static inline void
 br_i32_zero(uint32_t *x, uint32_t bit_len)
 {
 	*x ++ = bit_len;
-	memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
+	br_memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
 }
 
 /*
@@ -1285,7 +1277,7 @@ static inline void
 br_i31_zero(uint32_t *x, uint32_t bit_len)
 {
 	*x ++ = bit_len;
-	memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
+	br_memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
 }
 
 /*
@@ -1439,7 +1431,7 @@ static inline void
 br_i15_zero(uint16_t *x, uint16_t bit_len)
 {
 	*x ++ = bit_len;
-	memset(x, 0, ((bit_len + 15) >> 4) * sizeof *x);
+	br_memset(x, 0, ((bit_len + 15) >> 4) * sizeof *x);
 }
 
 uint32_t br_i15_iszero(const uint16_t *x);

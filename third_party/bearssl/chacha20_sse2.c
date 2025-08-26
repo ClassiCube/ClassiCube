@@ -72,7 +72,7 @@ br_chacha20_sse2_run(const void *key,
 	kw0 = _mm_loadu_si128(key);
 	kw1 = _mm_loadu_si128((const void *)((const unsigned char *)key + 16));
 	ivtmp[0] = cc;
-	memcpy(ivtmp + 1, iv, 12);
+	br_memcpy(ivtmp + 1, iv, 12);
 	iw = _mm_loadu_si128((const void *)ivtmp);
 	cw = _mm_loadu_si128((const void *)CW);
 	one = _mm_set_epi32(0, 0, 0, 1);

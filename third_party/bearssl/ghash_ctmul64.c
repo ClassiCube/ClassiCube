@@ -105,8 +105,8 @@ br_ghash_ctmul64(void *y, const void *h, const void *data, size_t len)
 			buf += 16;
 			len -= 16;
 		} else {
-			memcpy(tmp, buf, len);
-			memset(tmp + len, 0, (sizeof tmp) - len);
+			br_memcpy(tmp, buf, len);
+			br_memset(tmp + len, 0, (sizeof tmp) - len);
 			src = tmp;
 			len = 0;
 		}

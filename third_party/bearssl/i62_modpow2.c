@@ -154,7 +154,7 @@ montymul(uint64_t *d, const uint64_t *x, const uint64_t *y,
 	size_t u, num4;
 
 	num4 = 1 + ((num - 1) & ~(size_t)3);
-	memset(d, 0, num * sizeof *d);
+	br_memset(d, 0, num * sizeof *d);
 	dh = 0;
 	for (u = 0; u < num; u ++) {
 		size_t v;
@@ -335,11 +335,11 @@ br_i62_modpow_opt(uint32_t *x31, const unsigned char *e, size_t elen,
 	 * t2[k] is set to x^k (for k >= 1).
 	 */
 	if (win_len == 1) {
-		memcpy(t2, x, mw62num * sizeof *x);
+		br_memcpy(t2, x, mw62num * sizeof *x);
 	} else {
 		uint64_t *base;
 
-		memcpy(t2 + mw62num, x, mw62num * sizeof *x);
+		br_memcpy(t2 + mw62num, x, mw62num * sizeof *x);
 		base = t2 + mw62num;
 		for (u = 2; u < ((unsigned)1 << win_len); u ++) {
 			montymul(base + mw62num, base, x, m, mw62num, m0i);
@@ -401,7 +401,7 @@ br_i62_modpow_opt(uint32_t *x31, const unsigned char *e, size_t elen,
 		 */
 		for (i = 0; i < k; i ++) {
 			montymul(t1, x, x, m, mw62num, m0i);
-			memcpy(x, t1, mw62num * sizeof *x);
+			br_memcpy(x, t1, mw62num * sizeof *x);
 		}
 
 		/*
@@ -413,7 +413,7 @@ br_i62_modpow_opt(uint32_t *x31, const unsigned char *e, size_t elen,
 		if (win_len > 1) {
 			uint64_t *base;
 
-			memset(t2, 0, mw62num * sizeof *t2);
+			br_memset(t2, 0, mw62num * sizeof *t2);
 			base = t2 + mw62num;
 			for (u = 1; u < ((uint32_t)1 << k); u ++) {
 				uint64_t mask;

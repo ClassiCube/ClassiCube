@@ -232,8 +232,8 @@ br_ghash_ctmul(void *y, const void *h, const void *data, size_t len)
 			buf += 16;
 			len -= 16;
 		} else {
-			memcpy(tmp, buf, len);
-			memset(tmp + len, 0, (sizeof tmp) - len);
+			br_memcpy(tmp, buf, len);
+			br_memset(tmp + len, 0, (sizeof tmp) - len);
 			src = tmp;
 			len = 0;
 		}
@@ -332,7 +332,7 @@ br_ghash_ctmul(void *y, const void *h, const void *data, size_t len)
 			zw[i + 4] ^= lw ^ (lw >> 1) ^ (lw >> 2) ^ (lw >> 7);
 			zw[i + 3] ^= (lw << 31) ^ (lw << 30) ^ (lw << 25);
 		}
-		memcpy(yw, zw + 4, sizeof yw);
+		br_memcpy(yw, zw + 4, sizeof yw);
 	}
 
 	/*

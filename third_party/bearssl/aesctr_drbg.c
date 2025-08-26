@@ -33,7 +33,7 @@ br_aesctr_drbg_init(br_aesctr_drbg_context *ctx,
 	unsigned char tmp[16];
 
 	ctx->vtable = &br_aesctr_drbg_vtable;
-	memset(tmp, 0, sizeof tmp);
+	br_memset(tmp, 0, sizeof tmp);
 	aesctr->init(&ctx->sk.vtable, tmp, 16);
 	ctx->cc = 0;
 	br_aesctr_drbg_update(ctx, seed, len);
@@ -47,7 +47,7 @@ br_aesctr_drbg_generate(br_aesctr_drbg_context *ctx, void *out, size_t len)
 	unsigned char iv[12];
 
 	buf = out;
-	memset(iv, 0, sizeof iv);
+	br_memset(iv, 0, sizeof iv);
 	while (len > 0) {
 		size_t clen;
 
@@ -76,7 +76,7 @@ br_aesctr_drbg_generate(br_aesctr_drbg_context *ctx, void *out, size_t len)
 		/*
 		 * Run CTR.
 		 */
-		memset(buf, 0, clen);
+		br_memset(buf, 0, clen);
 		ctx->cc = ctx->sk.vtable->run(&ctx->sk.vtable,
 			iv, ctx->cc, buf, clen);
 		buf += clen;
@@ -131,15 +131,15 @@ br_aesctr_drbg_update(br_aesctr_drbg_context *ctx, const void *seed, size_t len)
 	 * Use an all-one IV to get a fresh output block that depends on the
 	 * current seed.
 	 */
-	memset(iv, 0xFF, sizeof iv);
-	memset(s, 0, 16);
+	br_memset(iv, 0xFF, sizeof iv);
+	br_memset(s, 0, 16);
 	ctx->sk.vtable->run(&ctx->sk.vtable, iv, 0xFFFFFFFF, s, 16);
 
 	/*
 	 * Set G[] and H[] to conventional start values.
 	 */
-	memset(G, 0xB6, sizeof G);
-	memset(H, 0x5A, sizeof H);
+	br_memset(G, 0xB6, sizeof G);
+	br_memset(H, 0x5A, sizeof H);
 
 	/*
 	 * Process the concatenation of the current state and the seed
@@ -153,9 +153,9 @@ br_aesctr_drbg_update(br_aesctr_drbg_context *ctx, const void *seed, size_t len)
 		/*
 		 * Assemble new key H||m into tmp[].
 		 */
-		memcpy(tmp, H, 16);
+		br_memcpy(tmp, H, 16);
 		if (first) {
-			memcpy(tmp + 16, s, 16);
+			br_memcpy(tmp + 16, s, 16);
 			first = 0;
 		} else {
 			size_t clen;
@@ -164,8 +164,8 @@ br_aesctr_drbg_update(br_aesctr_drbg_context *ctx, const void *seed, size_t len)
 				break;
 			}
 			clen = len < 16 ? len : 16;
-			memcpy(tmp + 16, seed, clen);
-			memset(tmp + 16 + clen, 0, 16 - clen);
+			br_memcpy(tmp + 16, seed, clen);
+			br_memset(tmp + 16 + clen, 0, 16 - clen);
 			seed = (const unsigned char *)seed + clen;
 			len -= clen;
 		}
@@ -174,16 +174,16 @@ br_aesctr_drbg_update(br_aesctr_drbg_context *ctx, const void *seed, size_t len)
 		/*
 		 * Compute new G and H values.
 		 */
-		memcpy(iv, G, 12);
-		memcpy(newG, G, 16);
+		br_memcpy(iv, G, 12);
+		br_memcpy(newG, G, 16);
 		ctx->sk.vtable->run(&ctx->sk.vtable, iv,
 			br_dec32be(G + 12), newG, 16);
 		iv[0] ^= 0x01;
-		memcpy(H, G, 16);
+		br_memcpy(H, G, 16);
 		H[0] ^= 0x01;
 		ctx->sk.vtable->run(&ctx->sk.vtable, iv,
 			br_dec32be(G + 12), H, 16);
-		memcpy(G, newG, 16);
+		br_memcpy(G, newG, 16);
 	}
 
 	/*

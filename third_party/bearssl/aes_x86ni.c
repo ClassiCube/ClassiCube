@@ -213,7 +213,7 @@ br_aes_x86ni_keysched_enc(unsigned char *skni, const void *key, size_t len)
 	unsigned num_rounds;
 
 	num_rounds = x86ni_keysched(sk, key, len);
-	memcpy(skni, sk, (num_rounds + 1) << 4);
+	br_memcpy(skni, sk, (num_rounds + 1) << 4);
 	return num_rounds;
 }
 

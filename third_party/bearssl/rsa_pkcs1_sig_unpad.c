@@ -93,7 +93,7 @@ br_rsa_pkcs1_sig_unpad(const unsigned char *sig, size_t sig_len,
 	} else {
 		x3 = hash_oid[0];
 		pad_len = x3 + 9;
-		memset(pad2, 0, pad_len);
+		br_memset(pad2, 0, pad_len);
 		zlen = sig_len - u - hash_len;
 		if (zlen == pad_len) {
 			x2 = x3 + 2;
@@ -109,13 +109,13 @@ br_rsa_pkcs1_sig_unpad(const unsigned char *sig, size_t sig_len,
 		pad2[3] = 0x30;
 		pad2[4] = x2;
 		pad2[5] = 0x06;
-		memcpy(pad2 + 6, hash_oid, x3 + 1);
+		br_memcpy(pad2 + 6, hash_oid, x3 + 1);
 		pad2[pad_len - 2] = 0x04;
 		pad2[pad_len - 1] = hash_len;
 		if (memcmp(pad2, sig + u, pad_len) != 0) {
 			return 0;
 		}
 	}
-	memcpy(hash_out, sig + sig_len - hash_len, hash_len);
+	br_memcpy(hash_out, sig + sig_len - hash_len, hash_len);
 	return 1;
 }

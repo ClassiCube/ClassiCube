@@ -59,7 +59,7 @@ br_aes_x86ni_ctr_run(const br_aes_x86ni_ctr_keys *ctx,
 	unsigned u;
 
 	buf = data;
-	memcpy(ivbuf, iv, 12);
+	br_memcpy(ivbuf, iv, 12);
 	num_rounds = ctx->num_rounds;
 	for (u = 0; u <= num_rounds; u ++) {
 		sk[u] = _mm_loadu_si128((void *)(ctx->skey.skni + (u << 4)));

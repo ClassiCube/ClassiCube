@@ -241,8 +241,8 @@ poly1305_inner_small(uint64_t *acc, uint64_t *r, const void *data, size_t len)
 		unsigned char tmp[16];
 
 		if (len < 16) {
-			memcpy(tmp, buf, len);
-			memset(tmp + len, 0, (sizeof tmp) - len);
+			br_memcpy(tmp, buf, len);
+			br_memset(tmp + len, 0, (sizeof tmp) - len);
 			buf = tmp;
 			len = 16;
 		}
@@ -327,7 +327,7 @@ br_poly1305_ctmulq_run(const void *key, const void *iv,
 	 * Compute the MAC key. The 'r' value is the first 16 bytes of
 	 * pkey[].
 	 */
-	memset(pkey, 0, sizeof pkey);
+	br_memset(pkey, 0, sizeof pkey);
 	ichacha(key, iv, 0, pkey, sizeof pkey);
 
 	/*

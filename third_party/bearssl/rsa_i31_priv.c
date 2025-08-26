@@ -133,7 +133,7 @@ br_rsa_i31_private(unsigned char *x, const br_rsa_private_key *sk)
 	 * Move the decoded p to another temporary buffer.
 	 */
 	mp = mq + 2 * fwlen;
-	memmove(mp, t1, fwlen * sizeof *t1);
+	br_memmove(mp, t1, fwlen * sizeof *t1);
 
 	/*
 	 * Compute s2 = x^dq mod q.

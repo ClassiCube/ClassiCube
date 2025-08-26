@@ -41,9 +41,9 @@ gen_gcm_init(br_sslrec_gcm_context *cc,
 	cc->seq = 0;
 	bc_impl->init(&cc->bc.vtable, key, key_len);
 	cc->gh = gh_impl;
-	memcpy(cc->iv, iv, sizeof cc->iv);
-	memset(cc->h, 0, sizeof cc->h);
-	memset(tmp, 0, sizeof tmp);
+	br_memcpy(cc->iv, iv, sizeof cc->iv);
+	br_memset(cc->h, 0, sizeof cc->h);
+	br_memset(tmp, 0, sizeof tmp);
 	bc_impl->run(&cc->bc.vtable, tmp, 0, cc->h, sizeof cc->h);
 }
 
@@ -96,7 +96,7 @@ do_tag(br_sslrec_gcm_context *cc,
 	br_enc16be(header + 11, len);
 	br_enc64be(footer, (uint64_t)(sizeof header) << 3);
 	br_enc64be(footer + 8, (uint64_t)len << 3);
-	memset(tag, 0, 16);
+	br_memset(tag, 0, 16);
 	cc->gh(tag, cc->h, header, sizeof header);
 	cc->gh(tag, cc->h, data, len);
 	cc->gh(tag, cc->h, footer, sizeof footer);
@@ -113,8 +113,8 @@ do_ctr(br_sslrec_gcm_context *cc, const void *nonce, void *data, size_t len,
 {
 	unsigned char iv[12];
 
-	memcpy(iv, cc->iv, 4);
-	memcpy(iv + 4, nonce, 8);
+	br_memcpy(iv, cc->iv, 4);
+	br_memcpy(iv + 4, nonce, 8);
 	cc->bc.vtable->run(&cc->bc.vtable, iv, 2, data, len);
 	cc->bc.vtable->run(&cc->bc.vtable, iv, 1, xortag, 16);
 }
@@ -201,7 +201,7 @@ gcm_encrypt(br_sslrec_gcm_context *cc,
 
 	buf = (unsigned char *)data;
 	len = *data_len;
-	memset(tmp, 0, sizeof tmp);
+	br_memset(tmp, 0, sizeof tmp);
 	br_enc64be(buf - 8, cc->seq);
 	do_ctr(cc, buf - 8, buf, len, tmp);
 	do_tag(cc, record_type, version, buf, len, buf + len);

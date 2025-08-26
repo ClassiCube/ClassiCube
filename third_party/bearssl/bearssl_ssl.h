@@ -34,6 +34,7 @@
 #include "bearssl_prf.h"
 #include "bearssl_rand.h"
 #include "bearssl_x509.h"
+#include "bearssl_stdlib.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1889,7 +1890,7 @@ static inline void
 br_ssl_engine_get_session_parameters(const br_ssl_engine_context *cc,
 	br_ssl_session_parameters *pp)
 {
-	memcpy(pp, &cc->session, sizeof *pp);
+	br_memcpy(pp, &cc->session, sizeof *pp);
 }
 
 /**
@@ -1906,7 +1907,7 @@ static inline void
 br_ssl_engine_set_session_parameters(br_ssl_engine_context *cc,
 	const br_ssl_session_parameters *pp)
 {
-	memcpy(&cc->session, pp, sizeof *pp);
+	br_memcpy(&cc->session, pp, sizeof *pp);
 }
 
 /**

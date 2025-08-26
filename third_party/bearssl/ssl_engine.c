@@ -954,7 +954,7 @@ br_ssl_engine_set_suites(br_ssl_engine_context *cc,
 		br_ssl_engine_fail(cc, BR_ERR_BAD_PARAM);
 		return;
 	}
-	memcpy(cc->suites_buf, suites, suites_num * sizeof *suites);
+	br_memcpy(cc->suites_buf, suites, suites_num * sizeof *suites);
 	cc->suites_num = suites_num;
 }
 

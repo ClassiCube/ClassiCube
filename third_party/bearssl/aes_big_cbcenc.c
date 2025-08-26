@@ -49,7 +49,7 @@ br_aes_big_cbcenc_run(const br_aes_big_cbcenc_keys *ctx,
 			buf[i] ^= ivbuf[i];
 		}
 		br_aes_big_encrypt(ctx->num_rounds, ctx->skey, buf);
-		memcpy(ivbuf, buf, 16);
+		br_memcpy(ivbuf, buf, 16);
 		buf += 16;
 		len -= 16;
 	}

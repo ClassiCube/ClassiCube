@@ -42,7 +42,7 @@ br_ecdsa_i31_vrfy_asn1(const br_ec_impl *impl,
 	if (sig_len > ((sizeof rsig) >> 1)) {
 		return 0;
 	}
-	memcpy(rsig, sig, sig_len);
+	br_memcpy(rsig, sig, sig_len);
 	sig_len = br_ecdsa_asn1_to_raw(rsig, sig_len);
 	return br_ecdsa_i31_vrfy_raw(impl, hash, hash_len, pk, rsig, sig_len);
 }

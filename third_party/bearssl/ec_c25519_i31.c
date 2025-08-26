@@ -61,7 +61,7 @@ print_int_mont(const char *name, const uint32_t *x)
 	size_t u;
 
 	printf("%s = ", name);
-	memcpy(y, x, sizeof y);
+	br_memcpy(y, x, sizeof y);
 	br_i31_from_monty(y, C255_P, P0I);
 	br_i31_encode(tmp, sizeof tmp, y);
 	for (u = 0; u < sizeof tmp; u ++) {
@@ -132,11 +132,11 @@ c255_add(uint32_t *d, const uint32_t *a, const uint32_t *b)
 	uint32_t ctl;
 	uint32_t t[10];
 
-	memcpy(t, a, sizeof t);
+	br_memcpy(t, a, sizeof t);
 	ctl = br_i31_add(t, b, 1);
 	ctl |= NOT(br_i31_sub(t, C255_P, 0));
 	br_i31_sub(t, C255_P, ctl);
-	memcpy(d, t, sizeof t);
+	br_memcpy(d, t, sizeof t);
 }
 
 static void
@@ -144,9 +144,9 @@ c255_sub(uint32_t *d, const uint32_t *a, const uint32_t *b)
 {
 	uint32_t t[10];
 
-	memcpy(t, a, sizeof t);
+	br_memcpy(t, a, sizeof t);
 	br_i31_add(t, C255_P, br_i31_sub(t, b, 1));
-	memcpy(d, t, sizeof t);
+	br_memcpy(d, t, sizeof t);
 }
 
 static void
@@ -155,7 +155,7 @@ c255_mul(uint32_t *d, const uint32_t *a, const uint32_t *b)
 	uint32_t t[10];
 
 	br_i31_montymul(t, a, b, C255_P, P0I);
-	memcpy(d, t, sizeof t);
+	br_memcpy(d, t, sizeof t);
 }
 
 static void
@@ -224,17 +224,17 @@ api_mul(unsigned char *G, size_t Glen,
 	 * into Montgomery representation.
 	 */
 	br_i31_montymul(x1, a, C255_R2, C255_P, P0I);
-	memcpy(x3, x1, sizeof x1);
+	br_memcpy(x3, x1, sizeof x1);
 	br_i31_zero(z2, C255_P[0]);
-	memcpy(x2, z2, sizeof z2);
+	br_memcpy(x2, z2, sizeof z2);
 	x2[1] = 0x13000000;
-	memcpy(z3, x2, sizeof x2);
+	br_memcpy(z3, x2, sizeof x2);
 
 	/*
 	 * kb[] is in big-endian notation, but possibly shorter than k[].
 	 */
-	memset(k, 0, (sizeof k) - kblen);
-	memcpy(k + (sizeof k) - kblen, kb, kblen);
+	br_memset(k, 0, (sizeof k) - kblen);
+	br_memcpy(k + (sizeof k) - kblen, kb, kblen);
 	k[31] &= 0xF8;
 	k[0] &= 0x7F;
 	k[0] |= 0x40;
@@ -307,12 +307,12 @@ api_mul(unsigned char *G, size_t Glen,
 	 * square-and-multiply algorithm; we mutualise most non-squarings
 	 * since the exponent contains almost only ones.
 	 */
-	memcpy(a, z2, sizeof z2);
+	br_memcpy(a, z2, sizeof z2);
 	for (i = 0; i < 15; i ++) {
 		c255_mul(a, a, a);
 		c255_mul(a, a, z2);
 	}
-	memcpy(b, a, sizeof a);
+	br_memcpy(b, a, sizeof a);
 	for (i = 0; i < 14; i ++) {
 		int j;
 
@@ -332,7 +332,7 @@ api_mul(unsigned char *G, size_t Glen,
 	/*
 	 * To avoid a dependency on br_i31_from_monty(), we use
 	 * a Montgomery multiplication with 1.
-	 *    memcpy(x2, b, sizeof b);
+	 *    br_memcpy(x2, b, sizeof b);
 	 *    br_i31_from_monty(x2, C255_P, P0I);
 	 */
 	br_i31_zero(a, C255_P[0]);
@@ -352,7 +352,7 @@ api_mulgen(unsigned char *R,
 	size_t Glen;
 
 	G = api_generator(curve, &Glen);
-	memcpy(R, G, Glen);
+	br_memcpy(R, G, Glen);
 	api_mul(R, Glen, x, xlen, curve);
 	return Glen;
 }

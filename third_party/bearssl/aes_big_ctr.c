@@ -57,7 +57,7 @@ br_aes_big_ctr_run(const br_aes_big_ctr_keys *ctx,
 	while (len > 0) {
 		unsigned char tmp[16];
 
-		memcpy(tmp, iv, 12);
+		br_memcpy(tmp, iv, 12);
 		br_enc32be(tmp + 12, cc ++);
 		br_aes_big_encrypt(ctx->num_rounds, ctx->skey, tmp);
 		if (len <= 16) {

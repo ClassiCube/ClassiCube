@@ -75,7 +75,7 @@ extern "C" {
  *     Context for an ongoing computation. It is allocated by the
  *     caller, and a pointer to it is passed to all functions. A
  *     context contains no interior pointer, so it can be moved around
- *     and cloned (with a simple `memcpy()` or equivalent) in order to
+ *     and cloned (with a simple `br_memcpy()` or equivalent) in order to
  *     capture the function state at some point. Computations that use
  *     distinct context structures are independent of each other. The
  *     first field of `br_xxx_context` is always a pointer to the

@@ -71,9 +71,9 @@ br_i31_modpow_opt(uint32_t *x,
 	 * t2[k] is set to x^k (for k >= 1).
 	 */
 	if (win_len == 1) {
-		memcpy(t2, x, mlen);
+		br_memcpy(t2, x, mlen);
 	} else {
-		memcpy(t2 + mwlen, x, mlen);
+		br_memcpy(t2 + mwlen, x, mlen);
 		base = t2 + mwlen;
 		for (u = 2; u < ((unsigned)1 << win_len); u ++) {
 			br_i31_montymul(base + mwlen, base, x, m, m0i);
@@ -121,7 +121,7 @@ br_i31_modpow_opt(uint32_t *x,
 		 */
 		for (i = 0; i < k; i ++) {
 			br_i31_montymul(t1, x, x, m, m0i);
-			memcpy(x, t1, mlen);
+			br_memcpy(x, t1, mlen);
 		}
 
 		/*

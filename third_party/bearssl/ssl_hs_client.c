@@ -315,7 +315,7 @@ make_pms_ecdh(br_ssl_client_context *ctx, unsigned ecdhe, int prf_id)
 		return -BR_ERR_INVALID_ALGORITHM;
 	}
 
-	memcpy(point, point_src, glen);
+	br_memcpy(point, point_src, glen);
 	if (!ctx->eng.iec->mul(point, glen, key, olen, curve)) {
 		return -BR_ERR_INVALID_ALGORITHM;
 	}
@@ -327,7 +327,7 @@ make_pms_ecdh(br_ssl_client_context *ctx, unsigned ecdhe, int prf_id)
 	br_ssl_engine_compute_master(&ctx->eng, prf_id, point + xoff, xlen);
 
 	ctx->eng.iec->mulgen(point, key, olen, curve);
-	memcpy(ctx->eng.pad, point, glen);
+	br_memcpy(ctx->eng.pad, point, glen);
 	return (int)glen;
 }
 
@@ -355,7 +355,7 @@ make_pms_static_ecdh(br_ssl_client_context *ctx, int prf_id)
 	if (point_len > sizeof point) {
 		return -1;
 	}
-	memcpy(point, pk->key.ec.q, point_len);
+	br_memcpy(point, pk->key.ec.q, point_len);
 	if (!(*ctx->client_auth_vtable)->do_keyx(
 		ctx->client_auth_vtable, point, &point_len))
 	{
@@ -925,7 +925,7 @@ br_ssl_hs_client_run(void *t0ctx)
 #define T0_ROLL(x)     do { \
 	size_t t0len = (size_t)(x); \
 	uint32_t t0tmp = *(dp - 1 - t0len); \
-	memmove(dp - t0len - 1, dp - t0len, t0len * sizeof *dp); \
+	br_memmove(dp - t0len - 1, dp - t0len, t0len * sizeof *dp); \
 	*(dp - 1) = t0tmp; \
 } while (0)
 #define T0_SWAP()      do { \
@@ -1186,7 +1186,7 @@ br_ssl_hs_client_run(void *t0ctx)
 
 	size_t len = (size_t)T0_POP();
 	void *addr = (unsigned char *)ENG + (size_t)T0_POP();
-	memset(addr, 0, len);
+	br_memset(addr, 0, len);
 
 				}
 				break;
@@ -1235,7 +1235,7 @@ br_ssl_hs_client_run(void *t0ctx)
 	if (clen > sizeof ENG->pad) {
 		clen = sizeof ENG->pad;
 	}
-	memcpy(ENG->pad, ENG->cert_cur, clen);
+	br_memcpy(ENG->pad, ENG->cert_cur, clen);
 	ENG->cert_cur += clen;
 	ENG->cert_len -= clen;
 	T0_PUSH(clen);
@@ -1247,7 +1247,7 @@ br_ssl_hs_client_run(void *t0ctx)
 
 	size_t idx = T0_POP();
 	size_t len = br_strlen(ENG->protocol_names[idx]);
-	memcpy(ENG->pad, ENG->protocol_names[idx], len);
+	br_memcpy(ENG->pad, ENG->protocol_names[idx], len);
 	T0_PUSH(len);
 
 				}
@@ -1449,12 +1449,12 @@ br_ssl_hs_client_run(void *t0ctx)
 				}
 				break;
 			case 49: {
-				/* memcpy */
+				/* br_memcpy */
 
 	size_t len = (size_t)T0_POP();
 	void *src = (unsigned char *)ENG + (size_t)T0_POP();
 	void *dst = (unsigned char *)ENG + (size_t)T0_POP();
-	memcpy(dst, src, len);
+	br_memcpy(dst, src, len);
 
 				}
 				break;
@@ -1523,7 +1523,7 @@ br_ssl_hs_client_run(void *t0ctx)
 		if ((size_t)len < clen) {
 			clen = (size_t)len;
 		}
-		memcpy((unsigned char *)ENG + addr, ENG->hbuf_in, clen);
+		br_memcpy((unsigned char *)ENG + addr, ENG->hbuf_in, clen);
 		if (ENG->record_type_in == BR_SSL_HANDSHAKE) {
 			br_multihash_update(&ENG->mhash, ENG->hbuf_in, clen);
 		}
@@ -1821,7 +1821,7 @@ br_ssl_hs_client_run(void *t0ctx)
 		if ((size_t)len < clen) {
 			clen = (size_t)len;
 		}
-		memcpy(ENG->hbuf_out, (unsigned char *)ENG + addr, clen);
+		br_memcpy(ENG->hbuf_out, (unsigned char *)ENG + addr, clen);
 		if (ENG->record_type_out == BR_SSL_HANDSHAKE) {
 			br_multihash_update(&ENG->mhash, ENG->hbuf_out, clen);
 		}

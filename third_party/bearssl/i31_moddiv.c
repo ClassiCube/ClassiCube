@@ -323,9 +323,9 @@ br_i31_moddiv(uint32_t *x, const uint32_t *y, const uint32_t *m, uint32_t m0i,
 	b = a + len;
 	u = x + 1;
 	v = b + len;
-	memcpy(a, y + 1, len * sizeof *y);
-	memcpy(b, m + 1, len * sizeof *m);
-	memset(v, 0, len * sizeof *v);
+	br_memcpy(a, y + 1, len * sizeof *y);
+	br_memcpy(b, m + 1, len * sizeof *m);
+	br_memset(v, 0, len * sizeof *v);
 
 	/*
 	 * Loop below ensures that a and b are reduced by some bits each,

@@ -135,7 +135,7 @@ br_rsa_i62_private(unsigned char *x, const br_rsa_private_key *sk)
 	 * Move the decoded p to another temporary buffer.
 	 */
 	mp = (uint32_t *)(tmp + 2 * fwlen);
-	memmove(mp, t1, 2 * fwlen * sizeof *t1);
+	br_memmove(mp, t1, 2 * fwlen * sizeof *t1);
 
 	/*
 	 * Compute s2 = x^dq mod q.

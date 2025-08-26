@@ -561,13 +561,13 @@ f256_invert(uint64_t *d, const uint64_t *a)
 	uint64_t r[4], t[4];
 	int i;
 
-	memcpy(t, a, sizeof t);
+	br_memcpy(t, a, sizeof t);
 	for (i = 0; i < 30; i ++) {
 		f256_montysquare(t, t);
 		f256_montymul(t, t, a);
 	}
 
-	memcpy(r, t, sizeof t);
+	br_memcpy(r, t, sizeof t);
 	for (i = 224; i >= 0; i --) {
 		f256_montysquare(r, r);
 		switch (i) {
@@ -584,7 +584,7 @@ f256_invert(uint64_t *d, const uint64_t *a)
 			break;
 		}
 	}
-	memcpy(d, r, sizeof r);
+	br_memcpy(d, r, sizeof r);
 }
 
 /*
@@ -713,9 +713,9 @@ point_decode(p256_jacobian *P, const unsigned char *buf)
 	 * Return the point in Jacobian coordinates (and Montgomery
 	 * representation).
 	 */
-	memcpy(P->x, x, sizeof x);
-	memcpy(P->y, y, sizeof y);
-	memcpy(P->z, F256_R, sizeof F256_R);
+	br_memcpy(P->x, x, sizeof x);
+	br_memcpy(P->y, y, sizeof y);
+	br_memcpy(P->z, F256_R, sizeof F256_R);
 	return r;
 }
 
@@ -1014,8 +1014,8 @@ p256_add_mixed(p256_jacobian *P1, const p256_affine *P2)
 	/*
 	 * Compute u1 = x1 (in t1) and s1 = y1 (in t3).
 	 */
-	memcpy(t1, P1->x, sizeof t1);
-	memcpy(t3, P1->y, sizeof t3);
+	br_memcpy(t1, P1->x, sizeof t1);
+	br_memcpy(t3, P1->y, sizeof t3);
 
 	/*
 	 * Compute u2 = x2*z1^2 (in t2) and s2 = y2*z1^3 (in t4).
@@ -1137,8 +1137,8 @@ p256_add_complete_mixed(p256_jacobian *P1, const p256_affine *P2)
 	/*
 	 * Compute u1 = x1 (in t1) and s1 = y1 (in t3).
 	 */
-	memcpy(t1, P1->x, sizeof t1);
-	memcpy(t3, P1->y, sizeof t3);
+	br_memcpy(t1, P1->x, sizeof t1);
+	br_memcpy(t3, P1->y, sizeof t3);
 
 	/*
 	 * Compute u2 = x2*z1^2 (in t2) and s2 = y2*z1^3 (in t4).
@@ -1272,7 +1272,7 @@ point_mul_inner(p256_jacobian *R, const p256_affine *W,
 	p256_jacobian Q;
 	uint32_t qz;
 
-	memset(&Q, 0, sizeof Q);
+	br_memset(&Q, 0, sizeof Q);
 	qz = 1;
 	while (klen -- > 0) {
 		int i;
@@ -1301,7 +1301,7 @@ point_mul_inner(p256_jacobian *R, const p256_affine *W,
 			 * problem because we will use it only if the
 			 * bits are non-zero.
 			 */
-			memset(&T, 0, sizeof T);
+			br_memset(&T, 0, sizeof T);
 			for (n = 0; n < 15; n ++) {
 				m = -(uint64_t)EQ(bits, n + 1);
 				T.x[0] |= m & W[n].x[0];
@@ -1415,14 +1415,14 @@ window_to_affine(p256_affine *aff, p256_jacobian *jac, int num)
 	 * extra one with coordinate Z = 1 (in Montgomery representation).
 	 */
 	for (i = 0; (i + 1) < num; i += 2) {
-		memcpy(zt, jac[i].z, sizeof zt);
-		memcpy(jac[i].z, jac[i + 1].z, sizeof zt);
-		memcpy(jac[i + 1].z, zt, sizeof zt);
+		br_memcpy(zt, jac[i].z, sizeof zt);
+		br_memcpy(jac[i].z, jac[i + 1].z, sizeof zt);
+		br_memcpy(jac[i + 1].z, zt, sizeof zt);
 		f256_montymul(z[i >> 1], jac[i].z, jac[i + 1].z);
 	}
 	if ((num & 1) != 0) {
-		memcpy(z[num >> 1], jac[num - 1].z, sizeof zt);
-		memcpy(jac[num - 1].z, F256_R, sizeof F256_R);
+		br_memcpy(z[num >> 1], jac[num - 1].z, sizeof zt);
+		br_memcpy(jac[num - 1].z, F256_R, sizeof F256_R);
 	}
 
 	/*
@@ -1441,7 +1441,7 @@ window_to_affine(p256_affine *aff, p256_jacobian *jac, int num)
 			f256_montymul(z[i], z[i << 1], z[(i << 1) + 1]);
 		}
 		if ((n & 1) != 0) {
-			memmove(z[n >> 1], z[n], sizeof zt);
+			br_memmove(z[n >> 1], z[n], sizeof zt);
 		}
 	}
 

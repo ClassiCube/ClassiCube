@@ -214,7 +214,7 @@ br_x509_minimal_init(br_x509_minimal_context *ctx,
 	const br_hash_class *dn_hash_impl,
 	const br_x509_trust_anchor *trust_anchors, size_t trust_anchors_num)
 {
-	memset(ctx, 0, sizeof *ctx);
+	br_memset(ctx, 0, sizeof *ctx);
 	ctx->vtable = &br_x509_minimal_vtable;
 	ctx->dn_hash_impl = dn_hash_impl;
 	ctx->trust_anchors = trust_anchors;
@@ -232,7 +232,7 @@ xm_start_chain(const br_x509_class **ctx, const char *server_name)
 		cc->name_elts[u].status = 0;
 		cc->name_elts[u].buf[0] = 0;
 	}
-	memset(&cc->pkey, 0, sizeof cc->pkey);
+	br_memset(&cc->pkey, 0, sizeof cc->pkey);
 	cc->num_certs = 0;
 	cc->err = 0;
 	cc->cpu.dp = cc->dp_stack;
@@ -885,7 +885,7 @@ br_x509_minimal_run(void *t0ctx)
 #define T0_ROLL(x)     do { \
 	size_t t0len = (size_t)(x); \
 	uint32_t t0tmp = *(dp - 1 - t0len); \
-	memmove(dp - t0len - 1, dp - t0len, t0len * sizeof *dp); \
+	br_memmove(dp - t0len - 1, dp - t0len, t0len * sizeof *dp); \
 	*(dp - 1) = t0tmp; \
 } while (0)
 #define T0_SWAP()      do { \
@@ -1099,7 +1099,7 @@ br_x509_minimal_run(void *t0ctx)
 	size_t len = T0_POP();
 	unsigned char *src = (unsigned char *)CTX + T0_POP();
 	unsigned char *dst = (unsigned char *)CTX + T0_POP();
-	memcpy(dst, src, len);
+	br_memcpy(dst, src, len);
 
 				}
 				break;
@@ -1251,7 +1251,7 @@ br_x509_minimal_run(void *t0ctx)
 
 	size_t qlen = T0_POP();
 	uint32_t curve = T0_POP();
-	memcpy(CTX->ee_pkey_data, CTX->pkey_data, qlen);
+	br_memcpy(CTX->ee_pkey_data, CTX->pkey_data, qlen);
 	CTX->pkey.key_type = BR_KEYTYPE_EC;
 	CTX->pkey.key.ec.curve = curve;
 	CTX->pkey.key.ec.q = CTX->ee_pkey_data;
@@ -1264,7 +1264,7 @@ br_x509_minimal_run(void *t0ctx)
 
 	size_t elen = T0_POP();
 	size_t nlen = T0_POP();
-	memcpy(CTX->ee_pkey_data, CTX->pkey_data, nlen + elen);
+	br_memcpy(CTX->ee_pkey_data, CTX->pkey_data, nlen + elen);
 	CTX->pkey.key_type = BR_KEYTYPE_RSA;
 	CTX->pkey.key.rsa.n = CTX->ee_pkey_data;
 	CTX->pkey.key.rsa.nlen = nlen;
@@ -1287,7 +1287,7 @@ br_x509_minimal_run(void *t0ctx)
 		ne = &CTX->name_elts[u];
 		if (ne->status == 0 && ne->oid[0] == 0 && ne->oid[1] == tag) {
 			if (ok && ne->len > len) {
-				memcpy(ne->buf, CTX->pad + 1, len);
+				br_memcpy(ne->buf, CTX->pad + 1, len);
 				ne->buf[len] = 0;
 				ne->status = 1;
 			} else {
@@ -1312,7 +1312,7 @@ br_x509_minimal_run(void *t0ctx)
 		if (ok) {
 			len = CTX->pad[0];
 			if (len < ne->len) {
-				memcpy(ne->buf, CTX->pad + 1, len);
+				br_memcpy(ne->buf, CTX->pad + 1, len);
 				ne->buf[len] = 0;
 				ne->status = 1;
 			} else {
@@ -1532,7 +1532,7 @@ br_x509_minimal_run(void *t0ctx)
 		clen = (size_t)len;
 	}
 	if (addr != 0) {
-		memcpy((unsigned char *)CTX + addr, CTX->hbuf, clen);
+		br_memcpy((unsigned char *)CTX + addr, CTX->hbuf, clen);
 	}
 	if (CTX->do_mhash) {
 		br_multihash_update(&CTX->mhash, CTX->hbuf, clen);

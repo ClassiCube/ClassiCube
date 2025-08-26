@@ -42,11 +42,11 @@ process_key(const br_hash_class **hc, void *ks,
 	size_t blen, u;
 
 	blen = block_size(*hc);
-	memcpy(tmp, key, key_len);
+	br_memcpy(tmp, key, key_len);
 	for (u = 0; u < key_len; u ++) {
 		tmp[u] ^= (unsigned char)bb;
 	}
-	memset(tmp + key_len, bb, blen - key_len);
+	br_memset(tmp + key_len, bb, blen - key_len);
 	(*hc)->init(hc);
 	(*hc)->update(hc, tmp, blen);
 	(*hc)->state(hc, ks);
@@ -85,7 +85,7 @@ br_hmac_init(br_hmac_context *ctx,
 	blen = block_size(dig);
 	dig->init(&ctx->dig.vtable);
 	dig->set_state(&ctx->dig.vtable, kc->ksi, (uint64_t)blen);
-	memcpy(ctx->kso, kc->kso, sizeof kc->kso);
+	br_memcpy(ctx->kso, kc->kso, sizeof kc->kso);
 	hlen = br_digest_size(dig);
 	if (out_len > 0 && out_len < hlen) {
 		hlen = out_len;
@@ -117,6 +117,6 @@ br_hmac_out(const br_hmac_context *ctx, void *out)
 	hlen = br_digest_size(dig);
 	dig->update(&hc.vtable, tmp, hlen);
 	dig->out(&hc.vtable, tmp);
-	memcpy(out, tmp, ctx->out_len);
+	br_memcpy(out, tmp, ctx->out_len);
 	return ctx->out_len;
 }

@@ -645,22 +645,22 @@ api_mul(unsigned char *G, size_t Glen,
 	x1[3] = br_dec64le(&G[24]) & MASK63;
 
 	/*
-	 * We can use memset() to clear values, because exact-width types
+	 * We can use br_memset() to clear values, because exact-width types
 	 * like uint64_t are guaranteed to have no padding bits or
 	 * trap representations.
 	 */
-	memset(x2, 0, sizeof x2);
+	br_memset(x2, 0, sizeof x2);
 	x2[0] = 1;
-	memset(z2, 0, sizeof z2);
-	memcpy(x3, x1, sizeof x1);
-	memcpy(z3, x2, sizeof x2);
+	br_memset(z2, 0, sizeof z2);
+	br_memcpy(x3, x1, sizeof x1);
+	br_memcpy(z3, x2, sizeof x2);
 
 	/*
 	 * The multiplier is provided in big-endian notation, and
 	 * possibly shorter than 32 bytes.
 	 */
-	memset(k, 0, (sizeof k) - kblen);
-	memcpy(k + (sizeof k) - kblen, kb, kblen);
+	br_memset(k, 0, (sizeof k) - kblen);
+	br_memcpy(k + (sizeof k) - kblen, kb, kblen);
 	k[31] &= 0xF8;
 	k[0] &= 0x7F;
 	k[0] |= 0x40;
@@ -730,12 +730,12 @@ api_mul(unsigned char *G, size_t Glen,
 	 * Compute 1/z2 = z2^(p-2). Since p = 2^255-19, we can mutualize
 	 * most non-squarings. We use x1 and x3, now useless, as temporaries.
 	 */
-	memcpy(x1, z2, sizeof z2);
+	br_memcpy(x1, z2, sizeof z2);
 	for (i = 0; i < 15; i ++) {
 		f255_mul(x1, x1, x1);
 		f255_mul(x1, x1, z2);
 	}
-	memcpy(x3, x1, sizeof x1);
+	br_memcpy(x3, x1, sizeof x1);
 	for (i = 0; i < 14; i ++) {
 		int j;
 
@@ -775,7 +775,7 @@ api_mulgen(unsigned char *R,
 	size_t Glen;
 
 	G = api_generator(curve, &Glen);
-	memcpy(R, G, Glen);
+	br_memcpy(R, G, Glen);
 	api_mul(R, Glen, x, xlen, curve);
 	return Glen;
 }

@@ -119,7 +119,7 @@ void
 br_md5_init(br_md5_context *cc)
 {
 	cc->vtable = &br_md5_vtable;
-	memcpy(cc->val, br_md5_IV, sizeof cc->val);
+	br_memcpy(cc->val, br_md5_IV, sizeof cc->val);
 	cc->count = 0;
 }
 
@@ -139,7 +139,7 @@ br_md5_update(br_md5_context *cc, const void *data, size_t len)
 		if (clen > len) {
 			clen = len;
 		}
-		memcpy(cc->buf + ptr, buf, clen);
+		br_memcpy(cc->buf + ptr, buf, clen);
 		ptr += clen;
 		buf += clen;
 		len -= clen;
@@ -160,15 +160,15 @@ br_md5_out(const br_md5_context *cc, void *dst)
 	size_t ptr;
 
 	ptr = (size_t)cc->count & 63;
-	memcpy(buf, cc->buf, ptr);
-	memcpy(val, cc->val, sizeof val);
+	br_memcpy(buf, cc->buf, ptr);
+	br_memcpy(val, cc->val, sizeof val);
 	buf[ptr ++] = 0x80;
 	if (ptr > 56) {
-		memset(buf + ptr, 0, 64 - ptr);
+		br_memset(buf + ptr, 0, 64 - ptr);
 		br_md5_round(buf, val);
-		memset(buf, 0, 56);
+		br_memset(buf, 0, 56);
 	} else {
-		memset(buf + ptr, 0, 56 - ptr);
+		br_memset(buf + ptr, 0, 56 - ptr);
 	}
 	br_enc64le(buf + 56, cc->count << 3);
 	br_md5_round(buf, val);

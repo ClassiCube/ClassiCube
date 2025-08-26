@@ -113,7 +113,7 @@ br_ecdsa_i31_vrfy_raw(const br_ec_impl *impl,
 	 * the inversion (because (1/s)*R = 1/(s/R)).
 	 */
 	br_i31_from_monty(s, n, n0i);
-	memcpy(tx, cd->order, nlen);
+	br_memcpy(tx, cd->order, nlen);
 	tx[nlen - 1] -= 2;
 	br_i31_modpow(s, tx, nlen, n, n0i, t1, t2);
 
@@ -143,7 +143,7 @@ br_ecdsa_i31_vrfy_raw(const br_ec_impl *impl,
 	 * Compute the point x*Q + y*G.
 	 */
 	ulen = cd->generator_len;
-	memcpy(eU, pk->q, ulen);
+	br_memcpy(eU, pk->q, ulen);
 	res = impl->muladd(eU, NULL, ulen,
 		tx, nlen, ty, nlen, cd->curve);
 

@@ -37,7 +37,7 @@ gen_ccm_init(br_sslrec_ccm_context *cc,
 {
 	cc->seq = 0;
 	bc_impl->init(&cc->bc.vtable, key, key_len);
-	memcpy(cc->iv, iv, sizeof cc->iv);
+	br_memcpy(cc->iv, iv, sizeof cc->iv);
 	cc->tag_len = tag_len;
 }
 
@@ -79,8 +79,8 @@ ccm_decrypt(br_sslrec_ccm_context *cc,
 	/*
 	 * Make nonce (implicit + explicit parts).
 	 */
-	memcpy(nonce, cc->iv, sizeof cc->iv);
-	memcpy(nonce + 4, data, 8);
+	br_memcpy(nonce, cc->iv, sizeof cc->iv);
+	br_memcpy(nonce + 4, data, 8);
 
 	/*
 	 * Assemble synthetic header for the AAD.
@@ -161,7 +161,7 @@ ccm_encrypt(br_sslrec_ccm_context *cc,
 	 * Make nonce; the explicit part is an encoding of the sequence
 	 * number.
 	 */
-	memcpy(nonce, cc->iv, sizeof cc->iv);
+	br_memcpy(nonce, cc->iv, sizeof cc->iv);
 	br_enc64be(nonce + 4, cc->seq);
 
 	/*
@@ -187,7 +187,7 @@ ccm_encrypt(br_sslrec_ccm_context *cc,
 	 */
 	len += 8 + cc->tag_len;
 	buf -= 13;
-	memcpy(buf + 5, nonce + 4, 8);
+	br_memcpy(buf + 5, nonce + 4, 8);
 	buf[0] = (unsigned char)record_type;
 	br_enc16be(buf + 1, version);
 	br_enc16be(buf + 3, len);

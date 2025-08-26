@@ -83,14 +83,14 @@ br_i31_muladd_small(uint32_t *x, uint32_t z, const uint32_t *m)
 	hi = x[mlen];
 	if (mblr == 0) {
 		a0 = x[mlen];
-		memmove(x + 2, x + 1, (mlen - 1) * sizeof *x);
+		br_memmove(x + 2, x + 1, (mlen - 1) * sizeof *x);
 		x[1] = z;
 		a1 = x[mlen];
 		b0 = m[mlen];
 	} else {
 		a0 = ((x[mlen] << (31 - mblr)) | (x[mlen - 1] >> mblr))
 			& 0x7FFFFFFF;
-		memmove(x + 2, x + 1, (mlen - 1) * sizeof *x);
+		br_memmove(x + 2, x + 1, (mlen - 1) * sizeof *x);
 		x[1] = z;
 		a1 = ((x[mlen] << (31 - mblr)) | (x[mlen - 1] >> mblr))
 			& 0x7FFFFFFF;

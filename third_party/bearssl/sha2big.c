@@ -156,7 +156,7 @@ sha2big_update(br_sha384_context *cc, const void *data, size_t len)
 		if (clen > len) {
 			clen = len;
 		}
-		memcpy(cc->buf + ptr, buf, clen);
+		br_memcpy(cc->buf + ptr, buf, clen);
 		ptr += clen;
 		buf += clen;
 		len -= clen;
@@ -175,15 +175,15 @@ sha2big_out(const br_sha384_context *cc, void *dst, int num)
 	size_t ptr;
 
 	ptr = (size_t)cc->count & 127;
-	memcpy(buf, cc->buf, ptr);
-	memcpy(val, cc->val, sizeof val);
+	br_memcpy(buf, cc->buf, ptr);
+	br_memcpy(val, cc->val, sizeof val);
 	buf[ptr ++] = 0x80;
 	if (ptr > 112) {
-		memset(buf + ptr, 0, 128 - ptr);
+		br_memset(buf + ptr, 0, 128 - ptr);
 		sha2big_round(buf, val);
-		memset(buf, 0, 112);
+		br_memset(buf, 0, 112);
 	} else {
-		memset(buf + ptr, 0, 112 - ptr);
+		br_memset(buf + ptr, 0, 112 - ptr);
 	}
 	br_enc64be(buf + 112, cc->count >> 61);
 	br_enc64be(buf + 120, cc->count << 3);
@@ -196,7 +196,7 @@ void
 br_sha384_init(br_sha384_context *cc)
 {
 	cc->vtable = &br_sha384_vtable;
-	memcpy(cc->val, IV384, sizeof IV384);
+	br_memcpy(cc->val, IV384, sizeof IV384);
 	cc->count = 0;
 }
 
@@ -235,7 +235,7 @@ void
 br_sha512_init(br_sha512_context *cc)
 {
 	cc->vtable = &br_sha512_vtable;
-	memcpy(cc->val, IV512, sizeof IV512);
+	br_memcpy(cc->val, IV512, sizeof IV512);
 	cc->count = 0;
 }
 

@@ -33,8 +33,8 @@ br_hmac_drbg_init(br_hmac_drbg_context *ctx,
 
 	ctx->vtable = &br_hmac_drbg_vtable;
 	hlen = br_digest_size(digest_class);
-	memset(ctx->K, 0x00, hlen);
-	memset(ctx->V, 0x01, hlen);
+	br_memset(ctx->K, 0x00, hlen);
+	br_memset(ctx->V, 0x01, hlen);
 	ctx->digest_class = digest_class;
 	br_hmac_drbg_update(ctx, seed, len);
 }
@@ -64,7 +64,7 @@ br_hmac_drbg_generate(br_hmac_drbg_context *ctx, void *out, size_t len)
 		if (clen > len) {
 			clen = len;
 		}
-		memcpy(buf, ctx->V, clen);
+		br_memcpy(buf, ctx->V, clen);
 		buf += clen;
 		len -= clen;
 	}

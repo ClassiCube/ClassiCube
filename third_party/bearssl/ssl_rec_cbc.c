@@ -38,10 +38,10 @@ in_cbc_init(br_sslrec_in_cbc_context *cc,
 	br_hmac_key_init(&cc->mac, dig_impl, mac_key, mac_key_len);
 	cc->mac_len = mac_out_len;
 	if (iv == NULL) {
-		memset(cc->iv, 0, sizeof cc->iv);
+		br_memset(cc->iv, 0, sizeof cc->iv);
 		cc->explicit_IV = 1;
 	} else {
-		memcpy(cc->iv, iv, bc_impl->block_size);
+		br_memcpy(cc->iv, iv, bc_impl->block_size);
 		cc->explicit_IV = 0;
 	}
 }
@@ -91,7 +91,7 @@ cond_rotate(uint32_t ctl, unsigned char *buf, size_t len, size_t num)
 			v = 0;
 		}
 	}
-	memcpy(buf, tmp, len);
+	br_memcpy(buf, tmp, len);
 }
 
 static unsigned char *
@@ -163,7 +163,7 @@ cbc_decrypt(br_sslrec_in_cbc_context *cc,
 	len_nomac = len_withmac - cc->mac_len;
 	min_len -= cc->mac_len;
 	rot_count = 0;
-	memset(tmp1, 0, cc->mac_len);
+	br_memset(tmp1, 0, cc->mac_len);
 	v = 0;
 	for (u = min_len; u < max_len; u ++) {
 		tmp1[v] |= MUX(GE(u, len_nomac) & LT(u, len_withmac),
@@ -278,10 +278,10 @@ out_cbc_init(br_sslrec_out_cbc_context *cc,
 	br_hmac_key_init(&cc->mac, dig_impl, mac_key, mac_key_len);
 	cc->mac_len = mac_out_len;
 	if (iv == NULL) {
-		memset(cc->iv, 0, sizeof cc->iv);
+		br_memset(cc->iv, 0, sizeof cc->iv);
 		cc->explicit_IV = 1;
 	} else {
-		memcpy(cc->iv, iv, bc_impl->block_size);
+		br_memcpy(cc->iv, iv, bc_impl->block_size);
 		cc->explicit_IV = 0;
 	}
 }
@@ -391,7 +391,7 @@ cbc_encrypt(br_sslrec_out_cbc_context *cc,
 	 * Add padding.
 	 */
 	plen = blen - (len & (blen - 1));
-	memset(buf + len, (unsigned)plen - 1, plen);
+	br_memset(buf + len, (unsigned)plen - 1, plen);
 	len += plen;
 
 	/*

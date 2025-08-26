@@ -405,7 +405,6 @@ void cc_qsort(void* v, size_t count, size_t size,
 }
 
 
-
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct StringsBuffer font_list;
