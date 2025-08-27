@@ -1,12 +1,9 @@
-#include "Core.h"
-#if defined CC_BUILD_AMIGA
-
-#include "_WindowBase.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Options.h"
-#include "Errors.h"
+#include "../_WindowBase.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Options.h"
+#include "../Errors.h"
 
 
 /*########################################################################################################################*
@@ -147,4 +144,3 @@ void Window_UpdateRawMouse(void) {
 void Window_DisableRawMouse(void) { 
 	DefaultDisableRawMouse();
 }
-#endif

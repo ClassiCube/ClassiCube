@@ -2,6 +2,8 @@
 #if defined CC_BUILD_MACCLASSIC
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define CC_NO_SOCKETS
+#define CC_NO_THREADING
 
 #include "_PlatformBase.h"
 #include "Stream.h"
@@ -362,91 +364,6 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 	long delay = milliseconds * 1000 / 60;
 	long final;
 	Delay(delay, &final);
-}
-
-void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
-	*handle = NULL;
-	// TODO
-}
-
-void Thread_Detach(void* handle) {
-	// TODO
-}
-
-void Thread_Join(void* handle) {
-	// TODO
-}
-
-void* Mutex_Create(const char* name) {
-	return NULL;
-}
-
-void Mutex_Free(void* handle) {
-	// TODO
-}
-
-void Mutex_Lock(void* handle) {
-	// TODO
-}
-
-void Mutex_Unlock(void* handle) {
-	// TODO
-}
-
-void* Waitable_Create(const char* name) {
-	return NULL;
-}
-
-void Waitable_Free(void* handle) {
-	// TODO
-}
-
-void Waitable_Signal(void* handle) {
-	// TODO
-}
-
-void Waitable_Wait(void* handle) {
-	// TODO
-}
-
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	// TODO
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Socket----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Socket_Close(cc_socket s) {
-
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return ERR_NOT_SUPPORTED;
 }
 
 
