@@ -241,7 +241,7 @@ verify_SKE_sig(br_ssl_client_context *ctx,
 		}
 		if (!ctx->eng.irsavrfy(ctx->eng.pad, sig_len,
 			hash_oid, hv_len, &pk->key.rsa, tmp)
-			|| memcmp(tmp, hv, hv_len) != 0)
+			|| br_memcmp(tmp, hv, hv_len) != 0)
 		{
 			return BR_ERR_BAD_SIGNATURE;
 		}
@@ -1438,12 +1438,12 @@ br_ssl_hs_client_run(void *t0ctx)
 				}
 				break;
 			case 48: {
-				/* memcmp */
+				/* br_memcmp */
 
 	size_t len = (size_t)T0_POP();
 	void *addr2 = (unsigned char *)ENG + (size_t)T0_POP();
 	void *addr1 = (unsigned char *)ENG + (size_t)T0_POP();
-	int x = memcmp(addr1, addr2, len);
+	int x = br_memcmp(addr1, addr2, len);
 	T0_PUSH((uint32_t)-(x == 0));
 
 				}
@@ -1766,7 +1766,7 @@ br_ssl_hs_client_run(void *t0ctx)
 		const char *name;
 
 		name = ENG->protocol_names[u];
-		if (len == br_strlen(name) && memcmp(ENG->pad, name, len) == 0) {
+		if (len == br_strlen(name) && br_memcmp(ENG->pad, name, len) == 0) {
 			T0_PUSH(u);
 			T0_RET();
 		}

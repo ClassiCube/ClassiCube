@@ -372,7 +372,7 @@ eqbigint(const unsigned char *b1, size_t len1,
 	if (len1 != len2) {
 		return 0;
 	}
-	return memcmp(b1, b2, len1) == 0;
+	return br_memcmp(b1, b2, len1) == 0;
 }
 
 /*
@@ -1118,7 +1118,7 @@ br_x509_minimal_run(void *t0ctx)
 			continue;
 		}
 		hash_dn(CTX, ta->dn.data, ta->dn.len, hashed_DN);
-		if (memcmp(hashed_DN, CTX->current_dn_hash, DNHASH_LEN)) {
+		if (br_memcmp(hashed_DN, CTX->current_dn_hash, DNHASH_LEN)) {
 			continue;
 		}
 		kt = CTX->pkey.key_type;
@@ -1144,7 +1144,7 @@ br_x509_minimal_run(void *t0ctx)
 		case BR_KEYTYPE_EC:
 			if (CTX->pkey.key.ec.curve != ta->pkey.key.ec.curve
 				|| CTX->pkey.key.ec.qlen != ta->pkey.key.ec.qlen
-				|| memcmp(CTX->pkey.key.ec.q,
+				|| br_memcmp(CTX->pkey.key.ec.q,
 					ta->pkey.key.ec.q,
 					ta->pkey.key.ec.qlen) != 0)
 			{
@@ -1179,7 +1179,7 @@ br_x509_minimal_run(void *t0ctx)
 			continue;
 		}
 		hash_dn(CTX, ta->dn.data, ta->dn.len, hashed_DN);
-		if (memcmp(hashed_DN, CTX->saved_dn_hash, DNHASH_LEN)) {
+		if (br_memcmp(hashed_DN, CTX->saved_dn_hash, DNHASH_LEN)) {
 			continue;
 		}
 		if (verify_signature(CTX, &ta->pkey) == 0) {
@@ -1389,7 +1389,7 @@ br_x509_minimal_run(void *t0ctx)
 	size_t len = a1[0];
 	int x;
 	if (len == a2[0]) {
-		x = -(memcmp(a1 + 1, a2 + 1, len) == 0);
+		x = -(br_memcmp(a1 + 1, a2 + 1, len) == 0);
 	} else {
 		x = 0;
 	}
@@ -1403,7 +1403,7 @@ br_x509_minimal_run(void *t0ctx)
 	size_t len = T0_POP();
 	const unsigned char *a2 = (const unsigned char *)CTX + T0_POP();
 	const unsigned char *a1 = (const unsigned char *)CTX + T0_POP();
-	T0_PUSHi(-(memcmp(a1, a2, len) == 0));
+	T0_PUSHi(-(br_memcmp(a1, a2, len) == 0));
 
 				}
 				break;
@@ -1496,7 +1496,7 @@ br_x509_minimal_run(void *t0ctx)
 			}
 			len = oid[off];
 			if (len != 0 && len == CTX->pad[0]
-				&& memcmp(oid + off + 1,
+				&& br_memcmp(oid + off + 1,
 					CTX->pad + 1, len) == 0)
 			{
 				T0_PUSH(u);
@@ -1672,7 +1672,7 @@ verify_signature(br_x509_minimal_context *ctx, const br_x509_pkey *pk)
 		{
 			return BR_ERR_X509_BAD_SIGNATURE;
 		}
-		if (memcmp(ctx->tbs_hash, tmp, ctx->cert_sig_hash_len) != 0) {
+		if (br_memcmp(ctx->tbs_hash, tmp, ctx->cert_sig_hash_len) != 0) {
 			return BR_ERR_X509_BAD_SIGNATURE;
 		}
 		return 0;

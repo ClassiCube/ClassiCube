@@ -7,6 +7,19 @@ static size_t br_strlen(const char* a) {
 	return i;
 }
 
+static size_t br_memcmp(const void* a, const void* b, size_t len) {
+	unsigned char* p1 = (unsigned char*)a;
+	unsigned char* p2 = (unsigned char*)b;
+	size_t i;
+
+	for (i = 0; i < len; i++) 
+	{
+		if (p1[i] < p2[i]) return -1;
+		if (p1[i] > p2[i]) return  1;
+	}
+	return 0;
+}
+
 #ifdef CC_BUILD_NOSTDLIB
 	extern void* Mem_Copy(void* dst, const void* src,  unsigned size);
 	extern void* Mem_Move(void* dst, const void* src,  unsigned size);
