@@ -307,6 +307,17 @@ amiga:
 atari_st:
 	$(MAKE) -f misc/atari_st/Makefile
 
+# Opens ./ClassiCube
+ifeq ($(PLAT),mingw)
+open:
+	$(TARGET)$(OEXT)
+else ifeq ($(PLAT),darwin)
+open:
+	open $(TARGET)
+else
+open:
+	./$(TARGET)$(OEXT)
+endif
 # Cleans up all build .o files
 clean:
 	$(RM) $(OBJECTS)
