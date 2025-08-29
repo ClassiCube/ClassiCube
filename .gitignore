@@ -111,8 +111,13 @@ OPTIONS.TXT
 # Android source files need to be included
 !android/app/src/main/java/com/classicube
 
-# Flatpak wrapper which needs to be included
+# Flatpak wrapper needs to be included
 !misc/flatpak/ClassiCubeLauncher
+
+# UWP files needs to be included
+!misc/UWP/ClassiCube-UWP.sln
+!misc/UWP/ClassiCube-UWP.vcxproj
+!misc/UWP/ClassiCube-UWP.vcxproj.filters
 
 # CMake files
 CMakeFiles/

@@ -199,8 +199,11 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static GfxResourceID fb_tex, fb_vb;
 static void AllocateVB(void) {
-	struct VertexTextured* data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&fb_vb,
-															VERTEX_FORMAT_TEXTURED, 4);
+	Gfx_DeleteVb(&fb_vb);
+	fb_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, 4);
+
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockVb(fb_vb, VERTEX_FORMAT_TEXTURED, 4);
+
 	data[0].x = -1.0f; data[0].y = -1.0f; data[0].z = 0.0f; data[0].Col = PACKEDCOL_WHITE; data[0].U = 0.0f; data[0].V = 1.0f;
 	data[1].x =  1.0f; data[1].y = -1.0f; data[1].z = 0.0f; data[1].Col = PACKEDCOL_WHITE; data[1].U = 1.0f; data[1].V = 1.0f;
 	data[2].x =  1.0f; data[2].y =  1.0f; data[2].z = 0.0f; data[2].Col = PACKEDCOL_WHITE; data[2].U = 1.0f; data[2].V = 0.0f;
@@ -285,7 +288,6 @@ void Window_DisableRawMouse(void) {
 
 struct CCApp : implements<CCApp, IFrameworkViewSource, IFrameworkView>
 {
-
 	// IFrameworkViewSource interface
 	IFrameworkView CreateView()
 	{

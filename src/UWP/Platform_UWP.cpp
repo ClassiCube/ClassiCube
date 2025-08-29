@@ -41,6 +41,25 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 #define UWP_STRING(str) ((wchar_t*)(str)->uni)
 
 /*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+// TODO integrate better with Window_UWP.cpp instead of hardcoding like this...
+int main(int argc, char** argv) {
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	do {
+		res = RunProgram(argc, argv);
+	} while (Window_Main.Exists);
+
+	Window_Free();
+	Process_Exit(res);
+	return res;
+}
+
+/*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
 void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
@@ -387,7 +406,37 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(SOCKADDR_STORAGE) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
-static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst->data;
+	cc_uint32 ip_addr;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.S_un.S_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = htons(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)dst->data;
+	cc_winstring str;
+	INT size = sizeof(*addr6);
+
+	cc_string address = String_FromReadonly(ip);
+	Platform_EncodeString(&str, &address);
+
+	if (!WSAStringToAddressW(UWP_STRING(&str), AF_INET6, NULL, (SOCKADDR*)addr6, &size)) {
+		addr6->sin6_port = htons(port);
+
+		dst->size = size;
+		return true;
+	}
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
@@ -421,36 +470,6 @@ static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* num
 	freeaddrinfo(result);
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-}
-
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	SOCKADDR_IN*  addr4 = (SOCKADDR_IN* )addrs[0].data;
-	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)addrs[0].data;
-	cc_winstring str;
-	INT size;
-
-	*numValidAddrs = 0;
-	Platform_EncodeString(&str, address);
-
-	size = sizeof(*addr4);
-	if (!WSAStringToAddressW(UWP_STRING(&str), AF_INET,  NULL, (SOCKADDR*)addr4, &size)) {
-		addr4->sin_port  = htons(port);
-
-		addrs[0].size  = size;
-		*numValidAddrs = 1;
-		return 0;
-	}
-
-	size = sizeof(*addr6);
-	if (!WSAStringToAddressW(UWP_STRING(&str), AF_INET6, NULL, (SOCKADDR*)addr6, &size)) {
-		addr6->sin6_port = htons(port);
-
-		addrs[0].size  = size;
-		*numValidAddrs = 1;
-		return 0;
-	}
-
-	return ParseHostNew(str.ansi, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
@@ -599,29 +618,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 #define UPDATE_SRC TEXT(UPDATE_FILE)
 cc_bool Updater_Supported = true;
 
-#if defined _M_IX86
-const struct UpdaterInfo Updater_Info = {
-	"&eDirect3D 9 is recommended", 2,
-	{
-		{ "Direct3D9", "ClassiCube.exe" },
-		{ "OpenGL",    "ClassiCube.opengl.exe" }
-	}
-};
-#elif defined _M_X64
-const struct UpdaterInfo Updater_Info = {
-	"&eDirect3D 9 is recommended", 2,
-	{
-		{ "Direct3D9", "ClassiCube.64.exe" },
-		{ "OpenGL",    "ClassiCube.64-opengl.exe" }
-	}
-};
-#elif defined _M_ARM64
-const struct UpdaterInfo Updater_Info = { "", 1, { { "Direct3D11", "cc-arm64-d3d11.exe" } } };
-#elif defined _M_ARM
-const struct UpdaterInfo Updater_Info = { "", 1, { { "Direct3D11", "cc-arm32-d3d11.exe" } } };
-#else
 const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-#endif
 
 cc_bool Updater_Clean(void) {
 	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;

@@ -1,0 +1,445 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>a901236d-c8ef-4041-966f-46f17511e342</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BearSSL">
+      <UniqueIdentifier>{93fa4266-80e4-4bbf-a7fa-c47e07da5098}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\Animations.c" />
+    <ClCompile Include="..\..\src\Audio.c" />
+    <ClCompile Include="..\..\src\AxisLinesRenderer.c" />
+    <ClCompile Include="..\..\src\Bitmap.c" />
+    <ClCompile Include="..\..\src\Block.c" />
+    <ClCompile Include="..\..\src\BlockPhysics.c" />
+    <ClCompile Include="..\..\src\Builder.c" />
+    <ClCompile Include="..\..\src\Camera.c" />
+    <ClCompile Include="..\..\src\Chat.c" />
+    <ClCompile Include="..\..\src\Commands.c" />
+    <ClCompile Include="..\..\src\Deflate.c" />
+    <ClCompile Include="..\..\src\Drawer.c" />
+    <ClCompile Include="..\..\src\Drawer2D.c" />
+    <ClCompile Include="..\..\src\Entity.c" />
+    <ClCompile Include="..\..\src\EntityComponents.c" />
+    <ClCompile Include="..\..\src\EntityRenderers.c" />
+    <ClCompile Include="..\..\src\EnvRenderer.c" />
+    <ClCompile Include="..\..\src\Event.c" />
+    <ClCompile Include="..\..\src\ExtMath.c" />
+    <ClCompile Include="..\..\src\FancyLighting.c" />
+    <ClCompile Include="..\..\src\Formats.c" />
+    <ClCompile Include="..\..\src\Game.c" />
+    <ClCompile Include="..\..\src\GameVersion.c" />
+    <ClCompile Include="..\..\src\Generator.c" />
+    <ClCompile Include="..\..\src\Gui.c" />
+    <ClCompile Include="..\..\src\HeldBlockRenderer.c" />
+    <ClCompile Include="..\..\src\Http_Worker.c" />
+    <ClCompile Include="..\..\src\Input.c" />
+    <ClCompile Include="..\..\src\InputHandler.c" />
+    <ClCompile Include="..\..\src\Inventory.c" />
+    <ClCompile Include="..\..\src\IsometricDrawer.c" />
+    <ClCompile Include="..\..\src\Launcher.c" />
+    <ClCompile Include="..\..\src\LBackend.c" />
+    <ClCompile Include="..\..\src\LBackend_Android.c" />
+    <ClCompile Include="..\..\src\Lighting.c" />
+    <ClCompile Include="..\..\src\Logger.c" />
+    <ClCompile Include="..\..\src\LScreens.c" />
+    <ClCompile Include="..\..\src\LWeb.c" />
+    <ClCompile Include="..\..\src\LWidgets.c" />
+    <ClCompile Include="..\..\src\MapRenderer.c" />
+    <ClCompile Include="..\..\src\MenuOptions.c" />
+    <ClCompile Include="..\..\src\Menus.c" />
+    <ClCompile Include="..\..\src\Model.c" />
+    <ClCompile Include="..\..\src\Options.c" />
+    <ClCompile Include="..\..\src\PackedCol.c" />
+    <ClCompile Include="..\..\src\Particle.c" />
+    <ClCompile Include="..\..\src\Physics.c" />
+    <ClCompile Include="..\..\src\Picking.c" />
+    <ClCompile Include="..\..\src\Protocol.c" />
+    <ClCompile Include="..\..\src\Queue.c" />
+    <ClCompile Include="..\..\src\Resources.c" />
+    <ClCompile Include="..\..\src\Screens.c" />
+    <ClCompile Include="..\..\src\SelectionBox.c" />
+    <ClCompile Include="..\..\src\SelOutlineRenderer.c" />
+    <ClCompile Include="..\..\src\Server.c" />
+    <ClCompile Include="..\..\src\SSL.c" />
+    <ClCompile Include="..\..\src\Stream.c" />
+    <ClCompile Include="..\..\src\String.c" />
+    <ClCompile Include="..\..\src\SystemFonts.c" />
+    <ClCompile Include="..\..\src\TexturePack.c" />
+    <ClCompile Include="..\..\src\TouchUI.c" />
+    <ClCompile Include="..\..\src\Utils.c" />
+    <ClCompile Include="..\..\src\Vectors.c" />
+    <ClCompile Include="..\..\src\Vorbis.c" />
+    <ClCompile Include="..\..\src\Widgets.c" />
+    <ClCompile Include="..\..\src\World.c" />
+    <ClCompile Include="..\..\src\Graphics_D3D11.c" />
+    <ClCompile Include="..\..\src\UWP\Platform_UWP.cpp" />
+    <ClCompile Include="..\..\src\UWP\Window_UWP.cpp" />
+    <ClCompile Include="..\..\src\Audio_OpenAL.c" />
+    <ClCompile Include="..\..\src\Certs.c" />
+    <ClCompile Include="..\..\third_party\bearssl\aes_big_cbcdec.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_big_cbcenc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_big_ctr.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_big_ctrcbc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_big_dec.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_big_enc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_common.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_x86ni.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_x86ni_cbcdec.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_x86ni_cbcenc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_x86ni_ctr.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aes_x86ni_ctrcbc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\aesctr_drbg.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\asn1enc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ccm.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ccopy.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\chacha20_ct.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\chacha20_sse2.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\dec32be.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\dec32le.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\dec64be.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\dec64le.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\dig_oid.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\dig_size.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_all_m31.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_c25519_i31.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_c25519_m31.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_c25519_m62.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_c25519_m64.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_curve25519.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_default.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_p256_m31.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_p256_m62.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_p256_m64.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_prime_i31.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_secp256r1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_secp384r1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ec_secp521r1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ecdsa_atr.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ecdsa_default_vrfy_asn1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ecdsa_default_vrfy_raw.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ecdsa_i31_bits.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ecdsa_i31_vrfy_asn1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ecdsa_i31_vrfy_raw.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\enc32be.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\enc32le.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\enc64be.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\enc64le.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\gcm.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ghash_ctmul.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ghash_ctmul64.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ghash_pclmul.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\hmac.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\hmac_ct.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\hmac_drbg.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_add.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_bitlen.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_decmod.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_decode.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_decred.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_encode.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_fmont.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_iszero.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_moddiv.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_modpow.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_modpow2.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_montmul.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_mulacc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_muladd.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_ninv31.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_reduce.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_rshift.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_sub.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i31_tmont.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i32_div32.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\i62_modpow2.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\md5.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\md5sha1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\multihash.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\poly1305_ctmul.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\poly1305_ctmulq.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\prf.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\prf_md5sha1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\prf_sha256.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\prf_sha384.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_default_pkcs1_vrfy.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_default_priv.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_default_pub.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_i31_pkcs1_vrfy.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_i31_priv.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_i31_pub.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_i62_pkcs1_vrfy.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_i62_priv.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_i62_pub.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\rsa_pkcs1_sig_unpad.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\sha1.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\sha2big.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\sha2small.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_client.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_client_default_rsapub.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_client_full.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine_default_aescbc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine_default_aesccm.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine_default_aesgcm.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine_default_chapol.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine_default_ec.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine_default_ecdsa.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_engine_default_rsavrfy.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_hashes.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_hs_client.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_io.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_rec_cbc.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_rec_ccm.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_rec_chapol.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\ssl_rec_gcm.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\x509_minimal.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\bearssl\x509_minimal_full.c">
+      <Filter>BearSSL</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Square44x44Logo.scale-200.png" />
+    <Image Include="Assets\Square150x150Logo.scale-200.png" />
+  </ItemGroup>
+</Project>
