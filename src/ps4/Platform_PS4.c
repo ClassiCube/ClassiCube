@@ -1,16 +1,17 @@
-#include "Core.h"
-#if defined CC_BUILD_PS4
-
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "SystemFonts.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "PackedCol.h"
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../SystemFonts.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../PackedCol.h"
+
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <libkernel.h>
-#include "_PlatformConsole.h"
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -39,7 +40,6 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
-#define SUPPORTS_GETADDRINFO 1
 
 const char* Platform_AppNameSuffix = " PS4";
 cc_bool Platform_ReadonlyFilesystem;
@@ -182,25 +182,15 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-#if !defined CC_BUILD_OS2
 	return File_Do(file, path->buffer, O_RDONLY);
-#else
-	return File_Do(file, path->buffer, O_RDONLY | O_BINARY);
-#endif
 }
+
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-#if !defined CC_BUILD_OS2
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
-#else
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
-#endif
 }
+
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-#if !defined CC_BUILD_OS2
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
-#else
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_BINARY);
-#endif
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -378,12 +368,6 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-void Platform_LoadSysFonts(void) { }
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 union SocketAddress {
@@ -492,27 +476,6 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-#if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS
-/* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-/* BeOS lacks support for poll */
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	fd_set set;
-	struct timeval time = { 0 };
-	int selectCount;
-
-	FD_ZERO(&set);
-	FD_SET(s, &set);
-
-	if (mode == SOCKET_POLL_READ) {
-		selectCount = select(s + 1, &set, NULL, NULL, &time);
-	} else {
-		selectCount = select(s + 1, NULL, &set, NULL, &time);
-	}
-
-	if (selectCount == -1) { *success = false; return errno; }
-	*success = FD_ISSET(s, &set) != 0; return 0;
-}
-#else
 #include <poll.h>
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
@@ -527,7 +490,6 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	*success = (pfd.revents & flags) != 0;
 	return 0;
 }
-#endif
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
@@ -589,4 +551,3 @@ static cc_result GetMachineID(cc_uint32* key) {
 cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif

@@ -1,4 +1,11 @@
-#include "../../src/Core.h"
+#include "../_WindowBase.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Options.h"
+#include "../Errors.h"
+#include "../Graphics.h"
+#include "../Game.h"
 
 #include <winrt/Windows.ApplicationModel.DataTransfer.h>
 #include <winrt/Windows.ApplicationModel.h>
@@ -23,14 +30,6 @@ using namespace Windows::System;
 using namespace Windows::UI::Core;
 using namespace Windows::UI::Input;
 
-#include "../../src/_WindowBase.h"
-#include "../../src/String.h"
-#include "../../src/Funcs.h"
-#include "../../src/Bitmap.h"
-#include "../../src/Options.h"
-#include "../../src/Errors.h"
-#include "../../src/Graphics.h"
-#include "../../src/Game.h"
 #define UWP_STRING(str) ((wchar_t*)(str)->uni)
 
 

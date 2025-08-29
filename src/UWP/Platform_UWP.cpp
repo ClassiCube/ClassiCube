@@ -1,10 +1,9 @@
-#include "../../src/Core.h"
-#include "../../src/_PlatformBase.h"
-#include "../../src/Stream.h"
-#include "../../src/SystemFonts.h"
-#include "../../src/Funcs.h"
-#include "../../src/Utils.h"
-#include "../../src/Errors.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../SystemFonts.h"
+#include "../Funcs.h"
+#include "../Utils.h"
+#include "../Errors.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -14,6 +13,7 @@
 #define UNICODE
 #define _UNICODE
 #endif
+
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -557,43 +557,7 @@ static cc_result Process_RawGetExePath(cc_winstring* path, int* len) {
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	union STARTUPINFO_union {
-		STARTUPINFOW wide;
-		STARTUPINFOA ansi;
-	} si = { 0 }; // less compiler warnings this way
-	
-	cc_winstring path;
-	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
-	PROCESS_INFORMATION pi = { 0 };
-	cc_winstring raw;
-	cc_result res;
-	int len, i;
-
-	if (Platform_IsSingleProcess()) return SetGameArgs(args, numArgs);
-
-	if ((res = Process_RawGetExePath(&path, &len))) return res;
-	si.wide.cb = sizeof(STARTUPINFOW);
-	
-	String_InitArray(argv, argvBuffer);
-	/* Game doesn't actually care about argv[0] */
-	String_AppendConst(&argv, "cc");
-	for (i = 0; i < numArgs; i++)
-	{
-		if (String_IndexOf(&args[i], ' ') >= 0) {
-			String_Format1(&argv, " \"%s\"", &args[i]);
-		} else {
-			String_Format1(&argv, " %s",     &args[i]);
-		}
-	}
-	Platform_EncodeString(&raw, &argv);
-
-	if (!CreateProcessW(UWP_STRING(&path), UWP_STRING(&raw), NULL, NULL,
-				false, 0, NULL, NULL, &si.wide, &pi)) return GetLastError();
-
-	/* Don't leak memory for process return code */
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	return 0;
+	return SetGameArgs(args, numArgs);
 }
 
 void Process_Exit(cc_result code) { ExitProcess(code); }

@@ -1,17 +1,15 @@
-#include "Core.h"
-#if defined CC_BUILD_PS4
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "Logger.h"
-#include "VirtualKeyboard.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../Logger.h"
+#include "../VirtualKeyboard.h"
 #include <VideoOut.h>
 
 static cc_bool launcherMode;
@@ -152,4 +150,3 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
