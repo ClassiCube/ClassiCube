@@ -249,19 +249,22 @@ static void Physics_HandleSapling(int index, BlockID block) {
 
 	below = BLOCK_AIR;
 	if (y > 0) below = World.Blocks[index - World.OneY];
-	if (below != BLOCK_GRASS) return;
+	/* Saplings stay alive on dirt */
+	if (below == BLOCK_DIRT) return;
+
+	/* Saplings grow if on grass in light, otherwise turn to air */
+	Game_UpdateBlock(x, y, z, BLOCK_AIR);
+	if (below != BLOCK_GRASS || !Lighting.IsLit(x, y, z)) return;
 
 	height = 5 + Random_Next(&physics_rnd, 3);
-	Game_UpdateBlock(x, y, z, BLOCK_AIR);
 
-	if (TreeGen_CanGrow(x, y, z, height)) {	
+	if (TreeGen_CanGrow(x, y, z, height)) {
 		count = TreeGen_Grow(x, y, z, height, coords, blocks);
 
-		for (i = 0; i < count; i++) {
+		for (i = 0; i < count; i++) 
+		{
 			Game_UpdateBlock(coords[i].x, coords[i].y, coords[i].z, blocks[i]);
 		}
-	} else {
-		Game_UpdateBlock(x, y, z, BLOCK_SAPLING);
 	}
 }
 

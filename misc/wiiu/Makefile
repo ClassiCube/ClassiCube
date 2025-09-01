@@ -50,7 +50,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 MACHDEP	= -DESPRESSO -mcpu=750 -meabi -mhard-float
 CFLAGS	= -g -Wall -O2 -ffunction-sections -fno-math-errno $(MACHDEP) \
 			-I $(DEVKITPRO)/wut/include \
-			-D__WIIU__ -D__WUT__
+			-D__WIIU__ -D__WUT__ -DPLAT_WIIU
 
 LDFLAGS	= -g $(MACHDEP) -specs=$(DEVKITPRO)/wut/share/wut.specs \
 			-L $(DEVKITPRO)/wut/lib

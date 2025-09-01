@@ -32,7 +32,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 # Code generation
 #---------------------------------------------------------------------------------
 MACHDEP = -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float
-CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc/include
+CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc/include -DPLAT_GCWII
 
 LDFLAGS	= -g $(MACHDEP) -L$(DEVKITPRO)/libogc/lib/wii
 # Additional libraries to link against
