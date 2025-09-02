@@ -78,3 +78,31 @@ static uint32_t* NV2A_set_vertex_attrib_format(uint32_t* p, int index, int forma
 						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE, size)   |
 						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE, stride));
 }
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Buffer clearing----------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE uint32_t* NV2A_set_clear_rect(uint32_t* p, int x, int y, int w, int h) {
+	// Sets NV097_SET_CLEAR_RECT_HORIZONTAL then NV097_SET_CLEAR_RECT_VERTICAL
+	return pb_push2(p, NV097_SET_CLEAR_RECT_HORIZONTAL,
+					((x + w - 1) << 16) | x,
+					((y + h - 1) << 16) | y);			
+}
+
+static CC_INLINE uint32_t* NV2A_set_clear_colour(uint32_t* p, uint32_t colour) {
+	// Sets NV097_SET_ZSTENCIL_CLEAR_VALUE then NV097_SET_COLOR_CLEAR_VALUE
+	return pb_push2(p, NV097_SET_ZSTENCIL_CLEAR_VALUE,
+					0xFFFFFF00, // (depth << 8) | stencil
+					colour);			
+}
+
+static CC_INLINE uint32_t* NV2A_start_clear(uint32_t* p, int color, int depth) {
+    uint32_t mask = 0;
+	if (color) mask |= NV097_CLEAR_SURFACE_COLOR;
+	if (depth) mask |= NV097_CLEAR_SURFACE_Z;
+	if (depth) mask |= NV097_CLEAR_SURFACE_STENCIL;
+
+	return pb_push1(p, NV097_CLEAR_SURFACE, mask);
+}
+

@@ -96,6 +96,10 @@ static void ResetState(void) {
 	// the order ClassiCube specifies quad vertices in are in the wrong order
 	//  compared to what the GPU expects for front and back facing quads
 
+	int width  = pb_back_buffer_width();
+	int height = pb_back_buffer_height();
+	p = NV2A_set_clear_rect(p, 0, 0, width, height);
+
 	pb_end(p);
 }
 
@@ -281,10 +285,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol clearColor;
-
 void Gfx_ClearColor(PackedCol color) {
-	clearColor = color;
+	uint32_t* p = pb_begin();
+	p = NV2A_set_clear_colour(p, color);
+	pb_end(p);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
@@ -360,17 +364,16 @@ void Gfx_BeginFrame(void) {
 	pb_wait_for_vbl();
 	pb_reset();
 	pb_target_back_buffer();
+
+	uint32_t* p = pb_begin();
+	p = NV2A_reset_control0(p);
+	pb_end(p);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int width  = pb_back_buffer_width();
-	int height = pb_back_buffer_height();
-	
-	// TODO do ourselves
-	if (buffers & GFX_BUFFER_DEPTH)
-		pb_erase_depth_stencil_buffer(0, 0, width, height);
-	if (buffers & GFX_BUFFER_COLOR)
-		pb_fill(0, 0, width, height, clearColor);
+	uint32_t* p = pb_begin();
+	p = NV2A_start_clear(p, buffers & GFX_BUFFER_COLOR, buffers & GFX_BUFFER_DEPTH);
+	pb_end(p);
 	
 	//pb_erase_text_screen();
 	while (pb_busy()) { } // Wait for completion TODO: necessary??
@@ -540,9 +543,6 @@ static struct Matrix _view, _proj, _mvp;
 static void UpdateVSConstants(void) {
 	uint32_t* p;
 	p = pb_begin();
-
-	// TODO: Have to call this to avoid graphical artifacts. Figure out why
-	p = NV2A_reset_control0(p);
 	
 	p = NV2A_set_constant_upload_offset(p, 0);
 
