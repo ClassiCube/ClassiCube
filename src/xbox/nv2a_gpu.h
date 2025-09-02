@@ -49,9 +49,32 @@ static CC_INLINE uint32_t* NV2A_set_constant_upload_offset(uint32_t* p, int offs
 	return pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96 + offset);
 }
 
-static CC_INLINE uint32_t* NV2A_start_constants_upload(uint32_t* p, int num_dwords) {
+static CC_INLINE uint32_t* NV2A_upload_constants(uint32_t* p, void* src, int num_dwords) {
 	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, num_dwords);
+	Mem_Copy(p, src, num_dwords * 4); p += num_dwords;
 	return p;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Vertex shader programs-------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE uint32_t* NV2A_set_program_upload_offset(uint32_t* p, int offset) {
+	return pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_LOAD, offset);
+}
+
+static CC_INLINE uint32_t* NV2A_upload_program(uint32_t* p, uint32_t* program, int size) {
+	// Copy program instructions (16 bytes each)
+	for (int i = 0; i < size / 16; i++, program += 4) 
+	{
+		pb_push(p++, NV097_SET_TRANSFORM_PROGRAM, 4);
+		Mem_Copy(p, program, 16); p += 4;
+	}
+	return p;
+}
+
+static CC_INLINE uint32_t* NV2A_set_program_run_offset(uint32_t* p, int offset) {
+	return pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_START, offset);
 }
 
 

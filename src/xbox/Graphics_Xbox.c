@@ -20,23 +20,16 @@
 // A lot of figuring out which GPU registers to use came from:
 // - comparing against pbgl and pbkit
 
-static void LoadVertexShader(uint32_t* program, int programSize) {
-	uint32_t* p;
-	
-	// Set cursor for program upload
-	p = pb_begin();
-	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_LOAD, 0);
-	pb_end(p);
+// Room for 136 vertex shader instructions
+// Only need 3, so give 40 instructions to each
+#define VS_COLOURED_OFFSET  0
+#define VS_TEXTURED_OFFSET 40
 
-	// Copy program instructions (16 bytes each)
-	for (int i = 0; i < programSize / 16; i++) 
-	{
-		p = pb_begin();
-		pb_push(p++, NV097_SET_TRANSFORM_PROGRAM, 4);
-		Mem_Copy(p, &program[i * 4], 4 * 4);
-		p += 4;
-		pb_end(p);
-	}
+static void LoadVertexShader(int offset, uint32_t* program, int programSize) {
+	uint32_t* p = pb_begin();
+	p = NV2A_set_program_upload_offset(p, offset);
+	p = NV2A_upload_program(p, program, programSize);
+	pb_end(p);
 }
 
 static uint32_t vs_coloured_program[] = {
@@ -68,8 +61,7 @@ static void SetupShaders(void) {
 	uint32_t *p;
 
 	p = pb_begin();
-	// Set run address of shader
-	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_START, 0);
+	p = NV2A_set_program_run_offset(p, 0);
 
 	// Set execution mode
 	p = pb_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
@@ -117,6 +109,9 @@ void Gfx_Create(void) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	ResetState();
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
+
+	LoadVertexShader(VS_COLOURED_OFFSET, vs_textured_program, sizeof(vs_textured_program));
+	LoadVertexShader(VS_TEXTURED_OFFSET, vs_coloured_program, sizeof(vs_coloured_program));
 		
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -539,31 +534,15 @@ void Gfx_OnWindowResize(void) { }
 static struct Vec4 vp_scale  = { 320, -240, 8388608, 1 };
 static struct Vec4 vp_offset = { 320,  240, 8388608, 1 };
 static struct Matrix _view, _proj, _mvp;
-
-static void UpdateVSConstants(void) {
-	uint32_t* p;
-	p = pb_begin();
-	
-	p = NV2A_set_constant_upload_offset(p, 0);
-
-	// upload transformation matrix
-	p = NV2A_start_constants_upload(p, 16);
-	Mem_Copy(p, &_mvp, 16 * 4); p += 16;
-
-	// Upload constants too
-	//struct Vec4 v = { 1, 1, 1, 1 };
-	//Mem_Copy(p, &v, 4 * 4); p += 4;
-	// if necessary, look at vs.inl output for 'c[5]' etc..
-
-	pb_end(p);
-}
+// TODO Upload constants too
+// if necessary, look at vs.inl output for 'c[5]' etc..
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
-
 	Matrix_Mul(&_mvp, &_view, &_proj);
 
+	struct Matrix final;
 	struct Matrix vp = Matrix_Identity;
 	vp.row1.x = vp_scale.x;
 	vp.row2.y = vp_scale.y;
@@ -572,14 +551,19 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	vp.row4.y = vp_offset.y;
 	vp.row4.z = 8388608;
 
-	Matrix_Mul(&_mvp, &_mvp, &vp);
-	UpdateVSConstants();
+	Matrix_Mul(&final, &_mvp, &vp);
+
+	uint32_t* p;
+	p = pb_begin();
+	p = NV2A_set_constant_upload_offset(p, 0);
+	p = NV2A_upload_constants(p, &final, 16);
+	pb_end(p);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
-	Matrix_Mul(mvp, view, proj);
+	Mem_Copy(mvp, &_mvp, sizeof(struct Matrix));
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -630,13 +614,17 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		p = NV2A_set_vertex_attrib_format(p, COLOUR_ATTR_INDEX, 
 					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 4, SIZEOF_VERTEX_COLOURED);
 	}
+
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
+		p = NV2A_set_program_run_offset(p, VS_COLOURED_OFFSET);
+	} else {
+		p = NV2A_set_program_run_offset(p, VS_TEXTURED_OFFSET);
+	}
 	pb_end(p);
 	
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		LoadVertexShader(vs_textured_program, sizeof(vs_textured_program));
 		LoadFragmentShader_Textured();
-	} else {		
-		LoadVertexShader(vs_coloured_program, sizeof(vs_coloured_program));
+	} else {
 		LoadFragmentShader_Coloured();
 	}
 }
