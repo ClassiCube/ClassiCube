@@ -12,7 +12,8 @@ struct vOut {
 
 vOut main(
 	vIn              input,
-	uniform float4x4 mvp
+	uniform float4x4 mvp,
+	uniform float4 tex_offset
 	)
 {
 	vOut   result;
@@ -24,6 +25,6 @@ vOut main(
 	
 	result.pos = position;
 	result.col = input.col;
-	result.tex = input.tex;
+	result.tex = input.tex + tex_offset;
 	return result;
 }

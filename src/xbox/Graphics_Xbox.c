@@ -24,6 +24,7 @@
 // Only need 3, so give 40 instructions to each
 #define VS_COLOURED_OFFSET  0
 #define VS_TEXTURED_OFFSET 40
+#define VS_OFFSET_OFFSET   80
 
 static void LoadVertexShader(int offset, uint32_t* program, int programSize) {
 	uint32_t* p = pb_begin();
@@ -37,6 +38,9 @@ static uint32_t vs_coloured_program[] = {
 };
 static uint32_t vs_textured_program[] = {
 	#include "../../misc/xbox/vs_textured.inl"
+};
+static uint32_t vs_offset_program[] = {
+	#include "../../misc/xbox/vs_offset.inl"
 };
 
 
@@ -110,8 +114,9 @@ void Gfx_Create(void) {
 	ResetState();
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 
-	LoadVertexShader(VS_COLOURED_OFFSET, vs_textured_program, sizeof(vs_textured_program));
-	LoadVertexShader(VS_TEXTURED_OFFSET, vs_coloured_program, sizeof(vs_coloured_program));
+	LoadVertexShader(VS_COLOURED_OFFSET, vs_coloured_program, sizeof(vs_coloured_program));
+	LoadVertexShader(VS_TEXTURED_OFFSET, vs_textured_program, sizeof(vs_textured_program));
+	LoadVertexShader(VS_OFFSET_OFFSET,   vs_offset_program,   sizeof(vs_offset_program));
 		
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -566,10 +571,34 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 	Mem_Copy(mvp, &_mvp, sizeof(struct Matrix));
 }
 
+static int tex_offset;
+
+static int CalcProgramOffset(void) {
+	if (tex_offset) 
+		return VS_OFFSET_OFFSET;
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) 
+		return VS_TEXTURED_OFFSET;
+
+	return VS_COLOURED_OFFSET;
+}
+
 void Gfx_EnableTextureOffset(float x, float y) {
+	struct Vec4 offset = { x, y, 0, 0 };
+	uint32_t* p = pb_begin();
+	tex_offset  = true;
+
+	p = NV2A_set_constant_upload_offset(p, 4);
+	p = NV2A_upload_constants(p, &offset, 4);
+	p = NV2A_set_program_run_offset(p, CalcProgramOffset());
+	pb_end(p);
 }
 
 void Gfx_DisableTextureOffset(void) {
+	uint32_t* p = pb_begin();
+	tex_offset  = false;
+
+	p = NV2A_set_program_run_offset(p, CalcProgramOffset());
+	pb_end(p);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
@@ -615,11 +644,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 4, SIZEOF_VERTEX_COLOURED);
 	}
 
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		p = NV2A_set_program_run_offset(p, VS_COLOURED_OFFSET);
-	} else {
-		p = NV2A_set_program_run_offset(p, VS_TEXTURED_OFFSET);
-	}
+	p = NV2A_set_program_run_offset(p, CalcProgramOffset());
 	pb_end(p);
 	
 	if (fmt == VERTEX_FORMAT_TEXTURED) {

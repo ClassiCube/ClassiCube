@@ -15,7 +15,7 @@ XBE_TITLE 	= ClassiCube
 # List of directories containing source code
 SOURCE_DIRS = src src/xbox third_party/bearssl
 # Shader objects
-SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
+SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/vs_offset.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
 # Directory where object files are placed
 BUILD_DIR   = build/xbox
 
