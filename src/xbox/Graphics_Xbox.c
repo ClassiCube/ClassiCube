@@ -4,11 +4,12 @@
 #include "../Window.h"
 
 #include <pbkit/pbkit.h>
+#define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
+#include "nv2a_gpu.h"
 #define _NV_ALPHAKILL_EN (1 << 2)
 
 #define MAX_RAM_ADDR 0x03FFAFFF
-#define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
 // https://github.com/XboxDev/nxdk/blob/master/samples/triangle/main.c
 // https://xboxdevwiki.net/NV2A/Vertex_Shader#Output_registers
@@ -77,9 +78,6 @@ static void SetupShaders(void) {
 
 	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
 
-	
-	// resets "z perspective" flag
-	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
 	pb_end(p);
 }
  
@@ -97,12 +95,7 @@ static void ResetState(void) {
 	p = pb_push1(p, NV097_SET_CULL_FACE, NV097_SET_CULL_FACE_V_FRONT);
 	// the order ClassiCube specifies quad vertices in are in the wrong order
 	//  compared to what the GPU expects for front and back facing quads
-	
-	/*pb_push(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 16); p++;
-	for (int i = 0; i < 16; i++) 
-	{
-		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
-	}*/
+
 	pb_end(p);
 }
 
@@ -335,14 +328,8 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	unsigned mask = 0;
-	if (r) mask |= NV097_SET_COLOR_MASK_RED_WRITE_ENABLE;
-	if (g) mask |= NV097_SET_COLOR_MASK_GREEN_WRITE_ENABLE;
-	if (b) mask |= NV097_SET_COLOR_MASK_BLUE_WRITE_ENABLE;
-	if (a) mask |= NV097_SET_COLOR_MASK_ALPHA_WRITE_ENABLE;
-	
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_COLOR_MASK, mask);
+	p = NV2A_set_color_write_mask(p, r, g, b, a);
 	pb_end(p);
 }
 
@@ -478,17 +465,13 @@ void Gfx_SetFog(cc_bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol color) {
-	int R = PackedCol_R(color);
-	int G = PackedCol_G(color);
-	int B = PackedCol_B(color);
-	int A = PackedCol_A(color);
-	
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_FOG_COLOR, 
-					MASK(NV097_SET_FOG_COLOR_RED,   R) |
-					MASK(NV097_SET_FOG_COLOR_GREEN, G) |
-					MASK(NV097_SET_FOG_COLOR_BLUE,  B) |
-					MASK(NV097_SET_FOG_COLOR_ALPHA, A));
+
+	p = NV2A_set_fog_colour(p,
+					PackedCol_R(color),
+					PackedCol_G(color),
+					PackedCol_B(color),
+					PackedCol_A(color));
 	pb_end(p);
 }
 
@@ -557,16 +540,16 @@ static struct Matrix _view, _proj, _mvp;
 static void UpdateVSConstants(void) {
 	uint32_t* p;
 	p = pb_begin();
-	
-	// resets "z perspective" flag
-	p = pb_push1(p, NV097_SET_CONTROL0, 0);
 
-	// set shader constants cursor to C0
-	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
+	// TODO: Have to call this to avoid graphical artifacts. Figure out why
+	p = NV2A_reset_control0(p);
+	
+	p = NV2A_set_constant_upload_offset(p, 0);
 
 	// upload transformation matrix
-	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4);
+	p = NV2A_start_constants_upload(p, 16);
 	Mem_Copy(p, &_mvp, 16 * 4); p += 16;
+
 	// Upload constants too
 	//struct Vec4 v = { 1, 1, 1, 1 };
 	//Mem_Copy(p, &v, 4 * 4); p += 4;
@@ -613,10 +596,8 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	uint32_t* p;
-	p = pb_begin();
-	// NV097_SET_SURFACE_CLIP_HORIZONTAL followed by NV097_SET_SURFACE_CLIP_VERTICAL 
-	p = pb_push2(p, NV097_SET_SURFACE_CLIP_HORIZONTAL, x | (w << 16), y | (h << 16));
+	uint32_t* p = pb_begin();
+	p = NV2A_set_clip_rect(p, x, y, w, h);
 	pb_end(p);
 }
 
@@ -627,42 +608,27 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
-static uint32_t* PushAttrib(uint32_t* p, int index, int format, int size, int stride) {
-	return pb_push1(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT + index * 4,
-						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE, format) |
-						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE, size)   |
-						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE, stride));
-}
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 
 	uint32_t* p = pb_begin();
-	// Clear all attributes TODO optimise
-	pb_push(p++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT,16);
-	for (int i = 0; i < 16; i++) 
-	{
-		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
-	}
-		
-	// resets "z perspective" flag
-	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
+	// TODO not always call this. But trying to just clear TEXTURE_ATTR_INDEX breaks on XEMU
+	p = NV2A_reset_all_vertex_attribs(p);
 
-	// TODO cache these..
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		p = PushAttrib(p, VERTEX_ATTR_INDEX,  NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
-						3, SIZEOF_VERTEX_TEXTURED);
-		p = PushAttrib(p, COLOUR_ATTR_INDEX,  NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D,
-						4, SIZEOF_VERTEX_TEXTURED);
-		p = PushAttrib(p, TEXTURE_ATTR_INDEX, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
-						2, SIZEOF_VERTEX_TEXTURED);
+		p = NV2A_set_vertex_attrib_format(p, VERTEX_ATTR_INDEX,  
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      3, SIZEOF_VERTEX_TEXTURED);
+		p = NV2A_set_vertex_attrib_format(p, COLOUR_ATTR_INDEX,  
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 4, SIZEOF_VERTEX_TEXTURED);
+		p = NV2A_set_vertex_attrib_format(p, TEXTURE_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      2, SIZEOF_VERTEX_TEXTURED);
 	} else {
-		p = PushAttrib(p, VERTEX_ATTR_INDEX, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F, 
-						3, SIZEOF_VERTEX_COLOURED);
-		p = PushAttrib(p, COLOUR_ATTR_INDEX, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 
-						4, SIZEOF_VERTEX_COLOURED);
+		p = NV2A_set_vertex_attrib_format(p, VERTEX_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      3, SIZEOF_VERTEX_COLOURED);
+		p = NV2A_set_vertex_attrib_format(p, COLOUR_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 4, SIZEOF_VERTEX_COLOURED);
 	}
 	pb_end(p);
 	
@@ -683,8 +649,8 @@ static void DrawArrays(int mode, int start, int count) {
 	while (count > 0)
 	{
 		int batch_count = min(count, 256);
-		
-		p = pb_push1(p, 0x40000000 | NV097_DRAW_ARRAYS,
+	
+		p = pb_push1(p, NV2A_WRITE_SAME_REGISTER | NV097_DRAW_ARRAYS,
 						MASK(NV097_DRAW_ARRAYS_COUNT, (batch_count-1)) | 
 						MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
 		
