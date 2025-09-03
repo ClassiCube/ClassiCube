@@ -97,6 +97,10 @@ static void ResetState(void) {
 	p = NV2A_set_clear_rect(p, 0, 0, width, height);
 
 	pb_end(p);
+
+	p = pb_begin();
+	p = NV2A_reset_all_vertex_attribs(p);
+	pb_end(p);
 }
 
 static GfxResourceID white_square;
@@ -418,24 +422,14 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return AllocBuffer(count, strideSizes[fmt]);
 }
 
-static uint32_t* PushAttribOffset(uint32_t* p, int index, cc_uint8* data) {
-	return pb_push1(p, NV097_SET_VERTEX_DATA_ARRAY_OFFSET + index * 4,
-						(uint32_t)data & 0x03ffffff);
-}
-
 void Gfx_BindVb(GfxResourceID vb) { 
 	gfx_vertices = vb;
 	uint32_t* p  = pb_begin();
-	
-	// TODO: Avoid the same code twice..
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		p = PushAttribOffset(p, VERTEX_ATTR_INDEX,  gfx_vertices +  0);
-		p = PushAttribOffset(p, COLOUR_ATTR_INDEX,  gfx_vertices + 12);
-		p = PushAttribOffset(p, TEXTURE_ATTR_INDEX, gfx_vertices + 16);
-	} else {
-		p = PushAttribOffset(p, VERTEX_ATTR_INDEX,  gfx_vertices +  0);
-		p = PushAttribOffset(p, COLOUR_ATTR_INDEX,  gfx_vertices + 12);
-	}
+
+	p = NV2A_set_vertex_attrib_pointer(p, VERTEX_ATTR_INDEX,  gfx_vertices +  0);
+	p = NV2A_set_vertex_attrib_pointer(p, COLOUR_ATTR_INDEX,  gfx_vertices + 12);
+	p = NV2A_set_vertex_attrib_pointer(p, TEXTURE_ATTR_INDEX, gfx_vertices + 16);
+	// Harmless to set TEXTURE_ATTR_INDEX, even when vertex format is coloured only
 	pb_end(p);
 }
 
@@ -627,8 +621,6 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	uint32_t* p = pb_begin();
-	// TODO not always call this. But trying to just clear TEXTURE_ATTR_INDEX breaks on XEMU
-	p = NV2A_reset_all_vertex_attribs(p);
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		p = NV2A_set_vertex_attrib_format(p, VERTEX_ATTR_INDEX,  
@@ -642,6 +634,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      3, SIZEOF_VERTEX_COLOURED);
 		p = NV2A_set_vertex_attrib_format(p, COLOUR_ATTR_INDEX, 
 					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 4, SIZEOF_VERTEX_COLOURED);
+		p = NV2A_set_vertex_attrib_format(p, TEXTURE_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      0, 0);
 	}
 
 	p = NV2A_set_program_run_offset(p, CalcProgramOffset());
