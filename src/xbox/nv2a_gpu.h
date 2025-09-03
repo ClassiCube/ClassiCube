@@ -119,6 +119,36 @@ static CC_INLINE uint32_t* NV2A_set_cull_face_mode(uint32_t* p, int mode) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Primitive drawing---------------------------------------------------*
+*#########################################################################################################################*/
+// NV097_DRAW_ARRAYS_COUNT is an 8 bit mask, so each draw call count must be <= 256
+#define DA_BATCH_SIZE 256
+
+static void NV2A_DrawArrays(int mode, unsigned start, unsigned count) {
+	uint32_t *p = pb_begin();
+	p = NV2A_push1(p, NV097_SET_BEGIN_END, mode);
+
+	// Ceiling division by DA_BATCH_SIZE
+	unsigned num_batches = (count + DA_BATCH_SIZE - 1) / DA_BATCH_SIZE;
+	*p++ = NV2A_3D_COMMAND(NV2A_WRITE_SAME_REGISTER | NV097_DRAW_ARRAYS, num_batches);
+
+	while (count > 0)
+	{
+		int batch_count = min(count, DA_BATCH_SIZE);
+	
+		*p++ = MASK(NV097_DRAW_ARRAYS_COUNT, batch_count-1) | 
+			   MASK(NV097_DRAW_ARRAYS_START_INDEX, start);
+		
+		start += batch_count;
+		count -= batch_count;
+	}
+
+	p = NV2A_push1(p, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
+	pb_end(p);
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------Vertex shader constants------------------------------------------------*
 *#########################################################################################################################*/
 static CC_INLINE uint32_t* NV2A_set_constant_upload_offset(uint32_t* p, int offset) {

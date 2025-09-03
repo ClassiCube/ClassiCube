@@ -620,44 +620,23 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	}
 }
 
-static void DrawArrays(int mode, int start, int count) {
-	uint32_t *p = pb_begin();
-	p = pb_push1(p, NV097_SET_BEGIN_END, mode);
-
-	// NV097_DRAW_ARRAYS_COUNT is an 8 bit mask, so must be <= 256
-	while (count > 0)
-	{
-		int batch_count = min(count, 256);
-	
-		p = pb_push1(p, NV2A_WRITE_SAME_REGISTER | NV097_DRAW_ARRAYS,
-						MASK(NV097_DRAW_ARRAYS_COUNT, (batch_count-1)) | 
-						MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
-		
-		start += batch_count;
-		count -= batch_count;
-	}
-
-	p = pb_push1(p, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
-	pb_end(p);
-}
-
 void Gfx_DrawVb_Lines(int verticesCount) {
-	DrawArrays(NV097_SET_BEGIN_END_OP_LINES, 0, verticesCount);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_LINES, 0, verticesCount);
 }
 
 static void DrawIndexedVertices(int verticesCount, int startVertex) {
-	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	DrawIndexedVertices(verticesCount, startVertex);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	DrawIndexedVertices(verticesCount, 0);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS,           0, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawIndexedVertices(verticesCount, startVertex);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
