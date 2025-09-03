@@ -7,6 +7,8 @@
 #define NV2A_COMMAND(subchan, cmd, num_params) (((num_params) << 18) | ((subchan) << 13) | (cmd))
 #define NV2A_3D_COMMAND(cmd, num_params) NV2A_COMMAND(SUBCH_3D, cmd, num_params)
 
+#define _NV_ALPHAKILL_EN (1 << 2)
+
 static CC_INLINE uint32_t* NV2A_push1(uint32_t* p, int cmd, uint32_t value) {
 	*p++ = NV2A_3D_COMMAND(cmd, 1);
 	*p++ = value;
@@ -64,6 +66,58 @@ static CC_INLINE uint32_t* NV2A_set_fog_colour(uint32_t* p, int R, int G, int B,
 }
 
 
+static CC_INLINE uint32_t* NV2A_set_depth_write(uint32_t* p, int enabled) {
+	return NV2A_push1(p, NV097_SET_DEPTH_MASK, enabled);
+}
+
+static CC_INLINE uint32_t* NV2A_set_depth_test(uint32_t* p, int enabled) {
+	return NV2A_push1(p, NV097_SET_DEPTH_TEST_ENABLE, enabled);
+}
+
+static CC_INLINE uint32_t* NV2A_set_depth_func(uint32_t* p, int func) {
+	return NV2A_push1(p, NV097_SET_DEPTH_FUNC, func);
+}
+
+
+static CC_INLINE uint32_t* NV2A_set_alpha_test(uint32_t* p, int enabled) {
+	return NV2A_push1(p, NV097_SET_ALPHA_TEST_ENABLE, enabled);
+}
+
+static CC_INLINE uint32_t* NV2A_set_alpha_test_func(uint32_t* p, int func) {
+	return NV2A_push1(p, NV097_SET_ALPHA_FUNC, func);
+}
+
+static CC_INLINE uint32_t* NV2A_set_alpha_test_ref(uint32_t* p, int ref) {
+	return NV2A_push1(p, NV097_SET_ALPHA_REF, ref);
+}
+
+
+static CC_INLINE uint32_t* NV2A_set_alpha_blend(uint32_t* p, int enabled) {
+	return NV2A_push1(p, NV097_SET_BLEND_ENABLE, enabled);
+}
+
+static CC_INLINE uint32_t* NV2A_set_alpha_blend_src(uint32_t* p, int factor) {
+	return NV2A_push1(p, NV097_SET_BLEND_FUNC_SFACTOR, factor);
+}
+
+static CC_INLINE uint32_t* NV2A_set_alpha_blend_dst(uint32_t* p, int factor) {
+	return NV2A_push1(p, NV097_SET_BLEND_FUNC_DFACTOR, factor);
+}
+
+static CC_INLINE uint32_t* NV2A_set_alpha_blend_eq(uint32_t* p, int equation) {
+	return NV2A_push1(p, NV097_SET_BLEND_EQUATION, equation);
+}
+
+
+static CC_INLINE uint32_t* NV2A_set_cull_face(uint32_t* p, int enabled) {
+	return NV2A_push1(p, NV097_SET_CULL_FACE_ENABLE, enabled);
+}
+
+static CC_INLINE uint32_t* NV2A_set_cull_face_mode(uint32_t* p, int mode) {
+	return NV2A_push1(p, NV097_SET_CULL_FACE, mode);
+}
+
+
 /*########################################################################################################################*
 *--------------------------------------------------Vertex shader constants------------------------------------------------*
 *#########################################################################################################################*/
@@ -98,6 +152,15 @@ static CC_INLINE uint32_t* NV2A_upload_program(uint32_t* p, uint32_t* program, i
 
 static CC_INLINE uint32_t* NV2A_set_program_run_offset(uint32_t* p, int offset) {
 	return NV2A_push1(p, NV097_SET_TRANSFORM_PROGRAM_START, offset);
+}
+
+static CC_INLINE uint32_t* NV2A_set_execution_mode_shaders(uint32_t* p) {
+	p = NV2A_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
+					MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE,       NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM) |
+					MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
+
+	p = NV2A_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
+	return p;
 }
 
 
@@ -157,5 +220,52 @@ static CC_INLINE uint32_t* NV2A_start_clear(uint32_t* p, int color, int depth) {
 	if (depth) mask |= NV097_CLEAR_SURFACE_STENCIL;
 
 	return NV2A_push1(p, NV097_CLEAR_SURFACE, mask);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Texturing--------------------------------------------------------*
+*#########################################################################################################################*/
+// NOTE: API is hardcoded for one texture only, even though hardware supports multiple textures
+
+static CC_INLINE uint32_t* NV2A_set_texture0_control0(uint32_t* p, int texkill) {
+	return NV2A_push1(p, NV097_SET_TEXTURE_CONTROL0, 
+					NV097_SET_TEXTURE_CONTROL0_ENABLE |
+					(texkill ? _NV_ALPHAKILL_EN : 0) |
+					MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
+					MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
+}
+
+static uint32_t* NV2A_set_texture0_pointer(uint32_t* p, void* pixels) {
+	uint32_t offset = (uint32_t)pixels & 0x03ffffff;
+	return NV2A_push1(p, NV097_SET_TEXTURE_OFFSET, offset);
+}
+
+static uint32_t* NV2A_set_texture0_format(uint32_t* p, unsigned log_u, unsigned log_v) {
+	return NV2A_push1(p, NV097_SET_TEXTURE_FORMAT,
+					MASK(NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA,    2) |
+					MASK(NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE,  NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE_COLOR) |
+					MASK(NV097_SET_TEXTURE_FORMAT_COLOR,          NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8) |
+					MASK(NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY, 2)  | // textures have U and V
+					MASK(NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS,  1)  |
+					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U, log_u) |
+					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V, log_v) |
+					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P,    0)); // log2(1) slice = 0
+}
+
+static uint32_t* NV2A_set_texture0_wrapmode(uint32_t* p) {
+	return NV2A_push1(p, NV097_SET_TEXTURE_ADDRESS, 
+					0x00010101); // modes (0x0W0V0U wrapping: 1=wrap 2=mirror 3=clamp 4=border 5=clamp to edge)
+}
+
+static uint32_t* NV2A_set_texture0_filter(uint32_t* p) {
+	return NV2A_push1(p, NV097_SET_TEXTURE_FILTER,
+					0x2000 |
+					MASK(NV097_SET_TEXTURE_FILTER_MIN, 1) |
+					MASK(NV097_SET_TEXTURE_FILTER_MAG, 1)); // 1 = nearest filter
+}
+
+static uint32_t* NV2A_set_texture0_matrix(uint32_t* p, int enabled) {
+	return NV2A_push1(p, NV097_SET_TEXTURE_MATRIX_ENABLE, enabled);
 }
 

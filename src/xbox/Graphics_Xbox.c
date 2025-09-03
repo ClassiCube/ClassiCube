@@ -7,7 +7,6 @@
 #define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
 #include "nv2a_gpu.h"
-#define _NV_ALPHAKILL_EN (1 << 2)
 
 #define MAX_RAM_ADDR 0x03FFAFFF
 
@@ -66,13 +65,7 @@ static void SetupShaders(void) {
 
 	p = pb_begin();
 	p = NV2A_set_program_run_offset(p, 0);
-
-	// Set execution mode
-	p = pb_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
-					MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM)
-					| MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
-
-	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
+	p = NV2A_set_execution_mode_shaders(p);
 
 	pb_end(p);
 }
@@ -80,15 +73,15 @@ static void SetupShaders(void) {
 static void ResetState(void) {
 	uint32_t* p = pb_begin();
 
-	p = pb_push1(p, NV097_SET_ALPHA_FUNC, 0x04); // GL_GREATER & 0x0F
-	p = pb_push1(p, NV097_SET_ALPHA_REF,  0x7F);
-	p = pb_push1(p, NV097_SET_DEPTH_FUNC, 0x03); // GL_LEQUAL & 0x0F
+	p = NV2A_set_alpha_test_func(p, 0x04); // GL_GREATER & 0x0F
+	p = NV2A_set_alpha_test_ref(p,  0x7F);
+	p = NV2A_set_depth_func(p,      0x03); // GL_LEQUAL & 0x0F
 	
-	p = pb_push1(p, NV097_SET_BLEND_FUNC_SFACTOR, NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_BLEND_FUNC_DFACTOR, NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_BLEND_EQUATION,     NV097_SET_BLEND_EQUATION_V_FUNC_ADD); // TODO not needed?
+	p = NV2A_set_alpha_blend_src(p, NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
+	p = NV2A_set_alpha_blend_dst(p, NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA);
+	p = NV2A_set_alpha_blend_eq( p, NV097_SET_BLEND_EQUATION_V_FUNC_ADD); // TODO not needed?
 	
-	p = pb_push1(p, NV097_SET_CULL_FACE, NV097_SET_CULL_FACE_V_FRONT);
+	p = NV2A_set_cull_face_mode(p, NV097_SET_CULL_FACE_V_FRONT);
 	// the order ClassiCube specifies quad vertices in are in the wrong order
 	//  compared to what the GPU expects for front and back facing quads
 
@@ -100,6 +93,7 @@ static void ResetState(void) {
 
 	p = pb_begin();
 	p = NV2A_reset_all_vertex_attribs(p);
+	p = NV2A_set_texture0_matrix(p, false);
 	pb_end(p);
 }
 
@@ -257,31 +251,11 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	uint32_t* p;
 
 	p = pb_begin();
-	// set texture stage 0 state
-	p = pb_push1(p, NV097_SET_TEXTURE_OFFSET, (DWORD)tex->pixels & 0x03ffffff);
-	p = pb_push1(p, NV097_SET_TEXTURE_FORMAT,
-					MASK(NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA,    2) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE,  NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE_COLOR) |
-					MASK(NV097_SET_TEXTURE_FORMAT_COLOR,          NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8) |
-					MASK(NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY, 2)  | // textures have U and V
-					MASK(NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS,  1)  |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U, log_u) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V, log_v) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P,    0)); // log2(1) slice = 0
-	p = pb_push1(p, NV097_SET_TEXTURE_CONTROL0, 
-					NV097_SET_TEXTURE_CONTROL0_ENABLE |
-					(gfx_alphaTest ? _NV_ALPHAKILL_EN : 0) |
-					MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
-					MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
-	p = pb_push1(p, NV097_SET_TEXTURE_ADDRESS, 
-					0x00010101); // modes (0x0W0V0U wrapping: 1=wrap 2=mirror 3=clamp 4=border 5=clamp to edge)
-	p = pb_push1(p, NV097_SET_TEXTURE_FILTER,
-					0x2000 |
-					MASK(NV097_SET_TEXTURE_FILTER_MIN, 1) |
-					MASK(NV097_SET_TEXTURE_FILTER_MAG, 1)); // 1 = nearest filter
-	
-	// set texture matrix state
-	p = pb_push1(p, NV097_SET_TEXTURE_MATRIX_ENABLE, 0);
+	p = NV2A_set_texture0_pointer(p, tex->pixels);
+	p = NV2A_set_texture0_format(p, tex->log2_w, tex->log2_h);
+	p = NV2A_set_texture0_control0(p, gfx_alphaTest);
+	p = NV2A_set_texture0_wrapmode(p);
+	p = NV2A_set_texture0_filter(p);
 	pb_end(p);
 }
 
@@ -297,7 +271,7 @@ void Gfx_ClearColor(PackedCol color) {
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_CULL_FACE_ENABLE, enabled);
+	p = NV2A_set_cull_face(p, enabled);
 	pb_end(p);
 }
 
@@ -305,32 +279,26 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void SetAlphaBlend(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_BLEND_ENABLE, enabled);
+	p = NV2A_set_alpha_blend(p, enabled);
 	pb_end(p);
 }
 
 static void SetAlphaTest(cc_bool enabled) {
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_ALPHA_TEST_ENABLE, enabled);
-
-	// TODO not duplicate with Gfx_BindTexture
-	p = pb_push1(p, NV097_SET_TEXTURE_CONTROL0, 
-					NV097_SET_TEXTURE_CONTROL0_ENABLE |
-					(gfx_alphaTest ? _NV_ALPHAKILL_EN : 0) |
-					MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
-					MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
+	p = NV2A_set_alpha_test(p, enabled);
+	p = NV2A_set_texture0_control0(p, gfx_alphaTest);
 	pb_end(p);
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_DEPTH_MASK, enabled);
+	p = NV2A_set_depth_write(p, enabled);
 	pb_end(p);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_DEPTH_TEST_ENABLE, enabled);
+	p = NV2A_set_depth_test(p, enabled);
 	pb_end(p);
 }
 
@@ -528,10 +496,14 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	matrix->row4.w =  0.0f;*/
 }
 
-void Gfx_OnWindowResize(void) { }
+void Gfx_OnWindowResize(void) {
+	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+}
 
-static struct Vec4 vp_scale  = { 320, -240, 8388608, 1 };
-static struct Vec4 vp_offset = { 320,  240, 8388608, 1 };
+//static struct Vec4 vp_scale  = { 320, -240, 8388608, 1 };
+//static struct Vec4 vp_offset = { 320,  240, 8388608, 1 };
+static struct Vec4 vp_scale, vp_offset;
 static struct Matrix _view, _proj, _mvp;
 // TODO Upload constants too
 // if necessary, look at vs.inl output for 'c[5]' etc..
@@ -545,10 +517,10 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix vp = Matrix_Identity;
 	vp.row1.x = vp_scale.x;
 	vp.row2.y = vp_scale.y;
-	vp.row3.z = 8388608;
+	vp.row3.z = 8388608; // 2^24 / 2
 	vp.row4.x = vp_offset.x;
 	vp.row4.y = vp_offset.y;
-	vp.row4.z = 8388608;
+	vp.row4.z = 8388608; // 2^24 / 2
 
 	Matrix_Mul(&final, &_mvp, &vp);
 
