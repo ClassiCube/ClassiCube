@@ -15,7 +15,7 @@ LDFLAGS = -g -rdynamic
 ENAME   = ClassiCube
 # Name of the final target file
 # (usually this is the executable, but e.g. is the app bundle on macOS)
-TARGET := $(ENAME)
+TARGET  := $(ENAME)
 
 # Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
 # This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
@@ -172,19 +172,6 @@ ifeq ($(PLAT),riscos)
 	BUILD_DIR = build/riscos
 endif
 
-ifeq ($(PLAT),dos)
-	CC	=  i586-pc-msdosdjgpp-gcc 
-	LIBS    =
-	LDFLAGS = -g
-	OEXT    =  .exe
-	BUILD_DIR = build/dos
-	BEARSSL = 0
-
-	BUILD_DIRS += $(BUILD_DIR)/src/msdos
-	C_SOURCES  += $(wildcard src/msdos/*.c)
-endif
-
-
 ifdef BUILD_SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
 	LIBS += -lSDL2
@@ -242,8 +229,6 @@ irix:
 	$(MAKE) $(TARGET) PLAT=irix
 riscos:
 	$(MAKE) $(TARGET) PLAT=riscos
-dos:
-	$(MAKE) $(TARGET) PLAT=dos
 # Default overrides
 sdl2:
 	$(MAKE) $(TARGET) BUILD_SDL2=1
@@ -296,6 +281,8 @@ switch:
 	$(MAKE) -f misc/switch/Makefile
 os/2:
 	$(MAKE) -f misc/os2/Makefile
+dos:
+	$(MAKE) -f misc/msdos/Makefile
 macclassic_68k:
 	$(MAKE) -f misc/macclassic/Makefile_68k
 macclassic_ppc:

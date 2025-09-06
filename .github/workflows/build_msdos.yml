@@ -27,7 +27,7 @@ jobs:
       - name: Compile MS dos build
         id: compile
         run: |
-          make CC=gcc dos RELEASE=1
+          make CC=gcc dos
 
 
       - uses: ./.github/actions/notify_failure
@@ -40,7 +40,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube.exe'
+          SOURCE_FILE: 'CCDOS.EXE'
           DEST_NAME: 'ClassiCube.exe'
           
           

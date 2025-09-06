@@ -41,7 +41,7 @@ $(BUILD_DIR)/%.o : src/amiga/%.S
 $(BUILD_DIR)/%.o : src/%.c
 	$(CC) $(CFLAGS) $(DEPFLAGS) -S -c $< -o $@
 
-$(BUILD_DIR)/%.S : src/amiga/%.c
+$(BUILD_DIR)/%.o : src/amiga/%.c
 	$(CC) $(CFLAGS) $(DEPFLAGS) -S -c $< -o $@
 
 # Dependency tracking
