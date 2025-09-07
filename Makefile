@@ -8,7 +8,7 @@ BUILD_DIRS	= $(BUILD_DIR) $(BUILD_DIR)/src
 # Configurable flags and names
 ##############################
 # Flags passed to the C compiler
-CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
+CFLAGS  = -pipe -fno-math-errno
 # Flags passed to the linker
 LDFLAGS = -g -rdynamic
 # Name of the main executable
@@ -88,8 +88,9 @@ endif
 
 ifeq ($(PLAT),hp-ux)
 	CC      = gcc
+	CFLAGS  += -std=c99 -D_POSIX_C_SOURCE=200112L -D_XOPEN_SOURCE=600 -D_DEFAULT_SOURCE -D_BSD_SOURCE
 	LDFLAGS =
-	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL -lpthread
+	LIBS    = -lm -lX11 -lXi -lXext -L/usr/local/lib/hpux32 -lGL -lpthread
 	BUILD_DIR = build/hpux
 endif
 

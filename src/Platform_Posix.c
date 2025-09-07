@@ -800,9 +800,16 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	if (*s == -1) return errno;
 
 	if (nonblocking) {
+#ifdef CC_BUILD_HPUX
+		int flags = fcntl(*s, F_GETFL, 0);
+		if (flags == -1) return errno;
+		int err = fcntl(*s, F_SETFL, flags | O_NONBLOCK);
+		if (err == -1) return errno;
+#else
 		int blocking_raw = -1; /* non-blocking mode */
 		int err = ioctl(*s, FIONBIO, &blocking_raw);
 		if (err == -1) return errno;
+#endif
 	}
 	return 0;
 }
