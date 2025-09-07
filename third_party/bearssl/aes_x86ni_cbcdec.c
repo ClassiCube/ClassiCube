@@ -46,7 +46,7 @@ br_aes_x86ni_cbcdec_init(br_aes_x86ni_cbcdec_keys *ctx,
 BR_TARGETS_X86_UP
 
 /* see bearssl_block.h */
-BR_TARGET("sse2,aes")
+BR_TARGET("sse2,aes") BR_SSE_FUNCTION
 void
 br_aes_x86ni_cbcdec_run(const br_aes_x86ni_cbcdec_keys *ctx,
 	void *iv, void *data, size_t len)

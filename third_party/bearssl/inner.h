@@ -2400,6 +2400,18 @@ br_cpuid(uint32_t mask_eax, uint32_t mask_ebx,
 
 #endif
 
+/* BEG classicube specific */
+/* Fix issue where 32 bit GCC aligns stack to 4 bytes, but will still
+/*  generate instructions expecting the stack to be _16_ byte aligned */
+/* https://gcc.gnu.org/onlinedocs/gcc/x86-Function-Attributes.html */
+/* TODO is this needed for MSVC ? */
+#if (BR_GCC || BR_CLANG) && BR_i386 && !BR_amd64
+	#define BR_SSE_FUNCTION __attribute__((force_align_arg_pointer))
+#else
+	#define BR_SSE_FUNCTION
+#endif
+/* END classicube specific
+
 /* ==================================================================== */
 
 #endif

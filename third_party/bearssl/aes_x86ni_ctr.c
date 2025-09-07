@@ -46,7 +46,7 @@ br_aes_x86ni_ctr_init(br_aes_x86ni_ctr_keys *ctx,
 BR_TARGETS_X86_UP
 
 /* see bearssl_block.h */
-BR_TARGET("sse2,sse4.1,aes")
+BR_TARGET("sse2,sse4.1,aes") BR_SSE_FUNCTION
 uint32_t
 br_aes_x86ni_ctr_run(const br_aes_x86ni_ctr_keys *ctx,
 	const void *iv, uint32_t cc, void *data, size_t len)

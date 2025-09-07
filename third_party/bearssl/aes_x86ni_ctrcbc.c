@@ -46,7 +46,7 @@ br_aes_x86ni_ctrcbc_init(br_aes_x86ni_ctrcbc_keys *ctx,
 BR_TARGETS_X86_UP
 
 /* see bearssl_block.h */
-BR_TARGET("sse2,sse4.1,aes")
+BR_TARGET("sse2,sse4.1,aes") BR_SSE_FUNCTION
 void
 br_aes_x86ni_ctrcbc_ctr(const br_aes_x86ni_ctrcbc_keys *ctx,
 	void *ctr, void *data, size_t len)
@@ -252,7 +252,7 @@ br_aes_x86ni_ctrcbc_ctr(const br_aes_x86ni_ctrcbc_keys *ctx,
 }
 
 /* see bearssl_block.h */
-BR_TARGET("sse2,sse4.1,aes")
+BR_TARGET("sse2,sse4.1,aes") BR_SSE_FUNCTION
 void
 br_aes_x86ni_ctrcbc_mac(const br_aes_x86ni_ctrcbc_keys *ctx,
 	void *cbcmac, const void *data, size_t len)
@@ -303,7 +303,7 @@ br_aes_x86ni_ctrcbc_mac(const br_aes_x86ni_ctrcbc_keys *ctx,
 }
 
 /* see bearssl_block.h */
-BR_TARGET("sse2,sse4.1,aes")
+BR_TARGET("sse2,sse4.1,aes") BR_SSE_FUNCTION
 void
 br_aes_x86ni_ctrcbc_encrypt(const br_aes_x86ni_ctrcbc_keys *ctx,
 	void *ctr, void *cbcmac, void *data, size_t len)
@@ -452,7 +452,7 @@ br_aes_x86ni_ctrcbc_encrypt(const br_aes_x86ni_ctrcbc_keys *ctx,
 }
 
 /* see bearssl_block.h */
-BR_TARGET("sse2,sse4.1,aes")
+BR_TARGET("sse2,sse4.1,aes") BR_SSE_FUNCTION
 void
 br_aes_x86ni_ctrcbc_decrypt(const br_aes_x86ni_ctrcbc_keys *ctx,
 	void *ctr, void *cbcmac, void *data, size_t len)

@@ -205,7 +205,7 @@ x86ni_keysched(__m128i *sk, const void *key, size_t len)
 }
 
 /* see inner.h */
-BR_TARGET("sse2,aes")
+BR_TARGET("sse2,aes") BR_SSE_FUNCTION
 unsigned
 br_aes_x86ni_keysched_enc(unsigned char *skni, const void *key, size_t len)
 {
@@ -218,7 +218,7 @@ br_aes_x86ni_keysched_enc(unsigned char *skni, const void *key, size_t len)
 }
 
 /* see inner.h */
-BR_TARGET("sse2,aes")
+BR_TARGET("sse2,aes") BR_SSE_FUNCTION
 unsigned
 br_aes_x86ni_keysched_dec(unsigned char *skni, const void *key, size_t len)
 {
