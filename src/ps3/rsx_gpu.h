@@ -2,6 +2,7 @@
 *-----------------------------------------------------GPU commands--------------------------------------------------------*
 *#########################################################################################################################*/
 // NOTE: shared with nv2a (Xbox) GPU
+#define RSX_MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
 // disables the default increment behaviour when writing multiple registers
 // E.g. with RSX_3D_COMMAND(cmd, 4):
@@ -20,8 +21,9 @@
 *#########################################################################################################################*/
 static CC_INLINE uint32_t* RSX_reserve(gcmContextData* ctx, int count) {
 	if (ctx->current + count > ctx->end) {
-		// TODO handle command buffer overflow properly
-		Process_Abort("Command buffer overflow");
+		// This flushes the command buffer to GPU via DMA
+		// TODO: returns 0 if fails, but not checked for??
+		rsxContextCallback(ctx, count);
 	}
 
 	uint32_t* p = ctx->current;
@@ -35,6 +37,9 @@ static CC_INLINE uint32_t* RSX_reserve_command(gcmContextData* context, uint32_t
 	return p;
 }
 
+#define RSX_append_single_command(context, cmd, value) \
+	uint32_t* p = RSX_reserve_command(ctx, cmd, 1); \
+	*p++ = value;
 
 /*########################################################################################################################*
 *-----------------------------------------------------Raster control------------------------------------------------------*
@@ -53,6 +58,44 @@ static CC_INLINE void RSX_set_color_write_mask(gcmContextData* ctx, int r, int g
 	if (b) mask |= GCM_COLOR_MASK_B;
 	if (a) mask |= GCM_COLOR_MASK_A;
 
-	uint32_t* p = RSX_reserve_command(ctx, NV40TCL_COLOR_MASK, 1);
-	*p++ = mask;
+	RSX_append_single_command(ctx, NV40TCL_COLOR_MASK, mask);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------State management----------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void RSX_set_depth_write(gcmContextData* ctx, int enabled) {
+	RSX_append_single_command(ctx, NV40TCL_DEPTH_WRITE_ENABLE, enabled);
+}
+
+static CC_INLINE void RSX_set_depth_test(gcmContextData* ctx, int enabled) {
+	RSX_append_single_command(ctx, NV40TCL_DEPTH_TEST_ENABLE, enabled);
+}
+
+static CC_INLINE void RSX_set_depth_func(gcmContextData* ctx, int func) {
+	RSX_append_single_command(ctx, NV40TCL_DEPTH_FUNC, func);
+}
+
+
+static CC_INLINE void RSX_set_alpha_test(gcmContextData* ctx, int enabled) {
+	RSX_append_single_command(ctx, NV40TCL_ALPHA_TEST_ENABLE, enabled);
+}
+
+static CC_INLINE void RSX_set_alpha_test_func(gcmContextData* ctx, int func) {
+	RSX_append_single_command(ctx, NV40TCL_ALPHA_TEST_FUNC, func);
+}
+
+static CC_INLINE void RSX_set_alpha_test_ref(gcmContextData* ctx, int ref) {
+	RSX_append_single_command(ctx, NV40TCL_ALPHA_TEST_REF, ref);
+}
+
+
+static CC_INLINE void RSX_set_alpha_blend(gcmContextData* ctx, int enabled) {
+	RSX_append_single_command(ctx, NV40TCL_BLEND_ENABLE, enabled);
+}
+
+
+static CC_INLINE void RSX_set_cull_face(gcmContextData* ctx, int enabled) {
+	RSX_append_single_command(ctx, NV40TCL_CULL_FACE_ENABLE, enabled);
 }

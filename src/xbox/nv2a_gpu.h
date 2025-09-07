@@ -2,6 +2,7 @@
 *-----------------------------------------------------GPU commands--------------------------------------------------------*
 *#########################################################################################################################*/
 // NOTE: shared with RSX (PS3) GPU
+#define NV2A_MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
 // disables the default increment behaviour when writing multiple registers
 // E.g. with NV2A_3D_COMMAND(cmd, 4):
@@ -66,10 +67,10 @@ static CC_INLINE uint32_t* NV2A_set_color_write_mask(uint32_t* p, int r, int g, 
 *#########################################################################################################################*/
 static CC_INLINE uint32_t* NV2A_set_fog_colour(uint32_t* p, int R, int G, int B, int A) {
 	uint32_t mask = 
-		MASK(NV097_SET_FOG_COLOR_RED,   R) |
-		MASK(NV097_SET_FOG_COLOR_GREEN, G) |
-		MASK(NV097_SET_FOG_COLOR_BLUE,  B) |
-		MASK(NV097_SET_FOG_COLOR_ALPHA, A);
+		NV2A_MASK(NV097_SET_FOG_COLOR_RED,   R) |
+		NV2A_MASK(NV097_SET_FOG_COLOR_GREEN, G) |
+		NV2A_MASK(NV097_SET_FOG_COLOR_BLUE,  B) |
+		NV2A_MASK(NV097_SET_FOG_COLOR_ALPHA, A);
 
 	return NV2A_push1(p, NV097_SET_FOG_COLOR, mask);
 }
@@ -145,8 +146,8 @@ static void NV2A_DrawArrays(int mode, unsigned start, unsigned count) {
 	{
 		int batch_count = min(count, DA_BATCH_SIZE);
 	
-		*p++ = MASK(NV097_DRAW_ARRAYS_COUNT, batch_count-1) | 
-			   MASK(NV097_DRAW_ARRAYS_START_INDEX, start);
+		*p++ = NV2A_MASK(NV097_DRAW_ARRAYS_COUNT, batch_count-1) | 
+			   NV2A_MASK(NV097_DRAW_ARRAYS_START_INDEX, start);
 		
 		start += batch_count;
 		count -= batch_count;
@@ -195,8 +196,8 @@ static CC_INLINE uint32_t* NV2A_set_program_run_offset(uint32_t* p, int offset) 
 
 static CC_INLINE uint32_t* NV2A_set_execution_mode_shaders(uint32_t* p) {
 	p = NV2A_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
-					MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE,       NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM) |
-					MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
+					NV2A_MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE,       NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM) |
+					NV2A_MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
 
 	p = NV2A_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
 	return p;
@@ -222,9 +223,9 @@ static uint32_t* NV2A_reset_all_vertex_attribs(uint32_t* p) {
 
 static uint32_t* NV2A_set_vertex_attrib_format(uint32_t* p, int index, int format, int size, int stride) {
 	uint32_t mask =
-		MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE, format) |
-		MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE, size)   |
-		MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE, stride);
+		NV2A_MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE, format) |
+		NV2A_MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE, size)   |
+		NV2A_MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE, stride);
 
 	return NV2A_push1(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT + index * 4, mask);
 }
@@ -271,8 +272,8 @@ static CC_INLINE uint32_t* NV2A_set_texture0_control0(uint32_t* p, int texkill) 
 	return NV2A_push1(p, NV097_SET_TEXTURE_CONTROL0, 
 					NV097_SET_TEXTURE_CONTROL0_ENABLE |
 					(texkill ? _NV_ALPHAKILL_EN : 0) |
-					MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
-					MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
+					NV2A_MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
+					NV2A_MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
 }
 
 static uint32_t* NV2A_set_texture0_pointer(uint32_t* p, void* pixels) {
@@ -282,14 +283,14 @@ static uint32_t* NV2A_set_texture0_pointer(uint32_t* p, void* pixels) {
 
 static uint32_t* NV2A_set_texture0_format(uint32_t* p, unsigned log_u, unsigned log_v) {
 	return NV2A_push1(p, NV097_SET_TEXTURE_FORMAT,
-					MASK(NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA,    2) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE,  NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE_COLOR) |
-					MASK(NV097_SET_TEXTURE_FORMAT_COLOR,          NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8) |
-					MASK(NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY, 2)  | // textures have U and V
-					MASK(NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS,  1)  |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U, log_u) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V, log_v) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P,    0)); // log2(1) slice = 0
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA,    2) |
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE,  NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE_COLOR) |
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_COLOR,          NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8) |
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY, 2)  | // textures have U and V
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS,  1)  |
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U, log_u) |
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V, log_v) |
+					NV2A_MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P,    0)); // log2(1) slice = 0
 }
 
 static uint32_t* NV2A_set_texture0_wrapmode(uint32_t* p) {
@@ -300,8 +301,8 @@ static uint32_t* NV2A_set_texture0_wrapmode(uint32_t* p) {
 static uint32_t* NV2A_set_texture0_filter(uint32_t* p) {
 	return NV2A_push1(p, NV097_SET_TEXTURE_FILTER,
 					0x2000 |
-					MASK(NV097_SET_TEXTURE_FILTER_MIN, 1) |
-					MASK(NV097_SET_TEXTURE_FILTER_MAG, 1)); // 1 = nearest filter
+					NV2A_MASK(NV097_SET_TEXTURE_FILTER_MIN, 1) |
+					NV2A_MASK(NV097_SET_TEXTURE_FILTER_MAG, 1)); // 1 = nearest filter
 }
 
 static uint32_t* NV2A_set_texture0_matrix(uint32_t* p, int enabled) {

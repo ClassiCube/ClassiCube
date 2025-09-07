@@ -2401,7 +2401,7 @@ br_cpuid(uint32_t mask_eax, uint32_t mask_ebx,
 #endif
 
 /* BEG classicube specific */
-/* Fix issue where 32 bit GCC aligns stack to 4 bytes, but will still
+/* Fix issue where 32 bit GCC aligns stack to 4 bytes, but will still */
 /*  generate instructions expecting the stack to be _16_ byte aligned */
 /* https://gcc.gnu.org/onlinedocs/gcc/x86-Function-Attributes.html */
 /* TODO is this needed for MSVC ? */

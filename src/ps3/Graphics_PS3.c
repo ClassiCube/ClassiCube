@@ -11,9 +11,6 @@
 static gcmContextData* context;
 static u32 cur_fb;
 
-#define CB_SIZE   0x100000 // TODO: smaller command buffer?
-#define HOST_SIZE (32 * 1024 * 1024)
-
 
 /*########################################################################################################################*
 *----------------------------------------------------- Vertex Shaders ----------------------------------------------------*
@@ -135,9 +132,23 @@ static u32* depth_buffer;
 #define GCM_LABEL_INDEX 255
 static u32 labelID = 1;
 
+#define CB_SIZE   (1024 * 1024) // TODO: smaller command buffer?
+#define HOST_SIZE (32 * 1024 * 1024)
+
+#define uint_to_ptr(raw)    ((void*)((uintptr_t)(raw)))
+#define ptr_to_uint(raw) ((uint32_t)((uintptr_t)(raw)))
+extern s32 gcmInitBodyEx(uint32_t ctx, uint32_t cbSize, uint32_t ioSize, uint32_t ioBuf);
+
 static void CreateContext(void) {
-	void* host_addr = memalign(1024 * 1024, HOST_SIZE);
-	rsxInit(&context, CB_SIZE, HOST_SIZE, host_addr);
+	void* host_buf = memalign(1024 * 1024, HOST_SIZE);
+
+	// PS3 pointers are 32 bits in size, but our pointers are 64 bits
+	uint32_t ctx_ptr = 0;
+	int res = gcmInitBodyEx(ptr_to_uint(&ctx_ptr), CB_SIZE, HOST_SIZE, ptr_to_uint(host_buf));
+	if (res) Process_Abort2(res, "gcmInitBody failed");
+
+	context = uint_to_ptr(ctx_ptr);
+	rsxHeapInit();
 }
 
 static void WaitRSXFinish(void) {
@@ -307,11 +318,11 @@ void Gfx_TransferImage(u32 offset, s32 w, s32 h) {
 static cc_uint32 clearColor;
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
-	rsxSetCullFaceEnable(context, enabled);
+	RSX_set_cull_face(context, enabled);
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
-	rsxSetBlendEnable(context, enabled);
+	RSX_set_alpha_blend(context, enabled);
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -324,15 +335,15 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	rsxSetDepthWriteEnable(context, enabled);
+	RSX_set_depth_write(context, enabled);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
-	rsxSetDepthTestEnable(context, enabled);
+	RSX_set_depth_test(context, enabled);
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	rsxSetAlphaTestEnable(context, enabled);
+	RSX_set_alpha_test(context, enabled);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -410,9 +421,9 @@ static void ResetFrameState(void) {
 	rsxSetClearColor(context, clearColor);
 	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
 
-	rsxSetDepthFunc(context, GCM_LEQUAL);	
-	rsxSetDepthWriteEnable(context, true);
-	rsxSetDepthTestEnable(context,  true);
+	RSX_set_depth_func(context, GCM_LEQUAL);	
+	RSX_set_depth_write(context, true);
+	RSX_set_depth_test(context,  true);
 	
 	rsxSetUserClipPlaneControl(context, GCM_USER_CLIP_PLANE_DISABLE,
 						GCM_USER_CLIP_PLANE_DISABLE,
@@ -492,7 +503,7 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	return 1;/* TODO */
+	return (void*)1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }

@@ -1,13 +1,13 @@
 #ifndef BR_BEARSSL_STDLIB_H__
 #define BR_BEARSSL_STDLIB_H__
 /* ==== BEG ClassiCube specific ==== */
-static size_t br_strlen(const char* a) {
+static inline size_t br_strlen(const char* a) {
 	int i = 0;
 	while (*a++) i++;
 	return i;
 }
 
-static size_t br_memcmp(const void* a, const void* b, size_t len) {
+static inline size_t br_memcmp(const void* a, const void* b, size_t len) {
 	unsigned char* p1 = (unsigned char*)a;
 	unsigned char* p2 = (unsigned char*)b;
 	size_t i;

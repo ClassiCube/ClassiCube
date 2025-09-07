@@ -4,8 +4,6 @@
 #include "../Window.h"
 
 #include <pbkit/pbkit.h>
-#define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
-
 #include "nv2a_gpu.h"
 
 #define MAX_RAM_ADDR 0x03FFAFFF
