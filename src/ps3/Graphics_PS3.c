@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
+#include "rsx_gpu.h"
 
 static gcmContextData* context;
 static u32 cur_fb;
@@ -335,13 +336,7 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	unsigned mask = 0;
-	if (r) mask |= GCM_COLOR_MASK_R;
-	if (g) mask |= GCM_COLOR_MASK_G;
-	if (b) mask |= GCM_COLOR_MASK_B;
-	if (a) mask |= GCM_COLOR_MASK_A;
-
-	rsxSetColorMask(context, mask);
+	RSX_set_color_write_mask(context, r, g, b, a);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -487,7 +482,7 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	rsxSetScissor(context, x, y, w, h);
+	RSX_set_scissor_rect(context, x, y, w, h);
 }
 
 
