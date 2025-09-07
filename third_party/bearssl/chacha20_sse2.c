@@ -40,13 +40,20 @@ br_chacha20_sse2_get(void)
 	 * If using 64-bit mode, then SSE2 opcodes should be automatically
 	 * available, since they are part of the ABI.
 	 *
-	 * In 32-bit mode, not used due anymore to hitting an obscure possible compiler bug.
+	 * In 32-bit mode, we use CPUID to detect the SSE2 feature.
 	 */
 
 #if BR_amd64
 	return &br_chacha20_sse2_run;
 #else
-	return 0;
+	/*
+	 * SSE2 support is indicated by bit 26 in EDX.
+	 */
+	if (br_cpuid(0, 0, 0, 0x04000000)) {
+		return &br_chacha20_sse2_run;
+	} else {
+		return 0;
+	}
 #endif
 }
 
