@@ -6,7 +6,7 @@ export BLOCKSDSEXT		?= /opt/wonderful/thirdparty/blocksds/external
 export WONDERFUL_TOOLCHAIN	?= /opt/wonderful
 ARM_NONE_EABI_PATH		?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
 
-SOURCEDIRS	:= src
+SOURCEDIRS	:= src src/nds
 INCLUDEDIRS     :=
 DSIWIFI		:= third_party/dsiwifi
 

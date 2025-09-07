@@ -546,13 +546,8 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	if (res || *writable) return res;
 	
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-#ifdef BUILD_DSI
 	socklen_t resultSize = sizeof(socklen_t);
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-#else
-	int resultSize = sizeof(int);
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-#endif
 	return res;
 }
 
