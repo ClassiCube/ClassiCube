@@ -454,11 +454,7 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int targets = 0;
-	if (buffers & GFX_BUFFER_COLOR) targets |= (GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A);
-	if (buffers & GFX_BUFFER_DEPTH) targets |= (GCM_CLEAR_S | GCM_CLEAR_Z);
-	
-	rsxClearSurface(context, targets); 
+	RSX_clear_buffers(context, buffers & GFX_BUFFER_COLOR, buffers & GFX_BUFFER_DEPTH);
 }
 
 void Gfx_EndFrame(void) {

@@ -2410,7 +2410,7 @@ br_cpuid(uint32_t mask_eax, uint32_t mask_ebx,
 #else
 	#define BR_SSE_FUNCTION
 #endif
-/* END classicube specific
+/* END classicube specific */
 
 /* ==================================================================== */
 

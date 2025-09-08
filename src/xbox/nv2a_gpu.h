@@ -221,18 +221,18 @@ static uint32_t* NV2A_reset_all_vertex_attribs(uint32_t* p) {
 	return p;
 }
 
-static uint32_t* NV2A_set_vertex_attrib_format(uint32_t* p, int index, int format, int size, int stride) {
+static uint32_t* NV2A_set_vertex_attrib_format(uint32_t* p, int attrib, int format, int size, int stride) {
 	uint32_t mask =
 		NV2A_MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE, format) |
 		NV2A_MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE, size)   |
 		NV2A_MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE, stride);
 
-	return NV2A_push1(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT + index * 4, mask);
+	return NV2A_push1(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT + attrib * 4, mask);
 }
 
-static uint32_t* NV2A_set_vertex_attrib_pointer(uint32_t* p, int index, cc_uint8* data) {
+static uint32_t* NV2A_set_vertex_attrib_pointer(uint32_t* p, int attrib, cc_uint8* data) {
 	uint32_t offset = (uint32_t)data & 0x03ffffff;
-	return NV2A_push1(p, NV097_SET_VERTEX_DATA_ARRAY_OFFSET + index * 4, offset);
+	return NV2A_push1(p, NV097_SET_VERTEX_DATA_ARRAY_OFFSET + attrib * 4, offset);
 }
 
 
@@ -253,7 +253,7 @@ static CC_INLINE uint32_t* NV2A_set_clear_colour(uint32_t* p, uint32_t colour) {
 					colour);
 }
 
-static CC_INLINE uint32_t* NV2A_start_clear(uint32_t* p, int color, int depth) {
+static CC_INLINE uint32_t* NV2A_clear_buffers(uint32_t* p, int color, int depth) {
     uint32_t mask = 0;
 	if (color) mask |= NV097_CLEAR_SURFACE_COLOR;
 	if (depth) mask |= NV097_CLEAR_SURFACE_Z;

@@ -342,7 +342,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	uint32_t* p = pb_begin();
-	p = NV2A_start_clear(p, buffers & GFX_BUFFER_COLOR, buffers & GFX_BUFFER_DEPTH);
+	p = NV2A_clear_buffers(p, buffers & GFX_BUFFER_COLOR, buffers & GFX_BUFFER_DEPTH);
 	pb_end(p);
 	
 	//pb_erase_text_screen();
