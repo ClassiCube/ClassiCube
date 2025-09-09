@@ -8,7 +8,7 @@ BUILD_DIRS	= $(BUILD_DIR) $(BUILD_DIR)/src
 # Configurable flags and names
 ##############################
 # Flags passed to the C compiler
-CFLAGS  = -pipe -fno-math-errno
+CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
 # Flags passed to the linker
 LDFLAGS = -g -rdynamic
 # Name of the main executable
