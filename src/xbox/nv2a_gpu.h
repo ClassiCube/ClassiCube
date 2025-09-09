@@ -40,7 +40,7 @@ static CC_INLINE uint32_t* NV2A_push2(uint32_t* p, int cmd, uint32_t val1, uint3
 *-----------------------------------------------------Misc commands-------------------------------------------------------*
 *#########################################################################################################################*/
 static CC_INLINE uint32_t* NV2A_reset_control0(uint32_t* p) {
-	// resets "z perspective" flag
+	// resets "z perspective" flag, set "texture perspective flag"
 	return NV2A_push1(p, NV097_SET_CONTROL0, _NV_CONTROL0_TEX_PERSPECTIVE_ENABLE);
 }
 
