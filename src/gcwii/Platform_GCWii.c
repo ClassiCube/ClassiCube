@@ -48,10 +48,6 @@ cc_bool Platform_ReadonlyFilesystem;
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-// To see these log messages:
-//   1) In the UI, make sure 'Show log configuration' checkbox is checked in View menu
-//   2) Make sure "OSReport EXI (OSREPORT)" log type is enabled
-//   3) In the UI, make sure 'Show log' checkbox is checked in View menu
 static void LogOverEXI(char* msg, int len) {
 	u32 cmd = 0x80000000 | (0x800400 << 6); // write flag, UART base address
 

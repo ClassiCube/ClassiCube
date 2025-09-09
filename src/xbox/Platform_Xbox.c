@@ -34,13 +34,11 @@ cc_bool Platform_ReadonlyFilesystem;
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	char tmp[2048 + 1];
+	char tmp[2048 + 2];
 	len = min(len, 2048);
-	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
+	Mem_Copy(tmp, msg, len); tmp[len] = '\n'; tmp[len + 1] = '\0';
 	
-	// log to on-screen display
-	debugPrint("%s\n", tmp);
-	// log to cxbx-reloaded console
+	// log to cxbx-reloaded console or Xemu serial output
 	OutputDebugStringA(tmp);
 }
 

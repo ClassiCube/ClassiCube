@@ -53,7 +53,6 @@ unsigned int __stacksize__ = 256 * 1024;
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	// output to debug service (visible in Citra with log level set to "Debug.Emulated:Debug", or on console via remote gdb)
 	svcOutputDebugString(msg, len);
 }
 
