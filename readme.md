@@ -74,7 +74,7 @@ And also runs on:
 * Haiku - needs <code>openal</code> package (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_haiku.yml))
 * BeOS - untested on actual hardware
 * IRIX - needs <code>openal</code> packages
-* HP-UX - needs Mesa package, tried building with HP OpenGL and `-DCC_BUILD_GL11` still not working
+* HPUX - tested on 11v3 IA64
 * SerenityOS - needs <code>SDL2</code>
 * Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
