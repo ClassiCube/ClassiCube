@@ -90,7 +90,7 @@ ifeq ($(PLAT),hp-ux)
 	CC      = gcc
 	CFLAGS  += -std=c99 -D_POSIX_C_SOURCE=200112L -D_XOPEN_SOURCE=600 -D_DEFAULT_SOURCE -D_BSD_SOURCE
 	LDFLAGS =
-	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib/hpux32 -lGL -lXhp11 -lpthread
+	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib/hpux32 -lGL -lpthread
 	BUILD_DIR = build/hpux
 endif
 
