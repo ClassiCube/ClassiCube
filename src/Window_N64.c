@@ -100,24 +100,24 @@ static void ProcessMouse(joypad_inputs_t* inputs, float delta) {
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static const BindMapping default_n64[BIND_COUNT] = {
-	[BIND_FORWARD] = { CCPAD_CUP,    0 },
-	[BIND_BACK]    = { CCPAD_CDOWN,  0 },
-	[BIND_LEFT]    = { CCPAD_CLEFT,  0 },
-	[BIND_RIGHT]   = { CCPAD_CRIGHT, 0 },
+static const BindMapping defaults_n64[BIND_COUNT] = {
+	[BIND_FORWARD] = { CCPAD_CUP    },
+	[BIND_BACK]    = { CCPAD_CDOWN  },
+	[BIND_LEFT]    = { CCPAD_CLEFT  },
+	[BIND_RIGHT]   = { CCPAD_CRIGHT },
 	
-	[BIND_FLY_UP]  = { CCPAD_UP,    0 },
-	[BIND_FLY_DOWN]= { CCPAD_DOWN,  0 },
-	[BIND_SPEED]   = { CCPAD_LEFT,  0 },
-	[BIND_FLY]     = { CCPAD_RIGHT, 0 },
+	[BIND_FLY_UP]  = { CCPAD_UP    },
+	[BIND_FLY_DOWN]= { CCPAD_DOWN  },
+	[BIND_SPEED]   = { CCPAD_LEFT  },
+	[BIND_FLY]     = { CCPAD_RIGHT },
 	
-	[BIND_JUMP]         = { CCPAD_1, 0 },
-	[BIND_INVENTORY]    = { CCPAD_2, 0 },
-	[BIND_PLACE_BLOCK]  = { CCPAD_5, 0 },
-	[BIND_HOTBAR_RIGHT] = { CCPAD_L, 0 },
-	[BIND_DELETE_BLOCK] = { CCPAD_R, 0 },
+	[BIND_JUMP]         = { CCPAD_1 },
+	[BIND_INVENTORY]    = { CCPAD_2 },
+	[BIND_PLACE_BLOCK]  = { CCPAD_5 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_L },
+	[BIND_DELETE_BLOCK] = { CCPAD_R },
 	
-	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+	[BIND_SET_SPAWN]    = { CCPAD_START },
 };
 
 void Gamepads_Init(void) {
@@ -169,7 +169,7 @@ void Gamepads_Process(float delta) {
 			ProcessMouse(&inputs, delta); continue;
 		}
 
-		int port = Gamepad_Connect(0x64 + i, default_n64);
+		int port = Gamepad_Connect(0x64 + i, defaults_n64);
 		HandleButtons(port, inputs.btn);
 		ProcessAnalogInput(port, &inputs, delta);
 	}

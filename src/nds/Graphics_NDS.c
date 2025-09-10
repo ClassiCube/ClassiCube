@@ -1,5 +1,3 @@
-#include "Core.h"
-#ifdef CC_BUILD_NDS
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Logger.h"
@@ -833,5 +831,4 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (skipRendering) return;
 	Draw_TexturedTriangles(verticesCount, startVertex);
 }
-#endif
 

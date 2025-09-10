@@ -1,5 +1,3 @@
-#include "Core.h"
-#if defined CC_BUILD_NDS
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
 
@@ -658,4 +656,4 @@ static cc_result GetMachineID(cc_uint32* key) {
 cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

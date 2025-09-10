@@ -227,6 +227,27 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping defaults_ps2[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP    },  
+	[BIND_BACK]         = { CCPAD_DOWN  },
+	[BIND_LEFT]         = { CCPAD_LEFT  },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_DELETE_BLOCK] = { CCPAD_L     },
+	[BIND_PLACE_BLOCK]  = { CCPAD_R     },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
+};
+
 static char padBuf0[256] __attribute__((aligned(64)));
 static char padBuf1[256] __attribute__((aligned(64)));
 
@@ -299,7 +320,7 @@ static void ProcessPad(int i, float delta) {
 	int ret = padRead(i, 0, &pad);
 	if (ret == 0) return;
 	
-	int port = Gamepad_Connect(0x503 + i, PadBind_Defaults);
+	int port = Gamepad_Connect(0x503 + i, defaults_ps2);
 	ProcessPadInput(port, delta, &pad);
 }
 

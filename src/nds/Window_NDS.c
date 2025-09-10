@@ -1,5 +1,3 @@
-#include "Core.h"
-#if defined CC_BUILD_NDS
 #include "Window.h"
 #include "Platform.h"
 #include "Input.h"
@@ -256,13 +254,34 @@ void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
-*#########################################################################################################################*/	
+*#########################################################################################################################*/
+static const BindMapping defaults_nds[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP    },  
+	[BIND_BACK]         = { CCPAD_DOWN  },
+	[BIND_LEFT]         = { CCPAD_LEFT  },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_DELETE_BLOCK] = { CCPAD_L     },
+	[BIND_PLACE_BLOCK]  = { CCPAD_R     },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
+};
+	
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 void Gamepads_Process(float delta) {
-	int port = Gamepad_Connect(0xD5, PadBind_Defaults);
+	int port = Gamepad_Connect(0xD5, defaults_nds);
 	int mods = keysDown() | keysHeld();
 	
 	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
@@ -379,4 +398,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

@@ -111,25 +111,21 @@ void Window_RequestClose(void) {
 *#########################################################################################################################*/
 static PADStatus gc_pads[PAD_CHANMAX];
 
-static const BindMapping gcpad_defaults[BIND_COUNT] = {
-	[BIND_FORWARD]      = { CCPAD_UP,    0 },  
-	[BIND_BACK]         = { CCPAD_DOWN,  0 },
-	[BIND_LEFT]         = { CCPAD_LEFT,  0 },  
-	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
-	[BIND_JUMP]         = { CCPAD_1,     0 },
-	[BIND_SET_SPAWN]    = { CCPAD_START, 0 }, 
-	[BIND_CHAT]         = { CCPAD_4,     0 },
-	[BIND_INVENTORY]    = { CCPAD_3,     0 },
-	[BIND_SEND_CHAT]    = { CCPAD_START, 0 },
-	[BIND_DELETE_BLOCK] = { CCPAD_L,     0 },
-	[BIND_PLACE_BLOCK]  = { CCPAD_R,     0 },
+static const BindMapping defaults_gc[BIND_COUNT] = {
+	[BIND_FLY_UP]       = { CCPAD_UP    },  
+	[BIND_FLY_DOWN]     = { CCPAD_DOWN  },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_LEFT  },  
+	[BIND_HOTBAR_RIGHT] = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_DELETE_BLOCK] = { CCPAD_L     },
+	[BIND_PLACE_BLOCK]  = { CCPAD_R     },
 	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
 	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
 	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
-	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
-	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
-	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
-	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT }
 };
 
 #define PAD_AXIS_SCALE 8.0f
@@ -170,7 +166,7 @@ static void ProcessPADInput(PADStatus* pad, int i, float delta) {
 		return; // not connected, still busy, etc
 	}
 	
-	int port = Gamepad_Connect(0x5C + i, gcpad_defaults);
+	int port = Gamepad_Connect(0x5C + i, defaults_gc);
 	ProcessPAD_Buttons(port, gc_pads[i].button);
 	ProcessPAD_Joystick(port, PAD_AXIS_LEFT,  gc_pads[i].stickX,    gc_pads[i].stickY,    delta);
 	ProcessPAD_Joystick(port, PAD_AXIS_RIGHT, gc_pads[i].substickX, gc_pads[i].substickY, delta);

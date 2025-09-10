@@ -141,21 +141,21 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static const BindMapping vita_padbinds[BIND_COUNT] = {
-	[BIND_JUMP]      = { CCPAD_1 },     
-	[BIND_SET_SPAWN] = { CCPAD_START }, 
-	[BIND_CHAT]      = { CCPAD_4 },
-	[BIND_INVENTORY] = { CCPAD_3 },
-	[BIND_SEND_CHAT] = { CCPAD_START },
-	[BIND_SPEED]     = { CCPAD_2, CCPAD_L },
-	[BIND_NOCLIP]    = { CCPAD_2, CCPAD_3 },
-	[BIND_FLY]       = { CCPAD_2, CCPAD_R },
-	[BIND_PLACE_BLOCK]  = { CCPAD_L },
-	[BIND_DELETE_BLOCK] = { CCPAD_R },
-	[BIND_FLY_UP]       = { CCPAD_UP },  
-	[BIND_FLY_DOWN]     = { CCPAD_DOWN },
-	[BIND_HOTBAR_LEFT]  = { CCPAD_LEFT },  
+static const BindMapping defaults_vita[BIND_COUNT] = {
+	[BIND_JUMP]         = { CCPAD_1     },     
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
+	[BIND_DELETE_BLOCK] = { CCPAD_R     },
+	[BIND_FLY_UP]       = { CCPAD_UP    },  
+	[BIND_FLY_DOWN]     = { CCPAD_DOWN  },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_LEFT  },  
 	[BIND_HOTBAR_RIGHT] = { CCPAD_RIGHT },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
 	
 };
 static cc_bool circle_main;
@@ -207,7 +207,7 @@ static void ProcessCircleInput(int port, int axis, int x, int y, float delta) {
 }
 
 static void ProcessPadInput(float delta) {
-	int port = Gamepad_Connect(0x503, vita_padbinds);
+	int port = Gamepad_Connect(0x503, defaults_vita);
 	SceCtrlData pad;
 	
 	// sceCtrlReadBufferPositive is blocking (seems to block until vblank), and don't want that
