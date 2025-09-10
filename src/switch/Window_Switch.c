@@ -157,8 +157,8 @@ static const BindMapping defaults_switch[BIND_COUNT] = {
 	[BIND_CHAT]         = { CCPAD_4     },
 	[BIND_INVENTORY]    = { CCPAD_3     },
 	[BIND_SEND_CHAT]    = { CCPAD_START },
-	[BIND_DELETE_BLOCK] = { CCPAD_L     },
-	[BIND_PLACE_BLOCK]  = { CCPAD_R     },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
+	[BIND_DELETE_BLOCK] = { CCPAD_R     },
 	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
 	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
 	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
@@ -173,8 +173,10 @@ void Gamepads_Init(void) {
 }
 
 static void HandleButtons(int port, u64 mods) {
-	Gamepad_SetButton(port, CCPAD_L, mods & HidNpadButton_L);
-	Gamepad_SetButton(port, CCPAD_R, mods & HidNpadButton_R);
+	Gamepad_SetButton(port, CCPAD_L,  mods & HidNpadButton_L);
+	Gamepad_SetButton(port, CCPAD_R,  mods & HidNpadButton_R);
+	Gamepad_SetButton(port, CCPAD_ZL, mods & HidNpadButton_ZL);
+	Gamepad_SetButton(port, CCPAD_ZR, mods & HidNpadButton_ZR);
 	
 	Gamepad_SetButton(port, CCPAD_1, mods & HidNpadButton_A);
 	Gamepad_SetButton(port, CCPAD_2, mods & HidNpadButton_B);

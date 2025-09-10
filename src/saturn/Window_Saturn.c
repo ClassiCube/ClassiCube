@@ -109,8 +109,8 @@ static const BindMapping saturn_defaults[BIND_COUNT] = {
 	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
 	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
 	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
-	[BIND_DELETE_BLOCK] = { CCPAD_L, 0 }, 
-	[BIND_PLACE_BLOCK]  = { CCPAD_R, 0 }
+	[BIND_PLACE_BLOCK]  = { CCPAD_L },
+	[BIND_DELETE_BLOCK] = { CCPAD_R },
 };
 
 void Gamepads_Init(void) {
