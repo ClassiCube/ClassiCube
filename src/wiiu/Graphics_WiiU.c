@@ -372,7 +372,12 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	buf->elemSize  = strideSizes[fmt];
 	buf->elemCount = count;
 	
-	if (GX2RCreateBuffer(buf)) return buf;
+	// TODO calculate directly, avoid GX2R
+	uint32_t align = GX2RGetBufferAlignment(buf->flags);
+	uint32_t size  = GX2RGetBufferAllocationSize(buf);
+		
+	buf->buffer = MEMAllocFromDefaultHeapEx(size, align);
+	if (buf->buffer) return buf;
 	// Something went wrong ?? TODO
 	Mem_Free(buf);
 	return NULL;
@@ -382,25 +387,24 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	GX2RBuffer* buf = *vb;
 	if (!buf) return;
 	
-	GX2RDestroyBufferEx(buf, 0);
-	Mem_Free(buf);	
+	MEMFreeToDefaultHeap(buf->buffer);
+	Mem_Free(buf);
 	*vb = NULL;
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
 	GX2RBuffer* buf = (GX2RBuffer*)vb;
-	GX2RSetAttributeBuffer(buf, 0, buf->elemSize, 0);
-	//GX2SetAttribBuffer(0, 
+	GX2SetAttribBuffer(0, buf->elemSize * buf->elemCount, buf->elemSize, buf->buffer);
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	GX2RBuffer* buf = (GX2RBuffer*)vb;
-	return GX2RLockBufferEx(buf, 0);
+	return buf->buffer;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
 	GX2RBuffer* buf = (GX2RBuffer*)vb;
-	GX2RUnlockBufferEx(buf, 0);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER, buf->buffer, buf->elemSize * buf->elemCount);
 }
 
 

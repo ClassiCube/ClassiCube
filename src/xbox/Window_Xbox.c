@@ -192,7 +192,7 @@ static void HandleButtons(int port, xid_gamepad_in* gp) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
 }
 
-#define AXIS_SCALE 8192.0f
+#define AXIS_SCALE 4096.0f
 static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	if (Math_AbsI(x) <= 6144) x = 0;
 	if (Math_AbsI(y) <= 6144) y = 0;
