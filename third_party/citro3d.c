@@ -140,14 +140,6 @@ static void C3D_ImmDrawBegin(GPU_Primitive_t primitive);
 static void C3D_ImmSendAttrib(float x, float y, float z, float w);
 static void C3D_ImmDrawEnd(void);
 
-static inline void C3D_ImmDrawRestartPrim(void)
-{
-	GPUCMD_AddWrite(GPUREG_RESTART_PRIMITIVE, 1);
-}
-
-
-
-
 
 typedef struct
 {
@@ -484,8 +476,6 @@ static void C3D_DrawElements(GPU_Primitive_t primitive, int count)
 	GPUCMD_AddWrite(GPUREG_RESTART_PRIMITIVE, 1);
 	// Number of vertices
 	GPUCMD_AddWrite(GPUREG_NUMVERTICES, count);
-	// First vertex
-	GPUCMD_AddWrite(GPUREG_VERTEX_OFFSET, 0);
 	// Enable triangle element drawing mode if necessary
 	GPUCMD_AddMaskedWrite(GPUREG_GEOSTAGE_CONFIG, 2, 0x100);
 	GPUCMD_AddMaskedWrite(GPUREG_GEOSTAGE_CONFIG2, 2, 0x100);

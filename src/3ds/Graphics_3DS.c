@@ -558,6 +558,14 @@ void Gfx_BeginFrame(void) {
 
 	static C3D_FVec _1_div_255 = { .x = 1/255.0f, .y = 1/255.0f, .z = 1/255.0f, .w = 1/255.0f };
 	pica_upload_vec4_constant(CONST_255, &_1_div_255);
+
+	// NOTE: GPUREG_VERTEX_OFFSET only works when drawing non-indexed arrays
+	GPUCMD_AddWrite(GPUREG_VERTEX_OFFSET, 0);
+
+	// https://github.com/devkitPro/citro3d/issues/47
+	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
+	// This just maps array attrib 0 = vertex attrib 0, array attrib 1 = vertex attrib 1, etc
+	pica_set_attrib_array0_mapping(0x210);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -901,14 +909,22 @@ void Gfx_DisableTextureOffset(void) {
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
-static void UpdateAttribFormat(VertexFormat fmt) {
+static void UpdateAttribFormat(void) {
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
 	AttrInfo_Init(attrInfo);
 	
 	AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3);         // in_pos
 	AttrInfo_AddLoader(attrInfo, 1, GPU_UNSIGNED_BYTE, 4); // in_col
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 2); // in_tex
+	}
+}
+
+static void UpdateAttribConfig(void) {
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		pica_set_attrib_array0_format(3, SIZEOF_VERTEX_TEXTURED);
+	} else {
+		pica_set_attrib_array0_format(2, SIZEOF_VERTEX_COLOURED);
 	}
 }
 
@@ -938,7 +954,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 	
 	SwitchProgram();
-	UpdateAttribFormat(fmt);
+	UpdateAttribFormat();
+	UpdateAttribConfig();
 	UpdateTexEnv(fmt);
 }
 
@@ -947,32 +964,10 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 static void SetVertexSource(int startVertex) {
-	// https://github.com/devkitPro/citro3d/issues/47
-	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
-	const void* data;
-	int stride, attribs, permutation;
-
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		data    = (struct VertexTextured*)gfx_vertices + startVertex;
-		stride  = SIZEOF_VERTEX_TEXTURED;
-		attribs = 3;
-		permutation = 0x210;
-	} else {
-		data    = (struct VertexColoured*)gfx_vertices + startVertex;
-		stride  = SIZEOF_VERTEX_COLOURED;
-		attribs = 2;
-		permutation = 0x10;
-	}
+	const void* data = (cc_uint8*)gfx_vertices + startVertex * gfx_stride;
 
 	u32 pa = osConvertVirtToPhys(data);
-	u32 args[3]; // GPUREG_ATTRIBBUFFER0_OFFSET, GPUREG_ATTRIBBUFFER0_CONFIG1, GPUREG_ATTRIBBUFFER0_CONFIG2
-
-	args[0] = pa - BUFFER_BASE_PADDR;
-	args[1] = permutation;
-	args[2] = (stride << 16) | (attribs << 28);
-
-	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, args, 3);
-	// NOTE: Can't use GPUREG_VERTEX_OFFSET, it only works when drawing non-indexed arrays
+	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFER0_OFFSET, pa - BUFFER_BASE_PADDR);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
