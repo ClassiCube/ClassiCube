@@ -80,6 +80,12 @@ static void ConvertRGBA(void* dst, const void* src, int numPixels) {
 		d[1] = s[2];
 		d[2] = s[3];
 		d[3] = s[0];
+#elif defined CC_BUILD_HPUX
+		/* HP-UX specific color channel mapping - try IRIX style G,B,A,R */
+		d[0] = s[1];  /* R = G */
+		d[1] = s[2];  /* G = B */
+		d[2] = s[3];  /* B = A */
+		d[3] = s[0];  /* A = R */
 #else
 		d[0] = s[2];
 		d[1] = s[1];
