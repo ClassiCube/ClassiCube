@@ -7,6 +7,7 @@
 #define BUFFER_BASE_PADDR OS_VRAM_PADDR // VRAM physical address
 #include "../../third_party/citro3d.c"
 
+#include "gsp_gpu.h"
 #include "pica_gpu.h"
 // See the .v.pica shader files in misc/3ds
 #define CONST_MVP 0 // c0-c3
@@ -121,9 +122,7 @@ static aptHookCookie hookCookie;
 static void AptEventHook(APT_HookType hookType, void* param) {
 	if (hookType == APTHOOK_ONSUSPEND) {
 		C3Di_RenderQueueWaitDone();
-		C3Di_RenderQueueDisableVBlank();
 	} else if (hookType == APTHOOK_ONRESTORE) {
-		C3Di_RenderQueueEnableVBlank();
 		C3Di_OnRestore();
 	}
 }
@@ -153,6 +152,8 @@ static void InitCitro3D(void) {
 	gfxSetDoubleBuffering(GFX_TOP, true);
 	SetDefaultState();
 	AllocShaders();
+
+	GSP_setup();
 }
 
 static GfxResourceID white_square;
@@ -547,7 +548,7 @@ void Gfx_SetVSync(cc_bool vsync) {
 void Gfx_BeginFrame(void) {
 	rendering3D = false;
 	// wait for vblank for both screens TODO move to end?
-	if (gfx_vsync) C3D_FrameSync();
+	if (gfx_vsync) GSP_wait_for_full_vblank();
 
 	C3D_FrameBegin(0);
 	topTarget = &topTargetLeft;

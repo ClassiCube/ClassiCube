@@ -245,11 +245,8 @@ struct C3D_RenderTarget_tag
 // Flags for C3D_FrameBegin
 enum
 {
-	C3D_FRAME_SYNCDRAW = BIT(0), // Perform C3D_FrameSync before checking the GPU status
 	C3D_FRAME_NONBLOCK = BIT(1), // Return false instead of waiting if the GPU is busy
 };
-
-static void C3D_FrameSync(void);
 
 static bool C3D_FrameBegin(u8 flags);
 static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
@@ -404,10 +401,6 @@ static bool C3Di_SplitFrame(u32** pBuf, u32* pSize);
 static void C3Di_RenderQueueInit(void);
 static void C3Di_RenderQueueExit(void);
 static void C3Di_RenderQueueWaitDone(void);
-static void C3Di_RenderQueueEnableVBlank(void);
-static void C3Di_RenderQueueDisableVBlank(void);
-
-
 
 
 
@@ -837,20 +830,9 @@ static void C3D_ImmDrawEnd(void)
 static C3D_RenderTarget *linkedTarget[3];
 
 static bool inFrame, inSafeTransfer;
-static bool needSwapTop, needSwapBot, isTopStereo;
-static u32 vblankCounter[2];
+static bool swapPending, isTopStereo;
 
 static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target);
-
-static void onVBlank0(void* unused)
-{
-	vblankCounter[0]++;
-}
-
-static void onVBlank1(void* unused)
-{
-	vblankCounter[1]++;
-}
 
 static void onQueueFinish(gxCmdQueue_s* queue)
 {
@@ -863,31 +845,11 @@ static void onQueueFinish(gxCmdQueue_s* queue)
 			gxCmdQueueClear(queue);
 		}
 	}
-	else
+	else if (swapPending)
 	{
-		if (needSwapTop)
-		{
-			gfxScreenSwapBuffers(GFX_TOP, isTopStereo);
-			needSwapTop = false;
-		}
-		if (needSwapBot)
-		{
-			gfxScreenSwapBuffers(GFX_BOTTOM, false);
-			needSwapBot = false;
-		}
+		gfxScreenSwapBuffers(GFX_TOP,    isTopStereo);
+		gfxScreenSwapBuffers(GFX_BOTTOM, false);
 	}
-}
-
-static void C3D_FrameSync(void)
-{
-	u32 cur[2];
-	u32 start[2] = { vblankCounter[0], vblankCounter[1] };
-	do
-	{
-		gspWaitForAnyEvent();
-		cur[0] = vblankCounter[0];
-		cur[1] = vblankCounter[1];
-	} while (cur[0]==start[0] || cur[1]==start[1]);
 }
 
 static bool C3Di_WaitAndClearQueue(s64 timeout)
@@ -895,28 +857,15 @@ static bool C3Di_WaitAndClearQueue(s64 timeout)
 	gxCmdQueue_s* queue = &C3Di_GetContext()->gxQueue;
 	if (!gxCmdQueueWait(queue, timeout))
 		return false;
+
 	gxCmdQueueStop(queue);
 	gxCmdQueueClear(queue);
 	return true;
 }
 
-static void C3Di_RenderQueueEnableVBlank(void)
-{
-	gspSetEventCallback(GSPGPU_EVENT_VBlank0, onVBlank0, NULL, false);
-	gspSetEventCallback(GSPGPU_EVENT_VBlank1, onVBlank1, NULL, false);
-}
-
-static void C3Di_RenderQueueDisableVBlank(void)
-{
-	gspSetEventCallback(GSPGPU_EVENT_VBlank0, NULL, NULL, false);
-	gspSetEventCallback(GSPGPU_EVENT_VBlank1, NULL, NULL, false);
-}
-
 static void C3Di_RenderQueueInit(void)
 {
 	C3D_Context* ctx = C3Di_GetContext();
-
-	C3Di_RenderQueueEnableVBlank();
 
 	GX_BindQueue(&ctx->gxQueue);
 	gxCmdQueueSetCallback(&ctx->gxQueue, onQueueFinish, NULL);
@@ -928,8 +877,6 @@ static void C3Di_RenderQueueExit(void)
 	C3Di_WaitAndClearQueue(-1);
 	gxCmdQueueSetCallback(&C3Di_GetContext()->gxQueue, NULL, NULL);
 	GX_BindQueue(NULL);
-
-	C3Di_RenderQueueDisableVBlank();
 }
 
 static void C3Di_RenderQueueWaitDone(void)
@@ -987,8 +934,7 @@ static void C3D_FrameEnd(u8 flags)
 
 	C3D_RenderTarget* target;
 	isTopStereo = false;
-	needSwapTop = true;
-	needSwapBot = true;
+	swapPending = true;
 
 	for (int i = 2; i >= 0; i --)
 	{
