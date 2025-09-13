@@ -147,6 +147,7 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_VULKAN    6
 #define CC_GFX_BACKEND_GL11      7
 #define CC_GFX_BACKEND_SOFTMIN   8
+#define CC_GFX_BACKEND_SOFTFP   9
 
 #define CC_SSL_BACKEND_NONE      1
 #define CC_SSL_BACKEND_BEARSSL   2
