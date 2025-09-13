@@ -147,5 +147,8 @@ BlockID AutoRotate_RotateBlock(BlockID block);
 /* Returns non 0 if both blocks belong to the same autorotate group */
 cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID blockOther);
 
+/* Updates the names for the default blocks dependant on language. */
+void Language_UpdateBlockNames();
+
 CC_END_HEADER
 #endif
