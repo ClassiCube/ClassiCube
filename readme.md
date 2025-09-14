@@ -419,7 +419,7 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 #### Tips
 * Press escape (after joining a world) or pause to switch to the pause menu.
 * Pause menu -> Options -> Controls lists all of the key combinations used by the client. 
-* Note that toggling 'vsync' to on will minimise CPU usage, while off will maximimise chunk loading speed.
+* Note that toggling 'vsync' to on will minimise CPU usage, while off will maximise chunk loading speed.
 * Press F to cycle view distance. Lower view distances can improve performance.
 
 * If the server has disabled hacks, key combinations such as fly and speed will not do anything.
@@ -476,3 +476,4 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>
 Full credits are listed in [doc/sound-credits.md](doc/sound-credits.md)
+
