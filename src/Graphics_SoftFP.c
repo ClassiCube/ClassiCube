@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <stdint.h>
 
+
 // 16.16 fixed point
 #define FP_SHIFT 16
 #define FP_ONE (1 << FP_SHIFT)
@@ -179,8 +180,7 @@ static void ClearColorBuffer(void) {
     int i, x, y, size = fb_width * fb_height;
 
     if (cb_stride == fb_width) {
-        //for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
-        Mem_Set(colorBuffer, clearColor, sizeof(colorBuffer) * size);
+        Mem_Set(colorBuffer, clearColor, sizeof(BitmapCol) * size);
     } else {
         for (y = 0; y < fb_height; y++) {
             i = y * cb_stride;
@@ -989,28 +989,37 @@ static void ProcessClippedTriangleAndDraw(const VertexFixed* inVerts, int polyCo
     }
 }
 
+static cc_bool TriangleFullyInsideFrustum(const VertexFixed tri[3]) {
+    const int planes[6] = { PLANE_LEFT, PLANE_RIGHT, PLANE_BOTTOM, PLANE_TOP, PLANE_NEAR, PLANE_FAR };
+    for (int p = 0; p < 6; p++) {
+        for (int i = 0; i < 3; i++) {
+            if (PlaneDistFixed(&tri[i], planes[p]) < 0) return false;
+        }
+    }
+    return true;
+}
+
 static void DrawClippedFixed(int mask, VertexFixed* v0, VertexFixed* v1, VertexFixed* v2, VertexFixed* v3) {
     VertexFixed inTri[3], outPoly[16];
     int polyCount;
     
     // Triangle 1: v0, v1, v2
-    inTri[0] = *v0;
-    inTri[1] = *v1;
-    inTri[2] = *v2;
-    
-    polyCount = ClipTriangleToFrustumFixed(inTri, outPoly);
-    if (polyCount > 0) {
-        ProcessClippedTriangleAndDraw(outPoly, polyCount);
+    inTri[0] = *v0; inTri[1] = *v1; inTri[2] = *v2;
+    if (TriangleFullyInsideFrustum(inTri)) {
+        // fully inside
+        ProcessClippedTriangleAndDraw(inTri, 3);
+    } else {
+        polyCount = ClipTriangleToFrustumFixed(inTri, outPoly);
+        if (polyCount > 0) ProcessClippedTriangleAndDraw(outPoly, polyCount);
     }
     
-    // triangle 2: v2, v3, v0
-    inTri[0] = *v2;
-    inTri[1] = *v3;
-    inTri[2] = *v0;
-    
-    polyCount = ClipTriangleToFrustumFixed(inTri, outPoly);
-    if (polyCount > 0) {
-        ProcessClippedTriangleAndDraw(outPoly, polyCount);
+    // Triangle 2: v2, v3, v0
+    inTri[0] = *v2; inTri[1] = *v3; inTri[2] = *v0;
+    if (TriangleFullyInsideFrustum(inTri)) {
+        ProcessClippedTriangleAndDraw(inTri, 3);
+    } else {
+        polyCount = ClipTriangleToFrustumFixed(inTri, outPoly);
+        if (polyCount > 0) ProcessClippedTriangleAndDraw(outPoly, polyCount);
     }
 }
 
