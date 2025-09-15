@@ -250,10 +250,8 @@ enum
 
 static bool C3D_FrameBegin(u8 flags);
 static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
-static void C3D_FrameSplit(u8 flags);
 static void C3D_FrameEnd(u8 flags);
 
-static void C3D_RenderTargetDelete(C3D_RenderTarget* target);
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
 static inline void C3D_RenderTargetDetachOutput(C3D_RenderTarget* target)
@@ -832,8 +830,6 @@ static C3D_RenderTarget *linkedTarget[3];
 static bool inFrame, inSafeTransfer;
 static bool swapPending, isTopStereo;
 
-static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target);
-
 static void onQueueFinish(gxCmdQueue_s* queue)
 {
 	if (inSafeTransfer)
@@ -907,20 +903,15 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target)
 	return true;
 }
 
-static void C3D_FrameSplit(u8 flags)
-{
-	u32 *cmdBuf, cmdBufSize;
-	if (!inFrame) return;
-	if (C3Di_SplitFrame(&cmdBuf, &cmdBufSize))
-		GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
-}
-
 static void C3D_FrameEnd(u8 flags)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 	if (!inFrame) return;
 
-	C3D_FrameSplit(flags);
+	u32 *cmdBuf, cmdBufSize;
+	if (C3Di_SplitFrame(&cmdBuf, &cmdBufSize))
+		GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
+
 	GPUCMD_SetBuffer(NULL, 0, 0);
 	inFrame = false;
 
@@ -982,23 +973,6 @@ static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFm
 	if (!depthBuf) return;
 
 	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
-}
-
-static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target)
-{
-	vramFree(target->frameBuf.colorBuf);
-	vramFree(target->frameBuf.depthBuf);
-}
-
-static void C3D_RenderTargetDelete(C3D_RenderTarget* target)
-{
-	if (inFrame)
-		svcBreak(USERBREAK_PANIC); // Shouldn't happen.
-	if (target->linked)
-		C3D_RenderTargetDetachOutput(target);
-	else
-		C3Di_WaitAndClearQueue(-1);
-	C3Di_RenderTargetDestroy(target);
 }
 
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags)
@@ -1079,6 +1053,9 @@ static void C3Di_OnRestore(void)
 		ctx->flags |= C3DiF_FogLut;
 }
 
+#define GXQUEUE_MAX_ENTRIES 32
+static gxCmdEntry_s queue_entries[GXQUEUE_MAX_ENTRIES];
+
 static bool C3D_Init(size_t cmdBufSize)
 {
 	int i;
@@ -1093,13 +1070,8 @@ static bool C3D_Init(size_t cmdBufSize)
 	if (!ctx->cmdBuf)
 		return false;
 
-	ctx->gxQueue.maxEntries = 32;
-	ctx->gxQueue.entries = (gxCmdEntry_s*)malloc(ctx->gxQueue.maxEntries*sizeof(gxCmdEntry_s));
-	if (!ctx->gxQueue.entries)
-	{
-		linearFree(ctx->cmdBuf);
-		return false;
-	}
+	ctx->gxQueue.maxEntries = GXQUEUE_MAX_ENTRIES;
+	ctx->gxQueue.entries = queue_entries;
 
 	ctx->flags = C3DiF_Active | C3DiF_TexEnvBuf | C3DiF_Effect | C3DiF_TexStatus | C3DiF_TexAll | C3DiF_Reset;
 
@@ -1308,7 +1280,6 @@ static void C3D_Fini(void)
 		return;
 
 	C3Di_RenderQueueExit();
-	free(ctx->gxQueue.entries);
 	linearFree(ctx->cmdBuf);
 	ctx->flags = 0;
 }

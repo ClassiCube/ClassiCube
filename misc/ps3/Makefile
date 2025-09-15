@@ -139,6 +139,10 @@ $(BUILD_DIR)/%.o: src/ps3/%.S
 $(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
+
+# prevent the .asm files from being deleted
+.PRECIOUS: $(BUILD_DIR)/%.vpo $(BUILD_DIR)/%.fpo
+
 $(BUILD_DIR)/%.vpo: $(SHADERS)/%.vcg
 	$(CGCOMP) -v $(CGCFLAGS) $^ $@
 $(BUILD_DIR)/%.fpo: $(SHADERS)/%.fcg

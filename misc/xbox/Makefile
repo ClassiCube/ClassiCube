@@ -82,7 +82,7 @@ $(BUILD_DIR):
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(OBJS) : $(SHADER_OBJS)
+$(BUILD_DIR)/Graphics_Xbox.o : $(SHADER_OBJS)
 
 $(TARGET).iso: $(TARGET).xbe
 	mkdir -p $(BUILD_DIR)/cd
@@ -111,15 +111,21 @@ $(BUILD_DIR)/%.o: src/xbox/%.S
 $(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) -c $< -o $@
 
-%.inl: %.vs.cg
-	$(CGC) -profile vp20 -o $@.$$$$ $< && \
-	$(VP20COMPILER) $@.$$$$ > $@ && \
-	rm -rf $@.$$$$
 
-%.inl: %.ps.cg
-	$(CGC) -profile fp20 -o $@.$$$$ $< && \
-	$(FP20COMPILER) $@.$$$$ > $@ && \
-	rm -rf $@.$$$$
+# prevent the .asm files from being deleted
+.PRECIOUS: vs_%.asm ps_%.asm
+
+vs_%.inl: vs_%.asm
+	$(VP20COMPILER) $< > $@
+
+vs_%.asm: vs_%.cg
+	$(CGC) -profile vp20 $< -o $@
+
+ps_%.inl: ps_%.asm
+	$(FP20COMPILER) $< > $@
+
+ps_%.asm: ps_%.cg
+	$(CGC) -profile fp20 $< -o $@
 
 
 #---------------------------------------------------------------------------------

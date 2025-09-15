@@ -5,3 +5,7 @@ To see debug log messages in Xemu:
 ----
 
 To launch directly, `-dvd_path cc-xbox.iso`
+
+####
+
+The .asm files are auto generated from the .cg files, and shouldn't be manually edited.
