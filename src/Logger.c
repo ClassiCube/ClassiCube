@@ -280,6 +280,12 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	cc_uintptr addr_ = (cc_uintptr)addr;
 	String_Format1(trace, "%x", &addr_);
 }
+#elif defined CC_BUILD_HPUX
+/* HP-UX doesn't expose a nice interface for dladdr */
+static void DumpFrame(cc_string* trace, void* addr) {
+	cc_uintptr addr_ = (cc_uintptr)addr;
+	String_Format1(trace, "%x", &addr_);
+}
 #elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
@@ -454,6 +460,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, "-- backtrace unimplemented --");
 	/* There is no dladdr on Symbian */
+}
+#elif defined CC_BUILD_HPUX
+/* HP-UX doesn't have unwind support */
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
 }
 #elif defined CC_BUILD_POSIX
 /* musl etc - rely on unwind from GCC instead */
