@@ -1,9 +1,9 @@
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
 #include <nds.h>
-#include "_BlockAlloc.h"
+#include "../_BlockAlloc.h"
 
 #define DS_MAT_PROJECTION 0
 #define DS_MAT_POSITION   1
