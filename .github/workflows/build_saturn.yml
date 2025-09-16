@@ -19,11 +19,6 @@ jobs:
       image: ijacquez/yaul:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install prerequisites
-        run: |
-          apt-get update
-          apt-get -y install curl
-
       - name: Compile Saturn build
         id: compile
         run: |
