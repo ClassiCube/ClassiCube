@@ -90,10 +90,7 @@ clean:
 $(BUILD_DIR)/$(TARGET).elf: $(SH_OBJS)
 	$(SH_LD) $(foreach specs,$(SH_SPECS),-specs=$(specs)) $(SH_OBJS) $(SH_LDFLAGS) -o $@
 
-$(TARGET).elf: $(BUILD_DIR)/$(TARGET).elf
-	cp $< $@
-
-$(BUILD_DIR)/$(TARGET).bin: $(TARGET).elf
+$(BUILD_DIR)/$(TARGET).bin: $(BUILD_DIR)/$(TARGET).elf
 	$(SH_OBJCOPY) -O binary $< $@
 	@[ -z "${SILENT}" ] && du -hs $@ | awk '{ print $$1; }' || true
 

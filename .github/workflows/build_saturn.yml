@@ -19,6 +19,11 @@ jobs:
       image: ijacquez/yaul:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: |
+          apt-get update
+          apt-get install -y curl
+
       - name: Compile Saturn build
         id: compile
         run: |
@@ -34,7 +39,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-saturn/ClassiCube-saturn.elf'
+          SOURCE_FILE: 'build/saturn/ClassiCube-saturn.elf'
           DEST_NAME: 'ClassiCube-saturn.elf'
           
       - uses: ./.github/actions/upload_build
