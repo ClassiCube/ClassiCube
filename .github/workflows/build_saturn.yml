@@ -16,14 +16,9 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: ijacquez/yaul:1.0.10
+      image: ijacquez/yaul:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install prerequisites
-        run: |
-          apt-get --allow-unauthenticated update
-          apt-get --allow-unauthenticated -y install curl
-
       - name: Compile Saturn build
         id: compile
         run: |

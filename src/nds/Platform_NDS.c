@@ -2,15 +2,15 @@
 #define CC_NO_DYNLIB
 
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
-#include "Stream.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "Options.h"
-#include "Animations.h"
+#include "../_PlatformBase.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../Options.h"
+#include "../Animations.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -31,7 +31,7 @@
 #include <nds/arm9/exceptions.h>
 #include <fat.h>
 #ifdef BUILD_DSI
-#include "../third_party/dsiwifi/include/dsiwifi9.h"
+#include <dsiwifi9.h>
 #else
 #include <dswifi9.h>
 #endif
@@ -40,7 +40,7 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <dirent.h>
-#include "_PlatformConsole.h"
+#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
