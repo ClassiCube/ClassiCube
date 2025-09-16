@@ -36,12 +36,6 @@ jobs:
           
           clang ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.ARM64_FLAGS }} $LATEST_FLAG -o cc-mac-arm64 ${{ env.LIBS }}
           # https://wiki.freepascal.org/Code_Signing_for_macOS#Ad_hoc_signing
-
-      - uses: ./.github/actions/notify_failure
-        if: failure()
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce 64 bit macOS builds'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
    
       - uses: ./.github/actions/upload_build
@@ -68,3 +62,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'mac64'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce 64 bit macOS builds'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

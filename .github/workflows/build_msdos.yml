@@ -30,13 +30,6 @@ jobs:
           make CC=gcc dos
 
 
-      - uses: ./.github/actions/notify_failure
-        if: failure()
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce MS DOS build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-
-
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
@@ -49,3 +42,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'msdos'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce MS DOS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

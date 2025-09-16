@@ -27,12 +27,6 @@ jobs:
           mkdir Payload
           mv ClassiCube.app Payload/ClassiCube.app
           zip -r cc.ipa Payload
-
-      - uses: ./.github/actions/notify_failure
-        if: failure()
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce iOS build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
@@ -46,3 +40,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'ios'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce iOS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

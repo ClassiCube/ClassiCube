@@ -52,13 +52,6 @@ jobs:
           
           i386-freebsd11-clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.PLAT32_FLAGS }} $LATEST_FLAG -o cc-fbsd32-gl1 ${{ env.LIBS }}
           x86_64-freebsd11-clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-fbsd64-gl1 ${{ env.LIBS }}
-
-
-      - uses: ./.github/actions/notify_failure
-        if: failure()
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce FreeBSD build(s)'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -79,3 +72,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'freebsd'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce FreeBSD build(s)'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

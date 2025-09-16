@@ -58,12 +58,6 @@ jobs:
         run: |
           PATH=$PATH:/usr/local/compiler/target/bin
           i386-apple-darwin8-lipo -create -output cc-mac32-universal cc-mac32-gl1 cc-mac32-ppc
-
-      - uses: ./.github/actions/notify_failure
-        if: failure()
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce 32 bit macOS build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -96,3 +90,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'mac32'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce 32 bit macOS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

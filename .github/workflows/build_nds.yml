@@ -30,13 +30,6 @@ jobs:
           make ds
           export BUILD_DSI=1
           make ds
-
-
-      - uses: ./.github/actions/notify_failure
-        if: failure()
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce NDS build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
  
          
       - uses: ./.github/actions/upload_build
@@ -69,3 +62,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'nds'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce NDS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
