@@ -70,28 +70,18 @@ static void* FastAllocTempMem(int size) {
 static cc_bool convert_rgba;
 
 static void ConvertRGBA(void* dst, const void* src, int numPixels) {
-	cc_uint8* d = (cc_uint8*)dst;
-	cc_uint8* s = (cc_uint8*)src;
+	cc_uint8* d  = (cc_uint8*)dst;
+	BitmapCol* s = (BitmapCol*)src;
 	int i;
 
-	for (i = 0; i < numPixels; i++, d += 4, s += 4) {
-#ifdef CC_BUILD_IRIX
-		d[0] = s[1];
-		d[1] = s[2];
-		d[2] = s[3];
-		d[3] = s[0];
-#elif defined CC_BUILD_HPUX
-		/* HP-UX specific color channel mapping - try IRIX style G,B,A,R */
-		d[0] = s[1];  /* R = G */
-		d[1] = s[2];  /* G = B */
-		d[2] = s[3];  /* B = A */
-		d[3] = s[0];  /* A = R */
-#else
-		d[0] = s[2];
-		d[1] = s[1];
-		d[2] = s[0];
-		d[3] = s[3];
-#endif
+	/* R,G,B,A byte order regardless of system endian */
+	for (i = 0; i < numPixels; i++, d += 4, s++) 
+    {
+        BitmapCol col = *s;
+		d[0] = BitmapCol_R(col);
+		d[1] = BitmapCol_G(col);
+		d[2] = BitmapCol_B(col);
+		d[3] = BitmapCol_A(col);
 	}
 }
 

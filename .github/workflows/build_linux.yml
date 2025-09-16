@@ -129,11 +129,11 @@ jobs:
           SOURCE_FILE: 'cc-nix64-gl2'
           DEST_NAME: 'ClassiCube-Linux64-ModernGL'
           
-      - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
-        with:
-          SOURCE_FILE: 'cc-sdl64-gl2'
-          DEST_NAME: 'ClassiCube-Linux64-SDL2'
+#      - uses: ./.github/actions/upload_build
+#        if: ${{ always() && steps.compile.outcome == 'success' }}
+#        with:
+#          SOURCE_FILE: 'cc-sdl64-gl2'
+#          DEST_NAME: 'ClassiCube-Linux64-SDL2'
           
           
       - uses: ./.github/actions/notify_success
