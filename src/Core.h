@@ -213,7 +213,7 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_D3D11
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-#elif defined _WIN32 && !defined __WINSCW__
+#elif defined _WIN32 && !defined __WINSCW__ && !defined _WIN32_WCE
 	#define CC_BUILD_WIN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
@@ -652,6 +652,21 @@ typedef cc_uint8  cc_bool;
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 		#define CC_DISABLE_ANIMATIONS
 	#endif
+#elif defined _WIN32_WCE
+	#define CC_BUILD_WINCE
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_NOFPU
+	#undef  CC_BUILD_ADVLIGHTING
+    #undef  CC_BUILD_FREETYPE
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+    #define CC_BUILD_TOUCH
+    #define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32CE
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTFP
+    #define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSS
 #endif
 #endif
 

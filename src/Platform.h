@@ -8,7 +8,7 @@ Abstracts platform specific memory management, I/O, etc
 Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
-#if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX
 #define _NL "\r\n"
 #define NATIVE_STR_LEN 300
 #else
@@ -20,7 +20,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 extern const char* Platform_AppNameSuffix;
 void* TempMem_Alloc(int size);
 
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE
 typedef struct cc_winstring_ {
 	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */
 	char ansi[NATIVE_STR_LEN]; /* String lossily represented using ANSI format */
@@ -30,7 +30,7 @@ typedef struct cc_winstring_ {
 void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
 #endif
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE
 typedef cc_winstring cc_filepath;
 #else
 typedef struct cc_filepath_ { char buffer[NATIVE_STR_LEN]; } cc_filepath;
@@ -245,7 +245,7 @@ int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
 /*########################################################################################################################*
 *---------------------------------------------------------File I/O--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX
 typedef void* cc_file;
 #else
 typedef int cc_file;
@@ -346,7 +346,7 @@ void Platform_LoadSysFonts(void);
 /*########################################################################################################################*
 *----------------------------------------------------------Sockets--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX
 typedef cc_uintptr cc_socket;
 #else
 typedef int cc_socket;
