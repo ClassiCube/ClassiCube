@@ -652,10 +652,12 @@ CCoeControl* CCContainer::ComponentControl(TInt) const {
 }
 
 void CCContainer::Draw(const TRect& aRect) const {
-	if (iBitmap && launcherMode) {
+#if CC_GFX_BACKEND_IS_GL()
+	if (!launcherMode) return;
+#endif
+	if (iBitmap) {
 		SystemGc().BitBlt(TPoint(0, 0), iBitmap);
 	}
-	// do nothing in 3d mode
 }
 
 void CCContainer::DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
