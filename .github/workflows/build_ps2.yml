@@ -30,9 +30,9 @@ jobs:
           
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile PS2 build'
+          NOTIFY_MESSAGE: 'Failed to produce PS2 build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           

@@ -44,9 +44,9 @@ jobs:
 
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile RPI 32 bit build'
+          NOTIFY_MESSAGE: 'Failed to produce RPI 32 bit build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
@@ -96,9 +96,9 @@ jobs:
 
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile RPI 64 bit build'
+          NOTIFY_MESSAGE: 'Failed to produce RPI 64 bit build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           

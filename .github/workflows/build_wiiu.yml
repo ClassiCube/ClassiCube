@@ -26,9 +26,9 @@ jobs:
 
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile WiiU build'
+          NOTIFY_MESSAGE: 'Failed to produce WiiU build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           

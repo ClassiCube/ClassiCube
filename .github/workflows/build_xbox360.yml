@@ -33,9 +33,9 @@ jobs:
           make xbox360
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile Xbox 360 build'
+          NOTIFY_MESSAGE: 'Failed to produce Xbox 360 build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           

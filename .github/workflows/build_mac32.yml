@@ -60,9 +60,9 @@ jobs:
           i386-apple-darwin8-lipo -create -output cc-mac32-universal cc-mac32-gl1 cc-mac32-ppc
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile 32 bit macOS build'
+          NOTIFY_MESSAGE: 'Failed to produce 32 bit macOS build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           

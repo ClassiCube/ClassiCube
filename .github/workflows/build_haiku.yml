@@ -30,9 +30,9 @@ jobs:
           x86_64-unknown-haiku-gcc ${{ env.SRCS }} -o ClassiCube-haiku ${{ env.COMMON_FLAGS }} ${{ env.LIBS }}
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile Haiku build'
+          NOTIFY_MESSAGE: 'Failed to produce Haiku build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           

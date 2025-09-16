@@ -46,9 +46,9 @@ jobs:
 
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile NetBSD build(s)'
+          NOTIFY_MESSAGE: 'Failed to produce NetBSD build(s)'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           

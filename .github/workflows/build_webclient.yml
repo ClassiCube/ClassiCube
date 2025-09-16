@@ -28,9 +28,9 @@ jobs:
           sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' ClassiCube.js
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile Webclient'
+          NOTIFY_MESSAGE: 'Failed to produce Webclient'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
       - uses: ./.github/actions/upload_build

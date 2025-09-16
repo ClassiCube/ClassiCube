@@ -53,9 +53,9 @@ jobs:
 
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile 32 bit Linux build'
+          NOTIFY_MESSAGE: 'Failed to produce 32 bit Linux build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
       
       
@@ -118,9 +118,9 @@ jobs:
 
 
       - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to compile 64 bit Linux build'
+          NOTIFY_MESSAGE: 'Failed to produce 64 bit Linux build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
