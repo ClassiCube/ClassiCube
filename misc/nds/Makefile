@@ -7,7 +7,7 @@ export BLOCKSDSEXT		?= /opt/wonderful/thirdparty/blocksds/external
 GAME_TITLE	:= ClassiCube
 GAME_SUBTITLE	:= Built with BlocksDS
 GAME_AUTHOR	:= ClassiCube team
-GAME_ICON	:= misc/ds/icon.bmp
+GAME_ICON	:= misc/nds/icon.bmp
 GAME_FULL_TITLE := $(GAME_TITLE);$(GAME_SUBTITLE);$(GAME_AUTHOR)
 
 
@@ -36,15 +36,15 @@ endif
 all: $(ROM)
 
 clean:
-	$(MAKE) -f Makefile.arm9 clean --no-print-directory
-	$(MAKE) -f Makefile.arm7 clean --no-print-directory
+	$(MAKE) -f misc/nds/Makefile.arm9 clean --no-print-directory
+	$(MAKE) -f misc/nds/Makefile.arm7 clean --no-print-directory
 	$(RM) $(ROM) $(BUILDDIR) $(SDIMAGE)
 
 arm9:
-	$(MAKE) -f misc/ds/Makefile.arm9 --no-print-directory
+	$(MAKE) -f misc/nds/Makefile.arm9 --no-print-directory
 
 arm7:
-	$(MAKE) -f misc/ds/Makefile.arm7 --no-print-directory
+	$(MAKE) -f misc/nds/Makefile.arm7 --no-print-directory
 
 
 $(ROM): arm9 arm7
