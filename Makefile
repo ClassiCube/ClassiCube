@@ -173,6 +173,15 @@ ifeq ($(PLAT),riscos)
 	BUILD_DIR = build/riscos
 endif
 
+ifeq ($(PLAT),wince)
+	CC      =  arm-mingw32ce-gcc
+	OEXT    =  .exe
+	CFLAGS  += -march=armv5tej -mcpu=arm926ej-s -DUNICODE -D_WIN32_WCE
+	LDFLAGS =  -g
+	LIBS    =  -lcoredll -lws2
+	BUILD_DIR = build/wince
+endif
+
 ifdef BUILD_SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
 	LIBS += -lSDL2
@@ -229,7 +238,9 @@ serenityos:
 irix:
 	$(MAKE) $(TARGET) PLAT=irix
 riscos:
-	$(MAKE) $(TARGET) PLAT=riscos
+	$(MAKE) $(TARGET) PLAT=riscos    
+wince:
+	$(MAKE) $(TARGET) PLAT=wince
 # Default overrides
 sdl2:
 	$(MAKE) $(TARGET) BUILD_SDL2=1
