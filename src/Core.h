@@ -138,6 +138,7 @@ typedef cc_uint8  cc_bool;
 #define CC_WIN_BACKEND_COCOA    6
 #define CC_WIN_BACKEND_BEOS     7
 #define CC_WIN_BACKEND_ANDROID  8
+#define CC_WIN_BACKEND_WIN32CE  9
 
 #define CC_GFX_BACKEND_SOFTGPU   1
 #define CC_GFX_BACKEND_GL1       2
@@ -147,7 +148,7 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_VULKAN    6
 #define CC_GFX_BACKEND_GL11      7
 #define CC_GFX_BACKEND_SOFTMIN   8
-#define CC_GFX_BACKEND_SOFTFP   9
+#define CC_GFX_BACKEND_SOFTFP    9
 
 #define CC_SSL_BACKEND_NONE      1
 #define CC_SSL_BACKEND_BEARSSL   2
