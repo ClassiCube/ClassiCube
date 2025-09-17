@@ -355,6 +355,9 @@ static void DoCreateWindow(int width, int height) {
 	ATOM atom;
 	HWND hwnd;
 
+	width  = min(width,  240); 
+	height = min(height, 160);
+
 	win_instance = GetModuleHandle(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 	width  = Display_ScaleX(width);

@@ -886,12 +886,8 @@ void Game_Setup(void) {
 
 	/* No custom resolution has been set */
 	if (width == 0 || height == 0) {
-#ifndef CC_BUILD_WINCE
 		width = 854; height = 480;
 		if (DisplayInfo.Width < 854) width = 640;
-#else
-        width = 240; height = 160;
-#endif
 	}
 	
 	String_InitArray(title, titleBuffer);

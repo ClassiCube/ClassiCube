@@ -61,28 +61,9 @@ typedef struct VertexFixed {
     PackedCol c;
 } VertexFixed;
 
+static int tex_offseting;
 static int texOffsetX_fp, texOffsetY_fp; // Fixed point texture offsets
 static FixedMatrix _view_fp, _proj_fp, _mvp_fp;
-
-#define MAX_PRECONV_VBS 64
-
-typedef struct {
-    void* vb;
-    VertexFixed* verts;
-    int count;
-    int stride;
-    VertexFormat fmt;
-} PreconvEntry;
-
-static PreconvEntry preconvEntries[MAX_PRECONV_VBS];
-static int preconvEntryCount = 0;
-
-
-static void* last_locked_vb = NULL;
-static int   last_locked_count = 0;
-static VertexFormat last_locked_fmt = 0;
-static int last_locked_stride = 0;
-
 
 static void Gfx_RestoreState(void) {
     InitDefaultResources();
@@ -260,128 +241,76 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
+// Preprocess vertex buffers into fixed point values
+struct FPVertexColoured { 
+	int x, y, z;
+	BitmapCol c;
+};
+
+struct FPVertexTextured { 
+	int x, y, z;
+	BitmapCol c;
+	int u, v;
+};
+
+static VertexFormat buf_fmt;
+static int buf_count;
+
+static void PreprocessTexturedVertices(void) {
+	struct FPVertexTextured* dst = gfx_vertices;
+	struct VertexTextured* src   = gfx_vertices;
+
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->x = FloatToFixed(src->x);
+		dst->y = FloatToFixed(src->y);
+		dst->z = FloatToFixed(src->z);
+		dst->u = FloatToFixed(src->U);
+		dst->v = FloatToFixed(src->V);
+		dst->c = src->Col;
+	}
+}
+
+static void PreprocessColouredVertices(void) {
+	struct FPVertexColoured* dst = gfx_vertices;
+	struct VertexColoured* src   = gfx_vertices;
+
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->x = FloatToFixed(src->x);
+		dst->y = FloatToFixed(src->y);
+		dst->z = FloatToFixed(src->z);
+		dst->c = src->Col;
+	}
+}
+
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
     return Mem_TryAlloc(count, strideSizes[fmt]);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
 
-
-
-static PreconvEntry* FindPreconvEntry(void* vb) {
-    for (int i = 0; i < preconvEntryCount; i++) {
-        if (preconvEntries[i].vb == vb) return &preconvEntries[i];
-    }
-    return NULL;
-}
-
-static void FreePreconvEntryAt(int idx) {
-    if (preconvEntries[idx].verts) Mem_Free(preconvEntries[idx].verts);
-    if (idx != preconvEntryCount - 1) {
-        preconvEntries[idx] = preconvEntries[preconvEntryCount - 1];
-    }
-    preconvEntryCount--;
-}
-
-static void FreePreconvForVB(void* vb) {
-    PreconvEntry* e = FindPreconvEntry(vb);
-    if (!e) return;
-    int idx = (int)(e - preconvEntries);
-    FreePreconvEntryAt(idx);
-}
-
-static int Preconv_Set(void* vb, int count, int stride, VertexFormat fmt) {
-    FreePreconvForVB(vb);
-
-    if (count <= 0) return 0;
-    if (preconvEntryCount >= MAX_PRECONV_VBS) {
-        return 0;
-    }
-
-    VertexFixed* arr = (VertexFixed*)Mem_Alloc(count, sizeof(VertexFixed), "vb-preconv");
-    if (!arr) return 0;
-
-    char* base = (char*)vb;
-    for (int i = 0; i < count; i++) {
-        char* ptr = base + i * stride;
-        if (fmt != VERTEX_FORMAT_TEXTURED) {
-            struct VertexColoured* v = (struct VertexColoured*)ptr;
-            arr[i].x = FloatToFixed(v->x);
-            arr[i].y = FloatToFixed(v->y);
-            arr[i].z = 0;
-            arr[i].w = IntToFixed(1);
-            arr[i].u = 0;
-            arr[i].v = 0;
-            arr[i].c = v->Col;
-        } else {
-            struct VertexTextured* v = (struct VertexTextured*)ptr;
-            arr[i].x = FloatToFixed(v->x);
-            arr[i].y = FloatToFixed(v->y);
-            arr[i].z = FloatToFixed(v->z);
-            arr[i].w = IntToFixed(1);
-            arr[i].u = FloatToFixed(v->U) + texOffsetX_fp;
-            arr[i].v = FloatToFixed(v->V) + texOffsetY_fp;
-            arr[i].c = v->Col;
-        }
-    }
-
-    preconvEntries[preconvEntryCount].vb = vb;
-    preconvEntries[preconvEntryCount].verts = arr;
-    preconvEntries[preconvEntryCount].count = count;
-    preconvEntries[preconvEntryCount].stride = stride;
-    preconvEntries[preconvEntryCount].fmt = fmt;
-    preconvEntryCount++;
-    return 1;
-}
-
-static cc_bool Preconv_GetVertex(void* vb, int index, VertexFixed* out) {
-    PreconvEntry* e = FindPreconvEntry(vb);
-    if (!e) return false;
-    if (index < 0 || index >= e->count) return false;
-    *out = e->verts[index];
-    return true;
-}
 void Gfx_DeleteVb(GfxResourceID* vb) {
     GfxResourceID data = *vb;
-    if (data) {
-        FreePreconvForVB(data);
-        Mem_Free(data);
-    }
+    if (data) Mem_Free(data);
+
     *vb = 0;
 }
+
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-    last_locked_vb     = vb;
-    last_locked_count  = count;
-    last_locked_fmt    = fmt;
-    last_locked_stride = strideSizes[fmt];
-    return vb;
+    buf_fmt   = fmt;
+    buf_count = count;
+	return vb;
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-    last_locked_vb     = vb;
-    last_locked_count  = count;
-    last_locked_fmt    = fmt;
-    last_locked_stride = strideSizes[fmt];
-    return vb;
-}
-
-
-void Gfx_UnlockVb(GfxResourceID vb) {
+void Gfx_UnlockVb(GfxResourceID vb) { 
     gfx_vertices = vb;
-    if (last_locked_vb == vb && last_locked_count > 0) {
-        Preconv_Set(vb, last_locked_count, last_locked_stride, last_locked_fmt);
+
+    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+        PreprocessTexturedVertices();
     } else {
-        // count is unknown
+        PreprocessColouredVertices();
     }
-    last_locked_vb = NULL; last_locked_count = 0;
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-    gfx_vertices = vb;
-    if (last_locked_vb == vb && last_locked_count > 0) {
-        Preconv_Set(vb, last_locked_count, last_locked_stride, last_locked_fmt);
-    }
-    last_locked_vb = NULL; last_locked_count = 0;
 }
 
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
@@ -391,6 +320,13 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockVb(vb, fmt, count);
+}
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
@@ -444,13 +380,31 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
+	tex_offseting = true;
     texOffsetX_fp = FloatToFixed(x);
     texOffsetY_fp = FloatToFixed(y);
 }
 
 void Gfx_DisableTextureOffset(void) {
-    texOffsetX_fp = 0;
-    texOffsetY_fp = 0;
+	tex_offseting = false;
+}
+
+static CC_NOINLINE void ShiftTextureCoords(int count) {
+	for (int i = 0; i < count; i++) 
+	{
+		struct FPVertexTextured* v = (struct FPVertexTextured*)gfx_vertices + i;
+		v->u += texOffsetX_fp; // TODO avoid overflow
+		v->v += texOffsetY_fp;
+	}
+}
+
+static CC_NOINLINE void UnshiftTextureCoords(int count) {
+	for (int i = 0; i < count; i++) 
+	{
+		struct FPVertexTextured* v = (struct FPVertexTextured*)gfx_vertices + i;
+		v->u -= texOffsetX_fp; // TODO avoid overflow
+		v->v -= texOffsetY_fp;
+	}
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
@@ -639,54 +593,52 @@ static int ClipTriangleToFrustumFixed(const VertexFixed tri[3], VertexFixed* out
 }
 
 static void TransformVertex2D(int index, VertexFixed* vertex) {
-    if (Preconv_GetVertex(gfx_vertices, index, vertex)) return;
-
-    char* ptr = (char*)gfx_vertices + index * gfx_stride;
-    
-    struct VertexColoured* v_col;
-    struct VertexTextured* v_tex;
+    struct FPVertexColoured* v_col;
+    struct FPVertexTextured* v_tex;
     
     if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-        v_col = (struct VertexColoured*)ptr;
-        vertex->x = FloatToFixed(v_col->x);
-        vertex->y = FloatToFixed(v_col->y);
+        v_col = (struct FPVertexColoured*)gfx_vertices + index;
+        vertex->x = v_col->x;
+        vertex->y = v_col->y;
         vertex->u = 0;
         vertex->v = 0;
-        vertex->c = v_col->Col;
+        vertex->c = v_col->c;
     } else {
-        v_tex = (struct VertexTextured*)ptr;
-        vertex->x = FloatToFixed(v_tex->x);
-        vertex->y = FloatToFixed(v_tex->y);
-        vertex->u = FloatToFixed(v_tex->U);
-        vertex->v = FloatToFixed(v_tex->V);
-        vertex->c = v_tex->Col;
+        v_tex = (struct FPVertexTextured*)gfx_vertices + index;
+        vertex->x = v_tex->x;
+        vertex->y = v_tex->y;
+        vertex->u = v_tex->u;
+        vertex->v = v_tex->v;
+        vertex->c = v_tex->c;
     }
 }
 
 static int TransformVertex3D(int index, VertexFixed* vertex) {
     int pos_x, pos_y, pos_z;
-
-    if (Preconv_GetVertex(gfx_vertices, index, vertex)) {
-        pos_x = vertex->x; pos_y = vertex->y; pos_z = vertex->z;
+    struct FPVertexColoured* v_col;
+    struct FPVertexTextured* v_tex;
+    
+    if (gfx_format != VERTEX_FORMAT_TEXTURED) {
+        v_col = (struct FPVertexColoured*)gfx_vertices + index;
+        vertex->x = v_col->x;
+        vertex->y = v_col->y;
+		vertex->z = v_col->z;
+        vertex->u = 0;
+        vertex->v = 0;
+        vertex->c = v_col->c;
     } else {
-        // fallback
-        char* ptr = (char*)gfx_vertices + index * gfx_stride;
-        if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-            struct VertexColoured* v_col = (struct VertexColoured*)ptr;
-            pos_x = FloatToFixed(v_col->x);
-            pos_y = FloatToFixed(v_col->y);
-            pos_z = 0;
-            vertex->u = 0; vertex->v = 0; vertex->c = v_col->Col;
-        } else {
-            struct VertexTextured* v_tex = (struct VertexTextured*)ptr;
-            pos_x = FloatToFixed(v_tex->x);
-            pos_y = FloatToFixed(v_tex->y);
-            pos_z = FloatToFixed(v_tex->z);
-            vertex->u = FloatToFixed(v_tex->U) + texOffsetX_fp;
-            vertex->v = FloatToFixed(v_tex->V) + texOffsetY_fp;
-            vertex->c = v_tex->Col;
-        }
+        v_tex = (struct FPVertexTextured*)gfx_vertices + index;
+        vertex->x = v_tex->x;
+        vertex->y = v_tex->y;
+        vertex->z = v_tex->z;
+        vertex->u = v_tex->u;
+        vertex->v = v_tex->v;
+        vertex->c = v_tex->c;
     }
+
+	pos_x = vertex->x;
+	pos_y = vertex->y;
+	pos_z = vertex->z;
 
     if (ABS(pos_x) > (1 << 28) || ABS(pos_y) > (1 << 28) || ABS(pos_z) > (1 << 28)) {
         return 0;
@@ -1425,6 +1377,8 @@ void DrawQuadsFixed(int startVertex, int verticesCount, DrawHints hints) {
             DrawTriangle2D(&vertices[2], &vertices[0], &vertices[3]);
         }
     } else {
+		if (tex_offseting) ShiftTextureCoords(verticesCount);
+
         for (i = 0; i < verticesCount / 4; i++, j += 4) {
             TransformVertex3D(j + 0, &vertices[0]);
             TransformVertex3D(j + 1, &vertices[1]);
@@ -1433,6 +1387,8 @@ void DrawQuadsFixed(int startVertex, int verticesCount, DrawHints hints) {
             
             DrawClippedFixed(0x0F, &vertices[0], &vertices[1], &vertices[2], &vertices[3]);
         }
+
+		if (tex_offseting) UnshiftTextureCoords(verticesCount);
     }
 }
 void Gfx_SetVertexFormat(VertexFormat fmt) {
