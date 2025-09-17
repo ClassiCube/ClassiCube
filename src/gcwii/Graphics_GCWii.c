@@ -109,44 +109,66 @@ typedef struct CCTexture_ {
 // GX RGBA8 textures
 // - store pixels in 4x4 tiles
 // - store all of the AR values of the tile's pixels, then store all of the GB values
-static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp, 
-			int originX, int originY, int rowWidth) {
-	int stride = GX_GetTexObjWidth(&tex->obj) * 4;
-	// TODO not really right
-	// TODO originX ignored
-	originX &= ~0x03;
-	originY &= ~0x03;
-	
-	// http://hitmen.c02.at/files/yagcd/yagcd/chap15.html
-	//  section 15.35  TPL (Texture Palette)
-	// "RGBA8 (4x4 tiles in two cache lines - first is AR and second is GB"
-	uint8_t *src = (uint8_t*)bmp->scan0;
-	uint8_t *dst = (uint8_t*)tex->pixels + stride * originY;
-	int srcWidth = bmp->width, srcHeight = bmp->height;
-	
-	for (int tileY = 0; tileY < srcHeight; tileY += 4)
-		for (int tileX = 0; tileX < srcWidth; tileX += 4) 
-	{
-		for (int y = 0; y < 4; y++) {
-			for (int x = 0; x < 4; x++) {
-				uint32_t idx = (((tileY + y) * rowWidth) + tileX + x) << 2;
+//
+// http://hitmen.c02.at/files/yagcd/yagcd/chap15.html
+//  section 15.35  TPL (Texture Palette)
+// "RGBA8 (4x4 tiles in two cache lines - first is AR and second is GB"
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0b00011; // 2 linear X bits, 1 bit until next block
+	*maskY = 0b01100; // 2 linear Y bits, 1 bit until next block
 
-				*dst++ = src[idx + 0]; // A
-				*dst++ = src[idx + 1]; // R
-			}
-		}
-		
-		for (int y = 0; y < 4; y++) {
-			for (int x = 0; x < 4; x++) {
-				uint32_t idx = (((tileY + y) * rowWidth) + tileX + x) << 2;
+	// Lower 2 X and Y bits are always linear
+	w >>= 3;
+	h >>= 3;
+	int shift = 5;
 
-				*dst++ = src[idx + 2]; // G
-				*dst++ = src[idx + 3]; // B
-			}
-		}
+	for (; w > 0; w >>= 1) {
+		*maskX += 0x01 << shift;
+		shift  += 1;
+	}
+
+	for (; h > 0; h >>= 1) {
+		*maskY += 0x01 << shift;
+		shift  += 1;
 	}
 }
 
+static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp, 
+			int originX, int originY, int rowWidth) {
+	int src_w = bmp->width,  dst_w = GX_GetTexObjWidth(&tex->obj);
+	int src_h = bmp->height, dst_h = GX_GetTexObjHeight(&tex->obj);
+
+	cc_uint16* dst_AR = (cc_uint16*)tex->pixels;
+	cc_uint16* dst_GB = (cc_uint16*)tex->pixels + 16; // offset by a 4x4 block
+	cc_uint32* src = bmp->scan0;
+
+	unsigned maskX, maskY;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+
+	unsigned begX = 0, begY = 0;
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { begX = (begX - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { begY = (begY - maskY) & maskY; }
+
+	unsigned Y = begY;
+	for (int y = 0; y < src_h; y++)
+	{
+		unsigned X = begX;
+		for (int x = 0; x < src_w; x++)
+		{
+			BitmapCol c = src[x];
+			dst_AR[X | Y] = (BitmapCol_A(c) << 8) | BitmapCol_R(c);
+			dst_GB[X | Y] = (BitmapCol_G(c) << 8) | BitmapCol_B(c);
+			
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+		src += rowWidth;
+	}
+}
+
+// TODO non power of two upload
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(32, 32 + size);
@@ -163,7 +185,6 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	// TODO: wrong behaviour if x/y/part isn't multiple of 4 pixels
 	ReorderPixels(tex, part, x, y, rowWidth);
 	GX_InvalidateTexAll();
 }
