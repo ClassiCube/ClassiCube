@@ -673,9 +673,12 @@ static void GPUTextures_DeleteUnreferenced(void) {
 	}
 }
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Swizzling-------------------------------------------------------*
+*#########################################################################################################################*/
 // See Graphics_Dreamcast.c for twiddling explanation
-static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
-										unsigned* maskX, unsigned* maskY) {
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, unsigned* maskX, unsigned* maskY) {
 	*maskX = 0;
 	*maskY = 0;
 	int shift = 0;
@@ -699,18 +702,7 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	}
 }
 
-
-/*########################################################################################################################*
-*---------------------------------------------------------Textures--------------------------------------------------------*
-*#########################################################################################################################*/
-GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int dst_w = Math_NextPowOf2(bmp->width);
-	int dst_h = Math_NextPowOf2(bmp->height);
-	int size  = dst_w * dst_h * 4;
-
-	struct GPUTexture* tex = GPUTexture_Alloc(size);
-	cc_uint32* dst = tex->data;
-
+static CC_INLINE void UploadFullTexture(struct Bitmap* bmp, int rowWidth, cc_uint32* dst, int dst_w, int dst_h) {
 	int src_w = bmp->width, src_h = bmp->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
@@ -728,6 +720,46 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 		Y = (Y - maskY) & maskY;
 	}
+}
+
+static CC_INLINE void UploadPartialTexture(struct Bitmap* part, int rowWidth, cc_uint32* dst, int dst_w, int dst_h,
+						int originX, int originY) {
+	int src_w = part->width, src_h = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
+	
+	for (int y = 0; y < src_h; y++)
+	{
+		cc_uint32* src = part->scan0 + y * rowWidth;
+		X = startX;
+		
+		for (int x = 0; x < src_w; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Textures--------------------------------------------------------*
+*#########################################################################################################################*/
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+	int size  = dst_w * dst_h * 4;
+
+	struct GPUTexture* tex = GPUTexture_Alloc(size);
+	cc_uint32* dst = tex->data;
+	UploadFullTexture(bmp, rowWidth, dst, dst_w, dst_h);
             
 	sceGxmTextureInitSwizzled(&tex->texture, dst,
 		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, dst_w, dst_h, 0);
@@ -741,33 +773,12 @@ void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bit
 	struct GPUTexture* tex = (struct GPUTexture*)texId;
 	int texWidth   = sceGxmTextureGetWidth(&tex->texture);
 	int texHeight  = sceGxmTextureGetHeight(&tex->texture);
-	cc_uint32* dst = tex->data;
-	
-	int width = part->width, height = part->height;
-	unsigned maskX, maskY;
-	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors(texWidth, texHeight, &maskX, &maskY);
 
-	// Calculate start twiddled X and Y values
-	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
-	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
-	unsigned startX = X;
-	
-	for (int y = 0; y < height; y++)
-	{
-		cc_uint32* src = part->scan0 + rowWidth * y;
-		X = startX;
-		
-		for (int x = 0; x < width; x++, src++)
-		{
-			dst[X | Y] = *src;
-			X = (X - maskX) & maskX;
-		}
-		Y = (Y - maskY) & maskY;
-	}
+	cc_uint32* dst = tex->data;
+	UploadPartialTexture(part, rowWidth, dst, texWidth, texHeight, originX, originY);
 
 	// TODO: is it necessary to invalidate? probably just everything?
-	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
+	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * tex->height) * 4);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {

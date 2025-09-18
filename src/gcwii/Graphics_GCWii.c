@@ -119,7 +119,7 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h,
 	*maskX = 0b00011; // 2 linear X bits, 1 bit until next block
 	*maskY = 0b01100; // 2 linear Y bits, 1 bit until next block
 
-	// Lower 2 X and Y bits are always linear
+	// Adjust for lower 2 X and 2 Y linear bits
 	w >>= 3;
 	h >>= 3;
 	int shift = 5;

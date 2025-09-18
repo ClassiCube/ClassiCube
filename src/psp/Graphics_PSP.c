@@ -74,6 +74,7 @@ void Gfx_Create(void) {
 	
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -103,6 +104,79 @@ static void Gfx_FreeState(void) {
 
 #define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
 
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Swizzling-------------------------------------------------------*
+*#########################################################################################################################*/
+// PSP swizzled textures are 16 bytes X 8 rows = 4 '32 bit' pixels X 8 rows
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, unsigned* maskX, unsigned* maskY) {
+	*maskX = 0b00011; // 2 linear X bits
+	*maskY = 0b11100; // 3 linear Y bits
+
+	// Adjust for lower 2 X and 2 Y linear bits
+	w >>= 3;
+	h >>= 4;
+	int shift = 5;
+
+	for (; w > 0; w >>= 1) {
+		*maskX += 0x01 << shift;
+		shift  += 1;
+	}
+
+	for (; h > 0; h >>= 1) {
+		*maskY += 0x01 << shift;
+		shift  += 1;
+	}
+}
+
+static CC_INLINE void UploadFullTexture(struct Bitmap* bmp, int rowWidth, cc_uint32* dst, int dst_w, int dst_h) {
+	int src_w = bmp->width, src_h = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+	
+	for (int y = 0; y < src_h; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < src_w; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+static CC_INLINE void UploadPartialTexture(struct Bitmap* part, int rowWidth, cc_uint32* dst, int dst_w, int dst_h,
+						int originX, int originY) {
+	int src_w = part->width, src_h = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
+	
+	for (int y = 0; y < src_h; y++)
+	{
+		cc_uint32* src = part->scan0 + y * rowWidth;
+		X = startX;
+		
+		for (int x = 0; x < src_w; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -113,37 +187,27 @@ typedef struct CCTexture_ {
 } CCTexture;
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	// Swizzled texture assumes at least 16 bytes x 8 rows
+	int size = max(16 * 8, dst_w * dst_h * 4);
 	CCTexture* tex = (CCTexture*)memalign(16, 16 + size);
 	
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->width  = dst_w;
+	tex->height = dst_h;
 
-	CopyPixels(tex->pixels, bmp->width * BITMAPCOLOR_SIZE,
-			   bmp->scan0,  rowWidth * BITMAPCOLOR_SIZE,
-			   bmp->width,  bmp->height);
+	UploadFullTexture(bmp, rowWidth, tex->pixels, dst_w, dst_h);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+	UploadPartialTexture(part, rowWidth, tex->pixels, tex->width, tex->height, x, y);
 
-	CopyPixels(dst,         tex->width * BITMAPCOLOR_SIZE,
-			   part->scan0, rowWidth  * BITMAPCOLOR_SIZE,
-			   part->width, part->height);
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
-	sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
+	sceKernelDcacheWritebackInvalidateRange(tex->pixels, (tex->width * tex->height) * 4);
 }
-
-/*void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
-
-	for (int yy = 0; yy < part->height; yy++) {
-		Mem_Copy(dst + (y + yy) * tex->width, part->scan0 + yy * rowWidth, part->width * 4);
-	}
-}*/
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GfxResourceID data = *texId;
@@ -158,7 +222,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square; 
 	
-	sceGuTexMode(GU_PSM_8888, 0, 0, 0);
+	sceGuTexMode(GU_PSM_8888, 0, 0, 1);
 	sceGuTexImage(0, tex->width, tex->height, tex->width, tex->pixels);
 }
 
