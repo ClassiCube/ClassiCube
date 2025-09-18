@@ -18,7 +18,9 @@
 #define FB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
 static unsigned int __attribute__((aligned(16))) list[262144];
 
-#define GE_CMD_TEXTUREMAPENABLE		0x1E
+static cc_uint8* gfx_vertices;
+static int gfx_fields;
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
@@ -61,7 +63,7 @@ static void guInit(void) {
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 	
 	sceGuFinish();
-	sceGuSync(0,0);
+	sceGuSync(GU_SYNC_WHAT_DONE, GU_SYNC_FINISH);
 	sceDisplayWaitVblankStart();
 	sceGuDisplay(GU_TRUE);
 }
@@ -156,7 +158,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square; 
 	
-	sceGuTexMode(GU_PSM_8888,0,0,0);
+	sceGuTexMode(GU_PSM_8888, 0, 0, 0);
 	sceGuTexImage(0, tex->width, tex->height, tex->width, tex->pixels);
 }
 
@@ -186,7 +188,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	sceGuDepthMask(enabled ? 0 : 0xffffffff); 
+	sceGuDepthMask(enabled ? 0 : 0xffffffff);
 }
 void Gfx_SetDepthTest(cc_bool enabled)  { GU_Toggle(GU_DEPTH_TEST); }
 
@@ -272,11 +274,13 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
 	
 	sceGuClear(targets);
+	// Clear involves draw commands
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 void Gfx_EndFrame(void) {
 	sceGuFinish();
-	sceGuSync(0, 0);
+	sceGuSync(GU_SYNC_WHAT_DONE, GU_SYNC_FINISH);
 
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
@@ -286,10 +290,6 @@ void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) { }
 void Gfx_SetScissor (int x, int y, int w, int h) { }
-
-
-static cc_uint8* gfx_vertices;
-static int gfx_fields;
 
 
 /*########################################################################################################################*
@@ -303,7 +303,10 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	return gfx_indices;
 }
 
-void Gfx_BindIb(GfxResourceID ib)    { }
+void Gfx_BindIb(GfxResourceID ib) { 
+	// TODO doesn't work properly
+	//GE_set_index_buffer(ib);
+}
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
@@ -435,23 +438,28 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	} else {
 		sceGuDisable(GU_TEXTURE_2D);
 	}
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	sceGuDrawArray(GU_LINES, gfx_fields, verticesCount, NULL, gfx_vertices);
+	// More efficient to set "indexed 16 bit" as default in Gfx_SetVertexFormat,
+	//  rather than in every single triangle draw command
+	GE_set_vertex_format(gfx_fields);
+	sceGuDrawArray(GU_LINES, 0, verticesCount, NULL, gfx_vertices);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
+	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 			gfx_indices, gfx_vertices + startVertex * gfx_stride);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount),
+	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount),
 			gfx_indices, gfx_vertices);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
+	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 			gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
 }

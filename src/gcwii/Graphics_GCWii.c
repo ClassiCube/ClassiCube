@@ -60,6 +60,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 512 * 512;
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	
 	Gfx.MinTexWidth  = 4;
 	Gfx.MinTexHeight = 4;
@@ -168,13 +169,15 @@ static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp,
 	}
 }
 
-// TODO non power of two upload
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	int size = dst_w * dst_h * 4;
 	CCTexture* tex = (CCTexture*)memalign(32, 32 + size);
 	if (!tex) return NULL;
 	
-	GX_InitTexObj(&tex->obj, tex->pixels, bmp->width, bmp->height,
+	GX_InitTexObj(&tex->obj, tex->pixels, dst_w, dst_h,
 			GX_TF_RGBA8, GX_REPEAT, GX_REPEAT, GX_FALSE);
 	GX_InitTexObjFilterMode(&tex->obj, GX_NEAR, GX_NEAR);
 			
