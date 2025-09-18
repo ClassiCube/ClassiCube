@@ -9,6 +9,7 @@
 #include <pspdebug.h>
 #include <pspctrl.h>
 #include <pspgu.h>
+#include "ge_gpu.h"
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -26,13 +27,11 @@ static int formatFields[] = {
 	GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D,
 	GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_3D
 };
-static ScePspFMatrix4 identity;
 
 static void guInit(void) {
 	void* framebuffer0 = (void*)0;
 	void* framebuffer1 = (void*)FB_SIZE;
 	void* depthbuffer  = (void*)(FB_SIZE + FB_SIZE);
-	Mem_Copy(&identity, &Matrix_Identity, sizeof(ScePspFMatrix4));
 	
 	sceGuInit();
 	sceGuStart(GU_DIRECT, list);
@@ -53,8 +52,7 @@ static void guInit(void) {
 	sceGuClearDepth(65535); // sceGuClearDepth(0);
 	sceGuDepthRange(0, 65535); // sceGuDepthRange(65535, 0);
 	
-	
-	sceGuSetMatrix(GU_MODEL, &identity);
+	GE_upload_world_matrix((const float*)&Matrix_Identity);
 	sceGuColor(0xffffffff);
 	sceGuScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceGuDisable(GU_SCISSOR_TEST);
@@ -394,12 +392,14 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static int matrix_modes[] = { GU_PROJECTION, GU_VIEW };
-static ScePspFMatrix4 tmp_matrix; // 16 byte aligned
-
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	Mem_Copy(&tmp_matrix, matrix, sizeof(ScePspFMatrix4));
-	sceGuSetMatrix(matrix_modes[type], &tmp_matrix);
+	const float* m = (const float*)matrix;
+
+	if (type == MATRIX_PROJ) {
+		GE_upload_proj_matrix(m);
+	} else {
+		GE_upload_view_matrix(m);
+	}
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {

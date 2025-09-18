@@ -18,7 +18,9 @@ SOURCE_DIRS		= src src/psp third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR		= build/psp
 
-PSP_EBOOT_TITLE  = ClassiCube
+SFO_TITLE  = ClassiCube
+SFO_DISCID = CUBE02000
+
 PSP_EBOOT_ICON	 = misc/psp/ICON0.png
 PSP_EBOOT_SFO    = PARAM.SFO
 PSP_EBOOT_ICON1  = NULL
@@ -82,7 +84,7 @@ $(TARGET).prx: $(TARGET).elf
 	$(PRXGEN) $< $@
 
 $(PSP_EBOOT_SFO): 
-	$(MKSFO) -d MEMSIZE=1 '$(PSP_EBOOT_TITLE)' $@
+	$(MKSFO) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $@
 
 $(PSP_EBOOT): $(TARGET).prx $(PSP_EBOOT_SFO)
 	$(PACK_PBP) $(PSP_EBOOT) $(PSP_EBOOT_SFO) $(PSP_EBOOT_ICON)  \
