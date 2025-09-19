@@ -144,6 +144,13 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
+static cc_string GetThreadName(void) {
+	kthread_t* thd = thd_get_current();
+	if (!thd) return String_FromReadonly("(unknown)");
+
+	return String_FromRawArray(thd->label);
+}
+
 static void HandleCrash(irq_t evt, irq_context_t* ctx, void* data) {
 	uint32_t code = evt;
 	log_timestamp = false;
@@ -152,9 +159,10 @@ static void HandleCrash(irq_t evt, irq_context_t* ctx, void* data) {
 
 	for (;;)
 	{
+		cc_string name = GetThreadName();
 		Platform_LogConst("** CLASSICUBE FATALLY CRASHED **");
-		Platform_Log2("PC: %h, error: %h",
-						&ctx->pc, &code);
+		Platform_Log3("PC: %h, error: %h, thd: %s",
+						&ctx->pc, &code, &name);
 		Platform_LogConst("");
 	
 		static const char* const regNames[] = {

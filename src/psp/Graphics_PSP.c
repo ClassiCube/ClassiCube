@@ -206,6 +206,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	UploadPartialTexture(part, rowWidth, tex->pixels, tex->width, tex->height, x, y);
 
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
+	// TODO: Invalidate full tex->size in case of very small textures?
 	sceKernelDcacheWritebackInvalidateRange(tex->pixels, (tex->width * tex->height) * 4);
 }
 
