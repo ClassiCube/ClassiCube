@@ -615,7 +615,7 @@ static void MFAScreen_Activated(struct LScreen* s_) {
 	LInput_Add(s,  &s->iptCode,   280, "Login code..", mfa_iptCode);
 	LButton_Add(s, &s->btnSignIn, 100, 35, "Sign in",  
 				MFAScreen_SignIn, mfa_btnSignIn);
-	LButton_Add(s, &s->btnCancel, 100, 35, "Cancel",   
+	LButton_Add(s, &s->btnCancel, 100, 35, ccStrings_optionsMenu[CC_CurrentLanguage][20],   
 				MFAScreen_Cancel, mfa_btnCancel);
 
 	LLabel_SetConst(&s->lblTitle, s->iptCode.text.length ?
@@ -1150,7 +1150,7 @@ static void FetchResourcesScreen_Activated(struct LScreen* s_) {
 	s->lblStatus.small = true;
 
 	LLabel_Add(s,  &s->lblStatus,   "",    fres_lblStatus);
-	LButton_Add(s, &s->btnCancel,   120, 35, "Cancel",                   
+	LButton_Add(s, &s->btnCancel,   120, 35, ccStrings_optionsMenu[CC_CurrentLanguage][20],                   
 				CheckResourcesScreen_Next, fres_btnCancel);
 	LSlider_Add(s, &s->sdrProgress, 200, 12, BitmapColor_RGB(0, 220, 0), fres_sdrProgress);
 
