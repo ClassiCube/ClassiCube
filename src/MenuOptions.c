@@ -775,7 +775,11 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 			"&eNoLimit: &fRenders as many frames as possible each second.\n" \
-			"&cNoLimit is pointless - it wastefully renders frames that you don't even see!");
+			"&cNoLimit is pointless - it wastefully renders frames that you don't even see!"
+#ifdef CC_BUILD_IOS
+			"\n&eProMotion: &fRender above 60Hz on devices with ProMotion."
+#endif
+			);
 		MenuOptionsScreen_AddInt(s, "View distance",
 			8, 4096, 512,
 			GrO_GetViewDist,   GrO_SetViewDist, NULL);
