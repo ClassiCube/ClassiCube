@@ -994,12 +994,11 @@ static BitmapCol* DC_GetRow(struct Bitmap* bmp, int y, void* ctx) {
 }
 
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	BitmapCol tmp[640];
+	BitmapCol tmp[1024];
 	int width  = vid_mode->width;
 	int height = vid_mode->height;
 
 	struct Bitmap bmp;
-	bmp.scan0  = tmp;
 	bmp.width  = width; 
 	bmp.height = height;
 

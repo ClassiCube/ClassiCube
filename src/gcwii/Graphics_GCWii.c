@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <gccore.h>
+#include "gx_gpu.h"
 
 static void* fifo_buffer;
 #define FIFO_SIZE (256 * 1024)
@@ -269,7 +270,8 @@ static BitmapCol* GCWii_GetRow(struct Bitmap* bmp, int y, void* ctx) {
 	int blockXStride = (4 * 4) * 4; // 16 pixels per tile
 
 	// Do the inverse of converting from 4x4 tiled to linear
-	for (u32 x = 0; x < bmp->width; x++)
+	int width = bmp->width;
+	for (u32 x = 0; x < width; x++)
 	{
 		int tileY = y >> 2, tileX = x >> 2;
 		int locY  = y & 0x3, locX = x & 0x3;
@@ -551,7 +553,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		GX_LoadProjectionMtx(dst,
 			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
-		GX_LoadPosMtxImm(dst, GX_PNMTX0);
+		XF_SetMatrix_3x4((GX_matrix_3x4*)&dst, XF_POS_MATRIX0);
 	}
 }
 
@@ -564,12 +566,12 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 static float texOffsetX, texOffsetY;
 static void UpdateTexCoordGen(void) {
 	if (texOffsetX || texOffsetY) {
-		Mtx mat   = { 0 };
+		GX_matrix_2x4 mat = { 0 };
 		// https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/glTranslate.xml
-		mat[0][0] = 1; mat[0][3] = texOffsetX;
-		mat[1][1] = 1; mat[1][3] = texOffsetY;
+		mat.m[0][0] = 1; mat.m[0][3] = texOffsetX;
+		mat.m[1][1] = 1; mat.m[1][3] = texOffsetY;
 		
-		GX_LoadTexMtxImm(mat, GX_TEXMTX0, GX_MTX2x4);
+		XF_SetMatrix_2x4(&mat, XF_TEX_MATRIX0);
 		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_TEXMTX0);
 	} else {
 		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
@@ -635,8 +637,8 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	{
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
-		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color1u32(v->Col);
+		FIFO_PUSH_F32x3(v->x, v->y, v->z);
+		FIFO_PUSH_U32(v->Col);
 	}
 }
 
@@ -646,9 +648,9 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	{
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
-		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color1u32(v->Col);
-		GX_TexCoord2f32(v->U, v->V);
+		FIFO_PUSH_F32x3(v->x, v->y, v->z);
+		FIFO_PUSH_U32(v->Col);
+		FIFO_PUSH_F32x2(v->U, v->V);
 	}
 }
 
