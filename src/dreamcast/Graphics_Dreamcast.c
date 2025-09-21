@@ -718,7 +718,6 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 static void* gfx_vertices;
-static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	return (void*)1;
@@ -743,15 +742,9 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 
-void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
-	return vb;
-}
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 
-void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-	//sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
-}
+void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
 
 
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
@@ -760,15 +753,9 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
-	return vb; 
-}
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
-	//dcache_flush_range(vb, vb_size);
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { gfx_vertices = vb; }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
@@ -988,8 +975,35 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static BitmapCol* DC_GetRow(struct Bitmap* bmp, int y, void* ctx) {
+	BitmapCol* tmp = (BitmapCol*)ctx;
+	uint16_t* src  = vram_s + vid_mode->width * y;
+	int r, g, b, width = bmp->width;
+
+	for (int x = 0; x < width; x++)
+	{
+		int r, g, b;
+		// RGB565 to RGB888
+		r = ((src[x] >> 11) & 0x1F) << 3;
+		g = ((src[x] >> 6)  & 0x3F) << 2;
+		b = ((src[x] >> 0)  & 0x1F) << 3;
+
+		tmp[x] = BitmapColor_RGB(r, g, b);
+	}
+	return tmp;
+}
+
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
+	BitmapCol tmp[640];
+	int width  = vid_mode->width;
+	int height = vid_mode->height;
+
+	struct Bitmap bmp;
+	bmp.scan0  = tmp;
+	bmp.width  = width; 
+	bmp.height = height;
+
+	return Png_Encode(&bmp, output, DC_GetRow, false, tmp);
 }
 
 void Gfx_GetApiInfo(cc_string* info) {

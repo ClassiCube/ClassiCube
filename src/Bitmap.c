@@ -678,7 +678,7 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	cc_uint8*  curLine = buffer + (bmp->width * 4) * 1;
 	cc_uint8* bestLine = buffer + (bmp->width * 4) * 2;
 
-#if CC_BUILD_MAXSTACK <= (50 * 1024)
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
 	struct ZLibState* zlState = (struct ZLibState*)Mem_TryAlloc(1, sizeof(struct ZLibState));
 #else
 	struct ZLibState _zlState;
@@ -689,6 +689,7 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	int y, lineSize;
 	cc_result res;
 
+	if (!zlState) return ERR_OUT_OF_MEMORY;
 	/* stream may not start at 0 (e.g. when making default.zip) */
 	if ((res = stream->Position(stream, &stream_beg))) return res;
 

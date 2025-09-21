@@ -239,8 +239,9 @@ static const BindMapping defaults_dc[BIND_COUNT] = {
 	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
 	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
 	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
-	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    }, 
-	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
+	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT },
+	[BIND_SCREENSHOT]   = { CCPAD_3 },
 };
 
 void Gamepads_Init(void) {
