@@ -80,5 +80,3 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0;
 }
 
-void Process_Exit(cc_result code) { exit(code); }
-

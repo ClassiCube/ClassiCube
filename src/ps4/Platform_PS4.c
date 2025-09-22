@@ -533,6 +533,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+void Process_Exit(cc_result code) { exit(code); }
+
 void Platform_Init(void) {
 	Platform_LogConst("initing 2..");
 }

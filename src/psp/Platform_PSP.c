@@ -39,6 +39,9 @@ PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 
 PSP_DISABLE_AUTOSTART_PTHREAD() // reduces .elf size by 140 kb
 
+// Save 70kb by not linking in sprintf/setenv code etc
+void __timezone_update() { }
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
@@ -487,6 +490,8 @@ cc_bool Process_OpenSupported = false;
 cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
+
+void Process_Exit(cc_result code) { exit(code); }
 
 
 /*########################################################################################################################*
