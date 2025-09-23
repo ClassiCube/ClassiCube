@@ -88,7 +88,7 @@ static void ResetHeldState(void) {
 
 	held_entity.SkinType     = p->SkinType;
 	held_entity.TextureId    = p->TextureId;
-	held_entity.MobTextureId = p->MobTextureId;
+	held_entity.NonHumanSkin = p->NonHumanSkin;
 	held_entity.uScale       = p->uScale;
 	held_entity.vScale       = p->vScale;
 }

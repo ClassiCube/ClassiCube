@@ -122,7 +122,8 @@ struct Entity {
 	cc_uint8 SkinType;
 	cc_uint8 SkinFetchState;
 	cc_bool NoShade, OnGround;
-	GfxResourceID TextureId, MobTextureId;
+	GfxResourceID TextureId;
+	cc_bool NonHumanSkin; /* Whether custom skin is also used on non humanoid models */
 	float uScale, vScale;
 
 	struct AnimatedComp Anim;

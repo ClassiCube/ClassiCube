@@ -229,13 +229,13 @@ static void Entity_CopySkin(struct Entity* dst, struct Entity* src) {
 	dst->SkinType     = src->SkinType;
 	dst->uScale       = src->uScale;
 	dst->vScale       = src->vScale;
-	dst->MobTextureId = src->MobTextureId;
+	dst->NonHumanSkin = src->NonHumanSkin;
 }
 
 /* Resets skin data for the given entity */
 static void Entity_ResetSkin(struct Entity* e) {
 	e->uScale = 1.0f; e->vScale = 1.0f;
-	e->MobTextureId = 0;
+	e->NonHumanSkin = false;
 	e->TextureId    = 0;
 	e->SkinType     = SKIN_64x32;
 }
@@ -247,7 +247,7 @@ static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 	int i;
 
 	skin = String_FromRawArray(source->SkinRaw);
-	source->MobTextureId = Utils_IsUrlPrefix(&skin) ? source->TextureId : 0;
+	source->NonHumanSkin = Utils_IsUrlPrefix(&skin);
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;

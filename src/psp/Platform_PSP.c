@@ -37,10 +37,10 @@ cc_bool Platform_ReadonlyFilesystem;
 PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 
-PSP_DISABLE_AUTOSTART_PTHREAD() // reduces .elf size by 140 kb
-
+// Save 140 kb by not linking in pthreads
+PSP_DISABLE_AUTOSTART_PTHREAD()
 // Save 70kb by not linking in sprintf/setenv code etc
-void __timezone_update() { }
+PSP_DISABLE_NEWLIB_TIMEZONE_SUPPORT()
 
 
 /*########################################################################################################################*
