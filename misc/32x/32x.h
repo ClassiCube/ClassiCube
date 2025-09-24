@@ -122,7 +122,6 @@ extern "C" {
 extern void fast_memcpy(void *dst, void *src, int len);
 extern void CacheControl(int mode);
 extern void CacheClearLine(void* ptr);
-extern void ScreenStretch(int src, int width, int height, int interp);
 
 #ifdef __cplusplus
 }

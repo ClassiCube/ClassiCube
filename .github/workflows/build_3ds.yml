@@ -24,13 +24,6 @@ jobs:
         run: |
           make 3ds
           
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile 3DS build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-          
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
@@ -56,3 +49,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: '3ds'
+          
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce 3DS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

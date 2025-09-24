@@ -15,7 +15,7 @@ XBE_TITLE 	= ClassiCube
 # List of directories containing source code
 SOURCE_DIRS = src src/xbox third_party/bearssl
 # Shader objects
-SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
+SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/vs_offset.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
 # Directory where object files are placed
 BUILD_DIR   = build/xbox
 
@@ -82,7 +82,7 @@ $(BUILD_DIR):
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(OBJS) : $(SHADER_OBJS)
+$(BUILD_DIR)/Graphics_Xbox.o : $(SHADER_OBJS)
 
 $(TARGET).iso: $(TARGET).xbe
 	mkdir -p $(BUILD_DIR)/cd
@@ -111,15 +111,21 @@ $(BUILD_DIR)/%.o: src/xbox/%.S
 $(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) -c $< -o $@
 
-%.inl: %.vs.cg
-	$(CGC) -profile vp20 -o $@.$$$$ $< && \
-	$(VP20COMPILER) $@.$$$$ > $@ && \
-	rm -rf $@.$$$$
 
-%.inl: %.ps.cg
-	$(CGC) -profile fp20 -o $@.$$$$ $< && \
-	$(FP20COMPILER) $@.$$$$ > $@ && \
-	rm -rf $@.$$$$
+# prevent the .asm files from being deleted
+.PRECIOUS: vs_%.asm ps_%.asm
+
+vs_%.inl: vs_%.asm
+	$(VP20COMPILER) $< > $@
+
+vs_%.asm: vs_%.cg
+	$(CGC) -profile vp20 $< -o $@
+
+ps_%.inl: ps_%.asm
+	$(FP20COMPILER) $< > $@
+
+ps_%.asm: ps_%.cg
+	$(CGC) -profile fp20 $< -o $@
 
 
 #---------------------------------------------------------------------------------

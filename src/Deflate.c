@@ -141,6 +141,19 @@ cc_result ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
 /*########################################################################################################################*
 *--------------------------------------------------Inflate (decompress)---------------------------------------------------*
 *#########################################################################################################################*/
+#if !defined CC_BUILD_COMPRESSION
+void Inflate_Init2(struct InflateState* state, struct Stream* source) {
+	Process_Abort("Should never be called");
+}
+
+void Inflate_Process(struct InflateState* s) {
+	Process_Abort("Should never be called");
+}
+
+void Inflate_MakeStream2(struct Stream* stream, struct InflateState* state, struct Stream* underlying) {
+	Process_Abort("Should never be called");
+}
+#else
 enum INFLATE_STATE_ {
 	INFLATE_STATE_HEADER, INFLATE_STATE_UNCOMPRESSED_HEADER,
 	INFLATE_STATE_UNCOMPRESSED_DATA, INFLATE_STATE_DYNAMIC_HEADER,
@@ -787,11 +800,18 @@ void Inflate_MakeStream2(struct Stream* stream, struct InflateState* state, stru
 	stream->meta.inflate = state;
 	stream->Read = Inflate_StreamRead;
 }
+#endif
 
 
 /*########################################################################################################################*
 *---------------------------------------------------Deflate (compress)----------------------------------------------------*
 *#########################################################################################################################*/
+#if !defined CC_BUILD_COMPRESSION
+void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying) { 
+	Process_Abort("Should never be called");
+}
+#else
+
 /* these are copies of len_base and dist_base, with UINT16_MAX instead of 0 for sentinel cutoff */
 static const cc_uint16 deflate_len[30] = {
 	3,4,5,6,7,8,9,10,11,13,
@@ -1141,11 +1161,19 @@ void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stre
 	stream->Write = ZLib_StreamWriteFirst;
 	stream->Close = ZLib_StreamClose;
 }
+#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------ZipReader--------------------------------------------------------*
 *#########################################################################################################################*/
+#if !defined CC_BUILD_COMPRESSION
+cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor, 
+						struct ZipEntry* entries, int maxEntries) {
+	return ERR_NOT_SUPPORTED;
+}
+#else
+
 #define ZIP_MAXNAMELEN 512
 /* Stores state for reading and processing entries in a .zip archive */
 struct ZipState {
@@ -1337,3 +1365,5 @@ cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_Proce
 	}
 	return 0;
 }
+#endif
+

@@ -1,12 +1,15 @@
 ; Vertex shader for rendering textured vertices with an offset for PICA200 GPU on the Nintendo 3DS
 ; ==================================================================================
 
-; Uniforms
-.fvec MVP[4];
-.fvec tex_offset;
+; Uniforms (layout common to all shaders)
+.alias MVP_0      c0
+.alias MVP_1      c1
+.alias MVP_2      c2
+.alias MVP_3      c3
+.alias TEX_OFFSET c4
 
-; Constants
-.constf ONE_DIV_255(0.003921568627, 0.003921568627, 0.003921568627, 0.003921568627)
+; Constants (initialised in Graphics_3DS.c)
+.alias ONE_DIV_255 c5
 
 ; Outputs
 .out out_pos position
@@ -19,19 +22,16 @@
 .alias in_tex v2
 
 .proc main
-	; r0 = in_pos
-	mov r0, in_pos
-
-	; out_pos = MVP * r0
-	dp4 out_pos.x, MVP[0], r0
-	dp4 out_pos.y, MVP[1], r0
-	dp4 out_pos.z, MVP[2], r0
-	dp4 out_pos.w, MVP[3], r0
+	; out_pos = MVP * in_pos
+	dp4 out_pos.x, MVP_0, in_pos
+	dp4 out_pos.y, MVP_1, in_pos
+	dp4 out_pos.z, MVP_2, in_pos
+	dp4 out_pos.w, MVP_3, in_pos
 
 	; out_col = in_col * ONE_DIV_255
 	mul out_col, ONE_DIV_255, in_col
 	; out_tex = in_tex + tex_offset
-	add out_tex, tex_offset, in_tex
+	add out_tex, TEX_OFFSET, in_tex
 	
 	end
 .end

@@ -26,23 +26,14 @@ project.xcworkspace/
 xcuserdata/
 
 # Nintendo Console build results
-build-3ds/
 build-nds/
 build-dsi/
 build-n64/
-build-gc/
-build-wii/
-build-wiiu/
-build-switch/
 classicube.nds
 
 # SEGA console build results
-build-32x/
-build-saturn/
-build-dc/
 IP.BIN
 ISO_FILES/
-third_party/gldc/libGLdc.a
 cd/
 
 # Microsoft console build results
@@ -55,19 +46,11 @@ misc/xbox/vs_coloured.inl
 misc/xbox/vs_textured.inl
 
 # Sony console build results
-build-ps2/
-build-ps3/
-build-ps4/
-build-psp/
-build-vita/
 EBOOT.PBP
 PARAM.SFO
 param.sfo
 eboot.bin
 pkg.gp4
-
-# Desktop build results
-build-amiga-68k/
 
 # Build results
 [Dd]ebug/
@@ -107,12 +90,18 @@ fontscache.txt
 CWSDPMI.EXE
 CWSDPMI.SWP
 OPTIONS.TXT
+CCDOS.EXE
 
 # Android source files need to be included
 !android/app/src/main/java/com/classicube
 
-# Flatpak wrapper which needs to be included
+# Flatpak wrapper needs to be included
 !misc/flatpak/ClassiCubeLauncher
+
+# UWP files needs to be included
+!misc/UWP/ClassiCube-UWP.sln
+!misc/UWP/ClassiCube-UWP.vcxproj
+!misc/UWP/ClassiCube-UWP.vcxproj.filters
 
 # CMake files
 CMakeFiles/

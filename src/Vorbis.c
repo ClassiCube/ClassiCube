@@ -7,6 +7,7 @@
 #include "Errors.h"
 #include "Stream.h"
 
+#if !defined CC_BUILD_ATARIOS && !defined CC_BUILD_AMIGA
 /*########################################################################################################################*
 *-------------------------------------------------------Ogg stream--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -1672,3 +1673,5 @@ int Vorbis_OutputFrame(struct VorbisState* ctx, cc_int16* data) {
 	ctx->prevBlockSize = ctx->curBlockSize;
 	return (prevQrtr + curQrtr) * ctx->channels;
 }
+#endif
+

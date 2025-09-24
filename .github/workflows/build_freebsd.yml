@@ -43,7 +43,7 @@ jobs:
         env: 
           LIBS: "-lm -lpthread -lX11 -lXi -lGL -lexecinfo"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic -Werror"
           PLAT32_FLAGS: "-fno-pie -fcf-protection=none -I freebsd32/include -L freebsd32/lib"
           PLAT64_FLAGS: "-fno-pie -fcf-protection=none -I freebsd64/include -L freebsd64/lib"
 
@@ -52,13 +52,6 @@ jobs:
           
           i386-freebsd11-clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.PLAT32_FLAGS }} $LATEST_FLAG -o cc-fbsd32-gl1 ${{ env.LIBS }}
           x86_64-freebsd11-clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-fbsd64-gl1 ${{ env.LIBS }}
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile FreeBSD build(s)'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -79,3 +72,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'freebsd'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce FreeBSD build(s)'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

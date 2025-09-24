@@ -28,12 +28,6 @@ jobs:
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
         run: |
           x86_64-unknown-haiku-gcc ${{ env.SRCS }} -o ClassiCube-haiku ${{ env.COMMON_FLAGS }} ${{ env.LIBS }}
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile Haiku build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -48,3 +42,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'haiku'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce Haiku build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

@@ -1,4 +1,7 @@
 #define CC_XTEA_ENCRYPTION
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -141,6 +144,13 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
+static cc_string GetThreadName(void) {
+	kthread_t* thd = thd_get_current();
+	if (!thd) return String_FromReadonly("(unknown)");
+
+	return String_FromRawArray(thd->label);
+}
+
 static void HandleCrash(irq_t evt, irq_context_t* ctx, void* data) {
 	uint32_t code = evt;
 	log_timestamp = false;
@@ -149,9 +159,10 @@ static void HandleCrash(irq_t evt, irq_context_t* ctx, void* data) {
 
 	for (;;)
 	{
+		cc_string name = GetThreadName();
 		Platform_LogConst("** CLASSICUBE FATALLY CRASHED **");
-		Platform_Log2("PC: %h, error: %h",
-						&ctx->pc, &code);
+		Platform_Log3("PC: %h, error: %h, thd: %s",
+						&ctx->pc, &code, &name);
 		Platform_LogConst("");
 	
 		static const char* const regNames[] = {
@@ -318,6 +329,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	int res = fs_mkdir(path->buffer);
@@ -692,7 +705,7 @@ static void InitModem(void) {
 	ppp_init();
 	
 	Platform_LogConst("Dialling modem.. (can take ~20 seconds)");
-	err = ppp_modem_init("111111111111", 0, NULL);
+	err = ppp_modem_init("111111111111", 1, NULL);
 	if (err) {
 		Platform_Log1("Establishing link failed (%i)", &err); return;
 	}
@@ -741,6 +754,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+void Process_Exit(cc_result code) { exit(code); }
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
@@ -752,3 +767,6 @@ static cc_result GetMachineID(cc_uint32* key) {
 	return 0;
 }
 
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
+}

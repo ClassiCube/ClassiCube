@@ -113,13 +113,6 @@ jobs:
           
           make_unix_tar cc-linux32.tar.gz cc-linux-32
           make_unix_tar cc-linux64.tar.gz cc-linux-64
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce release'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
         
       # Generate Linux release files
@@ -219,3 +212,11 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'release'
+
+
+      # Log any failure
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce release'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

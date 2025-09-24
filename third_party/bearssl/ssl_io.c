@@ -159,7 +159,7 @@ br_sslio_read(br_sslio_context *ctx, void *dst, size_t len)
 	if (alen > len) {
 		alen = len;
 	}
-	memcpy(dst, buf, alen);
+	br_memcpy(dst, buf, alen);
 	br_ssl_engine_recvapp_ack(ctx->engine, alen);
 	return (int)alen;
 }
@@ -201,7 +201,7 @@ br_sslio_write(br_sslio_context *ctx, const void *src, size_t len)
 	if (alen > len) {
 		alen = len;
 	}
-	memcpy(buf, src, alen);
+	br_memcpy(buf, src, alen);
 	br_ssl_engine_sendapp_ack(ctx->engine, alen);
 	return (int)alen;
 }

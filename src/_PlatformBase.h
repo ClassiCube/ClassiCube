@@ -102,7 +102,7 @@ static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
 static cc_bool gameHasArgs;
 
-static cc_result SetGameArgs(const cc_string* args, int numArgs) {
+static CC_INLINE cc_result SetGameArgs(const cc_string* args, int numArgs) {
 	int i;
 	for (i = 0; i < numArgs; i++) 
 	{
@@ -114,7 +114,7 @@ static cc_result SetGameArgs(const cc_string* args, int numArgs) {
 	return 0;
 }
 
-static int GetGameArgs(cc_string* args) {
+static CC_INLINE int GetGameArgs(cc_string* args) {
 	int i, count = gameNumArgs;
 	for (i = 0; i < count; i++) 
 	{
@@ -341,3 +341,118 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 }
 #endif
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Updater----------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_NO_UPDATER
+cc_bool Updater_Supported = false;
+cc_bool Updater_Clean(void) { return true; }
+
+const struct UpdaterInfo Updater_Info = { "&eRedownload or recompile to update", 0 };
+
+cc_result Updater_Start(const char** action) {
+	*action = "Starting game";
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Updater_GetBuildTime(cc_uint64* timestamp) { return ERR_NOT_SUPPORTED; }
+
+cc_result Updater_MarkExecutable(void) { return ERR_NOT_SUPPORTED; }
+
+cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTED; }
+#endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_NO_DYNLIB
+const cc_string DynamicLib_Ext = String_FromConst(".so");
+
+void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
+void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
+
+cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
+#endif
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Socket----------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_NO_SOCKETS
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+	return ERR_NOT_SUPPORTED;
+}
+
+void Socket_Close(cc_socket s) { }
+
+cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
+	return ERR_NOT_SUPPORTED;
+}
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Threading--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_NO_THREADING
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	*handle = NULL;
+}
+
+void Thread_Detach(void* handle) {
+}
+
+void Thread_Join(void* handle) {
+}
+
+void* Mutex_Create(const char* name) {
+	return NULL;
+}
+
+void Mutex_Free(void* handle) {
+}
+
+void Mutex_Lock(void* handle) {
+}
+
+void Mutex_Unlock(void* handle) {
+}
+
+void* Waitable_Create(const char* name) {
+	return NULL;
+}
+
+void Waitable_Free(void* handle) {
+}
+
+void Waitable_Signal(void* handle) {
+}
+
+void Waitable_Wait(void* handle) {
+}
+
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
+}
+#endif

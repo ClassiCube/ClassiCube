@@ -1,4 +1,7 @@
 #define CC_XTEA_ENCRYPTION
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -45,10 +48,6 @@ cc_bool Platform_ReadonlyFilesystem;
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-// To see these log messages:
-//   1) In the UI, make sure 'Show log configuration' checkbox is checked in View menu
-//   2) Make sure "OSReport EXI (OSREPORT)" log type is enabled
-//   3) In the UI, make sure 'Show log' checkbox is checked in View menu
 static void LogOverEXI(char* msg, int len) {
 	u32 cmd = 0x80000000 | (0x800400 << 6); // write flag, UART base address
 
@@ -138,6 +137,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str++ = '/';
 	String_EncodeUtf8(str, path);
 }
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	if (!fat_available) return ENOSYS;
@@ -629,6 +630,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+void Process_Exit(cc_result code) { exit(code); }
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
@@ -642,5 +645,9 @@ cc_result Process_StartOpen(const cc_string* args) {
 static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }
 

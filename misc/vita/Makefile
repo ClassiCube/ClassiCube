@@ -17,8 +17,8 @@ SOURCE_DIRS		= src src/psvita third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR		= build/vita
 
-PROJECT_TITLE 	= ClassiCube
-PROJECT_TITLEID = CUBE00200
+SFO_TITLE 	= ClassiCube
+SFO_TITLEID = CUBE00200
 
 
 #---------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-CFLAGS 	= -O1
+CFLAGS 	= -O1 -DPLAT_VITA -fno-math-errno
 
 LDFLAGS = -Wl,-q
 LIBS 	= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
@@ -78,7 +78,7 @@ eboot.bin: $(TARGET).velf
 	$(MAKE_FSELF) $(TARGET).velf eboot.bin
 
 param.sfo:
-	$(MKSOFEX) -s TITLE_ID="$(PROJECT_TITLEID)" "$(PROJECT_TITLE)" param.sfo
+	$(MKSOFEX) -s TITLE_ID="$(SFO_TITLEID)" "$(SFO_TITLE)" param.sfo
 
 $(TARGET).velf: $(TARGET).elf
 	$(VITA_STRIP) -g $<

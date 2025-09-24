@@ -23,7 +23,7 @@ static int db_stride;
 static void* gfx_vertices;
 static GfxResourceID white_square;
 
-void Gfx_RestoreState(void) {
+static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 
 	// 1x1 dummy white texture
@@ -33,20 +33,14 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) {
+static void Gfx_FreeState(void) {
 	FreeDefaultResources();
 	Gfx_DeleteTexture(&white_square);
 }
 
 void Gfx_Create(void) {
-#if defined CC_BUILD_32X || defined CC_BUILD_GBA
-	Gfx.MaxTexWidth  = 16;
-	Gfx.MaxTexHeight = 16;
-#else
 	Gfx.MaxTexWidth  = 4096;
 	Gfx.MaxTexHeight = 4096;
-#endif
-
 	Gfx.Created      = true;
 	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	Gfx.Limitations  = GFX_LIMIT_MINIMAL;
@@ -166,10 +160,8 @@ static void ClearColorBuffer(void) {
 }
 
 static void ClearDepthBuffer(void) {
-#ifndef SOFTGPU_DISABLE_ZBUFFER
 	int i, size = fb_width * fb_height;
 	for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
-#endif
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -664,15 +656,11 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
 			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
 
-#ifndef SOFTGPU_DISABLE_ZBUFFER
 			if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
 			if (!colWrite) {
 				if (depthWrite) depthBuffer[db_index] = z;
 				continue;
 			}
-#else
-			if (!colWrite) continue;
-#endif
 
 			if (texturing) {
 				float u = (ic0 * u0 + ic1 * u1 + ic2 * u2) * w;
@@ -687,9 +675,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			}
 
 			if (gfx_alphaTest && A < 0x80) continue;
-#ifndef SOFTGPU_DISABLE_ZBUFFER
 			if (depthWrite) depthBuffer[db_index] = z;
-#endif
 			int cb_index = y * cb_stride + x;
 			
 			if (!gfx_alphaBlend) {
@@ -1084,10 +1070,8 @@ void Gfx_OnWindowResize(void) {
 	colorBuffer = fb_bmp.scan0;
 	cb_stride   = fb_bmp.width;
 
-#ifndef SOFTGPU_DISABLE_ZBUFFER
 	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
 	db_stride   = fb_width;
-#endif
 
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	Gfx_SetScissor (0, 0, Game.Width, Game.Height);

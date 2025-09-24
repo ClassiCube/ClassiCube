@@ -58,10 +58,8 @@ static unsigned x509_maybe_skip_verify(unsigned r) {
 	if (r != BR_ERR_X509_EXPIRED) return r;
 
 	cc_uint64 cur = DateTime_CurrentUTC();
-	uint32_t days = (uint32_t)(cur / 86400) + 366;
-
-	/* Time earlier than August 2024 usually mean an improperly calibrated RTC */
-	if (days < 739464) return 0;
+	/* Time earlier than 19 Sep 2025 usually mean an improperly calibrated RTC */
+	if (cur < 63893864669ull) return 0;
 #endif
 
 	return r;

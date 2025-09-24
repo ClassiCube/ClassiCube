@@ -140,14 +140,6 @@ static void C3D_ImmDrawBegin(GPU_Primitive_t primitive);
 static void C3D_ImmSendAttrib(float x, float y, float z, float w);
 static void C3D_ImmDrawEnd(void);
 
-static inline void C3D_ImmDrawRestartPrim(void)
-{
-	GPUCMD_AddWrite(GPUREG_RESTART_PRIMITIVE, 1);
-}
-
-
-
-
 
 typedef struct
 {
@@ -253,18 +245,13 @@ struct C3D_RenderTarget_tag
 // Flags for C3D_FrameBegin
 enum
 {
-	C3D_FRAME_SYNCDRAW = BIT(0), // Perform C3D_FrameSync before checking the GPU status
 	C3D_FRAME_NONBLOCK = BIT(1), // Return false instead of waiting if the GPU is busy
 };
 
-static void C3D_FrameSync(void);
-
 static bool C3D_FrameBegin(u8 flags);
 static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
-static void C3D_FrameSplit(u8 flags);
 static void C3D_FrameEnd(u8 flags);
 
-static void C3D_RenderTargetDelete(C3D_RenderTarget* target);
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
 static inline void C3D_RenderTargetDetachOutput(C3D_RenderTarget* target)
@@ -314,51 +301,6 @@ void Mtx_Multiply(C3D_Mtx* out, const C3D_Mtx* a, const C3D_Mtx* b)
 		for (i = 0; i < 4; ++i)
 			out->r[j].c[i] = a->r[j].x*b->r[0].c[i] + a->r[j].y*b->r[1].c[i] + a->r[j].z*b->r[2].c[i] + a->r[j].w*b->r[3].c[i];
 }
-
-
-
-
-#define C3D_FVUNIF_COUNT 96
-#define C3D_IVUNIF_COUNT 4
-
-static C3D_FVec C3D_FVUnif[C3D_FVUNIF_COUNT];
-static C3D_IVec C3D_IVUnif[C3D_IVUNIF_COUNT];
-static u16      C3D_BoolUnifs;
-
-static bool C3D_FVUnifDirty[C3D_FVUNIF_COUNT];
-static bool C3D_IVUnifDirty[C3D_IVUNIF_COUNT];
-static bool C3D_BoolUnifsDirty;
-
-static inline C3D_FVec* C3D_FVUnifWritePtr(int id, int size)
-{
-	int i;
-	for (i = 0; i < size; i ++)
-		C3D_FVUnifDirty[id+i] = true;
-	return &C3D_FVUnif[id];
-}
-
-static inline void C3D_FVUnifMtx4x4(int id, const C3D_Mtx* mtx)
-{
-	int i;
-	C3D_FVec* ptr = C3D_FVUnifWritePtr(id, 4);
-	for (i = 0; i < 4; i ++)
-		ptr[i] = mtx->r[i]; // Struct copy.
-}
-
-static inline void C3D_FVUnifSet(int id, float x, float y, float z, float w)
-{
-	C3D_FVec* ptr = C3D_FVUnifWritePtr(id, 1);
-	ptr->x = x;
-	ptr->y = y;
-	ptr->z = z;
-	ptr->w = w;
-}
-
-static void C3D_UpdateUniforms(void);
-
-
-
-
 
 
 typedef struct
@@ -452,19 +394,11 @@ static void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
 static void C3Di_SetTex(int unit, C3D_Tex* tex);
 static void C3Di_EffectBind(C3D_Effect* effect);
 
-static void C3Di_DirtyUniforms(void);
-static void C3Di_LoadShaderUniforms(shaderInstance_s* si);
-static void C3Di_ClearShaderUniforms(GPU_SHADER_TYPE type);
-
 static bool C3Di_SplitFrame(u32** pBuf, u32* pSize);
 
 static void C3Di_RenderQueueInit(void);
 static void C3Di_RenderQueueExit(void);
 static void C3Di_RenderQueueWaitDone(void);
-static void C3Di_RenderQueueEnableVBlank(void);
-static void C3Di_RenderQueueDisableVBlank(void);
-
-
 
 
 
@@ -533,8 +467,6 @@ static void C3D_DrawElements(GPU_Primitive_t primitive, int count)
 	GPUCMD_AddWrite(GPUREG_RESTART_PRIMITIVE, 1);
 	// Number of vertices
 	GPUCMD_AddWrite(GPUREG_NUMVERTICES, count);
-	// First vertex
-	GPUCMD_AddWrite(GPUREG_VERTEX_OFFSET, 0);
 	// Enable triangle element drawing mode if necessary
 	GPUCMD_AddMaskedWrite(GPUREG_GEOSTAGE_CONFIG, 2, 0x100);
 	GPUCMD_AddMaskedWrite(GPUREG_GEOSTAGE_CONFIG2, 2, 0x100);
@@ -896,20 +828,7 @@ static void C3D_ImmDrawEnd(void)
 static C3D_RenderTarget *linkedTarget[3];
 
 static bool inFrame, inSafeTransfer;
-static bool needSwapTop, needSwapBot, isTopStereo;
-static u32 vblankCounter[2];
-
-static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target);
-
-static void onVBlank0(void* unused)
-{
-	vblankCounter[0]++;
-}
-
-static void onVBlank1(void* unused)
-{
-	vblankCounter[1]++;
-}
+static bool swapPending, isTopStereo;
 
 static void onQueueFinish(gxCmdQueue_s* queue)
 {
@@ -922,31 +841,11 @@ static void onQueueFinish(gxCmdQueue_s* queue)
 			gxCmdQueueClear(queue);
 		}
 	}
-	else
+	else if (swapPending)
 	{
-		if (needSwapTop)
-		{
-			gfxScreenSwapBuffers(GFX_TOP, isTopStereo);
-			needSwapTop = false;
-		}
-		if (needSwapBot)
-		{
-			gfxScreenSwapBuffers(GFX_BOTTOM, false);
-			needSwapBot = false;
-		}
+		gfxScreenSwapBuffers(GFX_TOP,    isTopStereo);
+		gfxScreenSwapBuffers(GFX_BOTTOM, false);
 	}
-}
-
-static void C3D_FrameSync(void)
-{
-	u32 cur[2];
-	u32 start[2] = { vblankCounter[0], vblankCounter[1] };
-	do
-	{
-		gspWaitForAnyEvent();
-		cur[0] = vblankCounter[0];
-		cur[1] = vblankCounter[1];
-	} while (cur[0]==start[0] || cur[1]==start[1]);
 }
 
 static bool C3Di_WaitAndClearQueue(s64 timeout)
@@ -954,28 +853,15 @@ static bool C3Di_WaitAndClearQueue(s64 timeout)
 	gxCmdQueue_s* queue = &C3Di_GetContext()->gxQueue;
 	if (!gxCmdQueueWait(queue, timeout))
 		return false;
+
 	gxCmdQueueStop(queue);
 	gxCmdQueueClear(queue);
 	return true;
 }
 
-static void C3Di_RenderQueueEnableVBlank(void)
-{
-	gspSetEventCallback(GSPGPU_EVENT_VBlank0, onVBlank0, NULL, false);
-	gspSetEventCallback(GSPGPU_EVENT_VBlank1, onVBlank1, NULL, false);
-}
-
-static void C3Di_RenderQueueDisableVBlank(void)
-{
-	gspSetEventCallback(GSPGPU_EVENT_VBlank0, NULL, NULL, false);
-	gspSetEventCallback(GSPGPU_EVENT_VBlank1, NULL, NULL, false);
-}
-
 static void C3Di_RenderQueueInit(void)
 {
 	C3D_Context* ctx = C3Di_GetContext();
-
-	C3Di_RenderQueueEnableVBlank();
 
 	GX_BindQueue(&ctx->gxQueue);
 	gxCmdQueueSetCallback(&ctx->gxQueue, onQueueFinish, NULL);
@@ -987,8 +873,6 @@ static void C3Di_RenderQueueExit(void)
 	C3Di_WaitAndClearQueue(-1);
 	gxCmdQueueSetCallback(&C3Di_GetContext()->gxQueue, NULL, NULL);
 	GX_BindQueue(NULL);
-
-	C3Di_RenderQueueDisableVBlank();
 }
 
 static void C3Di_RenderQueueWaitDone(void)
@@ -1019,20 +903,15 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target)
 	return true;
 }
 
-static void C3D_FrameSplit(u8 flags)
-{
-	u32 *cmdBuf, cmdBufSize;
-	if (!inFrame) return;
-	if (C3Di_SplitFrame(&cmdBuf, &cmdBufSize))
-		GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
-}
-
 static void C3D_FrameEnd(u8 flags)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 	if (!inFrame) return;
 
-	C3D_FrameSplit(flags);
+	u32 *cmdBuf, cmdBufSize;
+	if (C3Di_SplitFrame(&cmdBuf, &cmdBufSize))
+		GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
+
 	GPUCMD_SetBuffer(NULL, 0, 0);
 	inFrame = false;
 
@@ -1046,8 +925,7 @@ static void C3D_FrameEnd(u8 flags)
 
 	C3D_RenderTarget* target;
 	isTopStereo = false;
-	needSwapTop = true;
-	needSwapBot = true;
+	swapPending = true;
 
 	for (int i = 2; i >= 0; i --)
 	{
@@ -1095,23 +973,6 @@ static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFm
 	if (!depthBuf) return;
 
 	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
-}
-
-static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target)
-{
-	vramFree(target->frameBuf.colorBuf);
-	vramFree(target->frameBuf.depthBuf);
-}
-
-static void C3D_RenderTargetDelete(C3D_RenderTarget* target)
-{
-	if (inFrame)
-		svcBreak(USERBREAK_PANIC); // Shouldn't happen.
-	if (target->linked)
-		C3D_RenderTargetDetachOutput(target);
-	else
-		C3Di_WaitAndClearQueue(-1);
-	C3Di_RenderTargetDestroy(target);
 }
 
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags)
@@ -1180,132 +1041,6 @@ static void C3Di_SetTex(int unit, C3D_Tex* tex)
 	}
 }
 
-
-
-
-
-
-
-
-static struct
-{
-	bool dirty;
-	int count;
-	float24Uniform_s* data;
-} C3Di_ShaderFVecData;
-
-static bool C3Di_FVUnifEverDirty[C3D_FVUNIF_COUNT];
-static bool C3Di_IVUnifEverDirty[C3D_IVUNIF_COUNT];
-
-static void C3D_UpdateUniforms(void)
-{
-	int i = 0;
-
-	// Update FVec uniforms that come from shader constants
-	if (C3Di_ShaderFVecData.dirty)
-	{
-		while (i < C3Di_ShaderFVecData.count)
-		{
-			float24Uniform_s* u = &C3Di_ShaderFVecData.data[i++];
-			GPUCMD_AddIncrementalWrites(GPUREG_VSH_FLOATUNIFORM_CONFIG, (u32*)u, 4);
-			C3D_FVUnifDirty[u->id] = false;
-		}
-		C3Di_ShaderFVecData.dirty = false;
-		i = 0;
-	}
-
-	// Update FVec uniforms
-	while (i < C3D_FVUNIF_COUNT)
-	{
-		if (!C3D_FVUnifDirty[i])
-		{
-			i ++;
-			continue;
-		}
-
-		// Find the number of consecutive dirty uniforms
-		int j;
-		for (j = i; j < C3D_FVUNIF_COUNT && C3D_FVUnifDirty[j]; j ++);
-
-		// Upload the uniforms
-		GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG, 0x80000000|i);
-		GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA, (u32*)&C3D_FVUnif[i], (j-i)*4);
-
-		// Clear the dirty flag
-		int k;
-		for (k = i; k < j; k ++)
-		{
-			C3D_FVUnifDirty[k] = false;
-			C3Di_FVUnifEverDirty[k] = true;
-		}
-
-		// Advance
-		i = j;
-	}
-
-	// Update IVec uniforms
-	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
-	{
-		if (!C3D_IVUnifDirty[i]) continue;
-
-		GPUCMD_AddWrite(GPUREG_VSH_INTUNIFORM_I0+i, C3D_IVUnif[i]);
-		C3D_IVUnifDirty[i] = false;
-		C3Di_IVUnifEverDirty[i] = false;
-	}
-
-	// Update bool uniforms
-	if (C3D_BoolUnifsDirty)
-	{
-		GPUCMD_AddWrite(GPUREG_VSH_BOOLUNIFORM, 0x7FFF0000 | C3D_BoolUnifs);
-		C3D_BoolUnifsDirty = false;
-	}
-}
-
-static void C3Di_DirtyUniforms(void)
-{
-	int i;
-	C3D_BoolUnifsDirty = true;
-	if (C3Di_ShaderFVecData.count)
-		C3Di_ShaderFVecData.dirty = true;
-	for (i = 0; i < C3D_FVUNIF_COUNT; i ++)
-		C3D_FVUnifDirty[i] = C3D_FVUnifDirty[i] || C3Di_FVUnifEverDirty[i];
-	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
-		C3D_IVUnifDirty[i] = C3D_IVUnifDirty[i] || C3Di_IVUnifEverDirty[i];
-}
-
-static void C3Di_LoadShaderUniforms(shaderInstance_s* si)
-{
-	if (si->boolUniformMask)
-	{
-		C3D_BoolUnifs &= ~si->boolUniformMask;
-		C3D_BoolUnifs |= si->boolUniforms;
-	}
-
-	C3D_BoolUnifsDirty = true;
-
-	if (si->intUniformMask)
-	{
-		int i;
-		for (i = 0; i < 4; i ++)
-		{
-			if (si->intUniformMask & BIT(i))
-			{
-				C3D_IVUnif[i] = si->intUniforms[i];
-				C3D_IVUnifDirty[i] = true;
-			}
-		}
-	}
-	C3Di_ShaderFVecData.dirty = true;
-	C3Di_ShaderFVecData.count = si->numFloat24Uniforms;
-	C3Di_ShaderFVecData.data  = si->float24Uniforms;
-}
-
-
-
-
-
-
-
 static void C3Di_OnRestore(void)
 {
 	C3D_Context* ctx = C3Di_GetContext();
@@ -1314,11 +1049,12 @@ static void C3Di_OnRestore(void)
 		| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
 		| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
 
-	C3Di_DirtyUniforms();
-
 	if (ctx->fogLut)
 		ctx->flags |= C3DiF_FogLut;
 }
+
+#define GXQUEUE_MAX_ENTRIES 32
+static gxCmdEntry_s queue_entries[GXQUEUE_MAX_ENTRIES];
 
 static bool C3D_Init(size_t cmdBufSize)
 {
@@ -1334,13 +1070,8 @@ static bool C3D_Init(size_t cmdBufSize)
 	if (!ctx->cmdBuf)
 		return false;
 
-	ctx->gxQueue.maxEntries = 32;
-	ctx->gxQueue.entries = (gxCmdEntry_s*)malloc(ctx->gxQueue.maxEntries*sizeof(gxCmdEntry_s));
-	if (!ctx->gxQueue.entries)
-	{
-		linearFree(ctx->cmdBuf);
-		return false;
-	}
+	ctx->gxQueue.maxEntries = GXQUEUE_MAX_ENTRIES;
+	ctx->gxQueue.entries = queue_entries;
 
 	ctx->flags = C3DiF_Active | C3DiF_TexEnvBuf | C3DiF_Effect | C3DiF_TexStatus | C3DiF_TexAll | C3DiF_Reset;
 
@@ -1520,8 +1251,6 @@ static void C3Di_UpdateContext(void)
 			GPUCMD_AddWrites(GPUREG_FOG_LUT_DATA0, ctx->fogLut->data, 128);
 		}
 	}
-
-	C3D_UpdateUniforms();
 }
 
 static bool C3Di_SplitFrame(u32** pBuf, u32* pSize)
@@ -1551,7 +1280,6 @@ static void C3D_Fini(void)
 		return;
 
 	C3Di_RenderQueueExit();
-	free(ctx->gxQueue.entries);
 	linearFree(ctx->cmdBuf);
 	ctx->flags = 0;
 }
@@ -1577,6 +1305,4 @@ static void C3D_BindProgram(shaderProgram_s* program)
 				ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
 		}
 	}
-
-	C3Di_LoadShaderUniforms(program->vertexShader);
 }

@@ -154,7 +154,7 @@ static void SetupContexts(int w, int h) {
 static GfxResourceID white_square;
 static cc_bool cullingEnabled;
 
-void Gfx_RestoreState(void) {
+static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
 	// dummy texture (grey works better in menus than white)
@@ -164,7 +164,7 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) {
+static void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }

@@ -31,7 +31,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-CFLAGS	= -g -DNDEBUG -O3 -fipa-pta -fno-pie -flto=auto -fomit-frame-pointer -fbuiltin -ffast-math -ffp-contract=fast -mfsrra -mfsca -pipe -fno-math-errno
+CFLAGS	= -g -DNDEBUG -O3 -fipa-pta -fno-pie -flto=auto -fomit-frame-pointer -fbuiltin -ffast-math -ffp-contract=fast -mfsrra -mfsca -pipe -fno-math-errno -DPLAT_DREAMCAST
 LDFLAGS	= -g
 
 # Additional libraries to link against

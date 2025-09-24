@@ -15,7 +15,7 @@ LDFLAGS = -g -rdynamic
 ENAME   = ClassiCube
 # Name of the final target file
 # (usually this is the executable, but e.g. is the app bundle on macOS)
-TARGET := $(ENAME)
+TARGET  := $(ENAME)
 
 # Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
 # This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
@@ -88,15 +88,16 @@ endif
 
 ifeq ($(PLAT),hp-ux)
 	CC      = gcc
+	CFLAGS  += -std=c99 -D_POSIX_C_SOURCE=200112L -D_XOPEN_SOURCE=600 -D_DEFAULT_SOURCE -D_BSD_SOURCE
 	LDFLAGS =
-	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib -lGL -lpthread
+	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib/hpux32 -lGL -lpthread
 	BUILD_DIR = build/hpux
 endif
 
 ifeq ($(PLAT),darwin)
 	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
 	LIBS    =
-	LDFLAGS =  -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	LDFLAGS =  -rdynamic -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
 endif
@@ -172,28 +173,24 @@ ifeq ($(PLAT),riscos)
 	BUILD_DIR = build/riscos
 endif
 
-ifeq ($(PLAT),dos)
-	CC	=  i586-pc-msdosdjgpp-gcc 
-	LIBS    =
-	LDFLAGS = -g
+ifeq ($(PLAT),wince)
+	CC      =  arm-mingw32ce-gcc
 	OEXT    =  .exe
-	BUILD_DIR = build/dos
-	BEARSSL = 0
-
-	BUILD_DIRS += $(BUILD_DIR)/src/msdos
-	C_SOURCES  += $(wildcard src/msdos/*.c)
+	CFLAGS  += -march=armv5tej -mcpu=arm926ej-s -DUNICODE -D_WIN32_WCE
+	LDFLAGS =  -g
+	LIBS    =  -lcoredll -lws2
+	BUILD_DIR = build/wince
 endif
 
-
-ifdef SDL2
+ifdef BUILD_SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
 	LIBS += -lSDL2
 endif
-ifdef SDL3
+ifdef BUILD_SDL3
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
 	LIBS += -lSDL3
 endif
-ifdef TERMINAL
+ifdef BUILD_TERMINAL
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
 	LIBS := $(subst mwindows,mconsole,$(LIBS))
 endif
@@ -241,16 +238,16 @@ serenityos:
 irix:
 	$(MAKE) $(TARGET) PLAT=irix
 riscos:
-	$(MAKE) $(TARGET) PLAT=riscos
-dos:
-	$(MAKE) $(TARGET) PLAT=dos
+	$(MAKE) $(TARGET) PLAT=riscos    
+wince:
+	$(MAKE) $(TARGET) PLAT=wince
 # Default overrides
 sdl2:
-	$(MAKE) $(TARGET) SDL2=1
+	$(MAKE) $(TARGET) BUILD_SDL2=1
 sdl3:
-	$(MAKE) $(TARGET) SDL3=1
+	$(MAKE) $(TARGET) BUILD_SDL3=1
 terminal:
-	$(MAKE) $(TARGET) TERMINAL=1
+	$(MAKE) $(TARGET) BUILD_TERMINAL=1
 release:
 	$(MAKE) $(TARGET) RELEASE=1
 
@@ -283,7 +280,7 @@ n64:
 gba:
 	$(MAKE) -f misc/gba/Makefile
 ds:
-	$(MAKE) -f misc/ds/Makefile
+	$(MAKE) -f misc/nds/Makefile
 3ds:
 	$(MAKE) -f misc/3ds/Makefile
 gamecube:
@@ -296,14 +293,18 @@ switch:
 	$(MAKE) -f misc/switch/Makefile
 os/2:
 	$(MAKE) -f misc/os2/Makefile
+dos:
+	$(MAKE) -f misc/msdos/Makefile
 macclassic_68k:
 	$(MAKE) -f misc/macclassic/Makefile_68k
 macclassic_ppc:
 	$(MAKE) -f misc/macclassic/Makefile_ppc
-amiga_68k:
+amiga_gcc:
 	$(MAKE) -f misc/amiga/Makefile_68k
-amiga_ppc:
-	$(MAKE) -f misc/amiga/Makefile_ppc
+amiga:
+	$(MAKE) -f misc/amiga/Makefile
+atari_st:
+	$(MAKE) -f misc/atari_st/Makefile
 
 # Cleans up all build .o files
 clean:

@@ -2,7 +2,12 @@
 #include "../Audio.h"
 
 /* TODO needs way more testing, especially with sounds */
-static cc_bool valid_handles[SND_STREAM_MAX];
+#define HANDLE_STATE_UNUSED    0
+#define HANDLE_STATE_ALLOCATED 1
+#define HANDLE_STATE_PLAYABLE  2
+// Need to manually track playable state, to avoid triggering divide by zero when 0 channels in poll
+// https://github.com/KallistiOS/KallistiOS/pull/1099 - but manually check this to support older toolchains
+static cc_uint8 valid_handles[SND_STREAM_MAX];
 
 struct AudioBuffer {
 	int available;
@@ -28,7 +33,7 @@ void AudioBackend_Tick(void) {
 	// TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
 	for (int i = 0; i < SND_STREAM_MAX; i++)
 	{
-		if (valid_handles[i]) snd_stream_poll(i);
+		if (valid_handles[i] == HANDLE_STATE_PLAYABLE) snd_stream_poll(i);
 	}
 }
 
@@ -70,7 +75,7 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	
 	ctx->count   = buffers;
 	ctx->bufHead = 0;
-	valid_handles[ctx->hnd] = true;
+	valid_handles[ctx->hnd] = HANDLE_STATE_ALLOCATED;
 	return 0;
 }
 
@@ -78,7 +83,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->count) {
 		snd_stream_stop(ctx->hnd);
 		snd_stream_destroy(ctx->hnd);
-		valid_handles[ctx->hnd] = false;
+		valid_handles[ctx->hnd] = HANDLE_STATE_UNUSED;
 	}
 	
 	ctx->hnd   = SND_STREAM_INVALID;
@@ -115,6 +120,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {
 
 cc_result Audio_Play(struct AudioContext* ctx) {
 	snd_stream_start(ctx->hnd, ctx->sampleRate, ctx->channels == 2);
+	valid_handles[ctx->hnd] = HANDLE_STATE_PLAYABLE;
 	return 0;
 }
 

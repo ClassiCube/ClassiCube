@@ -64,7 +64,7 @@ void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src,
 
 
 /*########################################################################################################################*
-*------------------------------------------------------PNG decoder--------------------------------------------------------*
+*------------------------------------------------------PNG common---------------------------------------------------------*
 *#########################################################################################################################*/
 #define PNG_IHDR_SIZE 13
 #define PNG_PALETTE 256
@@ -79,13 +79,23 @@ enum PngFilter {
 	PNG_FILTER_NONE, PNG_FILTER_SUB, PNG_FILTER_UP, PNG_FILTER_AVERAGE, PNG_FILTER_PAETH
 };
 
-typedef void (*Png_RowExpander)(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst);
 static const cc_uint8 pngSig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 /* 5.2 PNG signature */
 cc_bool Png_Detect(const cc_uint8* data, cc_uint32 len) {
 	return len >= PNG_SIG_SIZE && Mem_Equal(data, pngSig, PNG_SIG_SIZE);
 }
+
+
+/*########################################################################################################################*
+*------------------------------------------------------PNG decoder--------------------------------------------------------*
+*#########################################################################################################################*/
+#if !defined CC_BUILD_COMPRESSION
+cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
+	return ERR_NOT_SUPPORTED;
+}
+#else
+typedef void (*Png_RowExpander)(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst);
 
 /* 9 Filtering */
 /* 13.9 Filtering */
@@ -329,11 +339,6 @@ static BitmapCol ExpandRGB(cc_uint8 bitsPerSample, int r, int g, int b) {
 	return BitmapCol_Make(r, g, b, 0);
 }
 
-#ifdef CC_BUILD_32X
-cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
-	return ERR_NOT_SUPPORTED;
-}
-#else
 cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[64];
 	cc_uint32 dataSize, fourCC;
@@ -559,7 +564,13 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_FILESYSTEM
+#if !defined CC_BUILD_FILESYSTEM
+/* No point including encoding code when can't save screenshots anyways */
+cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
+					Png_RowGetter getRow, cc_bool alpha, void* ctx) {
+	return ERR_NOT_SUPPORTED;
+}
+#else
 static void Png_Filter(cc_uint8 filter, const cc_uint8* cur, const cc_uint8* prior, cc_uint8* best, int lineLen, int bpp) {
 	/* 3 bytes per pixel constant */
 	cc_uint8 a, b, c;
@@ -667,7 +678,7 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	cc_uint8*  curLine = buffer + (bmp->width * 4) * 1;
 	cc_uint8* bestLine = buffer + (bmp->width * 4) * 2;
 
-#if CC_BUILD_MAXSTACK <= (50 * 1024)
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
 	struct ZLibState* zlState = (struct ZLibState*)Mem_TryAlloc(1, sizeof(struct ZLibState));
 #else
 	struct ZLibState _zlState;
@@ -678,6 +689,7 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	int y, lineSize;
 	cc_result res;
 
+	if (!zlState) return ERR_OUT_OF_MEMORY;
 	/* stream may not start at 0 (e.g. when making default.zip) */
 	if ((res = stream->Position(stream, &stream_beg))) return res;
 
@@ -748,12 +760,6 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 	res = Png_EncodeCore(bmp, stream, buffer, getRow, alpha, ctx);
 	Mem_Free(buffer);
 	return res;
-}
-#else
-/* No point including encoding code when can't save screenshots anyways */
-cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
-					Png_RowGetter getRow, cc_bool alpha, void* ctx) {
-	return ERR_NOT_SUPPORTED;
 }
 #endif
 

@@ -46,7 +46,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 # Code generation
 #---------------------------------------------------------------------------------
 ARCH	= -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
-CFLAGS	= -g -Wall -O2 -mword-relocations -ffunction-sections $(ARCH) $(INCLUDE) -D__3DS__
+CFLAGS	= -g -Wall -O2 -mword-relocations -ffunction-sections $(ARCH) $(INCLUDE) -D__3DS__ -DPLAT_3DS
 ASFLAGS	= -g $(ARCH)
 
 LDFLAGS	= -specs=3dsx.specs -g $(ARCH)
@@ -121,7 +121,7 @@ $(BUILD_DIR)/%.shbin: misc/3ds/%.v.pica
 	$(PICASSO) $< -o $@
 
 $(BUILD_DIR)/%.shbin.o: $(BUILD_DIR)/%.shbin
-	$(BIN2S) $< | $(ARM_AS) -o $@
+	$(BIN2S) $< | $(ARM_CC) -x assembler-with-cpp -c - -o $@
 
 
 #---------------------------------------------------------------------------------

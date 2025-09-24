@@ -6,12 +6,10 @@
 #include <malloc.h>
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
+#include "rsx_gpu.h"
 
 static gcmContextData* context;
 static u32 cur_fb;
-
-#define CB_SIZE   0x100000 // TODO: smaller command buffer?
-#define HOST_SIZE (32 * 1024 * 1024)
 
 
 /*########################################################################################################################*
@@ -101,7 +99,7 @@ static void FP_Load(FragmentProgram* fp, const u8* source) {
 	
 	fp->buffer = (u32*)rsxMemalign(128, size);
 	Mem_Copy(fp->buffer, fp->ucode, size);
-	rsxAddressToOffset(fp->buffer, &fp->offset);
+	gcmAddressToOffset(fp->buffer, &fp->offset);
 }
 
 static void LoadFragmentPrograms(void) {
@@ -132,34 +130,49 @@ static u32  depth_offset;
 static u32* depth_buffer;
 
 #define GCM_LABEL_INDEX 255
-static u32 slabelval = 1;
+static u32 labelID = 1;
+
+#define CB_SIZE   (1024 * 1024) // TODO: smaller command buffer?
+#define HOST_SIZE (32 * 1024 * 1024)
+
+#define uint_to_ptr(raw)    ((void*)((uintptr_t)(raw)))
+#define ptr_to_uint(raw) ((uint32_t)((uintptr_t)(raw)))
+extern s32 gcmInitBodyEx(uint32_t ctx, uint32_t cbSize, uint32_t ioSize, uint32_t ioBuf);
 
 static void CreateContext(void) {
-	void* host_addr = memalign(1024 * 1024, HOST_SIZE);
-	rsxInit(&context, CB_SIZE, HOST_SIZE, host_addr);
+	void* host_buf = memalign(1024 * 1024, HOST_SIZE);
+
+	// PS3 pointers are 32 bits in size, but our pointers are 64 bits
+	uint32_t ctx_ptr = 0;
+	int res = gcmInitBodyEx(ptr_to_uint(&ctx_ptr), CB_SIZE, HOST_SIZE, ptr_to_uint(host_buf));
+	if (res) Process_Abort2(res, "gcmInitBody failed");
+
+	context = uint_to_ptr(ctx_ptr);
+	rsxHeapInit();
 }
 
 static void WaitRSXFinish(void) {
-	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, labelID);
 	rsxFlushBuffer(context);
 
-	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != slabelval)
+	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != labelID)
 		usleep(30);
 
-	slabelval++;
+	labelID++;
 }
 
 static void WaitRSXIdle(void) {
-	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, slabelval);
-	rsxSetWaitLabel(context,         GCM_LABEL_INDEX, slabelval);
+	rsxSetWriteBackendLabel(context, GCM_LABEL_INDEX, labelID);
+	rsxSetWaitLabel(context,         GCM_LABEL_INDEX, labelID);
 
-	slabelval++;
+	labelID++;
 	WaitRSXFinish();
 }
 
 static void ConfigureVideo(void) {
-	videoState state;
     WaitRSXIdle();
+
+	videoState state;
 	videoGetState(0, 0, &state);
 
 	videoConfiguration vconfig = { 0 };
@@ -179,7 +192,7 @@ static void AllocColorSurface(u32 i) {
 	color_pitch     = DisplayInfo.Width * 4;
 	color_buffer[i] = (u32*)rsxMemalign(64, DisplayInfo.Height * color_pitch);
 	
-	rsxAddressToOffset(color_buffer[i], &color_offset[i]);
+	gcmAddressToOffset(color_buffer[i], &color_offset[i]);
 	gcmSetDisplayBuffer(i, color_offset[i], color_pitch,
 		DisplayInfo.Width, DisplayInfo.Height);
 }
@@ -188,7 +201,7 @@ static void AllocDepthSurface(void) {
 	depth_pitch  = DisplayInfo.Width * 4;
 	depth_buffer = (u32*)rsxMemalign(64, DisplayInfo.Height * depth_pitch);
 	
-	rsxAddressToOffset(depth_buffer, &depth_offset);
+	gcmAddressToOffset(depth_buffer, &depth_offset);
 }
 
 
@@ -269,7 +282,7 @@ cc_bool Gfx_TryRestoreContext(void) { return true; }
 cc_bool Gfx_WarnIfNecessary(void)   { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
-void Gfx_RestoreState(void) {
+static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
 	// 1x1 dummy white texture
@@ -279,7 +292,7 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) {
+static void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }
@@ -287,7 +300,7 @@ void Gfx_FreeState(void) {
 
 u32* Gfx_AllocImage(u32* offset, s32 w, s32 h) {
 	u32* pixels = (u32*)rsxMemalign(64, w * h * 4);
-	rsxAddressToOffset(pixels, offset);
+	gcmAddressToOffset(pixels, offset);
 	return pixels;
 }
 
@@ -305,11 +318,11 @@ void Gfx_TransferImage(u32 offset, s32 w, s32 h) {
 static cc_uint32 clearColor;
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
-	rsxSetCullFaceEnable(context, enabled);
+	RSX_set_cull_face(context, enabled);
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
-	rsxSetBlendEnable(context, enabled);
+	RSX_set_alpha_blend(context, enabled);
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -322,25 +335,19 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	rsxSetDepthWriteEnable(context, enabled);
+	RSX_set_depth_write(context, enabled);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
-	rsxSetDepthTestEnable(context, enabled);
+	RSX_set_depth_test(context, enabled);
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	rsxSetAlphaTestEnable(context, enabled);
+	RSX_set_alpha_test(context, enabled);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	unsigned mask = 0;
-	if (r) mask |= GCM_COLOR_MASK_R;
-	if (g) mask |= GCM_COLOR_MASK_G;
-	if (b) mask |= GCM_COLOR_MASK_B;
-	if (a) mask |= GCM_COLOR_MASK_A;
-
-	rsxSetColorMask(context, mask);
+	RSX_set_color_write_mask(context, r, g, b, a);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -414,9 +421,9 @@ static void ResetFrameState(void) {
 	rsxSetClearColor(context, clearColor);
 	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
 
-	rsxSetDepthFunc(context, GCM_LEQUAL);	
-	rsxSetDepthWriteEnable(context, true);
-	rsxSetDepthTestEnable(context,  true);
+	RSX_set_depth_func(context, GCM_LEQUAL);	
+	RSX_set_depth_write(context, true);
+	RSX_set_depth_test(context,  true);
 	
 	rsxSetUserClipPlaneControl(context, GCM_USER_CLIP_PLANE_DISABLE,
 						GCM_USER_CLIP_PLANE_DISABLE,
@@ -447,11 +454,7 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int targets = 0;
-	if (buffers & GFX_BUFFER_COLOR) targets |= (GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A);
-	if (buffers & GFX_BUFFER_DEPTH) targets |= (GCM_CLEAR_S | GCM_CLEAR_Z);
-	
-	rsxClearSurface(context, targets); 
+	RSX_clear_buffers(context, buffers & GFX_BUFFER_COLOR, buffers & GFX_BUFFER_DEPTH);
 }
 
 void Gfx_EndFrame(void) {
@@ -483,16 +486,10 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	offset[3] = 0.0f;
 
 	rsxSetViewport(context, x, y, w, h, zmin, zmax, scale, offset);
-	
-	// TODO: even needed?
-	for (int i = 0; i < 8; i++)
-	{
-		rsxSetViewportClip(context, i, w, h);
-	}
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	rsxSetScissor(context, x, y, w, h);
+	RSX_set_scissor_rect(context, x, y, w, h);
 }
 
 
@@ -502,7 +499,7 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	return 1;/* TODO */
+	return (void*)1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }
@@ -518,7 +515,7 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 
 void Gfx_BindVb(GfxResourceID vb) { 
 	u32 offset;
-	rsxAddressToOffset(vb, &offset);
+	gcmAddressToOffset(vb, &offset);
 	
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_POS,    0, offset, 
@@ -644,7 +641,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	/* TODO */
 	
 	u32 offset;
-	rsxAddressToOffset(tex->pixels, &offset);
+	gcmAddressToOffset(tex->pixels, &offset);
 	gcmTexture texture;
 
 	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_SWZ;

@@ -50,10 +50,10 @@ br_chacha20_ct_run(const void *key,
 		size_t clen;
 		unsigned char tmp[64];
 
-		memcpy(&state[0], CW, sizeof CW);
-		memcpy(&state[4], kw, sizeof kw);
+		br_memcpy(&state[0], CW, sizeof CW);
+		br_memcpy(&state[4], kw, sizeof kw);
 		state[12] = cc;
-		memcpy(&state[13], ivw, sizeof ivw);
+		br_memcpy(&state[13], ivw, sizeof ivw);
 		for (i = 0; i < 10; i ++) {
 
 #define QROUND(a, b, c, d)   do { \

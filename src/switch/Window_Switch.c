@@ -147,13 +147,36 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping defaults_switch[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP    },  
+	[BIND_BACK]         = { CCPAD_DOWN  },
+	[BIND_LEFT]         = { CCPAD_LEFT  },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
+	[BIND_DELETE_BLOCK] = { CCPAD_R     },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
+};
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 static void HandleButtons(int port, u64 mods) {
-	Gamepad_SetButton(port, CCPAD_L, mods & HidNpadButton_L);
-	Gamepad_SetButton(port, CCPAD_R, mods & HidNpadButton_R);
+	Gamepad_SetButton(port, CCPAD_L,  mods & HidNpadButton_L);
+	Gamepad_SetButton(port, CCPAD_R,  mods & HidNpadButton_R);
+	Gamepad_SetButton(port, CCPAD_ZL, mods & HidNpadButton_ZL);
+	Gamepad_SetButton(port, CCPAD_ZR, mods & HidNpadButton_ZR);
 	
 	Gamepad_SetButton(port, CCPAD_1, mods & HidNpadButton_A);
 	Gamepad_SetButton(port, CCPAD_2, mods & HidNpadButton_B);
@@ -179,7 +202,7 @@ static void ProcessJoystickInput(int port, int axis, HidAnalogStickState* pos, f
 }
 
 void Gamepads_Process(float delta) {
-	int port = Gamepad_Connect(0x51C, PadBind_Defaults);
+	int port = Gamepad_Connect(0x51C, defaults_switch);
 	u64 keys = padGetButtons(&pad);
 	HandleButtons(port, keys);
 

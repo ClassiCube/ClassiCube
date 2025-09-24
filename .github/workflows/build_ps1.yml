@@ -31,17 +31,10 @@ jobs:
           make ps1
 
 
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile PS1 build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-
-
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-ps1/ClassiCube-PS1.elf'
+          SOURCE_FILE: 'build/ps1/ClassiCube-ps1.elf'
           DEST_NAME: 'ClassiCube-PS1.elf'
 
       - uses: ./.github/actions/upload_build
@@ -68,3 +61,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'ps1'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce PS1 build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

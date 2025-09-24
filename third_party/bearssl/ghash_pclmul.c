@@ -228,7 +228,7 @@ pclmulqdq11(__m128i x, __m128i y)
 	} while (0)
 
 /* see bearssl_hash.h */
-BR_TARGET("ssse3,pclmul")
+BR_TARGET("ssse3,pclmul") BR_SSE_FUNCTION
 void
 br_ghash_pclmul(void *y, const void *h, const void *data, size_t len)
 {
@@ -250,8 +250,8 @@ br_ghash_pclmul(void *y, const void *h, const void *data, size_t len)
 	buf2 = buf1 + (num4 << 6);
 	num1 = (len + 15) >> 4;
 	if ((len & 15) != 0) {
-		memcpy(tmp, buf2, len);
-		memset(tmp + len, 0, (num1 << 4) - len);
+		br_memcpy(tmp, buf2, len);
+		br_memset(tmp + len, 0, (num1 << 4) - len);
 		buf2 = tmp;
 	}
 

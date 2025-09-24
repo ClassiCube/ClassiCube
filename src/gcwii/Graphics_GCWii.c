@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <gccore.h>
+#include "gx_gpu.h"
 
 static void* fifo_buffer;
 #define FIFO_SIZE (256 * 1024)
@@ -60,6 +61,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 512 * 512;
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	
 	Gfx.MinTexWidth  = 4;
 	Gfx.MinTexHeight = 4;
@@ -77,7 +79,7 @@ void Gfx_Free(void) {
 }
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 
-void Gfx_RestoreState(void) { 
+static void Gfx_RestoreState(void) { 
 	InitDefaultResources();
 
 	// 4x4 dummy white texture (textures must be at least 1 4x4 tile)
@@ -88,7 +90,7 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) { 
+static void Gfx_FreeState(void) { 
 	FreeDefaultResources();
 	Gfx_DeleteTexture(&white_square);
 }
@@ -109,50 +111,74 @@ typedef struct CCTexture_ {
 // GX RGBA8 textures
 // - store pixels in 4x4 tiles
 // - store all of the AR values of the tile's pixels, then store all of the GB values
+//
+// http://hitmen.c02.at/files/yagcd/yagcd/chap15.html
+//  section 15.35  TPL (Texture Palette)
+// "RGBA8 (4x4 tiles in two cache lines - first is AR and second is GB"
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, 
+										unsigned* maskX, unsigned* maskY) {
+	*maskX = 0b00011; // 2 linear X bits, 1 bit until next block
+	*maskY = 0b01100; // 2 linear Y bits, 1 bit until next block
+
+	// Adjust for lower 2 X and 2 Y linear bits
+	w >>= 3;
+	h >>= 3;
+	int shift = 5;
+
+	for (; w > 0; w >>= 1) {
+		*maskX += 0x01 << shift;
+		shift  += 1;
+	}
+
+	for (; h > 0; h >>= 1) {
+		*maskY += 0x01 << shift;
+		shift  += 1;
+	}
+}
+
 static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp, 
 			int originX, int originY, int rowWidth) {
-	int stride = GX_GetTexObjWidth(&tex->obj) * 4;
-	// TODO not really right
-	// TODO originX ignored
-	originX &= ~0x03;
-	originY &= ~0x03;
-	
-	// http://hitmen.c02.at/files/yagcd/yagcd/chap15.html
-	//  section 15.35  TPL (Texture Palette)
-	// "RGBA8 (4x4 tiles in two cache lines - first is AR and second is GB"
-	uint8_t *src = (uint8_t*)bmp->scan0;
-	uint8_t *dst = (uint8_t*)tex->pixels + stride * originY;
-	int srcWidth = bmp->width, srcHeight = bmp->height;
-	
-	for (int tileY = 0; tileY < srcHeight; tileY += 4)
-		for (int tileX = 0; tileX < srcWidth; tileX += 4) 
+	int src_w = bmp->width,  dst_w = GX_GetTexObjWidth(&tex->obj);
+	int src_h = bmp->height, dst_h = GX_GetTexObjHeight(&tex->obj);
+
+	cc_uint16* dst_AR = (cc_uint16*)tex->pixels;
+	cc_uint16* dst_GB = (cc_uint16*)tex->pixels + 16; // offset by a 4x4 block
+	cc_uint32* src = bmp->scan0;
+
+	unsigned maskX, maskY;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+
+	unsigned begX = 0, begY = 0;
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { begX = (begX - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { begY = (begY - maskY) & maskY; }
+
+	unsigned Y = begY;
+	for (int y = 0; y < src_h; y++)
 	{
-		for (int y = 0; y < 4; y++) {
-			for (int x = 0; x < 4; x++) {
-				uint32_t idx = (((tileY + y) * rowWidth) + tileX + x) << 2;
-
-				*dst++ = src[idx + 0]; // A
-				*dst++ = src[idx + 1]; // R
-			}
+		unsigned X = begX;
+		for (int x = 0; x < src_w; x++)
+		{
+			BitmapCol c = src[x];
+			dst_AR[X | Y] = (BitmapCol_A(c) << 8) | BitmapCol_R(c);
+			dst_GB[X | Y] = (BitmapCol_G(c) << 8) | BitmapCol_B(c);
+			
+			X = (X - maskX) & maskX;
 		}
-		
-		for (int y = 0; y < 4; y++) {
-			for (int x = 0; x < 4; x++) {
-				uint32_t idx = (((tileY + y) * rowWidth) + tileX + x) << 2;
-
-				*dst++ = src[idx + 2]; // G
-				*dst++ = src[idx + 3]; // B
-			}
-		}
+		Y = (Y - maskY) & maskY;
+		src += rowWidth;
 	}
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	int size = dst_w * dst_h * 4;
 	CCTexture* tex = (CCTexture*)memalign(32, 32 + size);
 	if (!tex) return NULL;
 	
-	GX_InitTexObj(&tex->obj, tex->pixels, bmp->width, bmp->height,
+	GX_InitTexObj(&tex->obj, tex->pixels, dst_w, dst_h,
 			GX_TF_RGBA8, GX_REPEAT, GX_REPEAT, GX_FALSE);
 	GX_InitTexObjFilterMode(&tex->obj, GX_NEAR, GX_NEAR);
 			
@@ -163,7 +189,6 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	// TODO: wrong behaviour if x/y/part isn't multiple of 4 pixels
 	ReorderPixels(tex, part, x, y, rowWidth);
 	GX_InvalidateTexAll();
 }
@@ -245,7 +270,8 @@ static BitmapCol* GCWii_GetRow(struct Bitmap* bmp, int y, void* ctx) {
 	int blockXStride = (4 * 4) * 4; // 16 pixels per tile
 
 	// Do the inverse of converting from 4x4 tiled to linear
-	for (u32 x = 0; x < bmp->width; x++)
+	int width = bmp->width;
+	for (u32 x = 0; x < width; x++)
 	{
 		int tileY = y >> 2, tileX = x >> 2;
 		int locY  = y & 0x3, locX = x & 0x3;
@@ -527,7 +553,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		GX_LoadProjectionMtx(dst,
 			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
-		GX_LoadPosMtxImm(dst, GX_PNMTX0);
+		XF_SetMatrix_3x4((GX_matrix_3x4*)&dst, XF_POS_MATRIX0);
 	}
 }
 
@@ -540,12 +566,12 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 static float texOffsetX, texOffsetY;
 static void UpdateTexCoordGen(void) {
 	if (texOffsetX || texOffsetY) {
-		Mtx mat   = { 0 };
+		GX_matrix_2x4 mat = { 0 };
 		// https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/glTranslate.xml
-		mat[0][0] = 1; mat[0][3] = texOffsetX;
-		mat[1][1] = 1; mat[1][3] = texOffsetY;
+		mat.m[0][0] = 1; mat.m[0][3] = texOffsetX;
+		mat.m[1][1] = 1; mat.m[1][3] = texOffsetY;
 		
-		GX_LoadTexMtxImm(mat, GX_TEXMTX0, GX_MTX2x4);
+		XF_SetMatrix_2x4(&mat, XF_TEX_MATRIX0);
 		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_TEXMTX0);
 	} else {
 		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
@@ -611,8 +637,8 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	{
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
-		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color1u32(v->Col);
+		FIFO_PUSH_F32x3(v->x, v->y, v->z);
+		FIFO_PUSH_U32(v->Col);
 	}
 }
 
@@ -622,9 +648,9 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	{
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
-		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color1u32(v->Col);
-		GX_TexCoord2f32(v->U, v->V);
+		FIFO_PUSH_F32x3(v->x, v->y, v->z);
+		FIFO_PUSH_U32(v->Col);
+		FIFO_PUSH_F32x2(v->U, v->V);
 	}
 }
 

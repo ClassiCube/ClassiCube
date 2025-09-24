@@ -88,6 +88,6 @@ br_asn1_encode_uint(void *dest, br_asn1_uint pp)
 	lenlen = br_asn1_encode_length(buf, pp.asn1len);
 	buf += lenlen;
 	*buf = 0x00;
-	memcpy(buf + pp.asn1len - pp.len, pp.data, pp.len);
+	br_memcpy(buf + pp.asn1len - pp.len, pp.data, pp.len);
 	return 1 + lenlen + pp.asn1len;
 }

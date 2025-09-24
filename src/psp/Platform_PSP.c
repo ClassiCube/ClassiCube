@@ -1,4 +1,7 @@
 #define CC_XTEA_ENCRYPTION
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -34,7 +37,10 @@ cc_bool Platform_ReadonlyFilesystem;
 PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 
-PSP_DISABLE_AUTOSTART_PTHREAD() // reduces .elf size by 140 kb
+// Save 140 kb by not linking in pthreads
+PSP_DISABLE_AUTOSTART_PTHREAD()
+// Save 70kb by not linking in sprintf/setenv code etc
+PSP_DISABLE_NEWLIB_TIMEZONE_SUPPORT()
 
 
 /*########################################################################################################################*
@@ -106,6 +112,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 }
 
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	int result = sceIoMkdir(path->buffer, 0777);
@@ -483,6 +491,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+void Process_Exit(cc_result code) { exit(code); }
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
@@ -492,4 +502,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }

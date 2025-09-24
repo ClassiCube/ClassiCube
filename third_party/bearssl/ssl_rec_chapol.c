@@ -32,8 +32,8 @@ gen_chapol_init(br_sslrec_chapol_context *cc,
 	cc->seq = 0;
 	cc->ichacha = ichacha;
 	cc->ipoly = ipoly;
-	memcpy(cc->key, key, sizeof cc->key);
-	memcpy(cc->iv, iv, sizeof cc->iv);
+	br_memcpy(cc->key, key, sizeof cc->key);
+	br_memcpy(cc->iv, iv, sizeof cc->iv);
 }
 
 static void
@@ -51,7 +51,7 @@ gen_chapol_process(br_sslrec_chapol_context *cc,
 	header[8] = (unsigned char)record_type;
 	br_enc16be(header + 9, version);
 	br_enc16be(header + 11, len);
-	memcpy(nonce, cc->iv, 12);
+	br_memcpy(nonce, cc->iv, 12);
 	for (u = 0; u < 8; u ++) {
 		nonce[11 - u] ^= (unsigned char)seq;
 		seq >>= 8;

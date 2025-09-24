@@ -461,8 +461,8 @@ run_code(jacobian *P1, const jacobian *P2,
 	/*
 	 * Copy the two operands in the dedicated registers.
 	 */
-	memcpy(t[P1x], P1->c, 3 * I31_LEN * sizeof(uint32_t));
-	memcpy(t[P2x], P2->c, 3 * I31_LEN * sizeof(uint32_t));
+	br_memcpy(t[P1x], P1->c, 3 * I31_LEN * sizeof(uint32_t));
+	br_memcpy(t[P2x], P2->c, 3 * I31_LEN * sizeof(uint32_t));
 
 	/*
 	 * Run formulas.
@@ -484,7 +484,7 @@ run_code(jacobian *P1, const jacobian *P2,
 			unsigned char tp[(BR_MAX_EC_SIZE + 7) >> 3];
 
 		case 0:
-			memcpy(t[d], t[a], I31_LEN * sizeof(uint32_t));
+			br_memcpy(t[d], t[a], I31_LEN * sizeof(uint32_t));
 			break;
 		case 1:
 			ctl = br_i31_add(t[d], t[a], 1);
@@ -513,7 +513,7 @@ run_code(jacobian *P1, const jacobian *P2,
 	/*
 	 * Copy back result.
 	 */
-	memcpy(P1->c, t[P1x], 3 * I31_LEN * sizeof(uint32_t));
+	br_memcpy(P1->c, t[P1x], 3 * I31_LEN * sizeof(uint32_t));
 	return r;
 }
 
@@ -523,7 +523,7 @@ set_one(uint32_t *x, const uint32_t *p)
 	size_t plen;
 
 	plen = (p[0] + 63) >> 5;
-	memset(x, 0, plen * sizeof *x);
+	br_memset(x, 0, plen * sizeof *x);
 	x[0] = p[0];
 	x[1] = 0x00000001;
 }
@@ -531,7 +531,7 @@ set_one(uint32_t *x, const uint32_t *p)
 static void
 point_zero(jacobian *P, const curve_params *cc)
 {
-	memset(P, 0, sizeof *P);
+	br_memset(P, 0, sizeof *P);
 	P->c[0][0] = P->c[1][0] = P->c[2][0] = cc->p[0];
 }
 
@@ -568,9 +568,9 @@ point_mul(jacobian *P, const unsigned char *x, size_t xlen,
 	uint32_t qz;
 	jacobian P2, P3, Q, T, U;
 
-	memcpy(&P2, P, sizeof P2);
+	br_memcpy(&P2, P, sizeof P2);
 	point_double(&P2, cc);
-	memcpy(&P3, P, sizeof P3);
+	br_memcpy(&P3, P, sizeof P3);
 	point_add(&P3, &P2, cc);
 
 	point_zero(&Q, cc);
@@ -584,8 +584,8 @@ point_mul(jacobian *P, const unsigned char *x, size_t xlen,
 
 			point_double(&Q, cc);
 			point_double(&Q, cc);
-			memcpy(&T, P, sizeof T);
-			memcpy(&U, &Q, sizeof U);
+			br_memcpy(&T, P, sizeof T);
+			br_memcpy(&U, &Q, sizeof U);
 			bits = (*x >> k) & (uint32_t)3;
 			bnz = NEQ(bits, 0);
 			CCOPY(EQ(bits, 2), &T, &P2, sizeof T);
@@ -597,7 +597,7 @@ point_mul(jacobian *P, const unsigned char *x, size_t xlen,
 		}
 		x ++;
 	}
-	memcpy(P, &Q, sizeof Q);
+	br_memcpy(P, &Q, sizeof Q);
 }
 
 /*
@@ -652,8 +652,8 @@ point_decode(jacobian *P, const void *src, size_t len, const curve_params *cc)
 	 * Convert coordinates and check that the point is valid.
 	 */
 	zlen = ((cc->p[0] + 63) >> 5) * sizeof(uint32_t);
-	memcpy(Q.c[0], cc->R2, zlen);
-	memcpy(Q.c[1], cc->b, zlen);
+	br_memcpy(Q.c[0], cc->R2, zlen);
+	br_memcpy(Q.c[1], cc->b, zlen);
 	set_one(Q.c[2], cc->p);
 	r &= ~run_code(P, &Q, cc, code_check);
 	return r;
@@ -677,7 +677,7 @@ point_encode(void *dst, const jacobian *P, const curve_params *cc)
 	xbl -= (xbl >> 5);
 	plen = (xbl + 7) >> 3;
 	buf[0] = 0x04;
-	memcpy(&Q, P, sizeof *P);
+	br_memcpy(&Q, P, sizeof *P);
 	set_one(T.c[2], cc->p);
 	run_code(&Q, &T, cc, code_affine);
 	br_i31_encode(buf + 1, plen, Q.c[0]);
@@ -752,7 +752,7 @@ api_mulgen(unsigned char *R,
 	size_t Glen;
 
 	G = api_generator(curve, &Glen);
-	memcpy(R, G, Glen);
+	br_memcpy(R, G, Glen);
 	api_mul(R, Glen, x, xlen, curve);
 	return Glen;
 }

@@ -1084,9 +1084,9 @@ static void CheckResourcesScreen_Activated(struct LScreen* s_) {
 }
 
 static void CheckResourcesScreen_ResetArea(struct Context2D* ctx, int x, int y, int width, int height) {
-	int R = BitmapCol_R(Launcher_Theme.BackgroundColor) * 0.78f; /* 153 -> 120 */
-	int G = BitmapCol_G(Launcher_Theme.BackgroundColor) * 0.70f; /* 127 ->  89 */
-	int B = BitmapCol_B(Launcher_Theme.BackgroundColor) * 0.88f; /* 172 -> 151 */
+	float R = BitmapCol_R(Launcher_Theme.BackgroundColor) * 0.78f; /* 153 -> 120 */
+	float G = BitmapCol_G(Launcher_Theme.BackgroundColor) * 0.70f; /* 127 ->  89 */
+	float B = BitmapCol_B(Launcher_Theme.BackgroundColor) * 0.88f; /* 172 -> 151 */
 
 	Gradient_Noise(ctx, BitmapColor_RGB(R, G, B), 4, x, y, width, height);
 }

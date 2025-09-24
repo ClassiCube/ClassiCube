@@ -27,13 +27,6 @@ jobs:
           make macclassic_68k RETRO68=/Retro68-build/toolchain ARCH_68040=1
 
 
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile Mac Classic build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-
-
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
@@ -58,3 +51,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'macclassic'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce Mac Classic build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

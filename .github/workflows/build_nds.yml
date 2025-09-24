@@ -30,13 +30,6 @@ jobs:
           make ds
           export BUILD_DSI=1
           make ds
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile NDS build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
  
          
       - uses: ./.github/actions/upload_build
@@ -48,7 +41,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-nds/cc-arm9.elf'
+          SOURCE_FILE: 'build/nds/cc-arm9.elf'
           DEST_NAME: 'ClassiCube-nds.elf'
 
       - uses: ./.github/actions/upload_build
@@ -60,7 +53,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build-dsi/cc-arm9.elf'
+          SOURCE_FILE: 'build/dsi/cc-arm9.elf'
           DEST_NAME: 'ClassiCube-dsi.elf'
           
           
@@ -69,3 +62,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'nds'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce NDS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

@@ -49,7 +49,7 @@ br_i31_modpow(uint32_t *x,
 	 *
 	 * Note that there is no need to call br_i32_from_monty().
 	 */
-	memcpy(t1, x, mlen);
+	br_memcpy(t1, x, mlen);
 	br_i31_to_monty(t1, m);
 	br_i31_zero(x, m[0]);
 	x[1] = 1;
@@ -60,6 +60,6 @@ br_i31_modpow(uint32_t *x,
 		br_i31_montymul(t2, x, t1, m, m0i);
 		CCOPY(ctl, x, t2, mlen);
 		br_i31_montymul(t2, t1, t1, m, m0i);
-		memcpy(t1, t2, mlen);
+		br_memcpy(t1, t2, mlen);
 	}
 }

@@ -25,6 +25,8 @@
 #include "../misc/opengl/GL1Funcs.h"
 #if defined CC_BUILD_SYMBIAN
 #include "../misc/opengl/GL2Funcs.h"
+
+static cc_bool mbx;
 #endif
 
 #if CC_BUILD_MAXSTACK <= (64 * 1024)
@@ -84,7 +86,9 @@ void Gfx_Create(void) {
 #ifdef CC_BUILD_GL11_FALLBACK
 	GLContext_GetAll(coreFuncs, Array_Elems(coreFuncs));
 #endif
+#ifndef CC_BUILD_GLES
 	customMipmapsLevels = true;
+#endif
 	Gfx.BackendType     = CC_GFX_BACKEND_GL1;
 
 	GL_InitCommon();
@@ -203,27 +207,27 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 #define IB_PTR NULL
 
 static void GL_SetupVbColoured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, VB_PTR +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, VB_PTR + 12);
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR +  0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR + 12));
 }
 
 static void GL_SetupVbTextured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, VB_PTR + 12);
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, VB_PTR + 16);
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR +  0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + 12));
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + 16));
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, VB_PTR + offset +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, VB_PTR + offset + 12);
+	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR + offset +  0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (GLpointer)(VB_PTR + offset + 12));
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, VB_PTR + offset +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 12);
-	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 16);
+	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset +  0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset + 12));
+	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -263,9 +267,9 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR + offset +  0);
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 12);
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 16);
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset +  0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset + 12));
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset + 16));
 	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),  GL_UNSIGNED_SHORT, IB_PTR);
 }
 
@@ -335,6 +339,21 @@ static void SetAlphaTest(cc_bool enabled) {
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
+#ifdef CC_BUILD_SYMBIAN
+	if (mbx) {
+		/* On PowerVR MBX cards, glColorMask appears to be unimplemented in hardware */
+		/*  and thus any usage of it significantly hurts performance. */
+		/* So instead, draw with blending of 'new_RGB = current_RGB' - that way */
+		/*  depth buffer is updated while the colour buffer remain unchanged. */
+		if (depthOnly) {
+			_glBlendFunc(GL_ZERO, GL_ONE);
+			Gfx_SetAlphaBlending(true);
+		} else {
+			_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		return;
+	}
+#endif
 	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
 				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 	
@@ -422,6 +441,18 @@ cc_bool Gfx_WarnIfNecessary(void) {
 		Gfx.Limitations |= GFX_LIMIT_VERTEX_ONLY_FOG;
 		return true;
 	}
+#if defined CC_BUILD_SYMBIAN
+	if (String_ContainsConst(&renderer, "SGX")) {
+	} else if (String_ContainsConst(&renderer, "MBX")) {
+		Gfx.Limitations |= GFX_LIMIT_MINIMAL;
+		mbx = true;
+	} else if (!String_ContainsConst(&renderer, "HW")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+
+		Gfx.Limitations |= GFX_LIMIT_MINIMAL;
+		return true;
+	}
+#endif
 	return false;
 }
 
@@ -554,7 +585,7 @@ static void APIENTRY gl10_colorPointer(GLint size, GLenum type, GLsizei stride, 
 static void APIENTRY gl10_texCoordPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
 }
 static void APIENTRY gl10_vertexPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
-	gl10_vb = cur_vb->data + offset;
+	gl10_vb = cur_vb->data + (cc_uintptr)offset;
 }
 
 

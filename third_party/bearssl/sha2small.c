@@ -215,7 +215,7 @@ sha2small_update(br_sha224_context *cc, const void *data, size_t len)
 		if (clen > len) {
 			clen = len;
 		}
-		memcpy(cc->buf + ptr, buf, clen);
+		br_memcpy(cc->buf + ptr, buf, clen);
 		ptr += clen;
 		buf += clen;
 		len -= clen;
@@ -234,15 +234,15 @@ sha2small_out(const br_sha224_context *cc, void *dst, int num)
 	size_t ptr;
 
 	ptr = (size_t)cc->count & 63;
-	memcpy(buf, cc->buf, ptr);
-	memcpy(val, cc->val, sizeof val);
+	br_memcpy(buf, cc->buf, ptr);
+	br_memcpy(val, cc->val, sizeof val);
 	buf[ptr ++] = 0x80;
 	if (ptr > 56) {
-		memset(buf + ptr, 0, 64 - ptr);
+		br_memset(buf + ptr, 0, 64 - ptr);
 		br_sha2small_round(buf, val);
-		memset(buf, 0, 56);
+		br_memset(buf, 0, 56);
 	} else {
-		memset(buf + ptr, 0, 56 - ptr);
+		br_memset(buf + ptr, 0, 56 - ptr);
 	}
 	br_enc64be(buf + 56, cc->count << 3);
 	br_sha2small_round(buf, val);
@@ -254,7 +254,7 @@ void
 br_sha224_init(br_sha224_context *cc)
 {
 	cc->vtable = &br_sha224_vtable;
-	memcpy(cc->val, br_sha224_IV, sizeof cc->val);
+	br_memcpy(cc->val, br_sha224_IV, sizeof cc->val);
 	cc->count = 0;
 }
 
@@ -293,7 +293,7 @@ void
 br_sha256_init(br_sha256_context *cc)
 {
 	cc->vtable = &br_sha256_vtable;
-	memcpy(cc->val, br_sha256_IV, sizeof cc->val);
+	br_memcpy(cc->val, br_sha256_IV, sizeof cc->val);
 	cc->count = 0;
 }
 

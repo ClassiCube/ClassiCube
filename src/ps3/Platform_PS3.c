@@ -1,4 +1,7 @@
 #define CC_XTEA_ENCRYPTION
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -60,10 +63,14 @@ TimeMS DateTime_CurrentUTC(void) {
 }
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
-	struct timeval cur; 
+	time_t cur_sec; 
 	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+
+	u64 sec, nsec;
+	sysGetCurrentTime(&sec, &nsec);
+
+	cur_sec = sec;
+	localtime_r(&cur_sec, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;
@@ -112,6 +119,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
@@ -482,6 +491,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+void Process_Exit(cc_result code) { exit(code); }
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
@@ -491,4 +502,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }

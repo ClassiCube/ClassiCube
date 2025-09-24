@@ -18,7 +18,9 @@ SOURCE_DIRS		= src src/psp third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR		= build/psp
 
-PSP_EBOOT_TITLE  = ClassiCube
+SFO_TITLE  = ClassiCube
+SFO_DISCID = CUBE02000
+
 PSP_EBOOT_ICON	 = misc/psp/ICON0.png
 PSP_EBOOT_SFO    = PARAM.SFO
 PSP_EBOOT_ICON1  = NULL
@@ -36,7 +38,7 @@ S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
-CFLAGS   := -I$(PSPSDK)/include -g -O1 -fno-math-errno -D_PSP_FW_VERSION=600
+CFLAGS   := -I$(PSPSDK)/include -g -O1 -fno-math-errno -D_PSP_FW_VERSION=600 -DPLAT_PSP
 ASFLAGS  := -I$(PSPSDK)/include -g
 
 LDFLAGS  := -L$(PSPSDK)/lib -specs=$(PSPSDK)/lib/prxspecs -Wl,-q,-T$(PSPSDK)/lib/linkfile.prx -Wl,-zmax-page-size=128
@@ -82,7 +84,7 @@ $(TARGET).prx: $(TARGET).elf
 	$(PRXGEN) $< $@
 
 $(PSP_EBOOT_SFO): 
-	$(MKSFO) -d MEMSIZE=1 '$(PSP_EBOOT_TITLE)' $@
+	$(MKSFO) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $@
 
 $(PSP_EBOOT): $(TARGET).prx $(PSP_EBOOT_SFO)
 	$(PACK_PBP) $(PSP_EBOOT) $(PSP_EBOOT_SFO) $(PSP_EBOOT_ICON)  \

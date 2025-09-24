@@ -142,22 +142,22 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 	[BIND_LOOK_DOWN]    = { CCPAD_4, CCPAD_DOWN },
 	[BIND_LOOK_LEFT]    = { CCPAD_4, CCPAD_LEFT },
 	[BIND_LOOK_RIGHT]   = { CCPAD_4, CCPAD_RIGHT },
-	[BIND_FORWARD]      = { CCPAD_UP,   0 },  
-	[BIND_BACK]         = { CCPAD_DOWN, 0 },
-	[BIND_LEFT]         = { CCPAD_LEFT, 0 },  
-	[BIND_RIGHT]        = { CCPAD_RIGHT, 0 },
-	[BIND_JUMP]         = { CCPAD_1, 0 },
-	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
-	[BIND_INVENTORY]    = { CCPAD_3, 0 },
+	[BIND_FORWARD]      = { CCPAD_UP    },  
+	[BIND_BACK]         = { CCPAD_DOWN  },
+	[BIND_LEFT]         = { CCPAD_LEFT  },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START },
+	[BIND_INVENTORY]    = { CCPAD_3     },
 	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
 	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
 	[BIND_FLY]          = { CCPAD_2, CCPAD_R }, 
 	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
 	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
-	[BIND_PLACE_BLOCK]  = { CCPAD_L,  0 },
-	[BIND_DELETE_BLOCK] = { CCPAD_R,  0 },
-	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL, 0 }, 
-	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR, 0 }
+	[BIND_PLACE_BLOCK]  = { CCPAD_L  },
+	[BIND_DELETE_BLOCK] = { CCPAD_R  },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR }
 };
 
 static char pad_buff[2][34];

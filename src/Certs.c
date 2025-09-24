@@ -89,7 +89,7 @@ static int (*_X509_STORE_CTX_init)(X509_STORE_CTX* ctx, X509_STORE* store,
 
 #if defined CC_BUILD_WIN
 static const cc_string cryptoLib = String_FromConst("libcrypto.dll");
-#elif defined CC_BUILD_HAIKU
+#elif defined CC_BUILD_HAIKU || defined CC_BUILD_LINUX
 static const cc_string cryptoLib = String_FromConst("libcrypto.so.3");
 static const cc_string cryptoAlt = String_FromConst("libcrypto.so");
 #else

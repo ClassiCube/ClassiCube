@@ -209,10 +209,13 @@ static cc_result Stream_PortionSkip(struct Stream* s, cc_uint32 count) {
 }
 
 static cc_result Stream_PortionPosition(struct Stream* s, cc_uint32* position) {
-	*position = s->meta.portion.length - s->meta.portion.left; return 0;
+	*position = s->meta.portion.length - s->meta.portion.left; 
+	return 0;
 }
+
 static cc_result Stream_PortionLength(struct Stream* s, cc_uint32* length) {
-	*length = s->meta.portion.length; return 0;
+	*length = s->meta.portion.length; 
+	return 0;
 }
 
 void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, cc_uint32 len) {

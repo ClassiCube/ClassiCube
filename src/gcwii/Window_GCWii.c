@@ -111,6 +111,23 @@ void Window_RequestClose(void) {
 *#########################################################################################################################*/
 static PADStatus gc_pads[PAD_CHANMAX];
 
+static const BindMapping defaults_gc[BIND_COUNT] = {
+	[BIND_FLY_UP]       = { CCPAD_UP    },  
+	[BIND_FLY_DOWN]     = { CCPAD_DOWN  },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_LEFT  },  
+	[BIND_HOTBAR_RIGHT] = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
+	[BIND_DELETE_BLOCK] = { CCPAD_R     },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+};
+
 #define PAD_AXIS_SCALE 8.0f
 static void ProcessPAD_Joystick(int port, int axis, int x, int y, float delta) {
 	// May not be exactly 0 on actual hardware
@@ -149,7 +166,7 @@ static void ProcessPADInput(PADStatus* pad, int i, float delta) {
 		return; // not connected, still busy, etc
 	}
 	
-	int port = Gamepad_Connect(0x5C + i, PadBind_Defaults);
+	int port = Gamepad_Connect(0x5C + i, defaults_gc);
 	ProcessPAD_Buttons(port, gc_pads[i].button);
 	ProcessPAD_Joystick(port, PAD_AXIS_LEFT,  gc_pads[i].stickX,    gc_pads[i].stickY,    delta);
 	ProcessPAD_Joystick(port, PAD_AXIS_RIGHT, gc_pads[i].substickX, gc_pads[i].substickY, delta);

@@ -40,20 +40,27 @@ br_chacha20_sse2_get(void)
 	 * If using 64-bit mode, then SSE2 opcodes should be automatically
 	 * available, since they are part of the ABI.
 	 *
-	 * In 32-bit mode, not used due anymore to hitting an obscure possible compiler bug.
+	 * In 32-bit mode, we use CPUID to detect the SSE2 feature.
 	 */
 
 #if BR_amd64
 	return &br_chacha20_sse2_run;
 #else
-	return 0;
+	/*
+	 * SSE2 support is indicated by bit 26 in EDX.
+	 */
+	if (br_cpuid(0, 0, 0, 0x04000000)) {
+		return &br_chacha20_sse2_run;
+	} else {
+		return 0;
+	}
 #endif
 }
 
 BR_TARGETS_X86_UP
 
 /* see bearssl_block.h */
-BR_TARGET("sse2")
+BR_TARGET("sse2") BR_SSE_FUNCTION
 uint32_t
 br_chacha20_sse2_run(const void *key,
 	const void *iv, uint32_t cc, void *data, size_t len)
@@ -72,7 +79,7 @@ br_chacha20_sse2_run(const void *key,
 	kw0 = _mm_loadu_si128(key);
 	kw1 = _mm_loadu_si128((const void *)((const unsigned char *)key + 16));
 	ivtmp[0] = cc;
-	memcpy(ivtmp + 1, iv, 12);
+	br_memcpy(ivtmp + 1, iv, 12);
 	iw = _mm_loadu_si128((const void *)ivtmp);
 	cw = _mm_loadu_si128((const void *)CW);
 	one = _mm_set_epi32(0, 0, 0, 1);

@@ -128,6 +128,27 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping defaults_3ds[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP    },  
+	[BIND_BACK]         = { CCPAD_DOWN  },
+	[BIND_LEFT]         = { CCPAD_LEFT  },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
+	[BIND_DELETE_BLOCK] = { CCPAD_R     },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
+};
+
 static Result irrst_result;
 
 void Gamepads_Init(void) {
@@ -167,7 +188,7 @@ static void ProcessCircleInput(int port, int axis, circlePosition* pos, float de
 
 void Gamepads_Process(float delta) {
 	u32 mods = hidKeysDown() | hidKeysHeld();
-	int port = Gamepad_Connect(0x3D5, PadBind_Defaults);
+	int port = Gamepad_Connect(0x3D5, defaults_3ds);
 	HandleButtons(port, mods);
 	
 	circlePosition hid_pos;

@@ -1,4 +1,7 @@
 #define CC_XTEA_ENCRYPTION
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../Funcs.h"
@@ -31,13 +34,11 @@ cc_bool Platform_ReadonlyFilesystem;
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	char tmp[2048 + 1];
+	char tmp[2048 + 2];
 	len = min(len, 2048);
-	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
+	Mem_Copy(tmp, msg, len); tmp[len] = '\n'; tmp[len + 1] = '\0';
 	
-	// log to on-screen display
-	debugPrint("%s\n", tmp);
-	// log to cxbx-reloaded console
+	// log to cxbx-reloaded console or Xemu serial output
 	OutputDebugStringA(tmp);
 }
 
@@ -112,6 +113,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	}
 	*str = '\0';
 }
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
@@ -461,6 +464,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+void Process_Exit(cc_result code) { exit(code); }
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
@@ -470,5 +475,9 @@ cc_result Process_StartOpen(const cc_string* args) {
 static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }
 

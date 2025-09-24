@@ -41,13 +41,6 @@ jobs:
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           
           $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI32_FLAGS }} $LATEST_FLAG -o cc-rpi32 ${{ env.LIBS }}
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile RPI 32 bit build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -62,6 +55,13 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'rpi32'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce RPI 32 bit build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
 
 
 #============================================
@@ -93,13 +93,6 @@ jobs:
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
           
           $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI64_FLAGS }} $LATEST_FLAG -o cc-rpi64 ${{ env.LIBS }}
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile RPI 64 bit build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -114,3 +107,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'rpi64'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce RPI 64 bit build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

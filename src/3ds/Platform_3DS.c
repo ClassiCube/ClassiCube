@@ -1,4 +1,7 @@
 #define CC_XTEA_ENCRYPTION
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -50,7 +53,6 @@ unsigned int __stacksize__ = 256 * 1024;
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	// output to debug service (visible in Citra with log level set to "Debug.Emulated:Debug", or on console via remote gdb)
 	svcOutputDebugString(msg, len);
 }
 
@@ -109,6 +111,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	return mkdir(path->buffer, 0666) == -1 ? errno : 0; // FS has no permissions anyways
@@ -450,6 +454,8 @@ cc_bool Process_OpenSupported = false;
 cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
+
+void Process_Exit(cc_result code) { exit(code); }
 
 
 /*########################################################################################################################*

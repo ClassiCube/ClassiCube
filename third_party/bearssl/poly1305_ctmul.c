@@ -78,8 +78,8 @@ poly1305_inner(uint32_t *acc, const uint32_t *r, const void *data, size_t len)
 		 * If there is a partial block, right-pad it with zeros.
 		 */
 		if (len < 16) {
-			memset(tmp, 0, sizeof tmp);
-			memcpy(tmp, buf, len);
+			br_memset(tmp, 0, sizeof tmp);
+			br_memcpy(tmp, buf, len);
 			buf = tmp;
 			len = 16;
 		}
@@ -158,7 +158,7 @@ br_poly1305_ctmul_run(const void *key, const void *iv,
 	 * Compute the MAC key. The 'r' value is the first 16 bytes of
 	 * pkey[].
 	 */
-	memset(pkey, 0, sizeof pkey);
+	br_memset(pkey, 0, sizeof pkey);
 	ichacha(key, iv, 0, pkey, sizeof pkey);
 
 	/*
@@ -189,7 +189,7 @@ br_poly1305_ctmul_run(const void *key, const void *iv,
 	/*
 	 * Accumulator is 0.
 	 */
-	memset(acc, 0, sizeof acc);
+	br_memset(acc, 0, sizeof acc);
 
 	/*
 	 * Process the additional authenticated data, ciphertext, and

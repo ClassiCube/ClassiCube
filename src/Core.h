@@ -138,6 +138,7 @@ typedef cc_uint8  cc_bool;
 #define CC_WIN_BACKEND_COCOA    6
 #define CC_WIN_BACKEND_BEOS     7
 #define CC_WIN_BACKEND_ANDROID  8
+#define CC_WIN_BACKEND_WIN32CE  9
 
 #define CC_GFX_BACKEND_SOFTGPU   1
 #define CC_GFX_BACKEND_GL1       2
@@ -146,6 +147,8 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_D3D11     5
 #define CC_GFX_BACKEND_VULKAN    6
 #define CC_GFX_BACKEND_GL11      7
+#define CC_GFX_BACKEND_SOFTMIN   8
+#define CC_GFX_BACKEND_SOFTFP    9
 
 #define CC_SSL_BACKEND_NONE      1
 #define CC_SSL_BACKEND_BEARSSL   2
@@ -170,6 +173,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_PLUGINS
 #define CC_BUILD_FILESYSTEM
 #define CC_BUILD_ADVLIGHTING
+#define CC_BUILD_COMPRESSION
 /*#define CC_BUILD_GL11*/
 
 #ifndef CC_BUILD_MANUAL
@@ -209,7 +213,8 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_D3D11
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENAL
-#elif defined _WIN32 && !defined __WINSCW__
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+#elif defined _WIN32 && !defined __WINSCW__ && !defined _WIN32_WCE
 	#define CC_BUILD_WIN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
@@ -262,12 +267,42 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_FREETYPE
 	#define CC_BUILD_AMIGA
 	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_TINYMEM
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_NOFPU
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_FILESYSTEM
+	#undef  CC_BUILD_COMPRESSION
+	#define CC_BUILD_MAXSTACK (32 * 1024)
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+#elif defined PLAT_ATARIOS
+	#undef  CC_BUILD_FREETYPE
+	#define CC_BUILD_ATARIOS
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_TINYMEM
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_NOFPU
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_FILESYSTEM
+	#undef  CC_BUILD_COMPRESSION
+	#define CC_BUILD_MAXSTACK (32 * 1024)
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
 #elif defined __linux__
 	#define CC_BUILD_LINUX
 	#define CC_BUILD_POSIX
@@ -329,6 +364,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BIG_ENDIAN
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_GL11_FALLBACK
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
@@ -408,7 +444,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_PLUGINS
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 	#define CC_DISABLE_LAUNCHER
-#elif defined __psp__
+#elif defined PLAT_PSP
 	#define CC_BUILD_PSP
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
@@ -416,14 +452,14 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
-#elif defined __3DS__
+#elif defined PLAT_3DS
 	#define CC_BUILD_3DS
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_DUALSCREEN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-#elif defined GEKKO
+#elif defined PLAT_GCWII
 	#define CC_BUILD_GCWII
 	#define CC_BUILD_CONSOLE
 	#ifndef HW_RVL
@@ -433,14 +469,14 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SPLITSCREEN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-#elif defined __vita__
+#elif defined PLAT_VITA
 	#define CC_BUILD_PSVITA
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_TOUCH
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
-#elif defined _arch_dreamcast
+#elif defined PLAT_DREAMCAST
 	#define CC_BUILD_DREAMCAST
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
@@ -456,7 +492,7 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
-#elif defined N64
+#elif defined PLAT_N64
 	#define CC_BIG_ENDIAN
 	#define CC_BUILD_N64
 	#define CC_BUILD_CONSOLE
@@ -490,20 +526,20 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_FILESYSTEM
+	#undef  CC_BUILD_COMPRESSION
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
-	#undef  CC_BUILD_ADVLIGHTING
-	#undef  CC_BUILD_FILESYSTEM
 	#define CC_DISABLE_EXTRA_MODELS
-	#define SOFTGPU_DISABLE_ZBUFFER
 	#undef  CC_VAR
 	#define CC_VAR __attribute__((visibility("default"), section(".ewram")))
 	#undef  CC_BIG_VAR
 	#define CC_BIG_VAR __attribute__((section(".ewram")))
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
-	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
 #elif defined PLAT_NDS
 	#define CC_BUILD_NDS
 	#define CC_BUILD_CONSOLE
@@ -520,7 +556,7 @@ typedef cc_uint8  cc_bool;
 	#endif
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
-#elif defined __WIIU__
+#elif defined PLAT_WIIU
 	#define CC_BUILD_WIIU
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_COOPTHREADED
@@ -528,7 +564,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_TOUCH
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-#elif defined __SWITCH__
+#elif defined PLAT_SWITCH
 	#define CC_BUILD_SWITCH
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_TOUCH
@@ -591,14 +627,14 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOFPU
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ADVLIGHTING
+	#undef  CC_BUILD_FILESYSTEM
+	#undef  CC_BUILD_COMPRESSION
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
 	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
-	#undef  CC_BUILD_ADVLIGHTING
-	#undef  CC_BUILD_FILESYSTEM
 	#define CC_DISABLE_EXTRA_MODELS
-	#define SOFTGPU_DISABLE_ZBUFFER
-	#define CC_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 #elif defined __SYMBIAN32__
 	#define CC_BUILD_SYMBIAN
@@ -616,7 +652,23 @@ typedef cc_uint8  cc_bool;
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
 	#else
 		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
+		#define CC_DISABLE_ANIMATIONS
 	#endif
+#elif defined _WIN32_WCE
+	#define CC_BUILD_WINCE
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_NOFPU
+	#undef  CC_BUILD_ADVLIGHTING
+    #undef  CC_BUILD_FREETYPE
+	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
+    #define CC_BUILD_TOUCH
+    #define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32CE
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTFP
+    #define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSS
 #endif
 #endif
 

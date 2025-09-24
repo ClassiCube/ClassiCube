@@ -77,7 +77,7 @@ br_multihash_zero(br_multihash_context *ctx)
 	 * This is not standard, but yields very short and efficient code,
 	 * and it works "everywhere".
 	 */
-	memset(ctx, 0, sizeof *ctx);
+	br_memset(ctx, 0, sizeof *ctx);
 }
 
 /* see bearssl_hash.h */
@@ -117,7 +117,7 @@ br_multihash_update(br_multihash_context *ctx, const void *data, size_t len)
 		if (clen > len) {
 			clen = len;
 		}
-		memcpy(ctx->buf + ptr, buf, clen);
+		br_memcpy(ctx->buf + ptr, buf, clen);
 		ptr += clen;
 		buf += clen;
 		len -= clen;

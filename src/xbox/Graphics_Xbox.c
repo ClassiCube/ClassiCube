@@ -4,9 +4,9 @@
 #include "../Window.h"
 
 #include <pbkit/pbkit.h>
+#include "nv2a_gpu.h"
 
 #define MAX_RAM_ADDR 0x03FFAFFF
-#define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
 // https://github.com/XboxDev/nxdk/blob/master/samples/triangle/main.c
 // https://xboxdevwiki.net/NV2A/Vertex_Shader#Output_registers
@@ -17,23 +17,17 @@
 // A lot of figuring out which GPU registers to use came from:
 // - comparing against pbgl and pbkit
 
-static void LoadVertexShader(uint32_t* program, int programSize) {
-	uint32_t* p;
-	
-	// Set cursor for program upload
-	p = pb_begin();
-	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_LOAD, 0);
-	pb_end(p);
+// Room for 136 vertex shader instructions
+// Only need 3, so give 40 instructions to each
+#define VS_COLOURED_OFFSET  0
+#define VS_TEXTURED_OFFSET 40
+#define VS_OFFSET_OFFSET   80
 
-	// Copy program instructions (16 bytes each)
-	for (int i = 0; i < programSize / 16; i++) 
-	{
-		p = pb_begin();
-		pb_push(p++, NV097_SET_TRANSFORM_PROGRAM, 4);
-		Mem_Copy(p, &program[i * 4], 4 * 4);
-		p += 4;
-		pb_end(p);
-	}
+static void LoadVertexShader(int offset, uint32_t* program, int programSize) {
+	uint32_t* p = pb_begin();
+	p = NV2A_set_program_upload_offset(p, offset);
+	p = NV2A_upload_program(p, program, programSize);
+	pb_end(p);
 }
 
 static uint32_t vs_coloured_program[] = {
@@ -41,6 +35,9 @@ static uint32_t vs_coloured_program[] = {
 };
 static uint32_t vs_textured_program[] = {
 	#include "../../misc/xbox/vs_textured.inl"
+};
+static uint32_t vs_offset_program[] = {
+	#include "../../misc/xbox/vs_offset.inl"
 };
 
 
@@ -65,42 +62,36 @@ static void SetupShaders(void) {
 	uint32_t *p;
 
 	p = pb_begin();
-	// Set run address of shader
-	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_START, 0);
+	p = NV2A_set_program_run_offset(p, 0);
+	p = NV2A_set_execution_mode_shaders(p);
 
-	// Set execution mode
-	p = pb_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
-					MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM)
-					| MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
-
-	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
-
-	
-	// resets "z perspective" flag
-	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
 	pb_end(p);
 }
  
 static void ResetState(void) {
 	uint32_t* p = pb_begin();
 
-	p = pb_push1(p, NV097_SET_ALPHA_FUNC, 0x04); // GL_GREATER & 0x0F
-	p = pb_push1(p, NV097_SET_ALPHA_REF,  0x7F);
-	p = pb_push1(p, NV097_SET_DEPTH_FUNC, 0x03); // GL_LEQUAL & 0x0F
+	p = NV2A_set_alpha_test_func(p, 0x04); // GL_GREATER & 0x0F
+	p = NV2A_set_alpha_test_ref(p,  0x7F);
+	p = NV2A_set_depth_func(p,      0x03); // GL_LEQUAL & 0x0F
 	
-	p = pb_push1(p, NV097_SET_BLEND_FUNC_SFACTOR, NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_BLEND_FUNC_DFACTOR, NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_BLEND_EQUATION,     NV097_SET_BLEND_EQUATION_V_FUNC_ADD); // TODO not needed?
+	p = NV2A_set_alpha_blend_src(p, NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
+	p = NV2A_set_alpha_blend_dst(p, NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA);
+	p = NV2A_set_alpha_blend_eq( p, NV097_SET_BLEND_EQUATION_V_FUNC_ADD); // TODO not needed?
 	
-	p = pb_push1(p, NV097_SET_CULL_FACE, NV097_SET_CULL_FACE_V_FRONT);
+	p = NV2A_set_cull_face_mode(p, NV097_SET_CULL_FACE_V_FRONT);
 	// the order ClassiCube specifies quad vertices in are in the wrong order
 	//  compared to what the GPU expects for front and back facing quads
-	
-	/*pb_push(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 16); p++;
-	for (int i = 0; i < 16; i++) 
-	{
-		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
-	}*/
+
+	int width  = pb_back_buffer_width();
+	int height = pb_back_buffer_height();
+	p = NV2A_set_clear_rect(p, 0, 0, width, height);
+
+	pb_end(p);
+
+	p = pb_begin();
+	p = NV2A_reset_all_vertex_attribs(p);
+	p = NV2A_set_texture0_matrix(p, false);
 	pb_end(p);
 }
 
@@ -111,14 +102,17 @@ void Gfx_Create(void) {
 	Gfx.MaxTexHeight = 512; // TODO: 1024?
 	Gfx.Created      = true;
 
-	InitDefaultResources();	
-	pb_init();
+	InitDefaultResources();
 	pb_show_front_screen();
 
 	SetupShaders();
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	ResetState();
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
+
+	LoadVertexShader(VS_COLOURED_OFFSET, vs_coloured_program, sizeof(vs_coloured_program));
+	LoadVertexShader(VS_TEXTURED_OFFSET, vs_textured_program, sizeof(vs_textured_program));
+	LoadVertexShader(VS_OFFSET_OFFSET,   vs_offset_program,   sizeof(vs_offset_program));
 		
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -128,13 +122,13 @@ void Gfx_Create(void) {
 }
 
 void Gfx_Free(void) { 
-	FreeDefaultResources(); 
-	pb_kill();
+	FreeDefaultResources();
+	pb_show_debug_screen();
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
-void Gfx_RestoreState(void) { }
-void Gfx_FreeState(void) { }
+static void Gfx_RestoreState(void) { }
+static void Gfx_FreeState(void) { }
 
 
 /*########################################################################################################################*
@@ -255,30 +249,11 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	uint32_t* p;
 
 	p = pb_begin();
-	// set texture stage 0 state
-	p = pb_push1(p, NV097_SET_TEXTURE_OFFSET, (DWORD)tex->pixels & 0x03ffffff);
-	p = pb_push1(p, NV097_SET_TEXTURE_FORMAT,
-					MASK(NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA,    2) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE,  NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE_COLOR) |
-					MASK(NV097_SET_TEXTURE_FORMAT_COLOR,          NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8) |
-					MASK(NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY, 2)  | // textures have U and V
-					MASK(NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS,  1)  |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U, log_u) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V, log_v) |
-					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P,    0)); // log2(1) slice = 0
-	p = pb_push1(p, NV097_SET_TEXTURE_CONTROL0, 
-					NV097_SET_TEXTURE_CONTROL0_ENABLE | 
-					MASK(NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP, 0) |
-					MASK(NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP, 1));
-	p = pb_push1(p, NV097_SET_TEXTURE_ADDRESS, 
-					0x00010101); // modes (0x0W0V0U wrapping: 1=wrap 2=mirror 3=clamp 4=border 5=clamp to edge)
-	p = pb_push1(p, NV097_SET_TEXTURE_FILTER,
-					0x2000 |
-					MASK(NV097_SET_TEXTURE_FILTER_MIN, 1) |
-					MASK(NV097_SET_TEXTURE_FILTER_MAG, 1)); // 1 = nearest filter
-	
-	// set texture matrix state
-	p = pb_push1(p, NV097_SET_TEXTURE_MATRIX_ENABLE, 0);
+	p = NV2A_set_texture0_pointer(p, tex->pixels);
+	p = NV2A_set_texture0_format(p, tex->log2_w, tex->log2_h);
+	p = NV2A_set_texture0_control0(p, gfx_alphaTest);
+	p = NV2A_set_texture0_wrapmode(p);
+	p = NV2A_set_texture0_filter(p);
 	pb_end(p);
 }
 
@@ -286,15 +261,15 @@ void Gfx_BindTexture(GfxResourceID texId) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol clearColor;
-
 void Gfx_ClearColor(PackedCol color) {
-	clearColor = color;
+	uint32_t* p = pb_begin();
+	p = NV2A_set_clear_colour(p, color);
+	pb_end(p);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_CULL_FACE_ENABLE, enabled);
+	p = NV2A_set_cull_face(p, enabled);
 	pb_end(p);
 }
 
@@ -302,38 +277,33 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void SetAlphaBlend(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_BLEND_ENABLE, enabled);
+	p = NV2A_set_alpha_blend(p, enabled);
 	pb_end(p);
 }
 
 static void SetAlphaTest(cc_bool enabled) {
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_ALPHA_TEST_ENABLE, enabled);
+	p = NV2A_set_alpha_test(p, enabled);
+	p = NV2A_set_texture0_control0(p, gfx_alphaTest);
 	pb_end(p);
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_DEPTH_MASK, enabled);
+	p = NV2A_set_depth_write(p, enabled);
 	pb_end(p);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_DEPTH_TEST_ENABLE, enabled);
+	p = NV2A_set_depth_test(p, enabled);
 	pb_end(p);
 }
 
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	unsigned mask = 0;
-	if (r) mask |= NV097_SET_COLOR_MASK_RED_WRITE_ENABLE;
-	if (g) mask |= NV097_SET_COLOR_MASK_GREEN_WRITE_ENABLE;
-	if (b) mask |= NV097_SET_COLOR_MASK_BLUE_WRITE_ENABLE;
-	if (a) mask |= NV097_SET_COLOR_MASK_ALPHA_WRITE_ENABLE;
-	
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_COLOR_MASK, mask);
+	p = NV2A_set_color_write_mask(p, r, g, b, a);
 	pb_end(p);
 }
 
@@ -364,17 +334,16 @@ void Gfx_BeginFrame(void) {
 	pb_wait_for_vbl();
 	pb_reset();
 	pb_target_back_buffer();
+
+	uint32_t* p = pb_begin();
+	p = NV2A_reset_control0(p);
+	pb_end(p);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int width  = pb_back_buffer_width();
-	int height = pb_back_buffer_height();
-	
-	// TODO do ourselves
-	if (buffers & GFX_BUFFER_DEPTH)
-		pb_erase_depth_stencil_buffer(0, 0, width, height);
-	if (buffers & GFX_BUFFER_COLOR)
-		pb_fill(0, 0, width, height, clearColor);
+	uint32_t* p = pb_begin();
+	p = NV2A_clear_buffers(p, buffers & GFX_BUFFER_COLOR, buffers & GFX_BUFFER_DEPTH);
+	pb_end(p);
 	
 	//pb_erase_text_screen();
 	while (pb_busy()) { } // Wait for completion TODO: necessary??
@@ -419,24 +388,14 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return AllocBuffer(count, strideSizes[fmt]);
 }
 
-static uint32_t* PushAttribOffset(uint32_t* p, int index, cc_uint8* data) {
-	return pb_push1(p, NV097_SET_VERTEX_DATA_ARRAY_OFFSET + index * 4,
-						(uint32_t)data & 0x03ffffff);
-}
-
 void Gfx_BindVb(GfxResourceID vb) { 
 	gfx_vertices = vb;
 	uint32_t* p  = pb_begin();
-	
-	// TODO: Avoid the same code twice..
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		p = PushAttribOffset(p, VERTEX_ATTR_INDEX,  gfx_vertices +  0);
-		p = PushAttribOffset(p, COLOUR_ATTR_INDEX,  gfx_vertices + 12);
-		p = PushAttribOffset(p, TEXTURE_ATTR_INDEX, gfx_vertices + 16);
-	} else {
-		p = PushAttribOffset(p, VERTEX_ATTR_INDEX,  gfx_vertices +  0);
-		p = PushAttribOffset(p, COLOUR_ATTR_INDEX,  gfx_vertices + 12);
-	}
+
+	p = NV2A_set_vertex_attrib_pointer(p, VERTEX_ATTR_INDEX,  gfx_vertices +  0);
+	p = NV2A_set_vertex_attrib_pointer(p, COLOUR_ATTR_INDEX,  gfx_vertices + 12);
+	p = NV2A_set_vertex_attrib_pointer(p, TEXTURE_ATTR_INDEX, gfx_vertices + 16);
+	// Harmless to set TEXTURE_ATTR_INDEX, even when vertex format is coloured only
 	pb_end(p);
 }
 
@@ -469,17 +428,13 @@ void Gfx_SetFog(cc_bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol color) {
-	int R = PackedCol_R(color);
-	int G = PackedCol_G(color);
-	int B = PackedCol_B(color);
-	int A = PackedCol_A(color);
-	
 	uint32_t* p = pb_begin();
-	p = pb_push1(p, NV097_SET_FOG_COLOR, 
-					MASK(NV097_SET_FOG_COLOR_RED,   R) |
-					MASK(NV097_SET_FOG_COLOR_GREEN, G) |
-					MASK(NV097_SET_FOG_COLOR_BLUE,  B) |
-					MASK(NV097_SET_FOG_COLOR_ALPHA, A));
+
+	p = NV2A_set_fog_colour(p,
+					PackedCol_R(color),
+					PackedCol_G(color),
+					PackedCol_B(color),
+					PackedCol_A(color));
 	pb_end(p);
 }
 
@@ -539,61 +494,75 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	matrix->row4.w =  0.0f;*/
 }
 
-void Gfx_OnWindowResize(void) { }
-
-static struct Vec4 vp_scale  = { 320, -240, 8388608, 1 };
-static struct Vec4 vp_offset = { 320,  240, 8388608, 1 };
-static struct Matrix _view, _proj, _mvp;
-
-static void UpdateVSConstants(void) {
-	uint32_t* p;
-	p = pb_begin();
-	
-	// resets "z perspective" flag
-	p = pb_push1(p, NV097_SET_CONTROL0, 0);
-
-	// set shader constants cursor to C0
-	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
-
-	// upload transformation matrix
-	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4);
-	Mem_Copy(p, &_mvp, 16 * 4); p += 16;
-	// Upload constants too
-	//struct Vec4 v = { 1, 1, 1, 1 };
-	//Mem_Copy(p, &v, 4 * 4); p += 4;
-	// if necessary, look at vs.inl output for 'c[5]' etc..
-
-	pb_end(p);
+void Gfx_OnWindowResize(void) {
+	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
+
+//static struct Vec4 vp_scale  = { 320, -240, 8388608, 1 };
+//static struct Vec4 vp_offset = { 320,  240, 8388608, 1 };
+static struct Vec4 vp_scale, vp_offset;
+static struct Matrix _view, _proj, _mvp;
+// TODO Upload constants too
+// if necessary, look at vs.inl output for 'c[5]' etc..
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
-
 	Matrix_Mul(&_mvp, &_view, &_proj);
 
+	struct Matrix final;
 	struct Matrix vp = Matrix_Identity;
 	vp.row1.x = vp_scale.x;
 	vp.row2.y = vp_scale.y;
-	vp.row3.z = 8388608;
+	vp.row3.z = 8388608; // 2^24 / 2
 	vp.row4.x = vp_offset.x;
 	vp.row4.y = vp_offset.y;
-	vp.row4.z = 8388608;
+	vp.row4.z = 8388608; // 2^24 / 2
 
-	Matrix_Mul(&_mvp, &_mvp, &vp);
-	UpdateVSConstants();
+	Matrix_Mul(&final, &_mvp, &vp);
+
+	uint32_t* p;
+	p = pb_begin();
+	p = NV2A_set_constant_upload_offset(p, 0);
+	p = NV2A_upload_constants(p, &final, 16);
+	pb_end(p);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
-	Matrix_Mul(mvp, view, proj);
+	Mem_Copy(mvp, &_mvp, sizeof(struct Matrix));
+}
+
+static int tex_offset;
+
+static int CalcProgramOffset(void) {
+	if (tex_offset) 
+		return VS_OFFSET_OFFSET;
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) 
+		return VS_TEXTURED_OFFSET;
+
+	return VS_COLOURED_OFFSET;
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
+	struct Vec4 offset = { x, y, 0, 0 };
+	uint32_t* p = pb_begin();
+	tex_offset  = true;
+
+	p = NV2A_set_constant_upload_offset(p, 4);
+	p = NV2A_upload_constants(p, &offset, 4);
+	p = NV2A_set_program_run_offset(p, CalcProgramOffset());
+	pb_end(p);
 }
 
 void Gfx_DisableTextureOffset(void) {
+	uint32_t* p = pb_begin();
+	tex_offset  = false;
+
+	p = NV2A_set_program_run_offset(p, CalcProgramOffset());
+	pb_end(p);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
@@ -604,10 +573,8 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	uint32_t* p;
-	p = pb_begin();
-	// NV097_SET_SURFACE_CLIP_HORIZONTAL followed by NV097_SET_SURFACE_CLIP_VERTICAL 
-	p = pb_push2(p, NV097_SET_SURFACE_CLIP_HORIZONTAL, x | (w << 16), y | (h << 16));
+	uint32_t* p = pb_begin();
+	p = NV2A_set_clip_rect(p, x, y, w, h);
 	pb_end(p);
 }
 
@@ -618,92 +585,56 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
-static uint32_t* PushAttrib(uint32_t* p, int index, int format, int size, int stride) {
-	return pb_push1(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT + index * 4,
-						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE, format) |
-						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE, size)   |
-						MASK(NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE, stride));
-}
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 
 	uint32_t* p = pb_begin();
-	// Clear all attributes TODO optimise
-	pb_push(p++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT,16);
-	for (int i = 0; i < 16; i++) 
-	{
-		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
-	}
-		
-	// resets "z perspective" flag
-	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
 
-	// TODO cache these..
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		p = PushAttrib(p, VERTEX_ATTR_INDEX,  NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
-						3, SIZEOF_VERTEX_TEXTURED);
-		p = PushAttrib(p, COLOUR_ATTR_INDEX,  NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D,
-						4, SIZEOF_VERTEX_TEXTURED);
-		p = PushAttrib(p, TEXTURE_ATTR_INDEX, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
-						2, SIZEOF_VERTEX_TEXTURED);
+		p = NV2A_set_vertex_attrib_format(p, VERTEX_ATTR_INDEX,  
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      3, SIZEOF_VERTEX_TEXTURED);
+		p = NV2A_set_vertex_attrib_format(p, COLOUR_ATTR_INDEX,  
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 4, SIZEOF_VERTEX_TEXTURED);
+		p = NV2A_set_vertex_attrib_format(p, TEXTURE_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      2, SIZEOF_VERTEX_TEXTURED);
 	} else {
-		p = PushAttrib(p, VERTEX_ATTR_INDEX, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F, 
-						3, SIZEOF_VERTEX_COLOURED);
-		p = PushAttrib(p, COLOUR_ATTR_INDEX, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 
-						4, SIZEOF_VERTEX_COLOURED);
+		p = NV2A_set_vertex_attrib_format(p, VERTEX_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      3, SIZEOF_VERTEX_COLOURED);
+		p = NV2A_set_vertex_attrib_format(p, COLOUR_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_UB_D3D, 4, SIZEOF_VERTEX_COLOURED);
+		p = NV2A_set_vertex_attrib_format(p, TEXTURE_ATTR_INDEX, 
+					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      0, 0);
 	}
+
+	p = NV2A_set_program_run_offset(p, CalcProgramOffset());
 	pb_end(p);
 	
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		LoadVertexShader(vs_textured_program, sizeof(vs_textured_program));
 		LoadFragmentShader_Textured();
-	} else {		
-		LoadVertexShader(vs_coloured_program, sizeof(vs_coloured_program));
+	} else {
 		LoadFragmentShader_Coloured();
 	}
 }
 
-static void DrawArrays(int mode, int start, int count) {
-	uint32_t *p = pb_begin();
-	p = pb_push1(p, NV097_SET_BEGIN_END, mode);
-
-	// NV097_DRAW_ARRAYS_COUNT is an 8 bit mask, so must be <= 256
-	while (count > 0)
-	{
-		int batch_count = min(count, 256);
-		
-		p = pb_push1(p, 0x40000000 | NV097_DRAW_ARRAYS,
-						MASK(NV097_DRAW_ARRAYS_COUNT, (batch_count-1)) | 
-						MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
-		
-		start += batch_count;
-		count -= batch_count;
-	}
-
-	p = pb_push1(p, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
-	pb_end(p);
-}
-
 void Gfx_DrawVb_Lines(int verticesCount) {
-	DrawArrays(NV097_SET_BEGIN_END_OP_LINES, 0, verticesCount);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_LINES, 0, verticesCount);
 }
 
 static void DrawIndexedVertices(int verticesCount, int startVertex) {
-	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	DrawIndexedVertices(verticesCount, startVertex);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	DrawIndexedVertices(verticesCount, 0);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS,           0, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawIndexedVertices(verticesCount, startVertex);
+	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 

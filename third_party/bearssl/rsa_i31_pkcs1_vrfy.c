@@ -35,7 +35,7 @@ br_rsa_i31_pkcs1_vrfy(const unsigned char *x, size_t xlen,
 	if (xlen > (sizeof sig)) {
 		return 0;
 	}
-	memcpy(sig, x, xlen);
+	br_memcpy(sig, x, xlen);
 	if (!br_rsa_i31_public(sig, xlen, pk)) {
 		return 0;
 	}

@@ -80,7 +80,7 @@ static struct CpeExt
 	bulkBlockUpdate_Ext = { "BulkBlockUpdate", 1 },
 	textColors_Ext      = { "TextColors", 1 },
 	envMapAspect_Ext    = { "EnvMapAspect", 2 },
-	entityProperty_Ext  = { "EntityProperty", 1 },
+	entityProperty_Ext  = { "EntityProperty", 2 },
 	extEntityPos_Ext    = { "ExtEntityPositions", 1 },
 	twoWayPing_Ext      = { "TwoWayPing", 1 },
 	invOrder_Ext        = { "InventoryOrder", 1 },
@@ -1427,6 +1427,12 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 		if (type == 5) e->ModelScale.z = scale;
 
 		Entity_UpdateModelBounds(e);
+		return;
+	case 6:
+		scale = value / 1000.0f;
+		if (scale < -1024.0f) scale = -1024.0f;
+		if (scale >  1024.0f) scale =  1024.0f;
+		e->PushStrength = scale;
 		return;
 	default:
 		return;

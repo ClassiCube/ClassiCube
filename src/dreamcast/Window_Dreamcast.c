@@ -222,6 +222,28 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping defaults_dc[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP    },  
+	[BIND_BACK]         = { CCPAD_DOWN  },
+	[BIND_LEFT]         = { CCPAD_LEFT  },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
+	[BIND_DELETE_BLOCK] = { CCPAD_R     },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT },
+	[BIND_SCREENSHOT]   = { CCPAD_3 },
+};
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
@@ -264,7 +286,7 @@ static void HandleController(int port, bool dual_analog, cont_state_t* state, fl
 	// TODO: verify values are right     
 	if(dual_analog) 
 	{
-		HandleJoystick(port, PAD_AXIS_LEFT, state->joyx, state->joyy, delta);
+		HandleJoystick(port, PAD_AXIS_LEFT,  state->joyx,  state->joyy,  delta);
 		HandleJoystick(port, PAD_AXIS_RIGHT, state->joy2x, state->joy2y, delta);
 	}
 	else
@@ -287,7 +309,7 @@ void Gamepads_Process(float delta) {
 		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
 		if(dual_analog == -1) dual_analog = 0;
 
-		int port = Gamepad_Connect(0xDC + i, PadBind_Defaults);
+		int port = Gamepad_Connect(0xDC + i, defaults_dc);
 		HandleButtons(port, state->buttons);
 		HandleController(port, dual_analog, state, delta);
 	}

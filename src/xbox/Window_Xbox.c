@@ -13,6 +13,7 @@
 #include <hal/video.h>
 #include <usbh_lib.h>
 #include <xid_driver.h>
+#include <pbkit/pbkit.h>
 
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
@@ -20,6 +21,8 @@ struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT); // TODO not call
+	pb_init();
+	pb_show_debug_screen();
 }
 
 void Window_Init(void) {
@@ -83,6 +86,27 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static const BindMapping defaults_xbox[BIND_COUNT] = {
+	[BIND_FORWARD]      = { CCPAD_UP    },  
+	[BIND_BACK]         = { CCPAD_DOWN  },
+	[BIND_LEFT]         = { CCPAD_LEFT  },  
+	[BIND_RIGHT]        = { CCPAD_RIGHT },
+	[BIND_JUMP]         = { CCPAD_1     },
+	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+	[BIND_CHAT]         = { CCPAD_4     },
+	[BIND_INVENTORY]    = { CCPAD_3     },
+	[BIND_SEND_CHAT]    = { CCPAD_START },
+	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
+	[BIND_DELETE_BLOCK] = { CCPAD_R     },
+	[BIND_SPEED]        = { CCPAD_2, CCPAD_L },
+	[BIND_FLY]          = { CCPAD_2, CCPAD_R },
+	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
+	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
+	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    }, 
+	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
+};
+
 static xid_dev_t* xid_ctrl;
 static xid_gamepad_in gp_state;
 
@@ -168,10 +192,10 @@ static void HandleButtons(int port, xid_gamepad_in* gp) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
 }
 
-#define AXIS_SCALE 8192.0f
+#define AXIS_SCALE 4096.0f
 static void HandleJoystick(int port, int axis, int x, int y, float delta) {
-	if (Math_AbsI(x) <= 4096) x = 0;
-	if (Math_AbsI(y) <= 4096) y = 0;	
+	if (Math_AbsI(x) <= 6144) x = 0;
+	if (Math_AbsI(y) <= 6144) y = 0;
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
@@ -181,7 +205,7 @@ void Gamepads_Process(float delta) {
 	usbh_pooling_hubs();
 #endif
 	if (!xid_ctrl) return;
-	int port = Gamepad_Connect(0xB0, PadBind_Defaults);
+	int port = Gamepad_Connect(0xB0, defaults_xbox);
 	
 	HandleButtons(port, &gp_state);
 	HandleJoystick(port, PAD_AXIS_LEFT,  gp_state.leftStickX,  gp_state.leftStickY,  delta);

@@ -690,7 +690,7 @@ p256_to_affine(p256_jacobian *P)
 	 * two dozen multiplications here with an addition chain, but
 	 * this would require a bit more code, and extra stack buffers.
 	 */
-	memcpy(t1, P->z, sizeof P->z);
+	br_memcpy(t1, P->z, sizeof P->z);
 	for (i = 0; i < 30; i ++) {
 		square_f256(t1, t1);
 		mul_f256(t1, t1, P->z);
@@ -701,7 +701,7 @@ p256_to_affine(p256_jacobian *P)
 	 * multiplications to set bits to 1; we multiply by the original z
 	 * for setting 1 bit, and by t1 for setting 31 bits.
 	 */
-	memcpy(t2, P->z, sizeof P->z);
+	br_memcpy(t2, P->z, sizeof P->z);
 	for (i = 1; i < 256; i ++) {
 		square_f256(t2, t2);
 		switch (i) {
@@ -976,8 +976,8 @@ p256_add_mixed(p256_jacobian *P1, const p256_jacobian *P2)
 	/*
 	 * Compute u1 = x1 (in t1) and s1 = y1 (in t3).
 	 */
-	memcpy(t1, P1->x, sizeof t1);
-	memcpy(t3, P1->y, sizeof t3);
+	br_memcpy(t1, P1->x, sizeof t1);
+	br_memcpy(t3, P1->y, sizeof t3);
 
 	/*
 	 * Compute u2 = x2*z1^2 (in t2) and s2 = y2*z1^3 (in t4).
@@ -1085,9 +1085,9 @@ p256_decode(p256_jacobian *P, const void *src, size_t len)
 	/*
 	 * Copy coordinates to the point structure.
 	 */
-	memcpy(P->x, tx, sizeof tx);
-	memcpy(P->y, ty, sizeof ty);
-	memset(P->z, 0, sizeof P->z);
+	br_memcpy(P->x, tx, sizeof tx);
+	br_memcpy(P->y, ty, sizeof ty);
+	br_memset(P->z, 0, sizeof P->z);
 	P->z[0] = 1;
 	return EQ(bad, 0);
 }
@@ -1136,7 +1136,7 @@ p256_mul(p256_jacobian *P, const unsigned char *x, size_t xlen)
 	/*
 	 * We start with Q = 0. We process multiplier bits 2 by 2.
 	 */
-	memset(&Q, 0, sizeof Q);
+	br_memset(&Q, 0, sizeof Q);
 	qz = 1;
 	while (xlen -- > 0) {
 		int k;
@@ -1272,7 +1272,7 @@ lookup_Gwin(p256_jacobian *T, uint32_t idx)
 	uint32_t k;
 	size_t u;
 
-	memset(xy, 0, sizeof xy);
+	br_memset(xy, 0, sizeof xy);
 	for (k = 0; k < 15; k ++) {
 		uint32_t m;
 
@@ -1281,9 +1281,9 @@ lookup_Gwin(p256_jacobian *T, uint32_t idx)
 			xy[u] |= m & Gwin[k][u];
 		}
 	}
-	memcpy(T->x, &xy[0], sizeof T->x);
-	memcpy(T->y, &xy[9], sizeof T->y);
-	memset(T->z, 0, sizeof T->z);
+	br_memcpy(T->x, &xy[0], sizeof T->x);
+	br_memcpy(T->y, &xy[9], sizeof T->y);
+	br_memset(T->z, 0, sizeof T->z);
 	T->z[0] = 1;
 }
 
@@ -1305,7 +1305,7 @@ p256_mulgen(p256_jacobian *P, const unsigned char *x, size_t xlen)
 	p256_jacobian Q;
 	uint32_t qz;
 
-	memset(&Q, 0, sizeof Q);
+	br_memset(&Q, 0, sizeof Q);
 	qz = 1;
 	while (xlen -- > 0) {
 		int k;

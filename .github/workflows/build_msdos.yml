@@ -27,20 +27,13 @@ jobs:
       - name: Compile MS dos build
         id: compile
         run: |
-          make CC=gcc dos RELEASE=1
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile MS DOS build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          make CC=gcc dos
 
 
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube.exe'
+          SOURCE_FILE: 'CCDOS.EXE'
           DEST_NAME: 'ClassiCube.exe'
           
           
@@ -49,3 +42,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'msdos'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce MS DOS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

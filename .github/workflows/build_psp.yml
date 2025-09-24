@@ -28,13 +28,6 @@ jobs:
         run: |
           make psp
           
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile PSP build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-          
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
@@ -54,3 +47,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'psp'
+          
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce PSP build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

@@ -31,13 +31,6 @@ jobs:
           cp ClassiCube-wii.dol wiitest/apps/ClassiCube/boot.dol
           cp misc/wii/icon.png wiitest/apps/ClassiCube/icon.png
           cp misc/wii/meta.xml wiitest/apps/ClassiCube/meta.xml
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile Wii/Gamecube build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -76,3 +69,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'wiigc'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce Wii/Gamecube build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

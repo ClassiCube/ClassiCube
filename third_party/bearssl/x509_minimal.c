@@ -214,7 +214,7 @@ br_x509_minimal_init(br_x509_minimal_context *ctx,
 	const br_hash_class *dn_hash_impl,
 	const br_x509_trust_anchor *trust_anchors, size_t trust_anchors_num)
 {
-	memset(ctx, 0, sizeof *ctx);
+	br_memset(ctx, 0, sizeof *ctx);
 	ctx->vtable = &br_x509_minimal_vtable;
 	ctx->dn_hash_impl = dn_hash_impl;
 	ctx->trust_anchors = trust_anchors;
@@ -232,7 +232,7 @@ xm_start_chain(const br_x509_class **ctx, const char *server_name)
 		cc->name_elts[u].status = 0;
 		cc->name_elts[u].buf[0] = 0;
 	}
-	memset(&cc->pkey, 0, sizeof cc->pkey);
+	br_memset(&cc->pkey, 0, sizeof cc->pkey);
 	cc->num_certs = 0;
 	cc->err = 0;
 	cc->cpu.dp = cc->dp_stack;
@@ -372,7 +372,7 @@ eqbigint(const unsigned char *b1, size_t len1,
 	if (len1 != len2) {
 		return 0;
 	}
-	return memcmp(b1, b2, len1) == 0;
+	return br_memcmp(b1, b2, len1) == 0;
 }
 
 /*
@@ -885,7 +885,7 @@ br_x509_minimal_run(void *t0ctx)
 #define T0_ROLL(x)     do { \
 	size_t t0len = (size_t)(x); \
 	uint32_t t0tmp = *(dp - 1 - t0len); \
-	memmove(dp - t0len - 1, dp - t0len, t0len * sizeof *dp); \
+	br_memmove(dp - t0len - 1, dp - t0len, t0len * sizeof *dp); \
 	*(dp - 1) = t0tmp; \
 } while (0)
 #define T0_SWAP()      do { \
@@ -1099,7 +1099,7 @@ br_x509_minimal_run(void *t0ctx)
 	size_t len = T0_POP();
 	unsigned char *src = (unsigned char *)CTX + T0_POP();
 	unsigned char *dst = (unsigned char *)CTX + T0_POP();
-	memcpy(dst, src, len);
+	br_memcpy(dst, src, len);
 
 				}
 				break;
@@ -1118,7 +1118,7 @@ br_x509_minimal_run(void *t0ctx)
 			continue;
 		}
 		hash_dn(CTX, ta->dn.data, ta->dn.len, hashed_DN);
-		if (memcmp(hashed_DN, CTX->current_dn_hash, DNHASH_LEN)) {
+		if (br_memcmp(hashed_DN, CTX->current_dn_hash, DNHASH_LEN)) {
 			continue;
 		}
 		kt = CTX->pkey.key_type;
@@ -1144,7 +1144,7 @@ br_x509_minimal_run(void *t0ctx)
 		case BR_KEYTYPE_EC:
 			if (CTX->pkey.key.ec.curve != ta->pkey.key.ec.curve
 				|| CTX->pkey.key.ec.qlen != ta->pkey.key.ec.qlen
-				|| memcmp(CTX->pkey.key.ec.q,
+				|| br_memcmp(CTX->pkey.key.ec.q,
 					ta->pkey.key.ec.q,
 					ta->pkey.key.ec.qlen) != 0)
 			{
@@ -1179,7 +1179,7 @@ br_x509_minimal_run(void *t0ctx)
 			continue;
 		}
 		hash_dn(CTX, ta->dn.data, ta->dn.len, hashed_DN);
-		if (memcmp(hashed_DN, CTX->saved_dn_hash, DNHASH_LEN)) {
+		if (br_memcmp(hashed_DN, CTX->saved_dn_hash, DNHASH_LEN)) {
 			continue;
 		}
 		if (verify_signature(CTX, &ta->pkey) == 0) {
@@ -1251,7 +1251,7 @@ br_x509_minimal_run(void *t0ctx)
 
 	size_t qlen = T0_POP();
 	uint32_t curve = T0_POP();
-	memcpy(CTX->ee_pkey_data, CTX->pkey_data, qlen);
+	br_memcpy(CTX->ee_pkey_data, CTX->pkey_data, qlen);
 	CTX->pkey.key_type = BR_KEYTYPE_EC;
 	CTX->pkey.key.ec.curve = curve;
 	CTX->pkey.key.ec.q = CTX->ee_pkey_data;
@@ -1264,7 +1264,7 @@ br_x509_minimal_run(void *t0ctx)
 
 	size_t elen = T0_POP();
 	size_t nlen = T0_POP();
-	memcpy(CTX->ee_pkey_data, CTX->pkey_data, nlen + elen);
+	br_memcpy(CTX->ee_pkey_data, CTX->pkey_data, nlen + elen);
 	CTX->pkey.key_type = BR_KEYTYPE_RSA;
 	CTX->pkey.key.rsa.n = CTX->ee_pkey_data;
 	CTX->pkey.key.rsa.nlen = nlen;
@@ -1287,7 +1287,7 @@ br_x509_minimal_run(void *t0ctx)
 		ne = &CTX->name_elts[u];
 		if (ne->status == 0 && ne->oid[0] == 0 && ne->oid[1] == tag) {
 			if (ok && ne->len > len) {
-				memcpy(ne->buf, CTX->pad + 1, len);
+				br_memcpy(ne->buf, CTX->pad + 1, len);
 				ne->buf[len] = 0;
 				ne->status = 1;
 			} else {
@@ -1312,7 +1312,7 @@ br_x509_minimal_run(void *t0ctx)
 		if (ok) {
 			len = CTX->pad[0];
 			if (len < ne->len) {
-				memcpy(ne->buf, CTX->pad + 1, len);
+				br_memcpy(ne->buf, CTX->pad + 1, len);
 				ne->buf[len] = 0;
 				ne->status = 1;
 			} else {
@@ -1389,7 +1389,7 @@ br_x509_minimal_run(void *t0ctx)
 	size_t len = a1[0];
 	int x;
 	if (len == a2[0]) {
-		x = -(memcmp(a1 + 1, a2 + 1, len) == 0);
+		x = -(br_memcmp(a1 + 1, a2 + 1, len) == 0);
 	} else {
 		x = 0;
 	}
@@ -1403,7 +1403,7 @@ br_x509_minimal_run(void *t0ctx)
 	size_t len = T0_POP();
 	const unsigned char *a2 = (const unsigned char *)CTX + T0_POP();
 	const unsigned char *a1 = (const unsigned char *)CTX + T0_POP();
-	T0_PUSHi(-(memcmp(a1, a2, len) == 0));
+	T0_PUSHi(-(br_memcmp(a1, a2, len) == 0));
 
 				}
 				break;
@@ -1440,7 +1440,7 @@ br_x509_minimal_run(void *t0ctx)
 		T0_PUSH(0);
 		T0_RET();
 	}
-	n1 = strlen(CTX->server_name);
+	n1 = br_strlen(CTX->server_name);
 	n2 = CTX->pad[0];
 	if (n1 == n2 && eqnocase(&CTX->pad[1], CTX->server_name, n1)) {
 		T0_PUSHi(-1);
@@ -1496,7 +1496,7 @@ br_x509_minimal_run(void *t0ctx)
 			}
 			len = oid[off];
 			if (len != 0 && len == CTX->pad[0]
-				&& memcmp(oid + off + 1,
+				&& br_memcmp(oid + off + 1,
 					CTX->pad + 1, len) == 0)
 			{
 				T0_PUSH(u);
@@ -1532,7 +1532,7 @@ br_x509_minimal_run(void *t0ctx)
 		clen = (size_t)len;
 	}
 	if (addr != 0) {
-		memcpy((unsigned char *)CTX + addr, CTX->hbuf, clen);
+		br_memcpy((unsigned char *)CTX + addr, CTX->hbuf, clen);
 	}
 	if (CTX->do_mhash) {
 		br_multihash_update(&CTX->mhash, CTX->hbuf, clen);
@@ -1672,7 +1672,7 @@ verify_signature(br_x509_minimal_context *ctx, const br_x509_pkey *pk)
 		{
 			return BR_ERR_X509_BAD_SIGNATURE;
 		}
-		if (memcmp(ctx->tbs_hash, tmp, ctx->cert_sig_hash_len) != 0) {
+		if (br_memcmp(ctx->tbs_hash, tmp, ctx->cert_sig_hash_len) != 0) {
 			return BR_ERR_X509_BAD_SIGNATURE;
 		}
 		return 0;

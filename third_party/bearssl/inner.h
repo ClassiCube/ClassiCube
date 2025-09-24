@@ -35,6 +35,23 @@
 #include "config.h"
 #include "bearssl.h"
 
+/* ==== BEG ClassiCube specific ==== */
+#include "bearssl_stdlib.h"
+ 
+/* The x86 intrinsics seem to be incomplete compared to what aes_x86ni expects when compiling with NXDK */
+/* Also disable when compiling the legacy windows 9x build */
+#if defined NXDK || defined CC_BUILD_NOSTDLIB
+	#define BR_AES_X86NI 0
+	#define BR_ENABLE_INTRINSICS 0
+	#define BR_SSE2 0
+#endif
+
+/* intrin.h doesn't exist in older TinyC */
+#if defined __TINYC__
+	#define BR_INT128 0
+#endif
+/* ==== END ClassiCube specific ==== */
+
 /*
  * On MSVC, disable the warning about applying unary minus on an
  * unsigned type: it is standard, we do it all the time, and for
@@ -290,106 +307,22 @@
 #endif
 
 /*
- * RDRAND intrinsics are available on x86 (32-bit and 64-bit) with
- * GCC 4.6+, Clang 3.7+ and MSC 2012+.
+ * Detect support for unaligned accesses with known endianness.
+ *
+ *  x86 (both 32-bit and 64-bit) is little-endian and allows unaligned
+ *  accesses.
+ *
+ *  POWER/PowerPC allows unaligned accesses when big-endian.
  */
-#ifndef BR_RDRAND
-#if (BR_i386 || BR_amd64) && (BR_GCC_4_6 || BR_CLANG_3_7 || BR_MSC_2012)
-#define BR_RDRAND   1
-#endif
+#if !defined BR_LE_UNALIGNED && !defined BR_BE_UNALIGNED
+
+#if __i386 || __i386__ || __x86_64__ || _M_IX86 || _M_X64
+#define BR_LE_UNALIGNED   1
+#elif (__powerpc__ || __powerpc64__ || _M_PPC || _ARCH_PPC || _ARCH_PPC64) \
+	&& __BIG_ENDIAN__
+#define BR_BE_UNALIGNED   1
 #endif
 
-/*
- * Determine type of OS for random number generation. Macro names and
- * values are documented on:
- *    https://sourceforge.net/p/predef/wiki/OperatingSystems/
- *
- * Win32's CryptGenRandom() should be available on Windows systems.
- *
- * /dev/urandom should work on all Unix-like systems (including macOS X).
- *
- * getentropy() is present on Linux (Glibc 2.25+), FreeBSD (12.0+) and
- * OpenBSD (5.6+). For OpenBSD, there does not seem to be easy to use
- * macros to test the minimum version, so we just assume that it is
- * recent enough (last version without getentropy() has gone out of
- * support in May 2015).
- *
- * Ideally we should use getentropy() on macOS (10.12+) too, but I don't
- * know how to test the exact OS version with preprocessor macros.
- *
- * TODO: enrich the list of detected system.
- */
-
-#ifndef BR_USE_URANDOM
-#if defined _AIX \
-	|| defined __ANDROID__ \
-	|| defined __FreeBSD__ \
-	|| defined __NetBSD__ \
-	|| defined __OpenBSD__ \
-	|| defined __DragonFly__ \
-	|| defined __linux__ \
-	|| (defined __sun && (defined __SVR4 || defined __svr4__)) \
-	|| (defined __APPLE__ && defined __MACH__)
-#define BR_USE_URANDOM   1
-#endif
-#endif
-
-#ifndef BR_USE_GETENTROPY
-#if (defined __linux__ \
-	&& (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 25))) \
-	|| (defined __FreeBSD__ && __FreeBSD__ >= 12) \
-	|| defined __OpenBSD__
-#define BR_USE_GETENTROPY   1
-#endif
-#endif
-
-#ifndef BR_USE_WIN32_RAND
-#if defined _WIN32 || defined _WIN64
-#define BR_USE_WIN32_RAND   1
-#endif
-#endif
-
-/*
- * POWER8 crypto support. We rely on compiler macros for the
- * architecture, since we do not have a reliable, simple way to detect
- * the required support at runtime (we could try running an opcode, and
- * trapping the exception or signal on illegal instruction, but this
- * induces some non-trivial OS dependencies that we would prefer to
- * avoid if possible).
- */
-#ifndef BR_POWER8
-#if __GNUC__ && ((_ARCH_PWR8 || _ARCH_PPC) && __CRYPTO__)
-#define BR_POWER8   1
-#endif
-#endif
-
-/*
- * Detect endinanness on POWER8.
- */
-#if BR_POWER8
-#if defined BR_POWER8_LE
-#undef BR_POWER8_BE
-#if BR_POWER8_LE
-#define BR_POWER8_BE   0
-#else
-#define BR_POWER8_BE   1
-#endif
-#elif defined BR_POWER8_BE
-#undef BR_POWER8_LE
-#if BR_POWER8_BE
-#define BR_POWER8_LE   0
-#else
-#define BR_POWER8_LE   1
-#endif
-#else
-#if __LITTLE_ENDIAN__
-#define BR_POWER8_LE   1
-#define BR_POWER8_BE   0
-#else
-#define BR_POWER8_LE   0
-#define BR_POWER8_BE   1
-#endif
-#endif
 #endif
 
 /*
@@ -408,21 +341,11 @@
  *
  *  x86 (both 32-bit and 64-bit) is little-endian and allows unaligned
  *  accesses.
- *
- *  POWER/PowerPC allows unaligned accesses when big-endian. POWER8 and
- *  later also allow unaligned accesses when little-endian.
  */
-#if !defined BR_LE_UNALIGNED && !defined BR_BE_UNALIGNED
+#if !defined BR_LE_UNALIGNED
 
 #if __i386 || __i386__ || __x86_64__ || _M_IX86 || _M_X64
 #define BR_LE_UNALIGNED   1
-#elif BR_POWER8_BE
-#define BR_BE_UNALIGNED   1
-#elif BR_POWER8_LE
-#define BR_LE_UNALIGNED   1
-#elif (__powerpc__ || __powerpc64__ || _M_PPC || _ARCH_PPC || _ARCH_PPC64) \
-	&& __BIG_ENDIAN__
-#define BR_BE_UNALIGNED   1
 #endif
 
 #endif
@@ -697,7 +620,7 @@ static inline void
 br_multihash_copyimpl(br_multihash_context *dst,
 	const br_multihash_context *src)
 {
-	memcpy((void *)dst->impl, src->impl, sizeof src->impl);
+	br_memcpy((void *)dst->impl, src->impl, sizeof src->impl);
 }
 
 /* ==================================================================== */
@@ -1207,7 +1130,7 @@ static inline void
 br_i32_zero(uint32_t *x, uint32_t bit_len)
 {
 	*x ++ = bit_len;
-	memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
+	br_memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
 }
 
 /*
@@ -1355,7 +1278,7 @@ static inline void
 br_i31_zero(uint32_t *x, uint32_t bit_len)
 {
 	*x ++ = bit_len;
-	memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
+	br_memset(x, 0, ((bit_len + 31) >> 5) * sizeof *x);
 }
 
 /*
@@ -1509,7 +1432,7 @@ static inline void
 br_i15_zero(uint16_t *x, uint16_t bit_len)
 {
 	*x ++ = bit_len;
-	memset(x, 0, ((bit_len + 15) >> 4) * sizeof *x);
+	br_memset(x, 0, ((bit_len + 15) >> 4) * sizeof *x);
 }
 
 uint32_t br_i15_iszero(const uint16_t *x);
@@ -2476,6 +2399,18 @@ br_cpuid(uint32_t mask_eax, uint32_t mask_ebx,
 #endif
 
 #endif
+
+/* BEG classicube specific */
+/* Fix issue where 32 bit GCC aligns stack to 4 bytes, but will still */
+/*  generate instructions expecting the stack to be _16_ byte aligned */
+/* https://gcc.gnu.org/onlinedocs/gcc/x86-Function-Attributes.html */
+/* TODO is this needed for MSVC ? */
+#if (BR_GCC || BR_CLANG) && BR_i386 && !BR_amd64
+	#define BR_SSE_FUNCTION __attribute__((force_align_arg_pointer))
+#else
+	#define BR_SSE_FUNCTION
+#endif
+/* END classicube specific */
 
 /* ==================================================================== */
 

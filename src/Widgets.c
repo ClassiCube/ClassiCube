@@ -2184,6 +2184,10 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	for (i = 0; i < w->lines; i++) 
 	{
 		line = TextGroupWidget_UNSAFE_Get(w, i);
+		/* TODO properly fix this buffer overflow if multiple lines */
+		/*  of max chat length are added by a plugin and have URLs */
+		line.length = min(line.length, TEXTGROUPWIDGET_LEN);
+
 		begs[i] = -1; ends[i] = -1;
 		if (!line.length) continue;
 

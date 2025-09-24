@@ -1,3 +1,8 @@
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+#define CC_NO_SOCKETS
+#define CC_NO_THREADING
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -126,9 +131,9 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
 #define US_PER_SEC 1000000ULL
 
 cc_uint64 Stopwatch_Measure(void) {
-        struct timeval cur;
-        gettimeofday(&cur, NULL);
-        return (cc_uint64)cur.tv_sec * US_PER_SEC + cur.tv_usec;
+	struct timeval cur;
+ 	gettimeofday(&cur, NULL);
+	return (cc_uint64)cur.tv_sec * US_PER_SEC + cur.tv_usec;
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
@@ -259,73 +264,6 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 
-void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
-	*handle = NULL;
-}
-
-void Thread_Detach(void* handle) { }
-
-void Thread_Join(void* handle) { }
-
-void* Mutex_Create(const char* name) { return NULL; }
-
-void Mutex_Free(void* handle) { }
-
-void Mutex_Lock(void* handle) { }
-
-void Mutex_Unlock(void* handle) { }
-
-void* Waitable_Create(const char* name) { return NULL; }
-
-void Waitable_Free(void* handle) { }
-
-void Waitable_Signal(void* handle) { }
-
-void Waitable_Wait(void* handle) { }
-
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-void Platform_LoadSysFonts(void) { }
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Socket----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Socket_Close(cc_socket s) {
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return ERR_NOT_SUPPORTED;
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
@@ -340,50 +278,6 @@ void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_bool Updater_Supported = false;
-
-cc_bool Updater_Clean(void) { return true; }
-
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-
-cc_result Updater_Start(const char** action) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_MarkExecutable(void) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-const cc_string DynamicLib_Ext = String_FromConst(".dll");
-
-void* DynamicLib_Load2(const cc_string* path) {
-	return NULL;
-}
-
-void* DynamicLib_Get2(void* lib, const char* name) {
-	return NULL;
-}
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	return false;
 }
 
 

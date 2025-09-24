@@ -1,4 +1,9 @@
 #define CC_XTEA_ENCRYPTION
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+#define CC_NO_SOCKETS
+#define CC_NO_THREADING
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -91,29 +96,31 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 /*########################################################################################################################*
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
-static volatile cc_uint32 overflow_count;
+#include "sh2_wdt.h"
+
+static void Stopwatch_Init(void) {
+	wdt_stop();
+
+	wdt_set_irq_number(CPU_INTC_INTERRUPT_WDT_ITI);
+	wdt_set_irq_priority(15);
+    cpu_intc_ihr_set(CPU_INTC_INTERRUPT_WDT_ITI, wdt_handler);
+
+	wdt_enable();
+}
 
 cc_uint64 Stopwatch_Measure(void) {
-	return cpu_frt_count_get() + (overflow_count * 65536);
+	return wdt_total_ticks();
 }
+
+#define US_PER_SEC     1000000
+#define NTSC_320_CLOCK 26846587
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	cc_uint32 delta = end - beg;
+	cc_uint64 delta = end - beg;
 
-	// TODO still wrong?? and overflows?? and PAL detection ???
-	return (delta * 1000) / CPU_FRT_NTSC_320_128_COUNT_1MS;
-}
-
-static void ovf_handler(void) { overflow_count++; }
-
-static void Stopwatch_Init(void) {
-	//cpu_frt_init(CPU_FRT_CLOCK_DIV_8);
-	cpu_frt_init(CPU_FRT_CLOCK_DIV_128);
-	cpu_frt_ovi_set(ovf_handler);
-
-	cpu_frt_interrupt_priority_set(15);
-	cpu_frt_count_set(0);
+	// TODO still wrong?? PAL detection ???
+	return (delta * US_PER_SEC) / (NTSC_320_CLOCK / 1024);
 }
 
 
@@ -134,6 +141,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
 	String_EncodeUtf8(str, path);
 }
+
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
 	return ReturnCode_DirectoryExists;
@@ -197,80 +206,6 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 	}
 }
 
-void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
-	*handle = NULL;
-}
-
-void Thread_Detach(void* handle) {
-}
-
-void Thread_Join(void* handle) {
-}
-
-void* Mutex_Create(const char* name) {
-	return NULL;
-}
-
-void Mutex_Free(void* handle) {
-}
-
-void Mutex_Lock(void* handle) {
-}
-
-void Mutex_Unlock(void* handle) {
-}
-
-void* Waitable_Create(const char* name) {
-	return NULL;
-}
-
-void Waitable_Free(void* handle) {
-}
-
-void Waitable_Signal(void* handle) {
-}
-
-void Waitable_Wait(void* handle) {
-}
-
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Socket----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Socket_Close(cc_socket s) {
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return ERR_NOT_SUPPORTED;
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
@@ -296,6 +231,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+void Process_Exit(cc_result code) { exit(code); }
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
@@ -305,4 +242,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 static cc_result GetMachineID(cc_uint32* key) {
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 	return 0;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
 }

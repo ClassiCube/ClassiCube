@@ -57,7 +57,7 @@ static void CreateShaders(void) {
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
 		CreateState();
-		CreateShaders();	
+		//CreateShaders(); TODO	
 	}
 	Gfx.Created = true;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
@@ -177,7 +177,7 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_ClearColor(PackedCol color) { 
+void Gfx_ClearColor(PackedCol color) {
 	Xe_SetClearColor(xe, color);
 }
 
@@ -231,7 +231,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 
 void Gfx_BindVb(GfxResourceID vb) {
 	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
-	Xe_SetStreamSource(xe, 0, xvb, 0, gfx_stride);
+	//Xe_SetStreamSource(xe, 0, xvb, 0, gfx_stride); TODO
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
@@ -274,33 +274,33 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 	
 	if (fmt == VERTEX_FORMAT_COLOURED) {
-		Xe_SetTexture(xe, 0, NULL);
-		Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_col_ps, 0);
-		Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_col_vs, 0);
+		//Xe_SetTexture(xe, 0, NULL); TODO
+		//Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_col_ps, 0); TODO
+		//Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_col_vs, 0); TODO
 	} else {
-		Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_tex_ps, 0);
-		Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_tex_vs, 0);
+		//Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_tex_ps, 0); TODO
+		//Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_tex_vs, 0); TODO
 	}
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 	Platform_Log1("DRAW_LINES: %i", &verticesCount);
-	Xe_DrawPrimitive(xe, XE_PRIMTYPE_LINELIST, 0, verticesCount >> 1);
+	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_LINELIST, 0, verticesCount >> 1); TODO
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	Platform_Log1("DRAW_TRIS: %i", &verticesCount);
-	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, 0, verticesCount >> 2);
+	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, 0, verticesCount >> 2); TODO
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	Platform_Log1("DRAW_TRIS_RANGE: %i", &verticesCount);
-	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2);
+	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	Platform_Log1("DRAW_TRIS_MAP: %i", &verticesCount);
-	Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2);
+	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
 }
 
 
@@ -316,7 +316,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	
 	Matrix_Mul(&_mvp, &_view, &_proj);
 	// TODO: Is this a global uniform, or does it need to be reloaded on shader change?
-	Xe_SetVertexShaderConstantF(xe, 0, (float*)&_mvp, 4);
+	//Xe_SetVertexShaderConstantF(xe, 0, (float*)&_mvp, 4); TODO
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {

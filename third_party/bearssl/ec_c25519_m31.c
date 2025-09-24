@@ -44,7 +44,7 @@ print_int(const char *name, const uint32_t *x)
 			return;
 		}
 	}
-	memset(tmp, 0, sizeof tmp);
+	br_memset(tmp, 0, sizeof tmp);
 	for (u = 0; u < 9; u ++) {
 		uint64_t w;
 		int j, k;
@@ -348,7 +348,7 @@ reduce_final_f255(uint32_t *d)
 	uint32_t cc;
 	int i;
 
-	memcpy(t, d, sizeof t);
+	br_memcpy(t, d, sizeof t);
 	cc = 19;
 	for (i = 0; i < 9; i ++) {
 		uint32_t w;
@@ -647,15 +647,15 @@ api_mul(unsigned char *G, size_t Glen,
 	 * into Montgomery representation.
 	 */
 	x1[8] = le8_to_le30(x1, G, 32);
-	memcpy(x3, x1, sizeof x1);
-	memset(z2, 0, sizeof z2);
-	memset(x2, 0, sizeof x2);
+	br_memcpy(x3, x1, sizeof x1);
+	br_memset(z2, 0, sizeof z2);
+	br_memset(x2, 0, sizeof x2);
 	x2[0] = 1;
-	memset(z3, 0, sizeof z3);
+	br_memset(z3, 0, sizeof z3);
 	z3[0] = 1;
 
-	memset(k, 0, (sizeof k) - kblen);
-	memcpy(k + (sizeof k) - kblen, kb, kblen);
+	br_memset(k, 0, (sizeof k) - kblen);
+	br_memcpy(k + (sizeof k) - kblen, kb, kblen);
 	k[31] &= 0xF8;
 	k[0] &= 0x7F;
 	k[0] |= 0x40;
@@ -728,12 +728,12 @@ api_mul(unsigned char *G, size_t Glen,
 	 * square-and-multiply algorithm; we mutualise most non-squarings
 	 * since the exponent contains almost only ones.
 	 */
-	memcpy(a, z2, sizeof z2);
+	br_memcpy(a, z2, sizeof z2);
 	for (i = 0; i < 15; i ++) {
 		f255_square(a, a);
 		f255_mul(a, a, z2);
 	}
-	memcpy(b, a, sizeof a);
+	br_memcpy(b, a, sizeof a);
 	for (i = 0; i < 14; i ++) {
 		int j;
 
@@ -762,7 +762,7 @@ api_mulgen(unsigned char *R,
 	size_t Glen;
 
 	G = api_generator(curve, &Glen);
-	memcpy(R, G, Glen);
+	br_memcpy(R, G, Glen);
 	api_mul(R, Glen, x, xlen, curve);
 	return Glen;
 }

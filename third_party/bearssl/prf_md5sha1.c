@@ -35,7 +35,7 @@ br_tls10_prf(void *dst, size_t len,
 
 	s1 = secret;
 	slen = (secret_len + 1) >> 1;
-	memset(dst, 0, len);
+	br_memset(dst, 0, len);
 	br_tls_phash(dst, len, &br_md5_vtable,
 		s1, slen, label, seed_num, seed);
 	br_tls_phash(dst, len, &br_sha1_vtable,

@@ -1,5 +1,9 @@
 #include "Core.h"
 #if defined CC_BUILD_MACCLASSIC
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+#define CC_NO_SOCKETS
+#define CC_NO_THREADING
 
 #include "_PlatformBase.h"
 #include "Stream.h"
@@ -362,91 +366,6 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 	Delay(delay, &final);
 }
 
-void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
-	*handle = NULL;
-	// TODO
-}
-
-void Thread_Detach(void* handle) {
-	// TODO
-}
-
-void Thread_Join(void* handle) {
-	// TODO
-}
-
-void* Mutex_Create(const char* name) {
-	return NULL;
-}
-
-void Mutex_Free(void* handle) {
-	// TODO
-}
-
-void Mutex_Lock(void* handle) {
-	// TODO
-}
-
-void Mutex_Unlock(void* handle) {
-	// TODO
-}
-
-void* Waitable_Create(const char* name) {
-	return NULL;
-}
-
-void Waitable_Free(void* handle) {
-	// TODO
-}
-
-void Waitable_Signal(void* handle) {
-	// TODO
-}
-
-void Waitable_Wait(void* handle) {
-	// TODO
-}
-
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	// TODO
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Socket----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Socket_Close(cc_socket s) {
-
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return ERR_NOT_SUPPORTED;
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
@@ -488,49 +407,6 @@ void Process_Exit(cc_result code) {
 
 cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_bool Updater_Supported = false;
-cc_bool Updater_Clean(void) { return true; }
-
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-
-cc_result Updater_Start(const char** action) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_MarkExecutable(void) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-const cc_string DynamicLib_Ext = String_FromConst(".dylib");
-
-void* DynamicLib_Load2(const cc_string* path) {
-	return NULL;
-}
-
-void* DynamicLib_Get2(void* lib, const char* name) {
-	return NULL;
-}
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	return false;
 }
 
 

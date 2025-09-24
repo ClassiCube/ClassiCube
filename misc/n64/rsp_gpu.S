@@ -294,14 +294,17 @@ GL_TnL:
     ssv vcspos_i.W,      SCREEN_VTX_W+0, vtx2
     ssv vcspos_f.W,      SCREEN_VTX_W+2, vtx2
 
+	// Perspective division
     vmudl v___,         vcspos_f, vinvw_f.wwwwWWWW
     vmadm v___,         vcspos_i, vinvw_f.wwwwWWWW
     vmadn vscreenpos_f, vcspos_f, vinvw_i.wwwwWWWW
     vmadh vscreenpos_i, vcspos_i, vinvw_i.wwwwWWWW
     
+	// Clip against guard planes
     vch v___, vguard_i, vguard_i.wwwwWWWW
     vcl v___, vguard_f, vguard_f.wwwwWWWW
 
+	// Viewport transform
     vmudn v___,         vscreenpos_f, vviewscale
     vmadh v___,         vscreenpos_i, vviewscale
     vmadh vscreenpos_i, vviewoff,     K1

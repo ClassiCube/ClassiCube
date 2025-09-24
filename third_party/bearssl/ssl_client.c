@@ -31,10 +31,10 @@ br_ssl_client_zero(br_ssl_client_context *cc)
 	/*
 	 * For really standard C, we should explicitly set to NULL all
 	 * pointers, and 0 all other fields. However, on all our target
-	 * architectures, a direct memset() will work, be faster, and
+	 * architectures, a direct br_memset() will work, be faster, and
 	 * use a lot less code.
 	 */
-	memset(cc, 0, sizeof *cc);
+	br_memset(cc, 0, sizeof *cc);
 }
 
 /* see bearssl_ssl.h */
@@ -64,12 +64,12 @@ br_ssl_client_reset(br_ssl_client_context *cc,
 	if (server_name == NULL) {
 		cc->eng.server_name[0] = 0;
 	} else {
-		n = strlen(server_name) + 1;
+		n = br_strlen(server_name) + 1;
 		if (n > sizeof cc->eng.server_name) {
 			br_ssl_engine_fail(&cc->eng, BR_ERR_BAD_PARAM);
 			return 0;
 		}
-		memcpy(cc->eng.server_name, server_name, n);
+		br_memcpy(cc->eng.server_name, server_name, n);
 	}
 
 	br_ssl_engine_hs_reset(&cc->eng,

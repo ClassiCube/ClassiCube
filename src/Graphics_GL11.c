@@ -30,6 +30,17 @@ typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
+static void CheckSupport(void) {
+	static const cc_string bgraExt = String_FromConst("GL_EXT_bgra");
+	cc_string extensions = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
+	const GLubyte* ver   = _glGetString(GL_VERSION);
+
+	/* Version string is always: x.y. (and whatever afterwards) */
+	int major = ver[0] - '0', minor = ver[2] - '0';
+	/* Some old IRIX cards don't support BGRA */
+	convert_rgba = major == 1 && minor <= 1 && !String_CaselessContains(&extensions, &bgraExt);
+}
+
 void Gfx_Create(void) {
 	GLContext_Create();
 	GL_InitCommon();
@@ -37,6 +48,7 @@ void Gfx_Create(void) {
 	MakeIndices(gl_indices, GFX_MAX_INDICES, NULL);
 	Gfx_RestoreState();
 	GLContext_SetVSync(gfx_vsync);
+	CheckSupport();
 }
 
 

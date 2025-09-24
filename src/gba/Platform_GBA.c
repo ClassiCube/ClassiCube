@@ -1,3 +1,8 @@
+#define CC_NO_UPDATER
+#define CC_NO_DYNLIB
+#define CC_NO_SOCKETS
+#define CC_NO_THREADING
+
 #include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -12,9 +17,6 @@
 #include <string.h>
 #include <unistd.h>
 #include "gbadefs.h"
-
-#define OVERRIDE_MEM_FUNCTIONS
-#include "../_PlatformConsole.h"
 
 #include "../../third_party/tinyalloc/tinyalloc.c"
 
@@ -31,24 +33,42 @@ const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix = " GBA";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunGame();
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
+
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	Platform_Log1("  MALLOC: %i", &size);
 	void* ptr = size ? ta_alloc(size) : NULL;
-	Platform_Log1("MALLOCED: %x", &ptr);
+	Platform_Log2("MALLOCED: %x (%i bytes)", &ptr, &size);
     return ptr;
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	Platform_Log1("  CALLOC: %i", &size);
 	void* ptr = size ? ta_alloc(size) : NULL;
-	Platform_Log1("CALLOCED: %x", &ptr);
+	Platform_Log2("CALLOCED: %x (%i bytes)", &ptr, &size);
 
 	if (ptr) Mem_Set(ptr, 0, size);
     return ptr;
@@ -70,12 +90,13 @@ static uint32_t GetTimerValues(void) {
 	uint16_t lo = REG_TMR2_DATA;
     uint16_t hi = REG_TMR3_DATA;
 
-	// Did lo timer possibly overflow between reading lo and hi?
+	// Lo timer can possibly overflow between reading lo and hi
 	uint16_t lo_again = REG_TMR2_DATA;
 	uint16_t hi_again = REG_TMR3_DATA;
 
+	// Check if lo timer has overflowed
 	if (lo_again < lo) {
-		// If so, use known safe timer read values instead
+		// If so, use known stable timer read values instead
 		lo = lo_again;
 		hi = hi_again;
 	}
@@ -180,6 +201,8 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Directory_GetCachePath(cc_string* path) { }
+
 cc_result Directory_Create(const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
@@ -238,80 +261,6 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 	//swiDelay(8378 * milliseconds); // TODO probably wrong
 }
 
-void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
-	*handle = NULL;
-}
-
-void Thread_Detach(void* handle) {
-}
-
-void Thread_Join(void* handle) {
-}
-
-void* Mutex_Create(const char* name) {
-	return NULL;
-}
-
-void Mutex_Free(void* handle) {
-}
-
-void Mutex_Lock(void* handle) {
-}
-
-void Mutex_Unlock(void* handle) {
-}
-
-void* Waitable_Create(const char* name) {
-	return NULL;
-}
-
-void Waitable_Free(void* handle) {
-}
-
-void Waitable_Signal(void* handle) {
-}
-
-void Waitable_Wait(void* handle) {
-}
-
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Socket----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Socket_Close(cc_socket s) {
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return ERR_NOT_SUPPORTED;
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
@@ -347,4 +296,22 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Process/Module------------------------------------------------------*
+*#########################################################################################################################*/
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	return 0;
+}
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	return 0;
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) { 
+	return 0; 
+}
+
+void Process_Exit(cc_result code) { _exit(code); }
 

@@ -66,8 +66,8 @@ br_gcm_init(br_gcm_context *ctx, const br_block_ctr_class **bctx, br_ghash gh)
 	 * with an all-zero IV and a zero counter, to CTR-encrypt an
 	 * all-zero block.
 	 */
-	memset(ctx->h, 0, sizeof ctx->h);
-	memset(iv, 0, sizeof iv);
+	br_memset(ctx->h, 0, sizeof ctx->h);
+	br_memset(iv, 0, sizeof iv);
 	(*bctx)->run(bctx, iv, 0, ctx->h, sizeof ctx->h);
 }
 
@@ -85,21 +85,21 @@ br_gcm_reset(br_gcm_context *ctx, const void *iv, size_t len)
 	 * (both 12-byte IV and 32-bit counter).
 	 */
 	if (len == 12) {
-		memcpy(ctx->j0_1, iv, 12);
+		br_memcpy(ctx->j0_1, iv, 12);
 		ctx->j0_2 = 1;
 	} else {
 		unsigned char ty[16], tmp[16];
 
-		memset(ty, 0, sizeof ty);
+		br_memset(ty, 0, sizeof ty);
 		ctx->gh(ty, ctx->h, iv, len);
-		memset(tmp, 0, 8);
+		br_memset(tmp, 0, 8);
 		br_enc64be(tmp + 8, (uint64_t)len << 3);
 		ctx->gh(ty, ctx->h, tmp, 16);
-		memcpy(ctx->j0_1, ty, 12);
+		br_memcpy(ctx->j0_1, ty, 12);
 		ctx->j0_2 = br_dec32be(ty + 12);
 	}
 	ctx->jc = ctx->j0_2 + 1;
-	memset(ctx->y, 0, sizeof ctx->y);
+	br_memset(ctx->y, 0, sizeof ctx->y);
 	ctx->count_aad = 0;
 	ctx->count_ctr = 0;
 }
@@ -120,11 +120,11 @@ br_gcm_aad_inject(br_gcm_context *ctx, const void *data, size_t len)
 
 		clen = 16 - ptr;
 		if (len < clen) {
-			memcpy(ctx->buf + ptr, data, len);
+			br_memcpy(ctx->buf + ptr, data, len);
 			ctx->count_aad += (uint64_t)len;
 			return;
 		}
-		memcpy(ctx->buf + ptr, data, clen);
+		br_memcpy(ctx->buf + ptr, data, clen);
 		ctx->gh(ctx->y, ctx->h, ctx->buf, 16);
 		data = (const unsigned char *)data + clen;
 		len -= clen;
@@ -138,7 +138,7 @@ br_gcm_aad_inject(br_gcm_context *ctx, const void *data, size_t len)
 	 */
 	dlen = len & ~(size_t)15;
 	ctx->gh(ctx->y, ctx->h, data, dlen);
-	memcpy(ctx->buf, (const unsigned char *)data + dlen, len - dlen);
+	br_memcpy(ctx->buf, (const unsigned char *)data + dlen, len - dlen);
 	ctx->count_aad += (uint64_t)len;
 }
 
@@ -216,7 +216,7 @@ br_gcm_run(br_gcm_context *ctx, int encrypt, void *data, size_t len)
 		 */
 		size_t u;
 
-		memset(ctx->buf, 0, sizeof ctx->buf);
+		br_memset(ctx->buf, 0, sizeof ctx->buf);
 		ctx->jc = (*ctx->bctx)->run(ctx->bctx, ctx->j0_1,
 			ctx->jc, ctx->buf, 16);
 		for (u = 0; u < len; u ++) {
@@ -259,7 +259,7 @@ br_gcm_get_tag(br_gcm_context *ctx, void *tag)
 	 * Tag is the GHASH output XORed with the encryption of the
 	 * nonce with the initial counter value.
 	 */
-	memcpy(tag, ctx->y, 16);
+	br_memcpy(tag, ctx->y, 16);
 	(*ctx->bctx)->run(ctx->bctx, ctx->j0_1, ctx->j0_2, tag, 16);
 }
 
@@ -270,7 +270,7 @@ br_gcm_get_tag_trunc(br_gcm_context *ctx, void *tag, size_t len)
 	unsigned char tmp[16];
 
 	br_gcm_get_tag(ctx, tmp);
-	memcpy(tag, tmp, len);
+	br_memcpy(tag, tmp, len);
 }
 
 /* see bearssl_aead.h */

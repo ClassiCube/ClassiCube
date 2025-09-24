@@ -46,12 +46,12 @@ br_aes_big_cbcdec_run(const br_aes_big_cbcdec_keys *ctx,
 		unsigned char tmp[16];
 		int i;
 
-		memcpy(tmp, buf, 16);
+		br_memcpy(tmp, buf, 16);
 		br_aes_big_decrypt(ctx->num_rounds, ctx->skey, buf);
 		for (i = 0; i < 16; i ++) {
 			buf[i] ^= ivbuf[i];
 		}
-		memcpy(ivbuf, tmp, 16);
+		br_memcpy(ivbuf, tmp, 16);
 		buf += 16;
 		len -= 16;
 	}

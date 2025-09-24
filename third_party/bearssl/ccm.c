@@ -76,7 +76,7 @@ br_ccm_reset(br_ccm_context *ctx, const void *nonce, size_t nonce_len,
 	tmp[0] = (aad_len > 0 ? 0x40 : 0x00)
 		| (((unsigned)tag_len - 2) << 2)
 		| (q - 1);
-	memcpy(tmp + 1, nonce, nonce_len);
+	br_memcpy(tmp + 1, nonce, nonce_len);
 	for (u = 0; u < q; u ++) {
 		tmp[15 - u] = (unsigned char)data_len;
 		data_len >>= 8;
@@ -93,7 +93,7 @@ br_ccm_reset(br_ccm_context *ctx, const void *nonce, size_t nonce_len,
 	/*
 	 * Start CBC-MAC.
 	 */
-	memset(ctx->cbcmac, 0, sizeof ctx->cbcmac);
+	br_memset(ctx->cbcmac, 0, sizeof ctx->cbcmac);
 	(*ctx->bctx)->mac(ctx->bctx, ctx->cbcmac, tmp, sizeof tmp);
 
 	/*
@@ -120,9 +120,9 @@ br_ccm_reset(br_ccm_context *ctx, const void *nonce, size_t nonce_len,
 	 * Make initial counter value and compute tag mask.
 	 */
 	ctx->ctr[0] = q - 1;
-	memcpy(ctx->ctr + 1, nonce, nonce_len);
-	memset(ctx->ctr + 1 + nonce_len, 0, q);
-	memset(ctx->tagmask, 0, sizeof ctx->tagmask);
+	br_memcpy(ctx->ctr + 1, nonce, nonce_len);
+	br_memset(ctx->ctr + 1 + nonce_len, 0, q);
+	br_memset(ctx->tagmask, 0, sizeof ctx->tagmask);
 	(*ctx->bctx)->ctr(ctx->bctx, ctx->ctr,
 		ctx->tagmask, sizeof ctx->tagmask);
 
@@ -147,11 +147,11 @@ br_ccm_aad_inject(br_ccm_context *ctx, const void *data, size_t len)
 
 		clen = (sizeof ctx->buf) - ptr;
 		if (clen > len) {
-			memcpy(ctx->buf + ptr, dbuf, len);
+			br_memcpy(ctx->buf + ptr, dbuf, len);
 			ctx->ptr = ptr + len;
 			return;
 		}
-		memcpy(ctx->buf + ptr, dbuf, clen);
+		br_memcpy(ctx->buf + ptr, dbuf, clen);
 		dbuf += clen;
 		len -= clen;
 		(*ctx->bctx)->mac(ctx->bctx, ctx->cbcmac,
@@ -169,7 +169,7 @@ br_ccm_aad_inject(br_ccm_context *ctx, const void *data, size_t len)
 	/*
 	 * Copy last partial block in the context buffer.
 	 */
-	memcpy(ctx->buf, dbuf, ptr);
+	br_memcpy(ctx->buf, dbuf, ptr);
 	ctx->ptr = ptr;
 }
 
@@ -184,7 +184,7 @@ br_ccm_flip(br_ccm_context *ctx)
 	 */
 	ptr = ctx->ptr;
 	if (ptr != 0) {
-		memset(ctx->buf + ptr, 0, (sizeof ctx->buf) - ptr);
+		br_memset(ctx->buf + ptr, 0, (sizeof ctx->buf) - ptr);
 		(*ctx->bctx)->mac(ctx->bctx, ctx->cbcmac,
 			ctx->buf, sizeof ctx->buf);
 		ctx->ptr = 0;
@@ -276,7 +276,7 @@ br_ccm_run(br_ccm_context *ctx, int encrypt, void *data, size_t len)
 	if (ptr != 0) {
 		size_t u;
 
-		memset(ctx->buf, 0, sizeof ctx->buf);
+		br_memset(ctx->buf, 0, sizeof ctx->buf);
 		(*ctx->bctx)->ctr(ctx->bctx, ctx->ctr,
 			ctx->buf, sizeof ctx->buf);
 		if (encrypt) {
@@ -314,7 +314,7 @@ br_ccm_get_tag(br_ccm_context *ctx, void *tag)
 	 */
 	ptr = ctx->ptr;
 	if (ptr != 0) {
-		memset(ctx->buf + ptr, 0, (sizeof ctx->buf) - ptr);
+		br_memset(ctx->buf + ptr, 0, (sizeof ctx->buf) - ptr);
 		(*ctx->bctx)->mac(ctx->bctx, ctx->cbcmac,
 			ctx->buf, sizeof ctx->buf);
 	}
@@ -325,7 +325,7 @@ br_ccm_get_tag(br_ccm_context *ctx, void *tag)
 	for (u = 0; u < ctx->tag_len; u ++) {
 		ctx->cbcmac[u] ^= ctx->tagmask[u];
 	}
-	memcpy(tag, ctx->cbcmac, ctx->tag_len);
+	br_memcpy(tag, ctx->cbcmac, ctx->tag_len);
 	return ctx->tag_len;
 }
 

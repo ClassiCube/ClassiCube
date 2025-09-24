@@ -34,13 +34,6 @@ jobs:
           make ps3
 
 
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile PS3 build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-
-
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
@@ -65,3 +58,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'ps3'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce PS3 build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

@@ -85,10 +85,14 @@ struct EntityVTABLE {
 	cc_bool (*ShouldRenderName)(struct Entity* e);
 };
 
-/* Skin is still being downloaded asynchronously */
-#define SKIN_FETCH_DOWNLOADING 1
-/* Skin was downloaded or copied from another entity with the same skin. */
-#define SKIN_FETCH_COMPLETED   2
+/* Entity's skin has not been checked yet */
+#define SKIN_FETCH_UNCHECKED   0
+/* Waiting for another entity with the same skin to finish downloading it */
+#define SKIN_FETCH_WAITINGFOR  1
+/* Entity's skin is currently being downloaded asynchronously */
+#define SKIN_FETCH_DOWNLOADING 2
+/* Entity's skin has been downloaded or copied from another entity with the same skin. */
+#define SKIN_FETCH_COMPLETED   3
 
 /* true to restrict model scale (needed for local player, giant model collisions are too costly) */
 #define ENTITY_FLAG_MODEL_RESTRICTED_SCALE 0x01
@@ -107,6 +111,7 @@ struct Entity {
 	const struct EntityVTABLE* VTABLE;
 	Vec3 Position;
 	/* NOTE: Do NOT change order of yaw/pitch, this will break models in plugins */
+	/* When adding a new field to structs that plugins can access, add them to the end to avoid breaking compatibility. */
 	float Pitch, Yaw, RotX, RotY, RotZ;
 	Vec3 Velocity;
 
@@ -121,7 +126,8 @@ struct Entity {
 	cc_uint8 SkinType;
 	cc_uint8 SkinFetchState;
 	cc_bool NoShade, OnGround;
-	GfxResourceID TextureId, MobTextureId;
+	GfxResourceID TextureId;
+	cc_bool NonHumanSkin; /* Whether custom skin is also used on non humanoid models */
 	float uScale, vScale;
 
 	struct AnimatedComp Anim;
@@ -133,6 +139,8 @@ struct Entity {
 	/*  Current state is linearly interpolated between prev and next */
 	struct EntityLocation prev, next;
 	GfxResourceID ModelVB;
+
+	float PushStrength;
 };
 typedef cc_bool (*Entity_TouchesCondition)(BlockID block);
 

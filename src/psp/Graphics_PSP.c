@@ -9,6 +9,7 @@
 #include <pspdebug.h>
 #include <pspctrl.h>
 #include <pspgu.h>
+#include "ge_gpu.h"
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -17,7 +18,9 @@
 #define FB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
 static unsigned int __attribute__((aligned(16))) list[262144];
 
-#define GE_CMD_TEXTUREMAPENABLE		0x1E
+static cc_uint8* gfx_vertices;
+static int gfx_fields;
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
@@ -26,13 +29,11 @@ static int formatFields[] = {
 	GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D,
 	GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_3D
 };
-static ScePspFMatrix4 identity;
 
 static void guInit(void) {
 	void* framebuffer0 = (void*)0;
 	void* framebuffer1 = (void*)FB_SIZE;
 	void* depthbuffer  = (void*)(FB_SIZE + FB_SIZE);
-	Mem_Copy(&identity, &Matrix_Identity, sizeof(ScePspFMatrix4));
 	
 	sceGuInit();
 	sceGuStart(GU_DIRECT, list);
@@ -53,8 +54,7 @@ static void guInit(void) {
 	sceGuClearDepth(65535); // sceGuClearDepth(0);
 	sceGuDepthRange(0, 65535); // sceGuDepthRange(65535, 0);
 	
-	
-	sceGuSetMatrix(GU_MODEL, &identity);
+	GE_upload_world_matrix((const float*)&Matrix_Identity);
 	sceGuColor(0xffffffff);
 	sceGuScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceGuDisable(GU_SCISSOR_TEST);
@@ -63,7 +63,7 @@ static void guInit(void) {
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 	
 	sceGuFinish();
-	sceGuSync(0,0);
+	sceGuSync(GU_SYNC_WHAT_DONE, GU_SYNC_FINISH);
 	sceDisplayWaitVblankStart();
 	sceGuDisplay(GU_TRUE);
 }
@@ -74,6 +74,7 @@ void Gfx_Create(void) {
 	
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
+	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -86,7 +87,7 @@ void Gfx_Free(void) {
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 
-void Gfx_RestoreState(void) {
+static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
 	// 1x1 dummy white texture
@@ -96,12 +97,85 @@ void Gfx_RestoreState(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_FreeState(void) {
+static void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }
 
 #define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
+
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Swizzling-------------------------------------------------------*
+*#########################################################################################################################*/
+// PSP swizzled textures are 16 bytes X 8 rows = 4 '32 bit' pixels X 8 rows
+static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, unsigned* maskX, unsigned* maskY) {
+	*maskX = 0b00011; // 2 linear X bits
+	*maskY = 0b11100; // 3 linear Y bits
+
+	// Adjust for lower 2 X and 2 Y linear bits
+	w >>= 3;
+	h >>= 4;
+	int shift = 5;
+
+	for (; w > 0; w >>= 1) {
+		*maskX += 0x01 << shift;
+		shift  += 1;
+	}
+
+	for (; h > 0; h >>= 1) {
+		*maskY += 0x01 << shift;
+		shift  += 1;
+	}
+}
+
+static CC_INLINE void UploadFullTexture(struct Bitmap* bmp, int rowWidth, cc_uint32* dst, int dst_w, int dst_h) {
+	int src_w = bmp->width, src_h = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+	
+	for (int y = 0; y < src_h; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < src_w; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+static CC_INLINE void UploadPartialTexture(struct Bitmap* part, int rowWidth, cc_uint32* dst, int dst_w, int dst_h,
+						int originX, int originY) {
+	int src_w = part->width, src_h = part->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors(dst_w, dst_h, &maskX, &maskY);
+
+	// Calculate start twiddled X and Y values
+	for (int x = 0; x < originX; x++) { X = (X - maskX) & maskX; }
+	for (int y = 0; y < originY; y++) { Y = (Y - maskY) & maskY; }
+	unsigned startX = X;
+	
+	for (int y = 0; y < src_h; y++)
+	{
+		cc_uint32* src = part->scan0 + y * rowWidth;
+		X = startX;
+		
+		for (int x = 0; x < src_w; x++, src++)
+		{
+			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
@@ -113,37 +187,28 @@ typedef struct CCTexture_ {
 } CCTexture;
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+	int dst_w = Math_NextPowOf2(bmp->width);
+	int dst_h = Math_NextPowOf2(bmp->height);
+
+	// Swizzled texture assumes at least 16 bytes x 8 rows
+	int size = max(16 * 8, dst_w * dst_h * 4);
 	CCTexture* tex = (CCTexture*)memalign(16, 16 + size);
 	
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->width  = dst_w;
+	tex->height = dst_h;
 
-	CopyPixels(tex->pixels, bmp->width * BITMAPCOLOR_SIZE,
-			   bmp->scan0,  rowWidth * BITMAPCOLOR_SIZE,
-			   bmp->width,  bmp->height);
+	UploadFullTexture(bmp, rowWidth, tex->pixels, dst_w, dst_h);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+	UploadPartialTexture(part, rowWidth, tex->pixels, tex->width, tex->height, x, y);
 
-	CopyPixels(dst,         tex->width * BITMAPCOLOR_SIZE,
-			   part->scan0, rowWidth  * BITMAPCOLOR_SIZE,
-			   part->width, part->height);
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
-	sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
+	// TODO: Invalidate full tex->size in case of very small textures?
+	sceKernelDcacheWritebackInvalidateRange(tex->pixels, (tex->width * tex->height) * 4);
 }
-
-/*void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)texId;
-	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
-
-	for (int yy = 0; yy < part->height; yy++) {
-		Mem_Copy(dst + (y + yy) * tex->width, part->scan0 + yy * rowWidth, part->width * 4);
-	}
-}*/
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GfxResourceID data = *texId;
@@ -158,7 +223,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square; 
 	
-	sceGuTexMode(GU_PSM_8888,0,0,0);
+	sceGuTexMode(GU_PSM_8888, 0, 0, 1);
 	sceGuTexImage(0, tex->width, tex->height, tex->width, tex->pixels);
 }
 
@@ -188,7 +253,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	sceGuDepthMask(enabled ? 0 : 0xffffffff); 
+	sceGuDepthMask(enabled ? 0 : 0xffffffff);
 }
 void Gfx_SetDepthTest(cc_bool enabled)  { GU_Toggle(GU_DEPTH_TEST); }
 
@@ -274,11 +339,13 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
 	
 	sceGuClear(targets);
+	// Clear involves draw commands
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 void Gfx_EndFrame(void) {
 	sceGuFinish();
-	sceGuSync(0, 0);
+	sceGuSync(GU_SYNC_WHAT_DONE, GU_SYNC_FINISH);
 
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
@@ -288,10 +355,6 @@ void Gfx_OnWindowResize(void) { }
 
 void Gfx_SetViewport(int x, int y, int w, int h) { }
 void Gfx_SetScissor (int x, int y, int w, int h) { }
-
-
-static cc_uint8* gfx_vertices;
-static int gfx_fields;
 
 
 /*########################################################################################################################*
@@ -305,7 +368,10 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	return gfx_indices;
 }
 
-void Gfx_BindIb(GfxResourceID ib)    { }
+void Gfx_BindIb(GfxResourceID ib) { 
+	// TODO doesn't work properly
+	//GE_set_index_buffer(ib);
+}
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
@@ -394,12 +460,14 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static int matrix_modes[] = { GU_PROJECTION, GU_VIEW };
-static ScePspFMatrix4 tmp_matrix; // 16 byte aligned
-
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	Mem_Copy(&tmp_matrix, matrix, sizeof(ScePspFMatrix4));
-	sceGuSetMatrix(matrix_modes[type], &tmp_matrix);
+	const float* m = (const float*)matrix;
+
+	if (type == MATRIX_PROJ) {
+		GE_upload_proj_matrix(m);
+	} else {
+		GE_upload_view_matrix(m);
+	}
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -435,23 +503,28 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	} else {
 		sceGuDisable(GU_TEXTURE_2D);
 	}
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	sceGuDrawArray(GU_LINES, gfx_fields, verticesCount, NULL, gfx_vertices);
+	// More efficient to set "indexed 16 bit" as default in Gfx_SetVertexFormat,
+	//  rather than in every single triangle draw command
+	GE_set_vertex_format(gfx_fields);
+	sceGuDrawArray(GU_LINES, 0, verticesCount, NULL, gfx_vertices);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
+	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 			gfx_indices, gfx_vertices + startVertex * gfx_stride);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount),
+	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount),
 			gfx_indices, gfx_vertices);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
+	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 			gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
 }

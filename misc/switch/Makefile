@@ -37,7 +37,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 # Code generation
 #---------------------------------------------------------------------------------
 ARCH	= -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
-CFLAGS	= -g -Wall -O2 -ffunction-sections $(ARCH) -D__SWITCH__
+CFLAGS	= -g -Wall -O2 -ffunction-sections $(ARCH) -D__SWITCH__ -DPLAT_SWITCH
 ASFLAGS	= -g $(ARCH)
 
 LDFLAGS	= -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH)

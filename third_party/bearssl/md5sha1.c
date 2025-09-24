@@ -29,8 +29,8 @@ void
 br_md5sha1_init(br_md5sha1_context *cc)
 {
 	cc->vtable = &br_md5sha1_vtable;
-	memcpy(cc->val_md5, br_md5_IV, sizeof cc->val_md5);
-	memcpy(cc->val_sha1, br_sha1_IV, sizeof cc->val_sha1);
+	br_memcpy(cc->val_md5, br_md5_IV, sizeof cc->val_md5);
+	br_memcpy(cc->val_sha1, br_sha1_IV, sizeof cc->val_sha1);
 	cc->count = 0;
 }
 
@@ -50,7 +50,7 @@ br_md5sha1_update(br_md5sha1_context *cc, const void *data, size_t len)
 		if (clen > len) {
 			clen = len;
 		}
-		memcpy(cc->buf + ptr, buf, clen);
+		br_memcpy(cc->buf + ptr, buf, clen);
 		ptr += clen;
 		buf += clen;
 		len -= clen;
@@ -76,17 +76,17 @@ br_md5sha1_out(const br_md5sha1_context *cc, void *dst)
 
 	count = cc->count;
 	ptr = (size_t)count & 63;
-	memcpy(buf, cc->buf, ptr);
-	memcpy(val_md5, cc->val_md5, sizeof val_md5);
-	memcpy(val_sha1, cc->val_sha1, sizeof val_sha1);
+	br_memcpy(buf, cc->buf, ptr);
+	br_memcpy(val_md5, cc->val_md5, sizeof val_md5);
+	br_memcpy(val_sha1, cc->val_sha1, sizeof val_sha1);
 	buf[ptr ++] = 0x80;
 	if (ptr > 56) {
-		memset(buf + ptr, 0, 64 - ptr);
+		br_memset(buf + ptr, 0, 64 - ptr);
 		br_md5_round(buf, val_md5);
 		br_sha1_round(buf, val_sha1);
-		memset(buf, 0, 56);
+		br_memset(buf, 0, 56);
 	} else {
-		memset(buf + ptr, 0, 56 - ptr);
+		br_memset(buf + ptr, 0, 56 - ptr);
 	}
 	count <<= 3;
 	br_enc64le(buf + 56, count);

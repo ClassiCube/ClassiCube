@@ -74,6 +74,7 @@ And also runs on:
 * Haiku - needs <code>openal</code> package (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_haiku.yml))
 * BeOS - untested on actual hardware
 * IRIX - needs <code>openal</code> packages
+* HPUX - tested on 11v3 IA64
 * SerenityOS - needs <code>SDL2</code>
 * Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
@@ -110,7 +111,7 @@ If you get a `The Windows SDK version 5.1 was not found` compilation error, [see
 ##### Using Visual Studio (command line)
 1. Use 'Developer Tools for Visual Studio' from Start Menu
 2. Navigate to the directory with ClassiCube's source code
-3. Run `cl.exe *.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
+3. Run `cl.exe src\*.c third_party\bearssl\*.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
 
 ##### Using MinGW-w64
 Assuming that you used the installer from https://sourceforge.net/projects/mingw-w64/ :
@@ -138,8 +139,7 @@ Setting up TCC:
 
 Compiling with TCC:
 1. Navigate to the directory with ClassiCube's source code
-2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
-3. Run `tcc.exe -o ClassiCube.exe src/*.c third_party/bearssl/*.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+2. Run `tcc.exe -o ClassiCube.exe src/*.c third_party/bearssl/*.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux
@@ -420,7 +420,7 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 #### Tips
 * Press escape (after joining a world) or pause to switch to the pause menu.
 * Pause menu -> Options -> Controls lists all of the key combinations used by the client. 
-* Note that toggling 'vsync' to on will minimise CPU usage, while off will maximimise chunk loading speed.
+* Note that toggling 'vsync' to on will minimise CPU usage, while off will maximise chunk loading speed.
 * Press F to cycle view distance. Lower view distances can improve performance.
 
 * If the server has disabled hacks, key combinations such as fly and speed will not do anything.
@@ -477,3 +477,4 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>
 Full credits are listed in [doc/sound-credits.md](doc/sound-credits.md)
+

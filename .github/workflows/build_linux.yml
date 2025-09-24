@@ -43,20 +43,13 @@ jobs:
         env: 
           LIBS: "-lX11 -lXi -lpthread -lGL -lm -ldl"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic -Werror"
           NIX32_FLAGS:  "-no-pie -fno-pie -m32 -fcf-protection=none -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
           gcc ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -o cc-nix32-gl1 ${{ env.LIBS }}
           gcc ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-nix32-gl2 ${{ env.LIBS }}
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile 32 bit Linux build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
       
       
       - uses: ./.github/actions/upload_build
@@ -77,6 +70,13 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'linux32'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce 32 bit Linux build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
 
 #============================================
 # =============== 64 BIT LINUX ==============
@@ -107,7 +107,7 @@ jobs:
         env:
           LIBS: "-lX11 -lXi -lpthread -lGL -lm -ldl"
           SRCS: "src/*.c third_party/bearssl/*.c" 
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic -Werror"
           NIX64_FLAGS:  "-no-pie -fno-pie -m64 -fcf-protection=none -rdynamic -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
@@ -115,13 +115,6 @@ jobs:
           gcc ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -o cc-nix64-gl1 ${{ env.LIBS }}
           gcc ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-nix64-gl2 ${{ env.LIBS }}
           #gcc ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2 -o cc-sdl64-gl2 -lSDL2  ${{ env.LIBS }}
-
-
-      - uses: ./.github/actions/notify_failure
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        with:
-          NOTIFY_MESSAGE: 'Failed to compile 64 bit Linux build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
           
       - uses: ./.github/actions/upload_build
@@ -136,11 +129,11 @@ jobs:
           SOURCE_FILE: 'cc-nix64-gl2'
           DEST_NAME: 'ClassiCube-Linux64-ModernGL'
           
-      - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
-        with:
-          SOURCE_FILE: 'cc-sdl64-gl2'
-          DEST_NAME: 'ClassiCube-Linux64-SDL2'
+#      - uses: ./.github/actions/upload_build
+#        if: ${{ always() && steps.compile.outcome == 'success' }}
+#        with:
+#          SOURCE_FILE: 'cc-sdl64-gl2'
+#          DEST_NAME: 'ClassiCube-Linux64-SDL2'
           
           
       - uses: ./.github/actions/notify_success
@@ -148,3 +141,10 @@ jobs:
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'linux64'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce 64 bit Linux build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
