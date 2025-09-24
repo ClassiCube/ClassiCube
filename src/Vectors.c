@@ -134,32 +134,35 @@ void Matrix_Scale(struct Matrix* result, float x, float y, float z) {
 
 void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct Matrix* right) {
 	/* Originally from http://www.edais.co.uk/blog/?p=27 */
-	float
-		lM11 = left->row1.x, lM12 = left->row1.y, lM13 = left->row1.z, lM14 = left->row1.w,
-		lM21 = left->row2.x, lM22 = left->row2.y, lM23 = left->row2.z, lM24 = left->row2.w,
-		lM31 = left->row3.x, lM32 = left->row3.y, lM33 = left->row3.z, lM34 = left->row3.w,
-		lM41 = left->row4.x, lM42 = left->row4.y, lM43 = left->row4.z, lM44 = left->row4.w,
+	float lM11, lM12, lM13, lM14, lM21, lM22, lM23, lM24;
+	float lM31, lM32, lM33, lM34, lM41, lM42, lM43, lM44;
 
+	/* Right matrix must be entirely pre-loaded, in case right and result matrices are the same */
+	float
 		rM11 = right->row1.x, rM12 = right->row1.y, rM13 = right->row1.z, rM14 = right->row1.w,
 		rM21 = right->row2.x, rM22 = right->row2.y, rM23 = right->row2.z, rM24 = right->row2.w,
 		rM31 = right->row3.x, rM32 = right->row3.y, rM33 = right->row3.z, rM34 = right->row3.w,
 		rM41 = right->row4.x, rM42 = right->row4.y, rM43 = right->row4.z, rM44 = right->row4.w;
 
+	lM11 = left->row1.x; lM12 = left->row1.y; lM13 = left->row1.z; lM14 = left->row1.w;
 	result->row1.x = (((lM11 * rM11) + (lM12 * rM21)) + (lM13 * rM31)) + (lM14 * rM41);
 	result->row1.y = (((lM11 * rM12) + (lM12 * rM22)) + (lM13 * rM32)) + (lM14 * rM42);
 	result->row1.z = (((lM11 * rM13) + (lM12 * rM23)) + (lM13 * rM33)) + (lM14 * rM43);
 	result->row1.w = (((lM11 * rM14) + (lM12 * rM24)) + (lM13 * rM34)) + (lM14 * rM44);
 
+	lM21 = left->row2.x; lM22 = left->row2.y; lM23 = left->row2.z; lM24 = left->row2.w;
 	result->row2.x = (((lM21 * rM11) + (lM22 * rM21)) + (lM23 * rM31)) + (lM24 * rM41);
 	result->row2.y = (((lM21 * rM12) + (lM22 * rM22)) + (lM23 * rM32)) + (lM24 * rM42);
 	result->row2.z = (((lM21 * rM13) + (lM22 * rM23)) + (lM23 * rM33)) + (lM24 * rM43);
 	result->row2.w = (((lM21 * rM14) + (lM22 * rM24)) + (lM23 * rM34)) + (lM24 * rM44);
 
+	lM31 = left->row3.x, lM32 = left->row3.y, lM33 = left->row3.z, lM34 = left->row3.w;
 	result->row3.x = (((lM31 * rM11) + (lM32 * rM21)) + (lM33 * rM31)) + (lM34 * rM41);
 	result->row3.y = (((lM31 * rM12) + (lM32 * rM22)) + (lM33 * rM32)) + (lM34 * rM42);
 	result->row3.z = (((lM31 * rM13) + (lM32 * rM23)) + (lM33 * rM33)) + (lM34 * rM43);
 	result->row3.w = (((lM31 * rM14) + (lM32 * rM24)) + (lM33 * rM34)) + (lM34 * rM44);
 
+	lM41 = left->row4.x; lM42 = left->row4.y; lM43 = left->row4.z; lM44 = left->row4.w;
 	result->row4.x = (((lM41 * rM11) + (lM42 * rM21)) + (lM43 * rM31)) + (lM44 * rM41);
 	result->row4.y = (((lM41 * rM12) + (lM42 * rM22)) + (lM43 * rM32)) + (lM44 * rM42);
 	result->row4.z = (((lM41 * rM13) + (lM42 * rM23)) + (lM43 * rM33)) + (lM44 * rM43);
