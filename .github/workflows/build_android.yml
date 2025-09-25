@@ -49,7 +49,7 @@ jobs:
           SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
 
           $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_16
-          $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_32
+          $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS -mfpu=vfp3-d16 ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_32
           $NDK_ROOT/aarch64-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_64
           $NDK_ROOT/i686-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-x86_32
           $NDK_ROOT/x86_64-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-x86_64
