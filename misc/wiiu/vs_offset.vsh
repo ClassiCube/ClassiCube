@@ -50,8 +50,8 @@
          w: MULADD      R1.w,  R1.x,  C0.w,  PV1.w
       3  x: ADD         R3.x,  R3.x,  C4.x      
          y: ADD         R3.y,  R3.y,  C4.y      
-02 EXP_DONE: POS0, R1
-03 EXP: PARAM0, R2  NO_BARRIER 
-04 EXP_DONE: PARAM1, R3.xyzz  NO_BARRIER 
+02 EXP_DONE: POS0,   R1
+03 EXP:      PARAM0, R2       NO_BARRIER 
+04 EXP_DONE: PARAM1, R3.xy__  NO_BARRIER 
 END_OF_PROGRAM
 

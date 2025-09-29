@@ -36,7 +36,7 @@
          y: MULADD      R1.y,  R1.x,  C0.y,  PV1.y
          z: MULADD      R1.z,  R1.x,  C0.z,  PV1.z
          w: MULADD      R1.w,  R1.x,  C0.w,  PV1.w  
-02 EXP_DONE: POS0, R1
+02 EXP_DONE: POS0,   R1
 03 EXP_DONE: PARAM0, R2  NO_BARRIER 
 END_OF_PROGRAM
 

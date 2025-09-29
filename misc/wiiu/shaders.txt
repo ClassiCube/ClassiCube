@@ -16,3 +16,7 @@ To generate shader assembly
 
 Then run assembler.sh to assemble all files
 
+https://www.x.org/docs/AMD/old/r600isa.pdf
+https://www.x.org/docs/AMD/old/R6xx_R7xx_3D.pdf
+https://www.x.org/docs/AMD/old/R6xx_3D_Registers.pdf
+
