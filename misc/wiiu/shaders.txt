@@ -20,3 +20,6 @@ https://www.x.org/docs/AMD/old/r600isa.pdf
 https://www.x.org/docs/AMD/old/R6xx_R7xx_3D.pdf
 https://www.x.org/docs/AMD/old/R6xx_3D_Registers.pdf
 
+Note this
+r600isa.pdf, 4.6.4  ALU Constants
+- " Each ALU instruction can reference up to two constants: one inline constant (literal), and one constant read from the on-chip constant file"
