@@ -547,8 +547,6 @@ void Gfx_SetVSync(cc_bool vsync) {
 
 void Gfx_BeginFrame(void) {
 	rendering3D = false;
-	// wait for vblank for both screens TODO move to end?
-	if (gfx_vsync) GSP_wait_for_full_vblank();
 
 	C3D_FrameBegin(0);
 	topTarget = &topTargetLeft;
@@ -586,6 +584,9 @@ void Gfx_EndFrame(void) {
 	GPUBuffers_DeleteUnreferenced();
 	GPUTextures_DeleteUnreferenced();
 	frameCounter1++;
+
+	// wait for vblank for both screens
+	if (gfx_vsync) GSP_wait_for_full_vblank();
 }
 
 void Gfx_OnWindowResize(void) { }

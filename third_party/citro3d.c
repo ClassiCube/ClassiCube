@@ -194,40 +194,6 @@ static void C3D_SetFrameBuf(C3D_FrameBuf* fb);
 static void C3D_FrameBufClear(C3D_FrameBuf* fb, C3D_ClearBits clearBits, u32 clearColor, u32 clearDepth);
 static void C3D_FrameBufTransfer(C3D_FrameBuf* fb, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
-static inline void C3D_FrameBufColor(C3D_FrameBuf* fb, void* buf, GPU_COLORBUF fmt)
-{
-	if (buf)
-	{
-		fb->colorBuf  = buf;
-		fb->colorFmt  = fmt;
-		fb->colorMask = 0xF;
-	} else
-	{
-		fb->colorBuf  = NULL;
-		fb->colorFmt  = GPU_RB_RGBA8;
-		fb->colorMask = 0;
-	}
-}
-
-static inline void C3D_FrameBufDepth(C3D_FrameBuf* fb, void* buf, GPU_DEPTHBUF fmt)
-{
-	if (buf)
-	{
-		fb->depthBuf  = buf;
-		fb->depthFmt  = fmt;
-		fb->depthMask = fmt == GPU_RB_DEPTH24_STENCIL8 ? 0x3 : 0x2;
-	} else
-	{
-		fb->depthBuf  = NULL;
-		fb->depthFmt  = GPU_RB_DEPTH24;
-		fb->depthMask = 0;
-	}
-}
-
-
-
-
-
 
 
 typedef struct C3D_RenderTarget_tag C3D_RenderTarget;
@@ -253,11 +219,6 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
 static void C3D_FrameEnd(u8 flags);
 
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
-
-static inline void C3D_RenderTargetDetachOutput(C3D_RenderTarget* target)
-{
-	C3D_RenderTargetSetOutput(NULL, target->screen, target->side, 0);
-}
 
 static inline void C3D_RenderTargetClear(C3D_RenderTarget* target, C3D_ClearBits clearBits, u32 clearColor, u32 clearDepth)
 {
@@ -951,20 +912,22 @@ static void C3D_RenderTargetInit(C3D_RenderTarget* target, int width, int height
 	fb->height  = height;
 }
 
-static void C3D_RenderTargetColor(C3D_RenderTarget* target, GPU_COLORBUF colorFmt)
+static void C3D_RenderTargetColor(C3D_RenderTarget* target, GPU_COLORBUF fmt)
 {
 	C3D_FrameBuf* fb = &target->frameBuf;
-	size_t colorSize = C3D_CalcColorBufSize(fb->width, fb->height, colorFmt);
+	size_t colorSize = C3D_CalcColorBufSize(fb->width, fb->height, fmt);
 	void* colorBuf   = vramAlloc(colorSize);
-
 	if (!colorBuf) return;
-	C3D_FrameBufColor(fb, colorBuf, colorFmt);
+
+	fb->colorBuf  = colorBuf;
+	fb->colorFmt  = fmt;
+	fb->colorMask = 0xF;
 }
 
-static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFmt)
+static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF fmt)
 {
 	C3D_FrameBuf* fb = &target->frameBuf;
-	size_t depthSize = C3D_CalcDepthBufSize(fb->width, fb->height, depthFmt);
+	size_t depthSize = C3D_CalcDepthBufSize(fb->width, fb->height, fmt);
 	void* depthBuf   = NULL;
 
 	vramAllocPos vramBank = addrGetVRAMBank(fb->colorBuf);
@@ -972,7 +935,9 @@ static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFm
 	if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
 	if (!depthBuf) return;
 
-	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
+	fb->depthBuf  = depthBuf;
+	fb->depthFmt  = fmt;
+	fb->depthMask = fmt == GPU_RB_DEPTH24_STENCIL8 ? 0x3 : 0x2;
 }
 
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags)
@@ -987,13 +952,6 @@ static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t scre
 			C3Di_WaitAndClearQueue(-1);
 	}
 	linkedTarget[id] = target;
-	if (target)
-	{
-		target->linked = true;
-		target->transferFlags = transferFlags;
-		target->screen = screen;
-		target->side = side;
-	}
 }
 
 
