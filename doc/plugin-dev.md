@@ -20,6 +20,7 @@ Or in other words, in a directory somewhere, you have a file named `TestPlugin.c
 
 ### Basic plugin
 ```C
+#include "src/PluginAPI.h"
 #include "src/Chat.h"
 #include "src/Game.h"
 #include "src/String.h"
@@ -29,37 +30,12 @@ static void TestPlugin_Init(void) {
         Chat_Add(&msg);
 }
 
-int Plugin_ApiVersion = 1;
-struct IGameComponent Plugin_Component = { TestPlugin_Init };
+PLUGIN_EXPORT int Plugin_ApiVersion = 1;
+PLUGIN_EXPORT struct IGameComponent Plugin_Component = { TestPlugin_Init };
 ```
-Here's the idea for a basic plugin that shows "Hello world" in chat when the game starts. Alas, this won't compile...
+Here's a basic plugin that shows "Hello world" in chat when the game starts.
 
-### Basic plugin boilerplate
-```C
-#ifdef _WIN32
-    #define CC_API __declspec(dllimport)
-    #define CC_VAR __declspec(dllimport)
-    #define EXPORT __declspec(dllexport)
-#else
-    #define CC_API
-    #define CC_VAR
-    #define EXPORT __attribute__((visibility("default")))
-#endif
-
-#include "src/Chat.h"
-#include "src/Game.h"
-#include "src/String.h"
-
-static void TestPlugin_Init(void) {
-    cc_string msg = String_FromConst("Hello world!");
-    Chat_Add(&msg);
-}
-
-EXPORT int Plugin_ApiVersion = 1;
-EXPORT struct IGameComponent Plugin_Component = { TestPlugin_Init };
-```
-With this boilerplate, we're ready to compile the plugin.
-All plugins require this boilerplate, so feel free to copy and paste it.
+Note that `src/PluginAPI.h` must always be included as the first header.
 
 ---
 
@@ -68,8 +44,8 @@ All plugins require this boilerplate, so feel free to copy and paste it.
 Exported plugin functions **must** be surrounded with `extern "C"`, i.e.
 ```C
 extern "C" {
-EXPORT int Plugin_ApiVersion = 1;
-EXPORT struct IGameComponent Plugin_Component = { TestPlugin_Init };
+PLUGIN_EXPORT int Plugin_ApiVersion = 1;
+PLUGIN_EXPORT struct IGameComponent Plugin_Component = { TestPlugin_Init };
 }
 ```
 Otherwise your plugin will not load. (you'll see `error getting plugin version` in-game)
