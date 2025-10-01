@@ -1,50 +1,3 @@
-#define CC_XTEA_ENCRYPTION
-#define CC_NO_UPDATER
-#define CC_NO_DYNLIB
-
-#include "../_PlatformBase.h"
-#include "../Stream.h"
-#include "../ExtMath.h"
-#include "../Funcs.h"
-#include "../Window.h"
-#include "../Utils.h"
-#include "../Errors.h"
-#include "../PackedCol.h"
-
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <network.h>
-#include <ogc/lwp.h>
-#include <ogc/mutex.h>
-#include <ogc/cond.h>
-#include <ogc/lwp_watchdog.h>
-#include <fat.h>
-#include <ogc/exi.h>
-#ifdef HW_RVL
-#include <ogc/wiilaunch.h>
-#endif
-#include "../_PlatformConsole.h"
-
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = -EINPROGRESS; // net_XYZ error results are negative
-const cc_result ReturnCode_SocketWouldBlock = -EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = -EPIPE;
-
-#ifdef HW_RVL
-const char* Platform_AppNameSuffix = " Wii";
-#else
-const char* Platform_AppNameSuffix = " GameCube";
-#endif
-cc_bool Platform_ReadonlyFilesystem;
-
-
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
@@ -397,57 +350,6 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	return false;
 }
 
-static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-#ifdef HW_RVL
-	struct hostent* res = net_gethostbyname(host);
-	struct sockaddr_in* addr4;
-	char* src_addr;
-	int i;
-	
-	// avoid confusion with SSL error codes
-	// e.g. FFFF FFF7 > FF00 FFF7
-	if (!res) return -0xFF0000 + errno;
-	
-	// Must have at least one IPv4 address
-	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
-	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
-
-	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
-	{
-		src_addr = res->h_addr_list[i];
-		if (!src_addr) break;
-		addrs[i].size = sizeof(struct sockaddr_in);
-
-		addr4 = (struct sockaddr_in*)addrs[i].data;
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		addr4->sin_addr   = *(struct in_addr*)src_addr;
-	}
-
-	*numValidAddrs = i;
-	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
-#else
-	// DNS resolution not implemented in gamecube libbba
-	static struct fixed_dns_map {
-		const cc_string host, ip;
-	} mappings[] = {
-		{ String_FromConst("cdn.classicube.net"), String_FromConst("104.20.90.158") },
-		{ String_FromConst("www.classicube.net"), String_FromConst("104.20.90.158") }
-	};
-	if (!net_supported) return ERR_NO_NETWORKING;
-
-	for (int i = 0; i < Array_Elems(mappings); i++) 
-	{
-		if (!String_CaselessEqualsConst(&mappings[i].host, host)) continue;
-
-		ParseIPv4(&mappings[i].ip, port, &addrs[0]);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	return ERR_NOT_SUPPORTED;
-#endif
-}
-
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
@@ -488,38 +390,7 @@ void Socket_Close(cc_socket s) {
 	net_close(s);
 }
 
-#ifdef HW_RVL
-// libogc only implements net_poll for wii currently
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	struct pollsd pfd;
-	pfd.socket = s;
-	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	
-	int res = net_poll(&pfd, 1, 0);
-	if (res < 0) { *success = false; return res; }
-	
-	// to match select, closed socket still counts as readable
-	int flags = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success  = (pfd.revents & flags) != 0;
-	return 0;
-}
-#else
-// libogc only implements net_select for gamecube currently
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	fd_set set;
-	struct timeval time = { 0 };
-	int res; // number of 'ready' sockets
-	FD_ZERO(&set);
-	FD_SET(s, &set);
-	if (mode == SOCKET_POLL_READ) {
-		res = net_select(s + 1, &set, NULL, NULL, &time);
-	} else {
-		res = net_select(s + 1, NULL, &set, NULL, &time);
-	}
-	if (res < 0) { *success = false; return res; }
-	*success = FD_ISSET(s, &set) != 0; return 0;
-}
-#endif
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success);
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
@@ -538,25 +409,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	return res;
 }
 
-static void InitSockets(void) {
-#ifdef HW_RVL
-	int ret = net_init();
-	Platform_Log1("Network setup result: %i", &ret);
-#else
-	// https://github.com/devkitPro/wii-examples/blob/master/devices/network/sockettest/source/sockettest.c
-	char localip[16] = {0};
-	char netmask[16] = {0};
-	char gateway[16] = {0};
-	
-	int ret = if_config(localip, netmask, gateway, TRUE, 20);
-	if (ret >= 0) {
-		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
-	} else {
-		Platform_Log1("Network setup failed: %i", &ret);
-		net_supported = false;
-	}
-#endif
-}
+static void InitSockets(void);
 
 
 /*########################################################################################################################*
@@ -631,23 +484,4 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Encryption--------------------------------------------------------*
-*#########################################################################################################################*/
-#if defined HW_RVL
-	#define MACHINE_KEY "Wii_Wii_Wii_Wii_"
-#else
-	#define MACHINE_KEY "GameCubeGameCube"
-#endif
-
-static cc_result GetMachineID(cc_uint32* key) {
-	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
-	return 0;
-}
-
-cc_result Platform_GetEntropy(void* data, int len) {
-	return ERR_NOT_SUPPORTED;
-}
 
