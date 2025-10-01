@@ -216,7 +216,6 @@ enum
 
 static bool C3D_FrameBegin(u8 flags);
 static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
-static void C3D_FrameEnd(u8 flags);
 
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
@@ -788,21 +787,12 @@ static void C3D_ImmDrawEnd(void)
 
 static C3D_RenderTarget *linkedTarget[3];
 
-static bool inFrame, inSafeTransfer;
+static bool inFrame;
 static bool swapPending, isTopStereo;
 
 static void onQueueFinish(gxCmdQueue_s* queue)
 {
-	if (inSafeTransfer)
-	{
-		inSafeTransfer = false;
-		if (inFrame)
-		{
-			gxCmdQueueStop(queue);
-			gxCmdQueueClear(queue);
-		}
-	}
-	else if (swapPending)
+	if (swapPending)
 	{
 		gfxScreenSwapBuffers(GFX_TOP,    isTopStereo);
 		gfxScreenSwapBuffers(GFX_BOTTOM, false);
@@ -843,14 +833,7 @@ static void C3Di_RenderQueueWaitDone(void)
 
 static bool C3D_FrameBegin(u8 flags)
 {
-	C3D_Context* ctx = C3Di_GetContext();
-	if (inFrame) return false;
-
-	if (!C3Di_WaitAndClearQueue((flags & C3D_FRAME_NONBLOCK) ? 0 : -1))
-		return false;
-
 	inFrame = true;
-	GPUCMD_SetBuffer(ctx->cmdBuf, ctx->cmdBufSize, 0);
 	return true;
 }
 
@@ -864,7 +847,7 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target)
 	return true;
 }
 
-static void C3D_FrameEnd(u8 flags)
+static void C3D_FrameFinish(u8 flags)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 	if (!inFrame) return;
@@ -901,6 +884,14 @@ static void C3D_FrameEnd(u8 flags)
 	}
 
 	gxCmdQueueRun(&ctx->gxQueue);
+}
+
+static void C3D_FrameEnd(u8 flags)
+{
+	C3D_Context* ctx = C3Di_GetContext();
+
+	C3Di_WaitAndClearQueue((flags & C3D_FRAME_NONBLOCK) ? 0 : -1);
+	GPUCMD_SetBuffer(ctx->cmdBuf, ctx->cmdBufSize, 0);
 }
 
 static void C3D_RenderTargetInit(C3D_RenderTarget* target, int width, int height)
@@ -952,6 +943,11 @@ static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t scre
 			C3Di_WaitAndClearQueue(-1);
 	}
 	linkedTarget[id] = target;
+
+	target->linked = true;
+	target->transferFlags = transferFlags;
+	target->screen = screen;
+	target->side = side;
 }
 
 
@@ -1019,9 +1015,6 @@ static bool C3D_Init(size_t cmdBufSize)
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
 
-	if (ctx->flags & C3DiF_Active)
-		return false;
-
 	cmdBufSize = (cmdBufSize + 0xF) &~ 0xF; // 0x10-byte align
 	ctx->cmdBufSize = cmdBufSize/4;
 	ctx->cmdBuf = (u32*)linearAlloc(cmdBufSize);
@@ -1056,6 +1049,7 @@ static bool C3D_Init(size_t cmdBufSize)
 
 	C3Di_RenderQueueInit();
 
+	GPUCMD_SetBuffer(ctx->cmdBuf, ctx->cmdBufSize, 0);
 	return true;
 }
 

@@ -8,7 +8,7 @@ To find the functions and variables available for use in plugins, look for `CC_A
 
 You need to download and install either Visual Studio, MinGW, or GCC/Clang.
 
-*Note: MinGW/GCC/Clang are relatively small, while Visual Studio is gigabytes in size.  
+*Note: MinGW/GCC/Clang are relatively small, while Visual Studio is gigabytes in size.
 If you're just trying to compile a plugin on Windows you might want to use MinGW. See main readme.*
 
 I assume your directory is structured like this:

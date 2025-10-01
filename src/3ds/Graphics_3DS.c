@@ -127,6 +127,22 @@ static void AptEventHook(APT_HookType hookType, void* param) {
 	}
 }
 
+static void SetInitialStates(void) {
+	extern void C3Di_UpdateContext(void);
+	C3Di_UpdateContext();
+
+	static C3D_FVec _1_div_255 = { .x = 1/255.0f, .y = 1/255.0f, .z = 1/255.0f, .w = 1/255.0f };
+	pica_upload_vec4_constant(CONST_255, &_1_div_255);
+
+	// NOTE: GPUREG_VERTEX_OFFSET only works when drawing non-indexed arrays
+	GPUCMD_AddWrite(GPUREG_VERTEX_OFFSET, 0);
+
+	// https://github.com/devkitPro/citro3d/issues/47
+	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
+	// This just maps array attrib 0 = vertex attrib 0, array attrib 1 = vertex attrib 1, etc
+	pica_set_attrib_array0_mapping(0x210);
+}
+
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 4);
 	aptHook(&hookCookie, AptEventHook, NULL);
@@ -154,6 +170,7 @@ static void InitCitro3D(void) {
 	AllocShaders();
 
 	GSP_setup();
+	SetInitialStates();
 }
 
 static GfxResourceID white_square;
@@ -551,20 +568,6 @@ void Gfx_BeginFrame(void) {
 	C3D_FrameBegin(0);
 	topTarget = &topTargetLeft;
 	C3D_FrameDrawOn(topTarget);
-
-	extern void C3Di_UpdateContext(void);
-	C3Di_UpdateContext();
-
-	static C3D_FVec _1_div_255 = { .x = 1/255.0f, .y = 1/255.0f, .z = 1/255.0f, .w = 1/255.0f };
-	pica_upload_vec4_constant(CONST_255, &_1_div_255);
-
-	// NOTE: GPUREG_VERTEX_OFFSET only works when drawing non-indexed arrays
-	GPUCMD_AddWrite(GPUREG_VERTEX_OFFSET, 0);
-
-	// https://github.com/devkitPro/citro3d/issues/47
-	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
-	// This just maps array attrib 0 = vertex attrib 0, array attrib 1 = vertex attrib 1, etc
-	pica_set_attrib_array0_mapping(0x210);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -577,7 +580,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 
 void Gfx_EndFrame(void) {
 	gfxSet3D(rendering3D);
-	C3D_FrameEnd(0);
+	C3D_FrameFinish(0);
 	//gfxFlushBuffers();
 	//gfxSwapBuffers();
 		
@@ -587,6 +590,8 @@ void Gfx_EndFrame(void) {
 
 	// wait for vblank for both screens
 	if (gfx_vsync) GSP_wait_for_full_vblank();
+
+	C3D_FrameEnd(0);
 }
 
 void Gfx_OnWindowResize(void) { }
