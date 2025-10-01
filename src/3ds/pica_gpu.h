@@ -3,7 +3,7 @@
 // which are mapped to
 // - 12 vertex attributes
 // which are mapped to
-// - 12 shader inputs
+// - 16 shader inputs
 // 
 // Note that ClassiCube only uses 1 vertex array at present
 
@@ -42,6 +42,17 @@ static CC_INLINE void pica_set_attrib_array0_mapping(u32 mapping) {
 // Sets how to map last 4 vertex array components to vertex attributes, bytes per vertex, components count
 static CC_INLINE void pica_set_attrib_array0_format(u32 num_attribs, u32 stride) {
 	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFER0_CONFIG2, (stride << 16) | (num_attribs << 28));
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------Vertex shader input config----------------------------------------------*
+*#########################################################################################################################*/
+// https://www.3dbrew.org/wiki/GPU/Internal_Registers#GPUREG_SH_ATTRIBUTES_PERMUTATION_LOW
+// Sets how to map vertex attributes to vertex shader input registers
+static CC_INLINE void pica_set_vsh_input_mapping(u32 mappingLo, u32 mappingHi) {
+	GPUCMD_AddWrite(GPUREG_VSH_ATTRIBUTES_PERMUTATION_LOW,  mappingLo);
+	GPUCMD_AddWrite(GPUREG_VSH_ATTRIBUTES_PERMUTATION_HIGH, mappingHi);
 }
 
 

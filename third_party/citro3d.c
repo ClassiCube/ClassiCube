@@ -48,7 +48,6 @@ typedef union
 typedef struct
 {
 	u32 flags[2];
-	u64 permutation;
 	int attrCount;
 } C3D_AttrInfo;
 
@@ -152,8 +151,6 @@ static inline float FogLut_CalcZ(float depth, float near, float far)
 }
 
 static void FogLut_FromArray(C3D_FogLut* lut, const float data[129]);
-
-static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip);
 
 
 
@@ -369,14 +366,13 @@ static int AttrInfo_AddLoader(C3D_AttrInfo* info, int regId, GPU_FORMATS format,
 {
 	if (info->attrCount == 12) return -1;
 	int id = info->attrCount++;
-	if (regId < 0) regId = id;
+
 	if (id < 8)
 		info->flags[0] |= GPU_ATTRIBFMT(id, count, format);
 	else
 		info->flags[1] |= GPU_ATTRIBFMT(id-8, count, format);
 
 	info->flags[1] = (info->flags[1] &~ (0xF0000000 | BIT(id+16))) | (id << 28);
-	info->permutation |= regId << (id*4);
 	return id;
 }
 
@@ -393,7 +389,6 @@ static void C3Di_AttrInfoBind(C3D_AttrInfo* info)
 	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFERS_FORMAT_LOW, (u32*)info->flags, sizeof(info->flags)/sizeof(u32));
 	GPUCMD_AddMaskedWrite(GPUREG_VSH_INPUTBUFFER_CONFIG, 0xB, 0xA0000000 | (info->attrCount - 1));
 	GPUCMD_AddWrite(GPUREG_VSH_NUM_ATTR, info->attrCount - 1);
-	GPUCMD_AddIncrementalWrites(GPUREG_VSH_ATTRIBUTES_PERMUTATION_LOW, (u32*)&info->permutation, 2);
 }
 
 
@@ -580,22 +575,6 @@ static void FogLut_FromArray(C3D_FogLut* lut, const float data[129])
 		lut->data[i] = val2 | (val << 13);
 	}
 }
-
-static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	ctx->flags |= C3DiF_TexEnvBuf;
-	ctx->texEnvBuf &= ~0x100FF;
-	ctx->texEnvBuf |= (fogMode&7) | ((gasMode&1)<<3) | (zFlip ? BIT(16) : 0);
-}
-
-
-
-
 
 
 

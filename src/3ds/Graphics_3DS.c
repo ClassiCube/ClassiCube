@@ -118,6 +118,7 @@ static void SetInitialStates(void) {
 	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
 	// This just maps array attrib 0 = vertex attrib 0, array attrib 1 = vertex attrib 1, etc
 	pica_set_attrib_array0_mapping(0x210);
+	pica_set_vsh_input_mapping(0x210, 0);
 }
 
 static void InitCitro3D(void) {	
@@ -711,7 +712,7 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static u32 fogColor;
-static int fogMode = FOG_LINEAR;
+static int fogMode = -1;
 static float fogDensity = 1.0f;
 static float fogEnd = 32.0f;
 
@@ -760,17 +761,19 @@ void Gfx_SetFogDensity(float value) {
 	if (fogDensity == value) return;
 
 	fogDensity = value;
-	UpdateFog();
+	if (fogMode != FOG_LINEAR) UpdateFog();
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (fogEnd == value) return;
 
 	fogEnd = value;
-	UpdateFog();
+	if (fogMode == FOG_LINEAR) UpdateFog();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
+	if (fogMode == func) return;
+
 	fogMode = func;
 	UpdateFog();
 }

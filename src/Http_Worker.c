@@ -77,7 +77,7 @@ static void HttpUrl_EncodeUrl(cc_string* dst, const cc_string* src) {
 		len = Convert_CP437ToUtf8(c, data);
 
 		/* URL path/query must not be URL encoded (it normally would be) */
-		if (c == '/' || c == '?' || c == '=') {
+		if (c == '/' || c == '?' || c == '=' || c == '&') {
 			String_Append(dst, c);
 		} else {
 			Http_UrlEncode(dst, data, len);
@@ -85,12 +85,22 @@ static void HttpUrl_EncodeUrl(cc_string* dst, const cc_string* src) {
 	}
 }
 
+static const cc_string url_rewrite_srcs[] = {
+	#define URL_REMAP_FUNC(src_base, src_host, dst_base, dst_host) String_FromConst(src_host),
+	#include "_HttpUrlMap.h"
+};
+static const cc_string url_rewrite_dsts[] = {
+	#undef  URL_REMAP_FUNC
+	#define URL_REMAP_FUNC(src_base, src_host, dst_base, dst_host) String_FromConst(dst_host),
+	#include "_HttpUrlMap.h"
+};
+
 /* Splits up the components of a URL */
 static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
 	cc_string scheme, path, addr, resource;
 	/* URL is of form [scheme]://[server host]:[server port]/[resource] */
 	/* For simplicity, parsed as [scheme]://[server address]/[resource] */
-	int idx = String_IndexOfConst(src, "://");
+	int i, idx = String_IndexOfConst(src, "://");
 
 	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(src,   0, idx);
 	path   = idx == -1 ? *src         : String_UNSAFE_SubstringAt(src, idx + 3);
@@ -99,6 +109,14 @@ static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
 	String_UNSAFE_Separate(&path, '/', &addr, &resource);
 
 	String_InitArray(url->address, url->_addressBuffer);
+	/* Converts e.g. "dl.dropbox.com" into "dl.dropboxusercontent.com" */
+	for (i = 0; i < Array_Elems(url_rewrite_srcs); i++) 
+	{
+		if (!String_Equals(&addr, &url_rewrite_srcs[i])) continue;
+
+		addr = url_rewrite_dsts[i];
+		break;
+	}
 	String_Copy(&url->address, &addr);
 
 	String_InitArray(url->resource, url->_resourceBuffer);
@@ -616,18 +634,24 @@ static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
 
 	return res;
 }
+static const char* verbs[] = { "GET", "HEAD", "POST" };
 
-static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
+static cc_result HttpBackend_Do(struct HttpRequest* req) {
 	struct HttpClientState state;
 	cc_bool retried = false;
 	int redirects   = 0;
+	cc_string url;
 	cc_result res;
 
 	HttpClientState_Init(&state);
-	HttpUrl_Parse(urlStr, &state.url);
+	url = String_FromRawArray(req->url);
+	HttpUrl_Parse(&url, &state.url);
 	state.req = req;
 
 	for (;;) {
+		Platform_Log4("Fetching %c%s%s (%c)", &state.url.https ? "https://" : "http://", 
+					&state.url.address, &state.url.resource, verbs[req->requestType]);
+
 		res = HttpBackend_PerformRequest(&state);
 		/* TODO: Can we handle this while preserving the TCP connection */
 		if (res == SSL_ERR_CONTEXT_DEAD && !retried) {
@@ -734,12 +758,7 @@ void Http_TryCancel(int reqID) {
 *-----------------------------------------------------Http worker---------------------------------------------------------*
 *#########################################################################################################################*/
 /* Sets up state to begin a http request */
-static void PrepareCurrentRequest(struct HttpRequest* req, cc_string* url) {
-	static const char* verbs[] = { "GET", "HEAD", "POST" };
-	Http_GetUrl(req, url);
-	Platform_Log2("Fetching %s (%c)", url, verbs[req->requestType]);
-	/* TODO change to verbs etc */
-
+static void SetCurrentRequest(struct HttpRequest* req) {
 	Mutex_Lock(curRequestMutex);
 	{
 		HttpRequest_Copy(&http_curRequest, req);
@@ -748,12 +767,12 @@ static void PrepareCurrentRequest(struct HttpRequest* req, cc_string* url) {
 	Mutex_Unlock(curRequestMutex);
 }
 
-static void PerformRequest(struct HttpRequest* req, cc_string* url) {
+static void PerformRequest(struct HttpRequest* req) {
 	cc_uint64 beg, end;
 	int elapsed;
 
 	beg = Stopwatch_Measure();
-	req->result = HttpBackend_Do(req, url);
+	req->result = HttpBackend_Do(req);
 	end = Stopwatch_Measure();
 
 	elapsed = Stopwatch_ElapsedMS(beg, end);
@@ -773,11 +792,8 @@ static void ClearCurrentRequest(void) {
 }
 
 static void DoRequest(struct HttpRequest* request) {
-	char urlBuffer[URL_MAX_SIZE]; cc_string url;
-
-	String_InitArray(url, urlBuffer);
-	PrepareCurrentRequest(request, &url);
-	PerformRequest(&http_curRequest, &url);
+	SetCurrentRequest(request);
+	PerformRequest(&http_curRequest);
 	ClearCurrentRequest();
 }
 
