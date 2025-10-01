@@ -1,7 +1,37 @@
-/*########################################################################################################################*
-*--------------------------------------------------Vertex attribute config------------------------------------------------*
-*#########################################################################################################################*/
+// Vertex data pipeline:
+// - 12 vertex arrays, which each consist of 12 components
+// which are mapped to
+// - 12 vertex attributes
+// which are mapped to
+// - 12 shader inputs
+// 
+// Note that ClassiCube only uses 1 vertex array at present
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Fog config------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void pica_set_fog_color(u32 color) {
+	GPUCMD_AddWrite(GPUREG_FOG_COLOR, color);
+}
+
+static CC_INLINE void pica_set_fog_table(const u32 table[128]) {
+	GPUCMD_AddWrite(GPUREG_FOG_LUT_INDEX, 0);
+	GPUCMD_AddWrites(GPUREG_FOG_LUT_DATA0, table, 128);
+}
+
+static CC_INLINE void pica_update_fog_mode(bool fogEnabled, bool flipZ) {
+	GPU_FOGMODE fog = fogEnabled ? GPU_FOG : GPU_NO_FOG;
+	GPU_GASMODE gas = GPU_PLAIN_DENSITY;
+
+	u32 buf = fog | (gas << 3) | (flipZ ? (1 << 16) : 0);
+	GPUCMD_AddMaskedWrite(GPUREG_TEXENV_UPDATE_BUFFER, 0x5, buf);
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Vertex arrays config-------------------------------------------------*
+*#########################################################################################################################*/
 // https://3dbrew.org/wiki/GPU/Internal_Registers#GPUREG_ATTRIBBUFFERi_CONFIG1
 // Sets how to map first 8 vertex array components to vertex attributes (or padding)
 static CC_INLINE void pica_set_attrib_array0_mapping(u32 mapping) {

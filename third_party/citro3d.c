@@ -151,13 +151,9 @@ static inline float FogLut_CalcZ(float depth, float near, float far)
 	return far*near/(depth*(far-near)+near);
 }
 
-static void FogLut_FromArray(C3D_FogLut* lut, const float data[256]);
+static void FogLut_FromArray(C3D_FogLut* lut, const float data[129]);
 
 static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip);
-static void C3D_FogColor(u32 color);
-static void C3D_FogLutBind(C3D_FogLut* lut);
-
-
 
 
 
@@ -297,8 +293,6 @@ typedef struct
 	C3D_Tex* tex[3];
 
 	u32 texEnvBuf, texEnvBufClr;
-	u32 fogClr;
-	C3D_FogLut* fogLut;
 
 	C3D_FrameBuf fb;
 	u32 viewport[5];
@@ -319,7 +313,6 @@ enum
 	C3DiF_VshCode = BIT(11),
 	C3DiF_GshCode = BIT(12),
 	C3DiF_TexStatus = BIT(14),
-	C3DiF_FogLut = BIT(17),
 	C3DiF_Gas = BIT(18),
 
 	C3DiF_Reset = BIT(19),
@@ -559,18 +552,20 @@ static void C3Di_EffectBind(C3D_Effect* e)
 
 
 
-static void FogLut_FromArray(C3D_FogLut* lut, const float data[256])
+static void FogLut_FromArray(C3D_FogLut* lut, const float data[129])
 {
 	int i;
 	for (i = 0; i < 128; i ++)
 	{
-		float in = data[i], diff = data[i+128];
+		float cur  = data[i + 0];
+		float next = data[i + 1];
+		float diff = next - cur;
 
 		u32 val = 0;
-		if (in > 0.0f)
+		if (cur > 0.0f)
 		{
-			in *= 0x800;
-			val = (in < 0x800) ? (u32)in : 0x7FF;
+			cur *= 0x800;
+			val = (cur < 0x800) ? (u32)cur : 0x7FF;
 		}
 
 		u32 val2 = 0;
@@ -596,32 +591,6 @@ static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip)
 	ctx->flags |= C3DiF_TexEnvBuf;
 	ctx->texEnvBuf &= ~0x100FF;
 	ctx->texEnvBuf |= (fogMode&7) | ((gasMode&1)<<3) | (zFlip ? BIT(16) : 0);
-}
-
-static void C3D_FogColor(u32 color)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	ctx->flags |= C3DiF_TexEnvBuf;
-	ctx->fogClr = color;
-}
-
-static void C3D_FogLutBind(C3D_FogLut* lut)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	if (lut)
-	{
-		ctx->flags |= C3DiF_FogLut;
-		ctx->fogLut = lut;
-	} else
-		ctx->flags &= ~C3DiF_FogLut;
 }
 
 
@@ -1002,9 +971,6 @@ static void C3Di_OnRestore(void)
 	ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
 		| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
 		| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
-
-	if (ctx->fogLut)
-		ctx->flags |= C3DiF_FogLut;
 }
 
 #define GXQUEUE_MAX_ENTRIES 32
@@ -1041,8 +1007,6 @@ static bool C3D_Init(size_t cmdBufSize)
 	ctx->texConfig = BIT(12);
 	ctx->texEnvBuf = 0;
 	ctx->texEnvBufClr = 0xFFFFFFFF;
-	ctx->fogClr = 0;
-	ctx->fogLut = NULL;
 
 	for (i = 0; i < 3; i ++)
 		ctx->tex[i] = NULL;
@@ -1191,17 +1155,6 @@ static void C3Di_UpdateContext(void)
 		ctx->flags &= ~C3DiF_TexEnvBuf;
 		GPUCMD_AddMaskedWrite(GPUREG_TEXENV_UPDATE_BUFFER, 0x7, ctx->texEnvBuf);
 		GPUCMD_AddWrite(GPUREG_TEXENV_BUFFER_COLOR, ctx->texEnvBufClr);
-		GPUCMD_AddWrite(GPUREG_FOG_COLOR, ctx->fogClr);
-	}
-
-	if ((ctx->flags & C3DiF_FogLut) && (ctx->texEnvBuf&7) != GPU_NO_FOG)
-	{
-		ctx->flags &= ~C3DiF_FogLut;
-		if (ctx->fogLut)
-		{
-			GPUCMD_AddWrite(GPUREG_FOG_LUT_INDEX, 0);
-			GPUCMD_AddWrites(GPUREG_FOG_LUT_DATA0, ctx->fogLut->data, 128);
-		}
 	}
 }
 
@@ -1240,21 +1193,7 @@ static void C3D_BindProgram(shaderProgram_s* program)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 
-	shaderProgram_s* oldProg = ctx->program;
-	if (oldProg != program)
-	{
-		ctx->program = program;
-		ctx->flags |= C3DiF_Program | C3DiF_AttrInfo;
-
-		if (!oldProg)
-			ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
-		else
-		{
-			DVLP_s* oldProgV = oldProg->vertexShader->dvle->dvlp;
-			DVLP_s* newProgV = program->vertexShader->dvle->dvlp;
-
-			if (oldProgV != newProgV)
-				ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
-		}
-	}
+	ctx->program = program;
+	ctx->flags |= C3DiF_Program | C3DiF_AttrInfo;
+	ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
 }

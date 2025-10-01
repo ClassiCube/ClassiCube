@@ -9,6 +9,7 @@
 
 #include "gsp_gpu.h"
 #include "pica_gpu.h"
+
 // See the .v.pica shader files in misc/3ds
 #define CONST_MVP 0 // c0-c3
 #define CONST_TEX 4 // c4
@@ -23,23 +24,23 @@ extern const u32 textured_shbin_size;
 
 extern const u8  offset_shbin[];
 extern const u32 offset_shbin_size;
+	
+static void GPUBuffers_DeleteUnreferenced(void);
+static void GPUTextures_DeleteUnreferenced(void);
+
+static cc_uint32 frameCounter1;
+static PackedCol clear_color;
+static cc_bool rendering3D;
 
 #define DISPLAY_TRANSFER_FLAGS \
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 	
-static void GPUBuffers_DeleteUnreferenced(void);
-static void GPUTextures_DeleteUnreferenced(void);
-static cc_uint32 frameCounter1;
-static PackedCol clear_color;
-static cc_bool rendering3D;
-	
 	
 /*########################################################################################################################*
 *------------------------------------------------------Vertex shaders-----------------------------------------------------*
 *#########################################################################################################################*/
-#define UNI_MVP_MATRIX  (1 << 0)
 static C3D_Mtx _mvp;
 static int texOffset, dirty_mvp;
 
@@ -56,22 +57,6 @@ static void Shader_Alloc(struct CCShader* shader, const u8* binData, int binSize
 	shaderProgramSetVsh(&shader->program, &shader->dvlb->DVLE[0]);
 }
 
-static void Shader_Free(struct CCShader* shader) {
-	shaderProgramFree(&shader->program);
-	DVLB_Free(shader->dvlb);
-}
-
-static void UpdateMVP(void) {
-	struct CCShader* s = gfx_activeShader;
-	dirty_mvp = true;
-	if (!s) return; // NULL if context is lost
-
-	if (dirty_mvp) {
-		pica_upload_mat4_constant(CONST_MVP, &_mvp);
-		dirty_mvp = false;
-	}
-}
-
 // Switches program to one that can render current vertex format and state
 // Loads program and reloads uniforms if needed
 static void SwitchProgram(void) {
@@ -86,7 +71,6 @@ static void SwitchProgram(void) {
 		gfx_activeShader = shader;
 		C3D_BindProgram(&shader->program);
 	}
-	UpdateMVP();
 }
 
 
@@ -103,13 +87,6 @@ static void AllocShaders(void) {
 	Shader_Alloc(&shaders[0], coloured_shbin, coloured_shbin_size);
 	Shader_Alloc(&shaders[1], textured_shbin, textured_shbin_size);
 	Shader_Alloc(&shaders[2], offset_shbin,   offset_shbin_size);
-}
-
-static void FreeShaders(void) {
-	for (int i = 0; i < Array_Elems(shaders); i++) 
-	{
-		Shader_Free(&shaders[i]);
-	}
 }
 
 static void SetDefaultState(void) {
@@ -196,7 +173,6 @@ void Gfx_Free(void) {
 	C3Di_RenderQueueExit();
 	gfxSet3D(false);
 
-	// FreeShaders()
 	// C3D_Fini()
 	// aptUnhook(&hookCookie);
 }
@@ -735,14 +711,13 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static u32 fogColor;
-static C3D_FogLut fog_lut;
 static int fogMode = FOG_LINEAR;
 static float fogDensity = 1.0f;
 static float fogEnd = 32.0f;
 
 void Gfx_SetFog(cc_bool enabled) {
-	C3D_FogGasMode(enabled ? GPU_FOG : GPU_NO_FOG, GPU_PLAIN_DENSITY, false);
-	// TODO doesn't work quite right
+	pica_update_fog_mode(enabled, false);
+	gfx_fogEnabled = enabled;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -751,21 +726,7 @@ void Gfx_SetFogCol(PackedCol color) {
 	if (c == fogColor) return;
 
 	fogColor = c;
-	C3D_FogColor(c);
-}
-
-static void ApplyFog(float* values) {
-	float data[256];
-
-	for (int i = 0; i <= 128; i ++)
-	{
-		float val = values[i];
-		if (i < 128) data[i]       = val;
-		if (i > 0)   data[i + 127] = val - data[i-1];
-	}
-
-	FogLut_FromArray(&fog_lut, data);
-	C3D_FogLutBind(&fog_lut);
+	pica_set_fog_color(c);
 }
 
 static float GetFogValue(float c) {
@@ -786,10 +747,13 @@ static void UpdateFog(void) {
 	// TODO: Exp calculation isn't right for lava ???
 	for (int i = 0; i <= 128; i ++)
 	{
-		float c   = FogLut_CalcZ(i / 128.0f, near, far);
+		float c = FogLut_CalcZ(i / 128.0f, near, far);
 		values[i] = GetFogValue(c);
 	}
-	ApplyFog(values);
+
+	C3D_FogLut fog_lut;
+	FogLut_FromArray(&fog_lut, values);
+	pica_set_fog_table(fog_lut.data);
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -862,7 +826,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	}
 
 	Mtx_Multiply(&_mvp, &_proj, &_view);
-	UpdateMVP();
+	pica_upload_mat4_constant(CONST_MVP, &_mvp);
 }
 
 
