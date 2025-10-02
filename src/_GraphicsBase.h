@@ -223,13 +223,6 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->height);
 	struct VertexTextured* v = *vertices;
 
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
-	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
-	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
-	x1 -= 0.5f; x2 -= 0.5f;
-	y1 -= 0.5f; y2 -= 0.5f;
-#endif
-
 	v->x = x1; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u1; v->V = tex->uv.v1; v++;
 	v->x = x2; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u2; v->V = tex->uv.v1; v++;
 	v->x = x2; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.u2; v->V = tex->uv.v2; v++;

@@ -756,15 +756,31 @@ void Gfx_DisableTextureOffset(void) {
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
-	/* NOTE: This calculation is shared with Direct3D 11 backend */
+	/* NOTE: This calculation is mostly shared with Direct3D 11 backend */
+	float adjustX, adjustY;
 	*matrix = Matrix_Identity;
+
+	/* Need to offset x/y coordinates by 0.5 pixels for correct rendering */
+	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
+	/*   i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why this is required. */
+	/* https://aras-p.info/blog/2016/04/08/solving-dx9-half-pixel-offset/ */
+	/* */
+	/* Recommended solution is doing this: clipPos.xy += renderTargetInvSize.xy * clipPos.w; */
+	/* Since not using vertex shaders, in orthographic case (clipPos.w=1), can adjust the matrix transform instead */
+	/*   final_X = pos->x * mvp.row1.x + ... + _mvp.row4.x; */
+	/*   final_x = (pos->x - 0.5) * mvp.row1.x + ... + _mvp.row4.x; */
+	/*   final_x = (pos->x - 0.5) * SCALEX + ... + OFFSET_X; */
+	/*   final_x = pos->x * SCALEX + ... + (OFFSET_X - 0.5 * SCALEX); */
+	/* TODO this assumes that the modelview matrix is identity */	
+	adjustX = 0.5 * ( 2.0f / width);
+	adjustY = 0.5 * (-2.0f / height);
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
 	matrix->row3.z =  1.0f / (zNear - zFar);
 
-	matrix->row4.x = -1.0f;
-	matrix->row4.y =  1.0f;
+	matrix->row4.x = -1.0f - adjustX;
+	matrix->row4.y =  1.0f - adjustY;
 	matrix->row4.z = zNear / (zNear - zFar);
 }
 
