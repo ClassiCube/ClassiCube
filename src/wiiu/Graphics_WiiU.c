@@ -564,10 +564,11 @@ static void CreateDRCTest(void) {
 }
 
 void Gfx_EndFrame(void) {
-	WHBGfxFinishRenderTV();
+	GX2ColorBuffer* buf = WHBGfxGetTVColourBuffer();
+	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_TV);
+
 	WHBGfxBeginRenderDRC();
-	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
-	WHBGfxFinishRenderDRC();
+	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_DRC);
 
 	WHBGfxFinishRender();
 }
