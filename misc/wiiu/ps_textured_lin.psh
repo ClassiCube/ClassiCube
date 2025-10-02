@@ -16,15 +16,16 @@
 ; $SPI_PS_INPUT_CNTL[2].semantic = 2
 ; $SPI_PS_INPUT_CNTL[2].default_val = 1
 
-; C0
-; $UNIFORM_VARS[0].name = "fogColor"
+; C0 (RGB = lin colour, A = fog end)
+; $UNIFORM_VARS[0].name = "fogLin"
 ; $UNIFORM_VARS[0].type = "vec4"
 ; $UNIFORM_VARS[0].count = 1
 ; $UNIFORM_VARS[0].block = -1
 ; $UNIFORM_VARS[0].offset = 0
-; C1
-; $UNIFORM_VARS[1].name = "fogValue"
-; $UNIFORM_VARS[1].type = "vec2"
+
+; C1 (RGB = exp colour, A = fog depth)
+; $UNIFORM_VARS[1].name = "fogExp"
+; $UNIFORM_VARS[1].type = "vec4"
 ; $UNIFORM_VARS[1].count = 1
 ; $UNIFORM_VARS[1].block = -1
 ; $UNIFORM_VARS[1].offset = 4
@@ -32,19 +33,15 @@
 ; --------  Disassembly --------------------
 00 TEX: ADDR(48) CNT(1) VALID_PIX 
       0  SAMPLE R1, R1.xy__, t0, s0
-01 ALU: ADDR(32) CNT(13) 
-      1  x: MUL            ____,  R0.x,  R1.x      
-         y: MUL            ____,  R0.z,  R1.z      
-         z: MUL            ____,  R0.y,  R1.y      
-         w: MUL            R0.w,  R0.w,  R1.w    
-         t: RECIP_IEEE     ____,  R2.W  
-      2  x: ADD            R1.x,  PV1.z, -C0.y      
-         y: ADD            R1.y,  PV1.x, -C0.x      
-         z: ADD            R1.z,  PV1.y, -C0.z
-         w: MULADD         R3.w,  -PS1,  C1.y,   1.0f      CLAMP 
-      3  x: MULADD         R0.x,  R1.y,  PV2.w,  C0.x      
-         y: MULADD         R0.y,  R1.x,  PV2.w,  C0.y      
-         z: MULADD         R0.z,  R1.z,  PV2.w,  C0.z      
+01 ALU: ADDR(32) CNT(10) 
+      1  t: RECIP_IEEE     ____,  R2.W
+      2  x: MULADD         R1.x,  R0.x,   R1.x,  -C0.x
+         y: MULADD         R1.y,  R0.y,   R1.y,  -C0.y
+         z: MULADD         R1.z,  R0.z,   R1.z,  -C0.z
+         w: MULADD         R2.w,  -PS1,   C0.w,  1.0f   CLAMP
+      3  x: MULADD         R0.x,  R1.x,  PV2.w,  C0.x
+         y: MULADD         R0.y,  R1.y,  PV2.w,  C0.y
+         z: MULADD         R0.z,  R1.z,  PV2.w,  C0.z
+         w: MUL            R0.w,  R1.w,   R0.w
 02 EXP_DONE: PIX0, R0
 END_OF_PROGRAM
-

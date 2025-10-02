@@ -649,7 +649,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req) {
 	state.req = req;
 
 	for (;;) {
-		Platform_Log4("Fetching %c%s%s (%c)", &state.url.https ? "https://" : "http://", 
+		Platform_Log4("Fetching %c%s%s (%c)", state.url.https ? "https://" : "http://", 
 					&state.url.address, &state.url.resource, verbs[req->requestType]);
 
 		res = HttpBackend_PerformRequest(&state);

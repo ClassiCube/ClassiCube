@@ -16,10 +16,18 @@ To generate shader assembly
 
 Then run assembler.sh to assemble all files
 
-https://www.x.org/docs/AMD/old/r600isa.pdf
+https://www.x.org/docs/AMD/old/R700-Family_Instruction_Set_Architecture.pdf
 https://www.x.org/docs/AMD/old/R6xx_R7xx_3D.pdf
 https://www.x.org/docs/AMD/old/R6xx_3D_Registers.pdf
 
 Note this
-r600isa.pdf, 4.6.4  ALU Constants
-- " Each ALU instruction can reference up to two constants: one inline constant (literal), and one constant read from the on-chip constant file"
+R700-Family_Instruction_Set_Architecture.pdf:
+4.7.5 Constant Register Read Port Restrictions
+
+Software can read any four distinct elements from the constant registers in one instruction group, after relative addressing is applied. 
+The four constants must be two pairs of constants from any address: either Cn.x,Cn.y or Cn.z,Cn.w. 
+No more than four distinct elements can be read from the constant file in one instruction group.
+
+4.7.7 Cycle Restrictions for ALU.[X,Y,Z,W] Units
+For ALU.[X,Y,Z,W] operations, source operands src0, src1, and src2 are loaded during three cycles. 
+At most one GPR.X, one GPR.Y, one GPR.Z and one GPR.W can be read per cycle.

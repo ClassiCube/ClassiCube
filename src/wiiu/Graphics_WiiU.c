@@ -81,10 +81,10 @@ extern const uint8_t offset_exp_gsh[];
 #define VS_UNI_OFFSET_OFST 16
 #define VS_UNI_COUNT_OFST   4
 
-#define PS_UNI_OFFSET_COLOR 0
-#define PS_UNI_COUNT_COLOR  4
-#define PS_UNI_OFFSET_FOG   4
-#define PS_UNI_COUNT_FOG    4
+#define PS_UNI_OFFSET_LIN  0
+#define PS_UNI_COUNT_LIN   4
+#define PS_UNI_OFFSET_EXP  4
+#define PS_UNI_COUNT_EXP   4
 
 struct ShaderProgram {
 	GX2VertexShader* vs;
@@ -270,27 +270,31 @@ void Gfx_SetFog(cc_bool enabled) {
 	UpdateProgram();
 }
 
+// xyz/rgb are colour, w/a is value
+static struct Vec4 fogLin, fogExp;
+static PackedCol fogColor;
+
 void Gfx_SetFogCol(PackedCol color) {
-	struct Vec4 c = {
-		PackedCol_R(color) / 255.0f,
-		PackedCol_G(color) / 255.0f,
-		PackedCol_B(color) / 255.0f,
-		1.0f
-	};
-	GX2SetPixelUniformReg(PS_UNI_OFFSET_COLOR, PS_UNI_COUNT_COLOR, &c);
-}
+	if (fogColor == color) return;
+	fogColor = color;
 
-static struct Vec4 fogValue;
-#define LOG2_E 1.44269504089f
+	fogLin.x = fogExp.x = PackedCol_R(color) / 255.0f;
+	fogLin.y = fogExp.y = PackedCol_G(color) / 255.0f;
+	fogLin.z = fogExp.z = PackedCol_B(color) / 255.0f;
 
-void Gfx_SetFogDensity(float value) {
-	fogValue.x = -value * LOG2_E;
-	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_LIN, PS_UNI_COUNT_LIN, &fogLin);
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_EXP, PS_UNI_COUNT_EXP, &fogExp);
 }
 
 void Gfx_SetFogEnd(float value) {
-	fogValue.y = 1.0f / value;
-	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
+	fogLin.w = 1.0f / value;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_LIN, PS_UNI_COUNT_LIN, &fogLin);
+}
+
+#define LOG2_E 1.44269504089f
+void Gfx_SetFogDensity(float value) {
+	fogExp.w = -value * LOG2_E;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_EXP, PS_UNI_COUNT_EXP, &fogExp);
 }
 
 void Gfx_SetFogMode(FogFunc func) {
