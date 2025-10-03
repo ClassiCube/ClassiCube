@@ -27,6 +27,7 @@ static cc_bool scroll_debugging;
 	#define DIALOG_OK      NSModalResponseOK
 	
 	#define PASTEBOARD_STRING_TYPE NSPasteboardTypeString
+	#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #else
 	#define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 	#define ANY_EVENT_MASK NSAnyEventMask
@@ -260,7 +261,11 @@ static void RefreshWindowBounds(void) {
 - (void)keyDown:(NSEvent *)event { }
 @end
 
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+@interface CCWindowDelegate : NSObject <NSWindowDelegate> { }
+#else
 @interface CCWindowDelegate : NSObject { }
+#endif
 @end
 @implementation CCWindowDelegate
 - (void)windowDidResize:(NSNotification *)notification {
@@ -490,7 +495,7 @@ static void ProcessKeyChars(id ev) {
 	len   = String_Length(src);
 
 	while (len > 0) {
-		i = Convert_Utf8ToCodepoint(&cp, src, len);
+		i = Convert_Utf8ToCodepoint(&cp, (const cc_uint8*)src, len);
 		if (!i) break;
 
 		Event_RaiseInt(&InputEvents.Press, cp);
@@ -626,8 +631,14 @@ void ShowDialogCore(const char* title, const char* msg) {
 	alert = [NSAlert alloc];
 	alert = [alert init];
 	
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+	[alert setMessageText: (__bridge NSString*)titleCF];
+	[alert setInformativeText: (__bridge NSString*)msgCF];
+#else
 	[alert setMessageText: titleCF];
 	[alert setInformativeText: msgCF];
+#endif
+
 	[alert addButtonWithTitle: @"OK"];
 	
 	[alert runModal];
@@ -643,7 +654,14 @@ static NSMutableArray* GetOpenSaveFilters(const char* const* filters) {
     {
         NSString* filter = [NSString stringWithUTF8String:filters[i]];
         filter = [filter substringFromIndex:1];
-        [types addObject:filter];
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+		UTType* uttype = [UTType typeWithFilenameExtension:filter];
+		if (uttype) {
+			[types addObject:uttype];
+		}
+#else
+		[types addObject:filter];
+#endif 
     }
     return types;
 }
@@ -669,7 +687,11 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	// TODO: Use args->defaultName, but only macOS 10.6
 
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
-    [dlg setAllowedFileTypes:types];
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+	[dlg setAllowedContentTypes:types];
+#else
+	[dlg setAllowedFileTypes:types];
+#endif
 	if ([dlg runModal] != DIALOG_OK) return 0;
 
 	NSURL* file = [dlg URL];
@@ -682,7 +704,12 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setCanChooseFiles: YES];
-    if ([dlg runModalForTypes:types] != DIALOG_OK) return 0;
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+	[dlg setAllowedContentTypes:types];
+	if ([dlg runModal] != DIALOG_OK) return 0;
+#else
+	if ([dlg runModalForTypes:types] != DIALOG_OK) return 0;
+#endif
     // unfortunately below code doesn't work when linked against SDK < 10.6
     //   https://developer.apple.com/documentation/appkit/nssavepanel/1534419-allowedfiletypes
     // [dlg setAllowedFileTypes:types];
@@ -723,7 +750,11 @@ static void DoDrawFramebuffer(NSRect dirty) {
 	// TODO: Find a better way of doing this in cocoa..
 	if (!fb_bmp.scan0) return;
 	nsContext = [NSGraphicsContext currentContext];
+#if defined MAC_OS_X_VERSION_10_14 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+	context   = [nsContext CGContext];
+#else
 	context   = [nsContext graphicsPort];
+#endif
 
 	// TODO: Only update changed bit..
 	rect.origin.x = 0; rect.origin.y = 0;
@@ -780,6 +811,11 @@ static NSOpenGLContext* ctxHandle;
 static int SupportsModernFullscreen(void) {
 	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
 }
+
+#if defined MAC_OS_X_VERSION_10_14 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
 	// TODO: Is there a penalty for fullscreen contexts in 10.7 and later?
@@ -964,5 +1000,10 @@ cc_result Window_ExitFullscreen(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
 }
+
+#if defined MAC_OS_X_VERSION_10_14 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+#pragma clang diagnostic pop
+#endif
+
 #endif
 #endif
