@@ -25,6 +25,7 @@ static cc_uint8 priorities[GUI_MAX_SCREENS];
 #ifdef CC_BUILD_DUALSCREEN
 static struct Texture touchBgTex;
 #endif
+static GfxResourceID bars_VB;
 
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
@@ -316,24 +317,39 @@ void Gui_ShowPauseMenu(void) {
 #endif
 }
 
-void Gui_ShowCinematicBars() {
-	int screenWidth = Window_Main.Width;
+#define BARS_VB_COUNT 4 * 2
+static void ShowCinematicBars() {
+	struct VertexColoured* v;
+	int screenWidth  = Window_Main.Width;
 	int screenHeight = Window_Main.Height;
+	PackedCol color;
+	int count;
 
 	// Ensure bar size is clamped between 0 and 1
 	if (Gui.BarSize < 0.0f) Gui.BarSize = 0.0f;
 	if (Gui.BarSize > 1.0f) Gui.BarSize = 1.0f;
 
+	if (!bars_VB) bars_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, BARS_VB_COUNT);
+	if (!bars_VB) return;
+
+	count = Gui.BarSize == 1.0f ? 4 : BARS_VB_COUNT;
+	color = Gui.CinematicBarColor;
+	v = (struct VertexColoured*)Gfx_LockDynamicVb(bars_VB, VERTEX_FORMAT_COLOURED, count);
+
 	// If bar size is 1, just draw 1 rectangle instead of 2
 	if (Gui.BarSize == 1.0f) {
-		Gfx_Draw2DGradient(0, 0, screenWidth, screenHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+		v = Gfx_Build2DGradient(0, 0, screenWidth, screenHeight, color, color, v);
 	} else {
 		// Calculate the height of each bar based on the bar size
 		int barHeight = (int)(screenHeight * Gui.BarSize / 2.0f);
 
-		Gfx_Draw2DGradient(0, 0, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
-		Gfx_Draw2DGradient(0, screenHeight - barHeight, screenWidth, barHeight, Gui.CinematicBarColor, Gui.CinematicBarColor);
+		v = Gfx_Build2DGradient(0,                        0, screenWidth, barHeight, color, color, v);
+		v = Gfx_Build2DGradient(0, screenHeight - barHeight, screenWidth, barHeight, color, color, v);
 	}
+
+	Gfx_UnlockDynamicVb(bars_VB);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	Gfx_DrawVb_IndexedTris(count);
 }
 
 void Gui_RenderGui(float delta) {
@@ -345,7 +361,7 @@ void Gui_RenderGui(float delta) {
 	Texture_Render(&touchBgTex);
 #endif
 
-	if (Gui.BarSize > 0) Gui_ShowCinematicBars();
+	if (Gui.BarSize > 0) ShowCinematicBars();
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
@@ -700,6 +716,7 @@ static void OnTextChanged(void* obj, const cc_string* str) {
 
 static void OnContextLost(void* obj) {
 	LoseAllScreens();
+	Gfx_DeleteDynamicVb(&bars_VB);
 	if (Gfx.ManagedTextures) return;
 
 	Gfx_DeleteTexture(&Gui.GuiTex);

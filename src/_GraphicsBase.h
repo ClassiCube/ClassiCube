@@ -180,11 +180,7 @@ void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
-
-	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = color; v++;
-	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = color; v++;
-	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
-	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
+	v = Gfx_Build2DFlat(x, y, width, height, color, v);
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris(4);
@@ -195,11 +191,7 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
-
-	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = top; v++;
-	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = top; v++;
-	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
-	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
+	v = Gfx_Build2DGradient(x, y, width, height, top, bottom, v);
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris(4);
@@ -217,6 +209,24 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	Gfx_DrawVb_IndexedTris(4);
 }
 #endif
+
+struct VertexColoured* Gfx_Build2DFlat(int x, int y, int width, int height, 
+										PackedCol color, struct VertexColoured* v) {
+	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = color; v++;
+	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = color; v++;
+	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
+	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
+	return v;
+}
+
+struct VertexColoured* Gfx_Build2DGradient(int x, int y, int width, int height, 
+											PackedCol top, PackedCol bottom, struct VertexColoured* v) {
+	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = top;    v++;
+	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = top;    v++;
+	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
+	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
+	return v;
+}
 
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
 	float x1 = (float)tex->x, x2 = (float)(tex->x + tex->width);
