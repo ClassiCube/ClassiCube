@@ -9,6 +9,7 @@
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Logger.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
 #include <VideoOut.h>
 
@@ -39,8 +40,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 20;
-	DisplayInfo.ContentOffsetY = 20;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(20);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(20);
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 }
 

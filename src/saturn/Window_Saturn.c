@@ -8,6 +8,7 @@
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
+#include "../Options.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -41,8 +42,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(10);
 
 	vdp2_tvmd_display_res_set(VDP2_TVMD_INTERLACE_NONE, VDP2_TVMD_HORZ_NORMAL_A, VDP2_TVMD_VERT_224);
 	vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(0, 0), RGB1555(1, 19, 0, 0));
