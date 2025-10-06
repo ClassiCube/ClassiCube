@@ -19,6 +19,8 @@
 #include <avkon.hrh>
 #include <AknUtils.h>
 #include <eikstart.h>
+#include <aknmessagequerydialog.h>
+#include <classicube.rsg>
 extern "C" {
 #include <stdapis/string.h>
 #include <gles/egl.h>
@@ -225,7 +227,7 @@ TInt E32Main() {
 // CCAppUi implementation
 
 void CCAppUi::ConstructL() {
-	BaseConstructL();
+	BaseConstructL(CAknAppUi::EAknEnableSkin);
 	iAppContainer = new (ELeave) CCContainer;
 	iAppContainer->SetMopParent(this);
 	iAppContainer->ConstructL(ClientRect(), this);
@@ -495,9 +497,9 @@ TInt CCContainer::LoopCallBack(TAny*) {
 		
 		if (run) {
 			run = false;
+			gameRunning = true;
 			ProcessProgramArgs(0, 0);
 			Game_Setup();
-			gameRunning = true;
 			container->RestartTimerL(100);
 		}
 		
@@ -740,16 +742,22 @@ CEikAppUi* CCDocument::CreateAppUiL() {
 static void ConvertToUnicode(TDes& dst, const char* src, size_t length) {
 	if (!src) return;
 
-	cc_unichar* uni = reinterpret_cast<cc_unichar*>(const_cast <TUint16*> (dst.Ptr()));
-	for (int i = 0; i < length; i++) {
-		*uni++ = Convert_CP437ToUnicode(src[i]);
-	}
-	*uni = '\0';
+	wchar_t* uni = reinterpret_cast<wchar_t*>(const_cast <TUint16*> (dst.Ptr()));
+	mbstowcs(uni, src, length);
+	
 	dst.SetLength(length);
 }
 
 static CC_INLINE void ConvertToUnicode(TDes& dst, const cc_string* src) {
-	ConvertToUnicode(dst, src->buffer, (size_t)src->length);
+	if (!src->buffer) return;
+	size_t length = (size_t)src->length;
+
+	cc_unichar* uni = reinterpret_cast<cc_unichar*>(const_cast <TUint16*> (dst.Ptr()));
+	for (int i = 0; i < length; i++) {
+		*uni++ = Convert_CP437ToUnicode(src->buffer[i]);
+	}
+	*uni = '\0';
+	dst.SetLength(length);
 }
 
 static cc_result OpenBrowserL(const cc_string* url) {
@@ -759,7 +767,7 @@ static cc_result OpenBrowserL(const cc_string* url) {
 
 	if (task.Exists()) {
 		task.BringToForeground();
-		task.SendMessage(TUid::Uid(0), TPtrC8((TUint8 *) url->buffer, (TInt) url->length));
+		task.SendMessage(TUid::Uid(0), TPtrC8((TUint8*) url->buffer, (TInt) url->length));
 	} else {
 		RApaLsSession ls;
 		if (!ls.Handle()) {
@@ -776,11 +784,17 @@ static cc_result OpenBrowserL(const cc_string* url) {
 }
 
 static void ShowDialogL(const char* title, const char* msg) {
-	// TODO: use text box or something instead to fix line breaks
-	CAknInformationNote* note = new (ELeave) CAknInformationNote(true);
 	TBuf<512> msgBuf;
 	ConvertToUnicode(msgBuf, msg, String_Length(msg));
-	note->ExecuteLD(msgBuf);
+	
+	CAknMessageQueryDialog* dialog = CAknMessageQueryDialog::NewL(msgBuf);
+	dialog->PrepareLC(R_QUERY_DIALOG);
+	
+	TBuf<100> titleBuf;
+	ConvertToUnicode(titleBuf, title, String_Length(title));
+	dialog->SetHeaderTextL(titleBuf);
+	
+	dialog->RunLD();
 }
 
 // Window implementation
@@ -815,9 +829,13 @@ void Window_Destroy(void) { }
 
 void Window_SetTitle(const cc_string* title) { }
 
-void Clipboard_GetText(cc_string* value) { }
+void Clipboard_GetText(cc_string* value) {
+	// TODO
+}
 
-void Clipboard_SetText(const cc_string* value) { }
+void Clipboard_SetText(const cc_string* value) {
+	// TODO
+}
 
 int Window_GetWindowState(void) {
 	return WINDOW_STATE_FULLSCREEN;
