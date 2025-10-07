@@ -30,7 +30,6 @@
 #include <nds/arm9/sdmmc.h>
 #include <nds/arm9/exceptions.h>
 #include <fat.h>
-#include <dsiwifi9.h>
 #include <dswifi9.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -639,5 +638,6 @@ static cc_result GetMachineID(cc_uint32* key) {
 cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
+
 
 
