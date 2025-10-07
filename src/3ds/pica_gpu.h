@@ -9,6 +9,14 @@
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Index buffer config-------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void pica_set_index_buffer_address(u32 addr) {
+	GPUCMD_AddWrite(GPUREG_INDEXBUFFER_CONFIG, (addr - BUFFER_BASE_PADDR) | (C3D_UNSIGNED_SHORT << 31));
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Fog config------------------------------------------------------*
 *#########################################################################################################################*/
 static CC_INLINE void pica_set_fog_color(u32 color) {
@@ -53,6 +61,12 @@ static CC_INLINE void pica_set_attrib_array0_format(u32 num_attribs, u32 stride)
 static CC_INLINE void pica_set_vsh_input_mapping(u32 mappingLo, u32 mappingHi) {
 	GPUCMD_AddWrite(GPUREG_VSH_ATTRIBUTES_PERMUTATION_LOW,  mappingLo);
 	GPUCMD_AddWrite(GPUREG_VSH_ATTRIBUTES_PERMUTATION_HIGH, mappingHi);
+}
+
+#define SH_MODE_VSH 0xA0000000
+static CC_INLINE void pica_set_vsh_input_count(u32 count) {
+	GPUCMD_AddMaskedWrite(GPUREG_VSH_INPUTBUFFER_CONFIG, 0xB, SH_MODE_VSH | (count - 1));
+	GPUCMD_AddWrite(GPUREG_VSH_NUM_ATTR, count - 1);
 }
 
 

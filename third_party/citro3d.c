@@ -127,8 +127,6 @@ enum
 static bool C3D_Init(size_t cmdBufSize);
 static void C3D_Fini(void);
 
-static void C3D_BindProgram(shaderProgram_s* program);
-
 static void C3D_SetViewport(u32 x, u32 y, u32 w, u32 h);
 static void C3D_SetScissor(GPU_SCISSORMODE mode, u32 left, u32 top, u32 right, u32 bottom);
 
@@ -281,7 +279,6 @@ typedef struct
 	size_t cmdBufSize;
 
 	u32 flags;
-	shaderProgram_s* program;
 
 	C3D_AttrInfo attrInfo;
 	C3D_Effect effect;
@@ -305,10 +302,7 @@ enum
 	C3DiF_FrameBuf = BIT(5),
 	C3DiF_Viewport = BIT(6),
 	C3DiF_Scissor = BIT(7),
-	C3DiF_Program = BIT(8),
 	C3DiF_TexEnvBuf = BIT(9),
-	C3DiF_VshCode = BIT(11),
-	C3DiF_GshCode = BIT(12),
 	C3DiF_TexStatus = BIT(14),
 	C3DiF_Gas = BIT(18),
 
@@ -387,18 +381,7 @@ static C3D_AttrInfo* C3D_GetAttrInfo(void)
 static void C3Di_AttrInfoBind(C3D_AttrInfo* info)
 {
 	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFERS_FORMAT_LOW, (u32*)info->flags, sizeof(info->flags)/sizeof(u32));
-	GPUCMD_AddMaskedWrite(GPUREG_VSH_INPUTBUFFER_CONFIG, 0xB, 0xA0000000 | (info->attrCount - 1));
-	GPUCMD_AddWrite(GPUREG_VSH_NUM_ATTR, info->attrCount - 1);
 }
-
-
-
-
-
-
-
-
-
 
 
 #define BUFFER_BASE_PADDR 0x18000000
@@ -791,7 +774,6 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target)
 
 	target->used = true;
 	C3D_SetFrameBuf(&target->frameBuf);
-	C3D_SetViewport(0, 0, target->frameBuf.width, target->frameBuf.height);
 	return true;
 }
 
@@ -948,7 +930,7 @@ static void C3Di_OnRestore(void)
 	C3D_Context* ctx = C3Di_GetContext();
 
 	ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
-		| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
+		| C3DiF_Viewport | C3DiF_Scissor
 		| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
 }
 
@@ -1078,12 +1060,6 @@ static void C3Di_UpdateContext(void)
 		GPUCMD_AddIncrementalWrites(GPUREG_SCISSORTEST_MODE, ctx->scissor, 3);
 	}
 
-	if (ctx->flags & C3DiF_Program)
-	{
-		shaderProgramConfigure(ctx->program, (ctx->flags & C3DiF_VshCode) != 0, (ctx->flags & C3DiF_GshCode) != 0);
-		ctx->flags &= ~(C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode);
-	}
-
 	if (ctx->flags & C3DiF_AttrInfo)
 	{
 		ctx->flags &= ~C3DiF_AttrInfo;
@@ -1166,13 +1142,4 @@ static void C3D_Fini(void)
 	C3Di_RenderQueueExit();
 	linearFree(ctx->cmdBuf);
 	ctx->flags = 0;
-}
-
-static void C3D_BindProgram(shaderProgram_s* program)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	ctx->program = program;
-	ctx->flags |= C3DiF_Program | C3DiF_AttrInfo;
-	ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
 }
