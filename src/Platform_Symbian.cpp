@@ -148,14 +148,12 @@ cc_bool crashed = false;
 
 static void ExceptionHandler(TExcType type) {
 	cc_string msg; char msgB[64];
+	
+	crashed = true;
 	String_InitArray(msg, msgB);
 	String_AppendConst(&msg, "Exception: ");
 	String_AppendInt(&msg, (int) type);
 	msg.buffer[msg.length] = '\0';
-	
-	crashed = true;
-	User::HandleException((TUint32*) &type);
-	
 	Logger_DoAbort(0, msg.buffer, 0);
 }
 
