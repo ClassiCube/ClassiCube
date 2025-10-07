@@ -485,8 +485,13 @@ void CCAppUi::HandleCommandL(TInt aCommand) {
 	}
 }
 
+extern cc_bool crashed;
+
 // CCContainer implementation
 TInt CCContainer::LoopCallBack(TAny*) {
+	if (crashed) {
+		return EFalse;
+	}
 	cc_bool run = false;
 	for (;;) {
 		if (!WindowInfo.Exists) {

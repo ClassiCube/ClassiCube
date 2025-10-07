@@ -144,6 +144,8 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
+cc_bool crashed = false;
+
 static void ExceptionHandler(TExcType type) {
 	cc_string msg; char msgB[64];
 	String_InitArray(msg, msgB);
@@ -151,9 +153,10 @@ static void ExceptionHandler(TExcType type) {
 	String_AppendInt(&msg, (int) type);
 	msg.buffer[msg.length] = '\0';
 	
-	Logger_DoAbort(0, msg.buffer, 0);
-	
+	crashed = true;
 	User::HandleException((TUint32*) &type);
+	
+	Logger_DoAbort(0, msg.buffer, 0);
 }
 
 void CrashHandler_Install(void) {
