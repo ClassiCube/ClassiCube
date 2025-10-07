@@ -30,11 +30,8 @@
 #include <nds/arm9/sdmmc.h>
 #include <nds/arm9/exceptions.h>
 #include <fat.h>
-#ifdef BUILD_DSI
 #include <dsiwifi9.h>
-#else
 #include <dswifi9.h>
-#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
@@ -510,11 +507,7 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 void Socket_Close(cc_socket s) {
 	shutdown(s, 2); // SHUT_RDWR = 2
-#ifdef BUILD_DSI
-	lwip_close(s);
-#else
 	closesocket(s);
-#endif
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -569,27 +562,15 @@ static void LogWifiStatus(int status) {
 }
 
 static void InitNetworking(void) {
-#ifdef BUILD_DSI
-    if (!DSiWifi_InitDefault(INIT_ONLY)) {
-#else
-    if (!Wifi_InitDefault(INIT_ONLY)) {
-#endif
+    if (!Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE)) {
         Platform_LogConst("Initing WIFI failed"); 
 		net_supported = false; return;
     }
-#ifdef BUILD_DSI
-    DSiWifi_AutoConnect();
-#else
     Wifi_AutoConnect();
-#endif
 
     for (int i = 0; i < 300; i++)
     {
-#ifdef BUILD_DSI
-        int status = DSiWifi_AssocStatus();
-#else
         int status = Wifi_AssocStatus();
-#endif	
 		LogWifiStatus(status);
         if (status == ASSOCSTATUS_ASSOCIATED) return;
 
@@ -658,4 +639,5 @@ static cc_result GetMachineID(cc_uint32* key) {
 cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
+
 
