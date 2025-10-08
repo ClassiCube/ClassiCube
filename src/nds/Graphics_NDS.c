@@ -159,7 +159,7 @@ void Gfx_EndFrame(void) {
 
 	GFX_FLUSH = 0;
 	// TODO not needed?
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
 }
 
 

@@ -541,22 +541,22 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	return res;
 }
 
-static void LogWifiStatus(int status) {
+static void LogWifiStatus(int timer, int status) {
 	switch (status) {
 		case ASSOCSTATUS_SEARCHING:
-			Platform_LogConst("Wifi: Searching.."); return;
+			Platform_Log1("Wifi: Searching.. %i", &timer); return;
 		case ASSOCSTATUS_AUTHENTICATING:
-			Platform_LogConst("Wifi: Authenticating.."); return;
+			Platform_Log1("Wifi: Authenticating.. %i", &timer); return;
 		case ASSOCSTATUS_ASSOCIATING:
-			Platform_LogConst("Wifi: Connecting.."); return;
+			Platform_Log1("Wifi: Connecting.. %i", &timer); return;
 		case ASSOCSTATUS_ACQUIRINGDHCP:
-			Platform_LogConst("Wifi: Acquiring.."); return;
+			Platform_Log1("Wifi: Acquiring.. %i", &timer); return;
 		case ASSOCSTATUS_ASSOCIATED:
 			Platform_LogConst("Wifi: Connected successfully!"); return;
 		case ASSOCSTATUS_CANNOTCONNECT:
 			Platform_LogConst("Wifi: FAILED TO CONNECT"); return;
 		default: 
-			Platform_Log1("Wifi: status = %i", &status); return;
+			Platform_Log2("Wifi: status = %i, timer = %i", &status, &timer); return;
 	}
 }
 
@@ -567,16 +567,17 @@ static void InitNetworking(void) {
     }
     Wifi_AutoConnect();
 
-    for (int i = 0; i < 300; i++)
+    int maxTime = 60*15;
+    for (int i = 0; i < maxTime; i++)
     {
         int status = Wifi_AssocStatus();
-		LogWifiStatus(status);
+        LogWifiStatus((maxTime-i)/60, status);
         if (status == ASSOCSTATUS_ASSOCIATED) return;
 
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
 			net_supported = false; return;
         }
-        swiWaitForVBlank();
+        cothread_yield_irq(IRQ_VBLANK);
     }
     Platform_LogConst("Gave up after 300 tries");
 	net_supported = false;
