@@ -8,19 +8,10 @@ ARM_NONE_EABI_PATH		?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
 
 SOURCEDIRS	:= misc/nds
 INCLUDEDIRS	:=
-DSIWIFI		:= third_party/dsiwifi
 
-ifdef BUILD_DSI
-SOURCEDIRS	+= $(DSIWIFI)/arm_iop/source $(DSIWIFI)/common/source $(DSIWIFI)/arm_iop/source/ath $(DSIWIFI)/arm_iop/source/crypto $(DSIWIFI)/arm_iop/source/ieee
-INCLUDEDIRS	+= $(DSIWIFI)/arm_iop/source  $(DSIWIFI)/arm_iop/include $(DSIWIFI)/common/source $(DSIWIFI)/include $(DSIWIFI)/include/lwip
-BUILDDIR	:= build/dsi
-LIBS		:= -lc -lnds7
-LIBDIRS		:= $(BLOCKSDS)/libs/libnds
-else
 BUILDDIR	:= build/nds
 LIBS		:= -lc -lnds7 -ldswifi7
 LIBDIRS		:= $(BLOCKSDS)/libs/libnds $(BLOCKSDS)/libs/dswifi
-endif
 
 NAME		:= cc-arm7
 ELF		:= $(BUILDDIR)/$(NAME).elf

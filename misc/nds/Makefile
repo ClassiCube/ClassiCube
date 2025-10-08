@@ -21,13 +21,8 @@ SDIMAGE		:= image.bin
 
 # Build artfacts
 # --------------
-ifdef BUILD_DSI
-BUILDDIR	:= build/dsi
-ROM			:= ClassiCube-dsi.nds
-else
 BUILDDIR	:= build/nds
-ROM			:= ClassiCube-nds.nds
-endif
+ROM			:= ClassiCube.nds
 
 # Targets
 # -------
