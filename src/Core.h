@@ -556,9 +556,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_MAXSTACK (16 * 1024) /* Only < 16 kb stack as it's in DTCM region */
 	#define CC_BUILD_NOFPU
 	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#ifndef BUILD_DSI
-		#undef CC_BUILD_ADVLIGHTING
-	#endif
+	#undef CC_BUILD_ADVLIGHTING
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 #elif defined PLAT_WIIU

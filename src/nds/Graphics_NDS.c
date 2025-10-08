@@ -29,9 +29,9 @@ static void WaitForGPUDone(void) {
 	if (!GFX_BUSY) return;
 
 	// Geometry engine still busy from before, give it some time
-	swiWaitForVBlank();
-	swiWaitForVBlank();
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
+	cothread_yield_irq(IRQ_VBLANK);
+	cothread_yield_irq(IRQ_VBLANK);
 	if (!GFX_BUSY) return;
 
 	// The geometry engine may still have some leftover state, try to recover
@@ -159,7 +159,7 @@ void Gfx_EndFrame(void) {
 
 	GFX_FLUSH = 0;
 	// TODO not needed?
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
 }
 
 

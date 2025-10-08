@@ -9,11 +9,7 @@
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Camera.h"
-#include <nds/arm9/background.h>
-#include <nds/arm9/input.h>
-#include <nds/arm9/keyboard.h>
-#include <nds/interrupts.h>
-#include <nds/system.h>
+#include <nds.h>
 #include <fat.h>
 
 #define LAYER_CON  0
@@ -312,7 +308,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
 	 
 	for (int y = r.y; y < r.y + r.height; y++)
 	{

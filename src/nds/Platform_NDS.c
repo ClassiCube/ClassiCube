@@ -30,11 +30,7 @@
 #include <nds/arm9/sdmmc.h>
 #include <nds/arm9/exceptions.h>
 #include <fat.h>
-#ifdef BUILD_DSI
-#include <dsiwifi9.h>
-#else
 #include <dswifi9.h>
-#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
@@ -510,11 +506,7 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 void Socket_Close(cc_socket s) {
 	shutdown(s, 2); // SHUT_RDWR = 2
-#ifdef BUILD_DSI
-	lwip_close(s);
-#else
 	closesocket(s);
-#endif
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -568,37 +560,30 @@ static void LogWifiStatus(int status) {
 	}
 }
 
+#define VSYNCS_PER_SEC 60
 static void InitNetworking(void) {
-#ifdef BUILD_DSI
-    if (!DSiWifi_InitDefault(INIT_ONLY)) {
-#else
-    if (!Wifi_InitDefault(INIT_ONLY)) {
-#endif
+    if (!Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE)) {
         Platform_LogConst("Initing WIFI failed"); 
 		net_supported = false; return;
     }
-#ifdef BUILD_DSI
-    DSiWifi_AutoConnect();
-#else
     Wifi_AutoConnect();
-#endif
+	int last_status = -1;
 
-    for (int i = 0; i < 300; i++)
+    for (int i = 0; i < VSYNCS_PER_SEC * 10; i++)
     {
-#ifdef BUILD_DSI
-        int status = DSiWifi_AssocStatus();
-#else
-        int status = Wifi_AssocStatus();
-#endif	
-		LogWifiStatus(status);
-        if (status == ASSOCSTATUS_ASSOCIATED) return;
+        int status = Wifi_AssocStatus();	
+		int do_log = status != last_status || ((i % VSYNCS_PER_SEC) == 0);
 
+		if (do_log) LogWifiStatus(status);
+		last_status = status;
+
+        if (status == ASSOCSTATUS_ASSOCIATED) return;
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
 			net_supported = false; return;
         }
-        swiWaitForVBlank();
+        cothread_yield_irq(IRQ_VBLANK);
     }
-    Platform_LogConst("Gave up after 300 tries");
+    Platform_LogConst("Gave up after ~10 seconds");
 	net_supported = false;
 }
 
@@ -608,11 +593,7 @@ static void InitNetworking(void) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	cc_bool dsiMode = isDSiMode();
-#ifdef BUILD_DSI
-	Platform_Log1("Running in %c mode with DSi wifi", dsiMode ? "DSi" : "DS");
-#else
-	Platform_Log1("Running in %c mode with NDS wifi", dsiMode ? "DSi" : "DS");
-#endif
+	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
 
 	InitFilesystem();
     InitNetworking();
