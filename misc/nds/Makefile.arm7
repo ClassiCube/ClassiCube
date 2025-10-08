@@ -10,9 +10,11 @@ SOURCEDIRS	:= misc/nds
 INCLUDEDIRS	:=
 LIBS		:= -lc -lnds7
 LIBDIRS		:= $(BLOCKSDS)/libs/libnds
+DEFINES		:= -D__NDS__ -DARM7
 
 ifdef BUILD_NONET
 BUILDDIR	:= build/nds_nonet
+DEFINES		+= -DNDS_NONET
 else
 BUILDDIR	:= build/nds
 LIBS		+= -ldswifi7
@@ -28,7 +30,6 @@ CC		:= $(PREFIX)gcc
 CXX		:= $(PREFIX)g++
 LD		:= $(CC)
 
-DEFINES		:= -D__NDS__ -DARM7
 ARCH		:= -mcpu=arm7tdmi -mtune=arm7tdmi
 WARNFLAGS	:= -Wall
 

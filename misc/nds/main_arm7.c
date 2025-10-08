@@ -6,7 +6,9 @@
 // Copyright (C) 2023 Antonio Niño Díaz
 
 // Default ARM7 core
+#ifndef NDS_NONET
 #include <dswifi7.h>
+#endif
 #include <nds.h>
 
 volatile bool exit_loop = false;
@@ -17,7 +19,9 @@ static void power_button_callback(void) {
 
 static void vblank_handler(void) {
     inputGetAndSend();
+#ifndef NDS_NONET
     Wifi_Update();
+#endif
 }
 
 int main(int argc, char *argv[]) {
@@ -30,7 +34,9 @@ int main(int argc, char *argv[]) {
     irqSet(IRQ_VBLANK, vblank_handler);
 
     fifoInit();
+#ifndef NDS_NONET
     installWifiFIFO();
+#endif
     installSoundFIFO();
     installSystemFIFO();
 

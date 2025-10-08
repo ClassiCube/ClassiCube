@@ -1,5 +1,8 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#ifdef NDS_NONET
+#define CC_NO_SOCKETS
+#endif
 
 #define CC_XTEA_ENCRYPTION
 #include "../_PlatformBase.h"
@@ -30,12 +33,15 @@
 #include <nds/arm9/sdmmc.h>
 #include <nds/arm9/exceptions.h>
 #include <fat.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <dirent.h>
+#ifndef NDS_NONET
 #include <dswifi9.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <sys/stat.h>
 #include <sys/socket.h>
-#include <dirent.h>
+#endif
 #include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -418,6 +424,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+#ifndef NDS_NONET
 static cc_bool net_supported = true;
 
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
@@ -586,6 +593,9 @@ static void InitNetworking(void) {
     Platform_LogConst("Gave up after ~10 seconds");
 	net_supported = false;
 }
+#else
+static void InitNetworking(void) { }
+#endif
 
 
 /*########################################################################################################################*

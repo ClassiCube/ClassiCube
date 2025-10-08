@@ -404,11 +404,7 @@ void Http_LogError(const char* action, const struct HttpRequest* item) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void Http_InitCommon(void) {
-#if defined CC_BUILD_NDS
-	httpOnly    = Options_GetBool(OPT_HTTP_ONLY, true);
-#else
-	httpOnly    = Options_GetBool(OPT_HTTP_ONLY, false);
-#endif
+	httpOnly    = Options_GetBool(OPT_HTTP_ONLY,    false);
 	httpsVerify = Options_GetBool(OPT_HTTPS_VERIFY, true);
 
 	Options_Get(OPT_SKIN_SERVER, &skinServer, SKINS_SERVER);

@@ -28,33 +28,33 @@ jobs:
         id: compile
         run: |
           make ds
-          export BUILD_DSI=1
+          export BUILD_NONET=1
           make ds
  
          
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube-nds.nds'
-          DEST_NAME: 'ClassiCube-nds.nds'
+          SOURCE_FILE: 'ClassiCube.nds'
+          DEST_NAME: 'ClassiCube.nds'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'build/nds/cc-arm9.elf'
-          DEST_NAME: 'ClassiCube-nds.elf'
+          DEST_NAME: 'ClassiCube.elf'
 
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube-dsi.nds'
-          DEST_NAME: 'ClassiCube-dsi.nds'
+          SOURCE_FILE: 'ClassiCube-nonet.nds'
+          DEST_NAME: 'ClassiCube-nonet.nds'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build/dsi/cc-arm9.elf'
-          DEST_NAME: 'ClassiCube-dsi.elf'
+          SOURCE_FILE: 'build/nds_nonet/cc-nonet.elf'
+          DEST_NAME: 'ClassiCube-nonet.elf'
           
           
       - uses: ./.github/actions/notify_success
