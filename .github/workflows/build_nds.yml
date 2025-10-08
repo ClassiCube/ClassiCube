@@ -53,7 +53,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'build/nds_nonet/cc-nonet.elf'
+          SOURCE_FILE: 'build/nds_nonet/cc-arm9.elf'
           DEST_NAME: 'ClassiCube-nonet.elf'
           
           
