@@ -59,6 +59,7 @@ static void Shader_Alloc(struct CCShader* shader, const u8* binData, int binSize
 
 // Switches program to one that can render current vertex format and state
 // Loads program and reloads uniforms if needed
+static void UpdateAttribFormat(void);
 static void SwitchProgram(void) {
 	struct CCShader* shader;
 	int index = 0;
@@ -69,8 +70,10 @@ static void SwitchProgram(void) {
 	shader = &shaders[index];
 	if (shader != gfx_activeShader) {
 		gfx_activeShader = shader;
-		C3D_BindProgram(&shader->program);
+		shaderProgramConfigure(&shader->program, true, false);
 	}
+	// TODO avoid explicitly calling this. but needed right now
+	UpdateAttribFormat();
 }
 
 
@@ -132,6 +135,7 @@ static void InitCitro3D(void) {
 
 	// Even though the bottom screen is 320 pixels wide, we use 400 here so that the same ortho matrix
 	// can be used for both screens. The output is clipped to the actual screen width, anyway.
+	// TODO avoid this	
 	C3D_RenderTargetInit(&bottomTarget, 240, 400);
 	C3D_RenderTargetColor(&bottomTarget, GPU_RB_RGBA8);
 	C3D_RenderTargetSetOutput(&bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
@@ -533,6 +537,10 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "-- Using 3DS --\n", NULL);
 	PrintMaxTextureInfo(info);
+
+	int total = (int)vramSpaceFree();
+	float totalMB = total / (1024.0f * 1024.0f);
+	String_Format1(info, "VRAM free: %f2 MB", &totalMB);
 }
 
 void Gfx_SetVSync(cc_bool vsync) {
@@ -571,9 +579,17 @@ void Gfx_EndFrame(void) {
 	C3D_FrameEnd(0);
 }
 
-void Gfx_OnWindowResize(void) { }
+void Gfx_OnWindowResize(void) {
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+}
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	// x and y are swapped and start from right/bottom instead of left/top
+	x = Game.Width  - w - x;
+	y = Game.Height - h - y;
+
+	C3D_SetViewport(y, x, h, w); 
+}
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 
@@ -654,8 +670,8 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-	u32 pa = osConvertVirtToPhys(ib);
-	GPUCMD_AddWrite(GPUREG_INDEXBUFFER_CONFIG, (pa - BUFFER_BASE_PADDR) | (C3D_UNSIGNED_SHORT << 31));
+	u32 phys_addr = osConvertVirtToPhys(ib);
+	pica_set_index_buffer_address(phys_addr);
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) { }
@@ -892,6 +908,9 @@ static void UpdateAttribFormat(void) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 2); // in_tex
 	}
+
+	cc_bool textured = gfx_format == VERTEX_FORMAT_TEXTURED;
+	pica_set_vsh_input_count(textured ? 3 : 2);
 }
 
 static void UpdateAttribConfig(void) {
@@ -928,7 +947,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 	
 	SwitchProgram();
-	UpdateAttribFormat();
+	//UpdateAttribFormat();
 	UpdateAttribConfig();
 	UpdateTexEnv(fmt);
 }
