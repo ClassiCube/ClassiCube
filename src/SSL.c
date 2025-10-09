@@ -201,22 +201,24 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	return 0;
 }
 
+static CC_NOINLINE cc_result SSL_GetError(SSLContext* ctx) {
+	int err;
+	if (ctx->writeError) return ctx->writeError;
+	if (ctx->readError)  return ctx->readError;
+		
+	// TODO session resumption, proper connection closing ??
+	err = br_ssl_engine_last_error(&ctx->sc.eng);
+	if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
+		return SSL_ERR_CONTEXT_DEAD;
+		
+	return SSL_ERROR_SHIFT | (err & 0xFFFF);
+}
+
 cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read) { 
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_read(&ctx->ioc, data, count);
-	int err;
-	
-	if (res < 0) {
-		if (ctx->readError) return ctx->readError;
-		
-		// TODO session resumption, proper connection closing ??
-		err = br_ssl_engine_last_error(&ctx->sc.eng);
-		if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
-			return SSL_ERR_CONTEXT_DEAD;
-		
-		return SSL_ERROR_SHIFT | (err & 0xFFFF);
-	}
+	if (res < 0) return SSL_GetError(ctx);	
 	
 	br_sslio_flush(&ctx->ioc);
 	*read = res;
@@ -227,15 +229,7 @@ cc_result SSL_WriteAll(void* ctx_, const cc_uint8* data, cc_uint32 count) {
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_write_all(&ctx->ioc, data, count);
-	
-	if (res < 0) {
-		if (ctx->writeError) {
-			return ctx->writeError;
-		} else {
-			int err = br_ssl_engine_last_error(&ctx->sc.eng);
-			return SSL_ERROR_SHIFT | (err & 0xFFFF);
-		}
-	}
+	if (res < 0) return SSL_GetError(ctx);	
 	
 	br_sslio_flush(&ctx->ioc);
 	return 0;

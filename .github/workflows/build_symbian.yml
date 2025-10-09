@@ -36,11 +36,30 @@ jobs:
           (Get-Content ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv5').Replace('$(TARGET)', 'urel') | Set-Content ClassiCube.pkg
           cmd /c "$SDK/epoc32/tools/makesis.exe ClassiCube.pkg ClassiCube.sis"
           
+          
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'misc/symbian/ClassiCube.sis'
           DEST_NAME: 'ClassiCube-Symbian.sis'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: '$pwd/SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe'
+          DEST_NAME: 'ClassiCube_s60v3.exe'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: '$pwd/SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe'
+          DEST_NAME: 'ClassiCube_s60v3.exe'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: '$pwd/SDK/epoc32/release/armv5/urel/ClassiCube_sym3.exe'
+          DEST_NAME: 'ClassiCube_sym3.exe'
           
           
       - uses: ./.github/actions/notify_success
