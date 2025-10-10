@@ -94,7 +94,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
-	if (!fat_available) return ENOSYS;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
@@ -157,12 +157,12 @@ cc_result File_Open(cc_file* file, const cc_filepath* path) {
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 

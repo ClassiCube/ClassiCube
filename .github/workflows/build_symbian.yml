@@ -54,6 +54,18 @@ jobs:
         with:
           SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe'
           DEST_NAME: 'ClassiCube_s60v3.exe'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe.sym'
+          DEST_NAME: 'ClassiCube_s60v5.elf'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe.sym'
+          DEST_NAME: 'ClassiCube_s60v3.elf'
           
           
       - uses: ./.github/actions/notify_success

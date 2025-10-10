@@ -286,12 +286,12 @@ cc_result File_Open(cc_file* file, const cc_filepath* path) {
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC, "Create");
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT, "Update");
 }
 

@@ -116,9 +116,10 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case NBT_ERR_EXPECTED_ARR: return "Expected ByteArray NBT tag";
 	case NBT_ERR_ARR_TOO_SMALL:return "ByteArray NBT tag too small";
 
-	case HTTP_ERR_NO_SSL: return "HTTPS URLs are not currently supported";
+	case HTTP_ERR_NO_SSL:       return "HTTPS URLs are not currently supported";
 	case SOCK_ERR_UNKNOWN_HOST: return "Host could not be resolved to an IP address";
-	case ERR_NO_NETWORKING: return "No working network access";
+	case ERR_NO_NETWORKING:     return "No working network access";
+	case ERR_NON_WRITABLE_FS:   return "Non-writable filesystem";
 	}
 	return NULL;
 }
