@@ -401,6 +401,15 @@ The PowerPC build will usually perform much better
 
 [Guide for Carbide.c++](misc/symbian/readme.md)
 
+#### Windows CE / PocketPC
+
+1. Install libmpfr-dev:i386 (or non-Debian equivalent)
+2. Unpack [the Windows CE GCC Toolchain](https://cegcc.sourceforge.net/) and update your $PATH to include it
+3. Add the following symbolic links in ```/usr/lib/i386-linux-gnu/``` to account for old toolchain versions:
+    * ```libmpfr.so.1``` -> ```libmpfr.so```
+    * ```libgmp.so.3``` -> ```libgmp.so```
+4. Run ```make wince```
+
 #### Other systems
 
 You'll have to write the necessary code. You should read `portability.md` in doc folder.
@@ -477,4 +486,5 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>
 Full credits are listed in [doc/sound-credits.md](doc/sound-credits.md)
+
 

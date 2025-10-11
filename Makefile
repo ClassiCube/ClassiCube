@@ -176,7 +176,7 @@ endif
 ifeq ($(PLAT),wince)
 	CC      =  arm-mingw32ce-gcc
 	OEXT    =  .exe
-	CFLAGS  += -march=armv5tej -mcpu=arm926ej-s -DUNICODE -D_WIN32_WCE
+CFLAGS  += -march=armv5te -DUNICODE -D_WIN32_WCE -std=gnu99
 	LDFLAGS =  -g
 	LIBS    =  -lcoredll -lws2
 	BUILD_DIR = build/wince
