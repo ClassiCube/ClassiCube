@@ -44,7 +44,7 @@ static CRITICAL_SECTION dir_lock;
 *#########################################################################################################################*/
 #include "main_impl.h"
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
 	cc_result res;
 	SetupProgram(0, NULL);
 
