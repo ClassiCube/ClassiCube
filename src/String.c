@@ -38,11 +38,13 @@ void String_Copy(cc_string* dst, const cc_string* src) {
 	String_AppendString(dst, src);
 }
 
-void String_CopyToRaw(char* dst, int capacity, const cc_string* src) {
+int String_CopyToRaw(char* dst, int capacity, const cc_string* src) {
 	int i, len = min(capacity, src->length);
 	for (i = 0; i < len; i++) { dst[i] = src->buffer[i]; }
+
 	/* add \0 to mark end of used portion of buffer */
 	if (len < capacity) dst[len] = '\0';
+	return len;
 }
 
 cc_string String_UNSAFE_Substring(STRING_REF const cc_string* str, int offset, int length) {
@@ -629,7 +631,8 @@ void String_AppendUtf8(cc_string* value, const void* data, int numBytes) {
 	const cc_uint8* chars = (const cc_uint8*)data;
 	int len; cc_codepoint cp; char c;
 
-	for (; numBytes > 0; numBytes -= len) {
+	for (; numBytes > 0; numBytes -= len) 
+	{
 		len = Convert_Utf8ToCodepoint(&cp, chars, numBytes);
 		if (!len) return;
 

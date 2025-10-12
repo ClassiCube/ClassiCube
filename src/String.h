@@ -51,7 +51,7 @@ CC_API cc_string String_FromReadonly(STRING_REF const char* buffer);
 CC_API void String_Copy(cc_string* dst, const cc_string* src);
 /* Copies up to capacity characters from src into dst. Appends \0 after if src->length is < capacity. */
 /* NOTE: This means the buffer MAY NOT be null-terminated. Only use with String_FromRawArray. */
-CC_API void String_CopyToRaw(char* dst, int capacity, const cc_string* src);
+int String_CopyToRaw(char* dst, int capacity, const cc_string* src);
 /* Calls String_CopyToRaw on a compile time array. */
 #define String_CopyToRawArray(buffer, src) String_CopyToRaw(buffer, sizeof(buffer), src)
 

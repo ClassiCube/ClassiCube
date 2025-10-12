@@ -149,8 +149,12 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
-	char* str = dst->buffer;
-	String_EncodeUtf8(str, path);
+	int len = String_CopyToRaw(dst->buffer, sizeof(dst->buffer) - 1, path);
+	dst->buffer[len] = '\0'; // Always null terminate just in case
+}
+
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendConst(dst, path->buffer);
 }
 
 void Directory_GetCachePath(cc_string* path) { }

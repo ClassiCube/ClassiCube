@@ -152,6 +152,10 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	// TODO
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendConst(dst, path->buffer);
+}
+
 
 void Directory_GetCachePath(cc_string* path) { }
 

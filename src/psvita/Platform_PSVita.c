@@ -91,6 +91,11 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = dst->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
 void Directory_GetCachePath(cc_string* path) { }

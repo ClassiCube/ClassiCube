@@ -200,6 +200,18 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static int retrievedWD, wd_refNum, wd_dirID;
 
+static void UpdateWorkingDirectory(void) {
+	retrievedWD = true;
+
+	WDPBRec r = { 0 };
+	PBHGetVolSync(&r);
+	wd_refNum = r.ioWDVRefNum;
+	wd_dirID  = r.ioWDDirID;
+
+	int V = r.ioWDVRefNum, D = r.ioWDDirID;
+	Platform_Log2("Working directory: %i, %i", &V, &D);
+}
+
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* buf = dst->buffer;
 	char* str = dst->buffer;
@@ -216,16 +228,13 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str   = '\0';
 	buf[0] = String_Length(buf + 1); // pascal strings
 
+	// TODO not call here? maybe in Platform_Init instead?
 	if (retrievedWD) return;
-	retrievedWD = true;
+	UpdateWorkingDirectory();
+}
 
-	WDPBRec r = { 0 };
-	PBHGetVolSync(&r);
-	wd_refNum = r.ioWDVRefNum;
-	wd_dirID  = r.ioWDDirID;
-
-	int V = r.ioWDVRefNum, D = r.ioWDDirID;
-	Platform_Log2("Working directory: %i, %i", &V, &D);
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendAll(dst, &path->buffer[1], path->buffer[0]);
 }
 
 static int DoOpenDF(const char* name, char perm, cc_file* file) {

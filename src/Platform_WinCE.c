@@ -235,6 +235,14 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* src) {
 	Platform_EncodeString(dst, src);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	int i;
+	for (i = 0; i < FILENAME_SIZE && dst->uni[i]; i++) 
+	{
+		String_Append(dst, Convert_CodepointToCP437(dst->uni[i]));
+	}
+}
+
 cc_result Directory_Create(const cc_filepath* path) {
 	WCHAR fullPath[MAX_PATH];
 	

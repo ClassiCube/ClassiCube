@@ -36,8 +36,13 @@ typedef cc_winstring cc_filepath;
 typedef struct cc_filepath_ { char buffer[NATIVE_STR_LEN]; } cc_filepath;
 #define FILEPATH_RAW(raw) ((cc_filepath*)raw)
 #endif
+
 /* Converts the provided path into a platform native file path */
 void Platform_EncodePath(cc_filepath* dst, const cc_string* src);
+/* Best attempts to convert the native file path into a string */
+/* (e.g. a native file path might be unicode, but not all */
+/*  unicode characters can be represented in code page 437) */
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path);
 
 /* Initialises the platform specific state. */
 void Platform_Init(void);

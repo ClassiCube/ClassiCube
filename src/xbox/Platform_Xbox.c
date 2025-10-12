@@ -114,6 +114,10 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str = '\0';
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendConst(dst, path->buffer);
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_filepath* path) {
