@@ -65,8 +65,10 @@ static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry select
 	struct Stream stream;
 	cc_result res;
 	struct ZipEntry entries[64];
+	cc_filepath raw_path;
 
-	res = Stream_OpenFile(&stream, path);
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Logger_SysWarn2(res, "opening", path); return; }
 
@@ -267,9 +269,11 @@ static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry*
 
 static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
 	struct Stream s;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_CreateFile(&s, path);
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_CreatePath(&s, &raw_path);
 	if (res) {
 		Logger_SysWarn2(res, "creating", path); return;
 	}

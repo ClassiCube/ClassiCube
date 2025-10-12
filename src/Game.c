@@ -594,10 +594,10 @@ void Game_TakeScreenshot(void) {
 	cc_string filename; char fileBuffer[STRING_SIZE];
 	cc_string path;     char pathBuffer[FILENAME_SIZE];
 	struct cc_datetime now;
+	cc_filepath raw_path;
 	cc_result res;
-#ifdef CC_BUILD_WEB
-	cc_filepath str;
-#else
+
+#ifndef CC_BUILD_WEB
 	struct Stream stream;
 #endif
 	Game_ScreenshotRequested = false;
@@ -609,14 +609,15 @@ void Game_TakeScreenshot(void) {
 
 #ifdef CC_BUILD_WEB
 	extern void interop_TakeScreenshot(const char* path);
-	Platform_EncodePath(&str, &filename);
-	interop_TakeScreenshot(str.buffer);
+	Platform_EncodePath(&raw_path, &filename);
+	interop_TakeScreenshot(raw_path.buffer);
 #else
 	if (!Utils_EnsureDirectory("screenshots")) return;
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "screenshots/%s", &filename);
 
-	res = Stream_CreateFile(&stream, &path);
+	Platform_EncodePath(&raw_path, &path);
+	res = Stream_CreatePath(&stream, &raw_path);
 	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
 
 	res = Gfx_TakeScreenshot(&stream);

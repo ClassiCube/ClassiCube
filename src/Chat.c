@@ -122,6 +122,7 @@ static cc_bool CreateLogsDirectory(void) {
 }
 
 static void OpenChatLog(struct cc_datetime* now) {
+	cc_filepath raw_path;
 	cc_result res;
 	int i;
 	if (Platform_ReadonlyFilesystem || !CreateLogsDirectory()) return;
@@ -137,7 +138,9 @@ static void OpenChatLog(struct cc_datetime* now) {
 			String_Format1(&logPath, "%s.txt", &logName);
 		}
 
-		res = Stream_AppendFile(&logStream, &logPath);
+		Platform_EncodePath(&raw_path, &logPath);
+		res = Stream_AppendPath(&logStream, &raw_path);
+
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
 			Logger_SysWarn2(res, "appending to", &logPath);

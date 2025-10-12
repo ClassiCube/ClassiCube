@@ -307,9 +307,9 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* src) {
 
 void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 	int i;
-	for (i = 0; i < FILENAME_SIZE && dst->uni[i]; i++) 
+	for (i = 0; i < FILENAME_SIZE && path->uni[i]; i++) 
 	{
-		String_Append(dst, Convert_CodepointToCP437(dst->uni[i]));
+		String_Append(dst, Convert_CodepointToCP437(path->uni[i]));
 	}
 }
 

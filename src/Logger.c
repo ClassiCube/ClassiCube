@@ -1165,10 +1165,14 @@ static struct Stream logStream;
 static cc_bool logOpen;
 
 void Logger_Log(const cc_string* msg) {
-	static const cc_string path = String_FromConst("client.log");
+	static const cc_string log_path = String_FromConst("client.log");
+	cc_filepath raw_path;
+
 	if (!logOpen) {
 		logOpen = true;
-		Stream_AppendFile(&logStream, &path);
+
+		Platform_EncodePath(&raw_path, &log_path);
+		Stream_AppendPath(&logStream, &raw_path);
 	}
 
 	if (!logStream.meta.file) return;

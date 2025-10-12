@@ -49,14 +49,20 @@ typedef cc_result (*FP_Stream_Write)(struct Stream* s, const cc_uint8* buffer, c
 /* Initialises default function pointers for a stream. (all read, write, seeks return an error) */
 void Stream_Init(struct Stream* s);
 
-/* Wrapper for File_Open() then Stream_FromFile() */
+/* Wrapper for Stream_OpenPath() */
 CC_API  cc_result Stream_OpenFile(      struct Stream* s, const cc_string* path);
 typedef cc_result (*FP_Stream_OpenFile)(struct Stream* s, const cc_string* path);
-/* Wrapper for File_Create() then Stream_FromFile() */
+/* Wrapper for Stream_CreatePath() */
 CC_API  cc_result Stream_CreateFile(      struct Stream* s, const cc_string* path);
 typedef cc_result (*FP_Stream_CreateFile)(struct Stream* s, const cc_string* path);
+
+/* Wrapper for File_Open() then Stream_FromFile() */
+cc_result Stream_OpenPath(  struct Stream* s, const cc_filepath* path);
+/* Wrapper for File_Create() then Stream_FromFile() */
+cc_result Stream_CreatePath(struct Stream* s, const cc_filepath* path);
 /* Wrapper for File_OpenOrCreate, then File_Seek(END), then Stream_FromFile() */
-cc_result Stream_AppendFile(struct Stream* s, const cc_string* path);
+cc_result Stream_AppendPath(struct Stream* s, const cc_filepath* path);
+
 /* Creates or overwrites a file, setting the contents to the given data. */
 cc_result Stream_WriteAllTo(const cc_string* path, const cc_uint8* data, cc_uint32 length);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */

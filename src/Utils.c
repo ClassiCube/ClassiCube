@@ -239,12 +239,14 @@ cc_result EntryList_Load(struct StringsBuffer* list, const char* file, char sepa
 
 	cc_uint8 buffer[2048];
 	struct Stream stream, buffered;
+	cc_filepath raw_path;
 	cc_result res;
 
 	path   = String_FromReadonly(file);
 	maxLen = list->_lenMask ? list->_lenMask : STRINGSBUFFER_DEF_LEN_MASK;
 	
-	res = Stream_OpenFile(&stream, &path);
+	Platform_EncodePath(&raw_path, &path);
+	res = Stream_OpenPath(&stream, &raw_path);
 	if (res == ReturnCode_FileNotFound) return res;
 	if (res) { Logger_SysWarn2(res, "opening", &path); return res; }
 
@@ -294,13 +296,15 @@ cc_result EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file) {
 void EntryList_Save(struct StringsBuffer* list, const char* file) {
 	cc_string path, entry; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
-	int i;
+	cc_filepath raw_path;
 	cc_result res;
+	int i;
 
 	String_InitArray(path, pathBuffer);
 	String_AppendConst(&path, file);
 	
-	res = Stream_CreateFile(&stream, &path);
+	Platform_EncodePath(&raw_path, &path);
+	res = Stream_CreatePath(&stream, &raw_path);
 	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
 
 	for (i = 0; i < list->count; i++) {

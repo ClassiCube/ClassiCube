@@ -1363,10 +1363,13 @@ static cc_result DoSaveMap(const cc_string* path, struct GZipState* state) {
 	static const cc_string schematic = String_FromConst(".schematic");
 	static const cc_string mine      = String_FromConst(".mine");
 	struct Stream stream, compStream;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_CreateFile(&stream, path);
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_CreatePath(&stream, &raw_path);
 	if (res) { Logger_SysWarn2(res, "creating", path); return res; }
+
 	GZip_MakeStream(&compStream, state, &stream);
 
 	if (String_CaselessEnds(path, &schematic)) {
