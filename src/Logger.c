@@ -192,6 +192,16 @@ void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path) {
 	Logger_Warn2(res, action, path, Platform_DescribeError);
 }
 
+void Logger_IOWarn2(cc_result res, const char* action, const struct cc_filepath_* path) {
+	char strBuffer[FILENAME_SIZE];
+	cc_string str;
+
+	String_InitArray(str, strBuffer);
+	Platform_DecodePath(&str, path); int len = str.length, cap = str.capacity;
+	Platform_Log3("%i,%i %c", &len,&cap, path->buffer);
+	Logger_SysWarn2(res, action, &str);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Frame dumping------------------------------------------------------*

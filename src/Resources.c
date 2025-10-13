@@ -70,11 +70,11 @@ static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry select
 	Platform_EncodePath(&raw_path, path);
 	res = Stream_OpenPath(&stream, &raw_path);
 	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_SysWarn2(res, "opening", path); return; }
+	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return; }
 
 	res = Zip_Extract(&stream, selector, NULL, 
 						entries, Array_Elems(entries));
-	if (res) Logger_SysWarn2(res, "inspecting", path);
+	if (res) Logger_IOWarn2(res, "inspecting", &raw_path);
 
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
@@ -275,14 +275,14 @@ static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entri
 	Platform_EncodePath(&raw_path, path);
 	res = Stream_CreatePath(&s, &raw_path);
 	if (res) {
-		Logger_SysWarn2(res, "creating", path); return;
+		Logger_IOWarn2(res, "creating", &raw_path); return;
 	}
 		
 	res = ZipFile_WriteEntries(&s, entries, numEntries);
-	if (res) Logger_SysWarn2(res, "making", path);
+	if (res) Logger_IOWarn2(res, "making", &raw_path);
 
 	res = s.Close(&s);
-	if (res) Logger_SysWarn2(res, "closing", path);
+	if (res) Logger_IOWarn2(res, "closing", &raw_path);
 }
 
 

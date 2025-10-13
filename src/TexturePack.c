@@ -605,7 +605,7 @@ static cc_result ExtractFromFile(const cc_string* path) {
 
 	Platform_EncodePath(&raw_path, path);
 	res = Stream_OpenPath(&stream, &raw_path);
-	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
+	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return res; }
 
 	res = ExtractFrom(&stream, path);
 	/* No point logging error for closing readonly file */

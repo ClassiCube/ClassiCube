@@ -1368,7 +1368,7 @@ static cc_result DoSaveMap(const cc_string* path, struct GZipState* state) {
 
 	Platform_EncodePath(&raw_path, path);
 	res = Stream_CreatePath(&stream, &raw_path);
-	if (res) { Logger_SysWarn2(res, "creating", path); return res; }
+	if (res) { Logger_IOWarn2(res, "creating", &raw_path); return res; }
 
 	GZip_MakeStream(&compStream, state, &stream);
 
@@ -1382,16 +1382,16 @@ static cc_result DoSaveMap(const cc_string* path, struct GZipState* state) {
 
 	if (res) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "encoding", path); return res;
+		Logger_IOWarn2(res, "encoding", &raw_path); return res;
 	}
 
 	if ((res = compStream.Close(&compStream))) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "closing", path); return res;
+		Logger_IOWarn2(res, "closing", &raw_path); return res;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", path); return res; }
+	if (res) { Logger_IOWarn2(res, "closing", &raw_path); return res; }
 	return 0;
 }
 

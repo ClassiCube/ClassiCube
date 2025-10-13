@@ -154,7 +154,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 }
 
 void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
-	const char* str = dst->buffer;
+	const char* str = path->buffer;
 	String_AppendUtf8(dst, str, String_Length(str));
 }
 

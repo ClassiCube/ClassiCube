@@ -618,15 +618,15 @@ void Game_TakeScreenshot(void) {
 
 	Platform_EncodePath(&raw_path, &path);
 	res = Stream_CreatePath(&stream, &raw_path);
-	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
+	if (res) { Logger_IOWarn2(res, "creating", &raw_path); return; }
 
 	res = Gfx_TakeScreenshot(&stream);
 	if (res) {
-		Logger_SysWarn2(res, "saving to", &path); stream.Close(&stream); return;
+		Logger_IOWarn2(res, "saving to", &raw_path); stream.Close(&stream); return;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", &path); return; }
+	if (res) { Logger_IOWarn2(res, "closing", &raw_path); return; }
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
 
 #ifdef CC_BUILD_MOBILE

@@ -226,11 +226,11 @@ static cc_result Sounds_ExtractZip(const cc_string* path) {
 
 	Platform_EncodePath(&raw_path, path);
 	res = Stream_OpenPath(&stream, &raw_path);
-	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
+	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return res; }
 
 	res = Zip_Extract(&stream, SelectZipEntry, ProcessZipEntry,
 						entries, Array_Elems(entries));
-	if (res) Logger_SysWarn2(res, "extracting", path);
+	if (res) Logger_IOWarn2(res, "extracting", &raw_path);
 
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
@@ -443,7 +443,7 @@ static void Music_RunLoop(void) {
 
 		Platform_EncodePath(&raw_path, &path);
 		res = Stream_OpenPath(&stream, &raw_path);
-		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
+		if (res) { Logger_IOWarn2(res, "opening", &raw_path); break; }
 
 		res = Music_PlayOgg(&stream);
 		if (res) { Logger_SimpleWarn2(res, "playing", &path); }

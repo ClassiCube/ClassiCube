@@ -21,17 +21,15 @@ extern const char* Platform_AppNameSuffix;
 void* TempMem_Alloc(int size);
 
 #if defined CC_BUILD_WIN || defined CC_BUILD_WINCE
-typedef struct cc_winstring_ {
+typedef struct cc_filepath_ {
 	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */
 	char ansi[NATIVE_STR_LEN]; /* String lossily represented using ANSI format */
 } cc_winstring;
 
 /* Encodes a string into the platform native string format */
 void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
-#endif
 
-#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE
-typedef cc_winstring cc_filepath;
+typedef struct cc_filepath_ cc_filepath;
 #else
 typedef struct cc_filepath_ { char buffer[NATIVE_STR_LEN]; } cc_filepath;
 #define FILEPATH_RAW(raw) ((cc_filepath*)raw)

@@ -24,16 +24,16 @@ cc_bool Utils_IsUrlPrefix(const cc_string* value) {
 }
 
 cc_bool Utils_EnsureDirectory(const char* dirName) {
-	cc_filepath path;
+	cc_filepath raw_dir;
 	cc_string dir;
 	cc_result res;
 	
 	dir = String_FromReadonly(dirName);
-	Platform_EncodePath(&path, &dir);
-	res = Directory_Create(&path);
+	Platform_EncodePath(&raw_dir, &dir);
+	res = Directory_Create(&raw_dir);
 
 	if (!res || res == ReturnCode_DirectoryExists) return true;
-	Logger_SysWarn2(res, "creating directory", &dir);
+	Logger_IOWarn2(res, "creating directory", &raw_dir);
 	return false;
 }
 
@@ -248,7 +248,7 @@ cc_result EntryList_Load(struct StringsBuffer* list, const char* file, char sepa
 	Platform_EncodePath(&raw_path, &path);
 	res = Stream_OpenPath(&stream, &raw_path);
 	if (res == ReturnCode_FileNotFound) return res;
-	if (res) { Logger_SysWarn2(res, "opening", &path); return res; }
+	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return res; }
 
 	/* ReadLine reads single byte at a time */
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
@@ -258,7 +258,7 @@ cc_result EntryList_Load(struct StringsBuffer* list, const char* file, char sepa
 
 		res = Stream_ReadLine(&buffered, &entry);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Logger_SysWarn2(res, "reading from", &path); break; }
+		if (res) { Logger_IOWarn2(res, "reading from", &raw_path); break; }
 		
 		/* whitespace lines are ignored (e.g. if user manually edits file) */
 		String_UNSAFE_TrimStart(&entry);
@@ -305,16 +305,16 @@ void EntryList_Save(struct StringsBuffer* list, const char* file) {
 	
 	Platform_EncodePath(&raw_path, &path);
 	res = Stream_CreatePath(&stream, &raw_path);
-	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
+	if (res) { Logger_IOWarn2(res, "creating", &raw_path); return; }
 
 	for (i = 0; i < list->count; i++) {
 		StringsBuffer_UNSAFE_GetRaw(list, i, &entry);
 		res = Stream_WriteLine(&stream, &entry);
-		if (res) { Logger_SysWarn2(res, "writing to", &path); break; }
+		if (res) { Logger_IOWarn2(res, "writing to", &raw_path); break; }
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", &path); }
+	if (res) { Logger_IOWarn2(res, "closing", &raw_path); }
 }
 
 cc_bool EntryList_Remove(struct StringsBuffer* list, const cc_string* key, char separator) {
