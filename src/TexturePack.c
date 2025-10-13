@@ -375,17 +375,22 @@ static int IsCached(const cc_string* url) {
 static cc_bool OpenCachedData(const cc_string* url, struct Stream* stream) {
 	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
 	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
+	cc_filepath raw_path;
 	cc_result res;
+
 	String_InitArray(mainPath, mainBuffer);
 	String_InitArray(altPath,   altBuffer);
 	
 
 	MakeCachePath(&mainPath, &altPath, url);
-	res = Stream_OpenFile(stream, &mainPath);
+	Platform_EncodePath(&raw_path, &mainPath);
+	res = Stream_OpenPath(stream,  &raw_path);
 
 	/* try fallback cache if can't find in main cache */
-	if (res == ReturnCode_FileNotFound && altPath.length)
-		res = Stream_OpenFile(stream, &altPath);
+	if (res == ReturnCode_FileNotFound && altPath.length) {
+		Platform_EncodePath(&raw_path, &altPath);
+		res = Stream_OpenPath(stream,  &raw_path);
+	}
 
 	if (res == ReturnCode_FileNotFound) return false;
 	if (res) { Logger_SysWarn2(res, "opening cache for", url); return false; }
@@ -595,9 +600,11 @@ static cc_result ExtractFromFile(const cc_string* path) {
 #else
 static cc_result ExtractFromFile(const cc_string* path) {
 	struct Stream stream;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_OpenFile(&stream, path);
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
 	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
 	res = ExtractFrom(&stream, path);

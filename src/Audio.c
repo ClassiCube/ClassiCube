@@ -221,9 +221,11 @@ static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, s
 static cc_result Sounds_ExtractZip(const cc_string* path) {
 	struct ZipEntry entries[128];
 	struct Stream stream;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_OpenFile(&stream, path);
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
 	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
 	res = Zip_Extract(&stream, SelectZipEntry, ProcessZipEntry,
@@ -422,6 +424,7 @@ static void Music_RunLoop(void) {
 	cc_string path;
 	RNGState rnd;
 	struct Stream stream;
+	cc_filepath raw_path;
 	int idx, delay;
 	cc_result res = 0;
 
@@ -438,7 +441,8 @@ static void Music_RunLoop(void) {
 		path = StringsBuffer_UNSAFE_Get(&files, idx);
 		Platform_Log1("playing music file: %s", &path);
 
-		res = Stream_OpenFile(&stream, &path);
+		Platform_EncodePath(&raw_path, &path);
+		res = Stream_OpenPath(&stream, &raw_path);
 		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
 
 		res = Music_PlayOgg(&stream);

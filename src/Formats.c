@@ -67,11 +67,14 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	struct LocationUpdate update = { 0 };
 	struct MapImporter* imp;
 	struct Stream stream;
+	cc_filepath raw_path;
 	cc_result res;
+
 	Game_Reset();
-	
 	spawn_point = &update;
-	res = Stream_OpenFile(&stream, path);
+
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
 	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
 	imp = MapImporter_Find(path);

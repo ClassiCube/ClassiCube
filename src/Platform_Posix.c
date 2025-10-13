@@ -1466,15 +1466,15 @@ static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 #if defined CC_BUILD_LINUX
 /* Read /var/lib/dbus/machine-id or /etc/machine-id for the key */
 static cc_result GetMachineID(cc_uint32* key) {
-	const cc_string idFile  = String_FromConst("/var/lib/dbus/machine-id");
-	const cc_string altFile = String_FromConst("/etc/machine-id");
+	const cc_filepath* id_path  = FILEPATH_RAW("/var/lib/dbus/machine-id");
+	const cc_filepath* alt_path = FILEPATH_RAW("/etc/machine-id");
 	char tmp[MACHINEID_LEN];
 	struct Stream s;
 	cc_result res;
 
 	/* Some machines only have dbus id, others only have etc id */
-	res = Stream_OpenFile(&s, &idFile);
-	if (res) res = Stream_OpenFile(&s, &altFile);
+	res = Stream_OpenPath(&s, id_path);
+	if (res) res = Stream_OpenPath(&s, alt_path);
 	if (res) return res;
 
 	res = Stream_Read(&s, (cc_uint8*)tmp, MACHINEID_LEN);

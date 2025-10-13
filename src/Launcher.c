@@ -463,9 +463,11 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 static cc_result ExtractTexturePack(const cc_string* path) {
 	struct ZipEntry entries[32];
 	struct Stream stream;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_OpenFile(&stream, path);
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
 	if (res == ReturnCode_FileNotFound) return res;
 	if (res) { Logger_SysWarn(res, "opening texture pack"); return res; }
 
