@@ -376,6 +376,8 @@ extern const cc_result ReturnCode_SocketDropped;
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable);
 /* Checks if the given socket is currently writable (i.e. has finished connecting) */
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
+/* Retrieves the most recent async error code (typically from connect) */
+cc_result Socket_GetLastError(cc_socket s);
 /* If the input represents an IP address, then parses the input into a single IP address */
 /* Otherwise, attempts to resolve the input via DNS into one or more IP addresses */
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs);

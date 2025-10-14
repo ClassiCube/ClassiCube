@@ -628,13 +628,17 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	//Platform_Log1("POLL WRITE: %i", &res);
 	if (res || *writable) return res;
 
-	// INPROGRESS error code returned if connect is still in progress
-	res = GetSocketError(s);
-	Platform_Log1("POLL FAIL: %i", &res);
-	if (res == EINPROGRESS) res = 0;
-	
 	if (tries++ > 20) { *writable = true; }
-	return res;
+	return Socket_GetLastError(s);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	// INPROGRESS error code returned if connect is still in progress
+	int error = GetSocketError(s);
+	Platform_Log1("POLL FAIL: %i", &error);
+	if (error == EINPROGRESS) error = 0;
+	
+	return error;
 }
 
 

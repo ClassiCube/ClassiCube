@@ -410,6 +410,10 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	return ERR_NOT_SUPPORTED;
 }
+
+cc_result Socket_GetLastError(cc_socket s) {
+	return ERR_INVALID_ARGUMENT;
+}
 #endif
 
 

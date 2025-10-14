@@ -563,12 +563,19 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	int resultSize = sizeof(cc_result);
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
-	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&res, &resultSize);
-	return res;
+	return Socket_GetLastError(s);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error   = ERR_INVALID_ARGUMENT;
+	int errSize = sizeof(error);
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&error, &errSize);
+	return error;
 }
 
 /*########################################################################################################################*

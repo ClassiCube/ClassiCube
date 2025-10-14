@@ -406,12 +406,19 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
+	return Socket_GetLastError(s);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error   = ERR_INVALID_ARGUMENT;
+	u32 errSize = sizeof(error);
+
 	return 0;
 	// TODO FIX with updated devkitpro ???
 	
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &res, resultSize);
-	return res;
+	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, errSize);
+	return error;
 }
 
 static void InitSockets(void);

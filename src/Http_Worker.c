@@ -323,6 +323,8 @@ static void HttpClientState_Reset(struct HttpClientState* state) {
 	state->autoClose   = false;
 	String_InitArray(state->header,   state->_headerBuffer);
 	String_InitArray(state->location, state->_locationBuffer);
+
+	state->req->contentLength = 0;
 }
 
 static void HttpClientState_Init(struct HttpClientState* state) {
@@ -604,7 +606,6 @@ static cc_result HttpClient_HandleRedirect(struct HttpClientState* state) {
 
 	HttpRequest_Free(state->req);
 	Platform_Log1("  Redirecting to: %s", &state->location);
-	state->req->contentLength = 0; /* TODO */
 	return 0;
 }
 
