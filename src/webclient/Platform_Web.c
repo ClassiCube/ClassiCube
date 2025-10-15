@@ -344,8 +344,16 @@ void Socket_Close(cc_socket s) {
 
 extern int interop_SocketWritable(int sock, cc_bool* writable);
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	/* returned result is negative for error */
-	return -interop_SocketWritable(s, writable);
+	// returned result is negative for error
+	int res = -interop_SocketWritable(s, writable);
+	if (res || *writable) return res;
+
+	return Socket_GetLastError(s);
+}
+
+extern int interop_SocketLastError(int sock);
+cc_result Socket_GetLastError(cc_socket s) {
+	return interop_SocketLastError(s);
 }
 
 
