@@ -589,7 +589,7 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	
 	int ERR = GetSocketError(s);
-	Platform_Log1("ERR: %i", &ERR);
+	Platform_Log1("ERW: %i", &ERR);
 	*modified = 0; return ERR;
 }
 
