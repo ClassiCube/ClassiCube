@@ -307,16 +307,16 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* r
 	int res; 
 	*read = 0;
 
-	/* interop_SocketRecv only reads one WebSocket frame at most, hence call it multiple times */
+	// interop_SocketRecv only reads one WebSocket frame at most, hence call it multiple times
 	while (count) {
-		/* returned result is negative for error */
+		// returned result is negative for error
 		res = interop_SocketRecv(s, data, count);
 
 		if (res >= 0) {
 			*read += res;
 			data  += res; count -= res;
 		} else {
-			/* EAGAIN when no more data available */
+			// EAGAIN when no more data available
 			if (res == -_EAGAIN) return *read == 0 ? _EAGAIN : 0;
 
 			return -res;
@@ -345,15 +345,13 @@ void Socket_Close(cc_socket s) {
 extern int interop_SocketWritable(int sock, cc_bool* writable);
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	// returned result is negative for error
-	int res = -interop_SocketWritable(s, writable);
-	if (res || *writable) return res;
-
-	return Socket_GetLastError(s);
+	return -interop_SocketWritable(s, writable);
 }
 
 extern int interop_SocketLastError(int sock);
 cc_result Socket_GetLastError(cc_socket s) {
-	return interop_SocketLastError(s);
+	// returned result is negative for error
+	return -interop_SocketLastError(s);
 }
 
 

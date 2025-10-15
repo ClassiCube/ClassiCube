@@ -626,10 +626,8 @@ static int tries;
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	//Platform_Log1("POLL WRITE: %i", &res);
-	if (res || *writable) return res;
-
 	if (tries++ > 20) { *writable = true; }
-	return Socket_GetLastError(s);
+	return res;
 }
 
 cc_result Socket_GetLastError(cc_socket s) {

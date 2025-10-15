@@ -284,7 +284,14 @@ static void MPConnection_TickConnect(struct ScheduledTask* task) {
 	if (res) {
 		MPConnection_FailConnect(res);
 	} else if (writable) {
-		MPConnection_FinishConnect();
+		/* The async connect call may have failed */
+		res = Socket_GetLastError(net_socket);
+
+		if (res) {
+			MPConnection_FailConnect(res);
+		} else {
+			MPConnection_FinishConnect();
+		}
 	} else if (net_connectElapsed > NET_TIMEOUT_SECS) {
 		MPConnection_FailConnect(0);
 	} else {
