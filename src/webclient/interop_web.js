@@ -706,7 +706,17 @@ mergeInto(LibraryManager.library, {
 
     var ws = sock.socket;
     if (!ws) return SOCKETS.ENOTCONN;
-    if (ws.readyState === ws.OPEN) HEAPU8[writable|0] = 1;
+    if (ws.readyState === ws.OPEN || ws.readyState == ws.CLOSED) HEAPU8[writable|0] = 1;
+
+    return 0;
+  },
+  interop_SocketLastError: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var ws = sock.socket;
+    if (!ws) return SOCKETS.ENOTCONN;
+
     return sock.error || 0;
   },
 

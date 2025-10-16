@@ -541,32 +541,39 @@ void Socket_Close(cc_socket s) {
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	fd_set set;
+	fd_set set1, set2;
 	struct timeval time = { 0 };
 	int selectCount;
 
-	FD_ZERO(&set);
-	FD_SET(s, &set);
+	set1.fd_count    = 1; set2.fd_count    = 1;
+	set1.fd_array[0] = s; set2.fd_array[0] = s;
+
+	/* As per https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-select */
+	/* A socket will be pollable (select returns true) in following cases):
+	/* - readfds: Data is available for reading, or Connection has been closed/reset/terminated. */
+	/* - writefds: Non-blocking connection attempt succeeded, or data can be sent */
+	/* - exceptfds: Non-blocking connection attempt failed, or OOB data is available for reading */
 
 	if (mode == SOCKET_POLL_READ) {
-		selectCount = select(0, &set, NULL, NULL, &time);
+		selectCount = select(1, &set1, NULL, NULL, &time);
+
+		*success = set1.fd_count != 0; 
 	} else {
-		selectCount = select(0, NULL, &set, NULL, &time);
+		selectCount = select(1, NULL, &set1, &set2, &time);
+
+		*success = set1.fd_count != 0 || set2.fd_count != 0;
 	}
 
-	if (selectCount == SOCKET_ERROR) { *success = false; return WSAGetLastError(); }
-	*success = FD_ISSET(s, &set) != 0; return 0;
+	if (selectCount >= 0) return 0;
+	*success = false; 
+	return WSAGetLastError();
 }
-
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
-
-	return Socket_GetLastError(s);
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 }
 
 cc_result Socket_GetLastError(cc_socket s) {

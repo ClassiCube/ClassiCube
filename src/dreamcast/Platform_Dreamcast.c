@@ -654,19 +654,19 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
-	
-	return Socket_GetLastError(s);
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 }
 
 cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
+	//int error = ERR_INVALID_ARGUMENT;
+	//socklen_t errSize = sizeof(error);
 
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
+	// https://github.com/KallistiOS/KallistiOS/blob/7bf0e0329b23482eae9f5231f39a0843dee407c7/kernel/net/net_tcp.c#L1493
+	// TODO not actually implemented
+	//getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	//return error;
+
+	return 0;
 }
 
 

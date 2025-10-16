@@ -589,7 +589,7 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	
 	int ERR = GetSocketError(s);
-	Platform_Log1("ERR: %i", &ERR);
+	Platform_Log1("ERW: %i", &ERR);
 	*modified = 0; return ERR;
 }
 
@@ -618,18 +618,11 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	//Platform_LogConst("POLL READ");
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
 }
 
-static int tries;
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	//Platform_Log1("POLL WRITE: %i", &res);
-	if (res || *writable) return res;
-
-	if (tries++ > 20) { *writable = true; }
-	return Socket_GetLastError(s);
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 }
 
 cc_result Socket_GetLastError(cc_socket s) {

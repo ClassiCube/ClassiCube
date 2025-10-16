@@ -371,10 +371,11 @@ extern const cc_result ReturnCode_SocketWouldBlock;
 /* Result code for when a socket connection has been dropped by the other side */
 extern const cc_result ReturnCode_SocketDropped;
 
-/* Checks if the given socket is currently readable (i.e. has data available to read) */
-/* NOTE: A closed socket is also considered readable */
+/* Polls if the given socket is currently readable */
+/* NOTE: 'readable' usually means socket either has data available to read, or is closed */
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable);
-/* Checks if the given socket is currently writable (i.e. has finished connecting) */
+/* Checks if the given socket is currently writable */
+/* NOTE: 'writable' usually means socket either has finished connecting, or is closed */
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
 /* Retrieves the most recent async error code (typically from connect) */
 cc_result Socket_GetLastError(cc_socket s);

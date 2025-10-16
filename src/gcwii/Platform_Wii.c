@@ -90,6 +90,11 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	return 0;
 }
 
+cc_result Socket_GetLastError(cc_socket s) {
+	return 0;
+	// TODO Not implemented in devkitpro libogc
+}
+
 static void InitSockets(void) {
 	int ret = net_init();
 	Platform_Log1("Network setup result: %i", &ret);

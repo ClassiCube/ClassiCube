@@ -82,6 +82,15 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	*success = FD_ISSET(s, &set) != 0; return 0;
 }
 
+cc_result Socket_GetLastError(cc_socket s) {
+	int error   = ERR_INVALID_ARGUMENT;
+	u32 errSize = sizeof(error);
+	
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, errSize);
+	return error;
+}
+
 static void InitSockets(void) {
 	// https://github.com/devkitPro/wii-examples/blob/master/devices/network/sockettest/source/sockettest.c
 	char localip[16] = {0};
