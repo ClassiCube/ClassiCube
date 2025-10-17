@@ -99,7 +99,7 @@ void Gfx_Create(void) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Index buffers-----------------------------------------------------*
+*------------------------------------------------Buffer generation/deletion-----------------------------------------------*
 *#########################################################################################################################*/
 /* Necessary to implement this way, so works on both little endian and big endian systems */
 typedef GfxResourceID (*GenGLBuffer)(void);
@@ -544,14 +544,14 @@ static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
 	}
 }
 
-static void APIENTRY gl10_deleteTexture(GLsizei n, const GLuint* textures) {
-	struct GL10Texture* tex = (struct GL10Texture*)textures[0];
+static void gl10_deleteTexture(GfxResourceID id) {
+	struct GL10Texture* tex = (struct GL10Texture*)id;
 	if (tex->pixels) Mem_Free(tex->pixels);
 	if (tex) Mem_Free(tex);
 }
 
-static void APIENTRY gl10_genTexture(GLsizei n, GLuint* textures) {
-	textures[0] = (GLuint)Mem_AllocCleared(1, sizeof(struct GL10Texture), "GL 1.0 texture");
+static GfxResourceID gl10_genTexture(void) {
+	return Mem_AllocCleared(1, sizeof(struct GL10Texture), "GL 1.0 texture");
 }
 
 static void APIENTRY gl10_texImage(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels) {
@@ -647,8 +647,8 @@ static void FallbackOpenGL(void) {
 	_glTexCoordPointer = gl10_texCoordPointer; _glVertexPointer = gl10_vertexPointer;
 
 	_glBindTexture    = gl10_bindTexture;
-	_glGenTextures    = gl10_genTexture;
-	_glDeleteTextures = gl10_deleteTexture;
+	genTexture        = gl10_genTexture;
+	delTexture        = gl10_deleteTexture;
 	_glTexImage2D     = gl10_texImage;
 	_glTexSubImage2D  = gl10_texSubImage;
 

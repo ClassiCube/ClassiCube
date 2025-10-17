@@ -65,6 +65,28 @@ static void* FastAllocTempMem(int size) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------Buffer generation/deletion-----------------------------------------------*
+*#########################################################################################################################*/
+/* Necessary to implement this way, so works on both little endian and big endian systems */
+typedef GfxResourceID (*GenGLTexture)(void);
+typedef void (*DelGLTexture)(GfxResourceID id);
+
+static GfxResourceID defaultGenTexture(void) {
+	GLuint buf = 0;
+	_glGenTextures(1, &buf);
+	return uint_to_ptr(buf);
+}
+
+static void defaultDelTexture(GfxResourceID id) {
+	GLuint buf = ptr_to_uint(id);
+	_glDeleteTextures(1, &buf);
+}
+
+static GenGLTexture genTexture = defaultGenTexture;
+static DelGLTexture delTexture = defaultDelTexture;
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool convert_rgba;
@@ -172,8 +194,7 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	GfxResourceID texId = NULL;
-	_glGenTextures(1, (GLuint*)&texId);
+	GfxResourceID texId = genTexture();
 	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 
@@ -210,8 +231,8 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GLuint id = ptr_to_uint(*texId);
-	if (id) _glDeleteTextures(1, &id);
+	GfxResourceID id = *texId;
+	if (id) delTexture(id);
 	*texId = 0;
 }
 
