@@ -308,24 +308,34 @@ struct HttpClientState {
 	struct HttpConnection* conn;
 	struct HttpRequest* req;
 	cc_uint32 dataLeft; /* Number of bytes still to read from the current chunk or body */
-	int chunked;
-	cc_bool autoClose;
-	cc_string header, location;
-	struct HttpUrl url;
+	cc_bool chunked;    /* Whether content is being transferred using HTTP chunks */
+	cc_bool autoClose;  /* TODO Whether connection should be dropped after request completed */
+	cc_bool retried;    /* Whether request has been retried due to SSL context being closed/dropped */
+	cc_uint8 redirects; /* Number of times current HTTP request has been redirected */
+	cc_string header;   /* Current header being parsed */
+	cc_string location; /* URL to redirect to */
+	struct HttpUrl url; /* Current URL (may not be same as original URL after redirecting) */
 	char _headerBuffer[HTTP_HEADER_MAX_LENGTH];
 	char _locationBuffer[HTTP_LOCATION_MAX_LENGTH];
 };
 
 static void HttpClientState_Reset(struct HttpClientState* state) {
-	state->state       = HTTP_RESPONSE_STATE_INITIAL;
-	state->chunked     = 0;
-	state->dataLeft    = 0;
-	state->autoClose   = false;
+	state->state     = HTTP_RESPONSE_STATE_INITIAL;
+	state->chunked   = false;
+	state->dataLeft  = 0;
+	state->autoClose = false;
+
 	String_InitArray(state->header,   state->_headerBuffer);
 	String_InitArray(state->location, state->_locationBuffer);
 }
 
-static void HttpClientState_Init(struct HttpClientState* state) {
+static void HttpClientState_Init(struct HttpClientState* state, struct HttpRequest* req) {
+	cc_string url    = String_FromRawArray(req->url);
+	state->req       = req;
+	state->retried   = false;
+	state->redirects = 0;
+
+	HttpUrl_Parse(&url, &state->url);
 	HttpClientState_Reset(state);
 }
 
@@ -638,15 +648,8 @@ static const char* verbs[] = { "GET", "HEAD", "POST" };
 
 static cc_result HttpBackend_Do(struct HttpRequest* req) {
 	struct HttpClientState state;
-	cc_bool retried = false;
-	int redirects   = 0;
-	cc_string url;
 	cc_result res;
-
-	HttpClientState_Init(&state);
-	url = String_FromRawArray(req->url);
-	HttpUrl_Parse(&url, &state.url);
-	state.req = req;
+	HttpClientState_Init(&state, req);
 
 	for (;;) {
 		Platform_Log4("Fetching %c%s%s (%c)", state.url.https ? "https://" : "http://", 
@@ -654,27 +657,27 @@ static cc_result HttpBackend_Do(struct HttpRequest* req) {
 
 		res = HttpBackend_PerformRequest(&state);
 		/* TODO: Can we handle this while preserving the TCP connection */
-		if (res == SSL_ERR_CONTEXT_DEAD && !retried) {
+		if (res == SSL_ERR_CONTEXT_DEAD && !state.retried) {
 			Platform_LogConst("Resetting connection due to SSL context being dropped..");
 			res = HttpBackend_PerformRequest(&state);
-			retried = true;
+			state.retried = true;
 		}
-		if (res == HTTP_ERR_NO_RESPONSE && !retried) {
+		if (res == HTTP_ERR_NO_RESPONSE && !state.retried) {
 			Platform_LogConst("Resetting connection due to empty response..");
 			res = HttpBackend_PerformRequest(&state);
-			retried = true;
+			state.retried = true;
 		}
-		if (res == ReturnCode_SocketDropped && !retried) {
+		if (res == ReturnCode_SocketDropped && !state.retried) {
 			Platform_LogConst("Resetting connection due to being dropped..");
 			res = HttpBackend_PerformRequest(&state);
-			retried = true;
+			state.retried = true;
 		}
 
 		if (res || !HttpClient_IsRedirect(req)) break;
-		if (redirects >= 20) return HTTP_ERR_REDIRECTS;
+		if (state.redirects >= 20) return HTTP_ERR_REDIRECTS;
 
 		/* TODO FOLLOW LOCATION PROPERLY */
-		redirects++;
+		state.redirects++;
 		res = HttpClient_HandleRedirect(&state);
 		if (res) break;
 		HttpClientState_Reset(&state);
