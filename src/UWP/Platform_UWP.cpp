@@ -526,7 +526,7 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	set1.fd_array[0] = s; set2.fd_array[0] = s;
 
 	/* As per https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-select */
-	/* A socket will be pollable (select returns true) in following cases):
+	/* A socket will be pollable (select returns true) in following cases): */
 	/* - readfds: Data is available for reading, or Connection has been closed/reset/terminated. */
 	/* - writefds: Non-blocking connection attempt succeeded, or data can be sent */
 	/* - exceptfds: Non-blocking connection attempt failed, or OOB data is available for reading */
