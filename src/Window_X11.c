@@ -346,13 +346,15 @@ static void ApplyIcon(Window win) {
 					(unsigned char*)CCIcon_Data, CCIcon_Size);
 }
 
-static XVisualInfo Select2DVisual(void) {
+static XVisualInfo GetDefaultVisual(void) {
 	XVisualInfo info = { 0 };
 	int screen  = DefaultScreen(win_display);
 	info.depth  = DefaultDepth(win_display, screen);
 	info.visual = DefaultVisual(win_display, screen);
 	return info;
 }
+
+#define GetVisualID(viz) (viz.visual ? viz.visual->visualid : 0)
 
 static void DoCreateWindow(int width, int height, int _2d) {
 	XSetWindowAttributes attributes = { 0 };
@@ -367,14 +369,16 @@ static void DoCreateWindow(int width, int height, int _2d) {
 	y = Display_CentreY(height);
 	RegisterAtoms();
 
-#if CC_GFX_BACKEND_IS_GL()
-	win_visual = _2d ? Select2DVisual() : GLContext_SelectVisual();
-#else
-	win_visual = Select2DVisual();
-#endif
-	visualID = win_visual.visual ? win_visual.visual->visualid : 0;
+	win_visual = GetDefaultVisual();
+	visualID   = GetVisualID(win_visual);
+	Platform_Log2("Display defaults (depth: %i, visual: %h)", &win_visual.depth, &visualID);
 
+#if CC_GFX_BACKEND_IS_GL()
+	if (!_2d) win_visual = GLContext_SelectVisual();
+#endif
+	visualID = GetVisualID(win_visual);
 	Platform_Log2("Creating window (depth: %i, visual: %h)", &win_visual.depth, &visualID);
+
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
 	attributes.event_mask = win_eventMask;
 
@@ -1430,7 +1434,7 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if CC_GFX_BACKEND_IS_GL() && defined CC_BUILD_EGL
 static XVisualInfo GLContext_SelectVisual(void) {
-	XVisualInfo info = Select2DVisual();
+	XVisualInfo info = GetDefaultVisual();
 	ctx_visualID = info.visual ? info.visual->visualid : 0;
 	return info;
 }
