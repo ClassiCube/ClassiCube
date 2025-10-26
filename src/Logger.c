@@ -578,6 +578,10 @@ String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13
 String_Format3(str, "mal=%x mah=%x gbr=%x"        _NL, REG_GET_MACL(), REG_GET_MACH(), REG_GET_GBR()); \
 String_Format2(str, "pc =%x ra =%x"               _NL, REG_GET_PC(), REG_GET_RA());
 
+#define Dump_E2K() \
+String_Format4(str, "ps =%x pcs=%x sbr=%x usd=%x" _NL, REG_GET_PSP(), REG_GET_PCSP(), REG_GET_SBR(), REG_GET_USD()); \
+String_Format1(str, "ip =%x"                      _NL, REG_GET_IP());
+
 #if defined CC_BUILD_WIN
 /* See CONTEXT in WinNT.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
@@ -694,6 +698,8 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #if __PPC__ && __WORDSIZE == 32
 	/* See sysdeps/unix/sysv/linux/powerpc/sys/ucontext.h in glibc */
 	mcontext_t* r = ((ucontext_t*)ctx)->uc_mcontext.uc_regs;
+#elif __e2k__
+	struct sigcontext* r = &((ucontext_t*)ctx)->uc_mcontext;
 #else
 	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 #endif
@@ -752,6 +758,13 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GNUM(num)     &r->__gregs[num]
 	#define REG_GET_PC()      &r->__gregs[REG_PC]
 	Dump_RISCV()
+#elif defined __e2k__
+	#define REG_GET_PSP()     &r->psp_hi  /* Procedure Stack Pointer */
+	#define REG_GET_PCSP()    &r->pcsp_hi /* Procedure Chain Stack Pointer */
+	#define REG_GET_SBR()     &r->sbr     /* User Stack Base Pointer */
+	#define REG_GET_USD()     &r->usd_hi  /* User Stack Pointer */
+	#define REG_GET_IP()      &r->cr0_hi  /* CR0 contains Instruction Pointer */
+	Dump_E2K()
 #else
 	#error "Unknown CPU architecture"
 #endif
