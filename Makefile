@@ -25,6 +25,8 @@ TRACK_DEPENDENCIES=1
 LINK = $(CC)
 # Whether to add BearSSL source files to list of files to compile
 BEARSSL=1
+# Optimization level in release builds
+OPT_LEVEL=1
 
 
 #################################################################
@@ -79,6 +81,11 @@ endif
 ifeq ($(PLAT),linux)
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
 	BUILD_DIR = build/linux
+
+	# Detect MCST LCC, where -O3 is about equivalent to -O1
+	ifeq ($(shell $(CC) -dM -E -xc - < /dev/null | grep -o __MCST__),__MCST__)
+		OPT_LEVEL=3
+	endif
 endif
 
 ifeq ($(PLAT),sunos)
@@ -201,7 +208,7 @@ ifeq ($(BEARSSL),1)
 endif
 
 ifdef RELEASE
-	CFLAGS += -O1
+	CFLAGS += -O$(OPT_LEVEL)
 else
 	CFLAGS += -g
 endif
