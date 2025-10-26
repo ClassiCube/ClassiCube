@@ -586,6 +586,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 	int res = getaddrinfo(host, portRaw, &hints, &result);
 	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
+	if (res == EAI_SYSTEM) return errno;
 	if (res) return res;
 
 	int i = 0;
