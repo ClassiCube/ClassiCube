@@ -183,7 +183,6 @@ void SoundArray_Load(const cc_string* file, struct Stream* stream) {
 	group->soundNames[group->count] = String_Init(soundNameStr, name.length, name.length);
 	String_Copy(&group->soundNames[group->count], &name);
 
-	Chat_Add1("&cLoaded '%s'", &group->soundNames[group->count]);
 	snd = &group->sounds[group->count];
 	res = Sound_ReadWaveData(stream, snd);
 
