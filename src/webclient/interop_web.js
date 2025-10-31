@@ -1406,9 +1406,8 @@ mergeInto(LibraryManager.library, {
         stream.position += bytesWritten;
         return bytesWritten;
       },
-      readFile:function(path, opts) {
-        opts = opts || {};
-        opts.encoding = opts.encoding || 'binary';
+      readFile:function(path, encoding) {
+        encoding = encoding || 'binary';
         
         var ret;
         var stream = CCFS.open(path, 0); // O_RDONLY
@@ -1416,12 +1415,12 @@ mergeInto(LibraryManager.library, {
         var buf    = new Uint8Array(length);
         CCFS.read(stream, buf, 0, length);
         
-        if (opts.encoding === 'utf8') {
+        if (encoding === 'utf8') {
           ret = UTF8ArrayToString(buf, 0);
-        } else if (opts.encoding === 'binary') {
+        } else if (encoding === 'binary') {
           ret = buf;
         } else {
-          throw new Error('Invalid encoding type "' + opts.encoding + '"');
+          throw new Error("Invalid encoding: " + encoding);
         }
         
         CCFS.close(stream);
