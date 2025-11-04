@@ -331,6 +331,7 @@ static void ShowCinematicBars() {
 
 	if (!bars_VB) bars_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, BARS_VB_COUNT);
 	if (!bars_VB) return;
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
 	count = Gui.BarSize == 1.0f ? 4 : BARS_VB_COUNT;
 	color = Gui.CinematicBarColor;
@@ -348,7 +349,6 @@ static void ShowCinematicBars() {
 	}
 
 	Gfx_UnlockDynamicVb(bars_VB);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx_DrawVb_IndexedTris(count);
 }
 
