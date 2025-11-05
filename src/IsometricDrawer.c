@@ -127,13 +127,8 @@ void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state) {
 
 void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
 	if (Blocks.Draw[block] == DRAW_GAS) return;
-	
+
 	iso_posX = x; iso_posY = y;
-	/* See comment in Gfx_Make2DQuad() for why 0.5 is subtracted in D3D9 */
-	/* TODO pass as arguments? test diff */
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
-	iso_posX -= 0.5f; iso_posY -= 0.5f;
-#endif
 
 	if (Blocks.Draw[block] == DRAW_SPRITE) {
 		IsometricDrawer_Flat(block, size);
