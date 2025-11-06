@@ -61,7 +61,6 @@ void Window_PreInit(void) {
 }
 
 void Window_Init(void) {
-	DisplayInfo.Depth  = 4; // 32 bit TODO wrong, this is actually 4 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 
@@ -114,7 +113,7 @@ void Window_RequestClose(void) {
 *#########################################################################################################################*/
 static void ProcessTouchInput(void) {
 	static int prev_touchcount = 0;
-	HidTouchScreenState state = {0};
+	HidTouchScreenState state = { 0 };
 	hidGetTouchScreenStates(&state, 1);
 
 	if (state.count) {
@@ -227,23 +226,19 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// Retrieve the framebuffer
 	cc_uint32 stride;
 	cc_uint32* framebuf = (cc_uint32*)framebufferBegin(&fb, &stride);
 
-	// flip upside down
-	for (cc_uint32 y = r.y; y < r.y + r.height; y++)
+	for (int y = r.y; y < r.y + r.height; y++)
 	{
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
 		cc_uint32* dst = framebuf + y * stride / sizeof(cc_uint32);
 
-		for (cc_uint32 x = r.x; x < r.x + r.width; x++)
+		for (int x = r.x; x < r.x + r.width; x++)
 		{
 			dst[x] = src[x];
 		}
 	}
-
-	// We're done rendering, so we end the frame here.
 	framebufferEnd(&fb);
 }
 
@@ -255,6 +250,12 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
+#include <EGL/egl.h>
+static EGLDisplay ctx_display;
+static EGLContext ctx_context;
+static EGLSurface ctx_surface;
+static EGLConfig  ctx_config;
+
 static void GLContext_InitSurface(void) {
 	NWindow* window = (NWindow*)Window_Main.Handle.ptr;
 	if (!window) return; /* window not created or lost */
@@ -272,6 +273,80 @@ static void GLContext_InitSurface(void) {
 	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
+
+static void GLContext_FreeSurface(void) {
+	if (!ctx_surface) return;
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	eglDestroySurface(ctx_display, ctx_surface);
+	ctx_surface = NULL;
+}
+
+void GLContext_Create(void) {
+	static const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+	static const EGLint attribs[] = {
+		EGL_RED_SIZE,          8, EGL_GREEN_SIZE,  8,
+		EGL_BLUE_SIZE,         8, EGL_ALPHA_SIZE,  0,
+		EGL_DEPTH_SIZE,        GLCONTEXT_DEFAULT_DEPTH,
+		EGL_STENCIL_SIZE,      0,
+		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
+		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES2_BIT, // EGL_OPENGL_BIT
+		EGL_NONE
+	};
+
+	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(ctx_display, NULL, NULL);
+	eglBindAPI(EGL_OPENGL_ES_API);
+
+	EGLConfig configs[64];
+	EGLint numConfig = 0;
+
+	eglChooseConfig(ctx_display, attribs, configs, 64, &numConfig);
+	ctx_config = configs[0];
+
+	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
+	if (!ctx_context) Process_Abort2(eglGetError(), "Failed to create EGL context");
+	GLContext_InitSurface();
+}
+
+void GLContext_Update(void) {
+	GLContext_FreeSurface();
+	GLContext_InitSurface();
+}
+
+cc_bool GLContext_TryRestore(void) {
+	GLContext_FreeSurface();
+	GLContext_InitSurface();
+	return ctx_surface != NULL;
+}
+
+void GLContext_Free(void) {
+	GLContext_FreeSurface();
+	eglDestroyContext(ctx_display, ctx_context);
+	eglTerminate(ctx_display);
+}
+
+void* GLContext_GetAddress(const char* function) {
+	return (void*)eglGetProcAddress(function);
+}
+
+cc_bool GLContext_SwapBuffers(void) {
+	if (!ctx_surface) return false;
+	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
+
+	EGLint err = eglGetError();
+	/* TODO: figure out what errors need to be handled here */
+	Process_Abort2(err, "Failed to swap buffers");
+	return false;
+}
+
+void GLContext_SetVSync(cc_bool vsync) {
+	eglSwapInterval(ctx_display, vsync);
+}
+
+void GLContext_GetApiInfo(cc_string* info) { }
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
