@@ -59,7 +59,7 @@ cc_bool Updater_Clean(void) { return true; }
 
 cc_result Updater_GetBuildTime(cc_uint64* t) {
 	JNIEnv* env;
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL);
 	return 0;
 }
@@ -75,7 +75,7 @@ cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
 void Platform_TryLogJavaError(void) {
 	JNIEnv* env;
 	jthrowable err;
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 
 	err = (*env)->ExceptionOccurred(env);
 	if (!err) return;
@@ -106,7 +106,7 @@ void Directory_GetCachePath(cc_string* path) {
 /* (see https://developer.android.com/training/articles/perf-jni#threads */
 void* ExecThread(void* param) {
 	JNIEnv* env;
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 
 	((Thread_StartFunc)param)();
 	(*VM_Ptr)->DetachCurrentThread(VM_Ptr);
@@ -162,7 +162,17 @@ cc_string JavaGetString(JNIEnv* env, jstring str, char* buffer) {
 	return dst;
 }
 
-jobject JavaMakeString(JNIEnv* env, const cc_string* str) {
+void Java_DecodeString(JNIEnv* env, jstring str, cc_string* dst) {
+	const jchar* src;
+	jsize len;
+
+	src = (*env)->GetStringChars(env,  str, NULL);
+	len = (*env)->GetStringLength(env, str);
+	String_AppendUtf16(dst, src, len * 2);
+	(*env)->ReleaseStringChars(env, str, src);
+}
+
+jobject Java_AllocString(JNIEnv* env, const cc_string* str) {
 	cc_uint8 tmp[2048 + 4];
 	cc_uint8* cur;
 	int i, len = 0;
@@ -175,8 +185,9 @@ jobject JavaMakeString(JNIEnv* env, const cc_string* str) {
 	return (*env)->NewStringUTF(env, (const char*)tmp);
 }
 
-jbyteArray JavaMakeBytes(JNIEnv* env, const void* src, cc_uint32 len) {
+jbyteArray Java_AllocBytes(JNIEnv* env, const void* src, cc_uint32 len) {
 	if (!len) return NULL;
+	
 	jbyteArray arr = (*env)->NewByteArray(env, len);
 	(*env)->SetByteArrayRegion(env, arr, 0, len, src);
 	return arr;
@@ -200,44 +211,37 @@ jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* a
 void JavaCall_String_Void(const char* name, const cc_string* value) {
 	JNIEnv* env;
 	jvalue args[1];
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 
-	args[0].l = JavaMakeString(env, value);
+	args[0].l = Java_AllocString(env, value);
 	JavaCallVoid(env, name, "(Ljava/lang/String;)V", args);
-	(*env)->DeleteLocalRef(env, args[0].l);
-}
-
-static void ReturnString(JNIEnv* env, jobject obj, cc_string* dst) {
-	const jchar* src;
-	jsize len;
-	if (!obj) return;
-
-	src = (*env)->GetStringChars(env,  obj, NULL);
-	len = (*env)->GetStringLength(env, obj);
-	String_AppendUtf16(dst, src, len * 2);
-	(*env)->ReleaseStringChars(env, obj, src);
-	(*env)->DeleteLocalRef(env,     obj);
+	
+	Java_DeleteLocalRef(env, args[0].l);
 }
 
 void JavaCall_Void_String(const char* name, cc_string* dst) {
 	JNIEnv* env;
 	jobject obj;
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 
 	obj = JavaCallObject(env, name, "()Ljava/lang/String;", NULL);
-	ReturnString(env, obj, dst);
+	if (obj) Java_DecodeString(env, obj, dst);
+	
+	Java_DeleteLocalRef(env, obj);
 }
 
 void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* dst) {
 	JNIEnv* env;
 	jobject obj;
 	jvalue args[1];
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 
-	args[0].l = JavaMakeString(env, arg);
+	args[0].l = Java_AllocString(env, arg);
 	obj       = JavaCallObject(env, name, "(Ljava/lang/String;)Ljava/lang/String;", args);
-	ReturnString(env, obj, dst);
-	(*env)->DeleteLocalRef(env, args[0].l);
+	if (obj) Java_DecodeString(env, obj, dst);
+	
+	Java_DeleteLocalRef(env, args[0].l);
+	Java_DeleteLocalRef(env, obj);
 }
 
 
@@ -261,6 +265,7 @@ static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
 	Thread_Run(&thread, android_main, 1024 * 1024, "Game"); // TODO check stack size needed
 	Thread_Detach(thread);
 }
+
 static const JNINativeMethod methods[] = {
 	{ "updateInstance", "()V", java_updateInstance },
 	{ "runGameAsync",   "()V", java_runGameAsync }
@@ -272,10 +277,11 @@ CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	jclass klass;
 	JNIEnv* env;
 	VM_Ptr = vm;
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 
 	klass     = (*env)->FindClass(env, "com/classicube/MainActivity");
 	App_Class = (*env)->NewGlobalRef(env, klass);
-	JavaRegisterNatives(env, methods);
+	
+	Java_RegisterNatives(env, methods);
 	return JNI_VERSION_1_4;
 }

@@ -30,6 +30,7 @@ static SLInterfaceID* _SL_IID_ENGINE;
 static SLInterfaceID* _SL_IID_BUFFERQUEUE;
 static SLInterfaceID* _SL_IID_PLAYBACKRATE;
 static SLInterfaceID* _SL_IID_VOLUME;
+
 static const cc_string slLib = String_FromConst("libOpenSLES.so");
 
 static cc_bool LoadSLFuncs(void) {

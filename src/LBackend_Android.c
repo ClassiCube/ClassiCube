@@ -111,8 +111,10 @@ static void JNICALL java_drawBackground(JNIEnv* env, jobject o, jobject bmp) {
 
 void LBackend_Redraw(void) {
     JNIEnv* env;
-    JavaGetCurrentEnv(env);
-    JavaCallVoid(env, "redrawBackground", "()V", NULL);
+    Java_GetCurrentEnv(env);
+	
+    jmethodID method = Java_GetIMethod(env, "redrawBackground", "()V");
+    Java_ICall_Void(env, method, NULL);
 }
 
 static void LBackend_ButtonUpdateBackground(struct LButton* btn);
@@ -154,7 +156,8 @@ static int ToAndroidColor(BitmapCol color) {
 
 static jstring JNICALL java_nextTextPart(JNIEnv* env, jobject o, jstring total, jintArray state) {
     char buffer[NATIVE_STR_LEN];
-    cc_string text = JavaGetString(env, total, buffer);
+	// TODO should it really be raw?
+    cc_string text = Java_DecodeRaw(env, total, buffer);
 
     jint* state_ = (*env)->GetIntArrayElements(env, state, NULL);
     text.buffer += state_[0];
@@ -170,7 +173,7 @@ static jstring JNICALL java_nextTextPart(JNIEnv* env, jobject o, jstring total, 
     state_[1] = ToAndroidColor(color);
 
     (*env)->ReleaseIntArrayElements(env, state, state_, 0);
-    return JavaMakeString(env, &part);
+    return Java_AllocString(env, &part);
 }
 
 
@@ -205,29 +208,30 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
 }
 
 static void LBackend_ButtonShow(struct LButton* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[6];
 
     LBackend_GetLayoutArgs(w, args);
     args[4].i = w->_textWidth;
     args[5].i = w->_textHeight;
 
-    jmethodID method = JavaGetIMethod(env, "buttonAdd", "(IIIIII)I");
-    w->meta = (void*)JavaICall_Int(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "buttonAdd", "(IIIIII)I");
+    w->meta = (void*)Java_ICall_Int(env, method, args);
 }
 
 void LBackend_ButtonUpdate(struct LButton* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[2];
     if (!w->meta) return;
 
     args[0].i = (int)w->meta;
-    args[1].l = JavaMakeString(env, &w->text);
+    args[1].l = Java_AllocString(env, &w->text);
 
     // TODO share logic with LabelUpdate/ButtonUpdate
-    jmethodID method = JavaGetIMethod(env, "buttonUpdate", "(ILjava/lang/String;)V");
-    JavaICall_Void(env, method, args);
-    (*env)->DeleteLocalRef(env, args[1].l);
+    jmethodID method = Java_GetIMethod(env, "buttonUpdate", "(ILjava/lang/String;)V");
+    Java_ICall_Void(env, method, args);
+	
+    Java_DeleteLocalRef(env, args[1].l);
 }
 void LBackend_ButtonDraw(struct LButton* w) { }
 
@@ -274,13 +278,13 @@ static void JNICALL java_makeButtonDefault(JNIEnv* env, jobject o, jobject bmp) 
 }
 
 static void LBackend_ButtonUpdateBackground(struct LButton* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[1];
     if (!w->meta) return;
 
     args[0].i = (int)w->meta;
-    jmethodID method = JavaGetIMethod(env, "buttonUpdateBackground", "(I)V");
-    JavaICall_Void(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "buttonUpdateBackground", "(I)V");
+    Java_ICall_Void(env, method, args);
 }
 
 
@@ -290,21 +294,21 @@ static void LBackend_ButtonUpdateBackground(struct LButton* w) {
 void LBackend_CheckboxInit(struct LCheckbox* w) { }
 
 static void LBackend_CheckboxShow(struct LCheckbox* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[6];
 
     LBackend_GetLayoutArgs(w, args);
-    args[4].l = JavaMakeString(env, &w->text);
+    args[4].l = Java_AllocString(env, &w->text);
     args[5].z = w->value;
 
-    jmethodID method = JavaGetIMethod(env, "checkboxAdd", "(IIIILjava/lang/String;Z)I");
-    w->meta = (void*)JavaICall_Int(env, method, args);
-    (*env)->DeleteLocalRef(env, args[4].l);
+    jmethodID method = Java_GetIMethod(env, "checkboxAdd", "(IIIILjava/lang/String;Z)I");
+    w->meta = (void*)Java_ICall_Int(env, method, args);
+    Java_DeleteLocalRef(env, args[4].l);
 }
 void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 
 void LBackend_CheckboxUpdate(struct LCheckbox* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[2];
     if (!w->meta) return;
 
@@ -312,8 +316,8 @@ void LBackend_CheckboxUpdate(struct LCheckbox* w) {
     args[1].z = w->value;
 
     // TODO share logic with LabelUpdate/ButtonUpdate
-    jmethodID method = JavaGetIMethod(env, "checkboxUpdate", "(IZ)V");
-    JavaICall_Void(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "checkboxUpdate", "(IZ)V");
+    Java_ICall_Void(env, method, args);
 }
 
 
@@ -325,32 +329,32 @@ void LBackend_InputInit(struct LInput* w, int width) {
 }
 
 static void LBackend_InputShow(struct LInput* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[8];
 
     LBackend_GetLayoutArgs(w, args);
     args[4].i = w->_textHeight;
     args[5].i = Display_ScaleY(LINPUT_HEIGHT);
     args[6].i = w->inputType;
-    args[7].l = JavaMakeConst(env, w->hintText);
+    args[7].l = Java_AllocConst(env, w->hintText);
 
-    jmethodID method = JavaGetIMethod(env, "inputAdd", "(IIIIIIILjava/lang/String;)I");
-    w->meta = (void*)JavaICall_Int(env, method, args);
-    (*env)->DeleteLocalRef(env, args[7].l);
+    jmethodID method = Java_GetIMethod(env, "inputAdd", "(IIIIIIILjava/lang/String;)I");
+    w->meta = (void*)Java_ICall_Int(env, method, args);
+    Java_DeleteLocalRef(env, args[7].l);
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[2];
     if (!w->meta) return;
 
     args[0].i = (int)w->meta;
-    args[1].l = JavaMakeString(env, &w->text);
+    args[1].l = Java_AllocString(env, &w->text);
 
     // TODO share logic with LabelUpdate/ButtonUpdate
-    jmethodID method = JavaGetIMethod(env, "inputUpdate", "(ILjava/lang/String;)V");
-    JavaICall_Void(env, method, args);
-    (*env)->DeleteLocalRef(env, args[1].l);
+    jmethodID method = Java_GetIMethod(env, "inputUpdate", "(ILjava/lang/String;)V");
+    Java_ICall_Void(env, method, args);
+    Java_DeleteLocalRef(env, args[1].l);
 }
 
 void LBackend_InputTick(struct LInput* w) { }
@@ -365,26 +369,26 @@ void LBackend_InputDraw(struct LInput* w) { }
 void LBackend_LabelInit(struct LLabel* w) { }
 
 static void LBackend_LabelShow(struct LLabel* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[4];
     LBackend_GetLayoutArgs(w, args);
 
-    jmethodID method = JavaGetIMethod(env, "labelAdd", "(IIII)I");
-    w->meta = (void*)JavaICall_Int(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "labelAdd", "(IIII)I");
+    w->meta = (void*)Java_ICall_Int(env, method, args);
 }
 
 void LBackend_LabelUpdate(struct LLabel* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[2];
     if (!w->meta) return;
 
     args[0].i = (int)w->meta;
-    args[1].l = JavaMakeString(env, &w->text);
+    args[1].l = Java_AllocString(env, &w->text);
 
     // TODO share logic with LabelUpdate/ButtonUpdate
-    jmethodID method = JavaGetIMethod(env, "labelUpdate", "(ILjava/lang/String;)V");
-    JavaICall_Void(env, method, args);
-    (*env)->DeleteLocalRef(env, args[1].l);
+    jmethodID method = Java_GetIMethod(env, "labelUpdate", "(ILjava/lang/String;)V");
+    Java_ICall_Void(env, method, args);
+    Java_DeleteLocalRef(env, args[1].l);
 }
 void LBackend_LabelDraw(struct LLabel* w) { }
 
@@ -397,7 +401,7 @@ void LBackend_LineInit(struct LLine* w, int width) {
 }
 
 static void LBackend_LineShow(struct LLine* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[7];
 
     LBackend_GetLayoutArgs(w, args);
@@ -405,8 +409,8 @@ static void LBackend_LineShow(struct LLine* w) {
     args[5].i = Display_ScaleY(LLINE_HEIGHT);
     args[6].i = ToAndroidColor(LLine_GetColor());
 
-    jmethodID method = JavaGetIMethod(env, "lineAdd", "(IIIIIII)I");
-    w->meta = (void*)JavaICall_Int(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "lineAdd", "(IIIIIII)I");
+    w->meta = (void*)Java_ICall_Int(env, method, args);
 }
 void LBackend_LineDraw(struct LLine* w) { }
 
@@ -420,7 +424,7 @@ void LBackend_SliderInit(struct LSlider* w, int width, int height) {
 }
 
 static void LBackend_SliderShow(struct LSlider* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[7];
 
     LBackend_GetLayoutArgs(w, args);
@@ -428,20 +432,20 @@ static void LBackend_SliderShow(struct LSlider* w) {
     args[5].i = w->_height;
     args[6].i = ToAndroidColor(w->color);
 
-    jmethodID method = JavaGetIMethod(env, "sliderAdd", "(IIIIIII)I");
-    w->meta = (void*)JavaICall_Int(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "sliderAdd", "(IIIIIII)I");
+    w->meta = (void*)Java_ICall_Int(env, method, args);
 }
 
 void LBackend_SliderUpdate(struct LSlider* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[2];
     if (!w->meta) return;
 
     args[0].i = (int)w->meta;
     args[1].i = w->value;
 
-    jmethodID method = JavaGetIMethod(env, "sliderUpdate", "(II)V");
-    JavaICall_Void(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "sliderUpdate", "(II)V");
+    Java_ICall_Void(env, method, args);
 }
 void LBackend_SliderDraw(struct LSlider* w) {}
 
@@ -454,14 +458,14 @@ void LBackend_TableInit(struct LTable* w) {
 }
 
 static void LBackend_TableShow(struct LTable* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[5];
 
     LBackend_GetLayoutArgs(w, args);
     args[4].i = ToAndroidColor(LTable_RowColor(1, false, false));
 
-    jmethodID method = JavaGetIMethod(env, "tableAdd", "(IIIII)I");
-    w->meta = (void*)JavaICall_Int(env, method, args);
+    jmethodID method = Java_GetIMethod(env, "tableAdd", "(IIIII)I");
+    w->meta = (void*)Java_ICall_Int(env, method, args);
     LBackend_TableUpdate(w);
 }
 
@@ -473,33 +477,33 @@ static jstring GetTableDetails(JNIEnv* env, struct ServerInfo* server) {
     LTable_FormatUptime(&text, server->uptime);
     if (server->software.length) String_Format1(&text, " | %s", &server->software);
 
-    return JavaMakeString(env, &text);
+    return Java_AllocString(env, &text);
 }
 
 void LBackend_TableUpdate(struct LTable* w) {
-    JNIEnv* env; JavaGetCurrentEnv(env);
+    JNIEnv* env; Java_GetCurrentEnv(env);
     jvalue args[3];
     jmethodID method;
 
-    method = JavaGetIMethod(env, "tableStartUpdate", "()V");
-    JavaICall_Void(env, method, args);
-    method = JavaGetIMethod(env, "tableAddEntry", "(Ljava/lang/String;Ljava/lang/String;Z)V");
+    method = Java_GetIMethod(env, "tableStartUpdate", "()V");
+    Java_ICall_Void(env, method, args);
+    method = Java_GetIMethod(env, "tableAddEntry", "(Ljava/lang/String;Ljava/lang/String;Z)V");
 
     for (int i = 0; i < w->rowsCount; i++)
     {
         struct ServerInfo* info = LTable_Get(i);
-        args[0].l = JavaMakeString(env, &info->name);
+        args[0].l = Java_AllocString(env, &info->name);
         args[1].l = GetTableDetails(env, info);
         args[2].z = info->featured;
-        JavaICall_Void(env, method, args);
+        Java_ICall_Void(env, method, args);
 
-        (*env)->DeleteLocalRef(env, args[0].l);
-        (*env)->DeleteLocalRef(env, args[1].l);
+        Java_DeleteLocalRef(env, args[0].l);
+        Java_DeleteLocalRef(env, args[1].l);
     }
 
-    method    = JavaGetIMethod(env, "tableFinishUpdate", "(I)V");
+    method    = Java_GetIMethod(env, "tableFinishUpdate", "(I)V");
     args[0].i = (int)w->meta;
-    JavaICall_Void(env, method, args);
+    Java_ICall_Void(env, method, args);
 }
 
 void LBackend_TableReposition(struct LTable* w) {
@@ -545,7 +549,7 @@ static void JNICALL java_UIString(JNIEnv* env, jobject o, jint id, jstring str) 
     if (!ipt) return;
 
     char buffer[NATIVE_STR_LEN];
-    cc_string text = JavaGetString(env, str, buffer);
+    cc_string text = Java_GetString(env, str, buffer);
     String_Copy(&ipt->text, &text);
     if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
@@ -593,9 +597,9 @@ void LBackend_CloseScreen(struct LScreen* s) {
         s->widgets[i]->meta = NULL;
     }
 
-    JNIEnv* env; JavaGetCurrentEnv(env);
-    jmethodID method = JavaGetIMethod(env, "clearWidgetsAsync", "()V");
-    JavaICall_Void(env, method, NULL);
+    JNIEnv* env; Java_GetCurrentEnv(env);
+    jmethodID method = Java_GetIMethod(env, "clearWidgetsAsync", "()V");
+    Java_ICall_Void(env, method, NULL);
 }
 
 static const JNINativeMethod methods[] = {
@@ -611,7 +615,7 @@ static const JNINativeMethod methods[] = {
 
 static void LBackend_InitHooks(void) {
     JNIEnv* env;
-    JavaGetCurrentEnv(env);
+    Java_GetCurrentEnv(env);
     JavaRegisterNatives(env, methods);
 }
 #endif

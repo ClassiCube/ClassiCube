@@ -264,31 +264,31 @@ static int created_trust;
 
 void CertsBackend_Init(void) {
 	JNIEnv* env;
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 	
-	JAVA_sslCreateTrust   = JavaGetSMethod(env, "sslCreateTrust", "()I");
-	JAVA_sslAddCert       = JavaGetSMethod(env, "sslAddCert",     "([B)V");
-	JAVA_sslVerifyChain   = JavaGetSMethod(env, "sslVerifyChain", "()I");
+	JAVA_sslCreateTrust   = Java_GetSMethod(env, "sslCreateTrust", "()I");
+	JAVA_sslAddCert       = Java_GetSMethod(env, "sslAddCert",     "([B)V");
+	JAVA_sslVerifyChain   = Java_GetSMethod(env, "sslVerifyChain", "()I");
 }
 
 int Certs_VerifyChain(struct X509CertContext* x509) {
 	JNIEnv* env;
 	jvalue args[1];
 	int i;
-	JavaGetCurrentEnv(env);
+	Java_GetCurrentEnv(env);
 	
-	if (!created_trust) created_trust = JavaSCall_Int(env, JAVA_sslCreateTrust, NULL);
+	if (!created_trust) created_trust = Java_SCall_Int(env, JAVA_sslCreateTrust, NULL);
 	if (!created_trust) return ERR_NOT_SUPPORTED;
 	
 	for (i = 0; i < x509->numCerts; i++)
 	{
 		struct X509Cert* cert = &x509->certs[i];
-		args[0].l = JavaMakeBytes(env, cert->data, cert->offset);
-		JavaSCall_Void(env, JAVA_sslAddCert, args);
-		(*env)->DeleteLocalRef(env, args[0].l);
+		args[0].l = Java_AllocBytes(env, cert->data, cert->offset);
+		Java_SCall_Void(env, JAVA_sslAddCert, args);
+		Java_DeleteLocalRef(env, args[0].l);
 	}
 
-	return JavaSCall_Int(env, JAVA_sslVerifyChain, NULL);
+	return Java_SCall_Int(env, JAVA_sslVerifyChain, NULL);
 }
 #elif CC_CRT_BACKEND == CC_CRT_BACKEND_WINCRYPTO
 #define CC_CRYPT32_FUNC extern
