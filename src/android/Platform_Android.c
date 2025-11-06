@@ -1,11 +1,13 @@
-#include "Core.h"
-#if defined CC_BUILD_ANDROID
-#include "Chat.h"
-#include "Constants.h"
-#include "Errors.h"
-#include "Funcs.h"
-#include "String.h"
-#include "Platform.h"
+#include "../Chat.h"
+#include "../Constants.h"
+#include "../Errors.h"
+#include "../Funcs.h"
+#include "../String.h"
+#include "../Platform.h"
+#include "../Window.h"
+#include "../Platform.h"
+#include "interop_android.h"
+
 #include <errno.h>
 #include <unistd.h>
 #include <android/log.h>
@@ -13,7 +15,7 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
-#include "main_impl.h"
+#include "../main_impl.h"
 
 // ClassiCube is just a native library on android,
 //   unlike most other platforms where it is the executable.
@@ -100,11 +102,21 @@ void Directory_GetCachePath(cc_string* path) {
 	JavaCall_Void_String("getGameCacheDirectory", path);
 }
 
+/* All threads using JNI must detach BEFORE they exit */
+/* (see https://developer.android.com/training/articles/perf-jni#threads */
+void* ExecThread(void* param) {
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+
+	((Thread_StartFunc)param)();
+	(*VM_Ptr)->DetachCurrentThread(VM_Ptr);
+	return NULL;
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-#include "Window.h"
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	cc_string dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
@@ -120,6 +132,10 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	// TODO there must be a better way
 	Window_ShowDialog("Failed to set working directory to", dir.buffer);
 	return res;
+}
+
+void GetDeviceUUID(cc_string* str) {
+	JavaCall_Void_String("getUUID", str);
 }
 
 
@@ -263,4 +279,3 @@ CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	JavaRegisterNatives(env, methods);
 	return JNI_VERSION_1_4;
 }
-#endif

@@ -257,6 +257,8 @@ int Certs_VerifyChain(struct X509CertContext* x509) {
 	return res;
 }
 #elif CC_CRT_BACKEND == CC_CRT_BACKEND_ANDROID
+#include "android/interop_android.h"
+
 static jmethodID JAVA_sslCreateTrust, JAVA_sslAddCert, JAVA_sslVerifyChain;
 static int created_trust;
 

@@ -17,6 +17,8 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Event.h"
+#include "android/interop_android.h"
+
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>

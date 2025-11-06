@@ -30,7 +30,6 @@ add_library(classicube SHARED
         ../../src/Camera.c
         ../../src/Game.c
         ../../src/GameVersion.c
-        ../../src/Window_Android.c
         ../../src/_ftbase.c
         ../../src/Graphics_GL2.c
         ../../src/Deflate.c
@@ -48,7 +47,6 @@ add_library(classicube SHARED
         ../../src/World.c
         ../../src/SelOutlineRenderer.c
         ../../src/Platform_Posix.c
-        ../../src/Platform_Android.c
         ../../src/LScreens.c
         ../../src/_truetype.c
         ../../src/_ftglyph.c
@@ -108,6 +106,8 @@ add_library(classicube SHARED
         ../../src/Queue.c
         ../../src/SSL.c
         ../../src/Certs.c
+        ../../src/android/Platform_Android.c
+        ../../src/android/Window_Android.c
         ../../third_party/bearssl/aes_big_cbcdec.c
         ../../third_party/bearssl/aes_big_cbcenc.c
         ../../third_party/bearssl/aes_big_ctr.c
@@ -233,5 +233,4 @@ target_link_libraries(classicube
     EGL
     GLESv2
     log
-    OpenSLES
     jnigraphics)

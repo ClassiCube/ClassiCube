@@ -451,16 +451,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 
 #ifdef CC_BUILD_ANDROID
-/* All threads using JNI must detach BEFORE they exit */
-/* (see https://developer.android.com/training/articles/perf-jni#threads */
-static void* ExecThread(void* param) {
-	JNIEnv* env;
-	JavaGetCurrentEnv(env);
-
-	((Thread_StartFunc)param)();
-	(*VM_Ptr)->DetachCurrentThread(VM_Ptr);
-	return NULL;
-}
+/* Special handling required for JNI, ExecThread implemented in Platform_Android.c */
 #else
 static void* ExecThread(void* param) {
 	((Thread_StartFunc)param)();
@@ -1568,11 +1559,13 @@ static cc_result GetMachineID(cc_uint32* key) {
 	return 0;
 }
 #elif defined CC_BUILD_ANDROID
+extern void GetDeviceUUID(cc_string* str);
+
 static cc_result GetMachineID(cc_uint32* key) {
 	cc_string dir; char dirBuffer[STRING_SIZE];
 	String_InitArray(dir, dirBuffer);
 
-	JavaCall_Void_String("getUUID", &dir);
+	GetDeviceUUID(&dir);
 	DecodeMachineID(dirBuffer, dir.length, key);
 	return 0;
 }

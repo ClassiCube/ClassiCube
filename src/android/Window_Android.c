@@ -1,12 +1,12 @@
-#include "Core.h"
-#if CC_WIN_BACKEND == CC_WIN_BACKEND_ANDROID
-#include "_WindowBase.h"
-#include "String.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "Graphics.h"
-#include "Gui.h"
+#include "../_WindowBase.h"
+#include "../String.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../Graphics.h"
+#include "../Gui.h"
+#include "interop_android.h"
+
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
@@ -589,4 +589,3 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
 void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
-#endif
