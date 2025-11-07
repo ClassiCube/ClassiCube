@@ -14,6 +14,7 @@
 
 static ANativeWindow* win_handle;
 static cc_bool winCreated;
+
 static jmethodID JAVA_openKeyboard, JAVA_setKeyboardText, JAVA_closeKeyboard;
 static jmethodID JAVA_getWindowState, JAVA_enterFullscreen, JAVA_exitFullscreen;
 static jmethodID JAVA_showAlert, JAVA_setRequestedOri;
@@ -21,6 +22,12 @@ static jmethodID JAVA_openFileDialog, JAVA_saveFileDialog;
 static jmethodID JAVA_processedSurfaceDestroyed, JAVA_processEvents;
 static jmethodID JAVA_getDpiX, JAVA_getDpiY, JAVA_setupForGame;
 static jmethodID JAVA_getClipboardText, JAVA_setClipboardText;
+
+static int32_t (*_ANativeWindow_lock)(ANativeWindow* window, ANativeWindow_Buffer* oBuffer, ARect* ioDirtyBounds);
+static int32_t (*_ANativeWindow_unlockAndPost)(ANativeWindow* window);
+
+static ANativeWindow* (*_ANativeWindow_fromSurface)(JNIEnv* env, jobject surface);
+static void           (*_ANativeWindow_release)(ANativeWindow* window);
 
 static void SetWindowBounds(int width, int height) {
 	Window_Main.Width  = width;
@@ -176,7 +183,7 @@ static void JNICALL java_processJoystickR(JNIEnv* env, jobject o, jint x, jint y
 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface, jint w, jint h) {
 	Platform_LogConst("WIN - CREATED");
-	win_handle        = ANativeWindow_fromSurface(env, surface);
+	win_handle        = _ANativeWindow_fromSurface(env, surface);
 	winCreated        = true;
 
 	Window_Main.Handle.ptr = win_handle;
@@ -187,7 +194,7 @@ static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject s
 
 static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	Platform_LogConst("WIN - DESTROYED");
-	if (win_handle) ANativeWindow_release(win_handle);
+	if (win_handle) _ANativeWindow_release(win_handle);
 
 	win_handle             = NULL;
 	Window_Main.Handle.ptr = NULL;
@@ -253,89 +260,6 @@ static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
 }
 
 static void JNICALL java_processOFDResult(JNIEnv* env, jobject o, jstring str);
-
-static const JNINativeMethod methods[] = {
-	{ "processKeyDown",   "(I)V", java_processKeyDown },
-	{ "processKeyUp",     "(I)V", java_processKeyUp },
-	{ "processKeyChar",   "(I)V", java_processKeyChar },
-	{ "processKeyText",   "(Ljava/lang/String;)V", java_processKeyText },
-
-	{ "processPointerDown", "(IIII)V", java_processPointerDown },
-	{ "processPointerUp",   "(IIII)V", java_processPointerUp },
-	{ "processPointerMove", "(IIII)V", java_processPointerMove },
-
-	{ "processJoystickL", "(II)V", java_processJoystickL },
-	{ "processJoystickR", "(II)V", java_processJoystickR },
-
-	{ "processSurfaceCreated",      "(Landroid/view/Surface;II)V", java_processSurfaceCreated },
-	{ "processSurfaceDestroyed",    "()V",                         java_processSurfaceDestroyed },
-	{ "processSurfaceResized",      "(II)V",                       java_processSurfaceResized },
-	{ "processSurfaceRedrawNeeded", "()V",                         java_processSurfaceRedrawNeeded },
-
-	{ "processOnStart",   "()V", java_onStart },
-	{ "processOnStop",    "()V", java_onStop },
-	{ "processOnResume",  "()V", java_onResume },
-	{ "processOnPause",   "()V", java_onPause },
-	{ "processOnDestroy", "()V", java_onDestroy },
-
-	{ "processOnGotFocus",  "()V", java_onGotFocus },
-	{ "processOnLostFocus", "()V", java_onLostFocus },
-	{ "processOnLowMemory", "()V", java_onLowMemory },
-
-	{ "processOFDResult",   "(Ljava/lang/String;)V", java_processOFDResult },
-};
-
-static void CacheJavaMethodRefs(JNIEnv* env) {
-	JAVA_openKeyboard    = Java_GetIMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");
-	JAVA_setKeyboardText = Java_GetIMethod(env, "setKeyboardText", "(Ljava/lang/String;)V");
-	JAVA_closeKeyboard   = Java_GetIMethod(env, "closeKeyboard",   "()V");
-
-	JAVA_getWindowState  = Java_GetIMethod(env, "getWindowState",  "()I");
-	JAVA_enterFullscreen = Java_GetIMethod(env, "enterFullscreen", "()V");
-	JAVA_exitFullscreen  = Java_GetIMethod(env, "exitFullscreen",  "()V");
-
-	JAVA_getDpiX      = Java_GetIMethod(env, "getDpiX", "()F");
-	JAVA_getDpiY      = Java_GetIMethod(env, "getDpiY", "()F");
-	JAVA_setupForGame = Java_GetIMethod(env, "setupForGame", "()V");
-
-	JAVA_processedSurfaceDestroyed = Java_GetIMethod(env, "processedSurfaceDestroyed", "()V");
-	JAVA_processEvents             = Java_GetIMethod(env, "processEvents",             "()V");
-
-	JAVA_showAlert       = Java_GetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
-	JAVA_setRequestedOri = Java_GetIMethod(env, "setRequestedOrientation", "(I)V");
-	JAVA_openFileDialog  = Java_GetIMethod(env, "openFileDialog", "(Ljava/lang/String;)I");
-	JAVA_saveFileDialog  = Java_GetIMethod(env, "saveFileDialog", "(Ljava/lang/String;Ljava/lang/String;)I");
-	
-	JAVA_getClipboardText = Java_GetIMethod(env, "getClipboardText", "()Ljava/lang/String;");
-	JAVA_setClipboardText = Java_GetIMethod(env, "setClipboardText", "(Ljava/lang/String;)V");
-}
-
-void Window_PreInit(void) {
-	JNIEnv* env;
-	Java_GetCurrentEnv(env);
-	Java_RegisterNatives(env, methods);
-	CacheJavaMethodRefs(env);
-	
-	DisplayInfo.CursorVisible = true;
-}
-
-// TODO move to bottom of file?
-void Window_Init(void) {
-	JNIEnv* env;
-	/* TODO: ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0); */
-	Java_GetCurrentEnv(env);
-
-	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
-	Input_SetTouchMode(true);
-	Gui_SetTouchUI(true);
-	Input.Sources = INPUT_SOURCE_NORMAL;
-
-	DisplayInfo.Depth  = 32;
-	DisplayInfo.ScaleX = Java_ICall_Float(env, JAVA_getDpiX, NULL);
-	DisplayInfo.ScaleY = Java_ICall_Float(env, JAVA_getDpiY, NULL);
-}
-
-void Window_Free(void) { }
 
 static void RemakeWindowSurface(void) {
 	JNIEnv* env;
@@ -547,7 +471,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	b.top  = r.y; b.bottom = r.y + r.height;
 
 	/* Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
-	res  = ANativeWindow_lock(win_handle, &buffer, &b);
+	res  = _ANativeWindow_lock(win_handle, &buffer, &b);
 	if (res) Process_Abort2(res, "Locking window pixels");
 	/* Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 
@@ -565,7 +489,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	{
 		Mem_Copy(dst + y * buffer.stride, src + y * bmp->width, size);
 	}
-	res = ANativeWindow_unlockAndPost(win_handle);
+	res = _ANativeWindow_unlockAndPost(win_handle);
 	if (res) Process_Abort2(res, "Unlocking window pixels");
 }
 
@@ -617,3 +541,169 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
 void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
+
+
+/*########################################################################################################################*
+*------------------------------------------------------libandroid---------------------------------------------------------*
+*#########################################################################################################################*/
+static const cc_string droidLib = String_FromConst("libandroid.so");
+
+static cc_bool LoadDroidFuncs(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_ReqSym(ANativeWindow_lock),
+		DynamicLib_ReqSym(ANativeWindow_unlockAndPost),
+		DynamicLib_ReqSym(ANativeWindow_fromSurface),
+		DynamicLib_ReqSym(ANativeWindow_release),
+	};
+	void* lib;
+	
+	return DynamicLib_LoadAll(&droidLib, funcs, Array_Elems(funcs), &lib);
+}
+
+static ANativeWindow* fallback_fromSurface(JNIEnv* env, jobject surface) {
+	return (void*)1;
+}
+
+static void fallback_release(ANativeWindow* window) {
+}
+
+static jobject   canvas_arr;
+static uint32_t* canvas_ptr;
+static ARect     canvas_rect;
+
+static int32_t fallback_lock(ANativeWindow* window, ANativeWindow_Buffer* oBuffer, ARect* ioDirtyBounds) {
+	JNIEnv* env;
+	jvalue args[4];
+	Java_GetCurrentEnv(env);
+
+	args[0].i = ioDirtyBounds->left;
+	args[1].i = ioDirtyBounds->top;
+	args[2].i = ioDirtyBounds->right;
+	args[3].i = ioDirtyBounds->bottom;
+	
+	jmethodID method = Java_GetIMethod(env, "legacy_lockCanvas", "(IIII)[I");
+	canvas_arr = Java_ICall_Obj(env, method, args);
+    canvas_ptr = (*env)->GetIntArrayElements(env, canvas_arr, NULL);
+	
+	oBuffer->stride = ioDirtyBounds->right - ioDirtyBounds->left;
+	// Counteract pointer adjustment done in Window_DrawFramebuffer
+	oBuffer->bits   = canvas_ptr - (ioDirtyBounds->top * oBuffer->stride) - ioDirtyBounds->left;
+	canvas_rect     = *ioDirtyBounds;
+	
+	if (!canvas_ptr) Process_Abort("Out of memory for canvas");
+	return 0;
+}
+
+static int32_t fallback_unlockAndPost(ANativeWindow* window) {
+	JNIEnv* env;
+	jvalue args[5];
+	Java_GetCurrentEnv(env);
+    (*env)->ReleaseIntArrayElements(env, canvas_arr, canvas_ptr, 0);
+
+	args[0].i = canvas_rect.left;
+	args[1].i = canvas_rect.top;
+	args[2].i = canvas_rect.right;
+	args[3].i = canvas_rect.bottom;
+	args[4].l = canvas_arr;
+	
+	jmethodID method = Java_GetIMethod(env, "legacy_unlockCanvas", "(IIII[I)V");
+	Java_ICall_Void(env, method, args);
+	
+	(*env)->DeleteLocalRef(env, canvas_arr);
+	canvas_arr = NULL;
+	return 0;
+}
+
+static void UseFallbackDroidFuncs(void) {
+	_ANativeWindow_fromSurface   = fallback_fromSurface;
+	_ANativeWindow_release       = fallback_release;
+	_ANativeWindow_lock          = fallback_lock;
+	_ANativeWindow_unlockAndPost = fallback_unlockAndPost;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Initialisation-------------------------------------------------------*
+*#########################################################################################################################*/
+static const JNINativeMethod methods[] = {
+	{ "processKeyDown",   "(I)V", java_processKeyDown },
+	{ "processKeyUp",     "(I)V", java_processKeyUp },
+	{ "processKeyChar",   "(I)V", java_processKeyChar },
+	{ "processKeyText",   "(Ljava/lang/String;)V", java_processKeyText },
+
+	{ "processPointerDown", "(IIII)V", java_processPointerDown },
+	{ "processPointerUp",   "(IIII)V", java_processPointerUp },
+	{ "processPointerMove", "(IIII)V", java_processPointerMove },
+
+	{ "processJoystickL", "(II)V", java_processJoystickL },
+	{ "processJoystickR", "(II)V", java_processJoystickR },
+
+	{ "processSurfaceCreated",      "(Landroid/view/Surface;II)V", java_processSurfaceCreated },
+	{ "processSurfaceDestroyed",    "()V",                         java_processSurfaceDestroyed },
+	{ "processSurfaceResized",      "(II)V",                       java_processSurfaceResized },
+	{ "processSurfaceRedrawNeeded", "()V",                         java_processSurfaceRedrawNeeded },
+
+	{ "processOnStart",   "()V", java_onStart },
+	{ "processOnStop",    "()V", java_onStop },
+	{ "processOnResume",  "()V", java_onResume },
+	{ "processOnPause",   "()V", java_onPause },
+	{ "processOnDestroy", "()V", java_onDestroy },
+
+	{ "processOnGotFocus",  "()V", java_onGotFocus },
+	{ "processOnLostFocus", "()V", java_onLostFocus },
+	{ "processOnLowMemory", "()V", java_onLowMemory },
+
+	{ "processOFDResult",   "(Ljava/lang/String;)V", java_processOFDResult },
+};
+
+static void CacheJavaMethodRefs(JNIEnv* env) {
+	JAVA_openKeyboard    = Java_GetIMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");
+	JAVA_setKeyboardText = Java_GetIMethod(env, "setKeyboardText", "(Ljava/lang/String;)V");
+	JAVA_closeKeyboard   = Java_GetIMethod(env, "closeKeyboard",   "()V");
+
+	JAVA_getWindowState  = Java_GetIMethod(env, "getWindowState",  "()I");
+	JAVA_enterFullscreen = Java_GetIMethod(env, "enterFullscreen", "()V");
+	JAVA_exitFullscreen  = Java_GetIMethod(env, "exitFullscreen",  "()V");
+
+	JAVA_getDpiX      = Java_GetIMethod(env, "getDpiX", "()F");
+	JAVA_getDpiY      = Java_GetIMethod(env, "getDpiY", "()F");
+	JAVA_setupForGame = Java_GetIMethod(env, "setupForGame", "()V");
+
+	JAVA_processedSurfaceDestroyed = Java_GetIMethod(env, "processedSurfaceDestroyed", "()V");
+	JAVA_processEvents             = Java_GetIMethod(env, "processEvents",             "()V");
+
+	JAVA_showAlert       = Java_GetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
+	JAVA_setRequestedOri = Java_GetIMethod(env, "setRequestedOrientation", "(I)V");
+	JAVA_openFileDialog  = Java_GetIMethod(env, "openFileDialog", "(Ljava/lang/String;)I");
+	JAVA_saveFileDialog  = Java_GetIMethod(env, "saveFileDialog", "(Ljava/lang/String;Ljava/lang/String;)I");
+	
+	JAVA_getClipboardText = Java_GetIMethod(env, "getClipboardText", "()Ljava/lang/String;");
+	JAVA_setClipboardText = Java_GetIMethod(env, "setClipboardText", "(Ljava/lang/String;)V");
+}
+
+void Window_PreInit(void) {
+	JNIEnv* env;
+	Java_GetCurrentEnv(env);
+	Java_RegisterNatives(env, methods);
+	CacheJavaMethodRefs(env);
+	
+	DisplayInfo.CursorVisible = true;
+	if (!LoadDroidFuncs()) UseFallbackDroidFuncs();
+}
+
+void Window_Init(void) {
+	JNIEnv* env;
+	/* TODO: ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0); */
+	Java_GetCurrentEnv(env);
+
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+	Input_SetTouchMode(true);
+	Gui_SetTouchUI(true);
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
+	DisplayInfo.Depth  = 32;
+	DisplayInfo.ScaleX = Java_ICall_Float(env, JAVA_getDpiX, NULL);
+	DisplayInfo.ScaleY = Java_ICall_Float(env, JAVA_getDpiY, NULL);
+}
+
+void Window_Free(void) { }

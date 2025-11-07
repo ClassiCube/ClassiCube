@@ -6,8 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -25,6 +23,8 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -914,118 +914,6 @@ public class MainActivity extends Activity
 
 
 	// ======================================================================
-	// -------------------------------- HTTP --------------------------------
-	// ======================================================================
-	//  Implements java Android side of the Android HTTP backend (See Http.c)
-	static HttpURLConnection conn;
-	static InputStream src;
-	static byte[] readCache = new byte[8192];
-
-	public static int httpInit(String url, String method) {
-		// newer android versions block cleartext traffic by default
-		if (android.os.Build.VERSION.SDK_INT >= 26) {
-			url = url.replace("http://", "https://");
-		}
-
-		try {
-			conn = (HttpURLConnection)new URL(url).openConnection();
-			conn.setDoInput(true);
-			conn.setRequestMethod(method);
-			conn.setInstanceFollowRedirects(true);
-			
-			httpAddMethodHeaders(method);
-			return 0;
-		} catch (Exception ex) {
-			return httpOnError(ex);
-		}
-	}
-	
-	static void httpAddMethodHeaders(String method) {
-		if (!method.equals("HEAD")) return;
-
-		// Ever since dropbox switched to to chunked transfer encoding,
-		//  sending a HEAD request to dropbox always seems to result in the
-		//  next GET request failing with 'Unexpected status line' ProtocolException
-		// Seems to be a known issue: https://github.com/square/okhttp/issues/3689
-		// Simplest workaround is to ask for connection to be closed after HEAD request
-		httpSetHeader("connection", "close");
-	}
-
-	public static void httpSetHeader(String name, String value) {
-		conn.setRequestProperty(name, value);
-	}
-
-	public static int httpSetData(byte[] data) {
-		try {
-			conn.setDoOutput(true);
-			conn.getOutputStream().write(data);
-			conn.getOutputStream().flush();
-			return 0;
-		} catch (Exception ex) {
-			return httpOnError(ex);
-		}
-	}
-
-	public static int httpPerform() {
-		int len;
-		try {
-			conn.connect();
-			// Some implementations also provide this as getHeaderField(0), but some don't
-			httpParseHeader("HTTP/1.1 " + conn.getResponseCode() + " MSG");
-			
-			// Legitimate webservers aren't going to reply with over 200 headers
-			for (int i = 0; i < 200; i++) {
-				String key = conn.getHeaderFieldKey(i);
-				String val = conn.getHeaderField(i);
-				if (key == null && val == null) break;
-				
-				if (key == null) {
-					httpParseHeader(val);
-				} else {
-					httpParseHeader(key + ":" + val);
-				}
-			}
-
-			src = conn.getInputStream();
-			while ((len = src.read(readCache)) > 0) {
-				httpAppendData(readCache, len);
-			}
-
-			httpFinish();
-			return 0;
-		} catch (Exception ex) {
-			return httpOnError(ex);
-		}
-	}
-
-	static void httpFinish() {
-		conn = null;
-		try {
-			src.close();
-		} catch (Exception ex) { }
-		src = null;
-	}
-
-	// TODO: Should we prune this list?
-	static List<String> errors = new ArrayList<String>();
-
-	static int httpOnError(Exception ex) {
-		ex.printStackTrace();
-		httpFinish();
-		errors.add(ex.getMessage());
-		return -errors.size(); // don't want 0 as an error code
-	}
-
-	public static String httpDescribeError(int res) {
-		res = -res - 1;
-		return res >= 0 && res < errors.size() ? errors.get(res) : null;
-	}
-
-	native static void httpParseHeader(String header);
-	native static void httpAppendData(byte[] data, int len);
-
-
-	// ======================================================================
 	// -------------------------------- SSL ---------------------------------
 	// ======================================================================
 	static X509TrustManager trust;
@@ -1086,5 +974,40 @@ public class MainActivity extends Activity
 
 		chain.clear();
 		return result;
+	}
+
+
+	// ======================================================================
+	// --------------------------- Legacy window ----------------------------
+	// ======================================================================
+	Canvas cur_canvas;
+	public int[] legacy_lockCanvas(int l, int t, int r, int b) {
+		CCView surface = (CCView)curView;
+		Rect rect = new Rect(l, t, r, b);
+		cur_canvas = surface.getHolder().lockCanvas(rect);
+
+		int w = (r - l);
+		int h = (b - t);
+		return new int[w * h];
+	}
+
+	public void legacy_unlockCanvas(int l, int t, int r, int b, int[] buf) {
+		CCView surface = (CCView)curView;
+		int w = (r - l);
+		int h = (b - t);
+
+		// TODO avoid need to swap R/B
+		for (int i = 0; i < buf.length; i++)
+		{
+			int color = buf[i];
+			int R = color & 0x00FF0000;
+			int B = color & 0x000000FF;
+
+			buf[i] = (color & 0xFF00FF00) | (B << 16) | (R >> 16);
+		}
+
+		cur_canvas.drawBitmap(buf, 0, w, l, t, w, h, false, null);
+		surface.getHolder().unlockCanvasAndPost(cur_canvas);
+		cur_canvas = null;
 	}
 }
