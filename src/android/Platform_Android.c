@@ -12,6 +12,14 @@
 #include <unistd.h>
 #include <android/log.h>
 
+static jmethodID JAVA_getApkUpdateTime;
+static jmethodID JAVA_shareScreenshot;
+static jmethodID JAVA_getGameDataDir;
+static jmethodID JAVA_getGameCacheDir;
+static jmethodID JAVA_startOpen;
+static jmethodID JAVA_getUUID;
+
+
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -43,8 +51,15 @@ void Platform_Log(const char* msg, int len) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Process_StartOpen(const cc_string* args) {
-	JavaCall_String_Void("startOpen", args);
+cc_result Process_StartOpen(const cc_string* open_args) {
+	JNIEnv* env;
+	jvalue args[1];
+	Java_GetCurrentEnv(env);
+
+	args[0].l = Java_AllocString(env, open_args);
+	Java_ICall_Void(env, JAVA_startOpen, args);
+	
+	Java_DeleteLocalRef(env, args[0].l);
 	return 0;
 }
 
@@ -60,7 +75,8 @@ cc_bool Updater_Clean(void) { return true; }
 cc_result Updater_GetBuildTime(cc_uint64* t) {
 	JNIEnv* env;
 	Java_GetCurrentEnv(env);
-	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL);
+	
+	*t = Java_ICall_Long(env, JAVA_getApkUpdateTime, NULL);
 	return 0;
 }
 
@@ -87,19 +103,34 @@ void Platform_TryLogJavaError(void) {
 }
 
 void Platform_ShareScreenshot(const cc_string* filename) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
-	String_InitArray(path, pathBuffer);
+	cc_string errMsg; char buffer[FILENAME_SIZE];
+	String_InitArray(errMsg, buffer);
+	
+	JNIEnv* env;
+	jobject obj;
+	jvalue args[1];
+	Java_GetCurrentEnv(env);
 
-	JavaCall_String_String("shareScreenshot", filename, &path);
-	if (!path.length) return;
+	args[0].l = Java_AllocString(env, filename);
+	obj       = Java_ICall_Obj(env, JAVA_shareScreenshot, args);
+	Java_DecodeString(env, obj, &errMsg);
+	
+	Java_DeleteLocalRef(env, args[0].l);
+	Java_DeleteLocalRef(env, obj);
 
+	if (!errMsg.length) return;
 	Chat_AddRaw("&cError sharing screenshot");
-	Chat_Add1("  &c%s", &path);
+	Chat_Add1("  &c%s", &errMsg);
 }
 
 void Directory_GetCachePath(cc_string* path) {
-	// TODO cache method ID
-	JavaCall_Void_String("getGameCacheDirectory", path);
+	JNIEnv* env;
+	Java_GetCurrentEnv(env);
+
+	jobject obj = Java_ICall_Obj(env, JAVA_getGameCacheDir, NULL);
+	Java_DecodeString(env, obj, path);
+	
+	Java_DeleteLocalRef(env, obj);
 }
 
 /* All threads using JNI must detach BEFORE they exit */
@@ -120,8 +151,14 @@ void* ExecThread(void* param) {
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	cc_string dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
+	JNIEnv* env;
+	Java_GetCurrentEnv(env);
 
-	JavaCall_Void_String("getGameDataDirectory", &dir);
+	jobject obj = Java_ICall_Obj(env, JAVA_getGameDataDir, NULL);
+	Java_DecodeString(env, obj, &dir);
+	
+	Java_DeleteLocalRef(env, obj);
+	// TODO should be raw path
 	dir.buffer[dir.length] = '\0';
 	Platform_Log1("DATA DIR: %s|", &dir);
 
@@ -135,7 +172,13 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 }
 
 void GetDeviceUUID(cc_string* str) {
-	JavaCall_Void_String("getUUID", str);
+	JNIEnv* env;
+	Java_GetCurrentEnv(env);
+
+	jobject obj = Java_ICall_Obj(env, JAVA_getUUID, NULL);
+	Java_DecodeString(env, obj, str);
+	
+	Java_DeleteLocalRef(env, obj);
 }
 
 
@@ -165,6 +208,7 @@ cc_string JavaGetString(JNIEnv* env, jstring str, char* buffer) {
 void Java_DecodeString(JNIEnv* env, jstring str, cc_string* dst) {
 	const jchar* src;
 	jsize len;
+	if (!str) return;
 
 	src = (*env)->GetStringChars(env,  str, NULL);
 	len = (*env)->GetStringLength(env, str);
@@ -191,57 +235,6 @@ jbyteArray Java_AllocBytes(JNIEnv* env, const void* src, cc_uint32 len) {
 	jbyteArray arr = (*env)->NewByteArray(env, len);
 	(*env)->SetByteArrayRegion(env, arr, 0, len, src);
 	return arr;
-}
-
-void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	(*env)->CallVoidMethodA(env, App_Instance, method, args);
-}
-
-jlong JavaCallLong(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	return (*env)->CallLongMethodA(env, App_Instance, method, args);
-}
-
-jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	return (*env)->CallObjectMethodA(env, App_Instance, method, args);
-}
-
-void JavaCall_String_Void(const char* name, const cc_string* value) {
-	JNIEnv* env;
-	jvalue args[1];
-	Java_GetCurrentEnv(env);
-
-	args[0].l = Java_AllocString(env, value);
-	JavaCallVoid(env, name, "(Ljava/lang/String;)V", args);
-	
-	Java_DeleteLocalRef(env, args[0].l);
-}
-
-void JavaCall_Void_String(const char* name, cc_string* dst) {
-	JNIEnv* env;
-	jobject obj;
-	Java_GetCurrentEnv(env);
-
-	obj = JavaCallObject(env, name, "()Ljava/lang/String;", NULL);
-	if (obj) Java_DecodeString(env, obj, dst);
-	
-	Java_DeleteLocalRef(env, obj);
-}
-
-void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* dst) {
-	JNIEnv* env;
-	jobject obj;
-	jvalue args[1];
-	Java_GetCurrentEnv(env);
-
-	args[0].l = Java_AllocString(env, arg);
-	obj       = JavaCallObject(env, name, "(Ljava/lang/String;)Ljava/lang/String;", args);
-	if (obj) Java_DecodeString(env, obj, dst);
-	
-	Java_DeleteLocalRef(env, args[0].l);
-	Java_DeleteLocalRef(env, obj);
 }
 
 
@@ -271,6 +264,15 @@ static const JNINativeMethod methods[] = {
 	{ "runGameAsync",   "()V", java_runGameAsync }
 };
 
+static void CacheJavaMethodRefs(JNIEnv* env) {
+	JAVA_getApkUpdateTime = Java_GetIMethod(env, "getApkUpdateTime",      "()J");
+	JAVA_shareScreenshot  = Java_GetIMethod(env, "shareScreenshot",       "(Ljava/lang/String;)Ljava/lang/String;");
+	JAVA_getGameDataDir   = Java_GetIMethod(env, "getGameDataDirectory",  "()Ljava/lang/String;");
+	JAVA_getGameCacheDir  = Java_GetIMethod(env, "getGameCacheDirectory", "()Ljava/lang/String;");
+	JAVA_startOpen        = Java_GetIMethod(env, "startOpen",             "(Ljava/lang/String;)V");
+	JAVA_getUUID          = Java_GetIMethod(env, "getUUID",               "()Ljava/lang/String;");
+}
+
 /* This method is automatically called by the Java VM when the */
 /*  activity java class calls 'System.loadLibrary("classicube");' */
 CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
@@ -283,5 +285,6 @@ CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	App_Class = (*env)->NewGlobalRef(env, klass);
 	
 	Java_RegisterNatives(env, methods);
+	CacheJavaMethodRefs(env);
 	return JNI_VERSION_1_4;
 }

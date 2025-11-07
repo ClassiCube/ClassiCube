@@ -26,6 +26,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
@@ -120,10 +121,14 @@ public class MainActivity extends Activity
 		pending.add(args);
 	}
 
-	public void pushCmd(int cmd, Surface surface) {
+	public void pushCmd(int cmd, SurfaceHolder holder) {
 		NativeCmdArgs args = getCmdArgs();
-		args.cmd = cmd;
-		args.sur = surface;
+		Rect rect = holder.getSurfaceFrame();
+
+		args.cmd  = cmd;
+		args.sur  = holder.getSurface();
+		args.arg1 = rect.width();
+		args.arg2 = rect.height();
 		pending.add(args);
 	}
 	
@@ -350,9 +355,9 @@ public class MainActivity extends Activity
 			case CMD_GPAD_AXISL: processJoystickL(c.arg1, c.arg2); break;
 			case CMD_GPAD_AXISR: processJoystickR(c.arg1, c.arg2); break;
 
-			case CMD_WIN_CREATED:   processSurfaceCreated(c.sur);   break;
+			case CMD_WIN_CREATED:   processSurfaceCreated(c.sur, c.arg1, c.arg2); break;
 			case CMD_WIN_DESTROYED: processSurfaceDestroyed();      break;
-			case CMD_WIN_RESIZED:   processSurfaceResized(c.sur);   break;
+			case CMD_WIN_RESIZED:   processSurfaceResized(c.arg1, c.arg2); break;
 			case CMD_WIN_REDRAW:    processSurfaceRedrawNeeded();   break;
 
 			case CMD_APP_START:   processOnStart();   break;
@@ -387,9 +392,9 @@ public class MainActivity extends Activity
 	native void processJoystickL(int x, int y);
 	native void processJoystickR(int x, int y);
 
-	native void processSurfaceCreated(Surface sur);
+	native void processSurfaceCreated(Surface sur, int w, int h);
 	native void processSurfaceDestroyed();
-	native void processSurfaceResized(Surface sur);
+	native void processSurfaceResized(int w, int h);
 	native void processSurfaceRedrawNeeded();
 
 	native void processOnStart();
@@ -444,13 +449,15 @@ public class MainActivity extends Activity
 		public void surfaceCreated(SurfaceHolder holder) {
 			// getSurface - API level 1
 			Log.i("CC_WIN", "win created " + holder.getSurface());
-			MainActivity.this.pushCmd(CMD_WIN_CREATED, holder.getSurface());
+			Rect r = holder.getSurfaceFrame();
+			MainActivity.this.pushCmd(CMD_WIN_CREATED, holder);
 		}
 		
 		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 			// getSurface - API level 1
 			Log.i("CC_WIN", "win changed " + holder.getSurface());
-			MainActivity.this.pushCmd(CMD_WIN_RESIZED, holder.getSurface());
+			Rect r = holder.getSurfaceFrame();
+			MainActivity.this.pushCmd(CMD_WIN_RESIZED, holder);
 		}
 		
 		public void surfaceDestroyed(SurfaceHolder holder) {

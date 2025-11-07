@@ -16,15 +16,15 @@ static ANativeWindow* win_handle;
 static cc_bool winCreated;
 static jmethodID JAVA_openKeyboard, JAVA_setKeyboardText, JAVA_closeKeyboard;
 static jmethodID JAVA_getWindowState, JAVA_enterFullscreen, JAVA_exitFullscreen;
-static jmethodID JAVA_showAlert, JAVA_setRequestedOrientation;
+static jmethodID JAVA_showAlert, JAVA_setRequestedOri;
 static jmethodID JAVA_openFileDialog, JAVA_saveFileDialog;
 static jmethodID JAVA_processedSurfaceDestroyed, JAVA_processEvents;
 static jmethodID JAVA_getDpiX, JAVA_getDpiY, JAVA_setupForGame;
 static jmethodID JAVA_getClipboardText, JAVA_setClipboardText;
 
-static void RefreshWindowBounds(void) {
-	Window_Main.Width  = ANativeWindow_getWidth(win_handle);
-	Window_Main.Height = ANativeWindow_getHeight(win_handle);
+static void SetWindowBounds(int width, int height) {
+	Window_Main.Width  = width;
+	Window_Main.Height = height;
 	Platform_Log2("SCREEN BOUNDS: %i,%i", &Window_Main.Width, &Window_Main.Height);
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
@@ -174,13 +174,13 @@ static void JNICALL java_processJoystickR(JNIEnv* env, jobject o, jint x, jint y
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / 4096.0f, y / 4096.0f, 1.0f / 60);
 }
 
-static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
+static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface, jint w, jint h) {
 	Platform_LogConst("WIN - CREATED");
 	win_handle        = ANativeWindow_fromSurface(env, surface);
 	winCreated        = true;
 
 	Window_Main.Handle.ptr = win_handle;
-	RefreshWindowBounds();
+	SetWindowBounds(w, h);
 	/* TODO: Restore context */
 	Event_RaiseVoid(&WindowEvents.Created);
 }
@@ -198,9 +198,9 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	Java_ICall_Void(env, JAVA_processedSurfaceDestroyed, NULL);
 }
 
-static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jobject surface) {
+static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jint w, jint h) {
 	Platform_LogConst("WIN - RESIZED");
-	RefreshWindowBounds();
+	SetWindowBounds(w, h);
 }
 
 static void JNICALL java_processSurfaceRedrawNeeded(JNIEnv* env, jobject o) {
@@ -267,10 +267,10 @@ static const JNINativeMethod methods[] = {
 	{ "processJoystickL", "(II)V", java_processJoystickL },
 	{ "processJoystickR", "(II)V", java_processJoystickR },
 
-	{ "processSurfaceCreated",      "(Landroid/view/Surface;)V",  java_processSurfaceCreated },
-	{ "processSurfaceDestroyed",    "()V",                        java_processSurfaceDestroyed },
-	{ "processSurfaceResized",      "(Landroid/view/Surface;)V",  java_processSurfaceResized },
-	{ "processSurfaceRedrawNeeded", "()V",                        java_processSurfaceRedrawNeeded },
+	{ "processSurfaceCreated",      "(Landroid/view/Surface;II)V", java_processSurfaceCreated },
+	{ "processSurfaceDestroyed",    "()V",                         java_processSurfaceDestroyed },
+	{ "processSurfaceResized",      "(II)V",                       java_processSurfaceResized },
+	{ "processSurfaceRedrawNeeded", "()V",                         java_processSurfaceRedrawNeeded },
 
 	{ "processOnStart",   "()V", java_onStart },
 	{ "processOnStop",    "()V", java_onStop },
@@ -301,16 +301,21 @@ static void CacheJavaMethodRefs(JNIEnv* env) {
 	JAVA_processedSurfaceDestroyed = Java_GetIMethod(env, "processedSurfaceDestroyed", "()V");
 	JAVA_processEvents             = Java_GetIMethod(env, "processEvents",             "()V");
 
-	JAVA_showAlert = Java_GetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
-	JAVA_setRequestedOrientation = Java_GetIMethod(env, "setRequestedOrientation", "(I)V");
-	JAVA_openFileDialog = Java_GetIMethod(env, "openFileDialog", "(Ljava/lang/String;)I");
-	JAVA_saveFileDialog = Java_GetIMethod(env, "saveFileDialog", "(Ljava/lang/String;Ljava/lang/String;)I");
+	JAVA_showAlert       = Java_GetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
+	JAVA_setRequestedOri = Java_GetIMethod(env, "setRequestedOrientation", "(I)V");
+	JAVA_openFileDialog  = Java_GetIMethod(env, "openFileDialog", "(Ljava/lang/String;)I");
+	JAVA_saveFileDialog  = Java_GetIMethod(env, "saveFileDialog", "(Ljava/lang/String;Ljava/lang/String;)I");
 	
 	JAVA_getClipboardText = Java_GetIMethod(env, "getClipboardText", "()Ljava/lang/String;");
 	JAVA_setClipboardText = Java_GetIMethod(env, "setClipboardText", "(Ljava/lang/String;)V");
 }
 
-void Window_PreInit(void) { 
+void Window_PreInit(void) {
+	JNIEnv* env;
+	Java_GetCurrentEnv(env);
+	Java_RegisterNatives(env, methods);
+	CacheJavaMethodRefs(env);
+	
 	DisplayInfo.CursorVisible = true;
 }
 
@@ -319,8 +324,6 @@ void Window_Init(void) {
 	JNIEnv* env;
 	/* TODO: ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0); */
 	Java_GetCurrentEnv(env);
-	Java_RegisterNatives(env, methods);
-	CacheJavaMethodRefs(env);
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
@@ -608,7 +611,7 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 	/* SCREEN_ORIENTATION_SENSOR_LANDSCAPE = 0x00000006 */
 	/* SCREEN_ORIENTATION_UNSPECIFIED = 0xffffffff */
 	args[0].i = lock ? 0x00000006 : 0xffffffff;
-	Java_ICall_Void(env, JAVA_setRequestedOrientation, args);
+	Java_ICall_Void(env, JAVA_setRequestedOri, args);
 }
 
 void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }

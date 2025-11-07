@@ -22,19 +22,6 @@ void Java_DecodeString(JNIEnv* env, jstring str, cc_string* dst);
 /* Creates a string from the given java string. buffer must be at least NATIVE_STR_LEN long. */
 //cc_string Java_DecodeRaw(JNIEnv* env, jstring str, char* buffer);
 
-/* Calls a method in the activity class that returns nothing. */
-void JavaCallVoid(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the activity class that returns a jint. */
-jlong JavaCallLong(JNIEnv* env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the activity class that returns a jobject. */
-jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the activity class that takes a string and returns nothing. */
-void JavaCall_String_Void(const char* name, const cc_string* value);
-/* Calls a method in the activity class that takes no arguments and returns a string. */
-void JavaCall_Void_String(const char* name, cc_string* dst);
-/* Calls a method in the activity class that takes a string and returns a string. */
-void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* dst);
-
 /* Calls an instance method in the activity class that returns nothing */
 #define Java_ICall_Void(env, method, args) (*env)->CallVoidMethodA(env,  App_Instance, method, args)
 /* Calls an instance method in the activity class that returns a jint */

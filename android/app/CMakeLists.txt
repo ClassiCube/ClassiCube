@@ -232,5 +232,4 @@ target_link_libraries(classicube
     android
     EGL
     GLESv2
-    log
-    jnigraphics)
+    log)
