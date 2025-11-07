@@ -567,9 +567,9 @@ static ANativeWindow* fallback_fromSurface(JNIEnv* env, jobject surface) {
 static void fallback_release(ANativeWindow* window) {
 }
 
-static jobject   canvas_arr;
-static uint32_t* canvas_ptr;
-static ARect     canvas_rect;
+static jobject canvas_arr;
+static jint*   canvas_ptr;
+static ARect   canvas_rect;
 
 static int32_t fallback_lock(ANativeWindow* window, ANativeWindow_Buffer* oBuffer, ARect* ioDirtyBounds) {
 	JNIEnv* env;

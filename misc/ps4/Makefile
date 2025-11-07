@@ -63,11 +63,19 @@ $(BUILD_DIR):
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(CONTENT_ID).pkg: pkg.gp4
+$(CONTENT_ID).pkg: $(BUILD_DIR)/pkg.gp4
 	$(TOOLCHAIN)/bin/$(CDIR)/PkgTool.Core pkg_build $< .
 
-pkg.gp4: eboot.bin $(BUILD_DIR)/sce_sys/param.sfo
+$(BUILD_DIR)/pkg.gp4: $(BUILD_DIR)/eboot.bin $(BUILD_DIR)/sce_sys/param.sfo $(BUILD_DIR)/sce_sys/icon0.png $(BUILD_DIR)/sce_sys/about/right.sprx
+	cd $(BUILD_DIR)
 	$(TOOLCHAIN)/bin/$(CDIR)/create-gp4 -out $@ --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/about/right.sprx sce_sys/param.sfo sce_sys/icon0.png"
+
+$(BUILD_DIR)/sce_sys/icon0.png: misc/ps4/icon0.png
+	cp $< $@
+
+$(BUILD_DIR)/sce_sys/about/right.sprx: misc/ps4/right.sprx
+	mkdir -p $(BUILD_DIR)/sce_sys/about
+	cp $< $@
 
 $(BUILD_DIR)/sce_sys/param.sfo:
 	mkdir -p $(BUILD_DIR)/sce_sys
@@ -86,8 +94,8 @@ $(BUILD_DIR)/sce_sys/param.sfo:
 $(BUILD_DIR)/$(TARGET).elf: $(OBJS)
 	$(LD) $(OBJS) -o $(BUILD_DIR)/$(TARGET).elf $(LDFLAGS)
 
-eboot.bin: $(BUILD_DIR)/$(TARGET).elf
-	$(TOOLCHAIN)/bin/$(CDIR)/create-fself -in=$(BUILD_DIR)/$(TARGET).elf -out=$(BUILD_DIR)/$(TARGET).oelf --eboot "eboot.bin" --paid 0x3800000000000011
+$(BUILD_DIR)/eboot.bin: $(BUILD_DIR)/$(TARGET).elf
+	$(TOOLCHAIN)/bin/$(CDIR)/create-fself -in=$(BUILD_DIR)/$(TARGET).elf -out=$(BUILD_DIR)/$(TARGET).oelf --eboot "$(BUILD_DIR)/eboot.bin" --paid 0x3800000000000011
 
 
 #---------------------------------------------------------------------------------
