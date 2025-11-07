@@ -578,7 +578,7 @@ void SetGLAttributes(void) {
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode.R);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode.G);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode.B);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, mode.A);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
 
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);

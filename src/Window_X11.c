@@ -1539,7 +1539,7 @@ static void GetAttribs(struct GraphicsMode* mode, int* attribs, int fbCfg, int d
 	attribs[i++] = GLX_RED_SIZE;   attribs[i++] = mode->R;
 	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = mode->G;
 	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = mode->B;
-	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = mode->A;
+	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = 0;
 	attribs[i++] = GLX_DEPTH_SIZE; attribs[i++] = depth;
 
 	attribs[i++] = GLX_DOUBLEBUFFER;
