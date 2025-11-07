@@ -1557,7 +1557,7 @@ static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	struct GraphicsMode mode;
 
-	InitGraphicsMode(&mode);
+	InitGraphicsMode(&mode, DisplayInfo.Depth);
 	GetAttribs(&mode, attribs, true, GLCONTEXT_DEFAULT_DEPTH);
 	screen = DefaultScreen(win_display);
 

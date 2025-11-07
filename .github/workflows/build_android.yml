@@ -36,7 +36,7 @@ jobs:
         env: 
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
-          LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
+          LIBS: "-lGLESv2 -lEGL -lm -llog"
           SRCS: "src/*.c src/android/*.c third_party/bearssl/*.c"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"

@@ -574,7 +574,8 @@ static SDL_GLContext win_ctx;
 
 void SetGLAttributes(void) {
 	struct GraphicsMode mode;
-	InitGraphicsMode(&mode);
+	InitGraphicsMode(&mode, DisplayInfo.Depth);
+
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode.R);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode.G);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode.B);

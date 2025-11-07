@@ -73,9 +73,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 
 struct GraphicsMode { int R, G, B; };
 /* Creates a GraphicsMode compatible with the default display device */
-static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
-	int bpp = DisplayInfo.Depth;
-
+static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m, int bpp) {
 	switch (bpp) {
 	case 32:
 		m->R =  8; m->G =  8; m->B =  8; break;
@@ -193,7 +191,7 @@ void GLContext_Create(void) {
 	};
 
 	struct GraphicsMode mode;
-	InitGraphicsMode(&mode);
+	InitGraphicsMode(&mode, DisplayInfo.Depth);
 	attribs[1] = mode.R; attribs[3] = mode.G; attribs[5] = mode.B;
 
 	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);

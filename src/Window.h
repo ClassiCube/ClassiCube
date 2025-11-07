@@ -75,6 +75,8 @@ struct cc_window {
 	/* Whether on-screen keyboard should be instantly opened when an input field is selected */
 	/* Otherwise, the on-screen keyboard is only opened when the input field is clicked */
 	cc_uint8 SoftKeyboardInstant;
+	/* Whether the window is used for drawing 2D framebuffer or 3D graphics contents */
+	cc_bool Is3D;
 	/* Scale factors specifically for some in-game elements (e.g. chat) */
 	/*  that vary their elements based on the window dimensions */
 	float UIScaleX, UIScaleY;
