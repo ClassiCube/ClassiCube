@@ -348,16 +348,16 @@ static void VirtualKeyboard_MarkDirty2D(void) {
 	LBackend_MarkAllDirty();
 }
 
-static void VirtualKeyboard_Display2D(struct Context2D* real_ctx) {
+static void VirtualKeyboard_Display2D(void) {
+	struct Bitmap copy = LBackend_FB.bmp;
 	struct Context2D ctx;
-	struct Bitmap copy = real_ctx->bmp;
 	int x, y;
 
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
 	LBackend_MarkAllDirty();
 
 	VirtualKeyboard_CalcPosition(&x, &y, copy.width, copy.height);
-	copy.scan0 = Bitmap_GetRow(&real_ctx->bmp, y);
+	copy.scan0 = Bitmap_GetRow(&copy, y);
 	copy.scan0 += x;
 
 	Context2D_Wrap(&ctx, &copy);

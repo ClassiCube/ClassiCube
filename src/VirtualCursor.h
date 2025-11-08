@@ -20,9 +20,9 @@ static void VirtualCursor_Draw(struct Context2D* ctx, int x, int y) {
 					x - CURSOR_SIZE, y - CURSOR_EXTENT, CURSOR_SIZE * 3, CURSOR_EXTENT * 2);
 }
 
-static void VirtualCursor_Display2D(struct Context2D* ctx) {
+static void VirtualCursor_Display2D(void) {
 	LBackend_MarkAllDirty();
-	VirtualCursor_Draw(ctx, Pointers[0].x, Pointers[0].y);
+	VirtualCursor_Draw(&LBackend_FB, Pointers[0].x, Pointers[0].y);
 }
 
 static void VirtualCursor_MakeTexture(void) {

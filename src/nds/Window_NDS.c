@@ -9,6 +9,7 @@
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Camera.h"
+
 #include <nds.h>
 #include <fat.h>
 
@@ -127,9 +128,6 @@ static void Console_Init(cc_bool onSub) {
 /*########################################################################################################################*
 *------------------------------------------------------General data-------------------------------------------------------*
 *#########################################################################################################################*/
-static int bg_id;
-static u16* bg_ptr;
-
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -162,6 +160,7 @@ static void SetupVideo(cc_bool is3D) {
 }
 
 void Window_PreInit(void) {
+	Window_Main.Is3D = 210; // So SetupVideo still runs
 	SetupVideo(false);
     setBrightness(2, 0);
 }
@@ -182,14 +181,13 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
+	Window_ShowDialog("AC", "DE");
 }
 
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
    	SetupVideo(false);
-	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
-	bg_ptr = bgGetGfxPtr(bg_id);
 }
 
 void Window_Create3D(int width, int height) { 
@@ -300,10 +298,16 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+static int bg_id;
+static u16* bg_ptr;
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+
+	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
+	bg_ptr = bgGetGfxPtr(bg_id);
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -381,9 +385,9 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
 	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	Platform_LogConst(message);
+	// TODO
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
