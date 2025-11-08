@@ -99,7 +99,12 @@ static void InitSockets(void) {
 	
 	int ret = if_config(localip, netmask, gateway, TRUE, 20);
 	if (ret >= 0) {
-		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
+		cc_string str; char buffer[256];
+		String_InitArray_NT(str, buffer);
+		String_Format3(&str, "IP address: %c\nGateway IP: %c\nNetmask %c", localip, gateway, netmask);
+
+		buffer[str.length] = '\0';
+		Window_ShowDialog("Networking details", buffer);
 	} else {
 		Logger_SimpleWarn(ret, "setting up network");
 		net_supported = false;
