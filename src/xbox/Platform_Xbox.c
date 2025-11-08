@@ -443,7 +443,7 @@ static void InitHDD(void) {
 	}
 
 	if (!hdd_mounted) {
-		Platform_LogConst("Failed to mount E:/ from Data partition");
+		Window_ShowDialog("Failed to mount HDD", "Failed to mount E:/ from Data partition");
 		return;
 	}
 	
@@ -454,8 +454,10 @@ static void InitHDD(void) {
 void Platform_Init(void) {
 	InitHDD();
 	Stopwatch_Init();
+
 #ifndef CC_BUILD_CXBX
-	nxNetInit(NULL);
+	int ret = nxNetInit(NULL);
+	if (ret) Logger_SimpleWarn(ret, "setting up network");
 #endif
 }
 

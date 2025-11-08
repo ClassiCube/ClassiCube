@@ -25,13 +25,14 @@ static void OnVblank(void* work) {
 	smpc_peripheral_intback_issue();
 }
 
-void Window_PreInit(void) { }
-void Window_Init(void) {
+void Window_PreInit(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
-	
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;

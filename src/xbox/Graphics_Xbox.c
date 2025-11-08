@@ -123,7 +123,6 @@ void Gfx_Create(void) {
 
 void Gfx_Free(void) { 
 	FreeDefaultResources();
-	pb_show_debug_screen();
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }

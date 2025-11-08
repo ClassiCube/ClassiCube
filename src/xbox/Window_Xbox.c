@@ -10,6 +10,7 @@
 #include "../ExtMath.h"
 #include "../Options.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <hal/video.h>
 #include <usbh_lib.h>
@@ -23,18 +24,17 @@ void Window_PreInit(void) {
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT); // TODO not call
 	pb_init();
 	pb_show_debug_screen();
-}
 
-void Window_Init(void) {
-	VIDEO_MODE mode = XVideoGetMode();
-	
+	VIDEO_MODE mode    = XVideoGetMode();
 	DisplayInfo.Width  = mode.width;
 	DisplayInfo.Height = mode.height;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
-	Window_Main.Width    = mode.width;
-	Window_Main.Height   = mode.height;
+}
+
+void Window_Init(void) {
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
 	
 	Window_Main.Exists   = true;
@@ -222,6 +222,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+
+	pb_show_debug_screen();
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -242,6 +244,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
+	pb_show_front_screen();
 }
 
 
@@ -266,9 +269,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

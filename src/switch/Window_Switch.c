@@ -50,12 +50,6 @@ static void Applet_Event(AppletHookType type, void* param) {
 }
 
 void Window_PreInit(void) {
-	// Configure our supported input layout: a single player with standard controller styles
-	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-	hidInitializeTouchScreen();
-	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
-	padInitializeDefault(&pad);
-	
 	appletHook(&cookie, Applet_Event, NULL);
 }
 
@@ -167,7 +161,13 @@ static const BindMapping defaults_switch[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
 };
 
-void Gamepads_PreInit(void) { }
+void Gamepads_PreInit(void) {
+	// Configure our supported input layout: a single player with standard controller styles
+	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+	hidInitializeTouchScreen();
+	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
+	padInitializeDefault(&pad);
+}
 
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;

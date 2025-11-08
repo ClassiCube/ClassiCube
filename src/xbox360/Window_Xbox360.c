@@ -9,6 +9,7 @@
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <xenos/xenos.h>
 #include <input/input.h>
@@ -23,13 +24,14 @@ static uint32_t reg_read32(int reg)
 	return read32n(0xec800000 + reg);
 }
 
-void Window_PreInit(void) { }
-void Window_Init(void) {
+void Window_PreInit(void) {
 	DisplayInfo.Width  = reg_read32(D1GRPH_X_END);
 	DisplayInfo.Height = reg_read32(D1GRPH_Y_END);
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
@@ -223,9 +225,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

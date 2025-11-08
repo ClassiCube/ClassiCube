@@ -2071,7 +2071,7 @@ void GeneratingScreen_Show(void) {
 *#########################################################################################################################*/
 static struct DisconnectScreen {
 	Screen_Body
-	double initTime;
+	float delayLeft;
 	cc_bool canReconnect, lastActive;
 	int lastSecsLeft;
 	struct ButtonWidget reconnect, quit;
@@ -2096,12 +2096,11 @@ static void DisconnectScreen_Layout(void* screen) {
 
 static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 	cc_string msg; char msgBuffer[STRING_SIZE];
-	int elapsed, secsLeft;
+	int secsLeft;
 	String_InitArray(msg, msgBuffer);
 
 	if (s->canReconnect) {
-		elapsed  = (int)(Game.Time - s->initTime);
-		secsLeft = DISCONNECT_DELAY_SECS - elapsed;
+		secsLeft = Math_Ceil(s->delayLeft);
 
 		if (secsLeft > 0) {
 			String_Format1(&msg, "Reconnect in %i", &secsLeft);
@@ -2158,18 +2157,18 @@ static void DisconnectScreen_Init(void* screen) {
 
 	Game_SetMinFrameTime(1000 / 5.0f);
 
-	s->initTime     = Game.Time;
+	s->delayLeft    = DISCONNECT_DELAY_SECS;
 	s->lastSecsLeft = DISCONNECT_DELAY_SECS;
 	s->maxVertices  = Screen_CalcDefaultMaxVertices(s);
 }
 
 static void DisconnectScreen_Update(void* screen, float delta) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	int elapsed, secsLeft;
+	int secsLeft;
 
 	if (!s->canReconnect) return;
-	elapsed  = (int)(Game.Time - s->initTime);
-	secsLeft = DISCONNECT_DELAY_SECS - elapsed;
+	s->delayLeft -= delta;
+	secsLeft = Math_Ceil(s->delayLeft);
 
 	if (secsLeft < 0) secsLeft = 0;
 	if (s->lastSecsLeft == secsLeft && s->reconnect.active == s->lastActive) return;
