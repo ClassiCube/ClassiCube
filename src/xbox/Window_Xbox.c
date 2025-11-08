@@ -16,7 +16,6 @@
 #include <xid_driver.h>
 #include <pbkit/pbkit.h>
 
-static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -49,8 +48,8 @@ void Window_Init(void) {
 
 void Window_Free(void) { usbh_core_deinit(); }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create2D(int width, int height) { Window_Main.Is3D = false;  }
+void Window_Create3D(int width, int height) { Window_Main.Is3D = true; }
 
 void Window_Destroy(void) { }
 
@@ -249,7 +248,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

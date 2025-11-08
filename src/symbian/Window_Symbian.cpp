@@ -42,7 +42,6 @@ extern "C" {
 
 class CCContainer;
 
-static cc_bool launcherMode;
 static cc_bool gameRunning = false;
 
 const TUid KUidClassiCube = {0xE212A5C2};
@@ -627,7 +626,8 @@ void CCContainer::SizeChanged() {
 	
 	DisplayInfo.Width  = size.iWidth;
 	DisplayInfo.Height = size.iHeight;
-	if (!launcherMode) {
+
+	if (Window_Main.Is3D) {
 		if (size.iWidth <= 360) {
 			DisplayInfo.ScaleX = 0.5f;
 			DisplayInfo.ScaleY = 0.5f;
@@ -636,6 +636,7 @@ void CCContainer::SizeChanged() {
 			DisplayInfo.ScaleY = 1;
 		}
 	}
+
 	WindowInfo.Width  = size.iWidth;
 	WindowInfo.Height = size.iHeight;
 	Event_RaiseVoid(&WindowEvents.Resized);
@@ -660,7 +661,7 @@ CCoeControl* CCContainer::ComponentControl(TInt) const {
 
 void CCContainer::Draw(const TRect& aRect) const {
 #if CC_GFX_BACKEND_IS_GL()
-	if (!launcherMode) return;
+	if (Window_Main.Is3D) return;
 #endif
 	if (iBitmap) {
 		SystemGc().BitBlt(TPoint(0, 0), iBitmap);
@@ -822,11 +823,12 @@ void Window_Free(void) {
 }
 
 void Window_Create2D(int width, int height) {
-	launcherMode = true;
+	Window_Main.Is3D = false;
 	container->SetExtentToWholeScreen();
 }
+
 void Window_Create3D(int width, int height) {
-	launcherMode = false;
+	Window_Main.Is3D = true;
 	container->SetExtentToWholeScreen();
 }
 
@@ -913,7 +915,7 @@ void ShowDialogCore(const char* title, const char* msg) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 #ifdef CC_BUILD_TOUCH
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 #endif
 }
 

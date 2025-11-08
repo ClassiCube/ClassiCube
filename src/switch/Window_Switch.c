@@ -14,7 +14,6 @@
 
 #include <switch.h>
 
-static cc_bool launcherMode;
 static Framebuffer fb;
 static PadState pad;
 static AppletHookCookie cookie;
@@ -83,10 +82,11 @@ void Window_Free(void) {
 }
 
 void Window_Create2D(int width, int height) {
-	launcherMode = true;
+	Window_Main.Is3D = false;
 }
+
 void Window_Create3D(int width, int height) {
-	launcherMode = false;
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }

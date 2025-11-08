@@ -140,7 +140,7 @@ mergeInto(LibraryManager.library, {
       
       var filetype = {
         description: UTF8ToString(title),
-        accept: {'applicaion/octet-stream': [UTF8ToString(filter)]}
+        accept: {'application/octet-stream': [UTF8ToString(filter)]}
       };
       fileTypes.push(filetype);
     }

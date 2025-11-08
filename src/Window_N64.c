@@ -15,7 +15,6 @@
 #include "Options.h"
 #include <libdragon.h>
 
-static cc_bool launcherMode;
 #include "VirtualCursor.h"
 
 struct _DisplayData DisplayInfo;
@@ -48,8 +47,8 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create2D(int width, int height) { Window_Main.Is3D = false; }
+void Window_Create3D(int width, int height) { Window_Main.Is3D = true;  }
 
 void Window_Destroy(void) { }
 
@@ -212,7 +211,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	kb_tileWidth  = KB_TILE_SIZE / 2;
 	kb_tileHeight = KB_TILE_SIZE / 2;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

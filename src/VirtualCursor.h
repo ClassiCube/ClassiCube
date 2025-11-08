@@ -73,6 +73,6 @@ static void VirtualCursor_SetPosition(int x, int y) {
 	Game.Draw2DHooks[3] = VirtualCursor_Display3D;
 	
 	/* TODO better dirty region tracking */
-	if (launcherMode) LBackend_Redraw();
+	if (!Window_Main.Is3D) LBackend_Redraw();
 }
 

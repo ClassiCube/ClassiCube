@@ -21,8 +21,6 @@
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   200
 
-static cc_bool launcherMode;
-
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -52,12 +50,12 @@ void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) {
 	Hw32xScreenClear();
-	launcherMode = true;
+	Window_Main.Is3D = false;
 }
 
 void Window_Create3D(int width, int height) {
 	Hw32xScreenClear();
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }

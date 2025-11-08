@@ -21,7 +21,6 @@
 #define SCREEN_XRES	320
 #define SCREEN_YRES	240
 
-static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 static int gpu_video_mode;
@@ -89,7 +88,7 @@ extern void Gfx_ResetGPU(void);
 
 void Window_Create2D(int width, int height) {
 	Gfx_ResetGPU();
-	launcherMode = true;
+	Window_Main.Is3D = false;
 
 	InitScreen();
 	ClearScreen();
@@ -97,7 +96,7 @@ void Window_Create2D(int width, int height) {
 
 void Window_Create3D(int width, int height) { 
 	Gfx_ResetGPU();
-	launcherMode = false;
+	Window_Main.Is3D = true;
 
 	InitScreen();
 }
@@ -259,7 +258,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	kb_tileWidth  = KB_TILE_SIZE / 2;
 	kb_tileHeight = KB_TILE_SIZE / 2;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

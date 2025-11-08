@@ -24,7 +24,7 @@
 #include <libkbd.h>
 #include <libmouse.h>
 
-static cc_bool launcherMode, mouseSupported, kbdSupported;
+static cc_bool mouseSupported, kbdSupported;
 #include "../VirtualCursor.h"
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -112,13 +112,13 @@ static void InitDisplay(framebuffer_t* fb) {
 void Window_Create2D(int width, int height) {
 	ResetDisplay();
 	InitDisplay(&fb_colors[0]);
-	launcherMode = true;
+	Window_Main.Is3D = false;
 }
 
 void Window_Create3D(int width, int height) { 
 	ResetDisplay();
 	InitDisplay(&fb_colors[0]);
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -374,7 +374,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

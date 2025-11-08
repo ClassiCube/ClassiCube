@@ -127,16 +127,15 @@ static void Console_Init(cc_bool onSub) {
 /*########################################################################################################################*
 *------------------------------------------------------General data-------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool launcherMode;
 static int bg_id;
 static u16* bg_ptr;
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
-static void SetupVideo(cc_bool mode) {
-	if (launcherMode == mode) return;
-	launcherMode = mode;
+static void SetupVideo(cc_bool is3D) {
+	if (Window_Main.Is3D == is3D) return;
+	Window_Main.Is3D = is3D;
 
 	vramSetBankA(VRAM_A_LCD);
 	vramSetBankB(VRAM_B_LCD);
@@ -145,7 +144,7 @@ static void SetupVideo(cc_bool mode) {
 	vramSetBankH(VRAM_H_LCD);
 	vramSetBankI(VRAM_I_LCD);
 
-	if (launcherMode) {
+	if (!is3D) {
 		videoSetModeSub(MODE_5_2D);
 		vramSetBankC(VRAM_C_SUB_BG);
 
@@ -159,11 +158,11 @@ static void SetupVideo(cc_bool mode) {
 		videoSetMode(MODE_0_3D);
 	}
 
-	Console_Init(!launcherMode);
+	Console_Init(is3D);
 }
 
 void Window_PreInit(void) {
-	SetupVideo(true);
+	SetupVideo(false);
     setBrightness(2, 0);
 }
 
@@ -188,13 +187,13 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
-   	SetupVideo(true);
+   	SetupVideo(false);
 	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
 	bg_ptr = bgGetGfxPtr(bg_id);
 }
 
 void Window_Create3D(int width, int height) { 
-	SetupVideo(false);
+	SetupVideo(true);
 }
 
 void Window_Destroy(void) { }
@@ -354,7 +353,7 @@ static void OnKeyPressed(int key) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
     Keyboard* kbd = keyboardGetDefault();
-    if (!launcherMode) videoBgDisableSub(LAYER_CON);
+    if (Window_Main.Is3D) videoBgDisableSub(LAYER_CON);
 
     keyboardInit(kbd, LAYER_KB, BgType_Text4bpp, BgSize_T_256x512,
                        14, 0, false, true);
@@ -374,7 +373,7 @@ void OnscreenKeyboard_Close(void) {
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
     DisplayInfo.ShowingSoftKeyboard = false;
 
-    if (!launcherMode) videoBgEnableSub(LAYER_CON);
+    if (Window_Main.Is3D) videoBgEnableSub(LAYER_CON);
 }
 
 

@@ -49,7 +49,6 @@ void LogUnhandledNSErrors(NSException* ex);
 @interface CCViewController : UIViewController<UIDocumentPickerDelegate, UIAlertViewDelegate>
 @end
 static UIWindow* win_handle;
-static cc_bool launcherMode;
 
 static void AddTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
@@ -100,8 +99,8 @@ static CGRect GetViewFrame(void) {
     // touchesBegan:withEvent - iOS 2.0
     for (UITouch* t in touches) AddTouch(t);
     
-    // clicking on the background should dismiss onscren keyboard
-    if (launcherMode) { [view_handle endEditing:NO]; }
+    // clicking on the background should dismiss onscreen keyboard
+    if (!Window_Main.Is3D) { [view_handle endEditing:NO]; }
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent *)event {
@@ -532,7 +531,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 static void Init3DLayer(void);
 
 void Window_Create2D(int width, int height) {
-    launcherMode  = true;
+    Window_Main.Is3D = false;
     CGRect bounds = DoCreateWindow();
     
     view_handle = [[UIView alloc] initWithFrame:bounds];
@@ -541,7 +540,7 @@ void Window_Create2D(int width, int height) {
 }
 
 void Window_Create3D(int width, int height) {
-    launcherMode  = false;
+    Window_Main.Is3D = true;
     CGRect bounds = DoCreateWindow();
     
     view_handle = [[CC3DView alloc] initWithFrame:bounds];

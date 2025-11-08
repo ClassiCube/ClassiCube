@@ -12,7 +12,6 @@
 
 #include <3ds.h>
 
-static cc_bool launcherMode;
 static u16 top_width, top_height;
 static u16 btm_width, btm_height;
 #include "../VirtualKeyboard.h"
@@ -58,18 +57,22 @@ void Window_Init(void) {
 
 void Window_Free(void) { irrstExit(); }
 
-void Window_Create2D(int width, int height) {  
+void Window_Create2D(int width, int height) {
+	Window_Main.Is3D  = false;
+	Window_Alt.Is3D   = false;
+
 	DisplayInfo.Width = btm_width;
 	Window_Main.Width = btm_width;
 	Window_Alt.Width  = top_width;
-	launcherMode      = true;  
 }
 
 void Window_Create3D(int width, int height) { 
+	Window_Main.Is3D  = true;
+	Window_Alt.Is3D   = true;
+
 	DisplayInfo.Width = top_width;
 	Window_Main.Width = top_width;
 	Window_Alt.Width  = btm_width;
-	launcherMode      = false; 
 }
 
 void Window_Destroy(void) { }
@@ -260,7 +263,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	kb_tileWidth  = 20;
 	kb_tileHeight = 20;
 
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

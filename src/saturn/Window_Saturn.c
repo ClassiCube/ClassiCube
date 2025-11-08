@@ -18,8 +18,6 @@
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   224
 
-static cc_bool launcherMode;
-
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -55,7 +53,7 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create3D(int width, int height) { 
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -201,7 +199,7 @@ static const vdp2_vram_cycp_t vram_cycp = {
 };
 		
 void Window_Create2D(int width, int height) {
-	launcherMode = true;
+	Window_Main.Is3D = false;
 
 	const vdp2_scrn_bitmap_format_t format = {
 		.scroll_screen = VDP2_SCRN_NBG0,

@@ -17,7 +17,6 @@
 #include <sysutil/sysutil.h>
 #include <sysutil/video.h>
 
-static cc_bool launcherMode;
 static KbInfo   kb_info;
 static KbData   kb_data;
 static KbConfig kb_config;
@@ -70,12 +69,12 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
-	launcherMode = true;
+	Window_Main.Is3D = false;
 	Gfx_Create(); // launcher also uses RSX to draw
 }
 
 void Window_Create3D(int width, int height) { 
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -398,7 +397,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

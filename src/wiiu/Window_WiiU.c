@@ -29,7 +29,6 @@
 #include <coreinit/filesystem.h>
 #include <coreinit/memdefaultheap.h>
 
-static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 struct cc_window Window_Alt;
@@ -112,7 +111,7 @@ void Window_Create2D(int width, int height) {
 	Window_Main.Width  = OSSCREEN_DRC_WIDTH;
 	Window_Main.Height = OSSCREEN_DRC_HEIGHT;
 
-	launcherMode = true;
+	Window_Main.Is3D = false;
 	Event_Register_(&WindowEvents.InactiveChanged, NULL, LauncherInactiveChanged);
 	Init2DResources();
 }
@@ -121,7 +120,7 @@ void Window_Create3D(int width, int height) {
 	Window_Main.Width   = DisplayInfo.Width;
 	Window_Main.Height  = DisplayInfo.Height;
 
-	launcherMode = false; 
+	Window_Main.Is3D = true; 
 	Event_Unregister_(&WindowEvents.InactiveChanged, NULL, LauncherInactiveChanged);
 }
 
@@ -478,7 +477,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
