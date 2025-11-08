@@ -72,6 +72,7 @@ enum InputButtons {
 
 extern const char* const Input_StorageNames[INPUT_COUNT];
 extern const char* Input_DisplayNames[INPUT_COUNT];
+typedef cc_bool (*Input_DownHook)(int btn, struct InputDevice* device);
 
 extern struct _InputState {
 	/* Pressed state of each input button. Use Input_Set to change */
@@ -81,7 +82,7 @@ extern struct _InputState {
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
 	/* Function that can override all normal input handling (e.g. for virtual keyboard) */
-	cc_bool (*DownHook)(int btn, struct InputDevice* device);
+	Input_DownHook DownHook;
 } Input;
 
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */

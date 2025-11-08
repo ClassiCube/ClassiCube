@@ -9,6 +9,7 @@
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Camera.h"
+#include "../VirtualDialog.h"
 
 #include <nds.h>
 #include <fat.h>
@@ -154,6 +155,12 @@ static void SetupVideo(cc_bool is3D) {
 		vramSetBankI(VRAM_I_SUB_BG_0x06208000);
 
 		videoSetMode(MODE_0_3D);
+	
+		vramSetBankA(VRAM_A_TEXTURE);
+		vramSetBankB(VRAM_B_TEXTURE);
+		vramSetBankC(VRAM_C_TEXTURE);
+		vramSetBankD(VRAM_D_TEXTURE);
+		vramSetBankE(VRAM_E_TEX_PALETTE);
 	}
 
 	Console_Init(is3D);
@@ -181,7 +188,6 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
-	Window_ShowDialog("AC", "DE");
 }
 
 void Window_Free(void) { }
@@ -308,6 +314,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 
 	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
 	bg_ptr = bgGetGfxPtr(bg_id);
+	SetupVideo(false);
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -330,6 +337,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
+	SetupVideo(true);
 }
 
 
@@ -385,9 +393,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	Platform_LogConst(title);
-	Platform_LogConst(message);
-	// TODO
+	VirtualDialog_Show(title, msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

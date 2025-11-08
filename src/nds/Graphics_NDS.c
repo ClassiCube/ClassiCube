@@ -81,12 +81,6 @@ void Gfx_Create(void) {
 	Gfx_ClearColor(PackedCol_Make(0, 120, 80, 255));
 	Gfx_SetViewport(0, 0, 256, 192);
 	
-	vramSetBankA(VRAM_A_TEXTURE);
-	vramSetBankB(VRAM_B_TEXTURE);
-	vramSetBankC(VRAM_C_TEXTURE);
-	vramSetBankD(VRAM_D_TEXTURE);
-	vramSetBankE(VRAM_E_TEX_PALETTE);
-	
 	Gfx_SetFaceCulling(false);
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 }
