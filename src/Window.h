@@ -139,6 +139,8 @@ void Window_RequestClose(void);
 /* Processes all pending window messages/events. */
 void Window_ProcessEvents(float delta);
 
+/* Initialises necessary state before initing platform and loading options */
+void Gamepads_PreInit(void);
 /* Initialises state for gamepad/joystick input. */
 void Gamepads_Init(void);
 /* Processes all pending gamepad/joystick input. */

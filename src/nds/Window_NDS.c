@@ -170,14 +170,14 @@ void Window_PreInit(void) {
 	Window_Main.Is3D = 210; // So SetupVideo still runs
 	SetupVideo(false);
     setBrightness(2, 0);
-}
 
-void Window_Init(void) {  
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
-	
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
@@ -274,6 +274,8 @@ static const BindMapping defaults_nds[BIND_COUNT] = {
 	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
 	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT }
 };
+
+void Gamepads_PreInit(void) { }
 	
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;

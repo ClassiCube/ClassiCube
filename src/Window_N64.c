@@ -120,9 +120,12 @@ static const BindMapping defaults_n64[BIND_COUNT] = {
 	[BIND_SET_SPAWN]    = { CCPAD_START },
 };
 
+void Gamepads_PreInit(void) {
+	joypad_init();
+}
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	joypad_init();
 }
 
 static void HandleButtons(int port, joypad_buttons_t btns) {

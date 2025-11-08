@@ -167,6 +167,8 @@ static const BindMapping defaults_switch[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
 };
 
+void Gamepads_PreInit(void) { }
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }

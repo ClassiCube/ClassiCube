@@ -153,10 +153,12 @@ static const BindMapping defaults_3ds[BIND_COUNT] = {
 };
 
 static Result irrst_result;
+void Gamepads_PreInit(void) {
+	irrst_result = irrstInit();
+}
 
 void Gamepads_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	irrst_result  = irrstInit();
 }
 
 static void HandleButtons(int port, u32 mods) {

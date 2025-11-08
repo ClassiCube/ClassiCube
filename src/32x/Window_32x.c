@@ -110,6 +110,8 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_4, CCPAD_RIGHT }
 };
 
+void Gamepads_PreInit(void) { }
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }

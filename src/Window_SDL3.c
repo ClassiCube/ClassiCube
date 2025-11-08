@@ -502,7 +502,9 @@ void Window_DisableRawMouse(void) {
 #include "ExtMath.h"
 static SDL_Gamepad* controllers[INPUT_MAX_GAMEPADS];
 
-static void LoadControllers(void) {
+void Gamepads_PreInit(void) { }
+
+void Gamepads_Init(void) {
 	int count = 0;
 	SDL_JoystickID* joysticks = SDL_GetGamepads(&count);
 
@@ -512,10 +514,6 @@ static void LoadControllers(void) {
 		controllers[i] = SDL_OpenGamepad(joysticks[i]);
     }
 	SDL_free(joysticks);
-}
-
-void Gamepads_Init(void) {
-	LoadControllers();
 }
 
 static void ProcessGamepadButtons(int port, SDL_Gamepad* gp) {

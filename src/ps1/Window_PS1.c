@@ -162,15 +162,17 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 
 static char pad_buff[2][34];
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	
+void Gamepads_PreInit(void) {
 	// http://lameguy64.net/tutorials/pstutorials/chapter1/4-controllers.html
 	InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
 	pad_buff[0][0] = pad_buff[0][1] = 0xff;
 	pad_buff[1][0] = pad_buff[1][1] = 0xff;
 	StartPAD();
 	ChangeClearPAD(0);
+}
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	
 	Input_DisplayNames[CCPAD_1] = "CIRCLE";
 	Input_DisplayNames[CCPAD_2] = "CROSS";

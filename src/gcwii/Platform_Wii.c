@@ -97,7 +97,7 @@ cc_result Socket_GetLastError(cc_socket s) {
 
 static void InitSockets(void) {
 	int ret = net_init();
-	Platform_Log1("Network setup result: %i", &ret);
+	if (ret) Logger_SimpleWarn(ret, "setting up network");
 }
 
 

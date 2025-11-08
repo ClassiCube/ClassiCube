@@ -146,9 +146,7 @@ static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
     xid_ctrl = NULL;
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 #ifndef CC_BUILD_CXBX
 	usbh_core_init();
 	usbh_xid_init();
@@ -156,6 +154,10 @@ void Gamepads_Init(void) {
 	usbh_install_xid_conn_callback(OnDeviceChanged, OnDeviceChanged);
 	OnDeviceChanged(NULL, 0); // TODO useless call?
 #endif
+}
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_gamepad

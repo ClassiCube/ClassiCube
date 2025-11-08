@@ -101,7 +101,7 @@ static void InitSockets(void) {
 	if (ret >= 0) {
 		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
 	} else {
-		Platform_Log1("Network setup failed: %i", &ret);
+		Logger_SimpleWarn(ret, "setting up network");
 		net_supported = false;
 	}
 }

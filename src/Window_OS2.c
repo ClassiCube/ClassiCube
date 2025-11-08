@@ -604,6 +604,8 @@ void Window_DisableRawMouse(void) {
 		DefaultDisableRawMouse();
 }
 
+void Gamepads_PreInit(void) { }
+
 void Gamepads_Init(void) { }
 
 void Gamepads_Process(float delta) { }

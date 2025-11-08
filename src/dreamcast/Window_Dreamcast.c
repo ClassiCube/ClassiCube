@@ -245,6 +245,8 @@ static const BindMapping defaults_dc[BIND_COUNT] = {
 	[BIND_SCREENSHOT]   = { CCPAD_3 },
 };
 
+void Gamepads_PreInit(void) { }
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }

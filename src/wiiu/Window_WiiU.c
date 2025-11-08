@@ -156,11 +156,13 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 static VPADStatus vpadStatus;
 static KPADStatus kpads[4];
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 	KPADInit();
 	VPADInit();
+}
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 static void ProcessKPadButtons(int port, int mods) {

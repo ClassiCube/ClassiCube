@@ -126,6 +126,7 @@ static void SetupProgram(int argc, char** argv) {
 	CrashHandler_Install();
 	Logger_Hook();
 	Window_PreInit();
+	Gamepads_PreInit();
 	Platform_Init();
 	
 	res = Platform_SetDefaultCurrentDirectory(argc, argv);

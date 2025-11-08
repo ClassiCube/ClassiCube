@@ -296,9 +296,12 @@ static padInfo pad_info;
 static padData pad_data[MAX_PORT_NUM];
 static cc_bool circle_main;
 
+void Gamepads_PreInit(void) {
+	ioPadInit(MAX_PORT_NUM);
+}
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	ioPadInit(MAX_PORT_NUM);
 
 	int ret = 0;
  	sysUtilGetSystemParamInt(SYSUTIL_SYSTEMPARAM_ID_ENTER_BUTTON_ASSIGN, &ret);

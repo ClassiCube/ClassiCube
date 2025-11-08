@@ -112,9 +112,12 @@ static const BindMapping saturn_defaults[BIND_COUNT] = {
 	[BIND_DELETE_BLOCK] = { CCPAD_R },
 };
 
+void Gamepads_PreInit(void) {
+	smpc_peripheral_init();
+}
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	smpc_peripheral_init();
 	
 	Input_DisplayNames[CCPAD_1] = "A";
 	Input_DisplayNames[CCPAD_2] = "B";

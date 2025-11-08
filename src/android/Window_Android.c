@@ -361,9 +361,9 @@ void Window_ProcessEvents(float delta) {
 	Java_ICall_Void(env, JAVA_processEvents, NULL);
 }
 
-void Gamepads_Init(void) {
+void Gamepads_PreInit(void) { }
 
-}
+void Gamepads_Init(void) { }
 
 void Gamepads_Process(float delta) { }
 

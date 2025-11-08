@@ -116,9 +116,9 @@ void Window_ProcessEvents(float delta) {
 	dispatcher.ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 }
 
-void Gamepads_Init(void) {
+void Gamepads_PreInit(void) { }
 
-}
+void Gamepads_Init(void) { }
 
 void Gamepads_Process(float delta) { }
 

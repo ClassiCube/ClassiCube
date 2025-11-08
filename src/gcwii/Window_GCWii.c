@@ -11,6 +11,7 @@
 #include "../Graphics.h"
 #include "../Options.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <gccore.h>
 #if defined HW_RVL
@@ -62,16 +63,16 @@ void Window_PreInit(void) {
 	SYS_SetPowerCallback(OnPowerOff);
 	#endif
 	InitVideo();
-}
 
-void Window_Init(void) {
 	DisplayInfo.Width  = cur_mode->fbWidth;
 	DisplayInfo.Height = cur_mode->xfbHeight;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
-	Window_Main.Width    = cur_mode->fbWidth;
-	Window_Main.Height   = cur_mode->xfbHeight;
+}
+
+void Window_Init(void) {
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
 	
 	Window_Main.Exists   = true;
@@ -91,7 +92,6 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) {
-	needsFBUpdate = true;
 	Window_Main.Is3D = false; 
 }
 
@@ -358,15 +358,17 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 	#if defined HW_RVL
 	WPAD_Init();
 	for (int i = 0; i < 4; i++)
 		WPAD_SetDataFormat(i, WPAD_FMT_BTNS_ACC_IR);
 	#endif
 	PAD_Init();
+}
+
+void Gamepads_Init(void) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 #if defined HW_RVL
@@ -522,6 +524,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+
+	needsFBUpdate = true;
 }
 
 // TODO: Get rid of this complexity and use the 3D API instead..
@@ -608,11 +612,8 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

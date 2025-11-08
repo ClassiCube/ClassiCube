@@ -159,10 +159,12 @@ static const BindMapping defaults_vita[BIND_COUNT] = {
 };
 static cc_bool circle_main;
 
+void Gamepads_PreInit(void) {
+	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+}
+
 void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
-	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
 
 	SceAppUtilInitParam init_param = { 0 };
 	SceAppUtilBootParam boot_param = { 0 };
