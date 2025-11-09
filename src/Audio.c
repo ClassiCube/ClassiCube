@@ -525,6 +525,8 @@ void Audio_SetMusic(int volume) {
 }
 
 static void OnInit(void) {
+	Utils_EnsureDirectory("audio");
+
 	Sounds_Init();
 	Music_Init();
 }

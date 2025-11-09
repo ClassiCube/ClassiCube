@@ -1297,6 +1297,9 @@ void Fetcher_Run(void) {
 	{
 		asset_sets[i]->DownloadAssets();
 	}
+
+	Utils_EnsureDirectory("texpacks");
+	Utils_EnsureDirectory("audio");
 }
 
 static void Fetcher_Finish(void) {

@@ -215,9 +215,6 @@ static void Launcher_Init(void) {
 
 	Event_Register_(&InputEvents.Down2,         NULL, OnInputDown);
 	Event_Register_(&InputEvents.Wheel,         NULL, OnMouseWheel);
-
-	Utils_EnsureDirectory("texpacks");
-	Utils_EnsureDirectory("audio");
 }
 
 void Launcher_Setup(void) {
