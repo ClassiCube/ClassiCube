@@ -130,17 +130,26 @@ void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
 
 	iso_posX = x; iso_posY = y;
 
+#if CC_BUILD_FPU_MODE <= CC_FPU_MODE_MINIMAL
+	IsometricDrawer_Flat(block, size);
+#else
 	if (Blocks.Draw[block] == DRAW_SPRITE) {
 		IsometricDrawer_Flat(block, size);
 	} else {
 		IsometricDrawer_Angled(block, size);
 	}
+#endif
 }
 
 int IsometricDrawer_EndBatch(void) {
 	return (int)(iso_vertices - iso_vertices_base);
 }
 
+#if CC_BUILD_FPU_MODE <= CC_FPU_MODE_MINIMAL
+	#define ISO_DRAW_HINT DRAW_HINT_SPRITE
+#else
+	#define ISO_DRAW_HINT DRAW_HINT_NONE
+#endif
 void IsometricDrawer_Render(int count, int offset, int* state) {
 	int i, curIdx, batchBeg, batchLen;
 
@@ -154,7 +163,7 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 
 		/* Flush previous batch */
 		Atlas1D_Bind(curIdx);
-		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg, DRAW_HINT_NONE);
+		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg, ISO_DRAW_HINT);
 
 		/* Reset for next batch */
 		curIdx   = state[i];
@@ -163,5 +172,5 @@ void IsometricDrawer_Render(int count, int offset, int* state) {
 	}
 
 	Atlas1D_Bind(curIdx);
-	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg, DRAW_HINT_NONE);
+	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg, ISO_DRAW_HINT);
 }

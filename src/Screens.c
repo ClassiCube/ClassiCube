@@ -411,7 +411,7 @@ static void HUDScreen_Render(void* screen, float delta) {
 		if (!Gui.HideCrosshair && Gui.IconsTex && !tablist_active) {
 			Gfx_BindTexture(Gui.IconsTex);
 			Gfx_BindDynamicVb(s->vb); /* Have to rebind for mobile right now... */
-			Gfx_DrawVb_IndexedTris(4);
+			Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_SPRITE);
 		}
 	}
 

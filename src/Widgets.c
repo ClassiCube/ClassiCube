@@ -2818,7 +2818,7 @@ static int ThumbstickWidget_Render2(void* widget, int offset) {
 		Gfx_BindTexture(Gui.TouchTex);
 		for (i = 0; i < 4; i++) {
 			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
-			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4), DRAW_HINT_NONE);
+			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4), DRAW_HINT_SPRITE);
 		}
 	}
 	return offset + THUMBSTICKWIDGET_MAX;

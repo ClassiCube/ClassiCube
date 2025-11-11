@@ -148,6 +148,7 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_GL11      7
 #define CC_GFX_BACKEND_SOFTMIN   8
 #define CC_GFX_BACKEND_SOFTFP    9
+#define CC_GFX_BACKEND_IS_GL() (CC_GFX_BACKEND == CC_GFX_BACKEND_GL1 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL2 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL11)
 
 #define CC_SSL_BACKEND_NONE      1
 #define CC_SSL_BACKEND_BEARSSL   2
@@ -164,7 +165,10 @@ typedef cc_uint8  cc_bool;
 #define CC_AUD_BACKEND_OPENSLES 3
 #define CC_AUD_BACKEND_NULL     4
 
-#define CC_GFX_BACKEND_IS_GL() (CC_GFX_BACKEND == CC_GFX_BACKEND_GL1 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL2 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL11)
+#define CC_FPU_MODE_MINIMAL 1 /* Integer math funcs, no animations, no held block, flat inventory */
+#define CC_FPU_MODE_LIMITED 2 /* Integer math funcs, no animations, no held block */
+#define CC_FPU_MODE_REDUCED 3 /* Integer math funcs, no animations */
+#define CC_FPU_MODE_NORMAL  4
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
@@ -269,15 +273,13 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
 	#define CC_BUILD_MAXSTACK (32 * 1024)
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
@@ -289,15 +291,13 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
 	#define CC_BUILD_MAXSTACK (32 * 1024)
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
@@ -526,14 +526,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_MAXSTACK (8 * 1024) /* TODO verify */
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
 	#define CC_DISABLE_EXTRA_MODELS
 	#undef  CC_VAR
@@ -552,8 +550,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_MAXSTACK (16 * 1024) /* Only < 16 kb stack as it's in DTCM region */
-	#define CC_BUILD_NOFPU
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_REDUCED
 	#undef CC_BUILD_ADVLIGHTING
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#ifndef NDS_NONET
@@ -586,11 +583,9 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_LIMITED
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
@@ -612,11 +607,9 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_MAXSTACK (64 * 1024)
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_LIMITED
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
@@ -629,14 +622,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_MAXSTACK (64 * 1024)
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
 	#define CC_DISABLE_EXTRA_MODELS
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
@@ -657,11 +648,9 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_WINCE
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_LIMITED
 	#undef  CC_BUILD_ADVLIGHTING
     #undef  CC_BUILD_FREETYPE
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
     #define CC_BUILD_TOUCH
     #define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32CE
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
@@ -708,6 +697,9 @@ typedef cc_uint8  cc_bool;
 
 #ifndef CC_BUILD_MAXSTACK
 	#define CC_BUILD_MAXSTACK (256 * 1024)
+#endif
+#ifndef CC_BUILD_FPU_MODE
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_NORMAL
 #endif
 
 #ifdef EXTENDED_BLOCKS

@@ -183,7 +183,7 @@ void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	v = Gfx_Build2DFlat(x, y, width, height, color, v);
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
-	Gfx_DrawVb_IndexedTris(4);
+	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
@@ -194,7 +194,7 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 	v = Gfx_Build2DGradient(x, y, width, height, top, bottom, v);
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
-	Gfx_DrawVb_IndexedTris(4);
+	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
@@ -206,7 +206,7 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	Gfx_Make2DQuad(tex, color, &ptr);
 
 	Gfx_UnlockDynamicVb(Gfx_texVb);
-	Gfx_DrawVb_IndexedTris(4);
+	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_SPRITE);
 }
 #endif
 

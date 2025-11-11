@@ -11,7 +11,7 @@
 #include "Options.h"
 
 cc_bool HeldBlockRenderer_Show;
-#ifndef CC_DISABLE_HELDBLOCK
+#if CC_BUILD_FPU_MODE >= CC_FPU_MODE_REDUCED
 static BlockID held_block;
 static struct Entity held_entity;
 static struct Matrix held_blockProj;
