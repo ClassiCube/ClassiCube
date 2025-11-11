@@ -6,7 +6,6 @@
 #include "../Utils.h"
 #include "../Errors.h"
 #include "../Game.h"
-#define OVERRIDE_MEM_FUNCTIONS
 
 #include <stdlib.h>
 #include <string.h>

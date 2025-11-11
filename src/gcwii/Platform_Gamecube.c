@@ -4,6 +4,7 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
 #include "../Stream.h"
 #include "../ExtMath.h"

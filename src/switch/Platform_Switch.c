@@ -27,7 +27,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
-#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
