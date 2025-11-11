@@ -159,7 +159,7 @@ void Platform_LogConst(const char* message) {
 }
 
 /*########################################################################################################################*
-*-----------------------------------------------------Process/Module------------------------------------------------------*
+*---------------------------------------------------Command line args-----------------------------------------------------*
 *#########################################################################################################################*/
 static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
@@ -188,6 +188,27 @@ static CC_INLINE int GetGameArgs(cc_string* args) {
 	gameNumArgs = 0;
 	return count;
 }
+
+#ifdef DEFAULT_COMMANDLINE_FUNC
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	if (gameHasArgs) return GetGameArgs(args);
+	/* Consoles *sometimes* doesn't use argv[0] for program name and so argc will be 0 */
+	//* (e.g. when running via some emulators) */
+	if (!argc) return 0;
+	
+	argc--; argv++; /* skip executable path argument */
+
+	int count = min(argc, GAME_MAX_CMDARGS);
+	Platform_Log1("ARGS: %i", &count);
+	
+	for (int i = 0; i < count; i++) 
+	{
+		args[i] = String_FromReadonly(argv[i]);
+		Platform_Log2("  ARG %i = %c", &i, argv[i]);
+	}
+	return count;
+}
+#endif
 
 
 /*########################################################################################################################*

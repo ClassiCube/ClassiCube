@@ -481,3 +481,12 @@ cc_result Process_StartOpen(const cc_string* args) {
 
 void Process_Exit(cc_result code) { exit(code); }
 
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
+

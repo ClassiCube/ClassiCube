@@ -38,8 +38,8 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 // Current directory management for Windows CE
 static WCHAR current_directory[MAX_PATH] = L"\\";
 static cc_string Platform_NextArg(STRING_REF cc_string* args);
-
 static CRITICAL_SECTION dir_lock;
+
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -51,12 +51,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 
 	do {
 		res = RunProgram(0, NULL);
-	} while (Platform_IsSingleProcess() && Window_Main.Exists);
+	} while (Window_Main.Exists);
 
 	Window_Free();
 	ExitProcess(res);
 	return res;
 }
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*

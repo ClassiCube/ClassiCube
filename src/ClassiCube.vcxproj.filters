@@ -342,9 +342,6 @@
     <ClInclude Include="SSL.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
-    <ClInclude Include="_PlatformConsole.h">
-      <Filter>Header Files\Platform</Filter>
-    </ClInclude>
     <ClInclude Include="EntityRenderers.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
