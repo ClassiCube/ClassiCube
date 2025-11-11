@@ -1,4 +1,3 @@
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../SystemFonts.h"
@@ -39,6 +38,7 @@ const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 const char* Platform_AppNameSuffix = "";
 cc_uint8 Platform_Flags;
 cc_bool  Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*

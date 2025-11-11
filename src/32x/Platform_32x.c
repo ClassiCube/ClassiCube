@@ -4,7 +4,6 @@
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -32,6 +31,7 @@ const cc_result ReturnCode_SocketDropped    = -1;
 const char* Platform_AppNameSuffix  = " 32x";
 cc_bool Platform_ReadonlyFilesystem = true;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*

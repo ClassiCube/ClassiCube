@@ -1,4 +1,3 @@
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../SystemFonts.h"
 #include "../Funcs.h"
@@ -27,6 +26,7 @@
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::System;
+#define UWP_STRING(str) ((wchar_t*)(str)->uni)
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
@@ -39,7 +39,7 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 const char* Platform_AppNameSuffix = "";
 cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
-#define UWP_STRING(str) ((wchar_t*)(str)->uni)
+#include "../_PlatformBase.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*

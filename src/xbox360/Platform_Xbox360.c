@@ -3,7 +3,6 @@
 #define CC_NO_SOCKETS
 #define CC_NO_DYNLIB
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../Funcs.h"
 #include "../Utils.h"
@@ -38,6 +37,7 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " XBox 360";
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*

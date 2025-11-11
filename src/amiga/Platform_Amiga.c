@@ -4,7 +4,6 @@
 #define CC_NO_THREADING
 #define OVERRIDE_MEM_FUNCTIONS
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../SystemFonts.h"
@@ -31,6 +30,7 @@ const cc_result ReturnCode_SocketDropped    = 1000000;
 const char* Platform_AppNameSuffix = " Amiga";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 cc_bool  Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 #ifdef __GNUC__
 static const char __attribute__((used)) min_stack[] = "$STACK:102400";

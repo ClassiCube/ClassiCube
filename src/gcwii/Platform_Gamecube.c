@@ -5,7 +5,6 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -39,6 +38,7 @@ const cc_result ReturnCode_SocketDropped    = -EPIPE;
 
 const char* Platform_AppNameSuffix = " GameCube";
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 #include "Platform_GCWii.h"
 
 

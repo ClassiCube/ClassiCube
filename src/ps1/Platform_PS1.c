@@ -4,7 +4,6 @@
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -21,7 +20,6 @@
 #include <psxapi.h>
 #include <psxgpu.h>
 #include <hwregs_c.h>
-void exit(int code) { _boot(); }
 
 // The SDK calloc doesn't zero memory, so need to override it
 void* calloc(size_t num, size_t size) {
@@ -29,7 +27,6 @@ void* calloc(size_t num, size_t size) {
 	if (ptr) memset(ptr, 0, num * size);
 	return ptr;
 }
-#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = 99999;
@@ -41,6 +38,8 @@ const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix  = " PS1";
 cc_bool Platform_ReadonlyFilesystem = true;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*
@@ -202,7 +201,20 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
-void Process_Exit(cc_result code) { exit(code); }
+void Process_Exit(cc_result code) { _boot(); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	return GetGameArgs(args);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 
 /*########################################################################################################################*

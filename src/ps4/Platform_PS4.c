@@ -2,7 +2,6 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../SystemFonts.h"
@@ -43,6 +42,7 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " PS4";
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*

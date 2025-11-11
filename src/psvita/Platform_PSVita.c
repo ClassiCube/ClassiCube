@@ -2,7 +2,6 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -27,6 +26,7 @@ static int stdout_fd;
 
 const char* Platform_AppNameSuffix = " PS Vita";
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*

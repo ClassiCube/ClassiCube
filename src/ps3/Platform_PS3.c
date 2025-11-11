@@ -2,7 +2,6 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -44,6 +43,7 @@ const cc_result ReturnCode_SocketDropped    = NET_EPIPE;
 
 const char* Platform_AppNameSuffix = " PS3";
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 SYS_PROCESS_PARAM(1001, 256 * 1024); // 256kb stack size
 

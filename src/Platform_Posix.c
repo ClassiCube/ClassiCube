@@ -2,7 +2,6 @@
 #if defined CC_BUILD_POSIX
 
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
 #include "SystemFonts.h"
@@ -11,6 +10,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -53,6 +53,7 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 cc_uint8 Platform_Flags;
 #endif
 cc_bool  Platform_ReadonlyFilesystem;
+#include "_PlatformBase.h"
 
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN

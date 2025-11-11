@@ -1,7 +1,6 @@
 #include "Core.h"
 #if defined CC_BUILD_WINCE
 
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "SystemFonts.h"
 #include "Funcs.h"
@@ -34,6 +33,7 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 const char* Platform_AppNameSuffix = " CE";
 cc_bool  Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+#include "_PlatformBase.h"
 
 // Current directory management for Windows CE
 static WCHAR current_directory[MAX_PATH] = L"\\";

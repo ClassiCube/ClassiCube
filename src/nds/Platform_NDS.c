@@ -5,7 +5,6 @@
 #endif
 
 #define CC_XTEA_ENCRYPTION
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -53,6 +52,7 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " NDS";
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*

@@ -1,12 +1,11 @@
-#include "Core.h"
-#if defined CC_BUILD_SYMBIAN
+#define CC_XTEA_ENCRYPTION
+#define OVERRIDE_MEM_FUNCTIONS
+
 extern "C" {
 #include "Errors.h"
 #include "Platform.h"
 #include "Logger.h"
 #include "String.h"
-#define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
 #include "SystemFonts.h"
@@ -15,7 +14,6 @@ extern "C" {
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
-#define OVERRIDE_MEM_FUNCTIONS
 
 #include <unistd.h>
 #include <errno.h>
@@ -55,6 +53,7 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 const char* Platform_AppNameSuffix = " Symbian";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 cc_bool  Platform_ReadonlyFilesystem;
+#include "_PlatformBase.h"
 
 
 /*########################################################################################################################*
@@ -730,6 +729,4 @@ int __aeabi_uidiv(unsigned int a, unsigned int b)
 	return __aeabi_uidivmod(a, b);
 }
 }
-#endif
-
 #endif

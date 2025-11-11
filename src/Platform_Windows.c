@@ -1,7 +1,6 @@
 #include "Core.h"
 #if defined CC_BUILD_WIN
 
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "SystemFonts.h"
 #include "Funcs.h"
@@ -35,6 +34,7 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 const char* Platform_AppNameSuffix = "";
 cc_bool  Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags;
+#include "_PlatformBase.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*

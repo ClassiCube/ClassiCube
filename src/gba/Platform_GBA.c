@@ -4,7 +4,6 @@
 #define CC_NO_THREADING
 #define OVERRIDE_MEM_FUNCTIONS
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -35,6 +34,7 @@ const cc_result ReturnCode_SocketDropped    = -1;
 const char* Platform_AppNameSuffix = " GBA";
 cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*

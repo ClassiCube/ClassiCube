@@ -1,6 +1,3 @@
-#include "Core.h"
-#if defined CC_BUILD_SYMBIAN
-
 #include <include/bitmap.h>
 #include <e32base.h>
 #include <coemain.h>
@@ -21,6 +18,7 @@
 #include <eikstart.h>
 #include <aknmessagequerydialog.h>
 #include <classicube.rsg>
+
 extern "C" {
 #include <stdapis/string.h>
 #include <gles/egl.h>
@@ -989,5 +987,3 @@ cc_result Process_StartOpen(const cc_string* args) {
 	TRAP(err, err = OpenBrowserL(args));
 	return (cc_result) err;
 }
-
-#endif

@@ -6,7 +6,6 @@
 #define CC_NO_THREADING
 
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
 #include "Funcs.h"
@@ -26,7 +25,6 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/fcntl.h>
-#include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -37,6 +35,24 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix  = " N64";
 cc_bool Platform_ReadonlyFilesystem = false;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "_PlatformBase.h"
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 
 /*########################################################################################################################*
@@ -263,6 +279,20 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	return GetGameArgs(args);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
+
 
 
 /*########################################################################################################################*
