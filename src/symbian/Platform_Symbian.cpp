@@ -15,6 +15,7 @@ extern "C" {
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+#define OVERRIDE_MEM_FUNCTIONS
 
 #include <unistd.h>
 #include <errno.h>
@@ -59,10 +60,6 @@ cc_bool  Platform_ReadonlyFilesystem;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*)memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*)memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*)memmove(dst, src,   numBytes); }
-
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? User::Alloc(size) : NULL;

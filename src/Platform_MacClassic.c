@@ -4,6 +4,7 @@
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
+#define OVERRIDE_MEM_FUNCTIONS
 
 #include "_PlatformBase.h"
 #include "Stream.h"
@@ -89,10 +90,6 @@ MAC_SYSAPI(void) Microseconds(cc_uint64* microTickCount) MAC_FOURWORDINLINE(0xA1
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? NewPtr(size) : NULL;
@@ -380,19 +377,9 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Process_OpenSupported = false;
-static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
-static int gameNumArgs;
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int count = gameNumArgs;
-	for (int i = 0; i < count; i++) 
-	{
-		args[i] = String_FromRawArray(gameArgs[i]);
-	}
-	
-	// clear arguments so after game is closed, launcher is started
-	gameNumArgs = 0;
-	return count;
+	return GetGameArgs(args);
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
@@ -400,13 +387,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	for (int i = 0; i < numArgs; i++) 
-	{
-		String_CopyToRawArray(gameArgs[i], &args[i]);
-	}
-
-	gameNumArgs = numArgs;
-	return 0;
+	return SetGameArgs(args, numArgs);
 }
 
 void Process_Exit(cc_result code) { 

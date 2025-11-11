@@ -20,12 +20,13 @@ void* TempMem_Alloc(int size) {
 }
 #endif
 
+
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
 int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes) {
-	const cc_uint8* src = (const cc_uint8*)a;
-	const cc_uint8* dst = (const cc_uint8*)b;
+	const char* src = (const char*)a;
+	const char* dst = (const char*)b;
 
 	while (numBytes--) { 
 		if (*src++ != *dst++) return false; 
@@ -33,6 +34,48 @@ int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes) {
 	return true;
 }
 
+#ifdef CC_BUILD_NOSTDLIB
+void* Mem_Set(void* dst, cc_uint8 value,  unsigned numBytes) {
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = value; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) {
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = *sp++; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { 
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+	
+	/* Check if destination range overlaps source range */
+	/* If this happens, then need to copy backwards */
+	if (dp >= sp && dp < (sp + numBytes)) {
+		sp += numBytes;
+		dp += numBytes;
+
+		while (numBytes--) *--dp = *--sp;
+	} else {
+		while (numBytes--) *dp++ = *sp++;
+	}
+	return dst;
+}
+#else
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*)memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*)memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*)memmove(dst, src,   numBytes); }
+#endif
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Memory management-----------------------------------------------------*
+*#########################################################################################################################*/
 CC_NOINLINE static void AbortOnAllocFailed(const char* place) {	
 	cc_string log; char logBuffer[STRING_SIZE+20 + 1];
 	String_InitArray_NT(log, logBuffer);
@@ -68,6 +111,26 @@ static CC_NOINLINE cc_uint32 CalcMemSize(cc_uint32 numElems, cc_uint32 elemsSize
 	if (numBytes / elemsSize != numElems) return 0; /* Overflow */
 	return numBytes;
 }
+
+#ifndef OVERRIDE_MEM_FUNCTIONS
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? malloc(size) : NULL;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	return calloc(numElems, elemsSize);
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? realloc(mem, size) : NULL;
+}
+
+void Mem_Free(void* mem) {
+	if (mem) free(mem);
+}
+#endif
 
 
 /*########################################################################################################################*

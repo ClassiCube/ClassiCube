@@ -7,6 +7,7 @@
 #include "../Utils.h"
 #include "../Errors.h"
 #include "../Game.h"
+#define OVERRIDE_MEM_FUNCTIONS
 
 #include <stdlib.h>
 #include <string.h>
@@ -38,32 +39,6 @@ const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 const char* Platform_AppNameSuffix = "";
 cc_uint8 Platform_Flags;
 cc_bool  Platform_ReadonlyFilesystem;
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, cc_uint32 numBytes) { return memmove(dst, src,   numBytes); }
-
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
-}
 
 
 /*########################################################################################################################*

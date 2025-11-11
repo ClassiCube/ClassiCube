@@ -17,34 +17,6 @@ int main(int argc, char** argv) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
-#ifndef OVERRIDE_MEM_FUNCTIONS
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
-}
-#endif
-
-
-/*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -58,10 +30,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	//  (e.g. when running via some emulators)
 	if (!argc) return 0;
 
-#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_32X
+#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
 	// When running in DuckStation at least, argv was a five element array of empty strings ???
 	return 0;
-#endif
+#else
 	
 	argc--; argv++; // skip executable path argument
 
@@ -74,6 +46,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 		Platform_Log2("  ARG %i = %c", &i, argv[i]);
 	}
 	return count;
+#endif
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
