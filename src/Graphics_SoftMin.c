@@ -480,32 +480,24 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	}
 
 	if (gfx_alphaTest && A == 0) return;
-	color = BitmapCol_Make(R, G, B, 0xFF);
+	
 
-	for (y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
-	{
-		int bc0 = bc0_start;
-		int bc1 = bc1_start;
-		int bc2 = bc2_start;
+	if (!gfx_alphaBlend) {
+		#define PIXEL_PLOT_FUNC(index, x, y) \
+			colorBuffer[index] = color;
 
-		for (x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
-		{
-			if ((bc0 | bc1 | bc2) < 0) continue;
-			int cb_index = y * cb_stride + x;
-			
-			if (!gfx_alphaBlend) {
-				colorBuffer[cb_index] = color;
-				continue;
-			}
+		color = BitmapCol_Make(R, G, B, 0xFF);
+		#include "Graphics_SoftMin.tri.i"
+	} else {
+		// Hardcode for alpha of 128
+		#define PIXEL_PLOT_FUNC(index, x, y) \
+			BitmapCol dst = colorBuffer[index];  \
+			int finR = (R + BitmapCol_R(dst)) >> 1; \
+			int finG = (G + BitmapCol_G(dst)) >> 1; \
+			int finB = (B + BitmapCol_B(dst)) >> 1; \
+			colorBuffer[index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 
-			// Hardcode for alpha of 128
-			BitmapCol dst = colorBuffer[cb_index];
-			int finR = (R + BitmapCol_R(dst)) >> 1;
-			int finG = (G + BitmapCol_G(dst)) >> 1;
-			int finB = (B + BitmapCol_B(dst)) >> 1;
-
-			colorBuffer[cb_index] = BitmapCol_Make(finR, finG, finB, 0xFF);
-		}
+		#include "Graphics_SoftMin.tri.i"
 	}
 }
 
