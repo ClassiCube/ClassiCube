@@ -44,7 +44,7 @@ jobs:
           LIBS: "-lX11 -lXi -lpthread -lGL -lm -ldl"
           SRCS: "src/*.c third_party/bearssl/*.c"
           FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic -Werror"
-          NIX32_FLAGS:  "-no-pie -fno-pie -m32 -march=pentium -fcf-protection=none -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+          NIX32_FLAGS:  "-no-pie -fno-pie -m32 -march=i486 -fcf-protection=none -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
@@ -148,4 +148,5 @@ jobs:
         with:
           NOTIFY_MESSAGE: 'Failed to produce 64 bit Linux build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+
 
