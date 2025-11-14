@@ -16,6 +16,8 @@ LIBRARY apparc.lib
 LIBRARY eikcore.lib
 LIBRARY eikdlg.lib
 LIBRARY mediaclientaudiostream.lib
+LIBRARY estor.lib
+LIBRARY bafl.lib
 
 LIBRARY libc.lib
 LIBRARY libm.lib

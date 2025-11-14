@@ -17,6 +17,8 @@
 #include <AknUtils.h>
 #include <eikstart.h>
 #include <aknmessagequerydialog.h>
+#include <baclipb.h>
+#include <s32ucmp.h>
 #include <classicube.rsg>
 
 extern "C" {
@@ -801,6 +803,63 @@ static void ShowDialogL(const char* title, const char* msg) {
 	dialog->RunLD();
 }
 
+static void GetClipboardL(cc_string* value) {
+	TUid uid = {268450333}; // KClipboardUidTypePlainText
+	
+	CClipboard* cb = CClipboard::NewForReadingLC(CCoeEnv::Static()->FsSession());
+	TStreamId stid = cb->StreamDictionary().At(uid);
+	if (stid != KNullStreamId) {
+		RStoreReadStream stream;
+		stream.OpenLC(cb->Store(), stid);
+		const TInt32 size = stream.ReadInt32L();
+		HBufC* buf = HBufC::NewLC(size);
+		buf->Des().SetLength(size);
+
+		TUnicodeExpander e;
+		TMemoryUnicodeSink sink(&buf->Des()[0]);
+		e.ExpandL(sink, stream, size);
+
+		String_AppendUtf16(value, buf->Ptr(), buf->Length() * 2);
+
+		stream.Close();
+		CleanupStack::Pop();
+		CleanupStack::PopAndDestroy(buf);
+	}
+	CleanupStack::PopAndDestroy(cb);
+}
+
+static void SetClipboardL(const cc_string* value) {
+	TUid uid = {268450333}; // KClipboardUidTypePlainText
+	
+	HBufC* buf = HBufC::NewLC(value->length + 1);
+	TPtr16 des = buf->Des();
+	ConvertToUnicode(des, value);
+	
+	CClipboard* cb = CClipboard::NewForWritingLC(CCoeEnv::Static()->FsSession());
+
+	RStoreWriteStream stream;
+	TStreamId stid = stream.CreateLC(cb->Store());
+	stream.WriteInt32L(buf->Length());
+
+	TUnicodeCompressor c;
+	TMemoryUnicodeSource source(buf->Ptr());
+	TInt bytes(0);
+	TInt words(0);
+	c.CompressL(stream, source, KMaxTInt, buf->Length(), &bytes, &words);
+
+	stream.WriteInt8L(0);
+
+	stream.CommitL();
+	cb->StreamDictionary().AssignL(uid, stid);
+	cb->CommitL();
+
+	stream.Close();
+	CleanupStack::PopAndDestroy();
+	CleanupStack::PopAndDestroy(cb);
+	
+	CleanupStack::PopAndDestroy(buf);
+}
+
 // Window implementation
 
 void Window_PreInit(void) {
@@ -835,11 +894,11 @@ void Window_Destroy(void) { }
 void Window_SetTitle(const cc_string* title) { }
 
 void Clipboard_GetText(cc_string* value) {
-	// TODO
+	TRAP_IGNORE(GetClipboardL(value));
 }
 
 void Clipboard_SetText(const cc_string* value) {
-	// TODO
+	TRAP_IGNORE(SetClipboardL(value));
 }
 
 int Window_GetWindowState(void) {
