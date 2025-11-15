@@ -64,6 +64,34 @@ void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src,
 
 
 /*########################################################################################################################*
+*------------------------------------------------------ZLib header--------------------------------------------------------*
+*#########################################################################################################################*/
+enum ZlibState { ZLIB_STATE_COMPRESSION_METHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE };
+#define Header_ReadU8(value) if ((res = s->ReadU8(s, &value))) return res;
+
+/* ZLib header is technically a separate spec, but it's simpler to just skip the whole header here */
+static cc_result ZLibHeader_Read(struct Stream* s, int* state) {
+	cc_uint8 tmp;
+	cc_result res;
+	switch (*state) {
+
+	case ZLIB_STATE_COMPRESSION_METHOD:
+		Header_ReadU8(tmp);
+		if ((tmp & 0x0F) != 0x08) return ZLIB_ERR_METHOD;
+		/* Upper 4 bits are window size (ignored) */
+		(*state)++;
+		
+	/* FALLTHRU */
+	case ZLIB_STATE_FLAGS:
+		Header_ReadU8(tmp);
+		if (tmp & 0x20) return ZLIB_ERR_FLAGS;
+		(*state)++;
+	}
+	return 0;
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------PNG common---------------------------------------------------------*
 *#########################################################################################################################*/
 #define PNG_IHDR_SIZE 13
@@ -371,7 +399,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	struct InflateState* inflate = &_inflate;
 #endif
 	struct Stream compStream, datStream;
-	struct ZLibHeader zlibHeader;
+	int zlib_state = ZLIB_STATE_COMPRESSION_METHOD;
 	cc_uint8* data = NULL;
 
 	bmp->width = 0; bmp->height = 0;
@@ -386,7 +414,6 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOLOR_BLACK; }
 
 	Inflate_MakeStream2(&compStream, inflate, stream);
-	ZLibHeader_Init(&zlibHeader);
 
 	for (;;) {
 		res = Stream_Read(stream,   tmp, 8);
@@ -483,8 +510,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			inflate->Source = &datStream;
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
-			while (!zlibHeader.done) {
-				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
+			while (zlib_state != ZLIB_STATE_DONE) {
+				if ((res = ZLibHeader_Read(&datStream, &zlib_state))) return res;
 			}
 
 			if (!bmp->scan0) return PNG_ERR_NO_DATA;

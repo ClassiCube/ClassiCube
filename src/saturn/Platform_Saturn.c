@@ -45,10 +45,10 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 *#########################################################################################################################*/
 #include "../main_impl.h"
 
-int main(int argc, char** argv) {
-	SetupProgram(argc, argv);
+int main(void) {
+	SetupProgram(0, NULL);
 	while (Window_Main.Exists) { 
-		RunProgram(argc, argv);
+		RunProgram(0, NULL);
 	}
 	
 	Window_Free();

@@ -107,38 +107,6 @@ cc_result GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------ZLib header-------------------------------------------------------*
-*#########################################################################################################################*/
-enum ZlibState { ZLIB_STATE_COMPRESSIONMETHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE };
-
-void ZLibHeader_Init(struct ZLibHeader* header) {
-	header->state = ZLIB_STATE_COMPRESSIONMETHOD;
-	header->done  = false;
-}
-
-cc_result ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
-	cc_uint8 tmp;
-	cc_result res;
-	switch (header->state) {
-
-	case ZLIB_STATE_COMPRESSIONMETHOD:
-		Header_ReadU8(tmp);
-		if ((tmp & 0x0F) != 0x08) return ZLIB_ERR_METHOD;
-		/* Upper 4 bits are window size (ignored) */
-		header->state++;
-		
-	/* FALLTHRU */
-	case ZLIB_STATE_FLAGS:
-		Header_ReadU8(tmp);
-		if (tmp & 0x20) return ZLIB_ERR_FLAGS;
-		header->state++;
-		header->done = true;
-	}
-	return 0;
-}
-
-
-/*########################################################################################################################*
 *--------------------------------------------------Inflate (decompress)---------------------------------------------------*
 *#########################################################################################################################*/
 #if !defined CC_BUILD_COMPRESSION
