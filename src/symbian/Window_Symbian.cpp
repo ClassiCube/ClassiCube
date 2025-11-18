@@ -20,7 +20,8 @@
 #include <baclipb.h>
 #include <s32ucmp.h>
 #include <classicube.rsg>
-
+#include <e32property.h>
+#include <hal.h>
 extern "C" {
 #include <stdapis/string.h>
 #include <gles/egl.h>
@@ -48,45 +49,54 @@ const TUid KUidClassiCube = {0xE212A5C2};
 
 static CCContainer* container;
 
-static const BindMapping symbian_binds[BIND_COUNT] = {
-	{ CCKEY_UP, 0 },    // BIND_FORWARD
-	{ CCKEY_DOWN, 0 },  // BIND_BACKWARDS
-	{ CCKEY_LEFT, 0 },  // BIND_LEFT
-	{ CCKEY_RIGHT, 0 }, // BIND_RIGHT
-	{ CCKEY_SPACE, 0 }, // BIND_JUMP  
-	{ 'R', 0 }, // BIND_RESPAWN
-	{ CCKEY_ENTER, 0 }, // BIND_SET_SPAWN
-	{ 'T', 0 }, // BIND_CHAT
-	{ 'B', 0 }, // BIND_INVENTORY
-	{ 'F', 0 }, // BIND_FOG
-	{ CCKEY_ENTER, 0 }, // BIND_SEND_CHAT
-	{ CCKEY_TAB, 0 }, // BIND_TABLIST
-	{ '7', 0 }, // BIND_SPEED
-	{ '8', 0 }, // BIND_NOCLIP
-	{ '9', 0 }, // BIND_FLY 
-	{ CCKEY_Q, 0 }, // BIND_FLY_UP
-	{ CCKEY_E, 0 }, // BIND_FLY_DOWN
-	{ CCKEY_LALT, 0 }, // BIND_EXT_INPUT
-	{ 0, 0 }, // BIND_HIDE_FPS
-	{ CCKEY_F12, 0 }, // BIND_SCREENSHOT
-	{ 0, 0 }, // BIND_FULLSCREEN
-	{ CCKEY_F5, 0 }, // BIND_THIRD_PERSON
-	{ 0, 0 }, // BIND_HIDE_GUI
-	{ CCKEY_F7, 0 }, // BIND_AXIS_LINES
-	{ 'C', 0 }, // BIND_ZOOM_SCROLL
-	{ CCKEY_LCTRL, 0 },// BIND_HALF_SPEED
-	{ '4', 0 }, // BIND_DELETE_BLOCK
-	{ '5', 0 }, // BIND_PICK_BLOCK
-	{ '6', 0 }, // BIND_PLACE_BLOCK
-	
-	{ 0, 0 }, { 0, 0 },         /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH */
-	{ 0, 0 }, { 0, 0 },                  /* BIND_SMOOTH_CAMERA, BIND_DROP_BLOCK */
-	{ 0, 0 }, { 0, 0 },                  /* BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },         /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },             /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },             /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },             /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
-	{ '1', 0 }, { '3', 0 }                              /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
+// 12 keys
+const BindMapping symbian_binds_12[BIND_COUNT] = {
+	{ '2', 0 }, { '8', 0 }, { '4', 0 }, { '6', 0 }, /* BIND_FORWARD - BIND_RIGHT */
+	{ CCKEY_ENTER, 0 },  { '3', 0 },                /* BIND_JUMP, BIND_RESPAWN */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_SET_SPAWN, BIND_CHAT */
+	{ '1', 0 },          { 0, 0 },                  /* BIND_INVENTORY, BIND_FOG */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_SEND_CHAT, BIND_TABLIST */
+	{ 0, 0 }, { '7', 0 },{ '9', 0 },                /* BIND_SPEED, BIND_NOCLIP, BIND_FLY */ 
+	{ 0, 0 },            { '0', 0 },                /* BIND_FLY_UP, BIND_FLY_DOWN */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_EXT_INPUT, BIND_HIDE_FPS */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_SCREENSHOT, BIND_FULLSCREEN */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_THIRD_PERSON, BIND_HIDE_GUI */ 
+	{ 0, 0 }, { 0, 0 },  { 0, 0 },                  /* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
+	{ '5', 0 }, { 0, 0 },{ CCKEY_F1, 0},            /* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH */
+
+	{ 0, 0 },            { CCKEY_BACKSPACE, 0 },    /* BIND_SMOOTH_CAMERA, BIND_DROP_BLOCK */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
+	{ CCKEY_UP, 0 }, { CCKEY_DOWN, 0 }, { CCKEY_RIGHT, 0 }, { CCKEY_LEFT, 0 }, /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },                   /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },                   /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },                   /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
+	{ CCKEY_LWIN, 0 }, { CCKEY_BACKSLASH, 0 }       /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
+};
+
+// QWERTY
+const BindMapping symbian_binds_qwerty[BIND_COUNT] = {
+	{ 'W', 0 }, { 'S', 0 }, { 'A', 0 }, { 'D', 0 }, /* BIND_FORWARD - BIND_RIGHT */
+	{ CCKEY_SPACE, 0 },  { 'I', 0 },                /* BIND_JUMP, BIND_RESPAWN */
+	{ 0, 0 },            { 'K', 0 },                /* BIND_SET_SPAWN, BIND_CHAT */
+	{ CCKEY_F1, 0 },     { 'L', 0 },                /* BIND_INVENTORY, BIND_FOG */
+	{ CCKEY_ENTER, 0 },  { CCKEY_TAB, 0 },          /* BIND_SEND_CHAT, BIND_TABLIST */
+	{ CCKEY_LSHIFT, 0 }, { 'X', 0}, { 'Z', 0 },     /* BIND_SPEED, BIND_NOCLIP, BIND_FLY */ 
+	{ 'C', 0 },          { 'D', 0 },                /* BIND_FLY_UP, BIND_FLY_DOWN */
+	{ CCKEY_LALT, 0 },   { 0, 0 },                  /* BIND_EXT_INPUT, BIND_HIDE_FPS */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_SCREENSHOT, BIND_FULLSCREEN */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_THIRD_PERSON, BIND_HIDE_GUI */ 
+	{ 0, 0 }, { 0, 0 },  { CCKEY_LCTRL, 0 },        /* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
+	{ 'E', 0 }, { 0, 0 },{ 'Q', 0},                 /* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH */
+
+	{ 0, 0 },            { CCKEY_BACKSPACE, 0 },    /* BIND_SMOOTH_CAMERA, BIND_DROP_BLOCK */
+	{ 0, 0 },            { 0, 0 },                  /* BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
+	{ CCKEY_UP, 0 }, { CCKEY_DOWN, 0 }, { CCKEY_RIGHT, 0 }, { CCKEY_LEFT, 0 }, /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
+	{ '1', 0 }, { '2', 0 }, { '3', 0 },             /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
+	{ '4', 0 }, { '5', 0 }, { '6', 0 },             /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
+	{ '7', 0 }, { '8', 0 }, { '9', 0 },             /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
+	{ 'O', 0 }, { 'P', 0 }                          /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
 };
 
 // Event management
@@ -863,7 +873,33 @@ static void SetClipboardL(const cc_string* value) {
 // Window implementation
 
 void Window_PreInit(void) {
-	//NormDevice.defaultBinds = symbian_binds; TODO only use on devices with limited hardware
+	TInt keyboardType = -1;
+	TUid categoryUid = { 0x101F876E }; //  KCRUidAvkon
+	RProperty::Get(categoryUid, 0x0000000B /* KAknKeyBoardLayout */, keyboardType);
+	
+	switch (keyboardType) {
+	case 0: // ENoKeyboard
+		break;
+	case 1: // EKeyboardWith12Key,
+	case 5: // EHalfQWERTY
+		NormDevice.defaultBinds = symbian_binds_12;
+		break;
+	case 2: // EQWERTY4x12Layout
+	case 3: // EQWERTY4x10Layout
+	case 4: // EQWERTY3x11Layout
+	case 6: // ECustomQWERTY
+		NormDevice.defaultBinds = symbian_binds_qwerty;
+		break;
+	default: // unknown or platform is older than s60v3.2
+		if (HAL::Get(HAL::EKeyboard, keyboardType) == KErrNone) {
+			if (!(keyboardType & EKeyboard_Full)) {
+				NormDevice.defaultBinds = symbian_binds_12;
+			} else {
+				NormDevice.defaultBinds = symbian_binds_qwerty;
+			}
+		}
+		break;
+	}
 }
 
 void Window_Init(void) {
