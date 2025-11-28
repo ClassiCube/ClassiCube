@@ -690,6 +690,7 @@ typedef cc_uint8  cc_bool;
 #endif
 #ifndef CC_BUILD_LOWMEM
 	#define EXTENDED_BLOCKS
+	#define LONGER_BBU
 #endif
 #ifndef CC_BUILD_TINYMEM
 	#define EXTENDED_TEXTURES
