@@ -131,6 +131,7 @@ static BlockID BBU_Blocks[BULK_MAX_CACHED_BLOCKS];
 static int BBU_OverallCount = 0;
 static cc_bool BBU_ShouldPurgeOnTeleport = false;
 static cc_bool BBU_FinishedSequence = false;
+static void ReadBulkBlockUpdate(cc_uint8* data, cc_bool longerBBU);
 static void PurgeBBU();
 #define IsSupported(ext) (ext.serverVersion > 0)
 
@@ -1304,16 +1305,21 @@ static void CPE_ExtAddEntity2(cc_uint8* data) {
 	AddEntity(data + 129, id, &name, &skin, true);
 }
 
+static void CPE_BulkBlockUpdate(cc_uint8* data) {
+	ReadBulkBlockUpdate(data, false);
+}
+
+static void CPE_LongerBulkBlockUpdate(cc_uint8* data) {
+	ReadBulkBlockUpdate(data, true);
+}
+
 #define BULK_MAX_BLOCKS 256
 #define BBU_SHOULD_CACHE 0x01
 #define BBU_SHOULD_PURGE_ON_TELEPORT 0x02
-static void CPE_BulkBlockUpdate(cc_uint8* data) {
+static void ReadBulkBlockUpdate(cc_uint8* data, cc_bool longerBBU) {
 	int i;
-#ifdef LONGER_BBU
-	cc_uint8 strategy = *data++;
-#else
 	cc_uint8 strategy = 0;
-#endif
+	if (longerBBU) strategy = *data++;
 	int count = 1 + *data++;
 
 	if (strategy & BBU_SHOULD_PURGE_ON_TELEPORT) BBU_ShouldPurgeOnTeleport = true;
@@ -1700,11 +1706,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_HACK_CONTROL, CPE_HackControl, 8);
 	Net_Set(OPCODE_EXT_ADD_ENTITY2, CPE_ExtAddEntity2, 138);
 
-#ifndef LONGER_BBU
 	Net_Set(OPCODE_BULK_BLOCK_UPDATE, CPE_BulkBlockUpdate, 1282);
-#else
-	Net_Set(OPCODE_BULK_BLOCK_UPDATE, CPE_BulkBlockUpdate, 1283);
-#endif
 	Net_Set(OPCODE_SET_TEXT_COLOR, CPE_SetTextColor, 6);
 	Net_Set(OPCODE_ENV_SET_MAP_URL, CPE_SetMapEnvUrl, 65);
 	Net_Set(OPCODE_ENV_SET_MAP_PROPERTY, CPE_SetMapEnvProperty, 6);
@@ -1721,6 +1723,9 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
 	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 10);
 	Net_Set(OPCODE_TOGGLE_BLOCK_LIST, CPE_ToggleBlockList, 2);
+#ifdef LONGER_BBU
+	Net_Set(OPCODE_LONGER_BULK_BLOCK_UPDATE, CPE_LongerBulkBlockUpdate, 1283)
+#endif
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {
