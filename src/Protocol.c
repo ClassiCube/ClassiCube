@@ -119,7 +119,19 @@ static struct CpeExt* cpe_clientExtensions[] = {
 #ifdef LONGER_BBU
 	&longerBBU_Ext
 #endif
-}; 
+};
+
+#ifdef LONGER_BBU
+#define BULK_MAX_CACHED_BLOCKS 2048
+#else
+#define BULK_MAX_CACHED_BLOCKS 256
+#endif
+static cc_int32 BBU_Indices[BULK_MAX_CACHED_BLOCKS];
+static BlockID BBU_Blocks[BULK_MAX_CACHED_BLOCKS];
+static int BBU_OverallCount = 0;
+static cc_bool BBU_ShouldPurgeOnTeleport = false;
+static cc_bool BBU_FinishedSequence = false;
+static void PurgeBBU();
 #define IsSupported(ext) (ext.serverVersion > 0)
 
 
@@ -799,7 +811,11 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint16 
 	update.yaw   = Math_Packed2Deg(*data++);
 	update.pitch = Math_Packed2Deg(*data++);
 
-	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
+	if (id == ENTITIES_SELF_ID) {
+		classic_receivedFirstPos = true;
+
+		if (BBU_FinishedSequence && BBU_ShouldPurgeOnTeleport) PurgeBBU();
+	}
 	UpdateLocation(id, &update);
 }
 
@@ -1289,65 +1305,72 @@ static void CPE_ExtAddEntity2(cc_uint8* data) {
 }
 
 #define BULK_MAX_BLOCKS 256
-#ifdef LONGER_BBU
-	#define BULK_MAX_CACHED_BLOCKS 2048
-#else
-    #define BULK_MAX_CACHED_BLOCKS 256
-#endif
+#define BBU_SHOULD_CACHE 0x01
+#define BBU_SHOULD_PURGE_ON_TELEPORT 0x02
 static void CPE_BulkBlockUpdate(cc_uint8* data) {
-	static cc_int32 indices[BULK_MAX_CACHED_BLOCKS];
-	static BlockID blocks[BULK_MAX_CACHED_BLOCKS];
-	static int overallCount = 0;
-	int index, i;
-	int x, y, z;
+	int i;
 #ifdef LONGER_BBU
-	cc_bool shouldCache = *data++;
+	cc_uint8 strategy = *data++;
 #else
-	cc_bool shouldCache = false;
+	cc_uint8 strategy = 0;
 #endif
 	int count = 1 + *data++;
 
-	if (overallCount + count > BULK_MAX_CACHED_BLOCKS) {
+	if (strategy & BBU_SHOULD_PURGE_ON_TELEPORT) BBU_ShouldPurgeOnTeleport = true;
+	if (BBU_FinishedSequence || BBU_OverallCount + count > BULK_MAX_CACHED_BLOCKS) {
 		static const cc_string title  = String_FromConst("Disconnected");
-		static const cc_string reason = String_FromConst("Server attempted to cache too many block updates");
+		static const cc_string reason1 = String_FromConst("Server was expected to send a teleport before the next BBU");
+		static const cc_string reason2 = String_FromConst("Server attempted to cache too many block updates");
 		
-		Game_Disconnect(&title, &reason); return;
+		Game_Disconnect(&title, (BBU_FinishedSequence ? &reason1 : &reason2)); return;
 	}
 	for (i = 0; i < count; i++) {
-		indices[overallCount + i] = Stream_GetU32_BE(data); data += 4;
+		BBU_Indices[BBU_OverallCount + i] = Stream_GetU32_BE(data); data += 4;
 	}
 	data += (BULK_MAX_BLOCKS - count) * 4;
 	
 	for (i = 0; i < count; i++) {
-		blocks[overallCount + i] = data[i];
+		BBU_Blocks[BBU_OverallCount + i] = data[i];
 	}
 	data += BULK_MAX_BLOCKS;
 
 	if (IsSupported(extBlocks_Ext)) {
 		for (i = 0; i < count; i += 4) {
 			cc_uint8 flags = data[i >> 2];
-			blocks[overallCount + i + 0] |= (BlockID)((flags & 0x03) << 8);
-			blocks[overallCount + i + 1] |= (BlockID)((flags & 0x0C) << 6);
-			blocks[overallCount + i + 2] |= (BlockID)((flags & 0x30) << 4);
-			blocks[overallCount + i + 3] |= (BlockID)((flags & 0xC0) << 2);
+			BBU_Blocks[BBU_OverallCount + i + 0] |= (BlockID)((flags & 0x03) << 8);
+			BBU_Blocks[BBU_OverallCount + i + 1] |= (BlockID)((flags & 0x0C) << 6);
+			BBU_Blocks[BBU_OverallCount + i + 2] |= (BlockID)((flags & 0x30) << 4);
+			BBU_Blocks[BBU_OverallCount + i + 3] |= (BlockID)((flags & 0xC0) << 2);
 		}
 		data += BULK_MAX_BLOCKS / 4;
 	}
-	overallCount += count;
+	BBU_OverallCount += count;
 
-	if (shouldCache) return;
-	for (i = 0; i < overallCount; i++) {
-		index = indices[i];
+	if (strategy & BBU_SHOULD_CACHE) return;
+	BBU_FinishedSequence = true;
+	if (BBU_ShouldPurgeOnTeleport) return;
+	
+	PurgeBBU();
+}
+
+static void PurgeBBU() {
+	int index, i;
+	int x, y, z;
+
+	for (i = 0; i < BBU_OverallCount; i++) {
+		index = BBU_Indices[i];
 		if (index < 0 || index >= World.Volume) continue;
 		World_Unpack(index, x, y, z);
 
 #ifdef EXTENDED_BLOCKS
-		Game_UpdateBlock(x, y, z, blocks[i] % BLOCK_COUNT);
+		Game_UpdateBlock(x, y, z, BBU_Blocks[i] % BLOCK_COUNT);
 #else
-		Game_UpdateBlock(x, y, z, blocks[i]);
+		Game_UpdateBlock(x, y, z, BBU_Blocks[i]);
 #endif
 	}
-	overallCount = 0;
+	BBU_OverallCount = 0;
+	BBU_ShouldPurgeOnTeleport = false;
+	BBU_FinishedSequence = false;
 }
 
 static void CPE_SetTextColor(cc_uint8* data) {
