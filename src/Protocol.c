@@ -1322,13 +1322,13 @@ static void ReadBulkBlockUpdate(cc_uint8* data, cc_bool longerBBU) {
 	if (longerBBU) strategy = *data++;
 	int count = 1 + *data++;
 
+	if (BBU_FinishedSequence) PurgeBBU();
 	if (strategy & BBU_SHOULD_PURGE_ON_TELEPORT) BBU_ShouldPurgeOnTeleport = true;
-	if (BBU_FinishedSequence || BBU_OverallCount + count > BULK_MAX_CACHED_BLOCKS) {
+	if (BBU_OverallCount + count > BULK_MAX_CACHED_BLOCKS) {
 		static const cc_string title  = String_FromConst("Disconnected");
-		static const cc_string reason1 = String_FromConst("Server was expected to send a teleport before the next BBU");
-		static const cc_string reason2 = String_FromConst("Server attempted to cache too many block updates");
+		static const cc_string reason = String_FromConst("Server attempted to cache too many block updates");
 		
-		Game_Disconnect(&title, (BBU_FinishedSequence ? &reason1 : &reason2)); return;
+		Game_Disconnect(&title, &reason); return;
 	}
 	for (i = 0; i < count; i++) {
 		BBU_Indices[BBU_OverallCount + i] = Stream_GetU32_BE(data); data += 4;
