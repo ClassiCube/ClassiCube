@@ -131,7 +131,6 @@ static BlockID BBU_Blocks[BULK_MAX_CACHED_BLOCKS];
 static int BBU_OverallCount = 0;
 static cc_bool BBU_ShouldPurgeOnTeleport = false;
 static cc_bool BBU_FinishedSequence = false;
-static void ReadBulkBlockUpdate(cc_uint8* data, cc_bool longerBBU);
 static void PurgeBBU();
 #define IsSupported(ext) (ext.serverVersion > 0)
 
@@ -1091,6 +1090,11 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		Protocol.Sizes[OPCODE_SET_HOTBAR]       += 1;
 	}
 #endif
+#ifdef LONGER_BBU
+	else if (ext == &longerBBU_Ext) {
+		Protocol.Sizes[OPCODE_BULK_BLOCK_UPDATE] += 1;
+	}
+#endif
 }
 
 static void CPE_ApplyTexturePack(const cc_string* url) {
@@ -1305,21 +1309,13 @@ static void CPE_ExtAddEntity2(cc_uint8* data) {
 	AddEntity(data + 129, id, &name, &skin, true);
 }
 
-static void CPE_BulkBlockUpdate(cc_uint8* data) {
-	ReadBulkBlockUpdate(data, false);
-}
-
-static void CPE_LongerBulkBlockUpdate(cc_uint8* data) {
-	ReadBulkBlockUpdate(data, true);
-}
-
 #define BULK_MAX_BLOCKS 256
 #define BBU_SHOULD_CACHE 0x01
 #define BBU_SHOULD_PURGE_ON_TELEPORT 0x02
-static void ReadBulkBlockUpdate(cc_uint8* data, cc_bool longerBBU) {
+static void CPE_BulkBlockUpdate(cc_uint8* data) {
 	int i;
 	cc_uint8 strategy = 0;
-	if (longerBBU) strategy = *data++;
+	if (IsSupported(longerBBU_Ext)) strategy = *data++;
 	int count = 1 + *data++;
 
 	if (BBU_FinishedSequence) PurgeBBU();
@@ -1723,9 +1719,6 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
 	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 10);
 	Net_Set(OPCODE_TOGGLE_BLOCK_LIST, CPE_ToggleBlockList, 2);
-#ifdef LONGER_BBU
-	Net_Set(OPCODE_LONGER_BULK_BLOCK_UPDATE, CPE_LongerBulkBlockUpdate, 1283)
-#endif
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {
