@@ -158,11 +158,12 @@ static void ProcessPAD_Buttons(int port, int mods) {
 static void ProcessPADInput(PADStatus* pad, int i, float delta) {
 	int error = pad->err;
 
-	if (error == 0) {
+	if (error == PAD_ERR_NONE) {
 		gc_pads[i] = *pad; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
 		// usually means still busy transferring state - use last state
 	} else {
+		if (error == PAD_ERR_NO_CONTROLLER) PAD_Reset(PAD_CHAN0_BIT >> i);
 		return; // not connected, still busy, etc
 	}
 	
