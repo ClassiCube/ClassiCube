@@ -60,7 +60,7 @@ void MusicCallback(s32 voice) {
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->chanID        = -1;
 	ctx->count         = buffers;
-	ctx->volume        = 255;
+	ctx->volume        = MAX_VOLUME;
 	ctx->bufHead       = 0;
 	ctx->makeAvailable = false;
 
@@ -88,7 +88,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 }
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) {
-	ctx->volume = (volume / 100.0f) * 255;
+	ctx->volume = (volume / 100.0f) * MAX_VOLUME;
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, struct AudioChunk* chunk) {

@@ -32,10 +32,10 @@ DEPFILES := $(OBJS:%.o=%.d)
 # Code generation
 #---------------------------------------------------------------------------------
 
-MACHDEP = -DGEKKO -mogc -mcpu=750 -meabi -mhard-float
-CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc/include -DPLAT_GAMECUBE
+MACHDEP = -DGEKKO -mogc -mcpu=750 -meabi -msdata=sysv -mhard-float
+CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(DEVKITPRO)/libogc2/gamecube/include -DPLAT_GAMECUBE
 
-LDFLAGS	= -g $(MACHDEP) -L$(DEVKITPRO)/libogc/lib/cube
+LDFLAGS	= -g $(MACHDEP) -L$(DEVKITPRO)/libogc2/gamecube/lib
 # Additional libraries to link against
 LIBS	= -lasnd -lbba -lfat -logc -lm
 

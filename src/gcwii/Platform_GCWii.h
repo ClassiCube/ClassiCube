@@ -1,6 +1,7 @@
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef HW_RVL
 static void LogOverEXI(char* msg, int len) {
 	u32 cmd = 0x80000000 | (0x800400 << 6); // write flag, UART base address
 
@@ -27,13 +28,16 @@ void Platform_Log(const char* msg, int len) {
 
 	LogOverEXI(tmp, len + 1);
 }
-
-#define GCWII_EPOCH_ADJUST 946684800ULL // GameCube/Wii time epoch is year 2000, not 1970
+#else
+void Platform_Log(const char* msg, int len) {
+	SYS_Report("%.*s\n", len, msg);
+}
+#endif
 
 TimeMS DateTime_CurrentUTC(void) {
-	u64 raw  = gettime();
-	u64 secs = ticks_to_secs(raw);
-	return secs + UNIX_EPOCH_SECONDS + GCWII_EPOCH_ADJUST;
+	struct timeval cur;
+	gettimeofday(&cur, NULL);
+	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
@@ -51,7 +55,11 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 }
 
 cc_uint64 Stopwatch_Measure(void) {
-	return gettime();
+#ifdef HW_RVL
+	return SYS_Time();
+#else
+	return __SYS_GetSystemTime();
+#endif
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
@@ -123,12 +131,15 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	DIR* dirPtr = opendir(str.buffer);
 	if (!dirPtr) return errno;
 
-	// POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed."
-	// errno is sometimes leftover from previous calls, so always reset it before readdir gets called
-	errno = 0;
 	String_InitArray(path, pathBuffer);
 
-	while ((entry = readdir(dirPtr))) {
+	do {
+		// POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed."
+		// errno is sometimes leftover from previous calls, so always reset it before readdir gets called
+		errno = 0;
+		entry = readdir(dirPtr);
+		if (!entry) continue;
+
 		path.length = 0;
 		String_Format1(&path, "%s/", dirPath);
 
@@ -143,8 +154,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		// TODO: fallback to stat when this fails
 
 		callback(&path, obj, is_dir);
-		errno = 0;
-	}
+	} while (entry || errno == EOVERFLOW);
 
 	res = errno; // return code from readdir
 	closedir(dirPtr);
@@ -216,13 +226,16 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	lwp_t* thread = (lwp_t*)Mem_Alloc(1, sizeof(lwp_t), "thread");
 	*handle = thread;
 	
-	int res = LWP_CreateThread(thread, ExecThread, (void*)func, NULL, stackSize, 80);
+	int res = LWP_CreateThread(thread, ExecThread, (void*)func, NULL, stackSize, 64);
 	if (res) Process_Abort2(res, "Creating thread");
 }
 
 void Thread_Detach(void* handle) {
 	// TODO: Leaks return value of thread ???
 	lwp_t* ptr = (lwp_t*)handle;
+#ifndef HW_RVL
+	LWP_DetachThread(*ptr);
+#endif
 	Mem_Free(ptr);
 }
 
@@ -259,6 +272,7 @@ void Mutex_Unlock(void* handle) {
 	if (res) Process_Abort2(res, "Unlocking mutex");
 }
 
+#ifdef HW_RVL
 // should really use a semaphore with max 1.. too bad no 'TimedWait' though
 struct WaitData {
 	cond_t  cond;
@@ -320,8 +334,8 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	struct timespec ts;
 	int res;
 
-	ts.tv_sec  = milliseconds / 1000;
-	ts.tv_nsec = milliseconds % 1000;
+	ts.tv_sec  = milliseconds  / TB_MSPERSEC;
+	ts.tv_nsec = (milliseconds % TB_MSPERSEC) * TB_NSPERMS;
 
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
@@ -331,6 +345,45 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
 }
+#else
+void* Waitable_Create(const char* name) {
+	sem_t* ptr = (sem_t*)Mem_Alloc(1, sizeof(sem_t), "waitable");
+	int res = LWP_SemInit(ptr, 0, 1);
+	if (res) Process_Abort2(res, "Creating waitable");
+	return ptr;
+}
+
+void Waitable_Free(void* handle) {
+	sem_t* ptr = (sem_t*)handle;
+	int res = LWP_SemDestroy(*ptr);
+	if (res) Process_Abort2(res, "Destroying waitable");
+	Mem_Free(handle);
+}
+
+void Waitable_Signal(void* handle) {
+	sem_t* ptr = (sem_t*)handle;
+	int res = LWP_SemPost(*ptr);
+	if (res && res != EOVERFLOW) Process_Abort2(res, "Signalling event");
+}
+
+void Waitable_Wait(void* handle) {
+	sem_t* ptr = (sem_t*)handle;
+	int res = LWP_SemWait(*ptr);
+	if (res) Process_Abort2(res, "Event wait");
+}
+
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
+	sem_t* ptr = (sem_t*)handle;
+	struct timespec ts;
+	int res;
+
+	ts.tv_sec  = milliseconds  / TB_MSPERSEC;
+	ts.tv_nsec = (milliseconds % TB_MSPERSEC) * TB_NSPERMS;
+
+	res = LWP_SemTimedWait(*ptr, &ts);
+	if (res && res != ETIMEDOUT) Process_Abort2(res, "Event timed wait");
+}
+#endif
 
 
 /*########################################################################################################################*
@@ -359,11 +412,11 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
-	*s = net_socket(raw->sa_family, SOCK_STREAM, 0);
+	*s = net_socket(raw->sa_family, SOCK_STREAM, IPPROTO_IP);
 	if (*s < 0) return *s;
 
 	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
+		int blocking_raw = 1; /* non-blocking mode */
 		net_ioctl(*s, FIONBIO, &blocking_raw);
 	}
 	return 0;

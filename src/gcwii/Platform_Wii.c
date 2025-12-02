@@ -28,6 +28,7 @@
 #include <ogc/lwp_watchdog.h>
 #include <fat.h>
 #include <ogc/exi.h>
+#include <ogc/system.h>
 #include <ogc/wiilaunch.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */

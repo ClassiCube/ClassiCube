@@ -24,10 +24,10 @@
 #include <network.h>
 #include <ogc/lwp.h>
 #include <ogc/mutex.h>
-#include <ogc/cond.h>
-#include <ogc/lwp_watchdog.h>
+#include <ogc/semaphore.h>
+#include <ogc/system.h>
+#include <ogc/timesupp.h>
 #include <fat.h>
-#include <ogc/exi.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -104,7 +104,7 @@ cc_result Socket_GetLastError(cc_socket s) {
 	u32 errSize = sizeof(error);
 	
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, errSize);
+	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
 	return error;
 }
 
@@ -114,7 +114,7 @@ static void InitSockets(void) {
 	char netmask[16] = {0};
 	char gateway[16] = {0};
 	
-	int ret = if_config(localip, netmask, gateway, TRUE, 20);
+	int ret = if_config(localip, netmask, gateway, true);
 	if (ret >= 0) {
 		cc_string str; char buffer[256];
 		String_InitArray_NT(str, buffer);

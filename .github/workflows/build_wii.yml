@@ -1,4 +1,4 @@
-name: Build latest (Wii/GameCube)
+name: Build latest (Wii)
 # trigger via either push to selected branches or on manual run
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}-wiigc
+  group: ${{ github.ref }}-wii
   cancel-in-progress: true
 
 jobs:
@@ -19,11 +19,10 @@ jobs:
       image: devkitpro/devkitppc:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile Wii and GameCube build
+      - name: Compile Wii build
         id: compile
         run: |
           make wii
-          make gamecube
           
       - name: Create Wii homebrew
         run: |
@@ -42,20 +41,8 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube-gc.dol'
-          DEST_NAME: 'ClassiCube-gc.dol'
-          
-      - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
-        with:
           SOURCE_FILE: 'ClassiCube-wii.elf'
           DEST_NAME: 'ClassiCube-wii.elf'
-          
-      - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
-        with:
-          SOURCE_FILE: 'ClassiCube-gc.elf'
-          DEST_NAME: 'ClassiCube-gc.elf'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
@@ -68,11 +55,11 @@ jobs:
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
-          WORKFLOW_NAME: 'wiigc'
+          WORKFLOW_NAME: 'wii'
 
 
       - uses: ./.github/actions/notify_failure
         if: failure()
         with:
-          NOTIFY_MESSAGE: 'Failed to produce Wii/Gamecube build'
+          NOTIFY_MESSAGE: 'Failed to produce Wii build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

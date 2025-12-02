@@ -247,9 +247,9 @@ Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
 
 #### GameCube
 
-Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
+Run `make gamecube`. You'll need [libogc2](https://github.com/extremscorner/libogc2)
 
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
+**NOTE: It is highly recommended that you install the precompiled libogc2 packages from [here](https://github.com/extremscorner/pacman-packages#readme) - you need the `gamecube-dev` group)**
 
 #### Nintendo DS/DSi
 
@@ -454,8 +454,9 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
 * [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
 * [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
-* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
-* [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
+* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii
+* [libogc2](https://github.com/extremscorner/libogc2) - Backend for GameCube
+* [libdvm](https://github.com/devkitPro/libdvm) - Filesystem backend for Wii/GC
 * [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
 * [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
