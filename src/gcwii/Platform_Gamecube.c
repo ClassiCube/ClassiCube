@@ -65,10 +65,13 @@ int main(int argc, char** argv) {
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	// DNS resolution not implemented in gamecube libbba
 	static struct fixed_dns_map {
-		const cc_string host, ip;
+		const cc_string host, ip[2];
 	} mappings[] = {
-		{ String_FromConst("cdn.classicube.net"), String_FromConst("104.20.90.158") },
-		{ String_FromConst("www.classicube.net"), String_FromConst("104.20.90.158") }
+		{ String_FromConst("cdn.classicube.net"),               { String_FromConst("172.66.134.165"), String_FromConst("172.66.138.91") }},
+		{ String_FromConst("static.classicube.net"),            { String_FromConst("172.66.134.165"), String_FromConst("172.66.138.91") }},
+		{ String_FromConst("www.classicube.net"),               { String_FromConst("172.66.134.165"), String_FromConst("172.66.138.91") }},
+		{ String_FromConst("resources.download.minecraft.net"), { String_FromConst("13.107.213.36"),  String_FromConst("13.107.246.36") }},
+		{ String_FromConst("launcher.mojang.com"),              { String_FromConst("13.107.213.36"),  String_FromConst("13.107.246.36") }}
 	};
 	if (!net_supported) return ERR_NO_NETWORKING;
 
@@ -76,8 +79,9 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	{
 		if (!String_CaselessEqualsConst(&mappings[i].host, host)) continue;
 
-		ParseIPv4(&mappings[i].ip, port, &addrs[0]);
-		*numValidAddrs = 1;
+		ParseIPv4(&mappings[i].ip[0], port, &addrs[0]);
+		ParseIPv4(&mappings[i].ip[1], port, &addrs[1]);
+		*numValidAddrs = 2;
 		return 0;
 	}
 	return ERR_NOT_SUPPORTED;
