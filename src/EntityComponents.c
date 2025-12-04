@@ -110,11 +110,6 @@ void AnimatedComp_GetCurrent(struct Entity* e, float t) {
 	}
 }
 
-void AnimatedComp_OmitTick(struct AnimatedComp* anim) {
-	anim->OmitAnim = true;
-	anim->OmitSound = true;
-}
-
 
 /*########################################################################################################################*
 *------------------------------------------------------TiltComponent------------------------------------------------------*
@@ -403,7 +398,7 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 0.66666667f));
 		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 1.00000000f));
 	}
-	if (flags & LU_NO_ANIMATION_AND_SOUND) AnimatedComp_OmitTick(&e->Anim);
+	if (flags & LU_NO_ANIMATION_AND_SOUND) e->Anim.OmitAnim = true;
 }
 
 void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e) {
@@ -487,7 +482,7 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 	}
 	Entity_LerpAngles(e, 0.0f);
 
-	if (flags & LU_NO_ANIMATION_AND_SOUND) AnimatedComp_OmitTick(&e->Anim);
+	if (flags & LU_NO_ANIMATION_AND_SOUND) e->Anim.OmitSound = true;
 }
 
 void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e) {

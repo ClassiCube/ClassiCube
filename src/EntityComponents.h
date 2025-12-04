@@ -27,7 +27,6 @@ struct AnimatedComp {
 void AnimatedComp_Init(struct AnimatedComp* anim);
 void AnimatedComp_Update(struct Entity* entity, Vec3 oldPos, Vec3 newPos, float delta);
 void AnimatedComp_GetCurrent(struct Entity* entity, float t);
-void AnimatedComp_OmitTick(struct AnimatedComp* anim);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
 struct TiltComp {
