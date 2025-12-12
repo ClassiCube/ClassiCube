@@ -24,10 +24,10 @@
 #include <network.h>
 #include <ogc/lwp.h>
 #include <ogc/mutex.h>
-#include <ogc/cond.h>
-#include <ogc/lwp_watchdog.h>
+#include <ogc/semaphore.h>
+#include <ogc/system.h>
+#include <ogc/timesupp.h>
 #include <fat.h>
-#include <ogc/exi.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -65,10 +65,13 @@ int main(int argc, char** argv) {
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	// DNS resolution not implemented in gamecube libbba
 	static struct fixed_dns_map {
-		const cc_string host, ip;
+		const cc_string host, ip[2];
 	} mappings[] = {
-		{ String_FromConst("cdn.classicube.net"), String_FromConst("104.20.90.158") },
-		{ String_FromConst("www.classicube.net"), String_FromConst("104.20.90.158") }
+		{ String_FromConst("cdn.classicube.net"),               { String_FromConst("172.66.134.165"), String_FromConst("172.66.138.91") }},
+		{ String_FromConst("static.classicube.net"),            { String_FromConst("172.66.134.165"), String_FromConst("172.66.138.91") }},
+		{ String_FromConst("www.classicube.net"),               { String_FromConst("172.66.134.165"), String_FromConst("172.66.138.91") }},
+		{ String_FromConst("resources.download.minecraft.net"), { String_FromConst("13.107.213.36"),  String_FromConst("13.107.246.36") }},
+		{ String_FromConst("launcher.mojang.com"),              { String_FromConst("13.107.213.36"),  String_FromConst("13.107.246.36") }}
 	};
 	if (!net_supported) return ERR_NO_NETWORKING;
 
@@ -76,8 +79,9 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	{
 		if (!String_CaselessEqualsConst(&mappings[i].host, host)) continue;
 
-		ParseIPv4(&mappings[i].ip, port, &addrs[0]);
-		*numValidAddrs = 1;
+		ParseIPv4(&mappings[i].ip[0], port, &addrs[0]);
+		ParseIPv4(&mappings[i].ip[1], port, &addrs[1]);
+		*numValidAddrs = 2;
 		return 0;
 	}
 	return ERR_NOT_SUPPORTED;
@@ -104,7 +108,7 @@ cc_result Socket_GetLastError(cc_socket s) {
 	u32 errSize = sizeof(error);
 	
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, errSize);
+	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
 	return error;
 }
 
@@ -114,7 +118,7 @@ static void InitSockets(void) {
 	char netmask[16] = {0};
 	char gateway[16] = {0};
 	
-	int ret = if_config(localip, netmask, gateway, TRUE, 20);
+	int ret = if_config(localip, netmask, gateway, true);
 	if (ret >= 0) {
 		cc_string str; char buffer[256];
 		String_InitArray_NT(str, buffer);
