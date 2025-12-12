@@ -40,15 +40,10 @@ CFLAGS	= -g -Wall -O2 -DPLAT_GBA -ffunction-sections -fdata-sections -mcpu=arm7t
 ASFLAGS	= -g $(ARCH)
 
 LDFLAGS	= -specs=gba.specs -g $(ARCH)
-LIBS	= -ltonc
 
 LIBGBA		:= $(DEVKITPRO)/libgba
 INCLUDES 	+= $(foreach dir, $(LIBGBA), -I$(dir)/include)
 LDFLAGS 	+= $(foreach dir, $(LIBGBA), -L$(dir)/lib)
-
-LIBTONC		= $(DEVKITPRO)/libtonc
-INCLUDES 	+= $(foreach dir, $(LIBTONC), -I$(dir)/include)
-LDFLAGS 	+= $(foreach dir, $(LIBTONC), -L$(dir)/lib)
 
 
 #---------------------------------------------------------------------------------
@@ -92,6 +87,9 @@ $(BUILD_DIR)/%.o: src/%.c
 	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: src/gba/%.c
+	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: src/gba/%.S
 	$(ARM_CC) $(CFLAGS) $(INCLUDES) $(DEPFLAGS) -c $< -o $@
 
 

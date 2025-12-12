@@ -139,35 +139,53 @@ cc_uint64 Stopwatch_Measure(void) {
 	return base_time + raw;
 }
 
-extern int nocash_puts(const char *str);
-static void Log_Nocash(char* buffer) {
-	nocash_puts(buffer);
-}
-
 #define MGBA_LOG_DEBUG 4
 #define REG_DEBUG_ENABLE (vu16*)0x4FFF780
 #define REG_DEBUG_FLAGS  (vu16*)0x4FFF700
 #define REG_DEBUG_STRING (char*)0x4FFF600
 
-static void Log_mgba(char* buffer, int len) {
+static void Log_mgba(const char* msg, int len) {
 	*REG_DEBUG_ENABLE = 0xC0DE;
 	// Check if actually emulated or not
 	if (*REG_DEBUG_ENABLE != 0x1DEA) return;
 
-	Mem_Copy(REG_DEBUG_STRING, buffer, len);
-	*REG_DEBUG_FLAGS = MGBA_LOG_DEBUG | 0x100;
+	while (len)
+	{
+    	// Can only be up to 120 bytes total
+		int bit   = min(len, 119);
+		char* dst = REG_DEBUG_STRING;
+
+		Mem_Copy(dst, msg, bit);
+		dst[bit] = '\0';
+
+		*REG_DEBUG_FLAGS = MGBA_LOG_DEBUG | 0x100;
+		msg += bit; len -= bit;
+	}
 }
 
+// Log to nocash debugger
+extern char nocash_msg[82];
+extern void nocash_log(void);
+
+static void Log_Nocash(const char* msg, int len) {
+	while (len)
+	{
+    	// Can only be up to 80 bytes total
+		int bit   = min(len, 80);
+		char* dst = nocash_msg;
+
+		Mem_Copy(dst, msg, bit);
+		dst[bit + 0] = '\0';
+
+		nocash_log();
+		msg += bit; len -= bit;
+	}
+}
+
+
 void Platform_Log(const char* msg, int len) {
-    // Can only be up to 120 bytes total
-	char buffer[120];
-	len = min(len, 118);
-	
-	Mem_Copy(buffer, msg, len);
-	buffer[len + 0] = '\n';
-	buffer[len + 1] = '\0';
-	Log_Nocash(buffer);
-	Log_mgba(buffer, len);
+	Log_mgba(msg, len);
+    Log_Nocash(msg, len);
 }
 
 TimeMS DateTime_CurrentUTC(void) {

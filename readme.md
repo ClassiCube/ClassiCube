@@ -259,6 +259,14 @@ Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
 
 Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
 
+#### GBA
+
+Run `make gba`. You'll need [libgba](https://github.com/devkitPro/libgba)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gba-dev` group)**
+
+**NOTE: The GBA port has terrible performance and is unusable in practice.**
+
 </details>
 
 
@@ -462,6 +470,8 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
 * [BlocksDS](https://github.com/blocksds/sdk) - Backend for Nintendo DS
 * [melonDS](https://github.com/melonDS-emu/melonDS) - Emulator used to test Nintendo DS port
+* [libgba](https://github.com/devkitPro/libgba) - Backend for GBA
+* [mGBA](https://github.com/mgba-emu/mgba) - Emulator used to test GBA port
 * [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
 * [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
 * [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
