@@ -60,7 +60,14 @@ void Thread_Join(void* handle) {
 	thread_id thread = (thread_id)handle;
 	wait_for_thread(thread, NULL);
 }
+#endif
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
+// NOTE: BeOS only, as haiku uses the more efficient pthreads implementation in Platform_Posix.c
+#if defined CC_BUILD_BEOS
 void* Mutex_Create(const char* name) {
 	sem_id id = create_sem(1, name);
 	return (void*)id;

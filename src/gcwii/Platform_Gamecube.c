@@ -60,6 +60,43 @@ int main(int argc, char** argv) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Logging/Time-------------------------------------------------------*
+*#########################################################################################################################*/
+void Platform_Log(const char* msg, int len) {
+	SYS_Report("%.*s\n", len, msg);
+}
+
+TimeMS DateTime_CurrentUTC(void) {
+	struct timeval cur;
+	gettimeofday(&cur, NULL);
+	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+}
+
+void DateTime_CurrentLocal(struct cc_datetime* t) {
+	struct timeval cur; 
+	struct tm loc_time;
+	gettimeofday(&cur, NULL);
+	localtime_r(&cur.tv_sec, &loc_time);
+
+	t->year   = loc_time.tm_year + 1900;
+	t->month  = loc_time.tm_mon  + 1;
+	t->day    = loc_time.tm_mday;
+	t->hour   = loc_time.tm_hour;
+	t->minute = loc_time.tm_min;
+	t->second = loc_time.tm_sec;
+}
+
+cc_uint64 Stopwatch_Measure(void) {
+	return __SYS_GetSystemTime();
+}
+
+cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
+	if (end < beg) return 0;
+	return ticks_to_microsecs(end - beg);
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
@@ -130,6 +167,74 @@ static void InitSockets(void) {
 		Logger_SimpleWarn(ret, "setting up network");
 		net_supported = false;
 	}
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
+void* Mutex_Create(const char* name) {
+	mutex_t* ptr = (mutex_t*)Mem_Alloc(1, sizeof(mutex_t), "mutex");
+	int res = LWP_MutexInit(ptr, false);
+	if (res) Process_Abort2(res, "Creating mutex");
+	return ptr;
+}
+
+void Mutex_Free(void* handle) {
+	mutex_t* mutex = (mutex_t*)handle;
+	int res = LWP_MutexDestroy(*mutex);
+	if (res) Process_Abort2(res, "Destroying mutex");
+	Mem_Free(handle);
+}
+
+void Mutex_Lock(void* handle) {
+	mutex_t* mutex = (mutex_t*)handle;
+	int res = LWP_MutexLock(*mutex);
+	if (res) Process_Abort2(res, "Locking mutex");
+}
+
+void Mutex_Unlock(void* handle) {
+	mutex_t* mutex = (mutex_t*)handle;
+	int res = LWP_MutexUnlock(*mutex);
+	if (res) Process_Abort2(res, "Unlocking mutex");
+}
+
+void* Waitable_Create(const char* name) {
+	sem_t* ptr = (sem_t*)Mem_Alloc(1, sizeof(sem_t), "waitable");
+	int res = LWP_SemInit(ptr, 0, 1);
+	if (res) Process_Abort2(res, "Creating waitable");
+	return ptr;
+}
+
+void Waitable_Free(void* handle) {
+	sem_t* ptr = (sem_t*)handle;
+	int res = LWP_SemDestroy(*ptr);
+	if (res) Process_Abort2(res, "Destroying waitable");
+	Mem_Free(handle);
+}
+
+void Waitable_Signal(void* handle) {
+	sem_t* ptr = (sem_t*)handle;
+	int res = LWP_SemPost(*ptr);
+	if (res && res != EOVERFLOW) Process_Abort2(res, "Signalling event");
+}
+
+void Waitable_Wait(void* handle) {
+	sem_t* ptr = (sem_t*)handle;
+	int res = LWP_SemWait(*ptr);
+	if (res) Process_Abort2(res, "Event wait");
+}
+
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
+	sem_t* ptr = (sem_t*)handle;
+	struct timespec ts;
+	int res;
+
+	ts.tv_sec  = milliseconds  / TB_MSPERSEC;
+	ts.tv_nsec = (milliseconds % TB_MSPERSEC) * TB_NSPERMS;
+
+	res = LWP_SemTimedWait(*ptr, &ts);
+	if (res && res != ETIMEDOUT) Process_Abort2(res, "Event timed wait");
 }
 
 

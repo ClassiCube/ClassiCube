@@ -270,6 +270,10 @@ void Thread_Join(void* handle) {
 	sceKernelDeleteThread((int)handle);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	SceLwMutexWorkarea* ptr = (SceLwMutexWorkarea*)Mem_Alloc(1, sizeof(SceLwMutexWorkarea), "mutex");
 	int res = sceKernelCreateLwMutex(ptr, name, 0, 0, NULL);
