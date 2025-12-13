@@ -108,17 +108,20 @@ void Gamepads_Init(void) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
+#define PAUSE_MASK (KEY_A|KEY_B|KEY_START|KEY_SELECT)
 void Gamepads_Process(float delta) {
 	int port = Gamepad_Connect(0x5BA, pad_defaults);
 	int mods = ~REG_KEYINPUT;
+
+	// TODO see comment in Platform_GBA.c, doesn't work anyways
+	//if ((mods & PAUSE_MASK) == PAUSE_MASK)
+	//	Process_Exit(0);
 	
 	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
 	
 	Gamepad_SetButton(port, CCPAD_1, mods & KEY_A);
 	Gamepad_SetButton(port, CCPAD_2, mods & KEY_B);
-	//Gamepad_SetButton(port, CCPAD_3, mods & KEY_X);
-	//Gamepad_SetButton(port, CCPAD_4, mods & KEY_Y);
 	
 	Gamepad_SetButton(port, CCPAD_START,  mods & KEY_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & KEY_SELECT);
@@ -133,6 +136,15 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+extern void fastset_256_bytes(char* beg, char* end, int value);
+
+void VRAM_FastClear(BitmapCol col) {
+	int value = (col << 16) | col;
+
+	char* vram = (char*)MEM_VRAM;
+	fastset_256_bytes(vram, vram + SCREEN_WIDTH * SCREEN_HEIGHT * 2, value);
+}
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)MEM_VRAM;
 	bmp->width  = width;

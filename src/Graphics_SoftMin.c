@@ -129,6 +129,11 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 static void ClearColorBuffer(void) {
 	int i, x, y, size = fb_width * fb_height;
 
+#ifdef CC_BUILD_GBA
+	/* in mGBA, fast clear takes ~2ms compared to ~52ms of code below */
+	extern void VRAM_FastClear(BitmapCol color);
+	VRAM_FastClear(clearColor);
+#else
 	if (cb_stride == fb_width) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
 	} else {
@@ -140,6 +145,7 @@ static void ClearColorBuffer(void) {
 			}
 		}
 	}
+#endif
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {

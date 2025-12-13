@@ -13,9 +13,8 @@
 #include "../Options.h"
 #include "../Animations.h"
 
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 #include "gbadefs.h"
 
 #include "../../third_party/tinyalloc/tinyalloc.c"
@@ -203,9 +202,10 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 void CrashHandler_Install(void) {
 }
 
+
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	Platform_LogConst(raw_msg);
-	_exit(0);
+	Process_Exit(0);
 }
 
 
@@ -333,5 +333,10 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0; 
 }
 
-void Process_Exit(cc_result code) { _exit(code); }
+extern void bios_soft_reset(void);
+void Process_Exit(cc_result code) { 
+	//*(vu8*)0x03007FFA = 0x00; // controls reset address
+	// TODO jump to start_vector instead?
+	for (;;) { __asm__ volatile(""); }
+}
 
