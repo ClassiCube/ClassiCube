@@ -36,6 +36,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
 const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;

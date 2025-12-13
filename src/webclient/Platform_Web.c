@@ -30,6 +30,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // Not used in web filesystem backend
 const cc_result ReturnCode_FileNotFound     = _ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;

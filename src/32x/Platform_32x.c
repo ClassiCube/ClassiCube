@@ -22,6 +22,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = 99999;
+const cc_result ReturnCode_PathNotFound       = 99999;
 const cc_result ReturnCode_DirectoryExists    = 99999;
 
 const cc_result ReturnCode_SocketInProgess  = -1;

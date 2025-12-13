@@ -130,7 +130,7 @@ static void ClearColorBuffer(void) {
 	int i, x, y, size = fb_width * fb_height;
 
 #ifdef CC_BUILD_GBA
-	/* in mGBA, fast clear takes ~2ms compared to ~52ms of code below */
+	/* in mGBA, fast clear takes ~3ms compared to ~52ms of standard code below */
 	extern void VRAM_FastClear(BitmapCol color);
 	VRAM_FastClear(clearColor);
 #else

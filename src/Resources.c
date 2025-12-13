@@ -69,7 +69,8 @@ static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry select
 
 	Platform_EncodePath(&raw_path, path);
 	res = Stream_OpenPath(&stream, &raw_path);
-	if (res == ReturnCode_FileNotFound) return;
+
+	if (ReturnCode_IsNotFound(res)) return;
 	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return; }
 
 	res = Zip_Extract(&stream, selector, NULL, 

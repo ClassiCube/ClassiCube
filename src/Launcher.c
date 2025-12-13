@@ -465,7 +465,8 @@ static cc_result ExtractTexturePack(const cc_string* path) {
 
 	Platform_EncodePath(&raw_path, path);
 	res = Stream_OpenPath(&stream, &raw_path);
-	if (res == ReturnCode_FileNotFound) return res;
+
+	if (ReturnCode_IsNotFound(res)) return res;
 	if (res) { Logger_SysWarn(res, "opening texture pack"); return res; }
 
 	res = Zip_Extract(&stream, 

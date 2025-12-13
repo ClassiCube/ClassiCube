@@ -264,8 +264,11 @@ extern cc_bool Platform_ReadonlyFilesystem;
 extern const cc_result ReturnCode_FileShareViolation;
 /* Result code for when trying to open a non-existent file */
 extern const cc_result ReturnCode_FileNotFound;
+/* Result code for when trying to open a file in a non-existent path */
+extern const cc_result ReturnCode_PathNotFound;
 /* Result code for when trying to create an already existent directory */
 extern const cc_result ReturnCode_DirectoryExists;
+#define ReturnCode_IsNotFound(res) ((res) == ReturnCode_FileNotFound || (res) == ReturnCode_PathNotFound)
 
 /* Attempts to create a new directory. */
 cc_result Directory_Create(const cc_filepath* path);
