@@ -492,6 +492,9 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 			avail = state->dataLeft;
 			read  = min(left, avail);
 
+			/* TODO figure out why this bug happens */
+			if (!req->data) Process_Abort("Http state broken, please report this");
+
 			Mem_Copy(req->data + req->size, buffer + offset, read);
 			Http_BufferExpanded(req, read); 
 
