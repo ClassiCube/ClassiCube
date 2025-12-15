@@ -32,8 +32,8 @@
 #define R_VAL r2 // r2 = value to fill
 
 BEG_ARM_FUNC(fastset_256_bytes)
-	// Spill callee saved registers + LR onto stack
-	stmfd sp!, {r4-r9, lr}
+	// Spill callee saved registers
+	stmfd sp!, {r4-r9}
 
 	// Clone 'value' for 'store multi CPU registers' loop
 	mov	r3, R_VAL
@@ -56,8 +56,9 @@ fastset_loop:
 	stmltia R_CUR!, {r2-r9}
 	blt fastset_loop
 
-	// Restore saved CPU registers + set PC to LR
-	ldmfd  sp!, {r4-r9, pc}
+	// Restore saved CPU registers
+	ldmfd  sp!, {r4-r9}
+	bx lr
 END_FUNC(fastset_256_bytes)
 
 

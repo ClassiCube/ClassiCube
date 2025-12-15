@@ -79,7 +79,8 @@ ifeq ($(PLAT),mingw)
 endif
 
 ifeq ($(PLAT),linux)
-	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
+	# -lm may be needed for __builtin_sqetf (in cases where it isn't replaced by a CPU instruction intrinsic)
+	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl -lm
 	BUILD_DIR = build/linux
 
 	# Detect MCST LCC, where -O3 is about equivalent to -O1
