@@ -22,17 +22,17 @@
 
 ! Final calculation:
 !    out->c = type << 24
-!    out->x = ((v2->x - v1->x) + v1->x) * 1/zNear
-!    out->y = ((v2->y - v1->y) + v1->y) * 1/zNear
+!    out->x = (t * (v2->x - v1->x) + v1->x) * 1/zNear
+!    out->y = (t * (v2->y - v1->y) + v1->y) * 1/zNear
 !    out->w = 1/zNear  
 !    
-!    out->u = (v2->u - v1->u) + v1->u;
-!    out->v = (v2->v - v1->v) + v1->v;
+!    out->u = t * (v2->u - v1->u) + v1->u;
+!    out->v = t * (v2->v - v1->v) + v1->v;
 !    
-!    out->b = (v2->b - v1->b) + v1->b;
-!    out->g = (v2->g - v1->g) + v1->g;
-!    out->r = (v2->r - v1->r) + v1->r;
-!    out->a = (v2->a - v1->a) + v1->a;
+!    out->b = t * (v2->b - v1->b) + v1->b;
+!    out->g = t * (v2->g - v1->g) + v1->g;
+!    out->r = t * (v2->r - v1->r) + v1->r;
+!    out->a = t * (v2->a - v1->a) + v1->a;
 
 ! INPUT ARGUMENTS
 #define IN1 r4 // input vertex 1

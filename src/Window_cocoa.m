@@ -349,7 +349,8 @@ static void ApplyIcon(void) {
 	img = [img initWithSize:NSMakeSize(CCIcon_Width, CCIcon_Height)];
 	[img addRepresentation:rep];
 	[appHandle setApplicationIconImage:img];
-	//[img release];
+
+	[img release];
 }
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
@@ -404,7 +405,6 @@ void Window_SetTitle(const cc_string* title) {
 
 	str = [NSString stringWithUTF8String:raw];
 	[winHandle setTitle:str];
-	[str release];
 }
 
 // NOTE: Only defined since macOS 10.7 SDK
@@ -781,7 +781,7 @@ static int SupportsModernFullscreen(void) {
 	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
 }
 
-static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
+static NSOpenGLPixelFormat* InitPixelFormat(cc_bool fullscreen) {
 	// TODO: Is there a penalty for fullscreen contexts in 10.7 and later?
 	// Need to test whether there is a performance penalty or not
 	if (SupportsModernFullscreen()) fullscreen = false;
@@ -800,11 +800,11 @@ static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
 
 void GLContext_Create(void) {
 	NSOpenGLPixelFormat* fmt;
-	fmt = MakePixelFormat(true);
+	fmt = InitPixelFormat(true);
 	if (!fmt) {
 		Platform_LogConst("Failed to create full screen pixel format.");
 		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
-		fmt = MakePixelFormat(false);
+		fmt = InitPixelFormat(false);
 	}
 	if (!fmt) Process_Abort("Choosing pixel format");
 
@@ -813,9 +813,10 @@ void GLContext_Create(void) {
 	if (!ctxHandle) Process_Abort("Failed to create OpenGL context");
 
 	[ctxHandle setView:viewHandle];
-	[fmt release];
 	[ctxHandle makeCurrentContext];
 	[ctxHandle update];
+
+	[fmt release];
 }
 
 void GLContext_Update(void) {
