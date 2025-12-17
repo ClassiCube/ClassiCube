@@ -301,8 +301,6 @@ void Gamepads_PreInit(void) {
 }
 
 void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
 	int ret = 0;
  	sysUtilGetSystemParamInt(SYSUTIL_SYSTEMPARAM_ID_ENTER_BUTTON_ASSIGN, &ret);
 	circle_main = ret == 0;

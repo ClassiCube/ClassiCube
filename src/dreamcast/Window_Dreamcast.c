@@ -246,10 +246,7 @@ static const BindMapping defaults_dc[BIND_COUNT] = {
 };
 
 void Gamepads_PreInit(void) { }
-
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void)    { }
 
 static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_1, mods & CONT_A);

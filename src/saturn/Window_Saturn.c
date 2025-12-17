@@ -118,8 +118,6 @@ void Gamepads_PreInit(void) {
 }
 
 void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	
 	Input_DisplayNames[CCPAD_1] = "A";
 	Input_DisplayNames[CCPAD_2] = "B";
 	Input_DisplayNames[CCPAD_3] = "C";

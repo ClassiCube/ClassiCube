@@ -103,10 +103,7 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 };
 
 void Gamepads_PreInit(void) { }
-
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void)    { }
 
 #define PAUSE_MASK (KEY_A|KEY_B|KEY_START|KEY_SELECT)
 void Gamepads_Process(float delta) {

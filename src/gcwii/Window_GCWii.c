@@ -368,9 +368,7 @@ void Gamepads_PreInit(void) {
 	PAD_Init();
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void) { }
 
 #if defined HW_RVL
 static const BindMapping default_nunchuck[BIND_COUNT] = {

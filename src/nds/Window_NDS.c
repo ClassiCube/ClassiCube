@@ -276,10 +276,7 @@ static const BindMapping defaults_nds[BIND_COUNT] = {
 };
 
 void Gamepads_PreInit(void) { }
-	
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void)    { }
 
 void Gamepads_Process(float delta) {
 	int port = Gamepad_Connect(0xD5, defaults_nds);

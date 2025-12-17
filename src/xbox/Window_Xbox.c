@@ -156,9 +156,7 @@ void Gamepads_PreInit(void) {
 #endif
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void) { }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_gamepad
 // NOTE: Analog buttons use dedicated field rather than being part of dButtons

@@ -615,7 +615,8 @@ static CC_NOINLINE void Gamepad_Add(int i, long deviceID, const struct BindMappi
 	Gamepad_Devices[i].base.defaultBinds = defaults;
 	Gamepad_Devices[i].deviceID          = deviceID;
 
-	InputBind_Load(&Gamepad_Devices[i].base);
+	InputBind_Load(&Gamepad_Devices[i].base);	
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 }
 
 int Gamepad_Connect(long deviceID, const struct BindMapping_* defaults) {

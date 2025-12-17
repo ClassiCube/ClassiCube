@@ -41,7 +41,6 @@ void LogUnhandledNSErrors(NSException* ex);
 
 
 @interface CCAppDelegate : UIResponder<UIApplicationDelegate>
-@property (strong, nonatomic) UIWindow *window;
 @end
 
 @implementation CCAppDelegate

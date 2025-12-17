@@ -169,9 +169,7 @@ void Gamepads_PreInit(void) {
 	padInitializeDefault(&pad);
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void) { }
 
 static void HandleButtons(int port, u64 mods) {
 	Gamepad_SetButton(port, CCPAD_L,  mods & HidNpadButton_L);

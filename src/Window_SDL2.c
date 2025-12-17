@@ -476,13 +476,10 @@ static SDL_GameController* controllers[INPUT_MAX_GAMEPADS];
 void Gamepads_PreInit(void) { }
 
 void Gamepads_Init(void) {
-    for (int i = 0, port = 0; i < SDL_NumJoysticks() && port < INPUT_MAX_GAMEPADS; i++) 
+    for (int i = 0, j = 0; i < SDL_NumJoysticks() && j < INPUT_MAX_GAMEPADS; i++) 
 	{
         if (!SDL_IsGameController(i)) continue;
-		Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
-		controllers[port] = SDL_GameControllerOpen(i);
-		port++;
+		controllers[j++] = SDL_GameControllerOpen(i);
     }
 }
 

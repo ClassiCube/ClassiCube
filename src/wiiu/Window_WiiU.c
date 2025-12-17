@@ -161,9 +161,7 @@ void Gamepads_PreInit(void) {
 	VPADInit();
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void) { }
 
 static void ProcessKPadButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_BUTTON_1);

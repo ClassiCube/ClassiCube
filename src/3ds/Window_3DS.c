@@ -157,9 +157,7 @@ void Gamepads_PreInit(void) {
 	irrst_result = irrstInit();
 }
 
-void Gamepads_Init(void) {
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void) { }
 
 static void HandleButtons(int port, u32 mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);

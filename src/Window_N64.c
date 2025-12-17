@@ -124,9 +124,7 @@ void Gamepads_PreInit(void) {
 	joypad_init();
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void) { }
 
 static void HandleButtons(int port, joypad_buttons_t btns) {
 	Gamepad_SetButton(port, CCPAD_L, btns.l);

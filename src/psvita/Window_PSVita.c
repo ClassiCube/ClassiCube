@@ -164,8 +164,6 @@ void Gamepads_PreInit(void) {
 }
 
 void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
 	SceAppUtilInitParam init_param = { 0 };
 	SceAppUtilBootParam boot_param = { 0 };
 	sceAppUtilInit(&init_param, &boot_param);

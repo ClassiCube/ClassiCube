@@ -510,7 +510,6 @@ void Gamepads_Init(void) {
 
     for (int i = 0; i < count && i < INPUT_MAX_GAMEPADS; i++) 
 	{
-		Input.Sources |= INPUT_SOURCE_GAMEPAD;
 		controllers[i] = SDL_OpenGamepad(joysticks[i]);
     }
 	SDL_free(joysticks);

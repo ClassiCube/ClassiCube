@@ -392,6 +392,8 @@ void Window_Init(void) {
 	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;
 
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
 	DisplayInfo.ScaleX = emscripten_get_device_pixel_ratio();
 	DisplayInfo.ScaleY = DisplayInfo.ScaleX;
 	interop_AddClipboardListeners();
@@ -603,14 +605,13 @@ static void ProcessGamepadButtons(int port, EmscriptenGamepadEvent* ev) {
 #define AXIS_SCALE 8.0f
 static void ProcessGamepadAxis(int port, int axis, float x, float y, float delta) {
 	/* Deadzone adjustment */
-	if (x >= -0.1 && x <= 0.1) x = 0;
-	if (y >= -0.1 && y <= 0.1) y = 0;
+	if (x >= -0.1f && x <= 0.1f) x = 0;
+	if (y >= -0.1f && y <= 0.1f) y = 0;
 
 	Gamepad_SetAxis(port, axis, x * AXIS_SCALE, y * AXIS_SCALE, delta);
 }
 
 static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delta) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	ProcessGamepadButtons(port, ev);
 
 	if (ev->numAxes >= 4) {
@@ -623,10 +624,9 @@ static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delt
 
 void Gamepads_Process(float delta) {
 	int i, port, res, count;
-	Input.Sources = INPUT_SOURCE_NORMAL;
-
 	if (emscripten_sample_gamepad_data() != 0) return;
 	count = emscripten_get_num_gamepads();
+	/* TODO: Unset Input.Sources & GAMEPAD_SOURCE if count == 0 for hot unplug support? */
 
 	for (i = 0; i < count; i++)
 	{

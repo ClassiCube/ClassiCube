@@ -111,9 +111,7 @@ void Gamepads_PreInit(void) {
 	usb_do_poll();
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_Init(void) { }
 /*
 struct controller_data_s
 {
