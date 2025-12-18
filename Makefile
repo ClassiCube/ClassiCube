@@ -79,7 +79,7 @@ ifeq ($(PLAT),mingw)
 endif
 
 ifeq ($(PLAT),linux)
-	# -lm may be needed for __builtin_sqetf (in cases where it isn't replaced by a CPU instruction intrinsic)
+	# -lm may be needed for __builtin_sqrtf (in cases where it isn't replaced by a CPU instruction intrinsic)
 	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl -lm
 	BUILD_DIR = build/linux
 

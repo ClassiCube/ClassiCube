@@ -252,13 +252,13 @@ static const BindMapping defaults_ps2[BIND_COUNT] = {
 static char padBuf0[256] __attribute__((aligned(64)));
 static char padBuf1[256] __attribute__((aligned(64)));
 
-void Gamepads_PreInit(void) {
+void Gamepads_PreInit(void) { }
+
+void Gamepads_Init(void) {
 	padInit(0);
 	padPortOpen(0, 0, padBuf0);
 	padPortOpen(1, 0, padBuf1);
-}
 
-void Gamepads_Init(void) {
 	Input_DisplayNames[CCPAD_1] = "CIRCLE";
 	Input_DisplayNames[CCPAD_2] = "CROSS";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
