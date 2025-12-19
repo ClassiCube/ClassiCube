@@ -20,13 +20,13 @@
 #include <CoreText/CoreText.h>
 
 #ifdef TARGET_OS_TV
-	// NSFontAttributeName etc - iOS 6.0
-	#define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
-	#define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
+    // NSFontAttributeName etc - iOS 6
+    #define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
+    #define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
 #else
-	// UITextAttributeFont etc - iOS 5.0
-	#define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
-	#define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
+    // UITextAttributeFont etc - iOS 5
+    #define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
+    #define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
 #endif
 
 // shared state with LBackend_ios.m and interop_ios.m
@@ -81,22 +81,23 @@ UIInterfaceOrientationMask SupportedOrientations(void) {
 static cc_bool fullscreen = true;
 static void UpdateStatusBar(void) {
     if ([cc_controller respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
-        // setNeedsStatusBarAppearanceUpdate - iOS 7.0
+        // setNeedsStatusBarAppearanceUpdate - iOS 7
         [cc_controller setNeedsStatusBarAppearanceUpdate];
     } else {
-        [[UIApplication sharedApplication] setStatusBarHidden:fullscreen withAnimation:UIStatusBarAnimationNone];
+        UIApplication* app = [UIApplication sharedApplication];
+        [app setStatusBarHidden:fullscreen withAnimation:UIStatusBarAnimationNone];
     }
 }
 
 static CGRect GetViewFrame(void) {
-    UIScreen* screen = UIScreen.mainScreen;
-    return fullscreen ? screen.bounds : screen.applicationFrame;
+    UIScreen* screen = [UIScreen mainScreen];
+    return fullscreen ? [screen bounds] : [screen applicationFrame];
 }
 
 @implementation CCWindow
 
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent *)event {
-    // touchesBegan:withEvent - iOS 2.0
+    // touchesBegan:withEvent - iOS 2
     for (UITouch* t in touches) AddTouch(t);
     
     // clicking on the background should dismiss onscreen keyboard
@@ -104,17 +105,17 @@ static CGRect GetViewFrame(void) {
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent *)event {
-    // touchesMoved:withEvent - iOS 2.0
+    // touchesMoved:withEvent - iOS 2
     for (UITouch* t in touches) UpdateTouch(t);
 }
 
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent *)event {
-    // touchesEnded:withEvent - iOS 2.0
+    // touchesEnded:withEvent - iOS 2
     for (UITouch* t in touches) RemoveTouch(t);
 }
 
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent *)event {
-    // touchesCancelled:withEvent - iOS 2.0
+    // touchesCancelled:withEvent - iOS 2
     for (UITouch* t in touches) RemoveTouch(t);
 }
 
@@ -124,24 +125,25 @@ static CGRect GetViewFrame(void) {
 
 @implementation CCViewController
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    // supportedInterfaceOrientations - iOS 6.0
+    // supportedInterfaceOrientations - iOS 6
     return SupportedOrientations();
 }
 
 - (BOOL)shouldAutorotate {
-    // shouldAutorotate - iOS 6.0
+    // shouldAutorotate - iOS 6
     return YES;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)ori {
-    // shouldAutorotateToInterfaceOrientation - iOS 2.0
+    // shouldAutorotateToInterfaceOrientation - iOS 2
     if (landscape_locked && !(ori == UIInterfaceOrientationLandscapeLeft || ori == UIInterfaceOrientationLandscapeRight))
         return NO;
+    
     return YES;
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id)coordinator {
-    // viewWillTransitionToSize:withTransitionCoordinator - iOS 8.0
+    // viewWillTransitionToSize:withTransitionCoordinator - iOS 8
     Window_Main.Width  = size.width;
     Window_Main.Height = size.height;
     
@@ -164,7 +166,7 @@ static void DeleteExportTempFile(void) {
 }
 
 - (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
-    // documentPicker:didPickDocumentAtURL - iOS 8.0
+    // documentPicker:didPickDocumentAtURL - iOS 8
     NSString* str    = url.path;
     const char* utf8 = str.UTF8String;
     
@@ -179,13 +181,13 @@ static void DeleteExportTempFile(void) {
 }
 
 - (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
-    // documentPickerWasCancelled - iOS 8.0
+    // documentPickerWasCancelled - iOS 8
     DeleteExportTempFile();
 }
 
 static cc_bool kb_active;
 - (void)keyboardDidShow:(NSNotification*)notification {
-    NSDictionary* info = notification.userInfo;
+    NSDictionary* info = [notification userInfo];
     if (kb_active) return;
     // TODO this is wrong
     // TODO this doesn't actually trigger view resize???
@@ -194,46 +196,47 @@ static cc_bool kb_active;
     double interval   = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
     CGRect kbFrame    = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    CGRect winFrame   = view_handle.frame;
+    CGRect winFrame   = [view_handle frame];
     
     cc_bool can_shift = true;
     // would the active input widget be pushed offscreen?
     if (kb_widget) {
-        can_shift = kb_widget.frame.origin.y > kbFrame.size.height;
+        CGRect curFrame = [kb_widget frame];
+        can_shift = curFrame.origin.y > kbFrame.size.height;
     }
     if (can_shift) winFrame.origin.y = -kbFrame.size.height;
     kb_widget = nil;
     
     Platform_LogConst("APPEAR");
     [UIView animateWithDuration:interval delay: 0.0 options:curve animations:^{
-        view_handle.frame = winFrame;
+        [view_handle setFrame:winFrame];
     } completion:nil];
 }
 
 - (void)keyboardDidHide:(NSNotification*)notification {
-    NSDictionary* info = notification.userInfo;
+    NSDictionary* info = [notification userInfo];
     if (!kb_active) return;
     kb_active = false;
     kb_widget = nil;
     
     double interval   = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
-    CGRect winFrame   = view_handle.frame;
+    CGRect winFrame   = [view_handle frame];
     winFrame.origin.y = 0;
     
     Platform_LogConst("VANISH");
     [UIView animateWithDuration:interval delay: 0.0 options:curve animations:^{
-       view_handle.frame = winFrame;
+       [view_handle setFrame:winFrame];
     } completion:nil];
 }
 
 - (BOOL)prefersStatusBarHidden {
-    // prefersStatusBarHidden - iOS 7.0
+    // prefersStatusBarHidden - iOS 7
     return fullscreen;
 }
 
 - (UIRectEdge)preferredScreenEdgesDeferringSystemGestures {
-    // preferredScreenEdgesDeferringSystemGestures - iOS 11.0
+    // preferredScreenEdgesDeferringSystemGestures - iOS 11
     // recent iOS versions have a 'bottom home bar', which when swiped up,
     //  switches out of ClassiCube and to the app list menu
     // overriding this forces the user to swipe up twice, which should
@@ -266,7 +269,7 @@ void Window_SetTitle(const cc_string* title) {
 }
 
 void Window_PreInit(void) { 
-	DisplayInfo.CursorVisible = true;
+    DisplayInfo.CursorVisible = true;
 }
 
 void Window_Init(void) {
@@ -288,29 +291,32 @@ void Window_Free(void) { }
 static UIColor* CalcBackgroundColor(void) {
     // default to purple if no themed background color yet
     if (!Launcher_Theme.BackgroundColor)
-        return UIColor.purpleColor;
+        return [UIColor purpleColor];
+    
     return ToUIColor(Launcher_Theme.BackgroundColor, 1.0f);
 }
 
 static CGRect DoCreateWindow(void) {
-    // UIKeyboardWillShowNotification - iOS 2.0
+    // UIKeyboardWillShowNotification - iOS 2
     cc_controller = [CCViewController alloc];
     UpdateStatusBar();
     
     CGRect bounds = GetViewFrame();
     win_handle    = [[CCWindow alloc] initWithFrame:bounds];
     
-    win_handle.rootViewController = cc_controller;
-    win_handle.backgroundColor = CalcBackgroundColor();
+    UIColor* color = CalcBackgroundColor();
+    [win_handle setBackgroundColor:color];
+    [win_handle setRootViewController:cc_controller];
+    
     Window_Main.Exists   = true;
     Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
     Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
     Window_Main.Width  = bounds.size.width;
     Window_Main.Height = bounds.size.height;
-	Window_Main.SoftKeyboardInstant = true;
+    Window_Main.SoftKeyboardInstant = true;
     
-    NSNotificationCenter* notifications = NSNotificationCenter.defaultCenter;
+    NSNotificationCenter* notifications = [NSNotificationCenter defaultCenter];
     [notifications addObserver:cc_controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];
     [notifications addObserver:cc_controller selector:@selector(keyboardDidHide:) name:UIKeyboardWillHideNotification object:nil];
     return bounds;
@@ -322,7 +328,7 @@ void Window_Show(void) {
 }
 
 void Window_RequestClose(void) {
-	Event_RaiseVoid(&WindowEvents.Closing);
+    Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 void Window_ProcessEvents(float delta) {
@@ -340,9 +346,9 @@ void Gamepads_Init(void) { }
 void Gamepads_Process(float delta) { }
 
 void ShowDialogCore(const char* title, const char* msg) {
-    // UIAlertController - iOS 8.0
-    // UIAlertAction - iOS 8.0
-    // UIAlertView - iOS 2.0
+    // UIAlertController - iOS 8
+    // UIAlertAction - iOS 8
+    // UIAlertView - iOS 2
     Platform_LogConst(title);
     Platform_LogConst(msg);
     NSString* _title = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
@@ -375,7 +381,8 @@ void ShowDialogCore(const char* title, const char* msg) {
 @implementation CCKBController
 - (void)handleTextChanged:(id)sender {
     UITextField* src = (UITextField*)sender;
-    const char* str  = src.text.UTF8String;
+    NSString* text   = [src text];
+    const char* str  = [text UTF8String];
     
     char tmpBuffer[NATIVE_STR_LEN];
     cc_string tmp = String_FromArray(tmpBuffer);
@@ -386,7 +393,7 @@ void ShowDialogCore(const char* title, const char* msg) {
 
 // === UITextFieldDelegate ===
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    // textFieldShouldReturn - iOS 2.0
+    // textFieldShouldReturn - iOS 2
     Input_SetPressed(CCKEY_ENTER);
     Input_SetReleased(CCKEY_ENTER);
     return YES;
@@ -401,11 +408,11 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
         kb_controller = [[CCKBController alloc] init];
         CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
     }
-	DisplayInfo.ShowingSoftKeyboard = true;
+    DisplayInfo.ShowingSoftKeyboard = true;
     
     text_input = [[UITextField alloc] initWithFrame:CGRectZero];
-    text_input.hidden   = YES;
-    text_input.delegate = kb_controller;
+    [text_input setHidden:YES];
+    [text_input setDelegate:kb_controller];
     [text_input addTarget:kb_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
     LInput_SetKeyboardType(text_input, args->type);
@@ -417,15 +424,15 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
     NSString* str = ToNSString(text);
-    NSString* cur = text_input.text;
+    NSString* cur = [text_input text];
     
     // otherwise on iOS 5, this causes an infinite loop
     if (cur && [str isEqualToString:cur]) return;
-    text_input.text = str;
+    [text_input setText:str];
 }
 
 void OnscreenKeyboard_Close(void) {
-	DisplayInfo.ShowingSoftKeyboard = false;
+    DisplayInfo.ShowingSoftKeyboard = false;
     [text_input resignFirstResponder];
 }
 
@@ -436,7 +443,9 @@ int Window_GetWindowState(void) {
 static void ToggleFullscreen(cc_bool isFullscreen) {
     fullscreen = isFullscreen;
     UpdateStatusBar();
-    view_handle.frame = GetViewFrame();
+    
+    CGRect frame = GetViewFrame();
+    [view_handle setFrame:frame];
 }
 
 cc_result Window_EnterFullscreen(void) {
@@ -452,13 +461,13 @@ void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
-    // attemptRotationToDeviceOrientation - iOS 5.0
+    // attemptRotationToDeviceOrientation - iOS 5
     // TODO doesn't work properly.. setting 'UIInterfaceOrientationUnknown' apparently
     //  restores orientation, but doesn't actually do that when I tried it
     if (lock) {
         //NSInteger ori    = lock ? UIInterfaceOrientationLandscapeRight : UIInterfaceOrientationUnknown;
         NSInteger ori    = UIInterfaceOrientationLandscapeRight;
-        UIDevice* device = UIDevice.currentDevice;
+        UIDevice* device = [UIDevice currentDevice];
         NSNumber* value  = [NSNumber numberWithInteger:ori];
         [device setValue:value forKey:@"orientation"];
     }
@@ -468,7 +477,7 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-    // UIDocumentPickerViewController - iOS 8.0
+    // UIDocumentPickerViewController - iOS 8
     // see the custom UTITypes declared in Info.plist 
     NSDictionary* fileExt_map =
     @{
@@ -494,14 +503,14 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     //dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
     
     open_dlg_callback = args->Callback;
-    dlg.delegate = cc_controller;
+    [dlg setDelegate:cc_controller];
     [cc_controller presentViewController:dlg animated:YES completion: Nil];
     return 0; // TODO still unfinished
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
     if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
-    // UIDocumentPickerViewController - iOS 8.0
+    // UIDocumentPickerViewController - iOS 8
     
     // save the item to a temp file, which is then (usually) later deleted by picker callbacks
     Directory_Create(FILEPATH_RAW("Exported"));
@@ -517,7 +526,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
     dlg = [UIDocumentPickerViewController alloc];
     dlg = [dlg initWithURL:url inMode:UIDocumentPickerModeExportToService];
     
-    dlg.delegate = cc_controller;
+    [dlg setDelegate:cc_controller];
     [cc_controller presentViewController:dlg animated:YES completion: Nil];
     return 0;
 }
@@ -535,8 +544,8 @@ void Window_Create2D(int width, int height) {
     CGRect bounds = DoCreateWindow();
     
     view_handle = [[UIView alloc] initWithFrame:bounds];
-    view_handle.multipleTouchEnabled = true;
-    cc_controller.view = view_handle;
+    [view_handle setMultipleTouchEnabled:YES];
+    [cc_controller setView:view_handle];
 }
 
 void Window_Create3D(int width, int height) {
@@ -544,8 +553,8 @@ void Window_Create3D(int width, int height) {
     CGRect bounds = DoCreateWindow();
     
     view_handle = [[CC3DView alloc] initWithFrame:bounds];
-    view_handle.multipleTouchEnabled = true;
-    cc_controller.view = view_handle;
+    [view_handle setMultipleTouchEnabled:YES];
+    [cc_controller setView:view_handle];
 
     Init3DLayer();
 }
@@ -566,7 +575,7 @@ static GLuint color_renderbuffer, depth_renderbuffer;
 static int fb_width, fb_height;
 
 static void UpdateColorbuffer(void) {
-    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    CAEAGLLayer* layer = (CAEAGLLayer*)[view_handle layer];
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     
     if (![ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer])
@@ -648,6 +657,7 @@ cc_bool GLContext_SwapBuffers(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glDiscardFramebufferEXT(GL_FRAMEBUFFER, 1, discards);
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+    
     [ctx_handle presentRenderbuffer:GL_RENDERBUFFER];
     return true;
 }
@@ -669,15 +679,16 @@ void GLContext_GetApiInfo(cc_string* info) { }
 @end
 
 static void Init3DLayer(void) {
-    // CAEAGLLayer - iOS 2.0
-    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    // CAEAGLLayer - iOS 2
+    CAEAGLLayer* layer = (CAEAGLLayer*)[view_handle layer];
 
-    layer.opaque = YES;
-    layer.drawableProperties =
+    [layer setOpaque:YES];
+    NSDictionary* props =
    @{
         kEAGLDrawablePropertyRetainedBacking : [NSNumber numberWithBool:NO],
         kEAGLDrawablePropertyColorFormat : kEAGLColorFormatRGBA8
     };
+    [layer setDrawableProperties:props];
 }
 #endif
 
@@ -686,22 +697,23 @@ static void Init3DLayer(void) {
 *-------------------------------------------------------Framebuffer-------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->width  = width;
-	bmp->height = height;
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
-	
-	win_ctx = CGBitmapContextCreate(bmp->scan0, width, height, 8, width * 4,
-									CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+    bmp->width  = width;
+    bmp->height = height;
+    bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+    
+    win_ctx = CGBitmapContextCreate(bmp->scan0, width, height, 8, width * 4,
+                                    CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	CGImageRef image = CGBitmapContextCreateImage(win_ctx);
-	view_handle.layer.contents = CFBridgingRelease(image);
+    CGImageRef image = CGBitmapContextCreateImage(win_ctx);
+    CALayer* layer = [view_handle layer];
+    [layer setContents:CFBridgingRelease(image)];
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
-	CGContextRelease(win_ctx);
+    Mem_Free(bmp->scan0);
+    CGContextRelease(win_ctx);
 }
 #endif
 

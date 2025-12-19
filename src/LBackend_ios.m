@@ -18,13 +18,13 @@
 #include <CoreText/CoreText.h>
 
 #ifdef TARGET_OS_TV
-	// NSFontAttributeName etc - iOS 6.0
-	#define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
-	#define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
+    // NSFontAttributeName etc - iOS 6
+    #define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
+    #define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
 #else
-	// UITextAttributeFont etc - iOS 5.0
-	#define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
-	#define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
+    // UITextAttributeFont etc - iOS 5
+    #define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
+    #define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
 #endif
 
 // shared state with interop_ios.m
@@ -81,7 +81,7 @@ static NSString* GetColorlessString(const cc_string* text) {
 }
 
 
-static void FreeContents(void* info, const void* data, size_t size) { Mem_Free(data); }
+static void FreeContents(void* info, const void* data, size_t size) { Mem_Free((void*)data); }
 // TODO probably a better way..
 static UIImage* ToUIImage(struct Bitmap* bmp) {
     CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
@@ -139,7 +139,8 @@ static NSString* cellID = @"CC_Cell";
     if (!w) return;
     
     UITextField* src   = (UITextField*)sender;
-    const char* str    = src.text.UTF8String;
+    NSString* text     = [src text];
+    const char* str    = [text UTF8String];
     struct LInput* ipt = (struct LInput*)w;
     
     ipt->text.length = 0;
@@ -149,7 +150,7 @@ static NSString* cellID = @"CC_Cell";
 
 - (void)handleValueChanged:(id)sender {
     UISwitch* swt     = (UISwitch*)sender;
-    UIView* parent    = swt.superview;
+    UIView* parent    = [swt superview];
     struct LWidget* w = FindWidgetForView(parent);
     if (!w) return;
 
@@ -161,29 +162,31 @@ static NSString* cellID = @"CC_Cell";
 
 // === UITableViewDataSource ===
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    // cellForRowAtIndexPath - iOS 2.0
+    // cellForRowAtIndexPath - iOS 2
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
     }
     
-    LTable_UpdateCell(tableView, cell, (int)indexPath.row);
+    LTable_UpdateCell(tableView, cell, (int)[indexPath row]);
     return cell;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    // numberOfRowsInSection - iOS 2.0
+    // numberOfRowsInSection - iOS 2
     struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
     return w ? w->rowsCount : 0;
 }
 
 // === UITableViewDelegate ===
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    // didSelectRowAtIndexPath - iOS 2.0
-    int row = (int)indexPath.row;
+    // didSelectRowAtIndexPath - iOS 2
+    int row = (int)[indexPath row];
     struct ServerInfo* server = LTable_Get(row);
-    LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, true);
+    
+    UIView* cell = [tableView cellForRowAtIndexPath:indexPath];
+    LTable_UpdateCellColor(cell, server, row, true);
     
     struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
     if (!w) return;
@@ -191,15 +194,17 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath {
-    // didDeselectRowAtIndexPath - iOS 2.0
-    int row = (int)indexPath.row;
+    // didDeselectRowAtIndexPath - iOS 2
+    int row = (int)[indexPath row];
     struct ServerInfo* server = LTable_Get(row);
-    LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, false);
+    
+    UIView* cell = [tableView cellForRowAtIndexPath:indexPath];
+    LTable_UpdateCellColor(cell, server, row, false);
 }
 
 // === UITextFieldDelegate ===
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    // textFieldShouldReturn - iOS 2.0
+    // textFieldShouldReturn - iOS 2
     struct LWidget* w   = FindWidgetForView(textField);
     if (!w) return YES;
     struct LWidget* sel = Launcher_Active->onEnterWidget;
@@ -213,7 +218,7 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
-    // textFieldDidBeginEditing - iOS 2.0
+    // textFieldDidBeginEditing - iOS 2
     kb_widget = textField;
 }
 
@@ -250,14 +255,14 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
         return;
     }
     
-    // systemFontOfSize: - iOS 2.0
+    // systemFontOfSize: - iOS 2
     UIFont* font   = [UIFont systemFontOfSize:42];
     NSString* text = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
         
     NSDictionary* attrs_bg =
     @{
       TEXT_ATTRIBUTE_FONT  : font,
-      TEXT_ATTRIBUTE_COLOR : UIColor.blackColor
+      TEXT_ATTRIBUTE_COLOR : [UIColor blackColor]
     };
     NSAttributedString* str_bg = [[NSAttributedString alloc] initWithString:text attributes:attrs_bg];
     DrawText(str_bg, ctx, 4, 42);
@@ -265,7 +270,7 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
     NSDictionary* attrs_fg =
     @{
       TEXT_ATTRIBUTE_FONT  : font,
-      TEXT_ATTRIBUTE_COLOR : UIColor.whiteColor
+      TEXT_ATTRIBUTE_COLOR : [UIColor whiteColor]
     };
     NSAttributedString* str_fg = [[NSAttributedString alloc] initWithString:text attributes:attrs_fg];
     DrawText(str_fg, ctx, 0, 38);
@@ -275,17 +280,17 @@ void LBackend_InitFramebuffer(void) { }
 void LBackend_FreeFramebuffer(void) { }
 
 void LBackend_Redraw(void) {
-	struct Context2D ctx;
-	struct Bitmap bmp;
-	int width  = max(Window_Main.Width,  1);
-	int height = max(Window_Main.Height, 1);
-	
-	Window_AllocFramebuffer(&bmp, width, height);
-		Context2D_Wrap(&ctx, &bmp);
-		Launcher_Active->DrawBackground(Launcher_Active, &ctx);
-		Rect2D rect = { 0, 0, width, height };
-		Window_DrawFramebuffer(rect, &bmp);
-	Window_FreeFramebuffer(&bmp);
+    struct Context2D ctx;
+    struct Bitmap bmp;
+    int width  = max(Window_Main.Width,  1);
+    int height = max(Window_Main.Height, 1);
+    
+    Window_AllocFramebuffer(&bmp, width, height);
+        Context2D_Wrap(&ctx, &bmp);
+        Launcher_Active->DrawBackground(Launcher_Active, &ctx);
+        Rect2D rect = { 0, 0, width, height };
+        Window_DrawFramebuffer(rect, &bmp);
+    Window_FreeFramebuffer(&bmp);
 }
 
 static void LBackend_ButtonUpdateBackground(struct LButton* w);
@@ -331,7 +336,7 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
 
 static UIView* LBackend_ButtonShow(struct LButton* w) {
     UIButton* btn = [[UIButton alloc] init];
-    btn.frame = CGRectMake(0, 0, w->_textWidth, w->_textHeight);
+    [btn setFrame:CGRectMake(0, 0, w->_textWidth, w->_textHeight)];
     [btn addTarget:ui_controller action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
     
     w->meta = (__bridge void*)btn;
@@ -359,33 +364,37 @@ void LBackend_CheckboxInit(struct LCheckbox* w) { }
 
 static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     UIView* root  = [[UIView alloc] init];
-    CGRect frame;
+    CGRect swtFrame, lblFrame, rootFrame;
     
     UISwitch* swt = [[UISwitch alloc] init];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     UILabel* lbl  = [[UILabel alloc] init];
-    lbl.backgroundColor = UIColor.clearColor;
-    lbl.textColor = UIColor.whiteColor;
-    lbl.text      = ToNSString(&w->text);
+    NSString* text=ToNSString(&w->text);
+    
+    [lbl setBackgroundColor:[UIColor clearColor]];
+    [lbl setTextColor:[UIColor whiteColor]];
+    [lbl setText:text];
     [lbl sizeToFit]; // adjust label to fit text
     
     [root addSubview:swt];
     [root addSubview:lbl];
     
     // label should be slightly to right of switch and vertically centred
-    frame = lbl.frame;
-    frame.origin.x = swt.frame.size.width + 10.0f;
-    frame.origin.y = swt.frame.size.height / 2 - frame.size.height / 2;
-    lbl.frame = frame;
+    swtFrame = [swt frame];
+    lblFrame = [lbl frame];
+    lblFrame.origin.x = swtFrame.size.width + 10.0f;
+    lblFrame.origin.y = swtFrame.size.height / 2 - lblFrame.size.height / 2;
+    [lbl setFrame:lblFrame];
     
     // adjust root view height to enclose children
-    frame = root.frame;
-    frame.size.width  = lbl.frame.origin.x + lbl.frame.size.width;
-    frame.size.height = max(swt.frame.size.height, lbl.frame.size.height);
-    root.frame = frame;
+    lblFrame  = [lbl  frame];
+    rootFrame = [root frame];
+    rootFrame.size.width  = lblFrame.origin.x + lblFrame.size.width;
+    rootFrame.size.height = max(swtFrame.size.height, lblFrame.size.height);
+    [root setFrame:rootFrame];
     
-    //root.userInteractionEnabled = YES;
+    // [root setUserInteractionEnabled:YES];
     w->meta = (__bridge void*)root;
     LBackend_CheckboxUpdate(w);
     return root;
@@ -393,9 +402,10 @@ static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
 
 void LBackend_CheckboxUpdate(struct LCheckbox* w) {
     UIView* root  = (__bridge UIView*)w->meta;
-    UISwitch* swt = (UISwitch*)root.subviews[0];
+    NSArray* subs = [root subviews];
+    UISwitch* swt = (UISwitch*)[subs objectAtIndex:0];
     
-    swt.on = w->value;
+    [swt setOn:w->value];
 }
 void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 
@@ -406,15 +416,15 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 void LInput_SetKeyboardType(UITextField* fld, int flags) {
     int type = flags & 0xFF;
     if (type == KEYBOARD_TYPE_INTEGER) {
-        fld.keyboardType = UIKeyboardTypeNumberPad;
+        [fld setKeyboardType:UIKeyboardTypeNumberPad];
     } else if (type == KEYBOARD_TYPE_PASSWORD) {
-        fld.secureTextEntry = YES;
+        [fld setSecureTextEntry:YES];
     }
     
     if (flags & KEYBOARD_FLAG_SEND) {
-        fld.returnKeyType = UIReturnKeySend;
+        [fld setReturnKeyType:UIReturnKeySend];
     } else {
-        fld.returnKeyType = UIReturnKeyDone;
+        [fld setReturnKeyType:UIReturnKeyDone];
     }
 }
 
@@ -422,7 +432,8 @@ void LInput_SetPlaceholder(UITextField* fld, const char* placeholder) {
     if (!placeholder) return;
     
     cc_string hint  = String_FromReadonly(placeholder);
-    fld.placeholder = ToNSString(&hint);
+    NSString* text  = ToNSString(&hint);
+    [fld setPlaceholder:text];
 }
 
 void LBackend_InputInit(struct LInput* w, int width) {
@@ -431,11 +442,13 @@ void LBackend_InputInit(struct LInput* w, int width) {
 
 static UIView* LBackend_InputShow(struct LInput* w) {
     UITextField* fld = [[UITextField alloc] init];
-    fld.frame           = CGRectMake(0, 0, w->_textHeight, LINPUT_HEIGHT);
-    fld.borderStyle     = UITextBorderStyleBezel;
-    fld.backgroundColor = UIColor.whiteColor;
-    fld.textColor       = UIColor.blackColor;
-    fld.delegate        = ui_controller;
+    CGRect frame     = CGRectMake(0, 0, w->_textHeight, LINPUT_HEIGHT);
+    
+    [fld setFrame:frame];
+    [fld setBorderStyle:UITextBorderStyleBezel];
+    [fld setBackgroundColor: [UIColor whiteColor]];
+    [fld setTextColor: [UIColor blackColor]];
+    [fld setDelegate:ui_controller];
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
     LInput_SetKeyboardType(fld, w->inputType);
@@ -448,7 +461,9 @@ static UIView* LBackend_InputShow(struct LInput* w) {
 
 void LBackend_InputUpdate(struct LInput* w) {
     UITextField* fld = (__bridge UITextField*)w->meta;
-    fld.text         = ToNSString(&w->text);
+    NSString* text   = ToNSString(&w->text);
+    
+    [fld setText:text];
 }
 
 void LBackend_InputDraw(struct LInput* w) { }
@@ -465,9 +480,9 @@ void LBackend_LabelInit(struct LLabel* w) { }
 static UIView* LBackend_LabelShow(struct LLabel* w) {
     UILabel* lbl  = [[UILabel alloc] init];
     w->meta       = (__bridge void*)lbl;
-    lbl.backgroundColor = UIColor.clearColor;
+    [lbl setBackgroundColor:[UIColor clearColor]];
     
-    if (w->small) lbl.font = [UIFont systemFontOfSize:14.0f];
+    if (w->small) [lbl setFont:[UIFont systemFontOfSize:14.0f]];
     LBackend_LabelUpdate(w);
     return lbl;
 }
@@ -477,11 +492,11 @@ void LBackend_LabelUpdate(struct LLabel* w) {
     if (!lbl) return;
     
     if ([lbl respondsToSelector:@selector(attributedText)]) {
-        // attributedText - iOS 6.0
-        lbl.attributedText = ToAttributedString(&w->text);
+        // attributedText - iOS 6
+        [lbl setAttributedText:ToAttributedString(&w->text)];
     } else {
-        lbl.textColor = GetStringColor(&w->text);
-        lbl.text      = GetColorlessString(&w->text);
+        [lbl setTextColor:GetStringColor(&w->text)];
+        [lbl setText:GetColorlessString(&w->text)];
     }
     
     [lbl sizeToFit]; // adjust label to fit text
@@ -498,11 +513,12 @@ void LBackend_LineInit(struct LLine* w, int width) {
 
 static UIView* LBackend_LineShow(struct LLine* w) {
     UIView* view = [[UIView alloc] init];
-    view.frame   = CGRectMake(0, 0, w->_width, LLINE_HEIGHT);
+    CGRect frame = CGRectMake(0, 0, w->_width, LLINE_HEIGHT);
+    [view setFrame:frame];
     w->meta      = (__bridge void*)view;
     
-    BitmapCol color      = LLine_GetColor();
-    view.backgroundColor = ToUIColor(color, 0.5f);
+    UIColor* color = ToUIColor(LLine_GetColor(), 0.5f);
+    [view setBackgroundColor:color];
     return view;
 }
 void LBackend_LineDraw(struct LLine* w) { }
@@ -518,8 +534,11 @@ void LBackend_SliderInit(struct LSlider* w, int width, int height) {
 
 static UIView* LBackend_SliderShow(struct LSlider* w) {
     UIProgressView* prg = [[UIProgressView alloc] init];
-    prg.frame           = CGRectMake(0, 0, w->_width, w->_height);
-    prg.progressTintColor = ToUIColor(w->color, 1.0f);
+    CGRect frame        = CGRectMake(0, 0, w->_width, w->_height);
+    UIColor* color      = ToUIColor(w->color, 1.0f);
+    
+    [prg setFrame:frame];
+    [prg setProgressTintColor:color];
     
     w->meta = (__bridge void*)prg;
     return prg;
@@ -528,7 +547,8 @@ static UIView* LBackend_SliderShow(struct LSlider* w) {
 void LBackend_SliderUpdate(struct LSlider* w) {
     UIProgressView* prg = (__bridge UIProgressView*)w->meta;
     
-    prg.progress = w->value / 100.0f;
+    float progress = w->value / 100.0f;
+    [prg setProgress:progress];
 }
 void LBackend_SliderDraw(struct LSlider* w) { }
 
@@ -540,10 +560,11 @@ void LBackend_TableInit(struct LTable* w) { }
 
 static UIView* LBackend_TableShow(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.delegate   = ui_controller;
-    tbl.dataSource = ui_controller;
-    tbl.editing    = NO;
-    tbl.allowsSelection = YES;
+    [tbl setDelegate:ui_controller];
+    [tbl setDataSource:ui_controller];
+    [tbl setEditing:NO];
+    [tbl setAllowsSelection:YES];
+    
     LTable_UpdateCellColor(tbl, NULL, 1, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
@@ -564,12 +585,13 @@ void LBackend_TableMouseMove(struct LTable* w, int idx) { }
 
 static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected) {
     BitmapCol color = LTable_RowColor(row, selected, server && server->featured);
+    
     if (color) {
-        view.backgroundColor = ToUIColor(color, 1.0f);
-        view.opaque          = YES;
+        [view setBackgroundColor:ToUIColor(color, 1.0f)];
+        [view setOpaque:YES];
     } else {
-        view.backgroundColor = UIColor.clearColor;
-        view.opaque          = NO;
+        [view setBackgroundColor:[UIColor clearColor]];
+        [view setOpaque:NO];
     }
 }
 
@@ -583,40 +605,46 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     LTable_FormatUptime(&desc, server->uptime);
     if (server->software.length) String_Format1(&desc, " | %s", &server->software);
     
-    if (flag && flag->meta)
-        cell.imageView.image = (__bridge UIImage*)flag->meta;
-        
-    cell.textLabel.text       = ToNSString(&server->name);
-    cell.detailTextLabel.text = ToNSString(&desc);//[ToNSString(&desc) stringByAppendingString:@"\nLine2"];
-    cell.textLabel.textColor  = UIColor.whiteColor;
-    cell.detailTextLabel.textColor = UIColor.whiteColor;
-    cell.selectionStyle       = UITableViewCellSelectionStyleNone;
+    if (flag && flag->meta) {
+        UIImageView* imageView = [cell imageView];
+        [imageView setImage:(__bridge UIImage*)flag->meta];
+    }
     
-    NSIndexPath* sel = table.indexPathForSelectedRow;
-    cc_bool selected = sel && sel.row == row;
+    UILabel* lbl = [cell textLabel];
+    [lbl setText:ToNSString(&server->name)];
+    [lbl setTextColor: [UIColor whiteColor]];
+    
+    UILabel* details = [cell detailTextLabel];
+    [details setText:ToNSString(&desc)];
+    [details setTextColor: [UIColor whiteColor]];
+    
+    [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
+    
+    NSIndexPath* sel = [table indexPathForSelectedRow];
+    cc_bool selected = sel && ([sel row] == row);
     LTable_UpdateCellColor(cell, server, row, selected);
 }
 
 // TODO only redraw flags
 void LBackend_TableFlagAdded(struct LTable* w) {
-	UITableView* tbl = (__bridge UITableView*)w->meta;
-	
-	// trying to update cell.imageView.image doesn't seem to work,
-	// so pointlessly reload entire table data instead
-	NSIndexPath* selected = [tbl indexPathForSelectedRow];
-	[tbl reloadData];
-	[tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
+    UITableView* tbl = (__bridge UITableView*)w->meta;
+    
+    // trying to use [cell imageView] setImage doesn't seem to work,
+    // so pointlessly reload entire table data instead
+    NSIndexPath* selected = [tbl indexPathForSelectedRow];
+    [tbl reloadData];
+    [tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
 /*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
-	NSData* ns_data = [NSData dataWithBytes:data length:len];
-	UIImage* img = [UIImage imageWithData:ns_data];
-	if (!img) return;
-	
-	flag->meta = CFBridgingRetain(img);  
+    NSData* ns_data = [NSData dataWithBytes:data length:len];
+    UIImage* img = [UIImage imageWithData:ns_data];
+    if (!img) return;
+    
+    flag->meta = CFBridgingRetain(img);  
 }
 
 static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
@@ -649,7 +677,7 @@ void LBackend_LayoutWidget(struct LWidget* w) {
     // e.g. Table widget needs adjusts width/height based on window
     if (l[1].type & LLAYOUT_EXTRA)
         LBackend_LayoutDimensions(w, &r);
-    view.frame = r;
+    [view setFrame:r];
 }
 
 static UIView* ShowWidget(struct LWidget* w) {

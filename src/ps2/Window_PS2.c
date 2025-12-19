@@ -338,18 +338,6 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
-
-	packet_t* packet = packet_init(100, PACKET_NORMAL);
-	qword_t* q = packet->data;
-
-	q = draw_setup_environment(q, 0, &fb_colors[0], &fb_depth);
-	q = draw_clear(q, 0, 0, 0,
-					fb_colors[0].width, fb_colors[0].height, 170, 170, 170);
-	q = draw_finish(q);
-
-	dma_channel_send_normal(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
-	dma_wait_fast();
-	packet_free(packet);
 }
 
 extern void Gfx_TransferPixels(void* src, int width, int height, 

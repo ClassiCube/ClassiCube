@@ -22,13 +22,13 @@
 #include <CoreText/CoreText.h>
 
 #ifdef TARGET_OS_TV
-	// NSFontAttributeName etc - iOS 6.0
-	#define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
-	#define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
+    // NSFontAttributeName etc - iOS 6
+    #define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
+    #define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
 #else
-	// UITextAttributeFont etc - iOS 5.0
-	#define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
-	#define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
+    // UITextAttributeFont etc - iOS 5
+    #define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
+    #define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
 #endif
 
 // shared state with Window_ios.m
@@ -47,10 +47,10 @@ void LogUnhandledNSErrors(NSException* ex);
 
 #include "main_impl.h"
 - (void)runMainLoop {
-	/* ClassiCube is sort of and sort of not the executable */
-	/*  on iOS - UIKit is responsible for kickstarting the game. */
-	SetupProgram(1, NULL);
-	for (;;) { RunProgram(1, NULL); }
+    /* ClassiCube is sort of and sort of not the executable */
+    /*  on iOS - UIKit is responsible for kickstarting the game. */
+    SetupProgram(1, NULL);
+    for (;;) { RunProgram(1, NULL); }
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -62,7 +62,7 @@ void LogUnhandledNSErrors(NSException* ex);
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
-    // applicationWillResignActive - iOS 2.0
+    // applicationWillResignActive - iOS 2
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
     Platform_LogConst("INACTIVE");
@@ -71,20 +71,20 @@ void LogUnhandledNSErrors(NSException* ex);
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
-    // applicationDidEnterBackground - iOS 4.0
+    // applicationDidEnterBackground - iOS 4
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     Platform_LogConst("BACKGROUND");
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
-    // applicationWillEnterForeground - iOS 4.0
+    // applicationWillEnterForeground - iOS 4
     // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
     Platform_LogConst("FOREGROUND");
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
-    // applicationDidBecomeActive - iOS 2.0
+    // applicationDidBecomeActive - iOS 2
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     Platform_LogConst("ACTIVE");
     Window_Main.Focused = true;
@@ -92,13 +92,13 @@ void LogUnhandledNSErrors(NSException* ex);
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
-    // applicationWillTerminate - iOS 2.0
+    // applicationWillTerminate - iOS 2
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     // TODO implement somehow, prob need a variable in Program.c
 }
 
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
-    // supportedInterfaceOrientationsForWindow - iOS 6.0
+    // supportedInterfaceOrientationsForWindow - iOS 6
     return SupportedOrientations();
 }
 @end
@@ -135,7 +135,7 @@ int main(int argc, char * argv[]) {
  *------------------------------------------------------Common helpers--------------------------------------------------------*
  *#########################################################################################################################*/
 UIColor* ToUIColor(BitmapCol color, float A) {
-    // colorWithRed:green:blue:alpha - iOS 2.0
+    // colorWithRed:green:blue:alpha - iOS 2
     float R = BitmapCol_R(color) / 255.0f;
     float G = BitmapCol_G(color) / 255.0f;
     float B = BitmapCol_B(color) / 255.0f;
@@ -165,7 +165,7 @@ void Platform_Log(const char* msg, int len) {
  *--------------------------------------------------------Updater----------------------------------------------------------*
  *#########################################################################################################################*/
 const struct UpdaterInfo Updater_Info = {
-	"&eRedownload and reinstall to update", 0
+    "&eRedownload and reinstall to update", 0
 };
 cc_bool Updater_Clean(void) { return true; }
 
@@ -189,11 +189,12 @@ cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
  *--------------------------------------------------------Platform--------------------------------------------------------*
  *#########################################################################################################################*/
 cc_result Process_StartOpen(const cc_string* args) {
-    // openURL - iOS 2.0 (deprecated)
+    // openURL - iOS 2 (deprecated)
     NSString* str = ToNSString(args);
     NSURL* url    = [[NSURL alloc] initWithString:str];
 
-    [UIApplication.sharedApplication openURL:url];
+    UIApplication* app = [UIApplication sharedApplication];
+    [app openURL:url];
     return 0;
 }
 
@@ -201,7 +202,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
     // NSSearchPathForDirectoriesInDomains - iOS 2.0
     // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
     NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    if (array.count <= 0) return ERR_NOT_SUPPORTED;
+    if ([array count] <= 0) return ERR_NOT_SUPPORTED;
     
     NSString* str    = [array objectAtIndex:0];
     const char* path = [str fileSystemRepresentation];
@@ -211,7 +212,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 }
 
 void Platform_ShareScreenshot(const cc_string* filename) {
-    // UIActivityViewController - iOS 6.0
+    // UIActivityViewController - iOS 6
     cc_string path; char pathBuffer[FILENAME_SIZE];
     String_InitArray(path, pathBuffer);
     String_Format1(&path, "screenshots/%s", filename);
@@ -227,8 +228,8 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 }
 
 void GetDeviceUUID(cc_string* str) {
-    // identifierForVendor - iOS 6.0
-    UIDevice* device = UIDevice.currentDevice;
+    // identifierForVendor - iOS 6
+    UIDevice* device = [UIDevice currentDevice];
     
     if ([device respondsToSelector:@selector(identifierForVendor)]) {
         NSString* string = [[device identifierForVendor] UUIDString];
@@ -240,7 +241,7 @@ void GetDeviceUUID(cc_string* str) {
 }
 
 void Directory_GetCachePath(cc_string* path) {
-    // NSSearchPathForDirectoriesInDomains - iOS 2.0
+    // NSSearchPathForDirectoriesInDomains - iOS 2
     NSArray* array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     if (array.count <= 0) return;
     
@@ -258,14 +259,14 @@ void Directory_GetCachePath(cc_string* path) {
  *#########################################################################################################################*/
 #ifndef CC_BUILD_FREETYPE
 void interop_GetFontNames(struct StringsBuffer* buffer) {
-    NSArray* families = UIFont.familyNames;
+    NSArray* families = [UIFont familyNames];
     NSLog(@"Families: %@", families);
     char tmpBuffer[NATIVE_STR_LEN];
     cc_string tmp = String_FromArray(tmpBuffer);
     
     for (NSString* family in families)
     {
-        const char* str = family.UTF8String;
+        const char* str = [family UTF8String];
         String_AppendUtf8(&tmp, str, String_Length(str));
         StringsBuffer_Add(buffer, &tmp);
         tmp.length = 0;
@@ -448,7 +449,9 @@ static NSMutableAttributedString* GetAttributedString(struct DrawTextArgs* args,
         
         NSString* bit = ToNSString(&part);
         NSRange range = NSMakeRange(str.length, bit.length);
-        [str.mutableString appendString:bit];
+        
+        NSMutableString* part = [str mutableString];
+        [part appendString:bit];
         
         [str addAttribute:TEXT_ATTRIBUTE_FONT  value:font                   range:range];
         [str addAttribute:TEXT_ATTRIBUTE_COLOR value:ToUIColor(color, 1.0f) range:range];
