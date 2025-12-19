@@ -69,8 +69,11 @@ cc_bool Platform_ReadonlyFilesystem;
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
 #include "../main_impl.h"
+static void SetupIOPCore(void);
 
 int main(int argc, char** argv) {
+	SetupIOPCore();
+
 	SetupProgram(argc, argv);
 	while (Window_Main.Exists) { 
 		RunProgram(argc, argv);
@@ -427,19 +430,19 @@ int ps2ip_setconfig(const t_ip_info* ip_info);
 
 // https://github.com/ps2dev/ps2sdk/blob/master/NETMAN.txt
 // https://github.com/ps2dev/ps2sdk/blob/master/ee/network/tcpip/samples/tcpip_dhcp/ps2ip.c
-static void ethStatusCheckCb(s32 alarm_id, u16 time, void *common) {
+static void Net_StatusCheckCb(s32 alarm_id, u16 time, void *common) {
 	int threadID = *(int*)common;
 	iWakeupThread(threadID);
 }
 
-static int WaitValidNetState(int (*checkingFunction)(void)) {
-	// Wait for a valid network status
+typedef int (*WaitCheckFunc)(void);
+static int WaitUntilReady(WaitCheckFunc checkingFunction) {
 	int threadID = GetThreadId();
 	
 	for (int retries = 0; checkingFunction() == 0; retries++)
 	{	
 		// Sleep for 500ms
-		SetAlarm(500 * 16, &ethStatusCheckCb, &threadID);
+		SetAlarm(500 * 16, &Net_StatusCheckCb, &threadID);
 		SleepThread();
 
 		if (retries >= 15) return -1; // 7.5s = 15 * 500ms 
@@ -447,16 +450,12 @@ static int WaitValidNetState(int (*checkingFunction)(void)) {
 	return 0;
 }
 
-static int ethGetNetIFLinkStatus(void) {
+static int Net_CheckIFLinkStatus(void) {
 	int status = NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0);
 	return status == NETMAN_NETIF_ETH_LINK_STATE_UP;
 }
 
-static int ethWaitValidNetIFLinkState(void) {
-	return WaitValidNetState(&ethGetNetIFLinkStatus);
-}
-
-static int ethGetDHCPStatus(void) {
+static int Net_CheckDHCPStatus(void) {
 	t_ip_info ip_info;
 	int result;
 	if ((result = ps2ip_getconfig("sm0", &ip_info)) < 0) return result;
@@ -467,11 +466,7 @@ static int ethGetDHCPStatus(void) {
 	return -1;
 }
 
-static int ethWaitValidDHCPState(void) {
-	return WaitValidNetState(&ethGetDHCPStatus);
-}
-
-static int ethEnableDHCP(void) {
+static int Net_EnableDHCP(void) {
 	t_ip_info ip_info;
 	int result;
 	// SMAP is registered as the "sm0" device to the TCP/IP stack.
@@ -490,17 +485,17 @@ static void Networking_Setup(void) {
 	struct ip4_addr IP  = { 0 }, NM = { 0 }, GW = { 0 };
 	ps2ipInit(&IP, &NM, &GW);
 
-	int res = ethEnableDHCP();
+	int res = Net_EnableDHCP();
 	if (res < 0) Platform_Log1("Error %i enabling DHCP", &res);
 
 	Platform_LogConst("Waiting for net link connection...");
-	if(ethWaitValidNetIFLinkState() != 0) {
-		Platform_LogConst("Failed to establish net link");
+	if(WaitUntilReady(Net_CheckIFLinkStatus) != 0) {
+		Window_ShowDialog("Warning", "Failed to establish network link");
 		return;
 	}
 
 	Platform_LogConst("Waiting for DHCP lease...");
-	if (ethWaitValidDHCPState() != 0) {
+	if (WaitUntilReady(Net_CheckDHCPStatus) != 0) {
 		Platform_LogConst("Failed to acquire DHCP lease");
 		return;
 	}
@@ -730,10 +725,9 @@ static void LoadIOPModules(void) {
     // Input pad module
     ret = SifLoadModule("rom0:PADMAN",  0, NULL);
     if (ret < 0) Platform_Log1("SifLoadModule PADMAN failed: %i", &ret);
- 
 }
 
-void Platform_Init(void) {
+static void SetupIOPCore(void) {
 	//InitDebug();
 	ResetIOP();
 	SifInitRpc(0);
@@ -742,6 +736,9 @@ void Platform_Init(void) {
 	sbv_patch_enable_lmb(); // Allows loading IRX modules from a buffer in EE RAM
 
 	LoadIOPModules();
+}
+
+void Platform_Init(void) {
 	USBStorage_LoadIOPModules();
 	//USBStorage_WaitUntilDeviceReady();
 	

@@ -50,6 +50,9 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 #include "../main_impl.h"
 
 int main(int argc, char** argv) {
+	// NOTE: Disable this if debugging via dcload
+	arch_set_exit_path(ARCH_EXIT_MENU);
+
 	SetupProgram(argc, argv);
 	while (Window_Main.Exists) { 
 		RunProgram(argc, argv);

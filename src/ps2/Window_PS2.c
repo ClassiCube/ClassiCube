@@ -11,6 +11,7 @@
 #include "../Logger.h"
 #include "../Options.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <libpad.h>
 #include <packet.h>
@@ -36,16 +37,16 @@ static int display_mode;
 void Window_PreInit(void) {
 	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
 	dma_channel_fast_waits(DMA_CHANNEL_GIF);
-}
 
-void Window_Init(void) {
 	display_mode = graph_get_region();
 
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = display_mode == GRAPH_MODE_PAL ? 512 : 448;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
@@ -252,13 +253,13 @@ static const BindMapping defaults_ps2[BIND_COUNT] = {
 static char padBuf0[256] __attribute__((aligned(64)));
 static char padBuf1[256] __attribute__((aligned(64)));
 
-void Gamepads_PreInit(void) { }
-
-void Gamepads_Init(void) {
+void Gamepads_PreInit(void) {
 	padInit(0);
 	padPortOpen(0, 0, padBuf0);
 	padPortOpen(1, 0, padBuf1);
+}
 
+void Gamepads_Init(void) {
 	Input_DisplayNames[CCPAD_1] = "CIRCLE";
 	Input_DisplayNames[CCPAD_2] = "CROSS";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
@@ -390,9 +391,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
