@@ -34,16 +34,54 @@ framebuffer_t fb_colors[2];
 zbuffer_t     fb_depth;
 static int display_mode;
 
+extern int Gfx_VRAM_AllocPaged(int width, int height, int psm);
+static void AllocBuffers(void) {
+	fb_colors[0].width   = DisplayInfo.Width;
+	fb_colors[0].height  = DisplayInfo.Height;
+	fb_colors[0].mask    = 0;
+	fb_colors[0].psm     = GS_PSM_24;
+	fb_colors[0].address = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm);
+
+	fb_colors[1].width   = DisplayInfo.Width;
+	fb_colors[1].height  = DisplayInfo.Height;
+	fb_colors[1].mask    = 0;
+	fb_colors[1].psm     = GS_PSM_24;
+	fb_colors[1].address = Gfx_VRAM_AllocPaged(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm);
+
+	fb_depth.enable      = 1;
+	fb_depth.method      = ZTEST_METHOD_ALLPASS;
+	fb_depth.mask        = 0;
+	fb_depth.zsm         = GS_ZBUF_24;
+	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
+}
+
+static void InitDisplay(void) {
+	framebuffer_t* fb = &fb_colors[0];
+	int interlaced = display_mode == GRAPH_MODE_NTSC || display_mode == GRAPH_MODE_PAL || display_mode == GRAPH_MODE_HDTV_1080I;
+	int mode       = interlaced ? GRAPH_MODE_INTERLACED : GRAPH_MODE_NONINTERLACED;
+	int display    = interlaced ? GRAPH_MODE_FIELD      : GRAPH_MODE_FRAME;
+
+	graph_set_mode(mode, display_mode, display, GRAPH_ENABLE);
+	graph_set_screen(0, 0, fb->width, fb->height);
+
+	graph_set_bgcolor(50, 50, 50);
+	graph_set_framebuffer_filtered(fb->address, fb->width, fb->psm, 0, 0);
+	graph_enable_output();
+}
+
+
 void Window_PreInit(void) {
 	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
 	dma_channel_fast_waits(DMA_CHANNEL_GIF);
-
 	display_mode = graph_get_region();
 
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = display_mode == GRAPH_MODE_PAL ? 512 : 448;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
+
+	AllocBuffers();
+	InitDisplay();
 }
 
 void Window_Init(void) {
@@ -71,54 +109,15 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-extern void Gfx_VRAM_Reset(void);
-extern int  Gfx_VRAM_AllocPaged(int width, int height, int psm);
-
-static void ResetDisplay(void) {
-	graph_shutdown();
-	Gfx_VRAM_Reset();
-
-	fb_colors[0].width   = DisplayInfo.Width;
-	fb_colors[0].height  = DisplayInfo.Height;
-	fb_colors[0].mask    = 0;
-	fb_colors[0].psm     = GS_PSM_24;
-	fb_colors[0].address = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm);
-
-	fb_colors[1].width   = DisplayInfo.Width;
-	fb_colors[1].height  = DisplayInfo.Height;
-	fb_colors[1].mask    = 0;
-	fb_colors[1].psm     = GS_PSM_24;
-	fb_colors[1].address = Gfx_VRAM_AllocPaged(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm);
-
-	fb_depth.enable      = 1;
-	fb_depth.method      = ZTEST_METHOD_ALLPASS;
-	fb_depth.mask        = 0;
-	fb_depth.zsm         = GS_ZBUF_24;
-	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
-}
-
-static void InitDisplay(framebuffer_t* fb) {
-	int interlaced = display_mode == GRAPH_MODE_NTSC || display_mode == GRAPH_MODE_PAL || display_mode == GRAPH_MODE_HDTV_1080I;
-	int mode       = interlaced ? GRAPH_MODE_INTERLACED : GRAPH_MODE_NONINTERLACED;
-	int display    = interlaced ? GRAPH_MODE_FIELD      : GRAPH_MODE_FRAME;
-
-	graph_set_mode(mode, display_mode, display, GRAPH_ENABLE);
-	graph_set_screen(0, 0, fb->width, fb->height);
-
-	graph_set_bgcolor(50, 50, 50);
-	graph_set_framebuffer_filtered(fb->address, fb->width, fb->psm, 0, 0);
-	graph_enable_output();
-}
-
 void Window_Create2D(int width, int height) {
-	ResetDisplay();
-	InitDisplay(&fb_colors[0]);
+	graph_shutdown();
+	InitDisplay();
 	Window_Main.Is3D = false;
 }
 
-void Window_Create3D(int width, int height) { 
-	ResetDisplay();
-	InitDisplay(&fb_colors[0]);
+void Window_Create3D(int width, int height) {
+	graph_shutdown();
+	InitDisplay();
 	Window_Main.Is3D = true;
 }
 

@@ -133,19 +133,22 @@ static void InitDrawingEnv(void) {
 static void InitPalette(void);
 static void InitTextureMem(void);
 
+static void InitGPUState(void) {
+	InitDMABuffers();
+	InitPalette();
+	InitTextureMem();
+}
+
 void Gfx_Create(void) {
 	primitive_type = 0; // PRIM_POINT, which isn't used here
+	if (!Gfx.Created) InitGPUState();
 
-	InitDMABuffers();
 	context = 0;
 	UpdateContext();
 	
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
-
-	InitPalette();
-	InitTextureMem();
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -177,10 +180,6 @@ static CC_INLINE void DMAFlushBuffer(void) {
 *#########################################################################################################################*/
 #define ALIGNUP(val, alignment) (((val) + (alignment - 1)) & -alignment)
 static int vram_pointer;
-
-void Gfx_VRAM_Reset(void) {
-	vram_pointer = 0;
-}
 
 // Returns size in words
 static int VRAM_Size(int width, int height, int psm) {
