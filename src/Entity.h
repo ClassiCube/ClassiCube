@@ -65,11 +65,13 @@ enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 /* If not set, then current angles are immediately updated to new angles */
 #define LU_ORI_INTERPOLATE 0x80
 
+#define LU_NO_ANIMATION_AND_SOUND 0x100
+
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
 	Vec3 pos;
 	float pitch, yaw, rotX, rotZ;
-	cc_uint8 flags;
+	cc_uint16 flags;
 };
 
 /* Represents a position and orientation state */
