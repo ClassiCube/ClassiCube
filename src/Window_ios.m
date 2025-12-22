@@ -30,7 +30,6 @@
 #endif
 
 // shared state with LBackend_ios.m and interop_ios.m
-UITextField* kb_widget;
 CGContextRef win_ctx;
 UIView* view_handle;
 UIViewController* cc_controller;
@@ -42,6 +41,14 @@ void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 UIInterfaceOrientationMask SupportedOrientations(void);
 void LogUnhandledNSErrors(NSException* ex);
 
+
+static UITextField* kb_widget;
+void Window_SetKBWidget(UITextField* widget) {
+	if (kb_widget) [kb_widget autorelease];
+	
+	if (widget) [widget retain];
+	kb_widget = widget;
+}
 
 @interface CCWindow : UIWindow
 @end
@@ -205,7 +212,7 @@ static cc_bool kb_active;
         can_shift = curFrame.origin.y > kbFrame.size.height;
     }
     if (can_shift) winFrame.origin.y = -kbFrame.size.height;
-    kb_widget = nil;
+    Window_SetKBWidget(nil);
     
     Platform_LogConst("APPEAR");
     [UIView animateWithDuration:interval delay: 0.0 options:curve animations:^{
@@ -217,7 +224,7 @@ static cc_bool kb_active;
     NSDictionary* info = [notification userInfo];
     if (!kb_active) return;
     kb_active = false;
-    kb_widget = nil;
+	Window_SetKBWidget(nil);
     
     double interval   = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
@@ -298,10 +305,14 @@ static UIColor* CalcBackgroundColor(void) {
 
 static CGRect DoCreateWindow(void) {
     // UIKeyboardWillShowNotification - iOS 2
-    cc_controller = [CCViewController alloc];
+	if (!cc_controller) {
+    	cc_controller = [CCViewController alloc];
+		// NOTE: don't need to call [retain], as retain count is initially 1
+	}
     UpdateStatusBar();
     
     CGRect bounds = GetViewFrame();
+	if (win_handle) [win_handle autorelease];
     win_handle    = [[CCWindow alloc] initWithFrame:bounds];
     
     UIColor* color = CalcBackgroundColor();
@@ -319,6 +330,7 @@ static CGRect DoCreateWindow(void) {
     NSNotificationCenter* notifications = [NSNotificationCenter defaultCenter];
     [notifications addObserver:cc_controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];
     [notifications addObserver:cc_controller selector:@selector(keyboardDidHide:) name:UIKeyboardWillHideNotification object:nil];
+	
     return bounds;
 }
 void Window_SetSize(int width, int height) { }
@@ -364,6 +376,7 @@ void ShowDialogCore(const char* title, const char* msg) {
     UIAlertView* alert = [UIAlertView alloc];
     alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
     [alert show];
+	[alert autorelease];
 #endif
     
     // TODO clicking outside message box crashes launcher
@@ -406,7 +419,7 @@ static CCKBController* kb_controller;
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     if (!kb_controller) {
         kb_controller = [[CCKBController alloc] init];
-        CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
+		// NOTE: don't need to call [retain], as retain count is initially 1
     }
     DisplayInfo.ShowingSoftKeyboard = true;
     
@@ -420,6 +433,8 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     
     [view_handle addSubview:text_input];
     [text_input becomeFirstResponder];
+	
+	[text_input autorelease];
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
@@ -505,6 +520,8 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     open_dlg_callback = args->Callback;
     [dlg setDelegate:cc_controller];
     [cc_controller presentViewController:dlg animated:YES completion: Nil];
+	
+	[dlg autorelease];
     return 0; // TODO still unfinished
 }
 
@@ -528,6 +545,8 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
     
     [dlg setDelegate:cc_controller];
     [cc_controller presentViewController:dlg animated:YES completion: Nil];
+	
+	[dlg autorelease];
     return 0;
 }
 
@@ -546,6 +565,8 @@ void Window_Create2D(int width, int height) {
     view_handle = [[UIView alloc] initWithFrame:bounds];
     [view_handle setMultipleTouchEnabled:YES];
     [cc_controller setView:view_handle];
+	
+	[view_handle autorelease];
 }
 
 void Window_Create3D(int width, int height) {
@@ -557,6 +578,7 @@ void Window_Create3D(int width, int height) {
     [cc_controller setView:view_handle];
 
     Init3DLayer();
+	[view_handle autorelease];
 }
 
 void Window_Destroy(void) { }
@@ -624,6 +646,7 @@ void GLContext_Create(void) {
     
     // unlike other platforms, have to manually setup render framebuffer
     CreateFramebuffer();
+	[ctx_handle autorelease];
 }
                   
 void GLContext_Update(void) {
