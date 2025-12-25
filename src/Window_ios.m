@@ -80,9 +80,11 @@ UIInterfaceOrientationMask SupportedOrientations(void) {
 
 static cc_bool fullscreen = true;
 static void UpdateStatusBar(void) {
-    if ([cc_controller respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
-        // setNeedsStatusBarAppearanceUpdate - iOS 7
-        [cc_controller setNeedsStatusBarAppearanceUpdate];
+    if (@available(iOS 7, *)) {
+        if ([cc_controller respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
+            // setNeedsStatusBarAppearanceUpdate - iOS 7
+            [cc_controller setNeedsStatusBarAppearanceUpdate];
+        }
     } else {
         UIApplication* app = [UIApplication sharedApplication];
         [app setStatusBarHidden:fullscreen withAnimation:UIStatusBarAnimationNone];
@@ -122,7 +124,6 @@ static CGRect GetViewFrame(void) {
 - (BOOL)isOpaque { return YES; }
 @end
 
-
 @implementation CCViewController
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     // supportedInterfaceOrientations - iOS 6
@@ -146,9 +147,11 @@ static CGRect GetViewFrame(void) {
     // viewWillTransitionToSize:withTransitionCoordinator - iOS 8
     Window_Main.Width  = size.width;
     Window_Main.Height = size.height;
-    
+
     Event_RaiseVoid(&WindowEvents.Resized);
-    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    if (@available(iOS 8, *)) {
+        [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    }
 }
 
 // ==== UIDocumentPickerDelegate ====
@@ -165,22 +168,22 @@ static void DeleteExportTempFile(void) {
     save_path.length = 0;
 }
 
-- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url NS_AVAILABLE_IOS(8.0) {
     // documentPicker:didPickDocumentAtURL - iOS 8
     NSString* str    = url.path;
     const char* utf8 = str.UTF8String;
-    
+
     char tmpBuffer[NATIVE_STR_LEN];
     cc_string tmp = String_FromArray(tmpBuffer);
     String_AppendUtf8(&tmp, utf8, String_Length(utf8));
-    
+
     DeleteExportTempFile();
     if (!open_dlg_callback) return;
     open_dlg_callback(&tmp);
     open_dlg_callback = NULL;
 }
 
-- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
+- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller NS_AVAILABLE_IOS(8.0) {
     // documentPickerWasCancelled - iOS 8
     DeleteExportTempFile();
 }
@@ -355,16 +358,16 @@ void ShowDialogCore(const char* title, const char* msg) {
     NSString* _msg   = [NSString stringWithCString:msg encoding:NSASCIIStringEncoding];
     alert_completed  = false;
     
-#ifdef TARGET_OS_TV
-    UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
-    [alert addAction:okBtn];
-    [cc_controller presentViewController:alert animated:YES completion: Nil];
-#else
-    UIAlertView* alert = [UIAlertView alloc];
-    alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
-    [alert show];
-#endif
+    if (@available(iOS 8, *)) {
+        UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
+        [alert addAction:okBtn];
+        [cc_controller presentViewController:alert animated:YES completion: Nil];
+    } else {
+        UIAlertView* alert = [UIAlertView alloc];
+        alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [alert show];
+    }
     
     // TODO clicking outside message box crashes launcher
     // loop until alert is closed TODO avoid sleeping
@@ -478,57 +481,65 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     // UIDocumentPickerViewController - iOS 8
-    // see the custom UTITypes declared in Info.plist 
-    NSDictionary* fileExt_map =
-    @{
-      @".cw"  : @"com.classicube.client.ios-cw",
-      @".dat" : @"com.classicube.client.ios-dat",
-      @".lvl" : @"com.classicube.client.ios-lvl",
-      @".fcm" : @"com.classicube.client.ios-fcm",
-      @".zip" : @"public.zip-archive"
-    };
-    NSMutableArray* types = [NSMutableArray array];
-    const char* const* filters = args->filters;
+    if (@available(iOS 8, *)) {
+        // see the custom UTITypes declared in Info.plist
+        NSDictionary* fileExt_map =
+        @{
+        @".cw"  : @"com.classicube.client.ios-cw",
+        @".dat" : @"com.classicube.client.ios-dat",
+        @".lvl" : @"com.classicube.client.ios-lvl",
+        @".fcm" : @"com.classicube.client.ios-fcm",
+        @".zip" : @"public.zip-archive"
+        };
+        NSMutableArray* types = [NSMutableArray array];
+        const char* const* filters = args->filters;
 
-    for (int i = 0; filters[i]; i++) 
-    {
-        NSString* fileExt = [NSString stringWithUTF8String:filters[i]];
-        NSString* utType  = [fileExt_map objectForKey:fileExt];
-        if (utType) [types addObject:utType];
+        for (int i = 0; filters[i]; i++)
+        {
+            NSString* fileExt = [NSString stringWithUTF8String:filters[i]];
+            NSString* utType  = [fileExt_map objectForKey:fileExt];
+            if (utType) [types addObject:utType];
+        }
+
+        UIDocumentPickerViewController* dlg;
+        dlg = [UIDocumentPickerViewController alloc];
+        dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeOpen];
+        //dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
+
+        open_dlg_callback = args->Callback;
+        [dlg setDelegate:cc_controller];
+        [cc_controller presentViewController:dlg animated:YES completion: Nil];
+        return 0; // TODO still unfinished
+    } else {
+        return ERR_NOT_SUPPORTED;
     }
-    
-    UIDocumentPickerViewController* dlg;
-    dlg = [UIDocumentPickerViewController alloc];
-    dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeOpen];
-    //dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
-    
-    open_dlg_callback = args->Callback;
-    [dlg setDelegate:cc_controller];
-    [cc_controller presentViewController:dlg animated:YES completion: Nil];
-    return 0; // TODO still unfinished
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
     if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+
     // UIDocumentPickerViewController - iOS 8
-    
-    // save the item to a temp file, which is then (usually) later deleted by picker callbacks
-    Directory_Create(FILEPATH_RAW("Exported"));
-    
-    save_path.length = 0;
-    String_Format2(&save_path, "Exported/%s%c", &args->defaultName, args->filters[0]);
-    args->Callback(&save_path);
-    
-    NSString* str = ToNSString(&save_path);
-    NSURL* url    = [NSURL fileURLWithPath:str isDirectory:NO];
-    
-    UIDocumentPickerViewController* dlg;
-    dlg = [UIDocumentPickerViewController alloc];
-    dlg = [dlg initWithURL:url inMode:UIDocumentPickerModeExportToService];
-    
-    [dlg setDelegate:cc_controller];
-    [cc_controller presentViewController:dlg animated:YES completion: Nil];
-    return 0;
+    if (@available(iOS 8, *)) {
+        // save the item to a temp file, which is then (usually) later deleted by picker callbacks
+        Directory_Create(FILEPATH_RAW("Exported"));
+
+        save_path.length = 0;
+        String_Format2(&save_path, "Exported/%s%c", &args->defaultName, args->filters[0]);
+        args->Callback(&save_path);
+
+        NSString* str = ToNSString(&save_path);
+        NSURL* url    = [NSURL fileURLWithPath:str isDirectory:NO];
+
+        UIDocumentPickerViewController* dlg;
+        dlg = [UIDocumentPickerViewController alloc];
+        dlg = [dlg initWithURL:url inMode:UIDocumentPickerModeExportToService];
+
+        [dlg setDelegate:cc_controller];
+        [cc_controller presentViewController:dlg animated:YES completion: Nil];
+        return 0;
+    } else {
+        return ERR_NOT_SUPPORTED;
+    }
 }
 
 
