@@ -240,9 +240,9 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	*vertices = v;
 }
 
-#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
-	/* These GFX backends have specialised implementations */
-#else
+#ifndef OVERRIDE_BEGEND2D_FUNCTIONS
+/* NOTE: Some GFX backends have specialised implementations of Begin2D/End2D */
+/* Make sure to check all of those whenever altering Begin2D/End2D in this file */
 static cc_bool gfx_hadFog;
 
 void Gfx_Begin2D(int width, int height) {

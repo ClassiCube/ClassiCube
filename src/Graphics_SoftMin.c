@@ -1,5 +1,6 @@
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTMIN
+#define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -101,6 +102,20 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------2D drawing-------------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_Begin2D(int width, int height) {
+	gfx_rendering2D = true;
+	Gfx_SetAlphaBlending(true);
+}
+
+void Gfx_End2D(void) {
+	gfx_rendering2D = false;
+	Gfx_SetAlphaBlending(false);
+}
 
 
 /*########################################################################################################################*
