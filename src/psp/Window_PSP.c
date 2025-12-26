@@ -162,8 +162,9 @@ void Gamepads_Process(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
-	bmp->width  = width;
+	void* fb = sceGeEdramGetAddr();
+	bmp->scan0  = fb;
+	bmp->width  = BUFFER_WIDTH;
 	bmp->height = height;
 }
 
@@ -171,20 +172,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = sceGeEdramGetAddr();
 	
 	sceDisplayWaitVblankStart();
-	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
-
-	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
-	cc_uint32* dst = (cc_uint32*)fb         + r.x;
-
-	for (int y = r.y; y < r.y + r.height; y++) 
-	{
-		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.width * 4);
-	}
 	sceKernelDcacheWritebackAll();
+	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
+	bmp->scan0 = NULL;
 }
 
 

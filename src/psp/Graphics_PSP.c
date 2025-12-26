@@ -345,8 +345,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
-	int S = sceGuFinish();
-	Platform_Log1("RESIZE: %i", &S);
+	sceGuFinish();
 	sceGeDrawSync(GU_SYNC_WAIT); // waits until FINISH command is reached
 
 	if (gfx_vsync) sceDisplayWaitVblankStart();
