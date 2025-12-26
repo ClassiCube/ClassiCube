@@ -41,8 +41,6 @@ static void guInit(void) {
 	sceGuDispBuffer(SCREEN_WIDTH, SCREEN_HEIGHT, framebuffer1, BUFFER_WIDTH);
 	sceGuDepthBuffer(depthbuffer, BUFFER_WIDTH);
 	
-	sceGuOffset(2048 - (SCREEN_WIDTH / 2), 2048 - (SCREEN_HEIGHT / 2));
-	sceGuViewport(2048, 2048, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceGuDepthRange(65535,0);
 	sceGuFrontFace(GU_CCW);
 	sceGuShadeModel(GU_SMOOTH);
@@ -56,14 +54,14 @@ static void guInit(void) {
 	
 	GE_upload_world_matrix((const float*)&Matrix_Identity);
 	sceGuColor(0xffffffff);
-	sceGuScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	sceGuDisable(GU_SCISSOR_TEST);
 	
 	sceGuEnable(GU_CLIP_PLANES); // TODO: swap near/far instead of this?
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
+
+	Gfx_OnWindowResize();
 	
 	sceGuFinish();
-	sceGuSync(GU_SYNC_WHAT_DONE, GU_SYNC_FINISH);
+	sceGeDrawSync(GU_SYNC_WAIT); // waits until FINISH command is reached
 	sceDisplayWaitVblankStart();
 	sceGuDisplay(GU_TRUE);
 }
@@ -79,6 +77,7 @@ void Gfx_Create(void) {
 	gfx_vsync        = true;
 	
 	Gfx_RestoreState();
+	last_base = -1;
 }
 
 void Gfx_Free(void) { 
@@ -331,6 +330,7 @@ void Gfx_SetVSync(cc_bool vsync) {
 
 void Gfx_BeginFrame(void) {
 	sceGuStart(GU_DIRECT, list);
+	last_base = -1;
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -341,20 +341,34 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	sceGuClear(targets);
 	// Clear involves draw commands
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
+	last_base = -1;
 }
 
 void Gfx_EndFrame(void) {
-	sceGuFinish();
-	sceGuSync(GU_SYNC_WHAT_DONE, GU_SYNC_FINISH);
+	int S = sceGuFinish();
+	Platform_Log1("RESIZE: %i", &S);
+	sceGeDrawSync(GU_SYNC_WAIT); // waits until FINISH command is reached
 
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
 }
 
-void Gfx_OnWindowResize(void) { }
+void Gfx_OnWindowResize(void) {
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
+}
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
-void Gfx_SetScissor (int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	// PSP X/Y guard band ranges from 0..4096
+	// To minimise need to clip, centre the viewport around (2048, 2048)
+	sceGuOffset(2048 - (w / 2), 2048 - (h / 2));
+	sceGuViewport(2048 + x, 2048 + y, w, h);
+}
+void Gfx_SetScissor (int x, int y, int w, int h) {
+	int no_scissor = x == 0 && y == 0 && w == SCREEN_WIDTH && h == SCREEN_HEIGHT;
+	sceGuScissor(x, y, w, h);
+	if (no_scissor) { sceGuDisable(GU_SCISSOR_TEST); } else { sceGuEnable(GU_SCISSOR_TEST); }
+}
 
 
 /*########################################################################################################################*
@@ -510,21 +524,32 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	// More efficient to set "indexed 16 bit" as default in Gfx_SetVertexFormat,
 	//  rather than in every single triangle draw command
 	GE_set_vertex_format(gfx_fields);
-	sceGuDrawArray(GU_LINES, 0, verticesCount, NULL, gfx_vertices);
+	GE_set_vertices(gfx_vertices);
+
+	sceGuDrawArray(GU_LINES, 0, verticesCount, NULL, NULL);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
+	GE_set_vertices(gfx_vertices + startVertex * gfx_stride);
+	GE_set_indices(gfx_indices);
+
 	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
-			gfx_indices, gfx_vertices + startVertex * gfx_stride);
+			NULL, NULL);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	GE_set_vertices(gfx_vertices);
+	GE_set_indices(gfx_indices);
+
 	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount),
-			gfx_indices, gfx_vertices);
+			NULL, NULL);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	GE_set_vertices(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
+	GE_set_indices(gfx_indices);
+
 	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
-			gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
+			NULL, NULL);
 }

@@ -10,9 +10,9 @@ extern struct GuDisplayListInternal
 
 enum GE_COMMANDS {
 	GE_NOP                      = 0x00,
-	GE_SET_VB_ADDR              = 0x01,
-	GE_SET_IB_ADDR              = 0x02,
-	GE_SET_BASE_ADDR            = 0x10,
+	GE_SET_REL_VADDR            = 0x01,
+	GE_SET_REL_IADDR            = 0x02,
+	GE_SET_ADDR_BASE            = 0x10,
 	GE_SET_VERTEX_FORMAT        = 0x12,
 	GE_WORLDMATRIX_UPLOAD_INDEX = 0x3A,
 	GE_WORLDMATRIX_UPLOAD_DATA  = 0x3B,	
@@ -76,6 +76,29 @@ static void GE_upload_proj_matrix(const float* matrix) {
 /*########################################################################################################################*
 *----------------------------------------------------Vertex drawing-------------------------------------------------------*
 *#########################################################################################################################*/
+static int last_base = -1;
+
 static CC_INLINE void GE_set_vertex_format(int format) {
     GE_PushI(GE_SET_VERTEX_FORMAT, format);
+}
+
+// Don't redundantly set base address (by avoiding 2 calls to this per draw call, reduces frame GE commands by ~25%)
+static CC_INLINE void GE_set_base_addr(cc_uintptr addr) {
+	cc_uintptr base = (addr >> 8) & 0xf0000;
+	if (base == last_base) return;
+
+	GE_PushI(GE_SET_ADDR_BASE, base);
+	last_base = base;
+}
+
+static CC_INLINE void GE_set_vertices(const void* vertices) {
+	cc_uintptr addr = (cc_uintptr)vertices;
+	GE_set_base_addr(addr);
+    GE_PushI(GE_SET_REL_VADDR, addr);
+}
+
+static CC_INLINE void GE_set_indices(const void* indices) {
+	cc_uintptr addr = (cc_uintptr)indices;
+	GE_set_base_addr(addr);
+    GE_PushI(GE_SET_REL_IADDR, addr);
 }
