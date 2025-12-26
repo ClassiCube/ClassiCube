@@ -15,6 +15,7 @@
 #include "Logger.h"
 #include "Utils.h"
 #include "Chat.h" /* TODO avoid this include */
+#include "Audio.h"
 #include "Errors.h"
 
 /* Simple fallback terrain for when no texture packs are available at all */
@@ -519,12 +520,18 @@ cc_result TexturePack_ExtractDefault(DefaultZipCallback callback, const char** d
 	return res;
 }
 
-
 static cc_bool SelectZipEntry(const cc_string* path) { return true; }
 static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, struct ZipEntry* source) {
 	cc_string name = *path;
 	Utils_UNSAFE_GetFilename(&name);
+
 	Event_RaiseEntry(&TextureEvents.FileChanged, stream, &name);
+
+	cc_string end = String_FromConst(".wav");
+	if (String_CaselessEnds(&name, &end)) {
+		SoundArray_Load(path, stream);
+	}
+
 	return 0;
 }
 
@@ -638,6 +645,7 @@ cc_result TexturePack_ExtractCurrent(cc_bool forceReload) {
 	struct Stream stream;
 	cc_result res = 0;
 
+	Audio_FreeCustomSounds();
 	/* don't pointlessly load default texture pack */
 	if (!usingDefault || forceReload) {
 		res = ExtractUserTextures();
@@ -796,6 +804,7 @@ static void OnReset(void) {
 static void OnFree(void) {
 	OnContextLost(NULL);
 	Atlas2D_Free();
+	Audio_FreeCustomSounds();
 	TexturePack_Url.length = 0;
 	entries_head = NULL;
 }
