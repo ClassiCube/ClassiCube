@@ -836,7 +836,7 @@ static struct ChatCommand ESPCommand = {
 	}
 };
 
-//todo: NoPushBack command
+//todo: NoPushBack
 
 /*########################################################################################################################*
 *---------------------------------------------------------Reach-----------------------------------------------------------*
@@ -853,7 +853,7 @@ static void ReachCommand_Execute(const cc_string* args, int argsCount) {
         Chat_AddRaw("&cInvalid distance. Must be between 1 and 1204.");
         return;
     }
-	
+
 	// TODO: check if this is the correct way to set reach distance for local player
 
     LocalPlayer_Instances[0].ReachDistance = reach;
