@@ -16,7 +16,12 @@ ifdef BUILD_NONET
 BUILDDIR	:= build/nds_nonet
 DEFINES		+= -DNDS_NONET
 else
+ifdef BUILD_NOTOUCH
+BUILDDIR	:= build/nds_notouch
+DEFINES		+= -DNDS_NOTOUCH
+else
 BUILDDIR	:= build/nds
+endif
 LIBS		+= -ldswifi7
 LIBDIRS		+= $(BLOCKSDS)/libs/dswifi
 endif

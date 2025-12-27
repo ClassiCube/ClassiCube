@@ -16,8 +16,13 @@ ifdef BUILD_NONET
 BUILDDIR	:= build/nds_nonet
 DEFINES		+= -DNDS_NONET
 else
-SOURCEDIRS	+= third_party/bearssl
+ifdef BUILD_NOTOUCH
+BUILDDIR	:= build/nds_notouch
+DEFINES		+= -DNDS_NOTOUCH
+else
 BUILDDIR	:= build/nds
+endif
+SOURCEDIRS	+= third_party/bearssl
 LIBS		+= -ldswifi9
 LIBDIRS		+= $(BLOCKSDS)/libs/dswifi
 endif
