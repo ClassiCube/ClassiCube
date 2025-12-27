@@ -798,6 +798,24 @@ static struct ChatCommand BlockEditCommand = {
 	}
 };
 
+/*########################################################################################################################*
+*------------------------------------------------------ForceHax-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void InfoCommand_Execute(const cc_string* args, int argsCount) {
+    Chat_AddRaw("&4[&cVelocty Client&4] &eby &aimpresson");
+	Chat_AddRaw("https://github.com/Peeguah/Velocity");
+	Chat_AddRaw("https://discord.gg/ckWe7tAcNA");
+}
+
+static struct ChatCommand ForceHaxCommand = {
+	"ForceHax", ForceHaxCommand_Execute,
+	0,
+	{
+		"&a/client Info",
+		"&eShows info and credits about this client.",
+	}
+};
 
 /*########################################################################################################################*
 *------------------------------------------------------ForceHax-----------------------------------------------------------*
@@ -882,8 +900,9 @@ static void OnInit(void) {
 	Commands_Register(&PlaceCommand);
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
-	/* Velocity */
 	Commands_Register(&ReplaceCommand);
+	/* Velocity */
+	Commands_Register(&InfoCommand);
 	Commands_Register(&ForceHaxCommand);
 	Commands_Register(&ReachCommand);
 }
