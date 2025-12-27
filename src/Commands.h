@@ -8,6 +8,8 @@ CC_BEGIN_HEADER
 */
 struct IGameComponent;
 extern struct IGameComponent Commands_Component;
+extern cc_bool MOTD_enabled;
+
 
 cc_bool Commands_Execute(const cc_string* input);
 

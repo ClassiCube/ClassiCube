@@ -25,7 +25,7 @@ static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
 //MOTD Toggle
-cc_bool MOTD_enabled;
+cc_bool ForceHax_enabled = true;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -797,20 +797,20 @@ static struct ChatCommand BlockEditCommand = {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------MOTD TOGGLE--------------------------------------------------------*
+*------------------------------------------------------ForceHax-----------------------------------------------------------*
 *#########################################################################################################################*/
 
-static void MOTDToggleCommand_Execute(const cc_string* args, int argsCount) {
-    MOTD_enabled = !MOTD_enabled;
-    Chat_AddRaw("Toggled MOTD");
+static void ForceHaxCommand_Execute(const cc_string* args, int argsCount) {
+    ForceHax_enabled = !ForceHax_enabled;
+    Chat_AddRaw("Toggled ForceHax.");
 }
 
-static struct ChatCommand MOTDToggleCommand = {
-	"MOTDToggle", MOTDToggleCommand_Execute,
+static struct ChatCommand ForceHaxCommand = {
+	"ForceHax", ForceHaxCommand_Execute,
 	0,
 	{
-		"&a/client tp [x y z]",
-		"&eMoves you to the given coordinates.",
+		"&a/client ForceHax",
+		"&eToggles ForceHax.",
 	}
 };
 
@@ -831,7 +831,7 @@ static void OnInit(void) {
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&ReplaceCommand);
-	Commands_Register(&MOTDToggleCommand);
+	Commands_Register(&ForceHaxCommand);
 }
 
 static void OnFree(void) {
