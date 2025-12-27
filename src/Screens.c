@@ -98,7 +98,7 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
 
 	if (Gfx.ReducedPerfMode || (Gfx.ReducedPerfModeCooldown > 0)) {
-		String_AppendConst(&status, "(low perf mode), ");
+		String_AppendConst(&status, "%4(low perf mode), ");
 		Gfx.ReducedPerfModeCooldown--;
 	} else if (fps == 0) {
 		/* Running at less than 1 FPS.. */
@@ -2153,7 +2153,6 @@ static void DisconnectScreen_Init(void* screen) {
 
 	ButtonWidget_Add(s, &s->reconnect, 300, DisconnectScreen_OnReconnect);
 	ButtonWidget_Add(s, &s->quit,      300, DisconnectScreen_OnQuit);
-	if (!s->canReconnect) s->reconnect.flags = WIDGET_FLAG_DISABLED;
 
 	Game_SetMinFrameTime(1000 / 5.0f);
 

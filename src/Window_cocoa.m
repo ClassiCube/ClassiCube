@@ -386,7 +386,7 @@ static void DoCreateWindow(int width, int height) {
 	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor
 
 	del = [CCWindowDelegate alloc];
-	[winHandle setDelegate:del];
+	[winHandle setDelegate:(id<NSWindowDelegate>)del];
 	RefreshWindowBounds();
 	MakeContentView();
 	ApplyIcon();
@@ -490,7 +490,7 @@ static void ProcessKeyChars(id ev) {
 	len   = String_Length(src);
 
 	while (len > 0) {
-		i = Convert_Utf8ToCodepoint(&cp, src, len);
+		i = Convert_Utf8ToCodepoint(&cp, (const cc_uint8*)src, len);
 		if (!i) break;
 
 		Event_RaiseInt(&InputEvents.Press, cp);
@@ -626,8 +626,8 @@ void ShowDialogCore(const char* title, const char* msg) {
 	alert = [NSAlert alloc];
 	alert = [alert init];
 	
-	[alert setMessageText: titleCF];
-	[alert setInformativeText: msgCF];
+	[alert setMessageText:(__bridge NSString *)titleCF];
+	[alert setInformativeText:(__bridge NSString *)msgCF];
 	[alert addButtonWithTitle: @"OK"];
 	
 	[alert runModal];
