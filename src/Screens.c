@@ -179,12 +179,12 @@ static void HUDScreen_RemakeLine2(struct HUDScreen* s) {
 
 	String_InitArray(status, statusBuffer);
 	if (Camera.Fov != Camera.DefaultFov) {
-		String_Format1(&status, "Zoom fov %i  ", &Camera.Fov);
+		String_Format1(&status, "&eZoom fov %i  ", &Camera.Fov);
 	}
 
-	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
-	if (speed)         String_Format1(&status, "Speed %f1x   ", &speed);
-	if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
+	if (hacks->Flying) String_AppendConst(&status, "&aFly ON   ");
+	if (speed)         String_Format1(&status, "&bSpeed %f1x   ", &speed);
+	if (hacks->Noclip) String_AppendConst(&status, "&cNoclip ON   ");
 
 	TextWidget_Set(&s->line2, &status, &s->font);
 }
@@ -203,7 +203,7 @@ static void HUDScreen_ContextLost(void* screen) {
 
 static void HUDScreen_ContextRecreated(void* screen) {	
 	static const cc_string chars  = String_FromConst("0123456789-, ()");
-	static const cc_string prefix = String_FromConst("Position: ");
+	static const cc_string prefix = String_FromConst("&ePosition: ");
 
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Screen_UpdateVb(s);

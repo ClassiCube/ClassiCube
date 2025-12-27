@@ -28,6 +28,8 @@
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
+//Velocity
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Entity----------------------------------------------------------*
@@ -720,6 +722,7 @@ static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* upd
 	LocalInterpComp_SetLocation(&p->Interp, update, e);
 }
 
+//TODO: put tick logic here if needed
 static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
@@ -728,14 +731,14 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	Vec3 headingVelocity;
 
 	if (!World.Loaded) return;
-	p->Collisions.StepSize = hacks->FullBlockStep && hacks->Enabled && ForceHax_enabled ? 1.0f : 0.5f;
+	p->Collisions.StepSize = p->Hacks.FullBlockStep && p->Hacks.Enabled || ForceHax_enabled ? 1.0f : 0.5f;
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
 
 	LocalInterpComp_AdvanceState(&p->Interp, e);
 	LocalPlayer_HandleInput(p, &xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
-	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(e);
+	if (!hacks->Floating && NoPush_enabled) PhysicsComp_DoEntityPush(e);
 
 	/* Immediate stop in noclip mode */
 	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
@@ -771,7 +774,7 @@ static cc_bool LocalPlayer_ShouldRenderName(struct Entity* e) {
 
 static void LocalPlayer_CheckJumpVelocity(void* obj) {
 	struct LocalPlayer* p = (struct LocalPlayer*)obj;
-	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
+	if (p->Hacks.CanSpeed && p->Hacks.Enabled || (ForceHax_enabled && p->Hacks.Enabled)) {
 		p->Physics.JumpVel = p->Physics.ServerJumpVel;
 	}
 }
@@ -869,7 +872,7 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 
 	/* Spawn player at highest solid position to match vanilla Minecraft classic */
 	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
-	if (p->Hacks.Enabled && ForceHax_enabled) {
+	if ((p->Hacks.CanNoclip && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
 		for (y = pos.y; y <= World.Height; y++) {
 			spawnY = Respawn_HighestSolidY(&bb);
@@ -922,15 +925,15 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	if (Gui.InputGrab) return false;
 	
-	if (p->Hacks.Enabled && ForceHax_enabled) {
+	if ((p->Hacks.CanNoclip && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
 
-		if (!p->Hacks.Enabled && ForceHax_enabled && !p->Base.OnGround) {
+		if (!p->Hacks.Enabled && !p->Base.OnGround) {
 			Chat_AddRaw("&cCannot set spawn midair when noclip is disabled");
 			return false;
 		}
 
 		/* Spawn is normally centered to match vanilla Minecraft classic */
-		if (!p->Hacks.Enabled && ForceHax_enabled) {
+		if ((p->Hacks.CanNoclip && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
 			/* Don't want to use Position because it is interpolated between prev and next. */
 			/* This means it can be halfway between stepping up a stair and clip through the floor. */
 			p->Spawn   = p->Base.prev.pos;
@@ -949,17 +952,17 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 }
 
 static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
-	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
-	if (Gui.InputGrab) return false;
+    struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
+    if (Gui.InputGrab) return false;
 
-	if (ForceHax_enabled && p->Hacks.Enabled) {
-		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
-		return true;
-	} else if (!p->_warnedFly) {
-		p->_warnedFly = true;
-		if (hackPermMsgs) Chat_AddRaw("&cFlying is currently disabled");
-	}
-	return false;
+    if ((p->Hacks.CanFly && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
+        HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
+        return true;
+    } else if (!p->_warnedFly) {
+        p->_warnedFly = true;
+        if (hackPermMsgs) Chat_AddRaw("&cFlying is currently disabled");
+    }
+    return false;
 }
 
 static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
@@ -967,13 +970,13 @@ static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
 	p->Hacks._noclipping = true;
 	if (Gui.InputGrab) return false;
 
-	if (ForceHax_enabled && p->Hacks.Enabled) {
+	if ((p->Hacks.CanNoclip && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.y = 0;
 
 		HacksComp_SetNoclip(&p->Hacks, !p->Hacks.Noclip);
 		return true;
-	} else if (!p->_warnedNoclip) {
+	} else {
 		p->_warnedNoclip = true;
 		if (hackPermMsgs) Chat_AddRaw("&cNoclip is currently disabled");
 	}
@@ -990,11 +993,11 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		maxJumps = hacks->Enabled && ForceHax_enabled && hacks->WOMStyleHacks ? 2 : 0;
-		if (hacks->Enabled && ForceHax_enabled) {
+		if ((hacks->CanDoubleJump && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
 			maxJumps = max(maxJumps, hacks->MaxJumps + 9999); /* infinite jumps */
 		} else {
-		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
-		}
+			maxJumps = max(maxJumps, hacks->MaxJumps - 1);
+		} 
 
 		if (physics->MultiJumps < maxJumps) {
 			PhysicsComp_DoNormalJump(physics);
@@ -1005,7 +1008,7 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 	return false;
 }
 
-
+// TODO fix ForceHax logic
 static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[device->mappedIndex].Hacks;
 	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;

@@ -25,10 +25,14 @@ static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
 //ForceHax Toggle
-cc_bool ForceHax_enabled = true;
+cc_bool ForceHax_enabled = false;
+
+
+//NoPush Toggle
+cc_bool NoPush_enabled = false;
 
 //ESP Toggle
-// cc_bool ESP_enabled = true;
+// cc_bool ESP_enabled = false;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -818,6 +822,24 @@ static struct ChatCommand InfoCommand = {
 };
 
 /*########################################################################################################################*
+*------------------------------------------------------NoPush-------------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoPushCommand_Execute(const cc_string* args, int argsCount) {
+    NoPush_enabled = !NoPush_enabled;
+    Chat_AddRaw("Toggled NoPush.");
+}
+
+static struct ChatCommand NoPushCommand = {
+	"NoPush", NoPushCommand_Execute,
+	0,
+	{
+		"&a/client NoPush",
+		"&eToggles NoPush.",
+	}
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------ForceHax-----------------------------------------------------------*
 *#########################################################################################################################*/
 
@@ -854,7 +876,6 @@ static struct ChatCommand ForceHaxCommand = {
 // 	}
 // };
 
-//todo: NoPushBack.
 
 /*########################################################################################################################*
 *---------------------------------------------------------Reach-----------------------------------------------------------*
@@ -905,6 +926,7 @@ static void OnInit(void) {
 	Commands_Register(&InfoCommand);
 	Commands_Register(&ForceHaxCommand);
 	Commands_Register(&ReachCommand);
+	Commands_Register(&NoPushCommand);
 }
 
 static void OnFree(void) {
@@ -917,3 +939,4 @@ struct IGameComponent Commands_Component = {
 };
 
 
+//todo: Speed p->hacksbasehorspeed, step p->colision.stepheight
