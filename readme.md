@@ -16,4 +16,10 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 ## Credits
 
 - [@impresson](https://www.github.com/impresson)
+
 - [Classicube](https://classicube.net)
+
+## Current Modules
+
+- ForceHax
+- Reach
