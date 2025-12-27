@@ -836,8 +836,36 @@ static struct ChatCommand ESPCommand = {
 	}
 };
 
+//todo: NoPushBack command
 
-//todo: NoPushBack command, Reach
+/*########################################################################################################################*
+*---------------------------------------------------------Reach-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void ReachCommand_Execute(const cc_string* args, int argsCount) {
+    if (argsCount != 1) {
+        Chat_AddRaw("&cUsage: /client reach <distance>");
+        return;
+    }
+
+    float reach;
+    if (!Convert_ParseFloat(args, &reach) || reach < 1.0f || reach > 1024.0f) {
+        Chat_AddRaw("&cInvalid distance. Must be between 1 and 1204.");
+        return;
+    }
+	
+	// TODO: check if this is the correct way to set reach distance for local player
+
+    LocalPlayer_Instances[0].ReachDistance = reach;
+    Chat_Add2("&eReach distance set to &f%f", &reach, NULL);
+}
+
+static struct ChatCommand ReachCommand = {
+    "reach", ReachCommand_Execute, 0,
+    "Sets the reach distance (1–1024)"
+};
+
+
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
@@ -854,8 +882,10 @@ static void OnInit(void) {
 	Commands_Register(&PlaceCommand);
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
+	/* Velocity */
 	Commands_Register(&ReplaceCommand);
 	Commands_Register(&ForceHaxCommand);
+	Commands_Register(&ReachCommand);
 }
 
 static void OnFree(void) {
