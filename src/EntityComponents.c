@@ -13,6 +13,7 @@
 #include "Physics.h"
 #include "Model.h"
 #include "Audio.h"
+#include "Commands.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------AnimatedComponent----------------------------------------------------*
@@ -263,7 +264,6 @@ void HacksComp_SetNoclip(struct HacksComp* hacks, cc_bool noclip) {
 
 float HacksComp_CalcSpeedFactor(struct HacksComp* hacks, cc_bool canSpeed) {
 	float speed = 0;
-	if (!canSpeed) return 0;
 
 	if (hacks->HalfSpeeding) speed += hacks->SpeedMultiplier / 2;
 	if (hacks->Speeding)     speed += hacks->SpeedMultiplier;
@@ -738,8 +738,8 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		dir = (hacks->FlyingUp || comp->Jumping) ? 1 : (hacks->FlyingDown ? -1 : 0);
 
 		entity->Velocity.y += 0.12f * dir;
-		if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.y += 0.12f * dir;
-		if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.y += 0.06f * dir;
+		if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += 0.12f * dir;
+		if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += 0.06f * dir;
 	} else if (comp->Jumping && Entity_TouchesAnyRope(entity) && entity->Velocity.y > 0.02f) {
 		entity->Velocity.y = 0.02f;
 	}
@@ -764,8 +764,8 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		if (!pastJumpPoint) {
 			comp->CanLiquidJump = true;
 			entity->Velocity.y += 0.04f;
-			if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.y += 0.04f;
-			if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.y += 0.02f;
+			if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += 0.04f; //TODO FIX forcehax logic
+			if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += 0.02f;
 		} else if (pastJumpPoint) {
 			/* either A) climb up solid on side B) jump bob in water */
 			if (Collisions_HitHorizontal(comp->Collisions)) {
@@ -777,11 +777,11 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		}
 	} else if (comp->UseLiquidGravity) {
 		entity->Velocity.y += 0.04f;
-		if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.y += 0.04f;
-		if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.y += 0.02f;
+		if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += 0.04f;
+		if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += 0.02f;
 		comp->CanLiquidJump = false;
 	} else if (Entity_TouchesAnyRope(entity)) {
-		entity->Velocity.y += (hacks->Speeding && hacks->CanSpeed) ? 0.15f : 0.10f;
+		entity->Velocity.y += (hacks->Speeding && hacks->Enabled) ? 0.15f : 0.10f;
 		comp->CanLiquidJump = false;
 	} else if (entity->OnGround) {
 		PhysicsComp_DoNormalJump(comp);
@@ -794,8 +794,8 @@ void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
 	if (comp->JumpVel == 0.0f || hacks->MaxJumps <= 0) return;
 
 	entity->Velocity.y = comp->JumpVel;
-	if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.y += comp->JumpVel;
-	if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.y += comp->JumpVel / 2;
+	if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += comp->JumpVel;
+	if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += comp->JumpVel / 2;
 	comp->CanLiquidJump = false;
 }
 
@@ -939,7 +939,7 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 	if (hacks->Noclip) entity->OnGround = false;
 	baseSpeed = PhysicsComp_GetBaseSpeed(comp);
 	verSpeed  = baseSpeed * (PhysicsComp_GetSpeed(hacks, 8.0f, hacks->CanSpeed) / 5.0f);
-	horSpeed  = baseSpeed * PhysicsComp_GetSpeed(hacks,  8.0f / 5.0f, true) * hacks->BaseHorSpeed;
+	horSpeed  = baseSpeed * PhysicsComp_GetSpeed(hacks,  8.0f / 5.0f, true) * hacks->BaseHorSpeed + Speed; // There is no other way TODO TRY TO REMOVE THIS IN THE FUTORE
 	/* previously horSpeed used to be multiplied by factor of 0.02 in last case */
 	/* it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same */
 

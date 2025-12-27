@@ -27,9 +27,11 @@ static struct ChatCommand* cmds_tail;
 //ForceHax Toggle
 cc_bool ForceHax_enabled = false;
 
-
 //NoPush Toggle
 cc_bool NoPush_enabled = false;
+
+//Speed multiplier
+float Speed = 0.0f;
 
 //ESP Toggle
 // cc_bool ESP_enabled = false;
@@ -908,24 +910,27 @@ static struct ChatCommand ReachCommand = {
 *---------------------------------------------------------Speed-----------------------------------------------------------*
 *#########################################################################################################################*/
 
-// static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
-//     float speed;
-// 	if (argsCount != 1) {
-//         Chat_AddRaw("&cUsage: /client speed <speed>");
-//         return;
-//     }
+static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
+    float SetSpeed;
+	if (argsCount != 1) {
+        Chat_AddRaw("&cUsage: /client speed <speed>");
+        return;
+    }
 
-//     struct LocalPlayer* p = &LocalPlayer_Instances[0];
+	if (!Convert_ParseFloat(args, &SetSpeed)) {
+    Chat_Add1("&cInvalid number!", NULL);
+    return;
+}
+	// Remove this awful hacks
+	Speed = SetSpeed;
+	int roundedSpeed = (int)(Speed + 0.5f);
+	Chat_Add1("&eSet speed value %i", &roundedSpeed);
+};
 
-//     p->Hacks.BaseHorSpeed = speed;
-
-//     Chat_AddRaw("&eSet speed Value");
-// }
-
-// static struct ChatCommand SpeedCommand = {
-//     "Speed", SpeedCommand_Execute, 0,
-//     "Sets the Speed"
-// };
+static struct ChatCommand SpeedCommand = {
+    "Speed", SpeedCommand_Execute, 0,
+    "Sets the Speed"
+};
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -949,7 +954,7 @@ static void OnInit(void) {
 	Commands_Register(&ForceHaxCommand);
 	Commands_Register(&ReachCommand);
 	Commands_Register(&NoPushCommand);
-	// Commands_Register(&SpeedCommand);
+	Commands_Register(&SpeedCommand);
 }
 
 static void OnFree(void) {

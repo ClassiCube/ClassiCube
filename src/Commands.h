@@ -11,6 +11,8 @@ extern struct IGameComponent Commands_Component;
 extern cc_bool ForceHax_enabled;
 extern cc_bool ESP_enabled;
 extern cc_bool NoPush_enabled;
+extern float Speed;
+
 
 
 cc_bool Commands_Execute(const cc_string* input);
