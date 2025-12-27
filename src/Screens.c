@@ -98,28 +98,28 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
 
 	if (Gfx.ReducedPerfMode || (Gfx.ReducedPerfModeCooldown > 0)) {
-		String_AppendConst(&status, "%4[%cVelocity%4]%e(low perf mode), ");
+		String_AppendConst(&status, "(low perf mode), ");
 		Gfx.ReducedPerfModeCooldown--;
 	} else if (fps == 0) {
 		/* Running at less than 1 FPS.. */
 		real_fps = s->frames / s->accumulator;
-		String_Format1(&status, "%4%f1 fps, ", &real_fps);
+		String_Format1(&status, "%f1 fps, ", &real_fps);
 	} else {
-		String_Format1(&status, "%a%i fps, ", &fps);
+		String_Format1(&status, "%i fps, ", &fps);
 	}
 
 	if (Game_ClassicMode) {
-		String_Format1(&status, "%b%i chunk updates", &Game.ChunkUpdates);
+		String_Format1(&status, "%i chunk updates", &Game.ChunkUpdates);
 	} else {
 		if (Game.ChunkUpdates) {
-			String_Format1(&status, "%b%i chunks/s, ", &Game.ChunkUpdates);
+			String_Format1(&status, "%i chunks/s, ", &Game.ChunkUpdates);
 		}
 
 		indices = ICOUNT(Game_Vertices);
-		String_Format1(&status, "%e%i vertices", &indices);
+		String_Format1(&status, "%i vertices", &indices);
 
 		ping = Ping_AveragePingMS();
-		if (ping) String_Format1(&status, ", %2ping %i ms", &ping);
+		if (ping) String_Format1(&status, ", ping %i ms", &ping);
 	}
 	TextWidget_Set(&s->line1, &status, &s->font);
 	s->dirty = true;
@@ -158,7 +158,7 @@ static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* 
 
 static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
-	float speed = HacksComp_CalcSpeedFactor(hacks, hacks->Enabled);
+	float speed = HacksComp_CalcSpeedFactor(hacks, hacks->CanSpeed);
 	return speed != s->lastSpeed || Camera.Fov != s->lastFov || s->hacksChanged;
 }
 
@@ -182,9 +182,9 @@ static void HUDScreen_RemakeLine2(struct HUDScreen* s) {
 		String_Format1(&status, "Zoom fov %i  ", &Camera.Fov);
 	}
 
-	if (hacks->Flying) String_AppendConst(&status, "%aFly ON   ");
-	if (speed)         String_Format1(&status, "%bSpeed %f1x   ", &speed);
-	if (hacks->Noclip) String_AppendConst(&status, "%cNoclip ON   ");
+	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
+	if (speed)         String_Format1(&status, "Speed %f1x   ", &speed);
+	if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
 
 	TextWidget_Set(&s->line2, &status, &s->font);
 }
