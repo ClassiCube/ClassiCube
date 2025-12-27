@@ -98,28 +98,28 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
 
 	if (Gfx.ReducedPerfMode || (Gfx.ReducedPerfModeCooldown > 0)) {
-		String_AppendConst(&status, "%4(low perf mode), ");
+		String_AppendConst(&status, "&4[&cVelocity&4] &e(low perf mode), ");
 		Gfx.ReducedPerfModeCooldown--;
 	} else if (fps == 0) {
 		/* Running at less than 1 FPS.. */
 		real_fps = s->frames / s->accumulator;
-		String_Format1(&status, "%f1 fps, ", &real_fps);
+		String_Format1(&status, "&4[&cVelocity&4] %f1 fps, ", &real_fps);
 	} else {
-		String_Format1(&status, "%i fps, ", &fps);
+		String_Format1(&status, "&4[&cVelocity&4] &a%i fps, ", &fps);
 	}
 
 	if (Game_ClassicMode) {
-		String_Format1(&status, "%i chunk updates", &Game.ChunkUpdates);
+		String_Format1(&status, "&d%i chunk updates", &Game.ChunkUpdates);
 	} else {
 		if (Game.ChunkUpdates) {
-			String_Format1(&status, "%i chunks/s, ", &Game.ChunkUpdates);
+			String_Format1(&status, "&b%i chunks/s, ", &Game.ChunkUpdates);
 		}
 
 		indices = ICOUNT(Game_Vertices);
-		String_Format1(&status, "%i vertices", &indices);
+		String_Format1(&status, "&b%i vertices", &indices);
 
 		ping = Ping_AveragePingMS();
-		if (ping) String_Format1(&status, ", ping %i ms", &ping);
+		if (ping) String_Format1(&status, ", &aping %i ms", &ping);
 	}
 	TextWidget_Set(&s->line1, &status, &s->font);
 	s->dirty = true;
