@@ -24,8 +24,11 @@
 static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
-//MOTD Toggle
+//ForceHax Toggle
 cc_bool ForceHax_enabled = true;
+
+//ESP Toggle
+cc_bool ESP_enabled = true;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -814,6 +817,27 @@ static struct ChatCommand ForceHaxCommand = {
 	}
 };
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------------ESP-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void ESPCommand_Execute(const cc_string* args, int argsCount) {
+    ESP_enabled = !ESP_enabled;
+    Chat_AddRaw("Toggled ESP.");
+}
+
+static struct ChatCommand ESPCommand = {
+	"ESP", ESPCommand_Execute,
+	0,
+	{
+		"&a/client ESP",
+		"&eToggles ESP.",
+	}
+};
+
+
+//todo: NoPushBack command, Reach
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/

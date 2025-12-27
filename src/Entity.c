@@ -23,6 +23,7 @@
 #include "Utils.h"
 #include "EntityRenderers.h"
 #include "Protocol.h"
+#include "Commands.h"
 
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -705,7 +706,7 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	*xMoving *= 0.98f;
 	*zMoving *= 0.98f;
 
-	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
+	if (hacks->WOMStyleHacks && hacks->Enabled && ForceHax_enabled) {
 		if (hacks->Noclip) {
 			/* need a { } block because it's a macro */
 			Vec3_Set(p->Base.Velocity, 0,0,0);
@@ -727,7 +728,7 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	Vec3 headingVelocity;
 
 	if (!World.Loaded) return;
-	p->Collisions.StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanSpeed ? 1.0f : 0.5f;
+	p->Collisions.StepSize = hacks->FullBlockStep && hacks->Enabled && ForceHax_enabled ? 1.0f : 0.5f;
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
 
@@ -868,7 +869,7 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 
 	/* Spawn player at highest solid position to match vanilla Minecraft classic */
 	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
-	if (p->Hacks.CanNoclip) {
+	if (p->Hacks.Enabled && ForceHax_enabled) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
 		for (y = pos.y; y <= World.Height; y++) {
 			spawnY = Respawn_HighestSolidY(&bb);
@@ -907,7 +908,7 @@ static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	if (Gui.InputGrab) return false;
 	
-	if (p->Hacks.CanRespawn) {
+	if (p->Hacks.Enabled && ForceHax_enabled) {
 		LocalPlayer_DoRespawn(p);
 		return true;
 	} else if (!p->_warnedRespawn) {
@@ -921,15 +922,15 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	if (Gui.InputGrab) return false;
 	
-	if (p->Hacks.CanRespawn) {
+	if (p->Hacks.Enabled && ForceHax_enabled) {
 
-		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
+		if (!p->Hacks.Enabled && ForceHax_enabled && !p->Base.OnGround) {
 			Chat_AddRaw("&cCannot set spawn midair when noclip is disabled");
 			return false;
 		}
 
 		/* Spawn is normally centered to match vanilla Minecraft classic */
-		if (!p->Hacks.CanNoclip) {
+		if (!p->Hacks.Enabled && ForceHax_enabled) {
 			/* Don't want to use Position because it is interpolated between prev and next. */
 			/* This means it can be halfway between stepping up a stair and clip through the floor. */
 			p->Spawn   = p->Base.prev.pos;
@@ -951,7 +952,7 @@ static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	if (Gui.InputGrab) return false;
 
-	if (p->Hacks.CanFly && p->Hacks.Enabled) {
+	if (ForceHax_enabled && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
 		return true;
 	} else if (!p->_warnedFly) {
@@ -966,7 +967,7 @@ static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
 	p->Hacks._noclipping = true;
 	if (Gui.InputGrab) return false;
 
-	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
+	if (ForceHax_enabled && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.y = 0;
 
@@ -988,8 +989,12 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 	physics->Jumping = true;
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
-		maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
+		maxJumps = hacks->Enabled && ForceHax_enabled && hacks->WOMStyleHacks ? 2 : 0;
+		if (hacks->Enabled && ForceHax_enabled) {
+			maxJumps = max(maxJumps, hacks->MaxJumps + 9999); /* infinite jumps */
+		} else {
 		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
+		}
 
 		if (physics->MultiJumps < maxJumps) {
 			PhysicsComp_DoNormalJump(physics);
@@ -1035,7 +1040,7 @@ static cc_bool LocalPlayer_TriggerFlyUp(int key, struct InputDevice* device) {
 	if (Gui.InputGrab) return false;
 	
 	hacks->FlyingUp = true;
-	return hacks->CanFly && hacks->Enabled;
+	return ForceHax_enabled && hacks->Enabled;
 }
 
 static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
@@ -1043,7 +1048,7 @@ static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
 	if (Gui.InputGrab) return false;
 	
 	hacks->FlyingDown = true;
-	return hacks->CanFly && hacks->Enabled;
+	return ForceHax_enabled && hacks->Enabled;
 }
 
 static void LocalPlayer_ReleaseFlyUp(int key, struct InputDevice* device) {
@@ -1084,7 +1089,7 @@ static void LocalPlayer_HookBinds(void) {
 }
 
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
-	if (p->Hacks.CanFly) return true;
+	if (p->Hacks.Enabled && ForceHax_enabled) return true;
 
 	if (!p->_warnedZoom) {
 		p->_warnedZoom = true;
