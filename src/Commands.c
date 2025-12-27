@@ -800,13 +800,13 @@ static struct ChatCommand BlockEditCommand = {
 *------------------------------------------------------MOTD TOGGLE--------------------------------------------------------*
 *#########################################################################################################################*/
 
-static void MOTDTogglecommand_Execute(const cc_string* args, int argsCount) {
-    MOTDEnabled = !MOTDEnabled;
+static void MOTDToggleCommand_Execute(const cc_string* args, int argsCount) {
+    MOTD_enabled = !MOTD_enabled;
     Chat_AddRaw("Toggled MOTD");
 }
 
 static struct ChatCommand MOTDToggleCommand = {
-	"MOTDToggle", MOTDToggle_Execute,
+	"MOTDToggle", MOTDToggleCommand_Execute,
 	0,
 	{
 		"&a/client tp [x y z]",
@@ -842,4 +842,5 @@ struct IGameComponent Commands_Component = {
 	OnInit, /* Init  */
 	OnFree  /* Free  */
 };
+
 
