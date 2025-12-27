@@ -1,6 +1,4 @@
-<p align="center">
-<img src="https://velocityclient.com/icon.png" alt="velocity-logo" width="15%"/>
-</p>
+# Velocity
 
 <h1 align="center"><b>Velocity</b></h1>
 <p align="center">A free and open-source utility client for ClassiCube.</p>
