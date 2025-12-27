@@ -35,6 +35,7 @@
 #include "Options.h"
 #include "Screens.h"
 #include "Audio.h"
+#include "Commands.h"
 
 struct _ProtocolData Protocol;
 
