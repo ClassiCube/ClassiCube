@@ -24,6 +24,9 @@
 static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
+//MOTD Toggle
+cc_bool MOTD_enabled;
+
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
@@ -246,7 +249,7 @@ static void ModelCommand_Execute(const cc_string* args, int argsCount) {
 
 static struct ChatCommand ModelCommand = {
 	"Model", ModelCommand_Execute,
-	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	0 | COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client model [name]",
 		"&bnames: &echibi, chicken, creeper, human, pig, sheep",
@@ -353,7 +356,7 @@ static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
 
 static struct ChatCommand PlaceCommand = {
 	"Place", PlaceCommand_Execute,
-	COMMAND_FLAG_SINGLEPLAYER_ONLY,
+	0,
 	{
 		"&a/client place [block] [x y z]",
 		"&ePlaces block at [x y z].",
@@ -497,7 +500,7 @@ static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 
 static struct ChatCommand CuboidCommand = {
 	"Cuboid", CuboidCommand_Execute,
-	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	0 | COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client cuboid [block] [persist]",
 		"&eFills the 3D rectangle between two points with [block].",
@@ -562,7 +565,7 @@ static void ReplaceCommand_Execute(const cc_string* args, int argsCount) {
 
 static struct ChatCommand ReplaceCommand = {
 	"Replace", ReplaceCommand_Execute,
-	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	0 | COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client replace [source] [replacement] [persist]",
 		"&eReplaces all [source] blocks between two points with [replacement].",
@@ -597,7 +600,7 @@ static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 
 static struct ChatCommand TeleportCommand = {
 	"TP", TeleportCommand_Execute,
-	COMMAND_FLAG_SINGLEPLAYER_ONLY,
+	0,
 	{
 		"&a/client tp [x y z]",
 		"&eMoves you to the given coordinates.",
@@ -783,7 +786,7 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 
 static struct ChatCommand BlockEditCommand = {
 	"BlockEdit", BlockEditCommand_Execute,
-	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	0 | COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client blockedit [block] [property] [value]",
 		"&eEdits the given property of the given block",
@@ -792,6 +795,24 @@ static struct ChatCommand BlockEditCommand = {
 	}
 };
 
+
+/*########################################################################################################################*
+*------------------------------------------------------MOTD TOGGLE--------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void MOTDTogglecommand_Execute(const cc_string* args, int argsCount) {
+    MOTDEnabled = !MOTDEnabled;
+    Chat_AddRaw("Toggled MOTD");
+}
+
+static struct ChatCommand MOTDToggleCommand = {
+	"MOTDToggle", MOTDToggle_Execute,
+	0,
+	{
+		"&a/client tp [x y z]",
+		"&eMoves you to the given coordinates.",
+	}
+};
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -810,6 +831,7 @@ static void OnInit(void) {
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&ReplaceCommand);
+	Commands_Register(&MOTDToggleCommand);
 }
 
 static void OnFree(void) {
@@ -820,3 +842,4 @@ struct IGameComponent Commands_Component = {
 	OnInit, /* Init  */
 	OnFree  /* Free  */
 };
+
