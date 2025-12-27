@@ -1,5 +1,3 @@
-# Velocity
-
 <h1 align="center"><b>Velocity</b></h1>
 <p align="center">A free and open-source utility client for ClassiCube.</p>
 
