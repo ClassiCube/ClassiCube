@@ -905,25 +905,27 @@ static struct ChatCommand ReachCommand = {
 };
 
 /*########################################################################################################################*
-*---------------------------------------------------------Reach-----------------------------------------------------------*
+*---------------------------------------------------------Speed-----------------------------------------------------------*
 *#########################################################################################################################*/
 
-static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
-    float speed;
-	if (argsCount != 1) {
-        Chat_AddRaw("&cUsage: /client speed <speed>");
-        return;
-    }
+// static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
+//     float speed;
+// 	if (argsCount != 1) {
+//         Chat_AddRaw("&cUsage: /client speed <speed>");
+//         return;
+//     }
 
-	// TODO: check if this is the correct Hacks thing to set for player
-    LocalPlayer_Instances[0].Hacks.BaseHorSpeed = speed;
-    Chat_AddRaw("&eSet speed Value");
-}
+//     struct LocalPlayer* p = &LocalPlayer_Instances[0];
 
-static struct ChatCommand SpeedCommand = {
-    "Speed", SpeedCommand_Execute, 0,
-    "Sets the Speed"
-};
+//     p->Hacks.BaseHorSpeed = speed;
+
+//     Chat_AddRaw("&eSet speed Value");
+// }
+
+// static struct ChatCommand SpeedCommand = {
+//     "Speed", SpeedCommand_Execute, 0,
+//     "Sets the Speed"
+// };
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -947,7 +949,7 @@ static void OnInit(void) {
 	Commands_Register(&ForceHaxCommand);
 	Commands_Register(&ReachCommand);
 	Commands_Register(&NoPushCommand);
-	Commands_Register(&SpeedCommand);
+	// Commands_Register(&SpeedCommand);
 }
 
 static void OnFree(void) {
