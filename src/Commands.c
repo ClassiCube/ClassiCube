@@ -799,7 +799,7 @@ static struct ChatCommand BlockEditCommand = {
 };
 
 /*########################################################################################################################*
-*------------------------------------------------------ForceHax-----------------------------------------------------------*
+*------------------------------------------------------Info---------------------------------------------------------------*
 *#########################################################################################################################*/
 
 static void InfoCommand_Execute(const cc_string* args, int argsCount) {
@@ -808,8 +808,8 @@ static void InfoCommand_Execute(const cc_string* args, int argsCount) {
 	Chat_AddRaw("https://discord.gg/ckWe7tAcNA");
 }
 
-static struct ChatCommand ForceHaxCommand = {
-	"ForceHax", ForceHaxCommand_Execute,
+static struct ChatCommand InfoCommand = {
+	"Info", InfoCommand_Execute,
 	0,
 	{
 		"&a/client Info",
