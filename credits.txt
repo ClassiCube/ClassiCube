@@ -1,3 +1,7 @@
+Velocity Credits:
+* Me impresson :)
+
+Classicube Credits:
 * Goodlyay - many suggestions, and being a great second pairs of eyes for issues and 
   improvements with character modelling, animating, and view bobbing. Also designed the icons.
   Also designed all the textures in the web client. Big thanks!
