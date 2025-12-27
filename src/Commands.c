@@ -17,7 +17,7 @@
 #include "TexturePack.h"
 #include "Options.h"
 #include "Drawer2D.h"
-#include "Audio.h"
+#include "Audio.h"|
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
@@ -900,10 +900,32 @@ static void ReachCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand ReachCommand = {
-    "reach", ReachCommand_Execute, 0,
+    "Reach", ReachCommand_Execute, 0,
     "Sets the reach distance (1–1024)"
 };
 
+/*########################################################################################################################*
+*---------------------------------------------------------Reach-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
+    if (argsCount != 1) {
+        Chat_AddRaw("&cUsage: /client speed <speed>");
+        return;
+    }
+
+    float speed;
+
+	// TODO: check if this is the correct Hacks thing to set for player
+
+    LocalPlayer_Instances[0].Hacks.BaseHorSpeed = speed;
+    Chat_Add2("&eSet speed to &f%f", &speed, NULL);
+}
+
+static struct ChatCommand SpeedCommand = {
+    "Speed", SpeedCommand_Execute, 0,
+    "Sets the Speed"
+};
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -927,6 +949,7 @@ static void OnInit(void) {
 	Commands_Register(&ForceHaxCommand);
 	Commands_Register(&ReachCommand);
 	Commands_Register(&NoPushCommand);
+	Commands_Register(&SpeedCommand);
 }
 
 static void OnFree(void) {
@@ -939,4 +962,4 @@ struct IGameComponent Commands_Component = {
 };
 
 
-//todo: Speed p->hacksbasehorspeed, step p->colision.stepheight
+//todo: Fix Forcehax ThirdPerson & Forcehax Speed step p->colision.stepheight
