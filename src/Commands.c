@@ -909,17 +909,15 @@ static struct ChatCommand ReachCommand = {
 *#########################################################################################################################*/
 
 static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
-    if (argsCount != 1) {
+    float speed;
+	if (argsCount != 1) {
         Chat_AddRaw("&cUsage: /client speed <speed>");
         return;
     }
 
-    float speed;
-
 	// TODO: check if this is the correct Hacks thing to set for player
-
     LocalPlayer_Instances[0].Hacks.BaseHorSpeed = speed;
-    Chat_Add2("&eSet speed to &f%f", &speed, NULL);
+    Chat_AddRaw("&eSet speed Value");
 }
 
 static struct ChatCommand SpeedCommand = {
@@ -962,4 +960,4 @@ struct IGameComponent Commands_Component = {
 };
 
 
-//todo: Fix Forcehax ThirdPerson & Forcehax Speed step p->colision.stepheight
+//todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight
