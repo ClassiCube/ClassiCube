@@ -22,6 +22,22 @@ jobs:
         run: |
           cd misc/ios
           sudo xcode-select -s /Applications/Xcode_15.0.1.app/Contents/Developer
+
+          # Workarounds to allow building down to iOS 6.0
+          export _ios6_dir="/Applications/Xcode_15.0.1.app/Contents/Developer/Platforms/iPhoneOS.platform/DeviceSupport/6.0"
+          export _arc_dir="/Applications/Xcode_15.0.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/arc"
+          sudo mkdir "${_ios6_dir}" "${_arc_dir}"
+
+          sudo curl -L -o "${_ios6_dir}"/DeveloperDiskImage.dmg https://raw.githubusercontent.com/filsv/iOSDeviceSupport/refs/heads/master/6.0/DeveloperDiskImage.dmg
+          sudo curl -L -o "${_ios6_dir}"/DeveloperDiskImage.dmg.signature https://raw.githubusercontent.com/filsv/iOSDeviceSupport/refs/heads/master/6.0/DeveloperDiskImage.dmg.signature
+          sudo curl -L -o "${_arc_dir}"/libarclite_iphoneos.a https://raw.githubusercontent.com/kamyarelyasi/Libarclite-Files/refs/heads/main/libarclite_iphoneos.a
+
+          (test "$(shasum -a 256 "${_ios6_dir}"/DeveloperDiskImage.dmg | cut -d' ' -f1)" == "e4f0b2b7d6a2a652d9bb9f6c04acbeb27c9d5c08043e4f7f40d146ad610f1e39" && \
+            test "$(shasum -a 256 "${_ios6_dir}"/DeveloperDiskImage.dmg.signature | cut -d' ' -f1)" == "7bc35496934f38f6f0103a1e9fb66d95a5ae4f7986fffb65301e1b1dc45aea10" && \
+            test "$(shasum -a 256 "${_arc_dir}"/libarclite_iphoneos.a | cut -d' ' -f1)" == "9d54588c2287cdaf3905b6eaaf857d62e390604205990d3ac7c44ccacccf6d79") || \
+            (echo "Failed to verify legacy support files checksum"; exit 1)
+
+          # Back to regular build process
           xcodebuild -sdk iphoneos -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
           cd build/Release-iphoneos
           mkdir Payload
