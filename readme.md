@@ -1,4 +1,7 @@
-<h1 align="center"><b>Velocity</b></h1>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Logos/VelocityLogo.png" alt="Velocity Logo" width="200">
+<!-- I just used weavesilk lmao -->
+</p><h1 align="center"><b>Velocity</b></h1>
 <p align="center">A free and open-source utility client for ClassiCube.</p>
 
 <div align="center">
