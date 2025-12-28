@@ -937,7 +937,7 @@ static struct ChatCommand SpeedCommand = {
 };
 
 /*########################################################################################################################*
-*-------------------------------------------------------JesusCommand------------------------------------------------------*
+*-------------------------------------------------------Jesus-------------------------------------------------------------*
 *#########################################################################################################################*/
 
 static void JesusCommand_Execute(const cc_string* args, int argsCount) {
@@ -972,6 +972,37 @@ static struct ChatCommand JesusCommand = {
 };
 
 /*########################################################################################################################*
+*-------------------------------------------------------Gravity-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void GravityCommand_Execute(const cc_string* args, int argsCount) {
+	float SetGravity;
+
+	if (argsCount != 1) {
+		Chat_AddRaw("&cUsage: /client gravity <gravity> Default is 0.08");
+		return;
+	}
+
+	if (!Convert_ParseFloat(args, &SetGravity)) {
+		Chat_Add1("&cInvalid number!", NULL);
+		return;
+	}
+
+	LocalPlayer_Instances[0].Physics.gravity = SetGravity;
+
+	Chat_AddRaw("&eGravity set");
+}
+
+static struct ChatCommand GravityCommand = {
+	"Gravity", GravityCommand_Execute,
+	0,
+	{
+		"&a/client gravity <gravity>",
+		"&eSets the gravity value. Default is 0.08.",
+	}
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -996,6 +1027,7 @@ static void OnInit(void) {
 	Commands_Register(&SpeedCommand);
 	// Commands_Register(&NametagsCommand);
 	Commands_Register(&JesusCommand);
+	Commands_Register(&GravityCommand);
 }
 
 static void OnFree(void) {
@@ -1010,3 +1042,7 @@ struct IGameComponent Commands_Component = {
 
 
 //todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight Fix menu hacks settings not working in
+// Fast climb, NoJumpDelay, Slippy (friction)
+
+
+// Roadmap: try to get every variable into "Velocity.Variable"
