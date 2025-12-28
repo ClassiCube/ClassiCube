@@ -18,6 +18,7 @@
 #include "Options.h"
 #include "Drawer2D.h"
 #include "Audio.h"
+#include "MapRenderer.h"
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
