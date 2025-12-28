@@ -463,7 +463,7 @@ static void InitChunks(void) {
 	}
 }
 
-static void RefreshChunks(void) {
+void RefreshChunks(void) {
 	int i;
 	if (!mapChunks) return;
 
@@ -810,3 +810,4 @@ struct IGameComponent MapRenderer_Component = {
 	OnNewMap, /* OnNewMap */
 	OnNewMapLoaded /* OnNewMapLoaded */
 };
+
