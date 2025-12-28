@@ -259,18 +259,18 @@ static void MPConnection_Fail(const cc_string* reason) {
 	String_InitArray(msg, msgBuffer);
 	net_connecting = false;
 
-	String_Format2(&msg, "Failed to connect to %s:%i", &Server.Address, &Server.Port);
+	String_Format2(&msg, "&4[&cVelocity&4] &cFailed to connect to %s:%i", &Server.Address, &Server.Port);
 	Game_Disconnect(&msg, reason);
 	OnClose();
 }
 
 static void MPConnection_FailConnect(cc_result result) {
-	static const cc_string reason = String_FromConst("You failed to connect to the server. It's probably down!");
+	static const cc_string reason = String_FromConst("&4[&cVelocity&4] &cYou failed to connect to the server. It's probably down!");
 	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 	String_InitArray(msg, msgBuffer);
 
 	if (result) {
-		String_Format3(&msg, "Error connecting to %s:%i: %e" _NL, &Server.Address, &Server.Port, &result);
+		String_Format3(&msg, "&4[&cVelocity&4] &cError connecting to %s:%i: %e" _NL, &Server.Address, &Server.Port, &result);
 		Logger_Log(&msg);
 	}
 	MPConnection_Fail(&reason);
@@ -301,7 +301,7 @@ static void MPConnection_TickConnect(struct ScheduledTask* task) {
 }
 
 static void MPConnection_BeginConnect(void) {
-	static const cc_string invalid_reason = String_FromConst("Invalid IP address");
+	static const cc_string invalid_reason = String_FromConst("&4[&cVelocity&4] &cInvalid IP address");
 	cc_string title; char titleBuffer[STRING_SIZE];
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
 	int numValidAddrs;
@@ -334,7 +334,7 @@ static void MPConnection_BeginConnect(void) {
 		net_connecting      = true;
 		net_connectElapsed  = 0;
 
-		String_Format2(&title, "Connecting to %s:%i..", &Server.Address, &Server.Port);
+		String_Format2(&title, "&4[&cVelocity&4] &aConnecting to &b%s:%i..", &Server.Address, &Server.Port);
 		LoadingScreen_Show(&title, &String_Empty);
 	}
 }
@@ -361,8 +361,8 @@ static void MPConnection_SendChat(const cc_string* text) {
 }
 
 static void MPConnection_Disconnect(void) {
-	static const cc_string title  = String_FromConst("Disconnected!");
-	static const cc_string reason = String_FromConst("You've lost connection to the server");
+	static const cc_string title  = String_FromConst("&4[&cVelocity&4] &cDisconnected!");
+	static const cc_string reason = String_FromConst("&4[&cVelocity&4] &cYou've lost connection to the server");
 	Game_Disconnect(&title, &reason);
 }
 
