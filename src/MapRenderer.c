@@ -14,6 +14,7 @@
 #include "Utils.h"
 #include "World.h"
 #include "Options.h"
+#include "MapRenderer.h"
 
 int MapRenderer_1DUsedCount;
 struct ChunkPartInfo* MapRenderer_PartsNormal;
@@ -810,4 +811,5 @@ struct IGameComponent MapRenderer_Component = {
 	OnNewMap, /* OnNewMap */
 	OnNewMapLoaded /* OnNewMapLoaded */
 };
+
 
