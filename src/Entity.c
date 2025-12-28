@@ -992,9 +992,9 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 	physics->Jumping = true;
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
-		maxJumps = hacks->Enabled && ForceHax_enabled && hacks->WOMStyleHacks ? 2 : 0;
+		maxJumps = hacks->WOMStyleHacks ? 2 : 0;
 		if (InfJump_enabled) {
-			maxJumps = max(maxJumps, hacks->MaxJumps = 2147483647); /* infinite jumps */
+			maxJumps =  2147483647; /* infinite jumps */
 		} else {
 			maxJumps = max(maxJumps, hacks->MaxJumps - 1);
 		} 

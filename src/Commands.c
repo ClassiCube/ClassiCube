@@ -1065,5 +1065,4 @@ struct IGameComponent Commands_Component = {
 //todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight Fix menu hacks settings not working in
 // Fast climb, NoJumpDelay, Slippy (friction), add a toggle message for on and off Fix Full block steping hacks logic, cant noclip message keeps getting show
 
-
 // Roadmap: try to get every variable into "Velocity.Variable"
