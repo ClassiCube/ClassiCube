@@ -33,8 +33,8 @@ cc_bool NoPush_enabled = false;
 //Speed multiplier
 float Speed = 0.0f;
 
-//ESP Toggle
-// cc_bool ESP_enabled = false;
+//Nametags Toggle
+// cc_bool Nametags_enabled = false;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -861,20 +861,20 @@ static struct ChatCommand ForceHaxCommand = {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------------ESP-----------------------------------------------------------*
+*-----------------------------------------------------------Nametags------------------------------------------------------*
 *#########################################################################################################################*/
 
-// static void ESPCommand_Execute(const cc_string* args, int argsCount) {
-//     ESP_enabled = !ESP_enabled;
-//     Chat_AddRaw("Toggled ESP.");
+// static void NametagsCommand_Execute(const cc_string* args, int argsCount) {
+//     Nametags_enabled = !Nametags_enabled;
+//     Chat_AddRaw("Toggled Nametags.");
 // }
 
-// static struct ChatCommand ESPCommand = {
-// 	"ESP", ESPCommand_Execute,
+// static struct ChatCommand NametagsCommand = {
+// 	"Nametags", NametagsCommand_Execute,
 // 	0,
 // 	{
-// 		"&a/client ESP",
-// 		"&eToggles ESP.",
+// 		"&a/client Nametags",
+// 		"&eToggles Nametags.",
 // 	}
 // };
 
@@ -955,6 +955,7 @@ static void OnInit(void) {
 	Commands_Register(&ReachCommand);
 	Commands_Register(&NoPushCommand);
 	Commands_Register(&SpeedCommand);
+	// Commands_Register(&NametagsCommand);
 }
 
 static void OnFree(void) {

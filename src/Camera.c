@@ -13,6 +13,7 @@
 #include "Picking.h"
 #include "Platform.h"
 #include "Protocol.h"
+#include "Commands.h"
 
 struct _CameraData Camera;
 static struct RayTracer cameraClipPos;
@@ -235,7 +236,7 @@ static Vec2 ThirdPersonCamera_GetOrientation(void) {
 static float ThirdPersonCamera_GetZoom(struct LocalPlayer* p) {
 	float dist = cam_isForwardThird ? dist_forward : dist_third;
 	/* Don't allow zooming out when -fly */
-	if (dist > DEF_ZOOM && !LocalPlayer_CheckCanZoom(p)) dist = DEF_ZOOM;
+	if (dist > DEF_ZOOM) dist = DEF_ZOOM;
 	return dist;
 }
 
@@ -301,8 +302,7 @@ static void OnAxisUpdate(void* obj, struct PadAxisUpdate* upd) {
 
 static void OnHacksChanged(void* obj) {
 	struct HacksComp* h = &Entities.CurPlayer->Hacks;
-	/* Leave third person if not allowed anymore */
-	if (!h->CanUseThirdPerson || !h->Enabled) Camera_CycleActive();
+	/* Leave third person if not allowed anymore */ //TODO do this later
 }
 
 void Camera_CycleActive(void) {
@@ -312,9 +312,6 @@ void Camera_CycleActive(void) {
 	if (Game_ClassicMode) return;
 	Camera.Active = Camera.Active->next;
 
-	if (!p->Hacks.CanUseThirdPerson || !p->Hacks.Enabled) {
-		Camera.Active = &cam_FirstPerson;
-	}
 	cam_isForwardThird = Camera.Active == &cam_ForwardThird;
 
 	if (Camera.Active == &cam_FirstPerson) cycle = 0;
