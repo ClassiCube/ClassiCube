@@ -738,7 +738,7 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	LocalInterpComp_AdvanceState(&p->Interp, e);
 	LocalPlayer_HandleInput(p, &xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
-	if (!hacks->Floating && NoPush_enabled) PhysicsComp_DoEntityPush(e);
+	if (!hacks->Floating && !NoPush_enabled) PhysicsComp_DoEntityPush(e);
 
 	/* Immediate stop in noclip mode */
 	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
@@ -993,8 +993,8 @@ static cc_bool LocalPlayer_HandleJump(int key, struct InputDevice* device) {
 
 	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		maxJumps = hacks->Enabled && ForceHax_enabled && hacks->WOMStyleHacks ? 2 : 0;
-		if ((hacks->CanDoubleJump && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
-			maxJumps = max(maxJumps, hacks->MaxJumps + 9999); /* infinite jumps */
+		if (InfJump_enabled) {
+			maxJumps = max(maxJumps, hacks->MaxJumps + 2147483647); /* infinite jumps */
 		} else {
 			maxJumps = max(maxJumps, hacks->MaxJumps - 1);
 		} 

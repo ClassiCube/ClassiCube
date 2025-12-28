@@ -40,6 +40,9 @@ float Speed = 0.0f;
 //Jesus Toggle
 static cc_bool isSolid = false;
 
+//InfJump Toggle
+cc_bool InfJump_enabled = false;
+
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
@@ -1002,6 +1005,24 @@ static struct ChatCommand GravityCommand = {
 };
 
 /*########################################################################################################################*
+*-------------------------------------------------------InfJump-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void InfJumpCommand_Execute(const cc_string* args, int argsCount) {
+	InfJump_enabled = !InfJump_enabled;
+	Chat_AddRaw("Toggled InfJump.");
+}
+
+static struct ChatCommand InfJumpCommand = {
+	"InfJump", InfJumpCommand_Execute,
+	0,
+	{
+		"&a/client InfJump",
+		"&eToggles InfJump.",
+	}
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -1027,6 +1048,7 @@ static void OnInit(void) {
 	// Commands_Register(&NametagsCommand);
 	Commands_Register(&JesusCommand);
 	Commands_Register(&GravityCommand);
+	Commands_Register(&InfJumpCommand);
 }
 
 static void OnFree(void) {
