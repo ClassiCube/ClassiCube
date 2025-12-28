@@ -738,8 +738,8 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		dir = (hacks->FlyingUp || comp->Jumping) ? 1 : (hacks->FlyingDown ? -1 : 0);
 
 		entity->Velocity.y += 0.12f * dir;
-		if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += 0.12f * dir;
-		if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += 0.06f * dir;
+		if (hacks->Speeding) entity->Velocity.y += 0.12f * dir;
+		if (hacks->HalfSpeeding) entity->Velocity.y += 0.06f * dir;
 	} else if (comp->Jumping && Entity_TouchesAnyRope(entity) && entity->Velocity.y > 0.02f) {
 		entity->Velocity.y = 0.02f;
 	}
@@ -764,8 +764,8 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		if (!pastJumpPoint) {
 			comp->CanLiquidJump = true;
 			entity->Velocity.y += 0.04f;
-			if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += 0.04f; //TODO FIX forcehax logic
-			if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += 0.02f;
+			if (hacks->Speeding) entity->Velocity.y += 0.04f; //TODO FIX forcehax logic
+			if (hacks->HalfSpeeding) entity->Velocity.y += 0.02f;
 		} else if (pastJumpPoint) {
 			/* either A) climb up solid on side B) jump bob in water */
 			if (Collisions_HitHorizontal(comp->Collisions)) {
@@ -777,11 +777,11 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		}
 	} else if (comp->UseLiquidGravity) {
 		entity->Velocity.y += 0.04f;
-		if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += 0.04f;
-		if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += 0.02f;
+		if (hacks->Speeding) entity->Velocity.y += 0.04f;
+		if (hacks->HalfSpeeding) entity->Velocity.y += 0.02f; //TODO might need to FIX forcehax logic
 		comp->CanLiquidJump = false;
 	} else if (Entity_TouchesAnyRope(entity)) {
-		entity->Velocity.y += (hacks->Speeding && hacks->Enabled) ? 0.15f : 0.10f;
+		entity->Velocity.y += (hacks->Speeding) ? 0.15f : 0.10f;
 		comp->CanLiquidJump = false;
 	} else if (entity->OnGround) {
 		PhysicsComp_DoNormalJump(comp);
@@ -794,8 +794,8 @@ void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
 	if (comp->JumpVel == 0.0f || hacks->MaxJumps <= 0) return;
 
 	entity->Velocity.y = comp->JumpVel;
-	if (hacks->Speeding     && hacks->Enabled) entity->Velocity.y += comp->JumpVel;
-	if (hacks->HalfSpeeding && hacks->Enabled) entity->Velocity.y += comp->JumpVel / 2;
+	if (hacks->Speeding) entity->Velocity.y += comp->JumpVel; //TODO might need to FIX forcehax logic
+	if (hacks->HalfSpeeding) entity->Velocity.y += comp->JumpVel / 2;
 	comp->CanLiquidJump = false;
 }
 
@@ -909,7 +909,7 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 static float PhysicsComp_GetSpeed(struct HacksComp* hacks, float speedMul, cc_bool canSpeed) {
 	float factor = hacks->Floating ? speedMul : 1.0f;
 	float speed  = factor * (1 + HacksComp_CalcSpeedFactor(hacks, canSpeed));
-	return hacks->CanSpeed ? speed : min(speed, hacks->MaxHorSpeed);
+	return((hacks->CanSpeed && hacks->Enabled) || (ForceHax_enabled && hacks->Enabled)) ? speed : min(speed, hacks->MaxHorSpeed);
 }
 
 static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {

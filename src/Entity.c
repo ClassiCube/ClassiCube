@@ -1014,7 +1014,7 @@ static cc_bool LocalPlayer_TriggerHalfSpeed(int key, struct InputDevice* device)
 	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
 	if (Gui.InputGrab) return false;
 
-	hacks->HalfSpeeding = (!touch || !hacks->HalfSpeeding) && hacks->Enabled;
+	hacks->HalfSpeeding = (!touch || !hacks->HalfSpeeding) && ((hacks->CanSpeed && hacks->Enabled) || (ForceHax_enabled && hacks->Enabled));
 	return true;
 }
 
@@ -1023,7 +1023,7 @@ static cc_bool LocalPlayer_TriggerSpeed(int key, struct InputDevice* device) {
 	cc_bool touch = device->type == INPUT_DEVICE_TOUCH;
 	if (Gui.InputGrab) return false;
 
-	hacks->Speeding = (!touch || !hacks->Speeding) && hacks->Enabled;
+	hacks->Speeding = (!touch || !hacks->Speeding) && ((hacks->CanSpeed && hacks->Enabled) || (ForceHax_enabled && hacks->Enabled));
 	return true;
 }
 
@@ -1043,7 +1043,7 @@ static cc_bool LocalPlayer_TriggerFlyUp(int key, struct InputDevice* device) {
 	if (Gui.InputGrab) return false;
 	
 	hacks->FlyingUp = true;
-	return ForceHax_enabled && hacks->Enabled;
+	return ForceHax_enabled || hacks->Enabled;
 }
 
 static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
@@ -1051,7 +1051,7 @@ static cc_bool LocalPlayer_TriggerFlyDown(int key, struct InputDevice* device) {
 	if (Gui.InputGrab) return false;
 	
 	hacks->FlyingDown = true;
-	return ForceHax_enabled && hacks->Enabled;
+	return ForceHax_enabled || hacks->Enabled;
 }
 
 static void LocalPlayer_ReleaseFlyUp(int key, struct InputDevice* device) {
