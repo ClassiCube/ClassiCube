@@ -927,8 +927,7 @@ static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
 }
 	// Remove this awful hacks
 	Speed = SetSpeed;
-	int roundedSpeed = (int)(Speed + 0.5f);
-	Chat_Add1("&eSet speed value %i", &roundedSpeed);
+	Chat_AddRaw("&eSpeed Set.");
 };
 
 static struct ChatCommand SpeedCommand = {
@@ -1042,7 +1041,7 @@ struct IGameComponent Commands_Component = {
 
 
 //todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight Fix menu hacks settings not working in
-// Fast climb, NoJumpDelay, Slippy (friction)
+// Fast climb, NoJumpDelay, Slippy (friction), add a toggle message for on and off Fix Full block steping hacks logic, cant noclip message keeps getting show
 
 
 // Roadmap: try to get every variable into "Velocity.Variable"
