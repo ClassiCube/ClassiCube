@@ -976,7 +976,7 @@ static cc_bool LocalPlayer_HandleNoclip(int key, struct InputDevice* device) {
 
 		HacksComp_SetNoclip(&p->Hacks, !p->Hacks.Noclip);
 		return true;
-	} else {
+	} else if (!p->_warnedNoclip) {
 		p->_warnedNoclip = true;
 		if (hackPermMsgs) Chat_AddRaw("&cNoclip is currently disabled");
 	}
