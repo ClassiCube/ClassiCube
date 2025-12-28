@@ -36,6 +36,9 @@ float Speed = 0.0f;
 //Nametags Toggle
 // cc_bool Nametags_enabled = false;
 
+//Jesus Toggle
+static cc_bool isSolid = false;
+
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
@@ -935,7 +938,6 @@ static struct ChatCommand SpeedCommand = {
 /*########################################################################################################################*
 *-------------------------------------------------------JesusCommand------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool isSolid = false;
 
 static void JesusCommand_Execute(const cc_string* args, int argsCount) {
     if (!isSolid) {
