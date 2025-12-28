@@ -34,5 +34,5 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 - Jesus
 - Gravity
 - Speed
-
+- Infjump
 <!--TODO Move this into a doc or a wiki -->
