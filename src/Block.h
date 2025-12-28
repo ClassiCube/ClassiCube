@@ -147,5 +147,9 @@ BlockID AutoRotate_RotateBlock(BlockID block);
 /* Returns non 0 if both blocks belong to the same autorotate group */
 cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID blockOther);
 
+/* Sets a block collision type by their BlockID */
+void Block_SetCollide(BlockID block, cc_uint8 collide);
+
 CC_END_HEADER
 #endif
+
