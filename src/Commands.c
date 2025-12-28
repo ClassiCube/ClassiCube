@@ -1009,4 +1009,4 @@ struct IGameComponent Commands_Component = {
 
 
 
-//todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight
+//todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight Fix menu hacks settings not working in
