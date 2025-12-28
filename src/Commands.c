@@ -933,6 +933,42 @@ static struct ChatCommand SpeedCommand = {
 };
 
 /*########################################################################################################################*
+*-------------------------------------------------------JesusCommand------------------------------------------------------*
+*#########################################################################################################################*/
+static cc_bool isSolid = false;
+
+static void JesusCommand_Execute(const cc_string* args, int argsCount) {
+    if (!isSolid) {
+        Chat_AddRaw("&eYou can now walk on water (and lava).");
+        Block_SetCollide(8, COLLIDE_SOLID); /* Water block */
+        Block_SetCollide(9, COLLIDE_SOLID); /* Still water block */
+        Block_SetCollide(10, COLLIDE_SOLID); /* Lava block */
+        Block_SetCollide(11, COLLIDE_SOLID); /* Still lava block */
+
+        MapRenderer_Refresh(); /* Refresh chunks */
+        isSolid = true;
+    } else {
+        Chat_AddRaw("&eYou can no longer walk on water (and lava).");
+        Block_SetCollide(8, COLLIDE_WATER);
+        Block_SetCollide(9, COLLIDE_WATER);
+        Block_SetCollide(10, COLLIDE_LAVA);
+        Block_SetCollide(11, COLLIDE_LAVA);
+
+        MapRenderer_Refresh();
+        isSolid = false;
+    }
+}
+
+static struct ChatCommand JesusCommand = {
+    "Jesus", JesusCommand_Execute,
+    0 | COMMAND_FLAG_UNSPLIT_ARGS,
+    {
+        "&eUsage: /client jesus",
+        "&eLets you walk on water (and lava)."
+    }
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -956,6 +992,7 @@ static void OnInit(void) {
 	Commands_Register(&NoPushCommand);
 	Commands_Register(&SpeedCommand);
 	// Commands_Register(&NametagsCommand);
+	Commands_Register(&JesusCommand);
 }
 
 static void OnFree(void) {
@@ -966,6 +1003,7 @@ struct IGameComponent Commands_Component = {
 	OnInit, /* Init  */
 	OnFree  /* Free  */
 };
+
 
 
 //todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight
