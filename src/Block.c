@@ -141,7 +141,7 @@ static void Block_RecalcIsLiquid(BlockID b) {
 }
 
 /* Sets the basic and extended collide types of the given block */
-static void Block_SetCollide(BlockID block, cc_uint8 collide) {
+void Block_SetCollide(BlockID block, cc_uint8 collide) {
 	Blocks.ExtendedCollide[block] = collide;
 	Block_RecalcIsLiquid(block);
 
@@ -805,3 +805,4 @@ struct IGameComponent Blocks_Component = {
 	NULL,    /* Free  */
 	OnReset, /* Reset */
 };
+
