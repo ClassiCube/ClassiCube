@@ -457,163 +457,10 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
     matrix->row4.w =  0.0f;
 }
 
+
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-
-enum { PLANE_LEFT=0, PLANE_RIGHT, PLANE_BOTTOM, PLANE_TOP, PLANE_NEAR, PLANE_FAR };
-
-static int PlaneDistFixed(const VertexFixed* v, int plane) {
-    int64_t result;
-    switch (plane) {
-    case PLANE_LEFT:
-        result = (int64_t)v->x + v->w;
-        break;
-    case PLANE_RIGHT:
-        result = (int64_t)v->w - v->x;
-        break;
-    case PLANE_BOTTOM:
-        result = (int64_t)v->y + v->w;
-        break;
-    case PLANE_TOP:
-        result = (int64_t)v->w - v->y;
-        break;
-    case PLANE_NEAR:
-        result = v->z;
-        break;
-    case PLANE_FAR:
-        result = (int64_t)v->w - (v->z >> 2); //hacked
-        break;
-    default:
-        return 0;
-    }
-    
-    // Clamp to valid range
-    if (result > INT_MAX) return INT_MAX;
-    if (result < INT_MIN) return INT_MIN;
-    return (int)result;
-}
-
-static void LerpClipFixed(VertexFixed* out, const VertexFixed* a, const VertexFixed* b, int t) {
-    if (t < 0) t = 0;
-    if (t > FP_ONE) t = FP_ONE;
-    
-    int invt = FP_ONE - t;
-    
-    int64_t x_interp = ((int64_t)invt * a->x + (int64_t)t * b->x) >> FP_SHIFT;
-    int64_t y_interp = ((int64_t)invt * a->y + (int64_t)t * b->y) >> FP_SHIFT;
-    int64_t z_interp = ((int64_t)invt * a->z + (int64_t)t * b->z) >> FP_SHIFT;
-    int64_t w_interp = ((int64_t)invt * a->w + (int64_t)t * b->w) >> FP_SHIFT;
-    int64_t u_interp = ((int64_t)invt * a->u + (int64_t)t * b->u) >> FP_SHIFT;
-    int64_t v_interp = ((int64_t)invt * a->v + (int64_t)t * b->v) >> FP_SHIFT;
-    
-    // Clamp results
-    out->x = (x_interp > INT_MAX) ? INT_MAX : (x_interp < INT_MIN) ? INT_MIN : (int)x_interp;
-    out->y = (y_interp > INT_MAX) ? INT_MAX : (y_interp < INT_MIN) ? INT_MIN : (int)y_interp;
-    out->z = (z_interp > INT_MAX) ? INT_MAX : (z_interp < INT_MIN) ? INT_MIN : (int)z_interp;
-    out->w = (w_interp > INT_MAX) ? INT_MAX : (w_interp < INT_MIN) ? INT_MIN : (int)w_interp;
-    out->u = (u_interp > INT_MAX) ? INT_MAX : (u_interp < INT_MIN) ? INT_MIN : (int)u_interp;
-    out->v = (v_interp > INT_MAX) ? INT_MAX : (v_interp < INT_MIN) ? INT_MIN : (int)v_interp;
-    
-    out->c = (t < FP_HALF) ? a->c : b->c;
-}
-
-static int SafeFixedDiv(int numerator, int denominator) {
-    if (denominator == 0) return FP_HALF;
-    if (ABS(denominator) < 16) return FP_HALF; // Avoid extreme divisions
-    
-    int64_t result = ((int64_t)numerator << FP_SHIFT) / denominator;
-    
-    if (result > FP_ONE) return FP_ONE;
-    if (result < 0) return 0;
-    return (int)result;
-}
-
-static int ClipPolygonPlaneFixed(const VertexFixed* in, int inCount, VertexFixed* out, int plane) {
-    if (inCount == 0) return 0;
-    if (inCount > 15) inCount = 15; // Safety limit
-    
-    int outCount = 0;
-    
-    for (int i = 0; i < inCount; i++) {
-        const VertexFixed* cur  = &in[i];
-        const VertexFixed* next = &in[(i + 1) % inCount];
-        
-        int dCur  = PlaneDistFixed(cur, plane);
-        int dNext = PlaneDistFixed(next, plane);
-        cc_bool curIn  = dCur >= 0;
-        cc_bool nextIn = dNext >= 0;
-        
-        if (curIn && nextIn) {
-            // Both inside
-            out[outCount++] = *next;
-        } else if (curIn && !nextIn) {
-            // Exiting
-            int denom = dCur - dNext;
-            int t = SafeFixedDiv(dCur, denom);
-            
-            VertexFixed intersection;
-            LerpClipFixed(&intersection, cur, next, t);
-            out[outCount++] = intersection;
-        } else if (!curIn && nextIn) {
-            // Entering
-            int denom = dCur - dNext;
-            int t = SafeFixedDiv(dCur, denom);
-            
-            VertexFixed intersection;
-            LerpClipFixed(&intersection, cur, next, t);
-            out[outCount++] = intersection;
-            out[outCount++] = *next;
-        }
-        // Both outside
-        
-        if (outCount >= 15) break; // Safety limit
-    }
-    
-    return outCount;
-}
-
-static int ClipTriangleToFrustumFixed(const VertexFixed tri[3], VertexFixed* outPoly) {
-    VertexFixed buf1[16], buf2[16];
-    VertexFixed* src = buf1;
-    VertexFixed* dst = buf2;
-    
-    src[0] = tri[0];
-    src[1] = tri[1]; 
-    src[2] = tri[2];
-    int count = 3;
-    
-    for (int i = 0; i < 3; i++) {
-        if (src[i].w == 0) {
-            return 0;
-        }
-    }
-    
-    const int planes[6] = { PLANE_LEFT, PLANE_RIGHT, PLANE_BOTTOM, PLANE_TOP, PLANE_NEAR, PLANE_FAR };
-    
-    for (int p = 0; p < 6; p++) {
-        int newCount = ClipPolygonPlaneFixed(src, count, dst, planes[p]);
-        
-        if (newCount == 0) {
-            return 0;
-        }
-        
-        // Swap buffers
-        VertexFixed* tmp = src;
-        src = dst;
-        dst = tmp;
-        count = newCount;
-        
-        if (count > 15) count = 15; // Safety limit
-    }
-    
-    for (int i = 0; i < count; i++) {
-        outPoly[i] = src[i];
-    }
-    
-    return count;
-}
-
 static void TransformVertex2D(int index, VertexFixed* vertex) {
     struct FPVertexColoured* v_col;
     struct FPVertexTextured* v_tex;
@@ -667,13 +514,13 @@ static int TransformVertex3D(int index, VertexFixed* vertex) {
     }
 
     int64_t x_temp = (int64_t)pos_x * _mvp_fp.m[0][0] + (int64_t)pos_y * _mvp_fp.m[1][0] + 
-                       (int64_t)pos_z * _mvp_fp.m[2][0] + ((int64_t)_mvp_fp.m[3][0] << FP_SHIFT);
+                     (int64_t)pos_z * _mvp_fp.m[2][0] + ((int64_t)_mvp_fp.m[3][0] << FP_SHIFT);
     int64_t y_temp = (int64_t)pos_x * _mvp_fp.m[0][1] + (int64_t)pos_y * _mvp_fp.m[1][1] + 
-                       (int64_t)pos_z * _mvp_fp.m[2][1] + ((int64_t)_mvp_fp.m[3][1] << FP_SHIFT);
+                     (int64_t)pos_z * _mvp_fp.m[2][1] + ((int64_t)_mvp_fp.m[3][1] << FP_SHIFT);
     int64_t z_temp = (int64_t)pos_x * _mvp_fp.m[0][2] + (int64_t)pos_y * _mvp_fp.m[1][2] + 
-                       (int64_t)pos_z * _mvp_fp.m[2][2] + ((int64_t)_mvp_fp.m[3][2] << FP_SHIFT);
+                     (int64_t)pos_z * _mvp_fp.m[2][2] + ((int64_t)_mvp_fp.m[3][2] << FP_SHIFT);
     int64_t w_temp = (int64_t)pos_x * _mvp_fp.m[0][3] + (int64_t)pos_y * _mvp_fp.m[1][3] + 
-                       (int64_t)pos_z * _mvp_fp.m[2][3] + ((int64_t)_mvp_fp.m[3][3] << FP_SHIFT);
+                     (int64_t)pos_z * _mvp_fp.m[2][3] + ((int64_t)_mvp_fp.m[3][3] << FP_SHIFT);
 
     x_temp >>= FP_SHIFT;
     y_temp >>= FP_SHIFT;
@@ -700,11 +547,11 @@ static cc_bool ViewportVertex3D(VertexFixed* vertex) {
     int64_t y_ndc = ((int64_t)vertex->y * invW) >> FP_SHIFT;
     int64_t z_ndc = ((int64_t)vertex->z * invW) >> FP_SHIFT;
     
-    int64_t screen_x = vp_hwidth_fp + ((x_ndc * vp_hwidth_fp) >> FP_SHIFT);
+    int64_t screen_x = vp_hwidth_fp  + ((x_ndc * vp_hwidth_fp)  >> FP_SHIFT);
     int64_t screen_y = vp_hheight_fp - ((y_ndc * vp_hheight_fp) >> FP_SHIFT);
     
     // Clamp
-    if (screen_x < -(fb_width << FP_SHIFT) || screen_x > (fb_width << (FP_SHIFT + 1))) return false;
+    if (screen_x < -(fb_width  << FP_SHIFT) || screen_x > (fb_width  << (FP_SHIFT + 1))) return false;
     if (screen_y < -(fb_height << FP_SHIFT) || screen_y > (fb_height << (FP_SHIFT + 1))) return false;
     
     vertex->x = (int)screen_x;
@@ -1239,6 +1086,7 @@ static void DrawTriangle2D(VertexFixed* V0, VertexFixed* V1, VertexFixed* V2) {
     }
 }
 
+
 static void ProcessClippedTriangleAndDraw(const VertexFixed* inVerts, int polyCount) {
     if (polyCount < 3) return;
     
@@ -1286,18 +1134,120 @@ static void ProcessClippedTriangleAndDraw(const VertexFixed* inVerts, int polyCo
     }
 }
 
-static cc_bool TriangleFullyInsideFrustum(const VertexFixed tri[3]) {
-    const int planes[6] = { PLANE_LEFT, PLANE_RIGHT, PLANE_BOTTOM, PLANE_TOP, PLANE_NEAR, PLANE_FAR };
-    for (int p = 0; p < 6; p++) {
-        for (int i = 0; i < 3; i++) {
-            if (PlaneDistFixed(&tri[i], planes[p]) < 0) return false;
-        }
+
+enum { PLANE_LEFT=0, PLANE_RIGHT, PLANE_BOTTOM, PLANE_TOP, PLANE_NEAR, PLANE_FAR };
+#define NUM_PLANES 6
+
+static int PlaneDistFixed(const VertexFixed* v, int plane) {
+    int64_t result;
+    switch (plane) {
+    case PLANE_LEFT:
+        result = (int64_t)v->x + v->w;
+        break;
+    case PLANE_RIGHT:
+        result = (int64_t)v->w - v->x;
+        break;
+    case PLANE_BOTTOM:
+        result = (int64_t)v->y + v->w;
+        break;
+    case PLANE_TOP:
+        result = (int64_t)v->w - v->y;
+        break;
+    case PLANE_NEAR:
+        result = v->z;
+        break;
+    case PLANE_FAR:
+        result = (int64_t)v->w - (v->z >> 2); //hacked
+        break;
+    default:
+        return 0;
     }
-    return true;
+    
+    // Clamp to valid range
+    if (result > INT_MAX) return INT_MAX;
+    if (result < INT_MIN) return INT_MIN;
+    return (int)result;
 }
 
-static int ClipQuadToFrustumFixed(const VertexFixed quad[4], VertexFixed* outPoly) {
-    VertexFixed buf1[16], buf2[16];
+static void LerpClipFixed(VertexFixed* out, const VertexFixed* a, const VertexFixed* b, int t) {
+    if (t < 0) t = 0;
+    if (t > FP_ONE) t = FP_ONE;
+    
+    int invt = FP_ONE - t;
+    
+    int64_t x_interp = ((int64_t)invt * a->x + (int64_t)t * b->x) >> FP_SHIFT;
+    int64_t y_interp = ((int64_t)invt * a->y + (int64_t)t * b->y) >> FP_SHIFT;
+    int64_t z_interp = ((int64_t)invt * a->z + (int64_t)t * b->z) >> FP_SHIFT;
+    int64_t w_interp = ((int64_t)invt * a->w + (int64_t)t * b->w) >> FP_SHIFT;
+    int64_t u_interp = ((int64_t)invt * a->u + (int64_t)t * b->u) >> FP_SHIFT;
+    int64_t v_interp = ((int64_t)invt * a->v + (int64_t)t * b->v) >> FP_SHIFT;
+    
+    // Clamp results
+    out->x = (x_interp > INT_MAX) ? INT_MAX : (x_interp < INT_MIN) ? INT_MIN : (int)x_interp;
+    out->y = (y_interp > INT_MAX) ? INT_MAX : (y_interp < INT_MIN) ? INT_MIN : (int)y_interp;
+    out->z = (z_interp > INT_MAX) ? INT_MAX : (z_interp < INT_MIN) ? INT_MIN : (int)z_interp;
+    out->w = (w_interp > INT_MAX) ? INT_MAX : (w_interp < INT_MIN) ? INT_MIN : (int)w_interp;
+    out->u = (u_interp > INT_MAX) ? INT_MAX : (u_interp < INT_MIN) ? INT_MIN : (int)u_interp;
+    out->v = (v_interp > INT_MAX) ? INT_MAX : (v_interp < INT_MIN) ? INT_MIN : (int)v_interp;
+    
+    out->c = (t < FP_HALF) ? a->c : b->c;
+}
+
+static int SafeFixedDiv(int numerator, int denominator) {
+    if (denominator == 0) return FP_HALF;
+    if (ABS(denominator) < 16) return FP_HALF; // Avoid extreme divisions
+    
+    int64_t result = ((int64_t)numerator << FP_SHIFT) / denominator;
+    
+    if (result > FP_ONE) return FP_ONE;
+    if (result < 0) return 0;
+    return (int)result;
+}
+
+static int ClipPolygonPlaneFixed(const VertexFixed* in, int inCount, VertexFixed* out, int plane) {
+    int outCount = 0;
+    
+	// https://en.wikipedia.org/wiki/Sutherland%E2%80%93Hodgman_algorithm
+    for (int i = 0; i < inCount; i++) 
+	{
+        const VertexFixed* cur  = &in[i];
+        const VertexFixed* next = &in[(i + 1) % inCount];
+        
+        int dCur  = PlaneDistFixed(cur,  plane);
+        int dNext = PlaneDistFixed(next, plane);
+        cc_bool curIn  = dCur >= 0;
+        cc_bool nextIn = dNext >= 0;
+        
+        if (curIn && nextIn) {
+            // Both inside
+            out[outCount++] = *next;
+        } else if (curIn && !nextIn) {
+            // Exiting
+            int denom = dCur - dNext;
+            int t = SafeFixedDiv(dCur, denom);
+            
+            VertexFixed intersection;
+            LerpClipFixed(&intersection, cur, next, t);
+            out[outCount++] = intersection;
+        } else if (!curIn && nextIn) {
+            // Entering
+            int denom = dCur - dNext;
+            int t = SafeFixedDiv(dCur, denom);
+            
+            VertexFixed intersection;
+            LerpClipFixed(&intersection, cur, next, t);
+            out[outCount++] = intersection;
+            out[outCount++] = *next;
+        }
+        // Both outside
+        
+        if (outCount >= 15) break; // Safety limit
+    }
+    
+    return outCount;
+}
+
+static int ClipQuadToFrustumFixed(const VertexFixed quad[4], VertexFixed buf1[16], VertexFixed buf2[16], VertexFixed** outPoly) {
     VertexFixed* src = buf1;
     VertexFixed* dst = buf2;
 
@@ -1307,75 +1257,45 @@ static int ClipQuadToFrustumFixed(const VertexFixed quad[4], VertexFixed* outPol
     // check w zero
     for (int i = 0; i < 4; i++) if (src[i].w == 0) return 0;
 
-    const int planes[6] = { PLANE_LEFT, PLANE_RIGHT, PLANE_BOTTOM, PLANE_TOP, PLANE_NEAR, PLANE_FAR };
-
-    for (int p = 0; p < 6; p++) {
-        int newCount = ClipPolygonPlaneFixed(src, count, dst, planes[p]);
+    for (int plane = 0; plane < NUM_PLANES; plane++) 
+	{
+        int newCount = ClipPolygonPlaneFixed(src, count, dst, plane);
         if (newCount == 0) return 0;
-        // swap
+
+        // swap lists
         VertexFixed* tmp = src; src = dst; dst = tmp;
         count = newCount;
-        if (count > 15) count = 15;
+        if (count > 15) count = 15; // TODO prob not needed?
     }
 
-    for (int i = 0; i < count; i++) outPoly[i] = src[i];
+    *outPoly = src;
     return count;
 }
+
 static cc_bool QuadFullyInsideFrustum(const VertexFixed quad[4]) {
-    const int planes[6] = { PLANE_LEFT, PLANE_RIGHT, PLANE_BOTTOM, PLANE_TOP, PLANE_NEAR, PLANE_FAR };
-    for (int p = 0; p < 6; p++) {
-        for (int i = 0; i < 4; i++) {
-            if (PlaneDistFixed(&quad[i], planes[p]) < 0) return false;
+    for (int plane = 0; plane < NUM_PLANES; plane++) 
+	{
+        for (int i = 0; i < 4; i++) 
+		{
+            if (PlaneDistFixed(&quad[i], plane) < 0) return false;
         }
     }
     return true;
 }
 
-static void DrawClippedFixed(int mask, VertexFixed* v0, VertexFixed* v1, VertexFixed* v2, VertexFixed* v3) {
-    VertexFixed quad[4] = { *v0, *v1, *v2, *v3 };
-    VertexFixed outPoly[16];
-    int polyCount;
+static void DrawClippedFixed(VertexFixed quad[4]) {
+	VertexFixed buf1[16], buf2[16];
+    VertexFixed* outPoly;
 
     if (QuadFullyInsideFrustum(quad)) {
         ProcessClippedTriangleAndDraw(quad, 4);
         return;
     }
 
-    polyCount = ClipQuadToFrustumFixed(quad, outPoly);
+    int polyCount = ClipQuadToFrustumFixed(quad, buf1, buf2, &outPoly);
     if (polyCount > 0) {
         ProcessClippedTriangleAndDraw(outPoly, polyCount);
     }
-}
-
-
-#define V0_VIS (1 << 0)
-#define V1_VIS (1 << 1)
-#define V2_VIS (1 << 2)
-#define V3_VIS (1 << 3)
-static void ClipLineFixed(const VertexFixed* v1, const VertexFixed* v2, VertexFixed* out, int d1, int d2) {
-    int denom = d1 - d2;
-    int t = denom == 0 ? FP_HALF : FixedDiv(d1, denom);
-    int invt = FP_ONE - t;
-
-    out->x = FixedMul(invt, v1->x) + FixedMul(t, v2->x);
-    out->y = FixedMul(invt, v1->y) + FixedMul(t, v2->y);
-    out->z = FixedMul(invt, v1->z) + FixedMul(t, v2->z);
-    out->w = FixedMul(invt, v1->w) + FixedMul(t, v2->w);
-    out->u = FixedMul(invt, v1->u) + FixedMul(t, v2->u);
-    out->v = FixedMul(invt, v1->v) + FixedMul(t, v2->v);
-    out->c = v1->c; //TODO: 色補完する？
-    /*
-    // Color linear interpolation
-    int aA = PackedCol_A(a->c), aR = PackedCol_R(a->c), aG = PackedCol_G(a->c), aB = PackedCol_B(a->c);
-    int bA = PackedCol_A(b->c), bR = PackedCol_R(b->c), bG = PackedCol_G(b->c), bB = PackedCol_B(b->c);
-
-    int Acol = ((int64_t)invt * aA + (int64_t)t * bA) >> FP_SHIFT;
-    int Rcol = ((int64_t)invt * aR + (int64_t)t * bR) >> FP_SHIFT;
-    int Gcol = ((int64_t)invt * aG + (int64_t)t * bG) >> FP_SHIFT;
-    int Bcol = ((int64_t)invt * aB + (int64_t)t * bB) >> FP_SHIFT;
-
-    out->c = PACKEDCOL(Rcol, Gcol, Bcol, Acol);
-    */
 }
 
 void DrawQuadsFixed(int startVertex, int verticesCount, DrawHints hints) {
@@ -1407,7 +1327,7 @@ void DrawQuadsFixed(int startVertex, int verticesCount, DrawHints hints) {
             TransformVertex3D(j + 2, &vertices[2]);
             TransformVertex3D(j + 3, &vertices[3]);
             
-            DrawClippedFixed(0x0F, &vertices[0], &vertices[1], &vertices[2], &vertices[3]);
+            DrawClippedFixed(vertices);
         }
 
 		if (tex_offseting) UnshiftTextureCoords(verticesCount);
