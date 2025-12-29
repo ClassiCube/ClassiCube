@@ -16,6 +16,14 @@ Android is currently broken but will have support later on.
 Massive thanks to Hexcode, root & SuperZMax for helping me out and being such awesome people
 </p>
 
+## Downloads (click the top one to download)
+
+<a href="https://github.com/Peeguah/Velocity/actions/workflows/build_windows.yml">Windows</a>
+
+<a href="https://github.com/Peeguah/Velocity/actions/workflows/build_linux.yml">Linux</a>
+
+<a href="https://github.com/Peeguah/Velocity/actions/workflows/build_mac64.yml">Macos</a>
+
 ## Credits
 
 - [@impresson](https://www.github.com/impresson)
@@ -35,4 +43,5 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 - Gravity
 - Speed
 - Infjump
+- Nametags
 <!--TODO Move this into a doc or a wiki -->
