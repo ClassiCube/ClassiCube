@@ -44,4 +44,5 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 - Speed
 - Infjump
 - Nametags
+- Fastclimb (ropes only)
 <!--TODO Move this into a doc or a wiki -->

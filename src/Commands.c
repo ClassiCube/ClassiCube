@@ -44,6 +44,9 @@ static cc_bool isSolid = false;
 //InfJump Toggle
 cc_bool InfJump_enabled = false;
 
+//FastClimb Toggle
+cc_bool FastClimb_enabled = false;
+
 //ArrayList Toggle
 // cc_bool ArrayList_enabled = false;
 
@@ -1044,6 +1047,24 @@ static struct ChatCommand InfJumpCommand = {
 // 	}
 // }; TODO : Finish ArrayList implementation
 
+/*########################################################################################################################*
+*------------------------------------------------------FastClimb----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void FastClimbCommand_Execute(const cc_string* args, int argsCount) {
+	FastClimb_enabled = !FastClimb_enabled;
+	Chat_AddRaw("Toggled FastClimb.");
+}
+
+static struct ChatCommand FastClimbCommand = {
+	"FastClimb", FastClimbCommand_Execute,
+	0,
+	{
+		"&a/client FastClimb",
+		"&eToggles FastClimb.",
+	}
+};
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -1073,6 +1094,7 @@ static void OnInit(void) {
 	Commands_Register(&GravityCommand);
 	Commands_Register(&InfJumpCommand);
 	// Commands_Register(&ArrayListCommand);
+	Commands_Register(&FastClimbCommand);
 }
 
 static void OnFree(void) {
@@ -1086,8 +1108,8 @@ struct IGameComponent Commands_Component = {
 
 
 
-//todo: Fix Forcehax ThirdPerson (might be camera) & step p->colision.stepheight Fix menu hacks settings not working in
-// Fast climb, NoJumpDelay, Slippy (friction), add a toggle message for on and off Fix Full block steping hacks logic, cant noclip message keeps getting show
+//todo: step p->colision.stepheight Fix menu hacks settings not working in
+// NoJumpDelay, Slippy (friction), add a toggle message for on and off Fix Full block steping hacks logic.
 
 // Roadmap: try to get every variable into "Velocity.Variable"
 // Arraylist

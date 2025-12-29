@@ -740,7 +740,7 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		entity->Velocity.y += 0.12f * dir;
 		if (hacks->Speeding) entity->Velocity.y += 0.12f * dir;
 		if (hacks->HalfSpeeding) entity->Velocity.y += 0.06f * dir;
-	} else if (comp->Jumping && Entity_TouchesAnyRope(entity) && entity->Velocity.y > 0.02f) {
+	} else if (comp->Jumping && Entity_TouchesAnyRope(entity) && entity->Velocity.y > 0.02f && !FastClimb_enabled) {
 		entity->Velocity.y = 0.02f;
 	}
 
@@ -764,7 +764,7 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		if (!pastJumpPoint) {
 			comp->CanLiquidJump = true;
 			entity->Velocity.y += 0.04f;
-			if (hacks->Speeding) entity->Velocity.y += 0.04f; //TODO FIX forcehax logic
+			if (hacks->Speeding) entity->Velocity.y += 0.04f;
 			if (hacks->HalfSpeeding) entity->Velocity.y += 0.02f;
 		} else if (pastJumpPoint) {
 			/* either A) climb up solid on side B) jump bob in water */
@@ -778,7 +778,7 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 	} else if (comp->UseLiquidGravity) {
 		entity->Velocity.y += 0.04f;
 		if (hacks->Speeding) entity->Velocity.y += 0.04f;
-		if (hacks->HalfSpeeding) entity->Velocity.y += 0.02f; //TODO might need to FIX forcehax logic
+		if (hacks->HalfSpeeding) entity->Velocity.y += 0.02f;
 		comp->CanLiquidJump = false;
 	} else if (Entity_TouchesAnyRope(entity)) {
 		entity->Velocity.y += (hacks->Speeding) ? 0.15f : 0.10f;
