@@ -829,8 +829,7 @@ static void InfoCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand InfoCommand = {
-	"Info", InfoCommand_Execute,
-	0,
+	"Info", InfoCommand_Execute, 0,
 	{
 		"&a/client Info",
 		"&eShows info and credits about this client.",
@@ -847,8 +846,7 @@ static void NoPushCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand NoPushCommand = {
-	"NoPush", NoPushCommand_Execute,
-	0,
+	"NoPush", NoPushCommand_Execute, 0,
 	{
 		"&a/client NoPush",
 		"&eToggles NoPush.",
@@ -865,8 +863,7 @@ static void ForceHaxCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand ForceHaxCommand = {
-	"ForceHax", ForceHaxCommand_Execute,
-	0,
+	"ForceHax", ForceHaxCommand_Execute, 0,
 	{
 		"&a/client ForceHax",
 		"&eToggles ForceHax.",
@@ -884,8 +881,7 @@ static void NametagsCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand NametagsCommand = {
-	"Nametags", NametagsCommand_Execute,
-	0,
+	"Nametags", NametagsCommand_Execute, 0,
 	{
 		"&a/client Nametags",
 		"&eToggles Nametags.",
@@ -972,8 +968,7 @@ static void JesusCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand JesusCommand = {
-    "Jesus", JesusCommand_Execute,
-    0 | COMMAND_FLAG_UNSPLIT_ARGS,
+    "Jesus", JesusCommand_Execute, 0,
     {
         "&eUsage: /client jesus",
         "&eLets you walk on water (and lava)."
@@ -1003,8 +998,7 @@ static void GravityCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand GravityCommand = {
-	"Gravity", GravityCommand_Execute,
-	0,
+	"Gravity", GravityCommand_Execute, 0,
 	{
 		"&a/client gravity <gravity>",
 		"&eSets the gravity value. Default is 0.08.",
@@ -1021,8 +1015,7 @@ static void InfJumpCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand InfJumpCommand = {
-	"InfJump", InfJumpCommand_Execute,
-	0,
+	"InfJump", InfJumpCommand_Execute, 0,
 	{
 		"&a/client InfJump",
 		"&eToggles InfJump.",
@@ -1039,8 +1032,7 @@ static struct ChatCommand InfJumpCommand = {
 // }
 
 // static struct ChatCommand ArrayListCommand = {
-// 	"ArrayList", ArrayListCommand_Execute,
-// 	0,
+// 	"ArrayList", ArrayListCommand_Execute, 0,
 // 	{
 // 		"&a/client ArrayList",
 // 		"&eToggles ArrayList.",
@@ -1057,8 +1049,7 @@ static void FastClimbCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand FastClimbCommand = {
-	"FastClimb", FastClimbCommand_Execute,
-	0,
+	"FastClimb", FastClimbCommand_Execute, 0,
 	{
 		"&a/client FastClimb",
 		"&eToggles FastClimb.",
