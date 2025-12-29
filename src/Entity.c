@@ -1095,7 +1095,7 @@ static void LocalPlayer_HookBinds(void) {
 }
 
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
-	if (p->Hacks.Enabled && ForceHax_enabled) return true;
+	if ((p->Hacks.CanFly && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) return true;
 
 	if (!p->_warnedZoom) {
 		p->_warnedZoom = true;
