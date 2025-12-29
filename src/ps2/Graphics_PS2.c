@@ -15,7 +15,7 @@
 #include <draw3d.h>
 #include <malloc.h>
 
-#define QWORD_ALIGNED __attribute__((aligned(16)))
+#define QWORD_ALIGNED CC_ALIGNED(16)
 
 typedef struct Matrix VU0_matrix QWORD_ALIGNED;
 typedef struct Vec4   VU0_vector QWORD_ALIGNED;

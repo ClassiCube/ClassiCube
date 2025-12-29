@@ -357,7 +357,7 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Index Buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-//static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
+//static cc_uint16 CC_ALIGNED(16) gfx_indices[GFX_MAX_INDICES];
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	//fillFunc(gfx_indices, count, obj);

@@ -249,8 +249,8 @@ static const BindMapping defaults_ps2[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
 };
 
-static char padBuf0[256] __attribute__((aligned(64)));
-static char padBuf1[256] __attribute__((aligned(64)));
+static char padBuf0[256] CC_ALIGNED(64);
+static char padBuf1[256] CC_ALIGNED(64);
 
 void Gamepads_PreInit(void) {
 	padInit(0);

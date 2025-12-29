@@ -16,7 +16,7 @@
 #define SCREEN_HEIGHT 272
 
 #define FB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
-static unsigned int __attribute__((aligned(16))) list[262144];
+static unsigned int CC_ALIGNED(16) list[262144];
 
 static cc_uint8* gfx_vertices;
 static int gfx_fields;
@@ -373,7 +373,7 @@ void Gfx_SetScissor (int x, int y, int w, int h) {
 /*########################################################################################################################*
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
+static cc_uint16 CC_ALIGNED(16) gfx_indices[GFX_MAX_INDICES];
 static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {

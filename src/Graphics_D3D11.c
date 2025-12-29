@@ -34,12 +34,6 @@ static const GUID guid_IDXGIFactory2   = { 0x50c83a1c, 0xe072, 0x4c48, { 0x87, 0
 static int depthBits; // TODO implement depthBits?? for ZNear calc
 static GfxResourceID white_square;
 
-#ifdef _MSC_VER
-#define CC_ALIGNED(x) __declspec(align(x))
-#else
-#define CC_ALIGNED(x) __attribute__((aligned(x)))
-#endif
-
 static ID3D11Device* device;
 static ID3D11DeviceContext* context;
 static IDXGIDevice1* dxgi_device;

@@ -198,7 +198,7 @@ static void FreeShaderPatcherMem(void* user_data, void* mem) {
 *#########################################################################################################################*/
 static VertexProgram VP_list[2];
 static VertexProgram* VP_Active;
-static float transposed_mvp[4*4] __attribute__((aligned(64)));
+static float transposed_mvp[4*4] CC_ALIGNED(64);
 
 static void VP_DirtyUniform(int uniform) {
 	for (int i = 0; i < Array_Elems(VP_list); i++) 
@@ -1102,7 +1102,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	struct Matrix mvp __attribute__((aligned(64)));	
+	struct Matrix mvp CC_ALIGNED(64);
 	Matrix_Mul(&mvp, &_view, &_proj);
 	float* m = &mvp;
 	

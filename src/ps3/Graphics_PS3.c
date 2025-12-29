@@ -30,8 +30,8 @@ static VertexProgram  VP_list[3];
 static VertexProgram* VP_active;
 
 static cc_bool textureOffseting;
-static float textureOffset[4] __attribute__((aligned(16)));
-static struct Matrix mvp      __attribute__((aligned(64)));
+static float textureOffset[4] CC_ALIGNED(16);
+static struct Matrix mvp      CC_ALIGNED(64);
 
 
 static void VP_Load(VertexProgram* vp, const u8* source) {
