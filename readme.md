@@ -5,7 +5,7 @@
 <p align="center">A free and open-source utility client for ClassiCube.</p>
 
 <div align="center">
-    <a href="https://discord.gg/ckWe7tAcNA"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"/></a>
+    <a href="https://discord.gg/VYyucWYrY9"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"/></a>
 </div>
 
 <p align="center">
@@ -45,4 +45,5 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 - Infjump
 - Nametags
 - Fastclimb (ropes only)
+
 <!--TODO Move this into a doc or a wiki -->
