@@ -11,14 +11,46 @@
 
 
 // ===============================
+// FIELD OFFSETS
+// ===============================
+#define VTEX_U  0
+#define VTEX_V  4
+#define VTEX_C  8
+#define VTEX_X 12
+#define VTEX_Y 16
+#define VTEX_Z 20
+
+#define VCOL_C  0
+#define VCOL_X  4
+#define VCOL_Y  8
+#define VCOL_Z 12
+
+#define POLY_X  0
+#define POLY_Y  4
+#define POLY_Z  8
+#define POLY_W 12
+#define POLY_U 16
+#define POLY_V 20
+#define POLY_C 24
+#define POLY_F 28
+
+#define VTEX_SIZE 24
+#define POLY_SIZE 32
+
+
+// ===============================
 // UTILITIES
 // ===============================
+#define JUMP_RA jr $ra;
+#define NO_JUMP ;
 
 // NOTE: Not using lvl.q because it is broken on some PSP CPUs
 //   https://pspdev.github.io/vfpu-docs/#ulvq-lvlq-lvrq-register-corruption
+// NOTE: MAYBE_JUMP_RA may or may not be 'jr $ra' (so that delay slot can be filled in some cases)
+
 // S500 = MEM_32[$a0+0]
 //  ...       ....
-#define LoadMatrixUnaligned(mtx, SRC) \
+#define LoadMatrixUnaligned(mtx, SRC, MAYBE_JUMP_RA) \
 	lv.s	S##mtx##00,  0(SRC); \
 	lv.s	S##mtx##10,  4(SRC); \
 	lv.s	S##mtx##20,  8(SRC); \
@@ -37,59 +69,123 @@
 	lv.s	S##mtx##03, 48(SRC); \
 	lv.s	S##mtx##13, 52(SRC); \
 	lv.s	S##mtx##23, 56(SRC); \
+	MAYBE_JUMP_RA;			 	\
 	lv.s	S##mtx##33, 60(SRC);
+
+// Write/Store matrix
+// See https://stackoverflow.com/questions/57522055/what-do-the-mips-load-word-left-lwl-and-load-word-right-lwr-instructions-do
+#define StoreMatrixUnaligned(mtx, DST, MAYBE_JUMP_RA) \
+	svl.q 	R##mtx##00, 12(DST); \
+	svr.q 	R##mtx##00,  0(DST); \
+\
+	svl.q 	R##mtx##01, 28(DST); \
+	svr.q 	R##mtx##01, 16(DST); \
+\
+	svl.q 	R##mtx##02, 44(DST); \
+	svr.q 	R##mtx##02, 32(DST); \
+\
+	svl.q 	R##mtx##03, 60(DST); \
+	MAYBE_JUMP_RA;				 \
+	svr.q 	R##mtx##03, 48(DST);
+
+
+// ===============================
+// REGISTER USAGE
+// ===============================
+// M0 - view matrix
+// M1 - proj matrix
+// M2 - MVP  matrix
+// M3 - temp
+// M4 - temp
+// M5 - temp
+// M6 - temp
+// M7 - temp
 
 
 // ===============================
 // FUNCTIONS
 // ===============================
-BEG_FUNC(Clip_SetMatrices)
-	#define VIEW $a0
-	#define PROJ $a1
 
-	lv.q	R000,  0(VIEW) // M0.row1 = MEM_128[VIEW+ 0]
-	lv.q	R001, 16(VIEW) // M0.row2 = MEM_128[VIEW+16]
-	lv.q	R002, 32(VIEW) // M0.row3 = MEM_128[VIEW+32]
-	lv.q	R003, 48(VIEW) // M0.row4 = MEM_128[VIEW+48]
+// Loads view matrix into M0
+BEG_FUNC(Clip_LoadView)
+	#define SRC $a0
+	LoadMatrixUnaligned(0, SRC, JUMP_RA)
 
-	lv.q	R100,  0(PROJ) // M1.row1 = MEM_128[PROJ+ 0]
-	lv.q	R101, 16(PROJ) // M1.row2 = MEM_128[PROJ+16]
-	lv.q	R102, 32(PROJ) // M1.row3 = MEM_128[PROJ+32]
-	lv.q	R103, 48(PROJ) // M1.row4 = MEM_128[PROJ+48]
+	#undef SRC
+END_FUNC(Clip_LoadView)
 
+// Loads projection matrix into M1
+BEG_FUNC(Clip_LoadProj)
+	#define SRC $a0
+	LoadMatrixUnaligned(1, SRC, JUMP_RA)
+
+	#undef SRC
+END_FUNC(Clip_LoadView)
+
+// Calculates MVP = VIEW * PROJ
+BEG_FUNC(Clip_RecalcMVP)
 	jr 		$ra
 	vmmul.q M200, M000, M100 // M2 = M0 * M1
+END_FUNC(Clip_RecalcMVP)
 
-	#undef VIEW
-	#undef PROJ
-END_FUNC(Clip_SetMatrices)
+// Stores MVP matrix
+BEG_FUNC(Clip_StoreMVP)
+	#define DST $a0
+	StoreMatrixUnaligned(2, DST, JUMP_RA)
+
+	#undef DST
+END_FUNC(Clip_StoreMVP)
+
 
 BEG_FUNC(Matrix_Mul2)
 	#define DST   $a0
 	#define SRC_L $a1
 	#define SRC_R $a2
 
-	LoadMatrixUnaligned(5, SRC_L)
-	LoadMatrixUnaligned(6, SRC_R)
+	LoadMatrixUnaligned(5, SRC_L, NO_JUMP)
+	LoadMatrixUnaligned(6, SRC_R, NO_JUMP)
 
 	vmmul.q M700, M500, M600 // M7 = M5 * M6
 
-// Write/Store multiplied matrix
-// See https://stackoverflow.com/questions/57522055/what-do-the-mips-load-word-left-lwl-and-load-word-right-lwr-instructions-do
-	svl.q 	R700, 12(DST) // MEM_128[DST+0] = ROW1
-	svr.q 	R700,  0(DST)
-
-	svl.q 	R701, 28(DST)
-	svr.q 	R701, 16(DST)
-
-	svl.q 	R702, 44(DST)
-	svr.q 	R702, 32(DST)
-
-	svl.q 	R703, 60(DST)
-	jr 		$ra
-	svr.q 	R703, 48(DST)
+	StoreMatrixUnaligned(7, DST, JUMP_RA);
 
 	#undef DST
 	#undef SRC_L
 	#undef SRC_R
 END_FUNC(Matrix_Mul2)
+
+
+BEG_FUNC(TransformTexturedQuad)
+	#define SRC $a0
+	#define DST $a1
+	#define END $t0
+
+	vone.s		S730;                // M7[0,3] = 1.0
+	addiu		END, DST, 3*POLY_SIZE;// TMP = DST + 3 * sizeof(PolyVertex)
+
+tex_next_iter:
+	lv.s		S701, VTEX_U(SRC);   // M7[1,0] = src->u
+	lv.s		S711, VTEX_V(SRC);   // M7[1,1] = src->v
+	lv.s		S721, VTEX_C(SRC);   // M7[1,2] = src->color
+
+	lv.s		S700, VTEX_X(SRC);   // M7[0,0] = src->x
+	lv.s		S710, VTEX_Y(SRC);   // M7[0,1] = src->y
+	lv.s		S720, VTEX_Z(SRC);   // M7[0,2] = src->z
+
+	vhtfm4.q 	R703, M200, R700;    // M7.R3 = M200 * M7.R0
+	// TODO TP 4, LT 10 cycles
+	addiu		SRC, SRC, VTEX_SIZE; // src += sizeof(VertexTextured)
+
+	sv.q		R703,  0(DST) // MEM_128[DST+ 0] = M7.R3
+	sv.q		R701, 16(DST) // MEM_128[DST+16] = M7.R1
+	bne			DST, END, tex_next_iter // if (dst != end) goto tex_next_iter;
+	addiu		DST, DST, POLY_SIZE;    // dst += sizeof(PolyVertex)
+
+	jr	$ra
+	nop
+
+	#undef SRC
+	#undef DST
+	#udnef END
+END_FUNC(TransformTexturedQuad)
+

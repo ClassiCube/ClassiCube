@@ -473,20 +473,34 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+extern void Clip_LoadView(const float* src);
+extern void Clip_LoadProj(const float* src);
+extern void Clip_RecalcMVP(void);
+extern void Clip_StoreMVP(float* dst);
+
+static void LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	const float* m = (const float*)matrix;
 
 	if (type == MATRIX_PROJ) {
 		GE_upload_proj_matrix(m);
+		Clip_LoadProj(m);
 	} else {
 		GE_upload_view_matrix(m);
+		Clip_LoadView(m);
 	}
 }
 
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	LoadMatrix(type, matrix);
+	Clip_RecalcMVP();
+}
+
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
-	Gfx_LoadMatrix(MATRIX_VIEW, view);
-	Gfx_LoadMatrix(MATRIX_PROJ, proj);
-	Matrix_Mul(mvp, view, proj);
+	LoadMatrix(MATRIX_VIEW, view);
+	LoadMatrix(MATRIX_PROJ, proj);
+
+	Clip_RecalcMVP();
+	Clip_StoreMVP((float*)mvp);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -496,7 +510,6 @@ void Gfx_EnableTextureOffset(float x, float y) {
 void Gfx_DisableTextureOffset(void) { 
 	sceGuTexOffset(0.0f, 0.0f);
 }
-
 
 
 /*########################################################################################################################*
@@ -529,12 +542,33 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
+struct ClipVertex {
+	float x, y, z, w;
+	float u, v;
+	int c, flags;
+} CC_ALIGNED(16);
+
+extern void TransformTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
+
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	GE_set_vertices(gfx_vertices + startVertex * gfx_stride);
 	GE_set_indices(gfx_indices);
 
 	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 			NULL, NULL);
+	/*if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		struct Matrix mvp;
+		Clip_StoreMVP((float*)&mvp);
+
+		struct ClipVertex clipped[8];
+		struct VertexTextured* src = (struct VertexTextured*)gfx_vertices;
+		TransformTexturedQuad(src, clipped);
+
+		Vec3 res;
+		Vec3_Transform(&res, (Vec3*)&src->x, &mvp);
+		Platform_Log3("S: %f3/%f3/%f3", &res.x, &res.y, &res.z);
+		Platform_Log3("D: %f3/%f3/%f3", &clipped[0].x, &clipped[0].y, &clipped[0].z);
+	}*/
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
