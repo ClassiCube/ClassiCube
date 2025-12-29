@@ -12,6 +12,7 @@
 #include "Particle.h"
 #include "Drawer2D.h"
 #include "Server.h"
+#include "Commands.h"
 
 /*########################################################################################################################*
 *------------------------------------------------------Entity Shadow------------------------------------------------------*
@@ -337,7 +338,7 @@ static void DrawName(struct Entity* e) {
 	float scale;
 	Vec2 size;
 
-	if (!e->VTABLE->ShouldRenderName(e)) return;
+	if (!Nametags_enabled && !e->VTABLE->ShouldRenderName(e)) return;
 	if (e->NameTex.x == NAME_IS_EMPTY)   return;
 	if (!e->NameTex.ID) MakeNameTexture(e);
 	Gfx_BindTexture(e->NameTex.ID);
@@ -353,7 +354,7 @@ static void DrawName(struct Entity* e) {
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
 	size.x = e->NameTex.width * scale; size.y = e->NameTex.height * scale;
 
-	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && Entities.CurPlayer->Hacks.CanSeeAllNames) {
+	if ((Entities.NamesMode == (NAME_MODE_ALL_UNSCALED)) && (Nametags_enabled || Entities.CurPlayer->Hacks.CanSeeAllNames)) {
 		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
 		/* Get W component of transformed position */
 		scale = pos.x * mat.row1.w + pos.y * mat.row2.w + pos.z * mat.row3.w + mat.row4.w;
@@ -389,7 +390,7 @@ void EntityNames_Render(void) {
 	if (Server.IsSinglePlayer && Game_NumStates == 1) return;
 
 	closestEntityId = Entities_GetClosest(&p->Base);
-	if (!p->Hacks.CanSeeAllNames || Entities.NamesMode != NAME_MODE_ALL) return;
+	if ((!Nametags_enabled && !p->Hacks.CanSeeAllNames) && Entities.NamesMode != NAME_MODE_NONE) return;
 
 	Gfx_SetAlphaTest(true);
 	hadFog = Gfx_GetFog();
@@ -416,7 +417,7 @@ void EntityNames_RenderHovered(void) {
 	if (Server.IsSinglePlayer && Game_NumStates == 1) return;
 
 	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
-		&& p->Hacks.CanSeeAllNames;
+		&& (p->Hacks.CanSeeAllNames || Nametags_enabled);
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{

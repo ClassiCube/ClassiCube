@@ -12,6 +12,7 @@ extern cc_bool ForceHax_enabled;
 extern cc_bool ESP_enabled;
 extern cc_bool NoPush_enabled;
 extern cc_bool InfJump_enabled;
+extern cc_bool Nametags_enabled;
 extern float Speed;
 
 

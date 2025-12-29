@@ -35,7 +35,7 @@ cc_bool NoPush_enabled = false;
 float Speed = 0.0f;
 
 //Nametags Toggle
-// cc_bool Nametags_enabled = false;
+cc_bool Nametags_enabled = false;
 
 //Jesus Toggle
 static cc_bool isSolid = false;
@@ -871,19 +871,19 @@ static struct ChatCommand ForceHaxCommand = {
 *-----------------------------------------------------------Nametags------------------------------------------------------*
 *#########################################################################################################################*/
 
-// static void NametagsCommand_Execute(const cc_string* args, int argsCount) {
-//     Nametags_enabled = !Nametags_enabled;
-//     Chat_AddRaw("Toggled Nametags.");
-// }
+static void NametagsCommand_Execute(const cc_string* args, int argsCount) {
+    Nametags_enabled = !Nametags_enabled;
+    Chat_AddRaw("Toggled Nametags.");
+}
 
-// static struct ChatCommand NametagsCommand = {
-// 	"Nametags", NametagsCommand_Execute,
-// 	0,
-// 	{
-// 		"&a/client Nametags",
-// 		"&eToggles Nametags.",
-// 	}
-// };
+static struct ChatCommand NametagsCommand = {
+	"Nametags", NametagsCommand_Execute,
+	0,
+	{
+		"&a/client Nametags",
+		"&eToggles Nametags.",
+	}
+};
 
 
 /*########################################################################################################################*
@@ -1045,7 +1045,7 @@ static void OnInit(void) {
 	Commands_Register(&ReachCommand);
 	Commands_Register(&NoPushCommand);
 	Commands_Register(&SpeedCommand);
-	// Commands_Register(&NametagsCommand);
+	Commands_Register(&NametagsCommand);
 	Commands_Register(&JesusCommand);
 	Commands_Register(&GravityCommand);
 	Commands_Register(&InfJumpCommand);
