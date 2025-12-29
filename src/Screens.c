@@ -24,6 +24,7 @@
 #include "Options.h"
 #include "InputHandler.h"
 #include "Protocol.h"
+#include "Commands.h"
 
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
@@ -98,14 +99,14 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
 
 	if (Gfx.ReducedPerfMode || (Gfx.ReducedPerfModeCooldown > 0)) {
-		String_AppendConst(&status, "&4[&cVelocity&4] &e(low perf mode), ");
+		String_AppendConst(&status, "&c\n &4[&cVelocity&4] &e(low perf mode), ");
 		Gfx.ReducedPerfModeCooldown--;
 	} else if (fps == 0) {
 		/* Running at less than 1 FPS.. */
 		real_fps = s->frames / s->accumulator;
-		String_Format1(&status, "&4[&cVelocity&4] %f1 fps, ", &real_fps);
+		String_Format1(&status, "&c\n &4[&cVelocity&4] %f1 fps, ", &real_fps);
 	} else {
-		String_Format1(&status, "&4[&cVelocity&4] &a%i fps, ", &fps);
+		String_Format1(&status, "&c\n &4[&cVelocity&4] &a%i fps, ", &fps);
 	}
 
 	if (Game_ClassicMode) {
@@ -124,6 +125,8 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	TextWidget_Set(&s->line1, &status, &s->font);
 	s->dirty = true;
 }
+
+
 
 static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* data) {
 	struct VertexTextured* cur = data;
@@ -184,8 +187,7 @@ static void HUDScreen_RemakeLine2(struct HUDScreen* s) {
 
 	if (hacks->Flying) String_AppendConst(&status, "&aFly ON   ");
 	if (speed)         String_Format1(&status, "&bSpeed %f1x   ", &speed);
-	if (hacks->Noclip) String_AppendConst(&status, "&cNoclip ON   ");
-
+	if (hacks->Noclip) String_AppendConst(&status, "&cNoclip ON");
 	TextWidget_Set(&s->line2, &status, &s->font);
 }
 

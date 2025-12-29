@@ -19,6 +19,7 @@
 #include "Drawer2D.h"
 #include "Audio.h"
 #include "MapRenderer.h"
+#include "Screens.h"
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
@@ -42,6 +43,9 @@ static cc_bool isSolid = false;
 
 //InfJump Toggle
 cc_bool InfJump_enabled = false;
+
+//ArrayList Toggle
+// cc_bool ArrayList_enabled = false;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -1023,6 +1027,25 @@ static struct ChatCommand InfJumpCommand = {
 };
 
 /*########################################################################################################################*
+*-------------------------------------------------------ArrayList---------------------------------------------------------*
+*#########################################################################################################################*/
+
+// static void ArrayListCommand_Execute(const cc_string* args, int argsCount) {
+// 	ArrayList_enabled = !ArrayList_enabled;
+// 	Chat_AddRaw("Toggled ArrayList.");
+// }
+
+// static struct ChatCommand ArrayListCommand = {
+// 	"ArrayList", ArrayListCommand_Execute,
+// 	0,
+// 	{
+// 		"&a/client ArrayList",
+// 		"&eToggles ArrayList.",
+// 	}
+// }; TODO : Finish ArrayList implementation
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -1049,6 +1072,7 @@ static void OnInit(void) {
 	Commands_Register(&JesusCommand);
 	Commands_Register(&GravityCommand);
 	Commands_Register(&InfJumpCommand);
+	// Commands_Register(&ArrayListCommand);
 }
 
 static void OnFree(void) {
@@ -1066,3 +1090,4 @@ struct IGameComponent Commands_Component = {
 // Fast climb, NoJumpDelay, Slippy (friction), add a toggle message for on and off Fix Full block steping hacks logic, cant noclip message keeps getting show
 
 // Roadmap: try to get every variable into "Velocity.Variable"
+// Arraylist
