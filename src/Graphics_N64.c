@@ -503,7 +503,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	struct Matrix mvp __attribute__((aligned(64)));	
+	struct Matrix mvp CC_ALIGNED(64);	
 	Matrix_Mul(&mvp, &_view, &_proj);
 	gpuLoadMatrix((const float*)&mvp);
 }

@@ -89,6 +89,12 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 /* Only used on GBA to store some variables in EWRAM instead of IWRAM */
 #define CC_BIG_VAR
 
+#ifdef _MSC_VER
+	#define CC_ALIGNED(x) __declspec(align(x))
+#else
+	#define CC_ALIGNED(x) __attribute__((aligned(x)))
+#endif
+
 /* Unrecognised compiler, so just go with some sensible default typdefs */
 /* Don't use <stdint.h>, as good chance such a compiler doesn't support it */
 #ifndef CC_HAS_TYPES

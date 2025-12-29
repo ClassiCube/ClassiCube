@@ -100,6 +100,9 @@ $(BUILD_DIR)/%.o : src/%.c
 
 $(BUILD_DIR)/%.o : src/psp/%.c
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o : src/psp/%.S
+	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	
 $(BUILD_DIR)/%.o : third_party/bearssl/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
