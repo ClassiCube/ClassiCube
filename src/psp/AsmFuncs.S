@@ -1,42 +1,5 @@
 .set noreorder
-
-#define BEG_FUNC(name_) \
-	.global name_; \
-	.align 4; \
-	name_:
-
-#define END_FUNC(name_) \
-	.size name_, . - name_; \
-	.type name_, %function;
-
-
-// ===============================
-// FIELD OFFSETS
-// ===============================
-#define VTEX_U  0
-#define VTEX_V  4
-#define VTEX_C  8
-#define VTEX_X 12
-#define VTEX_Y 16
-#define VTEX_Z 20
-
-#define VCOL_C  0
-#define VCOL_X  4
-#define VCOL_Y  8
-#define VCOL_Z 12
-
-#define POLY_X  0
-#define POLY_Y  4
-#define POLY_Z  8
-#define POLY_W 12
-#define POLY_U 16
-#define POLY_V 20
-#define POLY_C 24
-#define POLY_F 28
-
-#define VTEX_SIZE 24
-#define POLY_SIZE 32
-
+#include "AsmCommon.i"
 
 // ===============================
 // UTILITIES
@@ -87,19 +50,6 @@
 	svl.q 	R##mtx##03, 60(DST); \
 	MAYBE_JUMP_RA;				 \
 	svr.q 	R##mtx##03, 48(DST);
-
-
-// ===============================
-// REGISTER USAGE
-// ===============================
-// M0 - view matrix
-// M1 - proj matrix
-// M2 - MVP  matrix
-// M3 - temp
-// M4 - temp
-// M5 - temp
-// M6 - temp
-// M7 - temp
 
 
 // ===============================
@@ -160,26 +110,26 @@ BEG_FUNC(TransformTexturedQuad)
 	#define DST $a1
 	#define END $t0
 
-	vone.s		S730;                // M7[0,3] = 1.0
-	addiu		END, DST, 3*POLY_SIZE;// TMP = DST + 3 * sizeof(PolyVertex)
+	vone.s		S730;               // M7[0,3] = 1.0
+	addiu		END, DST, 3*S_POLY; // TMP = DST + 3 * sizeof(PolyVertex)
 
 tex_next_iter:
-	lv.s		S701, VTEX_U(SRC);   // M7[1,0] = src->u
-	lv.s		S711, VTEX_V(SRC);   // M7[1,1] = src->v
-	lv.s		S721, VTEX_C(SRC);   // M7[1,2] = src->color
+	lv.s		S701, VTEX_U(SRC);  // M7[1,0] = src->u
+	lv.s		S711, VTEX_V(SRC);  // M7[1,1] = src->v
+	lv.s		S721, VTEX_C(SRC);  // M7[1,2] = src->color
 
-	lv.s		S700, VTEX_X(SRC);   // M7[0,0] = src->x
-	lv.s		S710, VTEX_Y(SRC);   // M7[0,1] = src->y
-	lv.s		S720, VTEX_Z(SRC);   // M7[0,2] = src->z
+	lv.s		S700, VTEX_X(SRC);  // M7[0,0] = src->x
+	lv.s		S710, VTEX_Y(SRC);  // M7[0,1] = src->y
+	lv.s		S720, VTEX_Z(SRC);  // M7[0,2] = src->z
 
-	vhtfm4.q 	R703, M200, R700;    // M7.R3 = M200 * M7.R0
+	vhtfm4.q 	R703, M200, R700;   // M7.R3 = M200 * M7.R0
 	// TODO TP 4, LT 10 cycles
-	addiu		SRC, SRC, VTEX_SIZE; // src += sizeof(VertexTextured)
+	addiu		SRC, SRC, S_VTEX;   // src += sizeof(VertexTextured)
 
-	sv.q		R703,  0(DST) // MEM_128[DST+ 0] = M7.R3
-	sv.q		R701, 16(DST) // MEM_128[DST+16] = M7.R1
+	sv.q		R703,  0(DST) 		// MEM_128[DST+ 0] = M7.R3
+	sv.q		R701, 16(DST) 		// MEM_128[DST+16] = M7.R1
 	bne			DST, END, tex_next_iter // if (dst != end) goto tex_next_iter;
-	addiu		DST, DST, POLY_SIZE;    // dst += sizeof(PolyVertex)
+	addiu		DST, DST, S_POLY;	// dst += sizeof(PolyVertex)
 
 	jr	$ra
 	nop
