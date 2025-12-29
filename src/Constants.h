@@ -15,8 +15,10 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define GAME_APP_TITLE "ClassiCube"
 #else
 #define GAME_APP_NAME  "ClassiCube 1.3.7"
-#define GAME_APP_TITLE "ClassiCube 1.3.7"
+#define GAME_APP_TITLE "Velocity"
 #endif
+
+//TODO maybe find something that works for version number? not really needed
 
 /* Max number of characters strings can have. */
 #define STRING_SIZE 64
