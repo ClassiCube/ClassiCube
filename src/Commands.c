@@ -35,6 +35,9 @@ cc_bool NoPush_enabled = false;
 //Speed multiplier
 float Speed = 0.0f;
 
+//StepHeight
+float StepHeight = 0.0f;
+
 //Nametags Toggle
 cc_bool Nametags_enabled = false;
 
@@ -1056,6 +1059,34 @@ static struct ChatCommand FastClimbCommand = {
 	}
 };
 
+/*########################################################################################################################*
+*---------------------------------------------------------Step------------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void StepCommand_Execute(const cc_string* args, int argsCount) {
+	float step;
+	if (argsCount != 1) {
+		Chat_AddRaw("&cUsage: /client step <height>");
+		return;
+	}
+
+	if (!Convert_ParseFloat(args, &step) || step < 0.0f || step > 2.0f) {
+		Chat_AddRaw("&cInvalid height. Must be between 0 and 2.");
+		return;
+	}
+
+	StepHeight = step;
+	Chat_AddRaw("&eStep height set.");
+}
+
+static struct ChatCommand StepCommand = {
+	"Step", StepCommand_Execute, 0,
+	{
+		"&a/client step <height>",
+		"&eSets the step height (0–2).",
+	}
+};
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -1086,6 +1117,7 @@ static void OnInit(void) {
 	Commands_Register(&InfJumpCommand);
 	// Commands_Register(&ArrayListCommand);
 	Commands_Register(&FastClimbCommand);
+	Commands_Register(&StepCommand);
 }
 
 static void OnFree(void) {
@@ -1104,3 +1136,4 @@ struct IGameComponent Commands_Component = {
 
 // Roadmap: try to get every variable into "Velocity.Variable"
 // Arraylist
+// Make step height higher
