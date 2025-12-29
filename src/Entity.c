@@ -731,7 +731,7 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	Vec3 headingVelocity;
 
 	if (!World.Loaded) return;
-	p->Collisions.StepSize = p->Hacks.FullBlockStep && (p->Hacks.Enabled || ForceHax_enabled) ? 1.0f : 0.5f; //TODO: config
+	p->Collisions.StepSize = (p->Hacks.CanAnyHacks || ForceHax_enabled) && p->Hacks.Enabled ? 1.0f : 0.5f; //TODO: config & fix check
 	if (StepHeight > 0) {
 	p->Collisions.StepSize = StepHeight;
 	}
