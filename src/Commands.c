@@ -53,6 +53,9 @@ cc_bool FastClimb_enabled = false;
 //ArrayList Toggle
 // cc_bool ArrayList_enabled = false;
 
+//NoClickDelay Toggle
+cc_bool NoClickDelay_enabled = false;
+
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
@@ -1060,6 +1063,23 @@ static struct ChatCommand FastClimbCommand = {
 };
 
 /*########################################################################################################################*
+*------------------------------------------------------NoClickDelay--------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoClickDelayCommand_Execute(const cc_string* args, int argsCount) {
+	NoClickDelay_enabled = !NoClickDelay_enabled;
+	Chat_AddRaw("Toggled NoClickDelay.");
+}
+
+static struct ChatCommand NoClickDelayCommand = {
+	"NoClickDelay", NoClickDelayCommand_Execute, 0,
+	{
+		"&a/client NoClickDelay",
+		"&eToggles NoClickDelay.",
+	}
+};
+
+/*########################################################################################################################*
 *---------------------------------------------------------Step------------------------------------------------------------*
 *#########################################################################################################################*/
 
@@ -1118,6 +1138,7 @@ static void OnInit(void) {
 	// Commands_Register(&ArrayListCommand);
 	Commands_Register(&FastClimbCommand);
 	Commands_Register(&StepCommand);
+	Commands_Register(&NoClickDelayCommand);
 }
 
 static void OnFree(void) {

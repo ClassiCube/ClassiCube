@@ -46,4 +46,5 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 - Nametags
 - Fastclimb (ropes only)
 - Step
+- NoclickDelay
 <!--TODO Move this into a doc or a wiki -->

@@ -25,6 +25,7 @@
 #include "Protocol.h"
 #include "AxisLinesRenderer.h"
 #include "Picking.h"
+#include "Commands.h"
 
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
@@ -463,7 +464,8 @@ void InputHandler_Tick(float delta) {
 	if (Gui.InputGrab) return;
 
 	/* Only tick 4 times per second when held down */
-	if (input_deltaAcc < 0.2495f) return;
+
+	if (input_deltaAcc < 0.2495f && !NoClickDelay_enabled) return;
 	/* NOTE: 0.2495 is used instead of 0.25 to produce delta time */
 	/*  values slightly closer to the old code which measured */
 	/*  elapsed time using DateTime_CurrentUTC_MS() instead */

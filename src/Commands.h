@@ -15,6 +15,7 @@ extern cc_bool NoPush_enabled;
 extern cc_bool InfJump_enabled;
 extern cc_bool Nametags_enabled;
 extern cc_bool FastClimb_enabled;
+extern cc_bool NoClickDelay_enabled;
 // extern cc_bool ArrayList_enabled;
 extern float Speed;
 extern float StepHeight;
