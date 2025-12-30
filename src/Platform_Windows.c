@@ -279,7 +279,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 	}
 }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	cc_result res;
 	if (CreateDirectoryW(path->uni, NULL)) return 0;
 	/* Windows 9x does not support W API functions */

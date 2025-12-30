@@ -113,7 +113,7 @@ static cc_bool CreateLogsDirectory(void) {
 	/*            --> Utils_EnsureDirectory --> Logger_IOWarn2 --> Chat_Add --> AppendChatLog ... */
 	/* and so on, until eventually the stack overflows */
 	Platform_EncodePath(&raw_dir, &dir);
-	res = Directory_Create(&raw_dir);
+	res = Directory_Create2(&raw_dir);
 	if (!res || res == ReturnCode_DirectoryExists) return true;
 
 	Chat_DisableLogging();

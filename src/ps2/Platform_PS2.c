@@ -181,7 +181,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	return fioMkdir(path->buffer);
 }
 
@@ -746,7 +746,7 @@ void Platform_Init(void) {
 	Networking_Setup();
 	
 	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
-	int res = Directory_Create(root);
+	int res = Directory_Create2(root);
 	Platform_Log1("ROOT DIRECTORY CREATE %i", &res);
 }
 

@@ -36,11 +36,11 @@ typedef struct cc_filepath_ { char buffer[NATIVE_STR_LEN]; } cc_filepath;
 #endif
 
 /* Converts the provided path into a platform native file path */
-void Platform_EncodePath(cc_filepath* dst, const cc_string* src);
+CC_API void Platform_EncodePath(cc_filepath* dst, const cc_string* src);
 /* Best attempts to convert the native file path into a string */
 /* (e.g. a native file path might be unicode, but not all */
 /*  unicode characters can be represented in code page 437) */
-void Platform_DecodePath(cc_string* dst, const cc_filepath* path);
+CC_API void Platform_DecodePath(cc_string* dst, const cc_filepath* path);
 
 /* Initialises the platform specific state. */
 void Platform_Init(void);
@@ -271,7 +271,7 @@ extern const cc_result ReturnCode_DirectoryExists;
 #define ReturnCode_IsNotFound(res) ((res) == ReturnCode_FileNotFound || (res) == ReturnCode_PathNotFound)
 
 /* Attempts to create a new directory. */
-cc_result Directory_Create(const cc_filepath* path);
+CC_API cc_result Directory_Create2(const cc_filepath* path);
 /* Callback function invoked for each file found. */
 typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj, int isDirectory);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */

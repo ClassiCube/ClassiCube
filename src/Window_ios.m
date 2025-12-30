@@ -513,7 +513,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
     // UIDocumentPickerViewController - iOS 8
     
     // save the item to a temp file, which is then (usually) later deleted by picker callbacks
-    Directory_Create(FILEPATH_RAW("Exported"));
+    Directory_Create2(FILEPATH_RAW("Exported"));
     
     save_path.length = 0;
     String_Format2(&save_path, "Exported/%s%c", &args->defaultName, args->filters[0]);

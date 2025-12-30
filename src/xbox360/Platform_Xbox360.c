@@ -128,7 +128,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	if (!fat_available) return ERR_NON_WRITABLE_FS;
 
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;

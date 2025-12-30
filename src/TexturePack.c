@@ -326,7 +326,7 @@ static cc_bool UseDedicatedCache(cc_string* path, const cc_string* key) {
 
 	String_AppendConst(path, "/texturecache");
 	Platform_EncodePath(&str, path);
-	res = Directory_Create(&str);
+	res = Directory_Create2(&str);
 
 	/* Check if something is deleting the cache directory behind our back */
 	/*  (Several users have reported this happening on some Android devices) */
