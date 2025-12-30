@@ -118,7 +118,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	int result = sceIoMkdir(path->buffer, 0777);
 	return GetSCEResult(result);
 }
@@ -448,7 +448,7 @@ void Platform_Init(void) {
 	epoll_id = sceNetEpollCreate("CC poll", 0);
 	
 	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
-	Directory_Create(root);
+	Directory_Create2(root);
 }
 void Platform_Free(void) { }
 

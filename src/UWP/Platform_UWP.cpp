@@ -228,7 +228,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 	}
 }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	if (CreateDirectoryW(UWP_STRING(path), NULL)) return 0;
 	return GetLastError();
 }

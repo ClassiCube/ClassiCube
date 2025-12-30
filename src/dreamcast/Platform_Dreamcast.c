@@ -358,7 +358,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	int res = fs_mkdir(path->buffer);
 	int err = res == -1 ? errno : 0;
 	
@@ -728,7 +728,7 @@ static void TryInitSDCard(void) {
 	usingSD   = true;
 
 	cc_filepath* root = FILEPATH_RAW("/sd/ClassiCube");
-	int res = Directory_Create(root);
+	int res = Directory_Create2(root);
 	Platform_Log1("ROOT DIRECTORY CREATE: %i", &res);
 }
 

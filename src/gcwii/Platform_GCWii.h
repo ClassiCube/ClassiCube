@@ -36,7 +36,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	if (!fat_available) return ERR_NON_WRITABLE_FS;
 
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
@@ -284,7 +284,7 @@ static void CreateRootDirectory(void) {
 	if (!fat_available) return;
 	root_buffer[root_path.length] = '\0';
 	
-	// Directory_Create(&String_Empty); just returns error 20
+	// Directory_Create2(&String_Empty); just returns error 20
 	int res = mkdir(root_buffer, 0);
 	int err = res == -1 ? errno : 0;
 	Platform_Log1("Created root directory: %i", &err);

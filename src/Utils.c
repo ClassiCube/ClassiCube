@@ -30,7 +30,7 @@ cc_bool Utils_EnsureDirectory(const char* dirName) {
 	
 	dir = String_FromReadonly(dirName);
 	Platform_EncodePath(&raw_dir, &dir);
-	res = Directory_Create(&raw_dir);
+	res = Directory_Create2(&raw_dir);
 
 	if (!res || res == ReturnCode_DirectoryExists) return true;
 	Logger_IOWarn2(res, "creating directory", &raw_dir);

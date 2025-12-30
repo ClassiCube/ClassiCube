@@ -429,7 +429,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* save_args) {
     if (!save_args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
 
     // save the item to a temp file, which is then (usually) later deleted by intent callback
-    Directory_Create(FILEPATH_RAW("Exported"));
+    Directory_Create2(FILEPATH_RAW("Exported"));
 
     cc_string path; char pathBuffer[FILENAME_SIZE];
     String_InitArray(path, pathBuffer);

@@ -240,7 +240,7 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 	}
 }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	WCHAR fullPath[MAX_PATH];
 	
 	MakeAbsolutePath(path->uni, fullPath, MAX_PATH);
