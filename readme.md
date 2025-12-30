@@ -9,10 +9,6 @@
 </div>
 
 <p align="center">
-Android is currently broken but will have support later on.
-</p>
-
-<p align="center">
 Massive thanks to Hexcode, root & SuperZMax for helping me out and being such awesome people
 </p>
 
