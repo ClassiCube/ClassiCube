@@ -76,7 +76,7 @@ jobs:
           
           cd $ROOT_DIR/android/app/src/main
           # get debug signing key
-          echo -n "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > debug.keystore
+          echo -n "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > debug.keystore
           
           # compile the multiple .class files into one .dex file
           $TOOLS_ROOT/dx --dex --output=classes.dex ./obj
