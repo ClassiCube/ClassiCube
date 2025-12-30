@@ -20,6 +20,8 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 
 <a href="https://github.com/Peeguah/Velocity/actions/workflows/build_mac64.yml">Macos</a>
 
+<a href="https://github.com/Peeguah/Velocity/actions/workflows/build_android.yml">Macos</a>
+
 ## Credits
 
 - [@impresson](https://www.github.com/impresson)
