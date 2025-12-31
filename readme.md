@@ -12,7 +12,8 @@
 Massive thanks to Hexcode, root & SuperZMax for helping me out and being such awesome people
 </p>
 
-## Downloads (click the top one to download)
+## Downloads (click the top workflow to download)
+<!-- TODO ADD PROPER INSTRUCTIONS FOR 7 YEAR OLDS -->
 
 <a href="https://github.com/Peeguah/Velocity/actions/workflows/build_windows.yml">Windows</a>
 
