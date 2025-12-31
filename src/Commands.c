@@ -1138,7 +1138,7 @@ static void HighJumpCommand_Execute(const cc_string* args, int argsCount) {
 	float JumpHeight;
 
 	if (argsCount != 1) {
-		Chat_AddRaw("&cUsage: /client gravity <gravity> Default is 0.08");
+		Chat_AddRaw("&cUsage: /client highjump <height> Default is 0.42");
 		return;
 	}
 
