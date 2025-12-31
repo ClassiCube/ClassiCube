@@ -1,7 +1,7 @@
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_TERMINAL
 #include "_WindowBase.h"
-#include "String.h"
+#include "String_.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Options.h"

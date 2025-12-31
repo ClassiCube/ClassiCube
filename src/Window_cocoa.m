@@ -7,7 +7,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Bitmap.h"
-#include "String.h"
+#include "String_.h"
 #include "Options.h"
 #import  <Foundation/Foundation.h>
 #import  <AppKit/AppKit.h>

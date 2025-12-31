@@ -2,7 +2,7 @@
 #include "../Constants.h"
 #include "../Errors.h"
 #include "../Funcs.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Platform.h"
 #include "../Window.h"
 #include "../Platform.h"
@@ -210,7 +210,7 @@ void Java_DecodeString(JNIEnv* env, jstring str, cc_string* dst) {
 	jsize len;
 	if (!str) return;
 
-	src = (*env)->GetStringChars(env,  str, NULL);
+	src = (*env)->GetString_.hars(env,  str, NULL);
 	len = (*env)->GetStringLength(env, str);
 	String_AppendUtf16(dst, src, len * 2);
 	(*env)->ReleaseStringChars(env, str, src);

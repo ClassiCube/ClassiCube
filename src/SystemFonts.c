@@ -1,6 +1,6 @@
 #include "SystemFonts.h"
 #include "Drawer2D.h"
-#include "String.h"
+#include "String_.h"
 #include "Funcs.h"
 #include "Platform.h"
 #include "ExtMath.h"

@@ -1,5 +1,5 @@
 #include "Graphics.h"
-#include "String.h"
+#include "String_.h"
 #include "Platform.h"
 #include "Funcs.h"
 #include "Game.h"

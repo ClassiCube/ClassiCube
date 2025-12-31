@@ -1,5 +1,5 @@
 #include "Utils.h"
-#include "String.h"
+#include "String_.h"
 #include "Bitmap.h"
 #include "Platform.h"
 #include "Stream.h"

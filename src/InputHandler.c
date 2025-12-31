@@ -1,6 +1,6 @@
 #include "InputHandler.h"
 #include "Input.h"
-#include "String.h"
+#include "String_.h"
 #include "Event.h"
 #include "Funcs.h"
 #include "Options.h"

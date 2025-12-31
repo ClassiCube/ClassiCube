@@ -5,7 +5,7 @@ extern "C" {
 #include "Errors.h"
 #include "Platform.h"
 #include "Logger.h"
-#include "String.h"
+#include "String_.h"
 #include "Stream.h"
 #include "ExtMath.h"
 #include "SystemFonts.h"

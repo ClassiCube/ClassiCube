@@ -2,7 +2,7 @@
 #include "Errors.h"
 
 #if CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
-#include "String.h"
+#include "String_.h"
 #include "Certs.h"
 #include "../third_party/bearssl/bearssl.h"
 #include "../misc/certs/certs.h"

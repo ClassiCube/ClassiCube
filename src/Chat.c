@@ -1,6 +1,6 @@
 #include "Chat.h"
 #include "Commands.h"
-#include "String.h"
+#include "String_.h"
 #include "Stream.h"
 #include "Event.h"
 #include "Game.h"
