@@ -171,17 +171,17 @@ static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, fl
 
 	/* When standing on the ground, velocity.y is -0.08 (-gravity) */
 	/* So add 0.08 to counteract that, so that vel is 0 when standing on ground */
-	vel = gravity + Math_Lerp(p->OldVelocity.y, e->Velocity.y, t);
-	if (!NoCamGravity_enabled) {
+	if (!NoCamGravity_enabled) vel = gravity + Math_Lerp(p->OldVelocity.y, e->Velocity.y, t);
+	if (NoCamGravity_enabled) vel = gravity = 0.0f;
 		fall = -vel * 0.05f * velTiltStrength / velTiltScale;
+
 	if (fall > 0.5f) {
 			fall = 0.5f;
-		}
 	}
 
 	Matrix_RotateX(&velX, fall);
 	Matrix_MulBy(&Camera.TiltM, &velX);
-	if (!Game_ClassicMode) Camera.TiltPitch = fall;
+	if (!Game_ClassicMode && !NoCamGravity_enabled) Camera.TiltPitch = fall;
 }
 
 
