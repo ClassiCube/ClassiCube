@@ -445,7 +445,7 @@ static void TouchMore_Chat(void* s, void* w) {
 	ChatScreen_OpenInput(&String_Empty);
 }
 
-static void TouchForeHax(void* s, void* w) {
+static void TouchForceHax(void* s, void* w) {
 	ForceHax_enabled = !ForceHax_enabled;
 }
 
