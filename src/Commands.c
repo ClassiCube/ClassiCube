@@ -910,7 +910,7 @@ static void ReachCommand_Execute(const cc_string* args, int argsCount) {
 
     float reach;
     if (!Convert_ParseFloat(args, &reach) || reach < 1.0f || reach > 1024.0f) {
-        Chat_AddRaw("&cInvalid distance. Must be between 1 and 1204.");
+        Chat_AddRaw("&cInvalid distance. Must be between 1 and 1024.");
         return;
     }
 
