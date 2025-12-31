@@ -2,7 +2,7 @@
 #include "../Constants.h"
 #include "../Errors.h"
 #include "../Funcs.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Platform.h"
 #include "../Window.h"
 #include "../Platform.h"

@@ -1,7 +1,7 @@
 #include "Protocol.h"
 #include "Game.h"
 #ifdef CC_BUILD_NETWORKING
-#include "String.h"
+#include "String_.h"
 #include "Deflate.h"
 #include "Server.h"
 #include "Stream.h"

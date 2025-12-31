@@ -1,6 +1,6 @@
 #include "LScreens.h"
 #ifndef CC_DISABLE_LAUNCHER
-#include "String.h"
+#include "String_.h"
 #include "LWidgets.h"
 #include "LWeb.h"
 #include "Launcher.h"

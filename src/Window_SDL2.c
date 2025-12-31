@@ -3,7 +3,7 @@
 #undef CC_BUILD_EGL /* eglCreateWindowSurface can't use an SDL window */
 #include "_WindowBase.h"
 #include "Graphics.h"
-#include "String.h"
+#include "String_.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"

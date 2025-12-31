@@ -2,7 +2,7 @@
 #include "Errors.h"
 
 #if CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
-#include "String.h"
+#include "String_.h"
 #include "Certs.h"
 #include "../third_party/bearssl/bearssl.h"
 #include "../misc/certs/certs.h"
@@ -53,13 +53,9 @@ static unsigned x509_maybe_skip_verify(unsigned r) {
 	/* User selected to not care about certificate authenticity */
 	if (r == BR_ERR_X509_NOT_TRUSTED && !_verifyCerts) return 0;
 
-	/* It's fairly common for RTC on older consoles to not be set correctly */
+	/* It's fairly common for RTC on older console systems to not be set correctly */
 #ifdef CC_BUILD_CONSOLE
-	if (r != BR_ERR_X509_EXPIRED) return r;
-
-	cc_uint64 cur = DateTime_CurrentUTC();
-	/* Time earlier than 19 Sep 2025 usually mean an improperly calibrated RTC */
-	if (cur < 63893864669ull) return 0;
+	if (r == BR_ERR_X509_EXPIRED) return 0;
 #endif
 
 	return r;

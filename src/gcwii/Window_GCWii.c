@@ -3,7 +3,7 @@
 #include "../Input.h"
 #include "../InputHandler.h"
 #include "../Event.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"

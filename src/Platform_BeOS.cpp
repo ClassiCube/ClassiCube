@@ -2,7 +2,7 @@
 #if defined CC_BUILD_BEOS || defined CC_BUILD_HAIKU
 extern "C" {
 #include "Platform.h"
-#include "String.h"
+#include "String_.h"
 #include "Funcs.h"
 #include "Utils.h"
 }

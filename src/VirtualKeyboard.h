@@ -3,7 +3,7 @@
 #include "Drawer2D.h"
 #include "Event.h"
 #include "ExtMath.h"
-#include "String.h"
+#include "String_.h"
 #include "Input.h"
 #include "Utils.h"
 #include "LBackend.h"

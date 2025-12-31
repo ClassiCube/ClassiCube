@@ -13,7 +13,7 @@ void Certs_AppendCert(struct X509CertContext* ctx, const void* data, int len) { 
 void Certs_FinishCert(struct X509CertContext* ctx) { }
 #else
 #include "Platform.h"
-#include "String.h"
+#include "String_.h"
 #include "Stream.h"
 
 void Certs_BeginCert( struct X509CertContext* ctx, int size) {

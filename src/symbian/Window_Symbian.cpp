@@ -28,7 +28,7 @@ extern "C" {
 #include "_WindowBase.h"
 #include "Errors.h"
 #include "Logger.h"
-#include "String.h"
+#include "String_.h"
 #include "Gui.h"
 #include "Graphics.h"
 #include "Game.h"

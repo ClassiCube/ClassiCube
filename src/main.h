@@ -1,6 +1,6 @@
 #ifndef CC_MAIN_H
 #define CC_MAIN_H
-#include "String.h"
+#include "String_.h"
 /* Utility constants and methods for command line arguments
    Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
