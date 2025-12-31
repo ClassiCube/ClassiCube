@@ -47,4 +47,5 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 - Fastclimb (ropes only)
 - Step
 - NoclickDelay
+- NoCamGravity
 <!--TODO Move this into a doc or a wiki -->

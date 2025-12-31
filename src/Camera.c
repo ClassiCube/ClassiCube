@@ -14,6 +14,7 @@
 #include "Platform.h"
 #include "Protocol.h"
 #include "Commands.h"
+#include "EntityComponents.h"
 
 struct _CameraData Camera;
 static struct RayTracer cameraClipPos;
@@ -135,6 +136,9 @@ static void PerspectiveCamera_UpdateMouse(struct LocalPlayer* p, float delta) {
 }
 
 static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, float velTiltScale) {
+	float gravity;
+	gravity = LocalPlayer_Instances[0].Physics.gravity;
+
 	struct Entity* e = &p->Base;
 	struct Matrix tiltY, velX;
 
@@ -166,8 +170,13 @@ static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, fl
 
 	/* When standing on the ground, velocity.y is -0.08 (-gravity) */
 	/* So add 0.08 to counteract that, so that vel is 0 when standing on ground */
-	vel  = 0.08f + Math_Lerp(p->OldVelocity.y, e->Velocity.y, t);
-	fall = -vel * 0.05f * velTiltStrength / velTiltScale;
+	vel  = gravity + Math_Lerp(p->OldVelocity.y, e->Velocity.y, t);
+	if (!NoCamGravity_enabled) {
+		fall = -vel * 0.05f * velTiltStrength / velTiltScale;
+	if (fall > 0.5f) {
+			fall = 0.5f;
+		}
+	}
 
 	Matrix_RotateX(&velX, fall);
 	Matrix_MulBy(&Camera.TiltM, &velX);

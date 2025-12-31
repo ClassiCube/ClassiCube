@@ -788,7 +788,7 @@ static const struct EntityVTABLE localPlayer_VTABLE = {
 };
 static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	struct HacksComp* hacks = &p->Hacks;
-
+	
 	Entity_Init(&p->Base);
 	Entity_SetName(&p->Base, &Game_Username);
 	Entity_SetSkin(&p->Base, &Game_Username);

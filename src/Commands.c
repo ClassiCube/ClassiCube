@@ -32,6 +32,9 @@ cc_bool ForceHax_enabled = false;
 //NoPush Toggle
 cc_bool NoPush_enabled = false;
 
+//NoPush Toggle
+cc_bool NoCamGravity_enabled = false;
+
 //Speed multiplier
 float Speed = 0.0f;
 
@@ -860,6 +863,23 @@ static struct ChatCommand NoPushCommand = {
 };
 
 /*########################################################################################################################*
+*------------------------------------------------------NoCamGravity----------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoCamGravityCommand_Execute(const cc_string* args, int argsCount) {
+    NoCamGravity_enabled = !NoCamGravity_enabled;
+    Chat_AddRaw("Toggled NoCamGravity.");
+}
+
+static struct ChatCommand NoCamGravityCommand = {
+	"NoCamGravity", NoCamGravityCommand_Execute, 0,
+	{
+		"&a/client NoCamGravity",
+		"&eToggles NoCamGravity.",
+	}
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------ForceHax-----------------------------------------------------------*
 *#########################################################################################################################*/
 
@@ -1142,6 +1162,7 @@ static void OnInit(void) {
 	Commands_Register(&FastClimbCommand);
 	Commands_Register(&StepCommand);
 	Commands_Register(&NoClickDelayCommand);
+	Commands_Register(&NoCamGravityCommand);
 }
 
 static void OnFree(void) {
