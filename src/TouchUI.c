@@ -624,18 +624,20 @@ void TouchScreen_Refresh(void) {
 	TouchScreen_InitButtons(s);
 	Gui_Refresh((struct Screen*)s);
 }
-static void TouchScreen_HacksChanged(void* s) { 
-	struct HacksComp* hacks = &p->Hacks;
-	struct LocalPlayer* p = Entities.CurPlayer;
-		FlyEnabled   = ((p->Hacks.CanFly && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
-		NoclipEnabled    = ((p->Hacks.CanNoclip && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
-		SpeedEnabled     = ((p->Hacks.CanSpeed && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
-		HalfSpeedEnabled = ((p->Hacks.CanSpeed && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
-		ThirdPersonEnabled = ((p->Hacks.CanThirdPerson && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
-		RespawnEnabled   = ((p->Hacks.CanRespawn && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
-		SetSpawnEnabled  = ((p->Hacks.CanRespawn && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+static void TouchScreen_HacksChanged(void* s) {
+    struct LocalPlayer* p = Entities.CurPlayer;
+    struct HacksComp* hacks = &p->Hacks;
 
-	TouchScreen_Refresh(); }
+    cc_bool FlyEnabled         = (hacks->CanFly && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+    cc_bool NoclipEnabled      = (hacks->CanNoclip && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+    cc_bool SpeedEnabled       = (hacks->CanSpeed && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+    cc_bool HalfSpeedEnabled   = (hacks->CanSpeed && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled); // adjust if you have CanHalfSpeed
+    cc_bool ThirdPersonEnabled = (hacks->CanUseThirdPerson && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+    cc_bool RespawnEnabled     = (hacks->CanRespawn && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+    cc_bool SetSpawnEnabled    = (hacks->CanRespawn && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+
+	TouchScreen_Refresh();
+}
 
 static void TouchScreen_ContextLost(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
