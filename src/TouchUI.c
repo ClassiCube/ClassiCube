@@ -628,13 +628,13 @@ static void TouchScreen_HacksChanged(void* s) {
     struct LocalPlayer* p = Entities.CurPlayer;
     struct HacksComp* hacks = &p->Hacks;
 
-    cc_bool FlyEnabled         = (hacks->CanFly && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
-    cc_bool NoclipEnabled      = (hacks->CanNoclip && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
-    cc_bool SpeedEnabled       = (hacks->CanSpeed && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
-    cc_bool HalfSpeedEnabled   = (hacks->CanSpeed && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled); // adjust if you have CanHalfSpeed
-    cc_bool ThirdPersonEnabled = (hacks->CanUseThirdPerson && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
-    cc_bool RespawnEnabled     = (hacks->CanRespawn && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
-    cc_bool SetSpawnEnabled    = (hacks->CanRespawn && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+	FlyEnabled         = (hacks->CanFly && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+	NoclipEnabled      = (hacks->CanNoclip && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+	SpeedEnabled       = (hacks->CanSpeed && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+	HalfSpeedEnabled   = (hacks->CanSpeed && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled); // adjust if you have CanHalfSpeed
+	ThirdPersonEnabled = (hacks->CanUseThirdPerson && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+	RespawnEnabled     = (hacks->CanRespawn && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
+	SetSpawnEnabled    = (hacks->CanRespawn && hacks->Enabled) || (hacks->Enabled && ForceHax_enabled);
 
 	TouchScreen_Refresh();
 }
