@@ -19,7 +19,7 @@ Instructions:
 
 <img src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/Downloads.png" alt="Click the top one to download">
 
-src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/Downloads2.png" alt="Click the top one to download">
+<img src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/Downloads2.png" alt="Click the top one to download">
 
 **PUT THE APP IN YOUR CLASSICUBE FOLDER**
 
@@ -59,3 +59,4 @@ src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/
 - NoCamGravity
 - Highjump
 <!--TODO Move this into a doc or a wiki -->
+
