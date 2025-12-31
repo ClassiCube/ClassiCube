@@ -914,7 +914,7 @@ static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	if (Gui.InputGrab) return false;
 	
-	if (p->Hacks.Enabled && ForceHax_enabled) {
+	if ((p->Hacks.CanRespawn && p->Hacks.Enabled) || (ForceHax_enabled && p->Hacks.Enabled)) {
 		LocalPlayer_DoRespawn(p);
 		return true;
 	} else if (!p->_warnedRespawn) {
