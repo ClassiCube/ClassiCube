@@ -624,7 +624,16 @@ void TouchScreen_Refresh(void) {
 	TouchScreen_InitButtons(s);
 	Gui_Refresh((struct Screen*)s);
 }
-static void TouchScreen_HacksChanged(void* s) { TouchScreen_Refresh(); }
+static void TouchScreen_HacksChanged(void* s) { 
+	struct HacksComp* hacks = &p->Hacks;
+	static cc_bool FlyEnabled   = ((p->Hacks.CanFly && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+static cc_bool NoclipEnabled    = ((p->Hacks.CanNoclip && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+static cc_bool SpeedEnabled     = ((p->Hacks.CanSpeed && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+static cc_bool HalfSpeedEnabled = ((p->Hacks.CanSpeed && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+static cc_bool ThirdPersonEnabled = ((p->Hacks.CanThirdPerson && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+static cc_bool RespawnEnabled   = ((p->Hacks.CanRespawn && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+static cc_bool SetSpawnEnabled  = ((p->Hacks.CanRespawn && p->Hacks.Enabled) || (p->Hacks.Enabled && ForceHax_enabled));
+	TouchScreen_Refresh(); }
 
 static void TouchScreen_ContextLost(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
