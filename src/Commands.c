@@ -865,7 +865,9 @@ static struct ChatCommand NoPushCommand = {
 
 static void ForceHaxCommand_Execute(const cc_string* args, int argsCount) {
     ForceHax_enabled = !ForceHax_enabled;
+	#ifdef CC_BUILD_TOUCH
 	Event_RaiseVoid(&UserEvents.HackPermsChanged);
+	#endif
     Chat_AddRaw("Toggled ForceHax.");
 }
 
