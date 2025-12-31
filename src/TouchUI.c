@@ -43,6 +43,16 @@
 #define ONSCREEN_BTN_SWITCH    (1 << 12)
 #define ONSCREEN_MAX_BTNS 13
 
+
+// Checks for buttons
+static cc_bool FlyEnabled       = false;
+static cc_bool NoclipEnabled    = false;
+static cc_bool SpeedEnabled     = false;
+static cc_bool HalfSpeedEnabled = false;
+static cc_bool ThirdPersonEnabled = false;
+static cc_bool RespawnEnabled   = false;
+static cc_bool SetSpawnEnabled  = false;
+
 static int GetOnscreenButtons(void) {
 	#define DEFAULT_SP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED)
 	#define DEFAULT_MP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED | ONSCREEN_BTN_CHAT)
@@ -541,19 +551,19 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 }
 
 static struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
-	{ "Chat",      0,                 0,0, TouchScreen_ChatClick },
-	{ "Tablist",   0,                 0,0, TouchScreen_TabClick },
-	{ "Respawn",   BIND_RESPAWN,      0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanRespawn },
-	{ "Set spawn", BIND_SET_SPAWN,    0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanRespawn },
-	{ "Fly",       BIND_FLY,          0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanFly     },
-	{ "Noclip",    BIND_NOCLIP,       0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanNoclip  },
-	{ "Speed",     BIND_SPEED,        0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanSpeed   },
-	{ "\xabSpeed", BIND_HALF_SPEED,   0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanSpeed   },
-	{ "Camera",    BIND_THIRD_PERSON, 0,0, TouchScreen_BindClick, &LocalPlayer_Instances[0].Hacks.CanUseThirdPerson },
-	{ "Delete",    BIND_DELETE_BLOCK, 0,0, TouchScreen_BindClick },
-	{ "Pick",      BIND_PICK_BLOCK,   0,0, TouchScreen_BindClick },
-	{ "Place",     BIND_PLACE_BLOCK,  0,0, TouchScreen_BindClick },
-	{ "Hotbar",    0,                 0,0, TouchScreen_SwitchClick }
+    { "Chat",      0,                 0,0, TouchScreen_ChatClick },
+    { "Tablist",   0,                 0,0, TouchScreen_TabClick },
+    { "Respawn",   BIND_RESPAWN,      0,0, TouchScreen_BindClick, &RespawnEnabled },
+    { "Set spawn", BIND_SET_SPAWN,    0,0, TouchScreen_BindClick, &SetSpawnEnabled },
+    { "Fly",       BIND_FLY,          0,0, TouchScreen_BindClick, &FlyEnabled },
+    { "Noclip",    BIND_NOCLIP,       0,0, TouchScreen_BindClick, &NoclipEnabled },
+    { "Speed",     BIND_SPEED,        0,0, TouchScreen_BindClick, &SpeedEnabled },
+    { "\xabSpeed", BIND_HALF_SPEED,   0,0, TouchScreen_BindClick, &HalfSpeedEnabled },
+    { "Camera",    BIND_THIRD_PERSON, 0,0, TouchScreen_BindClick, &ThirdPersonEnabled },
+    { "Delete",    BIND_DELETE_BLOCK, 0,0, TouchScreen_BindClick },
+    { "Pick",      BIND_PICK_BLOCK,   0,0, TouchScreen_BindClick },
+    { "Place",     BIND_PLACE_BLOCK,  0,0, TouchScreen_BindClick },
+    { "Hotbar",    0,                 0,0, TouchScreen_SwitchClick }
 };
 static struct TouchButtonDesc normDescs[1] = {
 	{ "\x1E", BIND_JUMP,     50,  10, TouchScreen_BindClick }
