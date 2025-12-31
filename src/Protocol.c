@@ -121,17 +121,6 @@ static struct CpeExt* cpe_clientExtensions[] = {
 #endif
 };
 
-#ifdef LONGER_BBU
-#define BULK_MAX_CACHED_BLOCKS 2048
-#else
-#define BULK_MAX_CACHED_BLOCKS 256
-#endif
-static cc_int32 BBU_Indices[BULK_MAX_CACHED_BLOCKS];
-static BlockID BBU_Blocks[BULK_MAX_CACHED_BLOCKS];
-static int BBU_OverallCount = 0;
-static cc_bool BBU_ShouldPurgeOnTeleport = false;
-static cc_bool BBU_FinishedSequence = false;
-static void PurgeBBU();
 #define IsSupported(ext) (ext.serverVersion > 0)
 
 
@@ -811,11 +800,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint16 
 	update.yaw   = Math_Packed2Deg(*data++);
 	update.pitch = Math_Packed2Deg(*data++);
 
-	if (id == ENTITIES_SELF_ID) {
-		classic_receivedFirstPos = true;
-
-		if (BBU_FinishedSequence && BBU_ShouldPurgeOnTeleport) PurgeBBU();
-	}
+	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
 	UpdateLocation(id, &update);
 }
 
@@ -1310,69 +1295,64 @@ static void CPE_ExtAddEntity2(cc_uint8* data) {
 }
 
 #define BULK_MAX_BLOCKS 256
-#define BBU_SHOULD_CACHE 0x01
-#define BBU_SHOULD_PURGE_ON_TELEPORT 0x02
+#ifdef LONGER_BBU
+#define BULK_MAX_CACHED_BLOCKS 2048
+#else
+#define BULK_MAX_CACHED_BLOCKS 256
+#endif
 static void CPE_BulkBlockUpdate(cc_uint8* data) {
-	int i;
-	cc_uint8 strategy = 0;
-	if (IsSupported(longerBBU_Ext)) strategy = *data++;
-	int count = 1 + *data++;
+	static cc_int32 indices[BULK_MAX_CACHED_BLOCKS];
+	static BlockID blocks[BULK_MAX_CACHED_BLOCKS];
+	static int overallCount = 0;
+	int index, i;
+	int x, y, z;
+	int count;
+	cc_bool shouldCache = false;
+	if (IsSupported(longerBBU_Ext)) shouldCache = *data++;
+	count = 1 + *data++;
 
-	if (BBU_FinishedSequence) PurgeBBU();
-	if (strategy & BBU_SHOULD_PURGE_ON_TELEPORT) BBU_ShouldPurgeOnTeleport = true;
-	if (BBU_OverallCount + count > BULK_MAX_CACHED_BLOCKS) {
+	if (overallCount + count > BULK_MAX_CACHED_BLOCKS) {
 		static const cc_string title  = String_FromConst("Disconnected");
 		static const cc_string reason = String_FromConst("Server attempted to cache too many block updates");
 		
 		Game_Disconnect(&title, &reason); return;
 	}
 	for (i = 0; i < count; i++) {
-		BBU_Indices[BBU_OverallCount + i] = Stream_GetU32_BE(data); data += 4;
+		indices[overallCount + i] = Stream_GetU32_BE(data); data += 4;
 	}
 	data += (BULK_MAX_BLOCKS - count) * 4;
 	
 	for (i = 0; i < count; i++) {
-		BBU_Blocks[BBU_OverallCount + i] = data[i];
+		blocks[overallCount + i] = data[i];
 	}
 	data += BULK_MAX_BLOCKS;
 
 	if (IsSupported(extBlocks_Ext)) {
 		for (i = 0; i < count; i += 4) {
 			cc_uint8 flags = data[i >> 2];
-			BBU_Blocks[BBU_OverallCount + i + 0] |= (BlockID)((flags & 0x03) << 8);
-			BBU_Blocks[BBU_OverallCount + i + 1] |= (BlockID)((flags & 0x0C) << 6);
-			BBU_Blocks[BBU_OverallCount + i + 2] |= (BlockID)((flags & 0x30) << 4);
-			BBU_Blocks[BBU_OverallCount + i + 3] |= (BlockID)((flags & 0xC0) << 2);
+			blocks[overallCount + i + 0] |= (BlockID)((flags & 0x03) << 8);
+			blocks[overallCount + i + 1] |= (BlockID)((flags & 0x0C) << 6);
+			blocks[overallCount + i + 2] |= (BlockID)((flags & 0x30) << 4);
+			blocks[overallCount + i + 3] |= (BlockID)((flags & 0xC0) << 2);
 		}
 		data += BULK_MAX_BLOCKS / 4;
 	}
-	BBU_OverallCount += count;
+	overallCount += count;
 
-	if (strategy & BBU_SHOULD_CACHE) return;
-	BBU_FinishedSequence = true;
-	if (BBU_ShouldPurgeOnTeleport) return;
-	
-	PurgeBBU();
-}
+	if (shouldCache) return;
 
-static void PurgeBBU() {
-	int index, i;
-	int x, y, z;
-
-	for (i = 0; i < BBU_OverallCount; i++) {
-		index = BBU_Indices[i];
+	for (i = 0; i < overallCount; i++) {
+		index = indices[i];
 		if (index < 0 || index >= World.Volume) continue;
 		World_Unpack(index, x, y, z);
 
 #ifdef EXTENDED_BLOCKS
-		Game_UpdateBlock(x, y, z, BBU_Blocks[i] % BLOCK_COUNT);
+		Game_UpdateBlock(x, y, z, blocks[i] % BLOCK_COUNT);
 #else
-		Game_UpdateBlock(x, y, z, BBU_Blocks[i]);
+		Game_UpdateBlock(x, y, z, blocks[i]);
 #endif
 	}
-	BBU_OverallCount = 0;
-	BBU_ShouldPurgeOnTeleport = false;
-	BBU_FinishedSequence = false;
+	overallCount = 0;
 }
 
 static void CPE_SetTextColor(cc_uint8* data) {
