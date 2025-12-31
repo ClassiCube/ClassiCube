@@ -458,7 +458,7 @@ static const struct SimpleButtonDesc touchMore_btns[TOUCHMORE_BTNS] = {
 	{  102,   0, "Fog",        TouchMore_Fog    },
 	{    0,  50, "Controls",   TouchMore_Ctrls  },
 	{    0, 100, "Main menu",  TouchMore_Menu   },
-	{    0, 150, "Forcehax",   TouchForcehax    }
+	{    0, 150, "Forcehax",   TouchForceHax    }
 };
 
 static void TouchMoreScreen_ContextRecreated(void* screen) {
