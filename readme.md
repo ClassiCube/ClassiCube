@@ -58,5 +58,6 @@ Instructions:
 - NoclickDelay
 - NoCamGravity
 - Highjump
+- NoReconnectDelay
 <!--TODO Move this into a doc or a wiki -->
 
