@@ -21,7 +21,7 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 <a href="https://github.com/Peeguah/Velocity/actions/workflows/build_mac64.yml">Macos</a>
 
 <a href="https://github.com/Peeguah/Velocity/actions/workflows/build_android.yml">Android</a>
-<p>WARNING: You may need to uninstall classicube if it doesnt update. IT WILL DELETE ALL APP DATA YOU HAVE BEEN WARNED!!!!</p>
+<p>ANDROID WARNING: You may need to uninstall classicube if it doesnt update. IT WILL DELETE ALL APP DATA YOU HAVE BEEN WARNED!!!!</p>
 
 
 ## Credits
