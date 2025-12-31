@@ -235,18 +235,18 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 }
 
 void HacksComp_Update(struct HacksComp* hacks) {
-	if (!hacks->CanFly || !hacks->Enabled) {
+	if ((!hacks->CanFly && !ForceHax_enabled) || !hacks->Enabled) {
 		HacksComp_SetFlying(hacks, false); 
 		hacks->FlyingDown = false; hacks->FlyingUp = false;
 	}
-	if (!hacks->CanNoclip || !hacks->Enabled) {
+	if ((!hacks->CanNoclip && !ForceHax_enabled) || !hacks->Enabled) {
 		HacksComp_SetNoclip(hacks, false);
 	}
-	if (!hacks->CanSpeed || !hacks->Enabled) {
+	if ((!hacks->CanSpeed && ForceHax_enabled) || !hacks->Enabled) {
 		hacks->Speeding = false; hacks->HalfSpeeding = false;
 	}
 
-	hacks->CanDoubleJump = hacks->Enabled && hacks->CanSpeed;
+	hacks->CanDoubleJump = ((hacks->Enabled && hacks->CanDoubleJump) || (hacks->Enabled && ForceHax_enabled));
 	Event_RaiseVoid(&UserEvents.HackPermsChanged);
 }
 
