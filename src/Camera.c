@@ -136,8 +136,9 @@ static void PerspectiveCamera_UpdateMouse(struct LocalPlayer* p, float delta) {
 }
 
 static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, float velTiltScale) {
+	struct HacksComp* hacks = &p->Hacks;
 	float gravity;
-	gravity = LocalPlayer_Instances[0].Physics.gravity;
+	gravity = p->Physics.gravity;
 
 	struct Entity* e = &p->Base;
 	struct Matrix tiltY, velX;
