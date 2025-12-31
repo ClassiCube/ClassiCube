@@ -4,7 +4,7 @@
 #include "Drawer2D.h"
 #include "Window.h"
 #include "LWidgets.h"
-#include "String.h"
+#include "String_.h"
 #include "Gui.h"
 #include "Drawer2D.h"
 #include "Launcher.h"

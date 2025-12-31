@@ -135,7 +135,7 @@
     <ClInclude Include="Platform.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
-    <ClInclude Include="String.h">
+    <ClInclude Include="String_.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="BlockID.h">

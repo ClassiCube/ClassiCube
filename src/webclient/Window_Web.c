@@ -1,7 +1,7 @@
 #include "../Core.h"
 #include "../_WindowBase.h"
 #include "../Game.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../ExtMath.h"
 #include "../Bitmap.h"

@@ -1,7 +1,7 @@
 #include "Resources.h"
 #ifdef CC_BUILD_RESOURCES
 #include "Funcs.h"
-#include "String.h"
+#include "String_.h"
 #include "Constants.h"
 #include "Deflate.h"
 #include "Stream.h"

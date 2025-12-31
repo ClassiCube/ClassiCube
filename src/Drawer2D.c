@@ -1,5 +1,5 @@
 #include "Drawer2D.h"
-#include "String.h"
+#include "String_.h"
 #include "Graphics.h"
 #include "Funcs.h"
 #include "Platform.h"

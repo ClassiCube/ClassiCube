@@ -8,7 +8,7 @@ Eg. the webclient 'main' function loads IndexedDB, and when that has asynchronou
   then calls the 'web_main' callback - which actually runs ClassiCube
 */
 #include "Logger.h"
-#include "String.h"
+#include "String_.h"
 #include "Platform.h"
 #include "Window.h"
 #include "Constants.h"

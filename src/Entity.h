@@ -4,7 +4,7 @@
 #include "Physics.h"
 #include "Constants.h"
 #include "PackedCol.h"
-#include "String.h"
+#include "String_.h"
 CC_BEGIN_HEADER
 
 /* Represents an in-game entity.

@@ -1,7 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_WIN
 
-#include "String.h"
+#include "String_.h"
 #include "Stream.h"
 #include "SystemFonts.h"
 #include "Funcs.h"

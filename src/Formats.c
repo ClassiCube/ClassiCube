@@ -1,5 +1,5 @@
 #include "Formats.h"
-#include "String.h"
+#include "String_.h"
 #include "World.h"
 #include "Deflate.h"
 #include "Block.h"

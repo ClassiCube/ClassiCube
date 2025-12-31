@@ -1,5 +1,5 @@
 #include "Platform.h"
-#include "String.h"
+#include "String_.h"
 #include "Logger.h"
 #include "Constants.h"
 #include "Errors.h"

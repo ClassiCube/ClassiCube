@@ -435,7 +435,7 @@
     <ClInclude Include="ExtMath.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Platform.h" />
-    <ClInclude Include="String.h" />
+    <ClInclude Include="String_.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VirtualKeyboard.h" />
