@@ -1130,6 +1130,35 @@ static struct ChatCommand StepCommand = {
 	}
 };
 
+/*########################################################################################################################*
+*---------------------------------------------------------High Jump-------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void HighJumpCommand_Execute(const cc_string* args, int argsCount) {
+	float JumpHeight;
+
+	if (argsCount != 1) {
+		Chat_AddRaw("&cUsage: /client gravity <gravity> Default is 0.08");
+		return;
+	}
+
+	if (!Convert_ParseFloat(args, &JumpHeight)) {
+		Chat_Add1("&cInvalid number!", NULL);
+		return;
+	}
+
+	LocalPlayer_Instances[0].Physics.JumpVel = JumpHeight;
+
+	Chat_AddRaw("&eJump Height set");
+}
+
+static struct ChatCommand HighJumpCommand = {
+	"HighJump", HighJumpCommand_Execute, 0,
+	{
+		"&a/client HighJump <height>",
+		"&eSets the gravity value. Default is 0.42.",
+	}
+};
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -1163,6 +1192,7 @@ static void OnInit(void) {
 	Commands_Register(&StepCommand);
 	Commands_Register(&NoClickDelayCommand);
 	Commands_Register(&NoCamGravityCommand);
+	Commands_Register(&HighJumpCommand);
 }
 
 static void OnFree(void) {
@@ -1182,3 +1212,4 @@ struct IGameComponent Commands_Component = {
 // Roadmap: try to get every variable into "Velocity.Variable"
 // Arraylist
 // Make step height higher
+//Shorten forcehax logic as im dumb

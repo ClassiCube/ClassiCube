@@ -244,8 +244,10 @@ static Vec2 ThirdPersonCamera_GetOrientation(void) {
 }
 
 static float ThirdPersonCamera_GetZoom(struct LocalPlayer* p) {
+	struct HacksComp* hacks = &p->Hacks;
 	float dist = cam_isForwardThird ? dist_forward : dist_third;
 	/* Don't allow zooming out when -fly */
+	if ((hacks->CanUseThirdPerson || ForceHax_enabled) && ForceHax_enabled) return dist;
 	if (dist > DEF_ZOOM) dist = DEF_ZOOM;
 	return dist;
 }
