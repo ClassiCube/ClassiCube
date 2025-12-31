@@ -444,6 +444,11 @@ static void TouchMore_Chat(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	ChatScreen_OpenInput(&String_Empty);
 }
+
+static void TouchForeHax(void* s, void* w) {
+	ForceHax_enabled = !ForceHax_enabled;
+}
+
 static void TouchMore_Fog(void* s, void* w) { Game_CycleViewDistance(); }
 
 static const struct SimpleButtonDesc touchMore_btns[TOUCHMORE_BTNS] = {
@@ -452,7 +457,8 @@ static const struct SimpleButtonDesc touchMore_btns[TOUCHMORE_BTNS] = {
 	{  102, -50, "Chat",       TouchMore_Chat   },
 	{  102,   0, "Fog",        TouchMore_Fog    },
 	{    0,  50, "Controls",   TouchMore_Ctrls  },
-	{    0, 100, "Main menu",  TouchMore_Menu   }
+	{    0, 100, "Main menu",  TouchMore_Menu   },
+	{    0, 150, "Forcehax",   TouchForcehax    }
 };
 
 static void TouchMoreScreen_ContextRecreated(void* screen) {
