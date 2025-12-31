@@ -14,7 +14,14 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 
 ## Downloads (click the top workflow to download)
 <!-- TODO ADD PROPER INSTRUCTIONS FOR 7 YEAR OLDS -->
-src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/Downloads.png" alt="Velocity Logo">
+
+Instructions:
+
+<img src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/Downloads.png" alt="Click the top one to download">
+
+src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/Downloads2.png" alt="Click the top one to download">
+
+**PUT THE APP IN YOUR CLASSICUBE FOLDER**
 
 <a href="https://github.com/Peeguah/Velocity/actions/workflows/build_windows.yml">Windows</a>
 
