@@ -14,6 +14,7 @@ Massive thanks to Hexcode, root & SuperZMax for helping me out and being such aw
 
 ## Downloads (click the top workflow to download)
 <!-- TODO ADD PROPER INSTRUCTIONS FOR 7 YEAR OLDS -->
+src="https://raw.githubusercontent.com/Peeguah/Velocity/master/.github/Pictures/Downloads.png" alt="Velocity Logo">
 
 <a href="https://github.com/Peeguah/Velocity/actions/workflows/build_windows.yml">Windows</a>
 
