@@ -832,7 +832,7 @@ static struct ChatCommand BlockEditCommand = {
 *#########################################################################################################################*/
 
 static void InfoCommand_Execute(const cc_string* args, int argsCount) {
-    Chat_AddRaw("&4[&cVelocty Client&4] &eby &aimpresson");
+    Chat_AddRaw("&4[&cVelocity Client&4] &eby &aimpresson");
 	Chat_AddRaw("https://github.com/Peeguah/Velocity");
 	Chat_AddRaw("https://discord.gg/P7nyMYEavw");
 }
