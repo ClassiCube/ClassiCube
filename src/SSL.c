@@ -53,11 +53,6 @@ static unsigned x509_maybe_skip_verify(unsigned r) {
 	/* User selected to not care about certificate authenticity */
 	if (r == BR_ERR_X509_NOT_TRUSTED && !_verifyCerts) return 0;
 
-	/* It's fairly common for RTC on older console systems to not be set correctly */
-#ifdef CC_BUILD_CONSOLE
-	if (r == BR_ERR_X509_EXPIRED) return 0;
-#endif
-
 	return r;
 }
 
@@ -121,17 +116,29 @@ static void InjectEntropy(SSLContext* ctx) {
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
 
-static void SetCurrentTime(SSLContext* ctx) {
+static int ssl_time_check_callback(void* ctx,
+	uint32_t not_before_days, uint32_t not_before_secs,
+	uint32_t not_after_days,  uint32_t not_after_secs) 
+{
+#ifdef CC_BUILD_CONSOLE
+	/* It's fairly common for RTC on older console systems to not be set correctly */
+	return 0;
+#else
 	cc_uint64 cur = DateTime_CurrentUTC();
 	uint32_t days = (uint32_t)(cur / 86400) + 366;
 	uint32_t secs = (uint32_t)(cur % 86400);
-		
-	br_x509_minimal_set_time(&ctx->xc, days, secs);
-	/* This matches bearssl's default time calculation
+
+	/* This matches bearssl's default time calculation:
 		time_t x = time(NULL);
 		vd = (uint32_t)(x / 86400) + 719528;
 		vs = (uint32_t)(x % 86400);
-	 */
+	*/
+
+	if (days < not_before_days || (days == not_before_days && secs < not_before_secs)) return -1;
+	if (days > not_after_days  || (days == not_after_days  && secs > not_after_secs))  return  1;
+
+	return 0;
+#endif
 }
 
 static int sock_read(void* ctx_, unsigned char* buf, size_t len) {
@@ -175,7 +182,7 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	
 	br_ssl_client_init_full(&ctx->sc, &ctx->xc, TAs, TAs_NUM);
 	InjectEntropy(ctx);
-	SetCurrentTime(ctx);
+	br_x509_minimal_set_time_callback(&ctx->xc, NULL, ssl_time_check_callback);
 	ctx->socket = socket;
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);
