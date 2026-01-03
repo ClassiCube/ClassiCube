@@ -186,6 +186,8 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, unsigned* maskX
 	}
 }
 
+// Since can only address at byte level, each "byte" has two "4 bit" pixels in it
+// Therefore the calculation below is for "8 bit pixels", but is called with w divided by 2
 static CC_INLINE void TwiddleCalcFactors_Paletted(unsigned w, unsigned h, unsigned* maskX, unsigned* maskY) {
 	*maskX = 0b00001111; // 4 linear X bits
 	*maskY = 0b01110000; // 3 linear Y bits
@@ -232,16 +234,18 @@ static CC_INLINE void UploadPalettedTexture(struct Bitmap* bmp, int rowWidth, Bi
 	int src_w = bmp->width, src_h = bmp->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
-	TwiddleCalcFactors_Paletted(dst_w, dst_h, &maskX, &maskY);
+	TwiddleCalcFactors_Paletted(dst_w >> 1, dst_h, &maskX, &maskY);
 	
 	for (int y = 0; y < src_h; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * rowWidth;
 		X = 0;
 		
-		for (int x = 0; x < src_w; x++, src++)
+		for (int x = 0; x < src_w; x += 2, src += 2)
 		{
-			dst[X | Y] = FindInPalette(palette, pal_count, *src);
+			int pal0 = FindInPalette(palette, pal_count, src[0]);
+			int pal1 = FindInPalette(palette, pal_count, src[1]);
+			dst[X | Y] = pal0 | (pal1 << 4);
 
 			X = (X - maskX) & maskX;
 		}
@@ -290,14 +294,17 @@ typedef struct CCTexture_ {
 static_assert(sizeof(struct CCTexture_) % 16 == 0, "Texture struct size must be 16 byte aligned");
 #define ALIGNUP(val, alignment) (((val) + ((alignment) - 1)) & -(alignment))
 
-static void* Texture_PixelsAddr(CCTexture* tex) {
+static CC_INLINE void* Texture_PixelsAddr(CCTexture* tex) {
 	if (!tex->blocks) return tex->pixels;
 
 	char* texmem_start = (char*)sceGeEdramGetAddr() + ALL_BUFFERS_SIZE;
 	return texmem_start + (tex->base * TEXMEM_BLOCK_SIZE);
 }
 
-static int TOTAL = 0;
+static CC_INLINE int Texture_PixelsSize(int w, int h, int paletted) {
+	return paletted ? (w * h / 2) : (w * h * BITMAPCOLOR_SIZE);
+}
+
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int dst_w = Math_NextPowOf2(bmp->width);
 	int dst_h = Math_NextPowOf2(bmp->height);
@@ -309,11 +316,10 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		pal_count = CalcPalette(palette, bmp, rowWidth);
 	}
 
-	int size   = dst_w * dst_h * (pal_count ? 1 : BITMAPCOLOR_SIZE);
+	int size   = Texture_PixelsSize(dst_w, dst_h, pal_count > 0);
 	int blocks = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE);
 	int base   = blockalloc_alloc(tex_table, TEXMEM_MAX_BLOCKS, blocks);
 	CCTexture* tex;
-	TOTAL += size;
 
 	// Check if no room in VRAM
 	if (base == -1) {
@@ -347,7 +353,6 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	}
 
 	sceKernelDcacheWritebackInvalidateRange(addr, size);
-	//Platform_Log2("SIZE: %i,   %i", &TOTAL, &pal_count);
 	return tex;
 }
 
@@ -359,14 +364,14 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 
 	// TODO: Do line by line and only invalidate the actually changed parts of lines? harder with swizzling
 	// TODO: Invalidate full tex->size in case of very small textures?
-	sceKernelDcacheWritebackInvalidateRange(addr, (tex->width * tex->height) * 4);
+	int size = Texture_PixelsSize(tex->width, tex->height, false);
+	sceKernelDcacheWritebackInvalidateRange(addr, size);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = (CCTexture*)(*texId);
 	if (tex) {
     	blockalloc_dealloc(tex_table, tex->base, tex->blocks);
-		TOTAL -= (tex->width * tex->height) * (tex->paletted ? 1 : 4);
 		Mem_Free(tex);
 	}
 
@@ -382,7 +387,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	
 	if (tex->paletted) {
 		sceGuClutLoad(MAX_PAL_4BPP_ENTRIES/8, tex->palette); // "count" is in units of "8 entries"
-		sceGuTexMode(GU_PSM_T8, 0, 0, 1);
+		sceGuTexMode(GU_PSM_T4, 0, 0, 1);
 	} else {
 		sceGuTexMode(GU_PSM_8888, 0, 0, 1);
 	}
