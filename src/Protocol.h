@@ -3,6 +3,8 @@
 #include "Vectors.h"
 CC_BEGIN_HEADER
 
+extern int CPE_MaxViewDistance;
+
 /* 
 Implements network protocols for original classic, CPE, and WoM textures
 Copyright 2014-2025 ClassiCube | Licensed under BSD-3

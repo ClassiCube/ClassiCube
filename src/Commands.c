@@ -885,8 +885,7 @@ static struct ChatCommand NoCamGravityCommand = {
 
 static void ForceHaxCommand_Execute(const cc_string* args, int argsCount) {
     ForceHax_enabled = !ForceHax_enabled;
-		Game_MaxViewDistance = 4096;
-		Game_SetViewDistance(4096);
+
 	#ifdef CC_BUILD_TOUCH
 	Event_RaiseVoid(&UserEvents.HackPermsChanged);
 	#endif
@@ -1216,3 +1215,4 @@ struct IGameComponent Commands_Component = {
 // Make step height higher
 //Shorten forcehax logic as im dumb
 //Noslow
+//ForceViewDist
