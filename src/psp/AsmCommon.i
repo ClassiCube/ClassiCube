@@ -17,8 +17,8 @@
 // M0 - view matrix
 // M1 - proj matrix
 // M2 - MVP  matrix
-// M3 - temp
-// M4 - temp
+// M3 - clip planes L,R,B,T
+// M4 - clip planes N,F
 // M5 - temp
 // M6 - temp
 // M7 - temp

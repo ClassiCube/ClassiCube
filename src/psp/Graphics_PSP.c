@@ -656,6 +656,16 @@ extern void Clip_LoadProj(const float* src);
 extern void Clip_RecalcMVP(void);
 extern void Clip_StoreMVP(float* dst);
 
+static cc_bool clipping_dirty;
+struct Plane { float a, b, c, d; } CC_ALIGNED(16);
+static struct Plane frustum[6];
+extern void CalcFrustumPlanes(struct Plane* planes);
+
+static CC_NOINLINE void RecalcClipping(void) {
+	CalcFrustumPlanes(frustum);
+	clipping_dirty = false;
+}
+
 static void LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	const float* m = (const float*)matrix;
 
@@ -671,6 +681,7 @@ static void LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	LoadMatrix(type, matrix);
 	Clip_RecalcMVP();
+	clipping_dirty = true;
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -679,6 +690,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 
 	Clip_RecalcMVP();
 	Clip_StoreMVP((float*)mvp);
+	clipping_dirty = true;
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -727,15 +739,46 @@ struct ClipVertex {
 } CC_ALIGNED(16);
 
 extern void TransformTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
+static struct Vec4 Transform(struct VertexTextured* a, const struct Matrix* mat) {
+	struct Vec4 vec;
+	vec.x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
+	vec.y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
+	vec.z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
+	vec.w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
+	return vec;
+}
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	GE_set_vertices(gfx_vertices + startVertex * gfx_stride);
 	GE_set_indices(gfx_indices);
+	if (clipping_dirty) RecalcClipping();
 
 	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 			NULL, NULL);
-	/*if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+
+	if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		struct VertexTextured* V = (struct VertexTextured*)gfx_vertices + startVertex;
 		struct Matrix mvp;
+		Clip_StoreMVP((float*)&mvp);
+		struct Vec4 dst CC_ALIGNED(16);
+
+		for (int i = 0; i < verticesCount; i++, V++)
+		{
+			extern int TestVertex(struct VertexTextured* v, struct Plane* a);
+			extern int TestVertex2(struct VertexTextured* v, struct Vec4* d);
+			int A = TestVertex(V, frustum);
+			int B = TestVertex2(V, &dst);
+			//Platform_Log2("%i / %i", &A, &B);
+	
+			if (A == B) continue;
+			Platform_LogConst("????");
+			
+			/*struct Vec4 vec = Transform(V, &mvp);
+			Platform_Log4("  A: %f3/%f3/%f3/%f3", &dst.x, &dst.y, &dst.z, &dst.w);
+			Platform_Log4("  S: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w); vec.x /= vec.w; vec.y /= vec.w; vec.z /= vec.w;
+			Platform_Log4("  D: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w);*/
+		}
+		/*struct Matrix mvp;
 		Clip_StoreMVP((float*)&mvp);
 
 		struct ClipVertex clipped[8];
@@ -745,13 +788,14 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 		Vec3 res;
 		Vec3_Transform(&res, (Vec3*)&src->x, &mvp);
 		Platform_Log3("S: %f3/%f3/%f3", &res.x, &res.y, &res.z);
-		Platform_Log3("D: %f3/%f3/%f3", &clipped[0].x, &clipped[0].y, &clipped[0].z);
-	}*/
+		Platform_Log3("D: %f3/%f3/%f3", &clipped[0].x, &clipped[0].y, &clipped[0].z);*/
+	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	GE_set_vertices(gfx_vertices);
 	GE_set_indices(gfx_indices);
+	if (clipping_dirty) RecalcClipping();
 
 	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount),
 			NULL, NULL);
@@ -760,7 +804,31 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	GE_set_vertices(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
 	GE_set_indices(gfx_indices);
+	if (clipping_dirty) RecalcClipping();
 
 	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 			NULL, NULL);
+
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		struct VertexTextured* V = (struct VertexTextured*)gfx_vertices + startVertex;
+		struct Matrix mvp;
+		Clip_StoreMVP((float*)&mvp);
+		struct Vec4 dst CC_ALIGNED(16);
+
+		for (int i = 0; i < verticesCount; i++, V++)
+		{
+			extern int TestVertex(struct VertexTextured* v, struct Plane* a);
+			extern int TestVertex2(struct VertexTextured* v, struct Vec4* d);
+			int A = TestVertex(V, frustum);
+			int B = TestVertex2(V, &dst);
+	
+			if (A == B) continue;
+			Platform_LogConst("????");
+			
+			struct Vec4 vec = Transform(V, &mvp);
+			Platform_Log4("  A: %f3/%f3/%f3/%f3", &dst.x, &dst.y, &dst.z, &dst.w);
+			Platform_Log4("  S: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w); vec.x /= vec.w; vec.y /= vec.w; vec.z /= vec.w;
+			Platform_Log4("  D: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w);
+		}
+	}
 }

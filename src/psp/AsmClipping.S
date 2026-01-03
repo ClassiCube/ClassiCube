@@ -4,7 +4,7 @@
 #define SRC $a0
 #define DST $a1
 #define CNT $a2
-#define PLN 7   // $a3
+#define PLN $a3
 #define CUR $t0 // current vertex
 #define PRV $t1 // previous vertex
 #define END $t2
@@ -48,7 +48,7 @@ BEG_FUNC(Clip_PolyToPlane)
 	add		PRV, PRV, SRC		// PRV += src
 	move	END, PRV			// END = PRV (src + (count-1) * sizeof(POLY_VERTEX))
 
-	lv.q	PLN_Q, PLN			// PLANE = MEM_128[PLN]
+	lv.q	PLN_Q, 0(PLN)		// PLANE = MEM_128[PLN]
 	vzero.s ZRO_S				// ZRO_S = 0.0
 
 clip_next_line:

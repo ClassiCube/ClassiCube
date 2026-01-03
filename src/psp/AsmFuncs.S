@@ -32,7 +32,7 @@
 	lv.s	S##mtx##03, 48(SRC); \
 	lv.s	S##mtx##13, 52(SRC); \
 	lv.s	S##mtx##23, 56(SRC); \
-	MAYBE_JUMP_RA;			 	\
+	MAYBE_JUMP_RA;			 	 \
 	lv.s	S##mtx##33, 60(SRC);
 
 // Write/Store matrix
@@ -138,4 +138,3 @@ tex_next_iter:
 	#undef DST
 	#udnef END
 END_FUNC(TransformTexturedQuad)
-
