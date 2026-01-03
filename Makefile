@@ -106,7 +106,7 @@ ifeq ($(PLAT),darwin)
 	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
-    CFLAGS  = -Werror -Wno-error=deprecated-declarations
+    CFLAGS = -O3 -march=native -flto -fomit-frame-pointer -ffast-math -funroll-loops -fstrict-aliasing -DNDEBUG -Werror -Wno-error=deprecated-declarations
 	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
 endif
