@@ -174,7 +174,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	if (!tex) return NULL;
 
 	int width  = bmp->width, height = bmp->height;
-	int blocks = SIZE_TO_BLOCKS(width * height * 2, TEX_BLOCK_SIZE);
+	int blocks = SIZE_TO_BLOCKS(width * height * BITMAPCOLOR_SIZE, TEX_BLOCK_SIZE);
 	int addr   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
 
 	if (addr == -1) {
@@ -188,8 +188,10 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->offset = addr;
 	tex->blocks = blocks;
 
-	int vram_free = blockalloc_total_free(tex_table, TEX_TOTAL_BLOCKS) * TEX_BLOCK_SIZE;
-	Platform_Log1("VRAM left: %i bytes", &vram_free);
+	int vram_free, vram_used;
+	blockalloc_calc_usage(tex_table, TEX_TOTAL_BLOCKS, TEX_BLOCK_SIZE,
+							&vram_free, &vram_used);
+	Platform_Log2("VRAM: %i bytes left (%i used)", &vram_free, &vram_used);
 
 	cc_uint8*  tmp = CCTexture_Addr(tex);
 	cc_uint16* src = bmp->scan0;

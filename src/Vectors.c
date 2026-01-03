@@ -181,7 +181,7 @@ void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot) {
 
 
 struct Plane { float a, b, c, d; };
-static struct Plane frustumR, frustumL, frustumB, frustumT, frustumF;
+static struct Plane frustumL, frustumR, frustumB, frustumT, frustumF;
 
 static void FrustumCulling_Normalise(struct Plane* plane) {
 	float val1 = plane->a, val2 = plane->b, val3 = plane->c;
@@ -192,10 +192,10 @@ static void FrustumCulling_Normalise(struct Plane* plane) {
 cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) {
 	float d;
 
-	d = frustumR.a * x + frustumR.b * y + frustumR.c * z + frustumR.d;
+	d = frustumL.a * x + frustumL.b * y + frustumL.c * z + frustumL.d;
 	if (d <= -radius) return false;
 
-	d = frustumL.a * x + frustumL.b * y + frustumL.c * z + frustumL.d;
+	d = frustumR.a * x + frustumR.b * y + frustumR.c * z + frustumR.d;
 	if (d <= -radius) return false;
 
 	d = frustumB.a * x + frustumB.b * y + frustumB.c * z + frustumB.d;
@@ -216,19 +216,19 @@ cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) 
 }
 
 void FrustumCulling_CalcFrustumEquations(struct Matrix* clip) {
-	/* Extract the RIGHT plane */
-	frustumR.a = clip->row1.w - clip->row1.x;
-	frustumR.b = clip->row2.w - clip->row2.x;
-	frustumR.c = clip->row3.w - clip->row3.x;
-	frustumR.d = clip->row4.w - clip->row4.x;
-	FrustumCulling_Normalise(&frustumR);
-
 	/* Extract the LEFT plane */
 	frustumL.a = clip->row1.w + clip->row1.x;
 	frustumL.b = clip->row2.w + clip->row2.x;
 	frustumL.c = clip->row3.w + clip->row3.x;
 	frustumL.d = clip->row4.w + clip->row4.x;
 	FrustumCulling_Normalise(&frustumL);
+
+	/* Extract the RIGHT plane */
+	frustumR.a = clip->row1.w - clip->row1.x;
+	frustumR.b = clip->row2.w - clip->row2.x;
+	frustumR.c = clip->row3.w - clip->row3.x;
+	frustumR.d = clip->row4.w - clip->row4.x;
+	FrustumCulling_Normalise(&frustumR);
 
 	/* Extract the BOTTOM plane */
 	frustumB.a = clip->row1.w + clip->row1.y;

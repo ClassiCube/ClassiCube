@@ -2,6 +2,7 @@
 #include "../Errors.h"
 #include "../Logger.h"
 #include "../Window.h"
+#include "../_BlockAlloc.h"
 
 #include <malloc.h>
 #include <pspkernel.h>
@@ -16,8 +17,9 @@
 #define SCREEN_HEIGHT 272
 
 #define FB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
-static unsigned int CC_ALIGNED(16) list[262144];
+#define ZB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 2)
 
+static unsigned int CC_ALIGNED(16) list[262144];
 static cc_uint8* gfx_vertices;
 static int gfx_fields;
 
@@ -104,6 +106,17 @@ static void Gfx_FreeState(void) {
 #define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
 
 
+/*########################################################################################################################*
+*------------------------------------------------------Texture memory-----------------------------------------------------*
+*#########################################################################################################################*/
+#define VRAM_SIZE (2 * 1024 * 1024)
+#define ALL_BUFFERS_SIZE (FB_SIZE + FB_SIZE + ZB_SIZE)
+#define TEXMEM_TOTAL_FREE (VRAM_SIZE - ALL_BUFFERS_SIZE)
+
+#define TEXMEM_BLOCK_SIZE 1024
+#define TEXMEM_MAX_BLOCKS (TEXMEM_TOTAL_FREE / TEXMEM_BLOCK_SIZE)
+static cc_uint8 tex_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Swizzling-------------------------------------------------------*
@@ -181,37 +194,76 @@ static CC_INLINE void UploadPartialTexture(struct Bitmap* part, int rowWidth, cc
 *#########################################################################################################################*/
 typedef struct CCTexture_ {
 	cc_uint32 width, height;
-	cc_uint32 pad1, pad2; // data must be aligned to 16 bytes
-	BitmapCol pixels[];
+	cc_uint16 base, blocks; // VRAM block usage
+	cc_uint32 pad;
+	BitmapCol pixels[]; // NOTE: pixels must be aligned to 16 bytes
 } CCTexture;
 
+static void* Texture_PixelsAddr(CCTexture* tex) {
+	if (!tex->blocks) return tex->pixels;
+
+	char* texmem_start = (char*)sceGeEdramGetAddr() + ALL_BUFFERS_SIZE;
+	return texmem_start + (tex->base * TEXMEM_BLOCK_SIZE);
+}
+
+static int TOTAL = 0;
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int dst_w = Math_NextPowOf2(bmp->width);
 	int dst_h = Math_NextPowOf2(bmp->height);
 
-	// Swizzled texture assumes at least 16 bytes x 8 rows
-	int size = max(16 * 8, dst_w * dst_h * 4);
-	CCTexture* tex = (CCTexture*)memalign(16, 16 + size);
+	int size   = dst_w * dst_h * BITMAPCOLOR_SIZE;
+	int blocks = SIZE_TO_BLOCKS(dst_w * dst_h * BITMAPCOLOR_SIZE, TEXMEM_BLOCK_SIZE);
+	int base   = blockalloc_alloc(tex_table, TEXMEM_MAX_BLOCKS, blocks);
+	CCTexture* tex;
+	TOTAL += size;
+
+	// Check if no room in VRAM
+	if (base == -1) {
+		// Swizzled texture assumes at least 16 bytes x 8 rows
+		size = max(16 * 8, size);
+		tex  = (CCTexture*)memalign(16, 16 + size);
+
+		blocks = 0;
+		if (!tex) return 0;
+	} else {
+		tex = (CCTexture*)Mem_TryAlloc(1, sizeof(CCTexture));
+		if (!tex) { 
+    		blockalloc_dealloc(tex_table, tex->base, tex->blocks);
+			return 0;
+		}
+	}
 	
 	tex->width  = dst_w;
 	tex->height = dst_h;
+	tex->base   = base;
+	tex->blocks = blocks;
 
-	UploadFullTexture(bmp, rowWidth, tex->pixels, dst_w, dst_h);
+	void* addr = Texture_PixelsAddr(tex);
+	UploadFullTexture(bmp, rowWidth, addr, dst_w, dst_h);
+	sceKernelDcacheWritebackInvalidateRange(addr, size);
+	//Platform_Log1("SIZE: %i", &TOTAL);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	UploadPartialTexture(part, rowWidth, tex->pixels, tex->width, tex->height, x, y);
+	void* addr = Texture_PixelsAddr(tex);
 
-	// TODO: Do line by line and only invalidate the actually changed parts of lines?
+	UploadPartialTexture(part, rowWidth, addr, tex->width, tex->height, x, y);
+
+	// TODO: Do line by line and only invalidate the actually changed parts of lines? harder with swizzling
 	// TODO: Invalidate full tex->size in case of very small textures?
-	sceKernelDcacheWritebackInvalidateRange(tex->pixels, (tex->width * tex->height) * 4);
+	sceKernelDcacheWritebackInvalidateRange(addr, (tex->width * tex->height) * 4);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GfxResourceID data = *texId;
-	if (data) Mem_Free(data);
+	CCTexture* tex = (CCTexture*)(*texId);
+	if (tex) {
+    	blockalloc_dealloc(tex_table, tex->base, tex->blocks);
+		TOTAL -= (tex->width * tex->height) * 4;
+		Mem_Free(tex);
+	}
+
 	*texId = NULL;
 }
 
@@ -223,7 +275,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	if (!tex) tex  = white_square; 
 	
 	sceGuTexMode(GU_PSM_8888, 0, 0, 1);
-	sceGuTexImage(0, tex->width, tex->height, tex->width, tex->pixels);
+	void* addr = Texture_PixelsAddr(tex);
+	sceGuTexImage(0, tex->width, tex->height, tex->width, addr);
 }
 
 
@@ -320,8 +373,16 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
+	int freeMem, usedMem;
+	blockalloc_calc_usage(tex_table, TEXMEM_MAX_BLOCKS, TEXMEM_BLOCK_SIZE, 
+							&freeMem, &usedMem);
+	
+	float freeMemMB = freeMem / (1024.0f * 1024.0f);
+	float usedMemMB = usedMem / (1024.0f * 1024.0f);
+
 	String_AppendConst(info, "-- Using PSP--\n");
 	PrintMaxTextureInfo(info);
+	String_Format2(info,     "Texture memory: %f2 MB used, %f2 MB free\n", &usedMemMB, &freeMemMB);
 }
 
 void Gfx_SetVSync(cc_bool vsync) {

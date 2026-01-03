@@ -1006,11 +1006,9 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int freeMem = blockalloc_total_free(tex_table, texmem_blocks);
-	int usedMem = texmem_blocks - freeMem;
-
-	freeMem *= TEXMEM_BLOCK_SIZE;
-	usedMem *= TEXMEM_BLOCK_SIZE;
+	int freeMem, usedMem;
+	blockalloc_calc_usage(tex_table, texmem_blocks, TEXMEM_BLOCK_SIZE, 
+							&freeMem, &usedMem);
 	
 	float freeMemMB = freeMem / (1024.0f * 1024.0f);
 	float usedMemMB = usedMem / (1024.0f * 1024.0f);
