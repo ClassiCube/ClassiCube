@@ -61,6 +61,7 @@ static void guInit(void) {
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 
 	Gfx_OnWindowResize();
+	sceGuClutMode(GU_PSM_8888, 0, 0xFF, 0); // 32 bit CLUT entries
 	
 	sceGuFinish();
 	sceGeDrawSync(GU_SYNC_WAIT); // waits until FINISH command is reached
@@ -72,6 +73,8 @@ static GfxResourceID white_square;
 void Gfx_Create(void) {
 	if (!Gfx.Created) guInit();
 	
+	Gfx.MinTexWidth  = 2;
+	Gfx.MinTexHeight = 2;
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
@@ -119,17 +122,58 @@ static cc_uint8 tex_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Palettes--------------------------------------------------------*
+*#########################################################################################################################*/
+#define MAX_PAL_4BPP_ENTRIES 16
+
+static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
+	for (int i = 0; i < pal_count; i++) 
+	{
+		if (palette[i] == color) return i;
+	}
+	return -1;
+}
+
+static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
+	int width = bmp->width, height = bmp->height;
+
+	BitmapCol* row = bmp->scan0;
+	int pal_count  = 0;
+	
+	for (int y = 0; y < height; y++, row += rowWidth)
+	{
+		for (int x = 0; x < width; x++) 
+		{
+			BitmapCol color = row[x];
+			int idx = FindInPalette(palette, pal_count, color);
+			if (idx >= 0) continue;
+
+			// Too many distinct colours
+			if (pal_count >= MAX_PAL_4BPP_ENTRIES) return 0;
+
+			palette[pal_count] = color;
+			pal_count++;
+		}
+	}
+	return pal_count;
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Swizzling-------------------------------------------------------*
 *#########################################################################################################################*/
-// PSP swizzled textures are 16 bytes X 8 rows = 4 '32 bit' pixels X 8 rows
+// PSP swizzled textures are 16 bytes X 8 rows 
+//  = 4 '32 bit' pixels X 8 rows
+//  = 16 '8 bit' pixels X 8 rows
+//  = 32 '4 bit' pixels X 8 rows
 static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, unsigned* maskX, unsigned* maskY) {
-	*maskX = 0b00011; // 2 linear X bits
-	*maskY = 0b11100; // 3 linear Y bits
+	*maskX = 0b00000011; // 2 linear X bits
+	*maskY = 0b00011100; // 3 linear Y bits
 
-	// Adjust for lower 2 X and 2 Y linear bits
-	w >>= 3;
-	h >>= 4;
-	int shift = 5;
+	// Adjust for lower 2 X and 3 Y linear bits
+	w >>= (2 + 1);
+	h >>= (3 + 1);
+	int shift = 2 + 3;
 
 	for (; w > 0; w >>= 1) {
 		*maskX += 0x01 << shift;
@@ -142,7 +186,28 @@ static CC_INLINE void TwiddleCalcFactors(unsigned w, unsigned h, unsigned* maskX
 	}
 }
 
-static CC_INLINE void UploadFullTexture(struct Bitmap* bmp, int rowWidth, cc_uint32* dst, int dst_w, int dst_h) {
+static CC_INLINE void TwiddleCalcFactors_Paletted(unsigned w, unsigned h, unsigned* maskX, unsigned* maskY) {
+	*maskX = 0b00001111; // 4 linear X bits
+	*maskY = 0b01110000; // 3 linear Y bits
+
+	// Adjust for lower 4 X and 3 Y linear bits
+	w >>= (4 + 1);
+	h >>= (3 + 1);
+	int shift = 4 + 3;
+
+	for (; w > 0; w >>= 1) {
+		*maskX += 0x01 << shift;
+		shift  += 1;
+	}
+
+	for (; h > 0; h >>= 1) {
+		*maskY += 0x01 << shift;
+		shift  += 1;
+	}
+}
+
+static CC_INLINE void UploadFullTexture(struct Bitmap* bmp, int rowWidth, 
+										cc_uint32* dst, int dst_w, int dst_h) {
 	int src_w = bmp->width, src_h = bmp->height;
 	unsigned maskX, maskY;
 	unsigned X = 0, Y = 0;
@@ -156,6 +221,28 @@ static CC_INLINE void UploadFullTexture(struct Bitmap* bmp, int rowWidth, cc_uin
 		for (int x = 0; x < src_w; x++, src++)
 		{
 			dst[X | Y] = *src;
+			X = (X - maskX) & maskX;
+		}
+		Y = (Y - maskY) & maskY;
+	}
+}
+
+static CC_INLINE void UploadPalettedTexture(struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count,
+											cc_uint8* dst, int dst_w, int dst_h) {
+	int src_w = bmp->width, src_h = bmp->height;
+	unsigned maskX, maskY;
+	unsigned X = 0, Y = 0;
+	TwiddleCalcFactors_Paletted(dst_w, dst_h, &maskX, &maskY);
+	
+	for (int y = 0; y < src_h; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		X = 0;
+		
+		for (int x = 0; x < src_w; x++, src++)
+		{
+			dst[X | Y] = FindInPalette(palette, pal_count, *src);
+
 			X = (X - maskX) & maskX;
 		}
 		Y = (Y - maskY) & maskY;
@@ -195,9 +282,13 @@ static CC_INLINE void UploadPartialTexture(struct Bitmap* part, int rowWidth, cc
 typedef struct CCTexture_ {
 	cc_uint32 width, height;
 	cc_uint16 base, blocks; // VRAM block usage
-	cc_uint32 pad;
-	BitmapCol pixels[]; // NOTE: pixels must be aligned to 16 bytes
+	cc_uint32 paletted;
+	BitmapCol palette[MAX_PAL_4BPP_ENTRIES]; // NOTE: palette must be aligned to 16 bytes
+	BitmapCol pixels[];    // NOTE: pixels must be aligned to 16 bytes
 } CCTexture;
+
+static_assert(sizeof(struct CCTexture_) % 16 == 0, "Texture struct size must be 16 byte aligned");
+#define ALIGNUP(val, alignment) (((val) + ((alignment) - 1)) & -(alignment))
 
 static void* Texture_PixelsAddr(CCTexture* tex) {
 	if (!tex->blocks) return tex->pixels;
@@ -211,8 +302,15 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	int dst_w = Math_NextPowOf2(bmp->width);
 	int dst_h = Math_NextPowOf2(bmp->height);
 
-	int size   = dst_w * dst_h * BITMAPCOLOR_SIZE;
-	int blocks = SIZE_TO_BLOCKS(dst_w * dst_h * BITMAPCOLOR_SIZE, TEXMEM_BLOCK_SIZE);
+	BitmapCol palette[MAX_PAL_4BPP_ENTRIES];
+	int pal_count = 0;
+
+	if (!(flags & TEXTURE_FLAG_DYNAMIC)) {
+		pal_count = CalcPalette(palette, bmp, rowWidth);
+	}
+
+	int size   = dst_w * dst_h * (pal_count ? 1 : BITMAPCOLOR_SIZE);
+	int blocks = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE);
 	int base   = blockalloc_alloc(tex_table, TEXMEM_MAX_BLOCKS, blocks);
 	CCTexture* tex;
 	TOTAL += size;
@@ -220,8 +318,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	// Check if no room in VRAM
 	if (base == -1) {
 		// Swizzled texture assumes at least 16 bytes x 8 rows
-		size = max(16 * 8, size);
-		tex  = (CCTexture*)memalign(16, 16 + size);
+		size = ALIGNUP(size, 16 * 8);
+		tex  = (CCTexture*)memalign(16, sizeof(CCTexture) + size);
 
 		blocks = 0;
 		if (!tex) return 0;
@@ -237,11 +335,19 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->height = dst_h;
 	tex->base   = base;
 	tex->blocks = blocks;
+	tex->paletted = pal_count > 0;
 
 	void* addr = Texture_PixelsAddr(tex);
-	UploadFullTexture(bmp, rowWidth, addr, dst_w, dst_h);
+	if (pal_count > 0) {
+		Mem_Copy(tex->palette, palette, sizeof(palette));
+		UploadPalettedTexture(bmp, rowWidth, palette, pal_count, addr, dst_w, dst_h);
+		sceKernelDcacheWritebackInvalidateRange(tex->palette, sizeof(palette));
+	} else {
+		UploadFullTexture(bmp, rowWidth, addr, dst_w, dst_h);
+	}
+
 	sceKernelDcacheWritebackInvalidateRange(addr, size);
-	//Platform_Log1("SIZE: %i", &TOTAL);
+	//Platform_Log2("SIZE: %i,   %i", &TOTAL, &pal_count);
 	return tex;
 }
 
@@ -260,7 +366,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = (CCTexture*)(*texId);
 	if (tex) {
     	blockalloc_dealloc(tex_table, tex->base, tex->blocks);
-		TOTAL -= (tex->width * tex->height) * 4;
+		TOTAL -= (tex->width * tex->height) * (tex->paletted ? 1 : 4);
 		Mem_Free(tex);
 	}
 
@@ -274,7 +380,13 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square; 
 	
-	sceGuTexMode(GU_PSM_8888, 0, 0, 1);
+	if (tex->paletted) {
+		sceGuClutLoad(MAX_PAL_4BPP_ENTRIES/8, tex->palette); // "count" is in units of "8 entries"
+		sceGuTexMode(GU_PSM_T8, 0, 0, 1);
+	} else {
+		sceGuTexMode(GU_PSM_8888, 0, 0, 1);
+	}
+
 	void* addr = Texture_PixelsAddr(tex);
 	sceGuTexImage(0, tex->width, tex->height, tex->width, addr);
 }
