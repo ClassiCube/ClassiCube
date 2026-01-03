@@ -962,7 +962,7 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * horSpeed, lavaDrag, LIQUID_GRAVITY, verSpeed);
 	} else if (Entity_TouchesAnyRope(entity) && !hacks->Floating) {
 		Vec3 ropeDrag = { 0.5f, 0.85f, 0.5f };
-		PhysicsComp_MoveNormal(comp, vel, 0.02f * 1.7f, ropeDrag, ROPE_GRAVITY, verSpeed);
+		PhysicsComp_MoveNormal(comp, vel, 0.02f * 1.7f, ropeDrag, ROPE_GRAVITY, verSpeed); //Noslow
 	} else {
 		factor  = hacks->Floating || entity->OnGround ? 0.1f : 0.02f;
 		gravity = comp->UseLiquidGravity ? LIQUID_GRAVITY : comp->gravity;

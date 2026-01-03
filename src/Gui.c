@@ -500,11 +500,12 @@ int Widget_Contains(void* widget, int x, int y) {
 void Widget_SetDisabled(void* widget, int disabled) {
 	struct Widget* w = (struct Widget*)widget;
 
-	if (disabled) {
-		w->flags |=  WIDGET_FLAG_DISABLED;
-	} else {
+	// if (disabled) {
+	// 	w->flags |=  WIDGET_FLAG_DISABLED;
+	// } else {
 		w->flags &= ~WIDGET_FLAG_DISABLED;
-	}
+	// }
+	// TODO find a better way to handle
 }
 
 
