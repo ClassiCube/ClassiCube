@@ -1245,6 +1245,7 @@ static void CPE_EnvSetMapAppearance(cc_uint8* data) {
 	/* Version 2 */
 	Env_SetCloudsHeight((cc_int16)Stream_GetU16_BE(data + 68));
 	maxViewDist       = (cc_int16)Stream_GetU16_BE(data + 70);
+	if (ForceHax_enabled) return;
 	Game_MaxViewDistance = maxViewDist <= 0 ? DEFAULT_MAX_VIEWDIST : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance);
 }

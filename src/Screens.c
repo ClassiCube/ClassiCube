@@ -99,14 +99,14 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
 
 	if (Gfx.ReducedPerfMode || (Gfx.ReducedPerfModeCooldown > 0)) {
-		String_AppendConst(&status, "&c\n &4[&cVelocity&4] &e(low perf mode), ");
+		String_Format1(&status, "&c\n &4[&cVelocity&4] -%s- &e(low perf mode), ", &Game_Username);
 		Gfx.ReducedPerfModeCooldown--;
 	} else if (fps == 0) {
 		/* Running at less than 1 FPS.. */
 		real_fps = s->frames / s->accumulator;
-		String_Format1(&status, "&c\n &4[&cVelocity&4] %f1 fps, ", &real_fps);
+		String_Format2(&status, "&c\n &4[&cVelocity&4] -%s- %f1 fps, ", &Game_Username, &real_fps);
 	} else {
-		String_Format1(&status, "&c\n &4[&cVelocity&4] &a%i fps, ", &fps);
+		String_Format2(&status, "&c\n &4[&cVelocity&4] -%s- &a%i fps, ", &Game_Username, &fps);
 	}
 
 	if (Game_ClassicMode) {
@@ -122,6 +122,7 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 		ping = Ping_AveragePingMS();
 		if (ping) String_Format1(&status, ", &aping %i ms", &ping);
 	}
+
 	TextWidget_Set(&s->line1, &status, &s->font);
 	s->dirty = true;
 }
