@@ -162,18 +162,18 @@ void Gamepads_Process(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	void* fb = sceGeEdramGetAddr();
+	// Add 8192 to fix in PPSSPP, launcher-> in-game -> launcher resulting in in-game frame continuing to be drawn
+	void* fb = sceGeEdramGetAddr() + 8192;
+
 	bmp->scan0  = fb;
 	bmp->width  = BUFFER_WIDTH;
 	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	void* fb = sceGeEdramGetAddr();
-	
 	sceDisplayWaitVblankStart();
 	sceKernelDcacheWritebackAll();
-	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
+	sceDisplaySetFrameBuf(bmp->scan0, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
