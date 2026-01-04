@@ -828,7 +828,7 @@ static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vec3 vel, float factor
 	/* entity.Velocity += vel * (factor / dist) */
 	entity = comp->Entity;
 	Vec3_Mul1By(&vel, factor / dist);
-	Vec3_AddBy(&entity->Velocity, &vel);
+	if (!Strafe_enabled) Vec3_AddBy(&entity->Velocity, &vel);
 }
 
 static void PhysicsComp_Move(struct PhysicsComp* comp, Vec3 drag, float gravity, float yMul) {
@@ -989,6 +989,23 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 	}
 
 	if (entity->OnGround) comp->MultiJumps = 0;
+
+if (Strafe_enabled) {
+if (vel.x != 0.0f || vel.z != 0.0f ) {
+    float len = Math_SqrtF(vel.x * vel.x + vel.z * vel.z);
+    vel.x /= len;
+    vel.z /= len;
+
+    /* direct strafe velocity per tick */
+    float strafeSpeed = horSpeed * 0.25f;
+    entity->Velocity.x = vel.x * strafeSpeed;
+    entity->Velocity.z = vel.z * strafeSpeed;
+} else {
+    entity->Velocity.x = 0.0f;
+    entity->Velocity.z = 0.0f;
+}
+}
+
 }
 
 static double PhysicsComp_YPosAt(int t, float u) {

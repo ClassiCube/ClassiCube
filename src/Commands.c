@@ -44,6 +44,9 @@ float StepHeight = 0.0f;
 //Nametags Toggle
 cc_bool Nametags_enabled = false;
 
+//Strafe Toggle
+cc_bool Strafe_enabled = false;
+
 //Jesus Toggle
 static cc_bool isSolid = false;
 
@@ -1104,6 +1107,23 @@ static struct ChatCommand NoClickDelayCommand = {
 };
 
 /*########################################################################################################################*
+*------------------------------------------------------Stafe--------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void StrafeCommand_Execute(const cc_string* args, int argsCount) {
+	Strafe_enabled = !Strafe_enabled;
+	Chat_AddRaw("Toggled Strafe.");
+}
+
+static struct ChatCommand StrafeCommand = {
+	"Strafe", StrafeCommand_Execute, 0,
+	{
+		"&a/client Strafe",
+		"&eToggles Strafe.",
+	}
+};
+
+/*########################################################################################################################*
 *---------------------------------------------------------Step------------------------------------------------------------*
 *#########################################################################################################################*/
 
@@ -1194,6 +1214,7 @@ static void OnInit(void) {
 	Commands_Register(&NoClickDelayCommand);
 	Commands_Register(&NoCamGravityCommand);
 	Commands_Register(&HighJumpCommand);
+	Commands_Register(&StrafeCommand);
 }
 
 static void OnFree(void) {
