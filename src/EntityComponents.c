@@ -997,7 +997,7 @@ if (vel.x != 0.0f || vel.z != 0.0f ) {
     vel.z /= len;
 
     /* direct strafe velocity per tick */
-    float strafeSpeed = horSpeed * 0.25f;
+    float strafeSpeed = horSpeed * 0.23f;
     entity->Velocity.x = vel.x * strafeSpeed;
     entity->Velocity.z = vel.z * strafeSpeed;
 } else {
