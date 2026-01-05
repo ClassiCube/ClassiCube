@@ -9,6 +9,7 @@
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <pspdisplay.h>
 #include <pspge.h>
@@ -23,13 +24,15 @@ struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
-}
-
-void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
+
+	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
+}
+
+void Window_Init(void) {
 	
 	Window_Main.Width    = SCREEN_WIDTH;
 	Window_Main.Height   = SCREEN_HEIGHT;
@@ -39,8 +42,6 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
-
-	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void Window_Free(void) { }
@@ -201,9 +202,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

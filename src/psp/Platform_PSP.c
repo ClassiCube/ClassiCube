@@ -453,40 +453,43 @@ cc_result Socket_GetLastError(cc_socket s) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-static void InitNetworking(void) {
+static cc_bool InitNetworking(void) {
     sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
     sceUtilityLoadNetModule(PSP_NET_MODULE_INET);    
     int res;
 
     res = sceNetInit(128 * 1024, 0x20, 4096, 0x20, 4096);
-    if (res < 0) { Platform_Log1("sceNetInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetInit"); return false; }
 
     res = sceNetInetInit();
-    if (res < 0) { Platform_Log1("sceNetInetInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetInetInit"); return false; }
 
     res = sceNetResolverInit();
-    if (res < 0) { Platform_Log1("sceNetResolverInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetResolverInit"); return false; }
 
     res = sceNetApctlInit(10 * 1024, 0x30);
-    if (res < 0) { Platform_Log1("sceNetApctlInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetApctlInit"); return false; }
     
     res = sceNetApctlConnect(1); // 1 = first profile
-    if (res) { Platform_Log1("sceNetApctlConnect failed: %i", &res); return; }
+    if (res) { Logger_SimpleWarn(res, "calling sceNetApctlConnect"); return false; }
 
     for (int try = 0; try < 20; try++) {
         int state;
         res = sceNetApctlGetState(&state);
-        if (res) { Platform_Log1("sceNetApctlGetState failed: %i", &res); return; }
+        if (res) { Logger_SimpleWarn(res, "calling sceNetApctlGetState"); return false; }
         
-        if (state == PSP_NET_APCTL_STATE_GOT_IP) break;
+        if (state == PSP_NET_APCTL_STATE_GOT_IP) return true;
 
         // not successful yet? try polling again in 50 ms
         sceKernelDelayThread(50 * 1000);
     }
+
+	Window_ShowDialog("WiFi setup failed", "Timed out establishing a WiFi connection");
+	return false;
 }
 
 void Platform_Init(void) {
-	InitNetworking();
+	cc_bool net_ok = InitNetworking();
 	/*pspDebugSioInit();*/ 
 	
 	// Disabling FPU exceptions avoids sometimes crashing with this line in Physics.c
