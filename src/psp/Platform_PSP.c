@@ -488,8 +488,34 @@ static cc_bool InitNetworking(void) {
 	return false;
 }
 
+static void DisplayNetworkDetails(void) {
+	union SceNetApctlInfo localip  = { 0 };
+	union SceNetApctlInfo netmask  = { 0 };
+	union SceNetApctlInfo gateway  = { 0 };
+	union SceNetApctlInfo prim_dns = { 0 };
+	union SceNetApctlInfo sec_dns  = { 0 };
+
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_IP,         &localip);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_SUBNETMASK, &netmask);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_GATEWAY,    &gateway);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_PRIMDNS,    &prim_dns);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_SECDNS,     &sec_dns);
+
+
+	cc_string str; char buffer[256];
+	String_InitArray_NT(str, buffer);
+	String_Format3(&str, "IP address: %c\nGateway IP: %c\nNetmask %c\n", 
+							&localip.ip, &netmask.subNetMask, &gateway.gateway);
+	String_Format2(&str, "DNS server: %c, %c", 
+							&prim_dns.primaryDns, &sec_dns.	secondaryDns);
+
+	buffer[str.length] = '\0';
+	Window_ShowDialog("Networking details", buffer);
+}
+
 void Platform_Init(void) {
 	cc_bool net_ok = InitNetworking();
+	if (net_ok) DisplayNetworkDetails();
 	/*pspDebugSioInit();*/ 
 	
 	// Disabling FPU exceptions avoids sometimes crashing with this line in Physics.c
