@@ -21,6 +21,19 @@ enum GE_COMMANDS {
 	GE_PROJ_MATRIX_UPLOAD_INDEX = 0x3E,
 	GE_PROJ_MATRIX_UPLOAD_DATA  = 0x3F,
 
+	GE_SET_VIEWPORT_X_SCALE     = 0x42,
+	GE_SET_VIEWPORT_Y_SCALE     = 0x43,
+	GE_SET_VIEWPORT_Z_SCALE     = 0x44,
+	GE_SET_VIEWPORT_X_ORIGIN    = 0x45,
+	GE_SET_VIEWPORT_Y_ORIGIN    = 0x46,
+	GE_SET_VIEWPORT_Z_ORIGIN    = 0x47,
+
+	GE_SET_SCREEN_OFFSET_X      = 0x4C,
+	GE_SET_SCREEN_OFFSET_Y      = 0x4D,
+
+	GE_SET_Z_RANGE_MIN          = 0xD6,
+	GE_SET_Z_RANGE_MAX          = 0xD7,
+
 	GE_SET_DEPTH_MASK           = 0xE7,
 	GE_SET_COLOR_MASK           = 0xE8,
 	GE_SET_ALPHA_MASK           = 0xE9, 	
@@ -70,6 +83,33 @@ static void GE_upload_proj_matrix(const float* matrix) {
 	{
 		GE_PushF(GE_PROJ_MATRIX_UPLOAD_DATA, matrix[(i * 4) + j]);
 	}
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Viewport/Offset------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void GE_set_depth_range(unsigned short minZ, unsigned short maxZ) {
+    GE_PushI(GE_SET_Z_RANGE_MIN, minZ);
+    GE_PushI(GE_SET_Z_RANGE_MAX, maxZ);
+}
+
+static CC_INLINE void GE_set_screen_offset(int x, int y) {
+    GE_PushI(GE_SET_SCREEN_OFFSET_X, x << 4);
+    GE_PushI(GE_SET_SCREEN_OFFSET_Y, y << 4);
+}
+
+static CC_INLINE void GE_set_viewport_xy(int x, int y, int w, int h) {
+	GE_PushF(GE_SET_VIEWPORT_X_SCALE, w *  0.5f);
+	GE_PushF(GE_SET_VIEWPORT_Y_SCALE, h * -0.5f);
+	GE_PushF(GE_SET_VIEWPORT_X_ORIGIN, x);
+	GE_PushF(GE_SET_VIEWPORT_Y_ORIGIN, y);
+}
+
+static CC_INLINE void GE_set_viewport_z(int n, int f) {
+	int middle = (n + f) / 2;
+	GE_PushF(GE_SET_VIEWPORT_Z_SCALE,  middle - n);
+	GE_PushF(GE_SET_VIEWPORT_Z_ORIGIN, middle);
 }
 
 

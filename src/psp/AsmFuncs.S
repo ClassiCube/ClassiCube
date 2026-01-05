@@ -87,6 +87,22 @@ BEG_FUNC(Clip_StoreMVP)
 END_FUNC(Clip_StoreMVP)
 
 
+
+BEG_FUNC(Clip_SetGuardbandScale)
+	#define SRC_X $a0
+	#define SRC_Y $a1
+
+	lv.s	S700, 0(SRC_X)
+	lv.s	S701, 0(SRC_Y)
+	vscl.q C200, C200, S700
+	jr 		$ra
+	vscl.q C210, C210, S701
+
+	#undef SRC_X
+	#undef SRC_Y
+END_FUNC(Clip_SetGuardbandScale)
+
+
 BEG_FUNC(Matrix_Mul2)
 	#define DST   $a0
 	#define SRC_L $a1

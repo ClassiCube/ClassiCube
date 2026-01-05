@@ -1,54 +1,6 @@
 .set noreorder
 #include "AsmCommon.i"
 
-// TODO use macros
-#define F_XP R300 // frustum x+ (left)
-#define FR_XN R301 // frustum x- (right)
-
-// TODO use MVP instead?
-BEG_FUNC(TestVertex)
-	#define SRC $a0
-	#define PLN $a1
-	#define CUR $t0
-	#define END $t1
-
-	lv.s	S700, VTEX_X(SRC);  // M7[0,0] = src->x
-	lv.s	S710, VTEX_Y(SRC);  // M7[0,1] = src->y
-	lv.s	S720, VTEX_Z(SRC);  // M7[0,2] = src->z
-	vone.s	S730				// M7[0,3] = 1.0
-	vzero.s	S701				// M7[1,0] = 0.0
-
-	li CUR, 0
-	li END, 6
-
-plane_next_iter:
-	lv.q	R703, 0(PLN)		// PLN = MEM_128[plane]
-	vdot.q 	S711, R703, R700	// M7[1,1] = dot
-
-	vcmp.s LT, S711, S701
-	bvt 0, behind_a_plane
-	nop
-
-	addiu	CUR, CUR, 1;	    // iter++
-	bne		CUR, END, plane_next_iter // if (dst != end) goto plane_next_iter;
-	addiu	PLN, PLN, 16		// plane++
-
-	jr	$ra
-	li $v0, 1
-
-behind_a_plane:
-	jr	$ra
-	li $v0, 0
-
-	#undef SRC
-	#undef PLN
-	#undef CUR
-	#undef END
-END_FUNC(TestVertex)
-
-
-
-// TODO use MVP instead?
 BEG_FUNC(TestVertex2)
 	#define SRC $a0
 
@@ -59,8 +11,8 @@ BEG_FUNC(TestVertex2)
 
 	vhtfm4.q R703, M200, R700;  // M7.R3 = M200 * M7.R0
 
-	vcmp.q GT, R703[|x|,|y|,|z|,0], R703[|w|,|w|,|w|,0]
-	bvt 4, behind_a_clipping_plane
+	vcmp.q GT, R703[|x|,|y|,|z|,0], R703[|w|,|w|,|w|,0] // CC[0] = |x|>|w|...
+	bvt 4, behind_a_clipping_plane // CC[4] = (|x|>|w|) | (|y|>|w|) | (|z|>|w|) | (0>0)
 	nop
 
 	sv.q R703, 0($a1) // TODO temp
@@ -75,7 +27,26 @@ behind_a_clipping_plane:
 	#undef SRC
 END_FUNC(TestVertex2)
 
-BEG_FUNC(CalcFrustumPlanes)
+#define F_XP R300 // frustum plane x+ (left)
+#define F_XN R301 // frustum plane x- (right)
+#define F_YP R302 // frustum plane y+ (bottom)
+#define F_YN R303 // frustum plane y- (top)
+#define F_ZP R400 // frustum plane z+ (near)
+#define F_ZN R401 // frustum plane z- (far)
+
+#define M_CX C200 // mvp.columns.X
+#define M_CY C210 // mvp.columns.Y
+#define M_CZ C220 // mvp.columns.Z
+#define M_CW C230 // mvp.columns.W
+
+#define S_XP S700 // frustum plane x+ scale
+#define S_XN S701 // frustum plane x- scale
+#define S_YP S702 // frustum plane y+ scale
+#define S_YN S703 // frustum plane y- scale
+#define S_ZP S710 // frustum plane z+ scale
+#define S_ZN S711 // frustum plane z- scale
+
+BEG_FUNC(Frustum_CalcPlanes)
 	#define DST $a0
 
 	// Frustum planes calculation
@@ -86,46 +57,46 @@ BEG_FUNC(CalcFrustumPlanes)
 	// Near:   a,b,c,d = mvp.row[1,2,3,4].w + mvp.row[1,2,3,4].z
 	// Far:    a,b,c,d = mvp.row[1,2,3,4].w - mvp.row[1,2,3,4].z
 
-	vadd.q R300, C230, C200 // mvp.cols.W + mvp.cols.X
-	vsub.q R301, C230, C200 // mvp.cols.W - mvp.cols.X
-	vadd.q R302, C230, C210 // mvp.cols.W + mvp.cols.Y
-	vsub.q R303, C230, C210 // mvp.cols.W - mvp.cols.Y
-	vadd.q R400, C230, C220 // mvp.cols.W + mvp.cols.Z
-	vsub.q R401, C230, C220 // mvp.cols.W - mvp.cols.Z
+	vadd.q F_XP, M_CW, M_CX // mvp.cols.W + mvp.cols.X
+	vsub.q F_XN, M_CW, M_CX // mvp.cols.W - mvp.cols.X
+	vadd.q F_YP, M_CW, M_CY // mvp.cols.W + mvp.cols.Y
+	vsub.q F_YN, M_CW, M_CY // mvp.cols.W - mvp.cols.Y
+	vadd.q F_ZP, M_CW, M_CZ // mvp.cols.W + mvp.cols.Z
+	vsub.q F_ZN, M_CW, M_CZ // mvp.cols.W - mvp.cols.Z
 
 	// Normalise planes. For each plane:
 	// 1) len = a*a+b*b+c*c
 	// 2) scale = 1.0 / sqrt(len)
 	// 3) a *= scale; b *= scale; c *= scale; d *= scale;
-	vdot.t S700, R300, R300 // len = a*a + b*b + c*c
-	vdot.t S701, R301, R301 // ..
-	vdot.t S702, R302, R302 // ..
-	vdot.t S703, R303, R303 // ..
-	vdot.t S710, R400, R400 // ..
-	vdot.t S711, R401, R401 // ..
+	vdot.t S_XP, F_XP, F_XP // len = a*a + b*b + c*c
+	vdot.t S_XN, F_XN, F_XN // ..
+	vdot.t S_YP, F_YP, F_YP // ..
+	vdot.t S_YN, F_YN, F_YN // ..
+	vdot.t S_ZP, F_ZP, F_ZP // ..
+	vdot.t S_ZN, F_ZN, F_ZN // ..
 
-	vrsq.s S700, S700       // scale = 1 / sqrt(len)
-	vrsq.s S701, S701       // ..
-	vrsq.s S702, S702       // ..
-	vrsq.s S703, S703       // ..
-	vrsq.s S710, S710       // ..
-	vrsq.s S711, S711       // ..
+	vrsq.s S_XP, S_XP       // scale = 1 / sqrt(len)
+	vrsq.s S_XN, S_XN       // ..
+	vrsq.s S_YP, S_YP       // ..
+	vrsq.s S_YN, S_YN       // ..
+	vrsq.s S_ZP, S_ZP       // ..
+	vrsq.s S_ZN, S_ZN       // ..
 
-	vscl.q R300, R300, S700 // [a,b,c,d] *= scale
-	vscl.q R301, R301, S701 // ..
-	vscl.q R302, R302, S702 // ..
-	vscl.q R303, R303, S703 // ..
-	vscl.q R400, R400, S710 // ..
-	vscl.q R401, R401, S711 // ..
+	vscl.q F_XP, F_XP, S_XP // [a,b,c,d] *= scale
+	vscl.q F_XN, F_XN, S_XN // ..
+	vscl.q F_YP, F_YP, S_YP // ..
+	vscl.q F_YN, F_YN, S_YN // ..
+	vscl.q F_ZP, F_ZP, S_ZP // ..
+	vscl.q F_ZN, F_ZN, S_ZN // ..
 
 	// Store frustum planes back into memory
-	sv.q R300,  0(DST)      // MEM_128[PLANE_0] = [a,b,c,d]
-	sv.q R301, 16(DST)      // ..
-	sv.q R302, 32(DST)      // ..
-	sv.q R303, 48(DST)      // ..
-	sv.q R400, 64(DST)      // ..
+	sv.q F_XP,  0(DST)      // MEM_128[PLANE_0] = [a,b,c,d]
+	sv.q F_XN, 16(DST)      // ..
+	sv.q F_YP, 32(DST)      // ..
+	sv.q F_YN, 48(DST)      // ..
+	sv.q F_ZP, 64(DST)      // ..
 	jr $ra
-	sv.q R401, 80(DST)      // ..
+	sv.q F_ZN, 80(DST)      // ..
 
 	#undef DST
-END_FUNC(CalcFrustumPlanes)
+END_FUNC(Frustum_CalcPlanes)
