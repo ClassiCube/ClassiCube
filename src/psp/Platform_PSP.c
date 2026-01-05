@@ -453,6 +453,11 @@ cc_result Socket_GetLastError(cc_socket s) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+#define NET_PROFILE_FIRST  1
+#define NET_PROFILE_LAST  23
+
+#define _ERROR_NETPARAM_BAD_NETCONF 0x80110601
+
 static cc_bool InitNetworking(void) {
     sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
     sceUtilityLoadNetModule(PSP_NET_MODULE_INET);    
@@ -470,19 +475,27 @@ static cc_bool InitNetworking(void) {
     res = sceNetApctlInit(10 * 1024, 0x30);
     if (res < 0) { Logger_SimpleWarn(res, "calling sceNetApctlInit"); return false; }
     
-    res = sceNetApctlConnect(1); // 1 = first profile
-    if (res) { Logger_SimpleWarn(res, "calling sceNetApctlConnect"); return false; }
+	for (int profile = NET_PROFILE_FIRST; profile <= NET_PROFILE_LAST; profile++)
+	{
+    	res = sceNetApctlConnect(profile);
+		// Invalid profile? Try with next one
+		if (res == _ERROR_NETPARAM_BAD_NETCONF && profile != NET_PROFILE_LAST) continue;
 
-    for (int try = 0; try < 20; try++) {
-        int state;
-        res = sceNetApctlGetState(&state);
-        if (res) { Logger_SimpleWarn(res, "calling sceNetApctlGetState"); return false; }
+    	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlConnect"); return false; }
+
+    	for (int try = 0; try < 20; try++) 
+		{
+        	int state;
+        	res = sceNetApctlGetState(&state);
+        	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlGetState"); return false; }
         
-        if (state == PSP_NET_APCTL_STATE_GOT_IP) return true;
+        	if (state == PSP_NET_APCTL_STATE_GOT_IP) return true;
 
-        // not successful yet? try polling again in 50 ms
-        sceKernelDelayThread(50 * 1000);
-    }
+        	// not successful yet? try polling again in 50 ms
+        	sceKernelDelayThread(50 * 1000);
+    	}
+		break; // TODO auto fallback to next profile ?
+	}
 
 	Window_ShowDialog("WiFi setup failed", "Timed out establishing a WiFi connection");
 	return false;
