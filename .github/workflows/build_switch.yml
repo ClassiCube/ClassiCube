@@ -20,26 +20,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compile Switch build
-        id: compile
         run: |
           make switch
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-switch.nro'
           DEST_NAME: 'ClassiCube-switch.nro'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-switch.elf'
           DEST_NAME: 'ClassiCube-switch.elf'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'switch'

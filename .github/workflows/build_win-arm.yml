@@ -24,7 +24,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile ARM32 Windows builds
         shell: bash
-        id: compile
         env:
           LIBS: "-lwinmm -limagehlp"
           SRCS: "src/*.c third_party/bearssl/*.c"
@@ -36,7 +35,6 @@ jobs:
           armv7-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-arm32-d3d11.exe $LATEST_FLAG ${{ env.LIBS }}
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-arm32-d3d11.exe'
           DEST_NAME: 'ClassiCube-arm32-Direct3D11.exe'
@@ -59,7 +57,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile ARM64 Windows builds
         shell: bash
-        id: compile
         env: 
           LIBS: "-lwinmm -limagehlp"
           SRCS: "src/*.c third_party/bearssl/*.c"
@@ -70,16 +67,8 @@ jobs:
           
           aarch64-w64-mingw32-gcc ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-arm64-d3d11.exe $LATEST_FLAG ${{ env.LIBS }}
           
-          
-      - uses: ./.github/actions/notify_failure
-        if: failure()
-        with:
-          NOTIFY_MESSAGE: 'Failed to produce 64 bit Windows build'
-          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-          
 
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-arm64-d3d11.exe'
           DEST_NAME: 'ClassiCube-arm64-Direct3D11.exe'          

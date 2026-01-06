@@ -18,7 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compile iOS build
-        id: compile
         run: |
           cd misc/ios
           sudo xcode-select -s /Applications/Xcode_15.0.1.app/Contents/Developer
@@ -29,14 +28,12 @@ jobs:
           zip -r cc.ipa Payload
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'misc/ios/build/Release-iphoneos/cc.ipa'
           DEST_NAME: 'cc.ipa'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'ios'

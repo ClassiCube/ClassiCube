@@ -20,26 +20,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compile Vita build
-        id: compile
         run: |
           make vita
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-vita.vpk'
           DEST_NAME: 'ClassiCube-vita.vpk'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-vita.elf'
           DEST_NAME: 'ClassiCube-vita.elf'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'vita'

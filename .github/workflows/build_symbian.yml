@@ -25,7 +25,6 @@ jobs:
         run: Expand-Archive symbiansdk.zip -DestinationPath .
 
       - name: Compile Symbian build
-        id: compile
         run: |
           $SDK = "$pwd/SDK/"
           $Env:EPOCROOT = "$SDK".Substring(2)
@@ -38,38 +37,32 @@ jobs:
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'misc/symbian/ClassiCube.sis'
           DEST_NAME: 'ClassiCube-Symbian.sis'
 
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe'
           DEST_NAME: 'ClassiCube_s60v5.exe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe'
           DEST_NAME: 'ClassiCube_s60v3.exe'
 
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe.sym'
           DEST_NAME: 'ClassiCube_s60v5.elf'
 
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe.sym'
           DEST_NAME: 'ClassiCube_s60v3.elf'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'symbian'

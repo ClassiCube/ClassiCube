@@ -24,27 +24,23 @@ jobs:
           apk add curl curl-dev
 
       - name: Compile Xbox build
-        id: compile
         run: |
           eval $(/usr/src/nxdk/bin/activate -s)
           make xbox
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-xbox.xbe'
           DEST_NAME: 'ClassiCube-xbox.xbe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-xbox.iso'
           DEST_NAME: 'ClassiCube-xbox.iso'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'xbox'

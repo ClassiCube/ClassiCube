@@ -60,7 +60,6 @@ jobs:
           wget https://cdn.classicube.net/client/latest/cc-haiku-64 -O cc-haiku-64
           
       - name: Generate builds
-        id: compile
         shell: bash
         run: |
           mkdir ClassiCube
@@ -117,13 +116,11 @@ jobs:
         
       # Generate Linux release files
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-linux32.tar.gz'
           DEST_NAME: 'cc-linux32.tar.gz'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-linux64.tar.gz'
           DEST_NAME: 'cc-linux64.tar.gz'
@@ -131,13 +128,11 @@ jobs:
           
       # Generate macOS release files
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-mac32.tar.gz'
           DEST_NAME: 'cc-mac32.tar.gz'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-mac64.tar.gz'
           DEST_NAME: 'cc-mac64.tar.gz'
@@ -145,19 +140,16 @@ jobs:
           
       # Generate Windows release files
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-win32.zip'
           DEST_NAME: 'cc-win32.zip'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-win64.zip'
           DEST_NAME: 'cc-win64.zip'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w9x.exe'
           DEST_NAME: 'cc-win9x.exe'
@@ -165,13 +157,11 @@ jobs:
           
       # Generate RPI release files
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-rpi32.tar.gz'
           DEST_NAME: 'cc-rpi32.tar.gz'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-rpi64.tar.gz'
           DEST_NAME: 'cc-rpi64.tar.gz'
@@ -179,13 +169,11 @@ jobs:
           
       # Generate FreeBSD release files
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-freebsd32.tar.gz'
           DEST_NAME: 'cc-freebsd32.tar.gz'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-freebsd64.tar.gz'
           DEST_NAME: 'cc-freebsd64.tar.gz'
@@ -193,7 +181,6 @@ jobs:
           
       # Generate NetBSD release files
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-netbsd64.tar.gz'
           DEST_NAME: 'cc-netbsd64.tar.gz'
@@ -201,14 +188,12 @@ jobs:
           
       # Generate haiku release files
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-haiku64.tar.gz'
           DEST_NAME: 'cc-haiku64.tar.gz'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'release'

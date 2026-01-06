@@ -21,7 +21,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile 64 bit macOS builds
         shell: bash
-        id: compile
         env: 
           LIBS: "-framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc"
           SRCS: "src/*.c src/Window_cocoa.m third_party/bearssl/*.c"
@@ -39,26 +38,22 @@ jobs:
           
    
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-mac64-gl1'
           DEST_NAME: 'ClassiCube-mac64-OpenGL'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-mac64-gl2'
           DEST_NAME: 'ClassiCube-mac64-ModernGL'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-mac-arm64'
           DEST_NAME: 'ClassiCube-mac-ARM64'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'mac64'

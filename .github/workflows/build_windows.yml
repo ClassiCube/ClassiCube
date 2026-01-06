@@ -30,7 +30,6 @@ jobs:
 
       - name: Compile 32 bit Windows builds
         shell: bash
-        id: compile
         env: 
           LIBS: "-lwinmm -limagehlp"
           SRCS: "src/*.c third_party/bearssl/*.c"
@@ -49,32 +48,27 @@ jobs:
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w32-d3d9.exe'
           DEST_NAME: 'ClassiCube-Win32-Direct3D9.exe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w32-ogl.exe'
           DEST_NAME: 'ClassiCube-Win32-OpenGL.exe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w32-d3d11.exe'
           DEST_NAME: 'ClassiCube-Win32-Direct3D11.exe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w9x-ogl.exe'
           DEST_NAME: 'ClassiCube-Win9x.exe'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'win32'
@@ -103,7 +97,6 @@ jobs:
 
       - name: Compile 64 bit Windows builds
         shell: bash
-        id: compile
         env: 
           LIBS: "-lwinmm -limagehlp"
           SRCS: "src/*.c third_party/bearssl/*.c"
@@ -119,26 +112,22 @@ jobs:
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w64-d3d9.exe'
           DEST_NAME: 'ClassiCube-Win64-Direct3D9.exe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w64-ogl.exe'
           DEST_NAME: 'ClassiCube-Win64-OpenGL.exe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-w64-d3d11.exe'
           DEST_NAME: 'ClassiCube-Win64-Direct3D11.exe'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'win64'

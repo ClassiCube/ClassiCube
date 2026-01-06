@@ -20,19 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compile GBA build
-        id: compile
         run: |
           make gba
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-gba.gba'
           DEST_NAME: 'ClassiCube-gba.gba'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-gba.elf'
           DEST_NAME: 'ClassiCube-gba.elf'

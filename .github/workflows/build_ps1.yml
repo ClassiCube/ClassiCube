@@ -25,39 +25,33 @@ jobs:
           apt-get install -y curl
 
       - name: Compile PS1 build
-        id: compile
         run: |
           export PSN00BSDK_ROOT=/usr/local/psnoob
           make ps1
 
 
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'build/ps1/ClassiCube-ps1.elf'
           DEST_NAME: 'ClassiCube-PS1.elf'
 
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-ps1.exe'
           DEST_NAME: 'ClassiCube-PS1.exe'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-ps1.bin'
           DEST_NAME: 'ClassiCube-PS1.bin'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-ps1.cue'
           DEST_NAME: 'ClassiCube-PS1.cue'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'ps1'
