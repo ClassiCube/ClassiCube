@@ -96,8 +96,6 @@ cur_behind_prev_front:
 	ComputeIntersection
 	sv.q	D_POS, POLY_XYZW(DST)
 	sv.q	D_OTH, POLY_UVCF(DST)
-	addiu	DST, DST, S_POLY // dst += sizeof(PolyVertex)
-
 	j		line_finished
 	addiu	DST, DST, S_POLY // dst += sizeof(PolyVertex)
 
