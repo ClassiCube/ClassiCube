@@ -612,7 +612,7 @@ void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
 void Window_ShowDialog(const char* title, const char* msg) {
-	VirtualDialog_Show(title, msg);
+	VirtualDialog_Show(title, msg, false);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

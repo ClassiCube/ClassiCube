@@ -458,6 +458,40 @@ cc_result Socket_GetLastError(cc_socket s) {
 
 #define _ERROR_NETPARAM_BAD_NETCONF 0x80110601
 
+extern void VirtualDialog_Show(const char* title, const char* msg, cc_bool oneshot); // TODO better solution
+static int last_net_state = -1;
+
+static void DisplayNetState(int state) {
+	union SceNetApctlInfo net_name  = { 0 };
+	union SceNetApctlInfo net_ssid  = { 0 };
+
+	if (state == last_net_state) return;
+	last_net_state = state;
+
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_PROFILE_NAME, &net_name);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_SSID,         &net_ssid);
+
+	cc_string str; char buffer[256];
+	String_InitArray_NT(str, buffer);
+	String_Format2(&str, "Profile name: %c\nNetwork SSID: %c\n\n", 
+						net_name.name, net_ssid.ssid);
+
+	switch (state)
+	{
+		case PSP_NET_APCTL_STATE_SCANNING: 
+			String_AppendConst(&str, "Scanning for network.."); break;
+		case PSP_NET_APCTL_STATE_JOINING: 
+			String_AppendConst(&str, "Joining network.."); break;
+		case PSP_NET_APCTL_STATE_GETTING_IP: 
+			String_AppendConst(&str, "Getting IP address.."); break;
+	}
+
+	buffer[str.length] = '\0';
+	VirtualDialog_Show("Connecting to network", buffer, true);
+
+	Platform_Log1("STATE: %i", &state);
+}
+
 static cc_bool InitNetworking(void) {
     sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
     sceUtilityLoadNetModule(PSP_NET_MODULE_INET);    
@@ -483,13 +517,14 @@ static cc_bool InitNetworking(void) {
 
     	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlConnect"); return false; }
 
-    	for (int try = 0; try < 20; try++) 
+    	for (int try = 0; try < 100; try++) 
 		{
         	int state;
         	res = sceNetApctlGetState(&state);
         	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlGetState"); return false; }
         
         	if (state == PSP_NET_APCTL_STATE_GOT_IP) return true;
+			DisplayNetState(state);
 
         	// not successful yet? try polling again in 50 ms
         	sceKernelDelayThread(50 * 1000);

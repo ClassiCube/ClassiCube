@@ -54,7 +54,7 @@ static int DrawText(const char* msg, struct Bitmap* bmp, int y) {
 #define VD_TICK_INTERVAL 50
 #define VD_MAX_ITERS (5000 / VD_TICK_INTERVAL)
 
-static void VirtualDialog_Show(const char* title, const char* msg) {
+void VirtualDialog_Show(const char* title, const char* msg, cc_bool oneshot) {
 	struct Bitmap bmp;
 	Platform_LogConst(title);
 	Platform_LogConst(msg);
@@ -78,7 +78,8 @@ static void VirtualDialog_Show(const char* title, const char* msg) {
 
 	y = DrawText(title, &bmp, y);
 	y = DrawText(msg,   &bmp, y + vd_lineSpace);
-	DrawText(ipt_msg,   &bmp, bmp.height - vd_lineSpace * 2);
+
+	if (!oneshot) { DrawText(ipt_msg, &bmp, bmp.height - vd_lineSpace * 2); }
 
 	Input_DownHook old_hook = Input.DownHook;
 	Input.DownHook = VirtualDialog_InputHook;
@@ -94,14 +95,17 @@ static void VirtualDialog_Show(const char* title, const char* msg) {
 
 		Window_DrawFramebuffer(rect, &bmp);
 		Thread_Sleep(VD_TICK_INTERVAL);
+		if (oneshot) break;
 
 		// Window_ProcessEvents processed an app exit event
 		if (has_window && !Window_Main.Exists) break;
 	}
 
-	Context2D_Clear(&ctx, BitmapCol_Make(20, 20, 20, 255),
-					0, 0, bmp.width, bmp.height);
-	Window_DrawFramebuffer(rect, &bmp);
+	if (!oneshot) {
+		Context2D_Clear(&ctx, BitmapCol_Make(20, 20, 20, 255),
+						0, 0, bmp.width, bmp.height);
+		Window_DrawFramebuffer(rect, &bmp);
+	}
 
 	if (!LBackend_FB.bmp.scan0) {
 		Window_FreeFramebuffer(&bmp);
