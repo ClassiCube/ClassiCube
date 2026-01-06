@@ -75,6 +75,9 @@ int Game_NumStates = 1;
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
+#ifdef CC_BUILD_IOS
+	"LimitProMotion",
+#endif
 };
 
 static struct IGameComponent* comps_head;
@@ -497,6 +500,10 @@ void Game_SetFpsLimit(int method) {
 	case FPS_LIMIT_30:  minFrameTime = 1000/30.0f;  break;
 	}
 	Gfx_SetVSync(method == FPS_LIMIT_VSYNC);
+#ifdef CC_BUILD_IOS
+	extern void Gfx_SetProMotion(cc_bool);
+	Gfx_SetProMotion(method == FPS_LIMIT_PROMOTION);
+#endif
 	Game_SetMinFrameTime(minFrameTime);
 }
 
