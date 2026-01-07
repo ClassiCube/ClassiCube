@@ -72,12 +72,6 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Platform_Log(const char* msg, int len) {
 	int fd = sceKernelStdout();
 	sceIoWrite(fd, msg, len);
-	
-	//sceIoDevctl("emulator:", 2, msg, len, NULL, 0);
-	//cc_string str = String_Init(msg, len, len);
-	//cc_file file = 0;
-	//File_Open(&file, &str);
-	//File_Close(file);	
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -517,7 +511,7 @@ static cc_bool InitNetworking(void) {
 
     	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlConnect"); return false; }
 
-    	for (int try = 0; try < 100; try++) 
+    	for (int try = 0; try < 200; try++) 
 		{
         	int state;
         	res = sceNetApctlGetState(&state);

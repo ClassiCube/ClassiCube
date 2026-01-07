@@ -33,7 +33,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET=10.5 clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.INTEL64_FLAGS }} $LATEST_FLAG -o cc-mac64-gl1-x64 ${{ env.LIBS }}
           MACOSX_DEPLOYMENT_TARGET=10.5 clang ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.INTEL64_FLAGS }} $LATEST_FLAG -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -o cc-mac64-gl2-x64 ${{ env.LIBS }}
           
-          clang ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.ARM64_FLAGS }} $LATEST_FLAG -o cc-mac-gl2-arm64 ${{ env.LIBS }}
+          clang ${{ env.SRCS }} ${{ env.COMMON_FLAGS }} ${{ env.ARM64_FLAGS }} $LATEST_FLAG -o cc-mac64-gl2-arm64 ${{ env.LIBS }}
           # https://wiki.freepascal.org/Code_Signing_for_macOS#Ad_hoc_signing
 
       - name: Generate combined Intel + ARM64 build

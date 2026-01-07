@@ -374,14 +374,6 @@ extern const cc_result ReturnCode_SocketWouldBlock;
 /* Result code for when a socket connection has been dropped by the other side */
 extern const cc_result ReturnCode_SocketDropped;
 
-/* Polls if the given socket is currently readable */
-/* NOTE: 'readable' usually means socket either has data available to read, or is closed */
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable);
-/* Checks if the given socket is currently writable */
-/* NOTE: 'writable' usually means socket either has finished connecting, or is closed */
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
-/* Retrieves the most recent async error code (typically from connect) */
-cc_result Socket_GetLastError(cc_socket s);
 /* If the input represents an IP address, then parses the input into a single IP address */
 /* Otherwise, attempts to resolve the input via DNS into one or more IP addresses */
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs);
@@ -397,8 +389,15 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 /* Attempts to close the given socket */
 void Socket_Close(cc_socket s);
-/* Attempts to write all data to the given socket, returning ERR_END_OF_STREAM if it could not */
-cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count);
+
+/* Polls if the given socket is currently readable */
+/* NOTE: 'readable' usually means socket either has data available to read, or is closed */
+cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable);
+/* Checks if the given socket is currently writable */
+/* NOTE: 'writable' usually means socket either has finished connecting, or is closed */
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
+/* Retrieves the most recent async error code (typically from connect) */
+cc_result Socket_GetLastError(cc_socket s);
 
 
 /*########################################################################################################################*

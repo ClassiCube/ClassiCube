@@ -227,21 +227,6 @@ static CC_INLINE void SocketAddr_Set(cc_sockaddr* addr, const void* src, unsigne
 	addr->size = srcLen;
 }
 
-cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count) {
-	cc_uint32 sent;
-	cc_result res;
-
-	while (count)
-	{
-		if ((res = Socket_Write(socket, data, count, &sent))) return res;
-		if (!sent) return ERR_END_OF_STREAM;
-
-		data  += sent;
-		count -= sent;
-	}
-	return 0;
-}
-
 
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
