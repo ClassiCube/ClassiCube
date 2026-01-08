@@ -241,6 +241,16 @@ void Platform_LoadSysFonts(void) { }
 *#########################################################################################################################*/
 extern void interop_InitSockets(void);
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	const char* str = addr->data;
+
+	String_AppendUtf8(dst, str, String_Length(str));
+	String_Format1(dst, ":%i", &dst->size);
+	return true;
+}
+
+
+
 // not actually ipv4 address, just copies across hostname
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	int len = String_EncodeUtf8(dst->data, ip);

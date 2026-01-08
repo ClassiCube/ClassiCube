@@ -186,6 +186,8 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	cc_uint16 portNum;
 	cc_result res;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
+	char addrBuf[32];
+	cc_string addrStr;
 	int i, numValidAddrs;
 
 	ExtractHostPort(url, &host, &port);
@@ -204,6 +206,9 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	{
 		res = Socket_Create(&conn->socket, &addrs[i], false);
 		if (res) { HttpConnection_Close(conn); continue; }
+
+		String_InitArray(addrStr, addrBuf);
+		if (SockAddr_ToString(&addrs[i], &addrStr)) Platform_Log1("  Connecting to %s..", &addrStr);
 
 		res = Socket_Connect(conn->socket, &addrs[i]);
 		if (res) { HttpConnection_Close(conn); continue; }

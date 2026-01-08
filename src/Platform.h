@@ -377,6 +377,8 @@ extern const cc_result ReturnCode_SocketDropped;
 /* If the input represents an IP address, then parses the input into a single IP address */
 /* Otherwise, attempts to resolve the input via DNS into one or more IP addresses */
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs);
+/* Attempts to produce the string representation of the given socket address */
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst);
 
 /* Allocates a new socket that is capable of connecting to the given address */
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);
