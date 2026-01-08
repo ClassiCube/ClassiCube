@@ -1184,13 +1184,17 @@ static struct ChatCommand HighJumpCommand = {
 static void SpinCommand_Execute(const cc_string* args, int argsCount) {
 	float Spin_Command;
 
+	if (argsCount != 1) {
+	Spin_enabled = !Spin_enabled;
+	    Chat_AddRaw(Spin_enabled ? "&aSpin enabled" : "&cSpin disabled");
+		return;
+	}
 	if (!Convert_ParseFloat(args, &Spin_Command)) {
 		Chat_Add1("&cInvalid number!", NULL);
 		return;
 	}
 	SpinSpeed = Spin_Command;
-	Spin_enabled = !Spin_enabled;
-    Chat_AddRaw(Spin_enabled ? "&aSpin enabled" : "&cSpin disabled");
+	    Chat_AddRaw("&aSpin Speed set");
 }
 
 static struct ChatCommand SpinCommand = {
