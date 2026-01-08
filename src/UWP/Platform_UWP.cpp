@@ -423,7 +423,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.S_un.S_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -438,7 +438,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	Platform_EncodeString(&str, &address);
 
 	if (!WSAStringToAddressW(UWP_STRING(&str), AF_INET6, NULL, (SOCKADDR*)addr6, &size)) {
-		addr6->sin6_port = htons(port);
+		addr6->sin6_port = SockAddr_EncodePort(port);
 
 		dst->size = size;
 		return true;

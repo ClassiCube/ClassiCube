@@ -364,6 +364,13 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_NETWORKING
+/* Encodes port number in network (i.e. big endian) byte order) */
+static CC_INLINE cc_uint16 SockAddr_EncodePort(int port) {
+	cc_uint16 raw;
+	Stream_SetU16_BE((cc_uint8*)&raw, port);
+	return raw;
+}
+
 /* Parses IPv4 addresses in the form a.b.c.d */
 static CC_INLINE cc_bool ParseIPv4Address(const cc_string* addr, cc_uint32* ip) {
 	cc_string parts[5];

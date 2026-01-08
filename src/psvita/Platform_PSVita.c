@@ -317,7 +317,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = SCE_NET_AF_INET;
-	addr4->sin_port        = sceNetHtons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -329,7 +329,6 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)addrs[0].data;
-	char buf[1024];
 	
 	/* Fallback to resolving as DNS name */
 	int rid = sceNetResolverCreate("CC resolver", NULL, 0);
@@ -340,7 +339,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	if (ret) return ret;
 	
 	addr4->sin_family = SCE_NET_AF_INET;
-	addr4->sin_port   = sceNetHtons(port);
+	addr4->sin_port   = SockAddr_EncodePort(port);
 		
 	addrs[0].size  = sizeof(*addr4);
 	*numValidAddrs = 1;

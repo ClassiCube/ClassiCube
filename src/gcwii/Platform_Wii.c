@@ -147,7 +147,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 		addr4 = (struct sockaddr_in*)addrs[i].data;
 		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
+		addr4->sin_port   = SockAddr_EncodePort(port);
 		addr4->sin_addr   = *(struct in_addr*)src_addr;
 	}
 

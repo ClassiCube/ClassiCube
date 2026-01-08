@@ -564,7 +564,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.S_un.S_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = _htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -577,7 +577,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	if (!_WSAStringToAddressA) return false;
 
 	if (!_WSAStringToAddressA((char*)ip, AF_INET6, NULL, addr6, &size)) {
-		addr6->sin6_port = _htons(port);
+		addr6->sin6_port = SockAddr_EncodePort(port);
 
 		dst->size = size;
 		return true;
@@ -614,7 +614,7 @@ static cc_result ParseHostOld(const char* host, int port, cc_sockaddr* addrs, in
 
 		addr4 = (SOCKADDR_IN*)addrs[i].data;
 		addr4->sin_family = AF_INET;
-		addr4->sin_port   = _htons(port);
+		addr4->sin_port   = SockAddr_EncodePort(port);
 		addr4->sin_addr   = *(IN_ADDR*)src_addr;
 	}
 
