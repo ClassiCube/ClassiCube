@@ -2100,9 +2100,17 @@ static void DisconnectScreen_Layout(void* screen) {
 static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 	cc_string msg; char msgBuffer[STRING_SIZE];
 	String_InitArray(msg, msgBuffer);
+	int secsLeft;
 
-		Widget_SetDisabled(&s->reconnect, 0);
+		secsLeft = Math_Ceil(s->delayLeft);
 
+		if (secsLeft > 0) {
+			String_Format1(&msg, "Reconnect in %i", &secsLeft);
+		}
+		Widget_SetDisabled(&s->reconnect, secsLeft > 0);
+
+
+	if (NoReconnectDelay_enabled) Widget_SetDisabled(&s->reconnect, 0);
 	if (!msg.length) String_AppendConst(&msg, "Reconnect");
 	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
 }

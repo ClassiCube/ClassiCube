@@ -59,9 +59,10 @@ Instructions:
 - NoCamGravity
 - Highjump
 - Strafe
+- Spin
+- NoReconnectDelay (on by default)
 
 ## Current Features
-- NoReconnectDelay
 - Coloured F3 Menu
 <!--TODO Move this into a doc or a wiki -->
 

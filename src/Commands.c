@@ -20,47 +20,42 @@
 #include "Audio.h"
 #include "MapRenderer.h"
 #include "Screens.h"
+#include "ExtMath.h"
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
 static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
-//ForceHax Toggle
 cc_bool ForceHax_enabled = false;
 
-//NoPush Toggle
 cc_bool NoPush_enabled = false;
 
-//NoPush Toggle
 cc_bool NoCamGravity_enabled = false;
 
-//Speed multiplier
 float Speed = 0.0f;
 
-//StepHeight
 float StepHeight = 0.0f;
 
-//Nametags Toggle
 cc_bool Nametags_enabled = false;
 
-//Strafe Toggle
 cc_bool Strafe_enabled = false;
 
-//Jesus Toggle
 static cc_bool isSolid = false;
 
-//InfJump Toggle
 cc_bool InfJump_enabled = false;
 
-//FastClimb Toggle
 cc_bool FastClimb_enabled = false;
 
-//ArrayList Toggle
 // cc_bool ArrayList_enabled = false;
 
-//NoClickDelay Toggle
 cc_bool NoClickDelay_enabled = false;
+
+cc_bool Spin_enabled = false;
+
+float SpinSpeed = 1;
+
+cc_bool NoReconnectDelay_enabled = true;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -806,6 +801,7 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 	} else if (String_CaselessEqualsConst(prop, "fullbright")) {
 		if (!BlockEditCommand_GetBool(value, "Full brightness", &b))  return;
 		//TODO: Fix this, brightness isn't just a bool anymore
+		// Free fullbright
 		Blocks.Brightness[block] = b;
 	} else if (String_CaselessEqualsConst(prop, "blockslight")) {
 		if (!BlockEditCommand_GetBool(value, "Blocks light", &b)) return;
@@ -854,7 +850,7 @@ static struct ChatCommand InfoCommand = {
 
 static void NoPushCommand_Execute(const cc_string* args, int argsCount) {
     NoPush_enabled = !NoPush_enabled;
-    Chat_AddRaw("Toggled NoPush.");
+    Chat_AddRaw(NoPush_enabled ? "&aNoPush enabled" : "&cNoPush disabled");
 }
 
 static struct ChatCommand NoPushCommand = {
@@ -871,7 +867,7 @@ static struct ChatCommand NoPushCommand = {
 
 static void NoCamGravityCommand_Execute(const cc_string* args, int argsCount) {
     NoCamGravity_enabled = !NoCamGravity_enabled;
-    Chat_AddRaw("Toggled NoCamGravity.");
+    Chat_AddRaw(NoCamGravity_enabled ? "&aNoCamGravity enabled" : "&cNoCamGravity disabled");
 }
 
 static struct ChatCommand NoCamGravityCommand = {
@@ -892,7 +888,7 @@ static void ForceHaxCommand_Execute(const cc_string* args, int argsCount) {
 	#ifdef CC_BUILD_TOUCH
 	Event_RaiseVoid(&UserEvents.HackPermsChanged);
 	#endif
-    Chat_AddRaw("Toggled ForceHax.");
+    Chat_AddRaw(ForceHax_enabled ? "&aForcehax enabled" : "&cForcehax disabled");
 }
 
 static struct ChatCommand ForceHaxCommand = {
@@ -910,7 +906,7 @@ static struct ChatCommand ForceHaxCommand = {
 
 static void NametagsCommand_Execute(const cc_string* args, int argsCount) {
     Nametags_enabled = !Nametags_enabled;
-    Chat_AddRaw("Toggled Nametags.");
+    Chat_AddRaw(Nametags_enabled ? "&aNametags enabled" : "&cNametags disabled");
 }
 
 static struct ChatCommand NametagsCommand = {
@@ -1044,7 +1040,7 @@ static struct ChatCommand GravityCommand = {
 
 static void InfJumpCommand_Execute(const cc_string* args, int argsCount) {
 	InfJump_enabled = !InfJump_enabled;
-	Chat_AddRaw("Toggled InfJump.");
+    Chat_AddRaw(InfJump_enabled ? "&aInfjump enabled" : "&cInfjump disabled");
 }
 
 static struct ChatCommand InfJumpCommand = {
@@ -1078,7 +1074,7 @@ static struct ChatCommand InfJumpCommand = {
 
 static void FastClimbCommand_Execute(const cc_string* args, int argsCount) {
 	FastClimb_enabled = !FastClimb_enabled;
-	Chat_AddRaw("Toggled FastClimb.");
+    Chat_AddRaw(FastClimb_enabled ? "&aFastclimb enabled" : "&cFastclimb disabled");
 }
 
 static struct ChatCommand FastClimbCommand = {
@@ -1095,7 +1091,7 @@ static struct ChatCommand FastClimbCommand = {
 
 static void NoClickDelayCommand_Execute(const cc_string* args, int argsCount) {
 	NoClickDelay_enabled = !NoClickDelay_enabled;
-	Chat_AddRaw("Toggled NoClickDelay.");
+    Chat_AddRaw(NoClickDelay_enabled ? "&aNoClickDelay enabled" : "&cNoClickDelay disabled");
 }
 
 static struct ChatCommand NoClickDelayCommand = {
@@ -1112,7 +1108,7 @@ static struct ChatCommand NoClickDelayCommand = {
 
 static void StrafeCommand_Execute(const cc_string* args, int argsCount) {
 	Strafe_enabled = !Strafe_enabled;
-	Chat_AddRaw("Toggled Strafe.");
+    Chat_AddRaw(Strafe_enabled ? "&aStrafe enabled" : "&cStrafe disabled");
 }
 
 static struct ChatCommand StrafeCommand = {
@@ -1182,6 +1178,61 @@ static struct ChatCommand HighJumpCommand = {
 };
 
 /*########################################################################################################################*
+*---------------------------------------------------------Spin------------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void SpinCommand_Execute(const cc_string* args, int argsCount) {
+	float Spin_Command;
+
+	if (!Convert_ParseFloat(args, &Spin_Command)) {
+		Chat_Add1("&cInvalid number!", NULL);
+		return;
+	}
+	SpinSpeed = Spin_Command;
+	Spin_enabled = !Spin_enabled;
+    Chat_AddRaw(Spin_enabled ? "&aSpin enabled" : "&cSpin disabled");
+}
+
+static struct ChatCommand SpinCommand = {
+	"Spin", SpinCommand_Execute, 0,
+	{
+		"&a/client Spin",
+		"&eToggles Spin.",
+	}
+};
+
+static void Spin_Tick(struct ScheduledTask* task) {
+    if (!Spin_enabled) return;
+
+        struct LocalPlayer* p = Entities.CurPlayer;
+        struct Entity* e = &p->Base;
+
+        struct LocationUpdate update;
+        update.flags = LU_HAS_YAW | LU_HAS_PITCH;
+        update.yaw   = e->Yaw + SpinSpeed;
+        update.pitch = Math_ClampAngle(e->Pitch);
+        e->VTABLE->SetLocation(e, &update);
+}
+// TODO: Add pitch;
+
+/*########################################################################################################################*
+*------------------------------------------------------NoReconnectDelay---------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoReconnectDelayCommand_Execute(const cc_string* args, int argsCount) {
+    NoReconnectDelay_enabled = !NoReconnectDelay_enabled;
+    Chat_AddRaw(NoReconnectDelay_enabled ? "&aNoReconnectDelay enabled" : "&cNoReconnectDelay disabled");
+}
+
+static struct ChatCommand NoReconnectDelayCommand = {
+	"NoReconnectDelay", NoReconnectDelayCommand_Execute, 0,
+	{
+		"&a/client NoReconnectDelay.",
+		"&eToggles NoReconnectDelay.",
+	}
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -1215,6 +1266,11 @@ static void OnInit(void) {
 	Commands_Register(&NoCamGravityCommand);
 	Commands_Register(&HighJumpCommand);
 	Commands_Register(&StrafeCommand);
+	Commands_Register(&SpinCommand);
+	Commands_Register(&NoReconnectDelayCommand);
+	
+	/*Velocity Events*/
+	ScheduledTask_Add(0.01, Spin_Tick);
 }
 
 static void OnFree(void) {
@@ -1237,3 +1293,4 @@ struct IGameComponent Commands_Component = {
 //Shorten forcehax logic as im dumb
 //Noslow
 //ForceViewDist
+//Make noreconnectdelay a command
