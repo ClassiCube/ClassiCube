@@ -313,7 +313,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
 	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)addr->data;
 
-	if (addr4->sin_family == AF_INET) 
+	if (addr4->sin_family == SCE_NET_AF_INET) 
 		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
 	return false;
 }

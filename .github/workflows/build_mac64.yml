@@ -54,7 +54,7 @@ jobs:
           
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'cc-mac-gl2-arm64'
+          SOURCE_FILE: 'cc-mac64-gl2-arm64'
           DEST_NAME: 'ClassiCube-mac-ARM64'
           
           

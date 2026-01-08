@@ -169,15 +169,28 @@ static void HttpConnection_Close(struct HttpConnection* conn) {
 static void ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_string* port) {
 	/* address can have the form of either "host" or "host:port" */
 	/* Slightly more complicated because IPv6 hosts can be e.g. [::1] */
-	const cc_string* addr = &url->address;
-	int idx = String_LastIndexOf(addr, ':');
+	cc_string addr = url->address;
+	int idx = String_IndexOf(&addr, ':');
+	int endIdx;
+
+	/* Special handling for raw IPv6 hosts, e.g. "[::1]:80" */
+	if (addr.length && addr.buffer[0] == '[' && (endIdx = String_IndexOf(&addr, ']')) >= 0) {
+		*host = String_UNSAFE_Substring(&addr, 1, endIdx - 1);
+		addr  = String_UNSAFE_SubstringAt(&addr, endIdx + 1);
+
+		idx = String_IndexOf(&addr, ':');
+	} else if (idx == -1) {
+		/* Hostname/IP only */
+		*host = addr;
+	} else {
+		/* Hostname/IP:port */
+		*host = String_UNSAFE_Substring(&addr, 0, idx);
+	}
 
 	if (idx == -1) {
-		*host = *addr;
 		*port = String_Empty;
 	} else {
-		*host = String_UNSAFE_Substring(addr, 0, idx);
-		*port = String_UNSAFE_SubstringAt(addr, idx + 1);
+		*port = String_UNSAFE_SubstringAt(&addr, idx + 1);
 	}
 }
 
