@@ -744,7 +744,7 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		entity->Velocity.y = 0.02f;
 	}
 
-	if (!comp->Jumping) { comp->CanLiquidJump = false; return; }
+	if (!comp->Jumping && !AutoJump_enabled) { comp->CanLiquidJump = false; return; }
 	touchWater = Entity_TouchesAnyWater(entity);
 	touchLava  = Entity_TouchesAnyLava(entity);
 

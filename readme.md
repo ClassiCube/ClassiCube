@@ -61,6 +61,7 @@ Instructions:
 - Strafe
 - Spin
 - NoReconnectDelay (on by default)
+- Autojump
 
 ## Current Features
 - Coloured F3 Menu

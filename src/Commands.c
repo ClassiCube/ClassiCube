@@ -57,6 +57,8 @@ float SpinSpeed = 1;
 
 cc_bool NoReconnectDelay_enabled = true;
 
+cc_bool AutoJump_enabled = false;
+
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
@@ -1237,6 +1239,23 @@ static struct ChatCommand NoReconnectDelayCommand = {
 };
 
 /*########################################################################################################################*
+*------------------------------------------------------AutoJump-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void AutoJumpCommand_Execute(const cc_string* args, int argsCount) {
+	AutoJump_enabled = !AutoJump_enabled;
+    Chat_AddRaw(AutoJump_enabled ? "&aAutoJump enabled" : "&cAutoJump disabled");
+}
+
+static struct ChatCommand AutoJumpCommand = {
+	"AutoJumpb", AutoJumpCommand_Execute, 0,
+	{
+		"&a/client AutoJump",
+		"&eToggles AutoJump.",
+	}
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -1272,6 +1291,7 @@ static void OnInit(void) {
 	Commands_Register(&StrafeCommand);
 	Commands_Register(&SpinCommand);
 	Commands_Register(&NoReconnectDelayCommand);
+	Commands_Register(&AutoJumpCommand);
 	
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);

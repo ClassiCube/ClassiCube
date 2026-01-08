@@ -19,6 +19,7 @@ extern cc_bool NoClickDelay_enabled;
 extern cc_bool NoCamGravity_enabled;
 extern cc_bool Strafe_enabled;
 extern cc_bool NoReconnectDelay_enabled;
+extern cc_bool AutoJump_enabled;
 // extern cc_bool ArrayList_enabled;
 extern float Speed;
 extern float StepHeight;
