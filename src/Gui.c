@@ -100,6 +100,7 @@ int Gui_ContainsPointers(int x, int y, int width, int height) {
 void Gui_ShowDefault(void) {
 	HUDScreen_Show();
 	ChatScreen_Show();
+	SpecialTextScreen_Show();
 #ifdef CC_BUILD_TOUCH
 	TouchScreen_Show();
 #endif

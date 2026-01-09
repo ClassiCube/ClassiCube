@@ -333,7 +333,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	} else {
 		tex = (CCTexture*)Mem_TryAlloc(1, sizeof(CCTexture));
 		if (!tex) { 
-    		blockalloc_dealloc(tex_table, tex->base, tex->blocks);
+			blockalloc_dealloc(tex_table, base, blocks);
 			return 0;
 		}
 	}
