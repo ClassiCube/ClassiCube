@@ -317,6 +317,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
 #define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)
 #define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget)
+#define Widget_MaxVertices(widget)     (widget)->VTABLE->GetMaxVertices(widget)
 
 CC_END_HEADER
 #endif

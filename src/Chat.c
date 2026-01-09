@@ -27,9 +27,9 @@ cc_string Chat_Announcement = String_FromArray(announcement);
 cc_string Chat_BigAnnouncement = String_FromArray(bigAnnouncement);
 cc_string Chat_SmallAnnouncement = String_FromArray(smallAnnouncement);
 
-double Chat_AnnouncementReceived;
-double Chat_BigAnnouncementReceived;
-double Chat_SmallAnnouncementReceived;
+float Chat_AnnouncementLeft;
+float Chat_BigAnnouncementLeft;
+float Chat_SmallAnnouncementLeft;
 
 CC_BIG_VAR struct StringsBuffer Chat_Log, Chat_InputLog;
 cc_bool Chat_Logging;
@@ -232,13 +232,13 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 		String_Copy(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
 	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		String_Copy(&Chat_Announcement, text);
-		Chat_AnnouncementReceived = Game.Time;
+		Chat_AnnouncementLeft = 5.0f;
 	} else if (msgType == MSG_TYPE_BIGANNOUNCEMENT) {
 		String_Copy(&Chat_BigAnnouncement, text);
-		Chat_BigAnnouncementReceived = Game.Time;
+		Chat_BigAnnouncementLeft = 5.0f;
 	} else if (msgType == MSG_TYPE_SMALLANNOUNCEMENT) {
 		String_Copy(&Chat_SmallAnnouncement, text);
-		Chat_SmallAnnouncementReceived = Game.Time;
+		Chat_SmallAnnouncementLeft = 5.0f;
 	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_2) {
 		String_Copy(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	} else if (msgType >= MSG_TYPE_EXTRASTATUS_1 && msgType <= MSG_TYPE_EXTRASTATUS_2) {

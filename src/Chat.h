@@ -33,10 +33,10 @@ enum MsgType {
 extern double Chat_RecentLogTimes[CHATLOG_TIME_MASK + 1];
 #define Chat_GetLogTime(i) Chat_RecentLogTimes[(i) & CHATLOG_TIME_MASK]
 
-/* Times at which last announcement messages were received */
-extern double Chat_AnnouncementReceived;
-extern double Chat_BigAnnouncementReceived;
-extern double Chat_SmallAnnouncementReceived;
+/* Amount of time left for displaying announcement messages on-screen */
+extern float Chat_AnnouncementLeft;
+extern float Chat_BigAnnouncementLeft;
+extern float Chat_SmallAnnouncementLeft;
 
 extern cc_string Chat_Status[5], Chat_BottomRight[3], Chat_ClientStatus[2];
 extern cc_string Chat_Announcement, Chat_BigAnnouncement, Chat_SmallAnnouncement;

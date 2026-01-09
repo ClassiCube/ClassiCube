@@ -1466,6 +1466,7 @@ void ChatScreen_SetChatlines(int lines) {
 /*########################################################################################################################*
 *----------------------------------------------------SpecialTextScreen----------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
 static struct SpecialTextScreen {
 	Screen_Body
 	int lastDownloadStatus;
@@ -1475,6 +1476,7 @@ static struct SpecialTextScreen {
 
 	struct Texture statusTextures[CHAT_MAX_STATUS];
 	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
+	struct Widget* __widgets[3 + 2];
 } SpecialTextScreen_Instance CC_BIG_VAR;
 
 static cc_string SpecialTextScreen_GetStatus(int i)       { return Chat_Status[i]; }
@@ -1512,14 +1514,6 @@ static cc_bool SpecialTextScreen_ChatUpdateFont(struct SpecialTextScreen* s) {
 	return true;
 }
 
-static void SpecialTextScreen_Redraw(struct SpecialTextScreen* s) {
-	TextWidget_Set(&s->announcement, &Chat_Announcement, &s->announcementFont);
-	TextWidget_Set(&s->bigAnnouncement, &Chat_BigAnnouncement, &s->bigAnnouncementFont);
-	TextWidget_Set(&s->smallAnnouncement, &Chat_SmallAnnouncement, &s->smallAnnouncementFont);
-	TextGroupWidget_RedrawAll(&s->status);
-	TextGroupWidget_RedrawAll(&s->bottomRight);
-}
-
 static void SpecialTextScreen_UpdateTexpackStatus(struct SpecialTextScreen* s) {
 	int progress = Http_CheckProgress(TexturePack_ReqID);
 	cc_string msg; char msgBuffer[STRING_SIZE];
@@ -1549,45 +1543,39 @@ static void SpecialTextScreen_ColCodeChanged(void* screen, int code) {
 static void SpecialTextScreen_ChatReceived(void* screen, const cc_string* msg, int type) {
 	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
 	if (Gfx.LostContext) return;
-	s->dirty = true;
 
 	if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
 		/* Status[1] is for reduced performance mode message */
 		TextGroupWidget_Redraw(&s->status, 2 + (type - MSG_TYPE_STATUS_1));
+		s->dirty = true;
 	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
 		/* Bottom3 is top most line, so need to redraw index 0 */
 		TextGroupWidget_Redraw(&s->bottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1));
+		s->dirty = true;
 	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
 		TextWidget_Set(&s->announcement, msg, &s->announcementFont);
+		s->dirty = true;
 	} else if (type == MSG_TYPE_BIGANNOUNCEMENT) {
 		TextWidget_Set(&s->bigAnnouncement, msg, &s->bigAnnouncementFont);
+		s->dirty = true;
 	} else if (type == MSG_TYPE_SMALLANNOUNCEMENT) {
 		TextWidget_Set(&s->smallAnnouncement, msg, &s->smallAnnouncementFont);
+		s->dirty = true;
 	} else if (type >= MSG_TYPE_EXTRASTATUS_1 && type <= MSG_TYPE_EXTRASTATUS_2) {
 		/* Status[0] is for texture pack downloading message */
 		/* Status[1] is for reduced performance mode message */
 		TextGroupWidget_Redraw(&s->status, type - MSG_TYPE_EXTRASTATUS_1);
+		s->dirty = true;
 	} 
 }
 
-static void SpecialTextScreen_Update(void* screen, float delta) {
-	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
-	double now = Game.Time;
-
-	/* Destroy announcement texture before even rendering it at all, */
-	/* otherwise changing texture pack shows announcement for one frame */
-	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
-		Elem_Free(&s->announcement);
-	}
-
-	if (s->bigAnnouncement.tex.ID && now > Chat_BigAnnouncementReceived + 5) {
-		Elem_Free(&s->bigAnnouncement);
-	}
-
-	if (s->smallAnnouncement.tex.ID && now > Chat_SmallAnnouncementReceived + 5) {
-		Elem_Free(&s->smallAnnouncement);
-	}
+static void SpecialTextScreen_Redraw(struct SpecialTextScreen* s) {
+	TextWidget_Set(&s->announcement, &Chat_Announcement, &s->announcementFont);
+	TextWidget_Set(&s->bigAnnouncement, &Chat_BigAnnouncement, &s->bigAnnouncementFont);
+	TextWidget_Set(&s->smallAnnouncement, &Chat_SmallAnnouncement, &s->smallAnnouncementFont);
+	TextGroupWidget_RedrawAll(&s->status);
+	TextGroupWidget_RedrawAll(&s->bottomRight);
 }
 
 static void SpecialTextScreen_ContextLost(void* screen) {
@@ -1610,30 +1598,12 @@ static void SpecialTextScreen_ContextRecreated(void* screen) {
 	Screen_UpdateVb(s);
 }
 
-static int SpecialTextScreen_CalcMaxVertices(void* screen) {
-	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
-	/* In case chatlines is 0 */
-	return 4; // TODO
-}
-
-static void SpecialTextScreen_BuildMesh(void* screen) {
-	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
-	struct VertexTextured* data;
-	struct VertexTextured** ptr;
-
-	data = Screen_LockVb(s);
-	ptr  = &data;
-
-	// TODO
-	Gfx_UnlockDynamicVb(s->vb);
-}
-
 static void SpecialTextScreen_Layout(void* screen) {
 	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
 	if (SpecialTextScreen_ChatUpdateFont(s)) SpecialTextScreen_Redraw(s);
 
-	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
-	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, 0);
+	Widget_SetLocation(&s->status,      ANCHOR_MAX, ANCHOR_MIN,  0, 0);
+	Widget_SetLocation(&s->bottomRight, ANCHOR_MAX, ANCHOR_MAX,  0, 0);
 
 	/* Can't use Widget_SetLocation because it DPI scales input */
 	s->bottomRight.yOffset = HUDScreen_LayoutHotbar() + Display_ScaleY(15);
@@ -1652,25 +1622,62 @@ static void SpecialTextScreen_Layout(void* screen) {
 	Widget_Layout(&s->smallAnnouncement);
 }
 
+static void SpecialTextScreen_Update(void* screen, float delta) {
+	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
+	SpecialTextScreen_UpdateTexpackStatus(s);
+
+	/* Destroy announcement texture before even rendering it at all, */
+	/* otherwise changing texture pack shows announcement for one frame */
+	if (s->announcement.tex.ID && (Chat_AnnouncementLeft -= delta) <= 0) {
+		Platform_LogConst("DES ANN");
+		Elem_Free(&s->announcement);
+		s->dirty = true;
+	}
+
+	if (s->bigAnnouncement.tex.ID && (Chat_BigAnnouncementLeft -= delta) <= 0) {
+		Elem_Free(&s->bigAnnouncement);
+		s->dirty = true;
+	}
+
+	if (s->smallAnnouncement.tex.ID && (Chat_SmallAnnouncementLeft -= delta) <= 0) {
+		Elem_Free(&s->smallAnnouncement);
+		s->dirty = true;
+	}
+}
+
+static void SpecialTextScreen_Render(void* screen, float delta) {
+	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
+	int offset = 0;
+	if (Game_HideGui || Game_PureClassic) return;
+
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
+	Screen_Render2Widgets(screen, delta);
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
+}
+
 static void SpecialTextScreen_Init(void* screen) {
 	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
 
-	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS,
+	s->widgets     = s->__widgets;
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(s->__widgets);
+
+	TextGroupWidget_Add(s, &s->status, CHAT_MAX_STATUS,
 							s->statusTextures, SpecialTextScreen_GetStatus);
-	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, 
+	TextGroupWidget_Add(s, &s->bottomRight, CHAT_MAX_BOTTOMRIGHT, 
 							s->bottomRightTextures, SpecialTextScreen_GetBottomRight);
 
-	TextWidget_Init(&s->announcement);
-	TextWidget_Init(&s->bigAnnouncement);
-	TextWidget_Init(&s->smallAnnouncement);
-
-	s->status.collapsible[0] = true; /* Texture pack downloading status */
-	s->status.collapsible[1] = true; /* Reduced performance mode status */
+	TextWidget_Add(s, &s->announcement);
+	TextWidget_Add(s, &s->bigAnnouncement);
+	TextWidget_Add(s, &s->smallAnnouncement);
 
 	Event_Register_(&ChatEvents.ChatReceived,   s, SpecialTextScreen_ChatReceived);
 	Event_Register_(&ChatEvents.ColCodeChanged, s, SpecialTextScreen_ColCodeChanged);
-	
-	s->maxVertices = SpecialTextScreen_CalcMaxVertices(s);
+
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
+
+	s->status.collapsible[0] = true; /* Texture pack downloading status */
+	s->status.collapsible[1] = true; /* Reduced performance mode status */
 	
 	/* For dual screen builds, chat is still rendered on the main game screen */
 	s->status.flags       |= WIDGET_FLAG_MAINSCREEN;
@@ -1682,26 +1689,6 @@ static void SpecialTextScreen_Init(void* screen) {
 	s->smallAnnouncement.flags |= WIDGET_FLAG_MAINSCREEN;
 }
 
-static void SpecialTextScreen_Render(void* screen, float delta) {
-	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
-	if (Game_HideGui) return;
-
-	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
-
-	SpecialTextScreen_UpdateTexpackStatus(s);
-	if (!Game_PureClassic) { Elem_Render(&s->status, delta); }
-	Elem_Render(&s->bottomRight, delta);
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_BindDynamicVb(s->vb);
-
-	Elem_Render(&s->announcement, delta);
-	Elem_Render(&s->bigAnnouncement, delta);
-	Elem_Render(&s->smallAnnouncement, delta);
-
-	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
-}
-
 static void SpecialTextScreen_Free(void* screen) {
 	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
 	Event_Unregister_(&ChatEvents.ChatReceived,   s, SpecialTextScreen_ChatReceived);
@@ -1710,7 +1697,7 @@ static void SpecialTextScreen_Free(void* screen) {
 
 static const struct ScreenVTABLE SpecialTextScreen_VTABLE = {
 	SpecialTextScreen_Init,        SpecialTextScreen_Update, SpecialTextScreen_Free,
-	SpecialTextScreen_Render,      SpecialTextScreen_BuildMesh,
+	SpecialTextScreen_Render,      Screen_BuildMesh,
 	Screen_FInput,           Screen_InputUp,    Screen_FKeyPress,   Screen_FText,
 	Screen_FPointer,         Screen_PointerUp,  Screen_FPointer,    Screen_FMouseScroll,
 	SpecialTextScreen_Layout, SpecialTextScreen_ContextLost, SpecialTextScreen_ContextRecreated
@@ -1722,6 +1709,9 @@ void SpecialTextScreen_Show(void) {
 	s->VTABLE = &SpecialTextScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_SPECIALTEXT);
 }
+#else
+void SpecialTextScreen_Show(void) { }
+#endif
 
 
 /*########################################################################################################################*
@@ -1733,9 +1723,8 @@ static struct InventoryScreen {
 	struct TableWidget table;
 	struct TextWidget title;
 	cc_bool releasedInv, deferredSelect;
+	struct Widget* __widgets[2];
 } InventoryScreen CC_BIG_VAR;
-
-static struct Widget* inventory_widgets[2];
 
 
 static void InventoryScreen_GetTitleText(cc_string* desc, BlockID block) {
@@ -1816,9 +1805,9 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 
 static void InventoryScreen_Init(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	s->widgets     = inventory_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(inventory_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 	
 	TextWidget_Add(s,  &s->title);
 	TableWidget_Add(s, &s->table, 22 * Options_GetFloat(OPT_INV_SCROLLBAR_SCALE, 0, 10, 1));
@@ -1982,9 +1971,8 @@ static struct LoadingScreen {
 
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
+	struct Widget* __widgets[2];
 } LoadingScreen CC_BIG_VAR;
-
-static struct Widget* loading_widgets[2];
 #define LOADING_TILE_SIZE 64
 
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
@@ -2069,9 +2057,9 @@ static void LoadingScreen_MapLoaded(void* screen) {
 
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	s->widgets     = loading_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(loading_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 
 	TextWidget_Add(s, &s->title);
 	TextWidget_Add(s, &s->message);
@@ -2221,9 +2209,9 @@ static struct DisconnectScreen {
 	char _titleBuffer[STRING_SIZE * 2];
 	char _messageBuffer[STRING_SIZE];
 	cc_string titleStr, messageStr;
+	struct Widget* __widgets[4];
 } DisconnectScreen CC_BIG_VAR;
 
-static struct Widget* disconnect_widgets[4];
 #define DISCONNECT_DELAY_SECS 5
 
 static void DisconnectScreen_Layout(void* screen) {
@@ -2284,9 +2272,9 @@ static void DisconnectScreen_OnQuit(void* s, void* w) {
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	s->widgets      = disconnect_widgets;
+	s->widgets      = s->__widgets;
 	s->numWidgets   = 0;
-	s->maxWidgets   = Array_Elems(disconnect_widgets);
+	s->maxWidgets   = Array_Elems(s->__widgets);
 
 	TextWidget_Add(s, &s->title);
 	TextWidget_Add(s, &s->message);

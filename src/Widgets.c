@@ -2484,6 +2484,10 @@ void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture
 	w->textures = textures;
 	w->GetLine  = getLine;
 }
+void TextGroupWidget_Add(void* screen, struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
+	TextGroupWidget_Create(w, lines, textures, getLine);
+	AddWidget(screen, w);
+}
 
 
 /*########################################################################################################################*
