@@ -94,10 +94,11 @@ cc_bool Gfx_TryRestoreContext(void) { return true; }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
-	// 1x1 dummy white texture
+	// 4x4 dummy white texture
 	struct Bitmap bmp;
-	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
-	Bitmap_Init(bmp, 1, 1, pixels);
+	BitmapCol pixels[4 * 4];
+	Mem_Set(pixels, 0xFF, sizeof(pixels));
+	Bitmap_Init(bmp, 4, 4, pixels);
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
