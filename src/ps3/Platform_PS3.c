@@ -13,7 +13,6 @@
 
 #include <errno.h>
 #include <time.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -33,6 +32,7 @@
 #include <sys/systime.h>
 #include <sys/tty.h>
 #include <sys/process.h>
+#include <sysmodule/sysmodule.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
@@ -48,6 +48,9 @@ cc_bool Platform_ReadonlyFilesystem;
 #include "../_PlatformBase.h"
 
 SYS_PROCESS_PARAM(1001, 256 * 1024); // 256kb stack size
+
+#define uint_to_ptr(raw)    ((void*)((uintptr_t)(raw)))
+#define ptr_to_uint(raw) ((uint32_t)((uintptr_t)(raw)))
 
 
 /*########################################################################################################################*
@@ -410,7 +413,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	
 	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
 	{
-		char* src_addr = (char*)addr_list[i];
+		char* src_addr = uint_to_ptr(addr_list[i]);
 		if (!src_addr) break;
 		addrs[i].size = sizeof(struct sockaddr_in);
 
@@ -499,8 +502,23 @@ cc_result Socket_GetLastError(cc_socket s) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+#define LIBNET_MEM_SIZE (128 * 1024)
+static char libnet_mem[LIBNET_MEM_SIZE];
+
+static int InitNetworking(void) {
+	int res = sysModuleLoad(SYSMODULE_NET);
+	if (res < 0) return res;
+
+	netInitParam params = { 0 };
+	params.memory = ptr_to_uint(libnet_mem);
+	params.memory_size = LIBNET_MEM_SIZE;
+
+	return netInitializeNetworkEx(&params);
+}
+
 void Platform_Init(void) {
-	netInitialize();
+	int res = InitNetworking();
+	if (res) Platform_Log1("Error setting up network: %i", &res);
 	
 	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
 	Directory_Create2(root);
