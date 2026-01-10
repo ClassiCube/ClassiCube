@@ -27,6 +27,7 @@
 #endif
 
 // shared state with LBackend_ios.m and interop_ios.m
+UITextField* kb_widget;
 CGContextRef win_ctx;
 UIView* view_handle;
 UIViewController* cc_controller;
@@ -38,14 +39,6 @@ void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 UIInterfaceOrientationMask SupportedOrientations(void);
 void LogUnhandledNSErrors(NSException* ex);
 
-
-static UITextField* kb_widget;
-void Window_SetKBWidget(UITextField* widget) {
-	if (kb_widget) [kb_widget autorelease];
-	
-	if (widget) [widget retain];
-	kb_widget = widget;
-}
 
 @interface CCWindow : UIWindow
 @end
@@ -214,7 +207,7 @@ static cc_bool kb_active;
         can_shift = curFrame.origin.y > kbFrame.size.height;
     }
     if (can_shift) winFrame.origin.y = -kbFrame.size.height;
-    Window_SetKBWidget(nil);
+    kb_widget = nil;
     
     Platform_LogConst("APPEAR");
     [UIView animateWithDuration:interval delay: 0.0 options:curve animations:^{
@@ -226,7 +219,7 @@ static cc_bool kb_active;
     NSDictionary* info = [notification userInfo];
     if (!kb_active) return;
     kb_active = false;
-	Window_SetKBWidget(nil);
+    kb_widget = nil;
     
     double interval   = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
@@ -320,7 +313,6 @@ void Gamepads_Init(void) { }
 
 void Gamepads_Process(float delta) { }
 
-
 @interface CCKBController : NSObject<UITextFieldDelegate>
 @end
 
@@ -352,7 +344,7 @@ static CCKBController* kb_controller;
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     if (!kb_controller) {
         kb_controller = [[CCKBController alloc] init];
-		// NOTE: don't need to call [retain], as retain count is initially 1
+        CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
     }
     DisplayInfo.ShowingSoftKeyboard = true;
     
@@ -366,8 +358,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     
     [view_handle addSubview:text_input];
     [text_input becomeFirstResponder];
-	
-	[text_input autorelease];
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
@@ -423,7 +413,6 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
     landscape_locked = lock;
     [UIViewController attemptRotationToDeviceOrientation];
 }
-
 
 /*#########################################################################################################################*
  *-----------------------------------------------------Window creation-----------------------------------------------------*
@@ -487,8 +476,6 @@ void Window_Create2D(int width, int height) {
 	
     UIView* view = [[UIView alloc] initWithFrame:CGRectZero];
 	SetRootView(view);
-	
-	[view autorelease];
 }
 
 void Window_Create3D(int width, int height) {
@@ -498,8 +485,6 @@ void Window_Create3D(int width, int height) {
     CC3DView* view = [[CC3DView alloc] initWithFrame:CGRectZero];
 	SetRootView(view);
     Init3DLayer();
-	
-	[view autorelease];
 }
 
 void Window_Destroy(void) { }
@@ -527,7 +512,6 @@ void ShowDialogCore(const char* title, const char* msg) {
 	UIAlertView* alert = [UIAlertView alloc];
 	alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
 	[alert show];
-	[alert autorelease];
 #endif
 	
 	// TODO clicking outside message box crashes launcher
@@ -567,8 +551,6 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	open_dlg_callback = args->Callback;
 	[dlg setDelegate:cc_controller];
 	[cc_controller presentViewController:dlg animated:YES completion: Nil];
-	
-	[dlg autorelease];
 	return 0; // TODO still unfinished
 }
 
@@ -592,8 +574,6 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	
 	[dlg setDelegate:cc_controller];
 	[cc_controller presentViewController:dlg animated:YES completion: Nil];
-	
-	[dlg autorelease];
 	return 0;
 }
 
@@ -660,7 +640,6 @@ void GLContext_Create(void) {
     
     // unlike other platforms, have to manually setup render framebuffer
     CreateFramebuffer();
-	[ctx_handle autorelease];
 }
                   
 void GLContext_Update(void) {
