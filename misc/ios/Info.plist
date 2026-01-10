@@ -18,22 +18,6 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.games</string>
-	<key>GCSupportsGameMode</key>
-	<true/>
-	<key>LSSupportsGameMode</key>
-	<true/>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>LSRequiresIPhoneOS</key>
-	<false/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Saving screenshot</string>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundlePrimaryIcon</key>
@@ -62,6 +46,22 @@
 			</array>
 		</dict>
 	</dict>
+	<key>GCSupportsGameMode</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
+	<key>LSRequiresIPhoneOS</key>
+	<false/>
+	<key>LSSupportsGameMode</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Saving screenshot</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

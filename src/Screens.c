@@ -1571,9 +1571,10 @@ static void SpecialTextScreen_ChatReceived(void* screen, const cc_string* msg, i
 }
 
 static void SpecialTextScreen_Redraw(struct SpecialTextScreen* s) {
-	TextWidget_Set(&s->announcement, &Chat_Announcement, &s->announcementFont);
-	TextWidget_Set(&s->bigAnnouncement, &Chat_BigAnnouncement, &s->bigAnnouncementFont);
+	TextWidget_Set(&s->announcement,      &Chat_Announcement, &s->announcementFont);
+	TextWidget_Set(&s->bigAnnouncement,   &Chat_BigAnnouncement, &s->bigAnnouncementFont);
 	TextWidget_Set(&s->smallAnnouncement, &Chat_SmallAnnouncement, &s->smallAnnouncementFont);
+
 	TextGroupWidget_RedrawAll(&s->status);
 	TextGroupWidget_RedrawAll(&s->bottomRight);
 }
@@ -1592,7 +1593,7 @@ static void SpecialTextScreen_ContextLost(void* screen) {
 
 static void SpecialTextScreen_ContextRecreated(void* screen) {
 	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
-	struct FontDesc font;
+
 	SpecialTextScreen_ChatUpdateFont(s);
 	SpecialTextScreen_Redraw(s);
 	Screen_UpdateVb(s);
@@ -1646,8 +1647,6 @@ static void SpecialTextScreen_Update(void* screen, float delta) {
 }
 
 static void SpecialTextScreen_Render(void* screen, float delta) {
-	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
-	int offset = 0;
 	if (Game_HideGui || Game_PureClassic) return;
 
 	Gfx_3DS_SetRenderScreen(TOP_SCREEN);

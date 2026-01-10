@@ -470,6 +470,9 @@ cc_result Socket_GetLastError(cc_socket s) {
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+
+	// Apparently, actual Wii U hardware returns INPROGRESS error code if connect is still in progress
+	if (error == 22) error = 0;
 	return error;
 }
 
