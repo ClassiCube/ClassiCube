@@ -528,23 +528,22 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 }
 
 // TODO: Get rid of this complexity and use the 3D API instead..
-// https://github.com/devkitPro/gamecube-examples/blob/master/graphics/fb/pageflip/source/flip.c
-static u32 CvtRGB (u8 r1, u8 g1, u8 b1, u8 r2, u8 g2, u8 b2)
-{
-  int y1, cb1, cr1, y2, cb2, cr2, cb, cr;
- 
-  y1  = (299    * r1 +   587 * g1 +   114 * b1) / 1000;
-  cb1 = (-16874 * r1 - 33126 * g1 + 50000 * b1 + 12800000) / 100000;
-  cr1 = (50000  * r1 - 41869 * g1 -  8131 * b1 + 12800000) / 100000;
- 
-  y2  = (299    * r2 +   587 * g2 +   114 * b2) / 1000;
-  cb2 = (-16874 * r2 - 33126 * g2 + 50000 * b2 + 12800000) / 100000;
-  cr2 = (50000  * r2 - 41869 * g2 -  8131 * b2 + 12800000) / 100000;
- 
-  cb = (cb1 + cb2) >> 1;
-  cr = (cr1 + cr2) >> 1;
- 
-  return (y1 << 24) | (cb << 16) | (y2 << 8) | cr;
+// https://github.com/extremscorner/gamecube-examples/blob/master/graphics/fb/pageflip/source/flip.c
+static u32 CvtRGB(u8 r1, u8 g1, u8 b1, u8 r2, u8 g2, u8 b2) {
+	u8 y1, cb1, cr1, y2, cb2, cr2, cb, cr;
+
+	y1  = ((16829 * r1 + 33039 * g1 +  6416 * b1) >> 16) +  16;
+	cb1 = ((-9714 * r1 - 19071 * g1 + 28784 * b1) >> 16) + 128;
+	cr1 = ((28784 * r1 - 24103 * g1 -  4681 * b1) >> 16) + 128;
+
+	y2  = ((16829 * r2 + 33039 * g2 +  6416 * b2) >> 16) +  16;
+	cb2 = ((-9714 * r2 - 19071 * g2 + 28784 * b2) >> 16) + 128;
+	cr2 = ((28784 * r2 - 24103 * g2 -  4681 * b2) >> 16) + 128;
+
+	cb = (cb1 + cb2) >> 1;
+	cr = (cr1 + cr2) >> 1;
+
+	return (y1 << 24) | (cb << 16) | (y2 << 8) | cr;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
