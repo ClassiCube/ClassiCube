@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - ios_no_arc
   workflow_dispatch:
 
 concurrency:
