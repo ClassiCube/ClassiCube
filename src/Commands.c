@@ -1248,7 +1248,7 @@ static void AutoJumpCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand AutoJumpCommand = {
-	"AutoJumpb", AutoJumpCommand_Execute, 0,
+	"AutoJump", AutoJumpCommand_Execute, 0,
 	{
 		"&a/client AutoJump",
 		"&eToggles AutoJump.",
