@@ -21,6 +21,7 @@ extern cc_bool Strafe_enabled;
 extern cc_bool NoReconnectDelay_enabled;
 extern cc_bool AutoJump_enabled;
 extern cc_bool NoPitchLimit_enabled;
+extern cc_bool NoRender_enabled;
 // extern cc_bool AutoJump_always;
 // extern cc_bool ArrayList_enabled;
 extern float Speed;

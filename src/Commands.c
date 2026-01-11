@@ -40,6 +40,7 @@ cc_bool Spin_enabled = false;
 cc_bool NoReconnectDelay_enabled = true;
 cc_bool AutoJump_enabled = false;
 cc_bool NoPitchLimit_enabled = false;
+cc_bool NoRender_enabled = false;
 // cc_bool ArrayList_enabled = false;
 // cc_bool AutoJump_always = true;
 float SpinSpeed = 1;
@@ -1308,7 +1309,7 @@ static struct ChatCommand AutoJumpCommand = {
 };
 
 /*########################################################################################################################*
-*------------------------------------------------------NoPitchLimit-----------------------------------------------------*
+*------------------------------------------------------NoPitchLimit-------------------------------------------------------*
 *#########################################################################################################################*/
 
 static void NoPitchLimitCommand_Execute(const cc_string* args, int argsCount) {
@@ -1321,6 +1322,23 @@ static struct ChatCommand NoPitchLimitCommand = {
     {
         "&a/client NoPitchLimit.",
         "&eToggles NoPitchLimit.",
+    }
+};
+
+/*########################################################################################################################*
+*------------------------------------------------------NoRender-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoRenderCommand_Execute(const cc_string* args, int argsCount) {
+    NoRender_enabled = !NoRender_enabled;
+    Chat_AddRaw(NoRender_enabled ? "&aNoRender enabled" : "&cNoRender disabled");
+}
+
+static struct ChatCommand NoRenderCommand = {
+    "NoRender", NoRenderCommand_Execute, 0,
+    {
+        "&a/client NoRender.",
+        "&eToggles NoRender.",
     }
 };
 
@@ -1362,7 +1380,7 @@ static void OnInit(void) {
 	Commands_Register(&NoReconnectDelayCommand);
 	Commands_Register(&AutoJumpCommand);
 	Commands_Register(&NoPitchLimitCommand);
-
+	Commands_Register(&NoRenderCommand);
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
 }
