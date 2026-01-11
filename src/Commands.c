@@ -59,7 +59,7 @@ cc_bool NoReconnectDelay_enabled = true;
 
 cc_bool AutoJump_enabled = false;
 
-cc_bool AutoJump_always = true;
+// cc_bool AutoJump_always = true;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
