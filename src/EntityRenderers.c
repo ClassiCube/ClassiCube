@@ -416,7 +416,7 @@ void EntityNames_RenderHovered(void) {
 	if (Entities.NamesMode == NAME_MODE_NONE) return;
 	if (Server.IsSinglePlayer && Game_NumStates == 1) return;
 
-	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
+	allNames = !(Entities.NamesMode == (NAME_MODE_ALL || NAME_MODE_ALL_HOVERED || NAME_MODE_ALL_HOVERED)) 
 		&& (p->Hacks.CanSeeAllNames || Nametags_enabled);
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
