@@ -27,39 +27,25 @@
 static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
+static cc_bool isSolid = false;
 cc_bool ForceHax_enabled = false;
-
 cc_bool NoPush_enabled = false;
-
 cc_bool NoCamGravity_enabled = false;
-
+cc_bool Nametags_enabled = false;
+cc_bool Strafe_enabled = false;
+cc_bool InfJump_enabled = false;
+cc_bool FastClimb_enabled = false;
+cc_bool NoClickDelay_enabled = false;
+cc_bool Spin_enabled = false;
+cc_bool NoReconnectDelay_enabled = true;
+cc_bool AutoJump_enabled = false;
+cc_bool NoPitchLimit_enabled = false;
+// cc_bool ArrayList_enabled = false;
+// cc_bool AutoJump_always = true;
+float SpinSpeed = 1;
 float Speed = 0.0f;
-
 float StepHeight = 0.0f;
 
-cc_bool Nametags_enabled = false;
-
-cc_bool Strafe_enabled = false;
-
-static cc_bool isSolid = false;
-
-cc_bool InfJump_enabled = false;
-
-cc_bool FastClimb_enabled = false;
-
-// cc_bool ArrayList_enabled = false;
-
-cc_bool NoClickDelay_enabled = false;
-
-cc_bool Spin_enabled = false;
-
-float SpinSpeed = 1;
-
-cc_bool NoReconnectDelay_enabled = true;
-
-cc_bool AutoJump_enabled = false;
-
-// cc_bool AutoJump_always = true;
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -1322,6 +1308,23 @@ static struct ChatCommand AutoJumpCommand = {
 };
 
 /*########################################################################################################################*
+*------------------------------------------------------NoPitchLimit-----------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoPitchLimitCommand_Execute(const cc_string* args, int argsCount) {
+    NoPitchLimit_enabled = !NoPitchLimit_enabled;
+    Chat_AddRaw(NoPitchLimit_enabled ? "&aNoPitchLimit enabled" : "&cNoPitchLimit disabled");
+}
+
+static struct ChatCommand NoPitchLimitCommand = {
+    "NoPitchLimit", NoPitchLimitCommand_Execute, 0,
+    {
+        "&a/client NoPitchLimit.",
+        "&eToggles NoPitchLimit.",
+    }
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -1358,7 +1361,8 @@ static void OnInit(void) {
 	Commands_Register(&SpinCommand);
 	Commands_Register(&NoReconnectDelayCommand);
 	Commands_Register(&AutoJumpCommand);
-	
+	Commands_Register(&NoPitchLimitCommand);
+
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
 }

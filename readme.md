@@ -62,6 +62,7 @@ Instructions:
 - Spin
 - NoReconnectDelay (on by default)
 - Autojump
+- NoPitchLimit
 
 ## Current Features
 - Coloured F3 Menu

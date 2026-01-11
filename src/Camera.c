@@ -120,7 +120,7 @@ static void PerspectiveCamera_UpdateMouseRotation(struct LocalPlayer* p, float d
 	update.pitch = Math_ClampAngle(update.pitch);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
-	if (update.pitch >= 90.0f && update.pitch <= 270.0f) {
+	if (update.pitch >= 90.0f && update.pitch <= 270.0f && !NoPitchLimit_enabled) {
 		update.pitch = e->next.pitch < 180.0f ? 90.0f : 270.0f;
 	}
 	e->VTABLE->SetLocation(e, &update);
