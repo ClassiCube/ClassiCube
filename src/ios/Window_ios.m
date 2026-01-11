@@ -1,18 +1,15 @@
 // Silence deprecation warnings on modern iOS
 #define GLES_SILENCE_DEPRECATION
-#include "Core.h"
-
-#if defined CC_BUILD_IOS
-#include "_WindowBase.h"
-#include "Bitmap.h"
-#include "Input.h"
-#include "Platform.h"
-#include "String_.h"
-#include "Errors.h"
-#include "Drawer2D.h"
-#include "Launcher.h"
-#include "Funcs.h"
-#include "Gui.h"
+#include "../_WindowBase.h"
+#include "../Bitmap.h"
+#include "../Input.h"
+#include "../Platform.h"
+#include "../String_.h"
+#include "../Errors.h"
+#include "../Drawer2D.h"
+#include "../Launcher.h"
+#include "../Funcs.h"
+#include "../Gui.h"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
 #include <UIKit/UIKit.h>
@@ -738,5 +735,3 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
     Mem_Free(bmp->scan0);
     CGContextRelease(win_ctx);
 }
-#endif
-

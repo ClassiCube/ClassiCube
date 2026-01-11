@@ -1,19 +1,17 @@
-#include "Core.h"
-#if defined CC_BUILD_IOS
-#include "Bitmap.h"
-#include "Input.h"
-#include "Platform.h"
-#include "String_.h"
-#include "Errors.h"
-#include "Drawer2D.h"
-#include "Launcher.h"
-#include "LBackend.h"
-#include "LWidgets.h"
-#include "LScreens.h"
-#include "Gui.h"
-#include "LWeb.h"
-#include "Funcs.h"
-#include "Window.h"
+#include "../Bitmap.h"
+#include "../Input.h"
+#include "../Platform.h"
+#include "../String_.h"
+#include "../Errors.h"
+#include "../Drawer2D.h"
+#include "../Launcher.h"
+#include "../LBackend.h"
+#include "../LWidgets.h"
+#include "../LScreens.h"
+#include "../Gui.h"
+#include "../LWeb.h"
+#include "../Funcs.h"
+#include "../Window.h"
 #include <UIKit/UIKit.h>
 #include <CoreText/CoreText.h>
 
@@ -751,4 +749,3 @@ void LBackend_CloseScreen(struct LScreen* s) {
 		s->widgets[i]->meta = NULL;
 	}
 }
-#endif

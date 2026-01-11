@@ -1,20 +1,17 @@
 // Silence deprecation warnings on modern iOS
 #define GLES_SILENCE_DEPRECATION
-#include "Core.h"
-
-#if defined CC_BUILD_IOS
-#include "Bitmap.h"
-#include "Input.h"
-#include "Platform.h"
-#include "String_.h"
-#include "Errors.h"
-#include "Drawer2D.h"
-#include "Launcher.h"
-#include "Funcs.h"
-#include "Gui.h"
-#include "Window.h"
-#include "Event.h"
-#include "Logger.h"
+#include "../Bitmap.h"
+#include "../Input.h"
+#include "../Platform.h"
+#include "../String_.h"
+#include "../Errors.h"
+#include "../Drawer2D.h"
+#include "../Launcher.h"
+#include "../Funcs.h"
+#include "../Gui.h"
+#include "../Window.h"
+#include "../Event.h"
+#include "../Logger.h"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
 #include <UIKit/UIKit.h>
@@ -45,7 +42,7 @@ void LogUnhandledNSErrors(NSException* ex);
 
 @implementation CCAppDelegate
 
-#include "main_impl.h"
+#include "../main_impl.h"
 - (void)runMainLoop {
     /* ClassiCube is sort of and sort of not the executable */
     /*  on iOS - UIKit is responsible for kickstarting the game. */
@@ -542,6 +539,4 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
     CTLineDraw(line, cg_ctx);
     CGContextRelease(cg_ctx);
 }*/
-#endif
-
 #endif
