@@ -613,20 +613,67 @@ static struct ChatCommand ReplaceCommand = {
 /*########################################################################################################################*
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
+//Teleport helper
+static void StripColours(const cc_string* src, cc_string* dst, char* buffer) {
+    int outIndex = 0;
+    const char* in = src->buffer;
+    int len = src->length;
+
+    for (int i = 0; i < len; i++) {
+        if (in[i] == '&' && i + 1 < len) {
+            i++; // Skip color code char
+            continue;
+        }
+        buffer[outIndex++] = in[i];
+    }
+    buffer[outIndex] = '\0';
+    *dst = (cc_string){ buffer, outIndex, sizeof(buffer) };
+}
+
+static struct Entity* Commands_FindEntity(const cc_string* name) {
+    if (!name || !name->length) return NULL;
+
+    char typedBuf[STRING_SIZE];
+    cc_string typedClean;
+    StripColours(name, &typedClean, typedBuf);
+
+    for (int i = 0; i < ENTITIES_MAX_COUNT; i++) {
+        struct Entity* e = Entities.List[i];
+        if (!e || !e->NameRaw[0]) continue;
+
+        cc_string entName = String_FromReadonly(e->NameRaw);
+        char entBuf[STRING_SIZE];
+        cc_string entClean;
+        StripColours(&entName, &entClean, entBuf);
+
+        if (String_CaselessEquals(&typedClean, &entClean))
+            return e;
+    }
+    return NULL;
+} //FYI this is old code. Rewrite could be better but not needed
+
 static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 	struct Entity* e = &Entities.CurPlayer->Base;
 	struct LocationUpdate update;
 	Vec3 v;
 
-	if (argsCount != 3) {
+    if (argsCount == 1) { 
+        struct Entity* other = Commands_FindEntity(&args[0]);
+        if (!other) { Chat_AddRaw("&e/client tp: &cNo such player."); return; }
+        v = other->Position;
+    } else if (argsCount != 3) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 		return;
-	}
+	} else {
+        Chat_AddRaw("&e/client tp: &cUsage /client tp <player>  or  /client tp <x> <y> <z>");
+        return;
+    }
+	if (argsCount == 3) { 
 	if (!Convert_ParseFloat(&args[0], &v.x) || !Convert_ParseFloat(&args[1], &v.y) || !Convert_ParseFloat(&args[2], &v.z)) {
 		Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
 		return;
 	}
-
+	}
 	update.flags = LU_HAS_POS;
 	update.pos   = v;
 	e->VTABLE->SetLocation(e, &update);

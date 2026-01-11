@@ -46,7 +46,7 @@ Instructions:
 
 - ForceHax
 - Reach
-- Tp
+- Tp (Position | Player)
 - NoPush
 - Jesus
 - Gravity
