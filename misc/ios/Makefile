@@ -18,8 +18,19 @@ BUILD_DIR_APP	:= build/ios/$(TARGET).app
 BUILD_DIR_32	:= build/ios/$(ARCH_32)
 BUILD_DIR_64	:= build/ios/$(ARCH_64)
 
-IOS_SDK_PATH	?= /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk
+XCODE_ROOT		:= /Applications/Xcode.app/Contents/Developer
+IOS_SDK_PATH	?= $(XCODE_ROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk
 IOS_MIN_VERSION ?= 6.0
+
+
+#---------------------------------------------------------------------------------
+# Compiler tools
+#---------------------------------------------------------------------------------
+CC 		:= $(XCODE_ROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+LD 		:= $(XCODE_ROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+LIPO	:= $(XCODE_ROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo
+ACTOOL	:= $(XCODE_ROOT)/usr/bin/actool
+PLBUDDY	:= /usr/libexec/PlistBuddy
 
 
 #---------------------------------------------------------------------------------
@@ -42,14 +53,6 @@ DEPFLAGS_64 := -MT $@ -MMD -MP -MF $(BUILD_DIR_64)/$*.d
 DEPFILES_32 := $(OBJS_32:%.o=%.d)
 DEPFILES_64 := $(OBJS_64:%.o=%.d)
 
-
-#---------------------------------------------------------------------------------
-# Compiler tools
-#---------------------------------------------------------------------------------
-CC 		:= /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-LD 		:= /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-LIPO	:= /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo
-ACTOOL	:= /Applications/Xcode.app/Contents/Developer/usr/bin/actool
 
 #---------------------------------------------------------------------------------
 # main targets
@@ -86,6 +89,10 @@ $(BUILD_DIR_APP)/Assets.car:
 
 $(BUILD_DIR_APP)/Info.plist: misc/ios/Info.plist
 	cp $^ $@
+	$(PLBUDDY) -c "add MinimumOSVersion string $(IOS_MIN_VERSION)" $@
+	$(PLBUDDY) -c "add UIDeviceFamily array" $@
+	$(PLBUDDY) -c "add UIDeviceFamily:0 integer 1" $@
+	$(PLBUDDY) -c "add UIDeviceFamily:1 integer 2" $@
 
 $(BUILD_DIR_APP)/PkgInfo: misc/ios/PkgInfo
 	cp $^ $@
@@ -93,8 +100,8 @@ $(BUILD_DIR_APP)/PkgInfo: misc/ios/PkgInfo
 
 $(TARGET).ipa: $(BUILD_DIR_APP)/$(TARGET) $(BUILD_DIR_APP)/Assets.car $(BUILD_DIR_APP)/Info.plist $(BUILD_DIR_APP)/PkgInfo
 	rm -rf Payload
-	mkdir -p Payload/$(TARGET).app
-	cp -R $(BUILD_DIR_APP) Payload/$(TARGET).app
+	mkdir -p Payload
+	cp -R $(BUILD_DIR_APP) Payload
 	zip -r $(TARGET).ipa Payload
 
 
