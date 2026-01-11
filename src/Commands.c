@@ -59,6 +59,8 @@ cc_bool NoReconnectDelay_enabled = true;
 
 cc_bool AutoJump_enabled = false;
 
+cc_bool AutoJump_always = true;
+
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
@@ -1243,14 +1245,26 @@ static struct ChatCommand NoReconnectDelayCommand = {
 *#########################################################################################################################*/
 
 static void AutoJumpCommand_Execute(const cc_string* args, int argsCount) {
+	cc_string AutoJump_Command;
+
+	if (argsCount != 1) {
 	AutoJump_enabled = !AutoJump_enabled;
-    Chat_AddRaw(AutoJump_enabled ? "&aAutoJump enabled" : "&cAutoJump disabled");
+	    Chat_AddRaw(AutoJump_enabled ? "&aAutoJump enabled" : "&cAutoJump disabled");
+		return;
+	}
+	// if (String_CaselessEquals(&AutoJump_Command, "true")) {
+	// 			AutoJump_always = true;
+	// 		Chat_AddRaw("Set AutoJump mode to always");
+	// } else (String_CaselessEquals(&AutoJump_Command, "false")) {
+	// 				AutoJump_always = false;
+	// 		Chat_AddRaw("Set AutoJump mode to walking");
+	// } Fix this and work on it later
 }
 
 static struct ChatCommand AutoJumpCommand = {
-	"AutoJumpb", AutoJumpCommand_Execute, 0,
+	"AutoJump", AutoJumpCommand_Execute, 0,
 	{
-		"&a/client AutoJump",
+		"&a/client AutoJump <Always jump (true/false)>",
 		"&eToggles AutoJump.",
 	}
 };
