@@ -10,17 +10,26 @@ TARGET 			= ClassiCube
 SOURCE_DIRS		= src src/ios third_party/bearssl
 
 # CPU architecture names
-ARCH_32	?= armv7
-ARCH_64	?= arm64
+ifdef IOS_SIM
+	ARCH_32	:= i386
+	ARCH_64	:= x86_64
+	SDK_TYPE:= iPhoneSimulator
+else
+	ARCH_32	:= armv7
+	ARCH_64	:= arm64
+	SDK_TYPE:= iPhoneOS
+endif
+FULL_TARGET	:= $(TARGET)-$(SDK_TYPE)
 
 # Directory where object files are placed
-BUILD_DIR_APP	:= build/ios/$(TARGET).app
+BUILD_DIR_APP	:= build/ios/$(FULL_TARGET).app
 BUILD_DIR_32	:= build/ios/$(ARCH_32)
 BUILD_DIR_64	:= build/ios/$(ARCH_64)
 
-XCODE_ROOT		:= /Applications/Xcode.app/Contents/Developer
-IOS_SDK_PATH	?= $(XCODE_ROOT)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk
+IOS_SDK_VERSION	?= 12.1
 IOS_MIN_VERSION ?= 6.0
+XCODE_ROOT		:= /Applications/Xcode.app/Contents/Developer
+IOS_SDK_PATH	:= $(XCODE_ROOT)/Platforms/$(SDK_TYPE).platform/Developer/SDKs/$(SDK_TYPE)$(IOS_SDK_VERSION).sdk
 
 
 #---------------------------------------------------------------------------------
@@ -57,7 +66,7 @@ DEPFILES_64 := $(OBJS_64:%.o=%.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all: $(BUILD_DIR_32) $(BUILD_DIR_64) $(BUILD_DIR_APP) $(TARGET).ipa
+all: $(BUILD_DIR_32) $(BUILD_DIR_64) $(BUILD_DIR_APP) $(FULL_TARGET).ipa
 
 $(BUILD_DIR_32):
 	mkdir -p $(BUILD_DIR_32)
@@ -98,11 +107,12 @@ $(BUILD_DIR_APP)/PkgInfo: misc/ios/PkgInfo
 	cp $^ $@
 
 
-$(TARGET).ipa: $(BUILD_DIR_APP)/$(TARGET) $(BUILD_DIR_APP)/Assets.car $(BUILD_DIR_APP)/Info.plist $(BUILD_DIR_APP)/PkgInfo
+$(FULL_TARGET).ipa: $(BUILD_DIR_APP)/$(TARGET) $(BUILD_DIR_APP)/Assets.car $(BUILD_DIR_APP)/Info.plist $(BUILD_DIR_APP)/PkgInfo
 	rm -rf Payload
 	mkdir -p Payload
 	cp -R $(BUILD_DIR_APP) Payload
-	zip -r $(TARGET).ipa Payload
+	mv Payload/$(FULL_TARGET).app Payload/$(TARGET).app
+	zip -r $(FULL_TARGET).ipa Payload
 
 
 #---------------------------------------------------------------------------------
