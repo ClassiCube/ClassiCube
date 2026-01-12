@@ -66,6 +66,7 @@ Instructions:
 - NoRender
 - Brand
 - NoSetBack
+- Scaffold
 
 ## Current Features
 - Coloured F3 Menu
