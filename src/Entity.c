@@ -723,22 +723,6 @@ static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* upd
 	LocalInterpComp_SetLocation(&p->Interp, update, e);
 }
 
-void Scaffold_Tick(void* obj) { // OLD CODE
-    if (!Scaffold_enabled) return;
-
-    struct Entity* p = &Entities.CurPlayer->Base;
-    Vec3 pos = p->Position;
-    int x = Math_Floor(pos.x);
-    int y = Math_Floor(pos.y) - 1;
-    int z = Math_Floor(pos.z);
-
-    if (!World_Contains(x, y, z)) return;
-    if (World_GetBlock(x, y, z) != BLOCK_AIR) return;
-
-    BlockID held = Inventory_SelectedBlock;
-    Game_ChangeBlock(x, y, z, held);
-}
-
 //TODO: put tick logic here if needed
 static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
@@ -778,7 +762,6 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 
 	Entity_CheckSkin(&p->Base);
 	SoundComp_Tick(p, wasOnGround);
-	Scaffold_Tick(NULL);
 }
 
 static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {

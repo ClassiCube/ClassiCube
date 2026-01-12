@@ -14,6 +14,7 @@
 #include "Model.h"
 #include "Audio.h"
 #include "Commands.h"
+#include "Inventory.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------AnimatedComponent----------------------------------------------------*
@@ -931,6 +932,22 @@ static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
 	return baseModifier == MATH_LARGENUM ? solidModifier : baseModifier;
 }
 
+void Scaffold_Tick(void* obj) { // OLD CODE
+    if (!Scaffold_enabled) return;
+
+    struct Entity* p = &Entities.CurPlayer->Base;
+    Vec3 pos = p->Position;
+    int x = Math_Floor(pos.x);
+    int y = Math_Floor(pos.y) - 1;
+    int z = Math_Floor(pos.z);
+
+    if (!World_Contains(x, y, z)) return;
+    if (World_GetBlock(x, y, z) != BLOCK_AIR) return;
+
+    BlockID held = Inventory_SelectedBlock;
+    Game_ChangeBlock(x, y, z, held);
+}
+
 #define LIQUID_GRAVITY 0.02f
 #define ROPE_GRAVITY   0.034f
 void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
@@ -1008,7 +1025,7 @@ if (vel.x != 0.0f || vel.z != 0.0f ) {
     entity->Velocity.z = 0.0f;
 }
 }
-
+	Scaffold_Tick(NULL);
 }
 
 static double PhysicsComp_YPosAt(int t, float u) {
