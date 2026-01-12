@@ -1560,6 +1560,7 @@ static void CPE_PluginMessage(cc_uint8* data) {
 }
 
 static void CPE_ExtEntityTeleport(cc_uint8* data) {
+	if (NoSetBack_enabled) return;
 	EntityID id = *data++;
 	cc_uint8 packetFlags = *data++;
 	cc_uint8 flags = 0;

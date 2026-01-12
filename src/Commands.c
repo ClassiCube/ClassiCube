@@ -43,6 +43,7 @@ cc_bool AutoJump_enabled = false;
 cc_bool NoPitchLimit_enabled = false;
 cc_bool NoRender_enabled = false;
 cc_bool NoRender_everything = false;
+cc_bool NoSetBack_enabled = false;
 // cc_bool ArrayList_enabled = false;
 // cc_bool AutoJump_always = true;
 float SpinSpeed = 1;
@@ -1359,6 +1360,23 @@ static struct ChatCommand NoRenderCommand = {
 };
 
 /*########################################################################################################################*
+*------------------------------------------------------NoSetBack-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoSetBackCommand_Execute(const cc_string* args, int argsCount) {
+    NoSetBack_enabled = !NoSetBack_enabled;
+    Chat_AddRaw(NoSetBack_enabled ? "&aNoSetBack enabled" : "&cNoSetBack disabled");
+}
+
+static struct ChatCommand NoSetBackCommand = {
+    "NoSetBack", NoSetBackCommand_Execute, 0,
+    {
+        "&a/client NoSetBack.",
+        "&ePrevents the server from teleporting you.",
+    }
+};
+
+/*########################################################################################################################*
 *---------------------------------------------------------Brand-----------------------------------------------------------*
 *#########################################################################################################################*/
 
@@ -1426,6 +1444,7 @@ static void OnInit(void) {
 	Commands_Register(&NoPitchLimitCommand);
 	Commands_Register(&NoRenderCommand);
 	Commands_Register(&BrandCommand);
+	Commands_Register(&NoSetBackCommand);
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
 }

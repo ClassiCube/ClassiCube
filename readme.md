@@ -65,6 +65,7 @@ Instructions:
 - NoPitchLimit
 - NoRender
 - Brand
+- NoSetBack
 
 ## Current Features
 - Coloured F3 Menu
