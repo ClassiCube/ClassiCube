@@ -681,7 +681,7 @@ static void LimitFPS(void) {
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	int i;
-
+	if (NoRender_enabled) return;
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 		Camera_KeyLookUpdate(delta);
