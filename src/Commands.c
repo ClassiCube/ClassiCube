@@ -44,6 +44,7 @@ cc_bool NoPitchLimit_enabled = false;
 cc_bool NoRender_enabled = false;
 cc_bool NoRender_everything = false;
 cc_bool NoSetBack_enabled = false;
+cc_bool Scaffold_enabled = false;
 // cc_bool ArrayList_enabled = false;
 // cc_bool AutoJump_always = true;
 float SpinSpeed = 1;
@@ -1360,19 +1361,19 @@ static struct ChatCommand NoRenderCommand = {
 };
 
 /*########################################################################################################################*
-*------------------------------------------------------NoSetBack-----------------------------------------------------------*
+*------------------------------------------------------Scaffold-----------------------------------------------------------*
 *#########################################################################################################################*/
 
-static void NoSetBackCommand_Execute(const cc_string* args, int argsCount) {
-    NoSetBack_enabled = !NoSetBack_enabled;
-    Chat_AddRaw(NoSetBack_enabled ? "&aNoSetBack enabled" : "&cNoSetBack disabled");
+static void ScaffoldCommand_Execute(const cc_string* args, int argsCount) {
+    Scaffold_enabled = !Scaffold_enabled;
+    Chat_AddRaw(Scaffold_enabled ? "&aScaffold enabled" : "&cScaffold disabled");
 }
 
-static struct ChatCommand NoSetBackCommand = {
-    "NoSetBack", NoSetBackCommand_Execute, 0,
+static struct ChatCommand ScaffoldCommand = {
+    "Scaffold", ScaffoldCommand_Execute, 0,
     {
-        "&a/client NoSetBack.",
-        "&ePrevents the server from teleporting you.",
+        "&a/client Scaffold.",
+        "&eAuto places blocks underneath you.",
     }
 };
 
@@ -1402,6 +1403,23 @@ static struct ChatCommand BrandCommand = {
 		"&a/client brand <name>",
 		"&eSets the client brand name sent to servers.",
 	}
+};
+
+/*########################################################################################################################*
+*------------------------------------------------------NoSetBack-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void NoSetBackCommand_Execute(const cc_string* args, int argsCount) {
+    NoSetBack_enabled = !NoSetBack_enabled;
+    Chat_AddRaw(NoSetBack_enabled ? "&aNoSetBack enabled" : "&cNoSetBack disabled");
+}
+
+static struct ChatCommand NoSetBackCommand = {
+    "NoSetBack", NoSetBackCommand_Execute, 0,
+    {
+        "&a/client NoSetBack.",
+        "&ePrevents the server from teleporting you.",
+    }
 };
 
 /*########################################################################################################################*
@@ -1444,6 +1462,7 @@ static void OnInit(void) {
 	Commands_Register(&NoPitchLimitCommand);
 	Commands_Register(&NoRenderCommand);
 	Commands_Register(&BrandCommand);
+	Commands_Register(&ScaffoldCommand);
 	Commands_Register(&NoSetBackCommand);
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
