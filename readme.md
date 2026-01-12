@@ -63,7 +63,7 @@ Instructions:
 - NoReconnectDelay (on by default)
 - Autojump
 - NoPitchLimit
-- NoRender (Basic)
+- NoRender
 
 ## Current Features
 - Coloured F3 Menu

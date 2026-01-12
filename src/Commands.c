@@ -41,6 +41,7 @@ cc_bool NoReconnectDelay_enabled = true;
 cc_bool AutoJump_enabled = false;
 cc_bool NoPitchLimit_enabled = false;
 cc_bool NoRender_enabled = false;
+cc_bool NoRender_everything = false;
 // cc_bool ArrayList_enabled = false;
 // cc_bool AutoJump_always = true;
 float SpinSpeed = 1;
@@ -933,7 +934,7 @@ static struct ChatCommand ForceHaxCommand = {
 	"ForceHax", ForceHaxCommand_Execute, 0,
 	{
 		"&a/client ForceHax",
-		"&eToggles ForceHax.",
+		"&eAllows toggling of something idk bruh.",
 	}
 };
 
@@ -951,7 +952,7 @@ static struct ChatCommand NametagsCommand = {
 	"Nametags", NametagsCommand_Execute, 0,
 	{
 		"&a/client Nametags",
-		"&eToggles Nametags.",
+		"&eAllows you to see nametags through walls",
 	}
 };
 
@@ -1085,7 +1086,7 @@ static struct ChatCommand InfJumpCommand = {
 	"InfJump", InfJumpCommand_Execute, 0,
 	{
 		"&a/client InfJump",
-		"&eToggles InfJump.",
+		"&eAllows you to infinitely jump", // Thanks zoey
 	}
 };
 
@@ -1119,7 +1120,7 @@ static struct ChatCommand FastClimbCommand = {
 	"FastClimb", FastClimbCommand_Execute, 0,
 	{
 		"&a/client FastClimb",
-		"&eToggles FastClimb.",
+		"&eClimb quickly!!!",
 	}
 };
 
@@ -1136,7 +1137,7 @@ static struct ChatCommand NoClickDelayCommand = {
 	"NoClickDelay", NoClickDelayCommand_Execute, 0,
 	{
 		"&a/client NoClickDelay",
-		"&eToggles NoClickDelay.",
+		"&eRemoves the ~4bps speed of placing/breaking",
 	}
 };
 
@@ -1153,7 +1154,7 @@ static struct ChatCommand StrafeCommand = {
 	"Strafe", StrafeCommand_Execute, 0,
 	{
 		"&a/client Strafe",
-		"&eToggles Strafe.",
+		"&eRemoves acceleration.",
 	}
 };
 
@@ -1239,7 +1240,7 @@ static struct ChatCommand SpinCommand = {
 	"Spin", SpinCommand_Execute, 0,
 	{
 		"&a/client Spin",
-		"&eToggles Spin.",
+		"&eYou spin me right round baby right round.",
 	}
 };
 
@@ -1270,7 +1271,7 @@ static struct ChatCommand NoReconnectDelayCommand = {
 	"NoReconnectDelay", NoReconnectDelayCommand_Execute, 0,
 	{
 		"&a/client NoReconnectDelay.",
-		"&eToggles NoReconnectDelay.",
+		"&eAllows you to reconnect to a server without having to wait.",
 	}
 };
 
@@ -1304,7 +1305,7 @@ static struct ChatCommand AutoJumpCommand = {
 	"AutoJump", AutoJumpCommand_Execute, 0,
 	{
 		"&a/client AutoJump <Always|Walking>",
-		"&eToggles AutoJump.",
+		"&eAuto Jumps for you.",
 	}
 };
 
@@ -1321,7 +1322,7 @@ static struct ChatCommand NoPitchLimitCommand = {
     "NoPitchLimit", NoPitchLimitCommand_Execute, 0,
     {
         "&a/client NoPitchLimit.",
-        "&eToggles NoPitchLimit.",
+        "&eAllows you to rotate the pitch of the camera without restriction.",
     }
 };
 
@@ -1330,15 +1331,30 @@ static struct ChatCommand NoPitchLimitCommand = {
 *#########################################################################################################################*/
 
 static void NoRenderCommand_Execute(const cc_string* args, int argsCount) {
-    NoRender_enabled = !NoRender_enabled;
-    Chat_AddRaw(NoRender_enabled ? "&aNoRender enabled" : "&cNoRender disabled");
+   	if (!argsCount) {
+		NoRender_enabled = !NoRender_enabled;
+   	 	Chat_AddRaw(NoRender_enabled ? "&aNoRender enabled" : "&cNoRender disabled");
+        return;
+    }
+
+    if (String_CaselessEqualsConst(args, "normal")) {
+        NoRender_everything = false;
+        Chat_AddRaw("&aNoRender mode set to normal");
+        return;
+    }
+
+    if (String_CaselessEqualsConst(args, "More")) {
+        NoRender_everything = true;
+        Chat_AddRaw("&cNoRender mode set to more");
+        return;
+    }
 }
 
 static struct ChatCommand NoRenderCommand = {
     "NoRender", NoRenderCommand_Execute, 0,
     {
-        "&a/client NoRender.",
-        "&eToggles NoRender.",
+        "&a/client NoRender <Normal|More>",
+        "&eDisables rendering of the client.",
     }
 };
 

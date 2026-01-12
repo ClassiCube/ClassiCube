@@ -387,7 +387,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	playerBB.Min.y = min(nextPos.y, playerBB.Min.y);
 
 	if (hacks->Noclip || !AABB_Intersects(&playerBB, &blockBB)) return true;
-	if (hacks->CanPushbackBlocks && hacks->PushbackPlacing && hacks->Enabled) {
+	if ((hacks->CanPushbackBlocks || ForceHax_enabled) && hacks->PushbackPlacing && hacks->Enabled) { //TODO FIX
 		return PushbackPlace(&blockBB);
 	}
 

@@ -515,7 +515,7 @@ void Game_SetMinFrameTime(float frameTimeMS) {
 static void Render3DFrame(float delta, float t) {
 	struct Matrix mvp;
 	Vec3 pos;
-	if (NoRender_enabled) return;
+	if (NoRender_enabled && !NoRender_everything) return;
 	Camera.Active->GetView(&Gfx.View);
 	/*Gfx_LoadMatrix(MATRIX_PROJ, &Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
@@ -681,7 +681,7 @@ static void LimitFPS(void) {
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	int i;
-	if (NoRender_enabled) return;
+	if (NoRender_enabled && NoRender_everything) return;
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 		Camera_KeyLookUpdate(delta);
