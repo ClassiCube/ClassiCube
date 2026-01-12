@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -29,8 +28,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <utime.h>
-#include <signal.h>
-#include <stdio.h>
 #include <poll.h>
 #include <netdb.h>
 #include <malloc.h>
@@ -41,14 +38,22 @@
 #include <coreinit/systeminfo.h>
 #include <coreinit/time.h>
 #include <whb/proc.h>
+#include <nn/ac.h>
+#include <nsysnet/_socket.h>
+#include <nsysnet/_netdb.h>
+#include <nsysnet/misc.h>
+
+#define SOCK_ERR_WOULDBLOCK  6
+#define SOCK_ERR_PIPE       13
+#define SOCK_ERR_INPROGRESS 22
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = EPIPE;
+const cc_result ReturnCode_SocketInProgess  = SOCK_ERR_INPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = SOCK_ERR_WOULDBLOCK;
+const cc_result ReturnCode_SocketDropped    = SOCK_ERR_PIPE;
 
 const char* Platform_AppNameSuffix = " Wii U";
 cc_bool Platform_ReadonlyFilesystem;
@@ -382,7 +387,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
 
-	res = getaddrinfo(host, portRaw, &hints, &result);
+	res = RPLWRAP(getaddrinfo)(host, portRaw, &hints, &result);
 	if (res == EAI_AGAIN) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
@@ -400,20 +405,24 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 
-	freeaddrinfo(result);
+	RPLWRAP(freeaddrinfo)(result);
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+}
+
+static CC_INLINE int Socket_LastError(void) {
+	return RPLWRAP(socketlasterr)();
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
+	*s = RPLWRAP(socket)(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s < 0) return Socket_LastError();
 
 	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
+		int nonblock = 1; /* non-blocking mode */
+		RPLWRAP(setsockopt)(*s, SOL_SOCKET, SO_NONBLOCK, &nonblock, sizeof(int));
 	}
 	return 0;
 }
@@ -421,39 +430,46 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	int res = connect(s, raw, addr->size);
-	return res == -1 ? errno : 0;
+	int res = RPLWRAP(connect)(s, raw, addr->size);
+	return res < 0 ? Socket_LastError() : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int recvCount = recv(s, data, count, 0);
-	if (recvCount != -1) { *modified = recvCount; return 0; }
-	*modified = 0; return errno;
+	int recvCount = RPLWRAP(recv)(s, data, count, 0);
+
+	*modified = recvCount >= 0 ? recvCount : 0; 
+	return recvCount < 0 ? Socket_LastError() : 0;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = send(s, data, count, 0);
-	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return errno;
+	int sentCount = RPLWRAP(send)(s, data, count, 0);
+
+	*modified = sentCount >= 0 ? sentCount : 0;
+	return sentCount < 0 ? Socket_LastError() : 0;
 }
 
 void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
+	RPLWRAP(shutdown)(s, SHUT_RDWR);
+	RPLWRAP(socketclose)(s);
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	struct pollfd pfd;
-	int flags;
+	nsysnet_fd_set rd_set, wr_set, ex_set;
+	struct nsysnet_timeval timeout = { 0, 0 };
 
-	pfd.fd     = s;
-	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
-	
-	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
-	return 0;
+	NSYSNET_FD_ZERO(&rd_set);
+	NSYSNET_FD_ZERO(&wr_set);
+	NSYSNET_FD_ZERO(&ex_set);
+
+	nsysnet_fd_set* set = (mode == SOCKET_POLL_READ) ? &rd_set : &wr_set;
+	NSYSNET_FD_SET(s, set);
+	int res = RPLWRAP(select)(s + 1, &rd_set, &wr_set, &ex_set, &timeout);
+
+	if (res < 0) { 
+		*success = false; return Socket_LastError(); 
+	} else {
+		*success = NSYSNET_FD_ISSET(s, set) != 0; return 0;
+	}
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
@@ -469,10 +485,10 @@ cc_result Socket_GetLastError(cc_socket s) {
 	socklen_t errSize = sizeof(error);
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	RPLWRAP(getsockopt)(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
 
 	// Apparently, actual Wii U hardware returns INPROGRESS error code if connect is still in progress
-	if (error == 22) error = 0;
+	if (error == SOCK_ERR_INPROGRESS) error = 0;
 	return error;
 }
 
@@ -480,6 +496,16 @@ cc_result Socket_GetLastError(cc_socket s) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+void __init_wut_socket()
+{
+   socket_lib_init();
+   set_multicast_state(TRUE);
+   ACInitialize();
+   ACConnectAsync(); // TODO not Async
+}
+
+void __fini_wut_socket() { }
+
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
