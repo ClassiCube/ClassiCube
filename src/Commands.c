@@ -21,6 +21,7 @@
 #include "MapRenderer.h"
 #include "Screens.h"
 #include "ExtMath.h"
+#include "Protocol.h"
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
@@ -47,7 +48,6 @@ cc_bool NoRender_everything = false;
 float SpinSpeed = 1;
 float Speed = 0.0f;
 float StepHeight = 0.0f;
-
 
 void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
@@ -1359,6 +1359,34 @@ static struct ChatCommand NoRenderCommand = {
 };
 
 /*########################################################################################################################*
+*---------------------------------------------------------Brand-----------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void BrandCommand_Execute(const cc_string* args, int argsCount) {
+	char BrandNameBuffer[32];
+	cc_string BrandName;
+	if (!argsCount) {
+		Chat_AddRaw("&cUsage: /client brand <name>");
+		return;
+	}
+
+	BrandName.length = 0;
+	String_AppendString(&BrandName, &args[0]);
+	Server.AppName = BrandName;
+	CPE_SendExtInfo(1);
+
+	Chat_AddRaw("&aClient brand updated.");
+}
+
+static struct ChatCommand BrandCommand = {
+	"brand", BrandCommand_Execute, 0,
+	{
+		"&a/client brand <name>",
+		"&eSets the client brand name sent to servers.",
+	}
+};
+
+/*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
@@ -1397,6 +1425,7 @@ static void OnInit(void) {
 	Commands_Register(&AutoJumpCommand);
 	Commands_Register(&NoPitchLimitCommand);
 	Commands_Register(&NoRenderCommand);
+	Commands_Register(&BrandCommand);
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
 }

@@ -4,6 +4,7 @@
 CC_BEGIN_HEADER
 
 extern int CPE_MaxViewDistance;
+extern void CPE_SendExtInfo(int extsCount);
 
 /* 
 Implements network protocols for original classic, CPE, and WoM textures

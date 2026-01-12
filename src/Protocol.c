@@ -932,7 +932,7 @@ void CPE_SendNotifyPositionAction(int action, int x, int y, int z) {
 	Server.SendData(data, 9);
 }
 
-static void CPE_SendExtInfo(int extsCount) {
+void CPE_SendExtInfo(int extsCount) {
 	cc_uint8 data[67];
 	data[0] = OPCODE_EXT_INFO;
 	{

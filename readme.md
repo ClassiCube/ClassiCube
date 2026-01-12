@@ -64,6 +64,7 @@ Instructions:
 - Autojump
 - NoPitchLimit
 - NoRender
+- Brand
 
 ## Current Features
 - Coloured F3 Menu
