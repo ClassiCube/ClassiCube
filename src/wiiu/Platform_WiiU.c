@@ -67,12 +67,15 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 #include "../main_impl.h"
 
 int main(int argc, char** argv) {
+	WHBProcInit();
+
 	SetupProgram(argc, argv);
 	while (Window_Main.Exists) { 
 		RunProgram(argc, argv);
 	}
 	
 	Window_Free();
+	Process_Exit(0);
 	return 0;
 }
 
@@ -504,7 +507,11 @@ void __init_wut_socket()
    ACConnectAsync(); // TODO not Async
 }
 
-void __fini_wut_socket() { }
+void __fini_wut_socket() {
+   /*ACClose(); // TODO threadsafe?
+   ACFinalize();
+   socket_lib_finish();*/
+}
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
@@ -524,7 +531,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 }
 
 void Platform_Init(void) {
-	WHBProcInit();
 	// Otherwise loading sound gets stuck endlessly repeating
 	AudioBackend_Init();
 
@@ -536,7 +542,10 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
-void Process_Exit(cc_result code) { exit(code); }
+void Process_Exit(cc_result code) {
+	WHBProcShutdown();
+	exit(code); 
+}
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	Platform_LogConst("START CLASSICUBE");
