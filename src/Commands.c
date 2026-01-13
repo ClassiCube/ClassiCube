@@ -1382,17 +1382,18 @@ static struct ChatCommand ScaffoldCommand = {
 *#########################################################################################################################*/
 
 static void BrandCommand_Execute(const cc_string* args, int argsCount) {
-	char BrandNameBuffer[32];
+	char BrandNameBuffer[64];
 	cc_string BrandName;
+
 	if (!argsCount) {
 		Chat_AddRaw("&cUsage: /client brand <name>");
 		return;
 	}
 
-	BrandName.length = 0;
+	String_InitArray(BrandName, BrandNameBuffer)
 	String_AppendString(&BrandName, &args[0]);
 	Server.AppName = BrandName;
-	CPE_SendExtInfo(1);
+	CPE_SendExtInfo(64);
 
 	Chat_AddRaw("&aClient brand updated.");
 }
@@ -1488,4 +1489,5 @@ struct IGameComponent Commands_Component = {
 //Shorten forcehax logic as im dumb
 //Noslow
 //ForceViewDist
+
 //Make noreconnectdelay a command
