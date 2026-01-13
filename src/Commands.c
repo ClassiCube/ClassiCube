@@ -1390,7 +1390,7 @@ static void BrandCommand_Execute(const cc_string* args, int argsCount) {
 		return;
 	}
 
-	String_InitArray(BrandName, BrandNameBuffer)
+	String_InitArray(BrandName, BrandNameBuffer);
 	String_AppendString(&BrandName, &args[0]);
 	Server.AppName = BrandName;
 	CPE_SendExtInfo(64);
@@ -1491,3 +1491,4 @@ struct IGameComponent Commands_Component = {
 //ForceViewDist
 
 //Make noreconnectdelay a command
+
