@@ -9,7 +9,7 @@
 </div>
 
 <p align="center">
-Massive thanks to Hexcode, root & SuperZMax for helping me out and being such awesome people
+Massive thanks to Hexcode, root & SuperZPMax for helping me out and being such awesome people
 </p>
 
 ## Downloads (click the top workflow to download)
