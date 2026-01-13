@@ -29,6 +29,7 @@ static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
 static cc_bool isSolid = false;
+cc_bool AntiGravity_enabled = false;
 cc_bool ForceHax_enabled = false;
 cc_bool NoPush_enabled = false;
 cc_bool NoCamGravity_enabled = false;
@@ -1045,6 +1046,28 @@ static struct ChatCommand JesusCommand = {
     }
 };
 
+
+/*########################################################################################################################*
+*------------------------------------------------------AntiGravity--------------------------------------------------------*
+*#########################################################################################################################*/
+
+static void AntiGravity_Execute(const cc_string* args, int argsCount) {
+	float CurrentGravity = LocalPlayer_Instances[0].Physics.gravity;
+
+
+	if (!AntiGravity_enabled) {
+		LocalPlayer_Instances[0].Physics.gravity = -CurrentGravity;
+		AntiGravity_enabled = true;
+	} else {
+		LocalPlayer_Instances[0].Physics.gravity = -CurrentGravity;
+		AntiGravity_enabled = false;
+	}
+
+	AntiGravity_enabled
+		? Chat_AddRaw("&2AntiGravity enabled")
+		: Chat_AddRaw("&4AntiGravity disabled");
+}
+
 /*########################################################################################################################*
 *-------------------------------------------------------Gravity-----------------------------------------------------------*
 *#########################################################################################################################*/
@@ -1491,4 +1514,5 @@ struct IGameComponent Commands_Component = {
 //ForceViewDist
 
 //Make noreconnectdelay a command
+
 
