@@ -167,7 +167,7 @@ static void DeleteExportTempFile(void) {
     save_path.length = 0;
 }
 
-- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url NS_AVAILABLE_IOS(8.0) {
     // documentPicker:didPickDocumentAtURL - iOS 8
     NSString* str    = url.path;
     const char* utf8 = str.UTF8String;
@@ -182,7 +182,7 @@ static void DeleteExportTempFile(void) {
     open_dlg_callback = NULL;
 }
 
-- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
+- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller NS_AVAILABLE_IOS(8.0) {
     // documentPickerWasCancelled - iOS 8
     DeleteExportTempFile();
 }
@@ -502,18 +502,21 @@ void ShowDialogCore(const char* title, const char* msg) {
 	NSString* _title = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
 	NSString* _msg   = [NSString stringWithCString:msg encoding:NSASCIIStringEncoding];
 	alert_completed  = false;
-	
-#ifdef TARGET_OS_TV
-	UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
-	UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
-	[alert addAction:okBtn];
-	[cc_controller presentViewController:alert animated:YES completion: Nil];
-#else
-	UIAlertView* alert = [UIAlertView alloc];
-	alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
-	[alert show];
-#endif
-	
+
+    if ([UIAlertController respondsToSelector:@selector(alertControllerWithTitle)])
+    {
+        UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
+        [alert addAction:okBtn];
+        [cc_controller presentViewController:alert animated:YES completion: Nil];
+    }
+    else
+    {
+        UIAlertView* alert = [UIAlertView alloc];
+        alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [alert show];
+    }
+
 	// TODO clicking outside message box crashes launcher
 	// loop until alert is closed TODO avoid sleeping
 	while (!alert_completed) {
@@ -535,6 +538,8 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	  };
 	NSMutableArray* types = [NSMutableArray array];
 	const char* const* filters = args->filters;
+
+    if (NSClassFromString(@"UIDocumentPickerViewController") == nil) return ERR_NOT_SUPPORTED;
 	
 	for (int i = 0; filters[i]; i++)
 	{
@@ -556,6 +561,8 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+    if (NSClassFromString(@"UIDocumentPickerViewController") == nil) return ERR_NOT_SUPPORTED;
+
 	// UIDocumentPickerViewController - iOS 8
 	
 	// save the item to a temp file, which is then (usually) later deleted by picker callbacks
