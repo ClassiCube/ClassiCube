@@ -12,10 +12,8 @@
 		9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A62ADF4286D906F00E5E3DE /* Assets.xcassets */; };
 		9A6C79652BFDDEF200676D27 /* FancyLighting.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79642BFDDEF100676D27 /* FancyLighting.c */; };
 		9A6C79672BFDDF0700676D27 /* Queue.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C79662BFDDF0600676D27 /* Queue.c */; };
-		9A6C7DFA2C2F610C00676D27 /* LBackend_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */; };
 		9A6C7DFC2C41E93700676D27 /* InputHandler.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DFB2C41E93700676D27 /* InputHandler.c */; };
 		9A6C7DFE2C41E95D00676D27 /* MenuOptions.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DFD2C41E95C00676D27 /* MenuOptions.c */; };
-		9A6C7E002C41EED700676D27 /* Window_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DFF2C41EED700676D27 /* Window_ios.m */; };
 		9A7401D92B737D5C0040E575 /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401D82B737D5B0040E575 /* Commands.c */; };
 		9A7401DB2B7384060040E575 /* SSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401DA2B7384060040E575 /* SSL.c */; };
 		9A89D4F227F802F600FF3F80 /* LWidgets.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37827F802F500FF3F80 /* LWidgets.c */; };
@@ -46,7 +44,6 @@
 		9A89D55527F802F600FF3F80 /* HeldBlockRenderer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D47927F802F500FF3F80 /* HeldBlockRenderer.c */; };
 		9A89D55627F802F600FF3F80 /* EnvRenderer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D47A27F802F500FF3F80 /* EnvRenderer.c */; };
 		9A89D55827F802F600FF3F80 /* Graphics_GL1.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D47E27F802F500FF3F80 /* Graphics_GL1.c */; };
-		9A89D55927F802F600FF3F80 /* interop_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D47F27F802F600FF3F80 /* interop_ios.m */; };
 		9A89D55B27F802F600FF3F80 /* _type1.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D48227F802F600FF3F80 /* _type1.c */; };
 		9A89D55C27F802F600FF3F80 /* Animations.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D48527F802F600FF3F80 /* Animations.c */; };
 		9A89D55D27F802F600FF3F80 /* _psmodule.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D48627F802F600FF3F80 /* _psmodule.c */; };
@@ -214,6 +211,9 @@
 		9AC5433E2AE2649F0086C85F /* SystemFonts.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC5433D2AE2649E0086C85F /* SystemFonts.c */; };
 		9AC543402AE264AC0086C85F /* GameVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC5433F2AE264AC0086C85F /* GameVersion.c */; };
 		9AC543422AE264B90086C85F /* EntityRenderers.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC543412AE264B90086C85F /* EntityRenderers.c */; };
+		9AC67A502F13B87A00E979B4 /* Window_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AC67A4D2F13B87A00E979B4 /* Window_ios.m */; };
+		9AC67A512F13B87A00E979B4 /* interop_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AC67A4E2F13B87A00E979B4 /* interop_ios.m */; };
+		9AC67A522F13B87A00E979B4 /* LBackend_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AC67A4F2F13B87A00E979B4 /* LBackend_ios.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -222,10 +222,8 @@
 		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ClassiCube/Assets.xcassets; sourceTree = "<group>"; };
 		9A6C79642BFDDEF100676D27 /* FancyLighting.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FancyLighting.c; sourceTree = "<group>"; };
 		9A6C79662BFDDF0600676D27 /* Queue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Queue.c; sourceTree = "<group>"; };
-		9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LBackend_ios.m; sourceTree = "<group>"; };
 		9A6C7DFB2C41E93700676D27 /* InputHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = InputHandler.c; sourceTree = "<group>"; };
 		9A6C7DFD2C41E95C00676D27 /* MenuOptions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MenuOptions.c; sourceTree = "<group>"; };
-		9A6C7DFF2C41EED700676D27 /* Window_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Window_ios.m; sourceTree = "<group>"; };
 		9A7401D82B737D5B0040E575 /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Commands.c; sourceTree = "<group>"; };
 		9A7401DA2B7384060040E575 /* SSL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SSL.c; sourceTree = "<group>"; };
 		9A89D35727F802B100FF3F80 /* ClassiCube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassiCube.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -258,7 +256,6 @@
 		9A89D47927F802F500FF3F80 /* HeldBlockRenderer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = HeldBlockRenderer.c; sourceTree = "<group>"; };
 		9A89D47A27F802F500FF3F80 /* EnvRenderer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EnvRenderer.c; sourceTree = "<group>"; };
 		9A89D47E27F802F500FF3F80 /* Graphics_GL1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Graphics_GL1.c; sourceTree = "<group>"; };
-		9A89D47F27F802F600FF3F80 /* interop_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = interop_ios.m; sourceTree = "<group>"; };
 		9A89D48227F802F600FF3F80 /* _type1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = _type1.c; sourceTree = "<group>"; };
 		9A89D48527F802F600FF3F80 /* Animations.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Animations.c; sourceTree = "<group>"; };
 		9A89D48627F802F600FF3F80 /* _psmodule.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = _psmodule.c; sourceTree = "<group>"; };
@@ -428,6 +425,9 @@
 		9AC5433D2AE2649E0086C85F /* SystemFonts.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SystemFonts.c; sourceTree = "<group>"; };
 		9AC5433F2AE264AC0086C85F /* GameVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GameVersion.c; sourceTree = "<group>"; };
 		9AC543412AE264B90086C85F /* EntityRenderers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EntityRenderers.c; sourceTree = "<group>"; };
+		9AC67A4D2F13B87A00E979B4 /* Window_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Window_ios.m; sourceTree = "<group>"; };
+		9AC67A4E2F13B87A00E979B4 /* interop_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = interop_ios.m; sourceTree = "<group>"; };
+		9AC67A4F2F13B87A00E979B4 /* LBackend_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LBackend_ios.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -444,6 +444,7 @@
 		9A89D34E27F802B100FF3F80 = {
 			isa = PBXGroup;
 			children = (
+				9AC67A4C2F13B87A00E979B4 /* ios */,
 				9AC3D0322E1166AA00A38E91 /* src */,
 				9A62ADF4286D906F00E5E3DE /* Assets.xcassets */,
 				9A89D36827F802B400FF3F80 /* Info.plist */,
@@ -510,11 +511,9 @@
 				9A89D38227F802F500FF3F80 /* Http_Worker.c */,
 				9A89D4A627F802F600FF3F80 /* Input.c */,
 				9A6C7DFB2C41E93700676D27 /* InputHandler.c */,
-				9A89D47F27F802F600FF3F80 /* interop_ios.m */,
 				9A89D38B27F802F500FF3F80 /* Inventory.c */,
 				9A89D47527F802F500FF3F80 /* IsometricDrawer.c */,
 				9A89D4DD27F802F600FF3F80 /* Launcher.c */,
-				9A6C7DF92C2F610C00676D27 /* LBackend_ios.m */,
 				9A89D38F27F802F500FF3F80 /* LBackend.c */,
 				9A89D49927F802F600FF3F80 /* Lighting.c */,
 				9A89D47627F802F500FF3F80 /* Logger.c */,
@@ -548,7 +547,6 @@
 				9A89D4E927F802F600FF3F80 /* Vectors.c */,
 				9A89D37C27F802F500FF3F80 /* Vorbis.c */,
 				9A89D4EE27F802F600FF3F80 /* Widgets.c */,
-				9A6C7DFF2C41EED700676D27 /* Window_ios.m */,
 				9A89D4E427F802F600FF3F80 /* Window_SDL2.c */,
 				9A89D48727F802F600FF3F80 /* World.c */,
 			);
@@ -684,6 +682,17 @@
 			path = ../../third_party/bearssl;
 			sourceTree = "<group>";
 		};
+		9AC67A4C2F13B87A00E979B4 /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				9AC67A4D2F13B87A00E979B4 /* Window_ios.m */,
+				9AC67A4E2F13B87A00E979B4 /* interop_ios.m */,
+				9AC67A4F2F13B87A00E979B4 /* LBackend_ios.m */,
+			);
+			name = ios;
+			path = ../../src/ios;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -765,6 +774,7 @@
 				9AC3D0FE2E1166AB00A38E91 /* dec32be.c in Sources */,
 				9AC3D0DE2E1166AB00A38E91 /* ssl_rec_gcm.c in Sources */,
 				9AC3D0B62E1166AB00A38E91 /* asn1enc.c in Sources */,
+				9AC67A502F13B87A00E979B4 /* Window_ios.m in Sources */,
 				9AC3D0C72E1166AB00A38E91 /* i31_rshift.c in Sources */,
 				9AC3D11E2E1166AB00A38E91 /* ssl_client_full.c in Sources */,
 				9AC3D0EE2E1166AB00A38E91 /* enc64le.c in Sources */,
@@ -880,6 +890,7 @@
 				9A89D57827F802F600FF3F80 /* Protocol.c in Sources */,
 				9AC3D0BC2E1166AB00A38E91 /* rsa_i31_pkcs1_vrfy.c in Sources */,
 				9AC3D0CA2E1166AB00A38E91 /* ssl_io.c in Sources */,
+				9AC67A512F13B87A00E979B4 /* interop_ios.m in Sources */,
 				9AC3D0BB2E1166AB00A38E91 /* i62_modpow2.c in Sources */,
 				9A89D55427F802F600FF3F80 /* Bitmap.c in Sources */,
 				9AC3D0F52E1166AB00A38E91 /* prf_sha384.c in Sources */,
@@ -897,7 +908,6 @@
 				9AC3D10D2E1166AB00A38E91 /* ecdsa_i31_vrfy_raw.c in Sources */,
 				9A89D55827F802F600FF3F80 /* Graphics_GL1.c in Sources */,
 				9A89D59427F802F600FF3F80 /* Widgets.c in Sources */,
-				9A89D55927F802F600FF3F80 /* interop_ios.m in Sources */,
 				9AC3D0E42E1166AB00A38E91 /* aes_big_cbcdec.c in Sources */,
 				9AC3D0CB2E1166AB00A38E91 /* ecdsa_atr.c in Sources */,
 				9AC3D1082E1166AB00A38E91 /* ssl_engine_default_ec.c in Sources */,
@@ -933,7 +943,6 @@
 				9A89D56A27F802F600FF3F80 /* Physics.c in Sources */,
 				9AC3D0B42E1166AB00A38E91 /* aes_big_cbcenc.c in Sources */,
 				9AC3D0EF2E1166AB00A38E91 /* ec_p256_m64.c in Sources */,
-				9A6C7DFA2C2F610C00676D27 /* LBackend_ios.m in Sources */,
 				9AC3D0B82E1166AB00A38E91 /* aesctr_drbg.c in Sources */,
 				9A89D58727F802F600FF3F80 /* SelectionBox.c in Sources */,
 				9A89D4FE27F802F600FF3F80 /* Inventory.c in Sources */,
@@ -944,12 +953,12 @@
 				9AC3D0FA2E1166AB00A38E91 /* aes_big_dec.c in Sources */,
 				9A89D57527F802F600FF3F80 /* AxisLinesRenderer.c in Sources */,
 				9AC3D0D42E1166AB00A38E91 /* x509_minimal_full.c in Sources */,
-				9A6C7E002C41EED700676D27 /* Window_ios.m in Sources */,
 				9A89D55E27F802F600FF3F80 /* World.c in Sources */,
 				9AC3D0CD2E1166AB00A38E91 /* ssl_hs_client.c in Sources */,
 				9A89D58627F802F600FF3F80 /* Screens.c in Sources */,
 				9A89D4F927F802F600FF3F80 /* Http_Worker.c in Sources */,
 				9A89D58B27F802F600FF3F80 /* Launcher.c in Sources */,
+				9AC67A522F13B87A00E979B4 /* LBackend_ios.m in Sources */,
 				9A89D59027F802F600FF3F80 /* Stream.c in Sources */,
 				9AC3D0B12E1166AB00A38E91 /* ec_p256_m62.c in Sources */,
 				9AC3D0C82E1166AB00A38E91 /* aes_big_ctr.c in Sources */,
