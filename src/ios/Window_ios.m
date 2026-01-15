@@ -458,21 +458,19 @@ static void AllocWindow(void) {
 	[notifications addObserver:cc_controller selector:@selector(keyboardDidHide:) name:UIKeyboardWillHideNotification object:nil];
 }
 
-static CGRect DoCreateWindow(void) {
+static void DoCreateWindow(void) {
 	AllocWindow();
 	UpdateStatusBar();
 	
 	UIColor* color = CalcBackgroundColor();
 	[win_handle setBackgroundColor:color];
-	
-	return [win_handle frame];
 }
 
 void Window_Create2D(int width, int height) {
     Window_Main.Is3D = false;
-    CGRect bounds = DoCreateWindow();
+    DoCreateWindow();
 	
-    view_handle = [[UIView alloc] initWithFrame:bounds];
+    view_handle = [[UIView alloc] initWithFrame:CGRectZero];
     [view_handle setMultipleTouchEnabled:YES];
     [cc_controller setView:view_handle];
 	
@@ -481,9 +479,9 @@ void Window_Create2D(int width, int height) {
 
 void Window_Create3D(int width, int height) {
     Window_Main.Is3D = true;
-    CGRect bounds = DoCreateWindow();
+    DoCreateWindow();
 	
-    view_handle = [[CC3DView alloc] initWithFrame:bounds];
+    view_handle = [[CC3DView alloc] initWithFrame:CGRectZero];
     [view_handle setMultipleTouchEnabled:YES];
     [cc_controller setView:view_handle];
 

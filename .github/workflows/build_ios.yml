@@ -21,6 +21,7 @@ jobs:
       - name: Compile iOS build
         run: |
           sudo xcode-select -s /Applications/Xcode_15.0.1.app/Contents/Developer
+          export IOS_SDK_VERSION=17.0
           make ios
           
       - uses: ./.github/actions/upload_build
