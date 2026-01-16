@@ -1428,7 +1428,7 @@ static struct ChatCommand NoSetBackCommand = {
 /*########################################################################################################################*
 *-------------------------------------------------------Vclip-------------------------------------------------------------*
 *#########################################################################################################################*/
-void Vclip_Execute(const cc_string* args, int argsCount){
+void VclipCommand_Execute(const cc_string* args, int argsCount){
     struct Entity *e = &Entities.CurPlayer->Base;
     struct LocationUpdate update;
     float offset;
@@ -1452,8 +1452,8 @@ void Vclip_Execute(const cc_string* args, int argsCount){
     Chat_Add3("Vclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
 }
 
-struct ChatCommand Vclip = {
-    "Vclip", Vclip_Execute,
+struct ChatCommand VclipCommand = {
+    "Vclip", VclipCommand_Execute,
     0,
     {
         "&eTeleports you upwards.",
@@ -1464,7 +1464,7 @@ struct ChatCommand Vclip = {
 /*########################################################################################################################*
 *-------------------------------------------------------Hclip-------------------------------------------------------------*
 *#########################################################################################################################*/
-void Hclip_Execute(const cc_string* args, int argsCount) {
+void HclipCommand_Execute(const cc_string* args, int argsCount) {
     struct Entity *e = &Entities.CurPlayer->Base;
     struct LocationUpdate update;
     float offset;
@@ -1487,8 +1487,8 @@ void Hclip_Execute(const cc_string* args, int argsCount) {
     Chat_Add3("Hclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
 }
 
-struct ChatCommand Hclip = {
-    "Hclip", Hclip_Execute,
+struct ChatCommand HclipCommand = {
+    "Hclip", HclipCommand_Execute,
     0,
     {
         "&eTeleports you sideways",
@@ -1539,8 +1539,8 @@ static void OnInit(void) {
 	Commands_Register(&BrandCommand);
 	Commands_Register(&ScaffoldCommand);
 	Commands_Register(&NoSetBackCommand);
-	Commands_Register(&Vclip);
-	Commands_Register(&Hclip);
+	Commands_Register(&VclipCommand);
+	Commands_Register(&HclipCommand);
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
 }
