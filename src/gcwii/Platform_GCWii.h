@@ -1,3 +1,5 @@
+extern void VirtualDialog_Show(const char* title, const char* msg, cc_bool oneshot); // TODO better solution
+
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
@@ -312,6 +314,11 @@ void Platform_Free(void) { }
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
+
+	if (res == ERR_NON_WRITABLE_FS) {
+		String_AppendConst(dst, "No supported SD card detected\n    Will not be able to save any files");
+		return true;
+	}
 
 	/* For unrecognised error codes, strerror_r might return messages */
 	/*  such as 'No error information', which is not very useful */

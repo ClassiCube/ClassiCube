@@ -323,6 +323,11 @@ void Platform_Free(void) {
 }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
+	if (res == ERR_NON_WRITABLE_FS) {
+		String_AppendConst(dst, "No writable filesystem found");
+		return true;
+	}
+
 	return false;
 }
 

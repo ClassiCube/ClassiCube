@@ -67,6 +67,7 @@ void VirtualDialog_Show(const char* title, const char* msg, cc_bool oneshot) {
 
 	struct Context2D ctx;
 	Context2D_Wrap(&ctx, &bmp);
+	// TODO Backing surface may be bigger then valid area
 	Context2D_Clear(&ctx, BitmapCol_Make(30, 30, 30, 255),
 					0, 0, bmp.width, bmp.height);
 

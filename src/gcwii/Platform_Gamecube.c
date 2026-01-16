@@ -156,7 +156,9 @@ static void InitSockets(void) {
 	char netmask[16] = {0};
 	char gateway[16] = {0};
 	
+	VirtualDialog_Show("Connecting to network..", "This may take up to 30 seconds", true);
 	int ret = if_config(localip, netmask, gateway, true);
+
 	if (ret >= 0) {
 		cc_string str; char buffer[256];
 		String_InitArray_NT(str, buffer);

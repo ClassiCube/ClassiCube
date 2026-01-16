@@ -26,9 +26,10 @@ BUILD_DIR_APP	:= build/ios/$(FULL_TARGET).app
 BUILD_DIR_32	:= build/ios/$(ARCH_32)
 BUILD_DIR_64	:= build/ios/$(ARCH_64)
 
-IOS_SDK_VERSION	?= 12.1
-IOS_MIN_VERSION ?= 6.0
-XCODE_ROOT		:= /Applications/Xcode.app/Contents/Developer
+XCODE_APP		?= Xcode.app # override if need a specific xcode version
+IOS_SDK_VERSION	?= 12.1      # override to change iOS SDK version used to compile
+IOS_MIN_VERSION ?= 6.0       # override to change minimum iOS runtime/deployment version
+XCODE_ROOT		:= /Applications/$(XCODE_APP)/Contents/Developer
 IOS_SDK_PATH	:= $(XCODE_ROOT)/Platforms/$(SDK_TYPE).platform/Developer/SDKs/$(SDK_TYPE)$(IOS_SDK_VERSION).sdk
 
 

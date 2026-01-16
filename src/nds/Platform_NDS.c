@@ -653,6 +653,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
 
+	if (res == ERR_NON_WRITABLE_FS) {
+		String_AppendConst(dst, "No SD card or DLDI driver found \nWon't be able to save any files");
+		return true;
+	}
+
 	/* For unrecognised error codes, strerror_r might return messages */
 	/*  such as 'No error information', which is not very useful */
 	/* (could check errno here but quicker just to skip entirely) */
