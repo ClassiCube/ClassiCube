@@ -1435,11 +1435,11 @@ void VclipCommand_Execute(const cc_string* args, int argsCount){
     Vec3 v;
 
     if (argsCount != 1) {
-        Chat_AddRaw("You did not specify the Y offset.");
+        Chat_AddRaw("&cYou did not specify the Y offset.");
         return;
     }
     if (!Convert_ParseFloat(&args[0], &offset)) {
-        Chat_AddRaw("Offset must be a number");
+        Chat_AddRaw("&cOffset must be a number");
         return;
     }
     v = e->Position;
@@ -1449,7 +1449,7 @@ void VclipCommand_Execute(const cc_string* args, int argsCount){
     update.pos = v;
 
     e->VTABLE->SetLocation(e, &update);
-    Chat_Add3("Vclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
+    Chat_Add3("&aVclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
 }
 
 struct ChatCommand VclipCommand = {
@@ -1471,11 +1471,11 @@ void HclipCommand_Execute(const cc_string* args, int argsCount) {
     Vec3 v;
 
     if (argsCount != 1) {
-        Chat_AddRaw("You did not specify the X offset");
+        Chat_AddRaw("&cYou did not specify the X offset");
     	return;
 	}
     if (!Convert_ParseFloat(&args[0], &offset)) {
-        Chat_AddRaw("Offset must be a number.");
+        Chat_AddRaw("&CcOffset must be a number.");
 		return;
     }
 
@@ -1486,7 +1486,7 @@ void HclipCommand_Execute(const cc_string* args, int argsCount) {
     update.pos = v;
 
     e->VTABLE->SetLocation(e, &update);
-    Chat_Add3("Hclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
+    Chat_Add3("&aHclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
 }
 
 struct ChatCommand HclipCommand = {
