@@ -1472,9 +1472,11 @@ void Hclip_Execute(const cc_string* args, int argsCount) {
 
     if (argsCount != 1) {
         Chat_AddRaw("You did not specify the X offset");
-    }
+    	return;
+	}
     if (!Convert_ParseFloat(&args[0], &offset)) {
         Chat_AddRaw("Offset must be a number.");
+		return;
     }
 
     v = e->Position;
@@ -1567,6 +1569,7 @@ struct IGameComponent Commands_Component = {
 //ForceViewDist
 
 //Make noreconnectdelay a command
+
 
 
 
