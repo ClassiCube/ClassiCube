@@ -68,9 +68,12 @@ Instructions:
 - NoSetBack
 - Scaffold
 - AntiGravity
+- Vclip
+- Hclip
 
 ## Current Features
 - Coloured F3 Menu
 <!--TODO Move this into a doc or a wiki -->
+
 
 

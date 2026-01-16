@@ -1424,6 +1424,79 @@ static struct ChatCommand NoSetBackCommand = {
     }
 };
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------Vclip-------------------------------------------------------------*
+*#########################################################################################################################*/
+void Vclip_Execute(const cc_string* args, int argsCount){
+    struct Entity *e = &Entities.CurPlayer->Base;
+    struct LocationUpdate update;
+    float offset;
+    Vec3 v;
+
+    if (argsCount != 1) {
+        Chat_AddRaw("You did not specify the Y offset.");
+        return;
+    }
+    if (!Convert_ParseFloat(&args[0], &offset)) {
+        Chat_AddRaw("Offset must be a number");
+        return;
+    }
+    v = e->Position;
+    v.y += offset;
+
+    update.flags = LU_HAS_POS;
+    update.pos = v;
+
+    e->VTABLE->SetLocation(e, &update);
+    Chat_Add3("Vclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
+}
+
+struct ChatCommand Vclip = {
+    "Vclip", Vclip_Execute,
+    0,
+    {
+        "&eTeleports you upwards.",
+        "&eUsage: /client vclip <offset>"
+    }
+};
+
+/*########################################################################################################################*
+*-------------------------------------------------------Hclip-------------------------------------------------------------*
+*#########################################################################################################################*/
+void Hclip_Execute(const cc_string* args, int argsCount) {
+    struct Entity *e = &Entities.CurPlayer->Base;
+    struct LocationUpdate update;
+    float offset;
+    Vec3 v;
+
+    if (argsCount != 1) {
+        Chat_AddRaw("You did not specify the X offset");
+    }
+    if (!Convert_ParseFloat(&args[0], &offset)) {
+        Chat_AddRaw("Offset must be a number.");
+    }
+
+    v = e->Position;
+    v.x += offset;
+
+    update.flags = LU_HAS_POS;
+    update.pos = v;
+
+    e->VTABLE->SetLocation(e, &update);
+    Chat_Add3("Hclip: teleported you to: X:%f, Y:%f, Z:%f.", &v.x, &v.y, &v.z);
+}
+
+struct ChatCommand Hclip = {
+    "Hclip", Hclip_Execute,
+    0,
+    {
+        "&eTeleports you sideways",
+        "&eUsage: /client hclip <offset>"
+    }
+};
+
+
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
 *#########################################################################################################################*/
@@ -1466,6 +1539,8 @@ static void OnInit(void) {
 	Commands_Register(&BrandCommand);
 	Commands_Register(&ScaffoldCommand);
 	Commands_Register(&NoSetBackCommand);
+	Commands_Register(&Vclip);
+	Commands_Register(&Hclip);
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
 }
@@ -1492,6 +1567,7 @@ struct IGameComponent Commands_Component = {
 //ForceViewDist
 
 //Make noreconnectdelay a command
+
 
 
 
