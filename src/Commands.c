@@ -978,7 +978,7 @@ static void ReachCommand_Execute(const cc_string* args, int argsCount) {
 	// TODO: check if this is the correct way to set reach distance for local player
 
     LocalPlayer_Instances[0].ReachDistance = reach;
-    Chat_Add2("&eReach distance set to &f%f", &reach, NULL);
+    Chat_Add2("&eReach distance set to &f%f.", &reach, NULL);
 }
 
 static struct ChatCommand ReachCommand = {
@@ -998,7 +998,7 @@ static void SpeedCommand_Execute(const cc_string* args, int argsCount) {
     }
 
 	if (!Convert_ParseFloat(args, &SetSpeed)) {
-    Chat_Add1("&cInvalid number!", NULL);
+    Chat_Add1("&cInvalid number.", NULL);
     return;
 }
 	// Remove this awful hacks
@@ -1059,7 +1059,7 @@ static void GravityCommand_Execute(const cc_string* args, int argsCount) {
 	}
 
 	if (!Convert_ParseFloat(args, &SetGravity)) {
-		Chat_Add1("&cInvalid number!", NULL);
+		Chat_Add1("&cInvalid number.", NULL);
 		return;
 	}
 
@@ -1202,7 +1202,7 @@ static void HighJumpCommand_Execute(const cc_string* args, int argsCount) {
 	}
 
 	if (!Convert_ParseFloat(args, &JumpHeight)) {
-		Chat_Add1("&cInvalid number!", NULL);
+		Chat_Add1("&cInvalid number.", NULL);
 		return;
 	}
 
@@ -1232,7 +1232,7 @@ static void SpinCommand_Execute(const cc_string* args, int argsCount) {
 		return;
 	}
 	if (!Convert_ParseFloat(args, &Spin_Command)) {
-		Chat_Add1("&cInvalid number!", NULL);
+		Chat_Add1("&cInvalid number.", NULL);
 		return;
 	}
 	SpinSpeed = Spin_Command;
