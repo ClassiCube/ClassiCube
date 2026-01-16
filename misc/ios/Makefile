@@ -84,11 +84,11 @@ $(BUILD_DIR_APP):
 #---------------------------------------------------------------------------------
 $(BUILD_DIR_32)/$(TARGET): $(OBJS_32)
 	export IPHONEOS_DEPLOYMENT_TARGET=$(IOS_MIN_VERSION)
-	$(LD) $^ -arch $(ARCH_32) $(LDFLAGS) $(LIBS) -miphoneos-version-min=$(IOS_MIN_VERSION) -dead_strip -fobjc-link-runtime -o $@
+	$(LD) $^ -arch $(ARCH_32) $(LDFLAGS) $(LIBS) -miphoneos-version-min=$(IOS_MIN_VERSION) -dead_strip -fno-objc-link-runtime -o $@
 
 $(BUILD_DIR_64)/$(TARGET): $(OBJS_64)
 	export IPHONEOS_DEPLOYMENT_TARGET=$(IOS_MIN_VERSION)
-	$(LD) $^ -arch $(ARCH_64) $(LDFLAGS) $(LIBS) -miphoneos-version-min=$(IOS_MIN_VERSION) -dead_strip -fobjc-link-runtime -o $@
+	$(LD) $^ -arch $(ARCH_64) $(LDFLAGS) $(LIBS) -miphoneos-version-min=$(IOS_MIN_VERSION) -dead_strip -fno-objc-link-runtime -o $@
 
 
 $(BUILD_DIR_APP)/$(TARGET): $(BUILD_DIR_32)/$(TARGET) $(BUILD_DIR_64)/$(TARGET)

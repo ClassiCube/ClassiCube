@@ -364,6 +364,7 @@ static void OnKeyPressed(int key) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
     Keyboard* kbd = keyboardGetDefault();
+    kbd->OnKeyPressed = OnKeyPressed;
     if (Window_Main.Is3D) videoBgDisableSub(LAYER_CON);
 
     keyboardInit(kbd, LAYER_KB, BgType_Text4bpp, BgSize_T_256x512,
@@ -371,7 +372,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     keyboardShow();
     bgSetPriority(4 + LAYER_KB, BG_PRIORITY_0);
 
-    kbd->OnKeyPressed = OnKeyPressed;
     String_InitArray(kbText, kbBuffer);
 	String_AppendString(&kbText, args->text);
     DisplayInfo.ShowingSoftKeyboard = true;
