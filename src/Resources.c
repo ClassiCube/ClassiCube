@@ -287,7 +287,9 @@ static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entri
 }
 
 
-#ifndef CC_BUILD_NOMUSIC
+#ifdef CC_BUILD_NOMUSIC
+static int MusicAsset_Download(const char* hash) { return ERR_NOT_SUPPORTED; }
+#else
 /*########################################################################################################################*
 *---------------------------------------------------------Music assets----------------------------------------------------*
 *#########################################################################################################################*/

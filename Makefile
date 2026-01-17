@@ -190,6 +190,10 @@ CFLAGS  += -march=armv5te -DUNICODE -D_WIN32_WCE -std=gnu99
 	BUILD_DIR = build/wince
 endif
 
+ifeq ($(PLAT),os/2)
+	BUILD_DIR =	build/os2
+endif
+
 ifdef BUILD_SDL2
 	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
 	LIBS += -lSDL2
