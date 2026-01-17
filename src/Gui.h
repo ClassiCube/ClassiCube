@@ -165,7 +165,7 @@ typedef void (*Widget_LeftClick)(void* screen, void* widget);
 
 struct WidgetVTABLE {
 	/* Draws this widget on-screen. */
-	void (*Render)(void* elem, float delta);
+	void (*Render)(void* elem);
 	/* Destroys allocated graphics resources. */
 	void (*Free)(void* elem);
 	/* Positions this widget on-screen. */
@@ -300,8 +300,8 @@ void TextAtlas_Free(struct TextAtlas* atlas);
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices);
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices);
 
-#define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
-#define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
+#define Elem_Render(elem) (elem)->VTABLE->Render(elem)
+#define Elem_Free(elem)   (elem)->VTABLE->Free(elem)
 #define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
 
 #define Elem_HandlesKeyDown(elem, key, device) (elem)->VTABLE->HandlesKeyDown(elem, key, device)

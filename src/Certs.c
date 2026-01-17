@@ -241,7 +241,8 @@ int Certs_VerifyChain(struct X509CertContext* x509) {
 	if (!chain) return ERR_OUT_OF_MEMORY;
 	
 	CreateChain(x509, chain);
-	res = SecTrustCreateWithCertificates(chain, policy, &trust);
+	trust = NULL;
+	res   = SecTrustCreateWithCertificates(chain, policy, &trust);
 	
 	if (!res) {
 		SecTrustResultType result;

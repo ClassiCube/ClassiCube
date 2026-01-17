@@ -36,7 +36,7 @@ static void AddWidget(void* screen, void* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void TextWidget_Render(void* widget, float delta) {
+static void TextWidget_Render(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->color);
 }
@@ -132,7 +132,7 @@ static void ButtonWidget_Reposition(void* widget) {
 	w->tex.y = w->y + (w->height / 2 - w->tex.height / 2);
 }
 
-static void ButtonWidget_Render(void* widget, float delta) {
+static void ButtonWidget_Render(void* widget) {
 	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
 	PackedCol disabledColor = PackedCol_Make(160, 160, 160, 255);
@@ -294,7 +294,7 @@ static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, int* y
 	*height = min(*y + *height, w->height - w->borderY) - *y;
 }
 
-static void ScrollbarWidget_Render(void* widget, float delta) {
+static void ScrollbarWidget_Render(void* widget) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int x, y, width, height;
 	PackedCol barCol;
@@ -819,7 +819,7 @@ static int TableWidget_Render2(void* widget, int offset) {
 		Table_Width(w), Table_Height(w), topBackColor, bottomBackColor);
 
 	if (w->rowsVisible < w->rowsTotal) {
-		Elem_Render(&w->scroll, 0);
+		Elem_Render(&w->scroll);
 	}
 
 	cellSizeX = w->cellSizeX;
@@ -1168,10 +1168,9 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	}
 }
 
-static void InputWidget_RenderCaret(struct InputWidget* w, float delta) {
+static void InputWidget_RenderCaret(struct InputWidget* w) {
 	float second;
 	if (!w->showCaret) return;
-	w->caretAccumulator += delta;
 
 	second = Math_Mod1(w->caretAccumulator);
 	if (second < 0.5f) Texture_RenderShaded(&w->caretTex, w->caretCol);
@@ -1579,10 +1578,10 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 /*########################################################################################################################*
 *-----------------------------------------------------TextInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void TextInputWidget_Render(void* widget, float delta) {
+static void TextInputWidget_Render(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Texture_Render(&w->inputTex);
-	InputWidget_RenderCaret(w, delta);
+	InputWidget_RenderCaret(w);
 }
 
 static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
@@ -1815,7 +1814,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->inputTex.y = w->y;
 }
 
-static void ChatInputWidget_Render(void* widget, float delta) {
+static void ChatInputWidget_Render(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	PackedCol backColor   = PackedCol_Make(0, 0, 0, 127);
 	int x = w->x, y = w->y;
@@ -1836,7 +1835,7 @@ static void ChatInputWidget_Render(void* widget, float delta) {
 	}
 
 	Texture_Render(&w->inputTex);
-	InputWidget_RenderCaret(w, delta);
+	InputWidget_RenderCaret(w);
 }
 
 static void ChatInputWidget_OnPressedEnter(void* widget) {
@@ -2419,7 +2418,7 @@ void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 	Widget_Layout(w);
 }
 
-static void TextGroupWidget_Render(void* widget, float delta) {
+static void TextGroupWidget_Render(void* widget) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	struct Texture* textures  = w->textures;
 	int i;
@@ -2678,7 +2677,7 @@ void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	Widget_Layout(w);
 }
 
-static void SpecialInputWidget_Render(void* widget, float delta) {
+static void SpecialInputWidget_Render(void* widget) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	Texture_Render(&w->tex);
 }

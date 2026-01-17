@@ -470,7 +470,7 @@ static void MenuOptionsScreen_Render(void* screen, float delta) {
 	Gfx_Draw2DFlat(w->x - EXTHELP_PAD, w->y - EXTHELP_PAD, 
 		w->width + EXTHELP_PAD * 2, w->height + EXTHELP_PAD * 2, tableColor);
 
-	Elem_Render(&s->extHelp, delta);
+	Elem_Render(&s->extHelp);
 }
 
 static void MenuOptionsScreen_Free(void* screen) {

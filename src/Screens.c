@@ -1054,7 +1054,7 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 
 
 static void ChatScreen_Update(void* screen, float delta) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
+	
 }
 
 static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
@@ -1077,7 +1077,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 	double now;
 	int i, logIdx;
 
-	Elem_Render(&s->clientStatus, delta);
+	Elem_Render(&s->clientStatus);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
@@ -1103,17 +1103,17 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 	}
 
 	if (s->grabsInput) {
-		Elem_Render(&s->input.base, delta);
+		Elem_Render(&s->input.base);
 		if (s->altText.active) {
-			Elem_Render(&s->altText, delta);
+			Elem_Render(&s->altText);
 		}
 
 #ifdef CC_BUILD_TOUCH
 		if (!Gui.TouchUI) return;
 		Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
-		Elem_Render(&s->more,   delta);
-		Elem_Render(&s->send,   delta);
-		Elem_Render(&s->cancel, delta);
+		Elem_Render(&s->more);
+		Elem_Render(&s->send);
+		Elem_Render(&s->cancel);
 		Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 #endif
 	}
@@ -1391,8 +1391,10 @@ static void ChatScreen_Render(void* screen, float delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 
+	if (s->grabsInput) s->input.base.caretAccumulator += delta;
+
 	if (Game_HideGui && s->grabsInput) {
-		Elem_Render(&s->input.base, delta);
+		Elem_Render(&s->input.base);
 	}
 	if (!Game_HideGui) {
 		if (s->grabsInput && !Gui.ClassicChat) {
