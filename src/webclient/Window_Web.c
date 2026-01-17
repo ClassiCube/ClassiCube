@@ -805,11 +805,11 @@ void GLContext_SetVSync(cc_bool vsync) {
 	}
 }
 
-extern void interop_GetGpuRenderer(char* buffer, int len);
+extern void CC_gpu_getRenderer(char* buffer, int len);
 void GLContext_GetApiInfo(cc_string* info) { 
 	char buffer[NATIVE_STR_LEN];
 	int len;
-	interop_GetGpuRenderer(buffer, NATIVE_STR_LEN);
+	CC_gpu_getRenderer(buffer, NATIVE_STR_LEN);
 
 	len = String_CalcLen(buffer, NATIVE_STR_LEN);
 	if (!len) return;

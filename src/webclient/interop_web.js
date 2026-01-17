@@ -949,7 +949,7 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //--------------------------------------------------------GLContext-------------------------------------------------------
 //#########################################################################################################################
-  interop_GetGpuRenderer : function(buffer, len) { 
+  CC_gpu_getRenderer: function(buffer, len) { 
     var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
     var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
     stringToUTF8(str, buffer, len);
