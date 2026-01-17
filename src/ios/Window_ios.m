@@ -146,13 +146,18 @@ static CGRect GetViewFrame(void) {
     return YES;
 }
 
-- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id)coordinator {
-    // viewWillTransitionToSize:withTransitionCoordinator - iOS 8
-    Window_Main.Width  = size.width;
-    Window_Main.Height = size.height;
-    
-    Event_RaiseVoid(&WindowEvents.Resized);
-    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+- (void)viewDidLayoutSubviews {
+    // viewDidLayoutSubviews - iOS 5
+	[super viewDidLayoutSubviews];
+
+	CGRect frame = [view_handle frame];
+	int width  = (int)frame.size.width;
+	int height = (int)frame.size.height;
+	if (width == Window_Main.Width && height == Window_Main.Height) return;
+	
+	Window_Main.Width  = width;
+	Window_Main.Height = height;
+	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 // ==== UIDocumentPickerDelegate ====
@@ -659,11 +664,6 @@ void GLContext_Create(void) {
 }
                   
 void GLContext_Update(void) {
-    // trying to update renderbuffer here results in garbage output,
-    //  so do instead when layoutSubviews method is called
-}
-
-static void GLContext_OnLayout(void) {
     // only resize buffers when absolutely have to
     if (fb_width == Window_Main.Width && fb_height == Window_Main.Height) return;
     fb_width  = Window_Main.Width;
@@ -699,14 +699,8 @@ void GLContext_GetApiInfo(cc_string* info) { }
 
 
 @implementation CC3DView
-
 + (Class)layerClass {
     return [CAEAGLLayer class];
-}
-
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    GLContext_OnLayout();
 }
 @end
 
