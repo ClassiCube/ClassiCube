@@ -605,6 +605,9 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	cc_uint64 end;
 	int delta;
 
+	/* Workaround in case server sends LevelFinalise without LevelInit or LevelDataChunk */
+	if (!map_begunLoading) Classic_StartLoading();
+
 	end   = Stopwatch_Measure();
 	delta = Stopwatch_ElapsedMS(map_receiveBeg, end);
 	Platform_Log1("map loading took: %i", &delta);

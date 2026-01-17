@@ -1585,12 +1585,6 @@ static void SpecialTextScreen_ContextLost(void* screen) {
 	struct SpecialTextScreen* s = (struct SpecialTextScreen*)screen;
 	SpecialTextScreen_FreeChatFonts(s);
 	Screen_ContextLost(s);
-
-	Elem_Free(&s->status);
-	Elem_Free(&s->bottomRight);
-	Elem_Free(&s->announcement);
-	Elem_Free(&s->bigAnnouncement);
-	Elem_Free(&s->smallAnnouncement);
 }
 
 static void SpecialTextScreen_ContextRecreated(void* screen) {
