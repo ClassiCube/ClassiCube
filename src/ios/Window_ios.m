@@ -466,27 +466,35 @@ static void DoCreateWindow(void) {
 	[win_handle setBackgroundColor:color];
 }
 
+static void SetRootView(UIView* view) {
+	view_handle = view;
+	[view setMultipleTouchEnabled:YES];
+	[cc_controller setView:view];
+	
+	// Required, otherwise view doesn't rotate with device anymore after going in-game
+	[win_handle setRootViewController:nil];
+	[win_handle setRootViewController:cc_controller];
+}
+
 void Window_Create2D(int width, int height) {
     Window_Main.Is3D = false;
     DoCreateWindow();
 	
-    view_handle = [[UIView alloc] initWithFrame:CGRectZero];
-    [view_handle setMultipleTouchEnabled:YES];
-    [cc_controller setView:view_handle];
+    UIView* view = [[UIView alloc] initWithFrame:CGRectZero];
+	SetRootView(view);
 	
-	[view_handle autorelease];
+	[view autorelease];
 }
 
 void Window_Create3D(int width, int height) {
     Window_Main.Is3D = true;
     DoCreateWindow();
 	
-    view_handle = [[CC3DView alloc] initWithFrame:CGRectZero];
-    [view_handle setMultipleTouchEnabled:YES];
-    [cc_controller setView:view_handle];
-
+    CC3DView* view = [[CC3DView alloc] initWithFrame:CGRectZero];
+	SetRootView(view);
     Init3DLayer();
-	[view_handle autorelease];
+	
+	[view autorelease];
 }
 
 void Window_Destroy(void) { }
