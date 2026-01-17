@@ -453,6 +453,7 @@ static void web_main(void) {
 		// This needs to be called before Game_Setup, as that
 		//  in turn calls Game_Load -> Gfx_Create -> GLContext_SetVSync
 		// (which requires a main loop to already be running)
+		emscripten_cancel_main_loop();
 		emscripten_set_main_loop(DoNextFrame, 0, false);
 
 		Game_Setup();

@@ -805,6 +805,9 @@ mergeInto(LibraryManager.library, {
       window.cc_copyText = UTF8ToString(text);
     }
   },
+  interop_isInFullscreen: function() {
+    return document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+  },
   interop_EnterFullscreen: function() {
     // emscripten sets css size to screen's base width/height,
     //  except that becomes wrong when device rotates.

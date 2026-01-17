@@ -484,10 +484,9 @@ void Clipboard_SetText(const cc_string* value) {
 	interop_TrySetClipboardText(str);
 }
 
+extern int interop_isInFullscreen(void);
 int Window_GetWindowState(void) {
-	EmscriptenFullscreenChangeEvent status = { 0 };
-	emscripten_get_fullscreen_status(&status);
-	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
+	return interop_isInFullscreen() ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
 extern int interop_GetContainerID(void);
