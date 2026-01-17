@@ -97,7 +97,8 @@ static struct CpeExt
 	cinematicGui_Ext    = { "CinematicGui", 1 },
 	notifyAction_Ext    = { "NotifyAction", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
-	extBlocks_Ext       = { "ExtendedBlocks", 1 };
+	extBlocks_Ext       = { "ExtendedBlocks", 1 },
+	sounds_Ext			= { "Sounds", 1 };
 
 static struct CpeExt* cpe_clientExtensions[] = {
 	&clickDist_Ext, &customBlocks_Ext, &heldBlock_Ext, &emoteFix_Ext, &textHotKey_Ext, &extPlayerList_Ext,
@@ -106,6 +107,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
 	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext, &notifyAction_Ext,
+	&sounds_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
@@ -1627,6 +1629,30 @@ static void CPE_ToggleBlockList(cc_uint8* data) {
 	}
 }
 
+static void CPE_PlaySound(cc_uint8* data) {
+	cc_string name; char nameBuffer[STRING_SIZE];
+	cc_uint8 type = data[0];
+
+	data++;
+
+	String_InitArray(name, nameBuffer);
+	ReadString(&data, &name);
+
+	cc_uint8 volume = *data++;
+	cc_uint8 rate = *data++;
+	cc_uint8 flagUnused = *data++;
+
+	if (String_CaselessEqualsConst(&name, "dig")) {
+		Audio_PlayDigSound(type);
+	}
+	else if (String_CaselessEqualsConst(&name, "step")) {
+		Audio_PlayStepSound(type);
+	}
+	else {
+		Audio_PlayCustomSound(name, volume, rate);
+	}
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	CPEExtensions_Reset();
@@ -1672,6 +1698,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
 	Net_Set(OPCODE_CINEMATIC_GUI, CPE_CinematicGui, 10);
 	Net_Set(OPCODE_TOGGLE_BLOCK_LIST, CPE_ToggleBlockList, 2);
+	Net_Set(OPCODE_PLAY_SOUND, CPE_PlaySound, 69);
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {

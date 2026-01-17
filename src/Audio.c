@@ -169,6 +169,39 @@ static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_ui
 	return &group->sounds[idx];
 }
 
+void SoundArray_Load(const cc_string* file, struct Stream* stream) {
+	struct SoundArray* group = &customSounds;
+	struct Sound* snd;
+	cc_string name = *file;
+	cc_result res;
+
+	Utils_UNSAFE_TrimFirstDirectory(&name);
+	/* Remove .wav from filename */
+	name = String_UNSAFE_Substring(&name, 0, name.length - 4);
+
+	if (!group) {
+		Chat_Add1("&cUnknown sound group '%s'", &name); return;
+	}
+	if (group->count == Array_Elems(group->sounds)) {
+		Chat_AddRaw("&cCannot have more than 32 sounds in an array"); return;
+	}
+	char* soundNameStr = (char*)Mem_AllocCleared(name.length,
+		sizeof(char), "soundName buffer");
+	group->soundNames[group->count] = String_Init(soundNameStr, name.length, name.length);
+	String_Copy(&group->soundNames[group->count], &name);
+
+	snd = &group->sounds[group->count];
+	res = Sound_ReadWaveData(stream, snd);
+
+	if (res) {
+		Logger_SysWarn2(res, "decoding", file);
+		Audio_FreeChunks(&snd->chunk, 1);
+		snd->chunk.data = NULL;
+		snd->chunk.size = 0;
+	}
+	else { group->count++; }
+}
+
 
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Audio_Warn(res, "playing sounds");
@@ -204,6 +237,39 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	res = AudioPool_Play(&data);
 	if (res) Sounds_Fail(res);
 }
+
+static void Sounds_PlayCustom(cc_uint8 index, struct SoundArray* group, int volume, int rate) {
+	const struct Sound* snd;
+	struct AudioData data;
+	cc_result res;
+
+	if (!Audio_SoundsVolume) return;
+	if (index >= group->count) return;
+	snd = &group->sounds[index];
+	if (!snd) return;
+	if (!snd->chunk.data) return;
+
+	if (rate < 10) rate = 10;
+	else if(rate > 255)	rate = 255;
+
+	if (volume < 0) volume = 0;
+	else if (volume > Audio_SoundsVolume) volume = Audio_SoundsVolume;
+
+	int mappedVolume = (int)(((volume / 100.0f) * (float)Audio_SoundsVolume) * 2.0f);
+
+	if (mappedVolume < 0) mappedVolume = 0;
+	if (mappedVolume > Audio_SoundsVolume) mappedVolume = Audio_SoundsVolume;
+
+	data.chunk = snd->chunk;
+	data.channels = snd->channels;
+	data.sampleRate = snd->sampleRate;
+	data.rate = rate;
+	data.volume = mappedVolume;
+
+	res = AudioPool_Play(&data);
+	if (res) Sounds_Fail(res);
+}
+
 
 static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	if (now == BLOCK_AIR) {
@@ -263,6 +329,18 @@ static void Sounds_Start(void) {
 	AudioBackend_LoadSounds();
 }
 
+static void Sounds_FreeCustom(struct SoundArray* group) {
+	for (int i = 0; i < group->count; i++) {
+		if (group->sounds) {
+			struct AudioChunk chunk = group->sounds[i].chunk;
+			if (chunk.data) {
+				Mem_Free(chunk.data);
+			}
+		}
+	}
+	group->count = 0;
+}
+
 static void Sounds_Stop(void) { AudioPool_Close(); }
 
 static void Sounds_Init(void) {
@@ -270,10 +348,29 @@ static void Sounds_Init(void) {
 	Audio_SetSounds(volume);
 	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
-static void Sounds_Free(void) { Sounds_Stop(); }
+
+static void Sounds_Free(void) {
+	Audio_FreeCustomSounds();
+	Sounds_Stop();
+}
 
 void Audio_PlayDigSound(cc_uint8 type)  { Sounds_Play(type, &digBoard); }
 void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
+void Audio_PlayCustomSound(cc_string soundName, int volume, int rate) {
+	struct SoundArray* group = &customSounds;
+	if (group->count == 0) {
+		return;
+	}
+	
+	for (int i = 0; i < group->count; i++) {
+		cc_string str = group->soundNames[i];
+		if (str.length != 0 && String_Equals(&str, &soundName)) {
+			Sounds_PlayCustom(i, group, volume, rate);
+			return;
+		}
+	}
+}
+void Audio_FreeCustomSounds() { if (!sounds_loaded) return; Sounds_FreeCustom(&customSounds); }
 #endif
 
 

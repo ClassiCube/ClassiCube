@@ -50,6 +50,8 @@ void Audio_SetMusic(int volume);
 void Audio_SetSounds(int volume);
 void Audio_PlayDigSound(cc_uint8 type);
 void Audio_PlayStepSound(cc_uint8 type);
+void Audio_PlayCustomSound(cc_string soundName, int volume, int rate);
+void Audio_FreeCustomSounds();
 #define AUDIO_MAX_BUFFERS 4
 
 cc_bool AudioBackend_Init(void);
@@ -124,6 +126,7 @@ enum SoundType {
 extern const char* const Sound_Names[SOUND_COUNT];
 
 #define AUDIO_MAX_SOUNDS 10
+#define AUDIO_CUSTOM_MAX_SOUNDS 32
 struct Sound {
 	int channels, sampleRate;
 	struct AudioChunk chunk;
@@ -132,10 +135,19 @@ struct SoundGroup {
 	int count;
 	struct Sound sounds[AUDIO_MAX_SOUNDS];
 };
+struct SoundArray {
+	int count;
+	cc_string soundNames[AUDIO_CUSTOM_MAX_SOUNDS];
+	struct Sound sounds[AUDIO_CUSTOM_MAX_SOUNDS];
+};
 struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
 
 extern struct Soundboard digBoard, stepBoard;
 void Sounds_LoadDefault(void);
+
+
+struct SoundArray customSounds;
+void SoundArray_Load(const cc_string* file, struct Stream* stream);
 
 CC_END_HEADER
 #endif
