@@ -6,15 +6,15 @@
 #include "World.h"
 #include "Utils.h"
 #include "Game.h"
+#include "Screens.h"
 #include "Window.h"
 
-const struct MapGenerator* Gen_Active;
+static const struct MapGenerator* gen_active;
 BlockRaw* Gen_Blocks;
-int Gen_Seed;
 
 volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
-volatile cc_bool gen_done;
+volatile static cc_bool gen_done;
 
 /* There are two main types of multitasking: */
 /*  - Pre-emptive multitasking (system automatically switches between threads) */
@@ -49,12 +49,12 @@ static cc_uint64 lastRender;
 static void Gen_Run(void) {
 	gen_step = 0;
 	lastRender = Stopwatch_Measure();
-	Gen_Active->Generate();
+	gen_active->Generate();
 }
 
 cc_bool Gen_IsDone(void) {
 	/* Resume map generation if incomplete */
-	if (!gen_done) Gen_Active->Generate();
+	if (!gen_done) gen_active->Generate();
 	return gen_done;
 }
 #else
@@ -65,7 +65,7 @@ cc_bool Gen_IsDone(void) {
 #define GEN_COOP_END
 
 static void Gen_DoGen(void) {
-	Gen_Active->Generate();
+	gen_active->Generate();
 }
 
 static void Gen_Run(void) {
@@ -83,16 +83,24 @@ static void Gen_Reset(void) {
 	gen_done = false;
 }
 
-void Gen_Start(void) {
+void Gen_Start(const struct MapGenerator* gen, int seed,
+				int width, int height, int length) {	
+	World_NewMap();
+	World_SetDimensions(width, height, length);
+	World.Seed = seed;
+
+	gen_active = gen;
 	Gen_Reset();
 	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
 
-	if (!Gen_Blocks || !Gen_Active->Prepare()) {
+	if (!Gen_Blocks || !gen->Prepare(seed)) {
 		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
 		gen_done = true;
 	} else {
 		Gen_Run();
 	}
+
+	GeneratingScreen_Show();
 }
 
 
@@ -114,7 +122,7 @@ static void FlatgrassGen_MapSet(int yBeg, int yEnd, BlockRaw block) {
 	}
 }
 
-static cc_bool FlatgrassGen_Prepare(void) {
+static cc_bool FlatgrassGen_Prepare(int seed) {
 	return true;
 }
 
@@ -724,8 +732,8 @@ static void NotchyGen_PlantTrees(void) {
 	}
 }
 
-static cc_bool NotchyGen_Prepare(void) {
-	Random_Seed(&rnd, Gen_Seed);
+static cc_bool NotchyGen_Prepare(int seed) {
+	Random_Seed(&rnd, seed);
 	waterLevel = World.Height / 2;	
 	minHeight  = World.Height;
 

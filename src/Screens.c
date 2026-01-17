@@ -2155,8 +2155,6 @@ static void GeneratingScreen_EndGeneration(void) {
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 
 	Gen_Blocks = NULL;
-	World.Seed = Gen_Seed;
-
 	LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
 	LocalPlayers_MoveToSpawn(&update);
 }

@@ -14,23 +14,21 @@ CC_BEGIN_HEADER
 extern volatile float Gen_CurrentProgress;
 /* Name of the current step being performed */
 extern volatile const char* Gen_CurrentState;
-extern int Gen_Seed;
 extern BlockRaw* Gen_Blocks;
 
-/* Starts generating a map using the Gen_Active generator */
-void Gen_Start(void);
-/* Checks whether the map generator has completed yet */
-cc_bool Gen_IsDone(void);
-
-
 struct MapGenerator {
-	cc_bool (*Prepare)(void);
+	cc_bool (*Prepare)(int seed);
 	void   (*Generate)(void);
 };
 
-extern const struct MapGenerator* Gen_Active;
 extern const struct MapGenerator FlatgrassGen;
 extern const struct MapGenerator NotchyGen;
+
+/* Starts generating a map using the given generator */
+void Gen_Start(STRING_REF const struct MapGenerator* gen, int seed,
+				int width, int height, int length);
+/* Checks whether the map generator has completed yet */
+cc_bool Gen_IsDone(void);
 
 
 extern BlockRaw* Tree_Blocks;

@@ -119,8 +119,10 @@ cc_string SP_AutoloadMap = String_FromArray(autoloadBuffer);
 
 static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
+	const struct MapGenerator* gen;
+	int seed, horSize, verSize;
 	RNGState rnd;
-	int horSize, verSize;
+
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_Version.HasCPE;
 
@@ -128,9 +130,6 @@ static void SPConnection_BeginConnect(void) {
 	if (SP_AutoloadMap.length) {
 		Map_LoadFrom(&SP_AutoloadMap); return;
 	}
-
-	Random_SeedFromCurrentTime(&rnd);
-	World_NewMap();
 
 #if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_MACCLASSIC || defined CC_BUILD_TINYMEM
 	horSize = 16;
@@ -142,18 +141,17 @@ static void SPConnection_BeginConnect(void) {
 	horSize = Game_ClassicMode ? 256 : 128;
 	verSize = 64;
 #endif
-	World_SetDimensions(horSize, verSize, horSize);
 
 #if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_TINYMEM
-	Gen_Active = &FlatgrassGen;
+	gen = &FlatgrassGen;
 #else
-	Gen_Active = &NotchyGen;
+	gen = &NotchyGen;
 #endif
 
-	Gen_Seed   = Random_Next(&rnd, Int32_MaxValue);
-	Gen_Start();
+	Random_SeedFromCurrentTime(&rnd);
+	seed = Random_Next(&rnd, Int32_MaxValue);
 
-	GeneratingScreen_Show();
+	Gen_Start(gen, seed, horSize, verSize, horSize);
 }
 
 static char sp_lastCol;

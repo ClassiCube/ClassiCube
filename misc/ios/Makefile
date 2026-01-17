@@ -55,7 +55,7 @@ CFLAGS  := -g -Os -fno-math-errno -fpascal-strings -fvisibility=hidden -fno-comm
 MFLAGS  := $(CFLAGS)
 
 LDFLAGS  := -isysroot $(IOS_SDK_PATH) -Xlinker -rpath -Xlinker @executable_path/Frameworks
-LIBS 	 := -framework CoreFoundation -framework CoreGraphics -framework OpenGLES -framework UIKit -framework Security -framework CoreText -framework QuartzCore -lobjc
+LIBS 	 := -framework Foundation -framework CoreFoundation -framework CoreGraphics -framework OpenGLES -framework UIKit -framework Security -framework CoreText -framework QuartzCore -lobjc
 
 # Dependency tracking
 DEPFLAGS_32 := -MT $@ -MMD -MP -MF $(BUILD_DIR_32)/$*.d

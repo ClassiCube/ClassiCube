@@ -27,7 +27,7 @@ jobs:
           
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'ClassiCube-iPhoneOS.ipa'
+          SOURCE_FILE: 'ZClassiCube-iPhoneOS.ipa'
           DEST_NAME: 'cc.ipa'
           
           

@@ -206,14 +206,6 @@ static void AddPrimaryButton(void* screen, struct ButtonWidget* btn, Widget_Left
 *------------------------------------------------------Menu utilities-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_DISABLE_UI
-static void Menu_BeginGen(int width, int height, int length) {
-	World_NewMap();
-	World_SetDimensions(width, height, length);
-
-	Gen_Start();
-	GeneratingScreen_Show();
-}
-
 static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Show(); }
 static void Menu_SwitchPause(void* a, void* b)          { Gui_ShowPauseMenu(); }
 static void Menu_SwitchClassicOptions(void* a, void* b) { ClassicOptionsScreen_Show(); }
@@ -1091,10 +1083,8 @@ static void GenLevelScreen_Gen(void* screen, const struct MapGenerator* gen) {
 	} else if (!width || !height || !length) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");
 	} else {
-		Gen_Active  = gen;
-		Gen_Seed    = seed;
 		Gui_Remove((struct Screen*)s);
-		Menu_BeginGen(width, height, length);
+		Gen_Start(gen, seed, width, height, length);
 	}
 }
 
@@ -1263,12 +1253,14 @@ static struct ClassicGenScreen {
 } ClassicGenScreen;
 
 static void ClassicGenScreen_Gen(int size) {
-	RNGState rnd; Random_SeedFromCurrentTime(&rnd);
-	Gen_Active = &NotchyGen;
-	Gen_Seed   = Random_Next(&rnd, Int32_MaxValue);
+	RNGState rnd; 
+	int seed;
+
+	Random_SeedFromCurrentTime(&rnd);
+	seed = Random_Next(&rnd, Int32_MaxValue);
 
 	Gui_Remove((struct Screen*)&ClassicGenScreen);
-	Menu_BeginGen(size, 64, size);
+	Gen_Start(&NotchyGen, seed, size, 64, size);
 }
 
 static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128); }
