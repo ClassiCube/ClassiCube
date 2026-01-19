@@ -868,52 +868,6 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	formatDirty = true;
 }
 
-extern void ViewportTransform(VU0_vector* src, VU0_IVector* dst);
-static xyz_t FinishVertex(VU0_vector* src, float invW) {
-	src->w = invW;
-	VU0_IVector tmp;
-	ViewportTransform(src, &tmp);
-
-	xyz_t xyz;
-	xyz.x = (short)tmp.x;
-	xyz.y = (short)tmp.y;
-	xyz.z = tmp.z;
-	return xyz;
-}
-
-static u64* DrawTexturedTriangle(u64* dw, VU0_vector* coords, 
-								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
-	TexturedVertex* dst = (TexturedVertex*)dw;
-	float q;
-
-	// TODO optimise
-	// Add the "primitives" to the GIF packet
-	q   = 1.0f / coords[0].w;
-	dst[0].rgba  = V0->Col;
-	dst[0].q     = q;
-	dst[0].u     = V0->U * q;
-	dst[0].v     = V0->V * q;
-	dst[0].xyz   = FinishVertex(&coords[0], q);
-
-	q   = 1.0f / coords[1].w;
-	dst[1].rgba  = V1->Col;
-	dst[1].q     = q;
-	dst[1].u     = V1->U * q;
-	dst[1].v     = V1->V * q;
-	dst[1].xyz   = FinishVertex(&coords[1], q);
-
-	q   = 1.0f / coords[2].w;
-	dst[2].rgba  = V2->Col;
-	dst[2].q     = q;
-	dst[2].u     = V2->U * q;
-	dst[2].v     = V2->V * q;
-	dst[2].xyz   = FinishVertex(&coords[2], q);
-
-	return dw + 9;
-}
-
-extern void TransformTexturedQuad(void* src, VU0_vector* dst, VU0_vector* tmp, int* clip_flags);
-extern void TransformColouredQuad(void* src, VU0_vector* dst, VU0_vector* tmp, int* clip_flags);
 extern u64* DrawTexturedQuad(void* src, u64* dst, VU0_vector* tmp);
 extern u64* DrawColouredQuad(void* src, u64* dst, VU0_vector* tmp);
 

@@ -1,28 +1,13 @@
-# NOTE: vclipw.xyz takes 4 cycles to produce result, which must be accounted for
+#include "AsmCommon.i"
+// NOTE: vclipw.xyz takes 4 cycles to produce result, which must be accounted for
 
-.macro FUNC name
-	.global \name
-	.type   \name,%function
-	\name:
-.endm
-
-# mips ISA has explicit delay slots
-# (i.e. instruction after branches/jumps are always unconditionally executed)
+// mips ISA has explicit delay slots
+// (i.e. instruction after branches/jumps are always unconditionally executed)
 .set noreorder
 
-# Note that registers are numbered for N32 ABI, but when disassembling
-#   in ghidra or PCSX2, they are disassembled as O32 ABI ?
-# https://github.com/ps2dev/binutils-gdb/blob/e9cf3691bfa140469d52815a2307b00eecf7917c/gas/config/tc-mips.c#L2786
-
-# global registers
-	#define V0001 $vf0 // hardware coded to (0,0,0,1)
-	#define MVP1  $vf1 // mvp.row1
-	#define MVP2  $vf2 // mvp.row2
-	#define MVP3  $vf3 // mvp.row3
-	#define MVP4  $vf4 // mvp.row4
-	#define CL_F  $vf5 // clipping scale adjustments to match guardbands
-	#define VP_O  $vf6 // viewport origin
-	#define VP_S  $vf7 // viewport scale
+// Note that registers are numbered for N32 ABI, but when disassembling
+//   in ghidra or PCSX2, they are disassembled as O32 ABI ?
+// https://github.com/ps2dev/binutils-gdb/blob/e9cf3691bfa140469d52815a2307b00eecf7917c/gas/config/tc-mips.c#L2786
 
 # transform temp registers
 	#define POSCL $vf10 // TRANSFORMED(POS_[1234]) * CLIP_PLANES_ADJUST
@@ -87,12 +72,12 @@
 	vftoi0.xyz	\vpos, \vpos	    # TMP.xyz = int(TMP)
 .endm
 
-# Fully transforms 4 vertices with size of 16 bytes
-#	$a0 = addresss of src  vertices
-#	$a1 = addresss of dst  vertices
-#   $a2 = address of  tmp  vertex
-#	$v0 = address of final vertices (return value)
-FUNC DrawColouredQuad
+// Fully transforms 4 vertices with size of 16 bytes
+//	$a0 = addresss of src  vertices
+//	$a1 = addresss of dst  vertices
+//   $a2 = address of  tmp  vertex
+//	$v0 = address of final vertices (return value)
+BEG_FUNC(DrawColouredQuad)
 
 ### VERTEX 1 ###
 	lqc2		POS_1, 0x00(SRC)
@@ -185,40 +170,40 @@ FUNC DrawColouredQuad
 	or			XY_4, XY_4, Y_4
 
 	# write 1,2,3 3,4,1
-	swc1 COL1, 0x00(DST)
-	swc1  W_1, 0x04(DST)
-	sw   XY_1, 0x08(DST)
-	swc1  Z_1, 0x0C(DST)
+	swc1 COL1, (0*S_PCOL + PCOL__C)(DST)
+	swc1  W_1, (0*S_PCOL + PCOL__W)(DST)
+	sw   XY_1, (0*S_PCOL + PCOL_XY)(DST)
+	swc1  Z_1, (0*S_PCOL + PCOL__Z)(DST)
 
-	swc1 COL2, 0x10(DST)
-	swc1  W_2, 0x14(DST)
-	sw   XY_2, 0x18(DST)
-	swc1  Z_2, 0x1C(DST)
+	swc1 COL2, (1*S_PCOL + PCOL__C)(DST)
+	swc1  W_2, (1*S_PCOL + PCOL__W)(DST)
+	sw   XY_2, (1*S_PCOL + PCOL_XY)(DST)
+	swc1  Z_2, (1*S_PCOL + PCOL__Z)(DST)
 
-	swc1 COL3, 0x20(DST)
-	swc1  W_3, 0x24(DST)
-	sw   XY_3, 0x28(DST)
-	swc1  Z_3, 0x2C(DST)
+	swc1 COL3, (2*S_PCOL + PCOL__C)(DST)
+	swc1  W_3, (2*S_PCOL + PCOL__W)(DST)
+	sw   XY_3, (2*S_PCOL + PCOL_XY)(DST)
+	swc1  Z_3, (2*S_PCOL + PCOL__Z)(DST)
 
-	swc1 COL3, 0x30(DST)
-	swc1  W_3, 0x34(DST)
-	sw   XY_3, 0x38(DST)
-	swc1  Z_3, 0x3C(DST)
+	swc1 COL3, (3*S_PCOL + PCOL__C)(DST)
+	swc1  W_3, (3*S_PCOL + PCOL__W)(DST)
+	sw   XY_3, (3*S_PCOL + PCOL_XY)(DST)
+	swc1  Z_3, (3*S_PCOL + PCOL__Z)(DST)
 
-	swc1 COL4, 0x40(DST)
-	swc1  W_4, 0x44(DST)
-	sw   XY_4, 0x48(DST)
-	swc1  Z_4, 0x4C(DST)
+	swc1 COL4, (4*S_PCOL + PCOL__C)(DST)
+	swc1  W_4, (4*S_PCOL + PCOL__W)(DST)
+	sw   XY_4, (4*S_PCOL + PCOL_XY)(DST)
+	swc1  Z_4, (4*S_PCOL + PCOL__Z)(DST)
 
-	swc1 COL1, 0x50(DST)
-	swc1  W_1, 0x54(DST)
-	sw   XY_1, 0x58(DST)
-	swc1  Z_1, 0x5C(DST)
+	swc1 COL1, (5*S_PCOL + PCOL__C)(DST)
+	swc1  W_1, (5*S_PCOL + PCOL__W)(DST)
+	sw   XY_1, (5*S_PCOL + PCOL_XY)(DST)
+	swc1  Z_1, (5*S_PCOL + PCOL__Z)(DST)
 
-	addi DST, 16*6
+	addi DST, 6 * S_PCOL
 
 	# TODO clipping
 any_clipped_vertices:
 	jr $ra
 	move $v0, DST
-
+END_FUNC(DrawColouredQuad)
