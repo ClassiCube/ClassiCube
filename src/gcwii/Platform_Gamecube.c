@@ -152,9 +152,9 @@ cc_result Socket_GetLastError(cc_socket s) {
 
 static void InitSockets(void) {
 	// https://github.com/devkitPro/wii-examples/blob/master/devices/network/sockettest/source/sockettest.c
-	char localip[16] = {0};
-	char netmask[16] = {0};
-	char gateway[16] = {0};
+	char localip[32] = {0};
+	char netmask[32] = {0};
+	char gateway[32] = {0};
 	
 	VirtualDialog_Show("Connecting to network..", "This may take up to 30 seconds", true);
 	int ret = if_config(localip, netmask, gateway, true);
@@ -162,7 +162,8 @@ static void InitSockets(void) {
 	if (ret >= 0) {
 		cc_string str; char buffer[256];
 		String_InitArray_NT(str, buffer);
-		String_Format3(&str, "IP address: %c\nGateway IP: %c\nNetmask %c", localip, gateway, netmask);
+		String_Format3(&str, "IP address: %c\nGateway IP: %c\nNetmask %c", 
+							localip, gateway, netmask);
 
 		buffer[str.length] = '\0';
 		Window_ShowDialog("Networking details", buffer);

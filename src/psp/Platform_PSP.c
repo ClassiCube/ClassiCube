@@ -460,7 +460,6 @@ cc_result Socket_GetLastError(cc_socket s) {
 
 #define _ERROR_NETPARAM_BAD_NETCONF 0x80110601
 
-extern void VirtualDialog_Show(const char* title, const char* msg, cc_bool oneshot); // TODO better solution
 static int last_net_state = -1;
 
 static void DisplayNetState(int state) {

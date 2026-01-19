@@ -254,5 +254,8 @@ void GLContext_SetVSync(cc_bool vsync);
 void GLContext_GetApiInfo(cc_string* info);
 #endif
 
+/* NOTE: Only works when VirtualDialog.h is included in window backend */
+void VirtualDialog_Show(const char* title, const char* msg, cc_bool oneshot);
+
 CC_END_HEADER
 #endif

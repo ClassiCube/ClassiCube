@@ -48,8 +48,8 @@ void Window_Init(void) {
 
 void Window_Free(void) { usbh_core_deinit(); }
 
-void Window_Create2D(int width, int height) { Window_Main.Is3D = false;  }
-void Window_Create3D(int width, int height) { Window_Main.Is3D = true; }
+void Window_Create2D(int width, int height) { Window_Main.Is3D = false; }
+void Window_Create3D(int width, int height) { Window_Main.Is3D = true;  }
 
 void Window_Destroy(void) { }
 
@@ -217,32 +217,23 @@ void Gamepads_Process(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	pb_show_debug_screen();
+
+	bmp->scan0  = (BitmapCol*)XVideoGetFB();
 	bmp->width  = width;
 	bmp->height = height;
-
-	pb_show_debug_screen();
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	void* fb = XVideoGetFB();
 	//XVideoWaitForVBlank();
 	// XVideoWaitForVBlank installs an interrupt handler for VBlank - 
 	//  however this will cause pbkit's attempt to install an interrupt
 	//  handler fail - so instead just accept tearing in the launcher
-
-	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
-	cc_uint32* dst = (cc_uint32*)fb         + r.x;
-
-	for (int y = r.y; y < r.y + r.height; y++) 
-	{
-		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.width * 4);
-	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
 	pb_show_front_screen();
+	bmp->scan0 = NULL;
 }
 
 
