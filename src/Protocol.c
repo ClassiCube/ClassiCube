@@ -96,6 +96,7 @@ static struct CpeExt
 	lightingMode_Ext    = { "LightingMode", 1 },
 	cinematicGui_Ext    = { "CinematicGui", 1 },
 	notifyAction_Ext    = { "NotifyAction", 1 },
+	toggleBlockList_Ext = { "ToggleBlockList", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
 	extBlocks_Ext       = { "ExtendedBlocks", 1 };
 
@@ -106,6 +107,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
 	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext, &notifyAction_Ext,
+	&toggleBlockList_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
