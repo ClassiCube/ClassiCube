@@ -167,11 +167,14 @@ void Gfx_Free(void) {
 	Gfx_FreeState();
 }
 
-static CC_INLINE void DMAFlushBuffer(void) {
-	if (Q == dma_beg) return;
+static void FlushMainDMABuffer(void) {
+	dma_wait_fast();
 
-	DMATAG_END(dma_beg, (Q - dma_beg) - 1, 0, 0, 0);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
+	if (Q != dma_beg + 1) {
+		DMATAG_END(dma_beg, (Q - dma_beg) - 1, 0, 0, 0);
+		dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
+	}
+	Q = dma_beg + 1;
 }
 
 
@@ -398,7 +401,7 @@ struct GPUTexture {
 
 static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
 	// TODO terrible perf
-	DMAFlushBuffer();
+	FlushMainDMABuffer();
 	dma_wait_fast();
 
 	// 4bpp has extra garbage pixels when odd rows
@@ -408,9 +411,6 @@ static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
 	int dst_stride = GS_TEXTURE_STRIDE(tex);
 	Gfx_TransferPixels(tex->pixels, src_w, src_h, 
 						tex->format, dst_addr, dst_stride);
-	
-	// TODO terrible perf
-	Q = dma_beg + 1;
 }
 
 static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
@@ -928,10 +928,9 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty)  UpdateState(0);
 	if (formatDirty) UpdateFormat(0);
 
-	if ((Q - current->data) > 45000) {
-		DMAFlushBuffer();
+	if ((Q - current->data) > 40000) {
+		FlushMainDMABuffer();
 		dma_wait_fast();
-		Q = dma_beg + 1;
 		Platform_LogConst("Too much geometry!!");
 	}
 
@@ -999,11 +998,9 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_EndFrame(void) {
 	//Platform_LogConst("--- EF1 ---");
-
 	Q = draw_finish(Q);
 	
-	dma_wait_fast();
-	DMAFlushBuffer();
+	FlushMainDMABuffer();
 	//Platform_LogConst("--- EF2 ---");
 		
 	draw_wait_finish();

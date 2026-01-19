@@ -251,7 +251,7 @@ BEG_FUNC(DrawTexturedQuad)
 	sw   XY_1, (5*S_PTEX + PTEX_XY)(DST)
 	swc1  Z_1, (5*S_PTEX + PTEX__Z)(DST)
 
-	addi DST, 24*6
+	addi DST, 6 * S_PTEX
 
 	# TODO clipping
 any_clipped_vertices:
