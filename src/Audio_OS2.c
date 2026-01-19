@@ -1,6 +1,6 @@
 #include "Core.h"
 
-#if defined CC_BUILD_OS2
+#if CC_AUD_BACKEND == CC_AUD_BACKEND_OS2
 #include <stdio.h>
 #include <string.h>
 #include <kai.h>

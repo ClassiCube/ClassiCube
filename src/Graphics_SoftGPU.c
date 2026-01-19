@@ -401,6 +401,8 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int delTY = (int)(V2->v * curTexHeight) - begTY;
 
 	int width = maxX - minX, height = maxY - minY;
+	if (width == 0) width = 1;
+	if (height == 0) height = 1;
 
 	int fast =  delTX == width && delTY == height && 
 				(begTX + delTX < curTexWidth ) && 

@@ -170,6 +170,7 @@ typedef cc_uint8  cc_bool;
 #define CC_AUD_BACKEND_WINMM    2
 #define CC_AUD_BACKEND_OPENSLES 3
 #define CC_AUD_BACKEND_NULL     4
+#define CC_AUD_BACKEND_OS2      5
 
 #define CC_FPU_MODE_MINIMAL 1 /* Integer math funcs, no animations, no held block, flat inventory */
 #define CC_FPU_MODE_LIMITED 2 /* Integer math funcs, no animations, no held block */
@@ -601,9 +602,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_FREETYPE
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-	#define DEFAULT_CRT_BACKEND CC_CRT_BACKEND_OPENSSL
+	//#define DEFAULT_CRT_BACKEND CC_CRT_BACKEND_OPENSSL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_OS2
+// TODO We deactivate the OS/2 audio, because we get hard system crashes upon app exit.
+	//#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OS2
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 #elif defined PLAT_SATURN
 	#define CC_BUILD_SATURN
 	#define CC_BUILD_CONSOLE
