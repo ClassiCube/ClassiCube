@@ -70,6 +70,7 @@ Instructions:
 - AntiGravity
 - Vclip
 - Hclip
+- ServerInfo
 
 ## Current Features
 - Coloured F3 Menu

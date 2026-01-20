@@ -45,6 +45,8 @@ cc_bool NoRender_enabled = false;
 cc_bool NoRender_everything = false;
 cc_bool NoSetBack_enabled = false;
 cc_bool Scaffold_enabled = false;
+cc_bool AutoReconnect_enabled = false;
+cc_bool ServerInfo_enabled = false;
 // cc_bool ArrayList_enabled = false;
 // cc_bool AutoJump_always = true;
 float SpinSpeed = 1;
@@ -1498,6 +1500,39 @@ struct ChatCommand HclipCommand = {
     }
 };
 
+/*########################################################################################################################*
+*--------------------------------------------------------AutoReconnect----------------------------------------------------*
+*#########################################################################################################################*/
+
+static void AutoReconnectCommand_Execute(const cc_string* args, int argsCount) {
+    AutoReconnect_enabled = !AutoReconnect_enabled;
+    Chat_AddRaw(AutoReconnect_enabled ? "&aAutoReconnect enabled" : "&cAutoReconnect disabled");
+}
+
+static struct ChatCommand AutoReconnectCommand = {
+	"AutoReconnect", AutoReconnectCommand_Execute, 0,
+	{
+		"&a/client AutoReconnect",
+		"&eAutomatically reconnects you when disconnected",
+	}
+};
+
+/*########################################################################################################################*
+*--------------------------------------------------------ServerInfo----------------------------------------------=--------*
+*#########################################################################################################################*/
+
+static void ServerInfoCommand_Execute(const cc_string* args, int argsCount) {
+    ServerInfo_enabled = !ServerInfo_enabled;
+    Chat_AddRaw("&aServerInfo command executed");
+}
+
+static struct ChatCommand ServerInfoCommand = {
+    "ServerInfo", ServerInfoCommand_Execute, 0,
+    {
+        "&a/client ServerInfo",
+        "&eDisplays information about the server",
+    }
+};
 
 /*########################################################################################################################*
 *------------------------------------------------------Commands component-------------------------------------------------*
@@ -1526,7 +1561,6 @@ static void OnInit(void) {
 	Commands_Register(&JesusCommand);
 	Commands_Register(&GravityCommand);
 	Commands_Register(&InfJumpCommand);
-	// Commands_Register(&ArrayListCommand);
 	Commands_Register(&FastClimbCommand);
 	Commands_Register(&StepCommand);
 	Commands_Register(&NoClickDelayCommand);
@@ -1543,6 +1577,9 @@ static void OnInit(void) {
 	Commands_Register(&NoSetBackCommand);
 	Commands_Register(&VclipCommand);
 	Commands_Register(&HclipCommand);
+	Commands_Register(&ServerInfoCommand);
+	// Commands_Register(&AutoReconnectCommand);
+	// Commands_Register(&ArrayListCommand);
 	/*Velocity Events*/
 	ScheduledTask_Add(0.01, Spin_Tick);
 }

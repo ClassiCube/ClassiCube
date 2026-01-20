@@ -99,14 +99,17 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
 
 	if (Gfx.ReducedPerfMode || (Gfx.ReducedPerfModeCooldown > 0)) {
-		String_Format1(&status, "&c\n &4[&cVelocity&4] -%s- &e(low perf mode), ", &Game_Username);
+		if (ServerInfo_enabled) { String_Format3(&status, "&c\n &4[&cVelocity&4] -%s- &a%s:&b%i &e(low perf mode), ", &Game_Username, &Server.Address, &Server.Port); }
+		else { String_Format1(&status, "&c\n &4[&cVelocity&4] -%s- &e(low perf mode), ", &Game_Username); }
 		Gfx.ReducedPerfModeCooldown--;
 	} else if (fps == 0) {
 		/* Running at less than 1 FPS.. */
 		real_fps = s->frames / s->accumulator;
-		String_Format2(&status, "&c\n &4[&cVelocity&4] -%s- %f1 fps, ", &Game_Username, &real_fps);
+		if (ServerInfo_enabled) { String_Format4(&status, "&c\n &4[&cVelocity&4] -%s- &a%s:&b%i &a%f fps, ", &Game_Username, &Server.Address, &Server.Port, &real_fps); }
+		else { String_Format2(&status, "&c\n &4[&cVelocity&4] -%s- &a%f fps, ", &Game_Username, &real_fps); }
 	} else {
-		String_Format2(&status, "&c\n &4[&cVelocity&4] -%s- &a%i fps, ", &Game_Username, &fps);
+		if (ServerInfo_enabled) { String_Format4(&status, "&c\n &4[&cVelocity&4] -%s- &a%s:&b%i &a%i fps, ", &Game_Username, &Server.Address, &Server.Port, &fps); }
+		else { String_Format2(&status, "&c\n &4[&cVelocity&4] -%s- &a%i fps, ", &Game_Username, &fps); }
 	}
 
 	if (Game_ClassicMode) {
@@ -2102,7 +2105,11 @@ static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 	String_InitArray(msg, msgBuffer);
 	int secsLeft;
 
-		secsLeft = Math_Ceil(s->delayLeft);
+	secsLeft = Math_Ceil(s->delayLeft);
+
+	if (NoReconnectDelay_enabled) {
+		secsLeft = 0;
+	}
 
 		if (secsLeft > 0) {
 			String_Format1(&msg, "Reconnect in %i", &secsLeft);
@@ -2110,7 +2117,6 @@ static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 		Widget_SetDisabled(&s->reconnect, secsLeft > 0);
 
 
-	if (NoReconnectDelay_enabled) Widget_SetDisabled(&s->reconnect, 0);
 	if (!msg.length) String_AppendConst(&msg, "Reconnect");
 	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
 }
@@ -2156,6 +2162,7 @@ static void DisconnectScreen_Init(void* screen) {
 
 	ButtonWidget_Add(s, &s->reconnect, 300, DisconnectScreen_OnReconnect);
 	ButtonWidget_Add(s, &s->quit,      300, DisconnectScreen_OnQuit);
+	if (!s->canReconnect) s->reconnect.flags = WIDGET_FLAG_DISABLED;
 
 	Game_SetMinFrameTime(1000 / 5.0f);
 
@@ -2198,6 +2205,7 @@ static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	Menu_PointerDown,        Screen_PointerUp,        Menu_PointerMove, Screen_TMouseScroll,
 	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
+
 void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 	static const cc_string kick = String_FromConst("Kicked ");
 	static const cc_string ban  = String_FromConst("Banned ");
