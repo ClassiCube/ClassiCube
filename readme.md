@@ -67,7 +67,6 @@ Instructions:
 - Brand
 - NoSetBack
 - Scaffold
-- AntiGravity
 - Vclip
 - Hclip
 - ServerInfo
