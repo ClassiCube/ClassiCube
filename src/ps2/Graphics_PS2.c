@@ -14,6 +14,7 @@
 #include <draw.h>
 #include <draw3d.h>
 #include <malloc.h>
+#include "gs_gpu.h"
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
 
@@ -1003,9 +1004,9 @@ void Gfx_EndFrame(void) {
 	FlushMainDMABuffer();
 	//Platform_LogConst("--- EF2 ---");
 		
-	draw_wait_finish();
+	GS_wait_draw_finish();
 	//Platform_LogConst("--- EF3 ---");
-	if (gfx_vsync) graph_wait_vsync();
+	if (gfx_vsync) GS_wait_vsync();
 	
 	context ^= 1;
 	UpdateContext();
