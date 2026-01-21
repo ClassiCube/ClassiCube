@@ -501,6 +501,26 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 
 
 /*########################################################################################################################*
+*--------------------------------------------------Dynamic Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_DYNAMIC_VBS_ARE_STATIC
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return Gfx_AllocStaticVb(fmt, maxVertices);
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
+
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockVb(vb, fmt, count);
+}
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+#endif
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Graphics component---------------------------------------------------*
 *#########################################################################################################################*/
 static void OnContextLost(void* obj)      { Gfx_FreeState(); }

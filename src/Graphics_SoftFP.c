@@ -1,5 +1,6 @@
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTFP
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "_GraphicsBase.h"
 #include "Errors.h"
@@ -278,9 +279,9 @@ struct FPVertexTextured {
 static VertexFormat buf_fmt;
 static int buf_count;
 
-static void PreprocessTexturedVertices(void) {
-	struct FPVertexTextured* dst = gfx_vertices;
-	struct VertexTextured* src   = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+	struct FPVertexTextured* dst = vertices;
+	struct VertexTextured* src   = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -293,9 +294,9 @@ static void PreprocessTexturedVertices(void) {
 	}
 }
 
-static void PreprocessColouredVertices(void) {
-	struct FPVertexColoured* dst = gfx_vertices;
-	struct VertexColoured* src   = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+	struct FPVertexColoured* dst = vertices;
+	struct VertexColoured* src   = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -326,28 +327,12 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-    gfx_vertices = vb;
-
     if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-        PreprocessTexturedVertices();
+        PreprocessTexturedVertices(vb);
     } else {
-        PreprocessColouredVertices();
+        PreprocessColouredVertices(vb);
     }
 }
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-    return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
 
 
 /*########################################################################################################################*

@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -410,24 +411,6 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	GX2RBuffer* buf = (GX2RBuffer*)vb;
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER, buf->buffer, buf->elemSize * buf->elemCount);
 }
-
-
-/*########################################################################################################################*
-*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
-*#########################################################################################################################*/
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Gfx_AllocStaticVb(fmt, maxVertices);
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
-
-void Gfx_BindDynamicVb(GfxResourceID vb)    { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 
 /*########################################################################################################################*

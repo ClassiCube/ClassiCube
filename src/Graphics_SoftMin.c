@@ -1,5 +1,6 @@
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTMIN
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "_GraphicsBase.h"
 #include "Errors.h"
@@ -217,30 +218,9 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 
-void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb;
-}
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 
-void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
-}
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb; 
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
 /*########################################################################################################################*

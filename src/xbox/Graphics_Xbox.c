@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -403,21 +404,6 @@ void Gfx_DeleteVb(GfxResourceID* vb) { FreeBuffer(vb); }
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 
 void Gfx_UnlockVb(GfxResourceID vb) { }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return AllocBuffer(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
-	return vb;
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*

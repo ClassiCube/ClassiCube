@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -736,7 +737,7 @@ static void PreprocessColouredVertices(void* vertices) {
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	//return Mem_TryAlloc(count, strideSizes[fmt]);
-	return memalign(16,count * strideSizes[fmt]);
+	return memalign(16, count * strideSizes[fmt]);
 	// align to 16 bytes, so DrawTexturedQuad/DrawColouredQuad can
 	//  load vertices using the "load quad (16 bytes)" instruction
 }
@@ -762,21 +763,6 @@ void Gfx_UnlockVb(GfxResourceID vb) {
         PreprocessColouredVertices(vb);
     }
 }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
