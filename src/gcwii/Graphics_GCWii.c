@@ -294,14 +294,12 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 	u8* buffer = memalign(32, width * height * 4);
 	if (!buffer) return ERR_OUT_OF_MEMORY;
+	CPU_InvalidateDataCache(buffer, width * height * 4);
 
 	GX_SetTexCopySrc(0, 0, width, height);
 	GX_SetTexCopyDst(width, height, GX_TF_RGBA8, GX_FALSE);
 	GX_CopyTex(buffer, GX_FALSE);
-	GX_PixModeSync();
-	GX_Flush();
-
-	CPU_InvalidateDataCache(buffer, width * height * 4);
+	GX_DrawDone();
 
 	struct Bitmap bmp;
 	bmp.scan0  = tmp;
