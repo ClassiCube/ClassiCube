@@ -294,6 +294,9 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0;
 }
 
+void CPU_FlushDataCache(void* start, int length) {
+	data_cache_hit_writeback(start, length);
+}
 
 
 /*########################################################################################################################*

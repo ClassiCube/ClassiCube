@@ -16,22 +16,11 @@
 #include "../Animations.h"
 
 #include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <nds/arm9/background.h>
-#include <nds/bios.h>
-#include <nds/cothread.h>
-#include <nds/interrupts.h>
-#include <nds/timers.h>
-#include <nds/debug.h>
-#include <nds/system.h>
-#include <nds/arm9/dldi.h>
-#include <nds/arm9/sdmmc.h>
-#include <nds/arm9/exceptions.h>
+#include <nds.h>
 #include <fat.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -685,6 +674,10 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0;
+}
+
+void CPU_FlushDataCache(void* start, int length) {
+	DC_FlushRange(start, length);
 }
 
 

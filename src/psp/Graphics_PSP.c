@@ -349,12 +349,12 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	if (pal_count > 0) {
 		Mem_Copy(tex->palette, palette, sizeof(palette));
 		UploadPalettedTexture(bmp, rowWidth, palette, pal_count, addr, dst_w, dst_h);
-		sceKernelDcacheWritebackInvalidateRange(tex->palette, sizeof(palette));
+		CPU_FlushDataCache(tex->palette, sizeof(palette));
 	} else {
 		UploadFullTexture(bmp, rowWidth, addr, dst_w, dst_h);
 	}
 
-	sceKernelDcacheWritebackInvalidateRange(addr, size);
+	CPU_FlushDataCache(addr, size);
 	return tex;
 }
 
@@ -367,7 +367,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// TODO: Do line by line and only invalidate the actually changed parts of lines? harder with swizzling
 	// TODO: Invalidate full tex->size in case of very small textures?
 	int size = Texture_PixelsSize(tex->width, tex->height, false);
-	sceKernelDcacheWritebackInvalidateRange(addr, size);
+	CPU_FlushDataCache(addr, size);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -590,9 +590,8 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return vb;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
-	sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
+void Gfx_UnlockVb(GfxResourceID vb) {
+	CPU_FlushDataCache(vb, vb_size);
 }
 
 
@@ -603,14 +602,10 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
-	return vb; 
+	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
-	sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 

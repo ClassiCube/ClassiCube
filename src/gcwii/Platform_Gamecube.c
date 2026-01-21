@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <network.h>
+#include <ogc/cache.h>
 #include <ogc/lwp.h>
 #include <ogc/mutex.h>
 #include <ogc/semaphore.h>

@@ -24,3 +24,4 @@ static CC_INLINE void GS_wait_vsync(void) {
 
 	while (!(GS_CSR & GS_CSR_VSYNC)) { }
 }
+

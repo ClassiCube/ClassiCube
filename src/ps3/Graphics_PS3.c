@@ -543,8 +543,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return vb;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { 
-	Gfx_BindVb(vb);
+void Gfx_UnlockVb(GfxResourceID vb) {
 	rsxInvalidateVertexCache(context); // TODO needed?
 }
 
@@ -555,15 +554,11 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
-	return vb;
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
+	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	Gfx_BindVb(vb);
-	rsxInvalidateVertexCache(context); // TODO needed?
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 

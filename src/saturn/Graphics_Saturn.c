@@ -308,11 +308,9 @@ static void* gfx_vertices;
 #define XYZInteger(value) ((value) >> 6)
 #define XYZFixed(value)   ((int)((value) * (1 << 6)))
 
-static void* gfx_vertices;
-
-static void PreprocessTexturedVertices(void) {
-	struct SATVertexTextured* dst = gfx_vertices;
-	struct VertexTextured* src    = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+	struct SATVertexTextured* dst = vertices;
+	struct VertexTextured* src    = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -326,8 +324,8 @@ static void PreprocessTexturedVertices(void) {
         dst->Col = ((b >> 5) << 7) | ((g >> 4) << 3) | (r >> 5);
     }
 
-	dst = gfx_vertices;
-	src = gfx_vertices;
+	dst = vertices;
+	src = vertices;
 	for (int i = 0; i < buf_count; i += 4, src += 4, dst += 4)
 	{
         int flipped = src[0].V > src[2].V;
@@ -335,9 +333,9 @@ static void PreprocessTexturedVertices(void) {
     }
 }
 
-static void PreprocessColouredVertices(void) {
-	struct SATVertexColoured* dst = gfx_vertices;
-	struct VertexColoured* src    = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+	struct SATVertexColoured* dst = vertices;
+	struct VertexColoured* src    = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -372,12 +370,10 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-    gfx_vertices = vb;
-
     if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-        PreprocessTexturedVertices();
+        PreprocessTexturedVertices(vb);
     } else {
-        PreprocessColouredVertices();
+        PreprocessColouredVertices(vb);
     }
 }
 
@@ -392,7 +388,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 

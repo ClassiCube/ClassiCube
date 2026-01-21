@@ -9,11 +9,11 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 #if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX
-#define _NL "\r\n"
-#define NATIVE_STR_LEN 300
+	#define _NL "\r\n"
+	#define NATIVE_STR_LEN 300
 #else
-#define _NL "\n"
-#define NATIVE_STR_LEN 600
+	#define _NL "\n"
+	#define NATIVE_STR_LEN 600
 #endif
 
 /* Suffix added to app name sent to the server */
@@ -411,6 +411,18 @@ void Platform_ShareScreenshot(const cc_string* filename);
 #ifdef CC_BUILD_ANDROID
 void Platform_TryLogJavaError(void);
 void* ExecThread(void* param);
+#endif
+
+#ifdef CC_BUILD_CONSOLE
+/* Flushes any bytes in the range start..start+length out from the CPU's data cache to memory */
+/* E.g. used in some console ports to flush textures before a DMA unit loads them from memory */
+/* E.g. used in some console ports to flush vertex buffers before GPU loads them from memory */
+void CPU_FlushDataCache(void* start, int length);
+/* Inalidates any bytes in the range start..start+length out of the CPU's data cache */
+/* Typically used when an external unit reads data into main memory that the CPU is unaware of */
+/* Hence any data cached in that range must be purged from the outdated/unaware CPU's data cache */
+/*  (otherwise the CPU will read outdated data from data cache, instead of actual data from main memory) */
+void CPU_InvalidateDataCache(void* start, int length);
 #endif
 
 CC_END_HEADER

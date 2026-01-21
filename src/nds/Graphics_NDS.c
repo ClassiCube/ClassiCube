@@ -509,9 +509,9 @@ struct DSColouredVertex {
 
 // Precalculate all the expensive vertex data conversion,
 //  so that actual drawing of them is as fast as possible
-static void PreprocessTexturedVertices(void) {
-	struct   VertexTextured* src = gfx_vertices;
-	struct DSTexturedVertex* dst = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+	struct   VertexTextured* src = vertices;
+	struct DSTexturedVertex* dst = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -538,12 +538,12 @@ static void PreprocessTexturedVertices(void) {
 		dst->z  = z;
 	}
 	
-	DC_FlushRange(gfx_vertices, buf_count * sizeof(struct DSTexturedVertex));
+	CPU_FlushDataCache(vertices, buf_count * sizeof(struct DSTexturedVertex));
 }
 
-static void PreprocessColouredVertices(void) {
-	struct   VertexColoured* src = gfx_vertices;
-	struct DSColouredVertex* dst = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+	struct   VertexColoured* src = vertices;
+	struct DSColouredVertex* dst = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -565,7 +565,7 @@ static void PreprocessColouredVertices(void) {
 		dst->z  = z;
 	}
 	
-	DC_FlushRange(gfx_vertices, buf_count * sizeof(struct DSColouredVertex));
+	CPU_FlushDataCache(vertices, buf_count * sizeof(struct DSColouredVertex));
 }
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
@@ -595,12 +595,10 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-
 	if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-		PreprocessTexturedVertices();
+		PreprocessTexturedVertices(vb);
 	} else {
-		PreprocessColouredVertices();
+		PreprocessColouredVertices(vb);
 	}
 }
 
@@ -615,7 +613,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 

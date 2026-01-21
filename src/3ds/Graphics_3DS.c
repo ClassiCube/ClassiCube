@@ -700,8 +700,6 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	gfx_vertices = buffer->data;
 }
 
 
@@ -712,14 +710,10 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	return buffer->data;
+	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	gfx_vertices = buffer->data;
-}
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 

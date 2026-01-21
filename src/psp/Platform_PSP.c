@@ -610,6 +610,10 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0;
 }
 
+void CPU_FlushDataCache(void* start, int length) {
+	sceKernelDcacheWritebackRange(start, length);
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*

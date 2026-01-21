@@ -697,8 +697,8 @@ static VertexFormat buf_fmt;
 static int buf_count;
 
 // Precalculate all the vertex data adjustment
-static void PreprocessTexturedVertices(void) {
-    struct VertexTextured* v = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+    struct VertexTextured* v = vertices;
 
     for (int i = 0; i < buf_count; i++, v++)
     {
@@ -722,8 +722,8 @@ static void PreprocessTexturedVertices(void) {
     }
 }
 
-static void PreprocessColouredVertices(void) {
-    struct VertexColoured* v = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+    struct VertexColoured* v = vertices;
 
     for (int i = 0; i < buf_count; i++, v++)
     {
@@ -756,12 +756,10 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-
     if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-        PreprocessTexturedVertices();
+        PreprocessTexturedVertices(vb);
     } else {
-        PreprocessColouredVertices();
+        PreprocessColouredVertices(vb);
     }
 }
 
@@ -776,7 +774,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 

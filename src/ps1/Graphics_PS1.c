@@ -625,9 +625,9 @@ static void* gfx_vertices;
 #define XYZFixed(value) ((int)((value) * (1 << 8)))
 #define UVFixed(value)  ((int)((value) * 256.0f) & 0xFF) // U/V wrapping not supported
 
-static void PreprocessTexturedVertices(void) {
-	struct PS1VertexTextured* dst = gfx_vertices;
-	struct VertexTextured* src    = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+	struct PS1VertexTextured* dst = vertices;
+	struct VertexTextured* src    = vertices;
 	float u, v;
 
 	// PS1 need to use raw U/V coordinates
@@ -666,9 +666,9 @@ static void PreprocessTexturedVertices(void) {
 	}
 }
 
-static void PreprocessColouredVertices(void) {
-	struct PS1VertexColoured* dst = gfx_vertices;
-	struct VertexColoured* src    = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+	struct PS1VertexColoured* dst = vertices;
+	struct VertexColoured* src    = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -709,12 +709,10 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-    gfx_vertices = vb;
-
     if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-        PreprocessTexturedVertices();
+        PreprocessTexturedVertices(vb);
     } else {
-        PreprocessColouredVertices();
+        PreprocessColouredVertices(vb);
     }
 }
 
@@ -729,7 +727,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 

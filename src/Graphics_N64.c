@@ -442,10 +442,10 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	void* ptr = ((struct VertexBuffer*)vb)->vertices;
 	if (vb_fmt == VERTEX_FORMAT_COLOURED) {
 		convert_coloured_vertices(ptr, vb_count);
-		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+		CPU_FlushDataCache(ptr, vb_count * sizeof(struct rsp_vertex));
 	} else {
 		convert_textured_vertices(ptr, vb_count);
-		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+		CPU_FlushDataCache(ptr, vb_count * sizeof(struct rsp_vertex));
 	}
 }
 
