@@ -74,14 +74,12 @@ void Gfx_Create(void) {
 
 void Gfx_Free(void) { 
 	Gfx_FreeState();
-	GX_AbortFrame();
-	//GX_Flush(); // TODO needed?
-	VIDEO_Flush();
 }
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 
 static void Gfx_RestoreState(void) { 
 	InitDefaultResources();
+	gfx_format = -1;
 
 	// 4x4 dummy white texture (textures must be at least 1 4x4 tile)
 	struct Bitmap bmp;
@@ -238,7 +236,7 @@ void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor.g = PackedCol_G(color);
 	gfx_clearColor.b = PackedCol_B(color);
 	
-	GX_SetCopyClear(gfx_clearColor, 0x00ffffff); // TODO: use GX_MAX_Z24 
+	GX_SetCopyClear(gfx_clearColor, GX_MAX_Z24);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
