@@ -745,7 +745,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 
-void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
+void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
 /*########################################################################################################################*

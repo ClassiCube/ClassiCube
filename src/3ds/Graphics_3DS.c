@@ -682,6 +682,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint8* gfx_vertices;
+static int vb_size;
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return GPUBuffer_Alloc(count, strideSizes[fmt]);
@@ -697,10 +698,12 @@ void Gfx_DeleteVb(GfxResourceID* vb) { GPUBuffer_Unref(vb); }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	vb_size = count * strideSizes[fmt];
 	return buffer->data;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
+	CPU_FlushDataCache(vb, vb_size);
 }
 
 

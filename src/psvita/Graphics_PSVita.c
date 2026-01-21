@@ -1009,7 +1009,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return buffer->data;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { Gfx_BindVb(vb); }
+void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
 /*########################################################################################################################*

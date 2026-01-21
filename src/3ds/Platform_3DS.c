@@ -505,6 +505,12 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0;
 }
 
+void CPU_FlushDataCache(void* start, int length) {
+	// https://www.3dbrew.org/wiki/GSPGPU:FlushDataCache
+	// Only works in linear memory range though
+	GSPGPU_FlushDataCache(start, length);
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
