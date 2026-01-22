@@ -344,7 +344,7 @@ void Gfx_AllocFramebuffers(void) {
 	fb_depth.enable      = 1;
 	fb_depth.method      = ZTEST_METHOD_ALLPASS;
 	fb_depth.mask        = 0;
-	fb_depth.zsm         = GS_ZBUF_24;
+	fb_depth.zsm         = GS_ZBUF_16S;
 	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
 }
 
@@ -1054,7 +1054,7 @@ void Gfx_OnWindowResize(void) {
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	VU0_vector clip_scale;
-	unsigned int maxZ = 1 << (24 - 1); // TODO: half this? or << 24 instead?
+	unsigned int maxZ = 0xFFFF;
 
 	vp_origin.x =  ftoi4(2048 - (x / 2));
 	vp_origin.y = -ftoi4(2048 - (y / 2));
