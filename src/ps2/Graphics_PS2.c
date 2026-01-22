@@ -326,6 +326,30 @@ void Gfx_TransferPixels(void* src, int width, int height,
 
 
 /*########################################################################################################################*
+*-------------------------------------------------Framebuffer allocation--------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_AllocFramebuffers(void) {
+	fb_colors[0].width   = DisplayInfo.Width;
+	fb_colors[0].height  = DisplayInfo.Height;
+	fb_colors[0].mask    = 0;
+	fb_colors[0].psm     = GS_PSM_24;
+	fb_colors[0].address = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm);
+
+	fb_colors[1].width   = DisplayInfo.Width;
+	fb_colors[1].height  = DisplayInfo.Height;
+	fb_colors[1].mask    = 0;
+	fb_colors[1].psm     = GS_PSM_24;
+	fb_colors[1].address = Gfx_VRAM_AllocPaged(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm);
+
+	fb_depth.enable      = 1;
+	fb_depth.method      = ZTEST_METHOD_ALLPASS;
+	fb_depth.mask        = 0;
+	fb_depth.zsm         = GS_ZBUF_24;
+	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Palettes--------------------------------------------------------*
 *#########################################################################################################################*/
 #define PAL_TOTAL_ENTRIES    2048
@@ -400,7 +424,8 @@ static unsigned tex_offset;
 static void InitTextureMem(void) {
 	tex_offset = Gfx_VRAM_Alloc(256, 256, GS_PSM_32);
 
-	texmem_4bpp_blocks = fb_colors[1].address / TEXMEM_BLOCK_SIZE;
+	// Overlap 4bpp textures with the two 24bpp framebuffers
+	texmem_4bpp_blocks = fb_depth.address / TEXMEM_BLOCK_SIZE;
 }
 
 

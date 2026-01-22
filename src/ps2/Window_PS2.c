@@ -32,28 +32,9 @@ struct cc_window WindowInfo;
 
 framebuffer_t fb_colors[2];
 zbuffer_t     fb_depth;
+
 static int display_mode;
-
-extern int Gfx_VRAM_AllocPaged(int width, int height, int psm);
-static void AllocBuffers(void) {
-	fb_colors[0].width   = DisplayInfo.Width;
-	fb_colors[0].height  = DisplayInfo.Height;
-	fb_colors[0].mask    = 0;
-	fb_colors[0].psm     = GS_PSM_24;
-	fb_colors[0].address = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm);
-
-	fb_colors[1].width   = DisplayInfo.Width;
-	fb_colors[1].height  = DisplayInfo.Height;
-	fb_colors[1].mask    = 0;
-	fb_colors[1].psm     = GS_PSM_24;
-	fb_colors[1].address = Gfx_VRAM_AllocPaged(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm);
-
-	fb_depth.enable      = 1;
-	fb_depth.method      = ZTEST_METHOD_ALLPASS;
-	fb_depth.mask        = 0;
-	fb_depth.zsm         = GS_ZBUF_24;
-	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
-}
+extern void Gfx_AllocFramebuffers(void);
 
 static void InitDisplay(void) {
 	framebuffer_t* fb = &fb_colors[0];
@@ -80,7 +61,7 @@ void Window_PreInit(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 
-	AllocBuffers();
+	Gfx_AllocFramebuffers();
 	InitDisplay();
 }
 
