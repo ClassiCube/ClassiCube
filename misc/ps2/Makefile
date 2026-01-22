@@ -34,7 +34,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 IOP_MODS := DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o USBKBD_irx.o
 
 EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
-EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse -lkbd
+EE_LIBS = -lpatches -lpad -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc -lmouse -lkbd
 
 EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include
 EE_CFLAGS 	:= -D_EE -G0 -O2 -Wall -gdwarf-2 -gz -DPLAT_PS2

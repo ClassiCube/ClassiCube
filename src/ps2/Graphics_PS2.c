@@ -4,7 +4,6 @@
 #include "../Window.h"
 #include "../_BlockAlloc.h"
 
-#include <packet.h>
 #include <dma_tags.h>
 #include <gif_tags.h>
 #include <gs_privileged.h>
@@ -38,8 +37,8 @@ extern void LoadViewportOrigin(VU0_vector* origin);
 extern void LoadViewportScale(VU0_vector* scale);
 
 // double buffering
-static packet_t* packets[2];
-static packet_t* current;
+static qword_t* dma_bufs[2];
+static qword_t* cur_buf;
 static int context;
 
 static qword_t* dma_beg;
@@ -64,19 +63,31 @@ static void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
+
+static qword_t* AllocDMABuffer(int qwords) {
+	// TODO ucab memory with Flush at start? need to adjust free too though
+	return memalign(64, qwords * 16);
+}
+
+static void FreeDMABuffer(qword_t* buffer) {
+	// TODO ucab memory with Flush at start? need to adjust free too though
+	free(buffer);
+}
+
 // TODO: Find a better way than just increasing this hardcoded size
 static void InitDMABuffers(void) {
-	packets[0] = packet_init(50000, PACKET_NORMAL);
-	packets[1] = packet_init(50000, PACKET_NORMAL);
+	dma_bufs[0] = AllocDMABuffer(50000);
+	dma_bufs[1] = AllocDMABuffer(50000);
 }
+
 
 static void UpdateContext(void) {
 	fb_display = &fb_colors[context];
 	fb_draw    = &fb_colors[context ^ 1];
 
-	current = packets[context];
+	cur_buf = dma_bufs[context];
 	
-	dma_beg = current->data;
+	dma_beg = cur_buf;
 	// increment past the dmatag itself
 	Q = dma_beg + 1;
 }
@@ -303,14 +314,14 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 
 void Gfx_TransferPixels(void* src, int width, int height, 
 						int format, unsigned dst_base, unsigned dst_stride) {
-	packet_t* packet = packet_init(200, PACKET_NORMAL);
-	qword_t* q = packet->data;
+	qword_t* buf = AllocDMABuffer(200);
+	qword_t* q   = buf;
 
 	q = PrepareTransfer(q, src, width, height, format, dst_base, dst_stride);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0,0);
+	dma_channel_send_chain(DMA_CHANNEL_GIF, buf, q - buf, 0,0);
 	dma_wait_fast();
 
-	packet_free(packet);
+	FreeDMABuffer(buf);
 }
 
 
@@ -917,7 +928,7 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty)  UpdateState(0);
 	if (formatDirty) UpdateFormat(0);
 
-	if ((Q - current->data) > 40000) {
+	if ((Q - cur_buf) > 40000) {
 		FlushMainDMABuffer();
 		dma_wait_fast();
 		Platform_LogConst("Too much geometry!!");
