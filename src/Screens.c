@@ -305,11 +305,6 @@ static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	s->maxVertices      = HUD_MAX_VERTICES;
 
-	Gui.HideCrosshair = NULL;
-	Gui.HideHotbar = NULL;
-	Gui.CinematicBarColor = NULL;
-	Gui.BarSize = 0.0f;
-
 	HotbarWidget_Create(&s->hotbar);
 	TextWidget_Init(&s->line1);
 	TextWidget_Init(&s->line2);
