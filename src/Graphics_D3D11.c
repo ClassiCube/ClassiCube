@@ -81,7 +81,7 @@ static void CreateSwapChain(void) {
 	desc.Scaling            = DXGI_SCALING_NONE;
 
 	IDXGIDevice* dxgi_device = NULL;
-	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, &dxgi_device);
+	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, (void**)&dxgi_device);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI device");
 
 	IDXGIAdapter* dxgi_adapter = NULL;
@@ -89,7 +89,7 @@ static void CreateSwapChain(void) {
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI adapter");
 
 	IDXGIFactory2* dxgi_factory2 = NULL;
-	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory2, &dxgi_factory2);
+	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory2, (void**)&dxgi_factory2);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI factory");
 
 	void* window = Window_Main.Handle.ptr;
@@ -156,7 +156,7 @@ static void CreateSwapChain(void) {
 	desc.SwapEffect         = DXGI_SWAP_EFFECT_DISCARD;
 
 	IDXGIDevice* dxgi_device = NULL;
-	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, &dxgi_device);
+	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, (void**)&dxgi_device);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI device");
 
 	IDXGIAdapter* dxgi_adapter = NULL;
@@ -164,7 +164,7 @@ static void CreateSwapChain(void) {
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI adapter");
 
 	IDXGIFactory* dxgi_factory = NULL;
-	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory, &dxgi_factory);
+	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory, (void**)&dxgi_factory);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI factory");
 
 	void* window = Window_Main.Handle.ptr;
@@ -197,7 +197,7 @@ void Gfx_Free(void) {
 
 	ID3D11Debug *d3dDebug;
 	static const GUID guid_d3dDebug = { 0x79cf2233, 0x7536, 0x4948,{ 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };
-	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, &d3dDebug);
+	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, (void**)&d3dDebug);
 	if (SUCCEEDED(hr))
 	{
 		hr = ID3D11Debug_ReportLiveDeviceObjects(d3dDebug, D3D11_RLDO_DETAIL);
@@ -999,14 +999,15 @@ static void OM_UpdateTarget(void) {
 
 static void OM_InitTargets(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-depth-stencil
+	ID3D11Texture2D* pBackBuffer = NULL;
 	D3D11_TEXTURE2D_DESC desc;
-	ID3D11Texture2D* pBackBuffer;
 	HRESULT hr;
 
 	hr = IDXGISwapChain_GetBuffer(swapchain, 0, &guid_ID3D11Texture2D, (void**)&pBackBuffer);
 	if (hr) Process_Abort2(hr, "Failed to get swapchain backbuffer");
 
-	hr = ID3D11Device_CreateRenderTargetView(device, pBackBuffer, NULL, &backbuffer);
+	hr = ID3D11Device_CreateRenderTargetView(device, (ID3D11Resource*)pBackBuffer, 
+												NULL, &backbuffer);
 	if (hr) Process_Abort2(hr, "Failed to create render target");
 
 	ID3D11Texture2D_GetDesc(pBackBuffer, &desc);
@@ -1016,7 +1017,8 @@ static void OM_InitTargets(void) {
     hr = ID3D11Device_CreateTexture2D(device, &desc, NULL, &depthbuffer);
 	if (hr) Process_Abort2(hr, "Failed to create depthbuffer texture");
 
-	hr = ID3D11Device_CreateDepthStencilView(device, depthbuffer, NULL, &depthbufferView);
+	hr = ID3D11Device_CreateDepthStencilView(device, (ID3D11Resource*)depthbuffer, 
+												NULL, &depthbufferView);
 	if (hr) Process_Abort2(hr, "Failed to create depthbuffer view");
 
 	ID3D11Texture2D_Release(pBackBuffer);
@@ -1233,7 +1235,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	// TODO this overlaps with global declarations, switch to them at some point.. ?
 	// apparently using D3D11CreateDeviceAndSwapChain is bad, need to investigate
 	IDXGIDevice* dxgi_device = NULL;
-	hr = ID3D11Device_QueryInterface(device, &guid_IXDGIDevice, &dxgi_device);
+	hr = ID3D11Device_QueryInterface(device, &guid_IXDGIDevice, (void**)&dxgi_device);
 	if (hr || !dxgi_device) return;
 
 	IDXGIAdapter* dxgi_adapter;

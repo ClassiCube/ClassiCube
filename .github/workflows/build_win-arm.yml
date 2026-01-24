@@ -27,7 +27,7 @@ jobs:
         env:
           LIBS: "-lwinmm -limagehlp"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           WIN32_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
@@ -60,7 +60,7 @@ jobs:
         env: 
           LIBS: "-lwinmm -limagehlp"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           WIN64_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"

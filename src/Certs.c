@@ -312,7 +312,7 @@ void CertsBackend_Init(void) {
 	Crypt32_LoadDynamicFuncs();
 }
 
-static const LPCSTR const usage[] = {
+static LPCSTR const usage[] = {
 	szOID_PKIX_KP_SERVER_AUTH,
 	szOID_SERVER_GATED_CRYPTO,
 	szOID_SGC_NETSCAPE

@@ -266,11 +266,6 @@ struct GPUTexture {
 static struct GPUTexture* del_textures_head;
 static struct GPUTexture* del_textures_tail;
 
-struct GPUTexture* GPUTexture_Alloc(void) {
-	struct GPUTexture* tex = Mem_AllocCleared(1, sizeof(struct GPUTexture), "GPU texture");
-	return tex;
-}
-
 // can't delete textures until not used in any frames
 static void GPUTexture_Unref(GfxResourceID* resource) {
 	struct GPUTexture* tex = (struct GPUTexture*)(*resource);
@@ -407,7 +402,9 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	struct GPUTexture* tex = GPUTexture_Alloc();
+	struct GPUTexture* tex = Mem_TryAllocCleared(1, sizeof(struct GPUTexture));
+	if (!tex) return NULL;
+
 	int can_vram = !(flags & TEXTURE_FLAG_DYNAMIC);
 	bool success = CreateNativeTexture(&tex->texture, bmp->width, bmp->height, can_vram);
 	if (!success) return NULL;
