@@ -168,7 +168,7 @@ static void CreateSwapChain(void) {
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI factory");
 
 	void* window = Window_Main.Handle.ptr;
-	hr = IDXGIFactory_CreateSwapChain(dxgi_factory, device, &desc, &swapchain);
+	hr = IDXGIFactory_CreateSwapChain(dxgi_factory, (IUnknown*)device, &desc, &swapchain);
 	if (FAILED(hr)) Process_Abort2(hr, "Creating swap chain");
 }
 #endif
@@ -268,7 +268,8 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 		// https://eatplayhate.me/2013/09/29/d3d11-texture-update-costs/
 		// Might not be ideal, but seems to work well enough
 		int stride = width * 4;
-		ID3D11DeviceContext_UpdateSubresource(context, texture, lvl, &box, cur, stride, stride * height);
+		ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)texture, lvl, 
+												&box, cur, stride, stride * height);
 
 		if (prev != bmp->scan0) Mem_Free(prev);
 		prev     = cur;
@@ -318,7 +319,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 	}
 
-	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
+	hr = ID3D11Device_CreateShaderResourceView(device, (ID3D11Resource*)tex, 
+												NULL, &view);
 	if (hr) Process_Abort2(hr, "Failed to create view");
 
 	if (mipmaps) Gfx_UpdateTexture(view, 0, 0, bmp, rowWidth, mipmaps);
@@ -340,7 +342,8 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// Might not be ideal, but seems to work well enough
 	int stride = rowWidth * 4;
 	ID3D11ShaderResourceView_GetResource(view, &res);
-	ID3D11DeviceContext_UpdateSubresource(context, res, 0, &box, part->scan0, stride, stride * part->height);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)res, 0, 
+											&box, part->scan0, stride, stride * part->height);
 
 	if (mipmaps) D3D11_DoMipmaps(res, x, y, part, rowWidth);
 	ID3D11Resource_Release(res);
@@ -429,8 +432,8 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	ID3D11DeviceContext_UpdateSubresource(context, buffer, 0, NULL, tmp, 0, 0);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vb, 0, 
+											NULL, tmp, 0, 0);
 	Mem_Free(tmp);
 	tmp = NULL;
 }
@@ -454,14 +457,14 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
 	mapDesc.pData = NULL;
 
-	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
+	HRESULT hr = ID3D11DeviceContext_Map(context, (ID3D11Resource*)buffer, 0, 
+											D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
 	if (hr) Process_Abort2(hr, "Failed to lock dynamic VB");
 	return mapDesc.pData;
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	ID3D11DeviceContext_Unmap(context, buffer, 0);
+	ID3D11DeviceContext_Unmap(context, (ID3D11Resource*)vb, 0);
 	Gfx_BindDynamicVb(vb);
 }
 
@@ -657,7 +660,8 @@ static void VS_FreeShaders(void) {
 }
 
 static void VS_UpdateConstants(void) {
-	ID3D11DeviceContext_UpdateSubresource(context, vs_cBuffer, 0, NULL, &vs_constants, 0, 0);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer, 0, 
+											NULL, &vs_constants, 0, 0);
 }
 
 static void VS_FreeConstants(void) {
@@ -893,7 +897,8 @@ static void PS_UpdateConstants(void) {
 
 	// avoid doing - in pixel shader for density fog
 	ps_constants.fogValue = ps_fogMode == FOG_LINEAR ? ps_fogEnd : -ps_fogDensity;
-	ID3D11DeviceContext_UpdateSubresource(context, ps_cBuffer, 0, NULL, &ps_constants, 0, 0);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)ps_cBuffer, 0, 
+											NULL, &ps_constants, 0, 0);
 }
 
 static void PS_FreeConstants(void) {
@@ -1179,17 +1184,18 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	desc.Usage     = D3D11_USAGE_STAGING;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-	hr = ID3D11Device_CreateTexture2D(device, &desc, NULL, &tmp);
+	hr  = ID3D11Device_CreateTexture2D(device, &desc, NULL, &tmp);
 	if (hr) goto finished;
-	ID3D11DeviceContext_CopyResource(context, tmp, backbuffer_res);
+	ID3D11DeviceContext_CopyResource(context, (ID3D11Resource*)tmp, backbuffer_res);
 
-	hr = ID3D11DeviceContext_Map(context, tmp, 0, D3D11_MAP_READ, 0, &buffer);
+	hr = ID3D11DeviceContext_Map(context, (ID3D11Resource*)tmp, 0, 
+									D3D11_MAP_READ, 0, &buffer);
 	if (hr) goto finished;
 	{
 		Bitmap_Init(bmp, desc.Width, desc.Height, NULL);
 		hr = Png_Encode(&bmp, output, D3D11_GetRow, false, &buffer);
 	}
-	ID3D11DeviceContext_Unmap(context, tmp, 0);
+	ID3D11DeviceContext_Unmap(context, (ID3D11Resource*)tmp, 0);
 
 finished:
 	if (tmp) { ID3D11Texture2D_Release(tmp); }

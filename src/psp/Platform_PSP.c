@@ -31,6 +31,8 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
 
+#define _SCE_NET_APCTL_ERROR_WLAN_SWITCH_OFF 0x80410a06
+
 const char* Platform_AppNameSuffix = " PSP";
 cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
@@ -516,7 +518,7 @@ static cc_bool InitNetworking(void) {
 		// Invalid profile? Try with next one
 		if (res == _ERROR_NETPARAM_BAD_NETCONF && profile != NET_PROFILE_LAST) continue;
 
-    	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlConnect"); return false; }
+    	if (res) { Logger_SysWarn(res, "calling sceNetApctlConnect"); return false; }
 
     	for (int try = 0; try < 200; try++) 
 		{
@@ -580,6 +582,11 @@ void Platform_Free(void) { }
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
+
+	if (res == _SCE_NET_APCTL_ERROR_WLAN_SWITCH_OFF) {
+		String_AppendConst(dst, "Wifi disabled or switch is off");
+		return true;
+	}
 
 	/* For unrecognised error codes, strerror_r might return messages */
 	/*  such as 'No error information', which is not very useful */
