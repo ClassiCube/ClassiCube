@@ -37,7 +37,7 @@ static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 
 static void IsometricDrawer_Flat(BlockID block, float size) {
 	int texIndex;
-	TextureLoc loc = Block_Tex(block, FACE_ZMAX);
+	TextureLoc loc = Block_Tex(block, FACE_ZMIN);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &texIndex);
 
 	struct VertexTextured* v;
