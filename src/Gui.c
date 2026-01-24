@@ -30,43 +30,27 @@ static GfxResourceID bars_VB;
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
-static CC_NOINLINE int GetWindowScale(void) {
-	float widthScale  = Window_Main.Width  * Window_Main.UIScaleX;
-	float heightScale = Window_Main.Height * Window_Main.UIScaleY;
-
-	/* Use larger UI scaling on mobile */
-	/* TODO move this DPI scaling elsewhere.,. */
-#ifndef CC_BUILD_DUALSCREEN
-	if (!Gui_TouchUI) {
-#endif
-		widthScale  /= DisplayInfo.ScaleX;
-		heightScale /= DisplayInfo.ScaleY;
-#ifndef CC_BUILD_DUALSCREEN
-	}
-#endif
-	return 1 + (int)(min(widthScale, heightScale));
-}
 
 float Gui_Scale(float value) {
-	return (float)((int)(value * 10 + 0.5f)) / 10.0f;
+	return (float)((int)(value * Gui.GlobalScale * 10 + 0.5f)) / 10.0f;
 }
 
 float Gui_GetHotbarScale(void) {
-	return Gui_Scale(GetWindowScale() * Gui.RawHotbarScale);
+	return Gui_Scale(Gui.RawHotbarScale);
 }
 
 float Gui_GetInventoryScale(void) {
-	return Gui_Scale(GetWindowScale() * (Gui.RawInventoryScale * 0.5f));
+	return Gui_Scale(Gui.RawInventoryScale);
 }
 
 float Gui_GetChatScale(void) {
-	if (Gui.AutoScaleChat) return Gui_Scale(GetWindowScale() * Gui.RawChatScale);
+	if (Gui.AutoScaleChat) return Gui_Scale(Gui.RawChatScale);
 	return Gui.RawChatScale;
 }
 
 float Gui_GetCrosshairScale(void) {
-	float heightScale = Window_Main.Height * Window_Main.UIScaleY;
-	return Gui_Scale(heightScale) * Gui.RawCrosshairScale;
+	/* Scale multiplied by 0.5 because the crosshair is strangely bigger than other HUD items */
+	return Gui_Scale(Gui.RawCrosshairScale * 0.5f);
 }
 
 
@@ -134,6 +118,7 @@ static void LoadOptions(void) {
 	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.25f, 5.0f, 1.0f);
 	Gui.RawCrosshairScale = Options_GetFloat(OPT_CROSSHAIR_SCALE, 0.25f, 5.0f, 1.0f);
 	Gui.RawTouchScale     = Options_GetFloat(OPT_TOUCH_SCALE,     0.25f, 5.0f, 1.0f);
+	Gui.GlobalScale       = Options_GetFloat(OPT_GLOBAL_SCALE,     1.0f, 5.0f, 2.0f);
 
 	Gui.AutoScaleChat     = Options_GetBool(OPT_CHAT_AUTO_SCALE, true);
 }

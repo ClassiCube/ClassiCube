@@ -905,6 +905,11 @@ static void    GuO_SetShowFPS(cc_bool v) {
 	Options_SetBool(OPT_SHOW_FPS, v);
 }
 
+static void GuO_GetGuiScale(cc_string* v) { String_AppendFloat(v, Gui.GlobalScale, 1); }
+static void GuO_SetGuiScale(const cc_string* v) { 
+	ChatOptionsScreen_SetScale(v, &Gui.GlobalScale, OPT_GLOBAL_SCALE); 
+}
+
 static void GuO_GetHotbar(cc_string* v) { String_AppendFloat(v, Gui.RawHotbarScale, 1); }
 static void GuO_SetHotbar(const cc_string* v) { 
 	ChatOptionsScreen_SetScale(v, &Gui.RawHotbarScale, OPT_HOTBAR_SCALE); 
@@ -938,6 +943,9 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	{
 		MenuOptionsScreen_AddBool(s, "Show FPS",
 			GuO_GetShowFPS,   GuO_SetShowFPS, NULL);
+		MenuOptionsScreen_AddNum(s,  "GUI scale",
+			0.25f, 4.00f, 1,
+			GuO_GetGuiScale, GuO_SetGuiScale, NULL);
 		MenuOptionsScreen_AddNum(s,  "Hotbar scale",
 			0.25f, 4.00f, 1,
 			GuO_GetHotbar,    GuO_SetHotbar, NULL);
