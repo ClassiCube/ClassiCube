@@ -181,6 +181,10 @@ void Gfx_Free(void) {
 
 	// C3D_Fini()
 	// aptUnhook(&hookCookie);
+
+	frameCounter1 += 5;
+	GPUBuffers_DeleteUnreferenced();
+	GPUTextures_DeleteUnreferenced();
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }

@@ -338,8 +338,6 @@ static void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
 static void C3Di_SetTex(int unit, C3D_Tex* tex);
 static void C3Di_EffectBind(C3D_Effect* effect);
 
-static bool C3Di_SplitFrame(u32** pBuf, u32* pSize);
-
 static void C3Di_RenderQueueInit(void);
 static void C3Di_RenderQueueExit(void);
 static void C3Di_RenderQueueWaitDone(void);
@@ -783,8 +781,12 @@ static void C3D_FrameFinish(u8 flags)
 	if (!inFrame) return;
 
 	u32 *cmdBuf, cmdBufSize;
-	if (C3Di_SplitFrame(&cmdBuf, &cmdBufSize))
-		GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
+	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
+	GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
+
+	GPUCMD_Split(&cmdBuf, &cmdBufSize);
+	GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
 
 	GPUCMD_SetBuffer(NULL, 0, 0);
 	inFrame = false;
@@ -1111,25 +1113,6 @@ static void C3Di_UpdateContext(void)
 		GPUCMD_AddMaskedWrite(GPUREG_TEXENV_UPDATE_BUFFER, 0x7, ctx->texEnvBuf);
 		GPUCMD_AddWrite(GPUREG_TEXENV_BUFFER_COLOR, ctx->texEnvBufClr);
 	}
-}
-
-static bool C3Di_SplitFrame(u32** pBuf, u32* pSize)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!gpuCmdBufOffset)
-		return false; // Nothing was drawn
-
-	if (ctx->flags & C3DiF_DrawUsed)
-	{
-		ctx->flags &= ~C3DiF_DrawUsed;
-		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
-		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
-		GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
-	}
-
-	GPUCMD_Split(pBuf, pSize);
-	return true;
 }
 
 static void C3D_Fini(void)

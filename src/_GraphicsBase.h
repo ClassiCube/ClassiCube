@@ -18,8 +18,15 @@ const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced perf
 static const int strideSizes[] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
+
+/* Current format of vertices */
+static int gfx_format = -1;
+/* Current size of vertices */
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
+	static unsigned int gfx_stride;
+#else
+	static int gfx_stride;
+#endif
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static cc_bool gfx_rendering2D;
