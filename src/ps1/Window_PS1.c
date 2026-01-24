@@ -161,6 +161,25 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 };
 
 static char pad_buff[2][34];
+static const BindMapping default_ps1[BIND_COUNT] = {
+	[BIND_FORWARD] = { CCPAD_CUP,    0 },
+	[BIND_BACK]    = { CCPAD_CDOWN,  0 },
+	[BIND_LEFT]    = { CCPAD_CLEFT,  0 },
+	[BIND_RIGHT]   = { CCPAD_CRIGHT, 0 },
+	
+	[BIND_FLY_UP]  = { CCPAD_UP,    0 },
+	[BIND_FLY_DOWN]= { CCPAD_DOWN,  0 },
+	[BIND_SPEED]   = { CCPAD_LEFT,  0 },
+	[BIND_FLY]     = { CCPAD_RIGHT, 0 },
+	
+	[BIND_JUMP]         = { CCPAD_1, 0 },
+	[BIND_INVENTORY]    = { CCPAD_2, 0 },
+	[BIND_PLACE_BLOCK]  = { CCPAD_5, 0 },
+	[BIND_HOTBAR_LEFT]  = { CCPAD_L, 0 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_R, 0 },
+	
+	[BIND_SET_SPAWN]    = { CCPAD_START, 0 },
+};
 
 void Gamepads_PreInit(void) {
 	// http://lameguy64.net/tutorials/pstutorials/chapter1/4-controllers.html
@@ -204,8 +223,8 @@ static void HandleButtons(int port, int buttons) {
 
 #define AXIS_SCALE 16.0f
 static void HandleJoystick(int port, int axis, int x, int y, float delta) {
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }

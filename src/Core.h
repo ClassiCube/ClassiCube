@@ -5,6 +5,8 @@ Core fixed-size integer types, automatic platform detection, and common small st
 Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
+#include "Strings.h"
+
 #if _MSC_VER
 	typedef signed __int8  cc_int8;
 	typedef signed __int16 cc_int16;

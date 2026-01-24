@@ -19,6 +19,7 @@ Eg. the webclient 'main' function loads IndexedDB, and when that has asynchronou
 #include "Server.h"
 #include "Options.h"
 #include "main.h"
+#include "Strings.h"
 
 /*########################################################################################################################*
 *-------------------------------------------------Complex argument parsing------------------------------------------------*
@@ -76,6 +77,9 @@ void DirectUrl_ExtractAddress(const cc_string* addr, cc_string* ip, cc_string* p
 *------------------------------------------------------Game setup/run-----------------------------------------------------*
 *#########################################################################################################################*/
 static void RunGame(void) {
+	CC_CurrentLanguage = Options_GetInt(OPT_SELECTED_LANGUAGE, 0, CC_LANGUAGE_LANGCNT-1, 0);
+	applyLanguageToGame();
+	
 	Game_Setup();
 	while (Game_Running) { Game_RenderFrame(); }
 

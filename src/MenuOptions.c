@@ -34,6 +34,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "SystemFonts.h"
+#include <string.h>
 
 typedef void (*Button_GetText)(struct ButtonWidget* btn, cc_string* raw);
 typedef void (*Button_SetText)(struct ButtonWidget* btn, const cc_string* raw);
@@ -261,7 +262,7 @@ static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, int half, 
 static void MenuOptionsScreen_BoolGet(struct ButtonWidget* btn, cc_string* v) {
 	struct MenuOptionMetaBool* meta = (struct MenuOptionMetaBool*)btn->meta.ptr;
 	cc_bool value = meta->GetValue();
-	String_AppendConst(v, value ? "ON" : "OFF");
+	String_AppendConst(v, value ? ccStrings_optionsMenu[CC_CurrentLanguage][18] : ccStrings_optionsMenu[CC_CurrentLanguage][19]);	/* True/False booleans (ON/OFF) */
 }
 
 static void MenuOptionsScreen_BoolClick(void* screen, void* widget) {
@@ -506,7 +507,7 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 		if (s->widgets[i]) MenuOptionsScreen_Update(s, &s->buttons[i]); 
 	}
 
-	ButtonWidget_SetConst(&s->done, "Done", &s->titleFont);
+	ButtonWidget_SetConst(&s->done, ccStrings_optionsMenu[CC_CurrentLanguage][14], &s->titleFont);
 	if (s->DoRecreateExtra) s->DoRecreateExtra(s);
 	TextGroupWidget_SetFont(&s->extHelp, &s->textFont);
 	TextGroupWidget_RedrawAll(&s->extHelp); /* TODO: SetFont should redrawall implicitly */
@@ -602,31 +603,31 @@ static void    ClO_SetHacks(cc_bool v) {
 }
 
 static void ClassicOptionsScreen_RecreateExtra(struct MenuOptionsScreen* s) {
-	ButtonWidget_SetConst(&s->buttons[9], "Controls...", &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[9], ccStrings_optionsMenu[CC_CurrentLanguage][3], &s->titleFont);
 }
 
 static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Music",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][0],		/* Toggle Music */
 			ClO_GetMusic,    ClO_SetMusic, NULL);
-		MenuOptionsScreen_AddBool(s, "Invert mouse",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],				/* Invert Looking */
 			ClO_GetInvert,   ClO_SetInvert, NULL);
-		MenuOptionsScreen_AddEnum(s, "Render distance", viewDistNames, VIEW_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][4], ccString_ViewDistanceNames[CC_CurrentLanguage], VIEW_COUNT, /* View Distance */
 			ClO_GetViewDist, ClO_SetViewDist, NULL);
-		MenuOptionsScreen_AddBool(s, "3d anaglyph",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][2],		/* 3D Anaglyph */
 			ClO_GetAnaglyph, ClO_SetAnaglyph, NULL);
 		
-		MenuOptionsScreen_AddBool(s, "Sound",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][3],		/* Toggle Sounds */
 			ClO_GetSounds,   ClO_SetSounds, NULL);
-		MenuOptionsScreen_AddBool(s, "Show FPS",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][0],					/* Show FPS */
 			ClO_GetShowFPS,  ClO_SetShowFPS, NULL);
-		MenuOptionsScreen_AddBool(s, "View bobbing",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],				/* Toggle view bob */
 			ClO_GetViewBob,  ClO_SetViewBob, NULL);
-		MenuOptionsScreen_AddBool(s, "Limit framerate",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][1],		/* Limit framerate */
 			ClO_GetFPS,      ClO_SetFPS, NULL);
 		if (Game_ClassicHacks) {
-			MenuOptionsScreen_AddBool(s, "Hacks enabled",
+			MenuOptionsScreen_AddBool(s, ccString_SubOption_ClassicOptions[CC_CurrentLanguage][5],	/* Hax toggle */
 				ClO_GetHacks,ClO_SetHacks, NULL);
 		}
 	}
@@ -770,20 +771,20 @@ static void    GrO_SetMipmaps(cc_bool v) {
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][0], FpsLimit_Names, FPS_LIMIT_COUNT,			/* FPS Mode */
 			GrO_GetFPS,        GrO_SetFPS,
 			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 			"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 			"&cNoLimit is pointless - it wastefully renders frames that you don't even see!");
-		MenuOptionsScreen_AddInt(s, "View distance",
+		MenuOptionsScreen_AddInt(s, ccString_SubOption_Graphics[CC_CurrentLanguage][1],												/* View distance */
 			8, 4096, 512,
 			GrO_GetViewDist,   GrO_SetViewDist, NULL);
-		MenuOptionsScreen_AddBool(s, "Smooth lighting",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][2],											/* Fancy lighting */
 			GrO_GetSmooth,     GrO_SetSmooth,
 			"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
 			"&cNote: &eThis setting may reduce performance.");
-		MenuOptionsScreen_AddEnum(s, "Lighting mode", LightingMode_Names, LIGHTING_MODE_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][3], LightingMode_Names, LIGHTING_MODE_COUNT,	/* Light mode */
 			GrO_GetLighting,   GrO_SetLighting,
 			"&eClassic: &fTwo levels of light, sun and shadow.\n" \
 			"    Good for performance.\n" \
@@ -791,14 +792,14 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"    May heavily reduce performance.\n" \
 			"&cNote: &eIn multiplayer, this option may be changed or locked by the server.");
 			
-		MenuOptionsScreen_AddEnum(s, "Names",   NameMode_Names,   NAME_MODE_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][4],   NameMode_Names,   NAME_MODE_COUNT,	/* Name render mode*/
 			GrO_GetNames,      GrO_SetNames,
 			"&eNone: &fNo names of players are drawn.\n" \
 			"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 			"&eAll: &fNames of all other players are drawn normally.\n" \
 			"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 			"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.");
-		MenuOptionsScreen_AddEnum(s, "Shadows", ShadowMode_Names, SHADOW_MODE_COUNT,
+		MenuOptionsScreen_AddEnum(s, ccString_SubOption_Graphics[CC_CurrentLanguage][5], ShadowMode_Names, SHADOW_MODE_COUNT,	/* Shadow Mode */
 			GrO_GetShadows,    GrO_SetShadows,
 			"&eNone: &fNo entity shadows are drawn.\n" \
 			"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
@@ -806,11 +807,17 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"&eCircleAll: &fA circular shadow is shown underneath all entities.");
 
 		if (!Gfx_GetUIOptions(s)) {
-		MenuOptionsScreen_AddBool(s, "Mipmaps",
-			GrO_GetMipmaps,    GrO_SetMipmaps, NULL);
-		}
+			#ifndef CC_BUILD_N64
+				MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][6],	/* Mipmapping/Texture Filtering (On N64) */
+					GrO_GetMipmaps,    GrO_SetMipmaps, NULL);
+				}
+			#else
+				MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][7],	/* Mipmapping/Texture Filtering (On N64) */
+					GrO_GetMipmaps,    GrO_SetMipmaps, NULL);
+				}
+			#endif
 
-		MenuOptionsScreen_AddBool(s, "3D anaglyph",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Graphics[CC_CurrentLanguage][8],			/* 3D Anaglyph mode */
 			ClO_GetAnaglyph,   ClO_SetAnaglyph, NULL);
 	};
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
@@ -867,18 +874,18 @@ static void    ChO_SetClickable(cc_bool v) {
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Scale with window",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Chat[CC_CurrentLanguage][0],
 			ChO_GetAutoScaleChat, ChO_SetAutoScaleChat, NULL);
-		MenuOptionsScreen_AddNum(s, "Chat scale",
+		MenuOptionsScreen_AddNum(s, ccString_SubOption_Chat[CC_CurrentLanguage][1],
 			0.25f, 4.00f, 1,
 			ChO_GetChatScale,     ChO_SetChatScale, NULL);
-		MenuOptionsScreen_AddInt(s, "Chat lines",
+		MenuOptionsScreen_AddInt(s, ccString_SubOption_Chat[CC_CurrentLanguage][2],
 			    0,    30, Gui.DefaultLines,
 			ChO_GetChatlines,     ChO_SetChatlines, NULL);
 
-		MenuOptionsScreen_AddBool(s, "Log to disk",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Chat[CC_CurrentLanguage][3],
 			ChO_GetLogging,       ChO_SetLogging, NULL);
-		MenuOptionsScreen_AddBool(s, "Clickable chat",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Chat[CC_CurrentLanguage][4],
 			ChO_GetClickable,     ChO_SetClickable, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
@@ -936,25 +943,25 @@ static void    GuO_SetUseFont(cc_bool v) {
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Show FPS",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][0],
 			GuO_GetShowFPS,   GuO_SetShowFPS, NULL);
-		MenuOptionsScreen_AddNum(s,  "Hotbar scale",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_GUI[CC_CurrentLanguage][1],
 			0.25f, 4.00f, 1,
 			GuO_GetHotbar,    GuO_SetHotbar, NULL);
-		MenuOptionsScreen_AddNum(s,  "Inventory scale",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_GUI[CC_CurrentLanguage][2],
 			0.25f, 4.00f, 1,
 			GuO_GetInventory, GuO_SetInventory, NULL);
-		MenuOptionsScreen_AddNum(s,  "Crosshair scale",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_GUI[CC_CurrentLanguage][3],
 			0.25f, 4.00f, 1,
 			GuO_GetCrosshair, GuO_SetCrosshair, NULL);
 		
-		MenuOptionsScreen_AddBool(s, "Black text shadows",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][4],
 			GuO_GetShadows,   GuO_SetShadows, NULL);
-		MenuOptionsScreen_AddBool(s, "Tab auto-complete",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][5],
 			GuO_GetTabAuto,   GuO_SetTabAuto, NULL);
-		MenuOptionsScreen_AddBool(s, "Use system font",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_GUI[CC_CurrentLanguage][6],
 			GuO_GetUseFont,   GuO_SetUseFont, NULL);
-		MenuOptionsScreen_AddButton(s, "Select system font", Menu_SwitchFont,
+		MenuOptionsScreen_AddButton(s, ccString_SubOption_GUI[CC_CurrentLanguage][7], Menu_SwitchFont,
 			NULL,             NULL, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
@@ -1115,6 +1122,15 @@ static void MiO_SetCameraMass(const cc_string* c) {
 	Options_Set(OPT_CAMERA_MASS, c);
 }
 
+static void MiO_GetLanguage(cc_string* v) { String_AppendInt(v, CC_CurrentLanguage); }
+static void MiO_SetLanguage(const cc_string* c) {
+	CC_CurrentLanguage = (int)Menu_Float(c);
+	
+	applyLanguageToGame();
+
+	Options_SetInt(OPT_SELECTED_LANGUAGE, CC_CurrentLanguage);
+}
+
 static void MiO_GetReach(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->ReachDistance, 2); }
 static void MiO_SetReach(const cc_string* v) { Entities.CurPlayer->ReachDistance = Menu_Float(v); }
 
@@ -1163,35 +1179,39 @@ static void MiO_SetSensitivity(int v) {
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddNum(s,  "Reach distance",
+		MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][1],	/* Reach distance */
 			   1, 1024, 5,
 			MiO_GetReach,    MiO_SetReach, NULL);
-		MenuOptionsScreen_AddNum(s, "Camera Mass",
+		MenuOptionsScreen_AddNum(s, ccString_SubOption_Misc[CC_CurrentLanguage][2],		/* Smooth camera strength */
 			1, 100, 20,
 			MiO_GetCameraMass, MiO_SetCameraMass,
 			"&eChange the smoothness of the smooth camera.");
-		MenuOptionsScreen_AddInt(s,  "Music volume",
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][3],	/* Music volume*/
 			   0, 100,  DEFAULT_MUSIC_VOLUME,
 			MiO_GetMusic,     MiO_SetMusic, NULL);
-		MenuOptionsScreen_AddInt(s,  "Sounds volume",
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][4],	/* Sound volume */
 			   0, 100,  DEFAULT_SOUNDS_VOLUME,
 			MiO_GetSounds,  MiO_SetSounds, NULL);
 
-		MenuOptionsScreen_AddBool(s, "Block physics",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][5],	/* Block physics */
 			MiO_GetPhysics, MiO_SetPhysics, NULL);
-		MenuOptionsScreen_AddBool(s, "Smooth camera",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][6],	/* Cinematic aim */
 			MiO_GetCamera, MiO_SetCamera, NULL);
-		MenuOptionsScreen_AddBool(s, "View bobbing",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][7],	/* View bobbing */
 			MiO_GetViewBob, MiO_SetViewBob, NULL);
-		MenuOptionsScreen_AddBool(s, "Invert mouse",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_Misc[CC_CurrentLanguage][8],	/* Mouse inverted? */
 			MiO_GetInvert,  MiO_SetInvert, NULL);
-		MenuOptionsScreen_AddInt(s,  "Mouse sensitivity", 
+		MenuOptionsScreen_AddInt(s,  ccString_SubOption_Misc[CC_CurrentLanguage][9], 	/* Mouse sensitivity */
 #ifdef CC_BUILD_WIN
 			   1, 200, 40,
 #else
 			   1, 200, 30,
 #endif
 			MiO_GetSensitivity, MiO_SetSensitivity, NULL);
+
+			MenuOptionsScreen_AddNum(s,  ccString_SubOption_Misc[CC_CurrentLanguage][0], /* Current Language */
+			   0, CC_LANGUAGE_LANGCNT, 0,
+			MiO_GetLanguage,    MiO_SetLanguage, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 
@@ -1253,20 +1273,20 @@ static void    NA_SetOpts(cc_bool v) {
 static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Classic hand model",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][0], /* Toggle Hand Rendering Style */
 			NA_GetHand,        NA_SetHand, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic walk anim",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][1],	/* Classic Animations */
 			NA_GetAnim,        NA_SetAnim, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic chat",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][2],	/* Classic Chat Style*/
 			NA_GetClassicChat, NA_SetClassicChat, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic inventory",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][3],	/* Classic Inventory*/
 			NA_GetClassicInv,  NA_SetClassicInv, NULL);
 			
-		MenuOptionsScreen_AddBool(s, "Classic GUI textures",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][4],	/* Classic Button Style */
 			NA_GetGui,   NA_SetGui, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic player list",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][5], /* Classic player list*/
 			NA_GetList,  NA_SetList, NULL);
-		MenuOptionsScreen_AddBool(s, "Classic options",
+		MenuOptionsScreen_AddBool(s, ccString_SubOption_NostalgicAppearance[CC_CurrentLanguage][6], /* Classic Options */
 			NA_GetOpts,  NA_SetOpts, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchNostalgia);

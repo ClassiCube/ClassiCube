@@ -1148,7 +1148,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	Gui_MakeTitleFont(&font);
 	ButtonWidget_SetConst(&s->more,   "More",   &font);
 	ButtonWidget_SetConst(&s->send,   "Send",   &font);
-	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
+	ButtonWidget_SetConst(&s->cancel, ccStrings_optionsMenu[CC_CurrentLanguage][20], &font);
 	Font_Free(&font);
 #endif
 }
@@ -1725,7 +1725,7 @@ static struct InventoryScreen {
 static void InventoryScreen_GetTitleText(cc_string* desc, BlockID block) {
 	cc_string name;
 	int block_ = block;
-	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
+	if (Game_PureClassic) { String_AppendConst(desc, ccString_SubOption_ClassicGUI[CC_CurrentLanguage][0]); return; }
 	if (block == BLOCK_AIR) return;
 
 	name = Block_UNSAFE_GetName(block);

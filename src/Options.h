@@ -94,6 +94,8 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define OPT_SELECTED_BLOCK_OUTLINE_OPACITY "selected-block-outline-opacity"
 #define OPT_SELECTED_BLOCK_OUTLINE_SCALE "selected-block-outline-scale"
 
+#define OPT_SELECTED_LANGUAGE "language"
+
 #define LOPT_SESSION  "launcher-session"
 #define LOPT_USERNAME "launcher-cc-username"
 #define LOPT_PASSWORD "launcher-cc-password"
