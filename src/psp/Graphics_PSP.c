@@ -29,7 +29,7 @@ static int gfx_fields;
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
 static int formatFields[] = {
-	GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D,
+	GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_3D,
 	GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_3D
 };
 

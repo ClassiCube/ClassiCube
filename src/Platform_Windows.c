@@ -224,7 +224,9 @@ void CrashHandler_Install(void) {
 	SetUnhandledExceptionFilter(UnhandledFilter);
 }
 
-#if __GNUC__
+#if __clang__
+void __attribute__((optnone)) Process_Abort2(cc_result result, const char* raw_msg) {
+#elif __GNUC__
 /* Don't want compiler doing anything fancy with registers */
 void __attribute__((optimize("O0"))) Process_Abort2(cc_result result, const char* raw_msg) {
 #else
