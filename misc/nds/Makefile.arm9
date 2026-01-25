@@ -22,6 +22,11 @@ LIBS		+= -ldswifi9
 LIBDIRS		+= $(BLOCKSDS)/libs/dswifi
 endif
 
+ifdef BUILD_NOTOUCH
+BUILDDIR	:= build/nds_notouch
+DEFINES		+= -DNDS_NOTOUCH
+endif
+
 NAME	:= cc-arm9
 ELF		:= $(BUILDDIR)/$(NAME).elf
 MAP		:= $(BUILDDIR)/$(NAME).map

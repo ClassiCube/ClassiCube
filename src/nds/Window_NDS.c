@@ -11,6 +11,10 @@
 #include "../Camera.h"
 #include "../VirtualDialog.h"
 
+#ifdef NDS_NOTOUCH
+#include "../VirtualKeyboard.h"
+#endif
+
 #include <nds.h>
 #include <fat.h>
 
@@ -239,6 +243,9 @@ void Window_ProcessEvents(float delta) {
 	
 	if (DisplayInfo.ShowingSoftKeyboard) {
 		keyboardUpdate();
+#ifdef NDS_NOTOUCH 
+		ProcessTouchInput(keysDown() | keysHeld()); // Add this for people who still want to use touch
+#endif
 	} else {
 		ProcessTouchInput(keysDown() | keysHeld());
 	}
@@ -261,7 +268,11 @@ static const BindMapping defaults_nds[BIND_COUNT] = {
 	[BIND_RIGHT]        = { CCPAD_RIGHT },
 	[BIND_JUMP]         = { CCPAD_1     },
 	[BIND_SET_SPAWN]    = { CCPAD_START }, 
+#ifdef NDS_NOTOUCH
+	[BIND_CHAT]         = { CCPAD_SELECT},
+#else
 	[BIND_CHAT]         = { CCPAD_4     },
+#endif
 	[BIND_INVENTORY]    = { CCPAD_3     },
 	[BIND_SEND_CHAT]    = { CCPAD_START },
 	[BIND_PLACE_BLOCK]  = { CCPAD_L     },
@@ -272,7 +283,13 @@ static const BindMapping defaults_nds[BIND_COUNT] = {
 	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
 	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
 	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
-	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT }
+	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT },
+#ifdef NDS_NOTOUCH
+	[BIND_LOOK_UP]      = { CCPAD_4, CCPAD_UP },
+	[BIND_LOOK_DOWN]    = { CCPAD_4, CCPAD_DOWN },
+	[BIND_LOOK_LEFT]    = { CCPAD_4, CCPAD_LEFT },
+	[BIND_LOOK_RIGHT]   = { CCPAD_4, CCPAD_RIGHT }
+#endif
 };
 
 void Gamepads_PreInit(void) { }
@@ -343,6 +360,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
+
+#ifdef NDS_NOTOUCH
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	kb_tileWidth  = 16;
+	kb_tileHeight = 16;
+
+	if (Window_Main.Is3D) lcdMainOnBottom();
+
+	VirtualKeyboard_Open(args);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Close(void) {
+	if (Window_Main.Is3D) lcdMainOnTop();
+	VirtualKeyboard_Close();
+}
+#else
 static char kbBuffer[NATIVE_STR_LEN + 1];
 static cc_string kbText;
 
@@ -386,7 +423,7 @@ void OnscreenKeyboard_Close(void) {
 
     if (Window_Main.Is3D) videoBgEnableSub(LAYER_CON);
 }
-
+#endif
 
 /*########################################################################################################################*
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
