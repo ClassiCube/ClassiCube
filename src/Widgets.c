@@ -965,27 +965,37 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	return true;
 }
 
+static int TableWidget_ScrollXY(struct TableWidget* w, int deltaX, int deltaY) {
+	if (w->selectedIndex == -1) {
+		if (w->blocksCount == 0) return false;
+
+		TableWidget_SetToIndex(w, 0);
+		return true;
+	}
+
+	TableWidget_ScrollRelative(w, deltaX + deltaY * w->blocksPerRow);
+	return true;
+}
+
 static int TableWidget_KeyDown(void* widget, int key, struct InputDevice* device) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int deltaX, deltaY;
-	if (w->selectedIndex == -1) return false;
 
 	Input_CalcDelta(key, device, &deltaX, &deltaY);
 	if (deltaX || deltaY) {
-		TableWidget_ScrollRelative(w, deltaX + deltaY * w->blocksPerRow);
-		return true;
+		return TableWidget_ScrollXY(w, deltaX, deltaY);
 	}
 	return false;
 }
 
 static int TableWidget_PadAxis(void* widget, struct PadAxisUpdate* upd) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	if (w->selectedIndex == -1) return false;
+	int deltaX, deltaY;
 
-	if (upd->xSteps) TableWidget_ScrollRelative(w, upd->xSteps > 0 ? 1 : -1);
-	if (upd->ySteps) TableWidget_ScrollRelative(w, upd->ySteps > 0 ? w->blocksPerRow : -w->blocksPerRow);
+	deltaX = upd->xSteps == 0 ? 0 : (upd->xSteps > 0 ? 1 : -1); /* TODO Math_Sign ? or just directly? */
+	deltaY = upd->ySteps == 0 ? 0 : (upd->ySteps > 0 ? 1 : -1);
 
-	return true;
+	return TableWidget_ScrollXY(w, deltaX, deltaY);
 }
 
 static const struct WidgetVTABLE TableWidget_VTABLE = {
