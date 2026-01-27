@@ -732,14 +732,24 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force) {
+static void TableWidget_RecreateTitle_Internal(struct TableWidget* w, cc_bool force, int titleBlock) {
 	BlockID block;
 	if (!force && w->selectedIndex == w->lastCreatedIndex) return;
 	if (w->blocksCount == 0) return;
 	w->lastCreatedIndex = w->selectedIndex;
 
-	block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
+	if (titleBlock < 0) {
+		block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
+	} else {
+		block = (BlockID)titleBlock;
+	}
 	w->UpdateTitle(block);
+}
+void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force) {
+	TableWidget_RecreateTitle_Internal(w, force, -1);
+}
+void TableWidget_RecreateTitleForBlock(struct TableWidget* w, cc_bool force, int titleBlock) {
+	TableWidget_RecreateTitle_Internal(w, force, titleBlock);
 }
 
 void TableWidget_RecreateBlocks(struct TableWidget* w) {
@@ -1030,17 +1040,28 @@ void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth) {
 	w->paddingB = Display_ScaleY(classic ? 14 : 15);
 }
 
-void TableWidget_SetToBlock(struct TableWidget* w, BlockID block) {
+static void TableWidget_SetToBlock_Internal(struct TableWidget* w, BlockID block, cc_bool autoRotateGroup) {
 	int i, index = -1;
 	
-	for (i = 0; i < w->blocksCount; i++) 
-	{
-		if (w->blocks[i] == block) index = i;
+	if (autoRotateGroup) {
+		for (i = 0; i < w->blocksCount; i++) {
+			if (AutoRotate_BlocksShareGroup(w->blocks[i], block)) index = i;
+		}
+	} else {
+		for (i = 0; i < w->blocksCount; i++) {
+			if (w->blocks[i] == block) index = i;
+		}
 	}
 	/* When holding air, inventory should open at middle */
 	if (block == BLOCK_AIR) index = -1;
 
 	TableWidget_SetToIndex(w, index);
+}
+void TableWidget_SetToBlock(struct TableWidget* w, BlockID block) {
+	TableWidget_SetToBlock_Internal(w, block, false);
+}
+void TableWidget_SetToBlockInAutoRotateGroup(struct TableWidget* w, BlockID block) {
+	TableWidget_SetToBlock_Internal(w, block, true);
 }
 
 void TableWidget_SetToIndex(struct TableWidget* w, int index) {

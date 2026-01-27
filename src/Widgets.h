@@ -112,10 +112,13 @@ CC_NOINLINE void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidt
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
 CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_SetToBlockInAutoRotateGroup(struct TableWidget* w, BlockID block);
 CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
 CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
 CC_NOINLINE void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force);
+/* Like RecreateTitle, but the block's title to be shown can be changed from the currently selected index. Pass -1 to use the currently selected index. */
+CC_NOINLINE void TableWidget_RecreateTitleForBlock(struct TableWidget* w, cc_bool force, int blockForTitle);
 
 
 #define INPUTWIDGET_MAX_LINES 3

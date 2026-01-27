@@ -1780,6 +1780,7 @@ static void InventoryScreen_ContextRecreated(void* screen) {
 
 static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 	struct TableWidget* table = &s->table;
+	int blockForTitle;
 	s->deferredSelect = false;
 
 	if (Game_ClassicMode) {
@@ -1787,13 +1788,21 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 		TableWidget_SetToIndex(table, table->selectedIndex);
 		TableWidget_RecreateTitle(table, true);
 	} else {
+		blockForTitle = -1;
 		TableWidget_SetToBlock(table, Inventory_SelectedBlock);
+		/* When using auto rotate, if the held block is hidden, try to find another one in its autorotate group */
+		if (AutoRotate_Enabled && table->selectedIndex == -1) {
+			TableWidget_SetToBlockInAutoRotateGroup(table, Inventory_SelectedBlock);
+			/* We still need to be able to see the name and ID of the held block /*
+			/* rather than the one that the cursor snapped to */
+			blockForTitle = Inventory_SelectedBlock;
+		}
 
 		if (table->selectedIndex == -1) {
 			/* Hidden block in inventory - display title for it still */
 			InventoryScreen_OnUpdateTitle(Inventory_SelectedBlock);
 		} else {
-			TableWidget_RecreateTitle(table, true);
+			TableWidget_RecreateTitleForBlock(table, true, blockForTitle);
 		}
 	}
 }
