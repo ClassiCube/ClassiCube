@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <sys/stat.h>
 #include <network.h>
 #include <ogc/cache.h>
