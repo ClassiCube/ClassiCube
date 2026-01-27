@@ -1793,7 +1793,7 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 		/* When using auto rotate, if the held block is hidden, try to find another one in its autorotate group */
 		if (AutoRotate_Enabled && table->selectedIndex == -1) {
 			TableWidget_SetToBlockInAutoRotateGroup(table, Inventory_SelectedBlock);
-			/* We still need to be able to see the name and ID of the held block /*
+			/* We still need to be able to see the name and ID of the held block */
 			/* rather than the one that the cursor snapped to */
 			blockForTitle = Inventory_SelectedBlock;
 		}
