@@ -321,6 +321,17 @@ atari_st:
 ios:
 	$(MAKE) -f misc/ios/Makefile
 
+# Opens ./ClassiCube
+ifeq ($(PLAT),mingw)
+open:
+	$(TARGET)$(OEXT)
+else ifeq ($(PLAT),darwin)
+open:
+	open $(TARGET)
+else
+open:
+	./$(TARGET)$(OEXT)
+endif
 # Cleans up all build .o files
 clean:
 	$(RM) $(OBJECTS)
