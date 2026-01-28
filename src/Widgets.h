@@ -111,8 +111,8 @@ struct TableWidget {
 CC_NOINLINE void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
-CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
-CC_NOINLINE void TableWidget_SetToBlockInAutoRotateGroup(struct TableWidget* w, BlockID block);
+/* If autoRotateGroup is true, it selects the first block it finds that is in block's autorotate group. */
+CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block, cc_bool autoRotateGroup);
 CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
 CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);

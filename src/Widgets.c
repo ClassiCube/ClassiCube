@@ -1040,7 +1040,7 @@ void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth) {
 	w->paddingB = Display_ScaleY(classic ? 14 : 15);
 }
 
-static void TableWidget_SetToBlock_Internal(struct TableWidget* w, BlockID block, cc_bool autoRotateGroup) {
+void TableWidget_SetToBlock(struct TableWidget* w, BlockID block, cc_bool autoRotateGroup) {
 	int i, index = -1;
 	
 	if (autoRotateGroup) {
@@ -1056,12 +1056,6 @@ static void TableWidget_SetToBlock_Internal(struct TableWidget* w, BlockID block
 	if (block == BLOCK_AIR) index = -1;
 
 	TableWidget_SetToIndex(w, index);
-}
-void TableWidget_SetToBlock(struct TableWidget* w, BlockID block) {
-	TableWidget_SetToBlock_Internal(w, block, false);
-}
-void TableWidget_SetToBlockInAutoRotateGroup(struct TableWidget* w, BlockID block) {
-	TableWidget_SetToBlock_Internal(w, block, true);
 }
 
 void TableWidget_SetToIndex(struct TableWidget* w, int index) {
