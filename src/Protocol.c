@@ -98,7 +98,8 @@ static struct CpeExt
 	notifyAction_Ext    = { "NotifyAction", 1 },
 	toggleBlockList_Ext = { "ToggleBlockList", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
-	extBlocks_Ext       = { "ExtendedBlocks", 1 };
+	extBlocks_Ext       = { "ExtendedBlocks", 1 },
+	longerBBU_Ext       = { "LongerBBU", 1 };
 
 static struct CpeExt* cpe_clientExtensions[] = {
 	&clickDist_Ext, &customBlocks_Ext, &heldBlock_Ext, &emoteFix_Ext, &textHotKey_Ext, &extPlayerList_Ext,
@@ -117,7 +118,11 @@ static struct CpeExt* cpe_clientExtensions[] = {
 #ifdef EXTENDED_BLOCKS
 	&extBlocks_Ext,
 #endif
-}; 
+#ifdef LONGER_BBU
+	&longerBBU_Ext
+#endif
+};
+
 #define IsSupported(ext) (ext.serverVersion > 0)
 
 
@@ -205,7 +210,7 @@ static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
 	RemoveEndPlus(skin);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags);
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint16 flags);
 static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const cc_string* skin, cc_bool readPosition) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e;
@@ -766,7 +771,7 @@ static void Classic_SetPermission(cc_uint8* data) {
 	HacksComp_RecheckFlags(hacks);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags) {
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint16 flags) {
 	struct LocationUpdate update;
 	int x, y, z;
 	cc_uint8 mode;
@@ -1075,6 +1080,11 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		Protocol.Sizes[OPCODE_SET_HOTBAR]       += 1;
 	}
 #endif
+#ifdef LONGER_BBU
+	else if (ext == &longerBBU_Ext) {
+		Protocol.Sizes[OPCODE_BULK_BLOCK_UPDATE] += 1;
+	}
+#endif
 }
 
 static void CPE_ApplyTexturePack(const cc_string* url) {
@@ -1290,35 +1300,53 @@ static void CPE_ExtAddEntity2(cc_uint8* data) {
 }
 
 #define BULK_MAX_BLOCKS 256
+#ifdef LONGER_BBU
+#define BULK_MAX_CACHED_BLOCKS 2048
+#else
+#define BULK_MAX_CACHED_BLOCKS 256
+#endif
 static void CPE_BulkBlockUpdate(cc_uint8* data) {
-	cc_int32 indices[BULK_MAX_BLOCKS];
-	BlockID blocks[BULK_MAX_BLOCKS];
+	static cc_int32 indices[BULK_MAX_CACHED_BLOCKS];
+	static BlockID blocks[BULK_MAX_CACHED_BLOCKS];
+	static int overallCount = 0;
 	int index, i;
 	int x, y, z;
-	int count = 1 + *data++;
+	int count;
+	cc_bool shouldCache = false;
+	if (IsSupported(longerBBU_Ext)) shouldCache = *data++;
+	count = 1 + *data++;
 
+	if (overallCount + count > BULK_MAX_CACHED_BLOCKS) {
+		static const cc_string title  = String_FromConst("Disconnected");
+		static const cc_string reason = String_FromConst("Server attempted to cache too many block updates");
+		
+		Game_Disconnect(&title, &reason); return;
+	}
 	for (i = 0; i < count; i++) {
-		indices[i] = Stream_GetU32_BE(data); data += 4;
+		indices[overallCount + i] = Stream_GetU32_BE(data); data += 4;
 	}
 	data += (BULK_MAX_BLOCKS - count) * 4;
 	
 	for (i = 0; i < count; i++) {
-		blocks[i] = data[i];
+		blocks[overallCount + i] = data[i];
 	}
 	data += BULK_MAX_BLOCKS;
 
 	if (IsSupported(extBlocks_Ext)) {
 		for (i = 0; i < count; i += 4) {
 			cc_uint8 flags = data[i >> 2];
-			blocks[i + 0] |= (BlockID)((flags & 0x03) << 8);
-			blocks[i + 1] |= (BlockID)((flags & 0x0C) << 6);
-			blocks[i + 2] |= (BlockID)((flags & 0x30) << 4);
-			blocks[i + 3] |= (BlockID)((flags & 0xC0) << 2);
+			blocks[overallCount + i + 0] |= (BlockID)((flags & 0x03) << 8);
+			blocks[overallCount + i + 1] |= (BlockID)((flags & 0x0C) << 6);
+			blocks[overallCount + i + 2] |= (BlockID)((flags & 0x30) << 4);
+			blocks[overallCount + i + 3] |= (BlockID)((flags & 0xC0) << 2);
 		}
 		data += BULK_MAX_BLOCKS / 4;
 	}
+	overallCount += count;
 
-	for (i = 0; i < count; i++) {
+	if (shouldCache) return;
+
+	for (i = 0; i < overallCount; i++) {
 		index = indices[i];
 		if (index < 0 || index >= World.Volume) continue;
 		World_Unpack(index, x, y, z);
@@ -1329,6 +1357,7 @@ static void CPE_BulkBlockUpdate(cc_uint8* data) {
 		Game_UpdateBlock(x, y, z, blocks[i]);
 #endif
 	}
+	overallCount = 0;
 }
 
 static void CPE_SetTextColor(cc_uint8* data) {
@@ -1564,7 +1593,7 @@ static void CPE_PluginMessage(cc_uint8* data) {
 static void CPE_ExtEntityTeleport(cc_uint8* data) {
 	EntityID id = *data++;
 	cc_uint8 packetFlags = *data++;
-	cc_uint8 flags = 0;
+	cc_uint16 flags = 0;
 
 	/* bit  0    includes position */
 	/* bits 1-2  position mode(absolute_instant / absolute_smooth / relative_smooth / relative_seamless) */
@@ -1577,6 +1606,7 @@ static void CPE_ExtEntityTeleport(cc_uint8* data) {
 	flags |= (packetFlags & 6) << 4; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
 	if (packetFlags & 16) flags |= LU_HAS_PITCH | LU_HAS_YAW;
 	if (packetFlags & 32) flags |= LU_ORI_INTERPOLATE;
+	if (packetFlags & 64) flags |= LU_NO_ANIMATION_AND_SOUND;
 
 	Classic_ReadAbsoluteLocation(data, id, flags);
 }
