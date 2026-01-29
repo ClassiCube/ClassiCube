@@ -459,7 +459,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	/*   WebGL/OpenGL ES - pure black 1x1 texture */
 	/* So for consistency, always use a 1x1 pure white texture */
 	if (!texId) texId = white_square;
-	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
+	setTexture(texId);
 }
 
 

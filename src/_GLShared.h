@@ -65,11 +65,12 @@ static void* FastAllocTempMem(int size) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------Buffer generation/deletion-----------------------------------------------*
+*--------------------------------------------Texture generation/binding/deletion------------------------------------------*
 *#########################################################################################################################*/
 /* Necessary to implement this way, so works on both little endian and big endian systems */
 typedef GfxResourceID (*GenGLTexture)(void);
 typedef void (*DelGLTexture)(GfxResourceID id);
+typedef void (*SetGLTexture)(GfxResourceID id);
 
 static GfxResourceID defaultGenTexture(void) {
 	GLuint buf = 0;
@@ -82,8 +83,13 @@ static void defaultDelTexture(GfxResourceID id) {
 	_glDeleteTextures(1, &buf);
 }
 
+static void defaultSetTexture(GfxResourceID id) {
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(id));
+}
+
 static GenGLTexture genTexture = defaultGenTexture;
 static DelGLTexture delTexture = defaultDelTexture;
+static SetGLTexture setTexture = defaultSetTexture;
 
 
 /*########################################################################################################################*
@@ -195,7 +201,7 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GfxResourceID texId = genTexture();
-	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
+	setTexture(texId);
 	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 
 	if (mipmaps) {
@@ -219,7 +225,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
+	setTexture(texId);
 
 	if (part->width == rowWidth) {
 		CallTexSubImage2D(0, x, y, part->width, part->height, part->scan0);

@@ -296,9 +296,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_BindTexture(GfxResourceID texId) {
-	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
-}
+void Gfx_BindTexture(GfxResourceID texID) { setTexture(texID); }
 
 
 /*########################################################################################################################*
@@ -534,8 +532,8 @@ struct GL10Texture {
 };
 static struct GL10Texture* gl10_tex;
 
-static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
-	gl10_tex = (struct GL10Texture*)texture;
+static void gl10_bindTexture(GfxResourceID texID) {
+	gl10_tex = (struct GL10Texture*)texID;
 	if (gl10_tex && gl10_tex->pixels) {
 		_glTexImage2D(GL_TEXTURE_2D, 0, 4, gl10_tex->width, gl10_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gl10_tex->pixels);
 	} else {
@@ -646,7 +644,7 @@ static void FallbackOpenGL(void) {
 	_glDrawElements    = gl10_drawElements;    _glColorPointer  = gl10_colorPointer;
 	_glTexCoordPointer = gl10_texCoordPointer; _glVertexPointer = gl10_vertexPointer;
 
-	_glBindTexture    = gl10_bindTexture;
+	setTexture        = gl10_bindTexture;
 	genTexture        = gl10_genTexture;
 	delTexture        = gl10_deleteTexture;
 	_glTexImage2D     = gl10_texImage;
