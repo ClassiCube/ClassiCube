@@ -2317,7 +2317,10 @@ static void DisconnectScreen_Render(void* screen, float delta) {
 	Screen_Render2Widgets(screen, delta);
 }
 
-static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit); }
+static void DisconnectScreen_Free(void* screen) {
+	Game_SetFpsLimit(Game_FpsLimit);
+	Game_SetMaxFps(Game_MaxFps);
+}
 
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,   DisconnectScreen_Update, DisconnectScreen_Free,
