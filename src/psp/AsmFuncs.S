@@ -138,11 +138,9 @@ tex_next_iter:
 	lv.s		S710, VTEX_Y(SRC);  // M7[0,1] = src->y
 	lv.s		S720, VTEX_Z(SRC);  // M7[0,2] = src->z
 
-	vhtfm4.q 	R703, M200, R700;   // M7.R3 = M200 * M7.R0
-	// TODO TP 4, LT 10 cycles
 	addiu		SRC, SRC, S_VTEX;   // src += sizeof(VertexTextured)
 
-	sv.q		R703,  0(DST) 		// MEM_128[DST+ 0] = M7.R3
+	sv.q		R700,  0(DST) 		// MEM_128[DST+ 0] = M7.R0
 	sv.q		R701, 16(DST) 		// MEM_128[DST+16] = M7.R1
 	bne			DST, END, tex_next_iter // if (dst != end) goto tex_next_iter;
 	addiu		DST, DST, S_POLY;	// dst += sizeof(PolyVertex)

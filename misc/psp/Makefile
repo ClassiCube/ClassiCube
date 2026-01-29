@@ -70,7 +70,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean: 
-	-rm -f $(TARGET).prx $(TARGET).elf $(OBJS) $(PSP_EBOOT_SFO) $(PSP_EBOOT)
+	-rm -f $(TARGET).prx $(TARGET)-fixed.elf $(TARGET).elf $(OBJS) $(PSP_EBOOT_SFO) $(PSP_EBOOT)
 
 
 #---------------------------------------------------------------------------------
@@ -78,9 +78,12 @@ clean:
 #---------------------------------------------------------------------------------
 $(TARGET).elf: $(OBJS)
 	$(LD) $^ $(LDFLAGS) $(LIBS) -o $@
+
+$(TARGET)-fixed.elf: $(TARGET).elf
+	cp $< $@
 	$(FIXUP) $@
 
-$(TARGET).prx: $(TARGET).elf
+$(TARGET).prx: $(TARGET)-fixed.elf
 	$(PRXGEN) $< $@
 
 $(PSP_EBOOT_SFO): 
