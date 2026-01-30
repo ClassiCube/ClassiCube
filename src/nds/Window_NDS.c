@@ -34,6 +34,8 @@ static int  conFontCurPal;
 static int  conCursorX, conCurrentRow;
 
 void Console_Clear(void) {
+	if (!conFontBgMap) return;
+
     for (int i = 0; i < CON_WIDTH * CON_HEIGHT; i++)
     {
         conFontBgMap[i] = ' ' - FONT_ASCII_OFFSET;
@@ -79,16 +81,6 @@ static void Console_PrintChar(char c) {
     conCursorX++;
 }
 
-void Console_PrintString(const char* ptr, int len) {
-	if (!conFontBgMap) return;
-
-    for (int i = 0; i < len; i++)
-    {
-        Console_PrintChar(ptr[i]);
-    }
-    Console_NewLine();
-}
-
 static void Console_LoadFont(int bgId, u16* palette) {
 	conFontBgMap   = (u16*)bgGetMapPtr(bgId);
 	u16* fontBgGfx = (u16*)bgGetGfxPtr(bgId);
@@ -123,6 +115,16 @@ static void Console_Init(cc_bool onSub) {
 
     Console_LoadFont(bgId, onSub ? BG_PALETTE_SUB : BG_PALETTE);
     Console_Clear();
+}
+
+void Console_PrintString(const char* ptr, int len) {
+	if (!conFontBgMap) return;
+
+	for (int i = 0; i < len; i++)
+	{
+		Console_PrintChar(ptr[i]);
+	}
+	Console_NewLine();
 }
 
 
