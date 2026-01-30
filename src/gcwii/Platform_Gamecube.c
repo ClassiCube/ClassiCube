@@ -176,6 +176,39 @@ static void InitSockets(void) {
 
 
 /*########################################################################################################################*
+*--------------------------------------------------------Threading--------------------------------------------------------*
+*#########################################################################################################################*/
+void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
+
+static void* ExecThread(void* param) {
+	((Thread_StartFunc)param)(); 
+	return NULL;
+}
+
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	lwp_t* thread = (lwp_t*)Mem_Alloc(1, sizeof(lwp_t), "thread");
+	*handle = thread;
+	
+	int res = LWP_CreateThread(thread, ExecThread, (void*)func, NULL, stackSize, 64);
+	if (res) Process_Abort2(res, "Creating thread");
+}
+
+void Thread_Detach(void* handle) {
+	// TODO: Leaks return value of thread ???
+	lwp_t* ptr = (lwp_t*)handle;
+	LWP_DetachThread(*ptr);
+	Mem_Free(ptr);
+}
+
+void Thread_Join(void* handle) {
+	lwp_t* ptr = (lwp_t*)handle;
+	int res = LWP_JoinThread(*ptr, NULL);
+	if (res) Process_Abort2(res, "Joining thread");
+	Mem_Free(ptr);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Synchronisation-----------------------------------------------------*
 *#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
