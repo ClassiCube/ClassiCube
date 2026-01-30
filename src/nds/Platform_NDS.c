@@ -158,12 +158,43 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
 static const char* crash_msg;
+extern uint8_t __dtcm_start[];
+
+#define STACK_ROW 16
+
+static void DumpStackRow(cc_uintptr addr) {
+	cc_string msg; char msgBuffer[128];
+	String_InitArray(msg, msgBuffer);
+	cc_uintptr end = addr + STACK_ROW;
+
+	// Check actually in stack range
+	cc_uintptr dtcm = (cc_uintptr)__dtcm_start;
+    if (addr < dtcm || end >= dtcm + 0x4000) return;
+
+	for (; addr < end; addr++) 
+	{
+		cc_uint8* ptr = (cc_uint8*)addr;
+		String_AppendHex(&msg, *ptr);
+	}
+	Platform_Log(msg.buffer, msg.length);
+}
+
+static void DumpStack(cc_uintptr sp) {
+	sp &= ~0x10; // align to 16 bytes
+
+	cc_uintptr addr = sp - 3 * STACK_ROW;
+	Platform_Log1("STACK from %x:", &addr);
+
+	for (int i = 0; i < 4 * STACK_ROW; i += STACK_ROW) 
+	{
+		DumpStackRow(addr + i);
+	}
+}
 
 static __attribute__((noreturn)) void CrashHandler(void) {
 	Console_Clear();
 	Platform_LogConst("");
 	Platform_LogConst("** CLASSICUBE FATALLY CRASHED **");
-	Platform_LogConst("");
 
 	cc_uint32 mode = getCPSR() & CPSR_MODE_MASK;
 	if (crash_msg) {
@@ -189,14 +220,16 @@ static __attribute__((noreturn)) void CrashHandler(void) {
 	}
 
 	Platform_LogConst("");
-	Platform_LogConst("Please report this on the       ClassiCube Discord or forums");
+	Platform_LogConst("Please report this on the       ClassiCube Discord or GitHub");
 	Platform_LogConst("");
 	Platform_LogConst("You will need to restart your DS");
+	Platform_LogConst("");
 
 	// Make the background red since it's game over anyways
 	BG_PALETTE_SUB[16 * 16 - 1] = RGB15(31, 0, 0);
 	BG_PALETTE    [16 * 16 - 1] = RGB15(31, 0, 0);
 
+	DumpStack(exceptionRegisters[13]);
 	for (;;) { }
 }
 
