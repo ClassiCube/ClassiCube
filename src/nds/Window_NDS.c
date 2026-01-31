@@ -30,8 +30,9 @@ extern u8 default_fontTiles[];
 
 #define FONT_ASCII_OFFSET 32
 static u16* conFontBgMap;
-static int  conFontCurPal;
 static int  conCursorX, conCurrentRow;
+// Setup to select current 'colour' of font
+int conCurrentPalette = 0b1111;
 
 void Console_Clear(void) {
 	if (!conFontBgMap) return;
@@ -76,15 +77,34 @@ static void Console_PrintChar(char c) {
     if (conCursorX >= CON_WIDTH) 
         Console_NewLine();
 
-    u16 value = conFontCurPal | (c - FONT_ASCII_OFFSET);
+    u16 value = (conCurrentPalette << 12) | (c - FONT_ASCII_OFFSET);
     conFontBgMap[conCursorX + conCurrentRow * CON_WIDTH] = value;
     conCursorX++;
 }
 
-static void Console_LoadFont(int bgId, u16* palette) {
+static void Console_SetupPalette(u16* palette) {
+	palette[0] = RGB15(0, 0, 0);
+
+	// Palette is treated as 4 bits
+	//   Intensity|Red|Green|Blue
+	// So e.g. 
+	// - 0101 = R=15,G=0,B=15 
+	// - 1010 = R=0,G=31,B=0
+	for (int i = 0; i < 16; i++) 
+	{
+		int I = i < 8 ? 15 : 31;
+		int R = I * ((i >> 2) & 1);
+		int G = I * ((i >> 1) & 1);
+		int B = I * ((i >> 0) & 1);
+
+		// NOTE: Setting up palette this way ensures it doesn't overlap with keyboard graphics
+		palette[(i*16) + 15] = RGB15(R, G, B);
+	}
+}
+
+static void Console_LoadFont(int bgId) {
 	conFontBgMap   = (u16*)bgGetMapPtr(bgId);
 	u16* fontBgGfx = (u16*)bgGetGfxPtr(bgId);
-	conFontCurPal  = 15 << 12;
 
     for (int i = 0; i < FONT_NUM_CHARACTERS * 8; i++)
     {
@@ -100,9 +120,6 @@ static void Console_LoadFont(int bgId, u16* palette) {
         if (row & 0x80) gfx |= 0xF0000000;
         ((u32 *)fontBgGfx)[i] = gfx;
     }
-
-    palette[16 * 16 - 1] = RGB15(31, 31, 31);
-    palette[0]           = RGB15( 0,  0,  0);
 }
 
 static void Console_Init(cc_bool onSub) {
@@ -113,7 +130,9 @@ static void Console_Init(cc_bool onSub) {
 		bgId = bgInit(   LAYER_CON, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
 	}
 
-    Console_LoadFont(bgId, onSub ? BG_PALETTE_SUB : BG_PALETTE);
+    Console_LoadFont(bgId);
+	Console_SetupPalette(BG_PALETTE);
+	Console_SetupPalette(BG_PALETTE_SUB);
     Console_Clear();
 }
 
@@ -237,7 +256,7 @@ static void ProcessTouchInput(int mods) {
 }
 
 void Window_ProcessEvents(float delta) {
-	scanKeys();	
+	scanKeys();
 	
 	if (DisplayInfo.ShowingSoftKeyboard) {
 		keyboardUpdate();
