@@ -264,6 +264,9 @@ static void CreateRootDirectory(void) {
 }
 
 void Platform_Init(void) {
+#ifndef HW_RVL
+	AR_FormatDisk(true);
+#endif
 	fat_available = fatInitDefault();
 	Platform_ReadonlyFilesystem = !fat_available;
 
