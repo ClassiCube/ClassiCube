@@ -4,6 +4,7 @@
 #define CC_NO_SOCKETS
 #endif
 #define DEFAULT_COMMANDLINE_FUNC
+#define OVERRIDE_MEM_FUNCTIONS
 
 #define CC_XTEA_ENCRYPTION
 #include "../Stream.h"
@@ -59,6 +60,38 @@ int main(int argc, char** argv) {
 	
 	Window_Free();
 	return 0;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Memory management-----------------------------------------------------*
+*#########################################################################################################################*/
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? malloc(size) : NULL;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	return calloc(numElems, elemsSize);
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? realloc(mem, size) : NULL;
+}
+
+// TODO: should actual heap start/end be checked? probably good enough though
+#define RAM_RANGE_BEG (void*)0x02000000
+#define RAM_RANGE_END (void*)0x02FFFFFF
+
+void Mem_Free(void* mem) {
+	if (!mem) return;
+
+	// TODO: why is classicube crashing in free? hopefully this helps
+	if (mem < RAM_RANGE_BEG || mem > RAM_RANGE_END)
+		Process_Abort2(0, "Tried to free invalid pointer");
+
+	free(mem);
 }
 
 
@@ -238,6 +271,10 @@ void CrashHandler_Install(void) {
 
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	crash_msg = raw_msg;
+
+	// Try to trigger undefined error so registers are displayed in crash screen
+	asm volatile("udf #0" ::: "memory");
+	// .. and if that doesn't work, then just trigger crash screen manually
 	CrashHandler();
 }
 
