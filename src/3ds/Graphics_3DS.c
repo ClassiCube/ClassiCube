@@ -79,6 +79,27 @@ static void SwitchProgram(void) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Command buffer-----------------------------------------------------*
+*#########################################################################################################################*/
+static u32* _cmdBuf;
+static int  _cmdBufWords;
+#define DEFAULT_MAX_CMDS (256 * 1024)
+
+static void CmdBuf_Reset(void) {
+	GPUCMD_SetBuffer(_cmdBuf, _cmdBufWords, 0);
+}
+
+static void CmdBuf_Alloc(int size) {
+	size = (size + 0x0F) & ~0x0F; // 0x10-byte align
+	_cmdBufWords = size / 4;
+	_cmdBuf      = (u32*)linearAlloc(size);
+
+	if (!_cmdBuf) Process_Abort("Failed to allocate command buffer");
+	CmdBuf_Reset();
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
 static C3D_RenderTarget topTargetLeft;
@@ -126,7 +147,8 @@ static void SetInitialStates(void) {
 }
 
 static void InitCitro3D(void) {	
-	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 4);
+	CmdBuf_Alloc(DEFAULT_MAX_CMDS * 4);
+	C3D_Init();
 	aptHook(&hookCookie, AptEventHook, NULL);
 
 	C3D_RenderTargetInit(&topTargetLeft,  240, 400);
@@ -578,7 +600,8 @@ void Gfx_EndFrame(void) {
 	// wait for vblank for both screens
 	if (gfx_vsync) GSP_wait_for_full_vblank();
 
-	C3D_FrameEnd(0);
+	C3Di_WaitAndClearQueue(-1);
+	CmdBuf_Reset();
 }
 
 void Gfx_OnWindowResize(void) {

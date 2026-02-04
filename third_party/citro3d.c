@@ -113,18 +113,13 @@ static void C3D_FragOpShadow(float scale, float bias);
 
 
 
-
-
-
-#define C3D_DEFAULT_CMDBUF_SIZE 0x40000
-
 enum
 {
 	C3D_UNSIGNED_BYTE = 0,
 	C3D_UNSIGNED_SHORT = 1,
 };
 
-static bool C3D_Init(size_t cmdBufSize);
+static bool C3D_Init(void);
 static void C3D_Fini(void);
 
 static void C3D_SetViewport(u32 x, u32 y, u32 w, u32 h);
@@ -275,8 +270,6 @@ typedef struct
 typedef struct
 {
 	gxCmdQueue_s gxQueue;
-	u32* cmdBuf;
-	size_t cmdBufSize;
 
 	u32 flags;
 
@@ -818,14 +811,6 @@ static void C3D_FrameFinish(u8 flags)
 	gxCmdQueueRun(&ctx->gxQueue);
 }
 
-static void C3D_FrameEnd(u8 flags)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	C3Di_WaitAndClearQueue((flags & C3D_FRAME_NONBLOCK) ? 0 : -1);
-	GPUCMD_SetBuffer(ctx->cmdBuf, ctx->cmdBufSize, 0);
-}
-
 static void C3D_RenderTargetInit(C3D_RenderTarget* target, int width, int height)
 {
 	memset(target, 0, sizeof(C3D_RenderTarget));
@@ -868,12 +853,7 @@ static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t scre
 	int id = 0;
 	if (screen==GFX_BOTTOM) id = 2;
 	else if (side==GFX_RIGHT) id = 1;
-	if (linkedTarget[id])
-	{
-		linkedTarget[id]->linked = false;
-		if (!inFrame)
-			C3Di_WaitAndClearQueue(-1);
-	}
+
 	linkedTarget[id] = target;
 
 	target->linked = true;
@@ -939,16 +919,10 @@ static void C3Di_OnRestore(void)
 #define GXQUEUE_MAX_ENTRIES 32
 static gxCmdEntry_s queue_entries[GXQUEUE_MAX_ENTRIES];
 
-static bool C3D_Init(size_t cmdBufSize)
+static bool C3D_Init(void)
 {
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
-
-	cmdBufSize = (cmdBufSize + 0xF) &~ 0xF; // 0x10-byte align
-	ctx->cmdBufSize = cmdBufSize/4;
-	ctx->cmdBuf = (u32*)linearAlloc(cmdBufSize);
-	if (!ctx->cmdBuf)
-		return false;
 
 	ctx->gxQueue.maxEntries = GXQUEUE_MAX_ENTRIES;
 	ctx->gxQueue.entries = queue_entries;
@@ -975,8 +949,6 @@ static bool C3D_Init(size_t cmdBufSize)
 		ctx->tex[i] = NULL;
 
 	C3Di_RenderQueueInit();
-
-	GPUCMD_SetBuffer(ctx->cmdBuf, ctx->cmdBufSize, 0);
 	return true;
 }
 
@@ -1115,14 +1087,3 @@ static void C3Di_UpdateContext(void)
 	}
 }
 
-static void C3D_Fini(void)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	C3Di_RenderQueueExit();
-	linearFree(ctx->cmdBuf);
-	ctx->flags = 0;
-}

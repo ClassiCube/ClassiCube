@@ -225,7 +225,7 @@ static void DumpStack(cc_uintptr sp) {
 }
 
 extern int conCurrentPalette;
-static __attribute__((noreturn)) void CrashHandler(void) {
+static void CrashHandler(void) {
 	Console_Clear();
 	// Make the background red since it's game over anyways
 	conCurrentPalette = 0b1100;
@@ -269,14 +269,16 @@ void CrashHandler_Install(void) {
 	setExceptionHandler(CrashHandler);
 }
 
+// __attribute__ ((target("arm"))) 
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	crash_msg = raw_msg;
 
 	// Try to trigger undefined error so registers are displayed in crash screen
-	asm volatile("udf #0" ::: "memory");
+	asm volatile("udf #0;" ::: "memory");
 	// .. and if that doesn't work, then just trigger crash screen manually
 	CrashHandler();
 }
+// ldr r0, =exceptionRegisters; stmia r0, {r0-r15}
 
 
 /*########################################################################################################################*

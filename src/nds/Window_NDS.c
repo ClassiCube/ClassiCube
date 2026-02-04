@@ -332,6 +332,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->width  = width;
 	bmp->height = height;
 
+	Process_Abort("aaa");
+
 	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
 	bg_ptr = bgGetGfxPtr(bg_id);
 	SetupVideo(false);
