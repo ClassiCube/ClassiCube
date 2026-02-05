@@ -26,6 +26,7 @@
 #endif
 
 // shared state with interop_ios.m
+extern UITextField* kb_widget;
 extern CGContextRef win_ctx;
 extern UIView* view_handle;
 
@@ -33,7 +34,6 @@ UIColor* ToUIColor(BitmapCol color, float A);
 NSString* ToNSString(const cc_string* text);
 void LInput_SetKeyboardType(UITextField* fld, int flags);
 void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
-void Window_SetKBWidget(UITextField* widget);
 
 
 /*########################################################################################################################*
@@ -54,12 +54,10 @@ static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
           //TEXT_ATTRIBUTE_FONT : font,
           TEXT_ATTRIBUTE_COLOR  : ToUIColor(color, 1.0f)
         };
-		
         NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
         [str appendAttributedString:attr_bit];
-		[attr_bit autorelease];
     }
-	return [str autorelease];
+    return str;
 }
 
 
@@ -110,7 +108,7 @@ static struct LWidget* FindWidgetForView(id obj) {
     for (int i = 0; i < s->numWidgets; i++)
     {
         void* meta = s->widgets[i]->meta;
-        if (meta != (void*)obj) continue;
+        if (meta != (__bridge void*)obj) continue;
         
         return s->widgets[i];
     }
@@ -167,7 +165,6 @@ static NSString* cellID = @"CC_Cell";
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
-		[cell autorelease];
     }
     
     LTable_UpdateCell(tableView, cell, (int)[indexPath row]);
@@ -220,7 +217,7 @@ static NSString* cellID = @"CC_Cell";
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
     // textFieldDidBeginEditing - iOS 2
-	Window_SetKBWidget(textField);
+    kb_widget = textField;
 }
 
 @end
@@ -228,7 +225,7 @@ static NSString* cellID = @"CC_Cell";
 static CCUIController* ui_controller;
 void LBackend_Init(void) {
     ui_controller = [[CCUIController alloc] init];
-	// NOTE: don't need to call [retain], as retain count is initially 1
+    CFBridgingRetain(ui_controller); // prevent GC TODO even needed?
 }
 
 void LBackend_NeedsRedraw(void* widget) { }
@@ -275,9 +272,6 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
     };
     NSAttributedString* str_fg = [[NSAttributedString alloc] initWithString:text attributes:attrs_fg];
     DrawText(str_fg, ctx, 0, 38);
-	
-	[str_bg autorelease];
-	[str_fg autorelease];
 }
 
 void LBackend_InitFramebuffer(void) { }
@@ -314,7 +308,7 @@ void LBackend_ThemeChanged(void) {
  *------------------------------------------------------ButtonWidget-------------------------------------------------------*
  *#########################################################################################################################*/
 static void LBackend_ButtonUpdateBackground(struct LButton* w) {
-    UIButton* btn = (UIButton*)w->meta;
+    UIButton* btn = (__bridge UIButton*)w->meta;
     CGRect rect   = [btn frame];
     int width     = (int)rect.size.width;
     int height    = (int)rect.size.height;
@@ -340,19 +334,17 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
 
 static UIView* LBackend_ButtonShow(struct LButton* w) {
     UIButton* btn = [[UIButton alloc] init];
-	w->meta       = (void*)[btn retain];
     [btn setFrame:CGRectMake(0, 0, w->_textWidth, w->_textHeight)];
     [btn addTarget:ui_controller action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
-	
+    
+    w->meta = (__bridge void*)btn;
     LBackend_ButtonUpdateBackground(w);
     LBackend_ButtonUpdate(w);
-	
-	[btn autorelease];
     return btn;
 }
 
 void LBackend_ButtonUpdate(struct LButton* w) {
-    UIButton* btn = (UIButton*)w->meta;
+    UIButton* btn = (__bridge UIButton*)w->meta;
     
     UIColor* color = GetStringColor(&w->text);
     [btn setTitleColor:color forState:UIControlStateNormal];
@@ -369,9 +361,8 @@ void LBackend_ButtonDraw(struct LButton* w) { }
 void LBackend_CheckboxInit(struct LCheckbox* w) { }
 
 static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
-    UIView* root = [[UIView alloc] init];
-	w->meta      = (void*)[root retain];
-	CGRect swtFrame, lblFrame, rootFrame;
+    UIView* root  = [[UIView alloc] init];
+    CGRect swtFrame, lblFrame, rootFrame;
     
     UISwitch* swt = [[UISwitch alloc] init];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
@@ -402,16 +393,13 @@ static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     [root setFrame:rootFrame];
     
     // [root setUserInteractionEnabled:YES];
+    w->meta = (__bridge void*)root;
     LBackend_CheckboxUpdate(w);
-	
-	[lbl  autorelease];
-	[swt  autorelease];
-	[root autorelease];
     return root;
 }
 
 void LBackend_CheckboxUpdate(struct LCheckbox* w) {
-    UIView* root  = (UIView*)w->meta;
+    UIView* root  = (__bridge UIView*)w->meta;
     NSArray* subs = [root subviews];
     UISwitch* swt = (UISwitch*)[subs objectAtIndex:0];
     
@@ -453,7 +441,6 @@ void LBackend_InputInit(struct LInput* w, int width) {
 static UIView* LBackend_InputShow(struct LInput* w) {
     UITextField* fld = [[UITextField alloc] init];
     CGRect frame     = CGRectMake(0, 0, w->_textHeight, LINPUT_HEIGHT);
-	w->meta          = (void*)[fld retain];
     
     [fld setFrame:frame];
     [fld setBorderStyle:UITextBorderStyleBezel];
@@ -464,14 +451,14 @@ static UIView* LBackend_InputShow(struct LInput* w) {
     
     LInput_SetKeyboardType(fld, w->inputType);
     LInput_SetPlaceholder(fld,  w->hintText);
+    
+    w->meta = (__bridge void*)fld;
     LBackend_InputUpdate(w);
-	
-	[fld autorelease];
     return fld;
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
-    UITextField* fld = (UITextField*)w->meta;
+    UITextField* fld = (__bridge UITextField*)w->meta;
     NSString* text   = ToNSString(&w->text);
     
     [fld setText:text];
@@ -490,18 +477,16 @@ void LBackend_LabelInit(struct LLabel* w) { }
 
 static UIView* LBackend_LabelShow(struct LLabel* w) {
     UILabel* lbl  = [[UILabel alloc] init];
-	w->meta       = (void*)[lbl retain];
-	
+    w->meta       = (__bridge void*)lbl;
     [lbl setBackgroundColor:[UIColor clearColor]];
+    
     if (w->small) [lbl setFont:[UIFont systemFontOfSize:14.0f]];
     LBackend_LabelUpdate(w);
-	
-	[lbl autorelease];
     return lbl;
 }
 
 void LBackend_LabelUpdate(struct LLabel* w) {
-    UILabel* lbl = (UILabel*)w->meta;
+    UILabel* lbl = (__bridge UILabel*)w->meta;
     if (!lbl) return;
     
     if ([lbl respondsToSelector:@selector(attributedText)]) {
@@ -527,13 +512,11 @@ void LBackend_LineInit(struct LLine* w, int width) {
 static UIView* LBackend_LineShow(struct LLine* w) {
     UIView* view = [[UIView alloc] init];
     CGRect frame = CGRectMake(0, 0, w->_width, LLINE_HEIGHT);
-	w->meta      = (void*)[view retain];
-	
     [view setFrame:frame];
+    w->meta      = (__bridge void*)view;
+    
     UIColor* color = ToUIColor(LLine_GetColor(), 0.5f);
     [view setBackgroundColor:color];
-	
-	[view autorelease];
     return view;
 }
 void LBackend_LineDraw(struct LLine* w) { }
@@ -551,17 +534,16 @@ static UIView* LBackend_SliderShow(struct LSlider* w) {
     UIProgressView* prg = [[UIProgressView alloc] init];
     CGRect frame        = CGRectMake(0, 0, w->_width, w->_height);
     UIColor* color      = ToUIColor(w->color, 1.0f);
-	w->meta             = (void*)[prg retain];
     
     [prg setFrame:frame];
     [prg setProgressTintColor:color];
     
-	[prg autorelease];
+    w->meta = (__bridge void*)prg;
     return prg;
 }
 
 void LBackend_SliderUpdate(struct LSlider* w) {
-    UIProgressView* prg = (UIProgressView*)w->meta;
+    UIProgressView* prg = (__bridge UIProgressView*)w->meta;
     
     float progress = w->value / 100.0f;
     [prg setProgress:progress];
@@ -576,8 +558,6 @@ void LBackend_TableInit(struct LTable* w) { }
 
 static UIView* LBackend_TableShow(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-	w->meta          = (void*)[tbl retain];
-	
     [tbl setDelegate:ui_controller];
     [tbl setDataSource:ui_controller];
     [tbl setEditing:NO];
@@ -586,12 +566,12 @@ static UIView* LBackend_TableShow(struct LTable* w) {
     LTable_UpdateCellColor(tbl, NULL, 1, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
-	[tbl autorelease];
+    w->meta = (__bridge void*)tbl;
     return tbl;
 }
 
 void LBackend_TableUpdate(struct LTable* w) {
-    UITableView* tbl = (UITableView*)w->meta;
+    UITableView* tbl = (__bridge UITableView*)w->meta;
     [tbl reloadData];
 }
 
@@ -625,7 +605,7 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     
     if (flag && flag->meta) {
         UIImageView* imageView = [cell imageView];
-        [imageView setImage:(UIImage*)flag->meta];
+        [imageView setImage:(__bridge UIImage*)flag->meta];
     }
     
     UILabel* lbl = [cell textLabel];
@@ -645,7 +625,7 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
 
 // TODO only redraw flags
 void LBackend_TableFlagAdded(struct LTable* w) {
-    UITableView* tbl = (UITableView*)w->meta;
+    UITableView* tbl = (__bridge UITableView*)w->meta;
     
     // trying to use [cell imageView] setImage doesn't seem to work,
     // so pointlessly reload entire table data instead
@@ -662,7 +642,7 @@ void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
     UIImage* img = [UIImage imageWithData:ns_data];
     if (!img) return;
     
-	flag->meta = (void*)[img retain]; // TODO this leaks memory as it is never freed by LWeb.c
+    flag->meta = CFBridgingRetain(img);  
 }
 
 static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
@@ -684,7 +664,7 @@ static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
 
 void LBackend_LayoutWidget(struct LWidget* w) {
     const struct LLayout* l = w->layouts;
-    UIView* view = (UIView*)w->meta;
+    UIView* view = (__bridge UIView*)w->meta;
     CGRect r     = [view frame];
     int width    = (int)r.size.width;
     int height   = (int)r.size.height;
@@ -734,18 +714,16 @@ void LBackend_SetScreen(struct LScreen* s) {
 void LBackend_CloseScreen(struct LScreen* s) {
     if (!s) return;
     
+    // remove reference to soon to be garbage collected views
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        s->widgets[i]->meta = NULL;
+    }
+    
     // remove all widgets from previous screen
     NSArray* elems = [view_handle subviews];
     for (UIView* view in elems)
     {
         [view removeFromSuperview];
     }
-	
-	// remove reference to views that can now be cleaned up
-	for (int i = 0; i < s->numWidgets; i++)
-	{
-		UIView* view = (UIView*)s->widgets[i]->meta;
-		if (view) [view autorelease];
-		s->widgets[i]->meta = NULL;
-	}
 }
