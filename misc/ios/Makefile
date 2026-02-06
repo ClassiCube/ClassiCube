@@ -26,9 +26,13 @@ BUILD_DIR_APP	:= build/ios/$(FULL_TARGET).app
 BUILD_DIR_32	:= build/ios/$(ARCH_32)
 BUILD_DIR_64	:= build/ios/$(ARCH_64)
 
-XCODE_APP		?= Xcode.app # override if need a specific xcode version
-IOS_SDK_VERSION	?= 12.1      # override to change iOS SDK version used to compile
-IOS_MIN_VERSION ?= 6.0       # override to change minimum iOS runtime/deployment version
+# override if need a specific xcode version
+XCODE_APP		?= Xcode.app
+# override to change iOS SDK version used to compile
+IOS_SDK_VERSION	?= 12.1
+# override to change minimum iOS runtime/deployment version
+IOS_MIN_VERSION ?= 6.0
+
 XCODE_ROOT		:= /Applications/$(XCODE_APP)/Contents/Developer
 IOS_SDK_PATH	:= $(XCODE_ROOT)/Platforms/$(SDK_TYPE).platform/Developer/SDKs/$(SDK_TYPE)$(IOS_SDK_VERSION).sdk
 
@@ -41,6 +45,7 @@ LD 		:= $(XCODE_ROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
 LIPO	:= $(XCODE_ROOT)/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo
 ACTOOL	:= $(XCODE_ROOT)/usr/bin/actool
 PLBUDDY	:= /usr/libexec/PlistBuddy
+PLUTIL  := /usr/bin/plutil
 
 
 #---------------------------------------------------------------------------------
@@ -103,6 +108,8 @@ $(BUILD_DIR_APP)/Info.plist: misc/ios/Info.plist
 	$(PLBUDDY) -c "add UIDeviceFamily array" $@
 	$(PLBUDDY) -c "add UIDeviceFamily:0 integer 1" $@
 	$(PLBUDDY) -c "add UIDeviceFamily:1 integer 2" $@
+	# must be in binary format, otherwise xcrun simctl install rejects it
+	$(PLUTIL) -convert binary1 $@
 
 $(BUILD_DIR_APP)/PkgInfo: misc/ios/PkgInfo
 	cp $^ $@
