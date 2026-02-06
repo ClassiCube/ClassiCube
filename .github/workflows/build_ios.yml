@@ -24,11 +24,17 @@ jobs:
           export XCODE_APP=Xcode_15.0.1.app
           export IOS_SDK_VERSION=17.0
           make ios
+          make IOS_SIM=1 ios
           
       - uses: ./.github/actions/upload_build
         with:
           SOURCE_FILE: 'ClassiCube-iPhoneOS.ipa'
           DEST_NAME: 'cc-TESTING.ipa'
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-iPhoneSimulator.ipa'
+          DEST_NAME: 'cc-simulator.ipa'
           
           
       - uses: ./.github/actions/notify_success
