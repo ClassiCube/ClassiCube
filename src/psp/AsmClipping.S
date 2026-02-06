@@ -33,8 +33,8 @@
 	vsub.p	D_OTH, C_OTH, P_OTH		// delta.uv   = cur.uv   - prev.uv
 	vscl.q	D_POS, D_POS, T_S		// delta.xyzw *= t
 	vscl.p	D_OTH, D_OTH, T_S		// delta.uv   *= t
-	vadd.q	D_POS, D_POS, C_POS		// delta.xyzw += cur.xyzw
-	vadd.p	D_OTH, D_OTH, C_OTH		// delta.uv   += cur.uv
+	vadd.q	D_POS, D_POS, P_POS		// delta.xyzw += prev.xyzw
+	vadd.p	D_OTH, D_OTH, P_OTH		// delta.uv   += prev.uv
 .endm
 
 
