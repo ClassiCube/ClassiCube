@@ -20,6 +20,8 @@ struct AnimatedComp {
 
 	float LeftLegX, LeftLegZ, RightLegX, RightLegZ;
 	float LeftArmX, LeftArmZ, RightArmX, RightArmZ;
+
+	cc_bool OmitAnim, OmitSound;
 };
 
 void AnimatedComp_Init(struct AnimatedComp* anim);
