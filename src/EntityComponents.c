@@ -68,12 +68,13 @@ void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, float delta
 	anim->WalkTimeO = anim->WalkTimeN;
 	anim->SwingO    = anim->SwingN;
 
-	if (distance > 0.05f) {
+	if (distance > 0.05f && !anim->OmitAnim) {
 		walkDelta = distance * 2 * (float)(20 * delta);
 		anim->WalkTimeN += walkDelta;
 		anim->SwingN += delta * 3;
 	} else {
 		anim->SwingN -= delta * 3;
+		anim->OmitAnim = false;
 	}
 	Math_Clamp(anim->SwingN, 0.0f, 1.0f);
 
@@ -322,10 +323,13 @@ static void NetInterpComp_AddPosition(struct NetInterpComp* interp, Vec3 pos) {
 	interp->Positions[interp->PositionsCount++] = pos;
 }
 
-static void NetInterpComp_SetPosition(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e, int mode) {
+static void NetInterpComp_SetPosition(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e, cc_uint16 flags) {
+	int mode = flags & LU_POS_MODEMASK;
+	
 	Vec3 lastPos = interp->CurPos;
 	Vec3* curPos = &interp->CurPos;
 	Vec3 midPos;
+	cc_uint16 noAnimation = flags & LU_NO_ANIMATION_AND_SOUND;
 
 	if (mode == LU_POS_ABSOLUTE_INSTANT || mode == LU_POS_ABSOLUTE_SMOOTH) {
 		*curPos = update->pos;
@@ -333,7 +337,7 @@ static void NetInterpComp_SetPosition(struct NetInterpComp* interp, struct Locat
 		Vec3_AddBy(curPos, &update->pos);
 	}
 
-	if (mode == LU_POS_ABSOLUTE_INSTANT) {
+	if (mode == LU_POS_ABSOLUTE_INSTANT || noAnimation) {
 		e->prev.pos = *curPos;
 		e->next.pos = *curPos;
 		interp->PositionsCount = 0;
@@ -365,11 +369,11 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 	struct NetInterpAngles last = interp->CurAngles;
 	struct NetInterpAngles* cur = &interp->CurAngles;
 	struct NetInterpAngles mid;
-	cc_uint8 flags      = update->flags;
+	cc_uint16 flags     = update->flags;
 	cc_bool interpolate = flags & LU_ORI_INTERPOLATE;
 
 	if (flags & LU_HAS_POS) {
-		NetInterpComp_SetPosition(interp, update, e, flags & LU_POS_MODEMASK);
+		NetInterpComp_SetPosition(interp, update, e, flags);
 	}
 	if (flags & LU_HAS_ROTX)  cur->RotX  = Math_ClampAngle(update->rotX);
 	if (flags & LU_HAS_ROTZ)  cur->RotZ  = Math_ClampAngle(update->rotZ);
@@ -394,6 +398,7 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 0.66666667f));
 		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 1.00000000f));
 	}
+	if (flags & LU_NO_ANIMATION_AND_SOUND) e->Anim.OmitAnim = true;
 }
 
 void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e) {
@@ -445,7 +450,7 @@ static void LocalInterpComp_Angle(float* prev, float* next, float value, cc_bool
 void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, struct Entity* e) {
 	struct EntityLocation* prev = &e->prev;
 	struct EntityLocation* next = &e->next;
-	cc_uint8 flags      = update->flags;
+	cc_uint16 flags     = update->flags;
 	cc_bool interpolate = flags & LU_ORI_INTERPOLATE;
 
 	if (flags & LU_HAS_POS) {
@@ -476,6 +481,8 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 		}
 	}
 	Entity_LerpAngles(e, 0.0f);
+
+	if (flags & LU_NO_ANIMATION_AND_SOUND) e->Anim.OmitSound = true;
 }
 
 void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e) {
@@ -1120,7 +1127,9 @@ static cc_bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
 	Vec3_Sub(&delta, &sounds_lastPos, &soundPos);
 	distSq = Vec3_LengthSquared(&delta);
 	/* just play every certain block interval when not animating */
-	if (p->Base.Anim.Swing < 0.999f) return distSq > 1.75f * 1.75f;
+	if (p->Base.Anim.Swing < 0.999f) {
+		return (!p->Base.Anim.OmitSound && distSq > 1.75f * 1.75f);
+	}
 
 	/* have our legs just crossed over the '0' point? */
 	if (Camera.Active->isThirdPerson) {
@@ -1139,8 +1148,11 @@ void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround) {
 	SoundComp_GetSound(p);
 	if (!sounds_anyNonAir) soundPos = Vec3_BigPos();
 
+	cc_bool updateSoundPos = p->Base.Anim.OmitSound;
 	if (p->Base.OnGround && (SoundComp_ShouldPlay(p, soundPos) || !wasOnGround)) {
 		Audio_PlayStepSound(sounds_type);
-		sounds_lastPos = soundPos;
+		updateSoundPos = true;
 	}
+	if (updateSoundPos) sounds_lastPos = soundPos;
+	p->Base.Anim.OmitSound = false;
 }
