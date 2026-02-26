@@ -71,17 +71,14 @@ void Window_ShowDialog(const char* title, const char* msg) {
 }
 
 
-struct GraphicsMode { int R, G, B, A; };
+struct GraphicsMode { int R, G, B; };
 /* Creates a GraphicsMode compatible with the default display device */
-static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
-	int bpp = DisplayInfo.Depth;
-	m->A = 0;
-
+static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m, int bpp) {
 	switch (bpp) {
 	case 32:
-		m->R =  8; m->G =  8; m->B =  8; m->A = 8; break;
+		m->R =  8; m->G =  8; m->B =  8; break;
 	case 30:
-		m->R = 10; m->G = 10; m->B = 10; m->A = 2; break;
+		m->R = 10; m->G = 10; m->B = 10; break;
 	case 24:
 		m->R =  8; m->G =  8; m->B =  8; break;
 	case 16:
@@ -112,9 +109,6 @@ static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
 static cc_uintptr ctx_visualID;
 
-#ifdef CC_BUILD_SWITCH
-static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
-#else
 static void GLContext_InitSurface(void) {
 #if defined EGLNativeWindowType
 	EGLNativeWindowType window = (EGLNativeWindowType)Window_Main.Handle.ptr;
@@ -127,7 +121,6 @@ static void GLContext_InitSurface(void) {
 	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
-#endif
 
 static void GLContext_FreeSurface(void) {
 	if (!ctx_surface) return;
@@ -198,9 +191,8 @@ void GLContext_Create(void) {
 	};
 
 	struct GraphicsMode mode;
-	InitGraphicsMode(&mode);
-	attribs[1] = mode.R; attribs[3] = mode.G;
-	attribs[5] = mode.B; attribs[7] = mode.A;
+	InitGraphicsMode(&mode, DisplayInfo.Depth);
+	attribs[1] = mode.R; attribs[3] = mode.G; attribs[5] = mode.B;
 
 	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	eglInitialize(ctx_display, NULL, NULL);

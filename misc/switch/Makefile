@@ -18,7 +18,7 @@ BUILD_DIR	= build/switch
 APP_TITLE 	= ClassiCube
 APP_AUTHOR 	= ClassiCube team
 APP_ICON    = misc/switch/icon.jpg
-APP_VERSION	= 1.3.7
+APP_VERSION	= 1.3.8
 
 
 #---------------------------------------------------------------------------------

@@ -1,8 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -40,10 +40,10 @@
 #include <io_common.h>
 #include <iox_stat.h>
 #include <libcdvd.h>
-#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = -4;
+const cc_result ReturnCode_PathNotFound       = 99999;
 const cc_result ReturnCode_DirectoryExists    = -8;
 
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -51,7 +51,9 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " PS2";
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 // extern unsigned char DEV9_irx[];
 // extern unsigned int  size_DEV9_irx;
@@ -61,6 +63,25 @@ cc_bool Platform_ReadonlyFilesystem;
 	extern unsigned int  size_ ## name; \
 	ret = SifExecModuleBuffer(name, size_ ## name, 0, NULL, NULL); \
     if (ret < 0) Platform_Log1("SifExecModuleBuffer " STRINGIFY(name) " failed: %i", &ret);
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+static void SetupIOPCore(void);
+
+int main(int argc, char** argv) {
+	SetupIOPCore();
+
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 
 /*########################################################################################################################*
@@ -153,9 +174,14 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	return fioMkdir(path->buffer);
 }
 
@@ -324,6 +350,10 @@ void Thread_Join(void* handle) {
 	}
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	ee_sema_t sema  = { 0 };
 	sema.init_count = 1;
@@ -400,19 +430,19 @@ int ps2ip_setconfig(const t_ip_info* ip_info);
 
 // https://github.com/ps2dev/ps2sdk/blob/master/NETMAN.txt
 // https://github.com/ps2dev/ps2sdk/blob/master/ee/network/tcpip/samples/tcpip_dhcp/ps2ip.c
-static void ethStatusCheckCb(s32 alarm_id, u16 time, void *common) {
+static void Net_StatusCheckCb(s32 alarm_id, u16 time, void *common) {
 	int threadID = *(int*)common;
 	iWakeupThread(threadID);
 }
 
-static int WaitValidNetState(int (*checkingFunction)(void)) {
-	// Wait for a valid network status
+typedef int (*WaitCheckFunc)(void);
+static int WaitUntilReady(WaitCheckFunc checkingFunction) {
 	int threadID = GetThreadId();
 	
 	for (int retries = 0; checkingFunction() == 0; retries++)
 	{	
 		// Sleep for 500ms
-		SetAlarm(500 * 16, &ethStatusCheckCb, &threadID);
+		SetAlarm(500 * 16, &Net_StatusCheckCb, &threadID);
 		SleepThread();
 
 		if (retries >= 15) return -1; // 7.5s = 15 * 500ms 
@@ -420,16 +450,12 @@ static int WaitValidNetState(int (*checkingFunction)(void)) {
 	return 0;
 }
 
-static int ethGetNetIFLinkStatus(void) {
+static int Net_CheckIFLinkStatus(void) {
 	int status = NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0);
 	return status == NETMAN_NETIF_ETH_LINK_STATE_UP;
 }
 
-static int ethWaitValidNetIFLinkState(void) {
-	return WaitValidNetState(&ethGetNetIFLinkStatus);
-}
-
-static int ethGetDHCPStatus(void) {
+static int Net_CheckDHCPStatus(void) {
 	t_ip_info ip_info;
 	int result;
 	if ((result = ps2ip_getconfig("sm0", &ip_info)) < 0) return result;
@@ -440,11 +466,7 @@ static int ethGetDHCPStatus(void) {
 	return -1;
 }
 
-static int ethWaitValidDHCPState(void) {
-	return WaitValidNetState(&ethGetDHCPStatus);
-}
-
-static int ethEnableDHCP(void) {
+static int Net_EnableDHCP(void) {
 	t_ip_info ip_info;
 	int result;
 	// SMAP is registered as the "sm0" device to the TCP/IP stack.
@@ -463,17 +485,17 @@ static void Networking_Setup(void) {
 	struct ip4_addr IP  = { 0 }, NM = { 0 }, GW = { 0 };
 	ps2ipInit(&IP, &NM, &GW);
 
-	int res = ethEnableDHCP();
+	int res = Net_EnableDHCP();
 	if (res < 0) Platform_Log1("Error %i enabling DHCP", &res);
 
 	Platform_LogConst("Waiting for net link connection...");
-	if(ethWaitValidNetIFLinkState() != 0) {
-		Platform_LogConst("Failed to establish net link");
+	if(WaitUntilReady(Net_CheckIFLinkStatus) != 0) {
+		Window_ShowDialog("Warning", "Failed to establish network link");
 		return;
 	}
 
 	Platform_LogConst("Waiting for DHCP lease...");
-	if (ethWaitValidDHCPState() != 0) {
+	if (WaitUntilReady(Net_CheckDHCPStatus) != 0) {
 		Platform_LogConst("Failed to acquire DHCP lease");
 		return;
 	}
@@ -504,6 +526,14 @@ int lwip_ioctl(int s, long cmd, void *argp);
 
 int netconn_gethostbyname(const char *name, ip4_addr_t *addr);
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -511,7 +541,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -531,7 +561,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
     addr4->sin_addr.s_addr = addr.addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	addrs[0].size  = sizeof(*addr4);
 	*numValidAddrs = 1;
@@ -584,7 +614,7 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	
 	int ERR = GetSocketError(s);
-	Platform_Log1("ERR: %i", &ERR);
+	Platform_Log1("ERW: %i", &ERR);
 	*modified = 0; return ERR;
 }
 
@@ -613,23 +643,20 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	//Platform_LogConst("POLL READ");
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
 }
 
-static int tries;
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	//Platform_Log1("POLL WRITE: %i", &res);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
 
+cc_result Socket_GetLastError(cc_socket s) {
 	// INPROGRESS error code returned if connect is still in progress
-	res = GetSocketError(s);
-	Platform_Log1("POLL FAIL: %i", &res);
-	if (res == EINPROGRESS) res = 0;
+	int error = GetSocketError(s);
+	Platform_Log1("POLL FAIL: %i", &error);
+	if (error == EINPROGRESS) error = 0;
 	
-	if (tries++ > 20) { *writable = true; }
-	return res;
+	return error;
 }
 
 
@@ -706,10 +733,9 @@ static void LoadIOPModules(void) {
     // Input pad module
     ret = SifLoadModule("rom0:PADMAN",  0, NULL);
     if (ret < 0) Platform_Log1("SifLoadModule PADMAN failed: %i", &ret);
- 
 }
 
-void Platform_Init(void) {
+static void SetupIOPCore(void) {
 	//InitDebug();
 	ResetIOP();
 	SifInitRpc(0);
@@ -718,6 +744,9 @@ void Platform_Init(void) {
 	sbv_patch_enable_lmb(); // Allows loading IRX modules from a buffer in EE RAM
 
 	LoadIOPModules();
+}
+
+void Platform_Init(void) {
 	USBStorage_LoadIOPModules();
 	//USBStorage_WaitUntilDeviceReady();
 	
@@ -725,7 +754,7 @@ void Platform_Init(void) {
 	Networking_Setup();
 	
 	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
-	int res = Directory_Create(root);
+	int res = Directory_Create2(root);
 	Platform_Log1("ROOT DIRECTORY CREATE %i", &res);
 }
 
@@ -754,6 +783,19 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
+
+void CPU_FlushDataCache(void* start, int length) {
+	SyncDCache(start, start + length);
+}
 
 
 /*########################################################################################################################*

@@ -1,6 +1,6 @@
 #include "Chat.h"
 #include "Commands.h"
-#include "String.h"
+#include "String_.h"
 #include "Stream.h"
 #include "Event.h"
 #include "Game.h"
@@ -27,9 +27,9 @@ cc_string Chat_Announcement = String_FromArray(announcement);
 cc_string Chat_BigAnnouncement = String_FromArray(bigAnnouncement);
 cc_string Chat_SmallAnnouncement = String_FromArray(smallAnnouncement);
 
-double Chat_AnnouncementReceived;
-double Chat_BigAnnouncementReceived;
-double Chat_SmallAnnouncementReceived;
+float Chat_AnnouncementLeft;
+float Chat_BigAnnouncementLeft;
+float Chat_SmallAnnouncementLeft;
 
 CC_BIG_VAR struct StringsBuffer Chat_Log, Chat_InputLog;
 cc_bool Chat_Logging;
@@ -99,7 +99,7 @@ void Chat_DisableLogging(void) {
 
 static cc_bool CreateLogsDirectory(void) {
 	static const cc_string dir = String_FromConst("logs");
-	cc_filepath str;
+	cc_filepath raw_dir;
 	cc_result res;
 	/* Utils_EnsureDirectory cannot be used here because it causes a stack overflow  */
 	/* when running the game and an error occurs when trying to create the directory */
@@ -107,21 +107,22 @@ static cc_bool CreateLogsDirectory(void) {
 	/* a message in chat instead of showing a dialog box, which causes the following */
 	/* functions to be called in a recursive loop: */
 	/*                                                                                         */
-	/* Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
-	/*  --> Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
-	/*       --> Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
-	/*            --> Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog ... */
+	/* Utils_EnsureDirectory --> Logger_IOWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
+	/*  --> Utils_EnsureDirectory --> Logger_IOWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
+	/*       --> Utils_EnsureDirectory --> Logger_IOWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
+	/*            --> Utils_EnsureDirectory --> Logger_IOWarn2 --> Chat_Add --> AppendChatLog ... */
 	/* and so on, until eventually the stack overflows */
-	Platform_EncodePath(&str, &dir);
-	res = Directory_Create(&str);
+	Platform_EncodePath(&raw_dir, &dir);
+	res = Directory_Create2(&raw_dir);
 	if (!res || res == ReturnCode_DirectoryExists) return true;
 
 	Chat_DisableLogging();
-	Logger_SysWarn2(res, "creating directory", &dir); 
+	Logger_IOWarn2(res, "creating directory", &raw_dir); 
 	return false;
 }
 
 static void OpenChatLog(struct cc_datetime* now) {
+	cc_filepath raw_path;
 	cc_result res;
 	int i;
 	if (Platform_ReadonlyFilesystem || !CreateLogsDirectory()) return;
@@ -137,10 +138,12 @@ static void OpenChatLog(struct cc_datetime* now) {
 			String_Format1(&logPath, "%s.txt", &logName);
 		}
 
-		res = Stream_AppendFile(&logStream, &logPath);
+		Platform_EncodePath(&raw_path, &logPath);
+		res = Stream_AppendPath(&logStream, &raw_path);
+
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
-			Logger_SysWarn2(res, "appending to", &logPath);
+			Logger_IOWarn2(res, "appending to", &raw_path);
 			return;
 		}
 
@@ -229,13 +232,13 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 		String_Copy(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
 	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		String_Copy(&Chat_Announcement, text);
-		Chat_AnnouncementReceived = Game.Time;
+		Chat_AnnouncementLeft = 5.0f;
 	} else if (msgType == MSG_TYPE_BIGANNOUNCEMENT) {
 		String_Copy(&Chat_BigAnnouncement, text);
-		Chat_BigAnnouncementReceived = Game.Time;
+		Chat_BigAnnouncementLeft = 5.0f;
 	} else if (msgType == MSG_TYPE_SMALLANNOUNCEMENT) {
 		String_Copy(&Chat_SmallAnnouncement, text);
-		Chat_SmallAnnouncementReceived = Game.Time;
+		Chat_SmallAnnouncementLeft = 5.0f;
 	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_2) {
 		String_Copy(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	} else if (msgType >= MSG_TYPE_EXTRASTATUS_1 && msgType <= MSG_TYPE_EXTRASTATUS_2) {

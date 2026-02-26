@@ -1,5 +1,6 @@
 #include "Core.h"
 #ifdef CC_BUILD_N64
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Logger.h"
@@ -437,30 +438,16 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 
 void Gfx_UnlockVb(GfxResourceID vb) {
 	VB_ClearCache(vb); // data may have changed
-	gfx_vb = vb;
 
 	void* ptr = ((struct VertexBuffer*)vb)->vertices;
 	if (vb_fmt == VERTEX_FORMAT_COLOURED) {
 		convert_coloured_vertices(ptr, vb_count);
-		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+		CPU_FlushDataCache(ptr, vb_count * sizeof(struct rsp_vertex));
 	} else {
 		convert_textured_vertices(ptr, vb_count);
-		data_cache_hit_writeback_invalidate(ptr, vb_count * sizeof(struct rsp_vertex));
+		CPU_FlushDataCache(ptr, vb_count * sizeof(struct rsp_vertex));
 	}
 }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Gfx_AllocStaticVb(fmt, maxVertices);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return Gfx_LockVb(vb, fmt, count); }
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -503,7 +490,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	struct Matrix mvp __attribute__((aligned(64)));	
+	struct Matrix mvp CC_ALIGNED(64);	
 	Matrix_Mul(&mvp, &_view, &_proj);
 	gpuLoadMatrix((const float*)&mvp);
 }

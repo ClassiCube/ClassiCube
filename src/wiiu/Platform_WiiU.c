@@ -1,8 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../SystemFonts.h"
@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -29,8 +28,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <utime.h>
-#include <signal.h>
-#include <stdio.h>
 #include <poll.h>
 #include <netdb.h>
 #include <malloc.h>
@@ -41,18 +38,46 @@
 #include <coreinit/systeminfo.h>
 #include <coreinit/time.h>
 #include <whb/proc.h>
+#include <nn/ac.h>
+#include <nsysnet/_socket.h>
+#include <nsysnet/_netdb.h>
+#include <nsysnet/misc.h>
 
-#include "../_PlatformConsole.h"
+#define SOCK_ERR_WOULDBLOCK  6
+#define SOCK_ERR_PIPE       13
+#define SOCK_ERR_INPROGRESS 22
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = EPIPE;
+const cc_result ReturnCode_SocketInProgess  = SOCK_ERR_INPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = SOCK_ERR_WOULDBLOCK;
+const cc_result ReturnCode_SocketDropped    = SOCK_ERR_PIPE;
 
 const char* Platform_AppNameSuffix = " Wii U";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	WHBProcInit();
+
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	Process_Exit(0);
+	return 0;
+}
 
 
 /*########################################################################################################################*
@@ -127,9 +152,14 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
@@ -263,6 +293,10 @@ void Thread_Join(void* handle) {
 	OSJoinThread((OSThread*)handle, &result);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	OSFastMutex* mutex = (OSFastMutex*)Mem_Alloc(1, sizeof(OSFastMutex), "mutex");
 	
@@ -317,6 +351,14 @@ union SocketAddress {
 	struct sockaddr_storage total;
 };
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -324,7 +366,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -348,7 +390,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
 
-	res = getaddrinfo(host, portRaw, &hints, &result);
+	res = RPLWRAP(getaddrinfo)(host, portRaw, &hints, &result);
 	if (res == EAI_AGAIN) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
@@ -366,20 +408,24 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 
-	freeaddrinfo(result);
+	RPLWRAP(freeaddrinfo)(result);
 	*numValidAddrs = i;
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+}
+
+static CC_INLINE int Socket_LastError(void) {
+	return RPLWRAP(socketlasterr)();
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
+	*s = RPLWRAP(socket)(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s < 0) return Socket_LastError();
 
 	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
+		int nonblock = 1; /* non-blocking mode */
+		RPLWRAP(setsockopt)(*s, SOL_SOCKET, SO_NONBLOCK, &nonblock, sizeof(int));
 	}
 	return 0;
 }
@@ -387,39 +433,46 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	int res = connect(s, raw, addr->size);
-	return res == -1 ? errno : 0;
+	int res = RPLWRAP(connect)(s, raw, addr->size);
+	return res < 0 ? Socket_LastError() : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int recvCount = recv(s, data, count, 0);
-	if (recvCount != -1) { *modified = recvCount; return 0; }
-	*modified = 0; return errno;
+	int recvCount = RPLWRAP(recv)(s, data, count, 0);
+
+	*modified = recvCount >= 0 ? recvCount : 0; 
+	return recvCount < 0 ? Socket_LastError() : 0;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = send(s, data, count, 0);
-	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return errno;
+	int sentCount = RPLWRAP(send)(s, data, count, 0);
+
+	*modified = sentCount >= 0 ? sentCount : 0;
+	return sentCount < 0 ? Socket_LastError() : 0;
 }
 
 void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
+	RPLWRAP(shutdown)(s, SHUT_RDWR);
+	RPLWRAP(socketclose)(s);
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	struct pollfd pfd;
-	int flags;
+	nsysnet_fd_set rd_set, wr_set, ex_set;
+	struct nsysnet_timeval timeout = { 0, 0 };
 
-	pfd.fd     = s;
-	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
-	
-	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
-	return 0;
+	NSYSNET_FD_ZERO(&rd_set);
+	NSYSNET_FD_ZERO(&wr_set);
+	NSYSNET_FD_ZERO(&ex_set);
+
+	nsysnet_fd_set* set = (mode == SOCKET_POLL_READ) ? &rd_set : &wr_set;
+	NSYSNET_FD_SET(s, set);
+	int res = RPLWRAP(select)(s + 1, &rd_set, &wr_set, &ex_set, &timeout);
+
+	if (res < 0) { 
+		*success = false; return Socket_LastError(); 
+	} else {
+		*success = NSYSNET_FD_ISSET(s, set) != 0; return 0;
+	}
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
@@ -427,19 +480,39 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize = sizeof(socklen_t);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	socklen_t errSize = sizeof(error);
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	return res;
+	RPLWRAP(getsockopt)(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+
+	// Apparently, actual Wii U hardware returns INPROGRESS error code if connect is still in progress
+	if (error == SOCK_ERR_INPROGRESS) error = 0;
+	return error;
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+void __init_wut_socket()
+{
+   socket_lib_init();
+   set_multicast_state(TRUE);
+   ACInitialize();
+   ACConnectAsync(); // TODO not Async
+}
+
+void __fini_wut_socket() {
+   /*ACClose(); // TODO threadsafe?
+   ACFinalize();
+   socket_lib_finish();*/
+}
+
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
@@ -458,7 +531,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 }
 
 void Platform_Init(void) {
-	WHBProcInit();
 	// Otherwise loading sound gets stuck endlessly repeating
 	AudioBackend_Init();
 
@@ -470,7 +542,19 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
-void Process_Exit(cc_result code) { exit(code); }
+void Process_Exit(cc_result code) {
+	WHBProcShutdown();
+	exit(code); 
+}
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 
 /*########################################################################################################################*

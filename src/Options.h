@@ -87,6 +87,9 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define OPT_INV_SCROLLBAR_SCALE "inv-scrollbar-scale"
 #define OPT_ANAGLYPH3D "anaglyph-3d"
 
+#define Option_GetOffsetX(defValue) Options_GetInt("offset-x", 0, 1000, defValue);
+#define Option_GetOffsetY(defValue) Options_GetInt("offset-y", 0, 1000, defValue);
+
 #define OPT_SELECTED_BLOCK_OUTLINE_COLOR "selected-block-outline-color"
 #define OPT_SELECTED_BLOCK_OUTLINE_OPACITY "selected-block-outline-opacity"
 #define OPT_SELECTED_BLOCK_OUTLINE_SCALE "selected-block-outline-scale"

@@ -3,19 +3,20 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <hal/video.h>
 #include <usbh_lib.h>
 #include <xid_driver.h>
 #include <pbkit/pbkit.h>
 
-static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -23,33 +24,32 @@ void Window_PreInit(void) {
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT); // TODO not call
 	pb_init();
 	pb_show_debug_screen();
-}
 
-void Window_Init(void) {
-	VIDEO_MODE mode = XVideoGetMode();
-	
+	VIDEO_MODE mode    = XVideoGetMode();
 	DisplayInfo.Width  = mode.width;
 	DisplayInfo.Height = mode.height;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
-	Window_Main.Width    = mode.width;
-	Window_Main.Height   = mode.height;
+}
+
+void Window_Init(void) {
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
 	
 	Window_Main.Exists   = true;
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(20);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(20);
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 }
 
 void Window_Free(void) { usbh_core_deinit(); }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create2D(int width, int height) { Window_Main.Is3D = false; }
+void Window_Create3D(int width, int height) { Window_Main.Is3D = true;  }
 
 void Window_Destroy(void) { }
 
@@ -146,9 +146,7 @@ static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
     xid_ctrl = NULL;
 }
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 #ifndef CC_BUILD_CXBX
 	usbh_core_init();
 	usbh_xid_init();
@@ -157,6 +155,8 @@ void Gamepads_Init(void) {
 	OnDeviceChanged(NULL, 0); // TODO useless call?
 #endif
 }
+
+void Gamepads_Init(void) { }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_gamepad
 // NOTE: Analog buttons use dedicated field rather than being part of dButtons
@@ -217,29 +217,23 @@ void Gamepads_Process(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
+	pb_show_debug_screen();
+
+	bmp->scan0  = (BitmapCol*)XVideoGetFB();
 	bmp->width  = width;
 	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	void* fb = XVideoGetFB();
 	//XVideoWaitForVBlank();
 	// XVideoWaitForVBlank installs an interrupt handler for VBlank - 
 	//  however this will cause pbkit's attempt to install an interrupt
 	//  handler fail - so instead just accept tearing in the launcher
-
-	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
-	cc_uint32* dst = (cc_uint32*)fb         + r.x;
-
-	for (int y = r.y; y < r.y + r.height; y++) 
-	{
-		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.width * 4);
-	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
+	pb_show_front_screen();
+	bmp->scan0 = NULL;
 }
 
 
@@ -248,7 +242,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
@@ -264,9 +258,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg, false);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

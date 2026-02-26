@@ -1,8 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -27,10 +27,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
-#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -38,6 +38,8 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " Switch";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
 
 alignas(16) u8 __nx_exception_stack[0x1000];
 u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
@@ -66,6 +68,22 @@ void __libnx_exception_handler(ThreadExceptionDump *ctx)
     fprintf(f, "far: 0x%lx\n", ctx->far.x);
 
     fclose(f);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
 }
 
 
@@ -131,9 +149,14 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
 
@@ -369,6 +392,14 @@ union SocketAddress {
 	struct sockaddr_storage total;
 };
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -376,7 +407,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -387,7 +418,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	if (inet_pton(AF_INET6, ip, &addr->v6.sin6_addr) <= 0) return false;
 	
 	addr->v6.sin6_family = AF_INET6;
-	addr->v6.sin6_port   = htons(port);
+	addr->v6.sin6_port   = SockAddr_EncodePort(port);
 		
 	dst->size  = sizeof(addr->v6);
 	return true;
@@ -469,8 +500,9 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
-	pfd.fd     = s;
-	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
+	pfd.fd      = s;
+	pfd.events  = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
+	pfd.revents = 0;
 	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
 	
 	/* to match select, closed socket still counts as readable */
@@ -484,13 +516,16 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize = sizeof(socklen_t);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	socklen_t errSize = sizeof(error);
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	return res;
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	return error;
 }
 
 
@@ -536,6 +571,15 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 
 /*########################################################################################################################*

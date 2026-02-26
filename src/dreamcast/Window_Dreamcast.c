@@ -3,15 +3,15 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
 #include <kos.h>
 
-static cc_bool launcherMode;
 #include "../VirtualCursor.h"
 cc_bool window_inited;
 
@@ -37,8 +37,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 20;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(20);
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	window_inited = true;
@@ -47,10 +47,11 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
-	launcherMode = true;
+	Window_Main.Is3D = false;
 }
+
 void Window_Create3D(int width, int height) { 
-	launcherMode = false;
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -244,9 +245,8 @@ static const BindMapping defaults_dc[BIND_COUNT] = {
 	[BIND_SCREENSHOT]   = { CCPAD_3 },
 };
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_PreInit(void) { }
+void Gamepads_Init(void)    { }
 
 static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_1, mods & CONT_A);
@@ -355,7 +355,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

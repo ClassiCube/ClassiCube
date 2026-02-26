@@ -1,8 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -14,10 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vitasdk.h>
-#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = SCE_NET_ERROR_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = SCE_NET_ERROR_EWOULDBLOCK;
@@ -27,6 +27,24 @@ static int stdout_fd;
 
 const char* Platform_AppNameSuffix = " PS Vita";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 
 /*########################################################################################################################*
@@ -91,11 +109,16 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	int result = sceIoMkdir(path->buffer, 0777);
 	return GetSCEResult(result);
 }
@@ -228,6 +251,10 @@ void Thread_Join(void* handle) {
 	sceKernelDeleteThread((int)handle);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	SceKernelLwMutexWork* ptr = (SceKernelLwMutexWork*)Mem_Alloc(1, sizeof(SceKernelLwMutexWork), "mutex");
 	int res = sceKernelCreateLwMutex(ptr, name, 0, 0, NULL);
@@ -283,6 +310,14 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)addr->data;
+
+	if (addr4->sin_family == SCE_NET_AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -290,7 +325,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = SCE_NET_AF_INET;
-	addr4->sin_port        = sceNetHtons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -302,7 +337,6 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct SceNetSockaddrIn* addr4 = (struct SceNetSockaddrIn*)addrs[0].data;
-	char buf[1024];
 	
 	/* Fallback to resolving as DNS name */
 	int rid = sceNetResolverCreate("CC resolver", NULL, 0);
@@ -313,7 +347,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	if (ret) return ret;
 	
 	addr4->sin_family = SCE_NET_AF_INET;
-	addr4->sin_port   = sceNetHtons(port);
+	addr4->sin_port   = SockAddr_EncodePort(port);
 		
 	addrs[0].size  = sizeof(*addr4);
 	*numValidAddrs = 1;
@@ -385,13 +419,16 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	uint32_t resultSize = sizeof(uint32_t);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
 
-	// https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
-	sceNetGetsockopt(s, SCE_NET_SOL_SOCKET, SCE_NET_SO_ERROR, &res, &resultSize);
-	return res;
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	uint32_t errSize = sizeof(error);
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	sceNetGetsockopt(s, SCE_NET_SOL_SOCKET, SCE_NET_SO_ERROR, &error, &errSize);
+	return error;
 }
 
 
@@ -418,7 +455,7 @@ void Platform_Init(void) {
 	epoll_id = sceNetEpollCreate("CC poll", 0);
 	
 	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
-	Directory_Create(root);
+	Directory_Create2(root);
 }
 void Platform_Free(void) { }
 
@@ -445,6 +482,15 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 
 /*########################################################################################################################*

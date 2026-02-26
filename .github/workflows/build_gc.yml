@@ -1,0 +1,48 @@
+name: Build latest (GameCube)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-gc
+  cancel-in-progress: true
+
+jobs:
+  build:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/extremscorner/libogc2:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile GameCube build
+        run: |
+          make gamecube
+          
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-gc.dol'
+          DEST_NAME: 'ClassiCube-gc.dol'
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-gc.elf'
+          DEST_NAME: 'ClassiCube-gc.elf'
+          
+          
+      - uses: ./.github/actions/notify_success
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'gc'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce GameCube build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

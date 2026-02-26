@@ -11,7 +11,7 @@
 
 ; --------  Disassembly --------------------
 00 TEX: ADDR(48) CNT(1) VALID_PIX 
-      0  SAMPLE R1, R1.xy0x, t0, s0
+      0  SAMPLE R1, R1.xy__, t0, s0
 01 ALU: ADDR(32) CNT(4) 
       1  x: MUL         R0.x,  R0.x,  R1.x      
          y: MUL         R0.y,  R0.y,  R1.y      

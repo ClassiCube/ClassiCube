@@ -49,10 +49,10 @@ extern const struct LauncherTheme Launcher_ClassicTheme;
 extern const struct LauncherTheme Launcher_NordicTheme;
 
 /* Loads theme from options. */
-void Launcher_LoadTheme(void);
+void LauncherTheme_Load(struct LauncherTheme* theme);
 /* Saves the theme to options. */
 /* NOTE: Does not save options file itself. */
-void Launcher_SaveTheme(void);
+void LauncherTheme_Save(struct LauncherTheme* theme);
 
 /* Whether logo should be drawn using bitmapped text */
 cc_bool Launcher_BitmappedText(void);

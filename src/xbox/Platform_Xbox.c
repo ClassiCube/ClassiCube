@@ -1,8 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../Funcs.h"
 #include "../Utils.h"
@@ -17,10 +17,10 @@
 #include <lwip/sockets.h>
 #include <nxdk/net.h>
 #include <nxdk/mount.h>
-#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_PathNotFound     = ERROR_PATH_NOT_FOUND;
 const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -28,6 +28,24 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " XBox";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 
 /*########################################################################################################################*
@@ -114,9 +132,13 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str = '\0';
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendConst(dst, path->buffer);
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	
 	return CreateDirectoryA(path->buffer, NULL) ? 0 : GetLastError();
@@ -263,6 +285,10 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	RtlInitializeCriticalSection(ptr);
@@ -314,6 +340,14 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -321,7 +355,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -415,13 +449,16 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize = sizeof(socklen_t);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	socklen_t errSize = sizeof(error);
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	lwip_getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	return res;
+	lwip_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	return error;
 }
 
 
@@ -436,20 +473,43 @@ static void InitHDD(void) {
 	}
 
 	if (!hdd_mounted) {
-		Platform_LogConst("Failed to mount E:/ from Data partition");
+		Window_ShowDialog("Failed to mount HDD", "Failed to mount E:/ from Data partition");
 		return;
 	}
 	
 	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
-	Directory_Create(root);
+	Directory_Create2(root);
+}
+
+extern struct netif *g_pnetif;
+static void InitNetworking(void) {
+	VirtualDialog_Show("Connecting to network..", "This may take up to 30 seconds", true);
+	char localip[32] = {0};
+	char netmask[32] = {0};
+	char gateway[32] = {0};
+
+#ifndef CC_BUILD_CXBX
+	int ret = nxNetInit(NULL);
+	if (ret) { 
+		Logger_SimpleWarn(ret, "setting up network");
+	} else {
+		cc_string str; char buffer[256];
+		String_InitArray_NT(str, buffer);
+		String_Format3(&str, "IP address: %c\nGateway IP: %c\nNetmask %c", 
+						ip4addr_ntoa_r(netif_ip4_addr(g_pnetif),    localip, 31),
+						ip4addr_ntoa_r(netif_ip4_gw(g_pnetif),      gateway, 31),
+						ip4addr_ntoa_r(netif_ip4_netmask(g_pnetif), netmask, 31));
+
+		buffer[str.length] = '\0';
+		Window_ShowDialog("Networking details", buffer);
+	}
+#endif
 }
 
 void Platform_Init(void) {
 	InitHDD();
 	Stopwatch_Init();
-#ifndef CC_BUILD_CXBX
-	nxNetInit(NULL);
-#endif
+	InitNetworking();
 }
 
 void Platform_Free(void) {
@@ -465,6 +525,15 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 
 /*########################################################################################################################*

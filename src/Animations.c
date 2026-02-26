@@ -1,5 +1,5 @@
 #include "TexturePack.h"
-#include "String.h"
+#include "String_.h"
 #include "Constants.h"
 #include "Stream.h"
 #include "Graphics.h"
@@ -12,7 +12,8 @@
 #include "Options.h"
 #include "Logger.h"
 
-#ifndef CC_DISABLE_ANIMATIONS
+/* Disables when no hardware FPU, as lava/water animations are FPU heavy and thus costly */
+#if CC_BUILD_FPU_MODE >= CC_FPU_MODE_NORMAL
 static void Animations_Update(int loc, struct Bitmap* bmp, int stride);
 
 #ifdef CC_BUILD_LOWMEM

@@ -3,7 +3,7 @@
 #undef CC_BUILD_EGL /* eglCreateWindowSurface can't use an SDL window */
 #include "_WindowBase.h"
 #include "Graphics.h"
-#include "String.h"
+#include "String_.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
@@ -502,20 +502,17 @@ void Window_DisableRawMouse(void) {
 #include "ExtMath.h"
 static SDL_Gamepad* controllers[INPUT_MAX_GAMEPADS];
 
-static void LoadControllers(void) {
+void Gamepads_PreInit(void) { }
+
+void Gamepads_Init(void) {
 	int count = 0;
 	SDL_JoystickID* joysticks = SDL_GetGamepads(&count);
 
     for (int i = 0; i < count && i < INPUT_MAX_GAMEPADS; i++) 
 	{
-		Input.Sources |= INPUT_SOURCE_GAMEPAD;
 		controllers[i] = SDL_OpenGamepad(joysticks[i]);
     }
 	SDL_free(joysticks);
-}
-
-void Gamepads_Init(void) {
-	LoadControllers();
 }
 
 static void ProcessGamepadButtons(int port, SDL_Gamepad* gp) {
@@ -574,11 +571,12 @@ static SDL_GLContext win_ctx;
 
 void SetGLAttributes(void) {
 	struct GraphicsMode mode;
-	InitGraphicsMode(&mode);
+	InitGraphicsMode(&mode, DisplayInfo.Depth);
+
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode.R);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode.G);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode.B);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, mode.A);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
 
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);

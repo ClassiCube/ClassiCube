@@ -140,7 +140,7 @@ mergeInto(LibraryManager.library, {
       
       var filetype = {
         description: UTF8ToString(title),
-        accept: {'applicaion/octet-stream': [UTF8ToString(filter)]}
+        accept: {'application/octet-stream': [UTF8ToString(filter)]}
       };
       fileTypes.push(filetype);
     }
@@ -706,7 +706,17 @@ mergeInto(LibraryManager.library, {
 
     var ws = sock.socket;
     if (!ws) return SOCKETS.ENOTCONN;
-    if (ws.readyState === ws.OPEN) HEAPU8[writable|0] = 1;
+    if (ws.readyState === ws.OPEN || ws.readyState == ws.CLOSED) HEAPU8[writable|0] = 1;
+
+    return 0;
+  },
+  interop_SocketLastError: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var ws = sock.socket;
+    if (!ws) return SOCKETS.ENOTCONN;
+
     return sock.error || 0;
   },
 
@@ -794,6 +804,9 @@ mergeInto(LibraryManager.library, {
     } else {
       window.cc_copyText = UTF8ToString(text);
     }
+  },
+  interop_isInFullscreen: function() {
+    return document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
   },
   interop_EnterFullscreen: function() {
     // emscripten sets css size to screen's base width/height,
@@ -936,7 +949,7 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //--------------------------------------------------------GLContext-------------------------------------------------------
 //#########################################################################################################################
-  interop_GetGpuRenderer : function(buffer, len) { 
+  CC_gpu_getRenderer: function(buffer, len) { 
     var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
     var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
     stringToUTF8(str, buffer, len);
@@ -1396,9 +1409,8 @@ mergeInto(LibraryManager.library, {
         stream.position += bytesWritten;
         return bytesWritten;
       },
-      readFile:function(path, opts) {
-        opts = opts || {};
-        opts.encoding = opts.encoding || 'binary';
+      readFile:function(path, encoding) {
+        encoding = encoding || 'binary';
         
         var ret;
         var stream = CCFS.open(path, 0); // O_RDONLY
@@ -1406,12 +1418,12 @@ mergeInto(LibraryManager.library, {
         var buf    = new Uint8Array(length);
         CCFS.read(stream, buf, 0, length);
         
-        if (opts.encoding === 'utf8') {
+        if (encoding === 'utf8') {
           ret = UTF8ArrayToString(buf, 0);
-        } else if (opts.encoding === 'binary') {
+        } else if (encoding === 'binary') {
           ret = buf;
         } else {
-          throw new Error('Invalid encoding type "' + opts.encoding + '"');
+          throw new Error("Invalid encoding: " + encoding);
         }
         
         CCFS.close(stream);

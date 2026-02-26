@@ -1,8 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -22,25 +22,45 @@
 #include <pspnet_resolver.h>
 #include <pspnet_apctl.h>
 #include <psprtc.h>
-#include "../_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
 
+#define _SCE_NET_APCTL_ERROR_WLAN_SWITCH_OFF 0x80410a06
+
 const char* Platform_AppNameSuffix = " PSP";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
 
 PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
-PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
+PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER | PSP_THREAD_ATTR_VFPU);
 
 // Save 140 kb by not linking in pthreads
 PSP_DISABLE_AUTOSTART_PTHREAD()
 // Save 70kb by not linking in sprintf/setenv code etc
 PSP_DISABLE_NEWLIB_TIMEZONE_SUPPORT()
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 
 /*########################################################################################################################*
@@ -54,12 +74,6 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Platform_Log(const char* msg, int len) {
 	int fd = sceKernelStdout();
 	sceIoWrite(fd, msg, len);
-	
-	//sceIoDevctl("emulator:", 2, msg, len, NULL, 0);
-	//cc_string str = String_Init(msg, len, len);
-	//cc_file file = 0;
-	//File_Open(&file, &str);
-	//File_Close(file);	
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -111,11 +125,16 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	int result = sceIoMkdir(path->buffer, 0777);
 	return GetSCEResult(result);
 }
@@ -248,6 +267,10 @@ void Thread_Join(void* handle) {
 	sceKernelDeleteThread((int)handle);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	SceLwMutexWorkarea* ptr = (SceLwMutexWorkarea*)Mem_Alloc(1, sizeof(SceLwMutexWorkarea), "mutex");
 	int res = sceKernelCreateLwMutex(ptr, name, 0, 0, NULL);
@@ -303,6 +326,14 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -310,7 +341,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -334,7 +365,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	if (ret < 0) return ret;
 	
 	addr4->sin_family = AF_INET;
-	addr4->sin_port   = htons(port);
+	addr4->sin_port   = SockAddr_EncodePort(port);
 		
 	addrs[0].size  = sizeof(*addr4);
 	*numValidAddrs = 1;
@@ -410,53 +441,132 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize = sizeof(socklen_t);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
 
-	// https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
-	sceNetInetGetsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	return res;
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	socklen_t errSize = sizeof(error);
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	sceNetInetGetsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	return error;
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-static void InitNetworking(void) {
+#define NET_PROFILE_FIRST  1
+#define NET_PROFILE_LAST  23
+
+#define _ERROR_NETPARAM_BAD_NETCONF 0x80110601
+
+static int last_net_state = -1;
+
+static void DisplayNetState(int state) {
+	union SceNetApctlInfo net_name  = { 0 };
+	union SceNetApctlInfo net_ssid  = { 0 };
+
+	if (state == last_net_state) return;
+	last_net_state = state;
+
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_PROFILE_NAME, &net_name);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_SSID,         &net_ssid);
+
+	cc_string str; char buffer[256];
+	String_InitArray_NT(str, buffer);
+	String_Format2(&str, "Profile name: %c\nNetwork SSID: %c\n\n", 
+						net_name.name, net_ssid.ssid);
+
+	switch (state)
+	{
+		case PSP_NET_APCTL_STATE_SCANNING: 
+			String_AppendConst(&str, "Scanning for network.."); break;
+		case PSP_NET_APCTL_STATE_JOINING: 
+			String_AppendConst(&str, "Joining network.."); break;
+		case PSP_NET_APCTL_STATE_GETTING_IP: 
+			String_AppendConst(&str, "Getting IP address.."); break;
+	}
+
+	buffer[str.length] = '\0';
+	VirtualDialog_Show("Connecting to network", buffer, true);
+
+	Platform_Log1("STATE: %i", &state);
+}
+
+static cc_bool InitNetworking(void) {
     sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
     sceUtilityLoadNetModule(PSP_NET_MODULE_INET);    
     int res;
 
     res = sceNetInit(128 * 1024, 0x20, 4096, 0x20, 4096);
-    if (res < 0) { Platform_Log1("sceNetInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetInit"); return false; }
 
     res = sceNetInetInit();
-    if (res < 0) { Platform_Log1("sceNetInetInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetInetInit"); return false; }
 
     res = sceNetResolverInit();
-    if (res < 0) { Platform_Log1("sceNetResolverInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetResolverInit"); return false; }
 
     res = sceNetApctlInit(10 * 1024, 0x30);
-    if (res < 0) { Platform_Log1("sceNetApctlInit failed: %i", &res); return; }
+    if (res < 0) { Logger_SimpleWarn(res, "calling sceNetApctlInit"); return false; }
     
-    res = sceNetApctlConnect(1); // 1 = first profile
-    if (res) { Platform_Log1("sceNetApctlConnect failed: %i", &res); return; }
+	for (int profile = NET_PROFILE_FIRST; profile <= NET_PROFILE_LAST; profile++)
+	{
+    	res = sceNetApctlConnect(profile);
+		// Invalid profile? Try with next one
+		if (res == _ERROR_NETPARAM_BAD_NETCONF && profile != NET_PROFILE_LAST) continue;
 
-    for (int try = 0; try < 20; try++) {
-        int state;
-        res = sceNetApctlGetState(&state);
-        if (res) { Platform_Log1("sceNetApctlGetState failed: %i", &res); return; }
+    	if (res) { Logger_SysWarn(res, "calling sceNetApctlConnect"); return false; }
+
+    	for (int try = 0; try < 200; try++) 
+		{
+        	int state;
+        	res = sceNetApctlGetState(&state);
+        	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlGetState"); return false; }
         
-        if (state == PSP_NET_APCTL_STATE_GOT_IP) break;
+        	if (state == PSP_NET_APCTL_STATE_GOT_IP) return true;
+			DisplayNetState(state);
 
-        // not successful yet? try polling again in 50 ms
-        sceKernelDelayThread(50 * 1000);
-    }
+        	// not successful yet? try polling again in 50 ms
+        	sceKernelDelayThread(50 * 1000);
+    	}
+		break; // TODO auto fallback to next profile ?
+	}
+
+	Window_ShowDialog("WiFi setup failed", "Timed out establishing a WiFi connection");
+	return false;
+}
+
+static void DisplayNetworkDetails(void) {
+	union SceNetApctlInfo localip  = { 0 };
+	union SceNetApctlInfo netmask  = { 0 };
+	union SceNetApctlInfo gateway  = { 0 };
+	union SceNetApctlInfo prim_dns = { 0 };
+	union SceNetApctlInfo sec_dns  = { 0 };
+
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_IP,         &localip);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_SUBNETMASK, &netmask);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_GATEWAY,    &gateway);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_PRIMDNS,    &prim_dns);
+	sceNetApctlGetInfo(PSP_NET_APCTL_INFO_SECDNS,     &sec_dns);
+
+
+	cc_string str; char buffer[256];
+	String_InitArray_NT(str, buffer);
+	String_Format3(&str, "IP address: %c\nGateway IP: %c\nNetmask %c\n", 
+							&localip.ip, &netmask.subNetMask, &gateway.gateway);
+	String_Format2(&str, "DNS server: %c, %c", 
+							&prim_dns.primaryDns, &sec_dns.	secondaryDns);
+
+	buffer[str.length] = '\0';
+	Window_ShowDialog("Networking details", buffer);
 }
 
 void Platform_Init(void) {
-	InitNetworking();
+	cc_bool net_ok = InitNetworking();
+	if (net_ok) DisplayNetworkDetails();
 	/*pspDebugSioInit();*/ 
 	
 	// Disabling FPU exceptions avoids sometimes crashing with this line in Physics.c
@@ -465,13 +575,18 @@ void Platform_Init(void) {
 	pspSdkDisableFPUExceptions();
 	
 	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
-	Directory_Create(root);
+	Directory_Create2(root);
 }
 void Platform_Free(void) { }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
+
+	if (res == _SCE_NET_APCTL_ERROR_WLAN_SWITCH_OFF) {
+		String_AppendConst(dst, "Wifi disabled or switch is off");
+		return true;
+	}
 
 	/* For unrecognised error codes, strerror_r might return messages */
 	/*  such as 'No error information', which is not very useful */
@@ -492,6 +607,19 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
+
+void CPU_FlushDataCache(void* start, int length) {
+	sceKernelDcacheWritebackRange(start, length);
+}
 
 
 /*########################################################################################################################*

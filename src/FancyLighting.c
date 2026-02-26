@@ -7,7 +7,7 @@
 #include "Logger.h"
 #include "Event.h"
 #include "Game.h"
-#include "String.h"
+#include "String_.h"
 #include "Chat.h"
 #include "ExtMath.h"
 #include "Options.h"

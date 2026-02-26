@@ -111,11 +111,14 @@ struct TableWidget {
 CC_NOINLINE void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
-CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
+/* If autoRotateGroup is true, it selects the first block it finds that is in block's autorotate group. */
+CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block, cc_bool autoRotateGroup);
 CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
 CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
 CC_NOINLINE void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force);
+/* Like RecreateTitle, but the block's title to be shown can be changed from the currently selected index. Pass -1 to use the currently selected index. */
+CC_NOINLINE void TableWidget_RecreateTitleForBlock(struct TableWidget* w, cc_bool force, int blockForTitle);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -256,6 +259,8 @@ struct TextGroupWidget {
 };
 
 CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine);
+CC_NOINLINE void TextGroupWidget_Add(void* screen, struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine);
+
 CC_NOINLINE void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font);
 /* Deletes first line, then moves all other lines upwards, then redraws last line. */
 /* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */

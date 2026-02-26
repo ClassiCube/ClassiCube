@@ -1,9 +1,9 @@
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../SystemFonts.h"
 #include "../Funcs.h"
 #include "../Utils.h"
 #include "../Errors.h"
+#define OVERRIDE_MEM_FUNCTIONS
 
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -26,10 +26,12 @@
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::System;
+#define UWP_STRING(str) ((wchar_t*)(str)->uni)
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_PathNotFound     = ERROR_PATH_NOT_FOUND;
 const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
@@ -38,7 +40,7 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 const char* Platform_AppNameSuffix = "";
 cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
-#define UWP_STRING(str) ((wchar_t*)(str)->uni)
+#include "../_PlatformBase.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
@@ -62,10 +64,6 @@ int main(int argc, char** argv) {
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? HeapAlloc(heap, 0, size) : NULL;
@@ -222,7 +220,15 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* src) {
 	Platform_EncodeString(dst, src);
 }
 
-cc_result Directory_Create(const cc_filepath* path) {
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	int i;
+	for (i = 0; i < FILENAME_SIZE && path->uni[i]; i++) 
+	{
+		String_Append(dst, Convert_CodepointToCP437(path->uni[i]));
+	}
+}
+
+cc_result Directory_Create2(const cc_filepath* path) {
 	if (CreateDirectoryW(UWP_STRING(path), NULL)) return 0;
 	return GetLastError();
 }
@@ -363,6 +369,10 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	InitializeCriticalSection(ptr);
@@ -406,6 +416,14 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(SOCKADDR_STORAGE) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst->data;
 	cc_uint32 ip_addr;
@@ -413,7 +431,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.S_un.S_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -428,7 +446,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	Platform_EncodeString(&str, &address);
 
 	if (!WSAStringToAddressW(UWP_STRING(&str), AF_INET6, NULL, (SOCKADDR*)addr6, &size)) {
-		addr6->sin6_port = htons(port);
+		addr6->sin6_port = SockAddr_EncodePort(port);
 
 		dst->size = size;
 		return true;
@@ -510,22 +528,32 @@ void Socket_Close(cc_socket s) {
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	fd_set set;
+	fd_set set1, set2;
 	struct timeval time = { 0 };
 	int selectCount;
 
-	set.fd_count    = 1;
-	set.fd_array[0] = s;
+	set1.fd_count    = 1; set2.fd_count    = 1;
+	set1.fd_array[0] = s; set2.fd_array[0] = s;
+
+	/* As per https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-select */
+	/* A socket will be pollable (select returns true) in following cases): */
+	/* - readfds: Data is available for reading, or Connection has been closed/reset/terminated. */
+	/* - writefds: Non-blocking connection attempt succeeded, or data can be sent */
+	/* - exceptfds: Non-blocking connection attempt failed, or OOB data is available for reading */
 
 	if (mode == SOCKET_POLL_READ) {
-		selectCount = select(1, &set, NULL, NULL, &time);
+		selectCount = select(1, &set1, NULL, NULL, &time);
+
+		*success = set1.fd_count != 0; 
 	} else {
-		selectCount = select(1, NULL, &set, NULL, &time);
+		selectCount = select(1, NULL, &set1, &set2, &time);
+
+		*success = set1.fd_count != 0 || set2.fd_count != 0;
 	}
 
-	if (selectCount == -1) { *success = false; return WSAGetLastError(); }
-
-	*success = set.fd_count != 0; return 0;
+	if (selectCount >= 0) return 0;
+	*success = false; 
+	return WSAGetLastError();
 }
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
@@ -533,13 +561,16 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	int resultSize = sizeof(cc_result);
-	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error   = ERR_INVALID_ARGUMENT;
+	int errSize = sizeof(error);
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&res, &resultSize);
-	return res;
+	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&error, &errSize);
+	return error;
 }
 
 

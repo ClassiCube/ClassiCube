@@ -25,6 +25,8 @@ TRACK_DEPENDENCIES=1
 LINK = $(CC)
 # Whether to add BearSSL source files to list of files to compile
 BEARSSL=1
+# Optimization level in release builds
+OPT_LEVEL=1
 
 
 #################################################################
@@ -77,8 +79,14 @@ ifeq ($(PLAT),mingw)
 endif
 
 ifeq ($(PLAT),linux)
-	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl
+	# -lm may be needed for __builtin_sqrtf (in cases where it isn't replaced by a CPU instruction intrinsic)
+	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl -lm
 	BUILD_DIR = build/linux
+
+	# Detect MCST LCC, where -O3 is about equivalent to -O1
+	ifeq ($(shell $(CC) -dM -E -xc - < /dev/null | grep -o __MCST__),__MCST__)
+		OPT_LEVEL=3
+	endif
 endif
 
 ifeq ($(PLAT),sunos)
@@ -176,10 +184,14 @@ endif
 ifeq ($(PLAT),wince)
 	CC      =  arm-mingw32ce-gcc
 	OEXT    =  .exe
-	CFLAGS  += -march=armv5tej -mcpu=arm926ej-s -DUNICODE -D_WIN32_WCE
+	CFLAGS  += -march=armv5te -DUNICODE -D_WIN32_WCE -std=gnu99
 	LDFLAGS =  -g
 	LIBS    =  -lcoredll -lws2
 	BUILD_DIR = build/wince
+endif
+
+ifeq ($(PLAT),os/2)
+	BUILD_DIR =	build/os2
 endif
 
 ifdef BUILD_SDL2
@@ -201,7 +213,7 @@ ifeq ($(BEARSSL),1)
 endif
 
 ifdef RELEASE
-	CFLAGS += -O1
+	CFLAGS += -O$(OPT_LEVEL)
 else
 	CFLAGS += -g
 endif
@@ -291,6 +303,7 @@ wiiu:
 	$(MAKE) -f misc/wiiu/Makefile
 switch:
 	$(MAKE) -f misc/switch/Makefile
+
 os/2:
 	$(MAKE) -f misc/os2/Makefile
 dos:
@@ -305,6 +318,10 @@ amiga:
 	$(MAKE) -f misc/amiga/Makefile
 atari_st:
 	$(MAKE) -f misc/atari_st/Makefile
+ios:
+	$(MAKE) -f misc/ios/Makefile
+android:
+	$(MAKE) -f misc/android/Makefile
 
 # Cleans up all build .o files
 clean:

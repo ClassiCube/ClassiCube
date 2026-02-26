@@ -1,7 +1,7 @@
 #include "../Core.h"
 #include "../_WindowBase.h"
 #include "../Game.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../ExtMath.h"
 #include "../Bitmap.h"
@@ -392,6 +392,8 @@ void Window_Init(void) {
 	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;
 
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
 	DisplayInfo.ScaleX = emscripten_get_device_pixel_ratio();
 	DisplayInfo.ScaleY = DisplayInfo.ScaleX;
 	interop_AddClipboardListeners();
@@ -482,10 +484,9 @@ void Clipboard_SetText(const cc_string* value) {
 	interop_TrySetClipboardText(str);
 }
 
+extern int interop_isInFullscreen(void);
 int Window_GetWindowState(void) {
-	EmscriptenFullscreenChangeEvent status = { 0 };
-	emscripten_get_fullscreen_status(&status);
-	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
+	return interop_isInFullscreen() ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
 extern int interop_GetContainerID(void);
@@ -568,6 +569,8 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+void Gamepads_PreInit(void) { }
+
 void Gamepads_Init(void) {
 	/* Devices can't be detected until first time a button is pressed */
 }
@@ -601,14 +604,13 @@ static void ProcessGamepadButtons(int port, EmscriptenGamepadEvent* ev) {
 #define AXIS_SCALE 8.0f
 static void ProcessGamepadAxis(int port, int axis, float x, float y, float delta) {
 	/* Deadzone adjustment */
-	if (x >= -0.1 && x <= 0.1) x = 0;
-	if (y >= -0.1 && y <= 0.1) y = 0;
+	if (x >= -0.1f && x <= 0.1f) x = 0;
+	if (y >= -0.1f && y <= 0.1f) y = 0;
 
 	Gamepad_SetAxis(port, axis, x * AXIS_SCALE, y * AXIS_SCALE, delta);
 }
 
 static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delta) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	ProcessGamepadButtons(port, ev);
 
 	if (ev->numAxes >= 4) {
@@ -621,10 +623,9 @@ static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delt
 
 void Gamepads_Process(float delta) {
 	int i, port, res, count;
-	Input.Sources = INPUT_SOURCE_NORMAL;
-
 	if (emscripten_sample_gamepad_data() != 0) return;
 	count = emscripten_get_num_gamepads();
+	/* TODO: Unset Input.Sources & GAMEPAD_SOURCE if count == 0 for hot unplug support? */
 
 	for (i = 0; i < count; i++)
 	{
@@ -804,11 +805,11 @@ void GLContext_SetVSync(cc_bool vsync) {
 	}
 }
 
-extern void interop_GetGpuRenderer(char* buffer, int len);
+extern void CC_gpu_getRenderer(char* buffer, int len);
 void GLContext_GetApiInfo(cc_string* info) { 
 	char buffer[NATIVE_STR_LEN];
 	int len;
-	interop_GetGpuRenderer(buffer, NATIVE_STR_LEN);
+	CC_gpu_getRenderer(buffer, NATIVE_STR_LEN);
 
 	len = String_CalcLen(buffer, NATIVE_STR_LEN);
 	if (!len) return;

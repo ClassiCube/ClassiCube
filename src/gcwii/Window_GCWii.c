@@ -3,13 +3,15 @@
 #include "../Input.h"
 #include "../InputHandler.h"
 #include "../Event.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Graphics.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <gccore.h>
 #if defined HW_RVL
@@ -19,7 +21,6 @@
 #endif
 
 static cc_bool needsFBUpdate;
-static cc_bool launcherMode;
 static int mouseSupported;
 #include "../VirtualCursor.h"
 static void* xfb;
@@ -29,11 +30,6 @@ void* Window_XFB;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
-
-static void OnPowerOff(void) {
-	Window_Main.Exists = false;
-	Window_RequestClose();
-}
 static void InitVideo(void) {
 	VIDEO_Init();
 
@@ -57,29 +53,25 @@ static void InitVideo(void) {
 }
 
 void Window_PreInit(void) {
-	// TODO: SYS_SetResetCallback(reload); too? not sure how reset differs on GC/WII
-	#if defined HW_RVL
-	SYS_SetPowerCallback(OnPowerOff);
-	#endif
 	InitVideo();
-}
 
-void Window_Init(void) {
 	DisplayInfo.Width  = cur_mode->fbWidth;
 	DisplayInfo.Height = cur_mode->xfbHeight;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
-	Window_Main.Width    = cur_mode->fbWidth;
-	Window_Main.Height   = cur_mode->xfbHeight;
+}
+
+void Window_Init(void) {
+	Window_Main.Width    = DisplayInfo.Width;
+	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
 	
 	Window_Main.Exists   = true;
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(10);
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	#if defined HW_RVL
@@ -91,12 +83,11 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) {
-	needsFBUpdate = true;
-	launcherMode  = true;  
+	Window_Main.Is3D = false; 
 }
 
 void Window_Create3D(int width, int height) { 
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -158,11 +149,12 @@ static void ProcessPAD_Buttons(int port, int mods) {
 static void ProcessPADInput(PADStatus* pad, int i, float delta) {
 	int error = pad->err;
 
-	if (error == 0) {
+	if (error == PAD_ERR_NONE) {
 		gc_pads[i] = *pad; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
 		// usually means still busy transferring state - use last state
 	} else {
+		if (error == PAD_ERR_NO_CONTROLLER) PAD_Reset(PAD_CHAN0_BIT >> i);
 		return; // not connected, still busy, etc
 	}
 	
@@ -279,15 +271,22 @@ static void ProcessMouseInput(float delta) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(float delta) {
+	if (!SYS_MainLoop()) {
+		Window_Main.Exists = false;
+		Window_RequestClose();
+		return;
+	}
+	#if defined HW_RVL
+	ProcessKeyboardInput();
+	ProcessMouseInput(delta);
+	#endif
+}
+
 #if defined HW_RVL
 static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
 static cc_bool dragActive;
-
-void Window_ProcessEvents(float delta) {
-	ProcessKeyboardInput();
-    ProcessMouseInput(delta);
-}
 
 static void GetIRPos(int res, int* x, int* y) {
 	if (res == WPAD_ERR_NONE) {
@@ -343,9 +342,6 @@ void Window_UpdateRawMouse(void)  {
 	dragCurX = x; dragCurY = y;
 }
 #else
-void Window_ProcessEvents(float delta) {
-}
-
 void Window_UpdateRawMouse(void) { }
 #endif
 
@@ -358,9 +354,7 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 	#if defined HW_RVL
 	WPAD_Init();
 	for (int i = 0; i < 4; i++)
@@ -368,6 +362,8 @@ void Gamepads_Init(void) {
 	#endif
 	PAD_Init();
 }
+
+void Gamepads_Init(void) { }
 
 #if defined HW_RVL
 static const BindMapping default_nunchuck[BIND_COUNT] = {
@@ -522,26 +518,27 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+
+	needsFBUpdate = true;
 }
 
 // TODO: Get rid of this complexity and use the 3D API instead..
-// https://github.com/devkitPro/gamecube-examples/blob/master/graphics/fb/pageflip/source/flip.c
-static u32 CvtRGB (u8 r1, u8 g1, u8 b1, u8 r2, u8 g2, u8 b2)
-{
-  int y1, cb1, cr1, y2, cb2, cr2, cb, cr;
- 
-  y1  = (299    * r1 +   587 * g1 +   114 * b1) / 1000;
-  cb1 = (-16874 * r1 - 33126 * g1 + 50000 * b1 + 12800000) / 100000;
-  cr1 = (50000  * r1 - 41869 * g1 -  8131 * b1 + 12800000) / 100000;
- 
-  y2  = (299    * r2 +   587 * g2 +   114 * b2) / 1000;
-  cb2 = (-16874 * r2 - 33126 * g2 + 50000 * b2 + 12800000) / 100000;
-  cr2 = (50000  * r2 - 41869 * g2 -  8131 * b2 + 12800000) / 100000;
- 
-  cb = (cb1 + cb2) >> 1;
-  cr = (cr1 + cr2) >> 1;
- 
-  return (y1 << 24) | (cb << 16) | (y2 << 8) | cr;
+// https://github.com/extremscorner/gamecube-examples/blob/master/graphics/fb/pageflip/source/flip.c
+static u32 CvtRGB(u8 r1, u8 g1, u8 b1, u8 r2, u8 g2, u8 b2) {
+	u8 y1, cb1, cr1, y2, cb2, cr2, cb, cr;
+
+	y1  = ((16829 * r1 + 33039 * g1 +  6416 * b1) >> 16) +  16;
+	cb1 = ((-9714 * r1 - 19071 * g1 + 28784 * b1) >> 16) + 128;
+	cr1 = ((28784 * r1 - 24103 * g1 -  4681 * b1) >> 16) + 128;
+
+	y2  = ((16829 * r2 + 33039 * g2 +  6416 * b2) >> 16) +  16;
+	cb2 = ((-9714 * r2 - 19071 * g2 + 28784 * b2) >> 16) + 128;
+	cr2 = ((28784 * r2 - 24103 * g2 -  4681 * b2) >> 16) + 128;
+
+	cb = (cb1 + cb2) >> 1;
+	cr = (cr1 + cr2) >> 1;
+
+	return (y1 << 24) | (cb << 16) | (y2 << 8) | cr;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -581,7 +578,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
@@ -608,11 +605,8 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg, false);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

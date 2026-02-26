@@ -1,5 +1,5 @@
 #include "Logger.h"
-#include "String.h"
+#include "String_.h"
 #include "Platform.h"
 #include "Window.h"
 #include "Funcs.h"
@@ -27,25 +27,6 @@
 
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 	static cc_uintptr spRegister;
-#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
-	#include <signal.h>
-	/* These operating systems don't provide sys/ucontext.h */
-	/*  But register constants be found from includes in <signal.h> */
-#elif defined CC_BUILD_OS2
-	#include <signal.h>
-	#include <386/ucontext.h>
-#elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
-	/* Need to define this to get REG_ constants */
-	#define _GNU_SOURCE
-	#include <sys/ucontext.h>
-	#include <signal.h>
-#elif defined CC_BUILD_SOLARIS
-	#include <signal.h>
-	#include <sys/ucontext.h>
-	#include <sys/regset.h>
-#elif defined CC_BUILD_POSIX
-	#include <signal.h>
-	#include <sys/ucontext.h>
 #endif
 
 #ifdef CC_BUILD_DARWIN
@@ -116,9 +97,9 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case NBT_ERR_EXPECTED_ARR: return "Expected ByteArray NBT tag";
 	case NBT_ERR_ARR_TOO_SMALL:return "ByteArray NBT tag too small";
 
-	case HTTP_ERR_NO_SSL: return "HTTPS URLs are not currently supported";
+	case HTTP_ERR_NO_SSL:       return "HTTPS URLs are not currently supported";
 	case SOCK_ERR_UNKNOWN_HOST: return "Host could not be resolved to an IP address";
-	case ERR_NO_NETWORKING: return "No working network access";
+	case ERR_NO_NETWORKING:     return "No working network access";
 	}
 	return NULL;
 }
@@ -189,6 +170,56 @@ void Logger_SysWarn(cc_result res, const char* action) {
 }
 void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path) {
 	Logger_Warn2(res, action, path, Platform_DescribeError);
+}
+
+void Logger_IOWarn2(cc_result res, const char* action, const struct cc_filepath_* path) {
+	char strBuffer[FILENAME_SIZE];
+	cc_string str;
+
+	String_InitArray(str, strBuffer);
+	Platform_DecodePath(&str, path);
+	Logger_SysWarn2(res, action, &str);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------CPU registers-------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN
+	#include "win32/Plat_Win32.inc"
+#elif defined CC_BUILD_DARWIN
+	#include "posix/Plat_Darwin.inc"
+#elif defined CC_BUILD_ANDROID
+	#include "posix/Plat_Android.inc"
+#elif defined CC_BUILD_LINUX
+	#include "posix/Plat_Linux.inc"
+#elif defined CC_BUILD_SOLARIS
+	#include "posix/Plat_Solaris.inc"
+#elif defined CC_BUILD_NETBSD
+	#include "posix/Plat_NetBSD.inc"
+#elif defined CC_BUILD_FREEBSD
+	#include "posix/Plat_FreeBSD.inc"
+#elif defined CC_BUILD_OPENBSD
+	#include "posix/Plat_OpenBSD.inc"
+#elif defined CC_BUILD_HAIKU
+	#include "posix/Plat_Haiku.inc"
+#elif defined CC_BUILD_SERENITY
+	#include "posix/Plat_SerenityOS.inc"
+#elif defined CC_BUILD_IRIX
+	#include "posix/Plat_IRIX.inc"
+#else
+void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
+	/* Register dumping not implemented */
+}
+#endif
+
+static void DumpRegisters(void* ctx) {
+	cc_string str; char strBuffer[768];
+	String_InitArray(str, strBuffer);
+
+	String_AppendConst(&str, "-- registers --" _NL);
+	CrashHandler_DumpRegisters(ctx, &str);
+	Logger_Log(&str);
 }
 
 
@@ -475,505 +506,6 @@ void Logger_Backtrace(cc_string* trace, void* ctx) { }
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------CPU registers-------------------------------------------------------*
-*#########################################################################################################################*/
-/* Unfortunately, operating systems vary wildly in how they name and access registers for dumping */
-/* So this is the simplest way to avoid duplicating code on each platform */
-#define Dump_X86() \
-String_Format3(str, "eax=%x ebx=%x ecx=%x" _NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
-String_Format3(str, "edx=%x esi=%x edi=%x" _NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
-String_Format3(str, "eip=%x ebp=%x esp=%x" _NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));
-
-#define Dump_X64() \
-String_Format3(str, "rax=%x rbx=%x rcx=%x" _NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
-String_Format3(str, "rdx=%x rsi=%x rdi=%x" _NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
-String_Format3(str, "rip=%x rbp=%x rsp=%x" _NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));\
-String_Format3(str, "r8 =%x r9 =%x r10=%x" _NL, REG_GET(8,8),   REG_GET(9,9),   REG_GET(10,10));\
-String_Format3(str, "r11=%x r12=%x r13=%x" _NL, REG_GET(11,11), REG_GET(12,12), REG_GET(13,13));\
-String_Format2(str, "r14=%x r15=%x" _NL,        REG_GET(14,14), REG_GET(15,15));
-
-#define Dump_PPC() \
-String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
-String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
-String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
-String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
-String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
-String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
-String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
-String_Format4(str, "r28=%x r29=%x r30=%x r31=%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31)); \
-String_Format3(str, "pc =%x lr =%x ctr=%x" _NL,  REG_GET_PC(), REG_GET_LR(), REG_GET_CTR());
-
-#define Dump_ARM32() \
-String_Format3(str, "r0 =%x r1 =%x r2 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2));\
-String_Format3(str, "r3 =%x r4 =%x r5 =%x" _NL, REG_GNUM(3),  REG_GNUM(4),  REG_GNUM(5));\
-String_Format3(str, "r6 =%x r7 =%x r8 =%x" _NL, REG_GNUM(6),  REG_GNUM(7),  REG_GNUM(8));\
-String_Format3(str, "r9 =%x r10=%x fp =%x" _NL, REG_GNUM(9),  REG_GNUM(10), REG_GET_FP());\
-String_Format3(str, "ip =%x sp =%x lr =%x" _NL, REG_GET_IP(), REG_GET_SP(), REG_GET_LR());\
-String_Format1(str, "pc =%x"               _NL, REG_GET_PC());
-
-#define Dump_ARM64() \
-String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
-String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
-String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
-String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
-String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
-String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
-String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
-String_Format4(str, "r28=%x fp =%x lr =%x sp =%x" _NL, REG_GNUM(28), REG_GET_FP(), REG_GET_LR(), REG_GET_SP()); \
-String_Format1(str, "pc =%x" _NL,                      REG_GET_PC());
-
-#define Dump_Alpha() \
-String_Format4(str, "v0 =%x t0 =%x t1 =%x t2 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
-String_Format4(str, "t3 =%x t4 =%x t5 =%x t6 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
-String_Format4(str, "t7 =%x s0 =%x s1 =%x s2 =%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
-String_Format4(str, "s3 =%x s4 =%x s5 =%x a0 =%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(16)); \
-String_Format4(str, "a1 =%x a2 =%x a3 =%x a4 =%x" _NL, REG_GNUM(17), REG_GNUM(18), REG_GNUM(19), REG_GNUM(20)); \
-String_Format4(str, "a5 =%x t8 =%x t9 =%x t10=%x" _NL, REG_GNUM(21), REG_GNUM(22), REG_GNUM(23), REG_GNUM(24)); \
-String_Format4(str, "t11=%x ra =%x pv =%x at =%x" _NL, REG_GNUM(25), REG_GNUM(26), REG_GNUM(27), REG_GNUM(28)); \
-String_Format4(str, "gp =%x fp =%x sp =%x pc =%x" _NL, REG_GNUM(29), REG_GET_FP(), REG_GET_SP(), REG_GET_PC());
-
-#define Dump_SPARC() \
-String_Format4(str, "o0=%x o1=%x o2=%x o3=%x" _NL, REG_GET(o0,O0), REG_GET(o1,O1), REG_GET(o2,O2), REG_GET(o3,O3)); \
-String_Format4(str, "o4=%x o5=%x o6=%x o7=%x" _NL, REG_GET(o4,O4), REG_GET(o5,O5), REG_GET(o6,O6), REG_GET(o7,O7)); \
-String_Format4(str, "g1=%x g2=%x g3=%x g4=%x" _NL, REG_GET(g1,G1), REG_GET(g2,G2), REG_GET(g3,G3), REG_GET(g4,G4)); \
-String_Format4(str, "g5=%x g6=%x g7=%x y =%x" _NL, REG_GET(g5,G5), REG_GET(g6,G6), REG_GET(g7,G7), REG_GET( y, Y)); \
-String_Format2(str, "pc=%x nc=%x" _NL,             REG_GET(pc,PC), REG_GET(npc,nPC));
-
-#define Dump_RISCV() \
-String_Format4(str, "pc =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GET_PC(), REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
-String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
-String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
-String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
-String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
-String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
-String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
-String_Format4(str, "r28=%x r29=%x r30=%x r31=%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31));
-
-#define Dump_MIPS() \
-String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
-String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
-String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
-String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
-String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
-String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
-String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
-String_Format4(str, "r28=%x sp =%x fp =%x ra =%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31)); \
-String_Format3(str, "pc =%x lo =%x hi =%x" _NL,        REG_GET_PC(), REG_GET_LO(), REG_GET_HI());
-
-#define Dump_SH() \
-String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
-String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
-String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
-String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
-String_Format3(str, "mal=%x mah=%x gbr=%x"        _NL, REG_GET_MACL(), REG_GET_MACH(), REG_GET_GBR()); \
-String_Format2(str, "pc =%x ra =%x"               _NL, REG_GET_PC(), REG_GET_RA());
-
-#if defined CC_BUILD_WIN
-/* See CONTEXT in WinNT.h */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	CONTEXT* r = (CONTEXT*)ctx;
-#if defined _M_IX86
-	#define REG_GET(reg, ign) &r->E ## reg
-	Dump_X86()
-#elif defined _M_X64
-	#define REG_GET(reg, ign) &r->R ## reg
-	Dump_X64()
-#elif defined _M_ARM64
-	#define REG_GNUM(num)     &r->X[num]
-	#define REG_GET_FP()      &r->Fp
-	#define REG_GET_LR()      &r->Lr
-	#define REG_GET_SP()      &r->Sp
-	#define REG_GET_PC()      &r->Pc
-	Dump_ARM64()
-#elif defined _M_ARM
-	#define REG_GNUM(num)     &r->R ## num
-	#define REG_GET_FP()      &r->R11
-	#define REG_GET_IP()      &r->R12
-	#define REG_GET_SP()      &r->Sp
-	#define REG_GET_LR()      &r->Lr
-	#define REG_GET_PC()      &r->Pc
-	Dump_ARM32()
-#elif defined _M_PPC
-	#define REG_GNUM(num) &r->Gpr ## num
-	#define REG_GET_PC()  &r->Iar
-	#define REG_GET_LR()  &r->Lr
-	#define REG_GET_CTR() &r->Ctr
-	Dump_PPC()
-#elif defined _M_ALPHA
-	#define REG_GNUM(num) &r->IntV0 + num
-	#define REG_GET_FP()  &r->IntFp
-	#define REG_GET_SP()  &r->IntSp
-	#define REG_GET_PC()  &r->Fir
-	Dump_Alpha()
-#elif defined _MIPS_
-	#define REG_GNUM(num) &r->IntZero + num
-	#define REG_GET_PC()  &r->Fir
-	#define REG_GET_LO()  &r->IntLo
-	#define REG_GET_HI()  &r->IntHi
-	Dump_MIPS()
-#elif defined SHx
-	#define REG_GNUM(num)  &r->R ## num
-	#define REG_GET_MACL() &r->MACL
-	#define REG_GET_MACH() &r->MACH
-	#define REG_GET_GBR()  &r->GBR
-	#define REG_GET_PC()   &r->Fir
-	#define REG_GET_RA()   &r->PR
-	Dump_SH()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_DARWIN && __DARWIN_UNIX03
-/* See /usr/include/mach/i386/_structs.h (macOS 10.5+) */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
-#if defined __i386__
-	#define REG_GET(reg, ign) &r->__ss.__e##reg
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(reg, ign) &r->__ss.__r##reg
-	Dump_X64()
-#elif defined __aarch64__
-	#define REG_GNUM(num)     &r->__ss.__x[num]
-	#define REG_GET_FP()      &r->__ss.__fp
-	#define REG_GET_LR()      &r->__ss.__lr
-	#define REG_GET_SP()      &r->__ss.__sp
-	#define REG_GET_PC()      &r->__ss.__pc
-	Dump_ARM64()
-#elif defined __arm__
-	#define REG_GNUM(num)     &r->__ss.__r[num]
-	#define REG_GET_FP()      &r->__ss.__r[11]
-	#define REG_GET_IP()      &r->__ss.__r[12]
-	#define REG_GET_SP()      &r->__ss.__sp
-	#define REG_GET_LR()      &r->__ss.__lr
-	#define REG_GET_PC()      &r->__ss.__pc
-	Dump_ARM32()
-#elif defined __ppc__
-	#define REG_GNUM(num)     &r->__ss.__r##num
-	#define REG_GET_PC()      &r->__ss.__srr0
-	#define REG_GET_LR()      &r->__ss.__lr
-	#define REG_GET_CTR()     &r->__ss.__ctr
-	Dump_PPC()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_DARWIN
-/* See /usr/include/mach/i386/thread_status.h (macOS 10.4) */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
-#if defined __i386__
-	#define REG_GET(reg, ign) &r->ss.e##reg
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(reg, ign) &r->ss.r##reg
-	Dump_X64()
-#elif defined __ppc__
-	#define REG_GNUM(num)     &r->ss.r##num
-	#define REG_GET_PC()      &r->ss.srr0
-	#define REG_GET_LR()      &r->ss.lr
-	#define REG_GET_CTR()     &r->ss.ctr
-	Dump_PPC()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
-/* See /usr/include/sys/ucontext.h */
-static void PrintRegisters(cc_string* str, void* ctx) {
-#if __PPC__ && __WORDSIZE == 32
-	/* See sysdeps/unix/sysv/linux/powerpc/sys/ucontext.h in glibc */
-	mcontext_t* r = ((ucontext_t*)ctx)->uc_mcontext.uc_regs;
-#else
-	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
-#endif
-
-#if defined __i386__
-	#define REG_GET(ign, reg) &r->gregs[REG_E##reg]
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(ign, reg) &r->gregs[REG_R##reg]
-	Dump_X64()
-#elif defined __aarch64__
-	#define REG_GNUM(num)     &r->regs[num]
-	#define REG_GET_FP()      &r->regs[29]
-	#define REG_GET_LR()      &r->regs[30]
-	#define REG_GET_SP()      &r->sp
-	#define REG_GET_PC()      &r->pc
-	Dump_ARM64()
-#elif defined __arm__
-	#define REG_GNUM(num)     &r->arm_r##num
-	#define REG_GET_FP()      &r->arm_fp
-	#define REG_GET_IP()      &r->arm_ip
-	#define REG_GET_SP()      &r->arm_sp
-	#define REG_GET_LR()      &r->arm_lr
-	#define REG_GET_PC()      &r->arm_pc
-	Dump_ARM32()
-#elif defined __alpha__
-	#define REG_GNUM(num)     &r->sc_regs[num]
-	#define REG_GET_FP()      &r->sc_regs[15]
-	#define REG_GET_PC()      &r->sc_pc
-	#define REG_GET_SP()      &r->sc_regs[30]
-	Dump_Alpha()
-#elif defined __sparc__
-	#define REG_GET(ign, reg) &r->gregs[REG_##reg]
-	Dump_SPARC()
-#elif defined __PPC__ && __WORDSIZE == 32
-	#define REG_GNUM(num)     &r->gregs[num]
-	#define REG_GET_PC()      &r->gregs[32]
-	#define REG_GET_LR()      &r->gregs[35]
-	#define REG_GET_CTR()     &r->gregs[34]
-	Dump_PPC()
-#elif defined __PPC__
-	#define REG_GNUM(num)     &r->gp_regs[num]
-	#define REG_GET_PC()      &r->gp_regs[32]
-	/* TODO this might be wrong, compare with PT_LNK in */
-	/* https://elixir.bootlin.com/linux/v4.19.122/source/arch/powerpc/include/uapi/asm/ptrace.h#L102 */
-	#define REG_GET_LR()      &r->gp_regs[35]
-	#define REG_GET_CTR()     &r->gp_regs[34]
-	Dump_PPC()
-#elif defined __mips__
-	#define REG_GNUM(num)     &r->gregs[num]
-	#define REG_GET_PC()      &r->pc
-	#define REG_GET_LO()      &r->mdlo
-	#define REG_GET_HI()      &r->mdhi
-	Dump_MIPS()
-#elif defined __riscv
-	#define REG_GNUM(num)     &r->__gregs[num]
-	#define REG_GET_PC()      &r->__gregs[REG_PC]
-	Dump_RISCV()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_SOLARIS
-/* See /usr/include/sys/regset.h */
-/* -> usr/src/uts/[ARCH]/sys/mcontext.h */
-/* -> usr/src/uts/[ARCH]/sys/regset.h */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
-
-#if defined __i386__
-	#define REG_GET(ign, reg) &r->gregs[E##reg]
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(ign, reg) &r->gregs[REG_R##reg]
-	Dump_X64()
-#elif defined __sparc__
-	#define REG_GET(ign, reg) &r->gregs[REG_##reg]
-	Dump_SPARC()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_NETBSD
-/* See /usr/include/[ARCH]/mcontext.h */
-/* -> src/sys/arch/[ARCH]/include/mcontext.h */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
-#if defined __i386__
-	#define REG_GET(ign, reg) &r->__gregs[_REG_E##reg]
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(ign, reg) &r->__gregs[_REG_R##reg]
-	Dump_X64()
-#elif defined __aarch64__
-	#define REG_GNUM(num)     &r->__gregs[num]
-	#define REG_GET_FP()      &r->__gregs[_REG_FP]
-	#define REG_GET_LR()      &r->__gregs[_REG_LR]
-	#define REG_GET_SP()      &r->__gregs[_REG_SP]
-	#define REG_GET_PC()      &r->__gregs[_REG_PC]
-	Dump_ARM64()
-#elif defined __arm__
-	#define REG_GNUM(num)     &r->__gregs[num]
-	#define REG_GET_FP()      &r->__gregs[_REG_FP]
-	#define REG_GET_IP()      &r->__gregs[12]
-	#define REG_GET_SP()      &r->__gregs[_REG_SP]
-	#define REG_GET_LR()      &r->__gregs[_REG_LR]
-	#define REG_GET_PC()      &r->__gregs[_REG_PC]
-	Dump_ARM32()
-#elif defined __powerpc__
-	#define REG_GNUM(num)     &r->__gregs[num]
-	#define REG_GET_PC()      &r->__gregs[_REG_PC]
-	#define REG_GET_LR()      &r->__gregs[_REG_LR]
-	#define REG_GET_CTR()     &r->__gregs[_REG_CTR]
-	Dump_PPC()
-#elif defined __sparc__
-	#define REG_GET(ign, reg) &r->__gregs[_REG_##reg]
-	Dump_SPARC()
-#elif defined __mips__
-	#define REG_GNUM(num)     &r->__gregs[num]
-	#define REG_GET_PC()      &r->__gregs[_REG_EPC]
-	#define REG_GET_LO()      &r->__gregs[_REG_MDLO]
-	#define REG_GET_HI()      &r->__gregs[_REG_MDHI]
-	Dump_MIPS()
-#elif defined __riscv
-	#define REG_GNUM(num)     &r->__gregs[num]
-	#define REG_GET_PC()      &r->__gregs[_REG_PC]
-	Dump_RISCV()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_FREEBSD
-/* See /usr/include/machine/ucontext.h */
-/* -> src/sys/[ARCH]/include/ucontext.h */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
-#if defined __i386__
-	#define REG_GET(reg, ign) &r->mc_e##reg
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(reg, ign) &r->mc_r##reg
-	Dump_X64()
-#elif defined __aarch64__
-	#define REG_GNUM(num)     &r->mc_gpregs.gp_x[num]
-	#define REG_GET_FP()      &r->mc_gpregs.gp_x[29]
-	#define REG_GET_LR()      &r->mc_gpregs.gp_lr
-	#define REG_GET_SP()      &r->mc_gpregs.gp_sp
-	#define REG_GET_PC()      &r->mc_gpregs.gp_elr
-	Dump_ARM64()
-#elif defined __arm__
-	#define REG_GNUM(num)     &r->__gregs[num]
-	#define REG_GET_FP()      &r->__gregs[_REG_FP]
-	#define REG_GET_IP()      &r->__gregs[12]
-	#define REG_GET_SP()      &r->__gregs[_REG_SP]
-	#define REG_GET_LR()      &r->__gregs[_REG_LR]
-	#define REG_GET_PC()      &r->__gregs[_REG_PC]
-	Dump_ARM32()
-#elif defined __powerpc__
-	#define REG_GNUM(num)     &r->mc_frame[##num]
-	#define REG_GET_PC()      &r->mc_srr0
-	#define REG_GET_LR()      &r->mc_lr
-	#define REG_GET_CTR()     &r->mc_ctr
-	Dump_PPC()
-#elif defined __mips__
-	#define REG_GNUM(num)     &r->mc_regs[num]
-	#define REG_GET_PC()      &r->mc_pc
-	#define REG_GET_LO()      &r->mullo
-	#define REG_GET_HI()      &r->mulhi
-	Dump_MIPS()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_OPENBSD
-/* See /usr/include/machine/signal.h */
-/* -> src/sys/arch/[ARCH]/include/signal.h */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	ucontext_t* r = (ucontext_t*)ctx;
-#if defined __i386__
-	#define REG_GET(reg, ign) &r->sc_e##reg
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(reg, ign) &r->sc_r##reg
-	Dump_X64()
-#elif defined __aarch64__
-	#define REG_GNUM(num)     &r->sc_x[num]
-	#define REG_GET_FP()      &r->sc_x[29]
-	#define REG_GET_LR()      &r->sc_lr
-	#define REG_GET_SP()      &r->sc_sp
-	#define REG_GET_PC()      &r->sc_elr
-	Dump_ARM64()
-#elif defined __arm__
-	#define REG_GNUM(num)     &r->sc_r##num
-	#define REG_GET_FP()      &r->sc_r11
-	#define REG_GET_IP()      &r->sc_r12
-	#define REG_GET_SP()      &r->sc_usr_sp
-	#define REG_GET_LR()      &r->sc_usr_lr
-	#define REG_GET_PC()      &r->sc_pc
-	Dump_ARM32()
-#elif defined __powerpc__
-	#define REG_GNUM(num)     &r->sc_frame.fixreg[num]
-	#define REG_GET_PC()      &r->sc_frame.srr0
-	#define REG_GET_LR()      &r->sc_frame.lr
-	#define REG_GET_CTR()     &r->sc_frame.ctr
-	Dump_PPC()
-#elif defined __mips__
-	#define REG_GNUM(num)     &r->sc_regs[num]
-	#define REG_GET_PC()      &r->sc_pc
-	#define REG_GET_LO()      &r->mullo
-	#define REG_GET_HI()      &r->mulhi
-	Dump_MIPS()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_HAIKU
-/* See /headers/posix/arch/[ARCH]/signal.h */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
-#if defined __i386__
-	#define REG_GET(reg, ign) &r->e##reg
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(reg, ign) &r->r##reg
-	Dump_X64()
-#elif defined __aarch64__
-	#define REG_GNUM(num)     &r->x[num]
-	#define REG_GET_FP()      &r->x[29]
-	#define REG_GET_LR()      &r->lr
-	#define REG_GET_SP()      &r->sp
-	#define REG_GET_PC()      &r->elr
-	Dump_ARM64()
-#elif defined __arm__
-	#define REG_GNUM(num)     &r->r##num
-	#define REG_GET_FP()      &r->r11
-	#define REG_GET_IP()      &r->r12
-	#define REG_GET_SP()      &r->r13
-	#define REG_GET_LR()      &r->r14
-	#define REG_GET_PC()      &r->r15
-	Dump_ARM32()
-#elif defined __riscv
-	#define REG_GNUM(num)     &r->x[num - 1]
-	#define REG_GET_PC()      &r->pc
-	Dump_RISCV()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_SERENITY
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
-#if defined __i386__
-	#define REG_GET(reg, ign) &r->e##reg
-	Dump_X86()
-#elif defined __x86_64__
-	#define REG_GET(reg, ign) &r->r##reg
-	Dump_X64()
-#else
-	#error "Unknown CPU architecture"
-#endif
-}
-#elif defined CC_BUILD_IRIX
-/* See /usr/include/sys/ucontext.h */
-/* https://nixdoc.net/man-pages/IRIX/man5/UCONTEXT.5.html */
-static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
-
-	#define REG_GNUM(num) &r->__gregs[CTX_EPC]
-	#define REG_GET_PC()  &r->__gregs[CTX_MDLO]
-	#define REG_GET_LO()  &r->__gregs[CTX_MDLO]
-	#define REG_GET_HI()  &r->__gregs[CTX_MDHI]
-	Dump_MIPS()
-}
-#else
-static void PrintRegisters(cc_string* str, void* ctx) {
-	/* Register dumping not implemented */
-}
-#endif
-
-static void DumpRegisters(void* ctx) {
-	cc_string str; char strBuffer[768];
-	String_InitArray(str, strBuffer);
-
-	String_AppendConst(&str, "-- registers --" _NL);
-	PrintRegisters(&str, ctx);
-	Logger_Log(&str);
-}
-
-
-/*########################################################################################################################*
 *------------------------------------------------Module/Memory map handling-----------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_UWP
@@ -1164,10 +696,14 @@ static struct Stream logStream;
 static cc_bool logOpen;
 
 void Logger_Log(const cc_string* msg) {
-	static const cc_string path = String_FromConst("client.log");
+	static const cc_string log_path = String_FromConst("client.log");
+	cc_filepath raw_path;
+
 	if (!logOpen) {
 		logOpen = true;
-		Stream_AppendFile(&logStream, &path);
+
+		Platform_EncodePath(&raw_path, &log_path);
+		Stream_AppendPath(&logStream, &raw_path);
 	}
 
 	if (!logStream.meta.file) return;

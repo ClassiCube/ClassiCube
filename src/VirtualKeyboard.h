@@ -3,7 +3,7 @@
 #include "Drawer2D.h"
 #include "Event.h"
 #include "ExtMath.h"
-#include "String.h"
+#include "String_.h"
 #include "Input.h"
 #include "Utils.h"
 #include "LBackend.h"
@@ -185,7 +185,7 @@ static void VirtualKeyboard_CalcPosition(int* x, int* y, int width, int height) 
 
 static int VirtualKeyboard_WindowWidth(void) {
 #ifdef CC_BUILD_DUALSCREEN
-	return launcherMode ? Window_Main.Width : Window_Alt.Width;
+	return Window_Main.Is3D ? Window_Alt.Width : Window_Main.Width;
 #else
 	return Window_Main.Width;
 #endif
@@ -193,7 +193,7 @@ static int VirtualKeyboard_WindowWidth(void) {
 
 static int VirtualKeyboard_WindowHeight(void) {
 #ifdef CC_BUILD_DUALSCREEN
-	return launcherMode ? Window_Main.Height : Window_Alt.Height;
+	return Window_Main.Is3D ? Window_Alt.Height : Window_Main.Height;
 #else
 	return Window_Main.Height;
 #endif
@@ -348,16 +348,16 @@ static void VirtualKeyboard_MarkDirty2D(void) {
 	LBackend_MarkAllDirty();
 }
 
-static void VirtualKeyboard_Display2D(struct Context2D* real_ctx) {
+static void VirtualKeyboard_Display2D(void) {
+	struct Bitmap copy = LBackend_FB.bmp;
 	struct Context2D ctx;
-	struct Bitmap copy = real_ctx->bmp;
 	int x, y;
 
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
 	LBackend_MarkAllDirty();
 
 	VirtualKeyboard_CalcPosition(&x, &y, copy.width, copy.height);
-	copy.scan0 = Bitmap_GetRow(&real_ctx->bmp, y);
+	copy.scan0 = Bitmap_GetRow(&copy, y);
 	copy.scan0 += x;
 
 	Context2D_Wrap(&ctx, &copy);
@@ -439,7 +439,7 @@ static void VirtualKeyboard_Hook(void) {
 	PointerHooks.UpHook   = VirtualKeyboard_PointerUp;
 }
 
-static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher) {
+static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args) {
 	VirtualKeyboard_Close();
 	VirtualKeyboard_Init();
 	DisplayInfo.ShowingSoftKeyboard = true;
@@ -457,10 +457,10 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	kb_str.length = 0;
 	String_AppendString(&kb_str, args->text);
 
-	if (launcher) {
-		KB_MarkDirty = VirtualKeyboard_MarkDirty2D;
-	} else {
+	if (Window_Main.Is3D) {
 		KB_MarkDirty = VirtualKeyboard_MarkDirty3D;
+	} else {
+		KB_MarkDirty = VirtualKeyboard_MarkDirty2D;
 	}
 
 	Window_Main.SoftKeyboardFocus = true;

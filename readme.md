@@ -181,11 +181,11 @@ NOTE: If you are distributing a modified version, **please change the package ID
 
 ##### Using Android Studio GUI
 
-Open `android` folder in Android Studio (TODO explain more detailed)
+Open `misc/android` folder in Android Studio (TODO explain more detailed)
 
 ##### Using command line (gradle)
 
-Run `gradlew` in android folder (TODO explain more detailed)
+Run `gradlew` in `misc/android` folder (TODO explain more detailed)
 
 ## Compiling - for iOS
 
@@ -247,9 +247,9 @@ Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
 
 #### GameCube
 
-Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
+Run `make gamecube`. You'll need [libogc2](https://github.com/extremscorner/libogc2)
 
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
+**NOTE: It is highly recommended that you install the precompiled libogc2 packages from [here](https://github.com/extremscorner/pacman-packages#readme) - you need the `gamecube-dev` group)**
 
 #### Nintendo DS/DSi
 
@@ -258,6 +258,14 @@ Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
 #### Nintendo 64
 
 Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+
+#### GBA
+
+Run `make gba`. You'll need [libgba](https://github.com/devkitPro/libgba)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gba-dev` group)**
+
+**NOTE: The GBA port has terrible performance and is unusable in practice.**
 
 </details>
 
@@ -401,6 +409,15 @@ The PowerPC build will usually perform much better
 
 [Guide for Carbide.c++](misc/symbian/readme.md)
 
+#### Windows CE / PocketPC
+
+1. Install libmpfr-dev:i386 (or non-Debian equivalent)
+2. Unpack [the Windows CE GCC Toolchain](https://cegcc.sourceforge.net/) and update your $PATH to include it
+3. Add the following symbolic links in ```/usr/lib/i386-linux-gnu/``` to account for old toolchain versions:
+    * ```libmpfr.so.1``` -> ```libmpfr.so```
+    * ```libgmp.so.3``` -> ```libgmp.so```
+4. Run ```make wince```
+
 #### Other systems
 
 You'll have to write the necessary code. You should read `portability.md` in doc folder.
@@ -445,13 +462,16 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
 * [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
 * [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
-* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
-* [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
+* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii
+* [libogc2](https://github.com/extremscorner/libogc2) - Backend for GameCube
+* [libdvm](https://github.com/devkitPro/libdvm) - Filesystem backend for Wii/GC
 * [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
 * [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
 * [BlocksDS](https://github.com/blocksds/sdk) - Backend for Nintendo DS
 * [melonDS](https://github.com/melonDS-emu/melonDS) - Emulator used to test Nintendo DS port
+* [libgba](https://github.com/devkitPro/libgba) - Backend for GBA
+* [mGBA](https://github.com/mgba-emu/mgba) - Emulator used to test GBA port
 * [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
 * [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
 * [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
@@ -477,4 +497,5 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>
 Full credits are listed in [doc/sound-credits.md](doc/sound-credits.md)
+
 

@@ -7,6 +7,7 @@ CC_BEGIN_HEADER
 Logs warnings/errors and also abstracts platform specific logging for fatal errors
 Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
+struct cc_filepath_;
 
 typedef cc_bool (*Logger_DescribeError)(cc_result res, cc_string* dst);
 typedef void (*Logger_DoWarn)(const cc_string* msg);
@@ -40,6 +41,8 @@ void Logger_DynamicLibWarn(const char* action, const cc_string* path);
 void Logger_SysWarn(cc_result res, const char* action);
 /* Shortcut for Logger_Warn2 with Platform_DescribeError */
 void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path);
+/* Shortcut for Logger_Warn2 with Platform_DescribeError */
+void Logger_IOWarn2(cc_result res, const char* action, const struct cc_filepath_* path);
 
 /* Generates a backtrace based on the platform-specific CPU context. */
 /* NOTE: The provided CPU context may be modified (e.g on Windows) */

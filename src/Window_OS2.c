@@ -1,7 +1,7 @@
 #include "Core.h"
 #if defined CC_BUILD_OS2 && !defined CC_BUILD_SDL2
 #include "_WindowBase.h"
-#include "String.h"
+#include "String_.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Options.h"
@@ -603,6 +603,8 @@ void Window_DisableRawMouse(void) {
 	if (WinSetCapture(HWND_DESKTOP, NULLHANDLE))
 		DefaultDisableRawMouse();
 }
+
+void Gamepads_PreInit(void) { }
 
 void Gamepads_Init(void) { }
 

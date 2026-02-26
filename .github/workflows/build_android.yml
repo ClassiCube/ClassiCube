@@ -32,12 +32,11 @@ jobs:
 
       - name: Compile android builds
         shell: bash
-        id: compile
         env: 
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
-          LIBS: "-lGLESv2 -lEGL -lm -landroid -llog"
-          SRCS: "src/*.c third_party/bearssl/*.c"
+          LIBS: "-lGLESv2 -lEGL -lm -llog"
+          SRCS: "src/*.c src/android/*.c third_party/bearssl/*.c"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
@@ -49,12 +48,12 @@ jobs:
           SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
 
           $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_16
-          $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_32
+          $NDK_ROOT/armv7a-linux-androideabi19-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS -mfpu=vfp3-d16 ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_32
           $NDK_ROOT/aarch64-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-arm_64
           $NDK_ROOT/i686-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-x86_32
           $NDK_ROOT/x86_64-linux-android21-clang ${{ env.SRCS }} $COMMON_FLAGS $DROID_FLAGS ${{ env.LIBS }} $LATEST_FLAG -o cc-droid-x86_64
           
-          cd $ROOT_DIR/android/app/src/main
+          cd $ROOT_DIR/misc/android/app/src/main
           # copy required native libraries
           mkdir lib lib/armeabi lib/armeabi-v7a lib/arm64-v8a lib/x86 lib/x86_64
           cp $ROOT_DIR/cc-droid-arm_16 lib/armeabi/libclassicube.so
@@ -71,10 +70,10 @@ jobs:
           #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/CMakeLists.txt
           
           # compile java files into multiple .class files
-          cd $ROOT_DIR/android/app/src/main/java/com/classicube
-          javac *.java -d $ROOT_DIR/android/app/src/main/obj -classpath $SDK_ROOT/android.jar --release 8
+          cd $ROOT_DIR/misc/android/app/src/main/java/com/classicube
+          javac *.java -d $ROOT_DIR/misc/android/app/src/main/obj -classpath $SDK_ROOT/android.jar --release 8
           
-          cd $ROOT_DIR/android/app/src/main
+          cd $ROOT_DIR/misc/android/app/src/main
           # get debug signing key
           echo -n "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > debug.keystore
           
@@ -102,14 +101,12 @@ jobs:
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'src/cc.apk'
           DEST_NAME: 'cc.apk'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'android'

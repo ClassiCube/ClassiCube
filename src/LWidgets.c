@@ -1,6 +1,6 @@
 #include "LWidgets.h"
 #ifndef CC_DISABLE_LAUNCHER
-#include "String.h"
+#include "String_.h"
 #include "Gui.h"
 #include "Drawer2D.h"
 #include "Launcher.h"

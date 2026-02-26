@@ -1,8 +1,9 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
+#define CC_NO_SOCKETS
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../Funcs.h"
 #include "../Utils.h"
@@ -26,10 +27,9 @@
 #include <fcntl.h>
 #include <libfat/fat.h>
 
-#include "../_PlatformConsole.h"
-
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -37,6 +37,23 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " XBox 360";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
 
 
 /*########################################################################################################################*
@@ -104,10 +121,15 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
-	if (!fat_available) return ENOSYS;
+cc_result Directory_Create2(const cc_filepath* path) {
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
@@ -170,12 +192,12 @@ cc_result File_Open(cc_file* file, const cc_filepath* path) {
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
@@ -227,6 +249,10 @@ void Thread_Detach(void* handle) {// TODO
 void Thread_Join(void* handle) {// TODO
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	return Mem_AllocCleared(1, sizeof(int), "mutex");
 }
@@ -252,41 +278,6 @@ void Waitable_Wait(void* handle) {
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	// TODO
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Socket----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Socket_Close(cc_socket s) {
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return ERR_NOT_SUPPORTED;
 }
 
 
@@ -332,6 +323,11 @@ void Platform_Free(void) {
 }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
+	if (res == ERR_NON_WRITABLE_FS) {
+		String_AppendConst(dst, "No writable filesystem found");
+		return true;
+	}
+
 	return false;
 }
 
@@ -341,6 +337,15 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 
 /*########################################################################################################################*

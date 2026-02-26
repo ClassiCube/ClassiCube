@@ -77,7 +77,7 @@ static void HttpUrl_EncodeUrl(cc_string* dst, const cc_string* src) {
 		len = Convert_CP437ToUtf8(c, data);
 
 		/* URL path/query must not be URL encoded (it normally would be) */
-		if (c == '/' || c == '?' || c == '=') {
+		if (c == '/' || c == '?' || c == '=' || c == '&') {
 			String_Append(dst, c);
 		} else {
 			Http_UrlEncode(dst, data, len);
@@ -85,12 +85,22 @@ static void HttpUrl_EncodeUrl(cc_string* dst, const cc_string* src) {
 	}
 }
 
+static const cc_string url_rewrite_srcs[] = {
+	#define URL_REMAP_FUNC(src_base, src_host, dst_base, dst_host) String_FromConst(src_host),
+	#include "_HttpUrlMap.h"
+};
+static const cc_string url_rewrite_dsts[] = {
+	#undef  URL_REMAP_FUNC
+	#define URL_REMAP_FUNC(src_base, src_host, dst_base, dst_host) String_FromConst(dst_host),
+	#include "_HttpUrlMap.h"
+};
+
 /* Splits up the components of a URL */
 static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
 	cc_string scheme, path, addr, resource;
 	/* URL is of form [scheme]://[server host]:[server port]/[resource] */
 	/* For simplicity, parsed as [scheme]://[server address]/[resource] */
-	int idx = String_IndexOfConst(src, "://");
+	int i, idx = String_IndexOfConst(src, "://");
 
 	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(src,   0, idx);
 	path   = idx == -1 ? *src         : String_UNSAFE_SubstringAt(src, idx + 3);
@@ -99,6 +109,14 @@ static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
 	String_UNSAFE_Separate(&path, '/', &addr, &resource);
 
 	String_InitArray(url->address, url->_addressBuffer);
+	/* Converts e.g. "dl.dropbox.com" into "dl.dropboxusercontent.com" */
+	for (i = 0; i < Array_Elems(url_rewrite_srcs); i++) 
+	{
+		if (!String_Equals(&addr, &url_rewrite_srcs[i])) continue;
+
+		addr = url_rewrite_dsts[i];
+		break;
+	}
 	String_Copy(&url->address, &addr);
 
 	String_InitArray(url->resource, url->_resourceBuffer);
@@ -151,15 +169,28 @@ static void HttpConnection_Close(struct HttpConnection* conn) {
 static void ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_string* port) {
 	/* address can have the form of either "host" or "host:port" */
 	/* Slightly more complicated because IPv6 hosts can be e.g. [::1] */
-	const cc_string* addr = &url->address;
-	int idx = String_LastIndexOf(addr, ':');
+	cc_string addr = url->address;
+	int idx = String_IndexOf(&addr, ':');
+	int endIdx;
+
+	/* Special handling for raw IPv6 hosts, e.g. "[::1]:80" */
+	if (addr.length && addr.buffer[0] == '[' && (endIdx = String_IndexOf(&addr, ']')) >= 0) {
+		*host = String_UNSAFE_Substring(&addr, 1, endIdx - 1);
+		addr  = String_UNSAFE_SubstringAt(&addr, endIdx + 1);
+
+		idx = String_IndexOf(&addr, ':');
+	} else if (idx == -1) {
+		/* Hostname/IP only */
+		*host = addr;
+	} else {
+		/* Hostname/IP:port */
+		*host = String_UNSAFE_Substring(&addr, 0, idx);
+	}
 
 	if (idx == -1) {
-		*host = *addr;
 		*port = String_Empty;
 	} else {
-		*host = String_UNSAFE_Substring(addr, 0, idx);
-		*port = String_UNSAFE_SubstringAt(addr, idx + 1);
+		*port = String_UNSAFE_SubstringAt(&addr, idx + 1);
 	}
 }
 
@@ -168,6 +199,8 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	cc_uint16 portNum;
 	cc_result res;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
+	char addrBuf[32];
+	cc_string addrStr;
 	int i, numValidAddrs;
 
 	ExtractHostPort(url, &host, &port);
@@ -187,6 +220,9 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 		res = Socket_Create(&conn->socket, &addrs[i], false);
 		if (res) { HttpConnection_Close(conn); continue; }
 
+		String_InitArray(addrStr, addrBuf);
+		if (SockAddr_ToString(&addrs[i], &addrStr)) Platform_Log1("  Connecting to %s..", &addrStr);
+
 		res = Socket_Connect(conn->socket, &addrs[i]);
 		if (res) { HttpConnection_Close(conn); continue; }
 
@@ -197,6 +233,21 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	conn->valid = true;
 	if (!url->https) return 0;
 	return SSL_Init(conn->socket, &host, &conn->sslCtx);
+}
+
+static cc_result WriteAllToSocket(cc_socket socket, const cc_uint8* data, cc_uint32 count) {
+	cc_uint32 sent;
+	cc_result res;
+
+	while (count)
+	{
+		if ((res = Socket_Write(socket, data, count, &sent))) return res;
+		if (!sent) return ERR_END_OF_STREAM;
+
+		data  += sent;
+		count -= sent;
+	}
+	return 0;
 }
 
 static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
@@ -210,7 +261,7 @@ static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint
 	if (conn->sslCtx) 
 		return SSL_WriteAll(conn->sslCtx, data, count);
 
-	return Socket_WriteAll(conn->socket,  data, count);
+	return WriteAllToSocket(conn->socket, data, count);
 }
 
 
@@ -290,24 +341,34 @@ struct HttpClientState {
 	struct HttpConnection* conn;
 	struct HttpRequest* req;
 	cc_uint32 dataLeft; /* Number of bytes still to read from the current chunk or body */
-	int chunked;
-	cc_bool autoClose;
-	cc_string header, location;
-	struct HttpUrl url;
+	cc_bool chunked;    /* Whether content is being transferred using HTTP chunks */
+	cc_bool autoClose;  /* TODO Whether connection should be dropped after request completed */
+	cc_bool retried;    /* Whether request has been retried due to SSL context being closed/dropped */
+	cc_uint8 redirects; /* Number of times current HTTP request has been redirected */
+	cc_string header;   /* Current header being parsed */
+	cc_string location; /* URL to redirect to */
+	struct HttpUrl url; /* Current URL (may not be same as original URL after redirecting) */
 	char _headerBuffer[HTTP_HEADER_MAX_LENGTH];
 	char _locationBuffer[HTTP_LOCATION_MAX_LENGTH];
 };
 
 static void HttpClientState_Reset(struct HttpClientState* state) {
-	state->state       = HTTP_RESPONSE_STATE_INITIAL;
-	state->chunked     = 0;
-	state->dataLeft    = 0;
-	state->autoClose   = false;
+	state->state     = HTTP_RESPONSE_STATE_INITIAL;
+	state->chunked   = false;
+	state->dataLeft  = 0;
+	state->autoClose = false;
+
 	String_InitArray(state->header,   state->_headerBuffer);
 	String_InitArray(state->location, state->_locationBuffer);
 }
 
-static void HttpClientState_Init(struct HttpClientState* state) {
+static void HttpClientState_Init(struct HttpClientState* state, struct HttpRequest* req) {
+	cc_string url    = String_FromRawArray(req->url);
+	state->req       = req;
+	state->retried   = false;
+	state->redirects = 0;
+
+	HttpUrl_Parse(&url, &state->url);
 	HttpClientState_Reset(state);
 }
 
@@ -464,6 +525,9 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 			avail = state->dataLeft;
 			read  = min(left, avail);
 
+			/* TODO figure out why this bug happens */
+			if (!req->data) Process_Abort("Http state broken, please report this");
+
 			Mem_Copy(req->data + req->size, buffer + offset, read);
 			Http_BufferExpanded(req, read); 
 
@@ -586,7 +650,7 @@ static cc_result HttpClient_HandleRedirect(struct HttpClientState* state) {
 
 	HttpRequest_Free(state->req);
 	Platform_Log1("  Redirecting to: %s", &state->location);
-	state->req->contentLength = 0; /* TODO */
+	state->req->contentLength = 0;
 	return 0;
 }
 
@@ -616,41 +680,40 @@ static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
 
 	return res;
 }
+static const char* verbs[] = { "GET", "HEAD", "POST" };
 
-static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
+static cc_result HttpBackend_Do(struct HttpRequest* req) {
 	struct HttpClientState state;
-	cc_bool retried = false;
-	int redirects   = 0;
 	cc_result res;
-
-	HttpClientState_Init(&state);
-	HttpUrl_Parse(urlStr, &state.url);
-	state.req = req;
+	HttpClientState_Init(&state, req);
 
 	for (;;) {
+		Platform_Log4("Fetching %c%s%s (%c)", state.url.https ? "https://" : "http://", 
+					&state.url.address, &state.url.resource, verbs[req->requestType]);
+
 		res = HttpBackend_PerformRequest(&state);
 		/* TODO: Can we handle this while preserving the TCP connection */
-		if (res == SSL_ERR_CONTEXT_DEAD && !retried) {
+		if (res == SSL_ERR_CONTEXT_DEAD && !state.retried) {
 			Platform_LogConst("Resetting connection due to SSL context being dropped..");
 			res = HttpBackend_PerformRequest(&state);
-			retried = true;
+			state.retried = true;
 		}
-		if (res == HTTP_ERR_NO_RESPONSE && !retried) {
+		if (res == HTTP_ERR_NO_RESPONSE && !state.retried) {
 			Platform_LogConst("Resetting connection due to empty response..");
 			res = HttpBackend_PerformRequest(&state);
-			retried = true;
+			state.retried = true;
 		}
-		if (res == ReturnCode_SocketDropped && !retried) {
+		if (res == ReturnCode_SocketDropped && !state.retried) {
 			Platform_LogConst("Resetting connection due to being dropped..");
 			res = HttpBackend_PerformRequest(&state);
-			retried = true;
+			state.retried = true;
 		}
 
 		if (res || !HttpClient_IsRedirect(req)) break;
-		if (redirects >= 20) return HTTP_ERR_REDIRECTS;
+		if (state.redirects >= 20) return HTTP_ERR_REDIRECTS;
 
 		/* TODO FOLLOW LOCATION PROPERLY */
-		redirects++;
+		state.redirects++;
 		res = HttpClient_HandleRedirect(&state);
 		if (res) break;
 		HttpClientState_Reset(&state);
@@ -734,12 +797,7 @@ void Http_TryCancel(int reqID) {
 *-----------------------------------------------------Http worker---------------------------------------------------------*
 *#########################################################################################################################*/
 /* Sets up state to begin a http request */
-static void PrepareCurrentRequest(struct HttpRequest* req, cc_string* url) {
-	static const char* verbs[] = { "GET", "HEAD", "POST" };
-	Http_GetUrl(req, url);
-	Platform_Log2("Fetching %s (%c)", url, verbs[req->requestType]);
-	/* TODO change to verbs etc */
-
+static void SetCurrentRequest(struct HttpRequest* req) {
 	Mutex_Lock(curRequestMutex);
 	{
 		HttpRequest_Copy(&http_curRequest, req);
@@ -748,12 +806,12 @@ static void PrepareCurrentRequest(struct HttpRequest* req, cc_string* url) {
 	Mutex_Unlock(curRequestMutex);
 }
 
-static void PerformRequest(struct HttpRequest* req, cc_string* url) {
+static void PerformRequest(struct HttpRequest* req) {
 	cc_uint64 beg, end;
 	int elapsed;
 
 	beg = Stopwatch_Measure();
-	req->result = HttpBackend_Do(req, url);
+	req->result = HttpBackend_Do(req);
 	end = Stopwatch_Measure();
 
 	elapsed = Stopwatch_ElapsedMS(beg, end);
@@ -773,11 +831,8 @@ static void ClearCurrentRequest(void) {
 }
 
 static void DoRequest(struct HttpRequest* request) {
-	char urlBuffer[URL_MAX_SIZE]; cc_string url;
-
-	String_InitArray(url, urlBuffer);
-	PrepareCurrentRequest(request, &url);
-	PerformRequest(&http_curRequest, &url);
+	SetCurrentRequest(request);
+	PerformRequest(&http_curRequest);
 	ClearCurrentRequest();
 }
 

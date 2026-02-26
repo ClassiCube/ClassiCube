@@ -1,6 +1,6 @@
 #include "LWeb.h"
 #ifndef CC_DISABLE_LAUNCHER
-#include "String.h"
+#include "String_.h"
 #include "Launcher.h"
 #include "Platform.h"
 #include "Stream.h"

@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -28,7 +29,7 @@ struct CommandsList {
 	uint32_t capacity;
 	uint32_t list_type;
 	uint8_t* data;
-} __attribute__((aligned(32)));
+} CC_ALIGNED(32);
 
 // e.g. 1 -> 256, 50 -> 256, 256 -> 256
 #define ROUND_UP_256(v) (((v) + 0xFFu) & ~0xFFu)
@@ -744,20 +745,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 
-void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return memalign(16, maxVertices * strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { gfx_vertices = vb; }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
 /*########################################################################################################################*
@@ -818,8 +806,8 @@ void Gfx_SetFogMode(FogFunc func) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static matrix_t __attribute__((aligned(32))) _proj, _view;
-static matrix_t __attribute__((aligned(32))) mat_vp;
+static matrix_t CC_ALIGNED(32) _proj, _view;
+static matrix_t CC_ALIGNED(32) mat_vp;
 
 static float textureOffsetX, textureOffsetY;
 static int textureOffset;
@@ -1006,11 +994,9 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int freeMem = blockalloc_total_free(tex_table, texmem_blocks);
-	int usedMem = texmem_blocks - freeMem;
-
-	freeMem *= TEXMEM_BLOCK_SIZE;
-	usedMem *= TEXMEM_BLOCK_SIZE;
+	int freeMem, usedMem;
+	blockalloc_calc_usage(tex_table, texmem_blocks, TEXMEM_BLOCK_SIZE, 
+							&freeMem, &usedMem);
 	
 	float freeMemMB = freeMem / (1024.0f * 1024.0f);
 	float usedMemMB = usedMem / (1024.0f * 1024.0f);
@@ -1096,7 +1082,7 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 		uint32_t cmd; // TA command
 		uint32_t mode1, mode2, mode3; // not used in USERCLIP command
 		uint32_t sx, sy, ex, ey; // 4 corners of the region
-	} __attribute__((aligned(32))) c;
+	} CC_ALIGNED(32) c;
 
 	c.cmd = PVR_CMD_USERCLIP;
 	c.mode1 = c.mode2 = c.mode3 = 0;

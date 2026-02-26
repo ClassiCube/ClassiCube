@@ -1,12 +1,12 @@
 #include "Core.h"
 #if defined CC_BUILD_WINCE
 
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "SystemFonts.h"
 #include "Funcs.h"
 #include "Utils.h"
 #include "Errors.h"
+#define OVERRIDE_MEM_FUNCTIONS
 
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -25,6 +25,7 @@
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_PathNotFound     = ERROR_PATH_NOT_FOUND;
 const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
@@ -33,39 +34,35 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 const char* Platform_AppNameSuffix = " CE";
 cc_bool  Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
+#include "_PlatformBase.h"
 
 // Current directory management for Windows CE
 static WCHAR current_directory[MAX_PATH] = L"\\";
 static cc_string Platform_NextArg(STRING_REF cc_string* args);
-
 static CRITICAL_SECTION dir_lock;
+
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
 #include "main_impl.h"
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
 	cc_result res;
 	SetupProgram(0, NULL);
 
 	do {
 		res = RunProgram(0, NULL);
-	} while (Platform_IsSingleProcess() && Window_Main.Exists);
+	} while (Window_Main.Exists);
 
 	Window_Free();
 	ExitProcess(res);
 	return res;
 }
 
+
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-
-
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? HeapAlloc(heap, 0, size) : NULL;
@@ -235,7 +232,15 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* src) {
 	Platform_EncodeString(dst, src);
 }
 
-cc_result Directory_Create(const cc_filepath* path) {
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	int i;
+	for (i = 0; i < FILENAME_SIZE && path->uni[i]; i++) 
+	{
+		String_Append(dst, Convert_CodepointToCP437(path->uni[i]));
+	}
+}
+
+cc_result Directory_Create2(const cc_filepath* path) {
 	WCHAR fullPath[MAX_PATH];
 	
 	MakeAbsolutePath(path->uni, fullPath, MAX_PATH);
@@ -385,6 +390,10 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	InitializeCriticalSection(ptr);
@@ -451,6 +460,14 @@ void Platform_LoadSysFonts(void) {
 *#########################################################################################################################*/
 static char sockaddr_size_check[sizeof(SOCKADDR_STORAGE) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst->data;
 	cc_uint32 ip_addr;
@@ -458,7 +475,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.S_un.S_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -490,7 +507,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 		addr4 = (SOCKADDR_IN*)addrs[i].data;
 		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
+		addr4->sin_port   = SockAddr_EncodePort(port);
 		addr4->sin_addr   = *(IN_ADDR*)src_addr;
 	}
 
@@ -533,34 +550,48 @@ void Socket_Close(cc_socket s) {
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	fd_set set;
+	fd_set set1, set2;
 	struct timeval time = { 0 };
 	int selectCount;
 
-	FD_ZERO(&set);
-	FD_SET(s, &set);
+	set1.fd_count    = 1; set2.fd_count    = 1;
+	set1.fd_array[0] = s; set2.fd_array[0] = s;
+
+	/* As per https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-select */
+	/* A socket will be pollable (select returns true) in following cases): */
+	/* - readfds: Data is available for reading, or Connection has been closed/reset/terminated. */
+	/* - writefds: Non-blocking connection attempt succeeded, or data can be sent */
+	/* - exceptfds: Non-blocking connection attempt failed, or OOB data is available for reading */
 
 	if (mode == SOCKET_POLL_READ) {
-		selectCount = select(0, &set, NULL, NULL, &time);
+		selectCount = select(1, &set1, NULL, NULL, &time);
+
+		*success = set1.fd_count != 0; 
 	} else {
-		selectCount = select(0, NULL, &set, NULL, &time);
+		selectCount = select(1, NULL, &set1, &set2, &time);
+
+		*success = set1.fd_count != 0 || set2.fd_count != 0;
 	}
 
-	if (selectCount == SOCKET_ERROR) { *success = false; return WSAGetLastError(); }
-	*success = FD_ISSET(s, &set) != 0; return 0;
+	if (selectCount >= 0) return 0;
+	*success = false; 
+	return WSAGetLastError();
 }
-
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	int resultSize = sizeof(cc_result);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
 
-	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&res, &resultSize);
-	return res;
+cc_result Socket_GetLastError(cc_socket s) {
+	int error   = ERR_INVALID_ARGUMENT;
+	int errSize = sizeof(error);
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&error, &errSize);
+	return error;
 }
 
 /*########################################################################################################################*

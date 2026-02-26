@@ -34,12 +34,6 @@ static const GUID guid_IDXGIFactory2   = { 0x50c83a1c, 0xe072, 0x4c48, { 0x87, 0
 static int depthBits; // TODO implement depthBits?? for ZNear calc
 static GfxResourceID white_square;
 
-#ifdef _MSC_VER
-#define CC_ALIGNED(x) __declspec(align(x))
-#else
-#define CC_ALIGNED(x) __attribute__((aligned(x)))
-#endif
-
 static ID3D11Device* device;
 static ID3D11DeviceContext* context;
 static IDXGIDevice1* dxgi_device;
@@ -87,7 +81,7 @@ static void CreateSwapChain(void) {
 	desc.Scaling            = DXGI_SCALING_NONE;
 
 	IDXGIDevice* dxgi_device = NULL;
-	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, &dxgi_device);
+	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, (void**)&dxgi_device);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI device");
 
 	IDXGIAdapter* dxgi_adapter = NULL;
@@ -95,7 +89,7 @@ static void CreateSwapChain(void) {
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI adapter");
 
 	IDXGIFactory2* dxgi_factory2 = NULL;
-	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory2, &dxgi_factory2);
+	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory2, (void**)&dxgi_factory2);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI factory");
 
 	void* window = Window_Main.Handle.ptr;
@@ -162,7 +156,7 @@ static void CreateSwapChain(void) {
 	desc.SwapEffect         = DXGI_SWAP_EFFECT_DISCARD;
 
 	IDXGIDevice* dxgi_device = NULL;
-	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, &dxgi_device);
+	hr = ID3D11Device_QueryInterface(device, &guid_IDXGIDevice, (void**)&dxgi_device);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI device");
 
 	IDXGIAdapter* dxgi_adapter = NULL;
@@ -170,11 +164,11 @@ static void CreateSwapChain(void) {
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI adapter");
 
 	IDXGIFactory* dxgi_factory = NULL;
-	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory, &dxgi_factory);
+	hr = IDXGIAdapter_GetParent(dxgi_adapter, &guid_IDXGIFactory, (void**)&dxgi_factory);
 	if (FAILED(hr)) Process_Abort2(hr, "Querying DXGI factory");
 
 	void* window = Window_Main.Handle.ptr;
-	hr = IDXGIFactory_CreateSwapChain(dxgi_factory, device, &desc, &swapchain);
+	hr = IDXGIFactory_CreateSwapChain(dxgi_factory, (IUnknown*)device, &desc, &swapchain);
 	if (FAILED(hr)) Process_Abort2(hr, "Creating swap chain");
 }
 #endif
@@ -203,7 +197,7 @@ void Gfx_Free(void) {
 
 	ID3D11Debug *d3dDebug;
 	static const GUID guid_d3dDebug = { 0x79cf2233, 0x7536, 0x4948,{ 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };
-	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, &d3dDebug);
+	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, (void**)&d3dDebug);
 	if (SUCCEEDED(hr))
 	{
 		hr = ID3D11Debug_ReportLiveDeviceObjects(d3dDebug, D3D11_RLDO_DETAIL);
@@ -274,7 +268,8 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 		// https://eatplayhate.me/2013/09/29/d3d11-texture-update-costs/
 		// Might not be ideal, but seems to work well enough
 		int stride = width * 4;
-		ID3D11DeviceContext_UpdateSubresource(context, texture, lvl, &box, cur, stride, stride * height);
+		ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)texture, lvl, 
+												&box, cur, stride, stride * height);
 
 		if (prev != bmp->scan0) Mem_Free(prev);
 		prev     = cur;
@@ -324,7 +319,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 	}
 
-	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
+	hr = ID3D11Device_CreateShaderResourceView(device, (ID3D11Resource*)tex, 
+												NULL, &view);
 	if (hr) Process_Abort2(hr, "Failed to create view");
 
 	if (mipmaps) Gfx_UpdateTexture(view, 0, 0, bmp, rowWidth, mipmaps);
@@ -346,7 +342,8 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// Might not be ideal, but seems to work well enough
 	int stride = rowWidth * 4;
 	ID3D11ShaderResourceView_GetResource(view, &res);
-	ID3D11DeviceContext_UpdateSubresource(context, res, 0, &box, part->scan0, stride, stride * part->height);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)res, 0, 
+											&box, part->scan0, stride, stride * part->height);
 
 	if (mipmaps) D3D11_DoMipmaps(res, x, y, part, rowWidth);
 	ID3D11Resource_Release(res);
@@ -435,8 +432,8 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	ID3D11DeviceContext_UpdateSubresource(context, buffer, 0, NULL, tmp, 0, 0);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vb, 0, 
+											NULL, tmp, 0, 0);
 	Mem_Free(tmp);
 	tmp = NULL;
 }
@@ -460,14 +457,14 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
 	mapDesc.pData = NULL;
 
-	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
+	HRESULT hr = ID3D11DeviceContext_Map(context, (ID3D11Resource*)buffer, 0, 
+											D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
 	if (hr) Process_Abort2(hr, "Failed to lock dynamic VB");
 	return mapDesc.pData;
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	ID3D11DeviceContext_Unmap(context, buffer, 0);
+	ID3D11DeviceContext_Unmap(context, (ID3D11Resource*)vb, 0);
 	Gfx_BindDynamicVb(vb);
 }
 
@@ -663,7 +660,8 @@ static void VS_FreeShaders(void) {
 }
 
 static void VS_UpdateConstants(void) {
-	ID3D11DeviceContext_UpdateSubresource(context, vs_cBuffer, 0, NULL, &vs_constants, 0, 0);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer, 0, 
+											NULL, &vs_constants, 0, 0);
 }
 
 static void VS_FreeConstants(void) {
@@ -899,7 +897,8 @@ static void PS_UpdateConstants(void) {
 
 	// avoid doing - in pixel shader for density fog
 	ps_constants.fogValue = ps_fogMode == FOG_LINEAR ? ps_fogEnd : -ps_fogDensity;
-	ID3D11DeviceContext_UpdateSubresource(context, ps_cBuffer, 0, NULL, &ps_constants, 0, 0);
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)ps_cBuffer, 0, 
+											NULL, &ps_constants, 0, 0);
 }
 
 static void PS_FreeConstants(void) {
@@ -1005,14 +1004,15 @@ static void OM_UpdateTarget(void) {
 
 static void OM_InitTargets(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-depth-stencil
+	ID3D11Texture2D* pBackBuffer = NULL;
 	D3D11_TEXTURE2D_DESC desc;
-	ID3D11Texture2D* pBackBuffer;
 	HRESULT hr;
 
 	hr = IDXGISwapChain_GetBuffer(swapchain, 0, &guid_ID3D11Texture2D, (void**)&pBackBuffer);
 	if (hr) Process_Abort2(hr, "Failed to get swapchain backbuffer");
 
-	hr = ID3D11Device_CreateRenderTargetView(device, pBackBuffer, NULL, &backbuffer);
+	hr = ID3D11Device_CreateRenderTargetView(device, (ID3D11Resource*)pBackBuffer, 
+												NULL, &backbuffer);
 	if (hr) Process_Abort2(hr, "Failed to create render target");
 
 	ID3D11Texture2D_GetDesc(pBackBuffer, &desc);
@@ -1022,7 +1022,8 @@ static void OM_InitTargets(void) {
     hr = ID3D11Device_CreateTexture2D(device, &desc, NULL, &depthbuffer);
 	if (hr) Process_Abort2(hr, "Failed to create depthbuffer texture");
 
-	hr = ID3D11Device_CreateDepthStencilView(device, depthbuffer, NULL, &depthbufferView);
+	hr = ID3D11Device_CreateDepthStencilView(device, (ID3D11Resource*)depthbuffer, 
+												NULL, &depthbufferView);
 	if (hr) Process_Abort2(hr, "Failed to create depthbuffer view");
 
 	ID3D11Texture2D_Release(pBackBuffer);
@@ -1183,17 +1184,18 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	desc.Usage     = D3D11_USAGE_STAGING;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-	hr = ID3D11Device_CreateTexture2D(device, &desc, NULL, &tmp);
+	hr  = ID3D11Device_CreateTexture2D(device, &desc, NULL, &tmp);
 	if (hr) goto finished;
-	ID3D11DeviceContext_CopyResource(context, tmp, backbuffer_res);
+	ID3D11DeviceContext_CopyResource(context, (ID3D11Resource*)tmp, backbuffer_res);
 
-	hr = ID3D11DeviceContext_Map(context, tmp, 0, D3D11_MAP_READ, 0, &buffer);
+	hr = ID3D11DeviceContext_Map(context, (ID3D11Resource*)tmp, 0, 
+									D3D11_MAP_READ, 0, &buffer);
 	if (hr) goto finished;
 	{
 		Bitmap_Init(bmp, desc.Width, desc.Height, NULL);
 		hr = Png_Encode(&bmp, output, D3D11_GetRow, false, &buffer);
 	}
-	ID3D11DeviceContext_Unmap(context, tmp, 0);
+	ID3D11DeviceContext_Unmap(context, (ID3D11Resource*)tmp, 0);
 
 finished:
 	if (tmp) { ID3D11Texture2D_Release(tmp); }
@@ -1239,7 +1241,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	// TODO this overlaps with global declarations, switch to them at some point.. ?
 	// apparently using D3D11CreateDeviceAndSwapChain is bad, need to investigate
 	IDXGIDevice* dxgi_device = NULL;
-	hr = ID3D11Device_QueryInterface(device, &guid_IXDGIDevice, &dxgi_device);
+	hr = ID3D11Device_QueryInterface(device, &guid_IXDGIDevice, (void**)&dxgi_device);
 	if (hr || !dxgi_device) return;
 
 	IDXGIAdapter* dxgi_adapter;

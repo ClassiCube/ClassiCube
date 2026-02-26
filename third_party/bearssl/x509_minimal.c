@@ -924,8 +924,8 @@ br_x509_minimal_run(void *t0ctx)
 	t0_next:
 		t0x = T0_NEXT(&ip);
 		if (t0x < T0_INTERPRETED) {
+			int32_t t0off;
 			switch (t0x) {
-				int32_t t0off;
 
 			case 0: /* ret */
 				t0x = T0_RPOP();
@@ -1653,6 +1653,7 @@ t0_exit:
 static int
 verify_signature(br_x509_minimal_context *ctx, const br_x509_pkey *pk)
 {
+	unsigned char tmp[64];
 	int kt;
 
 	kt = ctx->cert_signer_key_type;
@@ -1660,7 +1661,6 @@ verify_signature(br_x509_minimal_context *ctx, const br_x509_pkey *pk)
 		return BR_ERR_X509_WRONG_KEY_TYPE;
 	}
 	switch (kt) {
-		unsigned char tmp[64];
 
 	case BR_KEYTYPE_RSA:
 		if (ctx->irsa == 0) {

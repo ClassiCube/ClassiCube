@@ -75,6 +75,8 @@ struct cc_window {
 	/* Whether on-screen keyboard should be instantly opened when an input field is selected */
 	/* Otherwise, the on-screen keyboard is only opened when the input field is clicked */
 	cc_uint8 SoftKeyboardInstant;
+	/* Whether the window is used for drawing 2D framebuffer or 3D graphics contents */
+	cc_bool Is3D;
 	/* Scale factors specifically for some in-game elements (e.g. chat) */
 	/*  that vary their elements based on the window dimensions */
 	float UIScaleX, UIScaleY;
@@ -137,6 +139,8 @@ void Window_RequestClose(void);
 /* Processes all pending window messages/events. */
 void Window_ProcessEvents(float delta);
 
+/* Initialises necessary state before initing platform and loading options */
+void Gamepads_PreInit(void);
 /* Initialises state for gamepad/joystick input. */
 void Gamepads_Init(void);
 /* Processes all pending gamepad/joystick input. */
@@ -249,6 +253,9 @@ void GLContext_SetVSync(cc_bool vsync);
 /* Gets OpenGL context specific graphics information. */
 void GLContext_GetApiInfo(cc_string* info);
 #endif
+
+/* NOTE: Only works when VirtualDialog.h is included in window backend */
+void VirtualDialog_Show(const char* title, const char* msg, cc_bool oneshot);
 
 CC_END_HEADER
 #endif

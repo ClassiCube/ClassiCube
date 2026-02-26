@@ -2,7 +2,6 @@
 #if defined CC_BUILD_POSIX
 
 #define CC_XTEA_ENCRYPTION
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
 #include "SystemFonts.h"
@@ -11,6 +10,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -33,6 +33,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -53,6 +54,7 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 cc_uint8 Platform_Flags;
 #endif
 cc_bool  Platform_ReadonlyFilesystem;
+#include "_PlatformBase.h"
 
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN
@@ -110,32 +112,6 @@ int main(int argc, char** argv) {
 	return res;
 }
 #endif
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*) memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*) memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*) memmove(dst, src,   numBytes); }
-
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
-}
 
 
 /*########################################################################################################################*
@@ -313,6 +289,11 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 #if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
@@ -321,7 +302,7 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 void Directory_GetCachePath(cc_string* path) { }
 #endif
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
@@ -446,16 +427,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 
 #ifdef CC_BUILD_ANDROID
-/* All threads using JNI must detach BEFORE they exit */
-/* (see https://developer.android.com/training/articles/perf-jni#threads */
-static void* ExecThread(void* param) {
-	JNIEnv* env;
-	JavaGetCurrentEnv(env);
-
-	((Thread_StartFunc)param)();
-	(*VM_Ptr)->DetachCurrentThread(VM_Ptr);
-	return NULL;
-}
+/* Special handling required for JNI, ExecThread implemented in Platform_Android.c */
 #else
 static void* ExecThread(void* param) {
 	((Thread_StartFunc)param)();
@@ -699,6 +671,14 @@ union SocketAddress {
 /* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
 static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -706,7 +686,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -718,7 +698,7 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	if (inet_pton(AF_INET6, ip, &addr->v6.sin6_addr) <= 0) return false;
 	
 	addr->v6.sin6_family = AF_INET6;
-	addr->v6.sin6_port   = htons(port);
+	addr->v6.sin6_port   = SockAddr_EncodePort(port);
 		
 	dst->size  = sizeof(addr->v6);
 	return true;
@@ -784,7 +764,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 		addr4 = (struct sockaddr_in*)addrs[i].data;
 		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
+		addr4->sin_port   = SockAddr_EncodePort(port);
 		addr4->sin_addr   = *(struct in_addr*)src_addr;
 	}
 
@@ -880,13 +860,16 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize = sizeof(socklen_t);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	socklen_t errSize = sizeof(error);
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	return res;
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	return error;
 }
 
 
@@ -1461,15 +1444,15 @@ static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 #if defined CC_BUILD_LINUX
 /* Read /var/lib/dbus/machine-id or /etc/machine-id for the key */
 static cc_result GetMachineID(cc_uint32* key) {
-	const cc_string idFile  = String_FromConst("/var/lib/dbus/machine-id");
-	const cc_string altFile = String_FromConst("/etc/machine-id");
+	const cc_filepath* id_path  = FILEPATH_RAW("/var/lib/dbus/machine-id");
+	const cc_filepath* alt_path = FILEPATH_RAW("/etc/machine-id");
 	char tmp[MACHINEID_LEN];
 	struct Stream s;
 	cc_result res;
 
 	/* Some machines only have dbus id, others only have etc id */
-	res = Stream_OpenFile(&s, &idFile);
-	if (res) res = Stream_OpenFile(&s, &altFile);
+	res = Stream_OpenPath(&s, id_path);
+	if (res) res = Stream_OpenPath(&s, alt_path);
 	if (res) return res;
 
 	res = Stream_Read(&s, (cc_uint8*)tmp, MACHINEID_LEN);
@@ -1560,11 +1543,13 @@ static cc_result GetMachineID(cc_uint32* key) {
 	return 0;
 }
 #elif defined CC_BUILD_ANDROID
+extern void GetDeviceUUID(cc_string* str);
+
 static cc_result GetMachineID(cc_uint32* key) {
 	cc_string dir; char dirBuffer[STRING_SIZE];
 	String_InitArray(dir, dirBuffer);
 
-	JavaCall_Void_String("getUUID", &dir);
+	GetDeviceUUID(&dir);
 	DecodeMachineID(dirBuffer, dir.length, key);
 	return 0;
 }

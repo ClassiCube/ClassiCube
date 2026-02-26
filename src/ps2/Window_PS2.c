@@ -3,13 +3,15 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Logger.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <libpad.h>
 #include <packet.h>
@@ -23,28 +25,47 @@
 #include <libkbd.h>
 #include <libmouse.h>
 
-static cc_bool launcherMode, mouseSupported, kbdSupported;
+static cc_bool mouseSupported, kbdSupported;
 #include "../VirtualCursor.h"
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 framebuffer_t fb_colors[2];
 zbuffer_t     fb_depth;
+
 static int display_mode;
+extern void Gfx_AllocFramebuffers(void);
+
+static void InitDisplay(void) {
+	framebuffer_t* fb = &fb_colors[0];
+	int interlaced = display_mode == GRAPH_MODE_NTSC || display_mode == GRAPH_MODE_PAL || display_mode == GRAPH_MODE_HDTV_1080I;
+	int mode       = interlaced ? GRAPH_MODE_INTERLACED : GRAPH_MODE_NONINTERLACED;
+	int display    = interlaced ? GRAPH_MODE_FIELD      : GRAPH_MODE_FRAME;
+
+	graph_set_mode(mode, display_mode, display, GRAPH_ENABLE);
+	graph_set_screen(0, 0, fb->width, fb->height);
+
+	graph_set_bgcolor(50, 50, 50);
+	graph_set_framebuffer_filtered(fb->address, fb->width, fb->psm, 0, 0);
+	graph_enable_output();
+}
+
 
 void Window_PreInit(void) {
 	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
 	dma_channel_fast_waits(DMA_CHANNEL_GIF);
-}
-
-void Window_Init(void) {
 	display_mode = graph_get_region();
 
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = display_mode == GRAPH_MODE_PAL ? 512 : 448;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
+
+	Gfx_AllocFramebuffers();
+	InitDisplay();
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
@@ -53,8 +74,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = 1.0f / Window_Main.Height;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetX(10);
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	if (PS2MouseInit() >= 0) {
@@ -69,55 +90,16 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-extern void Gfx_VRAM_Reset(void);
-extern int  Gfx_VRAM_AllocPaged(int width, int height, int psm);
-
-static void ResetDisplay(void) {
-	graph_shutdown();
-	Gfx_VRAM_Reset();
-
-	fb_colors[0].width   = DisplayInfo.Width;
-	fb_colors[0].height  = DisplayInfo.Height;
-	fb_colors[0].mask    = 0;
-	fb_colors[0].psm     = GS_PSM_24;
-	fb_colors[0].address = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm);
-
-	fb_colors[1].width   = DisplayInfo.Width;
-	fb_colors[1].height  = DisplayInfo.Height;
-	fb_colors[1].mask    = 0;
-	fb_colors[1].psm     = GS_PSM_24;
-	fb_colors[1].address = Gfx_VRAM_AllocPaged(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm);
-
-	fb_depth.enable      = 1;
-	fb_depth.method      = ZTEST_METHOD_ALLPASS;
-	fb_depth.mask        = 0;
-	fb_depth.zsm         = GS_ZBUF_24;
-	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
-}
-
-static void InitDisplay(framebuffer_t* fb) {
-	int interlaced = display_mode == GRAPH_MODE_NTSC || display_mode == GRAPH_MODE_PAL || display_mode == GRAPH_MODE_HDTV_1080I;
-	int mode       = interlaced ? GRAPH_MODE_INTERLACED : GRAPH_MODE_NONINTERLACED;
-	int display    = interlaced ? GRAPH_MODE_FIELD      : GRAPH_MODE_FRAME;
-
-	graph_set_mode(mode, display_mode, display, GRAPH_ENABLE);
-	graph_set_screen(0, 0, fb->width, fb->height);
-
-	graph_set_bgcolor(50, 50, 50);
-	graph_set_framebuffer_filtered(fb->address, fb->width, fb->psm, 0, 0);
-	graph_enable_output();
-}
-
 void Window_Create2D(int width, int height) {
-	ResetDisplay();
-	InitDisplay(&fb_colors[0]);
-	launcherMode = true;
+	graph_shutdown();
+	InitDisplay();
+	Window_Main.Is3D = false;
 }
 
-void Window_Create3D(int width, int height) { 
-	ResetDisplay();
-	InitDisplay(&fb_colors[0]);
-	launcherMode = false; 
+void Window_Create3D(int width, int height) {
+	graph_shutdown();
+	InitDisplay();
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -248,16 +230,16 @@ static const BindMapping defaults_ps2[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
 };
 
-static char padBuf0[256] __attribute__((aligned(64)));
-static char padBuf1[256] __attribute__((aligned(64)));
+static char padBuf0[256] CC_ALIGNED(64);
+static char padBuf1[256] CC_ALIGNED(64);
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	
+void Gamepads_PreInit(void) {
 	padInit(0);
 	padPortOpen(0, 0, padBuf0);
 	padPortOpen(1, 0, padBuf1);
-	
+}
+
+void Gamepads_Init(void) {
 	Input_DisplayNames[CCPAD_1] = "CIRCLE";
 	Input_DisplayNames[CCPAD_2] = "CROSS";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
@@ -337,18 +319,6 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
-
-	packet_t* packet = packet_init(100, PACKET_NORMAL);
-	qword_t* q = packet->data;
-
-	q = draw_setup_environment(q, 0, &fb_colors[0], &fb_depth);
-	q = draw_clear(q, 0, 0, 0,
-					fb_colors[0].width, fb_colors[0].height, 170, 170, 170);
-	q = draw_finish(q);
-
-	dma_channel_send_normal(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
-	dma_wait_fast();
-	packet_free(packet);
 }
 
 extern void Gfx_TransferPixels(void* src, int width, int height, 
@@ -373,7 +343,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
@@ -389,9 +359,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg, false);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

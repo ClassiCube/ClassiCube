@@ -52,6 +52,33 @@ static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
 	return false; 
 }
 
+static const cc_string url_rewrite_srcs[] = {
+	#define URL_REMAP_FUNC(src_base, src_host, dst_base, dst_host) String_FromConst(src_base),
+	#include "../_HttpUrlMap.h"
+};
+static const char* url_rewrite_dsts[] = {
+	#undef  URL_REMAP_FUNC
+	#define URL_REMAP_FUNC(src_base, src_host, dst_base, dst_host) dst_base,
+	#include "../_HttpUrlMap.h"
+};
+
+/* Converts e.g. "http://dl.dropbox.com/xyZ" into "https://dl.dropboxusercontent.com/xyZ" */
+static void GetFinalUrl(struct HttpRequest* req, cc_string* dst) {
+	cc_string url = String_FromRawArray(req->url);
+	cc_string resource;
+	int i;
+
+	for (i = 0; i < Array_Elems(url_rewrite_srcs); i++) 
+	{
+		if (!String_CaselessStarts(&url, &url_rewrite_srcs[i])) continue;
+
+		resource = String_UNSAFE_SubstringAt(&url, url_rewrite_srcs[i].length);
+		String_Format2(dst, "%c%s", url_rewrite_dsts[i], &resource);
+		return;
+	}
+	String_Copy(dst, &url);
+}
+
 #define HTTP_MAX_CONCURRENCY 6
 static void Http_StartNextDownload(void) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
@@ -65,7 +92,7 @@ static void Http_StartNextDownload(void) {
 	String_InitArray(url, urlBuffer);
 
 	req = &queuedReqs.entries[0];
-	Http_GetUrl(req, &url);
+	GetFinalUrl(req, &url);
 	Platform_Log1("Fetching %s", &url);
 
 	String_EncodeUtf8(urlStr, &url);

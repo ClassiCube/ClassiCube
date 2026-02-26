@@ -99,16 +99,37 @@ void Gfx_Create(void) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------Buffer generation/deletion-----------------------------------------------*
+*#########################################################################################################################*/
+/* Necessary to implement this way, so works on both little endian and big endian systems */
+typedef GfxResourceID (*GenGLBuffer)(void);
+typedef void (*DelGLBuffer)(GfxResourceID id);
+
+static GfxResourceID defaultGenBuffer(void) {
+	GLuint buf = 0;
+	_glGenBuffers(1, &buf);
+	return uint_to_ptr(buf);
+}
+
+static void defaultDelBuffer(GfxResourceID id) {
+	GLuint buf = ptr_to_uint(id);
+	_glDeleteBuffers(1, &buf);
+}
+
+static GenGLBuffer genBuffer = defaultGenBuffer;
+static DelGLBuffer delBuffer = defaultDelBuffer;
+
+
+/*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 #ifndef GL_INDICES
 	cc_uint16 gl_indices[GFX_MAX_INDICES];
 #endif
-	GfxResourceID id = NULL;
+	GfxResourceID id = genBuffer();
 	cc_uint32 size   = count * sizeof(cc_uint16);
 
-	_glGenBuffers(1, (GLuint*)&id);
 	fillFunc(gl_indices, count, obj);
 	_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, gl_indices, GL_STATIC_DRAW);
@@ -121,7 +142,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 	GfxResourceID id = *ib;
 	if (!id) return;
 
-	_glDeleteBuffers(1, (GLuint*)&id);
+	delBuffer(id);
 	*ib = 0;
 }
 
@@ -130,8 +151,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	GfxResourceID id = NULL;
-	_glGenBuffers(1, (GLuint*)&id);
+	GfxResourceID id = genBuffer();
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	return id;
 }
@@ -142,7 +162,7 @@ void Gfx_BindVb(GfxResourceID vb) {
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID id = *vb;
-	if (id) _glDeleteBuffers(1, (GLuint*)&id);
+	if (id) delBuffer(id);
 	*vb = 0;
 }
 
@@ -164,10 +184,9 @@ static cc_bool UnlockVb(GfxResourceID vb) {
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	GfxResourceID id = NULL;
+	GfxResourceID id = genBuffer();
 	cc_uint32 size   = maxVertices * strideSizes[fmt];
 
-	_glGenBuffers(1, (GLuint*)&id);
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
@@ -179,7 +198,7 @@ void Gfx_BindDynamicVb(GfxResourceID vb) {
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
 	GfxResourceID id = *vb;
-	if (id) _glDeleteBuffers(1, (GLuint*)&id);
+	if (id) delBuffer(id);
 	*vb = 0;
 }
 
@@ -277,9 +296,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_BindTexture(GfxResourceID texId) {
-	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
-}
+void Gfx_BindTexture(GfxResourceID texID) { setTexture(texID); }
 
 
 /*########################################################################################################################*
@@ -482,14 +499,12 @@ static legacy_buffer* cur_ib;
 static legacy_buffer* cur_vb;
 #define legacy_GetBuffer(target) (target == GL_ELEMENT_ARRAY_BUFFER ? &cur_ib : &cur_vb);
 
-static void APIENTRY legacy_genBuffer(GLsizei n, GLuint* buffer) {
-	GfxResourceID* dst = (GfxResourceID*)buffer;
-	*dst = Mem_TryAllocCleared(1, sizeof(legacy_buffer));
+static GfxResourceID legacy_genBuffer(void) {
+	return Mem_TryAllocCleared(1, sizeof(legacy_buffer));
 }
 
-static void APIENTRY legacy_deleteBuffer(GLsizei n, const GLuint* buffer) {
-	GfxResourceID* dst = (GfxResourceID*)buffer;
-	Mem_Free(*dst);
+static void legacy_deleteBuffer(GfxResourceID id) {
+	Mem_Free(id);
 }
 
 static void APIENTRY legacy_bindBuffer(GLenum target, GfxResourceID src) {
@@ -517,8 +532,8 @@ struct GL10Texture {
 };
 static struct GL10Texture* gl10_tex;
 
-static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
-	gl10_tex = (struct GL10Texture*)texture;
+static void gl10_bindTexture(GfxResourceID texID) {
+	gl10_tex = (struct GL10Texture*)texID;
 	if (gl10_tex && gl10_tex->pixels) {
 		_glTexImage2D(GL_TEXTURE_2D, 0, 4, gl10_tex->width, gl10_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gl10_tex->pixels);
 	} else {
@@ -527,14 +542,14 @@ static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
 	}
 }
 
-static void APIENTRY gl10_deleteTexture(GLsizei n, const GLuint* textures) {
-	struct GL10Texture* tex = (struct GL10Texture*)textures[0];
+static void gl10_deleteTexture(GfxResourceID id) {
+	struct GL10Texture* tex = (struct GL10Texture*)id;
 	if (tex->pixels) Mem_Free(tex->pixels);
 	if (tex) Mem_Free(tex);
 }
 
-static void APIENTRY gl10_genTexture(GLsizei n, GLuint* textures) {
-	textures[0] = (GLuint)Mem_AllocCleared(1, sizeof(struct GL10Texture), "GL 1.0 texture");
+static GfxResourceID gl10_genTexture(void) {
+	return Mem_AllocCleared(1, sizeof(struct GL10Texture), "GL 1.0 texture");
 }
 
 static void APIENTRY gl10_texImage(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels) {
@@ -610,8 +625,8 @@ static void FallbackOpenGL(void) {
 		"As such you will likely experience very poor performance");
 	customMipmapsLevels = false;
 		
-	_glGenBuffers    = legacy_genBuffer;
-	_glDeleteBuffers = legacy_deleteBuffer;
+	genBuffer        = legacy_genBuffer;
+	delBuffer        = legacy_deleteBuffer;
 	_glBindBuffer    = legacy_bindBuffer;
 	_glBufferData    = legacy_bufferData;
 	_glBufferSubData = legacy_bufferSubData;
@@ -629,9 +644,9 @@ static void FallbackOpenGL(void) {
 	_glDrawElements    = gl10_drawElements;    _glColorPointer  = gl10_colorPointer;
 	_glTexCoordPointer = gl10_texCoordPointer; _glVertexPointer = gl10_vertexPointer;
 
-	_glBindTexture    = gl10_bindTexture;
-	_glGenTextures    = gl10_genTexture;
-	_glDeleteTextures = gl10_deleteTexture;
+	setTexture        = gl10_bindTexture;
+	genTexture        = gl10_genTexture;
+	delTexture        = gl10_deleteTexture;
 	_glTexImage2D     = gl10_texImage;
 	_glTexSubImage2D  = gl10_texSubImage;
 

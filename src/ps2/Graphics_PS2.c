@@ -1,9 +1,9 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
 #include "../_BlockAlloc.h"
 
-#include <packet.h>
 #include <dma_tags.h>
 #include <gif_tags.h>
 #include <gs_privileged.h>
@@ -14,8 +14,9 @@
 #include <draw.h>
 #include <draw3d.h>
 #include <malloc.h>
+#include "gs_gpu.h"
 
-#define QWORD_ALIGNED __attribute__((aligned(16)))
+#define QWORD_ALIGNED CC_ALIGNED(16)
 
 typedef struct Matrix VU0_matrix QWORD_ALIGNED;
 typedef struct Vec4   VU0_vector QWORD_ALIGNED;
@@ -36,8 +37,8 @@ extern void LoadViewportOrigin(VU0_vector* origin);
 extern void LoadViewportScale(VU0_vector* scale);
 
 // double buffering
-static packet_t* packets[2];
-static packet_t* current;
+static qword_t* dma_bufs[2];
+static qword_t* cur_buf;
 static int context;
 
 static qword_t* dma_beg;
@@ -62,19 +63,31 @@ static void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
+
+static qword_t* AllocDMABuffer(int qwords) {
+	// TODO ucab memory with Flush at start? need to adjust free too though
+	return memalign(64, qwords * 16);
+}
+
+static void FreeDMABuffer(qword_t* buffer) {
+	// TODO ucab memory with Flush at start? need to adjust free too though
+	free(buffer);
+}
+
 // TODO: Find a better way than just increasing this hardcoded size
 static void InitDMABuffers(void) {
-	packets[0] = packet_init(50000, PACKET_NORMAL);
-	packets[1] = packet_init(50000, PACKET_NORMAL);
+	dma_bufs[0] = AllocDMABuffer(50000);
+	dma_bufs[1] = AllocDMABuffer(50000);
 }
+
 
 static void UpdateContext(void) {
 	fb_display = &fb_colors[context];
 	fb_draw    = &fb_colors[context ^ 1];
 
-	current = packets[context];
+	cur_buf = dma_bufs[context];
 	
-	dma_beg = current->data;
+	dma_beg = cur_buf;
 	// increment past the dmatag itself
 	Q = dma_beg + 1;
 }
@@ -133,19 +146,22 @@ static void InitDrawingEnv(void) {
 static void InitPalette(void);
 static void InitTextureMem(void);
 
+static void InitGPUState(void) {
+	InitDMABuffers();
+	InitPalette();
+	InitTextureMem();
+}
+
 void Gfx_Create(void) {
 	primitive_type = 0; // PRIM_POINT, which isn't used here
+	if (!Gfx.Created) InitGPUState();
 
-	InitDMABuffers();
 	context = 0;
 	UpdateContext();
 	
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
-
-	InitPalette();
-	InitTextureMem();
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -164,11 +180,14 @@ void Gfx_Free(void) {
 	Gfx_FreeState();
 }
 
-static CC_INLINE void DMAFlushBuffer(void) {
-	if (Q == dma_beg) return;
+static void FlushMainDMABuffer(void) {
+	dma_wait_fast();
 
-	DMATAG_END(dma_beg, (Q - dma_beg) - 1, 0, 0, 0);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
+	if (Q != dma_beg + 1) {
+		DMATAG_END(dma_beg, (Q - dma_beg) - 1, 0, 0, 0);
+		dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
+	}
+	Q = dma_beg + 1;
 }
 
 
@@ -177,10 +196,6 @@ static CC_INLINE void DMAFlushBuffer(void) {
 *#########################################################################################################################*/
 #define ALIGNUP(val, alignment) (((val) + (alignment - 1)) & -alignment)
 static int vram_pointer;
-
-void Gfx_VRAM_Reset(void) {
-	vram_pointer = 0;
-}
 
 // Returns size in words
 static int VRAM_Size(int width, int height, int psm) {
@@ -253,11 +268,15 @@ static int CalcTransferBytes(int width, int height, int psm) {
 	return 0;
 }
 
-static qword_t* BuildTransfer(qword_t* q, u8* src, int width, int height, int psm, 
+static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int psm, 
 								int dst_base, int dst_width)
 {
 	int  bytes = CalcTransferBytes(width, height, psm);
 	int qwords = (bytes + 15) / 16; // ceiling division by 16
+
+	CPU_FlushDataCache(src, bytes);
+	// TODO ucab memory? but this can run into obscure issues if memory range has ever been cached before..
+	// https://www.psx-place.com/threads/newlib-porting-challenges.26821/page-2
 
 	// Parameters for RAM -> GS transfer
 	DMATAG_CNT(q, 5, 0,0,0); q++;
@@ -295,14 +314,38 @@ static qword_t* BuildTransfer(qword_t* q, u8* src, int width, int height, int ps
 
 void Gfx_TransferPixels(void* src, int width, int height, 
 						int format, unsigned dst_base, unsigned dst_stride) {
-	packet_t* packet = packet_init(200, PACKET_NORMAL);
-	qword_t* q = packet->data;
+	qword_t* buf = AllocDMABuffer(200);
+	qword_t* q   = buf;
 
-	q = BuildTransfer(q, src, width, height, format, dst_base, dst_stride);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0,0);
+	q = PrepareTransfer(q, src, width, height, format, dst_base, dst_stride);
+	dma_channel_send_chain(DMA_CHANNEL_GIF, buf, q - buf, 0,0);
 	dma_wait_fast();
 
-	packet_free(packet);
+	FreeDMABuffer(buf);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------Framebuffer allocation--------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_AllocFramebuffers(void) {
+	fb_colors[0].width   = DisplayInfo.Width;
+	fb_colors[0].height  = DisplayInfo.Height;
+	fb_colors[0].mask    = 0;
+	fb_colors[0].psm     = GS_PSM_24;
+	fb_colors[0].address = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_colors[0].psm);
+
+	fb_colors[1].width   = DisplayInfo.Width;
+	fb_colors[1].height  = DisplayInfo.Height;
+	fb_colors[1].mask    = 0;
+	fb_colors[1].psm     = GS_PSM_24;
+	fb_colors[1].address = Gfx_VRAM_AllocPaged(fb_colors[1].width, fb_colors[1].height, fb_colors[1].psm);
+
+	fb_depth.enable      = 1;
+	fb_depth.method      = ZTEST_METHOD_ALLPASS;
+	fb_depth.mask        = 0;
+	fb_depth.zsm         = GS_ZBUF_16S;
+	fb_depth.address     = Gfx_VRAM_AllocPaged(fb_colors[0].width, fb_colors[0].height, fb_depth.zsm);
 }
 
 
@@ -381,7 +424,8 @@ static unsigned tex_offset;
 static void InitTextureMem(void) {
 	tex_offset = Gfx_VRAM_Alloc(256, 256, GS_PSM_32);
 
-	texmem_4bpp_blocks = fb_colors[1].address / TEXMEM_BLOCK_SIZE;
+	// Overlap 4bpp textures with the two 24bpp framebuffers
+	texmem_4bpp_blocks = fb_depth.address / TEXMEM_BLOCK_SIZE;
 }
 
 
@@ -399,7 +443,7 @@ struct GPUTexture {
 
 static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
 	// TODO terrible perf
-	DMAFlushBuffer();
+	FlushMainDMABuffer();
 	dma_wait_fast();
 
 	// 4bpp has extra garbage pixels when odd rows
@@ -409,9 +453,6 @@ static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
 	int dst_stride = GS_TEXTURE_STRIDE(tex);
 	Gfx_TransferPixels(tex->pixels, src_w, src_h, 
 						tex->format, dst_addr, dst_stride);
-	
-	// TODO terrible perf
-	Q = dma_beg + 1;
 }
 
 static void ConvertTexture_Palette(cc_uint8* dst, struct Bitmap* bmp, int rowWidth, BitmapCol* palette, int pal_count) {
@@ -697,8 +738,8 @@ static VertexFormat buf_fmt;
 static int buf_count;
 
 // Precalculate all the vertex data adjustment
-static void PreprocessTexturedVertices(void) {
-    struct VertexTextured* v = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+    struct VertexTextured* v = vertices;
 
     for (int i = 0; i < buf_count; i++, v++)
     {
@@ -722,8 +763,8 @@ static void PreprocessTexturedVertices(void) {
     }
 }
 
-static void PreprocessColouredVertices(void) {
-    struct VertexColoured* v = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+    struct VertexColoured* v = vertices;
 
     for (int i = 0; i < buf_count; i++, v++)
     {
@@ -736,7 +777,7 @@ static void PreprocessColouredVertices(void) {
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	//return Mem_TryAlloc(count, strideSizes[fmt]);
-	return memalign(16,count * strideSizes[fmt]);
+	return memalign(16, count * strideSizes[fmt]);
 	// align to 16 bytes, so DrawTexturedQuad/DrawColouredQuad can
 	//  load vertices using the "load quad (16 bytes)" instruction
 }
@@ -756,29 +797,12 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-
     if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-        PreprocessTexturedVertices();
+        PreprocessTexturedVertices(vb);
     } else {
-        PreprocessColouredVertices();
+        PreprocessColouredVertices(vb);
     }
 }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -869,52 +893,6 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	formatDirty = true;
 }
 
-extern void ViewportTransform(VU0_vector* src, VU0_IVector* dst);
-static xyz_t FinishVertex(VU0_vector* src, float invW) {
-	src->w = invW;
-	VU0_IVector tmp;
-	ViewportTransform(src, &tmp);
-
-	xyz_t xyz;
-	xyz.x = (short)tmp.x;
-	xyz.y = (short)tmp.y;
-	xyz.z = tmp.z;
-	return xyz;
-}
-
-static u64* DrawTexturedTriangle(u64* dw, VU0_vector* coords, 
-								struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
-	TexturedVertex* dst = (TexturedVertex*)dw;
-	float q;
-
-	// TODO optimise
-	// Add the "primitives" to the GIF packet
-	q   = 1.0f / coords[0].w;
-	dst[0].rgba  = V0->Col;
-	dst[0].q     = q;
-	dst[0].u     = V0->U * q;
-	dst[0].v     = V0->V * q;
-	dst[0].xyz   = FinishVertex(&coords[0], q);
-
-	q   = 1.0f / coords[1].w;
-	dst[1].rgba  = V1->Col;
-	dst[1].q     = q;
-	dst[1].u     = V1->U * q;
-	dst[1].v     = V1->V * q;
-	dst[1].xyz   = FinishVertex(&coords[1], q);
-
-	q   = 1.0f / coords[2].w;
-	dst[2].rgba  = V2->Col;
-	dst[2].q     = q;
-	dst[2].u     = V2->U * q;
-	dst[2].v     = V2->V * q;
-	dst[2].xyz   = FinishVertex(&coords[2], q);
-
-	return dw + 9;
-}
-
-extern void TransformTexturedQuad(void* src, VU0_vector* dst, VU0_vector* tmp, int* clip_flags);
-extern void TransformColouredQuad(void* src, VU0_vector* dst, VU0_vector* tmp, int* clip_flags);
 extern u64* DrawTexturedQuad(void* src, u64* dst, VU0_vector* tmp);
 extern u64* DrawColouredQuad(void* src, u64* dst, VU0_vector* tmp);
 
@@ -975,10 +953,9 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty)  UpdateState(0);
 	if (formatDirty) UpdateFormat(0);
 
-	if ((Q - current->data) > 45000) {
-		DMAFlushBuffer();
+	if ((Q - cur_buf) > 40000) {
+		FlushMainDMABuffer();
 		dma_wait_fast();
-		Q = dma_beg + 1;
 		Platform_LogConst("Too much geometry!!");
 	}
 
@@ -1046,16 +1023,14 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_EndFrame(void) {
 	//Platform_LogConst("--- EF1 ---");
-
 	Q = draw_finish(Q);
 	
-	dma_wait_fast();
-	DMAFlushBuffer();
+	FlushMainDMABuffer();
 	//Platform_LogConst("--- EF2 ---");
 		
-	draw_wait_finish();
+	GS_wait_draw_finish();
 	//Platform_LogConst("--- EF3 ---");
-	if (gfx_vsync) graph_wait_vsync();
+	if (gfx_vsync) GS_wait_vsync();
 	
 	context ^= 1;
 	UpdateContext();
@@ -1079,7 +1054,7 @@ void Gfx_OnWindowResize(void) {
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	VU0_vector clip_scale;
-	unsigned int maxZ = 1 << (24 - 1); // TODO: half this? or << 24 instead?
+	unsigned int maxZ = 0xFFFF;
 
 	vp_origin.x =  ftoi4(2048 - (x / 2));
 	vp_origin.y = -ftoi4(2048 - (y / 2));

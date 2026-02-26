@@ -31,7 +31,6 @@ jobs:
           unzip rpi32.zip
 
       - name: Compile RPI 32 bit build
-        id: compile
         env: 
           LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
           SRCS: "src/*.c third_party/bearssl/*.c"
@@ -44,14 +43,12 @@ jobs:
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-rpi32'
           DEST_NAME: 'cc-rpi32'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'rpi32'
@@ -83,7 +80,6 @@ jobs:
           unzip rpi64.zip     
 
       - name: Compile RPI 64 bit build
-        id: compile
         env: 
           LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
           SRCS: "src/*.c third_party/bearssl/*.c"
@@ -96,14 +92,12 @@ jobs:
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-rpi64'
           DEST_NAME: 'cc-rpi64'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'rpi64'

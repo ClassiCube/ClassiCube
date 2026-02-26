@@ -226,7 +226,6 @@ static void CheckSkin_Unchecked(struct Entity* e) {
 	cc_string skin, eSkin;
 	struct Entity* other;
 	cc_uint8 flags;
-	cc_result res;
 	int i;
 
 	skin = String_FromRawArray(e->SkinRaw);
@@ -259,8 +258,9 @@ static void CheckSkin_Unchecked(struct Entity* e) {
 static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 	struct Entity* e;
 	cc_string skin, eSkin;
-	skin = String_FromRawArray(source->SkinRaw);
 	int i;
+	
+	skin = String_FromRawArray(source->SkinRaw);
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{

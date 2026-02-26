@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -9,6 +10,7 @@
 
 #include "gsp_gpu.h"
 #include "pica_gpu.h"
+
 // See the .v.pica shader files in misc/3ds
 #define CONST_MVP 0 // c0-c3
 #define CONST_TEX 4 // c4
@@ -23,23 +25,23 @@ extern const u32 textured_shbin_size;
 
 extern const u8  offset_shbin[];
 extern const u32 offset_shbin_size;
+	
+static void GPUBuffers_DeleteUnreferenced(void);
+static void GPUTextures_DeleteUnreferenced(void);
+
+static cc_uint32 frameCounter1;
+static PackedCol clear_color;
+static cc_bool rendering3D;
 
 #define DISPLAY_TRANSFER_FLAGS \
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 	
-static void GPUBuffers_DeleteUnreferenced(void);
-static void GPUTextures_DeleteUnreferenced(void);
-static cc_uint32 frameCounter1;
-static PackedCol clear_color;
-static cc_bool rendering3D;
-	
 	
 /*########################################################################################################################*
 *------------------------------------------------------Vertex shaders-----------------------------------------------------*
 *#########################################################################################################################*/
-#define UNI_MVP_MATRIX  (1 << 0)
 static C3D_Mtx _mvp;
 static int texOffset, dirty_mvp;
 
@@ -56,24 +58,9 @@ static void Shader_Alloc(struct CCShader* shader, const u8* binData, int binSize
 	shaderProgramSetVsh(&shader->program, &shader->dvlb->DVLE[0]);
 }
 
-static void Shader_Free(struct CCShader* shader) {
-	shaderProgramFree(&shader->program);
-	DVLB_Free(shader->dvlb);
-}
-
-static void UpdateMVP(void) {
-	struct CCShader* s = gfx_activeShader;
-	dirty_mvp = true;
-	if (!s) return; // NULL if context is lost
-
-	if (dirty_mvp) {
-		pica_upload_mat4_constant(CONST_MVP, &_mvp);
-		dirty_mvp = false;
-	}
-}
-
 // Switches program to one that can render current vertex format and state
 // Loads program and reloads uniforms if needed
+static void UpdateAttribFormat(void);
 static void SwitchProgram(void) {
 	struct CCShader* shader;
 	int index = 0;
@@ -84,9 +71,31 @@ static void SwitchProgram(void) {
 	shader = &shaders[index];
 	if (shader != gfx_activeShader) {
 		gfx_activeShader = shader;
-		C3D_BindProgram(&shader->program);
+		shaderProgramConfigure(&shader->program, true, false);
 	}
-	UpdateMVP();
+	// TODO avoid explicitly calling this. but needed right now
+	UpdateAttribFormat();
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Command buffer-----------------------------------------------------*
+*#########################################################################################################################*/
+static u32* _cmdBuf;
+static int  _cmdBufWords;
+#define DEFAULT_MAX_CMDS (256 * 1024)
+
+static void CmdBuf_Reset(void) {
+	GPUCMD_SetBuffer(_cmdBuf, _cmdBufWords, 0);
+}
+
+static void CmdBuf_Alloc(int size) {
+	size = (size + 0x0F) & ~0x0F; // 0x10-byte align
+	_cmdBufWords = size / 4;
+	_cmdBuf      = (u32*)linearAlloc(size);
+
+	if (!_cmdBuf) Process_Abort("Failed to allocate command buffer");
+	CmdBuf_Reset();
 }
 
 
@@ -105,13 +114,6 @@ static void AllocShaders(void) {
 	Shader_Alloc(&shaders[2], offset_shbin,   offset_shbin_size);
 }
 
-static void FreeShaders(void) {
-	for (int i = 0; i < Array_Elems(shaders); i++) 
-	{
-		Shader_Free(&shaders[i]);
-	}
-}
-
 static void SetDefaultState(void) {
 	Gfx_SetFaceCulling(false);
 	Gfx_SetAlphaTest(false);
@@ -127,8 +129,26 @@ static void AptEventHook(APT_HookType hookType, void* param) {
 	}
 }
 
+static void SetInitialStates(void) {
+	extern void C3Di_UpdateContext(void);
+	C3Di_UpdateContext();
+
+	static C3D_FVec _1_div_255 = { .x = 1/255.0f, .y = 1/255.0f, .z = 1/255.0f, .w = 1/255.0f };
+	pica_upload_vec4_constant(CONST_255, &_1_div_255);
+
+	// NOTE: GPUREG_VERTEX_OFFSET only works when drawing non-indexed arrays
+	GPUCMD_AddWrite(GPUREG_VERTEX_OFFSET, 0);
+
+	// https://github.com/devkitPro/citro3d/issues/47
+	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
+	// This just maps array attrib 0 = vertex attrib 0, array attrib 1 = vertex attrib 1, etc
+	pica_set_attrib_array0_mapping(0x210);
+	pica_set_vsh_input_mapping(0x210, 0);
+}
+
 static void InitCitro3D(void) {	
-	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 4);
+	CmdBuf_Alloc(DEFAULT_MAX_CMDS * 4);
+	C3D_Init();
 	aptHook(&hookCookie, AptEventHook, NULL);
 
 	C3D_RenderTargetInit(&topTargetLeft,  240, 400);
@@ -138,6 +158,7 @@ static void InitCitro3D(void) {
 
 	// Even though the bottom screen is 320 pixels wide, we use 400 here so that the same ortho matrix
 	// can be used for both screens. The output is clipped to the actual screen width, anyway.
+	// TODO avoid this	
 	C3D_RenderTargetInit(&bottomTarget, 240, 400);
 	C3D_RenderTargetColor(&bottomTarget, GPU_RB_RGBA8);
 	C3D_RenderTargetSetOutput(&bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
@@ -154,6 +175,7 @@ static void InitCitro3D(void) {
 	AllocShaders();
 
 	GSP_setup();
+	SetInitialStates();
 }
 
 static GfxResourceID white_square;
@@ -179,9 +201,12 @@ void Gfx_Free(void) {
 	C3Di_RenderQueueExit();
 	gfxSet3D(false);
 
-	// FreeShaders()
 	// C3D_Fini()
 	// aptUnhook(&hookCookie);
+
+	frameCounter1 += 5;
+	GPUBuffers_DeleteUnreferenced();
+	GPUTextures_DeleteUnreferenced();
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
@@ -266,11 +291,6 @@ struct GPUTexture {
 };
 static struct GPUTexture* del_textures_head;
 static struct GPUTexture* del_textures_tail;
-
-struct GPUTexture* GPUTexture_Alloc(void) {
-	struct GPUTexture* tex = Mem_AllocCleared(1, sizeof(struct GPUTexture), "GPU texture");
-	return tex;
-}
 
 // can't delete textures until not used in any frames
 static void GPUTexture_Unref(GfxResourceID* resource) {
@@ -408,7 +428,9 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	struct GPUTexture* tex = GPUTexture_Alloc();
+	struct GPUTexture* tex = Mem_TryAllocCleared(1, sizeof(struct GPUTexture));
+	if (!tex) return NULL;
+
 	int can_vram = !(flags & TEXTURE_FLAG_DYNAMIC);
 	bool success = CreateNativeTexture(&tex->texture, bmp->width, bmp->height, can_vram);
 	if (!success) return NULL;
@@ -539,6 +561,10 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "-- Using 3DS --\n", NULL);
 	PrintMaxTextureInfo(info);
+
+	int total = (int)vramSpaceFree();
+	float totalMB = total / (1024.0f * 1024.0f);
+	String_Format1(info, "VRAM free: %f2 MB", &totalMB);
 }
 
 void Gfx_SetVSync(cc_bool vsync) {
@@ -547,26 +573,10 @@ void Gfx_SetVSync(cc_bool vsync) {
 
 void Gfx_BeginFrame(void) {
 	rendering3D = false;
-	// wait for vblank for both screens TODO move to end?
-	if (gfx_vsync) GSP_wait_for_full_vblank();
 
 	C3D_FrameBegin(0);
 	topTarget = &topTargetLeft;
 	C3D_FrameDrawOn(topTarget);
-
-	extern void C3Di_UpdateContext(void);
-	C3Di_UpdateContext();
-
-	static C3D_FVec _1_div_255 = { .x = 1/255.0f, .y = 1/255.0f, .z = 1/255.0f, .w = 1/255.0f };
-	pica_upload_vec4_constant(CONST_255, &_1_div_255);
-
-	// NOTE: GPUREG_VERTEX_OFFSET only works when drawing non-indexed arrays
-	GPUCMD_AddWrite(GPUREG_VERTEX_OFFSET, 0);
-
-	// https://github.com/devkitPro/citro3d/issues/47
-	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
-	// This just maps array attrib 0 = vertex attrib 0, array attrib 1 = vertex attrib 1, etc
-	pica_set_attrib_array0_mapping(0x210);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -579,18 +589,32 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 
 void Gfx_EndFrame(void) {
 	gfxSet3D(rendering3D);
-	C3D_FrameEnd(0);
+	C3D_FrameFinish(0);
 	//gfxFlushBuffers();
 	//gfxSwapBuffers();
 		
 	GPUBuffers_DeleteUnreferenced();
 	GPUTextures_DeleteUnreferenced();
 	frameCounter1++;
+
+	// wait for vblank for both screens
+	if (gfx_vsync) GSP_wait_for_full_vblank();
+
+	C3Di_WaitAndClearQueue(-1);
+	CmdBuf_Reset();
 }
 
-void Gfx_OnWindowResize(void) { }
+void Gfx_OnWindowResize(void) {
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+}
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	// x and y are swapped and start from right/bottom instead of left/top
+	x = Game.Width  - w - x;
+	y = Game.Height - h - y;
+
+	C3D_SetViewport(y, x, h, w); 
+}
 void Gfx_SetScissor (int x, int y, int w, int h) { }
 
 
@@ -671,8 +695,8 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-	u32 pa = osConvertVirtToPhys(ib);
-	GPUCMD_AddWrite(GPUREG_INDEXBUFFER_CONFIG, (pa - BUFFER_BASE_PADDR) | (C3D_UNSIGNED_SHORT << 31));
+	u32 phys_addr = osConvertVirtToPhys(ib);
+	pica_set_index_buffer_address(phys_addr);
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) { }
@@ -682,6 +706,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint8* gfx_vertices;
+static int vb_size;
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return GPUBuffer_Alloc(count, strideSizes[fmt]);
@@ -697,46 +722,26 @@ void Gfx_DeleteVb(GfxResourceID* vb) { GPUBuffer_Unref(vb); }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	vb_size = count * strideSizes[fmt];
 	return buffer->data;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	gfx_vertices = buffer->data;
+	CPU_FlushDataCache(vb, vb_size);
 }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return GPUBuffer_Alloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	return buffer->data;
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	gfx_vertices = buffer->data;
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static u32 fogColor;
-static C3D_FogLut fog_lut;
-static int fogMode = FOG_LINEAR;
+static int fogMode = -1;
 static float fogDensity = 1.0f;
 static float fogEnd = 32.0f;
 
 void Gfx_SetFog(cc_bool enabled) {
-	C3D_FogGasMode(enabled ? GPU_FOG : GPU_NO_FOG, GPU_PLAIN_DENSITY, false);
-	// TODO doesn't work quite right
+	pica_update_fog_mode(enabled, false);
+	gfx_fogEnabled = enabled;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -745,21 +750,7 @@ void Gfx_SetFogCol(PackedCol color) {
 	if (c == fogColor) return;
 
 	fogColor = c;
-	C3D_FogColor(c);
-}
-
-static void ApplyFog(float* values) {
-	float data[256];
-
-	for (int i = 0; i <= 128; i ++)
-	{
-		float val = values[i];
-		if (i < 128) data[i]       = val;
-		if (i > 0)   data[i + 127] = val - data[i-1];
-	}
-
-	FogLut_FromArray(&fog_lut, data);
-	C3D_FogLutBind(&fog_lut);
+	pica_set_fog_color(c);
 }
 
 static float GetFogValue(float c) {
@@ -780,27 +771,32 @@ static void UpdateFog(void) {
 	// TODO: Exp calculation isn't right for lava ???
 	for (int i = 0; i <= 128; i ++)
 	{
-		float c   = FogLut_CalcZ(i / 128.0f, near, far);
+		float c = FogLut_CalcZ(i / 128.0f, near, far);
 		values[i] = GetFogValue(c);
 	}
-	ApplyFog(values);
+
+	C3D_FogLut fog_lut;
+	FogLut_FromArray(&fog_lut, values);
+	pica_set_fog_table(fog_lut.data);
 }
 
 void Gfx_SetFogDensity(float value) {
 	if (fogDensity == value) return;
 
 	fogDensity = value;
-	UpdateFog();
+	if (fogMode != FOG_LINEAR) UpdateFog();
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (fogEnd == value) return;
 
 	fogEnd = value;
-	UpdateFog();
+	if (fogMode == FOG_LINEAR) UpdateFog();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
+	if (fogMode == func) return;
+
 	fogMode = func;
 	UpdateFog();
 }
@@ -856,7 +852,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	}
 
 	Mtx_Multiply(&_mvp, &_proj, &_view);
-	UpdateMVP();
+	pica_upload_mat4_constant(CONST_MVP, &_mvp);
 }
 
 
@@ -919,6 +915,9 @@ static void UpdateAttribFormat(void) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 2); // in_tex
 	}
+
+	cc_bool textured = gfx_format == VERTEX_FORMAT_TEXTURED;
+	pica_set_vsh_input_count(textured ? 3 : 2);
 }
 
 static void UpdateAttribConfig(void) {
@@ -955,7 +954,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 	
 	SwitchProgram();
-	UpdateAttribFormat();
+	//UpdateAttribFormat();
 	UpdateAttribConfig();
 	UpdateTexEnv(fmt);
 }

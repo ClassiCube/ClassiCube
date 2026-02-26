@@ -1,5 +1,5 @@
 #include "Graphics.h"
-#include "String.h"
+#include "String_.h"
 #include "Platform.h"
 #include "Funcs.h"
 #include "Game.h"
@@ -18,8 +18,15 @@ const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced perf
 static const int strideSizes[] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
+
+/* Current format of vertices */
+static int gfx_format = -1;
+/* Current size of vertices */
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
+	static unsigned int gfx_stride;
+#else
+	static int gfx_stride;
+#endif
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static cc_bool gfx_rendering2D;
@@ -180,14 +187,10 @@ void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
-
-	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = color; v++;
-	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = color; v++;
-	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
-	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
+	v = Gfx_Build2DFlat(x, y, width, height, color, v);
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
-	Gfx_DrawVb_IndexedTris(4);
+	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
@@ -195,14 +198,10 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
-
-	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = top; v++;
-	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = top; v++;
-	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
-	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
+	v = Gfx_Build2DGradient(x, y, width, height, top, bottom, v);
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
-	Gfx_DrawVb_IndexedTris(4);
+	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
@@ -214,21 +213,32 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	Gfx_Make2DQuad(tex, color, &ptr);
 
 	Gfx_UnlockDynamicVb(Gfx_texVb);
-	Gfx_DrawVb_IndexedTris(4);
+	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_SPRITE);
 }
 #endif
+
+struct VertexColoured* Gfx_Build2DFlat(int x, int y, int width, int height, 
+										PackedCol color, struct VertexColoured* v) {
+	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = color; v++;
+	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = color; v++;
+	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
+	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
+	return v;
+}
+
+struct VertexColoured* Gfx_Build2DGradient(int x, int y, int width, int height, 
+											PackedCol top, PackedCol bottom, struct VertexColoured* v) {
+	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = top;    v++;
+	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = top;    v++;
+	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
+	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
+	return v;
+}
 
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
 	float x1 = (float)tex->x, x2 = (float)(tex->x + tex->width);
 	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->height);
 	struct VertexTextured* v = *vertices;
-
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
-	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
-	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
-	x1 -= 0.5f; x2 -= 0.5f;
-	y1 -= 0.5f; y2 -= 0.5f;
-#endif
 
 	v->x = x1; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u1; v->V = tex->uv.v1; v++;
 	v->x = x2; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u2; v->V = tex->uv.v1; v++;
@@ -237,9 +247,9 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	*vertices = v;
 }
 
-#if defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
-	/* These GFX backends have specialised implementations */
-#else
+#ifndef OVERRIDE_BEGEND2D_FUNCTIONS
+/* NOTE: Some GFX backends have specialised implementations of Begin2D/End2D */
+/* Make sure to check all of those whenever altering Begin2D/End2D in this file */
 static cc_bool gfx_hadFog;
 
 void Gfx_Begin2D(int width, int height) {
@@ -494,6 +504,26 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Mem_Copy(data, vertices, vCount * gfx_stride);
 	Gfx_UnlockDynamicVb(vb);
 }
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Dynamic Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_DYNAMIC_VBS_ARE_STATIC
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return Gfx_AllocStaticVb(fmt, maxVertices);
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
+
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockVb(vb, fmt, count);
+}
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 #endif
 
 

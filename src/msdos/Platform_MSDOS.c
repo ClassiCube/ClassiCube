@@ -3,7 +3,6 @@
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../SystemFonts.h"
@@ -30,6 +29,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = -10002;
 const cc_result ReturnCode_SocketWouldBlock = -10002;
@@ -38,6 +38,7 @@ const cc_result ReturnCode_SocketDropped    = -10002;
 const char* Platform_AppNameSuffix = " DOS";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 cc_bool  Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
@@ -55,32 +56,6 @@ int main(int argc, char** argv) {
 	Window_Free();
 	Process_Exit(res);
 	return res;
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
 }
 
 
@@ -150,9 +125,14 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;

@@ -18,10 +18,6 @@ struct GZipHeader { cc_uint8 state; cc_bool done; cc_uint8 partsRead; int flags;
 void GZipHeader_Init(struct GZipHeader* header);
 cc_result GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
 
-struct ZLibHeader { cc_uint8 state; cc_bool done; };
-void ZLibHeader_Init(struct ZLibHeader* header);
-cc_result ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
-
 
 #define INFLATE_MAX_INPUT 8192
 #define INFLATE_MAX_CODELENS 19

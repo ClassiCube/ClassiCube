@@ -141,7 +141,6 @@ CC_WINSOCK_FUNC int (WINAPI *_send)(SOCKET s, const char FAR * buf, int len, int
 CC_WINSOCK_FUNC int (WINAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout);
 
 CC_WINSOCK_FUNC struct hostent* (WINAPI *_gethostbyname)(const char* name);
-CC_WINSOCK_FUNC unsigned short  (WINAPI *_htons)(u_short hostshort);
 CC_WINSOCK_FUNC int  (WINAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, ADDRINFOA** result);
 CC_WINSOCK_FUNC void (WINAPI* _freeaddrinfo)(ADDRINFOA* addrInfo);
 
@@ -152,7 +151,7 @@ static void Winsock_LoadDynamicFuncs(void) {
 		DynamicLib_ReqSym(socket),          DynamicLib_ReqSym(closesocket),
 		DynamicLib_ReqSym(connect),         DynamicLib_ReqSym(shutdown),
 		DynamicLib_ReqSym(ioctlsocket),     DynamicLib_ReqSym(getsockopt),
-		DynamicLib_ReqSym(gethostbyname),   DynamicLib_ReqSym(htons),
+		DynamicLib_ReqSym(gethostbyname),
 		DynamicLib_OptSym(getaddrinfo),     DynamicLib_OptSym(freeaddrinfo),
 		DynamicLib_ReqSym(recv), DynamicLib_ReqSym(send), DynamicLib_ReqSym(select)
 	};

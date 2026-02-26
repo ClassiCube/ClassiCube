@@ -4,7 +4,6 @@
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -23,6 +22,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound       = 99999;
+const cc_result ReturnCode_PathNotFound       = 99999;
 const cc_result ReturnCode_DirectoryExists    = 99999;
 
 const cc_result ReturnCode_SocketInProgess  = -1;
@@ -32,6 +32,7 @@ const cc_result ReturnCode_SocketDropped    = -1;
 const char* Platform_AppNameSuffix  = " 32x";
 cc_bool Platform_ReadonlyFilesystem = true;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*
@@ -53,10 +54,6 @@ int main(int argc, char** argv) {
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	void* ptr = size ? ta_alloc(size) : NULL;
@@ -149,13 +146,17 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
-	char* str = dst->buffer;
-	String_EncodeUtf8(str, path);
+	int len = String_CopyToRaw(dst->buffer, sizeof(dst->buffer) - 1, path);
+	dst->buffer[len] = '\0'; // Always null terminate just in case
+}
+
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendConst(dst, path->buffer);
 }
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	return ReturnCode_DirectoryExists;
 }
 

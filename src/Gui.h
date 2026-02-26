@@ -165,7 +165,7 @@ typedef void (*Widget_LeftClick)(void* screen, void* widget);
 
 struct WidgetVTABLE {
 	/* Draws this widget on-screen. */
-	void (*Render)(void* elem, float delta);
+	void (*Render)(void* elem);
 	/* Destroys allocated graphics resources. */
 	void (*Free)(void* elem);
 	/* Positions this widget on-screen. */
@@ -243,6 +243,7 @@ enum GuiPriority {
 	GUI_PRIORITY_INVENTORY  = 20,
 	GUI_PRIORITY_TABLIST    = 17,
 	GUI_PRIORITY_CHAT       = 15,
+	GUI_PRIORITY_SPECIALTEXT= 13,
 	GUI_PRIORITY_HUD        = 10,
 	GUI_PRIORITY_LOADING    =  5
 };
@@ -299,8 +300,8 @@ void TextAtlas_Free(struct TextAtlas* atlas);
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices);
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices);
 
-#define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
-#define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
+#define Elem_Render(elem) (elem)->VTABLE->Render(elem)
+#define Elem_Free(elem)   (elem)->VTABLE->Free(elem)
 #define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
 
 #define Elem_HandlesKeyDown(elem, key, device) (elem)->VTABLE->HandlesKeyDown(elem, key, device)
@@ -316,6 +317,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
 #define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)
 #define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget)
+#define Widget_MaxVertices(widget)     (widget)->VTABLE->GetMaxVertices(widget)
 
 CC_END_HEADER
 #endif

@@ -52,7 +52,8 @@ static void blockalloc_dealloc(cc_uint8* table, int base, int blocks) {
     }
 }
 
-static CC_INLINE int blockalloc_total_free(cc_uint8* table, int maxBlocks) {
+static CC_INLINE void blockalloc_calc_usage(cc_uint8* table, int maxBlocks, int blockSize,
+											int* freeSize, int* usedSize) {
 	int i, total_free = 0;
 	// Could be optimised to look at entire page in 0x00 and 0xFF case
 	// But this method is called so infrequently, so not really worth it
@@ -61,7 +62,9 @@ static CC_INLINE int blockalloc_total_free(cc_uint8* table, int maxBlocks) {
 	{
  		if (!BA_BLOCK_USED(table, i)) total_free++;
     }
-	return total_free;
+	
+	*freeSize = blockSize * total_free;
+	*usedSize = blockSize * (maxBlocks - total_free);
 }
 
 static CC_INLINE int blockalloc_shift(cc_uint8* table, int base, int blocks) {

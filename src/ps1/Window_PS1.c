@@ -3,12 +3,13 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Logger.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
 
 #include <psxapi.h>
@@ -20,7 +21,6 @@
 #define SCREEN_XRES	320
 #define SCREEN_YRES	240
 
-static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 static int gpu_video_mode;
@@ -43,8 +43,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(10);
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 }
 
@@ -88,7 +88,7 @@ extern void Gfx_ResetGPU(void);
 
 void Window_Create2D(int width, int height) {
 	Gfx_ResetGPU();
-	launcherMode = true;
+	Window_Main.Is3D = false;
 
 	InitScreen();
 	ClearScreen();
@@ -96,7 +96,7 @@ void Window_Create2D(int width, int height) {
 
 void Window_Create3D(int width, int height) { 
 	Gfx_ResetGPU();
-	launcherMode = false;
+	Window_Main.Is3D = true;
 
 	InitScreen();
 }
@@ -162,16 +162,16 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 
 static char pad_buff[2][34];
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	
+void Gamepads_PreInit(void) {
 	// http://lameguy64.net/tutorials/pstutorials/chapter1/4-controllers.html
 	InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
 	pad_buff[0][0] = pad_buff[0][1] = 0xff;
 	pad_buff[1][0] = pad_buff[1][1] = 0xff;
 	StartPAD();
 	ChangeClearPAD(0);
-	
+}
+
+void Gamepads_Init(void) {
 	Input_DisplayNames[CCPAD_1] = "CIRCLE";
 	Input_DisplayNames[CCPAD_2] = "CROSS";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
@@ -258,7 +258,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	kb_tileWidth  = KB_TILE_SIZE / 2;
 	kb_tileHeight = KB_TILE_SIZE / 2;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

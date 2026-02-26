@@ -3,17 +3,15 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Camera.h"
-#include <nds/arm9/background.h>
-#include <nds/arm9/input.h>
-#include <nds/arm9/keyboard.h>
-#include <nds/interrupts.h>
-#include <nds/system.h>
+#include "../VirtualDialog.h"
+
+#include <nds.h>
 #include <fat.h>
 
 #define LAYER_CON  0
@@ -32,10 +30,13 @@ extern u8 default_fontTiles[];
 
 #define FONT_ASCII_OFFSET 32
 static u16* conFontBgMap;
-static int  conFontCurPal;
 static int  conCursorX, conCurrentRow;
+// Setup to select current 'colour' of font
+int conCurrentPalette = 0b1111;
 
 void Console_Clear(void) {
+	if (!conFontBgMap) return;
+
     for (int i = 0; i < CON_WIDTH * CON_HEIGHT; i++)
     {
         conFontBgMap[i] = ' ' - FONT_ASCII_OFFSET;
@@ -76,25 +77,34 @@ static void Console_PrintChar(char c) {
     if (conCursorX >= CON_WIDTH) 
         Console_NewLine();
 
-    u16 value = conFontCurPal | (c - FONT_ASCII_OFFSET);
+    u16 value = (conCurrentPalette << 12) | (c - FONT_ASCII_OFFSET);
     conFontBgMap[conCursorX + conCurrentRow * CON_WIDTH] = value;
     conCursorX++;
 }
 
-void Console_PrintString(const char* ptr, int len) {
-	if (!conFontBgMap) return;
+static void Console_SetupPalette(u16* palette) {
+	palette[0] = RGB15(0, 0, 0);
 
-    for (int i = 0; i < len; i++)
-    {
-        Console_PrintChar(ptr[i]);
-    }
-    Console_NewLine();
+	// Palette is treated as 4 bits
+	//   Intensity|Red|Green|Blue
+	// So e.g. 
+	// - 0101 = R=15,G=0,B=15 
+	// - 1010 = R=0,G=31,B=0
+	for (int i = 0; i < 16; i++) 
+	{
+		int I = i < 8 ? 15 : 31;
+		int R = I * ((i >> 2) & 1);
+		int G = I * ((i >> 1) & 1);
+		int B = I * ((i >> 0) & 1);
+
+		// NOTE: Setting up palette this way ensures it doesn't overlap with keyboard graphics
+		palette[(i*16) + 15] = RGB15(R, G, B);
+	}
 }
 
-static void Console_LoadFont(int bgId, u16* palette) {
+static void Console_LoadFont(int bgId) {
 	conFontBgMap   = (u16*)bgGetMapPtr(bgId);
 	u16* fontBgGfx = (u16*)bgGetGfxPtr(bgId);
-	conFontCurPal  = 15 << 12;
 
     for (int i = 0; i < FONT_NUM_CHARACTERS * 8; i++)
     {
@@ -110,9 +120,6 @@ static void Console_LoadFont(int bgId, u16* palette) {
         if (row & 0x80) gfx |= 0xF0000000;
         ((u32 *)fontBgGfx)[i] = gfx;
     }
-
-    palette[16 * 16 - 1] = RGB15(31, 31, 31);
-    palette[0]           = RGB15( 0,  0,  0);
 }
 
 static void Console_Init(cc_bool onSub) {
@@ -123,24 +130,32 @@ static void Console_Init(cc_bool onSub) {
 		bgId = bgInit(   LAYER_CON, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
 	}
 
-    Console_LoadFont(bgId, onSub ? BG_PALETTE_SUB : BG_PALETTE);
+    Console_LoadFont(bgId);
+	Console_SetupPalette(BG_PALETTE);
+	Console_SetupPalette(BG_PALETTE_SUB);
     Console_Clear();
+}
+
+void Console_PrintString(const char* ptr, int len) {
+	if (!conFontBgMap) return;
+
+	for (int i = 0; i < len; i++)
+	{
+		Console_PrintChar(ptr[i]);
+	}
+	Console_NewLine();
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------General data-------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool launcherMode;
-static int bg_id;
-static u16* bg_ptr;
-
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
-static void SetupVideo(cc_bool mode) {
-	if (launcherMode == mode) return;
-	launcherMode = mode;
+static void SetupVideo(cc_bool is3D) {
+	if (Window_Main.Is3D == is3D) return;
+	Window_Main.Is3D = is3D;
 
 	vramSetBankA(VRAM_A_LCD);
 	vramSetBankB(VRAM_B_LCD);
@@ -149,7 +164,7 @@ static void SetupVideo(cc_bool mode) {
 	vramSetBankH(VRAM_H_LCD);
 	vramSetBankI(VRAM_I_LCD);
 
-	if (launcherMode) {
+	if (!is3D) {
 		videoSetModeSub(MODE_5_2D);
 		vramSetBankC(VRAM_C_SUB_BG);
 
@@ -161,22 +176,29 @@ static void SetupVideo(cc_bool mode) {
 		vramSetBankI(VRAM_I_SUB_BG_0x06208000);
 
 		videoSetMode(MODE_0_3D);
+	
+		vramSetBankA(VRAM_A_TEXTURE);
+		vramSetBankB(VRAM_B_TEXTURE);
+		vramSetBankC(VRAM_C_TEXTURE);
+		vramSetBankD(VRAM_D_TEXTURE);
+		vramSetBankE(VRAM_E_TEX_PALETTE);
 	}
 
-	Console_Init(!launcherMode);
+	Console_Init(is3D);
 }
 
 void Window_PreInit(void) {
-	SetupVideo(true);
+	Window_Main.Is3D = 210; // So SetupVideo still runs
+	SetupVideo(false);
     setBrightness(2, 0);
-}
 
-void Window_Init(void) {  
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
-	
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
@@ -192,13 +214,11 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
-   	SetupVideo(true);
-	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
-	bg_ptr = bgGetGfxPtr(bg_id);
+   	SetupVideo(false);
 }
 
 void Window_Create3D(int width, int height) { 
-	SetupVideo(false);
+	SetupVideo(true);
 }
 
 void Window_Destroy(void) { }
@@ -236,7 +256,7 @@ static void ProcessTouchInput(int mods) {
 }
 
 void Window_ProcessEvents(float delta) {
-	scanKeys();	
+	scanKeys();
 	
 	if (DisplayInfo.ShowingSoftKeyboard) {
 		keyboardUpdate();
@@ -275,10 +295,9 @@ static const BindMapping defaults_nds[BIND_COUNT] = {
 	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
 	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT }
 };
-	
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+
+void Gamepads_PreInit(void) { }
+void Gamepads_Init(void)    { }
 
 void Gamepads_Process(float delta) {
 	int port = Gamepad_Connect(0xD5, defaults_nds);
@@ -305,14 +324,21 @@ void Gamepads_Process(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+static int bg_id;
+static u16* bg_ptr;
+
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
 	bmp->width  = width;
 	bmp->height = height;
+
+	bg_id  = bgInitSub(2, BgType_Bmp16, BgSize_B16_256x256, 2, 0);
+	bg_ptr = bgGetGfxPtr(bg_id);
+	SetupVideo(false);
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
 	 
 	for (int y = r.y; y < r.y + r.height; y++)
 	{
@@ -331,6 +357,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
+	SetupVideo(true);
 }
 
 
@@ -358,14 +385,14 @@ static void OnKeyPressed(int key) {
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
     Keyboard* kbd = keyboardGetDefault();
-    if (!launcherMode) videoBgDisableSub(LAYER_CON);
+    kbd->OnKeyPressed = OnKeyPressed;
+    if (Window_Main.Is3D) videoBgDisableSub(LAYER_CON);
 
     keyboardInit(kbd, LAYER_KB, BgType_Text4bpp, BgSize_T_256x512,
                        14, 0, false, true);
     keyboardShow();
     bgSetPriority(4 + LAYER_KB, BG_PRIORITY_0);
 
-    kbd->OnKeyPressed = OnKeyPressed;
     String_InitArray(kbText, kbBuffer);
 	String_AppendString(&kbText, args->text);
     DisplayInfo.ShowingSoftKeyboard = true;
@@ -378,7 +405,7 @@ void OnscreenKeyboard_Close(void) {
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
     DisplayInfo.ShowingSoftKeyboard = false;
 
-    if (!launcherMode) videoBgEnableSub(LAYER_CON);
+    if (Window_Main.Is3D) videoBgEnableSub(LAYER_CON);
 }
 
 
@@ -386,9 +413,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg, false);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

@@ -20,7 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compiles webclient
-        id: compile
         env:
           SRCS: "src/*.c src/webclient/*.c"
         run: |
@@ -28,14 +27,12 @@ jobs:
           sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' ClassiCube.js
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube.js'
           DEST_NAME: 'ClassiCube.js'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'webclient'

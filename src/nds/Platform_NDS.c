@@ -1,8 +1,12 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#ifdef NDS_NONET
+#define CC_NO_SOCKETS
+#endif
+#define DEFAULT_COMMANDLINE_FUNC
+#define OVERRIDE_MEM_FUNCTIONS
 
 #define CC_XTEA_ENCRYPTION
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -13,37 +17,25 @@
 #include "../Animations.h"
 
 #include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <nds/arm9/background.h>
-#include <nds/bios.h>
-#include <nds/cothread.h>
-#include <nds/interrupts.h>
-#include <nds/timers.h>
-#include <nds/debug.h>
-#include <nds/system.h>
-#include <nds/arm9/dldi.h>
-#include <nds/arm9/sdmmc.h>
-#include <nds/arm9/exceptions.h>
+#include <nds.h>
 #include <fat.h>
-#ifdef BUILD_DSI
-#include <dsiwifi9.h>
-#else
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <dirent.h>
+#ifndef NDS_NONET
 #include <dswifi9.h>
-#endif
 #include <netdb.h>
 #include <netinet/in.h>
-#include <sys/stat.h>
 #include <sys/socket.h>
-#include <dirent.h>
-#include "../_PlatformConsole.h"
+#endif
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -51,6 +43,56 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " NDS";
 cc_bool Platform_ReadonlyFilesystem;
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Memory management-----------------------------------------------------*
+*#########################################################################################################################*/
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? malloc(size) : NULL;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	return calloc(numElems, elemsSize);
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? realloc(mem, size) : NULL;
+}
+
+// TODO: should actual heap start/end be checked? probably good enough though
+#define RAM_RANGE_BEG (void*)0x02000000
+#define RAM_RANGE_END (void*)0x02FFFFFF
+
+void Mem_Free(void* mem) {
+	if (!mem) return;
+
+	// TODO: why is classicube crashing in free? hopefully this helps
+	if (mem < RAM_RANGE_BEG || mem > RAM_RANGE_END)
+		Process_Abort2(0, "Tried to free invalid pointer");
+
+	free(mem);
+}
 
 
 /*########################################################################################################################*
@@ -149,21 +191,54 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
 static const char* crash_msg;
+extern uint8_t __dtcm_start[];
 
-static __attribute__((noreturn)) void CrashHandler(void) {
+#define STACK_ROW 16
+
+static void DumpStackRow(cc_uintptr addr) {
+	cc_string msg; char msgBuffer[128];
+	String_InitArray(msg, msgBuffer);
+	cc_uintptr end = addr + STACK_ROW;
+
+	// Check actually in stack range
+	cc_uintptr dtcm = (cc_uintptr)__dtcm_start;
+    if (addr < dtcm || end > dtcm + 0x4000) return;
+
+	for (; addr < end; addr++) 
+	{
+		cc_uint8* ptr = (cc_uint8*)addr;
+		String_AppendHex(&msg, *ptr);
+	}
+	Platform_Log(msg.buffer, msg.length);
+}
+
+static void DumpStack(cc_uintptr sp) {
+	sp &= ~0x0F; // align to 16 bytes
+
+	cc_uintptr addr = sp - 3 * STACK_ROW;
+	Platform_Log1("STACK from %x:", &addr);
+
+	for (int i = 0; i < 5 * STACK_ROW; i += STACK_ROW) 
+	{
+		DumpStackRow(addr + i);
+	}
+}
+
+extern int conCurrentPalette;
+static void CrashHandler(void) {
 	Console_Clear();
-	Platform_LogConst("");
-	Platform_LogConst("");
+	// Make the background red since it's game over anyways
+	conCurrentPalette = 0b1100;
+
 	Platform_LogConst("** CLASSICUBE FATALLY CRASHED **");
-	Platform_LogConst("");
 
 	cc_uint32 mode = getCPSR() & CPSR_MODE_MASK;
 	if (crash_msg) {
 		Platform_LogConst(crash_msg);
 	} else if (mode == CPSR_MODE_ABORT) {
-		Platform_LogConst("Read/write at invalid memory");
+		Platform_LogConst("  Read/write at invalid memory");
 	} else if (mode == CPSR_MODE_UNDEFINED) {
-		Platform_LogConst("Executed invalid instruction");
+		Platform_LogConst("  Executed invalid instruction");
 	} else {
 		Platform_Log1("Unknown error: %h", &mode);
 	}
@@ -181,14 +256,12 @@ static __attribute__((noreturn)) void CrashHandler(void) {
 	}
 
 	Platform_LogConst("");
-	Platform_LogConst("Please report this on the       ClassiCube Discord or forums");
+	Platform_LogConst("Please report this on the       ClassiCube Discord or GitHub");
 	Platform_LogConst("");
 	Platform_LogConst("You will need to restart your DS");
+	Platform_LogConst("");
 
-	// Make the background red since game over anyways
-	BG_PALETTE_SUB[16 * 16 - 1] = RGB15(31, 0, 0);
-	BG_PALETTE    [16 * 16 - 1] = RGB15(31, 0, 0);
-
+	DumpStack(exceptionRegisters[13]);
 	for (;;) { }
 }
 
@@ -196,10 +269,16 @@ void CrashHandler_Install(void) {
 	setExceptionHandler(CrashHandler);
 }
 
+// __attribute__ ((target("arm"))) 
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	crash_msg = raw_msg;
+
+	// Try to trigger undefined error so registers are displayed in crash screen
+	asm volatile("udf #0;" ::: "memory");
+	// .. and if that doesn't work, then just trigger crash screen manually
 	CrashHandler();
 }
+// ldr r0, =exceptionRegisters; stmia r0, {r0-r15}
 
 
 /*########################################################################################################################*
@@ -216,9 +295,14 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	if (!fat_available) return 0;
 
 	int ret = mkdir(path->buffer, 0) == -1 ? errno : 0;
@@ -284,12 +368,12 @@ cc_result File_Open(cc_file* file, const cc_filepath* path) {
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC, "Create");
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ENOTSUP;
+	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT, "Update");
 }
 
@@ -389,6 +473,10 @@ void Thread_Detach(void* handle) {
 void Thread_Join(void* handle) {
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	return NULL;
 }
@@ -422,7 +510,16 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+#ifndef NDS_NONET
 static cc_bool net_supported = true;
+
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
 
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
@@ -433,7 +530,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -465,7 +562,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 		addr4 = (struct sockaddr_in*)addrs[i].data;
 		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
+		addr4->sin_port   = SockAddr_EncodePort(port);
 		addr4->sin_addr   = *(struct in_addr*)src_addr;
 	}
 
@@ -510,11 +607,7 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 void Socket_Close(cc_socket s) {
 	shutdown(s, 2); // SHUT_RDWR = 2
-#ifdef BUILD_DSI
-	lwip_close(s);
-#else
 	closesocket(s);
-#endif
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -540,13 +633,16 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
-	
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	socklen_t errSize = sizeof(error);
+
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	socklen_t resultSize = sizeof(socklen_t);
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	return res;
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	return error;
 }
 
 static void LogWifiStatus(int status) {
@@ -560,47 +656,46 @@ static void LogWifiStatus(int status) {
 		case ASSOCSTATUS_ACQUIRINGDHCP:
 			Platform_LogConst("Wifi: Acquiring.."); return;
 		case ASSOCSTATUS_ASSOCIATED:
-			Platform_LogConst("Wifi: Connected successfully!"); return;
+			conCurrentPalette = 0b1010;
+			Platform_LogConst("Wifi: Connected successfully!"); break;
 		case ASSOCSTATUS_CANNOTCONNECT:
-			Platform_LogConst("Wifi: FAILED TO CONNECT"); return;
+			conCurrentPalette = 0b1100;
+			Platform_LogConst("Wifi: FAILED TO CONNECT"); break;
 		default: 
-			Platform_Log1("Wifi: status = %i", &status); return;
+			Platform_Log1("Wifi: status = %i", &status); break;
 	}
+	conCurrentPalette = 0b1111;
 }
 
+#define VSYNCS_PER_SEC 60
 static void InitNetworking(void) {
-#ifdef BUILD_DSI
-    if (!DSiWifi_InitDefault(INIT_ONLY)) {
-#else
-    if (!Wifi_InitDefault(INIT_ONLY)) {
-#endif
+    if (!Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE)) {
         Platform_LogConst("Initing WIFI failed"); 
 		net_supported = false; return;
     }
-#ifdef BUILD_DSI
-    DSiWifi_AutoConnect();
-#else
     Wifi_AutoConnect();
-#endif
+	int last_status = -1;
 
-    for (int i = 0; i < 300; i++)
+    for (int i = 0; i < VSYNCS_PER_SEC * 10; i++)
     {
-#ifdef BUILD_DSI
-        int status = DSiWifi_AssocStatus();
-#else
-        int status = Wifi_AssocStatus();
-#endif	
-		LogWifiStatus(status);
-        if (status == ASSOCSTATUS_ASSOCIATED) return;
+        int status = Wifi_AssocStatus();	
+		int do_log = status != last_status || ((i % VSYNCS_PER_SEC) == 0);
 
+		if (do_log) LogWifiStatus(status);
+		last_status = status;
+
+        if (status == ASSOCSTATUS_ASSOCIATED) return;
         if (status == ASSOCSTATUS_CANNOTCONNECT) {
 			net_supported = false; return;
         }
-        swiWaitForVBlank();
+        cothread_yield_irq(IRQ_VBLANK);
     }
-    Platform_LogConst("Gave up after 300 tries");
+    Platform_LogConst("Gave up after ~10 seconds");
 	net_supported = false;
 }
+#else
+static void InitNetworking(void) { }
+#endif
 
 
 /*########################################################################################################################*
@@ -608,11 +703,7 @@ static void InitNetworking(void) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	cc_bool dsiMode = isDSiMode();
-#ifdef BUILD_DSI
-	Platform_Log1("Running in %c mode with DSi wifi", dsiMode ? "DSi" : "DS");
-#else
-	Platform_Log1("Running in %c mode with NDS wifi", dsiMode ? "DSi" : "DS");
-#endif
+	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
 
 	InitFilesystem();
     InitNetworking();
@@ -623,6 +714,11 @@ void Platform_Free(void) { }
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
+
+	if (res == ERR_NON_WRITABLE_FS) {
+		String_AppendConst(dst, "No SD card or DLDI driver found \nWon't be able to save any files");
+		return true;
+	}
 
 	/* For unrecognised error codes, strerror_r might return messages */
 	/*  such as 'No error information', which is not very useful */
@@ -643,6 +739,19 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
+
+void CPU_FlushDataCache(void* start, int length) {
+	DC_FlushRange(start, length);
+}
 
 
 /*########################################################################################################################*

@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -81,10 +82,10 @@ extern const uint8_t offset_exp_gsh[];
 #define VS_UNI_OFFSET_OFST 16
 #define VS_UNI_COUNT_OFST   4
 
-#define PS_UNI_OFFSET_COLOR 0
-#define PS_UNI_COUNT_COLOR  4
-#define PS_UNI_OFFSET_FOG   4
-#define PS_UNI_COUNT_FOG    4
+#define PS_UNI_OFFSET_LIN  0
+#define PS_UNI_COUNT_LIN   4
+#define PS_UNI_OFFSET_EXP  4
+#define PS_UNI_COUNT_EXP   4
 
 struct ShaderProgram {
 	GX2VertexShader* vs;
@@ -270,27 +271,31 @@ void Gfx_SetFog(cc_bool enabled) {
 	UpdateProgram();
 }
 
+// xyz/rgb are colour, w/a is value
+static struct Vec4 fogLin, fogExp;
+static PackedCol fogColor;
+
 void Gfx_SetFogCol(PackedCol color) {
-	struct Vec4 c = {
-		PackedCol_R(color) / 255.0f,
-		PackedCol_G(color) / 255.0f,
-		PackedCol_B(color) / 255.0f,
-		1.0f
-	};
-	GX2SetPixelUniformReg(PS_UNI_OFFSET_COLOR, PS_UNI_COUNT_COLOR, &c);
-}
+	if (fogColor == color) return;
+	fogColor = color;
 
-static struct Vec4 fogValue;
-#define LOG2_E 1.44269504089f
+	fogLin.x = fogExp.x = PackedCol_R(color) / 255.0f;
+	fogLin.y = fogExp.y = PackedCol_G(color) / 255.0f;
+	fogLin.z = fogExp.z = PackedCol_B(color) / 255.0f;
 
-void Gfx_SetFogDensity(float value) {
-	fogValue.x = -value * LOG2_E;
-	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_LIN, PS_UNI_COUNT_LIN, &fogLin);
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_EXP, PS_UNI_COUNT_EXP, &fogExp);
 }
 
 void Gfx_SetFogEnd(float value) {
-	fogValue.y = 1.0f / value;
-	GX2SetPixelUniformReg(PS_UNI_OFFSET_FOG, PS_UNI_COUNT_FOG, &fogValue);
+	fogLin.w = 1.0f / value;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_LIN, PS_UNI_COUNT_LIN, &fogLin);
+}
+
+#define LOG2_E 1.44269504089f
+void Gfx_SetFogDensity(float value) {
+	fogExp.w = -value * LOG2_E;
+	GX2SetPixelUniformReg(PS_UNI_OFFSET_EXP, PS_UNI_COUNT_EXP, &fogExp);
 }
 
 void Gfx_SetFogMode(FogFunc func) {
@@ -409,24 +414,6 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
-*#########################################################################################################################*/
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Gfx_AllocStaticVb(fmt, maxVertices);
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
-
-void Gfx_BindDynamicVb(GfxResourceID vb)    { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
-
-
-/*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -463,7 +450,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-static struct Matrix _mvp __attribute__((aligned(64)));
+static struct Matrix _mvp CC_ALIGNED(64);
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
@@ -560,10 +547,11 @@ static void CreateDRCTest(void) {
 }
 
 void Gfx_EndFrame(void) {
-	WHBGfxFinishRenderTV();
+	GX2ColorBuffer* buf = WHBGfxGetTVColourBuffer();
+	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_TV);
+
 	WHBGfxBeginRenderDRC();
-	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
-	WHBGfxFinishRenderDRC();
+	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_DRC);
 
 	WHBGfxFinishRender();
 }

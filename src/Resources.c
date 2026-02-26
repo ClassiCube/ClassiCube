@@ -1,7 +1,7 @@
 #include "Resources.h"
 #ifdef CC_BUILD_RESOURCES
 #include "Funcs.h"
-#include "String.h"
+#include "String_.h"
 #include "Constants.h"
 #include "Deflate.h"
 #include "Stream.h"
@@ -65,14 +65,17 @@ static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry select
 	struct Stream stream;
 	cc_result res;
 	struct ZipEntry entries[64];
+	cc_filepath raw_path;
 
-	res = Stream_OpenFile(&stream, path);
-	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_SysWarn2(res, "opening", path); return; }
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
+
+	if (ReturnCode_IsNotFound(res)) return;
+	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return; }
 
 	res = Zip_Extract(&stream, selector, NULL, 
 						entries, Array_Elems(entries));
-	if (res) Logger_SysWarn2(res, "inspecting", path);
+	if (res) Logger_IOWarn2(res, "inspecting", &raw_path);
 
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
@@ -267,22 +270,26 @@ static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry*
 
 static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
 	struct Stream s;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_CreateFile(&s, path);
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_CreatePath(&s, &raw_path);
 	if (res) {
-		Logger_SysWarn2(res, "creating", path); return;
+		Logger_IOWarn2(res, "creating", &raw_path); return;
 	}
 		
 	res = ZipFile_WriteEntries(&s, entries, numEntries);
-	if (res) Logger_SysWarn2(res, "making", path);
+	if (res) Logger_IOWarn2(res, "making", &raw_path);
 
 	res = s.Close(&s);
-	if (res) Logger_SysWarn2(res, "closing", path);
+	if (res) Logger_IOWarn2(res, "closing", &raw_path);
 }
 
 
-#ifndef CC_BUILD_NOMUSIC
+#ifdef CC_BUILD_NOMUSIC
+static int MusicAsset_Download(const char* hash) { return ERR_NOT_SUPPORTED; }
+#else
 /*########################################################################################################################*
 *---------------------------------------------------------Music assets----------------------------------------------------*
 *#########################################################################################################################*/
@@ -469,7 +476,7 @@ static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx
 		count = Vorbis_OutputFrame(ctx, samples);
 		len  += count * 2;
 
-#ifdef CC_BUILD_BIGENDIAN
+#ifdef CC_BIG_ENDIAN
 		Utils_SwapEndian16(samples, count);
 #endif
 		res = Stream_Write(s, (cc_uint8*)samples, count * 2);
@@ -1293,6 +1300,9 @@ void Fetcher_Run(void) {
 	{
 		asset_sets[i]->DownloadAssets();
 	}
+
+	Utils_EnsureDirectory("texpacks");
+	Utils_EnsureDirectory("audio");
 }
 
 static void Fetcher_Finish(void) {

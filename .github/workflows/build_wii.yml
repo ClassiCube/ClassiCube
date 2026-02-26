@@ -1,0 +1,60 @@
+name: Build latest (Wii)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-wii
+  cancel-in-progress: true
+
+jobs:
+  build:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Wii build
+        run: |
+          make wii
+          
+      - name: Create Wii homebrew
+        run: |
+          mkdir -p wiitest/apps/ClassiCube
+          cp ClassiCube-wii.dol wiitest/apps/ClassiCube/boot.dol
+          cp misc/wii/icon.png wiitest/apps/ClassiCube/icon.png
+          cp misc/wii/meta.xml wiitest/apps/ClassiCube/meta.xml
+          
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-wii.dol'
+          DEST_NAME: 'ClassiCube-wii.dol'
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-wii.elf'
+          DEST_NAME: 'ClassiCube-wii.elf'
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'wiitest'
+          DEST_NAME: 'ClassiCube-Wii-Homebrew'
+          
+          
+      - uses: ./.github/actions/notify_success
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'wii'
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce Wii build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

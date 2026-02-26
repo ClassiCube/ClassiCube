@@ -89,6 +89,12 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 /* Only used on GBA to store some variables in EWRAM instead of IWRAM */
 #define CC_BIG_VAR
 
+#ifdef _MSC_VER
+	#define CC_ALIGNED(x) __declspec(align(x))
+#else
+	#define CC_ALIGNED(x) __attribute__((aligned(x)))
+#endif
+
 /* Unrecognised compiler, so just go with some sensible default typdefs */
 /* Don't use <stdint.h>, as good chance such a compiler doesn't support it */
 #ifndef CC_HAS_TYPES
@@ -137,7 +143,6 @@ typedef cc_uint8  cc_bool;
 #define CC_WIN_BACKEND_WIN32    5
 #define CC_WIN_BACKEND_COCOA    6
 #define CC_WIN_BACKEND_BEOS     7
-#define CC_WIN_BACKEND_ANDROID  8
 #define CC_WIN_BACKEND_WIN32CE  9
 
 #define CC_GFX_BACKEND_SOFTGPU   1
@@ -149,6 +154,7 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_GL11      7
 #define CC_GFX_BACKEND_SOFTMIN   8
 #define CC_GFX_BACKEND_SOFTFP    9
+#define CC_GFX_BACKEND_IS_GL() (CC_GFX_BACKEND == CC_GFX_BACKEND_GL1 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL2 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL11)
 
 #define CC_SSL_BACKEND_NONE      1
 #define CC_SSL_BACKEND_BEARSSL   2
@@ -164,8 +170,12 @@ typedef cc_uint8  cc_bool;
 #define CC_AUD_BACKEND_WINMM    2
 #define CC_AUD_BACKEND_OPENSLES 3
 #define CC_AUD_BACKEND_NULL     4
+#define CC_AUD_BACKEND_OS2      5
 
-#define CC_GFX_BACKEND_IS_GL() (CC_GFX_BACKEND == CC_GFX_BACKEND_GL1 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL2 || CC_GFX_BACKEND == CC_GFX_BACKEND_GL11)
+#define CC_FPU_MODE_MINIMAL 1 /* Integer math funcs, no animations, no held block, flat inventory */
+#define CC_FPU_MODE_LIMITED 2 /* Integer math funcs, no animations, no held block */
+#define CC_FPU_MODE_REDUCED 3 /* Integer math funcs, no animations */
+#define CC_FPU_MODE_NORMAL  4
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
@@ -203,6 +213,7 @@ typedef cc_uint8  cc_bool;
 #elif defined PLAT_PS4
 	#define CC_BUILD_PS4
 	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_COOPTHREADED /* TODO rid of */
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
@@ -232,7 +243,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_OPENSLES
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OPENSLES
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
-	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_ANDROID
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_CRT_BACKEND CC_CRT_BACKEND_ANDROID
@@ -271,15 +281,13 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
 	#define CC_BUILD_MAXSTACK (32 * 1024)
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
@@ -291,15 +299,13 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
 	#define CC_BUILD_MAXSTACK (32 * 1024)
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
@@ -459,12 +465,17 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_DUALSCREEN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-#elif defined PLAT_GCWII
-	#define CC_BUILD_GCWII
+#elif defined PLAT_GAMECUBE
+	#define CC_BUILD_GAMECUBE
 	#define CC_BUILD_CONSOLE
-	#ifndef HW_RVL
-		#define CC_BUILD_LOWMEM
-	#endif
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_SPLITSCREEN
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+#elif defined PLAT_WII
+	#define CC_BUILD_WII
+	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_SPLITSCREEN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
@@ -523,14 +534,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_MAXSTACK (8 * 1024) /* TODO verify */
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
 	#define CC_DISABLE_EXTRA_MODELS
 	#undef  CC_VAR
@@ -549,13 +558,15 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_MAXSTACK (16 * 1024) /* Only < 16 kb stack as it's in DTCM region */
-	#define CC_BUILD_NOFPU
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#ifndef BUILD_DSI
-		#undef CC_BUILD_ADVLIGHTING
-	#endif
-	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_REDUCED
+	#undef CC_BUILD_ADVLIGHTING
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
+	#ifndef NDS_NONET
+		#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+		#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#else
+		#undef CC_BUILD_NETWORKING
+	#endif
 #elif defined PLAT_WIIU
 	#define CC_BUILD_WIIU
 	#define CC_BUILD_CONSOLE
@@ -569,7 +580,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_GLES
-	#define CC_BUILD_EGL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
@@ -581,11 +591,9 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_LIMITED
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
@@ -595,9 +603,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_FREETYPE
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-	#define DEFAULT_CRT_BACKEND CC_CRT_BACKEND_OPENSSL
+	//#define DEFAULT_CRT_BACKEND CC_CRT_BACKEND_OPENSSL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_OS2
+// TODO We deactivate the OS/2 audio, because we get hard system crashes upon app exit.
+	//#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_OS2
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 #elif defined PLAT_SATURN
 	#define CC_BUILD_SATURN
 	#define CC_BUILD_CONSOLE
@@ -607,11 +618,9 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_MAXSTACK (64 * 1024)
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_LIMITED
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
@@ -624,14 +633,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_MAXSTACK (64 * 1024)
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_MINIMAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 	#undef  CC_BUILD_COMPRESSION
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
 	#define CC_DISABLE_UI
 	#define CC_DISABLE_EXTRA_MODELS
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
@@ -647,28 +654,20 @@ typedef cc_uint8  cc_bool;
 	#define CC_NOMAIN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-
-	#if defined CC_BUILD_SYMBIAN_LIBGLESV2
-		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL2
-	#else
-		#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
-		#define CC_DISABLE_ANIMATIONS
-	#endif
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL1
 #elif defined _WIN32_WCE
 	#define CC_BUILD_WINCE
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_NOFPU
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_LIMITED
 	#undef  CC_BUILD_ADVLIGHTING
     #undef  CC_BUILD_FREETYPE
-	#define CC_DISABLE_ANIMATIONS /* Very costly in FPU less system */
-	#define CC_DISABLE_HELDBLOCK  /* Very costly in FPU less system */
     #define CC_BUILD_TOUCH
     #define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32CE
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTFP
-    #define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSS
+    #define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 #endif
 #endif
 
@@ -710,6 +709,9 @@ typedef cc_uint8  cc_bool;
 #ifndef CC_BUILD_MAXSTACK
 	#define CC_BUILD_MAXSTACK (256 * 1024)
 #endif
+#ifndef CC_BUILD_FPU_MODE
+	#define CC_BUILD_FPU_MODE CC_FPU_MODE_NORMAL
+#endif
 
 #ifdef EXTENDED_BLOCKS
 typedef cc_uint16 BlockID;
@@ -738,6 +740,7 @@ typedef struct cc_string_ {
 	cc_uint16 length;   /* Number of characters used */
 	cc_uint16 capacity; /* Max number of characters  */
 } cc_string;
+
 /* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
 Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF

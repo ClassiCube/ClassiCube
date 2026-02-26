@@ -1,3 +1,5 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
+#define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -173,7 +175,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	if (!tex) return NULL;
 
 	int width  = bmp->width, height = bmp->height;
-	int blocks = SIZE_TO_BLOCKS(width * height * 2, TEX_BLOCK_SIZE);
+	int blocks = SIZE_TO_BLOCKS(width * height * BITMAPCOLOR_SIZE, TEX_BLOCK_SIZE);
 	int addr   = blockalloc_alloc(tex_table, TEX_TOTAL_BLOCKS, blocks);
 
 	if (addr == -1) {
@@ -187,8 +189,10 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	tex->offset = addr;
 	tex->blocks = blocks;
 
-	int vram_free = blockalloc_total_free(tex_table, TEX_TOTAL_BLOCKS) * TEX_BLOCK_SIZE;
-	Platform_Log1("VRAM left: %i bytes", &vram_free);
+	int vram_free, vram_used;
+	blockalloc_calc_usage(tex_table, TEX_TOTAL_BLOCKS, TEX_BLOCK_SIZE,
+							&vram_free, &vram_used);
+	Platform_Log2("VRAM: %i bytes left (%i used)", &vram_free, &vram_used);
 
 	cc_uint8*  tmp = CCTexture_Addr(tex);
 	cc_uint16* src = bmp->scan0;
@@ -305,11 +309,9 @@ static void* gfx_vertices;
 #define XYZInteger(value) ((value) >> 6)
 #define XYZFixed(value)   ((int)((value) * (1 << 6)))
 
-static void* gfx_vertices;
-
-static void PreprocessTexturedVertices(void) {
-	struct SATVertexTextured* dst = gfx_vertices;
-	struct VertexTextured* src    = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+	struct SATVertexTextured* dst = vertices;
+	struct VertexTextured* src    = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -323,8 +325,8 @@ static void PreprocessTexturedVertices(void) {
         dst->Col = ((b >> 5) << 7) | ((g >> 4) << 3) | (r >> 5);
     }
 
-	dst = gfx_vertices;
-	src = gfx_vertices;
+	dst = vertices;
+	src = vertices;
 	for (int i = 0; i < buf_count; i += 4, src += 4, dst += 4)
 	{
         int flipped = src[0].V > src[2].V;
@@ -332,9 +334,9 @@ static void PreprocessTexturedVertices(void) {
     }
 }
 
-static void PreprocessColouredVertices(void) {
-	struct SATVertexColoured* dst = gfx_vertices;
-	struct VertexColoured* src    = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+	struct SATVertexColoured* dst = vertices;
+	struct VertexColoured* src    = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -369,29 +371,12 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-    gfx_vertices = vb;
-
     if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-        PreprocessTexturedVertices();
+        PreprocessTexturedVertices(vb);
     } else {
-        PreprocessColouredVertices();
+        PreprocessColouredVertices(vb);
     }
 }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*

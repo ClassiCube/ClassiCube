@@ -14,7 +14,7 @@ IF version(0x20009a80, <, 1, 5, 0) AND NOT EXISTS("C:\sys\bin\libc.dll")
     "incompatible_openc.txt"-"", FT, FORCEABORT
 ENDIF
 
-IF exists("z:\system\install\Series60v5.2.sis") ; Symbian^3
+IF exists("z:\system\install\Series60v5.2.sis") AND exists("z:\sys\bin\libGLESv2.dll") ; Symbian^3
 	"$(EPOCROOT)Epoc32\release\$(PLATFORM)\$(TARGET)\ClassiCube.exe" - "!:\sys\bin\ClassiCube.exe"
 ELSE
 	IF exists("z:\system\install\Series60v5.0.sis") ; Symbian 9.4

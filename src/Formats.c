@@ -1,5 +1,5 @@
 #include "Formats.h"
-#include "String.h"
+#include "String_.h"
 #include "World.h"
 #include "Deflate.h"
 #include "Block.h"
@@ -67,12 +67,15 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	struct LocationUpdate update = { 0 };
 	struct MapImporter* imp;
 	struct Stream stream;
+	cc_filepath raw_path;
 	cc_result res;
+
 	Game_Reset();
-	
 	spawn_point = &update;
-	res = Stream_OpenFile(&stream, path);
-	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
+
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
+	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return res; }
 
 	imp = MapImporter_Find(path);
 	if (!imp) {
@@ -83,7 +86,7 @@ cc_result Map_LoadFrom(const cc_string* path) {
 
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
-	if (res) Logger_SysWarn2(res, "decoding", path);
+	if (res) Logger_IOWarn2(res, "decoding", &raw_path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	if (!spawn_point) LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);

@@ -964,8 +964,8 @@ br_ssl_hs_client_run(void *t0ctx)
 	t0_next:
 		t0x = T0_NEXT(&ip);
 		if (t0x < T0_INTERPRETED) {
+			int32_t t0off;
 			switch (t0x) {
-				int32_t t0off;
 
 			case 0: /* ret */
 				t0x = T0_RPOP();

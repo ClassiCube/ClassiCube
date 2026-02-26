@@ -24,3 +24,29 @@ RESOURCE LOCALISABLE_APP_INFO r_ClassiCube_localisable_app_info
 		icon_file = "\\resource\\apps\\classicube_icon.mif";
 	};
 }
+
+RESOURCE DIALOG r_query_dialog
+{
+	flags = EGeneralQueryFlags | EEikDialogFlagNoBorder | EEikDialogFlagNoShadow;
+	buttons = R_AVKON_SOFTKEYS_OK_EMPTY;
+	items =
+	{
+		DLG_LINE
+		{
+			type = EAknCtPopupHeadingPane;
+			id = EAknMessageQueryHeaderId;
+			itemflags = EEikDlgItemNonFocusing;
+			control = AVKON_HEADING
+			{
+			};
+		},
+		DLG_LINE
+		{
+			type = EAknCtMessageQuery;
+			id = EAknMessageQueryContentId;
+			control = AVKON_MESSAGE_QUERY
+			{
+			};
+		}
+	};
+}

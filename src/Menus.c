@@ -206,14 +206,6 @@ static void AddPrimaryButton(void* screen, struct ButtonWidget* btn, Widget_Left
 *------------------------------------------------------Menu utilities-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_DISABLE_UI
-static void Menu_BeginGen(int width, int height, int length) {
-	World_NewMap();
-	World_SetDimensions(width, height, length);
-
-	Gen_Start();
-	GeneratingScreen_Show();
-}
-
 static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Show(); }
 static void Menu_SwitchPause(void* a, void* b)          { Gui_ShowPauseMenu(); }
 static void Menu_SwitchClassicOptions(void* a, void* b) { ClassicOptionsScreen_Show(); }
@@ -262,9 +254,9 @@ static struct ListScreen {
 	const char* titleText;
 	struct TextWidget title;
 	struct StringsBuffer entries;
+	struct Widget* __widgets[LIST_SCREEN_ITEMS + 4 + 1];
 } ListScreen;
 
-static struct Widget* list_widgets[LIST_SCREEN_ITEMS + 4 + 1];
 #define LISTSCREEN_EMPTY "-"
 
 static void ListScreen_Layout(void* screen) {
@@ -399,9 +391,9 @@ static int ListScreen_KeyDown(void* screen, int key, struct InputDevice* device)
 static void ListScreen_Init(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int i, width;
-	s->widgets    = list_widgets;
+	s->widgets    = s->__widgets;
 	s->numWidgets = 0;
-	s->maxWidgets = Array_Elems(list_widgets);
+	s->maxWidgets = Array_Elems(s->__widgets);
 	s->currentIndex = 0;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) 
@@ -669,9 +661,8 @@ static struct OptionsGroupScreen {
 	struct ButtonWidget btns[8];
 	struct TextWidget desc;
 	struct ButtonWidget done;
+	struct Widget* __widgets[8 + 2];
 } OptionsGroupScreen;
-
-static struct Widget* optGroups_widgets[8 + 2];
 
 static const char* const optsGroup_descs[8] = {
 	"&eMusic/Sound, view bobbing, and more",
@@ -738,9 +729,9 @@ static void OptionsGroupScreen_Init(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 
 	Event_Register_(&UserEvents.HackPermsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
-	s->widgets     = optGroups_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(optGroups_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 	s->selectedI   = -1;
 	s->widgetsPerPage = 4;
 
@@ -795,9 +786,8 @@ static struct EditHotkeyScreen {
 	struct FontDesc titleFont, textFont;
 	struct TextInputWidget input;
 	struct ButtonWidget btns[5], cancel;
+	struct Widget* __widgets[1 + 5 + 1];
 } EditHotkeyScreen;
-
-static struct Widget* edithotkey_widgets[1 + 5 + 1];
 
 static void HotkeyListScreen_MakeFlags(int flags, cc_string* str);
 static void EditHotkeyScreen_MakeFlags(int flags, cc_string* str) {
@@ -1003,9 +993,9 @@ static void EditHotkeyScreen_Init(void* screen) {
 	struct MenuInputDesc desc;
 	cc_string text;
 
-	s->widgets     = edithotkey_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(edithotkey_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 	
 	s->selectedI   = -1;
 	MenuInput_String(desc);
@@ -1048,16 +1038,16 @@ void EditHotkeyScreen_Show(struct HotkeyData original) {
 /*########################################################################################################################*
 *-----------------------------------------------------GenLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
+#define GENLEVEL_NUM_INPUTS 4
+
 static struct GenLevelScreen {
 	Screen_Body
 	struct FontDesc textFont;
 	struct ButtonWidget flatgrass, vanilla, cancel;
 	struct TextInputWidget inputs[4];
 	struct TextWidget labels[4], title;
+	struct Widget* __widgets[2 * GENLEVEL_NUM_INPUTS + 4];
 } GenLevelScreen;
-#define GENLEVEL_NUM_INPUTS 4
-
-static struct Widget* gen_widgets[2 * GENLEVEL_NUM_INPUTS + 4];
 
 CC_NOINLINE static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 	struct TextInputWidget* input = &s->inputs[index];
@@ -1093,10 +1083,8 @@ static void GenLevelScreen_Gen(void* screen, const struct MapGenerator* gen) {
 	} else if (!width || !height || !length) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");
 	} else {
-		Gen_Active  = gen;
-		Gen_Seed    = seed;
 		Gui_Remove((struct Screen*)s);
-		Menu_BeginGen(width, height, length);
+		Gen_Start(gen, seed, width, height, length);
 	}
 }
 
@@ -1219,9 +1207,9 @@ static void GenLevelScreen_Layout(void* screen) {
 
 static void GenLevelScreen_Init(void* screen) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	s->widgets    = gen_widgets;
+	s->widgets    = s->__widgets;
 	s->numWidgets = 0;
-	s->maxWidgets = Array_Elems(gen_widgets);
+	s->maxWidgets = Array_Elems(s->__widgets);
 	s->selectedI  = -1;
 
 	GenLevelScreen_Make(s, 0, World.Width);
@@ -1261,17 +1249,18 @@ static struct ClassicGenScreen {
 	Screen_Body
 	struct ButtonWidget btns[3], cancel;
 	struct TextWidget title;
+	struct Widget* __widgets[1 + 3 + 1];
 } ClassicGenScreen;
 
-static struct Widget* classicgen_widgets[1 + 3 + 1];
-
 static void ClassicGenScreen_Gen(int size) {
-	RNGState rnd; Random_SeedFromCurrentTime(&rnd);
-	Gen_Active = &NotchyGen;
-	Gen_Seed   = Random_Next(&rnd, Int32_MaxValue);
+	RNGState rnd; 
+	int seed;
+
+	Random_SeedFromCurrentTime(&rnd);
+	seed = Random_Next(&rnd, Int32_MaxValue);
 
 	Gui_Remove((struct Screen*)&ClassicGenScreen);
-	Menu_BeginGen(size, 64, size);
+	Gen_Start(&NotchyGen, seed, size, 64, size);
 }
 
 static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128); }
@@ -1304,9 +1293,9 @@ static void ClassicGenScreen_Layout(void* screen) {
 
 static void ClassicGenScreen_Init(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
-	s->widgets     = classicgen_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(classicgen_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 
 	TextWidget_Add(s,   &s->title);
 	ButtonWidget_Add(s, &s->btns[0], 400, ClassicGenScreen_Small);
@@ -1343,9 +1332,8 @@ static struct SaveLevelScreen {
 	struct ButtonWidget save, file, cancel;
 	struct TextInputWidget input;
 	struct TextWidget desc;
+	struct Widget* __widgets[3 + 1 + 1];
 } SaveLevelScreen;
-
-static struct Widget* save_widgets[3 + 1 + 1];
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
@@ -1359,14 +1347,21 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 	}
 }
 
+static void SaveLevelScreen_OnInputTextChanged(void* elem) {
+	SaveLevelScreen_RemoveOverwrites(&SaveLevelScreen);
+}
+
 static cc_result DoSaveMap(const cc_string* path, struct GZipState* state) {
 	static const cc_string schematic = String_FromConst(".schematic");
 	static const cc_string mine      = String_FromConst(".mine");
 	struct Stream stream, compStream;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_CreateFile(&stream, path);
-	if (res) { Logger_SysWarn2(res, "creating", path); return res; }
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_CreatePath(&stream, &raw_path);
+	if (res) { Logger_IOWarn2(res, "creating", &raw_path); return res; }
+
 	GZip_MakeStream(&compStream, state, &stream);
 
 	if (String_CaselessEnds(path, &schematic)) {
@@ -1379,16 +1374,16 @@ static cc_result DoSaveMap(const cc_string* path, struct GZipState* state) {
 
 	if (res) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "encoding", path); return res;
+		Logger_IOWarn2(res, "encoding", &raw_path); return res;
 	}
 
 	if ((res = compStream.Close(&compStream))) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "closing", path); return res;
+		Logger_IOWarn2(res, "closing", &raw_path); return res;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", path); return res; }
+	if (res) { Logger_IOWarn2(res, "closing", &raw_path); return res; }
 	return 0;
 }
 
@@ -1435,6 +1430,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget) {
 		
 	SaveLevelScreen_RemoveOverwrites(s);
 	if ((res = SaveLevelScreen_SaveMap(&path))) return;
+
 	Chat_Add1("&eSaved map to: %s", &path);
 	CPE_SendNotifyAction(NOTIFY_ACTION_LEVEL_SAVED, 0);
 }
@@ -1473,14 +1469,12 @@ static void SaveLevelScreen_File(void* screen, void* b) {
 
 static int SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	SaveLevelScreen_RemoveOverwrites(s);
 	InputWidget_Append(&s->input.base, keyChar);
 	return true;
 }
 
 static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	SaveLevelScreen_RemoveOverwrites(s);
 	InputWidget_SetText(&s->input.base, str);
 	return true;
 }
@@ -1490,11 +1484,10 @@ static int SaveLevelScreen_KeyDown(void* screen, int key, struct InputDevice* de
 	int handled;
 	
 	handled = Menu_DoInputDown(s, key, device);
-	/* Pressing Enter triggers save */
+	/* Pressing Enter in general triggers save */
 	if (!handled && InputDevice_IsEnter(key, device))
 		SaveLevelScreen_Save(s, &s->save);
 
-	if (key != CCMOUSE_L) SaveLevelScreen_RemoveOverwrites(s);
 	return Screen_InputDown(s, key, device);
 }
 
@@ -1541,9 +1534,9 @@ static void SaveLevelScreen_Init(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct MenuInputDesc desc;
 	
-	s->widgets     = save_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(save_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 	MenuInput_Path(desc);
 	
 	ButtonWidget_Add(s, &s->save, 400, SaveLevelScreen_Save);
@@ -1555,6 +1548,7 @@ static void SaveLevelScreen_Init(void* screen) {
 
 	TextWidget_Add(s, &s->desc);
 	s->input.onscreenPlaceholder = "Map name";
+	s->input.base.OnTextChanged  = SaveLevelScreen_OnInputTextChanged;
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -1888,10 +1882,9 @@ void LoadLevelScreen_Show(void) {
 static struct BindsSourceScreen {
 	Screen_Body
 	struct ButtonWidget btns[2], cancel;
+	struct Widget* __widgets[3];
 } BindsSourceScreen;
 static struct InputDevice* bind_device;
-
-static struct Widget* bindsSource_widgets[3];
 
 static void BindsSourceScreen_ModeNormal(void* screen, void* b) {
 	bind_device = &NormDevice;
@@ -1925,9 +1918,9 @@ static void BindsSourceScreen_Layout(void* screen) {
 static void BindsSourceScreen_Init(void* screen) {
 	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
 
-	s->widgets     = bindsSource_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(bindsSource_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 	s->selectedI   = -1;
 
 	ButtonWidget_Add(s, &s->btns[0], 300, BindsSourceScreen_ModeNormal);
@@ -1987,9 +1980,8 @@ static struct KeyBindsScreen {
 	struct TextWidget title, msg;
 	struct ButtonWidget back, left, right;
 	struct ButtonWidget buttons[KEYBINDS_MAX_BTNS];
+	struct Widget* __widgets[KEYBINDS_MAX_BTNS + 5];
 } KeyBindsScreen;
-
-static struct Widget* key_widgets[KEYBINDS_MAX_BTNS + 5];
 
 static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	cc_string text; char textBuffer[STRING_SIZE];
@@ -2099,9 +2091,9 @@ static void KeyBindsScreen_Layout(void* screen) {
 static void KeyBindsScreen_Init(void* screen) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	int i;
-	s->widgets     = key_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(key_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 	s->curI        = -1;
 
 	for (i = 0; i < s->bindsCount; i++) 
@@ -2278,9 +2270,8 @@ static struct MenuInputOverlay {
 	struct MenuInputDesc* desc;
 	MenuInputDone onDone;
 	cc_string value; char valueBuffer[STRING_SIZE];
+	struct Widget* __widgets[2 + 1];
 } MenuInputOverlay;
-
-static struct Widget* menuInput_widgets[2 + 1];
 
 void MenuInputOverlay_Close(cc_bool valid) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)&MenuInputOverlay;
@@ -2344,9 +2335,9 @@ static void MenuInputOverlay_Default(void* screen, void* widget) {
 
 static void MenuInputOverlay_Init(void* screen) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
-	s->widgets     = menuInput_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(menuInput_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 
 	ButtonWidget_Add(s,    &s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
 	ButtonWidget_Add(s,    &s->Default,              200, MenuInputOverlay_Default);
@@ -2471,8 +2462,8 @@ static struct TexIdsOverlay {
 	int xOffset, yOffset, tileSize, textVertices;
 	struct TextAtlas idAtlas;
 	struct TextWidget title;
+	struct Widget* __widgets[1];
 } TexIdsOverlay;
-static struct Widget* texids_widgets[1];
 
 #define TEXIDS_MAX_ROWS_PER_PAGE 16
 #define TEXIDS_MAX_PER_PAGE      (TEXIDS_MAX_ROWS_PER_PAGE * ATLAS2D_TILES_PER_ROW)
@@ -2611,9 +2602,9 @@ static void TexIdsOverlay_OnAtlasChanged(void* screen) {
 
 static void TexIdsOverlay_Init(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
-	s->widgets     = texids_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(texids_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 	s->maxVertices = TEXIDS_MAX_VERTICES;
 
 	TextWidget_Add(s, &s->title);
@@ -2669,9 +2660,8 @@ static struct UrlWarningOverlay {
 	struct ButtonWidget btns[2];
 	struct TextWidget   lbls[4];
 	char _urlBuffer[STRING_SIZE * 4];
+	struct Widget* __widgets[4 + 2];
 } UrlWarningOverlay;
-
-static struct Widget* urlwarning_widgets[4 + 2];
 
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
@@ -2713,9 +2703,9 @@ static void UrlWarningOverlay_Layout(void* screen) {
 
 static void UrlWarningOverlay_Init(void* screen) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	s->widgets     = urlwarning_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(urlwarning_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 
 	Overlay_AddLabels(s, s->lbls);
 	ButtonWidget_Add(s, &s->btns[0], 160, UrlWarningOverlay_OpenUrl);
@@ -2757,9 +2747,8 @@ static struct TexPackOverlay {
 	struct ButtonWidget btns[4];
 	struct TextWidget   lbls[4];
 	char _urlBuffer[URL_MAX_SIZE];
+	struct Widget* __widgets[4 + 4];
 } TexPackOverlay;
-
-static struct Widget* texpack_widgets[4 + 4];
 
 static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) { 
 	struct ButtonWidget* btn = (struct ButtonWidget*)w;
@@ -2895,9 +2884,9 @@ static void TexPackOverlay_Layout(void* screen) {
 
 static void TexPackOverlay_Init(void* screen) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	s->widgets     = texpack_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(texpack_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 
 	s->contentLength = 0;
 	s->gotContent    = false;
@@ -2941,9 +2930,8 @@ static struct NostalgiaMenuScreen {
 	Screen_Body
 	struct ButtonWidget btnA, btnF, done;
 	struct TextWidget title;
+	struct Widget* __widgets[4];
 } NostalgiaMenuScreen;
-
-static struct Widget* nostalgiaMenu_widgets[4];
 
 static void NostalgiaMenuScreen_Appearance(void* a, void* b)    { NostalgiaAppearanceScreen_Show(); }
 static void NostalgiaMenuScreen_Functionality(void* a, void* b) { NostalgiaFunctionalityScreen_Show(); }
@@ -2977,9 +2965,9 @@ static void NostalgiaMenuScreen_Layout(void* screen) {
 static void NostalgiaMenuScreen_Init(void* screen) {
 	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
 
-	s->widgets     = nostalgiaMenu_widgets;
+	s->widgets     = s->__widgets;
 	s->numWidgets  = 0;
-	s->maxWidgets  = Array_Elems(nostalgiaMenu_widgets);
+	s->maxWidgets  = Array_Elems(s->__widgets);
 
 	ButtonWidget_Add(s, &s->btnA, 400, NostalgiaMenuScreen_Appearance);
 	ButtonWidget_Add(s, &s->btnF, 400, NostalgiaMenuScreen_Functionality);

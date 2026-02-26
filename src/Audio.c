@@ -1,5 +1,5 @@
 #include "Audio.h"
-#include "String.h"
+#include "String_.h"
 #include "Logger.h"
 #include "Event.h"
 #include "Block.h"
@@ -25,7 +25,14 @@ const char* const Sound_Names[SOUND_COUNT] = {
 	"metal", "glass", "cloth", "sand", "snow",
 };
 
+#ifdef CC_BIG_ENDIAN
+/* Hacky workaround to ensure that sounds are re-fetched on big endian systems, */
+/*  as the .wav writing code at one point accidentally wrote big endian instead */ 
+/*  of little endian samples to the .wav file */
+const cc_string Sounds_ZipPathMC = String_FromConst("audio/default2.zip");
+#else
 const cc_string Sounds_ZipPathMC = String_FromConst("audio/default.zip");
+#endif
 const cc_string Sounds_ZipPathCC = String_FromConst("audio/classicube.zip");
 static const cc_string audio_dir = String_FromConst("audio");
 
@@ -90,7 +97,7 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if ((res = Audio_AllocChunks(size, &snd->chunk, 1))) return res;
 			res = Stream_Read(stream, (cc_uint8*)snd->chunk.data, size);
 
-			#ifdef CC_BUILD_BIGENDIAN
+			#ifdef CC_BIG_ENDIAN
 			Utils_SwapEndian16((cc_int16*)snd->chunk.data, size / 2);
 			#endif
 			return res;
@@ -221,14 +228,16 @@ static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, s
 static cc_result Sounds_ExtractZip(const cc_string* path) {
 	struct ZipEntry entries[128];
 	struct Stream stream;
+	cc_filepath raw_path;
 	cc_result res;
 
-	res = Stream_OpenFile(&stream, path);
-	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
+	Platform_EncodePath(&raw_path, path);
+	res = Stream_OpenPath(&stream, &raw_path);
+	if (res) { Logger_IOWarn2(res, "opening", &raw_path); return res; }
 
 	res = Zip_Extract(&stream, SelectZipEntry, ProcessZipEntry,
 						entries, Array_Elems(entries));
-	if (res) Logger_SysWarn2(res, "extracting", path);
+	if (res) Logger_IOWarn2(res, "extracting", &raw_path);
 
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
@@ -422,6 +431,7 @@ static void Music_RunLoop(void) {
 	cc_string path;
 	RNGState rnd;
 	struct Stream stream;
+	cc_filepath raw_path;
 	int idx, delay;
 	cc_result res = 0;
 
@@ -438,8 +448,9 @@ static void Music_RunLoop(void) {
 		path = StringsBuffer_UNSAFE_Get(&files, idx);
 		Platform_Log1("playing music file: %s", &path);
 
-		res = Stream_OpenFile(&stream, &path);
-		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
+		Platform_EncodePath(&raw_path, &path);
+		res = Stream_OpenPath(&stream, &raw_path);
+		if (res) { Logger_IOWarn2(res, "opening", &raw_path); break; }
 
 		res = Music_PlayOgg(&stream);
 		if (res) { Logger_SimpleWarn2(res, "playing", &path); }
@@ -521,6 +532,8 @@ void Audio_SetMusic(int volume) {
 }
 
 static void OnInit(void) {
+	Utils_EnsureDirectory("audio");
+
 	Sounds_Init();
 	Music_Init();
 }

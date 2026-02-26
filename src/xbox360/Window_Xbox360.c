@@ -3,19 +3,18 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <xenos/xenos.h>
 #include <input/input.h>
 #include <usb/usbmain.h>
 #include <pci/io.h>
-
-static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -25,13 +24,14 @@ static uint32_t reg_read32(int reg)
 	return read32n(0xec800000 + reg);
 }
 
-void Window_PreInit(void) { }
-void Window_Init(void) {
+void Window_PreInit(void) {
 	DisplayInfo.Width  = reg_read32(D1GRPH_X_END);
 	DisplayInfo.Height = reg_read32(D1GRPH_Y_END);
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
@@ -47,8 +47,8 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create2D(int width, int height) { Window_Main.Is3D = false; }
+void Window_Create3D(int width, int height) { Window_Main.Is3D = true;  }
 
 void Window_Destroy(void) { }
 
@@ -106,12 +106,12 @@ static const BindMapping defaults_xbox360[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
 };
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 	usb_init();
 	usb_do_poll();
 }
+
+void Gamepads_Init(void) { }
 /*
 struct controller_data_s
 {
@@ -207,7 +207,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
@@ -223,9 +223,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg, false);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

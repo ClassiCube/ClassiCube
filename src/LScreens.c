@@ -1,6 +1,6 @@
 #include "LScreens.h"
 #ifndef CC_DISABLE_LAUNCHER
-#include "String.h"
+#include "String_.h"
 #include "LWidgets.h"
 #include "LWeb.h"
 #include "Launcher.h"
@@ -223,7 +223,7 @@ CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) 
 	Options_ResumeSaving();
 
 	Options_SaveIfChanged();
-	Launcher_LoadTheme();
+	LauncherTheme_Load(&Launcher_Theme);
 	LBackend_UpdateTitleFont();
 	MainScreen_SetActive();
 }
@@ -358,7 +358,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->iptColours[index + 2].text, &b)) return;
 
 	*color = BitmapColor_RGB(r, g, b);
-	Launcher_SaveTheme();
+	LauncherTheme_Save(&Launcher_Theme);
 	LBackend_ThemeChanged();
 }
 
@@ -395,7 +395,7 @@ static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was, struc
 
 static void ColoursScreen_ToggleBG(struct LCheckbox* w) {
 	Launcher_Theme.ClassicBackground = w->value;
-	Launcher_SaveTheme();
+	LauncherTheme_Save(&Launcher_Theme);
 	LBackend_ThemeChanged();
 }
 
@@ -1536,7 +1536,7 @@ LAYOUTS the_btnBack[]    = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
 
 static void ThemesScreen_Set(const struct LauncherTheme* theme) {
 	Launcher_Theme = *theme;
-	Launcher_SaveTheme();
+	LauncherTheme_Save(&Launcher_Theme);
 	LBackend_ThemeChanged();
 }
 

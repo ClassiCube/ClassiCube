@@ -10,9 +10,9 @@ extern struct GuDisplayListInternal
 
 enum GE_COMMANDS {
 	GE_NOP                      = 0x00,
-	GE_SET_VB_ADDR              = 0x01,
-	GE_SET_IB_ADDR              = 0x02,
-	GE_SET_BASE_ADDR            = 0x10,
+	GE_SET_REL_VADDR            = 0x01,
+	GE_SET_REL_IADDR            = 0x02,
+	GE_SET_ADDR_BASE            = 0x10,
 	GE_SET_VERTEX_FORMAT        = 0x12,
 	GE_WORLDMATRIX_UPLOAD_INDEX = 0x3A,
 	GE_WORLDMATRIX_UPLOAD_DATA  = 0x3B,	
@@ -20,6 +20,19 @@ enum GE_COMMANDS {
 	GE_VIEW_MATRIX_UPLOAD_DATA  = 0x3D,	
 	GE_PROJ_MATRIX_UPLOAD_INDEX = 0x3E,
 	GE_PROJ_MATRIX_UPLOAD_DATA  = 0x3F,
+
+	GE_SET_VIEWPORT_X_SCALE     = 0x42,
+	GE_SET_VIEWPORT_Y_SCALE     = 0x43,
+	GE_SET_VIEWPORT_Z_SCALE     = 0x44,
+	GE_SET_VIEWPORT_X_ORIGIN    = 0x45,
+	GE_SET_VIEWPORT_Y_ORIGIN    = 0x46,
+	GE_SET_VIEWPORT_Z_ORIGIN    = 0x47,
+
+	GE_SET_SCREEN_OFFSET_X      = 0x4C,
+	GE_SET_SCREEN_OFFSET_Y      = 0x4D,
+
+	GE_SET_Z_RANGE_MIN          = 0xD6,
+	GE_SET_Z_RANGE_MAX          = 0xD7,
 
 	GE_SET_DEPTH_MASK           = 0xE7,
 	GE_SET_COLOR_MASK           = 0xE8,
@@ -74,8 +87,58 @@ static void GE_upload_proj_matrix(const float* matrix) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------Viewport/Offset------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void GE_set_depth_range(unsigned short minZ, unsigned short maxZ) {
+    GE_PushI(GE_SET_Z_RANGE_MIN, minZ);
+    GE_PushI(GE_SET_Z_RANGE_MAX, maxZ);
+}
+
+static CC_INLINE void GE_set_screen_offset(int x, int y) {
+    GE_PushI(GE_SET_SCREEN_OFFSET_X, x << 4);
+    GE_PushI(GE_SET_SCREEN_OFFSET_Y, y << 4);
+}
+
+static CC_INLINE void GE_set_viewport_xy(int x, int y, int w, int h) {
+	GE_PushF(GE_SET_VIEWPORT_X_SCALE, w *  0.5f);
+	GE_PushF(GE_SET_VIEWPORT_Y_SCALE, h * -0.5f);
+	GE_PushF(GE_SET_VIEWPORT_X_ORIGIN, x);
+	GE_PushF(GE_SET_VIEWPORT_Y_ORIGIN, y);
+}
+
+static CC_INLINE void GE_set_viewport_z(int n, int f) {
+	int middle = (n + f) / 2;
+	GE_PushF(GE_SET_VIEWPORT_Z_SCALE,  middle - n);
+	GE_PushF(GE_SET_VIEWPORT_Z_ORIGIN, middle);
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Vertex drawing-------------------------------------------------------*
 *#########################################################################################################################*/
+static int last_base = -1;
+
 static CC_INLINE void GE_set_vertex_format(int format) {
     GE_PushI(GE_SET_VERTEX_FORMAT, format);
+}
+
+// Don't redundantly set base address (by avoiding 2 calls to this per draw call, reduces frame GE commands by ~25%)
+static CC_INLINE void GE_set_base_addr(cc_uintptr addr) {
+	cc_uintptr base = (addr >> 8) & 0xf0000;
+	if (base == last_base) return;
+
+	GE_PushI(GE_SET_ADDR_BASE, base);
+	last_base = base;
+}
+
+static CC_INLINE void GE_set_vertices(const void* vertices) {
+	cc_uintptr addr = (cc_uintptr)vertices;
+	GE_set_base_addr(addr);
+    GE_PushI(GE_SET_REL_VADDR, addr);
+}
+
+static CC_INLINE void GE_set_indices(const void* indices) {
+	cc_uintptr addr = (cc_uintptr)indices;
+	GE_set_base_addr(addr);
+    GE_PushI(GE_SET_REL_IADDR, addr);
 }

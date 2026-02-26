@@ -3,12 +3,13 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Logger.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
 
 #include <io/pad.h>
@@ -16,7 +17,6 @@
 #include <sysutil/sysutil.h>
 #include <sysutil/video.h>
 
-static cc_bool launcherMode;
 static KbInfo   kb_info;
 static KbData   kb_data;
 static KbConfig kb_config;
@@ -57,8 +57,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 20;
-	DisplayInfo.ContentOffsetY = 20;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(20);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(20);
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 
 	ioKbInit(MAX_KB_PORT_NUM);
@@ -69,12 +69,12 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
-	launcherMode = true;
+	Window_Main.Is3D = false;
 	Gfx_Create(); // launcher also uses RSX to draw
 }
 
 void Window_Create3D(int width, int height) { 
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -296,10 +296,11 @@ static padInfo pad_info;
 static padData pad_data[MAX_PORT_NUM];
 static cc_bool circle_main;
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+void Gamepads_PreInit(void) {
 	ioPadInit(MAX_PORT_NUM);
+}
 
+void Gamepads_Init(void) {
 	int ret = 0;
  	sysUtilGetSystemParamInt(SYSUTIL_SYSTEMPARAM_ID_ENTER_BUTTON_ASSIGN, &ret);
 	circle_main = ret == 0;
@@ -397,7 +398,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

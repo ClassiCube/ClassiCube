@@ -12,17 +12,18 @@ SYSTEMINCLUDE /epoc32/include/stdapis
 
 SYSTEMINCLUDE .
 
-USERINCLUDE ../../third_party/bearssl/inc
-USERINCLUDE ../../third_party/bearssl/src
+USERINCLUDE ../../third_party/bearssl
 
 #ifdef ARMCC
-OPTION ARMCC -Otime --diag_suppress 1296 --diag_suppress 1293 --diag_suppress 66
+OPTION ARMCC -Otime --diag_suppress 1296,1293,66,61
 #ifndef ARMV5
 OPTION_REPLACE ARMCC --cpu 6
 OPTION_REPLACE ARMCC --fpu softvfp+vfpv2 --fpmode fast
 OPTION_REPLACE ARMCC -O2 -O3
 #endif
 #endif
+
+OPTION CW -lang c99 -relax_pointers
 
 DEBUGGABLE_UDEBONLY
 #ifdef _DEBUG

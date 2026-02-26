@@ -168,7 +168,7 @@ float Random_Float(RNGState* seed) {
 
 float Math_SinF(float x)   { return sinf(x); }
 float Math_CosF(float x)   { return cosf(x); }
-#elif defined CC_BUILD_NOFPU
+#elif CC_BUILD_FPU_MODE < CC_FPU_MODE_NORMAL
 
 // Source https://www.coranac.com/2009/07/sines
 #define ISIN_QN	10

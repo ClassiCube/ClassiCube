@@ -2,7 +2,7 @@
 #include "../Platform.h"
 #include "../Input.h"
 #include "../Event.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
@@ -10,6 +10,7 @@
 #include "../Graphics.h"
 #include "../Launcher.h"
 #include "../LBackend.h"
+#include "../Options.h"
 #include "../VirtualKeyboard.h"
 
 #include <coreinit/memheap.h>
@@ -28,7 +29,6 @@
 #include <coreinit/filesystem.h>
 #include <coreinit/memdefaultheap.h>
 
-static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 struct cc_window Window_Alt;
@@ -85,8 +85,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(10);
 
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 	Input_SetTouchMode(true);
@@ -111,7 +111,7 @@ void Window_Create2D(int width, int height) {
 	Window_Main.Width  = OSSCREEN_DRC_WIDTH;
 	Window_Main.Height = OSSCREEN_DRC_HEIGHT;
 
-	launcherMode = true;
+	Window_Main.Is3D = false;
 	Event_Register_(&WindowEvents.InactiveChanged, NULL, LauncherInactiveChanged);
 	Init2DResources();
 }
@@ -120,7 +120,7 @@ void Window_Create3D(int width, int height) {
 	Window_Main.Width   = DisplayInfo.Width;
 	Window_Main.Height  = DisplayInfo.Height;
 
-	launcherMode = false; 
+	Window_Main.Is3D = true; 
 	Event_Unregister_(&WindowEvents.InactiveChanged, NULL, LauncherInactiveChanged);
 }
 
@@ -156,12 +156,12 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 static VPADStatus vpadStatus;
 static KPADStatus kpads[4];
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 	KPADInit();
 	VPADInit();
 }
+
+void Gamepads_Init(void) { }
 
 static void ProcessKPadButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_BUTTON_1);
@@ -477,7 +477,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {

@@ -1,8 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define DEFAULT_COMMANDLINE_FUNC
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -13,7 +13,6 @@
 
 #include <errno.h>
 #include <time.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -33,19 +32,42 @@
 #include <sys/systime.h>
 #include <sys/tty.h>
 #include <sys/process.h>
-#include "../_PlatformConsole.h"
+#include <sysmodule/sysmodule.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
 const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = NET_EPIPE;
 
 const char* Platform_AppNameSuffix = " PS3";
+cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 cc_bool Platform_ReadonlyFilesystem;
+#include "../_PlatformBase.h"
 
 SYS_PROCESS_PARAM(1001, 256 * 1024); // 256kb stack size
+
+#define uint_to_ptr(raw)    ((void*)((uintptr_t)(raw)))
+#define ptr_to_uint(raw) ((uint32_t)((uintptr_t)(raw)))
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Main entrypoint-----------------------------------------------------*
+*#########################################################################################################################*/
+#include "../main_impl.h"
+
+int main(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	while (Window_Main.Exists) { 
+		RunProgram(argc, argv);
+	}
+	
+	Window_Free();
+	return 0;
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
@@ -120,9 +142,14 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return sysLv2FsMkdir(path->buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -271,6 +298,10 @@ void Thread_Join(void* handle) {
 	Mem_Free(thread);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Synchronisation-----------------------------------------------------*
+*#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
 	sys_mutex_attr_t attr;	
 	sysMutexAttrInitialize(attr);
@@ -342,6 +373,14 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
 	cc_uint32 ip_addr = 0;
@@ -349,7 +388,7 @@ static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 
 	addr4->sin_addr.s_addr = ip_addr;
 	addr4->sin_family      = AF_INET;
-	addr4->sin_port        = htons(port);
+	addr4->sin_port        = SockAddr_EncodePort(port);
 		
 	dst->size = sizeof(*addr4);
 	return true;
@@ -374,13 +413,13 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	
 	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
 	{
-		char* src_addr = (char*)addr_list[i];
+		char* src_addr = uint_to_ptr(addr_list[i]);
 		if (!src_addr) break;
 		addrs[i].size = sizeof(struct sockaddr_in);
 
 		addr4 = (struct sockaddr_in*)addrs[i].data;
 		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
+		addr4->sin_port   = SockAddr_EncodePort(port);
 		addr4->sin_addr   = *(struct in_addr*)src_addr;
 	}
 
@@ -447,24 +486,42 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize = sizeof(socklen_t);
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-	if (res || *writable) return res;
+	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+}
 
-	// https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
-	netGetSockOpt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	return res;
+cc_result Socket_GetLastError(cc_socket s) {
+	int error = ERR_INVALID_ARGUMENT;
+	socklen_t errSize = sizeof(error);
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	netGetSockOpt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
+	return error;
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+#define LIBNET_MEM_SIZE (128 * 1024)
+static char libnet_mem[LIBNET_MEM_SIZE];
+
+static int InitNetworking(void) {
+	int res = sysModuleLoad(SYSMODULE_NET);
+	if (res < 0) return res;
+
+	netInitParam params = { 0 };
+	params.memory = ptr_to_uint(libnet_mem);
+	params.memory_size = LIBNET_MEM_SIZE;
+
+	return netInitializeNetworkEx(&params);
+}
+
 void Platform_Init(void) {
-	netInitialize();
+	int res = InitNetworking();
+	if (res) Platform_Log1("Error setting up network: %i", &res);
 	
 	cc_filepath* root = FILEPATH_RAW(root_path.buffer);
-	Directory_Create(root);
+	Directory_Create2(root);
 }
 
 void Platform_Free(void) { }
@@ -492,6 +549,15 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	Platform_LogConst("START CLASSICUBE");
+	return SetGameArgs(args, numArgs);
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 
 /*########################################################################################################################*

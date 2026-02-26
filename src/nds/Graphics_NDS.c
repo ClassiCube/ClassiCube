@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -29,9 +30,9 @@ static void WaitForGPUDone(void) {
 	if (!GFX_BUSY) return;
 
 	// Geometry engine still busy from before, give it some time
-	swiWaitForVBlank();
-	swiWaitForVBlank();
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
+	cothread_yield_irq(IRQ_VBLANK);
+	cothread_yield_irq(IRQ_VBLANK);
 	if (!GFX_BUSY) return;
 
 	// The geometry engine may still have some leftover state, try to recover
@@ -80,12 +81,6 @@ void Gfx_Create(void) {
 	ResetGPU();
 	Gfx_ClearColor(PackedCol_Make(0, 120, 80, 255));
 	Gfx_SetViewport(0, 0, 256, 192);
-	
-	vramSetBankA(VRAM_A_TEXTURE);
-	vramSetBankB(VRAM_B_TEXTURE);
-	vramSetBankC(VRAM_C_TEXTURE);
-	vramSetBankD(VRAM_D_TEXTURE);
-	vramSetBankE(VRAM_E_TEX_PALETTE);
 	
 	Gfx_SetFaceCulling(false);
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
@@ -159,7 +154,7 @@ void Gfx_EndFrame(void) {
 
 	GFX_FLUSH = 0;
 	// TODO not needed?
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
 }
 
 
@@ -515,9 +510,9 @@ struct DSColouredVertex {
 
 // Precalculate all the expensive vertex data conversion,
 //  so that actual drawing of them is as fast as possible
-static void PreprocessTexturedVertices(void) {
-	struct   VertexTextured* src = gfx_vertices;
-	struct DSTexturedVertex* dst = gfx_vertices;
+static void PreprocessTexturedVertices(void* vertices) {
+	struct   VertexTextured* src = vertices;
+	struct DSTexturedVertex* dst = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -544,12 +539,12 @@ static void PreprocessTexturedVertices(void) {
 		dst->z  = z;
 	}
 	
-	DC_FlushRange(gfx_vertices, buf_count * sizeof(struct DSTexturedVertex));
+	CPU_FlushDataCache(vertices, buf_count * sizeof(struct DSTexturedVertex));
 }
 
-static void PreprocessColouredVertices(void) {
-	struct   VertexColoured* src = gfx_vertices;
-	struct DSColouredVertex* dst = gfx_vertices;
+static void PreprocessColouredVertices(void* vertices) {
+	struct   VertexColoured* src = vertices;
+	struct DSColouredVertex* dst = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
@@ -571,7 +566,7 @@ static void PreprocessColouredVertices(void) {
 		dst->z  = z;
 	}
 	
-	DC_FlushRange(gfx_vertices, buf_count * sizeof(struct DSColouredVertex));
+	CPU_FlushDataCache(vertices, buf_count * sizeof(struct DSColouredVertex));
 }
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
@@ -601,29 +596,12 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-
 	if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
-		PreprocessTexturedVertices();
+		PreprocessTexturedVertices(vb);
 	} else {
-		PreprocessColouredVertices();
+		PreprocessColouredVertices(vb);
 	}
 }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*

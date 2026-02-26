@@ -3,12 +3,13 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualDialog.h"
 
 #include <pspdisplay.h>
 #include <pspge.h>
@@ -18,19 +19,20 @@
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
 #define SCREEN_HEIGHT 272
-static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
-}
-
-void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
+
+	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
+}
+
+void Window_Init(void) {
 	
 	Window_Main.Width    = SCREEN_WIDTH;
 	Window_Main.Height   = SCREEN_HEIGHT;
@@ -40,14 +42,12 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
-
-	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void Window_Free(void) { }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create2D(int width, int height) { Window_Main.Is3D = false; }
+void Window_Create3D(int width, int height) { Window_Main.Is3D = true;  }
 
 void Window_Destroy(void) { }
 
@@ -104,12 +104,12 @@ static const BindMapping defaults_psp[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
 };
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-
+void Gamepads_PreInit(void) {
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-	
+}
+
+void Gamepads_Init(void) {
 	Input_DisplayNames[CCPAD_1] = "CIRCLE";
 	Input_DisplayNames[CCPAD_2] = "CROSS";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
@@ -163,29 +163,22 @@ void Gamepads_Process(float delta) {
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
-	bmp->scan0  = (BitmapCol*)Mem_Alloc(width * height, BITMAPCOLOR_SIZE, "window pixels");
-	bmp->width  = width;
+	// Add 8192 to fix in PPSSPP, launcher-> in-game -> launcher resulting in in-game frame continuing to be drawn
+	void* fb = sceGeEdramGetAddr() + 8192;
+
+	bmp->scan0  = fb;
+	bmp->width  = BUFFER_WIDTH;
 	bmp->height = height;
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	void* fb = sceGeEdramGetAddr();
-	
 	sceDisplayWaitVblankStart();
-	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
-
-	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
-	cc_uint32* dst = (cc_uint32*)fb         + r.x;
-
-	for (int y = r.y; y < r.y + r.height; y++) 
-	{
-		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.width * 4);
-	}
 	sceKernelDcacheWritebackAll();
+	sceDisplaySetFrameBuf(bmp->scan0, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
+	bmp->scan0 = NULL;
 }
 
 
@@ -193,7 +186,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-	VirtualKeyboard_Open(args, launcherMode);
+	VirtualKeyboard_Open(args);
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
@@ -209,9 +202,7 @@ void OnscreenKeyboard_Close(void) {
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* TODO implement */
-	Platform_LogConst(title);
-	Platform_LogConst(msg);
+	VirtualDialog_Show(title, msg, false);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

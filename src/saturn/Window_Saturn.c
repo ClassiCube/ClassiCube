@@ -3,11 +3,12 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
+#include "../Options.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -17,8 +18,6 @@
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   224
 
-static cc_bool launcherMode;
-
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
@@ -26,13 +25,14 @@ static void OnVblank(void* work) {
 	smpc_peripheral_intback_issue();
 }
 
-void Window_PreInit(void) { }
-void Window_Init(void) {
+void Window_PreInit(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
-	
+}
+
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
@@ -41,8 +41,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(10);
 
 	vdp2_tvmd_display_res_set(VDP2_TVMD_INTERLACE_NONE, VDP2_TVMD_HORZ_NORMAL_A, VDP2_TVMD_VERT_224);
 	vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(0, 0), RGB1555(1, 19, 0, 0));
@@ -54,7 +54,7 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 void Window_Create3D(int width, int height) { 
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -113,10 +113,11 @@ static const BindMapping saturn_defaults[BIND_COUNT] = {
 	[BIND_DELETE_BLOCK] = { CCPAD_R },
 };
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+void Gamepads_PreInit(void) {
 	smpc_peripheral_init();
-	
+}
+
+void Gamepads_Init(void) {
 	Input_DisplayNames[CCPAD_1] = "A";
 	Input_DisplayNames[CCPAD_2] = "B";
 	Input_DisplayNames[CCPAD_3] = "C";
@@ -200,7 +201,7 @@ static const vdp2_vram_cycp_t vram_cycp = {
 };
 		
 void Window_Create2D(int width, int height) {
-	launcherMode = true;
+	Window_Main.Is3D = false;
 
 	const vdp2_scrn_bitmap_format_t format = {
 		.scroll_screen = VDP2_SCRN_NBG0,

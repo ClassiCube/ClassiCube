@@ -17,6 +17,7 @@
 #include "Block.h"
 #include "Input.h"
 #include "InputHandler.h"
+#include "Launcher.h"
 
 static void Widget_NullFunc(void* widget) { }
 static int  Widget_Pointer(void* elem, int id, int x, int y) { return false; }
@@ -36,7 +37,7 @@ static void AddWidget(void* screen, void* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void TextWidget_Render(void* widget, float delta) {
+static void TextWidget_Render(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->color);
 }
@@ -132,7 +133,7 @@ static void ButtonWidget_Reposition(void* widget) {
 	w->tex.y = w->y + (w->height / 2 - w->tex.height / 2);
 }
 
-static void ButtonWidget_Render(void* widget, float delta) {
+static void ButtonWidget_Render(void* widget) {
 	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
 	PackedCol disabledColor = PackedCol_Make(160, 160, 160, 255);
@@ -173,6 +174,23 @@ static void ButtonWidget_Render(void* widget, float delta) {
 	Texture_RenderShaded(&w->tex, color);
 }
 
+static PackedCol ButtonWidget_BackColor(struct ButtonWidget* w) {
+	GfxResourceID id = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
+	if (id) return w->color;
+
+#ifdef CC_BUILD_WEB /* TODO refactor web handling */
+	return w->color;
+#else
+	/* Avoid white button background */
+	struct LauncherTheme theme;
+	LauncherTheme_Load(&theme);
+
+	return PackedCol_Make(BitmapCol_R(theme.ButtonForeColor), 
+						  BitmapCol_G(theme.ButtonForeColor), 
+						  BitmapCol_B(theme.ButtonForeColor), 255);
+#endif
+}
+
 static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
@@ -188,11 +206,12 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 
 	back.x = w->x; back.width  = w->width;
 	back.y = w->y; back.height = w->height;
+	color  = ButtonWidget_BackColor(w);
 
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
 		/* Button can be drawn normally */
-		Gfx_Make2DQuad(&back, w->color, vertices);
+		Gfx_Make2DQuad(&back, color, vertices);
 		*vertices += 4; /* always use up 8 vertices for body */
 	} else {
 		/* Split button down the middle */
@@ -200,11 +219,11 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 
 		back.width = (w->width / 2);
 		back.uv.u1 = 0.0f; back.uv.u2 = BUTTON_uWIDTH * scale;
-		Gfx_Make2DQuad(&back, w->color, vertices);
+		Gfx_Make2DQuad(&back, color, vertices);
 
 		back.x += (w->width / 2);
 		back.uv.u1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.u2 = BUTTON_uWIDTH;
-		Gfx_Make2DQuad(&back, w->color, vertices);
+		Gfx_Make2DQuad(&back, color, vertices);
 	}
 
 	color = (w->flags & WIDGET_FLAG_DISABLED) ? disabledColor 
@@ -294,7 +313,7 @@ static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, int* y
 	*height = min(*y + *height, w->height - w->borderY) - *y;
 }
 
-static void ScrollbarWidget_Render(void* widget, float delta) {
+static void ScrollbarWidget_Render(void* widget) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int x, y, width, height;
 	PackedCol barCol;
@@ -732,14 +751,24 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force) {
+static void TableWidget_RecreateTitle_Internal(struct TableWidget* w, cc_bool force, int titleBlock) {
 	BlockID block;
 	if (!force && w->selectedIndex == w->lastCreatedIndex) return;
 	if (w->blocksCount == 0) return;
 	w->lastCreatedIndex = w->selectedIndex;
 
-	block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
+	if (titleBlock < 0) {
+		block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
+	} else {
+		block = (BlockID)titleBlock;
+	}
 	w->UpdateTitle(block);
+}
+void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force) {
+	TableWidget_RecreateTitle_Internal(w, force, -1);
+}
+void TableWidget_RecreateTitleForBlock(struct TableWidget* w, cc_bool force, int titleBlock) {
+	TableWidget_RecreateTitle_Internal(w, force, titleBlock);
 }
 
 void TableWidget_RecreateBlocks(struct TableWidget* w) {
@@ -819,7 +848,7 @@ static int TableWidget_Render2(void* widget, int offset) {
 		Table_Width(w), Table_Height(w), topBackColor, bottomBackColor);
 
 	if (w->rowsVisible < w->rowsTotal) {
-		Elem_Render(&w->scroll, 0);
+		Elem_Render(&w->scroll);
 	}
 
 	cellSizeX = w->cellSizeX;
@@ -965,27 +994,37 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	return true;
 }
 
+static int TableWidget_ScrollXY(struct TableWidget* w, int deltaX, int deltaY) {
+	if (w->selectedIndex == -1) {
+		if (w->blocksCount == 0) return false;
+
+		TableWidget_SetToIndex(w, 0);
+		return true;
+	}
+
+	TableWidget_ScrollRelative(w, deltaX + deltaY * w->blocksPerRow);
+	return true;
+}
+
 static int TableWidget_KeyDown(void* widget, int key, struct InputDevice* device) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int deltaX, deltaY;
-	if (w->selectedIndex == -1) return false;
 
 	Input_CalcDelta(key, device, &deltaX, &deltaY);
 	if (deltaX || deltaY) {
-		TableWidget_ScrollRelative(w, deltaX + deltaY * w->blocksPerRow);
-		return true;
+		return TableWidget_ScrollXY(w, deltaX, deltaY);
 	}
 	return false;
 }
 
 static int TableWidget_PadAxis(void* widget, struct PadAxisUpdate* upd) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	if (w->selectedIndex == -1) return false;
+	int deltaX, deltaY;
 
-	if (upd->xSteps) TableWidget_ScrollRelative(w, upd->xSteps > 0 ? 1 : -1);
-	if (upd->ySteps) TableWidget_ScrollRelative(w, upd->ySteps > 0 ? w->blocksPerRow : -w->blocksPerRow);
+	deltaX = upd->xSteps == 0 ? 0 : (upd->xSteps > 0 ? 1 : -1); /* TODO Math_Sign ? or just directly? */
+	deltaY = upd->ySteps == 0 ? 0 : (upd->ySteps > 0 ? 1 : -1);
 
-	return true;
+	return TableWidget_ScrollXY(w, deltaX, deltaY);
 }
 
 static const struct WidgetVTABLE TableWidget_VTABLE = {
@@ -1020,12 +1059,17 @@ void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth) {
 	w->paddingB = Display_ScaleY(classic ? 14 : 15);
 }
 
-void TableWidget_SetToBlock(struct TableWidget* w, BlockID block) {
+void TableWidget_SetToBlock(struct TableWidget* w, BlockID block, cc_bool autoRotateGroup) {
 	int i, index = -1;
 	
-	for (i = 0; i < w->blocksCount; i++) 
-	{
-		if (w->blocks[i] == block) index = i;
+	if (autoRotateGroup) {
+		for (i = 0; i < w->blocksCount; i++) {
+			if (AutoRotate_BlocksShareGroup(w->blocks[i], block)) index = i;
+		}
+	} else {
+		for (i = 0; i < w->blocksCount; i++) {
+			if (w->blocks[i] == block) index = i;
+		}
 	}
 	/* When holding air, inventory should open at middle */
 	if (block == BLOCK_AIR) index = -1;
@@ -1168,10 +1212,9 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	}
 }
 
-static void InputWidget_RenderCaret(struct InputWidget* w, float delta) {
+static void InputWidget_RenderCaret(struct InputWidget* w) {
 	float second;
 	if (!w->showCaret) return;
-	w->caretAccumulator += delta;
 
 	second = Math_Mod1(w->caretAccumulator);
 	if (second < 0.5f) Texture_RenderShaded(&w->caretTex, w->caretCol);
@@ -1579,10 +1622,10 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 /*########################################################################################################################*
 *-----------------------------------------------------TextInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void TextInputWidget_Render(void* widget, float delta) {
+static void TextInputWidget_Render(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Texture_Render(&w->inputTex);
-	InputWidget_RenderCaret(w, delta);
+	InputWidget_RenderCaret(w);
 }
 
 static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
@@ -1815,7 +1858,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->inputTex.y = w->y;
 }
 
-static void ChatInputWidget_Render(void* widget, float delta) {
+static void ChatInputWidget_Render(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	PackedCol backColor   = PackedCol_Make(0, 0, 0, 127);
 	int x = w->x, y = w->y;
@@ -1836,7 +1879,7 @@ static void ChatInputWidget_Render(void* widget, float delta) {
 	}
 
 	Texture_Render(&w->inputTex);
-	InputWidget_RenderCaret(w, delta);
+	InputWidget_RenderCaret(w);
 }
 
 static void ChatInputWidget_OnPressedEnter(void* widget) {
@@ -2419,7 +2462,7 @@ void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 	Widget_Layout(w);
 }
 
-static void TextGroupWidget_Render(void* widget, float delta) {
+static void TextGroupWidget_Render(void* widget) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	struct Texture* textures  = w->textures;
 	int i;
@@ -2483,6 +2526,10 @@ void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture
 	w->lines    = lines;
 	w->textures = textures;
 	w->GetLine  = getLine;
+}
+void TextGroupWidget_Add(void* screen, struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
+	TextGroupWidget_Create(w, lines, textures, getLine);
+	AddWidget(screen, w);
 }
 
 
@@ -2674,7 +2721,7 @@ void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	Widget_Layout(w);
 }
 
-static void SpecialInputWidget_Render(void* widget, float delta) {
+static void SpecialInputWidget_Render(void* widget) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	Texture_Render(&w->tex);
 }
@@ -2818,7 +2865,7 @@ static int ThumbstickWidget_Render2(void* widget, int offset) {
 		Gfx_BindTexture(Gui.TouchTex);
 		for (i = 0; i < 4; i++) {
 			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
-			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4), DRAW_HINT_NONE);
+			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4), DRAW_HINT_SPRITE);
 		}
 	}
 	return offset + THUMBSTICKWIDGET_MAX;

@@ -1,5 +1,5 @@
 #include "Platform.h"
-#include "String.h"
+#include "String_.h"
 #include "Logger.h"
 #include "Constants.h"
 #include "Errors.h"
@@ -20,12 +20,13 @@ void* TempMem_Alloc(int size) {
 }
 #endif
 
+
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
 int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes) {
-	const cc_uint8* src = (const cc_uint8*)a;
-	const cc_uint8* dst = (const cc_uint8*)b;
+	const char* src = (const char*)a;
+	const char* dst = (const char*)b;
 
 	while (numBytes--) { 
 		if (*src++ != *dst++) return false; 
@@ -33,6 +34,48 @@ int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes) {
 	return true;
 }
 
+#ifdef CC_BUILD_NOSTDLIB
+void* Mem_Set(void* dst, cc_uint8 value,  unsigned numBytes) {
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = value; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) {
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = *sp++; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { 
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+	
+	/* Check if destination range overlaps source range */
+	/* If this happens, then need to copy backwards */
+	if (dp >= sp && dp < (sp + numBytes)) {
+		sp += numBytes;
+		dp += numBytes;
+
+		while (numBytes--) *--dp = *--sp;
+	} else {
+		while (numBytes--) *dp++ = *sp++;
+	}
+	return dst;
+}
+#else
+void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return (void*)memset( dst, value, numBytes); }
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return (void*)memcpy( dst, src,   numBytes); }
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return (void*)memmove(dst, src,   numBytes); }
+#endif
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Memory management-----------------------------------------------------*
+*#########################################################################################################################*/
 CC_NOINLINE static void AbortOnAllocFailed(const char* place) {	
 	cc_string log; char logBuffer[STRING_SIZE+20 + 1];
 	String_InitArray_NT(log, logBuffer);
@@ -69,6 +112,26 @@ static CC_NOINLINE cc_uint32 CalcMemSize(cc_uint32 numElems, cc_uint32 elemsSize
 	return numBytes;
 }
 
+#ifndef OVERRIDE_MEM_FUNCTIONS
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? malloc(size) : NULL;
+}
+
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
+	return calloc(numElems, elemsSize);
+}
+
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? realloc(mem, size) : NULL;
+}
+
+void Mem_Free(void* mem) {
+	if (mem) free(mem);
+}
+#endif
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Logging----------------------------------------------------------*
@@ -96,7 +159,7 @@ void Platform_LogConst(const char* message) {
 }
 
 /*########################################################################################################################*
-*-----------------------------------------------------Process/Module------------------------------------------------------*
+*---------------------------------------------------Command line args-----------------------------------------------------*
 *#########################################################################################################################*/
 static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
@@ -126,6 +189,27 @@ static CC_INLINE int GetGameArgs(cc_string* args) {
 	return count;
 }
 
+#ifdef DEFAULT_COMMANDLINE_FUNC
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	if (gameHasArgs) return GetGameArgs(args);
+	/* Consoles *sometimes* doesn't use argv[0] for program name and so argc will be 0 */
+	//* (e.g. when running via some emulators) */
+	if (!argc) return 0;
+	
+	argc--; argv++; /* skip executable path argument */
+
+	int count = min(argc, GAME_MAX_CMDARGS);
+	Platform_Log1("ARGS: %i", &count);
+	
+	for (int i = 0; i < count; i++) 
+	{
+		args[i] = String_FromReadonly(argv[i]);
+		Platform_Log2("  ARG %i = %c", &i, argv[i]);
+	}
+	return count;
+}
+#endif
+
 
 /*########################################################################################################################*
 *----------------------------------------------------------Misc-----------------------------------------------------------*
@@ -141,21 +225,6 @@ static CC_INLINE void SocketAddr_Set(cc_sockaddr* addr, const void* src, unsigne
 
 	Mem_Copy(addr->data, src, srcLen);
 	addr->size = srcLen;
-}
-
-cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count) {
-	cc_uint32 sent;
-	cc_result res;
-
-	while (count)
-	{
-		if ((res = Socket_Write(socket, data, count, &sent))) return res;
-		if (!sent) return ERR_END_OF_STREAM;
-
-		data  += sent;
-		count -= sent;
-	}
-	return 0;
 }
 
 
@@ -295,6 +364,13 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_NETWORKING
+/* Encodes port number in network (i.e. big endian) byte order) */
+static CC_INLINE cc_uint16 SockAddr_EncodePort(int port) {
+	cc_uint16 raw;
+	Stream_SetU16_BE((cc_uint8*)&raw, port);
+	return raw;
+}
+
 /* Parses IPv4 addresses in the form a.b.c.d */
 static CC_INLINE cc_bool ParseIPv4Address(const cc_string* addr, cc_uint32* ip) {
 	cc_string parts[5];
@@ -338,6 +414,16 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 	*numValidAddrs = 0;
 	return ParseHost(str, port, addrs, numValidAddrs);
+}
+
+
+static CC_INLINE cc_bool IPv4_ToString(const void* ip, const void* port, cc_string* dst) {
+	int portNum = Stream_GetU16_BE(port);
+	char* rawIP = (char*)ip;
+
+	String_Format4(dst, "%b.%b.%b.%b", &rawIP[0], &rawIP[1], &rawIP[2], &rawIP[3]);
+	String_Format1(dst, ":%i", &portNum);
+	return true;
 }
 #endif
 
@@ -409,6 +495,10 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Socket_GetLastError(cc_socket s) {
+	return ERR_INVALID_ARGUMENT;
 }
 #endif
 

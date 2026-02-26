@@ -1,4 +1,3 @@
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../SystemFonts.h"
@@ -31,6 +30,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // Not used in web filesystem backend
 const cc_result ReturnCode_FileNotFound     = _ENOENT;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;
@@ -38,32 +38,7 @@ const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 const char* Platform_AppNameSuffix = "";
 cc_uint8 Platform_Flags;
 cc_bool  Platform_ReadonlyFilesystem;
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, cc_uint32 numBytes) { return memmove(dst, src,   numBytes); }
-
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
-}
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*
@@ -115,10 +90,15 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	String_EncodeUtf8(str, path);
 }
 
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	const char* str = path->buffer;
+	String_AppendUtf8(dst, str, String_Length(str));
+}
+
 void Directory_GetCachePath(cc_string* path) { }
 
 extern void interop_InitFilesystem(void);
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	/* Web filesystem doesn't need directories */
 	return 0;
 }
@@ -261,6 +241,16 @@ void Platform_LoadSysFonts(void) { }
 *#########################################################################################################################*/
 extern void interop_InitSockets(void);
 
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	const char* str = (const char*)addr->data;
+
+	String_AppendUtf8(dst, str, String_Length(str));
+	String_Format1(dst, ":%i", &addr->size);
+	return true;
+}
+
+
+
 // not actually ipv4 address, just copies across hostname
 static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
 	int len = String_EncodeUtf8(dst->data, ip);
@@ -302,16 +292,16 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* r
 	int res; 
 	*read = 0;
 
-	/* interop_SocketRecv only reads one WebSocket frame at most, hence call it multiple times */
+	// interop_SocketRecv only reads one WebSocket frame at most, hence call it multiple times
 	while (count) {
-		/* returned result is negative for error */
+		// returned result is negative for error
 		res = interop_SocketRecv(s, data, count);
 
 		if (res >= 0) {
 			*read += res;
 			data  += res; count -= res;
 		} else {
-			/* EAGAIN when no more data available */
+			// EAGAIN when no more data available
 			if (res == -_EAGAIN) return *read == 0 ? _EAGAIN : 0;
 
 			return -res;
@@ -339,8 +329,14 @@ void Socket_Close(cc_socket s) {
 
 extern int interop_SocketWritable(int sock, cc_bool* writable);
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	/* returned result is negative for error */
+	// returned result is negative for error
 	return -interop_SocketWritable(s, writable);
+}
+
+extern int interop_SocketLastError(int sock);
+cc_result Socket_GetLastError(cc_socket s) {
+	// returned result is negative for error
+	return -interop_SocketLastError(s);
 }
 
 
@@ -457,6 +453,7 @@ static void web_main(void) {
 		// This needs to be called before Game_Setup, as that
 		//  in turn calls Game_Load -> Gfx_Create -> GLContext_SetVSync
 		// (which requires a main loop to already be running)
+		emscripten_cancel_main_loop();
 		emscripten_set_main_loop(DoNextFrame, 0, false);
 
 		Game_Setup();

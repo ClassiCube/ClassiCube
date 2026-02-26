@@ -2,7 +2,7 @@
 #include "Errors.h"
 
 #if CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
-#include "String.h"
+#include "String_.h"
 #include "Certs.h"
 #include "../third_party/bearssl/bearssl.h"
 #include "../misc/certs/certs.h"
@@ -52,15 +52,6 @@ static void x509_start_chain(const br_x509_class** ctx, const char* server_name)
 static unsigned x509_maybe_skip_verify(unsigned r) {
 	/* User selected to not care about certificate authenticity */
 	if (r == BR_ERR_X509_NOT_TRUSTED && !_verifyCerts) return 0;
-
-	/* It's fairly common for RTC on older consoles to not be set correctly */
-#ifdef CC_BUILD_CONSOLE
-	if (r != BR_ERR_X509_EXPIRED) return r;
-
-	cc_uint64 cur = DateTime_CurrentUTC();
-	/* Time earlier than 19 Sep 2025 usually mean an improperly calibrated RTC */
-	if (cur < 63893864669ull) return 0;
-#endif
 
 	return r;
 }
@@ -125,17 +116,29 @@ static void InjectEntropy(SSLContext* ctx) {
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
 
-static void SetCurrentTime(SSLContext* ctx) {
+static int ssl_time_check_callback(void* ctx,
+	uint32_t not_before_days, uint32_t not_before_secs,
+	uint32_t not_after_days,  uint32_t not_after_secs) 
+{
+#ifdef CC_BUILD_CONSOLE
+	/* It's fairly common for RTC on older console systems to not be set correctly */
+	return 0;
+#else
 	cc_uint64 cur = DateTime_CurrentUTC();
 	uint32_t days = (uint32_t)(cur / 86400) + 366;
 	uint32_t secs = (uint32_t)(cur % 86400);
-		
-	br_x509_minimal_set_time(&ctx->xc, days, secs);
-	/* This matches bearssl's default time calculation
+
+	/* This matches bearssl's default time calculation:
 		time_t x = time(NULL);
 		vd = (uint32_t)(x / 86400) + 719528;
 		vs = (uint32_t)(x % 86400);
-	 */
+	*/
+
+	if (days < not_before_days || (days == not_before_days && secs < not_before_secs)) return -1;
+	if (days > not_after_days  || (days == not_after_days  && secs > not_after_secs))  return  1;
+
+	return 0;
+#endif
 }
 
 static int sock_read(void* ctx_, unsigned char* buf, size_t len) {
@@ -179,7 +182,7 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	
 	br_ssl_client_init_full(&ctx->sc, &ctx->xc, TAs, TAs_NUM);
 	InjectEntropy(ctx);
-	SetCurrentTime(ctx);
+	br_x509_minimal_set_time_callback(&ctx->xc, NULL, ssl_time_check_callback);
 	ctx->socket = socket;
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);
@@ -201,22 +204,24 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	return 0;
 }
 
+static CC_NOINLINE cc_result SSL_GetError(SSLContext* ctx) {
+	int err;
+	if (ctx->writeError) return ctx->writeError;
+	if (ctx->readError)  return ctx->readError;
+		
+	// TODO session resumption, proper connection closing ??
+	err = br_ssl_engine_last_error(&ctx->sc.eng);
+	if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
+		return SSL_ERR_CONTEXT_DEAD;
+		
+	return SSL_ERROR_SHIFT | (err & 0xFFFF);
+}
+
 cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read) { 
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_read(&ctx->ioc, data, count);
-	int err;
-	
-	if (res < 0) {
-		if (ctx->readError) return ctx->readError;
-		
-		// TODO session resumption, proper connection closing ??
-		err = br_ssl_engine_last_error(&ctx->sc.eng);
-		if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
-			return SSL_ERR_CONTEXT_DEAD;
-		
-		return SSL_ERROR_SHIFT | (err & 0xFFFF);
-	}
+	if (res < 0) return SSL_GetError(ctx);	
 	
 	br_sslio_flush(&ctx->ioc);
 	*read = res;
@@ -227,15 +232,7 @@ cc_result SSL_WriteAll(void* ctx_, const cc_uint8* data, cc_uint32 count) {
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_write_all(&ctx->ioc, data, count);
-	
-	if (res < 0) {
-		if (ctx->writeError) {
-			return ctx->writeError;
-		} else {
-			int err = br_ssl_engine_last_error(&ctx->sc.eng);
-			return SSL_ERROR_SHIFT | (err & 0xFFFF);
-		}
-	}
+	if (res < 0) return SSL_GetError(ctx);	
 	
 	br_sslio_flush(&ctx->ioc);
 	return 0;

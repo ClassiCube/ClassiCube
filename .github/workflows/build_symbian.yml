@@ -19,13 +19,30 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download Symbian SDK
+
+      - uses: actions/cache/restore@v5
+        name: Check SDK
+        id: cache_sdk
+        with:
+          path: symbiansdk.zip
+          key: symbian-sdk
+
+      - name: Download SDK
+        if: steps.cache_sdk.outputs.cache-hit != 'true'
         run: Invoke-WebRequest https://nnp.nnchan.ru/dl/symbiansr1_gcce_workflow.zip -OutFile symbiansdk.zip
-      - name: Extract Symbian SDK
+
+      - name: Cache SDK
+        if: steps.cache_sdk.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: symbiansdk.zip
+          key: symbian-sdk
+
+
+      - name: Extract SDK
         run: Expand-Archive symbiansdk.zip -DestinationPath .
 
       - name: Compile Symbian build
-        id: compile
         run: |
           $SDK = "$pwd/SDK/"
           $Env:EPOCROOT = "$SDK".Substring(2)
@@ -36,15 +53,34 @@ jobs:
           (Get-Content ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv5').Replace('$(TARGET)', 'urel') | Set-Content ClassiCube.pkg
           cmd /c "$SDK/epoc32/tools/makesis.exe ClassiCube.pkg ClassiCube.sis"
           
+          
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'misc/symbian/ClassiCube.sis'
           DEST_NAME: 'ClassiCube-Symbian.sis'
+
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe'
+          DEST_NAME: 'ClassiCube_s60v5.exe'
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe'
+          DEST_NAME: 'ClassiCube_s60v3.exe'
+
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe.sym'
+          DEST_NAME: 'ClassiCube_s60v5.elf'
+
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe.sym'
+          DEST_NAME: 'ClassiCube_s60v3.elf'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'symbian'

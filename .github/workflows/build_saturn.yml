@@ -25,32 +25,27 @@ jobs:
           apt-get install -y curl
 
       - name: Compile Saturn build
-        id: compile
         run: |
           make saturn
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'build/saturn/ClassiCube-saturn.elf'
           DEST_NAME: 'ClassiCube-saturn.elf'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-saturn.iso'
           DEST_NAME: 'ClassiCube-saturn.iso'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-saturn.cue'
           DEST_NAME: 'ClassiCube-saturn.cue'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'saturn'

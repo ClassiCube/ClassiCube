@@ -2,8 +2,8 @@
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
+#define OVERRIDE_MEM_FUNCTIONS
 
-#include "../_PlatformBase.h"
 #include "../Stream.h"
 #include "../ExtMath.h"
 #include "../Funcs.h"
@@ -13,9 +13,8 @@
 #include "../Options.h"
 #include "../Animations.h"
 
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 #include "gbadefs.h"
 
 #include "../../third_party/tinyalloc/tinyalloc.c"
@@ -26,6 +25,7 @@ typedef volatile uint32_t vu32;
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = -1;
+const cc_result ReturnCode_PathNotFound     = -1;
 const cc_result ReturnCode_DirectoryExists  = -1;
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
@@ -34,6 +34,7 @@ const cc_result ReturnCode_SocketDropped    = -1;
 const char* Platform_AppNameSuffix = " GBA";
 cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
+#include "../_PlatformBase.h"
 
 
 /*########################################################################################################################*
@@ -51,13 +52,10 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	void* ptr = size ? ta_alloc(size) : NULL;
@@ -141,35 +139,53 @@ cc_uint64 Stopwatch_Measure(void) {
 	return base_time + raw;
 }
 
-extern int nocash_puts(const char *str);
-static void Log_Nocash(char* buffer) {
-	nocash_puts(buffer);
-}
-
 #define MGBA_LOG_DEBUG 4
 #define REG_DEBUG_ENABLE (vu16*)0x4FFF780
 #define REG_DEBUG_FLAGS  (vu16*)0x4FFF700
 #define REG_DEBUG_STRING (char*)0x4FFF600
 
-static void Log_mgba(char* buffer, int len) {
+static void Log_mgba(const char* msg, int len) {
 	*REG_DEBUG_ENABLE = 0xC0DE;
 	// Check if actually emulated or not
 	if (*REG_DEBUG_ENABLE != 0x1DEA) return;
 
-	Mem_Copy(REG_DEBUG_STRING, buffer, len);
-	*REG_DEBUG_FLAGS = MGBA_LOG_DEBUG | 0x100;
+	while (len)
+	{
+    	// Can only be up to 120 bytes total
+		int bit   = min(len, 119);
+		char* dst = REG_DEBUG_STRING;
+
+		Mem_Copy(dst, msg, bit);
+		dst[bit] = '\0';
+
+		*REG_DEBUG_FLAGS = MGBA_LOG_DEBUG | 0x100;
+		msg += bit; len -= bit;
+	}
 }
 
+// Log to nocash debugger
+extern char nocash_msg[82];
+extern void nocash_log(void);
+
+static void Log_Nocash(const char* msg, int len) {
+	while (len)
+	{
+    	// Can only be up to 80 bytes total
+		int bit   = min(len, 80);
+		char* dst = nocash_msg;
+
+		Mem_Copy(dst, msg, bit);
+		dst[bit + 0] = '\0';
+
+		nocash_log();
+		msg += bit; len -= bit;
+	}
+}
+
+
 void Platform_Log(const char* msg, int len) {
-    // Can only be up to 120 bytes total
-	char buffer[120];
-	len = min(len, 118);
-	
-	Mem_Copy(buffer, msg, len);
-	buffer[len + 0] = '\n';
-	buffer[len + 1] = '\0';
-	Log_Nocash(buffer);
-	Log_mgba(buffer, len);
+	Log_mgba(msg, len);
+    Log_Nocash(msg, len);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -187,9 +203,10 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 void CrashHandler_Install(void) {
 }
 
+
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	Platform_LogConst(raw_msg);
-	_exit(0);
+	Process_Exit(0);
 }
 
 
@@ -197,13 +214,17 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
-	char* str = dst->buffer;
-	String_EncodeUtf8(str, path);
+	int len = String_CopyToRaw(dst->buffer, sizeof(dst->buffer) - 1, path);
+	dst->buffer[len] = '\0'; // Always null terminate just in case
+}
+
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendConst(dst, path->buffer);
 }
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -313,5 +334,10 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return 0; 
 }
 
-void Process_Exit(cc_result code) { _exit(code); }
+extern void bios_soft_reset(void);
+void Process_Exit(cc_result code) { 
+	//*(vu8*)0x03007FFA = 0x00; // controls reset address
+	// TODO jump to start_vector instead?
+	for (;;) { __asm__ volatile(""); }
+}
 

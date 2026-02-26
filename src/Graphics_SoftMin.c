@@ -1,5 +1,7 @@
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTMIN
+#define CC_DYNAMIC_VBS_ARE_STATIC
+#define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -104,6 +106,20 @@ void Gfx_DisableMipmaps(void) { }
 
 
 /*########################################################################################################################*
+*--------------------------------------------------------2D drawing-------------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_Begin2D(int width, int height) {
+	gfx_rendering2D = true;
+	Gfx_SetAlphaBlending(true);
+}
+
+void Gfx_End2D(void) {
+	gfx_rendering2D = false;
+	Gfx_SetAlphaBlending(false);
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFog(cc_bool enabled)	{ }
@@ -129,6 +145,11 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 static void ClearColorBuffer(void) {
 	int i, x, y, size = fb_width * fb_height;
 
+#ifdef CC_BUILD_GBA
+	/* in mGBA, fast clear takes ~3ms compared to ~52ms of standard code below */
+	extern void VRAM_FastClear(BitmapCol color);
+	VRAM_FastClear(clearColor);
+#else
 	if (cb_stride == fb_width) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
 	} else {
@@ -140,6 +161,7 @@ static void ClearColorBuffer(void) {
 			}
 		}
 	}
+#endif
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -196,30 +218,9 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 
-void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb;
-}
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 
-void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
-}
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb; 
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb;
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
 /*########################################################################################################################*
@@ -367,6 +368,8 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int delTY = (int)(V2->v * curTexHeight) - begTY;
 
 	int width = maxX - minX, height = maxY - minY;
+	if (width == 0) width = 1;
+	if (height == 0) height = 1;
 
 	int fast =  delTX == width && delTY == height && 
 				(begTX + delTX < curTexWidth ) && 
@@ -426,73 +429,6 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	b2 = BitmapCol_B(tColor); \
 	B  = ( b1 * b2 ) >> 8;    \
 
-static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
-	int x0 = (int)V0->x, y0 = (int)V0->y;
-	int x1 = (int)V1->x, y1 = (int)V1->y;
-	int x2 = (int)V2->x, y2 = (int)V2->y;
-	int minX = min(x0, min(x1, x2));
-	int minY = min(y0, min(y1, y2));
-	int maxX = max(x0, max(x1, x2));
-	int maxY = max(y0, max(y1, y2));
-
-	// Reject triangles completely outside
-	if (maxX < 0 || minX > fb_maxX) return;
-	if (maxY < 0 || minY > fb_maxY) return;
-
-	// Perform scissoring
-	minX = max(minX, 0); maxX = min(maxX, fb_maxX);
-	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
-	
-	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
-	// Essentially these are the deltas of edge functions between X/Y and X/Y + 1 (i.e. one X/Y step)
-	int dx01  = y0 - y1, dy01 = x1 - x0;
-	int dx12  = y1 - y2, dy12 = x2 - x1;
-	int dx20  = y2 - y0, dy20 = x0 - x2;
-
-	// TODO still too slow, costs 300 ms/frame
-	float bc0_start = edgeFunction(x1,y1, x2,y2, minX+0.5f,minY+0.5f);
-	float bc1_start = edgeFunction(x2,y2, x0,y0, minX+0.5f,minY+0.5f);
-	float bc2_start = edgeFunction(x0,y0, x1,y1, minX+0.5f,minY+0.5f);
-
-	PackedCol color = V0->c;
-	int R, G, B, A, x, y;
-	int a1, r1, g1, b1;
-	int a2, r2, g2, b2;
-
-	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		R = PackedCol_R(color);
-		G = PackedCol_G(color);
-		B = PackedCol_B(color);
-		A = PackedCol_A(color);
-	} else {
-		/* Always use a single pixel */
-		float rawY0 = V0->v * curTexHeight;
-		float rawY1 = V1->v * curTexHeight;
-
-		float rawY = min(rawY0, rawY1);
-		int texY   = (int)(rawY + 0.01f) & texHeightMask;
-		MultiplyColors(color, curTexPixels[texY * curTexWidth]);
-	}
-
-	if (A == 0) return;
-	color = BitmapCol_Make(R, G, B, 0xFF);
-
-	for (y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
-	{
-		float bc0 = bc0_start;
-		float bc1 = bc1_start;
-		float bc2 = bc2_start;
-
-		for (x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
-		{
-			if (bc0 < 0 || bc1 < 0 || bc2 < 0) continue;
-			int cb_index = y * cb_stride + x;
-			
-			colorBuffer[cb_index] = color;
-		}
-	}
-}
-
 static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int x0 = (int)V0->x, y0 = (int)V0->y;
 	int x1 = (int)V1->x, y1 = (int)V1->y;
@@ -547,32 +483,24 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	}
 
 	if (gfx_alphaTest && A == 0) return;
-	color = BitmapCol_Make(R, G, B, 0xFF);
+	
 
-	for (y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
-	{
-		int bc0 = bc0_start;
-		int bc1 = bc1_start;
-		int bc2 = bc2_start;
+	if (!gfx_alphaBlend) {
+		#define PIXEL_PLOT_FUNC(index, x, y) \
+			colorBuffer[index] = color;
 
-		for (x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
-		{
-			if ((bc0 | bc1 | bc2) < 0) continue;
-			int cb_index = y * cb_stride + x;
-			
-			if (!gfx_alphaBlend) {
-				colorBuffer[cb_index] = color;
-				continue;
-			}
+		color = BitmapCol_Make(R, G, B, 0xFF);
+		#include "Graphics_SoftMin.tri.i"
+	} else {
+		// Hardcode for alpha of 128
+		#define PIXEL_PLOT_FUNC(index, x, y) \
+			BitmapCol dst = colorBuffer[index];  \
+			int finR = (R + BitmapCol_R(dst)) >> 1; \
+			int finG = (G + BitmapCol_G(dst)) >> 1; \
+			int finB = (B + BitmapCol_B(dst)) >> 1; \
+			colorBuffer[index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 
-			// Hardcode for alpha of 128
-			BitmapCol dst = colorBuffer[cb_index];
-			int finR = (R + BitmapCol_R(dst)) >> 1;
-			int finG = (G + BitmapCol_G(dst)) >> 1;
-			int finB = (B + BitmapCol_B(dst)) >> 1;
-
-			colorBuffer[cb_index] = BitmapCol_Make(finR, finG, finB, 0xFF);
-		}
+		#include "Graphics_SoftMin.tri.i"
 	}
 }
 
@@ -854,17 +782,7 @@ void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 			DrawSprite2D(&vertices[0], &vertices[1], &vertices[2]);
 		}
 	} else if (gfx_rendering2D) {
-		// 4 vertices = 1 quad = 2 triangles
-		for (i = 0; i < verticesCount / 4; i++, j += 4)
-		{
-			TransformVertex2D(j + 0, &vertices[0]);
-			TransformVertex2D(j + 1, &vertices[1]);
-			TransformVertex2D(j + 2, &vertices[2]);
-			TransformVertex2D(j + 3, &vertices[3]);
-
-			DrawTriangle2D(&vertices[0], &vertices[2], &vertices[1]);
-			DrawTriangle2D(&vertices[2], &vertices[0], &vertices[3]);
-		}
+		Platform_LogConst("2D triangle unsupported..");
 	} else if (colWrite) {
 		// 4 vertices = 1 quad = 2 triangles
 		for (i = 0; i < verticesCount / 4; i++, j += 4)

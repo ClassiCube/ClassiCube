@@ -42,7 +42,7 @@ CFLAGS   := -I$(PSPSDK)/include -g -O1 -fno-math-errno -D_PSP_FW_VERSION=600 -DP
 ASFLAGS  := -I$(PSPSDK)/include -g
 
 LDFLAGS  := -L$(PSPSDK)/lib -specs=$(PSPSDK)/lib/prxspecs -Wl,-q,-T$(PSPSDK)/lib/linkfile.prx -Wl,-zmax-page-size=128
-LIBS 	 := -lm -lpspgum -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspdebug -lpspnet -lpspnet_apctl
+LIBS 	 := -lm -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspnet -lpspnet_apctl
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
@@ -70,7 +70,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean: 
-	-rm -f $(TARGET).prx $(TARGET).elf $(OBJS) $(PSP_EBOOT_SFO) $(PSP_EBOOT)
+	-rm -f $(TARGET).prx $(TARGET)-fixed.elf $(TARGET).elf $(OBJS) $(PSP_EBOOT_SFO) $(PSP_EBOOT)
 
 
 #---------------------------------------------------------------------------------
@@ -78,9 +78,12 @@ clean:
 #---------------------------------------------------------------------------------
 $(TARGET).elf: $(OBJS)
 	$(LD) $^ $(LDFLAGS) $(LIBS) -o $@
+
+$(TARGET)-fixed.elf: $(TARGET).elf
+	cp $< $@
 	$(FIXUP) $@
 
-$(TARGET).prx: $(TARGET).elf
+$(TARGET).prx: $(TARGET)-fixed.elf
 	$(PRXGEN) $< $@
 
 $(PSP_EBOOT_SFO): 
@@ -99,6 +102,9 @@ $(BUILD_DIR)/%.o : src/%.c
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o : src/psp/%.c
+	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o : src/psp/%.S
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	
 $(BUILD_DIR)/%.o : third_party/bearssl/%.c

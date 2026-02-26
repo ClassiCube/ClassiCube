@@ -48,7 +48,6 @@ typedef union
 typedef struct
 {
 	u32 flags[2];
-	u64 permutation;
 	int attrCount;
 } C3D_AttrInfo;
 
@@ -114,21 +113,14 @@ static void C3D_FragOpShadow(float scale, float bias);
 
 
 
-
-
-
-#define C3D_DEFAULT_CMDBUF_SIZE 0x40000
-
 enum
 {
 	C3D_UNSIGNED_BYTE = 0,
 	C3D_UNSIGNED_SHORT = 1,
 };
 
-static bool C3D_Init(size_t cmdBufSize);
+static bool C3D_Init(void);
 static void C3D_Fini(void);
-
-static void C3D_BindProgram(shaderProgram_s* program);
 
 static void C3D_SetViewport(u32 x, u32 y, u32 w, u32 h);
 static void C3D_SetScissor(GPU_SCISSORMODE mode, u32 left, u32 top, u32 right, u32 bottom);
@@ -151,13 +143,7 @@ static inline float FogLut_CalcZ(float depth, float near, float far)
 	return far*near/(depth*(far-near)+near);
 }
 
-static void FogLut_FromArray(C3D_FogLut* lut, const float data[256]);
-
-static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip);
-static void C3D_FogColor(u32 color);
-static void C3D_FogLutBind(C3D_FogLut* lut);
-
-
+static void FogLut_FromArray(C3D_FogLut* lut, const float data[129]);
 
 
 
@@ -194,40 +180,6 @@ static void C3D_SetFrameBuf(C3D_FrameBuf* fb);
 static void C3D_FrameBufClear(C3D_FrameBuf* fb, C3D_ClearBits clearBits, u32 clearColor, u32 clearDepth);
 static void C3D_FrameBufTransfer(C3D_FrameBuf* fb, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
-static inline void C3D_FrameBufColor(C3D_FrameBuf* fb, void* buf, GPU_COLORBUF fmt)
-{
-	if (buf)
-	{
-		fb->colorBuf  = buf;
-		fb->colorFmt  = fmt;
-		fb->colorMask = 0xF;
-	} else
-	{
-		fb->colorBuf  = NULL;
-		fb->colorFmt  = GPU_RB_RGBA8;
-		fb->colorMask = 0;
-	}
-}
-
-static inline void C3D_FrameBufDepth(C3D_FrameBuf* fb, void* buf, GPU_DEPTHBUF fmt)
-{
-	if (buf)
-	{
-		fb->depthBuf  = buf;
-		fb->depthFmt  = fmt;
-		fb->depthMask = fmt == GPU_RB_DEPTH24_STENCIL8 ? 0x3 : 0x2;
-	} else
-	{
-		fb->depthBuf  = NULL;
-		fb->depthFmt  = GPU_RB_DEPTH24;
-		fb->depthMask = 0;
-	}
-}
-
-
-
-
-
 
 
 typedef struct C3D_RenderTarget_tag C3D_RenderTarget;
@@ -250,14 +202,8 @@ enum
 
 static bool C3D_FrameBegin(u8 flags);
 static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
-static void C3D_FrameEnd(u8 flags);
 
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
-
-static inline void C3D_RenderTargetDetachOutput(C3D_RenderTarget* target)
-{
-	C3D_RenderTargetSetOutput(NULL, target->screen, target->side, 0);
-}
 
 static inline void C3D_RenderTargetClear(C3D_RenderTarget* target, C3D_ClearBits clearBits, u32 clearColor, u32 clearDepth)
 {
@@ -324,11 +270,8 @@ typedef struct
 typedef struct
 {
 	gxCmdQueue_s gxQueue;
-	u32* cmdBuf;
-	size_t cmdBufSize;
 
 	u32 flags;
-	shaderProgram_s* program;
 
 	C3D_AttrInfo attrInfo;
 	C3D_Effect effect;
@@ -337,8 +280,6 @@ typedef struct
 	C3D_Tex* tex[3];
 
 	u32 texEnvBuf, texEnvBufClr;
-	u32 fogClr;
-	C3D_FogLut* fogLut;
 
 	C3D_FrameBuf fb;
 	u32 viewport[5];
@@ -354,12 +295,8 @@ enum
 	C3DiF_FrameBuf = BIT(5),
 	C3DiF_Viewport = BIT(6),
 	C3DiF_Scissor = BIT(7),
-	C3DiF_Program = BIT(8),
 	C3DiF_TexEnvBuf = BIT(9),
-	C3DiF_VshCode = BIT(11),
-	C3DiF_GshCode = BIT(12),
 	C3DiF_TexStatus = BIT(14),
-	C3DiF_FogLut = BIT(17),
 	C3DiF_Gas = BIT(18),
 
 	C3DiF_Reset = BIT(19),
@@ -394,8 +331,6 @@ static void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
 static void C3Di_SetTex(int unit, C3D_Tex* tex);
 static void C3Di_EffectBind(C3D_Effect* effect);
 
-static bool C3Di_SplitFrame(u32** pBuf, u32* pSize);
-
 static void C3Di_RenderQueueInit(void);
 static void C3Di_RenderQueueExit(void);
 static void C3Di_RenderQueueWaitDone(void);
@@ -416,14 +351,13 @@ static int AttrInfo_AddLoader(C3D_AttrInfo* info, int regId, GPU_FORMATS format,
 {
 	if (info->attrCount == 12) return -1;
 	int id = info->attrCount++;
-	if (regId < 0) regId = id;
+
 	if (id < 8)
 		info->flags[0] |= GPU_ATTRIBFMT(id, count, format);
 	else
 		info->flags[1] |= GPU_ATTRIBFMT(id-8, count, format);
 
 	info->flags[1] = (info->flags[1] &~ (0xF0000000 | BIT(id+16))) | (id << 28);
-	info->permutation |= regId << (id*4);
 	return id;
 }
 
@@ -438,19 +372,7 @@ static C3D_AttrInfo* C3D_GetAttrInfo(void)
 static void C3Di_AttrInfoBind(C3D_AttrInfo* info)
 {
 	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFERS_FORMAT_LOW, (u32*)info->flags, sizeof(info->flags)/sizeof(u32));
-	GPUCMD_AddMaskedWrite(GPUREG_VSH_INPUTBUFFER_CONFIG, 0xB, 0xA0000000 | (info->attrCount - 1));
-	GPUCMD_AddWrite(GPUREG_VSH_NUM_ATTR, info->attrCount - 1);
-	GPUCMD_AddIncrementalWrites(GPUREG_VSH_ATTRIBUTES_PERMUTATION_LOW, (u32*)&info->permutation, 2);
 }
-
-
-
-
-
-
-
-
-
 
 
 #define BUFFER_BASE_PADDR 0x18000000
@@ -599,18 +521,20 @@ static void C3Di_EffectBind(C3D_Effect* e)
 
 
 
-static void FogLut_FromArray(C3D_FogLut* lut, const float data[256])
+static void FogLut_FromArray(C3D_FogLut* lut, const float data[129])
 {
 	int i;
 	for (i = 0; i < 128; i ++)
 	{
-		float in = data[i], diff = data[i+128];
+		float cur  = data[i + 0];
+		float next = data[i + 1];
+		float diff = next - cur;
 
 		u32 val = 0;
-		if (in > 0.0f)
+		if (cur > 0.0f)
 		{
-			in *= 0x800;
-			val = (in < 0x800) ? (u32)in : 0x7FF;
+			cur *= 0x800;
+			val = (cur < 0x800) ? (u32)cur : 0x7FF;
 		}
 
 		u32 val2 = 0;
@@ -625,48 +549,6 @@ static void FogLut_FromArray(C3D_FogLut* lut, const float data[256])
 		lut->data[i] = val2 | (val << 13);
 	}
 }
-
-static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	ctx->flags |= C3DiF_TexEnvBuf;
-	ctx->texEnvBuf &= ~0x100FF;
-	ctx->texEnvBuf |= (fogMode&7) | ((gasMode&1)<<3) | (zFlip ? BIT(16) : 0);
-}
-
-static void C3D_FogColor(u32 color)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	ctx->flags |= C3DiF_TexEnvBuf;
-	ctx->fogClr = color;
-}
-
-static void C3D_FogLutBind(C3D_FogLut* lut)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	if (lut)
-	{
-		ctx->flags |= C3DiF_FogLut;
-		ctx->fogLut = lut;
-	} else
-		ctx->flags &= ~C3DiF_FogLut;
-}
-
-
-
-
 
 
 
@@ -827,21 +709,12 @@ static void C3D_ImmDrawEnd(void)
 
 static C3D_RenderTarget *linkedTarget[3];
 
-static bool inFrame, inSafeTransfer;
+static bool inFrame;
 static bool swapPending, isTopStereo;
 
 static void onQueueFinish(gxCmdQueue_s* queue)
 {
-	if (inSafeTransfer)
-	{
-		inSafeTransfer = false;
-		if (inFrame)
-		{
-			gxCmdQueueStop(queue);
-			gxCmdQueueClear(queue);
-		}
-	}
-	else if (swapPending)
+	if (swapPending)
 	{
 		gfxScreenSwapBuffers(GFX_TOP,    isTopStereo);
 		gfxScreenSwapBuffers(GFX_BOTTOM, false);
@@ -882,14 +755,7 @@ static void C3Di_RenderQueueWaitDone(void)
 
 static bool C3D_FrameBegin(u8 flags)
 {
-	C3D_Context* ctx = C3Di_GetContext();
-	if (inFrame) return false;
-
-	if (!C3Di_WaitAndClearQueue((flags & C3D_FRAME_NONBLOCK) ? 0 : -1))
-		return false;
-
 	inFrame = true;
-	GPUCMD_SetBuffer(ctx->cmdBuf, ctx->cmdBufSize, 0);
 	return true;
 }
 
@@ -899,18 +765,21 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target)
 
 	target->used = true;
 	C3D_SetFrameBuf(&target->frameBuf);
-	C3D_SetViewport(0, 0, target->frameBuf.width, target->frameBuf.height);
 	return true;
 }
 
-static void C3D_FrameEnd(u8 flags)
+static void C3D_FrameFinish(u8 flags)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 	if (!inFrame) return;
 
 	u32 *cmdBuf, cmdBufSize;
-	if (C3Di_SplitFrame(&cmdBuf, &cmdBufSize))
-		GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
+	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
+	GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
+
+	GPUCMD_Split(&cmdBuf, &cmdBufSize);
+	GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
 
 	GPUCMD_SetBuffer(NULL, 0, 0);
 	inFrame = false;
@@ -951,20 +820,22 @@ static void C3D_RenderTargetInit(C3D_RenderTarget* target, int width, int height
 	fb->height  = height;
 }
 
-static void C3D_RenderTargetColor(C3D_RenderTarget* target, GPU_COLORBUF colorFmt)
+static void C3D_RenderTargetColor(C3D_RenderTarget* target, GPU_COLORBUF fmt)
 {
 	C3D_FrameBuf* fb = &target->frameBuf;
-	size_t colorSize = C3D_CalcColorBufSize(fb->width, fb->height, colorFmt);
+	size_t colorSize = C3D_CalcColorBufSize(fb->width, fb->height, fmt);
 	void* colorBuf   = vramAlloc(colorSize);
-
 	if (!colorBuf) return;
-	C3D_FrameBufColor(fb, colorBuf, colorFmt);
+
+	fb->colorBuf  = colorBuf;
+	fb->colorFmt  = fmt;
+	fb->colorMask = 0xF;
 }
 
-static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFmt)
+static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF fmt)
 {
 	C3D_FrameBuf* fb = &target->frameBuf;
-	size_t depthSize = C3D_CalcDepthBufSize(fb->width, fb->height, depthFmt);
+	size_t depthSize = C3D_CalcDepthBufSize(fb->width, fb->height, fmt);
 	void* depthBuf   = NULL;
 
 	vramAllocPos vramBank = addrGetVRAMBank(fb->colorBuf);
@@ -972,7 +843,9 @@ static void C3D_RenderTargetDepth(C3D_RenderTarget* target, GPU_DEPTHBUF depthFm
 	if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
 	if (!depthBuf) return;
 
-	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
+	fb->depthBuf  = depthBuf;
+	fb->depthFmt  = fmt;
+	fb->depthMask = fmt == GPU_RB_DEPTH24_STENCIL8 ? 0x3 : 0x2;
 }
 
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags)
@@ -980,20 +853,13 @@ static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t scre
 	int id = 0;
 	if (screen==GFX_BOTTOM) id = 2;
 	else if (side==GFX_RIGHT) id = 1;
-	if (linkedTarget[id])
-	{
-		linkedTarget[id]->linked = false;
-		if (!inFrame)
-			C3Di_WaitAndClearQueue(-1);
-	}
+
 	linkedTarget[id] = target;
-	if (target)
-	{
-		target->linked = true;
-		target->transferFlags = transferFlags;
-		target->screen = screen;
-		target->side = side;
-	}
+
+	target->linked = true;
+	target->transferFlags = transferFlags;
+	target->screen = screen;
+	target->side = side;
 }
 
 
@@ -1046,29 +912,17 @@ static void C3Di_OnRestore(void)
 	C3D_Context* ctx = C3Di_GetContext();
 
 	ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
-		| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
+		| C3DiF_Viewport | C3DiF_Scissor
 		| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
-
-	if (ctx->fogLut)
-		ctx->flags |= C3DiF_FogLut;
 }
 
 #define GXQUEUE_MAX_ENTRIES 32
 static gxCmdEntry_s queue_entries[GXQUEUE_MAX_ENTRIES];
 
-static bool C3D_Init(size_t cmdBufSize)
+static bool C3D_Init(void)
 {
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
-
-	if (ctx->flags & C3DiF_Active)
-		return false;
-
-	cmdBufSize = (cmdBufSize + 0xF) &~ 0xF; // 0x10-byte align
-	ctx->cmdBufSize = cmdBufSize/4;
-	ctx->cmdBuf = (u32*)linearAlloc(cmdBufSize);
-	if (!ctx->cmdBuf)
-		return false;
 
 	ctx->gxQueue.maxEntries = GXQUEUE_MAX_ENTRIES;
 	ctx->gxQueue.entries = queue_entries;
@@ -1090,14 +944,11 @@ static bool C3D_Init(size_t cmdBufSize)
 	ctx->texConfig = BIT(12);
 	ctx->texEnvBuf = 0;
 	ctx->texEnvBufClr = 0xFFFFFFFF;
-	ctx->fogClr = 0;
-	ctx->fogLut = NULL;
 
 	for (i = 0; i < 3; i ++)
 		ctx->tex[i] = NULL;
 
 	C3Di_RenderQueueInit();
-
 	return true;
 }
 
@@ -1183,12 +1034,6 @@ static void C3Di_UpdateContext(void)
 		GPUCMD_AddIncrementalWrites(GPUREG_SCISSORTEST_MODE, ctx->scissor, 3);
 	}
 
-	if (ctx->flags & C3DiF_Program)
-	{
-		shaderProgramConfigure(ctx->program, (ctx->flags & C3DiF_VshCode) != 0, (ctx->flags & C3DiF_GshCode) != 0);
-		ctx->flags &= ~(C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode);
-	}
-
 	if (ctx->flags & C3DiF_AttrInfo)
 	{
 		ctx->flags &= ~C3DiF_AttrInfo;
@@ -1239,70 +1084,6 @@ static void C3Di_UpdateContext(void)
 		ctx->flags &= ~C3DiF_TexEnvBuf;
 		GPUCMD_AddMaskedWrite(GPUREG_TEXENV_UPDATE_BUFFER, 0x7, ctx->texEnvBuf);
 		GPUCMD_AddWrite(GPUREG_TEXENV_BUFFER_COLOR, ctx->texEnvBufClr);
-		GPUCMD_AddWrite(GPUREG_FOG_COLOR, ctx->fogClr);
-	}
-
-	if ((ctx->flags & C3DiF_FogLut) && (ctx->texEnvBuf&7) != GPU_NO_FOG)
-	{
-		ctx->flags &= ~C3DiF_FogLut;
-		if (ctx->fogLut)
-		{
-			GPUCMD_AddWrite(GPUREG_FOG_LUT_INDEX, 0);
-			GPUCMD_AddWrites(GPUREG_FOG_LUT_DATA0, ctx->fogLut->data, 128);
-		}
 	}
 }
 
-static bool C3Di_SplitFrame(u32** pBuf, u32* pSize)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!gpuCmdBufOffset)
-		return false; // Nothing was drawn
-
-	if (ctx->flags & C3DiF_DrawUsed)
-	{
-		ctx->flags &= ~C3DiF_DrawUsed;
-		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
-		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
-		GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
-	}
-
-	GPUCMD_Split(pBuf, pSize);
-	return true;
-}
-
-static void C3D_Fini(void)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
-	C3Di_RenderQueueExit();
-	linearFree(ctx->cmdBuf);
-	ctx->flags = 0;
-}
-
-static void C3D_BindProgram(shaderProgram_s* program)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	shaderProgram_s* oldProg = ctx->program;
-	if (oldProg != program)
-	{
-		ctx->program = program;
-		ctx->flags |= C3DiF_Program | C3DiF_AttrInfo;
-
-		if (!oldProg)
-			ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
-		else
-		{
-			DVLP_s* oldProgV = oldProg->vertexShader->dvle->dvlp;
-			DVLP_s* newProgV = program->vertexShader->dvle->dvlp;
-
-			if (oldProgV != newProgV)
-				ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
-		}
-	}
-}

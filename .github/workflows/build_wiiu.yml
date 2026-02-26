@@ -20,32 +20,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compile Wii U build
-        id: compile
         run: |
           make wiiu
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-wiiu.wuhb'
           DEST_NAME: 'ClassiCube-wiiu.wuhb'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-wiiu.rpx'
           DEST_NAME: 'ClassiCube-wiiu.rpx'
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-wiiu.elf'
           DEST_NAME: 'ClassiCube-wiiu.elf'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'wiiu'

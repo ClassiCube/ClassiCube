@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -30,8 +31,8 @@ static VertexProgram  VP_list[3];
 static VertexProgram* VP_active;
 
 static cc_bool textureOffseting;
-static float textureOffset[4] __attribute__((aligned(16)));
-static struct Matrix mvp      __attribute__((aligned(64)));
+static float textureOffset[4] CC_ALIGNED(16);
+static struct Matrix mvp      CC_ALIGNED(64);
 
 
 static void VP_Load(VertexProgram* vp, const u8* source) {
@@ -543,29 +544,9 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return vb;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { 
-	Gfx_BindVb(vb);
+void Gfx_UnlockVb(GfxResourceID vb) {
 	rsxInvalidateVertexCache(context); // TODO needed?
 }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return rsxMemalign(128, maxVertices * strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];
-	return vb;
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	Gfx_BindVb(vb);
-	rsxInvalidateVertexCache(context); // TODO needed?
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*

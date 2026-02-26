@@ -2,7 +2,7 @@
 #if defined CC_BUILD_MACCLASSIC
 
 #include "_WindowBase.h"
-#include "String.h"
+#include "String_.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Options.h"
@@ -386,9 +386,9 @@ void Window_ProcessEvents(float delta) {
 	}
 }
 
-void Gamepads_Init(void) {
+void Gamepads_PreInit(void) { }
 
-}
+void Gamepads_Init(void) { }
 
 void Gamepads_Process(float delta) { }
 

@@ -4,8 +4,8 @@
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
+#define OVERRIDE_MEM_FUNCTIONS
 
-#include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
 #include "SystemFonts.h"
@@ -27,6 +27,7 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000;
 const cc_result ReturnCode_FileNotFound     = fnfErr;
+const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = dupFNErr;
 const cc_result ReturnCode_SocketInProgess  = 1000000;
 const cc_result ReturnCode_SocketWouldBlock = 1000000;
@@ -41,6 +42,7 @@ const char* Platform_AppNameSuffix = " MAC PPC";
 
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 cc_bool  Platform_ReadonlyFilesystem;
+#include "_PlatformBase.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
@@ -89,10 +91,6 @@ MAC_SYSAPI(void) Microseconds(cc_uint64* microTickCount) MAC_FOURWORDINLINE(0xA1
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
-void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
-void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
-
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? NewPtr(size) : NULL;
@@ -200,6 +198,18 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 static int retrievedWD, wd_refNum, wd_dirID;
 
+static void UpdateWorkingDirectory(void) {
+	retrievedWD = true;
+
+	WDPBRec r = { 0 };
+	PBHGetVolSync(&r);
+	wd_refNum = r.ioWDVRefNum;
+	wd_dirID  = r.ioWDDirID;
+
+	int V = r.ioWDVRefNum, D = r.ioWDDirID;
+	Platform_Log2("Working directory: %i, %i", &V, &D);
+}
+
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* buf = dst->buffer;
 	char* str = dst->buffer;
@@ -216,16 +226,13 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str   = '\0';
 	buf[0] = String_Length(buf + 1); // pascal strings
 
+	// TODO not call here? maybe in Platform_Init instead?
 	if (retrievedWD) return;
-	retrievedWD = true;
+	UpdateWorkingDirectory();
+}
 
-	WDPBRec r = { 0 };
-	PBHGetVolSync(&r);
-	wd_refNum = r.ioWDVRefNum;
-	wd_dirID  = r.ioWDDirID;
-
-	int V = r.ioWDVRefNum, D = r.ioWDDirID;
-	Platform_Log2("Working directory: %i, %i", &V, &D);
+void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
+	String_AppendAll(dst, &path->buffer[1], path->buffer[0]);
 }
 
 static int DoOpenDF(const char* name, char perm, cc_file* file) {
@@ -267,7 +274,7 @@ static int DoCreateFolder(const char* name) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
-cc_result Directory_Create(const cc_filepath* path) {
+cc_result Directory_Create2(const cc_filepath* path) {
 	return DoCreateFolder(path->buffer);
 }
 
@@ -371,19 +378,9 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Process_OpenSupported = false;
-static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
-static int gameNumArgs;
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int count = gameNumArgs;
-	for (int i = 0; i < count; i++) 
-	{
-		args[i] = String_FromRawArray(gameArgs[i]);
-	}
-	
-	// clear arguments so after game is closed, launcher is started
-	gameNumArgs = 0;
-	return count;
+	return GetGameArgs(args);
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
@@ -391,13 +388,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	for (int i = 0; i < numArgs; i++) 
-	{
-		String_CopyToRawArray(gameArgs[i], &args[i]);
-	}
-
-	gameNumArgs = numArgs;
-	return 0;
+	return SetGameArgs(args, numArgs);
 }
 
 void Process_Exit(cc_result code) { 

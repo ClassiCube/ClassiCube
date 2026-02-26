@@ -1,3 +1,4 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -198,7 +199,7 @@ static void FreeShaderPatcherMem(void* user_data, void* mem) {
 *#########################################################################################################################*/
 static VertexProgram VP_list[2];
 static VertexProgram* VP_Active;
-static float transposed_mvp[4*4] __attribute__((aligned(64)));
+static float transposed_mvp[4*4] CC_ALIGNED(64);
 
 static void VP_DirtyUniform(int uniform) {
 	for (int i = 0; i < Array_Elems(VP_list); i++) 
@@ -1008,23 +1009,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return buffer->data;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return GPUBuffer_Alloc(maxVertices * strideSizes[fmt]);
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	return buffer->data;
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
 /*########################################################################################################################*
@@ -1102,7 +1087,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	struct Matrix mvp __attribute__((aligned(64)));	
+	struct Matrix mvp CC_ALIGNED(64);
 	Matrix_Mul(&mvp, &_view, &_proj);
 	float* m = &mvp;
 	

@@ -3,12 +3,13 @@
 #include "../Input.h"
 #include "../Event.h"
 #include "../Graphics.h"
-#include "../String.h"
+#include "../String_.h"
 #include "../Funcs.h"
 #include "../Bitmap.h"
 #include "../Errors.h"
 #include "../ExtMath.h"
 #include "../Logger.h"
+#include "../Options.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -19,8 +20,6 @@
 // framebuffer only 128 kb
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   200
-
-static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -40,8 +39,8 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = Option_GetOffsetX(10);
+	DisplayInfo.ContentOffsetY = Option_GetOffsetY(10);
 	DisplayInfo.FullRedraw     = true;
 
 	Hw32xInit(MARS_VDP_MODE_32K, 0);
@@ -51,12 +50,12 @@ void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) {
 	Hw32xScreenClear();
-	launcherMode = true;
+	Window_Main.Is3D = false;
 }
 
 void Window_Create3D(int width, int height) {
 	Hw32xScreenClear();
-	launcherMode = false; 
+	Window_Main.Is3D = true;
 }
 
 void Window_Destroy(void) { }
@@ -111,9 +110,8 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_4, CCPAD_RIGHT }
 };
 
-void Gamepads_Init(void) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-}
+void Gamepads_PreInit(void) { }
+void Gamepads_Init(void)    { }
 
 void Gamepads_Process(float delta) {
 	int port = Gamepad_Connect(0x32, pad_defaults);

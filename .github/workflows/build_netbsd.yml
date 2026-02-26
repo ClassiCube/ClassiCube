@@ -32,7 +32,6 @@ jobs:
           unzip netbsd64.zip
 
       - name: Compile NetBSD builds
-        id: compile
         shell: bash
         env: 
           LIBS: "-lm -lpthread -lX11 -lXi -lGL -lexecinfo"
@@ -46,14 +45,12 @@ jobs:
           
           
       - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'cc-netbsd64-gl1'
           DEST_NAME: 'ClassiCube-NetBSD-64'
           
           
       - uses: ./.github/actions/notify_success
-        if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
           WORKFLOW_NAME: 'netbsd'

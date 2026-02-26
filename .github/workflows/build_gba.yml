@@ -1,0 +1,45 @@
+name: Build latest (GBA)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-gba
+  cancel-in-progress: true
+
+jobs:
+  build:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile GBA build
+        run: |
+          make gba
+          
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-gba.gba'
+          DEST_NAME: 'ClassiCube-gba.gba'
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-gba.elf'
+          DEST_NAME: 'ClassiCube-gba.elf'
+          
+          
+# NOTE: Not uploaded to website downloads at present
+
+
+      - uses: ./.github/actions/notify_failure
+        if: failure()
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce GBA build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
