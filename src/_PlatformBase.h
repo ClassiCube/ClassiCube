@@ -418,7 +418,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 
 static CC_INLINE cc_bool IPv4_ToString(const void* ip, const void* port, cc_string* dst) {
-	int portNum = Stream_GetU16_BE(port);
+	int portNum = Stream_GetU16_BE((const cc_uint8*) port);
 	char* rawIP = (char*)ip;
 
 	String_Format4(dst, "%b.%b.%b.%b", &rawIP[0], &rawIP[1], &rawIP[2], &rawIP[3]);
