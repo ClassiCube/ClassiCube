@@ -367,7 +367,7 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 /* Encodes port number in network (i.e. big endian) byte order) */
 static CC_INLINE cc_uint16 SockAddr_EncodePort(int port) {
 	cc_uint16 raw;
-	Stream_SetU16_BE((cc_uint8*)&raw, port);
+	Mem_WriteU16_BE(&raw, port);
 	return raw;
 }
 
@@ -418,7 +418,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 
 static CC_INLINE cc_bool IPv4_ToString(const void* ip, const void* port, cc_string* dst) {
-	int portNum = Stream_GetU16_BE(port);
+	int portNum = Mem_ReadU16_BE(port);
 	char* rawIP = (char*)ip;
 
 	String_Format4(dst, "%b.%b.%b.%b", &rawIP[0], &rawIP[1], &rawIP[2], &rawIP[3]);

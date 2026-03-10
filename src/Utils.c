@@ -395,3 +395,61 @@ int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separa
 	return -1;
 }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------Read/Write primitives---------------------------------------------------*
+*#########################################################################################################################*/
+cc_uint16 Mem_ReadU16_LE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint16)(data[0] | (data[1] << 8));
+}
+
+cc_uint16 Mem_ReadU16_BE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint16)((data[0] << 8) | data[1]);
+}
+
+cc_uint32 Mem_ReadU32_LE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint32)(
+		 (cc_uint32)data[0]        | ((cc_uint32)data[1] << 8) |
+		((cc_uint32)data[2] << 16) | ((cc_uint32)data[3] << 24));
+}
+
+cc_uint32 Mem_ReadU32_BE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint32)(
+		((cc_uint32)data[0] << 24) | ((cc_uint32)data[1] << 16) |
+		((cc_uint32)data[2] << 8)  |  (cc_uint32)data[3]);
+}
+
+void Mem_WriteU16_LE(void* src, cc_uint16 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
+}
+
+void Mem_WriteU16_BE(void* src, cc_uint16 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value >> 8 ); data[1] = (cc_uint8)(value      );
+}
+
+void Mem_WriteU32_LE(void* src, cc_uint32 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
+	data[2] = (cc_uint8)(value >> 16); data[3] = (cc_uint8)(value >> 24);
+}
+
+void Mem_WriteU32_BE(void* src, cc_uint32 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value >> 24); data[1] = (cc_uint8)(value >> 16);
+	data[2] = (cc_uint8)(value >> 8 ); data[3] = (cc_uint8)(value);
+}
+

@@ -1046,8 +1046,8 @@ static cc_result GZip_StreamClose(struct Stream* stream) {
 	cc_result res;
 
 	if ((res = Deflate_StreamClose(stream))) return res;
-	Stream_SetU32_LE(&data[0], state->Crc32 ^ 0xFFFFFFFFUL);
-	Stream_SetU32_LE(&data[4], state->Size);
+	Mem_WriteU32_LE(&data[0], state->Crc32 ^ 0xFFFFFFFFUL);
+	Mem_WriteU32_LE(&data[4], state->Size);
 	return Stream_Write(state->Base.Dest, data, sizeof(data));
 }
 
@@ -1093,7 +1093,7 @@ static cc_result ZLib_StreamClose(struct Stream* stream) {
 	cc_result res;
 
 	if ((res = Deflate_StreamClose(stream))) return res;	
-	Stream_SetU32_BE(&data[0], state->Adler32);
+	Mem_WriteU32_BE(&data[0], state->Adler32);
 	return Stream_Write(state->Base.Dest, data, sizeof(data));
 }
 
@@ -1176,7 +1176,7 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 	cc_result res;
 
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
-	pathLen  = Stream_GetU16_LE(&header[22]);
+	pathLen  = Mem_ReadU16_LE(&header[22]);
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
 
 	/* NOTE: ZIP spec says path uses code page 437 for encoding */
@@ -1184,13 +1184,13 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 	if ((res = Stream_Read(stream, (cc_uint8*)pathBuffer, pathLen))) return res;
 	if (!state->SelectEntry(&path)) return 0;
 
-	extraLen = Stream_GetU16_LE(&header[24]);
+	extraLen = Mem_ReadU16_LE(&header[24]);
 	/* local file may have extra data before actual data (e.g. ZIP64) */
 	if ((res = stream->Skip(stream, extraLen))) return res;
 
-	method           = Stream_GetU16_LE(&header[4]);
-	compressedSize   = Stream_GetU32_LE(&header[14]);
-	uncompressedSize = Stream_GetU32_LE(&header[18]);
+	method           = Mem_ReadU16_LE(&header[4]);
+	compressedSize   = Mem_ReadU32_LE(&header[14]);
+	uncompressedSize = Mem_ReadU32_LE(&header[18]);
 
 	/* Some .zip files don't set these in local file header */
 	if (!compressedSize)   compressedSize   = entry->CompressedSize;
@@ -1231,7 +1231,7 @@ static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {
 	cc_result res;
 
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
-	pathLen = Stream_GetU16_LE(&header[24]);
+	pathLen = Mem_ReadU16_LE(&header[24]);
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
 
 	/* NOTE: ZIP spec says path uses code page 437 for encoding */
@@ -1239,17 +1239,17 @@ static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {
 	if ((res = Stream_Read(stream, (cc_uint8*)pathBuffer, pathLen))) return res;
 
 	/* skip data following central directory entry header */
-	extraLen   = Stream_GetU16_LE(&header[26]);
-	commentLen = Stream_GetU16_LE(&header[28]);
+	extraLen   = Mem_ReadU16_LE(&header[26]);
+	commentLen = Mem_ReadU16_LE(&header[28]);
 	if ((res = stream->Skip(stream, extraLen + commentLen))) return res;
 
 	if (!state->SelectEntry(&path)) return 0;
 	if (state->usedEntries >= state->maxEntries) return ZIP_ERR_TOO_MANY_ENTRIES;
 	entry = &state->entries[state->usedEntries++];
 
-	entry->CompressedSize    = Stream_GetU32_LE(&header[16]);
-	entry->UncompressedSize  = Stream_GetU32_LE(&header[20]);
-	entry->LocalHeaderOffset = Stream_GetU32_LE(&header[38]);
+	entry->CompressedSize    = Mem_ReadU32_LE(&header[16]);
+	entry->UncompressedSize  = Mem_ReadU32_LE(&header[20]);
+	entry->LocalHeaderOffset = Mem_ReadU32_LE(&header[38]);
 	return 0;
 }
 
@@ -1260,8 +1260,8 @@ static cc_result Zip_ReadEndOfCentralDirectory(struct ZipState* state) {
 	cc_result res;
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 
-	state->totalEntries  = Stream_GetU16_LE(&header[6]);
-	state->centralDirBeg = Stream_GetU32_LE(&header[12]);
+	state->totalEntries  = Mem_ReadU16_LE(&header[6]);
+	state->centralDirBeg = Mem_ReadU32_LE(&header[12]);
 	return 0;
 }
 

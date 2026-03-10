@@ -418,8 +418,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	for (;;) {
 		res = Stream_Read(stream,   tmp, 8);
 		if (res) return res;
-		dataSize = Stream_GetU32_BE(tmp + 0);
-		fourCC   = Stream_GetU32_BE(tmp + 4);
+		dataSize = Mem_ReadU32_BE(tmp + 0);
+		fourCC   = Mem_ReadU32_BE(tmp + 4);
 
 		switch (fourCC) {
 		/* 11.2.2 IHDR Image header */
@@ -428,8 +428,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			res = Stream_Read(stream, tmp, PNG_IHDR_SIZE);
 			if (res) return res;
 
-			bmp->width  = (int)Stream_GetU32_BE(tmp + 0);
-			bmp->height = (int)Stream_GetU32_BE(tmp + 4);
+			bmp->width  = (int)Mem_ReadU32_BE(tmp + 0);
+			bmp->height = (int)Mem_ReadU32_BE(tmp + 4);
 			if (bmp->width  < 0 || bmp->width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->height < 0 || bmp->height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
@@ -725,23 +725,23 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	Stream_WriteonlyCrc32(&chunk, stream);
 
 	/* Write header chunk */
-	Stream_SetU32_BE(&tmp[0], PNG_IHDR_SIZE);
-	Stream_SetU32_BE(&tmp[4], PNG_FourCC('I','H','D','R'));
+	Mem_WriteU32_BE(&tmp[0], PNG_IHDR_SIZE);
+	Mem_WriteU32_BE(&tmp[4], PNG_FourCC('I','H','D','R'));
 	{
-		Stream_SetU32_BE(&tmp[8],  bmp->width);
-		Stream_SetU32_BE(&tmp[12], bmp->height);
+		Mem_WriteU32_BE(&tmp[8],  bmp->width);
+		Mem_WriteU32_BE(&tmp[12], bmp->height);
 		tmp[16] = 8;           /* bits per sample */
 		tmp[17] = alpha ? PNG_COLOR_RGB_A : PNG_COLOR_RGB;
 		tmp[18] = 0;           /* DEFLATE compression method */
 		tmp[19] = 0;           /* ADAPTIVE filter method */
 		tmp[20] = 0;           /* Not using interlacing */
 	}
-	Stream_SetU32_BE(&tmp[21], Utils_CRC32(&tmp[4], 17));
+	Mem_WriteU32_BE(&tmp[21], Utils_CRC32(&tmp[4], 17));
 
 	/* Write PNG body */
-	Stream_SetU32_BE(&tmp[25], 0); /* size of IDAT, filled in later */
+	Mem_WriteU32_BE(&tmp[25], 0); /* size of IDAT, filled in later */
 	if ((res = Stream_Write(stream, tmp, 29))) return res;
-	Stream_SetU32_BE(&tmp[0], PNG_FourCC('I','D','A','T'));
+	Mem_WriteU32_BE(&tmp[0], PNG_FourCC('I','D','A','T'));
 	if ((res = Stream_Write(&chunk, tmp, 4))) return res;
 
 	ZLib_MakeStream(&zlStream, zlState, &chunk); 
@@ -760,19 +760,19 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 		if ((res = Stream_Write(&zlStream, bestLine, lineSize + 1))) return res;
 	}
 	if ((res = zlStream.Close(&zlStream))) return res;
-	Stream_SetU32_BE(&tmp[0], chunk.meta.crc32.crc32 ^ 0xFFFFFFFFUL);
+	Mem_WriteU32_BE(&tmp[0], chunk.meta.crc32.crc32 ^ 0xFFFFFFFFUL);
 
 	/* Write end chunk */
-	Stream_SetU32_BE(&tmp[4],  0);
-	Stream_SetU32_BE(&tmp[8],  PNG_FourCC('I','E','N','D'));
-	Stream_SetU32_BE(&tmp[12], 0xAE426082UL); /* CRC32 of IEND */
+	Mem_WriteU32_BE(&tmp[4],  0);
+	Mem_WriteU32_BE(&tmp[8],  PNG_FourCC('I','E','N','D'));
+	Mem_WriteU32_BE(&tmp[12], 0xAE426082UL); /* CRC32 of IEND */
 	if ((res = Stream_Write(stream, tmp, 16))) return res;
 
 	/* Come back to fixup size of data in data chunk */
 	if ((res = stream->Position(stream, &stream_end))) return res;
 	if ((res = stream->Seek(stream, stream_beg + 33))) return res;
 
-	Stream_SetU32_BE(&tmp[0], (stream_end - stream_beg) - 57);
+	Mem_WriteU32_BE(&tmp[0], (stream_end - stream_beg) - 57);
 	if ((res = Stream_Write(stream, tmp, 4))) return res;
 	return stream->Seek(stream, stream_end);
 }

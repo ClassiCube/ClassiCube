@@ -408,54 +408,16 @@ void Stream_WriteonlyCrc32(struct Stream* s, struct Stream* source) {
 /*########################################################################################################################*
 *-------------------------------------------------Read/Write primitives---------------------------------------------------*
 *#########################################################################################################################*/
-cc_uint16 Stream_GetU16_LE(const cc_uint8* data) {
-	return (cc_uint16)(data[0] | (data[1] << 8));
-}
-
-cc_uint16 Stream_GetU16_BE(const cc_uint8* data) {
-	return (cc_uint16)((data[0] << 8) | data[1]);
-}
-
-cc_uint32 Stream_GetU32_LE(const cc_uint8* data) {
-	return (cc_uint32)(
-		 (cc_uint32)data[0]        | ((cc_uint32)data[1] << 8) |
-		((cc_uint32)data[2] << 16) | ((cc_uint32)data[3] << 24));
-}
-
-cc_uint32 Stream_GetU32_BE(const cc_uint8* data) {
-	return (cc_uint32)(
-		((cc_uint32)data[0] << 24) | ((cc_uint32)data[1] << 16) |
-		((cc_uint32)data[2] << 8)  |  (cc_uint32)data[3]);
-}
-
-void Stream_SetU16_LE(cc_uint8* data, cc_uint16 value) {
-	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
-}
-
-void Stream_SetU16_BE(cc_uint8* data, cc_uint16 value) {
-	data[0] = (cc_uint8)(value >> 8 ); data[1] = (cc_uint8)(value      );
-}
-
-void Stream_SetU32_LE(cc_uint8* data, cc_uint32 value) {
-	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
-	data[2] = (cc_uint8)(value >> 16); data[3] = (cc_uint8)(value >> 24);
-}
-
-void Stream_SetU32_BE(cc_uint8* data, cc_uint32 value) {
-	data[0] = (cc_uint8)(value >> 24); data[1] = (cc_uint8)(value >> 16);
-	data[2] = (cc_uint8)(value >> 8 ); data[3] = (cc_uint8)(value);
-}
-
 cc_result Stream_ReadU32_LE(struct Stream* s, cc_uint32* value) {
 	cc_uint8 data[4]; cc_result res;
 	if ((res = Stream_Read(s, data, 4))) return res;
-	*value = Stream_GetU32_LE(data); return 0;
+	*value = Mem_ReadU32_LE(data); return 0;
 }
 
 cc_result Stream_ReadU32_BE(struct Stream* s, cc_uint32* value) {
 	cc_uint8 data[4]; cc_result res;
 	if ((res = Stream_Read(s, data, 4))) return res;
-	*value = Stream_GetU32_BE(data); return 0;
+	*value = Mem_ReadU32_BE(data); return 0;
 }
 
 

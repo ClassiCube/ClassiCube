@@ -6,6 +6,7 @@
 #include "Funcs.h"
 #include "Errors.h"
 #include "Stream.h"
+#include "Utils.h"
 
 #if !defined CC_BUILD_ATARIOS && !defined CC_BUILD_AMIGA
 /*########################################################################################################################*
@@ -53,7 +54,7 @@ static cc_result Ogg_NextPage(struct OggState* ctx) {
 	source = ctx->source;
 	if ((res = Stream_Read(source, header, sizeof(header)))) return res;
 
-	sig = Stream_GetU32_BE(&header[0]);
+	sig = Mem_ReadU32_BE(&header[0]);
 	if (sig == OGG_FourCC('I','D','3', 2))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.2 tags header */
 	if (sig == OGG_FourCC('I','D','3', 3))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.3 tags header */
 	if (sig != OGG_FourCC('O','g','g','S')) return OGG_ERR_INVALID_SIG;
@@ -122,7 +123,7 @@ static cc_result Ogg_ReadU8(struct OggState* ctx, cc_uint8* data) {
 static cc_result Ogg_ReadU32(struct OggState* ctx, cc_uint32* value) {
 	cc_uint8 data[4]; cc_result res;
 	if ((res = Ogg_Read(ctx, data, 4))) return res;
-	*value = Stream_GetU32_LE(data); return 0;
+	*value = Mem_ReadU32_LE(data); return 0;
 }
 
 void Ogg_Init(struct OggState* ctx, struct Stream* source) {
@@ -1276,11 +1277,11 @@ static cc_result Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	cc_result res;
 
 	if ((res = Ogg_Read(ctx->source, header, sizeof(header)))) return res;
-	version  = Stream_GetU32_LE(&header[0]);
+	version  = Mem_ReadU32_LE(&header[0]);
 	if (version != 0) return VORBIS_ERR_VERSION;
 
 	ctx->channels   = header[4];
-	ctx->sampleRate = Stream_GetU32_LE(&header[5]);
+	ctx->sampleRate = Mem_ReadU32_LE(&header[5]);
 	/* (12) bitrate_maximum, nominal, minimum */
 	ctx->blockSizes[0] = 1 << (header[21] & 0xF);
 	ctx->blockSizes[1] = 1 << (header[21] >>  4);

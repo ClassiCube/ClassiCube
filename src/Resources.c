@@ -111,19 +111,19 @@ static cc_result ZipWriter_LocalFile(struct Stream* s, struct ResourceZipEntry* 
 	GetCurrentZipDate(&modTime, &modDate);
 	if ((res = s->Position(s, &e->offset))) return res;
 
-	Stream_SetU32_LE(header + 0,  0x04034b50);  /* signature */
-	Stream_SetU16_LE(header + 4,  20);          /* version needed */
-	Stream_SetU16_LE(header + 6,  0);           /* bitflags */
-	Stream_SetU16_LE(header + 8,  0);           /* compression method */
-	Stream_SetU16_LE(header + 10, modTime);     /* last modified */
-	Stream_SetU16_LE(header + 12, modDate);     /* last modified */
+	Mem_WriteU32_LE(header + 0,  0x04034b50);  /* signature */
+	Mem_WriteU16_LE(header + 4,  20);          /* version needed */
+	Mem_WriteU16_LE(header + 6,  0);           /* bitflags */
+	Mem_WriteU16_LE(header + 8,  0);           /* compression method */
+	Mem_WriteU16_LE(header + 10, modTime);     /* last modified */
+	Mem_WriteU16_LE(header + 12, modDate);     /* last modified */
 	
-	Stream_SetU32_LE(header + 14, e->crc32);    /* CRC32 */
-	Stream_SetU32_LE(header + 18, e->size);     /* Compressed size */
-	Stream_SetU32_LE(header + 22, e->size);     /* Uncompressed size */
+	Mem_WriteU32_LE(header + 14, e->crc32);    /* CRC32 */
+	Mem_WriteU32_LE(header + 18, e->size);     /* Compressed size */
+	Mem_WriteU32_LE(header + 22, e->size);     /* Uncompressed size */
 	 
-	Stream_SetU16_LE(header + 26, filenameLen); /* name length */
-	Stream_SetU16_LE(header + 28, 0);           /* extra field length */
+	Mem_WriteU16_LE(header + 26, filenameLen); /* name length */
+	Mem_WriteU16_LE(header + 28, 0);           /* extra field length */
 
 	Mem_Copy(header + 30, e->filename, filenameLen);
 	return Stream_Write(s, header, 30 + filenameLen);
@@ -135,25 +135,25 @@ static cc_result ZipWriter_CentralDir(struct Stream* s, struct ResourceZipEntry*
 	int modTime, modDate;
 	GetCurrentZipDate(&modTime, &modDate);
 
-	Stream_SetU32_LE(header + 0,  0x02014b50);  /* signature */
-	Stream_SetU16_LE(header + 4,  20);          /* version */
-	Stream_SetU16_LE(header + 6,  20);          /* version needed */
-	Stream_SetU16_LE(header + 8,  0);           /* bitflags */
-	Stream_SetU16_LE(header + 10, 0);           /* compression method */
-	Stream_SetU16_LE(header + 12, modTime);     /* last modified */
-	Stream_SetU16_LE(header + 14, modDate);     /* last modified */
+	Mem_WriteU32_LE(header + 0,  0x02014b50);  /* signature */
+	Mem_WriteU16_LE(header + 4,  20);          /* version */
+	Mem_WriteU16_LE(header + 6,  20);          /* version needed */
+	Mem_WriteU16_LE(header + 8,  0);           /* bitflags */
+	Mem_WriteU16_LE(header + 10, 0);           /* compression method */
+	Mem_WriteU16_LE(header + 12, modTime);     /* last modified */
+	Mem_WriteU16_LE(header + 14, modDate);     /* last modified */
 
-	Stream_SetU32_LE(header + 16, e->crc32);    /* CRC32 */
-	Stream_SetU32_LE(header + 20, e->size);     /* compressed size */
-	Stream_SetU32_LE(header + 24, e->size);     /* uncompressed size */
+	Mem_WriteU32_LE(header + 16, e->crc32);    /* CRC32 */
+	Mem_WriteU32_LE(header + 20, e->size);     /* compressed size */
+	Mem_WriteU32_LE(header + 24, e->size);     /* uncompressed size */
 
-	Stream_SetU16_LE(header + 28, filenameLen); /* name length */
-	Stream_SetU16_LE(header + 30, 0);           /* extra field length */
-	Stream_SetU16_LE(header + 32, 0);           /* file comment length */
-	Stream_SetU16_LE(header + 34, 0);           /* disk number */
-	Stream_SetU16_LE(header + 36, 0);           /* internal attributes */
-	Stream_SetU32_LE(header + 38, 0);           /* external attributes */
-	Stream_SetU32_LE(header + 42, e->offset);   /* local header offset */
+	Mem_WriteU16_LE(header + 28, filenameLen); /* name length */
+	Mem_WriteU16_LE(header + 30, 0);           /* extra field length */
+	Mem_WriteU16_LE(header + 32, 0);           /* file comment length */
+	Mem_WriteU16_LE(header + 34, 0);           /* disk number */
+	Mem_WriteU16_LE(header + 36, 0);           /* internal attributes */
+	Mem_WriteU32_LE(header + 38, 0);           /* external attributes */
+	Mem_WriteU32_LE(header + 42, e->offset);   /* local header offset */
 
 	Mem_Copy(header + 46, e->filename, filenameLen);
 	return Stream_Write(s, header, 46 + filenameLen);
@@ -163,14 +163,14 @@ static cc_result ZipWriter_EndOfCentralDir(struct Stream* s, int numEntries,
 											cc_uint32 centralDirBeg, cc_uint32 centralDirEnd) {
 	cc_uint8 header[22];
 
-	Stream_SetU32_LE(header + 0,  0x06054b50); /* signature */
-	Stream_SetU16_LE(header + 4,  0);          /* disk number */
-	Stream_SetU16_LE(header + 6,  0);          /* disk number of start */
-	Stream_SetU16_LE(header + 8,  numEntries); /* disk entries */
-	Stream_SetU16_LE(header + 10, numEntries); /* total entries */
-	Stream_SetU32_LE(header + 12, centralDirEnd - centralDirBeg);  /* central dir size */
-	Stream_SetU32_LE(header + 16, centralDirBeg);                  /* central dir start */
-	Stream_SetU16_LE(header + 20, 0);         /* comment length */
+	Mem_WriteU32_LE(header + 0,  0x06054b50); /* signature */
+	Mem_WriteU16_LE(header + 4,  0);          /* disk number */
+	Mem_WriteU16_LE(header + 6,  0);          /* disk number of start */
+	Mem_WriteU16_LE(header + 8,  numEntries); /* disk entries */
+	Mem_WriteU16_LE(header + 10, numEntries); /* total entries */
+	Mem_WriteU32_LE(header + 12, centralDirEnd - centralDirBeg);  /* central dir size */
+	Mem_WriteU32_LE(header + 16, centralDirBeg);                  /* central dir start */
+	Mem_WriteU16_LE(header + 20, 0);         /* comment length */
 	return Stream_Write(s, header, 22);
 }
 
@@ -429,20 +429,20 @@ static cc_result SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* 
 	cc_result res = s->Seek(s, offset);
 	if (res) return res;
 
-	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(header +  4, len - 8);
-	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
-	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
-	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
-	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
-	Stream_SetU16_LE(header + 22, ctx->channels);
-	Stream_SetU32_LE(header + 24, ctx->sampleRate);
+	Mem_WriteU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
+	Mem_WriteU32_LE(header +  4, len - 8);
+	Mem_WriteU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
+	Mem_WriteU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
+	Mem_WriteU32_LE(header + 16, 16); /* fmt chunk size */
+	Mem_WriteU16_LE(header + 20, 1);  /* PCM audio format */
+	Mem_WriteU16_LE(header + 22, ctx->channels);
+	Mem_WriteU32_LE(header + 24, ctx->sampleRate);
 
-	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
-	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
-	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
-	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
-	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
+	Mem_WriteU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
+	Mem_WriteU16_LE(header + 32, ctx->channels * 2);                   /* block align */
+	Mem_WriteU16_LE(header + 34, 16);                                  /* bits per sample */
+	Mem_WriteU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
+	Mem_WriteU32_LE(header + 40, len - WAV_HDR_SIZE);
 
 	return Stream_Write(s, header, WAV_HDR_SIZE);
 }

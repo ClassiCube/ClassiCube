@@ -8,7 +8,6 @@
 #include "Drawer2D.h"
 #include "ExtMath.h"
 #include "Platform.h"
-#include "Stream.h"
 #include "Funcs.h"
 #include "Resources.h"
 #include "Logger.h"
@@ -820,7 +819,7 @@ CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
 	{
 		Convert_ParseUInt8(&parts[i], &raw[i]);
 	}
-	return Stream_GetU32_BE(raw);
+	return Mem_ReadU32_BE(raw);
 }
 
 static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
