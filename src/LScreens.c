@@ -1241,12 +1241,21 @@ LAYOUTS srv_btnRefresh[] = { { ANCHOR_MAX, 135 }, { ANCHOR_MIN, 10 } };
 
 static void ServersScreen_Connect(void* w) {
 	struct LTable* table = &ServersScreen.table;
-	cc_string* hash      = &ServersScreen.iptHash.text;
+	cc_string* hash      = &ServersScreen.iptHash.text;	
+	char hashBuffer[256];
+	cc_string str;
 
+	/* Default to first visible row if no hash currently entered */
 	if (!hash->length && table->rowsCount) { 
 		hash = &LTable_Get(table->topRow)->hash; 
 	}
-	Launcher_ConnectToServer(hash);
+
+	/* Strip url in case user manually typed a full url */
+	String_InitArray(str, hashBuffer);
+	String_Copy(&str, hash);
+
+	Launcher_FilterUrlHash(&str);
+	Launcher_ConnectToServer(&str);
 }
 
 static void ServersScreen_Refresh(void* w) {
@@ -1256,20 +1265,6 @@ static void ServersScreen_Refresh(void* w) {
 	FetchServersTask_Run();
 	btn = &ServersScreen.btnRefresh;
 	LButton_SetConst(btn, "&eWorking..");
-}
-
-static void ServersScreen_HashFilter(cc_string* str) {
-	int lastIndex;
-	if (!str->length) return;
-
-	/* Server url look like http://www.classicube.net/server/play/aaaaa/ */
-	/* Trim it to only be the aaaaa */
-	if (str->buffer[str->length - 1] == '/') str->length--;
-
-	/* Trim the URL parts before the hash */
-	lastIndex = String_LastIndexOf(str, '/');
-	if (lastIndex == -1) return;
-	*str = String_UNSAFE_SubstringAt(str, lastIndex + 1);
 }
 
 static void ServersScreen_SearchChanged(struct LInput* w) {
@@ -1314,7 +1309,7 @@ static void ServersScreen_AddWidgets(struct ServersScreen* s) {
 	s->iptSearch.skipsEnter    = true;
 	s->iptSearch.TextChanged   = ServersScreen_SearchChanged;
 	s->iptHash.TextChanged     = ServersScreen_HashChanged;
-	s->iptHash.ClipboardFilter = ServersScreen_HashFilter;
+	s->iptHash.ClipboardFilter = Launcher_FilterUrlHash;
 
 	s->table.filter       = &s->iptSearch.text;
 	s->table.selectedHash = &s->iptHash.text;

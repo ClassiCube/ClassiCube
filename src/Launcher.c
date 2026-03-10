@@ -135,6 +135,20 @@ static void ConnectToServerError(struct HttpRequest* req) {
 	Launcher_DisplayHttpError(req, "fetching server info", &logMsg);
 }
 
+void Launcher_FilterUrlHash(cc_string* str) {
+	int lastIndex;
+	if (!str->length) return;
+
+	/* Server url look like http://www.classicube.net/server/play/aaaaa/ */
+	/* Trim it to only be the aaaaa */
+	if (str->buffer[str->length - 1] == '/') str->length--;
+
+	/* Trim the URL parts before the hash */
+	lastIndex = String_LastIndexOf(str, '/');
+	if (lastIndex == -1) return;
+	*str = String_UNSAFE_SubstringAt(str, lastIndex + 1);
+}
+
 cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 	struct ServerInfo* info;
 	int i;

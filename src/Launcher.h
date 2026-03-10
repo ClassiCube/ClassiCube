@@ -71,8 +71,11 @@ void Launcher_DrawBackgroundAll(struct Context2D* ctx);
 
 /* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);
+
+void Launcher_FilterUrlHash(cc_string* hash);
 /* Attempts to start the game by connecting to the given server. */
 cc_bool Launcher_ConnectToServer(const cc_string* hash);
+
 /* Starts the game from the given arguments. */
 cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server, int numStates);
 /* Prints information about a http error to dst. (for status widget) */
