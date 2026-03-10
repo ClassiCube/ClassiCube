@@ -207,6 +207,8 @@ struct LTable {
 	cc_string* filter;
 	/* Callback when selected has has changed. */
 	void (*OnSelectedChanged)(void);
+	/* Callback when the same row has been clicked twice in quick succession */
+	void (*OnDoubleclick)(int row);
 
 	/* Index of table column currently being dragged. */
 	int draggingColumn;
