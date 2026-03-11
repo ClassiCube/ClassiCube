@@ -481,41 +481,46 @@ static void DirectConnectScreen_UrlFilter(cc_string* str) {
 
 static void DirectConnectScreen_StartClient(void* w) {
 	static const cc_string defMppass = String_FromConst("(none)");
-	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
-	const cc_string* addr   = &DirectConnectScreen.iptAddress.text;
-	const cc_string* mppass = &DirectConnectScreen.iptMppass.text;
-	struct LLabel* status   = &DirectConnectScreen.lblStatus;
+	struct LLabel* status  = &DirectConnectScreen.lblStatus;
+
+	cc_string user   = DirectConnectScreen.iptUsername.text;
+	cc_string addr   = DirectConnectScreen.iptAddress.text;
+	cc_string mppass = DirectConnectScreen.iptMppass.text;
 
 	cc_string ip, port;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
 	int numAddrs;
 
-	int index = String_LastIndexOf(addr, ':');
-	if (index == 0 || index == addr->length - 1) {
+	/* Try to convert direct connect URL if it's in address field and no user */
+	if (!user.length) DirectUrl_Claims(&addr, &addr, &user, &mppass);
+
+	int index = String_LastIndexOf(&addr, ':');
+	if (index == 0 || index == addr.length - 1) {
 		LLabel_SetConst(status, "&cInvalid address"); return;
 	}
 
-	if (!user->length) {
+	if (!user.length) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
-	DirectUrl_ExtractAddress(addr, &ip, &port);
+
+	DirectUrl_ExtractAddress(&addr, &ip, &port);
 	if (!IsValidPort(&port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
 		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
-	if (!mppass->length) mppass = &defMppass;
+	if (!mppass.length) mppass = defMppass;
 
 	Options_PauseSaving();
-		Options_Set("launcher-dc-username", user);
+		Options_Set("launcher-dc-username", &user);
 		Options_Set("launcher-dc-ip",       &ip);
 		Options_Set("launcher-dc-port",     &port);
-		Options_SetSecure("launcher-dc-mppass", mppass);
+		Options_SetSecure("launcher-dc-mppass", &mppass);
 	Options_ResumeSaving();
 
 	LLabel_SetConst(status, "");
-	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty, 1);
+	Launcher_StartGame(&user, &mppass, &ip, &port, &String_Empty, 1);
 }
 
 static void DirectConnectScreen_Activated(struct LScreen* s_) {
