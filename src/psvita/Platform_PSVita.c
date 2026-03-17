@@ -395,7 +395,7 @@ void Socket_Close(cc_socket s) {
 	sceNetSocketClose(s);
 }
 
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	SceNetEpollEvent ev = { 0 };
 	// to match select, closed socket still counts as readable
 	int flags = mode == SOCKET_POLL_READ ? (SCE_NET_EPOLLIN | SCE_NET_EPOLLHUP) : SCE_NET_EPOLLOUT;
@@ -404,7 +404,7 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	ev.events  = flags;
 	
 	if ((res = sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_ADD, s, &ev))) return res;	
-	num_events = sceNetEpollWait(epoll_id, &ev, 1, 0);
+	num_events = sceNetEpollWait(epoll_id, &ev, 1, timeoutMS * 1000);
 	sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_DEL, s, NULL);
 
 	if (num_events < 0)  return num_events;
@@ -412,14 +412,6 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	
 	*success = (ev.events & flags) != 0;
 	return 0;
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return Socket_Poll(s, SOCKET_POLL_READ, readable);
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 }
 
 cc_result Socket_GetLastError(cc_socket s) {

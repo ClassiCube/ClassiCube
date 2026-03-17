@@ -821,10 +821,13 @@ void Socket_Close(cc_socket s) {
 #if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
 /* BeOS lacks support for poll */
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	fd_set set;
-	struct timeval time = { 0 };
 	int selectCount;
+	struct timeval time = {
+		timeoutMS / 1000,           /* seconds */
+		(timeoutMS % 1000) * 1000), /* microseconds */
+	};
 
 	FD_ZERO(&set);
 	FD_SET(s, &set);
@@ -840,13 +843,13 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 }
 #else
 #include <poll.h>
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
+	if (poll(&pfd, 1, timeoutMS) == -1) { *success = false; return errno; }
 	
 	/* to match select, closed socket still counts as readable */
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
@@ -854,14 +857,6 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	return 0;
 }
 #endif
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return Socket_Poll(s, SOCKET_POLL_READ, readable);
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
-}
 
 cc_result Socket_GetLastError(cc_socket s) {
 	int error = ERR_INVALID_ARGUMENT;

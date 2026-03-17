@@ -367,7 +367,6 @@ typedef struct cc_sockaddr_ {
 	cc_uint8 data[CC_SOCKETADDR_MAXSIZE]; /* Raw socket address (e.g. sockaddr_in) */
 } cc_sockaddr;
 
-enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 
 /* Result code for when a socket operation is aynchronously executing */
 extern const cc_result ReturnCode_SocketInProgess;
@@ -394,12 +393,11 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 /* Attempts to close the given socket */
 void Socket_Close(cc_socket s);
 
-/* Polls if the given socket is currently readable */
+enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
+/* Polls if the given socket is currently readable or writable */
 /* NOTE: 'readable' usually means socket either has data available to read, or is closed */
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable);
-/* Checks if the given socket is currently writable */
 /* NOTE: 'writable' usually means socket either has finished connecting, or is closed */
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success);
 /* Retrieves the most recent async error code (typically from connect) */
 cc_result Socket_GetLastError(cc_socket s);
 
