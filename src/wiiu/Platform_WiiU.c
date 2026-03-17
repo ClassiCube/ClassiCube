@@ -459,8 +459,8 @@ void Socket_Close(cc_socket s) {
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	nsysnet_fd_set rd_set, wr_set, ex_set;
 	struct nsysnet_timeval timeout = {
-		timeoutMS / 1000,           /* seconds */
-		(timeoutMS % 1000) * 1000), /* microseconds */
+		timeoutMS / 1000,          /* seconds */
+		(timeoutMS % 1000) * 1000, /* microseconds */
 	};
 
 	NSYSNET_FD_ZERO(&rd_set);

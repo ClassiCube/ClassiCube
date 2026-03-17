@@ -566,8 +566,8 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	fd_set set;
 	int selectCount;
 	struct timeval time = {
-		timeoutMS / 1000,           /* seconds */
-		(timeoutMS % 1000) * 1000), /* microseconds */
+		timeoutMS / 1000,          /* seconds */
+		(timeoutMS % 1000) * 1000, /* microseconds */
 	};
 
 	FD_ZERO(&set);
