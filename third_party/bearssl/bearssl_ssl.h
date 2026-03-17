@@ -2869,21 +2869,6 @@ void br_sslio_init(br_sslio_context *ctx,
 int br_sslio_read(br_sslio_context *cc, void *dst, size_t len);
 
 /**
- * \brief Read application data from a SSL connection.
- *
- * This calls returns only when _all_ requested `len` bytes are read,
- * or an error is reached. Returned value is 0 on success, -1 on error.
- * A normal (verified) SSL closure before that many bytes are obtained
- * is reported as an error by this function.
- *
- * \param cc    SSL wrapper context.
- * \param dst   destination buffer for application data.
- * \param len   number of bytes to obtain.
- * \return  0 on success, or -1 on error.
- */
-int br_sslio_read_all(br_sslio_context *cc, void *dst, size_t len);
-
-/**
  * \brief Write some application data unto a SSL connection.
  *
  * If `len` is zero, then this function returns 0 immediately. In
@@ -2908,26 +2893,6 @@ int br_sslio_read_all(br_sslio_context *cc, void *dst, size_t len);
  * \return  number of bytes written, or -1 on error.
  */
 int br_sslio_write(br_sslio_context *cc, const void *src, size_t len);
-
-/**
- * \brief Write application data unto a SSL connection.
- *
- * This calls returns only when _all_ requested `len` bytes have been
- * written, or an error is reached. Returned value is 0 on success, -1
- * on error. A normal (verified) SSL closure before that many bytes are
- * written is reported as an error by this function.
- *
- * **Important:** SSL is buffered; a "written" byte is a byte that was
- * injected into the wrapped SSL engine, but this does not necessarily mean
- * that it has been scheduled for sending. Use `br_sslio_flush()` to
- * ensure that all pending data has been sent to the transport medium.
- *
- * \param cc    SSL wrapper context.
- * \param src   source buffer for application data.
- * \param len   number of bytes to write.
- * \return  0 on success, or -1 on error.
- */
-int br_sslio_write_all(br_sslio_context *cc, const void *src, size_t len);
 
 /**
  * \brief Flush pending data.

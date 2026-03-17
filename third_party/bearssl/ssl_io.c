@@ -166,26 +166,6 @@ br_sslio_read(br_sslio_context *ctx, void *dst, size_t len)
 
 /* see bearssl_ssl.h */
 int
-br_sslio_read_all(br_sslio_context *ctx, void *dst, size_t len)
-{
-	unsigned char *buf;
-
-	buf = dst;
-	while (len > 0) {
-		int rlen;
-
-		rlen = br_sslio_read(ctx, buf, len);
-		if (rlen < 0) {
-			return -1;
-		}
-		buf += rlen;
-		len -= (size_t)rlen;
-	}
-	return 0;
-}
-
-/* see bearssl_ssl.h */
-int
 br_sslio_write(br_sslio_context *ctx, const void *src, size_t len)
 {
 	unsigned char *buf;
@@ -204,26 +184,6 @@ br_sslio_write(br_sslio_context *ctx, const void *src, size_t len)
 	br_memcpy(buf, src, alen);
 	br_ssl_engine_sendapp_ack(ctx->engine, alen);
 	return (int)alen;
-}
-
-/* see bearssl_ssl.h */
-int
-br_sslio_write_all(br_sslio_context *ctx, const void *src, size_t len)
-{
-	const unsigned char *buf;
-
-	buf = src;
-	while (len > 0) {
-		int wlen;
-
-		wlen = br_sslio_write(ctx, buf, len);
-		if (wlen < 0) {
-			return -1;
-		}
-		buf += wlen;
-		len -= (size_t)wlen;
-	}
-	return 0;
 }
 
 /* see bearssl_ssl.h */
