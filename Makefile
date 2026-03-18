@@ -89,6 +89,11 @@ ifeq ($(PLAT),linux)
 	endif
 endif
 
+ifeq ($(PLAT), gnu)
+	LIBS    = -lX11 -lXi -lpthread -ldl -lm
+	BUILD_DIR = build/gnu
+endif
+
 ifeq ($(PLAT),sunos)
 	LIBS    =  -lsocket -lX11 -lXi -lGL
 	BUILD_DIR = build/solaris
@@ -253,6 +258,8 @@ riscos:
 	$(MAKE) $(TARGET) PLAT=riscos    
 wince:
 	$(MAKE) $(TARGET) PLAT=wince
+gnu:
+	$(MAKE) $(TARGET) PLAT=gnu
 # Default overrides
 sdl2:
 	$(MAKE) $(TARGET) BUILD_SDL2=1

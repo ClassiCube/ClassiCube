@@ -176,13 +176,13 @@ static void ButtonWidget_Render(void* widget) {
 
 static PackedCol ButtonWidget_BackColor(struct ButtonWidget* w) {
 	GfxResourceID id = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
-	if (id) return w->color;
+	struct LauncherTheme theme;
 
+	if (id) return w->color;
 #ifdef CC_BUILD_WEB /* TODO refactor web handling */
 	return w->color;
 #else
 	/* Avoid white button background */
-	struct LauncherTheme theme;
 	LauncherTheme_Load(&theme);
 
 	return PackedCol_Make(BitmapCol_R(theme.ButtonForeColor), 

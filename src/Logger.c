@@ -317,6 +317,9 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	cc_uintptr addr_ = (cc_uintptr)addr;
 	String_Format1(trace, "%x", &addr_);
 }
+#elif defined CC_BUILD_GNU
+/* TODO: actually implement this */
+static void DumpFrame(cc_string* trace, void* addr) {}
 #elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU

@@ -68,29 +68,29 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	int bitsPerSample;
 
 	if ((res = Stream_Read(stream, tmp, 12)))  return res;
-	fourCC = Stream_GetU32_BE(tmp + 0);
+	fourCC = Mem_ReadU32_BE(tmp + 0);
 	if (fourCC == WAV_FourCC('I','D','3', 2))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.2 tags header */
 	if (fourCC == WAV_FourCC('I','D','3', 3))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.3 tags header */
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
 
 	/* tmp[4] (4) file size */
-	fourCC = Stream_GetU32_BE(tmp + 8);
+	fourCC = Mem_ReadU32_BE(tmp + 8);
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;
 
 	for (;;) {
 		if ((res = Stream_Read(stream, tmp, 8))) return res;
-		fourCC = Stream_GetU32_BE(tmp + 0);
-		size   = Stream_GetU32_LE(tmp + 4);
+		fourCC = Mem_ReadU32_BE(tmp + 0);
+		size   = Mem_ReadU32_LE(tmp + 4);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
 			if ((res = Stream_Read(stream, tmp, sizeof(tmp)))) return res;
-			if (Stream_GetU16_LE(tmp + 0) != 1) return WAV_ERR_DATA_TYPE;
+			if (Mem_ReadU16_LE(tmp + 0) != 1) return WAV_ERR_DATA_TYPE;
 
-			snd->channels   = Stream_GetU16_LE(tmp + 2);
-			snd->sampleRate = Stream_GetU32_LE(tmp + 4);
+			snd->channels   = Mem_ReadU16_LE(tmp + 2);
+			snd->sampleRate = Mem_ReadU32_LE(tmp + 4);
 			/* tmp[8] (6) alignment data and stuff */
 
-			bitsPerSample = Stream_GetU16_LE(tmp + 14);
+			bitsPerSample = Mem_ReadU16_LE(tmp + 14);
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {

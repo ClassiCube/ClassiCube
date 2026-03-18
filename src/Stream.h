@@ -79,23 +79,6 @@ CC_API void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, voi
 /* To get the final CRC32, xor it with 0xFFFFFFFFUL */
 void Stream_WriteonlyCrc32(struct Stream* s, struct Stream* source);
 
-/* Reads a little-endian 16 bit unsigned integer from memory. */
-cc_uint16 Stream_GetU16_LE(const cc_uint8* data);
-/* Reads a big-endian 16 bit unsigned integer from memory. */
-cc_uint16 Stream_GetU16_BE(const cc_uint8* data);
-/* Reads a little-endian 32 bit unsigned integer from memory. */
-cc_uint32 Stream_GetU32_LE(const cc_uint8* data);
-/* Reads a big-endian 32 bit unsigned integer from memory. */
-cc_uint32 Stream_GetU32_BE(const cc_uint8* data);
-
-/* Writes a little-endian 16 bit unsigned integer to memory. */
-void Stream_SetU16_LE(cc_uint8* data, cc_uint16 value);
-/* Writes a big-endian 16 bit unsigned integer to memory. */
-void Stream_SetU16_BE(cc_uint8* data, cc_uint16 value);
-/* Writes a little-endian 32 bit unsigned integer to memory. */
-void Stream_SetU32_LE(cc_uint8* data, cc_uint32 value);
-/* Writes a big-endian 32 bit unsigned integer to memory. */
-void Stream_SetU32_BE(cc_uint8* data, cc_uint32 value);
 /* Reads a little-endian 32 bit unsigned integer from the stream. */
 cc_result Stream_ReadU32_LE(struct Stream* s, cc_uint32* value);
 /* Reads a big-endian 32 bit unsigned integer from the stream. */

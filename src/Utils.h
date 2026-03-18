@@ -28,6 +28,26 @@ struct cc_datetime {
 #define SECS_PER_HOUR (60 * 60)
 #define SECS_PER_DAY (60 * 60 * 24)
 
+
+/* Reads a little-endian 16 bit unsigned integer from memory. */
+cc_uint16 Mem_ReadU16_LE(const void* src);
+/* Reads a big-endian 16 bit unsigned integer from memory. */
+cc_uint16 Mem_ReadU16_BE(const void* src);
+/* Reads a little-endian 32 bit unsigned integer from memory. */
+cc_uint32 Mem_ReadU32_LE(const void* src);
+/* Reads a big-endian 32 bit unsigned integer from memory. */
+cc_uint32 Mem_ReadU32_BE(const void* src);
+
+/* Writes a little-endian 16 bit unsigned integer to memory. */
+void Mem_WriteU16_LE(void* src, cc_uint16 value);
+/* Writes a big-endian 16 bit unsigned integer to memory. */
+void Mem_WriteU16_BE(void* src, cc_uint16 value);
+/* Writes a little-endian 32 bit unsigned integer to memory. */
+void Mem_WriteU32_LE(void* src, cc_uint32 value);
+/* Writes a big-endian 32 bit unsigned integer to memory. */
+void Mem_WriteU32_BE(void* src, cc_uint32 value);
+
+
 CC_NOINLINE int Utils_ParseEnum(const cc_string* text, int defValue, const char* const* names, int namesCount);
 /* Returns whether value starts with http:// or https:// */
 cc_bool Utils_IsUrlPrefix(const cc_string* value);
@@ -57,6 +77,7 @@ int Convert_ToBase64(const void* data, int len, char* dst);
 /* Returns the number of bytes written. */
 /* NOTE: You MUST ensure that dst is appropriately sized. */
 int Convert_FromBase64(const char* src, int len, cc_uint8* dst);
+
 
 typedef cc_bool (*EntryList_Filter)(const cc_string* entry);
 /* Loads the entries from disc. */

@@ -97,6 +97,13 @@ static const cc_string cryptoLib = String_FromConst("libcrypto.so");
 static const cc_string cryptoAlt = String_FromConst("libcrypto.so.3");
 #endif
 
+#ifdef CC_BUILD_OPENBSD
+	/* OpenBSD usually uses LibreSSL instead of OpenSSL, which didn't rename these symbols */
+	#define OPENSSL_sk_new_null sk_new_null
+	#define OPENSSL_sk_push     sk_push
+	#define OPENSSL_sk_pop_free sk_pop_free
+#endif
+
 static X509_STORE* store;
 static cc_bool ossl_loaded;
 

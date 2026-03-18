@@ -130,7 +130,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 #else
 #define ReadBlock(data, value)\
 if (IsSupported(extBlocks_Ext)) {\
-	value = Stream_GetU16_BE(data) % BLOCK_COUNT; data += 2;\
+	value = Mem_ReadU16_BE(data) % BLOCK_COUNT; data += 2;\
 } else { value = *data++; }
 #endif
 
@@ -139,7 +139,7 @@ if (IsSupported(extBlocks_Ext)) {\
 #else
 #define WriteBlock(data, value)\
 if (IsSupported(extBlocks_Ext)) {\
-	Stream_SetU16_BE(data, value); data += 2;\
+	Mem_WriteU16_BE(data, value); data += 2;\
 } else { *data++ = (BlockRaw)value; }
 #endif
 
@@ -155,7 +155,7 @@ static cc_string UNSAFE_GetString(cc_uint8* data) {
 
 static float GetFloat(cc_uint8* data) {
 	union IntAndFloat raw;
-	raw.u = Stream_GetU32_BE(data);
+	raw.u = Mem_ReadU32_BE(data);
 	return raw.f;
 }
 
@@ -412,7 +412,7 @@ static cc_result MapState_Read(struct MapState* m) {
 		if (m->sizeIndex < MAP_SIZE_LEN) return 0;
 	}
 
-	if (!map_volume) map_volume = Stream_GetU32_BE(m->size);
+	if (!map_volume) map_volume = Mem_ReadU32_BE(m->size);
 
 	if (!m->blocks) {
 		m->blocks = (BlockRaw*)Mem_TryAlloc(map_volume, 1);
@@ -480,13 +480,13 @@ static cc_uint8* Classic_WritePosition(cc_uint8* data, Vec3 pos, float yaw, floa
 		z = (int)(pos.z * 32);
 
 		if (IsSupported(extEntityPos_Ext)) {
-			Stream_SetU32_BE(data, x); data += 4;
-			Stream_SetU32_BE(data, y); data += 4;
-			Stream_SetU32_BE(data, z); data += 4;
+			Mem_WriteU32_BE(data, x); data += 4;
+			Mem_WriteU32_BE(data, y); data += 4;
+			Mem_WriteU32_BE(data, z); data += 4;
 		} else {
-			Stream_SetU16_BE(data, x); data += 2;
-			Stream_SetU16_BE(data, y); data += 2;
-			Stream_SetU16_BE(data, z); data += 2;
+			Mem_WriteU16_BE(data, x); data += 2;
+			Mem_WriteU16_BE(data, y); data += 2;
+			Mem_WriteU16_BE(data, z); data += 2;
 		}
 
 		*data++ = Math_Deg2Packed(yaw);
@@ -501,9 +501,9 @@ void Classic_SendSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 
 	*data++ = OPCODE_SET_BLOCK_CLIENT;
 	{
-		Stream_SetU16_BE(data, x); data += 2;
-		Stream_SetU16_BE(data, y); data += 2;
-		Stream_SetU16_BE(data, z); data += 2;
+		Mem_WriteU16_BE(data, x); data += 2;
+		Mem_WriteU16_BE(data, y); data += 2;
+		Mem_WriteU16_BE(data, z); data += 2;
 		*data++ = place;
 		WriteBlock(data, block);
 	}
@@ -555,7 +555,7 @@ static void Classic_LevelInit(cc_uint8* data) {
 	if (!IsSupported(fastMap_Ext)) return;
 
 	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
-	map_volume = Stream_GetU32_BE(data);
+	map_volume = Mem_ReadU32_BE(data);
 	MapState_SkipHeader(&map1);
 #ifdef EXTENDED_BLOCKS
 	MapState_SkipHeader(&map2);
@@ -570,7 +570,7 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
 	if (!map_begunLoading) Classic_StartLoading();
-	usedLength = Stream_GetU16_BE(data);
+	usedLength = Mem_ReadU16_BE(data);
 
 	map_part.meta.mem.cur    = data + 2;
 	map_part.meta.mem.base   = data + 2;
@@ -620,9 +620,9 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	if (map2.allocFailed) FreeMapStates();
 #endif
 
-	width  = Stream_GetU16_BE(data + 0);
-	height = Stream_GetU16_BE(data + 2);
-	length = Stream_GetU16_BE(data + 4);
+	width  = Mem_ReadU16_BE(data + 0);
+	height = Mem_ReadU16_BE(data + 2);
+	length = Mem_ReadU16_BE(data + 4);
 	volume = width * height * length;
 
 	if (map1.allocFailed) {
@@ -656,9 +656,9 @@ static void Classic_SetBlock(cc_uint8* data) {
 	int x, y, z;
 	BlockID block;
 
-	x = Stream_GetU16_BE(data + 0);
-	y = Stream_GetU16_BE(data + 2);
-	z = Stream_GetU16_BE(data + 4);
+	x = Mem_ReadU16_BE(data + 0);
+	y = Mem_ReadU16_BE(data + 2);
+	z = Mem_ReadU16_BE(data + 4);
 	data += 6;
 
 	ReadBlock(data, block);
@@ -772,14 +772,14 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 	cc_uint8 mode;
 
 	if (IsSupported(extEntityPos_Ext)) {
-		x = (int)Stream_GetU32_BE(&data[0]);
-		y = (int)Stream_GetU32_BE(&data[4]);
-		z = (int)Stream_GetU32_BE(&data[8]);
+		x = (int)Mem_ReadU32_BE(&data[0]);
+		y = (int)Mem_ReadU32_BE(&data[4]);
+		z = (int)Mem_ReadU32_BE(&data[8]);
 		data += 12;
 	} else {
-		x = (cc_int16)Stream_GetU16_BE(&data[0]);
-		y = (cc_int16)Stream_GetU16_BE(&data[2]);
-		z = (cc_int16)Stream_GetU16_BE(&data[4]);
+		x = (cc_int16)Mem_ReadU16_BE(&data[0]);
+		y = (cc_int16)Mem_ReadU16_BE(&data[2]);
+		z = (cc_int16)Mem_ReadU16_BE(&data[4]);
 		data += 6;
 	}
 
@@ -874,13 +874,13 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 	{
 		data[1] = button;
 		data[2] = !pressed;
-		Stream_SetU16_BE(&data[3], Ext_Deg2Packed(p->Yaw));
-		Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->Pitch));
+		Mem_WriteU16_BE(&data[3], Ext_Deg2Packed(p->Yaw));
+		Mem_WriteU16_BE(&data[5], Ext_Deg2Packed(p->Pitch));
 
 		data[7] = targetId;
-		Stream_SetU16_BE(&data[8],  t->pos.x);
-		Stream_SetU16_BE(&data[10], t->pos.y);
-		Stream_SetU16_BE(&data[12], t->pos.z);
+		Mem_WriteU16_BE(&data[8],  t->pos.x);
+		Mem_WriteU16_BE(&data[10], t->pos.y);
+		Mem_WriteU16_BE(&data[12], t->pos.z);
 
 		data[14] = 255;
 		/* FACE enum values differ from CPE block face values */
@@ -914,8 +914,8 @@ void CPE_SendNotifyAction(int action, cc_uint16 value) {
 
 	data[0] = OPCODE_NOTIFY_ACTION;
 	{
-		Stream_SetU16_BE(data + 1, action);
-		Stream_SetU16_BE(data + 3, value);
+		Mem_WriteU16_BE(data + 1, action);
+		Mem_WriteU16_BE(data + 3, value);
 	}
 	Server.SendData(data, 5);
 }
@@ -926,10 +926,10 @@ void CPE_SendNotifyPositionAction(int action, int x, int y, int z) {
 
 	data[0] = OPCODE_NOTIFY_POSITION_ACTION;
 	{
-		Stream_SetU16_BE(data + 1, action);
-		Stream_SetU16_BE(data + 3, x);
-		Stream_SetU16_BE(data + 5, y);
-		Stream_SetU16_BE(data + 7, z);
+		Mem_WriteU16_BE(data + 1, action);
+		Mem_WriteU16_BE(data + 3, x);
+		Mem_WriteU16_BE(data + 5, y);
+		Mem_WriteU16_BE(data + 7, z);
 	}
 	Server.SendData(data, 9);
 }
@@ -939,7 +939,7 @@ static void CPE_SendExtInfo(int extsCount) {
 	data[0] = OPCODE_EXT_INFO;
 	{
 		WriteString(data + 1,       &Server.AppName);
-		Stream_SetU16_BE(data + 65, extsCount);
+		Mem_WriteU16_BE(data + 65, extsCount);
 	}
 	Server.SendData(data, 67);
 }
@@ -949,7 +949,7 @@ static void CPE_SendExtEntry(const cc_string* extName, int extVersion) {
 	data[0] = OPCODE_EXT_ENTRY;
 	{
 		WriteString(data + 1,       extName);
-		Stream_SetU32_BE(data + 65, extVersion);
+		Mem_WriteU32_BE(data + 65, extVersion);
 	}
 	Server.SendData(data, 69);
 }
@@ -958,7 +958,7 @@ static cc_uint8* CPE_WriteTwoWayPing(cc_uint8* data, cc_bool serverToClient, int
 	*data++ = OPCODE_TWO_WAY_PING;
 	{
 		*data++ = serverToClient;
-		Stream_SetU16_BE(data, id); data += 2;
+		Mem_WriteU16_BE(data, id); data += 2;
 	}
 	return data;
 }
@@ -1004,7 +1004,7 @@ static void CPE_ExtInfo(cc_uint8* data) {
 
 	/* Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. */
 	/* Means ExtEntry may sometimes arrive before ExtInfo, so use += instead of = */
-	cpe_serverExtensionsCount += Stream_GetU16_BE(&data[64]);
+	cpe_serverExtensionsCount += Mem_ReadU16_BE(&data[64]);
 	CPE_SendCpeExtInfoReply();
 }
 
@@ -1086,7 +1086,7 @@ static void CPE_ApplyTexturePack(const cc_string* url) {
 
 
 static void CPE_SetClickDistance(cc_uint8* data) {
-	Entities.CurPlayer->ReachDistance = Stream_GetU16_BE(data) / 32.0f;
+	Entities.CurPlayer->ReachDistance = Mem_ReadU16_BE(data) / 32.0f;
 }
 
 static void CPE_CustomBlockLevel(cc_uint8* data) {
@@ -1113,7 +1113,7 @@ static void CPE_HoldThis(cc_uint8* data) {
 static void CPE_SetTextHotkey(cc_uint8* data) {
 	/* First 64 bytes are label string */
 	cc_string action  = UNSAFE_GetString(&data[64]);
-	cc_uint32 keyCode = Stream_GetU32_BE(&data[128]);
+	cc_uint32 keyCode = Mem_ReadU32_BE(&data[128]);
 	cc_uint8 keyMods  = data[132];
 	int key;
 	
@@ -1172,12 +1172,12 @@ static void CPE_MakeSelection(cc_uint8* data) {
 	PackedCol c;
 	/* data[0] is id, data[1..64] is label */
 
-	p1.x = (cc_int16)Stream_GetU16_BE(data + 65);
-	p1.y = (cc_int16)Stream_GetU16_BE(data + 67);
-	p1.z = (cc_int16)Stream_GetU16_BE(data + 69);
-	p2.x = (cc_int16)Stream_GetU16_BE(data + 71);
-	p2.y = (cc_int16)Stream_GetU16_BE(data + 73);
-	p2.z = (cc_int16)Stream_GetU16_BE(data + 75);
+	p1.x = (cc_int16)Mem_ReadU16_BE(data + 65);
+	p1.y = (cc_int16)Mem_ReadU16_BE(data + 67);
+	p1.z = (cc_int16)Mem_ReadU16_BE(data + 69);
+	p2.x = (cc_int16)Mem_ReadU16_BE(data + 71);
+	p2.y = (cc_int16)Mem_ReadU16_BE(data + 73);
+	p2.z = (cc_int16)Mem_ReadU16_BE(data + 75);
 
 	/* R,G,B,A are actually 16 bit unsigned integers */
 	c = PackedCol_Make(data[78], data[80], data[82], data[84]);
@@ -1243,12 +1243,12 @@ static void CPE_EnvSetMapAppearance(cc_uint8* data) {
 
 	Env_SetSidesBlock(data[64]);
 	Env_SetEdgeBlock(data[65]);
-	Env_SetEdgeHeight((cc_int16)Stream_GetU16_BE(data + 66));
+	Env_SetEdgeHeight((cc_int16)Mem_ReadU16_BE(data + 66));
 	if (mapAppearance_Ext.serverVersion == 1) return;
 
 	/* Version 2 */
-	Env_SetCloudsHeight((cc_int16)Stream_GetU16_BE(data + 68));
-	maxViewDist       = (cc_int16)Stream_GetU16_BE(data + 70);
+	Env_SetCloudsHeight((cc_int16)Mem_ReadU16_BE(data + 68));
+	maxViewDist       = (cc_int16)Mem_ReadU16_BE(data + 70);
 	Game_MaxViewDistance = maxViewDist <= 0 ? DEFAULT_MAX_VIEWDIST : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance);
 }
@@ -1267,7 +1267,7 @@ static void CPE_HackControl(cc_uint8* data) {
 	p->Hacks.CanRespawn        = data[3] != 0;
 	p->Hacks.CanUseThirdPerson = data[4] != 0;
 	HacksComp_Update(&p->Hacks);
-	jumpHeight = Stream_GetU16_BE(data + 5);
+	jumpHeight = Mem_ReadU16_BE(data + 5);
 
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
 		LocalPlayer_ResetJumpVelocity(p);
@@ -1298,7 +1298,7 @@ static void CPE_BulkBlockUpdate(cc_uint8* data) {
 	int count = 1 + *data++;
 
 	for (i = 0; i < count; i++) {
-		indices[i] = Stream_GetU32_BE(data); data += 4;
+		indices[i] = Mem_ReadU32_BE(data); data += 4;
 	}
 	data += (BULK_MAX_BLOCKS - count) * 4;
 	
@@ -1361,7 +1361,7 @@ static void CPE_SetMapEnvUrl(cc_uint8* data) {
 }
 
 static void CPE_SetMapEnvProperty(cc_uint8* data) {
-	int value = (int)Stream_GetU32_BE(data + 1);
+	int value = (int)Mem_ReadU32_BE(data + 1);
 	Math_Clamp(value, -0xFFFFFF, 0xFFFFFF);
 
 	switch (data[0]) {
@@ -1403,7 +1403,7 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 	EntityID id   = data[0];
 	cc_uint8 type = data[1];
-	int value     = (int)Stream_GetU32_BE(data + 2);
+	int value     = (int)Mem_ReadU32_BE(data + 2);
 
 	e = Entities.List[id];
 	if (!e) return;
@@ -1447,7 +1447,7 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 static void CPE_TwoWayPing(cc_uint8* data) {
 	cc_uint8 serverToClient = data[0];
-	int id = Stream_GetU16_BE(data + 1);
+	int id = Mem_ReadU16_BE(data + 1);
 	cc_uint8 tmp[32];
 
 	/* handle client>server ping response from server */
@@ -1482,14 +1482,14 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 	int x, y, z;
 
 	if (IsSupported(extEntityPos_Ext)) {
-		x = (int)Stream_GetU32_BE(&data[0]);
-		y = (int)Stream_GetU32_BE(&data[4]);
-		z = (int)Stream_GetU32_BE(&data[8]);
+		x = (int)Mem_ReadU32_BE(&data[0]);
+		y = (int)Mem_ReadU32_BE(&data[4]);
+		z = (int)Mem_ReadU32_BE(&data[8]);
 		data += 12;
 	} else {
-		x = (cc_int16)Stream_GetU16_BE(&data[0]);
-		y = (cc_int16)Stream_GetU16_BE(&data[2]);
-		z = (cc_int16)Stream_GetU16_BE(&data[4]);
+		x = (cc_int16)Mem_ReadU16_BE(&data[0]);
+		y = (cc_int16)Mem_ReadU16_BE(&data[2]);
+		z = (cc_int16)Mem_ReadU16_BE(&data[4]);
 		data += 6;
 	}
 	p->SpawnYaw   = Math_Packed2Deg(*data++);
@@ -1500,7 +1500,7 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 }
 
 static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
-	int raw     = (int)Stream_GetU32_BE(src);
+	int raw     = (int)Mem_ReadU32_BE(src);
 	float value = Math_AbsF(raw / 10000.0f);
 	value       = Math_Sign(raw) * PhysicsComp_CalcJumpVelocity(value);
 
@@ -1532,12 +1532,12 @@ static void CPE_DefineEffect(cc_uint8* data) {
 	e->particleCount = data[9];
 	e->size          = data[10] / 32.0f; /* 32 units per block */
 
-	e->sizeVariation      = (int)Stream_GetU32_BE(data + 11) / 10000.0f;
-	e->spread             =      Stream_GetU16_BE(data + 15) / 32.0f;
-	e->speed              = (int)Stream_GetU32_BE(data + 17) / 10000.0f;
-	e->gravity            = (int)Stream_GetU32_BE(data + 21) / 10000.0f;
-	e->baseLifetime       = (int)Stream_GetU32_BE(data + 25) / 10000.0f;
-	e->lifetimeVariation  = (int)Stream_GetU32_BE(data + 29) / 10000.0f;
+	e->sizeVariation      = (int)Mem_ReadU32_BE(data + 11) / 10000.0f;
+	e->spread             =      Mem_ReadU16_BE(data + 15) / 32.0f;
+	e->speed              = (int)Mem_ReadU32_BE(data + 17) / 10000.0f;
+	e->gravity            = (int)Mem_ReadU32_BE(data + 21) / 10000.0f;
+	e->baseLifetime       = (int)Mem_ReadU32_BE(data + 25) / 10000.0f;
+	e->lifetimeVariation  = (int)Mem_ReadU32_BE(data + 29) / 10000.0f;
 
 	e->collideFlags = data[33];
 	e->fullBright   = data[34];
@@ -1546,12 +1546,12 @@ static void CPE_DefineEffect(cc_uint8* data) {
 static void CPE_SpawnEffect(cc_uint8* data) {
 	float x, y, z, originX, originY, originZ;
 
-	x       = (int)Stream_GetU32_BE(data +  1) / 32.0f;
-	y       = (int)Stream_GetU32_BE(data +  5) / 32.0f;
-	z       = (int)Stream_GetU32_BE(data +  9) / 32.0f;
-	originX = (int)Stream_GetU32_BE(data + 13) / 32.0f;
-	originY = (int)Stream_GetU32_BE(data + 17) / 32.0f;
-	originZ = (int)Stream_GetU32_BE(data + 21) / 32.0f;
+	x       = (int)Mem_ReadU32_BE(data +  1) / 32.0f;
+	y       = (int)Mem_ReadU32_BE(data +  5) / 32.0f;
+	z       = (int)Mem_ReadU32_BE(data +  9) / 32.0f;
+	originX = (int)Mem_ReadU32_BE(data + 13) / 32.0f;
+	originY = (int)Mem_ReadU32_BE(data + 17) / 32.0f;
+	originZ = (int)Mem_ReadU32_BE(data + 21) / 32.0f;
 
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
 }
@@ -1609,7 +1609,7 @@ static void CPE_CinematicGui(cc_uint8* data) {
 	cc_bool hideCrosshair = data[0];
 	cc_bool hideHand = data[1];
 	cc_bool hideHotbar = data[2];
-	cc_uint16 barSize = Stream_GetU16_BE(data + 7);
+	cc_uint16 barSize = Mem_ReadU16_BE(data + 7);
 
 	HeldBlockRenderer_Show = !hideHand && Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
 	Gui.HideCrosshair = hideCrosshair;
@@ -1723,8 +1723,8 @@ static void CPE_DefineModel(cc_uint8* data) {
 	cm->pickingBoundsAABB.Max.y = GetFloat(data + 102);
 	cm->pickingBoundsAABB.Max.z = GetFloat(data + 106);
 
-	cm->uScale = Stream_GetU16_BE(data + 110);
-	cm->vScale = Stream_GetU16_BE(data + 112);
+	cm->uScale = Mem_ReadU16_BE(data + 110);
+	cm->vScale = Mem_ReadU16_BE(data + 112);
 	numParts   = data[114];
 
 	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
@@ -1759,10 +1759,10 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	/* read u, v coords for our 6 faces */
 	for (i = 0; i < 6; i++) 
 	{
-		p.u1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 0));
-		p.v1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 2));
-		p.u2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 4));
-		p.v2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 6));
+		p.u1[i] = Mem_ReadU16_BE(data + 25 + (i*8 + 0));
+		p.v1[i] = Mem_ReadU16_BE(data + 25 + (i*8 + 2));
+		p.u2[i] = Mem_ReadU16_BE(data + 25 + (i*8 + 4));
+		p.v2[i] = Mem_ReadU16_BE(data + 25 + (i*8 + 6));
 	}
 
 	p.rotationOrigin.x = GetFloat(data + 73);
@@ -1842,7 +1842,7 @@ static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {
 	if (!IsSupported(extTextures_Ext)) {
 		loc = *data++;
 	} else {
-		loc = Stream_GetU16_BE(data) % ATLAS1D_MAX_ATLASES; data += 2;
+		loc = Mem_ReadU16_BE(data) % ATLAS1D_MAX_ATLASES; data += 2;
 	}
 
 	*ptr = data; return loc;

@@ -58,7 +58,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	LBackend_Redraw();
 }
 
-void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_string* dst) {
+void Launcher_FormatHttpError(struct HttpRequest* req, const char* action, cc_string* dst) {
 	cc_result res = req->result;
 	int status    = req->statusCode;
 
@@ -130,12 +130,21 @@ CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	Launcher_StartGame(&Launcher_Username, &info->mppass, &info->ip, &port, &info->name, 1);
 }
 
-static void ConnectToServerError(struct HttpRequest* req) {
-	cc_string logMsg = String_Init(NULL, 0, 0);
-	Launcher_DisplayHttpError(req, "fetching server info", &logMsg);
+void Launcher_FilterUrlHash(cc_string* str) {
+	int lastIndex;
+	if (!str->length) return;
+
+	/* Server url look like http://www.classicube.net/server/play/aaaaa/ */
+	/* Trim it to only be the aaaaa */
+	if (str->buffer[str->length - 1] == '/') str->length--;
+
+	/* Trim the URL parts before the hash */
+	lastIndex = String_LastIndexOf(str, '/');
+	if (lastIndex == -1) return;
+	*str = String_UNSAFE_SubstringAt(str, lastIndex + 1);
 }
 
-cc_bool Launcher_ConnectToServer(const cc_string* hash) {
+cc_bool Launcher_ConnectToServer(const cc_string* hash, Launcher_WebErrorCallback errorCallback) {
 	struct ServerInfo* info;
 	int i;
 	if (!hash->length) return false;
@@ -153,7 +162,7 @@ cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 	FetchServerTask_Run(hash);
 
 	while (!FetchServerTask.Base.completed) { 
-		LWebTask_Tick(&FetchServerTask.Base, ConnectToServerError);
+		LWebTask_Tick(&FetchServerTask.Base, errorCallback);
 		Thread_Sleep(10); 
 	}
 

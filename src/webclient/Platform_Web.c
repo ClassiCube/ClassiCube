@@ -328,9 +328,12 @@ void Socket_Close(cc_socket s) {
 }
 
 extern int interop_SocketWritable(int sock, cc_bool* writable);
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
+	// NOTE: Can't implement timeout
+	// TODO read poll isn't used anyways so far
+	if (timeoutMS || (mode == SOCKET_POLL_READ)) Process_Abort("poll unsupported");
 	// returned result is negative for error
-	return -interop_SocketWritable(s, writable);
+	return -interop_SocketWritable(s, success);
 }
 
 extern int interop_SocketLastError(int sock);

@@ -591,7 +591,7 @@ void LTable_RowClick(struct LTable* w, int row) {
 
 	/* double click on row to join */
 	if (Stopwatch_ElapsedMS(w->_lastClick, now) < 1000 && row == w->_lastRow) {
-		Launcher_ConnectToServer(&LTable_Get(row)->hash);
+		w->OnDoubleclick(row);
 	}
 
 	w->_lastRow = LTable_GetSelectedIndex(w);

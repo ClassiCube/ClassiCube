@@ -235,21 +235,6 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	return SSL_Init(conn->socket, &host, &conn->sslCtx);
 }
 
-static cc_result WriteAllToSocket(cc_socket socket, const cc_uint8* data, cc_uint32 count) {
-	cc_uint32 sent;
-	cc_result res;
-
-	while (count)
-	{
-		if ((res = Socket_Write(socket, data, count, &sent))) return res;
-		if (!sent) return ERR_END_OF_STREAM;
-
-		data  += sent;
-		count -= sent;
-	}
-	return 0;
-}
-
 static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
 	if (conn->sslCtx)
 		return SSL_Read(conn->sslCtx, data, count, read);
@@ -257,11 +242,26 @@ static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data
 	return Socket_Read(conn->socket,  data, count, read);
 }
 
-static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count) {
+static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
 	if (conn->sslCtx) 
-		return SSL_WriteAll(conn->sslCtx, data, count);
+		return SSL_Write(conn->sslCtx, data, count, sent);
 
-	return WriteAllToSocket(conn->socket, data, count);
+	return Socket_Write(conn->socket, data, count, sent);
+}
+
+static cc_result HttpConnection_WriteAll(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count) {
+	cc_uint32 sent;
+	cc_result res;
+
+	while (count)
+	{
+		if ((res = HttpConnection_Write(conn, data, count, &sent))) return res;
+		if (!sent) return ERR_END_OF_STREAM;
+
+		data  += sent;
+		count -= sent;
+	}
+	return 0;
 }
 
 
@@ -407,7 +407,7 @@ static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
 	HttpClient_Serialise(state);
 
-	return HttpConnection_Write(state->conn, (cc_uint8*)inputBuffer, inputMsg.length);
+	return HttpConnection_WriteAll(state->conn, (cc_uint8*)inputBuffer, inputMsg.length);
 }
 
 

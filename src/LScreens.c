@@ -8,7 +8,6 @@
 #include "Drawer2D.h"
 #include "ExtMath.h"
 #include "Platform.h"
-#include "Stream.h"
 #include "Funcs.h"
 #include "Resources.h"
 #include "Logger.h"
@@ -482,41 +481,46 @@ static void DirectConnectScreen_UrlFilter(cc_string* str) {
 
 static void DirectConnectScreen_StartClient(void* w) {
 	static const cc_string defMppass = String_FromConst("(none)");
-	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
-	const cc_string* addr   = &DirectConnectScreen.iptAddress.text;
-	const cc_string* mppass = &DirectConnectScreen.iptMppass.text;
-	struct LLabel* status   = &DirectConnectScreen.lblStatus;
+	struct LLabel* status  = &DirectConnectScreen.lblStatus;
+
+	cc_string user   = DirectConnectScreen.iptUsername.text;
+	cc_string addr   = DirectConnectScreen.iptAddress.text;
+	cc_string mppass = DirectConnectScreen.iptMppass.text;
 
 	cc_string ip, port;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
 	int numAddrs;
 
-	int index = String_LastIndexOf(addr, ':');
-	if (index == 0 || index == addr->length - 1) {
+	/* Try to convert direct connect URL if it's in address field and no user */
+	if (!user.length) DirectUrl_Claims(&addr, &addr, &user, &mppass);
+
+	int index = String_LastIndexOf(&addr, ':');
+	if (index == 0 || index == addr.length - 1) {
 		LLabel_SetConst(status, "&cInvalid address"); return;
 	}
 
-	if (!user->length) {
+	if (!user.length) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
-	DirectUrl_ExtractAddress(addr, &ip, &port);
+
+	DirectUrl_ExtractAddress(&addr, &ip, &port);
 	if (!IsValidPort(&port)) {
 		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (Socket_ParseAddress(&ip, 25565, addrs, &numAddrs)) {
 		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
-	if (!mppass->length) mppass = &defMppass;
+	if (!mppass.length) mppass = defMppass;
 
 	Options_PauseSaving();
-		Options_Set("launcher-dc-username", user);
+		Options_Set("launcher-dc-username", &user);
 		Options_Set("launcher-dc-ip",       &ip);
 		Options_Set("launcher-dc-port",     &port);
-		Options_SetSecure("launcher-dc-mppass", mppass);
+		Options_SetSecure("launcher-dc-mppass", &mppass);
 	Options_ResumeSaving();
 
 	LLabel_SetConst(status, "");
-	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty, 1);
+	Launcher_StartGame(&user, &mppass, &ip, &port, &String_Empty, 1);
 }
 
 static void DirectConnectScreen_Activated(struct LScreen* s_) {
@@ -734,7 +738,7 @@ CC_NOINLINE static void MainScreen_Error(struct HttpRequest* req, const char* ac
 	struct MainScreen* s = &MainScreen;
 	String_InitArray(str, strBuffer);
 
-	Launcher_DisplayHttpError(req, action, &str);
+	Launcher_FormatHttpError(req, action, &str);
 	LLabel_SetText(&s->lblStatus, &str);
 	s->signingIn = false;
 }
@@ -820,7 +824,7 @@ CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
 	{
 		Convert_ParseUInt8(&parts[i], &raw[i]);
 	}
-	return Stream_GetU32_BE(raw);
+	return Mem_ReadU32_BE(raw);
 }
 
 static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
@@ -975,6 +979,10 @@ static void MainScreen_ServersError(struct HttpRequest* req) {
 	MainScreen_Error(req, "retrieving servers list");
 }
 
+static void MainScreen_FetchServerError(struct HttpRequest* req) {
+	MainScreen_Error(req, "fetching server details");
+}
+
 static void MainScreen_TickFetchServers(struct MainScreen* s) {
 	if (!FetchServersTask.Base.working)   return;
 	LWebTask_Tick(&FetchServersTask.Base, MainScreen_ServersError);
@@ -984,7 +992,7 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 
 	s->signingIn = false;
 	if (Launcher_AutoHash.length) {
-		Launcher_ConnectToServer(&Launcher_AutoHash);
+		Launcher_ConnectToServer(&Launcher_AutoHash, MainScreen_FetchServerError);
 		Launcher_AutoHash.length = 0;
 	} else {
 		ServersScreen_SetActive();
@@ -1141,7 +1149,7 @@ static void FetchResourcesScreen_Error(struct HttpRequest* req) {
 	cc_string str; char buffer[STRING_SIZE];
 	String_InitArray(str, buffer);
 
-	Launcher_DisplayHttpError(req, "downloading resources", &str);
+	Launcher_FormatHttpError(req, "downloading resources", &str);
 	LLabel_SetText(&FetchResourcesScreen.lblStatus, &str);
 }
 
@@ -1237,16 +1245,45 @@ LAYOUTS srv_table[5]    = { { ANCHOR_MIN, 10 }, { ANCHOR_MIN | LLAYOUT_EXTRA, 50
 LAYOUTS srv_btnBack[]    = { { ANCHOR_MAX,  10 }, { ANCHOR_MIN, 10 } };
 LAYOUTS srv_btnConnect[] = { { ANCHOR_MAX,  10 }, { ANCHOR_MAX, 10 } };
 LAYOUTS srv_btnRefresh[] = { { ANCHOR_MAX, 135 }, { ANCHOR_MIN, 10 } };
-	
+
+
+static void ServersScreen_FetchError(struct HttpRequest* req) {
+	cc_string log; char logBuffer[256];
+	String_InitArray_NT(log, logBuffer);
+
+	Launcher_FormatHttpError(req, "fetching server info", &log);
+	logBuffer[log.length] = '\0';
+	Window_ShowDialog("Error fetching server details", logBuffer);
+}
+
+static void ServersScreen_DoConnect(const cc_string* hash) {
+	char hashBuffer[256];
+	cc_string str;
+
+	/* Strip url in case user manually typed a full url */
+	String_InitArray(str, hashBuffer);
+	String_Copy(&str, hash);
+
+	Launcher_FilterUrlHash(&str);
+	Launcher_ConnectToServer(&str, ServersScreen_FetchError);
+}
+
+static void ServersScreen_OnDoubleclick(int row) {
+	cc_string* hash = &LTable_Get(row)->hash;
+
+	ServersScreen_DoConnect(hash);
+}
 
 static void ServersScreen_Connect(void* w) {
 	struct LTable* table = &ServersScreen.table;
-	cc_string* hash      = &ServersScreen.iptHash.text;
+	cc_string* hash      = &ServersScreen.iptHash.text;	
 
+	/* Default to first visible row if no hash currently entered */
 	if (!hash->length && table->rowsCount) { 
 		hash = &LTable_Get(table->topRow)->hash; 
 	}
-	Launcher_ConnectToServer(hash);
+
+	ServersScreen_DoConnect(hash);
 }
 
 static void ServersScreen_Refresh(void* w) {
@@ -1256,20 +1293,6 @@ static void ServersScreen_Refresh(void* w) {
 	FetchServersTask_Run();
 	btn = &ServersScreen.btnRefresh;
 	LButton_SetConst(btn, "&eWorking..");
-}
-
-static void ServersScreen_HashFilter(cc_string* str) {
-	int lastIndex;
-	if (!str->length) return;
-
-	/* Server url look like http://www.classicube.net/server/play/aaaaa/ */
-	/* Trim it to only be the aaaaa */
-	if (str->buffer[str->length - 1] == '/') str->length--;
-
-	/* Trim the URL parts before the hash */
-	lastIndex = String_LastIndexOf(str, '/');
-	if (lastIndex == -1) return;
-	*str = String_UNSAFE_SubstringAt(str, lastIndex + 1);
 }
 
 static void ServersScreen_SearchChanged(struct LInput* w) {
@@ -1314,11 +1337,12 @@ static void ServersScreen_AddWidgets(struct ServersScreen* s) {
 	s->iptSearch.skipsEnter    = true;
 	s->iptSearch.TextChanged   = ServersScreen_SearchChanged;
 	s->iptHash.TextChanged     = ServersScreen_HashChanged;
-	s->iptHash.ClipboardFilter = ServersScreen_HashFilter;
+	s->iptHash.ClipboardFilter = Launcher_FilterUrlHash;
 
 	s->table.filter       = &s->iptSearch.text;
 	s->table.selectedHash = &s->iptHash.text;
 	s->table.OnSelectedChanged = ServersScreen_OnSelectedChanged;
+	s->table.OnDoubleclick     = ServersScreen_OnDoubleclick;
 
 	if (s->table.VTABLE) {
 		LScreen_AddWidget(s, &s->table);
@@ -1724,7 +1748,7 @@ static void FetchUpdatesError(struct HttpRequest* req) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	String_InitArray(str, strBuffer);
 
-	Launcher_DisplayHttpError(req, "fetching update", &str);
+	Launcher_FormatHttpError(req, "fetching update", &str);
 	LLabel_SetText(&UpdatesScreen.lblStatus, &str);
 }
 

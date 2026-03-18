@@ -128,12 +128,17 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 }
 
 // libogc only implements net_select for gamecube currently
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	fd_set set;
-	struct timeval time = { 0 };
 	int res; // number of 'ready' sockets
+	struct timeval time = {
+		timeoutMS / 1000,          /* seconds */
+		(timeoutMS % 1000) * 1000, /* microseconds */
+	};
+
 	FD_ZERO(&set);
 	FD_SET(s, &set);
+
 	if (mode == SOCKET_POLL_READ) {
 		res = net_select(s + 1, &set, NULL, NULL, &time);
 	} else {

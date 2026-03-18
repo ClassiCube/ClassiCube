@@ -276,7 +276,7 @@ static void MPConnection_FailConnect(cc_result result) {
 
 static void MPConnection_TickConnect(struct ScheduledTask* task) {
 	cc_bool writable;
-	cc_result res = Socket_CheckWritable(net_socket, &writable);
+	cc_result res = Socket_Poll(net_socket, 0, SOCKET_POLL_WRITE, &writable);
 	net_connectElapsed += task->interval;
 
 	if (res) {

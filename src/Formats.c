@@ -195,16 +195,16 @@ static cc_result Lvl_Load(struct Stream* stream) {
 	
 	if ((res = Map_SkipGZipHeader(stream)))                       return res;
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
-	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
+	if (Mem_ReadU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
-	World.Width  = Stream_GetU16_LE(&header[2]);
-	World.Length = Stream_GetU16_LE(&header[4]);
-	World.Height = Stream_GetU16_LE(&header[6]);
+	World.Width  = Mem_ReadU16_LE(&header[2]);
+	World.Length = Mem_ReadU16_LE(&header[4]);
+	World.Height = Mem_ReadU16_LE(&header[6]);
 
 	spawn_point->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
-	spawn_point->pos.x = Stream_GetU16_LE(&header[8]);
-	spawn_point->pos.z = Stream_GetU16_LE(&header[10]);
-	spawn_point->pos.y = Stream_GetU16_LE(&header[12]);
+	spawn_point->pos.x = Mem_ReadU16_LE(&header[8]);
+	spawn_point->pos.z = Mem_ReadU16_LE(&header[10]);
+	spawn_point->pos.y = Mem_ReadU16_LE(&header[12]);
 	spawn_point->yaw   = Math_Packed2Deg(header[14]);
 	spawn_point->pitch = Math_Packed2Deg(header[15]);
 	/* (2) pervisit, perbuild permissions */
@@ -264,7 +264,7 @@ static cc_result Fcm_ReadString(struct Stream* stream) {
 	cc_result res;
 
 	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
-	len = Stream_GetU16_LE(data);
+	len = Mem_ReadU16_LE(data);
 
 	return stream->Skip(stream, len);
 }
@@ -281,17 +281,17 @@ static cc_result Fcm_Load(struct Stream* stream) {
 	Inflate_MakeStream2(&compStream, &state, stream);
 
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
-	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL)        return FCM_ERR_IDENTIFIER;
+	if (Mem_ReadU32_LE(&header[0]) != 0x0FC2AF40UL)        return FCM_ERR_IDENTIFIER;
 	if (header[4] != 13) return FCM_ERR_REVISION;
 	
-	World.Width  = Stream_GetU16_LE(&header[5]);
-	World.Height = Stream_GetU16_LE(&header[7]);
-	World.Length = Stream_GetU16_LE(&header[9]);
+	World.Width  = Mem_ReadU16_LE(&header[5]);
+	World.Height = Mem_ReadU16_LE(&header[7]);
+	World.Length = Mem_ReadU16_LE(&header[9]);
 	
 	spawn_point->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
-	spawn_point->pos.x = ((int)Stream_GetU32_LE(&header[11])) / 32.0f;
-	spawn_point->pos.y = ((int)Stream_GetU32_LE(&header[15])) / 32.0f;
-	spawn_point->pos.z = ((int)Stream_GetU32_LE(&header[19])) / 32.0f;
+	spawn_point->pos.x = ((int)Mem_ReadU32_LE(&header[11])) / 32.0f;
+	spawn_point->pos.y = ((int)Mem_ReadU32_LE(&header[15])) / 32.0f;
+	spawn_point->pos.z = ((int)Mem_ReadU32_LE(&header[19])) / 32.0f;
 	spawn_point->yaw   = Math_Packed2Deg(header[23]);
 	spawn_point->pitch = Math_Packed2Deg(header[24]);
 
@@ -299,7 +299,7 @@ static cc_result Fcm_Load(struct Stream* stream) {
 	/* header[29] (4) date created */
 	Mem_Copy(&World.Uuid, &header[33], WORLD_UUID_LEN);
 	/* header[49] (26) layer index */
-	count = (int)Stream_GetU32_LE(&header[75]);
+	count = (int)Mem_ReadU32_LE(&header[75]);
 
 	/* header isn't compressed, rest of data is though */
 	for (i = 0; i < count; i++) {
@@ -408,7 +408,7 @@ static cc_result Nbt_ReadString(struct Stream* stream, cc_string* str) {
 	cc_result res;
 
 	if ((res = Stream_Read(stream, buffer, 2)))   return res;
-	len = Stream_GetU16_BE(buffer);
+	len = Mem_ReadU16_BE(buffer);
 
 	if (len > Array_Elems(buffer)) return CW_ERR_STRING_LEN;
 	if ((res = Stream_Read(stream, buffer, len))) return res;
@@ -444,7 +444,7 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 		break;
 	case NBT_I16:
 		res = Stream_Read(stream, tmp, 2);
-		tag.value.u16 = Stream_GetU16_BE(tmp);
+		tag.value.u16 = Mem_ReadU16_BE(tmp);
 		break;
 	case NBT_I32:
 	case NBT_F32:
@@ -476,7 +476,7 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 	case NBT_LIST:
 		if ((res = Stream_Read(stream, tmp, 5))) break;
 		childType = tmp[0];
-		count = Stream_GetU32_BE(&tmp[1]);
+		count = Mem_ReadU32_BE(&tmp[1]);
 
 		for (i = 0; i < count; i++) {
 			res = Nbt_ReadTag(childType, false, stream, &tag, callback, i);
@@ -558,7 +558,7 @@ static cc_uint8* Nbt_WriteString(cc_uint8* data, const char* name, const cc_stri
 		data = Convert_CP437ToUtf8(text->buffer[i], data) + data;
 	}
 
-	Stream_SetU16_BE(start, (int)(data - start) - 2);
+	Mem_WriteU16_BE(start, (int)(data - start) - 2);
 	return data;
 }
 
@@ -573,7 +573,7 @@ static cc_uint8* Nbt_WriteArray(cc_uint8* data, const char* name, int size) {
 	*data++ = NBT_I8S;
 	data    = Nbt_WriteConst(data, name);
 
-	Stream_SetU32_BE(data, size);
+	Mem_WriteU32_BE(data, size);
 	return data + 4;
 }
 
@@ -589,7 +589,7 @@ static cc_uint8* Nbt_WriteUInt16(cc_uint8* data, const char* name, cc_uint16 val
 	*data++ = NBT_I16;
 	data    = Nbt_WriteConst(data, name);
 
-	Stream_SetU16_BE(data, value);
+	Mem_WriteU16_BE(data, value);
 	return data + 2;
 }
 
@@ -597,7 +597,7 @@ static cc_uint8* Nbt_WriteInt32(cc_uint8* data, const char* name, int value) {
 	*data++ = NBT_I32;
 	data    = Nbt_WriteConst(data, name);
 
-	Stream_SetU32_BE(data, value);
+	Mem_WriteU32_BE(data, value);
 	return data + 4;
 }
 
@@ -607,7 +607,7 @@ static cc_uint8* Nbt_WriteFloat(cc_uint8* data, const char* name, float value) {
 	data    = Nbt_WriteConst(data, name);
 
 	raw.f = value;
-	Stream_SetU32_BE(data, raw.u);
+	Mem_WriteU32_BE(data, raw.u);
 	return data + 4;
 }
 
@@ -966,7 +966,7 @@ static cc_result Java_ReadString(struct Stream* stream, cc_uint8* buffer) {
 	cc_result res;
 
 	if ((res = Stream_Read(stream, buffer, 2))) return res;
-	len = Stream_GetU16_BE(buffer);
+	len = Mem_ReadU16_BE(buffer);
 
 	Mem_Set(buffer, 0, JNAME_SIZE);
 	if (len > JNAME_SIZE) return JAVA_ERR_JSTRING_LEN;
@@ -1036,7 +1036,7 @@ static cc_result Java_ReadNewClassDesc(struct Stream* stream, struct JClassDesc*
 	Java_AddReference();
 
 	if ((res = Stream_Read(stream, count, 2))) return res;
-	desc->FieldsCount = Stream_GetU16_BE(count);
+	desc->FieldsCount = Mem_ReadU16_BE(count);
 	if (desc->FieldsCount > Array_Elems(desc->Fields)) return JAVA_ERR_JCLASS_FIELDS;
 	
 	for (i = 0; i < desc->FieldsCount; i++) {
@@ -1283,9 +1283,9 @@ static cc_result Dat_LoadFormat1(struct Stream* stream) {
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 	
 	/* bytes 0-8 = created timestamp (currentTimeMillis) */
-	World.Width  = Stream_GetU16_BE(header +  8);
-	World.Length = Stream_GetU16_BE(header + 10);
-	World.Height = Stream_GetU16_BE(header + 12);
+	World.Width  = Mem_ReadU16_BE(header +  8);
+	World.Length = Mem_ReadU16_BE(header + 10);
+	World.Height = Mem_ReadU16_BE(header + 12);
 	return Map_ReadBlocks(stream);
 }
 
@@ -1306,8 +1306,8 @@ static cc_result Dat_LoadFormat2(struct Stream* stream) {
 	reference_id = 0x7E0000;
 
 	/* Java seralisation headers */
-	if (Stream_GetU16_BE(header + 0) != 0xACED) return DAT_ERR_JIDENTIFIER;
-	if (Stream_GetU16_BE(header + 2) != 0x0005) return DAT_ERR_JVERSION;
+	if (Mem_ReadU16_BE(header + 0) != 0xACED) return DAT_ERR_JIDENTIFIER;
+	if (Mem_ReadU16_BE(header + 2) != 0x0005) return DAT_ERR_JVERSION;
 
 	if ((res = Java_ReadObject(stream, &obj)))  return res;
 	if (obj.Type != TC_OBJECT)                  return DAT_ERR_ROOT_OBJECT;
@@ -1355,7 +1355,7 @@ static cc_result Dat_Load(struct Stream* stream) {
 	if ((res = Map_SkipGZipHeader(stream)))                       return res;
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
 
-	signature = Stream_GetU32_BE(header + 0);
+	signature = Mem_ReadU32_BE(header + 0);
 	switch (signature)
 	{
 		/* Classic map format signature */
@@ -1709,17 +1709,17 @@ cc_result Schematic_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, sc_begin, sizeof(sc_begin));
 	{
-		Stream_SetU16_BE(&tmp[41], World.Width);
-		Stream_SetU16_BE(&tmp[52], World.Height);
-		Stream_SetU16_BE(&tmp[63], World.Length);
-		Stream_SetU32_BE(&tmp[74], World.Volume);
+		Mem_WriteU16_BE(&tmp[41], World.Width);
+		Mem_WriteU16_BE(&tmp[52], World.Height);
+		Mem_WriteU16_BE(&tmp[63], World.Length);
+		Mem_WriteU32_BE(&tmp[74], World.Volume);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_begin)))) return res;
 	if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
 
 	Mem_Copy(tmp, sc_data, sizeof(sc_data));
 	{
-		Stream_SetU32_BE(&tmp[7], World.Volume);
+		Mem_WriteU32_BE(&tmp[7], World.Volume);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_data)))) return res;
 
@@ -1847,11 +1847,11 @@ cc_result Dat_Save(struct Stream* stream) {
 
 		if (field->type == JFIELD_I32) {
 			value = field->isFloat ? *((float*)field->value) : *((int*)field->value);
-			Stream_SetU32_BE(tmp, value);
+			Mem_WriteU32_BE(tmp, value);
 			if ((res = Stream_Write(stream, tmp, 4))) return res;
 		} else {
 			if ((res = WriteClassDesc(stream, TC_ARRAY, "[B", 0, NULL)))  return res;
-			Stream_SetU32_BE(tmp, World.Volume);
+			Mem_WriteU32_BE(tmp, World.Volume);
 			if ((res = Stream_Write(stream, tmp, 4))) return res;
 			if ((res = WriteLevelBlocks(stream)))     return res;
 		}

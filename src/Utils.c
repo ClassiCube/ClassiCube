@@ -72,19 +72,36 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 	return steps;
 }
 
-/* Checks if an area is completely black, so Alex skins edited with Microsoft Paint are still treated as Alex */
-static cc_bool IsAllBlack(const struct Bitmap* bmp, int x1, int y1, int width, int height) {
+/* Checks if an area is entirely the same color. */
+/* If the area is all one color, and color param is NULL it will be set to that color. */
+/* If color param is not null, it checks if the area is all the specified color. */
+static cc_bool IsAllSameColor(const struct Bitmap* bmp, int x1, int y1, int width, int height, BitmapCol* color) {
 	int x, y;
+	
 	for (y = y1; y < y1 + height; y++) {
 		BitmapCol* row = Bitmap_GetRow(bmp, y);
 
 		for (x = x1; x < x1 + width; x++) {
-			if (row[x] != BITMAPCOLOR_BLACK) return false;
+			if (color == NULL) {
+				color = &row[x];
+				continue;
+			}
+			if (row[x] != *color) return false;
 		}
 	}
 	return true;
 }
 
+/* Coords for areas that are used on thick arm skin, but not used on slim arm skin. */
+#define SlimArmUnusedX 54
+#define SlimArmUnusedY 20
+#define SlimHandUnusedX 50
+#define SlimHandUnusedY 16
+/* Coords for the areas that are used on slim arm skin */
+#define SlimArmUsedX 40
+#define SlimArmUsedY 20
+#define SlimHandUsedX 44
+#define SlimHandUsedY 16
 cc_uint8 Utils_CalcSkinType(const struct Bitmap* bmp) {
 	BitmapCol col;
 	int scale;
@@ -96,8 +113,16 @@ cc_uint8 Utils_CalcSkinType(const struct Bitmap* bmp) {
 	col = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
 	if (BitmapCol_A(col) < 128) return SKIN_64x64_SLIM;
 
-	return IsAllBlack(bmp, 54 * scale, 20 * scale, 2 * scale, 12 * scale)
-		&& IsAllBlack(bmp, 50 * scale, 16 * scale, 2 * scale,  4 * scale) ? SKIN_64x64_SLIM : SKIN_64x64;
+	/* Assigned by the first function called using it */
+	BitmapCol* color = NULL;
+	/* It must be a thick-armed skin if the unused arm areas are not all the same color*/
+	if (!(IsAllSameColor(bmp,  SlimArmUnusedX * scale,  SlimArmUnusedY * scale, 2 * scale, 12 * scale, color) &&
+	      IsAllSameColor(bmp, SlimHandUnusedX * scale, SlimHandUnusedY * scale, 2 * scale, 4  * scale, color))) return SKIN_64x64;
+
+	/* Now it might be a slim-armed skin, but we need to make sure the entire arm isn't the same color */
+	/* If the slim arm area is the same color as the unused area, treat it as a thick skin. Else treat as slim skin.*/
+	return IsAllSameColor(bmp,  SlimArmUsedX * scale,  SlimArmUsedY * scale, 14 * scale, 12 * scale, color)
+		&& IsAllSameColor(bmp, SlimHandUsedX * scale, SlimHandUsedY * scale,  6 * scale,  4 * scale, color) ? SKIN_64x64 : SKIN_64x64_SLIM;
 }
 
 cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length) {
@@ -368,5 +393,63 @@ int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separa
 		if (String_CaselessEquals(key, &curKey)) return i;
 	}
 	return -1;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------Read/Write primitives---------------------------------------------------*
+*#########################################################################################################################*/
+cc_uint16 Mem_ReadU16_LE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint16)(data[0] | (data[1] << 8));
+}
+
+cc_uint16 Mem_ReadU16_BE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint16)((data[0] << 8) | data[1]);
+}
+
+cc_uint32 Mem_ReadU32_LE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint32)(
+		 (cc_uint32)data[0]        | ((cc_uint32)data[1] << 8) |
+		((cc_uint32)data[2] << 16) | ((cc_uint32)data[3] << 24));
+}
+
+cc_uint32 Mem_ReadU32_BE(const void* src) {
+	const cc_uint8* data = (const cc_uint8*)src;
+
+	return (cc_uint32)(
+		((cc_uint32)data[0] << 24) | ((cc_uint32)data[1] << 16) |
+		((cc_uint32)data[2] << 8)  |  (cc_uint32)data[3]);
+}
+
+void Mem_WriteU16_LE(void* src, cc_uint16 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
+}
+
+void Mem_WriteU16_BE(void* src, cc_uint16 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value >> 8 ); data[1] = (cc_uint8)(value      );
+}
+
+void Mem_WriteU32_LE(void* src, cc_uint32 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
+	data[2] = (cc_uint8)(value >> 16); data[3] = (cc_uint8)(value >> 24);
+}
+
+void Mem_WriteU32_BE(void* src, cc_uint32 value) {
+	cc_uint8* data = (cc_uint8*)src;
+
+	data[0] = (cc_uint8)(value >> 24); data[1] = (cc_uint8)(value >> 16);
+	data[2] = (cc_uint8)(value >> 8 ); data[3] = (cc_uint8)(value);
 }
 

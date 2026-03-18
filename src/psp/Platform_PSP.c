@@ -413,10 +413,13 @@ void Socket_Close(cc_socket s) {
 	sceNetInetClose(s);
 }
 
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	fd_set set;
-	struct SceNetInetTimeval time = { 0 };
 	int selectCount;
+	struct SceNetInetTimeval time = {
+		timeoutMS / 1000,          /* seconds */
+		(timeoutMS % 1000) * 1000, /* microseconds */
+	};
 
 	FD_ZERO(&set);
 	FD_SET(s, &set);
@@ -434,14 +437,6 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	
 	*success = FD_ISSET(s, &set) != 0; 
 	return 0;
-}
-
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return Socket_Poll(s, SOCKET_POLL_READ, readable);
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 }
 
 cc_result Socket_GetLastError(cc_socket s) {

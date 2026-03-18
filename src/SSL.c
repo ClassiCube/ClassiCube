@@ -219,22 +219,20 @@ static CC_NOINLINE cc_result SSL_GetError(SSLContext* ctx) {
 
 cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read) { 
 	SSLContext* ctx = (SSLContext*)ctx_;
-	// TODO: just br_sslio_write ??
 	int res = br_sslio_read(&ctx->ioc, data, count);
 	if (res < 0) return SSL_GetError(ctx);	
 	
-	br_sslio_flush(&ctx->ioc);
 	*read = res;
 	return 0;
 }
 
-cc_result SSL_WriteAll(void* ctx_, const cc_uint8* data, cc_uint32 count) {
+cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
 	SSLContext* ctx = (SSLContext*)ctx_;
-	// TODO: just br_sslio_write ??
-	int res = br_sslio_write_all(&ctx->ioc, data, count);
+	int res = br_sslio_write(&ctx->ioc, data, count);
 	if (res < 0) return SSL_GetError(ctx);	
 	
 	br_sslio_flush(&ctx->ioc);
+	*sent = res;
 	return 0;
 }
 

@@ -40,7 +40,7 @@ struct IGameComponent SystemFonts_Component = {
 #define CELL_SIZE 8
 
 #define FallbackFont_GetRows(c) (FallbackFont_ValidChar(c) ? font_bitmap[FallbackFont_ToIndex(c)] : missing_cell)
-#define FallbackFont_GetScale(size) ((size) >> 3)
+#define FallbackFont_GetScale(size) max(1, ((size) >> 3))
 
 static const cc_uint8 missing_cell[CELL_SIZE] = { 
 	0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF 

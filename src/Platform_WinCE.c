@@ -549,10 +549,13 @@ void Socket_Close(cc_socket s) {
 	closesocket(s);
 }
 
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	fd_set set1, set2;
-	struct timeval time = { 0 };
 	int selectCount;
+	struct timeval time = {
+		timeoutMS / 1000,          /* seconds */
+		(timeoutMS % 1000) * 1000, /* microseconds */
+	};
 
 	set1.fd_count    = 1; set2.fd_count    = 1;
 	set1.fd_array[0] = s; set2.fd_array[0] = s;
@@ -576,13 +579,6 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	if (selectCount >= 0) return 0;
 	*success = false; 
 	return WSAGetLastError();
-}
-cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return Socket_Poll(s, SOCKET_POLL_READ, readable);
-}
-
-cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 }
 
 cc_result Socket_GetLastError(cc_socket s) {

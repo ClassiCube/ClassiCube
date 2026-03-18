@@ -158,12 +158,12 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	struct pollsd pfd;
 	pfd.socket = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	
-	int res = net_poll(&pfd, 1, 0);
+	int res = net_poll(&pfd, 1, timeoutMS);
 	if (res < 0) { *success = false; return res; }
 	
 	// to match select, closed socket still counts as readable
