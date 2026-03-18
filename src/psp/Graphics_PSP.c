@@ -295,7 +295,6 @@ typedef struct CCTexture_ {
 } CCTexture;
 
 static_assert(sizeof(struct CCTexture_) % 16 == 0, "Texture struct size must be 16 byte aligned");
-#define ALIGNUP(val, alignment) (((val) + ((alignment) - 1)) & -(alignment))
 
 static CC_INLINE void* Texture_PixelsAddr(CCTexture* tex) {
 	if (!tex->blocks) return tex->pixels;
@@ -327,7 +326,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	// Check if no room in VRAM
 	if (base == -1) {
 		// Swizzled texture assumes at least 16 bytes x 8 rows
-		size = ALIGNUP(size, 16 * 8);
+		size = CC_ALIGNUP(size, 16 * 8);
 		tex  = (CCTexture*)memalign(16, sizeof(CCTexture) + size);
 
 		blocks = 0;

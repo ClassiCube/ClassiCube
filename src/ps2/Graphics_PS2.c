@@ -194,12 +194,11 @@ static void FlushMainDMABuffer(void) {
 /*########################################################################################################################*
 *--------------------------------------------------VRAM transfer/memory---------------------------------------------------*
 *#########################################################################################################################*/
-#define ALIGNUP(val, alignment) (((val) + (alignment - 1)) & -alignment)
 static int vram_pointer;
 
 // Returns size in words
 static int VRAM_Size(int width, int height, int psm) {
-	width = ALIGNUP(width, 64);
+	width = CC_ALIGNUP(width, 64);
 
 	switch (psm)
 	{
@@ -237,7 +236,7 @@ int Gfx_VRAM_AllocPaged(int width, int height, int psm) {
 	int addr = vram_pointer;
 
 	// Align to 2048 words / 8192 bytes (VRAM page alignment)
-	vram_pointer += ALIGNUP(size, 2048);
+	vram_pointer += CC_ALIGNUP(size, 2048);
 	return addr;
 }
 
@@ -439,7 +438,7 @@ struct GPUTexture {
 	cc_uint16 format, pal_index; // 4 bytes
 	BitmapCol pixels[]; // must be aligned to 16 bytes
 };
-#define GS_TEXTURE_STRIDE(tex) ALIGNUP((tex)->width, 64)
+#define GS_TEXTURE_STRIDE(tex) CC_ALIGNUP((tex)->width, 64)
 
 static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
 	// TODO terrible perf
@@ -508,7 +507,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		tex->pal_index = pal_index;
 		ConvertTexture_Palette((cc_uint8*)tex->pixels, bmp, rowWidth, palette, pal_count);
 
-		int size    = VRAM_Size(tex->width, ALIGNUP(tex->height, 32), GS_PSM_4HH);		
+		int size    = VRAM_Size(tex->width, CC_ALIGNUP(tex->height, 32), GS_PSM_4HH);		
 		// TODO fix properly. alignup instead
 		int blocks  = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE);
 		tex->blocks = blocks;

@@ -1129,8 +1129,7 @@ void SysFonts_GetNames(struct StringsBuffer* buffer) { }
 
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	size *= DisplayInfo.ScaleY;
-	/* Round upwards to nearest 8 */
-	size = (size + 7) & ~0x07;
+	size = CC_ALIGNUP(size, 8); /* Ensure sizes below 8 don't get rounded down to 0 */
 
 	desc->size   = size;
 	desc->flags  = flags;

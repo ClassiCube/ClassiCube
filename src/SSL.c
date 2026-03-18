@@ -229,7 +229,7 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
 	SSLContext* ctx = (SSLContext*)ctx_;
 	int res = br_sslio_write(&ctx->ioc, data, count);
-	if (res < 0) return SSL_GetError(ctx);	
+	if (res < 0) return SSL_GetError(ctx);
 	
 	br_sslio_flush(&ctx->ioc);
 	*sent = res;

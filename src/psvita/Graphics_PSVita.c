@@ -97,17 +97,15 @@ typedef struct CCFragmentProgram {
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-#define ALIGNUP(size, a) (((size) + ((a) - 1)) & ~((a) - 1))
-
 void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid, const char* memType) {
 	char buffer[128];
 	cc_string str;
 	void* addr;
 	
 	if (type == SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW) {
-		size = ALIGNUP(size, 256 * 1024);
+		size = CC_ALIGNUP(size, 256 * 1024);
 	} else {
-		size = ALIGNUP(size, 4 * 1024);
+		size = CC_ALIGNUP(size, 4 * 1024);
 	}
 	String_InitArray_NT(str, buffer);
 	
@@ -139,7 +137,7 @@ void* AllocGPUVertexUSSE(size_t size, SceUID* ret_uid, unsigned int* ret_usse_of
 	SceUID uid;
 	void *addr;
 
-	size = ALIGNUP(size, 4 * 1024);
+	size = CC_ALIGNUP(size, 4 * 1024);
 
 	uid = sceKernelAllocMemBlock("GPU vertex USSE",
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, size, NULL);
@@ -159,7 +157,7 @@ void* AllocGPUFragmentUSSE(size_t size, SceUID* ret_uid, unsigned int* ret_usse_
 	SceUID uid;
 	void *addr;
 
-	size = ALIGNUP(size, 4 * 1024);
+	size = CC_ALIGNUP(size, 4 * 1024);
 
 	uid = sceKernelAllocMemBlock("GPU fragment USSE",
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, size, NULL);
@@ -392,7 +390,7 @@ static void AllocRenderTarget(void) {
 }
 
 static void AllocColorBuffer(int i) {
-	int size = ALIGNUP(4 * DISPLAY_STRIDE * DISPLAY_HEIGHT, 1 * 1024 * 1024);
+	int size = CC_ALIGNUP(4 * DISPLAY_STRIDE * DISPLAY_HEIGHT, 1 * 1024 * 1024);
 	
 	gxm_color_surfaces_addr[i] = AllocGPUMemory(size, SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
 									SCE_GXM_MEMORY_ATTRIB_RW, &gxm_color_surfaces_uid[i], "color buffer");
@@ -409,8 +407,8 @@ static void AllocColorBuffer(int i) {
 }
 
 static void AllocDepthBuffer(void) {
-	int width   = ALIGNUP(DISPLAY_WIDTH,  SCE_GXM_TILE_SIZEX);
-	int height  = ALIGNUP(DISPLAY_HEIGHT, SCE_GXM_TILE_SIZEY);
+	int width   = CC_ALIGNUP(DISPLAY_WIDTH,  SCE_GXM_TILE_SIZEX);
+	int height  = CC_ALIGNUP(DISPLAY_HEIGHT, SCE_GXM_TILE_SIZEY);
 	int samples = width * height;
 
 	gxm_depth_stencil_surface_addr = AllocGPUMemory(4 * samples, SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,

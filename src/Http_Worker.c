@@ -143,30 +143,7 @@ static cc_result HttpUrl_ResolveRedirect(struct HttpUrl* parts, const cc_string*
 	return HTTP_ERR_RELATIVE;
 }
 
-
-/*########################################################################################################################*
-*------------------------------------------------------HttpConnection-----------------------------------------------------*
-*#########################################################################################################################*/
-struct HttpConnection {
-	cc_socket socket;
-	void* sslCtx;
-	cc_bool valid;
-};
-
-static void HttpConnection_Close(struct HttpConnection* conn) {
-	if (conn->sslCtx) {
-		SSL_Free(conn->sslCtx);
-		conn->sslCtx = NULL;
-	}
-
-	if (conn->socket != -1) {
-		Socket_Close(conn->socket);
-		conn->socket = -1;
-	}
-	conn->valid = false;
-}
-
-static void ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_string* port) {
+static void HttpUrl_ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_string* port) {
 	/* address can have the form of either "host" or "host:port" */
 	/* Slightly more complicated because IPv6 hosts can be e.g. [::1] */
 	cc_string addr = url->address;
@@ -194,6 +171,32 @@ static void ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_strin
 	}
 }
 
+#define DEF_HTTP_PORT   80
+#define DEF_HTTPS_PORT 443
+
+
+/*########################################################################################################################*
+*------------------------------------------------------HttpConnection-----------------------------------------------------*
+*#########################################################################################################################*/
+struct HttpConnection {
+	cc_socket socket;
+	void* sslCtx;
+	cc_bool valid;
+};
+
+static void HttpConnection_Close(struct HttpConnection* conn) {
+	if (conn->sslCtx) {
+		SSL_Free(conn->sslCtx);
+		conn->sslCtx = NULL;
+	}
+
+	if (conn->socket != -1) {
+		Socket_Close(conn->socket);
+		conn->socket = -1;
+	}
+	conn->valid = false;
+}
+
 static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct HttpUrl* url) {
 	cc_string host, port;
 	cc_uint16 portNum;
@@ -203,9 +206,9 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	cc_string addrStr;
 	int i, numValidAddrs;
 
-	ExtractHostPort(url, &host, &port);
+	HttpUrl_ExtractHostPort(url, &host, &port);
 	if (!Convert_ParseUInt16(&port, &portNum)) {
-		portNum = url->https ? 443 : 80;
+		portNum = url->https ? DEF_HTTPS_PORT : DEF_HTTP_PORT;
 	}
 
 	conn->socket = -1;
