@@ -66,16 +66,30 @@ CC_VAR extern struct _ProtocolData {
 	Net_Handler Handlers[256];
 } Protocol;
 
-struct RayTracer;	
+struct RayTracer;
 struct IGameComponent;
 extern struct IGameComponent Protocol_Component;
 
 void Protocol_Tick(void);
 
 extern cc_bool cpe_needD3Fix;
-void Classic_SendChat(const cc_string* text, cc_bool partial);
+struct LoginPacket {
+	cc_uint8 opcode;
+	cc_uint8 version;
+	cc_uint8 user[64];
+	cc_uint8 mppass[64];
+	cc_uint8 misc;
+};
+struct ChatPacket {
+	cc_uint8 opcode;
+	cc_uint8 type;
+	cc_uint8 msg[64];
+};
+
+void Classic_BuildLogin(struct LoginPacket* pkt);
+void Classic_BuildChat(const cc_string* text, cc_bool partial, struct ChatPacket* pkt);
 void Classic_SendSetBlock(int x, int y, int z, cc_bool place, BlockID block);
-void Classic_SendLogin(void);
+
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t);
 void CPE_SendNotifyAction(int action, cc_uint16 value);
 void CPE_SendNotifyPositionAction(int action, int x, int y, int z);

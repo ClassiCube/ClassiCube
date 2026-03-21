@@ -243,13 +243,16 @@ static float net_connectElapsed;
 #define NET_TIMEOUT_SECS 15
 
 static void MPConnection_FinishConnect(void) {
+	struct LoginPacket pkt;
 	net_connecting = false;
 	Event_RaiseVoid(&NetEvents.Connected);
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 
 	net_readCurrent = net_readBuffer;
 	net_lastPacket  = Game.Time;
-	Classic_SendLogin();
+
+	Classic_BuildLogin(&pkt);
+	Server.SendData((cc_uint8*)&pkt, sizeof(pkt));
 }
 
 static void MPConnection_Fail(const cc_string* reason) {
@@ -347,15 +350,31 @@ static void MPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now
 }
 
 static void MPConnection_SendChat(const cc_string* text) {
+	#define CHAT_MAX_PKTS 2
+	struct ChatPacket pkts[CHAT_MAX_PKTS];
+	cc_bool partial;
 	cc_string left;
+	int pktCount, partLen;
+
 	if (!text->length || net_connecting) return;
 	left = *text;
+	pktCount = 0;
 
-	while (left.length > STRING_SIZE) {
-		Classic_SendChat(&left, true);
-		left = String_UNSAFE_SubstringAt(&left, STRING_SIZE);
+	/* Try to fit multilined chat messages into one TCP packet */
+	while (left.length) {
+		partial = left.length > STRING_SIZE;
+		Classic_BuildChat(&left, partial, &pkts[pktCount++]);
+
+		partLen = min(left.length, STRING_SIZE);
+		left    = String_UNSAFE_SubstringAt(&left, partLen);
+
+		if (pktCount == CHAT_MAX_PKTS) continue;
+		Server.SendData((cc_uint8*)pkts, pktCount * sizeof(pkts[0]));
+		pktCount = 0;
 	}
-	Classic_SendChat(&left, false);
+
+	if (!pktCount) return;
+	Server.SendData((cc_uint8*)pkts, pktCount * sizeof(pkts[0]));
 }
 
 static void MPConnection_Disconnect(void) {
