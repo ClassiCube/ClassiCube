@@ -52,7 +52,7 @@ void Gfx_Free(void) {
 
 
 typedef struct CCTexture {
-	int width, height;
+	unsigned short width, height;
 	BitmapCol pixels[];
 } CCTexture;
 
@@ -81,7 +81,8 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 		
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)Mem_Alloc(2 + bmp->width * bmp->height, 4, "Texture");
+	CCTexture* tex = (CCTexture*)Mem_TryAlloc(2 + bmp->width * bmp->height, BITMAPCOLOR_SIZE);
+	if (!tex) return NULL;
 
 	tex->width  = bmp->width;
 	tex->height = bmp->height;

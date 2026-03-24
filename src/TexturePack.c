@@ -232,11 +232,13 @@ cc_bool Atlas_TryChange(struct Bitmap* atlas) {
 		return false;
 	}
 
+#ifndef CC_BUILD_TINYMEM
 	if (atlas->height < atlas->width) {
 		/* Probably wouldn't want to use these, but you still can technically */
 		Chat_AddRaw("&cHeight of terrain.png is less than its width.");
 		Chat_AddRaw("&c Some tiles will therefore appear completely white.");
 	}
+#endif
 	if (atlas->width > Gfx.MaxTexWidth) {
 		/* Super HD textures probably won't work great on this GPU */
 		Chat_AddRaw("&cYou may experience significantly reduced performance.");
