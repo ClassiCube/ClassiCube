@@ -374,6 +374,7 @@ extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
 /* Result code for when a socket connection has been dropped by the other side */
 extern const cc_result ReturnCode_SocketDropped;
+#define ReturnCode_IsWouldBlock(res) ((res) == ReturnCode_SocketInProgess || (res) == ReturnCode_SocketWouldBlock)
 
 /* If the input represents an IP address, then parses the input into a single IP address */
 /* Otherwise, attempts to resolve the input via DNS into one or more IP addresses */

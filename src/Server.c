@@ -243,19 +243,6 @@ static cc_bool net_connecting;
 static float net_connectElapsed;
 #define NET_TIMEOUT_SECS 15
 
-static void MPConnection_FinishConnect(void) {
-	struct LoginPacket pkt;
-	net_connecting = false;
-	Event_RaiseVoid(&NetEvents.Connected);
-	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
-
-	net_readCurrent = net_readBuffer;
-	net_lastPacket  = Game.Time;
-
-	Classic_BuildLogin(&pkt);
-	Server.SendData((cc_uint8*)&pkt, sizeof(pkt));
-}
-
 static void MPConnection_Fail(const cc_string* reason) {
 	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 	String_InitArray(msg, msgBuffer);
@@ -278,27 +265,38 @@ static void MPConnection_FailConnect(cc_result result) {
 	MPConnection_Fail(&reason);
 }
 
+static void MPConnection_FinishConnect(void) {
+	net_connecting = false;
+	Event_RaiseVoid(&NetEvents.Connected);
+	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
+
+	net_readCurrent = net_readBuffer;
+	net_lastPacket  = Game.Time;
+}
+
 static void MPConnection_TickConnect(struct ScheduledTask2* task) {
-	cc_bool writable;
-	cc_result res = Socket_Poll(net_socket, 0, SOCKET_POLL_WRITE, &writable);
+	struct LoginPacket pkt;
+	Classic_BuildLogin(&pkt);
+	cc_uint32 wrote = 0;
+
+	cc_uint8* buf = (cc_uint8*)&pkt;
+	cc_result res = Socket_Write(net_socket, buf, sizeof(pkt), &wrote);
 	net_connectElapsed += task->interval;
 
-	if (res) {
-		MPConnection_FailConnect(res);
-	} else if (writable) {
-		/* The async connect call may have failed */
-		res = Socket_GetLastError(net_socket);
+	if (!res) {
+		/* Shouldn't happen since packet is so small, but just in case */
+		if (wrote < sizeof(pkt)) { Server.SendData(buf + wrote, sizeof(pkt) - wrote); }
 
-		if (res) {
-			MPConnection_FailConnect(res);
+		MPConnection_FinishConnect();
+	} else if (ReturnCode_IsWouldBlock(res)) {
+		if (net_connectElapsed > NET_TIMEOUT_SECS) {
+			MPConnection_FailConnect(0);
 		} else {
-			MPConnection_FinishConnect();
+			float left = NET_TIMEOUT_SECS - net_connectElapsed;
+			Event_RaiseFloat(&WorldEvents.Loading, left / NET_TIMEOUT_SECS);
 		}
-	} else if (net_connectElapsed > NET_TIMEOUT_SECS) {
-		MPConnection_FailConnect(0);
 	} else {
-		float left = NET_TIMEOUT_SECS - net_connectElapsed;
-		Event_RaiseFloat(&WorldEvents.Loading, left / NET_TIMEOUT_SECS);
+		MPConnection_FailConnect(res);
 	}
 }
 
@@ -329,7 +327,7 @@ static void MPConnection_BeginConnect(void) {
 	if (res) { MPConnection_FailConnect(res); return; }
 	res = Socket_Connect(net_socket, &addrs[0]);
 
-	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
+	if (res && !ReturnCode_IsWouldBlock(res)) {
 		MPConnection_FailConnect(res);
 	} else {
 		Server.Disconnected = false;
@@ -418,8 +416,7 @@ static cc_bool MPConnection_Tick(struct ScheduledTask2* task) {
 	
 	if (res) {
 		/* 'no data available for non-blocking read' is an expected error */
-		if (res == ReturnCode_SocketInProgess)  res = 0;
-		if (res == ReturnCode_SocketWouldBlock) res = 0;
+		if (ReturnCode_IsWouldBlock(res)) res = 0;
 
 		if (res) { DisconnectReadFailed(res); return true; }
 	} else if (read == 0) {
@@ -486,7 +483,7 @@ static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
 		res = Socket_Write(net_socket, data, len, &wrote);
 		/* If sending would block (send buffer full), retry for a bit up to 10 seconds */
 		/* TODO: Avoid doing this and manually buffer data when this happens */
-		if (res && tries < 1000 && (res == ReturnCode_SocketInProgess || res == ReturnCode_SocketWouldBlock)) {
+		if (res && tries < 1000 && ReturnCode_IsWouldBlock(res)) {
 			Thread_Sleep(10);
 			tries++;
 			continue;
