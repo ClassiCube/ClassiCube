@@ -334,18 +334,18 @@ static void Animations_Validate(void) {
 	}
 }
 
-static void Animations_Tick(struct ScheduledTask* task) {
+static cc_bool Animations_Tick(struct ScheduledTask2* task) {
 	int i;
 #ifndef CC_BUILD_WEB
 	if (useLavaAnim)  LavaAnimation_Tick();
 	if (useWaterAnim) WaterAnimation_Tick();
 #endif
 
-	if (!anims_count) return;
+	if (!anims_count) return true;
 	if (!anims_bmp.scan0) {
 		Chat_AddRaw("&cCurrent texture pack specifies it uses animations,");
 		Chat_AddRaw("&cbut is missing animations.png");
-		anims_count = 0; return;
+		anims_count = 0; return true;
 	}
 
 	/* deferred, because when reading animations.txt, might not have read animations.png yet */
@@ -353,6 +353,7 @@ static void Animations_Tick(struct ScheduledTask* task) {
 	for (i = 0; i < anims_count; i++) {
 		Animations_Apply(&anims_list[i]);
 	}
+	return true;
 }
 
 
@@ -396,7 +397,10 @@ static void OnInit(void) {
 	TextureEntry_Register(&water_entry);
 	TextureEntry_Register(&lava_entry);
 
-	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
+	Game_Tasks.anims.interval = GAME_DEF_TICKS;
+	Game_Tasks.anims.callback = Animations_Tick;
+	ScheduledTask2_Add(&Game_Tasks.anims);
+
 	Event_Register_(&TextureEvents.PackChanged, NULL, OnPackChanged);
 }
 #else

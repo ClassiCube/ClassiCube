@@ -497,13 +497,15 @@ void Entity_LerpAngles(struct Entity* e, float t) {
 *#########################################################################################################################*/
 struct _EntitiesData Entities;
 
-void Entities_Tick(struct ScheduledTask* task) {
+static cc_bool Entities_Tick(struct ScheduledTask2* task) {
 	int i;
+
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->interval);
 	}
+	return true;
 }
 
 void Entities_RenderModels(float delta, float t) {
@@ -1199,6 +1201,10 @@ static void Entities_Init(void) {
 	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];
 	LocalPlayer_HookBinds();
+
+	Game_Tasks.entities.interval = GAME_DEF_TICKS;
+	Game_Tasks.entities.callback = Entities_Tick;
+	ScheduledTask2_Add(&Game_Tasks.entities);
 }
 
 static void Entities_Free(void) {

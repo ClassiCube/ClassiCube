@@ -307,7 +307,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 }
 
 /* Deletes cached responses that are over 10 seconds old */
-static void Http_CleanCacheTask(struct ScheduledTask* task) {
+static cc_bool Http_CleanCacheTask(struct ScheduledTask2* task) {
 	struct HttpRequest* item;
 	int i;
 
@@ -325,6 +325,7 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 		}
 	}
 	Mutex_Unlock(processedMutex);
+	return true;
 }
 
 
@@ -406,9 +407,11 @@ void Http_LogError(const char* action, const struct HttpRequest* item) {
 static void Http_InitCommon(void) {
 	httpOnly    = Options_GetBool(OPT_HTTP_ONLY,    false);
 	httpsVerify = Options_GetBool(OPT_HTTPS_VERIFY, true);
-
 	Options_Get(OPT_SKIN_SERVER, &skinServer, SKINS_SERVER);
-	ScheduledTask_Add(30, Http_CleanCacheTask);
+
+	Game_Tasks.http.interval = 30.0f;
+	Game_Tasks.http.callback = Http_CleanCacheTask;
+	ScheduledTask2_Add(&Game_Tasks.http);
 }
 static void Http_Init(void);
 

@@ -581,11 +581,12 @@ void Particles_Render(float t) {
 	Gfx_SetAlphaTest(false);
 }
 
-static void Particles_Tick(struct ScheduledTask* task) {
+static cc_bool Particles_Tick(struct ScheduledTask2* task) {
 	float delta = task->interval;
 	Terrain_Tick(delta);
 	Rain_Tick(delta);
 	Custom_Tick(delta);
+	return true;
 }
 
 
@@ -610,7 +611,10 @@ static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, Blo
 }
 
 static void OnInit(void) {
-	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
+	Game_Tasks.particles.interval = GAME_DEF_TICKS;
+	Game_Tasks.particles.callback = Particles_Tick;
+	ScheduledTask2_Add(&Game_Tasks.particles);
+
 	Random_SeedFromCurrentTime(&rnd);
 	TextureEntry_Register(&particles_entry);
 

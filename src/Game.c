@@ -83,24 +83,46 @@ void Game_AddComponent(struct IGameComponent* comp) {
 	LinkedList_Append(comp, comps_head, comps_tail);
 }
 
-#define TASKS_DEF_ELEMS 6
-static struct ScheduledTask defaultTasks[TASKS_DEF_ELEMS];
-static int tasksCapacity = TASKS_DEF_ELEMS, tasksCount, entTaskI;
-static struct ScheduledTask* tasks = defaultTasks;
+
+static struct ScheduledTask2* tasks_head;
+static struct ScheduledTask2* tasks_tail;
+struct CoreScheduledTasks Game_Tasks;
+
+/* Backwards compatibility */
+struct ScheduledTask2Ext {
+	struct ScheduledTask2 task;
+	ScheduledTaskCallback callback;
+};
+
+static cc_bool ScheduledTask_Callback(struct ScheduledTask2* task) {
+	struct ScheduledTask2Ext* src = (struct ScheduledTask2Ext*)task;
+	struct ScheduledTask dst;
+
+	dst.accumulator = task->accumulator;
+	dst.interval    = task->interval;
+	dst.Callback    = src->callback;
+
+	dst.Callback(&dst);
+
+	task->accumulator = dst.accumulator;
+	task->interval    = dst.interval;
+	src->callback     = dst.Callback;
+	return true;
+}
 
 int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
-	struct ScheduledTask task;
-	task.accumulator = 0.0;
-	task.interval    = interval;
-	task.Callback    = callback;
+	struct ScheduledTask2Ext* t = Mem_Alloc(1, sizeof(struct ScheduledTask2Ext), "task");
+	t->task.interval    = interval;
+	t->task.callback    = ScheduledTask_Callback;
+	t->callback         = callback;
 
-	if (tasksCount == tasksCapacity) {
-		Utils_Resize((void**)&tasks, &tasksCapacity,
-			sizeof(struct ScheduledTask), TASKS_DEF_ELEMS, TASKS_DEF_ELEMS);
-	}
+	ScheduledTask2_Add(&t->task);
+	return 0;
+}
 
-	tasks[tasksCount++] = task;
-	return tasksCount - 1;
+void ScheduledTask2_Add(struct ScheduledTask2* task) {
+	task->accumulator = 0.0f;
+	LinkedList_Append(task, tasks_head, tasks_tail);
 }
 
 
@@ -442,7 +464,6 @@ static void Game_Load(void) {
 	Game_AddComponent(&Particles_Component);
 	Game_AddComponent(&TabList_Component);
 	Game_AddComponent(&Models_Component);
-	Game_AddComponent(&Entities_Component);
 	Game_AddComponent(&Http_Component);
 	Game_AddComponent(&Lighting_Component);
 
@@ -453,6 +474,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&EnvRenderer_Component);
 	Game_AddComponent(&Server_Component);
 	Game_AddComponent(&Protocol_Component);
+	Game_AddComponent(&Entities_Component);
 
 	Game_AddComponent(&Gui_Component);
 	Game_AddComponent(&Selections_Component);
@@ -474,8 +496,6 @@ static void Game_Load(void) {
 		Window_ShowDialog("Missing file",
 			"Both default.zip and classicube.zip are missing,\n try downloading resources first.\n\nClassiCube will still run, but without any textures.");
 	}
-
-	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 	Gfx_WarnIfNecessary();
 
 	if (Gfx.Limitations & GFX_LIMIT_VERTEX_ONLY_FOG)
@@ -575,18 +595,17 @@ static void Render3D_Anaglyph(float delta, float t) {
 	Gfx_End3D(&proj, &view);
 }
 
-static void PerformScheduledTasks(double time) {
-	struct ScheduledTask* task;
-	int i;
+static void PerformScheduledTasks(float time) {
+	struct ScheduledTask2* task = tasks_head;
 
-	for (i = 0; i < tasksCount; i++) {
-		task = &tasks[i];
+	while (task) {
 		task->accumulator += time;
 
 		while (task->accumulator >= task->interval) {
-			task->Callback(task);
+			task->callback(task);
 			task->accumulator -= task->interval;
 		}
+		task = task->next;
 	}
 }
 
@@ -741,7 +760,6 @@ int Game_MapState(int deviceIndex) {
 #endif
 
 void Game_RenderFrame(void) {
-	struct ScheduledTask entTask;
 	double deltaD;
 	float t, delta;
 
@@ -766,7 +784,7 @@ void Game_RenderFrame(void) {
 			/* all good, context is back */
 		} else {
 			Game.Time += delta; /* TODO: Not set in two places? */
-			Server.Tick(NULL);
+			Server.Tick(&Game_Tasks.network);
 			Thread_Sleep(16);
 			return;
 		}
@@ -799,9 +817,8 @@ void Game_RenderFrame(void) {
 		InputHandler_SetFOV(Camera.ZoomFov);
 	}
 
-	PerformScheduledTasks(deltaD);
-	entTask = tasks[entTaskI];
-	t = (float)(entTask.accumulator / entTask.interval);
+	PerformScheduledTasks(delta);
+	t = (float)(Game_Tasks.entities.accumulator / Game_Tasks.entities.interval);
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
 
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
@@ -850,7 +867,7 @@ void Game_Free(void) {
 	/* Set to false so components will always free managed textures too */
 	Gfx.ManagedTextures = false;
 	Event_UnregisterAll();
-	tasksCount = 0;
+	tasks_head = NULL;
 
 	for (comp = comps_head; comp; comp = comp->next)
 	{

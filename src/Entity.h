@@ -183,8 +183,6 @@ CC_VAR extern struct _EntitiesData {
 	struct LocalPlayer* CurPlayer;
 } Entities;
 
-/* Ticks all entities */
-void Entities_Tick(struct ScheduledTask* task);
 /* Renders all entities */
 void Entities_RenderModels(float delta, float t);
 /* Removes the given entity, raising EntityEvents.Removed event */

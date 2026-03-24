@@ -154,20 +154,38 @@ struct IGameComponent {
 /* Adds a component to linked list of components. (always at end) */
 CC_NOINLINE void Game_AddComponent(struct IGameComponent* comp);
 
-/* Represents a task that periodically runs on the main thread every specified interval. */
+
+/* Obsoleted by ScheduledTask2 */
 struct ScheduledTask;
+typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
 struct ScheduledTask {
+	double accumulator, interval;
+	ScheduledTaskCallback Callback;
+};
+CC_API int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
+
+/* Represents a task that periodically runs on the main thread every specified interval. */
+struct ScheduledTask2;
+typedef cc_bool (*ScheduledTask2Callback)(struct ScheduledTask2* task);
+
+struct ScheduledTask2 {
 	/* How long (in seconds) has elapsed since callback was last invoked */
-	double accumulator;
+	float accumulator;
 	/* How long (in seconds) between invocations of the callback */
-	double interval;
+	float interval;
 	/* Callback function that is periodically invoked */
-	void (*Callback)(struct ScheduledTask* task);
+	ScheduledTask2Callback callback;
+	/* Internal, next scheduled task in linked list */
+	struct ScheduledTask2* next;
 };
 
-typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
 /* Adds a task to list of scheduled tasks. (always at end) */
-CC_API int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
+CC_API void ScheduledTask2_Add(struct ScheduledTask2* task);
+
+/* note: done so that default linked list entries are next to each other in memory */
+extern struct CoreScheduledTasks {
+	struct ScheduledTask2 entities, network, particles, anims, http;
+} Game_Tasks;
 
 CC_END_HEADER
 #endif
