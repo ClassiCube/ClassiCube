@@ -284,10 +284,10 @@ static void MPConnection_TickConnect(struct ScheduledTask2* task) {
 	net_connectElapsed += task->interval;
 
 	if (!res) {
+		MPConnection_FinishConnect();
+
 		/* Shouldn't happen since packet is so small, but just in case */
 		if (wrote < sizeof(pkt)) { Server.SendData(buf + wrote, sizeof(pkt) - wrote); }
-
-		MPConnection_FinishConnect();
 	} else if (ReturnCode_IsWouldBlock(res)) {
 		if (net_connectElapsed > NET_TIMEOUT_SECS) {
 			MPConnection_FailConnect(0);
