@@ -46,9 +46,10 @@ const cc_result ReturnCode_FileNotFound       = -4;
 const cc_result ReturnCode_PathNotFound       = 99999;
 const cc_result ReturnCode_DirectoryExists    = -8;
 
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = EPIPE;
+const cc_result ReturnCode_SocketInProgess    = EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock   = EWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped      = EPIPE;
+const cc_result ReturnCode_SocketNotConnected = ENOTCONN;
 
 const char* Platform_AppNameSuffix = " PS2";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;

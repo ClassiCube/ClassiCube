@@ -33,12 +33,14 @@
 #include <orbis/Rtc.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_PathNotFound     = 99999;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = EPIPE;
+const cc_result ReturnCode_FileNotFound       = ENOENT;
+const cc_result ReturnCode_PathNotFound       = 99999;
+const cc_result ReturnCode_DirectoryExists    = EEXIST;
+
+const cc_result ReturnCode_SocketInProgess    = EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock   = EWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped      = EPIPE;
+const cc_result ReturnCode_SocketNotConnected = ENOTCONN;
 
 const char* Platform_AppNameSuffix = " PS4";
 cc_bool Platform_ReadonlyFilesystem;

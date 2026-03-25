@@ -35,12 +35,14 @@
 #include <sysmodule/sysmodule.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
-const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
-const cc_result ReturnCode_PathNotFound     = 99999;
-const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
-const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = NET_EPIPE;
+const cc_result ReturnCode_FileNotFound       = 0x80010006; // ENOENT;
+const cc_result ReturnCode_PathNotFound       = 99999;
+const cc_result ReturnCode_DirectoryExists    = 0x80010014; // EEXIST
+
+const cc_result ReturnCode_SocketInProgess    = NET_EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock   = NET_EWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped      = NET_EPIPE;
+const cc_result ReturnCode_SocketNotConnected = NET_ENOTCONN;
 
 const char* Platform_AppNameSuffix = " PS3";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;

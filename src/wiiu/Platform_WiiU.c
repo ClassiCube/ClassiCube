@@ -46,14 +46,16 @@
 #define SOCK_ERR_WOULDBLOCK  6
 #define SOCK_ERR_PIPE       13
 #define SOCK_ERR_INPROGRESS 22
+#define SOCK_ERR_NOTCONN     9
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_PathNotFound     = 99999;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = SOCK_ERR_INPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = SOCK_ERR_WOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = SOCK_ERR_PIPE;
+const cc_result ReturnCode_FileNotFound       = ENOENT;
+const cc_result ReturnCode_PathNotFound       = 99999;
+const cc_result ReturnCode_DirectoryExists    = EEXIST;
+const cc_result ReturnCode_SocketInProgess    = SOCK_ERR_INPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock   = SOCK_ERR_WOULDBLOCK;
+const cc_result ReturnCode_SocketDropped      = SOCK_ERR_PIPE;
+const cc_result ReturnCode_SocketNotConnected = SOCK_ERR_NOTCONN;
 
 const char* Platform_AppNameSuffix = " Wii U";
 cc_bool Platform_ReadonlyFilesystem;

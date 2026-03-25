@@ -30,12 +30,15 @@ KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
                INIT_VMU        | INIT_CDROM    | INIT_NET);
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_PathNotFound     = 99999;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = EPIPE;
+const cc_result ReturnCode_FileNotFound       = ENOENT;
+const cc_result ReturnCode_PathNotFound       = 99999;
+const cc_result ReturnCode_DirectoryExists    = EEXIST;
+
+const cc_result ReturnCode_SocketInProgess    = EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock   = EWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped      = EPIPE;
+const cc_result ReturnCode_SocketNotConnected = ENOTCONN;
+
 static cc_bool usingSD;
 
 const char* Platform_AppNameSuffix = " Dreamcast";
