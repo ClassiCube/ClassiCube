@@ -470,7 +470,6 @@ cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
 const cc_result ReturnCode_SocketInProgess    = -1;
 const cc_result ReturnCode_SocketWouldBlock   = -1;
 const cc_result ReturnCode_SocketDropped      = -1;
-const cc_result ReturnCode_SocketNotConnected = -1;
 
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	return ERR_NOT_SUPPORTED;

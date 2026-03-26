@@ -42,7 +42,6 @@ const cc_result ReturnCode_DirectoryExists    = 0x80010014; // EEXIST
 const cc_result ReturnCode_SocketInProgess    = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock   = NET_EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped      = NET_EPIPE;
-const cc_result ReturnCode_SocketNotConnected = NET_ENOTCONN;
 
 const char* Platform_AppNameSuffix = " PS3";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;

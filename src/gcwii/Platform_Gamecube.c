@@ -39,7 +39,6 @@ const cc_result ReturnCode_DirectoryExists    = EEXIST;
 const cc_result ReturnCode_SocketInProgess    = -EINPROGRESS; // net_XYZ error results are negative
 const cc_result ReturnCode_SocketWouldBlock   = -EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped      = -EPIPE;
-const cc_result ReturnCode_SocketNotConnected = -ENOTCONN;
 
 const char* Platform_AppNameSuffix = " GameCube";
 cc_bool Platform_ReadonlyFilesystem;

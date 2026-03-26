@@ -39,7 +39,6 @@ const cc_result ReturnCode_DirectoryExists    = EEXIST;
 const cc_result ReturnCode_SocketInProgess    = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock   = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped      = EPIPE;
-const cc_result ReturnCode_SocketNotConnected = ENOTCONN;
 #define SUPPORTS_GETADDRINFO 1
 
 #if defined CC_BUILD_ANDROID

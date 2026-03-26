@@ -374,9 +374,6 @@ extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
 /* Result code for when a socket connection has been dropped by the other side */
 extern const cc_result ReturnCode_SocketDropped;
-/* Result code for when a socket operation is performed on a socket not currently fully connected */
-/* NOTE: This may only be a temporary state (e.g. because connection attempt is in progress) */
-extern const cc_result ReturnCode_SocketNotConnected;
 #define ReturnCode_IsWouldBlock(res) ((res) == ReturnCode_SocketInProgess || (res) == ReturnCode_SocketWouldBlock)
 
 /* If the input represents an IP address, then parses the input into a single IP address */

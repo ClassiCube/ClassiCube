@@ -23,7 +23,7 @@ const cc_result ReturnCode_DirectoryExists    = EEXIST;
 const cc_result ReturnCode_SocketInProgess    = SCE_NET_ERROR_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock   = SCE_NET_ERROR_EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped      = SCE_NET_ERROR_EPIPE;
-const cc_result ReturnCode_SocketNotConnected = SCE_NET_ERROR_ENOTCONN;
+
 static int epoll_id;
 static int stdout_fd;
 

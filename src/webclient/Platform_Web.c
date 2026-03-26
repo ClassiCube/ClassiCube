@@ -27,7 +27,6 @@
 #define _EEXIST       17
 #define _EHOSTUNREACH 23
 #define _EINPROGRESS  26
-#define _ENOTCONN     53
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // Not used in web filesystem backend
 const cc_result ReturnCode_FileNotFound       = _ENOENT;
@@ -36,7 +35,6 @@ const cc_result ReturnCode_DirectoryExists    = _EEXIST;
 
 const cc_result ReturnCode_SocketInProgess    = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock   = _EAGAIN;
-const cc_result ReturnCode_SocketNotConnected = _ENOTCONN;
 
 const char* Platform_AppNameSuffix = "";
 cc_uint8 Platform_Flags;
