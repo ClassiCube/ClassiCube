@@ -438,6 +438,7 @@ static void Game_Load(void) {
 	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 	Gfx_Create();
 	
+	tasks_head = NULL;
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
 	GameVersion_Load();
@@ -867,7 +868,6 @@ void Game_Free(void) {
 	/* Set to false so components will always free managed textures too */
 	Gfx.ManagedTextures = false;
 	Event_UnregisterAll();
-	tasks_head = NULL;
 
 	for (comp = comps_head; comp; comp = comp->next)
 	{
