@@ -12,6 +12,7 @@
 #include "Particle.h"
 #include "Drawer2D.h"
 #include "Server.h"
+#include "Platform.h"
 
 /*########################################################################################################################*
 *------------------------------------------------------Entity Shadow------------------------------------------------------*
@@ -224,7 +225,11 @@ static void EntityShadow_Draw(struct Entity* e) {
 #define sh_half (sh_size / 2)
 
 static void EntityShadows_MakeTexture(void) {
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	BitmapCol* pixels = (BitmapCol*)Mem_Alloc(sh_size * sh_size, BITMAPCOLOR_SIZE, "shadow");
+#else
 	BitmapCol pixels[sh_size * sh_size];
+#endif
 	BitmapCol color = BitmapCol_Make(0, 0, 0, 200);
 	struct Bitmap bmp;
 	cc_uint32 x, y;
@@ -241,6 +246,9 @@ static void EntityShadows_MakeTexture(void) {
 		}
 	}
 	shadows_tex = Gfx_CreateTexture(&bmp, 0, false);
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	Mem_Free(pixels);
+#endif
 }
 
 void EntityShadows_Render(void) {

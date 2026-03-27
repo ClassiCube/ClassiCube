@@ -161,6 +161,7 @@ void CrashHandler_Install(void) {
 }
 
 void Process_Abort2(cc_result result, const char* raw_msg) {
+	crashed = true;
 	Logger_DoAbort(result, raw_msg, NULL);
 }
 
