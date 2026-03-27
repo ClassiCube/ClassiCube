@@ -225,7 +225,7 @@ static void EntityShadow_Draw(struct Entity* e) {
 #define sh_half (sh_size / 2)
 
 static void EntityShadows_MakeTexture(void) {
-#if CC_BUILD_MAXSTACK <= (16 * 1024)
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
 	BitmapCol* pixels = (BitmapCol*)Mem_Alloc(sh_size * sh_size, BITMAPCOLOR_SIZE, "shadow");
 #else
 	BitmapCol pixels[sh_size * sh_size];
@@ -246,6 +246,9 @@ static void EntityShadows_MakeTexture(void) {
 		}
 	}
 	shadows_tex = Gfx_CreateTexture(&bmp, 0, false);
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	Mem_Free(pixels);
+#endif
 }
 
 void EntityShadows_Render(void) {
