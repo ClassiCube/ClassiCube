@@ -41,6 +41,11 @@ jobs:
           
       - uses: ./.github/actions/upload_build
         with:
+          SOURCE_FILE: 'ClassiCube-saturn.bin'
+          DEST_NAME: 'ClassiCube-saturn.bin'
+          
+      - uses: ./.github/actions/upload_build
+        with:
           SOURCE_FILE: 'ClassiCube-saturn.cue'
           DEST_NAME: 'ClassiCube-saturn.cue'
           
