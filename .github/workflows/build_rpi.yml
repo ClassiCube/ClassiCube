@@ -21,7 +21,7 @@ jobs:
     container:
       image: dockcross/linux-armv6-lts
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Retrieve OpenGL and X11 dev files
         run: |
@@ -70,7 +70,7 @@ jobs:
     container:
       image: dockcross/linux-arm64-lts
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Retrieve OpenGL and X11 dev files
         run: |

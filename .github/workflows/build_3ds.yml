@@ -18,7 +18,7 @@ jobs:
     container:
       image: devkitpro/devkitarm:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Compile 3DS build
         run: |
           make 3ds

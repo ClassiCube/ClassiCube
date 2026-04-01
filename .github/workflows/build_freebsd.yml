@@ -18,7 +18,7 @@ jobs:
     container:
       image: empterdose/freebsd-cross-build:11.4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install prerequisites
         run: apk add bash wget curl

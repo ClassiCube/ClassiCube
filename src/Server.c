@@ -236,22 +236,21 @@ static void OnClose(void);
 #ifdef CC_BUILD_NETWORKING
 static cc_uint8  net_readBuffer[4096 * 5];
 static cc_uint8* net_readCurrent;
-static double net_lastPacket;
 static cc_uint8 lastOpcode;
+static float timeSinceLast;
 
 static cc_bool net_connecting;
-static float net_connectElapsed;
 #define NET_TIMEOUT_SECS 15
 
 static void MPConnection_FinishConnect(void) {
 	struct LoginPacket pkt;
 	net_connecting = false;
+	timeSinceLast  = 0.0f;
+
 	Event_RaiseVoid(&NetEvents.Connected);
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 
 	net_readCurrent = net_readBuffer;
-	net_lastPacket  = Game.Time;
-
 	Classic_BuildLogin(&pkt);
 	Server.SendData((cc_uint8*)&pkt, sizeof(pkt));
 }
@@ -278,10 +277,9 @@ static void MPConnection_FailConnect(cc_result result) {
 	MPConnection_Fail(&reason);
 }
 
-static void MPConnection_TickConnect(struct ScheduledTask2* task) {
+static void MPConnection_TickConnect(void) {
 	cc_bool writable;
 	cc_result res = Socket_Poll(net_socket, 0, SOCKET_POLL_WRITE, &writable);
-	net_connectElapsed += task->interval;
 
 	if (res) {
 		MPConnection_FailConnect(res);
@@ -294,10 +292,10 @@ static void MPConnection_TickConnect(struct ScheduledTask2* task) {
 		} else {
 			MPConnection_FinishConnect();
 		}
-	} else if (net_connectElapsed > NET_TIMEOUT_SECS) {
+	} else if (timeSinceLast > NET_TIMEOUT_SECS) {
 		MPConnection_FailConnect(0);
 	} else {
-		float left = NET_TIMEOUT_SECS - net_connectElapsed;
+		float left = NET_TIMEOUT_SECS - timeSinceLast;
 		Event_RaiseFloat(&WorldEvents.Loading, left / NET_TIMEOUT_SECS);
 	}
 }
@@ -334,7 +332,7 @@ static void MPConnection_BeginConnect(void) {
 	} else {
 		Server.Disconnected = false;
 		net_connecting      = true;
-		net_connectElapsed  = 0;
+		timeSinceLast       = 0.0f;
 
 		String_Format2(&title, "Connecting to %s:%i..", &Server.Address, &Server.Port);
 		LoadingScreen_Show(&title, &String_Empty);
@@ -410,8 +408,9 @@ static cc_bool MPConnection_Tick(struct ScheduledTask2* task) {
 	int i, remaining;
 	cc_result res;
 
+	timeSinceLast += task->interval;
 	if (Server.Disconnected) return true;
-	if (net_connecting) { MPConnection_TickConnect(task); return true; }
+	if (net_connecting) { MPConnection_TickConnect(); return true; }
 
 	/* NOTE: using a read call that is a multiple of 4096 (appears to?) improve read performance */	
 	res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &read);
@@ -426,11 +425,11 @@ static cc_bool MPConnection_Tick(struct ScheduledTask2* task) {
 		/* recv only returns 0 read when socket is closed.. probably? */
 		/* Over 30 seconds since last packet, connection probably dropped */
 		/* TODO: Should this be checked unconditonally instead of just when read = 0 ? */
-		if (net_lastPacket + 30 < Game.Time) { MPConnection_Disconnect(); return true; }
+		if (timeSinceLast >= 30.0f) { MPConnection_Disconnect(); return true; }
 	} else {
-		readCur        = net_readBuffer;
-		readEnd        = net_readCurrent + read;
-		net_lastPacket = Game.Time;
+		readCur       = net_readBuffer;
+		readEnd       = net_readCurrent + read;
+		timeSinceLast = 0.0f;
 
 		while (readCur < readEnd) {
 			cc_uint8 opcode = readCur[0];

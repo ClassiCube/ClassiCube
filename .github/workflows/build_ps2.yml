@@ -18,7 +18,7 @@ jobs:
     container:
       image: ghcr.io/ps2dev/ps2sdk:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apk add make mpc1 curl
