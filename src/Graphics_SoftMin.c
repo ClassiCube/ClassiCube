@@ -492,6 +492,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 		color = BitmapCol_Make(R, G, B, 0xFF);
 		#include "Graphics_SoftMin.tri.i"
+		#undef PIXEL_PLOT_FUNC
 	} else {
 		// Hardcode for alpha of 128
 		#define PIXEL_PLOT_FUNC(index, x, y) \
@@ -502,6 +503,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			colorBuffer[index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 
 		#include "Graphics_SoftMin.tri.i"
+		#undef PIXEL_PLOT_FUNC
 	}
 }
 

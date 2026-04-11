@@ -115,12 +115,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 struct GRWORD { UWORD plane1, plane2, plane3, plane4; };
 
 // TODO should be done in assembly.. search up 'chunky to planar atari ST'
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// TODO
-	UWORD* ptr = Physbase();
-	Mem_Set(ptr, 0, 32000);
+#include "../Chat.h"
+#include "../Platform.h"
+
+static void Window_DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp, struct GRWORD* planes) {
+	Mem_Set(planes, 0, 32000);
 	int idx = 0;
-	struct GRWORD* planes = (struct GRWORD*)ptr;
 
 	for (int y = 0; y < r.height; y++) 
 	{
@@ -145,6 +145,53 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			planes[word].plane4 |= g2<< bit;
         }
     }
+}
+
+#define PLOT_PIXEL(bit) \
+	src= *cur++; \
+	R  = BitmapCol_R(src) >> 7; \
+	G  = BitmapCol_G(src) >> 6; \
+	B  = BitmapCol_B(src) >> 7; \
+	g1 = G & 0x01; \
+	g2 = (G >> 1); \
+	plane.plane1 |= R << bit; \
+	plane.plane2 |= B << bit; \
+	plane.plane3 |= g1<< bit; \
+	plane.plane4 |= g2<< bit; \
+
+static void Window_DrawFramebufferBulk(struct Bitmap* bmp, struct GRWORD* planes) {
+	BitmapCol* cur = bmp->scan0;
+	BitmapCol* end = bmp->scan0 + SCREEN_WIDTH * SCREEN_HEIGHT;
+	BitmapCol src;
+	cc_uint8 R, G, B;
+	int g1, g2;
+
+	while (cur < end)
+	{
+		struct GRWORD plane = { 0, 0, 0, 0 };
+        // TODO optimise
+		PLOT_PIXEL(15); PLOT_PIXEL(14); PLOT_PIXEL(13); PLOT_PIXEL(12);
+		PLOT_PIXEL(11); PLOT_PIXEL(10); PLOT_PIXEL( 9); PLOT_PIXEL( 8);
+		PLOT_PIXEL( 7); PLOT_PIXEL( 6); PLOT_PIXEL( 5); PLOT_PIXEL( 4);
+		PLOT_PIXEL( 3); PLOT_PIXEL( 2); PLOT_PIXEL( 1); PLOT_PIXEL( 0);
+		*planes++ = plane;
+    }
+}
+
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	// TODO
+	struct GRWORD* planes = (struct GRWORD*)Physbase();
+	cc_uint64 beg = Stopwatch_Measure();
+	
+	if (r.x == 0 && r.y == 0 && r.width == SCREEN_WIDTH && r.height == SCREEN_HEIGHT) {
+		Window_DrawFramebufferBulk(bmp, planes);
+	} else {
+		Window_DrawFramebufferSlow(r, bmp, planes);
+	}
+
+	cc_uint64 end = Stopwatch_Measure();
+	int E = Stopwatch_ElapsedMS(beg, end);
+	Platform_Log1("ERR: %i", &E);
 }
 /*
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
