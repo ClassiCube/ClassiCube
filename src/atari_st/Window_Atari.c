@@ -114,10 +114,6 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 // Each group of 16 pixels is interleaved across 4 bitplanes
 struct GRWORD { UWORD plane1, plane2, plane3, plane4; };
 
-// TODO should be done in assembly.. search up 'chunky to planar atari ST'
-#include "../Chat.h"
-#include "../Platform.h"
-
 static void Window_DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp, struct GRWORD* planes) {
 	Mem_Set(planes, 0, 32000);
 	int idx = 0;
@@ -147,41 +143,49 @@ static void Window_DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp, struct GRWO
     }
 }
 
+/* Extract highest red bit, highest 2 green bits, highest blue bit */
+#define BC_R_HI1 (BITMAPCOLOR_R_SHIFT + BITMAPCOLOR_RGB_BITS - 1)
+#define BC_G_HI1 (BITMAPCOLOR_G_SHIFT + BITMAPCOLOR_RGB_BITS - 1)
+#define BC_G_HI2 (BITMAPCOLOR_G_SHIFT + BITMAPCOLOR_RGB_BITS - 2)
+#define BC_B_HI1 (BITMAPCOLOR_B_SHIFT + BITMAPCOLOR_RGB_BITS - 1)
+
 #define PLOT_PIXEL(bit) \
 	src= *cur++; \
-	R  = BitmapCol_R(src) >> 7; \
-	G  = BitmapCol_G(src) >> 6; \
-	B  = BitmapCol_B(src) >> 7; \
-	g1 = G & 0x01; \
-	g2 = (G >> 1); \
-	plane.plane1 |= R << bit; \
-	plane.plane2 |= B << bit; \
-	plane.plane3 |= g1<< bit; \
-	plane.plane4 |= g2<< bit; \
+	v  = (WORD)(src >> BC_R_HI1) & 1; \
+	plane1 |= v << bit;   \
+	v  = (WORD)(src >> BC_B_HI1) & 1; \
+	plane2 |= v << bit;   \
+	v  = (WORD)(src >> BC_G_HI2) & 1; \
+	plane3 |= v << bit;   \
+	v  = (WORD)(src >> BC_G_HI1) & 1; \
+	plane4 |= v << bit;   \
 
+// TODO should still be done in assembly.. search up 'chunky to planar atari ST'
+// Still takes ~540 milliseconds per frame (compared to 1130 milliseconds of 'slow' path in 32bpp, 1395 milliseconds of 'slow' path in 16bpp)
 static void Window_DrawFramebufferBulk(struct Bitmap* bmp, struct GRWORD* planes) {
 	BitmapCol* cur = bmp->scan0;
 	BitmapCol* end = bmp->scan0 + SCREEN_WIDTH * SCREEN_HEIGHT;
 	BitmapCol src;
-	cc_uint8 R, G, B;
-	int g1, g2;
+	WORD v;
 
 	while (cur < end)
 	{
-		struct GRWORD plane = { 0, 0, 0, 0 };
-        // TODO optimise
+		WORD plane1 = 0, plane2 = 0, plane3 = 0, plane4 = 0;
 		PLOT_PIXEL(15); PLOT_PIXEL(14); PLOT_PIXEL(13); PLOT_PIXEL(12);
 		PLOT_PIXEL(11); PLOT_PIXEL(10); PLOT_PIXEL( 9); PLOT_PIXEL( 8);
 		PLOT_PIXEL( 7); PLOT_PIXEL( 6); PLOT_PIXEL( 5); PLOT_PIXEL( 4);
 		PLOT_PIXEL( 3); PLOT_PIXEL( 2); PLOT_PIXEL( 1); PLOT_PIXEL( 0);
-		*planes++ = plane;
+		planes->plane1 = plane1;
+		planes->plane2 = plane2;
+		planes->plane3 = plane3;
+		planes->plane4 = plane4;
+		planes++;
     }
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// TODO
 	struct GRWORD* planes = (struct GRWORD*)Physbase();
-	cc_uint64 beg = Stopwatch_Measure();
+	//cc_uint64 beg = Stopwatch_Measure();
 	
 	if (r.x == 0 && r.y == 0 && r.width == SCREEN_WIDTH && r.height == SCREEN_HEIGHT) {
 		Window_DrawFramebufferBulk(bmp, planes);
@@ -189,35 +193,10 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		Window_DrawFramebufferSlow(r, bmp, planes);
 	}
 
-	cc_uint64 end = Stopwatch_Measure();
-	int E = Stopwatch_ElapsedMS(beg, end);
-	Platform_Log1("ERR: %i", &E);
+	//cc_uint64 end = Stopwatch_Measure();
+	//int E = Stopwatch_ElapsedMS(beg, end);
+	//Platform_Log1("ERR: %i", &E);
 }
-/*
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// TODO
-	UWORD* ptr = Physbase();
-
-	for (int y = 0; y < r.height; ++y) 
-	{
-        BitmapCol* row = Bitmap_GetRow(bmp, y);
-		UWORD* src = ptr + 80 * y;
-		Mem_Set(src, 0, sizeof(UWORD) * 80);
-
-        for (int x = 0; x < r.width; ++x) 
-		{
-            // TODO optimise
-            BitmapCol col = row[x];
-			cc_uint8 R = BitmapCol_R(col) >> 7;
-			cc_uint8 G = BitmapCol_G(col) >> 7;
-			cc_uint8 B = BitmapCol_B(col) >> 6;
-
-            int idx = R | (G << 1) | (B << 2);
-			src[x] |= idx << ((x & 0x03) * 4);
-        }
-    }
-}
-*/
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
