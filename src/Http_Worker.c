@@ -220,7 +220,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	/* TODO: Connect in parallel instead of serial, but that's a lot of work */
 	for (i = 0; i < numValidAddrs; i++)
 	{
-		res = Socket_Create(&conn->socket, &addrs[i], false);
+		res = Socket_Create(&conn->socket, &addrs[i]);
 		if (res) { HttpConnection_Close(conn); continue; }
 
 		String_InitArray(addrStr, addrBuf);

@@ -372,17 +372,24 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
 	*s = sceNetInetSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return sceNetInetGetErrno();
 
-	if (nonblocking) {
-		int on = 1;
-		sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
-	}
 	return 0;
+}
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	int res  = sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &mode, sizeof(int));
+	return res < 0 ? sceNetInetGetErrno() : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	sceNetInetShutdown(s, SHUT_RDWR);
+	sceNetInetClose(s);
 }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
@@ -406,11 +413,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	
 	*modified = 0; 
 	return sceNetInetGetErrno();
-}
-
-void Socket_Close(cc_socket s) {
-	sceNetInetShutdown(s, SHUT_RDWR);
-	sceNetInetClose(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {

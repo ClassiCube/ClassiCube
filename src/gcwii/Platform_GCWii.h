@@ -172,18 +172,24 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	return false;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
 	*s = net_socket(raw->sa_family, SOCK_STREAM, IPPROTO_IP);
 	if (*s < 0) return *s;
 
-	if (nonblocking) {
-		int blocking_raw = 1; /* non-blocking mode */
-		net_ioctl(*s, FIONBIO, &blocking_raw);
-	}
 	return 0;
+}
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	return net_ioctl(s, FIONBIO, &mode);
+}
+
+void Socket_Close(cc_socket s) {
+	net_shutdown(s, 2); // SHUT_RDWR = 2
+	net_close(s);
 }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
@@ -205,11 +211,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (res < 0) { *modified = 0; return res; }
 	
 	*modified = res; return 0;
-}
-
-void Socket_Close(cc_socket s) {
-	net_shutdown(s, 2); // SHUT_RDWR = 2
-	net_close(s);
 }
 
 

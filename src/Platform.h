@@ -382,7 +382,12 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst);
 
 /* Allocates a new socket that is capable of connecting to the given address */
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr);
+/* Attempts to set whether socket operations block calling thread or not */
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking);
+/* Attempts to close the given socket */
+void Socket_Close(cc_socket s);
+
 /* Begins connecting to the given address */
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr);
 /* Attempts to read data from the given socket */
@@ -390,8 +395,6 @@ cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr);
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 /* Attempts to write data to the given socket */
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
-/* Attempts to close the given socket */
-void Socket_Close(cc_socket s);
 
 enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 /* Polls if the given socket is currently readable or writable */

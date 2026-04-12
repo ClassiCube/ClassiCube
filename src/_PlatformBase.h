@@ -471,9 +471,15 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	return ERR_NOT_SUPPORTED;
 }
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	return ERR_NOT_SUPPORTED;
+}
+
+void Socket_Close(cc_socket s) { }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	return ERR_NOT_SUPPORTED;
@@ -486,8 +492,6 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	return ERR_NOT_SUPPORTED;
 }
-
-void Socket_Close(cc_socket s) { }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	return ERR_NOT_SUPPORTED;

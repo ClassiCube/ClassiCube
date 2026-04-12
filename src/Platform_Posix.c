@@ -773,25 +773,37 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 }
 #endif
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 
-	if (nonblocking) {
-#ifdef CC_BUILD_HPUX
-		int flags = fcntl(*s, F_GETFL, 0);
-		if (flags == -1) return errno;
-		int err = fcntl(*s, F_SETFL, flags | O_NONBLOCK);
-		if (err == -1) return errno;
-#else
-		int blocking_raw = -1; /* non-blocking mode */
-		int err = ioctl(*s, FIONBIO, &blocking_raw);
-		if (err == -1) return errno;
-#endif
-	}
 	return 0;
+}
+
+#ifdef CC_BUILD_HPUX
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int res = fcntl(s, F_GETFL, 0);
+	if (res == -1) return errno;
+
+	int flags = res & ~O_NONBLOCK;
+	if (nonblocking) flags |= O_NONBLOCK;          
+
+	res = fcntl(s, F_SETFL, flags);
+	return res == -1 ? errno : 0;
+}
+#else
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? -1 : 0;
+	int res  = ioctl(s, FIONBIO, &mode);
+	return res == -1 ? errno : 0;
+}
+#endif
+
+void Socket_Close(cc_socket s) {
+	shutdown(s, SHUT_RDWR);
+	close(s);
 }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
@@ -811,11 +823,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return errno;
-}
-
-void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
 }
 
 #if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS

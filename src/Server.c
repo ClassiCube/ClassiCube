@@ -323,8 +323,10 @@ static void MPConnection_BeginConnect(void) {
 		MPConnection_FailConnect(res); return;
 	}
 
-	res = Socket_Create(&net_socket, &addrs[0], true);
+	res = Socket_Create(&net_socket, &addrs[0]);
 	if (res) { MPConnection_FailConnect(res); return; }
+
+	Socket_SetNonBlocking(net_socket, true);
 	res = Socket_Connect(net_socket, &addrs[0]);
 
 	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {

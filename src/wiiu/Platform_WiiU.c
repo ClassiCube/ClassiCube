@@ -417,17 +417,24 @@ static CC_INLINE int Socket_LastError(void) {
 	return RPLWRAP(socketlasterr)();
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
 	*s = RPLWRAP(socket)(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return Socket_LastError();
 
-	if (nonblocking) {
-		int nonblock = 1; /* non-blocking mode */
-		RPLWRAP(setsockopt)(*s, SOL_SOCKET, SO_NONBLOCK, &nonblock, sizeof(int));
-	}
 	return 0;
+}
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	int res  = RPLWRAP(setsockopt)(s, SOL_SOCKET, SO_NONBLOCK, &mode, sizeof(int));
+	return res < 0 ? Socket_LastError() : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	RPLWRAP(shutdown)(s, SHUT_RDWR);
+	RPLWRAP(socketclose)(s);
 }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
@@ -449,11 +456,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 	*modified = sentCount >= 0 ? sentCount : 0;
 	return sentCount < 0 ? Socket_LastError() : 0;
-}
-
-void Socket_Close(cc_socket s) {
-	RPLWRAP(shutdown)(s, SHUT_RDWR);
-	RPLWRAP(socketclose)(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {

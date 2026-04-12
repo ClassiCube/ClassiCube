@@ -427,17 +427,24 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
 	*s = netSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return net_errno;
 
-	if (nonblocking) {
-		int on = 1;
-		netSetSockOpt(*s, SOL_SOCKET, SO_NBIO, &on, sizeof(int));
-	}
 	return 0;
+}
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	int res  = netSetSockOpt(s, SOL_SOCKET, SO_NBIO, &mode, sizeof(int));
+	return res < 0 ? net_errno : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	netShutdown(s, SHUT_RDWR);
+	netClose(s);
 }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
@@ -459,11 +466,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (res < 0) return net_errno;
 	
 	*modified = res; return 0;
-}
-
-void Socket_Close(cc_socket s) {
-	netShutdown(s, SHUT_RDWR);
-	netClose(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {

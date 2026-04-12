@@ -677,17 +677,24 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	}
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
 
 	*s = _socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
 
-	if (nonblocking) {
-		u_long blockingMode = -1; /* non-blocking mode */
-		_ioctlsocket(*s, FIONBIO, &blockingMode);
-	}
 	return 0;
+}
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	u_long mode = nonblocking ? -1 : 0;
+	int res     = _ioctlsocket(s, FIONBIO, &mode);
+	return res == -1 ? _WSAGetLastError() : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	_shutdown(s, SD_BOTH);
+	_closesocket(s);
 }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
@@ -707,11 +714,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	int sentCount = _send(s, (const char*)data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return _WSAGetLastError();
-}
-
-void Socket_Close(cc_socket s) {
-	_shutdown(s, SD_BOTH);
-	_closesocket(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {

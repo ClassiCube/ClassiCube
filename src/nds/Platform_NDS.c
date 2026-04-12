@@ -570,18 +570,25 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
 	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return errno;
 
-	if (nonblocking) {
-		int blocking_raw = 1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
-	}
 	return 0;
+}
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	int res  = ioctl(*s, FIONBIO, &mode);
+	return res < 0 ? errno : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	shutdown(s, 2); // SHUT_RDWR = 2
+	closesocket(s);
 }
 
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
@@ -603,11 +610,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (res < 0) { *modified = 0; return errno; }
 	
 	*modified = res; return 0;
-}
-
-void Socket_Close(cc_socket s) {
-	shutdown(s, 2); // SHUT_RDWR = 2
-	closesocket(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
