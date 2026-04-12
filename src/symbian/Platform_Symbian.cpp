@@ -539,6 +539,11 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	return 0;
 }
 
+void Socket_Close(cc_socket s) {
+	shutdown(s, SHUT_RDWR);
+	close(s);
+}
+
 cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	
@@ -556,11 +561,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return errno;
-}
-
-void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {

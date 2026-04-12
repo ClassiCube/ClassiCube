@@ -14,11 +14,9 @@ static cc_string skinServer = String_FromArray(skinServer_buffer);
 
 void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
-	Mem_Free(request->error);
 
 	request->data  = NULL;
 	request->size  = 0;
-	request->error = NULL;
 	request->_capacity = 0;
 }
 #define HttpRequest_Copy(dst, src) Mem_Copy(dst, src, sizeof(struct HttpRequest))
@@ -194,24 +192,26 @@ static void Http_ParseHeader(struct HttpRequest* req, const cc_string* line) {
 }
 
 /* Adds a http header to the request headers. */
-static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value);
+static void Http_AddHeader(cc_string* dst, const char* key, const cc_string* value) {
+	String_Format2(dst, "%c:%s\r\n", key, value);
+}
 
 /* Adds all the appropriate headers for a request. */
-static void Http_SetRequestHeaders(struct HttpRequest* req) {
+static void Http_SetRequestHeaders(struct HttpRequest* req, cc_string* dst) {
 	static const cc_string contentType = String_FromConst("application/x-www-form-urlencoded");
 	cc_string str, cookies; char cookiesBuffer[1024];
 	int i;
 
 	if (req->lastModified[0]) {
 		str = String_FromRawArray(req->lastModified);
-		Http_AddHeader(req, "If-Modified-Since", &str);
+		Http_AddHeader(dst, "If-Modified-Since", &str);
 	}
 	if (req->etag[0]) {
 		str = String_FromRawArray(req->etag);
-		Http_AddHeader(req, "If-None-Match", &str);
+		Http_AddHeader(dst, "If-None-Match", &str);
 	}
 
-	if (req->data) Http_AddHeader(req, "Content-Type", &contentType);
+	if (req->data) Http_AddHeader(dst, "Content-Type", &contentType);
 	if (!req->cookies || !req->cookies->count) return;
 
 	String_InitArray(cookies, cookiesBuffer);
@@ -220,7 +220,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 		str = StringsBuffer_UNSAFE_Get(req->cookies, i);
 		String_AppendString(&cookies, &str);
 	}
-	Http_AddHeader(req, "Cookie", &cookies);
+	Http_AddHeader(dst, "Cookie", &cookies);
 }
 
 /* TODO: Rewrite to use a local variable instead */
@@ -292,9 +292,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 	req->success = !req->result && req->statusCode == 200 && req->data && req->size;
 
 	if (!req->success) {
-		char* error = req->error; req->error = NULL;
 		HttpRequest_Free(req);
-		req->error = error;
 		/* TODO don't HttpRequest_Free here? */
 	}
 
@@ -394,9 +392,6 @@ void Http_LogError(const char* action, const struct HttpRequest* item) {
 	String_InitArray(msg, msgBuffer);
 	
 	Logger_FormatWarn(&msg, item->result, action, HttpBackend_DescribeError);
-	if (item->error && item->error[0]) {
-		String_Format1(&msg, "\n  Error details: %c", item->error);
-	}
 	Logger_WarnFunc(&msg);
 }
 
