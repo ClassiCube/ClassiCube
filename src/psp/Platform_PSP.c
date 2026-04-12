@@ -383,7 +383,7 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 
 cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
 	int mode = nonblocking ? 1 : 0;
-	int res  = sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &mode, sizeof(int));
+	int res  = sceNetInetSetsockopt(s, SOL_SOCKET, SO_NONBLOCK, &mode, sizeof(int));
 	return res < 0 ? sceNetInetGetErrno() : 0;
 }
 

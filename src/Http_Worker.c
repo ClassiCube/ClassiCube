@@ -400,18 +400,6 @@ static void HttpClient_Serialise(struct HttpClientState* state, cc_string* dst) 
 }
 
 
-static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
-	char inputBuffer[SEND_BUFFER_LEN];
-	cc_string inputMsg;
-
-	String_InitArray(inputMsg, inputBuffer);
-	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
-	HttpClient_Serialise(state, &inputMsg);
-
-	return HttpConnection_WriteAll(state->conn, (cc_uint8*)inputBuffer, inputMsg.length);
-}
-
-
 static void HttpClient_ParseHeader(struct HttpClientState* state, const cc_string* line) {
 	static const cc_string HTTP_10_VERSION = String_FromConst("HTTP/1.0");
 	cc_string name, value;
@@ -664,12 +652,18 @@ static void HttpBackend_Init(void) {
 }
 
 static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
+	char buf[SEND_BUFFER_LEN];
+	cc_string inputMsg;
 	cc_result res;
+
+	String_InitArray(inputMsg, buf);
+	HttpClient_Serialise(state, &inputMsg);
 
 	res = ConnectionPool_Open(&state->conn, &state->url);
 	if (res) { HttpConnection_Close(state->conn); return res; }
 
-	res = HttpClient_SendRequest(state);
+	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
+	res = HttpConnection_WriteAll(state->conn, (cc_uint8*)buf, inputMsg.length);
 	if (res) { HttpConnection_Close(state->conn); return res; }
 
 	res = HttpClient_ParseResponse(state);

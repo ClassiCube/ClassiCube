@@ -582,7 +582,7 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 
 cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
 	int mode = nonblocking ? 1 : 0;
-	int res  = ioctl(*s, FIONBIO, &mode);
+	int res  = ioctl(s, FIONBIO, &mode);
 	return res < 0 ? errno : 0;
 }
 
