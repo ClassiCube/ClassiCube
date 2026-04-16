@@ -16,7 +16,7 @@ struct AudioContext;
 	#define DEFAULT_SOUNDS_VOLUME 100
 #endif
 
-#ifdef CC_BUILD_NOMUSIC
+#if defined CC_BUILD_NOMUSIC || defined CC_BUILD_SYMBIAN
 	#define DEFAULT_MUSIC_VOLUME   0
 #else
 	#define DEFAULT_MUSIC_VOLUME 100
