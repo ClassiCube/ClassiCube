@@ -438,6 +438,9 @@ void CCContainer::HandleResourceChange(TInt aType) {
 	switch (aType) {
 	case KEikDynamicLayoutVariantSwitch:
 		SetExtentToWholeScreen();
+		// keyboard type may have changed, reset default binds
+		Window_PreInit();
+		InputBind_Load(&NormDevice);
 		break;
 	}
 }
@@ -883,6 +886,7 @@ void Window_PreInit(void) {
 	
 	switch (keyboardType) {
 	case 0: // ENoKeyboard
+		break;
 	case 1: // EKeyboardWith12Key,
 	case 5: // EHalfQWERTY
 		NormDevice.defaultBinds = symbian_binds_12;
@@ -1029,6 +1033,7 @@ protected:
 				String_AppendUtf16(&kb_str, inputBuffer.Ptr(), inputBuffer.Length() * 2);
 				Event_RaiseString(&InputEvents.TextChanged, &kb_str);
 			}
+			// re-enable input after dialog closed
 			container->iAppUi->EventMonitor()->Enable(ETrue);
 		}
 		return res;
@@ -1043,6 +1048,7 @@ static void ShowQueryDialogL(struct OpenKeyboardArgs* args) {
 		ConvertToUnicode(buf, args->placeholder, String_Length(args->placeholder));
 		dlg->SetPromptL(buf);
 	}
+	// disable input
 	container->iAppUi->EventMonitor()->Enable(EFalse);
 	dlg->RunLD();
 }
