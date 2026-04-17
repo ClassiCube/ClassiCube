@@ -23,6 +23,10 @@
 #include <e32property.h>
 #include <hal.h>
 #include <aknwseventobserver.h>
+#include <featdiscovery.h>
+#ifndef KFeatureIdQwertyInput
+#include <featureinfo.h>
+#endif
 extern "C" {
 #include <stdapis/string.h>
 #include <gles/egl.h>
@@ -703,7 +707,7 @@ static int MapScanCode(TInt aScanCode, TInt aModifiers) {
 }
 
 void CCContainer::HandleWsEventL(const TWsEvent &aEvent, CCoeControl *aDestination) {
-	if (!events_mutex || WindowInfo.Inactive) return;
+	if (!events_mutex || WindowInfo.Inactive || CCoeEnv::Static()->AppUi()->IsDisplayingDialog()) return;
 	CCEvent event = { 0 };
 	switch (aEvent.Type()) {
 	case EEventKey: {
@@ -898,13 +902,9 @@ void Window_PreInit(void) {
 		NormDevice.defaultBinds = symbian_binds_qwerty;
 		break;
 	default: // unknown or platform is older than s60v3.2
-		if (HAL::Get(HAL::EKeyboard, keyboardType) == KErrNone) {
-			if (!(keyboardType & EKeyboard_Full)) {
-				NormDevice.defaultBinds = symbian_binds_12;
-			} else {
-				NormDevice.defaultBinds = symbian_binds_qwerty;
-			}
-		}
+		TBool qwerty = EFalse;
+		TRAP_IGNORE(qwerty = CFeatureDiscovery::IsFeatureSupportedL(KFeatureIdQwertyInput));
+		NormDevice.defaultBinds = qwerty ? symbian_binds_qwerty : symbian_binds_12;
 		break;
 	}
 }
@@ -1021,8 +1021,15 @@ static cc_string kb_str = String_FromArray(kb_buffer);
 
 class CCTextQuery : public CAknTextQueryDialog {
 public:
-	CCTextQuery(TDes& aDataText) : CAknTextQueryDialog(aDataText, CAknQueryDialog::ENoTone) {}
+	CCTextQuery(TDes& aDataText) :
+		CAknTextQueryDialog(aDataText, CAknQueryDialog::ENoTone) {}
 	virtual ~CCTextQuery() {}
+#if defined CC_BUILD_SYMBIAN_S60V3
+public:
+	TCoeInputCapabilities InputCapabilities() const {
+		return CEikDialog::InputCapabilities();
+	}
+#endif
 
 protected:
 	TBool OkToExitL(TInt aButtonId) {
@@ -1033,8 +1040,6 @@ protected:
 				String_AppendUtf16(&kb_str, inputBuffer.Ptr(), inputBuffer.Length() * 2);
 				Event_RaiseString(&InputEvents.TextChanged, &kb_str);
 			}
-			// re-enable input after dialog closed
-			container->iAppUi->EventMonitor()->Enable(ETrue);
 		}
 		return res;
 	}
@@ -1048,8 +1053,6 @@ static void ShowQueryDialogL(struct OpenKeyboardArgs* args) {
 		ConvertToUnicode(buf, args->placeholder, String_Length(args->placeholder));
 		dlg->SetPromptL(buf);
 	}
-	// disable input
-	container->iAppUi->EventMonitor()->Enable(EFalse);
 	dlg->RunLD();
 }
 

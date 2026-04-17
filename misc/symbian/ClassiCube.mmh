@@ -19,6 +19,7 @@ LIBRARY mediaclientaudiostream.lib
 LIBRARY estor.lib
 LIBRARY bafl.lib
 LIBRARY eikcoctl.lib
+LIBRARY featdiscovery.lib
 
 LIBRARY libc.lib
 LIBRARY libm.lib
