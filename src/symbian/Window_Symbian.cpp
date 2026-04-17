@@ -33,7 +33,6 @@ extern "C" {
 #include "Gui.h"
 #include "Graphics.h"
 #include "Game.h"
-#include "VirtualKeyboard.h"
 #include "Platform.h"
 #include "Options.h"
 #include "Server.h"
@@ -1012,22 +1011,61 @@ void ShowDialogCore(const char* title, const char* msg) {
 	TRAP_IGNORE(ShowDialogL(title, msg));
 }
 
+static TBuf<512> inputBuffer;
+static char kb_buffer[512];
+static cc_string kb_str = String_FromArray(kb_buffer);
+
+class CCTextQuery : public CAknTextQueryDialog {
+public:
+	CCTextQuery(TDes& aDataText) : CAknTextQueryDialog(aDataText, CAknQueryDialog::ENoTone) {}
+	virtual ~CCTextQuery() {}
+
+protected:
+	TBool OkToExitL(TInt aButtonId) {
+		TBool res = CAknTextQueryDialog::OkToExitL(aButtonId);
+		if (res) {
+			if (aButtonId == EAknSoftkeyOk) {
+				kb_str.length = 0;
+				String_AppendUtf16(&kb_str, inputBuffer.Ptr(), inputBuffer.Length() * 2);
+				Event_RaiseString(&InputEvents.TextChanged, &kb_str);
+			}
+			container->iAppUi->EventMonitor()->Enable(ETrue);
+		}
+		return res;
+	}
+};
+
+static void ShowQueryDialogL(struct OpenKeyboardArgs* args) {
+	CCTextQuery* dlg = new (ELeave) CCTextQuery(inputBuffer);
+	dlg->PrepareLC(R_TEXT_QUERY);
+	if (args->placeholder && String_Length(args->placeholder) != 0) {
+		TBuf<128> buf;
+		ConvertToUnicode(buf, args->placeholder, String_Length(args->placeholder));
+		dlg->SetPromptL(buf);
+	}
+	container->iAppUi->EventMonitor()->Enable(EFalse);
+	dlg->RunLD();
+}
+
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-#ifdef CC_BUILD_TOUCH
-	VirtualKeyboard_Open(args);
-#endif
+	if (CCoeEnv::Static()->AppUi()->IsDisplayingDialog()) {
+		return;
+	}
+	
+	inputBuffer.Zero();
+	kb_str.length = 0;
+
+	if (args->text) {
+		ConvertToUnicode(inputBuffer, args->text);
+	}
+
+	TRAP_IGNORE(ShowQueryDialogL(args));
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
-#ifdef CC_BUILD_TOUCH
-	VirtualKeyboard_SetText(text);
-#endif
 }
 
 void OnscreenKeyboard_Close(void) {
-#ifdef CC_BUILD_TOUCH
-	VirtualKeyboard_Close();
-#endif
 }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
