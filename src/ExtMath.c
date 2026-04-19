@@ -79,7 +79,7 @@ float Math_Mod1(float x) { return x - (int)x; /* fmodf(x, 1); */ }
 #include "../third_party/fix16_sqrt.c"
 
 float sqrtf(float x) {
-	int32_t fp_x = (int32_t)(x * (1 << 16));
+	cc_int32 fp_x = (cc_int32)(x * (1 << 16));
 	fp_x = sqrt_fix16(fp_x);
 	return (float)fp_x / (1 << 16);
 }

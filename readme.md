@@ -1,4 +1,7 @@
 ClassiCube is a custom Minecraft Classic compatible client written in C from scratch.<br>
+
+You can **download ClassiCube** [here](https://www.classicube.net/download/) and the very latest builds [here](https://www.classicube.net/nightlies/).
+
 > [!IMPORTANT]
 **ClassiCube is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.** <br><br>
 **ClassiCube is not trying to replicate modern Minecraft.**<br>
@@ -19,8 +22,6 @@ ClassiCube aims to replicate the 2009 Minecraft Classic client while offering **
 * Although in various stages of early development, also runs on various consoles
 
 </details>
-
-You can **download ClassiCube** [here](https://www.classicube.net/download/) and the very latest builds [here](https://www.classicube.net/nightlies/).
 
 ![classic](https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0)
 
