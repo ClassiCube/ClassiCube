@@ -584,14 +584,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	return WSAGetLastError();
 }
 
-cc_result Socket_GetLastError(cc_socket s) {
-	int error   = ERR_INVALID_ARGUMENT;
-	int errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&error, &errSize);
-	return error;
-}
 
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
@@ -609,6 +601,7 @@ void Process_Exit(cc_result code) {
 cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*

@@ -646,15 +646,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	*success = FD_ISSET(s, &write_set) != 0; return 0;
 }
 
-cc_result Socket_GetLastError(cc_socket s) {
-	// INPROGRESS error code returned if connect is still in progress
-	int error = GetSocketError(s);
-	Platform_Log1("POLL FAIL: %i", &error);
-	if (error == EINPROGRESS) error = 0;
-	
-	return error;
-}
-
 
 /*########################################################################################################################*
 *----------------------------------------------------USB mass storage-----------------------------------------------------*

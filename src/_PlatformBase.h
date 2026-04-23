@@ -467,6 +467,10 @@ cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_NO_SOCKETS
+const cc_result ReturnCode_SocketInProgess  = -1;
+const cc_result ReturnCode_SocketWouldBlock = -1;
+const cc_result ReturnCode_SocketDropped    = -1;
+
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	return ERR_NOT_SUPPORTED;
 }
@@ -495,10 +499,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	return ERR_INVALID_ARGUMENT;
 }
 #endif
 

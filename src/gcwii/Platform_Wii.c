@@ -172,11 +172,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	return 0;
 }
 
-cc_result Socket_GetLastError(cc_socket s) {
-	return 0;
-	// TODO Not implemented in devkitpro libogc
-}
-
 static void InitSockets(void) {
 	int ret = net_init();
 	if (ret) Logger_SimpleWarn(ret, "setting up network");

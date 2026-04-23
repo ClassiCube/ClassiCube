@@ -243,7 +243,6 @@ static cc_bool net_connecting;
 #define NET_TIMEOUT_SECS 15
 
 static void MPConnection_FinishConnect(void) {
-	struct LoginPacket pkt;
 	net_connecting = false;
 	timeSinceLast  = 0.0f;
 
@@ -251,8 +250,6 @@ static void MPConnection_FinishConnect(void) {
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 
 	net_readCurrent = net_readBuffer;
-	Classic_BuildLogin(&pkt);
-	Server.SendData((cc_uint8*)&pkt, sizeof(pkt));
 }
 
 static void MPConnection_Fail(const cc_string* reason) {
@@ -284,13 +281,19 @@ static void MPConnection_TickConnect(void) {
 	if (res) {
 		MPConnection_FailConnect(res);
 	} else if (writable) {
-		/* The async connect call may have failed */
-		res = Socket_GetLastError(net_socket);
+		struct LoginPacket pkt;
+		cc_uint32 wrote = 0;
+		cc_uint8* buf = (cc_uint8*)&pkt;
+
+		Classic_BuildLogin(&pkt);
+		res = Socket_Write(net_socket, buf, sizeof(pkt), &wrote);
 
 		if (res) {
 			MPConnection_FailConnect(res);
 		} else {
 			MPConnection_FinishConnect();
+
+			if (wrote < sizeof(pkt)) { Server.SendData(buf + wrote, sizeof(pkt) - wrote); }
 		}
 	} else if (timeSinceLast > NET_TIMEOUT_SECS) {
 		MPConnection_FailConnect(0);

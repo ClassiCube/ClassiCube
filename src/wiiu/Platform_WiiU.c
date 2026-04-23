@@ -480,18 +480,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	}
 }
 
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	RPLWRAP(getsockopt)(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-
-	// Apparently, actual Wii U hardware returns INPROGRESS error code if connect is still in progress
-	if (error == SOCK_ERR_INPROGRESS) error = 0;
-	return error;
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
