@@ -36,7 +36,7 @@
 
 /* Only show up to 50 frames in backtrace */
 #define MAX_BACKTRACE_FRAMES 50
-static cc_bool cefCrash;
+static cc_bool cefCrash, csCrash;
 
 /*########################################################################################################################*
 *----------------------------------------------------------Warning--------------------------------------------------------*
@@ -247,6 +247,7 @@ static void PrintFrame(cc_string* str, cc_uintptr addr,
 
 	/* Check if crash is most likely caused by third party plugins */
 	cefCrash |= String_ContainsConst(&module, "classicube_cef");
+	csCrash  |= String_ContainsConst(&module, "classicube_chatsounds");
 }
 
 #if defined CC_BUILD_UWP
@@ -766,6 +767,8 @@ void Logger_DoAbort(cc_result result, const char* raw_msg, void* ctx) {
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n\n");
 	if (cefCrash) {
 		String_AppendConst(&msg, "The crash may have been caused by the CEF plugin.\nYou may want to try completely reinstalling it.\n\n");
+	} else if (csCrash) {
+		String_AppendConst(&msg, "The crash may have been caused by ChatSounds plugin.\nYou may want to try completely reinstalling it.\n\n");
 	} else {
 		String_AppendConst(&msg, "Please report this on the ClassiCube forums or Discord.\n\n");
 	}
