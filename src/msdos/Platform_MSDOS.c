@@ -31,9 +31,6 @@ const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used ap
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = -10002;
-const cc_result ReturnCode_SocketWouldBlock = -10002;
-const cc_result ReturnCode_SocketDropped    = -10002;
 
 const char* Platform_AppNameSuffix = " DOS";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;

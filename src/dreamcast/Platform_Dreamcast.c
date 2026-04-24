@@ -687,18 +687,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	return 0;
 }
 
-cc_result Socket_GetLastError(cc_socket s) {
-	//int error = ERR_INVALID_ARGUMENT;
-	//socklen_t errSize = sizeof(error);
-
-	// https://github.com/KallistiOS/KallistiOS/blob/7bf0e0329b23482eae9f5231f39a0843dee407c7/kernel/net/net_tcp.c#L1493
-	// TODO not actually implemented
-	//getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	//return error;
-
-	return 0;
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*

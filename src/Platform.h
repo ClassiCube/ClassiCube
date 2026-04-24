@@ -401,8 +401,6 @@ enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 /* NOTE: 'readable' usually means socket either has data available to read, or is closed */
 /* NOTE: 'writable' usually means socket either has finished connecting, or is closed */
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success);
-/* Retrieves the most recent async error code (typically from connect) */
-cc_result Socket_GetLastError(cc_socket s);
 
 
 /*########################################################################################################################*

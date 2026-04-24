@@ -588,15 +588,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	*success = FD_ISSET(s, &set) != 0; return 0;
 }
 
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = 0;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*

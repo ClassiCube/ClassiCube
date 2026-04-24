@@ -27,9 +27,6 @@ const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = -1;
 const cc_result ReturnCode_PathNotFound     = -1;
 const cc_result ReturnCode_DirectoryExists  = -1;
-const cc_result ReturnCode_SocketInProgess  = -1;
-const cc_result ReturnCode_SocketWouldBlock = -1;
-const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix = " Atari";
 cc_bool Platform_ReadonlyFilesystem;

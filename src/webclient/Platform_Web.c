@@ -339,12 +339,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	return -interop_SocketWritable(s, success);
 }
 
-extern int interop_SocketLastError(int sock);
-cc_result Socket_GetLastError(cc_socket s) {
-	// returned result is negative for error
-	return -interop_SocketLastError(s);
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*

@@ -1,7 +1,7 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
 #ifdef NDS_NONET
-#define CC_NO_SOCKETS
+	#define CC_NO_SOCKETS
 #endif
 #define DEFAULT_COMMANDLINE_FUNC
 #define OVERRIDE_MEM_FUNCTIONS
@@ -37,9 +37,12 @@ const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+
+#ifndef NDS_NONET
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
+#endif
 
 const char* Platform_AppNameSuffix = " NDS";
 cc_bool Platform_ReadonlyFilesystem;
@@ -632,15 +635,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	if (res < 0) { *success = false; return errno; }
 	*success = FD_ISSET(s, &set) != 0; 
 	return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
 }
 
 static void LogWifiStatus(int status) {
