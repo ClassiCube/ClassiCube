@@ -472,7 +472,7 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
 	// TODO need to preserve old flags?
 	int mode = nonblocking ? O_NONBLOCK : 0;
-	int res  = fcntl(s, F_SETFL, O_NONBLOCK);
+	int res  = fcntl(s, F_SETFL, mode);
 	return res == -1 ? errno : 0;
 }
 
