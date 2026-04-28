@@ -177,6 +177,9 @@ struct GPUTexture {
 static struct GPUTexture tex_list[MAX_TEXTURE_COUNT];
 static struct GPUTexture* tex_active;
 
+#define _PVR_RAM_SIZE (8 * 1024 * 1024)
+/* PVR_RAM_SIZE is no longer constant in KOS master (devkit/naomi has 16 MB VRAM) */
+
 // For PVR2 GPU, highly recommended that multiple textures don't cross the same 2048 byte VRAM page alignment
 // So to avoid this, ensure that each texture is allocated at the start of a 2048 byte VRAM page
 #define TEXMEM_BLOCK_SIZE 2048
@@ -188,7 +191,7 @@ static struct GPUTexture* tex_active;
 
 #define BLOCK_TO_TEXMEM(block) (cc_uint16*)(texmem_base + (block) * TEXMEM_BLOCK_SIZE)
 
-#define TEXMEM_MAX_BLOCKS (PVR_RAM_SIZE / TEXMEM_BLOCK_SIZE)
+#define TEXMEM_MAX_BLOCKS (_PVR_RAM_SIZE / TEXMEM_BLOCK_SIZE)
 // Base address in VRAM for textures
 static cc_uint8* texmem_base;
 // Total number of blocks available for textures in VRAM
@@ -966,15 +969,14 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 static BitmapCol* DC_GetRow(struct Bitmap* bmp, int y, void* ctx) {
 	BitmapCol* tmp = (BitmapCol*)ctx;
 	uint16_t* src  = vram_s + vid_mode->width * y;
-	int r, g, b, width = bmp->width;
+	int width = bmp->width;
 
 	for (int x = 0; x < width; x++)
 	{
-		int r, g, b;
 		// RGB565 to RGB888
-		r = ((src[x] >> 11) & 0x1F) << 3;
-		g = ((src[x] >> 6)  & 0x3F) << 2;
-		b = ((src[x] >> 0)  & 0x1F) << 3;
+		int r = ((src[x] >> 11) & 0x1F) << 3;
+		int g = ((src[x] >>  6) & 0x3F) << 2;
+		int b = ((src[x] >>  0) & 0x1F) << 3;
 
 		tmp[x] = BitmapColor_RGB(r, g, b);
 	}

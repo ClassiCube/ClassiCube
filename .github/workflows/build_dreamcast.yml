@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/kos-builds/kos-dc:sha-20149ee-14.2.0
+      image: ghcr.io/classicube/minimal-kos:latest
     steps:
       - uses: actions/checkout@v5
       - name: Install prerequisites
@@ -31,6 +31,7 @@ jobs:
         shell: bash
         run: |
           export PATH=/opt/toolchains/dc/kos/utils/:$PATH
+          source /opt/toolchains/dc/kos/environ.sh
           make dreamcast
           
           
