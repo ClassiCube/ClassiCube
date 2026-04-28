@@ -19,13 +19,6 @@ jobs:
       image: ghcr.io/classicube/minimal-kos:latest
     steps:
       - uses: actions/checkout@v5
-      - name: Install prerequisites
-        shell: bash
-        run: |
-          apt-get update
-          apt-get -y install genisoimage
-          wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/cdi4dc -O /opt/toolchains/dc/kos/utils/cdi4dc
-          chmod +x /opt/toolchains/dc/kos/utils/cdi4dc
 
       - name: Compile Dreamcast build
         shell: bash
