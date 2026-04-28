@@ -425,16 +425,25 @@ static void ProcessNunchuck(int port, WPADData* wd, int mods) {
 	Gamepad_SetButton(port, CCPAD_CDOWN,  nunchuckDown);
 }
 
-#define CLASSIC_AXIS_SCALE 2.0f
+#define CLASSIC_AXIS_SCALE 16.0f
+#define CLASSIC_AXIS_DEADZONE 0.25f
+static float ProcessClassic_Axis(int value, int center, int min, int max) {
+	float extent = value >= center ? (float)(max - center) : (float)(center - min);
+	float offset = (float)(value - center);
+	float axis;
+
+	if (extent <= 0.0f) return 0.0f;
+
+	axis = offset / extent;
+	Math_Clamp(axis, -1.0f, 1.0f);
+	if (Math_AbsF(axis) <= CLASSIC_AXIS_DEADZONE) return 0.0f;
+	return axis * CLASSIC_AXIS_SCALE;
+}
+
 static void ProcessClassic_Joystick(int port, int axis, struct joystick_t* js, float delta) {
-	// TODO: need to account for min/max?? see libogc
-	int x = js->pos.x - js->center.x;
-	int y = js->pos.y - js->center.y;
-	
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
-	
-	Gamepad_SetAxis(port, axis, x / CLASSIC_AXIS_SCALE, -y / CLASSIC_AXIS_SCALE, delta);
+	float x = ProcessClassic_Axis(js->pos.x, js->center.x, js->min.x, js->max.x);
+	float y = ProcessClassic_Axis(js->pos.y, js->center.y, js->min.y, js->max.y);
+	Gamepad_SetAxis(port, axis, x, -y, delta);
 }
 
 static void ProcessClassicButtons(int port, int mods) {
