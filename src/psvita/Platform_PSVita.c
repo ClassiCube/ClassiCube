@@ -238,7 +238,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	int threadID = sceKernelCreateThread(name, ExecThread, CC_THREAD_PRIORITY, 
 										stackSize, CC_THREAD_ATTRS, 0, NULL);
 																				
-	*handle = (int)threadID;
+	*handle = (void*)((int)threadID);
 	sceKernelStartThread(threadID, sizeof(func_), (void*)&func_);
 }
 
