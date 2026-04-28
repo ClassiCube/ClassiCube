@@ -50,3 +50,29 @@ RESOURCE DIALOG r_query_dialog
 		}
 	};
 }
+
+RESOURCE DIALOG r_text_query
+{
+	flags = EEikDialogFlagNoDrag | EEikDialogFlagNoTitleBar | EEikDialogFlagCbaButtons;
+	buttons = R_AVKON_SOFTKEYS_OK_CANCEL;
+	items =
+	{
+		DLG_LINE
+		{
+			type = EAknCtQuery;
+			id = EGeneralQuery;
+			control = AVKON_DATA_QUERY
+			{
+				layout = EDataLayout;
+				control = EDWIN
+				{
+					width = 128;
+					lines = 1;
+					maxlength = 510;
+					default_case = EAknEditorLowerCase;
+					allowed_case_modes = EAknEditorAllCaseModes;
+				};
+			};
+		}
+	};
+}

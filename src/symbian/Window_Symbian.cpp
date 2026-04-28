@@ -22,6 +22,11 @@
 #include <classicube.rsg>
 #include <e32property.h>
 #include <hal.h>
+#include <aknwseventobserver.h>
+#include <featdiscovery.h>
+#ifndef KFeatureIdQwertyInput
+#include <featureinfo.h>
+#endif
 extern "C" {
 #include <stdapis/string.h>
 #include <gles/egl.h>
@@ -32,7 +37,6 @@ extern "C" {
 #include "Gui.h"
 #include "Graphics.h"
 #include "Game.h"
-#include "VirtualKeyboard.h"
 #include "Platform.h"
 #include "Options.h"
 #include "Server.h"
@@ -161,7 +165,7 @@ LOCAL_C CApaApplication* NewApplication();
 
 GLDEF_C TInt E32Main();
 
-class CCContainer: public CCoeControl, MCoeControlObserver {
+class CCContainer: public CCoeControl, MCoeControlObserver, MAknWsEventObserver {
 public:
 	void ConstructL(const TRect& aRect, CAknAppUi* aAppUi);
 	virtual ~CCContainer();
@@ -178,6 +182,7 @@ private:
 	void Draw(const TRect& aRect) const;
 	virtual void HandleControlEventL(CCoeControl*, TCoeEvent);
 	virtual void HandlePointerEventL(const TPointerEvent& aPointerEvent);
+	virtual void HandleWsEventL(const TWsEvent &aEvent, CCoeControl *aDestination);
 
 public:
 	CAknAppUi*  iAppUi;
@@ -208,7 +213,6 @@ public:
 private:
 	void DynInitMenuPaneL(TInt aResourceId, CEikMenuPane* aMenuPane);
 	void HandleCommandL(TInt aCommand);
-	virtual TKeyResponse HandleKeyEventL(const TKeyEvent& aKeyEvent, TEventCode aType);
 	virtual void HandleForegroundEventL(TBool aForeground);
 
 private:
@@ -252,7 +256,269 @@ CCAppUi::~CCAppUi() {
 
 void CCAppUi::DynInitMenuPaneL(TInt, CEikMenuPane*) { }
 
-static CC_INLINE int MapScanCode(TInt aScanCode, TInt aModifiers) {
+void CCAppUi::HandleForegroundEventL(TBool aForeground) {
+	WindowInfo.Inactive = !aForeground;
+	Event_RaiseVoid(&WindowEvents.InactiveChanged);
+}
+
+void CCAppUi::HandleCommandL(TInt aCommand) {	
+	switch (aCommand) {
+	case EAknSoftkeyBack:
+	case EEikCmdExit: {
+		WindowInfo.Exists = false;
+		Window_RequestClose();
+		Exit();
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+extern cc_bool crashed;
+
+// CCContainer implementation
+TInt CCContainer::LoopCallBack(TAny*) {
+	if (crashed) {
+		return EFalse;
+	}
+	cc_bool run = false;
+	for (;;) {
+		if (!WindowInfo.Exists) {
+			Window_RequestClose();
+			container->iAppUi->Exit();
+			return EFalse;
+		}
+		
+		if (run) {
+			run = false;
+			gameRunning = true;
+			ProcessProgramArgs(0, 0);
+			Game_Setup();
+			container->RestartTimerL(100);
+		}
+		
+		if (!gameRunning) {
+			if (Launcher_Tick()) break;
+			Launcher_Finish();
+			run = true;
+			continue;
+		}
+		
+		if (!Game_Running) {
+			gameRunning = false;
+			Game_Free();
+//			Launcher_Setup();
+//			container->RestartTimerL(10000);
+			WindowInfo.Exists = false;
+			continue;
+		}
+		
+		Game_RenderFrame();
+		break;
+	}
+	return ETrue;
+}
+
+void CCContainer::RestartTimerL(TInt aInterval) {
+	if (iPeriodic) {
+		iPeriodic->Cancel();
+	} else {
+		iPeriodic = CPeriodic::NewL(CActive::EPriorityIdle);
+	}
+	iPeriodic->Start(aInterval, aInterval, TCallBack(CCContainer::LoopCallBack, this));
+}
+
+void CCContainer::ConstructL(const TRect& aRect, CAknAppUi* aAppUi) {
+	iAppUi = aAppUi;
+	
+	CAknWsEventMonitor* monitor = iAppUi->EventMonitor();
+	monitor->AddObserverL(this);
+	monitor->Enable();
+	
+	// create window
+	CreateWindowL();
+	SetExtentToWholeScreen();
+	
+	// enable multi-touch and drag events
+#ifdef CC_BUILD_SYMBIAN_3
+	Window().EnableAdvancedPointers();
+#endif
+	EnableDragEvents();
+	
+	ActivateL();
+	container = this;
+	
+	SetupProgram(0, 0);
+
+	TSize size = Size();
+	WindowInfo.Focused = true;
+	WindowInfo.Exists = true;
+	WindowInfo.Handle.ptr = (void*) &Window();
+#ifdef CC_BUILD_TOUCH
+	WindowInfo.SoftKeyboard = SOFT_KEYBOARD_VIRTUAL;
+#endif
+
+	DisplayInfo.Width = size.iWidth;
+	DisplayInfo.Height = size.iHeight;
+
+	WindowInfo.Width = size.iWidth;
+	WindowInfo.Height = size.iHeight;
+
+	WindowInfo.UIScaleX = DEFAULT_UI_SCALE_X;
+	WindowInfo.UIScaleY = DEFAULT_UI_SCALE_Y;
+	if (size.iWidth <= 360) {
+		DisplayInfo.ScaleX = 0.5f;
+		DisplayInfo.ScaleY = 0.5f;
+	} else {
+		DisplayInfo.ScaleX = 1;
+		DisplayInfo.ScaleY = 1;
+	}
+	
+	TDisplayMode displayMode = Window().DisplayMode();
+	TInt bufferSize = 0;
+
+	switch (displayMode) {
+	case EColor4K:
+		bufferSize = 12;
+		break;
+	case EColor64K:
+		bufferSize = 16;
+		break;
+	case EColor16M:
+		bufferSize = 24;
+		break;
+	case EColor16MU:
+	case EColor16MA:
+		bufferSize = 32;
+		break;
+	default:
+		break;
+	}
+	DisplayInfo.Depth = bufferSize;
+
+	Launcher_Setup();
+	// reduced tickrate for launcher
+	RestartTimerL(10000);
+}
+
+CCContainer::~CCContainer() {
+	delete iPeriodic;
+}
+
+void CCContainer::SizeChanged() {
+	TSize size = Size();
+	if (iBitmap) {
+		delete iBitmap;
+		iBitmap = NULL;
+	}
+	iBitmap = new CFbsBitmap();
+	TInt err = iBitmap->Create(size, EColor16MA);
+	if (err) {
+		Process_Abort("Failed to create bitmap");
+		return;
+	}
+	
+	DisplayInfo.Width  = size.iWidth;
+	DisplayInfo.Height = size.iHeight;
+
+	if (Window_Main.Is3D) {
+		if (size.iWidth <= 360) {
+			DisplayInfo.ScaleX = 0.5f;
+			DisplayInfo.ScaleY = 0.5f;
+		} else {
+			DisplayInfo.ScaleX = 1;
+			DisplayInfo.ScaleY = 1;
+		}
+	}
+
+	WindowInfo.Width  = size.iWidth;
+	WindowInfo.Height = size.iHeight;
+	Event_RaiseVoid(&WindowEvents.Resized);
+	DrawNow();
+}
+
+void CCContainer::HandleResourceChange(TInt aType) {
+	switch (aType) {
+	case KEikDynamicLayoutVariantSwitch:
+		SetExtentToWholeScreen();
+		// keyboard type may have changed, reset default binds
+		Window_PreInit();
+		InputBind_Load(&NormDevice);
+		break;
+	}
+}
+
+TInt CCContainer::CountComponentControls() const {
+	return 0;
+}
+
+CCoeControl* CCContainer::ComponentControl(TInt) const {
+	return NULL;
+}
+
+void CCContainer::Draw(const TRect& aRect) const {
+#if CC_GFX_BACKEND_IS_GL()
+	if (Window_Main.Is3D) return;
+#endif
+	if (iBitmap) {
+		SystemGc().BitBlt(TPoint(0, 0), iBitmap);
+	}
+}
+
+void CCContainer::DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	if (iBitmap) {
+		iBitmap->LockHeap();
+		TUint8* data = (TUint8*) iBitmap->DataAddress();
+		if (!data) {
+			Process_Abort("Bitmap data address is null");
+			return;
+		}
+		const TUint8* src = (TUint8*) bmp->scan0;
+		for (TInt row = bmp->height - 1; row >= 0; --row) {
+			memcpy(data, src, bmp->width * BITMAPCOLOR_SIZE);
+			src += bmp->width * BITMAPCOLOR_SIZE;
+			data += iBitmap->DataStride();
+		}
+		iBitmap->UnlockHeap();
+	}
+	DrawDeferred();
+}
+
+void CCContainer::HandleControlEventL(CCoeControl*, TCoeEvent) {
+}
+
+void CCContainer::HandlePointerEventL(const TPointerEvent& aPointerEvent) {
+#ifdef CC_BUILD_TOUCH
+	CCEvent event = { 0 };
+#ifdef CC_BUILD_SYMBIAN_3
+	const TAdvancedPointerEvent* advpointer = aPointerEvent.AdvancedPointerEvent();
+	event.i1 = advpointer != NULL ? advpointer->PointerNumber() : 0;
+#else
+	event.i1 = 0;
+#endif
+	TPoint pos = aPointerEvent.iPosition;
+	event.i2 = pos.iX;
+	event.i3 = pos.iY;
+	switch (aPointerEvent.iType) {
+	case TPointerEvent::EButton1Down:
+		event.type = CC_TOUCH_ADD;
+		break;
+	case TPointerEvent::EDrag:
+		event.type = CC_TOUCH_ADD;
+		break;
+	case TPointerEvent::EButton1Up:
+		event.type = CC_TOUCH_REMOVE;
+		break;
+	default:
+		break;
+	}
+	if (event.type) Events_Push(&event);
+#endif
+	CCoeControl::HandlePointerEventL(aPointerEvent);
+}
+
+static int MapScanCode(TInt aScanCode, TInt aModifiers) {
 	// TODO array?
 	switch (aScanCode) {
 	case EStdKeyBackspace:
@@ -440,294 +706,39 @@ static CC_INLINE int MapScanCode(TInt aScanCode, TInt aModifiers) {
 	return aScanCode < INPUT_COUNT ? aScanCode : INPUT_NONE;
 }
 
-TKeyResponse CCAppUi::HandleKeyEventL(const TKeyEvent& aKeyEvent, TEventCode aType) {
-	if (!events_mutex) return EKeyWasNotConsumed;
-	
+void CCContainer::HandleWsEventL(const TWsEvent &aEvent, CCoeControl *aDestination) {
+	if (!events_mutex || WindowInfo.Inactive || CCoeEnv::Static()->AppUi()->IsDisplayingDialog()) return;
 	CCEvent event = { 0 };
-	event.i1 = MapScanCode(aKeyEvent.iScanCode, aKeyEvent.iModifiers);
-	switch (aType) {
+	switch (aEvent.Type()) {
 	case EEventKey: {
-		int code = aKeyEvent.iCode;
+		event.i1 = MapScanCode(aEvent.Key()->iScanCode, aEvent.Key()->iModifiers);
+		int code = aEvent.Key()->iCode;
 		if (code != 0 && (code < ENonCharacterKeyBase || code > ENonCharacterKeyBase + ENonCharacterKeyCount)) {
 			event.i1 = code;
 			event.type = CC_KEY_INPUT;
 			Events_Push(&event);
-			return EKeyWasConsumed;
 		}
 		break;
 	}
 	case EEventKeyDown: {
+		event.i1 = MapScanCode(aEvent.Key()->iScanCode, aEvent.Key()->iModifiers);
 		if (event.i1 != INPUT_NONE) {
 			event.type = CC_KEY_DOWN;
 			Events_Push(&event);
 		}
-		return EKeyWasConsumed;
+		break;
 	}
 	case EEventKeyUp: {
+		event.i1 = MapScanCode(aEvent.Key()->iScanCode, aEvent.Key()->iModifiers);
 		if (event.i1 != INPUT_NONE) {
 			event.type = CC_KEY_UP;
 			Events_Push(&event);
 		}
-		return EKeyWasConsumed;
-	}
-	}
-	return EKeyWasNotConsumed;
-}
-
-void CCAppUi::HandleForegroundEventL(TBool aForeground) {
-	WindowInfo.Inactive = !aForeground;
-	Event_RaiseVoid(&WindowEvents.InactiveChanged);
-	
-}
-
-void CCAppUi::HandleCommandL(TInt aCommand) {	
-	switch (aCommand) {
-	case EAknSoftkeyBack:
-	case EEikCmdExit: {
-		WindowInfo.Exists = false;
-		Window_RequestClose();
-		Exit();
 		break;
 	}
 	default:
 		break;
 	}
-}
-
-extern cc_bool crashed;
-
-// CCContainer implementation
-TInt CCContainer::LoopCallBack(TAny*) {
-	if (crashed) {
-		return EFalse;
-	}
-	cc_bool run = false;
-	for (;;) {
-		if (!WindowInfo.Exists) {
-			Window_RequestClose();
-			container->iAppUi->Exit();
-			return EFalse;
-		}
-		
-		if (run) {
-			run = false;
-			gameRunning = true;
-			ProcessProgramArgs(0, 0);
-			Game_Setup();
-			container->RestartTimerL(100);
-		}
-		
-		if (!gameRunning) {
-			if (Launcher_Tick()) break;
-			Launcher_Finish();
-			run = true;
-			continue;
-		}
-		
-		if (!Game_Running) {
-			gameRunning = false;
-			Game_Free();
-//			Launcher_Setup();
-//			container->RestartTimerL(10000);
-			WindowInfo.Exists = false;
-			continue;
-		}
-		
-		Game_RenderFrame();
-		break;
-	}
-	return ETrue;
-}
-
-void CCContainer::RestartTimerL(TInt aInterval) {
-	if (iPeriodic) {
-		iPeriodic->Cancel();
-	} else {
-		iPeriodic = CPeriodic::NewL(CActive::EPriorityIdle);
-	}
-	iPeriodic->Start(aInterval, aInterval, TCallBack(CCContainer::LoopCallBack, this));
-}
-
-void CCContainer::ConstructL(const TRect& aRect, CAknAppUi* aAppUi) {
-	iAppUi = aAppUi;
-	
-	// create window
-	CreateWindowL();
-	SetExtentToWholeScreen();
-	
-	// enable multi-touch and drag events
-#ifdef CC_BUILD_SYMBIAN_3
-	Window().EnableAdvancedPointers();
-#endif
-	EnableDragEvents();
-	
-	ActivateL();
-	container = this;
-	
-	SetupProgram(0, 0);
-
-	TSize size = Size();
-	WindowInfo.Focused = true;
-	WindowInfo.Exists = true;
-	WindowInfo.Handle.ptr = (void*) &Window();
-#ifdef CC_BUILD_TOUCH
-	WindowInfo.SoftKeyboard = SOFT_KEYBOARD_VIRTUAL;
-#endif
-
-	DisplayInfo.Width = size.iWidth;
-	DisplayInfo.Height = size.iHeight;
-
-	WindowInfo.Width = size.iWidth;
-	WindowInfo.Height = size.iHeight;
-
-	WindowInfo.UIScaleX = DEFAULT_UI_SCALE_X;
-	WindowInfo.UIScaleY = DEFAULT_UI_SCALE_Y;
-	if (size.iWidth <= 360) {
-		DisplayInfo.ScaleX = 0.5f;
-		DisplayInfo.ScaleY = 0.5f;
-	} else {
-		DisplayInfo.ScaleX = 1;
-		DisplayInfo.ScaleY = 1;
-	}
-	
-	TDisplayMode displayMode = Window().DisplayMode();
-	TInt bufferSize = 0;
-
-	switch (displayMode) {
-	case EColor4K:
-		bufferSize = 12;
-		break;
-	case EColor64K:
-		bufferSize = 16;
-		break;
-	case EColor16M:
-		bufferSize = 24;
-		break;
-	case EColor16MU:
-	case EColor16MA:
-		bufferSize = 32;
-		break;
-	default:
-		break;
-	}
-	DisplayInfo.Depth = bufferSize;
-
-	Launcher_Setup();
-	// reduced tickrate for launcher
-	RestartTimerL(10000);
-}
-
-CCContainer::~CCContainer() {
-	delete iPeriodic;
-}
-
-void CCContainer::SizeChanged() {
-	TSize size = Size();
-	if (iBitmap) {
-		delete iBitmap;
-		iBitmap = NULL;
-	}
-	iBitmap = new CFbsBitmap();
-	TInt err = iBitmap->Create(size, EColor16MA);
-	if (err) {
-		Process_Abort("Failed to create bitmap");
-		return;
-	}
-	
-	DisplayInfo.Width  = size.iWidth;
-	DisplayInfo.Height = size.iHeight;
-
-	if (Window_Main.Is3D) {
-		if (size.iWidth <= 360) {
-			DisplayInfo.ScaleX = 0.5f;
-			DisplayInfo.ScaleY = 0.5f;
-		} else {
-			DisplayInfo.ScaleX = 1;
-			DisplayInfo.ScaleY = 1;
-		}
-	}
-
-	WindowInfo.Width  = size.iWidth;
-	WindowInfo.Height = size.iHeight;
-	Event_RaiseVoid(&WindowEvents.Resized);
-	DrawNow();
-}
-
-void CCContainer::HandleResourceChange(TInt aType) {
-	switch (aType) {
-	case KEikDynamicLayoutVariantSwitch:
-		SetExtentToWholeScreen();
-		break;
-	}
-}
-
-TInt CCContainer::CountComponentControls() const {
-	return 0;
-}
-
-CCoeControl* CCContainer::ComponentControl(TInt) const {
-	return NULL;
-}
-
-void CCContainer::Draw(const TRect& aRect) const {
-#if CC_GFX_BACKEND_IS_GL()
-	if (Window_Main.Is3D) return;
-#endif
-	if (iBitmap) {
-		SystemGc().BitBlt(TPoint(0, 0), iBitmap);
-	}
-}
-
-void CCContainer::DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	if (iBitmap) {
-		iBitmap->LockHeap();
-		TUint8* data = (TUint8*) iBitmap->DataAddress();
-		if (!data) {
-			Process_Abort("Bitmap data address is null");
-			return;
-		}
-		const TUint8* src = (TUint8*) bmp->scan0;
-		for (TInt row = bmp->height - 1; row >= 0; --row) {
-			memcpy(data, src, bmp->width * BITMAPCOLOR_SIZE);
-			src += bmp->width * BITMAPCOLOR_SIZE;
-			data += iBitmap->DataStride();
-		}
-		iBitmap->UnlockHeap();
-	}
-	DrawDeferred();
-}
-
-void CCContainer::HandleControlEventL(CCoeControl*, TCoeEvent) {
-}
-
-void CCContainer::HandlePointerEventL(const TPointerEvent& aPointerEvent) {
-#ifdef CC_BUILD_TOUCH
-	CCEvent event = { 0 };
-#ifdef CC_BUILD_SYMBIAN_3
-	const TAdvancedPointerEvent* advpointer = aPointerEvent.AdvancedPointerEvent();
-	event.i1 = advpointer != NULL ? advpointer->PointerNumber() : 0;
-#else
-	event.i1 = 0;
-#endif
-	TPoint pos = aPointerEvent.iPosition;
-	event.i2 = pos.iX;
-	event.i3 = pos.iY;
-	switch (aPointerEvent.iType) {
-	case TPointerEvent::EButton1Down:
-		event.type = CC_TOUCH_ADD;
-		break;
-	case TPointerEvent::EDrag:
-		event.type = CC_TOUCH_ADD;
-		break;
-	case TPointerEvent::EButton1Up:
-		event.type = CC_TOUCH_REMOVE;
-		break;
-	default:
-		break;
-	}
-	if (event.type) Events_Push(&event);
-#endif
-	CCoeControl::HandlePointerEventL(aPointerEvent);
 }
 
 // CCDocument implementation
@@ -891,13 +902,9 @@ void Window_PreInit(void) {
 		NormDevice.defaultBinds = symbian_binds_qwerty;
 		break;
 	default: // unknown or platform is older than s60v3.2
-		if (HAL::Get(HAL::EKeyboard, keyboardType) == KErrNone) {
-			if (!(keyboardType & EKeyboard_Full)) {
-				NormDevice.defaultBinds = symbian_binds_12;
-			} else {
-				NormDevice.defaultBinds = symbian_binds_qwerty;
-			}
-		}
+		TBool qwerty = EFalse;
+		TRAP_IGNORE(qwerty = CFeatureDiscovery::IsFeatureSupportedL(KFeatureIdQwertyInput));
+		NormDevice.defaultBinds = qwerty ? symbian_binds_qwerty : symbian_binds_12;
 		break;
 	}
 }
@@ -1008,22 +1015,66 @@ void ShowDialogCore(const char* title, const char* msg) {
 	TRAP_IGNORE(ShowDialogL(title, msg));
 }
 
-void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
-#ifdef CC_BUILD_TOUCH
-	VirtualKeyboard_Open(args);
+static TBuf<512> inputBuffer;
+static char kb_buffer[512];
+static cc_string kb_str = String_FromArray(kb_buffer);
+
+class CCTextQuery : public CAknTextQueryDialog {
+public:
+	CCTextQuery(TDes& aDataText) :
+		CAknTextQueryDialog(aDataText, CAknQueryDialog::ENoTone) {}
+	virtual ~CCTextQuery() {}
+#if defined CC_BUILD_SYMBIAN_S60V3
+public:
+	TCoeInputCapabilities InputCapabilities() const {
+		return CEikDialog::InputCapabilities();
+	}
 #endif
+
+protected:
+	TBool OkToExitL(TInt aButtonId) {
+		TBool res = CAknTextQueryDialog::OkToExitL(aButtonId);
+		if (res) {
+			if (aButtonId == EAknSoftkeyOk) {
+				kb_str.length = 0;
+				String_AppendUtf16(&kb_str, inputBuffer.Ptr(), inputBuffer.Length() * 2);
+				Event_RaiseString(&InputEvents.TextChanged, &kb_str);
+			}
+		}
+		return res;
+	}
+};
+
+static void ShowQueryDialogL(struct OpenKeyboardArgs* args) {
+	CCTextQuery* dlg = new (ELeave) CCTextQuery(inputBuffer);
+	dlg->PrepareLC(R_TEXT_QUERY);
+	if (args->placeholder && String_Length(args->placeholder) != 0) {
+		TBuf<128> buf;
+		ConvertToUnicode(buf, args->placeholder, String_Length(args->placeholder));
+		dlg->SetPromptL(buf);
+	}
+	dlg->RunLD();
+}
+
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (CCoeEnv::Static()->AppUi()->IsDisplayingDialog()) {
+		return;
+	}
+	
+	inputBuffer.Zero();
+	kb_str.length = 0;
+
+	if (args->text) {
+		ConvertToUnicode(inputBuffer, args->text);
+	}
+
+	TRAP_IGNORE(ShowQueryDialogL(args));
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
-#ifdef CC_BUILD_TOUCH
-	VirtualKeyboard_SetText(text);
-#endif
 }
 
 void OnscreenKeyboard_Close(void) {
-#ifdef CC_BUILD_TOUCH
-	VirtualKeyboard_Close();
-#endif
 }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
