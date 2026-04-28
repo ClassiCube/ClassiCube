@@ -1087,7 +1087,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 
 	struct Matrix mvp CC_ALIGNED(64);
 	Matrix_Mul(&mvp, &_view, &_proj);
-	float* m = &mvp;
+	float* m = (float*)&mvp;
 	
 	// Transpose matrix
 	for (int i = 0; i < 4; i++)

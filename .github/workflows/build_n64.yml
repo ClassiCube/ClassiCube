@@ -28,7 +28,7 @@ jobs:
         run: |
           REAL_DIR=`pwd`
           cd /tmp
-          git clone -b opengl https://github.com/DragonMinded/libdragon.git --depth=1
+          git clone -b unstable https://github.com/DragonMinded/libdragon.git --depth=1
           cd libdragon
           make install
           make tools-install
