@@ -76,9 +76,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-// TODO: More intelligent diffing that uses less space
 static cc_bool has_prevState;
-static kbd_state_t prevState;
 
 static int MapKey(int k) {
 	if (k >= KBD_KEY_A  && k <= KBD_KEY_Z)   return 'A'      + (k - KBD_KEY_A);
@@ -130,10 +128,13 @@ static int MapKey(int k) {
 	}
 	return INPUT_NONE;
 }
+
 #define ToggleKey(diff, cur, mask, btn) if (diff & mask) Input_Set(btn, cur & mask)
+static kbd_mods_t prev_modifiers;
+
 static void UpdateKeyboardState(kbd_state_t* state) {
-	int cur_keys  = state->shift_keys;
-	int diff_keys = prevState.shift_keys ^ state->shift_keys;
+	int cur_keys  = state->last_modifiers.raw;
+	int diff_keys = prev_modifiers.raw ^ state->last_modifiers.raw;
 	
 	if (diff_keys) {
 		ToggleKey(diff_keys, cur_keys, KBD_MOD_LALT,   CCKEY_LALT);
@@ -147,9 +148,11 @@ static void UpdateKeyboardState(kbd_state_t* state) {
 	// see keyboard.h, KEY_S3 seems to be highest used key
 	for (int i = KBD_KEY_A; i < KBD_KEY_S3; i++)
 	{
-		if (state->matrix[i] == prevState.matrix[i]) continue;
+		key_state_t key = state->key_states[i];
+		if (key.is_down == key.was_down) continue;
+
 		int btn = MapKey(i);
-		if (btn) Input_Set(btn, state->matrix[i]);
+		if (btn) Input_Set(btn, key.is_down);
 	}
 }
 
@@ -163,8 +166,8 @@ static void ProcessKeyboardInput(void) {
 	if (!state)  return;
 	
 	if (has_prevState) UpdateKeyboardState(state);
-	has_prevState = true;
-	prevState     = *state;
+	has_prevState  = true;
+	prev_modifiers = state->last_modifiers;
 	
 	Input.Sources |= INPUT_SOURCE_NORMAL;
 	int ret = kbd_queue_pop(kb_dev, 1);
@@ -283,14 +286,12 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 static void HandleController(int port, bool dual_analog, cont_state_t* state, float delta) {
 	Gamepad_SetButton(port, CCPAD_L, state->ltrig > 10);
 	Gamepad_SetButton(port, CCPAD_R, state->rtrig > 10);
-	// TODO: verify values are right     
-	if(dual_analog) 
-	{
+	// TODO: verify values are right
+
+	if (dual_analog)  {
 		HandleJoystick(port, PAD_AXIS_LEFT,  state->joyx,  state->joyy,  delta);
 		HandleJoystick(port, PAD_AXIS_RIGHT, state->joy2x, state->joy2y, delta);
-	}
-	else
-	{
+	} else {
 		HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
 	}
 }

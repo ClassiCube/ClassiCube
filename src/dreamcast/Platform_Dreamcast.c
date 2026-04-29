@@ -27,7 +27,7 @@
 #include <kos/dbgio.h>
 
 KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
-               INIT_VMU        | INIT_CDROM    | INIT_NET);
+               INIT_VMU        | INIT_CDROM    | INIT_NET   | INIT_FS_RAMDISK);
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -112,7 +112,7 @@ static void LogOnscreen(const char* msg, int len) {
 
 	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
 
-	short* dst     = vram_s + Onscreen_LineOffset(pos.y);
+	uint16_t* dst  = vram_s + Onscreen_LineOffset(pos.y);
 	int num_pixels = ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width;
 	for (int i = 0; i < num_pixels; i++) dst[i] = 0;
 	//sq_set16(vram_s + Onscreen_LineOffset(pos.y), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
@@ -389,7 +389,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	if (fd < 0) return errno;
 
 	String_InitArray(path, pathBuffer);
-	dirent_t* entry;
+	const dirent_t* entry;
 	errno = 0;
 	
 	while ((entry = fs_readdir(fd))) {
