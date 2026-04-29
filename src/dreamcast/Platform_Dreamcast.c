@@ -25,6 +25,7 @@
 #include <dc/sd.h>
 #include <fat/fs_fat.h>
 #include <kos/dbgio.h>
+#include <dc/net/w5500_adapter.h>
 
 KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
                INIT_VMU        | INIT_CDROM    | INIT_NET   | INIT_FS_RAMDISK);
@@ -398,7 +399,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 		// ignore . and .. entry (PSP does return them)
 		// TODO: Does Dreamcast?
-		char* src = entry->name;
+		const char* src = entry->name;
 		if (src[0] == '.' && src[1] == '\0')                  continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 		
@@ -717,7 +718,9 @@ static void TryInitSDCard(void) {
 
 	root_path = String_FromReadonly("/sd/ClassiCube/");
 	Platform_ReadonlyFilesystem = false;
-	usingSD   = true;
+
+	usingSD      = true;
+	log_debugger = false;
 
 	cc_filepath* root = FILEPATH_RAW("/sd/ClassiCube");
 	int res = Directory_Create2(root);
@@ -750,7 +753,13 @@ static void InitModem(void) {
 
 void Platform_Init(void) {
 	Platform_ReadonlyFilesystem = true;
-	TryInitSDCard();
+
+	// W5500 net adapter also uses the serial port
+	if (w5500_adapter_init(NULL, true) == 0) {
+		log_debugger = false;
+	} else {
+		TryInitSDCard();
+	}
 	
 	if (net_default_dev) return;
 	// in case Broadband Adapter isn't active
