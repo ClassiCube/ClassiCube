@@ -33,7 +33,7 @@ jobs:
           make install
           make tools-install
           cd $REAL_DIR
-          make n64
+          make n64 -j $(nproc)
           
           
       - uses: ./.github/actions/upload_build

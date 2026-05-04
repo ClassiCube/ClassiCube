@@ -26,7 +26,7 @@ jobs:
       - name: Compile Xbox build
         run: |
           eval $(/usr/src/nxdk/bin/activate -s)
-          make xbox
+          make xbox -j $(nproc)
           
           
       - uses: ./.github/actions/upload_build
