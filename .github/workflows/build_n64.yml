@@ -30,8 +30,8 @@ jobs:
           cd /tmp
           git clone -b preview https://github.com/DragonMinded/libdragon.git --depth=1
           cd libdragon
-          make install
-          make tools-install
+          make install -j $(nproc)
+          make tools-install -j $(nproc)
           cd $REAL_DIR
           make n64 -j $(nproc)
           
