@@ -1,7 +1,8 @@
 .set noreorder
 #include "AsmCommon.i"
 
-BEG_FUNC(TestVertex2)
+
+BEG_FUNC(VertexNeedsXYClipping)
 	#define SRC $a0
 
 	lv.s	S700, VTEX_X(SRC);  // M7[0,0] = src->x
@@ -12,20 +13,72 @@ BEG_FUNC(TestVertex2)
 	vhtfm4.q R703, M200, R700;  // M7.R3 = M200 * M7.R0
 
 	vcmp.q GT, R703[|x|,|y|,|z|,0], R703[|w|,|w|,|w|,0] // CC[0] = |x|>|w|...
-	bvt 4, behind_a_clipping_plane // CC[4] = (|x|>|w|) | (|y|>|w|) | (|z|>|w|) | (0>0)
+	bvt 4, v_behind_a_clipping_plane // CC[4] = (|x|>|w|) | (|y|>|w|) | (|z|>|w|) | (0>0)
 	nop
-
-	sv.q R703, 0($a1) // TODO temp
-	jr	$ra
-	li $v0, 1
-
-behind_a_clipping_plane:
-	sv.q R703, 0($a1) // TODO temp
 	jr	$ra
 	li $v0, 0
 
+v_behind_a_clipping_plane:
+	jr	$ra
+	li $v0, 1
+
 	#undef SRC
-END_FUNC(TestVertex2)
+END_FUNC(VertexNeedsXYClipping)
+
+
+#define SRC $a0
+.macro LoadVertexXYZ idx
+	lv.s	S700, (VTEX_X * \idx)(SRC);  // M7[0,0] = src->x
+	lv.s	S710, (VTEX_Y * \idx)(SRC);  // M7[0,1] = src->y
+	lv.s	S720, (VTEX_Z * \idx)(SRC);  // M7[0,2] = src->z
+.endm
+
+.macro InitVertexWTo1
+	vone.s	S730                         // M7[0,3] = 1.0
+.endm
+
+.macro TransformVertex
+	vhtfm4.q R703, M200, R700;  // M7.R3 = M200 * M7.R0
+.endm
+
+.macro TestInsidePlane
+	vcmp.q GT, R703[|x|,|y|,0,0], R703[|w|,|w|,0,0] // CC[0] = |x|>|w|...
+	bvt 4, behind_a_clipping_plane // CC[4] = (|x|>|w|) | (|y|>|w|) | (0>0) | (0>0)
+	nop
+.endm
+
+BEG_FUNC(QuadNeedsXYClipping)
+	LoadVertexXYZ   0 // vertex.XYZ = MEM[src + 0]
+	InitVertexWTo1    // vertex.W   = 1
+	TransformVertex   // scr_vertex = vertex * ADJUSTED_MVP
+
+	LoadVertexXYZ   1 // vertex.XYZ = MEM[src + 1]
+	InitVertexWTo1    // vertex.W   = 1
+	TestInsidePlane   // is scr_vertex.XY inside guardband region?
+	TransformVertex   // scr_vertex = vertex * ADJUSTED_MVP
+
+	LoadVertexXYZ   2 // vertex.XYZ = MEM[src + 2]
+	InitVertexWTo1    // vertex.W   = 1
+	TestInsidePlane   // is scr_vertex.XY inside guardband region?
+	TransformVertex   // scr_vertex = vertex * ADJUSTED_MVP
+
+	LoadVertexXYZ   3 // vertex.XYZ = MEM[src + 3]
+	InitVertexWTo1    // vertex.W   = 1
+	TestInsidePlane   // is scr_vertex.XY inside guardband region?
+	TransformVertex   // scr_vertex = vertex * ADJUSTED_MVP
+
+	TestInsidePlane   // is scr_vertex.XY inside guardband region?
+
+	jr	$ra
+	li $v0, 0
+
+behind_a_clipping_plane:
+	jr	$ra
+	li $v0, 1
+
+	#undef SRC
+END_FUNC(QuadNeedsXYClipping)
+
 
 #define F_XP R300 // frustum plane x+ (left)
 #define F_XN R301 // frustum plane x- (right)

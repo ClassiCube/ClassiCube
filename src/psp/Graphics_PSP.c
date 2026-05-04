@@ -532,7 +532,7 @@ void Gfx_EndFrame(void) {
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
 
-	//Platform_Log2("%i / %i", &CLIPPED, &UNCLIPPED);
+	Platform_Log2("C %i / U %i", &CLIPPED, &UNCLIPPED);
 	CLIPPED = UNCLIPPED = 0;
 }
 
@@ -745,91 +745,119 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
+extern int QuadNeedsXYClipping(struct VertexTextured* v);
+extern struct ClipVertex* Clip_PolyToPlane(struct ClipVertex* src, struct ClipVertex* dst, 
+											int src_count, struct Plane* plane);
+extern void TransformTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
+
 struct ClipVertex {
 	float x, y, z, w;
 	float u, v;
 	int c, flags;
 } CC_ALIGNED(16);
 
-extern void TransformTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
-static struct Vec4 Transform(struct VertexTextured* a, const struct Matrix* mat) {
-	struct Vec4 vec;
-	vec.x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
-	vec.y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
-	vec.z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
-	vec.w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
-	return vec;
+static void DoClip(struct VertexTextured* V) {
+	struct ClipVertex clipped1[16], clipped2[16];
+
+	for (int j = 0; j < 4; j++) {
+		struct ClipVertex* C = &clipped1[j];
+		TransformTexturedQuad(V + j, C);
+	}
+	
+	struct ClipVertex* c_src = clipped1;
+	struct ClipVertex* c_dst = clipped2;
+	struct ClipVertex* c_tmp;
+	int i_src = 4, i_dst, i_tmp;
+
+	for (int j = 0; j < 4; j++)
+	{
+		struct ClipVertex* c_end = Clip_PolyToPlane(c_src, c_dst, i_src, &frustum[j]);
+		i_dst = (int)(c_end - c_dst);
+		if (i_dst == 0) return;
+
+		i_tmp = i_src; i_src = i_dst; i_dst = i_tmp;
+		c_tmp = c_src; c_src = c_dst; c_dst = c_tmp;
+	}
+
+	void* ptr = sceGuGetMemory(sizeof(struct VertexTextured) * i_dst);
+	if (!ptr) return;
+	struct VertexTextured* a = ptr;
+
+	for (int i = 0; i < i_dst; i++)
+	{
+		a[i].x = c_dst[i].x;
+		a[i].y = c_dst[i].y;
+		a[i].z = c_dst[i].z;
+		a[i].U = c_dst[i].u;
+		a[i].V = c_dst[i].v;
+		a[i].Col = 0xFF0000FF;
+	}
+
+	GE_set_vertex_format(gfx_fields);
+	GE_set_vertices(ptr);
+	sceGuDrawArray(GU_TRIANGLE_FAN, 0, i_dst, NULL, NULL);
+	CLIPPED++;
 }
 
-static void ProcessVertices(int startVertex, int verticesCount) {
-		struct VertexTextured* V = (struct VertexTextured*)gfx_vertices + startVertex;
-		struct Matrix mvp;
-		Clip_StoreMVP((float*)&mvp);
-		struct Vec4 dst CC_ALIGNED(16);
+// TODO don't set vertex format is unchanged
+#define CLIPPABLE_FLUSH_RUN() \
+	GE_set_vertices(beg); \
+	GE_set_indices(gfx_indices); \
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT); \
+	sceGuDrawArray(GU_TRIANGLES, 0, run, NULL, NULL);
 
-		for (int i = 0; i < verticesCount; i++, V++)
-		{
-			extern int TestVertex2(struct VertexTextured* v, struct Vec4* d);
-			int B = TestVertex2(V, &dst);
+// TODO fix QuadNeedsXYClipping
+extern int VertexNeedsXYClipping(struct VertexTextured* v);
+int QuadNeedsXYClipping2(struct VertexTextured* v) {
+	for (int i = 0; i < 4; i++)
+	{
+		if (VertexNeedsXYClipping(v + i)) return true;
+	}
+	return false;
+}
 
-			if (B) UNCLIPPED++; else CLIPPED++;
+static void DrawClippableVertices(struct VertexTextured* v, int verticesCount) {
+	int run;
+	struct VertexTextured* beg;
+	run = 0; beg = v;
 	
-			/*if (A == B) continue;
-			Platform_LogConst("????");
-			
-			struct Vec4 vec = Transform(V, &mvp);
-			Platform_Log4("  A: %f3/%f3/%f3/%f3", &dst.x, &dst.y, &dst.z, &dst.w);
-			Platform_Log4("  S: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w); vec.x /= vec.w; vec.y /= vec.w; vec.z /= vec.w;
-			Platform_Log4("  D: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w);*/
+	for (int i = 0; i < verticesCount; i += 4, v += 4)
+	{
+		if (QuadNeedsXYClipping2(v)) {
+			if (run) { CLIPPABLE_FLUSH_RUN(); }
+			run = 0; beg = v + 4;
+
+			DoClip(v);
+		} else {
+			run += 6; UNCLIPPED++;
 		}
-		/*struct Matrix mvp;
-		Clip_StoreMVP((float*)&mvp);
+	}
 
-		struct ClipVertex clipped[8];
-		struct VertexTextured* src = (struct VertexTextured*)gfx_vertices;
-		TransformTexturedQuad(src, clipped);
+	if (run) { CLIPPABLE_FLUSH_RUN(); }
+}
 
-		Vec3 res;
-		Vec3_Transform(&res, (Vec3*)&src->x, &mvp);
-		Platform_Log3("S: %f3/%f3/%f3", &res.x, &res.y, &res.z);
-		Platform_Log3("D: %f3/%f3/%f3", &clipped[0].x, &clipped[0].y, &clipped[0].z);*/
+static void DrawTriangles(void* vertices, int verticesCount) {
+	GE_set_vertices(vertices);
+	GE_set_indices(gfx_indices);
+	if (clipping_dirty) RecalcClipping();
+
+	if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawClippableVertices(vertices, verticesCount);
+	} else {
+		sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
+				NULL, NULL);
+	}
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	GE_set_vertices(gfx_vertices + startVertex * gfx_stride);
-	GE_set_indices(gfx_indices);
-	if (clipping_dirty) RecalcClipping();
-
-	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
-			NULL, NULL);
-
-	if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
-		//ProcessVertices(startVertex, verticesCount);
-	}
+	DrawTriangles(gfx_vertices + startVertex * gfx_stride, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	GE_set_vertices(gfx_vertices);
-	GE_set_indices(gfx_indices);
-	if (clipping_dirty) RecalcClipping();
-
-	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount),
-			NULL, NULL);
-
-	if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
-		//ProcessVertices(0, verticesCount);
-	}
+	DrawTriangles(gfx_vertices, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	GE_set_vertices(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
-	GE_set_indices(gfx_indices);
-	if (clipping_dirty) RecalcClipping();
-
-	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
-			NULL, NULL);
-
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		//ProcessVertices(startVertex, verticesCount);
-	}
+	DrawTriangles(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED, verticesCount);
 }
+
