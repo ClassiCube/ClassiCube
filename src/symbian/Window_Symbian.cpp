@@ -234,6 +234,7 @@ CApaApplication* NewApplication() {
 }
 
 TInt E32Main() {
+	User::SetFloatingPointMode(EFpModeRunFast);
 	return EikStart::RunApplication(NewApplication);
 }
 
@@ -355,9 +356,7 @@ void CCContainer::ConstructL(const TRect& aRect, CAknAppUi* aAppUi) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists = true;
 	WindowInfo.Handle.ptr = (void*) &Window();
-#ifdef CC_BUILD_TOUCH
 	WindowInfo.SoftKeyboard = SOFT_KEYBOARD_VIRTUAL;
-#endif
 
 	DisplayInfo.Width = size.iWidth;
 	DisplayInfo.Height = size.iHeight;
@@ -707,7 +706,7 @@ static int MapScanCode(TInt aScanCode, TInt aModifiers) {
 }
 
 void CCContainer::HandleWsEventL(const TWsEvent &aEvent, CCoeControl *aDestination) {
-	if (!events_mutex || WindowInfo.Inactive || CCoeEnv::Static()->AppUi()->IsDisplayingDialog()) return;
+	if (!events_mutex || WindowInfo.Inactive || iAppUi->IsDisplayingDialog()) return;
 	CCEvent event = { 0 };
 	switch (aEvent.Type()) {
 	case EEventKey: {
@@ -982,7 +981,7 @@ void Window_ProcessEvents(float delta) {
 			break;
 		case CC_KEY_INPUT:
 			Event_RaiseInt(&InputEvents.Press, event.i1);
-			break; 
+			break;
 #ifdef CC_BUILD_TOUCH
 		case CC_TOUCH_ADD:
 			Input_AddTouch(static_cast<long>(event.i1), event.i2, event.i3);
