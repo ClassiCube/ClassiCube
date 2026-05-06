@@ -452,7 +452,7 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 
 static int last_net_state = -1;
 
-static void DisplayNetState(int state) {
+static void DisplayNetState(int profile, int state) {
 	union SceNetApctlInfo net_name  = { 0 };
 	union SceNetApctlInfo net_ssid  = { 0 };
 
@@ -464,8 +464,8 @@ static void DisplayNetState(int state) {
 
 	cc_string str; char buffer[256];
 	String_InitArray_NT(str, buffer);
-	String_Format2(&str, "Profile name: %c\nNetwork SSID: %c\n\n", 
-						net_name.name, net_ssid.ssid);
+	String_Format3(&str, "Network profile %i\n  Name: %c\n  SSID: %c\n\n", 
+						&profile, net_name.name, net_ssid.ssid);
 
 	switch (state)
 	{
@@ -515,7 +515,7 @@ static cc_bool InitNetworking(void) {
         	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlGetState"); return false; }
         
         	if (state == PSP_NET_APCTL_STATE_GOT_IP) return true;
-			DisplayNetState(state);
+			DisplayNetState(profile + 1, state);
 
         	// not successful yet? try polling again in 50 ms
         	sceKernelDelayThread(50 * 1000);
