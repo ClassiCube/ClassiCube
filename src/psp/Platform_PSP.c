@@ -507,6 +507,7 @@ static cc_bool InitNetworking(void) {
 		if (res == _ERROR_NETPARAM_BAD_NETCONF && profile != NET_PROFILE_LAST) continue;
 
     	if (res) { Logger_SysWarn(res, "calling sceNetApctlConnect"); return false; }
+		last_net_state = -1;
 
     	for (int try = 0; try < 200; try++) 
 		{
