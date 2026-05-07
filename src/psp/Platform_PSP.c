@@ -516,12 +516,11 @@ static cc_bool InitNetworking(void) {
         	if (res) { Logger_SimpleWarn(res, "calling sceNetApctlGetState"); return false; }
         
         	if (state == PSP_NET_APCTL_STATE_GOT_IP) return true;
-			DisplayNetState(profile + 1, state);
+			DisplayNetState(profile, state);
 
         	// not successful yet? try polling again in 50 ms
         	sceKernelDelayThread(50 * 1000);
     	}
-		break; // TODO auto fallback to next profile ?
 	}
 
 	Window_ShowDialog("WiFi setup failed", "Timed out establishing a WiFi connection");
