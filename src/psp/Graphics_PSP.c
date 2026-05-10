@@ -121,7 +121,7 @@ static void Gfx_FreeState(void) {
 #define TEXMEM_BLOCK_SIZE 1024
 #define TEXMEM_MAX_BLOCKS (TEXMEM_TOTAL_FREE / TEXMEM_BLOCK_SIZE)
 static cc_uint8 tex_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
-static int CLIPPED, UNCLIPPED;
+static int CLIPPED, MACLIPPED, UNCLIPPED;
 
 
 /*########################################################################################################################*
@@ -532,8 +532,8 @@ void Gfx_EndFrame(void) {
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
 
-	Platform_Log2("C %i / U %i", &CLIPPED, &UNCLIPPED);
-	CLIPPED = UNCLIPPED = 0;
+	Platform_Log3("C %i/%i / U %i", &CLIPPED, &MACLIPPED, &UNCLIPPED);
+	CLIPPED = MACLIPPED = UNCLIPPED = 0;
 }
 
 void Gfx_OnWindowResize(void) {
@@ -748,7 +748,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 extern int QuadNeedsXYClipping(struct VertexTextured* v);
 extern struct ClipVertex* Clip_PolyToPlane(struct ClipVertex* src, struct ClipVertex* dst, 
 											int src_count, struct Plane* plane);
-extern void TransformTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
+extern void ConvertTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
 
 struct ClipVertex {
 	float x, y, z, w;
@@ -758,11 +758,7 @@ struct ClipVertex {
 
 static void DoClip(struct VertexTextured* V) {
 	struct ClipVertex clipped1[16], clipped2[16];
-
-	for (int j = 0; j < 4; j++) {
-		struct ClipVertex* C = &clipped1[j];
-		TransformTexturedQuad(V + j, C);
-	}
+	ConvertTexturedQuad(V, clipped1);
 	
 	struct ClipVertex* c_src = clipped1;
 	struct ClipVertex* c_dst = clipped2;
@@ -827,7 +823,7 @@ static void DrawClippableVertices(struct VertexTextured* v, int verticesCount) {
 			if (run) { CLIPPABLE_FLUSH_RUN(); }
 			run = 0; beg = v + 4;
 
-			DoClip(v);
+			DoClip(v); MACLIPPED++;
 		} else {
 			run += 6; UNCLIPPED++;
 		}

@@ -121,7 +121,7 @@ BEG_FUNC(Matrix_Mul2)
 END_FUNC(Matrix_Mul2)
 
 
-BEG_FUNC(TransformTexturedQuad)
+BEG_FUNC(ConvertTexturedQuad)
 	#define SRC $a0
 	#define DST $a1
 	#define END $t0
@@ -151,4 +151,4 @@ tex_next_iter:
 	#undef SRC
 	#undef DST
 	#udnef END
-END_FUNC(TransformTexturedQuad)
+END_FUNC(ConvertTexturedQuad)
