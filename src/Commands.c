@@ -28,6 +28,11 @@ void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
 
+void Commands_Unregister(struct ChatCommand* cmd) {
+	struct ChatCommand* cur;
+	LinkedList_Remove(cmd, cur, cmds_head, cmds_tail);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Command handling---------------------------------------------------*
