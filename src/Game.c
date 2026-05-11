@@ -385,52 +385,6 @@ static void LoadOptions(void) {
 	autoPause = Options_GetBool(OPT_AUTO_PAUSE, true);
 }
 
-#ifdef CC_BUILD_PLUGINS
-static void LoadPlugin(const cc_string* path, void* obj, int isDirectory) {
-	void* lib;
-	void* verSym;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
-	void* compSym; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
-	int ver;
-	if (isDirectory) return;
-
-	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
-	if (!String_CaselessEnds(path, &DynamicLib_Ext)) return;
-	/* don't try to load 32 bit plugins on 64 bit OS or vice versa */
-	if (sizeof(void*) == 4 && String_ContainsConst(path, "_64.")) return;
-	if (sizeof(void*) == 8 && String_ContainsConst(path, "_32.")) return;
-
-	lib = DynamicLib_Load2(path);
-	if (!lib) { Logger_DynamicLibWarn("loading", path); return; }
-
-	verSym  = DynamicLib_Get2(lib, "Plugin_ApiVersion");
-	if (!verSym)  { Logger_DynamicLibWarn("getting version of", path); return; }
-	compSym = DynamicLib_Get2(lib, "Plugin_Component");
-	if (!compSym) { Logger_DynamicLibWarn("initing", path); return; }
-
-	ver = *((int*)verSym);
-	if (ver < GAME_API_VER) {
-		Chat_Add1("&c%s plugin is outdated! Try getting a more recent version.", path);
-		return;
-	} else if (ver > GAME_API_VER) {
-		Chat_Add1("&cYour game is too outdated to use %s plugin! Try updating it.", path);
-		return;
-	}
-
-	Game_AddComponent((struct IGameComponent*)compSym);
-}
-
-static void LoadPlugins(void) {
-	static const cc_string dir = String_FromConst("plugins");
-	cc_result res;
-
-	Utils_EnsureDirectory("plugins");
-	res = Directory_Enum(&dir, NULL, LoadPlugin);
-	if (res) Logger_SysWarn(res, "enumerating plugins directory");
-}
-#else
-static void LoadPlugins(void) { }
-#endif
-
 static void Game_PendingClose(void* obj) { Game_Running = false; }
 static void Game_Load(void) {
 	struct IGameComponent* comp;
@@ -487,7 +441,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Formats_Component);
 	Game_AddComponent(&EntityRenderers_Component);
 
-	LoadPlugins();
+	Plugins_LoadAll();
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Init) comp->Init();
 	}

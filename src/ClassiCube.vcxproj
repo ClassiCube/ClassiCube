@@ -623,6 +623,7 @@
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Particle.c" />
+    <ClCompile Include="PluginAPI.c" />
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="Queue.c" />
     <ClCompile Include="SelOutlineRenderer.c" />
