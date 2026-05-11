@@ -53,4 +53,4 @@ struct ChatInterface {
 #define PLUGIN_INTERFACE_CHAT(value) { IFACE_TYPE_CHAT, 1, value }
 
 CC_END_HEADER
-
+#endif
