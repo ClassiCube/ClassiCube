@@ -552,15 +552,17 @@ static void Render3D_Anaglyph(float delta, float t) {
 
 static void PerformScheduledTasks(float time) {
 	struct ScheduledTask2* task = tasks_head;
+	struct ScheduledTask2* next;
 
 	while (task) {
 		task->accumulator += time;
+		next = task->next; /* cache in case callback removes task */
 
 		while (task->accumulator >= task->interval) {
 			task->callback(task);
 			task->accumulator -= task->interval;
 		}
-		task = task->next;
+		task = next;
 	}
 }
 
