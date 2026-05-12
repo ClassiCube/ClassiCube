@@ -745,7 +745,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
-extern int QuadNeedsXYClipping(struct VertexTextured* v);
+extern int QuadNeedsClipping(float* xyz_first, int stride);
 extern struct ClipVertex* Clip_PolyToPlane(struct ClipVertex* src, struct ClipVertex* dst, 
 											int src_count, struct Plane* plane);
 extern void ConvertTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
@@ -802,16 +802,6 @@ static void DoClip(struct VertexTextured* V) {
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT); \
 	sceGuDrawArray(GU_TRIANGLES, 0, run, NULL, NULL);
 
-// TODO fix QuadNeedsXYClipping
-extern int VertexNeedsXYClipping(struct VertexTextured* v);
-int QuadNeedsXYClipping2(struct VertexTextured* v) {
-	for (int i = 0; i < 4; i++)
-	{
-		if (VertexNeedsXYClipping(v + i)) return true;
-	}
-	return false;
-}
-
 static void DrawClippableVertices(struct VertexTextured* v, int verticesCount) {
 	int run;
 	struct VertexTextured* beg;
@@ -819,7 +809,7 @@ static void DrawClippableVertices(struct VertexTextured* v, int verticesCount) {
 	
 	for (int i = 0; i < verticesCount; i += 4, v += 4)
 	{
-		if (QuadNeedsXYClipping2(v)) {
+		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_TEXTURED)) {
 			if (run) { CLIPPABLE_FLUSH_RUN(); }
 			run = 0; beg = v + 4;
 
