@@ -756,7 +756,7 @@ struct ClipVertex {
 	int c, flags;
 } CC_ALIGNED(16);
 
-static void DoClip(struct VertexTextured* V) {
+static void DoTexturedClip(struct VertexTextured* V) {
 	struct ClipVertex clipped1[16], clipped2[16];
 	ConvertTexturedQuad(V, clipped1);
 	
@@ -795,6 +795,52 @@ static void DoClip(struct VertexTextured* V) {
 	CLIPPED++;
 }
 
+static void DoColouredClip(struct VertexColoured* V) {
+	struct ClipVertex clipped1[16], clipped2[16];
+	for (int i = 0; i < 4; i++)
+	{
+		clipped1[i].x = V[i].x;
+		clipped1[i].y = V[i].y;
+		clipped1[i].z = V[i].z;
+		clipped1[i].w = 1.0f;
+		clipped1[i].u = 0;
+		clipped1[i].v = 0;
+		clipped1[i].c = V[i].Col;
+	}
+	
+	struct ClipVertex* c_src = clipped1;
+	struct ClipVertex* c_dst = clipped2;
+	struct ClipVertex* c_tmp;
+	int i_src = 4, i_dst, i_tmp;
+
+	for (int j = 0; j < 4; j++)
+	{
+		struct ClipVertex* c_end = Clip_PolyToPlane(c_src, c_dst, i_src, &frustum[j]);
+		i_dst = (int)(c_end - c_dst);
+		if (i_dst == 0) return;
+
+		i_tmp = i_src; i_src = i_dst; i_dst = i_tmp;
+		c_tmp = c_src; c_src = c_dst; c_dst = c_tmp;
+	}
+
+	void* ptr = sceGuGetMemory(sizeof(struct VertexColoured) * i_dst);
+	if (!ptr) return;
+	struct VertexColoured* a = ptr;
+
+	for (int i = 0; i < i_dst; i++)
+	{
+		a[i].x = c_dst[i].x;
+		a[i].y = c_dst[i].y;
+		a[i].z = c_dst[i].z;
+		a[i].Col = c_dst[i].c;
+	}
+
+	GE_set_vertex_format(gfx_fields);
+	GE_set_vertices(ptr);
+	sceGuDrawArray(GU_TRIANGLE_FAN, 0, i_dst, NULL, NULL);
+	CLIPPED++;
+}
+
 // TODO don't set vertex format is unchanged
 #define CLIPPABLE_FLUSH_RUN() \
 	GE_set_vertices(beg); \
@@ -802,7 +848,7 @@ static void DoClip(struct VertexTextured* V) {
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT); \
 	sceGuDrawArray(GU_TRIANGLES, 0, run, NULL, NULL);
 
-static void DrawClippableVertices(struct VertexTextured* v, int verticesCount) {
+static void DrawClippableTexturedVertices(struct VertexTextured* v, int verticesCount) {
 	int run;
 	struct VertexTextured* beg;
 	run = 0; beg = v;
@@ -813,7 +859,27 @@ static void DrawClippableVertices(struct VertexTextured* v, int verticesCount) {
 			if (run) { CLIPPABLE_FLUSH_RUN(); }
 			run = 0; beg = v + 4;
 
-			DoClip(v); MACLIPPED++;
+			DoTexturedClip(v); MACLIPPED++;
+		} else {
+			run += 6; UNCLIPPED++;
+		}
+	}
+
+	if (run) { CLIPPABLE_FLUSH_RUN(); }
+}
+
+static void DrawClippableColouredVertices(struct VertexColoured* v, int verticesCount) {
+	int run;
+	struct VertexColoured* beg;
+	run = 0; beg = v;
+	
+	for (int i = 0; i < verticesCount; i += 4, v += 4)
+	{
+		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_COLOURED)) {
+			if (run) { CLIPPABLE_FLUSH_RUN(); }
+			run = 0; beg = v + 4;
+
+			DoColouredClip(v); MACLIPPED++;
 		} else {
 			run += 6; UNCLIPPED++;
 		}
@@ -823,15 +889,18 @@ static void DrawClippableVertices(struct VertexTextured* v, int verticesCount) {
 }
 
 static void DrawTriangles(void* vertices, int verticesCount) {
-	GE_set_vertices(vertices);
-	GE_set_indices(gfx_indices);
 	if (clipping_dirty) RecalcClipping();
 
-	if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawClippableVertices(vertices, verticesCount);
-	} else {
+	if (gfx_rendering2D) {
+		GE_set_vertices(vertices);
+		GE_set_indices(gfx_indices);
+
 		sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
 				NULL, NULL);
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawClippableTexturedVertices(vertices, verticesCount);
+	} else {
+		DrawClippableColouredVertices(vertices, verticesCount);
 	}
 }
 
