@@ -1035,7 +1035,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	DrawQuads(verticesCount, 0);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (depth_only) return;
 	DrawTexturedQuads3D(verticesCount, startVertex);
 }

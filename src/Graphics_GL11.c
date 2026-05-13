@@ -212,7 +212,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gl_indices);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { 
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) { 
 	glCallList(activeList); 
 }
 

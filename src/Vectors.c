@@ -184,66 +184,87 @@ struct Plane { float a, b, c, d; };
 struct FrustumPlanes { struct Plane L, R, B, T, F; };
 static struct FrustumPlanes frustum;
 
-cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) {
+int Frustum_TestSphere(float x, float y, float z, float radius) {
 	float d;
+#if CC_CLIPPING_FLAGS
+	int type = FRUSTUM_ON_OR_IN | FRUSTUM_INSIDE_FLAG;
+#else
+	const int type = FRUSTUM_ON_OR_IN;
+#endif
 
 	d = frustum.L.a * x + frustum.L.b * y + frustum.L.c * z + frustum.L.d;
-	if (d <= -radius) return false;
+	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_XMIN)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.R.a * x + frustum.R.b * y + frustum.R.c * z + frustum.R.d;
-	if (d <= -radius) return false;
+	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_XMAX)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.B.a * x + frustum.B.b * y + frustum.B.c * z + frustum.B.d;
-	if (d <= -radius) return false;
+	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_YMIN)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.T.a * x + frustum.T.b * y + frustum.T.c * z + frustum.T.d;
-	if (d <= -radius) return false;
+	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_YMAX)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.F.a * x + frustum.F.b * y + frustum.F.c * z + frustum.F.d;
-	if (d <= -radius) return false;
+	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_ZMAX)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
+
 	/* Don't test NEAR plane, it's pointless */
 
 #if defined CC_BUILD_SATURN || defined CC_BUILD_32X
 	/* Workaround a compiler bug causing the below statement to return 0 instead */
 	__asm__( "!" );
 #endif
-	return true;
+	return type;
 }
 
-static void FrustumCulling_Normalise(struct Plane* plane) {
+static void Frustum_NormalisePlane(struct Plane* plane) {
 	float val1 = plane->a, val2 = plane->b, val3 = plane->c;
 	float t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
 	plane->a /= t; plane->b /= t; plane->c /= t; plane->d /= t;
 }
 
-void FrustumCulling_CalcFrustumEquations(struct Matrix* clip) {
+void Frustum_CalcPlanes(struct Matrix* clip) {
 	/* Extract the LEFT plane */
 	frustum.L.a = clip->row1.w + clip->row1.x;
 	frustum.L.b = clip->row2.w + clip->row2.x;
 	frustum.L.c = clip->row3.w + clip->row3.x;
 	frustum.L.d = clip->row4.w + clip->row4.x;
-	FrustumCulling_Normalise(&frustum.L);
+	Frustum_NormalisePlane(&frustum.L);
 
 	/* Extract the RIGHT plane */
 	frustum.R.a = clip->row1.w - clip->row1.x;
 	frustum.R.b = clip->row2.w - clip->row2.x;
 	frustum.R.c = clip->row3.w - clip->row3.x;
 	frustum.R.d = clip->row4.w - clip->row4.x;
-	FrustumCulling_Normalise(&frustum.R);
+	Frustum_NormalisePlane(&frustum.R);
 
 	/* Extract the BOTTOM plane */
 	frustum.B.a = clip->row1.w + clip->row1.y;
 	frustum.B.b = clip->row2.w + clip->row2.y;
 	frustum.B.c = clip->row3.w + clip->row3.y;
 	frustum.B.d = clip->row4.w + clip->row4.y;
-	FrustumCulling_Normalise(&frustum.B);
+	Frustum_NormalisePlane(&frustum.B);
 
 	/* Extract the TOP plane */
 	frustum.T.a = clip->row1.w - clip->row1.y;
 	frustum.T.b = clip->row2.w - clip->row2.y;
 	frustum.T.c = clip->row3.w - clip->row3.y;
 	frustum.T.d = clip->row4.w - clip->row4.y;
-	FrustumCulling_Normalise(&frustum.T);
+	Frustum_NormalisePlane(&frustum.T);
 
 	/* Extract the FAR plane (Different for each graphics backend) */
 #if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11)
@@ -260,5 +281,5 @@ void FrustumCulling_CalcFrustumEquations(struct Matrix* clip) {
 	frustum.F.c = clip->row3.w - clip->row3.z;
 	frustum.F.d = clip->row4.w - clip->row4.z;
 #endif
-	FrustumCulling_Normalise(&frustum.F);
+	Frustum_NormalisePlane(&frustum.F);
 }

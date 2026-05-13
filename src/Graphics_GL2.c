@@ -728,7 +728,7 @@ void Gfx_BindVb_Textured(GfxResourceID vb) {
 	GL_SetupVbTextured();
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (startVertex + verticesCount > GFX_MAX_VERTICES) {
 		GL_SetupVbTextured_Range(startVertex);
 		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);

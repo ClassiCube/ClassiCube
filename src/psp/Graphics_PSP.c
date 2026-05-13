@@ -646,7 +646,7 @@ extern void Clip_StoreMVP(float* dst);
 static cc_bool clipping_dirty;
 struct Plane { float a, b, c, d; } CC_ALIGNED(16);
 static struct Plane frustum[6];
-extern void Frustum_CalcPlanes(struct Plane* planes);
+extern void Frustum_CalcAllPlanes(struct Plane* planes);
 extern void Clip_SetGuardbandScale(const float* x, const float* y);
 
 static CC_INLINE void RecalcMVP(void) {
@@ -655,7 +655,7 @@ static CC_INLINE void RecalcMVP(void) {
 }
 
 static CC_NOINLINE void RecalcClipping(void) {
-	Frustum_CalcPlanes(frustum);
+	Frustum_CalcAllPlanes(frustum);
 	clipping_dirty = false;
 
 	// PSP guard band ranges from 0..4096
@@ -792,6 +792,7 @@ static void DoTexturedClip(struct VertexTextured* V) {
 	GE_set_vertex_format(gfx_fields);
 	GE_set_vertices(ptr);
 	sceGuDrawArray(GU_TRIANGLE_FAN, 0, i_dst, NULL, NULL);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 	CLIPPED++;
 }
 
@@ -838,6 +839,7 @@ static void DoColouredClip(struct VertexColoured* V) {
 	GE_set_vertex_format(gfx_fields);
 	GE_set_vertices(ptr);
 	sceGuDrawArray(GU_TRIANGLE_FAN, 0, i_dst, NULL, NULL);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 	CLIPPED++;
 }
 
@@ -845,13 +847,12 @@ static void DoColouredClip(struct VertexColoured* V) {
 #define CLIPPABLE_FLUSH_RUN() \
 	GE_set_vertices(beg); \
 	GE_set_indices(gfx_indices); \
-	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT); \
 	sceGuDrawArray(GU_TRIANGLES, 0, run, NULL, NULL);
 
 static void DrawClippableTexturedVertices(struct VertexTextured* v, int verticesCount) {
-	int run;
-	struct VertexTextured* beg;
-	run = 0; beg = v;
+	struct VertexTextured* beg = v;
+	int run = 0;
+	if (clipping_dirty) RecalcClipping();
 	
 	for (int i = 0; i < verticesCount; i += 4, v += 4)
 	{
@@ -869,9 +870,9 @@ static void DrawClippableTexturedVertices(struct VertexTextured* v, int vertices
 }
 
 static void DrawClippableColouredVertices(struct VertexColoured* v, int verticesCount) {
-	int run;
-	struct VertexColoured* beg;
-	run = 0; beg = v;
+	struct VertexColoured* beg = v;
+	int run = 0;
+	if (clipping_dirty) RecalcClipping();
 	
 	for (int i = 0; i < verticesCount; i += 4, v += 4)
 	{
@@ -888,10 +889,8 @@ static void DrawClippableColouredVertices(struct VertexColoured* v, int vertices
 	if (run) { CLIPPABLE_FLUSH_RUN(); }
 }
 
-static void DrawTriangles(void* vertices, int verticesCount) {
-	if (clipping_dirty) RecalcClipping();
-
-	if (gfx_rendering2D) {
+static void DrawTriangles(void* vertices, int verticesCount, DrawHints hints) {
+	if (gfx_rendering2D || (hints & DRAW_HINT_NOCLIP)) {
 		GE_set_vertices(vertices);
 		GE_set_indices(gfx_indices);
 
@@ -905,14 +904,14 @@ static void DrawTriangles(void* vertices, int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	DrawTriangles(gfx_vertices + startVertex * gfx_stride, verticesCount);
+	DrawTriangles(gfx_vertices + startVertex * gfx_stride, verticesCount, hints);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	DrawTriangles(gfx_vertices, verticesCount);
+	DrawTriangles(gfx_vertices, verticesCount, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawTriangles(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED, verticesCount);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
+	DrawTriangles(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED, verticesCount, hints);
 }
 

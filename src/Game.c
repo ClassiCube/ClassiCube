@@ -540,9 +540,9 @@ static void Render3DFrame(float delta, float t) {
 	Camera.Active->GetView(&Gfx.View);
 	/*Gfx_LoadMatrix(MATRIX_PROJ, &Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
-	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);*/
+	Frustum_CalcPlanes(&Gfx.Projection, &Gfx.View);*/
 	Gfx_LoadMVP(&Gfx.View, &Gfx.Projection, &mvp);
-	FrustumCulling_CalcFrustumEquations(&mvp);
+	Frustum_CalcPlanes(&mvp);
 
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 	AxisLinesRenderer_Render();

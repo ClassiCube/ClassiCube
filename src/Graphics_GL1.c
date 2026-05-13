@@ -284,7 +284,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
 	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset +  0));
 	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (GLpointer)(VB_PTR + offset + 12));

@@ -1002,7 +1002,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	// TODO
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	//SetPrimitiveType(PRIM_TRIANGLE);
 	DrawTriangles(verticesCount, startVertex);
 	// TODO

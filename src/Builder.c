@@ -380,7 +380,9 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	int xMax, yMax, zMax, totalVerts;
 	int cIndex, index;
 	int x, y, z, xx, yy, zz;
-	int x1 = info->centreX - 8, y1 = info->centreY - 8, z1 = info->centreZ - 8;
+	int x1 = info->centreX - HALF_CHUNK_SIZE;
+	int y1 = info->centreY - HALF_CHUNK_SIZE;
+	int z1 = info->centreZ - HALF_CHUNK_SIZE;
 
 	Builder_Chunk  = chunk;
 	Builder_Counts = counts;

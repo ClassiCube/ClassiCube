@@ -20,7 +20,7 @@
 #define S_ZP S710 // frustum plane z+ scale
 #define S_ZN S711 // frustum plane z- scale
 
-BEG_FUNC(Frustum_CalcPlanes)
+BEG_FUNC(Frustum_CalcAllPlanes)
 	#define DST $a0
 
 	// Frustum planes calculation
@@ -73,5 +73,5 @@ BEG_FUNC(Frustum_CalcPlanes)
 	sv.q F_ZN, 80(DST)      // ..
 
 	#undef DST
-END_FUNC(Frustum_CalcPlanes)
+END_FUNC(Frustum_CalcAllPlanes)
 

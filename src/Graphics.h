@@ -362,6 +362,8 @@ USAGE NOTES:
 /* Optional draw hints used by some rendering backends to speed up 2D drawing */
 typedef enum DrawHints_ {
 	DRAW_HINT_NONE   = 0,
+	/* Vertices do not require clipping with the planes set in CC_CLIPPING_FLAGS */
+	DRAW_HINT_NOCLIP = 0x01,
 	/* Vertices are 2D rects with possible texture scaling and/or repeating */
 	DRAW_HINT_SPRITE = 0x02,
 	/* Vertices are 2D rects with no texture scaling or repeating */
@@ -379,7 +381,7 @@ CC_API void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, Dra
 /* Renders vertices from the currently bound vertex and index buffer as triangles */
 CC_API void Gfx_DrawVb_IndexedTris(int verticesCount);
 /* Special case Gfx_DrawVb_IndexedTris_Range for map renderer */
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints);
 
 
 /*########################################################################################################################*

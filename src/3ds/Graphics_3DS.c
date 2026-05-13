@@ -980,7 +980,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount));
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	SetVertexSource(startVertex);
 	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount));
 }
