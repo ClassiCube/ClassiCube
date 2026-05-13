@@ -765,7 +765,7 @@ static void DoTexturedClip(struct VertexTextured* V) {
 	struct ClipVertex* c_tmp;
 	int i_src = 4, i_dst, i_tmp;
 
-	for (int j = 0; j < 4; j++)
+	for (int j = 0; j < 6; j++)
 	{
 		struct ClipVertex* c_end = Clip_PolyToPlane(c_src, c_dst, i_src, &frustum[j]);
 		i_dst = (int)(c_end - c_dst);
@@ -813,7 +813,7 @@ static void DoColouredClip(struct VertexColoured* V) {
 	struct ClipVertex* c_tmp;
 	int i_src = 4, i_dst, i_tmp;
 
-	for (int j = 0; j < 4; j++)
+	for (int j = 0; j < 6; j++)
 	{
 		struct ClipVertex* c_end = Clip_PolyToPlane(c_src, c_dst, i_src, &frustum[j]);
 		i_dst = (int)(c_end - c_dst);
