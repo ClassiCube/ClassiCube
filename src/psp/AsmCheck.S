@@ -32,9 +32,11 @@
 #define ADJ_MVP M200 // NOTE: MVP adjusted by guardband scale
 
 
-.macro TestInsidePlane row
-	vcmp.q GT, \row[|x|,|y|,|z|,0], \row[|w|,|w|,|w|,0] // CC[0] = |x|>|w|...
-	bvt 4, behind_a_clipping_plane // CC[4] = (|x|>|w|) | (|y|>|w|) | (|z|>|w|) | (0>0)
+// Tests left, right, top, bottom, far planes
+//   Does NOT test near plane, as PSP GPU natively clips that
+.macro TestInsidePlanes row
+	vcmp.q GT, \row[|x|,|y|,z,0], \row[|w|,|w|,w,0] // CC[0] = |x|>|w|...
+	bvt 4, behind_a_clipping_plane // CC[4] = (|x|>|w|) | (|y|>|w|) | (z>w) | (0>0)
 	nop
 .endm
 
@@ -60,7 +62,7 @@ BEG_FUNC(QuadNeedsClipping)
 	addu    SRC, SRC, STRIDE // src++
 
 	// Check vertex 1 inside guardband region
-	TestInsidePlane F1
+	TestInsidePlanes F1
 
 	// Transform vertex 2
 	vhtfm4.q F2, ADJ_MVP, V2
@@ -73,7 +75,7 @@ BEG_FUNC(QuadNeedsClipping)
 	addu    SRC, SRC, STRIDE // src++
 
 	// Check vertex 2 inside guardband region
-	TestInsidePlane F2
+	TestInsidePlanes F2
 
 	// Transform vertex 3
 	vhtfm4.q F3, ADJ_MVP, V3
@@ -86,13 +88,13 @@ BEG_FUNC(QuadNeedsClipping)
 	//addu    SRC, SRC, STRIDE // src++
 
 	// Check vertex 3 inside guardband region
-	TestInsidePlane F3
+	TestInsidePlanes F3
 
 	// Transform vertex 4
 	vhtfm4.q F4, ADJ_MVP, V4
 
 	// Check vertex 4 inside guardband region
-	TestInsidePlane F4
+	TestInsidePlanes F4
 
 	jr	$ra
 	li $v0, 0
