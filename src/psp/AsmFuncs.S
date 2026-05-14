@@ -87,20 +87,25 @@ BEG_FUNC(Clip_StoreMVP)
 END_FUNC(Clip_StoreMVP)
 
 
-
 BEG_FUNC(Clip_SetGuardbandScale)
 	#define SRC_X $a0
 	#define SRC_Y $a1
 
-	lv.s	S700, 0(SRC_X)
-	lv.s	S701, 0(SRC_Y)
-	vscl.q C200, C200, S700
+	lv.s	GBAND_X, 0(SRC_X)
+	lv.s	GBAND_Y, 0(SRC_Y)
+	vrcp.s  GBINV_X, GBAND_X
 	jr 		$ra
-	vscl.q C210, C210, S701
+	vrcp.s  GBINV_Y, GBAND_Y
 
 	#undef SRC_X
 	#undef SRC_Y
 END_FUNC(Clip_SetGuardbandScale)
+
+BEG_FUNC(Clip_RescaleMVPtoGuardband)
+	vscl.q MVP_CX, MVP_CX, GBAND_X
+	jr 	   $ra
+	vscl.q MVP_CY, MVP_CY, GBAND_Y
+END_FUNC(Clip_RescaleMVPtoGuardband)
 
 
 BEG_FUNC(Matrix_Mul2)
@@ -127,7 +132,7 @@ BEG_FUNC(ConvertTexturedQuad)
 	#define END $t0
 
 	vone.s		S730;               // M7[0,3] = 1.0
-	addiu		END, DST, 3*S_POLY; // TMP = DST + 3 * sizeof(PolyVertex)
+	addiu		END, DST, 3*S_VCLP; // TMP = DST + 3 * sizeof(PolyVertex)
 
 tex_next_iter:
 	lv.s		S701, VTEX_U(SRC);  // M7[1,0] = src->u
@@ -143,7 +148,7 @@ tex_next_iter:
 	sv.q		R700,  0(DST) 		// MEM_128[DST+ 0] = M7.R0
 	sv.q		R701, 16(DST) 		// MEM_128[DST+16] = M7.R1
 	bne			DST, END, tex_next_iter // if (dst != end) goto tex_next_iter;
-	addiu		DST, DST, S_POLY;	// dst += sizeof(PolyVertex)
+	addiu		DST, DST, S_VCLP;	// dst += sizeof(PolyVertex)
 
 	jr	$ra
 	nop

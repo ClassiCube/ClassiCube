@@ -43,19 +43,19 @@ BEG_FUNC(Clip_PolyToPlane)
 	move 	CUR, SRC			// CUR = src
 	// prev = (cur - 1) % in_count
 	// so for first iteration, prev is in_count - 1
-	sll		PRV, CNT,S_POLY_LOG2// PRV = count * sizeof(POLY_VERTEX)
-	addiu	PRV, PRV, -S_POLY 	// PRV -= sizeof(POLY_VERTEX)
+	sll		PRV, CNT,S_VCLP_LOG2// PRV = count * sizeof(ClipVertex)
+	addiu	PRV, PRV, -S_VCLP 	// PRV -= sizeof(ClipVertex)
 	add		PRV, PRV, SRC		// PRV += src
-	move	END, PRV			// END = PRV (src + (count-1) * sizeof(POLY_VERTEX))
+	move	END, PRV			// END = PRV (src + (count-1) * sizeof(ClipVertex))
 
 	lv.q	PLN_Q, 0(PLN)		// PLANE = MEM_128[PLN]
 	vzero.s ZRO_S				// ZRO_S = 0.0
 
 clip_next_line:
-	lv.q	C_POS, POLY_XYZW(CUR)
-	lv.q	C_OTH, POLY_UVCF(CUR)// TODO delay loaded ?
-	lv.q	P_POS, POLY_XYZW(PRV)
-	lv.q	P_OTH, POLY_UVCF(PRV)
+	lv.q	C_POS, VCLP_XYZW(CUR)
+	lv.q	C_OTH, VCLP_UVCF(CUR)// TODO delay loaded ?
+	lv.q	P_POS, VCLP_XYZW(PRV)
+	lv.q	P_OTH, VCLP_UVCF(PRV)
 
 	vdot.q	C_DST, PLN_Q, C_POS	// C_DST = plane * CUR (distance from current vertex to plane)
 	vdot.q	P_DST, PLN_Q, P_POS	// P_DST = plane * PRV (distance from previous vertex to plane)
@@ -70,21 +70,21 @@ clip_next_line:
 
 
 cur_front_prev_front:
-	sv.q	C_POS, POLY_XYZW(DST)
-	sv.q	C_OTH, POLY_UVCF(DST)
+	sv.q	C_POS, VCLP_XYZW(DST)
+	sv.q	C_OTH, VCLP_UVCF(DST)
 	j		line_finished
-	addiu	DST, DST, S_POLY 		// dst += sizeof(PolyVertex)
+	addiu	DST, DST, S_VCLP 		// dst += sizeof(PolyVertex)
 
 cur_front_prev_behind:
 	ComputeIntersection
-	sv.q	D_POS, POLY_XYZW(DST)
-	sv.q	D_OTH, POLY_UVCF(DST)
-	addiu	DST, DST, S_POLY // dst += sizeof(PolyVertex)
+	sv.q	D_POS, VCLP_XYZW(DST)
+	sv.q	D_OTH, VCLP_UVCF(DST)
+	addiu	DST, DST, S_VCLP // dst += sizeof(ClipVertex)
 
-	sv.q	C_POS, POLY_XYZW(DST)
-	sv.q	C_OTH, POLY_UVCF(DST)
+	sv.q	C_POS, VCLP_XYZW(DST)
+	sv.q	C_OTH, VCLP_UVCF(DST)
 	j		line_finished
-	addiu	DST, DST, S_POLY // dst += sizeof(PolyVertex)
+	addiu	DST, DST, S_VCLP // dst += sizeof(ClipVertex)
 
 
 cur_behind:
@@ -94,10 +94,10 @@ cur_behind:
 
 cur_behind_prev_front:
 	ComputeIntersection
-	sv.q	D_POS, POLY_XYZW(DST)
-	sv.q	D_OTH, POLY_UVCF(DST)
+	sv.q	D_POS, VCLP_XYZW(DST)
+	sv.q	D_OTH, VCLP_UVCF(DST)
 	j		line_finished
-	addiu	DST, DST, S_POLY // dst += sizeof(PolyVertex)
+	addiu	DST, DST, S_VCLP // dst += sizeof(ClipVertex)
 
 cur_behind_prev_behind:
 	// No vertices are output if both points are behind the plane
@@ -106,7 +106,7 @@ cur_behind_prev_behind:
 line_finished:
 	move  PRV, CUR					// PRV = CUR
 	bne   CUR, END, clip_next_line	// if (CUR != END) goto clip_next_line
-	addiu CUR, CUR, S_POLY			// CUR += sizeof(PolyVertex) (delay slot)
+	addiu CUR, CUR, S_VCLP			// CUR += sizeof(PolyVertex) (delay slot)
 	// TODO
 	
 	jr $ra
