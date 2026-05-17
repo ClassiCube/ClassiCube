@@ -635,26 +635,46 @@ static int gfx_fogMode  = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	//GU_Toggle(GU_FOG);
+	GE_set_fog_active(enabled);
 }
 
 void Gfx_SetFogCol(PackedCol color) {
 	if (color == gfx_fogColor) return;
+
 	gfx_fogColor = color;
-	//sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
+	GE_set_fog_color(color);
+}
+
+static void UpdateFog(void) {
+	float depth;
+
+	// See algorithm in EnvRenderer.c
+	if (gfx_fogMode == FOG_EXP) {
+		#define LOG_005 -2.99573227355399f
+
+		depth = LOG_005 / -gfx_fogDensity;
+	} else {
+		depth = gfx_fogEnd;
+	}
+	GE_set_fog_range(depth);
 }
 
 void Gfx_SetFogDensity(float value) {
+	if (value == gfx_fogDensity) return;
+	gfx_fogDensity = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
 	gfx_fogEnd = value;
-	//sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
+	UpdateFog();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
-	/* TODO: Implemen fake exp/exp2 fog */
+	if (func == gfx_fogMode) return;
+	gfx_fogMode = func;
+	UpdateFog();
 }
 
 static void SetAlphaTest(cc_bool enabled) { 

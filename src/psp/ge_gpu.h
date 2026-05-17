@@ -19,7 +19,7 @@ enum GE_COMMANDS {
 	GE_SET_VERTEX_FORMAT        = 0x12,
 
 	GE_SET_TEXTURING            = 0x1E,
-	GE_SET_FOG                  = 0x1F,
+	GE_SET_FOG_ACTIVE           = 0x1F,
 	GE_SET_ALPHA_BLENDING       = 0x21,
 	GE_SET_ALPHA_TESTING        = 0x22,
 	GE_SET_DEPTH_TESTING        = 0x23,	
@@ -40,6 +40,10 @@ enum GE_COMMANDS {
 
 	GE_SET_SCREEN_OFFSET_X      = 0x4C,
 	GE_SET_SCREEN_OFFSET_Y      = 0x4D,
+
+	GE_SET_FOG_BIAS				= 0xCD,
+	GE_SET_FOG_STEP				= 0xCE,
+	GE_SET_FOG_COLOR            = 0xCF,
 
 	GE_SET_Z_RANGE_MIN          = 0xD6,
 	GE_SET_Z_RANGE_MAX          = 0xD7,
@@ -187,6 +191,21 @@ static CC_INLINE void GE_set_alpha_testing(int enabled) {
 static CC_INLINE void GE_set_alpha_blending(int enabled) {
 	GE_PushI(GE_SET_ALPHA_BLENDING, enabled);
 }
+
+
+static CC_INLINE void GE_set_fog_active(int enabled) {
+	GE_PushI(GE_SET_FOG_ACTIVE, enabled);
+}
+
+static CC_INLINE void GE_set_fog_color(unsigned color) {
+	GE_PushI(GE_SET_FOG_COLOR, color);
+}
+
+static CC_INLINE void GE_set_fog_range(float range) {
+	GE_PushF(GE_SET_FOG_BIAS, range);
+	GE_PushF(GE_SET_FOG_STEP, 1.0f / range);
+}
+
 
 
 /*########################################################################################################################*
