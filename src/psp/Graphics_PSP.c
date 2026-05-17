@@ -746,7 +746,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	GE_set_vertex_format(gfx_fields);
 	GE_set_vertices(gfx_vertices);
 
-	sceGuDrawArray(GU_LINES, 0, verticesCount, NULL, NULL);
+	GE_draw_array(GU_LINES, verticesCount);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
@@ -765,7 +765,7 @@ extern cc_uintptr Clip_PolyToPlanes(struct ClipVertex* buf1, struct ClipVertex* 
 static CC_INLINE void SubmitClippedVertices(const void* ptr, int count) {
 	GE_set_vertex_format(gfx_fields);
 	GE_set_vertices(ptr);
-	sceGuDrawArray(GU_TRIANGLE_FAN, 0, count, NULL, NULL);
+	GE_draw_array(GU_TRIANGLE_FAN, count);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 	CLIPPED++;
 }
@@ -774,8 +774,7 @@ extern void ConvertTexturedToClipQuad(struct VertexTextured* V, struct ClipVerte
 extern void ConvertColouredToClipQuad(struct VertexColoured* V, struct ClipVertex* C);
 
 static void* EnqueueTexturedVertices(struct ClipVertex* buf, int count) {
-	void* ptr = sceGuGetMemory(sizeof(struct VertexTextured) * count);
-	if (!ptr) return NULL;
+	void* ptr = GE_ReserveListSpace(sizeof(struct VertexTextured) * count);
 	struct VertexTextured* a = ptr;
 
 	for (int i = 0; i < count; i++)
@@ -791,8 +790,7 @@ static void* EnqueueTexturedVertices(struct ClipVertex* buf, int count) {
 }
 
 static void* EnqueueColouredVertices(struct ClipVertex* buf, int count) {
-	void* ptr = sceGuGetMemory(sizeof(struct VertexColoured) * count);
-	if (!ptr) return NULL;
+	void* ptr = GE_ReserveListSpace(sizeof(struct VertexColoured) * count);
 	struct VertexColoured* a = ptr;
 
 	for (int i = 0; i < count; i++)
@@ -810,7 +808,7 @@ static void* EnqueueColouredVertices(struct ClipVertex* buf, int count) {
 	if (run) { \
 		GE_set_vertices(beg); \
 		GE_set_indices(gfx_indices); \
-		sceGuDrawArray(GU_TRIANGLES, 0, run, NULL, NULL); \
+		GE_draw_array(GU_TRIANGLES, run); \
 	} \
 	run = 0; beg = v + 4;
 
@@ -837,7 +835,6 @@ static void DrawClippableTexturedVertices(struct VertexTextured* v, int vertices
 			cnt = CLIPRESULT_COUNT(res);
 			buf = CLIPRESULT_BUFFER(res);
 			ptr = EnqueueTexturedVertices(buf, cnt);
-			if (!ptr) { run += 6; continue; }
 
 			CLIPPABLE_FLUSH_RUN();
 			SubmitClippedVertices(ptr, cnt);
@@ -871,7 +868,6 @@ static void DrawClippableColouredVertices(struct VertexColoured* v, int vertices
 			cnt = CLIPRESULT_COUNT(res);
 			buf = CLIPRESULT_BUFFER(res);
 			ptr = EnqueueColouredVertices(buf, cnt);
-			if (!ptr) { run += 6; continue; }
 
 			CLIPPABLE_FLUSH_RUN();
 			SubmitClippedVertices(ptr, cnt);
@@ -887,8 +883,7 @@ static void DrawTriangles(void* vertices, int verticesCount, DrawHints hints) {
 		GE_set_vertices(vertices);
 		GE_set_indices(gfx_indices);
 
-		sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
-				NULL, NULL);
+		GE_draw_array(GU_TRIANGLES, ICOUNT(verticesCount));
 	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		DrawClippableTexturedVertices(vertices, verticesCount);
 	} else {
