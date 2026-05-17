@@ -759,25 +759,26 @@ struct ClipVertex {
 extern int QuadNeedsClipping(float* xyz_first, int stride);
 extern cc_uintptr Clip_PolyToPlanes(struct ClipVertex* buf1, struct ClipVertex* buf2, 
 											int planes_count, struct Plane* plane);
-extern void ConvertTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
+#define CLIPRESULT_COUNT(res)   (int)((res) & 0x0F);
+#define CLIPRESULT_BUFFER(res)  (struct ClipVertex*)((res) & ~0x0F);
 
-static void DoTexturedClip(struct VertexTextured* V) {
-	struct ClipVertex clipped1[16], clipped2[16];
-	struct ClipVertex* buf;
-	int cnt;
-	ConvertTexturedQuad(V, clipped1);
-	
-	cc_uintptr res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
-	if (res == 0) return;
+static CC_INLINE void SubmitClippedVertices(const void* ptr, int count) {
+	GE_set_vertex_format(gfx_fields);
+	GE_set_vertices(ptr);
+	sceGuDrawArray(GU_TRIANGLE_FAN, 0, count, NULL, NULL);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
+	CLIPPED++;
+}
 
-	cnt = (int)(res & 0x0F);
-	buf = (struct ClipVertex*)(res & ~0x0F);
+extern void ConvertTexturedToClipQuad(struct VertexTextured* V, struct ClipVertex* C);
+extern void ConvertColouredToClipQuad(struct VertexColoured* V, struct ClipVertex* C);
 
-	void* ptr = sceGuGetMemory(sizeof(struct VertexTextured) * cnt);
-	if (!ptr) return;
+static void* EnqueueTexturedVertices(struct ClipVertex* buf, int count) {
+	void* ptr = sceGuGetMemory(sizeof(struct VertexTextured) * count);
+	if (!ptr) return NULL;
 	struct VertexTextured* a = ptr;
 
-	for (int i = 0; i < cnt; i++)
+	for (int i = 0; i < count; i++)
 	{
 		a[i].x = buf[i].x;
 		a[i].y = buf[i].y;
@@ -786,99 +787,99 @@ static void DoTexturedClip(struct VertexTextured* V) {
 		a[i].V = buf[i].v;
 		a[i].Col = 0xFF0000FF;
 	}
-
-	GE_set_vertex_format(gfx_fields);
-	GE_set_vertices(ptr);
-	sceGuDrawArray(GU_TRIANGLE_FAN, 0, cnt, NULL, NULL);
-	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
-	CLIPPED++;
+	return ptr;
 }
 
-static void DoColouredClip(struct VertexColoured* V) {
-	struct ClipVertex clipped1[16], clipped2[16];
-	struct ClipVertex* buf;
-	int cnt;
-
-	for (int i = 0; i < 4; i++)
-	{
-		clipped1[i].x = V[i].x;
-		clipped1[i].y = V[i].y;
-		clipped1[i].z = V[i].z;
-		clipped1[i].w = 1.0f;
-		clipped1[i].u = 0;
-		clipped1[i].v = 0;
-		clipped1[i].c = V[i].Col;
-	}
-	
-	cc_uintptr res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
-	if (res == 0) return;
-
-	cnt = (int)(res & 0x0F);
-	buf = (struct ClipVertex*)(res & ~0x0F);
-
-	void* ptr = sceGuGetMemory(sizeof(struct VertexColoured) * cnt);
-	if (!ptr) return;
+static void* EnqueueColouredVertices(struct ClipVertex* buf, int count) {
+	void* ptr = sceGuGetMemory(sizeof(struct VertexColoured) * count);
+	if (!ptr) return NULL;
 	struct VertexColoured* a = ptr;
 
-	for (int i = 0; i < cnt; i++)
+	for (int i = 0; i < count; i++)
 	{
-		a[i].x   = buf[i].x;
-		a[i].y   = buf[i].y;
-		a[i].z   = buf[i].z;
+		a[i].x = buf[i].x;
+		a[i].y = buf[i].y;
+		a[i].z = buf[i].z;
 		a[i].Col = buf[i].c;
 	}
-
-	GE_set_vertex_format(gfx_fields);
-	GE_set_vertices(ptr);
-	sceGuDrawArray(GU_TRIANGLE_FAN, 0, cnt, NULL, NULL);
-	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
-	CLIPPED++;
+	return ptr;
 }
 
 // TODO don't set vertex format is unchanged
 #define CLIPPABLE_FLUSH_RUN() \
-	GE_set_vertices(beg); \
-	GE_set_indices(gfx_indices); \
-	sceGuDrawArray(GU_TRIANGLES, 0, run, NULL, NULL);
+	if (run) { \
+		GE_set_vertices(beg); \
+		GE_set_indices(gfx_indices); \
+		sceGuDrawArray(GU_TRIANGLES, 0, run, NULL, NULL); \
+	} \
+	run = 0; beg = v + 4;
 
 static void DrawClippableTexturedVertices(struct VertexTextured* v, int verticesCount) {
 	struct VertexTextured* beg = v;
 	int run = 0;
 	if (clipping_dirty) RecalcClipping();
+
+	// clipping variables
+	struct ClipVertex clipped1[16], clipped2[16];
+	struct ClipVertex* buf;
+	cc_uintptr res;
+	void* ptr;
+	int cnt;
 	
 	for (int i = 0; i < verticesCount; i += 4, v += 4)
 	{
 		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_TEXTURED)) {
-			if (run) { CLIPPABLE_FLUSH_RUN(); }
-			run = 0; beg = v + 4;
+			MACLIPPED++;
+			ConvertTexturedToClipQuad(v, clipped1);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
+			if (res == 0) { run += 6; continue; }
 
-			DoTexturedClip(v); MACLIPPED++;
+			cnt = CLIPRESULT_COUNT(res);
+			buf = CLIPRESULT_BUFFER(res);
+			ptr = EnqueueTexturedVertices(buf, cnt);
+			if (!ptr) { run += 6; continue; }
+
+			CLIPPABLE_FLUSH_RUN();
+			SubmitClippedVertices(ptr, cnt);
 		} else {
 			run += 6; UNCLIPPED++;
 		}
 	}
-
-	if (run) { CLIPPABLE_FLUSH_RUN(); }
+	CLIPPABLE_FLUSH_RUN();
 }
 
 static void DrawClippableColouredVertices(struct VertexColoured* v, int verticesCount) {
 	struct VertexColoured* beg = v;
 	int run = 0;
 	if (clipping_dirty) RecalcClipping();
+
+	// clipping variables
+	struct ClipVertex clipped1[16], clipped2[16];
+	struct ClipVertex* buf;
+	cc_uintptr res;
+	void* ptr;
+	int cnt;
 	
 	for (int i = 0; i < verticesCount; i += 4, v += 4)
 	{
 		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_COLOURED)) {
-			if (run) { CLIPPABLE_FLUSH_RUN(); }
-			run = 0; beg = v + 4;
+			MACLIPPED++;
+			ConvertColouredToClipQuad(v, clipped1);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
+			if (res == 0) { run += 6; continue; }
 
-			DoColouredClip(v); MACLIPPED++;
+			cnt = CLIPRESULT_COUNT(res);
+			buf = CLIPRESULT_BUFFER(res);
+			ptr = EnqueueColouredVertices(buf, cnt);
+			if (!ptr) { run += 6; continue; }
+
+			CLIPPABLE_FLUSH_RUN();
+			SubmitClippedVertices(ptr, cnt);
 		} else {
 			run += 6; UNCLIPPED++;
 		}
 	}
-
-	if (run) { CLIPPABLE_FLUSH_RUN(); }
+	CLIPPABLE_FLUSH_RUN();
 }
 
 static void DrawTriangles(void* vertices, int verticesCount, DrawHints hints) {

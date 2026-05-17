@@ -137,7 +137,7 @@ plane_finished:
 	addiu	PLN_PTR, 16 			// delay slot
 
 
-no_more_planes:
+all_planes_processed:
 	jr		$ra
 	// lower 4 bits are count, upper bits are clip buffer
 	or		RET, BUF_DST, CNT_DST // delay slot

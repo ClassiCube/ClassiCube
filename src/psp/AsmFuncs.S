@@ -125,35 +125,3 @@ BEG_FUNC(Matrix_Mul2)
 	#undef SRC_R
 END_FUNC(Matrix_Mul2)
 
-
-BEG_FUNC(ConvertTexturedQuad)
-	#define SRC $a0
-	#define DST $a1
-	#define END $t0
-
-	vone.s		S730;               // M7[0,3] = 1.0
-	addiu		END, DST, 3*S_VCLP; // TMP = DST + 3 * sizeof(PolyVertex)
-
-tex_next_iter:
-	lv.s		S701, VTEX_U(SRC);  // M7[1,0] = src->u
-	lv.s		S711, VTEX_V(SRC);  // M7[1,1] = src->v
-	lv.s		S721, VTEX_C(SRC);  // M7[1,2] = src->color
-
-	lv.s		S700, VTEX_X(SRC);  // M7[0,0] = src->x
-	lv.s		S710, VTEX_Y(SRC);  // M7[0,1] = src->y
-	lv.s		S720, VTEX_Z(SRC);  // M7[0,2] = src->z
-
-	addiu		SRC, SRC, S_VTEX;   // src += sizeof(VertexTextured)
-
-	sv.q		R700,  0(DST) 		// MEM_128[DST+ 0] = M7.R0
-	sv.q		R701, 16(DST) 		// MEM_128[DST+16] = M7.R1
-	bne			DST, END, tex_next_iter // if (dst != end) goto tex_next_iter;
-	addiu		DST, DST, S_VCLP;	// dst += sizeof(ClipVertex)
-
-	jr	$ra
-	nop
-
-	#undef SRC
-	#undef DST
-	#udnef END
-END_FUNC(ConvertTexturedQuad)
