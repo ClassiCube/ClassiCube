@@ -17,6 +17,13 @@ enum GE_COMMANDS {
 	GE_JUMP_TO_ADDR				= 0x08,
 	GE_SET_ADDR_BASE            = 0x10,
 	GE_SET_VERTEX_FORMAT        = 0x12,
+
+	GE_SET_TEXTURING            = 0x1E,
+	GE_SET_FOG                  = 0x1F,
+	GE_SET_ALPHA_BLENDING       = 0x21,
+	GE_SET_ALPHA_TESTING        = 0x22,
+	GE_SET_DEPTH_TESTING        = 0x23,	
+
 	GE_WORLDMATRIX_UPLOAD_INDEX = 0x3A,
 	GE_WORLDMATRIX_UPLOAD_DATA  = 0x3B,	
 	GE_VIEW_MATRIX_UPLOAD_INDEX = 0x3C,
@@ -159,6 +166,26 @@ static CC_INLINE void GE_set_indices(const void* indices) {
 static CC_INLINE void GE_draw_array(int prim, int count) { 
 	GE_PushI(GE_DRAW_PRIMITIVES, (prim << 16) | count);
 	GE_UpdateStallAddr();
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Raster state--------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void GE_set_texturing(int enabled) {
+	GE_PushI(GE_SET_TEXTURING, enabled);
+}
+
+static CC_INLINE void GE_set_depth_testing(int enabled) {
+	GE_PushI(GE_SET_DEPTH_TESTING, enabled);
+}
+
+static CC_INLINE void GE_set_alpha_testing(int enabled) {
+	GE_PushI(GE_SET_ALPHA_TESTING, enabled);
+}
+
+static CC_INLINE void GE_set_alpha_blending(int enabled) {
+	GE_PushI(GE_SET_ALPHA_BLENDING, enabled);
 }
 
 

@@ -427,9 +427,13 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
-static void SetAlphaBlend(cc_bool enabled) { GU_Toggle(GU_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
+
+void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
+
+static void SetAlphaBlend(cc_bool enabled) { 
+	GE_set_alpha_blending(enabled); 
+}
 
 void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
@@ -450,7 +454,10 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 void Gfx_SetDepthWrite(cc_bool enabled) {
 	sceGuDepthMask(enabled ? 0 : 0xffffffff);
 }
-void Gfx_SetDepthTest(cc_bool enabled)  { GU_Toggle(GU_DEPTH_TEST); }
+
+void Gfx_SetDepthTest(cc_bool enabled) { 
+	GE_set_depth_testing(enabled); 
+}
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
@@ -650,7 +657,9 @@ void Gfx_SetFogMode(FogFunc func) {
 	/* TODO: Implemen fake exp/exp2 fog */
 }
 
-static void SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
+static void SetAlphaTest(cc_bool enabled) { 
+	GE_set_alpha_testing(enabled);
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
@@ -732,11 +741,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_fields = formatFields[fmt];
 	gfx_stride = strideSizes[fmt];
 
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		sceGuEnable(GU_TEXTURE_2D);
-	} else {
-		sceGuDisable(GU_TEXTURE_2D);
-	}
+	GE_set_texturing(fmt == VERTEX_FORMAT_TEXTURED);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
