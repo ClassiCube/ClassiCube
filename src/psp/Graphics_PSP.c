@@ -750,59 +750,55 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
-extern int QuadNeedsClipping(float* xyz_first, int stride);
-extern struct ClipVertex* Clip_PolyToPlane(struct ClipVertex* src, struct ClipVertex* dst, 
-											int src_count, struct Plane* plane);
-extern void ConvertTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
-
 struct ClipVertex {
 	float x, y, z, w;
 	float u, v;
 	int c, flags;
 } CC_ALIGNED(16);
 
+extern int QuadNeedsClipping(float* xyz_first, int stride);
+extern cc_uintptr Clip_PolyToPlanes(struct ClipVertex* buf1, struct ClipVertex* buf2, 
+											int planes_count, struct Plane* plane);
+extern void ConvertTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
+
 static void DoTexturedClip(struct VertexTextured* V) {
 	struct ClipVertex clipped1[16], clipped2[16];
+	struct ClipVertex* buf;
+	int cnt;
 	ConvertTexturedQuad(V, clipped1);
 	
-	struct ClipVertex* c_src = clipped1;
-	struct ClipVertex* c_dst = clipped2;
-	struct ClipVertex* c_tmp;
-	int i_src = 4, i_dst, i_tmp;
+	cc_uintptr res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
+	if (res == 0) return;
 
-	for (int j = 0; j < 6; j++)
-	{
-		struct ClipVertex* c_end = Clip_PolyToPlane(c_src, c_dst, i_src, &frustum[j]);
-		i_dst = (int)(c_end - c_dst);
-		if (i_dst == 0) return;
+	cnt = (int)(res & 0x0F);
+	buf = (struct ClipVertex*)(res & ~0x0F);
 
-		i_tmp = i_src; i_src = i_dst; i_dst = i_tmp;
-		c_tmp = c_src; c_src = c_dst; c_dst = c_tmp;
-	}
-
-	void* ptr = sceGuGetMemory(sizeof(struct VertexTextured) * i_dst);
+	void* ptr = sceGuGetMemory(sizeof(struct VertexTextured) * cnt);
 	if (!ptr) return;
 	struct VertexTextured* a = ptr;
 
-	for (int i = 0; i < i_dst; i++)
+	for (int i = 0; i < cnt; i++)
 	{
-		a[i].x = c_dst[i].x;
-		a[i].y = c_dst[i].y;
-		a[i].z = c_dst[i].z;
-		a[i].U = c_dst[i].u;
-		a[i].V = c_dst[i].v;
+		a[i].x = buf[i].x;
+		a[i].y = buf[i].y;
+		a[i].z = buf[i].z;
+		a[i].U = buf[i].u;
+		a[i].V = buf[i].v;
 		a[i].Col = 0xFF0000FF;
 	}
 
 	GE_set_vertex_format(gfx_fields);
 	GE_set_vertices(ptr);
-	sceGuDrawArray(GU_TRIANGLE_FAN, 0, i_dst, NULL, NULL);
+	sceGuDrawArray(GU_TRIANGLE_FAN, 0, cnt, NULL, NULL);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 	CLIPPED++;
 }
 
 static void DoColouredClip(struct VertexColoured* V) {
 	struct ClipVertex clipped1[16], clipped2[16];
+	struct ClipVertex* buf;
+	int cnt;
+
 	for (int i = 0; i < 4; i++)
 	{
 		clipped1[i].x = V[i].x;
@@ -814,36 +810,27 @@ static void DoColouredClip(struct VertexColoured* V) {
 		clipped1[i].c = V[i].Col;
 	}
 	
-	struct ClipVertex* c_src = clipped1;
-	struct ClipVertex* c_dst = clipped2;
-	struct ClipVertex* c_tmp;
-	int i_src = 4, i_dst, i_tmp;
+	cc_uintptr res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
+	if (res == 0) return;
 
-	for (int j = 0; j < 6; j++)
-	{
-		struct ClipVertex* c_end = Clip_PolyToPlane(c_src, c_dst, i_src, &frustum[j]);
-		i_dst = (int)(c_end - c_dst);
-		if (i_dst == 0) return;
+	cnt = (int)(res & 0x0F);
+	buf = (struct ClipVertex*)(res & ~0x0F);
 
-		i_tmp = i_src; i_src = i_dst; i_dst = i_tmp;
-		c_tmp = c_src; c_src = c_dst; c_dst = c_tmp;
-	}
-
-	void* ptr = sceGuGetMemory(sizeof(struct VertexColoured) * i_dst);
+	void* ptr = sceGuGetMemory(sizeof(struct VertexColoured) * cnt);
 	if (!ptr) return;
 	struct VertexColoured* a = ptr;
 
-	for (int i = 0; i < i_dst; i++)
+	for (int i = 0; i < cnt; i++)
 	{
-		a[i].x = c_dst[i].x;
-		a[i].y = c_dst[i].y;
-		a[i].z = c_dst[i].z;
-		a[i].Col = c_dst[i].c;
+		a[i].x   = buf[i].x;
+		a[i].y   = buf[i].y;
+		a[i].z   = buf[i].z;
+		a[i].Col = buf[i].c;
 	}
 
 	GE_set_vertex_format(gfx_fields);
 	GE_set_vertices(ptr);
-	sceGuDrawArray(GU_TRIANGLE_FAN, 0, i_dst, NULL, NULL);
+	sceGuDrawArray(GU_TRIANGLE_FAN, 0, cnt, NULL, NULL);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 	CLIPPED++;
 }

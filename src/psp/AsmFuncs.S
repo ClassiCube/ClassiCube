@@ -148,7 +148,7 @@ tex_next_iter:
 	sv.q		R700,  0(DST) 		// MEM_128[DST+ 0] = M7.R0
 	sv.q		R701, 16(DST) 		// MEM_128[DST+16] = M7.R1
 	bne			DST, END, tex_next_iter // if (dst != end) goto tex_next_iter;
-	addiu		DST, DST, S_VCLP;	// dst += sizeof(PolyVertex)
+	addiu		DST, DST, S_VCLP;	// dst += sizeof(ClipVertex)
 
 	jr	$ra
 	nop
