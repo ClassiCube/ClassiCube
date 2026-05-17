@@ -100,6 +100,7 @@ void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
 void Game_Disconnect(const cc_string* title, const cc_string* reason);
 void Game_Reset(void);
+void Plugins_LoadAll(void);
 
 /* Sets the block in the map at the given coordinates, then updates state associated with the block. */
 /* (updating state means recalculating light, redrawing chunk block is in, etc) */

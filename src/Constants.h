@@ -7,7 +7,6 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 #define GAME_MAX_CMDARGS 5
 #define GAME_APP_VER "1.3.8"
-#define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
 #define GAME_APP_ALT   "ClassiCube 1.3.8 web mobile"

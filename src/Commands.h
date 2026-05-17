@@ -31,5 +31,11 @@ struct ChatCommand {
 CC_API  void Commands_Register(      struct ChatCommand* cmd);
 typedef void (*FP_Commands_Register)(struct ChatCommand* cmd);
 
+/* Unregisters a previously registered client-side command. Pass the same
+   struct ChatCommand* that was given to Commands_Register. Safe to call on
+   a command that was never registered (no-op). */
+CC_API  void Commands_Unregister(      struct ChatCommand* cmd);
+typedef void (*FP_Commands_Unregister)(struct ChatCommand* cmd);
+
 CC_END_HEADER
 #endif

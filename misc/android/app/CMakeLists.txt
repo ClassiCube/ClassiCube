@@ -22,6 +22,7 @@ set(${CMAKE_C_FLAGS}, "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Werror")
 
 add_library(classicube SHARED
+        ../../src/PluginAPI.c
         ../../src/IsometricDrawer.c
         ../../src/Builder.c
         ../../src/ExtMath.c
