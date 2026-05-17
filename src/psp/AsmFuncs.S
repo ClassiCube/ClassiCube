@@ -14,42 +14,20 @@
 // S500 = MEM_32[$a0+0]
 //  ...       ....
 #define LoadMatrixUnaligned(mtx, SRC, MAYBE_JUMP_RA) \
-	lv.s	S##mtx##00,  0(SRC); \
-	lv.s	S##mtx##10,  4(SRC); \
-	lv.s	S##mtx##20,  8(SRC); \
-	lv.s	S##mtx##30, 12(SRC); \
-\
-	lv.s	S##mtx##01, 16(SRC); \
-	lv.s	S##mtx##11, 20(SRC); \
-	lv.s	S##mtx##21, 24(SRC); \
-	lv.s	S##mtx##31, 28(SRC); \
-\
-	lv.s	S##mtx##02, 32(SRC); \
-	lv.s	S##mtx##12, 36(SRC); \
-	lv.s	S##mtx##22, 40(SRC); \
-	lv.s	S##mtx##32, 44(SRC); \
-\
-	lv.s	S##mtx##03, 48(SRC); \
-	lv.s	S##mtx##13, 52(SRC); \
-	lv.s	S##mtx##23, 56(SRC); \
+	lv.q	R##mtx##00,  0(SRC); \
+	lv.q	R##mtx##01, 16(SRC); \
+	lv.q	R##mtx##02, 32(SRC); \
 	MAYBE_JUMP_RA;			 	 \
-	lv.s	S##mtx##33, 60(SRC);
+	lv.q	R##mtx##03, 48(SRC);
 
 // Write/Store matrix
 // See https://stackoverflow.com/questions/57522055/what-do-the-mips-load-word-left-lwl-and-load-word-right-lwr-instructions-do
 #define StoreMatrixUnaligned(mtx, DST, MAYBE_JUMP_RA) \
-	svl.q 	R##mtx##00, 12(DST); \
-	svr.q 	R##mtx##00,  0(DST); \
-\
-	svl.q 	R##mtx##01, 28(DST); \
-	svr.q 	R##mtx##01, 16(DST); \
-\
-	svl.q 	R##mtx##02, 44(DST); \
-	svr.q 	R##mtx##02, 32(DST); \
-\
-	svl.q 	R##mtx##03, 60(DST); \
+	sv.q 	R##mtx##00,  0(DST); \
+	sv.q 	R##mtx##01, 16(DST); \
+	sv.q 	R##mtx##02, 32(DST); \
 	MAYBE_JUMP_RA;				 \
-	svr.q 	R##mtx##03, 48(DST);
+	sv.q 	R##mtx##03, 48(DST);
 
 
 // ===============================
@@ -59,7 +37,11 @@
 // Loads view matrix into M0
 BEG_FUNC(Clip_LoadView)
 	#define SRC $a0
-	LoadMatrixUnaligned(0, SRC, JUMP_RA)
+	lv.q	R000,  0(SRC)
+	lv.q	R001, 16(SRC)
+	lv.q	R002, 32(SRC)
+	jr		$ra
+	lv.q	R003, 48(SRC)
 
 	#undef SRC
 END_FUNC(Clip_LoadView)
@@ -67,10 +49,14 @@ END_FUNC(Clip_LoadView)
 // Loads projection matrix into M1
 BEG_FUNC(Clip_LoadProj)
 	#define SRC $a0
-	LoadMatrixUnaligned(1, SRC, JUMP_RA)
+	lv.q	R100,  0(SRC)
+	lv.q	R101, 16(SRC)
+	lv.q	R102, 32(SRC)
+	jr		$ra
+	lv.q	R103, 48(SRC)
 
 	#undef SRC
-END_FUNC(Clip_LoadView)
+END_FUNC(Clip_LoadProj)
 
 // Calculates MVP = VIEW * PROJ
 BEG_FUNC(Clip_RecalcMVP)
@@ -81,7 +67,11 @@ END_FUNC(Clip_RecalcMVP)
 // Stores MVP matrix
 BEG_FUNC(Clip_StoreMVP)
 	#define DST $a0
-	StoreMatrixUnaligned(2, DST, JUMP_RA)
+	sv.q 	R200,  0(DST)
+	sv.q 	R201, 16(DST)
+	sv.q 	R202, 32(DST)
+	jr 		$ra
+	sv.q 	R203, 48(DST)
 
 	#undef DST
 END_FUNC(Clip_StoreMVP)
@@ -108,20 +98,31 @@ BEG_FUNC(Clip_RescaleMVPtoGuardband)
 END_FUNC(Clip_RescaleMVPtoGuardband)
 
 
-BEG_FUNC(Matrix_Mul2)
+BEG_FUNC(Matrix_Mul)
 	#define DST   $a0
 	#define SRC_L $a1
 	#define SRC_R $a2
 
-	LoadMatrixUnaligned(5, SRC_L, NO_JUMP)
-	LoadMatrixUnaligned(6, SRC_R, NO_JUMP)
+	lv.q	R500,  0(SRC_L)
+	lv.q	R501, 16(SRC_L)
+	lv.q	R502, 32(SRC_L)
+	lv.q	R503, 48(SRC_L)
+
+	lv.q	R600,  0(SRC_R)
+	lv.q	R601, 16(SRC_R)
+	lv.q	R602, 32(SRC_R)
+	lv.q	R603, 48(SRC_R)
 
 	vmmul.q M700, M500, M600 // M7 = M5 * M6
 
-	StoreMatrixUnaligned(7, DST, JUMP_RA);
+	sv.q 	R700,  0(DST)
+	sv.q 	R701, 16(DST)
+	sv.q 	R702, 32(DST)
+	jr		$ra
+	sv.q 	R703, 48(DST)
 
 	#undef DST
 	#undef SRC_L
 	#undef SRC_R
-END_FUNC(Matrix_Mul2)
+END_FUNC(Matrix_Mul)
 

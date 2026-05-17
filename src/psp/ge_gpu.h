@@ -18,6 +18,7 @@ enum GE_COMMANDS {
 	GE_SET_ADDR_BASE            = 0x10,
 	GE_SET_VERTEX_FORMAT        = 0x12,
 
+	GE_SET_FACE_CULLING         = 0x1D,
 	GE_SET_TEXTURING            = 0x1E,
 	GE_SET_FOG_ACTIVE           = 0x1F,
 	GE_SET_ALPHA_BLENDING       = 0x21,
@@ -174,6 +175,14 @@ static CC_INLINE void GE_draw_array(int prim, int count) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Vertex state--------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void GE_set_face_culling(int enabled) {
+	GE_PushI(GE_SET_FACE_CULLING, enabled);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Raster state--------------------------------------------------------*
 *#########################################################################################################################*/
 static CC_INLINE void GE_set_texturing(int enabled) {
@@ -202,8 +211,10 @@ static CC_INLINE void GE_set_fog_color(unsigned color) {
 }
 
 static CC_INLINE void GE_set_fog_range(float range) {
+	float step = 1.0f / (range - 0.0f);
+
 	GE_PushF(GE_SET_FOG_BIAS, range);
-	GE_PushF(GE_SET_FOG_STEP, 1.0f / range);
+	GE_PushF(GE_SET_FOG_STEP, step);
 }
 
 

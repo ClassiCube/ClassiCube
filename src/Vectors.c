@@ -132,7 +132,7 @@ void Matrix_Scale(struct Matrix* result, float x, float y, float z) {
 	result->row1.x = x; result->row2.y = y; result->row3.z = z;
 }
 
-void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct Matrix* right) {
+CC_WEAKFUNC void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct Matrix* right) {
 	/* Originally from http://www.edais.co.uk/blog/?p=27 */
 	float lM11, lM12, lM13, lM14, lM21, lM22, lM23, lM24;
 	float lM31, lM32, lM33, lM34, lM41, lM42, lM43, lM44;

@@ -429,7 +429,9 @@ void Gfx_BindTexture(GfxResourceID texId) {
 static PackedCol gfx_clearColor;
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
+void Gfx_SetFaceCulling(cc_bool enabled) {
+	GE_set_face_culling(enabled);
+}
 
 static void SetAlphaBlend(cc_bool enabled) { 
 	GE_set_alpha_blending(enabled); 
@@ -648,8 +650,8 @@ void Gfx_SetFogCol(PackedCol color) {
 static void UpdateFog(void) {
 	float depth;
 
-	// See algorithm in EnvRenderer.c
 	if (gfx_fogMode == FOG_EXP) {
+		// See algorithm in EnvRenderer.c
 		#define LOG_005 -2.99573227355399f
 
 		depth = LOG_005 / -gfx_fogDensity;
@@ -854,7 +856,7 @@ static void DrawClippableTexturedVertices(struct VertexTextured* v, int vertices
 		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_TEXTURED)) {
 			MACLIPPED++;
 			ConvertTexturedToClipQuad(v, clipped1);
-			res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum);
 			if (res == 0) { run += 6; continue; }
 
 			cnt = CLIPRESULT_COUNT(res);
@@ -887,7 +889,7 @@ static void DrawClippableColouredVertices(struct VertexColoured* v, int vertices
 		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_COLOURED)) {
 			MACLIPPED++;
 			ConvertColouredToClipQuad(v, clipped1);
-			res = Clip_PolyToPlanes(clipped2, clipped1, 6, frustum);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum);
 			if (res == 0) { run += 6; continue; }
 
 			cnt = CLIPRESULT_COUNT(res);
