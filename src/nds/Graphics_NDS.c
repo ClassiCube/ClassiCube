@@ -805,7 +805,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	}
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (skipRendering) return;
 	Draw_TexturedTriangles(verticesCount, startVertex);
 }

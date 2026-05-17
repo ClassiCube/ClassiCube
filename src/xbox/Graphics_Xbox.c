@@ -607,10 +607,6 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_LINES, 0, verticesCount);
 }
 
-static void DrawIndexedVertices(int verticesCount, int startVertex) {
-	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
-}
-
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
@@ -619,7 +615,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS,           0, verticesCount);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 

@@ -63,7 +63,7 @@ cc_bool Model_ShouldRender(struct Entity* e) {
 	maxYZ  = max(bbHeight, bbLength);
 	maxXYZ = max(bbWidth,  maxYZ);
 	pos.y += bbHeight * 0.5f; /* Centre Y coordinate. */
-	return FrustumCulling_SphereInFrustum(pos.x, pos.y, pos.z, maxXYZ);
+	return Frustum_TestSphere(pos.x, pos.y, pos.z, maxXYZ);
 }
 
 static float Model_MinDist(float dist, float extent) {

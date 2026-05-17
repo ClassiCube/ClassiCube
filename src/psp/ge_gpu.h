@@ -7,13 +7,23 @@ extern struct GuDisplayListInternal
 	unsigned int* start;
 	unsigned int* current;
 } *gu_list;
+extern int ge_list_executed[2];
 
 enum GE_COMMANDS {
 	GE_NOP                      = 0x00,
 	GE_SET_REL_VADDR            = 0x01,
 	GE_SET_REL_IADDR            = 0x02,
+	GE_DRAW_PRIMITIVES			= 0x04,
+	GE_JUMP_TO_ADDR				= 0x08,
 	GE_SET_ADDR_BASE            = 0x10,
 	GE_SET_VERTEX_FORMAT        = 0x12,
+
+	GE_SET_TEXTURING            = 0x1E,
+	GE_SET_FOG                  = 0x1F,
+	GE_SET_ALPHA_BLENDING       = 0x21,
+	GE_SET_ALPHA_TESTING        = 0x22,
+	GE_SET_DEPTH_TESTING        = 0x23,	
+
 	GE_WORLDMATRIX_UPLOAD_INDEX = 0x3A,
 	GE_WORLDMATRIX_UPLOAD_DATA  = 0x3B,	
 	GE_VIEW_MATRIX_UPLOAD_INDEX = 0x3C,
@@ -39,16 +49,26 @@ enum GE_COMMANDS {
 	GE_SET_ALPHA_MASK           = 0xE9, 	
 };
 
+// Packs lower 24 bits of value into all 24 bits of command arg
+#define GE_PACK_LO(value) (((cc_uintptr)(value)) & 0xffffff)
+// Packs higher 8 bits of value into highest 8 bits of command arg
+#define GE_PACK_HI(value) ((((cc_uintptr)(value)) >> 8) & 0xf0000)
+
 
 // upper 8 bits are opcode, lower 24 bits are argument
 #define GE_OPCODE_SHIFT 24
 static CC_INLINE void GE_PushI(int cmd, int argument) {
-	*(gu_list->current++) = (cmd << GE_OPCODE_SHIFT) | (argument & 0xffffff);
+	*(gu_list->current++) = (cmd << GE_OPCODE_SHIFT) | GE_PACK_LO(argument);
 }
 
 static CC_INLINE void GE_PushF(int cmd, float argument) {
 	union IntAndFloat raw; raw.f = argument;
 	*(gu_list->current++) = (cmd << GE_OPCODE_SHIFT) | (raw.u >> 8);
+}
+
+// Updates the stall address (end address that GE can process commands up to)
+static CC_INLINE void GE_UpdateStallAddr(void) {
+	sceGeListUpdateStallAddr(ge_list_executed[0], gu_list->current);			
 }
 
 
@@ -124,7 +144,7 @@ static CC_INLINE void GE_set_vertex_format(int format) {
 
 // Don't redundantly set base address (by avoiding 2 calls to this per draw call, reduces frame GE commands by ~25%)
 static CC_INLINE void GE_set_base_addr(cc_uintptr addr) {
-	cc_uintptr base = (addr >> 8) & 0xf0000;
+	cc_uintptr base = GE_PACK_HI(addr);
 	if (base == last_base) return;
 
 	GE_PushI(GE_SET_ADDR_BASE, base);
@@ -141,4 +161,51 @@ static CC_INLINE void GE_set_indices(const void* indices) {
 	cc_uintptr addr = (cc_uintptr)indices;
 	GE_set_base_addr(addr);
     GE_PushI(GE_SET_REL_IADDR, addr);
+}
+
+static CC_INLINE void GE_draw_array(int prim, int count) { 
+	GE_PushI(GE_DRAW_PRIMITIVES, (prim << 16) | count);
+	GE_UpdateStallAddr();
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Raster state--------------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE void GE_set_texturing(int enabled) {
+	GE_PushI(GE_SET_TEXTURING, enabled);
+}
+
+static CC_INLINE void GE_set_depth_testing(int enabled) {
+	GE_PushI(GE_SET_DEPTH_TESTING, enabled);
+}
+
+static CC_INLINE void GE_set_alpha_testing(int enabled) {
+	GE_PushI(GE_SET_ALPHA_TESTING, enabled);
+}
+
+static CC_INLINE void GE_set_alpha_blending(int enabled) {
+	GE_PushI(GE_SET_ALPHA_BLENDING, enabled);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Utilities----------------------------------------------------------*
+*#########################################################################################################################*/
+// Reserves space in the GE command list for temporary data
+//   e.g. used to store clipping polygon vertices
+// NOTE: size must be aligned to 4 bytes
+static void* GE_ReserveListSpace(int size) {
+	cc_uintptr addr = (cc_uintptr)gu_list->current;
+	GE_set_base_addr(addr);
+
+	// Reserve space for JUMP command and then data
+	addr = (cc_uintptr)gu_list->current;
+	addr += 4 + size;
+
+	GE_PushI(GE_JUMP_TO_ADDR, GE_PACK_LO(addr));
+	gu_list->current += size >> 2;
+
+	GE_UpdateStallAddr();
+	return (char*)gu_list->current - size;
 }

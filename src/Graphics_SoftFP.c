@@ -1336,7 +1336,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
     DrawQuadsFixed(0, verticesCount, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
     DrawQuadsFixed(startVertex, verticesCount, DRAW_HINT_NONE);
 }
 

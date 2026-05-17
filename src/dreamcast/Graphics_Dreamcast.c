@@ -955,7 +955,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (renderingDisabled) return;
 	
 	void* src = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;

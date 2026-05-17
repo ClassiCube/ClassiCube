@@ -1152,7 +1152,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 // TODO probably wrong to offset index buffer
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	//Platform_Log2("DRAW3: %i, %i", &verticesCount, &startVertex); Thread_Sleep(100);
 	sceGxmDraw(gxm_context, SCE_GXM_PRIMITIVE_TRIANGLES,
 			SCE_GXM_INDEX_FORMAT_U16, gfx_indices + ICOUNT(startVertex), ICOUNT(verticesCount));

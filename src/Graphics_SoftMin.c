@@ -829,8 +829,8 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	DrawQuads(0, verticesCount, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawQuads(startVertex, verticesCount, DRAW_HINT_NONE);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
+	DrawQuads(startVertex, verticesCount, hints);
 }
 
 

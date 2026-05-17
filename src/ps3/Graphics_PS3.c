@@ -771,6 +771,6 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, 0, verticesCount);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, startVertex, verticesCount);
 }

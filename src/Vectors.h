@@ -134,10 +134,15 @@ CC_API void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const s
 
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot);
 
-cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius);
+#define FRUSTUM_OUTSIDE     0x00
+#define FRUSTUM_ON_OR_IN    0x01
+#define FRUSTUM_INSIDE_FLAG 0x02 /* Whether sphere fully fits inside clipping planes of CC_CLIPPING_FLAGS */
+
+/* Tests whether the given sphere lies outside any of the clipping planes */
+int  Frustum_TestSphere(float x, float y, float z, float radius);
 /* Calculates the clipping planes from the combined modelview and projection matrices */
 /* Matrix_Mul(&clip, modelView, projection); */
-void FrustumCulling_CalcFrustumEquations(struct Matrix* clip);
+void Frustum_CalcPlanes(struct Matrix* clip);
 
 CC_END_HEADER
 #endif

@@ -671,7 +671,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	Gfx_DrawVb_IndexedTris_Range(verticesCount, 0, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
