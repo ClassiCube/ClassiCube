@@ -149,7 +149,7 @@ static void SPConnection_BeginConnect(void) {
 #endif
 
 	Random_SeedFromCurrentTime(&rnd);
-	seed = 100;//Random_Next(&rnd, Int32_MaxValue);
+	seed = Random_Next(&rnd, Int32_MaxValue);
 
 	Gen_Start(gen, seed, horSize, verSize, horSize);
 }

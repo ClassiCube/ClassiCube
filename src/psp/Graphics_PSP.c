@@ -563,8 +563,8 @@ void Gfx_EndFrame(void) {
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
 
-	Platform_Log3("C %i/%i / U %i", &CLIPPED, &MACLIPPED, &UNCLIPPED);
-	CLIPPED = MACLIPPED = UNCLIPPED = 0;
+	//Platform_Log3("C %i/%i / U %i", &CLIPPED, &MACLIPPED, &UNCLIPPED);
+	//CLIPPED = MACLIPPED = UNCLIPPED = 0;
 }
 
 void Gfx_OnWindowResize(void) {
@@ -789,7 +789,7 @@ static void* EnqueueTexturedVertices(struct ClipVertex* buf, int count) {
 		a[i].z = buf[i].z;
 		a[i].U = buf[i].u;
 		a[i].V = buf[i].v;
-		a[i].Col = 0xFF0000FF;
+		a[i].Col = buf[i].c;
 	}
 	return ptr;
 }
