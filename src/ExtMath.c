@@ -159,16 +159,7 @@ float Random_Float(RNGState* seed) {
 /*########################################################################################################################*
 *--------------------------------------------------Trigonometric functions-----------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_DREAMCAST
-#include <math.h>
-
-/* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
-/* TODO: Properly investigate this issue */
-/* double make_dreamcast_build_compile(void) { fabs(4); } */
-
-float Math_SinF(float x)   { return sinf(x); }
-float Math_CosF(float x)   { return cosf(x); }
-#elif CC_BUILD_FPU_MODE < CC_FPU_MODE_NORMAL
+#if CC_BUILD_FPU_MODE < CC_FPU_MODE_NORMAL
 
 // Source https://www.coranac.com/2009/07/sines
 #define ISIN_QN	10
@@ -306,7 +297,7 @@ static double SinStage3(double x) {
  * Associated math function: sin(x)
  * Allowed input range: anything
  */
-float Math_SinF(float x) {
+CC_WEAKFUNC float Math_SinF(float x) {
 	double x_div_pi;
 
 	x_div_pi = x * DIV_2_PI;
@@ -323,7 +314,7 @@ float Math_SinF(float x) {
  * Associated math function: cos(x)
  * Allowed input range: anything
  */
-float Math_CosF(float x) {
+CC_WEAKFUNC float Math_CosF(float x) {
 	double x_div_pi_shifted;
 
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;

@@ -131,6 +131,7 @@ static int MapKey(int k) {
 
 #define ToggleKey(diff, cur, mask, btn) if (diff & mask) Input_Set(btn, cur & mask)
 static kbd_mods_t prev_modifiers;
+static key_state_t prev_states[KBD_MAX_KEYS];
 
 static void UpdateKeyboardState(kbd_state_t* state) {
 	int cur_keys  = state->last_modifiers.raw;
@@ -149,11 +150,12 @@ static void UpdateKeyboardState(kbd_state_t* state) {
 	for (int i = KBD_KEY_A; i < KBD_KEY_S3; i++)
 	{
 		key_state_t key = state->key_states[i];
-		if (key.is_down == key.was_down) continue;
+		if (key.is_down == prev_states[i].is_down) continue;
 
 		int btn = MapKey(i);
 		if (btn) Input_Set(btn, key.is_down);
 	}
+	Mem_Copy(prev_states, state->key_states, sizeof(prev_states));
 }
 
 static void ProcessKeyboardInput(void) {
