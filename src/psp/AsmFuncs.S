@@ -2,35 +2,6 @@
 #include "AsmCommon.i"
 
 // ===============================
-// UTILITIES
-// ===============================
-#define JUMP_RA jr $ra;
-#define NO_JUMP ;
-
-// NOTE: Not using lvl.q because it is broken on some PSP CPUs
-//   https://pspdev.github.io/vfpu-docs/#ulvq-lvlq-lvrq-register-corruption
-// NOTE: MAYBE_JUMP_RA may or may not be 'jr $ra' (so that delay slot can be filled in some cases)
-
-// S500 = MEM_32[$a0+0]
-//  ...       ....
-#define LoadMatrixUnaligned(mtx, SRC, MAYBE_JUMP_RA) \
-	lv.q	R##mtx##00,  0(SRC); \
-	lv.q	R##mtx##01, 16(SRC); \
-	lv.q	R##mtx##02, 32(SRC); \
-	MAYBE_JUMP_RA;			 	 \
-	lv.q	R##mtx##03, 48(SRC);
-
-// Write/Store matrix
-// See https://stackoverflow.com/questions/57522055/what-do-the-mips-load-word-left-lwl-and-load-word-right-lwr-instructions-do
-#define StoreMatrixUnaligned(mtx, DST, MAYBE_JUMP_RA) \
-	sv.q 	R##mtx##00,  0(DST); \
-	sv.q 	R##mtx##01, 16(DST); \
-	sv.q 	R##mtx##02, 32(DST); \
-	MAYBE_JUMP_RA;				 \
-	sv.q 	R##mtx##03, 48(DST);
-
-
-// ===============================
 // FUNCTIONS
 // ===============================
 
@@ -96,6 +67,16 @@ BEG_FUNC(Clip_RescaleMVPtoGuardband)
 	jr 	   $ra
 	vscl.q MVP_CY, MVP_CY, GBAND_Y
 END_FUNC(Clip_RescaleMVPtoGuardband)
+
+
+BEG_FUNC(Math_FastCos)
+	#define ADDR   $a0
+	lv.s	S700, 0(ADDR)
+	vcos.s	S700, S700
+	jr 	  	$ra
+	sv.s	S700, 0(ADDR)
+	#undef ADDR
+END_FUNC(Math_FastCos)
 
 
 BEG_FUNC(Matrix_Mul)

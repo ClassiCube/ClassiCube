@@ -75,7 +75,6 @@ void Window_RequestClose(void) {
 void Window_ProcessEvents(float delta) {
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 void Window_UpdateRawMouse(void)  { }
@@ -85,15 +84,7 @@ static void ProcessMouse(joypad_inputs_t* inputs, float delta) {
 	Input_SetNonRepeatable(CCMOUSE_R, inputs->btn.b);
 
 	// TODO check stick_x/y is right
-	if (!vc_hooked) {
-		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
-	}
-	VirtualCursor_SetPosition(Pointers[0].x + inputs->stick_x, Pointers[0].y + inputs->stick_y);
-	
-	if (!Input.RawMode) return;	
-	float scale = (delta * 60.0) / 2.0f;
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				inputs->stick_x * scale, inputs->stick_y * scale);
+	VirtualCursor_Update(inputs->stick_x, inputs->stick_y, delta);
 }
 
 

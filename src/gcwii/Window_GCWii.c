@@ -258,12 +258,7 @@ static void ProcessMouseInput(float delta) {
 	if (!vc_hooked) {
 		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
 	}
-	VirtualCursor_SetPosition(Pointers[0].x + event.rx, Pointers[0].y + event.ry);
-	
-	if (!Input.RawMode) return;	
-	float scale = (delta * 60.0) / 2.0f;
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				event.rx * scale, event.ry * scale);
+	VirtualCursor_Update(event.rx, event.ry, delta);
 }
 #endif
 
@@ -342,10 +337,11 @@ void Window_UpdateRawMouse(void)  {
 	dragCurX = x; dragCurY = y;
 }
 #else
+void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
+
 void Window_UpdateRawMouse(void) { }
 #endif
 
-void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
 // TODO: Display cursor on Wii when not raw mode
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }

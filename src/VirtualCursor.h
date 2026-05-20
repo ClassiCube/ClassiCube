@@ -76,3 +76,21 @@ static void VirtualCursor_SetPosition(int x, int y) {
 	if (!Window_Main.Is3D) LBackend_Redraw();
 }
 
+static CC_INLINE void VirtualCursor_Update(int x, int y, float delta) {
+	float scale;
+	if (!vc_hooked) {
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + x, Pointers[0].y + y);
+	
+	if (!Input.RawMode) return;
+	scale = (delta * 60.0) / 2.0f;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				x * scale, y * scale);
+}
+
+void Cursor_SetPosition(int x, int y) {
+	if (vc_hooked) VirtualCursor_SetPosition(x, y);
+}
+

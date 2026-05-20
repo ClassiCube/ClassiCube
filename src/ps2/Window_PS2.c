@@ -181,24 +181,12 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_M, mData.buttons & PS2MOUSE_BTN3);
 	Mouse_ScrollVWheel(mData.wheel * 0.5f);
 
-	if (!vc_hooked) {
-		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
-	}
-	VirtualCursor_SetPosition(Pointers[0].x + mData.x, Pointers[0].y + mData.y);
-	
-	if (!Input.RawMode) return;	
-	float scale = (delta * 60.0) / 2.0f;
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				mData.x * scale, mData.y * scale);
+	VirtualCursor_Update(mData.x, mData.y, delta);
 }
 
 void Window_ProcessEvents(float delta) {
 	ProcessMouseInput(delta);
 	ProcessKeyboardInput();
-}
-
-void Cursor_SetPosition(int x, int y) {
-	if (vc_hooked) VirtualCursor_SetPosition(x, y);
 }
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
