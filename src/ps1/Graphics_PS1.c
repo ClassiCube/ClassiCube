@@ -13,6 +13,8 @@
 #include <psxetc.h>
 #include <inline_c.h>
 #include "ps1defs.h"
+#include "ps1_gpu.h"
+#include "ps1_gte.h"
 // Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
 
 #define wait_while(cond) while (cond) { __asm__ volatile(""); }
