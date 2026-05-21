@@ -149,9 +149,9 @@ static void SPConnection_BeginConnect(void) {
 #endif
 
 	Random_SeedFromCurrentTime(&rnd);
-	seed = Random_Next(&rnd, Int32_MaxValue);
+	seed = 300;//Random_Next(&rnd, Int32_MaxValue);
 
-	Gen_Start(gen, seed, horSize, verSize, horSize);
+	Gen_Start(gen, seed, 64, 16, 512);
 }
 
 static char sp_lastCol;

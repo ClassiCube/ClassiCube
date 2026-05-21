@@ -819,10 +819,10 @@ static void NormalisePlane(struct Plane* plane) {
 
 static void CalcNearFrustumPlane(struct Matrix* clip) {
 	/* Extract the NEAR plane */
-	nearPlane.a = clip->row1.w + clip->row1.z;
-	nearPlane.b = clip->row2.w + clip->row2.z;
-	nearPlane.c = clip->row3.w + clip->row3.z;
-	nearPlane.d = clip->row4.w + clip->row4.z;
+	nearPlane.a = clip->row1.z;
+	nearPlane.b = clip->row2.z;
+	nearPlane.c = clip->row3.z;
+	nearPlane.d = clip->row4.z;
 	NormalisePlane(&nearPlane);
 }
 
@@ -910,6 +910,8 @@ extern Vertex* DrawTexturedQuads_Clip(const void* src, Vertex* dst, int numQuads
 extern Vertex* DrawColouredQuads_Fast(const void* src, Vertex* dst, int numQuads);
 extern Vertex* DrawTexturedQuads_Fast(const void* src, Vertex* dst, int numQuads);
 
+extern void DrawTexturedQuads_Direct(const void* src, int dst, int numQuads);
+
 static Vertex* ReserveOutput(struct CommandsList* list, cc_uint32 elems) {
 	Vertex* beg;
 	for (;;)
@@ -945,6 +947,15 @@ static void DrawQuads(int count, void* src, DrawHints hints) {
 	cc_bool noclip = (hints & DRAW_HINT_NOCLIP) || gfx_rendering2D;
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		// Super fast path draws directly to SQ
+		if (list == direct && noclip) {
+			if (list->length) SubmitCommands((Vertex*)list->data, list->length);
+			list->length = 0;
+
+			DrawTexturedQuads_Direct(src, MEM_AREA_SQ_BASE, count >> 2);
+			return;
+		}
+
 		end = noclip ? DrawTexturedQuads_Fast(src, beg, count >> 2) 
 					 : DrawTexturedQuads_Clip(src, beg, count >> 2);
 	} else {
