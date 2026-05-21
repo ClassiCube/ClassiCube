@@ -420,8 +420,14 @@ CC_API void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix);
 CC_API void Gfx_EnableTextureOffset(float x, float y);
 /* Disables texture U/V translation */
 CC_API void Gfx_DisableTextureOffset(void);
+
 /* Loads given modelview and projection matrices, then calculates the combined MVP matrix */
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp);
+#ifdef CC_CLIPPING_FLAGS
+cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius);
+#else
+static cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) { return false; }
+#endif
 
 /* Calculates an orthographic projection matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar);

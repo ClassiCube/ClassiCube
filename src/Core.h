@@ -468,7 +468,7 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
-	#define CC_CLIPPING_FLAGS (FACE_BIT_XMIN | FACE_BIT_XMAX | FACE_BIT_ZMAX | FACE_BIT_YMIN | FACE_BIT_YMAX)
+	#define CC_CLIPPING_FLAGS
 	#define CC_WEAKFUNC __attribute__((weak))
 #elif defined PLAT_3DS
 	#define CC_BUILD_3DS
@@ -509,6 +509,7 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define CC_WEAKFUNC __attribute__((weak))
+	#define CC_CLIPPING_FLAGS
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
 	#define CC_BUILD_CONSOLE
