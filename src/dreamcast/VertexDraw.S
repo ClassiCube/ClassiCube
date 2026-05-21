@@ -1,3 +1,5 @@
+#include "AsmCommon.i"
+
 ! r8  = STORE_QUEUE
 ! r9  = num vertices left
 ! r10 = PVR_CMD_VERTEX

@@ -1,3 +1,5 @@
+#include "AsmCommon.i"
+
 #define FLG r0 // clip flags
 #define TMP r1 // temp
 #define VTX r2 // PVR_CMD_VERTEX
@@ -19,9 +21,9 @@
 #define XYZW fv4 // vertex.xyzw
 
 
-! =========================================================
-! ========================= TRANSFORM SETUP ===============
-! =========================================================
+// =========================================================
+// ========================= TRANSFORM SETUP ===============
+// =========================================================
 .macro TransformSetup
     mov   SRC, PFT    ! MT, pft = src
     add  #-32, DST    ! EX, dst -= sizeof(VERTEX)
@@ -42,14 +44,14 @@
 .endm
 
 
-! =========================================================
-! ========================= VERTEX LOADING ================
-! =========================================================
+// =========================================================
+// ========================= VERTEX LOADING ================
+// =========================================================
 .macro LoadColouredVertex
 ! LOAD XYZ
-    fmov @SRC+, F_X   ! LS, X = src->x
-    fmov @SRC+, F_Y   ! LS, Y = src->y
-    fmov @SRC+, F_Z   ! LS, Z = src->z
+    fmov.s @SRC+, F_X ! LS, X = src->x
+    fmov.s @SRC+, F_Y ! LS, Y = src->y
+    fmov.s @SRC+, F_Z ! LS, Z = src->z
     fldi1 F_W         ! LS, W = 1.0
 ! PREPARE NEXT VERTEX
     add    #16, PFT   ! EX, pft += VERTEX_STRIDE
@@ -58,14 +60,14 @@
 ! TRANSFORM VERTEX
     ftrv xmtrx, XYZW  ! FE, TRANSFORM(XYZW)
 ! LOAD ATTRIBUTES
-    fmov @SRC+, F_C   ! LS, C = src->color
+    fmov.s @SRC+, F_C ! LS, C = src->color
 .endm
 
 .macro LoadTexturedVertex
 ! LOAD XYZ
-    fmov @SRC+, F_X   ! LS, X = src->x
-    fmov @SRC+, F_Y   ! LS, Y = src->y
-    fmov @SRC+, F_Z   ! LS, Z = src->z
+    fmov.s @SRC+, F_X ! LS, X = src->x
+    fmov.s @SRC+, F_Y ! LS, Y = src->y
+    fmov.s @SRC+, F_Z ! LS, Z = src->z
     fldi1 F_W         ! LS, W = 1.0
 ! PREPARE NEXT VERTEX
     add    #24, PFT   ! EX, pft += VERTEX_STRIDE
@@ -74,16 +76,16 @@
 ! TRANSFORM VERTEX
     ftrv xmtrx, XYZW  ! FE, TRANSFORM(XYZW)
 ! LOAD ATTRIBUTES
-    fmov @SRC+, F_C   ! LS, C = src->color
-    fmov @SRC+, F_U   ! LS, U = src->u
-    fmov @SRC+, F_V   ! LS, V = src->v
+    fmov.s @SRC+, F_C ! LS, C = src->color
+    fmov.s @SRC+, F_U ! LS, U = src->u
+    fmov.s @SRC+, F_V ! LS, V = src->v
 .endm
 
-! =========================================================
-! ========================= VERTEX OUTPUT =================
-! =========================================================
-! To take advantage of SH4 dual instruction processing, 
-!  clipflag calculation and vertex output are interleaved
+// =========================================================
+// ========================= VERTEX OUTPUT =================
+// =========================================================
+// To take advantage of SH4 dual instruction processing, 
+//  clipflag calculation and vertex output are interleaved
 .macro ProcessVertex1
     fmov.s  F_Z,@-DST ! LS, dst->z = Z
     fmov.s  F_C,@-DST ! LS, dst->c = C
@@ -145,14 +147,11 @@
 .endm
 
 
-! =========================================================
-! ==================== TEXTURED VERTEX TRANSFORM ==========
-! =========================================================
-.global _DrawTexturedQuads
-.align 4
-
-_DrawTexturedQuads:
-! Setup
+// =========================================================
+// ==================== TEXTURED VERTEX TRANSFORM ==========
+// =========================================================
+BEG_FUNC(_DrawTexturedQuads)
+// Setup
     TransformSetup
 
 .T_TRANSFORM_QUAD:
@@ -168,34 +167,30 @@ _DrawTexturedQuads:
     LoadTexturedVertex
     ProcessVertex4
 
-! CLIPFLAGS TESTING
+// CLIPFLAGS TESTING
     and     #15,FLG
-    cmp/eq   #0,FLG      ! T = CLIPFLAGS == 0 (all points invisible)
-    bf/s    .T_LOOP_END  ! if !T goto LOOP_END
+    cmp/eq   #0,FLG      // T = CLIPFLAGS == 0 (all points invisible)
+    bf/s    .T_LOOP_END  // if !T goto LOOP_END
     nop
 
-! No points visible case
-    add #-128, DST       ! DST -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
+// No points visible case
+    add #-128, DST       // DST -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
 
 .T_LOOP_END:
-    dt CNT               ! count--; T = count == 0
-    bf .T_TRANSFORM_QUAD ! if !T then goto T_TRANSFORM_QUAD
+    dt CNT               // count--; T = count == 0
+    bf .T_TRANSFORM_QUAD // if !T then goto T_TRANSFORM_QUAD
     nop
     
     TransformEnd
-.size _DrawTexturedQuads, .-_DrawTexturedQuads
-.type _DrawTexturedQuads, %function
+END_FUNC(_DrawTexturedQuads)
 
-! =========================================================
-! ==================== COLOURED VERTEX TRANSFORM ==========
-! =========================================================
-.global _DrawColouredQuads
-.align 4
-
-_DrawColouredQuads:
-! Setup
-    fldi0 F_U     ! U = 0
-    fldi0 F_V     ! V = 0
+// =========================================================
+// ==================== COLOURED VERTEX TRANSFORM ==========
+// =========================================================
+BEG_FUNC(_DrawColouredQuads)
+// Setup
+    fldi0 F_U     // U = 0
+    fldi0 F_V     // V = 0
     TransformSetup
 
 .C_TRANSFORM_QUAD:
@@ -211,20 +206,19 @@ _DrawColouredQuads:
     LoadColouredVertex
     ProcessVertex4
 
-! CLIPFLAGS TESTING
+// CLIPFLAGS TESTING
     and     #15,FLG
-    cmp/eq   #0,FLG      ! T = CLIPFLAGS == 0 (all points invisible)
-    bf/s    .C_LOOP_END  ! if !T goto LOOP_END
+    cmp/eq   #0,FLG      // T = CLIPFLAGS == 0 (all points invisible)
+    bf/s    .C_LOOP_END  // if !T goto LOOP_END
     nop
 
-! No points visible case
-    add #-128, DST       ! dst -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
+// No points visible case
+    add #-128, DST       // dst -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
 
 .C_LOOP_END:
-    dt CNT               ! count--; T = count == 0
-    bf .C_TRANSFORM_QUAD ! if !T then goto TRANSFORM_QUAD
+    dt CNT               // count--; T = count == 0
+    bf .C_TRANSFORM_QUAD // if !T then goto TRANSFORM_QUAD
     nop
     
     TransformEnd
-.size _DrawColouredQuads, .-_DrawColouredQuads
-.type _DrawColouredQuads, %function
+END_FUNC(_DrawColouredQuads)

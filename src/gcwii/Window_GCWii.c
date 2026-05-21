@@ -18,11 +18,11 @@
 #include <ogc/usbmouse.h>
 #include <wiiuse/wpad.h>
 #include <wiikeyboard/keyboard.h>
+#include "../VirtualCursor.h"
 #endif
 
 static cc_bool needsFBUpdate;
 static int mouseSupported;
-#include "../VirtualCursor.h"
 static void* xfb;
 
 GXRModeObj* cur_mode;
