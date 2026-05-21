@@ -190,21 +190,41 @@ static struct FrustumPlanes frustum;
 
 int Frustum_TestSphere(float x, float y, float z, float radius) {
 	float d;
+#if CC_CLIPPING_FLAGS
+	int type = FRUSTUM_ON_OR_IN | FRUSTUM_INSIDE_FLAG;
+#else
+	const int type = FRUSTUM_ON_OR_IN;
+#endif
 
 	d = frustum.L.a * x + frustum.L.b * y + frustum.L.c * z + frustum.L.d;
 	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_XMIN)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.R.a * x + frustum.R.b * y + frustum.R.c * z + frustum.R.d;
 	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_XMAX)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.B.a * x + frustum.B.b * y + frustum.B.c * z + frustum.B.d;
 	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_YMIN)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.T.a * x + frustum.T.b * y + frustum.T.c * z + frustum.T.d;
 	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_YMAX)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	d = frustum.F.a * x + frustum.F.b * y + frustum.F.c * z + frustum.F.d;
 	if (d <= -radius) return FRUSTUM_OUTSIDE;
+#if (CC_CLIPPING_FLAGS & FACE_BIT_ZMAX)
+	if (d <= 0) type &= ~FRUSTUM_INSIDE_FLAG;
+#endif
 
 	/* Don't test NEAR plane, it's pointless */
 
@@ -212,7 +232,7 @@ int Frustum_TestSphere(float x, float y, float z, float radius) {
 	/* Workaround a compiler bug causing the below statement to return 0 instead */
 	__asm__( "!" );
 #endif
-	return FRUSTUM_ON_OR_IN;
+	return type;
 }
 
 static void Frustum_NormalisePlane(struct Plane* plane) {
