@@ -107,7 +107,7 @@ static void CheckWeather(float delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
-#ifdef CC_CLIPPING_FLAGS
+#if CC_CLIPPING_FLAGS
 	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, info->skipClip ? DRAW_HINT_NOCLIP : 0)
 #else
 	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, 0)
@@ -584,7 +584,9 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 		} else {
 			res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
 			chunk->visible  = res != FRUSTUM_OUTSIDE;
-			chunk->skipClip = Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14);
+#if CC_CLIPPING_FLAGS
+			chunk->skipClip = (res & FRUSTUM_INSIDE_FLAG) != 0;
+#endif
 		}
 
 		if (chunk->visible && !chunk->empty) { renderChunks[j] = chunk; j++; }
@@ -620,7 +622,9 @@ static int UpdateChunksStill(int* chunkUpdates) {
 			} else {
 				res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
 				chunk->visible  = res != FRUSTUM_OUTSIDE;
-				chunk->skipClip = Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14);
+#if CC_CLIPPING_FLAGS
+				chunk->skipClip = (res & FRUSTUM_INSIDE_FLAG) != 0;
+#endif
 			}
 
 			if (chunk->visible && !chunk->empty) { renderChunks[j] = chunk; j++; }
