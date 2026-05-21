@@ -136,6 +136,35 @@ static void Gfx_FreeState(void) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------------Frustum--------------------------------------------------------*
+*#########################################################################################################################*/
+struct Plane_ { float a, b, c, d; };
+struct FrustumPlanes { struct Plane_ L, R, B, T, F; };
+extern struct FrustumPlanes frustum;
+
+cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) {
+	float d;
+
+	d = frustum.L.a * x + frustum.L.b * y + frustum.L.c * z + frustum.L.d;
+	if (d < radius) return false;
+
+	d = frustum.R.a * x + frustum.R.b * y + frustum.R.c * z + frustum.R.d;
+	if (d < radius) return false;
+
+	d = frustum.B.a * x + frustum.B.b * y + frustum.B.c * z + frustum.B.d;
+	if (d < radius) return false;
+
+	d = frustum.T.a * x + frustum.T.b * y + frustum.T.c * z + frustum.T.d;
+	if (d < radius) return false;
+
+	d = frustum.F.a * x + frustum.F.b * y + frustum.F.c * z + frustum.F.d;
+	if (d < radius) return false;
+
+	return true;
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Texture memory-----------------------------------------------------*
 *#########################################################################################################################*/
 #define VRAM_SIZE (2 * 1024 * 1024)
@@ -565,8 +594,8 @@ void Gfx_EndFrame(void) {
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
 
-	//Platform_Log3("C %i/%i / U %i", &CLIPPED, &MACLIPPED, &UNCLIPPED);
-	//CLIPPED = MACLIPPED = UNCLIPPED = 0;
+	Platform_Log3("C %i/%i / U %i", &CLIPPED, &MACLIPPED, &UNCLIPPED);
+	CLIPPED = MACLIPPED = UNCLIPPED = 0;
 }
 
 void Gfx_OnWindowResize(void) {
@@ -701,7 +730,7 @@ extern void Clip_RescaleMVPtoGuardband(void);
 
 static cc_bool clipping_dirty;
 struct Plane { float a, b, c, d; } CC_ALIGNED(16);
-static struct Plane frustum[6];
+static struct Plane frustum_planes[6];
 extern void Frustum_CalcAllPlanes(struct Plane* planes);
 
 static CC_INLINE void RecalcMVP(void) {
@@ -710,7 +739,7 @@ static CC_INLINE void RecalcMVP(void) {
 }
 
 static CC_NOINLINE void RecalcClipping(void) {
-	Frustum_CalcAllPlanes(frustum);
+	Frustum_CalcAllPlanes(frustum_planes);
 	clipping_dirty = false;
 	Clip_RescaleMVPtoGuardband();
 }
@@ -856,7 +885,7 @@ static void DrawClippableTexturedVertices(struct VertexTextured* v, int vertices
 		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_TEXTURED)) {
 			MACLIPPED++;
 			ConvertTexturedToClipQuad(v, clipped1);
-			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum_planes);
 			if (res == 0) { run += 6; continue; }
 
 			cnt = CLIPRESULT_COUNT(res);
@@ -889,7 +918,7 @@ static void DrawClippableColouredVertices(struct VertexColoured* v, int vertices
 		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_COLOURED)) {
 			MACLIPPED++;
 			ConvertColouredToClipQuad(v, clipped1);
-			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum_planes);
 			if (res == 0) { run += 6; continue; }
 
 			cnt = CLIPRESULT_COUNT(res);

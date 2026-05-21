@@ -182,7 +182,11 @@ void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot) {
 
 struct Plane { float a, b, c, d; };
 struct FrustumPlanes { struct Plane L, R, B, T, F; };
+#ifdef CC_BUILD_PSP
+struct FrustumPlanes frustum;
+#else
 static struct FrustumPlanes frustum;
+#endif
 
 int Frustum_TestSphere(float x, float y, float z, float radius) {
 	float d;
