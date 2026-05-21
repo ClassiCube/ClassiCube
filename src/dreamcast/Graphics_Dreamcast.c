@@ -807,6 +807,32 @@ void Gfx_SetFogMode(FogFunc func) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------------Frustum--------------------------------------------------------*
+*#########################################################################################################################*/
+static struct Plane { float a, b, c, d; } nearPlane;
+
+static void NormalisePlane(struct Plane* plane) {
+	float val1 = plane->a, val2 = plane->b, val3 = plane->c;
+	float t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
+	plane->a /= t; plane->b /= t; plane->c /= t; plane->d /= t;
+}
+
+static void CalcNearFrustumPlane(struct Matrix* clip) {
+	/* Extract the NEAR plane */
+	nearPlane.a = clip->row1.w + clip->row1.z;
+	nearPlane.b = clip->row2.w + clip->row2.z;
+	nearPlane.c = clip->row3.w + clip->row3.z;
+	nearPlane.d = clip->row4.w + clip->row4.z;
+	NormalisePlane(&nearPlane);
+}
+
+cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) {
+	float d = nearPlane.a * x + nearPlane.b * y + nearPlane.c * z + nearPlane.d;
+	return d > 0.0f;
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static matrix_t CC_ALIGNED(32) _proj, _view;
@@ -828,6 +854,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
 	Matrix_Mul(mvp, view, proj);
+	CalcNearFrustumPlane(mvp);
 }
 
 
@@ -878,8 +905,10 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 *#########################################################################################################################*/
 static cc_bool loggedNoVRAM;
 
-extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
-extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawColouredQuads_Clip(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawTexturedQuads_Clip(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawColouredQuads_Fast(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawTexturedQuads_Fast(const void* src, Vertex* dst, int numQuads);
 
 static Vertex* ReserveOutput(struct CommandsList* list, cc_uint32 elems) {
 	Vertex* beg;
@@ -897,7 +926,7 @@ static Vertex* ReserveOutput(struct CommandsList* list, cc_uint32 elems) {
 	}
 }
 
-void DrawQuads(int count, void* src) {
+static void DrawQuads(int count, void* src, DrawHints hints) {
 	if (!count) return;
 	struct CommandsList* list = ActivePolyList();
 
@@ -913,12 +942,16 @@ void DrawQuads(int count, void* src) {
 		beg++;
 	}
 	Vertex* end;
+	cc_bool noclip = (hints & DRAW_HINT_NOCLIP) || gfx_rendering2D;
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		end = DrawTexturedQuads(src, beg, count >> 2);
+		end = noclip ? DrawTexturedQuads_Fast(src, beg, count >> 2) 
+					 : DrawTexturedQuads_Clip(src, beg, count >> 2);
 	} else {
-		end = DrawColouredQuads(src, beg, count >> 2);
+		end = noclip ? DrawColouredQuads_Fast(src, beg, count >> 2) 
+					 : DrawColouredQuads_Clip(src, beg, count >> 2);
 	}
+
 	list->length += (end - beg);
 
 	if (list != direct) return;
@@ -946,12 +979,12 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 		src = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
 	}
 
-	DrawQuads(verticesCount, src);
+	DrawQuads(verticesCount, src, hints);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	DrawQuads(verticesCount, gfx_vertices);
+	DrawQuads(verticesCount, gfx_vertices, 0);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
@@ -959,7 +992,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 	if (renderingDisabled) return;
 	
 	void* src = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
-	DrawQuads(verticesCount, src);
+	DrawQuads(verticesCount, src, hints);
 }
 
 
