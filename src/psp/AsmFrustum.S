@@ -16,8 +16,6 @@
 #define SCL_ZN S713 // frustum plane z- scale
 
 BEG_FUNC(Frustum_CalcAllPlanes)
-	#define DST $a0
-
 	// Frustum planes calculation
 	// Left:   a,b,c,d = mvp.row[1,2,3,4].w + mvp.row[1,2,3,4].x
 	// Right:  a,b,c,d = mvp.row[1,2,3,4].w - mvp.row[1,2,3,4].x
@@ -60,10 +58,13 @@ BEG_FUNC(Frustum_CalcAllPlanes)
 	vscl.q FSM_YP, FSM_YP, SCL_YP
 	vscl.q FSM_YN, FSM_YN, SCL_YN
 	vscl.q FSM_ZP, FSM_ZP, SCL_ZP
+	jr $ra
 	vscl.q FSM_ZN, FSM_ZN, SCL_ZN
+END_FUNC(Frustum_CalcAllPlanes)
 
-	// Store frustum planes back into memory
-	// MEM_128[PLANE] = [a,b,c,d]
+BEG_FUNC(Frustum_StorePlanes)
+	#define DST $a0
+
 	sv.q FSM_XP,  0(DST)
 	sv.q FSM_XN, 16(DST)
 	sv.q FSM_YP, 32(DST)
@@ -73,5 +74,16 @@ BEG_FUNC(Frustum_CalcAllPlanes)
 	sv.q FSM_ZN, 80(DST)
 
 	#undef DST
-END_FUNC(Frustum_CalcAllPlanes)
+END_FUNC(Frustum_StorePlanes)
+
+
+BEG_FUNC(Frustum_SavePlanes)
+	vmov.q GBPLN_L, FSM_XP
+	vmov.q GBPLN_R, FSM_XN
+	vmov.q GBPLN_B, FSM_YP
+	vmov.q GBPLN_T, FSM_YN
+	vmov.q GBPLN_N, FSM_ZP
+	jr $ra
+	vmov.q GBPLN_F, FSM_ZN
+END_FUNC(Frustum_SavePlanes)
 

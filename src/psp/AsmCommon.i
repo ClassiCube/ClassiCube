@@ -17,8 +17,8 @@
 // M0 - view matrix
 // M1 - proj matrix
 // M2 - MVP  matrix
-// M3 - row1 = guardband scaling
-// M4 - ?
+// M3 - ?
+// M4 - row4 = guardband scaling
 // M5 - temp
 // M6 - temp
 // M7 - temp
@@ -32,10 +32,17 @@
 #define MVP_CZ  C220 // mvp.columns.Z
 #define MVP_CW  C230 // mvp.columns.W
 
-#define GBAND_X S300
-#define GBAND_Y S301
-#define GBINV_X S302
-#define GBINV_Y S303
+#define GBPLN_L R300
+#define GBPLN_R R301
+#define GBPLN_B R302
+#define GBPLN_T R303
+#define GBPLN_N R400
+#define GBPLN_F R401
+
+#define GBAND_X S403
+#define GBAND_Y S413
+#define GBINV_X S423
+#define GBINV_Y S433
 
 
 // ===============================
@@ -72,3 +79,10 @@
 #define S_VTEX 24 // textured vertex
 #define S_VCLP 32 // clipping vertex
 #define S_VCLP_LOG2 5 // x << 5 = x * 32
+
+
+// ===============================
+// VFPU branch comparison codes
+// ===============================
+#define FLG_ANY 4
+#define FLG_ALL 5

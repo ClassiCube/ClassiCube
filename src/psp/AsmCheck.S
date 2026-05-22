@@ -36,7 +36,7 @@
 //   Does NOT test near plane, as PSP GPU natively clips that
 .macro TestInsidePlanes row
 	vcmp.q GT, \row[|x|,|y|,z,0], \row[|w|,|w|,w,0] // CC[0] = |x|>|w|...
-	bvt 4, behind_a_clipping_plane // CC[4] = (|x|>|w|) | (|y|>|w|) | (z>w) | (0>0)
+	bvt FLG_ANY, behind_a_clipping_plane // (|x|>|w|) | (|y|>|w|) | (z>w) | (0>0)
 	nop
 .endm
 
