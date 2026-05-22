@@ -784,7 +784,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 
 	Clip_RecalcMVP();
 	Clip_StoreMVP((float*)mvp);
-	clipping_dirty = true;
+	RecalcClipping();
 
 	Frustum_CalcAllPlanes();
 	Frustum_SavePlanes();
