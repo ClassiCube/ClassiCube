@@ -426,7 +426,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 #ifdef CC_CLIPPING_FLAGS
 cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius);
 #else
-static cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) { return false; }
+static CC_INLINE cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) { return false; }
 #endif
 
 /* Calculates an orthographic projection matrix suitable with this backend. (usually for 2D) */

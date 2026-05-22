@@ -94,8 +94,9 @@ typedef struct {
 static RenderBuffer buffers[2];
 static void*     next_packet;
 static uint8_t*  next_packet_end;
-static int       active_buffer;
-static RenderBuffer* cur_buffer;
+
+static RenderBuffer* disp_buffer;
+static RenderBuffer* draw_buffer;
 static void* lastPoly;
 
 static void BuildContext(RenderBuffer* buf) {
@@ -136,18 +137,18 @@ static void ResetOTableR(RenderBuffer* buf) {
 }
 
 static void OnBufferUpdated(void) {
-	cur_buffer      = &buffers[active_buffer];
-	next_packet     = cur_buffer->buffer;
+	next_packet     = draw_buffer->buffer;
     next_packet_end = next_packet + BUFFER_LENGTH;
 
-	ResetOTableR(cur_buffer);
+	ResetOTableR(draw_buffer);
 }
 
 static void SetupContexts(int w, int h) {
-	InitContext(&buffers[0], 0, 0, w, h);
-	InitContext(&buffers[1], 0, h, w, h);
+	draw_buffer = &buffers[0];
+	disp_buffer = &buffers[1];
 
-	active_buffer = 0;
+	InitContext(draw_buffer, 0, 0, w, h);
+	InitContext(disp_buffer, 0, h, w, h);
 	OnBufferUpdated();
 }
 
@@ -847,7 +848,7 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		if (lastPoly) { 
 			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
 		} else {
-			addPrim(&cur_buffer->ot[0], poly);
+			addPrim(&draw_buffer->ot[0], poly);
 		}
 		lastPoly = poly;
 		poly++;
@@ -890,7 +891,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		if (lastPoly) { 
 			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
 		} else {
-			addPrim(&cur_buffer->ot[0], poly);
+			addPrim(&draw_buffer->ot[0], poly);
 		}
 
 		lastPoly = poly;
@@ -901,7 +902,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
-	uint32_t* ot = cur_buffer->ot;
+	uint32_t* ot = draw_buffer->ot;
 
 	psx_poly_F4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
@@ -955,7 +956,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 
 	int tpage = curTex->tpage, clut = curTex->clut;
 	int bmode = blend_mode;
-	uint32_t* ot = cur_buffer->ot;
+	uint32_t* ot = draw_buffer->ot;
 
 	psx_poly_FT4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
@@ -1072,16 +1073,17 @@ void Gfx_EndFrame(void) {
 	WaitUntilFinished();
 	Gfx_VSync();
 
-	RenderBuffer* draw_buffer = &buffers[active_buffer];
-	RenderBuffer* disp_buffer = &buffers[active_buffer ^ 1];
-
 	// Use previous finished frame as display framebuffer
 	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS | disp_buffer->fb_pos;
 
 	// Start sending commands to GPU to draw this frame
-	SendDrawCommands(cur_buffer);
+	SendDrawCommands(draw_buffer);
 
-	active_buffer ^= 1;
+	// Swap draw and display buffers
+	RenderBuffer* tmp = draw_buffer;
+	draw_buffer = disp_buffer;
+	disp_buffer = tmp;
+
 	OnBufferUpdated();
 }
 
