@@ -27,6 +27,24 @@
 // ===============================
 // GLOBAL REGISTERS
 // ===============================
+#define VIEW_R1  R000
+#define VIEW_R2  R001
+#define VIEW_R3  R002
+#define VIEW_R4  R003
+#define VIEW_MTX M000
+
+#define PROJ_R1  R100
+#define PROJ_R2  R101
+#define PROJ_R3  R102
+#define PROJ_R4  R103
+#define PROJ_MTX M100
+
+#define MVP_R1  R200
+#define MVP_R2  R201
+#define MVP_R3  R202
+#define MVP_R4  R203
+#define MVP_MTX M200
+
 #define MVP_CX  C200 // mvp.columns.X
 #define MVP_CY  C210 // mvp.columns.Y
 #define MVP_CZ  C220 // mvp.columns.Z

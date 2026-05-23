@@ -39,10 +39,11 @@ extern void LoadViewportScale(VU0_vector* scale);
 // double buffering
 static qword_t* dma_bufs[2];
 static qword_t* cur_buf;
-static int context;
+static int cur_context;
 
 static qword_t* dma_beg;
 static qword_t* Q;
+#define DRAWCTX_0 0
 
 static GfxResourceID white_square;
 static int primitive_type;
@@ -82,10 +83,10 @@ static void InitDMABuffers(void) {
 
 
 static void UpdateContext(void) {
-	fb_display = &fb_colors[context];
-	fb_draw    = &fb_colors[context ^ 1];
+	fb_display = &fb_colors[cur_context];
+	fb_draw    = &fb_colors[cur_context ^ 1];
 
-	cur_buf = dma_bufs[context];
+	cur_buf = dma_bufs[cur_context];
 	
 	dma_beg = cur_buf;
 	// increment past the dmatag itself
@@ -93,28 +94,30 @@ static void UpdateContext(void) {
 }
 
 
-static void SetTextureWrapping(int context) {
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+static qword_t* SetTextureWrapping(qword_t* q) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
 
-	PACK_GIFTAG(Q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), 
-					GS_REG_CLAMP + context);
-	Q++;
+	PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), 
+					GS_REG_CLAMP + DRAWCTX_0);
+	q++;
+	return q;
 }
 
-static void SetTextureSampling(int context) {
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+static qword_t* SetTextureSampling(qword_t* q) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
 
 	// TODO: should mipmapselect (first 0 after MIN_NEAREST) be 1?
-	PACK_GIFTAG(Q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), 
-					GS_REG_TEX1 + context);
-	Q++;
+	PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), 
+					GS_REG_TEX1 + DRAWCTX_0);
+	q++;
+	return q;
 }
 
-static void SetAlphaBlending(int context) {
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+static qword_t* SetAlphaBlending(qword_t* q) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
 
 	// https://psi-rockin.github.io/ps2tek/#gsalphablending
 	// Output = (((A - B) * C) >> 7) + D
@@ -122,9 +125,10 @@ static void SetAlphaBlending(int context) {
 	//        =  (src * alpha - dst * alpha) / 128 + dst
 	//        =  (src * alpha - dst * alpha) / 128 + dst * 128 / 128
 	//        = ((src * alpha + dst * (128 - alpha)) / 128
-	PACK_GIFTAG(Q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
-								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA + context);
-	Q++;
+	PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
+								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA + DRAWCTX_0);
+	q++;
+	return q;
 }
 
 static void InitDrawingEnv(void) {
@@ -133,9 +137,9 @@ static void InitDrawingEnv(void) {
 	// GS can render from 0 to 4096, so set primitive origin to centre of that
 	Q = draw_primitive_xyoffset(Q, 0, 2048 - Game.Width / 2, 2048 - Game.Height / 2);
 
-	SetTextureWrapping(0);
-	SetTextureSampling(0);
-	SetAlphaBlending(0); // TODO has no effect ?
+	Q = SetTextureWrapping(Q);
+	Q = SetTextureSampling(Q);
+	Q = SetAlphaBlending(Q); // TODO has no effect ?
 	Q = draw_finish(Q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, Q - beg, 0, 0);
@@ -156,7 +160,7 @@ void Gfx_Create(void) {
 	primitive_type = 0; // PRIM_POINT, which isn't used here
 	if (!Gfx.Created) InitGPUState();
 
-	context = 0;
+	cur_context = 0;
 	UpdateContext();
 	
 	stateDirty  = true;
@@ -559,20 +563,21 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 }
 
 static unsigned clut_counter;
-static void UpdateTextureBuffer(int context, struct GPUTexture* tex, unsigned buf_addr) {
+static qword_t* UpdateTextureBuffer(qword_t* q, struct GPUTexture* tex, unsigned buf_addr) {
 	unsigned buf_stride = GS_TEXTURE_STRIDE(tex);
 
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
 
 	unsigned clut_addr  = tex->format == GS_PSM_32 ? 0 : clut_offset >> 6;
 	unsigned clut_entry = tex->format == GS_PSM_32 ? 0 : ((clut_counter++) & 0x0F);
 	unsigned clut_mode  = tex->format == GS_PSM_32 ? CLUT_NO_LOAD : CLUT_LOAD;
 
-	PACK_GIFTAG(Q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
+	PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
 							   tex->log2_w, tex->log2_h, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
-							   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0 + context);
-	Q++;
+							   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0 + DRAWCTX_0);
+	q++;
+	return q;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -589,7 +594,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	} else {
 		UploadToVRAM(tex, dst_addr);
 	}
-	UpdateTextureBuffer(0, tex, dst_addr);
+	Q = UpdateTextureBuffer(Q, tex, dst_addr);
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -632,33 +637,35 @@ void Gfx_SetFogDensity(float value) { }
 void Gfx_SetFogEnd(float value)     { }
 void Gfx_SetFogMode(FogFunc func)   { }
 
-static void UpdateState(int context) {
+static qword_t* UpdateState(qword_t* q) {
 	// TODO: toggle Enable instead of method ?
 	int aMethod = gfx_alphaTest ? ATEST_METHOD_GREATER_EQUAL : ATEST_METHOD_ALLPASS;
 	int zMethod = gfx_depthTest ? ZTEST_METHOD_GREATER_EQUAL : ZTEST_METHOD_ALLPASS;
 	
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
 	// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
-	PACK_GIFTAG(Q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
+	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
 							   DRAW_DISABLE, DRAW_DISABLE,
-							   DRAW_ENABLE,  zMethod), GS_REG_TEST + context);
-	Q++;
+							   DRAW_ENABLE,  zMethod), GS_REG_TEST + DRAWCTX_0);
+	q++;
 	
 	stateDirty = false;
+	return q;
 }
 
-static void UpdateFormat(int context) {
+static qword_t* UpdateFormat(qword_t* q) {
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-	PACK_GIFTAG(Q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
 							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
-							  context, PRIM_UNFIXED), GS_REG_PRIM);
-	Q++;
+							  DRAWCTX_0, PRIM_UNFIXED), GS_REG_PRIM);
+	q++;
 	
 	formatDirty = false;
+	return q;
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -681,8 +688,8 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	Q = draw_clear(Q, 0, 2048.0f - fb_colors[0].width / 2.0f, 2048.0f - fb_colors[0].height / 2.0f,
 					fb_colors[0].width, fb_colors[0].height, clearR, clearG, clearB);
 
-	UpdateState(0);
-	UpdateFormat(0);
+	Q = UpdateState(Q);
+	Q = UpdateFormat(Q);
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -952,8 +959,8 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 }
 
 static void DrawTriangles(int verticesCount, int startVertex) {
-	if (stateDirty)  UpdateState(0);
-	if (formatDirty) UpdateFormat(0);
+	if (stateDirty)  Q = UpdateState(Q);
+	if (formatDirty) Q = UpdateFormat(Q);
 
 	if ((Q - cur_buf) > 40000) {
 		FlushMainDMABuffer();
@@ -975,16 +982,17 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 }
 
 // TODO: Can this be used? need to understand EOP more
-static void SetPrimitiveType(int type) {
-	if (primitive_type == type) return;
+static qword_t* SetPrimitiveType(qword_t* q, int type) {
+	if (primitive_type == type) return q;
 	primitive_type = type;
 	
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-	PACK_GIFTAG(Q, GS_SET_PRIM(type, PRIM_SHADE_GOURAUD, DRAW_DISABLE, DRAW_DISABLE,
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_PRIM(type, PRIM_SHADE_GOURAUD, DRAW_DISABLE, DRAW_DISABLE,
 							  DRAW_DISABLE, DRAW_DISABLE, PRIM_MAP_ST,
 							  0, PRIM_UNFIXED), GS_REG_PRIM);
-	Q++;
+	q++;
+	return q;
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -1034,7 +1042,7 @@ void Gfx_EndFrame(void) {
 	//Platform_LogConst("--- EF3 ---");
 	if (gfx_vsync) GS_wait_vsync();
 	
-	context ^= 1;
+	cur_context ^= 1;
 	UpdateContext();
 
 	// Double buffering
@@ -1096,11 +1104,9 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	int context = 0;
-	
 	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	Q++;
-	PACK_GIFTAG(Q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR + context);
+	PACK_GIFTAG(Q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR + DRAWCTX_0);
 	Q++;
 }
 
