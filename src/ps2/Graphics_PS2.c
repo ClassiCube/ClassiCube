@@ -163,7 +163,7 @@ static qword_t* GS_EnablePRMode(qword_t *q) {
 	return q;
 }
 
-// TODO shouldn't be needed?? but still is?? (prim set in draw triangle funcs)
+// TODO still needed as PRE/PRIM field only work when gif tag is PACKED (see PCSX2 and DobieStation for reference)
 static qword_t* GS_SetPrimMode(qword_t *q, int mode) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
 	{
@@ -1006,7 +1006,7 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 
 		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
 		// 3 registers per GIF "primitive" (colour, texture, position)
-		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1, 1,PRIM_TRIANGLE, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
+		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1, 0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
 	}
 }
 
@@ -1032,7 +1032,7 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 
 		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
 		// 2 registers per GIF "primitive" (colour, position)
-		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1, 1,PRIM_TRIANGLE, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
+		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1, 0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
 	}
 }
 
