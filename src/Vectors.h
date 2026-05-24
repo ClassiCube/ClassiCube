@@ -18,7 +18,7 @@ typedef struct Vec3_ { float x, y, z; } Vec3;
 typedef struct IVec3_ { int x, y, z; } IVec3;
 /* 4 component vector */
 struct Vec4 { float x, y, z, w; };
-#ifdef CC_BUILD_PSP
+#if defined CC_BUILD_PSP || defined CC_BUILD_PS2
 struct Matrix { struct Vec4 row1, row2, row3, row4; } CC_ALIGNED(16);
 #else
 /* 4x4 matrix. (for vertex transformations) */
@@ -140,7 +140,6 @@ void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot);
 
 #define FRUSTUM_OUTSIDE     0x00
 #define FRUSTUM_ON_OR_IN    0x01
-#define FRUSTUM_INSIDE_FLAG 0x02 /* Whether sphere fully fits inside clipping planes of CC_CLIPPING_FLAGS */
 
 /* Tests whether the given sphere lies outside any of the clipping planes */
 int  Frustum_TestSphere(float x, float y, float z, float radius);

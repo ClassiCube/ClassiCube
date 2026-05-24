@@ -18,7 +18,6 @@
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
 
-typedef struct Matrix VU0_matrix QWORD_ALIGNED;
 typedef struct Vec4   VU0_vector QWORD_ALIGNED;
 typedef struct { int x, y, z, w; } VU0_IVector QWORD_ALIGNED;
 
@@ -30,8 +29,8 @@ static cc_bool stateDirty, formatDirty;
 static framebuffer_t* fb_draw;
 static framebuffer_t* fb_display;
 
-static VU0_matrix mvp;
-extern void LoadMvpMatrix(VU0_matrix* matrix);
+static struct Matrix mvp;
+extern void LoadMvpMatrix(struct Matrix* matrix);
 extern void LoadClipScaleFactors(VU0_vector* scale);
 extern void LoadViewportOrigin(VU0_vector* origin);
 extern void LoadViewportScale(VU0_vector* scale);
@@ -831,6 +830,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+
 	Matrix_Mul(mvp, view, proj);
 }
 

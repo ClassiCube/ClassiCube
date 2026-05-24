@@ -539,6 +539,7 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
+	#define CC_WEAKFUNC __attribute__((weak))
 #elif defined PLAT_GBA
 	#define CC_BUILD_GBA
 	#define CC_BUILD_CONSOLE

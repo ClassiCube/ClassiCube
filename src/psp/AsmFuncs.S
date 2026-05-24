@@ -1,10 +1,6 @@
 .set noreorder
 #include "AsmCommon.i"
 
-// ===============================
-// FUNCTIONS
-// ===============================
-
 // Loads view matrix into VFPU registers
 //	$a0 = addresss of matrix
 BEG_FUNC(Clip_LoadView)
@@ -81,33 +77,4 @@ BEG_FUNC(Math_FastCos)
 	sv.s	S700, 0(ADDR)
 	#undef ADDR
 END_FUNC(Math_FastCos)
-
-
-BEG_FUNC(Matrix_Mul)
-	#define DST   $a0
-	#define SRC_L $a1
-	#define SRC_R $a2
-
-	lv.q	R500,  0(SRC_L)
-	lv.q	R501, 16(SRC_L)
-	lv.q	R502, 32(SRC_L)
-	lv.q	R503, 48(SRC_L)
-
-	lv.q	R600,  0(SRC_R)
-	lv.q	R601, 16(SRC_R)
-	lv.q	R602, 32(SRC_R)
-	lv.q	R603, 48(SRC_R)
-
-	vmmul.q M700, M500, M600 // M7 = M5 * M6
-
-	sv.q 	R700,  0(DST)
-	sv.q 	R701, 16(DST)
-	sv.q 	R702, 32(DST)
-	jr		$ra
-	sv.q 	R703, 48(DST)
-
-	#undef DST
-	#undef SRC_L
-	#undef SRC_R
-END_FUNC(Matrix_Mul)
 

@@ -1,9 +1,8 @@
-#include "AsmCommon.i"
-// NOTE: vclipw.xyz takes 4 cycles to produce result, which must be accounted for
-
+.set noreorder
 // mips ISA has explicit delay slots
 // (i.e. instruction after branches/jumps are always unconditionally executed)
-.set noreorder
+#include "AsmCommon.i"
+// NOTE: vclipw.xyz takes 4 cycles to produce result, which must be accounted for
 
 // Note that registers are numbered for N32 ABI, but when disassembling
 //   in ghidra or PCSX2, they are disassembled as O32 ABI ?
