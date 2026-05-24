@@ -17,6 +17,9 @@
 #define SCREEN_WIDTH  480
 #define SCREEN_HEIGHT 272
 
+#define GB_HALF  2048
+#define GB_RANGE 4096
+
 #define FB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
 #define ZB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 2)
 
@@ -74,22 +77,22 @@ static void guInit(void) {
 
 extern void Clip_SetGuardbandScale(const float* x, const float* y);
 static void InitGuardband(void) {
-	// PSP guard band ranges from 0..4096
-	// - 0 < screen_x < 4096
-	// - 0 < VIEWPORT(X/W) + WINDOW_OFFSET_X < 4096
-	// - 0 < ((X/W) * vp_hwidth + vp_x + vp_hwidth) + (2048-vp_hwidth) < 4096
-	// - 0 <  (X/W) * vp_hwidth + vp_x              +  2048            < 4096
+	// PSP guard band ranges from 0..GB_RANGE
+	// - 0 < screen_x < GB_RANGE
+	// - 0 < VIEWPORT(X/W) + WINDOW_OFFSET_X < GB_RANGE
+	// - 0 < ((X/W) * vp_hwidth + vp_x + vp_hwidth) + (GB_HALF-vp_hwidth) < GB_RANGE
+	// - 0 <  (X/W) * vp_hwidth + vp_x              +  GB_HALF            < GB_RANGE
 	// Although accurately rescaling from viewport range to guard band range
 	//  would involve vp_x and vp_hwidth, this does complicate the calculation
 	//  as e.g. a non-zero vp_x means viewport is not equally distant from the
 	//  left and right guardband planes.
 	// So to simplify calculation, just pretend viewport is same size as screen:
-	// - 0 < (X/W) * SCR_HWIDTH + (2048) < 4096
-	// - -2048 < (X/W) * SCR_HWIDTH < 2048 
-	// - -2048/SCR_HWIDTH < (X/W) < 2048/SCR_HWIDTH
-	// - W * -2048/SCR_HWIDTH < X < W * 2048/SCR_HWIDTH
-	// - -W < X / (2048/SCR_HWIDTH) < W
-	// - -W < X * (SCR_HWIDTH/2048) < W
+	// - 0 < (X/W) * SCR_HWIDTH + (GB_HALF) < GB_RANGE
+	// - -GB_HALF < (X/W) * SCR_HWIDTH < GB_HALF 
+	// - -GB_HALF/SCR_HWIDTH < (X/W) < GB_HALF/SCR_HWIDTH
+	// - W * -GB_HALF/SCR_HWIDTH < X < W * GB_HALF/SCR_HWIDTH
+	// - -W < X / (GB_HALF/SCR_HWIDTH) < W
+	// - -W < X * (SCR_HWIDTH/GB_HALF) < W
 	float scaleX =  (SCREEN_WIDTH /2) / 2047.0f;
 	float scaleY = -(SCREEN_HEIGHT/2) / 2047.0f;
 	Clip_SetGuardbandScale(&scaleX, &scaleY);
@@ -133,8 +136,6 @@ static void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }
-
-#define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
 
 
 /*########################################################################################################################*
@@ -617,16 +618,14 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	// PSP X/Y guard band ranges from 0..4096
-	// To minimise need to clip, centre the viewport around (2048, 2048)
-	GE_set_screen_offset(2048 - (w / 2), 2048 - (h / 2));
-	GE_set_viewport_xy(2048 + x, 2048 + y, w, h);
+	// PSP X/Y guard band ranges from 0..GB_RANGE
+	// To minimise need to clip, centre the viewport around (GB_RANGE/2, GB_RANGE/2)
+	GE_set_screen_offset(GB_HALF - (w / 2), GB_HALF - (h / 2));
+	GE_set_viewport_xy(GB_HALF + x, GB_HALF + y, w, h);
 }
 
-void Gfx_SetScissor (int x, int y, int w, int h) {
-	int no_scissor = x == 0 && y == 0 && w == SCREEN_WIDTH && h == SCREEN_HEIGHT;
-	sceGuScissor(x, y, w, h);
-	if (no_scissor) { sceGuDisable(GU_SCISSOR_TEST); } else { sceGuEnable(GU_SCISSOR_TEST); }
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	GE_set_scissor_region(x, y, x+w-1, y+h-1);
 }
 
 

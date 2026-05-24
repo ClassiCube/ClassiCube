@@ -16,7 +16,10 @@ enum GE_COMMANDS {
 	GE_DRAW_PRIMITIVES			= 0x04,
 	GE_JUMP_TO_ADDR				= 0x08,
 	GE_SET_ADDR_BASE            = 0x10,
-	GE_SET_VERTEX_FORMAT        = 0x12,
+	GE_SET_VERTEX_FORMAT        = 0x12,	
+
+	GE_SET_DRAW_REGION_TL       = 0x15,
+	GE_SET_DRAW_REGION_BR       = 0x16,		
 
 	GE_SET_FACE_CULLING         = 0x1D,
 	GE_SET_TEXTURING            = 0x1E,
@@ -45,7 +48,9 @@ enum GE_COMMANDS {
 	GE_SET_FOG_BIAS				= 0xCD,
 	GE_SET_FOG_STEP				= 0xCE,
 	GE_SET_FOG_COLOR            = 0xCF,
-
+		
+	GE_SET_SCISSOR_TL           = 0xD4,
+	GE_SET_SCISSOR_BR           = 0xD5,
 	GE_SET_Z_RANGE_MIN          = 0xD6,
 	GE_SET_Z_RANGE_MAX          = 0xD7,
 
@@ -185,6 +190,16 @@ static CC_INLINE void GE_set_face_culling(int enabled) {
 /*########################################################################################################################*
 *-----------------------------------------------------Raster state--------------------------------------------------------*
 *#########################################################################################################################*/
+static CC_INLINE void GE_set_scissor_region(int x1, int y1, int x2, int y2) {
+	int beg = (y1 << 10) | x1;
+	int end = (y2 << 10) | x2;
+
+	GE_PushI(GE_SET_SCISSOR_TL,     beg);
+	GE_PushI(GE_SET_SCISSOR_BR,     end);
+	GE_PushI(GE_SET_DRAW_REGION_TL,   0); // easier if it's just 0
+	GE_PushI(GE_SET_DRAW_REGION_BR, end);
+}
+
 static CC_INLINE void GE_set_texturing(int enabled) {
 	GE_PushI(GE_SET_TEXTURING, enabled);
 }

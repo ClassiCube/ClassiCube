@@ -18,6 +18,9 @@
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
 
+#define GB_HALF  2048
+#define GB_RANGE 4096
+
 typedef struct Vec4   VU0_vector QWORD_ALIGNED;
 typedef struct { int x, y, z, w; } VU0_IVector QWORD_ALIGNED;
 
@@ -93,28 +96,29 @@ static void UpdateContext(void) {
 }
 
 
-static qword_t* SetTextureWrapping(qword_t* q) {
+/*########################################################################################################################*
+*-------------------------------------------------------Misc GIF tags-----------------------------------------------------*
+*#########################################################################################################################*/
+static qword_t* GS_SetTextureWrapping(qword_t* q) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
-	PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), 
-					GS_REG_CLAMP + DRAWCTX_0);
+	PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), GS_REG_CLAMP);
 	q++;
 	return q;
 }
 
-static qword_t* SetTextureSampling(qword_t* q) {
+static qword_t* GS_SetTextureSampling(qword_t* q) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
 	// TODO: should mipmapselect (first 0 after MIN_NEAREST) be 1?
-	PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), 
-					GS_REG_TEX1 + DRAWCTX_0);
+	PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), GS_REG_TEX1);
 	q++;
 	return q;
 }
 
-static qword_t* SetAlphaBlending(qword_t* q) {
+static qword_t* GS_SetAlphaBlending(qword_t* q) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
 
@@ -125,21 +129,55 @@ static qword_t* SetAlphaBlending(qword_t* q) {
 	//        =  (src * alpha - dst * alpha) / 128 + dst * 128 / 128
 	//        = ((src * alpha + dst * (128 - alpha)) / 128
 	PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
-								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA + DRAWCTX_0);
+								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA);
 	q++;
 	return q;
 }
 
+static qword_t* GS_SetScissor(qword_t* q, int x, int y, int w, int h) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+
+	PACK_GIFTAG(q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR);
+	q++;
+	return q;
+}
+
+static qword_t* GS_DrawFinish(qword_t *q) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,1,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+
+	PACK_GIFTAG(q, 1, GS_REG_FINISH);
+	q++;
+
+	return q;
+
+}
+
+static qword_t* GS_SetPrimXYOffset(qword_t *q, int x, int y) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+
+	PACK_GIFTAG(q, GS_SET_XYOFFSET((x << 4), (y << 4)), GS_REG_XYOFFSET);
+	q++;
+
+	return q;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------GPU initialisation--------------------------------------------------*
+*#########################################################################################################################*/
 static void InitDrawingEnv(void) {
 	qword_t* beg = Q;
 	Q = draw_setup_environment(Q, 0, fb_draw, &fb_depth);
-	// GS can render from 0 to 4096, so set primitive origin to centre of that
-	Q = draw_primitive_xyoffset(Q, 0, 2048 - Game.Width / 2, 2048 - Game.Height / 2);
+	// GS can render from 0 to GB_RANGE, so set primitive origin to centre of that
+	Q = GS_SetPrimXYOffset(Q, GB_HALF - Game.Width / 2, GB_HALF - Game.Height / 2);
 
-	Q = SetTextureWrapping(Q);
-	Q = SetTextureSampling(Q);
-	Q = SetAlphaBlending(Q); // TODO has no effect ?
-	Q = draw_finish(Q);
+	Q = GS_SetTextureWrapping(Q);
+	Q = GS_SetTextureSampling(Q);
+	Q = GS_SetAlphaBlending(Q); // TODO has no effect ?
+	Q = GS_DrawFinish(Q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, Q - beg, 0, 0);
 	dma_wait_fast();
@@ -574,7 +612,7 @@ static qword_t* UpdateTextureBuffer(qword_t* q, struct GPUTexture* tex, unsigned
 
 	PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
 							   tex->log2_w, tex->log2_h, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
-							   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0 + DRAWCTX_0);
+							   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0);
 	q++;
 	return q;
 }
@@ -646,7 +684,7 @@ static qword_t* UpdateState(qword_t* q) {
 	// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
 	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
 							   DRAW_DISABLE, DRAW_DISABLE,
-							   DRAW_ENABLE,  zMethod), GS_REG_TEST + DRAWCTX_0);
+							   DRAW_ENABLE,  zMethod), GS_REG_TEST);
 	q++;
 	
 	stateDirty = false;
@@ -927,7 +965,7 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 		Q = (qword_t*)dw;
 
 		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
-		// 2 registers per GIF "primitive" (colour, position)
+		// 3 registers per GIF "primitive" (colour, texture, position)
 		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1,0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
 	}
 }
@@ -953,7 +991,7 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 		Q = (qword_t*)dw;
 
 		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
-		// 2 registers per GIF "primitive" (colour, texture, position)
+		// 2 registers per GIF "primitive" (colour, position)
 		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1,0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
 	}
 }
@@ -1033,7 +1071,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_EndFrame(void) {
 	//Platform_LogConst("--- EF1 ---");
-	Q = draw_finish(Q);
+	Q = GS_DrawFinish(Q);
 	
 	FlushMainDMABuffer();
 	//Platform_LogConst("--- EF2 ---");
@@ -1066,8 +1104,8 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	VU0_vector clip_scale;
 	unsigned int maxZ = 0xFFFF;
 
-	vp_origin.x =  ftoi4(2048 - (x / 2));
-	vp_origin.y = -ftoi4(2048 - (y / 2));
+	vp_origin.x =  ftoi4(GB_HALF - (x / 2));
+	vp_origin.y = -ftoi4(GB_HALF - (y / 2));
 	vp_origin.z =  maxZ / 2.0f;
 	LoadViewportOrigin(&vp_origin);
 
@@ -1079,8 +1117,8 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	float hwidth  = w / 2;
 	float hheight = h / 2;
 	// The code below clips to the viewport clip planes
-	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
-	//  However the guard band itself ranges from 0 to 4096
+	//  For e.g. X this is [GB_HALF - vp_width / 2, GB_HALF + vp_width / 2]
+	//  However the guard band itself ranges from 0 to GB_RANGE
 	// To reduce need to clip, clip against guard band on X/Y axes instead
 	/*return
 		xAdj  >= -pos.w && xAdj  <= pos.w &&
@@ -1091,9 +1129,9 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
 	//              X/W <= 1
 	//              X   <= W
-	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
-	//              X/W <= 2048 / vp_hwidth
-	//              X * vp_hwidth / 2048 <= W
+	//  X/W * vp_hwidth <= GB_HALF   -- clipping against guard band
+	//              X/W <= GB_HALF / vp_hwidth
+	//              X * vp_hwidth / GB_HALF <= W
 	
 	clip_scale.x = hwidth  / 2048.0f;
 	clip_scale.y = hheight / 2048.0f;
@@ -1104,10 +1142,7 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-	PACK_GIFTAG(Q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR + DRAWCTX_0);
-	Q++;
+	Q = GS_SetScissor(Q, x, y, w, h);
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
