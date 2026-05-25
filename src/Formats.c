@@ -1625,16 +1625,19 @@ cc_result Cw_Save(struct Stream* stream) {
 	{
 		cur = Nbt_WriteDict(cur, "ClickDistance");
 		{
+			cur = Nbt_WriteInt32(cur, "ExtensionVersion", 1);
 			cur  = Nbt_WriteUInt16(cur, "Distance", (cc_uint16)(p->ReachDistance * 32));
 		} *cur++ = NBT_END;
 
 		cur = Nbt_WriteDict(cur, "EnvWeatherType");
 		{
+			cur = Nbt_WriteInt32(cur, "ExtensionVersion", 1);
 			cur  = Nbt_WriteUInt8(cur, "WeatherType", Env.Weather);
 		} *cur++ = NBT_END;
 
 		cur = Nbt_WriteDict(cur, "EnvColors");
 		{
+			cur = Nbt_WriteInt32(cur, "ExtensionVersion", 1);
 			cur = Cw_WriteColor(cur, "Sky",      Env.SkyCol);
 			cur = Cw_WriteColor(cur, "Cloud",    Env.CloudsCol);
 			cur = Cw_WriteColor(cur, "Fog",      Env.FogCol);
@@ -1645,6 +1648,7 @@ cc_result Cw_Save(struct Stream* stream) {
 
 		cur = Nbt_WriteDict(cur, "EnvMapAppearance");
 		{
+			cur = Nbt_WriteInt32(cur, "ExtensionVersion", 1);
 			cur  = Nbt_WriteUInt8(cur, "SideBlock", (BlockRaw)Env.SidesBlock);
 			cur  = Nbt_WriteUInt8(cur, "EdgeBlock", (BlockRaw)Env.EdgeBlock);
 			cur  = Nbt_WriteUInt16(cur, "SideLevel", Env.EdgeHeight);
@@ -1670,6 +1674,7 @@ cc_result Cw_Save(struct Stream* stream) {
 		if ((res = Stream_Write(stream, buffer, (int)(cur - buffer)))) return res;
 
 		{
+			cur = Nbt_WriteInt32(cur, "ExtensionVersion", 1);
 			/* Write block definitions in reverse order so that software that only reads byte 'ID' */
 			/* still loads correct first 256 block defs when saving a map with over 256 block defs */
 			for (b = BLOCK_MAX_DEFINED; b >= 1; b--) {
