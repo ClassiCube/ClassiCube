@@ -128,11 +128,50 @@ void Gfx_EndFrame(void) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Palettes--------------------------------------------------------*
+*#########################################################################################################################*/
+#define MAX_PAL_4BPP_ENTRIES 16
+
+static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
+	for (int i = 0; i < pal_count; i++) 
+	{
+		if (palette[i] == color) return i;
+	}
+	return -1;
+}
+
+static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
+	int width = bmp->width, height = bmp->height;
+
+	BitmapCol* row = bmp->scan0;
+	int pal_count  = 0;
+	
+	for (int y = 0; y < height; y++, row += rowWidth)
+	{
+		for (int x = 0; x < width; x++) 
+		{
+			BitmapCol color = row[x];
+			int idx = FindInPalette(palette, pal_count, color);
+			if (idx >= 0) continue;
+
+			// Too many distinct colours
+			if (pal_count >= MAX_PAL_4BPP_ENTRIES) return 0;
+
+			palette[pal_count] = color;
+			pal_count++;
+		}
+	}
+	return pal_count;
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 typedef struct CCTexture {
 	surface_t surface;
 	rspq_block_t* upload_block;
+	cc_uint16 palette[MAX_PAL_4BPP_ENTRIES];
 } CCTexture;
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -147,12 +186,26 @@ void Gfx_BindTexture(GfxResourceID texId) {
 #define To16BitPixel(src) \
 	((src & 0x80) >> 7) | ((src & 0xF800) >> 10) | ((src & 0xF80000) >> 13) | ((src & 0xF8000000) >> 16);
 
-static void UploadTexture(CCTexture* tex, rdpq_texparms_t* params) {
+static void UploadTexture(CCTexture* tex, int palCount, rdpq_texparms_t* params) {
 	rspq_block_begin();
+
+	int fmt = tex->surface.flags & SURFACE_FLAGS_TEXFORMAT;
+	if (fmt == FMT_CI4) {
+		rdpq_tex_upload_tlut(tex->palette, 0, palCount);
+		rdpq_mode_tlut(TLUT_RGBA16);
+	} else {
+		rdpq_mode_tlut(TLUT_NONE);
+	}
 
 	rdpq_tex_upload(TILE0, &tex->surface, params);
 
 	tex->upload_block = rspq_block_end();
+}
+
+static CC_INLINE int CalcTextureFormat(cc_bool bit16, int pal_count) {
+	if (bit16 && pal_count) return FMT_CI4;
+
+	return bit16 ? FMT_RGBA16 : FMT_RGBA32;
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
@@ -162,30 +215,64 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	int pitch = bit16 ? CC_ALIGNUP(bmp->width * 2, 8) : CC_ALIGNUP(bmp->width * 4, 8);
 	if (pitch * bmp->height > 4096) return 0;
 	
-	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "texture");
-	tex->surface   = surface_alloc(bit16 ? FMT_RGBA16 : FMT_RGBA32, bmp->width, bmp->height);
-	surface_t* fb  = &tex->surface;
+	CCTexture* tex = Mem_TryAlloc(1, sizeof(CCTexture));
+	if (!tex) return NULL;
+
+	BitmapCol palette[MAX_PAL_4BPP_ENTRIES];
+	int pal_count = 0;
+	if (bit16 && !(flags & TEXTURE_FLAG_DYNAMIC))
+		pal_count = CalcPalette(palette, bmp, rowWidth);
+
+	tex->surface  = surface_alloc(CalcTextureFormat(bit16, pal_count), bmp->width, bmp->height);
+	surface_t* fb = &tex->surface;
+
+	cc_uint32* src = (cc_uint32*)bmp->scan0;
+	cc_uint8*  dst = (cc_uint8*)fb->buffer;
+	int width  = bmp->width;
+	int height = bmp->height;
 		
-	if (bit16) {
-		cc_uint32* src = (cc_uint32*)bmp->scan0;
-		cc_uint8*  dst = (cc_uint8*)fb->buffer;
+	if (bit16 && pal_count) {
+		for (int i = 0; i < pal_count; i++)
+		{
+			tex->palette[i] = To16BitPixel(palette[i]);
+		}
 		
 		// 16 bpp requires reducing A8R8G8B8 to A1R5G5B5
-		for (int y = 0; y < bmp->height; y++) 
+		for (int y = 0; y < height; y++) 
+		{	
+			cc_uint32* src_row = src + y * rowWidth;
+			cc_uint8*  dst_row = dst + y * fb->stride;
+			
+			for (int x = 0; x < (width & ~0x01); x += 2) 
+			{
+				int pal_0 = FindInPalette(palette, pal_count, *src_row++);
+				int pal_1 = FindInPalette(palette, pal_count, *src_row++);
+				*dst_row++ = (pal_0 << 4) | pal_1;
+			}
+			
+			// fixup for odd width textures
+			if (width & 0x01) {
+				int pal_0 = FindInPalette(palette, pal_count, *src_row++);
+				*dst_row++ = pal_0 << 4;
+			}
+		}
+	} else if (bit16) {
+		// 16 bpp requires reducing A8R8G8B8 to A1R5G5B5
+		for (int y = 0; y < height; y++) 
 		{	
 			cc_uint32* src_row = src + y * rowWidth;
 			cc_uint16* dst_row = (cc_uint16*)(dst + y * fb->stride);
 			
-			for (int x = 0; x < bmp->width; x++) 
+			for (int x = 0; x < width; x++) 
 			{
 				dst_row[x] = To16BitPixel(src_row[x]);
 			}
 		}
 	} else {
 		// 32 bpp can just be copied straight across
-		CopyPixels(fb->buffer, fb->stride, 
-				   bmp->scan0, rowWidth * BITMAPCOLOR_SIZE,
-				   bmp->width, bmp->height);
+		CopyPixels(dst, fb->stride, 
+				   src, rowWidth * BITMAPCOLOR_SIZE,
+				   width, height);
 	}
 	
 	rdpq_texparms_t params =
@@ -193,7 +280,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
         .s.repeats = (flags & TEXTURE_FLAG_NONPOW2) ? 1 : REPEAT_INFINITE,
         .t.repeats = (flags & TEXTURE_FLAG_NONPOW2) ? 1 : REPEAT_INFINITE,
     };
-	UploadTexture(tex, &params);
+	UploadTexture(tex, pal_count, &params);
 	return tex;
 }
 
