@@ -1,21 +1,19 @@
-#include "Core.h"
-#if defined CC_BUILD_N64
-#include "Window.h"
-#include "Platform.h"
-#include "Input.h"
-#include "InputHandler.h"
-#include "Event.h"
-#include "Graphics.h"
-#include "String_.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Errors.h"
-#include "ExtMath.h"
-#include "VirtualKeyboard.h"
-#include "Options.h"
-#include <libdragon.h>
+#include "../Window.h"
+#include "../Platform.h"
+#include "../Input.h"
+#include "../InputHandler.h"
+#include "../Event.h"
+#include "../Graphics.h"
+#include "../String_.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Errors.h"
+#include "../ExtMath.h"
+#include "../VirtualKeyboard.h"
+#include "../Options.h"
+#include "../VirtualCursor.h"
 
-#include "VirtualCursor.h"
+#include <libdragon.h>
 
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
@@ -231,4 +229,4 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+

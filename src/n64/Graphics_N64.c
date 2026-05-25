@@ -1,14 +1,13 @@
-#include "Core.h"
-#ifdef CC_BUILD_N64
 #define CC_DYNAMIC_VBS_ARE_STATIC
-#include "_GraphicsBase.h"
-#include "Errors.h"
-#include "Logger.h"
-#include "Window.h"
+#include "../_GraphicsBase.h"
+#include "../Errors.h"
+#include "../Logger.h"
+#include "../Window.h"
+
 #include <libdragon.h>
 #include <malloc.h>
 #include <rspq_profile.h>
-#include "../misc/n64/gpu.c"
+#include "gpu.i"
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
@@ -564,4 +563,4 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 		gpuDrawArrays(startVertex, verticesCount);
 	}
 }
-#endif
+

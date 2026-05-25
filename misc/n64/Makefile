@@ -1,12 +1,12 @@
 BUILD_DIR		= build-n64
-SOURCE_DIR	 	= misc/n64
+SOURCE_DIR	 	= src/n64
 N64_ROM_TITLE 	= "ClassiCube"
 N64_ROM_RTC 	= true
 TARGET			= ClassiCube-n64
 N64_MKDFS_ROOT	= "misc/n64/files"
 SRC_DIRS		= 
 
-CFILES 	:= $(notdir $(wildcard src/*.c))
+CFILES 	:= $(notdir $(wildcard src/*.c)) $(notdir $(wildcard src/n64/*.c))
 OFILES 	:= $(CFILES:.c=.o) rsp_gpu.o
 OBJS 	:= $(addprefix $(BUILD_DIR)/,$(OFILES))
 CFLAGS	:= -Wno-error=missing-braces -Wno-error=strict-aliasing -Wno-error=incompatible-pointer-types -DPLAT_N64
