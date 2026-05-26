@@ -354,6 +354,7 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 		qwords -= num_qwords;
 	}
 
+	// TODO only call for window pixels ??
 	DMATAG_END(q, 2, 0,0,0); q++;
 	{
 		PACK_GIFTAG(q, GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
@@ -612,17 +613,18 @@ static unsigned clut_counter;
 static qword_t* UpdateTextureBuffer(qword_t* q, struct GPUTexture* tex, unsigned buf_addr) {
 	unsigned buf_stride = GS_TEXTURE_STRIDE(tex);
 
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	q++;
+	PACK_GIFTAG(q, GIF_SET_TAG(2,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
+	{
+		unsigned clut_addr  = tex->format == GS_PSM_32 ? 0 : clut_offset >> 6;
+		unsigned clut_entry = tex->format == GS_PSM_32 ? 0 : ((clut_counter++) & 0x0F);
+		unsigned clut_mode  = tex->format == GS_PSM_32 ? CLUT_NO_LOAD : CLUT_LOAD;
 
-	unsigned clut_addr  = tex->format == GS_PSM_32 ? 0 : clut_offset >> 6;
-	unsigned clut_entry = tex->format == GS_PSM_32 ? 0 : ((clut_counter++) & 0x0F);
-	unsigned clut_mode  = tex->format == GS_PSM_32 ? CLUT_NO_LOAD : CLUT_LOAD;
+		PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
 
-	PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
-							   tex->log2_w, tex->log2_h, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
-							   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0);
-	q++;
+		PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
+								   tex->log2_w, tex->log2_h, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
+								   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0); q++;
+	}
 	return q;
 }
 
