@@ -29,6 +29,10 @@ static int gfx_fields;
 
 struct Plane { float a, b, c, d; } CC_ALIGNED(16);
 
+// https://www.ppsspp.org/docs/psp-hardware/gpu/ge-overview
+// https://www.ppsspp.org/docs/psp-hardware/gpu/ge-vertex-pipeline
+// https://github.com/pspdev/pspsdk/blob/master/src/gu/doc/commands.txt
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
@@ -51,7 +55,7 @@ static void guInit(void) {
 	
 	sceGuFrontFace(GU_CCW);
 	sceGuShadeModel(GU_SMOOTH);
-	sceGuDisable(GU_TEXTURE_2D);
+	GE_set_texturing(false);
 	
 	sceGuAlphaFunc(GU_GREATER, 0x7f, 0xff);
 	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
@@ -455,7 +459,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	if (!tex) tex  = white_square; 
 	
 	if (tex->paletted) {
-		sceGuClutLoad(MAX_PAL_4BPP_ENTRIES/8, tex->palette); // "count" is in units of "8 entries"
+		GE_set_clut_buffer(tex->palette);
+		GE_load_clut_entries(MAX_PAL_4BPP_ENTRIES);
 		sceGuTexMode(GU_PSM_T4, 0, 0, 1);
 	} else {
 		sceGuTexMode(GU_PSM_8888, 0, 0, 1);
@@ -790,11 +795,11 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	sceGuTexOffset(x, y);
+	GE_set_texture_offset(x, y);
 }
 
 void Gfx_DisableTextureOffset(void) { 
-	sceGuTexOffset(0.0f, 0.0f);
+	GE_set_texture_offset(0.0f, 0.0f);
 }
 
 

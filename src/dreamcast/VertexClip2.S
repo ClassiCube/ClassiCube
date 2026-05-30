@@ -119,7 +119,7 @@ BEG_FUNC(_ClipEdge)
 	add		 #28,  OUT // EX, dst = &dst->padding
 	
 // Bypass RGBA interpolation if unnecessary
-	bt.s    1f         // BR, if (T) goto 1;
+	bt.s .L_output_vtx // BR, if (T) goto output_vtx;
 	mov     CL1,CLO    // MT, OUTCOLOR = ACOLOR (branch delay instruction)
 
 // Interpolate B
@@ -188,7 +188,7 @@ BEG_FUNC(_ClipEdge)
 	shll8   TM2        // EX, tmp <<= 8
 	or      TM2,CLO    // EX, OUTCOLOR.a |= tmp
 
-1:
+.L_output_vtx:
 // Store output	
 	mov.l    CLO,@-OUT // LS, dst->color = OUTCOLOR
 	fmov.s  F_V1,@-OUT // LS, dst->v = v	
