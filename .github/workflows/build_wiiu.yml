@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Compile Wii U build
         run: |
-          make wiiu
+          make wiiu -j $(nproc)
           
           
       - uses: ./.github/actions/upload_build
