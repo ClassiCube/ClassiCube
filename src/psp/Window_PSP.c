@@ -29,11 +29,10 @@ void Window_PreInit(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 
-	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	sceDisplaySetMode(PSP_DISPLAY_MODE_LCD, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void Window_Init(void) {
-	
 	Window_Main.Width    = SCREEN_WIDTH;
 	Window_Main.Height   = SCREEN_HEIGHT;
 	Window_Main.Focused  = true;

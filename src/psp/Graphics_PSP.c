@@ -60,7 +60,6 @@ static void guInit(void) {
 	sceGuAlphaFunc(GU_GREATER, 0x7f, 0xff);
 	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
 	sceGuDepthFunc(GU_LEQUAL); // sceGuDepthFunc(GU_GEQUAL);
-	sceGuClearDepth(65535); // sceGuClearDepth(0);
 	GE_set_viewport_z(0, 65535); // GE_set_viewport_z(65535, 0);
 
 	GE_set_depth_range(0, 65535);
@@ -487,7 +486,6 @@ static void SetAlphaBlend(cc_bool enabled) {
 
 void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
-	sceGuClearColor(color);
 	gfx_clearColor = color;
 }
 
@@ -595,17 +593,6 @@ void Gfx_BeginFrame(void) {
 	last_base = -1;
 }
 
-void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int targets = GU_FAST_CLEAR_BIT;
-	if (buffers & GFX_BUFFER_COLOR) targets |= GU_COLOR_BUFFER_BIT;
-	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
-	
-	sceGuClear(targets);
-	// Clear involves draw commands
-	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
-	last_base = -1;
-}
-
 void Gfx_EndFrame(void) {
 	sceGuFinish();
 	sceGeDrawSync(GU_SYNC_WAIT); // waits until FINISH command is reached
@@ -631,6 +618,60 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
 	GE_set_scissor_region(x, y, x+w-1, y+h-1);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Clearing--------------------------------------------------------*
+*#########################################################################################################################*/
+// See https://www.ppsspp.org/docs/psp-hardware/gpu/ge-overview/
+// "Memory performance has a few quirks. For example, it's profitable to draw 2D images in 64- or 32- pixel wide vertical strips, 
+//  depending on color depth and texture format. This is why screen clears are usually performed as a series of vertical strips."
+#define CLEAR_DEPTH 65535
+#define STRIP_WIDTH    32
+
+typedef struct ClearVertex
+{
+	cc_uint32 color;
+	cc_uint16 x, y, z;
+	cc_uint16 pad;
+} ClearVertex;
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= GU_COLOR_BUFFER_BIT;
+	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
+	
+	PackedCol color = gfx_clearColor & 0xFFFFFF;
+	const int strips = (SCREEN_WIDTH + STRIP_WIDTH - 1) / STRIP_WIDTH;
+	const int count  = strips * 2;
+
+	ClearVertex* vertices = (ClearVertex*)GE_ReserveListSpace(count * sizeof(ClearVertex));
+	ClearVertex* v = vertices;
+
+	for (int i = 0; i < strips; i++)
+	{
+		v->color = color;
+		v->x = i * STRIP_WIDTH;
+		v->y = 0;
+		v->z = CLEAR_DEPTH;
+		v++;
+
+		v->color = color;
+		v->x = (i + 1) * STRIP_WIDTH;
+		v->y = SCREEN_HEIGHT;
+		v->z = CLEAR_DEPTH;
+		v++;
+	}
+
+	GE_set_clearing_state(true, targets);
+	{
+    	GE_set_vertex_format(GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D);
+    	GE_set_vertices(vertices);
+		GE_draw_array(GU_SPRITES, count);
+	}
+	GE_set_clearing_state(false, 0);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 

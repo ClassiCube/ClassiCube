@@ -56,7 +56,8 @@ enum GE_COMMANDS {
 	GE_SET_FOG_BIAS				= 0xCD,
 	GE_SET_FOG_STEP				= 0xCE,
 	GE_SET_FOG_COLOR            = 0xCF,
-		
+	
+	GE_SET_CLEARING_STATE		= 0xD3,	
 	GE_SET_SCISSOR_TL           = 0xD4,
 	GE_SET_SCISSOR_BR           = 0xD5,
 	GE_SET_Z_RANGE_MIN          = 0xD6,
@@ -215,6 +216,10 @@ static CC_INLINE void GE_set_indices(const void* indices) {
 static CC_INLINE void GE_draw_array(int prim, int count) { 
 	GE_PushI(GE_DRAW_PRIMITIVES, (prim << 16) | count);
 	GE_UpdateStallAddr();
+}
+
+static CC_INLINE void GE_set_clearing_state(cc_bool clearing, int buffers) { 
+	GE_PushI(GE_SET_CLEARING_STATE, (buffers << 8) | clearing);
 }
 
 
