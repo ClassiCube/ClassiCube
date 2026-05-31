@@ -21,8 +21,19 @@ jobs:
       - name: Setup environment
         run: |
           sudo xcode-select -s /Applications/Xcode_15.0.1.app/Contents/Developer
-          echo "XCODE_APP=Xcode_15.0.1.app" >> "$GITHUB_ENV"
+          export XCODE_APP=Xcode_15.0.1.app
+
+          echo "XCODE_APP=$XCODE_APP" >> "$GITHUB_ENV"
           echo "IOS_SDK_VERSION=17.0" >> "$GITHUB_ENV"
+
+          # Include libarclite for older iOS support (might not be needed though)
+          export _arc_dir="/Applications/${XCODE_APP}/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/arc"
+          sudo mkdir "${_arc_dir}"
+
+          sudo curl -L -o "${_arc_dir}"/libarclite_iphoneos.a https://raw.githubusercontent.com/kamyarelyasi/Libarclite-Files/refs/heads/main/libarclite_iphoneos.a
+
+          test "$(shasum -a 256 "${_arc_dir}"/libarclite_iphoneos.a | cut -d' ' -f1)" == "9d54588c2287cdaf3905b6eaaf857d62e390604205990d3ac7c44ccacccf6d79" || \
+            (echo "Failed to verify legacy support files checksum"; exit 1)
 
       - name: Compile iOS build
         run: |
