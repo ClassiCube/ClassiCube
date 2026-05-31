@@ -308,6 +308,8 @@ USAGE NOTES:
 */
 /* Creates a new vertex buffer */
 CC_API GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count);
+/* Attempts to create a new vertex buffer, or 0 if it fails to */
+CC_API GfxResourceID Gfx_TryCreateStaticVb(VertexFormat fmt, int count);
 /* Sets the currently active vertex buffer */
 CC_API void Gfx_BindVb(GfxResourceID vb);
 /* Deletes the given vertex buffer, then sets it to 0 */

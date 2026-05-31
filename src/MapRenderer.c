@@ -326,27 +326,27 @@ void MapRenderer_RenderTranslucent(float delta) {
 *---------------------------------------------------Chunk functionality---------------------------------------------------*
 *#########################################################################################################################*/
 /* Deletes vertex buffer associated with the given chunk and updates internal state */
-static void DeleteChunk(struct ChunkInfo* info) {
+static void DeleteChunk(struct ChunkInfo* chunk) {
 	struct ChunkPartInfo* ptr;
 	int i;
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 	int j;
 #else
-	Gfx_DeleteVb(&info->vb);
+	Gfx_DeleteVb(&chunk->vb);
 #endif
 
-	info->empty  = false; 
-	info->allAir = false;
-	info->noData = true;
-	info->dirty  = true;
+	chunk->empty  = false; 
+	chunk->allAir = false;
+	chunk->noData = true;
+	chunk->dirty  = true;
 
 #ifdef OCCLUSION
-	info.OcclusionFlags = 0;
-	info.OccludedFlags = 0;
+	chunk.OcclusionFlags = 0;
+	chunk.OccludedFlags = 0;
 #endif
 
-	if (info->normalParts) {
-		ptr = info->normalParts;
+	if (chunk->normalParts) {
+		ptr = chunk->normalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset < 0) continue; 
 			normPartsCount[i]--;
@@ -354,11 +354,11 @@ static void DeleteChunk(struct ChunkInfo* info) {
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		info->normalParts = NULL;
+		chunk->normalParts = NULL;
 	}
 
-	if (info->translucentParts) {
-		ptr = info->translucentParts;
+	if (chunk->translucentParts) {
+		ptr = chunk->translucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset < 0) continue;
 			tranPartsCount[i]--;
@@ -366,33 +366,33 @@ static void DeleteChunk(struct ChunkInfo* info) {
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		info->translucentParts = NULL;
+		chunk->translucentParts = NULL;
 	}
 }
 
 /* Builds the mesh (hence vertex buffer) for the given chunk, and updates internal state */
-static void BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
+static void BuildChunk(struct ChunkInfo* chunk, int* chunkUpdates) {
 	struct ChunkPartInfo* ptr;
 	int i;
 
 	Game.ChunkUpdates++;
 	(*chunkUpdates)++;
-	Builder_MakeChunk(info);
+	if (!Builder_MakeChunk(chunk)) return;
 
-	info->dirty  = false;
-	info->noData = !info->normalParts && !info->translucentParts;
-	info->empty  = info->noData;
-	if (info->empty) return;
+	chunk->dirty  = false;
+	chunk->noData = !chunk->normalParts && !chunk->translucentParts;
+	chunk->empty  = chunk->noData;
+	if (chunk->empty) return;
 	
-	if (info->normalParts) {
-		ptr = info->normalParts;
+	if (chunk->normalParts) {
+		ptr = chunk->normalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset >= 0) normPartsCount[i]++;
 		}
 	}
 
-	if (info->translucentParts) {
-		ptr = info->translucentParts;
+	if (chunk->translucentParts) {
+		ptr = chunk->translucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset >= 0) tranPartsCount[i]++;
 		}

@@ -183,7 +183,9 @@ static CC_NOINLINE void BuildClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	clouds_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, clouds_vertices);
+	clouds_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, clouds_vertices);
+	if (!clouds_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(clouds_vb,
 										VERTEX_FORMAT_TEXTURED, clouds_vertices);
 
@@ -251,7 +253,9 @@ static CC_NOINLINE void BuildSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	sky_vb = Gfx_CreateVb(VERTEX_FORMAT_COLOURED, sky_vertices);
+	sky_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_COLOURED, sky_vertices);
+	if (!sky_vb) return;
+
 	data   = (struct VertexColoured*)Gfx_LockVb(sky_vb,
 										VERTEX_FORMAT_COLOURED, sky_vertices);
 
@@ -321,7 +325,9 @@ static CC_NOINLINE void BuildSkybox(void) {
 	struct VertexTextured* data;
 	int i;
 
-	skybox_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	skybox_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	if (!skybox_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(skybox_vb,
 										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
 
@@ -721,7 +727,9 @@ static CC_NOINLINE void BuildMapSides(void) {
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
 
-	sides_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, sides_vertices);
+	sides_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, sides_vertices);
+	if (!sides_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(sides_vb,
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
@@ -769,7 +777,9 @@ static CC_NOINLINE void BuildMapEdges(void) {
 		edges_vertices += CalcNumVertices(r.width, r.height); /* YPlanes outside */
 	}
 
-	edges_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, edges_vertices);
+	edges_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, edges_vertices);
+	if (!edges_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 

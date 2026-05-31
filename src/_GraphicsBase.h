@@ -484,6 +484,18 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	}
 }
 
+GfxResourceID Gfx_TryCreateStaticVb(VertexFormat fmt, int count) {
+	GfxResourceID vb;
+	if (Gfx.LostContext) return 0;
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocStaticVb(fmt, count))) return vb;
+
+		if (!Game_ReduceVRAM()) return 0;
+	}
+}
+
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	GfxResourceID vb;
 	if (Gfx.LostContext) return 0; 
