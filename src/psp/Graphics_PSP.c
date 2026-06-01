@@ -79,22 +79,24 @@ static void guInit(void) {
 
 extern void Clip_SetGuardbandScale(const float* x, const float* y);
 static void InitGuardband(void) {
-	// PSP guard band ranges from 0..GB_RANGE
+	// PSP clipping guard band ranges from 0..GB_RANGE
 	// - 0 < screen_x < GB_RANGE
 	// - 0 < VIEWPORT(X/W) + WINDOW_OFFSET_X < GB_RANGE
 	// - 0 < ((X/W) * vp_hwidth + vp_x + vp_hwidth) + (GB_HALF-vp_hwidth) < GB_RANGE
 	// - 0 <  (X/W) * vp_hwidth + vp_x              +  GB_HALF            < GB_RANGE
 	// Although accurately rescaling from viewport range to guard band range
-	//  would involve vp_x and vp_hwidth, this does complicate the calculation
+	//  would involve vp_x and vp_hwidth, this complicates the calculation
 	//  as e.g. a non-zero vp_x means viewport is not equally distant from the
 	//  left and right guardband planes.
-	// So to simplify calculation, just pretend viewport is same size as screen:
+	// So to simplify calculation, just set viewport = screen size for clipping:
 	// - 0 < (X/W) * SCR_HWIDTH + (GB_HALF) < GB_RANGE
 	// - -GB_HALF < (X/W) * SCR_HWIDTH < GB_HALF 
 	// - -GB_HALF/SCR_HWIDTH < (X/W) < GB_HALF/SCR_HWIDTH
 	// - W * -GB_HALF/SCR_HWIDTH < X < W * GB_HALF/SCR_HWIDTH
 	// - -W < X / (GB_HALF/SCR_HWIDTH) < W
 	// - -W < X * (SCR_HWIDTH/GB_HALF) < W
+	// Clipping against guardband instead of view frustum reduces the
+	//   number of triangles that go through the slower 'clipping' codepath
 	float scaleX =  (SCREEN_WIDTH /2) / 2047.0f;
 	float scaleY = -(SCREEN_HEIGHT/2) / 2047.0f;
 	Clip_SetGuardbandScale(&scaleX, &scaleY);

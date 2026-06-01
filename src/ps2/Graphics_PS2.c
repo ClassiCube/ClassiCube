@@ -188,11 +188,37 @@ static qword_t* GS_InitRegisters(qword_t* q, framebuffer_t* fb, zbuffer_t* zb) {
 /*########################################################################################################################*
 *-----------------------------------------------------GPU initialisation--------------------------------------------------*
 *#########################################################################################################################*/
+static void InitGuardband(void) {
+	// PS2 clipping guard band ranges from 0..GB_RANGE
+	// - 0 < screen_x < GB_RANGE
+	// - 0 < VIEWPORT(X/W) + WINDOW_OFFSET_X < GB_RANGE
+	// - 0 < ((X/W) * vp_hwidth + vp_x + vp_hwidth) + (GB_HALF-vp_hwidth) < GB_RANGE
+	// - 0 <  (X/W) * vp_hwidth + vp_x              +  GB_HALF            < GB_RANGE
+	// Although accurately rescaling from viewport range to guard band range
+	//  would involve vp_x and vp_hwidth, this complicates the calculation
+	//  as e.g. a non-zero vp_x means viewport is not equally distant from the
+	//  left and right guardband planes.
+	// So to simplify calculation, just set viewport = screen size for clipping:
+	// - 0 < (X/W) * SCR_HWIDTH + (GB_HALF) < GB_RANGE
+	// - -GB_HALF < (X/W) * SCR_HWIDTH < GB_HALF 
+	// - -GB_HALF/SCR_HWIDTH < (X/W) < GB_HALF/SCR_HWIDTH
+	// - W * -GB_HALF/SCR_HWIDTH < X < W * GB_HALF/SCR_HWIDTH
+	// - -W < X / (GB_HALF/SCR_HWIDTH) < W
+	// - -W < X * (SCR_HWIDTH/GB_HALF) < W
+	// Clipping against guardband instead of view frustum reduces the
+	//   number of triangles that go through the slower 'clipping' codepath
+	VU0_vector clip_scale;
+	clip_scale.x = Game.Width  / 2047.0f;
+	clip_scale.y = Game.Height / 2047.0f;
+	clip_scale.z = 1.0f;
+	clip_scale.w = 1.0f;
+
+	LoadClipScaleFactors(&clip_scale);
+}
+
 static void InitDrawingEnv(void) {
 	qword_t* beg = Q;
 	Q = GS_InitRegisters(Q, fb_draw, &fb_depth);
-	// GS can render from 0 to GB_RANGE, so set primitive origin to centre of that
-	Q = GS_SetPrimXYOffset(Q, GB_HALF - Game.Width / 2, GB_HALF - Game.Height / 2);
 
 	Q = GS_SetPrimMode(Q, PRIM_TRIANGLE);
 	Q = GS_DrawFinish(Q);
@@ -220,6 +246,7 @@ void Gfx_Create(void) {
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
+	InitGuardband();
 	Gfx_OnWindowResize();
 	
 // TODO maybe Min not actually needed?
@@ -1137,44 +1164,34 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	VU0_vector clip_scale;
+	// PS2 X/Y guard band ranges from 0..GB_RANGE
+	// To minimise need to clip, centre the viewport around (GB_RANGE/2, GB_RANGE/2)
 	unsigned int maxZ = 0xFFFF;
 
-	vp_origin.x =  ftoi4(GB_HALF - (x / 2));
-	vp_origin.y = -ftoi4(GB_HALF - (y / 2));
+	vp_origin.x =  ftoi4(GB_HALF + x);
+	vp_origin.y = -ftoi4(GB_HALF + y);
 	vp_origin.z =  maxZ / 2.0f;
 	LoadViewportOrigin(&vp_origin);
 
-	vp_scale.x =  16 * (w / 2);
-	vp_scale.y = -16 * (h / 2);
+	vp_scale.x =  ftoi4(w / 2);
+	vp_scale.y = -ftoi4(h / 2);
 	vp_scale.z =  maxZ / 2.0f;
 	LoadViewportScale(&vp_scale);
 
-	float hwidth  = w / 2;
-	float hheight = h / 2;
-	// The code below clips to the viewport clip planes
-	//  For e.g. X this is [GB_HALF - vp_width / 2, GB_HALF + vp_width / 2]
-	//  However the guard band itself ranges from 0 to GB_RANGE
-	// To reduce need to clip, clip against guard band on X/Y axes instead
-	/*return
-		xAdj  >= -pos.w && xAdj  <= pos.w &&
-		yAdj  >= -pos.w && yAdj  <= pos.w &&
-		pos.z >= -pos.w && pos.z <= pos.w;*/	
-		
-	// Rescale clip planes to guard band extent:
-	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
-	//              X/W <= 1
-	//              X   <= W
-	//  X/W * vp_hwidth <= GB_HALF   -- clipping against guard band
-	//              X/W <= GB_HALF / vp_hwidth
-	//              X * vp_hwidth / GB_HALF <= W
-	
-	clip_scale.x = hwidth  / 2048.0f;
-	clip_scale.y = hheight / 2048.0f;
-	clip_scale.z = 1.0f;
-	clip_scale.w = 1.0f;
-	
-	LoadClipScaleFactors(&clip_scale);
+	// Afterwards, subtract the viewport centre so coordinates end up in 0..SCR_WIDTH/HEIGHT
+	int ox = GB_HALF - (w / 2);
+	int oy = GB_HALF - (h / 2);
+	Q = GS_SetPrimXYOffset(Q, ox, oy);
+
+	// So e.g. for X coordinates:
+	// - [-1, 1] (visible coordinate range)
+	// - [-1, 1] * w/2 + (GB_HALF + x) (viewport transform)
+	// - [-1, 1] * w/2 + (GB_HALF + x) - (GB_HALF - w/2) (viewport transform then screen offset)
+	// - [-1, 1] * w/2 + GB_HALF + x - GB_HALF + w/2 (simplification #1)
+	// - [-1, 1] * w/2 + x + w/2 (simplification #2)
+	// - [-w/2, w/2] + x + w/2 (simplification #3)
+	// - [-w/2+x+w/2, w/2+x+w/2] (simplification #4)
+	// - [x, x+w] (simplification #5)
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
