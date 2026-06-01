@@ -1172,7 +1172,7 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	unsigned int maxZ = 0xFFFF;
 
 	vp_origin.x =  ftoi4(GB_HALF + x);
-	vp_origin.y = -ftoi4(GB_HALF + y);
+	vp_origin.y =  ftoi4(GB_HALF + y);
 	vp_origin.z =  maxZ / 2.0f;
 	LoadViewportOrigin(&vp_origin);
 
