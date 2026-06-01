@@ -169,11 +169,14 @@ static CC_INLINE void GE_set_screen_offset(int x, int y) {
     GE_PushI(GE_SET_SCREEN_OFFSET_Y, y << 4);
 }
 
-static CC_INLINE void GE_set_viewport_xy(int x, int y, int w, int h) {
-	GE_PushF(GE_SET_VIEWPORT_X_SCALE, w *  0.5f);
-	GE_PushF(GE_SET_VIEWPORT_Y_SCALE, h * -0.5f);
-	GE_PushF(GE_SET_VIEWPORT_X_ORIGIN, x);
-	GE_PushF(GE_SET_VIEWPORT_Y_ORIGIN, y);
+static CC_INLINE void GE_set_viewport_x(int origin, int scale) {
+	GE_PushF(GE_SET_VIEWPORT_X_ORIGIN, origin);
+	GE_PushF(GE_SET_VIEWPORT_X_SCALE,  scale);
+}
+
+static CC_INLINE void GE_set_viewport_y(int origin, int scale) {
+	GE_PushF(GE_SET_VIEWPORT_Y_ORIGIN, origin);
+	GE_PushF(GE_SET_VIEWPORT_Y_SCALE,  scale);
 }
 
 static CC_INLINE void GE_set_viewport_z(int n, int f) {

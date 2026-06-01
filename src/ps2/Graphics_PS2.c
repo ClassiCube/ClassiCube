@@ -163,11 +163,11 @@ static qword_t* GS_EnablePRMode(qword_t *q) {
 	return q;
 }
 
-// TODO still needed as PRE/PRIM field only work when gif tag is PACKED (see PCSX2 and DobieStation for reference)
+// NOTE still needed as PRE/PRIM field only work when gif tag is PACKED (see PCSX2 and DobieStation for reference)
 static qword_t* GS_SetPrimMode(qword_t *q, int mode) {
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0, GIF_PRE_ENABLE,mode, GIF_FLG_PACKED, 1), GIF_REG_NOP); q++;
 	{
-		PACK_GIFTAG(q, GIF_SET_PRIM(mode, 0,0,0,0, 0,0,0,0), GS_REG_PRIM); q++;
+		PACK_GIFTAG(q, 0,0); q++;
 	}
 	return q;
 }
@@ -730,41 +730,49 @@ static void SetAlphaBlend(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
+static qword_t* ClearBuffers(qword_t *q) {
+	int w = fb_colors[0].width;
+	int h = fb_colors[0].height;
+	int x = GB_HALF - w / 2;
+	int y = GB_HALF - h / 2;
 
+	union IntAndFloat Q; Q.f = 1.0f;
 
-static qword_t* ClearBuffers(qword_t *q, int context, int x, int y, int width, int height) {
-	rect_t rect;
+	int x0 = ftoi4(x);
+	int x1 = ftoi4(x + w);
 
-	rect.color.r = clearR;
-	rect.color.g = clearG;
-	rect.color.b = clearB;
-	rect.color.a = 0x80;
-	rect.color.q = 1.0f;
+	int y0 = ftoi4(y);
+	int y1 = ftoi4(y + h); 
 
-	rect.v0.x = x;
-	rect.v0.y = y;
-	rect.v0.z = 0;
-
-	rect.v1.x = x + width  - 0.9375f;
-	rect.v1.y = y + height - 0.9375f;
-	rect.v1.z = 0;
-
-	PACK_GIFTAG(q, GIF_SET_TAG(2,0,0,0, GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+	PACK_GIFTAG(q, GIF_SET_TAG(3,0, GIF_PRE_ENABLE,PRIM_SPRITE, GIF_FLG_PACKED,1), GIF_REG_AD); q++;
 	{
-		PACK_GIFTAG(q, GS_SET_TEST( DRAW_ENABLE, ATEST_METHOD_ALLPASS,
-								0x00, ATEST_KEEP_ALL,
-								DRAW_DISABLE, DRAW_DISABLE,
+		PACK_GIFTAG(q, GS_SET_TEST(
+								DRAW_ENABLE,  ATEST_METHOD_ALLPASS,
+								0x00,         ATEST_KEEP_ALL,
+								DRAW_DISABLE, 0,
 								DRAW_ENABLE,  ZTEST_METHOD_ALLPASS), GS_REG_TEST); q++;
 		PACK_GIFTAG(q, GS_SET_PRMODE(0,0,0,0,0,0,DRAWCTX_0,1), GS_REG_PRMODE); q++;
+
+		PACK_GIFTAG(q, GS_SET_RGBAQ(clearR,clearG,clearB, 0x80, Q.u), GIF_REG_RGBAQ); q++;
 	}
 
-	return draw_rect_filled_strips(q, DRAWCTX_0, &rect);
+	// Write one horizontal GS page strip at a time
+	#define STRIP_WIDTH 32
+	int strips = (w + STRIP_WIDTH - 1) / STRIP_WIDTH;	
+	PACK_GIFTAG(q, GIF_SET_TAG(strips, 0,0,0,GIF_FLG_REGLIST,2), DRAW_XYZ_REGLIST); q++;
+
+	for (int i = 0; i < strips; i++, x0 += ftoi4(32))
+	{
+		q->dw[0] = GIF_SET_XYZ(x0,                 y0, 0);
+		q->dw[1] = GIF_SET_XYZ(x0 + ftoi4(31.75f), y1, 0);
+		q++;
+	}
+	return q;
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	// TODO clear only some buffers
-	Q = ClearBuffers(Q, 0, 2048 - fb_colors[0].width / 2, 2048 - fb_colors[0].height / 2,
-					fb_colors[0].width, fb_colors[0].height);
+	Q = ClearBuffers(Q);
 
 	Q = GS_SetPrimMode(Q, PRIM_TRIANGLE);
 	Q = UpdateState(Q);

@@ -64,7 +64,6 @@ static void guInit(void) {
 
 	GE_set_depth_range(0, 65535);
 	GE_upload_world_matrix((const float*)&Matrix_Identity);
-	sceGuColor(0xffffffff);
 	
 	sceGuEnable(GU_CLIP_PLANES); // TODO: swap near/far instead of this?
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
@@ -612,8 +611,20 @@ void Gfx_OnWindowResize(void) {
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	// PSP X/Y guard band ranges from 0..GB_RANGE
 	// To minimise need to clip, centre the viewport around (GB_RANGE/2, GB_RANGE/2)
+	GE_set_viewport_x(GB_HALF + x,  w / 2);
+	GE_set_viewport_y(GB_HALF + y, -h / 2);
+
+	// Afterwards, subtract the viewport centre so coordinates end up in 0..SCR_WIDTH/HEIGHT
 	GE_set_screen_offset(GB_HALF - (w / 2), GB_HALF - (h / 2));
-	GE_set_viewport_xy(GB_HALF + x, GB_HALF + y, w, h);
+	// So e.g. for X coordinates:
+	// - [-1, 1] (visible coordinate range)
+	// - [-1, 1] * w/2 + (GB_HALF + x) (viewport transform)
+	// - [-1, 1] * w/2 + (GB_HALF + x) - (GB_HALF - w/2) (viewport transform then screen offset)
+	// - [-1, 1] * w/2 + GB_HALF + x - GB_HALF + w/2 (simplification #1)
+	// - [-1, 1] * w/2 + x + w/2 (simplification #2)
+	// - [-w/2, w/2] + x + w/2 (simplification #3)
+	// - [-w/2+x+w/2, w/2+x+w/2] (simplification #4)
+	// - [x, x+w] (simplification #5)
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
