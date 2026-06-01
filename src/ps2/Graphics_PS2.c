@@ -46,6 +46,7 @@ static int cur_context;
 static qword_t* dma_beg;
 static qword_t* Q;
 #define DRAWCTX_0 0
+#define DRAWCTX_1 1
 
 static GfxResourceID white_square;
 
@@ -764,31 +765,34 @@ static void SetAlphaBlend(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-static qword_t* ClearBuffers(qword_t *q) {
-	int w = fb_colors[0].width;
-	int h = fb_colors[0].height;
-	int x = GB_HALF - w / 2;
-	int y = GB_HALF - h / 2;
-
+// Second drawing context is used just for clearing framebuffer
+// (that way scissor region always covers whole screen)
+static qword_t* ClearBuffers(qword_t *q, framebuffer_t* fb, zbuffer_t* zb) {
+	int w = fb->width;
+	int h = fb->height;
 	union IntAndFloat Q; Q.f = 1.0f;
 
-	int x0 = ftoi4(x);
-	int x1 = ftoi4(x + w);
-
-	int y0 = ftoi4(y);
-	int y1 = ftoi4(y + h); 
-
-	PACK_GIFTAG(q, GIF_SET_TAG(3,0, GIF_PRE_ENABLE,PRIM_SPRITE, GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+	PACK_GIFTAG(q, GIF_SET_TAG(7,0, GIF_PRE_ENABLE,PRIM_SPRITE, GIF_FLG_PACKED,1), GIF_REG_AD); q++;
 	{
+		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, 0), GS_REG_ZBUF     + DRAWCTX_1); q++;
+		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, 0), 
+																   GS_REG_FRAME    + DRAWCTX_1); q++;
+		PACK_GIFTAG(q, GS_SET_SCISSOR(0, w-1, 0,h-1),              GS_REG_SCISSOR  + DRAWCTX_1); q++;
+		PACK_GIFTAG(q, GS_SET_XYOFFSET(0, 0),                      GS_REG_XYOFFSET + DRAWCTX_1); q++;
 		PACK_GIFTAG(q, GS_SET_TEST(
 								DRAW_ENABLE,  ATEST_METHOD_ALLPASS,
 								0x00,         ATEST_KEEP_ALL,
 								DRAW_DISABLE, 0,
-								DRAW_ENABLE,  ZTEST_METHOD_ALLPASS), GS_REG_TEST); q++;
-		PACK_GIFTAG(q, GS_SET_PRMODE(0,0,0,0,0,0,DRAWCTX_0,1), GS_REG_PRMODE); q++;
+								DRAW_ENABLE,  ZTEST_METHOD_ALLPASS), GS_REG_TEST   + DRAWCTX_1); q++;
 
+		PACK_GIFTAG(q, GS_SET_PRMODE(0,0,0,0,0,0,DRAWCTX_1,1),        GS_REG_PRMODE); q++;
 		PACK_GIFTAG(q, GS_SET_RGBAQ(clearR,clearG,clearB, 0x80, Q.u), GIF_REG_RGBAQ); q++;
 	}
+
+	int x0 = 0;
+	int x1 = ftoi4(w);
+	int y0 = 0;
+	int y1 = ftoi4(h); 
 
 	// Write one horizontal GS page strip at a time
 	#define STRIP_WIDTH 32
@@ -806,10 +810,9 @@ static qword_t* ClearBuffers(qword_t *q) {
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	// TODO clear only some buffers
-	Q = ClearBuffers(Q);
+	Q = ClearBuffers(Q, fb_draw, &fb_depth);
 
 	Q = GS_SetPrimMode(Q, PRIM_TRIANGLE);
-	Q = UpdateState(Q);
 	Q = UpdateFormat(Q);
 }
 
