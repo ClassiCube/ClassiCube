@@ -98,34 +98,18 @@ static void UpdateContext(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Misc GIF tags-----------------------------------------------------*
 *#########################################################################################################################*/
-static qword_t* GS_SetTextureWrapping(qword_t* q) {
+static qword_t* GS_SetDepthBuffer(qword_t* q, zbuffer_t* zb, unsigned skipMask) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
 	{
-		PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), GS_REG_CLAMP); q++;
+		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, skipMask), GS_REG_ZBUF); q++;
 	}
 	return q;
 }
 
-static qword_t* GS_SetTextureSampling(qword_t* q) {
+static qword_t* GS_SetFrameBuffer(qword_t* q, framebuffer_t* fb, unsigned skipMask) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
 	{
-		// TODO: should mipmapselect (first 0 after MIN_NEAREST) be 1?
-		PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), GS_REG_TEX1); q++;
-	}
-	return q;
-}
-
-static qword_t* GS_SetAlphaBlending(qword_t* q) {
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
-	{
-		// https://psi-rockin.github.io/ps2tek/#gsalphablending
-		// Output = (((A - B) * C) >> 7) + D
-		//        = (((src - dst) * alpha) >> 7) + dst
-		//        =  (src * alpha - dst * alpha) / 128 + dst
-		//        =  (src * alpha - dst * alpha) / 128 + dst * 128 / 128
-		//        = ((src * alpha + dst * (128 - alpha)) / 128
-		PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
-								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA); q++;
+		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, skipMask), GS_REG_FRAME); q++;
 	}
 	return q;
 }
@@ -155,20 +139,48 @@ static qword_t* GS_SetPrimXYOffset(qword_t *q, int x, int y) {
 	return q;
 }
 
-static qword_t* GS_EnablePRMode(qword_t *q) {
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
-	{
-		PACK_GIFTAG(q, GS_SET_PRMODECONT(PRIM_OVERRIDE_ENABLE), GS_REG_PRMODECONT); q++;
-	}
-	return q;
-}
-
 // NOTE still needed as PRE/PRIM field only work when gif tag is PACKED (see PCSX2 and DobieStation for reference)
-static qword_t* GS_SetPrimMode(qword_t *q, int mode) {
+static qword_t* GS_SetPrimMode(qword_t* q, int mode) {
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0, GIF_PRE_ENABLE,mode, GIF_FLG_PACKED, 1), GIF_REG_NOP); q++;
 	{
 		PACK_GIFTAG(q, 0,0); q++;
 	}
+	return q;
+}
+
+static qword_t* GS_InitRegisters(qword_t* q, framebuffer_t* fb, zbuffer_t* zb) {
+	PACK_GIFTAG(q,GIF_SET_TAG(12,0,0,0,GIF_FLG_PACKED,1),GIF_REG_AD); q++;
+	{
+		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, 0), GS_REG_FRAME); q++; // frame buffer
+		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, 0), GS_REG_ZBUF); q++; // depth buffer
+
+		PACK_GIFTAG(q, GS_SET_PRMODECONT(PRIM_OVERRIDE_ENABLE), GS_REG_PRMODECONT); q++;
+		PACK_GIFTAG(q, GS_SET_TEST(
+								DRAW_ENABLE,  ATEST_METHOD_ALLPASS,
+								0x00,         ATEST_KEEP_ALL,
+								DRAW_DISABLE, 0,
+								DRAW_ENABLE,  ZTEST_METHOD_ALLPASS), GS_REG_TEST); q++;
+	
+		// https://psi-rockin.github.io/ps2tek/#gsalphablending
+		// Output = (((A - B) * C) >> 7) + D
+		//        = (((src - dst) * alpha) >> 7) + dst
+		//        =  (src * alpha - dst * alpha) / 128 + dst
+		//        =  (src * alpha - dst * alpha) / 128 + dst * 128 / 128
+		//        = ((src * alpha + dst * (128 - alpha)) / 128
+		PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
+									BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA); q++; // TODO has no effect ??
+	
+		PACK_GIFTAG(q, GS_SET_DTHE(GS_DISABLE), GS_REG_DTHE); q++; // dithering off (no need to set matrix)
+		PACK_GIFTAG(q, GS_SET_COLCLAMP(GS_ENABLE), GS_REG_COLCLAMP); q++; // colour clamping on
+		PACK_GIFTAG(q, GS_SET_FBA(ALPHA_CORRECT_RGBA32), GS_REG_FBA); q++; // NOTE: change to RGBA16 for 16bpp framebuffer
+		PACK_GIFTAG(q, GS_SET_PABE(DRAW_DISABLE), GS_REG_PABE); q++; // per pixel alpha blending
+	
+		// Texture settings
+		PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0,0,0,0), GS_REG_CLAMP); q++;
+		PACK_GIFTAG(q, GS_SET_TEXA(0x80, ALPHA_EXPAND_NORMAL, 0x80), GS_REG_TEXA); q++;
+		// TODO: should mipmapselect (first 0 after MIN_NEAREST) be 1?
+		PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), GS_REG_TEX1); q++;
+	}	
 	return q;
 }
 
@@ -178,14 +190,10 @@ static qword_t* GS_SetPrimMode(qword_t *q, int mode) {
 *#########################################################################################################################*/
 static void InitDrawingEnv(void) {
 	qword_t* beg = Q;
-	Q = draw_setup_environment(Q, 0, fb_draw, &fb_depth);
+	Q = GS_InitRegisters(Q, fb_draw, &fb_depth);
 	// GS can render from 0 to GB_RANGE, so set primitive origin to centre of that
 	Q = GS_SetPrimXYOffset(Q, GB_HALF - Game.Width / 2, GB_HALF - Game.Height / 2);
 
-	Q = GS_SetTextureWrapping(Q);
-	Q = GS_SetTextureSampling(Q);
-	Q = GS_SetAlphaBlending(Q); // TODO has no effect ?
-	Q = GS_EnablePRMode(Q);
 	Q = GS_SetPrimMode(Q, PRIM_TRIANGLE);
 	Q = GS_DrawFinish(Q);
 
@@ -212,6 +220,7 @@ void Gfx_Create(void) {
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
+	Gfx_OnWindowResize();
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -665,7 +674,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
 
 	CopyPixels(dst,        tex->width * BITMAPCOLOR_SIZE, 
-			  part->scan0, rowWidth  * BITMAPCOLOR_SIZE,
+			  part->scan0, rowWidth   * BITMAPCOLOR_SIZE,
 			  part->width, part->height);
 }
 
@@ -680,7 +689,7 @@ static int clearR, clearG, clearB;
 static cc_bool gfx_depthTest;
 
 void Gfx_SetFog(cc_bool enabled)    { }
-void Gfx_SetFogCol(PackedCol col)   { }
+void Gfx_SetFogCol(PackedCol col)   { } // TODO PACK_GIFTAG(q, GS_SET_FOGCOL(0,0,0), GS_REG_FOGCOL);
 void Gfx_SetFogDensity(float value) { }
 void Gfx_SetFogEnd(float value)     { }
 void Gfx_SetFogMode(FogFunc func)   { }
@@ -690,14 +699,13 @@ static qword_t* UpdateState(qword_t* q) {
 	int aMethod = gfx_alphaTest ? ATEST_METHOD_GREATER_EQUAL : ATEST_METHOD_ALLPASS;
 	int zMethod = gfx_depthTest ? ZTEST_METHOD_GREATER_EQUAL : ZTEST_METHOD_ALLPASS;
 	
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	q++;
-	// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
-	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
-							   DRAW_DISABLE, DRAW_DISABLE,
-							   DRAW_ENABLE,  zMethod), GS_REG_TEST);
-	q++;
-	
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
+	{
+		// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
+		PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
+								   DRAW_DISABLE, DRAW_DISABLE,
+								   DRAW_ENABLE,  zMethod), GS_REG_TEST); q++;
+	}
 	stateDirty = false;
 	return q;
 }
@@ -705,13 +713,12 @@ static qword_t* UpdateState(qword_t* q) {
 static qword_t* UpdateFormat(qword_t* q) {
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	q++;
-	PACK_GIFTAG(q, GS_SET_PRMODE(PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
-							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
-							  DRAWCTX_0, PRIM_UNFIXED), GS_REG_PRMODE);
-	q++;
-	
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); q++;
+	{
+		PACK_GIFTAG(q, GS_SET_PRMODE(PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
+								  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
+								  DRAWCTX_0, PRIM_UNFIXED), GS_REG_PRMODE);	q++;
+	}
 	formatDirty = false;
 	return q;
 }
@@ -791,9 +798,8 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	fb_depth.mask = !enabled;
-	Q = draw_zbuffer(Q, 0, &fb_depth);
-	fb_depth.mask = 0;
+	unsigned mask = !enabled;
+	Q = GS_SetDepthBuffer(Q, &fb_depth, mask);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -803,9 +809,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	if (!b) mask |= 0x00FF0000;
 	if (!a) mask |= 0xFF000000;
 
-	fb_draw->mask = mask;
-	Q = draw_framebuffer(Q, 0, fb_draw);
-	fb_draw->mask = 0;
+	Q = GS_SetFrameBuffer(Q, fb_draw, mask);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -1116,7 +1120,7 @@ void Gfx_EndFrame(void) {
 	UpdateContext();
 
 	// Double buffering
-	Q = draw_framebuffer(Q, 0, fb_draw);
+	Q = GS_SetFrameBuffer(Q, fb_draw, 0);
 	graph_set_framebuffer_filtered(fb_display->address,
                                    fb_display->width,
                                    fb_display->psm, 0, 0);
