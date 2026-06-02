@@ -14,6 +14,9 @@ TARGET 	= ClassiCube-ps2
 SOURCE_DIRS	:= src src/ps2 third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR = build/ps2
+# Shader objects
+SHADER_DIR  = misc/ps2
+SHADER_OBJS = $(BUILD_DIR)/vu1_DrawTextured.o
 
 
 #---------------------------------------------------------------------------------
@@ -46,7 +49,10 @@ EE_LINKFILE := $(PS2SDK)/ee/startup/linkfile
 # Compiler tools
 #---------------------------------------------------------------------------------
 EE_CC 	 = mips64r5900el-ps2-elf-gcc
+EE_PP 	 = mips64r5900el-ps2-elf-cpp
 EE_STRIP = mips64r5900el-ps2-elf-strip
+EE_DVP 	 = dvp-as
+VCL 	 = openvcl/openvcl
 
 
 #---------------------------------------------------------------------------------
@@ -101,6 +107,8 @@ $(BUILD_DIR)/USBKBD_irx.c: $(PS2SDK)/iop/irx/ps2kbd.irx
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
+$(BUILD_DIR)/Graphics_PS2.o : $(SHADER_OBJS)
+
 $(TARGET).elf : $(EE_OBJS)
 	$(EE_CC) -T$(EE_LINKFILE) -O2 -o $(TARGET).elf $(EE_OBJS) $(EE_LDFLAGS) $(EE_LIBS)
 	
@@ -125,6 +133,22 @@ $(BUILD_DIR)/%.o: src/ps2/%.S
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+
+#---------------------------------------------------------------------------------
+# shader object generation
+#---------------------------------------------------------------------------------
+.PRECIOUS: $(SHADER_DIR)/vu1_%.vsm $(SHADER_DIR)/vu1_%.vcl
+# prevent the .vsm files from being deleted
+
+$(SHADER_DIR)/vu1_%.vcl: $(SHADER_DIR)/vu1_%.vcp
+	$(EE_PP) -P -C $< -o $@
+
+$(SHADER_DIR)/vu1_%.vsm: $(SHADER_DIR)/vu1_%.vcl
+	$(VCL) $< -o $@
+
+$(BUILD_DIR)/vu1_%.o: $(SHADER_DIR)/vu1_%.vsm
+	$(EE_DVP) $< -o $@
 
 
 #---------------------------------------------------------------------------------
