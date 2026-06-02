@@ -112,8 +112,11 @@ $(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	nxdk-cc $(NXDK_CFLAGS) $(CFLAGS) -c $< -o $@
 
 
-# prevent the .asm files from being deleted
+#---------------------------------------------------------------------------------
+# shader object generation
+#---------------------------------------------------------------------------------
 .PRECIOUS: vs_%.asm ps_%.asm
+# prevent the .asm files from being deleted
 
 vs_%.inl: vs_%.asm
 	$(VP20COMPILER) $< > $@

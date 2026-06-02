@@ -789,8 +789,7 @@ static qword_t* ClearBuffers(qword_t *q, framebuffer_t* fb, zbuffer_t* zb) {
 		PACK_GIFTAG(q, GS_SET_RGBAQ(clearR,clearG,clearB, 0x80, Q.u), GIF_REG_RGBAQ); q++;
 	}
 
-	int x0 = 0;
-	int x1 = ftoi4(w);
+	int x  = 0;
 	int y0 = 0;
 	int y1 = ftoi4(h); 
 
@@ -799,10 +798,10 @@ static qword_t* ClearBuffers(qword_t *q, framebuffer_t* fb, zbuffer_t* zb) {
 	int strips = (w + STRIP_WIDTH - 1) / STRIP_WIDTH;	
 	PACK_GIFTAG(q, GIF_SET_TAG(strips, 0,0,0,GIF_FLG_REGLIST,2), DRAW_XYZ_REGLIST); q++;
 
-	for (int i = 0; i < strips; i++, x0 += ftoi4(32))
+	for (int i = 0; i < strips; i++, x += ftoi4(32))
 	{
-		q->dw[0] = GIF_SET_XYZ(x0,                 y0, 0);
-		q->dw[1] = GIF_SET_XYZ(x0 + ftoi4(31.75f), y1, 0);
+		q->dw[0] = GIF_SET_XYZ(x,                 y0, 0);
+		q->dw[1] = GIF_SET_XYZ(x + ftoi4(31.75f), y1, 0);
 		q++;
 	}
 	return q;
