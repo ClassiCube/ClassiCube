@@ -137,6 +137,7 @@ retro68scripts/
 
 # PS2
 openvcl/
+ee_log.txt
 
 *_i.c
 *_p.c
