@@ -13,6 +13,8 @@
 #include <graph.h>
 #include <draw.h>
 #include <draw3d.h>
+#include <vif_codes.h>
+#include <vif_registers.h>
 #include <malloc.h>
 #include "gs_gpu.h"
 
@@ -354,6 +356,14 @@ static int CalcTransferBytes(int width, int height, int psm) {
 	return 0;
 }
 
+// VIF no operation
+#define VIF_NOP 0
+// VIF path2 transfer
+#define VIF_PACK_DIRECT(qwords) VIF_CODE(qwords, 0, VIF_CMD_DIRECT, 0)
+
+#define PACK_VIFTAG_DIRECT(Q, qwords) PACK_VIFTAG(Q, VIF_NOP, VIF_NOP, VIF_NOP, VIF_PACK_DIRECT(qwords))
+// PACK_VIFTAG(Q, VIF_PACK_DIRECT(qwords), VIF_NOP, VIF_NOP, VIF_NOP)
+
 static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int psm, 
 								int dst_base, int dst_width)
 {
@@ -365,14 +375,17 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 	// https://www.psx-place.com/threads/newlib-porting-challenges.26821/page-2
 
 	// Parameters for RAM -> GS transfer
-	DMATAG_CNT(q, 5, 0,0,0); q++;
+	DMATAG_CNT(q, 6, 0,0,0); q++;
 	{
-		PACK_GIFTAG(q, GIF_SET_TAG(4,0,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+		PACK_VIFTAG_DIRECT(q, 5); q++;
 		{
-			PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF); q++;
-			PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0),     GS_REG_TRXPOS); q++;
-			PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG); q++;
-			PACK_GIFTAG(q, GS_SET_TRXDIR(0),             GS_REG_TRXDIR); q++;
+			PACK_GIFTAG(q, GIF_SET_TAG(4,0,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+			{
+				PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF); q++;
+				PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0),     GS_REG_TRXPOS); q++;
+				PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG); q++;
+				PACK_GIFTAG(q, GS_SET_TRXDIR(0),             GS_REG_TRXDIR); q++;
+			}
 		}
 	}
 
@@ -380,9 +393,12 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 	{
 		int num_qwords = min(qwords, GIF_BLOCK_SIZE);
 
-		DMATAG_CNT(q, 1, 0,0,0); q++;
+		DMATAG_CNT(q, 2, 0,0,0); q++;
 		{
-			PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0); q++;
+			PACK_VIFTAG_DIRECT(q, 1 + num_qwords); q++;
+			{
+				PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0); q++;
+			}
 		}
 
 		DMATAG_REF(q, num_qwords, (unsigned int)src, 0,0,0); q++;
@@ -392,11 +408,14 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 	}
 
 	// TODO only call for window pixels ??
-	DMATAG_END(q, 2, 0,0,0); q++;
+	DMATAG_END(q, 3, 0,0,0); q++;
 	{
-		PACK_GIFTAG(q, GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+		PACK_VIFTAG_DIRECT(q, 2); q++;
 		{
-			PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
+			PACK_GIFTAG(q, GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+			{
+				PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
+			}
 		}
 	}
 
@@ -409,7 +428,7 @@ void Gfx_TransferPixels(void* src, int width, int height,
 	qword_t* q   = buf;
 
 	q = PrepareTransfer(q, src, width, height, format, dst_base, dst_stride);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, buf, q - buf, 0,0);
+	dma_channel_send_chain(DMA_CHANNEL_VIF1, buf, q - buf, 0,0);
 	dma_wait_fast();
 
 	FreeDMABuffer(buf);

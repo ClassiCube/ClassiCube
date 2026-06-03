@@ -738,7 +738,7 @@ void Platform_Init(void) {
 	//USBStorage_WaitUntilDeviceReady();
 	
 	Networking_LoadIOPModules();
-	Networking_Setup();
+	//Networking_Setup();
 	
 	cc_filepath* root = FILEPATH_RAW("mass:/ClassiCube");
 	int res = Directory_Create2(root);

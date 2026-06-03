@@ -52,8 +52,8 @@ static void InitDisplay(void) {
 
 
 void Window_PreInit(void) {
-	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
-	dma_channel_fast_waits(DMA_CHANNEL_GIF);
+	dma_channel_initialize(DMA_CHANNEL_VIF1, NULL, 0);
+	dma_channel_fast_waits(DMA_CHANNEL_VIF1);
 	display_mode = graph_get_region();
 
 	DisplayInfo.Width  = 640;
