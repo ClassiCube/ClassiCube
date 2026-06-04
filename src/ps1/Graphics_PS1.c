@@ -189,6 +189,17 @@ void Gfx_Create(void) {
 	GTE_SetCtrlReg(C2CR_SCR_OFY, (Window_Main.Height / 2) << 16);
 	// Sets projection plane distance, i.e. field of view
 	GTE_SetCtrlReg(C2CR_SCR_DIST, Window_Main.Height / 2);
+
+	// Set scale factor for depth averaging
+	//   OTZ = ZSF3*(SZ1+SZ2+SZ3)     / 0x1000
+	//   OTZ = ZSF4*(SZ0+SZ1+SZ2+SZ3) / 0x1000
+	// visible OTZ ranges between 0 and OT_LENGTH
+	//   OT_LENGTH = ZSF3/4 * 3/4 * SZ_MAX / 0x1000
+	//   OT_LENGTH * 0x1000 / (3/4 * SZ_MAX) = ZSF3/4
+	//   ZSF3/4 = OT_LENGTH * 0x1000 / (3/4 * SZ_MAX)
+	#define SZ_MAX 9000 // TODO increase a bit? reduces precision though
+	GTE_SetCtrlReg(C2CR_AVE_ZSF3, OT_LENGTH * 0x1000 / (3 * SZ_MAX));
+	GTE_SetCtrlReg(C2CR_AVE_ZSF4, OT_LENGTH * 0x1000 / (4 * SZ_MAX));
 }
 
 void Gfx_Free(void) { 
@@ -929,7 +940,7 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		// Calculate Z depth
 		GTE_Exec_AVSZ3(); // 5 cycles
 		int p; GTE_GetDataReg(C2DR_OTZ, p);
-		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
+		if (p == 0 || p >= OT_LENGTH) continue;
 
 		GTE_SaveDataReg(C2DR_XY0, poly, offsetof(psx_poly_F4, x0));
 		GTE_SaveDataReg(C2DR_XY1, poly, offsetof(psx_poly_F4, x1));
@@ -939,8 +950,8 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 2 * VERTEX_COL_SIZE);
 
 		GTE_Exec_RTPS(); // 15 cycles
-		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(poly, offsetof(psx_poly_F4, x3));
+		addPrim(&ot[p], poly);
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_F4, x3));
 		
 		poly++;
 	}
@@ -991,7 +1002,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		// Calculate Z depth
 		GTE_Exec_AVSZ3(); // 5 cycles
 		int p; GTE_GetDataReg(C2DR_OTZ, p);
-		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
+		if (p == 0 || p >= OT_LENGTH) continue;
 
 		GTE_SaveDataReg(C2DR_XY0, poly, offsetof(psx_poly_FT4, x0));
 		GTE_SaveDataReg(C2DR_XY1, poly, offsetof(psx_poly_FT4, x1));
@@ -1001,8 +1012,8 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 2 * VERTEX_TEX_SIZE);
 
 		GTE_Exec_RTPS(); // 15 cycles
-		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(poly, offsetof(psx_poly_FT4, x3));
+		addPrim(&ot[p], poly);
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_FT4, x3));
 	
 		poly->v0 = (v1->v >> vShift) + vOffset;
 		poly->u1 = (v0->u >> uShift) + uOffset;

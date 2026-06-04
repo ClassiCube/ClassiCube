@@ -10,6 +10,9 @@
 #define C2CR_SCR_OFX  24
 #define C2CR_SCR_OFY  25
 #define C2CR_SCR_DIST 26
+#define C2CR_SCR_DIST 26
+#define C2CR_AVE_ZSF3 29
+#define C2CR_AVE_ZSF4 30
 
 #define GTE_SetCtrlReg(reg, val) __asm__ volatile("nop; ctc2 %0, $%1;" : : "r" (val), "i" (reg) : )
 
@@ -24,6 +27,10 @@
 #define C2DR_XY0      12
 #define C2DR_XY1      13
 #define C2DR_XY2      14
+#define C2DR_Z0       16
+#define C2DR_Z1       17
+#define C2DR_Z2       18
+#define C2DR_Z3       19
 #define C2DR_MAC0     24
 
 #define GTE_GetDataReg(reg, dst)       __asm__ volatile ("nop; mfc2 %0, $%1;" : "=r" (dst) : "i" (reg) : )
