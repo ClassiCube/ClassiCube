@@ -148,7 +148,7 @@ static int sock_read(void* ctx_, unsigned char* buf, size_t len) {
 	
 	if (res) { ctx->readError = res; return -1; }
 	/* In case socket has been partially closed (i.e. can't be read from anymore) */
-	if (!res && read == 0) { ctx->readError = ERR_END_OF_STREAM; return -1; }
+	if (read == 0) { ctx->readError = ERR_END_OF_STREAM; return -1; }
 
 	return read;
 }

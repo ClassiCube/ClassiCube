@@ -1,33 +1,41 @@
-#define GTE_Set_TransX(val) __asm__ volatile("nop; ctc2 %0, $5;" :: "r" (val) : )
-#define GTE_Set_TransY(val) __asm__ volatile("nop; ctc2 %0, $6;" :: "r" (val) : )
-#define GTE_Set_TransZ(val) __asm__ volatile("nop; ctc2 %0, $7;" :: "r" (val) : )
+// === COP2/GTE control registers ===
+#define C2CR_RT11_12  0
+#define C2CR_RT13_21  1
+#define C2CR_RT22_23  2
+#define C2CR_RT31_32  3
+#define C2CR_RT33     4
+#define C2CR_TRANSX   5
+#define C2CR_TRANSY   6
+#define C2CR_TRANSZ   7
+#define C2CR_SCR_OFX  24
+#define C2CR_SCR_OFY  25
+#define C2CR_SCR_DIST 26
 
-// Sets C2_OFX register (screen offset X added after vertex transform)
-#define GTE_Set_ScreenOffsetX(val)  __asm__ volatile ("nop; ctc2 %0, $24;" :: "r" (val) : )
-// Sets C2_OFY register (screen offset Y added after vertex transform)
-#define GTE_Set_ScreenOffsetY(val)  __asm__ volatile ("nop; ctc2 %0, $25;" :: "r" (val) : )
-// Sets C2_H register (projection plane distance, i.e. field of view)
-#define GTE_Set_ScreenDistance(val) __asm__ volatile ("nop; ctc2 %0, $26;" :: "r" (val) : )
+#define GTE_SetCtrlReg(reg, val) __asm__ volatile("nop; ctc2 %0, $%1;" : : "r" (val), "i" (reg) : )
 
-#define GTE_Get_OTZ(dst)  __asm__ volatile("mfc2 %0, $7;  nop;" : "=r" (dst) :: )
-#define GTE_Get_MAC0(dst) __asm__ volatile("mfc2 %0, $24; nop;" : "=r" (dst) :: )
+// === COP2/GTE data registers ===
+#define C2DR_VXY0     0
+#define C2DR_VZ0      1
+#define C2DR_VXY1     2
+#define C2DR_VZ1      3
+#define C2DR_VXY2     4
+#define C2DR_VZ2      5
+#define C2DR_OTZ      7
+#define C2DR_XY0      12
+#define C2DR_XY1      13
+#define C2DR_XY2      14
+#define C2DR_MAC0     24
 
+#define GTE_GetDataReg(reg, dst)       __asm__ volatile ("nop; mfc2 %0, $%1;" : "=r" (dst) : "i" (reg) : )
+#define GTE_LoadDataReg(reg, dst, off) __asm__ volatile ("lwc2 $%2, %1(%0);" : : "r" (dst), "i" (off), "i" (reg) : "memory" )
+#define GTE_SaveDataReg(reg, dst, off) __asm__ volatile ("swc2 $%2, %1(%0);" : : "r" (dst), "i" (off), "i" (reg) : "memory" )
+// e.g. expands to "swc2 $14, 8($5);"
+
+// === GTE commands ===
 #define GTE_Exec_RTPT()  __asm__ volatile ("nop; nop; cop2 0x00280030;")
 #define GTE_Exec_NCLIP() __asm__ volatile ("nop; nop; cop2 0x01400006;")
 #define GTE_Exec_AVSZ3() __asm__ volatile ("nop; nop; cop2 0x0158002D;")
 #define GTE_Exec_RTPS()  __asm__ volatile ("nop; nop; cop2 0x00180001;")
-
-// e.g. expands to "swc2 $14, 8(%0);"
-#define GTE_Store_XY0(dst, off) __asm__ volatile ("swc2 $12, %1(%0);" :: "r" (dst), "i" (off) : "memory" )
-#define GTE_Store_XY1(dst, off) __asm__ volatile ("swc2 $13, %1(%0);" :: "r" (dst), "i" (off) : "memory" )
-#define GTE_Store_XY2(dst, off) __asm__ volatile ("swc2 $14, %1(%0);" :: "r" (dst), "i" (off) : "memory" )
-
-#define GTE_Load_XY0(src,  off) __asm__ volatile ("lwc2 $0, 0 + %1(%0);" :: "r" (src), "i" (off) : )
-#define GTE_Load__Z0(src,  off) __asm__ volatile ("lwc2 $1, 4 + %1(%0);" :: "r" (src), "i" (off) : )
-#define GTE_Load_XY1(src,  off) __asm__ volatile ("lwc2 $2, 0 + %1(%0);" :: "r" (src), "i" (off) : )
-#define GTE_Load__Z1(src,  off) __asm__ volatile ("lwc2 $3, 4 + %1(%0);" :: "r" (src), "i" (off) : )
-#define GTE_Load_XY2(src,  off) __asm__ volatile ("lwc2 $4, 0 + %1(%0);" :: "r" (src), "i" (off) : )
-#define GTE_Load__Z2(src,  off) __asm__ volatile ("lwc2 $5, 4 + %1(%0);" :: "r" (src), "i" (off) : )
 
 #define GTE_Load_RotMatrix(mat) __asm__ volatile ( \
 	"lw		$t0,  0(%0);\n" \

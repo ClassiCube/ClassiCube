@@ -11,7 +11,6 @@
 #include <psxgte.h>
 #include <psxapi.h>
 #include <psxetc.h>
-#include <inline_c.h>
 #include "ps1defs.h"
 #include "ps1_gpu.h"
 #include "ps1_gte.h"
@@ -185,10 +184,11 @@ void Gfx_Create(void) {
 	Gfx_ClearColor(PackedCol_Make(63, 0, 127, 255));
 
 	InitGeom();
-	GTE_Set_ScreenOffsetX((Window_Main.Width  / 2) << 16);
-	GTE_Set_ScreenOffsetY((Window_Main.Height / 2) << 16);
-
-	GTE_Set_ScreenDistance(Window_Main.Height / 2);
+	// Sets screen offset X/Y added after vertex transform
+	GTE_SetCtrlReg(C2CR_SCR_OFX, (Window_Main.Width  / 2) << 16);
+	GTE_SetCtrlReg(C2CR_SCR_OFY, (Window_Main.Height / 2) << 16);
+	// Sets projection plane distance, i.e. field of view
+	GTE_SetCtrlReg(C2CR_SCR_DIST, Window_Main.Height / 2);
 }
 
 void Gfx_Free(void) { 
@@ -730,26 +730,26 @@ static struct Matrix _view, _proj;
 #define ToFixedTr(v) (int)(v * (1 << 8))
 
 static void LoadTransformMatrix(struct Matrix* src) {
-	MATRIX transform_matrix;
+	short matrix[3][3];
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	GTE_Set_TransX(ToFixedTr( src->row4.x));
-	GTE_Set_TransY(ToFixedTr(-src->row4.y));
-	GTE_Set_TransZ(ToFixedTr( src->row4.w));
+	GTE_SetCtrlReg(C2CR_TRANSX, ToFixedTr( src->row4.x));
+	GTE_SetCtrlReg(C2CR_TRANSY, ToFixedTr(-src->row4.y));
+	GTE_SetCtrlReg(C2CR_TRANSZ, ToFixedTr( src->row4.w));
 
-	transform_matrix.m[0][0] = ToFixed(src->row1.x);
-	transform_matrix.m[0][1] = ToFixed(src->row2.x);
-	transform_matrix.m[0][2] = ToFixed(src->row3.x);
+	matrix[0][0] = ToFixed(src->row1.x);
+	matrix[0][1] = ToFixed(src->row2.x);
+	matrix[0][2] = ToFixed(src->row3.x);
 	
-	transform_matrix.m[1][0] = ToFixed(-src->row1.y);
-	transform_matrix.m[1][1] = ToFixed(-src->row2.y);
-	transform_matrix.m[1][2] = ToFixed(-src->row3.y);
+	matrix[1][0] = ToFixed(-src->row1.y);
+	matrix[1][1] = ToFixed(-src->row2.y);
+	matrix[1][2] = ToFixed(-src->row3.y);
 	
-	transform_matrix.m[2][0] = ToFixed(src->row1.w);
-	transform_matrix.m[2][1] = ToFixed(src->row2.w);
-	transform_matrix.m[2][2] = ToFixed(src->row3.w);
+	matrix[2][0] = ToFixed(src->row1.w);
+	matrix[2][1] = ToFixed(src->row2.w);
+	matrix[2][2] = ToFixed(src->row3.w);
 	
-	GTE_Load_RotMatrix(&transform_matrix);
+	GTE_Load_RotMatrix(matrix);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -915,12 +915,12 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexColoured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
 
-		GTE_Load_XY0(v, 0 * VERTEX_COL_SIZE); // GTE_XY0 = v0->xy
-		GTE_Load__Z0(v, 0 * VERTEX_COL_SIZE); // GTE__Z0 = v0->z
-		GTE_Load_XY1(v, 1 * VERTEX_COL_SIZE); // GTE_XY1 = v1->xy
-		GTE_Load__Z1(v, 1 * VERTEX_COL_SIZE); // GTE__Z1 = v1->z
-		GTE_Load_XY2(v, 3 * VERTEX_COL_SIZE); // GTE_XY2 = v3->xy
-		GTE_Load__Z2(v, 3 * VERTEX_COL_SIZE); // GTE__Z2 = v3->z
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 0 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 0 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VXY1, v, 0 + 1 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ1,  v, 4 + 1 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VXY2, v, 0 + 3 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ2,  v, 4 + 3 * VERTEX_COL_SIZE);
 
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_F4);
@@ -928,15 +928,15 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	
 		// Calculate Z depth
 		GTE_Exec_AVSZ3(); // 5 cycles
-		int p; GTE_Get_OTZ(p);
+		int p; GTE_GetDataReg(C2DR_OTZ, p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		GTE_Store_XY0(poly, offsetof(psx_poly_F4, x0));
-		GTE_Store_XY1(poly, offsetof(psx_poly_F4, x1));
-		GTE_Store_XY2(poly, offsetof(psx_poly_F4, x2));
+		GTE_SaveDataReg(C2DR_XY0, poly, offsetof(psx_poly_F4, x0));
+		GTE_SaveDataReg(C2DR_XY1, poly, offsetof(psx_poly_F4, x1));
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_F4, x2));
 
-		GTE_Load_XY0(v, 2 * VERTEX_COL_SIZE); // GTE_XY2 = v2->xy
-		GTE_Load__Z0(v, 2 * VERTEX_COL_SIZE); // GTE__Z2 = v2->z
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 2 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 2 * VERTEX_COL_SIZE);
 
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
@@ -968,13 +968,13 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexTextured* v2 = &v[2];
 		struct PS1VertexTextured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
-	
-		GTE_Load_XY0(v, 0 * VERTEX_TEX_SIZE); // GTE_XY0 = v0->xy
-		GTE_Load__Z0(v, 0 * VERTEX_TEX_SIZE); // GTE__Z0 = v0->z
-		GTE_Load_XY1(v, 1 * VERTEX_TEX_SIZE); // GTE_XY1 = v1->xy
-		GTE_Load__Z1(v, 1 * VERTEX_TEX_SIZE); // GTE__Z1 = v1->z
-		GTE_Load_XY2(v, 3 * VERTEX_TEX_SIZE); // GTE_XY2 = v3->xy
-		GTE_Load__Z2(v, 3 * VERTEX_TEX_SIZE); // GTE__Z2 = v3->z
+
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 0 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 0 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VXY1, v, 0 + 1 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ1,  v, 4 + 1 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VXY2, v, 0 + 3 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ2,  v, 4 + 3 * VERTEX_TEX_SIZE);
 
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_FT4);
@@ -985,20 +985,20 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		GTE_Exec_NCLIP(); // 8 cycles
 		poly->tpage = tpage;
 		poly->clut  = clut;
-		int clip; GTE_Get_MAC0(clip);
+		int clip; GTE_GetDataReg(C2DR_MAC0, clip);
 		if (clip > 0) continue;
 	
 		// Calculate Z depth
 		GTE_Exec_AVSZ3(); // 5 cycles
-		int p; GTE_Get_OTZ(p);
+		int p; GTE_GetDataReg(C2DR_OTZ, p);
 		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
 
-		GTE_Store_XY0(poly, offsetof(psx_poly_FT4, x0));
-		GTE_Store_XY1(poly, offsetof(psx_poly_FT4, x1));
-		GTE_Store_XY2(poly, offsetof(psx_poly_FT4, x2));
+		GTE_SaveDataReg(C2DR_XY0, poly, offsetof(psx_poly_FT4, x0));
+		GTE_SaveDataReg(C2DR_XY1, poly, offsetof(psx_poly_FT4, x1));
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_FT4, x2));
 
-		GTE_Load_XY0(v, 2 * VERTEX_TEX_SIZE); // GTE_XY2 = v2->xy
-		GTE_Load__Z0(v, 2 * VERTEX_TEX_SIZE); // GTE__Z2 = v2->z
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 2 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 2 * VERTEX_TEX_SIZE);
 
 		GTE_Exec_RTPS(); // 15 cycles
 		addPrim(&ot[p >> 2], poly);
