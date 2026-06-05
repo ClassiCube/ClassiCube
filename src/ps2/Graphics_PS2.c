@@ -95,18 +95,41 @@ static void UpdateContext(void) {
 	Q = dma_beg + 1;
 }
 
-// Packs a simple GIF packet consisting of 'qwords' data+address GS primitives
-#define PACK_SIMPLE_GIF(Q, qwords, eop)  \
-	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); Q++;
-
-// Number of qwords in a simple GIF packet
-#define COUNT_SIMPLE_GIF(qwords) ((qwords) + 1)
 
 /*########################################################################################################################*
-*-------------------------------------------------------Misc GIF tags-----------------------------------------------------*
+*---------------------------------------------------GIF packet wrappers---------------------------------------------------*
 *#########################################################################################################################*/
+// Writes header for a simple GIF packet consisting of 'qwords' data+address GS primitives
+#define PACK_SIMPLE_HDR(Q, qwords, eop)  \
+	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); Q++;
+
+// Total number of qwords in a simple GIF packet
+#define COUNT_SIMPLE_PKT(qwords) ((qwords) + 1)
+
+// Writes header for a reglist GIF packet consisting of efficiently packed GS primitives
+#define PACK_REGLIST_HDR(Q, num_loops, eop, regs_per_loop, regs)  \
+	PACK_GIFTAG(Q, GIF_SET_TAG(num_loops,eop, 0,0, GIF_FLG_REGLIST, regs_per_loop), regs); Q++;
+
+// Number of qwords for a reglist GIF packet header
+#define COUNT_REGLIST_HDR 1
+
+// Writes header for an image GIF packet consisting of 'qwords' packed data
+#define PACK_IMAGE_HDR(Q, qwords, eop) \
+	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_IMAGE, 0), 0); Q++;
+
+// Number of qwords for an image GIF packet header
+#define COUNT_IMAGE_HDR 1
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Misc GS primitives---------------------------------------------------*
+*#########################################################################################################################*/
+#define REGLIST_XYZ_XYZ      (u64)((GIF_REG_XYZ2  << 0) | (GIF_REG_XYZ2 << 4))
+#define REGLIST_RGBAQ_XYZ    (u64)((GIF_REG_RGBAQ << 0) | (GIF_REG_XYZ2 << 4))
+#define REGLIST_RGBAQ_ST_XYZ (u64)((GIF_REG_RGBAQ << 0) | (GIF_REG_ST   << 4) | (GIF_REG_XYZ2 << 8))
+
 static qword_t* GS_SetDepthBuffer(qword_t* q, zbuffer_t* zb, unsigned skipMask) {
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, skipMask), GS_REG_ZBUF); q++;
 	}
@@ -114,7 +137,7 @@ static qword_t* GS_SetDepthBuffer(qword_t* q, zbuffer_t* zb, unsigned skipMask) 
 }
 
 static qword_t* GS_SetFrameBuffer(qword_t* q, framebuffer_t* fb, unsigned skipMask) {
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, skipMask), GS_REG_FRAME); q++;
 	}
@@ -122,7 +145,7 @@ static qword_t* GS_SetFrameBuffer(qword_t* q, framebuffer_t* fb, unsigned skipMa
 }
 
 static qword_t* GS_SetScissor(qword_t* q, int x, int y, int w, int h) {
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		PACK_GIFTAG(q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR); q++;
 	}
@@ -130,7 +153,7 @@ static qword_t* GS_SetScissor(qword_t* q, int x, int y, int w, int h) {
 }
 
 static qword_t* GS_DrawFinish(qword_t *q) {
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		PACK_GIFTAG(q, 1, GS_REG_FINISH); q++;
 	}
@@ -139,7 +162,7 @@ static qword_t* GS_DrawFinish(qword_t *q) {
 }
 
 static qword_t* GS_SetPrimXYOffset(qword_t *q, int x, int y) {
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		PACK_GIFTAG(q, GS_SET_XYOFFSET((x << 4), (y << 4)), GS_REG_XYOFFSET); q++;
 	}
@@ -148,7 +171,7 @@ static qword_t* GS_SetPrimXYOffset(qword_t *q, int x, int y) {
 
 // NOTE still needed as PRE/PRIM field only work when gif tag is PACKED (see PCSX2 and DobieStation for reference)
 static qword_t* GS_SetPrimMode(qword_t* q, int mode) {
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		PACK_GIFTAG(q, mode, GS_REG_PRIM); q++;
 	}
@@ -156,7 +179,7 @@ static qword_t* GS_SetPrimMode(qword_t* q, int mode) {
 }
 
 static qword_t* GS_InitRegisters(qword_t* q, framebuffer_t* fb, zbuffer_t* zb) {
-	PACK_SIMPLE_GIF(q, 12, true)
+	PACK_SIMPLE_HDR(q, 12, true)
 	{
 		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, 0), GS_REG_FRAME); q++; // frame buffer
 		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, 0), GS_REG_ZBUF); q++; // depth buffer
@@ -371,9 +394,9 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 	// https://www.psx-place.com/threads/newlib-porting-challenges.26821/page-2
 
 	// Parameters for RAM -> GS transfer
-	DMATAG_CNT(q, COUNT_SIMPLE_GIF(4), 0,0,0); q++;
+	DMATAG_CNT(q, COUNT_SIMPLE_PKT(4), 0,0,0); q++;
 	{
-		PACK_SIMPLE_GIF(q, 4, false)
+		PACK_SIMPLE_HDR(q, 4, false)
 		{
 			PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF); q++;
 			PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0),     GS_REG_TRXPOS); q++;
@@ -386,9 +409,9 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 	{
 		int num_qwords = min(qwords, GIF_BLOCK_SIZE);
 
-		DMATAG_CNT(q, 1, 0,0,0); q++;
+		DMATAG_CNT(q, COUNT_IMAGE_HDR, 0,0,0); q++;
 		{
-			PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0); q++;
+			PACK_IMAGE_HDR(q, num_qwords, false)
 		}
 
 		DMATAG_REF(q, num_qwords, (unsigned int)src, 0,0,0); q++;
@@ -398,9 +421,9 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 	}
 
 	// TODO only call for window pixels ??
-	DMATAG_END(q, COUNT_SIMPLE_GIF(1), 0,0,0); q++;
+	DMATAG_END(q, COUNT_SIMPLE_PKT(1), 0,0,0); q++;
 	{
-		PACK_SIMPLE_GIF(q, 1, true)
+		PACK_SIMPLE_HDR(q, 1, true)
 		{
 			PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
 		}
@@ -460,7 +483,7 @@ static qword_t* UploadPalette(qword_t* q, BitmapCol* palette) {
 	// psm8, w=16 h=16
 	// psm4, w=8  h=2
 
-	PACK_SIMPLE_GIF(q, 4, false)
+	PACK_SIMPLE_HDR(q, 4, false)
 	{
 		PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, clut_offset >> 6, 64 >> 6, GS_PSM_32), GS_REG_BITBLTBUF); q++;
 		PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0), GS_REG_TRXPOS); q++;
@@ -469,7 +492,7 @@ static qword_t* UploadPalette(qword_t* q, BitmapCol* palette) {
 	}
 
 	// (16 * 4) / 16 = 4 qwords
-	PACK_GIFTAG(q, GIF_SET_TAG(4, 1,0,0,GIF_FLG_IMAGE,0), 0); q++;
+	PACK_IMAGE_HDR(q, 4, true)
 	{
 		Mem_Copy(q, palette, MAX_PAL_4BPP_ENTRIES * 4);
 		q += 4;
@@ -656,7 +679,7 @@ static unsigned clut_counter;
 static qword_t* UpdateTextureBuffer(qword_t* q, struct GPUTexture* tex, unsigned buf_addr) {
 	unsigned buf_stride = GS_TEXTURE_STRIDE(tex);
 
-	PACK_SIMPLE_GIF(q, 2, true)
+	PACK_SIMPLE_HDR(q, 2, true)
 	{
 		unsigned clut_addr  = tex->format == GS_PSM_32 ? 0 : clut_offset >> 6;
 		unsigned clut_entry = tex->format == GS_PSM_32 ? 0 : ((clut_counter++) & 0x0F);
@@ -733,7 +756,7 @@ static qword_t* UpdateState(qword_t* q) {
 	int aMethod = gfx_alphaTest ? ATEST_METHOD_GREATER_EQUAL : ATEST_METHOD_ALLPASS;
 	int zMethod = gfx_depthTest ? ZTEST_METHOD_GREATER_EQUAL : ZTEST_METHOD_ALLPASS;
 	
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
 		PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
@@ -747,7 +770,7 @@ static qword_t* UpdateState(qword_t* q) {
 static qword_t* UpdateFormat(qword_t* q) {
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
-	PACK_SIMPLE_GIF(q, 1, true)
+	PACK_SIMPLE_HDR(q, 1, true)
 	{
 		PACK_GIFTAG(q, GS_SET_PRMODE(PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
 								  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
@@ -778,8 +801,10 @@ static qword_t* ClearBuffers(qword_t *q, framebuffer_t* fb, zbuffer_t* zb) {
 	int h = fb->height;
 	union IntAndFloat Q; Q.f = 1.0f;
 
-	PACK_GIFTAG(q, GIF_SET_TAG(7,0, GIF_PRE_ENABLE,PRIM_SPRITE, GIF_FLG_PACKED,1), GIF_REG_AD); q++;
+	PACK_SIMPLE_HDR(q, 8, false)
 	{
+		PACK_GIFTAG(q, PRIM_SPRITE, GS_REG_PRIM); q++;
+
 		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, 0), GS_REG_ZBUF     + DRAWCTX_1); q++;
 		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, 0), 
 																   GS_REG_FRAME    + DRAWCTX_1); q++;
@@ -800,14 +825,16 @@ static qword_t* ClearBuffers(qword_t *q, framebuffer_t* fb, zbuffer_t* zb) {
 	int y1 = ftoi4(h); 
 
 	// Write one horizontal GS page strip at a time
-	#define STRIP_WIDTH 32
-	int strips = (w + STRIP_WIDTH - 1) / STRIP_WIDTH;	
-	PACK_GIFTAG(q, GIF_SET_TAG(strips, 0,0,0,GIF_FLG_REGLIST,2), DRAW_XYZ_REGLIST); q++;
+	#define STRIP_WIDTH  64
+	#define STRIP_EXTENT ftoi4(63.75f)
 
-	for (int i = 0; i < strips; i++, x += ftoi4(32))
+	int strips = (w + STRIP_WIDTH - 1) / STRIP_WIDTH;	
+	PACK_REGLIST_HDR(q, strips, true, 2, REGLIST_XYZ_XYZ)
+
+	for (int i = 0; i < strips; i++, x += ftoi4(STRIP_WIDTH))
 	{
-		q->dw[0] = GIF_SET_XYZ(x,                 y0, 0);
-		q->dw[1] = GIF_SET_XYZ(x + ftoi4(31.75f), y1, 0);
+		q->dw[0] = GIF_SET_XYZ(x,                y0, 0);
+		q->dw[1] = GIF_SET_XYZ(x + STRIP_EXTENT, y1, 0);
 		q++;
 	}
 	return q;
@@ -1035,7 +1062,7 @@ extern u64* DrawColouredQuad(void* src, u64* dst, VU0_vector* tmp);
 static qword_t* DrawTexturedTriangles(qword_t* q, int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
 	qword_t* base = q;
-	q++; // skip over GIF tag (will be filled in later)
+	q += COUNT_REGLIST_HDR; // skip over GIF tag (will be filled in later)
 
 	u64* dw  = (u64*)q;
 	u64* beg = dw;
@@ -1052,7 +1079,7 @@ static qword_t* DrawTexturedTriangles(qword_t* q, int verticesCount, int startVe
 
 	// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
 	// 3 registers per GIF "primitive" (colour, texture, position)
-	PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1, 0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
+	PACK_REGLIST_HDR(base, numVerts, true, 3, REGLIST_RGBAQ_ST_XYZ)
 
 	return (qword_t*)dw;
 }
@@ -1060,7 +1087,7 @@ static qword_t* DrawTexturedTriangles(qword_t* q, int verticesCount, int startVe
 static qword_t* DrawColouredTriangles(qword_t* q, int verticesCount, int startVertex) {
 	struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex;
 	qword_t* base = q;
-	q++; // skip over GIF tag (will be filled in later)
+	q += COUNT_REGLIST_HDR; // skip over GIF tag (will be filled in later)
 
 	u64* dw  = (u64*)q;
 	u64* beg = dw;
@@ -1076,7 +1103,7 @@ static qword_t* DrawColouredTriangles(qword_t* q, int verticesCount, int startVe
 
 	// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
 	// 2 registers per GIF "primitive" (colour, position)
-	PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1, 0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
+	PACK_REGLIST_HDR(base, numVerts, true, 2, REGLIST_RGBAQ_XYZ)
 
 	return (qword_t*)dw;
 }
