@@ -14,6 +14,8 @@
 #include <draw.h>
 #include <draw3d.h>
 #include <malloc.h>
+#include <vif_codes.h>
+#include <vif_registers.h>
 #include "gs_gpu.h"
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
@@ -97,28 +99,44 @@ static void UpdateContext(void) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------VIF tags--------------------------------------------------------*
+*#########################################################################################################################*/
+// VIF no operation
+#define VIF_NOP 0
+// VIF path2 transfer
+#define VIF_PACK_DIRECT(qwords) VIF_CODE(qwords, 0, VIF_CMD_DIRECT, 0)
+
+#define PACK_VIFTAG_DIRECT(Q, qwords) PACK_VIFTAG(Q, VIF_NOP, VIF_NOP, VIF_NOP, VIF_PACK_DIRECT(qwords))
+// PACK_VIFTAG(Q, VIF_PACK_DIRECT(qwords), VIF_NOP, VIF_NOP, VIF_NOP)
+
+
+/*########################################################################################################################*
 *---------------------------------------------------GIF packet wrappers---------------------------------------------------*
 *#########################################################################################################################*/
-// Writes header for a simple GIF packet consisting of 'qwords' data+address GS primitives
-#define PACK_SIMPLE_HDR(Q, qwords, eop)  \
+// Writes VIF tag + header for a simple GIF packet consisting of 'qwords' data+address GS primitives
+#define PACK_SIMPLE_HDR(Q, qwords, eop) \
+	PACK_VIFTAG_DIRECT(Q, 1 + (qwords)); Q++; \
 	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); Q++;
 
-// Total number of qwords in a simple GIF packet
-#define COUNT_SIMPLE_PKT(qwords) ((qwords) + 1)
+// Total number of qwords in a VIF tag + simple GIF packet
+#define COUNT_SIMPLE_PKT(qwords) ((qwords) + 2)
 
-// Writes header for a reglist GIF packet consisting of efficiently packed GS primitives
+// Writes VIF tag + header for a reglist GIF packet consisting of efficiently packed GS primitives
+// (note GS primitives are 64 bits, vif count is in 128 bit units)
 #define PACK_REGLIST_HDR(Q, num_loops, eop, regs_per_loop, regs)  \
+	PACK_VIFTAG_DIRECT(Q, 1 + ((num_loops) * (regs_per_loop) + 1) / 2); Q++; \
 	PACK_GIFTAG(Q, GIF_SET_TAG(num_loops,eop, 0,0, GIF_FLG_REGLIST, regs_per_loop), regs); Q++;
 
-// Number of qwords for a reglist GIF packet header
-#define COUNT_REGLIST_HDR 1
+// Number of qwords for a VIF tag + reglist GIF packet header
+#define COUNT_REGLIST_HDR 2
 
-// Writes header for an image GIF packet consisting of 'qwords' packed data
+// Writes VIF tag + header for an image GIF packet consisting of 'qwords' packed data
 #define PACK_IMAGE_HDR(Q, qwords, eop) \
+	PACK_VIFTAG_DIRECT(Q, 1 + (qwords)); Q++; \
 	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_IMAGE, 0), 0); Q++;
 
-// Number of qwords for an image GIF packet header
-#define COUNT_IMAGE_HDR 1
+// Number of qwords for a VIF tag + image GIF packet header
+#define COUNT_IMAGE_HDR 2
 
 
 /*########################################################################################################################*
@@ -253,7 +271,7 @@ static void InitDrawingEnv(void) {
 	Q = GS_SetPrimMode(Q, PRIM_TRIANGLE);
 	Q = GS_DrawFinish(Q);
 
-	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, Q - beg, 0, 0);
+	dma_channel_send_normal(DMA_CHANNEL_VIF1, beg, Q - beg, 0, 0);
 	dma_wait_fast();
 	Q = dma_beg + 1;
 }
@@ -301,7 +319,7 @@ static void FlushMainDMABuffer(void) {
 
 	if (Q != dma_beg + 1) {
 		DMATAG_END(dma_beg, (Q - dma_beg) - 1, 0, 0, 0);
-		dma_channel_send_chain(DMA_CHANNEL_GIF, dma_beg, Q - dma_beg, 0, 0);
+		dma_channel_send_chain(DMA_CHANNEL_VIF1, dma_beg, Q - dma_beg, 0, 0);
 	}
 	Q = dma_beg + 1;
 }
@@ -438,7 +456,7 @@ void Gfx_TransferPixels(void* src, int width, int height,
 	qword_t* q   = buf;
 
 	q = PrepareTransfer(q, src, width, height, format, dst_base, dst_stride);
-	dma_channel_send_chain(DMA_CHANNEL_GIF, buf, q - buf, 0,0);
+	dma_channel_send_chain(DMA_CHANNEL_VIF1, buf, q - buf, 0,0);
 	dma_wait_fast();
 
 	FreeDMABuffer(buf);
