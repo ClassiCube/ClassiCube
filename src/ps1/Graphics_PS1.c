@@ -8,10 +8,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <psxgpu.h>
-#include <psxgte.h>
 #include <psxapi.h>
 #include <psxetc.h>
 #include "ps1defs.h"
+#include "ps1_cop0.h"
 #include "ps1_gpu.h"
 #include "ps1_gte.h"
 // Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
@@ -30,9 +30,9 @@ static void vblank_handler(void) { vblank_count++; }
 #define DMA_IDX_OTC (DMA_OTC * 4)
 
 void Gfx_ResetGPU(void) {
-	int needs_exit = EnterCriticalSection();
+	EnterCriticalSection();
 	InterruptCallback(IRQ_VBLANK, &vblank_handler);
-	if (needs_exit) ExitCriticalSection();
+	ExitCriticalSection();
 
 	GPU_GP1 = GP1_CMD_RESET_GPU;
 	ChangeClearPAD(0);
@@ -183,7 +183,20 @@ void Gfx_Create(void) {
 	SetupContexts(Window_Main.Width, Window_Main.Height);
 	Gfx_ClearColor(PackedCol_Make(63, 0, 127, 255));
 
-	InitGeom();
+	// Enable GTE/COP2 coprocessor if needed
+	EnterCriticalSection();
+	{
+		int status;
+		COP0_GetReg(COP0R_STATUS, status);
+		status |= COP0_STATUS_COP2_EN;
+		COP0_SetReg(COP0R_STATUS, status);
+	}
+	ExitCriticalSection();
+
+	// Depth cueing is unused (maybe could be used for fog)
+	GTE_SetCtrlReg(C2CR_DQA, 1);
+	GTE_SetCtrlReg(C2CR_DQB, 1);
+
 	// Sets screen offset X/Y added after vertex transform
 	GTE_SetCtrlReg(C2CR_SCR_OFX, (Window_Main.Width  / 2) << 16);
 	GTE_SetCtrlReg(C2CR_SCR_OFY, (Window_Main.Height / 2) << 16);
@@ -857,7 +870,7 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		poly->x3 = v[3].xx; poly->y3 = v[3].yy;
 
 		if (lastPoly) { 
-			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
+			addPrim(lastPoly, poly);
 		} else {
 			addPrim(&draw_buffer->ot[0], poly);
 		}

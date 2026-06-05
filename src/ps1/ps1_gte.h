@@ -11,6 +11,8 @@
 #define C2CR_SCR_OFY  25
 #define C2CR_SCR_DIST 26
 #define C2CR_SCR_DIST 26
+#define C2CR_DQA      27
+#define C2CR_DQB      28
 #define C2CR_AVE_ZSF3 29
 #define C2CR_AVE_ZSF4 30
 
@@ -44,6 +46,7 @@
 #define GTE_Exec_AVSZ3() __asm__ volatile ("nop; nop; cop2 0x0158002D;")
 #define GTE_Exec_RTPS()  __asm__ volatile ("nop; nop; cop2 0x00180001;")
 
+// TODO get rid of this
 #define GTE_Load_RotMatrix(mat) __asm__ volatile ( \
 	"lw		$t0,  0(%0);\n" \
 	"lw		$t1,  4(%0);\n" \

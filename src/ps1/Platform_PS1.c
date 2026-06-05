@@ -44,7 +44,16 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 *#########################################################################################################################*/
 #include "../main_impl.h"
 
+#define RAM_END      0x80200000 // 2 MB of RAM
+#define STACK_SIZE   (64 * 1024) // TODO or use CC_BUILD_MAXSTACK to 16kb ???
+#define RAM_HEAP_END (RAM_END - STACK_SIZE)
+extern uint8_t _end[];
+
 int main(int argc, char** argv) {
+	size_t heap_size = (void*)RAM_HEAP_END - (void *)_end;
+	InitHeap((void *)_end + 4, heap_size);
+	Platform_Log1("Memheap size: %i bytes", &heap_size);
+
 	SetupProgram(argc, argv);
 	while (Window_Main.Exists) { 
 		RunProgram(argc, argv);

@@ -35,7 +35,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 #---------------------------------------------------------------------------------
 CINCLUDES := -I$(PSN00BSDK_ROOT)/include/libpsn00b
 
-CFLAGS	:= -DPLAT_PS1 -DPSN00BSDK=1 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -Og -mdivide-breaks -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata
+CFLAGS	:= -DPLAT_PS1 -DPSN00BSDK=1 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fno-strict-overflow -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -Og -mdivide-breaks -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -Wstack-usage=50000
 
 # Additional libraries to link against
 # libpsxgpu -> $(PSN00BSDK_ROOT)/lib/libpsn00b/debug/libpsxgpu_exe_gprel.a
