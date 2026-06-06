@@ -19,6 +19,8 @@
 #include <graph.h>
 #include <draw.h>
 #include <kernel.h>
+#include <gif_registers.h>
+#include <vif_registers.h>
 #include <libkbd.h>
 #include <libmouse.h>
 
@@ -49,6 +51,10 @@ static void InitDisplay(void) {
 
 
 void Window_PreInit(void) {
+	GIF_REG_CTRL =  1; // reset GIF
+	VIF1_ERR     |= 2;  // disable DMA tag error per ps2tek "ME0 should always be set to 1"
+	VIF1_FBRST   =  1; // reset VIF1
+
 	dma_channel_initialize(DMA_CHANNEL_VIF1, NULL, 0);
 	dma_channel_fast_waits(DMA_CHANNEL_VIF1);
 	display_mode = graph_get_region();
