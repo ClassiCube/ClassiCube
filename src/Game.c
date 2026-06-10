@@ -41,6 +41,8 @@
 #include "SystemFonts.h"
 #include "Formats.h"
 #include "EntityRenderers.h"
+#include "Survival.h"
+#include "Mobs.h"
 
 struct _GameData Game;
 static cc_uint64 frameStart;
@@ -430,6 +432,8 @@ static void Game_Load(void) {
 	Game_AddComponent(&Server_Component);
 	Game_AddComponent(&Protocol_Component);
 	Game_AddComponent(&Entities_Component);
+	Game_AddComponent(&Survival_Component);
+	Game_AddComponent(&Mobs_Component);
 
 	Game_AddComponent(&Gui_Component);
 	Game_AddComponent(&Selections_Component);
