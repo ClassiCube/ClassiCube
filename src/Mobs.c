@@ -1,5 +1,6 @@
 #include "Mobs.h"
 #include "Survival.h"
+#include "SurvivalInv.h"
 #include "Game.h"
 #include "World.h"
 #include "Block.h"
@@ -454,13 +455,12 @@ void Mob_Kill(struct MobEntity* mob) {
 	if (mob->MobType == MOB_TYPE_SPIDER ||
 		mob->MobType == MOB_TYPE_PIG    ||
 		mob->MobType == MOB_TYPE_SHEEP) {
-		Inventory_PickBlock(BLOCK_BROWN_SHROOM);
+		SurvivalInv_Add(BLOCK_BROWN_SHROOM, 1);
 	}
 	/* Skeleton drops 4-9 arrows (use sapling as arrow proxy) */
 	if (mob->MobType == MOB_TYPE_SKELETON) {
 		int n = 4 + (int)(MobRng_Next() % 6); /* 4-9 */
-		int i;
-		for (i = 0; i < n; i++) Inventory_PickBlock(BLOCK_SAPLING);
+		SurvivalInv_Add(BLOCK_SAPLING, n);
 	}
 
 	/* Creeper explodes on death */

@@ -1,4 +1,5 @@
 #include "Survival.h"
+#include "SurvivalInv.h"
 #include "Game.h"
 #include "Entity.h"
 #include "EntityComponents.h"
@@ -161,7 +162,8 @@ static void OnBlockChanged(void* obj, IVec3 coords, BlockID oldBlock, BlockID ne
 
 	drop = Survival_GetDrop(oldBlock, &count);
 	if (drop == BLOCK_AIR) return;
-	for (i = 0; i < count; i++) Inventory_PickBlock(drop);
+	if (!SurvivalInv_Add(drop, count))
+		Chat_AddRaw("&cInventory full!");
 }
 
 /* Intercept mushroom placement as consumption (brown = heal, red = poison).
@@ -185,12 +187,10 @@ static void OnBlockPlaced(void* obj, IVec3 coords, BlockID oldBlock, BlockID new
 		Chat_AddRaw("&cYou ate a poisonous mushroom! (-3 HP)");
 		Survival_Damage(3);
 	} else if (newBlock == BLOCK_TNT) {
-		/* Track TNT usage -- remove from supply */
-		if (Survival_TNT > 0) {
-			Survival_TNT--;
-			if (Survival_TNT <= 0) Inventory_Remove(BLOCK_TNT);
-			Survival_UpdateHUD();
-		}
+		/* Remove one TNT from inventory when placed */
+		SurvivalInv_RemoveBlock(BLOCK_TNT, 1);
+		Survival_TNT = SurvivalInv_Count(BLOCK_TNT);
+		Survival_UpdateHUD();
 	}
 }
 
@@ -313,6 +313,7 @@ void Survival_UpdateHUD(void) {
 	String_InitArray(msg, buf);
 	String_Format2(&msg, "&eScore: %i  &bArrows: %i",
 	               &Survival_Score, &Survival_Arrows);
+	Survival_TNT = SurvivalInv_Count(BLOCK_TNT);
 	if (Survival_TNT > 0) {
 		String_AppendConst(&msg, "  &cTNT: ");
 		String_AppendInt(&msg, Survival_TNT);
@@ -470,8 +471,8 @@ static void Survival_OnNewMapLoaded(void) {
 		sv_highestY = Entities.CurPlayer->Base.Position.y;
 
 	if (Survival_Active) {
-		/* Give the player their starting TNT in hotbar slot 9 */
-		Inventory_Set(HOTBAR_MAX_INDEX, BLOCK_TNT);
+		/* Give the player starting TNT supply via inventory */
+		SurvivalInv_Add(BLOCK_TNT, SURVIVAL_START_TNT);
 		Survival_UpdateHUD();
 	}
 }

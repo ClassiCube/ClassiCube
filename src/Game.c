@@ -42,6 +42,7 @@
 #include "Formats.h"
 #include "EntityRenderers.h"
 #include "Survival.h"
+#include "SurvivalInv.h"
 #include "Mobs.h"
 
 struct _GameData Game;
@@ -433,6 +434,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Protocol_Component);
 	Game_AddComponent(&Entities_Component);
 	Game_AddComponent(&Survival_Component);
+	Game_AddComponent(&SurvivalInv_Component);
 	Game_AddComponent(&Mobs_Component);
 
 	Game_AddComponent(&Gui_Component);
