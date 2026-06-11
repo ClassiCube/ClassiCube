@@ -19,52 +19,101 @@ int     Survival_Health = SURVIVAL_MAX_HEALTH;
 int     Survival_Air    = SURVIVAL_MAX_AIR;
 int     Survival_Score;
 cc_bool Survival_Dead;
+int     Survival_Arrows = SURVIVAL_START_ARROWS;
+cc_bool Survival_InExplosion;
 
-static int  sv_damageCooldown; /* ticks of invincibility after hit */
-static int  sv_regenTimer;     /* unused - no regen in c0.30-s */
-static int  sv_deathTimer;     /* ticks since death, for auto-respawn */
-static int  sv_airCooldown;    /* ticks between air decrements */
-static int  sv_lavaTick;       /* ticks for lava damage rate */
-static int  sv_drownTick;      /* ticks for drowning damage rate */
+static int  sv_damageCooldown;
+static int  sv_deathTimer;       /* unused — no respawn, just for delayed HUD */
+static int  sv_airCooldown;
+static int  sv_lavaTick;
+static int  sv_drownTick;
 static cc_bool sv_prevOnGround;
-static float   sv_highestY;   /* highest Y since last landing */
-static int  sv_lastHealth;    /* track changes to update HUD */
+static float   sv_highestY;
+static int  sv_lastHealth;
 static int  sv_lastAir;
 
-/* CP437 heart char for health display */
+/* Simple XorShift RNG for block drops */
+static cc_uint32 sv_rng = 54321;
+static int Sv_RandRange(int min, int max) {
+    sv_rng ^= sv_rng << 13;
+    sv_rng ^= sv_rng >> 17;
+    sv_rng ^= sv_rng << 5;
+    return min + (int)(sv_rng % (cc_uint32)(max - min + 1));
+}
+
+/* CP437 heart / bullet chars */
 #define HEART_CHAR  "\x03"
 #define BULLET_CHAR "\xf9"
 
-/* --- Block drop table for c0.30-s --- */
-static BlockID Survival_GetDrop(BlockID block) {
+/* --- Block drop table (c0.30-s) ---
+   Logs drop 3-5 planks; leaves have 1/10 chance to drop a sapling;
+   ore blocks drop the processed material, not the ore itself. */
+static BlockID Survival_GetDrop(BlockID block, int* count) {
+    *count = 1;
     switch (block) {
     case BLOCK_GRASS:    return BLOCK_DIRT;
     case BLOCK_STONE:    return BLOCK_COBBLE;
-    case BLOCK_COAL_ORE: return BLOCK_SLAB;
+    case BLOCK_COAL_ORE: return BLOCK_SLAB;    /* coal ore → slab in c0.30-s */
     case BLOCK_IRON_ORE: return BLOCK_IRON;
     case BLOCK_GOLD_ORE: return BLOCK_GOLD;
-    case BLOCK_LOG:      return BLOCK_WOOD;
-    case BLOCK_LEAVES:   return BLOCK_SAPLING;
-    default:             return block;
+    case BLOCK_LOG:
+        *count = Sv_RandRange(3, 5);           /* logs drop 3–5 planks */
+        return BLOCK_WOOD;
+    case BLOCK_LEAVES:
+        if (Sv_RandRange(1, 10) == 1)          /* 1/10 chance */
+            return BLOCK_SAPLING;
+        return BLOCK_AIR;                      /* no drop */
+    default:
+        return block;
     }
 }
 
 static void OnBlockChanged(void* obj, IVec3 coords, BlockID oldBlock, BlockID newBlock) {
     BlockID drop;
-    (void)obj; (void)coords;
-    if (!Survival_Active || !Server.IsSinglePlayer) return;
-    /* Only care about block removals (break events) */
-    if (newBlock != BLOCK_AIR || oldBlock == BLOCK_AIR) return;
-    /* Bedrock, water, lava are unbreakable in survival */
-    if (oldBlock == BLOCK_BEDROCK)    return;
-    if (oldBlock == BLOCK_WATER)      return;
-    if (oldBlock == BLOCK_STILL_WATER) return;
-    if (oldBlock == BLOCK_LAVA)       return;
-    if (oldBlock == BLOCK_STILL_LAVA) return;
+    int count, i;
+    (void)obj;
 
-    drop = Survival_GetDrop(oldBlock);
-    /* Auto-pick the dropped block into the hotbar */
-    Inventory_PickBlock(drop);
+    if (!Survival_Active || !Server.IsSinglePlayer) return;
+    /* Only care about block removals */
+    if (newBlock != BLOCK_AIR || oldBlock == BLOCK_AIR) return;
+    /* Explosion-cleared blocks give no items */
+    if (Survival_InExplosion) return;
+
+    /* Unbreakable / non-item blocks */
+    if (oldBlock == BLOCK_BEDROCK)      return;
+    if (oldBlock == BLOCK_WATER)        return;
+    if (oldBlock == BLOCK_STILL_WATER)  return;
+    if (oldBlock == BLOCK_LAVA)         return;
+    if (oldBlock == BLOCK_STILL_LAVA)   return;
+
+    /* Mushroom consumption — intercept placement of mushrooms as "eating" */
+    if (newBlock == BLOCK_BROWN_SHROOM || newBlock == BLOCK_RED_SHROOM) return;
+
+    drop = Survival_GetDrop(oldBlock, &count);
+    if (drop == BLOCK_AIR) return;
+    for (i = 0; i < count; i++) Inventory_PickBlock(drop);
+}
+
+/* Intercept mushroom placement as consumption (brown = heal, red = poison) */
+static void OnBlockPlaced(void* obj, IVec3 coords, BlockID oldBlock, BlockID newBlock) {
+    (void)obj;
+    if (!Survival_Active || !Server.IsSinglePlayer) return;
+    if (oldBlock != BLOCK_AIR) return; /* only fresh placement */
+
+    if (newBlock == BLOCK_BROWN_SHROOM) {
+        /* Undo the placement and heal player instead */
+        Game_UpdateBlock(coords.x, coords.y, coords.z, BLOCK_AIR);
+        if (Survival_Dead) return;
+        Survival_Health += 5;
+        if (Survival_Health > SURVIVAL_MAX_HEALTH) Survival_Health = SURVIVAL_MAX_HEALTH;
+        Chat_AddRaw("&aYou ate a mushroom (5 HP).");
+        Survival_UpdateHUD();
+    } else if (newBlock == BLOCK_RED_SHROOM) {
+        Game_UpdateBlock(coords.x, coords.y, coords.z, BLOCK_AIR);
+        if (Survival_Dead) return;
+        Chat_AddRaw("&cYou ate a poisonous mushroom! (-3 HP)");
+        Survival_Damage(3);
+    }
 }
 
 void Survival_Damage(int amount) {
@@ -72,96 +121,88 @@ void Survival_Damage(int amount) {
     if (sv_damageCooldown > 0) return;
 
     Survival_Health -= amount;
-    sv_damageCooldown = 10; /* half second invincibility */
+    sv_damageCooldown = 10; /* 0.5-second invincibility */
 
     if (Survival_Health <= 0) {
         Survival_Health = 0;
         Survival_Die();
+        return;
     }
     Survival_UpdateHUD();
 }
 
 void Survival_Die(void) {
+    cc_string msg; char buf[128];
     if (Survival_Dead) return;
-    Survival_Dead   = true;
-    sv_deathTimer   = 0;
-    Chat_AddRaw("&cYou died! Respawning in 3 seconds...");
-    Chat_AddRaw("&eGame Over!");
-    Survival_UpdateHUD();
-}
+    Survival_Dead = true;
 
-void Survival_Respawn(void) {
-    struct LocationUpdate update;
-    Survival_Health     = SURVIVAL_MAX_HEALTH;
-    Survival_Air        = SURVIVAL_MAX_AIR;
-    Survival_Dead       = false;
-    sv_damageCooldown   = 0;
-    sv_deathTimer       = 0;
-    sv_prevOnGround     = true;
-    sv_highestY         = 0.0f;
-
-    LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
-    LocalPlayers_MoveToSpawn(&update);
+    String_InitArray(msg, buf);
+    String_Format1(&msg, "&4Game Over! &eYour score: %i", &Survival_Score);
+    Chat_AddRaw("&4-----------------------------");
+    Chat_Add(&msg);
+    Chat_AddRaw("&4-----------------------------");
+    Chat_AddRaw("&7Generate a new world to play again.");
     Survival_UpdateHUD();
-    Chat_AddRaw("&aRespawned!");
 }
 
 void Survival_AddScore(int points) {
-    cc_string msg; char msgBuffer[64];
+    cc_string msg; char buf[64];
+    if (Survival_InExplosion) return; /* no score for indirect kills */
     Survival_Score += points;
-    String_InitArray(msg, msgBuffer);
+    String_InitArray(msg, buf);
     String_Format1(&msg, "&eScore: %i", &Survival_Score);
     Chat_AddOf(&msg, MSG_TYPE_STATUS_3);
 }
 
 void Survival_UpdateHUD(void) {
-    cc_string msg; char msgBuffer[128];
-    int hearts, i;
+    cc_string msg; char buf[192];
+    int i;
 
     if (!Survival_Active) return;
 
-    /* Build health string: e.g. "&c[*][*][*]&8[.][.]" */
-    String_InitArray(msg, msgBuffer);
-    hearts = Survival_Health / 2; /* full hearts */
-
-    /* Health bar above hotbar shown in BOTTOMRIGHT_1 */
-    String_AppendConst(&msg, "&c");
-    for (i = 0; i < 10; i++) {
-        if (i * 2 + 1 < Survival_Health) {
-            /* Full heart */
-            String_AppendConst(&msg, HEART_CHAR);
-        } else if (i * 2 < Survival_Health) {
-            /* Half heart - show slightly different */
-            String_AppendConst(&msg, "&4" HEART_CHAR "&c");
-        } else {
-            /* Empty heart */
-            String_AppendConst(&msg, "&8" HEART_CHAR "&c");
-        }
-    }
-
-    /* Air bubbles when drowning */
-    if (Survival_Air < SURVIVAL_MAX_AIR) {
-        int bubbles = (Survival_Air * 10) / SURVIVAL_MAX_AIR;
-        String_AppendConst(&msg, " &9");
-        for (i = 0; i < 10; i++) {
-            if (i < bubbles) {
-                String_AppendConst(&msg, BULLET_CHAR);
-            } else {
-                String_AppendConst(&msg, "&8" BULLET_CHAR "&9");
-            }
-        }
-    }
-
     if (Survival_Dead) {
-        Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
+        /* Show Game Over on all status lines */
+        String_InitArray(msg, buf);
+        String_Format1(&msg, "&4GAME OVER  &eScore: %i", &Survival_Score);
+        Chat_AddOf(&msg, MSG_TYPE_STATUS_1);
         Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
         return;
     }
 
+    /* Line 1: hearts */
+    String_InitArray(msg, buf);
+    String_AppendConst(&msg, "&c");
+    for (i = 0; i < 10; i++) {
+        if (i * 2 + 1 < Survival_Health) {
+            String_AppendConst(&msg, HEART_CHAR);
+        } else if (i * 2 < Survival_Health) {
+            String_AppendConst(&msg, "&4" HEART_CHAR "&c");
+        } else {
+            String_AppendConst(&msg, "&8" HEART_CHAR "&c");
+        }
+    }
+
+    /* Append air bubbles while drowning */
+    if (Survival_Air < SURVIVAL_MAX_AIR) {
+        int bubbles = (Survival_Air * 10) / SURVIVAL_MAX_AIR;
+        String_AppendConst(&msg, " &9");
+        for (i = 0; i < 10; i++) {
+            if (i < bubbles)
+                String_AppendConst(&msg, BULLET_CHAR);
+            else
+                String_AppendConst(&msg, "&8" BULLET_CHAR "&9");
+        }
+    }
+
+    /* Flash hearts when critically low (≤4 HP = 2 hearts) */
+    if (Survival_Health <= 4) {
+        String_AppendConst(&msg, " &c!");
+    }
+
     Chat_AddOf(&msg, MSG_TYPE_STATUS_1);
 
-    /* Score on line 2 */
-    String_InitArray(msg, msgBuffer);
+    /* Line 2: score */
+    String_InitArray(msg, buf);
     String_Format1(&msg, "&eScore: %i", &Survival_Score);
     Chat_AddOf(&msg, MSG_TYPE_STATUS_2);
 }
@@ -175,47 +216,45 @@ static cc_bool Survival_Tick(struct ScheduledTask2* task) {
 
     if (!Survival_Active || !World.Loaded) return true;
 
-    /* Auto-respawn after 60 ticks (3 seconds) */
     if (Survival_Dead) {
-        sv_deathTimer++;
-        if (sv_deathTimer >= 60) Survival_Respawn();
+        /* Freeze the player in place on death — gravity still applies */
+        if (Entities.CurPlayer) {
+            Entities.CurPlayer->Base.Velocity.x = 0.0f;
+            Entities.CurPlayer->Base.Velocity.z = 0.0f;
+        }
         return true;
     }
 
     p = Entities.CurPlayer;
     e = &p->Base;
 
-    /* Physical position is e->next.pos after entity tick */
     curY     = e->next.pos.y;
     onGround = e->OnGround;
 
-    /* Decrement invincibility frames */
     if (sv_damageCooldown > 0) sv_damageCooldown--;
 
-    /* ---- Fall damage ---- */
+    /* ---- Fall damage: 1 HP per block beyond the safe 3 blocks ---- */
     if (onGround) {
         if (!sv_prevOnGround) {
-            /* Just landed - compute fall distance */
             float fallDist = sv_highestY - curY;
             if (fallDist > 3.0f) {
-                int damage = (int)(fallDist - 3.0f) * 2;
+                int damage = (int)(fallDist - 3.0f);
                 if (damage < 1) damage = 1;
                 Survival_Damage(damage);
             }
         }
-        /* Reset highest Y while on ground */
         sv_highestY = curY;
     } else {
-        /* Track highest point while in air */
         if (curY > sv_highestY) sv_highestY = curY;
     }
     sv_prevOnGround = onGround;
 
-    /* ---- Lava damage (2 hearts/sec = 2 HP per tick is too fast, use 1/sec) ---- */
+    /* ---- Lava damage: 2 HP every 10 ticks (4 HP/s) ---- */
     if (Entity_TouchesAnyLava(e)) {
-        /* Lava: 1 heart (2 HP) per second = every 10 ticks */
         sv_lavaTick++;
         if (sv_lavaTick >= 10) { sv_lavaTick = 0; Survival_Damage(2); }
+    } else {
+        sv_lavaTick = 0;
     }
 
     /* ---- Drowning ---- */
@@ -223,7 +262,7 @@ static cc_bool Survival_Tick(struct ScheduledTask2* task) {
         if (sv_airCooldown > 0) {
             sv_airCooldown--;
         } else {
-            sv_airCooldown = 15; /* lose 1 air every 15 ticks (~0.75s) */
+            sv_airCooldown = 15;
             if (Survival_Air > 0) {
                 Survival_Air--;
                 if (Survival_Air != sv_lastAir) {
@@ -233,16 +272,16 @@ static cc_bool Survival_Tick(struct ScheduledTask2* task) {
             }
         }
         if (Survival_Air <= 0) {
-            /* 1 heart per second when out of air */
+            /* 2 HP per second = once every 20 ticks */
             sv_drownTick++;
             if (sv_drownTick >= 20) { sv_drownTick = 0; Survival_Damage(2); }
         }
     } else {
-        /* Recover air quickly out of water */
         if (Survival_Air < SURVIVAL_MAX_AIR) {
             Survival_Air += 5;
             if (Survival_Air > SURVIVAL_MAX_AIR) Survival_Air = SURVIVAL_MAX_AIR;
             sv_airCooldown = 0;
+            sv_drownTick   = 0;
             if (Survival_Air != sv_lastAir) {
                 sv_lastAir = Survival_Air;
                 Survival_UpdateHUD();
@@ -250,7 +289,6 @@ static cc_bool Survival_Tick(struct ScheduledTask2* task) {
         }
     }
 
-    /* Update HUD if health changed */
     if (Survival_Health != sv_lastHealth) {
         sv_lastHealth = Survival_Health;
         Survival_UpdateHUD();
@@ -262,31 +300,36 @@ static cc_bool Survival_Tick(struct ScheduledTask2* task) {
 static struct ScheduledTask2 sv_task;
 
 static void Survival_Init(void) {
-    cc_bool enabled = Options_GetBool("survival-mode", false);
-    Survival_Active = enabled && true; /* Always allow enabling */
+    cc_bool enabled = Options_GetBool(OPT_SURVIVAL_MODE, false);
+    Survival_Active = enabled && Server.IsSinglePlayer;
 
     Survival_Health = SURVIVAL_MAX_HEALTH;
     Survival_Air    = SURVIVAL_MAX_AIR;
     Survival_Score  = 0;
     Survival_Dead   = false;
+    Survival_Arrows = SURVIVAL_START_ARROWS;
+    Survival_InExplosion = false;
     sv_damageCooldown = 0;
     sv_deathTimer     = 0;
     sv_airCooldown    = 0;
+    sv_lavaTick       = 0;
+    sv_drownTick      = 0;
     sv_prevOnGround   = true;
     sv_highestY       = 0.0f;
     sv_lastHealth     = SURVIVAL_MAX_HEALTH;
     sv_lastAir        = SURVIVAL_MAX_AIR;
 
-    sv_task.interval = 0.05f; /* 20 ticks per second */
+    sv_task.interval = 0.05f; /* 20 Hz */
     sv_task.callback = Survival_Tick;
     ScheduledTask2_Add(&sv_task);
 
     Event_Register_(&UserEvents.BlockChanged, NULL, OnBlockChanged);
+    Event_Register_(&UserEvents.BlockChanged, NULL, OnBlockPlaced);
 }
 
 static void Survival_Free(void) {
     Event_Unregister_(&UserEvents.BlockChanged, NULL, OnBlockChanged);
-    /* Clear survival status from HUD */
+    Event_Unregister_(&UserEvents.BlockChanged, NULL, OnBlockPlaced);
     Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
     Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
     Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_3);
@@ -295,7 +338,10 @@ static void Survival_Free(void) {
 static void Survival_Reset(void) {
     Survival_Health   = SURVIVAL_MAX_HEALTH;
     Survival_Air      = SURVIVAL_MAX_AIR;
+    Survival_Score    = 0;
     Survival_Dead     = false;
+    Survival_Arrows   = SURVIVAL_START_ARROWS;
+    Survival_InExplosion = false;
     sv_damageCooldown = 0;
     sv_deathTimer     = 0;
     sv_airCooldown    = 0;
@@ -309,34 +355,32 @@ static void Survival_Reset(void) {
 }
 
 static void Survival_OnNewMapLoaded(void) {
-    /* Reset state for new map */
+    Survival_Active = Options_GetBool(OPT_SURVIVAL_MODE, false) && Server.IsSinglePlayer;
+
     Survival_Health   = SURVIVAL_MAX_HEALTH;
     Survival_Air      = SURVIVAL_MAX_AIR;
+    Survival_Score    = 0;
     Survival_Dead     = false;
+    Survival_Arrows   = SURVIVAL_START_ARROWS;
+    Survival_InExplosion = false;
     sv_damageCooldown = 0;
     sv_deathTimer     = 0;
     sv_airCooldown    = 0;
     sv_lavaTick       = 0;
     sv_drownTick      = 0;
     sv_prevOnGround   = true;
-    /* Grab current player Y as starting high point */
-    if (Entities.CurPlayer) {
+    if (Entities.CurPlayer)
         sv_highestY = Entities.CurPlayer->Base.Position.y;
-    }
     sv_lastHealth = SURVIVAL_MAX_HEALTH;
     sv_lastAir    = SURVIVAL_MAX_AIR;
 
-    /* Force a check: is survival enabled in options? */
-    Survival_Active = Options_GetBool("survival-mode", false);
-    if (Survival_Active && Server.IsSinglePlayer) {
-        Survival_UpdateHUD();
-    }
+    if (Survival_Active) Survival_UpdateHUD();
 }
 
 struct IGameComponent Survival_Component = {
-    Survival_Init,         /* Init          */
-    Survival_Free,         /* Free          */
-    Survival_Reset,        /* Reset         */
-    NULL,                  /* OnNewMap      */
+    Survival_Init,          /* Init           */
+    Survival_Free,          /* Free           */
+    Survival_Reset,         /* Reset          */
+    NULL,                   /* OnNewMap       */
     Survival_OnNewMapLoaded /* OnNewMapLoaded */
 };

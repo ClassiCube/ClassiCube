@@ -18,21 +18,25 @@ extern int Survival_Health;
 extern int Survival_Air;
 /* Total score accumulated this session */
 extern int Survival_Score;
-/* Whether the player is currently dead (waiting to respawn) */
+/* Whether the player has died (Game Over - no respawn in c0.30-s) */
 extern cc_bool Survival_Dead;
+/* Player's arrow supply (starts at 20, used by Tab key) */
+extern int Survival_Arrows;
+/* Set true while a creeper/TNT explosion is destroying blocks so that
+   the block-drop handler doesn't award items for explosion-cleared blocks */
+extern cc_bool Survival_InExplosion;
 
 #define SURVIVAL_MAX_HEALTH 20
 #define SURVIVAL_MAX_AIR    300
+#define SURVIVAL_START_ARROWS 20
 
 /* Deals damage to the player, respecting invincibility frames */
 void Survival_Damage(int amount);
-/* Kills the player immediately */
+/* Kills the player immediately (Game Over) */
 void Survival_Die(void);
-/* Respawns the player at spawn with full health */
-void Survival_Respawn(void);
-/* Adds points to the player's score */
+/* Adds points to the player's score (no-op if InExplosion = indirect kill) */
 void Survival_AddScore(int points);
-/* Updates the HUD health/air display */
+/* Updates the HUD health/air/score display */
 void Survival_UpdateHUD(void);
 
 CC_END_HEADER
