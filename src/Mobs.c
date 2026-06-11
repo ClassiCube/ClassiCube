@@ -321,7 +321,7 @@ static PackedCol Mob_GetCol(struct Entity* e) {
     IVec3 pos;
 
     /* White flash when the mob has just been hit */
-    if (mob->HitFlashTimer > 0) return PackedCol_Make(255, 255, 255, 255);
+    if (mob->HitFlashTimer > 0) return PACKEDCOL_WHITE;
 
     eyePos = Entity_GetEyePosition(e);
     IVec3_Floor(&pos, &eyePos);
@@ -574,7 +574,6 @@ void Mobs_ClearAll(void) {
 void Mobs_PlayerMeleeAttack(void) {
     struct LocalPlayer* player;
     Vec3 eyePos, lookDir;
-    float yaw, pitch;
     int i;
     struct MobEntity* best;
     float bestDist2;
@@ -585,13 +584,9 @@ void Mobs_PlayerMeleeAttack(void) {
     player = Entities.CurPlayer;
     if (!player) return;
 
-    eyePos = Entity_GetEyePosition(&player->Base);
-    yaw    = player->Base.Yaw   * MATH_DEG2RAD;
-    pitch  = player->Base.Pitch * MATH_DEG2RAD;
-
-    lookDir.x = -Math_SinF(yaw) * Math_CosF(pitch);
-    lookDir.y = -Math_SinF(pitch);
-    lookDir.z =  Math_CosF(yaw) * Math_CosF(pitch);
+    eyePos  = Entity_GetEyePosition(&player->Base);
+    lookDir = Vec3_GetDirVector(player->Base.Yaw   * MATH_DEG2RAD,
+                                player->Base.Pitch * MATH_DEG2RAD);
 
     best      = NULL;
     bestDist2 = 4.0f * 4.0f; /* 4-block reach */
