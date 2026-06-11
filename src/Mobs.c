@@ -146,61 +146,8 @@ static void SetMobModelScale(struct Entity* e, int type) {
 *------------------------------------------------------Creeper Explosion-------------------------------------------------*
 *#########################################################################################################################*/
 static void MobCreeper_Explode(struct MobEntity* mob) {
-	Vec3 center;
-	struct LocalPlayer* player;
-	Vec3 diff;
-	float dist;
-	int damage;
-	int x, y, z;
-	int cx, cy, cz;
-	int r = CREEPER_BLAST_RADIUS;
-
-	center = mob->Base.Position;
-	cx = (int)center.x;
-	cy = (int)center.y;
-	cz = (int)center.z;
-
-	Survival_InExplosion = true;
-
-	/* Destroy non-stone blocks in a sphere of radius r */
-	for (x = cx - r; x <= cx + r; x++) {
-		for (y = cy - r; y <= cy + r; y++) {
-			for (z = cz - r; z <= cz + r; z++) {
-				BlockID b;
-				float dx, dy, dz;
-				if (!World_Contains(x, y, z)) continue;
-
-				dx = (float)(x - cx);
-				dy = (float)(y - cy);
-				dz = (float)(z - cz);
-				if (dx*dx + dy*dy + dz*dz > (float)(r * r)) continue;
-
-				b = World_GetBlock(x, y, z);
-				/* Stone and bedrock resist explosions */
-				if (b == BLOCK_STONE    || b == BLOCK_BEDROCK ||
-					b == BLOCK_COBBLE   || b == BLOCK_WATER   ||
-					b == BLOCK_STILL_WATER || b == BLOCK_LAVA ||
-					b == BLOCK_STILL_LAVA) continue;
-				if (b == BLOCK_AIR) continue;
-
-				Game_ChangeBlock(x, y, z, BLOCK_AIR);
-			}
-		}
-	}
-
-	Survival_InExplosion = false;
-
-	/* Damage player based on distance from blast center */
-	player = Entities.CurPlayer;
-	if (player && !Survival_Dead) {
-		Vec3_Sub(&diff, &player->Base.Position, &center);
-		dist = Math_SqrtF(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z);
-		if (dist < (float)r) {
-			float frac = 1.0f - dist / (float)r;
-			damage = (int)((float)CREEPER_BLAST_MAX_DMG * frac);
-			if (damage > 0) Survival_Damage(damage);
-		}
-	}
+	Vec3 c = mob->Base.Position;
+	Survival_Explode(c.x, c.y, c.z, CREEPER_BLAST_RADIUS, CREEPER_BLAST_MAX_DMG);
 }
 
 /*########################################################################################################################*
@@ -217,7 +164,7 @@ void MobArrow_Fire(Vec3 origin, Vec3 target, cc_bool fromPlayer) {
 	if (i >= MAX_ARROWS) return;
 
 	dir.x = target.x - origin.x;
-	dir.y = target.y - origin.y + 0.5f; /* aim slightly above centre */
+	dir.y = target.y - origin.y;
 	dir.z = target.z - origin.z;
 	len   = Math_SqrtF(dir.x*dir.x + dir.y*dir.y + dir.z*dir.z);
 	if (len < 0.001f) return;
@@ -373,10 +320,12 @@ static void Mob_UpdateAI(struct MobEntity* mob, float delta) {
 				mob->WalkX = 0.0f; mob->WalkZ = 0.0f; /* skeleton keeps distance */
 				if (dist2 < 24.0f * 24.0f) {
 					if ((MobRng_Next() % 10) == 0) {
-						Vec3 origin;
+						Vec3 origin, ptarget;
 						origin = e->Position;
 						origin.y += 1.6f; /* fire from eye level */
-						MobArrow_Fire(origin, player->Base.Position, false);
+						ptarget = player->Base.Position;
+						ptarget.y += 0.9f; /* aim at player's torso */
+						MobArrow_Fire(origin, ptarget, false);
 					}
 					/* Skeleton backs up slightly if player is too close */
 					if (dist2 < 4.0f) {
@@ -441,9 +390,11 @@ static void Mob_Tick(struct Entity* e, float delta) {
 
 	if (Survival_Active) Mob_UpdateAI(mob, delta);
 
-	/* Jump over obstacles */
-	if (Collisions_HitHorizontal(&mob->Collisions) && e->OnGround)
-		mob->Physics.Jumping = true;
+	/* Jump over obstacles (non-spiders only; spiders climb instead) */
+	if (mob->MobType != MOB_TYPE_SPIDER) {
+		if (Collisions_HitHorizontal(&mob->Collisions) && e->OnGround)
+			mob->Physics.Jumping = true;
+	}
 
 	Vec3_Set(heading,
 		mob->WalkX * MobSpeed(mob->MobType),
@@ -455,6 +406,27 @@ static void Mob_Tick(struct Entity* e, float delta) {
 	mob->Physics.Jumping = false;
 
 	e->next.pos = e->Position;
+
+	/* Spider wall-climbing: crawl up any surface they press against */
+	if (mob->MobType == MOB_TYPE_SPIDER) {
+		if (Collisions_HitHorizontal(&mob->Collisions) && !e->OnGround) {
+			e->next.pos.y += 0.1f; /* ~2 blocks/second climb rate */
+		}
+	}
+
+	/* Sheep grass-eating: slowly convert grass to dirt while grazing */
+	if (mob->MobType == MOB_TYPE_SHEEP && !mob->IsHostile) {
+		int bx = (int)e->Position.x;
+		int by = (int)(e->Position.y - 0.05f); /* block under feet */
+		int bz = (int)e->Position.z;
+		if (World_Contains(bx, by, bz) &&
+			World_GetBlock(bx, by, bz) == BLOCK_GRASS &&
+			(MobRng_Next() % 200) == 0) /* ~10% chance per second */
+		{
+			Game_ChangeBlock(bx, by, bz, BLOCK_DIRT);
+		}
+	}
+
 	e->Position = e->prev.pos;
 	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
 
@@ -652,6 +624,7 @@ static struct ScheduledTask2 mob_spawn_task;
 static struct ScheduledTask2 mob_tick_task;
 
 static cc_bool Mobs_UpdateTick(struct ScheduledTask2* task) {
+	int i;
 	(void)task;
 	if (!World.Loaded) return true;
 
@@ -660,6 +633,21 @@ static cc_bool Mobs_UpdateTick(struct ScheduledTask2* task) {
 
 	/* Update arrows (entity tick doesn't cover these) */
 	MobArrows_Tick(task->interval);
+
+	/* Despawn mobs that have wandered more than 64 blocks from the player */
+	if (Entities.CurPlayer) {
+		Vec3 pp = Entities.CurPlayer->Base.Position;
+		for (i = 0; i < MAX_MOBS; i++) {
+			Vec3 diff;
+			if (!MobEntities[i].IsAlive) continue;
+			Vec3_Sub(&diff, &MobEntities[i].Base.Position, &pp);
+			if (diff.x*diff.x + diff.y*diff.y + diff.z*diff.z > 64.0f * 64.0f) {
+				MobEntities[i].IsAlive = false;
+				if (Entities.List[i] == &MobEntities[i].Base)
+					Entities.List[i] = NULL;
+			}
+		}
+	}
 
 	/* NOTE: Mob_Tick for each mob is called automatically by the entity
 	   system (Entities_Tick -> VTABLE->Tick for all entries in Entities.List).
