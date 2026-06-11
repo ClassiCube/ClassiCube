@@ -1242,6 +1242,7 @@ void InputWidget_Clear(struct InputWidget* w) {
 }
 
 static cc_bool InputWidget_AllowedChar(void* widget, char c) {
+	if (!c) return false; /* never allow NUL into the text buffer */
 	return Server.SupportsFullCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 

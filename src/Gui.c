@@ -693,8 +693,9 @@ static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
 
 static void OnKeyPress(void* obj, int cp) {
 	struct Screen* s;
-	int i; 
+	int i;
 	char c;
+	if (!cp) return; /* ignore NUL keypress events (some Ctrl combos on X11) */
 	if (!Convert_TryCodepointToCP437(cp, &c)) return;
 
 	for (i = 0; i < Gui.ScreensCount; i++) 
