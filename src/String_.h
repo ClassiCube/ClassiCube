@@ -268,9 +268,9 @@ void StringsBuffer_Sort(struct StringsBuffer* buffer);
 void WordWrap_Do(STRING_REF cc_string* text, cc_string* lines, int numLines, int lineLen);
 /* Calculates the position of a raw index in the wrapped lines. */
 void WordWrap_GetCoords(int index, const cc_string* lines, int numLines, int* coordX, int* coordY);
-/* Returns number of characters from current character to end of previous word. */
+/* Returns number of characters from the caret to the start of the previous word. */
 int  WordWrap_GetBackLength(const cc_string* text, int index);
-/* Returns number of characters from current character to start of next word. */
+/* Returns number of characters from the caret to the end of the next word. */
 int  WordWrap_GetForwardLength(const cc_string* text, int index);
 
 CC_END_HEADER
