@@ -1294,26 +1294,20 @@ static void InputWidget_DeleteChar(struct InputWidget* w) {
 }
 
 static void InputWidget_BackspaceKey(struct InputWidget* w) {
-	int i, len;
+	int i, start, end;
 
 	if (Input_IsActionPressed()) {
-		if (w->caretPos == -1) { w->caretPos = w->text.length - 1; }
-		len = WordWrap_GetBackLength(&w->text, w->caretPos);
-		if (!len) return;
+		/* Ctrl+backspace deletes the word (and any spaces) to the left of the caret */
+		end   = w->caretPos == -1 ? w->text.length : w->caretPos;
+		start = end - WordWrap_GetBackLength(&w->text, end);
+		if (start >= end) return;
 
-		w->caretPos -= len;
-		if (w->caretPos < 0) { w->caretPos = 0; }
-
-		for (i = 0; i <= len; i++) {
-			String_DeleteAt(&w->text, w->caretPos);
+		for (i = start; i < end; i++) {
+			String_DeleteAt(&w->text, start);
 		}
 
+		w->caretPos = start;
 		if (w->caretPos >= w->text.length) { w->caretPos = -1; }
-		if (w->caretPos == -1 && w->text.length > 0) {
-			String_InsertAt(&w->text, w->text.length, ' ');
-		} else if (w->caretPos >= 0 && w->text.buffer[w->caretPos] != ' ') {
-			String_InsertAt(&w->text, w->caretPos, ' ');
-		}
 		InputWidget_UpdateText(w);
 	} else if (w->text.length > 0 && w->caretPos != 0) {
 		InputWidget_DeleteChar(w);
@@ -1322,7 +1316,21 @@ static void InputWidget_BackspaceKey(struct InputWidget* w) {
 }
 
 static void InputWidget_DeleteKey(struct InputWidget* w) {
-	if (w->text.length > 0 && w->caretPos != -1) {
+	int i, start, end;
+
+	if (Input_IsActionPressed()) {
+		/* Ctrl+delete deletes the word (and any spaces) to the right of the caret */
+		start = w->caretPos == -1 ? w->text.length : w->caretPos;
+		end   = start + WordWrap_GetForwardLength(&w->text, start);
+		if (start >= end) return;
+
+		for (i = start; i < end; i++) {
+			String_DeleteAt(&w->text, start);
+		}
+
+		if (w->caretPos >= w->text.length) { w->caretPos = -1; }
+		InputWidget_UpdateText(w);
+	} else if (w->text.length > 0 && w->caretPos != -1) {
 		String_DeleteAt(&w->text, w->caretPos);
 		if (w->caretPos >= w->text.length) { w->caretPos = -1; }
 		InputWidget_UpdateText(w);
@@ -1331,7 +1339,7 @@ static void InputWidget_DeleteKey(struct InputWidget* w) {
 
 static void InputWidget_LeftKey(struct InputWidget* w) {
 	if (Input_IsActionPressed()) {
-		if (w->caretPos == -1) { w->caretPos = w->text.length - 1; }
+		if (w->caretPos == -1) { w->caretPos = w->text.length; }
 		w->caretPos -= WordWrap_GetBackLength(&w->text, w->caretPos);
 		InputWidget_UpdateCaret(w);
 		return;
