@@ -8,6 +8,8 @@
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
 #include "rsx_gpu.h"
+#include <ppu-lv2.h>
+#include <sys/systime.h>
 
 static gcmContextData* context;
 static u32 cur_fb;
@@ -157,7 +159,7 @@ static void WaitRSXFinish(void) {
 	rsxFlushBuffer(context);
 
 	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != labelID)
-		usleep(30);
+		sysUsleep(30);
 
 	labelID++;
 }
@@ -442,7 +444,7 @@ static void ResetFrameState(void) {
 static cc_bool everFlipped;
 void Gfx_WaitFlip(void) {
 	if (everFlipped) {
-		while (gcmGetFlipStatus() != 0) usleep(200);
+		while (gcmGetFlipStatus() != 0) sysUsleep(200);
 	}
 	
 	everFlipped = true;
