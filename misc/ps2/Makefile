@@ -14,9 +14,11 @@ TARGET 	= ClassiCube-ps2
 SOURCE_DIRS	:= src src/ps2 third_party/bearssl
 # Directory where object files are placed
 BUILD_DIR = build/ps2
+
 # Shader objects
-SHADER_DIR  = misc/ps2
-SHADER_OBJS = #$(BUILD_DIR)/vu1_DrawTextured.o
+SHADER_DIR  = src/ps2
+SHADER_SRCS = $(wildcard $(SHADER_DIR)/*.vcp)
+SHADER_OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SHADER_SRCS:%.vcp=%.o) ))
 
 
 #---------------------------------------------------------------------------------
@@ -36,8 +38,9 @@ DEPFILES := $(OBJS:%.o=%.d)
 #---------------------------------------------------------------------------------
 IOP_MODS := DEV9_irx.o NETMAN_irx.o SMAP_irx.o USBD_irx.o BDM_irx.o BDMFS_FATFS_irx.o USBMASS_BD_irx.o USBHDFSD_irx.o USBMOUSE_irx.o USBKBD_irx.o
 
-EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
-EE_LIBS = -lpatches -lpad -ldma -lgraph -lc -lps2ip -lnetman -lmc -lmouse -lkbd
+EE_IOP_OBJS = $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
+EE_OBJS 	= $(OBJS) $(EE_IOP_OBJS) $(SHADER_OBJS)
+EE_LIBS 	= -lpatches -lpad -ldma -lgraph -lc -lps2ip -lnetman -lmc -lmouse -lkbd
 
 EE_INCS 	:= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include
 EE_CFLAGS 	:= -D_EE -G0 -O2 -Wall -gdwarf-2 -gz -DPLAT_PS2
@@ -110,7 +113,7 @@ $(BUILD_DIR)/USBKBD_irx.c: $(PS2SDK)/iop/irx/ps2kbd.irx
 $(BUILD_DIR)/Graphics_PS2.o : $(SHADER_OBJS)
 
 $(TARGET).elf : $(EE_OBJS)
-	$(EE_CC) -T$(EE_LINKFILE) -O2 -o $(TARGET).elf $(EE_OBJS) $(EE_LDFLAGS) $(EE_LIBS)
+	$(EE_CC) -T$(EE_LINKFILE) -O2 $(EE_OBJS) -o $(TARGET).elf $(EE_LDFLAGS) $(EE_LIBS)
 	
 $(TARGET)-min.elf : $(TARGET).elf
 	$(EE_STRIP) $(TARGET).elf -o $(TARGET)-min.elf
@@ -138,16 +141,16 @@ $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c # IOP modules
 #---------------------------------------------------------------------------------
 # shader object generation
 #---------------------------------------------------------------------------------
-.PRECIOUS: $(SHADER_DIR)/vu1_%.vsm $(SHADER_DIR)/vu1_%.vcl
+.PRECIOUS: $(BUILD_DIR)/vu1_%.vsm $(BUILD_DIR)/vu1_%.vcl
 # prevent the .vsm files from being deleted
 
-$(SHADER_DIR)/vu1_%.vcl: $(SHADER_DIR)/vu1_%.vcp
+$(BUILD_DIR)/vu1_%.vcl: $(SHADER_DIR)/vu1_%.vcp
 	$(EE_PP) -P -C $< -o $@
 
-$(SHADER_DIR)/vu1_%.vsm: $(SHADER_DIR)/vu1_%.vcl
+$(BUILD_DIR)/vu1_%.vsm: $(BUILD_DIR)/vu1_%.vcl
 	$(VCL) $< -o $@
 
-$(BUILD_DIR)/vu1_%.o: $(SHADER_DIR)/vu1_%.vsm
+$(BUILD_DIR)/vu1_%.o: $(BUILD_DIR)/vu1_%.vsm
 	$(EE_DVP) $< -o $@
 
 

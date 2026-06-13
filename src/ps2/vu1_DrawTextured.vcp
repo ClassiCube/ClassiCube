@@ -1,27 +1,4 @@
-// === GLOBAL DATA ===
-#define ADDR_MVP_ROW1 0
-#define ADDR_MVP_ROW2 1
-#define ADDR_MVP_ROW3 2
-#define ADDR_MVP_ROW4 3
-
-#define ADDR_GB_SCALE   4
-#define ADDR_VP_ORIGIN  5 // viewport origin
-#define ADDR_VP_SCALE   6 // viewport scale
-
-// === DRAW DATA ===
-// ADDR_VERTS_COUNT              0
-
-// === GLOBAL REGISTERS ===
-#define ONE_W  vf00[w] // (vf0.w is 1)
-
-#define MVP_R1 vf01
-#define MVP_R2 vf02
-#define MVP_R3 vf03
-#define MVP_R4 vf04
-
-#define VP_ORIGIN vf05
-#define VP_SCALE  vf06
-#define GB_SCALE  vf07 // guardband scale
+#include "vu1_common.h"
 
 // === LOCAL REGISTERS ===
 #define XYZ  vf31
@@ -44,24 +21,6 @@
 .init_vf     // no registers available for dynamic allocation
 .init_vi_all // all registers available for dynamic allocation
 .vu
-
-.name Reload_MVP
---enter
---endenter
-	lq			MVP_R1, ADDR_MVP_ROW1(vi00)
-	lq			MVP_R2, ADDR_MVP_ROW2(vi00)
-	lq			MVP_R3, ADDR_MVP_ROW3(vi00)
-	lq			MVP_R4, ADDR_MVP_ROW4(vi00)
---exit
---endexit
-
-.name Reload_Viewport
---enter
---endenter
-	lq			VP_ORIGIN,  ADDR_VP_ORIGIN(vi00)
-	lq			VP_SCALE,   ADDR_VP_SCALE(vi00)
---exit
---endexit
 
 .name Reload_Guardband
 --enter

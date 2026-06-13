@@ -1,0 +1,14 @@
+#include "vu1_common.h"
+
+.syntax new
+.init_vf     // no registers available for dynamic allocation
+.init_vi_all // all registers available for dynamic allocation
+.vu
+
+.name Reload_Viewport
+--enter
+--endenter
+	lq			VP_ORIGIN,  ADDR_VP_ORIGIN(vi00)
+	lq			VP_SCALE,   ADDR_VP_SCALE(vi00)
+--exit
+--endexit

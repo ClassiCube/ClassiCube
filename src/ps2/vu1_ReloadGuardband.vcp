@@ -1,0 +1,13 @@
+#include "vu1_common.h"
+
+.syntax new
+.init_vf     // no registers available for dynamic allocation
+.init_vi_all // all registers available for dynamic allocation
+.vu
+
+.name Reload_Guardband
+--enter
+--endenter
+	lq			GB_SCALE,   ADDR_GB_SCALE(vi00)
+--exit
+--endexit

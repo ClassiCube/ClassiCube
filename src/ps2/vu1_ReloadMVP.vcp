@@ -1,0 +1,17 @@
+#include "vu1_common.h"
+
+.syntax new
+.init_vf     // no registers available for dynamic allocation
+.init_vi_all // all registers available for dynamic allocation
+.vu
+
+.name Reload_MVP
+--enter
+--endenter
+	lq			MVP_R1, ADDR_MVP_ROW1(vi00)
+	lq			MVP_R2, ADDR_MVP_ROW2(vi00)
+	lq			MVP_R3, ADDR_MVP_ROW3(vi00)
+	lq			MVP_R4, ADDR_MVP_ROW4(vi00)
+--exit
+--endexit
+
