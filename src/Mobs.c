@@ -11,8 +11,6 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Chat.h"
-#include "Graphics.h"
-#include "Bitmap.h"
 #include "Input.h"
 #include "Lighting.h"
 #include "Model.h"
@@ -26,9 +24,6 @@ struct MobArrow  MobArrows[MAX_ARROWS];
 
 /* Shared HacksComp for all mobs */
 static struct HacksComp mob_hacks;
-
-/* Mob skin textures (solid coloured) */
-static GfxResourceID mob_skins[MOB_TYPE_COUNT];
 
 /* Player melee cooldown (1-second = 20 ticks between swings) */
 static int sv_playerAttackCooldown;
@@ -47,30 +42,18 @@ static float MobRng_Float(void) { return (float)(MobRng_Next() & 0x7FFF) / 32767
 static float MobRng_Range(float min, float max) { return min + MobRng_Float() * (max - min); }
 
 /*########################################################################################################################*
-*--------------------------------------------------Mob Texture Creation--------------------------------------------------*
+*--------------------------------------------------Mob Model Names-------------------------------------------------------*
 *#########################################################################################################################*/
-static GfxResourceID CreateSolidColorTex(int r, int g, int b) {
-	struct Bitmap bmp;
-	BitmapCol data[64];
-	BitmapCol col = BitmapCol_Make(r, g, b, 255);
-	int i;
-	for (i = 0; i < 64; i++) data[i] = col;
-	Bitmap_Init(bmp, 8, 8, data);
-	return Gfx_CreateTexture(&bmp, TEXTURE_FLAG_MANAGED, false);
-}
-
-static void CreateMobTextures(void) {
-	mob_skins[MOB_TYPE_PIG]      = CreateSolidColorTex(0xF0, 0x84, 0x7A); /* pig pink */
-	mob_skins[MOB_TYPE_SHEEP]    = CreateSolidColorTex(0xE0, 0xE0, 0xE0); /* sheep white */
-	mob_skins[MOB_TYPE_ZOMBIE]   = CreateSolidColorTex(0x00, 0x99, 0x00); /* zombie green */
-	mob_skins[MOB_TYPE_SKELETON] = CreateSolidColorTex(0xD0, 0xD0, 0xD0); /* skeleton pale */
-	mob_skins[MOB_TYPE_SPIDER]   = CreateSolidColorTex(0x40, 0x20, 0x10); /* spider dark brown */
-	mob_skins[MOB_TYPE_CREEPER]  = CreateSolidColorTex(0x30, 0xA0, 0x30); /* creeper green */
-}
-
-static void DestroyMobTextures(void) {
-	int i;
-	for (i = 0; i < MOB_TYPE_COUNT; i++) Gfx_DeleteTexture(&mob_skins[i]);
+static const char* MobModelName(int type) {
+	switch (type) {
+	case MOB_TYPE_PIG:      return "pig";
+	case MOB_TYPE_SHEEP:    return "sheep";
+	case MOB_TYPE_ZOMBIE:   return "zombie";
+	case MOB_TYPE_SKELETON: return "skeleton";
+	case MOB_TYPE_SPIDER:   return "spider";
+	case MOB_TYPE_CREEPER:  return "creeper";
+	default:                return "humanoid";
+	}
 }
 
 /*########################################################################################################################*
@@ -125,23 +108,6 @@ static int MobMeleeDamage(int type) {
 	}
 }
 
-static void SetMobModelScale(struct Entity* e, int type) {
-	switch (type) {
-	case MOB_TYPE_SPIDER:
-		Vec3_Set(e->ModelScale, 1.4f, 0.6f, 1.4f);
-		break;
-	case MOB_TYPE_PIG:
-	case MOB_TYPE_SHEEP:
-		Vec3_Set(e->ModelScale, 0.8f, 0.8f, 0.8f);
-		break;
-	case MOB_TYPE_CREEPER:
-		Vec3_Set(e->ModelScale, 0.55f, 1.1f, 0.55f);
-		break;
-	default:
-		Vec3_Set(e->ModelScale, 1.0f, 1.0f, 1.0f);
-		break;
-	}
-}
 
 /*########################################################################################################################*
 *------------------------------------------------------Creeper Explosion-------------------------------------------------*
@@ -472,7 +438,7 @@ void Mob_Kill(struct MobEntity* mob) {
 }
 
 void Mob_Spawn(int mobType, float x, float y, float z) {
-	static const cc_string humanoid = String_FromConst("humanoid");
+	cc_string modelName;
 	struct MobEntity* mob;
 	struct Entity* e;
 	int i;
@@ -494,15 +460,10 @@ void Mob_Spawn(int mobType, float x, float y, float z) {
 	Entity_Init(e);
 	e->VTABLE = &mob_vtable;
 
-	Entity_SetModel(e, &humanoid);
-	SetMobModelScale(e, mobType);
+	/* Use the mob's proper named model; it carries its own texture */
+	modelName = String_FromReadonly(MobModelName(mobType));
+	Entity_SetModel(e, &modelName);
 	Entity_UpdateModelBounds(e);
-
-	e->TextureId    = mob_skins[mobType];
-	e->uScale       = 1.0f;
-	e->vScale       = 1.0f;
-	e->SkinType     = 0;
-	e->NonHumanSkin = true;
 
 	Vec3_Set(e->Position, x, y, z);
 	e->prev.pos = e->Position;
@@ -707,25 +668,6 @@ static cc_bool Mobs_SpawnTick(struct ScheduledTask2* task) {
 	return true;
 }
 
-/*########################################################################################################################*
-*---------------------------------------------------------Context--------------------------------------------------------*
-*#########################################################################################################################*/
-static void Mobs_ContextLost(void* obj) {
-	int i;
-	(void)obj;
-	for (i = 0; i < MOB_TYPE_COUNT; i++) Gfx_DeleteTexture(&mob_skins[i]);
-	Mem_Set(mob_skins, 0, sizeof(mob_skins));
-}
-
-static void Mobs_ContextRecreated(void* obj) {
-	int i;
-	(void)obj;
-	CreateMobTextures();
-	for (i = 0; i < MAX_MOBS; i++) {
-		if (MobEntities[i].IsAlive)
-			MobEntities[i].Base.TextureId = mob_skins[MobEntities[i].MobType];
-	}
-}
 
 /*########################################################################################################################*
 *----------------------------------------------------Component Interface-------------------------------------------------*
@@ -746,8 +688,6 @@ static void Mobs_Init(void) {
 
 	sv_playerAttackCooldown = 0;
 
-	CreateMobTextures();
-
 	/* Mob physics/AI runs at 20 Hz (same as entity tick) */
 	mob_tick_task.interval  = 0.05f;
 	mob_tick_task.callback  = Mobs_UpdateTick;
@@ -757,17 +697,12 @@ static void Mobs_Init(void) {
 	mob_spawn_task.callback = Mobs_SpawnTick;
 	ScheduledTask2_Add(&mob_spawn_task);
 
-	Event_Register_(&GfxEvents.ContextLost,      NULL, Mobs_ContextLost);
-	Event_Register_(&GfxEvents.ContextRecreated,  NULL, Mobs_ContextRecreated);
-	Event_Register_(&InputEvents.Down2,           NULL, OnPlayerClick);
+	Event_Register_(&InputEvents.Down2, NULL, OnPlayerClick);
 }
 
 static void Mobs_Free(void) {
 	Mobs_ClearAll();
-	DestroyMobTextures();
-	Event_Unregister_(&GfxEvents.ContextLost,      NULL, Mobs_ContextLost);
-	Event_Unregister_(&GfxEvents.ContextRecreated,  NULL, Mobs_ContextRecreated);
-	Event_Unregister_(&InputEvents.Down2,           NULL, OnPlayerClick);
+	Event_Unregister_(&InputEvents.Down2, NULL, OnPlayerClick);
 }
 
 static void Mobs_Reset(void) {

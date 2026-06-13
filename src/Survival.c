@@ -260,12 +260,9 @@ void Survival_Die(void) {
 }
 
 void Survival_AddScore(int points) {
-	cc_string msg; char buf[64];
 	if (Survival_InExplosion) return; /* no score for indirect kills */
 	Survival_Score += points;
-	String_InitArray(msg, buf);
-	String_Format1(&msg, "&eScore: %i", &Survival_Score);
-	Chat_AddOf(&msg, MSG_TYPE_STATUS_3);
+	Survival_UpdateHUD();
 }
 
 void Survival_UpdateHUD(void) {
@@ -277,8 +274,8 @@ void Survival_UpdateHUD(void) {
 	if (Survival_Dead) {
 		String_InitArray(msg, buf);
 		String_Format1(&msg, "&4GAME OVER  &eScore: %i", &Survival_Score);
-		Chat_AddOf(&msg, MSG_TYPE_STATUS_1);
-		Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
+		Chat_AddOf(&msg, MSG_TYPE_BOTTOMRIGHT_1);
+		Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_2);
 		return;
 	}
 
@@ -307,7 +304,7 @@ void Survival_UpdateHUD(void) {
 	}
 
 	if (Survival_Health <= 4) String_AppendConst(&msg, " &c!");
-	Chat_AddOf(&msg, MSG_TYPE_STATUS_1);
+	Chat_AddOf(&msg, MSG_TYPE_BOTTOMRIGHT_1);
 
 	/* Line 2: score, arrows, TNT */
 	String_InitArray(msg, buf);
@@ -318,7 +315,7 @@ void Survival_UpdateHUD(void) {
 		String_AppendConst(&msg, "  &cTNT: ");
 		String_AppendInt(&msg, Survival_TNT);
 	}
-	Chat_AddOf(&msg, MSG_TYPE_STATUS_2);
+	Chat_AddOf(&msg, MSG_TYPE_BOTTOMRIGHT_2);
 }
 
 /*########################################################################################################################*
@@ -453,9 +450,8 @@ static void Survival_Free(void) {
 	Event_Unregister_(&UserEvents.BlockChanged, NULL, OnBlockChanged);
 	Event_Unregister_(&UserEvents.BlockChanged, NULL, OnBlockPlaced);
 	Event_Unregister_(&InputEvents.Down2,       NULL, OnTabFire);
-	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
-	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
-	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_1);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_2);
 }
 
 static void Survival_Reset(void) {
