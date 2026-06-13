@@ -35,6 +35,9 @@ extern cc_bool Survival_InExplosion;
 /* TNT/creeper explosion parameters (same as original c0.30-s) */
 #define EXPLOSION_RADIUS      4
 #define EXPLOSION_MAX_DMG     12
+/* Survival walking speed multiplier. 1.0 = the standard classic walk; this is
+   a touch brisker so on-foot survival doesn't feel sluggish without fly/sprint. */
+#define SURVIVAL_WALK_SPEED   1.2f
 
 /* Deals damage to the player, respecting invincibility frames */
 void Survival_Damage(int amount);

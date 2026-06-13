@@ -69,6 +69,20 @@ void SurvivalInv_RemoveBlock(BlockID block, int count) {
 	}
 }
 
+/* The hotbar maps 1:1 onto inventory slots 0-8, so the selected hotbar */
+/*  index is also the inventory slot index of the block in the player's hand */
+void SurvivalInv_ConsumeSelected(void) {
+	int idx = Inventory.SelectedIndex;
+	if (idx < 0 || idx >= SURINV_HOTBAR_SLOTS) return;
+	SurvivalInv_Remove(idx, 1);
+}
+
+int SurvivalInv_SelectedCount(void) {
+	int idx = Inventory.SelectedIndex;
+	if (idx < 0 || idx >= SURINV_HOTBAR_SLOTS) return 0;
+	return SurvivalInv_Slots[idx].count;
+}
+
 int SurvivalInv_Count(BlockID block) {
 	int i, total = 0;
 	for (i = 0; i < SURINV_TOTAL_SLOTS; i++) {
@@ -87,13 +101,12 @@ void SurvivalInv_SyncHotbar(void) {
 	}
 }
 
-static void SurvivalInv_Reset(void) {
+void SurvivalInv_Clear(void) {
 	int i;
 	for (i = 0; i < SURINV_TOTAL_SLOTS; i++) {
 		SurvivalInv_Slots[i].id    = BLOCK_AIR;
 		SurvivalInv_Slots[i].count = 0;
 	}
-	SurvivalInv_SyncHotbar();
 }
 
 /*########################################################################################################################*
@@ -376,17 +389,15 @@ static void SurvivalInv_Free(void) {
 }
 
 static void SurvivalInv_OnReset(void) {
-	SurvivalInv_Reset();
-}
-
-static void SurvivalInv_OnNewMapLoaded(void) {
-	SurvivalInv_Reset();
+	/* Just wipe the data; the Survival component owns (re)populating the */
+	/* hotbar on map load, so it stays the single source of truth */
+	SurvivalInv_Clear();
 }
 
 struct IGameComponent SurvivalInv_Component = {
-	SurvivalInv_Init,          /* Init           */
-	SurvivalInv_Free,          /* Free           */
-	SurvivalInv_OnReset,       /* Reset          */
-	NULL,                      /* OnNewMap       */
-	SurvivalInv_OnNewMapLoaded /* OnNewMapLoaded */
+	SurvivalInv_Init,    /* Init           */
+	SurvivalInv_Free,    /* Free           */
+	SurvivalInv_OnReset, /* Reset          */
+	NULL,                /* OnNewMap       */
+	NULL                 /* OnNewMapLoaded */
 };

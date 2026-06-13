@@ -25,6 +25,8 @@
 #include "Protocol.h"
 #include "AxisLinesRenderer.h"
 #include "Picking.h"
+#include "Survival.h"
+#include "SurvivalInv.h"
 
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
@@ -55,6 +57,7 @@ static void PlayerInputPad(int port, int axis, struct LocalPlayer* p, float* xMo
 
 static void PlayerInputGamepad(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	int port;
+	if (Survival_Dead) return; /* no walking around after death */
 	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		/* In splitscreen mode, tie a controller to a specific player*/
@@ -427,6 +430,10 @@ static void InputHandler_PlaceBlock(void) {
 	old   = World_GetBlock(pos.x, pos.y, pos.z);
 	block = Inventory_SelectedBlock;
 	if (AutoRotate_Enabled) block = AutoRotate_RotateBlock(block);
+
+	/* In survival the selected hotbar slot must actually hold a block. This */
+	/* also stops middle-click pick-block from granting a free placement.    */
+	if (Survival_Active && SurvivalInv_SelectedCount() <= 0) return;
 
 	if (Game_CanPick(old) || !Blocks.CanPlace[block]) return;
 	/* air-ish blocks can only replace over other air-ish blocks */
@@ -966,8 +973,17 @@ static void Player_ReleaseDown(int key,  struct InputDevice* device) {
 }
 
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	int flags = moveFlags[p->index];
+	int flags;
 
+	/* On death, swallow movement input and kill horizontal momentum every */
+	/* frame so the player is truly frozen instead of drifting around. */
+	if (Survival_Dead) {
+		p->Base.Velocity.x = 0.0f;
+		p->Base.Velocity.z = 0.0f;
+		return;
+	}
+
+	flags = moveFlags[p->index];
 	if (flags & FACE_BIT_YMIN) *zMoving -= 1;
 	if (flags & FACE_BIT_YMAX) *zMoving += 1;
 	if (flags & FACE_BIT_XMIN) *xMoving -= 1;

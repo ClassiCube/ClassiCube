@@ -102,6 +102,27 @@ void Survival_Explode(float cx, float cy, float cz, int radius, int maxDmg) {
 }
 
 /*########################################################################################################################*
+*--------------------------------------------------Player physics--------------------------------------------------------*
+*#########################################################################################################################*/
+/* Forces the local player into a faithful survival movement state:
+   grounded (no fly/noclip), but a brisk walk so it doesn't feel sluggish.
+   Fields are set directly (not via HacksComp_Update) so this is cheap and
+   event-free, letting it be re-asserted every tick to resist cheating. */
+static void Survival_ConfigurePlayer(void) {
+	struct HacksComp* h;
+	if (!Survival_Active || !Entities.CurPlayer) return;
+
+	h = &Entities.CurPlayer->Hacks;
+	h->Enabled      = true;   /* keep the hacks framework alive for movement */
+	h->CanFly       = false;  h->Flying     = false;
+	h->FlyingUp     = false;  h->FlyingDown = false;
+	h->CanNoclip    = false;  h->Noclip     = false;
+	h->CanRespawn   = false;  /* no instant respawn -- death is final in c0.30-s */
+	h->CanSpeed     = false;  /* no sprint/double-jump in c0.30-s (classic jump) */
+	h->BaseHorSpeed = SURVIVAL_WALK_SPEED; /* brisk walk so on-foot isn't sluggish */
+}
+
+/*########################################################################################################################*
 *--------------------------------------------------Block drop table------------------------------------------------------*
 *#########################################################################################################################*/
 /* Logs drop 3-5 planks; leaves have 1/10 chance to drop a sapling;
@@ -131,7 +152,7 @@ static BlockID Survival_GetDrop(BlockID block, int* count) {
 *#########################################################################################################################*/
 static void OnBlockChanged(void* obj, IVec3 coords, BlockID oldBlock, BlockID newBlock) {
 	BlockID drop;
-	int count, i;
+	int count;
 	(void)obj;
 
 	if (!Survival_Active || !Server.IsSinglePlayer) return;
@@ -166,15 +187,20 @@ static void OnBlockChanged(void* obj, IVec3 coords, BlockID oldBlock, BlockID ne
 		Chat_AddRaw("&cInventory full!");
 }
 
-/* Intercept mushroom placement as consumption (brown = heal, red = poison).
-   Intercept TNT placement to track supply count. */
+/* Every placed block is consumed from the player's hand (this is what stops
+   survival from feeling like creative). Mushrooms are eaten instead of placed
+   (brown = heal, red = poison); TNT just refreshes the HUD supply count. */
 static void OnBlockPlaced(void* obj, IVec3 coords, BlockID oldBlock, BlockID newBlock) {
 	(void)obj;
 	if (!Survival_Active || !Server.IsSinglePlayer) return;
 	if (oldBlock != BLOCK_AIR) return; /* only fresh placement */
 
+	/* The block came out of the player's selected hotbar slot -- spend it.
+	   Consuming by slot (not by id) stays correct even with auto-rotate. */
+	SurvivalInv_ConsumeSelected();
+
 	if (newBlock == BLOCK_BROWN_SHROOM) {
-		/* Undo the placement and heal player instead */
+		/* Undo the placement and heal the player instead */
 		Game_UpdateBlock(coords.x, coords.y, coords.z, BLOCK_AIR);
 		if (Survival_Dead) return;
 		Survival_Health += 5;
@@ -187,10 +213,7 @@ static void OnBlockPlaced(void* obj, IVec3 coords, BlockID oldBlock, BlockID new
 		Chat_AddRaw("&cYou ate a poisonous mushroom! (-3 HP)");
 		Survival_Damage(3);
 	} else if (newBlock == BLOCK_TNT) {
-		/* Remove one TNT from inventory when placed */
-		SurvivalInv_RemoveBlock(BLOCK_TNT, 1);
-		Survival_TNT = SurvivalInv_Count(BLOCK_TNT);
-		Survival_UpdateHUD();
+		Survival_UpdateHUD(); /* refresh the TNT supply line */
 	}
 }
 
@@ -331,13 +354,18 @@ static cc_bool Survival_Tick(struct ScheduledTask2* task) {
 	if (!Survival_Active || !World.Loaded) return true;
 
 	if (Survival_Dead) {
-		/* Freeze the player in place on death -- gravity still applies */
+		/* Freeze the player in place on death -- gravity still applies.
+		   Horizontal input is separately blocked in InputHandler so this
+		   can't be fought frame-by-frame. */
 		if (Entities.CurPlayer) {
 			Entities.CurPlayer->Base.Velocity.x = 0.0f;
 			Entities.CurPlayer->Base.Velocity.z = 0.0f;
 		}
 		return true;
 	}
+
+	/* Keep fly/noclip disabled and the walk speed applied while alive */
+	Survival_ConfigurePlayer();
 
 	p = Entities.CurPlayer;
 	e = &p->Base;
@@ -466,9 +494,16 @@ static void Survival_OnNewMapLoaded(void) {
 	if (Entities.CurPlayer)
 		sv_highestY = Entities.CurPlayer->Base.Position.y;
 
+	/* Always start from an empty container so stale items don't carry over */
+	SurvivalInv_Clear();
+
 	if (Survival_Active) {
-		/* Give the player starting TNT supply via inventory */
+		/* The survival inventory becomes the single source of truth for the
+		   hotbar: clearing then seeding it wipes the creative default blocks,
+		   so the player has to actually mine for materials. */
 		SurvivalInv_Add(BLOCK_TNT, SURVIVAL_START_TNT);
+		SurvivalInv_SyncHotbar();
+		Survival_ConfigurePlayer();
 		Survival_UpdateHUD();
 	}
 }

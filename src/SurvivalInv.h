@@ -23,8 +23,14 @@ cc_bool SurvivalInv_Add(BlockID block, int count);
 void    SurvivalInv_Remove(int slotIdx, int count);
 /* Removes count of block from wherever it appears in inventory */
 void    SurvivalInv_RemoveBlock(BlockID block, int count);
+/* Removes one item from the slot matching the currently selected hotbar index */
+void    SurvivalInv_ConsumeSelected(void);
+/* Number of items in the slot matching the currently selected hotbar index */
+int     SurvivalInv_SelectedCount(void);
 /* Returns total count of the given block across all slots */
 int     SurvivalInv_Count(BlockID block);
+/* Empties every slot. Does NOT touch the live hotbar (call SyncHotbar for that) */
+void    SurvivalInv_Clear(void);
 /* Copies hotbar slots 0-8 into Inventory.Table so the HUD stays in sync */
 void    SurvivalInv_SyncHotbar(void);
 
