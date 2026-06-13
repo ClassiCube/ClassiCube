@@ -305,6 +305,9 @@ void Thread_Join(void* handle) {
 void* Mutex_Create(const char* name) {
 	sys_mutex_attr_t attr;	
 	sysMutexAttrInitialize(attr);
+
+	cc_string str = String_FromReadonly(name);
+	String_CopyToRaw(attr.name, sizeof(attr.name) - 1, &str);
 	
 	sys_mutex_t* mutex = (sys_mutex_t*)Mem_Alloc(1, sizeof(sys_mutex_t), "mutex");
 	int res = sysMutexCreate(mutex, &attr);
@@ -334,7 +337,10 @@ void Mutex_Unlock(void* handle) {
 void* Waitable_Create(const char* name) {
 	sys_sem_attr_t attr = { 0 };
 	attr.attr_protocol  = SYS_SEM_ATTR_PROTOCOL;
-	attr.attr_pshared   = SYS_SEM_ATTR_PSHARED; 
+	attr.attr_pshared   = SYS_SEM_ATTR_PSHARED;
+
+	cc_string str = String_FromReadonly(name);
+	String_CopyToRaw(attr.name, sizeof(attr.name) - 1, &str);
 	
 	sys_sem_t* sem = (sys_sem_t*)Mem_Alloc(1, sizeof(sys_sem_t), "waitable");
 	int res = sysSemCreate(sem, &attr, 0, 1000000);
