@@ -173,11 +173,11 @@ static void ReadString(cc_uint8** ptr, cc_string* str) {
 	*ptr = data + STRING_SIZE;
 }
 
-static void WriteString(cc_uint8* data, const cc_string* value, cc_bool escape) {
+static void WriteString(cc_uint8* data, const cc_string* value, cc_bool escapeAmpersands) {
 	int i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		char c = value->buffer[i];
-		if (escape && c == '&') c = '%'; /* escape color codes */
+		if (escapeAmpersands && c == '&') c = '%'; /* escape color codes */
 		data[i] = c;
 	}
 
