@@ -25,7 +25,8 @@ SFO_TITLEID = CUBE00200
 # Compilable files
 #---------------------------------------------------------------------------------
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
+S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
@@ -99,6 +100,9 @@ $(BUILD_DIR)/%.o : src/psvita/%.c
 	
 $(BUILD_DIR)/%.o : third_party/bearssl/%.c
 	$(VITA_CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o : src/psvita/%.S
+	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 
 #---------------------------------------------------------------------------------
