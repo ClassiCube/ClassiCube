@@ -49,7 +49,7 @@ BEG_FUNC(Matrix_Mul)
 #define RHT r2
 
 	vldm LFT!, {LFT_R1,LFT_R2,LFT_R3,LFT_R4}
-//vldm RHT!, {RHT_R1,RHT_R2,RHT_R3,RHT_R4} try to make it easier to execute out of order by splitting up loads
+//vldm RHT!, {RHT_R1,RHT_R2,RHT_R3,RHT_R4} try to make it easier to parallelise with other instructions by splitting up loads
 	vldm RHT!, {RHT_R1,RHT_R2}
 
 	vmul.f32	RES_R1,	RHT_R1,	LFT_R1XY[0]

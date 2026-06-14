@@ -35,7 +35,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-CFLAGS = -O1 -fno-math-errno -Wno-builtin-macro-redefined \
+CFLAGS = -O2 -fno-math-errno -Wno-builtin-macro-redefined \
 	-I$(NXDK_DIR)/lib/net/lwip/src/include \
 	-I$(NXDK_DIR)/lib/net/nforceif/include \
 	-I$(NXDK_DIR)/lib/net/nvnetdrv \
