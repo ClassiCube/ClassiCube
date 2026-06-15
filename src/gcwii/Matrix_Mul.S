@@ -44,27 +44,26 @@ BEG_FUNC(Matrix_Mul)
 
 	psq_l		RHT_R1XY,	XY1(RHT),	LD_BOTH, 0
 	psq_l		RHT_R1ZW,	ZW1(RHT),	LD_BOTH, 0
-	psq_l		RHT_R2XY,	XY2(RHT),	LD_BOTH, 0
-	psq_l		RHT_R2ZW,	ZW2(RHT),	LD_BOTH, 0
-	psq_l		RHT_R3XY,	XY3(RHT),	LD_BOTH, 0
-	psq_l		RHT_R3ZW,	ZW3(RHT),	LD_BOTH, 0
-	psq_l		RHT_R4XY,	XY4(RHT),	LD_BOTH, 0
-	psq_l		RHT_R4ZW,	ZW4(RHT),	LD_BOTH, 0
-
 	psq_l		LFT_XY,		XY1(LFT),	LD_BOTH, 0
 	psq_l		LFT_ZW,		ZW1(LFT),	LD_BOTH, 0
+	// NOTE: load operations interleaved for potentially better pipelining	
 
 	// Row 1
 	ps_muls0	DST_XY,		RHT_R1XY,	LFT_XY
+	psq_l		RHT_R2XY,	XY2(RHT),	LD_BOTH, 0
 	ps_muls0	DST_ZW,		RHT_R1ZW,	LFT_XY
+	psq_l		RHT_R2ZW,	ZW2(RHT),	LD_BOTH, 0
 	ps_madds1	DST_XY,		RHT_R2XY,	LFT_XY, DST_XY
+	psq_l		RHT_R3XY,	XY3(RHT),	LD_BOTH, 0
 	ps_madds1	DST_ZW,		RHT_R2ZW,	LFT_XY, DST_ZW
+	psq_l		RHT_R3ZW,	ZW3(RHT),	LD_BOTH, 0
 	ps_madds0	DST_XY,		RHT_R3XY,	LFT_ZW, DST_XY
+	psq_l		RHT_R4XY,	XY4(RHT),	LD_BOTH, 0
 	ps_madds0	DST_ZW,		RHT_R3ZW,	LFT_ZW, DST_ZW
+	psq_l		RHT_R4ZW,	ZW4(RHT),	LD_BOTH, 0
 	ps_madds1	DST_XY,		RHT_R4XY,	LFT_ZW, DST_XY
-	ps_madds1	DST_ZW,		RHT_R4ZW,	LFT_ZW, DST_ZW
-
 	psq_l		LFT_XY,		XY2(LFT),	LD_BOTH, 0
+	ps_madds1	DST_ZW,		RHT_R4ZW,	LFT_ZW, DST_ZW
 	psq_l		LFT_ZW,		ZW2(LFT),	LD_BOTH, 0
 	psq_st		DST_XY,		XY1(DST),	ST_BOTH, 0
 	psq_st		DST_ZW,		ZW1(DST),	ST_BOTH, 0
@@ -76,10 +75,9 @@ BEG_FUNC(Matrix_Mul)
 	ps_madds1	DST_ZW,		RHT_R2ZW,	LFT_XY, DST_ZW
 	ps_madds0	DST_XY,		RHT_R3XY,	LFT_ZW, DST_XY
 	ps_madds0	DST_ZW,		RHT_R3ZW,	LFT_ZW, DST_ZW
+	psq_l		LFT_XY,		XY3(LFT),	LD_BOTH, 0
 	ps_madds1	DST_XY,		RHT_R4XY,	LFT_ZW, DST_XY
 	ps_madds1	DST_ZW,		RHT_R4ZW,	LFT_ZW, DST_ZW
-
-	psq_l		LFT_XY,		XY3(LFT),	LD_BOTH, 0
 	psq_l		LFT_ZW,		ZW3(LFT),	LD_BOTH, 0
 	psq_st		DST_XY,		XY2(DST),	ST_BOTH, 0
 	psq_st		DST_ZW,		ZW2(DST),	ST_BOTH, 0
@@ -91,10 +89,9 @@ BEG_FUNC(Matrix_Mul)
 	ps_madds1	DST_ZW,		RHT_R2ZW,	LFT_XY, DST_ZW
 	ps_madds0	DST_XY,		RHT_R3XY,	LFT_ZW, DST_XY
 	ps_madds0	DST_ZW,		RHT_R3ZW,	LFT_ZW, DST_ZW
+	psq_l		LFT_XY,		XY4(LFT), 	LD_BOTH, 0
 	ps_madds1	DST_XY,		RHT_R4XY,	LFT_ZW, DST_XY
 	ps_madds1	DST_ZW,		RHT_R4ZW,	LFT_ZW, DST_ZW
-
-	psq_l		LFT_XY,		XY4(LFT), 	LD_BOTH, 0
 	psq_l		LFT_ZW,		ZW4(LFT), 	LD_BOTH, 0
 	psq_st		DST_XY,		XY3(DST), 	ST_BOTH, 0
 	psq_st		DST_ZW,		ZW3(DST), 	ST_BOTH, 0
@@ -108,7 +105,6 @@ BEG_FUNC(Matrix_Mul)
 	ps_madds0	DST_ZW,		RHT_R3ZW,	LFT_ZW, DST_ZW
 	ps_madds1	DST_XY,		RHT_R4XY,	LFT_ZW, DST_XY
 	ps_madds1	DST_ZW,		RHT_R4ZW,	LFT_ZW, DST_ZW
-
 	psq_st		DST_XY,		XY4(DST), 	ST_BOTH, 0
 	psq_st		DST_ZW,		ZW4(DST), 	ST_BOTH, 0
 

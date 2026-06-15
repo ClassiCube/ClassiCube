@@ -69,8 +69,7 @@ BEG_FUNC(Matrix_Mul)
 	lvx		RHT_R3, OFF_32, RHT
 	lvx		RHT_R4, OFF_48, RHT
 
-	// NOTE: code below tries to overlap permute and arithmetic ops,
-	// to attempt to take advantage of the dual execution units
+	// NOTE: arithmetic/permute operations interleaved for potentially better pipelining	
 
 	// Calculate row 1
 	vspltw	TMP_X, LFT_R1, SELECT_X
