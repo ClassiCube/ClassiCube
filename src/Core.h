@@ -485,6 +485,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SPLITSCREEN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#define CC_WEAKFUNC __attribute__((weak))
 #elif defined PLAT_WII
 	#define CC_BUILD_WII
 	#define CC_BUILD_CONSOLE
@@ -492,6 +493,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SPLITSCREEN
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
+	#define CC_WEAKFUNC __attribute__((weak))
 #elif defined PLAT_VITA
 	#define CC_BUILD_PSVITA
 	#define CC_BUILD_CONSOLE

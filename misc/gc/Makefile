@@ -82,6 +82,9 @@ $(BUILD_DIR)/%.o: src/%.c
 $(BUILD_DIR)/%.o: src/gcwii/%.c
 	$(PPC_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/%.o: src/gcwii/%.S
+	$(PPC_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
 $(BUILD_DIR)/%.o: third_party/bearssl/%.c
 	$(PPC_CC) $(CFLAGS) -c $< -o $@
 

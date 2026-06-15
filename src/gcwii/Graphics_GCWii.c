@@ -539,6 +539,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		XF_SetMatrix_3x4((GX_matrix_3x4*)&dst, XF_POS_MATRIX0);
 	}
 }
+extern void Matrix_Mul2(struct Matrix* result, const struct Matrix* left, const struct Matrix* right);
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);

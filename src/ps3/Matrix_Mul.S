@@ -41,13 +41,13 @@
 
 
 // Multiplies two matrices together, then writes the output
-//	$r4 = addresss of destination matrix
-//	$r5 = addresss of source left matrix
-//	$r6 = addresss of source right matrix
+//	$r3 = addresss of destination matrix
+//	$r4 = addresss of source left matrix
+//	$r5 = addresss of source right matrix
 BEG_FUNC(Matrix_Mul)
-	#define DST   3
-	#define SRC_L 4
-	#define SRC_R 5
+	#define DST 3
+	#define LFT 4
+	#define RHT 5
 
 	// NOTE: load/store instructions compute address as follows:
 	// - if rA is r0, then address = rB
@@ -58,16 +58,16 @@ BEG_FUNC(Matrix_Mul)
 	li		OFF_48, 48
 
 	// Load left matrix
-	lvx		LFT_R1, OFF_00, SRC_L
-	lvx		LFT_R2, OFF_16, SRC_L
-	lvx		LFT_R3, OFF_32, SRC_L
-	lvx		LFT_R4, OFF_48, SRC_L
+	lvx		LFT_R1, OFF_00, LFT
+	lvx		LFT_R2, OFF_16, LFT
+	lvx		LFT_R3, OFF_32, LFT
+	lvx		LFT_R4, OFF_48, LFT
 
 	// Load right matrix
-	lvx		RHT_R1, OFF_00, SRC_R
-	lvx		RHT_R2, OFF_16, SRC_R
-	lvx		RHT_R3, OFF_32, SRC_R
-	lvx		RHT_R4, OFF_48, SRC_R
+	lvx		RHT_R1, OFF_00, RHT
+	lvx		RHT_R2, OFF_16, RHT
+	lvx		RHT_R3, OFF_32, RHT
+	lvx		RHT_R4, OFF_48, RHT
 
 	// NOTE: code below tries to overlap permute and arithmetic ops,
 	// to attempt to take advantage of the dual execution units
