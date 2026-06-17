@@ -20,6 +20,9 @@
 #define DST_XY		10
 #define DST_ZW		11
 
+// TODO fr12/fr13 are still free. could they be utilised somehow?
+
+// Offsets into matrix struct
 #define XY1  0
 #define ZW1  8
 #define XY2 16

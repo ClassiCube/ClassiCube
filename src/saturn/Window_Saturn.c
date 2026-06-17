@@ -227,18 +227,23 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 	bmp->height = height;
 }
 
+typedef volatile uint16_t vuint16_t;
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	volatile rgb1555_t* vram = (volatile rgb1555_t*)VDP2_VRAM_ADDR(0, 0x00000);
+	vuint16_t* vram = (vuint16_t*)VDP2_VRAM_ADDR(0, 0x00000);
+
+	int src_stride = bmp->width;
+	int dst_stride = 512; // framebuffer width
+
+	BitmapCol* src = bmp->scan0 + src_stride * r.y + r.x;
+	vuint16_t* dst = vram       + dst_stride * r.y + r.x;
 
 	// TODO: Partial redraws seem to produce some corrupt pixels ???
-	for (int y = r.y; y < r.y + r.height; y++) 
+	for (int y = 0; y < r.height; y++)
 	{
-		BitmapCol* row = Bitmap_GetRow(bmp, y);
-		for (int x = r.x; x < r.x + r.width; x++) 
-		{
-			// TODO optimise
-			vram[x + (y * 512)].raw = row[x];
-		}
+		for (int x = 0; x < r.width; x++) { dst[x] = src[x]; }
+
+		src += src_stride;
+		dst += dst_stride;
 	}
 
 	vdp2_sync();
