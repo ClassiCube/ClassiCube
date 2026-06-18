@@ -446,7 +446,7 @@ static void NotchyGen_CarveCaves(void) {
 		caveY = (float)Random_Next(&rnd, World.Height);
 		caveZ = (float)Random_Next(&rnd, World.Length);
 
-		caveLen = (int)(Random_Float(&rnd) * Random_Float(&rnd) * 200.0f);
+		caveLen = (int)((Random_Float(&rnd) + Random_Float(&rnd)) * 200.0f);
 		theta   = Random_Float(&rnd) * 2.0f * MATH_PI; deltaTheta = 0.0f;
 		phi     = Random_Float(&rnd) * 2.0f * MATH_PI; deltaPhi   = 0.0f;
 		caveRadius = Random_Float(&rnd) * Random_Float(&rnd);
@@ -541,7 +541,7 @@ static void NotchyGen_FloodFillWater(void) {
 	int numSources;
 	int i, x, y, z;
 
-	numSources       = World.Width * World.Length / 800;
+	numSources       = World.Width * World.Length / 8000;
 	Gen_CurrentState = "Flooding water";
 	for (i = 0; i < numSources; i++) {
 		Gen_CurrentProgress = (float)i / numSources;
@@ -557,7 +557,7 @@ static void NotchyGen_FloodFillLava(void) {
 	int numSources;
 	int i, x, y, z;
 
-	numSources       = World.Width * World.Length / 20000;
+	numSources       = World.Width * World.Height * World.Length / 20000;
 	Gen_CurrentState = "Flooding lava";
 	for (i = 0; i < numSources; i++) {
 		Gen_CurrentProgress = (float)i / numSources;
@@ -670,6 +670,7 @@ static void NotchyGen_PlantMushrooms(void) {
 			for (k = 0; k < 5; k++) {
 				mushX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				mushZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
+				mushY += Random_Next(&rnd, 2) - Random_Next(&rnd, 2);
 
 				if (!World_ContainsXZ(mushX, mushZ)) continue;
 				groundHeight = heightmap[mushZ * World.Width + mushX];
