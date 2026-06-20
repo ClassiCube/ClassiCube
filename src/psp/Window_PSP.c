@@ -138,8 +138,9 @@ static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
 	int x = pad->Lx - 127;
 	int y = pad->Ly - 127;
 
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;
 
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
