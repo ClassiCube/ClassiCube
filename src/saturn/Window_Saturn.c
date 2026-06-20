@@ -49,6 +49,7 @@ void Window_Init(void) {
 	vdp2_tvmd_display_set();
 
 	vdp_sync_vblank_out_set(OnVblank, NULL);
+	vdp2_sync();
 }
 
 void Window_Free(void) { }
@@ -145,17 +146,25 @@ static void ProcessButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PERIPHERAL_DIGITAL_DOWN);
 }
 
-static smpc_peripheral_digital_t dig_state;
-static smpc_peripheral_analog_t  ana_state;
-
 void Gamepads_Process(float delta) {
 	int port = Gamepad_Connect(0x5A, saturn_defaults);
 	smpc_peripheral_process();
 
-	smpc_peripheral_digital_port(1, &dig_state);
-	ProcessButtons(port, dig_state.pressed.raw | dig_state.held.raw);
-	
-	smpc_peripheral_analog_port(1, &ana_state);
+	const smpc_peripheral_port_t* raw = smpc_peripheral_raw_port(1);
+	const smpc_peripheral_t* ctrl = raw->peripheral;
+	int type = ctrl->type;
+	// TODO multitap
+
+	// TODO checking 'TYPE_DIGITAL' would be better, but this isn't exposed ?
+	if (type == ID_DIGITAL || type == ID_MD3B || type == ID_MD6B) {
+		uint16_t btns = *(uint16_t *)&ctrl->data[0];
+		ProcessButtons(port, btns);
+	} else if (type == ID_ANALOG) {
+		uint16_t btns = *(uint16_t *)&ctrl->data[0];
+		ProcessButtons(port, btns);
+		// TODO analog movement
+	}
+	// TODO mouse keyboard peripherals
 }
 
 
