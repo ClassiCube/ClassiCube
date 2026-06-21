@@ -674,7 +674,7 @@ static void NotchyGen_PlantMushrooms(void) {
 
 				if (!World_ContainsXZ(mushX, mushZ)) continue;
 				groundHeight = heightmap[mushZ * World.Width + mushX];
-				if (mushY >= (groundHeight - 1)) continue;
+				if (mushY <= 0 || mushY >= (groundHeight - 1)) continue;
 
 				index = World_Pack(mushX, mushY, mushZ);
 				if (Gen_Blocks[index] == BLOCK_AIR && Gen_Blocks[index - World.OneY] == BLOCK_STONE)
