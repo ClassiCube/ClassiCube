@@ -27,7 +27,7 @@ jobs:
       - name: Compile PS1 build
         run: |
           export PSN00BSDK_ROOT=/usr/local/psnoob
-          make ps1
+          make ps1 -j $(nproc)
 
 
       - uses: ./.github/actions/upload_build

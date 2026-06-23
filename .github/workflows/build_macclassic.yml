@@ -21,9 +21,9 @@ jobs:
       - uses: actions/checkout@v5
       - name: Compile Mac classic build
         run: |
-          make macclassic_ppc RETRO68=/Retro68-build/toolchain
-          make macclassic_68k RETRO68=/Retro68-build/toolchain
-          make macclassic_68k RETRO68=/Retro68-build/toolchain ARCH_68040=1
+          make macclassic_ppc RETRO68=/Retro68-build/toolchain -j $(nproc)
+          make macclassic_68k RETRO68=/Retro68-build/toolchain -j $(nproc)
+          make macclassic_68k RETRO68=/Retro68-build/toolchain ARCH_68040=1 -j $(nproc)
 
 
       - uses: ./.github/actions/upload_build
