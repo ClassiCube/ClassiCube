@@ -339,16 +339,19 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	cothread_yield_irq(IRQ_VBLANK);
+
+	int src_stride = bmp->width;
+	int dst_stride = 256; // framebuffer width
+
+	BitmapCol* src = bmp->scan0 + src_stride * r.y + r.x;
+	uint16_t*  dst = bg_ptr     + dst_stride * r.y + r.x;
 	 
-	for (int y = r.y; y < r.y + r.height; y++)
+	for (int y = 0; y < r.height; y++)
 	{
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		uint16_t*  dst = bg_ptr + 256 * y;
-		
-		for (int x = r.x; x < r.x + r.width; x++)
-		{
-			dst[x] = src[x];
-		}
+		for (int x = 0; x < r.width; x++) { dst[x] = src[x]; }
+
+		src += src_stride;
+		dst += dst_stride;
 	}
 	
 	bgShow(bg_id);

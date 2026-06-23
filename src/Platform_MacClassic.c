@@ -416,7 +416,7 @@ void Platform_Init(void) {
 	cc_filepath str;
 	Platform_EncodePath(&str, &path);
 
-	int ERR2 = DoCreateFile(&str);
+	int ERR2 = DoCreateFile(str.buffer);
 	Platform_Log1("TEST FILE: %i", &ERR2);
 }
 

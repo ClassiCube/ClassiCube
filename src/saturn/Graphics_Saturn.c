@@ -563,14 +563,14 @@ static int TransformColoured(struct SATVertexColoured* a, vdp1_cmdt_t* cmd) {
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
 		*dst++ = x;
-		if (x < -2048 || x > 2048) return -1;
+		if (x < -2047 || x > 2048) return -1;
 
 		int z = (unsigned)w >> 6;
 		if (z < 0 || z > 50000) return -1;
 		aveZ += z;
 
 		y = cpu_divu_quotient_get();
-		if (y < -2048 || y > 2048) return -1;
+		if (y < -2047 || y > 2048) return -1;
 		*dst++ = y;
 	}
 	return aveZ >> 2;
@@ -613,14 +613,14 @@ static int TransformTextured(struct SATVertexTextured* a, vdp1_cmdt_t* cmd) {
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
 		*dst++ = x;
-		if (x < -2048 || x > 2048) return -1;
+		if (x < -2047 || x > 2048) return -1;
 
 		int z = (unsigned)w >> 6;
 		if (z < 0 || z > 50000) return -1;
 		aveZ += z;
 
 		y = cpu_divu_quotient_get();
-		if (y < -2048 || y > 2048) return -1;
+		if (y < -2047 || y > 2048) return -1;
 		*dst++ = y;
 	}
 	return aveZ >> 2;

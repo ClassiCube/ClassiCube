@@ -644,7 +644,8 @@ static void HandleKeyPress(XEvent* e) {
 			i = Convert_Utf8ToCodepoint(&cp, (cc_uint8*)chars, status);
 			if (!i) break;
 
-			Event_RaiseInt(&InputEvents.Press, cp);
+			/* E.g. pressing ctrl+space produces U+0000 codepoint */
+			if (cp) Event_RaiseInt(&InputEvents.Press, cp);
 			status -= i; chars += i;
 		}
 		return;
@@ -656,7 +657,8 @@ static void HandleKeyPress(XEvent* e) {
 	status = XLookupString(&e->xkey, data, Array_Elems(data), NULL, NULL);
 	for (i = 0; i < status; i++) 
 	{
-		Event_RaiseInt(&InputEvents.Press, (cc_uint8)data[i]);
+		/* E.g. pressing ctrl+space produces 0 in data */
+		if (data[i]) Event_RaiseInt(&InputEvents.Press, (cc_uint8)data[i]);
 	}
 }
 

@@ -828,7 +828,7 @@ static void CalcNearFrustumPlane(struct Matrix* clip) {
 
 cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) {
 	float d = nearPlane.a * x + nearPlane.b * y + nearPlane.c * z + nearPlane.d;
-	return d >= radius; // sphere entirely in front plane
+	return d >= radius; // sphere entirely in front of plane
 }
 
 

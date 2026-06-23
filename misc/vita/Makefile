@@ -25,7 +25,8 @@ SFO_TITLEID = CUBE00200
 # Compilable files
 #---------------------------------------------------------------------------------
 C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
+S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
+OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 
 # Dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
@@ -35,7 +36,7 @@ DEPFILES := $(OBJS:%.o=%.d)
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-CFLAGS 	= -O1 -DPLAT_VITA -fno-math-errno
+CFLAGS 	= -O2 -DPLAT_VITA -fno-math-errno
 
 LDFLAGS = -Wl,-q
 LIBS 	= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
@@ -99,6 +100,9 @@ $(BUILD_DIR)/%.o : src/psvita/%.c
 	
 $(BUILD_DIR)/%.o : third_party/bearssl/%.c
 	$(VITA_CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o : src/psvita/%.S
+	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 
 #---------------------------------------------------------------------------------

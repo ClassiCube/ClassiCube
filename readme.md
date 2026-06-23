@@ -52,7 +52,7 @@ The most common reason for being stuck on OpenGL 1.1 is non-working GPU drivers 
 
 Otherwise:
 * On Windows, you can still run the OpenGL build of ClassiCube anyways. <br> 
-(You can try downloading and using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
+(You can still try using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
 * On other operating systems, you will have to [compile the game yourself](#Compiling). <br> 
 Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
 
@@ -80,20 +80,22 @@ And also runs on:
 * Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
 * Saturn - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/saturn))
+* 32x - terrible performance and practically unusable
 * Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
-* Wii U - unfinished, major issues, **broken on real hardware** (can [download from here](https://www.classicube.net/download/wiiu))
+* Wii U - unfinished, major issues (can [download from here](https://www.classicube.net/download/wiiu))
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
 * 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
 * DS/DSi - unfinished, rendering issues  (can [download from here](https://www.classicube.net/download/nds))
+* GBA - terrible performance and practically unusable
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3))
 * PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
 * PS1 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps1))
 * Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
-* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
+* Xbox - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/xbox))
 * Symbian (S60 3rd Edition FP1 and later) - unfinished, but usable
 
 # Compiling 
@@ -258,7 +260,7 @@ Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
 
 #### Nintendo 64
 
-Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+Run `make n64`. You'll need the preview branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/preview)
 
 #### GBA
 
@@ -325,6 +327,12 @@ Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/Kal
 #### Saturn
 
 Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
+
+#### 32x
+
+Run `make 32x`.
+
+**NOTE: The 32x port has terrible performance and is unusable in practice.**
 
 </details>
 
@@ -488,7 +496,6 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
 * [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
 * [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
-* [GLdc](https://github.com/Kazade/GLdc) - Basis of rendering backend for Dreamcast
 * [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
 * [libyaul](https://github.com/yaul-org/libyaul) - Backend for Saturn
 * [mednafen](https://mednafen.github.io/) - Emulator used to test Saturn port

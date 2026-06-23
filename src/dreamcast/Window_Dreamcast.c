@@ -234,8 +234,7 @@ static const BindMapping defaults_dc[BIND_COUNT] = {
 	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
 	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
 	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
-	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT },
-	[BIND_SCREENSHOT]   = { CCPAD_3 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT }
 };
 
 void Gamepads_PreInit(void) { }
@@ -298,7 +297,7 @@ void Gamepads_Process(float delta) {
 		if (!state) return;
 
 		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
-		if(dual_analog == -1) dual_analog = 0;
+		if (dual_analog == -1) dual_analog = 0;
 
 		int port = Gamepad_Connect(0xDC + i, defaults_dc);
 		HandleButtons(port, state->buttons);
@@ -321,18 +320,24 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
+
+	int src_stride = bmp->width;
+	int dst_stride = vid_mode->width;
+
+	BitmapCol* src = bmp->scan0 + src_stride * r.y + r.x;
+	uint16_t*  dst = vram_s     + dst_stride * r.y + r.x;
 	
-	for (int y = r.y; y < r.y + r.height; y++)
+	for (int y = 0; y < r.height; y++)
 	{
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		uint16_t*  dst = vram_s + vid_mode->width * y;
-		
-		for (int x = r.x; x < r.x + r.width; x++)
+		for (int x = 0; x < r.width; x++)
 		{
 			BitmapCol color = src[x];
 			// 888 to 565 (discard least significant bits)
 			dst[x] = ((BitmapCol_R(color) & 0xF8) << 8) | ((BitmapCol_G(color) & 0xFC) << 3) | (BitmapCol_B(color) >> 3);
 		}
+
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 
