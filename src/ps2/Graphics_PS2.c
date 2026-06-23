@@ -17,6 +17,7 @@
 #include "gs_gpu.h"
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
+#define CACHELINE_ALIGNED CC_ALIGNED(64)
 
 #define GB_HALF  2048
 #define GB_RANGE 4096
@@ -38,8 +39,9 @@ extern void LoadClipScaleFactors(VU0_vector* scale);
 extern void LoadViewportOrigin(VU0_vector* origin);
 extern void LoadViewportScale(VU0_vector* scale);
 
-// double buffering
-static qword_t* dma_bufs[2];
+// TODO ucab memory with dcache flush at start?
+// TODO: Find a better way than just increasing this hardcoded size
+static qword_t  dma_bufs[2][50000] CACHELINE_ALIGNED;
 static qword_t* cur_buf;
 static int cur_context;
 
@@ -65,24 +67,6 @@ static void Gfx_FreeState(void) {
 	FreeDefaultResources();
 	Gfx_DeleteTexture(&white_square);
 }
-
-
-static qword_t* AllocDMABuffer(int qwords) {
-	// TODO ucab memory with Flush at start? need to adjust free too though
-	return memalign(64, qwords * 16);
-}
-
-static void FreeDMABuffer(qword_t* buffer) {
-	// TODO ucab memory with Flush at start? need to adjust free too though
-	free(buffer);
-}
-
-// TODO: Find a better way than just increasing this hardcoded size
-static void InitDMABuffers(void) {
-	dma_bufs[0] = AllocDMABuffer(50000);
-	dma_bufs[1] = AllocDMABuffer(50000);
-}
-
 
 static void UpdateContext(void) {
 	fb_display = &fb_colors[cur_context];
@@ -262,7 +246,6 @@ static void InitPalette(void);
 static void InitTextureMem(void);
 
 static void InitGPUState(void) {
-	InitDMABuffers();
 	InitPalette();
 	InitTextureMem();
 }
@@ -434,14 +417,12 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 
 void Gfx_TransferPixels(void* src, int width, int height, 
 						int format, unsigned dst_base, unsigned dst_stride) {
-	qword_t* buf = AllocDMABuffer(200);
-	qword_t* q   = buf;
+	qword_t buf[200] CACHELINE_ALIGNED;
+	qword_t* q = buf;
 
 	q = PrepareTransfer(q, src, width, height, format, dst_base, dst_stride);
 	dma_channel_send_chain(DMA_CHANNEL_GIF, buf, q - buf, 0,0);
 	dma_wait_fast();
-
-	FreeDMABuffer(buf);
 }
 
 
