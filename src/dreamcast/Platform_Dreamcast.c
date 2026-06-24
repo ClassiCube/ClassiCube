@@ -27,8 +27,9 @@
 #include <kos/dbgio.h>
 #include <dc/net/w5500_adapter.h>
 
-KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
-               INIT_VMU        | INIT_CDROM    | INIT_NET   | INIT_FS_RAMDISK);
+KOS_INIT_FLAGS(	INIT_IRQ		| INIT_NET		|
+				INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
+               	INIT_VMU        | INIT_CDROM    | INIT_FS_RAMDISK);
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -621,6 +622,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	int res = getaddrinfo(host, portRaw, &hints, &result);
 	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
 	if (res == EAI_SYSTEM) return errno;
+
 	if (res) return res;
 
 	int i = 0;

@@ -115,7 +115,6 @@ void Gamepads_Init(void) {
 	// PPSSPP #define PSP_SYSTEMPARAM_ID_INT_BUTTON_PREFERENCE 9
  	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN, &ret);
 	circle_main = ret == 0;
-	Platform_LogConst(circle_main ? "MAIN: CIRCLE" : "MAIN: CROSS");
 
 	Input_DisplayNames[CCPAD_1] = circle_main ? "CIRCLE" : "CROSS";
 	Input_DisplayNames[CCPAD_2] = circle_main ? "CROSS" : "CIRCLE";
