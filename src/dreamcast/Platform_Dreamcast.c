@@ -751,6 +751,9 @@ static void InitModem(void) {
 	if (err) {
 		Platform_Log1("Connecting link failed (%i)", &err); return;
  	}
+
+	net_init(0); // normally auto called in kallistios autoinit, but need to manually call
+	// here because modem is not in the default network devices list
 }
 
 void Platform_Init(void) {
