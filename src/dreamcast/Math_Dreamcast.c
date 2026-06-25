@@ -1,6 +1,6 @@
 #include "../ExtMath.h"
 
-// These are able to use fsca
+// These instrinsics are able to use FSCA instruction
 float Math_SinF(float x) { 
 	return __builtin_sinf(x);
 }

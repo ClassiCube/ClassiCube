@@ -158,6 +158,23 @@ static void UpdateKeyboardState(kbd_state_t* state) {
 	Mem_Copy(prev_states, state->key_states, sizeof(prev_states));
 }
 
+static void ProcessRawKey(kbd_state_t* state, int raw) {
+	kbd_key_t key;
+	kbd_mods_t mods;
+	kbd_leds_t leds;
+
+	key      = raw         & 0xFF;
+	mods.raw = (raw >>  8) & 0xFF;
+	leds.raw = (raw >> 16) & 0xFF;
+
+	int c = kbd_key_to_ascii(key, state->region, mods, leds);
+        
+	// Ascii printable characters
+	//  NOTE: Escape, Enter etc map to ASCII control characters
+	if (c >= ' ' && c <= 0x7F)
+		Event_RaiseInt(&InputEvents.Press, c);
+}
+
 static void ProcessKeyboardInput(void) {
 	maple_device_t* kb_dev;
 	kbd_state_t* state;
@@ -172,13 +189,8 @@ static void ProcessKeyboardInput(void) {
 	prev_modifiers = state->last_modifiers;
 	
 	Input.Sources |= INPUT_SOURCE_NORMAL;
-	int ret = kbd_queue_pop(kb_dev, 1);
-	if (ret < 0) return;
-        
-	// Ascii printable characters
-	//  NOTE: Escape, Enter etc map to ASCII control characters
-	if (ret >= ' ' && ret <= 0x7F)
-		Event_RaiseInt(&InputEvents.Press, ret);
+	int ret = kbd_queue_pop(kb_dev, 0);
+	if (ret > 0) ProcessRawKey(state, ret);
 }
 
 
