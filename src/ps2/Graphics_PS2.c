@@ -87,6 +87,10 @@ static void UpdateContext(void) {
 *#########################################################################################################################*/
 // VIF no operation
 #define VIF_NOP 0
+
+// VIF load VU1 program memory
+#define VIF_PACK_LOADPROG(addr, count) VIF_CODE(addr, count, VIF_CMD_MPG, 0)
+
 // VIF path2 transfer
 #define VIF_PACK_DIRECT(qwords) VIF_CODE(qwords, 0, VIF_CMD_DIRECT, 0)
 
@@ -218,6 +222,67 @@ static qword_t* GS_InitRegisters(qword_t* q, framebuffer_t* fb, zbuffer_t* zb) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------VU1 programs------------------------------------------------------*
+*#########################################################################################################################*/
+// VU1 instruction size is 64 bit, so is addressed in terms of 64 bit units
+#define VU1_PROGMEM_SIZE (16*1024)
+#define VU1_INS_SIZE     8
+#define VU1_PROGMEM_MAX_INS (VU1_PROGMEM_SIZE / VU1_INS_SIZE)
+
+#define VU1_MAX_UPLOAD 256 // num field is only 8 bits, with 0 treated as 256
+
+static int vu1_prog_addr;
+static int vu1_reloadMVP;
+
+extern char Reload_MVP_CodeStart[], Reload_MVP_CodeEnd[];
+
+static void VU1_UploadProgram(int dst, const void* src_ins, int num_ins) {
+	qword_t buf[256 + 1];
+	qword_t* Q = buf;
+
+	PACK_VIFTAG(Q, VIF_NOP, VIF_NOP, VIF_NOP, VIF_PACK_LOADPROG(dst, num_ins));
+	Q++;
+
+	Mem_Copy(Q, src_ins, num_ins * VU1_INS_SIZE);
+	Q += num_ins >> 1;
+
+	// Pad buffer to 128 bit alignment if needed with VIF 'nops'
+	if (num_ins & 1) { Q->dw[1] = VIF_NOP; Q++; }
+
+	dma_channel_send_normal(DMA_CHANNEL_VIF1, buf, Q - buf, 0, 0);
+	dma_wait_fast();
+}
+
+static int VU1_LoadProgram(cc_uintptr beg, cc_uintptr end) {
+	int num_ins = (end - beg) / VU1_INS_SIZE;
+	Platform_Log3("LOAD: %h -> %h / %i", &beg, &end, &num_ins);
+
+	int prog_addr   = vu1_prog_addr;
+	if (prog_addr + num_ins > VU1_PROGMEM_MAX_INS) Process_Abort("VU1 imem overflow");
+	const char* src = (const char*)beg;
+
+	while (num_ins) {
+		int part_ins = min(num_ins, VU1_MAX_UPLOAD);
+		VU1_UploadProgram(vu1_prog_addr, src, num_ins);
+	
+		vu1_prog_addr += part_ins;
+		src           += part_ins * VU1_INS_SIZE;
+		num_ins       -= part_ins;	
+	}
+	return prog_addr;
+}
+
+static void VU1_LoadPrograms(void) {
+	vu1_reloadMVP = VU1_LoadProgram((cc_uintptr)Reload_MVP_CodeStart, (cc_uintptr)Reload_MVP_CodeEnd);
+
+	int* mem = (int*)0x11008000;
+	for (int i = 0; i < 200; i++) {
+		Platform_Log3("VU1 %p3 = %h %h", &i, &mem[0], &mem[1]); mem += 2;
+	}
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------GPU initialisation--------------------------------------------------*
 *#########################################################################################################################*/
 static void InitGuardband(void) {
@@ -263,13 +328,12 @@ static void InitDrawingEnv(void) {
 static void InitPalette(void);
 static void InitTextureMem(void);
 
-static void InitGPUState(void) {
-	InitPalette();
-	InitTextureMem();
-}
-
 void Gfx_Create(void) {
-	if (!Gfx.Created) InitGPUState();
+	if (!Gfx.Created) {
+		InitPalette();
+		InitTextureMem();
+		VU1_LoadPrograms();
+	}
 
 	cur_context = 0;
 	UpdateContext();
