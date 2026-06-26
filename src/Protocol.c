@@ -1975,6 +1975,7 @@ void Protocol_Tick(void) {
 static void OnInit(void) {
 	if (Server.IsSinglePlayer) return;
 	Protocol_Reset();
+	CCJoin_Init();
 }
 
 static void OnReset(void) {
