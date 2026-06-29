@@ -1939,7 +1939,7 @@ static void ChatInputWidget_DownKey(struct InputWidget* w) {
 		return;
 	}
 
-	if (!Chat_InputLog.count) return;
+	if (W->typingLogPos >= Chat_InputLog.count) return;
 	W->typingLogPos++;
 	w->text.length = 0;
 
