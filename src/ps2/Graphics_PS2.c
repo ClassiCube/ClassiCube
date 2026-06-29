@@ -14,8 +14,8 @@
 #include <draw.h>
 #include <draw3d.h>
 #include <malloc.h>
-#include <vif_codes.h>
 #include <vif_registers.h>
+#include "vif.h"
 #include "gs_gpu.h"
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
@@ -83,27 +83,11 @@ static void UpdateContext(void) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------VIF tags--------------------------------------------------------*
-*#########################################################################################################################*/
-// VIF no operation
-#define VIF_NOP 0
-
-// VIF load VU1 program memory
-#define VIF_PACK_LOADPROG(addr, count) VIF_CODE(addr, count, VIF_CMD_MPG, 0)
-
-// VIF path2 transfer
-#define VIF_PACK_DIRECT(qwords) VIF_CODE(qwords, 0, VIF_CMD_DIRECT, 0)
-
-#define PACK_VIFTAG_DIRECT(Q, qwords) PACK_VIFTAG(Q, VIF_NOP, VIF_NOP, VIF_NOP, VIF_PACK_DIRECT(qwords))
-// PACK_VIFTAG(Q, VIF_PACK_DIRECT(qwords), VIF_NOP, VIF_NOP, VIF_NOP)
-
-
-/*########################################################################################################################*
 *---------------------------------------------------GIF packet wrappers---------------------------------------------------*
 *#########################################################################################################################*/
 // Writes VIF tag + header for a simple GIF packet consisting of 'qwords' data+address GS primitives
 #define PACK_SIMPLE_HDR(Q, qwords, eop) \
-	PACK_VIFTAG_DIRECT(Q, 1 + (qwords)); Q++; \
+	PACK_VIFTAG_SINGLE(Q, VIF_XFER_GIF(1 + (qwords))); Q++; \
 	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); Q++;
 
 // Total number of qwords in a VIF tag + simple GIF packet
@@ -112,7 +96,7 @@ static void UpdateContext(void) {
 // Writes VIF tag + header for a reglist GIF packet consisting of efficiently packed GS primitives
 // (note GS primitives are 64 bits, vif count is in 128 bit units)
 #define PACK_REGLIST_HDR(Q, num_loops, eop, regs_per_loop, regs)  \
-	PACK_VIFTAG_DIRECT(Q, 1 + ((num_loops) * (regs_per_loop) + 1) / 2); Q++; \
+	PACK_VIFTAG_SINGLE(Q, VIF_XFER_GIF(1 + ((num_loops) * (regs_per_loop) + 1) / 2)); Q++; \
 	PACK_GIFTAG(Q, GIF_SET_TAG(num_loops,eop, 0,0, GIF_FLG_REGLIST, regs_per_loop), regs); Q++;
 
 // Number of qwords for a VIF tag + reglist GIF packet header
@@ -120,7 +104,7 @@ static void UpdateContext(void) {
 
 // Writes VIF tag + header for an image GIF packet consisting of 'qwords' packed data
 #define PACK_IMAGE_HDR(Q, qwords, eop) \
-	PACK_VIFTAG_DIRECT(Q, 1 + (qwords)); Q++; \
+	PACK_VIFTAG_SINGLE(Q, VIF_XFER_GIF(1 + (qwords))); Q++; \
 	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_IMAGE, 0), 0); Q++;
 
 // Number of qwords for a VIF tag + image GIF packet header
@@ -233,14 +217,18 @@ static qword_t* GS_InitRegisters(qword_t* q, framebuffer_t* fb, zbuffer_t* zb) {
 
 static int vu1_prog_addr;
 static int vu1_reloadMVP;
+static int vu1_reloadGB;
+static int vu1_drawTex3D;
 
-extern char Reload_MVP_CodeStart[], Reload_MVP_CodeEnd[];
+extern char Reload_MVP_CodeStart[],       Reload_MVP_CodeEnd[];
+extern char Reload_Guardband_CodeStart[], Reload_Guardband_CodeEnd[];
+extern char DrawTexturedQuad_CodeStart[], DrawTexturedQuad_CodeEnd[];
 
 static void VU1_UploadProgram(int dst, const void* src_ins, int num_ins) {
 	qword_t buf[256 + 1];
 	qword_t* Q = buf;
 
-	PACK_VIFTAG(Q, VIF_NOP, VIF_NOP, VIF_NOP, VIF_PACK_LOADPROG(dst, num_ins));
+	PACK_VIFTAG_SINGLE(Q, VIF_LOAD_CODE(dst, num_ins));
 	Q++;
 
 	Mem_Copy(Q, src_ins, num_ins * VU1_INS_SIZE);
@@ -273,7 +261,9 @@ static int VU1_LoadProgram(cc_uintptr beg, cc_uintptr end) {
 }
 
 static void VU1_LoadPrograms(void) {
-	vu1_reloadMVP = VU1_LoadProgram((cc_uintptr)Reload_MVP_CodeStart, (cc_uintptr)Reload_MVP_CodeEnd);
+	vu1_reloadMVP = VU1_LoadProgram((cc_uintptr)Reload_MVP_CodeStart,       (cc_uintptr)Reload_MVP_CodeEnd);
+	vu1_reloadGB  = VU1_LoadProgram((cc_uintptr)Reload_Guardband_CodeStart, (cc_uintptr)Reload_Guardband_CodeEnd);
+	vu1_drawTex3D = VU1_LoadProgram((cc_uintptr)DrawTexturedQuad_CodeStart, (cc_uintptr)DrawTexturedQuad_CodeEnd);
 
 	int* mem = (int*)0x11008000;
 	for (int i = 0; i < 200; i++) {

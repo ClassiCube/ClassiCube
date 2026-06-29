@@ -22,13 +22,6 @@
 .init_vi_all // all registers available for dynamic allocation
 .vu
 
-.name Reload_Guardband
---enter
---endenter
-	lq			GB_SCALE,   ADDR_GB_SCALE(vi00)
---exit
---endexit
-
 .name DrawTexturedQuad
 --enter
 	in_vf mvp_r1(MVP_R1)
