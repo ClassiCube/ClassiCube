@@ -24,7 +24,7 @@ jobs:
         env: 
           LIBS: "-framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc"
           SRCS: "src/*.c src/Window_cocoa.m third_party/bearssl/*.c"
-          FLAGS:  "-O1 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -rdynamic"
+          FLAGS:  "-O2 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -rdynamic"
           ARM64_FLAGS:   "-DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -arch arm64"
           INTEL64_FLAGS: "-arch x86_64"
         run: |

@@ -33,14 +33,14 @@ jobs:
       - name: Compile android builds
         shell: bash
         env: 
-          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
+          COMMON_FLAGS: "-O2 -s -fno-stack-protector -fno-math-errno -Qn -Werror"
           DROID_FLAGS: "-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
           LIBS: "-lGLESv2 -lEGL -lm -llog"
           SRCS: "src/*.c src/android/*.c third_party/bearssl/*.c"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
-          DROID_FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+          DROID_FLAGS="-fPIC -shared -s -O2 -fvisibility=hidden -rdynamic -funwind-tables"
           
           ROOT_DIR=$PWD
           NDK_ROOT="/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"

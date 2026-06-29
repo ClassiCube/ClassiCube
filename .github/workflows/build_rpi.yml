@@ -34,7 +34,7 @@ jobs:
         env: 
           LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O2 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -rdynamic -Werror"
           RPI32_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
@@ -83,7 +83,7 @@ jobs:
         env: 
           LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
           SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
+          FLAGS: "-O2 -s -fno-stack-protector -fno-math-errno -Qn -fvisibility=hidden -rdynamic -Werror"
           RPI64_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
