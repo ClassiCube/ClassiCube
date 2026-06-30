@@ -2,16 +2,16 @@
 # Configurable flags and names
 #-----------------------------
 SOURCE_DIRS = src third_party/bearssl
-BUILD_DIR	= build/openbsd
+BUILD_DIR	= build/riscos
 
 # Name of the main executable
 TARGET  = ClassiCube
 # Flags passed to the C compiler
-CFLAGS	= -I /usr/X11R6/include -I /usr/local/include -fvisibility=hidden
+CFLAGS	=
 # Flags passed to the linker
-LDFLAGS = -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
+LDFLAGS = -g
 # Libraries to link against
-LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+LIBS    =
 
 
 include misc/makefiles/Makefile_common.mk

@@ -13,12 +13,11 @@ BUILD_DIR	= build/linux
 # Name of the main executable
 TARGET  = ClassiCube
 # Flags passed to the C compiler
-CFLAGS	=
+CFLAGS	= -fvisibility=hidden
 # Flags passed to the linker
 LDFLAGS	= -g -rdynamic
 # Libraries to link against
 # -lm may be needed for __builtin_sqrtf (in cases where it isn't replaced by a CPU instruction intrinsic)
 LIBS 	= -lX11 -lXi -lpthread -lGL -ldl -lm
-
 
 include misc/makefiles/Makefile_common.mk

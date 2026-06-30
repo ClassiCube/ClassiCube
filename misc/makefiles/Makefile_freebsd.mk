@@ -7,7 +7,7 @@ BUILD_DIR	= build/freebsd
 # Name of the main executable
 TARGET  = ClassiCube
 # Flags passed to the C compiler
-CFLAGS	= -I /usr/local/include
+CFLAGS	= -I /usr/local/include -fvisibility=hidden
 # Flags passed to the linker
 LDFLAGS = -L /usr/local/lib -rdynamic
 # Libraries to link against

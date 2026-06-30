@@ -13,7 +13,8 @@ LINK ?= $(CC)
 #-----------------------------
 BUILD_DIRS	= $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SOURCE_DIRS))
 C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJECTS   	= $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+C_OBJECTS   = $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+OBJECTS += C_OBJECTS
 
 
 #----------------------------------------------------------------

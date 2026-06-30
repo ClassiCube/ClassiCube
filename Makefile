@@ -78,78 +78,12 @@ ifeq ($(PLAT),mingw)
 	BUILD_DIR = build/win
 endif
 
-ifeq ($(PLAT),linux)
-	# -lm may be needed for __builtin_sqrtf (in cases where it isn't replaced by a CPU instruction intrinsic)
-	LIBS    =  -lX11 -lXi -lpthread -lGL -ldl -lm
-	BUILD_DIR = build/linux
-
-	# Detect MCST LCC, where -O3 is about equivalent to -O1
-	ifeq ($(shell $(CC) -dM -E -xc - < /dev/null | grep -o __MCST__),__MCST__)
-		OPT_LEVEL=3
-	endif
-endif
-
-ifeq ($(PLAT), gnu)
-	LIBS    = -lX11 -lXi -lpthread -ldl -lm
-	BUILD_DIR = build/gnu
-endif
-
-ifeq ($(PLAT),sunos)
-	LIBS    =  -lsocket -lX11 -lXi -lGL
-	BUILD_DIR = build/solaris
-endif
-
-ifeq ($(PLAT),hp-ux)
-	CC      = gcc
-	CFLAGS  += -std=c99 -D_POSIX_C_SOURCE=200112L -D_XOPEN_SOURCE=600 -D_DEFAULT_SOURCE -D_BSD_SOURCE
-	LDFLAGS =
-	LIBS    = -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib/hpux32 -lGL -lpthread
-	BUILD_DIR = build/hpux
-endif
-
 ifeq ($(PLAT),darwin)
 	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
 	LIBS    =
 	LDFLAGS =  -rdynamic -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 	BUILD_DIR = build/macos
 	TARGET  = $(ENAME).app
-endif
-
-ifeq ($(PLAT),freebsd)
-	CFLAGS  += -I /usr/local/include
-	LDFLAGS =  -L /usr/local/lib -rdynamic
-	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build/freebsd
-endif
-
-ifeq ($(PLAT),openbsd)
-	CFLAGS  += -I /usr/X11R6/include -I /usr/local/include
-	LDFLAGS =  -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
-	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build/openbsd
-endif
-
-ifeq ($(PLAT),netbsd)
-	CFLAGS  += -I /usr/X11R7/include -I /usr/pkg/include
-	LDFLAGS =  -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic -Wl,-R/usr/X11R7/lib
-	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build/netbsd
-endif
-
-ifeq ($(PLAT),dragonfly)
-	CFLAGS  += -I /usr/local/include
-	LDFLAGS =  -L /usr/local/lib -rdynamic
-	LIBS    =  -lexecinfo -lGL -lX11 -lXi -lpthread
-	BUILD_DIR = build/flybsd
-endif
-
-ifeq ($(PLAT),haiku)
-	OBJECTS += $(BUILD_DIR)/src/Platform_BeOS.o $(BUILD_DIR)/src/Window_BeOS.o
-	CFLAGS  = -pipe -fno-math-errno
-	LDFLAGS = -g
-	LINK    = $(CXX)
-	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
-	BUILD_DIR = build/haiku
 endif
 
 ifeq ($(PLAT),beos)
@@ -161,42 +95,6 @@ ifeq ($(PLAT),beos)
 	BUILD_DIR = build/beos
 	TRACK_DEPENDENCIES = 0
 	BEARSSL = 0
-endif
-
-ifeq ($(PLAT),serenityos)
-	LIBS    = -lgl -lSDL2
-	BUILD_DIR = build/serenity
-endif
-
-ifeq ($(PLAT),irix)
-	CC      = gcc
-	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
-	BUILD_DIR = build/irix
-endif
-
-ifeq ($(PLAT),rpi)
-	CFLAGS += -DCC_BUILD_RPI
-	LIBS    =  -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl
-	BUILD_DIR = build/rpi
-endif
-
-ifeq ($(PLAT),riscos)
-	LIBS    =
-	LDFLAGS = -g
-	BUILD_DIR = build/riscos
-endif
-
-ifeq ($(PLAT),wince)
-	CC      =  arm-mingw32ce-gcc
-	OEXT    =  .exe
-	CFLAGS  += -march=armv5te -DUNICODE -D_WIN32_WCE -std=gnu99
-	LDFLAGS =  -g
-	LIBS    =  -lcoredll -lws2
-	BUILD_DIR = build/wince
-endif
-
-ifeq ($(PLAT),os/2)
-	BUILD_DIR =	build/os2
 endif
 
 ifdef BUILD_SDL2
@@ -225,19 +123,29 @@ endif
 
 default: $(PLAT)
 
+# Shortcuts for default platform
+sdl2:
+	$(MAKE) $(PLAT) BUILD_SDL2=1
+sdl3:
+	$(MAKE) $(PLAT) BUILD_SDL3=1
+terminal:
+	$(MAKE) $(PLAT) BUILD_TERMINAL=1
+release:
+	$(MAKE) $(PLAT) RELEASE=1
+
 # Build for the specified platform
 #   "$(filter-out $@, $(MAKECMDGOALS))" is used to get all goals except the current one
 # that way, e.g. "make freebsd clean" invokes freebsd makefile with 'clean' goal
 web:
 	$(MAKE) $(TARGET) PLAT=web
 linux:
-	$(MAKE) $(TARGET) PLAT=linux
+	$(MAKE) -f misc/makefiles/Makefile_linux.mk $(filter-out $@, $(MAKECMDGOALS))
 mingw:
 	$(MAKE) $(TARGET) PLAT=mingw
 sunos:
-	$(MAKE) $(TARGET) PLAT=sunos
+	$(MAKE) -f misc/makefiles/Makefile_solaris.mk $(filter-out $@, $(MAKECMDGOALS))
 hp-ux:
-	$(MAKE) $(TARGET) PLAT=hp-ux
+	$(MAKE) -f misc/makefiles/Makefile_hpux.mk $(filter-out $@, $(MAKECMDGOALS))
 darwin:
 	$(MAKE) $(TARGET) PLAT=darwin
 freebsd:
@@ -247,90 +155,93 @@ openbsd:
 netbsd:
 	$(MAKE) -f misc/makefiles/Makefile_netbsd.mk  $(filter-out $@, $(MAKECMDGOALS))
 dragonfly:
-	$(MAKE) $(TARGET) PLAT=dragonfly
+	$(MAKE) -f misc/makefiles/Makefile_flybsd.mk  $(filter-out $@, $(MAKECMDGOALS))
 haiku:
-	$(MAKE) $(TARGET) PLAT=haiku
+	$(MAKE) -f misc/makefiles/Makefile_haiku.mk  $(filter-out $@, $(MAKECMDGOALS))
 beos:
 	$(MAKE) $(TARGET) PLAT=beos
 serenityos:
-	$(MAKE) $(TARGET) PLAT=serenityos
+	$(MAKE) -f misc/makefiles/Makefile_serenityos.mk $(filter-out $@, $(MAKECMDGOALS)) 
 irix:
-	$(MAKE) $(TARGET) PLAT=irix
+	$(MAKE) -f misc/makefiles/Makefile_irix.mk $(filter-out $@, $(MAKECMDGOALS))   
 riscos:
-	$(MAKE) $(TARGET) PLAT=riscos    
-wince:
-	$(MAKE) $(TARGET) PLAT=wince
+	$(MAKE) -f misc/makefiles/Makefile_riscos.mk $(filter-out $@, $(MAKECMDGOALS))   
 gnu:
-	$(MAKE) $(TARGET) PLAT=gnu
-# Shortcuts for default platform
-sdl2:
-	$(MAKE) $(TARGET) BUILD_SDL2=1
-sdl3:
-	$(MAKE) $(TARGET) BUILD_SDL3=1
-terminal:
-	$(MAKE) $(TARGET) BUILD_TERMINAL=1
-release:
-	$(MAKE) $(TARGET) RELEASE=1
+	$(MAKE) -f misc/makefiles/Makefile_gnuhurd.mk $(filter-out $@, $(MAKECMDGOALS))
 
-# Some builds require more complex handling, so are moved to
-#  separate makefiles to avoid having one giant messy makefile
-32x:
-	$(MAKE) -f misc/32x/Makefile
-saturn:
-	$(MAKE) -f misc/saturn/Makefile
-dreamcast:
-	$(MAKE) -f misc/dreamcast/Makefile
-psp:
-	$(MAKE) -f misc/psp/Makefile
-vita:
-	$(MAKE) -f misc/vita/Makefile
-ps1:
-	$(MAKE) -f misc/ps1/Makefile
-ps2:
-	$(MAKE) -f misc/ps2/Makefile
-ps3:
-	$(MAKE) -f misc/ps3/Makefile
-ps4:
-	$(MAKE) -f misc/ps4/Makefile
-xbox:
-	$(MAKE) -f misc/xbox/Makefile
-xbox360:
-	$(MAKE) -f misc/xbox360/Makefile
-n64:
-	$(MAKE) -f misc/n64/Makefile
-gba:
-	$(MAKE) -f misc/gba/Makefile
-ds:
-	$(MAKE) -f misc/nds/Makefile
-3ds:
-	$(MAKE) -f misc/3ds/Makefile
-gamecube:
-	$(MAKE) -f misc/gc/Makefile
-wii:
-	$(MAKE) -f misc/wii/Makefile
-wiiu:
-	$(MAKE) -f misc/wiiu/Makefile
-switch:
-	$(MAKE) -f misc/switch/Makefile
-
-os/2:
-	$(MAKE) -f misc/os2/Makefile
-dos:
-	$(MAKE) -f misc/msdos/Makefile
-macclassic_68k:
-	$(MAKE) -f misc/macclassic/Makefile_68k.mk
-macclassic_ppc:
-	$(MAKE) -f misc/macclassic/Makefile_ppc.mk
-amiga_gcc:
-	$(MAKE) -f misc/amiga/Makefile_68k
-amiga:
-	$(MAKE) -f misc/amiga/Makefile
-atari_st:
-	$(MAKE) -f misc/atari_st/Makefile
+# Mobile systems
 ios:
-	$(MAKE) -f misc/ios/Makefile
+	$(MAKE) -f misc/ios/Makefile $(filter-out $@, $(MAKECMDGOALS))
 android:
-	$(MAKE) -f misc/android/Makefile
+	$(MAKE) -f misc/android/Makefile $(filter-out $@, $(MAKECMDGOALS))
+
+# Embedded systems
+wince:
+	$(MAKE) -f misc/makefiles/Makefile_wince.mk $(filter-out $@, $(MAKECMDGOALS))
+rpi:
+	$(MAKE) -f misc/makefiles/Makefile_rpi.mk $(filter-out $@, $(MAKECMDGOALS))
+
+# SEGA consoles
+32x:
+	$(MAKE) -f misc/32x/Makefile $(filter-out $@, $(MAKECMDGOALS))
+saturn:
+	$(MAKE) -f misc/saturn/Makefile $(filter-out $@, $(MAKECMDGOALS))
+dreamcast:
+	$(MAKE) -f misc/dreamcast/Makefile $(filter-out $@, $(MAKECMDGOALS))
+
+# Sony consoles
+psp:
+	$(MAKE) -f misc/psp/Makefile $(filter-out $@, $(MAKECMDGOALS))
+vita:
+	$(MAKE) -f misc/vita/Makefile $(filter-out $@, $(MAKECMDGOALS))
+ps1:
+	$(MAKE) -f misc/ps1/Makefile $(filter-out $@, $(MAKECMDGOALS))
+ps2:
+	$(MAKE) -f misc/ps2/Makefile $(filter-out $@, $(MAKECMDGOALS))
+ps3:
+	$(MAKE) -f misc/ps3/Makefile $(filter-out $@, $(MAKECMDGOALS))
+ps4:
+	$(MAKE) -f misc/ps4/Makefile $(filter-out $@, $(MAKECMDGOALS))
+
+# Microsoft consoles
+xbox:
+	$(MAKE) -f misc/xbox/Makefile $(filter-out $@, $(MAKECMDGOALS))
+xbox360:
+	$(MAKE) -f misc/xbox360/Makefile $(filter-out $@, $(MAKECMDGOALS))
+
+# Nintendo consoles
+n64:
+	$(MAKE) -f misc/n64/Makefile $(filter-out $@, $(MAKECMDGOALS))
+gba:
+	$(MAKE) -f misc/gba/Makefile $(filter-out $@, $(MAKECMDGOALS))
+ds:
+	$(MAKE) -f misc/nds/Makefile $(filter-out $@, $(MAKECMDGOALS))
+3ds:
+	$(MAKE) -f misc/3ds/Makefile $(filter-out $@, $(MAKECMDGOALS))
+gamecube:
+	$(MAKE) -f misc/gc/Makefile $(filter-out $@, $(MAKECMDGOALS))
+wii:
+	$(MAKE) -f misc/wii/Makefile $(filter-out $@, $(MAKECMDGOALS))
+wiiu:
+	$(MAKE) -f misc/wiiu/Makefile $(filter-out $@, $(MAKECMDGOALS))
+switch:
+	$(MAKE) -f misc/switch/Makefile $(filter-out $@, $(MAKECMDGOALS))
+
+# Other systems
+os/2:
+	$(MAKE) -f misc/os2/Makefile $(filter-out $@, $(MAKECMDGOALS))
+dos:
+	$(MAKE) -f misc/msdos/Makefile $(filter-out $@, $(MAKECMDGOALS))
+macclassic_68k:
+	$(MAKE) -f misc/macclassic/Makefile_68k.mk $(filter-out $@, $(MAKECMDGOALS))
+macclassic_ppc:
+	$(MAKE) -f misc/macclassic/Makefile_ppc.mk $(filter-out $@, $(MAKECMDGOALS))
+amiga_gcc:
+	$(MAKE) -f misc/amiga/Makefile_68k $(filter-out $@, $(MAKECMDGOALS))
+amiga:
+	$(MAKE) -f misc/amiga/Makefile $(filter-out $@, $(MAKECMDGOALS))
+atari_st:
+	$(MAKE) -f misc/atari_st/Makefile $(filter-out $@, $(MAKECMDGOALS))
 
 # Cleans up all build .o files (except when clean goal is from e.g 'make freebsd clean')
 ifeq ($(MAKECMDGOALS),clean)
