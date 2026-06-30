@@ -258,7 +258,7 @@ cc_result SSL_Read(void* ctx, cc_uint8* data, cc_uint32 count, cc_uint32* read) 
 	return ERR_NOT_SUPPORTED; 
 }
 
-cc_result SSL_WriteAll(void* ctx, const cc_uint8* data, cc_uint32 count) { 
+cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
 	return ERR_NOT_SUPPORTED; 
 }
 
