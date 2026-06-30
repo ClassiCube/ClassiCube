@@ -436,34 +436,34 @@ static cc_bool Launcher_SelectZipEntry(const cc_string* path) {
 }
 
 static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
-	struct Bitmap bmp;
-	cc_result res;
-
+	struct Bitmap bmp = {0};
+	cc_result res = 0;
 
 	if (String_CaselessEqualsConst(path, "default.png")) {
-		if (hasBitmappedFont) return 0;
+		if (hasBitmappedFont) goto defer;
 		hasBitmappedFont = false;
 		res = Png_Decode(&bmp, data);
 
-		if (res) {
-			Logger_SysWarn(res, "decoding default.png"); return res;
-		} else if (Font_SetBitmapAtlas(&bmp)) {
+		if (res) Logger_SysWarn(res, "decoding default.png");
+		else if (Font_SetBitmapAtlas(&bmp)) {
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
 			hasBitmappedFont = true;
-		} else {
-			Mem_Free(bmp.scan0);
+			bmp.scan0 = NULL; /* Font_SetBitmapAtlas has ownership, do NOT free */
 		}
-	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
-		if (dirtBmp.scan0 != NULL) return 0;
+		goto defer;
+	}
+	
+	if (String_CaselessEqualsConst(path, "terrain.png")) {
+		if (dirtBmp.scan0 != NULL) goto defer;
 		res = Png_Decode(&bmp, data);
 
-		if (res) {
-			Logger_SysWarn(res, "decoding terrain.png"); return res;
-		} else {
-			ExtractTerrainTiles(&bmp);
-		}
+		if (res) Logger_SysWarn(res, "decoding terrain.png");
+		else ExtractTerrainTiles(&bmp);
 	}
-	return 0;
+
+defer:
+	Mem_Free(bmp.scan0);
+	return res;
 }
 
 static cc_result ExtractTexturePack(const cc_string* path) {
