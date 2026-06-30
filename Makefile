@@ -226,6 +226,8 @@ endif
 default: $(PLAT)
 
 # Build for the specified platform
+#   "$(filter-out $@, $(MAKECMDGOALS))" is used to get all goals except the current one
+# that way, e.g. "make freebsd clean" invokes freebsd makefile with 'clean' goal
 web:
 	$(MAKE) $(TARGET) PLAT=web
 linux:
@@ -239,11 +241,11 @@ hp-ux:
 darwin:
 	$(MAKE) $(TARGET) PLAT=darwin
 freebsd:
-	$(MAKE) $(TARGET) PLAT=freebsd
+	$(MAKE) -f misc/makefiles/Makefile_freebsd.mk $(filter-out $@, $(MAKECMDGOALS))
 openbsd:
-	$(MAKE) $(TARGET) PLAT=openbsd
+	$(MAKE) -f misc/makefiles/Makefile_openbsd.mk $(filter-out $@, $(MAKECMDGOALS))
 netbsd:
-	$(MAKE) $(TARGET) PLAT=netbsd
+	$(MAKE) -f misc/makefiles/Makefile_netbsd.mk  $(filter-out $@, $(MAKECMDGOALS))
 dragonfly:
 	$(MAKE) $(TARGET) PLAT=dragonfly
 haiku:
@@ -260,7 +262,7 @@ wince:
 	$(MAKE) $(TARGET) PLAT=wince
 gnu:
 	$(MAKE) $(TARGET) PLAT=gnu
-# Default overrides
+# Shortcuts for default platform
 sdl2:
 	$(MAKE) $(TARGET) BUILD_SDL2=1
 sdl3:
@@ -316,9 +318,9 @@ os/2:
 dos:
 	$(MAKE) -f misc/msdos/Makefile
 macclassic_68k:
-	$(MAKE) -f misc/macclassic/Makefile_68k
+	$(MAKE) -f misc/macclassic/Makefile_68k.mk
 macclassic_ppc:
-	$(MAKE) -f misc/macclassic/Makefile_ppc
+	$(MAKE) -f misc/macclassic/Makefile_ppc.mk
 amiga_gcc:
 	$(MAKE) -f misc/amiga/Makefile_68k
 amiga:
@@ -330,9 +332,14 @@ ios:
 android:
 	$(MAKE) -f misc/android/Makefile
 
-# Cleans up all build .o files
+# Cleans up all build .o files (except when clean goal is from e.g 'make freebsd clean')
+ifeq ($(MAKECMDGOALS),clean)
 clean:
 	$(RM) $(OBJECTS)
+else
+clean:
+	@echo "NOTE: Skipping 'clean' due to not being the only goal (all goals: $(MAKECMDGOALS))"
+endif
 
 
 #################################################
