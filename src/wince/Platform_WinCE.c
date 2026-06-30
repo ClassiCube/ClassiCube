@@ -1,11 +1,8 @@
-#include "Core.h"
-#if defined CC_BUILD_WINCE
-
-#include "Stream.h"
-#include "SystemFonts.h"
-#include "Funcs.h"
-#include "Utils.h"
-#include "Errors.h"
+#include "../Stream.h"
+#include "../SystemFonts.h"
+#include "../Funcs.h"
+#include "../Utils.h"
+#include "../Errors.h"
 #define OVERRIDE_MEM_FUNCTIONS
 
 #define WIN32_LEAN_AND_MEAN
@@ -34,7 +31,7 @@ const cc_result ReturnCode_SocketDropped    = WSAECONNRESET;
 const char* Platform_AppNameSuffix = " CE";
 cc_bool  Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
-#include "_PlatformBase.h"
+#include "../_PlatformBase.h"
 
 // Current directory management for Windows CE
 static WCHAR current_directory[MAX_PATH] = L"\\";
@@ -44,7 +41,7 @@ static CRITICAL_SECTION dir_lock;
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
-#include "main_impl.h"
+#include "../main_impl.h"
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
 	cc_result res;
@@ -800,5 +797,3 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {
 	return 0;
 }
 
-
-#endif

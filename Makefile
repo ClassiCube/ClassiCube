@@ -1,47 +1,3 @@
-SOURCE_DIR  = src
-BUILD_DIR   = build
-C_SOURCES   = $(wildcard $(SOURCE_DIR)/*.c)
-OBJECTS   	= $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
-BUILD_DIRS	= $(BUILD_DIR) $(BUILD_DIR)/src
-
-##############################
-# Configurable flags and names
-##############################
-# Flags passed to the C compiler
-CFLAGS  = -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
-# Flags passed to the linker
-LDFLAGS = -g -rdynamic
-# Name of the main executable
-ENAME   = ClassiCube
-# Name of the final target file
-# (usually this is the executable, but e.g. is the app bundle on macOS)
-TARGET  := $(ENAME)
-
-# Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
-# This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
-# On older systems the required GCC options may not be supported - in which case just change TRACK_DEPENDENCIES to 0
-TRACK_DEPENDENCIES=1
-# link using C Compiler by default
-LINK = $(CC)
-# Whether to add BearSSL source files to list of files to compile
-BEARSSL=1
-# Optimization level in release builds
-OPT_LEVEL=1
-
-
-#################################################################
-# Determine shell command used to remove files (for "make clean")
-#################################################################
-ifndef RM
-	# No prefined RM variable, try to guess OS default
-	ifeq ($(OS),Windows_NT)
-		RM = del
-	else
-		RM = rm -f
-	endif
-endif
-
-
 ###########################################################
 # If target platform isn't specified, default to current OS
 ###########################################################
@@ -53,73 +9,6 @@ ifndef $(PLAT)
 	endif
 endif
 
-
-#########################################################
-# Setup environment appropriate for the specific platform
-#########################################################
-ifeq ($(PLAT),web)
-	CC      = emcc
-	OEXT    = .html
-	CFLAGS  = -g
-	LDFLAGS = -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library $(SOURCE_DIR)/webclient/interop_web.js
-	BUILD_DIR = build/web
-	BEARSSL = 0
-
-	BUILD_DIRS += $(BUILD_DIR)/src/webclient
-	C_SOURCES  += $(wildcard src/webclient/*.c)
-endif
-
-ifeq ($(PLAT),mingw)
-	CC      =  gcc
-	OEXT    =  .exe
-	CFLAGS  += -DUNICODE
-	LDFLAGS =  -g
-	LIBS    =  -mwindows -lwinmm
-	BUILD_DIR = build/win
-endif
-
-ifeq ($(PLAT),darwin)
-	OBJECTS += $(BUILD_DIR)/src/Window_cocoa.o
-	LIBS    =
-	LDFLAGS =  -rdynamic -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
-	BUILD_DIR = build/macos
-	TARGET  = $(ENAME).app
-endif
-
-ifeq ($(PLAT),beos)
-	OBJECTS += $(BUILD_DIR)/src/Platform_BeOS.o $(BUILD_DIR)/src/Window_BeOS.o
-	CFLAGS  = -pipe
-	LDFLAGS = -g
-	LINK    = $(CXX)
-	LIBS    = -lGL -lnetwork -lbe -lgame -ltracker
-	BUILD_DIR = build/beos
-	TRACK_DEPENDENCIES = 0
-	BEARSSL = 0
-endif
-
-ifdef BUILD_SDL2
-	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
-	LIBS += -lSDL2
-endif
-ifdef BUILD_SDL3
-	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
-	LIBS += -lSDL3
-endif
-ifdef BUILD_TERMINAL
-	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
-	LIBS := $(subst mwindows,mconsole,$(LIBS))
-endif
-
-ifeq ($(BEARSSL),1)
-	BUILD_DIRS += $(BUILD_DIR)/third_party/bearssl
-	C_SOURCES  += $(wildcard third_party/bearssl/*.c)
-endif
-
-ifdef RELEASE
-	CFLAGS += -O$(OPT_LEVEL)
-else
-	CFLAGS += -g
-endif
 
 default: $(PLAT)
 
@@ -137,17 +26,17 @@ release:
 #   "$(filter-out $@, $(MAKECMDGOALS))" is used to get all goals except the current one
 # that way, e.g. "make freebsd clean" invokes freebsd makefile with 'clean' goal
 web:
-	$(MAKE) $(TARGET) PLAT=web
+	$(MAKE) -f misc/makefiles/Makefile_web.mk     $(filter-out $@, $(MAKECMDGOALS))
 linux:
-	$(MAKE) -f misc/makefiles/Makefile_linux.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/Makefile_linux.mk   $(filter-out $@, $(MAKECMDGOALS))
 mingw:
-	$(MAKE) $(TARGET) PLAT=mingw
+	$(MAKE) -f misc/makefiles/Makefile_windows.mk $(filter-out $@, $(MAKECMDGOALS))
 sunos:
 	$(MAKE) -f misc/makefiles/Makefile_solaris.mk $(filter-out $@, $(MAKECMDGOALS))
 hp-ux:
-	$(MAKE) -f misc/makefiles/Makefile_hpux.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/Makefile_hpux.mk    $(filter-out $@, $(MAKECMDGOALS))
 darwin:
-	$(MAKE) $(TARGET) PLAT=darwin
+	$(MAKE) -f misc/makefiles/Makefile_macos.mk   $(filter-out $@, $(MAKECMDGOALS))
 freebsd:
 	$(MAKE) -f misc/makefiles/Makefile_freebsd.mk $(filter-out $@, $(MAKECMDGOALS))
 openbsd:
@@ -157,15 +46,15 @@ netbsd:
 dragonfly:
 	$(MAKE) -f misc/makefiles/Makefile_flybsd.mk  $(filter-out $@, $(MAKECMDGOALS))
 haiku:
-	$(MAKE) -f misc/makefiles/Makefile_haiku.mk  $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/Makefile_haiku.mk   $(filter-out $@, $(MAKECMDGOALS))
 beos:
-	$(MAKE) $(TARGET) PLAT=beos
+	$(MAKE) -f misc/makefiles/Makefile_beos.mk    $(filter-out $@, $(MAKECMDGOALS))
 serenityos:
 	$(MAKE) -f misc/makefiles/Makefile_serenityos.mk $(filter-out $@, $(MAKECMDGOALS)) 
 irix:
-	$(MAKE) -f misc/makefiles/Makefile_irix.mk $(filter-out $@, $(MAKECMDGOALS))   
+	$(MAKE) -f misc/makefiles/Makefile_irix.mk    $(filter-out $@, $(MAKECMDGOALS))   
 riscos:
-	$(MAKE) -f misc/makefiles/Makefile_riscos.mk $(filter-out $@, $(MAKECMDGOALS))   
+	$(MAKE) -f misc/makefiles/Makefile_riscos.mk  $(filter-out $@, $(MAKECMDGOALS))   
 gnu:
 	$(MAKE) -f misc/makefiles/Makefile_gnuhurd.mk $(filter-out $@, $(MAKECMDGOALS))
 
@@ -246,60 +135,8 @@ atari_st:
 # Cleans up all build .o files (except when clean goal is from e.g 'make freebsd clean')
 ifeq ($(MAKECMDGOALS),clean)
 clean:
-	$(RM) $(OBJECTS)
+	$(MAKE) $(PLAT) clean
 else
 clean:
 	@echo "NOTE: Skipping 'clean' due to not being the only goal (all goals: $(MAKECMDGOALS))"
 endif
-
-
-#################################################
-# Source files and executable compilation section
-#################################################
-# Auto creates directories for build files (.o and .d files)
-$(BUILD_DIRS):
-	mkdir -p $@
-
-# Main executable (typically just 'ClassiCube' or 'ClassiCube.exe')
-$(ENAME): $(BUILD_DIRS) $(OBJECTS)
-	$(LINK) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(EXTRA_LIBS) $(LIBS)
-	@echo "----------------------------------------------------"
-	@echo "Successfully compiled executable file: $(ENAME)"
-	@echo "----------------------------------------------------"
-
-# macOS app bundle
-$(ENAME).app : $(ENAME)
-	mkdir -p $(TARGET)/Contents/MacOS
-	mkdir -p $(TARGET)/Contents/Resources
-	cp $(ENAME) $(TARGET)/Contents/MacOS/$(ENAME)
-	cp misc/macOS/Info.plist   $(TARGET)/Contents/Info.plist
-	cp misc/macOS/appicon.icns $(TARGET)/Contents/Resources/appicon.icns
-
-
-# === Compiling with dependency tracking ===
-# NOTE: Tracking dependencies might not work on older systems - disable this if so
-ifeq ($(TRACK_DEPENDENCIES), 1)
-
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(patsubst %.o, %.d, $(OBJECTS))
-$(DEPFILES):
-
-$(BUILD_DIR)/%.o : %.c $(BUILD_DIR)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
-$(BUILD_DIR)/%.o : %.cpp $(BUILD_DIR)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
-$(BUILD_DIR)/%.o : %.m $(BUILD_DIR)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
-
-include $(wildcard $(DEPFILES))
-# === Compiling WITHOUT dependency tracking ===
-else
-
-$(BUILD_DIR)/%.o : %.c
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
-$(BUILD_DIR)/%.o : %.cpp
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
-endif
-
-# EXTRA_CFLAGS and EXTRA_LIBS are not defined in the makefile intentionally -
-# define them on the command line as a simple way of adding CFLAGS/LIBS

@@ -7,6 +7,10 @@ CFLAGS  += -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=st
 OPT_LEVEL ?= 2
 # Linker executable (overridable)
 LINK ?= $(CC)
+# Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
+# This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
+# Other compilers or on older systems the required GCC options may not be supported - if so, change TRACK_DEPENDENCIES to 0
+TRACK_DEPENDENCIES ?= 1
 
 #-----------------------------
 # Autoconfigured variables
@@ -14,7 +18,7 @@ LINK ?= $(CC)
 BUILD_DIRS	= $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SOURCE_DIRS))
 C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 C_OBJECTS   = $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
-OBJECTS += C_OBJECTS
+OBJECTS += $(C_OBJECTS)
 
 
 #----------------------------------------------------------------
@@ -57,9 +61,9 @@ endif
 # Main executable compilation
 #------------------------------------------------
 $(TARGET)$(OEXT): $(BUILD_DIRS) $(OBJECTS)
-	$(LINK) $(LDFLAGS) -o$(OEXT) $@ $(OBJECTS) $(LIBS) $(EXTRA_LIBS)
+	$(LINK) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS) $(EXTRA_LIBS)
 	@echo "----------------------------------------------------"
-	@echo "Successfully compiled executable: $(TARGET)$(OEXT)"
+	@echo "Successfully compiled executable: $@"
 	@echo "----------------------------------------------------"
 
 
@@ -78,6 +82,8 @@ clean:
 #------------------------------------------------
 # Dependency tracking + object compilation
 #------------------------------------------------
+ifeq ($(TRACK_DEPENDENCIES), 1)
+# === Compiling with dependency tracking ===
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(patsubst %.o, %.d, $(OBJECTS))
 $(DEPFILES):
@@ -90,3 +96,13 @@ $(BUILD_DIR)/%.o : %.m $(BUILD_DIR)/%.d
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 include $(wildcard $(DEPFILES))
+
+else
+# === Compiling without dependency tracking ===
+$(BUILD_DIR)/%.o : %.c
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.cpp
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o : %.m
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@
+endif

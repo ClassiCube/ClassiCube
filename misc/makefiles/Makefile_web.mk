@@ -1,20 +1,19 @@
 #-----------------------------
 # Configurable flags and names
 #-----------------------------
-SOURCE_DIRS = src src/wince third_party/bearssl
-BUILD_DIR	= build/wince
+SOURCE_DIRS = src src/webclient
+BUILD_DIR	= build/web
 
 # Name of the main executable
 TARGET  = ClassiCube
 # Flags passed to the C compiler
-CFLAGS	= -march=armv5te -DUNICODE -D_WIN32_WCE -std=gnu99
+CFLAGS	= -g
 # Flags passed to the linker
-LDFLAGS	= -g
+LDFLAGS	= -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb --js-library src/webclient/interop_web.js
 # Libraries to link against
-LIBS 	= -lcoredll -lws2
+LIBS 	=
 
-CC      =  arm-mingw32ce-gcc
-OEXT    =  .exe
-
+CC      = emcc
+OEXT    = .html
 
 include misc/makefiles/Makefile_common.mk

@@ -1,20 +1,20 @@
 #-----------------------------
 # Configurable flags and names
 #-----------------------------
-SOURCE_DIRS = src src/wince third_party/bearssl
-BUILD_DIR	= build/wince
+SOURCE_DIRS = src third_party/bearssl
+BUILD_DIR	= build/windows
 
 # Name of the main executable
 TARGET  = ClassiCube
 # Flags passed to the C compiler
-CFLAGS	= -march=armv5te -DUNICODE -D_WIN32_WCE -std=gnu99
+CFLAGS	= -DUNICODE
 # Flags passed to the linker
-LDFLAGS	= -g
+LDFLAGS	= -g -mwindows
 # Libraries to link against
-LIBS 	= -lcoredll -lws2
+LIBS 	= -lwinmm
 
-CC      =  arm-mingw32ce-gcc
-OEXT    =  .exe
+CC      = gcc
+OEXT    = .exe
 
 
 include misc/makefiles/Makefile_common.mk

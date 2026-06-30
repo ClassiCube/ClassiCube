@@ -1,12 +1,9 @@
-#include "Core.h"
-#if defined CC_BUILD_MACCLASSIC
-
-#include "_WindowBase.h"
-#include "String_.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Options.h"
-#include "Errors.h"
+#include "../_WindowBase.h"
+#include "../String_.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Options.h"
+#include "../Errors.h"
 
 #undef true
 #undef false
@@ -562,4 +559,4 @@ void GLContext_SetVSync(cc_bool vsync) {
 }
 void GLContext_GetApiInfo(cc_string* info) { }
 #endif
-#endif
+

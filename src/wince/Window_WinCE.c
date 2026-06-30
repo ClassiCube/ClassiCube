@@ -1,5 +1,3 @@
-#include "Core.h"
-#if CC_WIN_BACKEND == CC_WIN_BACKEND_WIN32CE
 /*
    The Open Toolkit Library License
   
@@ -25,13 +23,13 @@
    OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "_WindowBase.h"
-#include "String_.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "Options.h"
-#include "Errors.h"
-#include "Gui.h"
+#include "../_WindowBase.h"
+#include "../String_.h"
+#include "../Funcs.h"
+#include "../Bitmap.h"
+#include "../Options.h"
+#include "../Errors.h"
+#include "../Gui.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -693,4 +691,3 @@ void Window_DisableRawMouse(void) {
 	Input.RawMode = false;
 }
 
-#endif

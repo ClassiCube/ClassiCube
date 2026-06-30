@@ -1,19 +1,17 @@
-#include "Core.h"
-#if defined CC_BUILD_MACCLASSIC
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
 #define OVERRIDE_MEM_FUNCTIONS
 
-#include "Stream.h"
-#include "ExtMath.h"
-#include "SystemFonts.h"
-#include "Funcs.h"
-#include "Window.h"
-#include "Utils.h"
-#include "Errors.h"
-#include "PackedCol.h"
+#include "../Stream.h"
+#include "../ExtMath.h"
+#include "../SystemFonts.h"
+#include "../Funcs.h"
+#include "../Window.h"
+#include "../Utils.h"
+#include "../Errors.h"
+#include "../PackedCol.h"
 #include <string.h>
 #include <sys/time.h>
 
@@ -39,12 +37,12 @@ const char* Platform_AppNameSuffix = " MAC PPC";
 
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 cc_bool  Platform_ReadonlyFilesystem;
-#include "_PlatformBase.h"
+#include "../_PlatformBase.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
-#include "main_impl.h"
+#include "../main_impl.h"
 
 int main(int argc, char** argv) {
 	cc_result res;
@@ -238,7 +236,7 @@ static int DoOpenDF(const char* name, char perm, cc_file* file) {
 
 	pb.fileParam.ioVRefNum = wd_refNum;
 	pb.fileParam.ioDirID   = wd_dirID;
-	pb.fileParam.ioNamePtr = name;
+	pb.fileParam.ioNamePtr = (char*)name;
 	pb.ioParam.ioPermssn   = perm;
 
 	int err = PBHOpenDFSync(&pb);
@@ -252,7 +250,7 @@ static int DoCreateFile(const char* name) {
 
 	pb.fileParam.ioVRefNum = wd_refNum;
 	pb.fileParam.ioDirID   = wd_dirID;
-	pb.fileParam.ioNamePtr = name;
+	pb.fileParam.ioNamePtr = (char*)name;
 
     return PBHCreateSync(&pb);
 }
@@ -263,7 +261,7 @@ static int DoCreateFolder(const char* name) {
 
 	pb.fileParam.ioVRefNum = wd_refNum;
 	pb.fileParam.ioDirID   = wd_dirID;
-	pb.fileParam.ioNamePtr = name;
+	pb.fileParam.ioNamePtr = (char*)name;
 
     return PBDirCreateSync(&pb);
 }
@@ -316,7 +314,7 @@ cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesR
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	ParamBlockRec pb;
 	pb.ioParam.ioRefNum   = file;
-	pb.ioParam.ioBuffer   = data;
+	pb.ioParam.ioBuffer   = (void*)data;
 	pb.ioParam.ioReqCount = count;
 	pb.ioParam.ioPosMode  = fsAtMark;
 
@@ -431,4 +429,4 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 cc_result Platform_GetEntropy(void* data, int len) {
 	return ERR_NOT_SUPPORTED;
 }
-#endif
+
