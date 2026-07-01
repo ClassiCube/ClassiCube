@@ -1,13 +1,12 @@
-BUILD_DIR 	= build/msdos
-SOURCE_DIRS	= src src/msdos
+BUILD_DIR 	:= build/msdos
+SOURCE_DIRS	:= src src/msdos
 
-LDFLAGS		= -g
-OEXT    	= .EXE
  # performance too slow if not in release mode
-RELEASE		= 1
+RELEASE		:= 1
 include misc/makefiles/common_config.mk
-TARGET		= CCDOS
+TARGET		:= CCDOS
 
 
-CC=i586-pc-msdosdjgpp-gcc
+CC		:= i586-pc-msdosdjgpp-gcc
+OEXT	:= .EXE
 include misc/makefiles/common_build.mk

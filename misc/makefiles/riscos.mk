@@ -1,10 +1,10 @@
 #-----------------------------
 # Configurable flags and names
 #-----------------------------
-SOURCE_DIRS = src third_party/bearssl
-BUILD_DIR	= build/riscos
+SOURCE_DIRS := src third_party/bearssl
+BUILD_DIR	:= build/riscos
 
-LDFLAGS = -g
+CFLAGS  := -fvisibility=hidden
 include misc/makefiles/common_config.mk
 
 

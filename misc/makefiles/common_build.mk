@@ -6,9 +6,9 @@ TRACK_DEPENDENCIES ?= 1
 #-----------------------------
 # Autoconfigured variables
 #-----------------------------
-BUILD_DIRS	= $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SOURCE_DIRS))
-C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-C_OBJECTS   = $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+BUILD_DIRS	:= $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SOURCE_DIRS))
+C_SOURCES   := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+C_OBJECTS   := $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 OBJECTS 	+= $(C_OBJECTS)
 
 
@@ -18,9 +18,9 @@ OBJECTS 	+= $(C_OBJECTS)
 ifndef RM
 	# No prefined RM variable, try to guess OS default
 	ifeq ($(OS),Windows_NT)
-		RM = del
+		RM := del
 	else
-		RM = rm -f
+		RM := rm -f
 	endif
 endif
 

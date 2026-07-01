@@ -9,11 +9,11 @@ REZ=$(RETRO68)/bin/Rez
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
-SOURCE_DIRS = src src/macclassic
-LIBS		= -lm
-OEXT    	= .code.bin
+SOURCE_DIRS := src src/macclassic
+LIBS		:= -lm
+OEXT    	:= .code.bin
 # performance too slow if not in release mode
-RELEASE		= 1
+RELEASE		:= 1
 include misc/makefiles/common_config.mk
 
 ifdef ARCH_68040

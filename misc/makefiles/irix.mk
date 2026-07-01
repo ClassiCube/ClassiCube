@@ -1,13 +1,14 @@
 #-----------------------------
 # Configurable flags and names
 #-----------------------------
-SOURCE_DIRS = src third_party/bearssl
-BUILD_DIR	= build/irix
+SOURCE_DIRS := src third_party/bearssl
+BUILD_DIR	:= build/irix
 
-LDFLAGS	= -g -rdynamic
-LIBS 	= -lGL -lX11 -lXi -lpthread -ldl
+CFLAGS  := -fvisibility=hidden
+LDFLAGS	:= -rdynamic
+LIBS 	:= -lGL -lX11 -lXi -lpthread -ldl
 include misc/makefiles/common_config.mk
 
 
-CC = gcc
+CC := gcc
 include misc/makefiles/common_build.mk

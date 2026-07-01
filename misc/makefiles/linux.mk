@@ -7,12 +7,13 @@ endif
 #-----------------------------
 # Configurable flags and names
 #-----------------------------
-SOURCE_DIRS = src third_party/bearssl
-BUILD_DIR	= build/linux
+SOURCE_DIRS := src third_party/bearssl
+BUILD_DIR	:= build/linux
 
-LDFLAGS	= -g -rdynamic
+CFLAGS  := -fvisibility=hidden
+LDFLAGS	:= -rdynamic
 # -lm may be needed for __builtin_sqrtf (in cases where it isn't replaced by a CPU instruction intrinsic)
-LIBS 	= -lX11 -lXi -lpthread -lGL -ldl -lm
+LIBS 	:= -lX11 -lXi -lpthread -lGL -ldl -lm
 include misc/makefiles/common_config.mk
 
 

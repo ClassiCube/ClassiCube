@@ -1,15 +1,16 @@
 #-----------------------------
 # Configurable flags and names
 #-----------------------------
-SOURCE_DIRS = src third_party/bearssl
-BUILD_DIR	= build/macos
+SOURCE_DIRS := src third_party/bearssl
+BUILD_DIR	:= build/macos
 
-LDFLAGS	= -rdynamic
-LIBS 	= -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+CFLAGs  := -fvisibility=hidden
+LDFLAGS	:= -rdynamic
+LIBS 	:= -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 include misc/makefiles/common_config.mk
 
 
-OBJECTS = $(BUILD_DIR)/src/Window_cocoa.o
+OBJECTS := $(BUILD_DIR)/src/Window_cocoa.o
 
 # macOS app bundle
 $(TARGET).app : $(TARGET)

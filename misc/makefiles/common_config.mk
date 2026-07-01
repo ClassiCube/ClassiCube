@@ -2,9 +2,9 @@
 # Common configurable flags and names
 #-------------------------------------
 # Name of the main executable
-TARGET = ClassiCube
+TARGET := ClassiCube
 # Flags passed to the C compiler
-CFLAGS += -pipe -fno-math-errno -fvisibility=hidden -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
+CFLAGS += -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
 # Flags passed to the linker
 #LDFLAGS +=
 # Libraries to link against
