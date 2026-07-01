@@ -5,6 +5,7 @@
 #include "Errors.h"
 #include "Window.h"
 
+static cc_bool inited = false;
 static cc_bool faceCulling;
 static int fb_width, fb_height; 
 static struct Bitmap fb_bmp;
@@ -25,6 +26,9 @@ static void* gfx_vertices;
 static GfxResourceID white_square;
 
 static void Gfx_RestoreState(void) {
+	if (inited) return;
+	inited = true;
+
 	InitDefaultResources();
 
 	// 1x1 dummy white texture
@@ -35,6 +39,9 @@ static void Gfx_RestoreState(void) {
 }
 
 static void Gfx_FreeState(void) {
+	if (!inited) return;
+	inited = false;
+
 	FreeDefaultResources();
 	Gfx_DeleteTexture(&white_square);
 }
