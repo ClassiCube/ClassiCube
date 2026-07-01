@@ -27,11 +27,10 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
-          export CC=armv7-w64-mingw32-gcc
           export EXTRA_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
           export EXTRA_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make mingw RELEASE=1 TARGET=cc-arm32-d3d11.exe
+          make mingw RELEASE=1 TARGET=cc-arm32-d3d11.exe CC=armv7-w64-mingw32-gcc
           
       - uses: ./.github/actions/upload_build
         with:
@@ -59,11 +58,10 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
-          export CC=aarch64-w64-mingw32-gcc
           export EXTRA_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
           export EXTRA_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make mingw RELEASE=1 TARGET=cc-arm64-d3d11.exe
+          make mingw RELEASE=1 TARGET=cc-arm64-d3d11.exe CC=aarch64-w64-mingw32-gcc
           
 
       - uses: ./.github/actions/upload_build
