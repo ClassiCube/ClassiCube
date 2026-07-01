@@ -34,9 +34,9 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
 
-          export CC=x86_64-unknown-netbsd-gcc
-          export EXTRA_CFLAGS=-fno-stack-protector -fno-pie -fcf-protection=none $LATEST_FLAG
-          export EXTRA_LDFLAGS=-s -L netbsd64/lib -Wl,-R/usr/X11R7/lib -Wl,--unresolved-symbols=ignore-in-shared-libs
+          export CC="x86_64-unknown-netbsd-gcc"
+          export EXTRA_CFLAGS="-fno-stack-protector -fno-pie -fcf-protection=none $LATEST_FLAG"
+          export EXTRA_LDFLAGS="-s -L netbsd64/lib -Wl,-R/usr/X11R7/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
           make netbsd RELEASE=1 TARGET=cc-netbsd64-gl1
           

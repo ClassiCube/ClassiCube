@@ -25,10 +25,8 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files
         run: |
-          mkdir rpi
-          cd rpi
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/rpi32.zip
-          unzip rpi32.zip
+          unzip rpi32.zip -d rpi
 
       - name: Compile RPI 32 bit build
         env: 
@@ -74,10 +72,8 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files
         run: |
-          mkdir rpi
-          cd rpi
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/rpi64.zip
-          unzip rpi64.zip     
+          unzip rpi64.zip -d rpi
 
       - name: Compile RPI 64 bit build
         env: 
