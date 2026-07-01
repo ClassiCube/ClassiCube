@@ -34,7 +34,6 @@ endif
 
 ifdef RELEASE
 	CFLAGS  += -O$(OPT_LEVEL)
-	LDFLAGS += -s
 else
 	CFLAGS  += -g
 endif

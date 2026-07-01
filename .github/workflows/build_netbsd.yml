@@ -26,22 +26,19 @@ jobs:
 
       - name: Retrieve OpenGL and X11 dev files (64 bit)
         run: |
-          mkdir netbsd64
-          cd netbsd64
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/netbsd64.zip
-          unzip netbsd64.zip
+          unzip netbsd64.zip -d netbsd64
 
-      - name: Compile NetBSD builds
+      - name: Compile NetBSD 64 bit build
         shell: bash
-        env: 
-          LIBS: "-lm -lpthread -lX11 -lXi -lGL -lexecinfo"
-          SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O2 -s -fno-stack-protector -fno-math-errno -Qn -Werror -Wl,-R/usr/X11R7/lib -fvisibility=hidden -rdynamic -Werror"
-          PLAT64_FLAGS: "-fno-pie -fcf-protection=none -I netbsd64/include -L netbsd64/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
 
-          x86_64-unknown-netbsd-gcc ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.PLAT64_FLAGS }} $LATEST_FLAG -o cc-netbsd64-gl1 ${{ env.LIBS }}
+          export CC=x86_64-unknown-netbsd-gcc
+          export EXTRA_CFLAGS=-fno-stack-protector -fno-pie -fcf-protection=none $LATEST_FLAG
+          export EXTRA_LDFLAGS=-s -L netbsd64/lib -Wl,-R/usr/X11R7/lib -Wl,--unresolved-symbols=ignore-in-shared-libs
+
+          make netbsd RELEASE=1 TARGET=cc-netbsd64-gl1
           
           
       - uses: ./.github/actions/upload_build
