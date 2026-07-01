@@ -26,37 +26,37 @@ release:
 #   "$(filter-out $@, $(MAKECMDGOALS))" is used to get all goals except the current one
 # that way, e.g. "make freebsd clean" invokes freebsd makefile with 'clean' goal
 web:
-	$(MAKE) -f misc/makefiles/Makefile_web.mk     $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/web.mk     $(filter-out $@, $(MAKECMDGOALS))
 linux:
-	$(MAKE) -f misc/makefiles/Makefile_linux.mk   $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/linux.mk   $(filter-out $@, $(MAKECMDGOALS))
 mingw:
-	$(MAKE) -f misc/makefiles/Makefile_windows.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/windows.mk $(filter-out $@, $(MAKECMDGOALS))
 sunos:
-	$(MAKE) -f misc/makefiles/Makefile_solaris.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/solaris.mk $(filter-out $@, $(MAKECMDGOALS))
 hp-ux:
-	$(MAKE) -f misc/makefiles/Makefile_hpux.mk    $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/hpux.mk    $(filter-out $@, $(MAKECMDGOALS))
 darwin:
-	$(MAKE) -f misc/makefiles/Makefile_macos.mk   $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/macos.mk   $(filter-out $@, $(MAKECMDGOALS))
 freebsd:
-	$(MAKE) -f misc/makefiles/Makefile_freebsd.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/freebsd.mk $(filter-out $@, $(MAKECMDGOALS))
 openbsd:
-	$(MAKE) -f misc/makefiles/Makefile_openbsd.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/openbsd.mk $(filter-out $@, $(MAKECMDGOALS))
 netbsd:
-	$(MAKE) -f misc/makefiles/Makefile_netbsd.mk  $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/netbsd.mk  $(filter-out $@, $(MAKECMDGOALS))
 dragonfly:
-	$(MAKE) -f misc/makefiles/Makefile_flybsd.mk  $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/flybsd.mk  $(filter-out $@, $(MAKECMDGOALS))
 haiku:
-	$(MAKE) -f misc/makefiles/Makefile_haiku.mk   $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/haiku.mk   $(filter-out $@, $(MAKECMDGOALS))
 beos:
-	$(MAKE) -f misc/makefiles/Makefile_beos.mk    $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/beos.mk    $(filter-out $@, $(MAKECMDGOALS))
 serenityos:
-	$(MAKE) -f misc/makefiles/Makefile_serenityos.mk $(filter-out $@, $(MAKECMDGOALS)) 
+	$(MAKE) -f misc/makefiles/serenityos.mk $(filter-out $@, $(MAKECMDGOALS)) 
 irix:
-	$(MAKE) -f misc/makefiles/Makefile_irix.mk    $(filter-out $@, $(MAKECMDGOALS))   
+	$(MAKE) -f misc/makefiles/irix.mk    $(filter-out $@, $(MAKECMDGOALS))   
 riscos:
-	$(MAKE) -f misc/makefiles/Makefile_riscos.mk  $(filter-out $@, $(MAKECMDGOALS))   
+	$(MAKE) -f misc/makefiles/riscos.mk  $(filter-out $@, $(MAKECMDGOALS))   
 gnu:
-	$(MAKE) -f misc/makefiles/Makefile_gnuhurd.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/gnuhurd.mk $(filter-out $@, $(MAKECMDGOALS))
 
 # Mobile systems
 ios:
@@ -66,9 +66,9 @@ android:
 
 # Embedded systems
 wince:
-	$(MAKE) -f misc/makefiles/Makefile_wince.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/wince.mk $(filter-out $@, $(MAKECMDGOALS))
 rpi:
-	$(MAKE) -f misc/makefiles/Makefile_rpi.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/rpi.mk $(filter-out $@, $(MAKECMDGOALS))
 
 # SEGA consoles
 32x:
@@ -120,7 +120,7 @@ switch:
 os/2:
 	$(MAKE) -f misc/os2/Makefile $(filter-out $@, $(MAKECMDGOALS))
 dos:
-	$(MAKE) -f misc/msdos/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f misc/makefiles/msdos.mk $(filter-out $@, $(MAKECMDGOALS))
 macclassic_68k:
 	$(MAKE) -f misc/macclassic/Makefile_68k.mk $(filter-out $@, $(MAKECMDGOALS))
 macclassic_ppc:

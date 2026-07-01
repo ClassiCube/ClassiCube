@@ -11,15 +11,15 @@ RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
 SOURCE_DIRS = src src/macclassic
-CFLAGS		=
-LDFLAGS		= 
 LIBS		= -lm
 OEXT    	= .elf
 # performance too slow if not in release mode
 RELEASE		= 1
+include misc/makefiles/common_config.mk
 
-TARGET		= ClassiCube-ppc
-BUILD_DIR 	= build/mac_ppc
+TARGET		+= -ppc
+BUILD_DIR 	:= build/mac_ppc
+
 
 #---------------------------------------------------------------------------------
 # executable generation
@@ -34,5 +34,4 @@ $(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).pef
 $(TARGET).pef: $(TARGET).elf
 	$(MakePEF) $(TARGET).elf -o $(TARGET).pef
 
-
-include misc/makefiles/Makefile_common.mk
+include misc/makefiles/common_build.mk

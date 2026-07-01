@@ -1,15 +1,6 @@
-#-------------------------------------
-# Common configurable flags and names
-#-------------------------------------
-# Flags passed to the C compiler
-CFLAGS  += -pipe -fno-math-errno -Werror -Wno-error=missing-braces -Wno-error=strict-aliasing
-# Optimization level in release builds
-OPT_LEVEL ?= 2
-# Linker executable (overridable)
-LINK ?= $(CC)
 # Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
 # This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
-# Other compilers or on older systems the required GCC options may not be supported - if so, change TRACK_DEPENDENCIES to 0
+# Other compilers or on older systems the required GCC options may not be supported - if so, set TRACK_DEPENDENCIES to 0 beforehand
 TRACK_DEPENDENCIES ?= 1
 
 #-----------------------------
@@ -18,7 +9,7 @@ TRACK_DEPENDENCIES ?= 1
 BUILD_DIRS	= $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SOURCE_DIRS))
 C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 C_OBJECTS   = $(patsubst %.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
-OBJECTS += $(C_OBJECTS)
+OBJECTS 	+= $(C_OBJECTS)
 
 
 #----------------------------------------------------------------
@@ -31,29 +22,6 @@ ifndef RM
 	else
 		RM = rm -f
 	endif
-endif
-
-
-#----------------------------------------------------------------
-# Platform independent flags
-#----------------------------------------------------------------
-ifdef BUILD_SDL2
-	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
-	LIBS += -lSDL2
-endif
-ifdef BUILD_SDL3
-	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
-	LIBS += -lSDL3
-endif
-ifdef BUILD_TERMINAL
-	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_TERMINAL -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTGPU
-	LIBS := $(subst mwindows,mconsole,$(LIBS))
-endif
-
-ifdef RELEASE
-	CFLAGS += -O$(OPT_LEVEL)
-else
-	CFLAGS += -g
 endif
 
 
@@ -74,7 +42,7 @@ $(TARGET)$(OEXT): $(BUILD_DIRS) $(OBJECTS)
 $(BUILD_DIRS):
 	mkdir -p $@
 
-# Cleans up all build .o files
+# Cleans up all built files
 clean:
 	$(RM) $(OBJECTS)
 
