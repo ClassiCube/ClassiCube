@@ -29,7 +29,7 @@ endif
 # Main executable compilation
 #------------------------------------------------
 $(TARGET)$(OEXT): $(BUILD_DIRS) $(OBJECTS)
-	$(LINK) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS) $(EXTRA_LIBS)
+	$(LINK) $(LDFLAGS) $(EXTRA_LDFLAGS) -o $@ $(OBJECTS) $(LIBS) $(EXTRA_LIBS)
 	@echo "----------------------------------------------------"
 	@echo "Successfully compiled executable: $@"
 	@echo "----------------------------------------------------"

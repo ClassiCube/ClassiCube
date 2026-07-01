@@ -29,6 +29,7 @@ jobs:
           unzip rpi32.zip -d rpi
 
       - name: Compile RPI 32 bit build
+        shell: bash
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
@@ -74,6 +75,7 @@ jobs:
           unzip rpi64.zip -d rpi
 
       - name: Compile RPI 64 bit build
+        shell: bash
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
