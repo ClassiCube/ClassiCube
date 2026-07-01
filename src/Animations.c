@@ -362,11 +362,7 @@ static cc_bool Animations_Tick(struct ScheduledTask2* task) {
 *#########################################################################################################################*/
 static void AnimationsPngProcess(struct Stream* stream, const cc_string* name) {
 	cc_result res = Png_Decode(&anims_bmp, stream);
-	if (!res) return;
-
-	Logger_SysWarn2(res, "decoding", name);
-	Mem_Free(anims_bmp.scan0);
-	anims_bmp.scan0 = NULL;
+	if (res) Logger_SysWarn2(res, "decoding", name);
 }
 static struct TextureEntry animations_entry = { "animations.png", AnimationsPngProcess };
 static struct TextureEntry animations_txt   = { "animations.txt", Animations_ReadDescription };

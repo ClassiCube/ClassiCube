@@ -737,7 +737,6 @@ static void TerrainPngProcess(struct Stream* stream, const cc_string* name) {
 
 	if (res) {
 		Logger_SysWarn2(res, "decoding", name);
-		Mem_Free(bmp.scan0);
 	} else if (!Atlas_TryChange(&bmp)) {
 		Mem_Free(bmp.scan0);
 	}

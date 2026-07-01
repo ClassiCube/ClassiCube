@@ -248,13 +248,13 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 	cc_result res;
 	
 	res = Png_Decode(&bmp, src);
-	if (res) { Logger_SysWarn2(res, "decoding", file); }
+	if (res) { Logger_SysWarn2(res, "decoding", file); return false; }
 	
 	/* E.g. gui.png only need top half of the texture loaded */
 	if (heightDivisor && bmp.height >= *heightDivisor)
 		bmp.height /= *heightDivisor;
 
-	success = !res && Game_ValidateBitmap(file, &bmp);
+	success = Game_ValidateBitmap(file, &bmp);
 	if (success) {
 		if (skinType) { *skinType = Utils_CalcSkinType(&bmp); }
 		Gfx_RecreateTexture(texId, &bmp, TEXTURE_FLAG_MANAGED, false);
