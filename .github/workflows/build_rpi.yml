@@ -33,7 +33,7 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
-          export EXTRA_CFLAGS="-fno-stack-protector $LATEST_FLAG"
+          export EXTRA_CFLAGS="-I rpi_files/include -fno-stack-protector $LATEST_FLAG"
           export EXTRA_LDFLAGS="-s -L rpi_files/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
           make rpi RELEASE=1 TARGET=cc-rpi32
@@ -79,7 +79,7 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
-          export EXTRA_CFLAGS="-fno-stack-protector $LATEST_FLAG"
+          export EXTRA_CFLAGS="-I rpi_files/include -fno-stack-protector $LATEST_FLAG"
           export EXTRA_LDFLAGS="-s -L rpi_files/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
           make rpi RELEASE=1 TARGET=cc-rpi64

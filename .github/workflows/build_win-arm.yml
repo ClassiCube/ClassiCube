@@ -30,7 +30,7 @@ jobs:
           export EXTRA_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
           export EXTRA_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make mingw RELEASE=1 TARGET=cc-arm32-d3d11.exe CC=armv7-w64-mingw32-gcc
+          make mingw RELEASE=1 TARGET=cc-arm32-d3d11 CC=armv7-w64-mingw32-gcc
           
       - uses: ./.github/actions/upload_build
         with:
@@ -61,7 +61,7 @@ jobs:
           export EXTRA_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
           export EXTRA_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make mingw RELEASE=1 TARGET=cc-arm64-d3d11.exe CC=aarch64-w64-mingw32-gcc
+          make mingw RELEASE=1 TARGET=cc-arm64-d3d11 CC=aarch64-w64-mingw32-gcc
           
 
       - uses: ./.github/actions/upload_build
