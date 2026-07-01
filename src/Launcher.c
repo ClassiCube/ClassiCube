@@ -461,6 +461,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 			Logger_SysWarn(res, "decoding terrain.png"); return res;
 		} else {
 			ExtractTerrainTiles(&bmp);
+			Mem_Free(bmp.scan0);
 		}
 	}
 	return 0;
