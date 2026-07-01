@@ -307,6 +307,8 @@ amiga_ppc:
 
 run: $(TARGET)(OEXT)
 	./$(TARGET)$(OEXT)
+open: $(TARGET)(OEXT)
+	./$(TARGET)$(OEXT)
 # Cleans up all build .o files
 clean:
 	$(RM) $(OBJECTS)
