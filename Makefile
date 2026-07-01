@@ -305,17 +305,8 @@ amiga_68k:
 amiga_ppc:
 	$(MAKE) -f misc/amiga/Makefile_ppc
 
-# Opens ./ClassiCube
-ifeq ($(PLAT),mingw)
-open:
-	$(TARGET)$(OEXT)
-else ifeq ($(PLAT),darwin)
-open:
-	open $(TARGET)
-else
-open:
+run: $(TARGET)(OEXT)
 	./$(TARGET)$(OEXT)
-endif
 # Cleans up all build .o files
 clean:
 	$(RM) $(OBJECTS)
