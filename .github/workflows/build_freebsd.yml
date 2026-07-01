@@ -36,7 +36,7 @@ jobs:
       - name: Compile FreeBSD 64 bit build
         shell: bash
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
           export CC=x86_64-freebsd11-clang
           export EXTRA_CFLAGS="-fno-stack-protector -fno-pie -fcf-protection=none $LATEST_FLAG"
@@ -48,7 +48,7 @@ jobs:
         shell: bash
         run: |
           make freebsd clean
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
           export CC=i386-freebsd11-clang
           export EXTRA_CFLAGS="-fno-stack-protector -fno-pie -fcf-protection=none $LATEST_FLAG"

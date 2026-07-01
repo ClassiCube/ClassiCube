@@ -23,7 +23,7 @@ jobs:
       - name: Compile haiku build
         shell: bash
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
           export CC=x86_64-unknown-haiku-gcc
           export CXX=x86_64-unknown-haiku-g++
