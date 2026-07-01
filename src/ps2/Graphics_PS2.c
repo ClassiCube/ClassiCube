@@ -17,6 +17,7 @@
 #include <vif_registers.h>
 #include "vif.h"
 #include "gs_gpu.h"
+#include "vu1_common.h"
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
 #define CACHELINE_ALIGNED CC_ALIGNED(64)
@@ -35,8 +36,6 @@ static cc_bool stateDirty, formatDirty;
 static framebuffer_t* fb_draw;
 static framebuffer_t* fb_display;
 
-static struct Matrix mvp;
-extern void LoadMvpMatrix(struct Matrix* matrix);
 extern void LoadClipScaleFactors(VU0_vector* scale);
 extern void LoadViewportOrigin(VU0_vector* origin);
 extern void LoadViewportScale(VU0_vector* scale);
@@ -1023,22 +1022,35 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Matrix _view, _proj;
+extern void LoadMvpMatrix(struct Matrix* matrix);
+static struct Matrix _view, _proj, _mvp;
+
+static void Update_MVP(void) {
+	Matrix_Mul(&_mvp, &_view, &_proj);
+	LoadMvpMatrix(&_mvp);
+
+	qword_t* q = Q;
+	PACK_VIFTAG_SINGLE(q, VIF_UNPACK(VIF_UNPACK_V4_32, ADDR_MVP_ROW1, 4)); q++;
+	{
+		Mem_Copy(q, &_mvp, sizeof(struct Matrix)); q += 4;
+	}
+	// TODO actually execute reloadMVP program
+	Q = q;
+}
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&mvp, &_view, &_proj);
-	// TODO	
-	LoadMvpMatrix(&mvp);
+	Update_MVP();
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
-	Gfx_LoadMatrix(MATRIX_VIEW, view);
-	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	_view = *view;
+	_proj = *proj;
 
-	Matrix_Mul(mvp, view, proj);
+	Update_MVP();
+	*mvp = _mvp;
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
