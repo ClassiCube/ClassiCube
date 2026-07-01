@@ -4,7 +4,7 @@
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/haiku
 
-CFLAGS  := -fvisibility=hidden
+CFLAGS  := -fvisibility=hidden -fno-ident
 LIBS 	:= -lGL -lnetwork -lbe -lgame -ltracker
 include misc/makefiles/common_config.mk
 

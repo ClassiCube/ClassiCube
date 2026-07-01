@@ -4,7 +4,7 @@
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/macos
 
-CFLAGs  := -fvisibility=hidden
+CFLAGS	:= -fvisibility=hidden -fno-ident
 LDFLAGS	:= -rdynamic
 LIBS 	:= -framework Security -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 include misc/makefiles/common_config.mk

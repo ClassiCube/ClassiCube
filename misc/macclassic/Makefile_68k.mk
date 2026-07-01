@@ -17,11 +17,11 @@ RELEASE		:= 1
 include misc/makefiles/common_config.mk
 
 ifdef ARCH_68040
-	TARGET		+= -68040
+	TARGET		:= $(TARGET)-68040
 	BUILD_DIR 	:= build/mac_68040
 	CFLAGS		+= -march=68040
 else
-	TARGET		+= -68k
+	TARGET		:= $(TARGET)-68k
 	BUILD_DIR 	:= build/mac_68k
 	CFLAGS		+= -DCC_BUILD_FPU_MODE=CC_FPU_MODE_MINIMAL -DCC_BUILD_TINYMEM -DCC_GFX_BACKEND=CC_GFX_BACKEND_SOFTMIN
 endif

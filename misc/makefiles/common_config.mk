@@ -33,8 +33,9 @@ ifdef BUILD_TERMINAL
 endif
 
 ifdef RELEASE
-	CFLAGS += -O$(OPT_LEVEL)
+	CFLAGS  += -O$(OPT_LEVEL)
+	LDFLAGS += -s
 else
-	CFLAGS += -g
+	CFLAGS  += -g
 endif
 

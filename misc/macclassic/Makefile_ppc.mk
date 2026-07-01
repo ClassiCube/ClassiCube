@@ -17,7 +17,7 @@ OEXT    	:= .elf
 RELEASE		:= 1
 include misc/makefiles/common_config.mk
 
-TARGET		+= -ppc
+TARGET		:= $(TARGET)-ppc
 BUILD_DIR 	:= build/mac_ppc
 
 
