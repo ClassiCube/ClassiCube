@@ -30,7 +30,7 @@ jobs:
           export PSL1GHT=/usr/local/ps3dev
           export PATH=$PATH:$PS3DEV/bin
           export PATH=$PATH:$PS3DEV/ppu/bin
-          make ps3
+          make ps3 -j $(nproc)
 
 
       - uses: ./.github/actions/upload_build

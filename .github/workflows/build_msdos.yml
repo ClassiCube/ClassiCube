@@ -26,7 +26,7 @@ jobs:
 
       - name: Compile MS dos build
         run: |
-          make CC=gcc dos
+          make CC=gcc dos -j $(nproc)
 
 
       - uses: ./.github/actions/upload_build

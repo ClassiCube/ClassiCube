@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Compile GameCube build
         run: |
-          make gamecube
+          make gamecube -j $(nproc)
           
           
       - uses: ./.github/actions/upload_build

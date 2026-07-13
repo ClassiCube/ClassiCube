@@ -25,7 +25,7 @@ jobs:
 
       - name: Compile PSP build
         run: |
-          make psp
+          make psp -j $(nproc)
           
           
       - uses: ./.github/actions/upload_build

@@ -26,9 +26,9 @@ jobs:
 
       - name: Compile NDS build
         run: |
-          make ds
+          make ds -j $(nproc)
           export BUILD_NONET=1
-          make ds
+          make ds -j $(nproc)
  
          
       - uses: ./.github/actions/upload_build

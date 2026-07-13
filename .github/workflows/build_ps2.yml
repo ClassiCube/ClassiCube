@@ -25,7 +25,7 @@ jobs:
 
       - name: Compile PS2 build
         run: |
-          make ps2
+          make ps2 -j $(nproc)
           
           
       - uses: ./.github/actions/upload_build

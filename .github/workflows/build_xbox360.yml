@@ -29,7 +29,7 @@ jobs:
         run: |
           export DEVKITXENON=/usr/local/xenon
           export PATH=$PATH:$DEVKITXENON/bin:$DEVKITXENON/usr/bin
-          make xbox360
+          make xbox360 -j $(nproc)
           
           
       - uses: ./.github/actions/upload_build
