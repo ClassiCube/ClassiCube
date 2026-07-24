@@ -64,14 +64,53 @@ static CC_INLINE void RSX_set_color_write_mask(gcmContextData* ctx, int r, int g
 
 
 /*########################################################################################################################*
+*---------------------------------------------------Vertex shader programs-------------------------------------------------*
+*#########################################################################################################################*/
+// Room for 136 vertex shader instructions
+static int rsx_prog_offset;
+#define VS_INS_SIZE 16
+
+static CC_INLINE void RSX_upload_VS(gcmContextData* ctx, int* offset, const void* program, int size) {
+	// Copy program instructions (16 bytes each)
+	int num_ins = size / VS_INS_SIZE;
+
+	*offset = rsx_prog_offset;
+	RSX_append_single_command(ctx, NV40TCL_VP_UPLOAD_FROM_ID, *offset);
+	rsx_prog_offset += num_ins;
+
+	for (int i = 0; i < num_ins; i++, program += VS_INS_SIZE) 
+	{
+		uint32_t* p = RSX_reserve_command(ctx, NV40TCL_VP_UPLOAD_INST(0), 4);
+		Mem_Copy(p, program, VS_INS_SIZE);
+	}
+}
+
+static CC_INLINE void RSX_set_active_VS(gcmContextData* ctx, int offset, rsxVertexProgram* prog) {
+	uint32_t* p = RSX_reserve(ctx, 8);
+
+	*p++ = RSX_3D_COMMAND(NV40TCL_VP_START_FROM_ID, 1);
+	*p++ = offset;
+	
+	*p++ = RSX_3D_COMMAND(NV40TCL_VP_ATTRIB_EN, 1);
+	*p++ = prog->input_mask;
+
+	*p++ = RSX_3D_COMMAND(NV40TCL_VP_RESULT_EN, 1);
+	*p++ = prog->output_mask | GCM_ATTRIB_OUTPUT_MASK_POINTSIZE;
+
+	*p++ = RSX_3D_COMMAND(NV40TCL_TRANSFORM_TIMEOUT, 1);
+	*p++ = 0x0020FFFF;
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------Vertex shader constants------------------------------------------------*
 *#########################################################################################################################*/
-static CC_INLINE void RSX_upload_constants(gcmContextData* ctx, int index, const void* src, int num_dwords) {
+static CC_INLINE void RSX_upload_VS_constants(gcmContextData* ctx, int index, const void* src, int num_dwords) {
 	// NV40TCL_VP_UPLOAD_CONST_ID, then NV40TCL_VP_UPLOAD_CONST etc
 	uint32_t* p = RSX_reserve_command(ctx, NV40TCL_VP_UPLOAD_CONST_ID, 1 + num_dwords);
 
 	*p++ = index;
-	memcpy(p, src, num_dwords * 4);
+	Mem_Copy(p, src, num_dwords * 4);
 }
 
 

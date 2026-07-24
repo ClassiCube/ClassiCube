@@ -20,7 +20,7 @@ static u32 cur_fb;
 *#########################################################################################################################*/
 typedef struct CCVertexProgram {
 	rsxVertexProgram* prog;
-	void* ucode;
+	int offset;
 } VertexProgram;
 
 extern const u8 vs_coloured_vpo[];
@@ -35,11 +35,13 @@ static cc_bool textureOffseting;
 #define VS_CONST_MVP  0
 #define VS_CONST_OFST 4
 
-
 static void VP_Load(VertexProgram* vp, const u8* source) {
-	vp->prog = (rsxVertexProgram*)source;
-	u32 size = 0;
-	rsxVertexProgramGetUCode(vp->prog, &vp->ucode, &size);
+	rsxVertexProgram* prog = (rsxVertexProgram*)source;
+	vp->prog = prog;
+
+	RSX_upload_VS(context, &vp->offset, 
+					source + prog->ucode_off,
+					prog->num_insn * VS_INS_SIZE);
 }
 
 static void LoadVertexPrograms(void) {
@@ -56,7 +58,7 @@ static void VP_SwitchActive(void) {
 	if (VP == VP_active) return;
 	VP_active = VP;
 	
-	rsxLoadVertexProgram(context, VP->prog, VP->ucode);
+	RSX_set_active_VS(context, VP->offset, VP->prog);
 }
 
 
@@ -706,7 +708,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	*dst = *matrix;
 
 	Matrix_Mul(&_mvp, &_view, &_proj);
-	RSX_upload_constants(context, VS_CONST_MVP, &_mvp, 16);
+	RSX_upload_VS_constants(context, VS_CONST_MVP, &_mvp, 16);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -722,7 +724,7 @@ void Gfx_EnableTextureOffset(float x, float y) {
 	textureOffset[1] = y;
 	
 	VP_SwitchActive();
-	RSX_upload_constants(context, VS_CONST_OFST, textureOffset, 4);
+	RSX_upload_VS_constants(context, VS_CONST_OFST, textureOffset, 4);
 }
 
 void Gfx_DisableTextureOffset(void) {
