@@ -235,6 +235,7 @@ cc_result DynamicLib_Load(const cc_string* path, void** lib) {
 	*lib = DynamicLib_Load2(path);
 	return *lib == NULL;
 }
+
 cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	*symbol = DynamicLib_Get2(lib, name);
 	return *symbol == NULL;

@@ -67,8 +67,6 @@ static void VP_SwitchActive(void) {
 *#########################################################################################################################*/
 typedef struct CCFragmentProgram {
 	rsxFragmentProgram* prog;
-	void* ucode;
-	u32* buffer;
 	u32 offset;
 } FragmentProgram;
 
@@ -80,13 +78,15 @@ static FragmentProgram* FP_active;
 
 
 static void FP_Load(FragmentProgram* fp, const u8* source) {
-	fp->prog = (rsxFragmentProgram*)source;
-	u32 size = 0;
-	rsxFragmentProgramGetUCode(fp->prog, &fp->ucode, &size);
+	rsxFragmentProgram* prog = (rsxFragmentProgram*)source;
+	fp->prog = prog;
+
+	u32 size    = prog->num_insn * 16;
+	void* ucode = source + prog->ucode_off;
 	
-	fp->buffer = (u32*)rsxMemalign(128, size);
-	Mem_Copy(fp->buffer, fp->ucode, size);
-	gcmAddressToOffset(fp->buffer, &fp->offset);
+	u32* buffer = (u32*)rsxMemalign(128, size);
+	Mem_Copy(buffer, ucode, size);
+	gcmAddressToOffset(buffer, &fp->offset);
 }
 
 static void LoadFragmentPrograms(void) {
