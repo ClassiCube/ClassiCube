@@ -1,12 +1,14 @@
 ###########################################################
 # If target platform isn't specified, default to current OS
 ###########################################################
+ifeq ($(OS),Windows_NT)
+    HOST := windows
+else
+    HOST := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+endif
+
 ifndef $(PLAT)
-	ifeq ($(OS),Windows_NT)
-		PLAT = mingw
-	else
-		PLAT = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-	endif
+    PLAT := $(HOST)
 endif
 
 
@@ -23,18 +25,27 @@ release:
 	$(MAKE) $(PLAT) RELEASE=1
 
 
+ifeq ($(HOST),linux)
+    JOBS := $(shell nproc)
+endif
+# default to 1 job (1 per core)
+ifeq ($(strip $(JOBS)),)
+    JOBS := 1
+endif
+
+
 # Build for the specified platform
 #   "$(filter-out $@, $(MAKECMDGOALS))" is used to get all goals except the current one
 # that way, e.g. "make freebsd clean" invokes freebsd makefile with 'clean' goal
 define make_platform
-	$(MAKE) -f $(1) $(filter-out $@, $(MAKECMDGOALS))
+	$(MAKE) -f $(1) $(filter-out $@,$(MAKECMDGOALS)) -j $(JOBS)
 endef
 
 web:
 	$(call make_platform,misc/makefiles/web.mk)
 linux:
 	$(call make_platform,misc/makefiles/linux.mk)
-mingw:
+windows:
 	$(call make_platform,misc/makefiles/windows.mk)
 sunos:
 	$(call make_platform,misc/makefiles/solaris.mk)
@@ -148,5 +159,14 @@ clean:
 else
 clean:
 	@echo "NOTE: Skipping 'clean' due to not being the only goal (all goals: $(MAKECMDGOALS))"
+endif
+
+# Compiles for platform and then runs it
+ifeq ($(MAKECMDGOALS),run)
+run:
+	$(MAKE) $(PLAT) run
+else
+run:
+	@echo "NOTE: Skipping 'run' due to not being the only goal (all goals: $(MAKECMDGOALS))"
 endif
 
