@@ -496,9 +496,9 @@ static void Networking_Setup(void) {
 static void Networking_LoadIOPModules(void) {
 	int ret;
 	
-	SifLoadBuffer(DEV9_irx);
-	SifLoadBuffer(NETMAN_irx);
-	SifLoadBuffer(SMAP_irx);
+	SifLoadBuffer(ps2dev9_irx);
+	SifLoadBuffer(netman_irx);
+	SifLoadBuffer(smap_irx);
 }
 
 /*########################################################################################################################*
@@ -647,15 +647,15 @@ static void USBStorage_LoadIOPModules(void) {
     // BDM, BDMFS_FATFS, USBMASS_BD - newer ?
     // USBHDFSD - older ?
     
-	SifLoadBuffer(USBD_irx);  
+	SifLoadBuffer(usbd_irx);  
 	//SifLoadBuffer(USBHDFSD_irx);
     
-	SifLoadBuffer(BDM_irx);
-	SifLoadBuffer(BDMFS_FATFS_irx);
+	SifLoadBuffer(bdm_irx);
+	SifLoadBuffer(bdmfs_fatfs_irx);
     
-	SifLoadBuffer(USBMASS_BD_irx);
-	SifLoadBuffer(USBMOUSE_irx);
-	SifLoadBuffer(USBKBD_irx);
+	SifLoadBuffer(usbmass_bd_irx);
+	SifLoadBuffer(ps2mouse_irx);
+	SifLoadBuffer(ps2kbd_irx);
 }
 
 // TODO Maybe needed ???

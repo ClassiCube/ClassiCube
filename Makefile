@@ -22,117 +22,125 @@ terminal:
 release:
 	$(MAKE) $(PLAT) RELEASE=1
 
+
 # Build for the specified platform
 #   "$(filter-out $@, $(MAKECMDGOALS))" is used to get all goals except the current one
 # that way, e.g. "make freebsd clean" invokes freebsd makefile with 'clean' goal
+define make_platform
+	$(MAKE) -f $(1) $(filter-out $@, $(MAKECMDGOALS))
+endef
+
 web:
-	$(MAKE) -f misc/makefiles/web.mk     $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/web.mk)
 linux:
-	$(MAKE) -f misc/makefiles/linux.mk   $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/linux.mk)
 mingw:
-	$(MAKE) -f misc/makefiles/windows.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/windows.mk)
 sunos:
-	$(MAKE) -f misc/makefiles/solaris.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/solaris.mk)
 hp-ux:
-	$(MAKE) -f misc/makefiles/hpux.mk    $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/hpux.mk)
 darwin:
-	$(MAKE) -f misc/makefiles/macos.mk   $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/macos.mk)
 freebsd:
-	$(MAKE) -f misc/makefiles/freebsd.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/freebsd.mk)
 openbsd:
-	$(MAKE) -f misc/makefiles/openbsd.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/openbsd.mk)
 netbsd:
-	$(MAKE) -f misc/makefiles/netbsd.mk  $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/netbsd.mk)
 dragonfly:
-	$(MAKE) -f misc/makefiles/flybsd.mk  $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/flybsd.mk)
 haiku:
-	$(MAKE) -f misc/makefiles/haiku.mk   $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/haiku.mk)
 beos:
-	$(MAKE) -f misc/makefiles/beos.mk    $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/beos.mk)
 serenityos:
-	$(MAKE) -f misc/makefiles/serenityos.mk $(filter-out $@, $(MAKECMDGOALS)) 
+	$(call make_platform,misc/makefiles/serenityos.mk) 
 irix:
-	$(MAKE) -f misc/makefiles/irix.mk    $(filter-out $@, $(MAKECMDGOALS))   
+	$(call make_platform,misc/makefiles/irix.mk)   
 riscos:
-	$(MAKE) -f misc/makefiles/riscos.mk  $(filter-out $@, $(MAKECMDGOALS))   
+	$(call make_platform,misc/makefiles/riscos.mk)   
 gnu:
-	$(MAKE) -f misc/makefiles/gnuhurd.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/gnuhurd.mk)
 
 # Mobile systems
 ios:
-	$(MAKE) -f misc/ios/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/ios/Makefile)
 android:
-	$(MAKE) -f misc/android/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/android/Makefile)
 
 # Embedded systems
 wince:
-	$(MAKE) -f misc/makefiles/wince.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/wince.mk)
 rpi:
-	$(MAKE) -f misc/makefiles/rpi.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/rpi.mk)
 
 # SEGA consoles
 32x:
-	$(MAKE) -f misc/32x/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/32x/Makefile)
 saturn:
-	$(MAKE) -f misc/saturn/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/saturn/Makefile)
 dreamcast:
-	$(MAKE) -f misc/dreamcast/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/dreamcast/Makefile)
 
 # Sony consoles
 psp:
-	$(MAKE) -f misc/psp/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/psp/Makefile)
 vita:
-	$(MAKE) -f misc/vita/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/vita/Makefile)
 ps1:
-	$(MAKE) -f misc/ps1/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/ps1/Makefile)
 ps2:
-	$(MAKE) -f misc/ps2/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/ps2/Makefile)
 ps3:
-	$(MAKE) -f misc/ps3/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/ps3/Makefile)
 ps4:
-	$(MAKE) -f misc/ps4/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/ps4/Makefile)
 
 # Microsoft consoles
 xbox:
-	$(MAKE) -f misc/xbox/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/xbox/Makefile)
 xbox360:
-	$(MAKE) -f misc/xbox360/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/xbox360/Makefile)
 
 # Nintendo consoles
 n64:
-	$(MAKE) -f misc/n64/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/n64/Makefile)
 gba:
-	$(MAKE) -f misc/gba/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/gba/Makefile)
 ds:
-	$(MAKE) -f misc/nds/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/nds/Makefile)
 3ds:
-	$(MAKE) -f misc/3ds/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/3ds/Makefile)
 gamecube:
-	$(MAKE) -f misc/gc/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/gc/Makefile)
 wii:
-	$(MAKE) -f misc/wii/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/wii/Makefile)
 wiiu:
-	$(MAKE) -f misc/wiiu/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/wiiu/Makefile)
 switch:
-	$(MAKE) -f misc/switch/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/switch/Makefile)
 
 # Other systems
 os/2:
-	$(MAKE) -f misc/makefiles/os2.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/os2.mk)
 dos:
-	$(MAKE) -f misc/makefiles/msdos.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/msdos.mk)
 macclassic_68k:
-	$(MAKE) -f misc/makefiles/macclassic_68k.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/macclassic_68k.mk)
 macclassic_ppc:
-	$(MAKE) -f misc/makefiles/macclassic_ppc.mk $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/makefiles/macclassic_ppc.mk)
 amiga_gcc:
-	$(MAKE) -f misc/amiga/Makefile_68k $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/amiga/Makefile_68k)
 amiga:
-	$(MAKE) -f misc/amiga/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/amiga/Makefile)
 atari_st:
-	$(MAKE) -f misc/atari_st/Makefile $(filter-out $@, $(MAKECMDGOALS))
+	$(call make_platform,misc/atari_st/Makefile)
 
 
+###########################################################
+# Global shared/common makefile rules
+###########################################################
 # Cleans up built files (except when clean goal is from e.g 'make freebsd clean')
 ifeq ($(MAKECMDGOALS),clean)
 clean:
@@ -141,3 +149,4 @@ else
 clean:
 	@echo "NOTE: Skipping 'clean' due to not being the only goal (all goals: $(MAKECMDGOALS))"
 endif
+

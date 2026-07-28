@@ -11,11 +11,8 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-# Name of the final output
 TARGET		= ClassiCube-PS3
-# Directory where object files are placed
 BUILD_DIR	= build/ps3
-# List of directories containing source code
 SOURCE_DIRS = src src/ps3 third_party/bearssl
 SHADERS		= misc/ps3
 
