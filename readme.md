@@ -122,8 +122,8 @@ Assuming that you used the installer from https://sourceforge.net/projects/mingw
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to the directory with ClassiCube's source code
 4. Run either:
-    * `make mingw` - produces a simple non-optimised executable, easier to debug
-    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
+    * `make windows` - produces a simple non-optimised executable, easier to debug
+    * `make windows RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using MinGW
 Assuming that you used the installer from https://osdn.net/projects/mingw/ :
@@ -131,8 +131,8 @@ Assuming that you used the installer from https://osdn.net/projects/mingw/ :
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 3. Navigate to the directory with ClassiCube's source code
 4. Run either:
-    * `make mingw` - produces a simple non-optimised executable, easier to debug
-    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
+    * `make windows` - produces a simple non-optimised executable, easier to debug
+    * `make windows RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using TCC (Tiny C Compiler)
 Setting up TCC:
@@ -156,11 +156,11 @@ For Ubuntu, these are the `libx11-dev`, `libxi-dev` and `libgl1-mesa-dev` packag
 
 ##### Cross compiling for Windows (32 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```make mingw CC=i686-w64-mingw32-gcc```
+2. Run ```make windows CC=i686-w64-mingw32-gcc```
 
 ##### Cross compiling for Windows (64 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```make mingw CC=x86_64-w64-mingw32-gcc```
+2. Run ```make windows CC=x86_64-w64-mingw32-gcc```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:

@@ -46,7 +46,7 @@ endif
 #------------------------------------------------
 # Main executable compilation
 #------------------------------------------------
-$(TARGET)$(OEXT): $(BUILD_DIRS) $(OBJECTS)
+$(TARGET)$(OEXT): $(OBJECTS) $(BUILD_DIRS)
 	$(LINK) $(LDFLAGS) $(EXTRA_LDFLAGS) -o $@ $(OBJECTS) $(LIBS) $(EXTRA_LIBS)
 	@echo "----------------------------------------------------"
 	@echo "Successfully compiled executable: $@"

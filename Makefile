@@ -26,7 +26,7 @@ release:
 
 
 ifeq ($(HOST),linux)
-    JOBS := $(shell nproc)
+    #JOBS := $(shell nproc)
 endif
 # default to 1 job (1 per core)
 ifeq ($(strip $(JOBS)),)
