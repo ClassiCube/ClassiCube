@@ -16,6 +16,7 @@
 		9A6C7DFE2C41E95D00676D27 /* MenuOptions.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7DFD2C41E95C00676D27 /* MenuOptions.c */; };
 		9A7401D92B737D5C0040E575 /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401D82B737D5B0040E575 /* Commands.c */; };
 		9A7401DB2B7384060040E575 /* SSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401DA2B7384060040E575 /* SSL.c */; };
+		9A77B263301A9A9000B040FB /* PluginAPI.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A77B262301A9A9000B040FB /* PluginAPI.c */; };
 		9A89D4F227F802F600FF3F80 /* LWidgets.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37827F802F500FF3F80 /* LWidgets.c */; };
 		9A89D4F327F802F600FF3F80 /* Graphics_GL2.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37A27F802F500FF3F80 /* Graphics_GL2.c */; };
 		9A89D4F427F802F600FF3F80 /* Vorbis.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37C27F802F500FF3F80 /* Vorbis.c */; };
@@ -216,13 +217,14 @@
 /* Begin PBXFileReference section */
 		9A4D0C632BDD168800E1695D /* TouchUI.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TouchUI.c; sourceTree = "<group>"; };
 		9A57ECED2BCD1408006A89F0 /* Audio_OpenAL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Audio_OpenAL.c; sourceTree = "<group>"; };
-		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Assets.xcassets; sourceTree = "<group>"; };
+		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9A6C79642BFDDEF100676D27 /* FancyLighting.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FancyLighting.c; sourceTree = "<group>"; };
 		9A6C79662BFDDF0600676D27 /* Queue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Queue.c; sourceTree = "<group>"; };
 		9A6C7DFB2C41E93700676D27 /* InputHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = InputHandler.c; sourceTree = "<group>"; };
 		9A6C7DFD2C41E95C00676D27 /* MenuOptions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MenuOptions.c; sourceTree = "<group>"; };
 		9A7401D82B737D5B0040E575 /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Commands.c; sourceTree = "<group>"; };
 		9A7401DA2B7384060040E575 /* SSL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SSL.c; sourceTree = "<group>"; };
+		9A77B262301A9A9000B040FB /* PluginAPI.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PluginAPI.c; path = ../../src/PluginAPI.c; sourceTree = "<group>"; };
 		9A89D35727F802B100FF3F80 /* ClassiCube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassiCube.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A89D36827F802B400FF3F80 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9A89D37827F802F500FF3F80 /* LWidgets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LWidgets.c; sourceTree = "<group>"; };
@@ -551,6 +553,7 @@
 		9AC3D0322E1166AA00A38E91 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9A77B262301A9A9000B040FB /* PluginAPI.c */,
 				9AC3D0332E1166AA00A38E91 /* enc32le.c */,
 				9AC3D0342E1166AA00A38E91 /* ssl_hashes.c */,
 				9AC3D0352E1166AA00A38E91 /* sha2small.c */,
@@ -757,6 +760,7 @@
 				9A89D56C27F802F600FF3F80 /* _ftinit.c in Sources */,
 				9AC3D10F2E1166AB00A38E91 /* aes_x86ni_cbcdec.c in Sources */,
 				9A89D58F27F802F600FF3F80 /* Audio.c in Sources */,
+				9A77B263301A9A9000B040FB /* PluginAPI.c in Sources */,
 				9AC3D0E62E1166AB00A38E91 /* i31_ninv31.c in Sources */,
 				9AC3D1192E1166AB00A38E91 /* ecdsa_default_vrfy_asn1.c in Sources */,
 				9AC3D0AD2E1166AB00A38E91 /* sha2small.c in Sources */,

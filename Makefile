@@ -28,6 +28,8 @@ release:
 
 ifeq ($(HOST),linux)
     JOBS := $(shell nproc)
+else ifeq ($(HOST),darwin)
+    JOBS := $(shell sysctl -n hw.logicalcpu)
 endif
 # default to 1 job (1 per core)
 ifeq ($(strip $(JOBS)),)

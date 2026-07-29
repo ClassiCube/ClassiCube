@@ -426,7 +426,7 @@ cc_result Stream_ReadU32_BE(struct Stream* s, cc_uint32* value) {
 *#########################################################################################################################*/
 cc_result Stream_ReadLine(struct Stream* s, cc_string* text) {
 	cc_bool readAny = false;
-	cc_codepoint cp;
+	cc_codepoint cp = 0;
 	cc_result res;
 
 	cc_uint8 tmp[8];
