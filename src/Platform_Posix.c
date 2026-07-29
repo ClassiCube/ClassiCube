@@ -24,6 +24,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -787,6 +788,8 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 
+	int nodelay = 1;
+	setsockopt(*s, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
 	return 0;
 }
 
