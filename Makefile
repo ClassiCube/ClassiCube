@@ -1,12 +1,13 @@
-###########################################################
-# If target platform isn't specified, default to current OS
-###########################################################
+.PHONY: clean run
+
+
 ifeq ($(OS),Windows_NT)
     HOST := windows
 else
     HOST := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 endif
 
+# If target platform isn't specified, default to current OS
 ifndef $(PLAT)
     PLAT := $(HOST)
 endif
@@ -26,7 +27,7 @@ release:
 
 
 ifeq ($(HOST),linux)
-    #JOBS := $(shell nproc)
+    JOBS := $(shell nproc)
 endif
 # default to 1 job (1 per core)
 ifeq ($(strip $(JOBS)),)

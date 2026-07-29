@@ -8,10 +8,11 @@ TOOLCHAIN := $(OO_PS4_TOOLCHAIN)
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-BUILD_DIR	= build/ps4
-SOURCE_DIRS = src src/ps4 third_party/bearssl
+TARGET		:= ClassiCube-PS4
+SOURCE_DIRS := src src/ps4 third_party/bearssl
+BUILD_DIR	:= build/ps4
+RUN_PROGRAM	?= shadps4
 
-TARGET		= ClassiCube-PS4
 TITLE       := ClassiCube
 VERSION     := 1.38
 TITLE_ID    := CUBE00200

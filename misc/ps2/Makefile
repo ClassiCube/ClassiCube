@@ -11,6 +11,7 @@ endif
 TARGET 		:= ClassiCube-ps2
 SOURCE_DIRS	:= src src/ps2 third_party/bearssl
 BUILD_DIR 	:= build/ps2
+RUN_PROGRAM	?= pcsx2
 
 
 #---------------------------------------------------------------------------------

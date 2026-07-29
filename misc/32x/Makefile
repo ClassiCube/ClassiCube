@@ -10,9 +10,10 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-TARGET = ClassiCube-32x
-BUILD_DIR = build/32x
-SOURCE_DIRS = src src/32x misc/32x
+TARGET 		:= ClassiCube-32x
+SOURCE_DIRS := src src/32x misc/32x
+BUILD_DIR 	:= build/32x
+RUN_PROGRAM	?= ares
 
 
 #---------------------------------------------------------------------------------

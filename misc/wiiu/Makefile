@@ -11,6 +11,7 @@ endif
 TARGET 		:= ClassiCube-wiiu
 SOURCE_DIRS	:= src src/wiiu third_party/bearssl
 BUILD_DIR	:= build/wiiu
+RUN_PROGRAM	?= cemu
 
 WUHB_OPTIONS := \
 	--name "ClassiCube" \

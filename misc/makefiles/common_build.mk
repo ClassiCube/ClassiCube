@@ -46,11 +46,14 @@ endif
 #------------------------------------------------
 # Main executable compilation
 #------------------------------------------------
-$(TARGET)$(OEXT): $(OBJECTS) $(BUILD_DIRS)
+$(TARGET)$(OEXT): $(OBJECTS)
 	$(LINK) $(LDFLAGS) $(EXTRA_LDFLAGS) -o $@ $(OBJECTS) $(LIBS) $(EXTRA_LIBS)
 	@echo "----------------------------------------------------"
 	@echo "Successfully compiled executable: $@"
 	@echo "----------------------------------------------------"
+
+# build directories are an order only pre-requisite
+$(OBJECTS): | $(BUILD_DIRS)
 
 
 #------------------------------------------------
@@ -63,6 +66,10 @@ $(BUILD_DIRS):
 # Cleans up all built files
 clean:
 	$(RM) $(GEN_FILES) $(OBJECTS) $(DEPFILES)
+
+# Runs the main executable
+run: $(TARGET)$(OEXT)
+	$(RUN_PROGRAM) ./$(TARGET)$(OEXT)
 
 
 #------------------------------------------------

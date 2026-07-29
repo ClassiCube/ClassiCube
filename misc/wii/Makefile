@@ -11,6 +11,7 @@ endif
 TARGET 		:= ClassiCube-wii
 SOURCE_DIRS	:= src src/gcwii third_party/bearssl
 BUILD_DIR	:= build/wii
+RUN_PROGRAM	?= dolphin
 
 
 #---------------------------------------------------------------------------------

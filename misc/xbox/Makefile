@@ -10,10 +10,12 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-TARGET		= ClassiCube-xbox
-XBE_TITLE 	= ClassiCube
-SOURCE_DIRS = src src/xbox third_party/bearssl
-BUILD_DIR   = build/xbox
+TARGET		:= ClassiCube-xbox
+SOURCE_DIRS := src src/xbox third_party/bearssl
+BUILD_DIR   := build/xbox
+RUN_PROGRAM	?= xemu
+
+XBE_TITLE 	:= ClassiCube
 
 
 #---------------------------------------------------------------------------------

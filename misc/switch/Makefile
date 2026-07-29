@@ -11,6 +11,7 @@ endif
 TARGET 		:= ClassiCube-switch
 SOURCE_DIRS	:= src src/switch third_party/bearssl
 BUILD_DIR	:= build/switch
+RUN_PROGRAM	?= ryujinx
 
 APP_TITLE 	:= ClassiCube
 APP_AUTHOR 	:= ClassiCube team

@@ -11,6 +11,7 @@ endif
 TARGET 		:= ClassiCube-3ds
 SOURCE_DIRS	:= src src/3ds third_party/bearssl
 BUILD_DIR	:= build/3ds
+RUN_PROGRAM	?= azahar
 
 APP_ICON	:= misc/3ds/icon.png
 APP_TITLE 	:= ClassiCube

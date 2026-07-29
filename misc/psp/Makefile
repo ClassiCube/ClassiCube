@@ -11,9 +11,10 @@ PSPSDK=$(PSPDEV)/psp/sdk
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-TARGET 			:= ClassiCube-psp
-SOURCE_DIRS		:= src src/psp third_party/bearssl
-BUILD_DIR		:= build/psp
+TARGET 		:= ClassiCube-psp
+SOURCE_DIRS	:= src src/psp third_party/bearssl
+BUILD_DIR	:= build/psp
+RUN_PROGRAM	?= ppsspp
 
 SFO_TITLE  := ClassiCube
 SFO_DISCID := CUBE02000

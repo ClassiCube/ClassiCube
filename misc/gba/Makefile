@@ -8,9 +8,10 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
+TARGET 		:= ClassiCube-gba
 SOURCE_DIRS	:= src src/gba
 BUILD_DIR	:= build/gba
-TARGET 		:= ClassiCube-gba
+RUN_PROGRAM	?= mgba
 
 GAME_TITLE	:= ClassiCube
 GAME_CODE	:= 0000

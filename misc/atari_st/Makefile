@@ -8,8 +8,9 @@ endif
 # Configurable options
 #---------------------------------------------------------------------------------
 TARGET		:= ClassiCube-atari
-BUILD_DIR 	:= build/atari_st
 SOURCE_DIRS	:= src src/atari_st
+BUILD_DIR 	:= build/atari_st
+RUN_PROGRAM	?= hatari
 
 
 #---------------------------------------------------------------------------------

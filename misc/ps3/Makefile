@@ -11,16 +11,16 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-TARGET		= ClassiCube-PS3
-BUILD_DIR	= build/ps3
-SOURCE_DIRS = src src/ps3 third_party/bearssl
-SHADERS		= misc/ps3
+TARGET		:= ClassiCube-PS3
+BUILD_DIR	:= build/ps3
+SOURCE_DIRS := src src/ps3 third_party/bearssl
+RUN_PROGRAM	?= rpcs3
 
-TITLE		= ClassiCube
-APPID		= CUBE00200
-CONTENTID	= UP0001-$(APPID)_00-0000000000000000
-ICON0		= misc/ps3/ICON0.png
-SFOXML		= misc/ps3/sfo.xml
+TITLE		:= ClassiCube
+APPID		:= CUBE00200
+CONTENTID	:= UP0001-$(APPID)_00-0000000000000000
+ICON0		:= misc/ps3/ICON0.png
+SFOXML		:= misc/ps3/sfo.xml
 
 
 #---------------------------------------------------------------------------------
@@ -110,9 +110,9 @@ src/ps3/Graphics_PS3.c: $(SHDR_OBJS)
 # prevent the .asm files from being deleted
 .PRECIOUS: $(BUILD_DIR)/%.vpo $(BUILD_DIR)/%.fpo
 
-$(BUILD_DIR)/%.vpo: $(SHADERS)/%.vcg
+$(BUILD_DIR)/%.vpo: $(SHDR_DIR)/%.vcg
 	$(CGCOMP) -v $(CGCFLAGS) $^ $@
-$(BUILD_DIR)/%.fpo: $(SHADERS)/%.fcg
+$(BUILD_DIR)/%.fpo: $(SHDR_DIR)/%.fcg
 	$(CGCOMP) -f $(CGCFLAGS) $^ $@
 
 $(BUILD_DIR)/%.vpo.o: $(BUILD_DIR)/%.vpo

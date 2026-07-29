@@ -10,9 +10,10 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-BUILD_DIR	= build/saturn
-SOURCE_DIRS = src src/saturn
-TARGET 		= ClassiCube-saturn
+TARGET 		:= ClassiCube-saturn
+SOURCE_DIRS := src src/saturn
+BUILD_DIR	:= build/saturn
+RUN_PROGRAM	?= mednafen
 
 IP_VERSION				= V1.370
 IP_RELEASE_DATE			= 20250101

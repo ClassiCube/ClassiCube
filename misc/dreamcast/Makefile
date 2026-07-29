@@ -11,6 +11,8 @@ endif
 BUILD_DIR	:= build/dc
 SOURCE_DIRS	:= src third_party/bearssl src/dreamcast
 TARGET 		:= ClassiCube-dc
+RUN_PROGRAM	?= flycast
+
 ISO_DIR		:= $(BUILD_DIR)/ISO_FILES
 
 

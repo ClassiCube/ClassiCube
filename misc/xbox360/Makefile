@@ -8,9 +8,10 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-TARGET		:=	ClassiCube-xbox360
-BUILD_DIR	:=	build/xbox360
-SOURCE_DIRS	:=	src src/xbox360 third_party/bearssl
+TARGET		:= ClassiCube-xbox360
+BUILD_DIR	:= build/xbox360
+SOURCE_DIRS	:= src src/xbox360 third_party/bearssl
+RUN_PROGRAM	?= xenon
 
 
 #---------------------------------------------------------------------------------

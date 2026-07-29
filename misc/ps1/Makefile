@@ -13,6 +13,7 @@ endif
 TARGET 		:= ClassiCube-ps1
 SOURCE_DIRS	:= src src/ps1
 BUILD_DIR	:= build/ps1
+RUN_PROGRAM	?= duckstation
 
 
 #---------------------------------------------------------------------------------

@@ -10,24 +10,25 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-TARGET 			:= ClassiCube-vita
-SOURCE_DIRS		:= src src/psvita third_party/bearssl
-BUILD_DIR		:= build/vita
+TARGET 		:= ClassiCube-vita
+SOURCE_DIRS	:= src src/psvita third_party/bearssl
+BUILD_DIR	:= build/vita
+RUN_PROGRAM	?= vita3k
 
 SFO_TITLE 	:= ClassiCube
 SFO_TITLEID := CUBE00200
 
-PARAM_SFO    := $(BUILD_DIR)/param.sfo
-EBOOT_BIN    := eboot.bin
+PARAM_SFO	:= $(BUILD_DIR)/param.sfo
+EBOOT_BIN	:= eboot.bin
 
 
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-CFLAGS 	= -O2 -DPLAT_VITA -fno-math-errno
+CFLAGS 	:= -O2 -DPLAT_VITA -fno-math-errno
 
-LDFLAGS = -Wl,-q
-LIBS 	= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
+LDFLAGS := -Wl,-q
+LIBS 	:= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
 
 
 #---------------------------------------------------------------------------------
