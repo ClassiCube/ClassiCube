@@ -17,104 +17,73 @@ RUN_PROGRAM	?= ares
 
 
 #---------------------------------------------------------------------------------
-# Compilable files
-#---------------------------------------------------------------------------------
-C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-S_FILES = misc/32x/sh2_crt0.s
-OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.s=%.o)))
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
-
-
-#---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
-LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
+LIBS := $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
 
-LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
-INCPATH = -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include
+CFLAGS 	:= -m2 -mb -Ofast -Wall -g -c -fomit-frame-pointer -DPLAT_32X -ffunction-sections -fdata-sections \
+			-I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include
+LDFLAGS := -T $(ROOTDIR)/ldscripts/mars.ld \
+			-nostdlib -Wl,--gc-sections \
+			-L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
+ASFLAGS := --big
 
-SHCCFLAGS = -m2 -mb -Ofast -Wall -g -c -fomit-frame-pointer -DPLAT_32X -ffunction-sections -fdata-sections
-SHHWFLAGS = -m2 -mb -O1 -Wall -g -c -fomit-frame-pointer
-SHLDFLAGS = -T $(LDSCRIPTSDIR)/mars.ld -nostdlib -Wl,--gc-sections
-SHASFLAGS = --big
-
-MDLDFLAGS = -T $(LDSCRIPTSDIR)/md.ld --oformat binary
-MDASFLAGS = -m68000 --register-prefix-optional
+MDLDFLAGS := -T $(ROOTDIR)/ldscripts/md.ld \
+			--oformat binary
+MDASFLAGS := -m68000 --register-prefix-optional
 
 
 #---------------------------------------------------------------------------------
 # Compiler tools
 #---------------------------------------------------------------------------------
-SHPREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
-SHCC = $(SHPREFIX)gcc
-SHAS = $(SHPREFIX)as
-SHLD = $(SHPREFIX)ld
-SHOBJC = $(SHPREFIX)objcopy
+SHPREFIX := $(ROOTDIR)/sh-elf/bin/sh-elf-
+CC 		 := $(SHPREFIX)gcc
+AS 		 := $(SHPREFIX)as
 
-MDPREFIX = $(ROOTDIR)/m68k-elf/bin/m68k-elf-
-MDAS = $(MDPREFIX)as
-MDLD = $(MDPREFIX)ld
+OBJCOPY  := $(SHPREFIX)objcopy
+LINK	 := $(CC)
 
-
-#---------------------------------------------------------------------------------
-# main targets
-#---------------------------------------------------------------------------------
-all: $(BUILD_DIR) $(BUILD_DIR)/m68k_crt0.bin $(BUILD_DIR)/m68k_crt1.bin $(TARGET).bin
-
-clean:
-	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/*.bin $(TARGET).bin $(TARGET).elf
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+MDPREFIX := $(ROOTDIR)/m68k-elf/bin/m68k-elf-
+MDAS 	 := $(MDPREFIX)as
+MDLD 	 := $(MDPREFIX)ld
 
 
 #---------------------------------------------------------------------------------
-# binary generation
+# Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).bin: $(TARGET).elf
-	$(SHOBJC) -O binary $< $(BUILD_DIR)/temp.bin
-	dd if=$(BUILD_DIR)/temp.bin of=$@ bs=64K conv=sync
+$(TARGET).bin: $(BUILD_DIR)/temp.bin
+	dd if=$< of=$@ bs=64K conv=sync
 
-$(TARGET).elf: $(OBJS)
-	$(SHCC) $(SHLDFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
+$(BUILD_DIR)/temp.bin: $(TARGET).elf
+	$(OBJCOPY) -O binary $< $@
 
 
-$(BUILD_DIR)/m68k_crt0.o: misc/32x/m68k_crt0.s
-	$(MDAS) $(MDASFLAGS) $< -o $@
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).bin $(BUILD_DIR)/temp.bin
+include misc/makefiles/common_build.mk
 
-$(BUILD_DIR)/m68k_crt0.bin: $(BUILD_DIR)/m68k_crt0.o
+
+#---------------------------------------------------------------------------------
+# CRT generation
+#---------------------------------------------------------------------------------
+MD_DIR	:= misc/32x
+MD_SRCS := $(notdir $(wildcard $(MD_DIR)/m68k*.s))
+
+MD_OBJS := $(addprefix $(BUILD_DIR)/, $(MD_SRCS:.s=.o))
+MD_BINS := $(MD_OBJS:.o=.bin)
+
+SH_CRT		:= $(BUILD_DIR)/sh2_crt0.o
+OBJECTS 	+= $(SH_CRT)
+GEN_FILES	+= $(MD_OBJS) $(MD_BINS)
+
+$(SH_CRT): misc/32x/sh2_crt0.s $(MD_BINS)
+	$(AS) $(ASFLAGS) $< -o $@
+
+$(BUILD_DIR)/m68k_crt%.bin: $(BUILD_DIR)/m68k_crt%.o
 	$(MDLD) $(MDLDFLAGS) $< -o $@
 
-$(BUILD_DIR)/m68k_crt1.o: misc/32x/m68k_crt1.s
+$(BUILD_DIR)/m68k_crt%.o: $(MD_DIR)/m68k_crt%.s
 	$(MDAS) $(MDASFLAGS) $< -o $@
 
-$(BUILD_DIR)/m68k_crt1.bin: $(BUILD_DIR)/m68k_crt1.o
-	$(MDLD) $(MDLDFLAGS) $< -o $@
+src/32x/Platform_32x.c: $(SH_CRT)
 
-
-#---------------------------------------------------------------------------------
-# object generation
-#---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o: src/%.c
-	$(SHCC) $(SHCCFLAGS) $(INCPATH) $(DEPFLAGS) $< -o $@
-
-$(BUILD_DIR)/%.o: src/32x/%.c
-	$(SHCC) $(SHCCFLAGS) $(INCPATH) $(DEPFLAGS) $< -o $@
-
-$(BUILD_DIR)/%.o: misc/32x/%.c
-	$(SHCC) $(SHCCFLAGS) $(INCPATH) $(DEPFLAGS) $< -o $@
-
-$(BUILD_DIR)/%.o: misc/32x/%.s
-	$(SHAS) $(SHASFLAGS) $(INCPATH) $< -o $@
-
-
-#---------------------------------------------------------------------------------
-# Dependency tracking
-#---------------------------------------------------------------------------------
-$(DEPFILES):
-
-include $(wildcard $(DEPFILES))
