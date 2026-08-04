@@ -32,6 +32,8 @@
 #include "Options.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "main.h"
+
 /*
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -78,10 +80,6 @@ static Atom net_wm_state_fullscreen;
 static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4;
 static cc_bool grabCursor;
-static long win_eventMask = StructureNotifyMask | /* SubstructureNotifyMask | */ 
-	ExposureMask      | KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | 
-	PointerMotionMask | FocusChangeMask | ButtonPressMask | ButtonReleaseMask | 
-	EnterWindowMask   | LeaveWindowMask | PropertyChangeMask;
 
 static int MapNativeKey(KeySym key, unsigned int state) {
 	if (key >= XK_0 && key <= XK_9) { return '0' + (key - XK_0); }
@@ -134,8 +132,8 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	/* A chromebook user reported issues with pressing some keys: */
 	/*  tilde - "Unknown key press: (8000060, 800007E) */
 	/*  quote - "Unknown key press: (8000027, 8000022) */
-	/* Note if 8000 is stripped, you get '0060' (XK_grave) and 0027 (XK_apostrophe) */
-	/*   ChromeOS seems to also mask to 0xFFFF, so I also do so here */
+	/* However, masking to lowest 16 bits produces '0060' (XK_grave) and 0027 (XK_apostrophe) */
+	/*   ChromeOS seems to also mask to 0xFFFF, so do the same here */
 	/* https://chromium.googlesource.com/chromium/src/+/lkgr/ui/events/keycodes/keyboard_code_conversion_x.cc */
 	key &= 0xFFFF;
 
@@ -340,7 +338,7 @@ void Window_Free(void) { }
 
 static void ApplyIcon(Window win) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
-	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
+	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL",     false);
 	
 	XChangeProperty(win_display, win, net_wm_icon, xa_cardinal, 32, PropModeReplace, 
 					(unsigned char*)CCIcon_Data, CCIcon_Size);
@@ -356,33 +354,24 @@ static XVisualInfo GetDefaultVisual(void) {
 
 #define GetVisualID(viz) (viz.visual ? viz.visual->visualid : 0)
 
-static void DoCreateWindow(int width, int height, int _2d) {
+static Window AllocWindow(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
-	XSizeHints hints = { 0 };
-	Atom protocols[2];
-	int supported, x, y;
-	Window focus, win;
 	int visualID;
-	int focusRevert;
+	int x, y;
 
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
-	RegisterAtoms();
 
-	win_visual = GetDefaultVisual();
-	visualID   = GetVisualID(win_visual);
-	Platform_Log2("Display defaults (depth: %i, visual: %h)", &win_visual.depth, &visualID);
-
-#if CC_GFX_BACKEND_IS_GL()
-	if (!_2d) win_visual = GLContext_SelectVisual();
-#endif
 	visualID = GetVisualID(win_visual);
 	Platform_Log2("Creating window (depth: %i, visual: %h)", &win_visual.depth, &visualID);
 
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
-	attributes.event_mask = win_eventMask;
+	attributes.event_mask = StructureNotifyMask | /* SubstructureNotifyMask | */ 
+		ExposureMask      | KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | 
+		PointerMotionMask | FocusChangeMask | ButtonPressMask | ButtonReleaseMask | 
+		EnterWindowMask   | LeaveWindowMask | PropertyChangeMask;
 
-	win = XCreateWindow(win_display, win_rootWin, x, y, width, height,
+	return XCreateWindow(win_display, win_rootWin, x, y, width, height,
 		0, win_visual.depth, InputOutput, win_visual.visual,
 #ifdef CC_BUILD_IRIX
 		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
@@ -390,7 +379,50 @@ static void DoCreateWindow(int width, int height, int _2d) {
 		/* Omitting black/border pixels produces nicer looking resizing on some WMs */
 		CWColormap | CWEventMask, &attributes);
 #endif
+}
 
+static void SetupWindow(Window win, int width, int height) {
+	XSizeHints wm_hints = { 0 };
+	XClassHint cl_hints = { 0 };
+	Atom protos[] = { wm_destroy, net_wm_ping };
+	char* argv[]  = { (char*)GAME_APP_TITLE };
+
+	/* Set hints to try to force WM to create window at requested x,y */
+	/* Without this, some WMs will instead place the window whereever */
+	wm_hints.base_width  = width;
+	wm_hints.base_height = height;
+	wm_hints.flags       = PSize | PPosition;
+	
+	/* So right name appears in e.g. Ubuntu Unity launchbar */
+	#ifdef CC_BUILD_FLATPAK
+	cl_hints.res_name   = (char*)"net.classicube.flatpak.client";
+	cl_hints.res_class  = (char*)"net.classicube.flatpak.client";
+	#else
+	cl_hints.res_name   = (char*)GAME_APP_TITLE;
+	cl_hints.res_class  = (char*)GAME_APP_TITLE;
+	#endif
+
+	XSetWMProperties(win_display, win, NULL, NULL, 
+					argv, Array_Elems(argv), &wm_hints, NULL, &cl_hints);
+	XSetWMProtocols(win_display, win, 
+					protos, Array_Elems(protos));
+}
+
+static void DoCreateWindow(int width, int height, int _2d) {
+	int supported;
+	Window focus, win;
+	int visualID;
+	int focusRevert;
+
+	RegisterAtoms();
+	win_visual = GetDefaultVisual();
+	visualID   = GetVisualID(win_visual);
+	Platform_Log2("Display defaults (depth: %i, visual: %h)", &win_visual.depth, &visualID);
+
+#if CC_GFX_BACKEND_IS_GL()
+	if (!_2d) win_visual = GLContext_SelectVisual();
+#endif
+	win = AllocWindow(width, height);
 	if (!win) Process_Abort("XCreateWindow failed");
 
 #ifdef CC_BUILD_XIM
@@ -399,43 +431,22 @@ static void DoCreateWindow(int width, int height, int _2d) {
 						XNClientWindow, win, NULL);
 #endif
 
-	/* Set hints to try to force WM to create window at requested x,y */
-	/* Without this, some WMs will instead place the window whereever */
-	hints.base_width  = width;
-	hints.base_height = height;
-	hints.flags = PSize | PPosition;
-	XSetWMNormalHints(win_display, win, &hints);
-
-	/* Register for window destroy notification */
-	protocols[0] = wm_destroy;
-	protocols[1] = net_wm_ping;
-	XSetWMProtocols(win_display, win, protocols, 2);
-
 	/* Request that auto-repeat is only set on devices that support it physically.
 	   This typically means that it's turned off for keyboards (which is what we want).
 	   We prefer this method over XAutoRepeatOff/On, because the latter needs to
 	   be reset before the program exits. */
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 
+	SetupWindow(win, width, height);
 	RefreshWindowBounds(width, height);
+
 	Window_Main.Exists     = true;
 	Window_Main.Handle.val = win;
 	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
-	
-	/* So right name appears in e.g. Ubuntu Unity launchbar */
-	XClassHint hint = { 0 };
-	#ifdef CC_BUILD_FLATPAK
-		hint.res_name   = (char*)"net.classicube.flatpak.client";
-		hint.res_class  = (char*)"net.classicube.flatpak.client";
-	#else
-		hint.res_name   = (char*)GAME_APP_TITLE;
-		hint.res_class  = (char*)GAME_APP_TITLE;
-	#endif
-	XSetClassHint(win_display, win, &hint);
-	ApplyIcon(win);
 
+	ApplyIcon(win);
 	/* Check for focus initially, in case WM doesn't send a FocusIn event */
 	XGetInputFocus(win_display, &focus, &focusRevert);
 	if (focus == win) Window_Main.Focused = true;

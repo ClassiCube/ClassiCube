@@ -9,9 +9,6 @@ CC_BEGIN_HEADER
 #define DEFAULT_SINGLEPLAYER_ARG "--singleplayer"
 #define DEFAULT_RESUME_ARG       "--resume"
 
-extern int    main_argc;
-extern char** main_argv;
-
 struct ResumeInfo {
 	cc_string user, ip, port, server, mppass;
 	char _userBuffer[STRING_SIZE], _serverBuffer[STRING_SIZE];

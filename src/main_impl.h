@@ -20,9 +20,6 @@ Eg. the webclient 'main' function loads IndexedDB, and when that has asynchronou
 #include "Options.h"
 #include "main.h"
 
-int    main_argc;
-char** main_argv;
-
 
 /*########################################################################################################################*
 *-------------------------------------------------Complex argument parsing------------------------------------------------*
@@ -127,9 +124,6 @@ CC_NOINLINE static void WarnMissingArgs(int argsCount, const cc_string* args) {
 static void SetupProgram(int argc, char** argv) {
 	static char ipBuffer[STRING_SIZE];
 	cc_result res;
-
-	main_argc = argc;
-	main_argv = argv;
 
 	CrashHandler_Install();
 	Logger_Hook();
