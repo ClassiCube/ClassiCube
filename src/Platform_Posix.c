@@ -1648,7 +1648,7 @@ static cc_bool IsProblematicWorkingDirectory(void) {
 	#endif
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
 	cc_result res;

@@ -758,7 +758,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return i;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	WCHAR module_path[MAX_PATH];
 	WCHAR* last_slash;
 	DWORD len;

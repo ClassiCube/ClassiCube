@@ -691,10 +691,8 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return GetGameArgs(args);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	// Directory is already set by platform: !:/private/e212a5c2
-	return 0;
-}
+// Directory is already set by platform: !:/private/e212a5c2
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 void Platform_ShareScreenshot(const cc_string* filename) {
 	

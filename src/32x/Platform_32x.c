@@ -4,6 +4,8 @@
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
 #define CC_NO_FILESYSTEM
+#define CC_NO_ENCRYPTION
+#define CC_NO_OPEN
 #define CC_NO_CRASHHANDLER
 
 #include "../Stream.h"
@@ -158,19 +160,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
@@ -183,9 +172,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return 0;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) { 
-	return 0; 
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 void Process_Exit(cc_result code) { _exit(code); }
 

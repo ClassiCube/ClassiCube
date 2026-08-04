@@ -1194,7 +1194,7 @@ static cc_bool IsProblematicWorkingDirectory(void) {
 	return false;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	cc_winstring path;
 	int i, len;
 	cc_result res;

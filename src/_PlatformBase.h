@@ -34,7 +34,7 @@ int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes) {
 	return true;
 }
 
-#ifdef CC_BUILD_NOSTDLIB
+#if defined CC_BUILD_NOSTDLIB
 void* Mem_Set(void* dst, cc_uint8 value,  unsigned numBytes) {
 	char* dp = (char*)dst;
 
@@ -189,7 +189,7 @@ static CC_INLINE int GetGameArgs(cc_string* args) {
 	return count;
 }
 
-#ifdef DEFAULT_COMMANDLINE_FUNC
+#if defined DEFAULT_COMMANDLINE_FUNC
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	if (gameHasArgs) return GetGameArgs(args);
 	/* Consoles *sometimes* doesn't use argv[0] for program name and so argc will be 0 */
@@ -270,7 +270,7 @@ cc_bool DynamicLib_LoadAll(const cc_string* path, const struct DynamicLibSym* sy
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_XTEA_ENCRYPTION
+#if defined CC_XTEA_ENCRYPTION
 
 /* Encrypts data using XTEA block cipher, with OS specific method to get machine-specific key */
 static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
@@ -358,13 +358,25 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	}
 	return 0;
 }
+#elif defined CC_NO_ENCRYPTION
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Platform_GetEntropy(void* data, int len) {
+	return ERR_NOT_SUPPORTED;
+}
 #endif
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_NETWORKING
+#if defined CC_BUILD_NETWORKING
 /* Encodes port number in network (i.e. big endian) byte order) */
 static CC_INLINE cc_uint16 SockAddr_EncodePort(int port) {
 	cc_uint16 raw;
@@ -432,7 +444,7 @@ static CC_INLINE cc_bool IPv4_ToString(const void* ip, const void* port, cc_stri
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_NO_UPDATER
+#if defined CC_NO_UPDATER
 cc_bool Updater_Supported = false;
 cc_bool Updater_Clean(void) { return true; }
 
@@ -454,7 +466,7 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTE
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_NO_CRASHHANDLER
+#if defined CC_NO_CRASHHANDLER
 void CrashHandler_Install(void) { }
 
 void CrashHandler_DumpRegisters(void* ctx, cc_string* str) { }
@@ -468,7 +480,7 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_NO_DYNLIB
+#if defined CC_NO_DYNLIB
 const cc_string DynamicLib_Ext = String_FromConst(".so");
 
 void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
@@ -481,7 +493,7 @@ cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_NO_SOCKETS
+#if defined CC_NO_SOCKETS
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
 const cc_result ReturnCode_SocketDropped    = -1;
@@ -522,7 +534,7 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_NO_FILESYSTEM
+#if defined CC_NO_FILESYSTEM
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = -1;
 const cc_result ReturnCode_PathNotFound     = -1;
@@ -589,10 +601,23 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 #endif
 
 
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Platform---------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_NO_OPEN
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
+}
+#endif
+
+
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_NO_THREADING
+#if defined CC_NO_THREADING
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	*handle = NULL;
 }

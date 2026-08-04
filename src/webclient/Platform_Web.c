@@ -12,6 +12,7 @@
 #include <sys/time.h>
 #include <emscripten.h>
 
+#define CC_NO_ENCRYPTION
 #define CC_NO_CRASHHANDLER
 
 #define O_RDONLY 0x000
@@ -388,21 +389,7 @@ void Platform_Init(void) {
 }
 void Platform_Free(void) { }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) { return 0; }
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Encryption--------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) { 
-	return ERR_NOT_SUPPORTED; 
-}
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { 
-	return ERR_NOT_SUPPORTED; 
-}
-cc_result Platform_GetEntropy(void* data, int len) {
-	return ERR_NOT_SUPPORTED;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*
