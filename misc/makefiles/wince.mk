@@ -12,7 +12,8 @@ include misc/makefiles/common_config.mk
 
 ifeq ($(WINCE_ARCH),arm)
 	CC      := arm-mingw32ce-gcc
-	CFLAGS	:= $(CFLAGS) -march=armv5te
+	WINCE_CPU ?= armv4t
+	CFLAGS	:= $(CFLAGS) -march=$(WINCE_CPU)
 else ifeq  ($(WINCE_ARCH),i386)
 	CC      := i386-mingw32ce-gcc
 else
