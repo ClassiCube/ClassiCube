@@ -32,7 +32,6 @@
 #include "Options.h"
 #include "Errors.h"
 #include "Utils.h"
-#include "main.h"
 
 /*
 #include <X11/Xlib.h>

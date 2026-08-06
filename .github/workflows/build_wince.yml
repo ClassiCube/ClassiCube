@@ -64,7 +64,7 @@ jobs:
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
-          make wince RELEASE=1 TARGET=CC-arm WINCE_ARCH=arm \
+          make wince RELEASE=1 TARGET=CC-arm WINCE_ARCH=armv4 \
                 EXTRA_CFLAGS="$LATEST_FLAG"
           
       - uses: ./.github/actions/upload_build

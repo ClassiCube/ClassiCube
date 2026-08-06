@@ -3,6 +3,7 @@
 #include "../Funcs.h"
 #include "../Utils.h"
 #include "../Errors.h"
+#define CC_NO_UPDATER
 #define OVERRIDE_MEM_FUNCTIONS
 
 #define WIN32_LEAN_AND_MEAN
@@ -35,6 +36,22 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 
 // Current directory management for Windows CE
 static WCHAR current_directory[MAX_PATH] = L"\\";
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Platform---------------------------------------------------------*
+*#########################################################################################################################*/
+static int EncodeUnicode(WCHAR* dst, int dstLen, const char* src, int srcLen) {
+	int i, len = min(srcLen, dstLen - 1);
+
+	for (i = 0; i < len; i++) 
+	{
+		*dst++ = Convert_CP437ToUnicode(*src++);
+	}
+
+	*dst = '\0';
+	return len;
+}
 
 
 /*########################################################################################################################*
@@ -83,12 +100,12 @@ void Mem_Free(void* mem) {
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
 	WCHAR wbuf[2048];
-	int wlen = MultiByteToWideChar(CP_UTF8, 0, msg, len, wbuf, 2047);
-	if (wlen > 0) {
-		wbuf[wlen] = 0;
-		OutputDebugStringW(wbuf);
-		OutputDebugStringW(L"\n");
-	}
+	/* Subtract 1 for \n */
+	len = EncodeUnicode(wbuf, 2048 - 1, msg, len);
+	wbuf[len + 0] = L'\n';
+	wbuf[len + 1] = 0;
+
+	OutputDebugStringW(wbuf);
 }
 
 #define FILETIME_EPOCH 50491123200ULL
@@ -151,42 +168,6 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
 /*########################################################################################################################*
 *-----------------------------------------------Current Directory Management---------------------------------------------*
 *#########################################################################################################################*/
-
-static void NormalizePath(WCHAR* path) {
-	WCHAR* src = path;
-	WCHAR* dst = path;
-	WCHAR* component_start;
-	
-	while (*src) {
-		if (*src == L'/' || *src == L'\\') {
-			*dst++ = L'\\';
-			src++;
-			while (*src == L'/' || *src == L'\\') src++;
-			continue;
-		}
-		
-		component_start = dst;
-		while (*src && *src != L'/' && *src != L'\\') {
-			*dst++ = *src++;
-		}
-		
-		if (dst - component_start == 1 && component_start[0] == L'.') {
-			dst = component_start;
-			if (dst > path && dst[-1] == L'\\') dst--;
-		} else if (dst - component_start == 2 && component_start[0] == L'.' && component_start[1] == L'.') {
-			dst = component_start;
-			if (dst > path && dst[-1] == L'\\') dst--;
-			while (dst > path && dst[-1] != L'\\') dst--;
-			if (dst > path) dst--;
-		}
-	}
-	
-	if (dst == path) {
-		*dst++ = L'\\';
-	}
-	*dst = L'\0';
-}
-
 static void MakeAbsolutePath(const WCHAR* src_path, WCHAR* absolute_path, DWORD size) {
 	if (src_path[0] == L'\\') {
 		wcsncpy(absolute_path, src_path, size - 1);
@@ -200,7 +181,6 @@ static void MakeAbsolutePath(const WCHAR* src_path, WCHAR* absolute_path, DWORD 
 		}
 	}
 	absolute_path[size - 1] = L'\0';
-	NormalizePath(absolute_path);
 }
 
 /*########################################################################################################################*
@@ -582,19 +562,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_bool Updater_Supported = false;
-const struct UpdaterInfo Updater_Info = { "&eUpdate not supported on Windows CE", 0 };
-
-cc_bool Updater_Clean(void) { return true; }
-cc_result Updater_Start(const char** action) { return ERR_NOT_SUPPORTED; }
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) { return ERR_NOT_SUPPORTED; }
-cc_result Updater_MarkExecutable(void) { return 0; }
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTED; }
-
-
-/*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
 const cc_string DynamicLib_Ext = String_FromConst(".dll");
@@ -612,7 +579,7 @@ void* DynamicLib_Load2(const cc_string* path) {
 
 void* DynamicLib_Get2(void* lib, const char* name) {
 	WCHAR wname[256];
-	MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, 256);
+	EncodeUnicode(wname, 256, name, String_Length(name));
 	
 	void* addr = GetProcAddressW((HMODULE)lib, wname);
 	if (!addr) dynamicErr = GetLastError();
@@ -632,12 +599,8 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_EncodeString(cc_winstring* dst, const cc_string* src) {
-	int i;
-	
-	MultiByteToWideChar(CP_UTF8, 0, src->buffer, src->length, dst->uni, NATIVE_STR_LEN - 1);
-	dst->uni[src->length] = 0;
-	
-	WideCharToMultiByte(CP_ACP, 0, dst->uni, -1, dst->ansi, NATIVE_STR_LEN - 1, NULL, NULL);
+	EncodeUnicode(dst->uni, NATIVE_STR_LEN, 
+				src->buffer, src->length);
 }
 
 void Platform_Init(void) {
@@ -645,8 +608,7 @@ void Platform_Init(void) {
 	cc_result res;
 
 	heap = GetProcessHeap();
-	
-	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	res  = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res) Logger_SysWarn(res, "starting WSA");
 }
 
