@@ -34,9 +34,6 @@ cc_bool  Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS;
 #include "../_PlatformBase.h"
 
-// Current directory management for Windows CE
-static WCHAR current_directory[MAX_PATH] = L"\\";
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
@@ -58,9 +55,12 @@ static int EncodeUnicode(WCHAR* dst, int dstLen, const char* src, int srcLen) {
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
 *#########################################################################################################################*/
 #include "../main_impl.h"
+HINSTANCE plat_instance;
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
 	cc_result res;
+
+	plat_instance = hInstance;
 	SetupProgram(0, NULL);
 
 	do {
@@ -165,9 +165,13 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
 	ExitProcess(result);
 }
 
+
 /*########################################################################################################################*
 *-----------------------------------------------Current Directory Management---------------------------------------------*
 *#########################################################################################################################*/
+// Current directory management for Windows CE
+static WCHAR current_directory[MAX_PATH] = L"\\";
+
 static void MakeAbsolutePath(const WCHAR* src_path, WCHAR* absolute_path, DWORD size) {
 	if (src_path[0] == L'\\') {
 		wcsncpy(absolute_path, src_path, size - 1);
@@ -182,6 +186,29 @@ static void MakeAbsolutePath(const WCHAR* src_path, WCHAR* absolute_path, DWORD 
 	}
 	absolute_path[size - 1] = L'\0';
 }
+
+cc_result Platform_SetDefaultCurrentDirectory(void) {
+	WCHAR module_path[MAX_PATH];
+	WCHAR* last_slash;
+	DWORD len;
+	
+	len = GetModuleFileNameW(NULL, module_path, MAX_PATH);
+	if (len == 0) {
+		wcscpy(current_directory, L"\\");
+		return 0;
+	}
+	
+	last_slash = wcsrchr(module_path, L'\\');
+	if (last_slash) {
+		*last_slash = L'\0';
+		wcscpy(current_directory, module_path);
+	} else {
+		wcscpy(current_directory, L"\\");
+	}
+	
+	return 0;
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
@@ -718,27 +745,5 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 		if (!args[i].length) break;
 	}
 	return i;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(void) {
-	WCHAR module_path[MAX_PATH];
-	WCHAR* last_slash;
-	DWORD len;
-	
-	len = GetModuleFileNameW(NULL, module_path, MAX_PATH);
-	if (len == 0) {
-		wcscpy(current_directory, L"\\");
-		return 0;
-	}
-	
-	last_slash = wcsrchr(module_path, L'\\');
-	if (last_slash) {
-		*last_slash = L'\0';
-		wcscpy(current_directory, module_path);
-	} else {
-		wcscpy(current_directory, L"\\");
-	}
-	
-	return 0;
 }
 

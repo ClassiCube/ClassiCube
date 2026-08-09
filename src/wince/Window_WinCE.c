@@ -49,7 +49,8 @@
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
-static HINSTANCE win_instance;
+extern HINSTANCE plat_instance;
+
 static HDC win_DC;
 static cc_bool suppress_resize;
 static cc_bool is_ansiWindow, grabCursor;
@@ -277,7 +278,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 0;
 
 	case WM_DESTROY:
-		UnregisterClassW(CC_WIN_CLASSNAME, win_instance);
+		UnregisterClassW(CC_WIN_CLASSNAME, plat_instance);
 		break;
 	}
 	return DefWindowProc(handle, message, wParam, lParam);
@@ -316,22 +317,19 @@ void Window_Free(void) { }
 
 static ATOM DoRegisterClass(void) {
 	ATOM atom;
-	cc_result res;
 	WNDCLASSW wc   = { 0 };
 	wc.style         = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
-	wc.hInstance     = win_instance;
+	wc.hInstance     = plat_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
 
-	wc.hIcon   = (HICON)LoadImage(win_instance, MAKEINTRESOURCE(1), IMAGE_ICON,
-			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0);
+	wc.hIcon   = LoadIcon(plat_instance, MAKEINTRESOURCE(1)); // TODO doesn't show in taskbar
 	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 
-	if ((atom = RegisterClass(&wc))) return atom;
+	return RegisterClass(&wc);
 }
 
 static HWND CreateWindowHandle(ATOM atom, int width, int height) {
-	cc_result res;
 	HWND hwnd;
 	RECT r;
 	
@@ -340,12 +338,10 @@ static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
     AdjustWindowRectEx(&r, CC_WIN_STYLE, false, 0);
 
-
 	if ((hwnd = CreateWindowExW(0, CC_WIN_CLASSNAME, NULL, CC_WIN_STYLE,
-		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return hwnd;
-	res = GetLastError();
+		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, plat_instance, NULL))) return hwnd;
 
-	Process_Abort2(res, "Failed to create window");
+	Process_Abort2(GetLastError(), "Failed to create window");
 	return NULL;
 }
 
@@ -356,12 +352,12 @@ static void DoCreateWindow(int width, int height) {
 	width  = min(width,  240); 
 	height = min(height, 160);
 
-	win_instance = GetModuleHandle(NULL);
-	/* TODO: UngroupFromTaskbar(); */
 	width  = Display_ScaleX(width);
 	height = Display_ScaleY(height);
 
 	atom = DoRegisterClass();
+	if (!atom) Process_Abort2(GetLastError(), "Failed to create window class");
+
 	hwnd = CreateWindowHandle(atom, width, height);
 	RefreshWindowDimensions();
 	RefreshWindowPosition();
