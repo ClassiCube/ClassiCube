@@ -473,6 +473,8 @@ static void DoCreateWindow(void) {
 
 static void SetRootView(UIView* view) {
 	view_handle = view;
+	Window_Main.Handle.ptr = view;
+	
 	[view setMultipleTouchEnabled:YES];
 	[cc_controller setView:view];
 	
