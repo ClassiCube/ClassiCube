@@ -386,7 +386,12 @@ static void DoCreateWindow(int width, int height) {
 	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor
 
 	del = [CCWindowDelegate alloc];
+#if defined MAC_OS_X_VERSION_10_6 && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
+	[winHandle setDelegate:(id<NSWindowDelegate>)del];
+#else
 	[winHandle setDelegate:del];
+#endif
+	
 	RefreshWindowBounds();
 	MakeContentView();
 	ApplyIcon();
@@ -474,6 +479,7 @@ static int MapNativeMouse(long button) {
 }
 
 static void ProcessKeyChars(id ev) {
+	const cc_uint8* buf;
 	const char* src;
 	cc_codepoint cp;
 	NSString* chars;
@@ -488,13 +494,14 @@ static void ProcessKeyChars(id ev) {
 	chars = [ev characters];
 	src   = [chars UTF8String];
 	len   = String_Length(src);
+	buf   = (const cc_uint8*)src;
 
 	while (len > 0) {
-		i = Convert_Utf8ToCodepoint(&cp, src, len);
+		i = Convert_Utf8ToCodepoint(&cp, buf, len);
 		if (!i) break;
 
 		Event_RaiseInt(&InputEvents.Press, cp);
-		src += i; len -= i;
+		buf += i; len -= i;
 	}
 }
 
@@ -617,22 +624,21 @@ void Gamepads_Process(float delta) { }
 *-----------------------------------------------------------Dialogs-------------------------------------------------------*
 *#########################################################################################################################*/
 void ShowDialogCore(const char* title, const char* msg) {
-	CFStringRef titleCF, msgCF;
+	NSString* ttlStr;
+	NSString* msgStr;
 	NSAlert* alert;
 	
-	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
-	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
+	ttlStr = [NSString stringWithCString:title];
+	msgStr = [NSString stringWithCString:msg];
 	
 	alert = [NSAlert alloc];
 	alert = [alert init];
 	
-	[alert setMessageText: titleCF];
-	[alert setInformativeText: msgCF];
+	[alert setMessageText: ttlStr];
+	[alert setInformativeText: msgStr];
 	[alert addButtonWithTitle: @"OK"];
 	
 	[alert runModal];
-	CFRelease(titleCF);
-	CFRelease(msgCF);
 }
 
 static NSMutableArray* GetOpenSaveFilters(const char* const* filters) {

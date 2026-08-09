@@ -11,10 +11,10 @@ include misc/makefiles/common_config.mk
 
 # macOS app bundle
 $(TARGET).app : $(TARGET)
-	mkdir -p $(TARGET)/Contents/MacOS
-	mkdir -p $(TARGET)/Contents/Resources
-	cp $(ENAME) $(TARGET)/Contents/MacOS/$(ENAME)
-	cp misc/macOS/Info.plist   $(TARGET)/Contents/Info.plist
-	cp misc/macOS/appicon.icns $(TARGET)/Contents/Resources/appicon.icns
+	mkdir -p $@/Contents/MacOS
+	mkdir -p $@/Contents/Resources
+	cp $< $@/Contents/MacOS/$<
+	cp misc/macOS/Info.plist   $@/Contents/Info.plist
+	cp misc/macOS/appicon.icns $@/Contents/Resources/appicon.icns
 
 include misc/makefiles/common_build.mk
