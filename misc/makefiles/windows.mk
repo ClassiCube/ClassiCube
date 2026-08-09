@@ -9,7 +9,22 @@ LDFLAGS	:= -mwindows
 LIBS 	:= -lwinmm
 include misc/makefiles/common_config.mk
 
+ifneq ($(strip $(WINDRES)),)
+ICON_OBJ 	:= $(BUILD_DIR)/ccicon.o
+OBJECTS		+= $(ICON_OBJ)
+endif
 
+
+#-----------------------------
+# Executable generation
+#-----------------------------
 CC      := gcc
 OEXT    := .exe
 include misc/makefiles/common_build.mk
+
+
+#-----------------------------
+# Icon generation
+#-----------------------------
+$(ICON_OBJ): misc/windows/CCicon.rc
+	$(WINDRES) $< -o $@

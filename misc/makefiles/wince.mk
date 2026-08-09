@@ -10,6 +10,9 @@ LDFLAGS	:=
 LIBS 	:= -lcoredll -lws2
 include misc/makefiles/common_config.mk
 
+ICON_OBJ 	:= $(BUILD_DIR)/ccicon.o
+OBJECTS		+= $(ICON_OBJ)
+
 
 #-----------------------------
 # Compiler+Tools selection
@@ -40,11 +43,6 @@ include misc/makefiles/common_build.mk
 #-----------------------------
 # Icon generation
 #-----------------------------
-ICON_OBJ 	:= $(BUILD_DIR)/ccicon.o
-OBJECTS		+= $(ICON_OBJ)
-
 $(ICON_OBJ): misc/windows/CCicon.rc
 	$(WINDRES) $< -o $@
-
-src/wince/Window_WinCE.c: $(ICON_OBJ)
 

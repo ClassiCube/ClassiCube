@@ -34,25 +34,25 @@ jobs:
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
           COMMON_CFLAGS="-fno-stack-protector -DCC_NOMAIN -fno-ident $LATEST_FLAG"
-          COMMON_LDFLAGS="-nostartfiles -Wl,-e_main_real misc/windows/CCicon_32.res"
+          COMMON_LDFLAGS="-nostartfiles -Wl,-e_main_real"
 
-          make windows RELEASE=1 TARGET=cc-w32-d3d9 CC=i686-w64-mingw32-gcc \
+          make windows RELEASE=1 TARGET=cc-w32-d3d9 CC=i686-w64-mingw32-gcc WINDRES=i686-w64-mingw32-windres \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
           make windows clean
-          make windows RELEASE=1 TARGET=cc-w32-d3d11 CC=i686-w64-mingw32-gcc \
+          make windows RELEASE=1 TARGET=cc-w32-d3d11 CC=i686-w64-mingw32-gcc WINDRES=i686-w64-mingw32-windres \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
           make windows clean
-          make windows RELEASE=1 TARGET=cc-w32-ogl CC=i686-w64-mingw32-gcc \
+          make windows RELEASE=1 TARGET=cc-w32-ogl CC=i686-w64-mingw32-gcc WINDRES=i686-w64-mingw32-windres \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
           # mingw defaults to i686, but some really old CPUs only support i586
           make windows clean
-          make windows RELEASE=1 TARGET=cc-w9x-ogl CC=i686-w64-mingw32-gcc \
+          make windows RELEASE=1 TARGET=cc-w9x-ogl CC=i686-w64-mingw32-gcc WINDRES=i686-w64-mingw32-windres \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -march=i586 -DCC_BUILD_NOSTDLIB -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
@@ -111,19 +111,19 @@ jobs:
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 
           COMMON_CFLAGS="-fno-stack-protector -DCC_NOMAIN -fno-ident $LATEST_FLAG"
-          COMMON_LDFLAGS="-nostartfiles -Wl,-emain_real misc/windows/CCicon_64.res"
+          COMMON_LDFLAGS="-nostartfiles -Wl,-emain_real"
 
-          make windows RELEASE=1 TARGET=cc-w64-d3d9 CC=x86_64-w64-mingw32-gcc \
+          make windows RELEASE=1 TARGET=cc-w64-d3d9 CC=x86_64-w64-mingw32-gcc WINDRES=x86_64-w64-mingw32-windres \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
           make windows clean
-          make windows RELEASE=1 TARGET=cc-w64-d3d11 CC=x86_64-w64-mingw32-gcc \
+          make windows RELEASE=1 TARGET=cc-w64-d3d11 CC=x86_64-w64-mingw32-gcc WINDRES=x86_64-w64-mingw32-windres \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
           make windows clean
-          make windows RELEASE=1 TARGET=cc-w64-ogl CC=x86_64-w64-mingw32-gcc \
+          make windows RELEASE=1 TARGET=cc-w64-ogl CC=x86_64-w64-mingw32-gcc WINDRES=x86_64-w64-mingw32-windres \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
