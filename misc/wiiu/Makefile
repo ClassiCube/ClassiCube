@@ -69,3 +69,9 @@ SHDR_DIR	:= misc/wiiu
 SHDR_OBJS 	:= $(wildcard $(SHDR_DIR)/*.gsh)
 
 src/wiiu/Graphics_WiiU.c: $(SHDR_OBJS)
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

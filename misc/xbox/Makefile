@@ -97,3 +97,9 @@ $(SHDR_DIR)/ps_%.asm: $(SHDR_DIR)/ps_%.cg
 	$(CGC) -profile fp20 $< -o $@
 
 src/xbox/Graphics_Xbox.c : $(SHDR_OBJS)
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

@@ -30,19 +30,6 @@ OBJECTS		+= $(C_OBJECTS) $(CPP_OBJECTS) $(S_OBJECTS) $(M_OBJECTS)
 GEN_FILES	+= $(TARGET)$(OEXT)
 
 
-#----------------------------------------------------------------
-# Determine shell command used to remove files (for "make clean")
-#----------------------------------------------------------------
-ifndef RM
-	# No prefined RM variable, try to guess OS default
-	ifeq ($(OS),Windows_NT)
-		RM := del
-	else
-		RM := rm -f
-	endif
-endif
-
-
 #------------------------------------------------
 # Main executable compilation
 #------------------------------------------------
@@ -55,21 +42,9 @@ $(TARGET)$(OEXT): $(OBJECTS)
 # build directories are an order only pre-requisite
 $(OBJECTS): | $(BUILD_DIRS)
 
-
-#------------------------------------------------
-# Misc targets section
-#------------------------------------------------
 # Auto creates directories for build files (.o and .d files)
 $(BUILD_DIRS):
 	mkdir -p $@
-
-# Cleans up all built files
-clean:
-	$(RM) $(GEN_FILES) $(OBJECTS) $(DEPFILES)
-
-# Runs the main executable
-run: $(TARGET)$(OEXT)
-	$(RUN_PROGRAM) ./$(TARGET)$(OEXT)
 
 
 #------------------------------------------------

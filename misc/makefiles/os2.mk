@@ -18,3 +18,9 @@ include misc/makefiles/common_build.mk
 #---------------------------------------------------------------------------------
 $(BUILD_DIR)/$(TARGET).res: misc/os2/$(TARGET).rc misc/os2/$(TARGET).ico
 	wrc -r misc/os2/$(TARGET).rc -fo=$@
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

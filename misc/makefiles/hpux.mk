@@ -10,5 +10,14 @@ LIBS    := -lm -lX11 -lXi -lXext -L/opt/graphics/OpenGL/lib/hpux32 -lGL -lpthrea
 include misc/makefiles/common_config.mk
 
 
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
 CC := gcc
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

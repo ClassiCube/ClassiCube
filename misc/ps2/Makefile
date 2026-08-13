@@ -89,3 +89,8 @@ $(SHDR_DIR)/vu1_%.o: $(SHDR_DIR)/vu1_%.vsm
 
 src/ps2/Graphics_PS2.c: $(SHDR_OBJS)
 
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

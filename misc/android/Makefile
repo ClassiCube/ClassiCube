@@ -1,13 +1,6 @@
-.SUFFIXES:
-
-
-#---------------------------------------------------------------------------------
-# Configurable options
-#---------------------------------------------------------------------------------
-# Name of the final output
-TARGET 			= ClassiCube
-# List of directories containing source code
-SOURCE_DIRS		= src src/ios third_party/bearssl
+TARGET_NAME	:= ClassiCube
+SOURCE_DIRS	:= src src/android third_party/bearssl
+BUILD_DIR	:= build/android
 
 
 #---------------------------------------------------------------------------------
@@ -17,20 +10,54 @@ NDK_ROOT	?= /opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/lin
 TOOLS_ROOT	?= $(PWD)/build-tools
 SDK_ROOT	?= /opt/android-sdk-linux/platforms/android-34
 
-# Directories where object files are placed
-BUILD_DIR_ROOT	:= build/android
-BUILD_DIR_A16	:= $(BUILD_DIR_ROOT)/arm16
-BUILD_DIR_A32	:= $(BUILD_DIR_ROOT)/arm32
-BUILD_DIR_A64	:= $(BUILD_DIR_ROOT)/arm64
-BUILD_DIR_X32	:= $(BUILD_DIR_ROOT)/x86_32
-BUILD_DIR_X64	:= $(BUILD_DIR_ROOT)/x86_64
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
+$(TARGET_NAME).apk: $(BUILD_DIR)/cc-arm32 $(BUILD_DIR)/cc-arm64 $(BUILD_DIR)/cc-x86_32 $(BUILD_DIR)/cc-x86_64
+	echo "AAAAA"
 
 
 #---------------------------------------------------------------------------------
-# Compiler tools
+# executable generation - ARM32
 #---------------------------------------------------------------------------------
-ARM32_CC	:= $(NDK_ROOT)/armv7a-linux-androideabi19-clang
-ARM64_CC	:= $(NDK_ROOT)/aarch64-linux-android21-clang
-X86_32_CC	:= $(NDK_ROOT)/i686-linux-android21-clang
-X86_64_CC	:= $(NDK_ROOT)/x86_64-linux-android21-clang
+BUILD_ARCH  := arm32
+TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
+CC			:= $(NDK_ROOT)/armv7a-linux-androideabi19-clang
+LINK		:= $(CC)
+include misc/makefiles/common_build.mk
 
+
+#---------------------------------------------------------------------------------
+# executable generation - ARM64
+#---------------------------------------------------------------------------------
+BUILD_ARCH  := arm64
+TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
+CC			:= $(NDK_ROOT)/aarch64-linux-android21-clang
+LINK		:= $(CC)
+include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# executable generation - x86_32
+#---------------------------------------------------------------------------------
+BUILD_ARCH  := x86_32
+TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
+CC			:= $(NDK_ROOT)/i686-linux-android21-clang
+LINK		:= $(CC)
+include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# executable generation - x86_64
+#---------------------------------------------------------------------------------
+BUILD_ARCH  := x86_64
+TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
+CC			:= $(NDK_ROOT)/x86_64-linux-android21-clang
+LINK		:= $(CC)
+include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

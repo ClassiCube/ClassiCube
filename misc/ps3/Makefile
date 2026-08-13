@@ -119,3 +119,9 @@ $(BUILD_DIR)/%.vpo.o: $(BUILD_DIR)/%.vpo
 	bin2s -a 64 $< | $(AS) -o $@
 $(BUILD_DIR)/%.fpo.o: $(BUILD_DIR)/%.fpo
 	bin2s -a 64 $< | $(AS) -o $@
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

@@ -39,3 +39,9 @@ $(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).code.bin
 		-o $(TARGET).bin --cc $(TARGET).APPL --cc $(TARGET).dsk
 
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

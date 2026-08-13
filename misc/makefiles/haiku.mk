@@ -9,5 +9,14 @@ LIBS 	:= -lGL -lnetwork -lbe -lgame -ltracker
 include misc/makefiles/common_config.mk
 
 
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
 LINK    := $(CXX)
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

@@ -36,3 +36,9 @@ $(TARGET).pef: $(TARGET).elf
 	$(MakePEF) $(TARGET).elf -o $(TARGET).pef
 
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

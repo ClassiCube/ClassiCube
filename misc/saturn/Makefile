@@ -89,3 +89,9 @@ $(BUILD_DIR)/$(TARGET).bin: $(TARGET).elf
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).cue $(TARGET).iso $(BUILD_DIR)/IP.BIN $(BUILD_DIR)/$(TARGET).bin
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

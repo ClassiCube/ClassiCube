@@ -85,3 +85,9 @@ $(BUILD_DIR)/%.shbin: $(SHDR_DIR)/%.v.pica
 	$(PICASSO) $< -o $@
 
 src/3ds/Graphics_3DS.c: $(SHDR_OBJS)
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

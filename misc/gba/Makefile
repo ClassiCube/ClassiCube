@@ -48,3 +48,9 @@ $(TARGET).gba: $(TARGET).elf
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).gba
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

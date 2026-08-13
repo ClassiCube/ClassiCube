@@ -101,3 +101,9 @@ $(MODS_DIR)/libSceFios2.prx: misc/ps4/sce_module/libSceFios2.prx
 $(MODS_DIR)/libc.prx: misc/ps4/sce_module/libc.prx
 	mkdir -p $(MODS_DIR)
 	cp $< $@
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

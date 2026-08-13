@@ -49,3 +49,9 @@ $(TARGET).elf32: $(TARGET).elf
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).elf32
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

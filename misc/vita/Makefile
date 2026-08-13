@@ -81,3 +81,9 @@ $(BUILD_DIR)/%.gxp.h: $(SHDR_DIR)/%.gxp
 	xxd -i $< > $@
 
 src/psvita/Graphics_PSVita.c: $(SHDR_OBJS)
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

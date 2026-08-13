@@ -57,3 +57,9 @@ $(TARGET).exe: $(TARGET).elf
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).exe $(TARGET).bin $(TARGET).cue
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

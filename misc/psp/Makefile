@@ -72,3 +72,9 @@ $(TARGET)-fixed.elf: $(TARGET).elf
 OEXT		:= .elf
 GEN_FILES 	:= $(EBOOT_PBP) $(PARAM_SFO) $(TARGET).prx $(TARGET)-fixed.elf
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

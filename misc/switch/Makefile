@@ -64,3 +64,9 @@ $(BUILD_DIR)/$(TARGET).nacp:
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).nro $(BUILD_DIR)/$(TARGET).nacp
 include misc/makefiles/common_build.mk
+
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk
