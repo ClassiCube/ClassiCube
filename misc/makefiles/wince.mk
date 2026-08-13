@@ -1,11 +1,14 @@
 SOURCE_DIRS := src src/wince third_party/bearssl
 BUILD_DIR	:= build/wince
+TARGET 		:= ClassiCube
 WINCE_ARCH	?= armv4
 
 CFLAGS	:= -DUNICODE -D_WIN32_WCE -std=gnu99 -fno-ident
 LDFLAGS	:=
 LIBS 	:= -lcoredll -lws2
 include misc/makefiles/common_config.mk
+
+default: $(TARGET).exe
 
 
 #-----------------------------
@@ -44,7 +47,6 @@ src/wince/Window_WinCE.c: $(ICON_OBJ)
 #-----------------------------
 OEXT    := .exe
 include misc/makefiles/common_build.mk
-.DEFAULT_GOAL := $(TARGET)$(OEXT)
 
 
 #---------------------------------------------------------------------------------

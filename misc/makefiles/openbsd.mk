@@ -1,8 +1,6 @@
-#-----------------------------
-# Configurable flags and names
-#-----------------------------
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/openbsd
+TARGET 		:= ClassiCube
 
 CFLAGS	:= -I /usr/X11R6/include -I /usr/local/include -fvisibility=hidden -fno-ident
 LDFLAGS := -L /usr/X11R6/lib -L /usr/local/lib -rdynamic

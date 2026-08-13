@@ -1,5 +1,6 @@
 SOURCE_DIRS := src src/macos third_party/bearssl
 BUILD_DIR	:= build/macos
+TARGET 		:= ClassiCube
 
 CFLAGS	:= -fvisibility=hidden -fno-ident -Wno-error=deprecated-declarations
 LDFLAGS	:= -rdynamic

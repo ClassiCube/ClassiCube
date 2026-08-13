@@ -1,5 +1,6 @@
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/freebsd
+TARGET 		:= ClassiCube
 
 CFLAGS	:= -I /usr/local/include -fvisibility=hidden -fno-ident
 LDFLAGS := -L /usr/local/lib -rdynamic

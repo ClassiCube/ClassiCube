@@ -4,11 +4,9 @@ ifeq ($(shell $(CC) -dM -E -xc - < /dev/null | grep -o __MCST__),__MCST__)
 endif
 
 
-#-----------------------------
-# Configurable flags and names
-#-----------------------------
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/linux
+TARGET 		:= ClassiCube
 
 CFLAGS  := -fvisibility=hidden -fno-ident
 LDFLAGS	:= -rdynamic

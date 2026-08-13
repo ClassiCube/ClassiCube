@@ -1,5 +1,6 @@
 BUILD_DIR 	:= build/os2
 SOURCE_DIRS	:= src src/os2 third_party/bearssl
+TARGET 		:= ClassiCube
 
 include misc/makefiles/common_config.mk
 CFLAGS	:= -pipe -Wno-attributes -fno-math-errno -O3 -g -mtune=pentium4 -msse2 -march=i686 -idirafter /@unixroot/usr/include/os2tk45 -DOS2

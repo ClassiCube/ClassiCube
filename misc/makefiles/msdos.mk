@@ -1,5 +1,6 @@
 BUILD_DIR 	:= build/msdos
 SOURCE_DIRS	:= src src/msdos
+TARGET 		:= ClassiCube
 
  # performance too slow if not in release mode
 RELEASE		:= 1

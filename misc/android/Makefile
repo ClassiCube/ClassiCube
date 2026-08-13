@@ -1,5 +1,5 @@
 TARGET_NAME	:= ClassiCube
-SOURCE_DIRS	:= src src/android third_party/bearssl
+SOURCE_DIRS	:= src/android
 BUILD_DIR	:= build/android
 
 
@@ -25,6 +25,7 @@ TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
 CC			:= $(NDK_ROOT)/armv7a-linux-androideabi19-clang
 LINK		:= $(CC)
 include misc/makefiles/common_build.mk
+$(warning source $(OBJECTS))
 
 
 #---------------------------------------------------------------------------------
@@ -35,6 +36,7 @@ TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
 CC			:= $(NDK_ROOT)/aarch64-linux-android21-clang
 LINK		:= $(CC)
 include misc/makefiles/common_build.mk
+$(warning source $(OBJECTS))
 
 
 #---------------------------------------------------------------------------------
@@ -45,6 +47,7 @@ TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
 CC			:= $(NDK_ROOT)/i686-linux-android21-clang
 LINK		:= $(CC)
 include misc/makefiles/common_build.mk
+$(warning source $(OBJECTS))
 
 
 #---------------------------------------------------------------------------------
@@ -55,6 +58,7 @@ TARGET		:= $(BUILD_DIR)/cc-$(BUILD_ARCH)
 CC			:= $(NDK_ROOT)/x86_64-linux-android21-clang
 LINK		:= $(CC)
 include misc/makefiles/common_build.mk
+$(warning source $(OBJECTS))
 
 
 #---------------------------------------------------------------------------------

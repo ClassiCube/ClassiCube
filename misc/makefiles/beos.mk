@@ -1,5 +1,6 @@
 SOURCE_DIRS := src
 BUILD_DIR	:= build/beos
+TARGET 		:= ClassiCube
 
 LIBS 	:= -lGL -lnetwork -lbe -lgame -ltracker
 include misc/makefiles/common_config.mk
