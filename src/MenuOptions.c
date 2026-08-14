@@ -803,7 +803,8 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"&eNone: &fNo entity shadows are drawn.\n" \
 			"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 			"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
-			"&eCircleAll: &fA circular shadow is shown underneath all entities.");
+			"&eCircleAll: &fA circular shadow is shown underneath all entities.\n" \
+			"&eSquare: &fA square shadow matching your collision box is shown directly below you.");
 
 		if (!Gfx_GetUIOptions(s)) {
 		MenuOptionsScreen_AddBool(s, "Mipmaps",
