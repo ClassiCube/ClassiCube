@@ -49,6 +49,8 @@ CC_VAR extern struct _GuiData {
 	/* Whether classic-style inventory is used */
 	cc_bool ClassicInventory;
 	float RawHotbarScale, RawChatScale, RawInventoryScale, RawCrosshairScale;
+	/* Baseline scale for all HUD screens, when automatic scaling isn't used */
+	float GlobalScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;
 	int _unused;
@@ -76,6 +78,10 @@ CC_VAR extern struct _GuiData {
 #else
 #define Gui_TouchUI false
 #endif
+
+/* This function is exposed because it was supposed to be used in the options menu.
+ * As it turns out, options don't change their minimum and maximum values when the window is resized. Why would they? */
+int Gui_GetMaxScale(void);
 
 float Gui_Scale(float value);
 float Gui_GetHotbarScale(void);
