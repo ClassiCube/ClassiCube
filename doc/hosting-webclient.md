@@ -16,6 +16,8 @@ NOTE: The generated ClassiCube.html page starts the game in singleplayer with th
 
 Run `make web dist` to package the compiled webclient into a `build/web/dist` folder, which can then be uploaded to a website. Add `RELEASE=1` for optimised output (run `make web clean` first if you previously compiled without it).
 
+Add `LEGACY=1` to instead produce a build equivalent to the webclient deployed to classicube.net, a single optimised `ClassiCube.js` file that also runs on older browsers. Run `make web clean` first when switching between build types.
+
 The folder contains a basic singleplayer webpage as `index.html`. For hosting your own version properly, keep reading below.
 
 Only the following 3 files are required:
