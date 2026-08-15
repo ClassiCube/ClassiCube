@@ -14,6 +14,10 @@ NOTE: The generated ClassiCube.html page starts the game in singleplayer with th
 
 ### Hosting the webclient
 
+Run `make web dist` to package the compiled webclient into a `build/web/dist` folder, which can then be uploaded to a website. Add `RELEASE=1` for optimised output (run `make web clean` first if you previously compiled without it).
+
+The folder contains a basic singleplayer webpage as `index.html`. For hosting your own version properly, keep reading below.
+
 Only the following 3 files are required:
 1) A web page to initialise the game .js and display the game
 2) The game .js file
