@@ -1,5 +1,19 @@
 Hosting your own version of the ClassiCube webclient is relatively straightforward
 
+### Testing the webclient locally
+
+After compiling the webclient do `make web run`. This serves the compiled webclient on a local web server using emscripten's `emrun`, and then opens it in your browser.
+
+The webclient downloads the default texture pack from `/static/default.zip`, so you need to provide that file too. For example:
+```
+mkdir -p static
+curl -o static/default.zip https://classicube.net/static/default.zip
+```
+
+NOTE: The generated ClassiCube.html page starts the game in singleplayer with the default username. To test multiplayer, you will need a webpage that provides server connection arguments.
+
+### Hosting the webclient
+
 Only the following 3 files are required:
 1) A web page to initialise the game .js and display the game
 2) The game .js file

@@ -30,6 +30,8 @@ ifeq ($(HOST),linux)
     JOBS := $(shell nproc)
 else ifeq ($(HOST),darwin)
     JOBS := $(shell sysctl -n hw.logicalcpu)
+else ifeq ($(HOST),windows)
+    JOBS := $(NUMBER_OF_PROCESSORS)
 endif
 # default to 1 job (1 per core)
 ifeq ($(strip $(JOBS)),)
