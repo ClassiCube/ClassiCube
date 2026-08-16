@@ -159,7 +159,7 @@ void Process_Abort2(cc_result result, const char* raw_msg) {
     WCHAR fbuf[512];
 	int wlen = MultiByteToWideChar(CP_UTF8, 0, raw_msg, -1, wbuf, 511);
 	if (wlen > 0) {
-        swprintf(fbuf, L"Error %s: 0x%04x", result, wbuf);
+        swprintf(fbuf, L"Error %s: 0x%04x", wbuf, result);
 		MessageBoxW(NULL, fbuf, L"Error", MB_OK | MB_ICONERROR);
 	}
 	ExitProcess(result);

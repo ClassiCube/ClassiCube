@@ -15,18 +15,18 @@ default: $(TARGET).exe
 # Compiler+Tools selection
 #-----------------------------
 ifeq ($(WINCE_ARCH),armv4)
-	CC      := arm-mingw32ce-gcc
-	CFLAGS	:= $(CFLAGS) -march=armv4t
-	WINDRES := arm-mingw32ce-windres
+    CC      := arm-mingw32ce-gcc
+    CFLAGS  := $(CFLAGS) -march=armv4t
+    WINDRES := arm-mingw32ce-windres
 else ifeq ($(WINCE_ARCH),armv5)
-	CC      := arm-mingw32ce-gcc
-	CFLAGS	:= $(CFLAGS) -march=armv5te
-	WINDRES := arm-mingw32ce-windres
+    CC      := arm-mingw32ce-gcc
+    CFLAGS  := $(CFLAGS) -march=armv5te
+    WINDRES := arm-mingw32ce-windres
 else ifeq  ($(WINCE_ARCH),i386)
-	CC      := i386-mingw32ce-gcc
-	WINDRES := i386-mingw32ce-windres
+    CC      := i386-mingw32ce-gcc
+    WINDRES := i386-mingw32ce-windres
 else
-	$(error "Unknown arch to compile WinCE build for")
+    $(error "Unknown arch to compile WinCE build for")
 endif
 
 

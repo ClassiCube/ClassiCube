@@ -346,6 +346,7 @@ static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 }
 
 static void DoCreateWindow(int width, int height) {
+	cc_result res;
 	ATOM atom;
 	HWND hwnd;
 
@@ -356,7 +357,16 @@ static void DoCreateWindow(int width, int height) {
 	height = Display_ScaleY(height);
 
 	atom = DoRegisterClass();
-	if (!atom) Process_Abort2(GetLastError(), "Failed to create window class");
+	if (!atom) {
+		/* Registering the window class fails with ERROR_CLASS_ALREADY_EXISTS when
+		  the game window is created after the launcher window was destroyed, as
+		  the UnregisterClassW in WM_DESTROY fails - it runs while a window of
+		  that class still exists. Harmless though, since the class is still
+		  registered and CreateWindowExW finds it by name anyways */
+		res = GetLastError();
+		if (res != ERROR_CLASS_ALREADY_EXISTS)
+			Process_Abort2(res, "Failed to create window class");
+	}
 
 	hwnd = CreateWindowHandle(atom, width, height);
 	RefreshWindowDimensions();
