@@ -1,4 +1,4 @@
-Hosting your own version of the ClassiCube webclient is relatively straightforward
+Hosting your own version of the ClassiCube webclient is relatively straightforward.
 
 ### Testing the webclient locally
 
@@ -10,26 +10,28 @@ mkdir -p static
 curl -o static/default.zip https://classicube.net/static/default.zip
 ```
 
-NOTE: The generated ClassiCube.html page starts the game in singleplayer with the default username. To test multiplayer, you will need a webpage that provides server connection arguments.
+The generated ClassiCube.html page starts the game in singleplayer with the default username. To test multiplayer, you will need a webpage that provides server connection arguments.
 
 ### Hosting the webclient
 
-Run `make web dist` to package the compiled webclient into a `build/web/dist` folder, which can then be uploaded to a website. Add `RELEASE=1` for optimised output (run `make web clean` first if you previously compiled without it).
+Run `make web dist` to package the compiled webclient into a `build/web/dist` folder, which can then be uploaded to a website.
 
-Add `LEGACY=1` to instead produce a build equivalent to the webclient deployed to classicube.net, a single optimised `ClassiCube.js` file that also runs on older browsers. Run `make web clean` first when switching between build types.
+- By default the game is compiled to WebAssembly (`ClassiCube.js` and `ClassiCube.wasm`). Add `RELEASE=1` for optimised output.
+- Add `LEGACY=1` to produce a build equivalent to the webclient deployed to classicube.net, a single optimised `ClassiCube.js` file (either asm.js or wasm2js depending on your emscripten version) that's slower but compatible with older browsers.
+- Make sure to run `make web clean` first when rebuilding with different flags/options.
 
-The folder contains a basic singleplayer webpage as `index.html`. For hosting your own version properly, keep reading below.
-
-Only the following 3 files are required:
-1) A web page to initialise the game .js and display the game
-2) The game .js file
-3) The default texture pack
+The folder contains a basic singleplayer webpage (`index.html`), the compiled game, and the texture pack (if `static/default.zip` exists). The game loads the texture pack from `/static/default.zip` at the website root, so upload the folder contents to the root (or see below for changing the url).
 
 TODO: more advanced sample (authentication, custom game.js, skin server)
 
 ### Example setup
 
-For example, let's assume your website is setup like this:
+At minimum, a deployment needs 3 things:
+1) A web page to initialise the game .js and display the game
+2) The game .js file
+3) The default texture pack
+
+When building from source, `make web dist` provides all three. You can also rehost the prebuilt JS client from ClassiCube.net. For example, let's assume your website is setup like this:
 * `example.com/play.html`
 * `example.com/static/classisphere.js`
 * `example.com/static/default.zip`

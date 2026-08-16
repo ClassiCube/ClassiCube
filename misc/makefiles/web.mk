@@ -3,8 +3,7 @@ BUILD_DIR	:= build/web
 TARGET 		:= ClassiCube
 RUN_PROGRAM	?= emrun
 
-# LEGACY=1 matches the webclient deployed to classicube.net, producing a
-#  single ClassiCube.js file that also runs on older browsers
+# LEGACY=1 matches the webclient deployed to classicube.net, slower but more compatible
 # NOTE: run 'make web clean' first when switching between build types
 ifdef LEGACY
 RELEASE  	:= 1
