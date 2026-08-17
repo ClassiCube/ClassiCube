@@ -30,7 +30,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN $LATEST_FLAG"
           COMMON_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make windows RELEASE=1 TARGET=cc-arm32-d3d11 CC=armv7-w64-mingw32-gcc WINDRES=armv7-w64-mingw32-windres \
+          make windows RELEASE=1 TARGET=cc-arm32-d3d11 CC=armv7-w64-mingw32-gcc \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
@@ -63,7 +63,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN $LATEST_FLAG"
           COMMON_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make windows RELEASE=1 TARGET=cc-arm64-d3d11 CC=aarch64-w64-mingw32-gcc WINDRES=aarch64-w64-mingw32-windres \
+          make windows RELEASE=1 TARGET=cc-arm64-d3d11 CC=aarch64-w64-mingw32-gcc \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
