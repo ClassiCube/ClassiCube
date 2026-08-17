@@ -27,17 +27,20 @@ M_OBJECTS	:= $(patsubst %.m,$(BUILD_ROOT)/%.o, $(M_SOURCES))
 BUILD_DIRS	:= $(BUILD_ROOT) $(addprefix $(BUILD_ROOT)/, $(SOURCE_DIRS))
 OBJECTS		+= $(C_OBJECTS) $(CPP_OBJECTS) $(S_OBJECTS) $(M_OBJECTS)
 # Additional generated files that are cleaned up by 'clean' target
-GEN_FILES	+= $(TARGET)$(OEXT)
+GEN_FILES	:= $(GEN_FILES) $(TARGET)$(OEXT) $(OBJECTS)
 
 
 #------------------------------------------------
 # Main executable compilation
 #------------------------------------------------
 $(TARGET)$(OEXT): $(OBJECTS)
-	$(LINK) $(LDFLAGS) $(EXTRA_LDFLAGS) -o $@ $(OBJECTS) $(LIBS) $(EXTRA_LIBS)
+	$(LINK) $(LDFLAGS) $(EXTRA_LDFLAGS) $^ -o $@ $(LIBS) $(EXTRA_LIBS)
 	@echo "----------------------------------------------------"
 	@echo "Successfully compiled executable: $@"
 	@echo "----------------------------------------------------"
+
+# ensure correct linker is used when this file is included multiple times
+$(TARGET)$(OEXT): LINK:=$(LINK)
 
 # build directories are an order only pre-requisite
 $(OBJECTS): | $(BUILD_DIRS)
@@ -52,18 +55,21 @@ $(BUILD_DIRS):
 #------------------------------------------------
 ifeq ($(TRACK_DEPENDENCIES), 1)
 # === Compiling with dependency tracking ===
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_ROOT)/$*.d
-DEPFILES := $(patsubst %.o,%.d, $(OBJECTS))
+DEPFILES 	:= $(patsubst %.o,%.d,$(OBJECTS))
+GEN_FILES	:= $(GEN_FILES) $(DEPFILES)
 $(DEPFILES):
 
 $(BUILD_ROOT)/%.o : %.c $(BUILD_ROOT)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@ -MT $@ -MMD -MP -MF $(patsubst %.o,%.d,$@)
 $(BUILD_ROOT)/%.o : %.S $(BUILD_ROOT)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@ -MT $@ -MMD -MP -MF $(patsubst %.o,%.d,$@)
 $(BUILD_ROOT)/%.o : %.cpp $(BUILD_ROOT)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@ -MT $@ -MMD -MP -MF $(patsubst %.o,%.d,$@)
 $(BUILD_ROOT)/%.o : %.m $(BUILD_ROOT)/%.d
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c $< -o $@ -MT $@ -MMD -MP -MF $(patsubst %.o,%.d,$@)
+
+# ensure correct compiler is used when this file is included multiple times
+$(BUILD_ROOT)/%.o: CC:=$(CC)
 	
 include $(wildcard $(DEPFILES))
 
@@ -80,6 +86,6 @@ $(BUILD_ROOT)/%.o : %.m
 
 # Assume worst case scenario and recompile everything if a .h changes
 H_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.h))
-$(OBJECTS) : $(H_FILES)
+$(OBJECTS): $(H_FILES)
 
 endif
