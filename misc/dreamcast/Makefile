@@ -13,7 +13,7 @@ SOURCE_DIRS	:= src third_party/bearssl src/dreamcast
 TARGET 		:= ClassiCube-dc
 RUN_PROGRAM	?= flycast
 
-ISO_DIR		:= $(BUILD_DIR)/ISO_FILES
+default: $(TARGET).cdi
 
 
 #---------------------------------------------------------------------------------
@@ -38,8 +38,18 @@ SCRAMBLE 	:= $(KOS_BASE)/utils/scramble/scramble
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).cdi: $(TARGET).iso
-	$(CDI4DC) $< $@
+ISO_DIR	:= $(BUILD_DIR)/ISO_FILES
+
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).cdi $(TARGET).iso $(TARGET)-scr.bin $(TARGET).bin
+include misc/makefiles/common_build.mk
+	
+$(TARGET).bin: $(TARGET).elf
+	$(OBJCOPY) -R .stack -O binary $< $@
+
+# https://dcemulation.org/phpBB/viewtopic.php?t=105269
+$(TARGET)-scr.bin: $(TARGET).bin
+	$(SCRAMBLE) $< $@
 	
 $(TARGET).iso: $(TARGET)-scr.bin
 	mkdir -p $(ISO_DIR)
@@ -53,17 +63,8 @@ $(TARGET).iso: $(TARGET)-scr.bin
 	mkisofs -G IP.BIN -C 0,11702 -J -l -r -quiet -o $@ $(ISO_DIR)
 # genisoimage -V ClassiCube -G IP.BIN -joliet -rock -l -o $@ $(ISO_DIR)
 
-# https://dcemulation.org/phpBB/viewtopic.php?t=105269
-$(TARGET)-scr.bin: $(TARGET).bin
-	$(SCRAMBLE) $< $@
-	
-$(TARGET).bin: $(TARGET).elf
-	$(OBJCOPY) -R .stack -O binary $< $@
-
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).cdi $(TARGET).iso $(TARGET)-scr.bin $(TARGET).bin
-include misc/makefiles/common_build.mk
+$(TARGET).cdi: $(TARGET).iso
+	$(CDI4DC) $< $@
 
 
 #---------------------------------------------------------------------------------

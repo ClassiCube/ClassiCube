@@ -29,6 +29,8 @@ EBOOT_PSAR   := NULL
 PARAM_SFO    := $(BUILD_DIR)/param.sfo
 EBOOT_PBP    := EBOOT.PBP
 
+default: $(EBOOT_PBP)
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -54,24 +56,23 @@ PRXGEN   := $(PSPDEV)/bin/psp-prxgen
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(EBOOT_PBP): $(TARGET).prx $(PARAM_SFO)
-	$(PACK_PBP) $@ $(PARAM_SFO) $(EBOOT_ICON) \
-		$(EBOOT_ICON1) $(EBOOT_UNKPNG) $(EBOOT_PIC1) \
-		$(EBOOT_SND0)  $(TARGET).prx $(EBOOT_PSAR)
-
-$(PARAM_SFO): 
-	$(MKSFOEX) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $@
-
-$(TARGET).prx: $(TARGET)-fixed.elf
-	$(PRXGEN) $< $@
+OEXT		:= .elf
+GEN_FILES 	:= $(EBOOT_PBP) $(PARAM_SFO) $(TARGET).prx $(TARGET)-fixed.elf
+include misc/makefiles/common_build.mk
 
 $(TARGET)-fixed.elf: $(TARGET).elf
 	$(FIXUP) -o $@ $<
 
+$(TARGET).prx: $(TARGET)-fixed.elf
+	$(PRXGEN) $< $@
 
-OEXT		:= .elf
-GEN_FILES 	:= $(EBOOT_PBP) $(PARAM_SFO) $(TARGET).prx $(TARGET)-fixed.elf
-include misc/makefiles/common_build.mk
+$(PARAM_SFO): 
+	$(MKSFOEX) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $
+
+@$(EBOOT_PBP): $(TARGET).prx $(PARAM_SFO)
+	$(PACK_PBP) $@ $(PARAM_SFO) $(EBOOT_ICON) \
+		$(EBOOT_ICON1) $(EBOOT_UNKPNG) $(EBOOT_PIC1) \
+		$(EBOOT_SND0)  $(TARGET).prx $(EBOOT_PSAR)
 
 
 #---------------------------------------------------------------------------------

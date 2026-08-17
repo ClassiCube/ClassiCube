@@ -13,6 +13,8 @@ SOURCE_DIRS	:= src src/ps2 third_party/bearssl
 BUILD_DIR 	:= build/ps2
 RUN_PROGRAM	?= pcsx2
 
+default: $(TARGET)-min.elf
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -35,18 +37,6 @@ LINK	:= $(CC)
 STRIP	:= mips64r5900el-ps2-elf-strip
 DVP 	:= dvp-as
 VCL 	:= openvcl/openvcl
-
-
-#---------------------------------------------------------------------------------
-# executable generation
-#---------------------------------------------------------------------------------
-$(TARGET)-min.elf : $(TARGET).elf
-	$(STRIP) $< -o $@
-
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET)-min.elf
-include misc/makefiles/common_build.mk
 
 
 #---------------------------------------------------------------------------------
@@ -88,6 +78,17 @@ $(SHDR_DIR)/vu1_%.o: $(SHDR_DIR)/vu1_%.vsm
 	$(DVP) $< -o $@
 
 src/ps2/Graphics_PS2.c: $(SHDR_OBJS)
+
+
+#---------------------------------------------------------------------------------
+# executable generation
+#---------------------------------------------------------------------------------
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET)-min.elf
+include misc/makefiles/common_build.mk
+
+$(TARGET)-min.elf: $(TARGET).elf
+	$(STRIP) $< -o $@
 
 
 #---------------------------------------------------------------------------------

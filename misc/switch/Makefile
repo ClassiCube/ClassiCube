@@ -18,6 +18,8 @@ APP_AUTHOR 	:= ClassiCube team
 APP_ICON    := misc/switch/icon.jpg
 APP_VERSION	:= 1.3.8
 
+default: $(TARGET).nro
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -54,16 +56,15 @@ NACPTOOL := $(DEVKITPRO)/tools/bin/nacptool
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).nro: $(TARGET).elf $(BUILD_DIR)/$(TARGET).nacp
-	$(ELF2NRO) $< $@ --icon=$(APP_ICON) --nacp=$(BUILD_DIR)/$(TARGET).nacp
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).nro $(BUILD_DIR)/$(TARGET).nacp
+include misc/makefiles/common_build.mk
 
 $(BUILD_DIR)/$(TARGET).nacp:
 	$(NACPTOOL) --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ --titleid=$(APP_TITLEID)
 
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).nro $(BUILD_DIR)/$(TARGET).nacp
-include misc/makefiles/common_build.mk
+$(TARGET).nro: $(TARGET).elf $(BUILD_DIR)/$(TARGET).nacp
+	$(ELF2NRO) $< $@ --icon=$(APP_ICON) --nacp=$(BUILD_DIR)/$(TARGET).nacp
 
 
 #---------------------------------------------------------------------------------

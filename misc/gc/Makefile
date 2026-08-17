@@ -13,6 +13,8 @@ SOURCE_DIRS	:= src src/gcwii third_party/bearssl
 BUILD_DIR	:= build/gc
 RUN_PROGRAM	?= dolphin
 
+default: $(TARGET).dol
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -39,7 +41,6 @@ ELF2DOL := $(DEVKITPRO)/tools/bin/elf2dol
 #---------------------------------------------------------------------------------
 $(TARGET).dol: $(TARGET).elf
 	$(ELF2DOL) $< $@
-
 
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).dol

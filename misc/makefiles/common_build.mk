@@ -25,15 +25,15 @@ S_OBJECTS	:= $(patsubst %.S,$(BUILD_ROOT)/%.o, $(S_SOURCES))
 M_OBJECTS	:= $(patsubst %.m,$(BUILD_ROOT)/%.o, $(M_SOURCES))
 
 BUILD_DIRS	:= $(BUILD_ROOT) $(addprefix $(BUILD_ROOT)/, $(SOURCE_DIRS))
-OBJECTS		+= $(C_OBJECTS) $(CPP_OBJECTS) $(S_OBJECTS) $(M_OBJECTS)
+EXE_OBJECTS := $(C_OBJECTS) $(CPP_OBJECTS) $(S_OBJECTS) $(M_OBJECTS) $(OBJECTS)
 # Additional generated files that are cleaned up by 'clean' target
-GEN_FILES	:= $(GEN_FILES) $(TARGET)$(OEXT) $(OBJECTS)
+GEN_FILES	:= $(GEN_FILES) $(TARGET)$(OEXT) $(EXE_OBJECTS)
 
 
 #------------------------------------------------
 # Main executable compilation
 #------------------------------------------------
-$(TARGET)$(OEXT): $(OBJECTS)
+$(TARGET)$(OEXT): $(EXE_OBJECTS)
 	$(LINK) $(LDFLAGS) $(EXTRA_LDFLAGS) $^ -o $@ $(LIBS) $(EXTRA_LIBS)
 	@echo "----------------------------------------------------"
 	@echo "Successfully compiled executable: $@"
@@ -43,7 +43,7 @@ $(TARGET)$(OEXT): $(OBJECTS)
 $(TARGET)$(OEXT): LINK:=$(LINK)
 
 # build directories are an order only pre-requisite
-$(OBJECTS): | $(BUILD_DIRS)
+$(EXE_OBJECTS): | $(BUILD_DIRS)
 
 # Auto creates directories for build files (.o and .d files)
 $(BUILD_DIRS):
@@ -55,7 +55,7 @@ $(BUILD_DIRS):
 #------------------------------------------------
 ifeq ($(TRACK_DEPENDENCIES), 1)
 # === Compiling with dependency tracking ===
-DEPFILES 	:= $(patsubst %.o,%.d,$(OBJECTS))
+DEPFILES 	:= $(patsubst %.o,%.d,$(EXE_OBJECTS))
 GEN_FILES	:= $(GEN_FILES) $(DEPFILES)
 $(DEPFILES):
 
@@ -86,6 +86,6 @@ $(BUILD_ROOT)/%.o : %.m
 
 # Assume worst case scenario and recompile everything if a .h changes
 H_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.h))
-$(OBJECTS): $(H_FILES)
+$(EXE_OBJECTS): $(H_FILES)
 
 endif

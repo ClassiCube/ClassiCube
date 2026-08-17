@@ -17,6 +17,8 @@ GAME_TITLE	:= ClassiCube
 GAME_CODE	:= 0000
 MAKER_CODE	:= 00
 
+default: $(TARGET).gba
+
 
 #---------------------------------------------------------------------------------
 # Code generation options
@@ -40,14 +42,13 @@ GBAFIX 	:= $(DEVKITPRO)/tools/bin/gbafix
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).gba: $(TARGET).elf
-	$(OBJCOPY) -O binary $< $@
-	$(GBAFIX) $@ -t$(GAME_TITLE) -c$(GAME_CODE) -m$(MAKER_CODE)
-
-
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).gba
 include misc/makefiles/common_build.mk
+
+$(TARGET).gba: $(TARGET).elf
+	$(OBJCOPY) -O binary $< $@
+	$(GBAFIX) $@ -t$(GAME_TITLE) -c$(GAME_CODE) -m$(MAKER_CODE)
 
 
 #---------------------------------------------------------------------------------

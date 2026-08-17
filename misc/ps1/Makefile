@@ -15,6 +15,8 @@ SOURCE_DIRS	:= src src/ps1
 BUILD_DIR	:= build/ps1
 RUN_PROGRAM	?= duckstation
 
+default: $(TARGET).bin
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -47,16 +49,15 @@ ELF2X		:= $(PSN00BSDK_ROOT)/bin/elf2x
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).bin: $(TARGET).exe
-	$(PSN00BSDK_ROOT)/bin/mkpsxiso -y -o $(TARGET).bin -c $(TARGET).cue misc/ps1/iso.xml
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).exe $(TARGET).bin $(TARGET).cue
+include misc/makefiles/common_build.mk
 	
 $(TARGET).exe: $(TARGET).elf
 	$(PSN00BSDK_ROOT)/bin/elf2x -q $(TARGET).elf $(TARGET).exe
 
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).exe $(TARGET).bin $(TARGET).cue
-include misc/makefiles/common_build.mk
+$(TARGET).bin: $(TARGET).exe
+	$(PSN00BSDK_ROOT)/bin/mkpsxiso -y -o $(TARGET).bin -c $(TARGET).cue misc/ps1/iso.xml
 
 
 #---------------------------------------------------------------------------------

@@ -22,6 +22,8 @@ WUHB_OPTIONS := \
 #WUHB_OPTIONS += --tv-image=misc/wiiu/tv_splash.png
 #WUHB_OPTIONS += --drc-image=misc/wiiu/drc_splash.png
 
+default: $(TARGET).wuhb
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -50,16 +52,15 @@ WUHBTOOL := $(DEVKITPRO)/tools/bin/wuhbtool
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).wuhb: $(TARGET).rpx
-	$(WUHBTOOL) $< $@ $(WUHB_OPTIONS)
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).wuhb $(TARGET).rpx
+include misc/makefiles/common_build.mk
 	
 $(TARGET).rpx: $(TARGET).elf
 	$(ELF2RPL) $< $@
 
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).wuhb $(TARGET).rpx
-include misc/makefiles/common_build.mk
+$(TARGET).wuhb: $(TARGET).rpx
+	$(WUHBTOOL) $< $@ $(WUHB_OPTIONS)
 
 
 #---------------------------------------------------------------------------------
