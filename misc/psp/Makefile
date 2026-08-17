@@ -67,7 +67,7 @@ $(TARGET).prx: $(TARGET)-fixed.elf
 	$(PRXGEN) $< $@
 
 $(PARAM_SFO): 
-	$(MKSFOEX) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $
+	$(MKSFOEX) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $@
 
 $(EBOOT_PBP): $(TARGET).prx $(PARAM_SFO)
 	$(PACK_PBP) $@ $(PARAM_SFO) $(EBOOT_ICON) \
