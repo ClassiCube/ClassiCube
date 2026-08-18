@@ -71,20 +71,6 @@ $(TARGET).vpk: $(EBOOT_BIN) $(PARAM_SFO)
 
 
 #---------------------------------------------------------------------------------
-# Shader generation
-#---------------------------------------------------------------------------------
-SHDR_DIR	:= misc/vita
-SHDR_SRCS 	:= $(notdir $(wildcard $(SHDR_DIR)/*.gxp))
-SHDR_OBJS	:= $(addprefix $(BUILD_DIR)/, $(SHDR_SRCS:.gxp=.gxp.h))
-GEN_FILES	+= $(SHDR_OBJS)
-
-$(BUILD_DIR)/%.gxp.h: $(SHDR_DIR)/%.gxp
-	xxd -i $< > $@
-
-src/psvita/Graphics_PSVita.c: $(SHDR_OBJS)
-
-
-#---------------------------------------------------------------------------------
 # common targets
 #---------------------------------------------------------------------------------
 include misc/makefiles/common_targets.mk
