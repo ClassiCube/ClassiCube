@@ -686,6 +686,8 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	*s = _socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
 
+	int nodelay = 1;
+	_setsockopt(*s, IPPROTO_TCP, TCP_NODELAY, (const char*)&nodelay, sizeof(nodelay));
 	return 0;
 }
 

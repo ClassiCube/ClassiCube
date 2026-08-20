@@ -62,6 +62,8 @@ typedef _UINT_PTR SOCKET;
 
 #define IPPROTO_TCP 6
 
+#define TCP_NODELAY 0x0001
+
 #define SOL_SOCKET 0xffff
 
 #define SO_ERROR 0x1007
@@ -136,6 +138,7 @@ CC_WINSOCK_FUNC int (WINAPI *_shutdown)(SOCKET s, int how);
 
 CC_WINSOCK_FUNC int (WINAPI *_ioctlsocket)(SOCKET s, long cmd, u_long* argp);
 CC_WINSOCK_FUNC int (WINAPI *_getsockopt)(SOCKET s, int level, int optname, char* optval, int* optlen);
+CC_WINSOCK_FUNC int (WINAPI *_setsockopt)(SOCKET s, int level, int optname, const char* optval, int optlen);
 CC_WINSOCK_FUNC int (WINAPI *_recv)(SOCKET s, char* buf, int len, int flags);
 CC_WINSOCK_FUNC int (WINAPI *_send)(SOCKET s, const char FAR * buf, int len, int flags);
 CC_WINSOCK_FUNC int (WINAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout);
@@ -151,6 +154,7 @@ static void Winsock_LoadDynamicFuncs(void) {
 		DynamicLib_ReqSym(socket),          DynamicLib_ReqSym(closesocket),
 		DynamicLib_ReqSym(connect),         DynamicLib_ReqSym(shutdown),
 		DynamicLib_ReqSym(ioctlsocket),     DynamicLib_ReqSym(getsockopt),
+		DynamicLib_ReqSym(setsockopt),
 		DynamicLib_ReqSym(gethostbyname),
 		DynamicLib_OptSym(getaddrinfo),     DynamicLib_OptSym(freeaddrinfo),
 		DynamicLib_ReqSym(recv), DynamicLib_ReqSym(send), DynamicLib_ReqSym(select)
