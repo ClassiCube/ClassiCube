@@ -97,6 +97,7 @@ static struct CpeExt
 	cinematicGui_Ext    = { "CinematicGui", 1 },
 	notifyAction_Ext    = { "NotifyAction", 1 },
 	toggleBlockList_Ext = { "ToggleBlockList", 1 },
+	ampersandSupport_Ext= { "AmpersandSupport", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
 	extBlocks_Ext       = { "ExtendedBlocks", 1 };
 
@@ -107,7 +108,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
 	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext, &cinematicGui_Ext, &notifyAction_Ext,
-	&toggleBlockList_Ext,
+	&toggleBlockList_Ext, &ampersandSupport_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
@@ -172,11 +173,11 @@ static void ReadString(cc_uint8** ptr, cc_string* str) {
 	*ptr = data + STRING_SIZE;
 }
 
-static void WriteString(cc_uint8* data, const cc_string* value) {
+static void WriteString(cc_uint8* data, const cc_string* value, cc_bool escapeAmpersands) {
 	int i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		char c = value->buffer[i];
-		if (c == '&') c = '%'; /* escape color codes */
+		if (escapeAmpersands && c == '&') c = '%'; /* escape color codes */
 		data[i] = c;
 	}
 
@@ -438,8 +439,8 @@ static cc_result MapState_Read(struct MapState* m) {
 void Classic_BuildLogin(struct LoginPacket* pkt) {
 	pkt->opcode  = OPCODE_HANDSHAKE;
 	pkt->version = Game_Version.Protocol;
-	WriteString(pkt->user,   &Game_Username);
-	WriteString(pkt->mppass, &Game_Mppass);
+	WriteString(pkt->user,   &Game_Username, true);
+	WriteString(pkt->mppass, &Game_Mppass,   true);
 
 	/* The 'user type' field's behaviour depends on protocol version: */
 	/*   version 7 - 0x42 specifies CPE client, any other value is ignored? */
@@ -456,7 +457,7 @@ void Classic_BuildLogin(struct LoginPacket* pkt) {
 void Classic_BuildChat(const cc_string* text, cc_bool partial, struct ChatPacket* pkt) {
 	pkt->opcode = OPCODE_MESSAGE;
 	pkt->type   = Server.SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
-	WriteString(pkt->msg, text);
+	WriteString(pkt->msg, text, !IsSupported(ampersandSupport_Ext));
 }
 
 static cc_uint8* Classic_WritePosition(cc_uint8* data, Vec3 pos, float yaw, float pitch) {
@@ -930,7 +931,7 @@ static void CPE_SendExtInfo(int extsCount) {
 	cc_uint8 data[67];
 	data[0] = OPCODE_EXT_INFO;
 	{
-		WriteString(data + 1,       &Server.AppName);
+		WriteString(data + 1, &Server.AppName, true);
 		Mem_WriteU16_BE(data + 65, extsCount);
 	}
 	Server.SendData(data, 67);
@@ -940,7 +941,7 @@ static void CPE_SendExtEntry(const cc_string* extName, int extVersion) {
 	cc_uint8 data[69];
 	data[0] = OPCODE_EXT_ENTRY;
 	{
-		WriteString(data + 1,       extName);
+		WriteString(data + 1, extName, true);
 		Mem_WriteU32_BE(data + 65, extVersion);
 	}
 	Server.SendData(data, 69);
