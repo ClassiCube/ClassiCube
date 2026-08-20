@@ -18,6 +18,8 @@ VERSION     := 1.38
 TITLE_ID    := CUBE00200
 CONTENT_ID  := IV0000-CUBE00200_00-CLASSICUBE000000
 
+default: $(TARGET).pkg
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -43,30 +45,6 @@ CDIR	:= linux
 GP4TOOL	:= DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true $(TOOLCHAIN)/bin/$(CDIR)/create-gp4
 PKGTOOL := DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true $(TOOLCHAIN)/bin/$(CDIR)/PkgTool.Core
 MKFSELF := $(TOOLCHAIN)/bin/$(CDIR)/create-fself
-
-
-#---------------------------------------------------------------------------------
-# Executable generation
-#---------------------------------------------------------------------------------
-$(TARGET).pkg: $(BUILD_DIR)/$(CONTENT_ID).pkg
-	mv $(BUILD_DIR)/$(CONTENT_ID).pkg $(TARGET).pkg
-
-$(BUILD_DIR)/$(CONTENT_ID).pkg: $(BUILD_DIR)/pkg.gp4
-	$(PKGTOOL) pkg_build $< $(BUILD_DIR)
-
-$(BUILD_DIR)/pkg.gp4: $(BUILD_DIR)/eboot.bin $(SYS_DIR)/param.sfo $(SYS_DIR)/icon0.png $(SYS_DIR)/about/right.sprx $(MODS_DIR)/libSceFios2.prx $(MODS_DIR)/libc.prx
-	cd $(BUILD_DIR)
-	$(GP4TOOL) -out $@ --content-id=$(CONTENT_ID) --files \
-		"eboot.bin sce_sys/about/right.sprx sce_sys/param.sfo sce_sys/icon0.png sce_module/libc.prx sce_module/libSceFios2.prx"
-
-$(BUILD_DIR)/eboot.bin: $(TARGET).elf
-	$(MKFSELF) -in=$< -out=$(BUILD_DIR)/$(TARGET).self --eboot "$(BUILD_DIR)/eboot.bin" --paid 0x3800000000000011
-
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).pkg $(BUILD_DIR)/$(CONTENT_ID).pkg $(BUILD_DIR)/pkg.gp4 \
-				$(BUILD_DIR)/$(TARGET).self $(BUILD_DIR)/eboot.bin $(SYS_DIR)/param.sfo
-include misc/makefiles/common_build.mk
 
 
 #---------------------------------------------------------------------------------
@@ -101,6 +79,29 @@ $(MODS_DIR)/libSceFios2.prx: misc/ps4/sce_module/libSceFios2.prx
 $(MODS_DIR)/libc.prx: misc/ps4/sce_module/libc.prx
 	mkdir -p $(MODS_DIR)
 	cp $< $@
+
+
+#---------------------------------------------------------------------------------
+# Executable generation
+#---------------------------------------------------------------------------------
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).pkg $(BUILD_DIR)/$(CONTENT_ID).pkg $(BUILD_DIR)/pkg.gp4 \
+				$(BUILD_DIR)/$(TARGET).self $(BUILD_DIR)/eboot.bin $(SYS_DIR)/param.sfo
+include misc/makefiles/common_build.mk
+
+$(BUILD_DIR)/eboot.bin: $(TARGET).elf
+	$(MKFSELF) -in=$< -out=$(BUILD_DIR)/$(TARGET).self --eboot "$(BUILD_DIR)/eboot.bin" --paid 0x3800000000000011
+
+$(BUILD_DIR)/pkg.gp4: $(BUILD_DIR)/eboot.bin $(SYS_DIR)/param.sfo $(SYS_DIR)/icon0.png $(SYS_DIR)/about/right.sprx $(MODS_DIR)/libSceFios2.prx $(MODS_DIR)/libc.prx
+	cd $(BUILD_DIR)
+	$(GP4TOOL) -out $@ --content-id=$(CONTENT_ID) --files \
+		"eboot.bin sce_sys/about/right.sprx sce_sys/param.sfo sce_sys/icon0.png sce_module/libc.prx sce_module/libSceFios2.prx"
+
+$(BUILD_DIR)/$(CONTENT_ID).pkg: $(BUILD_DIR)/pkg.gp4
+	$(PKGTOOL) pkg_build $< $(BUILD_DIR)
+
+$(TARGET).pkg: $(BUILD_DIR)/$(CONTENT_ID).pkg
+	mv $< $@
 
 
 #---------------------------------------------------------------------------------

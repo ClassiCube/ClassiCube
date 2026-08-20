@@ -15,6 +15,8 @@ SOURCE_DIRS := src src/32x misc/32x
 BUILD_DIR 	:= build/32x
 RUN_PROGRAM	?= ares
 
+default: $(TARGET).bin
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -49,21 +51,6 @@ MDLD 	 := $(MDPREFIX)ld
 
 
 #---------------------------------------------------------------------------------
-# Executable generation
-#---------------------------------------------------------------------------------
-$(TARGET).bin: $(BUILD_DIR)/temp.bin
-	dd if=$< of=$@ bs=64K conv=sync
-
-$(BUILD_DIR)/temp.bin: $(TARGET).elf
-	$(OBJCOPY) -O binary $< $@
-
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).bin $(BUILD_DIR)/temp.bin
-include misc/makefiles/common_build.mk
-
-
-#---------------------------------------------------------------------------------
 # CRT generation
 #---------------------------------------------------------------------------------
 MD_DIR	:= misc/32x
@@ -85,7 +72,19 @@ $(BUILD_DIR)/m68k_crt%.bin: $(BUILD_DIR)/m68k_crt%.o
 $(BUILD_DIR)/m68k_crt%.o: $(MD_DIR)/m68k_crt%.s
 	$(MDAS) $(MDASFLAGS) $< -o $@
 
-src/32x/Platform_32x.c: $(SH_CRT)
+
+#---------------------------------------------------------------------------------
+# Executable generation
+#---------------------------------------------------------------------------------
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).bin $(BUILD_DIR)/temp.bin
+include misc/makefiles/common_build.mk
+
+$(BUILD_DIR)/temp.bin: $(TARGET).elf
+	$(OBJCOPY) -O binary $< $@
+
+$(TARGET).bin: $(BUILD_DIR)/temp.bin
+	dd if=$< of=$@ bs=64K conv=sync
 
 
 #---------------------------------------------------------------------------------

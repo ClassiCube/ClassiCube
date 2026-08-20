@@ -21,6 +21,8 @@ SFO_TITLEID := CUBE00200
 PARAM_SFO	:= $(BUILD_DIR)/param.sfo
 EBOOT_BIN	:= eboot.bin
 
+default: $(TARGET).vpk
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -48,39 +50,24 @@ ELF_CREATE	:= $(VITASDK)/bin/vita-elf-create
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).vpk: $(EBOOT_BIN) $(PARAM_SFO)
-	$(PACK_VPK) -s $(PARAM_SFO) -b $(EBOOT_BIN) -a misc/vita/ICON0.png=sce_sys/ICON0.png $@
-
-$(EBOOT_BIN): $(TARGET).velf
-	$(MAKE_FSELF) $< $@
-
-$(PARAM_SFO):
-	$(MKSOFEX) -s TITLE_ID="$(SFO_TITLEID)" "$(SFO_TITLE)" $@
-
-$(TARGET).velf: $(TARGET).stripped
-	$(ELF_CREATE) $< $@
-
-$(TARGET).stripped: $(TARGET).elf
-	$(STRIP) -g $< -o $@
-
-
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).vpk $(EBOOT_BIN) $(PARAM_SFO) $(TARGET).stripped $(TARGET).velf
 include misc/makefiles/common_build.mk
 
+$(TARGET).stripped: $(TARGET).elf
+	$(STRIP) -g $< -o $@
 
-#---------------------------------------------------------------------------------
-# Shader generation
-#---------------------------------------------------------------------------------
-SHDR_DIR	:= misc/vita
-SHDR_SRCS 	:= $(notdir $(wildcard $(SHDR_DIR)/*.gxp))
-SHDR_OBJS	:= $(addprefix $(BUILD_DIR)/, $(SHDR_SRCS:.gxp=.gxp.h))
-GEN_FILES	+= $(SHDR_OBJS)
+$(TARGET).velf: $(TARGET).stripped
+	$(ELF_CREATE) $< $@
 
-$(BUILD_DIR)/%.gxp.h: $(SHDR_DIR)/%.gxp
-	xxd -i $< > $@
+$(PARAM_SFO):
+	$(MKSOFEX) -s TITLE_ID="$(SFO_TITLEID)" "$(SFO_TITLE)" $@
 
-src/psvita/Graphics_PSVita.c: $(SHDR_OBJS)
+$(EBOOT_BIN): $(TARGET).velf
+	$(MAKE_FSELF) $< $@
+
+$(TARGET).vpk: $(EBOOT_BIN) $(PARAM_SFO)
+	$(PACK_VPK) -s $(PARAM_SFO) -b $(EBOOT_BIN) -a misc/vita/ICON0.png=sce_sys/ICON0.png $@
 
 
 #---------------------------------------------------------------------------------

@@ -17,6 +17,8 @@ RUN_PROGRAM	?= xemu
 
 XBE_TITLE 	:= ClassiCube
 
+default: $(TARGET).iso
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -57,23 +59,6 @@ EXTRACT_XISO := $(NXDK_DIR)/tools/extract-xiso/build/extract-xiso
 
 
 #---------------------------------------------------------------------------------
-# Executable generation
-#---------------------------------------------------------------------------------
-$(TARGET).iso: $(TARGET).xbe
-	mkdir -p $(BUILD_DIR)/cd
-	cp $(TARGET).xbe $(BUILD_DIR)/cd/default.xbe
-	$(EXTRACT_XISO) -c $(BUILD_DIR)/cd $(XISO_FLAGS) $@
-
-$(TARGET).xbe: $(TARGET).exe
-	$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $<
-
-
-OEXT		:= .exe
-GEN_FILES 	:= $(TARGET).iso $(TARGET).xbe
-include misc/makefiles/common_build.mk
-
-
-#---------------------------------------------------------------------------------
 # shader object generation
 #---------------------------------------------------------------------------------
 SHDR_DIR	:= misc/xbox
@@ -97,6 +82,22 @@ $(SHDR_DIR)/ps_%.asm: $(SHDR_DIR)/ps_%.cg
 	$(CGC) -profile fp20 $< -o $@
 
 src/xbox/Graphics_Xbox.c : $(SHDR_OBJS)
+
+
+#---------------------------------------------------------------------------------
+# Executable generation
+#---------------------------------------------------------------------------------
+OEXT		:= .exe
+GEN_FILES 	:= $(TARGET).iso $(TARGET).xbe
+include misc/makefiles/common_build.mk
+
+$(TARGET).xbe: $(TARGET).exe
+	$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $<
+
+$(TARGET).iso: $(TARGET).xbe
+	mkdir -p $(BUILD_DIR)/cd
+	cp $(TARGET).xbe $(BUILD_DIR)/cd/default.xbe
+	$(EXTRACT_XISO) -c $(BUILD_DIR)/cd $(XISO_FLAGS) $@
 
 
 #---------------------------------------------------------------------------------

@@ -63,27 +63,38 @@ static void*  gxm_shader_patcher_fragment_usse_addr;
 static unsigned int shader_patcher_fragment_usse_offset;
 
 
-#include "../../build/vita/colored_f.gxp.h"
-#include "../../build/vita/colored_v.gxp.h"
-static SceGxmProgram* gxm_colored_VP = (SceGxmProgram *)&misc_vita_colored_v_gxp;
-static SceGxmProgram* gxm_colored_FP = (SceGxmProgram *)&misc_vita_colored_f_gxp;
+static const uint8_t coloured_v_gxp[] = {
+	#embed "../../misc/vita/colored_v.gxp"
+};
+static const uint8_t coloured_f_gxp[] = {
+	#embed "../../misc/vita/colored_f.gxp"
+};
+static SceGxmProgram* gxm_coloured_VP = (SceGxmProgram *)&coloured_v_gxp;
+static SceGxmProgram* gxm_coloured_FP = (SceGxmProgram *)&coloured_f_gxp;
 
-#include "../../build/vita/textured_f.gxp.h"
-#include "../../build/vita/textured_v.gxp.h"
-static SceGxmProgram* gxm_textured_VP = (SceGxmProgram *)&misc_vita_textured_v_gxp;
-static SceGxmProgram* gxm_textured_FP = (SceGxmProgram *)&misc_vita_textured_f_gxp;
 
-#include "../../build/vita/colored_alpha_f.gxp.h"
-static SceGxmProgram* gxm_colored_alpha_FP = (SceGxmProgram *)&misc_vita_colored_alpha_f_gxp;
-#include "../../build/vita/textured_alpha_f.gxp.h"
-static SceGxmProgram* gxm_textured_alpha_FP = (SceGxmProgram *)&misc_vita_textured_alpha_f_gxp;
+static const uint8_t textured_v_gxp[] = {
+	#embed "../../misc/vita/textured_v.gxp"
+};
+static const uint8_t textured_f_gxp[] = {
+	#embed "../../misc/vita/textured_f.gxp"
+};
+static SceGxmProgram* gxm_textured_VP = (SceGxmProgram *)&textured_v_gxp;
+static SceGxmProgram* gxm_textured_FP = (SceGxmProgram *)&textured_f_gxp;
+
+
+static const uint8_t coloured_alpha_f_gxp[] = {
+	#embed "../../misc/vita/colored_alpha_f.gxp"
+};
+static const uint8_t textured_alpha_f_gxp[] = {
+	#embed "../../misc/vita/textured_alpha_f.gxp"
+};
+static SceGxmProgram* gxm_coloured_alpha_FP = (SceGxmProgram *)&coloured_alpha_f_gxp;
+static SceGxmProgram* gxm_textured_alpha_FP = (SceGxmProgram *)&textured_alpha_f_gxp;
 
 
 typedef struct CCVertexProgram {
 	SceGxmVertexProgram* programPatched;
-	const SceGxmProgramParameter* param_in_position;
-	const SceGxmProgramParameter* param_in_color;
-	const SceGxmProgramParameter* param_in_texcoord;
 	const SceGxmProgramParameter* param_uni_mvp;
 	int dirtyUniforms;
 } VertexProgram;
@@ -456,28 +467,29 @@ static void AllocShaderPatcher(void) {
 static void AllocColouredVertexProgram(int index) {
 	SceGxmShaderPatcherId programID;
 	VertexProgram* VP = &VP_list[index];
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_colored_VP, &programID);
 
-	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID);
+	const SceGxmProgram* prog = gxm_coloured_VP;
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, prog, &programID);
 
-	VP->param_in_position = sceGxmProgramFindParameterByName(prog, "in_position");
-	VP->param_in_color    = sceGxmProgramFindParameterByName(prog, "in_color");
-	VP->param_uni_mvp     = sceGxmProgramFindParameterByName(prog, "mvp_matrix");
+	const SceGxmProgramParameter* in_pos = sceGxmProgramFindParameterByName(prog, "in_position");
+	const SceGxmProgramParameter* in_col = sceGxmProgramFindParameterByName(prog, "in_color");
+
+	VP->param_uni_mvp = sceGxmProgramFindParameterByName(prog, "mvp_matrix");
 
 	SceGxmVertexAttribute attribs[2];
 	SceGxmVertexStream vertex_stream;
 	
 	attribs[0].streamIndex    = 0;
-	attribs[0].offset         = 0;
+	attribs[0].offset         = offsetof(struct VertexColoured, x);
 	attribs[0].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
 	attribs[0].componentCount = 3;
-	attribs[0].regIndex       = sceGxmProgramParameterGetResourceIndex(VP->param_in_position);
+	attribs[0].regIndex       = sceGxmProgramParameterGetResourceIndex(in_pos);
 		
 	attribs[1].streamIndex    = 0;
-	attribs[1].offset         = 3 * sizeof(float);
+	attribs[1].offset         = offsetof(struct VertexColoured, Col);
 	attribs[1].format         = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
 	attribs[1].componentCount = 4;
-	attribs[1].regIndex       = sceGxmProgramParameterGetResourceIndex(VP->param_in_color);
+	attribs[1].regIndex       = sceGxmProgramParameterGetResourceIndex(in_col);
 		
 	vertex_stream.stride      = SIZEOF_VERTEX_COLOURED;
 	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
@@ -490,35 +502,36 @@ static void AllocColouredVertexProgram(int index) {
 static void AllocTexturedVertexProgram(int index) {
 	SceGxmShaderPatcherId programID;
 	VertexProgram* VP = &VP_list[index];
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_textured_VP, &programID);
 
-	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID);
+	const SceGxmProgram* prog = gxm_textured_VP;
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, prog, &programID);
 
-	VP->param_in_position = sceGxmProgramFindParameterByName(prog, "in_position");
-	VP->param_in_color    = sceGxmProgramFindParameterByName(prog, "in_color");
-	VP->param_in_texcoord = sceGxmProgramFindParameterByName(prog, "in_texcoord");
-	VP->param_uni_mvp     = sceGxmProgramFindParameterByName(prog, "mvp_matrix");
+	const SceGxmProgramParameter* in_pos = sceGxmProgramFindParameterByName(prog, "in_position");
+	const SceGxmProgramParameter* in_col = sceGxmProgramFindParameterByName(prog, "in_color");
+	const SceGxmProgramParameter* in_tex = sceGxmProgramFindParameterByName(prog, "in_texcoord");
+
+	VP->param_uni_mvp = sceGxmProgramFindParameterByName(prog, "mvp_matrix");
 
 	SceGxmVertexAttribute attribs[3];
 	SceGxmVertexStream vertex_stream;
 	
 	attribs[0].streamIndex    = 0;
-	attribs[0].offset         = 0;
+	attribs[0].offset         = offsetof(struct VertexTextured, x);
 	attribs[0].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
 	attribs[0].componentCount = 3;
-	attribs[0].regIndex       = sceGxmProgramParameterGetResourceIndex(VP->param_in_position);
+	attribs[0].regIndex       = sceGxmProgramParameterGetResourceIndex(in_pos);
 		
 	attribs[1].streamIndex    = 0;
-	attribs[1].offset         = 3 * sizeof(float);
+	attribs[1].offset         = offsetof(struct VertexTextured, Col);
 	attribs[1].format         = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
 	attribs[1].componentCount = 4;
-	attribs[1].regIndex       = sceGxmProgramParameterGetResourceIndex(VP->param_in_color);
+	attribs[1].regIndex       = sceGxmProgramParameterGetResourceIndex(in_col);
 		
 	attribs[2].streamIndex    = 0;
-	attribs[2].offset         = 3 * sizeof(float) + 4 * sizeof(char);
+	attribs[2].offset         = offsetof(struct VertexTextured, U);
 	attribs[2].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
 	attribs[2].componentCount = 2;
-	attribs[2].regIndex       = sceGxmProgramParameterGetResourceIndex(VP->param_in_texcoord);
+	attribs[2].regIndex       = sceGxmProgramParameterGetResourceIndex(in_tex);
 		
 	vertex_stream.stride      = SIZEOF_VERTEX_TEXTURED;
 	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
@@ -557,8 +570,8 @@ static void InitGPU(void) {
 	AllocShaderPatcher();
 	
 	AllocColouredVertexProgram(0);
-	CreateFragmentPrograms(0, gxm_colored_FP,        gxm_colored_VP);
-	CreateFragmentPrograms(6, gxm_colored_alpha_FP,  gxm_colored_VP);
+	CreateFragmentPrograms(0, gxm_coloured_FP,        gxm_coloured_VP);
+	CreateFragmentPrograms(6, gxm_coloured_alpha_FP,  gxm_coloured_VP);
 	AllocTexturedVertexProgram(1);
 	CreateFragmentPrograms(3, gxm_textured_FP,       gxm_textured_VP);
 	CreateFragmentPrograms(9, gxm_textured_alpha_FP, gxm_textured_VP);

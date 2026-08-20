@@ -13,6 +13,8 @@ SOURCE_DIRS	:= src src/gcwii third_party/bearssl
 BUILD_DIR	:= build/wii
 RUN_PROGRAM	?= dolphin
 
+default: $(TARGET).dol
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -37,13 +39,12 @@ ELF2DOL := $(DEVKITPRO)/tools/bin/elf2dol
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).dol: $(TARGET).elf
-	$(ELF2DOL) $< $@
-
-
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).dol
 include misc/makefiles/common_build.mk
+
+$(TARGET).dol: $(TARGET).elf
+	$(ELF2DOL) $< $@
 
 
 #---------------------------------------------------------------------------------

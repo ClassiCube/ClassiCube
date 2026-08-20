@@ -13,7 +13,7 @@ SOURCE_DIRS	:= src third_party/bearssl src/dreamcast
 TARGET 		:= ClassiCube-dc
 RUN_PROGRAM	?= flycast
 
-ISO_DIR		:= $(BUILD_DIR)/ISO_FILES
+default: $(TARGET).cdi
 
 
 #---------------------------------------------------------------------------------
@@ -38,32 +38,29 @@ SCRAMBLE 	:= $(KOS_BASE)/utils/scramble/scramble
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).cdi: $(TARGET).iso
-	$(CDI4DC) $< $@
+ISO_DIR	:= $(BUILD_DIR)/ISO_FILES
+
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).cdi $(TARGET).iso $(TARGET)-scr.bin $(TARGET).bin
+include misc/makefiles/common_build.mk
 	
-$(TARGET).iso: $(TARGET)-scr.bin
-	mkdir -p $(ISO_DIR)
-	cp $< $(ISO_DIR)/1ST_READ.BIN
-	mkdir -p $(ISO_DIR)/audio
-	mkdir -p $(ISO_DIR)/maps
-	mkdir -p $(ISO_DIR)/texpacks
-	mkdir -p $(ISO_DIR)/texturecache
-	cp misc/dreamcast/classicube.zip $(ISO_DIR)/texpacks/default.zip
-	cp misc/dreamcast/IP.BIN IP.BIN
-	mkisofs -G IP.BIN -C 0,11702 -J -l -r -quiet -o $@ $(ISO_DIR)
-# genisoimage -V ClassiCube -G IP.BIN -joliet -rock -l -o $@ $(ISO_DIR)
+$(TARGET).bin: $(TARGET).elf
+	$(OBJCOPY) -R .stack -O binary $< $@
 
 # https://dcemulation.org/phpBB/viewtopic.php?t=105269
 $(TARGET)-scr.bin: $(TARGET).bin
 	$(SCRAMBLE) $< $@
 	
-$(TARGET).bin: $(TARGET).elf
-	$(OBJCOPY) -R .stack -O binary $< $@
+$(TARGET).iso: $(TARGET)-scr.bin
+	mkdir -p $(ISO_DIR)/audio $(ISO_DIR)/maps $(ISO_DIR)/texpacks $(ISO_DIR)/texturecache
+	cp $< $(ISO_DIR)/1ST_READ.BIN
+	cp misc/classicube.zip $(ISO_DIR)/texpacks/default.zip
+	cp misc/dreamcast/IP.BIN IP.BIN
+	mkisofs -G IP.BIN -C 0,11702 -J -l -r -quiet -o $@ $(ISO_DIR)
+# genisoimage -V ClassiCube -G IP.BIN -joliet -rock -l -o $@ $(ISO_DIR)
 
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).cdi $(TARGET).iso $(TARGET)-scr.bin $(TARGET).bin
-include misc/makefiles/common_build.mk
+$(TARGET).cdi: $(TARGET).iso
+	$(CDI4DC) $< $@
 
 
 #---------------------------------------------------------------------------------

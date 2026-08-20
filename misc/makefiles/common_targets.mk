@@ -18,7 +18,7 @@ endif
 #------------------------------------------------
 # Cleans up all built files
 clean:
-	$(RM) $(GEN_FILES) $(OBJECTS) $(DEPFILES)
+	$(RM) $(GEN_FILES)
 
 # Runs the main executable
 run: $(TARGET)$(OEXT)

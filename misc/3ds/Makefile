@@ -18,11 +18,13 @@ APP_TITLE 	:= ClassiCube
 APP_DESC	:= Simple block building sandbox
 APP_AUTHOR 	:= ClassiCube team
 
-CIA_BANNER_BIN	= misc/3ds/banner.bin
-CIA_ICON_BIN	= misc/3ds/icon.bin
-CIA_SPEC_RSF	= misc/3ds/spec.rsf
+CIA_BANNER_BIN	:= misc/3ds/banner.bin
+CIA_ICON_BIN	:= misc/3ds/icon.bin
+CIA_SPEC_RSF	:= misc/3ds/spec.rsf
 
 SMDH_FILE	:= $(BUILD_DIR)/$(TARGET).smdh
+
+default: $(TARGET).cia $(TARGET).3dsx
 
 
 #---------------------------------------------------------------------------------
@@ -51,29 +53,6 @@ PICASSO	 := $(DEVKITPRO)/tools/bin/picasso
 
 
 #---------------------------------------------------------------------------------
-# Executable generation
-#---------------------------------------------------------------------------------
-$(TARGET).cia : $(TARGET).3dsx $(BUILD_DIR)/makerom
-	$(BUILD_DIR)/makerom -f cia -o $(TARGET).cia -elf $(TARGET).elf -rsf $(CIA_SPEC_RSF) -icon $(CIA_ICON_BIN) -banner $(CIA_BANNER_BIN) -exefslogo -target t
-
-$(TARGET).3dsx: $(TARGET).elf $(SMDH_FILE)
-	$(TDSXTOOL) $< $@ --smdh=$(SMDH_FILE)
-
-$(SMDH_FILE): $(APP_ICON)
-	$(SMDHTOOL) --create "$(APP_TITLE)" "$(APP_DESC)" "$(APP_AUTHOR)" $(APP_ICON) $@
-
-$(BUILD_DIR)/makerom:
-	wget https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.3/makerom-v0.18.3-ubuntu_x86_64.zip -O $(BUILD_DIR)/makerom.zip
-	unzip $(BUILD_DIR)/makerom.zip -d $(BUILD_DIR)
-	chmod +x $(BUILD_DIR)/makerom
-
-
-OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).cia $(TARGET).3dsx $(SMDH_FILE)
-include misc/makefiles/common_build.mk
-
-
-#---------------------------------------------------------------------------------
 # Shader generation
 #---------------------------------------------------------------------------------
 SHDR_DIR	:= misc/3ds
@@ -85,6 +64,28 @@ $(BUILD_DIR)/%.shbin: $(SHDR_DIR)/%.v.pica
 	$(PICASSO) $< -o $@
 
 src/3ds/Graphics_3DS.c: $(SHDR_OBJS)
+
+
+#---------------------------------------------------------------------------------
+# Executable generation
+#---------------------------------------------------------------------------------
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).cia $(TARGET).3dsx $(SMDH_FILE)
+include misc/makefiles/common_build.mk
+
+$(BUILD_DIR)/makerom:
+	wget https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.3/makerom-v0.18.3-ubuntu_x86_64.zip -O $(BUILD_DIR)/makerom.zip
+	unzip $(BUILD_DIR)/makerom.zip -d $(BUILD_DIR)
+	chmod +x $(BUILD_DIR)/makerom
+
+$(SMDH_FILE): $(APP_ICON)
+	$(SMDHTOOL) --create "$(APP_TITLE)" "$(APP_DESC)" "$(APP_AUTHOR)" $(APP_ICON) $@
+
+$(TARGET).3dsx: $(TARGET).elf $(SMDH_FILE)
+	$(TDSXTOOL) $< $@ --smdh=$(SMDH_FILE)
+
+$(TARGET).cia: $(TARGET).elf $(BUILD_DIR)/makerom $(CIA_BANNER_BIN) $(CIA_ICON_BIN) $(CIA_SPEC_RSF)
+	$(BUILD_DIR)/makerom -f cia -o $@ -elf $< -rsf $(CIA_SPEC_RSF) -icon $(CIA_ICON_BIN) -banner $(CIA_BANNER_BIN) -exefslogo -target t
 
 
 #---------------------------------------------------------------------------------

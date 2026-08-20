@@ -13,6 +13,8 @@ BUILD_DIR	:= build/xbox360
 SOURCE_DIRS	:= src src/xbox360 third_party/bearssl
 RUN_PROGRAM	?= xenon
 
+default: $(TARGET).elf32
+
 
 #---------------------------------------------------------------------------------
 # Code generation
@@ -41,14 +43,13 @@ LINK	:= $(CC)
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).elf32: $(TARGET).elf
-	$(OBJCOPY) -O elf32-powerpc --adjust-vma 0x80000000 $< $@
-	$(STRIP) $@
-
-
 OEXT		:= .elf
 GEN_FILES 	:= $(TARGET).elf32
 include misc/makefiles/common_build.mk
+
+$(TARGET).elf32: $(TARGET).elf
+	$(OBJCOPY) -O elf32-powerpc --adjust-vma 0x80000000 $< $@
+	$(STRIP) $@
 
 
 #---------------------------------------------------------------------------------
