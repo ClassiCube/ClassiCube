@@ -28,12 +28,12 @@ default: $(TARGET).gnpdrm.pkg $(TARGET).self $(TARGET).fake.self
 #---------------------------------------------------------------------------------
 # Code generation
 #--------------------------------------------------------------------------------
-MACHDEP	= -mhard-float -fmodulo-sched -ffunction-sections -fdata-sections
+MACHDEP	:= -mhard-float -fmodulo-sched -ffunction-sections -fdata-sections
 
-CFLAGS	= -O2 -DPLAT_PS3 -Wall -mcpu=cell -fno-math-errno $(MACHDEP) \
+CFLAGS	:= -O2 -DPLAT_PS3 -Wall -mcpu=cell -fno-math-errno $(MACHDEP) \
 			-I$(PSL1GHT)/ppu/include -I$(PSL1GHT)/ppu/include/simdmath
-LDFLAGS	= $(MACHDEP) -fno-use-linker-plugin -L$(PSL1GHT)/ppu/lib
-LIBS	= -lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm -lnet -lsysmodule 
+LDFLAGS	:= $(MACHDEP) -fno-use-linker-plugin -L$(PSL1GHT)/ppu/lib
+LIBS	:= -lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm -lnet -lsysmodule 
 
 
 #---------------------------------------------------------------------------------

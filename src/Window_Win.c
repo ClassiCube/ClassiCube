@@ -299,10 +299,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		Window_Main.Exists = false;
 		Window_RequestClose();
 		return 0;
-
-	case WM_DESTROY:
-		UnregisterClassW(CC_WIN_CLASSNAME, win_instance);
-		break;
 	}
 	return is_ansiWindow ? DefWindowProcA(handle, message, wParam, lParam)
 						 : DefWindowProcW(handle, message, wParam, lParam);
@@ -312,35 +308,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-void Window_PreInit(void) { 
-	DisplayInfo.CursorVisible = true;
-}
-
-void Window_Init(void) {
-	HDC hdc;
-	User32_LoadDynamicFuncs();
-	Input.Sources = INPUT_SOURCE_NORMAL;
-
-	/* Enable high DPI support */
-	DisplayInfo.DPIScaling = Options_GetBool(OPT_DPI_SCALING, false);
-	if (DisplayInfo.DPIScaling && _SetProcessDPIAware) _SetProcessDPIAware();
-
-	hdc = GetDC(NULL);
-	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);
-	DisplayInfo.Height = GetSystemMetrics(SM_CYSCREEN);
-	DisplayInfo.Depth  = GetDeviceCaps(hdc, BITSPIXEL);
-	DisplayInfo.ScaleX = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
-	DisplayInfo.ScaleY = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
-	ReleaseDC(NULL, hdc);
-
-	/* https://docs.microsoft.com/en-us/windows/win32/opengl/reading-color-values-from-the-framebuffer */
-	/* https://devblogs.microsoft.com/oldnewthing/20101013-00/?p=12543  */
-	/* TODO probably should always multiply? not just for 16 colors */
-	if (DisplayInfo.Depth != 1) return;
-	DisplayInfo.Depth *= GetDeviceCaps(hdc, PLANES);
-}
-
-void Window_Free(void) { }
+static ATOM win_class;
 
 static ATOM DoRegisterClass(void) {
 	ATOM atom;
@@ -373,7 +341,44 @@ static ATOM DoRegisterClass(void) {
 	return (ATOM)0;
 }
 
-static HWND CreateWindowHandle(ATOM atom, int width, int height) {
+void Window_PreInit(void) { 
+	DisplayInfo.CursorVisible = true;
+}
+
+void Window_Init(void) {
+	HDC hdc;
+	User32_LoadDynamicFuncs();
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
+	/* Enable high DPI support */
+	DisplayInfo.DPIScaling = Options_GetBool(OPT_DPI_SCALING, false);
+	if (DisplayInfo.DPIScaling && _SetProcessDPIAware) _SetProcessDPIAware();
+
+	win_instance = GetModuleHandleA(NULL);
+	win_class    = DoRegisterClass();
+
+	hdc = GetDC(NULL);
+	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);
+	DisplayInfo.Height = GetSystemMetrics(SM_CYSCREEN);
+	DisplayInfo.Depth  = GetDeviceCaps(hdc, BITSPIXEL);
+	DisplayInfo.ScaleX = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
+	DisplayInfo.ScaleY = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
+	ReleaseDC(NULL, hdc);
+
+	/* https://docs.microsoft.com/en-us/windows/win32/opengl/reading-color-values-from-the-framebuffer */
+	/* https://devblogs.microsoft.com/oldnewthing/20101013-00/?p=12543  */
+	/* TODO probably should always multiply? not just for 16 colors */
+	if (DisplayInfo.Depth != 1) return;
+	DisplayInfo.Depth *= GetDeviceCaps(hdc, PLANES);
+}
+
+void Window_Free(void) {
+	/* UnregisterClassW(CC_WIN_CLASSNAME, win_instance); */
+	/*   See https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unregisterclassw */
+	/*   "All window classes that an application registers are unregistered when it terminates." */
+}
+
+static HWND CreateWindowHandle(int width, int height) {
 	cc_result res;
 	HWND hwnd;
 	RECT r;
@@ -383,14 +388,14 @@ static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
 	AdjustWindowRect(&r, CC_WIN_STYLE, false);
 
-	if ((hwnd = CreateWindowExW(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+	if ((hwnd = CreateWindowExW(0, MAKEINTATOM(win_class), NULL, CC_WIN_STYLE,
 		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return hwnd;
 	res = GetLastError();
 
 	/* Windows 9x does not support W API functions */
 	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
 		is_ansiWindow = true;
-		if ((hwnd = CreateWindowExA(0, (LPCSTR)MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+		if ((hwnd = CreateWindowExA(0, (LPCSTR)MAKEINTATOM(win_class), NULL, CC_WIN_STYLE,
 			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return hwnd;
 		res = GetLastError();
 	}
@@ -399,16 +404,12 @@ static HWND CreateWindowHandle(ATOM atom, int width, int height) {
 }
 
 static void DoCreateWindow(int width, int height) {
-	ATOM atom;
 	HWND hwnd;
-
-	win_instance = GetModuleHandleA(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 	width  = Display_ScaleX(width);
 	height = Display_ScaleY(height);
 
-	atom = DoRegisterClass();
-	hwnd = CreateWindowHandle(atom, width, height);
+	hwnd = CreateWindowHandle(width, height);
 	RefreshWindowDimensions();
 	RefreshWindowPosition();
 
