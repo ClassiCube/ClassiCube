@@ -433,7 +433,7 @@ void Gfx_OnWindowResize(int width, int height) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	_glViewport(x, y, w, h);
+	_glViewport(x, Game.Height - h - y, w, h);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
