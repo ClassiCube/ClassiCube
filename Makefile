@@ -1,4 +1,4 @@
-.PHONY: clean run
+.PHONY: clean run dist
 
 
 ifeq ($(OS),Windows_NT)
@@ -30,6 +30,8 @@ ifeq ($(HOST),linux)
     JOBS := $(shell nproc)
 else ifeq ($(HOST),darwin)
     JOBS := $(shell sysctl -n hw.logicalcpu)
+else ifeq ($(HOST),windows)
+    JOBS := $(NUMBER_OF_PROCESSORS)
 endif
 # default to 1 job (1 per core)
 ifeq ($(strip $(JOBS)),)
@@ -171,5 +173,14 @@ run:
 else
 run:
 	@echo "NOTE: Skipping 'run' due to not being the only goal (all goals: $(MAKECMDGOALS))"
+endif
+
+# Compiles for platform and then packages a deployable folder
+ifeq ($(MAKECMDGOALS),dist)
+dist:
+	$(MAKE) $(PLAT) dist
+else
+dist:
+	@echo "NOTE: Skipping 'dist' due to not being the only goal (all goals: $(MAKECMDGOALS))"
 endif
 
