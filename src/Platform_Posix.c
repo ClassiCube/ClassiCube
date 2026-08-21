@@ -456,7 +456,12 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	if (res) Process_Abort2(res, "Creating thread");
 	pthread_attr_destroy(&attrs);
 	
-#if defined CC_BUILD_LINUX
+#if defined CC_BUILD_LINUX && defined PLAT_SNOWSKY
+	/* Static musl build: dlsym(RTLD_NEXT, ...) has no dynamic linker to walk and
+	   crashes. musl has always provided pthread_setname_np, so call it directly. */
+	extern int pthread_setname_np(pthread_t thread, const char* name);
+	pthread_setname_np(*ptr, name);
+#elif defined CC_BUILD_LINUX
 	static int (*FP_pthread_setname_np)(pthread_t thread, const char* name);
 	/* Not available on old libc versions, so load it dynamically */
 	if (!FP_pthread_setname_np) {
