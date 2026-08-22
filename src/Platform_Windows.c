@@ -1,4 +1,4 @@
-5#include "Core.h"
+#include "Core.h"
 #if defined CC_BUILD_WIN
 
 #include "String_.h"
