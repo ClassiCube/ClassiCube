@@ -153,7 +153,7 @@ Setting up Watcom:
 Compiling with Watcom:
 1. Navigate to the directory with ClassiCube's source code
 2. Run `wcl386 -za99 -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -fe=ClassiCube.exe src/*.c third_party/bearssl/*.c winmm.lib`
-(Note: OpenGL rendering was specifically chosen because Direct3D 9 is broken in OW v2.)
+(Note: OpenGL rendering was specifically chosen because Direct3D 9 is broken in OW v2; This method is also written for compilation under Windows; on Linux, the steps are slightly different and you need to manually add the PATH)
 
 ## Compiling - Linux
 
