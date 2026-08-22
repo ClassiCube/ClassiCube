@@ -1,4 +1,4 @@
-#include "Core.h"
+5#include "Core.h"
 #if defined CC_BUILD_WIN
 
 #include "String_.h"
@@ -722,10 +722,10 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	fd_set set1, set2;
 	int selectCount;
-	struct timeval time = {
-		timeoutMS / 1000,          /* seconds */
-		(timeoutMS % 1000) * 1000, /* microseconds */
-	};
+	struct timeval time;
+	
+	time.tv_sec  = timeoutMS / 1000;          /* seconds */
+	time.tv_usec = (timeoutMS % 1000) * 1000; /* microseconds */
 
 	set1.fd_count    = 1; set2.fd_count    = 1;
 	set1.fd_array[0] = s; set2.fd_array[0] = s;

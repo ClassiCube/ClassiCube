@@ -98,7 +98,7 @@ float sqrtf(float x) {
 	}
 #elif defined __GNUC__ || defined NXDK
 	/* Defined in .h using builtins */
-#elif defined __TINYC__ || defined CC_BUILD_ATARIOS || defined CC_BUILD_AMIGA
+#elif defined __TINYC__ || defined CC_BUILD_ATARIOS || defined CC_BUILD_AMIGA || defined __WATCOMC__
 	/* Older versions of TinyC don't support fabsf or sqrtf */
 	/* Those can be used though if compiling with newer TinyC */
 	/*  versions for a very small performance improvement */

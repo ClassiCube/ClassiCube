@@ -145,6 +145,16 @@ Compiling with TCC:
 2. Run `tcc.exe -o ClassiCube.exe src/*.c third_party/bearssl/*.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
+##### Using Open Watcom v2
+Setting up Watcom:
+1. Download and install Watcom from https://open-watcom.github.io/
+2. Open the WATCOM folder in the command line where it was installed (it was probably installed in C:\WATCOM) and run owsetenv.bat.
+
+Compiling with Watcom:
+1. Navigate to the directory with ClassiCube's source code
+2. Run `wcl386 -za99 -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -fe=ClassiCube.exe src/*.c third_party/bearssl/*.c winmm.lib`
+(Note: OpenGL rendering was specifically chosen because Direct3D 9 is broken in OW v2.)
+
 ## Compiling - Linux
 
 ##### Using gcc/clang

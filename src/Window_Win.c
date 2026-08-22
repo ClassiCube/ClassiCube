@@ -570,7 +570,13 @@ void Window_Show(void) {
 void Window_SetSize(int width, int height) {
 	HWND hwnd   = Window_Main.Handle.ptr;
 	DWORD style = GetWindowLongA(hwnd, GWL_STYLE);
-	RECT rect   = { 0, 0, width, height };
+	RECT rect;
+	
+	rect.left	= 0;
+	rect.top	= 0;
+	rect.right	= width;
+	rect.bottom = height;
+	
 	AdjustWindowRect(&rect, style, false);
 
 	SetWindowPos(hwnd, NULL, 0, 0, 
