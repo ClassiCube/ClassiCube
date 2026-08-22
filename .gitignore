@@ -224,3 +224,6 @@ UpgradeLog*.htm
 # Eclipse
 .cproject
 .project
+
+# Watcom
+*.err
