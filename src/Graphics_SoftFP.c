@@ -1357,7 +1357,12 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 void Gfx_BeginFrame(void) { }
 
 void Gfx_EndFrame(void) {
-    Rect2D r = { 0, 0, fb_width, fb_height };
+    Rect2D r;
+	r.x = 0;
+	r.y = 0; 
+	r.width  = fb_width;
+	r.height = fb_height;
+	
     Window_DrawFramebuffer(r, &fb_bmp);
 }
 
