@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Compiles webclient
+        shell: bash
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
 

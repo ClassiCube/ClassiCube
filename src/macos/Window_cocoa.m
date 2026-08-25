@@ -778,10 +778,26 @@ void OnscreenKeyboard_Close(void) { }
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 
-// SDKs < macOS 10.7 do not have this defined
-#ifndef kCGLRPVideoMemoryMegabytes
-#define kCGLRPVideoMemoryMegabytes 131
+// TODO kCGLCPCurrentRendererID is only available on macOS 10.4 and later
+// so the gpu info query won't work below 10.4. maybe retrieve rendererID from a CGLPixelFormatObj there?
+#define _kCGLCPCurrentRendererID 309
+
+
+#define _kCGLRPRendererID             70
+#define _kCGLRPAccelerated            73
+// SDKs < macOS 10.7 do not have kCGLRPVideoMemoryMegabytes defined
+#define _kCGLRPVideoMemory           120
+#define _kCGLRPVideoMemoryMegabytes  131
+#define _kCGLCPGPUVertexProcessing   310
+#define _kCGLCPGPUFragmentProcessing 311
+
+// Before 10.5 uses long instead of glInt and didn't include the normal gl.h with typedefs
+#if defined MAC_OS_X_VERSION_10_4 && MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+typedef long  GLinteger;
+#else
+typedef GLint GLinteger;
 #endif
+
 
 static int SupportsModernFullscreen(void) {
 	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
@@ -855,17 +871,12 @@ void GLContext_SetVSync(cc_bool vsync) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
-// kCGLCPCurrentRendererID is only available on macOS 10.4 and later
-// Before 10.5 uses long instead of glInt and didn't include the normal gl.h with typedefs
-#if defined MAC_OS_X_VERSION_10_4
-typedef int GLinteger;
-
 static const char* GetAccelerationMode(CGLContextObj ctx) {
 	GLinteger fGPU, vGPU;
 	
 	// NOTE: only macOS 10.4 or later
-	if (CGLGetParameter(ctx, kCGLCPGPUFragmentProcessing, &fGPU)) return NULL;
-	if (CGLGetParameter(ctx, kCGLCPGPUVertexProcessing,   &vGPU)) return NULL;
+	if (CGLGetParameter(ctx, _kCGLCPGPUFragmentProcessing, &fGPU) != 0) return NULL;
+	if (CGLGetParameter(ctx, _kCGLCPGPUVertexProcessing,   &vGPU) != 0) return NULL;
 	
 	if (fGPU && vGPU) return "Fully";
 	if (fGPU || vGPU) return "Partially";
@@ -874,28 +885,28 @@ static const char* GetAccelerationMode(CGLContextObj ctx) {
 
 void GLContext_GetApiInfo(cc_string* info) {
 	CGLContextObj ctx = [ctxHandle CGLContextObj];
-	GLinteger rendererID;
-	CGLGetParameter(ctx, kCGLCPCurrentRendererID, &rendererID);
+	GLinteger rendererID = -1;
+	if (CGLGetParameter(ctx, _kCGLCPCurrentRendererID, &rendererID) != 0) return;
 	
 	GLinteger nRenders = 0;
 	CGLRendererInfoObj rend;
-	CGLQueryRendererInfo(-1, &rend, &nRenders);
+	if (CGLQueryRendererInfo(-1, &rend, &nRenders) != 0) return;
 	int i;
 	
 	for (i = 0; i < nRenders; i++)
 	{
 		GLinteger curID = -1;
-		CGLDescribeRenderer(rend, i, kCGLRPRendererID, &curID);
+		CGLDescribeRenderer(rend, i, _kCGLRPRendererID, &curID);
 		if (curID != rendererID) continue;
 		
 		GLinteger acc = 0;
-		CGLDescribeRenderer(rend, i, kCGLRPAccelerated, &acc);
+		CGLDescribeRenderer(rend, i, _kCGLRPAccelerated, &acc);
 		const char* mode = GetAccelerationMode(ctx);
 		
 		GLinteger vram = 0;
-		if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemoryMegabytes, &vram)) {
+		if (CGLDescribeRenderer(rend, i, _kCGLRPVideoMemoryMegabytes, &vram) == 0) {
 			// preferred path (macOS 10.7 or later)
-		} else if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemory, &vram)) {
+		} else if (CGLDescribeRenderer(rend, i, _kCGLRPVideoMemory, &vram) == 0) {
 			vram /= (1024 * 1024); // TODO: use float instead?
 		} else {
 			vram = -1; // TODO show a better error?
@@ -911,12 +922,6 @@ void GLContext_GetApiInfo(cc_string* info) {
 	}
 	CGLDestroyRendererInfo(rend);
 }
-#else
-// macOS 10.3 and earlier case
-void GLContext_GetApiInfo(cc_string* info) {
-	// TODO: retrieve rendererID from a CGLPixelFormatObj, but this isn't all that important
-}
-#endif
 
 cc_result Window_EnterFullscreen(void) {
 	if (SupportsModernFullscreen()) {
