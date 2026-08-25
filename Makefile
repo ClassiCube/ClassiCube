@@ -30,8 +30,11 @@ ifeq ($(HOST),linux)
     JOBS := $(shell nproc)
 else ifeq ($(HOST),darwin)
     JOBS := $(shell sysctl -n hw.logicalcpu)
+else ifeq ($(HOST),windows)
+    JOBS := $(NUMBER_OF_PROCESSORS)
 endif
-# default to 1 job (1 per core)
+# default to 1 job across all cores
+# (if -j is provided without an argument, make tries building EVERYTHING all at once)
 ifeq ($(strip $(JOBS)),)
     JOBS := 1
 endif
