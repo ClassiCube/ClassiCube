@@ -49,6 +49,8 @@ endef
 
 web:
 	$(call make_platform,misc/makefiles/web.mk)
+weblegacy:
+	$(call make_platform,misc/makefiles/weblegacy.mk)
 linux:
 	$(call make_platform,misc/makefiles/linux.mk)
 windows:

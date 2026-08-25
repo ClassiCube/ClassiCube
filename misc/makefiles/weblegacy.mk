@@ -1,18 +1,21 @@
 SOURCE_DIRS := src src/webclient
-BUILD_DIR	:= build/web
+BUILD_DIR	:= build/weblegacy
 TARGET 		:= ClassiCube
 
-CFLAGS	:= -g
-LDFLAGS	:= -g -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=256Kb
+CFLAGS	:= -Os -g2
+LDFLAGS	:= -g2 -s WASM=0 -s NO_EXIT_RUNTIME=1 -s LEGACY_VM_SUPPORT=1 -s ABORTING_MALLOC=0 -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT=web -s SINGLE_FILE -s TOTAL_STACK=256Kb --closure 0
 LIBS 	:= --js-library src/webclient/interop_web.js
-include misc/makefiles/common_config.mk
+
+default: $(TARGET).js
+	sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' ClassiCube.js
 
 
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
 CC      := emcc
-OEXT    := .html
+OEXT    := .js
+LINK	:= $(CC)
 include misc/makefiles/common_build.mk
 
 

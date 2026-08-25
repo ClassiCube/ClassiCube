@@ -26,7 +26,7 @@ jobs:
       - name: Compile 32 bit macOS builds
         shell: bash
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
           COMMON_CFLAGS="-fno-stack-protector $LATEST_FLAG"
           COMMON_LDFLAGS="-s -lgcc_s.1"
  
@@ -44,7 +44,7 @@ jobs:
       - name: Compile 32 bit macOS builds (PowerPC)
         shell: bash
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
           COMMON_CFLAGS="-fno-stack-protector -isystem /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk $LATEST_FLAG"
           COMMON_LDFLAGS="-s -static-libgcc -Wl,-no_compact_unwind -Wl,-syslibroot /usr/local/compiler/ppc/target/SDK/MacOSX10.5.sdk"
  
