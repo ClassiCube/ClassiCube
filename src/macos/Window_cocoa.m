@@ -13,6 +13,28 @@
 #import  <AppKit/AppKit.h>
 #include <ApplicationServices/ApplicationServices.h>
 
+#define _NSOKButton 1
+
+#define _NSLeftMouseDown      1
+#define _NSLeftMouseUp        2
+#define _NSRightMouseDown     3
+#define _NSRightMouseUp       4
+#define _NSMouseMoved         5
+#define _NSLeftMouseDragged   6
+#define _NSRightMouseDragged  7
+#define _NSMouseEntered       8
+#define _NSMouseExited		  9
+#define _NSKeyDown           10
+#define _NSKeyUp             11
+#define _NSFlagsChanged	     12
+#define _NSScrollWheel       22
+#define _NSOtherMouseDown    25
+#define _NSOtherMouseUp      26
+#define _NSOtherMouseDragged 27
+
+// NOTE: Only defined since macOS 10.9 SDK
+#define _NSWindowOcclusionStateVisible (1 << 1)
+
 static int windowX, windowY;
 static NSApplication* appHandle;
 static NSWindow* winHandle;
@@ -24,13 +46,11 @@ static cc_bool scroll_debugging;
 #if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
 	#define WIN_MASK (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
 	#define ANY_EVENT_MASK NSEventMaskAny
-	#define DIALOG_OK      NSModalResponseOK
 	
 	#define PASTEBOARD_STRING_TYPE NSPasteboardTypeString
 #else
 	#define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 	#define ANY_EVENT_MASK NSAnyEventMask
-	#define DIALOG_OK      NSOKButton
 	
 	#define PASTEBOARD_STRING_TYPE NSStringPboardType
 #endif
@@ -428,14 +448,12 @@ int Window_GetWindowState(void) {
 	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
 }
 
-// NOTE: Only defined since macOS 10.9 SDK
-#define _NSWindowOcclusionStateVisible (1 << 1)
 int Window_IsObscured(void) {
     if (!canCheckOcclusion)
         return [winHandle isMiniaturized];
     
     // covers both minimised and hidden behind another window
-    int flags = [winHandle occlusionState];
+    int flags = (int)[winHandle occlusionState];
     return !(flags & _NSWindowOcclusionStateVisible);
 }
 
@@ -542,33 +560,33 @@ void Window_ProcessEvents(float delta) {
 		type = [ev type];
 
 		switch (type) {
-		case  1: // NSLeftMouseDown 
-		case  3: // NSRightMouseDown
-		case 25: // NSOtherMouseDown
+		case _NSLeftMouseDown:
+		case _NSRightMouseDown:
+		case _NSOtherMouseDown:
 			key = MapNativeMouse([ev buttonNumber]);
 			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key);
 			break;
 
-		case  2: // NSLeftMouseUp 
-		case  4: // NSRightMouseUp
-		case 26: // NSOtherMouseUp
+		case _NSLeftMouseUp:
+		case _NSRightMouseUp:
+		case _NSOtherMouseUp:
 			key = MapNativeMouse([ev buttonNumber]);
 			if (key) Input_SetReleased(key);
 			break;
 
-		case 10: // NSKeyDown
+		case _NSKeyDown:
 			key = TryGetKey(ev);
 			if (key) Input_SetPressed(key);
 			// TODO: Test works properly with other languages
 			ProcessKeyChars(ev);
 			break;
 
-		case 11: // NSKeyUp
+		case _NSKeyUp:
 			key = TryGetKey(ev);
 			if (key) Input_SetReleased(key);
 			break;
 
-		case 12: // NSFlagsChanged
+		case _NSFlagsChanged:
 			key = [ev modifierFlags];
 			// TODO: Figure out how to only get modifiers that changed
 			Input_Set(CCKEY_LCTRL,    key & 0x000001);
@@ -582,7 +600,7 @@ void Window_ProcessEvents(float delta) {
 			Input_Set(CCKEY_CAPSLOCK, key & 0x010000);
 			break;
 
-		case 22: // NSScrollWheel
+		case _NSScrollWheel:
 			if (scroll_debugging) DebugScrollEvent(ev);
 			dx    = [ev deltaX];
 			dy    = [ev deltaY];
@@ -599,10 +617,10 @@ void Window_ProcessEvents(float delta) {
 			Mouse_ScrollVWheel(steps);
 			break;
 
-		case  5: // NSMouseMoved
-		case  6: // NSLeftMouseDragged
-		case  7: // NSRightMouseDragged
-		case 27: // NSOtherMouseDragged
+		case _NSMouseMoved:
+		case _NSLeftMouseDragged:
+		case _NSRightMouseDragged:
+		case _NSOtherMouseDragged:
 			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
 
 			if (Input.RawMode) ProcessRawMouseMovement(ev);
@@ -676,7 +694,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setAllowedFileTypes:types];
-	if ([dlg runModal] != DIALOG_OK) return 0;
+	if ([dlg runModal] != _NSOKButton) return 0;
 
 	NSURL* file = [dlg URL];
     if (file) OpenSaveDoCallback(file, args->Callback);
@@ -688,11 +706,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setCanChooseFiles: YES];
-    if ([dlg runModalForTypes:types] != DIALOG_OK) return 0;
+    if ([dlg runModalForTypes:types] != _NSOKButton) return 0;
     // unfortunately below code doesn't work when linked against SDK < 10.6
     //   https://developer.apple.com/documentation/appkit/nssavepanel/1534419-allowedfiletypes
     // [dlg setAllowedFileTypes:types];
-    // if ([dlg runModal] != DIALOG_OK) return 0;
+    // if ([dlg runModal] != _NSOKButton) return 0;
     
     NSArray* files = [dlg URLs];
     if ([files count] < 1) return 0;
@@ -867,7 +885,7 @@ cc_bool GLContext_SwapBuffers(void) {
 }
 
 void GLContext_SetVSync(cc_bool vsync) {
-	int value = vsync ? 1 : 0;
+	GLinteger value = vsync ? 1 : 0;
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
