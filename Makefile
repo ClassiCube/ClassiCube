@@ -1,4 +1,4 @@
-.PHONY: clean run
+.PHONY: clean run dist
 
 
 ifeq ($(OS),Windows_NT)
@@ -174,5 +174,14 @@ run:
 else
 run:
 	@echo "NOTE: Skipping 'run' due to not being the only goal (all goals: $(MAKECMDGOALS))"
+endif
+
+# Compiles for platform and then packages a deployable folder
+ifeq ($(MAKECMDGOALS),dist)
+dist:
+	$(MAKE) $(PLAT) dist
+else
+dist:
+	@echo "NOTE: Skipping 'dist' due to not being the only goal (all goals: $(MAKECMDGOALS))"
 endif
 

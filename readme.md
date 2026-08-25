@@ -212,6 +212,10 @@ NOTE: If you are distributing a modified version, **please change the bundle ID 
     * `make web` - produces simple non-optimised output, easier to debug
     * `make web RELEASE=1` - produces optimised output, harder to debug
 
+You can also run `make web run` to compile the webclient and then serve it on a local web server using emscripten's `emrun`. [See here for details](doc/hosting-webclient.md#testing-the-webclient-locally)
+
+NOTE: On Windows, you will need to install GNU make (e.g. via `winget install ezwinports.make`), and then run `make web` from a shell where both make and emscripten are on the PATH (e.g. Git Bash)
+
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
 For details on how to integrate the webclient into a website, see [here](doc/hosting-webclient.md)
