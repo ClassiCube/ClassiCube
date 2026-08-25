@@ -23,7 +23,6 @@ jobs:
         shell: bash
         run: |
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
-
           COMMON_CFLAGS="-fno-stack-protector $LATEST_FLAG"
           COMMON_LDFLAGS="-s"
 

@@ -1,7 +1,8 @@
 TARGET_NAME	:= ClassiCube
-SOURCE_DIRS	:= src/android
+SOURCE_DIRS	:= src src/android third_party/bearssl
 BUILD_DIR	:= build/android
 
+APK_DIR		:= $(BUILD_DIR)/apk
 SIGNED_APK	:= cc-signed.apk
 UNSIGNED_APK:= cc-unsigned.apk
 
@@ -20,9 +21,8 @@ SDK_ROOT	?= /opt/android-sdk-linux/platforms/android-34
 #---------------------------------------------------------------------------------
 # Code generation
 #--------------------------------------------------------------------------------
-CFLAGS	:= -fPIC -fvisibility=hidden -funwind-tables \
-			-O2 -fno-stack-protector -fno-math-errno -fno-ident -Werror
-LDFLAGS	:= -fPIC -shared -rdynamic -s -Werror
+CFLAGS	:= -fPIC -O2 -fvisibility=hidden -funwind-tables -fno-math-errno -fno-ident -Werror
+LDFLAGS	:= -shared -rdynamic -s -Werror
 LIBS	:= -lGLESv2 -lEGL -lm -llog
 # TODO set no-stack-protector via extra cflags
 
@@ -100,7 +100,7 @@ include misc/makefiles/common_build.mk
 #---------------------------------------------------------------------------------
 # Java targets
 #---------------------------------------------------------------------------------
-OBJ_DIR		:= $(APK_DIR)/obj
+OBJ_DIR		:= $(BUILD_DIR)/obj
 JAVA_DIR	:= misc/android/app/src/main/java/com/classicube
 CLASSES_DEX	:= $(APK_DIR)/classes.dex
 
@@ -108,6 +108,9 @@ CLASSES_DEX	:= $(APK_DIR)/classes.dex
 $(CLASSES_DEX): $(OBJ_DIR)
 	javac $(JAVA_DIR)/*.java -d $(OBJ_DIR) -classpath $(SDK_ROOT)/android.jar --release 8
 	$(TOOLS_ROOT)/dx --dex --output=$@ $(OBJ_DIR)
+
+GEN_FILES += $(CLASSES_DEX)
+# TODO add java generated classes to GEN_FILES
 
 
 #---------------------------------------------------------------------------------
@@ -120,12 +123,14 @@ $(ARM_v5_DIR) $(ARM_32_DIR) $(ARM_64_DIR) $(X86_32_DIR) $(X86_64_DIR) $(OBJ_DIR)
 #---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
+GEN_FILES += $(SIGNED_APK) $(UNSIGNED_APK)
+
 MANIFEST := misc/android/app/src/main/AndroidManifest.xml
 RES_DIR	 := misc/android/app/src/main/res
 
 # create initial .apk with packaged version of resources, then add all required files
 # TODO just use package ??
-$(UNSIGNED_APK): $(ARM_v5_LIB) $(ARM_32_LIB) $(ARM_64_LIB) $(X86_32_LIB) $(X86_64_LIB)
+$(UNSIGNED_APK): $(CLASSES_DEX) $(ARM_v5_LIB) $(ARM_32_LIB) $(ARM_64_LIB) $(X86_32_LIB) $(X86_64_LIB)
 	$(TOOLS_ROOT)/aapt package -f -M $(MANIFEST) -S $(RES_DIR) -F $@ -I $(SDK_ROOT)/android.jar
 	$(TOOLS_ROOT)/aapt add -f $@ $^
 
@@ -144,7 +149,6 @@ $(SIGNED_APK): $(UNSIGNED_APK)
 # jarsigner -verbose
 # create aligned .apk file
 #$TOOLS_ROOT/zipalign -f 4 cc-signed.apk cc-final.apk
-#TODO add java files to GEN_FILES
 
 
 #---------------------------------------------------------------------------------

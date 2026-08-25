@@ -207,7 +207,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	GX2Texture* tex = Mem_TryAllocCleared(1, sizeof(GX2Texture));
 	if (!tex) return NULL;
 
-	// TODO handle out of memory better
+	// TODO handle out of memory better. and not linear?
 	int width = bmp->width, height = bmp->height;
 	tex->surface.width    = width;
 	tex->surface.height   = height;

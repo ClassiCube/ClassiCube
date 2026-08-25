@@ -47,7 +47,7 @@ $(EXE_OBJECTS): | $(BUILD_DIRS)
 
 # Auto creates directories for build files (.o and .d files)
 $(BUILD_DIRS):
-	mkdir -p $@
+	$(call MAKE_DIR,$@)
 
 
 #------------------------------------------------
