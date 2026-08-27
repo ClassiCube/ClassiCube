@@ -3,8 +3,8 @@ SOURCE_DIRS	:= src src/android third_party/bearssl
 BUILD_DIR	:= build/android
 
 APK_DIR		:= $(BUILD_DIR)/apk
-SIGNED_APK	:= cc-signed.apk
-UNSIGNED_APK:= cc-unsigned.apk
+SIGNED_APK	:= $(TARGET_NAME)-signed.apk
+UNSIGNED_APK:= $(TARGET_NAME)-unsigned.apk
 
 default: $(SIGNED_APK)
 
@@ -130,9 +130,10 @@ RES_DIR	 := misc/android/app/src/main/res
 
 # create initial .apk with packaged version of resources, then add all required files
 # TODO just use package ??
+# note: need to cd into APK_DIR so that files in apk/zip have expected path layout
 $(UNSIGNED_APK): $(CLASSES_DEX) $(ARM_v5_LIB) $(ARM_32_LIB) $(ARM_64_LIB) $(X86_32_LIB) $(X86_64_LIB)
 	$(TOOLS_ROOT)/aapt package -f -M $(MANIFEST) -S $(RES_DIR) -F $@ -I $(SDK_ROOT)/android.jar
-	$(TOOLS_ROOT)/aapt add -f $@ $^
+	cd $(APK_DIR) && $(TOOLS_ROOT)/aapt add -f ../../../$@ $(subst $(APK_DIR)/,,$^)
 
 # sign the apk with debug key (https://stackoverflow.com/questions/16711233/)
 # Note per https://developer.android.com/tools/zipalign

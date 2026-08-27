@@ -1,4 +1,4 @@
-name: Build latest (Android2)
+name: Build latest (Android)
 # trigger via either push to selected branches or on manual run
 on:
   push:
@@ -33,73 +33,17 @@ jobs:
       - name: Compile android builds
         shell: bash
         run: |
-          LIBS="-lGLESv2 -lEGL -lm -llog"
-          SRCS="src/*.c src/android/*.c third_party/bearssl/*.c"
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
-          COMMON_FLAGS="-O2 -s -fno-stack-protector -fno-math-errno -fno-ident -Werror"
-          DROID_FLAGS="-fPIC -shared -fvisibility=hidden -rdynamic -funwind-tables"
-          
-          ROOT_DIR=$PWD
-          NDK_ROOT="/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          TOOLS_ROOT=$ROOT_DIR/build-tools
-          SDK_ROOT="/opt/android-sdk-linux/platforms/android-34"
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          COMMON_CFLAGS="-fno-stack-protector $LATEST_FLAG"
 
-          $NDK_ROOT/armv7a-linux-androideabi19-clang $SRCS $COMMON_FLAGS $DROID_FLAGS -march=armv5 -rtlib=libgcc -L $ROOT_DIR/build-tools/runtime $LIBS $LATEST_FLAG -o cc-droid-arm_16
-          $NDK_ROOT/armv7a-linux-androideabi19-clang $SRCS $COMMON_FLAGS $DROID_FLAGS -mfpu=vfp3-d16 $LIBS $LATEST_FLAG -o cc-droid-arm_32
-          $NDK_ROOT/aarch64-linux-android21-clang $SRCS $COMMON_FLAGS $DROID_FLAGS $LIBS $LATEST_FLAG -o cc-droid-arm_64
-          $NDK_ROOT/i686-linux-android21-clang $SRCS $COMMON_FLAGS $DROID_FLAGS $LIBS $LATEST_FLAG -o cc-droid-x86_32
-          $NDK_ROOT/x86_64-linux-android21-clang $SRCS $COMMON_FLAGS $DROID_FLAGS $LIBS $LATEST_FLAG -o cc-droid-x86_64
-          
-          cd $ROOT_DIR/misc/android/app/src/main
-          # copy required native libraries
-          mkdir lib lib/armeabi lib/armeabi-v7a lib/arm64-v8a lib/x86 lib/x86_64
-          cp $ROOT_DIR/cc-droid-arm_16 lib/armeabi/libclassicube.so
-          cp $ROOT_DIR/cc-droid-arm_32 lib/armeabi-v7a/libclassicube.so
-          cp $ROOT_DIR/cc-droid-arm_64 lib/arm64-v8a/libclassicube.so
-          cp $ROOT_DIR/cc-droid-x86_32 lib/x86/libclassicube.so
-          cp $ROOT_DIR/cc-droid-x86_64 lib/x86_64/libclassicube.so
-          
-          # The following commands are for manually building an .apk, see
-          #  https://spin.atomicobject.com/2011/08/22/building-android-application-bundles-apks-by-hand/
-          #  https://github.com/cnlohr/rawdrawandroid/blob/master/Makefile
-          #  https://stackoverflow.com/questions/41132753/how-can-i-build-an-android-apk-without-gradle-on-the-command-line
-          #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/Makefile
-          #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/CMakeLists.txt
-          
-          # compile java files into multiple .class files
-          cd $ROOT_DIR/misc/android/app/src/main/java/com/classicube
-          javac *.java -d $ROOT_DIR/misc/android/app/src/main/obj -classpath $SDK_ROOT/android.jar --release 8
-          
-          cd $ROOT_DIR/misc/android/app/src/main
-          # get debug signing key
           echo -n "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > debug.keystore
-          
-          # compile the multiple .class files into one .dex file
-          $TOOLS_ROOT/dx --dex --output=classes.dex ./obj
-          # create initial .apk with packaged version of resources
-          $TOOLS_ROOT/aapt package -f -M AndroidManifest.xml -S res -F cc-unsigned.apk -I $SDK_ROOT/android.jar
-          # and add all the required files
-          $TOOLS_ROOT/aapt add -f cc-unsigned.apk classes.dex lib/armeabi/libclassicube.so lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
-          
-          # sign the apk with debug key (https://stackoverflow.com/questions/16711233/)
-          # Note per https://developer.android.com/tools/zipalign
-          # - if using apksigner, zipalign must be called before apksigner
-          # - if using jarsigner, zipalign must be called after jarsigner
-          $TOOLS_ROOT/zipalign -f 4 cc-unsigned.apk cc-signed.apk
-          $TOOLS_ROOT/apksigner sign --ks debug.keystore --ks-pass pass:android cc-signed.apk
-          cp cc-signed.apk $ROOT_DIR/src/cc.apk
 
-          # old v1 only version (doesn't work properly now)
-          #cp cc-unsigned.apk cc-signed.apk
-          #jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore debug.keystore -storepass android -keypass android cc-signed.apk androiddebugkey
-          # jarsigner -verbose
-          # create aligned .apk file
-          #$TOOLS_ROOT/zipalign -f 4 cc-signed.apk $ROOT_DIR/src/cc.apk
+          make android EXTRA_CFLAGS="$COMMON_CFLAGS"
           
           
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'src/cc.apk'
+          SOURCE_FILE: 'ClassiCube-signed.apk'
           DEST_NAME: 'cc.apk'
           
           

@@ -9,24 +9,26 @@ TARGET 			= ClassiCube
 # List of directories containing source code
 SOURCE_DIRS		= src src/ios third_party/bearssl
 
-# CPU architecture names
-ifdef IOS_SIM
-	ARCH_32	:= i386
-	ARCH_64	:= x86_64
-	SDK_TYPE:= iPhoneSimulator
-else
-	ARCH_32	:= armv7
-	ARCH_64	:= arm64
-	SDK_TYPE:= iPhoneOS
-endif
-FULL_TARGET	:= $(TARGET)-$(SDK_TYPE)
-
 # override if need a specific xcode version
 XCODE_APP		?= Xcode.app
 # override to change iOS SDK version used to compile
 IOS_SDK_VERSION	?= 12.1
 # override to change minimum iOS runtime/deployment version
 IOS_MIN_VERSION ?= 6.0
+
+# CPU architecture names
+ifdef IOS_SIM
+	ARCH_32	:= i386
+	ARCH_64	:= x86_64
+	SDK_TYPE:= iPhoneSimulator
+	MIN_FLAG:= -miphonesimulator-version-min=$(IOS_MIN_VERSION)
+else
+	ARCH_32	:= armv7
+	ARCH_64	:= arm64
+	SDK_TYPE:= iPhoneOS
+	MIN_FLAG:= -miphoneos-version-min=$(IOS_MIN_VERSION)
+endif
+FULL_TARGET	:= $(TARGET)-$(SDK_TYPE)
 
 
 #---------------------------------------------------------------------------------
@@ -61,10 +63,10 @@ C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS_32	:= $(addprefix $(BUILD_DIR_32)/, $(notdir $(C_FILES:%.c=%.o) $(M_FILES:%.m=%.o)))
 OBJS_64	:= $(addprefix $(BUILD_DIR_64)/, $(notdir $(C_FILES:%.c=%.o) $(M_FILES:%.m=%.o)))
 
-CFLAGS  := -g -Os -fno-math-errno -fvisibility=hidden -fno-common -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Wunreachable-code -Wno-missing-braces -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wuninitialized -Wconditional-uninitialized -Wno-shadow -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wno-float-conversion -Wobjc-literal-conversion -Wshorten-64-to-32 -Wpointer-sign -isysroot $(IOS_SDK_PATH) -fstrict-aliasing -miphoneos-version-min=$(IOS_MIN_VERSION) -Wno-sign-conversion -Wcomma -Wstrict-prototypes
+CFLAGS  := -g -Os -fno-math-errno -fvisibility=hidden -fno-common -isysroot $(IOS_SDK_PATH) -fstrict-aliasing $(MIN_FLAG) -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Wunreachable-code -Wno-missing-braces -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wuninitialized -Wconditional-uninitialized -Wno-shadow -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wno-float-conversion -Wobjc-literal-conversion -Wshorten-64-to-32 -Wpointer-sign -Wno-sign-conversion -Wcomma -Wstrict-prototypes
 MFLAGS  := $(CFLAGS)
 
-LDFLAGS  := -isysroot $(IOS_SDK_PATH) -Xlinker -rpath -Xlinker @executable_path/Frameworks -miphoneos-version-min=$(IOS_MIN_VERSION)
+LDFLAGS  := -isysroot $(IOS_SDK_PATH) -Xlinker -rpath -Xlinker @executable_path/Frameworks $(MIN_FLAG) -dead_strip
 LIBS 	 := -framework Foundation -framework CoreFoundation -framework CoreGraphics -framework OpenGLES -framework UIKit -framework Security -framework CoreText -framework QuartzCore -lobjc
 
 # Dependency tracking
@@ -93,12 +95,10 @@ $(BUILD_DIR_APP):
 # executable generation
 #---------------------------------------------------------------------------------
 $(BUILD_DIR_32)/$(TARGET): $(OBJS_32)
-	export IPHONEOS_DEPLOYMENT_TARGET=$(IOS_MIN_VERSION)
-	$(LD) $^ -arch $(ARCH_32) $(LDFLAGS) $(LIBS) -dead_strip -o $@
+	$(LD) $^ -arch $(ARCH_32) $(LDFLAGS) $(LIBS) -o $@
 
 $(BUILD_DIR_64)/$(TARGET): $(OBJS_64)
-	export IPHONEOS_DEPLOYMENT_TARGET=$(IOS_MIN_VERSION)
-	$(LD) $^ -arch $(ARCH_64) $(LDFLAGS) $(LIBS) -dead_strip -o $@
+	$(LD) $^ -arch $(ARCH_64) $(LDFLAGS) $(LIBS) -o $@
 
 
 $(BUILD_DIR_APP)/$(TARGET): $(BUILD_DIR_32)/$(TARGET) $(BUILD_DIR_64)/$(TARGET)
