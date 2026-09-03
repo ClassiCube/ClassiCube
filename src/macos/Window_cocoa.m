@@ -35,6 +35,9 @@
 // NOTE: Only defined since macOS 10.9 SDK
 #define _NSWindowOcclusionStateVisible (1 << 1)
 
+// NOTE: Only defined since macOS 10.7 SDK
+#define _NSFullScreenWindowMask (1 << 14)
+
 static int windowX, windowY;
 static NSApplication* appHandle;
 static NSWindow* winHandle;
@@ -432,8 +435,6 @@ void Window_SetTitle(const cc_string* title) {
 	[winHandle setTitle:str];
 }
 
-// NOTE: Only defined since macOS 10.7 SDK
-#define _NSFullScreenWindowMask (1 << 14)
 int Window_GetWindowState(void) {
 	int flags;
 
@@ -453,8 +454,10 @@ int Window_IsObscured(void) {
         return [winHandle isMiniaturized];
     
     // covers both minimised and hidden behind another window
-    int flags = (int)[winHandle occlusionState];
+    cc_uintptr flags = (cc_uintptr)[winHandle performSelector:@selector(occlusionState)];
     return !(flags & _NSWindowOcclusionStateVisible);
+    //int flags = (int)[winHandle occlusionState];
+    //return !(flags & _NSWindowOcclusionStateVisible);
 }
 
 void Window_Show(void) { 
@@ -831,7 +834,7 @@ static NSOpenGLPixelFormat* InitPixelFormat(cc_bool fullscreen) {
 		NSOpenGLPFADepthSize,    24,
 		NSOpenGLPFADoubleBuffer,
 		fullscreen ? NSOpenGLPFAFullScreen : 0,
-		// TODO do we have to mask to main display? or can we just use -1 for all displays?
+		// TODO: do we have to mask to main display? or can we just use -1 for all displays?
 		NSOpenGLPFAScreenMask,   CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()),
 		0
 	};
@@ -927,7 +930,7 @@ void GLContext_GetApiInfo(cc_string* info) {
 		} else if (CGLDescribeRenderer(rend, i, _kCGLRPVideoMemory, &vram) == 0) {
 			vram /= (1024 * 1024); // TODO: use float instead?
 		} else {
-			vram = -1; // TODO show a better error?
+			vram = -1; // TODO: show a better error?
 		}
 		
 		if (mode && acc) {
@@ -943,7 +946,8 @@ void GLContext_GetApiInfo(cc_string* info) {
 
 cc_result Window_EnterFullscreen(void) {
 	if (SupportsModernFullscreen()) {
-		[winHandle toggleFullScreen:appHandle];
+		//[winHandle toggleFullScreen:appHandle];
+        [winHandle performSelector:@selector(toggleFullScreen:) withObject:appHandle];
 		return 0;
 	}
 
@@ -981,7 +985,8 @@ cc_result Window_EnterFullscreen(void) {
 
 cc_result Window_ExitFullscreen(void) {
 	if (SupportsModernFullscreen()) {
-		[winHandle toggleFullScreen:appHandle];
+		//[winHandle toggleFullScreen:appHandle];
+        [winHandle performSelector:@selector(toggleFullScreen:) withObject:appHandle];
 		return 0;
 	}
 

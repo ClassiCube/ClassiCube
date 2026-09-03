@@ -46,7 +46,7 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	String_Format3(str, "r9 =%x r10=%x r11=%x" _NL, RNUM(9),  RNUM(10), RNUM(11));
 	String_Format3(str, "r12=%x sp =%x lr =%x" _NL, RNUM(12), RREG(sp), RREG(lr));
 	String_Format1(str, "pc =%x"               _NL, RREG(pc));
-#elif defined __ppc__
+#elif defined __ppc__ || defined __ppc64__
 	#define RREG(reg) &r->__ss.__##reg
 	#define RNUM(reg) &r->__ss.__r##reg
 
@@ -82,7 +82,7 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	String_Format3(str, "r8 =%x r9 =%x r10=%x" _NL, RREG(r8),  RREG(r9),  RREG(r10));
 	String_Format3(str, "r11=%x r12=%x r13=%x" _NL, RREG(r11), RREG(r12), RREG(r13));
 	String_Format2(str, "r14=%x r15=%x" _NL,        RREG(r14), RREG(r15));
-#elif defined __ppc__
+#elif defined __ppc__ || defined __ppc64__
 	#define RREG(reg) &r->ss.reg
 	#define RNUM(reg) &r->ss.r##reg
 
