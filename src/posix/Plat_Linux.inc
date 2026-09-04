@@ -102,7 +102,7 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 #elif defined __mips__
 	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 	#define RREG(reg) &r->reg
-	#define RNUM(reg) &r->greps[reg]
+	#define RNUM(reg) &r->gregs[reg]
 
 	String_Format4(str, "r1 =%x r2 =%x r3 =%x r4 =%x" _NL, RNUM(1),  RNUM(2),  RNUM(3),  RNUM(4));
 	String_Format4(str, "r5 =%x r6 =%x r7 =%x r8 =%x" _NL, RNUM(5),  RNUM(6),  RNUM(7),  RNUM(8));
@@ -112,7 +112,7 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	String_Format4(str, "r21=%x r22=%x r23=%x r24=%x" _NL, RNUM(21), RNUM(22), RNUM(23), RNUM(24));
 	String_Format4(str, "r25=%x r26=%x r27=%x r28=%x" _NL, RNUM(25), RNUM(26), RNUM(27), RNUM(28));
 	String_Format4(str, "sp =%x fp =%x ra =%x pc =%x" _NL, RNUM(29), RNUM(30), RNUM(31), RREG(pc));
-	String_Format3(str, "lo =%x hi =%x" _NL,               &r->mdlo, &r->mdhi);
+	String_Format2(str, "lo =%x hi =%x" _NL,               &r->mdlo, &r->mdhi);
 #elif defined __riscv
 	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 	#define RREG(reg) &r->__gregs[REG_##reg]

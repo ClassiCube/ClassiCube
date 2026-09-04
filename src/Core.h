@@ -143,6 +143,7 @@ typedef cc_uint8  cc_bool;
 #define CC_WIN_BACKEND_WIN32    5
 #define CC_WIN_BACKEND_COCOA    6
 #define CC_WIN_BACKEND_BEOS     7
+#define CC_WIN_BACKEND_FBDEV    8
 #define CC_WIN_BACKEND_WIN32CE  9
 
 #define CC_GFX_BACKEND_SOFTGPU   1
@@ -309,6 +310,22 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
+#elif defined PLAT_SNOWSKY
+	/* Snowsky Echo Disc (FiiO) - Ingenic X2000, raw Linux framebuffer + evdev input.
+	   Offline single-player build: no freetype (bitmap font from the texture pack), no
+	   resource downloader (assets are pre-staged), no networking. Software rendering. */
+	#define CC_BUILD_LINUX
+	#define CC_BUILD_POSIX
+	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_PLUGINS
+	/* Networking stays compiled (Platform_Posix's socket layer needs it), but with no SSL
+	   so nothing external is required; the PoC is offline single-player regardless. */
+	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
+	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_NONE
+	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_FBDEV
 #elif defined __linux__
 	#define CC_BUILD_LINUX
 	#define CC_BUILD_POSIX
