@@ -519,9 +519,8 @@ void Socket_Close(cc_socket s) {
 	closesocket(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
-	int res = connect(s, raw_addr, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (SOCKADDR*)addr, addrSize);
 	return res == SOCKET_ERROR ? WSAGetLastError() : 0;
 }
 

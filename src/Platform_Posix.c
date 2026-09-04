@@ -814,10 +814,8 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = connect(s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (struct sockaddr*)addr, addrSize);
 	return res == -1 ? errno : 0;
 }
 
@@ -1286,8 +1284,8 @@ const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 void* DynamicLib_Load2(const cc_string* path) {
 	cc_filepath str;
 	Platform_EncodePath(&str, path);
-	return NSAddImage(str.buffer, NSADDIMAGE_OPTION_WITH_SEARCHING |
-								NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+	return (void*)NSAddImage(str.buffer, NSADDIMAGE_OPTION_WITH_SEARCHING |
+										NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {

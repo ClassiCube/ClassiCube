@@ -182,10 +182,8 @@ void Socket_Close(cc_socket s) {
 	net_close(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = net_connect(s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = net_connect(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? res : 0;
 }
 

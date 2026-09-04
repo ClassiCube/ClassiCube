@@ -143,6 +143,7 @@ typedef cc_uint8  cc_bool;
 #define CC_WIN_BACKEND_WIN32    5
 #define CC_WIN_BACKEND_COCOA    6
 #define CC_WIN_BACKEND_BEOS     7
+#define CC_WIN_BACKEND_WAYLAND  8
 #define CC_WIN_BACKEND_WIN32CE  9
 
 #define CC_GFX_BACKEND_SOFTGPU   1

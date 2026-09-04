@@ -429,10 +429,8 @@ void Socket_Close(cc_socket s) {
 	RPLWRAP(socketclose)(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-
-	int res = RPLWRAP(connect)(s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = RPLWRAP(connect)(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? Socket_LastError() : 0;
 }
 

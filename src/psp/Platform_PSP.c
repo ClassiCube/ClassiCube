@@ -384,10 +384,8 @@ void Socket_Close(cc_socket s) {
 	sceNetInetClose(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = sceNetInetConnect(s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = sceNetInetConnect(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? sceNetInetGetErrno() : 0;
 }
 

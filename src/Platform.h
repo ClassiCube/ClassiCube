@@ -389,7 +389,7 @@ cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking);
 void Socket_Close(cc_socket s);
 
 /* Begins connecting to the given address */
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize);
 /* Attempts to read data from the given socket */
 /* NOTE: A closed socket may set modified to 0, but still return 'success' (i.e. 0) */
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);

@@ -512,7 +512,7 @@ cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
 
 void Socket_Close(cc_socket s) { }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
 	return ERR_NOT_SUPPORTED;
 }
 

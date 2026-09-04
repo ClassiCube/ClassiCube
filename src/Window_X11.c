@@ -492,7 +492,7 @@ void Clipboard_GetText(cc_string* value) {
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
 	for (i = 0; i < 100; i++) {
-		Window_ProcessEvents(0.0);
+		Window_ProcessEvents(0.0f);
 		if (clipboard_paste_received) {
 			String_AppendString(value, &clipboard_paste_text);
 			return;
@@ -574,7 +574,7 @@ void Window_Show(void) {
 void Window_SetSize(int width, int height) {
 	Window win = Window_Main.Handle.val;
 	XResizeWindow(win_display, win, width, height);
-	Window_ProcessEvents(0.0);
+	Window_ProcessEvents(0.0f);
 }
 
 void Window_RequestClose(void) {
@@ -632,7 +632,7 @@ static int TryGetKey(XKeyEvent* ev) {
 
 	Platform_Log3("Unknown key %i (%x, %x)", &ev->keycode, &keysym1, &keysym2);
 	/* The user may be using a keyboard layout such as cryllic - */
-	/*   fallback to trying to conver the raw scancodes instead */
+	/*   fallback to trying to convert the raw scancodes instead */
 	return MapNativeKeycode(ev->keycode);
 }
 

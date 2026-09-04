@@ -445,10 +445,8 @@ void Socket_Close(cc_socket s) {
 	netClose(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = netConnect(s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = netConnect(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? net_errno : 0;
 }
 

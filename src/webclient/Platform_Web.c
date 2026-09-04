@@ -278,10 +278,10 @@ void Socket_Close(cc_socket s) {
 }
 
 extern int interop_SocketConnect(int sock, const cc_uint8* host, int port);
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
 	/* size is used to store port number instead */
 	/* returned result is negative for error */
-	int res = -interop_SocketConnect(s, addr->data, addr->size);
+	int res = -interop_SocketConnect(s, addr, addrSize);
 
 	/* error returned when invalid address provided */
 	if (res == _EHOSTUNREACH) return ERR_INVALID_ARGUMENT;

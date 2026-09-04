@@ -700,10 +700,8 @@ void Socket_Close(cc_socket s) {
 	_closesocket(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
-
-	int res = _connect(s, raw_addr, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = _connect(s, (SOCKADDR*)addr, addrSize);
 	return res == -1 ? _WSAGetLastError() : 0;
 }
 

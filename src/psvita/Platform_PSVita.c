@@ -365,11 +365,8 @@ void Socket_Close(cc_socket s) {
 	sceNetSocketClose(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
-	
-	int res = sceNetConnect(s, raw, addr->size);
-	return res;
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	return sceNetConnect(s, (struct SceNetSockaddr*)addr, addrSize);
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {

@@ -587,10 +587,8 @@ void Socket_Close(cc_socket s) {
 	lwip_close(s);
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-
-	int res = lwip_connect(s, raw, addr->size);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = lwip_connect(s, (struct sockaddr*)addr, addrSize);
 	return res == -1 ? GetSocketError(s) : 0;
 }
 

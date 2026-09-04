@@ -226,7 +226,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 		String_InitArray(addrStr, addrBuf);
 		if (SockAddr_ToString(&addrs[i], &addrStr)) Platform_Log1("  Connecting to %s..", &addrStr);
 
-		res = Socket_Connect(conn->socket, &addrs[i]);
+		res = Socket_Connect(conn->socket, addrs[i].data, addrs[i].size);
 		if (res) { HttpConnection_Close(conn); continue; }
 
 		break; /* Successful connection */
