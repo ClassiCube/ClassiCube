@@ -115,6 +115,20 @@ int main(int argc, char** argv) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------------Misc-----------------------------------------------------------*
+*#########################################################################################################################*/
+/* although it'd be better to use linux O_CLOEXEC and SOCK_CLOEXEC, */
+/*  this approach works good enough for our purposes */
+static void SetCloseOnExec(int fd) {
+#ifdef FD_CLOEXEC
+	int flags = fcntl(fd, F_GETFD, 0);
+	if (flags == -1) return;
+
+	fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+#endif
+}
+
+/*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_ANDROID
@@ -372,8 +386,11 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result File_Do(cc_file* file, const char* path, int mode) {
-	*file = open(path, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	return *file == -1 ? errno : 0;
+	int fd = open(path, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	if (fd != -1) SetCloseOnExec(fd);
+
+	*file = fd;
+	return fd == -1 ? errno : 0;
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
@@ -784,10 +801,11 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
+	int fd = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	if (fd != -1) SetCloseOnExec(fd);
 
-	return 0;
+	*s = fd; 
+	return fd == -1 ? errno : 0;
 }
 
 #ifdef CC_BUILD_HPUX

@@ -349,7 +349,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
 
-	*s = sceNetSocket("CC socket", raw->sa_family, SCE_NET_SOCK_STREAM, SCE_NET_IPPROTO_TCP);
+	*s = sceNetSocket("CC socket", raw->sa_family, SCE_NET_SOCK_STREAM, 0);
 	if (*s < 0) return *s;
 
 	return 0;

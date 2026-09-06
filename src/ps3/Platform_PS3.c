@@ -428,7 +428,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = netSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	*s = netSocket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return net_errno;
 
 	return 0;

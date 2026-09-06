@@ -39,7 +39,7 @@ jobs:
           make darwin clean
           make darwin RELEASE=1 TARGET=cc-mac32-gl2-x86 CC=i386-apple-darwin8-clang \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2" \
-                EXTRA_LDFLAGS="$COMMON_LDFLAGS"
+                EXTRA_LDFLAGS="$COMMON_LDFLAGS" LDFLAGS=""
 
       - name: Compile 32 bit macOS builds (PowerPC)
         shell: bash

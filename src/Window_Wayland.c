@@ -57,6 +57,55 @@ static void wl_socket_close(void) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Wayland message-----------------------------------------------------*
+*#########################################################################################################################*/
+enum wl_field_type {
+	WL_FIELD_INT32,
+	WL_FIELD_STRING,
+	WL_FIELD_END = 0x574C4E44,
+};
+
+typedef struct wl_field {
+	enum wl_field_type type;
+
+	union {
+		int32_t   int_val;
+		int32_t   obj_id;
+		cc_string str_val;
+	};
+} wl_field;
+
+#define WL_MSG_HDR_SIZE    8 // 4 bytes for object ID, 4 bytes for opcode + size
+#define WL_MSG_SIZE_SHIFT 16
+struct wl_message {
+	uint32_t obj_id;
+	uint32_t opcode_size;
+	char data[0x10000 - WL_MSG_HDR_SIZE]; 
+}
+
+static int wl_msg_calc_data_size(wl_field* fields) {
+	int size = 0;
+	while (fields->type != WL_FIELD_END) {
+		fields++;
+	}
+	return 0;
+}
+
+// TODO async..
+static void wl_msg_send(int32_t senderObj, int32_t opcode, wl_field* fields) {
+	struct wl_message msg;
+	msg.obj_id      = senderObj;
+	msg.opcode_size = opcode;
+
+	int size = wl_msg_calc_data_size(fields);
+	if (size > sizeof(msg.data)) Process_Abort("wayland message too large");
+
+	size += WL_MSG_HDR_SIZE;
+	msg.opcode_size |= size << WL_MSG_SIZE_SHIFT;
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 void Window_PreInit(void) { 

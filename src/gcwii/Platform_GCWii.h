@@ -166,7 +166,7 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
-	*s = net_socket(raw->sa_family, SOCK_STREAM, IPPROTO_IP);
+	*s = net_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
 
 	return 0;
