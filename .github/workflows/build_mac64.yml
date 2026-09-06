@@ -44,8 +44,8 @@ jobs:
       - name: Generate combined Intel + ARM64 build
         shell: bash
         run: |
+          lipo -create -output cc-mac64-gl1 cc-mac64-gl1-x64 cc-mac64-gl2-arm64
           lipo -create -output cc-mac64-gl2 cc-mac64-gl2-x64 cc-mac64-gl2-arm64
-          cp cc-mac64-gl1-x64 cc-mac64-gl1         
    
       - uses: ./.github/actions/upload_build
         with:
@@ -56,11 +56,6 @@ jobs:
         with:
           SOURCE_FILE: 'cc-mac64-gl2'
           DEST_NAME: 'ClassiCube-mac64-ModernGL'
-          
-      - uses: ./.github/actions/upload_build
-        with:
-          SOURCE_FILE: 'cc-mac64-gl2-arm64'
-          DEST_NAME: 'ClassiCube-mac-ARM64'
           
           
       - uses: ./.github/actions/notify_success
