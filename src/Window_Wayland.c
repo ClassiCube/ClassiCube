@@ -1,6 +1,9 @@
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_WAYLAND
 
+// https://gaultier.github.io/blog/wayland_from_scratch.html
+// https://wayland.freedesktop.org/docs/book/Protocol.html#wire-format
+
 #define CC_BUILD_EGL
 #include "_WindowBase.h"
 #include "String_.h"
@@ -55,25 +58,48 @@ static void wl_socket_close(void) {
 	Socket_Close(wl_fd);
 }
 
+// TODO async..
+static void wl_socket_send(const void* ptr, int size) {
+	while (size) {
+		cc_uint32 sent = 0;
+		cc_result res  = Socket_Write(wl_fd, ptr, size, &sent);
+
+		if (res) Process_Abort2(res, "writing wayland socket");
+		ptr += sent; size -= sent;
+	}
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Wayland message-----------------------------------------------------*
 *#########################################################################################################################*/
 enum wl_field_type {
-	WL_FIELD_INT32,
-	WL_FIELD_STRING,
-	WL_FIELD_END = 0x574C4E44,
+	WL_TYPE_INT32,
+	WL_TYPE_STRING,
+	WL_TYPE_ARRAY,
+	WL_TYPE_END = 0x574C4E44,
 };
+
+typedef struct wl_string { int32_t size; char* ptr; } wl_string;
+typedef struct wl_array  { int32_t size; void* ptr; } wl_array;
+typedef int32_t wl_obj_id;
 
 typedef struct wl_field {
 	enum wl_field_type type;
 
 	union {
 		int32_t   int_val;
-		int32_t   obj_id;
-		cc_string str_val;
+		wl_string str_val;
+		wl_array  arr_val;
 	};
 } wl_field;
+
+#define WL_FIELD_END           { WL_TYPE_END }
+#define WL_FIELD_INT(value)    { WL_TYPE_INT32,  .int_val = (value) }
+#define WL_FIELD_STR(ptr, len) { WL_TYPE_STRING, .str_val.size = len,             .str_val.ptr = ptr }
+#define WL_FIELD_CONST(str)    { WL_TYPE_STRING, .str_val.size = sizeof(str) - 1, .str_val.ptr = str }
+#define WL_FIELD_ARR(ptr, len) { WL_TYPE_ARRAY,  .arr_val.size = len,             .arr_val.ptr = ptr }
+
 
 #define WL_MSG_HDR_SIZE    8 // 4 bytes for object ID, 4 bytes for opcode + size
 #define WL_MSG_SIZE_SHIFT 16
@@ -81,17 +107,50 @@ struct wl_message {
 	uint32_t obj_id;
 	uint32_t opcode_size;
 	char data[0x10000 - WL_MSG_HDR_SIZE]; 
-}
+};
 
 static int wl_msg_calc_data_size(wl_field* fields) {
+	wl_field* f = fields;
 	int size = 0;
-	while (fields->type != WL_FIELD_END) {
-		fields++;
+
+	while (f->type != WL_TYPE_END) 
+	{
+		switch (f->type) {
+			case WL_TYPE_INT32:  
+				size += 4; break;
+			case WL_TYPE_STRING: 
+				size += 4 + f->str_val.size; break;
+			case WL_TYPE_ARRAY:  
+				size += 4 + f->arr_val.size; break;
+		}
+		f++;
 	}
-	return 0;
+	return size;
 }
 
-// TODO async..
+#define COPY_BYTES(dst, src, size) memcpy(dst, src, size); dst += ((size) + 3) & ~0x03;
+static void wl_msg_write_data(wl_field* fields, char* dst) {
+	wl_field* f = fields;
+
+	while (f->type != WL_TYPE_END) 
+	{
+		switch (f->type) {
+			case WL_TYPE_INT32:
+				COPY_BYTES(dst, &f->int_val, sizeof(int32_t));
+				break;
+			case WL_TYPE_STRING: 
+				COPY_BYTES(dst, &f->str_val.size, sizeof(int32_t));
+				COPY_BYTES(dst,  f->str_val.ptr, f->arr_val.size);
+				break;
+			case WL_TYPE_ARRAY:  
+				COPY_BYTES(dst, &f->arr_val.size, sizeof(int32_t));
+				COPY_BYTES(dst,  f->arr_val.ptr, f->arr_val.size);
+				break;
+		}
+		f++;
+	}
+}
+
 static void wl_msg_send(int32_t senderObj, int32_t opcode, wl_field* fields) {
 	struct wl_message msg;
 	msg.obj_id      = senderObj;
@@ -102,6 +161,57 @@ static void wl_msg_send(int32_t senderObj, int32_t opcode, wl_field* fields) {
 
 	size += WL_MSG_HDR_SIZE;
 	msg.opcode_size |= size << WL_MSG_SIZE_SHIFT;
+	wl_msg_write_data(fields, msg.data);
+
+	wl_socket_send(&msg, size);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------Wayland event processing-------------------------------------------------*
+*#########################################################################################################################*/
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Wayland objects-----------------------------------------------------*
+*#########################################################################################################################*/
+#define WL_DISPLAY_OBJ_ID 1 // 1 is reserved for wl_display singleton
+
+static wl_obj_id wl_current_obj_id = WL_DISPLAY_OBJ_ID;
+static wl_obj_id wl_allocate_obj_id(void) { return ++wl_current_obj_id; }
+
+
+// === WAYLAND DISPLAY OBJECT ===
+static wl_obj_id wl_display_obj_id = WL_DISPLAY_OBJ_ID;
+
+#define WL_DISPLAY_REQ_SYNC         0
+#define WL_DISPLAY_REQ_GET_REGISTRY 1
+
+#define WL_DISPLAY_EVT_ERROR        0
+#define WL_DISPLAY_EVT_DELETE_ID    1
+
+static wl_obj_id wl_display_send_sync(void) {
+	wl_obj_id callbackID = wl_allocate_obj_id();
+
+	wl_field fields[] = {
+		WL_FIELD_INT(callbackID),
+		WL_FIELD_END,
+	};
+
+	wl_msg_send(wl_display_obj_id, WL_DISPLAY_REQ_SYNC, fields);
+	return callbackID;
+}
+
+static wl_obj_id wl_display_send_get_registry(void) {
+	wl_obj_id registryID = wl_allocate_obj_id();
+
+	wl_field fields[] = {
+		WL_FIELD_INT(registryID),
+		WL_FIELD_END,
+	};
+	
+	wl_msg_send(wl_display_obj_id, WL_DISPLAY_REQ_GET_REGISTRY, fields);
+	return registryID;
 }
 
 
@@ -217,9 +327,22 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 *-----------------------------------------------------X11 message box-----------------------------------------------------*
 *#########################################################################################################################*/
 static void ShowDialogCore(const char* title, const char* msg) {
-	// TODO
 	Platform_LogConst(title);
 	Platform_LogConst(msg);
+
+	cc_string args; char argsBuffer[1024];
+	String_InitArray_NT(args, argsBuffer);
+	String_Format2(&args, "zenity --info --title=\"%c\" --text=\"%c\"", title, msg);
+	args.buffer[args.length] = '\0';
+
+	/* TODO this doesn't detect when Zenity doesn't exist */
+	FILE* fp = popen(argsBuffer, "r");
+	if (!fp) return;
+
+	/* result from zenity is normally just one string */
+	char result[64];
+	while (fgets(result, sizeof(result), fp)) { }
+	pclose(fp);
 }
 
 static cc_result OpenSaveFileDialog(const char* args, FileDialogCallback callback, const char* defaultExt) {

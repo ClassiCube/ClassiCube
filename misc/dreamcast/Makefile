@@ -54,7 +54,7 @@ $(TARGET)-scr.bin: $(TARGET).bin
 $(TARGET).iso: $(TARGET)-scr.bin
 	mkdir -p $(ISO_DIR)/audio $(ISO_DIR)/maps $(ISO_DIR)/texpacks $(ISO_DIR)/texturecache
 	cp $< $(ISO_DIR)/1ST_READ.BIN
-	cp misc/classicube.zip $(ISO_DIR)/texpacks/default.zip
+	cp misc/cc_textures.zip $(ISO_DIR)/texpacks/default.zip
 	cp misc/dreamcast/IP.BIN IP.BIN
 	mkisofs -G IP.BIN -C 0,11702 -J -l -r -quiet -o $@ $(ISO_DIR)
 # genisoimage -V ClassiCube -G IP.BIN -joliet -rock -l -o $@ $(ISO_DIR)

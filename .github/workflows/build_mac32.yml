@@ -55,7 +55,7 @@ jobs:
           make darwin clean
           make darwin RELEASE=1 TARGET=cc-mac32-gl1-ppc CC=powerpc-apple-darwin9-base-gcc \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -m32 -mmacosx-version-min=10.2.0" \
-                EXTRA_LDFLAGS="$COMMON_LDFLAGS" LDFLAGS=""
+                EXTRA_LDFLAGS="$COMMON_LDFLAGS -m32" LDFLAGS=""
 
       - name: Generate combined Intel + PowerPC build
         shell: bash
