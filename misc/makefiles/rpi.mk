@@ -1,6 +1,7 @@
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/rpi
 TARGET 		:= ClassiCube
+DIST_NAME	:= ClassiCube
 
 CFLAGS	:= -fvisibility=hidden -fno-ident -DCC_BUILD_RPI
 LDFLAGS	:= -rdynamic

@@ -1,6 +1,7 @@
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/netbsd
 TARGET 		:= ClassiCube
+DIST_NAME	:= ClassiCube
 
 CFLAGS	:= -I /usr/X11R7/include -I /usr/pkg/include -fvisibility=hidden -fno-ident
 LDFLAGS := -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic -Wl,-R/usr/X11R7/lib
