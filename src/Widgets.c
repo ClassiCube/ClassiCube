@@ -1887,7 +1887,14 @@ static void ChatInputWidget_OnPressedEnter(void* widget) {
 	/* Don't want trailing spaces in output message */
 	cc_string text = w->base.text;
 	String_UNSAFE_TrimEnd(&text);
-	if (text.length) { Chat_Send(&text, true); }
+
+	if (text.length) {
+		if (Gui.MessageChat || (!Gui.MessageChat && text.buffer[0] == '/')) {
+			Chat_Send(&text, true);
+		} else {
+			Chat_AddRaw("&cSending messages has been disabled in the settings.");
+		}
+	}
 
 	w->origStr.length = 0;
 	w->typingLogPos = Chat_InputLog.count; /* Index of newest entry + 1. */
