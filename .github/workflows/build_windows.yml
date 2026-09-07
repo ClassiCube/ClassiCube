@@ -36,7 +36,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -DCC_NOMAIN -fno-ident $LATEST_FLAG"
           COMMON_LDFLAGS="-nostartfiles -Wl,-e_main_real"
 
-          make windows RELEASE=1 TARGET=cc-w32-d3d9 CC=i686-w64-mingw32-gcc \
+          make windows dist RELEASE=1 TARGET=cc-w32-d3d9 CC=i686-w64-mingw32-gcc \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
@@ -76,6 +76,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-w9x-ogl.exe'
           DEST_NAME: 'ClassiCube-Win9x.exe'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-w32-d3d9.zip'
+          DEST_NAME: 'ClassiCube-win32-d3d9.zip'
           
           
       - uses: ./.github/actions/notify_success
@@ -113,7 +119,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -DCC_NOMAIN -fno-ident $LATEST_FLAG"
           COMMON_LDFLAGS="-nostartfiles -Wl,-emain_real"
 
-          make windows RELEASE=1 TARGET=cc-w64-d3d9 CC=x86_64-w64-mingw32-gcc \
+          make windows dist RELEASE=1 TARGET=cc-w64-d3d9 CC=x86_64-w64-mingw32-gcc \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
@@ -142,6 +148,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-w64-d3d11.exe'
           DEST_NAME: 'ClassiCube-Win64-Direct3D11.exe'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-w64-d3d9.zip'
+          DEST_NAME: 'ClassiCube-win64-d3d9.zip'
           
           
       - uses: ./.github/actions/notify_success

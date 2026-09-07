@@ -30,7 +30,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN $LATEST_FLAG"
           COMMON_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make windows RELEASE=1 TARGET=cc-arm32-d3d11 CC=armv7-w64-mingw32-gcc \
+          make windows dist RELEASE=1 TARGET=cc-arm32-d3d11 CC=armv7-w64-mingw32-gcc \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
@@ -38,6 +38,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-arm32-d3d11.exe'
           DEST_NAME: 'ClassiCube-arm32-Direct3D11.exe'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-arm32-d3d11.zip'
+          DEST_NAME: 'ClassiCube-winARM32.zip'
           
           
       - uses: ./.github/actions/notify_failure
@@ -63,7 +69,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -Wno-pragma-pack -DCC_NOMAIN $LATEST_FLAG"
           COMMON_LDFLAGS="-s -nostartfiles -Wl,-emain_real"
 
-          make windows RELEASE=1 TARGET=cc-arm64-d3d11 CC=aarch64-w64-mingw32-gcc \
+          make windows dist RELEASE=1 TARGET=cc-arm64-d3d11 CC=aarch64-w64-mingw32-gcc \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
@@ -71,7 +77,13 @@ jobs:
       - uses: ./.github/actions/upload_build
         with:
           SOURCE_FILE: 'cc-arm64-d3d11.exe'
-          DEST_NAME: 'ClassiCube-arm64-Direct3D11.exe'          
+          DEST_NAME: 'ClassiCube-arm64-Direct3D11.exe'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-arm64-d3d11.zip'
+          DEST_NAME: 'ClassiCube-winARM64.zip'        
           
 
       - uses: ./.github/actions/notify_failure
