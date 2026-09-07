@@ -105,6 +105,8 @@ struct EntityVTABLE {
 /* Whether in classic mode, to slightly adjust this entity downwards when rendering it */
 /*  to replicate the behaviour of the original vanilla classic client */
 #define ENTITY_FLAG_CLASSIC_ADJUST 0x04
+/* Forcibly enable face culling for rendering this entity if it represents a block model */
+#define ENTITY_FLAG_BLOCK_MODEL_FACE_CULLING 0x08
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 struct Entity {

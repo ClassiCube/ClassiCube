@@ -139,6 +139,9 @@ void Entity_SetModel(struct Entity* e, const cc_string* model) {
 
 	if (e->Flags & ENTITY_FLAG_HAS_MODELVB)
 		Gfx_DeleteDynamicVb(&e->ModelVB);
+
+	if (String_CaselessEqualsConst(&scale, "fc"))
+		e->Flags |= ENTITY_FLAG_BLOCK_MODEL_FACE_CULLING;
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {

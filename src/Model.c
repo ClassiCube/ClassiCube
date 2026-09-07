@@ -2218,7 +2218,7 @@ static void BlockModel_DrawParts(void) {
 }
 
 static void BlockModel_Draw(struct Entity* e) {
-	cc_bool sprite;
+	cc_bool sprite, faceCulling;
 	int i;
 
 	bModel_block = e->ModelBlock;
@@ -2235,9 +2235,10 @@ static void BlockModel_Draw(struct Entity* e) {
 	sprite = Blocks.Draw[bModel_block] == DRAW_SPRITE;
 	BlockModel_BuildParts(e, sprite);
 
-	if (sprite) Gfx_SetFaceCulling(true);
+	faceCulling = (sprite || (e->Flags & ENTITY_FLAG_BLOCK_MODEL_FACE_CULLING));
+	if (faceCulling) Gfx_SetFaceCulling(true);
 	BlockModel_DrawParts();
-	if (sprite) Gfx_SetFaceCulling(false);
+	if (faceCulling) Gfx_SetFaceCulling(false);
 }
 
 static struct Model block_model = { "block", NULL, &human_tex,
