@@ -45,7 +45,7 @@ jobs:
           COMMON_CFLAGS="-m32 -fno-stack-protector -fno-pie -fcf-protection=none -U_FORTIFY_SOURCE -DFORCE_OLD_CLOCKGETTIME_X86 $LATEST_FLAG"
           COMMON_LDFLAGS="-m32 -s -no-pie -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
-          make linux RELEASE=1 TARGET=cc-nix32-gl1 \
+          make linux dist RELEASE=1 TARGET=cc-nix32-gl1 \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
@@ -64,6 +64,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-nix32-gl2'
           DEST_NAME: 'ClassiCube-Linux32-ModernGL'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-nix32-gl1.tar.gz'
+          DEST_NAME: 'ClassiCube-linux32.tar.gz'
           
           
       - uses: ./.github/actions/notify_success
@@ -109,7 +115,7 @@ jobs:
           COMMON_CFLAGS="-m64 -fno-stack-protector -fno-pie -fcf-protection=none -U_FORTIFY_SOURCE $LATEST_FLAG"
           COMMON_LDFLAGS="-m64 -s -no-pie -L ./lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
-          make linux RELEASE=1 TARGET=cc-nix64-gl1 \
+          make linux dist RELEASE=1 TARGET=cc-nix64-gl1 \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
@@ -134,6 +140,12 @@ jobs:
 #        with:
 #          SOURCE_FILE: 'cc-sdl64-gl2'
 #          DEST_NAME: 'ClassiCube-Linux64-SDL2'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-nix64-gl1.tar.gz'
+          DEST_NAME: 'ClassiCube-linux64.tar.gz'
           
           
       - uses: ./.github/actions/notify_success

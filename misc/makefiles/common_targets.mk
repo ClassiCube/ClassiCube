@@ -54,10 +54,16 @@ endef
 define DIST_PKG_BUILD_TAR
 cd $(BUILD_ROOT)/dist && tar -zcvf $(1).tar.gz $(DIST_NAME)
 mv $(BUILD_ROOT)/dist/$(1).tar.gz $(1).tar.gz
+@echo "----------------------------------------------------"
+@echo "Successfully produced bundle: $(1).tar.gz"
+@echo "----------------------------------------------------"
 endef
 
 define DIST_PKG_BUILD_ZIP
 cd $(BUILD_ROOT)/dist && zip -r $(1).zip $(DIST_NAME)
 mv $(BUILD_ROOT)/dist/$(1).zip $(1).zip
+@echo "----------------------------------------------------"
+@echo "Successfully produced bundle: $(1).zip"
+@echo "----------------------------------------------------"
 endef
 

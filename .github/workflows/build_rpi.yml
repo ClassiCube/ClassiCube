@@ -36,7 +36,7 @@ jobs:
           COMMON_CFLAGS="-I rpi_files/include -fno-stack-protector $LATEST_FLAG"
           COMMON_LDFLAGS="-s -L rpi_files/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
-          make rpi RELEASE=1 TARGET=cc-rpi32 \
+          make rpi dist RELEASE=1 TARGET=cc-rpi32 \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
@@ -45,6 +45,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-rpi32'
           DEST_NAME: 'cc-rpi32'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-rpi32.tar.gz'
+          DEST_NAME: 'ClassiCube-rpi32.tar.gz'
           
           
       - uses: ./.github/actions/notify_success
@@ -84,7 +90,7 @@ jobs:
           COMMON_CFLAGS="-I rpi_files/include -fno-stack-protector $LATEST_FLAG"
           COMMON_LDFLAGS="-s -L rpi_files/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
-          make rpi RELEASE=1 TARGET=cc-rpi64 \
+          make rpi dist RELEASE=1 TARGET=cc-rpi64 \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
@@ -93,6 +99,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-rpi64'
           DEST_NAME: 'cc-rpi64'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-rpi64.tar.gz'
+          DEST_NAME: 'ClassiCube-rpi64.tar.gz'
           
           
       - uses: ./.github/actions/notify_success

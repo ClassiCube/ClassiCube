@@ -41,7 +41,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -fno-pie -fcf-protection=none $LATEST_FLAG"
           COMMON_LDFLAGS="-s -L freebsd64/lib"
 
-          make freebsd RELEASE=1 TARGET=cc-fbsd64-gl1 CC=x86_64-freebsd11-clang \
+          make freebsd dist RELEASE=1 TARGET=cc-fbsd64-gl1 CC=x86_64-freebsd11-clang \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 
@@ -54,7 +54,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector -fno-pie -fcf-protection=none $LATEST_FLAG"
           COMMON_LDFLAGS="-s -L freebsd32/lib"
 
-          make freebsd RELEASE=1 TARGET=cc-fbsd32-gl1 CC=i386-freebsd11-clang \
+          make freebsd dist RELEASE=1 TARGET=cc-fbsd32-gl1 CC=i386-freebsd11-clang \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
@@ -68,6 +68,17 @@ jobs:
         with:
           SOURCE_FILE: 'cc-fbsd64-gl1'
           DEST_NAME: 'ClassiCube-FreeBSD-64'
+
+
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-fbsd32-gl1.tar.gz'
+          DEST_NAME: 'ClassiCube-freebsd32.tar.gz'
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-fbsd64-gl1.tar.gz'
+          DEST_NAME: 'ClassiCube-freebsd64.tar.gz'
           
           
       - uses: ./.github/actions/notify_success

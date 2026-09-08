@@ -28,15 +28,21 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector $LATEST_FLAG"
           COMMON_LDFLAGS="-s"
 
-          make haiku RELEASE=1 TARGET=cc-haiku CC=x86_64-unknown-haiku-gcc CXX=x86_64-unknown-haiku-g++ \
+          make haiku dist RELEASE=1 TARGET=cc-haiku64 CC=x86_64-unknown-haiku-gcc CXX=x86_64-unknown-haiku-g++ \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
           
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'cc-haiku'
+          SOURCE_FILE: 'cc-haiku64'
           DEST_NAME: 'ClassiCube-haiku'
+
+
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-haiku64.tar.gz'
+          DEST_NAME: 'ClassiCube-haiku64.tar.gz'
           
           
       - uses: ./.github/actions/notify_success
