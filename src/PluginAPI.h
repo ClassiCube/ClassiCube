@@ -1,13 +1,11 @@
 #ifndef CC_PLUGIN_H
 #define CC_PLUGIN_H
-#include "PluginAPI.h"
-CC_BEGIN_HEADER
 
 /* Represents the interface for plugins.
    Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
-#if !defined INTERNAL_PLUGIN_HDR && defined CC_BUILD_WIN
+#if !defined INTERNAL_PLUGIN_HDR && defined _WIN32
 	// When compiling external plugins, functions/variables need to be imported from ClassiCube exe instead of exporting them
 	// need to specifically declare as imported for MSVC
 	#define CC_API __declspec(dllimport)
@@ -31,15 +29,18 @@ CC_BEGIN_HEADER
 #define GAME_API_VER 1
 
 
+#include "Core.h"
+CC_BEGIN_HEADER
+
 struct PluginInterface {
-	int   version;
-	int   type;
-	void* value;
+	short  type;
+	short  version;
+	void*  impl;
 };
 #define IFACE_TYPE_CHAT 1
 
 
-struct ChatInterface {
+struct CC_ChatInterface_V1 {
 	void (*Send) (const cc_string* text, cc_bool logUsage);
 	void (*Add)  (const cc_string* text);
 	void (*AddOf)(const cc_string* text, int msgType);
@@ -50,7 +51,9 @@ struct ChatInterface {
 	void (*Add3)  (const char* format, const void* a1, const void* a2, const void* a3);
 	void (*Add4)  (const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 };
-#define PLUGIN_INTERFACE_CHAT(value) { IFACE_TYPE_CHAT, 1, value }
+
+typedef struct CC_ChatInterface_v1 CC_ChatInterface;
+#define PLUGIN_INTERFACE_CHAT(impl_ptr) { IFACE_TYPE_CHAT, 1, impl_ptr }
 
 CC_END_HEADER
 #endif
