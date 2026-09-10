@@ -488,7 +488,7 @@ void EnvRenderer_RenderWeather(float delta) {
 	if (!Weather_Heightmap) 
 		InitWeatherHeightmap();
 	if (!weather_vb)
-		weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
+		weather_vb = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 
 	IVec3_Floor(&pos, &Camera.CurrentPos);
 	moved   = pos.x != lastPos.x || pos.y != lastPos.y || pos.z != lastPos.z;
@@ -525,7 +525,7 @@ void EnvRenderer_RenderWeather(float delta) {
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	v = (struct VertexTextured*)Gfx_LockDynamicVb(weather_vb, 
+	v = (struct VertexTextured*)Gfx_LockScratchVb(weather_vb, 
 										VERTEX_FORMAT_TEXTURED, numCoords * WEATHER_VERTS);
 
 	color = Env.SunCol;
@@ -583,7 +583,7 @@ void EnvRenderer_RenderWeather(float delta) {
 		v->x = x1; v->y = y1; v->z = z2; v->Col = color; v->U = uOffset2;        v->V = v1; v++;
 	}
 
-	Gfx_UnlockDynamicVb(weather_vb);
+	Gfx_UnlockScratchVb(weather_vb);
 	Gfx_DrawVb_IndexedTris(numCoords * WEATHER_VERTS);
 
 	Gfx_SetAlphaArgBlend(false);
@@ -861,7 +861,7 @@ static void DeleteCloudsVB(void)  { Gfx_DeleteVb(&clouds_vb); }
 static void DeleteSkyboxVB(void)  { Gfx_DeleteVb(&skybox_vb); }
 static void DeleteSidesVB(void)   { Gfx_DeleteVb(&sides_vb); }
 static void DeleteEdgesVB(void)   { Gfx_DeleteVb(&edges_vb); }
-static void DeleteWeatherVB(void) { Gfx_DeleteDynamicVb(&weather_vb); }
+static void DeleteWeatherVB(void) { Gfx_DeleteScratchVb(&weather_vb); }
 
 static void DeleteStaticVbs(void) {
 	DeleteSkyVB();

@@ -1,6 +1,7 @@
 /* Silence deprecation warnings on modern macOS/iOS */
 #define GL_SILENCE_DEPRECATION
 #define GLES_SILENCE_DEPRECATION
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
@@ -211,7 +212,11 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+
+/*########################################################################################################################*
+*--------------------------------------------------Scratch Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * gfx_stride;
 	_glBindBuffer(GL_ARRAY_BUFFER, vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);

@@ -342,8 +342,17 @@ CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count);
 /* Binds then submits the changed contents of a dynamic vertex buffer */
 CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb);
 
-/* Updates the data of a dynamic vertex buffer */
-CC_API void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
+/* Creates a new scratch vertex buffer, whose contents are updated each frame */
+CC_API GfxResourceID Gfx_CreateScratchVb(VertexFormat fmt, int maxVertices);
+/* Deletes the given scratch vertex buffer, then sets it to 0 */
+CC_API void  Gfx_DeleteScratchVb(GfxResourceID* vb);
+/* Acquires temp memory for changing the contents of a scratch vertex buffer */
+CC_API void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count);
+/* Binds then submits the changed contents of a scratch vertex buffer */
+CC_API void  Gfx_UnlockScratchVb(GfxResourceID vb);
+
+/* Updates the data of a scratch vertex buffer */
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount);
 
 
 /*########################################################################################################################*

@@ -40,7 +40,7 @@ static void VirtualCursor_Display3D(float delta) {
 	if (!DisplayInfo.CursorVisible) return;
 	
 	if (!vc_vb) {
-		vc_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
+		vc_vb = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, 4);
 		if (!vc_vb) return;
 	}	
 	
@@ -55,10 +55,10 @@ static void VirtualCursor_Display3D(float delta) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindTexture(vc_texture.ID);
 	
-	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockDynamicVb(vc_vb, VERTEX_FORMAT_TEXTURED, 4);
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockScratchVb(vc_vb, VERTEX_FORMAT_TEXTURED, 4);
 	struct VertexTextured** ptr = &data;
 	Gfx_Make2DQuad(&vc_texture, PACKEDCOL_WHITE, ptr);
-	Gfx_UnlockDynamicVb(vc_vb);
+	Gfx_UnlockScratchVb(vc_vb);
 	Gfx_DrawVb_IndexedTris(4);
 }
 

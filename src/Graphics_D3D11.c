@@ -1,3 +1,4 @@
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
 #include "_GraphicsBase.h"
@@ -451,9 +452,9 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
 	*vb = NULL;
 }
 
-static D3D11_MAPPED_SUBRESOURCE mapDesc;
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	D3D11_MAPPED_SUBRESOURCE mapDesc;
 	mapDesc.pData = NULL;
 
 	HRESULT hr = ID3D11DeviceContext_Map(context, (ID3D11Resource*)buffer, 0, 
