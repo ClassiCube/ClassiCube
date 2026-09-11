@@ -1,5 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
-#define CC_SCRATCH_VBS_ARE_DYNAMIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTGPU
 #include "_GraphicsBase.h"

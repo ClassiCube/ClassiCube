@@ -1,5 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
-#define CC_SCRATCH_VBS_ARE_DYNAMIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "../_GraphicsBase.h"
 #include "../Errors.h"

@@ -561,9 +561,38 @@ void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return Gfx_LockDynamicVb(vb, fmt, count);
 }
 
-void Gfx_UnlockScratchVb(GfxResourceID vb)  { Gfx_UnlockDynamicVb(vb); Gfx_BindDynamicVb(vb); }
+void Gfx_UnlockScratchVb(GfxResourceID vb)  { Gfx_UnlockDynamicVb(vb); }
 
 void Gfx_DeleteScratchVb(GfxResourceID* vb) { Gfx_DeleteDynamicVb(vb); }
+#endif
+
+#ifdef CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
+static void* gfx_scratchVb;
+static int   gfx_scratchSize;
+
+static GfxResourceID Gfx_AllocScratchVb(VertexFormat fmt, int maxVertices) {
+	int size = maxVertices * strideSizes[fmt];
+	if (size <= gfx_scratchSize) return gfx_scratchVb;
+
+	Mem_Free(gfx_scratchVb);
+	gfx_scratchVb = Mem_TryAlloc(size, 1);
+
+	if (gfx_scratchVb) {
+		gfx_scratchSize = size;
+		return (void*)1;
+	} else {
+		gfx_scratchSize = 0;
+		return NULL;
+	}
+}
+
+void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockDynamicVb(gfx_scratchVb, fmt, count);
+}
+
+void Gfx_UnlockScratchVb(GfxResourceID vb)  { Gfx_UnlockDynamicVb(gfx_scratchVb); }
+
+void Gfx_DeleteScratchVb(GfxResourceID* vb) { *vb = NULL; }
 #endif
 
 
