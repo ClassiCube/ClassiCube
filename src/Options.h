@@ -57,6 +57,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define OPT_SHOW_FPS "gui-showfps"
 #define OPT_FONT_NAME "gui-fontname"
 #define OPT_BLACK_TEXT "gui-blacktextshadows"
+#define OPT_CHAT_MESSAGE "gui-chatmessage"
 
 #define OPT_LANDSCAPE_MODE "landscape-mode"
 #define OPT_CLASSIC_MODE "mode-classic"

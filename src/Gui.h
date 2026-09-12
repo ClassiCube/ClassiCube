@@ -42,6 +42,8 @@ CC_VAR extern struct _GuiData {
 	int     Chatlines;
 	/* Whether clicking on a chatline inserts it into chat input. */
 	cc_bool ClickableChat;
+	/* Whether the player can send messages. */
+	cc_bool MessageChat;
 	/* Whether pressing tab in chat input attempts to autocomplete player names. */
 	cc_bool TabAutocomplete;
 	/* Whether FPS counter (and other info) is shown in top left. */

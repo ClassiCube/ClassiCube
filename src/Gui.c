@@ -116,6 +116,7 @@ static void LoadOptions(void) {
 	Gui.DefaultLines    = Game_ClassicMode ? 10 : 12;
 	Gui.Chatlines       = Options_GetInt(OPT_CHATLINES, 0, GUI_MAX_CHATLINES, Gui.DefaultLines);
 	Gui.ClickableChat   = !Game_ClassicMode && Options_GetBool(OPT_CLICKABLE_CHAT,   !Input_TouchMode);
+	Gui.MessageChat     = Options_GetBool(OPT_CHAT_MESSAGE, true);
 	Gui.TabAutocomplete = !Game_ClassicMode && Options_GetBool(OPT_TAB_AUTOCOMPLETE, true);
 
 	Gui.ClassicTexture   = Options_GetBool(OPT_CLASSIC_GUI,        true) || Game_ClassicMode;

@@ -864,6 +864,12 @@ static void    ChO_SetClickable(cc_bool v) {
 	Options_SetBool(OPT_CLICKABLE_CHAT, v); 
 }
 
+static cc_bool ChO_GetChatMessage(void) { return Gui.MessageChat; }
+static void    ChO_SetChatMessage(cc_bool v) {
+	Gui.MessageChat = v;
+	Options_SetBool(OPT_CHAT_MESSAGE, v);
+}
+
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
@@ -880,6 +886,8 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ChO_GetLogging,       ChO_SetLogging, NULL);
 		MenuOptionsScreen_AddBool(s, "Clickable chat",
 			ChO_GetClickable,     ChO_SetClickable, NULL);
+		MenuOptionsScreen_AddBool(s, "Sending messages",
+			ChO_GetChatMessage,   ChO_SetChatMessage, NULL);
 	}
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 }
@@ -1354,4 +1362,3 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 void NostalgiaFunctionalityScreen_Show(void) {
 	MenuOptionsScreen_Show(NostalgiaFunctionalityScreen_InitWidgets);
 }
-
