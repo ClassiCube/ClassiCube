@@ -138,7 +138,7 @@ void Entity_SetModel(struct Entity* e, const cc_string* model) {
 	Entity_UpdateModelBounds(e);
 
 	if (e->Flags & ENTITY_FLAG_HAS_MODELVB)
-		Gfx_DeleteDynamicVb(&e->ModelVB);
+		Gfx_DeleteScratchVb(&e->ModelVB);
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {
@@ -530,7 +530,7 @@ static void Entities_ContextLost(void* obj) {
 		if (!entity) continue;
 
 		if (entity->Flags & ENTITY_FLAG_HAS_MODELVB)
-			Gfx_DeleteDynamicVb(&entity->ModelVB);
+			Gfx_DeleteScratchVb(&entity->ModelVB);
 
 		if (!Gfx.ManagedTextures)
 			DeleteSkin(entity);
@@ -581,7 +581,7 @@ static void Player_Despawn(struct Entity* e) {
 	EntityNames_Delete(e);
 
 	if (e->Flags & ENTITY_FLAG_HAS_MODELVB)
-		Gfx_DeleteDynamicVb(&e->ModelVB);
+		Gfx_DeleteScratchVb(&e->ModelVB);
 }
 
 

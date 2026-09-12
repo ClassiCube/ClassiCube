@@ -26,7 +26,7 @@ jobs:
           COMMON_CFLAGS="-fno-stack-protector $LATEST_FLAG"
           COMMON_LDFLAGS="-s"
 
-          make darwin RELEASE=1 TARGET=cc-mac64-gl1-x64 \
+          make darwin dist RELEASE=1 TARGET=cc-mac64-gl1-x64 \
                 EXTRA_CFLAGS="$COMMON_CFLAGS -arch x86_64 -mmacosx-version-min=10.5" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS -arch x86_64 -mmacosx-version-min=10.5"
 

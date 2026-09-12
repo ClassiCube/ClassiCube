@@ -43,7 +43,12 @@ jobs:
 
           make android EXTRA_CFLAGS="$COMMON_CFLAGS"
           
-          
+           
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'ClassiCube-unsigned.apk'
+          DEST_NAME: 'cc-unsigned.apk'
+       
       - uses: ./.github/actions/upload_build
         with:
           SOURCE_FILE: 'ClassiCube-signed.apk'

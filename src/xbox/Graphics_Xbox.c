@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"

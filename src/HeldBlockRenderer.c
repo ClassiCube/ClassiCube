@@ -28,7 +28,7 @@ static void SetHeldModel(struct Model* model) {
 	if (model->maxVertices <= maxVertices) return;
 
 	maxVertices = model->maxVertices;
-	Gfx_DeleteDynamicVb(&held_entity.ModelVB);
+	Gfx_DeleteScratchVb(&held_entity.ModelVB);
 #endif
 }
 
@@ -243,7 +243,7 @@ void HeldBlockRenderer_Render(float delta) {
 
 
 static void OnContextLost(void* obj) {
-	Gfx_DeleteDynamicVb(&held_entity.ModelVB);
+	Gfx_DeleteScratchVb(&held_entity.ModelVB);
 }
 
 static const struct EntityVTABLE heldEntity_VTABLE = {

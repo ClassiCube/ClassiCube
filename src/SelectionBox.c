@@ -138,13 +138,13 @@ void Selections_Remove(cc_uint8 id) {
 }
 
 static void Selections_ContextLost(void* obj) {
-	Gfx_DeleteDynamicVb(&selections_VB);
-	Gfx_DeleteDynamicVb(&selections_LineVB);
+	Gfx_DeleteScratchVb(&selections_VB);
+	Gfx_DeleteScratchVb(&selections_LineVB);
 }
 
 static void AllocateVertexBuffers(void) {
-	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
-	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+	selections_VB     = Gfx_CreateScratchVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+	selections_LineVB = Gfx_CreateScratchVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
 }
 
 static void Selections_QuickSort(int left, int right) {
@@ -186,20 +186,20 @@ void Selections_Render(void) {
 	count = selections_count * SELECTIONS_VERTICES;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
-	data = (struct VertexColoured*)Gfx_LockDynamicVb(selections_LineVB, 
+	data = (struct VertexColoured*)Gfx_LockScratchVb(selections_LineVB, 
 										VERTEX_FORMAT_COLOURED, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
 		BuildEdges(&selections_list[i], data);
 	}
-	Gfx_UnlockDynamicVb(selections_LineVB);
+	Gfx_UnlockScratchVb(selections_LineVB);
 	Gfx_DrawVb_Lines(count);
 
-	data = (struct VertexColoured*)Gfx_LockDynamicVb(selections_VB, 
+	data = (struct VertexColoured*)Gfx_LockScratchVb(selections_VB, 
 										VERTEX_FORMAT_COLOURED, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
 		BuildFaces(&selections_list[i], data);
 	}
-	Gfx_UnlockDynamicVb(selections_VB);
+	Gfx_UnlockScratchVb(selections_VB);
 
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);

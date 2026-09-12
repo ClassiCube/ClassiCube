@@ -164,7 +164,7 @@ static void Rain_Render(float t) {
 	int i;
 	if (!rain_count) return;
 	
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
+	data = (struct VertexTextured*)Gfx_LockScratchVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, rain_count * 4);
 	for (i = 0; i < rain_count; i++) {
 		RainParticle_Render(&rain_Particles[i], t, data);
@@ -172,7 +172,7 @@ static void Rain_Render(float t) {
 	}
 
 	Gfx_BindTexture(particles_TexId);
-	Gfx_UnlockDynamicVb(particles_VB);
+	Gfx_UnlockScratchVb(particles_VB);
 	Gfx_DrawVb_IndexedTris(rain_count * 4);
 }
 
@@ -282,7 +282,7 @@ static void Terrain_Render(float t) {
 	int i, index;
 	if (!terrain_count) return;
 
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
+	data = (struct VertexTextured*)Gfx_LockScratchVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, terrain_count * 4);
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) 
@@ -294,7 +294,7 @@ static void Terrain_Render(float t) {
 		terrain_1DIndices[index] += 4;
 	}
 
-	Gfx_UnlockDynamicVb(particles_VB);
+	Gfx_UnlockScratchVb(particles_VB);
 	for (i = 0; i < Atlas1D.Count; i++) 
 	{
 		int partCount = terrain_1DCount[i];
@@ -476,7 +476,7 @@ static void Custom_Render(float t) {
 	int i;
 	if (!custom_count) return;
 
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
+	data = (struct VertexTextured*)Gfx_LockScratchVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, custom_count * 4);
 	for (i = 0; i < custom_count; i++) {
 		CustomParticle_Render(&custom_particles[i], t, data);
@@ -484,7 +484,7 @@ static void Custom_Render(float t) {
 	}
 
 	Gfx_BindTexture(particles_TexId);
-	Gfx_UnlockDynamicVb(particles_VB);
+	Gfx_UnlockScratchVb(particles_VB);
 	Gfx_DrawVb_IndexedTris(custom_count * 4);
 }
 
@@ -569,7 +569,7 @@ void Particles_Render(float t) {
 
 	if (Gfx.LostContext) return;
 	if (!particles_VB)
-		particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
+		particles_VB = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
 
 	Gfx_SetAlphaTest(true);
 
@@ -600,7 +600,7 @@ static struct TextureEntry particles_entry = { "particles.png", ParticlesPngProc
 
 
 static void OnContextLost(void* obj) {
-	Gfx_DeleteDynamicVb(&particles_VB); 
+	Gfx_DeleteScratchVb(&particles_VB); 
 
 	if (Gfx.ManagedTextures) return;
 	Gfx_DeleteTexture(&particles_TexId);

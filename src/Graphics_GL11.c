@@ -1,3 +1,4 @@
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 #include "_GraphicsBase.h"

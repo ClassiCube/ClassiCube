@@ -32,7 +32,7 @@ jobs:
  
           PATH=$PATH:/usr/local/compiler/target/bin
 
-          make darwin RELEASE=1 TARGET=cc-mac32-gl1-x86 CC=i386-apple-darwin8-clang \
+          make darwin dist RELEASE=1 TARGET=cc-mac32-gl1-x86 CC=i386-apple-darwin8-clang \
                 EXTRA_CFLAGS="$COMMON_CFLAGS" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
 

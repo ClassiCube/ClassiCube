@@ -405,7 +405,7 @@ static void VirtualKeyboard_Display3D(float delta) {
 	if (!DisplayInfo.ShowingSoftKeyboard) return;
 	
 	if (!kb_vb) {
-		kb_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
+		kb_vb = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, 4);
 		if (!kb_vb) return;
 	}	
 	
@@ -418,10 +418,10 @@ static void VirtualKeyboard_Display3D(float delta) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindTexture(kb_texture.ID);
 	
-	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockDynamicVb(kb_vb, VERTEX_FORMAT_TEXTURED, 4);
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockScratchVb(kb_vb, VERTEX_FORMAT_TEXTURED, 4);
 	struct VertexTextured** ptr = &data;
 	Gfx_Make2DQuad(&kb_texture, PACKEDCOL_WHITE, ptr);
-	Gfx_UnlockDynamicVb(kb_vb);
+	Gfx_UnlockScratchVb(kb_vb);
 	Gfx_DrawVb_IndexedTris(4);
 	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 }

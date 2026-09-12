@@ -126,21 +126,18 @@ static void MakeIndices(cc_uint16* indices, int count, void* obj) {
 	}
 }
 
-static void RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices) {
-	Gfx_DeleteDynamicVb(vb);
-	*vb = Gfx_CreateDynamicVb(fmt, maxVertices);
-}
-
 static void InitDefaultResources(void) {
 	Gfx.DefaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
+	Gfx_DeleteScratchVb(&Gfx_quadVb);
+	Gfx_DeleteScratchVb(&Gfx_texVb);
 
-	RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
-	RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
+	Gfx_quadVb = Gfx_CreateScratchVb(VERTEX_FORMAT_COLOURED, 4);
+	Gfx_texVb  = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, 4);
 }
 
 static void FreeDefaultResources(void) {
-	Gfx_DeleteDynamicVb(&Gfx_quadVb);
-	Gfx_DeleteDynamicVb(&Gfx_texVb);
+	Gfx_DeleteScratchVb(&Gfx_quadVb);
+	Gfx_DeleteScratchVb(&Gfx_texVb);
 	Gfx_DeleteIb(&Gfx.DefaultIb);
 }
 
@@ -186,10 +183,10 @@ void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured* v;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
+	v = (struct VertexColoured*)Gfx_LockScratchVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	v = Gfx_Build2DFlat(x, y, width, height, color, v);
 
-	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_UnlockScratchVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
@@ -197,10 +194,10 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 	struct VertexColoured* v;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
+	v = (struct VertexColoured*)Gfx_LockScratchVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	v = Gfx_Build2DGradient(x, y, width, height, top, bottom, v);
 
-	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_UnlockScratchVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
@@ -208,11 +205,11 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	struct VertexTextured* ptr;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	ptr = (struct VertexTextured*)Gfx_LockDynamicVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
+	ptr = (struct VertexTextured*)Gfx_LockScratchVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
 
 	Gfx_Make2DQuad(tex, color, &ptr);
 
-	Gfx_UnlockDynamicVb(Gfx_texVb);
+	Gfx_UnlockScratchVb(Gfx_texVb);
 	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_SPRITE);
 }
 #endif
@@ -471,6 +468,7 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
+static GfxResourceID Gfx_AllocScratchVb(VertexFormat fmt, int maxVertices);
 
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	GfxResourceID vb;
@@ -508,13 +506,25 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	}
 }
 
+GfxResourceID Gfx_CreateScratchVb(VertexFormat fmt, int maxVertices) {
+	GfxResourceID vb;
+	if (Gfx.LostContext) return 0; 
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocScratchVb(fmt, maxVertices))) return vb;
+
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (allocating dynamic VB)");
+	}
+}
+
 #if CC_GFX_BACKEND_IS_GL() || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9)
 /* Slightly more efficient implementations are defined in the backends */
 #else
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
+	void* data = Gfx_LockScratchVb(vb, gfx_format, vCount);
 	Mem_Copy(data, vertices, vCount * gfx_stride);
-	Gfx_UnlockDynamicVb(vb);
+	Gfx_UnlockScratchVb(vb);
 }
 #endif
 
@@ -536,6 +546,53 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Scratch Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_SCRATCH_VBS_ARE_DYNAMIC
+static GfxResourceID Gfx_AllocScratchVb(VertexFormat fmt, int maxVertices) {
+	return Gfx_AllocDynamicVb(fmt, maxVertices);
+}
+
+void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockDynamicVb(vb, fmt, count);
+}
+
+void Gfx_UnlockScratchVb(GfxResourceID vb)  { Gfx_UnlockDynamicVb(vb); }
+
+void Gfx_DeleteScratchVb(GfxResourceID* vb) { Gfx_DeleteDynamicVb(vb); }
+#endif
+
+#ifdef CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
+static void* gfx_scratchVb;
+static int   gfx_scratchSize;
+
+static GfxResourceID Gfx_AllocScratchVb(VertexFormat fmt, int maxVertices) {
+	int size = maxVertices * strideSizes[fmt];
+	if (size <= gfx_scratchSize) return gfx_scratchVb;
+
+	Mem_Free(gfx_scratchVb);
+	gfx_scratchVb = Mem_TryAlloc(size, 1);
+
+	if (gfx_scratchVb) {
+		gfx_scratchSize = size;
+		return (void*)1;
+	} else {
+		gfx_scratchSize = 0;
+		return NULL;
+	}
+}
+
+void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockDynamicVb(gfx_scratchVb, fmt, count);
+}
+
+void Gfx_UnlockScratchVb(GfxResourceID vb)  { Gfx_UnlockDynamicVb(gfx_scratchVb); }
+
+void Gfx_DeleteScratchVb(GfxResourceID* vb) { *vb = NULL; }
 #endif
 
 

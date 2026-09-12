@@ -173,9 +173,9 @@ void Model_ApplyTexture(struct Entity* e) {
 void Model_UpdateVB(void) {
 	struct Model* model = Models.Active;
 	if (!Models.Vb)
-		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+		Models.Vb = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 	
-	Gfx_SetDynamicVbData(Models.Vb, Models.Vertices, model->index);
+	Gfx_SetScratchVbData(Models.Vb, Models.Vertices, model->index);
 	Gfx_DrawVb_IndexedTris(model->index);
 	model->index = 0;
 }
@@ -187,22 +187,22 @@ static GfxResourceID modelVB;
 void Model_LockVB(struct Entity* entity, int verticesCount) {
 #ifdef CC_BUILD_CONSOLE
 	if (!entity->ModelVB) {
-		entity->ModelVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.Active->maxVertices);
+		entity->ModelVB = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, Models.Active->maxVertices);
 	}
 	modelVB = entity->ModelVB;
 #else
 	if (!Models.Vb) {
-		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+		Models.Vb = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 	}
 	modelVB = Models.Vb;
 #endif
 
 	real_vertices   = Models.Vertices;
-	Models.Vertices = (struct VertexTextured*)Gfx_LockDynamicVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
+	Models.Vertices = (struct VertexTextured*)Gfx_LockScratchVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
 }
 
 void Model_UnlockVB(void) {
-	Gfx_UnlockDynamicVb(modelVB);
+	Gfx_UnlockScratchVb(modelVB);
 	Models.Vertices = real_vertices;
 }
 
@@ -867,7 +867,7 @@ static void CheckMaxVertices(void) {
 	if (Models.MaxVertices < MODELS_MAX_VERTICES) {
 		Platform_LogConst("CheckMaxVertices found smaller buffer, resetting Models.Vb");
 		Models.MaxVertices = MODELS_MAX_VERTICES;
-		Gfx_DeleteDynamicVb(&Models.Vb);
+		Gfx_DeleteScratchVb(&Models.Vb);
 	}
 }
 
@@ -2420,7 +2420,7 @@ static void RegisterDefaultModels(void) {
 
 static void OnContextLost(void* obj) {
 	struct ModelTex* tex;
-	Gfx_DeleteDynamicVb(&Models.Vb);
+	Gfx_DeleteScratchVb(&Models.Vb);
 	if (Gfx.ManagedTextures) return;
 
 	for (tex = textures_head; tex; tex = tex->next) 

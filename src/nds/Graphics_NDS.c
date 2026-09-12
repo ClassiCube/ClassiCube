@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -768,7 +769,7 @@ static void CallDrawList(void* list, u32 listSize) {
 	// Based on libnds glCallList
 	while (dmaBusy(0) || dmaBusy(1) || dmaBusy(2) || dmaBusy(3));
 	dmaSetParams(0, list, (void*) &GFX_FIFO, DMA_FIFO | listSize);
-	while (dmaBusy(0));
+	while (dmaBusy(0)); // NOTE: wait for DMA to finish (if not waiting, remove shared scratch VBs)
 }
 
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {

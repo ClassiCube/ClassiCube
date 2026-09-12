@@ -1,3 +1,4 @@
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 #include "_GraphicsBase.h"
@@ -668,14 +669,18 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	Gfx_BindDynamicVb(vb); /* TODO: Inline this? */
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+
+/*########################################################################################################################*
+*--------------------------------------------------Scratch Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 	int size = vCount * gfx_stride;
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
 	cc_result res;
 	
 	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
 	res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
-	if (res) Process_Abort2(res, "D3D9_SetDynamicVbData - Bind");
+	if (res) Process_Abort2(res, "D3D9_SetScratchVbData - Bind");
 }
 
 
