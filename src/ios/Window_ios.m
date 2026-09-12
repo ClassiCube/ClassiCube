@@ -47,9 +47,6 @@ void Window_SetKBWidget(UITextField* widget) {
 	kb_widget = widget;
 }
 
-@interface CCWindow : UIWindow
-@end
-
 @interface CCViewController : UIViewController<UIDocumentPickerDelegate, UIAlertViewDelegate>
 @end
 static UIWindow* win_handle;
@@ -98,8 +95,8 @@ static CGRect GetViewFrame(void) {
     return fullscreen ? [screen bounds] : [screen applicationFrame];
 }
 
-@implementation CCWindow
 
+@implementation CCViewController
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesBegan:withEvent - iOS 2
     for (UITouch* t in touches) AddTouch(t);
@@ -123,11 +120,7 @@ static CGRect GetViewFrame(void) {
     for (UITouch* t in touches) RemoveTouch(t);
 }
 
-- (BOOL)isOpaque { return YES; }
-@end
 
-
-@implementation CCViewController
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     // supportedInterfaceOrientations - iOS 6
     return SupportedOrientations();
@@ -447,7 +440,7 @@ static void AllocWindow(void) {
 	// NOTE: don't need to call [retain], as retain count is initially 1
 	
 	CGRect bounds = GetViewFrame();
-	win_handle    = [[CCWindow alloc] initWithFrame:bounds];
+	win_handle    = [[UIWindow alloc] initWithFrame:bounds];
 	[win_handle setRootViewController:cc_controller];
 	
 	Window_Main.Exists   = true;
