@@ -16,14 +16,15 @@
 #include "../PackedCol.h"
 
 #include <errno.h>
-//#include <stdlib.h>
 #include <string.h>
-//#include <stdio.h>
-//#include <unistd.h>
 
+
+#if defined(TARGET_SIMULATOR)
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#endif
 #include "pd_api.h"
-
-#define printf(...) ((void)0)
 
 const char* Platform_AppNameSuffix = " Playdate";
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -68,12 +69,12 @@ static int PlaydateUpdate(void* userdata)
 {
 	if(!rungame)
 	{
-		pd->system->logToConsole("Launcher_Tick\n");
+		//pd->system->logToConsole("Launcher_Tick\n");
 		Launcher_Tick();
 	}
 	else
 	{
-		pd->system->logToConsole("Game_RenderFrame\n");
+		//pd->system->logToConsole("Game_RenderFrame\n");
 		Game_RenderFrame();
 	}
 	//Game_RenderFrame(); 
@@ -206,34 +207,34 @@ int File_Exists(const cc_filepath* path) {
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	printf("Directory_Enum\n");
+	pd->system->logToConsole("Directory_Enum\n");
 	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
 	*file = pd->file->open(path->buffer,kFileReadData);
-	printf("File_Open: %s\n",path->buffer);
-	return (*file == NULL) ? (printf("File_Open error: %s `%s`\n",pd->file->geterr(),path->buffer),-12) : (0);
+	pd->system->logToConsole("File_Open: %s\n",path->buffer);
+	return (*file == NULL) ? (pd->system->logToConsole("File_Open error: %s `%s`\n",pd->file->geterr(),path->buffer),-12) : (0);
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
 	*file = pd->file->open(path->buffer,kFileReadData|kFileWrite);
-	return (*file == NULL) ? (printf("File_Create error: %s `%s`\n",pd->file->geterr(),path->buffer),-13) : (0);
+	return (*file == NULL) ? (pd->system->logToConsole("File_Create error: %s `%s`\n",pd->file->geterr(),path->buffer),-13) : (0);
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 	*file = pd->file->open(path->buffer,kFileReadData|kFileWrite);
-	return (*file == NULL) ? (printf("File_OpenOrCreate error: %s `%s`\n",pd->file->geterr(),path->buffer),-14) : (0);
+	return (*file == NULL) ? (pd->system->logToConsole("File_OpenOrCreate error: %s `%s`\n",pd->file->geterr(),path->buffer),-14) : (0);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
 	*bytesRead = pd->file->read((SDFile*)file,data,count);
-	return (*bytesRead == -1) ? (printf("File_Read error: %s\n",pd->file->geterr()),-15) : (0);
+	return (*bytesRead == -1) ? (pd->system->logToConsole("File_Read error: %s\n",pd->file->geterr()),-15) : (0);
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	*bytesWrote = pd->file->write((SDFile*)file,data,count);
-	return (*bytesWrote == -1) ? (printf("File_Write error: %s\n",pd->file->geterr()),-16) : (0);
+	return (*bytesWrote == -1) ? (pd->system->logToConsole("File_Write error: %s\n",pd->file->geterr()),-16) : (0);
 }
 
 cc_result File_Close(cc_file file) {
@@ -241,22 +242,23 @@ cc_result File_Close(cc_file file) {
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	printf("File_Seek %i %i\n",offset,seekType);
+	pd->system->logToConsole("File_Seek %i %i\n",offset,seekType);
 	return pd->file->seek((SDFile*)file, offset, seekType);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
 	*pos = pd->file->tell((SDFile*)file);
-	printf("File_Position %i\n",*pos);
+	pd->system->logToConsole("File_Position %i\n",*pos);
 	return 0;
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	FileStat fst;
-	cc_result ret = pd->file->stat((SDFile*)file, &fst);
-	*len = fst.size;
-	//printf("File_Length %i, %i\n",ret, *len);
-	return (ret == -1) ? (printf("File_Length error: %s\n",pd->file->geterr()),-17) : (0);
+	int pos = pd->file->tell((SDFile*)file);
+	pd->file->seek((SDFile*)file,0,SEEK_END);
+	*len = pd->file->tell((SDFile*)file);
+	pd->file->seek((SDFile*)file,pos,SEEK_SET);
+	//pd->system->logToConsole("File_Length %i, %i\n",ret, *len);
+	return 0;
 }
 
 
@@ -277,7 +279,7 @@ typedef struct
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	PDsockaddr* PDdata = (PDsockaddr*)addrs->data;
 	String_CopyToRaw(PDdata->address,128,address);
-	printf("Socket_ParseAddress %s\n",PDdata->address);
+	pd->system->logToConsole("Socket_ParseAddress %s\n",PDdata->address);
 	PDdata->port = port;
 	*numValidAddrs = 1;
 	return 0;
@@ -292,7 +294,7 @@ cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst)
 
 void TCPAccessCallback(bool allowed, void* userdata)
 {
-	pd->system->logToConsole("TCPAccessCallback: %i", allowed);
+	pd->system->logToConsole("TCPAccessCallback: %i\n", allowed);
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
@@ -303,7 +305,7 @@ cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	//if (fd != -1) SetCloseOnExec(fd);
 	pd->network->tcp->requestAccess(PDdata->address,PDdata->port,false,"Classicube socket 2",TCPAccessCallback,NULL);
 	*s = (cc_socket)pd->network->tcp->newConnection(PDdata->address,PDdata->port,false);
-	printf("Socket_Create %s %i %x\n", PDdata->address, PDdata->port, *s);
+	pd->system->logToConsole("Socket_Create %s %i %x\n", PDdata->address, PDdata->port, *s);
 	
 	return 0;
 }
@@ -312,34 +314,35 @@ void Socket_Close(cc_socket s) { }
 
 void tcpOpenCallback(TCPConnection* conn, PDNetErr err, void* ud)
 {
-	
+	pd->system->logToConsole("tcpOpenCallback: %i\n", err);
 }
 
 cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
 	PDsockaddr* PDdata = (PDsockaddr*)addr;
 	
-	printf("Socket_Connect %s\n", PDdata->address);
+	pd->system->logToConsole("Socket_Connect %s\n", PDdata->address);
+	pd->network->tcp->open((TCPConnection*)s, tcpOpenCallback, NULL);
 	//s = (cc_socket)pd->network->tcp->newConnection(PDdata->address,PDdata->port,false);
-	return pd->network->tcp->open((TCPConnection*)s, tcpOpenCallback, NULL);
+	return 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	TCPConnection* conn = (TCPConnection*)s;
-	printf("Socket_Read %i\n",count);
+	pd->system->logToConsole("Socket_Read %i\n",count);
 	*modified = pd->network->tcp->read(conn,data,count);
-	return (((int)*modified) < 0) ? (printf("Socket_Read error: %i\n",*modified),*modified) : (0);
+	return (((int)*modified) < 0) ? (pd->system->logToConsole("Socket_Read error: %i\n",*modified),*modified) : (0);
 	//return ERR_NOT_SUPPORTED;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	TCPConnection* conn = (TCPConnection*)s;
 	*modified = pd->network->tcp->write(conn,data,count);
-	printf("Socket_Write %i   %i\n",count, *modified);
-	return (((int)*modified) < 0) ? (printf("Socket_Write error: %i\n",*modified),*modified) : (0);
+	pd->system->logToConsole("Socket_Write %i   %i\n",count, *modified);
+	return (((int)*modified) < 0) ? (pd->system->logToConsole("Socket_Write error: %i\n",*modified),*modified) : (0);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
-	printf("Socket_Poll\n");
+	pd->system->logToConsole("Socket_Poll\n");
 	return ERR_NOT_SUPPORTED;
 }
 
