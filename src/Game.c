@@ -41,6 +41,7 @@
 #include "SystemFonts.h"
 #include "Formats.h"
 #include "EntityRenderers.h"
+#include "LWeb.h"
 
 struct _GameData Game;
 static cc_uint64 frameStart;
@@ -420,6 +421,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&TabList_Component);
 	Game_AddComponent(&Models_Component);
 	Game_AddComponent(&Http_Component);
+	LWebTasks_Init();
 	Game_AddComponent(&Lighting_Component);
 
 	Game_AddComponent(&Animations_Component);
