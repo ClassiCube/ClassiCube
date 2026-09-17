@@ -1,11 +1,3 @@
-//
-//  File.metal
-//  ClassiCube
-//
-//  Created by Admin on 16/9/2026.
-//  Copyright © 2026 ClassiCube. All rights reserved.
-//
-
 #include <metal_stdlib>
 using namespace metal;
 
@@ -38,6 +30,17 @@ vertex textured_out vertex_textured_main(textured_in in [[stage_in]],
     out.position  = mvp * float4(in.position, 1.0);
     out.color     = in.color;
     out.texcoords = in.texcoords;
+    return out;
+}
+
+vertex textured_out vertex_textured_main_offset(textured_in in [[stage_in]],
+                                         device const float4x4& mvp [[buffer(1)]],
+                                         device const float2& texOffset [[buffer(2)]])
+{
+    textured_out out;
+    out.position  = mvp * float4(in.position, 1.0);
+    out.color     = in.color;
+    out.texcoords = in.texcoords + texOffset;
     return out;
 }
 
