@@ -595,16 +595,45 @@ void Gfx_BindDynamicVb(GfxResourceID vb) {
 
 
 //########################################################################################################################
+//------------------------------------------------------Constant buffers--------------------------------------------------
+//########################################################################################################################
+static ID3D11Buffer* ConstantBuffer_Alloc(const void* ptr, int size) {
+	// https://developer.nvidia.com/content/constant-buffers-without-constant-pain-0
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
+	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
+	D3D11_BUFFER_DESC desc = { 0 };
+	ID3D11Buffer* buf = NULL;
+	desc.ByteWidth = size;
+	//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.Usage     = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem          = ptr;
+	data.SysMemPitch      = 0;
+	data.SysMemSlicePitch = 0;
+
+	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &buf);
+	if (hr) Process_Abort2(hr, "allocating constant buffer");
+	return buf;
+}
+
+
+//########################################################################################################################
 //--------------------------------------------------------Vertex shader---------------------------------------------------
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/vertex-shader-stage
 static ID3D11VertexShader* vs_shaders[3];
-static ID3D11Buffer* vs_cBuffer;
+static ID3D11Buffer* vs_cBuffer_mvp;
+static ID3D11Buffer* vs_cBuffer_tex;
 
-static struct CC_ALIGNED(64) VSConstants {
+static struct CC_ALIGNED(64) VSConstantsMVP {
 	struct Matrix mvp;
-	float texX, texY;
-} vs_constants;
+} vs_constants_mvp;
+static struct CC_ALIGNED(64) VSMVPConstantsTex {
+	float x, y;
+} vs_constants_tex;
+
 static const struct ShaderDesc vs_descs[] = {
 	{ vs_colored,         sizeof(vs_colored) },
 	{ vs_textured,        sizeof(vs_textured) },
@@ -620,30 +649,17 @@ static void VS_CreateShaders(void) {
 }
 
 static void VS_CreateConstants(void) {
-	// https://developer.nvidia.com/content/constant-buffers-without-constant-pain-0
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
-	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
-	D3D11_BUFFER_DESC desc = { 0 };
-	desc.ByteWidth      = sizeof(vs_constants);
-	//desc.Usage          = D3D11_USAGE_DYNAMIC;
-	//desc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
-	//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	vs_cBuffer_mvp = ConstantBuffer_Alloc(&vs_constants_mvp, sizeof(vs_constants_mvp));
+	vs_cBuffer_tex = ConstantBuffer_Alloc(&vs_constants_tex, sizeof(vs_constants_tex));
 
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem          = &vs_constants;
-	data.SysMemPitch      = 0;
-	data.SysMemSlicePitch = 0;
-
-	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &vs_cBuffer);
-	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer);
+	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer_mvp);
+	ID3D11DeviceContext_VSSetConstantBuffers(context, 1, 1, &vs_cBuffer_tex);
 }
 
 static int VS_CalcShaderIndex(void) {
 	if (gfx_format == VERTEX_FORMAT_COLOURED) return 0;
 
-	cc_bool has_offset = vs_constants.texX != 0 || vs_constants.texY != 0;
+	cc_bool has_offset = vs_constants_tex.x != 0 || vs_constants_tex.y != 0;
 	return has_offset ? 2 : 1;
 }
 
@@ -659,13 +675,19 @@ static void VS_FreeShaders(void) {
 	}
 }
 
-static void VS_UpdateConstants(void) {
-	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer, 0, 
-											NULL, &vs_constants, 0, 0);
+static void VS_UpdateConstants_MVP(void) {
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer_mvp, 0, 
+											NULL, &vs_constants_mvp, 0, 0);
+}
+
+static void VS_UpdateConstants_Tex(void) {
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer_tex, 0, 
+											NULL, &vs_constants_tex, 0, 0);
 }
 
 static void VS_FreeConstants(void) {
-	ID3D11Buffer_Release(vs_cBuffer);
+	ID3D11Buffer_Release(vs_cBuffer_mvp);
+	ID3D11Buffer_Release(vs_cBuffer_tex);
 }
 
 static void VS_Init(void) {
@@ -684,8 +706,8 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&vs_constants.mvp, &_view, &_proj);
-	VS_UpdateConstants();
+	Matrix_Mul(&vs_constants_mvp.mvp, &_view, &_proj);
+	VS_UpdateConstants_MVP();
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -695,15 +717,15 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	vs_constants.texX = x;
-	vs_constants.texY = y;
+	vs_constants_tex.x = x;
+	vs_constants_tex.y = y;
 	VS_UpdateShader();
-	VS_UpdateConstants();
+	VS_UpdateConstants_Tex();
 }
 
 void Gfx_DisableTextureOffset(void) {
-	vs_constants.texX = 0;
-	vs_constants.texY = 0;
+	vs_constants_tex.x = 0;
+	vs_constants_tex.y = 0;
 	VS_UpdateShader();
 }
 
@@ -876,17 +898,7 @@ static void PS_FreeSamplers(void) {
 }
 
 static void PS_CreateConstants(void) {
-	D3D11_BUFFER_DESC desc = { 0 }; // TODO see notes in VS_CreateConstants
-	desc.ByteWidth      = sizeof(ps_constants);
-	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem          = &ps_constants;
-	data.SysMemPitch      = 0;
-	data.SysMemSlicePitch = 0;
-
-	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &ps_cBuffer);
+	ps_cBuffer = ConstantBuffer_Alloc(&ps_constants, sizeof(ps_constants));
 	ID3D11DeviceContext_PSSetConstantBuffers(context, 0, 1, &ps_cBuffer);
 }
 

@@ -8,10 +8,12 @@
 #pragma comment(lib,"d3dcompiler.lib")
 
 static const char VS_SOURCE[] =
-"float4x4 mvpMatrix;                                                \n" \
-"#ifdef VS_TEXTURE_OFFSET                                           \n" \
-"float2 texOffset;                                                  \n" \
-"#endif                                                             \n" \
+"cbuffer VS_MVPConstants : register(b0) {                           \n" \
+"   float4x4 mvpMatrix;                                             \n" \
+"};                                                                 \n" \
+"cbuffer VS_TexConstants : register(b1) {                           \n" \
+"   float2 texOffset;                                               \n" \
+"};                                                                 \n" \
 "                                                                   \n" \
 "struct INPUT_VERTEX {                                              \n" \
 "   float3 position : POSITION;                                     \n" \
@@ -47,7 +49,7 @@ static const char PS_SOURCE[] =
 "Texture2D    texValue;                                             \n" \
 "SamplerState texState;                                             \n" \
 "#endif                                                             \n" \
-"cbuffer PS_FogConstants {                                          \n" \
+"cbuffer PS_FogConstants : register(b0) {                           \n" \
 "   float3 fogColor;                                                \n" \
 "   float1 fogEnd;                                                  \n" \
 "   float1 fogDensity;                                              \n" \
@@ -58,12 +60,7 @@ static const char PS_SOURCE[] =
 "   float2 coords : TEXCOORD0;                                      \n" \
 "#endif                                                             \n" \
 "   float4 color : COLOR0;                                          \n" \
-"#ifdef PS_FOG_LINEAR                                               \n" \
 "   float4 position : SV_Position;                                  \n" \
-"#endif                                                             \n" \
-"#ifdef PS_FOG_DENSITY                                              \n" \
-"   float4 position : SV_Position;                                  \n" \
-"#endif                                                             \n" \
 "};                                                                 \n" \
 "                                                                   \n" \
 "//float4 main(float2 coords : TEXCOORD0, float4 color : COLOR0) : SV_TARGET {\n" \
