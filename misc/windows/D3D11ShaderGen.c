@@ -25,7 +25,7 @@ static const char VS_SOURCE[] =
 "   float2 coords : TEXCOORD0;                                      \n" \
 "#endif                                                             \n" \
 "   float4 color : COLOR0;                                          \n" \
-"   float4 position : VPOS;                                         \n" \
+"   float4 position : SV_Position;                                  \n" \
 "};                                                                 \n" \
 "                                                                   \n" \
 "OUTPUT_VERTEX main(INPUT_VERTEX input) {                           \n" \
@@ -85,7 +85,7 @@ static const char PS_SOURCE[] =
 "#endif                                                             \n" \
 "#ifdef PS_FOG_LINEAR                                               \n" \
 "   float depth = input.position.w;                                 \n" \
-"   float fog   = saturate((fogEnd - depth) / fogEnd);              \n" \
+"   float fog   = saturate(1.0f - depth * fogEnd);                  \n" \
 "   color.rgb   = lerp(fogColor, color.rgb, fog);                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_DENSITY                                              \n" \
