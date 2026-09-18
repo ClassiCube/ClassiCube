@@ -47,14 +47,11 @@ static const char PS_SOURCE[] =
 "Texture2D    texValue;                                             \n" \
 "SamplerState texState;                                             \n" \
 "#endif                                                             \n" \
-"#ifdef PS_FOG_LINEAR                                               \n" \
-"float  fogEnd;                                                     \n" \
-"float3 fogColor;                                                   \n" \
-"#endif                                                             \n" \
-"#ifdef PS_FOG_DENSITY                                              \n" \
-"float  fogDensity;                                                 \n" \
-"float3 fogColor;                                                   \n" \
-"#endif                                                             \n" \
+"cbuffer PS_FogConstants {                                          \n" \
+"   float3 fogColor;                                                \n" \
+"   float1 fogEnd;                                                  \n" \
+"   float1 fogDensity;                                              \n" \
+"};                                                                 \n" \
 "                                                                   \n" \
 "struct INPUT_VERTEX {                                              \n" \
 "#ifndef PS_COLOR_ONLY                                              \n" \
@@ -62,10 +59,10 @@ static const char PS_SOURCE[] =
 "#endif                                                             \n" \
 "   float4 color : COLOR0;                                          \n" \
 "#ifdef PS_FOG_LINEAR                                               \n" \
-"   float4 position : VPOS;                                         \n" \
+"   float4 position : SV_Position;                                  \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_DENSITY                                              \n" \
-"   float4 position : VPOS;                                         \n" \
+"   float4 position : SV_Position;                                  \n" \
 "#endif                                                             \n" \
 "};                                                                 \n" \
 "                                                                   \n" \
@@ -132,8 +129,8 @@ static void CompileShader(LPCSTR src, LPCSTR name, LPCSTR profile, const D3D_SHA
 	printf("};\n");
 }
 
-#define CompileVertexShader(name, defines) CompileShader(VS_SOURCE, name, "vs_4_0_level_9_1", defines)
-#define CompilePixelShader( name, defines) CompileShader(PS_SOURCE, name, "ps_4_0_level_9_1", defines)
+#define CompileVertexShader(name, defines) CompileShader(VS_SOURCE, name, "vs_4_0", defines)
+#define CompilePixelShader( name, defines) CompileShader(PS_SOURCE, name, "ps_4_0", defines)
 int main() {
 	const D3D_SHADER_MACRO vs_colored[]  = { "VS_COLOR_ONLY","1",  NULL,NULL };
 	const D3D_SHADER_MACRO vs_textured[] = {                       NULL,NULL };
