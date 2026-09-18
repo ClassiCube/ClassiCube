@@ -518,6 +518,7 @@ GfxResourceID Gfx_CreateScratchVb(VertexFormat fmt, int maxVertices) {
 	}
 }
 
+
 #if CC_GFX_BACKEND_IS_GL() || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9)
 /* Slightly more efficient implementations are defined in the backends */
 #else
@@ -527,6 +528,12 @@ void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_UnlockScratchVb(vb);
 }
 #endif
+
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
+	Mem_Copy(data, vertices, vCount * gfx_stride);
+	Gfx_UnlockDynamicVb(vb);
+}
 
 
 /*########################################################################################################################*
