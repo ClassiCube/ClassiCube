@@ -206,15 +206,17 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_MAXSTACK (16 * 1024) /* Only < 16 kb stack as it's in DTCM region */
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_TINYMEM
+	#define CC_BUILD_MAXSTACK (10 * 1024)
 	#undef CC_BUILD_ADVLIGHTING
-//	#undef CC_BUILD_FILESYSTEM
-//	#undef CC_BUILD_NETWORKING
-//	#undef CC_BUILD_RESOURCES
-//	#undef CC_BUILD_COMPRESSION
+	#undef CC_BUILD_FILESYSTEM
+	#undef CC_BUILD_NETWORKING
+	#undef CC_BUILD_RESOURCES
+	#undef CC_BUILD_COMPRESSION
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
-	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTMIN
 #elif defined XENON
 	/* libxenon also defines __linux__ (yes, really) */
 	#define CC_BUILD_XBOX360

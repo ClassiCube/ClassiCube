@@ -55,8 +55,9 @@ int eventHandler(PlaydateAPI* pd_api, PDSystemEvent event, uint32_t arg)
 	{
 		pd = pd_api;
 		SetupProgram(0, NULL);
-		Launcher_Setup();
-		//Game_Setup();
+		//Launcher_Setup();
+		Game_Setup();
+		rungame = true;
 		pd_api->system->setUpdateCallback(PlaydateUpdate, pd);
 	}
 	
