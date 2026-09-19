@@ -856,7 +856,7 @@ static void WorkerLoop(void) {
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
 static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
-#if defined CC_BUILD_PSP || defined CC_BUILD_NDS
+#if defined CC_BUILD_PSP || defined CC_BUILD_NDS || defined CC_BUILD_PLAYDATE
 	/* TODO why doesn't threading work properly on PSP */
 	DoRequest(req);
 #else
