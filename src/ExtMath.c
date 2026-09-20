@@ -74,22 +74,19 @@ float Math_Mod1(float x) { return x - (int)x; /* fmodf(x, 1); */ }
 /*########################################################################################################################*
 *-------------------------------------------------------Math intrinsics---------------------------------------------------*
 *#########################################################################################################################*/
-/* 32x/Saturn/GBA is missing these intrinsics */
+
 #if defined CC_BUILD_32X || defined CC_BUILD_SATURN || defined CC_BUILD_GBA
-#include "../third_party/fix16_sqrt.c"
+	/* 32x/Saturn/GBA is missing these intrinsics */
+	#include "../third_party/fix16_sqrt.c"
 
-float sqrtf(float x) {
-	cc_int32 fp_x = (cc_int32)(x * (1 << 16));
-	fp_x = sqrt_fix16(fp_x);
-	return (float)fp_x / (1 << 16);
-}
-#endif
-
-
-#if defined CC_BUILD_PS1
-	/* PS1 is missing these intrinsics */
+	float Math_SqrtF(float x) {
+		cc_int32 fp_x = (cc_int32)(x * (1 << 16));
+		fp_x = sqrt_fix16(fp_x);
+		return (float)fp_x / (1 << 16);
+	}
+#elif defined CC_BUILD_PS1
+	/* PS1 is missing this intrinsic */
 	#include <psxgte.h>
-	float Math_AbsF(float x)  { return __builtin_fabsf(x); }
 
 	float Math_SqrtF(float x) { 
 		int fp_x = (int)(x * (1 << 12));

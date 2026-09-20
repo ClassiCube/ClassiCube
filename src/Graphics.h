@@ -275,12 +275,13 @@ SUMMARY:
 	  when rendering using the Gfx_DrawVb_IndexedTris/Gfx_DrawVb_IndexedTris_Range APIs
 IMPLEMENTATION NOTES:
 	All of the OpenGL and Direct3D rendering backends fully support index buffers
-	However, most console ports rendering backends do not support index buffers
+	However, some console ports rendering backends do not support index buffers
 USAGE NOTES:
 	The default index buffer selects groups of 4 vertices (1 quad) to produce 2 triangles
 	  ( (0,1,2) (2,3,0)  (4,5,6) (6,7,4)  etc)
 	ClassiCube itself never uses a different index buffer, as it draws everything using quads
-	However, plugins might alter the index buffer to draw geometry that doesn't use quads
+	However, if plugins alter the index buffer to draw geometry that doesn't use quads, they
+      must remember to restore the index buffer back to Gfx.DefaultIB
 */
 
 /* Callback function to initialise/fill out the contents of an index buffer */
@@ -304,8 +305,10 @@ IMPLEMENTATION NOTES:
 	For example, the PS1 and DS ports convert XYZ floats into fixed point integers
 USAGE NOTES:
 	Static vertex buffers should be used for data that very rarely changes
-	Dynamic vertex buffers should be used for frequently changing data
+	Dynamic vertex buffers should be used for frequently changing data (e.g. UI)
+    Scratch vertex buffers should be used for data that changes every frame
 */
+
 /* Creates a new vertex buffer */
 CC_API GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count);
 /* Attempts to create a new vertex buffer, or 0 if it fails to */
@@ -372,7 +375,8 @@ USAGE NOTES:
 	  is setup to draw groups of 2 triangles from 4 vertices (1 quad)
 */
 
-/* Optional draw hints used by some rendering backends to speed up 2D drawing */
+/* Optional draw hints used by some rendering backends to speed up some drawing */
+/* These hints are NOT required (but can improve performance on some rendering backends) */
 typedef enum DrawHints_ {
 	DRAW_HINT_NONE   = 0,
 	/* Vertices do not require clipping with the planes set in CC_CLIPPING_FLAGS */
@@ -380,7 +384,7 @@ typedef enum DrawHints_ {
 	/* Vertices are 2D rects with possible texture scaling and/or repeating */
 	DRAW_HINT_SPRITE = 0x02,
 	/* Vertices are 2D rects with no texture scaling or repeating */
-	/* Typically this is only used for textures purely containing text */
+	/*  (e.g. used for drawing 2D UI quads purely containing text) */
 	DRAW_HINT_RECT   = 0x04,
 } DrawHints;
 
