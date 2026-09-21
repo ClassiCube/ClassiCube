@@ -232,7 +232,6 @@ void Gfx_UnlockVb(GfxResourceID vb) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static float texOffsetX, texOffsetY;
 static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -251,13 +250,10 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	texOffsetX = x;
-	texOffsetY = y;
+	// TODO: implement? but clouds aren't drawn anyways
 }
 
 void Gfx_DisableTextureOffset(void) {
-	texOffsetX = 0;
-	texOffsetY = 0;
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
@@ -341,8 +337,8 @@ static int TransformVertex3D(int index, Vertex* vertex) {
 		vertex->c = v->Col;
 	} else {
 		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		vertex->u = (v->U + texOffsetX);
-		vertex->v = (v->V + texOffsetY);
+		vertex->u = v->U;
+		vertex->v = v->V;
 		vertex->c = v->Col;
 	}
 	return vertex->z >= 0.0f;
@@ -528,8 +524,8 @@ static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
 	V->z = 0.0f; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
 	V->w = invt * v1->w + t * v2->w;
 	
-	V->u = invt * v1->u + t * v2->u;
-	V->v = invt * v1->v + t * v2->v;
+	V->u = t < 0.5f ? v1->u : v2->u;
+	V->v = t < 0.5f ? v1->v : v2->v;
 	V->c = v1->c;
 }
 
