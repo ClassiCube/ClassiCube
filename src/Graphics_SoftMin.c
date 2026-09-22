@@ -149,13 +149,13 @@ static void SetAlphaBlend(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void ClearColorBuffer(void) {
-	int i, x, y, size = fb_width * fb_height;
-
 #ifdef CC_BUILD_GBA
 	/* in mGBA, fast clear takes ~3ms compared to ~52ms of standard code below */
 	extern void VRAM_FastClear(BitmapCol color);
 	VRAM_FastClear(clearColor);
 #else
+	int i, x, y, size = fb_width * fb_height;
+
 	if (cb_stride == fb_width) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
 	} else {
@@ -353,7 +353,7 @@ static void ViewportVertex3D(Vertex* vertex) {
 	vertex->w = invW;
 }
 
-static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
+CC_API void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	PackedCol vColor = V0->c;
 	int minX = (int)V0->x;
 	int minY = (int)V0->y;
@@ -382,32 +382,42 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
 
 	int x, y;
-	for (y = minY; y <= maxY; y++) 
-	{
-		int texY = fast ? (begTY + (y - minY)) : (((begTY + delTY * (y - minY) / height)) & texHeightMask);
-		for (x = minX; x <= maxX; x++) 
+	if (fast) {
+		for (y = minY; y <= maxY; y++) 
 		{
-			int texX = fast ? (begTX + (x - minX)) : (((begTX + delTX * (x - minX) / width)) & texWidthMask);
-			int texIndex = texY * curTexWidth + texX;
-
-			BitmapCol color = curTexPixels[texIndex];
-			int R, G, B;
-
-			if ((color & BITMAPCOLOR_A_MASK) == 0) continue;
-			int cb_index = y * cb_stride + x;
-
-			if (vColor != PACKEDCOL_WHITE) {
-				int r1 = PackedCol_R(vColor), r2 = BitmapCol_R(color);
-				R = ( r1 * r2 ) >> 8;
-				int g1 = PackedCol_G(vColor), g2 = BitmapCol_G(color);
-				G = ( g1 * g2 ) >> 8;
-				int b1 = PackedCol_B(vColor), b2 = BitmapCol_B(color);
-				B = ( b1 * b2 ) >> 8;
-
-				color = BitmapCol_Make(R, G, B, 0xFF);
+			int texY = begTY + (y - minY);
+			for (x = minX; x <= maxX; x++) 
+			{
+				int texX = begTX + (x - minX);
+				int texIndex = texY * curTexWidth + texX;
+				BitmapCol color = curTexPixels[texIndex];
+				#include "Graphics_SoftMin.sprite.i"
 			}
+		}
+	} else if (delTX == 0 && delTY == 0) {
+		int texY = begTY & texHeightMask;
+		int texX = begTX & texWidthMask;
+		int texIndex = texY * curTexWidth + texX;
+		BitmapCol color = curTexPixels[texIndex];
 
-			colorBuffer[cb_index] = color;
+		for (y = minY; y <= maxY; y++) 
+		{
+			for (x = minX; x <= maxX; x++) 
+			{
+				#include "Graphics_SoftMin.sprite.i"
+			}
+		}
+	} else {
+		for (y = minY; y <= maxY; y++) 
+		{
+			int texY = ((begTY + delTY * (y - minY) / height)) & texHeightMask;
+			for (x = minX; x <= maxX; x++) 
+			{
+				int texX = ((begTX + delTX * (x - minX) / width)) & texWidthMask;
+				int texIndex = texY * curTexWidth + texX;
+				BitmapCol color = curTexPixels[texIndex];
+				#include "Graphics_SoftMin.sprite.i"
+			}
 		}
 	}
 }
