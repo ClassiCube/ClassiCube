@@ -10,7 +10,7 @@
 static cc_bool faceCulling;
 static int fb_width, fb_height; 
 static struct Bitmap fb_bmp;
-static float vp_hwidth, vp_hheight;
+static int vp_hwidth, vp_hheight;
 static int fb_maxX, fb_maxY;
 
 static BitmapCol* colorBuffer;
@@ -67,8 +67,8 @@ void Gfx_Free(void) {
 #define FP_to_int(x)   ((x) >> FP_SHIFT)
 #define int_to_FP(x)   ((x) << FP_SHIFT)
 
-#define FP_mul(a, b) (((int64_t)(a) * (b)) >> FP_SHIFT)
-#define FP_div(a, b) (((int64_t)(a) << FP_SHIFT) / (b))
+#define FP_mul(a, b) (((cc_int64)(a) * (b)) >> FP_SHIFT)
+#define FP_div(a, b) (((cc_int64)(a) << FP_SHIFT) / (b))
 
 #define FP_ONE   int_to_FP(1)
 #define FP_HALF  (FP_ONE >> 1)
@@ -238,26 +238,37 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
-struct FPVertexColoured { float x, y, z; PackedCol c; };
-struct FPVertexTextured { float x, y, z; PackedCol c; int u, v; };
+struct FPVertexCommon   { int x, y, z; };
+struct FPVertexColoured { int x, y, z; PackedCol c; };
+struct FPVertexTextured { int x, y, z; PackedCol c; int u, v; };
 
 static VertexFormat buf_fmt;
 static int buf_count;
 
 static void PreprocessTexturedVertices(void* vertices) {
-	// TODO X/Y/Z fixed point in the future
 	struct FPVertexTextured* dst = vertices;
 	struct VertexTextured* src   = vertices;
 
 	for (int i = 0; i < buf_count; i++, src++, dst++)
 	{
+		dst->x = float_to_FP(src->x);
+		dst->y = float_to_FP(src->y);
+		dst->z = float_to_FP(src->z);
 		dst->u = float_to_FP(src->U);
 		dst->v = float_to_FP(src->V);
 	}
 }
 
 static void PreprocessColouredVertices(void* vertices) {
-	// TODO X/Y/Z fixed point in the future
+	struct FPVertexColoured* dst = vertices;
+	struct VertexColoured* src   = vertices;
+
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->x = float_to_FP(src->x);
+		dst->y = float_to_FP(src->y);
+		dst->z = float_to_FP(src->z);
+	}
 }
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
@@ -290,13 +301,29 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Matrix _view, _proj, _mvp;
+struct FPVec4   { int x, y, z, w; };
+struct FPMatrix { struct FPVec4 row1, row2, row3, row4; };
+
+static struct Matrix _view, _proj;
+static struct FPMatrix _mvp;
+
+static void SetMVP(const struct Matrix* mvp) {
+	float* src = (float*)mvp;
+	int*   dst = (int*)&_mvp;
+	
+	for (int i = 0; i < 4 * 4; i++)
+	{
+		dst[i] = float_to_FP(src[i]);
+	}
+}
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&_mvp, &_view, &_proj);
+	struct Matrix mvp;
+	Matrix_Mul(&mvp, &_view, &_proj);
+	SetMVP(&mvp);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -304,7 +331,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 	_proj = *proj;
 
 	Matrix_Mul(mvp, view, proj);
-	_mvp  = *mvp;
+	SetMVP(mvp);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -350,10 +377,8 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct Vector3 { float x, y, z; } Vector3;
-typedef struct Vector2 { float x, y; } Vector2;
 typedef struct Vertex_ {
-	float x, y, z, w;
+	cc_int64 x, y, z, w;
 	int u, v;
 	PackedCol c;
 } Vertex;
@@ -361,7 +386,7 @@ typedef struct Vertex_ {
 static void TransformVertex2D(int index, Vertex* vertex) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
-	Vector3* pos = (Vector3*)ptr;
+	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
 	vertex->x = pos->x;
 	vertex->y = pos->y;
 
@@ -381,12 +406,22 @@ static void TransformVertex2D(int index, Vertex* vertex) {
 static int TransformVertex3D(int index, Vertex* vertex) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
-	Vector3* pos = (Vector3*)ptr;
+	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
 
-	vertex->x = pos->x * _mvp.row1.x + pos->y * _mvp.row2.x + pos->z * _mvp.row3.x + _mvp.row4.x;
-	vertex->y = pos->x * _mvp.row1.y + pos->y * _mvp.row2.y + pos->z * _mvp.row3.y + _mvp.row4.y;
-	vertex->z = pos->x * _mvp.row1.z + pos->y * _mvp.row2.z + pos->z * _mvp.row3.z + _mvp.row4.z;
-	vertex->w = pos->x * _mvp.row1.w + pos->y * _mvp.row2.w + pos->z * _mvp.row3.w + _mvp.row4.w;
+	cc_int64 src_x = pos->x;
+	cc_int64 src_y = pos->y;
+	cc_int64 src_z = pos->z;
+	cc_int64 src_w = FP_ONE; // TODO << shift instead?
+
+	cc_int64 x = src_x * _mvp.row1.x + src_y * _mvp.row2.x + src_z * _mvp.row3.x + src_w * _mvp.row4.x;
+	cc_int64 y = src_x * _mvp.row1.y + src_y * _mvp.row2.y + src_z * _mvp.row3.y + src_w * _mvp.row4.y;
+	cc_int64 z = src_x * _mvp.row1.z + src_y * _mvp.row2.z + src_z * _mvp.row3.z + src_w * _mvp.row4.z;
+	cc_int64 w = src_x * _mvp.row1.w + src_y * _mvp.row2.w + src_z * _mvp.row3.w + src_w * _mvp.row4.w;
+
+	vertex->x = x >> FP_SHIFT;
+	vertex->y = y >> FP_SHIFT;
+	vertex->z = z >> FP_SHIFT;
+	vertex->w = w >> FP_SHIFT;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct FPVertexColoured* v = (struct FPVertexColoured*)ptr;
@@ -399,24 +434,28 @@ static int TransformVertex3D(int index, Vertex* vertex) {
 		vertex->v = v->v;
 		vertex->c = v->c;
 	}
-	return vertex->z >= 0.0f;
+	return z >= 0;
 }
 
 static void ViewportVertex3D(Vertex* vertex) {
-	float invW = 1.0f / vertex->w;
+	cc_int64 invW = FP_div(FP_ONE, vertex->w);
 
-	vertex->x = vp_hwidth  * (1 + vertex->x * invW);
-	vertex->y = vp_hheight * (1 - vertex->y * invW);
-	vertex->z = vertex->z * invW;
+	cc_int64 x_ndc = FP_mul(vertex->x, invW);
+	cc_int64 y_ndc = FP_mul(vertex->y, invW);
+	cc_int64 z_ndc = FP_mul(vertex->z, invW);
+
+	vertex->x = vp_hwidth  + FP_mul(x_ndc, vp_hwidth);
+	vertex->y = vp_hheight - FP_mul(y_ndc, vp_hheight);
+	vertex->z = z_ndc;
 	vertex->w = invW;
 }
 
 static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	PackedCol vColor = V0->c;
-	int minX = (int)V0->x;
-	int minY = (int)V0->y;
-	int maxX = (int)V1->x;
-	int maxY = (int)V2->y;
+	int minX = FP_to_int(V0->x);
+	int minY = FP_to_int(V0->y);
+	int maxX = FP_to_int(V1->x);
+	int maxY = FP_to_int(V2->y);
 
 	// Reject triangles completely outside
 	if (maxX < 0 || minX > fb_maxX) return;
@@ -500,9 +539,9 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	B  = ( b1 * b2 ) >> 8;    \
 
 static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
-	int x0 = (int)V0->x, y0 = (int)V0->y;
-	int x1 = (int)V1->x, y1 = (int)V1->y;
-	int x2 = (int)V2->x, y2 = (int)V2->y;
+	int x0 = FP_to_int(V0->x), y0 = FP_to_int(V0->y);
+	int x1 = FP_to_int(V1->x), y1 = FP_to_int(V1->y);
+	int x2 = FP_to_int(V2->x), y2 = FP_to_int(V2->y);
 	int minX = min(x0, min(x1, x2));
 	int minY = min(y0, min(y1, y2));
 	int maxX = max(x0, max(x1, x2));
@@ -583,18 +622,18 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 // https://github.com/behindthepixels/EDXRaster/blob/master/EDXRaster/Core/Clipper.h
 static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
-	float t  = Math_AbsF(v1->z / (v2->z - v1->z));
-	float invt = 1.0f - t;
+	cc_int64 t  = FP_div(v1->z, v2->z - v1->z);
+	if (t < 0) t = -t;
 	
-	V->x = invt * v1->x + t * v2->x;
-	V->y = invt * v1->y + t * v2->y;
-	//V->z = invt * v1->z + t * v2->z;
-	V->z = 0.0f; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
-	V->w = invt * v1->w + t * v2->w;
+	V->x = v1->x + FP_mul(t, v2->x - v1->x);
+	V->y = v1->y + FP_mul(t, v2->y - v1->y);
+	//V->z = v1->z + FP_mul(t, v2->z - v1->z);
+	V->z = 0; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
+	V->w = v1->w + FP_mul(t, v2->w - v1->w);
 	
-	V->u = t < 0.5f ? v1->u : v2->u;
-	V->v = t < 0.5f ? v1->v : v2->v;
-	V->c = v1->c;
+	V->u = t < FP_HALF ? v1->u : v2->u;
+	V->v = t < FP_HALF ? v1->v : v2->v;
+	V->c = v1->c;//PackedCol_Make(255, 0, 0, 255);
 }
 
 // https://casual-effects.com/research/McGuire2011Clipping/clip.glsl
@@ -950,8 +989,8 @@ void Gfx_OnWindowResize(int width, int height) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_hwidth  = w / 2.0f;
-	vp_hheight = h / 2.0f;
+	vp_hwidth  = float_to_FP(w / 2.0f);
+	vp_hheight = float_to_FP(h / 2.0f);
 }
 
 void Gfx_SetScissor (int x, int y, int w, int h) {
