@@ -56,27 +56,53 @@ void Gfx_Free(void) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------Fixed point-------------------------------------------------------*
+*#########################################################################################################################*/
+// 16.16 fixed point
+#define FP_SHIFT 16
+
+#define float_to_FP(x) ((int)((x) * FP_ONE))
+#define FP_to_float(x) ((float)(x) / FP_ONE)
+#define FP_to_int(x)   ((x) >> FP_SHIFT)
+#define int_to_FP(x)   ((x) << FP_SHIFT)
+
+#define FP_mul(a, b) (((int64_t)(a) * (b)) >> FP_SHIFT)
+#define FP_div(a, b) (((int64_t)(a) << FP_SHIFT) / (b))
+
+#define FP_ONE   int_to_FP(1)
+#define FP_HALF  (FP_ONE >> 1)
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Textures--------------------------------------------------------*
+*#########################################################################################################################*/
 typedef struct CCTexture {
 	unsigned short width, height;
 	BitmapCol pixels[];
 } CCTexture;
 
-static CCTexture* curTexture;
 static BitmapCol* curTexPixels;
-static int curTexWidth, curTexHeight;
+static int curTexWidth,  curTexHeight;
 static int texWidthMask, texHeightMask;
+static int texUShift,    texVShift;
 		
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = texId;
 
-	curTexture   = tex;
 	curTexPixels = tex->pixels;
 	curTexWidth  = tex->width;
 	curTexHeight = tex->height;
 
-	texWidthMask   = (1 << Math_ilog2(tex->width))  - 1;
-	texHeightMask  = (1 << Math_ilog2(tex->height)) - 1;
+	int log2_width  = Math_ilog2(tex->width);
+	int log2_height = Math_ilog2(tex->height);
+
+	texWidthMask  = (1 << log2_width)  - 1;
+	texHeightMask = (1 << log2_height) - 1;
+	
+	texUShift = FP_SHIFT - log2_width;
+	texVShift = FP_SHIFT - log2_height;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -212,6 +238,28 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
+struct FPVertexColoured { float x, y, z; PackedCol c; };
+struct FPVertexTextured { float x, y, z; PackedCol c; int u, v; };
+
+static VertexFormat buf_fmt;
+static int buf_count;
+
+static void PreprocessTexturedVertices(void* vertices) {
+	// TODO X/Y/Z fixed point in the future
+	struct FPVertexTextured* dst = vertices;
+	struct VertexTextured* src   = vertices;
+
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->u = float_to_FP(src->U);
+		dst->v = float_to_FP(src->V);
+	}
+}
+
+static void PreprocessColouredVertices(void* vertices) {
+	// TODO X/Y/Z fixed point in the future
+}
+
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return Mem_TryAlloc(count, strideSizes[fmt]);
 }
@@ -224,9 +272,19 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 
-void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+    buf_fmt   = fmt;
+    buf_count = count;
+	return vb;
+}
 
-void Gfx_UnlockVb(GfxResourceID vb) { }
+void Gfx_UnlockVb(GfxResourceID vb) { 
+    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+        PreprocessTexturedVertices(vb);
+    } else {
+        PreprocessColouredVertices(vb);
+    }
+}
 
 
 /*########################################################################################################################*
@@ -296,7 +354,7 @@ typedef struct Vector3 { float x, y, z; } Vector3;
 typedef struct Vector2 { float x, y; } Vector2;
 typedef struct Vertex_ {
 	float x, y, z, w;
-	float u, v;
+	int u, v;
 	PackedCol c;
 } Vertex;
 
@@ -308,15 +366,15 @@ static void TransformVertex2D(int index, Vertex* vertex) {
 	vertex->y = pos->y;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		struct VertexColoured* v = (struct VertexColoured*)ptr;
-		vertex->u = 0.0f;
-		vertex->v = 0.0f;
-		vertex->c = v->Col;
+		struct FPVertexColoured* v = (struct FPVertexColoured*)ptr;
+		vertex->u = 0;
+		vertex->v = 0;
+		vertex->c = v->c;
 	} else {
-		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		vertex->u = v->U;
-		vertex->v = v->V;
-		vertex->c = v->Col;
+		struct FPVertexTextured* v = (struct FPVertexTextured*)ptr;
+		vertex->u = v->u;
+		vertex->v = v->v;
+		vertex->c = v->c;
 	}
 }
 
@@ -331,15 +389,15 @@ static int TransformVertex3D(int index, Vertex* vertex) {
 	vertex->w = pos->x * _mvp.row1.w + pos->y * _mvp.row2.w + pos->z * _mvp.row3.w + _mvp.row4.w;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		struct VertexColoured* v = (struct VertexColoured*)ptr;
-		vertex->u = 0.0f;
-		vertex->v = 0.0f;
-		vertex->c = v->Col;
+		struct FPVertexColoured* v = (struct FPVertexColoured*)ptr;
+		vertex->u = 0;
+		vertex->v = 0;
+		vertex->c = v->c;
 	} else {
-		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		vertex->u = v->U;
-		vertex->v = v->V;
-		vertex->c = v->Col;
+		struct FPVertexTextured* v = (struct FPVertexTextured*)ptr;
+		vertex->u = v->u;
+		vertex->v = v->v;
+		vertex->c = v->c;
 	}
 	return vertex->z >= 0.0f;
 }
@@ -353,7 +411,7 @@ static void ViewportVertex3D(Vertex* vertex) {
 	vertex->w = invW;
 }
 
-CC_API void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
+static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	PackedCol vColor = V0->c;
 	int minX = (int)V0->x;
 	int minY = (int)V0->y;
@@ -364,10 +422,10 @@ CC_API void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	if (maxX < 0 || minX > fb_maxX) return;
 	if (maxY < 0 || minY > fb_maxY) return;
 
-	int begTX = (int)(V0->u * curTexWidth);
-	int begTY = (int)(V0->v * curTexHeight);
-	int delTX = (int)(V1->u * curTexWidth)  - begTX;
-	int delTY = (int)(V2->v * curTexHeight) - begTY;
+	int begTX = (V0->u >> texUShift);
+	int begTY = (V0->v >> texVShift);
+	int delTX = (V1->u >> texUShift) - begTX;
+	int delTY = (V2->v >> texVShift) - begTY;
 
 	int width = maxX - minX, height = maxY - minY;
 	if (width == 0) width = 1;
@@ -486,11 +544,11 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 		A = PackedCol_A(color);
 	} else {
 		/* Always use a single pixel */
-		float rawY0 = V0->v * curTexHeight;
-		float rawY1 = V1->v * curTexHeight;
+		int rawY0 = V0->v >> texVShift;
+		int rawY1 = V1->v >> texVShift;
 
-		float rawY = min(rawY0, rawY1);
-		int texY   = (int)(rawY + 0.01f) & texHeightMask;
+		int rawY = min(rawY0, rawY1);
+		int texY = rawY & texHeightMask;
 		MultiplyColors(color, curTexPixels[texY * curTexWidth]);
 	}
 
