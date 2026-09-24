@@ -832,13 +832,6 @@ static void ChatOptionsScreen_SetScale(const cc_string* v, float* target, const 
 	Gui_LayoutAll();
 }
 
-static cc_bool ChO_GetAutoScaleChat(void) { return Gui.AutoScaleChat; }
-static void    ChO_SetAutoScaleChat(cc_bool v) {
-	Gui.AutoScaleChat = v;
-	Options_SetBool(OPT_CHAT_AUTO_SCALE, v);
-	Gui_LayoutAll();
-}
-
 static void ChO_GetChatScale(cc_string* v) { String_AppendFloat(v, Gui.RawChatScale, 1); }
 static void ChO_SetChatScale(const cc_string* v) { 
 	ChatOptionsScreen_SetScale(v, &Gui.RawChatScale, OPT_CHAT_SCALE); 
@@ -867,8 +860,6 @@ static void    ChO_SetClickable(cc_bool v) {
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddBool(s, "Scale with window",
-			ChO_GetAutoScaleChat, ChO_SetAutoScaleChat, NULL);
 		MenuOptionsScreen_AddNum(s, "Chat scale",
 			0.25f, 4.00f, 1,
 			ChO_GetChatScale,     ChO_SetChatScale, NULL);
@@ -933,9 +924,27 @@ static void    GuO_SetUseFont(cc_bool v) {
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
+static cc_bool GuO_GetAutoScaleChat(void) { return Gui.AutoScaleChat; }
+static void    GuO_SetAutoScaleChat(cc_bool v) {
+	Gui.AutoScaleChat = v;
+	Options_SetBool(OPT_CHAT_AUTO_SCALE, v);
+	Gui_LayoutAll();
+}
+
+static void GuO_GetGlobalScale(cc_string* v) { String_AppendFloat(v, Gui.GlobalScale, 1); }
+static void GuO_SetGlobalScale(const cc_string* v) { 
+	ChatOptionsScreen_SetScale(v, &Gui.GlobalScale, OPT_GUI_SCALE); 
+}
+
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
+		/* In practice, it's limited to the maximum that fits in the window.
+		 * I couldn't make it work correctly here, so hardcoded limit for now. */
+		MenuOptionsScreen_AddNum(s,  "GUI scale",
+			1.00f, 4.00f, 2,
+			GuO_GetGlobalScale, GuO_SetGlobalScale, NULL);
+
 		MenuOptionsScreen_AddBool(s, "Show FPS",
 			GuO_GetShowFPS,   GuO_SetShowFPS, NULL);
 		MenuOptionsScreen_AddNum(s,  "Hotbar scale",
@@ -947,6 +956,9 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		MenuOptionsScreen_AddNum(s,  "Crosshair scale",
 			0.25f, 4.00f, 1,
 			GuO_GetCrosshair, GuO_SetCrosshair, NULL);
+
+		MenuOptionsScreen_AddBool(s, "Scale with window",
+			GuO_GetAutoScaleChat, GuO_SetAutoScaleChat, NULL);
 		
 		MenuOptionsScreen_AddBool(s, "Black text shadows",
 			GuO_GetShadows,   GuO_SetShadows, NULL);
