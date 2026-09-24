@@ -141,7 +141,7 @@ Listed below are all of the options supported in options.txt
 `nostalgia-classicarm`|Classic mode|Whether to render your own arm in classic or modern minecraft style
 `gui-blockinhand`|`true`|Whether to show block currently being held in bottom right corner
 `namesmode`|`Hovered`|Entity nametag rendering mode<br>None, Hovered, All, AllHovered, AllUnscaled
-`entityshadow`|`None`|Entity shadow rendering mode<br>None, SnapToBlock, Circle, CircleAll
+`entityshadow`|`None`|Entity shadow rendering mode<br>None, SnapToBlock, Circle, CircleAll, Square
 
 ### Texture pack options
 |Name|Default|Description|
