@@ -1009,12 +1009,14 @@ void WordWrap_GetCoords(int index, const cc_string* lines, int numLines, int* co
 int WordWrap_GetBackLength(const cc_string* text, int index) {
 	int start = index;
 	if (index <= 0) return 0;
-	if (index >= text->length) Process_Abort("WordWrap_GetBackLength - index past end of string");
-	
-	/* Go backward to the end of the previous word */
-	while (index > 0 && text->buffer[index] == ' ') index--;
-	/* Go backward to the start of the current word */
-	while (index > 0 && text->buffer[index] != ' ') index--;
+	if (index > text->length) Process_Abort("WordWrap_GetBackLength - index past end of string");
+
+	index--; /* Move to the character to the left of the caret */
+	/* Skip over any spaces between the caret and the previous word */
+	while (index >= 0 && text->buffer[index] == ' ') index--;
+	/* Skip backward over the word, landing on its first character */
+	while (index >= 0 && text->buffer[index] != ' ') index--;
+	index++;
 
 	return start - index;
 }
@@ -1022,12 +1024,12 @@ int WordWrap_GetBackLength(const cc_string* text, int index) {
 int WordWrap_GetForwardLength(const cc_string* text, int index) {
 	int start = index, length = text->length;
 	if (index == -1) return 0;
-	if (index >= text->length) Process_Abort("WordWrap_GetForwardLength - index past end of string");
+	if (index > text->length) Process_Abort("WordWrap_GetForwardLength - index past end of string");
 
-	/* Go forward to the end of the word 'index' is currently in */
-	while (index < length && text->buffer[index] != ' ') index++;
-	/* Go forward to the start of the next word after 'index' */
+	/* Skip over any spaces between the caret and the next word */
 	while (index < length && text->buffer[index] == ' ') index++;
+	/* Skip forward over the word, landing just past its last character */
+	while (index < length && text->buffer[index] != ' ') index++;
 
 	return index - start;
 }
