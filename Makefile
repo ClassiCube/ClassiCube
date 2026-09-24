@@ -127,6 +127,8 @@ n64:
 	$(call make_platform,misc/n64/Makefile)
 gba:
 	$(call make_platform,misc/gba/Makefile)
+playdate:
+	$(call make_platform,misc/playdate/Makefile)
 ds:
 	$(call make_platform,misc/nds/Makefile)
 3ds:
