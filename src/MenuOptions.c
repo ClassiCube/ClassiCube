@@ -715,15 +715,37 @@ void EnvSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
-static void GrO_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
-	Widget_SetDisabled(s->widgets[3], Lighting_ModeLockedByServer);
+static void Gr0_CheckCustomFpsLimitEnabled(struct MenuOptionsScreen* s) {
+	Widget_SetDisabled(s->widgets[1], Game_FpsLimit != FPS_LIMIT_CUSTOM);
 }
 
-static int  GrO_GetFPS(void) { return Game_FpsLimit; }
-static void GrO_SetFPS(int v) {
-	cc_string str = String_FromReadonly(FpsLimit_Names[v]);
+static void GrO_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
+	Widget_SetDisabled(s->widgets[4], Lighting_ModeLockedByServer);
+}
+
+static void GraphicsOptionsScreen_FpsLimit(void* screen, void* widget) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
+
+	int method = Game_FpsLimit + 1;
+	if (method >= FPS_LIMIT_COUNT) method = 0;
+
+	cc_string str = String_FromReadonly(FpsLimit_Names[method]);
 	Options_Set(OPT_FPS_LIMIT, &str);
-	Game_SetFpsLimit(v);
+	Game_SetFpsLimit(method);
+	Gr0_CheckCustomFpsLimitEnabled(s);
+	MenuOptionsScreen_Update(s, btn);
+}
+
+static void GrO_GetFPSLimit(struct ButtonWidget* btn, cc_string* v) {
+	String_AppendConst(v, FpsLimit_Names[Game_FpsLimit]);
+}
+static void GrO_SetFPSLimit(struct ButtonWidget* btn, const cc_string* v) { }
+
+static int  GrO_GetMaxFPS(void) { return Game_MaxFps; }
+static void GrO_SetMaxFPS(int v) {
+	Options_SetInt(OPT_MAX_FPS, v);
+	Game_SetMaxFps(v);
 }
 
 static int  GrO_GetViewDist(void) { return Game_ViewDistance; }
@@ -770,12 +792,14 @@ static void    GrO_SetMipmaps(cc_bool v) {
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
-		MenuOptionsScreen_AddEnum(s, "FPS mode", FpsLimit_Names, FPS_LIMIT_COUNT,
-			GrO_GetFPS,        GrO_SetFPS,
+		MenuOptionsScreen_AddButton(s, "FPS mode", GraphicsOptionsScreen_FpsLimit,
+			GrO_GetFPSLimit,   GrO_SetFPSLimit,
 			"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
-			"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
+			"&eCustom: &fRenders a specified number of frames at most each second.\n" \
 			"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 			"&cNoLimit is pointless - it wastefully renders frames that you don't even see!");
+		MenuOptionsScreen_AddInt(s, "Max FPS", 10, 1000, 60,
+			GrO_GetMaxFPS,     GrO_SetMaxFPS, NULL);
 		MenuOptionsScreen_AddInt(s, "View distance",
 			8, 4096, 512,
 			GrO_GetViewDist,   GrO_SetViewDist, NULL);
@@ -815,6 +839,7 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	};
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 	s->OnLightingModeServerChanged = GrO_CheckLightingModeAllowed;
+	Gr0_CheckCustomFpsLimitEnabled(s);
 	GrO_CheckLightingModeAllowed(s);
 }
 
