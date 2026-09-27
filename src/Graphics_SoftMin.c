@@ -393,9 +393,7 @@ typedef struct Vertex_ {
 	PackedCol c;
 } Vertex;
 
-static CC_FAST_FUNC void TransformVertex2D(int index, Vertex* vertex) {
-	// TODO: avoid the multiply, just add down in DrawTriangles
-	char* ptr = (char*)gfx_vertices + index * gfx_stride;
+static CC_FAST_FUNC void TransformVertex2D(const char* ptr, Vertex* vertex) {
 	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
 	vertex->x = pos->x;
 	vertex->y = pos->y;
@@ -413,9 +411,7 @@ static CC_FAST_FUNC void TransformVertex2D(int index, Vertex* vertex) {
 	}
 }
 
-static CC_FAST_FUNC int TransformVertex3D(int index, Vertex* vertex) {
-	// TODO: avoid the multiply, just add down in DrawTriangles
-	char* ptr = (char*)gfx_vertices + index * gfx_stride;
+static CC_FAST_FUNC int TransformVertex3D(const char* ptr, Vertex* vertex) {
 	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
 
 	cc_int64 src_x = pos->x;
@@ -889,16 +885,19 @@ static CC_NOINLINE void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2
 }
 
 static void CC_FAST_FUNC DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
+	int i, stride = gfx_stride;
+	char* ptr = (char*)gfx_vertices + startVertex * gfx_stride;
 	Vertex vertices[4];
-	int i, j = startVertex;
 
 	if (gfx_rendering2D && (hints & (DRAW_HINT_SPRITE|DRAW_HINT_RECT))) {
 		// 4 vertices = 1 quad = 2 triangles
-		for (i = 0; i < verticesCount / 4; i++, j += 4)
+
+		for (i = 0; i < verticesCount / 4; i++)
 		{
-			TransformVertex2D(j + 0, &vertices[0]);
-			TransformVertex2D(j + 1, &vertices[1]);
-			TransformVertex2D(j + 2, &vertices[2]);
+			TransformVertex2D(ptr, &vertices[0]); ptr += stride;
+			TransformVertex2D(ptr, &vertices[1]); ptr += stride;
+			TransformVertex2D(ptr, &vertices[2]); ptr += stride;
+			/* don't need 4th vertex for quads */ ptr += stride;
 
 			DrawSprite2D(&vertices[0], &vertices[1], &vertices[2]);
 		}
@@ -906,12 +905,13 @@ static void CC_FAST_FUNC DrawQuads(int startVertex, int verticesCount, DrawHints
 		Platform_LogConst("2D triangle unsupported..");
 	} else if (colWrite) {
 		// 4 vertices = 1 quad = 2 triangles
-		for (i = 0; i < verticesCount / 4; i++, j += 4)
+		for (i = 0; i < verticesCount / 4; i++)
 		{
-			int clip = TransformVertex3D(j + 0, &vertices[0]) << 0
-					|  TransformVertex3D(j + 1, &vertices[1]) << 1
-					|  TransformVertex3D(j + 2, &vertices[2]) << 2
-					|  TransformVertex3D(j + 3, &vertices[3]) << 3;
+			int clip;
+			clip  = TransformVertex3D(ptr, &vertices[0]) << 0; ptr += stride;
+			clip |= TransformVertex3D(ptr, &vertices[1]) << 1; ptr += stride;
+			clip |= TransformVertex3D(ptr, &vertices[2]) << 2; ptr += stride;
+			clip |= TransformVertex3D(ptr, &vertices[3]) << 3; ptr += stride;
 
 			if (clip == 0) {
 				// Quad entirely clipped
