@@ -21,6 +21,7 @@
 #include <network/network.h>
 #include <ppc/timebase.h>
 #include <time/time.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>

@@ -78,31 +78,32 @@ void Gfx_Free(void) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 typedef struct CCTexture {
-	unsigned short width, height;
+	unsigned short log2_width, log2_height;
 	BitmapCol pixels[];
 } CCTexture;
+#define Texture_Width(tex)  (1 << (tex)->log2_width)
+#define Texture_Height(tex) (1 << (tex)->log2_height)
 
 static BitmapCol* curTexPixels;
 static int curTexWidth,  curTexHeight;
 static int texWidthMask, texHeightMask;
 static int texUShift,    texVShift;
+static int texYShift;
 		
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = texId;
 
 	curTexPixels = tex->pixels;
-	curTexWidth  = tex->width;
-	curTexHeight = tex->height;
+	curTexWidth  = Texture_Width(tex);
+	curTexHeight = Texture_Height(tex);
 
-	int log2_width  = Math_ilog2(tex->width);
-	int log2_height = Math_ilog2(tex->height);
-
-	texWidthMask  = (1 << log2_width)  - 1;
-	texHeightMask = (1 << log2_height) - 1;
+	texWidthMask  = (1 << tex->log2_width)  - 1;
+	texHeightMask = (1 << tex->log2_height) - 1;
 	
-	texUShift = FP_SHIFT - log2_width;
-	texVShift = FP_SHIFT - log2_height;
+	texUShift = FP_SHIFT - tex->log2_width;
+	texVShift = FP_SHIFT - tex->log2_height;
+	texYShift = tex->log2_width;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -115,8 +116,8 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	CCTexture* tex = (CCTexture*)Mem_TryAlloc(2 + bmp->width * bmp->height, BITMAPCOLOR_SIZE);
 	if (!tex) return NULL;
 
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->log2_width  = Math_ilog2(bmp->width);
+	tex->log2_height = Math_ilog2(bmp->height);
 
 	CopyPixels(tex->pixels, bmp->width * BITMAPCOLOR_SIZE,
 			   bmp->scan0,  rowWidth * BITMAPCOLOR_SIZE,
@@ -126,10 +127,11 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+	int tex_width  = Texture_Width(tex);
+	BitmapCol* dst = (tex->pixels + x) + y * tex_width;
 
-	CopyPixels(dst,         tex->width * BITMAPCOLOR_SIZE,
-			   part->scan0, rowWidth   * BITMAPCOLOR_SIZE,
+	CopyPixels(dst,         tex_width * BITMAPCOLOR_SIZE,
+			   part->scan0, rowWidth  * BITMAPCOLOR_SIZE,
 			   part->width, part->height);
 }
 
@@ -486,7 +488,7 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			for (x = minX; x <= maxX; x++) 
 			{
 				int texX = begTX + (x - minX);
-				int texIndex = texY * curTexWidth + texX;
+				int texIndex = (texY << texYShift) | texX;
 				BitmapCol color = curTexPixels[texIndex];
 				#include "Graphics_SoftMin.sprite.i"
 			}
@@ -494,7 +496,7 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	} else if (delTX == 0 && delTY == 0) {
 		int texY = begTY & texHeightMask;
 		int texX = begTX & texWidthMask;
-		int texIndex = texY * curTexWidth + texX;
+		int texIndex = (texY << texYShift) | texX;
 		BitmapCol color = curTexPixels[texIndex];
 
 		for (y = minY; y <= maxY; y++) 
@@ -511,7 +513,7 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			for (x = minX; x <= maxX; x++) 
 			{
 				int texX = ((begTX + delTX * (x - minX) / width)) & texWidthMask;
-				int texIndex = texY * curTexWidth + texX;
+				int texIndex = (texY << texYShift) | texX;
 				BitmapCol color = curTexPixels[texIndex];
 				#include "Graphics_SoftMin.sprite.i"
 			}
@@ -588,7 +590,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 		int rawY = min(rawY0, rawY1);
 		int texY = rawY & texHeightMask;
-		MultiplyColors(color, curTexPixels[texY * curTexWidth]);
+		MultiplyColors(color, curTexPixels[texY << texYShift]);
 	}
 
 	if (gfx_alphaTest && A == 0) return;
