@@ -55,6 +55,14 @@ void Gfx_Free(void) {
 	FreeFramebuffer();
 }
 
+#ifdef CC_BUILD_GBA
+	/* ARM code in IWRAM is the fastest code to execute, however only the most */
+	/* time critical code should be placed there due to its limited size */
+	#define CC_FAST_FUNC __attribute__((section(".iwram"), long_call, target("arm")))
+#else
+	#define CC_FAST_FUNC
+#endif
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Fixed point-------------------------------------------------------*
@@ -385,7 +393,7 @@ typedef struct Vertex_ {
 	PackedCol c;
 } Vertex;
 
-static void TransformVertex2D(int index, Vertex* vertex) {
+static CC_FAST_FUNC void TransformVertex2D(int index, Vertex* vertex) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
 	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
@@ -405,7 +413,7 @@ static void TransformVertex2D(int index, Vertex* vertex) {
 	}
 }
 
-static int TransformVertex3D(int index, Vertex* vertex) {
+static CC_FAST_FUNC int TransformVertex3D(int index, Vertex* vertex) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
 	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
@@ -439,7 +447,7 @@ static int TransformVertex3D(int index, Vertex* vertex) {
 	return z >= 0;
 }
 
-static void ViewportVertex3D(Vertex* vertex) {
+static CC_FAST_FUNC void ViewportVertex3D(Vertex* vertex) {
 	cc_int64 invW = FP_div(FP_ONE, vertex->w);
 
 	cc_int64 x_ndc = FP_mul(vertex->x, invW);
@@ -452,7 +460,7 @@ static void ViewportVertex3D(Vertex* vertex) {
 	vertex->w = invW;
 }
 
-static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
+static CC_FAST_FUNC void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	PackedCol vColor = V0->c;
 	int minX = FP_to_int(V0->x);
 	int minY = FP_to_int(V0->y);
@@ -540,7 +548,7 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	b2 = BitmapCol_B(tColor); \
 	B  = ( b1 * b2 ) >> 8;    \
 
-static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
+static CC_FAST_FUNC void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int x0 = FP_to_int(V0->x), y0 = FP_to_int(V0->y);
 	int x1 = FP_to_int(V1->x), y1 = FP_to_int(V1->y);
 	int x2 = FP_to_int(V2->x), y2 = FP_to_int(V2->y);
@@ -639,7 +647,7 @@ static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
 }
 
 // https://casual-effects.com/research/McGuire2011Clipping/clip.glsl
-static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3) {
+static CC_NOINLINE void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3) {
 	Vertex tmp[2];
 	Vertex* a = &tmp[0];
 	Vertex* b = &tmp[1];
@@ -880,7 +888,7 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 	}
 }
 
-void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
+static void CC_FAST_FUNC DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 	Vertex vertices[4];
 	int i, j = startVertex;
 
