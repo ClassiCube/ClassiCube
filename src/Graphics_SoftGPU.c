@@ -418,9 +418,10 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = BitmapCol_G(color);
 				B = BitmapCol_B(color);
 
-				R = (R * A + dstR * (255 - A)) >> 8;
-				G = (G * A + dstG * (255 - A)) >> 8;
-				B = (B * A + dstB * (255 - A)) >> 8;
+				// R = (R * A + dstR * (255 - A)) >> 8;
+				R = dstR + ((A * (R - dstR)) >> 8);
+				G = dstG + ((A * (G - dstG)) >> 8);
+				B = dstB + ((A * (B - dstB)) >> 8);
 				color = BitmapCol_Make(R, G, B, 0xFF);
 			}
 
@@ -525,9 +526,10 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				int dstG = BitmapCol_G(dst);
 				int dstB = BitmapCol_B(dst);
 
-				R = (R * A + dstR * (255 - A)) >> 8;
-				G = (G * A + dstG * (255 - A)) >> 8;
-				B = (B * A + dstB * (255 - A)) >> 8;
+				// R = (R * A + dstR * (255 - A)) >> 8;
+				R = dstR + ((A * (R - dstR)) >> 8);
+				G = dstG + ((A * (G - dstG)) >> 8);
+				B = dstB + ((A * (B - dstB)) >> 8);
 			}
 
 			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
@@ -670,9 +672,10 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			int dstG = BitmapCol_G(dst);
 			int dstB = BitmapCol_B(dst);
 
-			int finR = (R * A + dstR * (255 - A)) >> 8;
-			int finG = (G * A + dstG * (255 - A)) >> 8;
-			int finB = (B * A + dstB * (255 - A)) >> 8;
+			// int finR = (R * A + dstR * (255 - A)) >> 8;
+			int finR = dstR + ((A * (R - dstR)) >> 8);
+			int finG = dstG + ((A * (G - dstG)) >> 8);
+			int finB = dstB + ((A * (B - dstB)) >> 8);
 			colorBuffer[cb_index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 		}
 	}
