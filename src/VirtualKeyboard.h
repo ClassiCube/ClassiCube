@@ -48,17 +48,17 @@ static struct KBLayout* kb;
 static const char* kb_normal_lower[] =
 {
 	"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace",
-	"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "(", ")", "&    ",
-	"a", "s", "d", "f", "g", "h", "j", "k", "l", "?", ";", "'", "Enter",
-	"z", "x", "c", "v", "b", "n", "m", ",", ".","\\", "!", "@", "/    ",
+	"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\    ",
+	"a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'", "?", "Enter",
+	"z", "x", "c", "v", "b", "n", "m", ",", ".", "/", "!", "@", "/    ",
 	"Caps",0,0,0, "Shift",0,0,0, "Space",0,0,0, "Close"
 };
 static const char* kb_normal_upper[] =
 {
-	"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "_", "+", "Backspace",
-	"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "&   ",
-	"A", "S", "D", "F", "G", "H", "J", "K", "L", "?", ":", "\"", "Enter",
-	"Z", "X", "C", "V", "B", "N", "M", "<", ">", "*", "%", "#", "/    ",
+	"!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "Backspace",
+	"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "{", "}", "|    ",
+	"A", "S", "D", "F", "G", "H", "J", "K", "L", ":", "\"", "?", "Enter",
+	"Z", "X", "C", "V", "B", "N", "M", "<", ">", "?", "!", "@", "/    ",
 	"Caps",0,0,0, "Shift",0,0,0, "Space",0,0,0, "Close"
 };
 static const cc_uint8 kb_normal_behaviour[] =
@@ -214,10 +214,23 @@ static void VirtualKeyboard_Clamp(void) {
 static void VirtualKeyboard_Scroll(int xDelta, int yDelta) {
 	if (kb_curX < 0) kb_curX = 0;
 
+	// skip over empty keys when moving right
+	if (xDelta > 0 && kb_curX < kb->cellsPerRow - 1)
+		xDelta = KB_GetCellWidth(VirtualKeyboard_GetSelected());
+
 	kb_curX += xDelta;
 	kb_curY += yDelta;
-	
+
 	VirtualKeyboard_Clamp();
+
+	// Snap the position to the actual key to the left if it's over an empty one
+	int idx = kb_curX + kb->cellsPerRow * kb_curY;
+	while (KB_GetCellWidth(idx) == 0)
+	{
+		kb_curX--;
+		idx--;
+	}
+
 	KB_MarkDirty();
 }
 
