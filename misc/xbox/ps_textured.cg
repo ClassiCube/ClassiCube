@@ -1,12 +1,7 @@
-struct vOut {
-	float4 color : COLOR;
-	float2 tex0  : TEXCOORD0;
-};
-
 float4 main(
-		vOut input,
-		uniform sampler2D tex
-	) : COLOR
-{
-	return tex2D(tex, input.tex0.xy) * input.color;
+	float4 in_col : COLOR,
+	float2 in_tex : TEXCOORD0,
+	uniform sampler2D tex
+) : COLOR {
+	return tex2D(tex, in_tex.xy) * in_col;
 }

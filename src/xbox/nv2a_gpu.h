@@ -68,17 +68,6 @@ static CC_INLINE uint32_t* NV2A_set_color_write_mask(uint32_t* p, int r, int g, 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static CC_INLINE uint32_t* NV2A_set_fog_colour(uint32_t* p, int R, int G, int B, int A) {
-	uint32_t mask = 
-		NV2A_MASK(NV097_SET_FOG_COLOR_RED,   R) |
-		NV2A_MASK(NV097_SET_FOG_COLOR_GREEN, G) |
-		NV2A_MASK(NV097_SET_FOG_COLOR_BLUE,  B) |
-		NV2A_MASK(NV097_SET_FOG_COLOR_ALPHA, A);
-
-	return NV2A_push1(p, NV097_SET_FOG_COLOR, mask);
-}
-
-
 static CC_INLINE uint32_t* NV2A_set_depth_write(uint32_t* p, int enabled) {
 	return NV2A_push1(p, NV097_SET_DEPTH_MASK, enabled);
 }
@@ -162,9 +151,38 @@ static void NV2A_DrawArrays(int mode, unsigned start, unsigned count) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Fog functionality---------------------------------------------------*
+*#########################################################################################################################*/
+static CC_INLINE uint32_t* NV2A_fog_set_color(uint32_t* p, int R, int G, int B, int A) {
+	uint32_t mask = 
+		NV2A_MASK(NV097_SET_FOG_COLOR_RED,   R) |
+		NV2A_MASK(NV097_SET_FOG_COLOR_GREEN, G) |
+		NV2A_MASK(NV097_SET_FOG_COLOR_BLUE,  B) |
+		NV2A_MASK(NV097_SET_FOG_COLOR_ALPHA, A);
+
+	return NV2A_push1(p, NV097_SET_FOG_COLOR, mask);
+}
+
+static CC_INLINE uint32_t* NV2A_fog_set_enabled(uint32_t* p, cc_bool enabled) {
+	return NV2A_push1(p, NV097_SET_FOG_ENABLE, enabled);
+}
+
+static CC_INLINE uint32_t* NV2A_fog_set_mode(uint32_t* p, int mode) {
+	return NV2A_push1(p, NV097_SET_FOG_MODE, mode);
+}
+
+static CC_INLINE uint32_t* NV2A_fog_set_params(uint32_t* p, float bias, float scale) {
+	union IntAndFloat biasI, scaleI; 
+	biasI.f = bias; scaleI.f = scale;
+
+	return NV2A_push2(p, NV097_SET_FOG_PARAMS, biasI.i, scaleI.i);
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------Vertex shader constants------------------------------------------------*
 *#########################################################################################################################*/
-static CC_INLINE uint32_t* NV2A_upload_VS_constants(uint32_t* p, int offset, const void* src, int num_dwords) {
+static CC_INLINE uint32_t* NV2A_VS_upload_constants(uint32_t* p, int offset, const void* src, int num_dwords) {
 	// set shader constants cursor to: C0 + offset
 	p = NV2A_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96 + offset);
 
@@ -181,7 +199,7 @@ static CC_INLINE uint32_t* NV2A_upload_VS_constants(uint32_t* p, int offset, con
 static int nv2a_prog_offset;
 #define VS_INS_SIZE 16
 
-static CC_INLINE uint32_t* NV2A_upload_VS(uint32_t* p, int* offset, const void* program, int size) {
+static CC_INLINE uint32_t* NV2A_VS_upload_program(uint32_t* p, int* offset, const void* program, int size) {
 	// Copy program instructions (16 bytes each)
 	int num_ins = size / VS_INS_SIZE;
 
@@ -197,13 +215,13 @@ static CC_INLINE uint32_t* NV2A_upload_VS(uint32_t* p, int* offset, const void* 
 	return p;
 }
 
-static CC_INLINE uint32_t* NV2A_set_active_VS(uint32_t* p, int offset) {
+static CC_INLINE uint32_t* NV2A_VS_set_active(uint32_t* p, int offset) {
 	return NV2A_push1(p, NV097_SET_TRANSFORM_PROGRAM_START, offset);
 }
 
-static CC_INLINE uint32_t* NV2A_set_execution_mode_shaders(uint32_t* p) {
+static CC_INLINE uint32_t* NV2A_set_transform_mode(uint32_t* p, int mode) {
 	p = NV2A_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
-					NV2A_MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE,       NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM) |
+					NV2A_MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE,       mode) |
 					NV2A_MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
 
 	p = NV2A_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);

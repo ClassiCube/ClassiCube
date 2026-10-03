@@ -5,6 +5,7 @@ void main(
 	uniform float4x4 mvp,
 	uniform float4   tex_offset,
 	out float4 out_pos : HPOS,
+	out float  out_fog : FOGC,
 	out float4 out_col : COL0,
 	out float4 out_tex : TEX0)
 {
@@ -15,6 +16,7 @@ void main(
 	position.xyz = position.xyz / position.w;
 	
 	out_pos = position;
+	out_fog = position.w;
 	out_col = in_col;
 	out_tex = in_tex + tex_offset;
 }

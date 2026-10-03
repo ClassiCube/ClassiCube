@@ -19,15 +19,16 @@
 // A lot of figuring out which GPU registers to use came from:
 // - comparing against pbgl and pbkit
 
-
-static int vs_coloured, vs_textured, vs_offset;
+static int vs_coloured,     vs_textured,     vs_offset;
+static int vs_coloured_fog, vs_textured_fog, vs_offset_fog;
+static int VS_CalcActiveProgram(void);
 
 #define VS_CONST_MVP  0
 #define VS_CONST_OFST 4
 
-static void LoadVertexShader(int* offset, uint32_t* program, int programSize) {
+static void LoadVertexShader(int* offset, const uint32_t* program, int programSize) {
 	uint32_t* p = pb_begin();
-	p = NV2A_upload_VS(p, offset, program, programSize);
+	p = NV2A_VS_upload_program(p, offset, program, programSize);
 	pb_end(p);
 }
 
@@ -39,6 +40,15 @@ static uint32_t vs_textured_program[] = {
 };
 static uint32_t vs_offset_program[] = {
 	#include "../../build/xbox/vs_offset.inl"
+};
+static uint32_t vs_coloured_fog_program[] = {
+	#include "../../build/xbox/vs_coloured_fog.inl"
+};
+static uint32_t vs_textured_fog_program[] = {
+	#include "../../build/xbox/vs_textured_fog.inl"
+};
+static uint32_t vs_offset_fog_program[] = {
+	#include "../../build/xbox/vs_offset_fog.inl"
 };
 
 
@@ -63,8 +73,8 @@ static void SetupShaders(void) {
 	uint32_t *p;
 
 	p = pb_begin();
-	p = NV2A_set_active_VS(p, 0);
-	p = NV2A_set_execution_mode_shaders(p);
+	p = NV2A_VS_set_active(p, 0);
+	p = NV2A_set_transform_mode(p, NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM);
 
 	pb_end(p);
 }
@@ -114,6 +124,10 @@ void Gfx_Create(void) {
 	LoadVertexShader(&vs_coloured, vs_coloured_program, sizeof(vs_coloured_program));
 	LoadVertexShader(&vs_textured, vs_textured_program, sizeof(vs_textured_program));
 	LoadVertexShader(&vs_offset,   vs_offset_program,   sizeof(vs_offset_program));
+
+	LoadVertexShader(&vs_coloured_fog, vs_coloured_fog_program, sizeof(vs_coloured_fog_program));
+	LoadVertexShader(&vs_textured_fog, vs_textured_fog_program, sizeof(vs_textured_fog_program));
+	LoadVertexShader(&vs_offset_fog,   vs_offset_fog_program,   sizeof(vs_offset_fog_program));
 		
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -315,23 +329,10 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------------Misc----------------------------------------------------------*
+*-----------------------------------------------------Frame management----------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Gfx_GetApiInfo(cc_string* info) {
-	String_AppendConst(info, "-- Using XBox --\n");
-	PrintMaxTextureInfo(info);
-}
-
-void Gfx_SetVSync(cc_bool vsync) {
-	gfx_vsync = vsync;
-}
-
 void Gfx_BeginFrame(void) {
-	pb_wait_for_vbl();
+	pb_wait_for_vbl(); // TODO: only when vsync?
 	pb_reset();
 	pb_target_back_buffer();
 
@@ -340,22 +341,21 @@ void Gfx_BeginFrame(void) {
 	pb_end(p);
 }
 
+void Gfx_EndFrame(void) {
+	while (pb_busy())     { } // Wait for frame completion
+	while (pb_finished()) { } // Swap when possible
+}
+
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	uint32_t* p = pb_begin();
 	p = NV2A_clear_buffers(p, buffers & GFX_BUFFER_COLOR, buffers & GFX_BUFFER_DEPTH);
 	pb_end(p);
 	
-	//pb_erase_text_screen();
 	while (pb_busy()) { } // Wait for completion TODO: necessary??
 }
 
-static int frames;
-void Gfx_EndFrame(void) {
-	//pb_print("Frame #%d\n", frames++);
-	//pb_draw_text_screen();
-
-	while (pb_busy())     { } // Wait for frame completion
-	while (pb_finished()) { } // Swap when possible
+void Gfx_SetVSync(cc_bool vsync) {
+	gfx_vsync = vsync;
 }
 
 
@@ -409,13 +409,26 @@ void Gfx_UnlockVb(GfxResourceID vb) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static PackedCol gfx_fogColor;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static int gfx_fogMode  = -1;
+
 void Gfx_SetFog(cc_bool enabled) {
+	gfx_fogEnabled = enabled;
+
+	uint32_t* p = pb_begin();
+	p = NV2A_VS_set_active(p, VS_CalcActiveProgram());
+	//p = NV2A_fog_set_enabled(p, enabled); TODO how to mix fog??
+	pb_end(p);
 }
 
 void Gfx_SetFogCol(PackedCol color) {
+	if (gfx_fogColor == color) return;
+	gfx_fogColor = color;
+
 	uint32_t* p = pb_begin();
 
-	p = NV2A_set_fog_colour(p,
+	p = NV2A_fog_set_color(p,
 					PackedCol_R(color),
 					PackedCol_G(color),
 					PackedCol_B(color),
@@ -423,13 +436,55 @@ void Gfx_SetFogCol(PackedCol color) {
 	pb_end(p);
 }
 
+#define LOGE_256      5.54518f
+#define SQRT_LOGE_256 2.35482f
+static void UpdateFog(void) {
+	int mode;
+	float bias, scale;
+
+	// https://github.com/xemu-project/xemu/blob/478b4f496102379c7eaa7f3ec10e714a703c4300/hw/xbox/nv2a/pgraph/glsl/vsh.c#L334
+	switch (gfx_fogMode) {
+		case FOG_LINEAR:
+			mode  = NV097_SET_FOG_MODE_V_LINEAR;
+			scale = -1.0f / gfx_fogEnd;
+			bias  = 2.0f;
+			break;
+
+		case FOG_EXP:
+			mode  = NV097_SET_FOG_MODE_V_EXP;
+			bias  = 1.5f;
+ 			scale = -gfx_fogDensity / (2.0f * LOGE_256);
+			break;
+
+		case FOG_EXP2:
+			mode  = NV097_SET_FOG_MODE_V_EXP2;
+			bias  = 1.5f;
+			scale = -gfx_fogDensity / (2.0f * SQRT_LOGE_256);
+			break;
+	}
+	
+	uint32_t* p = pb_begin();
+	p = NV2A_fog_set_mode(p, mode);
+	p = NV2A_fog_set_params(p, bias, scale);
+	pb_end(p);
+}
+
 void Gfx_SetFogDensity(float value) {
+	if (value == gfx_fogDensity) return;
+	gfx_fogDensity = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogEnd(float value) {
+	if (value == gfx_fogEnd) return;
+	gfx_fogEnd = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
+	if (func == gfx_fogMode) return;
+	gfx_fogMode = func;
+	UpdateFog();
 }
 
 
@@ -509,7 +564,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 
 	uint32_t* p;
 	p = pb_begin();
-	p = NV2A_upload_VS_constants(p, VS_CONST_MVP, &final, 16);
+	p = NV2A_VS_upload_constants(p, VS_CONST_MVP, &final, 16);
 	pb_end(p);
 }
 
@@ -521,22 +576,13 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 
 static int tex_offset;
 
-static int CalcProgramOffset(void) {
-	if (tex_offset) 
-		return vs_offset;
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) 
-		return vs_textured;
-
-	return vs_coloured;
-}
-
 void Gfx_EnableTextureOffset(float x, float y) {
 	struct Vec4 offset = { x, y, 0, 0 };
 	uint32_t* p = pb_begin();
 	tex_offset  = true;
 
-	p = NV2A_upload_VS_constants(p, VS_CONST_OFST, &offset, 4);
-	p = NV2A_set_active_VS(p, CalcProgramOffset());
+	p = NV2A_VS_upload_constants(p, VS_CONST_OFST, &offset, 4);
+	p = NV2A_VS_set_active(p, VS_CalcActiveProgram());
 	pb_end(p);
 }
 
@@ -544,7 +590,7 @@ void Gfx_DisableTextureOffset(void) {
 	uint32_t* p = pb_begin();
 	tex_offset  = false;
 
-	p = NV2A_set_active_VS(p, CalcProgramOffset());
+	p = NV2A_VS_set_active(p, VS_CalcActiveProgram());
 	pb_end(p);
 }
 
@@ -591,7 +637,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 					NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,      0, 0);
 	}
 
-	p = NV2A_set_active_VS(p, CalcProgramOffset());
+	p = NV2A_VS_set_active(p, VS_CalcActiveProgram());
 	pb_end(p);
 	
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
@@ -617,3 +663,24 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 	NV2A_DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------------Misc----------------------------------------------------------*
+*#########################################################################################################################*/
+cc_result Gfx_TakeScreenshot(struct Stream* output) {
+	return ERR_NOT_SUPPORTED;
+}
+
+void Gfx_GetApiInfo(cc_string* info) {
+	String_AppendConst(info, "-- Using XBox --\n");
+	PrintMaxTextureInfo(info);
+}
+
+static int VS_CalcActiveProgram(void) {
+	if (tex_offset) 
+		return gfx_fogEnabled ? vs_offset_fog : vs_offset;
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) 
+		return gfx_fogEnabled ? vs_textured_fog : vs_textured;
+
+	return gfx_fogEnabled ? vs_coloured_fog : vs_coloured;
+}
