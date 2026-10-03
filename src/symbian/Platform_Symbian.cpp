@@ -22,25 +22,26 @@ extern "C" {
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <pthread.h>
 #include <dlfcn.h>
 
-#include <stdapis/string.h>
-#include <stdapis/arpa/inet.h>
-#include <stdapis/netinet/in.h>
-#include <stdapis/sys/socket.h>
-#include <stdapis/sys/ioctl.h>
-#include <stdapis/sys/types.h>
-#include <stdapis/sys/stat.h>
-#include <stdapis/sys/time.h>
-#include <stdapis/sys/select.h>
-#include <stdapis/netdb.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/select.h>
+#include <netdb.h>
 }
 #include <e32base.h>
 #include <e32debug.h>
 #include <hal.h>
+#include <e32hal.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -54,6 +55,9 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 const char* Platform_AppNameSuffix = " Symbian";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 cc_bool  Platform_ReadonlyFilesystem;
+#ifndef CC_BUILD_NETWORKING
+#define CC_NO_SOCKETS
+#endif
 #include "_PlatformBase.h"
 
 
@@ -141,15 +145,21 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool crashed = false;
+bool crashed = false;
 
 static void ExceptionHandler(TExcType type) {
-	cc_string msg; char msgB[64];
+	cc_string msg; char msgB[128];
+	
+	TInt id;
+	TExcInfo excInfo;
+	UserHal::ExceptionId(id);
+	UserHal::ExceptionInfo(excInfo);
 	
 	crashed = true;
 	String_InitArray(msg, msgB);
-	String_AppendConst(&msg, "Exception: ");
+	String_AppendConst(&msg, "Exception type: ");
 	String_AppendInt(&msg, (int) type);
+	String_Format4(&msg, ", id: %i, code: %x, data: %x, extra: %i", &id, &excInfo.iCodeAddress, &excInfo.iDataAddress, &excInfo.iExtraData);
 	msg.buffer[msg.length] = '\0';
 	Logger_DoAbort(0, msg.buffer, 0);
 }
@@ -507,6 +517,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	int i;
 	
 	// Must have at least one IPv4 address
+	if (!res)                       return ERR_INVALID_ARGUMENT;
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
 	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
 
@@ -719,17 +730,15 @@ static cc_result GetMachineID(cc_uint32* key) {
 	return 0;
 }
 
-#ifndef __ARMCC_4_0__
+#if !defined __ARMCC_4_0__ && defined EKA2
 extern "C" {
 extern int __aeabi_uidivmod(unsigned int a, unsigned int b);
 extern int __aeabi_idivmod(int a, int b);
-int __aeabi_idiv(int a, int b)
-{
+int __aeabi_idiv(int a, int b) {
 	return __aeabi_idivmod(a, b);
 }
 
-int __aeabi_uidiv(unsigned int a, unsigned int b)
-{
+int __aeabi_uidiv(unsigned int a, unsigned int b) {
 	return __aeabi_uidivmod(a, b);
 }
 }
