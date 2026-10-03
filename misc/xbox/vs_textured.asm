@@ -7,13 +7,13 @@
 #profile vp20
 #program main
 #semantic main.mvp
-#var float4 input.tex : $vin.TEXCOORD : TEXCOORD0 : 0 : 1
-#var float4 input.col : $vin.DIFFUSE : ATTR3 : 0 : 1
-#var float4 input.pos : $vin.POSITION : ATTR0 : 0 : 1
-#var float4x4 mvp :  : c[0], 4 : 1 : 1
-#var float4 main.pos : $vout.POSITION : HPOS : -1 : 1
-#var float4 main.col : $vout.COLOR : COL0 : -1 : 1
-#var float4 main.tex : $vout.TEXCOORD0 : TEX0 : -1 : 1
+#var float4 in_pos : $vin.POSITION : ATTR0 : 0 : 1
+#var float4 in_col : $vin.DIFFUSE : ATTR3 : 1 : 1
+#var float4 in_tex : $vin.TEXCOORD : TEXCOORD0 : 2 : 1
+#var float4x4 mvp :  : c[0], 4 : 3 : 1
+#var float4 out_pos : $vout.POSITION : HPOS : 4 : 1
+#var float4 out_col : $vout.COLOR : COL0 : 5 : 1
+#var float4 out_tex : $vout.TEXCOORD0 : TEX0 : 6 : 1
 MUL   R0, v[0].y, c[1];
 MAD   R0, v[0].x, c[0], R0;
 MAD   R0, v[0].z, c[2], R0;

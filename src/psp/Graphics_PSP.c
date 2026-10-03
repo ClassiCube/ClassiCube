@@ -458,16 +458,19 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square; 
 	
+	GE_set_texture_mode();
 	if (tex->paletted) {
 		GE_set_clut_buffer(tex->palette);
 		GE_load_clut_entries(MAX_PAL_4BPP_ENTRIES);
-		sceGuTexMode(GU_PSM_T4, 0, 0, 1);
+		GE_set_texture_format(GU_PSM_T4);
 	} else {
-		sceGuTexMode(GU_PSM_8888, 0, 0, 1);
+		GE_set_texture_format(GU_PSM_8888);
 	}
 
 	void* addr = Texture_PixelsAddr(tex);
 	sceGuTexImage(0, tex->width, tex->height, tex->width, addr);
+	// TODO when is flushing actually required? just when uploading textures?
+	GE_flush_texture_cache();
 }
 
 

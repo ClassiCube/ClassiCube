@@ -15,18 +15,25 @@ enum GE_COMMANDS {
 	GE_SET_REL_IADDR            = 0x02,
 	GE_DRAW_PRIMITIVES			= 0x04,
 	GE_JUMP_TO_ADDR				= 0x08,
+
+	GE_TRIGGER_SIGNAL           = 0x0E,
+	GE_TRIGGER_FINISH           = 0x0F,
+
 	GE_SET_ADDR_BASE            = 0x10,
-	GE_SET_VERTEX_FORMAT        = 0x12,	
+	GE_SET_VERTEX_FORMAT        = 0x12,
 
 	GE_SET_DRAW_REGION_TL       = 0x15,
 	GE_SET_DRAW_REGION_BR       = 0x16,		
 
+	GE_SET_DEPTH_CLAMPING       = 0x1C,
 	GE_SET_FACE_CULLING         = 0x1D,
 	GE_SET_TEXTURING            = 0x1E,
 	GE_SET_FOG_ACTIVE           = 0x1F,
+	GE_SET_DITHERING            = 0x20,
 	GE_SET_ALPHA_BLENDING       = 0x21,
 	GE_SET_ALPHA_TESTING        = 0x22,
-	GE_SET_DEPTH_TESTING        = 0x23,	
+	GE_SET_DEPTH_TESTING        = 0x23,
+	GE_SET_STENCIL_TESTING      = 0x24,
 
 	GE_WORLDMATRIX_UPLOAD_INDEX = 0x3A,
 	GE_WORLDMATRIX_UPLOAD_DATA  = 0x3B,	
@@ -42,16 +49,24 @@ enum GE_COMMANDS {
 	GE_SET_VIEWPORT_Y_ORIGIN    = 0x46,
 	GE_SET_VIEWPORT_Z_ORIGIN    = 0x47,
 
+	GE_SET_TEX_SCALE_X          = 0x48,
+	GE_SET_TEX_SCALE_Y          = 0x49,
 	GE_SET_TEX_OFFSET_X         = 0x4A,
 	GE_SET_TEX_OFFSET_Y         = 0x4B,
 
 	GE_SET_SCREEN_OFFSET_X      = 0x4C,
 	GE_SET_SCREEN_OFFSET_Y      = 0x4D,
 
+	GE_SET_SHADE_MODEL          = 0x50,
+
 	GE_SET_CLUT_BUFFER_PTR_LO	= 0xB0,
 	GE_SET_CLUT_BUFFER_PTR_HI	= 0xB1,
 
+	GE_SET_TEX_MODE		        = 0xC2,
+	GE_SET_TEX_FORMAT		    = 0xC3,
 	GE_LOAD_CLUT_ENTRIES		= 0xC4,
+
+	GE_LOAD_TEX_FLUSH		    = 0xCB,
 
 	GE_SET_FOG_BIAS				= 0xCD,
 	GE_SET_FOG_STEP				= 0xCE,
@@ -153,6 +168,22 @@ static CC_INLINE void GE_load_clut_entries(int num_entries) {
 static CC_INLINE void GE_set_texture_offset(float x, float y) {
 	GE_PushF(GE_SET_TEX_OFFSET_X, x);
 	GE_PushF(GE_SET_TEX_OFFSET_Y, y);
+}
+
+static CC_INLINE void GE_flush_texture_cache(void) {
+	GE_PushI(GE_LOAD_TEX_FLUSH, 0);
+}
+
+static CC_INLINE void GE_set_texture_format(int format) {
+	GE_PushI(GE_SET_TEX_FORMAT, format);
+}
+
+static CC_INLINE void GE_set_texture_mode(void) {
+	int max_mips   = 0;
+	int multi_clut = false;
+	int swizzled   = true;
+
+	GE_PushI(GE_SET_TEX_MODE, (max_mips << 16) | (multi_clut << 8) | swizzled);
 }
 
 

@@ -1,5 +1,5 @@
 ifeq ($(strip $(NXDK_DIR)),)
-$(error Please set NXDK_DIR in your environment. For example:)
+$(warning Please set NXDK_DIR in your environment. For example:)
 $(warning /opt/nxdk/bin/activate)
 $(error Undefined NXDK_DIR (root directory))
 endif
