@@ -20,6 +20,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define OPT_INVERT_MOUSE "invertmouse"
 #define OPT_SENSITIVITY "mousesensitivity"
 #define OPT_FPS_LIMIT "fpslimit"
+#define OPT_MAX_FPS "maxfps"
 #define OPT_DEFAULT_TEX_PACK "defaulttexpack"
 #define OPT_VIEW_BOBBING "viewbobbing"
 #define OPT_ENTITY_SHADOW "entityshadow"
