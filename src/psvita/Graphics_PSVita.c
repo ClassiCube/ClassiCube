@@ -895,8 +895,19 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(int width, int height) { }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
-void Gfx_SetScissor (int x, int y, int w, int h) { }
+// NOTE: beginScene resets viewport and clip region
+void Gfx_SetViewport(int x, int y, int w, int h) { 
+	sceGxmSetViewport(
+		gxm_context,
+		x + 0.5f * w,  0.5f * w,
+		y + 0.5f * h, -0.5f * h,
+		0.5f, 0.5f);
+}
+
+void Gfx_SetScissor (int x, int y, int w, int h) {
+	sceGxmSetRegionClip(gxm_context, SCE_GXM_REGION_CLIP_OUTSIDE, 
+						x, y, x + w - 1, y + h - 1);
+}
 
 
 /*########################################################################################################################*
