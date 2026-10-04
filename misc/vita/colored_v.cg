@@ -1,10 +1,10 @@
 void main(
-	float3 in_position, 
-	float4 in_color,
+	float3 in_pos,
+	float4 in_col,
 	uniform float4x4 mvp_matrix,
-	out float4 out_position: POSITION, 
-	out float4 out_color: COLOR)
+	out float4 out_pos : POSITION, 
+	out float4 out_col : COLOR)
 {
-	out_position = mul(mvp_matrix, float4(in_position, 1.0f));
-	out_color    = in_color;
+	out_pos = mul(mvp_matrix, float4(in_pos, 1.0f));
+	out_col = in_col;
 }
