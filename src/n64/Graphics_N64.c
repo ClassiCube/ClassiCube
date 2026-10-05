@@ -356,7 +356,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 #define FLAG_Z_WRITE 0x02
-void Gfx_SetDepthWrite(cc_bool enabled) { 
+static void SetDepthWrite(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_WRITE, enabled ? SOM_Z_WRITE : 0);
 
 	gpu_attr_z &= ~FLAG_Z_WRITE;
@@ -365,7 +365,7 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 }
 
 #define FLAG_Z_READ 0x01
-void Gfx_SetDepthTest(cc_bool enabled) { 
+static void SetDepthTest(cc_bool enabled) { 
 	__rdpq_mode_change_som(SOM_Z_COMPARE, enabled ? SOM_Z_COMPARE : 0);
 
 	gpu_attr_z &= ~FLAG_Z_READ;

@@ -82,8 +82,6 @@ static cc_bool exceeded_vram;
 static const cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
 static const cc_bool fsaa     = false;
 
-static cc_uint8 gfx_depthTest;
-static cc_uint8 gfx_depthWrite;
 static cc_uint8 gfx_culling;
 static cc_uint8 gfx_scissor;
 
@@ -121,8 +119,6 @@ static void InitGLState(void) {
 	gfx_alphaTest  = false;
 	gfx_culling    = false;
 	gfx_alphaBlend = false;
-	gfx_depthTest  = false;
-	gfx_depthWrite = true;
 	gfx_fogEnabled = false;
 	
 	stateDirty       = true;
@@ -658,22 +654,16 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO: Doesn't work
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { 
-	if (gfx_depthWrite == enabled) return;
-	
-	gfx_depthWrite = enabled;
-	stateDirty     = true;
+static void SetDepthWrite(cc_bool enabled) {
+	stateDirty = true;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) { 
-	if (gfx_depthTest == enabled) return;
-	
-	gfx_depthTest = enabled;
-	stateDirty    = true;
+static void SetDepthTest(cc_bool enabled) { 
+	stateDirty = true;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	stateDirty    = true;
+	stateDirty = true;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {

@@ -239,21 +239,20 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
+	// TODO: can per channel be done somehow?
+	GX_SetColorUpdate(r || g || b);
+	GX_SetAlphaUpdate(a);
 }
 
-static cc_bool depth_write = true, depth_test = true;
 static void UpdateDepthState(void) {
-	GX_SetZMode(depth_test, GX_LEQUAL, depth_write);
+	GX_SetZMode(gfx_depthTest, GX_LEQUAL, gfx_depthWrite);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depth_write = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	depth_test = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
@@ -461,8 +460,7 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	GX_SetColorUpdate(!depthOnly);
-	GX_SetAlphaUpdate(!depthOnly);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 

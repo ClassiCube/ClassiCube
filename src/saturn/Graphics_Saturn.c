@@ -267,10 +267,10 @@ void Gfx_ClearColor(PackedCol color) {
 	UpdateVDP1Env();
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	// TODO
 }
 

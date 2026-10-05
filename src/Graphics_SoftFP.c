@@ -47,8 +47,6 @@ static cc_bool colWrite = true;
 static int cb_stride;
 
 static int* depthBuffer;
-static cc_bool depthTest  = true;
-static cc_bool depthWrite = true;
 static int db_stride;
 
 static void* gfx_vertices;
@@ -164,17 +162,11 @@ void Gfx_DisableMipmaps(void) { }
 *#########################################################################################################################*/
 void Gfx_Begin2D(int width, int height) {
 	gfx_rendering2D = true;
-
-	Gfx_SetDepthTest(false);
-	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
 }
 
 void Gfx_End2D(void) {
 	gfx_rendering2D = false;
-
-	Gfx_SetDepthTest(true);
-	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 }
 
@@ -235,12 +227,12 @@ void Gfx_ClearColor(PackedCol color) {
     clearColor = BitmapCol_Make(R, G, B, A);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-    depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
+	/* Uses value from Gfx_SetDepthTest */
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-    depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
+	/* Uses value from Gfx_SetDepthWrite */
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -733,9 +725,9 @@ static void DrawTriangle3D(VertexFixed* V0, VertexFixed* V1, VertexFixed* V2) {
             int z_interp = FixedMul(ic0, z0) + FixedMul(ic1, z1) + FixedMul(ic2, z2);
             int z = FixedMul(z_interp, w);
 
-            if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
+            if (gfx_depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
             if (!colWrite) {
-                if (depthWrite) depthBuffer[db_index] = z;
+                if (gfx_depthWrite) depthBuffer[db_index] = z;
                 continue;
             }
 
@@ -910,14 +902,14 @@ static void DrawTriangle3D(VertexFixed* V0, VertexFixed* V1, VertexFixed* V2) {
             int w = FixedReciprocal(w_interp);
             int z = FixedMul(z_interp, w);
 
-            if (depthTest && (z < 0 || z > depthBuffer[db_index])) {
+            if (gfx_depthTest && (z < 0 || z > depthBuffer[db_index])) {
                 // update and continue
                 ic0 += step_ic0_per_x; ic1 += step_ic1_per_x; ic2 += step_ic2_per_x;
                 w_interp += step_w; z_interp += step_z; u_interp += step_u; v_interp += step_v;
                 continue;
             }
             if (!colWrite) {
-                if (depthWrite) depthBuffer[db_index] = z;
+                if (gfx_depthWrite) depthBuffer[db_index] = z;
                 // update and continue
                 ic0 += step_ic0_per_x; ic1 += step_ic1_per_x; ic2 += step_ic2_per_x;
                 w_interp += step_w; z_interp += step_z; u_interp += step_u; v_interp += step_v;
@@ -949,9 +941,9 @@ static void DrawTriangle3D(VertexFixed* V0, VertexFixed* V1, VertexFixed* V2) {
 
             if (gfx_alphaTest && Aloc < 0x80) {
                 // update and continue
-                if (depthWrite) ; // nothing
+                if (gfx_depthWrite) ; // nothing
             } else {
-                if (depthWrite) depthBuffer[db_index] = z;
+                if (gfx_depthWrite) depthBuffer[db_index] = z;
                 int cb_index = y * cb_stride + x;
                 
                 if (!gfx_alphaBlend) {

@@ -498,6 +498,9 @@ static void Render3DFrame(float delta, float t) {
 	Gfx_LoadMVP(&Gfx.View, &Gfx.Projection, &mvp);
 	Frustum_CalcPlanes(&mvp);
 
+	Gfx_SetDepthTest(true);
+	Gfx_SetDepthWrite(true);
+
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);

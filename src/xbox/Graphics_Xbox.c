@@ -302,13 +302,13 @@ static void SetAlphaTest(cc_bool enabled) {
 	pb_end(p);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	uint32_t* p = pb_begin();
 	p = NV2A_set_depth_write(p, enabled);
 	pb_end(p);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) { 
+static void SetDepthTest(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
 	p = NV2A_set_depth_test(p, enabled);
 	pb_end(p);

@@ -434,8 +434,8 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 
-void Gfx_SetDepthWrite(cc_bool enabled) { }
-void Gfx_SetDepthTest(cc_bool enabled)  { }
+static void SetDepthWrite(cc_bool enabled) { }
+static void SetDepthTest(cc_bool enabled)  { }
 
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) { InitDefaultResources(); }

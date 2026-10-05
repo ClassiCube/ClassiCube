@@ -598,7 +598,6 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
-	Gfx_SetDepthTest(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
@@ -1081,23 +1080,18 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-static PackedCol clear_color;
-void Gfx_ClearColor(PackedCol color) {
-	clear_color = color;
-}
-
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
     gfx_R = r; gfx_G = g; gfx_B = b; gfx_A = a;
 	FP_SwitchActive();
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	int mode = enabled ? SCE_GXM_DEPTH_WRITE_ENABLED : SCE_GXM_DEPTH_WRITE_DISABLED;
 	sceGxmSetFrontDepthWriteEnable(gxm_context, mode);
 	sceGxmSetBackDepthWriteEnable(gxm_context,  mode);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 	int func = enabled ? SCE_GXM_DEPTH_FUNC_LESS_EQUAL : SCE_GXM_DEPTH_FUNC_ALWAYS;
 	sceGxmSetFrontDepthFunc(gxm_context, func);
 	sceGxmSetBackDepthFunc(gxm_context,  func);
@@ -1152,7 +1146,6 @@ void Gfx_DisableTextureOffset(void) {
 }
 
 
-
 /*########################################################################################################################*
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
@@ -1194,6 +1187,14 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------Clearing---------------------------------------------------------*
+*#########################################################################################################################*/
+static PackedCol clear_color;
+void Gfx_ClearColor(PackedCol color) {
+	clear_color = color;
+}
+
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	// TODO clear only some buffers
 	static struct GPUBuffer* clearVB;
@@ -1206,16 +1207,27 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	clear_vertices[1] = (struct VertexColoured){ 1.0f, -1.0f, 1.0f, clear_color };
 	clear_vertices[2] = (struct VertexColoured){ 1.0f,  1.0f, 1.0f, clear_color };
 	clear_vertices[3] = (struct VertexColoured){-1.0f,  1.0f, 1.0f, clear_color };
-	
-	Gfx_SetAlphaTest(false);
-	Gfx_SetDepthTest(false);
+
+	cc_bool alpha_test  = gfx_alphaTest;
+	cc_bool alpha_blend = gfx_alphaBlend;
+	struct Matrix view  = _view;
+	struct Matrix proj  = _proj;
 	
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+
+	Gfx_SetAlphaTest (false);
+	Gfx_SetAlphaBlend(false);
+	Gfx_SetDepthTest (false);
 	Gfx_LoadMatrix(MATRIX_VIEW, &Matrix_Identity);
 	Gfx_LoadMatrix(MATRIX_PROJ, &Matrix_Identity);
+
 	Gfx_BindVb(clearVB);
 	Gfx_DrawVb_IndexedTris(4);
 	
-	Gfx_SetDepthTest(true);
+	Gfx_SetAlphaTest (alpha_test);
+	Gfx_SetAlphaBlend(alpha_blend);
+	Gfx_SetDepthTest (true);
+	Gfx_LoadMatrix(MATRIX_VIEW, &view);
+	Gfx_LoadMatrix(MATRIX_PROJ, &proj);
 }
 

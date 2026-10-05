@@ -599,10 +599,11 @@ void Gfx_ClearColor(PackedCol color) {
 	buffers[1].env.fill_code[0] = packed;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
+	// TODO
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	// TODO
 }
 

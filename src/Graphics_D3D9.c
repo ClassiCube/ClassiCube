@@ -407,8 +407,6 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool gfx_alphaBlending;
-static cc_bool gfx_depthTesting, gfx_depthWriting;
 static PackedCol gfx_clearColor;
 
 /* NOTE: Although SetRenderState is okay to call on a lost device, it's also possible */
@@ -479,14 +477,12 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORWRITEENABLE, channels);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	gfx_depthTesting = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE, enabled);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	gfx_depthWriting = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, enabled);
 }
@@ -521,8 +517,8 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,   gfx_alphaTest);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlending);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,  gfx_alphaTest);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlend);
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, gfx_fogEnabled);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR,  gfx_fogColor);
@@ -532,8 +528,8 @@ static void D3D9_RestoreRenderStates(void) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, fog_modes[gfx_fogMode]);
 
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE,      gfx_depthTesting);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, gfx_depthWriting);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE,      gfx_depthTest);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, gfx_depthWrite);
 }
 
 

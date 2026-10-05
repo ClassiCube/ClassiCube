@@ -119,7 +119,6 @@ static void AllocShaders(void) {
 static void SetDefaultState(void) {
 	Gfx_SetFaceCulling(false);
 	Gfx_SetAlphaTest(false);
-	Gfx_SetDepthWrite(true);
 }
 
 static aptHookCookie hookCookie;
@@ -491,24 +490,21 @@ void Gfx_ClearColor(PackedCol color) {
 	clear_color = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
 }
 
-static cc_bool depthTest, depthWrite;
 static int colorWriteMask = GPU_WRITE_COLOR;
 
 static void UpdateWriteState(void) {
 	//C3D_EarlyDepthTest(true, GPU_EARLYDEPTH_GREATER, 0);
 	//C3D_EarlyDepthTest(false, GPU_EARLYDEPTH_GREATER, 0);
 	int writeMask = colorWriteMask;
-	if (depthWrite) writeMask |= GPU_WRITE_DEPTH;
-	C3D_DepthTest(depthTest, GPU_GEQUAL, writeMask);
+	if (gfx_depthWrite) writeMask |= GPU_WRITE_DEPTH;
+	C3D_DepthTest(gfx_depthTest, GPU_GEQUAL, writeMask);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	UpdateWriteState();
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) { 
-	depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	UpdateWriteState();
 }
 

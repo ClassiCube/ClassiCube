@@ -18,8 +18,6 @@ static cc_bool colWrite = true;
 static int cb_stride;
 
 static float* depthBuffer;
-static cc_bool depthTest  = true;
-static cc_bool depthWrite = true;
 static int db_stride;
 
 static void* gfx_vertices;
@@ -179,12 +177,12 @@ void Gfx_ClearColor(PackedCol color) {
 	clearColor = BitmapCol_Make(R, G, B, A);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
+	/* Uses value from Gfx_SetDepthTest */
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
+	/* Uses value from Gfx_SetDepthWrite */
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -641,9 +639,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
 			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
 
-			if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
+			if (gfx_depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
 			if (!colWrite) {
-				if (depthWrite) depthBuffer[db_index] = z;
+				if (gfx_depthWrite) depthBuffer[db_index] = z;
 				continue;
 			}
 
@@ -660,7 +658,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			}
 
 			if (gfx_alphaTest && A < 0x80) continue;
-			if (depthWrite) depthBuffer[db_index] = z;
+			if (gfx_depthWrite) depthBuffer[db_index] = z;
 			int cb_index = y * cb_stride + x;
 			
 			if (!gfx_alphaBlend) {

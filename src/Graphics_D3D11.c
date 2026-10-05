@@ -989,7 +989,6 @@ static ID3D11BlendState* om_blendStates[16 * 2];
 static ID3D11DepthStencilState* om_depthStates[4];
 static float gfx_clearColor[4];
 static cc_bool gfx_channels[4] = { true, true, true, true };
-static cc_bool gfx_depthTest, gfx_depthWrite;
 
 static void OM_Clear(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_COLOR) {
@@ -1127,13 +1126,11 @@ void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor[3] = PackedCol_A(color) / 255.0f;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	gfx_depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	OM_UpdateDepthState();
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	gfx_depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	OM_UpdateDepthState();
 }
 

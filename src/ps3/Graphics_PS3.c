@@ -321,11 +321,11 @@ void Gfx_ClearColor(PackedCol color) {
 	clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	RSX_set_depth_write(context, enabled);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 	RSX_set_depth_test(context, enabled);
 }
 

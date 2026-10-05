@@ -272,10 +272,9 @@ void Gfx_DisableMipmaps(void) { } // TODO
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static float clearR, clearG, clearB;
-static cc_bool depthWrite = true, depthTest = true;
 
 static void UpdateDepthState(void) {
-	GX2SetDepthOnlyControl(depthTest, depthWrite, GX2_COMPARE_FUNC_LEQUAL);
+	GX2SetDepthOnlyControl(gfx_depthTest, gfx_depthWrite, GX2_COMPARE_FUNC_LEQUAL);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -333,13 +332,11 @@ void Gfx_ClearColor(PackedCol color) {
 	clearB = PackedCol_B(color) / 255.0f;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	UpdateDepthState();
 }
 

@@ -37,6 +37,7 @@ static cc_bool gfx_rendering2D;
 *#########################################################################################################################*/
 static cc_bool gfx_colorMask[4] = { true, true, true, true };
 static cc_bool gfx_alphaTest, gfx_alphaBlend;
+static cc_bool gfx_depthTest, gfx_depthWrite; // TODO: depth write on by default in OpenGL ??
 
 static void SetAlphaTest(cc_bool enabled);
 void Gfx_SetAlphaTest(cc_bool enabled) {
@@ -52,6 +53,22 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	
 	gfx_alphaBlend = enabled;
 	SetAlphaBlend(enabled);
+}
+
+static void SetDepthTest(cc_bool enabled);
+void Gfx_SetDepthTest(cc_bool enabled) {
+	if (gfx_depthTest == enabled) return;
+	
+	gfx_depthTest = enabled;
+	SetDepthTest(enabled);
+}
+
+static void SetDepthWrite(cc_bool enabled);
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	if (gfx_depthWrite == enabled) return;
+	
+	gfx_depthWrite = enabled;
+	SetDepthWrite(enabled);
 }
 
 /* Initialises/Restores render state */
@@ -76,6 +93,10 @@ static CC_INLINE void DefaultDepthOnlyRendering(cc_bool depthOnly) {
 
 void Gfx_SetTexturing(cc_bool enabled) { } /* useless */
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Anaglyph 3D------------------------------------------------------*
+*#########################################################################################################################*/
 #ifndef CC_BUILD_3DS
 void Gfx_Set3DLeft(struct Matrix* proj, struct Matrix* view) {
 	struct Matrix proj_left, view_left;
