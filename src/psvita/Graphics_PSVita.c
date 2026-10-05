@@ -64,54 +64,6 @@ static void*  gxm_shader_patcher_fragment_usse_addr;
 static unsigned int shader_patcher_fragment_usse_offset;
 
 
-static const uint8_t coloured_v_gxp[] = {
-	#embed "../../misc/vita/colored_v.gxp"
-};
-static const uint8_t textured_v_gxp[] = {
-	#embed "../../misc/vita/textured_v.gxp"
-};
-static const uint8_t offset___v_gxp[] = {
-	#embed "../../misc/vita/offset_v.gxp"
-};
-static SceGxmProgram* gxm_coloured_VP = (SceGxmProgram *)&coloured_v_gxp;
-static SceGxmProgram* gxm_textured_VP = (SceGxmProgram *)&textured_v_gxp;
-static SceGxmProgram* gxm_offset_VP   = (SceGxmProgram *)&offset___v_gxp;
-
-
-static const uint8_t coloured_f_gxp[] = {
-	#embed "../../misc/vita/colored_f.gxp"
-};
-static const uint8_t textured_none_f_gxp[] = {
-	#embed "../../misc/vita/textured_none_f.gxp"
-};
-static const uint8_t textured_linr_f_gxp[] = {
-	#embed "../../misc/vita/textured_linear_f.gxp"
-};
-static SceGxmProgram* gxm_coloured_FP      = (SceGxmProgram *)&coloured_f_gxp;
-static SceGxmProgram* gxm_textured_none_FP = (SceGxmProgram *)&textured_none_f_gxp;
-static SceGxmProgram* gxm_textured_linr_FP = (SceGxmProgram *)&textured_linr_f_gxp;
-
-
-static const uint8_t coloured_alpha_f_gxp[] = {
-	#embed "../../misc/vita/colored_alpha_f.gxp"
-};
-static const uint8_t textured_alpha_f_gxp[] = {
-	#embed "../../misc/vita/textured_alpha_f.gxp"
-};
-static SceGxmProgram* gxm_coloured_alpha_FP = (SceGxmProgram *)&coloured_alpha_f_gxp;
-static SceGxmProgram* gxm_textured_alpha_FP = (SceGxmProgram *)&textured_alpha_f_gxp;
-
-
-typedef struct CCVertexProgram {
-	SceGxmVertexProgram* programPatched;
-	int dirtyUniforms;
-} VertexProgram;
-
-typedef struct CCFragmentProgram {
-	SceGxmFragmentProgram* programPatched;
-} FragmentProgram;
-
-
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
@@ -213,13 +165,102 @@ static void FreeShaderPatcherMem(void* user_data, void* mem) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex shaders------------------------------------------------------*
 *#########################################################################################################################*/
-static VertexProgram VP_list[3];
-static VertexProgram* VP_Active;
+#define VS_INPUT_REG_POS 0
+#define VS_INPUT_REG_COL 4
+#define VS_INPUT_REG_TEX 8
+
+static SceGxmVertexProgram* VP_BuildColoured(const uint8_t* src) {
+	const SceGxmProgram* prog = (const SceGxmProgram*)src;
+	SceGxmShaderPatcherId programID;
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, prog, &programID);
+
+	SceGxmVertexAttribute attribs[2];
+	SceGxmVertexStream vertex_stream;
+	
+	attribs[0].streamIndex    = 0;
+	attribs[0].offset         = offsetof(struct VertexColoured, x);
+	attribs[0].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
+	attribs[0].componentCount = 3;
+	attribs[0].regIndex       = VS_INPUT_REG_POS;
+		
+	attribs[1].streamIndex    = 0;
+	attribs[1].offset         = offsetof(struct VertexColoured, Col);
+	attribs[1].format         = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
+	attribs[1].componentCount = 4;
+	attribs[1].regIndex       = VS_INPUT_REG_COL;
+		
+	vertex_stream.stride      = SIZEOF_VERTEX_COLOURED;
+	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
+
+	SceGxmVertexProgram* programPatched = NULL;
+	sceGxmShaderPatcherCreateVertexProgram(gxm_shader_patcher,
+		programID, attribs, Array_Elems(attribs),
+		&vertex_stream, 1, &programPatched);
+	return programPatched;
+}
+
+static SceGxmVertexProgram* VP_BuildTextured(const uint8_t* src) {
+	const SceGxmProgram* prog = (const SceGxmProgram*)src;
+	SceGxmShaderPatcherId programID;
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, prog, &programID);
+
+	SceGxmVertexAttribute attribs[3];
+	SceGxmVertexStream vertex_stream;
+	
+	attribs[0].streamIndex    = 0;
+
+	attribs[0].offset         = offsetof(struct VertexTextured, x);
+	attribs[0].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
+	attribs[0].componentCount = 3;
+	attribs[0].regIndex       = VS_INPUT_REG_POS;
+		
+	attribs[1].streamIndex    = 0;
+	attribs[1].offset         = offsetof(struct VertexTextured, Col);
+	attribs[1].format         = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
+	attribs[1].componentCount = 4;
+	attribs[1].regIndex       = VS_INPUT_REG_COL;
+		
+	attribs[2].streamIndex    = 0;
+	attribs[2].offset         = offsetof(struct VertexTextured, U);
+	attribs[2].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
+	attribs[2].componentCount = 2;
+	attribs[2].regIndex       = VS_INPUT_REG_TEX;
+		
+	vertex_stream.stride      = SIZEOF_VERTEX_TEXTURED;
+	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
+
+	SceGxmVertexProgram* programPatched = NULL;
+	sceGxmShaderPatcherCreateVertexProgram(gxm_shader_patcher,
+		programID, attribs, Array_Elems(attribs),
+		&vertex_stream, 1, &programPatched);
+	return programPatched;
+}
+
+static const uint8_t coloured_v_gxp[] = {
+	#embed "../../misc/vita/colored_v.gxp"
+};
+static const uint8_t textured_v_gxp[] = {
+	#embed "../../misc/vita/textured_v.gxp"
+};
+static const uint8_t offset___v_gxp[] = {
+	#embed "../../misc/vita/offset_v.gxp"
+};
+
+
+static SceGxmVertexProgram* VP_list[3];
+static SceGxmVertexProgram* VP_Active;
+
+static void VP_BuildPrograms(void) {
+	VP_list[0] = VP_BuildColoured(coloured_v_gxp);
+	VP_list[1] = VP_BuildTextured(textured_v_gxp);
+	VP_list[2] = VP_BuildTextured( offset___v_gxp);
+}
+
 static float transposed_mvp[4*4] CC_ALIGNED(64);
 static struct { float x, y; } texOffset;
 
 static void VP_UpdateUniforms(void) {
-	VertexProgram* VP = VP_Active;
+	SceGxmVertexProgram* VP = VP_Active;
 	// Calling sceGxmReserveVertexDefaultUniformBuffer when not in a scene
 	//   results in SCE_GXM_ERROR_NOT_WITHIN_SCENE on real hardware
 	if (!VP || !in_scene) return;
@@ -229,7 +270,7 @@ static void VP_UpdateUniforms(void) {
 	if (ret) Process_Abort2(ret, "Reserving uniform buffer");
 
 	Mem_Copy(uniform_buffer, transposed_mvp, sizeof(transposed_mvp));
-	if (VP == &VP_list[2]) {
+	if (VP == VP_list[2]) {
 		Mem_Copy((char*)uniform_buffer + 64, &texOffset, sizeof(texOffset));
 	}
 }
@@ -240,11 +281,11 @@ static void VP_SwitchActive(void) {
 		index = (texOffset.x == 0.0f && texOffset.y == 0.0f) ? 1 : 2;
 	}
 	
-	VertexProgram* VP = &VP_list[index];
+	SceGxmVertexProgram* VP = VP_list[index];
 	if (VP == VP_Active) return;
 	VP_Active = VP;
 	
-	sceGxmSetVertexProgram(gxm_context, VP->programPatched);
+	sceGxmSetVertexProgram(gxm_context, VP);
 	VP_UpdateUniforms(); // TODO: really need to update uniforms after switching program?
 }
 
@@ -252,11 +293,75 @@ static void VP_SwitchActive(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Fragment shaders-----------------------------------------------------*
 *#########################################################################################################################*/
-static FragmentProgram FP_list[5 * 3];
-static FragmentProgram* FP_Active;
+static const SceGxmBlendInfo no_blending = {
+	SCE_GXM_COLOR_MASK_ALL,
+	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
+};
+static const SceGxmBlendInfo yes_blending = {
+	SCE_GXM_COLOR_MASK_ALL,
+	SCE_GXM_BLEND_FUNC_ADD,   SCE_GXM_BLEND_FUNC_ADD,
+	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
+};
+static const SceGxmBlendInfo no_rendering = {
+	SCE_GXM_COLOR_MASK_NONE,
+	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
+};
+static const SceGxmBlendInfo* blend_modes[] = { &no_blending, &yes_blending, &no_rendering };
+
+static SceGxmFragmentProgram* FP_BuildProgram(const SceGxmBlendInfo* blend_mode, const uint8_t* src) {
+	const SceGxmProgram* prog = (const SceGxmProgram*)src;
+	SceGxmShaderPatcherId programID;
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, prog, &programID);
+
+	SceGxmFragmentProgram* programPatched = NULL;
+	sceGxmShaderPatcherCreateFragmentProgram(gxm_shader_patcher,
+		programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
+		SCE_GXM_MULTISAMPLE_NONE, blend_mode, NULL,
+		&programPatched);
+	return programPatched;
+}
+
+static const uint8_t coloured_f_gxp[] = {
+	#embed "../../misc/vita/colored_f.gxp"
+};
+
+static const uint8_t textured_none_f_gxp[] = {
+	#embed "../../misc/vita/textured_none_f.gxp"
+};
+static const uint8_t textured_linr_f_gxp[] = {
+	#embed "../../misc/vita/textured_linear_f.gxp"
+};
+
+static const uint8_t coloured_alpha_f_gxp[] = {
+	#embed "../../misc/vita/colored_alpha_f.gxp"
+};
+
+static const uint8_t textured_alpha_f_gxp[] = {
+	#embed "../../misc/vita/textured_alpha_f.gxp"
+};
+
+static SceGxmFragmentProgram* FP_list[5 * 3];
+static SceGxmFragmentProgram* FP_Active;
+
+static void FP_BuildPrograms(void) {
+	for (int i = 0; i < Array_Elems(blend_modes); i++)
+	{
+		const SceGxmBlendInfo* blend = blend_modes[i];
+		FP_list[ 0 + i] = FP_BuildProgram(blend, coloured_f_gxp);
+		FP_list[ 3 + i] = FP_BuildProgram(blend, textured_none_f_gxp);
+		FP_list[ 6 + i] = FP_BuildProgram(blend, coloured_alpha_f_gxp);
+		FP_list[ 9 + i] = FP_BuildProgram(blend, textured_alpha_f_gxp);
+		FP_list[12 + i] = FP_BuildProgram(blend, textured_linr_f_gxp);
+	}
+}
 
 static void FP_UpdateUniforms(void) {
-	FragmentProgram* FP = FP_Active;
+	SceGxmFragmentProgram* FP = FP_Active;
 	// Calling sceGxmReserveFragmentDefaultUniformBuffer when not in a scene
 	//   results in SCE_GXM_ERROR_NOT_WITHIN_SCENE on real hardware
 	if (!FP || !in_scene) return;
@@ -286,47 +391,12 @@ static void FP_SwitchActive(void) {
 		index += 1;
 	}
 	
-	FragmentProgram* FP = &FP_list[index];
+	SceGxmFragmentProgram* FP = FP_list[index];
 	if (FP == FP_Active) return;
 	FP_Active = FP;
 	
-	sceGxmSetFragmentProgram(gxm_context, FP->programPatched);
+	sceGxmSetFragmentProgram(gxm_context, FP);
 	FP_UpdateUniforms(); // TODO: need to update uniforms after switching program?
-}
-
-static const SceGxmBlendInfo no_blending = {
-	SCE_GXM_COLOR_MASK_ALL,
-	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
-};
-static const SceGxmBlendInfo yes_blending = {
-	SCE_GXM_COLOR_MASK_ALL,
-	SCE_GXM_BLEND_FUNC_ADD,   SCE_GXM_BLEND_FUNC_ADD,
-	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
-};
-static const SceGxmBlendInfo no_rendering = {
-	SCE_GXM_COLOR_MASK_NONE,
-	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
-};
-static const SceGxmBlendInfo* blend_modes[] = { &no_blending, &yes_blending, &no_rendering };
-
-static void CreateFragmentPrograms(int index, const SceGxmProgram* fragProgram) {
-	SceGxmShaderPatcherId programID;
-	
-	for (int i = 0; i < Array_Elems(blend_modes); i++)
-	{
-		FragmentProgram* FP = &FP_list[index + i];
-		sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, fragProgram, &programID);
-
-		sceGxmShaderPatcherCreateFragmentProgram(gxm_shader_patcher,
-			programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
-			SCE_GXM_MULTISAMPLE_NONE, blend_modes[i], NULL,
-			&FP->programPatched);
-	}
 }
 
 
@@ -483,70 +553,6 @@ static void AllocShaderPatcher(void) {
 	sceGxmShaderPatcherCreate(&params, &gxm_shader_patcher);
 }
 
-#define VS_INPUT_REG_POS 0
-#define VS_INPUT_REG_COL 4
-#define VS_INPUT_REG_TEX 8
-
-static void BuildColouredVertexProgram(VertexProgram* VP, const SceGxmProgram* prog) {
-	SceGxmShaderPatcherId programID;
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, prog, &programID);
-
-	SceGxmVertexAttribute attribs[2];
-	SceGxmVertexStream vertex_stream;
-	
-	attribs[0].streamIndex    = 0;
-	attribs[0].offset         = offsetof(struct VertexColoured, x);
-	attribs[0].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
-	attribs[0].componentCount = 3;
-	attribs[0].regIndex       = VS_INPUT_REG_POS;
-		
-	attribs[1].streamIndex    = 0;
-	attribs[1].offset         = offsetof(struct VertexColoured, Col);
-	attribs[1].format         = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
-	attribs[1].componentCount = 4;
-	attribs[1].regIndex       = VS_INPUT_REG_COL;
-		
-	vertex_stream.stride      = SIZEOF_VERTEX_COLOURED;
-	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
-
-	sceGxmShaderPatcherCreateVertexProgram(gxm_shader_patcher,
-		programID, attribs, 2,
-		&vertex_stream, 1, &VP->programPatched);
-}
-
-static void BuildTexturedVertexProgram(VertexProgram* VP, const SceGxmProgram* prog) {
-	SceGxmShaderPatcherId programID;
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, prog, &programID);
-
-	SceGxmVertexAttribute attribs[3];
-	SceGxmVertexStream vertex_stream;
-	
-	attribs[0].streamIndex    = 0;
-	attribs[0].offset         = offsetof(struct VertexTextured, x);
-	attribs[0].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
-	attribs[0].componentCount = 3;
-	attribs[0].regIndex       = VS_INPUT_REG_POS;
-		
-	attribs[1].streamIndex    = 0;
-	attribs[1].offset         = offsetof(struct VertexTextured, Col);
-	attribs[1].format         = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
-	attribs[1].componentCount = 4;
-	attribs[1].regIndex       = VS_INPUT_REG_COL;
-		
-	attribs[2].streamIndex    = 0;
-	attribs[2].offset         = offsetof(struct VertexTextured, U);
-	attribs[2].format         = SCE_GXM_ATTRIBUTE_FORMAT_F32;
-	attribs[2].componentCount = 2;
-	attribs[2].regIndex       = VS_INPUT_REG_TEX;
-		
-	vertex_stream.stride      = SIZEOF_VERTEX_TEXTURED;
-	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
-
-	sceGxmShaderPatcherCreateVertexProgram(gxm_shader_patcher,
-		programID, attribs, 3,
-		&vertex_stream, 1, &VP->programPatched);
-}
-
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
@@ -574,16 +580,9 @@ static void InitGPU(void) {
 	AllocRenderTarget();
 	AllocShaderPatcherMemory();
 	AllocShaderPatcher();
-	
-	BuildColouredVertexProgram(&VP_list[0], gxm_coloured_VP);
-	BuildTexturedVertexProgram(&VP_list[1], gxm_textured_VP);
-	BuildTexturedVertexProgram(&VP_list[2], gxm_offset_VP);
 
-	CreateFragmentPrograms( 0, gxm_coloured_FP);
-	CreateFragmentPrograms( 3, gxm_textured_none_FP);
-	CreateFragmentPrograms( 6, gxm_coloured_alpha_FP);
-	CreateFragmentPrograms( 9, gxm_textured_alpha_FP);
-	CreateFragmentPrograms(12, gxm_textured_linr_FP);
+	VP_BuildPrograms();
+	FP_BuildPrograms();
 }
 
 void Gfx_Create(void) {
