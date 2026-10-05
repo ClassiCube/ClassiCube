@@ -1201,6 +1201,9 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (!clearVB) {
 		clearVB = GPUBuffer_Alloc(4 * sizeof(struct VertexColoured));
 	}
+
+	int clear_z = (buffers & GFX_BUFFER_DEPTH) != 0;
+	int clear_c = (buffers & GFX_BUFFER_COLOR) != 0;
 	
 	struct VertexColoured* clear_vertices = clearVB->data;
 	clear_vertices[0] = (struct VertexColoured){-1.0f, -1.0f, 1.0f, clear_color };
@@ -1210,23 +1213,29 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 
 	cc_bool alpha_test  = gfx_alphaTest;
 	cc_bool alpha_blend = gfx_alphaBlend;
+	cc_bool depth_test  = gfx_depthTest;
+	cc_bool depth_write = gfx_depthWrite;
 	struct Matrix view  = _view;
 	struct Matrix proj  = _proj;
 	
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
-	Gfx_SetAlphaTest (false);
-	Gfx_SetAlphaBlend(false);
-	Gfx_SetDepthTest (false);
+	Gfx_SetAlphaTest    (false);
+	Gfx_SetAlphaBlending(false);
+	Gfx_SetDepthTest    (false);
+	Gfx_SetDepthWrite   (clear_z);
+	SetColorWrite(clear_c, clear_c, clear_c, clear_c);
 	Gfx_LoadMatrix(MATRIX_VIEW, &Matrix_Identity);
 	Gfx_LoadMatrix(MATRIX_PROJ, &Matrix_Identity);
 
 	Gfx_BindVb(clearVB);
 	Gfx_DrawVb_IndexedTris(4);
 	
-	Gfx_SetAlphaTest (alpha_test);
-	Gfx_SetAlphaBlend(alpha_blend);
-	Gfx_SetDepthTest (true);
+	Gfx_SetAlphaTest    (alpha_test);
+	Gfx_SetAlphaBlending(alpha_blend);
+	Gfx_SetDepthTest    (depth_test);
+	Gfx_SetDepthWrite   (depth_write);
+	DefaultDepthOnlyRendering(false);
 	Gfx_LoadMatrix(MATRIX_VIEW, &view);
 	Gfx_LoadMatrix(MATRIX_PROJ, &proj);
 }
