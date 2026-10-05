@@ -507,10 +507,10 @@ static void Pipeline_Build(int idx) {
     fb.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 
     fb.writeMask =
-    (idx & PIPELINE_FLAG_R_WRITE ? MTLColorWriteMaskRed   : 0) |
-    (idx & PIPELINE_FLAG_G_WRITE ? MTLColorWriteMaskGreen : 0) |
-    (idx & PIPELINE_FLAG_B_WRITE ? MTLColorWriteMaskBlue  : 0) |
-    (idx & PIPELINE_FLAG_A_WRITE ? MTLColorWriteMaskAlpha : 0);
+    	((idx & PIPELINE_FLAG_R_WRITE) ? MTLColorWriteMaskRed   : 0) |
+    	((idx & PIPELINE_FLAG_G_WRITE) ? MTLColorWriteMaskGreen : 0) |
+    	((idx & PIPELINE_FLAG_B_WRITE) ? MTLColorWriteMaskBlue  : 0) |
+   		((idx & PIPELINE_FLAG_A_WRITE) ? MTLColorWriteMaskAlpha : 0);
     if (fb.writeMask == MTLColorWriteMaskNone) desc.fragmentFunction = nil;
     
     desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
@@ -525,14 +525,14 @@ static void Pipeline_Build(int idx) {
 
 static void Pipeline_Update(void) {
     int idx =
-    (gfx_format == VERTEX_FORMAT_TEXTURED ? PIPELINE_FLAG_TEXTURED : 0) |
-    (texOffseting   ? PIPELINE_FLAG_TEXOFFSET   : 0) |
-    (gfx_alphaTest  ? PIPELINE_FLAG_ALPHA_TEST  : 0) |
-    (gfx_alphaBlend ? PIPELINE_FLAG_ALPHA_BLEND : 0) |
-    (gfx_R          ? PIPELINE_FLAG_R_WRITE     : 0) |
-    (gfx_G          ? PIPELINE_FLAG_G_WRITE     : 0) |
-    (gfx_B          ? PIPELINE_FLAG_B_WRITE     : 0) |
-    (gfx_A          ? PIPELINE_FLAG_A_WRITE     : 0);
+    	(gfx_format == VERTEX_FORMAT_TEXTURED ? PIPELINE_FLAG_TEXTURED : 0) |
+    	(texOffseting   ? PIPELINE_FLAG_TEXOFFSET   : 0) |
+    	(gfx_alphaTest  ? PIPELINE_FLAG_ALPHA_TEST  : 0) |
+    	(gfx_alphaBlend ? PIPELINE_FLAG_ALPHA_BLEND : 0) |
+    	(gfx_R          ? PIPELINE_FLAG_R_WRITE     : 0) |
+   		(gfx_G          ? PIPELINE_FLAG_G_WRITE     : 0) |
+    	(gfx_B          ? PIPELINE_FLAG_B_WRITE     : 0) |
+    	(gfx_A          ? PIPELINE_FLAG_A_WRITE     : 0);
     
     if (pipelines[idx] == nil) Pipeline_Build(idx);
     [ren_enc setRenderPipelineState:pipelines[idx]];

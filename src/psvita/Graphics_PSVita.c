@@ -8,7 +8,7 @@
 #include <vitasdk.h>
 
 // TODO track last frame used on
-static cc_bool gfx_depthOnly;
+static cc_bool gfx_R = true, gfx_G = true, gfx_B = true, gfx_A = true;
 static int frontBufferIndex, backBufferIndex;
 // Inspired from
 // https://github.com/xerpi/gxmfun/blob/master/source/main.c
@@ -293,26 +293,6 @@ static void VP_SwitchActive(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Fragment shaders-----------------------------------------------------*
 *#########################################################################################################################*/
-static const SceGxmBlendInfo no_blending = {
-	SCE_GXM_COLOR_MASK_ALL,
-	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
-};
-static const SceGxmBlendInfo yes_blending = {
-	SCE_GXM_COLOR_MASK_ALL,
-	SCE_GXM_BLEND_FUNC_ADD,   SCE_GXM_BLEND_FUNC_ADD,
-	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
-};
-static const SceGxmBlendInfo no_rendering = {
-	SCE_GXM_COLOR_MASK_NONE,
-	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
-	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
-};
-static const SceGxmBlendInfo* blend_modes[] = { &no_blending, &yes_blending, &no_rendering };
-
 static SceGxmFragmentProgram* FP_BuildProgram(const SceGxmBlendInfo* blend_mode, const uint8_t* src) {
 	const SceGxmProgram* prog = (const SceGxmProgram*)src;
 	SceGxmShaderPatcherId programID;
@@ -345,19 +325,39 @@ static const uint8_t textured_alpha_f_gxp[] = {
 	#embed "../../misc/vita/textured_alpha_f.gxp"
 };
 
-static SceGxmFragmentProgram* FP_list[5 * 3];
+#define FP_WRITE_R (1 << 0)
+#define FP_WRITE_G (1 << 1)
+#define FP_WRITE_B (1 << 2)
+#define FP_WRITE_A (1 << 3)
+#define FP_BLEND   (1 << 4)
+
+#define FP_STATES 32
+
+static SceGxmFragmentProgram* FP_list[5 * FP_STATES];
 static SceGxmFragmentProgram* FP_Active;
 
-static void FP_BuildPrograms(void) {
-	for (int i = 0; i < Array_Elems(blend_modes); i++)
-	{
-		const SceGxmBlendInfo* blend = blend_modes[i];
-		FP_list[ 0 + i] = FP_BuildProgram(blend, coloured_f_gxp);
-		FP_list[ 3 + i] = FP_BuildProgram(blend, textured_none_f_gxp);
-		FP_list[ 6 + i] = FP_BuildProgram(blend, coloured_alpha_f_gxp);
-		FP_list[ 9 + i] = FP_BuildProgram(blend, textured_alpha_f_gxp);
-		FP_list[12 + i] = FP_BuildProgram(blend, textured_linr_f_gxp);
-	}
+static void FP_BuildAll(int states) {
+	SceGxmBlendInfo blend;
+	int blending = states & FP_BLEND;
+
+	blend.colorMask =
+    	((states & FP_WRITE_R) ? SCE_GXM_COLOR_MASK_R : 0) |
+    	((states & FP_WRITE_G) ? SCE_GXM_COLOR_MASK_G : 0) |
+    	((states & FP_WRITE_B) ? SCE_GXM_COLOR_MASK_B : 0) |
+    	((states & FP_WRITE_A) ? SCE_GXM_COLOR_MASK_A : 0);
+
+	blend.colorFunc = blending ? SCE_GXM_BLEND_FUNC_ADD  : SCE_GXM_BLEND_FUNC_NONE;
+	blend.alphaFunc = blending ? SCE_GXM_BLEND_FUNC_ADD  : SCE_GXM_BLEND_FUNC_NONE;
+	blend.colorSrc  = blending ? SCE_GXM_BLEND_FACTOR_SRC_ALPHA : SCE_GXM_BLEND_FACTOR_ONE;
+	blend.alphaSrc  = blending ? SCE_GXM_BLEND_FACTOR_SRC_ALPHA : SCE_GXM_BLEND_FACTOR_ZERO;
+	blend.colorDst  = blending ? SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : SCE_GXM_BLEND_FACTOR_ONE;
+	blend.alphaDst  = blending ? SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : SCE_GXM_BLEND_FACTOR_ONE;
+
+	FP_list[ 0*FP_STATES + states] = FP_BuildProgram(&blend, coloured_f_gxp);
+	FP_list[ 1*FP_STATES + states] = FP_BuildProgram(&blend, textured_none_f_gxp);
+	FP_list[ 2*FP_STATES + states] = FP_BuildProgram(&blend, coloured_alpha_f_gxp);
+	FP_list[ 3*FP_STATES + states] = FP_BuildProgram(&blend, textured_alpha_f_gxp);
+	FP_list[ 4*FP_STATES + states] = FP_BuildProgram(&blend, textured_linr_f_gxp);
 }
 
 static void FP_UpdateUniforms(void) {
@@ -373,24 +373,27 @@ static void FP_UpdateUniforms(void) {
 
 	float* buf = uniform_buffer;
 	buf[0] = PackedCol_R(gfx_fogColor) / 255.0f;
-	buf[1] = PackedCol_R(gfx_fogColor) / 255.0f;
-	buf[2] = PackedCol_R(gfx_fogColor) / 255.0f;
+	buf[1] = PackedCol_G(gfx_fogColor) / 255.0f;
+	buf[2] = PackedCol_B(gfx_fogColor) / 255.0f;
 	buf[3] = gfx_fogMode == FOG_LINEAR ? gfx_fogEnd : gfx_fogDensity;
 }
 
 static void FP_SwitchActive(void) {
-	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 3 : 0;
+	int shdr = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
+	if (gfx_alphaTest) shdr += 2;
+	//if (gfx_fogEnabled) index = 12; // TODO: fix
+
+	// TODO still not working properly?
+    int states =
+    	(gfx_R          ? FP_WRITE_R : 0) |
+    	(gfx_G          ? FP_WRITE_G : 0) |
+    	(gfx_B          ? FP_WRITE_B : 0) |
+    	(gfx_A          ? FP_WRITE_A : 0) |
+    	(gfx_alphaBlend ? FP_BLEND   : 0);
 	
-	if (gfx_alphaTest) index += 2 * 3;
-	//else if (gfx_fogEnabled) index = 12; // TODO: fix
-	
-	// [normal rendering, blend rendering, no rendering]
-	if (gfx_depthOnly) {
-		index += 2;
-	} else if (gfx_alphaBlend) {
-		index += 1;
-	}
-	
+	int index = shdr * FP_STATES + states;
+	if (FP_list[index] == NULL) FP_BuildAll(states);
+
 	SceGxmFragmentProgram* FP = FP_list[index];
 	if (FP == FP_Active) return;
 	FP_Active = FP;
@@ -582,7 +585,6 @@ static void InitGPU(void) {
 	AllocShaderPatcher();
 
 	VP_BuildPrograms();
-	FP_BuildPrograms();
 }
 
 void Gfx_Create(void) {
@@ -1070,15 +1072,14 @@ static void SetAlphaBlend(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	// TODO
-	gfx_depthOnly = depthOnly;
-	FP_SwitchActive();
+    cc_bool enabled = !depthOnly;
+    SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1],
+                  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	sceGxmSetCullMode(gxm_context, enabled ? SCE_GXM_CULL_CW : SCE_GXM_CULL_NONE);
 }
-
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -1088,7 +1089,8 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
- // TODO
+    gfx_R = r; gfx_G = g; gfx_B = b; gfx_A = a;
+	FP_SwitchActive();
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
