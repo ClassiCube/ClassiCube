@@ -606,18 +606,13 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 *#########################################################################################################################*/
 static cc_bool skipRendering;
 static cc_bool backfaceCull;
-static cc_bool alphaBlend;
-
-static cc_bool fogEnabled;
-static FogFunc fogMode;
-static float fogDensityEnd;
 
 static void SetPolygonMode() {
-	int blend = !gfx_rendering2D && alphaBlend;
+	int blend = !gfx_rendering2D && gfx_alphaBlend;
 	u32 fmt =
 		POLY_ALPHA(blend ? 14 : 31) | 
 		(backfaceCull ? POLY_CULL_BACK : POLY_CULL_NONE) | 
-		//(fogEnabled ? POLY_FOG : 0) | fog breaks UI
+		//(gfx_fogEnabled ? POLY_FOG : 0) | fog breaks UI
 		POLY_RENDER_FAR_POLYS | 
 		POLY_RENDER_1DOT_POLYS;
 
@@ -629,10 +624,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	SetPolygonMode();
 }
 
-static void SetAlphaBlend(cc_bool enabled) {
-	alphaBlend = enabled;
-	SetPolygonMode();
-}
+static void SetAlphaBlend(cc_bool enabled) { SetPolygonMode(); }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -640,9 +632,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
 }
 
-static void RecalculateFog() {
-	if (fogMode == FOG_LINEAR) {
-		int fogEnd = floattof32(fogDensityEnd);
+static void UpdateFog(void) {
+	if (gfx_fogMode == FOG_LINEAR) {
+		int fogEnd = floattof32(gfx_fogEnd);
 		
 		// Find shift value so that our fog end is
 		//  inside maximum distance covered by fog table
@@ -667,16 +659,16 @@ static void RecalculateFog() {
 		
 		GFX_FOG_TABLE[31] = 127;
 	} else {
-		// TODO?
+		// TODO? implement
 	}
 }
 
 void Gfx_SetFog(cc_bool enabled) {
-	fogEnabled = enabled;
+	gfx_fogEnabled = enabled;
 	SetPolygonMode();
 }
 
-void Gfx_SetFogCol(PackedCol color) {
+static void SetFogColor(PackedCol color) {
 	int r = PackedCol_R(color) >> 3;
 	int g = PackedCol_G(color) >> 3;
 	int b = PackedCol_B(color) >> 3;
@@ -685,20 +677,11 @@ void Gfx_SetFogCol(PackedCol color) {
 	GFX_FOG_COLOR = RGB15(r, g, b) | (a << 16);
 }
 
-void Gfx_SetFogDensity(float value) {
-	fogDensityEnd = value;
-	RecalculateFog();
-}
+static void SetFogDensity(float value) { UpdateFog(); }
 
-void Gfx_SetFogEnd(float value) {
-	fogDensityEnd = value;
-	RecalculateFog();
-}
+static void SetFogEnd(float value)     { UpdateFog(); }
 
-void Gfx_SetFogMode(FogFunc func) {
-	fogMode = func;
-	RecalculateFog();
-}
+static void SetFogMode(FogFunc func)   { UpdateFog(); }
 
 static void SetAlphaTest(cc_bool enabled) {
 	if (enabled) {

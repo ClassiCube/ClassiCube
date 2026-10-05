@@ -20,6 +20,7 @@
 
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
 static DWORD d3d9_formatMappings[] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
+static D3DFOGMODE fog_modes[] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
@@ -406,11 +407,9 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 static cc_bool gfx_alphaBlending;
 static cc_bool gfx_depthTesting, gfx_depthWriting;
-static PackedCol gfx_clearColor, gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static PackedCol gfx_clearColor;
 
 /* NOTE: Although SetRenderState is okay to call on a lost device, it's also possible */
 /*   the context is lost because the device was never created to begin with!          */
@@ -430,42 +429,30 @@ void Gfx_SetFog(cc_bool enabled) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, enabled);
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == gfx_fogColor) return;
-	gfx_fogColor = color;
-
+static void SetFogColor(PackedCol color) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogColor);
 }
 
-void Gfx_SetFogDensity(float value) {
+static void SetFogDensity(float value) {
 	union IntAndFloat raw;
-	if (value == gfx_fogDensity) return;
-	gfx_fogDensity = value;
-
 	raw.f = value;
+
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 }
 
-void Gfx_SetFogEnd(float value) {
+static void SetFogEnd(float value) {
 	union IntAndFloat raw;
-	if (value == gfx_fogEnd) return;
-	gfx_fogEnd = value;
-
 	raw.f = value;
+
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
 }
 
-void Gfx_SetFogMode(FogFunc func) {
-	static D3DFOGMODE modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
-	D3DFOGMODE mode = modes[func];
-	if (mode == gfx_fogMode) return;
-
-	gfx_fogMode = mode;
+static void SetFogMode(FogFunc func) {
 	if (Gfx.LostContext) return;
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, fog_modes[func]);
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -545,7 +532,7 @@ static void D3D9_RestoreRenderStates(void) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 	raw.f = gfx_fogEnd;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, gfx_fogMode);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, fog_modes[gfx_fogMode]);
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE,      gfx_depthTesting);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, gfx_depthWriting);

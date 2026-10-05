@@ -1,0 +1,16 @@
+float4 main
+(
+	float4 out_pos : WPOS,
+	float4 out_col : COLOR,
+	float2 out_tex : TEXCOORD0,
+	uniform sampler2D tex,
+	uniform float4 fog_factor
+) : COLOR
+{
+	// fog_factor.rgb = fog colour
+	// fog_factor.a   = fog end
+	float4 color = tex2D(tex, out_tex) * out_col;
+	float f = clamp(1.0 - out_pos.w * fog_factor.a, 0.0, 1.0);
+	color.rgb = lerp(fog_factor.rgb, color.rgb, f);
+	return color;
+}

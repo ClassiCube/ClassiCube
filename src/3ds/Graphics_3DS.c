@@ -735,32 +735,23 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static u32 fogColor;
-static int fogMode = -1;
-static float fogDensity = 1.0f;
-static float fogEnd = 32.0f;
-
 void Gfx_SetFog(cc_bool enabled) {
 	pica_update_fog_mode(enabled, false);
 	gfx_fogEnabled = enabled;
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	// TODO find better way?
+static void SetFogColor(PackedCol color) {
 	u32 c = (0xFFu << 24) | (PackedCol_B(color) << 16) | (PackedCol_G(color) << 8) | PackedCol_R(color);
-	if (c == fogColor) return;
-
-	fogColor = c;
 	pica_set_fog_color(c);
 }
 
 static float GetFogValue(float c) {
-	if (fogMode == FOG_LINEAR) {
-		return (fogEnd - c) / fogEnd;
-	} else if (fogMode == FOG_EXP) {
-		return expf(-(fogDensity * c));
+	if (gfx_fogMode == FOG_LINEAR) {
+		return (gfx_fogEnd - c) / gfx_fogEnd;
+	} else if (gfx_fogMode == FOG_EXP) {
+		return expf(-(gfx_fogDensity * c));
 	} else {
-		return expf(-(fogDensity * c) * (fogDensity * c));
+		return expf(-(gfx_fogDensity * c) * (gfx_fogDensity * c));
 	}
 }
 
@@ -781,26 +772,11 @@ static void UpdateFog(void) {
 	pica_set_fog_table(fog_lut.data);
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (fogDensity == value) return;
+static void SetFogDensity(float value) { UpdateFog(); }
 
-	fogDensity = value;
-	if (fogMode != FOG_LINEAR) UpdateFog();
-}
+static void SetFogEnd(float value)     { UpdateFog(); }
 
-void Gfx_SetFogEnd(float value) {
-	if (fogEnd == value) return;
-
-	fogEnd = value;
-	if (fogMode == FOG_LINEAR) UpdateFog();
-}
-
-void Gfx_SetFogMode(FogFunc func) {
-	if (fogMode == func) return;
-
-	fogMode = func;
-	UpdateFog();
-}
+static void SetFogMode(FogFunc func)   { UpdateFog(); }
 
 
 /*########################################################################################################################*

@@ -810,9 +810,6 @@ static ID3D11SamplerState* ps_samplers[2];
 static ID3D11PixelShader* ps_shaders[12];
 static ID3D11Buffer* ps_cBuffer;
 static cc_bool ps_mipmaps;
-static float ps_fogEnd, ps_fogDensity;
-static PackedCol ps_fogColor;
-static int ps_fogMode;
 
 static struct CC_ALIGNED(64) PSConstants {
 	float fogR, fogG, fogB;
@@ -846,9 +843,9 @@ static int PS_CalcShaderIndex(void) {
 	if (gfx_alphaTest) idx += 2;
 
 	if (gfx_fogEnabled) {
-		// uncomment when it works
-		if (ps_fogMode == FOG_LINEAR) idx += 4;
-		if (ps_fogMode == FOG_EXP)    idx += 8;
+		if (gfx_fogMode == FOG_LINEAR) idx += 4;
+		if (gfx_fogMode == FOG_EXP)    idx += 8;
+		// TODO: EXP2 fog mode?
 	}
 	return idx;
 }
@@ -945,35 +942,26 @@ void Gfx_SetFog(cc_bool enabled) {
 	PS_UpdateShader();
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == ps_fogColor) return;
-	ps_fogColor = color;
-
-	ps_constants.fogR = PackedCol_R(ps_fogColor) / 255.0f;
-	ps_constants.fogG = PackedCol_G(ps_fogColor) / 255.0f;
-	ps_constants.fogB = PackedCol_B(ps_fogColor) / 255.0f;
+static void SetFogColor(PackedCol color) {
+	ps_constants.fogR = PackedCol_R(color) / 255.0f;
+	ps_constants.fogG = PackedCol_G(color) / 255.0f;
+	ps_constants.fogB = PackedCol_B(color) / 255.0f;
 	PS_UpdateConstants();
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (value == ps_fogDensity) return;
-	ps_fogDensity = value;
+static void SetFogDensity(float value) {
 	// avoid doing - in pixel shader for density fog
-	ps_constants.fogDensity = -ps_fogDensity;
+	ps_constants.fogDensity = -value;
 	PS_UpdateConstants();
 }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == ps_fogEnd) return;
-	ps_fogEnd = value;
+static void SetFogEnd(float value) {
 	// avoid doing division in pixel shader for linear fog
-	ps_constants.fogEnd = 1.0f / ps_fogEnd;
+	ps_constants.fogEnd = 1.0f / value;
 	PS_UpdateConstants();
 }
 
-void Gfx_SetFogMode(FogFunc func) {
-	if (ps_fogMode == func) return;
-	ps_fogMode = func;
+static void SetFogMode(FogFunc func) {
 	PS_UpdateShader();
 }
 

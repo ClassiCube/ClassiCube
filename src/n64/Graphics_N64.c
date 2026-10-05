@@ -540,20 +540,11 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 *#########################################################################################################################*/
 static cc_bool depthOnlyRendering;
 
-void Gfx_SetFog(cc_bool enabled) {
-}
-
-void Gfx_SetFogCol(PackedCol color) {
-}
-
-void Gfx_SetFogDensity(float value) {
-}
-
-void Gfx_SetFogEnd(float value) {
-}
-
-void Gfx_SetFogMode(FogFunc func) {
-}
+void Gfx_SetFog(cc_bool enabled)         { } // TODO: implement
+static void SetFogColor(PackedCol color) { } // TODO: implement
+static void SetFogDensity(float value)   { } // TODO: implement
+static void SetFogEnd(float value)       { } // TODO: implement
+static void SetFogMode(FogFunc func)     { } // TODO: implement
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	depthOnlyRendering = depthOnly; // TODO: Better approach? maybe using glBlendFunc instead?

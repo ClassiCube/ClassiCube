@@ -755,10 +755,6 @@ void Gfx_UnlockVb(GfxResourceID vb) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd = 16.0f, gfx_fogDensity = 1.0f;
-static FogFunc gfx_fogMode = -1;
-
 void Gfx_SetFog(cc_bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	
@@ -766,10 +762,7 @@ void Gfx_SetFog(cc_bool enabled) {
 	stateDirty     = true;
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == gfx_fogColor) return;
-	gfx_fogColor = color;
-
+static void SetFogColor(PackedCol color) {
 	float r = PackedCol_R(color) / 255.0f; 
 	float g = PackedCol_G(color) / 255.0f;
 	float b = PackedCol_B(color) / 255.0f; 
@@ -788,23 +781,11 @@ static void UpdateFog(void) {
 	}
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (value == gfx_fogDensity) return;
-	gfx_fogDensity = value;
-	UpdateFog();
-}
+static void SetFogDensity(float value) { UpdateFog(); }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == gfx_fogEnd) return;
-	gfx_fogEnd = value;
-	UpdateFog();
-}
+static void SetFogEnd(float value)     { UpdateFog(); }
 
-void Gfx_SetFogMode(FogFunc func) {
-	if (func == gfx_fogMode) return;
-	gfx_fogMode = func;
-	UpdateFog();
-}
+static void SetFogMode(FogFunc func)   { UpdateFog(); }
 
 
 /*########################################################################################################################*

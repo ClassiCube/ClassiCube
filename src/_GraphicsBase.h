@@ -36,7 +36,6 @@ static cc_bool gfx_rendering2D;
 *------------------------------------------------------State changes------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool gfx_colorMask[4] = { true, true, true, true };
-cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 static cc_bool gfx_alphaTest, gfx_alphaBlend;
 
 static void SetAlphaTest(cc_bool enabled);
@@ -104,6 +103,48 @@ void Gfx_End3D(struct Matrix* proj, struct Matrix* view) {
 	Gfx_SetColorWrite(true, true, true, true);
 }
 #endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------------------Fog----------------------------------------------------------*
+*#########################################################################################################################*/
+static PackedCol gfx_fogColor;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static int gfx_fogMode  = -1;
+
+cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+
+static void SetFogColor(PackedCol color);
+void Gfx_SetFogCol(PackedCol color) {
+	if (gfx_fogColor == color) return;
+
+	gfx_fogColor = color;
+	SetFogColor(color);
+}
+
+static void SetFogDensity(float value);
+void Gfx_SetFogDensity(float value) {
+	if (value == gfx_fogDensity) return;
+
+	gfx_fogDensity = value;
+	SetFogDensity(value);
+}
+
+static void SetFogEnd(float value);
+void Gfx_SetFogEnd(float value) {
+	if (value == gfx_fogEnd) return;
+
+	gfx_fogEnd = value;
+	SetFogEnd(value);
+}
+
+static void SetFogMode(FogFunc func);
+void Gfx_SetFogMode(FogFunc func) {
+	if (func == gfx_fogMode) return;
+
+	gfx_fogMode = func;
+	SetFogMode(func);
+}
 
 
 /*########################################################################################################################*

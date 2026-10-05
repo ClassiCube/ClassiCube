@@ -683,20 +683,11 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled) {/* TODO */
-}
-
-void Gfx_SetFogCol(PackedCol color) {/* TODO */
-}
-
-void Gfx_SetFogDensity(float value) {/* TODO */
-}
-
-void Gfx_SetFogEnd(float value) {/* TODO */
-}
-
-void Gfx_SetFogMode(FogFunc func) {/* TODO */
-}
+void Gfx_SetFog(cc_bool enabled)         { } // TODO: implement
+static void SetFogColor(PackedCol color) { } // TODO: implement
+static void SetFogDensity(float value)   { } // TODO: implement
+static void SetFogEnd(float value)       { } // TODO: implement
+static void SetFogMode(FogFunc func)     { } // TODO: implement
 
 
 /*########################################################################################################################*

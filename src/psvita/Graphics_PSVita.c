@@ -81,11 +81,15 @@ static SceGxmProgram* gxm_offset_VP   = (SceGxmProgram *)&offset___v_gxp;
 static const uint8_t coloured_f_gxp[] = {
 	#embed "../../misc/vita/colored_f.gxp"
 };
-static const uint8_t textured_f_gxp[] = {
-	#embed "../../misc/vita/textured_f.gxp"
+static const uint8_t textured_none_f_gxp[] = {
+	#embed "../../misc/vita/textured_none_f.gxp"
 };
-static SceGxmProgram* gxm_coloured_FP = (SceGxmProgram *)&coloured_f_gxp;
-static SceGxmProgram* gxm_textured_FP = (SceGxmProgram *)&textured_f_gxp;
+static const uint8_t textured_linr_f_gxp[] = {
+	#embed "../../misc/vita/textured_linear_f.gxp"
+};
+static SceGxmProgram* gxm_coloured_FP      = (SceGxmProgram *)&coloured_f_gxp;
+static SceGxmProgram* gxm_textured_none_FP = (SceGxmProgram *)&textured_none_f_gxp;
+static SceGxmProgram* gxm_textured_linr_FP = (SceGxmProgram *)&textured_linr_f_gxp;
 
 
 static const uint8_t coloured_alpha_f_gxp[] = {
@@ -214,11 +218,11 @@ static VertexProgram* VP_Active;
 static float transposed_mvp[4*4] CC_ALIGNED(64);
 static struct { float x, y; } texOffset;
 
-static void VP_ReloadUniforms(void) {
+static void VP_UpdateUniforms(void) {
 	VertexProgram* VP = VP_Active;
 	// Calling sceGxmReserveVertexDefaultUniformBuffer when not in a scene
 	//   results in SCE_GXM_ERROR_NOT_WITHIN_SCENE on real hardware
-	if (!VP || !in_scene || !VP->dirtyUniforms) return;
+	if (!VP || !in_scene) return;
 	void *uniform_buffer = NULL;
 		
 	int ret = sceGxmReserveVertexDefaultUniformBuffer(gxm_context, &uniform_buffer);
@@ -228,14 +232,12 @@ static void VP_ReloadUniforms(void) {
 	if (VP == &VP_list[2]) {
 		Mem_Copy((char*)uniform_buffer + 64, &texOffset, sizeof(texOffset));
 	}
-
-	VP->dirtyUniforms = false;
 }
 
 static void VP_SwitchActive(void) {
 	int index = 0;
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		index = (texOffset.x != 0.0f || texOffset.y != 0.0f) ? 2 : 1;
+		index = (texOffset.x == 0.0f && texOffset.y == 0.0f) ? 1 : 2;
 	}
 	
 	VertexProgram* VP = &VP_list[index];
@@ -243,19 +245,39 @@ static void VP_SwitchActive(void) {
 	VP_Active = VP;
 	
 	sceGxmSetVertexProgram(gxm_context, VP->programPatched);
-	VP->dirtyUniforms = true; // Need to update uniforms after switching program
-	VP_ReloadUniforms();
+	VP_UpdateUniforms(); // TODO: really need to update uniforms after switching program?
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------Fragment shaders-----------------------------------------------------*
 *#########################################################################################################################*/
-static FragmentProgram FP_list[4 * 3];
+static FragmentProgram FP_list[5 * 3];
 static FragmentProgram* FP_Active;
+
+static void FP_UpdateUniforms(void) {
+	FragmentProgram* FP = FP_Active;
+	// Calling sceGxmReserveFragmentDefaultUniformBuffer when not in a scene
+	//   results in SCE_GXM_ERROR_NOT_WITHIN_SCENE on real hardware
+	if (!FP || !in_scene) return;
+	void *uniform_buffer = NULL;
+		
+	int ret = sceGxmReserveFragmentDefaultUniformBuffer(gxm_context, &uniform_buffer);
+	if (!uniform_buffer) return; // non-fog shaders have no uniform buffer
+	if (ret) Process_Abort2(ret, "Reserving uniform buffer");
+
+	float* buf = uniform_buffer;
+	buf[0] = PackedCol_R(gfx_fogColor) / 255.0f;
+	buf[1] = PackedCol_R(gfx_fogColor) / 255.0f;
+	buf[2] = PackedCol_R(gfx_fogColor) / 255.0f;
+	buf[3] = gfx_fogMode == FOG_LINEAR ? gfx_fogEnd : gfx_fogDensity;
+}
 
 static void FP_SwitchActive(void) {
 	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 3 : 0;
+	
+	if (gfx_alphaTest) index += 2 * 3;
+	//else if (gfx_fogEnabled) index = 12; // TODO: fix
 	
 	// [normal rendering, blend rendering, no rendering]
 	if (gfx_depthOnly) {
@@ -264,15 +286,13 @@ static void FP_SwitchActive(void) {
 		index += 1;
 	}
 	
-	if (gfx_alphaTest) index += 2 * 3;
-	
 	FragmentProgram* FP = &FP_list[index];
 	if (FP == FP_Active) return;
 	FP_Active = FP;
 	
 	sceGxmSetFragmentProgram(gxm_context, FP->programPatched);
+	FP_UpdateUniforms(); // TODO: need to update uniforms after switching program?
 }
-
 
 static const SceGxmBlendInfo no_blending = {
 	SCE_GXM_COLOR_MASK_ALL,
@@ -559,10 +579,11 @@ static void InitGPU(void) {
 	BuildTexturedVertexProgram(&VP_list[1], gxm_textured_VP);
 	BuildTexturedVertexProgram(&VP_list[2], gxm_offset_VP);
 
-	CreateFragmentPrograms(0, gxm_coloured_FP);
-	CreateFragmentPrograms(6, gxm_coloured_alpha_FP);
-	CreateFragmentPrograms(3, gxm_textured_FP);
-	CreateFragmentPrograms(9, gxm_textured_alpha_FP);
+	CreateFragmentPrograms( 0, gxm_coloured_FP);
+	CreateFragmentPrograms( 3, gxm_textured_none_FP);
+	CreateFragmentPrograms( 6, gxm_coloured_alpha_FP);
+	CreateFragmentPrograms( 9, gxm_textured_alpha_FP);
+	CreateFragmentPrograms(12, gxm_textured_linr_FP);
 }
 
 void Gfx_Create(void) {
@@ -1022,28 +1043,25 @@ void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------State management----------------------------------------------------*
+*------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFog(cc_bool enabled) {
- // TODO
+	gfx_fogEnabled = enabled;
+	FP_SwitchActive();
 }
 
-void Gfx_SetFogCol(PackedCol color) {
- // TODO
-}
+static void SetFogColor(PackedCol color) { FP_UpdateUniforms(); }
 
-void Gfx_SetFogDensity(float value) {
- // TODO
-}
+static void SetFogDensity(float value)   { FP_UpdateUniforms(); }
 
-void Gfx_SetFogEnd(float value) {
- // TODO
-}
+static void SetFogEnd(float value)       { FP_UpdateUniforms(); }
 
-void Gfx_SetFogMode(FogFunc func) {
- // TODO
-}
+static void SetFogMode(FogFunc func)     { FP_SwitchActive(); }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------State management----------------------------------------------------*
+*#########################################################################################################################*/
 static void SetAlphaTest(cc_bool enabled) {
 	FP_SwitchActive();
 }
@@ -1092,10 +1110,7 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
 
-void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW) _view = *matrix;
-	if (type == MATRIX_PROJ) _proj = *matrix;
-
+static void UpdateMVP(void) {
 	struct Matrix mvp CC_ALIGNED(64);
 	Matrix_Mul(&mvp, &_view, &_proj);
 	float* m = (float*)&mvp;
@@ -1108,15 +1123,22 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		transposed_mvp[i * 4 + 2] = m[8  + i];
 		transposed_mvp[i * 4 + 3] = m[12 + i];
 	}
-	
-	VertexProgram* VP = VP_Active;
-	if (VP) VP->dirtyUniforms = true;
-	VP_ReloadUniforms();
+
+	VP_UpdateUniforms();
+}
+
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	if (type == MATRIX_VIEW) _view = *matrix;
+	if (type == MATRIX_PROJ) _proj = *matrix;
+
+	UpdateMVP();
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
-	Gfx_LoadMatrix(MATRIX_VIEW, view);
-	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+	_view = *view;
+	_proj = *proj;
+
+	UpdateMVP();
 	Matrix_Mul(mvp, view, proj);
 }
 

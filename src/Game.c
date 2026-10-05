@@ -657,6 +657,7 @@ static void LimitFPS(void) {
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	int i;
+	/* int MS = delta * 1000; Platform_Log1("ELAPSED: %i ms", &MS); */
 
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */

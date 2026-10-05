@@ -100,11 +100,11 @@ void Gfx_InitForLayer(CAMetalLayer* layer) {
 static cc_bool gfx_R = true, gfx_G = true, gfx_B = true, gfx_A = true;
 static cc_bool gfx_depthTest, gfx_depthWrite;
 
-void Gfx_SetFog(cc_bool enabled)    { }// TODO: implement
-void Gfx_SetFogCol(PackedCol col)   { }// TODO: implement
-void Gfx_SetFogDensity(float value) { }// TODO: implement
-void Gfx_SetFogEnd(float value)     { }// TODO: implement
-void Gfx_SetFogMode(FogFunc func)   { }// TODO: implement
+void Gfx_SetFog(cc_bool enabled)         { } // TODO: implement
+static void SetFogColor(PackedCol color) { } // TODO: implement
+static void SetFogDensity(float value)   { } // TODO: implement
+static void SetFogEnd(float value)       { } // TODO: implement
+static void SetFogMode(FogFunc func)     { } // TODO: implement
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
     [ren_enc setCullMode:enabled ? MTLCullModeFront : MTLCullModeNone];
