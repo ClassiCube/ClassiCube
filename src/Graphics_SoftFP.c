@@ -244,11 +244,12 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-    // TODO
+	// TODO
+	colWrite = r || g || b || a;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-    colWrite = !depthOnly;
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 /*########################################################################################################################*

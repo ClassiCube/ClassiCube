@@ -68,6 +68,12 @@ void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	SetColorWrite(r, g, b, a);
 }
 
+static CC_INLINE void DefaultDepthOnlyRendering(cc_bool depthOnly) {
+    cc_bool enabled = !depthOnly;
+    SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1],
+                  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+}
+
 void Gfx_SetTexturing(cc_bool enabled) { } /* useless */
 
 #ifndef CC_BUILD_3DS

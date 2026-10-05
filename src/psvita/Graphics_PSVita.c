@@ -1072,9 +1072,7 @@ static void SetAlphaBlend(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-    cc_bool enabled = !depthOnly;
-    SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1],
-                  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 

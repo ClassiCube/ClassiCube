@@ -347,7 +347,6 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
 #ifdef CC_BUILD_SYMBIAN
 	if (mbx) {
 		/* On PowerVR MBX cards, glColorMask appears to be unimplemented in hardware */
@@ -363,10 +362,9 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 		return;
 	}
 #endif
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 	
-	if (enabled) { _glEnable(GL_TEXTURE_2D); } else { _glDisable(GL_TEXTURE_2D); }
+	if (depthOnly) { glDisable(GL_TEXTURE_2D); } else { glEnable(GL_TEXTURE_2D); }
 }
 
 

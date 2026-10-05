@@ -550,8 +550,7 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	depthOnlyRendering = depthOnly; // TODO: Better approach? maybe using glBlendFunc instead?
 	cc_bool enabled    = !depthOnly;
 
-	//SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-	//			  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+	//DefaultDepthOnlyRendering(depthOnly);
 	gpu_attr_tex = enabled;
 	gpuUpdateFormat();
 }

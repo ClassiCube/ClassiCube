@@ -492,9 +492,7 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 	if (depthOnly) IDirect3DDevice9_SetTexture(device, 0, NULL);
 
 	/* For when Direct3D9 device doesn't support D3DRS_COLORWRITEENABLE */
