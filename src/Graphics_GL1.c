@@ -364,7 +364,7 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 #endif
     DefaultDepthOnlyRendering(depthOnly);
 	
-	if (depthOnly) { glDisable(GL_TEXTURE_2D); } else { glEnable(GL_TEXTURE_2D); }
+	if (depthOnly) { _glDisable(GL_TEXTURE_2D); } else { _glEnable(GL_TEXTURE_2D); }
 }
 
 

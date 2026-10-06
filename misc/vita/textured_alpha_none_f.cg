@@ -6,6 +6,7 @@ float4 main
 ) : COLOR
 {
 	float4 color = tex2D(tex, out_tex) * out_col;
-	
+	if (color.a < 0.5) discard;
+
 	return color;
 }

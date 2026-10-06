@@ -237,13 +237,13 @@ static SceGxmVertexProgram* VP_BuildTextured(const uint8_t* src) {
 }
 
 static const uint8_t coloured_v_gxp[] = {
-	#embed "../../misc/vita/colored_v.gxp"
+	#embed "../../misc/vita/gxp/colored_v.gxp"
 };
 static const uint8_t textured_v_gxp[] = {
-	#embed "../../misc/vita/textured_v.gxp"
+	#embed "../../misc/vita/gxp/textured_v.gxp"
 };
 static const uint8_t offset___v_gxp[] = {
-	#embed "../../misc/vita/offset_v.gxp"
+	#embed "../../misc/vita/gxp/offset_v.gxp"
 };
 
 
@@ -306,45 +306,80 @@ static SceGxmFragmentProgram* FP_BuildProgram(const SceGxmBlendInfo* blend_mode,
 	return programPatched;
 }
 
-static const uint8_t coloured_f_gxp[] = {
-	#embed "../../misc/vita/colored_f.gxp"
+static const uint8_t coloured_none_f_gxp[] = {
+	#embed "../../misc/vita/gxp/colored_none_f.gxp"
+};
+static const uint8_t coloured_linr_f_gxp[] = {
+	#embed "../../misc/vita/gxp/colored_linear_f.gxp"
+};
+static const uint8_t coloured__exp_f_gxp[] = {
+	#embed "../../misc/vita/gxp/colored_exp_f.gxp"
+};
+
+static const uint8_t coloured_alpha_none_f_gxp[] = {
+	#embed "../../misc/vita/gxp/colored_alpha_none_f.gxp"
+};
+static const uint8_t coloured_alpha_linr_f_gxp[] = {
+	#embed "../../misc/vita/gxp/colored_alpha_linear_f.gxp"
+};
+static const uint8_t coloured_alpha__exp_f_gxp[] = {
+	#embed "../../misc/vita/gxp/colored_alpha_exp_f.gxp"
 };
 
 static const uint8_t textured_none_f_gxp[] = {
-	#embed "../../misc/vita/textured_none_f.gxp"
+	#embed "../../misc/vita/gxp/textured_none_f.gxp"
 };
 static const uint8_t textured_linr_f_gxp[] = {
-	#embed "../../misc/vita/textured_linear_f.gxp"
+	#embed "../../misc/vita/gxp/textured_linear_f.gxp"
+};
+static const uint8_t textured__exp_f_gxp[] = {
+	#embed "../../misc/vita/gxp/textured_exp_f.gxp"
 };
 
-static const uint8_t coloured_alpha_f_gxp[] = {
-	#embed "../../misc/vita/colored_alpha_f.gxp"
+static const uint8_t textured_alpha_none_f_gxp[] = {
+	#embed "../../misc/vita/gxp/textured_alpha_none_f.gxp"
+};
+static const uint8_t textured_alpha_linr_f_gxp[] = {
+	#embed "../../misc/vita/gxp/textured_alpha_linear_f.gxp"
+};
+static const uint8_t textured_alpha__exp_f_gxp[] = {
+	#embed "../../misc/vita/gxp/textured_alpha_exp_f.gxp"
 };
 
-static const uint8_t textured_alpha_f_gxp[] = {
-	#embed "../../misc/vita/textured_alpha_f.gxp"
+static const uint8_t* FP_shader_sources[] = {
+	coloured_none_f_gxp,       coloured_linr_f_gxp,       coloured__exp_f_gxp,       NULL,
+	coloured_alpha_none_f_gxp, coloured_alpha_linr_f_gxp, coloured_alpha__exp_f_gxp, NULL,
+	textured_none_f_gxp,       textured_linr_f_gxp,       textured__exp_f_gxp,       NULL,
+	textured_alpha_none_f_gxp, textured_alpha_linr_f_gxp, textured_alpha__exp_f_gxp, NULL,
 };
 
-#define FP_WRITE_R (1 << 0)
-#define FP_WRITE_G (1 << 1)
-#define FP_WRITE_B (1 << 2)
-#define FP_WRITE_A (1 << 3)
-#define FP_BLEND   (1 << 4)
+#define FP_FOGMODE1 (1 << 0)
+#define FP_FOGMODE2 (1 << 1)
+#define FP_ATEST    (1 << 2)
+#define FP_TEXTURED (1 << 3)
+#define FP_SHDR_MASK 0x0F
+#define FP_WRITE_R  (1 << 4)
+#define FP_WRITE_G  (1 << 5)
+#define FP_WRITE_B  (1 << 6)
+#define FP_WRITE_A  (1 << 7)
+#define FP_BLEND    (1 << 8)
 
-#define FP_STATES 32
-
-static SceGxmFragmentProgram* FP_list[5 * FP_STATES];
+#define FP_STATES_COUNT (2 * FP_BLEND)
+static SceGxmFragmentProgram* FP_list[FP_STATES_COUNT];
 static SceGxmFragmentProgram* FP_Active;
 
-static void FP_BuildAll(int states) {
+static void FP_BuildFor(int index) {
 	SceGxmBlendInfo blend;
-	int blending = states & FP_BLEND;
+	int blending = index & FP_BLEND;
+
+	const uint8_t* shader = FP_shader_sources[index & FP_SHDR_MASK];
+	if (!shader) Process_Abort2(index, "missing FP shader");
 
 	blend.colorMask =
-    	((states & FP_WRITE_R) ? SCE_GXM_COLOR_MASK_R : 0) |
-    	((states & FP_WRITE_G) ? SCE_GXM_COLOR_MASK_G : 0) |
-    	((states & FP_WRITE_B) ? SCE_GXM_COLOR_MASK_B : 0) |
-    	((states & FP_WRITE_A) ? SCE_GXM_COLOR_MASK_A : 0);
+    	((index & FP_WRITE_R) ? SCE_GXM_COLOR_MASK_R : 0) |
+    	((index & FP_WRITE_G) ? SCE_GXM_COLOR_MASK_G : 0) |
+    	((index & FP_WRITE_B) ? SCE_GXM_COLOR_MASK_B : 0) |
+    	((index & FP_WRITE_A) ? SCE_GXM_COLOR_MASK_A : 0);
 
 	blend.colorFunc = blending ? SCE_GXM_BLEND_FUNC_ADD  : SCE_GXM_BLEND_FUNC_NONE;
 	blend.alphaFunc = blending ? SCE_GXM_BLEND_FUNC_ADD  : SCE_GXM_BLEND_FUNC_NONE;
@@ -353,11 +388,7 @@ static void FP_BuildAll(int states) {
 	blend.colorDst  = blending ? SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : SCE_GXM_BLEND_FACTOR_ONE;
 	blend.alphaDst  = blending ? SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : SCE_GXM_BLEND_FACTOR_ONE;
 
-	FP_list[ 0*FP_STATES + states] = FP_BuildProgram(&blend, coloured_f_gxp);
-	FP_list[ 1*FP_STATES + states] = FP_BuildProgram(&blend, textured_none_f_gxp);
-	FP_list[ 2*FP_STATES + states] = FP_BuildProgram(&blend, coloured_alpha_f_gxp);
-	FP_list[ 3*FP_STATES + states] = FP_BuildProgram(&blend, textured_alpha_f_gxp);
-	FP_list[ 4*FP_STATES + states] = FP_BuildProgram(&blend, textured_linr_f_gxp);
+	FP_list[index]  = FP_BuildProgram(&blend, shader);
 }
 
 static void FP_UpdateUniforms(void) {
@@ -375,24 +406,23 @@ static void FP_UpdateUniforms(void) {
 	buf[0] = PackedCol_R(gfx_fogColor) / 255.0f;
 	buf[1] = PackedCol_G(gfx_fogColor) / 255.0f;
 	buf[2] = PackedCol_B(gfx_fogColor) / 255.0f;
-	buf[3] = gfx_fogMode == FOG_LINEAR ? gfx_fogEnd : gfx_fogDensity;
+	buf[3] = gfx_fogMode == FOG_LINEAR ? (1.0f / gfx_fogEnd) : -gfx_fogDensity;
 }
 
 static void FP_SwitchActive(void) {
-	int shdr = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
-	if (gfx_alphaTest) shdr += 2;
-	//if (gfx_fogEnabled) index = 12; // TODO: fix
+	int textured = gfx_format == VERTEX_FORMAT_TEXTURED;
+	int fogMode  = gfx_fogEnabled ? (gfx_fogMode + 1) : 0;
 
 	// TODO still not working properly?
-    int states =
-    	(gfx_R          ? FP_WRITE_R : 0) |
-    	(gfx_G          ? FP_WRITE_G : 0) |
-    	(gfx_B          ? FP_WRITE_B : 0) |
-    	(gfx_A          ? FP_WRITE_A : 0) |
-    	(gfx_alphaBlend ? FP_BLEND   : 0);
-	
-	int index = shdr * FP_STATES + states;
-	if (FP_list[index] == NULL) FP_BuildAll(states);
+    int index = fogMode |
+		(gfx_alphaTest  ? FP_ATEST    : 0) |
+		(textured       ? FP_TEXTURED : 0) |
+    	(gfx_R          ? FP_WRITE_R  : 0) |
+    	(gfx_G          ? FP_WRITE_G  : 0) |
+    	(gfx_B          ? FP_WRITE_B  : 0) |
+    	(gfx_A          ? FP_WRITE_A  : 0) |
+    	(gfx_alphaBlend ? FP_BLEND    : 0);
+	if (FP_list[index] == NULL) FP_BuildFor(index);
 
 	SceGxmFragmentProgram* FP = FP_list[index];
 	if (FP == FP_Active) return;
