@@ -17,6 +17,6 @@ texture_2d();
     col0 = tex0.a * col0.a;
   }
 }
-out.rgb = lerp(col0.rgb, fog.rgb, fog.a);
+out.rgb = lerp(fog.a, col0.rgb, fog.rgb);
 out.a = unsigned(col0.a);
 // 3 instructions

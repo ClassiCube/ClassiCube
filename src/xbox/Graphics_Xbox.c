@@ -150,6 +150,8 @@ static int VS_CalcActiveProgram(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Pixel shaders-----------------------------------------------------*
 *#########################################################################################################################*/
+// https://xboxdevwiki.net/NV2A/Pixel_Combiner
+
 // https://developer.download.nvidia.com/assets/gamedev/docs/DynamicTexturing.pdf
 // https://developer.download.nvidia.com/assets/gamedev/docs/combiners.pdf
 // https://developer.download.nvidia.com/assets/gamedev/docs/GDC01_TextureShaders.pdf
@@ -163,6 +165,8 @@ static void PS_UpdateActive(void) {
 		#include "../../build/xbox/ps_textured_fog.inl"
 	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		#include "../../build/xbox/ps_textured.inl"
+	} else if (gfx_fogEnabled) {
+		#include "../../build/xbox/ps_coloured_fog.inl"
 	} else {
 		#include "../../build/xbox/ps_coloured.inl"
 	}
@@ -453,9 +457,6 @@ static void SetFogColor(PackedCol color) {
 	pb_end(p);
 }
 
-#define LOGE_256      5.54518f
-#define SQRT_LOGE_256 2.35482f
-#define LOGE_2        0.693147f
 static void UpdateFog(void) {
 	int mode;
 	float bias, scale;
@@ -463,25 +464,50 @@ static void UpdateFog(void) {
 	// https://github.com/xemu-project/xemu/blob/478b4f496102379c7eaa7f3ec10e714a703c4300/hw/xbox/nv2a/pgraph/glsl/vsh.c#L334
 	switch (gfx_fogMode) {
 		case FOG_LINEAR:
-			// float fogFactor = fogParam.x + fogDistance * fogParam.y - 1.0
-			// float fogFactor = 1.0 + fogDistance * 1/fogEnd - 1.0
-			// float fogFactor = fogDistance/fogEnd
+			// FACTOR    = fogParam.x + DIST * fogParam.y - 1.0
+			// GL_LINEAR = (end-DIST)/end
+			// GL_LINEAR = 1.0 - DIST/end
+			// GL_LINEAR = 2.0 - DIST/end - 1.0
+			// GL_LINEAR = 2.0 + DIST * (-1/end) - 1.0
+
+			// therefore fogParam.x = 2.0 and fogParam.y = (-1/end)
 			mode  = NV097_SET_FOG_MODE_V_LINEAR;
-			scale = 1.0f / gfx_fogEnd;
-			bias  = 1.0f;
+			scale = -1.0f / gfx_fogEnd;
+			bias  = 2.0f;
 			break;
 
-// TODO not right...
 		case FOG_EXP:
+			// FACTOR = fogParam.x + exp2(DIST * fogParam.y * 16.0) - 1.5
+			// GL_EXP = exp(-density * DIST)
+			// GL_EXP = 1.5 + exp(-density*DIST) - 1.5
+			// GL_EXP = 1.5 + exp(DIST * -density/16.0 * 16.0) - 1.5
+			// GL_EXP = 1.5 + exp2(log2(e) * DIST * -density/16.0 * 16.0) - 1.5
+			// GL_EXP = 1.5 + exp2(DIST * (-density * log2(e)/16.0) * 16.0) - 1.5
+			// GL_EXP = 1.5 + exp2(DIST * (-density/(16.0*loge(2)) * 16.0) - 1.5  (using rule logx(y) = 1/logy(x))
+
+			// therefore fogParam.x = 1.5 and fogParam.y = -density/(16.0*loge(2))
+			#define LOGE_2 0.693147f
 			mode  = NV097_SET_FOG_MODE_V_EXP;
 			bias  = 1.5f;
  			scale = -gfx_fogDensity / (16 * LOGE_2);
-			break; // (e^-DC)
+			break;
 
 		case FOG_EXP2:
+			// FACTOR  = fogParam.x + exp2(-DIST * DIST * fogParam.y * fogParam.y * 32.0) - 1.5
+			// GL_EXP2 = exp(-(density * DIST)*(density*DIST))
+			// GL_EXP2 = 1.5 + exp(-DIST * DIST * density * density) - 1.5
+			// GL_EXP2 = 1.5 + exp(-DIST * DIST * (density/sqrt(32)) * (density/sqrt(32)) * 32.0) - 1.5
+			// GL_EXP2 = 1.5 + exp2(log2(e) * -DIST * DIST * (density/sqrt(32)) * (density/sqrt(32)) * 32.0) - 1.5
+			// GL_EXP2 = 1.5 + exp2(-DIST * DIST * (density*sqrt(log2(e))/sqrt(32)) * (density*sqrt(log2(e)/sqrt(32)) * 32.0) - 1.5
+			// GL_EXP2 = 1.5 + exp2(-DIST * DIST * (density*sqrt(log2(e)/32)) * (density*sqrt(log2(e)/32)) * 32.0) - 1.5
+			// GL_EXP2 = 1.5 + exp2(-DIST * DIST * (density*sqrt(1/(loge(2)*32))) * (density*sqrt(1/(loge(2)*32))) * 32.0) - 1.5
+			// GL_EXP2 = 1.5 + exp2(-DIST * DIST * (density/sqrt(loge(2)*32)) * (density/sqrt(loge(2)*32)) * 32.0) - 1.5
+
+			// therefore fogParam.x = 1.5 and fogParam.y = density/sqrt(loge(2)*32)
+			#define SQRT_32LOGE_2 4.70964f
 			mode  = NV097_SET_FOG_MODE_V_EXP2;
 			bias  = 1.5f;
-			scale = -gfx_fogDensity / (2.0f * SQRT_LOGE_256);
+			scale = gfx_fogDensity / SQRT_32LOGE_2;
 			break;
 	}
 	
