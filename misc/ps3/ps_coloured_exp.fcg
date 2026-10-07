@@ -1,0 +1,16 @@
+float4 main
+(
+	float4 out_pos : WPOS,
+	float4 out_col : COLOR,
+	uniform float4 fog_state
+) : COLOR
+{
+	// fog_state.rgb = fog colour
+	// fog_state.a   = fog end
+	float depth  = 1.0 / out_pos.w;
+	float4 color = out_col;
+
+	float factor = clamp(exp(fog_state.a * depth), 0.0, 1.0);
+	color.rgb    = lerp(fog_state.rgb, color.rgb, factor);
+	return color;
+}

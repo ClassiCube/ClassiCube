@@ -359,7 +359,7 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *-----------------------------------------------------Frame management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_BeginFrame(void) {
-	pb_wait_for_vbl(); // TODO: only when vsync?
+	pb_wait_for_vbl(); // TODO: only when vsync? move to end frame?
 	pb_reset();
 	pb_target_back_buffer();
 
