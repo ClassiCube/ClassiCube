@@ -29,6 +29,11 @@ android/local.properties
 project.xcworkspace/
 xcuserdata/
 
+# Playdate build results
+Classicube.pdx/
+misc/playdate/Classicube.pdx/
+*.so
+
 # Nintendo Console build results
 build-nds/
 build-dsi/
