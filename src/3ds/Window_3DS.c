@@ -11,6 +11,7 @@
 #include "../Gui.h"
 
 #include <3ds.h>
+#include "cpp.h" //CPP = Circle Pad Pro
 
 static u16 top_width, top_height;
 static u16 btm_width, btm_height;
@@ -55,7 +56,7 @@ void Window_Init(void) {
 	Window_Alt.Height = btm_height;
 }
 
-void Window_Free(void) { irrstExit(); }
+void Window_Free(void) { irrstExit(); cppExit(); }
 
 void Window_Create2D(int width, int height) {
 	Window_Main.Is3D  = false;
@@ -148,36 +149,43 @@ static const BindMapping defaults_3ds[BIND_COUNT] = {
 	[BIND_NOCLIP]       = { CCPAD_2, CCPAD_3 },
 	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
 	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
-	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    }, 
+	[BIND_HOTBAR_LEFT]  = { CCPAD_ZL    },
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR    }
 };
 
 static Result irrst_result;
 void Gamepads_PreInit(void) {
 	irrst_result = irrstInit();
+	cppInit(); //star cpp
 }
 
 void Gamepads_Init(void) { }
 
-static void HandleButtons(int port, u32 mods) {
+static void HandleButtons(int port, u32 mods, u32 extra) {
+	if(cppGetConnected()) {
+		//CPP specific buttons
+		Gamepad_SetButton(port, CCPAD_R, extra & KEY_R);
+		Gamepad_SetButton(port, CCPAD_ZL, extra & KEY_ZL);
+		Gamepad_SetButton(port, CCPAD_ZR, extra & KEY_ZR);
+	}else{
+		Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
+		Gamepad_SetButton(port, CCPAD_ZL, mods & KEY_ZL);
+		Gamepad_SetButton(port, CCPAD_ZR, mods & KEY_ZR);
+	}
 	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
-	
+
 	Gamepad_SetButton(port, CCPAD_1, mods & KEY_A);
 	Gamepad_SetButton(port, CCPAD_2, mods & KEY_B);
 	Gamepad_SetButton(port, CCPAD_3, mods & KEY_X);
 	Gamepad_SetButton(port, CCPAD_4, mods & KEY_Y);
-	
+
 	Gamepad_SetButton(port, CCPAD_START,  mods & KEY_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, mods & KEY_SELECT);
-	
+
 	Gamepad_SetButton(port, CCPAD_LEFT,   mods & KEY_DLEFT);
 	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & KEY_DRIGHT);
 	Gamepad_SetButton(port, CCPAD_UP,     mods & KEY_DUP);
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & KEY_DDOWN);
-	
-	Gamepad_SetButton(port, CCPAD_ZL, mods & KEY_ZL);
-	Gamepad_SetButton(port, CCPAD_ZR, mods & KEY_ZR);
 }
 
 #define AXIS_SCALE 8.0f
@@ -192,12 +200,23 @@ static void ProcessCircleInput(int port, int axis, circlePosition* pos, float de
 void Gamepads_Process(float delta) {
 	u32 mods = hidKeysDown() | hidKeysHeld();
 	int port = Gamepad_Connect(0x3D5, defaults_3ds);
-	HandleButtons(port, mods);
-	
+
 	circlePosition hid_pos;
 	hidCircleRead(&hid_pos);
+	if (cppGetConnected()) {
+		//read the status of the CPP
+		circlePosition cpp_pos;
+		cppCircleRead(&cpp_pos);
+		u32 cpp_keys = cppKeysHeld();
 
-	if (irrst_result == 0) {
+		//joysticks
+		ProcessCircleInput(port, PAD_AXIS_RIGHT, &cpp_pos, delta);
+		ProcessCircleInput(port, PAD_AXIS_LEFT,  &hid_pos, delta);
+		HandleButtons(port, mods, cpp_keys);
+
+	} else if (irrst_result == 0) {
+		HandleButtons(port, mods, 0);
+
 		circlePosition stk_pos;
 		irrstScanInput();
 		irrstCstickRead(&stk_pos);
@@ -205,6 +224,7 @@ void Gamepads_Process(float delta) {
 		ProcessCircleInput(port, PAD_AXIS_RIGHT, &stk_pos, delta);
 		ProcessCircleInput(port, PAD_AXIS_LEFT,  &hid_pos, delta);
 	} else {
+		HandleButtons(port, mods, 0);
 		ProcessCircleInput(port, PAD_AXIS_RIGHT, &hid_pos, delta);
 	}
 }
