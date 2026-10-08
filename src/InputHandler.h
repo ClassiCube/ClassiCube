@@ -53,8 +53,12 @@ cc_bool Input_HandleMouseWheel(float delta);
 void InputHandler_Tick(float delta);
 void InputHandler_OnScreensChanged(void);
 
+typedef cc_uint8 cc_ipt_flags; /*dont know if this is the best place to put this*/
+#define IPT_NONE 0x00 /* key havent been handled */
+#define IPT_HANDLED 0x01 /* key has been handled */
+#define IPT_SUPPRESS_UI 0x02 /* key supresses GUI's key processing*/
 
-typedef cc_bool (*BindTriggered)(int key, struct InputDevice* device);
+typedef cc_ipt_flags (*BindTriggered)(int key, struct InputDevice* device); /*changes this to use 'cc_key_flag' instead of bool*/
 typedef void    (*BindReleased)(int key, struct InputDevice* device);
 /* Gets whether the given input binding is currently being triggered */
 CC_API cc_bool KeyBind_IsPressed(InputBind binding);
