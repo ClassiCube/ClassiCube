@@ -168,8 +168,9 @@ void Gfx_Create(void) {
 	if (!Gfx.Created) InitGfx();
 	
 	Gfx.Created      = true;
-	Gfx.MaxTexWidth  = 1024;
-	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexWidth  = 2048; // TODO: 4096?
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {

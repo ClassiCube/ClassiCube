@@ -263,8 +263,9 @@ void SetRenderTarget(u32 index) {
 }
 
 static void InitGfxContext(void) {
-	Gfx.MaxTexWidth  = 1024;
-	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexWidth  = 2048; // TODO: 4096?
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
 	Gfx.Created      = true;
 	
 	// https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30

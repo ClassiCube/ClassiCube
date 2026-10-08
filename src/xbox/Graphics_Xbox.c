@@ -41,8 +41,9 @@ static GfxResourceID white_square;
 
 static void VS_Init(void);
 void Gfx_Create(void) {
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512; // TODO: 1024?
+	Gfx.MaxTexWidth  = 2048; // TODO: 4096?
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 512 * 512;
 	Gfx.Created      = true;
 
 	InitDefaultResources();
