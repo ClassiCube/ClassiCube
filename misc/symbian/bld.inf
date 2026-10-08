@@ -1,5 +1,5 @@
 PRJ_PLATFORMS
-DEFAULT
+GCCE ARMV5 ARMV6
 
 PRJ_MMPFILES
 gnumakefile Icons_scalable_dc.mk
@@ -7,3 +7,6 @@ bearssl.mmp
 ClassiCube_sym3.mmp
 ClassiCube_s60v5.mmp
 ClassiCube_s60v3.mmp
+
+PRJ_EXPORTS
+../cc_textures.zip /epoc32/winscw/c/private/e212a5c2/texpacks/cc_textures.zip

@@ -27,4 +27,4 @@ ENDIF
 "$(EPOCROOT)\epoc32\data\z\private\10003a3f\import\apps\classicube_reg.rsc" - "!:\private\10003a3f\import\apps\classicube_reg.rsc"
 "$(EPOCROOT)\epoc32\data\z\resource\apps\classicube.rsc" - "!:\resource\apps\classicube.rsc"
 "$(EPOCROOT)\epoc32\data\z\resource\apps\classicube_icon.mif" - "!:\resource\apps\classicube_icon.mif"
-;"$(EPOCROOT)\epoc32\winscw\c\private\e212a5c2\texpacks\classicube.zip" - "!:\private\e212a5c2\texpacks\classicube.zip"
+"../cc_textures.zip" - "!:\private\e212a5c2\texpacks\classicube.zip"
