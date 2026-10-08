@@ -505,7 +505,7 @@ static void ProcessGamepadButtons(int port, SDL_GameController* gp) {
 	Gamepad_SetButton(port, CCPAD_RIGHT, SDL_GameControllerGetButton(gp, SDL_CONTROLLER_BUTTON_DPAD_RIGHT));
 }
 
-#define PAD_AXIS_SCALE 32768.0f
+#define PAD_AXIS_SCALE 1024.0f
 static void ProcessJoystick(int port, SDL_GameController* gp, int axis, float delta) {
 	int x = SDL_GameControllerGetAxis(gp, axis == PAD_AXIS_LEFT ? SDL_CONTROLLER_AXIS_LEFTX : SDL_CONTROLLER_AXIS_RIGHTX);
 	int y = SDL_GameControllerGetAxis(gp, axis == PAD_AXIS_LEFT ? SDL_CONTROLLER_AXIS_LEFTY : SDL_CONTROLLER_AXIS_RIGHTY);
@@ -514,7 +514,7 @@ static void ProcessJoystick(int port, SDL_GameController* gp, int axis, float de
 	if (Math_AbsI(x) <= 1024) x = 0;
 	if (Math_AbsI(y) <= 1024) y = 0;
 	
-	Gamepad_SetAxis(port, axis, x / PAD_AXIS_SCALE, -y / PAD_AXIS_SCALE, delta);
+	Gamepad_SetAxis(port, axis, x / PAD_AXIS_SCALE, y / PAD_AXIS_SCALE, delta);
 }
 
 void Gamepads_Process(float delta) {
