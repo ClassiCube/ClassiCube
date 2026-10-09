@@ -24,6 +24,7 @@
 #include "Options.h"
 #include "InputHandler.h"
 #include "Protocol.h"
+#include "LWeb.h"
 
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
@@ -2196,6 +2197,74 @@ void GeneratingScreen_Show(void) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------CCJOIN server transfer---------------------------------------------------*
+*#########################################################################################################################*/
+void CCJoin_Tick(void) {
+	struct ServerInfo* info;
+	cc_string ip, mppass;
+	cc_string portStr; char portBuf[8];
+
+	if (!FetchServerTask.Base.working && !FetchServerTask.Base.reqID) return;
+
+	LWebTask_Tick(&FetchServerTask.Base, NULL);
+	if (!FetchServerTask.Base.completed) return;
+
+	FetchServerTask.Base.reqID = 0;
+
+	if (!FetchServerTask.Base.success) {
+		Chat_AddRaw("&cCCJOIN: failed to fetch server info");
+		return;
+	}
+
+	info = &FetchServerTask.server;
+	if (!info->ip.length || info->port <= 0) {
+		Chat_AddRaw("&cCCJOIN: server not found (invalid hash?)");
+		return;
+	}
+
+	ip     = info->ip;
+	mppass = info->mppass;
+
+	String_Copy(&Server.Address, &ip);
+	Server.Port = info->port;
+	String_Copy(&Game_Mppass, &mppass);
+
+	Options_Set(ROPT_IP, &ip);
+	String_InitArray(portStr, portBuf);
+	String_AppendInt(&portStr, info->port);
+	Options_Set(ROPT_PORT, &portStr);
+	Options_SetSecure(ROPT_MPPASS, &mppass);
+
+	Server.Disconnected = false;
+	Server.BeginConnect();
+}
+
+static void CCJoin_ScheduledTick(struct ScheduledTask* task) { CCJoin_Tick(); }
+void CCJoin_Init(void) { ScheduledTask_Add(GAME_NET_TICKS, CCJoin_ScheduledTick); }
+
+static cc_bool DisconnectScreen_TryTransferJoin(const cc_string* message) {
+	static const cc_string prefix  = String_FromConst("CCJOIN ");
+	static const cc_string loading = String_FromConst("Connecting...");
+	static const cc_string empty   = String_FromConst("");
+	cc_string hash;
+
+	if (!String_CaselessStarts(message, &prefix)) return false;
+
+	hash = String_UNSAFE_SubstringAt(message, prefix.length);
+	String_UNSAFE_TrimStart(&hash);
+	String_UNSAFE_TrimEnd(&hash);
+	if (!hash.length || hash.length > STRING_SIZE - 1) return false;
+
+	/* Session_Load pulls the saved classicube.net cookie from disk so
+	   the API call returns a real authenticated mppass for this player */
+	Session_Load();
+	FetchServerTask_Run(&hash);
+
+	LoadingScreen_Show(&loading, &empty);
+	return true;
+}
+
+/*########################################################################################################################*
 *----------------------------------------------------DisconnectScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static struct DisconnectScreen {
@@ -2332,6 +2401,11 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 	struct DisconnectScreen* s = &DisconnectScreen;
 	int i;
 
+	/* Intercept CCJOIN transfers before showing the disconnect screen */
+	String_InitArray(why, whyBuffer);
+	String_AppendColorless(&why, message);
+	if (DisconnectScreen_TryTransferJoin(&why)) return;
+
 	s->grabsInput  = true;
 	s->blocksWorld = true;
 
@@ -2340,9 +2414,6 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 	String_InitArray(s->messageStr, s->_messageBuffer);
 	String_AppendString(&s->messageStr, message);
 
-	String_InitArray(why, whyBuffer);
-	String_AppendColorless(&why, message);
-	
 	s->canReconnect = !(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
 	s->VTABLE       = &DisconnectScreen_VTABLE;
 

@@ -33,6 +33,8 @@ void LoadingScreen_Show(const cc_string* title, const cc_string* message);
 void GeneratingScreen_Show(void);
 void ChatScreen_Show(void);
 void SpecialTextScreen_Show(void);
+void CCJoin_Tick(void);
+void CCJoin_Init(void);
 void DisconnectScreen_Show(const cc_string* title, const cc_string* message);
 #ifdef CC_BUILD_TOUCH
 void TouchScreen_Refresh(void);
