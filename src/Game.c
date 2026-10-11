@@ -498,6 +498,9 @@ static void Render3DFrame(float delta, float t) {
 	Gfx_LoadMVP(&Gfx.View, &Gfx.Projection, &mvp);
 	Frustum_CalcPlanes(&mvp);
 
+	Gfx_SetDepthTest(true);
+	Gfx_SetDepthWrite(true);
+
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);
@@ -657,6 +660,7 @@ static void LimitFPS(void) {
 
 static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	int i;
+	/* int MS = delta * 1000; Platform_Log1("ELAPSED: %i ms", &MS); */
 
 	if (!Gui_GetBlocksWorld()) {
 		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */

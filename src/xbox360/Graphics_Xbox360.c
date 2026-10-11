@@ -135,28 +135,14 @@ void Gfx_DisableMipmaps(void) { } // TODO
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+void Gfx_SetFog(cc_bool enabled)         { } // TODO: implement
+static void SetFogColor(PackedCol color) { } // TODO: implement
+static void SetFogDensity(float value)   { } // TODO: implement
+static void SetFogEnd(float value)       { } // TODO: implement
+static void SetFogMode(FogFunc func)     { } // TODO: implement
+
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
-}
-
-void Gfx_SetFog(cc_bool enabled) {
-	// TODO
-}
-
-void Gfx_SetFogCol(PackedCol color) {
-	// TODO
-}
-
-void Gfx_SetFogDensity(float value) {
-	// TODO
-}
-
-void Gfx_SetFogEnd(float value) {
-	// TODO
-}
-
-void Gfx_SetFogMode(FogFunc func) {
-	// TODO
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -183,11 +169,11 @@ void Gfx_ClearColor(PackedCol color) {
 	Xe_SetClearColor(xe, color);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 	Xe_SetZEnable(xe, enabled);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	Xe_SetZWrite(xe, enabled);
 }
 
@@ -196,9 +182,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 

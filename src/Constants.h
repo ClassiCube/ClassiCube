@@ -71,9 +71,13 @@ enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
 #define Int32_MinValue  ((cc_int32)-2147483647L - (cc_int32)1L)
 #define Int32_MaxValue  ((cc_int32)2147483647L)
 
+/* Default webserver for downloading skins from */
 #define SKINS_SERVER    "http://cdn.classicube.net/skin"
+/* Webserver for downloading executables from */
 #define UPDATES_SERVER  "https://cdn.classicube.net/client"
+/* Webserver for login, server detail fetching etc */
 #define SERVICES_SERVER "https://www.classicube.net/api"
+/* Webserver for downloading non-minecraft assets */
 #define RESOURCE_SERVER "http://static.classicube.net"
 /* Webpage where users can register for a new account */
 #define REGISTERNEW_URL "https://www.classicube.net/acc/register/"

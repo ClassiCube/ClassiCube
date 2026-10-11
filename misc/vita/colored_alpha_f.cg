@@ -1,9 +1,0 @@
-float4 main
-(
-	float4 out_color: COLOR
-) : COLOR
-{
-	if (out_color.a < 0.5) discard;
-	
-	return out_color;
-}

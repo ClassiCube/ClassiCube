@@ -68,13 +68,18 @@ static void VP_SwitchActive(void) {
 *#########################################################################################################################*/
 typedef struct CCFragmentProgram {
 	rsxFragmentProgram* prog;
+	rsxProgramConst* fog_state;
 	u32 offset;
 } FragmentProgram;
 
-extern const u8 ps_textured_fpo[];
-extern const u8 ps_coloured_fpo[];
+extern const u8 ps_textured_none_fpo[];
+extern const u8 ps_textured_linear_fpo[];
+extern const u8 ps_textured_exp_fpo[];
+extern const u8 ps_coloured_none_fpo[];
+extern const u8 ps_coloured_linear_fpo[];
+extern const u8 ps_coloured_exp_fpo[];
 
-static FragmentProgram  FP_list[2];
+static FragmentProgram  FP_list[8];
 static FragmentProgram* FP_active;
 
 
@@ -88,21 +93,47 @@ static void FP_Load(FragmentProgram* fp, const u8* source) {
 	u32* buffer = (u32*)rsxMemalign(128, size);
 	Mem_Copy(buffer, ucode, size);
 	gcmAddressToOffset(buffer, &fp->offset);
+
+	fp->fog_state = rsxFragmentProgramGetConst(prog, "fog_state");
 }
 
 static void LoadFragmentPrograms(void) {
-	FP_Load(&FP_list[0], ps_coloured_fpo);
-	FP_Load(&FP_list[1], ps_textured_fpo);
+	FP_Load(&FP_list[0], ps_coloured_none_fpo);
+	FP_Load(&FP_list[1], ps_coloured_linear_fpo);
+	FP_Load(&FP_list[2], ps_coloured_exp_fpo);
+
+	FP_Load(&FP_list[4], ps_textured_none_fpo);
+	FP_Load(&FP_list[5], ps_textured_linear_fpo);
+	FP_Load(&FP_list[6], ps_textured_exp_fpo);
+}
+
+static void FP_UpdateUniforms(void) {
+	FragmentProgram* FP = FP_active;
+	if (!FP || !FP->fog_state) return;
+
+	float values[4];
+	values[0] = PackedCol_R(gfx_fogColor) / 255.0f;
+	values[1] = PackedCol_G(gfx_fogColor) / 255.0f;
+	values[2] = PackedCol_B(gfx_fogColor) / 255.0f;
+	values[3] = gfx_fogMode == FOG_LINEAR ? (1.0f / gfx_fogEnd) : -gfx_fogDensity;
+	// TODO: use rsxSetFogMode and rsxSetFogParams? is it actually any faster?
+
+	rsxSetFragmentProgramParameter(context, FP->prog, FP->fog_state, 
+									values, FP->offset, GCM_LOCATION_RSX);
 }
 
 static void FP_SwitchActive(void) {
-	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
+	int fog   = gfx_fogEnabled ? (gfx_fogMode + 1) : 0;
+	int base  = gfx_format == VERTEX_FORMAT_TEXTURED ? 4 : 0;
+	int index = base + fog;
 
 	FragmentProgram* FP = &FP_list[index];
+	if (!FP) Process_Abort2(index, "missing FP shader");
 	if (FP == FP_active) return;
 	FP_active = FP;
 	
 	rsxLoadFragmentProgramLocation(context, FP->prog, FP->offset, GCM_LOCATION_RSX);
+	FP_UpdateUniforms();
 }
 
 
@@ -232,8 +263,9 @@ void SetRenderTarget(u32 index) {
 }
 
 static void InitGfxContext(void) {
-	Gfx.MaxTexWidth  = 1024;
-	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexWidth  = 2048; // TODO: 4096?
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
 	Gfx.Created      = true;
 	
 	// https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
@@ -321,11 +353,11 @@ void Gfx_ClearColor(PackedCol color) {
 	clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	RSX_set_depth_write(context, enabled);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 	RSX_set_depth_test(context, enabled);
 }
 
@@ -338,9 +370,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -683,20 +713,15 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled) {/* TODO */
+void Gfx_SetFog(cc_bool enabled)  { 
+	gfx_fogEnabled = enabled;
+	FP_SwitchActive();
 }
 
-void Gfx_SetFogCol(PackedCol color) {/* TODO */
-}
-
-void Gfx_SetFogDensity(float value) {/* TODO */
-}
-
-void Gfx_SetFogEnd(float value) {/* TODO */
-}
-
-void Gfx_SetFogMode(FogFunc func) {/* TODO */
-}
+static void SetFogColor(PackedCol color) { FP_UpdateUniforms(); }
+static void SetFogDensity(float value)   { FP_UpdateUniforms(); }
+static void SetFogEnd(float value)       { FP_UpdateUniforms(); }
+static void SetFogMode(FogFunc func)     { FP_UpdateUniforms(); }
 
 
 /*########################################################################################################################*

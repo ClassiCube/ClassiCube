@@ -1,7 +1,0 @@
-float4 main(
-	float4 in_col : COLOR,
-	float2 in_tex : TEXCOORD0,
-	uniform sampler2D tex
-) : COLOR {
-	return tex2D(tex, in_tex.xy) * in_col;
-}

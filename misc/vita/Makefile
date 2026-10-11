@@ -17,6 +17,7 @@ RUN_PROGRAM	?= vita3k
 
 SFO_TITLE 	:= ClassiCube
 SFO_TITLEID := CUBE00200
+SFO_VERSION  := 01.38
 
 PARAM_SFO	:= $(BUILD_DIR)/param.sfo
 EBOOT_BIN	:= eboot.bin
@@ -61,13 +62,16 @@ $(TARGET).velf: $(TARGET).stripped
 	$(ELF_CREATE) $< $@
 
 $(PARAM_SFO):
-	$(MKSOFEX) -s TITLE_ID="$(SFO_TITLEID)" "$(SFO_TITLE)" $@
+	$(MKSOFEX) -s TITLE_ID="$(SFO_TITLEID)" \
+				-s APP_VER="$(SFO_VERSION)" \
+				-s VERSION="$(SFO_VERSION)" \
+				"$(SFO_TITLE)" $@
 
 $(EBOOT_BIN): $(TARGET).velf
 	$(MAKE_FSELF) $< $@
 
 $(TARGET).vpk: $(EBOOT_BIN) $(PARAM_SFO)
-	$(PACK_VPK) -s $(PARAM_SFO) -b $(EBOOT_BIN) -a misc/vita/ICON0.png=sce_sys/ICON0.png $@
+	$(PACK_VPK) -s $(PARAM_SFO) -b $(EBOOT_BIN) -a misc/vita/ICON0.png=sce_sys/icon0.png $@
 
 
 #---------------------------------------------------------------------------------

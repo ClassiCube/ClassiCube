@@ -239,11 +239,11 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)    { }
-void Gfx_SetFogCol(PackedCol col)   { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value)     { }
-void Gfx_SetFogMode(FogFunc func)   { }
+void Gfx_SetFog(cc_bool enabled)         { }
+static void SetFogColor(PackedCol color) { }
+static void SetFogDensity(float value)   { }
+static void SetFogEnd(float value)       { }
+static void SetFogMode(FogFunc func)     { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	// TODO
@@ -267,10 +267,10 @@ void Gfx_ClearColor(PackedCol color) {
 	UpdateVDP1Env();
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	// TODO
 }
 
@@ -278,10 +278,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
 }
 
+static cc_bool depth_only;
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+	depth_only = depthOnly;
 }
 
 
@@ -673,6 +672,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
+	if (depth_only) return;
 	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 

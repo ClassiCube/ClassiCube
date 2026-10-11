@@ -239,21 +239,20 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
+	// TODO: can per channel be done somehow?
+	GX_SetColorUpdate(r || g || b);
+	GX_SetAlphaUpdate(a);
 }
 
-static cc_bool depth_write = true, depth_test = true;
 static void UpdateDepthState(void) {
-	GX_SetZMode(depth_test, GX_LEQUAL, depth_write);
+	GX_SetZMode(gfx_depthTest, GX_LEQUAL, gfx_depthWrite);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depth_write = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	depth_test = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
@@ -403,10 +402,6 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
-static int gfx_fogMode  = -1;
-
 static void UpdateFog(void) {
 	float beg = 0.0f, end = 0.0f;
 	float near = 0.1f, far = Game_ViewDistance;
@@ -442,29 +437,13 @@ void Gfx_SetFog(cc_bool enabled) {
 	UpdateFog();
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == gfx_fogColor) return;
-	gfx_fogColor = color;
-	UpdateFog();
-}
+static void SetFogColor(PackedCol color) { UpdateFog(); }
 
-void Gfx_SetFogDensity(float value) {
-	if (value == gfx_fogDensity) return;
-	gfx_fogDensity = value;
-	UpdateFog();
-}
+static void SetFogDensity(float value)   { UpdateFog(); }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == gfx_fogEnd) return;
-	gfx_fogEnd = value;
-	UpdateFog();
-}
+static void SetFogEnd(float value)       { UpdateFog(); }
 
-void Gfx_SetFogMode(FogFunc func) {
-	if (func == gfx_fogMode) return;
-	gfx_fogMode = func;
-	UpdateFog();
-}
+static void SetFogMode(FogFunc func)     { UpdateFog(); }
 
 static void SetAlphaTest(cc_bool enabled) {
 	if (enabled) {
@@ -481,8 +460,7 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	GX_SetColorUpdate(!depthOnly);
-	GX_SetAlphaUpdate(!depthOnly);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 

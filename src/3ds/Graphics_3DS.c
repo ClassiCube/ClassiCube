@@ -119,7 +119,6 @@ static void AllocShaders(void) {
 static void SetDefaultState(void) {
 	Gfx_SetFaceCulling(false);
 	Gfx_SetAlphaTest(false);
-	Gfx_SetDepthWrite(true);
 }
 
 static aptHookCookie hookCookie;
@@ -483,9 +482,7 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -493,24 +490,21 @@ void Gfx_ClearColor(PackedCol color) {
 	clear_color = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
 }
 
-static cc_bool depthTest, depthWrite;
 static int colorWriteMask = GPU_WRITE_COLOR;
 
 static void UpdateWriteState(void) {
 	//C3D_EarlyDepthTest(true, GPU_EARLYDEPTH_GREATER, 0);
 	//C3D_EarlyDepthTest(false, GPU_EARLYDEPTH_GREATER, 0);
 	int writeMask = colorWriteMask;
-	if (depthWrite) writeMask |= GPU_WRITE_DEPTH;
-	C3D_DepthTest(depthTest, GPU_GEQUAL, writeMask);
+	if (gfx_depthWrite) writeMask |= GPU_WRITE_DEPTH;
+	C3D_DepthTest(gfx_depthTest, GPU_GEQUAL, writeMask);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	UpdateWriteState();
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) { 
-	depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	UpdateWriteState();
 }
 
@@ -735,32 +729,23 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static u32 fogColor;
-static int fogMode = -1;
-static float fogDensity = 1.0f;
-static float fogEnd = 32.0f;
-
 void Gfx_SetFog(cc_bool enabled) {
 	pica_update_fog_mode(enabled, false);
 	gfx_fogEnabled = enabled;
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	// TODO find better way?
+static void SetFogColor(PackedCol color) {
 	u32 c = (0xFFu << 24) | (PackedCol_B(color) << 16) | (PackedCol_G(color) << 8) | PackedCol_R(color);
-	if (c == fogColor) return;
-
-	fogColor = c;
 	pica_set_fog_color(c);
 }
 
 static float GetFogValue(float c) {
-	if (fogMode == FOG_LINEAR) {
-		return (fogEnd - c) / fogEnd;
-	} else if (fogMode == FOG_EXP) {
-		return expf(-(fogDensity * c));
+	if (gfx_fogMode == FOG_LINEAR) {
+		return (gfx_fogEnd - c) / gfx_fogEnd;
+	} else if (gfx_fogMode == FOG_EXP) {
+		return expf(-(gfx_fogDensity * c));
 	} else {
-		return expf(-(fogDensity * c) * (fogDensity * c));
+		return expf(-(gfx_fogDensity * c) * (gfx_fogDensity * c));
 	}
 }
 
@@ -781,26 +766,11 @@ static void UpdateFog(void) {
 	pica_set_fog_table(fog_lut.data);
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (fogDensity == value) return;
+static void SetFogDensity(float value) { UpdateFog(); }
 
-	fogDensity = value;
-	if (fogMode != FOG_LINEAR) UpdateFog();
-}
+static void SetFogEnd(float value)     { UpdateFog(); }
 
-void Gfx_SetFogEnd(float value) {
-	if (fogEnd == value) return;
-
-	fogEnd = value;
-	if (fogMode == FOG_LINEAR) UpdateFog();
-}
-
-void Gfx_SetFogMode(FogFunc func) {
-	if (fogMode == func) return;
-
-	fogMode = func;
-	UpdateFog();
-}
+static void SetFogMode(FogFunc func)   { UpdateFog(); }
 
 
 /*########################################################################################################################*

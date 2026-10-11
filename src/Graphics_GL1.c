@@ -307,43 +307,31 @@ void Gfx_BindTexture(GfxResourceID texID) { setTexture(texID); }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd, gfx_fogDensity;
-static int gfx_fogMode;
-
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
 	if (enabled) { _glEnable(GL_FOG); } else { _glDisable(GL_FOG); }
 }
 
-void Gfx_SetFogCol(PackedCol color) {
+static void SetFogColor(PackedCol color) {
 	float rgba[4];
-	if (color == gfx_fogColor) return;
-
 	rgba[0] = PackedCol_R(color) / 255.0f; 
 	rgba[1] = PackedCol_G(color) / 255.0f;
 	rgba[2] = PackedCol_B(color) / 255.0f; 
 	rgba[3] = PackedCol_A(color) / 255.0f;
 
 	_glFogfv(GL_FOG_COLOR, rgba);
-	gfx_fogColor = color;
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (value == gfx_fogDensity) return;
+static void SetFogDensity(float value) {
 	_glFogf(GL_FOG_DENSITY, value);
-	gfx_fogDensity = value;
 }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == gfx_fogEnd) return;
+static void SetFogEnd(float value) {
 	_glFogf(GL_FOG_END, value);
-	gfx_fogEnd = value;
 }
 
-void Gfx_SetFogMode(FogFunc func) {
+static void SetFogMode(FogFunc func) {
 	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
-	if (func == gfx_fogMode) return;
 
 #ifdef CC_BUILD_GLES
 	/* OpenGL ES doesn't support glFogi, so use glFogf instead */
@@ -352,7 +340,6 @@ void Gfx_SetFogMode(FogFunc func) {
 #else
 	_glFogi(GL_FOG_MODE, modes[func]);
 #endif
-	gfx_fogMode = func;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -360,7 +347,6 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
 #ifdef CC_BUILD_SYMBIAN
 	if (mbx) {
 		/* On PowerVR MBX cards, glColorMask appears to be unimplemented in hardware */
@@ -376,10 +362,9 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 		return;
 	}
 #endif
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 	
-	if (enabled) { _glEnable(GL_TEXTURE_2D); } else { _glDisable(GL_TEXTURE_2D); }
+	if (depthOnly) { _glDisable(GL_TEXTURE_2D); } else { _glEnable(GL_TEXTURE_2D); }
 }
 
 

@@ -164,11 +164,11 @@ void Gfx_End2D(void) {
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)	{ }
-void Gfx_SetFogCol(PackedCol col)   { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value) 	{ }
-void Gfx_SetFogMode(FogFunc func)   { }
+void Gfx_SetFog(cc_bool enabled)         { }
+static void SetFogColor(PackedCol color) { } // TODO PACK_GIFTAG(q, GS_SET_FOGCOL(0,0,0), GS_REG_FOGCOL);
+static void SetFogDensity(float value)   { }
+static void SetFogEnd(float value)       { }
+static void SetFogMode(FogFunc func)     { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	faceCulling = enabled;
@@ -219,18 +219,19 @@ void Gfx_ClearColor(PackedCol color) {
 	clearColor = BitmapCol_Make(R, G, B, A);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
+	colWrite = r || g || b || a;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	colWrite = !depthOnly;
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 

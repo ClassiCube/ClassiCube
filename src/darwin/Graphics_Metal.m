@@ -98,13 +98,12 @@ void Gfx_InitForLayer(CAMetalLayer* layer) {
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool gfx_R = true, gfx_G = true, gfx_B = true, gfx_A = true;
-static cc_bool gfx_depthTest, gfx_depthWrite;
 
-void Gfx_SetFog(cc_bool enabled)    { }// TODO: implement
-void Gfx_SetFogCol(PackedCol col)   { }// TODO: implement
-void Gfx_SetFogDensity(float value) { }// TODO: implement
-void Gfx_SetFogEnd(float value)     { }// TODO: implement
-void Gfx_SetFogMode(FogFunc func)   { }// TODO: implement
+void Gfx_SetFog(cc_bool enabled)         { } // TODO: implement
+static void SetFogColor(PackedCol color) { } // TODO: implement
+static void SetFogDensity(float value)   { } // TODO: implement
+static void SetFogEnd(float value)       { } // TODO: implement
+static void SetFogMode(FogFunc func)     { } // TODO: implement
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
     [ren_enc setCullMode:enabled ? MTLCullModeFront : MTLCullModeNone];
@@ -126,13 +125,11 @@ void Gfx_ClearColor(PackedCol color) {
     clearB = PackedCol_B(color) / 255.0f;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-    gfx_depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
     dirty_bits |= DIRTY_DEPTH;
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-    gfx_depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
     dirty_bits |= DIRTY_DEPTH;
 }
 
@@ -142,9 +139,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-    cc_bool enabled = !depthOnly;
-    SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1],
-                  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -507,10 +502,10 @@ static void Pipeline_Build(int idx) {
     fb.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 
     fb.writeMask =
-    (idx & PIPELINE_FLAG_R_WRITE ? MTLColorWriteMaskRed   : 0) |
-    (idx & PIPELINE_FLAG_G_WRITE ? MTLColorWriteMaskGreen : 0) |
-    (idx & PIPELINE_FLAG_B_WRITE ? MTLColorWriteMaskBlue  : 0) |
-    (idx & PIPELINE_FLAG_A_WRITE ? MTLColorWriteMaskAlpha : 0);
+    	((idx & PIPELINE_FLAG_R_WRITE) ? MTLColorWriteMaskRed   : 0) |
+    	((idx & PIPELINE_FLAG_G_WRITE) ? MTLColorWriteMaskGreen : 0) |
+    	((idx & PIPELINE_FLAG_B_WRITE) ? MTLColorWriteMaskBlue  : 0) |
+   		((idx & PIPELINE_FLAG_A_WRITE) ? MTLColorWriteMaskAlpha : 0);
     if (fb.writeMask == MTLColorWriteMaskNone) desc.fragmentFunction = nil;
     
     desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
@@ -525,14 +520,14 @@ static void Pipeline_Build(int idx) {
 
 static void Pipeline_Update(void) {
     int idx =
-    (gfx_format == VERTEX_FORMAT_TEXTURED ? PIPELINE_FLAG_TEXTURED : 0) |
-    (texOffseting   ? PIPELINE_FLAG_TEXOFFSET   : 0) |
-    (gfx_alphaTest  ? PIPELINE_FLAG_ALPHA_TEST  : 0) |
-    (gfx_alphaBlend ? PIPELINE_FLAG_ALPHA_BLEND : 0) |
-    (gfx_R          ? PIPELINE_FLAG_R_WRITE     : 0) |
-    (gfx_G          ? PIPELINE_FLAG_G_WRITE     : 0) |
-    (gfx_B          ? PIPELINE_FLAG_B_WRITE     : 0) |
-    (gfx_A          ? PIPELINE_FLAG_A_WRITE     : 0);
+    	(gfx_format == VERTEX_FORMAT_TEXTURED ? PIPELINE_FLAG_TEXTURED : 0) |
+    	(texOffseting   ? PIPELINE_FLAG_TEXOFFSET   : 0) |
+    	(gfx_alphaTest  ? PIPELINE_FLAG_ALPHA_TEST  : 0) |
+    	(gfx_alphaBlend ? PIPELINE_FLAG_ALPHA_BLEND : 0) |
+    	(gfx_R          ? PIPELINE_FLAG_R_WRITE     : 0) |
+   		(gfx_G          ? PIPELINE_FLAG_G_WRITE     : 0) |
+    	(gfx_B          ? PIPELINE_FLAG_B_WRITE     : 0) |
+    	(gfx_A          ? PIPELINE_FLAG_A_WRITE     : 0);
     
     if (pipelines[idx] == nil) Pipeline_Build(idx);
     [ren_enc setRenderPipelineState:pipelines[idx]];

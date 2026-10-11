@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sfo>
-	<value name="APP_VER" type="string">01.37</value>
+	<value name="APP_VER" type="string">01.38</value>
 	<value name="ATTRIBUTE" type="integer">0</value>
 	<value name="BOOTABLE" type="integer">1</value>
 	<value name="CATEGORY" type="string">HG</value>
@@ -11,5 +11,5 @@
 	<value name="SOUND_FORMAT" type="integer">279</value>
 	<value name="TITLE" type="string">ClassiCube</value>
 	<value name="TITLE_ID" type="string">CUBE00200</value>
-	<value name="VERSION" type="string">01.37</value>
+	<value name="VERSION" type="string">01.38</value>
 </sfo>

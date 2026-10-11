@@ -36,8 +36,8 @@ static cc_bool gfx_rendering2D;
 *------------------------------------------------------State changes------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool gfx_colorMask[4] = { true, true, true, true };
-cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 static cc_bool gfx_alphaTest, gfx_alphaBlend;
+static cc_bool gfx_depthTest, gfx_depthWrite; // TODO: depth write on by default in OpenGL ??
 
 static void SetAlphaTest(cc_bool enabled);
 void Gfx_SetAlphaTest(cc_bool enabled) {
@@ -55,6 +55,22 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	SetAlphaBlend(enabled);
 }
 
+static void SetDepthTest(cc_bool enabled);
+void Gfx_SetDepthTest(cc_bool enabled) {
+	if (gfx_depthTest == enabled) return;
+	
+	gfx_depthTest = enabled;
+	SetDepthTest(enabled);
+}
+
+static void SetDepthWrite(cc_bool enabled);
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	if (gfx_depthWrite == enabled) return;
+	
+	gfx_depthWrite = enabled;
+	SetDepthWrite(enabled);
+}
+
 /* Initialises/Restores render state */
 CC_NOINLINE static void Gfx_RestoreState(void);
 /* Destroys render state, but can be restored later */
@@ -69,8 +85,18 @@ void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	SetColorWrite(r, g, b, a);
 }
 
+static CC_INLINE void DefaultDepthOnlyRendering(cc_bool depthOnly) {
+    cc_bool enabled = !depthOnly;
+    SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1],
+                  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+}
+
 void Gfx_SetTexturing(cc_bool enabled) { } /* useless */
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Anaglyph 3D------------------------------------------------------*
+*#########################################################################################################################*/
 #ifndef CC_BUILD_3DS
 void Gfx_Set3DLeft(struct Matrix* proj, struct Matrix* view) {
 	struct Matrix proj_left, view_left;
@@ -104,6 +130,48 @@ void Gfx_End3D(struct Matrix* proj, struct Matrix* view) {
 	Gfx_SetColorWrite(true, true, true, true);
 }
 #endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------------------Fog----------------------------------------------------------*
+*#########################################################################################################################*/
+static PackedCol gfx_fogColor;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static int gfx_fogMode  = -1;
+
+cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+
+static void SetFogColor(PackedCol color);
+void Gfx_SetFogCol(PackedCol color) {
+	if (gfx_fogColor == color) return;
+
+	gfx_fogColor = color;
+	SetFogColor(color);
+}
+
+static void SetFogDensity(float value);
+void Gfx_SetFogDensity(float value) {
+	if (value == gfx_fogDensity) return;
+
+	gfx_fogDensity = value;
+	SetFogDensity(value);
+}
+
+static void SetFogEnd(float value);
+void Gfx_SetFogEnd(float value) {
+	if (value == gfx_fogEnd) return;
+
+	gfx_fogEnd = value;
+	SetFogEnd(value);
+}
+
+static void SetFogMode(FogFunc func);
+void Gfx_SetFogMode(FogFunc func) {
+	if (func == gfx_fogMode) return;
+
+	gfx_fogMode = func;
+	SetFogMode(func);
+}
 
 
 /*########################################################################################################################*
