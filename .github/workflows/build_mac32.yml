@@ -63,6 +63,12 @@ jobs:
           PATH=$PATH:/usr/local/compiler/target/bin
           i386-apple-darwin8-lipo -create -output cc-mac32-gl1 cc-mac32-gl1-x86 cc-mac32-gl1-ppc
           cp cc-mac32-gl2-x86 cc-mac32-gl2
+
+      - name: Generate unified tar.gz
+        shell: bash
+        run: |
+          cp cc-mac32-gl1 build/macos/ClassiCube
+          cd build/macos/dist && tar -zcvf cc-mac32-gl1.tar.gz ClassiCube
           
           
       - uses: ./.github/actions/upload_build
@@ -74,16 +80,12 @@ jobs:
         with:
           SOURCE_FILE: 'cc-mac32-gl2'
           DEST_NAME: 'ClassiCube-mac32-ModernGL'
-          
+
+      
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'cc-mac32-gl1-x86'
-          DEST_NAME: 'ClassiCube-mac32-OpenGL-X86'
-          
-      - uses: ./.github/actions/upload_build
-        with:
-          SOURCE_FILE: 'cc-mac32-gl1-ppc'
-          DEST_NAME: 'ClassiCube-mac32-OpenGL-PPC'
+          SOURCE_FILE: 'build/macos/dist/cc-mac32-gl1.tar.gz'
+          DEST_NAME: 'ClassiCube-mac32.tar.gz'
         
           
       - uses: ./.github/actions/notify_success

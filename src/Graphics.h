@@ -114,6 +114,12 @@ extern const cc_string Gfx_LowPerfMessage;
 
 void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11)
+	#define GFX_CLIPSPACE_ONE_TO_ZERO
+#else
+	#define GFX_CLIPSPACE_NEGONE_TO_ONE
+#endif
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*

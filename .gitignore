@@ -52,6 +52,11 @@ param.sfo
 eboot.bin
 pkg.gp4
 
+# vita port shader compiler
+ShaderCompiler.stripped
+ShaderCompiler.velf
+ShaderCompiler.vpk
+
 # Build results
 [Dd]ebug/
 [Rr]elease/

@@ -2,7 +2,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Constants.h"
-#include "Core.h"
+#include "Graphics.h"
 
 void Vec3_Lerp(Vec3* result, const Vec3* a, const Vec3* b, float blend) {
 	result->x = blend * (b->x - a->x) + a->x;
@@ -247,7 +247,7 @@ void Frustum_CalcPlanes(struct Matrix* clip) {
 	Frustum_NormalisePlane(&frustum.T);
 
 	/* Extract the FAR plane (Different for each graphics backend) */
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11)
+#ifdef GFX_CLIPSPACE_ONE_TO_ZERO
 	/* OpenGL and Direct3D require slightly different behaviour for NEAR clipping planes */
 	/* https://www.gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-view-projection-matrix.pdf */
 	/* (and because reverse Z is used, 'NEAR' plane is actually the 'FAR' clipping plane) */
