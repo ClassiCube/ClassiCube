@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/dragonminded/libdragon:preview
+      image: ghcr.io/n64brew/libdragon:preview
     steps:
       - uses: actions/checkout@v5
       - name: Install prerequisites
@@ -27,7 +27,7 @@ jobs:
       - name: Compile libdragon
         run: |
           cd /tmp
-          git clone -b preview https://github.com/DragonMinded/libdragon.git --depth=1
+          git clone -b preview https://github.com/n64brew/libdragon.git --depth=1
           cd libdragon
           make install
           make tools-install
