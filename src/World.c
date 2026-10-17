@@ -41,7 +41,7 @@ void World_Reset(void) {
 #ifdef EXTENDED_BLOCKS
 	if (World.Blocks != World.Blocks2) Mem_Free(World.Blocks2);
 	World.Blocks2 = NULL;
-	World.IDMask  = 0xFF;
+	World.IDMask  = WORLD_ID_MASK_NO_EXT_BLOCKS;
 #endif
 	Mem_Free(World.Blocks);
 	World.Blocks = NULL;
@@ -72,7 +72,7 @@ void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 	/* .cw maps may have set this to a non-NULL when importing */
 	if (!World.Blocks2) {
 		World.Blocks2 = World.Blocks;
-		World.IDMask  = 0xFF;
+		World.IDMask  = WORLD_ID_MASK_NO_EXT_BLOCKS;
 	}
 #endif
 
@@ -103,7 +103,7 @@ CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
 #ifdef EXTENDED_BLOCKS
 void World_SetMapUpper(BlockRaw* blocks) {
 	World.Blocks2 = blocks;
-	World.IDMask  = 0x3FF;
+	World.IDMask  = MAX_WORLD_ID_MASK;
 }
 #endif
 
