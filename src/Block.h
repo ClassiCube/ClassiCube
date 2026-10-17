@@ -99,6 +99,30 @@ CC_VAR extern struct _BlockLists {
 	float ParticleGravity[BLOCK_COUNT];
 } Blocks;
 
+/* Ensures all blocks are uniquely represented in searcher state. Make sure */
+/*  the sum of these shifts is the amount of bits of BLOCK_COUNT, that is, */
+/*  ceil(log2(BLOCK_COUNT)) */
+#define BLOCK_COUNT_BITS 12
+#define BLOCK_ID_SHIFT_X (BLOCK_COUNT_BITS / 3)
+#define BLOCK_ID_SHIFT_Y (BLOCK_ID_SHIFT_X * 3 + 2 == BLOCK_COUNT_BITS ? BLOCK_ID_SHIFT_X + 1 : BLOCK_ID_SHIFT_X)
+#define BLOCK_ID_SHIFT_Z (BLOCK_COUNT_BITS - BLOCK_ID_SHIFT_X - BLOCK_ID_SHIFT_Y)
+
+/* Then we get their masks. Example: */
+/* 0000000111 */
+/* 0000001111 */
+/* 0000000111 */
+#define BLOCK_ID_MASK_BASE_X ((1 << BLOCK_ID_SHIFT_X) - 1)
+#define BLOCK_ID_MASK_BASE_Y ((1 << BLOCK_ID_SHIFT_Y) - 1)
+#define BLOCK_ID_MASK_BASE_Z ((1 << BLOCK_ID_SHIFT_Z) - 1)
+
+/* And with that, their positions. Example: */
+/* 0000000111 */
+/* 0001111000 */
+/* 1110000000 */
+#define BLOCK_ID_MASK_POS_X  BLOCK_ID_MASK_BASE_X
+#define BLOCK_ID_MASK_POS_Y (BLOCK_ID_MASK_BASE_Y << BLOCK_ID_SHIFT_X)
+#define BLOCK_ID_MASK_POS_Z (BLOCK_ID_MASK_BASE_Z << (BLOCK_ID_SHIFT_X + BLOCK_ID_SHIFT_Y))
+
 #define Block_Tint(col, block)\
 if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
 
