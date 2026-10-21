@@ -118,7 +118,7 @@ struct Entity {
 	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a valid block. */
 	cc_uint8 Flags;
-	cc_bool ShouldRender;
+	cc_uint8 ShouldRender;
 	struct AABB ModelAABB;
 	Vec3 ModelScale, Size;
 	int _skinReqID;
@@ -183,8 +183,6 @@ CC_VAR extern struct _EntitiesData {
 	struct LocalPlayer* CurPlayer;
 } Entities;
 
-/* Ticks all entities */
-void Entities_Tick(struct ScheduledTask* task);
 /* Renders all entities */
 void Entities_RenderModels(float delta, float t);
 /* Removes the given entity, raising EntityEvents.Removed event */

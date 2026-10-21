@@ -18,26 +18,33 @@ jobs:
     container:
       image: ijacquez/yaul:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apt-get --allow-releaseinfo-change update
           apt-get install -y curl
 
       - name: Compile Saturn build
+        shell: bash
         run: |
-          make saturn
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make saturn EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'build/saturn/ClassiCube-saturn.elf'
+          SOURCE_FILE: 'ClassiCube-saturn.elf'
           DEST_NAME: 'ClassiCube-saturn.elf'
           
       - uses: ./.github/actions/upload_build
         with:
           SOURCE_FILE: 'ClassiCube-saturn.iso'
           DEST_NAME: 'ClassiCube-saturn.iso'
+          
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'build/saturn/ClassiCube-saturn.bin'
+          DEST_NAME: 'ClassiCube-saturn.bin'
           
       - uses: ./.github/actions/upload_build
         with:

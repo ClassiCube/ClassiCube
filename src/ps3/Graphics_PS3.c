@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -8,6 +9,8 @@
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
 #include "rsx_gpu.h"
+#include <ppu-lv2.h>
+#include <sys/systime.h>
 
 static gcmContextData* context;
 static u32 cur_fb;
@@ -18,9 +21,7 @@ static u32 cur_fb;
 *#########################################################################################################################*/
 typedef struct CCVertexProgram {
 	rsxVertexProgram* prog;
-	void* ucode;
-	rsxProgramConst* mvp;
-	rsxProgramConst* uv_offset;
+	int offset;
 } VertexProgram;
 
 extern const u8 vs_coloured_vpo[];
@@ -31,17 +32,17 @@ static VertexProgram  VP_list[3];
 static VertexProgram* VP_active;
 
 static cc_bool textureOffseting;
-static float textureOffset[4] CC_ALIGNED(16);
-static struct Matrix mvp      CC_ALIGNED(64);
 
+#define VS_CONST_MVP  0
+#define VS_CONST_OFST 4
 
 static void VP_Load(VertexProgram* vp, const u8* source) {
-	vp->prog = (rsxVertexProgram*)source;
-	u32 size = 0;
-	rsxVertexProgramGetUCode(vp->prog, &vp->ucode, &size);
-	
-	vp->mvp       = rsxVertexProgramGetConst(vp->prog, "mvp");
-	vp->uv_offset = rsxVertexProgramGetConst(vp->prog, "uv_offset");
+	rsxVertexProgram* prog = (rsxVertexProgram*)source;
+	vp->prog = prog;
+
+	RSX_upload_VS(context, &vp->offset, 
+					source + prog->ucode_off,
+					prog->num_insn * VS_INS_SIZE);
 }
 
 static void LoadVertexPrograms(void) {
@@ -58,21 +59,7 @@ static void VP_SwitchActive(void) {
 	if (VP == VP_active) return;
 	VP_active = VP;
 	
-	rsxLoadVertexProgram(context, VP->prog, VP->ucode);
-}
-
-static void VP_UpdateUniforms() {
-	// TODO: dirty uniforms instead
-	for (int i = 0; i < Array_Elems(VP_list); i++)
-	{
-		VertexProgram* vp = &VP_list[i];
-		rsxSetVertexProgramParameter(context, vp->prog, vp->mvp, (float*)&mvp);
-	}
-	
-	if (VP_active == &VP_list[2]) {
-		VertexProgram* vp = &VP_list[2];
-		rsxSetVertexProgramParameter(context, vp->prog, vp->uv_offset, textureOffset);
-	}
+	RSX_set_active_VS(context, VP->offset, VP->prog);
 }
 
 
@@ -81,41 +68,72 @@ static void VP_UpdateUniforms() {
 *#########################################################################################################################*/
 typedef struct CCFragmentProgram {
 	rsxFragmentProgram* prog;
-	void* ucode;
-	u32* buffer;
+	rsxProgramConst* fog_state;
 	u32 offset;
 } FragmentProgram;
 
-extern const u8 ps_textured_fpo[];
-extern const u8 ps_coloured_fpo[];
+extern const u8 ps_textured_none_fpo[];
+extern const u8 ps_textured_linear_fpo[];
+extern const u8 ps_textured_exp_fpo[];
+extern const u8 ps_coloured_none_fpo[];
+extern const u8 ps_coloured_linear_fpo[];
+extern const u8 ps_coloured_exp_fpo[];
 
-static FragmentProgram  FP_list[2];
+static FragmentProgram  FP_list[8];
 static FragmentProgram* FP_active;
 
 
 static void FP_Load(FragmentProgram* fp, const u8* source) {
-	fp->prog = (rsxFragmentProgram*)source;
-	u32 size = 0;
-	rsxFragmentProgramGetUCode(fp->prog, &fp->ucode, &size);
+	rsxFragmentProgram* prog = (rsxFragmentProgram*)source;
+	fp->prog = prog;
+
+	u32 size    = prog->num_insn * 16;
+	void* ucode = source + prog->ucode_off;
 	
-	fp->buffer = (u32*)rsxMemalign(128, size);
-	Mem_Copy(fp->buffer, fp->ucode, size);
-	gcmAddressToOffset(fp->buffer, &fp->offset);
+	u32* buffer = (u32*)rsxMemalign(128, size);
+	Mem_Copy(buffer, ucode, size);
+	gcmAddressToOffset(buffer, &fp->offset);
+
+	fp->fog_state = rsxFragmentProgramGetConst(prog, "fog_state");
 }
 
 static void LoadFragmentPrograms(void) {
-	FP_Load(&FP_list[0], ps_coloured_fpo);
-	FP_Load(&FP_list[1], ps_textured_fpo);
+	FP_Load(&FP_list[0], ps_coloured_none_fpo);
+	FP_Load(&FP_list[1], ps_coloured_linear_fpo);
+	FP_Load(&FP_list[2], ps_coloured_exp_fpo);
+
+	FP_Load(&FP_list[4], ps_textured_none_fpo);
+	FP_Load(&FP_list[5], ps_textured_linear_fpo);
+	FP_Load(&FP_list[6], ps_textured_exp_fpo);
+}
+
+static void FP_UpdateUniforms(void) {
+	FragmentProgram* FP = FP_active;
+	if (!FP || !FP->fog_state) return;
+
+	float values[4];
+	values[0] = PackedCol_R(gfx_fogColor) / 255.0f;
+	values[1] = PackedCol_G(gfx_fogColor) / 255.0f;
+	values[2] = PackedCol_B(gfx_fogColor) / 255.0f;
+	values[3] = gfx_fogMode == FOG_LINEAR ? (1.0f / gfx_fogEnd) : -gfx_fogDensity;
+	// TODO: use rsxSetFogMode and rsxSetFogParams? is it actually any faster?
+
+	rsxSetFragmentProgramParameter(context, FP->prog, FP->fog_state, 
+									values, FP->offset, GCM_LOCATION_RSX);
 }
 
 static void FP_SwitchActive(void) {
-	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
+	int fog   = gfx_fogEnabled ? (gfx_fogMode + 1) : 0;
+	int base  = gfx_format == VERTEX_FORMAT_TEXTURED ? 4 : 0;
+	int index = base + fog;
 
 	FragmentProgram* FP = &FP_list[index];
+	if (!FP) Process_Abort2(index, "missing FP shader");
 	if (FP == FP_active) return;
 	FP_active = FP;
 	
 	rsxLoadFragmentProgramLocation(context, FP->prog, FP->offset, GCM_LOCATION_RSX);
+	FP_UpdateUniforms();
 }
 
 
@@ -157,7 +175,7 @@ static void WaitRSXFinish(void) {
 	rsxFlushBuffer(context);
 
 	while (*(vu32*)gcmGetLabelAddress(GCM_LABEL_INDEX) != labelID)
-		usleep(30);
+		sysUsleep(30);
 
 	labelID++;
 }
@@ -245,8 +263,9 @@ void SetRenderTarget(u32 index) {
 }
 
 static void InitGfxContext(void) {
-	Gfx.MaxTexWidth  = 1024;
-	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexWidth  = 2048; // TODO: 4096?
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
 	Gfx.Created      = true;
 	
 	// https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
@@ -271,7 +290,6 @@ void Gfx_Create(void) {
 	// TODO rethink all this
 	if (!Gfx.Created) InitGfxContext();
 	
-	Gfx_RestoreState();
 	gfx_format = -1;
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 }
@@ -335,11 +353,11 @@ void Gfx_ClearColor(PackedCol color) {
 	clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	RSX_set_depth_write(context, enabled);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 	RSX_set_depth_test(context, enabled);
 }
 
@@ -352,9 +370,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -442,7 +458,7 @@ static void ResetFrameState(void) {
 static cc_bool everFlipped;
 void Gfx_WaitFlip(void) {
 	if (everFlipped) {
-		while (gcmGetFlipStatus() != 0) usleep(200);
+		while (gcmGetFlipStatus() != 0) sysUsleep(200);
 	}
 	
 	everFlipped = true;
@@ -467,9 +483,9 @@ void Gfx_EndFrame(void) {
 	SetRenderTarget(cur_fb);
 }
 
-void Gfx_OnWindowResize(void) {
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
-	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
+void Gfx_OnWindowResize(int width, int height) {
+	Gfx_SetViewport(0, 0, width, height);
+	Gfx_SetScissor (0, 0, width, height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
@@ -697,48 +713,44 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled) {/* TODO */
+void Gfx_SetFog(cc_bool enabled)  { 
+	gfx_fogEnabled = enabled;
+	FP_SwitchActive();
 }
 
-void Gfx_SetFogCol(PackedCol color) {/* TODO */
-}
-
-void Gfx_SetFogDensity(float value) {/* TODO */
-}
-
-void Gfx_SetFogEnd(float value) {/* TODO */
-}
-
-void Gfx_SetFogMode(FogFunc func) {/* TODO */
-}
+static void SetFogColor(PackedCol color) { FP_UpdateUniforms(); }
+static void SetFogDensity(float value)   { FP_UpdateUniforms(); }
+static void SetFogEnd(float value)       { FP_UpdateUniforms(); }
+static void SetFogMode(FogFunc func)     { FP_UpdateUniforms(); }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Matrix _view, _proj;
+static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
 
-	Matrix_Mul(&mvp, &_view, &_proj);
-	VP_UpdateUniforms();
+	Matrix_Mul(&_mvp, &_view, &_proj);
+	RSX_upload_VS_constants(context, VS_CONST_MVP, &_mvp, 16);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
-	Matrix_Mul(mvp, view, proj);
+	Mem_Copy(mvp, &_mvp, sizeof(struct Matrix));
 }
 
+static float textureOffset[4];
 void Gfx_EnableTextureOffset(float x, float y) {
 	textureOffseting = true;
 	textureOffset[0] = x;
 	textureOffset[1] = y;
 	
 	VP_SwitchActive();
-	VP_UpdateUniforms();
+	RSX_upload_VS_constants(context, VS_CONST_OFST, textureOffset, 4);
 }
 
 void Gfx_DisableTextureOffset(void) {
@@ -771,6 +783,6 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, 0, verticesCount);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	rsxDrawVertexArray(context, GCM_TYPE_QUADS, startVertex, verticesCount);
 }

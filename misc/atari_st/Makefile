@@ -1,42 +1,41 @@
-TARGET		:=	ClassiCube-atari
-BUILD_DIR 	:=	build/atari_st
-SOURCE_DIRS	:= src src/atari_st
+ifeq ($(strip $(VBCC)),)
+$(error "VBCC must be set in your environment")
+endif
+# if $VBCC is not set to root of vbcc folder, vc will fail with 'No config file'
 
-S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
-C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+
+#---------------------------------------------------------------------------------
+# Configurable options
+#---------------------------------------------------------------------------------
+TARGET		:= ClassiCube-atari
+SOURCE_DIRS	:= src src/atari_st
+BUILD_DIR 	:= build/atari_st
+RUN_PROGRAM	?= hatari
 
 
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-CC = vc +tos
-CFLAGS = -O1 -DPLAT_ATARIOS
+CC 		:= vc +tos
+CFLAGS 	:= -O1 -DPLAT_ATARIOS
 
-AS = vasmm68k_mot
-ASFLAGS = -Fvobj -m68000 -no-fpu
+AS 		:= vasmm68k_mot
+ASFLAGS := -Fvobj -m68000 -no-fpu
 
-LDFLAGS = $(CFLAGS)
-LDLIBS  = -lm
-
-
-#---------------------------------------------------------------------------------
-# Main targets
-#---------------------------------------------------------------------------------
-default: $(BUILD_DIR) $(TARGET).tos
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-$(TARGET).tos: $(OBJS)
-	$(CC) $(LDFLAGS) -final -o $@ $^ $(LDLIBS)
+LDFLAGS := -final
+LIBS  	:= -lm
+LINK	:= $(CC)
 
 
 #---------------------------------------------------------------------------------
-# object generation
+# executable generation
 #---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o : src/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+OEXT := .tos
+TRACK_DEPENDENCIES := 0
+include misc/makefiles/common_build.mk
 
-$(BUILD_DIR)/%.o : src/atari_st/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+
+#---------------------------------------------------------------------------------
+# common targets
+#---------------------------------------------------------------------------------
+include misc/makefiles/common_targets.mk

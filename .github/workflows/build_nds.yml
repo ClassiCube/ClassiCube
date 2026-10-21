@@ -18,17 +18,19 @@ jobs:
     container:
       image: skylyrac/blocksds:dev-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apt-get update
           apt-get -y install curl
 
       - name: Compile NDS build
+        shell: bash
         run: |
-          make ds
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make ds EXTRA_CFLAGS="$LATEST_FLAG"
           export BUILD_NONET=1
-          make ds
+          make ds EXTRA_CFLAGS="$LATEST_FLAG"
  
          
       - uses: ./.github/actions/upload_build

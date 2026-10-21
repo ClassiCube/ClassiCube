@@ -105,6 +105,7 @@ static cc_bool IsAllSameColor(const struct Bitmap* bmp, int x1, int y1, int widt
 cc_uint8 Utils_CalcSkinType(const struct Bitmap* bmp) {
 	BitmapCol col;
 	int scale;
+	BitmapCol* color;
 	if (bmp->width == bmp->height * 2) return SKIN_64x32;
 	if (bmp->width != bmp->height)     return SKIN_INVALID;
 
@@ -114,7 +115,7 @@ cc_uint8 Utils_CalcSkinType(const struct Bitmap* bmp) {
 	if (BitmapCol_A(col) < 128) return SKIN_64x64_SLIM;
 
 	/* Assigned by the first function called using it */
-	BitmapCol* color = NULL;
+	color = NULL;
 	/* It must be a thick-armed skin if the unused arm areas are not all the same color*/
 	if (!(IsAllSameColor(bmp,  SlimArmUnusedX * scale,  SlimArmUnusedY * scale, 2 * scale, 12 * scale, color) &&
 	      IsAllSameColor(bmp, SlimHandUnusedX * scale, SlimHandUnusedY * scale, 2 * scale, 4  * scale, color))) return SKIN_64x64;

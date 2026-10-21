@@ -114,6 +114,12 @@ extern const cc_string Gfx_LowPerfMessage;
 
 void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11)
+	#define GFX_CLIPSPACE_ONE_TO_ZERO
+#else
+	#define GFX_CLIPSPACE_NEGONE_TO_ONE
+#endif
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
@@ -164,11 +170,13 @@ CC_API void Gfx_DisableMipmaps(void);
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Frame management---------------------------------------------------*
+*------------------------------------------------------Buffer clearing----------------------------------------------------*
 *#########################################################################################################################*//*
 SUMMARY:
-	The frame management functions manage frame related functionality
-	(beginning frames, displaying framebuffers, and resetting rendering buffers)
+	Clears/Fills colour buffer and/or depth buffer
+IMPLEMENTATION NOTES:
+	Some graphics backends do not support explicit clearing, 
+     but instead implicitly clear as part of a new frame
 USAGE NOTES:
 	There is usually no need to call these functions
 */
@@ -177,11 +185,22 @@ typedef enum GfxBuffers_ {
 	GFX_BUFFER_DEPTH = 2
 } GfxBuffers;
 
-/* Clears the given rendering buffer(s) to their default values. */
+/* Clears the colour and/or depth buffer to their default values. */
 /* buffers can be either GFX_BUFFER_COLOR or GFX_BUFFER_DEPTH, or both */
 CC_API void Gfx_ClearBuffers(GfxBuffers buffers);
 /* Sets the default colour that the colour buffer is cleared to */
 CC_API void Gfx_ClearColor(PackedCol color);
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Frame management---------------------------------------------------*
+*#########################################################################################################################*//*
+SUMMARY:
+	The frame management functions manage frame related functionality
+	(beginning frames, displaying framebuffers, synchronising rendering with monitor refresh)
+USAGE NOTES:
+	There is usually no need to call these functions
+*/
 
 /* Sets up state for rendering a new frame */
 void Gfx_BeginFrame(void);
@@ -271,16 +290,17 @@ CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
 *#########################################################################################################################*/
 /*
 SUMMARY:
-	Index buffers are used to select the triangle vertices from the active vertex buffer
-	  when rendering using the Gfx_DrawVb_IndexedTris/Gfx_DrawVb_IndexedTris_Range APIs
+	Index buffers are used to select vertices from the active vertex buffer when
+	  rendering triangles using the Gfx_DrawVb_IndexedTris/Gfx_DrawVb_IndexedTris_Range APIs
 IMPLEMENTATION NOTES:
 	All of the OpenGL and Direct3D rendering backends fully support index buffers
-	However, most console ports rendering backends do not support index buffers
+	However, some console ports rendering backends do not support index buffers
 USAGE NOTES:
 	The default index buffer selects groups of 4 vertices (1 quad) to produce 2 triangles
 	  ( (0,1,2) (2,3,0)  (4,5,6) (6,7,4)  etc)
 	ClassiCube itself never uses a different index buffer, as it draws everything using quads
-	However, plugins might alter the index buffer to draw geometry that doesn't use quads
+	However, if plugins alter the index buffer to draw geometry that doesn't use quads, they
+      must remember to restore the index buffer back to Gfx.DefaultIB
 */
 
 /* Callback function to initialise/fill out the contents of an index buffer */
@@ -303,11 +323,15 @@ IMPLEMENTATION NOTES:
 	Vertex buffers may be stored in VRAM or converted into a more efficient internal format
 	For example, the PS1 and DS ports convert XYZ floats into fixed point integers
 USAGE NOTES:
-	Static vertex buffers should be used for data that very rarely changes
-	Dynamic vertex buffers should be used for frequently changing data
+	Static  vertex buffers should be used for data that very rarely changes
+	Dynamic vertex buffers should be used for frequently changing data (e.g. UI)
+    Scratch vertex buffers should be used for data that changes every frame
 */
+
 /* Creates a new vertex buffer */
 CC_API GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count);
+/* Attempts to create a new vertex buffer, or 0 if it fails to */
+CC_API GfxResourceID Gfx_TryCreateStaticVb(VertexFormat fmt, int count);
 /* Sets the currently active vertex buffer */
 CC_API void Gfx_BindVb(GfxResourceID vb);
 /* Deletes the given vertex buffer, then sets it to 0 */
@@ -340,8 +364,19 @@ CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count);
 /* Binds then submits the changed contents of a dynamic vertex buffer */
 CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb);
 
+/* Creates a new scratch vertex buffer, whose contents are updated each frame */
+CC_API GfxResourceID Gfx_CreateScratchVb(VertexFormat fmt, int maxVertices);
+/* Deletes the given scratch vertex buffer, then sets it to 0 */
+CC_API void  Gfx_DeleteScratchVb(GfxResourceID* vb);
+/* Acquires temp memory for changing the contents of a scratch vertex buffer */
+CC_API void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count);
+/* Binds then submits the changed contents of a scratch vertex buffer */
+CC_API void  Gfx_UnlockScratchVb(GfxResourceID vb);
+
 /* Updates the data of a dynamic vertex buffer */
 CC_API void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
+/* Updates the data of a scratch vertex buffer */
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount);
 
 
 /*########################################################################################################################*
@@ -359,13 +394,16 @@ USAGE NOTES:
 	  is setup to draw groups of 2 triangles from 4 vertices (1 quad)
 */
 
-/* Optional draw hints used by some rendering backends to speed up 2D drawing */
+/* Optional draw hints used by some rendering backends to speed up some drawing */
+/* These hints are NOT required (but can improve performance on some rendering backends) */
 typedef enum DrawHints_ {
 	DRAW_HINT_NONE   = 0,
+	/* Vertices do not require clipping with the planes set in CC_CLIPPING_FLAGS */
+	DRAW_HINT_NOCLIP = 0x01,
 	/* Vertices are 2D rects with possible texture scaling and/or repeating */
 	DRAW_HINT_SPRITE = 0x02,
 	/* Vertices are 2D rects with no texture scaling or repeating */
-	/* Typically this is only used for textures purely containing text */
+	/*  (e.g. used for drawing 2D UI quads purely containing text) */
 	DRAW_HINT_RECT   = 0x04,
 } DrawHints;
 
@@ -379,7 +417,7 @@ CC_API void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, Dra
 /* Renders vertices from the currently bound vertex and index buffer as triangles */
 CC_API void Gfx_DrawVb_IndexedTris(int verticesCount);
 /* Special case Gfx_DrawVb_IndexedTris_Range for map renderer */
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints);
 
 
 /*########################################################################################################################*
@@ -418,8 +456,14 @@ CC_API void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix);
 CC_API void Gfx_EnableTextureOffset(float x, float y);
 /* Disables texture U/V translation */
 CC_API void Gfx_DisableTextureOffset(void);
+
 /* Loads given modelview and projection matrices, then calculates the combined MVP matrix */
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp);
+#ifdef CC_CLIPPING_FLAGS
+cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius);
+#else
+static CC_INLINE cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) { return false; }
+#endif
 
 /* Calculates an orthographic projection matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar);
@@ -454,7 +498,7 @@ void Gfx_GetApiInfo(cc_string* info);
 
 /* Updates state when the window's dimensions have changed */
 /* NOTE: This may require recreating the context depending on the backend */
-void Gfx_OnWindowResize(void);
+void Gfx_OnWindowResize(int width, int height);
 
 /* Anaglyph 3D rendering support */
 void Gfx_Set3DLeft( struct Matrix* proj, struct Matrix* view);

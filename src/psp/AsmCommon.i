@@ -17,11 +17,50 @@
 // M0 - view matrix
 // M1 - proj matrix
 // M2 - MVP  matrix
-// M3 - clip planes L,R,B,T
-// M4 - clip planes N,F
+// M3 - ?
+// M4 - row4 = guardband scaling
 // M5 - temp
 // M6 - temp
 // M7 - temp
+
+
+// ===============================
+// GLOBAL REGISTERS
+// ===============================
+#define VIEW_R1  R000
+#define VIEW_R2  R001
+#define VIEW_R3  R002
+#define VIEW_R4  R003
+#define VIEW_MTX M000
+
+#define PROJ_R1  R100
+#define PROJ_R2  R101
+#define PROJ_R3  R102
+#define PROJ_R4  R103
+#define PROJ_MTX M100
+
+#define MVP_R1  R200
+#define MVP_R2  R201
+#define MVP_R3  R202
+#define MVP_R4  R203
+#define MVP_MTX M200
+
+#define MVP_CX  C200 // mvp.columns.X
+#define MVP_CY  C210 // mvp.columns.Y
+#define MVP_CZ  C220 // mvp.columns.Z
+#define MVP_CW  C230 // mvp.columns.W
+
+#define GBPLN_L R300
+#define GBPLN_R R301
+#define GBPLN_B R302
+#define GBPLN_T R303
+#define GBPLN_N R400
+#define GBPLN_F R401
+
+#define GBAND_X S403
+#define GBAND_Y S413
+#define GBINV_X S423
+#define GBINV_Y S433
 
 
 // ===============================
@@ -39,22 +78,29 @@
 #define VCOL_Y  8
 #define VCOL_Z 12
 
-#define POLY_X  0
-#define POLY_Y  4
-#define POLY_Z  8
-#define POLY_W 12
-#define POLY_U 16
-#define POLY_V 20
-#define POLY_C 24
-#define POLY_F 28
+#define VCLP_X  0
+#define VCLP_Y  4
+#define VCLP_Z  8
+#define VCLP_W 12
+#define VCLP_U 16
+#define VCLP_V 20
+#define VCLP_C 24
+#define VCLP_F 28
 
-#define POLY_XYZW  0
-#define POLY_UVCF 16
+#define VCLP_XYZW  0
+#define VCLP_UVCF 16
 
 // ===============================
 // VERTEX STRUCT SIZES
 // ===============================
-#define S_VCOL 16
-#define S_VTEX 24
-#define S_POLY 32
-#define S_POLY_LOG2 5 // x << 5 = x * 32
+#define S_VCOL 16 // coloured vertex
+#define S_VTEX 24 // textured vertex
+#define S_VCLP 32 // clipping vertex
+#define S_VCLP_LOG2 5 // x << 5 = x * 32
+
+
+// ===============================
+// VFPU branch comparison codes
+// ===============================
+#define FLG_ANY 4
+#define FLG_ALL 5

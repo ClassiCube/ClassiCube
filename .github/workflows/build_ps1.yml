@@ -18,21 +18,24 @@ jobs:
     container:
       image: ghcr.io/classicube/minimal-psn00b:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apt-get update
           apt-get install -y curl
 
       - name: Compile PS1 build
+        shell: bash
         run: |
           export PSN00BSDK_ROOT=/usr/local/psnoob
-          make ps1
+
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make ps1 EXTRA_CFLAGS="$LATEST_FLAG"
 
 
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'build/ps1/ClassiCube-ps1.elf'
+          SOURCE_FILE: 'ClassiCube-ps1.elf'
           DEST_NAME: 'ClassiCube-PS1.elf'
 
       - uses: ./.github/actions/upload_build

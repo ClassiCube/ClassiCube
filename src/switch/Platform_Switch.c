@@ -1,6 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 #define DEFAULT_COMMANDLINE_FUNC
 
 #include "../Stream.h"
@@ -124,16 +126,6 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 	t->hour   = calTime.hour;
 	t->minute = calTime.minute;
 	t->second = calTime.second;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -460,22 +452,29 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s == -1) return errno;
 
-	if (nonblocking) {
-		fcntl(*s, F_SETFL, O_NONBLOCK);
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = connect(s, raw, addr->size);
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	// TODO need to preserve old flags?
+	int mode = nonblocking ? O_NONBLOCK : 0;
+	int res  = fcntl(s, F_SETFL, mode);
+	return res == -1 ? errno : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	shutdown(s, SHUT_RDWR);
+	close(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (struct sockaddr*)addr, addrSize);
 	return res == -1 ? errno : 0;
 }
 
@@ -491,11 +490,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	*modified = 0; return errno;
 }
 
-void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
-}
-
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
@@ -509,15 +503,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
 	*success = (pfd.revents & flags) != 0;
 	return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
 }
 
 
@@ -557,11 +542,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -569,9 +549,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

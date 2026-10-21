@@ -33,9 +33,9 @@ void AxisLinesRenderer_Render(void) {
 	struct Entity* e;
 
 	if (!AxisLinesRenderer_Enabled) return;
-	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
+	/* Don't do it in a ContextRecreated handler, so that VB is only recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
-		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
+		axisLines_vb = Gfx_CreateScratchVb(VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	}
 	e = &Entities.CurPlayer->Base;
 	
@@ -60,7 +60,7 @@ void AxisLinesRenderer_Render(void) {
 	Vec3_Add1(&coords[3], &pos,  AXISLINES_THICKNESS * axisThicknessScale);
 	Vec3_Add1(&coords[4], &pos,  AXISLINES_LENGTH  	 * axisLengthScale);
 
-	v = (struct VertexColoured*)Gfx_LockDynamicVb(axisLines_vb, 
+	v = (struct VertexColoured*)Gfx_LockScratchVb(axisLines_vb, 
 									VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	for (i = 0; i < count; i++, v++) 
 	{
@@ -71,7 +71,7 @@ void AxisLinesRenderer_Render(void) {
 	}
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_UnlockDynamicVb(axisLines_vb);
+	Gfx_UnlockScratchVb(axisLines_vb);
 	Gfx_DrawVb_IndexedTris(count);
 }
 
@@ -80,7 +80,7 @@ void AxisLinesRenderer_Render(void) {
 *-----------------------------------------------AxisLinesRenderer component-----------------------------------------------*
 *#########################################################################################################################*/
 static void OnContextLost(void* obj) {
-	Gfx_DeleteDynamicVb(&axisLines_vb);
+	Gfx_DeleteScratchVb(&axisLines_vb);
 }
 
 static void OnInit(void) {

@@ -18,14 +18,15 @@ jobs:
     container:
       image: ghcr.io/ps2dev/ps2sdk:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apk add make mpc1 curl
 
       - name: Compile PS2 build
         run: |
-          make ps2
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"$GITHUB_SHA\\\"
+          make ps2 EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build

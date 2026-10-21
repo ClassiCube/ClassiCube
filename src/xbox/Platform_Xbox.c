@@ -1,6 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 #define DEFAULT_COMMANDLINE_FUNC
 
 #include "../Stream.h"
@@ -98,16 +100,6 @@ cc_uint64 Stopwatch_Measure(void) {
 static void Stopwatch_Init(void) {
 	ULONGLONG freq = KeQueryPerformanceFrequency();
 	sw_freqDiv     = freq;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -393,23 +385,28 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
 	*s = lwip_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s == -1) return errno;
 
-	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
-		lwip_ioctl(*s, FIONBIO, &blocking_raw);
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? -1 : 0;
+	int res  = lwip_ioctl(s, FIONBIO, &mode);
+	return res == -1 ? errno : 0;
+}
 
-	int res = lwip_connect(s, raw, addr->size);
+void Socket_Close(cc_socket s) {
+	lwip_shutdown(s, SHUT_RDWR);
+	lwip_close(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = lwip_connect(s, (struct sockaddr*)addr, addrSize);
 	return res == -1 ? errno : 0;
 }
 
@@ -425,11 +422,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	*modified = 0; return errno;
 }
 
-void Socket_Close(cc_socket s) {
-	lwip_shutdown(s, SHUT_RDWR);
-	lwip_close(s);
-}
-
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
@@ -442,15 +434,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
 	*success = (pfd.revents & flags) != 0;
 	return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	lwip_getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
 }
 
 
@@ -511,11 +494,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -523,9 +501,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

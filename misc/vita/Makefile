@@ -10,45 +10,37 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-# Name of the final output
-TARGET 			= ClassiCube-vita
-# List of directories containing source code
-SOURCE_DIRS		= src src/psvita third_party/bearssl
-# Directory where object files are placed
-BUILD_DIR		= build/vita
+TARGET 		:= ClassiCube-vita
+SOURCE_DIRS	:= src src/psvita third_party/bearssl
+BUILD_DIR	:= build/vita
+RUN_PROGRAM	?= vita3k
 
-SFO_TITLE 	= ClassiCube
-SFO_TITLEID = CUBE00200
+SFO_TITLE 	:= ClassiCube
+SFO_TITLEID := CUBE00200
+SFO_VERSION  := 01.38
 
+PARAM_SFO	:= $(BUILD_DIR)/param.sfo
+EBOOT_BIN	:= eboot.bin
 
-#---------------------------------------------------------------------------------
-# Compilable files
-#---------------------------------------------------------------------------------
-C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
+default: $(TARGET).vpk
 
 
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-CFLAGS 	= -O1 -DPLAT_VITA -fno-math-errno
+CFLAGS 	:= -O2 -DPLAT_VITA -fno-math-errno
 
-LDFLAGS = -Wl,-q
-LIBS 	= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
+LDFLAGS := -Wl,-q
+LIBS 	:= -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lSceCommonDialog_stub -lSceAppUtil_stub
 
 
 #---------------------------------------------------------------------------------
 # Compiler tools
 #---------------------------------------------------------------------------------
 PREFIX	:= $(VITASDK)/bin/arm-vita-eabi-
-VITA_AS	:= $(PREFIX)as
-VITA_CC	:= $(PREFIX)gcc
-VITA_CXX:= $(PREFIX)g++
-VITA_STRIP := $(PREFIX)strip
+CC		:= $(PREFIX)gcc
+STRIP 	:= $(PREFIX)strip
+LINK	:= $(CC)
 
 PACK_VPK 	:= $(VITASDK)/bin/vita-pack-vpk
 MAKE_FSELF	:= $(VITASDK)/bin/vita-make-fself
@@ -57,53 +49,32 @@ ELF_CREATE	:= $(VITASDK)/bin/vita-elf-create
 
 
 #---------------------------------------------------------------------------------
-# main targets
-#---------------------------------------------------------------------------------
-default: $(BUILD_DIR) $(TARGET).vpk
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-clean:
-	rm $(TARGET).velf $(TARGET).elf $(TARGET).vpk param.sfo eboot.bin $(OBJS)
-
-
-#---------------------------------------------------------------------------------
 # executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).vpk: eboot.bin param.sfo
-	$(PACK_VPK) -s param.sfo -b eboot.bin -a misc/vita/sce_sys/ICON0.png=sce_sys/ICON0.png $(TARGET).vpk
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).vpk $(EBOOT_BIN) $(PARAM_SFO) $(TARGET).stripped $(TARGET).velf
+include misc/makefiles/common_build.mk
 
-eboot.bin: $(TARGET).velf
-	$(MAKE_FSELF) $(TARGET).velf eboot.bin
+$(TARGET).stripped: $(TARGET).elf
+	$(STRIP) -g $< -o $@
 
-param.sfo:
-	$(MKSOFEX) -s TITLE_ID="$(SFO_TITLEID)" "$(SFO_TITLE)" param.sfo
-
-$(TARGET).velf: $(TARGET).elf
-	$(VITA_STRIP) -g $<
+$(TARGET).velf: $(TARGET).stripped
 	$(ELF_CREATE) $< $@
 
-$(TARGET).elf: $(OBJS)
-	$(VITA_CC) $(LDFLAGS) $^ $(LIBS) -o $@
+$(PARAM_SFO):
+	$(MKSOFEX) -s TITLE_ID="$(SFO_TITLEID)" \
+				-s APP_VER="$(SFO_VERSION)" \
+				-s VERSION="$(SFO_VERSION)" \
+				"$(SFO_TITLE)" $@
+
+$(EBOOT_BIN): $(TARGET).velf
+	$(MAKE_FSELF) $< $@
+
+$(TARGET).vpk: $(EBOOT_BIN) $(PARAM_SFO)
+	$(PACK_VPK) -s $(PARAM_SFO) -b $(EBOOT_BIN) -a misc/vita/ICON0.png=sce_sys/icon0.png $@
 
 
 #---------------------------------------------------------------------------------
-# object generation
+# common targets
 #---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o : src/%.c
-	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o : src/psvita/%.c
-	$(VITA_CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-	
-$(BUILD_DIR)/%.o : third_party/bearssl/%.c
-	$(VITA_CC) $(CFLAGS) -c $< -o $@
-
-
-#---------------------------------------------------------------------------------
-# Dependency tracking
-#---------------------------------------------------------------------------------
-$(DEPFILES):
-
-include $(wildcard $(DEPFILES))
+include misc/makefiles/common_targets.mk

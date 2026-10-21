@@ -5,13 +5,6 @@
 // (i.e. instruction after branches/jumps are always unconditionally executed)
 .set noreorder
 
-# transform temp registers
-	#define POSCL $vf10 // TRANSFORMED(POS_[1234]) * CLIP_PLANES_ADJUST
-	#define POS_1 $vf11 // vertex 1 position
-	#define POS_2 $vf12 // vertex 2 position
-	#define POS_3 $vf13 // vertex 3 position
-	#define POS_4 $vf14 // vertex 4 position
-
 
 // Loads matrix into VU0 registers
 //	$a0 = addresss of mvp

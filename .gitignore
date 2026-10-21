@@ -44,10 +44,6 @@ cd/
 build-360/
 main.exe
 main.lib
-misc/xbox/ps_coloured.inl
-misc/xbox/ps_textured.inl
-misc/xbox/vs_coloured.inl
-misc/xbox/vs_textured.inl
 
 # Sony console build results
 EBOOT.PBP
@@ -55,6 +51,11 @@ PARAM.SFO
 param.sfo
 eboot.bin
 pkg.gp4
+
+# vita port shader compiler
+ShaderCompiler.stripped
+ShaderCompiler.velf
+ShaderCompiler.vpk
 
 # Build results
 [Dd]ebug/
@@ -137,6 +138,7 @@ retro68scripts/
 
 # PS2
 openvcl/
+ee_log.txt
 
 *_i.c
 *_p.c
@@ -227,3 +229,6 @@ UpgradeLog*.htm
 # Eclipse
 .cproject
 .project
+
+# Watcom
+*.err

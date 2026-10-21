@@ -54,11 +54,12 @@ static void ChunkInfo_Init(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->vb = 0;
 #endif
 
-	chunk->visible = true;  
-	chunk->empty   = false;
-	chunk->allAir  = false;
-	chunk->noData  = true;
-	chunk->dirty   = true;
+	chunk->visible  = true;  
+	chunk->empty    = false;
+	chunk->allAir   = false;
+	chunk->noData   = true;
+	chunk->dirty    = true;
+	chunk->skipClip = false;
 
 	chunk->drawXMin = false; chunk->drawXMax = false; chunk->drawZMin = false;
 	chunk->drawZMax = false; chunk->drawYMin = false; chunk->drawYMax = false;
@@ -106,12 +107,18 @@ static void CheckWeather(float delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
+#ifdef CC_CLIPPING_FLAGS
+	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, info->skipClip ? DRAW_HINT_NOCLIP : 0)
+#else
+	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, 0)
+#endif
+
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
-	#define DrawFace(face, ign)    Gfx_BindVb(part.vbs[face]); Gfx_DrawIndexedTris_T2fC4b(0, 0);
+	#define DrawFace(face, ign)    Gfx_BindVb(part.vbs[face]); DrawBatch(0, 0);
 	#define DrawFaces(f1, f2, ign) DrawFace(f1, ign); DrawFace(f2, ign);
 #else
-	#define DrawFace(face, offset)    Gfx_DrawIndexedTris_T2fC4b(part.counts[face], offset);
-	#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedTris_T2fC4b(part.counts[f1] + part.counts[f2], offset);
+	#define DrawFace(face, offset)    DrawBatch(part.counts[face], offset);
+	#define DrawFaces(f1, f2, offset) DrawBatch(part.counts[f1] + part.counts[f2], offset);
 #endif
 
 #define DrawNormalFaces(minFace, maxFace) \
@@ -170,25 +177,25 @@ static void RenderNormalBatch(int batch) {
 		/* TODO: fix to not render them all */
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 		Gfx_BindVb(part.vbs[FACE_COUNT]);
-		Gfx_DrawIndexedTris_T2fC4b(0, 0);
+		DrawBatch(0, 0);
 		Game_Vertices += count * 4;
 		Gfx_SetFaceCulling(false);
 		continue;
 #endif
 		if (info->drawXMax || info->drawZMin) {
-			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
+			DrawBatch(count, offset); Game_Vertices += count;
 		} offset += count;
 
 		if (info->drawXMin || info->drawZMax) {
-			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
+			DrawBatch(count, offset); Game_Vertices += count;
 		} offset += count;
 
 		if (info->drawXMin || info->drawZMin) {
-			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
+			DrawBatch(count, offset); Game_Vertices += count;
 		} offset += count;
 
 		if (info->drawXMax || info->drawZMax) {
-			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
+			DrawBatch(count, offset); Game_Vertices += count;
 		}
 		Gfx_SetFaceCulling(false);
 	}
@@ -319,27 +326,27 @@ void MapRenderer_RenderTranslucent(float delta) {
 *---------------------------------------------------Chunk functionality---------------------------------------------------*
 *#########################################################################################################################*/
 /* Deletes vertex buffer associated with the given chunk and updates internal state */
-static void DeleteChunk(struct ChunkInfo* info) {
+static void DeleteChunk(struct ChunkInfo* chunk) {
 	struct ChunkPartInfo* ptr;
 	int i;
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 	int j;
 #else
-	Gfx_DeleteVb(&info->vb);
+	Gfx_DeleteVb(&chunk->vb);
 #endif
 
-	info->empty  = false; 
-	info->allAir = false;
-	info->noData = true;
-	info->dirty  = true;
+	chunk->empty  = false; 
+	chunk->allAir = false;
+	chunk->noData = true;
+	chunk->dirty  = true;
 
 #ifdef OCCLUSION
-	info.OcclusionFlags = 0;
-	info.OccludedFlags = 0;
+	chunk.OcclusionFlags = 0;
+	chunk.OccludedFlags = 0;
 #endif
 
-	if (info->normalParts) {
-		ptr = info->normalParts;
+	if (chunk->normalParts) {
+		ptr = chunk->normalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset < 0) continue; 
 			normPartsCount[i]--;
@@ -347,11 +354,11 @@ static void DeleteChunk(struct ChunkInfo* info) {
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		info->normalParts = NULL;
+		chunk->normalParts = NULL;
 	}
 
-	if (info->translucentParts) {
-		ptr = info->translucentParts;
+	if (chunk->translucentParts) {
+		ptr = chunk->translucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset < 0) continue;
 			tranPartsCount[i]--;
@@ -359,33 +366,33 @@ static void DeleteChunk(struct ChunkInfo* info) {
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		info->translucentParts = NULL;
+		chunk->translucentParts = NULL;
 	}
 }
 
 /* Builds the mesh (hence vertex buffer) for the given chunk, and updates internal state */
-static void BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
+static void BuildChunk(struct ChunkInfo* chunk, int* chunkUpdates) {
 	struct ChunkPartInfo* ptr;
 	int i;
 
 	Game.ChunkUpdates++;
 	(*chunkUpdates)++;
-	Builder_MakeChunk(info);
+	if (!Builder_MakeChunk(chunk)) return;
 
-	info->dirty  = false;
-	info->noData = !info->normalParts && !info->translucentParts;
-	info->empty  = info->noData;
-	if (info->empty) return;
+	chunk->dirty  = false;
+	chunk->noData = !chunk->normalParts && !chunk->translucentParts;
+	chunk->empty  = chunk->noData;
+	if (chunk->empty) return;
 	
-	if (info->normalParts) {
-		ptr = info->normalParts;
+	if (chunk->normalParts) {
+		ptr = chunk->normalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset >= 0) normPartsCount[i]++;
 		}
 	}
 
-	if (info->translucentParts) {
-		ptr = info->translucentParts;
+	if (chunk->translucentParts) {
+		ptr = chunk->translucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
 			if (ptr->offset >= 0) tranPartsCount[i]++;
 		}
@@ -553,28 +560,34 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 	int renderDistSqr = renderDistSquared;
 	int buildDistSqr  = buildDistSquared;
 
-	struct ChunkInfo* info;
-	int i, j = 0, distSqr;
+	struct ChunkInfo* chunk;
+	int i, j = 0, distSqr, res;
 
 	for (i = 0; i < chunksCount; i++) 
 	{
-		info = sortedChunks[i];
-		if (info->empty) continue;
+		chunk = sortedChunks[i];
+		if (chunk->empty) continue;
 		distSqr = distances[i];
 		
 		/* Auto unload chunks far away chunks */
-		if (!info->noData && distSqr >= buildDistSqr + 32 * 16) {
-			DeleteChunk(info); continue;
+		if (!chunk->noData && distSqr >= buildDistSqr + 32 * 16) {
+			DeleteChunk(chunk); continue;
 		}
 
-		if (info->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
-			DeleteChunk(info);
-			BuildChunk(info, chunkUpdates);
+		if (chunk->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
+			DeleteChunk(chunk);
+			BuildChunk(chunk, chunkUpdates);
 		}
 
-		info->visible = distSqr <= renderDistSqr &&
-			FrustumCulling_SphereInFrustum(info->centreX, info->centreY, info->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
-		if (info->visible && !info->empty) { renderChunks[j] = info; j++; }
+		if (distSqr > renderDistSqr) {
+			chunk->visible  = false;
+		} else {
+			res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+			chunk->visible  = res != FRUSTUM_OUTSIDE;
+			chunk->skipClip = Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14);
+		}
+
+		if (chunk->visible && !chunk->empty) { renderChunks[j] = chunk; j++; }
 	}
 	return j;
 }
@@ -583,30 +596,36 @@ static int UpdateChunksStill(int* chunkUpdates) {
 	int renderDistSqr = renderDistSquared;
 	int buildDistSqr  = buildDistSquared;
 
-	struct ChunkInfo* info;
-	int i, j = 0, distSqr;
+	struct ChunkInfo* chunk;
+	int i, j = 0, distSqr, res;
 
 	for (i = 0; i < chunksCount; i++) 
 	{
-		info = sortedChunks[i];
-		if (info->empty) continue;
+		chunk = sortedChunks[i];
+		if (chunk->empty) continue;
 		distSqr = distances[i];
 
 		/* Auto unload chunks far away chunks */
-		if (!info->noData && distSqr >= buildDistSqr + 32 * 16) {
-			DeleteChunk(info); continue;
+		if (!chunk->noData && distSqr >= buildDistSqr + 32 * 16) {
+			DeleteChunk(chunk); continue;
 		}
 
-		if (info->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
-			DeleteChunk(info);
-			BuildChunk(info, chunkUpdates);
+		if (chunk->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
+			DeleteChunk(chunk);
+			BuildChunk(chunk, chunkUpdates);
 
 			/* only need to update the visibility of chunks in range. */
-			info->visible = distSqr <= renderDistSqr &&
-				FrustumCulling_SphereInFrustum(info->centreX, info->centreY, info->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
-			if (info->visible && !info->empty) { renderChunks[j] = info; j++; }
-		} else if (info->visible) {
-			renderChunks[j] = info; j++;
+			if (distSqr > renderDistSqr) {
+				chunk->visible  = false;
+			} else {
+				res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+				chunk->visible  = res != FRUSTUM_OUTSIDE;
+				chunk->skipClip = Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14);
+			}
+
+			if (chunk->visible && !chunk->empty) { renderChunks[j] = chunk; j++; }
+		} else if (chunk->visible) {
+			renderChunks[j] = chunk; j++;
 		}
 	}
 	return j;

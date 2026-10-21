@@ -1,6 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define CC_NO_CRASHHANDLER
+#define CC_NO_OPEN
 #define DEFAULT_COMMANDLINE_FUNC
 
 #include "../Stream.h"
@@ -117,16 +119,6 @@ cc_uint64 Stopwatch_Measure(void) {
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return (end - beg) / 1000;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -305,6 +297,9 @@ void Thread_Join(void* handle) {
 void* Mutex_Create(const char* name) {
 	sys_mutex_attr_t attr;	
 	sysMutexAttrInitialize(attr);
+
+	cc_string str = String_FromReadonly(name);
+	String_CopyToRaw(attr.name, sizeof(attr.name) - 1, &str);
 	
 	sys_mutex_t* mutex = (sys_mutex_t*)Mem_Alloc(1, sizeof(sys_mutex_t), "mutex");
 	int res = sysMutexCreate(mutex, &attr);
@@ -334,7 +329,10 @@ void Mutex_Unlock(void* handle) {
 void* Waitable_Create(const char* name) {
 	sys_sem_attr_t attr = { 0 };
 	attr.attr_protocol  = SYS_SEM_ATTR_PROTOCOL;
-	attr.attr_pshared   = SYS_SEM_ATTR_PSHARED; 
+	attr.attr_pshared   = SYS_SEM_ATTR_PSHARED;
+
+	cc_string str = String_FromReadonly(name);
+	String_CopyToRaw(attr.name, sizeof(attr.name) - 1, &str);
 	
 	sys_sem_t* sem = (sys_sem_t*)Mem_Alloc(1, sizeof(sys_sem_t), "waitable");
 	int res = sysSemCreate(sem, &attr, 0, 1000000);
@@ -427,23 +425,28 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = netSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	*s = netSocket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return net_errno;
 
-	if (nonblocking) {
-		int on = 1;
-		netSetSockOpt(*s, SOL_SOCKET, SO_NBIO, &on, sizeof(int));
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = netConnect(s, raw, addr->size);
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	int res  = netSetSockOpt(s, SOL_SOCKET, SO_NBIO, &mode, sizeof(int));
+	return res < 0 ? net_errno : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	netShutdown(s, SHUT_RDWR);
+	netClose(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = netConnect(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? net_errno : 0;
 }
 
@@ -461,11 +464,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	*modified = res; return 0;
 }
 
-void Socket_Close(cc_socket s) {
-	netShutdown(s, SHUT_RDWR);
-	netClose(s);
-}
-
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
@@ -479,15 +477,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
 	*success = (pfd.revents & flags) != 0;
 	return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	netGetSockOpt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
 }
 
 
@@ -535,11 +524,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -547,9 +531,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

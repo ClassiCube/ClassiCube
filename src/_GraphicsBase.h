@@ -36,8 +36,8 @@ static cc_bool gfx_rendering2D;
 *------------------------------------------------------State changes------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool gfx_colorMask[4] = { true, true, true, true };
-cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 static cc_bool gfx_alphaTest, gfx_alphaBlend;
+static cc_bool gfx_depthTest, gfx_depthWrite; // TODO: depth write on by default in OpenGL ??
 
 static void SetAlphaTest(cc_bool enabled);
 void Gfx_SetAlphaTest(cc_bool enabled) {
@@ -55,6 +55,22 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	SetAlphaBlend(enabled);
 }
 
+static void SetDepthTest(cc_bool enabled);
+void Gfx_SetDepthTest(cc_bool enabled) {
+	if (gfx_depthTest == enabled) return;
+	
+	gfx_depthTest = enabled;
+	SetDepthTest(enabled);
+}
+
+static void SetDepthWrite(cc_bool enabled);
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	if (gfx_depthWrite == enabled) return;
+	
+	gfx_depthWrite = enabled;
+	SetDepthWrite(enabled);
+}
+
 /* Initialises/Restores render state */
 CC_NOINLINE static void Gfx_RestoreState(void);
 /* Destroys render state, but can be restored later */
@@ -69,8 +85,18 @@ void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	SetColorWrite(r, g, b, a);
 }
 
+static CC_INLINE void DefaultDepthOnlyRendering(cc_bool depthOnly) {
+    cc_bool enabled = !depthOnly;
+    SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1],
+                  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+}
+
 void Gfx_SetTexturing(cc_bool enabled) { } /* useless */
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Anaglyph 3D------------------------------------------------------*
+*#########################################################################################################################*/
 #ifndef CC_BUILD_3DS
 void Gfx_Set3DLeft(struct Matrix* proj, struct Matrix* view) {
 	struct Matrix proj_left, view_left;
@@ -107,6 +133,48 @@ void Gfx_End3D(struct Matrix* proj, struct Matrix* view) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------------Fog----------------------------------------------------------*
+*#########################################################################################################################*/
+static PackedCol gfx_fogColor;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static int gfx_fogMode  = -1;
+
+cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+
+static void SetFogColor(PackedCol color);
+void Gfx_SetFogCol(PackedCol color) {
+	if (gfx_fogColor == color) return;
+
+	gfx_fogColor = color;
+	SetFogColor(color);
+}
+
+static void SetFogDensity(float value);
+void Gfx_SetFogDensity(float value) {
+	if (value == gfx_fogDensity) return;
+
+	gfx_fogDensity = value;
+	SetFogDensity(value);
+}
+
+static void SetFogEnd(float value);
+void Gfx_SetFogEnd(float value) {
+	if (value == gfx_fogEnd) return;
+
+	gfx_fogEnd = value;
+	SetFogEnd(value);
+}
+
+static void SetFogMode(FogFunc func);
+void Gfx_SetFogMode(FogFunc func) {
+	if (func == gfx_fogMode) return;
+
+	gfx_fogMode = func;
+	SetFogMode(func);
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
 /* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc */
@@ -126,21 +194,18 @@ static void MakeIndices(cc_uint16* indices, int count, void* obj) {
 	}
 }
 
-static void RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices) {
-	Gfx_DeleteDynamicVb(vb);
-	*vb = Gfx_CreateDynamicVb(fmt, maxVertices);
-}
-
 static void InitDefaultResources(void) {
 	Gfx.DefaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
+	Gfx_DeleteScratchVb(&Gfx_quadVb);
+	Gfx_DeleteScratchVb(&Gfx_texVb);
 
-	RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
-	RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
+	Gfx_quadVb = Gfx_CreateScratchVb(VERTEX_FORMAT_COLOURED, 4);
+	Gfx_texVb  = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, 4);
 }
 
 static void FreeDefaultResources(void) {
-	Gfx_DeleteDynamicVb(&Gfx_quadVb);
-	Gfx_DeleteDynamicVb(&Gfx_texVb);
+	Gfx_DeleteScratchVb(&Gfx_quadVb);
+	Gfx_DeleteScratchVb(&Gfx_texVb);
 	Gfx_DeleteIb(&Gfx.DefaultIb);
 }
 
@@ -186,10 +251,10 @@ void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured* v;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
+	v = (struct VertexColoured*)Gfx_LockScratchVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	v = Gfx_Build2DFlat(x, y, width, height, color, v);
 
-	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_UnlockScratchVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
@@ -197,10 +262,10 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 	struct VertexColoured* v;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
+	v = (struct VertexColoured*)Gfx_LockScratchVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	v = Gfx_Build2DGradient(x, y, width, height, top, bottom, v);
 
-	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_UnlockScratchVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_RECT);
 }
 
@@ -208,11 +273,11 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	struct VertexTextured* ptr;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	ptr = (struct VertexTextured*)Gfx_LockDynamicVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
+	ptr = (struct VertexTextured*)Gfx_LockScratchVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
 
 	Gfx_Make2DQuad(tex, color, &ptr);
 
-	Gfx_UnlockDynamicVb(Gfx_texVb);
+	Gfx_UnlockScratchVb(Gfx_texVb);
 	Gfx_DrawVb_IndexedTris_Range(4, 0, DRAW_HINT_SPRITE);
 }
 #endif
@@ -471,6 +536,7 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
+static GfxResourceID Gfx_AllocScratchVb(VertexFormat fmt, int maxVertices);
 
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	GfxResourceID vb;
@@ -481,6 +547,18 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 		if ((vb = Gfx_AllocStaticVb(fmt, count))) return vb;
 
 		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (allocating static VB)");
+	}
+}
+
+GfxResourceID Gfx_TryCreateStaticVb(VertexFormat fmt, int count) {
+	GfxResourceID vb;
+	if (Gfx.LostContext) return 0;
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocStaticVb(fmt, count))) return vb;
+
+		if (!Game_ReduceVRAM()) return 0;
 	}
 }
 
@@ -496,15 +574,34 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	}
 }
 
+GfxResourceID Gfx_CreateScratchVb(VertexFormat fmt, int maxVertices) {
+	GfxResourceID vb;
+	if (Gfx.LostContext) return 0; 
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocScratchVb(fmt, maxVertices))) return vb;
+
+		if (!Game_ReduceVRAM()) Process_Abort("Out of video memory! (allocating dynamic VB)");
+	}
+}
+
+
 #if CC_GFX_BACKEND_IS_GL() || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9)
 /* Slightly more efficient implementations are defined in the backends */
 #else
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
+	void* data = Gfx_LockScratchVb(vb, gfx_format, vCount);
+	Mem_Copy(data, vertices, vCount * gfx_stride);
+	Gfx_UnlockScratchVb(vb);
+}
+#endif
+
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
 	Mem_Copy(data, vertices, vCount * gfx_stride);
 	Gfx_UnlockDynamicVb(vb);
 }
-#endif
 
 
 /*########################################################################################################################*
@@ -524,6 +621,53 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Scratch Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_SCRATCH_VBS_ARE_DYNAMIC
+static GfxResourceID Gfx_AllocScratchVb(VertexFormat fmt, int maxVertices) {
+	return Gfx_AllocDynamicVb(fmt, maxVertices);
+}
+
+void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockDynamicVb(vb, fmt, count);
+}
+
+void Gfx_UnlockScratchVb(GfxResourceID vb)  { Gfx_UnlockDynamicVb(vb); }
+
+void Gfx_DeleteScratchVb(GfxResourceID* vb) { Gfx_DeleteDynamicVb(vb); }
+#endif
+
+#ifdef CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
+static void* gfx_scratchVb;
+static int   gfx_scratchSize;
+
+static GfxResourceID Gfx_AllocScratchVb(VertexFormat fmt, int maxVertices) {
+	int size = maxVertices * strideSizes[fmt];
+	if (size <= gfx_scratchSize) return gfx_scratchVb;
+
+	Mem_Free(gfx_scratchVb);
+	gfx_scratchVb = Mem_TryAlloc(size, 1);
+
+	if (gfx_scratchVb) {
+		gfx_scratchSize = size;
+		return (void*)1;
+	} else {
+		gfx_scratchSize = 0;
+		return NULL;
+	}
+}
+
+void* Gfx_LockScratchVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return Gfx_LockDynamicVb(gfx_scratchVb, fmt, count);
+}
+
+void Gfx_UnlockScratchVb(GfxResourceID vb)  { Gfx_UnlockDynamicVb(gfx_scratchVb); }
+
+void Gfx_DeleteScratchVb(GfxResourceID* vb) { *vb = NULL; }
 #endif
 
 

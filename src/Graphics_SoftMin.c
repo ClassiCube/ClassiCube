@@ -1,7 +1,8 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
+#define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTMIN
-#define CC_DYNAMIC_VBS_ARE_STATIC
-#define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -9,7 +10,7 @@
 static cc_bool faceCulling;
 static int fb_width, fb_height; 
 static struct Bitmap fb_bmp;
-static float vp_hwidth, vp_hheight;
+static int vp_hwidth, vp_hheight;
 static int fb_maxX, fb_maxY;
 
 static BitmapCol* colorBuffer;
@@ -41,37 +42,76 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	Gfx.Limitations  = GFX_LIMIT_MINIMAL | GFX_LIMIT_WORLD_ONLY;
-	
-	Gfx_RestoreState();
+}
+
+static void FreeFramebuffer(void) {
+	Window_FreeFramebuffer(&fb_bmp);
+	fb_width  = 0;
+	fb_height = 0;
 }
 
 void Gfx_Free(void) { 
 	Gfx_FreeState();
-	Window_FreeFramebuffer(&fb_bmp);
+	FreeFramebuffer();
 }
 
+#ifdef CC_BUILD_GBA
+	/* ARM code in IWRAM is the fastest code to execute, however only the most */
+	/* time critical code should be placed there due to its limited size */
+	#define CC_FAST_FUNC __attribute__((section(".iwram"), long_call, target("arm")))
+#else
+	#define CC_FAST_FUNC
+#endif
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------Fixed point-------------------------------------------------------*
+*#########################################################################################################################*/
+// 16.16 fixed point
+#define FP_SHIFT 16
+
+#define float_to_FP(x) ((int)((x) * FP_ONE))
+#define FP_to_float(x) ((float)(x) / FP_ONE)
+#define FP_to_int(x)   ((x) >> FP_SHIFT)
+#define int_to_FP(x)   ((x) << FP_SHIFT)
+
+#define FP_mul(a, b) (((cc_int64)(a) * (b)) >> FP_SHIFT)
+#define FP_div(a, b) (((cc_int64)(a) << FP_SHIFT) / (b))
+
+#define FP_ONE   int_to_FP(1)
+#define FP_HALF  (FP_ONE >> 1)
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Textures--------------------------------------------------------*
+*#########################################################################################################################*/
 typedef struct CCTexture {
-	int width, height;
+	unsigned short log2_width, log2_height;
 	BitmapCol pixels[];
 } CCTexture;
+#define Texture_Width(tex)  (1 << (tex)->log2_width)
+#define Texture_Height(tex) (1 << (tex)->log2_height)
 
-static CCTexture* curTexture;
 static BitmapCol* curTexPixels;
-static int curTexWidth, curTexHeight;
+static int curTexWidth,  curTexHeight;
 static int texWidthMask, texHeightMask;
+static int texUShift,    texVShift;
+static int texYShift;
 		
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = texId;
 
-	curTexture   = tex;
 	curTexPixels = tex->pixels;
-	curTexWidth  = tex->width;
-	curTexHeight = tex->height;
+	curTexWidth  = Texture_Width(tex);
+	curTexHeight = Texture_Height(tex);
 
-	texWidthMask   = (1 << Math_ilog2(tex->width))  - 1;
-	texHeightMask  = (1 << Math_ilog2(tex->height)) - 1;
+	texWidthMask  = (1 << tex->log2_width)  - 1;
+	texHeightMask = (1 << tex->log2_height) - 1;
+	
+	texUShift = FP_SHIFT - tex->log2_width;
+	texVShift = FP_SHIFT - tex->log2_height;
+	texYShift = tex->log2_width;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -81,10 +121,11 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 		
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)Mem_Alloc(2 + bmp->width * bmp->height, 4, "Texture");
+	CCTexture* tex = (CCTexture*)Mem_TryAlloc(2 + bmp->width * bmp->height, BITMAPCOLOR_SIZE);
+	if (!tex) return NULL;
 
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->log2_width  = Math_ilog2(bmp->width);
+	tex->log2_height = Math_ilog2(bmp->height);
 
 	CopyPixels(tex->pixels, bmp->width * BITMAPCOLOR_SIZE,
 			   bmp->scan0,  rowWidth * BITMAPCOLOR_SIZE,
@@ -94,10 +135,11 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)texId;
-	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
+	int tex_width  = Texture_Width(tex);
+	BitmapCol* dst = (tex->pixels + x) + y * tex_width;
 
-	CopyPixels(dst,         tex->width * BITMAPCOLOR_SIZE,
-			   part->scan0, rowWidth   * BITMAPCOLOR_SIZE,
+	CopyPixels(dst,         tex_width * BITMAPCOLOR_SIZE,
+			   part->scan0, rowWidth  * BITMAPCOLOR_SIZE,
 			   part->width, part->height);
 }
 
@@ -122,11 +164,11 @@ void Gfx_End2D(void) {
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)	{ }
-void Gfx_SetFogCol(PackedCol col)   { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value) 	{ }
-void Gfx_SetFogMode(FogFunc func)   { }
+void Gfx_SetFog(cc_bool enabled)         { }
+static void SetFogColor(PackedCol color) { } // TODO PACK_GIFTAG(q, GS_SET_FOGCOL(0,0,0), GS_REG_FOGCOL);
+static void SetFogDensity(float value)   { }
+static void SetFogEnd(float value)       { }
+static void SetFogMode(FogFunc func)     { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	faceCulling = enabled;
@@ -143,13 +185,13 @@ static void SetAlphaBlend(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void ClearColorBuffer(void) {
-	int i, x, y, size = fb_width * fb_height;
-
 #ifdef CC_BUILD_GBA
 	/* in mGBA, fast clear takes ~3ms compared to ~52ms of standard code below */
 	extern void VRAM_FastClear(BitmapCol color);
 	VRAM_FastClear(clearColor);
 #else
+	int i, x, y, size = fb_width * fb_height;
+
 	if (cb_stride == fb_width) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
 	} else {
@@ -177,18 +219,19 @@ void Gfx_ClearColor(PackedCol color) {
 	clearColor = BitmapCol_Make(R, G, B, A);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
+	colWrite = r || g || b || a;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	colWrite = !depthOnly;
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -206,6 +249,39 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
+struct FPVertexCommon   { int x, y, z; };
+struct FPVertexColoured { int x, y, z; PackedCol c; };
+struct FPVertexTextured { int x, y, z; PackedCol c; int u, v; };
+
+static VertexFormat buf_fmt;
+static int buf_count;
+
+static void PreprocessTexturedVertices(void* vertices) {
+	struct FPVertexTextured* dst = vertices;
+	struct VertexTextured* src   = vertices;
+
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->x = float_to_FP(src->x);
+		dst->y = float_to_FP(src->y);
+		dst->z = float_to_FP(src->z);
+		dst->u = float_to_FP(src->U);
+		dst->v = float_to_FP(src->V);
+	}
+}
+
+static void PreprocessColouredVertices(void* vertices) {
+	struct FPVertexColoured* dst = vertices;
+	struct VertexColoured* src   = vertices;
+
+	for (int i = 0; i < buf_count; i++, src++, dst++)
+	{
+		dst->x = float_to_FP(src->x);
+		dst->y = float_to_FP(src->y);
+		dst->z = float_to_FP(src->z);
+	}
+}
+
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return Mem_TryAlloc(count, strideSizes[fmt]);
 }
@@ -218,22 +294,47 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 
-void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+    buf_fmt   = fmt;
+    buf_count = count;
+	return vb;
+}
 
-void Gfx_UnlockVb(GfxResourceID vb) { }
+void Gfx_UnlockVb(GfxResourceID vb) { 
+    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+        PreprocessTexturedVertices(vb);
+    } else {
+        PreprocessColouredVertices(vb);
+    }
+}
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static float texOffsetX, texOffsetY;
-static struct Matrix _view, _proj, _mvp;
+struct FPVec4   { int x, y, z, w; };
+struct FPMatrix { struct FPVec4 row1, row2, row3, row4; };
+
+static struct Matrix _view, _proj;
+static struct FPMatrix _mvp;
+
+static void SetMVP(const struct Matrix* mvp) {
+	float* src = (float*)mvp;
+	int*   dst = (int*)&_mvp;
+	
+	for (int i = 0; i < 4 * 4; i++)
+	{
+		dst[i] = float_to_FP(src[i]);
+	}
+}
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&_mvp, &_view, &_proj);
+	struct Matrix mvp;
+	Matrix_Mul(&mvp, &_view, &_proj);
+	SetMVP(&mvp);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -241,17 +342,14 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 	_proj = *proj;
 
 	Matrix_Mul(mvp, view, proj);
-	_mvp  = *mvp;
+	SetMVP(mvp);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	texOffsetX = x;
-	texOffsetY = y;
+	// TODO: implement? but clouds aren't drawn anyways
 }
 
 void Gfx_DisableTextureOffset(void) {
-	texOffsetX = 0;
-	texOffsetY = 0;
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
@@ -290,82 +388,90 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct Vector3 { float x, y, z; } Vector3;
-typedef struct Vector2 { float x, y; } Vector2;
 typedef struct Vertex_ {
-	float x, y, z, w;
-	float u, v;
+	cc_int64 x, y, z, w;
+	int u, v;
 	PackedCol c;
 } Vertex;
 
-static void TransformVertex2D(int index, Vertex* vertex) {
-	// TODO: avoid the multiply, just add down in DrawTriangles
-	char* ptr = (char*)gfx_vertices + index * gfx_stride;
-	Vector3* pos = (Vector3*)ptr;
+static CC_FAST_FUNC void TransformVertex2D(const char* ptr, Vertex* vertex) {
+	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
 	vertex->x = pos->x;
 	vertex->y = pos->y;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		struct VertexColoured* v = (struct VertexColoured*)ptr;
-		vertex->u = 0.0f;
-		vertex->v = 0.0f;
-		vertex->c = v->Col;
+		struct FPVertexColoured* v = (struct FPVertexColoured*)ptr;
+		vertex->u = 0;
+		vertex->v = 0;
+		vertex->c = v->c;
 	} else {
-		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		vertex->u = v->U;
-		vertex->v = v->V;
-		vertex->c = v->Col;
+		struct FPVertexTextured* v = (struct FPVertexTextured*)ptr;
+		vertex->u = v->u;
+		vertex->v = v->v;
+		vertex->c = v->c;
 	}
 }
 
-static int TransformVertex3D(int index, Vertex* vertex) {
-	// TODO: avoid the multiply, just add down in DrawTriangles
-	char* ptr = (char*)gfx_vertices + index * gfx_stride;
-	Vector3* pos = (Vector3*)ptr;
+static CC_FAST_FUNC int TransformVertex3D(const char* ptr, Vertex* vertex) {
+	struct FPVertexCommon* pos = (struct FPVertexCommon*)ptr;
 
-	vertex->x = pos->x * _mvp.row1.x + pos->y * _mvp.row2.x + pos->z * _mvp.row3.x + _mvp.row4.x;
-	vertex->y = pos->x * _mvp.row1.y + pos->y * _mvp.row2.y + pos->z * _mvp.row3.y + _mvp.row4.y;
-	vertex->z = pos->x * _mvp.row1.z + pos->y * _mvp.row2.z + pos->z * _mvp.row3.z + _mvp.row4.z;
-	vertex->w = pos->x * _mvp.row1.w + pos->y * _mvp.row2.w + pos->z * _mvp.row3.w + _mvp.row4.w;
+	cc_int64 src_x = pos->x;
+	cc_int64 src_y = pos->y;
+	cc_int64 src_z = pos->z;
+	cc_int64 src_w = FP_ONE; // TODO << shift instead?
+
+	cc_int64 x = src_x * _mvp.row1.x + src_y * _mvp.row2.x + src_z * _mvp.row3.x + src_w * _mvp.row4.x;
+	cc_int64 y = src_x * _mvp.row1.y + src_y * _mvp.row2.y + src_z * _mvp.row3.y + src_w * _mvp.row4.y;
+	cc_int64 z = src_x * _mvp.row1.z + src_y * _mvp.row2.z + src_z * _mvp.row3.z + src_w * _mvp.row4.z;
+	cc_int64 w = src_x * _mvp.row1.w + src_y * _mvp.row2.w + src_z * _mvp.row3.w + src_w * _mvp.row4.w;
+
+	vertex->x = x >> FP_SHIFT;
+	vertex->y = y >> FP_SHIFT;
+	vertex->z = z >> FP_SHIFT;
+	vertex->w = w >> FP_SHIFT;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
-		struct VertexColoured* v = (struct VertexColoured*)ptr;
-		vertex->u = 0.0f;
-		vertex->v = 0.0f;
-		vertex->c = v->Col;
+		struct FPVertexColoured* v = (struct FPVertexColoured*)ptr;
+		vertex->u = 0;
+		vertex->v = 0;
+		vertex->c = v->c;
 	} else {
-		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		vertex->u = (v->U + texOffsetX);
-		vertex->v = (v->V + texOffsetY);
-		vertex->c = v->Col;
+		struct FPVertexTextured* v = (struct FPVertexTextured*)ptr;
+		vertex->u = v->u;
+		vertex->v = v->v;
+		vertex->c = v->c;
 	}
-	return vertex->z >= 0.0f;
+	return z >= 0;
 }
 
-static void ViewportVertex3D(Vertex* vertex) {
-	float invW = 1.0f / vertex->w;
+static CC_FAST_FUNC void ViewportVertex3D(Vertex* vertex) {
+	cc_int64 invW = FP_div(FP_ONE, vertex->w);
 
-	vertex->x = vp_hwidth  * (1 + vertex->x * invW);
-	vertex->y = vp_hheight * (1 - vertex->y * invW);
-	vertex->z = vertex->z * invW;
+	cc_int64 x_ndc = FP_mul(vertex->x, invW);
+	cc_int64 y_ndc = FP_mul(vertex->y, invW);
+	cc_int64 z_ndc = FP_mul(vertex->z, invW);
+
+	vertex->x = vp_hwidth  + FP_mul(x_ndc, vp_hwidth);
+	vertex->y = vp_hheight - FP_mul(y_ndc, vp_hheight);
+	vertex->z = z_ndc;
 	vertex->w = invW;
 }
 
-static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
+static CC_FAST_FUNC void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	PackedCol vColor = V0->c;
-	int minX = (int)V0->x;
-	int minY = (int)V0->y;
-	int maxX = (int)V1->x;
-	int maxY = (int)V2->y;
+	int minX = FP_to_int(V0->x);
+	int minY = FP_to_int(V0->y);
+	int maxX = FP_to_int(V1->x);
+	int maxY = FP_to_int(V2->y);
 
 	// Reject triangles completely outside
 	if (maxX < 0 || minX > fb_maxX) return;
 	if (maxY < 0 || minY > fb_maxY) return;
 
-	int begTX = (int)(V0->u * curTexWidth);
-	int begTY = (int)(V0->v * curTexHeight);
-	int delTX = (int)(V1->u * curTexWidth)  - begTX;
-	int delTY = (int)(V2->v * curTexHeight) - begTY;
+	int begTX = (V0->u >> texUShift);
+	int begTY = (V0->v >> texVShift);
+	int delTX = (V1->u >> texUShift) - begTX;
+	int delTY = (V2->v >> texVShift) - begTY;
 
 	int width = maxX - minX, height = maxY - minY;
 	if (width == 0) width = 1;
@@ -380,32 +486,42 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
 
 	int x, y;
-	for (y = minY; y <= maxY; y++) 
-	{
-		int texY = fast ? (begTY + (y - minY)) : (((begTY + delTY * (y - minY) / height)) & texHeightMask);
-		for (x = minX; x <= maxX; x++) 
+	if (fast) {
+		for (y = minY; y <= maxY; y++) 
 		{
-			int texX = fast ? (begTX + (x - minX)) : (((begTX + delTX * (x - minX) / width)) & texWidthMask);
-			int texIndex = texY * curTexWidth + texX;
-
-			BitmapCol color = curTexPixels[texIndex];
-			int R, G, B;
-
-			if ((color & BITMAPCOLOR_A_MASK) == 0) continue;
-			int cb_index = y * cb_stride + x;
-
-			if (vColor != PACKEDCOL_WHITE) {
-				int r1 = PackedCol_R(vColor), r2 = BitmapCol_R(color);
-				R = ( r1 * r2 ) >> 8;
-				int g1 = PackedCol_G(vColor), g2 = BitmapCol_G(color);
-				G = ( g1 * g2 ) >> 8;
-				int b1 = PackedCol_B(vColor), b2 = BitmapCol_B(color);
-				B = ( b1 * b2 ) >> 8;
-
-				color = BitmapCol_Make(R, G, B, 0xFF);
+			int texY = begTY + (y - minY);
+			for (x = minX; x <= maxX; x++) 
+			{
+				int texX = begTX + (x - minX);
+				int texIndex = (texY << texYShift) | texX;
+				BitmapCol color = curTexPixels[texIndex];
+				#include "Graphics_SoftMin.sprite.i"
 			}
+		}
+	} else if (delTX == 0 && delTY == 0) {
+		int texY = begTY & texHeightMask;
+		int texX = begTX & texWidthMask;
+		int texIndex = (texY << texYShift) | texX;
+		BitmapCol color = curTexPixels[texIndex];
 
-			colorBuffer[cb_index] = color;
+		for (y = minY; y <= maxY; y++) 
+		{
+			for (x = minX; x <= maxX; x++) 
+			{
+				#include "Graphics_SoftMin.sprite.i"
+			}
+		}
+	} else {
+		for (y = minY; y <= maxY; y++) 
+		{
+			int texY = ((begTY + delTY * (y - minY) / height)) & texHeightMask;
+			for (x = minX; x <= maxX; x++) 
+			{
+				int texX = ((begTX + delTX * (x - minX) / width)) & texWidthMask;
+				int texIndex = (texY << texYShift) | texX;
+				BitmapCol color = curTexPixels[texIndex];
+				#include "Graphics_SoftMin.sprite.i"
+			}
 		}
 	}
 }
@@ -429,10 +545,10 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 	b2 = BitmapCol_B(tColor); \
 	B  = ( b1 * b2 ) >> 8;    \
 
-static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
-	int x0 = (int)V0->x, y0 = (int)V0->y;
-	int x1 = (int)V1->x, y1 = (int)V1->y;
-	int x2 = (int)V2->x, y2 = (int)V2->y;
+static CC_FAST_FUNC void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
+	int x0 = FP_to_int(V0->x), y0 = FP_to_int(V0->y);
+	int x1 = FP_to_int(V1->x), y1 = FP_to_int(V1->y);
+	int x2 = FP_to_int(V2->x), y2 = FP_to_int(V2->y);
 	int minX = min(x0, min(x1, x2));
 	int minY = min(y0, min(y1, y2));
 	int maxX = max(x0, max(x1, x2));
@@ -474,12 +590,12 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 		A = PackedCol_A(color);
 	} else {
 		/* Always use a single pixel */
-		float rawY0 = V0->v * curTexHeight;
-		float rawY1 = V1->v * curTexHeight;
+		int rawY0 = V0->v >> texVShift;
+		int rawY1 = V1->v >> texVShift;
 
-		float rawY = min(rawY0, rawY1);
-		int texY   = (int)(rawY + 0.01f) & texHeightMask;
-		MultiplyColors(color, curTexPixels[texY * curTexWidth]);
+		int rawY = min(rawY0, rawY1);
+		int texY = rawY & texHeightMask;
+		MultiplyColors(color, curTexPixels[texY << texYShift]);
 	}
 
 	if (gfx_alphaTest && A == 0) return;
@@ -491,6 +607,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 		color = BitmapCol_Make(R, G, B, 0xFF);
 		#include "Graphics_SoftMin.tri.i"
+		#undef PIXEL_PLOT_FUNC
 	} else {
 		// Hardcode for alpha of 128
 		#define PIXEL_PLOT_FUNC(index, x, y) \
@@ -501,6 +618,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			colorBuffer[index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 
 		#include "Graphics_SoftMin.tri.i"
+		#undef PIXEL_PLOT_FUNC
 	}
 }
 
@@ -511,22 +629,22 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 
 // https://github.com/behindthepixels/EDXRaster/blob/master/EDXRaster/Core/Clipper.h
 static void ClipLine(Vertex* v1, Vertex* v2, Vertex* V) {
-	float t  = Math_AbsF(v1->z / (v2->z - v1->z));
-	float invt = 1.0f - t;
+	cc_int64 t  = FP_div(v1->z, v2->z - v1->z);
+	if (t < 0) t = -t;
 	
-	V->x = invt * v1->x + t * v2->x;
-	V->y = invt * v1->y + t * v2->y;
-	//V->z = invt * v1->z + t * v2->z;
-	V->z = 0.0f; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
-	V->w = invt * v1->w + t * v2->w;
+	V->x = v1->x + FP_mul(t, v2->x - v1->x);
+	V->y = v1->y + FP_mul(t, v2->y - v1->y);
+	//V->z = v1->z + FP_mul(t, v2->z - v1->z);
+	V->z = 0; // clipped against near plane anyways (I.e Z/W = 0 --> Z = 0)
+	V->w = v1->w + FP_mul(t, v2->w - v1->w);
 	
-	V->u = invt * v1->u + t * v2->u;
-	V->v = invt * v1->v + t * v2->v;
-	V->c = v1->c;
+	V->u = t < FP_HALF ? v1->u : v2->u;
+	V->v = t < FP_HALF ? v1->v : v2->v;
+	V->c = v1->c;//PackedCol_Make(255, 0, 0, 255);
 }
 
 // https://casual-effects.com/research/McGuire2011Clipping/clip.glsl
-static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3) {
+static CC_NOINLINE void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3) {
 	Vertex tmp[2];
 	Vertex* a = &tmp[0];
 	Vertex* b = &tmp[1];
@@ -767,17 +885,20 @@ static void DrawClipped(int mask, Vertex* v0, Vertex* v1, Vertex* v2, Vertex* v3
 	}
 }
 
-void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
+static void CC_FAST_FUNC DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
+	int i, stride = gfx_stride;
+	char* ptr = (char*)gfx_vertices + startVertex * gfx_stride;
 	Vertex vertices[4];
-	int i, j = startVertex;
 
 	if (gfx_rendering2D && (hints & (DRAW_HINT_SPRITE|DRAW_HINT_RECT))) {
 		// 4 vertices = 1 quad = 2 triangles
-		for (i = 0; i < verticesCount / 4; i++, j += 4)
+
+		for (i = 0; i < verticesCount / 4; i++)
 		{
-			TransformVertex2D(j + 0, &vertices[0]);
-			TransformVertex2D(j + 1, &vertices[1]);
-			TransformVertex2D(j + 2, &vertices[2]);
+			TransformVertex2D(ptr, &vertices[0]); ptr += stride;
+			TransformVertex2D(ptr, &vertices[1]); ptr += stride;
+			TransformVertex2D(ptr, &vertices[2]); ptr += stride;
+			/* don't need 4th vertex for quads */ ptr += stride;
 
 			DrawSprite2D(&vertices[0], &vertices[1], &vertices[2]);
 		}
@@ -785,12 +906,13 @@ void DrawQuads(int startVertex, int verticesCount, DrawHints hints) {
 		Platform_LogConst("2D triangle unsupported..");
 	} else if (colWrite) {
 		// 4 vertices = 1 quad = 2 triangles
-		for (i = 0; i < verticesCount / 4; i++, j += 4)
+		for (i = 0; i < verticesCount / 4; i++)
 		{
-			int clip = TransformVertex3D(j + 0, &vertices[0]) << 0
-					|  TransformVertex3D(j + 1, &vertices[1]) << 1
-					|  TransformVertex3D(j + 2, &vertices[2]) << 2
-					|  TransformVertex3D(j + 3, &vertices[3]) << 3;
+			int clip;
+			clip  = TransformVertex3D(ptr, &vertices[0]) << 0; ptr += stride;
+			clip |= TransformVertex3D(ptr, &vertices[1]) << 1; ptr += stride;
+			clip |= TransformVertex3D(ptr, &vertices[2]) << 2; ptr += stride;
+			clip |= TransformVertex3D(ptr, &vertices[3]) << 3; ptr += stride;
 
 			if (clip == 0) {
 				// Quad entirely clipped
@@ -826,8 +948,8 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	DrawQuads(0, verticesCount, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawQuads(startVertex, verticesCount, DRAW_HINT_NONE);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
+	DrawQuads(startVertex, verticesCount, hints);
 }
 
 
@@ -850,7 +972,12 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 void Gfx_BeginFrame(void) { }
 
 void Gfx_EndFrame(void) {
-	Rect2D r = { 0, 0, fb_width, fb_height };
+    Rect2D r;
+	r.x = 0;
+	r.y = 0; 
+	r.width  = fb_width;
+	r.height = fb_height;
+	
 	Window_DrawFramebuffer(r, &fb_bmp);
 }
 
@@ -858,24 +985,23 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_OnWindowResize(void) {
-	// TODO ??????
-	//Window_FreeFramebuffer(&fb_bmp);
+void Gfx_OnWindowResize(int width, int height) {
+	if (fb_width || fb_height) FreeFramebuffer();
 
-	fb_width   = Game.Width;
-	fb_height  = Game.Height;
+	fb_width  = width;
+	fb_height = height;
 
-	Window_AllocFramebuffer(&fb_bmp, Game.Width, Game.Height);
+	Window_AllocFramebuffer(&fb_bmp, width, height);
 	colorBuffer = fb_bmp.scan0;
 	cb_stride   = fb_bmp.width;
 
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
-	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, width, height);
+	Gfx_SetScissor (0, 0, width, height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	vp_hwidth  = w / 2.0f;
-	vp_hheight = h / 2.0f;
+	vp_hwidth  = float_to_FP(w / 2.0f);
+	vp_hheight = float_to_FP(h / 2.0f);
 }
 
 void Gfx_SetScissor (int x, int y, int w, int h) {

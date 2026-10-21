@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -17,12 +18,21 @@
 #define SCREEN_WIDTH  480
 #define SCREEN_HEIGHT 272
 
+#define GB_HALF  2048
+#define GB_RANGE 4096
+
 #define FB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
 #define ZB_SIZE (BUFFER_WIDTH * SCREEN_HEIGHT * 2)
 
 static unsigned int CC_ALIGNED(16) list[262144];
 static cc_uint8* gfx_vertices;
 static int gfx_fields;
+
+struct Plane { float a, b, c, d; } CC_ALIGNED(16);
+
+// https://www.ppsspp.org/docs/psp-hardware/gpu/ge-overview
+// https://www.ppsspp.org/docs/psp-hardware/gpu/ge-vertex-pipeline
+// https://github.com/pspdev/pspsdk/blob/master/src/gu/doc/commands.txt
 
 
 /*########################################################################################################################*
@@ -46,28 +56,51 @@ static void guInit(void) {
 	
 	sceGuFrontFace(GU_CCW);
 	sceGuShadeModel(GU_SMOOTH);
-	sceGuDisable(GU_TEXTURE_2D);
+	GE_set_texturing(false);
 	
 	sceGuAlphaFunc(GU_GREATER, 0x7f, 0xff);
 	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
 	sceGuDepthFunc(GU_LEQUAL); // sceGuDepthFunc(GU_GEQUAL);
-	sceGuClearDepth(65535); // sceGuClearDepth(0);
 	GE_set_viewport_z(0, 65535); // GE_set_viewport_z(65535, 0);
 
 	GE_set_depth_range(0, 65535);
 	GE_upload_world_matrix((const float*)&Matrix_Identity);
-	sceGuColor(0xffffffff);
 	
 	sceGuEnable(GU_CLIP_PLANES); // TODO: swap near/far instead of this?
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 
-	Gfx_OnWindowResize();
+	Gfx_OnWindowResize(Game.Width, Game.Height);
 	sceGuClutMode(GU_PSM_8888, 0, 0xFF, 0); // 32 bit CLUT entries
 	
 	sceGuFinish();
 	sceGeDrawSync(GU_SYNC_WAIT); // waits until FINISH command is reached
 	sceDisplayWaitVblankStart();
 	sceGuDisplay(GU_TRUE);
+}
+
+extern void Clip_SetGuardbandScale(const float* x, const float* y);
+static void InitGuardband(void) {
+	// PSP clipping guard band ranges from 0..GB_RANGE
+	// - 0 < screen_x < GB_RANGE
+	// - 0 < VIEWPORT(X/W) + WINDOW_OFFSET_X < GB_RANGE
+	// - 0 < ((X/W) * vp_hwidth + vp_x + vp_hwidth) + (GB_HALF-vp_hwidth) < GB_RANGE
+	// - 0 <  (X/W) * vp_hwidth + vp_x              +  GB_HALF            < GB_RANGE
+	// Although accurately rescaling from viewport range to guard band range
+	//  would involve vp_x and vp_hwidth, this complicates the calculation
+	//  as e.g. a non-zero vp_x means viewport is not equally distant from the
+	//  left and right guardband planes.
+	// So to simplify calculation, just set viewport = screen size for clipping:
+	// - 0 < (X/W) * SCR_HWIDTH + (GB_HALF) < GB_RANGE
+	// - -GB_HALF < (X/W) * SCR_HWIDTH < GB_HALF 
+	// - -GB_HALF/SCR_HWIDTH < (X/W) < GB_HALF/SCR_HWIDTH
+	// - W * -GB_HALF/SCR_HWIDTH < X < W * GB_HALF/SCR_HWIDTH
+	// - -W < X / (GB_HALF/SCR_HWIDTH) < W
+	// - -W < X * (SCR_HWIDTH/GB_HALF) < W
+	// Clipping against guardband instead of view frustum reduces the
+	//   number of triangles that go through the slower 'clipping' codepath
+	float scaleX =  (SCREEN_WIDTH /2) / 2047.0f;
+	float scaleY = -(SCREEN_HEIGHT/2) / 2047.0f;
+	Clip_SetGuardbandScale(&scaleX, &scaleY);
 }
 
 static GfxResourceID white_square;
@@ -81,9 +114,9 @@ void Gfx_Create(void) {
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
-	
-	Gfx_RestoreState();
+
 	last_base = -1;
+	InitGuardband();
 }
 
 void Gfx_Free(void) { 
@@ -108,7 +141,45 @@ static void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
-#define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
+
+/*########################################################################################################################*
+*----------------------------------------------------------Frustum--------------------------------------------------------*
+*#########################################################################################################################*/
+extern cc_bool Frustum_SphereSkipsClipping(float x, float y, float z, float radius);
+
+cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) {
+	return Frustum_SphereSkipsClipping(x, y, z, radius);
+}
+
+/*struct Plane_ { float a, b, c, d; };
+struct FrustumPlanes { struct Plane_ L, R, B, T, F; };
+extern struct FrustumPlanes frustum;
+
+cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) {
+	float d;
+
+	d = frustum.L.a * x + frustum.L.b * y + frustum.L.c * z + frustum.L.d;
+	Platform_Log2("L %f3 < %f3", &d, &radius);
+	if (d < radius) return false;
+
+	d = frustum.R.a * x + frustum.R.b * y + frustum.R.c * z + frustum.R.d;
+	Platform_Log2("R %f3 < %f3", &d, &radius);
+	if (d < radius) return false;
+
+	d = frustum.B.a * x + frustum.B.b * y + frustum.B.c * z + frustum.B.d;
+	Platform_Log2("B %f3 < %f3", &d, &radius);
+	if (d < radius) return false;
+
+	d = frustum.T.a * x + frustum.T.b * y + frustum.T.c * z + frustum.T.d;
+	Platform_Log2("T %f3 < %f3", &d, &radius);
+	if (d < radius) return false;
+
+	d = frustum.F.a * x + frustum.F.b * y + frustum.F.c * z + frustum.F.d;
+	Platform_Log2("F %f3 < %f3", &d, &radius);
+	if (d < radius) return false;
+
+	return true;
+}*/
 
 
 /*########################################################################################################################*
@@ -121,7 +192,7 @@ static void Gfx_FreeState(void) {
 #define TEXMEM_BLOCK_SIZE 1024
 #define TEXMEM_MAX_BLOCKS (TEXMEM_TOTAL_FREE / TEXMEM_BLOCK_SIZE)
 static cc_uint8 tex_table[TEXMEM_MAX_BLOCKS / BLOCKS_PER_PAGE];
-static int CLIPPED, UNCLIPPED;
+static int CLIPPED, MACLIPPED, UNCLIPPED;
 
 
 /*########################################################################################################################*
@@ -295,7 +366,6 @@ typedef struct CCTexture_ {
 } CCTexture;
 
 static_assert(sizeof(struct CCTexture_) % 16 == 0, "Texture struct size must be 16 byte aligned");
-#define ALIGNUP(val, alignment) (((val) + ((alignment) - 1)) & -(alignment))
 
 static CC_INLINE void* Texture_PixelsAddr(CCTexture* tex) {
 	if (!tex->blocks) return tex->pixels;
@@ -327,7 +397,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	// Check if no room in VRAM
 	if (base == -1) {
 		// Swizzled texture assumes at least 16 bytes x 8 rows
-		size = ALIGNUP(size, 16 * 8);
+		size = CC_ALIGNUP(size, 16 * 8);
 		tex  = (CCTexture*)memalign(16, sizeof(CCTexture) + size);
 
 		blocks = 0;
@@ -388,15 +458,19 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square; 
 	
+	GE_set_texture_mode();
 	if (tex->paletted) {
-		sceGuClutLoad(MAX_PAL_4BPP_ENTRIES/8, tex->palette); // "count" is in units of "8 entries"
-		sceGuTexMode(GU_PSM_T4, 0, 0, 1);
+		GE_set_clut_buffer(tex->palette);
+		GE_load_clut_entries(MAX_PAL_4BPP_ENTRIES);
+		GE_set_texture_format(GU_PSM_T4);
 	} else {
-		sceGuTexMode(GU_PSM_8888, 0, 0, 1);
+		GE_set_texture_format(GU_PSM_8888);
 	}
 
 	void* addr = Texture_PixelsAddr(tex);
 	sceGuTexImage(0, tex->width, tex->height, tex->width, addr);
+	// TODO when is flushing actually required? just when uploading textures?
+	GE_flush_texture_cache();
 }
 
 
@@ -404,13 +478,18 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
-static void SetAlphaBlend(cc_bool enabled) { GU_Toggle(GU_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
+
+void Gfx_SetFaceCulling(cc_bool enabled) {
+	GE_set_face_culling(enabled);
+}
+
+static void SetAlphaBlend(cc_bool enabled) { 
+	GE_set_alpha_blending(enabled); 
+}
 
 void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
-	sceGuClearColor(color);
 	gfx_clearColor = color;
 }
 
@@ -424,10 +503,13 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	sceGuPixelMask(mask);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	sceGuDepthMask(enabled ? 0 : 0xffffffff);
 }
-void Gfx_SetDepthTest(cc_bool enabled)  { GU_Toggle(GU_DEPTH_TEST); }
+
+static void SetDepthTest(cc_bool enabled) { 
+	GE_set_depth_testing(enabled); 
+}
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
@@ -515,17 +597,6 @@ void Gfx_BeginFrame(void) {
 	last_base = -1;
 }
 
-void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int targets = GU_FAST_CLEAR_BIT;
-	if (buffers & GFX_BUFFER_COLOR) targets |= GU_COLOR_BUFFER_BIT;
-	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
-	
-	sceGuClear(targets);
-	// Clear involves draw commands
-	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
-	last_base = -1;
-}
-
 void Gfx_EndFrame(void) {
 	sceGuFinish();
 	sceGeDrawSync(GU_SYNC_WAIT); // waits until FINISH command is reached
@@ -533,26 +604,90 @@ void Gfx_EndFrame(void) {
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	sceGuSwapBuffers();
 
-	//Platform_Log2("%i / %i", &CLIPPED, &UNCLIPPED);
-	CLIPPED = UNCLIPPED = 0;
+	//Platform_Log3("C %i/%i / U %i", &CLIPPED, &MACLIPPED, &UNCLIPPED);
+	CLIPPED = MACLIPPED = UNCLIPPED = 0;
 }
 
-void Gfx_OnWindowResize(void) {
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
-	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
+void Gfx_OnWindowResize(int width, int height) {
+	Gfx_SetViewport(0, 0, width, height);
+	Gfx_SetScissor( 0, 0, width, height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	// PSP X/Y guard band ranges from 0..4096
-	// To minimise need to clip, centre the viewport around (2048, 2048)
-	GE_set_screen_offset(2048 - (w / 2), 2048 - (h / 2));
-	GE_set_viewport_xy(2048 + x, 2048 + y, w, h);
+	// PSP X/Y guard band ranges from 0..GB_RANGE
+	// To minimise need to clip, centre the viewport around (GB_RANGE/2, GB_RANGE/2)
+	GE_set_viewport_x(GB_HALF + x,  w / 2);
+	GE_set_viewport_y(GB_HALF + y, -h / 2);
+
+	// Afterwards, subtract the viewport centre so coordinates end up in 0..SCR_WIDTH/HEIGHT
+	GE_set_screen_offset(GB_HALF - (w / 2), GB_HALF - (h / 2));
+	// So e.g. for X coordinates:
+	// - [-1, 1] (visible coordinate range)
+	// - [-1, 1] * w/2 + (GB_HALF + x) (viewport transform)
+	// - [-1, 1] * w/2 + (GB_HALF + x) - (GB_HALF - w/2) (viewport transform then screen offset)
+	// - [-1, 1] * w/2 + GB_HALF + x - GB_HALF + w/2 (simplification #1)
+	// - [-1, 1] * w/2 + x + w/2 (simplification #2)
+	// - [-w/2, w/2] + x + w/2 (simplification #3)
+	// - [-w/2+x+w/2, w/2+x+w/2] (simplification #4)
+	// - [x, x+w] (simplification #5)
 }
 
-void Gfx_SetScissor (int x, int y, int w, int h) {
-	int no_scissor = x == 0 && y == 0 && w == SCREEN_WIDTH && h == SCREEN_HEIGHT;
-	sceGuScissor(x, y, w, h);
-	if (no_scissor) { sceGuDisable(GU_SCISSOR_TEST); } else { sceGuEnable(GU_SCISSOR_TEST); }
+void Gfx_SetScissor(int x, int y, int w, int h) {
+	GE_set_scissor_region(x, y, x+w-1, y+h-1);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Clearing--------------------------------------------------------*
+*#########################################################################################################################*/
+// See https://www.ppsspp.org/docs/psp-hardware/gpu/ge-overview/
+// "Memory performance has a few quirks. For example, it's profitable to draw 2D images in 64- or 32- pixel wide vertical strips, 
+//  depending on color depth and texture format. This is why screen clears are usually performed as a series of vertical strips."
+#define CLEAR_DEPTH 65535
+#define STRIP_WIDTH    32
+
+typedef struct ClearVertex
+{
+	cc_uint32 color;
+	cc_uint16 x, y, z;
+	cc_uint16 pad;
+} ClearVertex;
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= GU_COLOR_BUFFER_BIT;
+	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
+	
+	PackedCol color = gfx_clearColor & 0xFFFFFF;
+	const int strips = (SCREEN_WIDTH + STRIP_WIDTH - 1) / STRIP_WIDTH;
+	const int count  = strips * 2;
+
+	ClearVertex* vertices = (ClearVertex*)GE_ReserveListSpace(count * sizeof(ClearVertex));
+	ClearVertex* v = vertices;
+
+	for (int i = 0; i < strips; i++)
+	{
+		v->color = color;
+		v->x = i * STRIP_WIDTH;
+		v->y = 0;
+		v->z = CLEAR_DEPTH;
+		v++;
+
+		v->color = color;
+		v->x = (i + 1) * STRIP_WIDTH;
+		v->y = SCREEN_HEIGHT;
+		v->z = CLEAR_DEPTH;
+		v++;
+	}
+
+	GE_set_clearing_state(true, targets);
+	{
+    	GE_set_vertex_format(GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D);
+    	GE_set_vertices(vertices);
+		GE_draw_array(GU_SPRITES, count);
+	}
+	GE_set_clearing_state(false, 0);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
 
@@ -599,40 +734,41 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
-static int gfx_fogMode  = -1;
-
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	//GU_Toggle(GU_FOG);
+	GE_set_fog_active(enabled);
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == gfx_fogColor) return;
-	gfx_fogColor = color;
-	//sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
+static void SetFogColor(PackedCol color) {
+	GE_set_fog_color(color);
 }
 
-void Gfx_SetFogDensity(float value) {
+static void UpdateFog(void) {
+	float depth;
+
+	if (gfx_fogMode == FOG_EXP) {
+		// See algorithm in EnvRenderer.c
+		#define LOG_005 -2.99573227355399f
+
+		depth = LOG_005 / -gfx_fogDensity;
+	} else {
+		depth = gfx_fogEnd;
+	}
+	GE_set_fog_range(depth);
 }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == gfx_fogEnd) return;
-	gfx_fogEnd = value;
-	//sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
-}
+static void SetFogDensity(float value) { UpdateFog(); }
 
-void Gfx_SetFogMode(FogFunc func) {
-	/* TODO: Implemen fake exp/exp2 fog */
-}
+static void SetFogEnd(float value)     { UpdateFog(); }
 
-static void SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
+static void SetFogMode(FogFunc func)   { UpdateFog(); }
+
+static void SetAlphaTest(cc_bool enabled) { 
+	GE_set_alpha_testing(enabled);
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -643,12 +779,14 @@ extern void Clip_LoadView(const float* src);
 extern void Clip_LoadProj(const float* src);
 extern void Clip_RecalcMVP(void);
 extern void Clip_StoreMVP(float* dst);
+extern void Clip_RescaleMVPtoGuardband(void);
 
 static cc_bool clipping_dirty;
-struct Plane { float a, b, c, d; } CC_ALIGNED(16);
-static struct Plane frustum[6];
-extern void Frustum_CalcPlanes(struct Plane* planes);
-extern void Clip_SetGuardbandScale(const float* x, const float* y);
+static struct Plane frustum_planes[6];
+
+extern void Frustum_CalcAllPlanes(void);
+extern void Frustum_StorePlanes(struct Plane* planes);
+extern void Frustum_SavePlanes(void);
 
 static CC_INLINE void RecalcMVP(void) {
 	Clip_RecalcMVP();
@@ -656,26 +794,10 @@ static CC_INLINE void RecalcMVP(void) {
 }
 
 static CC_NOINLINE void RecalcClipping(void) {
-	Frustum_CalcPlanes(frustum);
+	Frustum_CalcAllPlanes();
+	Frustum_StorePlanes(frustum_planes);
 	clipping_dirty = false;
-
-	// PSP guard band ranges from 0..4096
-	// - 0 < screen_x < 4096
-	// - 0 < (X/W) * vp_hwidth + (2048 + vp_x) < 4096
-	// Although accurately rescaling from viewport range to guard band range
-	//  would involve vp_x and vp_hwidth, this does complicate the calculation
-	//  as e.g. a non-zero vp_x means viewport is not equally distant from the
-	//  left and right guardband planes.
-	// So to simplify calculation, just pretend viewport is same size as screen:
-	// - 0 < (X/W) * SCR_WIDTH + (2048) < 4096
-	// - -2048 < (X/W) * SCR_WIDTH < 2048 
-	// - -2048/SCR_WIDTH < (X/W) < 2048/SCR_WIDTH
-	// - W * -2048/SCR_WIDTH < X < W * 2048/SCR_WIDTH
-	// - -W < X / (2048/SCR_WIDTH) < W
-	// - -W < X * (SCR_WIDTH/2048) < W
-	float scaleX =  SCREEN_WIDTH  / 2047.0f;
-	float scaleY = -SCREEN_HEIGHT / 2047.0f;
-	Clip_SetGuardbandScale(&scaleX, &scaleY);
+	Clip_RescaleMVPtoGuardband();
 }
 
 static void LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -702,15 +824,18 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 
 	Clip_RecalcMVP();
 	Clip_StoreMVP((float*)mvp);
-	clipping_dirty = true;
+	RecalcClipping();
+
+	Frustum_CalcAllPlanes();
+	Frustum_SavePlanes();
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	sceGuTexOffset(x, y);
+	GE_set_texture_offset(x, y);
 }
 
 void Gfx_DisableTextureOffset(void) { 
-	sceGuTexOffset(0.0f, 0.0f);
+	GE_set_texture_offset(0.0f, 0.0f);
 }
 
 
@@ -726,11 +851,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_fields = formatFields[fmt];
 	gfx_stride = strideSizes[fmt];
 
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		sceGuEnable(GU_TEXTURE_2D);
-	} else {
-		sceGuDisable(GU_TEXTURE_2D);
-	}
+	GE_set_texturing(fmt == VERTEX_FORMAT_TEXTURED);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
@@ -740,7 +861,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	GE_set_vertex_format(gfx_fields);
 	GE_set_vertices(gfx_vertices);
 
-	sceGuDrawArray(GU_LINES, 0, verticesCount, NULL, NULL);
+	GE_draw_array(GU_LINES, verticesCount);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
 }
 
@@ -750,85 +871,150 @@ struct ClipVertex {
 	int c, flags;
 } CC_ALIGNED(16);
 
-extern void TransformTexturedQuad(struct VertexTextured* V, struct ClipVertex* C);
-static struct Vec4 Transform(struct VertexTextured* a, const struct Matrix* mat) {
-	struct Vec4 vec;
-	vec.x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
-	vec.y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
-	vec.z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
-	vec.w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
-	return vec;
+extern int QuadNeedsClipping(float* xyz_first, int stride);
+extern cc_uintptr Clip_PolyToPlanes(struct ClipVertex* buf1, struct ClipVertex* buf2, 
+											int planes_count, struct Plane* plane);
+#define CLIPRESULT_COUNT(res)   (int)((res) & 0x0F);
+#define CLIPRESULT_BUFFER(res)  (struct ClipVertex*)((res) & ~0x0F);
+
+static CC_INLINE void SubmitClippedVertices(const void* ptr, int count) {
+	GE_set_vertex_format(gfx_fields);
+	GE_set_vertices(ptr);
+	GE_draw_array(GU_TRIANGLE_FAN, count);
+	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);
+	CLIPPED++;
 }
 
-static void ProcessVertices(int startVertex, int verticesCount) {
-		struct VertexTextured* V = (struct VertexTextured*)gfx_vertices + startVertex;
-		struct Matrix mvp;
-		Clip_StoreMVP((float*)&mvp);
-		struct Vec4 dst CC_ALIGNED(16);
+extern void ConvertTexturedToClipQuad(struct VertexTextured* V, struct ClipVertex* C);
+extern void ConvertColouredToClipQuad(struct VertexColoured* V, struct ClipVertex* C);
 
-		for (int i = 0; i < verticesCount; i++, V++)
-		{
-			extern int TestVertex2(struct VertexTextured* v, struct Vec4* d);
-			int B = TestVertex2(V, &dst);
+static void* EnqueueTexturedVertices(struct ClipVertex* buf, int count) {
+	void* ptr = GE_ReserveListSpace(sizeof(struct VertexTextured) * count);
+	struct VertexTextured* a = ptr;
 
-			if (B) UNCLIPPED++; else CLIPPED++;
+	for (int i = 0; i < count; i++)
+	{
+		a[i].x = buf[i].x;
+		a[i].y = buf[i].y;
+		a[i].z = buf[i].z;
+		a[i].U = buf[i].u;
+		a[i].V = buf[i].v;
+		a[i].Col = buf[i].c;
+	}
+	return ptr;
+}
+
+static void* EnqueueColouredVertices(struct ClipVertex* buf, int count) {
+	void* ptr = GE_ReserveListSpace(sizeof(struct VertexColoured) * count);
+	struct VertexColoured* a = ptr;
+
+	for (int i = 0; i < count; i++)
+	{
+		a[i].x = buf[i].x;
+		a[i].y = buf[i].y;
+		a[i].z = buf[i].z;
+		a[i].Col = buf[i].c;
+	}
+	return ptr;
+}
+
+// TODO don't set vertex format is unchanged
+#define CLIPPABLE_FLUSH_RUN() \
+	if (run) { \
+		GE_set_vertices(beg); \
+		GE_set_indices(gfx_indices); \
+		GE_draw_array(GU_TRIANGLES, run); \
+	} \
+	run = 0; beg = v + 4;
+
+static void DrawClippableTexturedVertices(struct VertexTextured* v, int verticesCount) {
+	struct VertexTextured* beg = v;
+	int run = 0;
+	if (clipping_dirty) RecalcClipping();
+
+	// clipping variables
+	struct ClipVertex clipped1[16], clipped2[16];
+	struct ClipVertex* buf;
+	cc_uintptr res;
+	void* ptr;
+	int cnt;
 	
-			/*if (A == B) continue;
-			Platform_LogConst("????");
-			
-			struct Vec4 vec = Transform(V, &mvp);
-			Platform_Log4("  A: %f3/%f3/%f3/%f3", &dst.x, &dst.y, &dst.z, &dst.w);
-			Platform_Log4("  S: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w); vec.x /= vec.w; vec.y /= vec.w; vec.z /= vec.w;
-			Platform_Log4("  D: %f3/%f3/%f3/%f3", &vec.x, &vec.y, &vec.z, &vec.w);*/
+	for (int i = 0; i < verticesCount; i += 4, v += 4)
+	{
+		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_TEXTURED)) {
+			MACLIPPED++;
+			ConvertTexturedToClipQuad(v, clipped1);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum_planes);
+			if (res == 0) { run += 6; continue; }
+
+			cnt = CLIPRESULT_COUNT(res);
+			buf = CLIPRESULT_BUFFER(res);
+			ptr = EnqueueTexturedVertices(buf, cnt);
+
+			CLIPPABLE_FLUSH_RUN();
+			SubmitClippedVertices(ptr, cnt);
+		} else {
+			run += 6; UNCLIPPED++;
 		}
-		/*struct Matrix mvp;
-		Clip_StoreMVP((float*)&mvp);
+	}
+	CLIPPABLE_FLUSH_RUN();
+}
 
-		struct ClipVertex clipped[8];
-		struct VertexTextured* src = (struct VertexTextured*)gfx_vertices;
-		TransformTexturedQuad(src, clipped);
+static void DrawClippableColouredVertices(struct VertexColoured* v, int verticesCount) {
+	struct VertexColoured* beg = v;
+	int run = 0;
+	if (clipping_dirty) RecalcClipping();
 
-		Vec3 res;
-		Vec3_Transform(&res, (Vec3*)&src->x, &mvp);
-		Platform_Log3("S: %f3/%f3/%f3", &res.x, &res.y, &res.z);
-		Platform_Log3("D: %f3/%f3/%f3", &clipped[0].x, &clipped[0].y, &clipped[0].z);*/
+	// clipping variables
+	struct ClipVertex clipped1[16], clipped2[16];
+	struct ClipVertex* buf;
+	cc_uintptr res;
+	void* ptr;
+	int cnt;
+	
+	for (int i = 0; i < verticesCount; i += 4, v += 4)
+	{
+		if (QuadNeedsClipping(&v->x, SIZEOF_VERTEX_COLOURED)) {
+			MACLIPPED++;
+			ConvertColouredToClipQuad(v, clipped1);
+			res = Clip_PolyToPlanes(clipped2, clipped1, 4, frustum_planes);
+			if (res == 0) { run += 6; continue; }
+
+			cnt = CLIPRESULT_COUNT(res);
+			buf = CLIPRESULT_BUFFER(res);
+			ptr = EnqueueColouredVertices(buf, cnt);
+
+			CLIPPABLE_FLUSH_RUN();
+			SubmitClippedVertices(ptr, cnt);
+		} else {
+			run += 6; UNCLIPPED++;
+		}
+	}
+	CLIPPABLE_FLUSH_RUN();
+}
+
+static void DrawTriangles(void* vertices, int verticesCount, DrawHints hints) {
+	if (gfx_rendering2D || (hints & DRAW_HINT_NOCLIP)) {
+		GE_set_vertices(vertices);
+		GE_set_indices(gfx_indices);
+
+		GE_draw_array(GU_TRIANGLES, ICOUNT(verticesCount));
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawClippableTexturedVertices(vertices, verticesCount);
+	} else {
+		DrawClippableColouredVertices(vertices, verticesCount);
+	}
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	GE_set_vertices(gfx_vertices + startVertex * gfx_stride);
-	GE_set_indices(gfx_indices);
-	if (clipping_dirty) RecalcClipping();
-
-	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
-			NULL, NULL);
-
-	if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
-		//ProcessVertices(startVertex, verticesCount);
-	}
+	DrawTriangles(gfx_vertices + startVertex * gfx_stride, verticesCount, hints);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	GE_set_vertices(gfx_vertices);
-	GE_set_indices(gfx_indices);
-	if (clipping_dirty) RecalcClipping();
-
-	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount),
-			NULL, NULL);
-
-	if (!gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
-		//ProcessVertices(0, verticesCount);
-	}
+	DrawTriangles(gfx_vertices, verticesCount, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	GE_set_vertices(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
-	GE_set_indices(gfx_indices);
-	if (clipping_dirty) RecalcClipping();
-
-	sceGuDrawArray(GU_TRIANGLES, 0, ICOUNT(verticesCount), 
-			NULL, NULL);
-
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		//ProcessVertices(startVertex, verticesCount);
-	}
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
+	DrawTriangles(gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED, verticesCount, hints);
 }
+

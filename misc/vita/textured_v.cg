@@ -1,13 +1,13 @@
 void main(
-	float3 in_position,
-	float4 in_color, 
-	float2 in_texcoord,
+	float3 in_pos,
+	float4 in_col,
+	float2 in_tex,
 	uniform float4x4 mvp_matrix,
-	out float4 out_position : POSITION, 
-	out float4 out_color : COLOR, 
-	out float2 out_texcoord: TEXCOORD0)
+	out float4 out_pos : POSITION, 
+	out float4 out_col : COLOR, 
+	out float2 out_tex : TEXCOORD0)
 {
-	out_position = mul(mvp_matrix, float4(in_position, 1.0f));
-	out_color    = in_color;
-	out_texcoord = in_texcoord;
+	out_pos = mul(mvp_matrix, float4(in_pos, 1.0f));
+	out_col = in_col;
+	out_tex = in_tex;
 }

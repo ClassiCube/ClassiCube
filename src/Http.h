@@ -34,12 +34,10 @@ struct HttpRequest {
 	int statusCode;           /* HTTP status code returned in the response. */
 	cc_uint32 contentLength;  /* HTTP content length returned in the response. */
 
-	cc_result result; /* 0 on success, otherwise platform-specific error. */
-	cc_uint8*   data; /* Contents of the response. (i.e. result data) */
-	cc_uint32   size; /* Size of the contents. */
+	cc_result result;    /* 0 on success, otherwise platform-specific error. */
+	cc_uint8*   data;    /* Contents of the response. (i.e. result data) */
+	cc_uint32   size;    /* Size of the contents. */
 	cc_uint32 _capacity; /* (private) Maximum size of data buffer */
-	void* meta;          /* Pointer to backend specific data */
-	char* error;         /* Pointer to dynamically allocated error message */
 
 	char lastModified[STRING_SIZE]; /* Time item cached at (if at all) */
 	char etag[STRING_SIZE];         /* ETag of cached item (if any) */

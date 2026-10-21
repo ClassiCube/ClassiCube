@@ -147,6 +147,9 @@ static int sock_read(void* ctx_, unsigned char* buf, size_t len) {
 	cc_result res = Socket_Read(ctx->socket, buf, len, &read);
 	
 	if (res) { ctx->readError = res; return -1; }
+	/* In case socket has been partially closed (i.e. can't be read from anymore) */
+	if (read == 0) { ctx->readError = ERR_END_OF_STREAM; return -1; }
+
 	return read;
 }
 
@@ -229,7 +232,7 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
 	SSLContext* ctx = (SSLContext*)ctx_;
 	int res = br_sslio_write(&ctx->ioc, data, count);
-	if (res < 0) return SSL_GetError(ctx);	
+	if (res < 0) return SSL_GetError(ctx);
 	
 	br_sslio_flush(&ctx->ioc);
 	*sent = res;
@@ -255,7 +258,7 @@ cc_result SSL_Read(void* ctx, cc_uint8* data, cc_uint32 count, cc_uint32* read) 
 	return ERR_NOT_SUPPORTED; 
 }
 
-cc_result SSL_WriteAll(void* ctx, const cc_uint8* data, cc_uint32 count) { 
+cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
 	return ERR_NOT_SUPPORTED; 
 }
 

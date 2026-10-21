@@ -1,3 +1,4 @@
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 #include "_GraphicsBase.h"
@@ -212,7 +213,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gl_indices);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { 
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) { 
 	glCallList(activeList); 
 }
 
@@ -226,46 +227,32 @@ void Gfx_BindTexture(GfxResourceID texId) { setTexture(texId); }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd, gfx_fogDensity;
-static int gfx_fogMode;
-
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
 	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
 }
 
-void Gfx_SetFogCol(PackedCol color) {
+static void SetFogColor(PackedCol color) {
 	float rgba[4];
-	if (color == gfx_fogColor) return;
-
 	rgba[0] = PackedCol_R(color) / 255.0f; 
 	rgba[1] = PackedCol_G(color) / 255.0f;
 	rgba[2] = PackedCol_B(color) / 255.0f; 
 	rgba[3] = PackedCol_A(color) / 255.0f;
 
 	glFogfv(GL_FOG_COLOR, rgba);
-	gfx_fogColor = color;
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (value == gfx_fogDensity) return;
+static void SetFogDensity(float value) {
 	glFogf(GL_FOG_DENSITY, value);
-	gfx_fogDensity = value;
 }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == gfx_fogEnd) return;
+static void SetFogEnd(float value) {
 	glFogf(GL_FOG_END, value);
-	gfx_fogEnd = value;
 }
 
-void Gfx_SetFogMode(FogFunc func) {
+static void SetFogMode(FogFunc func) {
 	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
-	if (func == gfx_fogMode) return;
-
 	glFogi(GL_FOG_MODE, modes[func]);
-	gfx_fogMode = func;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -273,11 +260,9 @@ static void SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 	
-	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
+	if (depthOnly) { glDisable(GL_TEXTURE_2D); } else { glEnable(GL_TEXTURE_2D); }
 }
 
 

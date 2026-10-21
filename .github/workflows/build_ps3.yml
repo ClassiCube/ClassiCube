@@ -18,19 +18,22 @@ jobs:
     container:
       image: ghcr.io/classicube/minimal-psl1ght:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apt-get update
           apt-get install -y curl
 
       - name: Compile PS3 build
+        shell: bash
         run: |
           export PS3DEV=/usr/local/ps3dev
           export PSL1GHT=/usr/local/ps3dev
           export PATH=$PATH:$PS3DEV/bin
           export PATH=$PATH:$PS3DEV/ppu/bin
-          make ps3
+
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make ps3 EXTRA_CFLAGS="$LATEST_FLAG"
 
 
       - uses: ./.github/actions/upload_build

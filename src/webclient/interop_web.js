@@ -625,7 +625,7 @@ mergeInto(LibraryManager.library, {
     ws.onerror = function(error) {
       // The WebSocket spec only allows a 'simple event' to be thrown on error,
       // so we only really know as much as ECONNREFUSED.
-      sock.error = SOCKETS.ECONNREFUSED; // Used by interop_SocketWritable
+      sock.error = SOCKETS.ECONNREFUSED;
     };
     // always "fail" in non-blocking mode
     return SOCKETS.EINPROGRESS;
@@ -709,15 +709,6 @@ mergeInto(LibraryManager.library, {
     if (ws.readyState === ws.OPEN || ws.readyState == ws.CLOSED) HEAPU8[writable|0] = 1;
 
     return 0;
-  },
-  interop_SocketLastError: function(sockFD) {
-    var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
-
-    var ws = sock.socket;
-    if (!ws) return SOCKETS.ENOTCONN;
-
-    return sock.error || 0;
   },
 
 

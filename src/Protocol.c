@@ -435,36 +435,28 @@ static cc_result MapState_Read(struct MapState* m) {
 /*########################################################################################################################*
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
-void Classic_SendLogin(void) {
-	cc_uint8 data[131];
-	data[0] = OPCODE_HANDSHAKE;
-	{
-		data[1]   = Game_Version.Protocol;
-		WriteString(&data[2],  &Game_Username);
-		WriteString(&data[66], &Game_Mppass);
+void Classic_BuildLogin(struct LoginPacket* pkt) {
+	pkt->opcode  = OPCODE_HANDSHAKE;
+	pkt->version = Game_Version.Protocol;
+	WriteString(pkt->user,   &Game_Username);
+	WriteString(pkt->mppass, &Game_Mppass);
 
-		/* The 'user type' field's behaviour depends on protocol version: */
-		/*   version 7 - 0x42 specifies CPE client, any other value is ignored? */
-		/*   version 6 - any value ignored? */
-		/*   version 5 - field doesn't exist */
-		/* Theroetically, this means packet size is 131 bytes for 6/7, 130 bytes for 5 and below. */
-		/* In practice, some version 7 server software always expects to read 131 bytes for handshake packet, */
-		/*  and will get stuck waiting for data if client connects using version 5 and only sends 130 bytes */
-		/* To workaround this, include a 'ping packet' after 'version 5 handshake packet' - version 5 server software */
-		/*  will do nothing with the ping packet, and the aforementioned server software will be happy with 131 bytes */
-		data[130] = Game_Version.HasCPE ? 0x42 : (Game_Version.Protocol <= PROTOCOL_0019 ? OPCODE_PING : 0x00);
-	}
-	Server.SendData(data, 131);
+	/* The 'user type' field's behaviour depends on protocol version: */
+	/*   version 7 - 0x42 specifies CPE client, any other value is ignored? */
+	/*   version 6 - any value ignored? */
+	/*   version 5 - field doesn't exist */
+	/* Theroetically, this means packet size is 131 bytes for 6/7, 130 bytes for 5 and below. */
+	/* In practice, some version 7 server software always expects to read 131 bytes for handshake packet, */
+	/*  and will get stuck waiting for data if client connects using version 5 and only sends 130 bytes */
+	/* To workaround this, include a 'ping packet' after 'version 5 handshake packet' - version 5 server software */
+	/*  will do nothing with the ping packet, and the aforementioned server software will be happy with 131 bytes */
+	pkt->misc = Game_Version.HasCPE ? 0x42 : (Game_Version.Protocol <= PROTOCOL_0019 ? OPCODE_PING : 0x00);
 }
 
-void Classic_SendChat(const cc_string* text, cc_bool partial) {
-	cc_uint8 data[66];
-	data[0] = OPCODE_MESSAGE;
-	{
-		data[1] = Server.SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
-		WriteString(&data[2], text);
-	}
-	Server.SendData(data, 66);
+void Classic_BuildChat(const cc_string* text, cc_bool partial, struct ChatPacket* pkt) {
+	pkt->opcode = OPCODE_MESSAGE;
+	pkt->type   = Server.SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
+	WriteString(pkt->msg, text);
 }
 
 static cc_uint8* Classic_WritePosition(cc_uint8* data, Vec3 pos, float yaw, float pitch) {

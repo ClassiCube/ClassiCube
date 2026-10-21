@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -17,8 +18,11 @@
 #include "gs_gpu.h"
 
 #define QWORD_ALIGNED CC_ALIGNED(16)
+#define CACHELINE_ALIGNED CC_ALIGNED(64)
 
-typedef struct Matrix VU0_matrix QWORD_ALIGNED;
+#define GB_HALF  2048
+#define GB_RANGE 4096
+
 typedef struct Vec4   VU0_vector QWORD_ALIGNED;
 typedef struct { int x, y, z, w; } VU0_IVector QWORD_ALIGNED;
 
@@ -30,22 +34,24 @@ static cc_bool stateDirty, formatDirty;
 static framebuffer_t* fb_draw;
 static framebuffer_t* fb_display;
 
-static VU0_matrix mvp;
-extern void LoadMvpMatrix(VU0_matrix* matrix);
+static struct Matrix mvp;
+extern void LoadMvpMatrix(struct Matrix* matrix);
 extern void LoadClipScaleFactors(VU0_vector* scale);
 extern void LoadViewportOrigin(VU0_vector* origin);
 extern void LoadViewportScale(VU0_vector* scale);
 
-// double buffering
-static qword_t* dma_bufs[2];
+// TODO ucab memory with dcache flush at start?
+// TODO: Find a better way than just increasing this hardcoded size
+static qword_t  dma_bufs[2][50000] CACHELINE_ALIGNED;
 static qword_t* cur_buf;
-static int context;
+static int cur_context;
 
 static qword_t* dma_beg;
 static qword_t* Q;
+#define DRAWCTX_0 0
+#define DRAWCTX_1 1
 
 static GfxResourceID white_square;
-static int primitive_type;
 
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
@@ -63,29 +69,11 @@ static void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
-
-static qword_t* AllocDMABuffer(int qwords) {
-	// TODO ucab memory with Flush at start? need to adjust free too though
-	return memalign(64, qwords * 16);
-}
-
-static void FreeDMABuffer(qword_t* buffer) {
-	// TODO ucab memory with Flush at start? need to adjust free too though
-	free(buffer);
-}
-
-// TODO: Find a better way than just increasing this hardcoded size
-static void InitDMABuffers(void) {
-	dma_bufs[0] = AllocDMABuffer(50000);
-	dma_bufs[1] = AllocDMABuffer(50000);
-}
-
-
 static void UpdateContext(void) {
-	fb_display = &fb_colors[context];
-	fb_draw    = &fb_colors[context ^ 1];
+	fb_display = &fb_colors[cur_context];
+	fb_draw    = &fb_colors[cur_context ^ 1];
 
-	cur_buf = dma_bufs[context];
+	cur_buf = dma_bufs[cur_context];
 	
 	dma_beg = cur_buf;
 	// increment past the dmatag itself
@@ -93,50 +81,162 @@ static void UpdateContext(void) {
 }
 
 
-static void SetTextureWrapping(int context) {
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+/*########################################################################################################################*
+*---------------------------------------------------GIF packet wrappers---------------------------------------------------*
+*#########################################################################################################################*/
+// Writes header for a simple GIF packet consisting of 'qwords' data+address GS primitives
+#define PACK_SIMPLE_HDR(Q, qwords, eop)  \
+	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_PACKED, 1), GIF_REG_AD); Q++;
 
-	PACK_GIFTAG(Q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), 
-					GS_REG_CLAMP + context);
-	Q++;
+// Total number of qwords in a simple GIF packet
+#define COUNT_SIMPLE_PKT(qwords) ((qwords) + 1)
+
+// Writes header for a reglist GIF packet consisting of efficiently packed GS primitives
+#define PACK_REGLIST_HDR(Q, num_loops, eop, regs_per_loop, regs)  \
+	PACK_GIFTAG(Q, GIF_SET_TAG(num_loops,eop, 0,0, GIF_FLG_REGLIST, regs_per_loop), regs); Q++;
+
+// Number of qwords for a reglist GIF packet header
+#define COUNT_REGLIST_HDR 1
+
+// Writes header for an image GIF packet consisting of 'qwords' packed data
+#define PACK_IMAGE_HDR(Q, qwords, eop) \
+	PACK_GIFTAG(Q, GIF_SET_TAG(qwords,eop, 0,0, GIF_FLG_IMAGE, 0), 0); Q++;
+
+// Number of qwords for an image GIF packet header
+#define COUNT_IMAGE_HDR 1
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Misc GS primitives---------------------------------------------------*
+*#########################################################################################################################*/
+#define REGLIST_XYZ_XYZ      (u64)((GIF_REG_XYZ2  << 0) | (GIF_REG_XYZ2 << 4))
+#define REGLIST_RGBAQ_XYZ    (u64)((GIF_REG_RGBAQ << 0) | (GIF_REG_XYZ2 << 4))
+#define REGLIST_RGBAQ_ST_XYZ (u64)((GIF_REG_RGBAQ << 0) | (GIF_REG_ST   << 4) | (GIF_REG_XYZ2 << 8))
+
+static qword_t* GS_SetDepthBuffer(qword_t* q, zbuffer_t* zb, unsigned skipMask) {
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, skipMask), GS_REG_ZBUF); q++;
+	}
+	return q;
 }
 
-static void SetTextureSampling(int context) {
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-
-	// TODO: should mipmapselect (first 0 after MIN_NEAREST) be 1?
-	PACK_GIFTAG(Q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), 
-					GS_REG_TEX1 + context);
-	Q++;
+static qword_t* GS_SetFrameBuffer(qword_t* q, framebuffer_t* fb, unsigned skipMask) {
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, skipMask), GS_REG_FRAME); q++;
+	}
+	return q;
 }
 
-static void SetAlphaBlending(int context) {
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+static qword_t* GS_SetScissor(qword_t* q, int x, int y, int w, int h) {
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		PACK_GIFTAG(q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR); q++;
+	}
+	return q;
+}
 
-	// https://psi-rockin.github.io/ps2tek/#gsalphablending
-	// Output = (((A - B) * C) >> 7) + D
-	//        = (((src - dst) * alpha) >> 7) + dst
-	//        =  (src * alpha - dst * alpha) / 128 + dst
-	//        =  (src * alpha - dst * alpha) / 128 + dst * 128 / 128
-	//        = ((src * alpha + dst * (128 - alpha)) / 128
-	PACK_GIFTAG(Q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
-								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA + context);
-	Q++;
+static qword_t* GS_DrawFinish(qword_t *q) {
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		PACK_GIFTAG(q, 1, GS_REG_FINISH); q++;
+	}
+	return q;
+
+}
+
+static qword_t* GS_SetPrimXYOffset(qword_t *q, int x, int y) {
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		PACK_GIFTAG(q, GS_SET_XYOFFSET((x << 4), (y << 4)), GS_REG_XYOFFSET); q++;
+	}
+	return q;
+}
+
+// NOTE still needed as PRE/PRIM field only work when gif tag is PACKED (see PCSX2 and DobieStation for reference)
+static qword_t* GS_SetPrimMode(qword_t* q, int mode) {
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		PACK_GIFTAG(q, mode, GS_REG_PRIM); q++;
+	}
+	return q;
+}
+
+static qword_t* GS_InitRegisters(qword_t* q, framebuffer_t* fb, zbuffer_t* zb) {
+	PACK_SIMPLE_HDR(q, 12, true)
+	{
+		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, 0), GS_REG_FRAME); q++; // frame buffer
+		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, 0), GS_REG_ZBUF); q++; // depth buffer
+
+		PACK_GIFTAG(q, GS_SET_PRMODECONT(PRIM_OVERRIDE_ENABLE), GS_REG_PRMODECONT); q++;
+		PACK_GIFTAG(q, GS_SET_TEST(
+								DRAW_ENABLE,  ATEST_METHOD_ALLPASS,
+								0x00,         ATEST_KEEP_ALL,
+								DRAW_DISABLE, 0,
+								DRAW_ENABLE,  ZTEST_METHOD_ALLPASS), GS_REG_TEST); q++;
+	
+		// https://psi-rockin.github.io/ps2tek/#gsalphablending
+		// Output = (((A - B) * C) >> 7) + D
+		//        = (((src - dst) * alpha) >> 7) + dst
+		//        =  (src * alpha - dst * alpha) / 128 + dst
+		//        =  (src * alpha - dst * alpha) / 128 + dst * 128 / 128
+		//        = ((src * alpha + dst * (128 - alpha)) / 128
+		PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
+									BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA); q++; // TODO has no effect ??
+	
+		PACK_GIFTAG(q, GS_SET_DTHE(GS_DISABLE), GS_REG_DTHE); q++; // dithering off (no need to set matrix)
+		PACK_GIFTAG(q, GS_SET_COLCLAMP(GS_ENABLE), GS_REG_COLCLAMP); q++; // colour clamping on
+		PACK_GIFTAG(q, GS_SET_FBA(ALPHA_CORRECT_RGBA32), GS_REG_FBA); q++; // NOTE: change to RGBA16 for 16bpp framebuffer
+		PACK_GIFTAG(q, GS_SET_PABE(DRAW_DISABLE), GS_REG_PABE); q++; // per pixel alpha blending
+	
+		// Texture settings
+		PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0,0,0,0), GS_REG_CLAMP); q++;
+		PACK_GIFTAG(q, GS_SET_TEXA(0x80, ALPHA_EXPAND_NORMAL, 0x80), GS_REG_TEXA); q++;
+		// TODO: should mipmapselect (first 0 after MIN_NEAREST) be 1?
+		PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), GS_REG_TEX1); q++;
+	}	
+	return q;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------GPU initialisation--------------------------------------------------*
+*#########################################################################################################################*/
+static void InitGuardband(void) {
+	// PS2 clipping guard band ranges from 0..GB_RANGE
+	// - 0 < screen_x < GB_RANGE
+	// - 0 < VIEWPORT(X/W) + WINDOW_OFFSET_X < GB_RANGE
+	// - 0 < ((X/W) * vp_hwidth + vp_x + vp_hwidth) + (GB_HALF-vp_hwidth) < GB_RANGE
+	// - 0 <  (X/W) * vp_hwidth + vp_x              +  GB_HALF            < GB_RANGE
+	// Although accurately rescaling from viewport range to guard band range
+	//  would involve vp_x and vp_hwidth, this complicates the calculation
+	//  as e.g. a non-zero vp_x means viewport is not equally distant from the
+	//  left and right guardband planes.
+	// So to simplify calculation, just set viewport = screen size for clipping:
+	// - 0 < (X/W) * SCR_HWIDTH + (GB_HALF) < GB_RANGE
+	// - -GB_HALF < (X/W) * SCR_HWIDTH < GB_HALF 
+	// - -GB_HALF/SCR_HWIDTH < (X/W) < GB_HALF/SCR_HWIDTH
+	// - W * -GB_HALF/SCR_HWIDTH < X < W * GB_HALF/SCR_HWIDTH
+	// - -W < X / (GB_HALF/SCR_HWIDTH) < W
+	// - -W < X * (SCR_HWIDTH/GB_HALF) < W
+	// Clipping against guardband instead of view frustum reduces the
+	//   number of triangles that go through the slower 'clipping' codepath
+	VU0_vector clip_scale;
+	clip_scale.x = Game.Width  / 2047.0f;
+	clip_scale.y = Game.Height / 2047.0f;
+	clip_scale.z = 1.0f;
+	clip_scale.w = 1.0f;
+
+	LoadClipScaleFactors(&clip_scale);
 }
 
 static void InitDrawingEnv(void) {
 	qword_t* beg = Q;
-	Q = draw_setup_environment(Q, 0, fb_draw, &fb_depth);
-	// GS can render from 0 to 4096, so set primitive origin to centre of that
-	Q = draw_primitive_xyoffset(Q, 0, 2048 - Game.Width / 2, 2048 - Game.Height / 2);
+	Q = GS_InitRegisters(Q, fb_draw, &fb_depth);
 
-	SetTextureWrapping(0);
-	SetTextureSampling(0);
-	SetAlphaBlending(0); // TODO has no effect ?
-	Q = draw_finish(Q);
+	Q = GS_SetPrimMode(Q, PRIM_TRIANGLE);
+	Q = GS_DrawFinish(Q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF, beg, Q - beg, 0, 0);
 	dma_wait_fast();
@@ -147,21 +247,21 @@ static void InitPalette(void);
 static void InitTextureMem(void);
 
 static void InitGPUState(void) {
-	InitDMABuffers();
 	InitPalette();
 	InitTextureMem();
 }
 
 void Gfx_Create(void) {
-	primitive_type = 0; // PRIM_POINT, which isn't used here
 	if (!Gfx.Created) InitGPUState();
 
-	context = 0;
+	cur_context = 0;
 	UpdateContext();
 	
 	stateDirty  = true;
 	formatDirty = true;
 	InitDrawingEnv();
+	InitGuardband();
+	Gfx_OnWindowResize(Game.Width, Game.Height);
 	
 // TODO maybe Min not actually needed?
 	Gfx.MinTexWidth  = 4;
@@ -173,7 +273,6 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
-	Gfx_RestoreState();
 }
 
 void Gfx_Free(void) { 
@@ -194,12 +293,11 @@ static void FlushMainDMABuffer(void) {
 /*########################################################################################################################*
 *--------------------------------------------------VRAM transfer/memory---------------------------------------------------*
 *#########################################################################################################################*/
-#define ALIGNUP(val, alignment) (((val) + (alignment - 1)) & -alignment)
 static int vram_pointer;
 
 // Returns size in words
 static int VRAM_Size(int width, int height, int psm) {
-	width = ALIGNUP(width, 64);
+	width = CC_ALIGNUP(width, 64);
 
 	switch (psm)
 	{
@@ -237,7 +335,7 @@ int Gfx_VRAM_AllocPaged(int width, int height, int psm) {
 	int addr = vram_pointer;
 
 	// Align to 2048 words / 8192 bytes (VRAM page alignment)
-	vram_pointer += ALIGNUP(size, 2048);
+	vram_pointer += CC_ALIGNUP(size, 2048);
 	return addr;
 }
 
@@ -279,22 +377,24 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 	// https://www.psx-place.com/threads/newlib-porting-challenges.26821/page-2
 
 	// Parameters for RAM -> GS transfer
-	DMATAG_CNT(q, 5, 0,0,0); q++;
+	DMATAG_CNT(q, COUNT_SIMPLE_PKT(4), 0,0,0); q++;
 	{
-		PACK_GIFTAG(q, GIF_SET_TAG(4,0,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
-		PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF); q++;
-		PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0),     GS_REG_TRXPOS); q++;
-		PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG); q++;
-		PACK_GIFTAG(q, GS_SET_TRXDIR(0),             GS_REG_TRXDIR); q++;
+		PACK_SIMPLE_HDR(q, 4, false)
+		{
+			PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, dst_base >> 6, dst_width >> 6, psm), GS_REG_BITBLTBUF); q++;
+			PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0),     GS_REG_TRXPOS); q++;
+			PACK_GIFTAG(q, GS_SET_TRXREG(width, height), GS_REG_TRXREG); q++;
+			PACK_GIFTAG(q, GS_SET_TRXDIR(0),             GS_REG_TRXDIR); q++;
+		}
 	}
 
 	while (qwords)
 	{
 		int num_qwords = min(qwords, GIF_BLOCK_SIZE);
 
-		DMATAG_CNT(q, 1, 0,0,0); q++;
+		DMATAG_CNT(q, COUNT_IMAGE_HDR, 0,0,0); q++;
 		{
-			PACK_GIFTAG(q, GIF_SET_TAG(num_qwords,0,0,0,GIF_FLG_IMAGE,0), 0); q++;
+			PACK_IMAGE_HDR(q, num_qwords, false)
 		}
 
 		DMATAG_REF(q, num_qwords, (unsigned int)src, 0,0,0); q++;
@@ -303,10 +403,13 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 		qwords -= num_qwords;
 	}
 
-	DMATAG_END(q, 2, 0,0,0); q++;
+	// TODO only call for window pixels ??
+	DMATAG_END(q, COUNT_SIMPLE_PKT(1), 0,0,0); q++;
 	{
-		PACK_GIFTAG(q, GIF_SET_TAG(1,1,0,0,GIF_FLG_PACKED,1), GIF_REG_AD); q++;
-		PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
+		PACK_SIMPLE_HDR(q, 1, true)
+		{
+			PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
+		}
 	}
 
 	return q;
@@ -314,14 +417,12 @@ static qword_t* PrepareTransfer(qword_t* q, u8* src, int width, int height, int 
 
 void Gfx_TransferPixels(void* src, int width, int height, 
 						int format, unsigned dst_base, unsigned dst_stride) {
-	qword_t* buf = AllocDMABuffer(200);
-	qword_t* q   = buf;
+	qword_t buf[200] CACHELINE_ALIGNED;
+	qword_t* q = buf;
 
 	q = PrepareTransfer(q, src, width, height, format, dst_base, dst_stride);
 	dma_channel_send_chain(DMA_CHANNEL_GIF, buf, q - buf, 0,0);
 	dma_wait_fast();
-
-	FreeDMABuffer(buf);
 }
 
 
@@ -352,17 +453,32 @@ void Gfx_AllocFramebuffers(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Palettes--------------------------------------------------------*
 *#########################################################################################################################*/
-#define PAL_TOTAL_ENTRIES    2048
 #define MAX_PAL_4BPP_ENTRIES 16
-
-#define PAL_TOTAL_BLOCKS (PAL_TOTAL_ENTRIES / MAX_PAL_4BPP_ENTRIES)
-static cc_uint8 pal_table[PAL_TOTAL_BLOCKS / BLOCKS_PER_PAGE];
-
 static unsigned clut_offset;
-#define PaletteAddr(index) (clut_offset + (index) * 64)
 
 static void InitPalette(void) {
-	clut_offset = Gfx_VRAM_Alloc(PAL_TOTAL_ENTRIES, 1, GS_PSM_32);
+	clut_offset = Gfx_VRAM_AllocPaged(MAX_PAL_4BPP_ENTRIES, 1, GS_PSM_32);
+}
+
+static qword_t* UploadPalette(qword_t* q, BitmapCol* palette) {
+	// psm8, w=16 h=16
+	// psm4, w=8  h=2
+
+	PACK_SIMPLE_HDR(q, 4, false)
+	{
+		PACK_GIFTAG(q, GS_SET_BITBLTBUF(0,0,0, clut_offset >> 6, 64 >> 6, GS_PSM_32), GS_REG_BITBLTBUF); q++;
+		PACK_GIFTAG(q, GS_SET_TRXPOS(0,0,0,0,0), GS_REG_TRXPOS); q++;
+		PACK_GIFTAG(q, GS_SET_TRXREG(8, 2),      GS_REG_TRXREG); q++;
+		PACK_GIFTAG(q, GS_SET_TRXDIR(0),         GS_REG_TRXDIR); q++;
+	}
+
+	// (16 * 4) / 16 = 4 qwords
+	PACK_IMAGE_HDR(q, 4, true)
+	{
+		Mem_Copy(q, palette, MAX_PAL_4BPP_ENTRIES * 4);
+		q += 4;
+	}
+	return q;
 }
 
 static CC_INLINE int FindInPalette(BitmapCol* palette, int pal_count, BitmapCol color) {
@@ -395,13 +511,6 @@ static int CalcPalette(BitmapCol* palette, struct Bitmap* bmp, int rowWidth) {
 		}
 	}
 	return pal_count;
-}
-
-static void ApplyPalette(BitmapCol* palette, int pal_index) {
-	dma_wait_fast();
-	// psm8, w=16 h=16
-	// psm4, w=8  h=2
-	Gfx_TransferPixels(palette, 8, 2, GS_PSM_32, PaletteAddr(pal_index), 64);
 }
 
 
@@ -437,9 +546,10 @@ struct GPUTexture {
 	cc_uint16 base, blocks;      // 4 bytes
 	cc_uint16 log2_w, log2_h;    // 4 bytes
 	cc_uint16 format, pal_index; // 4 bytes
+	BitmapCol palette[MAX_PAL_4BPP_ENTRIES];
 	BitmapCol pixels[]; // must be aligned to 16 bytes
 };
-#define GS_TEXTURE_STRIDE(tex) ALIGNUP((tex)->width, 64)
+#define GS_TEXTURE_STRIDE(tex) CC_ALIGNUP((tex)->width, 64)
 
 static void UploadToVRAM(struct GPUTexture* tex, int dst_addr) {
 	// TODO terrible perf
@@ -484,31 +594,24 @@ static void GPUTexture_Init(struct GPUTexture* tex, struct Bitmap* bmp) {
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	BitmapCol palette[MAX_PAL_4BPP_ENTRIES] QWORD_ALIGNED;
-	int pal_count =  0;
-	int pal_index = -1;
+	int pal_count = 0;
 
 	if (!(flags & TEXTURE_FLAG_DYNAMIC)) {
 		pal_count = CalcPalette(palette, bmp, rowWidth);
-
-		if (pal_count > 0) {
-			pal_index = blockalloc_alloc(pal_table, PAL_TOTAL_BLOCKS, 1);
-		}
-		if (pal_index >= 0) {
-			ApplyPalette(palette, pal_index);
-		}
 	}
 	//Platform_Log4("%i, c%i (%i x %i)", &pal_index, &pal_count, &bmp->width, &bmp->height);
 	
-	if (pal_index >= 0) {
-		struct GPUTexture* tex = memalign(16, 32 + bmp->width * bmp->height);
+	if (pal_count > 0) {
+		struct GPUTexture* tex = memalign(16, sizeof(struct GPUTexture) + bmp->width * bmp->height);
 		if (!tex) return 0;
-		GPUTexture_Init(tex, bmp);
 
-		tex->format    = GS_PSM_4;
-		tex->pal_index = pal_index;
+		GPUTexture_Init(tex, bmp);
+		Mem_Copy(tex->palette, palette, sizeof(palette));
+
+		tex->format = GS_PSM_4;
 		ConvertTexture_Palette((cc_uint8*)tex->pixels, bmp, rowWidth, palette, pal_count);
 
-		int size    = VRAM_Size(tex->width, ALIGNUP(tex->height, 32), GS_PSM_4HH);		
+		int size    = VRAM_Size(tex->width, CC_ALIGNUP(tex->height, 32), GS_PSM_4HH);		
 		// TODO fix properly. alignup instead
 		int blocks  = SIZE_TO_BLOCKS(size, TEXMEM_BLOCK_SIZE);
 		tex->blocks = blocks;
@@ -536,7 +639,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 		}
 		return tex;
 	} else {
-		struct GPUTexture* tex = memalign(16, 32 + bmp->width * bmp->height * 4);
+		struct GPUTexture* tex = memalign(16, sizeof(struct GPUTexture) + bmp->width * bmp->height * 4);
 		if (!tex) return 0;
 		GPUTexture_Init(tex, bmp);
 
@@ -553,22 +656,23 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	}
 }
 
-static void UpdateTextureBuffer(int context, struct GPUTexture* tex, unsigned buf_addr) {
+static unsigned clut_counter;
+static qword_t* UpdateTextureBuffer(qword_t* q, struct GPUTexture* tex, unsigned buf_addr) {
 	unsigned buf_stride = GS_TEXTURE_STRIDE(tex);
 
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
+	PACK_SIMPLE_HDR(q, 2, true)
+	{
+		unsigned clut_addr  = tex->format == GS_PSM_32 ? 0 : clut_offset >> 6;
+		unsigned clut_entry = tex->format == GS_PSM_32 ? 0 : ((clut_counter++) & 0x0F);
+		unsigned clut_mode  = tex->format == GS_PSM_32 ? CLUT_NO_LOAD : CLUT_LOAD;
 
-	unsigned clut_addr  = tex->format == GS_PSM_32 ? 0 : PaletteAddr(tex->pal_index) >> 6;
-	unsigned clut_entry = 0;
-	//unsigned clut_addr  = tex->format == GS_PSM_32 ? 0 : clut_addr >> 6;
-	//unsigned clut_entry = tex->format == GS_PSM_32 ? 0 : tex->pal_index;
-	unsigned clut_mode  = tex->format == GS_PSM_32 ? CLUT_NO_LOAD : CLUT_LOAD;
+		PACK_GIFTAG(q, 1, GS_REG_TEXFLUSH); q++;
 
-	PACK_GIFTAG(Q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
-							   tex->log2_w, tex->log2_h, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
-							   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0 + context);
-	Q++;
+		PACK_GIFTAG(q, GS_SET_TEX0(buf_addr >> 6, buf_stride >> 6, tex->format,
+								   tex->log2_w, tex->log2_h, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
+								   clut_addr, GS_PSM_32, CLUT_STORAGE_MODE1, clut_entry, clut_mode), GS_REG_TEX0); q++;
+	}
+	return q;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -578,12 +682,14 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	int dst_addr = tex_offset;
 	
 	if (tex->format == GS_PSM_4HH || tex->format == GS_PSM_4HL) {
-		// No need to upload to vram
+		// No need to upload whole texture to vram
 		dst_addr = TEXMEM_4BPP_TO_VRAM(tex->base);
+
+		Q = UploadPalette(Q, tex->palette);
 	} else {
 		UploadToVRAM(tex, dst_addr);
 	}
-	UpdateTextureBuffer(0, tex, dst_addr);
+	Q = UpdateTextureBuffer(Q, tex, dst_addr);
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -597,10 +703,6 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 		blockalloc_dealloc(tex_4HL_table, tex->base, tex->blocks);
 	}
 
-	if (tex->format != GS_PSM_32) {
-		blockalloc_dealloc(pal_table, tex->pal_index, 1);
-	}
-
 	Mem_Free(tex);
 	*texId = NULL;
 }
@@ -610,7 +712,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	BitmapCol* dst = (tex->pixels + x) + y * tex->width;
 
 	CopyPixels(dst,        tex->width * BITMAPCOLOR_SIZE, 
-			  part->scan0, rowWidth  * BITMAPCOLOR_SIZE,
+			  part->scan0, rowWidth   * BITMAPCOLOR_SIZE,
 			  part->width, part->height);
 }
 
@@ -622,41 +724,40 @@ void Gfx_DisableMipmaps(void) { }
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
 static int clearR, clearG, clearB;
-static cc_bool gfx_depthTest;
 
-void Gfx_SetFog(cc_bool enabled)    { }
-void Gfx_SetFogCol(PackedCol col)   { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value)     { }
-void Gfx_SetFogMode(FogFunc func)   { }
+void Gfx_SetFog(cc_bool enabled)         { }
+static void SetFogColor(PackedCol color) { } // TODO PACK_GIFTAG(q, GS_SET_FOGCOL(0,0,0), GS_REG_FOGCOL);
+static void SetFogDensity(float value)   { }
+static void SetFogEnd(float value)       { }
+static void SetFogMode(FogFunc func)     { }
 
-static void UpdateState(int context) {
+static qword_t* UpdateState(qword_t* q) {
 	// TODO: toggle Enable instead of method ?
 	int aMethod = gfx_alphaTest ? ATEST_METHOD_GREATER_EQUAL : ATEST_METHOD_ALLPASS;
 	int zMethod = gfx_depthTest ? ZTEST_METHOD_GREATER_EQUAL : ZTEST_METHOD_ALLPASS;
 	
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-	// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
-	PACK_GIFTAG(Q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
-							   DRAW_DISABLE, DRAW_DISABLE,
-							   DRAW_ENABLE,  zMethod), GS_REG_TEST + context);
-	Q++;
-	
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		// NOTE: Reference value is 0x40 instead of 0x80, since alpha values are halved compared to normal
+		PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x40, ATEST_KEEP_ALL,
+								   DRAW_DISABLE, DRAW_DISABLE,
+								   DRAW_ENABLE,  zMethod), GS_REG_TEST); q++;
+	}
 	stateDirty = false;
+	return q;
 }
 
-static void UpdateFormat(int context) {
+static qword_t* UpdateFormat(qword_t* q) {
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-	PACK_GIFTAG(Q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
-							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
-							  context, PRIM_UNFIXED), GS_REG_PRIM);
-	Q++;
-	
+	PACK_SIMPLE_HDR(q, 1, true)
+	{
+		PACK_GIFTAG(q, GS_SET_PRMODE(PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
+								  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
+								  DRAWCTX_0, PRIM_UNFIXED), GS_REG_PRMODE);	q++;
+	}
 	formatDirty = false;
+	return q;
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -673,14 +774,58 @@ static void SetAlphaBlend(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
+// Second drawing context is used just for clearing framebuffer
+// (that way scissor region always covers whole screen)
+static qword_t* ClearBuffers(qword_t *q, framebuffer_t* fb, zbuffer_t* zb) {
+	int w = fb->width;
+	int h = fb->height;
+	union IntAndFloat Q; Q.f = 1.0f;
+
+	PACK_SIMPLE_HDR(q, 8, false)
+	{
+		PACK_GIFTAG(q, PRIM_SPRITE, GS_REG_PRIM); q++;
+
+		PACK_GIFTAG(q, GS_SET_ZBUF(zb->address >> 11, zb->zsm, 0), GS_REG_ZBUF     + DRAWCTX_1); q++;
+		PACK_GIFTAG(q, GS_SET_FRAME(fb->address >> 11, fb->width >> 6, fb->psm, 0), 
+																   GS_REG_FRAME    + DRAWCTX_1); q++;
+		PACK_GIFTAG(q, GS_SET_SCISSOR(0, w-1, 0,h-1),              GS_REG_SCISSOR  + DRAWCTX_1); q++;
+		PACK_GIFTAG(q, GS_SET_XYOFFSET(0, 0),                      GS_REG_XYOFFSET + DRAWCTX_1); q++;
+		PACK_GIFTAG(q, GS_SET_TEST(
+								DRAW_ENABLE,  ATEST_METHOD_ALLPASS,
+								0x00,         ATEST_KEEP_ALL,
+								DRAW_DISABLE, 0,
+								DRAW_ENABLE,  ZTEST_METHOD_ALLPASS), GS_REG_TEST   + DRAWCTX_1); q++;
+
+		PACK_GIFTAG(q, GS_SET_PRMODE(0,0,0,0,0,0,DRAWCTX_1,1),        GS_REG_PRMODE); q++;
+		PACK_GIFTAG(q, GS_SET_RGBAQ(clearR,clearG,clearB, 0x80, Q.u), GIF_REG_RGBAQ); q++;
+	}
+
+	int x  = 0;
+	int y0 = 0;
+	int y1 = ftoi4(h); 
+
+	// Write one horizontal GS page strip at a time
+	#define STRIP_WIDTH  64
+	#define STRIP_EXTENT ftoi4(63.75f)
+
+	int strips = (w + STRIP_WIDTH - 1) / STRIP_WIDTH;	
+	PACK_REGLIST_HDR(q, strips, true, 2, REGLIST_XYZ_XYZ)
+
+	for (int i = 0; i < strips; i++, x += ftoi4(STRIP_WIDTH))
+	{
+		q->dw[0] = GIF_SET_XYZ(x,                y0, 0);
+		q->dw[1] = GIF_SET_XYZ(x + STRIP_EXTENT, y1, 0);
+		q++;
+	}
+	return q;
+}
+
 void Gfx_ClearBuffers(GfxBuffers buffers) {
 	// TODO clear only some buffers
-	Q = draw_disable_tests(Q, 0, &fb_depth);
-	Q = draw_clear(Q, 0, 2048.0f - fb_colors[0].width / 2.0f, 2048.0f - fb_colors[0].height / 2.0f,
-					fb_colors[0].width, fb_colors[0].height, clearR, clearG, clearB);
+	Q = ClearBuffers(Q, fb_draw, &fb_depth);
 
-	UpdateState(0);
-	UpdateFormat(0);
+	Q = GS_SetPrimMode(Q, PRIM_TRIANGLE);
+	Q = UpdateFormat(Q);
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -689,15 +834,13 @@ void Gfx_ClearColor(PackedCol color) {
 	clearB = PackedCol_B(color);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	gfx_depthTest = enabled;
-	stateDirty    = true;
+static void SetDepthTest(cc_bool enabled) {
+	stateDirty = true;
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	fb_depth.mask = !enabled;
-	Q = draw_zbuffer(Q, 0, &fb_depth);
-	fb_depth.mask = 0;
+static void SetDepthWrite(cc_bool enabled) {
+	unsigned mask = !enabled;
+	Q = GS_SetDepthBuffer(Q, &fb_depth, mask);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -707,15 +850,11 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	if (!b) mask |= 0x00FF0000;
 	if (!a) mask |= 0xFF000000;
 
-	fb_draw->mask = mask;
-	Q = draw_framebuffer(Q, 0, fb_draw);
-	fb_draw->mask = 0;
+	Q = GS_SetFrameBuffer(Q, fb_draw, mask);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -822,6 +961,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
+
 	Matrix_Mul(mvp, view, proj);
 }
 
@@ -896,12 +1036,12 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 extern u64* DrawTexturedQuad(void* src, u64* dst, VU0_vector* tmp);
 extern u64* DrawColouredQuad(void* src, u64* dst, VU0_vector* tmp);
 
-static void DrawTexturedTriangles(int verticesCount, int startVertex) {
+static qword_t* DrawTexturedTriangles(qword_t* q, int verticesCount, int startVertex) {
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
-	qword_t* base = Q;
-	Q++; // skip over GIF tag (will be filled in later)
+	qword_t* base = q;
+	q += COUNT_REGLIST_HDR; // skip over GIF tag (will be filled in later)
 
-	u64* dw  = (u64*)Q;
+	u64* dw  = (u64*)q;
 	u64* beg = dw;
 	VU0_vector tmp[6];
 
@@ -911,24 +1051,22 @@ static void DrawTexturedTriangles(int verticesCount, int startVertex) {
 	}
 
 	unsigned numVerts = (unsigned)(dw - beg) / 3;
-	if (numVerts == 0) {
-		Q--; // No GIF tag was added
-	} else {
-		if (numVerts & 1) dw++; // one more to even out number of doublewords
-		Q = (qword_t*)dw;
+	if (numVerts == 0) return base; // No vertices
+	if (numVerts & 1) dw++; // one more to even out number of doublewords
 
-		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
-		// 2 registers per GIF "primitive" (colour, position)
-		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1,0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
-	}
+	// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
+	// 3 registers per GIF "primitive" (colour, texture, position)
+	PACK_REGLIST_HDR(base, numVerts, true, 3, REGLIST_RGBAQ_ST_XYZ)
+
+	return (qword_t*)dw;
 }
 
-static void DrawColouredTriangles(int verticesCount, int startVertex) {
+static qword_t* DrawColouredTriangles(qword_t* q, int verticesCount, int startVertex) {
 	struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex;
-	qword_t* base = Q;
-	Q++; // skip over GIF tag (will be filled in later)
+	qword_t* base = q;
+	q += COUNT_REGLIST_HDR; // skip over GIF tag (will be filled in later)
 
-	u64* dw  = (u64*)Q;
+	u64* dw  = (u64*)q;
 	u64* beg = dw;
 	VU0_vector tmp[6];
 
@@ -938,20 +1076,18 @@ static void DrawColouredTriangles(int verticesCount, int startVertex) {
 	}
 
 	unsigned numVerts = (unsigned)(dw - beg) / 2;
-	if (numVerts == 0) {
-		Q--; // No GIF tag was added
-	} else {
-		Q = (qword_t*)dw;
+	if (numVerts == 0) return base; // No vertices
 
-		// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
-		// 2 registers per GIF "primitive" (colour, texture, position)
-		PACK_GIFTAG(base, GIF_SET_TAG(numVerts, 1,0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
-	}
+	// Fill GIF tag in now that know number of GIF "primitives" (aka vertices)
+	// 2 registers per GIF "primitive" (colour, position)
+	PACK_REGLIST_HDR(base, numVerts, true, 2, REGLIST_RGBAQ_XYZ)
+
+	return (qword_t*)dw;
 }
 
 static void DrawTriangles(int verticesCount, int startVertex) {
-	if (stateDirty)  UpdateState(0);
-	if (formatDirty) UpdateFormat(0);
+	if (stateDirty)  Q = UpdateState(Q);
+	if (formatDirty) Q = UpdateFormat(Q);
 
 	if ((Q - cur_buf) > 40000) {
 		FlushMainDMABuffer();
@@ -964,44 +1100,27 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 		int count = min(32000, verticesCount);
 
 		if (gfx_format == VERTEX_FORMAT_COLOURED) {
-			DrawColouredTriangles(count, startVertex);
+			Q = DrawColouredTriangles(Q, count, startVertex);
 		} else {
-			DrawTexturedTriangles(count, startVertex);
+			Q = DrawTexturedTriangles(Q, count, startVertex);
 		}
 		verticesCount -= count; startVertex += count;
 	}
 }
 
-// TODO: Can this be used? need to understand EOP more
-static void SetPrimitiveType(int type) {
-	if (primitive_type == type) return;
-	primitive_type = type;
-	
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-	PACK_GIFTAG(Q, GS_SET_PRIM(type, PRIM_SHADE_GOURAUD, DRAW_DISABLE, DRAW_DISABLE,
-							  DRAW_DISABLE, DRAW_DISABLE, PRIM_MAP_ST,
-							  0, PRIM_UNFIXED), GS_REG_PRIM);
-	Q++;
-}
-
 void Gfx_DrawVb_Lines(int verticesCount) {
-	//SetPrimitiveType(PRIM_LINE);
 } /* TODO */
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	//SetPrimitiveType(PRIM_TRIANGLE);
 	DrawTriangles(verticesCount, startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	//SetPrimitiveType(PRIM_TRIANGLE);
 	DrawTriangles(verticesCount, 0);
 	// TODO
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	//SetPrimitiveType(PRIM_TRIANGLE);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	DrawTriangles(verticesCount, startVertex);
 	// TODO
 }
@@ -1023,7 +1142,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_EndFrame(void) {
 	//Platform_LogConst("--- EF1 ---");
-	Q = draw_finish(Q);
+	Q = GS_DrawFinish(Q);
 	
 	FlushMainDMABuffer();
 	//Platform_LogConst("--- EF2 ---");
@@ -1032,11 +1151,11 @@ void Gfx_EndFrame(void) {
 	//Platform_LogConst("--- EF3 ---");
 	if (gfx_vsync) GS_wait_vsync();
 	
-	context ^= 1;
+	cur_context ^= 1;
 	UpdateContext();
 
 	// Double buffering
-	Q = draw_framebuffer(Q, 0, fb_draw);
+	Q = GS_SetFrameBuffer(Q, fb_draw, 0);
 	graph_set_framebuffer_filtered(fb_display->address,
                                    fb_display->width,
                                    fb_display->psm, 0, 0);
@@ -1047,59 +1166,44 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_OnWindowResize(void) {
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
-	Gfx_SetScissor( 0, 0, Game.Width, Game.Height);
+void Gfx_OnWindowResize(int width, int height) {
+	Gfx_SetViewport(0, 0, width, height);
+	Gfx_SetScissor( 0, 0, width, height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	VU0_vector clip_scale;
+	// PS2 X/Y guard band ranges from 0..GB_RANGE
+	// To minimise need to clip, centre the viewport around (GB_RANGE/2, GB_RANGE/2)
 	unsigned int maxZ = 0xFFFF;
 
-	vp_origin.x =  ftoi4(2048 - (x / 2));
-	vp_origin.y = -ftoi4(2048 - (y / 2));
+	vp_origin.x =  ftoi4(GB_HALF + x);
+	vp_origin.y =  ftoi4(GB_HALF + y);
 	vp_origin.z =  maxZ / 2.0f;
 	LoadViewportOrigin(&vp_origin);
 
-	vp_scale.x =  16 * (w / 2);
-	vp_scale.y = -16 * (h / 2);
+	vp_scale.x =  ftoi4(w / 2);
+	vp_scale.y = -ftoi4(h / 2);
 	vp_scale.z =  maxZ / 2.0f;
 	LoadViewportScale(&vp_scale);
 
-	float hwidth  = w / 2;
-	float hheight = h / 2;
-	// The code below clips to the viewport clip planes
-	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
-	//  However the guard band itself ranges from 0 to 4096
-	// To reduce need to clip, clip against guard band on X/Y axes instead
-	/*return
-		xAdj  >= -pos.w && xAdj  <= pos.w &&
-		yAdj  >= -pos.w && yAdj  <= pos.w &&
-		pos.z >= -pos.w && pos.z <= pos.w;*/	
-		
-	// Rescale clip planes to guard band extent:
-	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
-	//              X/W <= 1
-	//              X   <= W
-	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
-	//              X/W <= 2048 / vp_hwidth
-	//              X * vp_hwidth / 2048 <= W
-	
-	clip_scale.x = hwidth  / 2048.0f;
-	clip_scale.y = hheight / 2048.0f;
-	clip_scale.z = 1.0f;
-	clip_scale.w = 1.0f;
-	
-	LoadClipScaleFactors(&clip_scale);
+	// Afterwards, subtract the viewport centre so coordinates end up in 0..SCR_WIDTH/HEIGHT
+	int ox = GB_HALF - (w / 2);
+	int oy = GB_HALF - (h / 2);
+	Q = GS_SetPrimXYOffset(Q, ox, oy);
+
+	// So e.g. for X coordinates:
+	// - [-1, 1] (visible coordinate range)
+	// - [-1, 1] * w/2 + (GB_HALF + x) (viewport transform)
+	// - [-1, 1] * w/2 + (GB_HALF + x) - (GB_HALF - w/2) (viewport transform then screen offset)
+	// - [-1, 1] * w/2 + GB_HALF + x - GB_HALF + w/2 (simplification #1)
+	// - [-1, 1] * w/2 + x + w/2 (simplification #2)
+	// - [-w/2, w/2] + x + w/2 (simplification #3)
+	// - [-w/2+x+w/2, w/2+x+w/2] (simplification #4)
+	// - [x, x+w] (simplification #5)
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {
-	int context = 0;
-	
-	PACK_GIFTAG(Q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	Q++;
-	PACK_GIFTAG(Q, GS_SET_SCISSOR(x, x+w-1, y,y+h-1), GS_REG_SCISSOR + context);
-	Q++;
+	Q = GS_SetScissor(Q, x, y, w, h);
 }
 
 void Gfx_GetApiInfo(cc_string* info) {

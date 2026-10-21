@@ -131,8 +131,8 @@ typedef cc_result (*Zip_ProcessEntry)(const cc_string* path, struct Stream* data
 /* NOTE: returning false entirely skips the entry (avoids pointless seek to entry) */
 typedef cc_bool (*Zip_SelectEntry)(const cc_string* path);
 
-cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor,
-						struct ZipEntry* entries, int maxEntries);
+CC_API cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor,
+								struct ZipEntry* entries, int maxEntries);
 
 CC_END_HEADER
 #endif

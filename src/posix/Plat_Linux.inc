@@ -138,3 +138,4 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	#error "Unknown CPU architecture"
 #endif
 }
+

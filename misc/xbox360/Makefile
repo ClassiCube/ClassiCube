@@ -8,82 +8,51 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-# Name of the final output
-TARGET		:=	ClassiCube-xbox360
-# Directory where object files are placed
-BUILD_DIR	:=	build/xbox360
-# List of directories containing source code
-SOURCE_DIRS	:=	src src/xbox360 third_party/bearssl
+TARGET		:= ClassiCube-xbox360
+BUILD_DIR	:= build/xbox360
+SOURCE_DIRS	:= src src/xbox360 third_party/bearssl
+RUN_PROGRAM	?= xenon
 
-
-#---------------------------------------------------------------------------------
-# Compilable files
-#---------------------------------------------------------------------------------
-S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
-C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
+default: $(TARGET).elf32
 
 
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-MACHDEP = -DXENON -m32 -maltivec -fno-pic -mpowerpc64 -mhard-float -L$(DEVKITXENON)/xenon/lib/32
-LDSCRIPT = $(DEVKITXENON)/app.lds
+MACHDEP := -DXENON -m32 -maltivec -fno-pic -mpowerpc64 -mhard-float
 
-CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-LDFLAGS	= -g $(MACHDEP) -Wl,--gc-sections
-LIBS	= -lxenon -lm -lfat
+CFLAGS	:= -g -O2 -Wall $(MACHDEP) \
+			-I$(DEVKITXENON)/usr/include
 
-CFLAGS  += -I$(DEVKITXENON)/usr/include
-LDFLAGS += -L$(DEVKITXENON)/usr/lib
+LDFLAGS	:= -g $(MACHDEP) -Wl,--gc-sections \
+			-L$(DEVKITXENON)/usr/lib \
+			-L$(DEVKITXENON)/xenon/lib/32 \
+			-n -T $(DEVKITXENON)/app.lds
+LIBS	:= -lxenon -lm -lfat
 
 
 #---------------------------------------------------------------------------------
-# Main targets
+# Tools
 #---------------------------------------------------------------------------------
-default: $(BUILD_DIR) $(TARGET).elf32
-
-clean:
-	rm -f $(TARGET).elf $(TARGET).elf32 $(OBJS) $(DEPFILES)
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+CC 		:= $(DEVKITXENON)/bin/xenon-gcc
+OBJCOPY	:= $(DEVKITXENON)/bin/xenon-objcopy
+STRIP	:= $(DEVKITXENON)/bin/xenon-strip
+LINK	:= $(CC)
 
 
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).elf: $(OBJS)
-	xenon-gcc $^ $(LDFLAGS) $(LIBS) -n -T $(LDSCRIPT) -o $@
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).elf32
+include misc/makefiles/common_build.mk
 
 $(TARGET).elf32: $(TARGET).elf
-	xenon-objcopy -O elf32-powerpc --adjust-vma 0x80000000 $< $@
-	xenon-strip $@
+	$(OBJCOPY) -O elf32-powerpc --adjust-vma 0x80000000 $< $@
+	$(STRIP) $@
 
 
 #---------------------------------------------------------------------------------
-# Object generation
+# common targets
 #---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o: src/%.c
-	xenon-gcc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: src/xbox360/%.c
-	xenon-gcc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: src/xbox360/%.S
-	xenon-gcc $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: third_party/bearssl/%.c
-	xenon-gcc $(CFLAGS) -c $< -o $@
-
-
-#---------------------------------------------------------------------------------
-# Dependency tracking
-#---------------------------------------------------------------------------------
-$(DEPFILES):
-
-include $(wildcard $(DEPFILES))
+include misc/makefiles/common_targets.mk

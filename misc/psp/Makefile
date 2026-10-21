@@ -11,109 +11,71 @@ PSPSDK=$(PSPDEV)/psp/sdk
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-# Name of the final output
-TARGET 			= ClassiCube-psp
-# List of directories containing source code
-SOURCE_DIRS		= src src/psp third_party/bearssl
-# Directory where object files are placed
-BUILD_DIR		= build/psp
+TARGET 		:= ClassiCube-psp
+SOURCE_DIRS	:= src src/psp third_party/bearssl
+BUILD_DIR	:= build/psp
+RUN_PROGRAM	?= ppsspp
 
-SFO_TITLE  = ClassiCube
-SFO_DISCID = CUBE02000
+SFO_TITLE  := ClassiCube
+SFO_DISCID := CUBE02000
 
-PSP_EBOOT_ICON	 = misc/psp/ICON0.png
-PSP_EBOOT_SFO    = PARAM.SFO
-PSP_EBOOT_ICON1  = NULL
-PSP_EBOOT_UNKPNG = NULL
-PSP_EBOOT_PIC1   = NULL
-PSP_EBOOT_SND0   = NULL
-PSP_EBOOT_PSAR   = NULL
-PSP_EBOOT        = EBOOT.PBP
+EBOOT_ICON	 := misc/psp/ICON0.png
+EBOOT_ICON1  := NULL
+EBOOT_UNKPNG := NULL
+EBOOT_PIC1   := NULL
+EBOOT_SND0   := NULL
+EBOOT_PSAR   := NULL
+
+PARAM_SFO    := $(BUILD_DIR)/param.sfo
+EBOOT_PBP    := EBOOT.PBP
+
+default: $(EBOOT_PBP)
 
 
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
-C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-
-CFLAGS   := -I$(PSPSDK)/include -g -O1 -fno-math-errno -D_PSP_FW_VERSION=600 -DPLAT_PSP
-ASFLAGS  := -I$(PSPSDK)/include -g
+CFLAGS   := -I$(PSPSDK)/include -g -O2 -fno-math-errno -D_PSP_FW_VERSION=600 -DPLAT_PSP
 
 LDFLAGS  := -L$(PSPSDK)/lib -specs=$(PSPSDK)/lib/prxspecs -Wl,-q,-T$(PSPSDK)/lib/linkfile.prx -Wl,-zmax-page-size=128
 LIBS 	 := -lm -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspnet -lpspnet_apctl
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
 
 
 #---------------------------------------------------------------------------------
 # Compiler tools
 #---------------------------------------------------------------------------------
-CC       = $(PSPDEV)/bin/psp-gcc
-AS       = $(PSPDEV)/bin/psp-gcc
-LD       = $(PSPDEV)/bin/psp-gcc
-MKSFO    = $(PSPDEV)/bin/mksfoex
-PACK_PBP = $(PSPDEV)/bin/pack-pbp
-FIXUP    = $(PSPDEV)/bin/psp-fixup-imports
-PRXGEN   = $(PSPDEV)/bin/psp-prxgen
+CC       := $(PSPDEV)/bin/psp-gcc
+LINK     := $(CC)
+
+MKSFOEX  := $(PSPDEV)/bin/mksfoex
+PACK_PBP := $(PSPDEV)/bin/pack-pbp
+FIXUP    := $(PSPDEV)/bin/psp-fixup-imports
+PRXGEN   := $(PSPDEV)/bin/psp-prxgen
 
 
 #---------------------------------------------------------------------------------
-# main targets
+# Executable generation
 #---------------------------------------------------------------------------------
-all: $(BUILD_DIR) $(PSP_EBOOT)
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-clean: 
-	-rm -f $(TARGET).prx $(TARGET)-fixed.elf $(TARGET).elf $(OBJS) $(PSP_EBOOT_SFO) $(PSP_EBOOT)
-
-
-#---------------------------------------------------------------------------------
-# executable generation
-#---------------------------------------------------------------------------------
-$(TARGET).elf: $(OBJS)
-	$(LD) $^ $(LDFLAGS) $(LIBS) -o $@
+OEXT		:= .elf
+GEN_FILES 	:= $(EBOOT_PBP) $(PARAM_SFO) $(TARGET).prx $(TARGET)-fixed.elf
+include misc/makefiles/common_build.mk
 
 $(TARGET)-fixed.elf: $(TARGET).elf
-	cp $< $@
-	$(FIXUP) $@
+	$(FIXUP) -o $@ $<
 
 $(TARGET).prx: $(TARGET)-fixed.elf
 	$(PRXGEN) $< $@
 
-$(PSP_EBOOT_SFO): 
-	$(MKSFO) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $@
+$(PARAM_SFO): 
+	$(MKSFOEX) -d MEMSIZE=1 -s DISC_ID="$(SFO_DISCID)" '$(SFO_TITLE)' $@
 
-$(PSP_EBOOT): $(TARGET).prx $(PSP_EBOOT_SFO)
-	$(PACK_PBP) $(PSP_EBOOT) $(PSP_EBOOT_SFO) $(PSP_EBOOT_ICON)  \
-		$(PSP_EBOOT_ICON1) $(PSP_EBOOT_UNKPNG) $(PSP_EBOOT_PIC1)  \
-		$(PSP_EBOOT_SND0)  $(TARGET).prx $(PSP_EBOOT_PSAR)
-
-
-#---------------------------------------------------------------------------------
-# object generation
-#---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o : src/%.c
-	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o : src/psp/%.c
-	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o : src/psp/%.S
-	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-	
-$(BUILD_DIR)/%.o : third_party/bearssl/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(EBOOT_PBP): $(TARGET).prx $(PARAM_SFO)
+	$(PACK_PBP) $@ $(PARAM_SFO) $(EBOOT_ICON) \
+		$(EBOOT_ICON1) $(EBOOT_UNKPNG) $(EBOOT_PIC1) \
+		$(EBOOT_SND0)  $(TARGET).prx $(EBOOT_PSAR)
 
 
 #---------------------------------------------------------------------------------
-# Dependency tracking
+# common targets
 #---------------------------------------------------------------------------------
-$(DEPFILES):
-
-include $(wildcard $(DEPFILES))
+include misc/makefiles/common_targets.mk

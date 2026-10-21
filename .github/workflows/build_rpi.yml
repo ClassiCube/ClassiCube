@@ -21,31 +21,36 @@ jobs:
     container:
       image: dockcross/linux-armv6-lts
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Retrieve OpenGL and X11 dev files
         run: |
-          mkdir rpi
-          cd rpi
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/rpi32.zip
-          unzip rpi32.zip
+          unzip rpi32.zip -d rpi_files
 
       - name: Compile RPI 32 bit build
-        env: 
-          LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
-          SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
-          RPI32_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+        shell: bash
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
-          
-          $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI32_FLAGS }} $LATEST_FLAG -o cc-rpi32 ${{ env.LIBS }}
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+
+          COMMON_CFLAGS="-I rpi_files/include -fno-stack-protector $LATEST_FLAG"
+          COMMON_LDFLAGS="-s -L rpi_files/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+
+          make rpi dist RELEASE=1 TARGET=cc-rpi32 \
+                EXTRA_CFLAGS="$COMMON_CFLAGS" \
+                EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
           
       - uses: ./.github/actions/upload_build
         with:
           SOURCE_FILE: 'cc-rpi32'
           DEST_NAME: 'cc-rpi32'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-rpi32.tar.gz'
+          DEST_NAME: 'ClassiCube-rpi32.tar.gz'
           
           
       - uses: ./.github/actions/notify_success
@@ -70,31 +75,36 @@ jobs:
     container:
       image: dockcross/linux-arm64-lts
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Retrieve OpenGL and X11 dev files
         run: |
-          mkdir rpi
-          cd rpi
           wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/rpi64.zip
-          unzip rpi64.zip     
+          unzip rpi64.zip -d rpi_files
 
       - name: Compile RPI 64 bit build
-        env: 
-          LIBS: "-lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt"
-          SRCS: "src/*.c third_party/bearssl/*.c"
-          FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn -Werror -fvisibility=hidden -rdynamic"
-          RPI64_FLAGS: "-DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+        shell: bash
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
-          
-          $CC ${{ env.SRCS }} ${{ env.FLAGS }} ${{ env.RPI64_FLAGS }} $LATEST_FLAG -o cc-rpi64 ${{ env.LIBS }}
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+
+          COMMON_CFLAGS="-I rpi_files/include -fno-stack-protector $LATEST_FLAG"
+          COMMON_LDFLAGS="-s -L rpi_files/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
+
+          make rpi dist RELEASE=1 TARGET=cc-rpi64 \
+                EXTRA_CFLAGS="$COMMON_CFLAGS" \
+                EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
           
       - uses: ./.github/actions/upload_build
         with:
           SOURCE_FILE: 'cc-rpi64'
           DEST_NAME: 'cc-rpi64'
+
+      
+      - uses: ./.github/actions/upload_build
+        with:
+          SOURCE_FILE: 'cc-rpi64.tar.gz'
+          DEST_NAME: 'ClassiCube-rpi64.tar.gz'
           
           
       - uses: ./.github/actions/notify_success

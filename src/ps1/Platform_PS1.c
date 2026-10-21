@@ -3,6 +3,8 @@
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -33,10 +35,6 @@ const cc_result ReturnCode_FileNotFound       = 99999;
 const cc_result ReturnCode_PathNotFound       = 99999;
 const cc_result ReturnCode_DirectoryExists    = 99999;
 
-const cc_result ReturnCode_SocketInProgess  = -1;
-const cc_result ReturnCode_SocketWouldBlock = -1;
-const cc_result ReturnCode_SocketDropped    = -1;
-
 const char* Platform_AppNameSuffix  = " PS1";
 cc_bool Platform_ReadonlyFilesystem = true;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
@@ -48,7 +46,16 @@ cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 *#########################################################################################################################*/
 #include "../main_impl.h"
 
+#define RAM_END      0x80200000 // 2 MB of RAM
+#define STACK_SIZE   (64 * 1024) // TODO or use CC_BUILD_MAXSTACK to 16kb ???
+#define RAM_HEAP_END (RAM_END - STACK_SIZE)
+extern uint8_t _end[];
+
 int main(int argc, char** argv) {
+	size_t heap_size = (void*)RAM_HEAP_END - (void *)_end;
+	InitHeap((void *)_end + 4, heap_size);
+	Platform_Log1("Memheap size: %i bytes", &heap_size);
+
 	SetupProgram(argc, argv);
 	while (Window_Main.Exists) { 
 		RunProgram(argc, argv);
@@ -76,16 +83,6 @@ TimeMS DateTime_CurrentUTC(void) {
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
 	Mem_Set(t, 0, sizeof(struct cc_datetime));
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -213,11 +210,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { _boot(); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -229,9 +221,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return GetGameArgs(args);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

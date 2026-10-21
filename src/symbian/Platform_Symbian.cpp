@@ -160,7 +160,12 @@ void CrashHandler_Install(void) {
 #endif
 }
 
+void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
+	// TODO Register dumping not implemented
+}
+
 void Process_Abort2(cc_result result, const char* raw_msg) {
+	crashed = true;
 	Logger_DoAbort(result, raw_msg, NULL);
 }
 
@@ -522,26 +527,33 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 }
 #endif
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
 	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 
-	if (nonblocking) {
-		int res = fcntl(*s, F_GETFL, 0);
-		if (res < 0) return errno;
-		
-		res = fcntl(*s, F_SETFL, res | O_NONBLOCK);
-		if (res < 0) return errno;
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = connect(s, raw, addr->size);
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int res = fcntl(s, F_GETFL, 0), flags;
+	if (res < 0) return errno;
+
+	flags = res & ~O_NONBLOCK;
+	if (nonblocking) flags |= O_NONBLOCK;
+
+	res = fcntl(s, F_SETFL, flags);
+	return res < 0 ? errno : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	shutdown(s, SHUT_RDWR);
+	close(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (struct sockaddr*)addr, addrSize);
 	return res == -1 ? errno : 0;
 }
 
@@ -555,11 +567,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return errno;
-}
-
-void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
@@ -581,15 +588,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 
 	if (selectCount == -1) { *success = false; return errno; }
 	*success = FD_ISSET(s, &set) != 0; return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
 }
 
 
@@ -691,10 +689,8 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return GetGameArgs(args);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	// Directory is already set by platform: !:/private/e212a5c2
-	return 0;
-}
+// Directory is already set by platform: !:/private/e212a5c2
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 void Platform_ShareScreenshot(const cc_string* filename) {
 	

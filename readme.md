@@ -1,4 +1,7 @@
 ClassiCube is a custom Minecraft Classic compatible client written in C from scratch.<br>
+
+You can **download ClassiCube** [here](https://www.classicube.net/download/) and the very latest builds [here](https://www.classicube.net/nightlies/).
+
 > [!IMPORTANT]
 **ClassiCube is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.** <br><br>
 **ClassiCube is not trying to replicate modern Minecraft.**<br>
@@ -19,8 +22,6 @@ ClassiCube aims to replicate the 2009 Minecraft Classic client while offering **
 * Although in various stages of early development, also runs on various consoles
 
 </details>
-
-You can **download ClassiCube** [here](https://www.classicube.net/download/) and the very latest builds [here](https://www.classicube.net/nightlies/).
 
 ![classic](https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0)
 
@@ -51,7 +52,7 @@ The most common reason for being stuck on OpenGL 1.1 is non-working GPU drivers 
 
 Otherwise:
 * On Windows, you can still run the OpenGL build of ClassiCube anyways. <br> 
-(You can try downloading and using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
+(You can still try using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
 * On other operating systems, you will have to [compile the game yourself](#Compiling). <br> 
 Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
 
@@ -79,20 +80,22 @@ And also runs on:
 * Classic Mac OS (System 7 and later)
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
 * Saturn - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/saturn))
+* 32x - terrible performance and practically unusable
 * Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
-* Wii U - unfinished, major issues, **broken on real hardware** (can [download from here](https://www.classicube.net/download/wiiu))
+* Wii U - unfinished, major issues (can [download from here](https://www.classicube.net/download/wiiu))
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
 * 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
 * DS/DSi - unfinished, rendering issues  (can [download from here](https://www.classicube.net/download/nds))
+* GBA - terrible performance and practically unusable
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3))
 * PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
 * PS1 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps1))
 * Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
-* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
+* Xbox - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/xbox))
 * Symbian (S60 3rd Edition FP1 and later) - unfinished, but usable
 
 # Compiling 
@@ -119,8 +122,8 @@ Assuming that you used the installer from https://sourceforge.net/projects/mingw
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to the directory with ClassiCube's source code
 4. Run either:
-    * `make mingw` - produces a simple non-optimised executable, easier to debug
-    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
+    * `make windows` - produces a simple non-optimised executable, easier to debug
+    * `make windows RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using MinGW
 Assuming that you used the installer from https://osdn.net/projects/mingw/ :
@@ -128,8 +131,8 @@ Assuming that you used the installer from https://osdn.net/projects/mingw/ :
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 3. Navigate to the directory with ClassiCube's source code
 4. Run either:
-    * `make mingw` - produces a simple non-optimised executable, easier to debug
-    * `make mingw RELEASE=1` - produces an optimised executable, harder to debug
+    * `make windows` - produces a simple non-optimised executable, easier to debug
+    * `make windows RELEASE=1` - produces an optimised executable, harder to debug
 
 ##### Using TCC (Tiny C Compiler)
 Setting up TCC:
@@ -142,6 +145,16 @@ Compiling with TCC:
 2. Run `tcc.exe -o ClassiCube.exe src/*.c third_party/bearssl/*.c -lwinmm -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
 (Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
+##### Using Open Watcom v2
+Setting up Watcom:
+1. Download and install Watcom from https://open-watcom.github.io/
+2. Open the WATCOM folder in the command line where it was installed (it was probably installed in C:\WATCOM) and run owsetenv.bat.
+
+Compiling with Watcom:
+1. Navigate to the directory with ClassiCube's source code
+2. Run `wcl386 -za99 -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1 -fe=ClassiCube.exe src/*.c third_party/bearssl/*.c winmm.lib`
+(Note: OpenGL rendering was specifically chosen because Direct3D 9 is broken in OW v2; This method written for compilation under Windows; on Linux, the steps are slightly different)
+
 ## Compiling - Linux
 
 ##### Using gcc/clang
@@ -153,11 +166,11 @@ For Ubuntu, these are the `libx11-dev`, `libxi-dev` and `libgl1-mesa-dev` packag
 
 ##### Cross compiling for Windows (32 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```make mingw CC=i686-w64-mingw32-gcc```
+2. Run ```make windows CC=i686-w64-mingw32-gcc```
 
 ##### Cross compiling for Windows (64 bit):
 1. Install MinGW-w64 if necessary. (Ubuntu: `gcc-mingw-w64` package)
-2. Run ```make mingw CC=x86_64-w64-mingw32-gcc```
+2. Run ```make windows CC=x86_64-w64-mingw32-gcc```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
@@ -257,7 +270,7 @@ Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
 
 #### Nintendo 64
 
-Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+Run `make n64`. You'll need the preview branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/preview)
 
 #### GBA
 
@@ -324,6 +337,12 @@ Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/Kal
 #### Saturn
 
 Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
+
+#### 32x
+
+Run `make 32x`.
+
+**NOTE: The 32x port has terrible performance and is unusable in practice.**
 
 </details>
 
@@ -487,7 +506,6 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
 * [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
 * [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
-* [GLdc](https://github.com/Kazade/GLdc) - Basis of rendering backend for Dreamcast
 * [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
 * [libyaul](https://github.com/yaul-org/libyaul) - Backend for Saturn
 * [mednafen](https://mednafen.github.io/) - Emulator used to test Saturn port

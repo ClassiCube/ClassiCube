@@ -76,9 +76,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-// TODO: More intelligent diffing that uses less space
 static cc_bool has_prevState;
-static kbd_state_t prevState;
 
 static int MapKey(int k) {
 	if (k >= KBD_KEY_A  && k <= KBD_KEY_Z)   return 'A'      + (k - KBD_KEY_A);
@@ -130,10 +128,14 @@ static int MapKey(int k) {
 	}
 	return INPUT_NONE;
 }
+
 #define ToggleKey(diff, cur, mask, btn) if (diff & mask) Input_Set(btn, cur & mask)
+static kbd_mods_t prev_modifiers;
+static key_state_t prev_states[KBD_MAX_KEYS];
+
 static void UpdateKeyboardState(kbd_state_t* state) {
-	int cur_keys  = state->shift_keys;
-	int diff_keys = prevState.shift_keys ^ state->shift_keys;
+	int cur_keys  = state->last_modifiers.raw;
+	int diff_keys = prev_modifiers.raw ^ state->last_modifiers.raw;
 	
 	if (diff_keys) {
 		ToggleKey(diff_keys, cur_keys, KBD_MOD_LALT,   CCKEY_LALT);
@@ -147,10 +149,30 @@ static void UpdateKeyboardState(kbd_state_t* state) {
 	// see keyboard.h, KEY_S3 seems to be highest used key
 	for (int i = KBD_KEY_A; i < KBD_KEY_S3; i++)
 	{
-		if (state->matrix[i] == prevState.matrix[i]) continue;
+		key_state_t key = state->key_states[i];
+		if (key.is_down == prev_states[i].is_down) continue;
+
 		int btn = MapKey(i);
-		if (btn) Input_Set(btn, state->matrix[i]);
+		if (btn) Input_Set(btn, key.is_down);
 	}
+	Mem_Copy(prev_states, state->key_states, sizeof(prev_states));
+}
+
+static void ProcessRawKey(kbd_state_t* state, int raw) {
+	kbd_key_t key;
+	kbd_mods_t mods;
+	kbd_leds_t leds;
+
+	key      = raw         & 0xFF;
+	mods.raw = (raw >>  8) & 0xFF;
+	leds.raw = (raw >> 16) & 0xFF;
+
+	int c = kbd_key_to_ascii(key, state->region, mods, leds);
+        
+	// Ascii printable characters
+	//  NOTE: Escape, Enter etc map to ASCII control characters
+	if (c >= ' ' && c <= 0x7F)
+		Event_RaiseInt(&InputEvents.Press, c);
 }
 
 static void ProcessKeyboardInput(void) {
@@ -163,17 +185,12 @@ static void ProcessKeyboardInput(void) {
 	if (!state)  return;
 	
 	if (has_prevState) UpdateKeyboardState(state);
-	has_prevState = true;
-	prevState     = *state;
+	has_prevState  = true;
+	prev_modifiers = state->last_modifiers;
 	
 	Input.Sources |= INPUT_SOURCE_NORMAL;
-	int ret = kbd_queue_pop(kb_dev, 1);
-	if (ret < 0) return;
-        
-	// Ascii printable characters
-	//  NOTE: Escape, Enter etc map to ASCII control characters
-	if (ret >= ' ' && ret <= 0x7F)
-		Event_RaiseInt(&InputEvents.Press, ret);
+	int ret = kbd_queue_pop(kb_dev, 0);
+	if (ret > 0) ProcessRawKey(state, ret);
 }
 
 
@@ -195,24 +212,12 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
 	Mouse_ScrollVWheel(-state->dz * 0.5f);
 
-	if (!vc_hooked) {
-		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
-	}
-	VirtualCursor_SetPosition(Pointers[0].x + state->dx, Pointers[0].y + state->dy);
-	
-	if (!Input.RawMode) return;	
-	float scale = (delta * 60.0) / 2.0f;
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				state->dx * scale, state->dy * scale);
+	VirtualCursor_Update(state->dx, state->dy, delta);
 }
 
 void Window_ProcessEvents(float delta) {
 	ProcessKeyboardInput();
 	ProcessMouseInput(delta);
-}
-
-void Cursor_SetPosition(int x, int y) {
-	if (vc_hooked) VirtualCursor_SetPosition(x, y);
 }
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
@@ -241,8 +246,7 @@ static const BindMapping defaults_dc[BIND_COUNT] = {
 	[BIND_FLY_UP]       = { CCPAD_2, CCPAD_UP },
 	[BIND_FLY_DOWN]     = { CCPAD_2, CCPAD_DOWN },
 	[BIND_HOTBAR_LEFT]  = { CCPAD_2, CCPAD_LEFT }, 
-	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT },
-	[BIND_SCREENSHOT]   = { CCPAD_3 },
+	[BIND_HOTBAR_RIGHT] = { CCPAD_2, CCPAD_RIGHT }
 };
 
 void Gamepads_PreInit(void) { }
@@ -283,14 +287,12 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 static void HandleController(int port, bool dual_analog, cont_state_t* state, float delta) {
 	Gamepad_SetButton(port, CCPAD_L, state->ltrig > 10);
 	Gamepad_SetButton(port, CCPAD_R, state->rtrig > 10);
-	// TODO: verify values are right     
-	if(dual_analog) 
-	{
+	// TODO: verify values are right
+
+	if (dual_analog)  {
 		HandleJoystick(port, PAD_AXIS_LEFT,  state->joyx,  state->joyy,  delta);
 		HandleJoystick(port, PAD_AXIS_RIGHT, state->joy2x, state->joy2y, delta);
-	}
-	else
-	{
+	} else {
 		HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
 	}
 }
@@ -307,7 +309,7 @@ void Gamepads_Process(float delta) {
 		if (!state) return;
 
 		int dual_analog = cont_has_capabilities(cont, CONT_CAPABILITIES_DUAL_ANALOG);
-		if(dual_analog == -1) dual_analog = 0;
+		if (dual_analog == -1) dual_analog = 0;
 
 		int port = Gamepad_Connect(0xDC + i, defaults_dc);
 		HandleButtons(port, state->buttons);
@@ -330,18 +332,24 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
+
+	int src_stride = bmp->width;
+	int dst_stride = vid_mode->width;
+
+	BitmapCol* src = bmp->scan0 + src_stride * r.y + r.x;
+	uint16_t*  dst = vram_s     + dst_stride * r.y + r.x;
 	
-	for (int y = r.y; y < r.y + r.height; y++)
+	for (int y = 0; y < r.height; y++)
 	{
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		uint16_t*  dst = vram_s + vid_mode->width * y;
-		
-		for (int x = r.x; x < r.x + r.width; x++)
+		for (int x = 0; x < r.width; x++)
 		{
 			BitmapCol color = src[x];
 			// 888 to 565 (discard least significant bits)
 			dst[x] = ((BitmapCol_R(color) & 0xF8) << 8) | ((BitmapCol_G(color) & 0xFC) << 3) | (BitmapCol_B(color) >> 3);
 		}
+
+		src += src_stride;
+		dst += dst_stride;
 	}
 }
 

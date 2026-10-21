@@ -14,9 +14,6 @@
 #include "../VirtualDialog.h"
 
 #include <libpad.h>
-#include <packet.h>
-#include <dma_tags.h>
-#include <gif_tags.h>
 #include <gs_psm.h>
 #include <dma.h>
 #include <graph.h>
@@ -181,24 +178,12 @@ static void ProcessMouseInput(float delta) {
 	Input_SetNonRepeatable(CCMOUSE_M, mData.buttons & PS2MOUSE_BTN3);
 	Mouse_ScrollVWheel(mData.wheel * 0.5f);
 
-	if (!vc_hooked) {
-		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
-	}
-	VirtualCursor_SetPosition(Pointers[0].x + mData.x, Pointers[0].y + mData.y);
-	
-	if (!Input.RawMode) return;	
-	float scale = (delta * 60.0) / 2.0f;
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				mData.x * scale, mData.y * scale);
+	VirtualCursor_Update(mData.x, mData.y, delta);
 }
 
 void Window_ProcessEvents(float delta) {
 	ProcessMouseInput(delta);
 	ProcessKeyboardInput();
-}
-
-void Cursor_SetPosition(int x, int y) {
-	if (vc_hooked) VirtualCursor_SetPosition(x, y);
 }
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
@@ -325,10 +310,6 @@ extern void Gfx_TransferPixels(void* src, int width, int height,
 								int format, unsigned dst_base, unsigned dst_stride);
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// FlushCache bios call https://psi-rockin.github.io/ps2tek/
-	//   mode=0: Flush data cache (invalidate+writeback dirty contents to memory)
-	FlushCache(0);
-	
 	Gfx_TransferPixels(bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
 						fb_colors[0].address, fb_colors[0].width);
 }

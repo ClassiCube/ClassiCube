@@ -1,6 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 #define DEFAULT_COMMANDLINE_FUNC
 
 #include "../Stream.h"
@@ -84,16 +86,6 @@ cc_uint64 Stopwatch_Measure(void) {
 	struct SceKernelTimeval cur;
 	sceKernelLibcGettimeofday(&cur, NULL);
 	return (cc_uint64)cur.sec * US_PER_SEC + cur.usec;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -238,7 +230,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	int threadID = sceKernelCreateThread(name, ExecThread, CC_THREAD_PRIORITY, 
 										stackSize, CC_THREAD_ATTRS, 0, NULL);
 																				
-	*handle = (int)threadID;
+	*handle = (void*)((int)threadID);
 	sceKernelStartThread(threadID, sizeof(func_), (void*)&func_);
 }
 
@@ -354,24 +346,27 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
 
-	*s = sceNetSocket("CC socket", raw->sa_family, SCE_NET_SOCK_STREAM, SCE_NET_IPPROTO_TCP);
+	*s = sceNetSocket("CC socket", raw->sa_family, SCE_NET_SOCK_STREAM, 0);
 	if (*s < 0) return *s;
 
-	if (nonblocking) {
-		int on = 1;
-		sceNetSetsockopt(*s, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO, &on, sizeof(int));
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct SceNetSockaddr* raw = (struct SceNetSockaddr*)addr->data;
-	
-	int res = sceNetConnect(s, raw, addr->size);
-	return res;
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	return sceNetSetsockopt(s, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO, &mode, sizeof(int));
+}
+
+void Socket_Close(cc_socket s) {
+	sceNetShutdown(s, SCE_NET_SHUT_RDWR);
+	sceNetSocketClose(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	return sceNetConnect(s, (struct SceNetSockaddr*)addr, addrSize);
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
@@ -388,11 +383,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	
 	*modified = 0; 
 	return sentCount;
-}
-
-void Socket_Close(cc_socket s) {
-	sceNetShutdown(s, SCE_NET_SHUT_RDWR);
-	sceNetSocketClose(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
@@ -412,15 +402,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	
 	*success = (ev.events & flags) != 0;
 	return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	uint32_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	sceNetGetsockopt(s, SCE_NET_SOL_SOCKET, SCE_NET_SO_ERROR, &error, &errSize);
-	return error;
 }
 
 
@@ -468,11 +449,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -480,9 +456,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

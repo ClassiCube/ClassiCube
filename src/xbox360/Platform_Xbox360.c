@@ -2,6 +2,8 @@
 #define CC_NO_UPDATER
 #define CC_NO_SOCKETS
 #define CC_NO_DYNLIB
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 #define DEFAULT_COMMANDLINE_FUNC
 
 #include "../Stream.h"
@@ -19,6 +21,7 @@
 #include <network/network.h>
 #include <ppc/timebase.h>
 #include <time/time.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,9 +34,6 @@ const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used ap
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
-const cc_result ReturnCode_SocketDropped    = EPIPE;
 
 const char* Platform_AppNameSuffix = " XBox 360";
 cc_bool Platform_ReadonlyFilesystem;
@@ -94,16 +94,6 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 
 cc_uint64 Stopwatch_Measure(void) {
 	return mftb();
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -331,11 +321,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -343,9 +328,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

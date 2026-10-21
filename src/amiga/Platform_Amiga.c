@@ -2,6 +2,9 @@
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
+#define CC_NO_ENCRYPTION
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 #define OVERRIDE_MEM_FUNCTIONS
 
 #include "../Stream.h"
@@ -97,16 +100,6 @@ TimeMS DateTime_CurrentUTC(void) {
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
 	// TODO
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -219,15 +212,11 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Process_OpenSupported = false;
-
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	return GetGameArgs(args);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
@@ -236,10 +225,6 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 void Process_Exit(cc_result code) { 
 	Exit(code);
     for(;;) { }
-}
-
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
 }
 
 
@@ -258,14 +243,3 @@ void Platform_Init(void) {
 	DOSBase = OpenLibrary("dos.library", 0);
 }
 
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_GetEntropy(void* data, int len) {
-	return ERR_NOT_SUPPORTED;
-}

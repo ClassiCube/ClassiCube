@@ -1,50 +1,25 @@
-TARGET		:=	ClassiCube-amiga
-BUILD_DIR 	:=	build/amiga_68k
-SOURCE_DIRS	:= src src/amiga
+SOURCE_DIRS := src src/amiga
+BUILD_DIR 	:= build/amiga_68k
+TARGET 		:= ClassiCube-amiga
 
-S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
-C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
+CC			:= m68k-amigaos-gcc
+CFLAGS		:= -DPLAT_AMIGA -DCC_BUILD_FPU_MODE=CC_FPU_MODE_MINIMAL
+LDFLAGS		:=
+LIBS		:=
 
-
-#---------------------------------------------------------------------------------
-# Code generation
-#---------------------------------------------------------------------------------
-AS		:= m68k-amigaos-as
-CC		:= m68k-amigaos-gcc
-CXX		:= m68k-amigaos-g++
-CFLAGS 	:= -O1 -fno-math-errno -DPLAT_AMIGA -DCC_BUILD_FPU_MODE=CC_FPU_MODE_MINIMAL
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
+# performance too slow if not in release mode
+RELEASE		:= 1
+include misc/makefiles/common_config.mk
 
 
 #---------------------------------------------------------------------------------
-# main targets
+# executable generation
 #---------------------------------------------------------------------------------
-default: $(BUILD_DIR) $(TARGET).exe
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-$(TARGET).exe: $(C_OBJECTS)
-	$(CC) $(LDFLAGS) -o $(TARGET).exe $(C_OBJECTS)
+OEXT    	:= .exe
+include misc/makefiles/common_build.mk
 
 
 #---------------------------------------------------------------------------------
-# object generation
+# common targets
 #---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o : src/amiga/%.S
-	$(AS) $< -o $@
-
-$(BUILD_DIR)/%.o : src/%.c
-	$(CC) $(CFLAGS) $(DEPFLAGS) -S -c $< -o $@
-
-$(BUILD_DIR)/%.o : src/amiga/%.c
-	$(CC) $(CFLAGS) $(DEPFLAGS) -S -c $< -o $@
-
-# Dependency tracking
-$(DEPFILES):
-
-include $(wildcard $(DEPFILES))
+include misc/makefiles/common_targets.mk

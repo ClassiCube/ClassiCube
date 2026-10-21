@@ -2,6 +2,10 @@
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
+#define CC_NO_ENCRYPTION
+#define CC_NO_CRASHHANDLER
+#define CC_NO_OPEN
+#define CC_NO_FILESYSTEM
 #define OVERRIDE_MEM_FUNCTIONS
 
 #include "../Stream.h"
@@ -22,14 +26,6 @@
 typedef volatile uint8_t   vu8;
 typedef volatile uint16_t vu16;
 typedef volatile uint32_t vu32;
-
-const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
-const cc_result ReturnCode_FileNotFound     = -1;
-const cc_result ReturnCode_PathNotFound     = -1;
-const cc_result ReturnCode_DirectoryExists  = -1;
-const cc_result ReturnCode_SocketInProgess  = -1;
-const cc_result ReturnCode_SocketWouldBlock = -1;
-const cc_result ReturnCode_SocketDropped    = -1;
 
 const char* Platform_AppNameSuffix = " GBA";
 cc_bool Platform_ReadonlyFilesystem;
@@ -198,82 +194,6 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) {
-}
-
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Platform_LogConst(raw_msg);
-	Process_Exit(0);
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Directory/File------------------------------------------------------*
-*#########################################################################################################################*/
-void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
-	int len = String_CopyToRaw(dst->buffer, sizeof(dst->buffer) - 1, path);
-	dst->buffer[len] = '\0'; // Always null terminate just in case
-}
-
-void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
-	String_AppendConst(dst, path->buffer);
-}
-
-void Directory_GetCachePath(cc_string* path) { }
-
-cc_result Directory_Create2(const cc_filepath* path) {
-	return ERR_NOT_SUPPORTED;
-}
-
-int File_Exists(const cc_filepath* path) {
-	return false;
-}
-
-cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Open(cc_file* file, const cc_filepath* path) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Close(cc_file file) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Seek(cc_file file, int offset, int seekType) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Position(cc_file file, cc_uint32* pos) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result File_Length(cc_file file, cc_uint32* len) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 // !!! NOTE: PSP uses cooperative multithreading (not preemptive multithreading) !!!
@@ -305,19 +225,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
@@ -330,9 +237,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return 0;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) { 
-	return 0; 
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 extern void bios_soft_reset(void);
 void Process_Exit(cc_result code) { 

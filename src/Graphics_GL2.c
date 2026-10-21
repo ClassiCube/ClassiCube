@@ -1,6 +1,7 @@
 /* Silence deprecation warnings on modern macOS/iOS */
 #define GL_SILENCE_DEPRECATION
 #define GLES_SILENCE_DEPRECATION
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
@@ -57,7 +58,6 @@ void Gfx_Create(void) {
 	
 	GL_InitCommon();
 	GLBackend_Init();
-	Gfx_RestoreState();
 	GLContext_SetVSync(gfx_vsync);
 }
 
@@ -158,7 +158,11 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+
+/*########################################################################################################################*
+*--------------------------------------------------Scratch Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * gfx_stride;
 	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb));
 	glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
@@ -187,9 +191,6 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 static struct Matrix _view, _proj, _mvp;
 static cc_bool gfx_texTransform;
 static float _texX, _texY;
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
-static int gfx_fogMode = -1;
 
 /* shader programs (emulate fixed function) */
 static struct GLShader {
@@ -467,39 +468,28 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFog(cc_bool enabled) { gfx_fogEnabled = enabled; SwitchProgram(); }
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == gfx_fogColor) return;
-	gfx_fogColor = color;
+
+static void SetFogColor(PackedCol color) {
 	DirtyUniform(UNI_FOG_COL);
 	ReloadUniforms();
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (gfx_fogDensity == value) return;
-	gfx_fogDensity = value;
+static void SetFogDensity(float value) {
 	DirtyUniform(UNI_FOG_DENS);
 	ReloadUniforms();
 }
 
-void Gfx_SetFogEnd(float value) {
-	if (gfx_fogEnd == value) return;
-	gfx_fogEnd = value;
+static void SetFogEnd(float value) {
 	DirtyUniform(UNI_FOG_END);
 	ReloadUniforms();
 }
 
-void Gfx_SetFogMode(FogFunc func) {
-	if (gfx_fogMode == func) return;
-	gfx_fogMode = func;
-	SwitchProgram();
-}
+static void SetFogMode(FogFunc func) { SwitchProgram(); }
 
 static void SetAlphaTest(cc_bool enabled) { SwitchProgram(); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -728,7 +718,7 @@ void Gfx_BindVb_Textured(GfxResourceID vb) {
 	GL_SetupVbTextured();
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (startVertex + verticesCount > GFX_MAX_VERTICES) {
 		GL_SetupVbTextured_Range(startVertex);
 		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);

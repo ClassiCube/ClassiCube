@@ -274,11 +274,11 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	_glColorMask(r, g, b, a);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	_glDepthMask(enabled);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 	if (enabled) { _glEnable(GL_DEPTH_TEST); } else { _glDisable(GL_DEPTH_TEST); }
 }
 
@@ -359,21 +359,28 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return res;
 }
 
+// https://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
+#define _GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX         0x9047
+#define _GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX   0x9048
+#define _GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX 0x9049
+
 static void AppendVRAMStats(cc_string* info) {
 	static const cc_string memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	GLint totalKb, curKb;
-	float total, cur;
+	GLint totalKB = 0, curKB = 0, dediKB = 0;
+	float total, cur, dedi;
 
-	/* NOTE: glGetString returns UTF8, but I just treat it as code page 437 */
-	cc_string exts = String_FromReadonly((const char*)_glGetString(GL_EXTENSIONS));
+	/* NOTE: glGetString returns UTF8, but for simplicity is treated as code page 437 */
+	const char* extensions = (const char*)_glGetString(GL_EXTENSIONS);
+	cc_string exts = String_FromReadonly(extensions);
 	if (!String_CaselessContains(&exts, &memExt)) return;
 
-	_glGetIntegerv(0x9048, &totalKb);
-	_glGetIntegerv(0x9049, &curKb);
-	if (totalKb <= 0 || curKb <= 0) return;
+	_glGetIntegerv(_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX,        &dediKB);
+	_glGetIntegerv(_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &totalKB);
+	_glGetIntegerv(_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &curKB);
+	if (totalKB <= 0 || curKB <= 0) return;
 
-	total = totalKb / 1024.0f; cur = curKb / 1024.0f;
-	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &total, &cur);
+	total = totalKB / 1024.0f; cur = curKB / 1024.0f; dedi = dediKB / 1024.0f;
+	String_Format3(info, "Graphics memory: %f2 MB total (%f2 VRAM), %f2 free\n", &total, &dedi, &cur);
 }
 
 static void GetGLApiInfo(cc_string* info) {
@@ -420,8 +427,8 @@ void Gfx_EndFrame(void) {
 	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
 }
 
-void Gfx_OnWindowResize(void) {
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+void Gfx_OnWindowResize(int width, int height) {
+	Gfx_SetViewport(0, 0, width, height);
 	/* With cocoa backend, in some cases [NSOpenGLContext update] will actually */
 	/*  call glViewport with the size of the window framebuffer */
 	/*  https://github.com/glfw/glfw/issues/80 */
@@ -433,7 +440,7 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
-	_glViewport(x, y, w, h);
+	_glViewport(x, Game.Height - h - y, w, h);
 }
 
 void Gfx_SetScissor(int x, int y, int w, int h) {

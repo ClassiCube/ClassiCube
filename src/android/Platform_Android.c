@@ -148,7 +148,7 @@ void* ExecThread(void* param) {
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	cc_string dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
 	JNIEnv* env;

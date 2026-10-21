@@ -15,6 +15,7 @@
 #include <pspge.h>
 #include <pspctrl.h>
 #include <pspkernel.h>
+#include <psputility_sysparam.h>
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -29,11 +30,10 @@ void Window_PreInit(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 
-	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	sceDisplaySetMode(PSP_DISPLAY_MODE_LCD, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void Window_Init(void) {
-	
 	Window_Main.Width    = SCREEN_WIDTH;
 	Window_Main.Height   = SCREEN_HEIGHT;
 	Window_Main.Focused  = true;
@@ -108,10 +108,16 @@ void Gamepads_PreInit(void) {
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 }
+static cc_bool circle_main;
 
 void Gamepads_Init(void) {
-	Input_DisplayNames[CCPAD_1] = "CIRCLE";
-	Input_DisplayNames[CCPAD_2] = "CROSS";
+	int ret = 0;
+	// PPSSPP #define PSP_SYSTEMPARAM_ID_INT_BUTTON_PREFERENCE 9
+ 	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_UNKNOWN, &ret);
+	circle_main = ret == 0;
+
+	Input_DisplayNames[CCPAD_1] = circle_main ? "CIRCLE" : "CROSS";
+	Input_DisplayNames[CCPAD_2] = circle_main ? "CROSS" : "CIRCLE";
 	Input_DisplayNames[CCPAD_3] = "SQUARE";
 	Input_DisplayNames[CCPAD_4] = "TRIANGLE";
 }
@@ -120,8 +126,8 @@ static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & PSP_CTRL_LTRIGGER);
 	Gamepad_SetButton(port, CCPAD_R, mods & PSP_CTRL_RTRIGGER);
 	
-	Gamepad_SetButton(port, CCPAD_1, mods & PSP_CTRL_CIRCLE);
-	Gamepad_SetButton(port, CCPAD_2, mods & PSP_CTRL_CROSS);
+	Gamepad_SetButton(port, CCPAD_1, mods & (circle_main ? PSP_CTRL_CIRCLE : PSP_CTRL_CROSS));
+	Gamepad_SetButton(port, CCPAD_2, mods & (circle_main ? PSP_CTRL_CROSS  : PSP_CTRL_CIRCLE));
 	Gamepad_SetButton(port, CCPAD_3, mods & PSP_CTRL_SQUARE);
 	Gamepad_SetButton(port, CCPAD_4, mods & PSP_CTRL_TRIANGLE);
 	
@@ -139,8 +145,9 @@ static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
 	int x = pad->Lx - 127;
 	int y = pad->Ly - 127;
 
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;
 
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }

@@ -143,30 +143,7 @@ static cc_result HttpUrl_ResolveRedirect(struct HttpUrl* parts, const cc_string*
 	return HTTP_ERR_RELATIVE;
 }
 
-
-/*########################################################################################################################*
-*------------------------------------------------------HttpConnection-----------------------------------------------------*
-*#########################################################################################################################*/
-struct HttpConnection {
-	cc_socket socket;
-	void* sslCtx;
-	cc_bool valid;
-};
-
-static void HttpConnection_Close(struct HttpConnection* conn) {
-	if (conn->sslCtx) {
-		SSL_Free(conn->sslCtx);
-		conn->sslCtx = NULL;
-	}
-
-	if (conn->socket != -1) {
-		Socket_Close(conn->socket);
-		conn->socket = -1;
-	}
-	conn->valid = false;
-}
-
-static void ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_string* port) {
+static void HttpUrl_ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_string* port) {
 	/* address can have the form of either "host" or "host:port" */
 	/* Slightly more complicated because IPv6 hosts can be e.g. [::1] */
 	cc_string addr = url->address;
@@ -194,6 +171,32 @@ static void ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_strin
 	}
 }
 
+#define DEF_HTTP_PORT   80
+#define DEF_HTTPS_PORT 443
+
+
+/*########################################################################################################################*
+*------------------------------------------------------HttpConnection-----------------------------------------------------*
+*#########################################################################################################################*/
+struct HttpConnection {
+	cc_socket socket;
+	void* sslCtx;
+	cc_bool valid;
+};
+
+static void HttpConnection_Close(struct HttpConnection* conn) {
+	if (conn->sslCtx) {
+		SSL_Free(conn->sslCtx);
+		conn->sslCtx = NULL;
+	}
+
+	if (conn->socket != -1) {
+		Socket_Close(conn->socket);
+		conn->socket = -1;
+	}
+	conn->valid = false;
+}
+
 static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct HttpUrl* url) {
 	cc_string host, port;
 	cc_uint16 portNum;
@@ -203,9 +206,9 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	cc_string addrStr;
 	int i, numValidAddrs;
 
-	ExtractHostPort(url, &host, &port);
+	HttpUrl_ExtractHostPort(url, &host, &port);
 	if (!Convert_ParseUInt16(&port, &portNum)) {
-		portNum = url->https ? 443 : 80;
+		portNum = url->https ? DEF_HTTPS_PORT : DEF_HTTP_PORT;
 	}
 
 	conn->socket = -1;
@@ -217,13 +220,13 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	/* TODO: Connect in parallel instead of serial, but that's a lot of work */
 	for (i = 0; i < numValidAddrs; i++)
 	{
-		res = Socket_Create(&conn->socket, &addrs[i], false);
+		res = Socket_Create(&conn->socket, &addrs[i]);
 		if (res) { HttpConnection_Close(conn); continue; }
 
 		String_InitArray(addrStr, addrBuf);
 		if (SockAddr_ToString(&addrs[i], &addrStr)) Platform_Log1("  Connecting to %s..", &addrStr);
 
-		res = Socket_Connect(conn->socket, &addrs[i]);
+		res = Socket_Connect(conn->socket, addrs[i].data, addrs[i].size);
 		if (res) { HttpConnection_Close(conn); continue; }
 
 		break; /* Successful connection */
@@ -373,41 +376,27 @@ static void HttpClientState_Init(struct HttpClientState* state, struct HttpReque
 }
 
 
-static void HttpClient_Serialise(struct HttpClientState* state) {
+static void HttpClient_Serialise(struct HttpClientState* state, cc_string* dst) {
 	static const char* verbs[] = { "GET", "HEAD", "POST" };
 
 	struct HttpRequest* req = state->req;
-	cc_string* buffer = (cc_string*)req->meta;
 	/* TODO move to other functions */
 	/* Write request message headers */
-	String_Format2(buffer, "%c %s HTTP/1.1\r\n",
+	String_Format2(dst, "%c %s HTTP/1.1\r\n",
 					verbs[req->requestType], &state->url.resource);
 
-	Http_AddHeader(req, "Host",       &state->url.address);
-	Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
-	if (req->data) String_Format1(buffer, "Content-Length: %i\r\n", &req->size);
+	Http_AddHeader(dst, "Host",       &state->url.address);
+	Http_AddHeader(dst, "User-Agent", Http_GetUserAgent_UNSAFE());
+	if (req->data) String_Format1(dst, "Content-Length: %i\r\n", &req->size);
 
-	Http_SetRequestHeaders(req);
-	String_AppendConst(buffer, "\r\n");
+	Http_SetRequestHeaders(req, dst);
+	String_AppendConst(dst, "\r\n");
 	
 	/* Write request message body */
 	if (req->data) {
-		String_AppendAll(buffer, req->data, req->size);
+		String_AppendAll(dst, req->data, req->size);
 		HttpRequest_Free(req);
 	} /* TODO post redirect handling */
-}
-
-
-static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
-	char inputBuffer[SEND_BUFFER_LEN];
-	cc_string inputMsg;
-
-	String_InitArray(inputMsg, inputBuffer);
-	state->req->meta     = &inputMsg;
-	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
-	HttpClient_Serialise(state);
-
-	return HttpConnection_WriteAll(state->conn, (cc_uint8*)inputBuffer, inputMsg.length);
 }
 
 
@@ -662,17 +651,19 @@ static void HttpBackend_Init(void) {
 	SSLBackend_Init(httpsVerify);
 }
 
-static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) {
-	String_Format2((cc_string*)req->meta, "%c:%s\r\n", key, value);
-}
-
 static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
+	char buf[SEND_BUFFER_LEN];
+	cc_string inputMsg;
 	cc_result res;
+
+	String_InitArray(inputMsg, buf);
+	HttpClient_Serialise(state, &inputMsg);
 
 	res = ConnectionPool_Open(&state->conn, &state->url);
 	if (res) { HttpConnection_Close(state->conn); return res; }
 
-	res = HttpClient_SendRequest(state);
+	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
+	res = HttpConnection_WriteAll(state->conn, (cc_uint8*)buf, inputMsg.length);
 	if (res) { HttpConnection_Close(state->conn); return res; }
 
 	res = HttpClient_ParseResponse(state);

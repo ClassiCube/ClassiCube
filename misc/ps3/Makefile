@@ -11,53 +11,29 @@ endif
 #---------------------------------------------------------------------------------
 # Configurable options
 #---------------------------------------------------------------------------------
-# Name of the final output
-TARGET		= ClassiCube-PS3
-# Directory where object files are placed
-BUILD_DIR	= build/ps3
-# List of directories containing source code
-SOURCE_DIRS = src src/ps3 third_party/bearssl
-SHADERS		= misc/ps3
+TARGET		:= ClassiCube-PS3
+BUILD_DIR	:= build/ps3
+SOURCE_DIRS := src src/ps3 third_party/bearssl
+RUN_PROGRAM	?= rpcs3
 
-TITLE		= ClassiCube
-APPID		= CUBE00200
-CONTENTID	= UP0001-$(APPID)_00-0000000000000000
-ICON0		= misc/ps3/ICON0.png
-SFOXML		= misc/ps3/sfo.xml
+TITLE		:= ClassiCube
+APPID		:= CUBE00200
+CONTENTID	:= UP0001-$(APPID)_00-0000000000000000
+ICON0		:= misc/ps3/ICON0.png
+SFOXML		:= misc/ps3/sfo.xml
 
-
-#---------------------------------------------------------------------------------
-# Compilable files
-#---------------------------------------------------------------------------------
-S_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
-C_FILES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
-
-# Dependency tracking
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
-DEPFILES := $(OBJS:%.o=%.d)
-
-# Shaders
-VCGFILES	:= $(notdir $(wildcard $(SHADERS)/*.vcg))
-FCGFILES	:= $(notdir $(wildcard $(SHADERS)/*.fcg))
-VPOFILES	:= $(addprefix $(BUILD_DIR)/, $(VCGFILES:.vcg=.vpo))
-FPOFILES	:= $(addprefix $(BUILD_DIR)/, $(FCGFILES:.fcg=.fpo))
-
-OBJS 		+= $(addsuffix .o, $(VPOFILES))
-OBJS 		+= $(addsuffix .o, $(FPOFILES))
+default: $(TARGET).gnpdrm.pkg $(TARGET).self $(TARGET).fake.self
 
 
 #---------------------------------------------------------------------------------
 # Code generation
 #--------------------------------------------------------------------------------
-MACHDEP	= -mhard-float -fmodulo-sched -ffunction-sections -fdata-sections
+MACHDEP	:= -mhard-float -fmodulo-sched -ffunction-sections -fdata-sections
 
-CFLAGS	= -O2 -DPLAT_PS3 -Wall -mcpu=cell -fno-math-errno $(MACHDEP) $(INCLUDE)
-LDFLAGS	= $(MACHDEP) -Wl,-Map,$(notdir $@).map -fno-use-linker-plugin
-LIBS	= -lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm -lnet -lsysmodule 
-
-INCLUDE = -I$(PSL1GHT)/ppu/include -I$(PSL1GHT)/ppu/include/simdmath
-LIBPATHS = -L$(PSL1GHT)/ppu/lib
+CFLAGS	:= -O2 -DPLAT_PS3 -Wall -mcpu=cell -fno-math-errno $(MACHDEP) \
+			-I$(PSL1GHT)/ppu/include -I$(PSL1GHT)/ppu/include/simdmath
+LDFLAGS	:= $(MACHDEP) -fno-use-linker-plugin -L$(PSL1GHT)/ppu/lib
+LIBS	:= -lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm -lnet -lsysmodule 
 
 
 #---------------------------------------------------------------------------------
@@ -65,9 +41,8 @@ LIBPATHS = -L$(PSL1GHT)/ppu/lib
 #---------------------------------------------------------------------------------
 AS		:=	$(PS3DEV)/ppu/bin/ppu-as
 CC		:=	$(PS3DEV)/ppu/bin/ppu-gcc
-LD		:=	$(PS3DEV)/ppu/bin/ppu-gcc
 STRIP	:=	$(PS3DEV)/ppu/bin/ppu-strip
-OBJCOPY	:=	$(PS3DEV)/ppu/bin/ppu-objcopy
+LINK	:=	$(CC)
 
 PKG		:=	$(PS3DEV)/bin/pkg.py
 SFO		:=	$(PS3DEV)/bin/sfo.py
@@ -86,23 +61,42 @@ SELF_NPDRM		:=	$(PS3DEV)/bin/make_self_npdrm
 # NPDRM pkg tool
 PACKAGE_FINALIZE :=	$(PS3DEV)/bin/package_finalize
 
-#---------------------------------------------------------------------------------
-# Main targets
-#---------------------------------------------------------------------------------
-default: $(BUILD_DIR) $(TARGET).pkg $(TARGET).fake.self
 
-clean:
-	rm -f $(TARGET).elf $(TARGET).fake.self $(TARGET).sprx $(TARGET).self $(TARGET).pkg $(OBJS) $(DEPFILES)
+#---------------------------------------------------------------------------------
+# Shader generation
+#---------------------------------------------------------------------------------
+SHDR_DIR	:= misc/ps3
+VCGFILES	:= $(notdir $(wildcard $(SHDR_DIR)/*.vcg))
+FCGFILES	:= $(notdir $(wildcard $(SHDR_DIR)/*.fcg))
+VPOFILES	:= $(addprefix $(BUILD_DIR)/, $(VCGFILES:.vcg=.vpo))
+FPOFILES	:= $(addprefix $(BUILD_DIR)/, $(FCGFILES:.fcg=.fpo))
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+SHDR_OBJS	:= $(addsuffix .o, $(VPOFILES)) $(addsuffix .o, $(FPOFILES))
+OBJECTS 	+= $(SHDR_OBJS)
+
+src/ps3/Graphics_PS3.c: $(SHDR_OBJS)
+
+
+# prevent the .asm files from being deleted
+.PRECIOUS: $(BUILD_DIR)/%.vpo $(BUILD_DIR)/%.fpo
+
+$(BUILD_DIR)/%.vpo: $(SHDR_DIR)/%.vcg
+	$(CGCOMP) -v $(CGCFLAGS) $^ $@
+$(BUILD_DIR)/%.fpo: $(SHDR_DIR)/%.fcg
+	$(CGCOMP) -f $(CGCFLAGS) $^ $@
+
+$(BUILD_DIR)/%.vpo.o: $(BUILD_DIR)/%.vpo
+	bin2s -a 64 $< | $(AS) -o $@
+$(BUILD_DIR)/%.fpo.o: $(BUILD_DIR)/%.fpo
+	bin2s -a 64 $< | $(AS) -o $@
 
 
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
-$(TARGET).elf: $(OBJS)
-	$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -o $@
+OEXT		:= .elf
+GEN_FILES 	:= $(TARGET).fake.self $(TARGET).sprx $(TARGET).self $(TARGET).pkg $(TARGET).gnpdrm.pkg
+include misc/makefiles/common_build.mk
 
 $(TARGET).fake.self: $(TARGET).elf
 	$(FSELF) $< $@
@@ -114,49 +108,19 @@ $(TARGET).sprx: $(TARGET).elf
 $(TARGET).self: $(TARGET).sprx
 	$(SELF) $< $@
 
-$(TARGET).pkg: $(TARGET).self
+$(TARGET).pkg: $(TARGET).sprx
 	mkdir -p $(BUILD_DIR)/pkg/USRDIR
 	cp $(ICON0) $(BUILD_DIR)/pkg/ICON0.PNG
-	$(SELF_NPDRM) $(TARGET).sprx $(BUILD_DIR)/pkg/USRDIR/EBOOT.BIN $(CONTENTID) >> /dev/null
+	$(SELF_NPDRM) $< $(BUILD_DIR)/pkg/USRDIR/EBOOT.BIN $(CONTENTID)
 	$(SFO) --title "$(TITLE)" --appid "$(APPID)" -f $(SFOXML) $(BUILD_DIR)/pkg/PARAM.SFO
-	$(PKG) --contentid $(CONTENTID) $(BUILD_DIR)/pkg/ $@ >> /dev/null
-	cp $@ $(TARGET).gnpdrm.pkg
-	$(PACKAGE_FINALIZE) $(TARGET).gnpdrm.pkg
+	$(PKG) --contentid $(CONTENTID) $(BUILD_DIR)/pkg/ $@
+
+$(TARGET).gnpdrm.pkg: $(TARGET).pkg
+	cp $< $@
+	$(PACKAGE_FINALIZE) $@
 
 
 #---------------------------------------------------------------------------------
-# Object generation
+# common targets
 #---------------------------------------------------------------------------------
-$(BUILD_DIR)/%.o: src/%.c
-	$(CC) $(CFLAGS) $(INCLUDE) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: src/ps3/%.c
-	$(CC) $(CFLAGS) $(INCLUDE) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: src/ps3/%.S
-	$(CC) $(CFLAGS) $(INCLUDE) $(DEPFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: third_party/bearssl/%.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
-
-
-# prevent the .asm files from being deleted
-.PRECIOUS: $(BUILD_DIR)/%.vpo $(BUILD_DIR)/%.fpo
-
-$(BUILD_DIR)/%.vpo: $(SHADERS)/%.vcg
-	$(CGCOMP) -v $(CGCFLAGS) $^ $@
-$(BUILD_DIR)/%.fpo: $(SHADERS)/%.fcg
-	$(CGCOMP) -f $(CGCFLAGS) $^ $@
-
-$(BUILD_DIR)/%.vpo.o: $(BUILD_DIR)/%.vpo
-	bin2s -a 64 $< | $(AS) -o $@
-$(BUILD_DIR)/%.fpo.o: $(BUILD_DIR)/%.fpo
-	bin2s -a 64 $< | $(AS) -o $@
-
-
-#---------------------------------------------------------------------------------
-# Dependency tracking
-#---------------------------------------------------------------------------------
-$(DEPFILES):
-
-include $(wildcard $(DEPFILES))
+include misc/makefiles/common_targets.mk

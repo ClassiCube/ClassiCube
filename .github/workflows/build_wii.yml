@@ -18,10 +18,12 @@ jobs:
     container:
       image: devkitpro/devkitppc:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Compile Wii build
+        shell: bash
         run: |
-          make wii
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make wii EXTRA_CFLAGS="$LATEST_FLAG"
           
       - name: Create Wii homebrew
         run: |

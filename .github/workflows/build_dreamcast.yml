@@ -16,22 +16,18 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/kos-builds/kos-dc:sha-20149ee-14.2.0
+      image: ghcr.io/classicube/minimal-kos:latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install prerequisites
-        shell: bash
-        run: |
-          apt-get update
-          apt-get -y install genisoimage
-          wget https://github.com/ClassiCube/rpi-compiling-stuff/raw/main/cdi4dc -O /opt/toolchains/dc/kos/utils/cdi4dc
-          chmod +x /opt/toolchains/dc/kos/utils/cdi4dc
+      - uses: actions/checkout@v5
 
       - name: Compile Dreamcast build
         shell: bash
         run: |
           export PATH=/opt/toolchains/dc/kos/utils/:$PATH
-          make dreamcast
+          source /opt/toolchains/dc/kos/environ.sh
+
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make dreamcast EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build

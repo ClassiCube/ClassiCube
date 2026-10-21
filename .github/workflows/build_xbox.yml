@@ -18,7 +18,7 @@ jobs:
     container:
       image: ghcr.io/xboxdev/nxdk:git-e955705a
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apk add curl curl-dev
@@ -26,7 +26,9 @@ jobs:
       - name: Compile Xbox build
         run: |
           eval $(/usr/src/nxdk/bin/activate -s)
-          make xbox
+
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"$GITHUB_SHA\\\"
+          make xbox EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build

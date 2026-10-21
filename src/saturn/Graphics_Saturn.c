@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #define OVERRIDE_BEGEND2D_FUNCTIONS
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
@@ -238,11 +239,11 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)    { }
-void Gfx_SetFogCol(PackedCol col)   { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value)     { }
-void Gfx_SetFogMode(FogFunc func)   { }
+void Gfx_SetFog(cc_bool enabled)         { }
+static void SetFogColor(PackedCol color) { }
+static void SetFogDensity(float value)   { }
+static void SetFogEnd(float value)       { }
+static void SetFogMode(FogFunc func)     { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	// TODO
@@ -266,10 +267,10 @@ void Gfx_ClearColor(PackedCol color) {
 	UpdateVDP1Env();
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	// TODO
 }
 
@@ -277,10 +278,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
 }
 
+static cc_bool depth_only;
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+	depth_only = depthOnly;
 }
 
 
@@ -563,14 +563,14 @@ static int TransformColoured(struct SATVertexColoured* a, vdp1_cmdt_t* cmd) {
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
 		*dst++ = x;
-		if (x < -2048 || x > 2048) return -1;
+		if (x < -2047 || x > 2048) return -1;
 
 		int z = (unsigned)w >> 6;
 		if (z < 0 || z > 50000) return -1;
 		aveZ += z;
 
 		y = cpu_divu_quotient_get();
-		if (y < -2048 || y > 2048) return -1;
+		if (y < -2047 || y > 2048) return -1;
 		*dst++ = y;
 	}
 	return aveZ >> 2;
@@ -613,14 +613,14 @@ static int TransformTextured(struct SATVertexTextured* a, vdp1_cmdt_t* cmd) {
 		cpu_divu_32_32_set(y * -(SCREEN_HEIGHT/2), w);
 
 		*dst++ = x;
-		if (x < -2048 || x > 2048) return -1;
+		if (x < -2047 || x > 2048) return -1;
 
 		int z = (unsigned)w >> 6;
 		if (z < 0 || z > 50000) return -1;
 		aveZ += z;
 
 		y = cpu_divu_quotient_get();
-		if (y < -2048 || y > 2048) return -1;
+		if (y < -2047 || y > 2048) return -1;
 		*dst++ = y;
 	}
 	return aveZ >> 2;
@@ -671,7 +671,8 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	Gfx_DrawVb_IndexedTris_Range(verticesCount, 0, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
+	if (depth_only) return;
 	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
@@ -740,7 +741,7 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_OnWindowResize(void) {
+void Gfx_OnWindowResize(int width, int height) {
 	// TODO
 }
 

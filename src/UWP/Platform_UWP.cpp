@@ -206,6 +206,10 @@ void CrashHandler_Install(void) {
 	SetUnhandledExceptionFilter(UnhandledFilter);
 }
 
+void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
+	// TODO implement Register dumping
+}
+
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	Logger_DoAbort(result, raw_msg, NULL);
 }
@@ -490,23 +494,28 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
 
 	*s = socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return WSAGetLastError();
 
-	if (nonblocking) {
-		u_long blockingMode = -1; /* non-blocking mode */
-		ioctlsocket(*s, FIONBIO, &blockingMode);
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	u_long mode = nonblocking ? -1 : 0;
+	int res     = ioctlsocket(s, FIONBIO, &mode);
+	return res == -1 ? WSAGetLastError() : 0;
+}
 
-	int res = connect(s, raw_addr, addr->size);
+void Socket_Close(cc_socket s) {
+	shutdown(s, SD_BOTH);
+	closesocket(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (SOCKADDR*)addr, addrSize);
 	return res == -1 ? WSAGetLastError() : 0;
 }
 
@@ -520,11 +529,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	int sentCount = send(s, (const char*)data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return WSAGetLastError();
-}
-
-void Socket_Close(cc_socket s) {
-	shutdown(s, SD_BOTH);
-	closesocket(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
@@ -557,15 +561,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	if (selectCount >= 0) return 0;
 	*success = false; 
 	return WSAGetLastError();
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error   = ERR_INVALID_ARGUMENT;
-	int errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&error, &errSize);
-	return error;
 }
 
 
@@ -791,6 +786,5 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return GetGameArgs(args);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
+

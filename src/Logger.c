@@ -36,7 +36,7 @@
 
 /* Only show up to 50 frames in backtrace */
 #define MAX_BACKTRACE_FRAMES 50
-static cc_bool cefCrash;
+static cc_bool cefCrash, csCrash;
 
 /*########################################################################################################################*
 *----------------------------------------------------------Warning--------------------------------------------------------*
@@ -186,7 +186,7 @@ void Logger_IOWarn2(cc_result res, const char* action, const struct cc_filepath_
 *-----------------------------------------------------CPU registers-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-	#include "win32/Plat_Win32.inc"
+	/* Done in Platform_Windows */
 #elif defined CC_BUILD_DARWIN
 	#include "posix/Plat_Darwin.inc"
 #elif defined CC_BUILD_ANDROID
@@ -207,7 +207,7 @@ void Logger_IOWarn2(cc_result res, const char* action, const struct cc_filepath_
 	#include "posix/Plat_SerenityOS.inc"
 #elif defined CC_BUILD_IRIX
 	#include "posix/Plat_IRIX.inc"
-#else
+#elif defined CC_BUILD_POSIX
 void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	/* Register dumping not implemented */
 }
@@ -247,6 +247,7 @@ static void PrintFrame(cc_string* str, cc_uintptr addr,
 
 	/* Check if crash is most likely caused by third party plugins */
 	cefCrash |= String_ContainsConst(&module, "classicube_cef");
+	csCrash  |= String_ContainsConst(&module, "classicube_chatsounds");
 }
 
 #if defined CC_BUILD_UWP
@@ -747,7 +748,11 @@ static void CloseLogFile(void) {
 
 void Logger_DoAbort(cc_result result, const char* raw_msg, void* ctx) {
 	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
+#if CC_BUILD_MAXSTACK < (64 * 1024)
+	cc_string msg; char msgBuffer[256 + 1];
+#else
 	cc_string msg; char msgBuffer[3070 + 1];
+#endif
 	String_InitArray_NT(msg, msgBuffer);
 
 	String_AppendConst(&msg, "ClassiCube crashed." _NL);
@@ -766,6 +771,8 @@ void Logger_DoAbort(cc_result result, const char* raw_msg, void* ctx) {
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n\n");
 	if (cefCrash) {
 		String_AppendConst(&msg, "The crash may have been caused by the CEF plugin.\nYou may want to try completely reinstalling it.\n\n");
+	} else if (csCrash) {
+		String_AppendConst(&msg, "The crash may have been caused by ChatSounds plugin.\nYou may want to try completely reinstalling it.\n\n");
 	} else {
 		String_AppendConst(&msg, "Please report this on the ClassiCube forums or Discord.\n\n");
 	}

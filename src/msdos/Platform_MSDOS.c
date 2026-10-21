@@ -2,6 +2,9 @@
 #define CC_NO_DYNLIB
 #define CC_NO_SOCKETS
 #define CC_NO_THREADING
+#define CC_NO_ENCRYPTION
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 
 #include "../Stream.h"
 #include "../ExtMath.h"
@@ -31,9 +34,6 @@ const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used ap
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-const cc_result ReturnCode_SocketInProgess  = -10002;
-const cc_result ReturnCode_SocketWouldBlock = -10002;
-const cc_result ReturnCode_SocketDropped    = -10002;
 
 const char* Platform_AppNameSuffix = " DOS";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
@@ -87,16 +87,6 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 	t->hour   = loc_time.tm_hour;
 	t->minute = loc_time.tm_min;
 	t->second = loc_time.tm_sec;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -248,17 +238,11 @@ void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Process_OpenSupported = false;
-
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
 void Process_Exit(cc_result code) { exit(code); }
-
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
 
 
 /*########################################################################################################################*
@@ -288,22 +272,6 @@ void Platform_Init(void) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Encryption--------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Platform_GetEntropy(void* data, int len) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
@@ -319,7 +287,5 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 

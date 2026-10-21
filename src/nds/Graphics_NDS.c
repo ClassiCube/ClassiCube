@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -68,8 +69,6 @@ void ResetGPU(void) {
 }
 
 void Gfx_Create(void) {
-	Gfx_RestoreState();
-
 	Gfx.MinTexWidth  =   8;
 	Gfx.MinTexHeight =   8;
 	Gfx.MaxTexWidth  = 256;
@@ -117,7 +116,7 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_OnWindowResize(void) { 
+void Gfx_OnWindowResize(int width, int height) { 
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
@@ -435,13 +434,11 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 
-void Gfx_SetDepthWrite(cc_bool enabled) { }
-void Gfx_SetDepthTest(cc_bool enabled)  { }
+static void SetDepthWrite(cc_bool enabled) { }
+static void SetDepthTest(cc_bool enabled)  { }
 
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
-static void Gfx_RestoreState(void) {
-	InitDefaultResources();
-}
+static void Gfx_RestoreState(void) { InitDefaultResources(); }
 
 cc_bool Gfx_WarnIfNecessary(void) { return true; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
@@ -609,18 +606,13 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 *#########################################################################################################################*/
 static cc_bool skipRendering;
 static cc_bool backfaceCull;
-static cc_bool alphaBlend;
-
-static cc_bool fogEnabled;
-static FogFunc fogMode;
-static float fogDensityEnd;
 
 static void SetPolygonMode() {
-	int blend = !gfx_rendering2D && alphaBlend;
+	int blend = !gfx_rendering2D && gfx_alphaBlend;
 	u32 fmt =
 		POLY_ALPHA(blend ? 14 : 31) | 
 		(backfaceCull ? POLY_CULL_BACK : POLY_CULL_NONE) | 
-		//(fogEnabled ? POLY_FOG : 0) | fog breaks UI
+		//(gfx_fogEnabled ? POLY_FOG : 0) | fog breaks UI
 		POLY_RENDER_FAR_POLYS | 
 		POLY_RENDER_1DOT_POLYS;
 
@@ -632,10 +624,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	SetPolygonMode();
 }
 
-static void SetAlphaBlend(cc_bool enabled) {
-	alphaBlend = enabled;
-	SetPolygonMode();
-}
+static void SetAlphaBlend(cc_bool enabled) { SetPolygonMode(); }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -643,9 +632,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
 }
 
-static void RecalculateFog() {
-	if (fogMode == FOG_LINEAR) {
-		int fogEnd = floattof32(fogDensityEnd);
+static void UpdateFog(void) {
+	if (gfx_fogMode == FOG_LINEAR) {
+		int fogEnd = floattof32(gfx_fogEnd);
 		
 		// Find shift value so that our fog end is
 		//  inside maximum distance covered by fog table
@@ -670,16 +659,16 @@ static void RecalculateFog() {
 		
 		GFX_FOG_TABLE[31] = 127;
 	} else {
-		// TODO?
+		// TODO? implement
 	}
 }
 
 void Gfx_SetFog(cc_bool enabled) {
-	fogEnabled = enabled;
+	gfx_fogEnabled = enabled;
 	SetPolygonMode();
 }
 
-void Gfx_SetFogCol(PackedCol color) {
+static void SetFogColor(PackedCol color) {
 	int r = PackedCol_R(color) >> 3;
 	int g = PackedCol_G(color) >> 3;
 	int b = PackedCol_B(color) >> 3;
@@ -688,20 +677,11 @@ void Gfx_SetFogCol(PackedCol color) {
 	GFX_FOG_COLOR = RGB15(r, g, b) | (a << 16);
 }
 
-void Gfx_SetFogDensity(float value) {
-	fogDensityEnd = value;
-	RecalculateFog();
-}
+static void SetFogDensity(float value) { UpdateFog(); }
 
-void Gfx_SetFogEnd(float value) {
-	fogDensityEnd = value;
-	RecalculateFog();
-}
+static void SetFogEnd(float value)     { UpdateFog(); }
 
-void Gfx_SetFogMode(FogFunc func) {
-	fogMode = func;
-	RecalculateFog();
-}
+static void SetFogMode(FogFunc func)   { UpdateFog(); }
 
 static void SetAlphaTest(cc_bool enabled) {
 	if (enabled) {
@@ -772,7 +752,7 @@ static void CallDrawList(void* list, u32 listSize) {
 	// Based on libnds glCallList
 	while (dmaBusy(0) || dmaBusy(1) || dmaBusy(2) || dmaBusy(3));
 	dmaSetParams(0, list, (void*) &GFX_FIFO, DMA_FIFO | listSize);
-	while (dmaBusy(0));
+	while (dmaBusy(0)); // NOTE: wait for DMA to finish (if not waiting, remove shared scratch VBs)
 }
 
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
@@ -805,7 +785,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	}
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (skipRendering) return;
 	Draw_TexturedTriangles(verticesCount, startVertex);
 }

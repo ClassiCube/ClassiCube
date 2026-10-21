@@ -18,10 +18,12 @@ jobs:
     container:
       image: ghcr.io/extremscorner/libogc2:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Compile GameCube build
+        shell: bash
         run: |
-          make gamecube
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make gamecube EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build

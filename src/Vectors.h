@@ -18,8 +18,12 @@ typedef struct Vec3_ { float x, y, z; } Vec3;
 typedef struct IVec3_ { int x, y, z; } IVec3;
 /* 4 component vector */
 struct Vec4 { float x, y, z, w; };
+#if defined CC_BUILD_PSP || defined CC_BUILD_PS2 || defined CC_BUILD_PS3 || defined CC_BUILD_PSVITA || defined CC_BUILD_XBOX || defined CC_BUILD_WII || defined CC_BUILD_GAMECUBE
+struct CC_ALIGNED(16) Matrix { struct Vec4 row1, row2, row3, row4; };
+#else
 /* 4x4 matrix. (for vertex transformations) */
 struct Matrix { struct Vec4 row1, row2, row3, row4; };
+#endif
 
 #define Matrix_IdentityValue \
 { \
@@ -134,10 +138,14 @@ CC_API void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const s
 
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot);
 
-cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius);
+#define FRUSTUM_OUTSIDE     0x00
+#define FRUSTUM_ON_OR_IN    0x01
+
+/* Tests whether the given sphere lies outside any of the clipping planes */
+int  Frustum_TestSphere(float x, float y, float z, float radius);
 /* Calculates the clipping planes from the combined modelview and projection matrices */
 /* Matrix_Mul(&clip, modelView, projection); */
-void FrustumCulling_CalcFrustumEquations(struct Matrix* clip);
+void Frustum_CalcPlanes(struct Matrix* clip);
 
 CC_END_HEADER
 #endif

@@ -136,7 +136,7 @@ void Gamepads_Process(float delta) {
 extern void fastset_256_bytes(char* beg, char* end, int value);
 
 void VRAM_FastClear(BitmapCol col) {
-	int value = (col << 16) | col;
+	int value  = (col << 16) | col;
 
 	char* vram = (char*)MEM_VRAM;
 	fastset_256_bytes(vram, vram + SCREEN_WIDTH * SCREEN_HEIGHT * 2, value);

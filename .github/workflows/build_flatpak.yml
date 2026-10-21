@@ -1,0 +1,55 @@
+name: Build latest (Flatpak)
+# trigger via either push to selected branches or on manual run
+on:
+  #push:
+ #   branches:
+ #     - main
+ #     - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-flatpak
+  cancel-in-progress: true
+
+jobs:
+  build_x64:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-24.08
+      options: --privileged
+    steps:
+    - uses: actions/checkout@v5
+    - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      with:
+        bundle: net.classicube.flatpak.client.flatpak
+        manifest-path: misc/flatpak/net.classicube.flatpak.client.X11.json
+        arch: x86_64
+
+
+    - uses: ./.github/actions/notify_failure
+      if: failure()
+      with:
+        NOTIFY_MESSAGE: 'Failed to produce x86_64 Flatpak build'
+        WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+
+  build_arm64:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-24.08
+      options: --privileged
+    steps:
+    - uses: actions/checkout@v5
+    - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      with:
+        bundle: net.classicube.flatpak.client.flatpak
+        manifest-path: misc/flatpak/net.classicube.flatpak.client.X11.json
+        arch: aarch64
+
+
+    - uses: ./.github/actions/notify_failure
+      if: failure()
+      with:
+        NOTIFY_MESSAGE: 'Failed to produce arm64 Flatpak build'
+        WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'

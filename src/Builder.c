@@ -360,7 +360,7 @@ static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
 	}
 }
 
-void Builder_MakeChunk(struct ChunkInfo* info) {
+cc_bool Builder_MakeChunk(struct ChunkInfo* info) {
 #if CC_BUILD_MAXSTACK <= (32 * 1024)
 	void* mem        = TempMem_Alloc((EXTCHUNK_SIZE_3 * sizeof(BlockID)) + (CHUNK_SIZE_3 * FACE_COUNT));
 	BlockID* chunk   = (BlockID*)mem;
@@ -380,7 +380,9 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	int xMax, yMax, zMax, totalVerts;
 	int cIndex, index;
 	int x, y, z, xx, yy, zz;
-	int x1 = info->centreX - 8, y1 = info->centreY - 8, z1 = info->centreZ - 8;
+	int x1 = info->centreX - HALF_CHUNK_SIZE;
+	int y1 = info->centreY - HALF_CHUNK_SIZE;
+	int z1 = info->centreZ - HALF_CHUNK_SIZE;
 
 	Builder_Chunk  = chunk;
 	Builder_Counts = counts;
@@ -400,7 +402,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	}
 
 	info->allAir = allAir;
-	if (allAir || allSolid) return;
+	if (allAir || allSolid) return true;
 	Lighting.LightHint(x1 - 1, y1 - 1, z1 - 1);
 
 	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
@@ -412,7 +414,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	PrepareChunk(x1, y1, z1);
 
 	totalVerts = Builder_TotalVerticesCount();
-	if (!totalVerts) return;
+	if (!totalVerts) return true;
 	
 	OutputChunkPartsMeta(x1, y1, z1, info);
 #ifdef OCCLUSION
@@ -422,7 +424,9 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 #if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	info->vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, totalVerts + 1);
+	info->vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, totalVerts + 1);
+	if (!info->vb) return false;
+
 	Builder_Vertices = (struct VertexTextured*)Gfx_LockVb(info->vb,
 													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #else
@@ -460,6 +464,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 #else
 	Gfx_UnlockVb(info->vb);
 #endif
+	return true;
 }
 
 static cc_bool Builder_OccludedLiquid(int chunkIndex) {

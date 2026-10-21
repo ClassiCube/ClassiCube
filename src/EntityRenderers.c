@@ -12,6 +12,7 @@
 #include "Particle.h"
 #include "Drawer2D.h"
 #include "Server.h"
+#include "Platform.h"
 
 /*########################################################################################################################*
 *------------------------------------------------------Entity Shadow------------------------------------------------------*
@@ -212,7 +213,7 @@ static void EntityShadow_Draw(struct Entity* e) {
 	}
 
 	count = (int)(ptr - vertices);
-	Gfx_SetDynamicVbData(shadows_VB, vertices, count);
+	Gfx_SetScratchVbData(shadows_VB, vertices, count);
 	Gfx_DrawVb_IndexedTris(count);
 }
 
@@ -224,7 +225,11 @@ static void EntityShadow_Draw(struct Entity* e) {
 #define sh_half (sh_size / 2)
 
 static void EntityShadows_MakeTexture(void) {
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	BitmapCol* pixels = (BitmapCol*)Mem_Alloc(sh_size * sh_size, BITMAPCOLOR_SIZE, "shadow");
+#else
 	BitmapCol pixels[sh_size * sh_size];
+#endif
 	BitmapCol color = BitmapCol_Make(0, 0, 0, 200);
 	struct Bitmap bmp;
 	cc_uint32 x, y;
@@ -241,6 +246,9 @@ static void EntityShadows_MakeTexture(void) {
 		}
 	}
 	shadows_tex = Gfx_CreateTexture(&bmp, 0, false);
+#if CC_BUILD_MAXSTACK <= (64 * 1024)
+	Mem_Free(pixels);
+#endif
 }
 
 void EntityShadows_Render(void) {
@@ -252,7 +260,7 @@ void EntityShadows_Render(void) {
 	if (!shadows_tex) 
 		EntityShadows_MakeTexture();
 	if (!shadows_VB)
-		shadows_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, SHADOW_MAX_VERTS);
+		shadows_VB = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, SHADOW_MAX_VERTS);
 
 	Gfx_SetAlphaArgBlend(true);
 	Gfx_SetDepthWrite(false);
@@ -343,7 +351,7 @@ static void DrawName(struct Entity* e) {
 	Gfx_BindTexture(e->NameTex.ID);
 
 	if (!names_VB)
-		names_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
+		names_VB = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, 4);
 
 	model = e->Model;
 	Model_GetEntityTransform(model, e, &transform);
@@ -362,9 +370,9 @@ static void DrawName(struct Entity* e) {
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
-	vertices = (struct VertexTextured*)Gfx_LockDynamicVb(names_VB, VERTEX_FORMAT_TEXTURED, 4);
+	vertices = (struct VertexTextured*)Gfx_LockScratchVb(names_VB, VERTEX_FORMAT_TEXTURED, 4);
 	Particle_DoRender(&size, &pos, &e->NameTex.uv, PACKEDCOL_WHITE, vertices);
-	Gfx_UnlockDynamicVb(names_VB);
+	Gfx_UnlockScratchVb(names_VB);
 
 	Gfx_DrawVb_IndexedTris(4);
 }
@@ -463,9 +471,9 @@ static void EntityNames_ChatFontChanged(void* obj) {
 *#########################################################################################################################*/
 static void EntityRenderers_ContextLost(void* obj) {
 	Gfx_DeleteTexture(&shadows_tex);
-	Gfx_DeleteDynamicVb(&shadows_VB);
+	Gfx_DeleteScratchVb(&shadows_VB);
 	
-	Gfx_DeleteDynamicVb(&names_VB);
+	Gfx_DeleteScratchVb(&names_VB);
 	DeleteAllNameTextures();
 }
 

@@ -101,9 +101,33 @@ typedef struct {
 #define PAllHints (PPosition|PSize|PMinSize|PMaxSize|PResizeInc|PAspect)
 
 typedef struct {
+	long flags;	/* marks which fields in this structure are defined */
+	Bool input;	/* does this application rely on the window manager to
+			get keyboard input? */
+	int initial_state;	/* see below */
+	Pixmap icon_pixmap;	/* pixmap to be used as icon */
+	Window icon_window; 	/* window to be used as icon */
+	int icon_x, icon_y; 	/* initial position of icon */
+	Pixmap icon_mask;	/* icon mask bitmap */
+	XID window_group;	/* id of related window group */
+	/* this structure may be extended in the future */
+} XWMHints;
+
+typedef struct {
 	char *res_name;
 	char *res_class;
 } XClassHint;
+
+/*
+ * new structure for manipulating TEXT properties; used with WM_NAME,
+ * WM_ICON_NAME, WM_CLIENT_MACHINE, and WM_COMMAND.
+ */
+typedef struct {
+    unsigned char *value;		/* same as Property routines */
+    Atom encoding;			/* prop type */
+    int format;				/* prop data format: 8, 16, or 32 */
+    unsigned long nitems;		/* number of data items in value */
+} XTextProperty;
 
 #ifdef XUTIL_DEFINE_FUNCTIONS
 extern int XDestroyImage(
@@ -244,6 +268,18 @@ extern void XSetWMSizeHints(
     Window		/* w */,
     XSizeHints*		/* hints */,
     Atom		/* property */
+);
+
+extern void XSetWMProperties(
+    Display*		/* display */,
+    Window		/* w */,
+    XTextProperty*	/* window_name */,
+    XTextProperty*	/* icon_name */,
+    char**		/* argv */,
+    int			/* argc */,
+    XSizeHints*		/* normal_hints */,
+    XWMHints*		/* wm_hints */,
+    XClassHint*		/* class_hints */
 );
 
 extern int XLookupString(

@@ -222,7 +222,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp, int width, int height) {
 
 	Game.Width  = Window_Main.Width;
 	Game.Height = Window_Main.Height;
-	Gfx_OnWindowResize();
+	Gfx_OnWindowResize(Game.Width, Game.Height);
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

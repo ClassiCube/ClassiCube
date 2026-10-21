@@ -1,7 +1,8 @@
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define CC_NO_OPEN
 #ifdef NDS_NONET
-#define CC_NO_SOCKETS
+	#define CC_NO_SOCKETS
 #endif
 #define DEFAULT_COMMANDLINE_FUNC
 #define OVERRIDE_MEM_FUNCTIONS
@@ -37,9 +38,12 @@ const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_PathNotFound     = 99999;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+
+#ifndef NDS_NONET
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
+#endif
 
 const char* Platform_AppNameSuffix = " NDS";
 cc_bool Platform_ReadonlyFilesystem;
@@ -267,6 +271,10 @@ static void CrashHandler(void) {
 
 void CrashHandler_Install(void) { 
 	setExceptionHandler(CrashHandler);
+}
+
+void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
+	// TODO Register dumping not implemented
 }
 
 // __attribute__ ((target("arm"))) 
@@ -570,24 +578,29 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
 	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return errno;
 
-	if (nonblocking) {
-		int blocking_raw = 1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	int res  = ioctl(s, FIONBIO, &mode);
+	return res < 0 ? errno : 0;
+}
 
-	int res = connect(s, raw, addr->size);
+void Socket_Close(cc_socket s) {
+	shutdown(s, 2); // SHUT_RDWR = 2
+	closesocket(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? errno : 0;
 }
 
@@ -603,11 +616,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (res < 0) { *modified = 0; return errno; }
 	
 	*modified = res; return 0;
-}
-
-void Socket_Close(cc_socket s) {
-	shutdown(s, 2); // SHUT_RDWR = 2
-	closesocket(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
@@ -630,15 +638,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	if (res < 0) { *success = false; return errno; }
 	*success = FD_ISSET(s, &set) != 0; 
 	return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
 }
 
 static void LogWifiStatus(int status) {
@@ -729,11 +728,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -741,9 +735,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 void CPU_FlushDataCache(void* start, int length) {
 	DC_FlushRange(start, length);

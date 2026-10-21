@@ -229,16 +229,20 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	cc_uint32 stride;
 	cc_uint32* framebuf = (cc_uint32*)framebufferBegin(&fb, &stride);
 
-	for (int y = r.y; y < r.y + r.height; y++)
-	{
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		cc_uint32* dst = framebuf + y * stride / sizeof(cc_uint32);
+	int src_stride = bmp->width;
+	int dst_stride = stride / sizeof(cc_uint32);
 
-		for (int x = r.x; x < r.x + r.width; x++)
-		{
-			dst[x] = src[x];
-		}
+	BitmapCol* src = bmp->scan0 + src_stride * r.y + r.x;
+	cc_uint32* dst = framebuf   + dst_stride * r.y + r.x;
+	 
+	for (int y = 0; y < r.height; y++)
+	{
+		for (int x = 0; x < r.width; x++) { dst[x] = src[x]; }
+
+		src += src_stride;
+		dst += dst_stride;
 	}
+
 	framebufferEnd(&fb);
 }
 

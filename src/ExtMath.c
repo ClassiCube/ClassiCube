@@ -74,22 +74,19 @@ float Math_Mod1(float x) { return x - (int)x; /* fmodf(x, 1); */ }
 /*########################################################################################################################*
 *-------------------------------------------------------Math intrinsics---------------------------------------------------*
 *#########################################################################################################################*/
-/* 32x/Saturn/GBA is missing these intrinsics */
+
 #if defined CC_BUILD_32X || defined CC_BUILD_SATURN || defined CC_BUILD_GBA
-#include "../third_party/fix16_sqrt.c"
+	/* 32x/Saturn/GBA is missing these intrinsics */
+	#include "../third_party/fix16_sqrt.c"
 
-float sqrtf(float x) {
-	int32_t fp_x = (int32_t)(x * (1 << 16));
-	fp_x = sqrt_fix16(fp_x);
-	return (float)fp_x / (1 << 16);
-}
-#endif
-
-
-#if defined CC_BUILD_PS1
-	/* PS1 is missing these intrinsics */
+	float Math_SqrtF(float x) {
+		cc_int32 fp_x = (cc_int32)(x * (1 << 16));
+		fp_x = sqrt_fix16(fp_x);
+		return (float)fp_x / (1 << 16);
+	}
+#elif defined CC_BUILD_PS1
+	/* PS1 is missing this intrinsic */
 	#include <psxgte.h>
-	float Math_AbsF(float x)  { return __builtin_fabsf(x); }
 
 	float Math_SqrtF(float x) { 
 		int fp_x = (int)(x * (1 << 12));
@@ -98,7 +95,7 @@ float sqrtf(float x) {
 	}
 #elif defined __GNUC__ || defined NXDK
 	/* Defined in .h using builtins */
-#elif defined __TINYC__ || defined CC_BUILD_ATARIOS || defined CC_BUILD_AMIGA
+#elif defined __TINYC__ || defined CC_BUILD_ATARIOS || defined CC_BUILD_AMIGA || defined __WATCOMC__
 	/* Older versions of TinyC don't support fabsf or sqrtf */
 	/* Those can be used though if compiling with newer TinyC */
 	/*  versions for a very small performance improvement */
@@ -159,16 +156,7 @@ float Random_Float(RNGState* seed) {
 /*########################################################################################################################*
 *--------------------------------------------------Trigonometric functions-----------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_DREAMCAST
-#include <math.h>
-
-/* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
-/* TODO: Properly investigate this issue */
-/* double make_dreamcast_build_compile(void) { fabs(4); } */
-
-float Math_SinF(float x)   { return sinf(x); }
-float Math_CosF(float x)   { return cosf(x); }
-#elif CC_BUILD_FPU_MODE < CC_FPU_MODE_NORMAL
+#if CC_BUILD_FPU_MODE < CC_FPU_MODE_NORMAL
 
 // Source https://www.coranac.com/2009/07/sines
 #define ISIN_QN	10
@@ -306,7 +294,7 @@ static double SinStage3(double x) {
  * Associated math function: sin(x)
  * Allowed input range: anything
  */
-float Math_SinF(float x) {
+CC_WEAKFUNC float Math_SinF(float x) {
 	double x_div_pi;
 
 	x_div_pi = x * DIV_2_PI;
@@ -323,7 +311,7 @@ float Math_SinF(float x) {
  * Associated math function: cos(x)
  * Allowed input range: anything
  */
-float Math_CosF(float x) {
+CC_WEAKFUNC float Math_CosF(float x) {
 	double x_div_pi_shifted;
 
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;

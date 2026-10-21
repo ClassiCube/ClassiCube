@@ -44,12 +44,12 @@
  *
  * Algorithm and code Author Christophe Meessen 1993. */
 
-static int32_t sqrt_fix16(int32_t value)
+static cc_int32 sqrt_fix16(cc_int32 value)
 {
-    uint32_t t;
-    uint32_t r = value;
-    uint32_t b = 0x40000000;
-    uint32_t q = 0;
+    cc_uint32 t;
+    cc_uint32 r = value;
+    cc_uint32 b = 0x40000000;
+    cc_uint32 q = 0;
 
     while (b > 0x40) {
         t = q + b;

@@ -18,7 +18,7 @@ jobs:
     container:
       image: free60/libxenon
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           sed -i -e 's/archive.ubuntu.com\|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
@@ -26,10 +26,12 @@ jobs:
           apt-get install -y curl
 
       - name: Compile 360 build
+        shell: bash
         run: |
           export DEVKITXENON=/usr/local/xenon
-          export PATH=$PATH:$DEVKITXENON/bin:$DEVKITXENON/usr/bin
-          make xbox360
+
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make xbox360 EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build

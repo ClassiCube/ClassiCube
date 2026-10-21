@@ -224,6 +224,9 @@ void CrashHandler_Install(void) {
 	SetUnhandledExceptionFilter(UnhandledFilter);
 }
 
+// TODO move into Platform file
+#include "win32/Plat_Win32.inc"
+
 #if __clang__
 void __attribute__((optnone)) Process_Abort2(cc_result result, const char* raw_msg) {
 #elif __GNUC__
@@ -677,23 +680,28 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	}
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
 
 	*s = _socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
 
-	if (nonblocking) {
-		u_long blockingMode = -1; /* non-blocking mode */
-		_ioctlsocket(*s, FIONBIO, &blockingMode);
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	u_long mode = nonblocking ? -1 : 0;
+	int res     = _ioctlsocket(s, FIONBIO, &mode);
+	return res == -1 ? _WSAGetLastError() : 0;
+}
 
-	int res = _connect(s, raw_addr, addr->size);
+void Socket_Close(cc_socket s) {
+	_shutdown(s, SD_BOTH);
+	_closesocket(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = _connect(s, (SOCKADDR*)addr, addrSize);
 	return res == -1 ? _WSAGetLastError() : 0;
 }
 
@@ -709,18 +717,13 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	*modified = 0; return _WSAGetLastError();
 }
 
-void Socket_Close(cc_socket s) {
-	_shutdown(s, SD_BOTH);
-	_closesocket(s);
-}
-
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	fd_set set1, set2;
 	int selectCount;
-	struct timeval time = {
-		timeoutMS / 1000,          /* seconds */
-		(timeoutMS % 1000) * 1000, /* microseconds */
-	};
+	struct timeval time;
+	
+	time.tv_sec  = timeoutMS / 1000;          /* seconds */
+	time.tv_usec = (timeoutMS % 1000) * 1000; /* microseconds */
 
 	set1.fd_count    = 1; set2.fd_count    = 1;
 	set1.fd_array[0] = s; set2.fd_array[0] = s;
@@ -744,15 +747,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	if (selectCount >= 0) return 0;
 	*success = false; 
 	return _WSAGetLastError();
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error   = ERR_INVALID_ARGUMENT;
-	int errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	_getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&error, &errSize);
-	return error;
 }
 
 
@@ -1198,7 +1192,7 @@ static cc_bool IsProblematicWorkingDirectory(void) {
 	return false;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	cc_winstring path;
 	int i, len;
 	cc_result res;

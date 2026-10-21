@@ -183,7 +183,9 @@ static CC_NOINLINE void BuildClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	clouds_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, clouds_vertices);
+	clouds_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, clouds_vertices);
+	if (!clouds_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(clouds_vb,
 										VERTEX_FORMAT_TEXTURED, clouds_vertices);
 
@@ -251,7 +253,9 @@ static CC_NOINLINE void BuildSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	sky_vb = Gfx_CreateVb(VERTEX_FORMAT_COLOURED, sky_vertices);
+	sky_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_COLOURED, sky_vertices);
+	if (!sky_vb) return;
+
 	data   = (struct VertexColoured*)Gfx_LockVb(sky_vb,
 										VERTEX_FORMAT_COLOURED, sky_vertices);
 
@@ -321,7 +325,9 @@ static CC_NOINLINE void BuildSkybox(void) {
 	struct VertexTextured* data;
 	int i;
 
-	skybox_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	skybox_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	if (!skybox_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(skybox_vb,
 										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
 
@@ -482,7 +488,7 @@ void EnvRenderer_RenderWeather(float delta) {
 	if (!Weather_Heightmap) 
 		InitWeatherHeightmap();
 	if (!weather_vb)
-		weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
+		weather_vb = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 
 	IVec3_Floor(&pos, &Camera.CurrentPos);
 	moved   = pos.x != lastPos.x || pos.y != lastPos.y || pos.z != lastPos.z;
@@ -519,7 +525,7 @@ void EnvRenderer_RenderWeather(float delta) {
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	v = (struct VertexTextured*)Gfx_LockDynamicVb(weather_vb, 
+	v = (struct VertexTextured*)Gfx_LockScratchVb(weather_vb, 
 										VERTEX_FORMAT_TEXTURED, numCoords * WEATHER_VERTS);
 
 	color = Env.SunCol;
@@ -577,7 +583,7 @@ void EnvRenderer_RenderWeather(float delta) {
 		v->x = x1; v->y = y1; v->z = z2; v->Col = color; v->U = uOffset2;        v->V = v1; v++;
 	}
 
-	Gfx_UnlockDynamicVb(weather_vb);
+	Gfx_UnlockScratchVb(weather_vb);
 	Gfx_DrawVb_IndexedTris(numCoords * WEATHER_VERTS);
 
 	Gfx_SetAlphaArgBlend(false);
@@ -721,7 +727,9 @@ static CC_NOINLINE void BuildMapSides(void) {
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
 
-	sides_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, sides_vertices);
+	sides_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, sides_vertices);
+	if (!sides_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(sides_vb,
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
@@ -769,7 +777,9 @@ static CC_NOINLINE void BuildMapEdges(void) {
 		edges_vertices += CalcNumVertices(r.width, r.height); /* YPlanes outside */
 	}
 
-	edges_vb = Gfx_CreateVb(VERTEX_FORMAT_TEXTURED, edges_vertices);
+	edges_vb = Gfx_TryCreateStaticVb(VERTEX_FORMAT_TEXTURED, edges_vertices);
+	if (!edges_vb) return;
+
 	data = (struct VertexTextured*)Gfx_LockVb(edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
@@ -851,7 +861,7 @@ static void DeleteCloudsVB(void)  { Gfx_DeleteVb(&clouds_vb); }
 static void DeleteSkyboxVB(void)  { Gfx_DeleteVb(&skybox_vb); }
 static void DeleteSidesVB(void)   { Gfx_DeleteVb(&sides_vb); }
 static void DeleteEdgesVB(void)   { Gfx_DeleteVb(&edges_vb); }
-static void DeleteWeatherVB(void) { Gfx_DeleteDynamicVb(&weather_vb); }
+static void DeleteWeatherVB(void) { Gfx_DeleteScratchVb(&weather_vb); }
 
 static void DeleteStaticVbs(void) {
 	DeleteSkyVB();

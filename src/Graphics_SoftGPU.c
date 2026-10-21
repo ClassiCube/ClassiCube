@@ -1,6 +1,7 @@
+#define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTGPU
-#define CC_DYNAMIC_VBS_ARE_STATIC
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -17,8 +18,6 @@ static cc_bool colWrite = true;
 static int cb_stride;
 
 static float* depthBuffer;
-static cc_bool depthTest  = true;
-static cc_bool depthWrite = true;
 static int db_stride;
 
 static void* gfx_vertices;
@@ -45,8 +44,6 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	Gfx.BackendType  = CC_GFX_BACKEND_SOFTGPU;
 	Gfx.Limitations  = GFX_LIMIT_MINIMAL;
-	
-	Gfx_RestoreState();
 }
 
 static void DestroyBuffers(void) {
@@ -62,7 +59,7 @@ void Gfx_Free(void) {
 
 
 typedef struct CCTexture {
-	int width, height;
+	unsigned short width, height;
 	BitmapCol pixels[];
 } CCTexture;
 
@@ -97,7 +94,8 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 		
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	CCTexture* tex = (CCTexture*)Mem_Alloc(2 + bmp->width * bmp->height, 4, "Texture");
+	CCTexture* tex = (CCTexture*)Mem_TryAlloc(2 + bmp->width * bmp->height, BITMAPCOLOR_SIZE);
+	if (!tex) return NULL;
 
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
@@ -124,11 +122,11 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)	{ }
-void Gfx_SetFogCol(PackedCol col)   { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value) 	{ }
-void Gfx_SetFogMode(FogFunc func)   { }
+void Gfx_SetFog(cc_bool enabled)         { }
+static void SetFogColor(PackedCol color) { } // TODO PACK_GIFTAG(q, GS_SET_FOGCOL(0,0,0), GS_REG_FOGCOL);
+static void SetFogDensity(float value)   { }
+static void SetFogEnd(float value)       { }
+static void SetFogMode(FogFunc func)     { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	faceCulling = enabled;
@@ -179,20 +177,21 @@ void Gfx_ClearColor(PackedCol color) {
 	clearColor = BitmapCol_Make(R, G, B, A);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
+	/* Uses value from Gfx_SetDepthTest */
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
+	/* Uses value from Gfx_SetDepthWrite */
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
+	colWrite = r || g || b || a;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	colWrite = !depthOnly;
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -418,9 +417,10 @@ static void DrawSprite2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				G = BitmapCol_G(color);
 				B = BitmapCol_B(color);
 
-				R = (R * A + dstR * (255 - A)) >> 8;
-				G = (G * A + dstG * (255 - A)) >> 8;
-				B = (B * A + dstB * (255 - A)) >> 8;
+				// R = (R * A + dstR * (255 - A)) >> 8;
+				R = dstR + ((A * (R - dstR)) >> 8);
+				G = dstG + ((A * (G - dstG)) >> 8);
+				B = dstB + ((A * (B - dstB)) >> 8);
 				color = BitmapCol_Make(R, G, B, 0xFF);
 			}
 
@@ -525,9 +525,10 @@ static void DrawTriangle2D(Vertex* V0, Vertex* V1, Vertex* V2) {
 				int dstG = BitmapCol_G(dst);
 				int dstB = BitmapCol_B(dst);
 
-				R = (R * A + dstR * (255 - A)) >> 8;
-				G = (G * A + dstG * (255 - A)) >> 8;
-				B = (B * A + dstB * (255 - A)) >> 8;
+				// R = (R * A + dstR * (255 - A)) >> 8;
+				R = dstR + ((A * (R - dstR)) >> 8);
+				G = dstG + ((A * (G - dstG)) >> 8);
+				B = dstB + ((A * (B - dstB)) >> 8);
 			}
 
 			colorBuffer[cb_index] = BitmapCol_Make(R, G, B, 0xFF);
@@ -638,9 +639,9 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
 			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
 
-			if (depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
+			if (gfx_depthTest && (z < 0 || z > depthBuffer[db_index])) continue;
 			if (!colWrite) {
-				if (depthWrite) depthBuffer[db_index] = z;
+				if (gfx_depthWrite) depthBuffer[db_index] = z;
 				continue;
 			}
 
@@ -657,7 +658,7 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			}
 
 			if (gfx_alphaTest && A < 0x80) continue;
-			if (depthWrite) depthBuffer[db_index] = z;
+			if (gfx_depthWrite) depthBuffer[db_index] = z;
 			int cb_index = y * cb_stride + x;
 			
 			if (!gfx_alphaBlend) {
@@ -670,9 +671,10 @@ static void DrawTriangle3D(Vertex* V0, Vertex* V1, Vertex* V2) {
 			int dstG = BitmapCol_G(dst);
 			int dstB = BitmapCol_B(dst);
 
-			int finR = (R * A + dstR * (255 - A)) >> 8;
-			int finG = (G * A + dstG * (255 - A)) >> 8;
-			int finB = (B * A + dstB * (255 - A)) >> 8;
+			// int finR = (R * A + dstR * (255 - A)) >> 8;
+			int finR = dstR + ((A * (R - dstR)) >> 8);
+			int finG = dstG + ((A * (G - dstG)) >> 8);
+			int finB = dstB + ((A * (B - dstB)) >> 8);
 			colorBuffer[cb_index] = BitmapCol_Make(finR, finG, finB, 0xFF);
 		}
 	}
@@ -1010,8 +1012,8 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	DrawQuads(0, verticesCount, DRAW_HINT_NONE);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawQuads(startVertex, verticesCount, DRAW_HINT_NONE);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
+	DrawQuads(startVertex, verticesCount, hints);
 }
 
 
@@ -1034,7 +1036,12 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 void Gfx_BeginFrame(void) { }
 
 void Gfx_EndFrame(void) {
-	Rect2D r = { 0, 0, fb_width, fb_height };
+    Rect2D r;
+	r.x = 0;
+	r.y = 0; 
+	r.width  = fb_width;
+	r.height = fb_height;
+	
 	Window_DrawFramebuffer(r, &fb_bmp);
 }
 
@@ -1042,21 +1049,21 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_OnWindowResize(void) {
+void Gfx_OnWindowResize(int width, int height) {
 	if (depthBuffer) DestroyBuffers();
 
-	fb_width   = Game.Width;
-	fb_height  = Game.Height;
+	fb_width   = width;
+	fb_height  = height;
 
-	Window_AllocFramebuffer(&fb_bmp, Game.Width, Game.Height);
+	Window_AllocFramebuffer(&fb_bmp, width, height);
 	colorBuffer = fb_bmp.scan0;
 	cb_stride   = fb_bmp.width;
 
-	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
-	db_stride   = fb_width;
+	depthBuffer = Mem_Alloc(width * height, 4, "depth buffer");
+	db_stride   = width;
 
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
-	Gfx_SetScissor (0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, width, height);
+	Gfx_SetScissor (0, 0, width, height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {

@@ -47,7 +47,7 @@ void Platform_Init(void);
 /* Frees the platform specific state. */
 void Platform_Free(void);
 /* Sets the appropriate default current/working directory. */
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv);
+cc_result Platform_SetDefaultCurrentDirectory(void);
 /* Gets the command line arguments passed to the program. */
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args);
 
@@ -382,24 +382,25 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst);
 
 /* Allocates a new socket that is capable of connecting to the given address */
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr);
+/* Attempts to set whether socket operations block calling thread or not */
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking);
+/* Attempts to close the given socket */
+void Socket_Close(cc_socket s);
+
 /* Begins connecting to the given address */
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr);
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize);
 /* Attempts to read data from the given socket */
 /* NOTE: A closed socket may set modified to 0, but still return 'success' (i.e. 0) */
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 /* Attempts to write data to the given socket */
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
-/* Attempts to close the given socket */
-void Socket_Close(cc_socket s);
 
 enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 /* Polls if the given socket is currently readable or writable */
 /* NOTE: 'readable' usually means socket either has data available to read, or is closed */
 /* NOTE: 'writable' usually means socket either has finished connecting, or is closed */
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success);
-/* Retrieves the most recent async error code (typically from connect) */
-cc_result Socket_GetLastError(cc_socket s);
 
 
 /*########################################################################################################################*

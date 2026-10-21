@@ -1,5 +1,6 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
+#define CC_NO_OPEN
 #define CC_NO_DYNLIB
 #define DEFAULT_COMMANDLINE_FUNC
 
@@ -25,9 +26,11 @@
 #include <dc/sd.h>
 #include <fat/fs_fat.h>
 #include <kos/dbgio.h>
+#include <dc/net/w5500_adapter.h>
 
-KOS_INIT_FLAGS(INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
-               INIT_VMU        | INIT_CDROM    | INIT_NET);
+KOS_INIT_FLAGS(	INIT_IRQ		| INIT_NET		|
+				INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE |
+               	INIT_VMU        | INIT_CDROM    | INIT_FS_RAMDISK);
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -112,7 +115,7 @@ static void LogOnscreen(const char* msg, int len) {
 
 	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
 
-	short* dst     = vram_s + Onscreen_LineOffset(pos.y);
+	uint16_t* dst  = vram_s + Onscreen_LineOffset(pos.y);
 	int num_pixels = ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width;
 	for (int i = 0; i < num_pixels; i++) dst[i] = 0;
 	//sq_set16(vram_s + Onscreen_LineOffset(pos.y), 0, ONSCREEN_LINE_HEIGHT * 2 * vid_mode->width);
@@ -216,6 +219,10 @@ void CrashHandler_Install(void) {
 	irq_set_handler(EXC_UNHANDLED_EXC, HandleCrash, NULL);
 }
 
+void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
+	// TODO Register dumping not implemented
+}
+
 void Process_Abort2(cc_result result, const char* raw_msg) {
 	Logger_DoAbort(result, raw_msg, NULL);
 }
@@ -278,7 +285,7 @@ static int VMUFile_Do(cc_file* file, int mode) {
 		data = Mem_Alloc(len, 1, "VMU data");
 		fs_read(fd, data, len);
 		
-		err = vmu_pkg_parse(data, &pkg);
+		err = vmu_pkg_parse(data, len, &pkg);
 		fs_close(fd);
 	}
 	
@@ -389,7 +396,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	if (fd < 0) return errno;
 
 	String_InitArray(path, pathBuffer);
-	dirent_t* entry;
+	const dirent_t* entry;
 	errno = 0;
 	
 	while ((entry = fs_readdir(fd))) {
@@ -398,7 +405,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 		// ignore . and .. entry (PSP does return them)
 		// TODO: Does Dreamcast?
-		char* src = entry->name;
+		const char* src = entry->name;
 		if (src[0] == '.' && src[1] == '\0')                  continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 		
@@ -620,6 +627,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	int res = getaddrinfo(host, portRaw, &hints, &result);
 	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
 	if (res == EAI_SYSTEM) return errno;
+
 	if (res) return res;
 
 	int i = 0;
@@ -633,22 +641,29 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	*s = socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s == -1) return errno;
 
-	if (nonblocking) {
-		fcntl(*s, F_SETFL, O_NONBLOCK);
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	// TODO need to preserve old flags?
+	int mode = nonblocking ? O_NONBLOCK : 0;
+	int res  = fcntl(s, F_SETFL, mode);
+	return res == -1 ? errno : 0;
+}
 
-	int res = connect(s, raw, addr->size);
+void Socket_Close(cc_socket s) {
+	shutdown(s, SHUT_RDWR);
+	close(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (struct sockaddr*)addr, addrSize);
 	return res == -1 ? errno : 0;
 }
 
@@ -664,11 +679,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	*modified = 0; return errno;
 }
 
-void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
-}
-
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
@@ -680,18 +690,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	/* to match select, closed socket still counts as readable */
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
 	*success = (pfd.revents & flags) != 0;
-	return 0;
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	//int error = ERR_INVALID_ARGUMENT;
-	//socklen_t errSize = sizeof(error);
-
-	// https://github.com/KallistiOS/KallistiOS/blob/7bf0e0329b23482eae9f5231f39a0843dee407c7/kernel/net/net_tcp.c#L1493
-	// TODO not actually implemented
-	//getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	//return error;
-
 	return 0;
 }
 
@@ -725,7 +723,9 @@ static void TryInitSDCard(void) {
 
 	root_path = String_FromReadonly("/sd/ClassiCube/");
 	Platform_ReadonlyFilesystem = false;
-	usingSD   = true;
+
+	usingSD      = true;
+	log_debugger = false;
 
 	cc_filepath* root = FILEPATH_RAW("/sd/ClassiCube");
 	int res = Directory_Create2(root);
@@ -754,11 +754,20 @@ static void InitModem(void) {
 	if (err) {
 		Platform_Log1("Connecting link failed (%i)", &err); return;
  	}
+
+	net_init(0); // normally auto called in kallistios autoinit, but need to manually call
+	// here because modem is not in the default network devices list
 }
 
 void Platform_Init(void) {
 	Platform_ReadonlyFilesystem = true;
-	TryInitSDCard();
+
+	// W5500 net adapter also uses the serial port
+	if (w5500_adapter_init(NULL, true) == 0) {
+		log_debugger = false;
+	} else {
+		TryInitSDCard();
+	}
 	
 	if (net_default_dev) return;
 	// in case Broadband Adapter isn't active
@@ -786,11 +795,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -798,9 +802,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

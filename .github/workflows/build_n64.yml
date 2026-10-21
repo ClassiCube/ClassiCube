@@ -16,24 +16,27 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/dragonminded/libdragon:preview
+      image: ghcr.io/n64brew/libdragon:preview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apt-get update
           apt-get -y install curl
 
-      - name: Compile N64 build
+      - name: Compile libdragon
         run: |
-          REAL_DIR=`pwd`
           cd /tmp
-          git clone -b opengl https://github.com/DragonMinded/libdragon.git --depth=1
+          git clone -b preview https://github.com/n64brew/libdragon.git --depth=1
           cd libdragon
           make install
           make tools-install
-          cd $REAL_DIR
-          make n64
+
+      - name: Compile N64 build
+        shell: bash
+        run: |
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make n64 EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build

@@ -40,7 +40,8 @@
  
 /* The x86 intrinsics seem to be incomplete compared to what aes_x86ni expects when compiling with NXDK */
 /* Also disable when compiling the legacy windows 9x build */
-#if defined NXDK || defined CC_BUILD_NOSTDLIB
+/* Also disable when compiling for Windows CE */
+#if defined NXDK || defined CC_BUILD_NOSTDLIB || defined _WIN32_WCE
 	#undef BR_ENABLE_INTRINSICS
 	#define BR_AES_X86NI 0
 	#define BR_ENABLE_INTRINSICS 0
@@ -1515,19 +1516,6 @@ br_digest_size(const br_hash_class *digest_class)
 	return (size_t)(digest_class->desc >> BR_HASHDESC_OUT_OFF)
 		& BR_HASHDESC_OUT_MASK;
 }
-
-/*
- * Get the output size (in bytes) of a hash function.
- */
-size_t br_digest_size_by_ID(int digest_id);
-
-/*
- * Get the OID (encoded OBJECT IDENTIFIER value, without tag and length)
- * for a hash function. If digest_id is not a supported digest identifier
- * (in particular if it is equal to 0, i.e. br_md5sha1_ID), then NULL is
- * returned and *len is set to 0.
- */
-const unsigned char *br_digest_OID(int digest_id, size_t *len);
 
 /* ==================================================================== */
 /*

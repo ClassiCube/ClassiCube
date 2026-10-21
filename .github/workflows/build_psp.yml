@@ -18,14 +18,16 @@ jobs:
     container:
       image: pspdev/pspdev:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apk add curl curl-dev
 
       - name: Compile PSP build
+        shell: bash
         run: |
-          make psp
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make psp EXTRA_CFLAGS="$LATEST_FLAG"
           
           
       - uses: ./.github/actions/upload_build

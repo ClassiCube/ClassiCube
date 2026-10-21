@@ -473,8 +473,6 @@
     <ClCompile Include="..\third_party\bearssl\dec32le.c" />
     <ClCompile Include="..\third_party\bearssl\dec64be.c" />
     <ClCompile Include="..\third_party\bearssl\dec64le.c" />
-    <ClCompile Include="..\third_party\bearssl\dig_oid.c" />
-    <ClCompile Include="..\third_party\bearssl\dig_size.c" />
     <ClCompile Include="..\third_party\bearssl\ecdsa_atr.c" />
     <ClCompile Include="..\third_party\bearssl\ecdsa_default_vrfy_asn1.c" />
     <ClCompile Include="..\third_party\bearssl\ecdsa_default_vrfy_raw.c" />
@@ -528,7 +526,6 @@
     <ClCompile Include="..\third_party\bearssl\i32_div32.c" />
     <ClCompile Include="..\third_party\bearssl\i62_modpow2.c" />
     <ClCompile Include="..\third_party\bearssl\md5.c" />
-    <ClCompile Include="..\third_party\bearssl\md5sha1.c" />
     <ClCompile Include="..\third_party\bearssl\multihash.c" />
     <ClCompile Include="..\third_party\bearssl\poly1305_ctmul.c" />
     <ClCompile Include="..\third_party\bearssl\poly1305_ctmulq.c" />
@@ -623,6 +620,7 @@
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Particle.c" />
+    <ClCompile Include="PluginAPI.c" />
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="Queue.c" />
     <ClCompile Include="SelOutlineRenderer.c" />

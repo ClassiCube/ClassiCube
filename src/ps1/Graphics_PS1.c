@@ -1,5 +1,6 @@
 #define OVERRIDE_BEGEND2D_FUNCTIONS
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -8,11 +9,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <psxgpu.h>
-#include <psxgte.h>
 #include <psxapi.h>
 #include <psxetc.h>
-#include <inline_c.h>
 #include "ps1defs.h"
+#include "ps1_cop0.h"
+#include "ps1_gpu.h"
+#include "ps1_gte.h"
 // Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
 
 #define wait_while(cond) while (cond) { __asm__ volatile(""); }
@@ -29,9 +31,9 @@ static void vblank_handler(void) { vblank_count++; }
 #define DMA_IDX_OTC (DMA_OTC * 4)
 
 void Gfx_ResetGPU(void) {
-	int needs_exit = EnterCriticalSection();
+	EnterCriticalSection();
 	InterruptCallback(IRQ_VBLANK, &vblank_handler);
-	if (needs_exit) ExitCriticalSection();
+	ExitCriticalSection();
 
 	GPU_GP1 = GP1_CMD_RESET_GPU;
 	ChangeClearPAD(0);
@@ -92,8 +94,9 @@ typedef struct {
 static RenderBuffer buffers[2];
 static void*     next_packet;
 static uint8_t*  next_packet_end;
-static int       active_buffer;
-static RenderBuffer* cur_buffer;
+
+static RenderBuffer* disp_buffer;
+static RenderBuffer* draw_buffer;
 static void* lastPoly;
 
 static void BuildContext(RenderBuffer* buf) {
@@ -134,18 +137,18 @@ static void ResetOTableR(RenderBuffer* buf) {
 }
 
 static void OnBufferUpdated(void) {
-	cur_buffer      = &buffers[active_buffer];
-	next_packet     = cur_buffer->buffer;
+	next_packet     = draw_buffer->buffer;
     next_packet_end = next_packet + BUFFER_LENGTH;
 
-	ResetOTableR(cur_buffer);
+	ResetOTableR(draw_buffer);
 }
 
 static void SetupContexts(int w, int h) {
-	InitContext(&buffers[0], 0, 0, w, h);
-	InitContext(&buffers[1], 0, h, w, h);
+	draw_buffer = &buffers[0];
+	disp_buffer = &buffers[1];
 
-	active_buffer = 0;
+	InitContext(draw_buffer, 0, 0, w, h);
+	InitContext(disp_buffer, 0, h, w, h);
 	OnBufferUpdated();
 }
 
@@ -177,15 +180,39 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	Gfx.Limitations  = GFX_LIMIT_MAX_VERTEX_SIZE;
 	
-	Gfx_RestoreState();
 	SetupContexts(Window_Main.Width, Window_Main.Height);
 	Gfx_ClearColor(PackedCol_Make(63, 0, 127, 255));
 
-	InitGeom();
-	GTE_Set_ScreenOffsetX((Window_Main.Width  / 2) << 16);
-	GTE_Set_ScreenOffsetY((Window_Main.Height / 2) << 16);
+	// Enable GTE/COP2 coprocessor if needed
+	EnterCriticalSection();
+	{
+		int status;
+		COP0_GetReg(COP0R_STATUS, status);
+		status |= COP0_STATUS_COP2_EN;
+		COP0_SetReg(COP0R_STATUS, status);
+	}
+	ExitCriticalSection();
 
-	GTE_Set_ScreenDistance(Window_Main.Height / 2);
+	// Depth cueing is unused (maybe could be used for fog)
+	GTE_SetCtrlReg(C2CR_DQA, 1);
+	GTE_SetCtrlReg(C2CR_DQB, 1);
+
+	// Sets screen offset X/Y added after vertex transform
+	GTE_SetCtrlReg(C2CR_SCR_OFX, (Window_Main.Width  / 2) << 16);
+	GTE_SetCtrlReg(C2CR_SCR_OFY, (Window_Main.Height / 2) << 16);
+	// Sets projection plane distance, i.e. field of view
+	GTE_SetCtrlReg(C2CR_SCR_DIST, Window_Main.Height / 2);
+
+	// Set scale factor for depth averaging
+	//   OTZ = ZSF3*(SZ1+SZ2+SZ3)     / 0x1000
+	//   OTZ = ZSF4*(SZ0+SZ1+SZ2+SZ3) / 0x1000
+	// visible OTZ ranges between 0 and OT_LENGTH
+	//   OT_LENGTH = ZSF3/4 * 3/4 * SZ_MAX / 0x1000
+	//   OT_LENGTH * 0x1000 / (3/4 * SZ_MAX) = ZSF3/4
+	//   ZSF3/4 = OT_LENGTH * 0x1000 / (3/4 * SZ_MAX)
+	#define SZ_MAX 9000 // TODO increase a bit? reduces precision though
+	GTE_SetCtrlReg(C2CR_AVE_ZSF3, OT_LENGTH * 0x1000 / (3 * SZ_MAX));
+	GTE_SetCtrlReg(C2CR_AVE_ZSF4, OT_LENGTH * 0x1000 / (4 * SZ_MAX));
 }
 
 void Gfx_Free(void) { 
@@ -535,11 +562,11 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled)    { }
-void Gfx_SetFogCol(PackedCol col)   { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value)     { }
-void Gfx_SetFogMode(FogFunc func)   { }
+void Gfx_SetFog(cc_bool enabled)         { }
+static void SetFogColor(PackedCol color) { }
+static void SetFogDensity(float value)   { }
+static void SetFogEnd(float value)       { }
+static void SetFogMode(FogFunc func)     { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	cullingEnabled = enabled;
@@ -572,10 +599,11 @@ void Gfx_ClearColor(PackedCol color) {
 	buffers[1].env.fill_code[0] = packed;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
+	// TODO
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	// TODO
 }
 
@@ -727,26 +755,26 @@ static struct Matrix _view, _proj;
 #define ToFixedTr(v) (int)(v * (1 << 8))
 
 static void LoadTransformMatrix(struct Matrix* src) {
-	MATRIX transform_matrix;
+	short matrix[3][3];
 	// Use w instead of z
 	// (row123.z = row123.w, only difference is row4.z/w being different)
-	GTE_Set_TransX(ToFixedTr( src->row4.x));
-	GTE_Set_TransY(ToFixedTr(-src->row4.y));
-	GTE_Set_TransZ(ToFixedTr( src->row4.w));
+	GTE_SetCtrlReg(C2CR_TRANSX, ToFixedTr( src->row4.x));
+	GTE_SetCtrlReg(C2CR_TRANSY, ToFixedTr(-src->row4.y));
+	GTE_SetCtrlReg(C2CR_TRANSZ, ToFixedTr( src->row4.w));
 
-	transform_matrix.m[0][0] = ToFixed(src->row1.x);
-	transform_matrix.m[0][1] = ToFixed(src->row2.x);
-	transform_matrix.m[0][2] = ToFixed(src->row3.x);
+	matrix[0][0] = ToFixed(src->row1.x);
+	matrix[0][1] = ToFixed(src->row2.x);
+	matrix[0][2] = ToFixed(src->row3.x);
 	
-	transform_matrix.m[1][0] = ToFixed(-src->row1.y);
-	transform_matrix.m[1][1] = ToFixed(-src->row2.y);
-	transform_matrix.m[1][2] = ToFixed(-src->row3.y);
+	matrix[1][0] = ToFixed(-src->row1.y);
+	matrix[1][1] = ToFixed(-src->row2.y);
+	matrix[1][2] = ToFixed(-src->row3.y);
 	
-	transform_matrix.m[2][0] = ToFixed(src->row1.w);
-	transform_matrix.m[2][1] = ToFixed(src->row2.w);
-	transform_matrix.m[2][2] = ToFixed(src->row3.w);
+	matrix[2][0] = ToFixed(src->row1.w);
+	matrix[2][1] = ToFixed(src->row2.w);
+	matrix[2][2] = ToFixed(src->row3.w);
 	
-	GTE_Load_RotMatrix(&transform_matrix);
+	GTE_Load_RotMatrix(matrix);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -843,9 +871,9 @@ static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 		poly->x3 = v[3].xx; poly->y3 = v[3].yy;
 
 		if (lastPoly) { 
-			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
+			addPrim(lastPoly, poly);
 		} else {
-			addPrim(&cur_buffer->ot[0], poly);
+			addPrim(&draw_buffer->ot[0], poly);
 		}
 		lastPoly = poly;
 		poly++;
@@ -888,7 +916,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		if (lastPoly) { 
 			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
 		} else {
-			addPrim(&cur_buffer->ot[0], poly);
+			addPrim(&draw_buffer->ot[0], poly);
 		}
 
 		lastPoly = poly;
@@ -899,7 +927,7 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	struct PS1VertexColoured* v = (struct PS1VertexColoured*)gfx_vertices + startVertex;
-	uint32_t* ot = cur_buffer->ot;
+	uint32_t* ot = draw_buffer->ot;
 
 	psx_poly_F4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
@@ -912,12 +940,12 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexColoured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
 
-		GTE_Load_XY0(v, 0 * VERTEX_COL_SIZE); // GTE_XY0 = v0->xy
-		GTE_Load__Z0(v, 0 * VERTEX_COL_SIZE); // GTE__Z0 = v0->z
-		GTE_Load_XY1(v, 1 * VERTEX_COL_SIZE); // GTE_XY1 = v1->xy
-		GTE_Load__Z1(v, 1 * VERTEX_COL_SIZE); // GTE__Z1 = v1->z
-		GTE_Load_XY2(v, 3 * VERTEX_COL_SIZE); // GTE_XY2 = v3->xy
-		GTE_Load__Z2(v, 3 * VERTEX_COL_SIZE); // GTE__Z2 = v3->z
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 0 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 0 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VXY1, v, 0 + 1 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ1,  v, 4 + 1 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VXY2, v, 0 + 3 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ2,  v, 4 + 3 * VERTEX_COL_SIZE);
 
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_F4);
@@ -925,19 +953,19 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	
 		// Calculate Z depth
 		GTE_Exec_AVSZ3(); // 5 cycles
-		int p; GTE_Get_OTZ(p);
-		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
+		int p; GTE_GetDataReg(C2DR_OTZ, p);
+		if (p == 0 || p >= OT_LENGTH) continue;
 
-		GTE_Store_XY0(poly, offsetof(psx_poly_F4, x0));
-		GTE_Store_XY1(poly, offsetof(psx_poly_F4, x1));
-		GTE_Store_XY2(poly, offsetof(psx_poly_F4, x2));
+		GTE_SaveDataReg(C2DR_XY0, poly, offsetof(psx_poly_F4, x0));
+		GTE_SaveDataReg(C2DR_XY1, poly, offsetof(psx_poly_F4, x1));
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_F4, x2));
 
-		GTE_Load_XY0(v, 2 * VERTEX_COL_SIZE); // GTE_XY2 = v2->xy
-		GTE_Load__Z0(v, 2 * VERTEX_COL_SIZE); // GTE__Z2 = v2->z
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 2 * VERTEX_COL_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 2 * VERTEX_COL_SIZE);
 
 		GTE_Exec_RTPS(); // 15 cycles
-		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(poly, offsetof(psx_poly_F4, x3));
+		addPrim(&ot[p], poly);
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_F4, x3));
 		
 		poly++;
 	}
@@ -953,7 +981,7 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 
 	int tpage = curTex->tpage, clut = curTex->clut;
 	int bmode = blend_mode;
-	uint32_t* ot = cur_buffer->ot;
+	uint32_t* ot = draw_buffer->ot;
 
 	psx_poly_FT4* poly = next_packet;
 	cc_uint8* max = next_packet_end - sizeof(*poly);
@@ -965,13 +993,13 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		struct PS1VertexTextured* v2 = &v[2];
 		struct PS1VertexTextured* v3 = &v[3];
 		if ((cc_uint8*)poly > max) break;
-	
-		GTE_Load_XY0(v, 0 * VERTEX_TEX_SIZE); // GTE_XY0 = v0->xy
-		GTE_Load__Z0(v, 0 * VERTEX_TEX_SIZE); // GTE__Z0 = v0->z
-		GTE_Load_XY1(v, 1 * VERTEX_TEX_SIZE); // GTE_XY1 = v1->xy
-		GTE_Load__Z1(v, 1 * VERTEX_TEX_SIZE); // GTE__Z1 = v1->z
-		GTE_Load_XY2(v, 3 * VERTEX_TEX_SIZE); // GTE_XY2 = v3->xy
-		GTE_Load__Z2(v, 3 * VERTEX_TEX_SIZE); // GTE__Z2 = v3->z
+
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 0 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 0 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VXY1, v, 0 + 1 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ1,  v, 4 + 1 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VXY2, v, 0 + 3 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ2,  v, 4 + 3 * VERTEX_TEX_SIZE);
 
 		GTE_Exec_RTPT(); // 23 cycles
 		setlen(poly, POLY_LEN_FT4);
@@ -982,24 +1010,24 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		GTE_Exec_NCLIP(); // 8 cycles
 		poly->tpage = tpage;
 		poly->clut  = clut;
-		int clip; GTE_Get_MAC0(clip);
+		int clip; GTE_GetDataReg(C2DR_MAC0, clip);
 		if (clip > 0) continue;
 	
 		// Calculate Z depth
 		GTE_Exec_AVSZ3(); // 5 cycles
-		int p; GTE_Get_OTZ(p);
-		if (p == 0 || (p >> 2) > OT_LENGTH) continue;
+		int p; GTE_GetDataReg(C2DR_OTZ, p);
+		if (p == 0 || p >= OT_LENGTH) continue;
 
-		GTE_Store_XY0(poly, offsetof(psx_poly_FT4, x0));
-		GTE_Store_XY1(poly, offsetof(psx_poly_FT4, x1));
-		GTE_Store_XY2(poly, offsetof(psx_poly_FT4, x2));
+		GTE_SaveDataReg(C2DR_XY0, poly, offsetof(psx_poly_FT4, x0));
+		GTE_SaveDataReg(C2DR_XY1, poly, offsetof(psx_poly_FT4, x1));
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_FT4, x2));
 
-		GTE_Load_XY0(v, 2 * VERTEX_TEX_SIZE); // GTE_XY2 = v2->xy
-		GTE_Load__Z0(v, 2 * VERTEX_TEX_SIZE); // GTE__Z2 = v2->z
+		GTE_LoadDataReg(C2DR_VXY0, v, 0 + 2 * VERTEX_TEX_SIZE);
+		GTE_LoadDataReg(C2DR_VZ0,  v, 4 + 2 * VERTEX_TEX_SIZE);
 
 		GTE_Exec_RTPS(); // 15 cycles
-		addPrim(&ot[p >> 2], poly);
-		GTE_Store_XY2(poly, offsetof(psx_poly_FT4, x3));
+		addPrim(&ot[p], poly);
+		GTE_SaveDataReg(C2DR_XY2, poly, offsetof(psx_poly_FT4, x3));
 	
 		poly->v0 = (v1->v >> vShift) + vOffset;
 		poly->u1 = (v0->u >> uShift) + uOffset;
@@ -1035,7 +1063,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	DrawQuads(verticesCount, 0);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (depth_only) return;
 	DrawTexturedQuads3D(verticesCount, startVertex);
 }
@@ -1070,16 +1098,17 @@ void Gfx_EndFrame(void) {
 	WaitUntilFinished();
 	Gfx_VSync();
 
-	RenderBuffer* draw_buffer = &buffers[active_buffer];
-	RenderBuffer* disp_buffer = &buffers[active_buffer ^ 1];
-
 	// Use previous finished frame as display framebuffer
 	GPU_GP1 = GP1_CMD_DISPLAY_ADDRESS | disp_buffer->fb_pos;
 
 	// Start sending commands to GPU to draw this frame
-	SendDrawCommands(cur_buffer);
+	SendDrawCommands(draw_buffer);
 
-	active_buffer ^= 1;
+	// Swap draw and display buffers
+	RenderBuffer* tmp = draw_buffer;
+	draw_buffer = disp_buffer;
+	disp_buffer = tmp;
+
 	OnBufferUpdated();
 }
 
@@ -1087,7 +1116,7 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_OnWindowResize(void) {
+void Gfx_OnWindowResize(int width, int height) {
 	// TODO
 }
 

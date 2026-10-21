@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -69,13 +70,29 @@ static void CompileFetchShaders(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Shaders---------------------------------------------------------*
 *#########################################################################################################################*/
-extern const uint8_t coloured_none_gsh[];
-extern const uint8_t textured_none_gsh[];
-extern const uint8_t textured_lin_gsh[];
-extern const uint8_t textured_exp_gsh[];
-extern const uint8_t offset_none_gsh[];
-extern const uint8_t offset_lin_gsh[];
-extern const uint8_t offset_exp_gsh[];
+static const uint8_t coloured_none_gsh[] = {
+	#embed "../../misc/wiiu/coloured_none.gsh"
+};
+
+static const uint8_t textured_none_gsh[] = {
+	#embed "../../misc/wiiu/textured_none.gsh"
+};
+static const uint8_t textured_lin_gsh[] = {
+	#embed "../../misc/wiiu/textured_lin.gsh"
+};
+static const uint8_t textured_exp_gsh[] = {
+	#embed "../../misc/wiiu/textured_exp.gsh"
+};
+
+static const uint8_t offset_none_gsh[] = {
+	#embed "../../misc/wiiu/offset_none.gsh"
+};
+static const uint8_t offset_lin_gsh[] = {
+	#embed "../../misc/wiiu/offset_lin.gsh"
+};
+static const uint8_t offset_exp_gsh[] = {
+	#embed "../../misc/wiiu/offset_exp.gsh"
+};
 
 #define VS_UNI_OFFSET_MVP   0
 #define VS_UNI_COUNT_MVP   16
@@ -102,7 +119,6 @@ static void LoadProgram(struct ShaderProgram* prog, const cc_uint8* gsh) {
 static GX2Sampler sampler;
 static GfxResourceID white_square;
 static struct ShaderProgram* cur_PG;
-static int fog_func;
 
 static void InitGfx(void) {
 	CompileFetchShaders();
@@ -122,8 +138,8 @@ static void InitGfx(void) {
 static struct Vec4 texOffset;
 
 static int CalcPSIndex(void) {
-	if (gfx_fogEnabled && fog_func == FOG_EXP)    return 2;
-	if (gfx_fogEnabled && fog_func == FOG_LINEAR) return 1;
+	if (gfx_fogEnabled && gfx_fogMode == FOG_EXP)    return 2;
+	if (gfx_fogEnabled && gfx_fogMode == FOG_LINEAR) return 1;
 
 	return 0;
 }
@@ -152,8 +168,9 @@ void Gfx_Create(void) {
 	if (!Gfx.Created) InitGfx();
 	
 	Gfx.Created      = true;
-	Gfx.MaxTexWidth  = 1024;
-	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexWidth  = 2048; // TODO: 4096?
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -191,7 +208,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	GX2Texture* tex = Mem_TryAllocCleared(1, sizeof(GX2Texture));
 	if (!tex) return NULL;
 
-	// TODO handle out of memory better
+	// TODO handle out of memory better. and not linear?
 	int width = bmp->width, height = bmp->height;
 	tex->surface.width    = width;
 	tex->surface.height   = height;
@@ -256,10 +273,9 @@ void Gfx_DisableMipmaps(void) { } // TODO
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static float clearR, clearG, clearB;
-static cc_bool depthWrite = true, depthTest = true;
 
 static void UpdateDepthState(void) {
-	GX2SetDepthOnlyControl(depthTest, depthWrite, GX2_COMPARE_FUNC_LEQUAL);
+	GX2SetDepthOnlyControl(gfx_depthTest, gfx_depthWrite, GX2_COMPARE_FUNC_LEQUAL);
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -273,12 +289,8 @@ void Gfx_SetFog(cc_bool enabled) {
 
 // xyz/rgb are colour, w/a is value
 static struct Vec4 fogLin, fogExp;
-static PackedCol fogColor;
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (fogColor == color) return;
-	fogColor = color;
-
+static void SetFogColor(PackedCol color) {
 	fogLin.x = fogExp.x = PackedCol_R(color) / 255.0f;
 	fogLin.y = fogExp.y = PackedCol_G(color) / 255.0f;
 	fogLin.z = fogExp.z = PackedCol_B(color) / 255.0f;
@@ -287,21 +299,18 @@ void Gfx_SetFogCol(PackedCol color) {
 	GX2SetPixelUniformReg(PS_UNI_OFFSET_EXP, PS_UNI_COUNT_EXP, &fogExp);
 }
 
-void Gfx_SetFogEnd(float value) {
+static void SetFogEnd(float value) {
 	fogLin.w = 1.0f / value;
 	GX2SetPixelUniformReg(PS_UNI_OFFSET_LIN, PS_UNI_COUNT_LIN, &fogLin);
 }
 
 #define LOG2_E 1.44269504089f
-void Gfx_SetFogDensity(float value) {
+static void SetFogDensity(float value) {
 	fogExp.w = -value * LOG2_E;
 	GX2SetPixelUniformReg(PS_UNI_OFFSET_EXP, PS_UNI_COUNT_EXP, &fogExp);
 }
 
-void Gfx_SetFogMode(FogFunc func) {
-	fog_func = func;
-	UpdateProgram();
-}
+static void SetFogMode(FogFunc func) { UpdateProgram(); }
 
 static void SetAlphaTest(cc_bool enabled) {
 	GX2SetAlphaTest(enabled, GX2_COMPARE_FUNC_GEQUAL, 0.5f);
@@ -324,13 +333,11 @@ void Gfx_ClearColor(PackedCol color) {
 	clearB = PackedCol_B(color) / 255.0f;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	UpdateDepthState();
 }
 
@@ -346,9 +353,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -440,7 +445,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	BindPendingTexture();
 	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
@@ -564,7 +569,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_OnWindowResize(void) {
+void Gfx_OnWindowResize(int width, int height) {
 
 }
 

@@ -40,7 +40,7 @@ static void VirtualCursor_Display3D(float delta) {
 	if (!DisplayInfo.CursorVisible) return;
 	
 	if (!vc_vb) {
-		vc_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
+		vc_vb = Gfx_CreateScratchVb(VERTEX_FORMAT_TEXTURED, 4);
 		if (!vc_vb) return;
 	}	
 	
@@ -55,10 +55,10 @@ static void VirtualCursor_Display3D(float delta) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindTexture(vc_texture.ID);
 	
-	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockDynamicVb(vc_vb, VERTEX_FORMAT_TEXTURED, 4);
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_LockScratchVb(vc_vb, VERTEX_FORMAT_TEXTURED, 4);
 	struct VertexTextured** ptr = &data;
 	Gfx_Make2DQuad(&vc_texture, PACKEDCOL_WHITE, ptr);
-	Gfx_UnlockDynamicVb(vc_vb);
+	Gfx_UnlockScratchVb(vc_vb);
 	Gfx_DrawVb_IndexedTris(4);
 }
 
@@ -74,5 +74,23 @@ static void VirtualCursor_SetPosition(int x, int y) {
 	
 	/* TODO better dirty region tracking */
 	if (!Window_Main.Is3D) LBackend_Redraw();
+}
+
+static CC_INLINE void VirtualCursor_Update(int x, int y, float delta) {
+	float scale;
+	if (!vc_hooked) {
+		Pointer_SetPosition(0, Window_Main.Width / 2, Window_Main.Height / 2);
+	}
+	VirtualCursor_SetPosition(Pointers[0].x + x, Pointers[0].y + y);
+	
+	if (!Input.RawMode) return;
+	scale = (delta * 60.0f) / 2.0f;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				x * scale, y * scale);
+}
+
+void Cursor_SetPosition(int x, int y) {
+	if (vc_hooked) VirtualCursor_SetPosition(x, y);
 }
 

@@ -11,12 +11,14 @@
 #include "../Logger.h"
 #include "../Options.h"
 #include "../VirtualKeyboard.h"
+#include "../VirtualCursor.h"
 
 #include <psxapi.h>
 #include <psxetc.h>
 #include <psxgpu.h>
 #include <psxpad.h>
 #include "ps1defs.h"
+#include "ps1_gpu.h"
 
 #define SCREEN_XRES	320
 #define SCREEN_YRES	240
@@ -123,10 +125,16 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(float delta) {
+static void ProcessMouse(PADTYPE* pad, float delta) {
+	int btns = ~pad->btn;
+	Input_SetNonRepeatable(CCMOUSE_L, btns & MOUSE_LEFT);
+	Input_SetNonRepeatable(CCMOUSE_R, btns & MOUSE_RIGHT);
+	
+	VirtualCursor_Update(pad->x_mov, pad->y_mov, delta);
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
+void Window_ProcessEvents(float delta) {
+}
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
 void Window_UpdateRawMouse(void)  {  }
@@ -160,13 +168,13 @@ static const BindMapping pad_defaults[BIND_COUNT] = {
 	[BIND_HOTBAR_RIGHT] = { CCPAD_ZR }
 };
 
-static char pad_buff[2][34];
+static char pad1[34], pad2[34];
 
 void Gamepads_PreInit(void) {
 	// http://lameguy64.net/tutorials/pstutorials/chapter1/4-controllers.html
-	InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
-	pad_buff[0][0] = pad_buff[0][1] = 0xff;
-	pad_buff[1][0] = pad_buff[1][1] = 0xff;
+	InitPAD(pad1, 34, pad2, 34);
+	pad1[0] = pad1[1] = 0xff;
+	pad2[0] = pad2[1] = 0xff;
 	StartPAD();
 	ChangeClearPAD(0);
 }
@@ -210,7 +218,14 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
+static void ProcessPadInput(PADTYPE* pad, int i, float delta) {
+	int port = Gamepad_Connect(0x503E + i, pad_defaults);
+	if (pad->stat != 0) return;
+
+	if (pad->type == PAD_ID_MOUSE) {
+		ProcessMouse(pad, delta);
+		return;
+	}
 	HandleButtons(port, pad->btn);
 
 	if (pad->type == PAD_ID_ANALOG_STICK || pad->type == PAD_ID_ANALOG) {
@@ -220,10 +235,8 @@ static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
 }
 
 void Gamepads_Process(float delta) {
-	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
-	int port = Gamepad_Connect(0x503E, pad_defaults);
-	
-	if (pad->stat == 0) ProcessPadInput(port, pad, delta);
+	ProcessPadInput((PADTYPE*)pad1, 0, delta);
+	ProcessPadInput((PADTYPE*)pad2, 1, delta);
 }
 
 

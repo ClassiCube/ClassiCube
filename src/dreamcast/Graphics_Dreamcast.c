@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_SHARED_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Logger.h"
@@ -81,8 +82,6 @@ static cc_bool exceeded_vram;
 static const cc_bool autosort = false; // Turn off auto sorting to match traditional GPU behaviour
 static const cc_bool fsaa     = false;
 
-static cc_uint8 gfx_depthTest;
-static cc_uint8 gfx_depthWrite;
 static cc_uint8 gfx_culling;
 static cc_uint8 gfx_scissor;
 
@@ -120,8 +119,6 @@ static void InitGLState(void) {
 	gfx_alphaTest  = false;
 	gfx_culling    = false;
 	gfx_alphaBlend = false;
-	gfx_depthTest  = false;
-	gfx_depthWrite = true;
 	gfx_fogEnabled = false;
 	
 	stateDirty       = true;
@@ -149,7 +146,7 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
-	Gfx_RestoreState();
+	gfx_format = -1;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -177,6 +174,9 @@ struct GPUTexture {
 static struct GPUTexture tex_list[MAX_TEXTURE_COUNT];
 static struct GPUTexture* tex_active;
 
+#define _PVR_RAM_SIZE (8 * 1024 * 1024)
+/* PVR_RAM_SIZE is no longer constant in KOS master (devkit/naomi has 16 MB VRAM) */
+
 // For PVR2 GPU, highly recommended that multiple textures don't cross the same 2048 byte VRAM page alignment
 // So to avoid this, ensure that each texture is allocated at the start of a 2048 byte VRAM page
 #define TEXMEM_BLOCK_SIZE 2048
@@ -188,7 +188,7 @@ static struct GPUTexture* tex_active;
 
 #define BLOCK_TO_TEXMEM(block) (cc_uint16*)(texmem_base + (block) * TEXMEM_BLOCK_SIZE)
 
-#define TEXMEM_MAX_BLOCKS (PVR_RAM_SIZE / TEXMEM_BLOCK_SIZE)
+#define TEXMEM_MAX_BLOCKS (_PVR_RAM_SIZE / TEXMEM_BLOCK_SIZE)
 // Base address in VRAM for textures
 static cc_uint8* texmem_base;
 // Total number of blocks available for textures in VRAM
@@ -654,22 +654,16 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO: Doesn't work
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { 
-	if (gfx_depthWrite == enabled) return;
-	
-	gfx_depthWrite = enabled;
-	stateDirty     = true;
+static void SetDepthWrite(cc_bool enabled) {
+	stateDirty = true;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) { 
-	if (gfx_depthTest == enabled) return;
-	
-	gfx_depthTest = enabled;
-	stateDirty    = true;
+static void SetDepthTest(cc_bool enabled) { 
+	stateDirty = true;
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	stateDirty    = true;
+	stateDirty = true;
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -751,10 +745,6 @@ void Gfx_UnlockVb(GfxResourceID vb) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd = 16.0f, gfx_fogDensity = 1.0f;
-static FogFunc gfx_fogMode = -1;
-
 void Gfx_SetFog(cc_bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	
@@ -762,10 +752,7 @@ void Gfx_SetFog(cc_bool enabled) {
 	stateDirty     = true;
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == gfx_fogColor) return;
-	gfx_fogColor = color;
-
+static void SetFogColor(PackedCol color) {
 	float r = PackedCol_R(color) / 255.0f; 
 	float g = PackedCol_G(color) / 255.0f;
 	float b = PackedCol_B(color) / 255.0f; 
@@ -784,22 +771,36 @@ static void UpdateFog(void) {
 	}
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (value == gfx_fogDensity) return;
-	gfx_fogDensity = value;
-	UpdateFog();
+static void SetFogDensity(float value) { UpdateFog(); }
+
+static void SetFogEnd(float value)     { UpdateFog(); }
+
+static void SetFogMode(FogFunc func)   { UpdateFog(); }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Frustum--------------------------------------------------------*
+*#########################################################################################################################*/
+static struct Plane { float a, b, c, d; } nearPlane;
+
+static void NormalisePlane(struct Plane* plane) {
+	float val1 = plane->a, val2 = plane->b, val3 = plane->c;
+	float t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
+	plane->a /= t; plane->b /= t; plane->c /= t; plane->d /= t;
 }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == gfx_fogEnd) return;
-	gfx_fogEnd = value;
-	UpdateFog();
+static void CalcNearFrustumPlane(struct Matrix* clip) {
+	/* Extract the NEAR plane */
+	nearPlane.a = clip->row1.z;
+	nearPlane.b = clip->row2.z;
+	nearPlane.c = clip->row3.z;
+	nearPlane.d = clip->row4.z;
+	NormalisePlane(&nearPlane);
 }
 
-void Gfx_SetFogMode(FogFunc func) {
-	if (func == gfx_fogMode) return;
-	gfx_fogMode = func;
-	UpdateFog();
+cc_bool Gfx_CanSphereSkipClipping(float x, float y, float z, float radius) {
+	float d = nearPlane.a * x + nearPlane.b * y + nearPlane.c * z + nearPlane.d;
+	return d >= radius; // sphere entirely in front of plane
 }
 
 
@@ -825,6 +826,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
 	Gfx_LoadMatrix(MATRIX_PROJ, proj);
 	Matrix_Mul(mvp, view, proj);
+	CalcNearFrustumPlane(mvp);
 }
 
 
@@ -861,10 +863,7 @@ static CC_NOINLINE void UnshiftTextureCoords(int count) {
 *-------------------------------------------------------State setup-------------------------------------------------------*
 *#########################################################################################################################*/
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
-static void Gfx_RestoreState(void) {
-	InitDefaultResources();
-	gfx_format = -1;
-}
+static void Gfx_RestoreState(void) { InitDefaultResources(); }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
@@ -875,8 +874,12 @@ cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 *#########################################################################################################################*/
 static cc_bool loggedNoVRAM;
 
-extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
-extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawColouredQuads_Clip(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawTexturedQuads_Clip(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawColouredQuads_Fast(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawTexturedQuads_Fast(const void* src, Vertex* dst, int numQuads);
+
+extern void DrawTexturedQuads_Direct(const void* src, int dst, int numQuads);
 
 static Vertex* ReserveOutput(struct CommandsList* list, cc_uint32 elems) {
 	Vertex* beg;
@@ -894,7 +897,7 @@ static Vertex* ReserveOutput(struct CommandsList* list, cc_uint32 elems) {
 	}
 }
 
-void DrawQuads(int count, void* src) {
+static void DrawQuads(int count, void* src, DrawHints hints) {
 	if (!count) return;
 	struct CommandsList* list = ActivePolyList();
 
@@ -910,12 +913,25 @@ void DrawQuads(int count, void* src) {
 		beg++;
 	}
 	Vertex* end;
+	cc_bool noclip = (hints & DRAW_HINT_NOCLIP) || gfx_rendering2D;
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		end = DrawTexturedQuads(src, beg, count >> 2);
+		// Super fast path draws directly to SQ
+		if (list == direct && noclip) {
+			if (list->length) SubmitCommands((Vertex*)list->data, list->length);
+			list->length = 0;
+
+			DrawTexturedQuads_Direct(src, MEM_AREA_SQ_BASE, count >> 2);
+			return;
+		}
+
+		end = noclip ? DrawTexturedQuads_Fast(src, beg, count >> 2) 
+					 : DrawTexturedQuads_Clip(src, beg, count >> 2);
 	} else {
-		end = DrawColouredQuads(src, beg, count >> 2);
+		end = noclip ? DrawColouredQuads_Fast(src, beg, count >> 2) 
+					 : DrawColouredQuads_Clip(src, beg, count >> 2);
 	}
+
 	list->length += (end - beg);
 
 	if (list != direct) return;
@@ -943,20 +959,20 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 		src = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
 	}
 
-	DrawQuads(verticesCount, src);
+	DrawQuads(verticesCount, src, hints);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	DrawQuads(verticesCount, gfx_vertices);
+	DrawQuads(verticesCount, gfx_vertices, 0);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	if (renderingDisabled) return;
 	
 	void* src = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
-	DrawQuads(verticesCount, src);
+	DrawQuads(verticesCount, src, hints);
 }
 
 
@@ -966,15 +982,14 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 static BitmapCol* DC_GetRow(struct Bitmap* bmp, int y, void* ctx) {
 	BitmapCol* tmp = (BitmapCol*)ctx;
 	uint16_t* src  = vram_s + vid_mode->width * y;
-	int r, g, b, width = bmp->width;
+	int width = bmp->width;
 
 	for (int x = 0; x < width; x++)
 	{
-		int r, g, b;
 		// RGB565 to RGB888
-		r = ((src[x] >> 11) & 0x1F) << 3;
-		g = ((src[x] >> 6)  & 0x3F) << 2;
-		b = ((src[x] >> 0)  & 0x1F) << 3;
+		int r = ((src[x] >> 11) & 0x1F) << 3;
+		int g = ((src[x] >>  6) & 0x3F) << 2;
+		int b = ((src[x] >>  0) & 0x1F) << 3;
 
 		tmp[x] = BitmapColor_RGB(r, g, b);
 	}
@@ -1056,8 +1071,8 @@ void Gfx_EndFrame(void) {
 	pvr_wait_ready();
 }
 
-void Gfx_OnWindowResize(void) {
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+void Gfx_OnWindowResize(int width, int height) {
+	Gfx_SetViewport(0, 0, width, height);
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {

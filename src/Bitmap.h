@@ -23,7 +23,7 @@ struct Stream;
 	#define BITMAPCOLOR_G_SHIFT  5
 	#define BITMAPCOLOR_R_SHIFT 10
 	#define BITMAPCOLOR_A_SHIFT 15
-#elif defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_NDS || defined CC_BUILD_32X || defined CC_BUILD_GBA
+#elif defined CC_BUILD_PS1 || defined CC_BUILD_SATURN || defined CC_BUILD_NDS || defined CC_BUILD_32X || defined CC_BUILD_GBA || defined CC_BUILD_ATARIOS
 	#define BITMAPCOLOR_R_SHIFT  0
 	#define BITMAPCOLOR_G_SHIFT  5
 	#define BITMAPCOLOR_B_SHIFT 10
@@ -39,7 +39,8 @@ struct Stream;
 #ifndef BITMAP_16BPP
 	/* Represents a packed RGBA colour, suitable for 3D graphics API textures and 2D window framebuffers. */
 	typedef cc_uint32 BitmapCol;
-	#define BITMAPCOLOR_SIZE 4
+	#define BITMAPCOLOR_SIZE     4
+	#define BITMAPCOLOR_RGB_BITS 8
 
 	/* Masks a packed color to the selected component */
 	#define BITMAPCOLOR_R_MASK (0xFFU << BITMAPCOLOR_R_SHIFT)
@@ -61,7 +62,8 @@ struct Stream;
 #else
 	/* Represents a packed RGBA colour, suitable for 3D graphics API textures and 2D window framebuffers. */
 	typedef cc_uint16 BitmapCol;
-	#define BITMAPCOLOR_SIZE 2
+	#define BITMAPCOLOR_SIZE     2
+	#define BITMAPCOLOR_RGB_BITS 5
 
 	/* Masks a packed color to the selected component */
 	#define BITMAPCOLOR_R_MASK (0x1FU << BITMAPCOLOR_R_SHIFT)

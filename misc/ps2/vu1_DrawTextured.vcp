@@ -1,0 +1,210 @@
+// === GLOBAL DATA ===
+#define ADDR_MVP_ROW1 0
+#define ADDR_MVP_ROW2 1
+#define ADDR_MVP_ROW3 2
+#define ADDR_MVP_ROW4 3
+
+#define ADDR_GB_SCALE   4
+#define ADDR_VP_ORIGIN  5 // viewport origin
+#define ADDR_VP_SCALE   6 // viewport scale
+
+// === DRAW DATA ===
+// ADDR_VERTS_COUNT              0
+
+// === GLOBAL REGISTERS ===
+#define ONE_W  vf00[w] // (vf0.w is 1)
+
+#define MVP_R1 vf01
+#define MVP_R2 vf02
+#define MVP_R3 vf03
+#define MVP_R4 vf04
+
+#define VP_ORIGIN vf05
+#define VP_SCALE  vf06
+#define GB_SCALE  vf07 // guardband scale
+
+// === LOCAL REGISTERS ===
+#define XYZ  vf31
+#define POS1 vf30
+#define UV1  vf29
+#define COL1 vf28
+#define POS2 vf27
+#define UV2  vf26
+#define COL2 vf25
+#define POS3 vf24
+#define UV3  vf23
+#define COL3 vf22
+#define POS4 vf21
+#define UV4  vf20
+#define COL4 vf19
+
+#define TMP  vf18
+
+.syntax new
+.init_vf     // no registers available for dynamic allocation
+.init_vi_all // all registers available for dynamic allocation
+.vu
+
+.name Reload_MVP
+--enter
+--endenter
+	lq			MVP_R1, ADDR_MVP_ROW1(vi00)
+	lq			MVP_R2, ADDR_MVP_ROW2(vi00)
+	lq			MVP_R3, ADDR_MVP_ROW3(vi00)
+	lq			MVP_R4, ADDR_MVP_ROW4(vi00)
+--exit
+--endexit
+
+.name Reload_Viewport
+--enter
+--endenter
+	lq			VP_ORIGIN,  ADDR_VP_ORIGIN(vi00)
+	lq			VP_SCALE,   ADDR_VP_SCALE(vi00)
+--exit
+--endexit
+
+.name Reload_Guardband
+--enter
+--endenter
+	lq			GB_SCALE,   ADDR_GB_SCALE(vi00)
+--exit
+--endexit
+
+.name DrawTexturedQuad
+--enter
+	in_vf mvp_r1(MVP_R1)
+	in_vf mvp_r2(MVP_R2)
+	in_vf mvp_r3(MVP_R3)
+	in_vf mvp_r4(MVP_R4)
+
+	in_vf gb_scale(GB_SCALE)
+--endenter
+	xtop		iBase
+	ilw.x		numQuads, 0(iBase)    // ADDR_VERTS_COUNT
+	iaddiu		srcAddr,  iBase,   1  // ADDR_SRC_OFFSET
+	iaddiu		dstAddr,  iBase, 100  // ADDR_DST_OFFSET
+	iaddiu		kickAddr, iBase, 100  // ADDR_DST_OFFSET
+
+	// Copy the GIF packet
+	lqi			TMP, (srcAddr++)
+	sqi			TMP, (dstAddr++)
+
+TRANSFORM_LOOP:
+	// Transform first vertex
+	lqi			XYZ,  (srcAddr++)
+	mula		acc,  mvp_r4, ONE_W  // ACC  = mvp.row4
+	madda		acc,  mvp_r1, XYZ[x] // ACC  = ACC + mvp.row1 * src.x
+	madda		acc,  mvp_r2, XYZ[y] // ACC  = ACC + mvp.row2 * src.y
+	madd		POS1, mvp_r3, XYZ[z] // dst  = ACC + mvp.row3 * src.z
+	div			q,    ONE_W,  POS1[w]// Q    = 1 / dst.w
+
+	mul			TMP, POS1, gb_scale  // TMP  = TRANSFORMED(dst) * CLIP_PLANES_ADJUST
+	clipw.xyz	TMP, TMP             // CLIP_FLAGS.append(CLIP(TMP.xyz, TMP.w))
+	lqi			 UV1, (srcAddr++)
+	lqi			COL1, (srcAddr++)
+
+	// Perspective divide vertex 1
+	mul.xyz		POS1, POS1, q
+	mul.xyz		 UV1,  UV1, q
+	ftoi0		POS1, POS1
+	
+	// Transform second vertex
+	lqi			XYZ,  (srcAddr++)
+	mula		acc,  mvp_r4, ONE_W  // ACC  = mvp.row4
+	madda		acc,  mvp_r1, XYZ[x] // ACC  = ACC + mvp.row1 * src.x
+	madda		acc,  mvp_r2, XYZ[y] // ACC  = ACC + mvp.row2 * src.y
+	madd		POS2, mvp_r3, XYZ[z] // dst  = ACC + mvp.row3 * src.z
+	div			q,    ONE_W,  POS2[w]// Q    = 1 / dst.w
+
+	mul			TMP, POS2, gb_scale  // TMP  = TRANSFORMED(dst) * CLIP_PLANES_ADJUST
+	clipw.xyz	TMP, TMP             // CLIP_FLAGS.append(CLIP(TMP.xyz, TMP.w))
+	lqi			 UV2, (srcAddr++)
+	lqi			COL2, (srcAddr++)
+
+	// Perspective divide vertex 2
+	mul.xyz		POS2, POS2, q
+	mul.xyz		 UV2,  UV2, q
+	ftoi0		POS2, POS2
+	
+	
+	// Transform third vertex
+	lqi			XYZ,  (srcAddr++)
+	mula		acc,  mvp_r4, ONE_W  // ACC  = mvp.row4
+	madda		acc,  mvp_r1, XYZ[x] // ACC  = ACC + mvp.row1 * src.x
+	madda		acc,  mvp_r2, XYZ[y] // ACC  = ACC + mvp.row2 * src.y
+	madd		POS3, mvp_r3, XYZ[z] // dst  = ACC + mvp.row3 * src.z
+	div			q,    ONE_W,  POS3[w]// Q    = 1 / dst.w
+
+	mul			TMP, POS3, gb_scale  // TMP  = TRANSFORMED(dst) * CLIP_PLANES_ADJUST
+	clipw.xyz	TMP, TMP             // CLIP_FLAGS.append(CLIP(TMP.xyz, TMP.w))
+	lqi			 UV3, (srcAddr++)
+	lqi			COL3, (srcAddr++)
+
+	// Perspective divide vertex 3
+	mul.xyz		POS3, POS3, q
+	mul.xyz		 UV3,  UV3, q
+	ftoi0		POS3, POS3
+	
+	
+	// Transform fourth vertex
+	lqi			XYZ,  (srcAddr++)
+	mula		acc,  mvp_r4, ONE_W  // ACC  = mvp.row4
+	madda		acc,  mvp_r1, XYZ[x] // ACC  = ACC + mvp.row1 * src.x
+	madda		acc,  mvp_r2, XYZ[y] // ACC  = ACC + mvp.row2 * src.y
+	madd		POS4, mvp_r3, XYZ[z] // dst  = ACC + mvp.row3 * src.z
+	div			q,    ONE_W,  POS4[w]// Q    = 1 / dst.w
+
+	mul			TMP, POS4, gb_scale  // TMP  = TRANSFORMED(dst) * CLIP_PLANES_ADJUST
+	clipw.xyz	TMP, TMP             // CLIP_FLAGS.append(CLIP(TMP.xyz, TMP.w))
+	lqi			 UV4, (srcAddr++)
+	lqi			COL4, (srcAddr++)
+
+	// Perspective divide vertex 4
+	mul.xyz		POS4, POS4, q
+	mul.xyz		 UV4,  UV4, q
+	ftoi0		POS4, POS4
+	
+	// Calculate clip flags
+	fcand		VI01, 0xFFFFFF
+	iaddiu		iADC, VI01, 0x7FFF
+	
+	// Write V0, V1, V2, V2, V3, V0
+	sqi			POS1, (dstAddr++)
+	sqi			 UV1, (dstAddr++)
+	sqi			COL1, (dstAddr++)
+	isw.w		iADC, -3(dstAddr)
+	
+	sqi			POS2, (dstAddr++)
+	sqi			 UV2, (dstAddr++)
+	sqi			COL2, (dstAddr++)
+	isw.w		iADC, -3(dstAddr)
+	
+	sqi			POS3, (dstAddr++)
+	sqi			 UV3, (dstAddr++)
+	sqi			COL3, (dstAddr++)
+	isw.w		iADC, -3(dstAddr)
+	
+	sqi			POS3, (dstAddr++)
+	sqi			 UV3, (dstAddr++)
+	sqi			COL3, (dstAddr++)
+	isw.w		iADC, -3(dstAddr)
+	
+	sqi			POS4, (dstAddr++)
+	sqi			 UV4, (dstAddr++)
+	sqi			COL4, (dstAddr++)
+	isw.w		iADC, -3(dstAddr)
+		
+	sqi			POS1, (dstAddr++)
+	sqi			 UV1, (dstAddr++)
+	sqi			COL1, (dstAddr++)
+	isw.w		iADC, -3(dstAddr)
+	
+	// Next loop
+	iaddi		numQuads, numQuads, -1
+	ibne		numQuads, vi00, TRANSFORM_LOOP
+
+	// Finished
+	xgkick		kickAddr
+
+--exit
+--endexit

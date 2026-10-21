@@ -9,7 +9,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;
-struct ScheduledTask;
+struct ScheduledTask2;
 extern struct IGameComponent Server_Component;
 
 /* Prepares a ping entry for sending to the server, then returns its ID */
@@ -25,7 +25,7 @@ CC_VAR extern struct _ServerConnectionData {
 	/* NOTE: Usually asynchronous, but not always */
 	void (*BeginConnect)(void);
 	/* Ticks state of the server. */
-	void (*Tick)(struct ScheduledTask* task);
+	cc_bool (*Tick)(struct ScheduledTask2* task);
 	/* Sends a block update to the server */
 	void (*SendBlock)(int x, int y, int z, BlockID old, BlockID now);
 	/* Sends a chat message to the server */

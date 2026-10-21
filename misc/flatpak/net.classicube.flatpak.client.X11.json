@@ -38,8 +38,8 @@
             "name": "ClassiCube",
             "buildsystem": "simple",
             "build-commands": [
-                "gcc -fno-math-errno src/*.c -o src/ClassiCube -O1 -DCC_BUILD_FLATPAK -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -rdynamic -lm -lpthread -lX11 -lXi -lGL -ldl",
-                "install -Dm755 src/ClassiCube -t ${FLATPAK_DEST}/bin",
+                "make linux RELEASE=1 EXTRA_CFLAGS=\"-DCC_BUILD_FLATPAK -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2\"",
+                "install -Dm755 ClassiCube -t ${FLATPAK_DEST}/bin",
                 "install -Dm755 misc/flatpak/ClassiCubeLauncher -t ${FLATPAK_DEST}/bin",
                 "install -Dm644 misc/flatpak/net.classicube.flatpak.client.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/net.classicube.flatpak.client.svg",
                 "install -Dm644 misc/flatpak/net.classicube.flatpak.client.desktop ${FLATPAK_DEST}/share/applications/net.classicube.flatpak.client.desktop",

@@ -8,10 +8,12 @@
 #pragma comment(lib,"d3dcompiler.lib")
 
 static const char VS_SOURCE[] =
-"float4x4 mvpMatrix;                                                \n" \
-"#ifdef VS_TEXTURE_OFFSET                                           \n" \
-"float2 texOffset;                                                  \n" \
-"#endif                                                             \n" \
+"cbuffer VS_MVPConstants : register(b0) {                           \n" \
+"   float4x4 mvpMatrix;                                             \n" \
+"};                                                                 \n" \
+"cbuffer VS_TexConstants : register(b1) {                           \n" \
+"   float2 texOffset;                                               \n" \
+"};                                                                 \n" \
 "                                                                   \n" \
 "struct INPUT_VERTEX {                                              \n" \
 "   float3 position : POSITION;                                     \n" \
@@ -25,7 +27,7 @@ static const char VS_SOURCE[] =
 "   float2 coords : TEXCOORD0;                                      \n" \
 "#endif                                                             \n" \
 "   float4 color : COLOR0;                                          \n" \
-"   float4 position : VPOS;                                         \n" \
+"   float4 position : SV_Position;                                  \n" \
 "};                                                                 \n" \
 "                                                                   \n" \
 "OUTPUT_VERTEX main(INPUT_VERTEX input) {                           \n" \
@@ -47,26 +49,18 @@ static const char PS_SOURCE[] =
 "Texture2D    texValue;                                             \n" \
 "SamplerState texState;                                             \n" \
 "#endif                                                             \n" \
-"#ifdef PS_FOG_LINEAR                                               \n" \
-"float  fogEnd;                                                     \n" \
-"float3 fogColor;                                                   \n" \
-"#endif                                                             \n" \
-"#ifdef PS_FOG_DENSITY                                              \n" \
-"float  fogDensity;                                                 \n" \
-"float3 fogColor;                                                   \n" \
-"#endif                                                             \n" \
+"cbuffer PS_FogConstants : register(b0) {                           \n" \
+"   float3 fogColor;                                                \n" \
+"   float1 fogEnd;                                                  \n" \
+"   float1 fogDensity;                                              \n" \
+"};                                                                 \n" \
 "                                                                   \n" \
 "struct INPUT_VERTEX {                                              \n" \
 "#ifndef PS_COLOR_ONLY                                              \n" \
 "   float2 coords : TEXCOORD0;                                      \n" \
 "#endif                                                             \n" \
 "   float4 color : COLOR0;                                          \n" \
-"#ifdef PS_FOG_LINEAR                                               \n" \
-"   float4 position : VPOS;                                         \n" \
-"#endif                                                             \n" \
-"#ifdef PS_FOG_DENSITY                                              \n" \
-"   float4 position : VPOS;                                         \n" \
-"#endif                                                             \n" \
+"   float4 position : SV_Position;                                  \n" \
 "};                                                                 \n" \
 "                                                                   \n" \
 "//float4 main(float2 coords : TEXCOORD0, float4 color : COLOR0) : SV_TARGET {\n" \
@@ -85,7 +79,7 @@ static const char PS_SOURCE[] =
 "#endif                                                             \n" \
 "#ifdef PS_FOG_LINEAR                                               \n" \
 "   float depth = input.position.w;                                 \n" \
-"   float fog   = saturate((fogEnd - depth) / fogEnd);              \n" \
+"   float fog   = saturate(1.0f - depth * fogEnd);                  \n" \
 "   color.rgb   = lerp(fogColor, color.rgb, fog);                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_DENSITY                                              \n" \
@@ -132,8 +126,8 @@ static void CompileShader(LPCSTR src, LPCSTR name, LPCSTR profile, const D3D_SHA
 	printf("};\n");
 }
 
-#define CompileVertexShader(name, defines) CompileShader(VS_SOURCE, name, "vs_4_0_level_9_1", defines)
-#define CompilePixelShader( name, defines) CompileShader(PS_SOURCE, name, "ps_4_0_level_9_1", defines)
+#define CompileVertexShader(name, defines) CompileShader(VS_SOURCE, name, "vs_4_0", defines)
+#define CompilePixelShader( name, defines) CompileShader(PS_SOURCE, name, "ps_4_0", defines)
 int main() {
 	const D3D_SHADER_MACRO vs_colored[]  = { "VS_COLOR_ONLY","1",  NULL,NULL };
 	const D3D_SHADER_MACRO vs_textured[] = {                       NULL,NULL };

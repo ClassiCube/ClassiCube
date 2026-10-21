@@ -72,18 +72,19 @@ static void* audio_device;
 static void* audio_context;
 
 #if defined CC_BUILD_WIN
-static const cc_string alLib = String_FromConst("openal32.dll");
+	#define OPENAL_PATH "openal32.dll"
 #elif defined CC_BUILD_MACOS
-static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
+	#define OPENAL_PATH "/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL"
 #elif defined CC_BUILD_IOS
-static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/OpenAL");
+	#define OPENAL_PATH "/System/Library/Frameworks/OpenAL.framework/OpenAL"
 #elif defined CC_BUILD_NETBSD
-static const cc_string alLib = String_FromConst("/usr/pkg/lib/libopenal.so");
+	#define OPENAL_PATH "/usr/pkg/lib/libopenal.so"
 #elif defined CC_BUILD_BSD
-static const cc_string alLib = String_FromConst("libopenal.so");
+	#define OPENAL_PATH "libopenal.so"
 #else
-static const cc_string alLib = String_FromConst("libopenal.so.1");
+	#define OPENAL_PATH "libopenal.so.1"
 #endif
+static const cc_string alLib = String_FromConst(OPENAL_PATH);
 
 static cc_bool LoadALFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {

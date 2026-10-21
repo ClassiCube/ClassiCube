@@ -7,7 +7,6 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 #define GAME_MAX_CMDARGS 5
 #define GAME_APP_VER "1.3.8"
-#define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
 #define GAME_APP_ALT   "ClassiCube 1.3.8 web mobile"
@@ -48,15 +47,20 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 
 #define GUI_MAX_CHATLINES 30
 
-enum FACE_CONSTS {
-	FACE_XMIN = 0, FACE_BIT_XMIN = 1 << FACE_XMIN, /* Face X = 0 */
-	FACE_XMAX = 1, FACE_BIT_XMAX = 1 << FACE_XMAX, /* Face X = 1 */
-	FACE_ZMIN = 2, FACE_BIT_ZMIN = 1 << FACE_ZMIN, /* Face Z = 0 */
-	FACE_ZMAX = 3, FACE_BIT_ZMAX = 1 << FACE_ZMAX, /* Face Z = 1 */
-	FACE_YMIN = 4, FACE_BIT_YMIN = 1 << FACE_YMIN, /* Face Y = 0 */
-	FACE_YMAX = 5, FACE_BIT_YMAX = 1 << FACE_YMAX, /* Face Y = 1 */
-	FACE_COUNT= 6  /* Number of faces on a cube */
-};
+#define FACE_XMIN  0 /* Face X = 0 */
+#define FACE_XMAX  1 /* Face X = 1 */
+#define FACE_ZMIN  2 /* Face Z = 0 */
+#define FACE_ZMAX  3 /* Face Z = 1 */
+#define FACE_YMIN  4 /* Face Y = 0 */
+#define FACE_YMAX  5 /* Face Y = 1 */
+#define FACE_COUNT 6 /* Number of faces on a cube */
+
+#define FACE_BIT_XMIN (1 << FACE_XMIN)
+#define FACE_BIT_XMAX (1 << FACE_XMAX)
+#define FACE_BIT_ZMIN (1 << FACE_ZMIN)
+#define FACE_BIT_ZMAX (1 << FACE_ZMAX)
+#define FACE_BIT_YMIN (1 << FACE_YMIN) 
+#define FACE_BIT_YMAX (1 << FACE_YMAX)
 
 enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
 #define DRAWER2D_MAX_COLORS 256
@@ -67,9 +71,13 @@ enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
 #define Int32_MinValue  ((cc_int32)-2147483647L - (cc_int32)1L)
 #define Int32_MaxValue  ((cc_int32)2147483647L)
 
+/* Default webserver for downloading skins from */
 #define SKINS_SERVER    "http://cdn.classicube.net/skin"
+/* Webserver for downloading executables from */
 #define UPDATES_SERVER  "https://cdn.classicube.net/client"
+/* Webserver for login, server detail fetching etc */
 #define SERVICES_SERVER "https://www.classicube.net/api"
+/* Webserver for downloading non-minecraft assets */
 #define RESOURCE_SERVER "http://static.classicube.net"
 /* Webpage where users can register for a new account */
 #define REGISTERNEW_URL "https://www.classicube.net/acc/register/"

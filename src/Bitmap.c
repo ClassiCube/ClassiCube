@@ -367,6 +367,13 @@ static BitmapCol ExpandRGB(cc_uint8 bitsPerSample, int r, int g, int b) {
 	return BitmapCol_Make(r, g, b, 0);
 }
 
+/* ensures bitmap data is always released in event of an error part way through decoding */
+static CC_NOINLINE cc_result DecodeFailure(struct Bitmap* bmp, cc_result res) {
+	Mem_Free(bmp->scan0);
+	bmp->scan0  = NULL;
+	return res;	
+}
+
 cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[64];
 	cc_uint32 dataSize, fourCC;
@@ -402,12 +409,13 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	int zlib_state = ZLIB_STATE_COMPRESSION_METHOD;
 	cc_uint8* data = NULL;
 
-	bmp->width = 0; bmp->height = 0;
-	bmp->scan0 = NULL;
+	bmp->width  = 0; 
+	bmp->height = 0;
+	bmp->scan0  = NULL;
 
 	res = Stream_Read(stream, tmp, PNG_SIG_SIZE);
-	if (res) return res;
-	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
+	if (res) return DecodeFailure(bmp, res);
+	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return DecodeFailure(bmp, PNG_ERR_INVALID_SIG);
 
 	colorspace = 0xFF; /* Unknown colour space */
 	trnsColor  = BITMAPCOLOR_BLACK;
@@ -417,31 +425,32 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 	for (;;) {
 		res = Stream_Read(stream,   tmp, 8);
-		if (res) return res;
+		if (res) return DecodeFailure(bmp, res);
 		dataSize = Mem_ReadU32_BE(tmp + 0);
 		fourCC   = Mem_ReadU32_BE(tmp + 4);
 
 		switch (fourCC) {
 		/* 11.2.2 IHDR Image header */
 		case PNG_FourCC('I','H','D','R'): {
-			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HDR_SIZE;
+			if (dataSize != PNG_IHDR_SIZE) return DecodeFailure(bmp, PNG_ERR_INVALID_HDR_SIZE);
+
 			res = Stream_Read(stream, tmp, PNG_IHDR_SIZE);
-			if (res) return res;
+			if (res) return DecodeFailure(bmp, res);
 
 			bmp->width  = (int)Mem_ReadU32_BE(tmp + 0);
 			bmp->height = (int)Mem_ReadU32_BE(tmp + 4);
-			if (bmp->width  < 0 || bmp->width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
-			if (bmp->height < 0 || bmp->height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
+			if (bmp->width  < 0 || bmp->width  > PNG_MAX_DIMS) return DecodeFailure(bmp, PNG_ERR_TOO_WIDE);
+			if (bmp->height < 0 || bmp->height > PNG_MAX_DIMS) return DecodeFailure(bmp, PNG_ERR_TOO_TALL);
 
 			bitsPerSample = tmp[8]; colorspace = tmp[9];
-			if (bitsPerSample == 16) return PNG_ERR_16BITSAMPLES;
+			if (bitsPerSample == 16) return DecodeFailure(bmp, PNG_ERR_16BITSAMPLES);
 
 			rowExpander = Png_GetExpander(colorspace, bitsPerSample);
-			if (!rowExpander) return PNG_ERR_INVALID_COL_BPP;
+			if (!rowExpander) return DecodeFailure(bmp, PNG_ERR_INVALID_COL_BPP);
 
-			if (tmp[10] != 0) return PNG_ERR_COMP_METHOD;
-			if (tmp[11] != 0) return PNG_ERR_FILTER;
-			if (tmp[12] != 0) return PNG_ERR_INTERLACED;
+			if (tmp[10] != 0) return DecodeFailure(bmp, PNG_ERR_COMP_METHOD);
+			if (tmp[11] != 0) return DecodeFailure(bmp, PNG_ERR_FILTER);
+			if (tmp[12] != 0) return DecodeFailure(bmp, PNG_ERR_INTERLACED);
 
 			bytesPerPixel = ((samplesPerPixel[colorspace] * bitsPerSample) + 7) >> 3;
 			scanlineSize  = ((samplesPerPixel[colorspace] * bitsPerSample * bmp->width) + 7) >> 3;
@@ -449,18 +458,18 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			data = (cc_uint8*)Mem_TryAlloc(bmp->height, max(scanlineBytes, bmp->width * 4));
 			bmp->scan0 = (BitmapCol*)data;
-			if (!bmp->scan0) return ERR_OUT_OF_MEMORY;
+			if (!bmp->scan0) return DecodeFailure(bmp, ERR_OUT_OF_MEMORY);
 
 			bufferLen = bmp->height * scanlineBytes;
 		} break;
 
 		/* 11.2.3 PLTE Palette */
 		case PNG_FourCC('P','L','T','E'): {
-			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_SIZE;
-			if ((dataSize % 3) != 0)        return PNG_ERR_PAL_SIZE;
+			if (dataSize > PNG_PALETTE * 3) return DecodeFailure(bmp, PNG_ERR_PAL_SIZE);
+			if ((dataSize % 3) != 0)        return DecodeFailure(bmp, PNG_ERR_PAL_SIZE);
 
 			res = Stream_Read(stream, buffer, dataSize);
-			if (res) return res;
+			if (res) return DecodeFailure(bmp, res);
 
 			for (i = 0; i < dataSize; i += 3) {
 				palette[i / 3] &= BITMAPCOLOR_A_MASK; /* set RGB to 0 */
@@ -473,34 +482,35 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 		/* 11.3.2.1 tRNS Transparency */
 		case PNG_FourCC('t','R','N','S'): {
 			if (colorspace == PNG_COLOR_GRAYSCALE) {
-				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
+				if (dataSize != 2) return DecodeFailure(bmp, PNG_ERR_TRANS_COUNT);
 
 				res = Stream_Read(stream, buffer, dataSize);
-				if (res) return res;
+				if (res) return DecodeFailure(bmp, res);
 
 				/* RGB is always two bytes */
 				trnsColor = ExpandRGB(bitsPerSample, buffer[1], buffer[1], buffer[1]);
 			} else if (colorspace == PNG_COLOR_INDEXED) {
-				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
+				if (dataSize > PNG_PALETTE) return DecodeFailure(bmp, PNG_ERR_TRANS_COUNT);
 
 				res = Stream_Read(stream, buffer, dataSize);
-				if (res) return res;
+				if (res) return DecodeFailure(bmp, res);
 
 				/* set alpha component of palette */
-				for (i = 0; i < dataSize; i++) {
+				for (i = 0; i < dataSize; i++) 
+				{
 					palette[i] &= BITMAPCOLOR_RGB_MASK; /* set A to 0 */
 					palette[i] |= BitmapColor_A_Bits(buffer[i]);
 				}
 			} else if (colorspace == PNG_COLOR_RGB) {
-				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
+				if (dataSize != 6) return DecodeFailure(bmp, PNG_ERR_TRANS_COUNT);
 
 				res = Stream_Read(stream, buffer, dataSize);
-				if (res) return res;
+				if (res) return DecodeFailure(bmp, res);
 
 				/* R,G,B are always two bytes */
 				trnsColor = ExpandRGB(bitsPerSample, buffer[1], buffer[3], buffer[5]);
 			} else {
-				return PNG_ERR_TRANS_INVALID;
+				return DecodeFailure(bmp, PNG_ERR_TRANS_INVALID);
 			}
 		} break;
 
@@ -511,15 +521,15 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
 			while (zlib_state != ZLIB_STATE_DONE) {
-				if ((res = ZLibHeader_Read(&datStream, &zlib_state))) return res;
+				if ((res = ZLibHeader_Read(&datStream, &zlib_state))) return DecodeFailure(bmp, res);
 			}
 
-			if (!bmp->scan0) return PNG_ERR_NO_DATA;
+			if (!bmp->scan0) return DecodeFailure(bmp, PNG_ERR_NO_DATA);
 			if (rowY >= bmp->height) break;
 			left = bufferLen - bufferIdx;
 
 			res  = compStream.Read(&compStream, &data[bufferIdx], left, &read);
-			if (res) return res;
+			if (res) return DecodeFailure(bmp, res);
 			if (!read) break;
 
 			available += read;
@@ -529,7 +539,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			/* NOTE: Need to check height too, in case IDAT is corrupted and has extra data */
 			for (; available >= scanlineBytes && rowY < bmp->height; rowY++, available -= scanlineBytes) {
 				cc_uint8* scanline = &data[rowY * scanlineBytes];
-				if (scanline[0] > PNG_FILTER_PAETH) return PNG_ERR_INVALID_SCANLINE;
+				if (scanline[0] > PNG_FILTER_PAETH) return DecodeFailure(bmp, PNG_ERR_INVALID_SCANLINE);
 
 				if (rowY == 0) {
 					/* First row, prior is assumed as 0 */
@@ -561,7 +571,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			/*  be done backwards to avoid overwriting any source data that has yet to be processed */
 			/* This is slightly slower, but the majority of images ClassiCube encounters are RGBA anyways */
 			if (colorspace != PNG_COLOR_RGB_A) {
-				for (curY = bmp->height - 1; curY >= 0; curY--) {
+				for (curY = bmp->height - 1; curY >= 0; curY--) 
+				{
 					cc_uint8* scanline = &data[curY * scanlineBytes];
 					rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
 				}
@@ -575,14 +586,14 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 		case PNG_FourCC('I','E','N','D'):
 			/* Reading all image data should be handled by above if in the IDAT chunk */
 			/* If we reached here, it means not all of the image data was read */
-			return PNG_ERR_REACHED_IEND;
+			return DecodeFailure(bmp, PNG_ERR_REACHED_IEND);
 
 		default:
-			if ((res = stream->Skip(stream, dataSize))) return res;
+			if ((res = stream->Skip(stream, dataSize))) return DecodeFailure(bmp, res);
 			break;
 		}
 
-		if ((res = stream->Skip(stream, 4))) return res; /* Skip CRC32 */
+		if ((res = stream->Skip(stream, 4))) return DecodeFailure(bmp, res); /* Skip CRC32 */
 	}
 }
 #endif

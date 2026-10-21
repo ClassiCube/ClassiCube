@@ -1,3 +1,4 @@
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 #include "_GraphicsBase.h"
@@ -19,6 +20,7 @@
 
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
 static DWORD d3d9_formatMappings[] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
+static D3DFOGMODE fog_modes[] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
@@ -405,11 +407,7 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
-static cc_bool gfx_alphaBlending;
-static cc_bool gfx_depthTesting, gfx_depthWriting;
-static PackedCol gfx_clearColor, gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static PackedCol gfx_clearColor;
 
 /* NOTE: Although SetRenderState is okay to call on a lost device, it's also possible */
 /*   the context is lost because the device was never created to begin with!          */
@@ -429,42 +427,30 @@ void Gfx_SetFog(cc_bool enabled) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, enabled);
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == gfx_fogColor) return;
-	gfx_fogColor = color;
-
+static void SetFogColor(PackedCol color) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogColor);
 }
 
-void Gfx_SetFogDensity(float value) {
+static void SetFogDensity(float value) {
 	union IntAndFloat raw;
-	if (value == gfx_fogDensity) return;
-	gfx_fogDensity = value;
-
 	raw.f = value;
+
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 }
 
-void Gfx_SetFogEnd(float value) {
+static void SetFogEnd(float value) {
 	union IntAndFloat raw;
-	if (value == gfx_fogEnd) return;
-	gfx_fogEnd = value;
-
 	raw.f = value;
+
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
 }
 
-void Gfx_SetFogMode(FogFunc func) {
-	static D3DFOGMODE modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
-	D3DFOGMODE mode = modes[func];
-	if (mode == gfx_fogMode) return;
-
-	gfx_fogMode = mode;
+static void SetFogMode(FogFunc func) {
 	if (Gfx.LostContext) return;
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, fog_modes[func]);
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -491,22 +477,18 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORWRITEENABLE, channels);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	gfx_depthTesting = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE, enabled);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	gfx_depthWriting = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, enabled);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 	if (depthOnly) IDirect3DDevice9_SetTexture(device, 0, NULL);
 
 	/* For when Direct3D9 device doesn't support D3DRS_COLORWRITEENABLE */
@@ -535,8 +517,8 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,   gfx_alphaTest);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlending);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,  gfx_alphaTest);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlend);
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, gfx_fogEnabled);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR,  gfx_fogColor);
@@ -544,10 +526,10 @@ static void D3D9_RestoreRenderStates(void) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 	raw.f = gfx_fogEnd;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, gfx_fogMode);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, fog_modes[gfx_fogMode]);
 
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE,      gfx_depthTesting);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, gfx_depthWriting);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE,      gfx_depthTest);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, gfx_depthWrite);
 }
 
 
@@ -668,14 +650,18 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	Gfx_BindDynamicVb(vb); /* TODO: Inline this? */
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+
+/*########################################################################################################################*
+*--------------------------------------------------Scratch Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 	int size = vCount * gfx_stride;
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
 	cc_result res;
 	
 	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
 	res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
-	if (res) Process_Abort2(res, "D3D9_SetDynamicVbData - Bind");
+	if (res) Process_Abort2(res, "D3D9_SetScratchVbData - Bind");
 }
 
 
@@ -716,7 +702,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 }
@@ -908,7 +894,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "Depth buffer bits: %i", &depthBits);
 }
 
-void Gfx_OnWindowResize(void) {
+void Gfx_OnWindowResize(int width, int height) {
 	if (Game.Width == cachedWidth && Game.Height == cachedHeight) return;
 	/* Only resize when necessary */
 	UpdateSwapchain(" (resizing window)");

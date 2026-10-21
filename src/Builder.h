@@ -20,7 +20,8 @@ extern int Builder_SidesLevel, Builder_EdgeLevel;
 extern cc_bool Builder_SmoothLighting;
 
 /* Builds the mesh of vertices for the given chunk. */
-void Builder_MakeChunk(struct ChunkInfo* info);
+/* Returns false if vertex buffer allocation fails */
+cc_bool Builder_MakeChunk(struct ChunkInfo* info);
 
 void Builder_ApplyActive(void);
 

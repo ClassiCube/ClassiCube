@@ -115,6 +115,20 @@ int main(int argc, char** argv) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------------Misc-----------------------------------------------------------*
+*#########################################################################################################################*/
+/* although it'd be better to use linux O_CLOEXEC and SOCK_CLOEXEC, */
+/*  this approach works good enough for our purposes */
+static void SetCloseOnExec(int fd) {
+#ifdef FD_CLOEXEC
+	int flags = fcntl(fd, F_GETFD, 0);
+	if (flags == -1) return;
+
+	fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+#endif
+}
+
+/*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_ANDROID
@@ -189,6 +203,14 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return (end - beg) / 1000;
 }
 #else
+/* Force usage of old clock_gettime symbol so it works on really old linux distributions */
+#ifdef FORCE_OLD_CLOCKGETTIME_X86
+__asm__(".symver clock_gettime, clock_gettime@GLIBC_2.2");
+#endif
+#ifdef FORCE_OLD_CLOCKGETTIME_X64
+__asm__(".symver clock_gettime, clock_gettime@GLIBC_2.2.5");
+#endif
+
 /* clock_gettime is optional, see http://pubs.opengroup.org/onlinepubs/009696899/functions/clock_getres.html */
 /* "... These functions are part of the Timers option and need not be available on all implementations..." */
 cc_uint64 Stopwatch_Measure(void) {
@@ -364,8 +386,11 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result File_Do(cc_file* file, const char* path, int mode) {
-	*file = open(path, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	return *file == -1 ? errno : 0;
+	int fd = open(path, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	if (fd != -1) SetCloseOnExec(fd);
+
+	*file = fd;
+	return fd == -1 ? errno : 0;
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
@@ -773,31 +798,42 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 }
 #endif
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
-	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
+	int fd = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	if (fd != -1) SetCloseOnExec(fd);
 
-	if (nonblocking) {
-#ifdef CC_BUILD_HPUX
-		int flags = fcntl(*s, F_GETFL, 0);
-		if (flags == -1) return errno;
-		int err = fcntl(*s, F_SETFL, flags | O_NONBLOCK);
-		if (err == -1) return errno;
-#else
-		int blocking_raw = -1; /* non-blocking mode */
-		int err = ioctl(*s, FIONBIO, &blocking_raw);
-		if (err == -1) return errno;
-#endif
-	}
-	return 0;
+	*s = fd; 
+	return fd == -1 ? errno : 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = connect(s, raw, addr->size);
+#ifdef CC_BUILD_HPUX
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int res = fcntl(s, F_GETFL, 0);
+	if (res == -1) return errno;
+
+	int flags = res & ~O_NONBLOCK;
+	if (nonblocking) flags |= O_NONBLOCK;          
+
+	res = fcntl(s, F_SETFL, flags);
+	return res == -1 ? errno : 0;
+}
+#else
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? -1 : 0;
+	int res  = ioctl(s, FIONBIO, &mode);
+	return res == -1 ? errno : 0;
+}
+#endif
+
+void Socket_Close(cc_socket s) {
+	shutdown(s, SHUT_RDWR);
+	close(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = connect(s, (struct sockaddr*)addr, addrSize);
 	return res == -1 ? errno : 0;
 }
 
@@ -811,11 +847,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return errno;
-}
-
-void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
 }
 
 #if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS
@@ -857,15 +888,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	return 0;
 }
 #endif
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-	return error;
-}
 
 
 /*########################################################################################################################*
@@ -1280,8 +1302,8 @@ const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 void* DynamicLib_Load2(const cc_string* path) {
 	cc_filepath str;
 	Platform_EncodePath(&str, path);
-	return NSAddImage(str.buffer, NSADDIMAGE_OPTION_WITH_SEARCHING |
-								NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+	return (void*)NSAddImage(str.buffer, NSADDIMAGE_OPTION_WITH_SEARCHING |
+										NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
@@ -1642,7 +1664,7 @@ static cc_bool IsProblematicWorkingDirectory(void) {
 	#endif
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
 	cc_result res;

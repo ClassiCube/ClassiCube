@@ -1,6 +1,8 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
 #define CC_NO_DYNLIB
+#define CC_NO_OPEN
+#define CC_NO_CRASHHANDLER
 #define DEFAULT_COMMANDLINE_FUNC
 
 #include "../Stream.h"
@@ -121,16 +123,6 @@ cc_uint64 Stopwatch_Measure(void) {
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return OSTicksToMicroseconds(end - beg);
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
 }
 
 
@@ -417,23 +409,28 @@ static CC_INLINE int Socket_LastError(void) {
 	return RPLWRAP(socketlasterr)();
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 
 	*s = RPLWRAP(socket)(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return Socket_LastError();
 
-	if (nonblocking) {
-		int nonblock = 1; /* non-blocking mode */
-		RPLWRAP(setsockopt)(*s, SOL_SOCKET, SO_NONBLOCK, &nonblock, sizeof(int));
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	int res  = RPLWRAP(setsockopt)(s, SOL_SOCKET, SO_NONBLOCK, &mode, sizeof(int));
+	return res < 0 ? Socket_LastError() : 0;
+}
 
-	int res = RPLWRAP(connect)(s, raw, addr->size);
+void Socket_Close(cc_socket s) {
+	RPLWRAP(shutdown)(s, SHUT_RDWR);
+	RPLWRAP(socketclose)(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = RPLWRAP(connect)(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? Socket_LastError() : 0;
 }
 
@@ -449,11 +446,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 
 	*modified = sentCount >= 0 ? sentCount : 0;
 	return sentCount < 0 ? Socket_LastError() : 0;
-}
-
-void Socket_Close(cc_socket s) {
-	RPLWRAP(shutdown)(s, SHUT_RDWR);
-	RPLWRAP(socketclose)(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
@@ -476,18 +468,6 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 	} else {
 		*success = NSYSNET_FD_ISSET(s, set) != 0; return 0;
 	}
-}
-
-cc_result Socket_GetLastError(cc_socket s) {
-	int error = ERR_INVALID_ARGUMENT;
-	socklen_t errSize = sizeof(error);
-
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	RPLWRAP(getsockopt)(s, SOL_SOCKET, SO_ERROR, &error, &errSize);
-
-	// Apparently, actual Wii U hardware returns INPROGRESS error code if connect is still in progress
-	if (error == SOCK_ERR_INPROGRESS) error = 0;
-	return error;
 }
 
 
@@ -532,11 +512,6 @@ void Platform_Init(void) {
 	mkdir("ClassiCube", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) {
 	WHBProcShutdown();
 	exit(code); 
@@ -547,9 +522,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 
 /*########################################################################################################################*

@@ -138,7 +138,7 @@ void Entity_SetModel(struct Entity* e, const cc_string* model) {
 	Entity_UpdateModelBounds(e);
 
 	if (e->Flags & ENTITY_FLAG_HAS_MODELVB)
-		Gfx_DeleteDynamicVb(&e->ModelVB);
+		Gfx_DeleteScratchVb(&e->ModelVB);
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {
@@ -497,13 +497,15 @@ void Entity_LerpAngles(struct Entity* e, float t) {
 *#########################################################################################################################*/
 struct _EntitiesData Entities;
 
-void Entities_Tick(struct ScheduledTask* task) {
+static cc_bool Entities_Tick(struct ScheduledTask2* task) {
 	int i;
+
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->interval);
 	}
+	return true;
 }
 
 void Entities_RenderModels(float delta, float t) {
@@ -528,7 +530,7 @@ static void Entities_ContextLost(void* obj) {
 		if (!entity) continue;
 
 		if (entity->Flags & ENTITY_FLAG_HAS_MODELVB)
-			Gfx_DeleteDynamicVb(&entity->ModelVB);
+			Gfx_DeleteScratchVb(&entity->ModelVB);
 
 		if (!Gfx.ManagedTextures)
 			DeleteSkin(entity);
@@ -579,7 +581,7 @@ static void Player_Despawn(struct Entity* e) {
 	EntityNames_Delete(e);
 
 	if (e->Flags & ENTITY_FLAG_HAS_MODELVB)
-		Gfx_DeleteDynamicVb(&e->ModelVB);
+		Gfx_DeleteScratchVb(&e->ModelVB);
 }
 
 
@@ -1199,6 +1201,10 @@ static void Entities_Init(void) {
 	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];
 	LocalPlayer_HookBinds();
+
+	Game_Tasks.entities.interval = GAME_DEF_TICKS;
+	Game_Tasks.entities.callback = Entities_Tick;
+	ScheduledTask2_Add(&Game_Tasks.entities);
 }
 
 static void Entities_Free(void) {

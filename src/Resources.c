@@ -917,7 +917,6 @@ static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Strea
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req) {
 	struct Stream src;
-	cc_result res;
 	struct ZipEntry entries[64];
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	

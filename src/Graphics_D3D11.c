@@ -1,3 +1,4 @@
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "Core.h"
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
 #include "_GraphicsBase.h"
@@ -181,7 +182,6 @@ void Gfx_Create(void) {
 	Gfx.Created         = true;
 	Gfx.BackendType     = CC_GFX_BACKEND_D3D11;
 	customMipmapsLevels = true;
-	Gfx_RestoreState();
 }
 
 void Gfx_Free(void) {
@@ -452,9 +452,9 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
 	*vb = NULL;
 }
 
-static D3D11_MAPPED_SUBRESOURCE mapDesc;
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	D3D11_MAPPED_SUBRESOURCE mapDesc;
 	mapDesc.pData = NULL;
 
 	HRESULT hr = ID3D11DeviceContext_Map(context, (ID3D11Resource*)buffer, 0, 
@@ -496,7 +496,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
 }
 
@@ -595,16 +595,45 @@ void Gfx_BindDynamicVb(GfxResourceID vb) {
 
 
 //########################################################################################################################
+//------------------------------------------------------Constant buffers--------------------------------------------------
+//########################################################################################################################
+static ID3D11Buffer* ConstantBuffer_Alloc(const void* ptr, int size) {
+	// https://developer.nvidia.com/content/constant-buffers-without-constant-pain-0
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
+	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
+	D3D11_BUFFER_DESC desc = { 0 };
+	ID3D11Buffer* buf = NULL;
+	desc.ByteWidth = size;
+	//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.Usage     = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem          = ptr;
+	data.SysMemPitch      = 0;
+	data.SysMemSlicePitch = 0;
+
+	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &buf);
+	if (hr) Process_Abort2(hr, "allocating constant buffer");
+	return buf;
+}
+
+
+//########################################################################################################################
 //--------------------------------------------------------Vertex shader---------------------------------------------------
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/vertex-shader-stage
 static ID3D11VertexShader* vs_shaders[3];
-static ID3D11Buffer* vs_cBuffer;
+static ID3D11Buffer* vs_cBuffer_mvp;
+static ID3D11Buffer* vs_cBuffer_tex;
 
-static struct CC_ALIGNED(64) VSConstants {
+static struct CC_ALIGNED(64) VSConstantsMVP {
 	struct Matrix mvp;
-	float texX, texY;
-} vs_constants;
+} vs_constants_mvp;
+static struct CC_ALIGNED(64) VSMVPConstantsTex {
+	float x, y;
+} vs_constants_tex;
+
 static const struct ShaderDesc vs_descs[] = {
 	{ vs_colored,         sizeof(vs_colored) },
 	{ vs_textured,        sizeof(vs_textured) },
@@ -620,30 +649,17 @@ static void VS_CreateShaders(void) {
 }
 
 static void VS_CreateConstants(void) {
-	// https://developer.nvidia.com/content/constant-buffers-without-constant-pain-0
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
-	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
-	D3D11_BUFFER_DESC desc = { 0 };
-	desc.ByteWidth      = sizeof(vs_constants);
-	//desc.Usage          = D3D11_USAGE_DYNAMIC;
-	//desc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
-	//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	vs_cBuffer_mvp = ConstantBuffer_Alloc(&vs_constants_mvp, sizeof(vs_constants_mvp));
+	vs_cBuffer_tex = ConstantBuffer_Alloc(&vs_constants_tex, sizeof(vs_constants_tex));
 
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem          = &vs_constants;
-	data.SysMemPitch      = 0;
-	data.SysMemSlicePitch = 0;
-
-	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &vs_cBuffer);
-	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer);
+	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer_mvp);
+	ID3D11DeviceContext_VSSetConstantBuffers(context, 1, 1, &vs_cBuffer_tex);
 }
 
 static int VS_CalcShaderIndex(void) {
 	if (gfx_format == VERTEX_FORMAT_COLOURED) return 0;
 
-	cc_bool has_offset = vs_constants.texX != 0 || vs_constants.texY != 0;
+	cc_bool has_offset = vs_constants_tex.x != 0 || vs_constants_tex.y != 0;
 	return has_offset ? 2 : 1;
 }
 
@@ -659,13 +675,19 @@ static void VS_FreeShaders(void) {
 	}
 }
 
-static void VS_UpdateConstants(void) {
-	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer, 0, 
-											NULL, &vs_constants, 0, 0);
+static void VS_UpdateConstants_MVP(void) {
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer_mvp, 0, 
+											NULL, &vs_constants_mvp, 0, 0);
+}
+
+static void VS_UpdateConstants_Tex(void) {
+	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)vs_cBuffer_tex, 0, 
+											NULL, &vs_constants_tex, 0, 0);
 }
 
 static void VS_FreeConstants(void) {
-	ID3D11Buffer_Release(vs_cBuffer);
+	ID3D11Buffer_Release(vs_cBuffer_mvp);
+	ID3D11Buffer_Release(vs_cBuffer_tex);
 }
 
 static void VS_Init(void) {
@@ -684,8 +706,8 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW) _view = *matrix;
 	if (type == MATRIX_PROJ) _proj = *matrix;
 
-	Matrix_Mul(&vs_constants.mvp, &_view, &_proj);
-	VS_UpdateConstants();
+	Matrix_Mul(&vs_constants_mvp.mvp, &_view, &_proj);
+	VS_UpdateConstants_MVP();
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
@@ -695,15 +717,15 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	vs_constants.texX = x;
-	vs_constants.texY = y;
+	vs_constants_tex.x = x;
+	vs_constants_tex.y = y;
 	VS_UpdateShader();
-	VS_UpdateConstants();
+	VS_UpdateConstants_Tex();
 }
 
 void Gfx_DisableTextureOffset(void) {
-	vs_constants.texX = 0;
-	vs_constants.texY = 0;
+	vs_constants_tex.x = 0;
+	vs_constants_tex.y = 0;
 	VS_UpdateShader();
 }
 
@@ -788,13 +810,10 @@ static ID3D11SamplerState* ps_samplers[2];
 static ID3D11PixelShader* ps_shaders[12];
 static ID3D11Buffer* ps_cBuffer;
 static cc_bool ps_mipmaps;
-static float ps_fogEnd, ps_fogDensity;
-static PackedCol ps_fogColor;
-static int ps_fogMode;
 
 static struct CC_ALIGNED(64) PSConstants {
-	float fogValue;
 	float fogR, fogG, fogB;
+	float fogEnd, fogDensity;
 } ps_constants;
 static const struct ShaderDesc ps_descs[] = {
 	{ ps_colored,       sizeof(ps_colored) },
@@ -824,9 +843,9 @@ static int PS_CalcShaderIndex(void) {
 	if (gfx_alphaTest) idx += 2;
 
 	if (gfx_fogEnabled) {
-		// uncomment when it works
-		if (ps_fogMode == FOG_LINEAR) idx += 4;
-		if (ps_fogMode == FOG_EXP)    idx += 8;
+		if (gfx_fogMode == FOG_LINEAR) idx += 4;
+		if (gfx_fogMode == FOG_EXP)    idx += 8;
+		// TODO: EXP2 fog mode?
 	}
 	return idx;
 }
@@ -876,27 +895,11 @@ static void PS_FreeSamplers(void) {
 }
 
 static void PS_CreateConstants(void) {
-	D3D11_BUFFER_DESC desc = { 0 }; // TODO see notes in VS_CreateConstants
-	desc.ByteWidth      = sizeof(ps_constants);
-	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem          = &ps_constants;
-	data.SysMemPitch      = 0;
-	data.SysMemSlicePitch = 0;
-
-	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &ps_cBuffer);
+	ps_cBuffer = ConstantBuffer_Alloc(&ps_constants, sizeof(ps_constants));
 	ID3D11DeviceContext_PSSetConstantBuffers(context, 0, 1, &ps_cBuffer);
 }
 
 static void PS_UpdateConstants(void) {
-	ps_constants.fogR = PackedCol_R(ps_fogColor) / 255.0f;
-	ps_constants.fogG = PackedCol_G(ps_fogColor) / 255.0f;
-	ps_constants.fogB = PackedCol_B(ps_fogColor) / 255.0f;
-
-	// avoid doing - in pixel shader for density fog
-	ps_constants.fogValue = ps_fogMode == FOG_LINEAR ? ps_fogEnd : -ps_fogDensity;
 	ID3D11DeviceContext_UpdateSubresource(context, (ID3D11Resource*)ps_cBuffer, 0, 
 											NULL, &ps_constants, 0, 0);
 }
@@ -939,27 +942,26 @@ void Gfx_SetFog(cc_bool enabled) {
 	PS_UpdateShader();
 }
 
-void Gfx_SetFogCol(PackedCol color) {
-	if (color == ps_fogColor) return;
-	ps_fogColor = color;
+static void SetFogColor(PackedCol color) {
+	ps_constants.fogR = PackedCol_R(color) / 255.0f;
+	ps_constants.fogG = PackedCol_G(color) / 255.0f;
+	ps_constants.fogB = PackedCol_B(color) / 255.0f;
 	PS_UpdateConstants();
 }
 
-void Gfx_SetFogDensity(float value) {
-	if (value == ps_fogDensity) return;
-	ps_fogDensity = value;
+static void SetFogDensity(float value) {
+	// avoid doing - in pixel shader for density fog
+	ps_constants.fogDensity = -value;
 	PS_UpdateConstants();
 }
 
-void Gfx_SetFogEnd(float value) {
-	if (value == ps_fogEnd) return;
-	ps_fogEnd = value;
+static void SetFogEnd(float value) {
+	// avoid doing division in pixel shader for linear fog
+	ps_constants.fogEnd = 1.0f / value;
 	PS_UpdateConstants();
 }
 
-void Gfx_SetFogMode(FogFunc func) {
-	if (ps_fogMode == func) return;
-	ps_fogMode = func;
+static void SetFogMode(FogFunc func) {
 	PS_UpdateShader();
 }
 
@@ -987,7 +989,6 @@ static ID3D11BlendState* om_blendStates[16 * 2];
 static ID3D11DepthStencilState* om_depthStates[4];
 static float gfx_clearColor[4];
 static cc_bool gfx_channels[4] = { true, true, true, true };
-static cc_bool gfx_depthTest, gfx_depthWrite;
 
 static void OM_Clear(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_COLOR) {
@@ -1125,13 +1126,11 @@ void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor[3] = PackedCol_A(color) / 255.0f;
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
-	gfx_depthTest = enabled;
+static void SetDepthTest(cc_bool enabled) {
 	OM_UpdateDepthState();
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	gfx_depthWrite = enabled;
+static void SetDepthWrite(cc_bool enabled) {
 	OM_UpdateDepthState();
 }
 
@@ -1148,9 +1147,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -1272,14 +1269,14 @@ release_device:
 	IDXGIDevice_Release(dxgi_device);
 }
 
-void Gfx_OnWindowResize(void) {
+void Gfx_OnWindowResize(int width, int height) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi#handling-window-resizing
 	OM_FreeTargets();
 	HRESULT hr = IDXGISwapChain_ResizeBuffers(swapchain, 0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
 	if (hr) Process_Abort2(hr, "Failed to resize swapchain");
 
 	OM_InitTargets();
-	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, width, height);
 }
 
 static void InitPipeline(void) {

@@ -662,7 +662,6 @@ static void DefaultPngProcess(struct Stream* stream, const cc_string* name) {
 
 	if ((res = Png_Decode(&bmp, stream))) {
 		Logger_SysWarn2(res, "decoding", name);
-		Mem_Free(bmp.scan0);
 	} else if (Font_SetBitmapAtlas(&bmp)) {
 		Event_RaiseVoid(&ChatEvents.FontChanged);
 	} else {

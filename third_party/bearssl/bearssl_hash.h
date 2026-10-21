@@ -168,13 +168,6 @@ extern "C" {
  * | SHA-256   | sha256  |     32        |     32       |
  * | SHA-384   | sha384  |     48        |     64       |
  * | SHA-512   | sha512  |     64        |     64       |
- * | MD5+SHA-1 | md5sha1 |     36        |     36       |
- *
- * (MD5+SHA-1 is the concatenation of MD5 and SHA-1 computed over the
- * same input; in the implementation, the internal data buffer is
- * shared, thus making it more memory-efficient than separate MD5 and
- * SHA-1. It can be useful in implementing SSL 3.0, TLS 1.0 and TLS
- * 1.1.)
  *
  *
  * ## Multi-Hasher
@@ -965,113 +958,6 @@ void br_sha512_set_state(br_sha512_context *ctx,
 #define br_sha512_set_state   br_sha384_set_state
 #endif
 
-/*
- * "md5sha1" is a special hash function that computes both MD5 and SHA-1
- * on the same input, and produces a 36-byte output (MD5 and SHA-1
- * concatenation, in that order). State size is also 36 bytes.
- */
-
-/**
- * \brief Symbolic identifier for MD5+SHA-1.
- *
- * MD5+SHA-1 is the concatenation of MD5 and SHA-1, computed over the
- * same input. It is not one of the functions identified in TLS, so
- * we give it a symbolic identifier of value 0.
- */
-#define br_md5sha1_ID     0
-
-/**
- * \brief MD5+SHA-1 output size (in bytes).
- */
-#define br_md5sha1_SIZE   36
-
-/**
- * \brief Constant vtable for MD5+SHA-1.
- */
-extern const br_hash_class br_md5sha1_vtable;
-
-/**
- * \brief MD5+SHA-1 context.
- *
- * First field is a pointer to the vtable; it is set by the initialisation
- * function. Other fields are not supposed to be accessed by user code.
- */
-typedef struct {
-	/**
-	 * \brief Pointer to vtable for this context.
-	 */
-	const br_hash_class *vtable;
-#ifndef BR_DOXYGEN_IGNORE
-	unsigned char buf[64];
-	uint64_t count;
-	uint32_t val_md5[4];
-	uint32_t val_sha1[5];
-#endif
-} br_md5sha1_context;
-
-/**
- * \brief MD5+SHA-1 context initialisation.
- *
- * This function initialises or resets a context for a new SHA-512
- * computation. It also sets the vtable pointer.
- *
- * \param ctx   pointer to the context structure.
- */
-void br_md5sha1_init(br_md5sha1_context *ctx);
-
-/**
- * \brief Inject some data bytes in a running MD5+SHA-1 computation.
- *
- * The provided context is updated with some data bytes. If the number
- * of bytes (`len`) is zero, then the data pointer (`data`) is ignored
- * and may be `NULL`, and this function does nothing.
- *
- * \param ctx    pointer to the context structure.
- * \param data   pointer to the injected data.
- * \param len    injected data length (in bytes).
- */
-void br_md5sha1_update(br_md5sha1_context *ctx, const void *data, size_t len);
-
-/**
- * \brief Compute MD5+SHA-1 output.
- *
- * The MD5+SHA-1 output for the concatenation of all bytes injected in the
- * provided context since the last initialisation or reset call, is
- * computed and written in the buffer pointed to by `out`. The context
- * itself is not modified, so extra bytes may be injected afterwards
- * to continue that computation.
- *
- * \param ctx   pointer to the context structure.
- * \param out   destination buffer for the hash output.
- */
-void br_md5sha1_out(const br_md5sha1_context *ctx, void *out);
-
-/**
- * \brief Save MD5+SHA-1 running state.
- *
- * The running state for MD5+SHA-1 (output of the last internal block
- * processing) is written in the buffer pointed to by `out`. The
- * number of bytes injected since the last initialisation or reset
- * call is returned. The context is not modified.
- *
- * \param ctx   pointer to the context structure.
- * \param out   destination buffer for the running state.
- * \return  the injected total byte length.
- */
-uint64_t br_md5sha1_state(const br_md5sha1_context *ctx, void *out);
-
-/**
- * \brief Restore MD5+SHA-1 running state.
- *
- * The running state for MD5+SHA-1 is set to the provided values.
- *
- * \param ctx     pointer to the context structure.
- * \param stb     source buffer for the running state.
- * \param count   the injected total byte length.
- */
-void br_md5sha1_set_state(br_md5sha1_context *ctx,
-	const void *stb, uint64_t count);
-
 /**
  * \brief Aggregate context for configurable hash function support.
  *
@@ -1086,7 +972,6 @@ typedef union {
 	br_sha256_context sha256;
 	br_sha384_context sha384;
 	br_sha512_context sha512;
-	br_md5sha1_context md5sha1;
 } br_hash_compat_context;
 
 /*

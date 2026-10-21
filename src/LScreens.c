@@ -490,11 +490,12 @@ static void DirectConnectScreen_StartClient(void* w) {
 	cc_string ip, port;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
 	int numAddrs;
+	int index;
 
 	/* Try to convert direct connect URL if it's in address field and no user */
 	if (!user.length) DirectUrl_Claims(&addr, &addr, &user, &mppass);
 
-	int index = String_LastIndexOf(&addr, ':');
+	index = String_LastIndexOf(&addr, ':');
 	if (index == 0 || index == addr.length - 1) {
 		LLabel_SetConst(status, "&cInvalid address"); return;
 	}

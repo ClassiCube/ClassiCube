@@ -133,7 +133,7 @@ void AudioBackend_LoadSounds(void) {
 			board = &digBoard;
 		} else {
 			group = &board->groups[sounds_list[i].group];
-			group->sounds[group->count++].chunk.data = sounds_list[i].name;
+			group->sounds[group->count++].chunk.data = (void*)sounds_list[i].name;
 		}
 	}
 }

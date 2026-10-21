@@ -18,12 +18,14 @@ jobs:
     container:
       image: ghcr.io/autc04/retro68
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Compile Mac classic build
+        shell: bash
         run: |
-          make macclassic_ppc RETRO68=/Retro68-build/toolchain
-          make macclassic_68k RETRO68=/Retro68-build/toolchain
-          make macclassic_68k RETRO68=/Retro68-build/toolchain ARCH_68040=1
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make macclassic_ppc EXTRA_CFLAGS="$LATEST_FLAG" RETRO68=/Retro68-build/toolchain
+          make macclassic_68k EXTRA_CFLAGS="$LATEST_FLAG" RETRO68=/Retro68-build/toolchain
+          make macclassic_68k EXTRA_CFLAGS="$LATEST_FLAG" RETRO68=/Retro68-build/toolchain ARCH_68040=1
 
 
       - uses: ./.github/actions/upload_build

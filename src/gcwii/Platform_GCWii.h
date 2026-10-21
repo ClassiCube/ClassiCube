@@ -1,14 +1,4 @@
 /*########################################################################################################################*
-*-------------------------------------------------------Crash handling----------------------------------------------------*
-*#########################################################################################################################*/
-void CrashHandler_Install(void) { }
-
-void Process_Abort2(cc_result result, const char* raw_msg) {
-	Logger_DoAbort(result, raw_msg, NULL);
-}
-
-
-/*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static char root_buffer[NATIVE_STR_LEN];
@@ -172,24 +162,28 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 	return false;
 }
 
-cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
 	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	if (!net_supported) { *s = -1; return ERR_NO_NETWORKING; }
 
-	*s = net_socket(raw->sa_family, SOCK_STREAM, IPPROTO_IP);
+	*s = net_socket(raw->sa_family, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
 
-	if (nonblocking) {
-		int blocking_raw = 1; /* non-blocking mode */
-		net_ioctl(*s, FIONBIO, &blocking_raw);
-	}
 	return 0;
 }
 
-cc_result Socket_Connect(cc_socket s, cc_sockaddr* addr) {
-	struct sockaddr* raw = (struct sockaddr*)addr->data;
-	
-	int res = net_connect(s, raw, addr->size);
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	int mode = nonblocking ? 1 : 0;
+	return net_ioctl(s, FIONBIO, &mode);
+}
+
+void Socket_Close(cc_socket s) {
+	net_shutdown(s, 2); // SHUT_RDWR = 2
+	net_close(s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = net_connect(s, (struct sockaddr*)addr, addrSize);
 	return res < 0 ? res : 0;
 }
 
@@ -205,11 +199,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (res < 0) { *modified = 0; return res; }
 	
 	*modified = res; return 0;
-}
-
-void Socket_Close(cc_socket s) {
-	net_shutdown(s, 2); // SHUT_RDWR = 2
-	net_close(s);
 }
 
 
@@ -281,11 +270,6 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-cc_bool Process_OpenSupported = false;
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
@@ -293,9 +277,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return SetGameArgs(args, numArgs);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
+cc_result Platform_SetDefaultCurrentDirectory(void) { return 0; }
 
 void CPU_FlushDataCache(void* start, int length) {
 	DCFlushRange(start, length);

@@ -18,15 +18,17 @@ jobs:
     container:
       image: ghcr.io/volkertb/debian-djgpp
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install prerequisites
         run: |
           apt-get update
           apt-get -y install curl
 
       - name: Compile MS dos build
+        shell: bash
         run: |
-          make CC=gcc dos
+          LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
+          make dos CC=gcc EXTRA_CFLAGS="$LATEST_FLAG"
 
 
       - uses: ./.github/actions/upload_build

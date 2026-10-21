@@ -2,10 +2,10 @@
 ; ==================================================================================
 
 ; Uniforms (layout common to all shaders)
-.alias MVP_0      c0
-.alias MVP_1      c1
-.alias MVP_2      c2
-.alias MVP_3      c3
+.alias MVP_1      c0
+.alias MVP_2      c1
+.alias MVP_3      c2
+.alias MVP_4      c3
 .alias TEX_OFFSET c4
 
 ; Constants (initialised in Graphics_3DS.c)
@@ -23,10 +23,10 @@
 
 .proc main
 	; out_pos = MVP * in_pos
-	dp4 out_pos.x, MVP_0, in_pos
-	dp4 out_pos.y, MVP_1, in_pos
-	dp4 out_pos.z, MVP_2, in_pos
-	dp4 out_pos.w, MVP_3, in_pos
+	dp4 out_pos.x, MVP_1, in_pos
+	dp4 out_pos.y, MVP_2, in_pos
+	dp4 out_pos.z, MVP_3, in_pos
+	dp4 out_pos.w, MVP_4, in_pos
 
 	; out_col = in_col * ONE_DIV_255
 	mul out_col, ONE_DIV_255, in_col

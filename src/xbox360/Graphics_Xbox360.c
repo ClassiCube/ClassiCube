@@ -1,4 +1,5 @@
 #define CC_DYNAMIC_VBS_ARE_STATIC
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 #include "../_GraphicsBase.h"
 #include "../Errors.h"
 #include "../Window.h"
@@ -134,28 +135,14 @@ void Gfx_DisableMipmaps(void) { } // TODO
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+void Gfx_SetFog(cc_bool enabled)         { } // TODO: implement
+static void SetFogColor(PackedCol color) { } // TODO: implement
+static void SetFogDensity(float value)   { } // TODO: implement
+static void SetFogEnd(float value)       { } // TODO: implement
+static void SetFogMode(FogFunc func)     { } // TODO: implement
+
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
-}
-
-void Gfx_SetFog(cc_bool enabled) {
-	// TODO
-}
-
-void Gfx_SetFogCol(PackedCol color) {
-	// TODO
-}
-
-void Gfx_SetFogDensity(float value) {
-	// TODO
-}
-
-void Gfx_SetFogEnd(float value) {
-	// TODO
-}
-
-void Gfx_SetFogMode(FogFunc func) {
-	// TODO
 }
 
 static void SetAlphaTest(cc_bool enabled) {
@@ -182,11 +169,11 @@ void Gfx_ClearColor(PackedCol color) {
 	Xe_SetClearColor(xe, color);
 }
 
-void Gfx_SetDepthTest(cc_bool enabled) {
+static void SetDepthTest(cc_bool enabled) {
 	Xe_SetZEnable(xe, enabled);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
+static void SetDepthWrite(cc_bool enabled) {
 	Xe_SetZWrite(xe, enabled);
 }
 
@@ -195,9 +182,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+    DefaultDepthOnlyRendering(depthOnly);
 }
 
 
@@ -281,7 +266,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints 
 	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	Platform_Log1("DRAW_TRIS_MAP: %i", &verticesCount);
 	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
 }
@@ -380,7 +365,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	PrintMaxTextureInfo(info);
 }
 
-void Gfx_OnWindowResize(void) {
+void Gfx_OnWindowResize(int width, int height) {
 
 }
 
