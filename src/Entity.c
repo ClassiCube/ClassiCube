@@ -808,6 +808,7 @@ static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE,     false);
 	hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS,  false);
 	hacks->FullBlockStep   = Options_GetBool(OPT_FULL_BLOCK_STEP,  false);
+	hacks->EntityPlacing   = Options_GetBool(OPT_ENTITY_PLACING,  false);
 	p->Physics.UserJumpVel = Options_GetFloat(OPT_JUMP_VELOCITY, 0.0f, 52.0f, 0.42f);
 	p->Physics.JumpVel     = p->Physics.UserJumpVel;
 	hackPermMsgs           = Options_GetBool(OPT_HACK_PERM_MSGS, true);
