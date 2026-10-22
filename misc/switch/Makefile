@@ -16,7 +16,7 @@ RUN_PROGRAM	?= ryujinx
 APP_TITLE 	:= ClassiCube
 APP_AUTHOR 	:= ClassiCube team
 APP_ICON    := misc/switch/icon.jpg
-APP_VERSION	:= 1.3.8
+APP_VERSION	:= 1.3.9
 
 default: $(TARGET).nro
 

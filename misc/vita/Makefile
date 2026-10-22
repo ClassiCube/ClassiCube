@@ -17,7 +17,7 @@ RUN_PROGRAM	?= vita3k
 
 SFO_TITLE 	:= ClassiCube
 SFO_TITLEID := CUBE00200
-SFO_VERSION  := 01.38
+SFO_VERSION  := 01.39
 
 PARAM_SFO	:= $(BUILD_DIR)/param.sfo
 EBOOT_BIN	:= eboot.bin
