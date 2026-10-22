@@ -1,6 +1,7 @@
 #ifndef CC_WORLD_H
 #define CC_WORLD_H
 #include "Vectors.h"
+#include "BlockID.h"
 #include "PackedCol.h"
 CC_BEGIN_HEADER
 
@@ -61,6 +62,27 @@ CC_VAR extern struct _WorldData {
 	/* Seed world was generated with. May be 0 (unknown) */
 	int Seed;
 } World;
+
+#ifdef EXTENDED_BLOCKS
+/* The mask to get all blocks, including custom blocks. Used to be a hardcoded value */
+#define MAX_WORLD_ID_MASK (BLOCK_MAX_DEFINED | (BLOCK_MAX_DEFINED >> 1) \
+											 | (BLOCK_MAX_DEFINED >> 2) \
+											 | (BLOCK_MAX_DEFINED >> 3) \
+											 | (BLOCK_MAX_DEFINED >> 4) \
+											 | (BLOCK_MAX_DEFINED >> 5) \
+											 | (BLOCK_MAX_DEFINED >> 6) \
+											 | (BLOCK_MAX_DEFINED >> 7) \
+											 | (BLOCK_MAX_DEFINED >> 8) \
+											 | (BLOCK_MAX_DEFINED >> 9) \
+											 | (BLOCK_MAX_DEFINED >> 10) \
+											 | (BLOCK_MAX_DEFINED >> 11) \
+											 | (BLOCK_MAX_DEFINED >> 12) \
+											 | (BLOCK_MAX_DEFINED >> 13) \
+											 | (BLOCK_MAX_DEFINED >> 14) \
+											 | (BLOCK_MAX_DEFINED >> 15))
+/* The mask without custom blocks */
+#define WORLD_ID_MASK_NO_EXT_BLOCKS ((1 << 8) - 1)
+#endif
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */
 void World_Reset(void);

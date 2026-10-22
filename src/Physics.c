@@ -199,9 +199,9 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 				Searcher_CalcTime(&vel, entityBB, &blockBB, &tx, &ty, &tz);
 				if (tx > 1.0f || ty > 1.0f || tz > 1.0f) continue;
 
-				curState->x = (x << 3) | (block  & 0x007);
-				curState->y = (y << 4) | ((block & 0x078) >> 3);
-				curState->z = (z << 3) | ((block & 0x380) >> 7);
+				curState->x = (x << BLOCK_ID_SHIFT_X) | (block  & BLOCK_ID_MASK_POS_X);
+				curState->y = (y << BLOCK_ID_SHIFT_Y) | ((block & BLOCK_ID_MASK_POS_Y) >> BLOCK_ID_SHIFT_X);
+				curState->z = (z << BLOCK_ID_SHIFT_Z) | ((block & BLOCK_ID_MASK_POS_Z) >> (BLOCK_ID_SHIFT_X + BLOCK_ID_SHIFT_Y));
 				curState->tSquared = tx * tx + ty * ty + tz * tz;
 				curState++;
 			}
