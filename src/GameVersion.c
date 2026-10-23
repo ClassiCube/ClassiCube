@@ -25,6 +25,10 @@ static const cc_uint8 v4_inventory[] = {
 	BLOCK_STONE, BLOCK_COBBLE, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, 
 	BLOCK_SAPLING, BLOCK_SAND, BLOCK_GRAVEL,
 };
+static const cc_uint8 v3_inventory[] = {
+BLOCK_STONE, BLOCK_COBBLE, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, BLOCK_SAPLING, 
+BLOCK_SAND, BLOCK_GRAVEL, BLOCK_GOLD_ORE, BLOCK_IRON_ORE, BLOCK_COAL_ORE,
+};
 
 static const cc_uint8 v7_hotbar[INVENTORY_BLOCKS_PER_HOTBAR] = {
 	BLOCK_STONE, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB
@@ -37,6 +41,9 @@ static const cc_uint8 v5_hotbar[INVENTORY_BLOCKS_PER_HOTBAR] = {
 };
 static const cc_uint8 v4_hotbar[INVENTORY_BLOCKS_PER_HOTBAR] = {
 	BLOCK_STONE, BLOCK_DIRT, BLOCK_COBBLE, BLOCK_WOOD, BLOCK_SAPLING, BLOCK_LOG, BLOCK_LEAVES, BLOCK_SAND, BLOCK_GRAVEL
+};
+static const cc_uint8 v3_hotbar[INVENTORY_BLOCKS_PER_HOTBAR] = {
+	BLOCK_STONE, BLOCK_COBBLE, BLOCK_DIRT, BLOCK_WOOD, BLOCK_SAPLING
 };
 
 static const struct GameVersion version_cpe  = { 
@@ -69,7 +76,12 @@ static const struct GameVersion version_0017 = {
 	 6, sizeof(v4_inventory), v4_inventory, v4_hotbar,
 	 "texpacks/default_0023.zip"
 };
-
+static const struct GameVersion version_0014 = {
+	"0.0.14a", false, VERSION_0014,
+	PROTOCOL_0019, BLOCK_GLASS, 
+	 5, sizeof(v3_inventory), v3_inventory, v3_hotbar,
+	 "texpacks/default_0023.zip"
+};
 void GameVersion_Load(void) {
 	cc_bool hasCPE = !Game_ClassicMode && Options_GetBool(OPT_CPE, true);
 	int version    = Options_GetInt(OPT_GAME_VERSION, VERSION_0017, VERSION_0030, VERSION_0030);
@@ -85,6 +97,8 @@ void GameVersion_Load(void) {
 		ver = &version_0019;
 	} else if (version == VERSION_0017) {
 		ver = &version_0017;
+	} else if (version == VERSION_0014) {
+		ver = &version_0014;
 	}
 
 	Game_Version = *ver;
