@@ -315,14 +315,14 @@ void Model_RenderArm(struct Model* model, struct Entity* e) {
 
 void Model_DrawArmPart(struct ModelPart* part) {
 	struct Model* model  = Models.Active;
-	struct ModelPart arm = *part;
-	arm.rotX = model->armX / 16.0f; 
-	arm.rotY = (model->armY + model->armY / 2) / 16.0f;
+	struct ModelPart armPart = *part;
+	armPart.rotX = model->armX / 16.0f; 
+	armPart.rotY = (model->armY + model->armY / 2) / 16.0f;
 
 	if (Models.ClassicArms) {
-		Model_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, &arm, false);
+		Model_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, &armPart, false);
 	} else {
-		Model_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, &arm, false);
+		Model_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, &armPart, false);
 	}
 }
 
