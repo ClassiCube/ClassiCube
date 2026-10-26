@@ -4,6 +4,7 @@ VK_FUNC(void,     vkDestroyInstance, (VkInstance instance, const void* pAllocato
 
 /* Physical device functions */
 VK_FUNC(VkResult, vkEnumeratePhysicalDevices,               (VkInstance instance, cc_uint32* pCount, VkPhysicalDevice* pDevices))
+VK_FUNC(VkResult, vkEnumerateDeviceExtensionProperties,     (VkPhysicalDevice physicalDevice, const char* pLayerName, cc_uint32* pCount, VkExtensionProperties* pProperties))
 VK_FUNC(void,     vkGetPhysicalDeviceProperties,            (VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties))
 VK_FUNC(void,     vkGetPhysicalDeviceMemoryProperties,      (VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pProperties))
 VK_FUNC(void,     vkGetPhysicalDeviceQueueFamilyProperties, (VkPhysicalDevice physicalDevice, cc_uint32* pCount, VkQueueFamilyProperties* pProperties))
@@ -14,6 +15,7 @@ VK_FUNC(VkResult, vkCreateDevice,   (VkPhysicalDevice physicalDevice, const VkDe
 VK_FUNC(void,     vkDestroyDevice,  (VkDevice device, const void* pAllocator))
 VK_FUNC(void,     vkGetDeviceQueue, (VkDevice device, cc_uint32 queueFamilyIndex, cc_uint32 queueIndex, VkQueue* pQueue))
 VK_FUNC(VkResult, vkDeviceWaitIdle, (VkDevice device))
+VK_FUNC(PFN_vkVoidFunction, vkGetDeviceProcAddr, (VkDevice device, const char* pName))
 
 /* Surface functions (VK_KHR_surface, VK_KHR_win32_surface) */
 VK_FUNC(VkResult, vkCreateWin32SurfaceKHR,                   (VkInstance instance, const VkWin32SurfaceCreateInfoKHR* pCreateInfo, const void* pAllocator, VkSurfaceKHR* pSurface))

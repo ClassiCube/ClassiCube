@@ -158,8 +158,13 @@ static VkBuffer vbBuffer, ibBuffer;
 static VkDeviceSize vbOffset, ibOffset;
 static struct VulkanTexture* curTex;
 static int boundPipeline;
-static cc_bool dirtyViewport, dirtyScissor, dirtyConstants, dirtyTexture, dirtyVb, dirtyIb;
+static cc_bool dirtyViewport, dirtyScissor, dirtyConstants, dirtyTexture, dirtyVb, dirtyIb, dirtyCull;
 static struct Matrix _view, _proj;
+
+/* Face culling is toggled a lot by MapRenderer, so with VK_EXT_extended_dynamic_state it's */
+/*  just a cheap state change (like Direct3D) instead of having to switch to another pipeline */
+static cc_bool dynamicCull;
+static void (VKAPI_PTR *vkCmdSetCullModeEXT)(VkCommandBuffer cmd, VkFlags cullMode);
 
 static void RecreateSwapchain(void);
 static void Garbage_Collect(struct Frame* f);
@@ -672,9 +677,31 @@ static void PickPhysicalDevice(void) {
 	vkGetPhysicalDeviceMemoryProperties(physDevice, &memProps);
 }
 
+static cc_bool HasDeviceExtension(const char* name) {
+	VkExtensionProperties* exts;
+	cc_uint32 i, count = 0;
+	cc_bool found = false;
+	cc_string ext;
+
+	vkEnumerateDeviceExtensionProperties(physDevice, NULL, &count, NULL);
+	if (!count) return false;
+
+	exts = (VkExtensionProperties*)Mem_Alloc(count, sizeof(VkExtensionProperties), "Vulkan extensions");
+	vkEnumerateDeviceExtensionProperties(physDevice, NULL, &count, exts);
+
+	for (i = 0; i < count && !found; i++)
+	{
+		ext   = String_FromRawArray(exts[i].extensionName);
+		found = String_CaselessEqualsConst(&ext, name);
+	}
+	Mem_Free(exts);
+	return found;
+}
+
 static void CreateDevice(void) {
-	static const char* const extensions[] = { "VK_KHR_swapchain" };
+	static const char* const extensions[] = { "VK_KHR_swapchain", "VK_EXT_extended_dynamic_state" };
 	static const float priority = 1.0f;
+	VkPhysicalDeviceExtendedDynamicStateFeaturesEXT dynamicState = { 0 };
 	VkDeviceQueueCreateInfo queueInfo = { 0 };
 	VkDeviceCreateInfo info = { 0 };
 	VkResult res;
@@ -687,12 +714,27 @@ static void CreateDevice(void) {
 	info.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	info.queueCreateInfoCount    = 1;
 	info.pQueueCreateInfos       = &queueInfo;
-	info.enabledExtensionCount   = Array_Elems(extensions);
+	info.enabledExtensionCount   = 1;
 	info.ppEnabledExtensionNames = extensions;
+
+	/* Implementations supporting this extension must also support the extendedDynamicState feature */
+	dynamicCull = HasDeviceExtension("VK_EXT_extended_dynamic_state");
+	if (dynamicCull) {
+		dynamicState.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT;
+		dynamicState.extendedDynamicState = true;
+
+		info.pNext = &dynamicState;
+		info.enabledExtensionCount = 2;
+	}
 
 	res = vkCreateDevice(physDevice, &info, NULL, &device);
 	if (res) Process_Abort2(res, "Failed to create Vulkan device");
 	vkGetDeviceQueue(device, queueFamily, 0, &queue);
+
+	/* Extension functions aren't exported by vulkan-1.dll, so have to be loaded separately */
+	if (!dynamicCull) return;
+	vkCmdSetCullModeEXT = (void (VKAPI_PTR *)(VkCommandBuffer, VkFlags))vkGetDeviceProcAddr(device, "vkCmdSetCullModeEXT");
+	dynamicCull         = vkCmdSetCullModeEXT != NULL;
 }
 
 /* B8G8R8A8 is preferred since it matches BitmapCol, so screenshots don't need converting */
@@ -1163,7 +1205,7 @@ static void DestroyPipelineObjects(void) {
 
 /* Pipelines are created on demand for each combination of render state (see CalcPipelineKey) */
 static VkPipeline CreatePipeline(int key) {
-	static const VkDynamicState dynamics[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+	static const VkDynamicState dynamics[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_CULL_MODE_EXT };
 	VkPipelineShaderStageCreateInfo stages[2]            = { { 0 } };
 	VkVertexInputAttributeDescription attribs[3]         = { { 0 } };
 	VkVertexInputBindingDescription binding              = { 0 };
@@ -1239,7 +1281,7 @@ static VkPipeline CreatePipeline(int key) {
 	blend.pAttachments    = &blendAttachment;
 
 	dynamic.sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamic.dynamicStateCount = Array_Elems(dynamics);
+	dynamic.dynamicStateCount = dynamicCull ? 3 : 2;
 	dynamic.pDynamicStates    = dynamics;
 
 	info.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -1742,6 +1784,7 @@ static void InvalidateState(void) {
 	dirtyTexture   = true;
 	dirtyVb        = true;
 	dirtyIb        = true;
+	dirtyCull      = true;
 }
 
 static void BeginRenderPass(VkRenderPass pass) {
@@ -1790,13 +1833,13 @@ static cc_bool EnsureRenderPass(void) {
 }
 
 /* Bit 0 = format, 1 = alpha test, 2-3 = fog, 4 = blending, 5-8 = colour mask, */
-/*  9 = depth test, 10 = depth write, 11 = culling, 12 = lines */
+/*  9 = depth test, 10 = depth write, 11 = culling (only without dynamic cull mode), 12 = lines */
 static int CalcPipelineKey(cc_bool lines) {
-	int fog = 0;
+	int fog = 0, cull = dynamicCull ? 0 : cullFaces;
 	if (gfx_fogEnabled && gfx_fogMode >= 0) fog = gfx_fogMode == FOG_LINEAR ? 1 : 2;
 
 	return gfx_format | (gfx_alphaTest << 1) | (fog << 2) | (gfx_alphaBlend << 4) | (colorMask << 5) |
-		(gfx_depthTest << 9) | (gfx_depthWrite << 10) | (cullFaces << 11) | (lines << 12);
+		(gfx_depthTest << 9) | (gfx_depthWrite << 10) | (cull << 11) | (lines << 12);
 }
 
 static cc_bool PrepareDraw(cc_bool lines) {
@@ -1818,6 +1861,10 @@ static cc_bool PrepareDraw(cc_bool lines) {
 		boundPipeline = key;
 	}
 
+	if (dirtyCull && dynamicCull) {
+		vkCmdSetCullModeEXT(cmd, cullFaces ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE);
+		dirtyCull = false;
+	}
 	if (dirtyViewport) {
 		vkCmdSetViewport(cmd, 0, 1, &viewport);
 		dirtyViewport = false;
@@ -1975,7 +2022,11 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	DefaultDepthOnlyRendering(depthOnly);
 }
 
-void Gfx_SetFaceCulling(cc_bool enabled) { cullFaces = enabled; }
+void Gfx_SetFaceCulling(cc_bool enabled) {
+	if (cullFaces == enabled) return;
+	cullFaces = enabled;
+	dirtyCull = true;
+}
 
 
 /*########################################################################################################################*

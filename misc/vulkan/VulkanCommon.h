@@ -49,6 +49,7 @@ typedef int VkIndexType;
 typedef int VkPipelineBindPoint;
 typedef int VkSubpassContents;
 typedef int VkDynamicState;
+typedef void (VKAPI_PTR *PFN_vkVoidFunction)(void);
 
 /* Only the enum values/flags actually used by the Vulkan backend are defined */
 #define VK_API_VERSION_1_1 ((1u << 22) | (1u << 12))
@@ -104,6 +105,7 @@ typedef int VkDynamicState;
 #define VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR                 1000001000
 #define VK_STRUCTURE_TYPE_PRESENT_INFO_KHR                          1000001001
 #define VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR             1000009000
+#define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT 1000267000
 
 #define VK_FORMAT_UNDEFINED            0
 #define VK_FORMAT_R8G8B8A8_UNORM       37
@@ -217,6 +219,7 @@ typedef int VkDynamicState;
 #define VK_BLEND_OP_ADD 0
 #define VK_DYNAMIC_STATE_VIEWPORT 0
 #define VK_DYNAMIC_STATE_SCISSOR  1
+#define VK_DYNAMIC_STATE_CULL_MODE_EXT 1000267000
 
 #define VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER 1
 #define VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT 0x00000001
@@ -308,6 +311,17 @@ typedef struct VkQueueFamilyProperties {
 	cc_uint32  timestampValidBits;
 	VkExtent3D minImageTransferGranularity;
 } VkQueueFamilyProperties;
+
+typedef struct VkExtensionProperties {
+	char      extensionName[256];
+	cc_uint32 specVersion;
+} VkExtensionProperties;
+
+typedef struct VkPhysicalDeviceExtendedDynamicStateFeaturesEXT {
+	VkStructureType sType;
+	void*    pNext;
+	VkBool32 extendedDynamicState;
+} VkPhysicalDeviceExtendedDynamicStateFeaturesEXT;
 
 typedef struct VkFormatProperties {
 	VkFlags linearTilingFeatures;
