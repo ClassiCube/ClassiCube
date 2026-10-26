@@ -593,6 +593,7 @@
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
     <ClCompile Include="Graphics_SoftGPU.c" />
+    <ClCompile Include="Graphics_Vulkan.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Worker.c" />
