@@ -135,7 +135,12 @@ double PhysicsComp_CalcMaxHeight(float u);
 void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */
-void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround);
+struct SoundsComp {
+	struct Entity* entity;
+	Vec3 lastPos;
+};
+void SoundsComp_Init(struct SoundsComp* comp, struct Entity* entity);
+void SoundsComp_Tick(struct SoundsComp* comp, cc_bool wasOnGround);
 
 CC_END_HEADER
 #endif

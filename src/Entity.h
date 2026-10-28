@@ -250,6 +250,7 @@ struct LocalPlayer {
 	struct InterpComp Interp;
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
+	struct SoundsComp Sounds;
 	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip, _warnedZoom;
 	cc_uint8 index;
 };

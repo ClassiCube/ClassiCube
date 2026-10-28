@@ -754,7 +754,7 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	TiltComp_Update(p, &p->Tilt, delta);
 
 	Entity_CheckSkin(&p->Base);
-	SoundComp_Tick(p, wasOnGround);
+	SoundsComp_Tick(&p->Sounds, wasOnGround);
 }
 
 static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {
@@ -791,6 +791,7 @@ static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);
 	PhysicsComp_Init(&p->Physics, &p->Base);
+	SoundsComp_Init(&p->Sounds, &p->Base);
 	TiltComp_Init(&p->Tilt);
 
 	p->Base.Flags |= ENTITY_FLAG_MODEL_RESTRICTED_SCALE;
