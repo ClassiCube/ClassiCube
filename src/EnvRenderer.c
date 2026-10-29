@@ -412,7 +412,7 @@ static int CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 #ifndef EXTENDED_BLOCKS
 	RainCalcBody(World.Blocks[i]);
 #else
-	if (World.IDMask <= 0xFF) {
+	if (World.IDMask <= WORLD_ID_MASK_NO_EXT_BLOCKS) {
 		RainCalcBody(World.Blocks[i]);
 	} else {
 		RainCalcBody(World.Blocks[i] | (World.Blocks2[i] << 8));

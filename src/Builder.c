@@ -273,7 +273,7 @@ static cc_bool ReadChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
 #else
 	BlockRaw* blocks2;
 
-	if (World.IDMask <= 0xFF) {
+	if (World.IDMask <= WORLD_ID_MASK_NO_EXT_BLOCKS) {
 		ReadChunkBody(blocks[index]);
 	} else {
 		blocks2 = World.Blocks2;
@@ -322,7 +322,7 @@ static cc_bool ReadBorderChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
 #ifndef EXTENDED_BLOCKS
 	ReadBorderChunkBody(blocks[index]);
 #else
-	if (World.IDMask <= 0xFF) {
+	if (World.IDMask <= WORLD_ID_MASK_NO_EXT_BLOCKS) {
 		ReadBorderChunkBody(blocks[index]);
 	} else {
 		blocks2 = World.Blocks2;

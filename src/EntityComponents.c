@@ -638,8 +638,10 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 	for (i = 0; i < count; i++) {
 		/* Unpack the block and coordinate data */
 		state  = Searcher_States[i];
-		bPos.x = state.x >> 3; bPos.y = state.y >> 4; bPos.z = state.z >> 3;
-		block  = (state.x & 0x7) | (state.y & 0xF) << 3 | (state.z & 0x7) << 7;
+		bPos.x = state.x >> BLOCK_ID_SHIFT_X; bPos.y = state.y >> BLOCK_ID_SHIFT_Y; bPos.z = state.z >> BLOCK_ID_SHIFT_Z;
+		block  =   (state.x & BLOCK_ID_MASK_BASE_X)
+				 | ((state.y & BLOCK_ID_MASK_BASE_Y) << BLOCK_ID_SHIFT_X)
+				 | ((state.z & BLOCK_ID_MASK_BASE_Z) << (BLOCK_ID_SHIFT_X + BLOCK_ID_SHIFT_Y));
 
 		Vec3_Add(&blockBB.Min, &Blocks.MinBB[block], &bPos);
 		Vec3_Add(&blockBB.Max, &Blocks.MaxBB[block], &bPos);
