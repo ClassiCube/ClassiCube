@@ -1,0 +1,176 @@
+name: Build all
+# Builds every platform (each platform's binaries are uploaded as artifacts of this run)
+# NOTE: Also used by release_all.yml
+on:
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-all
+  cancel-in-progress: true
+
+jobs:
+  build_3ds:
+    name: 3DS
+    uses: ./.github/workflows/build_3ds.yml
+    secrets: inherit
+
+  build_android:
+    name: Android
+    uses: ./.github/workflows/build_android.yml
+    secrets: inherit
+
+  build_dreamcast:
+    name: Dreamcast
+    uses: ./.github/workflows/build_dreamcast.yml
+    secrets: inherit
+
+  build_freebsd:
+    name: FreeBSD
+    uses: ./.github/workflows/build_freebsd.yml
+    secrets: inherit
+
+  build_gba:
+    name: GBA
+    uses: ./.github/workflows/build_gba.yml
+    secrets: inherit
+
+  build_gc:
+    name: GameCube
+    uses: ./.github/workflows/build_gc.yml
+    secrets: inherit
+
+  build_haiku:
+    name: Haiku
+    uses: ./.github/workflows/build_haiku.yml
+    secrets: inherit
+
+  build_ios:
+    name: iOS
+    uses: ./.github/workflows/build_ios.yml
+    secrets: inherit
+
+  build_linux:
+    name: Linux
+    uses: ./.github/workflows/build_linux.yml
+    secrets: inherit
+
+  build_mac32:
+    name: macOS 32 bit
+    uses: ./.github/workflows/build_mac32.yml
+    secrets: inherit
+
+  build_mac64:
+    name: macOS 64 bit
+    uses: ./.github/workflows/build_mac64.yml
+    secrets: inherit
+
+  build_macclassic:
+    name: Mac Classic
+    uses: ./.github/workflows/build_macclassic.yml
+    secrets: inherit
+
+  build_msdos:
+    name: MS DOS
+    uses: ./.github/workflows/build_msdos.yml
+    secrets: inherit
+
+  build_n64:
+    name: N64
+    uses: ./.github/workflows/build_n64.yml
+    secrets: inherit
+
+  build_nds:
+    name: NDS
+    uses: ./.github/workflows/build_nds.yml
+    secrets: inherit
+
+  build_netbsd:
+    name: NetBSD
+    uses: ./.github/workflows/build_netbsd.yml
+    secrets: inherit
+
+  build_ps1:
+    name: PS1
+    uses: ./.github/workflows/build_ps1.yml
+    secrets: inherit
+
+  build_ps2:
+    name: PS2
+    uses: ./.github/workflows/build_ps2.yml
+    secrets: inherit
+
+  build_ps3:
+    name: PS3
+    uses: ./.github/workflows/build_ps3.yml
+    secrets: inherit
+
+  build_psp:
+    name: PSP
+    uses: ./.github/workflows/build_psp.yml
+    secrets: inherit
+
+  build_rpi:
+    name: RPI
+    uses: ./.github/workflows/build_rpi.yml
+    secrets: inherit
+
+  build_saturn:
+    name: Saturn
+    uses: ./.github/workflows/build_saturn.yml
+    secrets: inherit
+
+  build_switch:
+    name: Switch
+    uses: ./.github/workflows/build_switch.yml
+    secrets: inherit
+
+  build_symbian:
+    name: Symbian
+    uses: ./.github/workflows/build_symbian.yml
+    secrets: inherit
+
+  build_vita:
+    name: Vita
+    uses: ./.github/workflows/build_vita.yml
+    secrets: inherit
+
+  build_webclient:
+    name: Webclient
+    uses: ./.github/workflows/build_webclient.yml
+    secrets: inherit
+
+  build_wii:
+    name: Wii
+    uses: ./.github/workflows/build_wii.yml
+    secrets: inherit
+
+  build_wiiu:
+    name: WiiU
+    uses: ./.github/workflows/build_wiiu.yml
+    secrets: inherit
+
+  build_win_arm:
+    name: Windows ARM32/64
+    uses: ./.github/workflows/build_win-arm.yml
+    secrets: inherit
+
+  build_wince:
+    name: WinCE
+    uses: ./.github/workflows/build_wince.yml
+    secrets: inherit
+
+  build_windows:
+    name: Windows
+    uses: ./.github/workflows/build_windows.yml
+    secrets: inherit
+
+  build_xbox:
+    name: Xbox
+    uses: ./.github/workflows/build_xbox.yml
+    secrets: inherit
+
+  build_xbox360:
+    name: Xbox 360
+    uses: ./.github/workflows/build_xbox360.yml
+    secrets: inherit

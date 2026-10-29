@@ -1,14 +1,11 @@
 name: Build latest (N64)
-# trigger via either push to selected branches or on manual run
+# run manually, or from the build/release console and build/release all workflows
 on:
-  push:
-    branches:
-      - main
-      - master
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}-n64
+  group: ${{ github.workflow }}-${{ github.ref }}-n64
   cancel-in-progress: true
 
 jobs:

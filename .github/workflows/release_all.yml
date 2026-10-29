@@ -1,0 +1,39 @@
+name: Release all
+# Builds every platform, then attaches all their binaries to a GitHub release
+# NOTE: Platforms that fail to build are left out, rather than stopping the release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.3.9-ps2.1). An existing release with this tag is updated'
+        required: true
+        type: string
+      title:
+        description: 'Release title (defaults to the tag)'
+        required: false
+        type: string
+      prerelease:
+        description: 'Mark as a pre-release'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-release-all
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/build_all.yml
+    secrets: inherit
+
+  publish:
+    needs: build
+    if: ${{ !cancelled() }}
+    uses: ./.github/workflows/publish_release.yml
+    permissions:
+      contents: write
+    with:
+      tag: ${{ inputs.tag }}
+      title: ${{ inputs.title }}
+      prerelease: ${{ inputs.prerelease }}

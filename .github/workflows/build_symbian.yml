@@ -1,16 +1,11 @@
 name: Build latest (Symbian)
-# trigger via either push to selected branches or on manual run
+# run manually, or from the build/release console and build/release all workflows
 on:
-  push:
-    branches:
-      - main
-      - master
-      - ModernLighting
-      - AngledLighting
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}-symbian
+  group: ${{ github.workflow }}-${{ github.ref }}-symbian
   cancel-in-progress: true
 
 jobs:

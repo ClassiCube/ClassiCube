@@ -1,0 +1,252 @@
+name: Build console
+# Builds a single platform (its binaries are uploaded as artifacts of this run)
+# NOTE: Also used by release_console.yml
+on:
+  workflow_dispatch:
+    inputs:
+      console:
+        description: 'Platform to build'
+        required: true
+        type: choice
+        options:
+          - 3ds
+          - android
+          - dreamcast
+          - freebsd
+          - gba
+          - gc
+          - haiku
+          - ios
+          - linux
+          - mac32
+          - mac64
+          - macclassic
+          - msdos
+          - n64
+          - nds
+          - netbsd
+          - ps1
+          - ps2
+          - ps3
+          - psp
+          - rpi
+          - saturn
+          - switch
+          - symbian
+          - vita
+          - webclient
+          - wii
+          - wiiu
+          - win-arm
+          - wince
+          - windows
+          - xbox
+          - xbox360
+  workflow_call:
+    inputs:
+      console:
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-console-${{ inputs.console }}
+  cancel-in-progress: true
+
+jobs:
+  build_3ds:
+    name: 3DS
+    if: ${{ inputs.console == '3ds' }}
+    uses: ./.github/workflows/build_3ds.yml
+    secrets: inherit
+
+  build_android:
+    name: Android
+    if: ${{ inputs.console == 'android' }}
+    uses: ./.github/workflows/build_android.yml
+    secrets: inherit
+
+  build_dreamcast:
+    name: Dreamcast
+    if: ${{ inputs.console == 'dreamcast' }}
+    uses: ./.github/workflows/build_dreamcast.yml
+    secrets: inherit
+
+  build_freebsd:
+    name: FreeBSD
+    if: ${{ inputs.console == 'freebsd' }}
+    uses: ./.github/workflows/build_freebsd.yml
+    secrets: inherit
+
+  build_gba:
+    name: GBA
+    if: ${{ inputs.console == 'gba' }}
+    uses: ./.github/workflows/build_gba.yml
+    secrets: inherit
+
+  build_gc:
+    name: GameCube
+    if: ${{ inputs.console == 'gc' }}
+    uses: ./.github/workflows/build_gc.yml
+    secrets: inherit
+
+  build_haiku:
+    name: Haiku
+    if: ${{ inputs.console == 'haiku' }}
+    uses: ./.github/workflows/build_haiku.yml
+    secrets: inherit
+
+  build_ios:
+    name: iOS
+    if: ${{ inputs.console == 'ios' }}
+    uses: ./.github/workflows/build_ios.yml
+    secrets: inherit
+
+  build_linux:
+    name: Linux
+    if: ${{ inputs.console == 'linux' }}
+    uses: ./.github/workflows/build_linux.yml
+    secrets: inherit
+
+  build_mac32:
+    name: macOS 32 bit
+    if: ${{ inputs.console == 'mac32' }}
+    uses: ./.github/workflows/build_mac32.yml
+    secrets: inherit
+
+  build_mac64:
+    name: macOS 64 bit
+    if: ${{ inputs.console == 'mac64' }}
+    uses: ./.github/workflows/build_mac64.yml
+    secrets: inherit
+
+  build_macclassic:
+    name: Mac Classic
+    if: ${{ inputs.console == 'macclassic' }}
+    uses: ./.github/workflows/build_macclassic.yml
+    secrets: inherit
+
+  build_msdos:
+    name: MS DOS
+    if: ${{ inputs.console == 'msdos' }}
+    uses: ./.github/workflows/build_msdos.yml
+    secrets: inherit
+
+  build_n64:
+    name: N64
+    if: ${{ inputs.console == 'n64' }}
+    uses: ./.github/workflows/build_n64.yml
+    secrets: inherit
+
+  build_nds:
+    name: NDS
+    if: ${{ inputs.console == 'nds' }}
+    uses: ./.github/workflows/build_nds.yml
+    secrets: inherit
+
+  build_netbsd:
+    name: NetBSD
+    if: ${{ inputs.console == 'netbsd' }}
+    uses: ./.github/workflows/build_netbsd.yml
+    secrets: inherit
+
+  build_ps1:
+    name: PS1
+    if: ${{ inputs.console == 'ps1' }}
+    uses: ./.github/workflows/build_ps1.yml
+    secrets: inherit
+
+  build_ps2:
+    name: PS2
+    if: ${{ inputs.console == 'ps2' }}
+    uses: ./.github/workflows/build_ps2.yml
+    secrets: inherit
+
+  build_ps3:
+    name: PS3
+    if: ${{ inputs.console == 'ps3' }}
+    uses: ./.github/workflows/build_ps3.yml
+    secrets: inherit
+
+  build_psp:
+    name: PSP
+    if: ${{ inputs.console == 'psp' }}
+    uses: ./.github/workflows/build_psp.yml
+    secrets: inherit
+
+  build_rpi:
+    name: RPI
+    if: ${{ inputs.console == 'rpi' }}
+    uses: ./.github/workflows/build_rpi.yml
+    secrets: inherit
+
+  build_saturn:
+    name: Saturn
+    if: ${{ inputs.console == 'saturn' }}
+    uses: ./.github/workflows/build_saturn.yml
+    secrets: inherit
+
+  build_switch:
+    name: Switch
+    if: ${{ inputs.console == 'switch' }}
+    uses: ./.github/workflows/build_switch.yml
+    secrets: inherit
+
+  build_symbian:
+    name: Symbian
+    if: ${{ inputs.console == 'symbian' }}
+    uses: ./.github/workflows/build_symbian.yml
+    secrets: inherit
+
+  build_vita:
+    name: Vita
+    if: ${{ inputs.console == 'vita' }}
+    uses: ./.github/workflows/build_vita.yml
+    secrets: inherit
+
+  build_webclient:
+    name: Webclient
+    if: ${{ inputs.console == 'webclient' }}
+    uses: ./.github/workflows/build_webclient.yml
+    secrets: inherit
+
+  build_wii:
+    name: Wii
+    if: ${{ inputs.console == 'wii' }}
+    uses: ./.github/workflows/build_wii.yml
+    secrets: inherit
+
+  build_wiiu:
+    name: WiiU
+    if: ${{ inputs.console == 'wiiu' }}
+    uses: ./.github/workflows/build_wiiu.yml
+    secrets: inherit
+
+  build_win_arm:
+    name: Windows ARM32/64
+    if: ${{ inputs.console == 'win-arm' }}
+    uses: ./.github/workflows/build_win-arm.yml
+    secrets: inherit
+
+  build_wince:
+    name: WinCE
+    if: ${{ inputs.console == 'wince' }}
+    uses: ./.github/workflows/build_wince.yml
+    secrets: inherit
+
+  build_windows:
+    name: Windows
+    if: ${{ inputs.console == 'windows' }}
+    uses: ./.github/workflows/build_windows.yml
+    secrets: inherit
+
+  build_xbox:
+    name: Xbox
+    if: ${{ inputs.console == 'xbox' }}
+    uses: ./.github/workflows/build_xbox.yml
+    secrets: inherit
+
+  build_xbox360:
+    name: Xbox 360
+    if: ${{ inputs.console == 'xbox360' }}
+    uses: ./.github/workflows/build_xbox360.yml
+    secrets: inherit

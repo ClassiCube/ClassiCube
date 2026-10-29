@@ -1,0 +1,77 @@
+name: Release console
+# Builds a single platform, then attaches its binaries to a GitHub release
+on:
+  workflow_dispatch:
+    inputs:
+      console:
+        description: 'Platform to build and release'
+        required: true
+        type: choice
+        options:
+          - 3ds
+          - android
+          - dreamcast
+          - freebsd
+          - gba
+          - gc
+          - haiku
+          - ios
+          - linux
+          - mac32
+          - mac64
+          - macclassic
+          - msdos
+          - n64
+          - nds
+          - netbsd
+          - ps1
+          - ps2
+          - ps3
+          - psp
+          - rpi
+          - saturn
+          - switch
+          - symbian
+          - vita
+          - webclient
+          - wii
+          - wiiu
+          - win-arm
+          - wince
+          - windows
+          - xbox
+          - xbox360
+      tag:
+        description: 'Release tag (e.g. v1.3.9-ps2.1). An existing release with this tag is updated'
+        required: true
+        type: string
+      title:
+        description: 'Release title (defaults to the tag)'
+        required: false
+        type: string
+      prerelease:
+        description: 'Mark as a pre-release'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-release-console
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/build_console.yml
+    with:
+      console: ${{ inputs.console }}
+    secrets: inherit
+
+  publish:
+    needs: build
+    uses: ./.github/workflows/publish_release.yml
+    permissions:
+      contents: write
+    with:
+      tag: ${{ inputs.tag }}
+      title: ${{ inputs.title }}
+      prerelease: ${{ inputs.prerelease }}

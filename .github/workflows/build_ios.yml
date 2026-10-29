@@ -1,15 +1,11 @@
 name: Build latest (iOS)
-# trigger via either push to selected branches or on manual run
+# run manually, or from the build/release console and build/release all workflows
 on:
-  push:
-    branches:
-      - main
-      - master
-      - ios_no_arc
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}-ios
+  group: ${{ github.workflow }}-${{ github.ref }}-ios
   cancel-in-progress: true
 
 jobs:

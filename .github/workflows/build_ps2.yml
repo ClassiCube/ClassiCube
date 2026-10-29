@@ -1,14 +1,11 @@
 name: Build latest (PS2)
-# trigger via either push to selected branches or on manual run
+# run manually, or from the build/release console and build/release all workflows
 on:
-  push:
-    branches:
-      - main
-      - master
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}-ps2
+  group: ${{ github.workflow }}-${{ github.ref }}-ps2
   cancel-in-progress: true
 
 jobs:

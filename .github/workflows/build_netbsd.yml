@@ -1,14 +1,11 @@
 name: Build latest (NetBSD)
-# trigger via either push to selected branches or on manual run
+# run manually, or from the build/release console and build/release all workflows
 on:
-  push:
-    branches:
-      - main
-      - master
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}-netbsd
+  group: ${{ github.workflow }}-${{ github.ref }}-netbsd
   cancel-in-progress: true
 
 jobs:

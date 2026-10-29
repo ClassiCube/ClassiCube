@@ -1,0 +1,68 @@
+name: Publish release
+# Attaches every artifact produced earlier in this run to a GitHub release
+# The release is created if it doesn't exist yet, otherwise its files are added/replaced
+# NOTE: Only meant to be used by release_console.yml and release_all.yml
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      title:
+        required: false
+        type: string
+        default: ''
+      prerelease:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      # Each artifact is downloaded into its own folder, named after the artifact
+      # Single files are attached using that name, folders are attached as a .zip
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          for dir in artifacts/*/; do
+            name=$(basename "$dir")
+            count=$(find "$dir" -type f | wc -l)
+
+            if [ "$count" -eq 1 ]; then
+              cp "$(find "$dir" -type f)" "release/$name"
+            elif [ "$count" -gt 1 ]; then
+              (cd "$dir" && zip -qr "$OLDPWD/release/$name.zip" .)
+            fi
+          done
+
+          if [ -z "$(ls release)" ]; then
+            echo "::error::No build artifacts to release"
+            exit 1
+          fi
+          ls -l release
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          TITLE: ${{ inputs.title }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" release/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            FLAGS=""
+            if [ "$PRERELEASE" = "true" ]; then FLAGS="--prerelease"; fi
+
+            gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" --title "${TITLE:-$TAG}" --generate-notes $FLAGS
+          fi
