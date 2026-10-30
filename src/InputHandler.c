@@ -350,7 +350,10 @@ static cc_bool IntersectsOthers(Vec3 pos, BlockID block) {
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 	
-	for (id = 0; id < ENTITIES_MAX_COUNT; id++)	
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
+	if (hacks->CanNoclip || hacks->EntityPlacing) return false;
+
+	for (id = 0; id < ENTITIES_MAX_COUNT; id++)
 	{
 		e = Entities.List[id];
 		if (!e || e == &Entities.CurPlayer->Base) continue;
