@@ -199,7 +199,17 @@ void Window_PreInit(void) {
 void Window_Init(void) {
 	container->InitEvents();
 #ifdef CC_BUILD_TOUCH
-	bool touch = AknLayoutUtils::PenEnabled();
+	bool touch = false;
+#ifdef __WINSCW__
+	touch = AknLayoutUtils::PenEnabled();
+#else
+	RLibrary lib;
+	if (lib.Load(_L("avkon.dll")) == KErrNone) {
+		TLibraryFunction func = lib.Lookup(4251); // _ZN14AknLayoutUtils10PenEnabledEv
+		if (func != NULL) touch = ((TBool (*)()) func)();
+		lib.Close();
+	}
+#endif
 
 	Input_SetTouchMode(touch);
 	Gui_SetTouchUI(touch);

@@ -96,7 +96,9 @@ void Platform_Log(const char* msg, int len) {
 	str = String_FromReadonly("\r\n");
 	Logger_Log(&str);
 	
+#ifdef _DEBUG
 	RDebug::RawPrint(ptr);
+#endif
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -729,17 +731,3 @@ static cc_result GetMachineID(cc_uint32* key) {
 	}
 	return 0;
 }
-
-#if !defined __ARMCC_4_0__ && defined EKA2
-extern "C" {
-extern int __aeabi_uidivmod(unsigned int a, unsigned int b);
-extern int __aeabi_idivmod(int a, int b);
-int __aeabi_idiv(int a, int b) {
-	return __aeabi_idivmod(a, b);
-}
-
-int __aeabi_uidiv(unsigned int a, unsigned int b) {
-	return __aeabi_uidivmod(a, b);
-}
-}
-#endif
