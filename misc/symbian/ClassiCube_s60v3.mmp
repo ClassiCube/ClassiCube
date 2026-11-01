@@ -1,11 +1,14 @@
-TARGET		  ClassiCube_s60v3.exe
+TARGET ClassiCube_s60v3.exe
 
 MACRO CC_BUILD_SYMBIAN_S60V3
 MACRO CC_GFX_BACKEND=CC_GFX_BACKEND_GL1
 MACRO CC_BUILD_FPU_MODE=CC_FPU_MODE_LIMITED
+MACRO SYMBIAN_OE_POSIX_SIGNALS
 
 ARMFPU softvfp
 
+LIBRARY avkon.lib
+LIBRARY featdiscovery.lib
 LIBRARY libgles_cm.lib
 
-#include "ClassiCube.mmh"
+#include "common.mmh"

@@ -11,6 +11,13 @@
 #include <eikenv.h>
 #include <eikdef.h>
 
+#ifdef CC_BUILD_SYMBIAN_GENERIC
+#include <eikappui.h>
+#include <eikapp.h>
+#include <eikdoc.h>
+#define FRAMEWORK_CLASS(name) CEik ## name
+#define USE_VKB
+#else
 #include <aknutils.h>
 #include <aknnotewrappers.h>
 #include <aknapp.h>
@@ -21,7 +28,12 @@
 #include <avkon.hrh>
 #include <aknmessagequerydialog.h>
 #include <aknwseventobserver.h>
+#include <featdiscovery.h>
+#ifndef KFeatureIdQwertyInput
+#include <featureinfo.h>
+#endif
 #define FRAMEWORK_CLASS(name) CAkn ## name
+#endif
 
 #include <eikstart.h>
 #include <baclipb.h>
@@ -29,10 +41,6 @@
 #include <classicube.rsg>
 #include <e32property.h>
 #include <hal.h>
-#include <featdiscovery.h>
-#ifndef KFeatureIdQwertyInput
-#include <featureinfo.h>
-#endif
 extern "C" {
 #include <stdlib.h>
 #include <string.h>
@@ -97,10 +105,23 @@ private:
 	virtual void HandleForegroundEventL(TBool aForeground);
 
 private:
+#ifdef CC_BUILD_SYMBIAN_GENERIC
+	// CQikAppUi compatibility
+	class PImpl_ {
+		int _align[4];
+		RArray<int> array;
+	};
+	
+	int _align;
+	PImpl_* p;
+#endif
 	CCContainer* iAppContainer;
 };
 
-class CCContainer: public CCoeControl, MCoeControlObserver, MAknWsEventObserver
+class CCContainer: public CCoeControl, MCoeControlObserver
+#if !defined(CC_BUILD_SYMBIAN_GENERIC) && defined(EKA2)
+, MAknWsEventObserver
+#endif
 {
 public:
 	void ConstructL(const TRect& aRect, CCAppUi* aAppUi);

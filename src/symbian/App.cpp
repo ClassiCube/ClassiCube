@@ -19,7 +19,7 @@ CApaApplication* NewApplication() {
 GLDEF_C TInt E32Main();
 
 TInt E32Main() {
-#ifndef CC_BUILD_SYMBIAN_S60V3
+#if defined(CC_BUILD_SYMBIAN_S60V5) || defined(CC_BUILD_SYMBIAN_3)
 	User::SetFloatingPointMode(EFpModeRunFast);
 #endif
 	return EikStart::RunApplication(NewApplication);
@@ -39,9 +39,10 @@ int __aeabi_uidiv(unsigned int a, unsigned int b) {
 }
 #endif
 
-#ifdef CC_BUILD_SYMBIAN_S60V3
+#if !defined(CC_BUILD_SYMBIAN_S60V5) && !defined(CC_BUILD_SYMBIAN_3)
+// hack for 9.1, linker will use this stub instead of importing it from dll.
+// it is used in symbian^3 sdk version of the static library that calls e32main
 extern "C" {
-// hack for 9.1, linker will use this stub instead of importing it from dll
 extern int _ZN7UserSvr9DllSetTlsEiiPv(int, int, void*);
 int _ZN7UserSvr9DllSetTlsEiiPv(int, int, void*) {
 	return 0;

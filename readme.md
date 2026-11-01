@@ -78,7 +78,7 @@ And also runs on:
 * HPUX - tested on 11v3 IA64
 * SerenityOS - needs <code>SDL2</code>
 * Classic Mac OS (System 7 and later)
-* Symbian (S60 3rd Edition FP1 and later)
+* Symbian (9.1 and later) - needs PIPS
 * Dreamcast - unfinished, but usable (can [download from here](https://www.classicube.net/download/dreamcast))
 * Saturn - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/saturn))
 * 32x - terrible performance and practically unusable

@@ -88,7 +88,6 @@ void Mem_Free(void* mem) {
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	TPtrC8 ptr((const TUint8*)msg, len);
 	cc_string str;
 	
 	str = String_Init((char*)msg, len, len);
@@ -97,7 +96,12 @@ void Platform_Log(const char* msg, int len) {
 	Logger_Log(&str);
 	
 #ifdef _DEBUG
+#ifdef CC_BUILD_SYMBIAN_GENERIC
+	RDebug::Printf("%s\r\n", msg);
+#else
+	TPtrC8 ptr((const TUint8*)msg, len);
 	RDebug::RawPrint(ptr);
+#endif
 #endif
 }
 
@@ -167,7 +171,8 @@ static void ExceptionHandler(TExcType type) {
 }
 
 void CrashHandler_Install(void) {
-#if !defined _DEBUG
+	// uiq3 has builtin crash logger that is far better than ours
+#if !defined _DEBUG && !defined CC_BUILD_SYMBIAN_UIQ3
 	User::SetExceptionHandler(ExceptionHandler, 0xffffffff);
 #endif
 }
@@ -673,9 +678,12 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	cc_uintptr addr;
+	// signals were added somewhere in PIPS 1.5-1.6, UIQ 3 only supports 1.3
+#ifndef CC_BUILD_SYMBIAN_GENERIC
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
+#endif
 
 	/* Log runtime address of a known function to ease investigating crashes */
 	/* (on platforms with ASLR, function addresses change every time when run) */
@@ -714,7 +722,20 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Platform_GetEntropy(void* data, int len) {
-	return ERR_NOT_SUPPORTED;
+	// Simple random generator
+	static cc_uint32 seed = 1;
+	cc_uint8* bytes = (cc_uint8*)data;
+	int i;
+	
+	if (seed == 1) {
+		seed = User::TickCount();
+	}
+	
+	for (i = 0; i < len; i++) {
+		seed = seed * 1103515245 + 12345;
+		bytes[i] = (cc_uint8)(seed >> 8);
+	}
+	return 0;
 }
 
 #define MACHINE_KEY "Symbian_Symbian_"
@@ -723,9 +744,11 @@ static cc_result GetMachineID(cc_uint32* key) {
 	TInt res;
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 
+#ifdef CC_BUILD_SYMBIAN_3
 	if (HAL::Get(HAL::ESerialNumber, res) == KErrNone) {
 		key[0] = res;
 	}
+#endif
 	if (HAL::Get(HAL::EMachineUid, res) == KErrNone) {
 		key[1] = res;
 	}

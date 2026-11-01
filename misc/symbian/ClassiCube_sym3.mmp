@@ -1,16 +1,7 @@
-TARGET		  ClassiCube.exe
+TARGET ClassiCube.exe
 
 MACRO CC_BUILD_SYMBIAN_3
-#if !defined(WINS)
-MACRO CC_GFX_BACKEND=CC_GFX_BACKEND_GL2
-
-LIBRARY libglesv2.lib
-LIBRARY libegl.lib
-#else
-MACRO CC_GFX_BACKEND=CC_GFX_BACKEND_GL1
-
-LIBRARY libgles_cm.lib
-#endif
+MACRO SYMBIAN_OE_POSIX_SIGNALS
 
 ARMFPU vfpv2
 
@@ -18,4 +9,22 @@ ARMFPU vfpv2
 ALWAYS_BUILD_AS_ARM
 #endif
 
-#include "ClassiCube.mmh"
+LIBRARY avkon.lib
+LIBRARY featdiscovery.lib
+#if !defined(WINS)
+MACRO CC_GFX_BACKEND=CC_GFX_BACKEND_GL2
+LIBRARY libglesv2.lib
+LIBRARY libegl.lib
+#else
+MACRO CC_GFX_BACKEND=CC_GFX_BACKEND_GL1
+LIBRARY libgles_cm.lib
+#endif
+
+SOURCEPATH .
+START RESOURCE classicube.rss
+HEADER
+TARGETPATH \resource\apps
+LANG SC
+END
+
+#include "common.mmh"

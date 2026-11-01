@@ -1,6 +1,9 @@
 #include "Window_Symbian.h"
 extern "C" {
 #include "_WindowBase.h"
+#ifdef USE_VKB
+#include "VirtualKeyboard.h"
+#endif
 }
 
 // 12 keys
@@ -98,6 +101,7 @@ static cc_result OpenBrowserL(const cc_string* url) {
 }
 
 static void ShowDialogL(const char* title, const char* msg) {
+#if !defined(CC_BUILD_SYMBIAN_GENERIC) && defined(EKA2)
 	TBuf<512> msgBuf;
 	ConvertToUnicode(msgBuf, msg, String_Length(msg));
 	
@@ -109,6 +113,11 @@ static void ShowDialogL(const char* title, const char* msg) {
 	dialog->SetHeaderTextL(titleBuf);
 	
 	dialog->RunLD();
+#else
+	// TODO
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
+#endif
 }
 
 static void GetClipboardL(cc_string* value) {
@@ -171,6 +180,10 @@ static void SetClipboardL(const cc_string* value) {
 // Window implementation
 
 void Window_PreInit(void) {
+#ifdef CC_BUILD_SYMBIAN_GENERIC
+	// assuming qwerty layout
+	NormDevice.defaultBinds = symbian_binds_qwerty;
+#else
 	TInt keyboardType = -1;
 	TUid categoryUid = { 0x101F876E }; //  KCRUidAvkon
 	RProperty::Get(categoryUid, 0x0000000B /* KAknKeyBoardLayout */, keyboardType);
@@ -194,15 +207,20 @@ void Window_PreInit(void) {
 		NormDevice.defaultBinds = qwerty ? symbian_binds_qwerty : symbian_binds_12;
 		break;
 	}
+#endif
 }
 
 void Window_Init(void) {
 	container->InitEvents();
 #ifdef CC_BUILD_TOUCH
 	bool touch = false;
-#ifdef __WINSCW__
+#ifdef CC_BUILD_SYMBIAN_GENERIC
+	// assuming touch input
+	touch = true;
+#elif defined(__WINSCW__) || defined(CC_BUILD_SYMBIAN_3)
 	touch = AknLayoutUtils::PenEnabled();
 #else
+	// load this function dynamically because it's available only on s60v3.1 onwards
 	RLibrary lib;
 	if (lib.Load(_L("avkon.dll")) == KErrNone) {
 		TLibraryFunction func = lib.Lookup(4251); // _ZN14AknLayoutUtils10PenEnabledEv
@@ -312,6 +330,25 @@ void ShowDialogCore(const char* title, const char* msg) {
 	TRAP_IGNORE(ShowDialogL(title, msg));
 }
 
+#ifdef USE_VKB
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+#ifdef CC_BUILD_TOUCH
+	VirtualKeyboard_Open(args);
+#endif
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+#ifdef CC_BUILD_TOUCH
+	VirtualKeyboard_SetText(text);
+#endif
+}
+
+void OnscreenKeyboard_Close(void) {
+#ifdef CC_BUILD_TOUCH
+	VirtualKeyboard_Close();
+#endif
+}
+#else
 static TBuf<512> inputBuffer;
 static char kb_buffer[512];
 static cc_string kb_str = String_FromArray(kb_buffer);
@@ -373,9 +410,12 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 
 void OnscreenKeyboard_Close(void) {
 }
+#endif
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
+#if !defined(CC_BUILD_SYMBIAN_GENERIC) && defined(EKA2)
 	container->iAppUi->SetOrientationL(lock ? CAknAppUiBase::EAppUiOrientationLandscape : CAknAppUiBase::EAppUiOrientationAutomatic);
+#endif
 	container->SetExtentToWholeScreen();
 }
 

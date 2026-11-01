@@ -61,12 +61,14 @@ void CCContainer::RestartTimerL(TInt aInterval) {
 void CCContainer::ConstructL(const TRect& aRect, CCAppUi* aAppUi) {
 	iAppUi = aAppUi;
 	
+#if !defined(CC_BUILD_SYMBIAN_GENERIC) && defined(EKA2)
 	CAknWsEventMonitor* monitor = iAppUi->EventMonitor();
 	monitor->AddObserverL(this);
 #ifdef __WINSCW__
 	monitor->Enable(ETrue);
 	useAknWsEventMonitor = true;
 #else
+	// load this function dynamically because it's available only on s60v3.1 onwards
 	RLibrary lib;
 	if (lib.Load(_L("avkon.dll")) == KErrNone) {
 		TLibraryFunction func = lib.Lookup(4345); // _ZN18CAknWsEventMonitor6EnableEi
@@ -76,6 +78,7 @@ void CCContainer::ConstructL(const TRect& aRect, CCAppUi* aAppUi) {
 		}
 		lib.Close();
 	}
+#endif
 #endif
 	
 	// create window
