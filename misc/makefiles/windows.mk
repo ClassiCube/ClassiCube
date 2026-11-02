@@ -1,7 +1,7 @@
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/windows
 TARGET 		:= ClassiCube
-DIST_NAME	:= ClassiCube.exe
+DIST_NAME	:= ClassiCube
 
 CFLAGS	:= -DUNICODE -fno-ident
 LDFLAGS	:= -mwindows
@@ -40,5 +40,5 @@ include misc/makefiles/common_build.mk
 include misc/makefiles/common_targets.mk
 
 dist: $(TARGET).exe
-	$(call DIST_PKG_INIT_DEFAULT,$(TARGET).exe)
+	$(call DIST_PKG_INIT_DEFAULT,$(TARGET).exe,.exe)
 	$(call DIST_PKG_BUILD_ZIP,$(TARGET))
