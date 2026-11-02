@@ -1,7 +1,7 @@
 SOURCE_DIRS := src third_party/bearssl
 BUILD_DIR	:= build/windows
 TARGET 		:= ClassiCube
-DIST_NAME	:= ClassiCube
+DIST_NAME	:= ClassiCube.exe
 
 CFLAGS	:= -DUNICODE -fno-ident
 LDFLAGS	:= -mwindows
