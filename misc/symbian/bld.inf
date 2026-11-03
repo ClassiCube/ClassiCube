@@ -1,5 +1,5 @@
 PRJ_PLATFORMS
-GCCE ARMV5 ARMV6
+GCCE ARMV5 ARMV6 WINSCW
 
 PRJ_MMPFILES
 gnumakefile Icons_scalable_dc.mk

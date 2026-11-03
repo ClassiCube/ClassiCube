@@ -678,11 +678,21 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	cc_uintptr addr;
-	// signals were added somewhere in PIPS 1.5-1.6, UIQ 3 only supports 1.3
-#ifndef CC_BUILD_SYMBIAN_GENERIC
+#if defined(__WINSCW__) && defined(SYMBIAN_OE_POSIX_SIGNALS)
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
+#else
+	// signals were added in PIPS 1.5, load the function dinamically for compatibility with 1.3
+	RLibrary lib;
+	if (lib.Load(_L("libc.dll")) == KErrNone) {
+		__sighandler_t* (*_signal)(int, __sighandler_t*) = (__sighandler_t* (*)(int, __sighandler_t*)) lib.Lookup(576);
+		if (_signal != NULL) {
+			_signal(SIGCHLD, SIG_IGN);
+			_signal(SIGPIPE, SIG_IGN);
+		}
+		lib.Close();
+	}
 #endif
 
 	/* Log runtime address of a known function to ease investigating crashes */
