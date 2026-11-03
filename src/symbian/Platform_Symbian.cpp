@@ -686,7 +686,7 @@ void Platform_Init(void) {
 	// signals were added in PIPS 1.5, load the function dinamically for compatibility with 1.3
 	RLibrary lib;
 	if (lib.Load(_L("libc.dll")) == KErrNone) {
-		__sighandler_t* (*_signal)(int, __sighandler_t*) = (__sighandler_t* (*)(int, __sighandler_t*)) lib.Lookup(576);
+		__sighandler_t* (*_signal)(int, __sighandler_t*) = (__sighandler_t* (*)(int, __sighandler_t*)) lib.Lookup(578);
 		if (_signal != NULL) {
 			_signal(SIGCHLD, SIG_IGN);
 			_signal(SIGPIPE, SIG_IGN);
