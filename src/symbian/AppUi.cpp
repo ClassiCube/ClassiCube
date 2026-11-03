@@ -5,12 +5,20 @@ void CCAppUi::ConstructL() {
 	// uiq3 needs initialization of qikon things, otherwise it will crash inside BaseConstructL
 	RLibrary lib;
 	if (lib.Load(_L("Skins.dll")) == KErrNone) {
+#ifdef __WINSCW__
+		TLibraryFunction func = lib.Lookup(1); // ?CreateL@SkinManager@@SAXAAVCEikonEnv@@@Z 
+#else
 		TLibraryFunction func = lib.Lookup(7); // _ZN11SkinManager7CreateLER9CEikonEnv
+#endif
 		((void (*)(void*)) func)(CEikonEnv::Static());
 		lib.Close();
 	}
 	if (lib.Load(_L("QikCore.dll")) == KErrNone) {
+#ifdef __WINSCW__
+		TLibraryFunction func = lib.Lookup(198); // ?CreateL@CQikCommandManager@@SAXAAVMQikCommandHandler@@AAVCEikonEnv@@@Z
+#else
 		TLibraryFunction func = lib.Lookup(306); // _ZN18CQikCommandManager7CreateLER18MQikCommandHandlerR9CEikonEnv
+#endif
 		((void (*)(void*, void*)) func)(NULL, CEikonEnv::Static());
 		lib.Close();
 	}
