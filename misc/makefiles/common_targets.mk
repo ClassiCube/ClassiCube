@@ -46,7 +46,7 @@ endef
 define DIST_PKG_INIT_DEFAULT
 $(call MAKE_DIR, $(call DIST_PKG_PATH,audio))
 $(call MAKE_DIR, $(call DIST_PKG_PATH,texpacks))
-$(call DIST_PKG_ADD,$(1),$(DIST_NAME))
+$(call DIST_PKG_ADD,$(1),$(DIST_NAME)$(2))
 $(call DIST_PKG_ADD,misc/cc_audio.zip,audio/classicube.zip)
 $(call DIST_PKG_ADD,misc/cc_textures.zip,texpacks/classicube.zip)
 endef
