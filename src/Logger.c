@@ -738,6 +738,8 @@ static void CloseLogFile(void) {
 	#define GFX_BACKEND " (Direct3D11)"
 #elif CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 	#define GFX_BACKEND " (Direct3D9)"
+#elif CC_GFX_BACKEND == CC_GFX_BACKEND_VULKAN
+	#define GFX_BACKEND " (Vulkan)"
 #elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	#define GFX_BACKEND " (ModernGL)"
 #elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
