@@ -4,6 +4,7 @@
 #if CC_SSL_BACKEND == CC_SSL_BACKEND_BEARSSL
 #include "String_.h"
 #include "Certs.h"
+#include "Funcs.h"
 #include "../third_party/bearssl/bearssl.h"
 #include "../misc/certs/certs.h"
 
@@ -15,11 +16,9 @@ typedef struct SSLContext {
 	br_ssl_client_context sc;
 	struct X509CertContext x509;
 	unsigned char iobuf[BR_SSL_BUFSIZE_BIDI];
-	br_sslio_context ioc;
-	cc_result readError, writeError;
-	cc_socket socket;
 } SSLContext;
 static cc_bool _verifyCerts;
+
 
 static void x509_start_cert(const br_x509_class** ctx, uint32_t length) {
 	struct SSLContext* ssl = (struct SSLContext*)ctx;
@@ -141,28 +140,7 @@ static int ssl_time_check_callback(void* ctx,
 #endif
 }
 
-static int sock_read(void* ctx_, unsigned char* buf, size_t len) {
-	SSLContext* ctx = (SSLContext*)ctx_;
-	cc_uint32 read;
-	cc_result res = Socket_Read(ctx->socket, buf, len, &read);
-	
-	if (res) { ctx->readError = res; return -1; }
-	/* In case socket has been partially closed (i.e. can't be read from anymore) */
-	if (read == 0) { ctx->readError = ERR_END_OF_STREAM; return -1; }
-
-	return read;
-}
-
-static int sock_write(void* ctx_, const unsigned char* buf, size_t len) {
-	SSLContext* ctx = (SSLContext*)ctx_;
-	cc_uint32 wrote;
-	cc_result res = Socket_Write(ctx->socket, buf, len, &wrote);
-	
-	if (res) { ctx->writeError = res; return -1; }
-	return wrote;
-}
-
-cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
+cc_result SSL_Init(const cc_string* host_, void** out_ctx) {
 	SSLContext* ctx;
 	char host[NATIVE_STR_LEN];
 	String_EncodeUtf8(host, host_);
@@ -186,7 +164,6 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	br_ssl_client_init_full(&ctx->sc, &ctx->xc, TAs, TAs_NUM);
 	InjectEntropy(ctx);
 	br_x509_minimal_set_time_callback(&ctx->xc, NULL, ssl_time_check_callback);
-	ctx->socket = socket;
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);
 	br_ssl_client_reset(&ctx->sc, host, 0);
@@ -196,71 +173,108 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	if (String_CaselessEqualsConst(host_, "www.classicube.net")) {
 		br_ssl_engine_set_versions(&ctx->sc.eng, BR_TLS12, BR_TLS12);
 	}
-	
-	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
-			sock_read,  ctx, 
-			sock_write, ctx);
-			
-	ctx->readError  = 0;
-	ctx->writeError = 0;
-	
+
 	return 0;
 }
 
-static CC_NOINLINE cc_result SSL_GetError(SSLContext* ctx) {
-	int err;
-	if (ctx->writeError) return ctx->writeError;
-	if (ctx->readError)  return ctx->readError;
+static cc_result SSL_Run(br_ssl_engine_context* engine, struct CallbackIOState* io) {
+	unsigned char* buf;
+	size_t len;
+	cc_result res;
+
+	int state = br_ssl_engine_current_state(engine);
+
+	if (state & BR_SSL_CLOSED) {
+		int err = br_ssl_engine_last_error(engine);
+		if (err == 0 && br_ssl_engine_current_state(engine) == BR_SSL_CLOSED)
+			return SSL_ERR_CONTEXT_DEAD;
 		
-	// TODO session resumption, proper connection closing ??
-	err = br_ssl_engine_last_error(&ctx->sc.eng);
-	if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
-		return SSL_ERR_CONTEXT_DEAD;
-		
-	return SSL_ERROR_SHIFT | (err & 0xFFFF);
-}
+		return SSL_ERROR_SHIFT | (err & 0xFFFF);
+	}
 
-cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read) { 
-	SSLContext* ctx = (SSLContext*)ctx_;
-	int res = br_sslio_read(&ctx->ioc, data, count);
-	if (res < 0) return SSL_GetError(ctx);	
-	
-	*read = res;
+	/* any TLS record data to send takes top priority */
+	if (state & BR_SSL_SENDREC) {
+		buf = br_ssl_engine_sendrec_buf(engine, &len);
+		cc_uint32 wrote = 0;
+
+		res = io->SendData(io->io_ctx, buf, len, &wrote);
+		if (res) return res;
+
+		br_ssl_engine_sendrec_ack(engine, wrote);
+	}
+
+	/* able to send app data ? */
+	if (io->send_left && (state & BR_SSL_SENDAPP)) {
+		buf = br_ssl_engine_sendapp_buf(engine, &len);
+		len = min(len, io->send_left);
+
+		br_memcpy(buf, io->send_head, len);
+		br_ssl_engine_sendapp_ack(engine, len);
+
+		io->send_head += len;
+		io->send_left -= len;
+		br_ssl_engine_flush(engine, 0);
+		return 0;		
+	}
+
+	/* able to read app data ? */
+	if (state & BR_SSL_RECVAPP) {
+		buf = br_ssl_engine_recvapp_buf(engine, &len);
+		len = min(len, io->recv_size);
+
+		br_memcpy(io->recv_buf, buf, len);
+		br_ssl_engine_recvapp_ack(engine, len);
+
+		if (io->recv_cb) io->recv_cb(io->ctx, io->recv_buf, len);
+	}
+
+	/* ready to read next TLS record? */
+	if (state & BR_SSL_RECVREC) {
+		buf = br_ssl_engine_recvrec_buf(engine, &len);
+		cc_uint32 read = 0;
+
+		res = io->RecvData(io->io_ctx, buf, len, &read);
+		if (res) return res;
+
+		br_ssl_engine_recvrec_ack(engine, read);
+	}
 	return 0;
 }
 
-cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
+void SSL_Close(void* ctx_, struct CallbackIOState* io_state) {
 	SSLContext* ctx = (SSLContext*)ctx_;
-	int res = br_sslio_write(&ctx->ioc, data, count);
-	if (res < 0) return SSL_GetError(ctx);
-	
-	br_sslio_flush(&ctx->ioc);
-	*sent = res;
-	return 0;
+	cc_result res;
+
+	if (ctx && io_state) {
+		br_ssl_engine_close(&ctx->sc.eng);
+
+		while (br_ssl_engine_current_state(&ctx->sc.eng) != BR_SSL_CLOSED) {
+			// TODO could this get stuck looping ?
+			if ((res = SSL_Run(&ctx->sc.eng, io_state))) return;
+		}
+	}
 }
 
-cc_result SSL_Free(void* ctx_) {
+cc_result SSL_Tick(void* ctx_, struct CallbackIOState* io_state) {
 	SSLContext* ctx = (SSLContext*)ctx_;
-	if (ctx) br_sslio_close(&ctx->ioc);
-	
+	return SSL_Run(&ctx->sc.eng, io_state);
+}
+
+void SSL_Free(void* ctx_) {
 	Mem_Free(ctx_);
-	return 0;
 }
 #else
 void SSLBackend_Init(cc_bool verifyCerts) { }
 cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) { return false; }
 
-cc_result SSL_Init(cc_socket socket, const cc_string* host, void** ctx) {
+cc_result SSL_Init(const cc_string* host, void** ctx) {
 	return HTTP_ERR_NO_SSL;
 }
 
-cc_result SSL_Read(void* ctx, cc_uint8* data, cc_uint32 count, cc_uint32* read) { 
-	return ERR_NOT_SUPPORTED; 
+cc_result SSL_Tick(void* ctx, struct CallbackIOState* io_state) {
+	return ERR_NOT_SUPPORTED;
 }
 
-cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
-	return ERR_NOT_SUPPORTED; 
-}
-
-cc_result SSL_Free(void* ctx) { return 0; }
+void SSL_Close(void* ctx, struct CallbackIOState* io_state) { }
+void SSL_Free (void* ctx) { }
 #endif

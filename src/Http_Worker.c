@@ -184,8 +184,11 @@ struct HttpConnection {
 	cc_bool valid;
 };
 
-static void HttpConnection_Close(struct HttpConnection* conn) {
+static void HttpConnection_Close(struct HttpConnection* conn, struct CallbackIOState* io_state) {
+	if (io_state) { io_state->recv_cb = NULL; }
+
 	if (conn->sslCtx) {
+		SSL_Close(conn->sslCtx, io_state);
 		SSL_Free(conn->sslCtx);
 		conn->sslCtx = NULL;
 	}
@@ -221,13 +224,13 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	for (i = 0; i < numValidAddrs; i++)
 	{
 		res = Socket_Create(&conn->socket, &addrs[i]);
-		if (res) { HttpConnection_Close(conn); continue; }
+		if (res) { HttpConnection_Close(conn, NULL); continue; }
 
 		String_InitArray(addrStr, addrBuf);
 		if (SockAddr_ToString(&addrs[i], &addrStr)) Platform_Log1("  Connecting to %s..", &addrStr);
 
 		res = Socket_Connect(conn->socket, addrs[i].data, addrs[i].size);
-		if (res) { HttpConnection_Close(conn); continue; }
+		if (res) { HttpConnection_Close(conn, NULL); continue; }
 
 		break; /* Successful connection */
 	}
@@ -235,36 +238,30 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 
 	conn->valid = true;
 	if (!url->https) return 0;
-	return SSL_Init(conn->socket, &host, &conn->sslCtx);
+	return SSL_Init(&host, &conn->sslCtx);
 }
 
-static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
-	if (conn->sslCtx)
-		return SSL_Read(conn->sslCtx, data, count, read);
-
-	return Socket_Read(conn->socket,  data, count, read);
-}
-
-static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count, cc_uint32* sent) {
-	if (conn->sslCtx) 
-		return SSL_Write(conn->sslCtx, data, count, sent);
-
-	return Socket_Write(conn->socket, data, count, sent);
-}
-
-static cc_result HttpConnection_WriteAll(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count) {
-	cc_uint32 sent;
+static cc_result HttpConnection_Tick(struct HttpConnection* conn, struct CallbackIOState* io) {
 	cc_result res;
+	cc_uint32 count;
+	if (conn->sslCtx) return SSL_Tick(conn->sslCtx, io);
 
-	while (count)
-	{
-		if ((res = HttpConnection_Write(conn, data, count, &sent))) return res;
-		if (!sent) return ERR_END_OF_STREAM;
+	if (io->send_left) {
+		res = io->SendData(io->io_ctx, io->send_head, io->send_left, &count);
+		if (res) return res;
 
-		data  += sent;
-		count -= sent;
+		io->send_head += count;
+		io->send_left -= count;
+
+		/* still more data to send? don't start trying to receive yet */
+		if (io->send_left) return 0;
 	}
-	return 0;
+
+	res = io->RecvData(io->io_ctx, io->recv_buf, io->recv_size, &count);
+	if (res) return res;
+
+	if (io->recv_cb) res = io->recv_cb(io->ctx, io->recv_buf, io->recv_size);
+	return res;
 }
 
 
@@ -309,7 +306,7 @@ static cc_result ConnectionPool_Open(struct HttpConnection** conn, const struct 
 
 	/* TODO: Should we be consistent in which entry gets evicted? */
 	i = (cc_uint8)Stopwatch_Measure() % Array_Elems(connection_pool);
-	HttpConnection_Close(&connection_pool[i].conn);
+	HttpConnection_Close(&connection_pool[i].conn, NULL);
 	return ConnectionPool_Insert(i, conn, url);
 }
 
@@ -462,7 +459,7 @@ static int HttpClient_GetChunkLength(const cc_string* line) {
 }
 
 /* https://httpwg.org/specs/rfc7230.html */
-static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer, int total) {
+static cc_result HttpClient_Process(struct HttpClientState* state, const char* buffer, int total) {
 	struct HttpRequest* req = state->req;
 	cc_uint32 left, avail, read;
 	int offset = 0, chunkLen, ok;
@@ -596,39 +593,6 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 	return 0;
 }
 
-static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
-	struct HttpRequest* req = state->req;
-	cc_uint8 buffer[INPUT_BUFFER_LEN];
-	cc_uint8* dst;
-	cc_uint32 total;
-	cc_result res;
-
-	for (;;) 
-	{
-		dst = state->dataLeft > INPUT_BUFFER_LEN ? (req->data + req->size) : buffer;
-		res = HttpConnection_Read(state->conn, dst, INPUT_BUFFER_LEN, &total);
-		if (res) return res;
-
-		if (total == 0) {
-			Platform_Log1("Http read unexpectedly returned 0 in state %i", &state->state);
-			return state->state == HTTP_RESPONSE_STATE_INITIAL ? HTTP_ERR_NO_RESPONSE : ERR_END_OF_STREAM;
-		}
-
-		if (dst != buffer) {
-			/* When there is more than INPUT_BUFFER_LEN bytes of unread data/content, */
-			/*  there is no need to run the HTTP client state machine - just read directly */
-			/*  into the output buffer to avoid a pointless Mem_Copy call */
-			Http_BufferExpanded(req, total); 
-			state->dataLeft -= total;
-		} else {
-			res = HttpClient_Process(state, (char*)buffer, total);
-		}
-
-		if (res) return res;
-		if (state->state == HTTP_RESPONSE_STATE_DONE) return 0;
-	}
-}
-
 static cc_bool HttpClient_IsRedirect(struct HttpRequest* req) {
 	return req->statusCode >= 300 && req->statusCode <= 399 && req->statusCode != 304;
 }
@@ -651,7 +615,72 @@ static void HttpBackend_Init(void) {
 	SSLBackend_Init(httpsVerify);
 }
 
+static cc_result HttpBackend_RecvData(cc_pointer io_ctx, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
+	cc_result res = Socket_Read(io_ctx.val, data, count, bytesRead);	
+	if (res) return res;
+
+	/* In case socket has been partially closed (i.e. can't be read from anymore) */
+	if (*bytesRead == 0) return ERR_END_OF_STREAM;
+	return res;
+}
+
+static cc_result HttpBackend_SendData(cc_pointer io_ctx, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
+	cc_result res = Socket_Write(io_ctx.val, data, count, bytesWrote);
+	if (res) return res;
+
+	if (*bytesWrote == 0) return ERR_END_OF_STREAM;
+	return res;
+}
+
+static cc_result HttpBackend_RecvCallbackGeneric(void* ctx, cc_uint8* buf, cc_uint32 len) {
+	struct HttpClientState* state = (struct HttpClientState*)ctx;
+
+	return HttpClient_Process(state, (const char*)buf, len);
+}
+
+static cc_result HttpBackend_RecvCallbackDirect(void* ctx, cc_uint8* buf, cc_uint32 len) {
+	struct HttpClientState* state = (struct HttpClientState*)ctx;
+
+	Http_BufferExpanded(state->req, len); 
+	state->dataLeft -= len;
+	return 0;
+}
+
+
+static cc_result HttpBackend_Run(struct HttpClientState* state, struct CallbackIOState* io) {
+	struct HttpRequest* req = state->req;
+	cc_uint8 buffer[INPUT_BUFFER_LEN];
+	cc_uint8* dst;
+	cc_uint32 total;
+	cc_result res;
+
+	while (state->state != HTTP_RESPONSE_STATE_DONE)
+	{
+		if (state->dataLeft > INPUT_BUFFER_LEN) {
+			/* When there is more than INPUT_BUFFER_LEN bytes of unread data/content, */
+			/*  there is no need to run the HTTP client state machine - just read directly */
+			/*  into the output buffer to avoid a pointless Mem_Copy call */
+			io->recv_buf  = req->data + req->size;
+			io->recv_size = INPUT_BUFFER_LEN; // TODO state->dataLeft ? but then doesn't handle trailing chunk
+			io->recv_cb   = HttpBackend_RecvCallbackDirect;
+		} else {
+			io->recv_buf  = buffer;
+			io->recv_size = INPUT_BUFFER_LEN;
+			io->recv_cb   = HttpBackend_RecvCallbackGeneric;	
+		}
+
+		res = HttpConnection_Tick(state->conn, io);
+		if (res == ERR_END_OF_STREAM) {
+			Platform_Log1("Http read unexpectedly returned 0 in state %i", &state->state);
+			if (state->state == HTTP_RESPONSE_STATE_INITIAL) res = HTTP_ERR_NO_RESPONSE;
+		}
+		if (res) return res;
+	}
+	return 0;
+}
+
 static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
+	struct CallbackIOState io_state;
 	char buf[SEND_BUFFER_LEN];
 	cc_string inputMsg;
 	cc_result res;
@@ -660,14 +689,19 @@ static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
 	HttpClient_Serialise(state, &inputMsg);
 
 	res = ConnectionPool_Open(&state->conn, &state->url);
-	if (res) { HttpConnection_Close(state->conn); return res; }
+	if (res) { HttpConnection_Close(state->conn, NULL); return res; }
+
+	io_state.ctx        = state;
+	io_state.io_ctx.val = state->conn->socket;
+	io_state.send_head  = buf;
+	io_state.send_left  = inputMsg.length;
+
+	io_state.RecvData   = HttpBackend_RecvData;
+	io_state.SendData   = HttpBackend_SendData;
 
 	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
-	res = HttpConnection_WriteAll(state->conn, (cc_uint8*)buf, inputMsg.length);
-	if (res) { HttpConnection_Close(state->conn); return res; }
-
-	res = HttpClient_ParseResponse(state);
-	if (res) HttpConnection_Close(state->conn);
+	res = HttpBackend_Run(state, &io_state);
+	if (res) HttpConnection_Close(state->conn, &io_state);
 
 	return res;
 }
