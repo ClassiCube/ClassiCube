@@ -201,6 +201,9 @@ static cc_result SSL_Run(br_ssl_engine_context* engine, struct CallbackIOState* 
 		if (res) return res;
 
 		br_ssl_engine_sendrec_ack(engine, wrote);
+		/* return immediately, in case the SSL engine is currently in both the */
+		/*  'sending record(s)' the 'ready to receive record(s)' states */
+		return 0;
 	}
 
 	/* able to send app data ? */
