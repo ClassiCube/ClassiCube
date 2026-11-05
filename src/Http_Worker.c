@@ -241,10 +241,9 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	return SSL_Init(&host, &conn->sslCtx);
 }
 
-static cc_result HttpConnection_Tick(struct HttpConnection* conn, struct CallbackIOState* io) {
+static cc_result HttpPlain_Tick(struct HttpConnection* conn, struct CallbackIOState* io) {
 	cc_result res;
 	cc_uint32 count;
-	if (conn->sslCtx) return SSL_Tick(conn->sslCtx, io);
 
 	if (io->send_left) {
 		res = io->SendData(io->io_ctx, io->send_head, io->send_left, &count);
@@ -260,8 +259,15 @@ static cc_result HttpConnection_Tick(struct HttpConnection* conn, struct Callbac
 	res = io->RecvData(io->io_ctx, io->recv_buf, io->recv_size, &count);
 	if (res) return res;
 
-	if (io->recv_cb) res = io->recv_cb(io->ctx, io->recv_buf, io->recv_size);
+	if (io->recv_cb) res = io->recv_cb(io->ctx, io->recv_buf, count);
 	return res;
+}
+
+static cc_result HttpConnection_Tick(struct HttpConnection* conn, struct CallbackIOState* io) {
+	if (conn->sslCtx) 
+		return SSL_Tick(conn->sslCtx, io);
+	else
+		return HttpPlain_Tick(conn, io);
 }
 
 
