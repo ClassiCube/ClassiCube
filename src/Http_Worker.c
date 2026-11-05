@@ -699,7 +699,7 @@ static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
 
 	io_state.ctx        = state;
 	io_state.io_ctx.val = state->conn->socket;
-	io_state.send_head  = buf;
+	io_state.send_head  = (cc_uint8*)buf;
 	io_state.send_left  = inputMsg.length;
 
 	io_state.RecvData   = HttpBackend_RecvData;

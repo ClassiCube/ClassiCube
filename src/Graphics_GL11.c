@@ -4,6 +4,7 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+#define CC_SCRATCH_VBS_ARE_DYNAMIC
 
 /* 
   This is the OpenGL 1.1 specific backend, that uses display lists for static geometry.
@@ -137,7 +138,11 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+
+/*########################################################################################################################*
+*--------------------------------------------------Scratch Vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_BindDynamicVb(vb);
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
 }
