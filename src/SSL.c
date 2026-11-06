@@ -194,8 +194,8 @@ static cc_result SSL_Run(br_ssl_engine_context* engine, struct CallbackIOState* 
 
 	/* any TLS record data to send takes top priority */
 	if (state & BR_SSL_SENDREC) {
-		buf = br_ssl_engine_sendrec_buf(engine, &len);
 		cc_uint32 wrote = 0;
+		buf = br_ssl_engine_sendrec_buf(engine, &len);
 
 		res = io->SendData(io->io_ctx, buf, len, &wrote);
 		if (res) return res;
@@ -233,8 +233,8 @@ static cc_result SSL_Run(br_ssl_engine_context* engine, struct CallbackIOState* 
 
 	/* ready to read next TLS record? */
 	if (state & BR_SSL_RECVREC) {
-		buf = br_ssl_engine_recvrec_buf(engine, &len);
 		cc_uint32 read = 0;
+		buf = br_ssl_engine_recvrec_buf(engine, &len);
 
 		res = io->RecvData(io->io_ctx, buf, len, &read);
 		if (res) return res;
