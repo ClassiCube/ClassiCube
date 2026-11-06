@@ -146,6 +146,8 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
+	// Dreamcast GPU can only apply scissoring on a per 32x32 tile level
+	Gfx.ScissorAlignment = 32; 
 	gfx_format = -1;
 }
 

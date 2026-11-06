@@ -81,6 +81,9 @@ CC_VAR extern struct _GfxData {
 	int MinTexWidth, MinTexHeight;
 	cc_bool  ReducedPerfMode;
 	cc_uint8 ReducedPerfModeCooldown;
+	/* Alignment in pixels of scissoring regions (usally no alignment is required) */
+	/*  However e.g. dreamcast GPU can only scissor on 32x32 tiled boundaries */
+	cc_uint8 ScissorAlignment;
 	/* Default index buffer for a triangle list representing quads */
 	GfxResourceID DefaultIb;
 } Gfx;
