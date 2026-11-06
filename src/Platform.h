@@ -250,7 +250,7 @@ int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
 /*########################################################################################################################*
 *---------------------------------------------------------File I/O--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX || defined CC_BUILD_PLAYDATE 
 typedef void* cc_file;
 #else
 typedef int cc_file;
@@ -354,7 +354,7 @@ void Platform_LoadSysFonts(void);
 /*########################################################################################################################*
 *----------------------------------------------------------Sockets--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX || defined CC_BUILD_PLAYDATE
 typedef cc_uintptr cc_socket;
 #else
 typedef int cc_socket;
