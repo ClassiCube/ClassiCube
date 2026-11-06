@@ -126,6 +126,8 @@ static struct MenuOptionsScreen {
 	struct TextGroupWidget extHelp;
 	struct Texture extHelpTextures[5]; /* max lines is 5 */
 	struct ButtonWidget buttons[MENUOPTS_MAX_OPTS], done;
+	struct ButtonWidget left, right;
+	Widget_LeftClick leftPage, rightPage;
 	const char* extHelpDesc;
 } MenuOptionsScreen_Instance;
 
@@ -255,6 +257,15 @@ static void MenuOptionsScreen_EndButtons(struct MenuOptionsScreen* s, int half, 
 		Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_CENTRE, col, row);
 	}
 	ButtonWidget_Add(s, &s->done, 400, backClick);
+
+	if (s->leftPage || s->rightPage) {
+		ButtonWidget_Add(s, &s->left, 40, s->leftPage);
+		ButtonWidget_Add(s, &s->right, 40, s->rightPage);
+		Widget_SetDisabled(&s->left, !s->leftPage);
+		Widget_SetDisabled(&s->right, !s->rightPage);
+		Widget_SetLocation(&s->left, ANCHOR_CENTRE, ANCHOR_CENTRE, -350, 0);
+		Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE, 350, 0);
+	}
 }
 
 
@@ -437,7 +448,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 
 	s->widgets    = menuOpts_widgets;
 	s->numWidgets = 0;
-	s->maxWidgets = MENUOPTS_MAX_OPTS + 1; /* always have back button */
+	s->maxWidgets = MENUOPTS_MAX_OPTS + 1 + 2; /* back button + l/r arrows */
 
 	/* The various menu options screens might have different number of widgets */
 	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { 
@@ -507,6 +518,11 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 	}
 
 	ButtonWidget_SetConst(&s->done, "Done", &s->titleFont);
+	if (s->leftPage || s->rightPage) {
+		ButtonWidget_SetConst(&s->left, "<", &s->titleFont);
+		ButtonWidget_SetConst(&s->right, ">", &s->titleFont);
+	}
+
 	if (s->DoRecreateExtra) s->DoRecreateExtra(s);
 	TextGroupWidget_SetFont(&s->extHelp, &s->textFont);
 	TextGroupWidget_RedrawAll(&s->extHelp); /* TODO: SetFont should redrawall implicitly */
@@ -528,6 +544,8 @@ void MenuOptionsScreen_Show(InitMenuOptions init) {
 	s->DoInit          = init;
 	s->DoRecreateExtra = NULL;
 	s->OnHacksChanged  = NULL;
+	s->leftPage = NULL;
+	s->rightPage = NULL;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
@@ -1043,6 +1061,12 @@ static void HS_SetFOV(int fov) {
 	Camera_SetFov(fov);
 }
 
+static cc_bool HS_GetEntityBlockPlacement(void) { return Entities.CurPlayer->Hacks.EntityPlacing; }
+static void    HS_SetEntityBlockPlacement(cc_bool v) {
+	Entities.CurPlayer->Hacks.EntityPlacing = v;
+	Options_SetBool(OPT_ENTITY_PLACING, v);
+}
+
 static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 	struct Widget** widgets = s->widgets;
 	struct LocalPlayer* p   = Entities.CurPlayer;
@@ -1055,21 +1079,29 @@ static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 	MenuInputOverlay_CheckStillValid(s);
 }
 
+static void HacksSettingsScreen2_CheckHacksAllowed(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->widgets;
+	struct LocalPlayer* p = Entities.CurPlayer;
+	cc_bool disabled = !p->Hacks.Enabled;
+
+	MenuInputOverlay_CheckStillValid(s);
+}
+
 static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	MenuOptionsScreen_BeginButtons(s);
 	{
 		MenuOptionsScreen_AddBool(s, "Hacks enabled",
-			HS_GetHacks,    HS_SetHacks, NULL);
-		MenuOptionsScreen_AddNum(s,  "Speed multiplier", 
-			0.1f,   50, 10,
-			HS_GetSpeed,    HS_SetSpeed, NULL);
+			HS_GetHacks, HS_SetHacks, NULL);
+		MenuOptionsScreen_AddNum(s, "Speed multiplier",
+			0.1f, 50, 10,
+			HS_GetSpeed, HS_SetSpeed, NULL);
 		MenuOptionsScreen_AddBool(s, "Camera clipping",
 			HS_GetClipping, HS_SetClipping,
 			"&eIf &fON&e, then the third person cameras will limit\n" \
 			"&etheir zoom distance if they hit a solid block.");
-		MenuOptionsScreen_AddNum(s,  "Jump height",
+		MenuOptionsScreen_AddNum(s, "Jump height",
 			0.1f, 2048, 1.233f,
-			HS_GetJump,     HS_SetJump,
+			HS_GetJump, HS_SetJump,
 			"&eSets how many blocks high you can jump up.\n" \
 			"&eNote: You jump much higher when holding down the Speed key binding.");
 		MenuOptionsScreen_AddBool(s, "WoM style hacks",
@@ -1078,33 +1110,52 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			"&ealong with older noclip style. This is based on the \"World of Minecraft\"\n" \
 			"&eclassic client mod, which popularized hacks conventions and controls\n" \
 			"&ebefore ClassiCube was created.");
-		
+
 		MenuOptionsScreen_AddBool(s, "Full block stepping",
 			HS_GetFullStep, HS_SetFullStep, NULL);
 		MenuOptionsScreen_AddBool(s, "Breakable liquids",
-			HS_GetLiquids,  HS_SetLiquids, NULL);
+			HS_GetLiquids, HS_SetLiquids, NULL);
 		MenuOptionsScreen_AddBool(s, "Pushback placing",
 			HS_GetPushback, HS_SetPushback,
 			"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
 			"&ethe block to be placed, and you to be moved out of the way.\n" \
 			"&fThis is mainly useful for quick pillaring/towering.");
 		MenuOptionsScreen_AddBool(s, "Noclip slide",
-			HS_GetSlide,    HS_SetSlide,
+			HS_GetSlide, HS_SetSlide,
 			"&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.");
-		MenuOptionsScreen_AddInt(s,  "Field of view", 
-			1,  179, 70,
-			HS_GetFOV,      HS_SetFOV, NULL);
+		MenuOptionsScreen_AddInt(s, "Field of view",
+			1, 179, 70,
+			HS_GetFOV, HS_SetFOV, NULL);
 	}
+	s->leftPage = NULL;
+	s->rightPage = HacksSettingsScreen2_Show;
 	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
 
 	s->OnHacksChanged = HacksSettingsScreen_CheckHacksAllowed;
 	HacksSettingsScreen_CheckHacksAllowed(s);
 }
 
+static void HacksSettingsScreen2_InitWidgets(struct MenuOptionsScreen* s) {
+	MenuOptionsScreen_BeginButtons(s);
+	{
+		MenuOptionsScreen_AddBool(s, "Entity block placement",
+			HS_GetEntityBlockPlacement, HS_SetEntityBlockPlacement, NULL);
+	}
+	s->leftPage = HacksSettingsScreen_Show;
+	s->rightPage = NULL;
+	MenuOptionsScreen_EndButtons(s, -1, Menu_SwitchOptions);
+
+	s->OnHacksChanged = HacksSettingsScreen2_CheckHacksAllowed;
+	HacksSettingsScreen2_CheckHacksAllowed(s);
+}
+
 void HacksSettingsScreen_Show(void) {
 	MenuOptionsScreen_Show(HacksSettingsScreen_InitWidgets);
 }
 
+void HacksSettingsScreen2_Show(void) {
+	MenuOptionsScreen_Show(HacksSettingsScreen2_InitWidgets);
+}
 
 /*########################################################################################################################*
 *----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
