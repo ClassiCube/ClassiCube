@@ -50,7 +50,7 @@ jobs:
       - name: Generate unified tar.gz
         shell: bash
         run: |
-          cp cc-mac64-gl1 build/macos/ClassiCube
+          cp cc-mac64-gl1 build/macos/dist/ClassiCube
           cd build/macos/dist && tar -zcvf cc-mac64-gl1.tar.gz ClassiCube
 
    
