@@ -262,9 +262,10 @@ float LocalPlayer_JumpHeight(struct LocalPlayer* p);
 void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t);
 void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p);
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p);
+
 /* Moves local player back to spawn point. */
 void LocalPlayers_MoveToSpawn(struct LocationUpdate* update);
-void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update);
+Vec3 LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p);
 
 CC_END_HEADER
 #endif

@@ -700,6 +700,13 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 
 #ifdef CC_BUILD_SPLITSCREEN
 static void DrawSplitscreen(float delta, float t, int i, int x, int y, int w, int h) {
+	if (Gfx.ScissorAlignment) {
+		int mask  = Gfx.ScissorAlignment - 1;
+
+		int xOver = x & mask; x -= xOver; w = (w + xOver) & ~mask;
+		int yOver = y & mask; y -= yOver; h = (h + yOver) & ~mask;
+	}
+
 	Gfx_SetViewport(x, y, w, h);
 	Gfx_SetScissor( x, y, w, h);
 	Game.CurrentState = i;
