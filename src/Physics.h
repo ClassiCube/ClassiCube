@@ -35,8 +35,10 @@ Source: http://www.cs.utah.edu/~awilliam/box/box.pdf */
 /* NOTE: invDir is inverse of ray's direction (i.e. 1.0f / dir) */
 cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 invDir, Vec3 min, Vec3 max, float* t0, float* t1);
 
-struct SearcherState { int x, y, z; float tSquared; };
+struct SearcherState { BlockID block; short relX, relY, relZ; float tSquared; };
 extern struct SearcherState* Searcher_States;
+extern IVec3 Searcher_Origin;
+
 int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB);
 void Searcher_CalcTime(Vec3* vel, struct AABB *entityBB, struct AABB* blockBB, float* tx, float* ty, float* tz);
 void Searcher_Free(void);

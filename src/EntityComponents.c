@@ -624,6 +624,7 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 	Vec3 size;
 	cc_bool wasOn;
 
+	IVec3 origin;
 	Vec3 bPos, v;
 	float tx, ty, tz;
 	int i, block;
@@ -634,12 +635,15 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 	comp->HitXMin = false; comp->HitYMin = false; comp->HitZMin = false;
 	comp->HitXMax = false; comp->HitYMax = false; comp->HitZMax = false;
 
-	size = entity->Size;
-	for (i = 0; i < count; i++) {
-		/* Unpack the block and coordinate data */
+	origin = Searcher_Origin;
+	size   = entity->Size;
+	for (i = 0; i < count; i++) 
+	{
 		state  = Searcher_States[i];
-		bPos.x = state.x >> 3; bPos.y = state.y >> 4; bPos.z = state.z >> 3;
-		block  = (state.x & 0x7) | (state.y & 0xF) << 3 | (state.z & 0x7) << 7;
+		bPos.x = state.relX + origin.x;
+		bPos.y = state.relY + origin.y;
+		bPos.z = state.relZ + origin.z;
+		block  = state.block;
 
 		Vec3_Add(&blockBB.Min, &Blocks.MinBB[block], &bPos);
 		Vec3_Add(&blockBB.Max, &Blocks.MaxBB[block], &bPos);
