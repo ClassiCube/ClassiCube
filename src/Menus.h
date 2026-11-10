@@ -55,6 +55,7 @@ void ChatOptionsScreen_Show(void);
 void GuiOptionsScreen_Show(void);
 void GraphicsOptionsScreen_Show(void);
 void HacksSettingsScreen_Show(void);
+void HacksSettingsScreen2_Show(void);
 void EnvSettingsScreen_Show(void);
 void NostalgiaAppearanceScreen_Show(void);
 void NostalgiaFunctionalityScreen_Show(void);
