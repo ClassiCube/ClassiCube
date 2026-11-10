@@ -507,14 +507,15 @@ static void Render3DFrame(float delta, float t) {
 	EntityNames_Render();
 
 	Particles_Render(t);
-	EnvRenderer_RenderSky();
-	EnvRenderer_RenderClouds();
 
 	MapRenderer_Update(delta);
 	MapRenderer_RenderNormal(delta);
 	EnvRenderer_RenderMapSides();
 
 	EntityShadows_Render();
+	EnvRenderer_RenderClouds();
+	EnvRenderer_RenderSky();
+
 	if (Game_SelectedPos.valid && !Game_HideGui) {
 		SelOutlineRenderer_Render(&Game_SelectedPos, true);
 	}
