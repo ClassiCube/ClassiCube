@@ -11,16 +11,9 @@
 #include "../Utils.h"
 #include "../Errors.h"
 
-#define LWIP_SOCKET 1
-#include <lwip/sockets.h>
-#include <diskio/ata.h>
-#include <xenos/xe.h>
-#include <xenos/xenos.h>
-#include <xenos/edram.h>
-#include <console/console.h>
-#include <network/network.h>
-#include <ppc/timebase.h>
-#include <time/time.h>
+#include <xsdk/kernel.h>
+#include <xsdk/log.h>
+#include <xsdk/thread.h>
 #include <sys/time.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -28,7 +21,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <libfat/fat.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -64,7 +56,8 @@ void Platform_Log(const char* msg, int len) {
 	len = min(len, 2048);
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	
-	puts(tmp);
+	// TODO apparently very slow on real hardware
+	DbgPrint("%s", tmp);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -87,22 +80,38 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 	t->second = loc_time.tm_sec;
 }
 
+#define MICROSECS_PER_SEC 1000000
+#define TIMEBASE_FREQ     49875000LL
+#define TIMEBASE_FREQ_US  (TIMEBASE_FREQ / MICROSECS_PER_SEC)
+
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return tb_diff_usec(end, beg);
+	return (end - beg) / TIMEBASE_FREQ_US;
 }
 
+#define READ_MFTB_HI(value) __asm__ volatile("mftbu %0" : "=r"(value))
+#define READ_MFTB_LO(value) __asm__ volatile("mftbl %0" : "=r"(value))
+
 cc_uint64 Stopwatch_Measure(void) {
-	return mftb();
+	cc_uint32 hi_1; READ_MFTB_HI(hi_1);
+	cc_uint32 lo_1; READ_MFTB_LO(lo_1);
+	cc_uint32 hi_2; READ_MFTB_HI(hi_2);
+	cc_uint32 lo_2; READ_MFTB_LO(lo_2);
+
+	// Upper half can theoretically tick between the lo and hi read
+	if (hi_1 != hi_2) {
+		hi_1 = hi_2;
+		lo_1 = lo_2;
+	}
+
+	return ((uint64_t)hi_1 << 32) | lo_1;
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static char root_buffer[NATIVE_STR_LEN];
-static cc_string root_path = String_FromArray(root_buffer);
-static bool fat_available;
+static cc_string root_path = String_FromConst("game:/");
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
@@ -119,21 +128,15 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create2(const cc_filepath* path) {
-	if (!fat_available) return ERR_NON_WRITABLE_FS;
-
 	return mkdir(path->buffer, 0) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_filepath* path) {
-	if (!fat_available) return 0;
-
 	struct stat sb;
 	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	if (!fat_available) return ENOSYS;
-
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_filepath str;
 	struct dirent* entry;
@@ -177,17 +180,14 @@ static cc_result File_Do(cc_file* file, const char* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ReturnCode_FileNotFound;
 	return File_Do(file, path->buffer, O_RDONLY);
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	if (!fat_available) return ERR_NON_WRITABLE_FS;
 	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
 }
 
@@ -224,7 +224,9 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#############################################################################################################p############*/
-void Thread_Sleep(cc_uint32 milliseconds) { mdelay(milliseconds); }
+void Thread_Sleep(cc_uint32 milliseconds) { 
+	xsdk_thread_sleep(milliseconds); 
+}
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	*handle = NULL; // TODO
@@ -274,53 +276,15 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-extern int bdev_enum(int handle, const char** name);
-
-static void FindRootDirectory(void) {
-	const char* dev = NULL;
-    int handle = bdev_enum(-1, &dev);
-    if (handle < 0) { fat_available = false; return; }
-	
-	root_path.length = 0;
-	String_Format1(&root_path, "%c:/ClassiCube", dev);
-}
-
-static void CreateRootDirectory(void) {
-	if (!fat_available) return;
-	root_buffer[root_path.length] = '\0';
-	
-	int res = mkdir(root_buffer, 0);
-	int err = res == -1 ? errno : 0;
-	Platform_Log1("Created root directory: %i", &err);
-}
-
 void Platform_Init(void) {
-	xenos_init(VIDEO_MODE_AUTO);
-	console_init();
-	//network_init();
-	
-	xenon_ata_init();
-	xenon_atapi_init();
-
-	fat_available = fatInitDefault();
-	Platform_ReadonlyFilesystem = !fat_available;
-
-	FindRootDirectory();
-	CreateRootDirectory();
+	// TODO remove on console
+	xsdk_log_set_dbgprint(true);
 }
 
 void Platform_Free(void) {
 }
 
-cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	if (res == ERR_NON_WRITABLE_FS) {
-		String_AppendConst(dst, "No writable filesystem found");
-		return true;
-	}
-
-	return false;
-}
-
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst) { return false; }
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {

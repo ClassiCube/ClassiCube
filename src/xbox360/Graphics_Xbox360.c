@@ -4,10 +4,10 @@
 #include "../Errors.h"
 #include "../Window.h"
 
-#include <xenos/xe.h>
-#include <xenos/edram.h>
+//#include <xenos/xe.h>
+//#include <xenos/edram.h>
 
-#include "../../misc/xbox360/ps_coloured.h"
+/*#include "../../misc/xbox360/ps_coloured.h"
 #include "../../misc/xbox360/vs_coloured.h"
 #include "../../misc/xbox360/ps_textured.h"
 #include "../../misc/xbox360/vs_textured.h"
@@ -31,19 +31,19 @@ static const struct XenosVBFFormat coloured_vbf = {
 2, {
 	{ XE_USAGE_POSITION, 0, XE_TYPE_FLOAT4 },
 	{ XE_USAGE_COLOR,    0, XE_TYPE_UBYTE4 }
-} };
+} };*/
 
 static void CreateState(void) {
-	xe = &device;
-	Xe_Init(xe);
-	edram_init(xe);
+	//xe = &device;
+	//Xe_Init(xe);
+	//edram_init(xe);
 	
-	struct XenosSurface* fb = Xe_GetFramebufferSurface(xe);
-	Xe_SetRenderTarget(xe, fb);
+	//struct XenosSurface* fb = Xe_GetFramebufferSurface(xe);
+	//Xe_SetRenderTarget(xe, fb);
 }
 
 static void CreateShaders(void) {
-	shdr_tex_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_textured);
+	/*shdr_tex_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_textured);
 	Xe_InstantiateShader(xe, shdr_tex_vs, 0);	 
 	Xe_ShaderApplyVFetchPatches(xe, shdr_tex_vs, 0, &textured_vbf);
 	shdr_tex_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_textured);
@@ -53,7 +53,7 @@ static void CreateShaders(void) {
 	Xe_InstantiateShader(xe, shdr_col_vs, 0);	 
 	Xe_ShaderApplyVFetchPatches(xe, shdr_col_vs, 0, &coloured_vbf);
 	shdr_col_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_coloured);
-	Xe_InstantiateShader(xe, shdr_col_ps, 0);
+	Xe_InstantiateShader(xe, shdr_col_ps, 0);*/
 }
 
 void Gfx_Create(void) {
@@ -83,12 +83,12 @@ static void Gfx_FreeState(void) {
 
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
-	Gfx_SetFaceCulling(false);
-	SetAlphaBlend(false);
+	//Gfx_SetFaceCulling(false);
+	//SetAlphaBlend(false);
 
-	Xe_SetAlphaFunc(xe, XE_CMP_GREATER);
-	Xe_SetAlphaRef(xe,  0.5f);
-	Xe_SetZFunc(xe,     XE_CMP_LESSEQUAL);
+	//Xe_SetAlphaFunc(xe, XE_CMP_GREATER);
+	//Xe_SetAlphaRef(xe,  0.5f);
+	//Xe_SetZFunc(xe,     XE_CMP_LESSEQUAL);
 }
 
 
@@ -96,34 +96,35 @@ static void Gfx_RestoreState(void) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
-	void* dst = Xe_Surface_LockRect(xe, xtex, x, y, bmp->width, bmp->height, XE_LOCK_WRITE);
+	//void* dst = Xe_Surface_LockRect(xe, xtex, x, y, bmp->width, bmp->height, XE_LOCK_WRITE);
 
-	CopyPixels(dst,        bmp->width * BITMAPCOLOR_SIZE,
-			   bmp->scan0, rowWidth   * BITMAPCOLOR_SIZE,
-			   bmp->width, bmp->height);
+	//CopyPixels(dst,        bmp->width * BITMAPCOLOR_SIZE,
+	//		   bmp->scan0, rowWidth   * BITMAPCOLOR_SIZE,
+	//		   bmp->width, bmp->height);
 	
-	Xe_Surface_Unlock(xe, xtex);
+	//Xe_Surface_Unlock(xe, xtex);
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	struct XenosSurface* xtex = Xe_CreateTexture(xe, bmp->width, bmp->height, 1, XE_FMT_8888, 0);
-	SetTextureData(xtex, 0, 0, bmp, rowWidth, 0);
-	return xtex;
+	//struct XenosSurface* xtex = Xe_CreateTexture(xe, bmp->width, bmp->height, 1, XE_FMT_8888, 0);
+	//SetTextureData(xtex, 0, 0, bmp, rowWidth, 0);
+	//return xtex;
+	return (void*)1;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	struct XenosSurface* xtex = (struct XenosSurface*)texId;
-	SetTextureData(xtex, x, y, part, rowWidth, 0);
+	//struct XenosSurface* xtex = (struct XenosSurface*)texId;
+	//SetTextureData(xtex, x, y, part, rowWidth, 0);
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	struct XenosSurface* xtex = (struct XenosSurface*)texId;
-	Xe_SetTexture(xe, 0, xtex);
+	//struct XenosSurface* xtex = (struct XenosSurface*)texId;
+	//Xe_SetTexture(xe, 0, xtex);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	struct XenosSurface* xtex = (struct XenosSurface*)(*texId);
-	if (xtex) Xe_DestroyTexture(xe, xtex);
+	//struct XenosSurface* xtex = (struct XenosSurface*)(*texId);
+	//if (xtex) Xe_DestroyTexture(xe, xtex);
 	*texId = NULL;
 }
 
@@ -142,15 +143,15 @@ static void SetFogEnd(float value)       { } // TODO: implement
 static void SetFogMode(FogFunc func)     { } // TODO: implement
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
-	Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
+	//Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
 }
 
 static void SetAlphaTest(cc_bool enabled) {
-	Xe_SetAlphaTestEnable(xe, enabled);
+	//Xe_SetAlphaTestEnable(xe, enabled);
 }
 
 static void SetAlphaBlend(cc_bool enabled) {
-	if (enabled) {
+/*	if (enabled) {
 		Xe_SetBlendControl(xe,
 			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA,
 			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA);
@@ -158,7 +159,7 @@ static void SetAlphaBlend(cc_bool enabled) {
 		Xe_SetBlendControl(xe,
 			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO,
 			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO);
-	}
+	}*/
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
@@ -166,15 +167,15 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 }
 
 void Gfx_ClearColor(PackedCol color) {
-	Xe_SetClearColor(xe, color);
+	//Xe_SetClearColor(xe, color);
 }
 
 static void SetDepthTest(cc_bool enabled) {
-	Xe_SetZEnable(xe, enabled);
+	//Xe_SetZEnable(xe, enabled);
 }
 
 static void SetDepthWrite(cc_bool enabled) {
-	Xe_SetZWrite(xe, enabled);
+	//Xe_SetZWrite(xe, enabled);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -206,12 +207,13 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	int size = count * strideSizes[fmt];
-	return Xe_CreateVertexBuffer(xe, size);
+	//return Xe_CreateVertexBuffer(xe, size);
+	return (void*)1;
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)(*vb);
-	if (xvb) Xe_DestroyVertexBuffer(xe, xvb);
+	//struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)(*vb);
+	//if (xvb) Xe_DestroyVertexBuffer(xe, xvb);
 	*vb = NULL;
 }
 
@@ -223,12 +225,13 @@ void Gfx_BindVb(GfxResourceID vb) {
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
 	int size = count * strideSizes[fmt];
-	return Xe_VB_Lock(xe, xvb, 0, size, XE_LOCK_WRITE);
+	//return Xe_VB_Lock(xe, xvb, 0, size, XE_LOCK_WRITE);
+	return (void*)1;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
 	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
-	Xe_VB_Unlock(xe, xvb);
+	//Xe_VB_Unlock(xe, xvb);
 }
 
 
@@ -352,8 +355,8 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 
 void Gfx_EndFrame(void) {
 	Platform_LogConst("END FRAME A");
-	Xe_Resolve(xe);
-	Xe_Sync(xe);
+	//Xe_Resolve(xe);
+	//Xe_Sync(xe);
 	Platform_LogConst("END FRAME B");
 }
 

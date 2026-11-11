@@ -200,12 +200,11 @@ typedef cc_uint8  cc_bool;
 	#define DEFAULT_AUD_BACKEND CC_AUD_BACKEND_NULL
 	#define DEFAULT_NET_BACKEND CC_NET_BACKEND_BUILTIN
 	#define DEFAULT_SSL_BACKEND CC_SSL_BACKEND_BEARSSL
-#elif defined XENON
-	/* libxenon also defines __linux__ (yes, really) */
+#elif defined PLAT_XBOX360
 	#define CC_BUILD_XBOX360
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_COOPTHREADED /* TODO remove */
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#undef  CC_BUILD_NETWORKING /* TODO broken */
