@@ -122,7 +122,7 @@ CC_NOINLINE static void WarnMissingArgs(int argsCount, const cc_string* args) {
 }
 
 static void SetupProgram(int argc, char** argv) {
-	static char ipBuffer[STRING_SIZE];
+	static char ipBuffer[MAX_URL_LEN];
 	cc_result res;
 
 	CrashHandler_Install();

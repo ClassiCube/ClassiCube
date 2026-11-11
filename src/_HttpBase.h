@@ -331,7 +331,7 @@ static cc_bool Http_CleanCacheTask(struct ScheduledTask2* task) {
 *----------------------------------------------------Http public api------------------------------------------------------*
 *#########################################################################################################################*/
 int Http_AsyncGetSkin(const cc_string* skinName, cc_uint8 flags) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 	String_InitArray(url, urlBuffer);
 
 	if (Utils_IsUrlPrefix(skinName)) {

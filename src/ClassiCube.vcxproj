@@ -559,7 +559,6 @@
     <ClCompile Include="..\third_party\bearssl\ssl_engine_default_rsavrfy.c" />
     <ClCompile Include="..\third_party\bearssl\ssl_hashes.c" />
     <ClCompile Include="..\third_party\bearssl\ssl_hs_client.c" />
-    <ClCompile Include="..\third_party\bearssl\ssl_io.c" />
     <ClCompile Include="..\third_party\bearssl\ssl_rec_cbc.c" />
     <ClCompile Include="..\third_party\bearssl\ssl_rec_ccm.c" />
     <ClCompile Include="..\third_party\bearssl\ssl_rec_chapol.c" />

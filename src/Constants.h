@@ -17,10 +17,12 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define GAME_APP_TITLE "ClassiCube 1.3.9"
 #endif
 
-/* Max number of characters strings can have. */
+/* Max number of characters classic strings can have */
 #define STRING_SIZE 64
-/* Max number of characters filenames can have. */
+/* Max supported number of characters in filenames */
 #define FILENAME_SIZE 260
+/* Max supported number of characters in URL addresses */
+#define MAX_URL_LEN (STRING_SIZE * 2)
 
 /* Chunk axis length in blocks. */
 #define CHUNK_SIZE 16
