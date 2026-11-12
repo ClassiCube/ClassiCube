@@ -33,7 +33,24 @@ LIBS	:= -Wl,--start-group $(XSDK_SDK)/build/libxsdk.a -lc -lm -lgcc -Wl,--end-gr
 #---------------------------------------------------------------------------------
 CC 		:= $(XSDK_TOOLCHAIN)/bin/powerpc-xsdk-elf-gcc
 OBJDUMP	:= $(XSDK_TOOLCHAIN)/bin/powerpc-xsdk-elf-objdump
+SHDRGEN := python3 $(XSDK_SDK)/tools/build_shaders.py
+XEX_GEN := python3 $(XSDK_SDK)/tools/elf2xex.py
 LINK	:= $(CC)
+
+
+#---------------------------------------------------------------------------------
+# shader object generation
+#---------------------------------------------------------------------------------
+SHDR_DIR	:= misc/xbox360
+VSHDR_SRCS 	:= $(wildcard $(SHDR_DIR)/*.vert)
+PSHDR_SRCS 	:= $(wildcard $(SHDR_DIR)/*.frag)
+SHDR_HDR	:= $(BUILD_DIR)/shaders.h
+GEN_FILES	+= $(SHDR_HDR)
+
+$(SHDR_HDR): $(VSHDR_SRCS) $(PSHDR_SRCS)
+	$(SHDRGEN) $^ --output $@
+
+src/xbox360/Graphics_Xbox360.c: $(SHDR_HDR)
 
 
 #---------------------------------------------------------------------------------
@@ -45,7 +62,7 @@ include misc/makefiles/common_build.mk
 
 $(TARGET).xex: $(TARGET).elf
 	sh -c "'$(OBJDUMP)' -d '$<' | python3 '$(XSDK_SDK)/tools/xenia_scan.py'"
-	python3 $(XSDK_SDK)/tools/elf2xex.py $< $@
+	$(XEX_GEN) $< $@
 
 
 #---------------------------------------------------------------------------------

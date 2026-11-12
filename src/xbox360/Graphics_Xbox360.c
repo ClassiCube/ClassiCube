@@ -5,8 +5,10 @@
 #include "../Window.h"
 
 #include <xsdk/gpu.h>
+#include <xsdk/present.h>
 //#include <xenos/xe.h>
 //#include <xenos/edram.h>
+#include "../../build/xbox360/shaders.h"
 
 /*#include "../../misc/xbox360/ps_coloured.h"
 #include "../../misc/xbox360/vs_coloured.h"
@@ -31,15 +33,6 @@ static const XsdkVertexElement coloured_layout[] = {
 	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4, .offset_bytes = 12 }
 };
 
-static void CreateState(void) {
-	//xe = &device;
-	//Xe_Init(xe);
-	//edram_init(xe);
-	
-	//struct XenosSurface* fb = Xe_GetFramebufferSurface(xe);
-	//Xe_SetRenderTarget(xe, fb);
-}
-
 static void CreateShaders(void) {
 	/*shdr_tex_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_textured);
 	Xe_InstantiateShader(xe, shdr_tex_vs, 0);	 
@@ -56,7 +49,7 @@ static void CreateShaders(void) {
 
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
-		CreateState();
+		//CreateState();
 		//CreateShaders(); TODO	
 	}
 	Gfx.Created = true;
@@ -164,8 +157,9 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	// TODO
 }
 
+static uint32_t clear_color;
 void Gfx_ClearColor(PackedCol color) {
-	//Xe_SetClearColor(xe, color);
+	clear_color = color;
 }
 
 static void SetDepthTest(cc_bool enabled) {
@@ -338,8 +332,18 @@ void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
 }
 
-void Gfx_BeginFrame(void) { 
-	Platform_LogConst("BEGIN FRAME");
+#define PRESENT_TIMEOUT_MS 5000
+static uint32_t fb_address;
+
+void Gfx_BeginFrame(void) {
+	uint32_t status = xsdk_present_begin(&fb_address, PRESENT_TIMEOUT_MS);
+
+	if (!NT_SUCCESS(status)) {
+		Platform_Log1("xsdk_present_begin failed: %h",&status);
+		return;
+	}
+
+	xsdk_gpu_set_target(Window_Main.Width, Window_Main.Height);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -348,10 +352,8 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
-	Platform_LogConst("END FRAME A");
-	//Xe_Resolve(xe);
-	//Xe_Sync(xe);
-	Platform_LogConst("END FRAME B");
+	xsdk_gpu_resolve(fb_address, Window_Main.Width, Window_Main.Height, clear_color);
+	xsdk_present_end();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
