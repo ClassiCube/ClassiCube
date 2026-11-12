@@ -11,6 +11,7 @@
 #include "../VirtualKeyboard.h"
 #include "../VirtualDialog.h"
 
+#include <xsdk/gpu.h>
 #include <xsdk/present.h>
 #include <xsdk/texture.h>
 
@@ -18,6 +19,12 @@ struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
 void Window_PreInit(void) {
+	uint32_t status = xsdk_gpu_open();
+	if (!NT_SUCCESS(status)) {
+		Platform_Log1("xsdk_gpu_open failed: %h", &status);
+		Process_Abort2(status, "Initing GPU");
+	}
+
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 }
@@ -45,9 +52,7 @@ void Window_Init(void) {
 	Window_Main.UIScaleX = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY = DEFAULT_UI_SCALE_Y;
 
-	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
-	//xenon_ata_init();
-	//xenon_atapi_init();
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_VIRTUAL;
 }
 
 void Window_Free(void) { }
@@ -179,8 +184,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// https://github.com/Free60Project/libxenon/blob/master/libxenon/drivers/console/console.c#L57
 	uint32_t address = 0;
 	uint32_t status  = xsdk_present_begin(&address, PRESENT_TIMEOUT_MS);
-	//Platform_Log3("Presenting %i x %i to %h", &DisplayInfo.Width, &DisplayInfo.Height, &address);
-	//return;
 
 	if (!NT_SUCCESS(status)) {
 		Platform_Log1("xsdk_present_begin failed: %h", &status);
@@ -192,7 +195,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	xsdk_texture_attach(&frame, xsdk_present_pixels(address));
 
 	xsdk_texture_upload_rows(&frame, 0, r.y, r.height, Bitmap_GetRow(bmp, r.y), bmp->width * 4);
-
 	xsdk_present_end();
 }
 
