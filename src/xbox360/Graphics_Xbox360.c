@@ -4,6 +4,7 @@
 #include "../Errors.h"
 #include "../Window.h"
 
+#include <xsdk/gpu.h>
 //#include <xenos/xe.h>
 //#include <xenos/edram.h>
 
@@ -18,20 +19,17 @@ static struct XenosShader* shdr_col_vs;
 static struct XenosShader* shdr_col_ps;
 
 static struct XenosDevice device;
-static struct XenosDevice* xe;
+static struct XenosDevice* xe;*/
 
-static const struct XenosVBFFormat textured_vbf = {
-3, {
-	{ XE_USAGE_POSITION, 0, XE_TYPE_FLOAT4 },
-	{ XE_USAGE_COLOR,    0, XE_TYPE_UBYTE4 },
-	{ XE_USAGE_TEXCOORD, 0, XE_TYPE_FLOAT2 }
-} };
-
-static const struct XenosVBFFormat coloured_vbf = {
-2, {
-	{ XE_USAGE_POSITION, 0, XE_TYPE_FLOAT4 },
-	{ XE_USAGE_COLOR,    0, XE_TYPE_UBYTE4 }
-} };*/
+static const XsdkVertexElement textured_layout[] = {
+	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3, .offset_bytes =  0 },
+	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4, .offset_bytes = 12 },
+	{ .usage = XSDK_USAGE_TEXCOORD, .format = XSDK_VERTEX_FLOAT2, .offset_bytes = 16 },
+};
+static const XsdkVertexElement coloured_layout[] = {
+	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3, .offset_bytes =  0 },
+	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4, .offset_bytes = 12 }
+};
 
 static void CreateState(void) {
 	//xe = &device;
@@ -206,32 +204,28 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	int size = count * strideSizes[fmt];
-	//return Xe_CreateVertexBuffer(xe, size);
-	return (void*)1;
-}
+	return xsdk_gpu_alloc(count * strideSizes[fmt]);
+} // TODO gpu_alloc is always 64kb aligned, so this is wasteful
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	//struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)(*vb);
-	//if (xvb) Xe_DestroyVertexBuffer(xe, xvb);
+	void* ptr = *vb;
+	if (ptr) xsdk_gpu_free(ptr);
 	*vb = NULL;
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
 	//Xe_SetStreamSource(xe, 0, xvb, 0, gfx_stride); TODO
 }
 
+static void* locked_vb;
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
-	int size = count * strideSizes[fmt];
-	//return Xe_VB_Lock(xe, xvb, 0, size, XE_LOCK_WRITE);
-	return (void*)1;
+	locked_vb = Mem_Alloc(count, strideSizes[fmt], "VB temp");
+	return locked_vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
-	//Xe_VB_Unlock(xe, xvb);
+	// TODO copy back locked_vb and invalidate
+	Mem_Free(locked_vb);
 }
 
 

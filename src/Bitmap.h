@@ -13,10 +13,15 @@ struct Stream;
 	#define BITMAPCOLOR_G_SHIFT  8
 	#define BITMAPCOLOR_B_SHIFT 16
 	#define BITMAPCOLOR_A_SHIFT 24
-#elif defined CC_BUILD_3DS || defined CC_BUILD_N64 || defined CC_BUILD_WIIU
+#elif defined CC_BUILD_3DS || defined CC_BUILD_N64 || defined CC_BUILD_WIIU 
 	#define BITMAPCOLOR_R_SHIFT 24
 	#define BITMAPCOLOR_G_SHIFT 16
 	#define BITMAPCOLOR_B_SHIFT  8
+	#define BITMAPCOLOR_A_SHIFT  0
+#elif defined CC_BUILD_XBOX360
+	#define BITMAPCOLOR_B_SHIFT 24
+	#define BITMAPCOLOR_G_SHIFT 16
+	#define BITMAPCOLOR_R_SHIFT  8
 	#define BITMAPCOLOR_A_SHIFT  0
 #elif defined BITMAP_16BPP
 	#define BITMAPCOLOR_B_SHIFT  0
