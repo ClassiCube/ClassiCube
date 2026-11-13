@@ -179,11 +179,7 @@ static void GL_SetupVbTextured_Range(int startVertex) {
 	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, ptr + 16);
 }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
+static void SetVertexFormat(VertexFormat fmt) {
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);

@@ -681,11 +681,7 @@ static void GL_SetupVbTextured_Range(int startVertex) {
 	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset + 16));
 }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
+static void SetVertexFormat(VertexFormat fmt) {
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableVertexAttribArray(2);
 		gfx_setupVBFunc      = GL_SetupVbTextured;

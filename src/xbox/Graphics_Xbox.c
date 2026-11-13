@@ -649,11 +649,7 @@ void Gfx_SetScissor(int x, int y, int w, int h) {
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
+static void SetVertexFormat(VertexFormat fmt) {
 	uint32_t* p = pb_begin();
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {

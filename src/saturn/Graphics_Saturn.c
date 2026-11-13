@@ -471,10 +471,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-}
+static void SetVertexFormat(VertexFormat fmt) { }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 

@@ -845,11 +845,8 @@ void Gfx_DisableTextureOffset(void) {
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 cc_bool Gfx_GetUIOptions(struct MenuOptionsScreen* s) { return false; }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
+static void SetVertexFormat(VertexFormat fmt) {
 	gfx_fields = formatFields[fmt];
-	gfx_stride = strideSizes[fmt];
 
 	GE_set_texturing(fmt == VERTEX_FORMAT_TEXTURED);
 	GE_set_vertex_format(gfx_fields | GU_INDEX_16BIT);

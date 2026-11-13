@@ -19,17 +19,28 @@ static const int strideSizes[] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURE
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
 
-/* Current format of vertices */
-static int gfx_format = -1;
-/* Current size of vertices */
-#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
-	static unsigned int gfx_stride;
-#else
-	static int gfx_stride;
-#endif
-
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static cc_bool gfx_rendering2D;
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Drawing--------------------------------------------------------*
+*#########################################################################################################################*/
+static int gfx_format = -1;
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
+static unsigned int gfx_stride;
+#else
+static int gfx_stride;
+#endif
+
+static void SetVertexFormat(VertexFormat fmt);
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+
+	SetVertexFormat(fmt);
+}
 
 
 /*########################################################################################################################*
