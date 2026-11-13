@@ -10,18 +10,8 @@
 //#include <xenos/edram.h>
 #include "../../build/xbox360/shaders.h"
 
-/*#include "../../misc/xbox360/ps_coloured.h"
-#include "../../misc/xbox360/vs_coloured.h"
-#include "../../misc/xbox360/ps_textured.h"
-#include "../../misc/xbox360/vs_textured.h"
-
-static struct XenosShader* shdr_tex_vs;
-static struct XenosShader* shdr_tex_ps;
-static struct XenosShader* shdr_col_vs;
-static struct XenosShader* shdr_col_ps;
-
-static struct XenosDevice device;
-static struct XenosDevice* xe;*/
+static XsdkShader vs_tex, vs_col;
+static XsdkShader ps_tex, ps_col;
 
 static const XsdkVertexElement textured_layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3, .offset_bytes =  0 },
@@ -33,31 +23,41 @@ static const XsdkVertexElement coloured_layout[] = {
 	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4, .offset_bytes = 12 }
 };
 
-static void CreateShaders(void) {
-	/*shdr_tex_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_textured);
-	Xe_InstantiateShader(xe, shdr_tex_vs, 0);	 
-	Xe_ShaderApplyVFetchPatches(xe, shdr_tex_vs, 0, &textured_vbf);
-	shdr_tex_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_textured);
-	Xe_InstantiateShader(xe, shdr_tex_ps, 0);
-    	
-	shdr_col_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_coloured);
-	Xe_InstantiateShader(xe, shdr_col_vs, 0);	 
-	Xe_ShaderApplyVFetchPatches(xe, shdr_col_vs, 0, &coloured_vbf);
-	shdr_col_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_coloured);
-	Xe_InstantiateShader(xe, shdr_col_ps, 0);*/
+static void CreatePixelShader(XsdkShader* shdr, const XsdkBuiltShader* src) {
+	uint32_t status = xsdk_shader_load(shdr, src->container, src->container_bytes);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "loading pixel shader");
+}
+
+static void CreateVertexShader(XsdkShader* shdr, const XsdkBuiltShader* src, int stride, 
+								const XsdkVertexElement* attribs, uint32_t num_attribs) {
+	uint32_t status = xsdk_shader_load(shdr, src->container, src->container_bytes);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "loading vertex shader");
+
+	uint32_t stream_strides[] = { stride };
+	status = xsdk_shader_set_vertex_layout(shdr, attribs, num_attribs, stream_strides);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "building vertex shader");
+}
+
+static void LoadShaders(void) {
+	CreatePixelShader(&ps_tex, &ps_textured_frag);
+	CreatePixelShader(&ps_col, &ps_coloured_frag);
+
+	CreateVertexShader(&vs_tex, &vs_textured_vert, SIZEOF_VERTEX_TEXTURED, 
+						textured_layout, Array_Elems(textured_layout));
+	CreateVertexShader(&vs_col, &vs_coloured_vert, SIZEOF_VERTEX_COLOURED, 
+						coloured_layout, Array_Elems(coloured_layout));
 }
 
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
-		//CreateState();
-		//CreateShaders(); TODO	
+		LoadShaders();
 	}
 	Gfx.Created = true;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	
-	Gfx.MaxTexWidth  = 1024;
-	Gfx.MaxTexHeight = 1024;
-	Gfx.MaxTexSize   = 512 * 512;
+	Gfx.MaxTexWidth  = 2048;
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -197,8 +197,12 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
+#define VB_DATA_OFFSET 64
+
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	return xsdk_gpu_alloc(count * strideSizes[fmt]);
+	void* ptr = xsdk_gpu_alloc(VB_DATA_OFFSET + count * strideSizes[fmt]);
+	if (ptr) { *((cc_uint32*)ptr) = count * strideSizes[fmt]; }
+	return ptr;
 } // TODO gpu_alloc is always 64kb aligned, so this is wasteful
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
@@ -208,17 +212,37 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
-	//Xe_SetStreamSource(xe, 0, xvb, 0, gfx_stride); TODO
+	cc_uint32 size = *((cc_uint32*)vb);
+	xsdk_gpu_set_vertices(0, xsdk_gpu_address(vb + VB_DATA_OFFSET), size);
 }
 
 static void* locked_vb;
+static int locked_size;
+
+static void FlushLockedVb(GfxResourceID vb) {
+	// TODO: xsdk documentation says have to do this to avoid 64 bit write issues. verify this
+	cc_uint32* src  = (cc_uint32*)locked_vb;
+	cc_uint32* dst  = (cc_uint32*)(vb + VB_DATA_OFFSET);
+	int count_words = locked_size / 4;
+
+	for (int i = 0; i < count_words; i++) 
+	{
+		uint32_t word;
+		__builtin_memcpy(&word, &src[i], 4);
+		dst[i] = word;
+	}
+	xsdk_gpu_invalidate(xsdk_gpu_address(dst), locked_size);
+}
+
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	locked_vb = Mem_Alloc(count, strideSizes[fmt], "VB temp");
+	locked_vb   = Mem_Alloc(count, strideSizes[fmt], "VB temp");
+	locked_size = count * strideSizes[fmt];
+
 	return locked_vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	// TODO copy back locked_vb and invalidate
+	FlushLockedVb(vb);
 	Mem_Free(locked_vb);
 }
 
@@ -228,18 +252,17 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 *#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
-	Platform_LogConst("CHANGE FORMAT");
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
+
+	int colored = fmt == VERTEX_FORMAT_COLOURED;
+	XsdkShader* vs = colored ? &vs_col : &vs_tex;
+	//XsdkShader* ps = colored ? &ps_col : &ps_tex; TODO uncomment
+	XsdkShader* ps = &ps_col;
 	
-	if (fmt == VERTEX_FORMAT_COLOURED) {
-		//Xe_SetTexture(xe, 0, NULL); TODO
-		//Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_col_ps, 0); TODO
-		//Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_col_vs, 0); TODO
-	} else {
-		//Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_tex_ps, 0); TODO
-		//Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_tex_vs, 0); TODO
-	}
+	xsdk_gpu_set_shaders(vs, ps);
+	xsdk_built_shader_set_literals(&vs_coloured_vert); // TODO prob wrong
+	//xsdk_built_shader_set_literals(ps);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -247,19 +270,22 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_LINELIST, 0, verticesCount >> 1); TODO
 }
 
+#define PRIM_TYPE_QUADLIST 13 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	Platform_Log1("DRAW_TRIS: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, 0, verticesCount >> 2); TODO
+	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
 	Platform_Log1("DRAW_TRIS_RANGE: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
+	if (startVertex) return;
+	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
 	Platform_Log1("DRAW_TRIS_MAP: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
+	if (startVertex) return;
+	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 
@@ -268,20 +294,22 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 *#########################################################################################################################*/
 static struct Matrix _view, _proj, _mvp;
 
+#define MVP_CONST_INDEX 0 
+#define MVP_CONST_COUNT 4 // each slot is 4 floats/1 vec4 
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
-	Platform_LogConst("LOAD MATRIX");
 	
 	Matrix_Mul(&_mvp, &_view, &_proj);
-	// TODO: Is this a global uniform, or does it need to be reloaded on shader change?
-	//Xe_SetVertexShaderConstantF(xe, 0, (float*)&_mvp, 4); TODO
+	xsdk_gpu_set_vertex_constants(MVP_CONST_INDEX, &_mvp.row1.x, MVP_CONST_COUNT);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
-	Gfx_LoadMatrix(MATRIX_PROJ, proj);
-	Matrix_Mul(mvp, view, proj);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj); // TODO not set vs constants twice
+
+	Mem_Copy(mvp, &_mvp, sizeof(struct Matrix));
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
