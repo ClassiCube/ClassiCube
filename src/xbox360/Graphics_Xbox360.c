@@ -14,13 +14,13 @@ static XsdkShader vs_tex, vs_col;
 static XsdkShader ps_tex, ps_col;
 
 static const XsdkVertexElement textured_layout[] = {
-	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3, .offset_bytes =  0 },
-	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4, .offset_bytes = 12 },
-	{ .usage = XSDK_USAGE_TEXCOORD, .format = XSDK_VERTEX_FLOAT2, .offset_bytes = 16 },
+	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3,  .offset_bytes =  0 },
+	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4N, .offset_bytes = 12 },
+	{ .usage = XSDK_USAGE_TEXCOORD, .format = XSDK_VERTEX_FLOAT2,  .offset_bytes = 16 },
 };
 static const XsdkVertexElement coloured_layout[] = {
-	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3, .offset_bytes =  0 },
-	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4, .offset_bytes = 12 }
+	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3,  .offset_bytes =  0 },
+	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4N, .offset_bytes = 12 }
 };
 
 static void CreatePixelShader(XsdkShader* shdr, const XsdkBuiltShader* src) {
@@ -250,15 +250,10 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
+static void SetVertexFormat(VertexFormat fmt) {
 	int colored = fmt == VERTEX_FORMAT_COLOURED;
 	XsdkShader* vs = colored ? &vs_col : &vs_tex;
-	//XsdkShader* ps = colored ? &ps_col : &ps_tex; TODO uncomment
-	XsdkShader* ps = &ps_col;
+	XsdkShader* ps = colored ? &ps_col : &ps_tex;
 	
 	xsdk_gpu_set_shaders(vs, ps);
 	xsdk_built_shader_set_literals(&vs_coloured_vert); // TODO prob wrong
@@ -272,18 +267,15 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 #define PRIM_TYPE_QUADLIST 13 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	Platform_Log1("DRAW_TRIS: %i", &verticesCount);
 	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	Platform_Log1("DRAW_TRIS_RANGE: %i", &verticesCount);
 	if (startVertex) return;
 	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
-	Platform_Log1("DRAW_TRIS_MAP: %i", &verticesCount);
 	if (startVertex) return;
 	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
@@ -372,6 +364,8 @@ void Gfx_BeginFrame(void) {
 	}
 
 	xsdk_gpu_set_target(Window_Main.Width, Window_Main.Height);
+
+	if (gfx_format >= 0) SetVertexFormat(gfx_format);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
