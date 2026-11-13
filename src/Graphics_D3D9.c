@@ -668,11 +668,7 @@ void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	cc_result res;
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-
+static void SetVertexFormat(VertexFormat fmt) {
 	if (fmt == VERTEX_FORMAT_COLOURED) {
 		/* it's necessary to unbind the texture, otherwise the alpha from the last bound texture */
 		/*  gets used - because D3DTSS_ALPHAOP texture stage state is still set to D3DTOP_SELECTARG1 */
@@ -684,7 +680,6 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
 	if (res) Process_Abort2(res, "D3D9_SetVertexFormat");
-	gfx_stride = strideSizes[fmt];
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {

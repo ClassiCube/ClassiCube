@@ -919,11 +919,7 @@ static void UpdateTexEnv(VertexFormat fmt) {
 	GPUCMD_AddWrite(GPUREG_TEXENV0_COMBINER, func   | (func   << 16));
 }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-	
+static void SetVertexFormat(VertexFormat fmt) {
 	SwitchProgram();
 	//UpdateAttribFormat();
 	UpdateAttribConfig();

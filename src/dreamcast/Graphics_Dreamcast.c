@@ -941,10 +941,7 @@ static void DrawQuads(int count, void* src, DrawHints hints) {
 	list->length = 0;
 }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
+static void SetVertexFormat(VertexFormat fmt) {
 	stateDirty = true;
 }
 
