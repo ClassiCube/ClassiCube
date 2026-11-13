@@ -94,10 +94,7 @@ int main(int argc, char** argv) {
 *#########################################################################################################################*/
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	
-	// See include/switch/arm/counter.h
-	//   static inline u64 armTicksToNs(u64 tick) { return (tick * 625) / 12; }
-	return ((end - beg) * 625) / 12000;
+	return armTicksToNs(end - beg) / 1000;
 }
 
 cc_uint64 Stopwatch_Measure(void) {
