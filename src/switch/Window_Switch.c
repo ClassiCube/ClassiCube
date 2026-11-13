@@ -77,14 +77,8 @@ void Window_Init(void) {
 	Window_Main.Focused    = true;
 	Window_Main.Exists     = true;
 	Window_Main.Handle.ptr = nwindowGetDefault();
-#ifdef __SWITCH2__
-	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X*2;
-	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y*2;
-#else
 	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
-#endif
-
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
