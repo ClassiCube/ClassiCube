@@ -13,6 +13,10 @@
 static XsdkShader vs_tex, vs_col;
 static XsdkShader ps_tex, ps_col;
 
+#define SAMPLER_0       0
+#define MVP_CONST_INDEX 0 
+#define MVP_CONST_COUNT 4 // each slot is 4 floats/1 vec4 
+
 static const XsdkVertexElement textured_layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3,  .offset_bytes =  0 },
 	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4N, .offset_bytes = 12 },
@@ -48,12 +52,34 @@ static void LoadShaders(void) {
 						coloured_layout, Array_Elems(coloured_layout));
 }
 
+static GfxResourceID white_square;
+static XsdkSamplerState sampler_state;
+
+static void AllocResources(void) {
+	const XsdkSampler sampler = { 
+		.mag_filter = XSDK_FILTER_POINT,
+		.min_filter = XSDK_FILTER_POINT,
+		.mip_filter = XSDK_FILTER_POINT,
+		.address_u  = XSDK_ADDRESS_WRAP,
+		.address_v  = XSDK_ADDRESS_WRAP 
+	};
+	xsdk_texture_sampler_state(&sampler_state, &sampler);
+
+	// 1x1 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
+}
+
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
 		LoadShaders();
+		AllocResources();
 	}
 	Gfx.Created = true;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	// TODO nonpow2 upload
 	
 	Gfx.MaxTexWidth  = 2048;
 	Gfx.MaxTexHeight = 2048;
@@ -86,36 +112,34 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
-	//void* dst = Xe_Surface_LockRect(xe, xtex, x, y, bmp->width, bmp->height, XE_LOCK_WRITE);
-
-	//CopyPixels(dst,        bmp->width * BITMAPCOLOR_SIZE,
-	//		   bmp->scan0, rowWidth   * BITMAPCOLOR_SIZE,
-	//		   bmp->width, bmp->height);
-	
-	//Xe_Surface_Unlock(xe, xtex);
-}
-
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	//struct XenosSurface* xtex = Xe_CreateTexture(xe, bmp->width, bmp->height, 1, XE_FMT_8888, 0);
-	//SetTextureData(xtex, 0, 0, bmp, rowWidth, 0);
-	//return xtex;
-	return (void*)1;
+	XsdkTexture* tex = Mem_TryAlloc(1, sizeof(XsdkTexture));
+	if (!tex) return NULL;
+
+	uint32_t status = xsdk_texture_create(tex, XSDK_FORMAT_A8R8G8B8, bmp->width, bmp->height, 1, true);
+	if (status == STATUS_NO_MEMORY) { Mem_Free(tex); return NULL; }
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "alloc texture");
+
+	xsdk_texture_upload_rows(tex, 0, 0, bmp->height, bmp->scan0, rowWidth * 4);
+	xsdk_gpu_invalidate(tex->address, tex->size_bytes);
+	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	//struct XenosSurface* xtex = (struct XenosSurface*)texId;
-	//SetTextureData(xtex, x, y, part, rowWidth, 0);
+	// TODO update textures
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	//struct XenosSurface* xtex = (struct XenosSurface*)texId;
-	//Xe_SetTexture(xe, 0, xtex);
+	if (!texId) texId = white_square;
+	XsdkTexture* tex  = texId;
+
+	xsdk_gpu_set_texture(SAMPLER_0, tex, &sampler_state);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	//struct XenosSurface* xtex = (struct XenosSurface*)(*texId);
-	//if (xtex) Xe_DestroyTexture(xe, xtex);
+	XsdkTexture* tex = *texId;
+	if (tex) { xsdk_texture_free(tex); Mem_Free(tex); }
+
 	*texId = NULL;
 }
 
@@ -162,13 +186,20 @@ void Gfx_ClearColor(PackedCol color) {
 	clear_color = color;
 }
 
-static void SetDepthTest(cc_bool enabled) {
-	//Xe_SetZEnable(xe, enabled);
+static void UpdateDepthState(void) {
+	const XsdkDepthStencil depth = {
+		.depth_test    = gfx_depthTest,
+		.depth_write   = gfx_depthWrite,
+		.depth_compare = XSDK_COMPARE_LESS_EQUAL,
+	};
+	XsdkDepthStencilState state;
+
+	xsdk_gpu_depth_stencil_state(&state, &depth);
+	xsdk_gpu_set_depth_stencil(&state);
 }
 
-static void SetDepthWrite(cc_bool enabled) {
-	//Xe_SetZWrite(xe, enabled);
-}
+static void SetDepthTest(cc_bool enabled)  { UpdateDepthState(); }
+static void SetDepthWrite(cc_bool enabled) { UpdateDepthState(); }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
@@ -260,12 +291,13 @@ static void SetVertexFormat(VertexFormat fmt) {
 	//xsdk_built_shader_set_literals(ps);
 }
 
+#define PRIM_TYPE_LINELIST  2
+#define PRIM_TYPE_QUADLIST 13 
+
 void Gfx_DrawVb_Lines(int verticesCount) {
-	Platform_Log1("DRAW_LINES: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_LINELIST, 0, verticesCount >> 1); TODO
+	xsdk_gpu_draw(PRIM_TYPE_LINELIST, verticesCount);
 }
 
-#define PRIM_TYPE_QUADLIST 13 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
@@ -285,9 +317,6 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj, _mvp;
-
-#define MVP_CONST_INDEX 0 
-#define MVP_CONST_COUNT 4 // each slot is 4 floats/1 vec4 
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
@@ -366,6 +395,7 @@ void Gfx_BeginFrame(void) {
 	xsdk_gpu_set_target(Window_Main.Width, Window_Main.Height);
 
 	if (gfx_format >= 0) SetVertexFormat(gfx_format);
+	UpdateDepthState();
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -374,6 +404,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
+	// NOTE: resolve also resets other state too (confusingly)
 	xsdk_gpu_resolve(fb_address, Window_Main.Width, Window_Main.Height, clear_color);
 	xsdk_present_end();
 }
