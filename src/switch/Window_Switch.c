@@ -23,13 +23,25 @@ struct cc_window WindowInfo;
 
 static void SetResolution(void) {
 	// check whether the Switch is docked
-	// use 720p for handheld, 1080p for docked
+	// use 720p for handheld, 1080p for docked (S1)
+	// or 1080p handheld, 4k docked (S2)
 	AppletOperationMode opMode = appletGetOperationMode();
+#ifdef __SWITCH2__
+	int w = 1920;
+	int h = 1080;
+#else
 	int w = 1280;
 	int h = 720;
+#endif
 	if (opMode == AppletOperationMode_Console) {
+#ifdef __SWITCH2__
+		// docked resolution hasnt been tested yet...
+		w = 3840;
+		h = 2160;
+#else
 		w = 1920;
 		h = 1080;
+#endif
 	}
 
 	DisplayInfo.Width  = w;
@@ -54,20 +66,33 @@ void Window_PreInit(void) {
 }
 
 void Window_Init(void) {
+#ifdef __SWITCH2__
+	DisplayInfo.ScaleX = 2;
+	DisplayInfo.ScaleY = 2;
+#else
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
+#endif
 
 	Window_Main.Focused    = true;
 	Window_Main.Exists     = true;
 	Window_Main.Handle.ptr = nwindowGetDefault();
+#ifdef __SWITCH2__
+	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X*2;
+	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y*2;
+#else
 	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
+#endif
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
-
+#ifdef __SWITCH2__
+	nwindowSetDimensions(Window_Main.Handle.ptr, 3840, 2160);
+#else
 	nwindowSetDimensions(Window_Main.Handle.ptr, 1920, 1080);
+#endif
 	SetResolution();
 }
 
