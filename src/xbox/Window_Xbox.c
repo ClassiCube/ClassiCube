@@ -128,7 +128,7 @@ static void OnDataReceived(UTR_T* utr) {
 }
 
 static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
-    Platform_LogConst("Getting devices");
+    Platform_LogConst("Getting devices..");
     xid_dev_t* xid_dev = usbh_xid_get_device_list();
     Platform_LogConst("Devices check");
 	
