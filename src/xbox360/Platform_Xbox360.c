@@ -98,7 +98,7 @@ cc_uint64 Stopwatch_Measure(void) {
 	cc_uint32 hi_2; READ_MFTB_HI(hi_2);
 	cc_uint32 lo_2; READ_MFTB_LO(lo_2);
 
-	// Upper half can theoretically tick between the lo and hi read
+	// Upper half can theoretically tick over between the lo and hi read
 	if (hi_1 != hi_2) {
 		hi_1 = hi_2;
 		lo_1 = lo_2;
@@ -224,52 +224,97 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#############################################################################################################p############*/
+static void WaitForSignal(HANDLE handle, int64_t* duration) {
+	for (;;) 
+	{
+		NTSTATUS status = NtWaitForSingleObjectEx(handle, USER_MODE, false, duration);
+		if (status != STATUS_ALERTED) break;
+	}
+}
+
 void Thread_Sleep(cc_uint32 milliseconds) { 
 	xsdk_thread_sleep(milliseconds); 
 }
 
+static void run_thread(Thread_StartFunc func) {
+	func();
+	ExTerminateThread(0);
+}
+
+#define CREATE_SUSPENDED 0x00000001
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
-	*handle = NULL; // TODO
+	uint32_t thread_id;
+	HANDLE thread;
+
+	NTSTATUS status = ExCreateThread((HANDLE*)handle, stackSize, &thread_id, NULL, (void *)run_thread, func, 0);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "creating thread");
+
+	// TODO use NtResumeThread once added
+	//NTSTATUS status = ExCreateThread(&thread, stackSize, &thread_id, NULL, (void *)run_thread, func, CREATE_SUSPENDED);
+	//if (!NT_SUCCESS(status)) Process_Abort2(status, "creating thread");
+
+	//*handle = (void*)thread;
+	//NtResumeThread(thread, NULL);
 }
 
-void Thread_Start2(void* handle, Thread_StartFunc func) {// TODO
+void Thread_Detach(void* handle) {
+	NTSTATUS status = NtClose((HANDLE)handle);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Freeing thread handle");
 }
 
-void Thread_Detach(void* handle) {// TODO
+void Thread_Join(void* handle) {
+	WaitForSignal((HANDLE)handle, NULL);
+	Thread_Detach(handle);
 }
-
-void Thread_Join(void* handle) {// TODO
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------Synchronisation-----------------------------------------------------*
 *#########################################################################################################################*/
 void* Mutex_Create(const char* name) {
-	return Mem_AllocCleared(1, sizeof(int), "mutex");
+	RTL_CRITICAL_SECTION* ptr = (RTL_CRITICAL_SECTION*)Mem_Alloc(1, sizeof(RTL_CRITICAL_SECTION), "mutex");
+	RtlInitializeCriticalSection(ptr);
+	return ptr;
 }
 
-void Mutex_Free(void* handle) {
+void Mutex_Free(void* handle)   { 
+	// per Xenia, "... Also, the 360 never calls RtlDeleteCriticalSection"
+	//RtlDeleteCriticalSection((RTL_CRITICAL_SECTION*)handle); 
 	Mem_Free(handle);
 }
-void Mutex_Lock(void* handle)   {  } // TODO
-void Mutex_Unlock(void* handle) {  } // TODO
+
+void Mutex_Lock(void* handle)   { 
+	RtlEnterCriticalSection((RTL_CRITICAL_SECTION*)handle); 
+}
+
+void Mutex_Unlock(void* handle) { 
+	RtlLeaveCriticalSection((RTL_CRITICAL_SECTION*)handle); 
+}
 
 void* Waitable_Create(const char* name) {
-	return NULL; // TODO
+	HANDLE handle;
+	NTSTATUS status = NtCreateEvent(&handle, NULL, SYNCHRONIZATION_EVENT, false);
+
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Creating waitable");
+	return (void*)handle;
 }
 
 void Waitable_Free(void* handle) {
-	// TODO
+	NTSTATUS status = NtClose((HANDLE)handle);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "Freeing waitable");
 }
 
-void Waitable_Signal(void* handle) { } // TODO }
+void Waitable_Signal(void* handle) { 
+	NtSetEvent((HANDLE)handle, NULL); 
+}
+
 void Waitable_Wait(void* handle) {
-	// TODO
+	WaitForSignal((HANDLE)handle, NULL);
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	// TODO
+	int64_t duration = ((int64_t)milliseconds) * -10000; // negative for relative timeout
+
+	WaitForSignal((HANDLE)handle, &duration);
 }
 
 
