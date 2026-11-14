@@ -125,19 +125,19 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str = '\0';
 }
 
+#define INIT_OBJ_ATTRIBS(path) {.ObjectName    = path, \
+								.Attributes    = OBJ_CASE_INSENSITIVE, \
+								.RootDirectory = ObDosDevicesDirectory() }
+
 void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 	String_AppendConst(dst, path->buffer);
 }
 
 void Directory_GetCachePath(cc_string* path) { }
-
 cc_result Directory_Create2(const cc_filepath* path) {
 	ANSI_STRING str;
 	RtlInitAnsiString(&str, path->buffer);
-
-	OBJECT_ATTRIBUTES attribs;
-	InitializeObjectAttributes(&attribs, &str, OBJ_CASE_INSENSITIVE, 
-								ObDosDevicesDirectory(), NULL);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	IO_STATUS_BLOCK block;
 	HANDLE handle   = NULL;
@@ -154,10 +154,7 @@ cc_result Directory_Create2(const cc_filepath* path) {
 int File_Exists(const cc_filepath* path) {
 	ANSI_STRING str;
 	RtlInitAnsiString(&str, path->buffer);
-
-	OBJECT_ATTRIBUTES attribs;
-	InitializeObjectAttributes(&attribs, &str, OBJ_CASE_INSENSITIVE, 
-								ObDosDevicesDirectory(), NULL);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	FILE_NETWORK_OPEN_INFORMATION info;
 	NTSTATUS status = NtQueryFullAttributesFile(&attribs, &info);
@@ -186,9 +183,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 	ANSI_STRING str;
 	RtlInitAnsiString(&str, dirBuf.buffer);
-
-	OBJECT_ATTRIBUTES attribs;
-	InitializeObjectAttributes(&attribs, &str, OBJ_CASE_INSENSITIVE, ObDosDevicesDirectory(), NULL);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	HANDLE handle = NULL;
 	IO_STATUS_BLOCK block;
@@ -227,10 +222,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result DoFile(cc_file* file, const char* path, DWORD access, DWORD createMode) {
 	ANSI_STRING str;
 	RtlInitAnsiString(&str, path);
-
-	OBJECT_ATTRIBUTES attribs;
- 	InitializeObjectAttributes(&attribs, &str, OBJ_CASE_INSENSITIVE, 
-								ObDosDevicesDirectory(), NULL);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	HANDLE handle = NULL;
 	IO_STATUS_BLOCK block;
@@ -553,10 +545,24 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 static void InitHDD(void) {
-	if (nxIsDriveMounted('E')) {
+	// E: drive is usually used for storing game data 
+	//   see https://xboxdevwiki.net/Hard_Drive#Partitions
+	ANSI_STRING drivePath;
+	RtlInitAnsiString(&drivePath, "\\??\\E:");
+
+	OBJECT_ATTRIBUTES attribs; // NOTE: not in DOS namespace, unlike other usages of OBJECT_ATTRIBUTES
+	InitializeObjectAttributes(&attribs, &drivePath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+	HANDLE handle = NULL;
+	if (NT_SUCCESS(NtOpenSymbolicLinkObject(&handle, &attribs))) {
+		NtClose(handle);
 		hdd_mounted = true;
 	} else {
-		hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
+		ANSI_STRING mountPath;
+		RtlInitAnsiString(&mountPath, "\\Device\\Harddisk0\\Partition1\\");
+
+		Platform_LogConst("Mounting HDD to E:\...");
+		hdd_mounted = NT_SUCCESS(IoCreateSymbolicLink(&drivePath, &mountPath));
 	}
 
 	if (!hdd_mounted) {
