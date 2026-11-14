@@ -1,6 +1,5 @@
 #define CC_XTEA_ENCRYPTION
 #define CC_NO_UPDATER
-#define CC_NO_SOCKETS
 #define CC_NO_DYNLIB
 #define CC_NO_OPEN
 #define CC_NO_CRASHHANDLER
@@ -21,11 +20,26 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
+
+#define _WSAEWOULDBLOCK 10035
+#define _WSAEINPROGRESS 10036
+#define _WSAECONNRESET  10054
+
+#define _SD_BOTH 2
+
+// see Xenia
+#define OPT_MODE_INSECURE 0x5801
+// https://github.com/xenia-canary/xenia-canary/blob/canary_experimental/src/xenia/kernel/xsocket.cc#L58C6-L58C16
+#define _FIONBIO 0x8004667E
 
 const cc_result ReturnCode_FileShareViolation = STATUS_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound       = ENOENT;
 const cc_result ReturnCode_PathNotFound       = 99999;
 const cc_result ReturnCode_DirectoryExists    = STATUS_OBJECT_NAME_COLLISION;
+const cc_result ReturnCode_SocketInProgess    = _WSAEINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock   = _WSAEWOULDBLOCK;
+const cc_result ReturnCode_SocketDropped      = _WSAECONNRESET;
 
 const char* Platform_AppNameSuffix = " XBox 360";
 cc_bool Platform_ReadonlyFilesystem;
@@ -371,11 +385,129 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Socket----------------------------------------------------------*
+*#########################################################################################################################*/
+cc_bool SockAddr_ToString(const cc_sockaddr* addr, cc_string* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addr->data;
+
+	if (addr4->sin_family == AF_INET) 
+		return IPv4_ToString(&addr4->sin_addr, &addr4->sin_port, dst);
+	return false;
+}
+
+static cc_bool ParseIPv4(const cc_string* ip, int port, cc_sockaddr* dst) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)dst->data;
+	cc_uint32 ip_addr;
+	if (!ParseIPv4Address(ip, &ip_addr)) return false;
+
+	addr4->sin_addr.s_addr = ip_addr;
+	addr4->sin_family      = AF_INET;
+	addr4->sin_port        = SockAddr_EncodePort(port);
+		
+	dst->size = sizeof(*addr4);
+	return true;
+}
+
+static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
+	return false;
+}
+
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	return ERR_NOT_SUPPORTED; // TODO: implement
+}
+
+cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
+	struct sockaddr_in* raw_addr = (struct sockaddr_in*)addr->data;
+
+	*s = NetDll_socket(XNCALLER_TITLE, raw_addr->sin_family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s == -1) return NetDll_WSAGetLastError();
+
+	// default 'secure' sockets are unusable for general LAN/Internet connections
+	cc_uint32 insecure_on = 1;
+	NetDll_setsockopt(XNCALLER_TITLE, *s, SOL_SOCKET, OPT_MODE_INSECURE, &insecure_on, sizeof(insecure_on));
+
+	return 0;
+}
+
+cc_result Socket_SetNonBlocking(cc_socket s, cc_bool nonblocking) {
+	uint32_t mode = nonblocking ? -1 : 0;
+	int res       = NetDll_ioctlsocket(XNCALLER_TITLE, s, _FIONBIO, &mode);
+	return res == -1 ? NetDll_WSAGetLastError() : 0;
+}
+
+void Socket_Close(cc_socket s) {
+	NetDll_shutdown(XNCALLER_TITLE, s, _SD_BOTH);
+	NetDll_closesocket(XNCALLER_TITLE, s);
+}
+
+cc_result Socket_Connect(cc_socket s, const void* addr, int addrSize) {
+	int res = NetDll_connect(XNCALLER_TITLE, s, addr, addrSize);
+	return res == -1 ? NetDll_WSAGetLastError() : 0;
+}
+
+cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+	int recvCount = NetDll_recv(XNCALLER_TITLE, s, (char*)data, count, 0);
+	if (recvCount != -1) { *modified = recvCount; return 0; }
+	*modified = 0; return NetDll_WSAGetLastError();
+}
+
+cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+	int sentCount = NetDll_send(XNCALLER_TITLE, s, (const char*)data, count, 0);
+	if (sentCount != -1) { *modified = sentCount; return 0; }
+	*modified = 0; return NetDll_WSAGetLastError();
+}
+
+cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
+	WSA_FD_SET set1, set2;
+	int selectCount;
+	WSA_TIMEVAL time;
+	
+	time.seconds      = timeoutMS / 1000;          // seconds
+	time.microseconds = (timeoutMS % 1000) * 1000; // microseconds
+
+	set1.count      = 1; set2.count      = 1;
+	set1.sockets[0] = s; set2.sockets[0] = s;
+
+	/* As per https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-select */
+	/* A socket will be pollable (select returns true) in following cases): */
+	/* - readfds: Data is available for reading, or Connection has been closed/reset/terminated. */
+	/* - writefds: Non-blocking connection attempt succeeded, or data can be sent */
+	/* - exceptfds: Non-blocking connection attempt failed, or OOB data is available for reading */
+
+	if (mode == SOCKET_POLL_READ) {
+		selectCount = NetDll_select(XNCALLER_TITLE, 1, &set1, NULL, NULL, &time);
+
+		*success = set1.count != 0; 
+	} else {
+		selectCount = NetDll_select(XNCALLER_TITLE, 1, NULL, &set1, &set2, &time);
+
+		*success = set1.count != 0 || set2.count != 0;
+	}
+
+	if (selectCount >= 0) return 0;
+	*success = false; 
+	return NetDll_WSAGetLastError();
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+#define WINSOCK_VERSION 0x0202 // MAKEWORD(2, 2)
+
+static void InitNetworking(void) {
+	int status1 = NetDll_XNetStartup(XNCALLER_TITLE, NULL);
+	if (status1) { Logger_SimpleWarn(status1, "setting up network"); }
+
+	cc_uint8 wsa_data[512]; // TODO: only 400 bytes? does it need to be static?
+	int status2 = NetDll_WSAStartup(XNCALLER_TITLE, WINSOCK_VERSION, wsa_data);
+	if (status2) { Logger_SimpleWarn(status2, "setting up WSA"); }
+}
+
 void Platform_Init(void) {
-	// TODO remove on console
+	// TODO: remove on console
 	xsdk_log_set_dbgprint(true);
+	InitNetworking();
 }
 
 void Platform_Free(void) {
