@@ -42,8 +42,8 @@ struct _FILE_POSITION_INFORMATION {
 #define _NT_RETURN_CODE(status) (NT_SUCCESS(status) ? 0 : status)
 
 const cc_result ReturnCode_FileShareViolation = STATUS_SHARING_VIOLATION;
-const cc_result ReturnCode_FileNotFound       = ENOENT;
-const cc_result ReturnCode_PathNotFound       = 99999;
+const cc_result ReturnCode_FileNotFound       = STATUS_OBJECT_NAME_NOT_FOUND;
+const cc_result ReturnCode_PathNotFound       = STATUS_OBJECT_PATH_NOT_FOUND;
 const cc_result ReturnCode_DirectoryExists    = STATUS_OBJECT_NAME_COLLISION;
 const cc_result ReturnCode_SocketInProgess    = _WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock   = _WSAEWOULDBLOCK;
@@ -210,42 +210,59 @@ int File_Exists(const cc_filepath* path) {
 	return !(info.attributes & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
-	cc_filepath str;
-	struct dirent* entry;
-	int res;
+static void Directory_EnumCore(const cc_string* dirPath, const cc_string* file, uint32_t attribs,
+									void* obj, Directory_EnumCallback callback) {
+	cc_string path; char pathBuffer[NATIVE_STR_LEN + 10];
+	/* ignore . and .. entry */
+	if (file->length == 1 && file->buffer[0] == '.') return;
+	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return;
 
-	Platform_EncodePath(&str, dirPath);
-	DIR* dirPtr = opendir(str.buffer);
-	if (!dirPtr) return errno;
-
-	// POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed."
-	// errno is sometimes leftover from previous calls, so always reset it before readdir gets called
-	errno = 0;
 	String_InitArray(path, pathBuffer);
+	String_Format2(&path, "%s/%s", dirPath, file);
 
-	while ((entry = readdir(dirPtr))) {
-		path.length = 0;
-		String_Format1(&path, "%s/", dirPath);
+	callback(&path, obj, attribs & FILE_ATTRIBUTE_DIRECTORY);
+}
 
-		// ignore . and .. entry
-		char* src = entry->d_name;
-		if (src[0] == '.' && src[1] == '\0') continue;
-		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
+cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+	cc_filepath dirBuf;
+	Platform_EncodePath(&dirBuf, dirPath);
 
-		int len = String_Length(src);
-		String_AppendUtf8(&path, src, len);
-		int is_dir = entry->d_type == DT_DIR;
-		// TODO: fallback to stat when this fails
+	ANSI_STRING str = INIT_ANSI_STRING(dirBuf.buffer);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
-		callback(&path, obj, is_dir);
-		errno = 0;
+	HANDLE handle = 0;
+	IO_STATUS_BLOCK block;
+
+	NTSTATUS status = NtCreateFile(&handle, GENERIC_READ /*FILE_LIST_DIRECTORY*/ | SYNCHRONIZE, 
+						&attribs, &block, NULL, FILE_ATTRIBUTE_NORMAL, 
+						FILE_SHARE_READ, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+	if (!NT_SUCCESS(status)) return status;
+
+	uint32_t first_scan = true;
+	for (;;)
+	{
+		struct {
+    		FILE_DIRECTORY_INFORMATION dirInfo; // dirInfo.filename array has no actual characters
+    		char filename_rest[NATIVE_STR_LEN];
+		} info = { 0 };
+		status = NtQueryDirectoryFile(handle, 0, NULL, NULL, &block, &info.dirInfo, sizeof(info), 
+										NULL, first_scan);
+		first_scan = false;
+		if (status) break;
+
+		cc_string path; char pathBuffer[NATIVE_STR_LEN + 10];
+		String_InitArray(path, pathBuffer);
+		const char* filename = info.dirInfo.file_name;
+
+		for (int i = 0; i < info.dirInfo.file_name_length; i++) 
+		{
+			String_Append(&path, Convert_CodepointToCP437(filename[i]));
+		}
+		Directory_EnumCore(dirPath, &path, info.dirInfo.attributes, obj, callback);
 	}
 
-	res = errno; // return code from readdir
-	closedir(dirPtr);
-	return res;
+	NtClose(handle);
+	return status == STATUS_NO_MORE_FILES ? 0 : status;
 }
 
 static cc_result DoFile(cc_file* file, const char* path, uint32_t access, uint32_t createMode) {

@@ -18,6 +18,9 @@
 struct _DisplayData DisplayInfo;
 struct cc_window WindowInfo;
 
+#define MAX_GPU_BACKBUFFERS 2
+#define GPU_SWAP_INTERVAL   1
+
 void Window_PreInit(void) {
 	uint32_t status = xsdk_gpu_open();
 	if (!NT_SUCCESS(status)) {
@@ -25,16 +28,9 @@ void Window_PreInit(void) {
 		Process_Abort2(status, "Initing GPU");
 	}
 
-	DisplayInfo.ScaleX = 1;
-	DisplayInfo.ScaleY = 1;
-}
-
-#define MAX_GPU_BACKBUFFERS 2
-#define GPU_SWAP_INTERVAL   1
-void Window_Init(void) {
 	uint32_t width  = 0;
 	uint32_t height = 0;
-	uint32_t status = xsdk_present_open(XSDK_DISPLAY_720P, MAX_GPU_BACKBUFFERS, GPU_SWAP_INTERVAL, &width, &height);
+	status = xsdk_present_open(XSDK_DISPLAY_720P, MAX_GPU_BACKBUFFERS, GPU_SWAP_INTERVAL, &width, &height);
 
 	if (!NT_SUCCESS(status)) {
 		Platform_Log1("xsdk_present_open failed: %h", &status);
@@ -43,7 +39,11 @@ void Window_Init(void) {
 
 	DisplayInfo.Width  = width;
 	DisplayInfo.Height = height;
+	DisplayInfo.ScaleX = 1;
+	DisplayInfo.ScaleY = 1;
+}
 
+void Window_Init(void) {
 	Window_Main.Width    = DisplayInfo.Width;
 	Window_Main.Height   = DisplayInfo.Height;
 	Window_Main.Focused  = true;
