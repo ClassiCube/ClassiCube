@@ -14,6 +14,18 @@
 
 #include <switch.h>
 
+#ifdef __SWITCH2__
+#define UNDOCKED_WIDTH 1920
+#define UNDOCKED_HEIGHT 1080
+#define DOCKED_WIDTH 3840
+#define DOCKED_HEIGHT 2160
+#else
+#define UNDOCKED_WIDTH 1280
+#define UNDOCKED_HEIGHT 720
+#define DOCKED_WIDTH 1920
+#define DOCKED_HEIGHT 1080
+#endif
+
 static Framebuffer fb;
 static PadState pad;
 static AppletHookCookie cookie;
@@ -26,22 +38,13 @@ static void SetResolution(void) {
 	// use 720p for handheld, 1080p for docked (S1)
 	// or 1080p handheld, 4k docked (S2)
 	AppletOperationMode opMode = appletGetOperationMode();
-#ifdef __SWITCH2__
-	int w = 1920;
-	int h = 1080;
-#else
-	int w = 1280;
-	int h = 720;
-#endif
+
+	int w = UNDOCKED_WIDTH;
+	int h = UNDOCKED_HEIGHT;
+
 	if (opMode == AppletOperationMode_Console) {
-#ifdef __SWITCH2__
-		// docked resolution hasnt been tested yet...
-		w = 3840;
-		h = 2160;
-#else
-		w = 1920;
-		h = 1080;
-#endif
+		w = DOCKED_WIDTH;
+		h = DOCKED_HEIGHT;
 	}
 
 	DisplayInfo.Width  = w;
@@ -82,11 +85,7 @@ void Window_Init(void) {
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
-#ifdef __SWITCH2__
-	nwindowSetDimensions(Window_Main.Handle.ptr, 3840, 2160);
-#else
-	nwindowSetDimensions(Window_Main.Handle.ptr, 1920, 1080);
-#endif
+	nwindowSetDimensions(Window_Main.Handle.ptr, DOCKED_WIDTH, DOCKED_HEIGHT);
 	SetResolution();
 }
 
@@ -128,9 +127,14 @@ static void ProcessTouchInput(void) {
 	static int prev_touchcount = 0;
 	HidTouchScreenState state = { 0 };
 	hidGetTouchScreenStates(&state, 1);
-
 	if (state.count) {
+		// very hacky way to make touch work on switch 2
+		// but I can't really think of another way, as touch seems to be mapped as 720p instead of 1080p
+#ifdef __SWITCH2__
+		Input_AddTouch(0,    state.touches[0].x*1.5, state.touches[0].y*1.5);
+#else
 		Input_AddTouch(0,    state.touches[0].x, state.touches[0].y);
+#endif
 	} else if (prev_touchcount) {
 		Input_RemoveTouch(0, Pointers[0].x,      Pointers[0].y);
 	}

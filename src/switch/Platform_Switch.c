@@ -38,7 +38,11 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_SocketDropped    = EPIPE;
 
+#ifdef __SWITCH2__
+const char* Platform_AppNameSuffix = " Switch 2";
+#else
 const char* Platform_AppNameSuffix = " Switch";
+#endif
 cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 #include "../_PlatformBase.h"
