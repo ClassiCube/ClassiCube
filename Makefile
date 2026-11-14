@@ -139,6 +139,8 @@ wiiu:
 	$(call make_platform,misc/wiiu/Makefile)
 switch:
 	$(call make_platform,misc/switch/Makefile)
+switch2:
+	$(call make_platform,misc/switch2/Makefile)
 
 # Other systems
 os/2:
