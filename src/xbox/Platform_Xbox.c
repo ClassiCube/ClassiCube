@@ -209,13 +209,39 @@ cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
-	return success ? 0 : GetLastError();
+	IO_STATUS_BLOCK block;
+
+	NTSTATUS status = NtReadFile(file, NULL, NULL, NULL, &block, data, count, NULL);
+	if (status == STATUS_PENDING) {
+		status = NtWaitForSingleObject(file, FALSE, NULL);
+		if (NT_SUCCESS(status)) status = block.Status;
+	}
+
+	if (NT_SUCCESS(status)) {
+		*bytesRead = block.Information;
+		return 0;
+    }
+   
+	*bytesRead = 0;
+	return status == STATUS_END_OF_FILE ? 0 : status;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
-	return success ? 0 : GetLastError();
+	IO_STATUS_BLOCK block;
+
+	NTSTATUS status = NtWriteFile(file, NULL, NULL, NULL, &block, (void*)data, count, NULL);
+	if (status == STATUS_PENDING) {
+		status = NtWaitForSingleObject(file, FALSE, NULL);
+		if (NT_SUCCESS(status)) status = block.Status;
+	}
+
+	if (NT_SUCCESS(status)) {
+		*bytesWrote = block.Information;
+		return 0;
+    }
+
+	*bytesWrote = 0;
+	return status;
 }
 
 cc_result File_Close(cc_file file) {
