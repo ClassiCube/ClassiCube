@@ -22,6 +22,12 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 
+
+#define _FILE_POSITION_INFORMATION_CLASS 14
+struct _FILE_POSITION_INFORMATION {
+  uint64_t current_byte_offset;
+};
+
 #define _WSAEWOULDBLOCK 10035
 #define _WSAEINPROGRESS 10036
 #define _WSAECONNRESET  10054
@@ -32,6 +38,8 @@
 #define OPT_MODE_INSECURE 0x5801
 // https://github.com/xenia-canary/xenia-canary/blob/canary_experimental/src/xenia/kernel/xsocket.cc#L58C6-L58C16
 #define _FIONBIO 0x8004667E
+
+#define _NT_RETURN_CODE(status) (NT_SUCCESS(status) ? 0 : status)
 
 const cc_result ReturnCode_FileShareViolation = STATUS_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound       = ENOENT;
@@ -240,52 +248,102 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const char* path, int mode) {
-	*file = open(path, mode, 0);
-	return *file == -1 ? errno : 0;
+static cc_result DoFile(cc_file* file, const char* path, uint32_t access, uint32_t createMode) {
+	ANSI_STRING str = INIT_ANSI_STRING(path);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
+
+	HANDLE handle = 0;
+	IO_STATUS_BLOCK block;
+	NTSTATUS status = NtCreateFile(&handle, access | SYNCHRONIZE, 
+						&attribs, &block, NULL, FILE_ATTRIBUTE_NORMAL, 
+						FILE_SHARE_READ, createMode, FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+
+	*file = NT_SUCCESS(status) ? handle : 0;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path->buffer, O_RDONLY);
+	return DoFile(file, path->buffer, GENERIC_READ, FILE_OPEN);
 }
 
 cc_result File_Create(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT | O_TRUNC);
+	return DoFile(file, path->buffer, GENERIC_WRITE | GENERIC_READ, FILE_OVERWRITE_IF);
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_filepath* path) {
-	return File_Do(file, path->buffer, O_RDWR | O_CREAT);
+	return DoFile(file, path->buffer, GENERIC_WRITE | GENERIC_READ, FILE_OPEN_IF);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return *bytesRead == -1 ? errno : 0;
+	IO_STATUS_BLOCK block;
+	NTSTATUS status = NtReadFile(file, 0, NULL, NULL, &block, data, count, NULL);
+   
+	*bytesRead = NT_SUCCESS(status) ? block.information : 0;
+	if (status == STATUS_END_OF_FILE) return 0;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	*bytesWrote = write(file, data, count);
-	return *bytesWrote == -1 ? errno : 0;
+	IO_STATUS_BLOCK block;
+	NTSTATUS status = NtWriteFile(file, 0, NULL, NULL, &block, (void*)data, count, NULL);
+
+	*bytesWrote = NT_SUCCESS(status) ? block.information : 0;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Close(cc_file file) {
-	return close(file) == -1 ? errno : 0;
+	NTSTATUS status = NtClose(file);
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
+	struct _FILE_POSITION_INFORMATION pos = { 0 };
+	IO_STATUS_BLOCK block;
+	NTSTATUS status;
+
+	switch (seekType) {
+	case FILE_SEEKFROM_BEGIN:
+		pos.current_byte_offset = offset;
+		break;
+	case FILE_SEEKFROM_CURRENT:
+		status = NtQueryInformationFile(file, &block, &pos, sizeof(pos), _FILE_POSITION_INFORMATION_CLASS);
+		if (!NT_SUCCESS(status)) return status;
+
+		pos.current_byte_offset += offset;
+		break;
+	case FILE_SEEKFROM_END:
+		FILE_NETWORK_OPEN_INFORMATION info;
+		status = NtQueryInformationFile(file, &block, &info, sizeof(info), FILE_NETWORK_OPEN_INFORMATION_CLASS);
+		if (!NT_SUCCESS(status)) return status;
+
+		pos.current_byte_offset = info.end_of_file + offset;
+		break;
+	}
+
+	status = NtSetInformationFile(file, &block, &pos, sizeof(pos), _FILE_POSITION_INFORMATION_CLASS);
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = lseek(file, 0, SEEK_CUR);
-	return *pos == -1 ? errno : 0;
+	struct _FILE_POSITION_INFORMATION info;
+	IO_STATUS_BLOCK block;
+
+	NTSTATUS status = NtQueryInformationFile(file, &block, &info, sizeof(info), _FILE_POSITION_INFORMATION_CLASS);
+
+	*pos = NT_SUCCESS(status) ? info.current_byte_offset : 0;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	FILE_NETWORK_OPEN_INFORMATION info;
+	IO_STATUS_BLOCK block;
+
+	NTSTATUS status = NtQueryInformationFile(file, &block, &info, sizeof(info), FILE_NETWORK_OPEN_INFORMATION_CLASS);
+
+	*len = NT_SUCCESS(status) ? info.end_of_file : 0;
+	return _NT_RETURN_CODE(status);
 }
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
