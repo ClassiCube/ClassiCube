@@ -128,7 +128,6 @@
 		9AC3D4AD2E12921400A38E91 /* i31_rshift.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC3D4362E12921400A38E91 /* i31_rshift.c */; };
 		9AC3D4AE2E12921400A38E91 /* aes_big_ctr.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC3D4372E12921400A38E91 /* aes_big_ctr.c */; };
 		9AC3D4AF2E12921400A38E91 /* hmac_drbg.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC3D4382E12921400A38E91 /* hmac_drbg.c */; };
-		9AC3D4B02E12921400A38E91 /* ssl_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC3D4392E12921400A38E91 /* ssl_io.c */; };
 		9AC3D4B12E12921400A38E91 /* ecdsa_atr.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC3D43A2E12921400A38E91 /* ecdsa_atr.c */; };
 		9AC3D4B22E12921400A38E91 /* ssl_engine.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC3D43B2E12921400A38E91 /* ssl_engine.c */; };
 		9AC3D4B32E12921400A38E91 /* ssl_hs_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 9AC3D43C2E12921400A38E91 /* ssl_hs_client.c */; };
@@ -349,7 +348,6 @@
 		9AC3D4362E12921400A38E91 /* i31_rshift.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = i31_rshift.c; sourceTree = "<group>"; };
 		9AC3D4372E12921400A38E91 /* aes_big_ctr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aes_big_ctr.c; sourceTree = "<group>"; };
 		9AC3D4382E12921400A38E91 /* hmac_drbg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hmac_drbg.c; sourceTree = "<group>"; };
-		9AC3D4392E12921400A38E91 /* ssl_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssl_io.c; sourceTree = "<group>"; };
 		9AC3D43A2E12921400A38E91 /* ecdsa_atr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ecdsa_atr.c; sourceTree = "<group>"; };
 		9AC3D43B2E12921400A38E91 /* ssl_engine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssl_engine.c; sourceTree = "<group>"; };
 		9AC3D43C2E12921400A38E91 /* ssl_hs_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ssl_hs_client.c; sourceTree = "<group>"; };
@@ -681,7 +679,6 @@
 				9AC3D43B2E12921400A38E91 /* ssl_engine.c */,
 				9AC3D41A2E12921400A38E91 /* ssl_hashes.c */,
 				9AC3D43C2E12921400A38E91 /* ssl_hs_client.c */,
-				9AC3D4392E12921400A38E91 /* ssl_io.c */,
 				9AC3D4572E12921400A38E91 /* ssl_rec_cbc.c */,
 				9AC3D4402E12921400A38E91 /* ssl_rec_ccm.c */,
 				9AC3D44F2E12921400A38E91 /* ssl_rec_chapol.c */,
@@ -790,7 +787,6 @@
 				9AC3D4E12E12921400A38E91 /* prf_sha256.c in Sources */,
 				9AC3D39F2E12909D00A38E91 /* HeldBlockRenderer.c in Sources */,
 				9AC3D4D72E12921400A38E91 /* aes_big_ctrcbc.c in Sources */,
-				9AC3D4B02E12921400A38E91 /* ssl_io.c in Sources */,
 				9AC3D4DE2E12921400A38E91 /* i31_tmont.c in Sources */,
 				9AC3D4132E12909D00A38E91 /* Vectors.c in Sources */,
 				9AC3D3EB2E12909D00A38E91 /* MenuOptions.c in Sources */,

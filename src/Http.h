@@ -13,7 +13,6 @@ struct IGameComponent;
 struct ScheduledTask;
 struct StringsBuffer;
 
-#define URL_MAX_SIZE (STRING_SIZE * 2)
 #define HTTP_FLAG_PRIORITY 0x01
 #define HTTP_FLAG_NOCACHE  0x02
 
@@ -27,7 +26,7 @@ enum HttpProgress {
 };
 
 struct HttpRequest {
-	char url[URL_MAX_SIZE];   /* URL data is downloaded from/uploaded to. */
+	char url[MAX_URL_LEN];    /* URL data is downloaded from/uploaded to. */
 	int id;                   /* Unique identifier for this request. */
 	volatile int progress;    /* Progress with downloading this request */
 	cc_uint64 timeDownloaded; /* Time response contents were completely downloaded. */

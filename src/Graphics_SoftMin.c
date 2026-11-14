@@ -933,10 +933,7 @@ static void CC_FAST_FUNC DrawQuads(int startVertex, int verticesCount, DrawHints
 	}
 }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-}
+static void SetVertexFormat(VertexFormat fmt) { }
 
 void Gfx_DrawVb_Lines(int verticesCount) { } /* TODO */
 

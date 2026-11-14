@@ -971,9 +971,6 @@
     <ClCompile Include="..\third_party\bearssl\ssl_hs_client.c">
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
-    <ClCompile Include="..\third_party\bearssl\ssl_io.c">
-      <Filter>Source Files\BearSSL</Filter>
-    </ClCompile>
     <ClCompile Include="..\third_party\bearssl\ssl_rec_cbc.c">
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>

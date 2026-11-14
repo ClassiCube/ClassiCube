@@ -555,11 +555,7 @@ void Gfx_DisableTextureOffset(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
+static void SetVertexFormat(VertexFormat fmt) {
 	GX_ClearVtxDesc();
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		GX_SetVtxDesc(GX_VA_POS,  GX_DIRECT);

@@ -1336,7 +1336,7 @@ static void CPE_SetTextColor(cc_uint8* data) {
 }
 
 static void CPE_SetMapEnvUrl(cc_uint8* data) {
-	char urlBuffer[URL_MAX_SIZE];
+	char urlBuffer[MAX_URL_LEN];
 	cc_string url;
 
 	cc_string part1 = UNSAFE_GetString(data);

@@ -1027,9 +1027,7 @@ typedef struct {
 	xyz_t xyz;
 } __attribute__((packed,aligned(8))) ColouredVertex;
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	gfx_format  = fmt;
-	gfx_stride  = strideSizes[fmt];
+static void SetVertexFormat(VertexFormat fmt) {
 	formatDirty = true;
 }
 
