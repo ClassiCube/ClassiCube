@@ -116,7 +116,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	XsdkTexture* tex = Mem_TryAlloc(1, sizeof(XsdkTexture));
 	if (!tex) return NULL;
 
-	uint32_t status = xsdk_texture_create(tex, XSDK_FORMAT_A8R8G8B8, bmp->width, bmp->height, 1, true);
+	uint32_t status = xsdk_texture_create(tex, XSDK_FORMAT_B8G8R8A8, bmp->width, bmp->height, 1, true);
 	if (status == STATUS_NO_MEMORY) { Mem_Free(tex); return NULL; }
 	if (!NT_SUCCESS(status)) Process_Abort2(status, "alloc texture");
 

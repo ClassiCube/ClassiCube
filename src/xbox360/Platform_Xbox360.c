@@ -22,10 +22,10 @@
 #include <dirent.h>
 #include <fcntl.h>
 
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_PathNotFound     = 99999;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_FileShareViolation = STATUS_SHARING_VIOLATION;
+const cc_result ReturnCode_FileNotFound       = ENOENT;
+const cc_result ReturnCode_PathNotFound       = 99999;
+const cc_result ReturnCode_DirectoryExists    = STATUS_OBJECT_NAME_COLLISION;
 
 const char* Platform_AppNameSuffix = " XBox 360";
 cc_bool Platform_ReadonlyFilesystem;
@@ -60,10 +60,15 @@ void Platform_Log(const char* msg, int len) {
 	DbgPrint("%s", tmp);
 }
 
+#define FILETIME_EPOCH      50491123200ULL
+#define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
+
 TimeMS DateTime_CurrentUTC(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+	uint64_t ft;
+	
+	KeQuerySystemTime(&ft);
+	/* in 100 nanosecond units, since Jan 1 1601 */
+	return FileTime_TotalSecs(ft);
 }
 
 void DateTime_CurrentLocal(struct cc_datetime* t) {
@@ -71,6 +76,7 @@ void DateTime_CurrentLocal(struct cc_datetime* t) {
 	struct tm loc_time;
 	gettimeofday(&cur, NULL);
 	localtime_r(&cur.tv_sec, &loc_time);
+	// TODO use NT kernel directly
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;
@@ -111,13 +117,21 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_string root_path = String_FromConst("game:/");
+static cc_string root_path = String_FromConst("game:\\");
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
-	String_EncodeUtf8(str, path);
+	
+	// XBox 360 kernel doesn't automatically convert /
+	for (int i = 0; i < path->length; i++) 
+	{
+		char c = (char)path->buffer[i];
+		if (c == '/') c = '\\';
+		*str++ = c;
+	}
+	*str = '\0';
 }
 
 void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
@@ -127,13 +141,51 @@ void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 
 void Directory_GetCachePath(cc_string* path) { }
 
+static CC_INLINE ANSI_STRING INIT_ANSI_STRING(const char* src) {
+	int len = String_Length(src);
+	return (ANSI_STRING){ .pointer = src, .length = len, .maximum_length = len + 1 };
+}
+
+#define INIT_OBJ_ATTRIBS(path) {.name           = path, \
+								.root_directory = OB_DOS_DEVICES }
+
+
+/*static NTSTATUS open_resolved(
+	const char *resolved, uint32_t access, uint32_t disposition, uint32_t options, HANDLE *handle)
+{
+	ANSI_STRING path = INIT_ANSI_STRING(resolved);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&path);
+
+	IO_STATUS_BLOCK block;
+	return NtCreateFile(handle, access | SYNCHRONIZE, &attribs, &block, NULL, FILE_ATTRIBUTE_NORMAL, 0,
+		disposition, options | FILE_SYNCHRONOUS_IO_NONALERT);
+}*/
+
 cc_result Directory_Create2(const cc_filepath* path) {
-	return mkdir(path->buffer, 0) == -1 ? errno : 0;
+	ANSI_STRING str = INIT_ANSI_STRING(path->buffer);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
+
+	HANDLE handle = 0;
+	IO_STATUS_BLOCK block;
+	NTSTATUS status = NtCreateFile(&handle, GENERIC_READ | SYNCHRONIZE, 
+						&attribs, &block, NULL, FILE_ATTRIBUTE_NORMAL, 
+						0, FILE_CREATE, 
+						FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+	if (!NT_SUCCESS(status)) return status;
+
+	(void)NtClose(handle);
+	return 0;
 }
 
 int File_Exists(const cc_filepath* path) {
-	struct stat sb;
-	return stat(path->buffer, &sb) == 0 && S_ISREG(sb.st_mode);
+	ANSI_STRING str = INIT_ANSI_STRING(path->buffer);
+	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
+
+	FILE_NETWORK_OPEN_INFORMATION info;
+	NTSTATUS status = NtQueryFullAttributesFile(&attribs, &info);
+	if (!NT_SUCCESS(status)) return 0;
+
+	return !(info.attributes & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
