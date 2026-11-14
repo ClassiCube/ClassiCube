@@ -25,18 +25,18 @@ jobs:
         id: cache_sdk
         with:
           path: symbiansdk.zip
-          key: symbian-sdk
+          key: symbian-sdk-2
 
       - name: Download SDK
         if: steps.cache_sdk.outputs.cache-hit != 'true'
-        run: Invoke-WebRequest https://nnp.nnchan.ru/dl/symbiansr1_gcce_workflow.zip -OutFile symbiansdk.zip
+        run: Invoke-WebRequest https://nnproject.cc/dl/symbian3_gcce1520_workflow.zip -OutFile symbiansdk.zip
 
       - name: Cache SDK
         if: steps.cache_sdk.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: symbiansdk.zip
-          key: symbian-sdk
+          key: symbian-sdk-2
 
 
       - name: Extract SDK
@@ -46,11 +46,11 @@ jobs:
         run: |
           $SDK = "$pwd/SDK/"
           $Env:EPOCROOT = "$SDK".Substring(2)
-          $Env:SBS_GCCE441BIN = "$pwd/GCCE/bin"
-          cmd /c "$SDK/epoc32/tools/sbs\bin\sbs.bat -b misc/symbian/bld.inf -c armv5_urel_gcce -f - -m $SDK/epoc32/build/ClassiCube/makefile -j 4"
+          $Env:SBS_GCCE1520BIN = "$pwd/GCCE/bin"
+          cmd /c "$SDK/epoc32/tools/sbs\bin\sbs.bat -b misc/symbian/bld.inf -c armv6_urel_gcce -f - -m $SDK/epoc32/build/ClassiCube/makefile -j 4"
           
           cd misc/symbian
-          (Get-Content ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv5').Replace('$(TARGET)', 'urel') | Set-Content ClassiCube.pkg
+          (Get-Content ClassiCube.pkg).Replace('$(EPOCROOT)', "$SDK").Replace('$(PLATFORM)', 'armv6').Replace('$(TARGET)', 'urel') | Set-Content ClassiCube.pkg
           cmd /c "$SDK/epoc32/tools/makesis.exe ClassiCube.pkg ClassiCube.sis"
           
           
@@ -58,26 +58,6 @@ jobs:
         with:
           SOURCE_FILE: 'misc/symbian/ClassiCube.sis'
           DEST_NAME: 'ClassiCube-Symbian.sis'
-
-      - uses: ./.github/actions/upload_build
-        with:
-          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe'
-          DEST_NAME: 'ClassiCube_s60v5.exe'
-          
-      - uses: ./.github/actions/upload_build
-        with:
-          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe'
-          DEST_NAME: 'ClassiCube_s60v3.exe'
-
-      - uses: ./.github/actions/upload_build
-        with:
-          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v5.exe.sym'
-          DEST_NAME: 'ClassiCube_s60v5.elf'
-
-      - uses: ./.github/actions/upload_build
-        with:
-          SOURCE_FILE: 'SDK/epoc32/release/armv5/urel/ClassiCube_s60v3.exe.sym'
-          DEST_NAME: 'ClassiCube_s60v3.elf'
           
           
       - uses: ./.github/actions/notify_success
