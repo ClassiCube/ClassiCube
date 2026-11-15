@@ -19,6 +19,7 @@
 #define UNDOCKED_HEIGHT 1080
 #define DOCKED_WIDTH 3840
 #define DOCKED_HEIGHT 2160
+static PadPointer mouse;
 #else
 #define UNDOCKED_WIDTH 1280
 #define UNDOCKED_HEIGHT 720
@@ -86,6 +87,9 @@ void Window_Init(void) {
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
 	nwindowSetDimensions(Window_Main.Handle.ptr, DOCKED_WIDTH, DOCKED_HEIGHT);
+#ifdef __SWITCH2__
+	nwindowSetFrameRates(Window_Main.Handle.ptr, 120, 60, false);
+#endif
 	SetResolution();
 }
 
@@ -128,13 +132,7 @@ static void ProcessTouchInput(void) {
 	HidTouchScreenState state = { 0 };
 	hidGetTouchScreenStates(&state, 1);
 	if (state.count) {
-		// very hacky way to make touch work on switch 2
-		// but I can't really think of another way, as touch seems to be mapped as 720p instead of 1080p
-#ifdef __SWITCH2__
-		Input_AddTouch(0,    state.touches[0].x*1.5, state.touches[0].y*1.5);
-#else
 		Input_AddTouch(0,    state.touches[0].x, state.touches[0].y);
-#endif
 	} else if (prev_touchcount) {
 		Input_RemoveTouch(0, Pointers[0].x,      Pointers[0].y);
 	}
@@ -153,11 +151,18 @@ void Window_ProcessEvents(float delta) {
 	ProcessTouchInput();
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
+void Cursor_SetPosition(int x, int y) { }
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
-void Window_UpdateRawMouse(void)  { }
+void Window_UpdateRawMouse(void) {
+#ifdef __SWITCH2__
+	padPointerUpdate(&mouse, &pad);
+	if(!mouse.active)
+		return;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, mouse.delta_x, mouse.delta_y);
+#endif
+}
 
 
 /*########################################################################################################################*
@@ -187,6 +192,10 @@ static const BindMapping defaults_switch[BIND_COUNT] = {
 void Gamepads_PreInit(void) {
 	// Configure our supported input layout: a single player with standard controller styles
 	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+#ifdef __SWITCH2__
+	hidSetTouchScreenOutputRanges(UNDOCKED_WIDTH, UNDOCKED_HEIGHT);
+	padPointerInitialize(&mouse, UNDOCKED_WIDTH, UNDOCKED_HEIGHT);
+#endif
 	hidInitializeTouchScreen();
 	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
 	padInitializeDefault(&pad);
