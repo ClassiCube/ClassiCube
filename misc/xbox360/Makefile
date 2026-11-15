@@ -16,6 +16,11 @@ BUILD_DIR	:= build/xbox360
 SOURCE_DIRS	:= src src/xbox360 third_party/bearssl
 RUN_PROGRAM	?= xenon
 
+
+XEX_TITLE_ID 	:= 0x43556265
+XEX_TITLE		:= ClassiCube
+XEX_VERSION		:= 1.3.9.0
+
 default: $(TARGET).xex
 
 
@@ -62,7 +67,7 @@ include misc/makefiles/common_build.mk
 
 $(TARGET).xex: $(TARGET).elf
 	sh -c "'$(OBJDUMP)' -d '$<' | python3 '$(XSDK_SDK)/tools/xenia_scan.py'"
-	$(XEX_GEN) $< $@
+	$(XEX_GEN) $< $@ --title-id $(XEX_TITLE_ID) --title-name $(XEX_TITLE) --version $(XEX_VERSION)
 
 
 #---------------------------------------------------------------------------------

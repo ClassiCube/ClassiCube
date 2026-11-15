@@ -10,12 +10,14 @@
 //#include <xenos/edram.h>
 #include "../../build/xbox360/shaders.h"
 
-static XsdkShader vs_tex, vs_col;
+static XsdkShader vs_tex, vs_col, vs_oft;
 static XsdkShader ps_tex, ps_col;
 
 #define SAMPLER_0       0
 #define MVP_CONST_INDEX 0 
 #define MVP_CONST_COUNT 4 // each slot is 4 floats/1 vec4 
+#define OFT_CONST_INDEX 4
+#define OFT_CONST_COUNT 5
 
 static const XsdkVertexElement textured_layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3,  .offset_bytes =  0 },
@@ -46,6 +48,8 @@ static void LoadShaders(void) {
 	CreatePixelShader(&ps_tex, &ps_textured_frag);
 	CreatePixelShader(&ps_col, &ps_coloured_frag);
 
+	CreateVertexShader(&vs_oft, &vs_offset_vert, SIZEOF_VERTEX_TEXTURED, 
+						textured_layout, Array_Elems(textured_layout));
 	CreateVertexShader(&vs_tex, &vs_textured_vert, SIZEOF_VERTEX_TEXTURED, 
 						textured_layout, Array_Elems(textured_layout));
 	CreateVertexShader(&vs_col, &vs_coloured_vert, SIZEOF_VERTEX_COLOURED, 
@@ -282,15 +286,8 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-static void SetVertexFormat(VertexFormat fmt) {
-	int colored = fmt == VERTEX_FORMAT_COLOURED;
-	XsdkShader* vs = colored ? &vs_col : &vs_tex;
-	XsdkShader* ps = colored ? &ps_col : &ps_tex;
-	
-	xsdk_gpu_set_shaders(vs, ps);
-	xsdk_built_shader_set_literals(&vs_coloured_vert); // TODO prob wrong
-	//xsdk_built_shader_set_literals(ps);
-}
+static void UpdateShader(void);
+static void SetVertexFormat(VertexFormat fmt) { UpdateShader(); }
 
 #define PRIM_TYPE_LINELIST  2
 #define PRIM_TYPE_QUADLIST 13 
@@ -318,6 +315,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj, _mvp;
+static struct Vec4 texOffset;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
@@ -335,11 +333,19 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	// TODO
+	texOffset.x = x;
+	texOffset.x = y;
+
+	// TODO not working??
+	UpdateShader();
+	xsdk_gpu_set_vertex_constants(OFT_CONST_INDEX, &texOffset.x, OFT_CONST_COUNT);
 }
 
 void Gfx_DisableTextureOffset(void) {
-	// TODO
+	texOffset.x = 0;
+	texOffset.y = 0;
+
+	UpdateShader();
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
@@ -374,12 +380,24 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static void UpdateShader(void) {
+	int colored = gfx_format == VERTEX_FORMAT_COLOURED;
+	XsdkShader* vs = colored ? &vs_col : ((texOffset.x || texOffset.y) ? &vs_oft : &vs_tex);
+	XsdkShader* ps = colored ? &ps_col : &ps_tex;
+	
+	xsdk_gpu_set_shaders(vs, ps);
+	xsdk_built_shader_set_literals(&vs_coloured_vert); // TODO prob wrong
+	//xsdk_built_shader_set_literals(ps);
+}
+
+// TODO tidy up functions
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
 void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
+	// TODO vsync
 }
 
 #define PRESENT_TIMEOUT_MS 5000

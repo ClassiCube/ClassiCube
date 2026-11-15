@@ -177,17 +177,6 @@ static CC_INLINE ANSI_STRING INIT_ANSI_STRING(const char* src) {
 								.root_directory = OB_DOS_DEVICES }
 
 
-/*static NTSTATUS open_resolved(
-	const char *resolved, uint32_t access, uint32_t disposition, uint32_t options, HANDLE *handle)
-{
-	ANSI_STRING path = INIT_ANSI_STRING(resolved);
-	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&path);
-
-	IO_STATUS_BLOCK block;
-	return NtCreateFile(handle, access | SYNCHRONIZE, &attribs, &block, NULL, FILE_ATTRIBUTE_NORMAL, 0,
-		disposition, options | FILE_SYNCHRONOUS_IO_NONALERT);
-}*/
-
 cc_result Directory_Create2(const cc_filepath* path) {
 	ANSI_STRING str = INIT_ANSI_STRING(path->buffer);
 	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
