@@ -551,12 +551,6 @@ static void OnInit(void) {
 
 	String_AppendConst(&Server.AppName, GAME_APP_NAME);
 	String_AppendConst(&Server.AppName, Platform_AppNameSuffix);
-
-#ifdef CC_BUILD_WEB
-	if (!Input_TouchMode) return;
-	Server.AppName.length = 0;
-	String_AppendConst(&Server.AppName, GAME_APP_ALT);
-#endif
 }
 
 static void OnReset(void) {
