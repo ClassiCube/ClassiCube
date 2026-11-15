@@ -531,7 +531,7 @@ struct CustomModel* CustomModel_Get(int id) {
 
 	/* TODO log message if allocation fails? */
 	if (!custom_models)
-		custom_models = (struct CustomModel*)Mem_TryAlloc(MAX_CUSTOM_MODELS, sizeof(struct CustomModel));
+		custom_models = (struct CustomModel*)Mem_TryAllocCleared(MAX_CUSTOM_MODELS, sizeof(struct CustomModel));
 
 	if (!custom_models) return NULL;
 	return &custom_models[id];

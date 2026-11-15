@@ -41,6 +41,10 @@ static GfxResourceID white_square;
 
 static void VS_Init(void);
 void Gfx_Create(void) {
+	if (!Gfx.Created) {
+		VS_Init();
+	}
+
 	Gfx.MaxTexWidth  = 2048; // TODO: 4096?
 	Gfx.MaxTexHeight = 2048;
 	Gfx.MaxTexSize   = 512 * 512;
@@ -49,7 +53,6 @@ void Gfx_Create(void) {
 	InitDefaultResources();
 	pb_show_front_screen();
 
-	VS_Init();
 	ResetState();
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
