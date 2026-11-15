@@ -422,5 +422,10 @@ void Gfx_OnWindowResize(int width, int height) {
 
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
-void Gfx_SetScissor (int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	xsdk_gpu_set_viewport(x, y, w, h, 0.0f, 1.0f);
+}
+
+void Gfx_SetScissor (int x, int y, int w, int h) {
+	xsdk_gpu_set_scissor(x, y, w, h);
+}

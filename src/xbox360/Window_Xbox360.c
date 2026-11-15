@@ -153,19 +153,18 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 }
 
 void Gamepads_Process(float delta) {
-	int port = Gamepad_Connect(0xB0360, defaults_xbox360);
+	for (int i = 0; i < 4; i++)
+	{
+		INPUT_STATE input = { 0 };
+		if (XamInputGetState(i, 0, &input)) continue;
 
-	INPUT_STATE input = { 0 };
-	uint32_t status   = XamInputGetState(0, 0, &input);
-	if (status != ERROR_SUCCESS) {
-		Platform_Log1("gamepad failed: %h", &status);
-		return;
-	}
-	INPUT_GAMEPAD* pad = &input.gamepad;
+		int port = Gamepad_Connect(0xB0360 + i, defaults_xbox360);	
+		INPUT_GAMEPAD* pad = &input.gamepad;
 	
-	HandleButtons(port, pad);
-	HandleJoystick(port, PAD_AXIS_LEFT,  pad->thumb_lx, pad->thumb_ly, delta);
-	HandleJoystick(port, PAD_AXIS_RIGHT, pad->thumb_rx, pad->thumb_ry, delta);
+		HandleButtons(port, pad);
+		HandleJoystick(port, PAD_AXIS_LEFT,  pad->thumb_lx, pad->thumb_ly, delta);
+		HandleJoystick(port, PAD_AXIS_RIGHT, pad->thumb_rx, pad->thumb_ry, delta);
+	}
 }
 
 
