@@ -73,17 +73,18 @@ static void AllocResources(void) {
 }
 
 void Gfx_Create(void) {
+	Gfx.MaxTexWidth  = 2048;
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
+
 	if (!Gfx.Created) {
 		LoadShaders();
 		AllocResources();
 	}
+
 	Gfx.Created = true;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	// TODO nonpow2 upload
-	
-	Gfx.MaxTexWidth  = 2048;
-	Gfx.MaxTexHeight = 2048;
-	Gfx.MaxTexSize   = 1024 * 1024;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
