@@ -31,6 +31,7 @@ struct _FILE_POSITION_INFORMATION {
 #define _WSAEWOULDBLOCK 10035
 #define _WSAEINPROGRESS 10036
 #define _WSAECONNRESET  10054
+#define _WSAHOST_NOT_FOUND 11001
 
 #define _SD_BOTH 2
 
@@ -40,6 +41,9 @@ struct _FILE_POSITION_INFORMATION {
 #define _FIONBIO 0x8004667E
 
 #define _NT_RETURN_CODE(status) (NT_SUCCESS(status) ? 0 : status)
+
+// Relative timeouts are specified in units of 100 ns
+#define TICKS_PER_MS 10000
 
 const cc_result ReturnCode_FileShareViolation = STATUS_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound       = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -53,6 +57,7 @@ const char* Platform_AppNameSuffix = " XBox 360";
 cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 #include "../_PlatformBase.h"
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
@@ -374,7 +379,9 @@ static void WaitForSignal(HANDLE handle, int64_t* duration) {
 }
 
 void Thread_Sleep(cc_uint32 milliseconds) { 
-	xsdk_thread_sleep(milliseconds); 
+	// negative value specifies relative timeout
+	int64_t delay = -(int64_t)milliseconds * TICKS_PER_MS;
+	KeDelayExecutionThread(USER_MODE, 0, &delay);
 }
 
 static void run_thread(Thread_StartFunc func) {
@@ -453,7 +460,8 @@ void Waitable_Wait(void* handle) {
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	int64_t duration = ((int64_t)milliseconds) * -10000; // negative for relative timeout
+	// negative values specify relative timeouts
+	int64_t duration = -(int64_t)milliseconds * TICKS_PER_MS;
 
 	WaitForSignal((HANDLE)handle, &duration);
 }
@@ -488,7 +496,40 @@ static cc_bool ParseIPv6(const char* ip, int port, cc_sockaddr* dst) {
 }
 
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED; // TODO: implement
+	HANDLE done_signal = 0;
+	NTSTATUS status = NtCreateEvent(&done_signal, NULL, NOTIFICATION_EVENT, 0);
+	if (!NT_SUCCESS(status)) return ERR_OUT_OF_MEMORY;
+
+	XNDNS* lookup = NULL;
+	int result = NetDll_XNetDnsLookup(XNCALLER_TITLE, host, done_signal, &lookup);
+	if (result != 0 || !lookup) return ERR_NOT_SUPPORTED;
+
+	int64_t timeout = -(int64_t)5000 * TICKS_PER_MS;
+	status = NtWaitForSingleObjectEx(done_signal, USER_MODE, 0, &timeout);
+	NtClose(done_signal);
+
+	if (status == STATUS_TIMEOUT) {
+		result = _WSAECONNRESET;
+	} else if (lookup->status) {
+		result = lookup->status == _WSAHOST_NOT_FOUND ? SOCK_ERR_UNKNOWN_HOST : lookup->status;
+	} else {
+		int count = min(lookup->count, SOCKET_MAX_ADDRS);
+		for (int i = 0; i < count; i++)
+		{
+			struct sockaddr_in addr;
+			addr.sin_family      = AF_INET;
+			addr.sin_port        = port;
+			addr.sin_addr.s_addr = lookup->addresses[i];
+
+			SocketAddr_Set(&addrs[i], &addr, sizeof(addr));
+		}
+
+		*numValidAddrs = count;
+		result = count == 0 ? ERR_INVALID_ARGUMENT : 0;
+	}
+
+	NetDll_XNetDnsRelease(XNCALLER_TITLE, lookup);
+	return result;
 }
 
 cc_result Socket_Create(cc_socket* s, cc_sockaddr* addr) {
