@@ -166,26 +166,6 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	//Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
 }
 
-static void SetAlphaTest(cc_bool enabled) {
-	//Xe_SetAlphaTestEnable(xe, enabled);
-}
-
-static void SetAlphaBlend(cc_bool enabled) {
-/*	if (enabled) {
-		Xe_SetBlendControl(xe,
-			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA,
-			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA);
-	} else {
-		Xe_SetBlendControl(xe,
-			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO,
-			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO);
-	}*/
-}
-
-void Gfx_SetAlphaArgBlend(cc_bool enabled) {
-	// TODO
-}
-
 static uint32_t clear_color;
 void Gfx_ClearColor(PackedCol color) {
 	clear_color = color;
@@ -206,9 +186,39 @@ static void UpdateDepthState(void) {
 static void SetDepthTest(cc_bool enabled)  { UpdateDepthState(); }
 static void SetDepthWrite(cc_bool enabled) { UpdateDepthState(); }
 
-static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
+
+static void UpdateBlendState(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	cc_bool no_blend = !gfx_alphaBlend;
+
+	XsdkBlend blend = {
+		.color_source = no_blend ? XSDK_BLEND_ONE  : XSDK_BLEND_SRC_ALPHA,
+		.color_dest   = no_blend ? XSDK_BLEND_ZERO : XSDK_BLEND_ONE_MINUS_SRC_ALPHA,
+		.color_op     = XSDK_BLEND_OP_ADD,
+		.alpha_source = no_blend ? XSDK_BLEND_ONE  : XSDK_BLEND_SRC_ALPHA,
+		.alpha_dest   = no_blend ? XSDK_BLEND_ZERO : XSDK_BLEND_ONE_MINUS_SRC_ALPHA,
+		.alpha_op     = XSDK_BLEND_OP_ADD,
+		.write_mask   = (r ? 0x1 : 0) | (g ? 0x2 : 0) | (b ? 0x4 : 0) | (a ? 0x8 : 0),
+		.alpha_to_coverage = false
+	};
+
+	XsdkBlendState state;
+	xsdk_gpu_blend_state(&state, &blend);
+	xsdk_gpu_set_blend(&state);
 }
+
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	UpdateBlendState(r, g, b, a);
+}
+
+static void SetAlphaTest(cc_bool enabled) {
+	//Xe_SetAlphaTestEnable(xe, enabled);
+}
+
+static void SetAlphaBlend(cc_bool enabled) {
+	UpdateBlendState(gfx_colorMask[0], gfx_colorMask[1], gfx_colorMask[2], gfx_colorMask[3]);
+}
+
+void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
     DefaultDepthOnlyRendering(depthOnly);
