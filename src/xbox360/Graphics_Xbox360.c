@@ -243,12 +243,8 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-#define VB_DATA_OFFSET 64
-
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	void* ptr = xsdk_gpu_alloc(VB_DATA_OFFSET + count * strideSizes[fmt]);
-	if (ptr) { *((cc_uint32*)ptr) = count * strideSizes[fmt]; }
-	return ptr;
+	return xsdk_gpu_alloc(count * strideSizes[fmt]);
 } // TODO gpu_alloc is always 64kb aligned, so this is wasteful
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
@@ -257,18 +253,13 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	*vb = NULL;
 }
 
-void Gfx_BindVb(GfxResourceID vb) {
-	cc_uint32 size = *((cc_uint32*)vb);
-	xsdk_gpu_set_vertices(0, xsdk_gpu_address(vb + VB_DATA_OFFSET), size);
-}
-
 static void* locked_vb;
 static int locked_size;
 
 static void FlushLockedVb(GfxResourceID vb) {
 	// TODO: xsdk documentation says have to do this to avoid 64 bit write issues. verify this
 	cc_uint32* src  = (cc_uint32*)locked_vb;
-	cc_uint32* dst  = (cc_uint32*)(vb + VB_DATA_OFFSET);
+	cc_uint32* dst  = (cc_uint32*)vb;
 	int count_words = locked_size / 4;
 
 	for (int i = 0; i < count_words; i++) 
@@ -296,27 +287,34 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
+#define PRIM_TYPE_LINELIST  2
+#define PRIM_TYPE_QUADLIST 13
+static cc_uint32 gpu_vb_addr; 
+
 static void UpdateShader(void);
 static void SetVertexFormat(VertexFormat fmt) { UpdateShader(); }
 
-#define PRIM_TYPE_LINELIST  2
-#define PRIM_TYPE_QUADLIST 13 
+void Gfx_BindVb(GfxResourceID vb) {
+	gpu_vb_addr = xsdk_gpu_address(vb);
+}
 
 void Gfx_DrawVb_Lines(int verticesCount) {
+	xsdk_gpu_set_vertices(0, gpu_vb_addr, verticesCount * gfx_stride);
 	xsdk_gpu_draw(PRIM_TYPE_LINELIST, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	xsdk_gpu_set_vertices(0, gpu_vb_addr, verticesCount * gfx_stride);
 	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	if (startVertex) return;
+	xsdk_gpu_set_vertices(0, gpu_vb_addr + startVertex * gfx_stride, verticesCount * gfx_stride);
 	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
-	if (startVertex) return;
+	xsdk_gpu_set_vertices(0, gpu_vb_addr + startVertex * SIZEOF_VERTEX_TEXTURED, verticesCount * SIZEOF_VERTEX_TEXTURED);
 	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
