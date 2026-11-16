@@ -367,8 +367,7 @@ static void WaitForSignal(HANDLE handle, int64_t* duration) {
 	}
 }
 
-void Thread_Sleep(cc_uint32 milliseconds) { milliseconds = 1000;
-	Platform_Log1("SLEEPY %i", &milliseconds);
+void Thread_Sleep(cc_uint32 milliseconds) {
 	// negative value specifies relative timeout
 	int64_t delay = -(int64_t)milliseconds * TICKS_PER_MS;
 	KeDelayExecutionThread(USER_MODE, 0, &delay);

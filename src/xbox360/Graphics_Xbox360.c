@@ -344,7 +344,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 
 void Gfx_EnableTextureOffset(float x, float y) {
 	texOffset.x = x;
-	texOffset.x = y;
+	texOffset.y = y;
 
 	// TODO not working??
 	UpdateShader();
