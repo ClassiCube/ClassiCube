@@ -55,16 +55,18 @@ vertex coloured_out vertex_coloured_main(coloured_in in [[stage_in]],
 
 
 // == FRAGMENT SHADERS ==
-float4 fragment fragment_textured_main(struct textured_out in [[stage_in]], texture2d<float, access::sample> tex [[texture(0)]])
+float4 fragment fragment_textured_main(struct textured_out in [[stage_in]],
+                                       texture2d<float, access::sample> tex [[texture(0)]],
+                                       sampler s [[sampler(0)]])
 {
-    constexpr sampler s(address::repeat, filter::nearest);
     float4 texel = tex.sample(s, in.texcoords).rgba;
     return texel * in.color;
 }
 
-float4 fragment fragment_textured_main_at(struct textured_out in [[stage_in]], texture2d<float, access::sample> tex [[texture(0)]])
+float4 fragment fragment_textured_main_at(struct textured_out in [[stage_in]],
+                                          texture2d<float, access::sample> tex [[texture(0)]],
+                                          sampler s [[sampler(0)]])
 {
-    constexpr sampler s(address::repeat, filter::nearest);
     float4 texel = tex.sample(s, in.texcoords).rgba;
     float4 color = texel * in.color;
     

@@ -152,7 +152,7 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 #define DEPTHSTATE_STATES_COUNT (2 * DEPTHSTATE_FLAG_DEPTH_WRITE)
 static id<MTLDepthStencilState> depthStates[DEPTHSTATE_STATES_COUNT];
 
-static void DepthState_Build(int idx) {
+static id<MTLDepthStencilState> DepthState_Build(int idx) {
     int depthTest  = (idx & DEPTHSTATE_FLAG_DEPTH_TEST);
     int depthWrite = (idx & DEPTHSTATE_FLAG_DEPTH_WRITE);
     
@@ -161,10 +161,10 @@ static void DepthState_Build(int idx) {
     desc.depthCompareFunction = depthTest ? MTLCompareFunctionLessEqual : MTLCompareFunctionAlways;
     
     id<MTLDepthStencilState> dstate = [gfx_device newDepthStencilStateWithDescriptor:desc];
-    if (dstate == nil) Process_Abort("depth state failure"); // TODO: log error
+    if (dstate == nil) Process_Abort("depth state failure");
     
     [desc autorelease];
-    depthStates[idx] = dstate;
+    return dstate;
 }
 
 static void DepthState_Update(void) {
@@ -172,7 +172,7 @@ static void DepthState_Update(void) {
     (gfx_depthTest  ? DEPTHSTATE_FLAG_DEPTH_TEST  : 0) |
     (gfx_depthWrite ? DEPTHSTATE_FLAG_DEPTH_WRITE : 0);
     
-    if (depthStates[idx] == nil) DepthState_Build(idx);
+    if (depthStates[idx] == nil) depthStates[idx] = DepthState_Build(idx);
     [ren_enc setDepthStencilState:depthStates[idx]];
 }
 
@@ -180,7 +180,33 @@ static void DepthState_Update(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void UploadTexture(id<MTLTexture> dst, struct Bitmap* src, int x, int y, int rowWidth) {
+static id<MTLSamplerState> gfx_samplers[2];
+
+static id<MTLSamplerState> SamplerState_Build(int idx) {
+    cc_bool mipmaps = idx != 0;
+    
+    MTLSamplerDescriptor* desc = [[MTLSamplerDescriptor alloc] init];
+    desc.sAddressMode = MTLSamplerAddressModeRepeat;
+    desc.tAddressMode = MTLSamplerAddressModeRepeat;
+    desc.minFilter    = MTLSamplerMinMagFilterNearest;
+    desc.magFilter    = MTLSamplerMinMagFilterNearest;
+    desc.mipFilter    = mipmaps ? MTLSamplerMipFilterNearest : MTLSamplerMipFilterNotMipmapped;
+    
+    id<MTLSamplerState> sampler = [gfx_device newSamplerStateWithDescriptor:desc];
+    if (sampler == nil) Process_Abort("sampler state failure");
+
+    [desc autorelease];
+    return sampler;
+}
+
+// TODO: not set unless changed?
+static void SamplerState_Update(void) {
+    int idx = Gfx.Mipmaps ? 1 : 0;
+    if (gfx_samplers[idx] == nil) gfx_samplers[idx] = SamplerState_Build(idx);
+    [ren_enc setFragmentSamplerState:gfx_samplers[idx] atIndex:0];
+}
+
+static void UploadTexture(id<MTLTexture> dst, struct Bitmap* src, int x, int y, int rowWidth, cc_bool mipmaps) {
     id<MTLCommandBuffer> buf  = [cmd_queue commandBuffer];
     if (buf == nil) Process_Abort("no temp command buffer");
     
@@ -192,6 +218,8 @@ static void UploadTexture(id<MTLTexture> dst, struct Bitmap* src, int x, int y, 
     if (enc == nil) Process_Abort("no temp encoder");
     
     [enc copyFromBuffer:tmp sourceOffset:0 sourceBytesPerRow:rowWidth*4 sourceBytesPerImage:0 sourceSize:MTLSizeMake(src->width, src->height, 1) toTexture:dst destinationSlice:0 destinationLevel:0 destinationOrigin:MTLOriginMake(x, y, 0)];
+    // TODO: mipmaps look bad and also need to set max mipmap level..
+    if (mipmaps) [enc generateMipmapsForTexture:dst];
     [enc endEncoding];
     
     [buf addCompletedHandler:^(id<MTLCommandBuffer> _Nonnull buffer) {
@@ -201,23 +229,22 @@ static void UploadTexture(id<MTLTexture> dst, struct Bitmap* src, int x, int y, 
 }
 
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-    // TODO: implement
     // TODO: mipmaps
     MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
-                                                                                    width:bmp->width height:bmp->height mipmapped:NO];
+                                                                                    width:bmp->width height:bmp->height mipmapped:mipmaps];
     if (desc == nil) return NULL;
     
     desc.storageMode = MTLStorageModePrivate; // TODO: needed?
     id<MTLTexture> tex = [gfx_device newTextureWithDescriptor:desc];
     if (tex == NULL) return NULL;
     
-    UploadTexture(tex, bmp, 0, 0, rowWidth);
+    UploadTexture(tex, bmp, 0, 0, rowWidth, mipmaps);
     return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
     id<MTLTexture> tex = (id<MTLTexture>)texId;
-    UploadTexture(tex, part, x, y, rowWidth);
+    UploadTexture(tex, part, x, y, rowWidth, mipmaps);
 }
 
 void Gfx_EnableMipmaps(void)  { }// TODO: implement
@@ -228,6 +255,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
     id<MTLTexture> tex = (id<MTLTexture>)texId;
     
     [ren_enc setFragmentTexture:tex atIndex:0];
+    SamplerState_Update();
 }
         
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -292,24 +320,11 @@ void Gfx_DeleteIb(GfxResourceID* ib) { DeleteBuffer(ib); }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
-static int gfx_vOffset;
-
-// TODO: use this instead of index buffer offset. after scratch VBs
-static void SetVertexOffset(int offset) {
-    if (gfx_vOffset == offset) return;
-    gfx_vOffset = offset;
-    [ren_enc setVertexBufferOffset:offset atIndex:0];
-}
+// TODO: scratch VBs
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
     int size = count * strideSizes[fmt];
     return [gfx_device newBufferWithLength:size options:MTLResourceStorageModePrivate];
-}
-
-void Gfx_BindVb(GfxResourceID vb) {
-    id<MTLBuffer> buf = (id<MTLBuffer>)vb;
-    [ren_enc setVertexBuffer:buf offset:0 atIndex:0];
-    gfx_vOffset = 0;
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) { DeleteBuffer(vb); }
@@ -404,35 +419,46 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-static void SetVertexFormat(VertexFormat fmt) {
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+    gfx_format = fmt;
+    gfx_stride = strideSizes[fmt];
     dirty_bits |= DIRTY_PIPELINE;
 }
 
+void Gfx_BindVb(GfxResourceID vb) {
+    id<MTLBuffer> buf = (id<MTLBuffer>)vb;
+    [ren_enc setVertexBuffer:buf offset:0 atIndex:0];
+}
+
+// TODO: indexBufferOffset might be unsafe for glass/leaves chunk
 void Gfx_DrawVb_Lines(int verticesCount) {
     if (dirty_bits) UpdateDirtyState();
     // TODO: implement
     [ren_enc drawPrimitives:MTLPrimitiveTypeLine vertexStart:0 vertexCount:verticesCount];
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
+static void DrawTriangles(int verticesCount, int startVertex) {
     if (dirty_bits) UpdateDirtyState();
-    // TODO: implement
+    // avoid undefined behaviour when index buffer offset + index count would exceed index buffer size
+    //  if such a case happens, just offset access into vertex buffer instead
+    int big = startVertex + verticesCount > GFX_MAX_VERTICES;
+
+    if (big) { [ren_enc setVertexBufferOffset:startVertex * gfx_stride atIndex:0]; startVertex = 0; }
     [ren_enc drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:ICOUNT(verticesCount) indexType:MTLIndexTypeUInt16
                        indexBuffer:gfx_IB indexBufferOffset:ICOUNT(startVertex)*sizeof(ushort)];
+    if (big) { [ren_enc setVertexBufferOffset:0 atIndex:0]; }
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
+    DrawTriangles(verticesCount, startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-    if (dirty_bits) UpdateDirtyState();
-    // TODO: implement
-    [ren_enc drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:ICOUNT(verticesCount) indexType:MTLIndexTypeUInt16
-                       indexBuffer:gfx_IB indexBufferOffset:0];
+    DrawTriangles(verticesCount, 0);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
-    if (dirty_bits) UpdateDirtyState();
-    // TODO: implement
-    [ren_enc drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:ICOUNT(verticesCount) indexType:MTLIndexTypeUInt16
-                       indexBuffer:gfx_IB indexBufferOffset:ICOUNT(startVertex)*sizeof(ushort)];
+    DrawTriangles(verticesCount, startVertex);
 }
 
 
@@ -471,7 +497,29 @@ static void Pipelines_FillVertexDeclaration(MTLVertexDescriptor* desc, VertexFor
     desc.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
 }
 
-static void Pipeline_Build(int idx) {
+static NSString* Pipeline_VertexFunc(int idx) {
+    VertexFormat fmt = (idx & PIPELINE_FLAG_TEXTURED) ? VERTEX_FORMAT_TEXTURED : VERTEX_FORMAT_COLOURED;
+    int texOffset    = (idx & PIPELINE_FLAG_TEXOFFSET);
+    
+    if (fmt == VERTEX_FORMAT_TEXTURED) {
+        return texOffset ? @"vertex_textured_main_offset" : @"vertex_textured_main";
+    } else {
+        return @"vertex_coloured_main";
+    }
+}
+
+static NSString* Pipeline_FragmentFunc(int idx) {
+    VertexFormat fmt = (idx & PIPELINE_FLAG_TEXTURED) ? VERTEX_FORMAT_TEXTURED : VERTEX_FORMAT_COLOURED;
+    int alphaTest    = (idx & PIPELINE_FLAG_ALPHA_TEST);
+    
+    if (fmt == VERTEX_FORMAT_TEXTURED) {
+        return alphaTest ? @"fragment_textured_main_at" : @"fragment_textured_main";
+    } else {
+        return alphaTest ? @"fragment_coloured_main_at" : @"fragment_coloured_main";
+    }
+}
+
+static id<MTLRenderPipelineState> Pipeline_Build(int idx) {
     VertexFormat fmt = (idx & PIPELINE_FLAG_TEXTURED) ? VERTEX_FORMAT_TEXTURED : VERTEX_FORMAT_COLOURED;
     int texOffset    = (idx & PIPELINE_FLAG_TEXOFFSET);
     int alphaTest    = (idx & PIPELINE_FLAG_ALPHA_TEST);
@@ -480,17 +528,12 @@ static void Pipeline_Build(int idx) {
     MTLVertexDescriptor* vdesc = [MTLVertexDescriptor vertexDescriptor];
     Pipelines_FillVertexDeclaration(vdesc, fmt);
     
-    NSString* vfunc = texOffset ? (fmt == VERTEX_FORMAT_TEXTURED ? @"vertex_textured_main_offset" : @"vertex_coloured_main")
-                                : (fmt == VERTEX_FORMAT_TEXTURED ? @"vertex_textured_main"        : @"vertex_coloured_main");
-    NSString* ffunc = alphaTest ? (fmt == VERTEX_FORMAT_TEXTURED ? @"fragment_textured_main_at" : @"fragment_coloured_main_at")
-                                : (fmt == VERTEX_FORMAT_TEXTURED ? @"fragment_textured_main"    : @"fragment_coloured_main");
-    
     MTLRenderPipelineDescriptor* desc = [[MTLRenderPipelineDescriptor alloc] init];
     MTLRenderPipelineColorAttachmentDescriptor* fb = desc.colorAttachments[0];
     
     desc.vertexDescriptor = vdesc;
-    desc.vertexFunction   = [gfx_library newFunctionWithName:vfunc];
-    desc.fragmentFunction = [gfx_library newFunctionWithName:ffunc];
+    desc.vertexFunction   = [gfx_library newFunctionWithName:Pipeline_VertexFunc(idx)];
+    desc.fragmentFunction = [gfx_library newFunctionWithName:Pipeline_FragmentFunc(idx)];
     fb.pixelFormat = MTLPixelFormatBGRA8Unorm; // TODO: nil frag on depth only pass
     
     fb.blendingEnabled             = alphaBlend ? YES : NO;
@@ -500,10 +543,10 @@ static void Pipeline_Build(int idx) {
     fb.destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 
     fb.writeMask =
-    	((idx & PIPELINE_FLAG_R_WRITE) ? MTLColorWriteMaskRed   : 0) |
-    	((idx & PIPELINE_FLAG_G_WRITE) ? MTLColorWriteMaskGreen : 0) |
-    	((idx & PIPELINE_FLAG_B_WRITE) ? MTLColorWriteMaskBlue  : 0) |
-   		((idx & PIPELINE_FLAG_A_WRITE) ? MTLColorWriteMaskAlpha : 0);
+    (idx & PIPELINE_FLAG_R_WRITE ? MTLColorWriteMaskRed   : 0) |
+    (idx & PIPELINE_FLAG_G_WRITE ? MTLColorWriteMaskGreen : 0) |
+    (idx & PIPELINE_FLAG_B_WRITE ? MTLColorWriteMaskBlue  : 0) |
+    (idx & PIPELINE_FLAG_A_WRITE ? MTLColorWriteMaskAlpha : 0);
     if (fb.writeMask == MTLColorWriteMaskNone) desc.fragmentFunction = nil;
     
     desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
@@ -513,21 +556,21 @@ static void Pipeline_Build(int idx) {
     if (pso == nil) Process_Abort("pipeline failure"); // TODO: log error
     
     [desc autorelease];
-    pipelines[idx] = pso;
+    return pso;
 }
 
 static void Pipeline_Update(void) {
     int idx =
-    	(gfx_format == VERTEX_FORMAT_TEXTURED ? PIPELINE_FLAG_TEXTURED : 0) |
-    	(texOffseting   ? PIPELINE_FLAG_TEXOFFSET   : 0) |
-    	(gfx_alphaTest  ? PIPELINE_FLAG_ALPHA_TEST  : 0) |
-    	(gfx_alphaBlend ? PIPELINE_FLAG_ALPHA_BLEND : 0) |
-    	(gfx_R          ? PIPELINE_FLAG_R_WRITE     : 0) |
-   		(gfx_G          ? PIPELINE_FLAG_G_WRITE     : 0) |
-    	(gfx_B          ? PIPELINE_FLAG_B_WRITE     : 0) |
-    	(gfx_A          ? PIPELINE_FLAG_A_WRITE     : 0);
+    (gfx_format == VERTEX_FORMAT_TEXTURED ? PIPELINE_FLAG_TEXTURED : 0) |
+    (texOffseting   ? PIPELINE_FLAG_TEXOFFSET   : 0) |
+    (gfx_alphaTest  ? PIPELINE_FLAG_ALPHA_TEST  : 0) |
+    (gfx_alphaBlend ? PIPELINE_FLAG_ALPHA_BLEND : 0) |
+    (gfx_R          ? PIPELINE_FLAG_R_WRITE     : 0) |
+    (gfx_G          ? PIPELINE_FLAG_G_WRITE     : 0) |
+    (gfx_B          ? PIPELINE_FLAG_B_WRITE     : 0) |
+    (gfx_A          ? PIPELINE_FLAG_A_WRITE     : 0);
     
-    if (pipelines[idx] == nil) Pipeline_Build(idx);
+    if (pipelines[idx] == nil) pipelines[idx] = Pipeline_Build(idx);
     [ren_enc setRenderPipelineState:pipelines[idx]];
 }
 
@@ -627,6 +670,7 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
     viewport_rect.height  = h;
     viewport_rect.znear   = 0.0f;
     viewport_rect.zfar    = 1.0f;
+    
     dirty_bits |= DIRTY_VIEWPORT;
 }
 
@@ -635,6 +679,7 @@ void Gfx_SetScissor (int x, int y, int w, int h) {
     scissor_rect.y      = y;
     scissor_rect.width  = w;
     scissor_rect.height = h;
+    
     dirty_bits |= DIRTY_SCISSOR;
 }
 
