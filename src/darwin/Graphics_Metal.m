@@ -34,7 +34,8 @@ static MTLViewport viewport_rect;
 #define VSHDR_ATTR_TEX_OFFSET 2
 
 // fragment shader attributes
-#define FSHDR_ATTR_FOGCOLOR 1
+#define FSHDR_ATTR_FOGVALUE 1
+#define FSHDR_ATTR_FOGCOLOR 2
 
 static void Gfx_RestoreState(void) {
     InitDefaultResources();
@@ -99,11 +100,30 @@ void Gfx_InitForLayer(CAMetalLayer* layer) {
 *#########################################################################################################################*/
 static cc_bool gfx_R = true, gfx_G = true, gfx_B = true, gfx_A = true;
 
-void Gfx_SetFog(cc_bool enabled)         { } // TODO: implement
-static void SetFogColor(PackedCol color) { } // TODO: implement
-static void SetFogDensity(float value)   { } // TODO: implement
-static void SetFogEnd(float value)       { } // TODO: implement
-static void SetFogMode(FogFunc func)     { } // TODO: implement
+void Gfx_SetFog(cc_bool enabled) { dirty_bits |= DIRTY_PIPELINE; }
+
+static void SetFogColor(PackedCol col)  {
+    Vec3 fogColor = {
+        PackedCol_R(col) / 255.0f,
+        PackedCol_G(col) / 255.0f,
+        PackedCol_B(col) / 255.0f
+    };
+    [ren_enc setFragmentBytes:&fogColor length:12 atIndex:FSHDR_ATTR_FOGCOLOR];
+}
+
+static void UpdateFogValue(void) {
+    Vec2 fogValue;
+    fogValue.x = 1.0f / gfx_fogEnd; // avoid doing division in pixel shader for linear fog
+    fogValue.y = -gfx_fogDensity; // avoid doing - in pixel shader for density fog
+    [ren_enc setFragmentBytes:&fogValue length:8 atIndex:FSHDR_ATTR_FOGVALUE];
+}
+
+static void SetFogDensity(float value) { UpdateFogValue(); }
+static void SetFogEnd(float value)     { UpdateFogValue(); }
+
+static void SetFogMode(FogFunc func) {
+    dirty_bits |= DIRTY_PIPELINE;
+}
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
     [ren_enc setCullMode:enabled ? MTLCullModeFront : MTLCullModeNone];
@@ -139,7 +159,9 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-    DefaultDepthOnlyRendering(depthOnly);
+    cc_bool enabled = !depthOnly;
+    SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1],
+                  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -234,7 +256,7 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
                                                                                     width:bmp->width height:bmp->height mipmapped:mipmaps];
     if (desc == nil) return NULL;
     
-    desc.storageMode = MTLStorageModePrivate; // TODO: needed?
+    desc.storageMode = MTLStorageModePrivate;
     id<MTLTexture> tex = [gfx_device newTextureWithDescriptor:desc];
     if (tex == NULL) return NULL;
     
@@ -419,9 +441,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-    gfx_format = fmt;
-    gfx_stride = strideSizes[fmt];
+static void SetVertexFormat(VertexFormat fmt) {
     dirty_bits |= DIRTY_PIPELINE;
 }
 
@@ -513,16 +533,14 @@ static NSString* Pipeline_FragmentFunc(int idx) {
     int alphaTest    = (idx & PIPELINE_FLAG_ALPHA_TEST);
     
     if (fmt == VERTEX_FORMAT_TEXTURED) {
-        return alphaTest ? @"fragment_textured_main_at" : @"fragment_textured_main";
+        return alphaTest ? @"fragment_textured_none_main_at" : @"fragment_textured_none_main";
     } else {
-        return alphaTest ? @"fragment_coloured_main_at" : @"fragment_coloured_main";
+        return alphaTest ? @"fragment_coloured_none_main_at" : @"fragment_coloured_none_main";
     }
 }
 
 static id<MTLRenderPipelineState> Pipeline_Build(int idx) {
     VertexFormat fmt = (idx & PIPELINE_FLAG_TEXTURED) ? VERTEX_FORMAT_TEXTURED : VERTEX_FORMAT_COLOURED;
-    int texOffset    = (idx & PIPELINE_FLAG_TEXOFFSET);
-    int alphaTest    = (idx & PIPELINE_FLAG_ALPHA_TEST);
     int alphaBlend   = (idx & PIPELINE_FLAG_ALPHA_BLEND);
     
     MTLVertexDescriptor* vdesc = [MTLVertexDescriptor vertexDescriptor];
