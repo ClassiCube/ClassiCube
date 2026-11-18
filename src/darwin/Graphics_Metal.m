@@ -28,6 +28,8 @@ static MTLViewport viewport_rect;
 #define DIRTY_PIPELINE (1 << 2)
 #define DIRTY_DEPTH    (1 << 3)
 #define DIRTY_MVP      (1 << 4)
+#define DIRTY_FOGCOLOR (1 << 5)
+#define DIRTY_FOGVALUE (1 << 6)
 
 // vertex shader attributes
 #define VSHDR_ATTR_MVP_MATRIX 1
@@ -100,30 +102,16 @@ void Gfx_InitForLayer(CAMetalLayer* layer) {
 *#########################################################################################################################*/
 static cc_bool gfx_R = true, gfx_G = true, gfx_B = true, gfx_A = true;
 
-void Gfx_SetFog(cc_bool enabled) { dirty_bits |= DIRTY_PIPELINE; }
-
-static void SetFogColor(PackedCol col)  {
-    Vec3 fogColor = {
-        PackedCol_R(col) / 255.0f,
-        PackedCol_G(col) / 255.0f,
-        PackedCol_B(col) / 255.0f
-    };
-    [ren_enc setFragmentBytes:&fogColor length:12 atIndex:FSHDR_ATTR_FOGCOLOR];
-}
-
-static void UpdateFogValue(void) {
-    Vec2 fogValue;
-    fogValue.x = 1.0f / gfx_fogEnd; // avoid doing division in pixel shader for linear fog
-    fogValue.y = -gfx_fogDensity; // avoid doing - in pixel shader for density fog
-    [ren_enc setFragmentBytes:&fogValue length:8 atIndex:FSHDR_ATTR_FOGVALUE];
-}
-
-static void SetFogDensity(float value) { UpdateFogValue(); }
-static void SetFogEnd(float value)     { UpdateFogValue(); }
-
-static void SetFogMode(FogFunc func) {
+void Gfx_SetFog(cc_bool enabled) {
+    if (gfx_fogEnabled == enabled) return;
+    gfx_fogEnabled = enabled;
     dirty_bits |= DIRTY_PIPELINE;
 }
+
+static void SetFogColor(PackedCol col) { dirty_bits |= DIRTY_FOGCOLOR; }
+static void SetFogDensity(float value) { dirty_bits |= DIRTY_FOGVALUE; }
+static void SetFogEnd(float value)     { dirty_bits |= DIRTY_FOGVALUE; }
+static void SetFogMode(FogFunc func)   { dirty_bits |= DIRTY_PIPELINE; }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
     [ren_enc setCullMode:enabled ? MTLCullModeFront : MTLCullModeNone];
@@ -489,10 +477,19 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 #define PIPELINE_FLAG_TEXOFFSET   (1 << 1)
 #define PIPELINE_FLAG_ALPHA_TEST  (1 << 2)
 #define PIPELINE_FLAG_ALPHA_BLEND (1 << 3)
-#define PIPELINE_FLAG_R_WRITE     (1 << 4)
-#define PIPELINE_FLAG_G_WRITE     (1 << 5)
-#define PIPELINE_FLAG_B_WRITE     (1 << 6)
-#define PIPELINE_FLAG_A_WRITE     (1 << 7)
+#define PIPELINE_FLAG_FOG_SHIFT         4
+#define PIPELINE_FLAG_FOG_LO      (1 << 4)
+#define PIPELINE_FLAG_FOG_HI      (1 << 5)
+#define PIPELINE_FLAG_R_WRITE     (1 << 6)
+#define PIPELINE_FLAG_G_WRITE     (1 << 7)
+#define PIPELINE_FLAG_B_WRITE     (1 << 8)
+#define PIPELINE_FLAG_A_WRITE     (1 << 9)
+
+#define PIPELINE_FLAG_FOG_ALL (PIPELINE_FLAG_FOG_LO | PIPELINE_FLAG_FOG_HI)
+#define PIPELINE_FOG_NONE (0              << PIPELINE_FLAG_FOG_SHIFT)
+#define PIPELINE_FOG_LINR ((FOG_LINEAR+1) << PIPELINE_FLAG_FOG_SHIFT)
+#define PIPELINE_FOG_EXP  ((FOG_EXP+1)    << PIPELINE_FLAG_FOG_SHIFT)
+#define PIPELINE_FOG_EXP2 ((FOG_EXP2+1)   << PIPELINE_FLAG_FOG_SHIFT)
 
 #define PIPELINE_STATES_COUNT (2 * PIPELINE_FLAG_A_WRITE)
 static id<MTLRenderPipelineState> pipelines[PIPELINE_STATES_COUNT];
@@ -518,10 +515,10 @@ static void Pipelines_FillVertexDeclaration(MTLVertexDescriptor* desc, VertexFor
 }
 
 static NSString* Pipeline_VertexFunc(int idx) {
-    VertexFormat fmt = (idx & PIPELINE_FLAG_TEXTURED) ? VERTEX_FORMAT_TEXTURED : VERTEX_FORMAT_COLOURED;
-    int texOffset    = (idx & PIPELINE_FLAG_TEXOFFSET);
+    int textured  = (idx & PIPELINE_FLAG_TEXTURED);
+    int texOffset = (idx & PIPELINE_FLAG_TEXOFFSET);
     
-    if (fmt == VERTEX_FORMAT_TEXTURED) {
+    if (textured) {
         return texOffset ? @"vertex_textured_main_offset" : @"vertex_textured_main";
     } else {
         return @"vertex_coloured_main";
@@ -529,13 +526,34 @@ static NSString* Pipeline_VertexFunc(int idx) {
 }
 
 static NSString* Pipeline_FragmentFunc(int idx) {
-    VertexFormat fmt = (idx & PIPELINE_FLAG_TEXTURED) ? VERTEX_FORMAT_TEXTURED : VERTEX_FORMAT_COLOURED;
+    int textured     = (idx & PIPELINE_FLAG_TEXTURED);
     int alphaTest    = (idx & PIPELINE_FLAG_ALPHA_TEST);
+    int fogMode      = (idx & PIPELINE_FLAG_FOG_ALL);
     
-    if (fmt == VERTEX_FORMAT_TEXTURED) {
-        return alphaTest ? @"fragment_textured_none_main_at" : @"fragment_textured_none_main";
+    if (textured && alphaTest) {
+        if (fogMode == PIPELINE_FOG_LINR) return @"fragment_textured_lin_main_at";
+        if (fogMode == PIPELINE_FOG_EXP ) return @"fragment_textured_exp_main_at";
+        if (fogMode == PIPELINE_FOG_EXP2) return @"fragment_textured_exp2_main_at";
+        
+        return @"fragment_textured_none_main_at";
+    } else if (textured) {
+        if (fogMode == PIPELINE_FOG_LINR) return @"fragment_textured_lin_main";
+        if (fogMode == PIPELINE_FOG_EXP ) return @"fragment_textured_exp_main";
+        if (fogMode == PIPELINE_FOG_EXP2) return @"fragment_textured_exp2_main";
+        
+        return @"fragment_textured_none_main";
+    } else if (alphaTest) {
+        if (fogMode == PIPELINE_FOG_LINR) return @"fragment_coloured_lin_main_at";
+        if (fogMode == PIPELINE_FOG_EXP ) return @"fragment_coloured_exp_main_at";
+        if (fogMode == PIPELINE_FOG_EXP2) return @"fragment_coloured_exp2_main_at";
+        
+        return @"fragment_coloured_none_main_at";
     } else {
-        return alphaTest ? @"fragment_coloured_none_main_at" : @"fragment_coloured_none_main";
+        if (fogMode == PIPELINE_FOG_LINR) return @"fragment_coloured_lin_main";
+        if (fogMode == PIPELINE_FOG_EXP ) return @"fragment_coloured_exp_main";
+        if (fogMode == PIPELINE_FOG_EXP2) return @"fragment_coloured_exp2_main";
+        
+        return @"fragment_coloured_none_main";
     }
 }
 
@@ -578,11 +596,13 @@ static id<MTLRenderPipelineState> Pipeline_Build(int idx) {
 }
 
 static void Pipeline_Update(void) {
+    int fog = gfx_fogEnabled ? (gfx_fogMode + 1) : 0;
     int idx =
     (gfx_format == VERTEX_FORMAT_TEXTURED ? PIPELINE_FLAG_TEXTURED : 0) |
     (texOffseting   ? PIPELINE_FLAG_TEXOFFSET   : 0) |
     (gfx_alphaTest  ? PIPELINE_FLAG_ALPHA_TEST  : 0) |
     (gfx_alphaBlend ? PIPELINE_FLAG_ALPHA_BLEND : 0) |
+    (fog << PIPELINE_FLAG_FOG_SHIFT                ) |
     (gfx_R          ? PIPELINE_FLAG_R_WRITE     : 0) |
     (gfx_G          ? PIPELINE_FLAG_G_WRITE     : 0) |
     (gfx_B          ? PIPELINE_FLAG_B_WRITE     : 0) |
@@ -606,9 +626,27 @@ static void UpdateDirtyState(void) {
     if (dirty_bits & DIRTY_DEPTH) {
         DepthState_Update();
     }
+    
     if (dirty_bits & DIRTY_MVP) {
         [ren_enc setVertexBytes:&_mvp length:sizeof(struct Matrix) atIndex:VSHDR_ATTR_MVP_MATRIX];
     }
+    
+    if (dirty_bits & DIRTY_FOGCOLOR) {
+        struct Vec4 fogColor = {
+            PackedCol_R(gfx_fogColor) / 255.0f,
+            PackedCol_G(gfx_fogColor) / 255.0f,
+            PackedCol_B(gfx_fogColor) / 255.0f,
+            1.0f,
+        };
+        [ren_enc setFragmentBytes:&fogColor length:16 atIndex:FSHDR_ATTR_FOGCOLOR];
+    }
+    if (dirty_bits & DIRTY_FOGVALUE) {
+        Vec2 fogValue;
+        fogValue.x = 1.0f / gfx_fogEnd; // avoid doing division in pixel shader for linear fog
+        fogValue.y = -gfx_fogDensity; // avoid doing - in pixel shader for density fog
+        [ren_enc setFragmentBytes:&fogValue length:8 atIndex:FSHDR_ATTR_FOGVALUE];
+    }
+    
     if (dirty_bits & DIRTY_PIPELINE) {
         Pipeline_Update();
     }
@@ -654,6 +692,9 @@ void Gfx_EndFrame(void) {
     [cmd_buf autorelease];
     cmd_buf = nil;
     // TODO: implement
+    
+    // endEncoding resets buffer bindings
+    dirty_bits |= DIRTY_MVP | DIRTY_FOGCOLOR | DIRTY_FOGVALUE;
 }
 
 void Gfx_SetVSync(cc_bool vsync) {

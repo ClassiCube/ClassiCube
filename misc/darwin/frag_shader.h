@@ -25,17 +25,17 @@ float4 fragment FS_NAME(
 #endif
 
 #if FS_FLAGS & FS_FOG_LIN
-	float depth = in.position.w;
-	float fog   = saturate(1.0f - depth * fogValue.x);
-	color.rgb   = mix(fogColor, color.rgb, fog);
+	float depth = 1.0f / in.position.w;
+	float fog   = saturate(depth * fogValue.x);
+    color.rgb   = mix(color.rgb, fogColor, fog);
 #endif
 #if FS_FLAGS & FS_FOG_EXP
-	float depth = in.position.w;
-	float fog   = saturate(exp(fogValue.y * depth));
+	float depth = 1.0f / in.position.w;
+	float fog   = saturate(exp(depth * fogValue.y));
 	color.rgb   = mix(fogColor, color.rgb, fog);
 #endif
 #if FS_FLAGS & FS_FOG_EXP2
-	float depth = in.position.w;
+	float depth = 1.0f / in.position.w;
 	float fog   = saturate(exp(-(fogValue.y * depth) * (fogValue.y * depth)));
 	color.rgb   = mix(fogColor, color.rgb, fog);
 #endif
