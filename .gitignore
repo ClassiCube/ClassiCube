@@ -167,6 +167,7 @@ ee_log.txt
 *.bin
 *.elf
 *.exe
+*.EXE
 
 # Visual C++ cache files
 ipch/
