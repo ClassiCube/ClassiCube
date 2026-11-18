@@ -79,8 +79,8 @@ static const char PS_SOURCE[] =
 "#endif                                                             \n" \
 "#ifdef PS_FOG_LINEAR                                               \n" \
 "   float depth = input.position.w;                                 \n" \
-"   float fog   = saturate(1.0f - depth * fogEnd);                  \n" \
-"   color.rgb   = lerp(fogColor, color.rgb, fog);                   \n" \
+"   float fog   = saturate(depth * fogEnd);                         \n" \
+"   color.rgb   = lerp(color.rgb, fogColor, fog);                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_DENSITY                                              \n" \
 "   float depth = input.position.w;                                 \n" \

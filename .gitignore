@@ -42,7 +42,6 @@ cd/
 
 # Microsoft console build results
 build-360/
-main.exe
 main.lib
 
 # Sony console build results
@@ -92,10 +91,8 @@ screenshots
 fontscache.txt
 
 # DOS files
-CWSDPMI.EXE
 CWSDPMI.SWP
 OPTIONS.TXT
-CCDOS.EXE
 
 # Android source files need to be included
 !android/app/src/main/java/com/classicube
@@ -169,6 +166,7 @@ ee_log.txt
 # Binary files
 *.bin
 *.elf
+*.exe
 
 # Visual C++ cache files
 ipch/
