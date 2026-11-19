@@ -38,7 +38,8 @@ const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 
-const char* Platform_AppNameSuffix = "";
+const char* Platform_AppNameSuffix = " web";
+static const char* mobileAppName   = " web mobile";
 cc_uint8 Platform_Flags;
 cc_bool  Platform_ReadonlyFilesystem;
 #include "../_PlatformBase.h"
@@ -382,10 +383,16 @@ EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
 }
 
 extern void interop_InitModule(void);
+extern int interop_IsAndroid(void);
+extern int interop_IsIOS(void);
+
 void Platform_Init(void) {
 	interop_InitModule();
 	interop_InitFilesystem();
 	interop_InitSockets();
+
+	if (interop_IsAndroid() || interop_IsIOS())
+		Platform_AppNameSuffix = mobileAppName;
 }
 void Platform_Free(void) { }
 

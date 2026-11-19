@@ -55,30 +55,107 @@ vertex coloured_out vertex_coloured_main(coloured_in in [[stage_in]],
 
 
 // == FRAGMENT SHADERS ==
-float4 fragment fragment_textured_main(struct textured_out in [[stage_in]], texture2d<float, access::sample> tex [[texture(0)]])
-{
-    constexpr sampler s(address::repeat, filter::nearest);
-    float4 texel = tex.sample(s, in.texcoords).rgba;
-    return texel * in.color;
-}
+#define FS_TEXTURED   (1 << 0)
+#define FS_ALPHA_TEST (1 << 1)
+#define FS_FOG_LIN    (1 << 2)
+#define FS_FOG_EXP    (1 << 3)
+#define FS_FOG_EXP2   (1 << 4)
 
-float4 fragment fragment_textured_main_at(struct textured_out in [[stage_in]], texture2d<float, access::sample> tex [[texture(0)]])
-{
-    constexpr sampler s(address::repeat, filter::nearest);
-    float4 texel = tex.sample(s, in.texcoords).rgba;
-    float4 color = texel * in.color;
-    
-    if (color.a < 0.5f) discard_fragment();
-    return color;
-}
+#define FS_NAME  fragment_textured_none_main
+#define FS_FLAGS (FS_TEXTURED)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
 
-float4 fragment fragment_coloured_main(struct coloured_out in [[stage_in]])
-{
-    return in.color;
-}
+#define FS_NAME  fragment_textured_lin_main
+#define FS_FLAGS (FS_TEXTURED | FS_FOG_LIN)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
 
-float4 fragment fragment_coloured_main_at(struct coloured_out in [[stage_in]])
-{
-    if (in.color.a < 0.5f) discard_fragment();
-    return in.color;
-}
+#define FS_NAME  fragment_textured_exp_main
+#define FS_FLAGS (FS_TEXTURED | FS_FOG_EXP)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_textured_exp2_main
+#define FS_FLAGS (FS_TEXTURED | FS_FOG_EXP2)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+
+#define FS_NAME  fragment_textured_none_main_at
+#define FS_FLAGS (FS_TEXTURED | FS_ALPHA_TEST)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_textured_lin_main_at
+#define FS_FLAGS (FS_TEXTURED | FS_ALPHA_TEST | FS_FOG_LIN)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_textured_exp_main_at
+#define FS_FLAGS (FS_TEXTURED | FS_ALPHA_TEST | FS_FOG_EXP)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_textured_exp2_main_at
+#define FS_FLAGS (FS_TEXTURED | FS_ALPHA_TEST | FS_FOG_EXP2)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+
+#define FS_NAME  fragment_coloured_none_main
+#define FS_FLAGS (0)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_coloured_lin_main
+#define FS_FLAGS (0 | FS_FOG_LIN)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_coloured_exp_main
+#define FS_FLAGS (0 | FS_FOG_EXP)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_coloured_exp2_main
+#define FS_FLAGS (0 | FS_FOG_EXP2)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+
+#define FS_NAME  fragment_coloured_none_main_at
+#define FS_FLAGS (0 | FS_ALPHA_TEST)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_coloured_lin_main_at
+#define FS_FLAGS (0 | FS_ALPHA_TEST | FS_FOG_LIN)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_coloured_exp_main_at
+#define FS_FLAGS (0 | FS_ALPHA_TEST | FS_FOG_EXP)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME
+
+#define FS_NAME  fragment_coloured_exp2_main_at
+#define FS_FLAGS (0 | FS_ALPHA_TEST | FS_FOG_EXP2)
+	#include "frag_shader.h"
+#undef FS_FLAGS
+#undef FS_NAME

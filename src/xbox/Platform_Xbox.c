@@ -34,6 +34,8 @@ cc_bool Platform_ReadonlyFilesystem;
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 #include "../_PlatformBase.h"
 
+#define _NT_RETURN_CODE(status) (NT_SUCCESS(status) ? 0 : status)
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
@@ -64,9 +66,8 @@ void Platform_Log(const char* msg, int len) {
 }
 
 #define FILETIME_EPOCH      50491123200ULL
-#define FILETIME_UNIX_EPOCH 11644473600ULL
 #define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
-#define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
+
 TimeMS DateTime_CurrentUTC(void) {
 	LARGE_INTEGER ft;
 	
@@ -108,14 +109,13 @@ static void Stopwatch_Init(void) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_string root_path = String_FromConst("E:\\ClassiCube\\");
-static BOOL hdd_mounted;
 
 void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	char* str = dst->buffer;
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
 	
-	// XBox kernel doesn't seem to convert /
+	// XBox kernel doesn't automatically convert /
 	for (int i = 0; i < path->length; i++) 
 	{
 		char c = (char)path->buffer[i];
@@ -125,18 +125,23 @@ void Platform_EncodePath(cc_filepath* dst, const cc_string* path) {
 	*str = '\0';
 }
 
-#define INIT_OBJ_ATTRIBS(path) {.ObjectName    = path, \
-								.Attributes    = OBJ_CASE_INSENSITIVE, \
-								.RootDirectory = ObDosDevicesDirectory() }
-
 void Platform_DecodePath(cc_string* dst, const cc_filepath* path) {
 	String_AppendConst(dst, path->buffer);
 }
 
 void Directory_GetCachePath(cc_string* path) { }
+
+static ANSI_STRING INIT_ANSI_STRING(const char* src) {
+	int len = String_Length(src);
+	return (ANSI_STRING){ .Buffer = src, .Length = len, .MaximumLength = len + 1 };
+}
+#define INIT_OBJ_ATTRIBS(path) {.ObjectName    = path, \
+								.Attributes    = OBJ_CASE_INSENSITIVE, \
+								.RootDirectory = ObDosDevicesDirectory() }
+
+
 cc_result Directory_Create2(const cc_filepath* path) {
-	ANSI_STRING str;
-	RtlInitAnsiString(&str, path->buffer);
+	ANSI_STRING str = INIT_ANSI_STRING(path->buffer);
 	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	IO_STATUS_BLOCK block;
@@ -152,8 +157,7 @@ cc_result Directory_Create2(const cc_filepath* path) {
 }
 
 int File_Exists(const cc_filepath* path) {
-	ANSI_STRING str;
-	RtlInitAnsiString(&str, path->buffer);
+	ANSI_STRING str = INIT_ANSI_STRING(path->buffer);
 	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	FILE_NETWORK_OPEN_INFORMATION info;
@@ -181,8 +185,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	cc_filepath dirBuf;
 	Platform_EncodePath(&dirBuf, dirPath);
 
-	ANSI_STRING str;
-	RtlInitAnsiString(&str, dirBuf.buffer);
+	ANSI_STRING str = INIT_ANSI_STRING(dirBuf.buffer);
 	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	HANDLE handle = NULL;
@@ -220,23 +223,17 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result DoFile(cc_file* file, const char* path, DWORD access, DWORD createMode) {
-	ANSI_STRING str;
-	RtlInitAnsiString(&str, path);
+	ANSI_STRING str = INIT_ANSI_STRING(path);
 	OBJECT_ATTRIBUTES attribs = INIT_OBJ_ATTRIBS(&str);
 
 	HANDLE handle = NULL;
 	IO_STATUS_BLOCK block;
-	NTSTATUS status = NtCreateFile(&handle, access | FILE_READ_ATTRIBUTES | SYNCHRONIZE, 
+	NTSTATUS status = NtCreateFile(&handle, access | SYNCHRONIZE, 
 						&attribs, &block, NULL, FILE_ATTRIBUTE_NORMAL, 
 						FILE_SHARE_READ, createMode, FILE_SYNCHRONOUS_IO_NONALERT);
 
-	if (NT_SUCCESS(status)) {
-		*file = handle;
-		return 0;
-	}
-   
-	*file = NULL;
-	return status;
+	*file = NT_SUCCESS(status) ? handle : NULL;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Open(cc_file* file, const cc_filepath* path) {
@@ -260,13 +257,9 @@ cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesR
 		if (NT_SUCCESS(status)) status = block.Status;
 	}
 
-	if (NT_SUCCESS(status)) {
-		*bytesRead = block.Information;
-		return 0;
-	}
-   
-	*bytesRead = 0;
-	return status == STATUS_END_OF_FILE ? 0 : status;
+	*bytesRead = NT_SUCCESS(status) ? block.Information : 0;
+	if (status == STATUS_END_OF_FILE) return 0;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
@@ -278,18 +271,13 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 		if (NT_SUCCESS(status)) status = block.Status;
 	}
 
-	if (NT_SUCCESS(status)) {
-		*bytesWrote = block.Information;
-		return 0;
-	}
-
-	*bytesWrote = 0;
-	return status;
+	*bytesWrote = NT_SUCCESS(status) ? block.Information : 0;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Close(cc_file file) {
 	NTSTATUS status = NtClose(file);
-	return NT_SUCCESS(status) ? 0 : status;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
@@ -316,7 +304,8 @@ cc_result File_Seek(cc_file file, int offset, int seekType) {
 		break;
 	}
 
-	return NtSetInformationFile(file, &block, &pos, sizeof(pos), FilePositionInformation);
+	status = NtSetInformationFile(file, &block, &pos, sizeof(pos), FilePositionInformation);
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
@@ -324,11 +313,9 @@ cc_result File_Position(cc_file file, cc_uint32* pos) {
 	FILE_POSITION_INFORMATION info;
 
 	NTSTATUS status = NtQueryInformationFile(file, &block, &info, sizeof(info), FilePositionInformation);
-	if (NT_SUCCESS(status)) {
-		*pos = info.CurrentByteOffset.QuadPart;
-		return 0;
-	}
-	return status;
+
+	*pos = NT_SUCCESS(status) ? info.CurrentByteOffset.QuadPart : 0;
+	return _NT_RETURN_CODE(status);
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
@@ -336,11 +323,9 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	FILE_NETWORK_OPEN_INFORMATION info;
 
 	NTSTATUS status = NtQueryInformationFile(file, &block, &info, sizeof(info), FileNetworkOpenInformation);
-	if (NT_SUCCESS(status)) {
-		*len = info.EndOfFile.LowPart;
-		return 0;
-	}
-	return status;
+	
+	*len = NT_SUCCESS(status) ? info.EndOfFile.LowPart : 0;
+	return _NT_RETURN_CODE(status);
 }
 
 
@@ -547,19 +532,18 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 static void InitHDD(void) {
 	// E: drive is usually used for storing game data 
 	//   see https://xboxdevwiki.net/Hard_Drive#Partitions
-	ANSI_STRING drivePath;
-	RtlInitAnsiString(&drivePath, "\\??\\E:");
+	ANSI_STRING drivePath = INIT_ANSI_STRING("\\??\\E:");
 
 	OBJECT_ATTRIBUTES attribs; // NOTE: not in DOS namespace, unlike other usages of OBJECT_ATTRIBUTES
 	InitializeObjectAttributes(&attribs, &drivePath, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
+	BOOL hdd_mounted;
 	HANDLE handle = NULL;
 	if (NT_SUCCESS(NtOpenSymbolicLinkObject(&handle, &attribs))) {
 		NtClose(handle);
 		hdd_mounted = true;
 	} else {
-		ANSI_STRING mountPath;
-		RtlInitAnsiString(&mountPath, "\\Device\\Harddisk0\\Partition1\\");
+		ANSI_STRING mountPath = INIT_ANSI_STRING("\\Device\\Harddisk0\\Partition1\\");
 
 		Platform_LogConst("Mounting HDD to E:\...");
 		hdd_mounted = NT_SUCCESS(IoCreateSymbolicLink(&drivePath, &mountPath));

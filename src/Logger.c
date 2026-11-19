@@ -72,13 +72,15 @@ static const char* GetCCErrorDesc(cc_result res) {
 
 	case PNG_ERR_INVALID_SIG:      return "Only PNG images supported";
 	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
-	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
-	case PNG_ERR_TOO_TALL:         return "PNG image too tall";
+	case PNG_ERR_TOO_WIDE:         return "Image too wide (>32768 pixels)";
+	case PNG_ERR_TOO_TALL:         return "Image too tall (>32768 pixels)";
 	case PNG_ERR_INTERLACED:       return "Interlaced PNGs unsupported";
 	case PNG_ERR_REACHED_IEND:     return "Incomplete PNG image data";
-	case PNG_ERR_NO_DATA:          return "No image in PNG";
+	case PNG_ERR_NO_DATA:          return "No pixels in image";
 	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";
-	case PNG_ERR_16BITSAMPLES:     return "16 bpp PNGs unsupported";
+	case PNG_ERR_16BITSAMPLES:     return "16 bps PNGs unsupported";
+	case PNG_ERR_TOO_SMALL:        return "Image <= 0 pixels in size";
+	case PNG_ERR_MULTI_HDRS:       return "Image has more than one header";
 
 	case NBT_ERR_UNKNOWN:   return "Unknown NBT tag type";
 	case CW_ERR_ROOT_TAG:   return "Invalid root NBT tag";
