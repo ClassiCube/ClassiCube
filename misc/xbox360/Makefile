@@ -1,5 +1,8 @@
-ifeq ($(strip $(DEVKITXENON)),)
-$(error "Please set DEVKITXENON in your environment. export DEVKITXENON=<path to>devkitPPC")
+ifeq ($(strip $(XSDK_TOOLCHAIN)),)
+$(error "Please set XSDK_TOOLCHAIN in your environment. export XSDK_TOOLCHAIN=<path to>toolchain")
+endif
+ifeq ($(strip $(XSDK_SDK)),)
+$(error "Please set XSDK_SDK in your environment. export XSDK_SDK=<path to>toolchain")
 endif
 
 .SUFFIXES:
@@ -13,43 +16,58 @@ BUILD_DIR	:= build/xbox360
 SOURCE_DIRS	:= src src/xbox360 third_party/bearssl
 RUN_PROGRAM	?= xenon
 
-default: $(TARGET).elf32
+
+XEX_TITLE_ID 	:= 0x43556265
+XEX_TITLE		:= ClassiCube
+XEX_VERSION		:= 1.3.9.0
+
+default: $(TARGET).xex
 
 
 #---------------------------------------------------------------------------------
 # Code generation
 #---------------------------------------------------------------------------------
-MACHDEP := -DXENON -m32 -maltivec -fno-pic -mpowerpc64 -mhard-float
+CFLAGS	:= -isystem $(XSDK_SDK)/include -mcpu=cell -fno-pic -O2 -g -DPLAT_XBOX360
 
-CFLAGS	:= -g -O2 -Wall $(MACHDEP) \
-			-I$(DEVKITXENON)/usr/include
-
-LDFLAGS	:= -g $(MACHDEP) -Wl,--gc-sections \
-			-L$(DEVKITXENON)/usr/lib \
-			-L$(DEVKITXENON)/xenon/lib/32 \
-			-n -T $(DEVKITXENON)/app.lds
-LIBS	:= -lxenon -lm -lfat
+LDFLAGS	:= -g -static -nostdlib -T $(XSDK_SDK)/src/xsdk.ld 
+LIBS	:= -Wl,--start-group $(XSDK_SDK)/build/libxsdk.a -lc -lm -lgcc -Wl,--end-group
 
 
 #---------------------------------------------------------------------------------
 # Tools
 #---------------------------------------------------------------------------------
-CC 		:= $(DEVKITXENON)/bin/xenon-gcc
-OBJCOPY	:= $(DEVKITXENON)/bin/xenon-objcopy
-STRIP	:= $(DEVKITXENON)/bin/xenon-strip
+CC 		:= $(XSDK_TOOLCHAIN)/bin/powerpc-xsdk-elf-gcc
+OBJDUMP	:= $(XSDK_TOOLCHAIN)/bin/powerpc-xsdk-elf-objdump
+SHDRGEN := python3 $(XSDK_SDK)/tools/build_shaders.py
+XEX_GEN := python3 $(XSDK_SDK)/tools/elf2xex.py
 LINK	:= $(CC)
+
+
+#---------------------------------------------------------------------------------
+# shader object generation
+#---------------------------------------------------------------------------------
+SHDR_DIR	:= misc/xbox360
+VSHDR_SRCS 	:= $(wildcard $(SHDR_DIR)/*.vert)
+PSHDR_SRCS 	:= $(wildcard $(SHDR_DIR)/*.frag)
+SHDR_HDR	:= $(BUILD_DIR)/shaders.h
+GEN_FILES	+= $(SHDR_HDR)
+
+$(SHDR_HDR): $(VSHDR_SRCS) $(PSHDR_SRCS)
+	$(SHDRGEN) $^ --output $@
+
+src/xbox360/Graphics_Xbox360.c: $(SHDR_HDR)
 
 
 #---------------------------------------------------------------------------------
 # Executable generation
 #---------------------------------------------------------------------------------
 OEXT		:= .elf
-GEN_FILES 	:= $(TARGET).elf32
+GEN_FILES 	:= $(TARGET).xex
 include misc/makefiles/common_build.mk
 
-$(TARGET).elf32: $(TARGET).elf
-	$(OBJCOPY) -O elf32-powerpc --adjust-vma 0x80000000 $< $@
-	$(STRIP) $@
+$(TARGET).xex: $(TARGET).elf
+	sh -c "'$(OBJDUMP)' -d '$<' | python3 '$(XSDK_SDK)/tools/xenia_scan.py'"
+	$(XEX_GEN) $< $@ --title-id $(XEX_TITLE_ID) --title-name $(XEX_TITLE) --version $(XEX_VERSION)
 
 
 #---------------------------------------------------------------------------------
