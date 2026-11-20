@@ -54,6 +54,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define OPT_CHAT_SCALE "gui-chatscale"
 #define OPT_CHAT_AUTO_SCALE "gui-autoscalechat"
 #define OPT_CROSSHAIR_SCALE "gui-crosshairscale"
+#define OPT_GUI_SCALE "gui-globalscale"
 #define OPT_SHOW_FPS "gui-showfps"
 #define OPT_FONT_NAME "gui-fontname"
 #define OPT_BLACK_TEXT "gui-blacktextshadows"
