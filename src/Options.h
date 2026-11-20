@@ -43,6 +43,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define OPT_WOM_STYLE_HACKS "hacks-womstylehacks"
 #define OPT_FULL_BLOCK_STEP "hacks-fullblockstep"
 #define OPT_HACK_PERM_MSGS "hacks-perm-msgs"
+#define OPT_ENTITY_PLACING "hacks-entityplacing"
 
 #define OPT_TAB_AUTOCOMPLETE "gui-tab-autocomplete"
 #define OPT_SHOW_BLOCK_IN_HAND "gui-blockinhand"

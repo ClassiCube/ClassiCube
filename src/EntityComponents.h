@@ -46,6 +46,8 @@ struct HacksComp {
 	cc_bool PushbackPlacing;
 	/* Whether the player should be able to step up whole blocks, instead of just slabs */
 	cc_bool FullBlockStep;
+	/* Whether the player can place blocks through entities */
+	cc_bool EntityPlacing;
 	/* Whether user has allowed hacks as an option. Note 'can use X' set by the server override this */
 	cc_bool Enabled;
 
