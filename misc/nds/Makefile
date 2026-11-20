@@ -25,8 +25,13 @@ ifdef BUILD_NONET
 BUILDDIR	:= build/nds_nonet
 ROM			:= ClassiCube-nonet.nds
 else
+ifdef BUILD_NOTOUCH
+BUILDDIR    := build/nds_notouch
+ROM         := ClassiCube-notouch.nds
+else
 BUILDDIR	:= build/nds
 ROM			:= ClassiCube.nds
+endif
 endif
 
 # Targets
