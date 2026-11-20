@@ -4,69 +4,91 @@
 #include "../Errors.h"
 #include "../Window.h"
 
-#include <xenos/xe.h>
-#include <xenos/edram.h>
+#include <xsdk/gpu.h>
+#include <xsdk/present.h>
+//#include <xenos/xe.h>
+//#include <xenos/edram.h>
+#include "../../build/xbox360/shaders.h"
 
-#include "../../misc/xbox360/ps_coloured.h"
-#include "../../misc/xbox360/vs_coloured.h"
-#include "../../misc/xbox360/ps_textured.h"
-#include "../../misc/xbox360/vs_textured.h"
+static XsdkShader vs_tex, vs_col, vs_oft;
+static XsdkShader ps_tex, ps_col;
 
-static struct XenosShader* shdr_tex_vs;
-static struct XenosShader* shdr_tex_ps;
-static struct XenosShader* shdr_col_vs;
-static struct XenosShader* shdr_col_ps;
+#define SAMPLER_0       0
+#define MVP_CONST_INDEX 0 
+#define MVP_CONST_COUNT 4 // each slot is 4 floats/1 vec4 
+#define OFT_CONST_INDEX 4
+#define OFT_CONST_COUNT 5
 
-static struct XenosDevice device;
-static struct XenosDevice* xe;
+static const XsdkVertexElement textured_layout[] = {
+	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3,  .offset_bytes =  0 },
+	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4N, .offset_bytes = 12 },
+	{ .usage = XSDK_USAGE_TEXCOORD, .format = XSDK_VERTEX_FLOAT2,  .offset_bytes = 16 },
+};
+static const XsdkVertexElement coloured_layout[] = {
+	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT3,  .offset_bytes =  0 },
+	{ .usage = XSDK_USAGE_COLOR,    .format = XSDK_VERTEX_UBYTE4N, .offset_bytes = 12 }
+};
 
-static const struct XenosVBFFormat textured_vbf = {
-3, {
-	{ XE_USAGE_POSITION, 0, XE_TYPE_FLOAT4 },
-	{ XE_USAGE_COLOR,    0, XE_TYPE_UBYTE4 },
-	{ XE_USAGE_TEXCOORD, 0, XE_TYPE_FLOAT2 }
-} };
-
-static const struct XenosVBFFormat coloured_vbf = {
-2, {
-	{ XE_USAGE_POSITION, 0, XE_TYPE_FLOAT4 },
-	{ XE_USAGE_COLOR,    0, XE_TYPE_UBYTE4 }
-} };
-
-static void CreateState(void) {
-	xe = &device;
-	Xe_Init(xe);
-	edram_init(xe);
-	
-	struct XenosSurface* fb = Xe_GetFramebufferSurface(xe);
-	Xe_SetRenderTarget(xe, fb);
+static void CreatePixelShader(XsdkShader* shdr, const XsdkBuiltShader* src) {
+	uint32_t status = xsdk_shader_load(shdr, src->container, src->container_bytes);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "loading pixel shader");
 }
 
-static void CreateShaders(void) {
-	shdr_tex_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_textured);
-	Xe_InstantiateShader(xe, shdr_tex_vs, 0);	 
-	Xe_ShaderApplyVFetchPatches(xe, shdr_tex_vs, 0, &textured_vbf);
-	shdr_tex_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_textured);
-	Xe_InstantiateShader(xe, shdr_tex_ps, 0);
-    	
-	shdr_col_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_coloured);
-	Xe_InstantiateShader(xe, shdr_col_vs, 0);	 
-	Xe_ShaderApplyVFetchPatches(xe, shdr_col_vs, 0, &coloured_vbf);
-	shdr_col_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_coloured);
-	Xe_InstantiateShader(xe, shdr_col_ps, 0);
+static void CreateVertexShader(XsdkShader* shdr, const XsdkBuiltShader* src, int stride, 
+								const XsdkVertexElement* attribs, uint32_t num_attribs) {
+	uint32_t status = xsdk_shader_load(shdr, src->container, src->container_bytes);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "loading vertex shader");
+
+	uint32_t stream_strides[] = { stride };
+	status = xsdk_shader_set_vertex_layout(shdr, attribs, num_attribs, stream_strides);
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "building vertex shader");
+}
+
+static void LoadShaders(void) {
+	CreatePixelShader(&ps_tex, &ps_textured_frag);
+	CreatePixelShader(&ps_col, &ps_coloured_frag);
+
+	CreateVertexShader(&vs_oft, &vs_offset_vert, SIZEOF_VERTEX_TEXTURED, 
+						textured_layout, Array_Elems(textured_layout));
+	CreateVertexShader(&vs_tex, &vs_textured_vert, SIZEOF_VERTEX_TEXTURED, 
+						textured_layout, Array_Elems(textured_layout));
+	CreateVertexShader(&vs_col, &vs_coloured_vert, SIZEOF_VERTEX_COLOURED, 
+						coloured_layout, Array_Elems(coloured_layout));
+}
+
+static GfxResourceID white_square;
+static XsdkSamplerState sampler_state;
+
+static void AllocResources(void) {
+	const XsdkSampler sampler = { 
+		.mag_filter = XSDK_FILTER_POINT,
+		.min_filter = XSDK_FILTER_POINT,
+		.mip_filter = XSDK_FILTER_POINT,
+		.address_u  = XSDK_ADDRESS_WRAP,
+		.address_v  = XSDK_ADDRESS_WRAP 
+	};
+	xsdk_texture_sampler_state(&sampler_state, &sampler);
+
+	// 1x1 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 void Gfx_Create(void) {
+	Gfx.MaxTexWidth  = 2048;
+	Gfx.MaxTexHeight = 2048;
+	Gfx.MaxTexSize   = 1024 * 1024;
+
 	if (!Gfx.Created) {
-		CreateState();
-		//CreateShaders(); TODO	
+		LoadShaders();
+		AllocResources();
 	}
+
 	Gfx.Created = true;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	
-	Gfx.MaxTexWidth  = 1024;
-	Gfx.MaxTexHeight = 1024;
-	Gfx.MaxTexSize   = 512 * 512;
+	// TODO nonpow2 upload
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -83,47 +105,46 @@ static void Gfx_FreeState(void) {
 
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
-	Gfx_SetFaceCulling(false);
-	SetAlphaBlend(false);
+	//Gfx_SetFaceCulling(false);
+	//SetAlphaBlend(false);
 
-	Xe_SetAlphaFunc(xe, XE_CMP_GREATER);
-	Xe_SetAlphaRef(xe,  0.5f);
-	Xe_SetZFunc(xe,     XE_CMP_LESSEQUAL);
+	//Xe_SetAlphaFunc(xe, XE_CMP_GREATER);
+	//Xe_SetAlphaRef(xe,  0.5f);
+	//Xe_SetZFunc(xe,     XE_CMP_LESSEQUAL);
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
-	void* dst = Xe_Surface_LockRect(xe, xtex, x, y, bmp->width, bmp->height, XE_LOCK_WRITE);
-
-	CopyPixels(dst,        bmp->width * BITMAPCOLOR_SIZE,
-			   bmp->scan0, rowWidth   * BITMAPCOLOR_SIZE,
-			   bmp->width, bmp->height);
-	
-	Xe_Surface_Unlock(xe, xtex);
-}
-
 GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	struct XenosSurface* xtex = Xe_CreateTexture(xe, bmp->width, bmp->height, 1, XE_FMT_8888, 0);
-	SetTextureData(xtex, 0, 0, bmp, rowWidth, 0);
-	return xtex;
+	XsdkTexture* tex = Mem_TryAlloc(1, sizeof(XsdkTexture));
+	if (!tex) return NULL;
+
+	uint32_t status = xsdk_texture_create(tex, XSDK_FORMAT_B8G8R8A8, bmp->width, bmp->height, 1, true);
+	if (status == STATUS_NO_MEMORY) { Mem_Free(tex); return NULL; }
+	if (!NT_SUCCESS(status)) Process_Abort2(status, "alloc texture");
+
+	xsdk_texture_upload_rows(tex, 0, 0, bmp->height, bmp->scan0, rowWidth * 4);
+	xsdk_gpu_invalidate(tex->address, tex->size_bytes);
+	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	struct XenosSurface* xtex = (struct XenosSurface*)texId;
-	SetTextureData(xtex, x, y, part, rowWidth, 0);
+	// TODO update textures
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	struct XenosSurface* xtex = (struct XenosSurface*)texId;
-	Xe_SetTexture(xe, 0, xtex);
+	if (!texId) texId = white_square;
+	XsdkTexture* tex  = texId;
+
+	xsdk_gpu_set_texture(SAMPLER_0, tex, &sampler_state);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	struct XenosSurface* xtex = (struct XenosSurface*)(*texId);
-	if (xtex) Xe_DestroyTexture(xe, xtex);
+	XsdkTexture* tex = *texId;
+	if (tex) { xsdk_texture_free(tex); Mem_Free(tex); }
+
 	*texId = NULL;
 }
 
@@ -142,44 +163,62 @@ static void SetFogEnd(float value)       { } // TODO: implement
 static void SetFogMode(FogFunc func)     { } // TODO: implement
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
-	Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
+	//Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
 }
 
-static void SetAlphaTest(cc_bool enabled) {
-	Xe_SetAlphaTestEnable(xe, enabled);
-}
-
-static void SetAlphaBlend(cc_bool enabled) {
-	if (enabled) {
-		Xe_SetBlendControl(xe,
-			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA,
-			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA);
-	} else {
-		Xe_SetBlendControl(xe,
-			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO,
-			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO);
-	}
-}
-
-void Gfx_SetAlphaArgBlend(cc_bool enabled) {
-	// TODO
-}
-
+static uint32_t clear_color;
 void Gfx_ClearColor(PackedCol color) {
-	Xe_SetClearColor(xe, color);
+	clear_color = color;
 }
 
-static void SetDepthTest(cc_bool enabled) {
-	Xe_SetZEnable(xe, enabled);
+static void UpdateDepthState(void) {
+	const XsdkDepthStencil depth = {
+		.depth_test    = gfx_depthTest,
+		.depth_write   = gfx_depthWrite,
+		.depth_compare = XSDK_COMPARE_LESS_EQUAL,
+	};
+	XsdkDepthStencilState state;
+
+	xsdk_gpu_depth_stencil_state(&state, &depth);
+	xsdk_gpu_set_depth_stencil(&state);
 }
 
-static void SetDepthWrite(cc_bool enabled) {
-	Xe_SetZWrite(xe, enabled);
+static void SetDepthTest(cc_bool enabled)  { UpdateDepthState(); }
+static void SetDepthWrite(cc_bool enabled) { UpdateDepthState(); }
+
+
+static void UpdateBlendState(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	cc_bool no_blend = !gfx_alphaBlend;
+
+	XsdkBlend blend = {
+		.color_source = no_blend ? XSDK_BLEND_ONE  : XSDK_BLEND_SRC_ALPHA,
+		.color_dest   = no_blend ? XSDK_BLEND_ZERO : XSDK_BLEND_ONE_MINUS_SRC_ALPHA,
+		.color_op     = XSDK_BLEND_OP_ADD,
+		.alpha_source = no_blend ? XSDK_BLEND_ONE  : XSDK_BLEND_SRC_ALPHA,
+		.alpha_dest   = no_blend ? XSDK_BLEND_ZERO : XSDK_BLEND_ONE_MINUS_SRC_ALPHA,
+		.alpha_op     = XSDK_BLEND_OP_ADD,
+		.write_mask   = (r ? 0x1 : 0) | (g ? 0x2 : 0) | (b ? 0x4 : 0) | (a ? 0x8 : 0),
+		.alpha_to_coverage = false
+	};
+
+	XsdkBlendState state;
+	xsdk_gpu_blend_state(&state, &blend);
+	xsdk_gpu_set_blend(&state);
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
+	UpdateBlendState(r, g, b, a);
 }
+
+static void SetAlphaTest(cc_bool enabled) {
+	//Xe_SetAlphaTestEnable(xe, enabled);
+}
+
+static void SetAlphaBlend(cc_bool enabled) {
+	UpdateBlendState(gfx_colorMask[0], gfx_colorMask[1], gfx_colorMask[2], gfx_colorMask[3]);
+}
+
+void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
     DefaultDepthOnlyRendering(depthOnly);
@@ -205,70 +244,78 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	int size = count * strideSizes[fmt];
-	return Xe_CreateVertexBuffer(xe, size);
-}
+	return xsdk_gpu_alloc(count * strideSizes[fmt]);
+} // TODO gpu_alloc is always 64kb aligned, so this is wasteful
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)(*vb);
-	if (xvb) Xe_DestroyVertexBuffer(xe, xvb);
+	void* ptr = *vb;
+	if (ptr) xsdk_gpu_free(ptr);
 	*vb = NULL;
 }
 
-void Gfx_BindVb(GfxResourceID vb) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
-	//Xe_SetStreamSource(xe, 0, xvb, 0, gfx_stride); TODO
+static void* locked_vb;
+static int locked_size;
+
+static void FlushLockedVb(GfxResourceID vb) {
+	// TODO: xsdk documentation says have to do this to avoid 64 bit write issues. verify this
+	cc_uint32* src  = (cc_uint32*)locked_vb;
+	cc_uint32* dst  = (cc_uint32*)vb;
+	int count_words = locked_size / 4;
+
+	for (int i = 0; i < count_words; i++) 
+	{
+		uint32_t word;
+		__builtin_memcpy(&word, &src[i], 4);
+		dst[i] = word;
+	}
+	xsdk_gpu_invalidate(xsdk_gpu_address(dst), locked_size);
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
-	int size = count * strideSizes[fmt];
-	return Xe_VB_Lock(xe, xvb, 0, size, XE_LOCK_WRITE);
+	locked_vb   = Mem_Alloc(count, strideSizes[fmt], "VB temp");
+	locked_size = count * strideSizes[fmt];
+
+	return locked_vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	struct XenosVertexBuffer* xvb = (struct XenosVertexBuffer*)vb;
-	Xe_VB_Unlock(xe, xvb);
+	FlushLockedVb(vb);
+	Mem_Free(locked_vb);
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	Platform_LogConst("CHANGE FORMAT");
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-	
-	if (fmt == VERTEX_FORMAT_COLOURED) {
-		//Xe_SetTexture(xe, 0, NULL); TODO
-		//Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_col_ps, 0); TODO
-		//Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_col_vs, 0); TODO
-	} else {
-		//Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_tex_ps, 0); TODO
-		//Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_tex_vs, 0); TODO
-	}
+#define PRIM_TYPE_LINELIST  2
+#define PRIM_TYPE_QUADLIST 13
+static cc_uint32 gpu_vb_addr; 
+
+static void UpdateShader(void);
+static void SetVertexFormat(VertexFormat fmt) { UpdateShader(); }
+
+void Gfx_BindVb(GfxResourceID vb) {
+	gpu_vb_addr = xsdk_gpu_address(vb);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	Platform_Log1("DRAW_LINES: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_LINELIST, 0, verticesCount >> 1); TODO
+	xsdk_gpu_set_vertices(0, gpu_vb_addr, verticesCount * gfx_stride);
+	xsdk_gpu_draw(PRIM_TYPE_LINELIST, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	Platform_Log1("DRAW_TRIS: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, 0, verticesCount >> 2); TODO
+	xsdk_gpu_set_vertices(0, gpu_vb_addr, verticesCount * gfx_stride);
+	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex, DrawHints hints) {
-	Platform_Log1("DRAW_TRIS_RANGE: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
+	xsdk_gpu_set_vertices(0, gpu_vb_addr + startVertex * gfx_stride, verticesCount * gfx_stride);
+	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hints) {
-	Platform_Log1("DRAW_TRIS_MAP: %i", &verticesCount);
-	//Xe_DrawPrimitive(xe, XE_PRIMTYPE_QUADLIST, startVertex, verticesCount >> 2); TODO
+	xsdk_gpu_set_vertices(0, gpu_vb_addr + startVertex * SIZEOF_VERTEX_TEXTURED, verticesCount * SIZEOF_VERTEX_TEXTURED);
+	xsdk_gpu_draw(PRIM_TYPE_QUADLIST, verticesCount);
 }
 
 
@@ -276,29 +323,37 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex, DrawHints hi
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj, _mvp;
+static struct Vec4 texOffset;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJ ? &_proj : &_view;
 	*dst = *matrix;
-	Platform_LogConst("LOAD MATRIX");
 	
 	Matrix_Mul(&_mvp, &_view, &_proj);
-	// TODO: Is this a global uniform, or does it need to be reloaded on shader change?
-	//Xe_SetVertexShaderConstantF(xe, 0, (float*)&_mvp, 4); TODO
+	xsdk_gpu_set_vertex_constants(MVP_CONST_INDEX, &_mvp.row1.x, MVP_CONST_COUNT);
 }
 
 void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Matrix* mvp) {
 	Gfx_LoadMatrix(MATRIX_VIEW, view);
-	Gfx_LoadMatrix(MATRIX_PROJ, proj);
-	Matrix_Mul(mvp, view, proj);
+	Gfx_LoadMatrix(MATRIX_PROJ, proj); // TODO not set vs constants twice
+
+	Mem_Copy(mvp, &_mvp, sizeof(struct Matrix));
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-	// TODO
+	texOffset.x = x;
+	texOffset.y = y;
+
+	// TODO not working??
+	UpdateShader();
+	xsdk_gpu_set_vertex_constants(OFT_CONST_INDEX, &texOffset.x, OFT_CONST_COUNT);
 }
 
 void Gfx_DisableTextureOffset(void) {
-	// TODO
+	texOffset.x = 0;
+	texOffset.y = 0;
+
+	UpdateShader();
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
@@ -333,16 +388,41 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static void UpdateShader(void) {
+	int colored = gfx_format == VERTEX_FORMAT_COLOURED;
+	XsdkShader* vs = colored ? &vs_col : ((texOffset.x || texOffset.y) ? &vs_oft : &vs_tex);
+	XsdkShader* ps = colored ? &ps_col : &ps_tex;
+	
+	xsdk_gpu_set_shaders(vs, ps);
+	xsdk_built_shader_set_literals(&vs_coloured_vert); // TODO prob wrong
+	//xsdk_built_shader_set_literals(ps);
+}
+
+// TODO tidy up functions
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
 void Gfx_SetVSync(cc_bool vsync) {
 	gfx_vsync = vsync;
+	// TODO vsync
 }
 
-void Gfx_BeginFrame(void) { 
-	Platform_LogConst("BEGIN FRAME");
+#define PRESENT_TIMEOUT_MS 5000
+static uint32_t fb_address;
+
+void Gfx_BeginFrame(void) {
+	uint32_t status = xsdk_present_begin(&fb_address, PRESENT_TIMEOUT_MS);
+
+	if (!NT_SUCCESS(status)) {
+		Platform_Log1("xsdk_present_begin failed: %h",&status);
+		return;
+	}
+
+	xsdk_gpu_set_target(Window_Main.Width, Window_Main.Height);
+
+	if (gfx_format >= 0) SetVertexFormat(gfx_format);
+	UpdateDepthState();
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -351,10 +431,9 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
-	Platform_LogConst("END FRAME A");
-	Xe_Resolve(xe);
-	Xe_Sync(xe);
-	Platform_LogConst("END FRAME B");
+	// NOTE: resolve also resets other state too (confusingly)
+	xsdk_gpu_resolve(fb_address, Window_Main.Width, Window_Main.Height, clear_color);
+	xsdk_present_end();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
@@ -369,5 +448,10 @@ void Gfx_OnWindowResize(int width, int height) {
 
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
-void Gfx_SetScissor (int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	xsdk_gpu_set_viewport(x, y, w, h, 0.0f, 1.0f);
+}
+
+void Gfx_SetScissor (int x, int y, int w, int h) {
+	xsdk_gpu_set_scissor(x, y, w, h);
+}
