@@ -32,6 +32,7 @@ TODO: Move this into table
 * CC_GFX_BACKEND_SOFTGPU - Software rasteriser
 * CC_GFX_BACKEND_D3D9 - Direct3D 9
 * CC_GFX_BACKEND_D3D11 - Direct3D 11
+* CC_GFX_BACKEND_VULKAN - Vulkan 1.1 (Windows only)
 * CC_GFX_BACKEND_GL1 - OpenGL 1.2/1.5
 * CC_GFX_BACKEND_GL2 - OpenGL 2 (shaders)
 
