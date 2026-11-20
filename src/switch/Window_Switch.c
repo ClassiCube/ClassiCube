@@ -14,6 +14,19 @@
 
 #include <switch.h>
 
+#ifdef __SWITCH2__
+#define UNDOCKED_WIDTH 1920
+#define UNDOCKED_HEIGHT 1080
+#define DOCKED_WIDTH 3840
+#define DOCKED_HEIGHT 2160
+static PadPointer mouse;
+#else
+#define UNDOCKED_WIDTH 1280
+#define UNDOCKED_HEIGHT 720
+#define DOCKED_WIDTH 1920
+#define DOCKED_HEIGHT 1080
+#endif
+
 static Framebuffer fb;
 static PadState pad;
 static AppletHookCookie cookie;
@@ -23,13 +36,16 @@ struct cc_window WindowInfo;
 
 static void SetResolution(void) {
 	// check whether the Switch is docked
-	// use 720p for handheld, 1080p for docked
+	// use 720p for handheld, 1080p for docked (S1)
+	// or 1080p handheld, 4k docked (S2)
 	AppletOperationMode opMode = appletGetOperationMode();
-	int w = 1280;
-	int h = 720;
+
+	int w = UNDOCKED_WIDTH;
+	int h = UNDOCKED_HEIGHT;
+
 	if (opMode == AppletOperationMode_Console) {
-		w = 1920;
-		h = 1080;
+		w = DOCKED_WIDTH;
+		h = DOCKED_HEIGHT;
 	}
 
 	DisplayInfo.Width  = w;
@@ -54,20 +70,26 @@ void Window_PreInit(void) {
 }
 
 void Window_Init(void) {
+#ifdef __SWITCH2__
+	DisplayInfo.ScaleX = 2;
+	DisplayInfo.ScaleY = 2;
+#else
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
+#endif
 
 	Window_Main.Focused    = true;
 	Window_Main.Exists     = true;
 	Window_Main.Handle.ptr = nwindowGetDefault();
 	Window_Main.UIScaleX   = DEFAULT_UI_SCALE_X;
 	Window_Main.UIScaleY   = DEFAULT_UI_SCALE_Y;
-
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
-
-	nwindowSetDimensions(Window_Main.Handle.ptr, 1920, 1080);
+	nwindowSetDimensions(Window_Main.Handle.ptr, DOCKED_WIDTH, DOCKED_HEIGHT);
+#ifdef __SWITCH2__
+	nwindowSetFrameRates(Window_Main.Handle.ptr, 120, 60, false);
+#endif
 	SetResolution();
 }
 
@@ -109,7 +131,6 @@ static void ProcessTouchInput(void) {
 	static int prev_touchcount = 0;
 	HidTouchScreenState state = { 0 };
 	hidGetTouchScreenStates(&state, 1);
-
 	if (state.count) {
 		Input_AddTouch(0,    state.touches[0].x, state.touches[0].y);
 	} else if (prev_touchcount) {
@@ -130,11 +151,18 @@ void Window_ProcessEvents(float delta) {
 	ProcessTouchInput();
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
+void Cursor_SetPosition(int x, int y) { }
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
-void Window_UpdateRawMouse(void)  { }
+void Window_UpdateRawMouse(void) {
+#ifdef __SWITCH2__
+	padPointerUpdate(&mouse, &pad);
+	if(!mouse.active)
+		return;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, mouse.delta_x, mouse.delta_y);
+#endif
+}
 
 
 /*########################################################################################################################*
@@ -164,6 +192,10 @@ static const BindMapping defaults_switch[BIND_COUNT] = {
 void Gamepads_PreInit(void) {
 	// Configure our supported input layout: a single player with standard controller styles
 	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+#ifdef __SWITCH2__
+	hidSetTouchScreenOutputRanges(UNDOCKED_WIDTH, UNDOCKED_HEIGHT);
+	padPointerInitialize(&mouse, UNDOCKED_WIDTH, UNDOCKED_HEIGHT);
+#endif
 	hidInitializeTouchScreen();
 	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
 	padInitializeDefault(&pad);
