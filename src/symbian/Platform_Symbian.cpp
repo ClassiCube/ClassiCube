@@ -27,20 +27,21 @@ extern "C" {
 #include <stdio.h>
 #include <dlfcn.h>
 
-#include <stdapis/string.h>
-#include <stdapis/arpa/inet.h>
-#include <stdapis/netinet/in.h>
-#include <stdapis/sys/socket.h>
-#include <stdapis/sys/ioctl.h>
-#include <stdapis/sys/types.h>
-#include <stdapis/sys/stat.h>
-#include <stdapis/sys/time.h>
-#include <stdapis/sys/select.h>
-#include <stdapis/netdb.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/select.h>
+#include <netdb.h>
 }
 #include <e32base.h>
 #include <e32debug.h>
 #include <hal.h>
+#include <e32hal.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -54,6 +55,9 @@ const cc_result ReturnCode_SocketDropped    = EPIPE;
 const char* Platform_AppNameSuffix = " Symbian";
 cc_uint8 Platform_Flags = PLAT_FLAG_SINGLE_PROCESS | PLAT_FLAG_APP_EXIT;
 cc_bool  Platform_ReadonlyFilesystem;
+#ifndef CC_BUILD_NETWORKING
+#define CC_NO_SOCKETS
+#endif
 #include "_PlatformBase.h"
 
 
@@ -84,7 +88,6 @@ void Mem_Free(void* mem) {
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	TPtrC8 ptr((const TUint8*)msg, len);
 	cc_string str;
 	
 	str = String_Init((char*)msg, len, len);
@@ -92,7 +95,14 @@ void Platform_Log(const char* msg, int len) {
 	str = String_FromReadonly("\r\n");
 	Logger_Log(&str);
 	
+#ifdef _DEBUG
+#ifdef CC_BUILD_SYMBIAN_GENERIC
+	RDebug::Printf("%s\r\n", msg);
+#else
+	TPtrC8 ptr((const TUint8*)msg, len);
 	RDebug::RawPrint(ptr);
+#endif
+#endif
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -141,21 +151,28 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-------------------------------------------------------Crash handling----------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool crashed = false;
+bool crashed = false;
 
 static void ExceptionHandler(TExcType type) {
-	cc_string msg; char msgB[64];
+	cc_string msg; char msgB[128];
+	
+	TInt id;
+	TExcInfo excInfo;
+	UserHal::ExceptionId(id);
+	UserHal::ExceptionInfo(excInfo);
 	
 	crashed = true;
 	String_InitArray(msg, msgB);
-	String_AppendConst(&msg, "Exception: ");
+	String_AppendConst(&msg, "Exception type: ");
 	String_AppendInt(&msg, (int) type);
+	String_Format4(&msg, ", id: %i, code: %x, data: %x, extra: %i", &id, &excInfo.iCodeAddress, &excInfo.iDataAddress, &excInfo.iExtraData);
 	msg.buffer[msg.length] = '\0';
 	Logger_DoAbort(0, msg.buffer, 0);
 }
 
 void CrashHandler_Install(void) {
-#if !defined _DEBUG
+	// uiq3 has builtin crash logger that is far better than ours
+#if !defined _DEBUG && !defined CC_BUILD_SYMBIAN_UIQ3
 	User::SetExceptionHandler(ExceptionHandler, 0xffffffff);
 #endif
 }
@@ -507,6 +524,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	int i;
 	
 	// Must have at least one IPv4 address
+	if (!res)                       return ERR_INVALID_ARGUMENT;
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
 	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
 
@@ -660,9 +678,22 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	cc_uintptr addr;
+#if defined(__WINSCW__) && defined(SYMBIAN_OE_POSIX_SIGNALS)
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
+#else
+	// signals were added in PIPS 1.5, load the function dinamically for compatibility with 1.3
+	RLibrary lib;
+	if (lib.Load(_L("libc.dll")) == KErrNone) {
+		__sighandler_t* (*_signal)(int, __sighandler_t*) = (__sighandler_t* (*)(int, __sighandler_t*)) lib.Lookup(578);
+		if (_signal != NULL) {
+			_signal(SIGCHLD, SIG_IGN);
+			_signal(SIGPIPE, SIG_IGN);
+		}
+		lib.Close();
+	}
+#endif
 
 	/* Log runtime address of a known function to ease investigating crashes */
 	/* (on platforms with ASLR, function addresses change every time when run) */
@@ -701,7 +732,20 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Platform_GetEntropy(void* data, int len) {
-	return ERR_NOT_SUPPORTED;
+	// Simple random generator
+	static cc_uint32 seed = 1;
+	cc_uint8* bytes = (cc_uint8*)data;
+	int i;
+	
+	if (seed == 1) {
+		seed = User::TickCount();
+	}
+	
+	for (i = 0; i < len; i++) {
+		seed = seed * 1103515245 + 12345;
+		bytes[i] = (cc_uint8)(seed >> 8);
+	}
+	return 0;
 }
 
 #define MACHINE_KEY "Symbian_Symbian_"
@@ -710,27 +754,13 @@ static cc_result GetMachineID(cc_uint32* key) {
 	TInt res;
 	Mem_Copy(key, MACHINE_KEY, sizeof(MACHINE_KEY) - 1);
 
+#ifdef CC_BUILD_SYMBIAN_3
 	if (HAL::Get(HAL::ESerialNumber, res) == KErrNone) {
 		key[0] = res;
 	}
+#endif
 	if (HAL::Get(HAL::EMachineUid, res) == KErrNone) {
 		key[1] = res;
 	}
 	return 0;
 }
-
-#ifndef __ARMCC_4_0__
-extern "C" {
-extern int __aeabi_uidivmod(unsigned int a, unsigned int b);
-extern int __aeabi_idivmod(int a, int b);
-int __aeabi_idiv(int a, int b)
-{
-	return __aeabi_idivmod(a, b);
-}
-
-int __aeabi_uidiv(unsigned int a, unsigned int b)
-{
-	return __aeabi_uidivmod(a, b);
-}
-}
-#endif
