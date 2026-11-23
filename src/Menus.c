@@ -1583,7 +1583,7 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	TexturePack_Url.length = 0;
 	res = TexturePack_ExtractCurrent(true);
 
-	CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PACK_CHANGED, 0);
+	CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PACK_CHANGED, NOTIFY_ACTION_VALUE__TEXTURE_CHANGE_FROM_USER);
 
 	/* FileNotFound error may be because user deleted .zips from disc */
 	if (res != ReturnCode_FileNotFound) return;
@@ -2761,8 +2761,8 @@ static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	if (TexPackOverlay_IsAlways(s, widget)) TextureUrls_Accept(&s->url);
 	Gui_Remove((struct Screen*)s);
 
-	if (TexPackOverlay_IsAlways(s, widget)) CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 3);
-	else CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 2);
+	if (TexPackOverlay_IsAlways(s, widget)) CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_ACCEPTED);
+	else CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_ACCEPTED);
 }
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
@@ -2777,8 +2777,8 @@ static void TexPackOverlay_ConfirmNoClick(void* screen, void* b) {
 	if (s->alwaysDeny) TextureUrls_Deny(&s->url);
 	Gui_Remove((struct Screen*)s);
 
-	if (s->alwaysDeny) CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 0);
-	else CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONDED, 1);
+	if (s->alwaysDeny) CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_DENIED);
+	else CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_DENIED);
 }
 
 static void TexPackOverlay_GoBackClick(void* screen, void* b) {
@@ -2920,6 +2920,8 @@ void TexPackOverlay_Show(const cc_string* url) {
 
 	s->reqID = Http_AsyncGetHeaders(url, HTTP_FLAG_PRIORITY);
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TEXPACK);
+
+	CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_OPENED);
 }
 
 

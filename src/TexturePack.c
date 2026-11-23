@@ -16,6 +16,7 @@
 #include "Utils.h"
 #include "Chat.h" /* TODO avoid this include */
 #include "Errors.h"
+#include "Protocol.h"
 
 /* Simple fallback terrain for when no texture packs are available at all */
 static BitmapCol fallback_terrain[16 * 8] = {
@@ -676,13 +677,16 @@ static void ApplyDownloaded(struct HttpRequest* item) {
 
 void TexturePack_CheckPending(void) {
 	struct HttpRequest item;
+	cc_bool success = false;
 	if (!Http_GetResult(TexturePack_ReqID, &item)) return;
 
 	if (item.success) {
 		ApplyDownloaded(&item);
+		success = true;
 	} else if (item.result) {
 		Http_LogError("trying to download texture pack", &item);
 	} else if (item.statusCode == 200 || item.statusCode == 304) {
+		success = true;
 		/* Empty responses is okay for these status codes, so don't log an error */
 	} else if (item.statusCode == 404) {
 		Chat_AddRaw("&c404 Not Found error when trying to download texture pack");
@@ -693,6 +697,7 @@ void TexturePack_CheckPending(void) {
 	} else {
 		Chat_Add1("&c%i error when trying to download texture pack", &item.statusCode);
 	}
+	CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PACK_CHANGED, success ? NOTIFY_ACTION_VALUE__TEXTURE_CHANGE_FROM_SERVER : NOTIFY_ACTION_VALUE__TEXTURE_CHANGE_FAILURE);
 	HttpRequest_Free(&item);
 }
 
