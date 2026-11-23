@@ -53,7 +53,7 @@ jobs:
           # mingw defaults to i686, but some really old CPUs only support i586
           make windows clean
           make windows RELEASE=1 TARGET=cc-w9x-ogl CC=i686-w64-mingw32-gcc \
-                EXTRA_CFLAGS="$COMMON_CFLAGS -march=i586 -DCC_BUILD_NOSTDLIB -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1" \
+                EXTRA_CFLAGS="$COMMON_CFLAGS -march=i586 -ffreestanding -DCC_BUILD_NOSTDLIB -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL1" \
                 EXTRA_LDFLAGS="$COMMON_LDFLAGS"
           
           
