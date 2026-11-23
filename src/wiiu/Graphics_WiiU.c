@@ -421,11 +421,7 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-	
+static void SetVertexFormat(VertexFormat fmt) {
 	GX2SetFetchShader(fmt == VERTEX_FORMAT_TEXTURED ? &texture_FS : &colour_FS);
 	UpdateProgram();
 }

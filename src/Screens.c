@@ -2153,17 +2153,22 @@ static void GeneratingScreen_Free(void* screen) {
 
 static void GeneratingScreen_EndGeneration(void) {
 	struct LocationUpdate update;
+
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
-
 	Gen_Blocks = NULL;
-	LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
+
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
+	update.pos   = LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer);
+	update.yaw   = 0.0f;
+	update.pitch = 0.0f;
 	LocalPlayers_MoveToSpawn(&update);
 }
 
 static void GeneratingScreen_Update(void* screen, float delta) {
-	struct LoadingScreen* s    = (struct LoadingScreen*)screen;
-	const char* state = (const char*)Gen_CurrentState;
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	const char* state       = (const char*)Gen_CurrentState;
+
 	if (state == s->lastState) return;
 	s->lastState = state;
 

@@ -754,7 +754,7 @@ static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	TiltComp_Update(p, &p->Tilt, delta);
 
 	Entity_CheckSkin(&p->Base);
-	SoundComp_Tick(p, wasOnGround);
+	SoundsComp_Tick(&p->Sounds, wasOnGround);
 }
 
 static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {
@@ -791,6 +791,7 @@ static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);
 	PhysicsComp_Init(&p->Physics, &p->Base);
+	SoundsComp_Init(&p->Sounds, &p->Base);
 	TiltComp_Init(&p->Tilt);
 
 	p->Base.Flags |= ENTITY_FLAG_MODEL_RESTRICTED_SCALE;
@@ -1097,13 +1098,30 @@ cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
 void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	struct LocalPlayer* p;
 	int i;
+
+	/* If spawn position isn't set, use default of map centre */
+	if (!(update->flags & LU_HAS_POS)) {
+		update->flags |= LU_HAS_POS;
+		update->pos   = LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer);
+	}
 	
 	for (i = 0; i < Game_NumStates; i++)
 	{
 		p = &LocalPlayer_Instances[i];
+
+		/* offset other player spawnpoints in splitscreen oade */
+		if (Game_NumStates && i > 0) {
+			RNGState rng;
+			Random_Seed(&rng, i + (int)Stopwatch_Measure());
+
+			update->pos = Respawn_FindSpawnPosition(Random_Next(&rng, World.Width), 
+													Random_Next(&rng, World.Length), 
+													p->Base.Size);
+		}
+
 		p->Base.VTABLE->SetLocation(&p->Base, update);
-		
-		if (update->flags & LU_HAS_POS)   p->Spawn      = update->pos;
+		p->Spawn = update->pos;
+
 		if (update->flags & LU_HAS_YAW)   p->SpawnYaw   = update->yaw;
 		if (update->flags & LU_HAS_PITCH) p->SpawnPitch = update->pitch;
 	}
@@ -1112,14 +1130,11 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
 
-void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
+Vec3 LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p) {
 	float x = (World.Width  / 2) + 0.5f;
 	float z = (World.Length / 2) + 0.5f;
 
-	update->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
-	update->pos   = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-	update->yaw   = 0.0f;
-	update->pitch = 0.0f;
+	return Respawn_FindSpawnPosition(x, z, p->Base.Size);
 }
 
 

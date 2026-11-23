@@ -89,7 +89,6 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	if (res) Logger_IOWarn2(res, "decoding", &raw_path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
-	if (!spawn_point) LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
 	LocalPlayers_MoveToSpawn(&update);
 
 	relPath = *path;
@@ -1241,9 +1240,6 @@ Classic 0.15 to Classic 0.30:
 }*/
 
 static void Dat_Format0And1(void) {
-	/* Formats 0 and 1 don't store spawn position, so use default of map centre */
-	spawn_point = NULL;
-
 	/* Similiar env to how it appears in preclassic - 0.13 classic client */
 	Env.CloudsHeight = -30000;
 	Env.SkyCol       = PackedCol_Make(0x7F, 0xCC, 0xFF, 0xFF);

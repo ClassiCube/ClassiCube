@@ -133,7 +133,7 @@ static void VirtualKeyboard_Hook(void);
 
 
 #define KB_NORMAL_COLOR     BitmapCol_Make(0x7F, 0x7F, 0x7F, 0x90)
-#define KB_SELECTED_COLOR   BitmapCol_Make(0xAF, 0xAF, 0xAF, 0x90)
+#define KB_SELECTED_COLOR   BitmapCol_Make(0xAF, 0xAF, 0xAF, 0xFF)
 #define KB_BACKGROUND_COLOR BitmapCol_Make(0xFF, 0xFF, 0xFF, 0x90)
 
 static void VirtualKeyboard_Draw(struct Context2D* ctx) {
@@ -445,7 +445,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args) {
 	DisplayInfo.ShowingSoftKeyboard = true;
 
 	kb_needsHook = true;
-	kb_curX      = -1;
+	kb_curX      = 0;
 	kb_curY      = 0;
 	kb_shift     = false;
 	kb_yOffset   = args->yOffset;

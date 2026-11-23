@@ -256,7 +256,7 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 	OSSleepTicks(OSMillisecondsToTicks(milliseconds));
 }
 
-static int ExecThread(int argc, const char **argv) {
+static int ExecThread(int argc, void* argv) {
 	((Thread_StartFunc)argv)(); 
 	return 0;
 }

@@ -572,9 +572,6 @@
     <ClCompile Include="Graphics_D3D9.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Http_Web.c">
-      <Filter>Source Files\Network</Filter>
-    </ClCompile>
     <ClCompile Include="Http_Worker.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
@@ -702,12 +699,6 @@
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
     <ClCompile Include="..\third_party\bearssl\dec64le.c">
-      <Filter>Source Files\BearSSL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\third_party\bearssl\dig_oid.c">
-      <Filter>Source Files\BearSSL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\third_party\bearssl\dig_size.c">
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
     <ClCompile Include="..\third_party\bearssl\ec_all_m31.c">
@@ -869,9 +860,6 @@
     <ClCompile Include="..\third_party\bearssl\md5.c">
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
-    <ClCompile Include="..\third_party\bearssl\md5sha1.c">
-      <Filter>Source Files\BearSSL</Filter>
-    </ClCompile>
     <ClCompile Include="..\third_party\bearssl\multihash.c">
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
@@ -971,9 +959,6 @@
     <ClCompile Include="..\third_party\bearssl\ssl_hs_client.c">
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
-    <ClCompile Include="..\third_party\bearssl\ssl_io.c">
-      <Filter>Source Files\BearSSL</Filter>
-    </ClCompile>
     <ClCompile Include="..\third_party\bearssl\ssl_rec_cbc.c">
       <Filter>Source Files\BearSSL</Filter>
     </ClCompile>
@@ -991,6 +976,9 @@
     </ClCompile>
     <ClCompile Include="..\third_party\bearssl\x509_minimal_full.c">
       <Filter>Source Files\BearSSL</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginAPI.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

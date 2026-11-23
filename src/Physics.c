@@ -130,6 +130,7 @@ cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 invDir, Vec3 min, Vec3 m
 static struct SearcherState searcherDefaultStates[SEARCHER_STATES_MIN];
 static cc_uint32 searcherCapacity = SEARCHER_STATES_MIN;
 struct SearcherState* Searcher_States = searcherDefaultStates;
+IVec3 Searcher_Origin;
 
 static void Searcher_QuickSort(int left, int right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;
@@ -181,8 +182,9 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 		Searcher_States  = (struct SearcherState*)Mem_Alloc(elements, sizeof(struct SearcherState), "collision search states");
 	}
 	curState = Searcher_States;
+	Searcher_Origin = min;
 
-	/* Order loops so that we minimise cache misses */
+	/* Order loops so that cache misses are minimised */
 	for (y = min.y; y <= max.y; y++) {
 		for (z = min.z; z <= max.z; z++) {
 			for (x = min.x; x <= max.x; x++) {
@@ -199,9 +201,10 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 				Searcher_CalcTime(&vel, entityBB, &blockBB, &tx, &ty, &tz);
 				if (tx > 1.0f || ty > 1.0f || tz > 1.0f) continue;
 
-				curState->x = (x << 3) | (block  & 0x007);
-				curState->y = (y << 4) | ((block & 0x078) >> 3);
-				curState->z = (z << 3) | ((block & 0x380) >> 7);
+				curState->block = block;
+				curState->relX  = x - min.x;
+				curState->relY  = y - min.y;
+				curState->relZ  = z - min.z;
 				curState->tSquared = tx * tx + ty * ty + tz * tz;
 				curState++;
 			}

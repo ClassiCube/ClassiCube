@@ -740,10 +740,7 @@ void Gfx_LoadMVP(const struct Matrix* view, const struct Matrix* proj, struct Ma
 /*########################################################################################################################*
 *--------------------------------------------------------Rendering--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-}
+static void SetVertexFormat(VertexFormat fmt) { }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 }

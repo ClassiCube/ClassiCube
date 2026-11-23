@@ -139,5 +139,8 @@ enum CC_ERRORS {
 	PNG_ERR_16BITSAMPLES = 0xCCDED071UL, /* Image uses 16 bit samples, which is unimplemented */
 	ERR_NO_NETWORKING    = 0xCCDED072UL, /* No working network connection */
 	ERR_NON_WRITABLE_FS  = 0xCCDED073UL, /* No writable filesystem detected */
+
+	PNG_ERR_TOO_SMALL    = 0xCCDED074UL, /* Image width/height is <= zero */
+	PNG_ERR_MULTI_HDRS   = 0xCCDED075UL, /* Image has more than one header */
 };
 #endif

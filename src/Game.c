@@ -507,14 +507,15 @@ static void Render3DFrame(float delta, float t) {
 	EntityNames_Render();
 
 	Particles_Render(t);
-	EnvRenderer_RenderSky();
-	EnvRenderer_RenderClouds();
 
 	MapRenderer_Update(delta);
 	MapRenderer_RenderNormal(delta);
 	EnvRenderer_RenderMapSides();
 
 	EntityShadows_Render();
+	EnvRenderer_RenderClouds();
+	EnvRenderer_RenderSky();
+
 	if (Game_SelectedPos.valid && !Game_HideGui) {
 		SelOutlineRenderer_Render(&Game_SelectedPos, true);
 	}
@@ -700,6 +701,13 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 
 #ifdef CC_BUILD_SPLITSCREEN
 static void DrawSplitscreen(float delta, float t, int i, int x, int y, int w, int h) {
+	if (Gfx.ScissorAlignment) {
+		int mask  = Gfx.ScissorAlignment - 1;
+
+		int xOver = x & mask; x -= xOver; w = (w + xOver) & ~mask;
+		int yOver = y & mask; y -= yOver; h = (h + yOver) & ~mask;
+	}
+
 	Gfx_SetViewport(x, y, w, h);
 	Gfx_SetScissor( x, y, w, h);
 	Game.CurrentState = i;

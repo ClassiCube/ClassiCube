@@ -40,5 +40,5 @@ include misc/makefiles/common_build.mk
 include misc/makefiles/common_targets.mk
 
 dist: $(TARGET).exe
-	$(call DIST_PKG_INIT_DEFAULT,$(TARGET).exe)
+	$(call DIST_PKG_INIT_DEFAULT,$(TARGET).exe,.exe)
 	$(call DIST_PKG_BUILD_ZIP,$(TARGET))

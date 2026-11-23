@@ -588,10 +588,7 @@ void Gfx_DisableTextureOffset(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------Rendering--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
+static void SetVertexFormat(VertexFormat fmt) {
 	gpu_stride = gfx_stride;
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {

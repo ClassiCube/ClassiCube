@@ -217,7 +217,6 @@ add_library(classicube SHARED
         ../../third_party/bearssl/ssl_engine_default_rsavrfy.c
         ../../third_party/bearssl/ssl_hashes.c
         ../../third_party/bearssl/ssl_hs_client.c
-        ../../third_party/bearssl/ssl_io.c
         ../../third_party/bearssl/ssl_rec_cbc.c
         ../../third_party/bearssl/ssl_rec_ccm.c
         ../../third_party/bearssl/ssl_rec_chapol.c

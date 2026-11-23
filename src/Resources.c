@@ -341,7 +341,7 @@ static void MusicAssets_CountMissing(void) {
 *-----------------------------------------------------Music asset fetching -----------------------------------------------*
 *#########################################################################################################################*/
 CC_NOINLINE static int MusicAsset_Download(const char* hash) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 
 	String_InitArray(url, urlBuffer);
 	String_Format3(&url, "https://resources.download.minecraft.net/%r%r/%c", 

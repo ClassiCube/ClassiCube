@@ -278,10 +278,14 @@ static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	if (uv) String_AppendConst(dst, "  vec4 col = texture2D(texImage, out_uv) * out_col;\n");
 	else    String_AppendConst(dst, "  vec4 col = out_col;\n");
 	if (al) String_AppendConst(dst, "  if (col.a < 0.5) discard;\n");
-	if (fm) String_AppendConst(dst, "  float depth = 1.0 / gl_FragCoord.w;\n");
-	if (fl) String_AppendConst(dst, "  float f = clamp(1.0 - depth * fogEnd, 0.0, 1.0);\n");
+
+	if (fl) String_AppendConst(dst, "  float depth = 1.0 / gl_FragCoord.w;\n");
+	if (fl) String_AppendConst(dst, "  float f = clamp(depth * fogEnd, 0.0, 1.0);\n");
+	if (fl) String_AppendConst(dst, "  col.rgb = mix(col.rgb, fogCol, f);\n");
+
+	if (fd) String_AppendConst(dst, "  float depth = 1.0 / gl_FragCoord.w;\n");
 	if (fd) String_AppendConst(dst, "  float f = clamp(exp(fogDensity * depth), 0.0, 1.0);\n");
-	if (fm) String_AppendConst(dst, "  col.rgb = mix(fogCol, col.rgb, f);\n");
+	if (fd) String_AppendConst(dst, "  col.rgb = mix(fogCol, col.rgb, f);\n");
 	
 	if (fl || fd || fm) AddPostProcessing(dst);
 	String_AppendConst(dst,         "  gl_FragColor = col;\n");
@@ -681,11 +685,7 @@ static void GL_SetupVbTextured_Range(int startVertex) {
 	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset + 16));
 }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
+static void SetVertexFormat(VertexFormat fmt) {
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableVertexAttribArray(2);
 		gfx_setupVBFunc      = GL_SetupVbTextured;

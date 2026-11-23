@@ -275,7 +275,7 @@ static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void GetTokenTask_Run(void) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 	static char tokenBuffer[STRING_SIZE];
 	static char userBuffer[STRING_SIZE];
 	if (GetTokenTask.Base.working) return;
@@ -353,7 +353,7 @@ static void SignInTask_Append(cc_string* dst, const char* key, const cc_string* 
 }
 
 void SignInTask_Run(const cc_string* user, const cc_string* pass, const cc_string* mfaCode) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 	static char userBuffer[STRING_SIZE];
 	cc_string args; char argsBuffer[1024];
 	if (SignInTask.Base.working) return;
@@ -444,7 +444,7 @@ static void FetchServerTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchServerTask_Run(const cc_string* hash) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 	if (FetchServerTask.Base.working) return;
 
 	LWebTask_Reset(&FetchServerTask.Base);
@@ -513,7 +513,7 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchServersTask_Run(void) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 	if (FetchServersTask.Base.working) return;
 
 	LWebTask_Reset(&FetchServersTask.Base);
@@ -606,7 +606,7 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchUpdateTask_Run(cc_bool release, int buildIndex) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 	String_InitArray(url, urlBuffer);
 
 	String_Format2(&url, UPDATES_SERVER "/%c/%c",
@@ -637,7 +637,7 @@ static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 static void FetchFlagsTask_DownloadNext(void) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[MAX_URL_LEN];
 	String_InitArray(url, urlBuffer);
 
 	if (FetchFlagsTask.Base.working)        return;

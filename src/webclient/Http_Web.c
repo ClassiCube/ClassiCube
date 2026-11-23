@@ -81,7 +81,7 @@ static void GetFinalUrl(struct HttpRequest* req, cc_string* dst) {
 
 #define HTTP_MAX_CONCURRENCY 6
 static void Http_StartNextDownload(void) {
-	char urlBuffer[URL_MAX_SIZE]; cc_string url;
+	char urlBuffer[MAX_URL_LEN]; cc_string url;
 	char urlStr[NATIVE_STR_LEN];
 	struct HttpRequest* req;
 	cc_result res;

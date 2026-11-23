@@ -668,10 +668,9 @@ void Gfx_SetScratchVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	cc_result res;
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
+static void SetVertexFormat(VertexFormat fmt) {
+	cc_result res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
+	if (res) Process_Abort2(res, "D3D9_SetVertexFormat");
 
 	if (fmt == VERTEX_FORMAT_COLOURED) {
 		/* it's necessary to unbind the texture, otherwise the alpha from the last bound texture */
@@ -681,10 +680,6 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		/*  IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, fmt == VERTEX_FORMAT_COLOURED ? D3DTOP_DISABLE : D3DTOP_SELECTARG1); */
 		/* SetTexture(NULL) seems to be enough, not really required to call SetTextureStageState */
 	}
-
-	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
-	if (res) Process_Abort2(res, "D3D9_SetVertexFormat");
-	gfx_stride = strideSizes[fmt];
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {

@@ -8,7 +8,7 @@ Abstracts platform specific memory management, I/O, etc
 Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
-#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX
+#if defined CC_BUILD_WIN || defined CC_BUILD_WINCE || defined CC_BUILD_XBOX || defined CC_BUILD_XBOX360
 	#define _NL "\r\n"
 	#define NATIVE_STR_LEN 300
 #else

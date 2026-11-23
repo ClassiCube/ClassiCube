@@ -439,14 +439,16 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			bmp->width  = (int)Mem_ReadU32_BE(tmp + 0);
 			bmp->height = (int)Mem_ReadU32_BE(tmp + 4);
-			if (bmp->width  < 0 || bmp->width  > PNG_MAX_DIMS) return DecodeFailure(bmp, PNG_ERR_TOO_WIDE);
-			if (bmp->height < 0 || bmp->height > PNG_MAX_DIMS) return DecodeFailure(bmp, PNG_ERR_TOO_TALL);
+			if (bmp->width <= 0 || bmp->height <= 0) return DecodeFailure(bmp, PNG_ERR_TOO_SMALL);
+			if (bmp->width  > PNG_MAX_DIMS)          return DecodeFailure(bmp, PNG_ERR_TOO_WIDE);
+			if (bmp->height > PNG_MAX_DIMS)          return DecodeFailure(bmp, PNG_ERR_TOO_TALL);
 
 			bitsPerSample = tmp[8]; colorspace = tmp[9];
 			if (bitsPerSample == 16) return DecodeFailure(bmp, PNG_ERR_16BITSAMPLES);
 
 			rowExpander = Png_GetExpander(colorspace, bitsPerSample);
 			if (!rowExpander) return DecodeFailure(bmp, PNG_ERR_INVALID_COL_BPP);
+			if (bmp->scan0)   return DecodeFailure(bmp, PNG_ERR_MULTI_HDRS);
 
 			if (tmp[10] != 0) return DecodeFailure(bmp, PNG_ERR_COMP_METHOD);
 			if (tmp[11] != 0) return DecodeFailure(bmp, PNG_ERR_FILTER);

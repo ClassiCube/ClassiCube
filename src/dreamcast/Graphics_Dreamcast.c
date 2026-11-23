@@ -146,6 +146,8 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	
 	Gfx.NonPowTwoTexturesSupport = GFX_NONPOW2_UPLOAD;
+	// Dreamcast GPU can only apply scissoring on a per 32x32 tile level
+	Gfx.ScissorAlignment = 32; 
 	gfx_format = -1;
 }
 
@@ -939,10 +941,7 @@ static void DrawQuads(int count, void* src, DrawHints hints) {
 	list->length = 0;
 }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
+static void SetVertexFormat(VertexFormat fmt) {
 	stateDirty = true;
 }
 

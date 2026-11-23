@@ -844,10 +844,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 #define VERTEX_TEX_SIZE sizeof(struct PS1VertexTextured)
 #define VERTEX_COL_SIZE sizeof(struct PS1VertexColoured)
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-}
+static void SetVertexFormat(VertexFormat fmt) { }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 

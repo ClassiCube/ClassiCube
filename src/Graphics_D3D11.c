@@ -472,11 +472,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
+static void SetVertexFormat(VertexFormat fmt) {
 	IA_UpdateLayout();
 	VS_UpdateShader();
 	PS_UpdateShader();

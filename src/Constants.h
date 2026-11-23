@@ -6,21 +6,22 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 */
 
 #define GAME_MAX_CMDARGS 5
-#define GAME_APP_VER "1.3.8"
+#define GAME_APP_VER "1.4.0"
 
+
+#define GAME_APP_NAME  "ClassiCube 1.4.0"
 #if defined CC_BUILD_WEB
-#define GAME_APP_ALT   "ClassiCube 1.3.8 web mobile"
-#define GAME_APP_NAME  "ClassiCube 1.3.8 web"
 #define GAME_APP_TITLE "ClassiCube"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.3.8"
-#define GAME_APP_TITLE "ClassiCube 1.3.8"
+#define GAME_APP_TITLE "ClassiCube 1.4.0"
 #endif
 
-/* Max number of characters strings can have. */
+/* Max number of characters classic strings can have */
 #define STRING_SIZE 64
-/* Max number of characters filenames can have. */
+/* Max supported number of characters in filenames */
 #define FILENAME_SIZE 260
+/* Max supported number of characters in URL addresses */
+#define MAX_URL_LEN (STRING_SIZE * 2)
 
 /* Chunk axis length in blocks. */
 #define CHUNK_SIZE 16
