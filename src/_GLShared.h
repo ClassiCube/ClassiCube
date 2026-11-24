@@ -65,34 +65,6 @@ static void* FastAllocTempMem(int size) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------Texture generation/binding/deletion------------------------------------------*
-*#########################################################################################################################*/
-/* Necessary to implement this way, so works on both little endian and big endian systems */
-typedef GfxResourceID (*GenGLTexture)(void);
-typedef void (*DelGLTexture)(GfxResourceID id);
-typedef void (*SetGLTexture)(GfxResourceID id);
-
-static GfxResourceID defaultGenTexture(void) {
-	GLuint buf = 0;
-	_glGenTextures(1, &buf);
-	return uint_to_ptr(buf);
-}
-
-static void defaultDelTexture(GfxResourceID id) {
-	GLuint buf = ptr_to_uint(id);
-	_glDeleteTextures(1, &buf);
-}
-
-static void defaultSetTexture(GfxResourceID id) {
-	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(id));
-}
-
-static GenGLTexture genTexture = defaultGenTexture;
-static DelGLTexture delTexture = defaultDelTexture;
-static SetGLTexture setTexture = defaultSetTexture;
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool convert_rgba;
@@ -199,11 +171,13 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
 }
 
-GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	GfxResourceID texId = genTexture();
-	setTexture(texId);
-	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 
+static GfxResourceID def_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+	GLuint buf = 0;
+	_glGenTextures(1, &buf);
+	_glBindTexture(GL_TEXTURE_2D, buf);
+
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (flags & TEXTURE_FLAG_BILINEAR) ? GL_LINEAR : GL_NEAREST);
 	if (mipmaps) {
 		_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		if (customMipmapsLevels) {
@@ -221,11 +195,19 @@ GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags,
 	}
 
 	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, rowWidth, false);
-	return texId;
+	return uint_to_ptr(buf);
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	setTexture(texId);
+typedef GfxResourceID (*NewGLTexture)(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps);
+static NewGLTexture newTexture = def_AllocTexture;
+
+GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+	return newTexture(bmp, rowWidth, flags, mipmaps);
+}
+
+
+static void def_UpdateTexture(GfxResourceID id, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(id));
 
 	if (part->width == rowWidth) {
 		CallTexSubImage2D(0, x, y, part->width, part->height, part->scan0);
@@ -236,11 +218,35 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
 }
 
+typedef void (*UpdGLTexture)(GfxResourceID id, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps);
+static UpdGLTexture updTexture = def_UpdateTexture;
+
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	updTexture(texId, x, y, part, rowWidth, mipmaps);
+}
+
+
+static void def_DeleteTexture(GfxResourceID id) {
+	GLuint buf = ptr_to_uint(id);
+	_glDeleteTextures(1, &buf);
+}
+
+typedef void (*DelGLTexture)(GfxResourceID id);
+static DelGLTexture delTexture = def_DeleteTexture;
+
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GfxResourceID id = *texId;
 	if (id) delTexture(id);
 	*texId = 0;
 }
+
+
+static void defaultSetTexture(GfxResourceID id) {
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(id));
+}
+
+typedef void (*SetGLTexture)(GfxResourceID id);
+static SetGLTexture setTexture = defaultSetTexture;
 
 void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }

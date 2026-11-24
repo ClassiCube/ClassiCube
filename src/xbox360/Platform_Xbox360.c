@@ -495,7 +495,6 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 
 	int64_t timeout = -(int64_t)5000 * TICKS_PER_MS;
 	status = NtWaitForSingleObjectEx(done_signal, USER_MODE, 0, &timeout);
-	NtClose(done_signal);
 
 	if (status == STATUS_TIMEOUT) {
 		result = _WSAECONNRESET;
@@ -518,6 +517,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	}
 
 	NetDll_XNetDnsRelease(XNCALLER_TITLE, lookup);
+	NtClose(done_signal);
 	return result;
 }
 

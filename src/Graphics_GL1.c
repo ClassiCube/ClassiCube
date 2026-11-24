@@ -514,42 +514,58 @@ static void APIENTRY legacy_bufferSubData(GLenum target, cc_uintptr offset, cc_u
 
 struct GL10Texture {
 	int width, height;
-	unsigned char* pixels;
+	unsigned char pixels[];
 };
-static struct GL10Texture* gl10_tex;
 
-static void gl10_bindTexture(GfxResourceID texID) {
-	gl10_tex = (struct GL10Texture*)texID;
-	if (gl10_tex && gl10_tex->pixels) {
-		_glTexImage2D(GL_TEXTURE_2D, 0, 4, gl10_tex->width, gl10_tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gl10_tex->pixels);
+static GfxResourceID gl10_newTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
+	int width  = bmp->width;
+	int height = bmp->height;
+	int size   = sizeof(struct GL10Texture) + (width * height * 4);
+	int x, y;
+
+	struct GL10Texture* tex = Mem_TryAllocCleared(1, size);
+	if (!tex) return NULL;
+	tex->width  = width;
+	tex->height = height;
+
+	cc_uint8* d  = (cc_uint8*)tex->pixels;
+	BitmapCol* s = (BitmapCol*)bmp->scan0;
+
+	/* R,G,B,A byte order regardless of system endian */
+	for (y = 0; y < height; y++, s += rowWidth)
+	{
+		for (x = 0; x < width; x++, d += 4) 
+    	{
+    	    BitmapCol col = s[x];
+			d[0] = BitmapCol_R(col);
+			d[1] = BitmapCol_G(col);
+			d[2] = BitmapCol_B(col);
+			d[3] = BitmapCol_A(col);
+		}
+	}
+	return tex;
+}
+
+static void gl10_updTexture(GfxResourceID id, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	/* TODO */
+}
+
+static void gl10_setTexture(GfxResourceID texID) {
+	struct GL10Texture* tex = texID;
+
+	if (tex) {
+		_glTexImage2D(GL_TEXTURE_2D, 0, 4, tex->width, tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
 	} else {
 		BitmapCol pixel = BITMAPCOLOR_WHITE;
 		_glTexImage2D(GL_TEXTURE_2D, 0, 4, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
 	}
 }
 
-static void gl10_deleteTexture(GfxResourceID id) {
-	struct GL10Texture* tex = (struct GL10Texture*)id;
-	if (tex->pixels) Mem_Free(tex->pixels);
+static void gl10_delTexture(GfxResourceID id) {
+	struct GL10Texture* tex = id;
 	if (tex) Mem_Free(tex);
 }
 
-static GfxResourceID gl10_genTexture(void) {
-	return Mem_AllocCleared(1, sizeof(struct GL10Texture), "GL 1.0 texture");
-}
-
-static void APIENTRY gl10_texImage(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels) {
-	int i;
-	gl10_tex->width  = width;
-	gl10_tex->height = height;
-	gl10_tex->pixels = Mem_Alloc(width * height, 4, "GL 1.0 pixels");
-
-	ConvertRGBA(gl10_tex->pixels, pixels, width * height);
-}
-
-static void APIENTRY gl10_texSubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels) {
-	/* TODO */
-}
 
 static void APIENTRY gl10_disableClientState(GLenum target) { }
 
@@ -630,11 +646,10 @@ static void FallbackOpenGL(void) {
 	_glDrawElements    = gl10_drawElements;    _glColorPointer  = gl10_colorPointer;
 	_glTexCoordPointer = gl10_texCoordPointer; _glVertexPointer = gl10_vertexPointer;
 
-	setTexture        = gl10_bindTexture;
-	genTexture        = gl10_genTexture;
-	delTexture        = gl10_deleteTexture;
-	_glTexImage2D     = gl10_texImage;
-	_glTexSubImage2D  = gl10_texSubImage;
+	newTexture = gl10_newTexture;
+	updTexture = gl10_updTexture;
+	setTexture = gl10_setTexture;
+	delTexture = gl10_delTexture;
 
 	_glDisableClientState = gl10_disableClientState;
 	_glEnableClientState  = gl10_enableClientState;
