@@ -1871,6 +1871,7 @@ static int InventoryScreen_KeyDown(void* screen, int key, struct InputDevice* de
 		Gui_Remove((struct Screen*)s);
 	} else if (InputDevice_IsEnter(key, device) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
+		CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_SELECTED, table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key, device)) {
 	} else {
