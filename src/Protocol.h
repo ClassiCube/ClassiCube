@@ -102,7 +102,7 @@ void Classic_SendSetBlock(int x, int y, int z, cc_bool place, BlockID block);
 
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t);
 void CPE_SendNotifyAction(int action, cc_uint16 value);
-void CPE_SendNotifyPositionAction(int action, int x, int y, int z);
+void CPE_SendNotifyPositionAction(int action, Vec3 pos);
 
 /* Send a PluginMessage to the server; data must contain 64 bytes. */
 CC_API void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data);

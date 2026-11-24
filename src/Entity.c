@@ -856,7 +856,6 @@ static void LocalPlayers_OnNewMap(void) {
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 
 static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
-	struct EntityLocation* prev;
 	struct LocationUpdate update;
 	struct AABB bb;
 	Vec3 spawn = p->Spawn;
@@ -885,8 +884,7 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 		}
 	}
 
-	prev = &p->Base.prev;
-	CPE_SendNotifyPositionAction(3, prev->pos.x, prev->pos.y, prev->pos.z);
+	CPE_SendNotifyPositionAction(NOTIFY_ACTION_RESPAWNED, p->Base.prev.pos);
 
 	/* Adjust the position to be slightly above the ground, so that */
 	/*  it's obvious to the player that they are being respawned */
@@ -944,7 +942,7 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 		p->SpawnYaw   = p->Base.Yaw;
 		if (!Game_ClassicMode) p->SpawnPitch = p->Base.Pitch;
 
-		CPE_SendNotifyPositionAction(4, p->Spawn.x, p->Spawn.y, p->Spawn.z);
+		CPE_SendNotifyPositionAction(NOTIFY_ACTION_SPAWN_UPDATED, p->Spawn);
 	}
 	return LocalPlayer_HandleRespawn(key, device);
 }
