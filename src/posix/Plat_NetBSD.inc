@@ -17,7 +17,7 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 #elif defined __x86_64__
 	/* src/sys/arch/amd64/include/mcontext.h */
 	String_Format3(str, "rax=%x rbx=%x rcx=%x" _NL, RREG(RAX), RREG(RBX), RREG(RCX));
-	String_Format3(str, "rdx=%x rsi=%x rdi=%x" _NL, RREG(RAX), RREG(RSI), RREG(RDI));
+	String_Format3(str, "rdx=%x rsi=%x rdi=%x" _NL, RREG(RDX), RREG(RSI), RREG(RDI));
 	String_Format3(str, "rip=%x rbp=%x rsp=%x" _NL, RREG(RIP), RREG(RBP), RREG(RSP));
 	String_Format3(str, "r8 =%x r9 =%x r10=%x" _NL, RREG(R8),  RREG(R9),  RREG(R10));
 	String_Format3(str, "r11=%x r12=%x r13=%x" _NL, RREG(R11), RREG(R12), RREG(R13));
