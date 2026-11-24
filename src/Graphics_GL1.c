@@ -517,6 +517,7 @@ struct GL10Texture {
 	unsigned char pixels[];
 };
 
+
 static GfxResourceID gl10_newTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int width  = bmp->width;
 	int height = bmp->height;
@@ -528,8 +529,8 @@ static GfxResourceID gl10_newTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 
 	tex->width  = width;
 	tex->height = height;
 
-	cc_uint8* d  = (cc_uint8*)tex->pixels;
-	BitmapCol* s = (BitmapCol*)bmp->scan0;
+	cc_uint8* d  = tex->pixels;
+	BitmapCol* s = bmp->scan0;
 
 	/* R,G,B,A byte order regardless of system endian */
 	for (y = 0; y < height; y++, s += rowWidth)
@@ -543,11 +544,32 @@ static GfxResourceID gl10_newTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 
 			d[3] = BitmapCol_A(col);
 		}
 	}
+
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	return tex;
 }
 
 static void gl10_updTexture(GfxResourceID id, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	/* TODO */
+	struct GL10Texture* tex = id;
+	int width  = part->width;
+	int height = part->height;
+
+	cc_uint8* d  = tex->pixels + 4 * (x + y * tex->width);
+	BitmapCol* s = part->scan0;
+
+	/* R,G,B,A byte order regardless of system endian */
+	for (y = 0; y < height; y++, s += rowWidth)
+	{
+		for (x = 0; x < width; x++, d += 4) 
+    	{
+    	    BitmapCol col = s[x];
+			d[0] = BitmapCol_R(col);
+			d[1] = BitmapCol_G(col);
+			d[2] = BitmapCol_B(col);
+			d[3] = BitmapCol_A(col);
+		}
+	}
 }
 
 static void gl10_setTexture(GfxResourceID texID) {
