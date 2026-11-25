@@ -388,7 +388,7 @@ cc_bool SoundContext_FastPlay(struct AudioContext* ctx, struct AudioData* data) 
 }
 
 cc_result SoundContext_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-    cc_result res;
+	cc_result res;
 
 	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
 	if ((res = Audio_QueueChunk(ctx, &data->chunk))) return res;
