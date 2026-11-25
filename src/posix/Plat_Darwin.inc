@@ -6,59 +6,46 @@
 /* See /usr/include/mach/i386/_structs.h (macOS 10.5+) */
 void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+
 #if defined __i386__
-	#define RREG(reg) &r->__ss.__##reg
-
-	String_Format3(str, "eax=%x ebx=%x ecx=%x" _NL, RREG(eax), RREG(ebx), RREG(ecx));
-	String_Format3(str, "edx=%x esi=%x edi=%x" _NL, RREG(edx), RREG(esi), RREG(edi));
-	String_Format3(str, "eip=%x ebp=%x esp=%x" _NL, RREG(eip), RREG(ebp), RREG(esp));
+	String_Format4(str, "eax=%x ebx=%x ecx=%x edx=%x" _NL, &r->__ss.__eax, &r->__ss.__ebx, &r->__ss.__ecx, &r->__ss.__edx);
+	String_Format4(str, "esi=%x edi=%x ebp=%x esp=%x" _NL, &r->__ss.__esi, &r->__ss.__edi, &r->__ss.__ebp, &r->__ss.__esp);
+	String_Format1(str, "eip=%x"                      _NL, &r->__ss.__eip);
 #elif defined __x86_64__
-	#define RREG(reg) &r->__ss.__##reg
-
-	String_Format3(str, "rax=%x rbx=%x rcx=%x" _NL, RREG(rax), RREG(rbx), RREG(rcx));
-	String_Format3(str, "rdx=%x rsi=%x rdi=%x" _NL, RREG(rdx), RREG(rsi), RREG(rdi));
-	String_Format3(str, "rip=%x rbp=%x rsp=%x" _NL, RREG(rip), RREG(rbp), RREG(rsp));
-	String_Format3(str, "r8 =%x r9 =%x r10=%x" _NL, RREG(r8),  RREG(r9),  RREG(r10));
-	String_Format3(str, "r11=%x r12=%x r13=%x" _NL, RREG(r11), RREG(r12), RREG(r13));
-	String_Format2(str, "r14=%x r15=%x" _NL,        RREG(r14), RREG(r15));
+	String_Format4(str, "rax=%x rbx=%x rcx=%x rdx=%x" _NL, &r->__ss__.__rax, &r->__ss__.__rbx, &r->__ss__.__rcx, &r->__ss__.__rdx);
+	String_Format4(str, "rsi=%x rdi=%x rbp=%x rsp=%x" _NL, &r->__ss__.__rsi, &r->__ss__.__rdi, &r->__ss__.__rbp, &r->__ss__.__rsp);
+	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->__ss__.__r8,  &r->__ss__.__r9,  &r->__ss__.__r10, &r->__ss__.__r11);
+	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->__ss__.__r12, &r->__ss__.__r13, &r->__ss__.__r14, &r->__ss__.__r15);
+	String_Format1(str, "rip=%x"                      _NL, &r->__ss__.__rip);
 #elif defined __aarch64__
 	/* /usr/include/mach/arm/_structs.h */
-	#define RREG(reg) &r->__ss.__##reg
-	#define RNUM(reg) &r->__ss.__x[reg]
-
-	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, RNUM(0),  RNUM(1),  RNUM(2),  RNUM(3));
-	String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, RNUM(4),  RNUM(5),  RNUM(6),  RNUM(7));
-	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, RNUM(8),  RNUM(9),  RNUM(10), RNUM(11));
-	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, RNUM(12), RNUM(13), RNUM(14), RNUM(15));
-	String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, RNUM(16), RNUM(17), RNUM(18), RNUM(19));
-	String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, RNUM(20), RNUM(21), RNUM(22), RNUM(23));
-	String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, RNUM(24), RNUM(25), RNUM(26), RNUM(27));
-	String_Format4(str, "r28=%x fp =%x lr =%x sp =%x" _NL, RNUM(28), RREG(fp), RREG(lr), RREG(sp));
-	String_Format1(str, "pc =%x" _NL,                      RREG(pc));
+	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, &r->__ss.__x[0],  &r->__ss.__x[1],  &r->__ss.__x[2],  &r->__ss.__x[3]);
+	String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, &r->__ss.__x[4],  &r->__ss.__x[5],  &r->__ss.__x[6],  &r->__ss.__x[7]);
+	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->__ss.__x[8],  &r->__ss.__x[9],  &r->__ss.__x[10], &r->__ss.__x[11]);
+	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->__ss.__x[12], &r->__ss.__x[13], &r->__ss.__x[14], &r->__ss.__x[15]);
+	String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, &r->__ss.__x[16], &r->__ss.__x[17], &r->__ss.__x[18], &r->__ss.__x[19]);
+	String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, &r->__ss.__x[20], &r->__ss.__x[21], &r->__ss.__x[22], &r->__ss.__x[23]);
+	String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, &r->__ss.__x[24], &r->__ss.__x[25], &r->__ss.__x[26], &r->__ss.__x[27]);
+	String_Format4(str, "r28=%x fp =%x lr =%x sp =%x" _NL, &r->__ss.__x[28], &r->__ss.__fp,    &r->__ss.__lr,    &r->__ss.__sp);
+	String_Format1(str, "pc =%x"                      _NL, &r->__ss.__pc);
 #elif defined __arm__
 	/* /usr/include/mach/arm/_structs.h */
-	#define RREG(reg) &r->__ss.__##reg
-	#define RNUM(reg) &r->__ss.__r[reg]
-
-	String_Format3(str, "r0 =%x r1 =%x r2 =%x" _NL, RNUM(0),  RNUM(1),  RNUM(2));
-	String_Format3(str, "r3 =%x r4 =%x r5 =%x" _NL, RNUM(3),  RNUM(4),  RNUM(5));
-	String_Format3(str, "r6 =%x r7 =%x r8 =%x" _NL, RNUM(6),  RNUM(7),  RNUM(8));
-	String_Format3(str, "r9 =%x r10=%x r11=%x" _NL, RNUM(9),  RNUM(10), RNUM(11));
-	String_Format3(str, "r12=%x sp =%x lr =%x" _NL, RNUM(12), RREG(sp), RREG(lr));
-	String_Format1(str, "pc =%x"               _NL, RREG(pc));
+	String_Format3(str, "r0 =%x r1 =%x r2 =%x" _NL, &r->__ss.__r[0],  &r->__ss.__r[1],  &r->__ss.__r[2]);
+	String_Format3(str, "r3 =%x r4 =%x r5 =%x" _NL, &r->__ss.__r[3],  &r->__ss.__r[4],  &r->__ss.__r[5]);
+	String_Format3(str, "r6 =%x r7 =%x r8 =%x" _NL, &r->__ss.__r[6],  &r->__ss.__r[7],  &r->__ss.__r[8]);
+	String_Format3(str, "r9 =%x r10=%x r11=%x" _NL, &r->__ss.__r[9],  &r->__ss.__r[10], &r->__ss.__r[11]);
+	String_Format3(str, "r12=%x sp =%x lr =%x" _NL, &r->__ss.__r[12], &r->__ss.__sp,    &r->__ss.__lr);
+	String_Format1(str, "pc =%x"               _NL, &r->__ss.__pc);
 #elif defined __ppc__ || defined __ppc64__
-	#define RREG(reg) &r->__ss.__##reg
-	#define RNUM(reg) &r->__ss.__r##reg
-
-	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, RNUM(0),    RNUM(1),  RNUM(2),  RNUM(3));
-	String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, RNUM(4),    RNUM(5),  RNUM(6),  RNUM(7));
-	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, RNUM(8),    RNUM(9),  RNUM(10), RNUM(11));
-	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, RNUM(12),   RNUM(13), RNUM(14), RNUM(15));
-	String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, RNUM(16),   RNUM(17), RNUM(18), RNUM(19));
-	String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, RNUM(20),   RNUM(21), RNUM(22), RNUM(23));
-	String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, RNUM(24),   RNUM(25), RNUM(26), RNUM(27));
-	String_Format4(str, "r28=%x r29=%x r30=%x r31=%x" _NL, RNUM(28),   RNUM(29), RNUM(30), RNUM(31));
-	String_Format3(str, "pc =%x lr =%x ctr=%x" _NL,        RREG(srr0), RREG(lr), RREG(ctr));
+	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, &r->__ss.__r0,   &r->__ss.__r1,  &r->__ss.__r2,  &r->__ss.__r3);
+	String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, &r->__ss.__r4,   &r->__ss.__r5,  &r->__ss.__r6,  &r->__ss.__r7);
+	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->__ss.__r8,   &r->__ss.__r9,  &r->__ss.__r10, &r->__ss.__r11);
+	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->__ss.__r12,  &r->__ss.__r13, &r->__ss.__r14, &r->__ss.__r15);
+	String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, &r->__ss.__r16,  &r->__ss.__r17, &r->__ss.__r18, &r->__ss.__r19);
+	String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, &r->__ss.__r20,  &r->__ss.__r21, &r->__ss.__r22, &r->__ss.__r23);
+	String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, &r->__ss.__r24,  &r->__ss.__r25, &r->__ss.__r26, &r->__ss.__r27);
+	String_Format4(str, "r28=%x r29=%x r30=%x r31=%x" _NL, &r->__ss.__r28,  &r->__ss.__r29, &r->__ss.__r30, &r->__ss.__r31);
+	String_Format3(str, "pc =%x lr =%x ctr=%x"        _NL, &r->__ss.__srr0, &r->__ss.__lr,  &r->__ss.__ctr);
 #else
 	#error "Unknown CPU architecture"
 #endif
@@ -67,17 +54,17 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 /* See /usr/include/mach/i386/thread_status.h (macOS 10.4) */
 void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+
 #if defined __i386__
-	String_Format3(str, "eax=%x ebx=%x ecx=%x" _NL, &r->ss.eax, &r->ss.ebx, &r->ss.ecx);
-	String_Format3(str, "edx=%x esi=%x edi=%x" _NL, &r->ss.edx, &r->ss.esi, &r->ss.edi);
-	String_Format3(str, "eip=%x ebp=%x esp=%x" _NL, &r->ss.eip, &r->ss.ebp, &r->ss.esp);
+	String_Format4(str, "eax=%x ebx=%x ecx=%x edx=%x" _NL, &r->ss.eax, &r->ss.ebx, &r->ss.ecx, &r->ss.edx);
+	String_Format4(str, "esi=%x edi=%x ebp=%x esp=%x" _NL, &r->ss.esi, &r->ss.edi, &r->ss.ebp, &r->ss.esp);
+	String_Format1(str, "eip=%x"                      _NL, &r->ss.eip);
 #elif defined __x86_64__
-	String_Format3(str, "rax=%x rbx=%x rcx=%x" _NL, &r->ss.rax, &r->ss.rbx, &r->ss.rcx);
-	String_Format3(str, "rdx=%x rsi=%x rdi=%x" _NL, &r->ss.rdx, &r->ss.rsi, &r->ss.rdi);
-	String_Format3(str, "rip=%x rbp=%x rsp=%x" _NL, &r->ss.rip, &r->ss.rbp, &r->ss.rsp);
-	String_Format3(str, "r8 =%x r9 =%x r10=%x" _NL, &r->ss.r8,  &r->ss.r9,  &r->ss.r10);
-	String_Format3(str, "r11=%x r12=%x r13=%x" _NL, &r->ss.r11, &r->ss.r12, &r->ss.r13);
-	String_Format2(str, "r14=%x r15=%x"        _NL, &r->ss.r14, &r->ss.r15);
+	String_Format4(str, "rax=%x rbx=%x rcx=%x rdx=%x" _NL, &r->ss.rax, &r->ss.rbx, &r->ss.rcx, &r->ss.rdx);
+	String_Format4(str, "rsi=%x rdi=%x rbp=%x rsp=%x" _NL, &r->ss.rsi, &r->ss.rdi, &r->ss.rbp, &r->ss.rsp);
+	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->ss.r8,  &r->ss.r9,  &r->ss.r10, &r->ss.r11);
+	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->ss.r12, &r->ss.r13, &r->ss.r14, &r->ss.r15);
+	String_Format1(str, "rip=%x"                      _NL, &r->ss.rip);
 #elif defined __ppc__ || defined __ppc64__
 	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, &r->ss.r0,   &r->ss.r1,  &r->ss.r2,  &r->ss.r3);
 	String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, &r->ss.r4,   &r->ss.r5,  &r->ss.r6,  &r->ss.r7);

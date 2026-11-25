@@ -8,12 +8,11 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 
 #if defined __x86_64__
 	/* Kernel/Arch/x86_64/mcontext.h */
-	String_Format3(str, "rax=%x rbx=%x rcx=%x" _NL, &r->rax, &r->rbx, &r->rcx);
-	String_Format3(str, "rdx=%x rsi=%x rdi=%x" _NL, &r->rdx, &r->rsi, &r->rdi);
-	String_Format3(str, "rip=%x rbp=%x rsp=%x" _NL, &r->rip, &r->rbp, &r->rsp);
-	String_Format3(str, "r8 =%x r9 =%x r10=%x" _NL, &r->r8,  &r->r9,  &r->r10);
-	String_Format3(str, "r11=%x r12=%x r13=%x" _NL, &r->r11, &r->r12, &r->r13);
-	String_Format2(str, "r14=%x r15=%x" _NL,        &r->r14, &r->r15);
+	String_Format4(str, "rax=%x rbx=%x rcx=%x rdx=%x" _NL, &r->rax, &r->rbx, &r->rcx, &r->rdx);
+	String_Format4(str, "rsi=%x rdi=%x rbp=%x rsp=%x" _NL, &r->rsi, &r->rdi, &r->rbp, &r->rsp);
+	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->r8,  &r->r9,  &r->r10, &r->r11);
+	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->r12, &r->r13, &r->r14, &r->r15);
+	String_Format1(str, "rip=%x"                      _NL, &r->rip);
 #elif defined __aarch64__
 	/* Kernel/Arch/aarch64/mcontext.h */
 	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, &r->x[0],  &r->x[1],  &r->x[2],  &r->x[3]);

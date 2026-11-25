@@ -3,16 +3,15 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	CONTEXT* r = (CONTEXT*)ctx;
 
 #if defined _M_IX86
-	String_Format3(str, "eax=%x ebx=%x ecx=%x" _NL, &r->Eax, &r->Ebx, &r->Ecx);
-	String_Format3(str, "edx=%x esi=%x edi=%x" _NL, &r->Edx, &r->Esi, &r->Edi);
-	String_Format3(str, "eip=%x ebp=%x esp=%x" _NL, &r->Eip, &r->Ebp, &r->Esp);
+	String_Format4(str, "eax=%x ebx=%x ecx=%x edx=%x" _NL, &r->Eax, &r->Ebx, &r->Ecx, &r->Edx);
+	String_Format4(str, "esi=%x edi=%x ebp=%x esp=%x" _NL, &r->Esi, &r->Edi, &r->Ebp, &r->Esp);
+	String_Format1(str, "eip=%x"                      _NL, &r->Eip);
 #elif defined _M_X64
-	String_Format3(str, "rax=%x rbx=%x rcx=%x" _NL, &r->Rax, &r->Rbx, &r->Rcx);
-	String_Format3(str, "rdx=%x rsi=%x rdi=%x" _NL, &r->Rdx, &r->Rsi, &r->Rdi);
-	String_Format3(str, "rip=%x rbp=%x rsp=%x" _NL, &r->Rip, &r->Rbp, &r->Rsp);
-	String_Format3(str, "r8 =%x r9 =%x r10=%x" _NL, &r->R8,  &r->R9,  &r->R10);
-	String_Format3(str, "r11=%x r12=%x r13=%x" _NL, &r->R11, &r->R12, &r->R13);
-	String_Format2(str, "r14=%x r15=%x"        _NL, &r->R14, &r->R15);
+	String_Format4(str, "rax=%x rbx=%x rcx=%x rdx=%x" _NL, &r->Rax, &r->Rbx, &r->Rcx, &r->Rdx);
+	String_Format4(str, "rsi=%x rdi=%x rbp=%x rsp=%x" _NL, &r->Rsi, &r->Rdi, &r->Rbp, &r->Rsp);
+	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->R8,  &r->R9,  &r->R10, &r->R11);
+	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->R12, &r->R13, &r->R14, &r->R15);
+	String_Format1(str, "rip=%x"                      _NL, &r->Rip);
 #elif defined _M_ARM64
 	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, &r->X0,  &r->X1,  &r->X2,  &r->X3);
 	String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, &r->X4,  &r->X5,  &r->X6,  &r->X7);
