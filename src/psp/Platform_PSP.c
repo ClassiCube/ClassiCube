@@ -48,6 +48,9 @@ PSP_DISABLE_AUTOSTART_PTHREAD()
 // Save 70kb by not linking in sprintf/setenv code etc
 PSP_DISABLE_NEWLIB_TIMEZONE_SUPPORT()
 
+PSP_DISABLE_NEWLIB_PIPE_SUPPORT()
+PSP_DISABLE_NEWLIB_SOCKET_SUPPORT()
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Main entrypoint-----------------------------------------------------*
@@ -433,6 +436,31 @@ cc_result Socket_Poll(cc_socket s, int timeoutMS, int mode, cc_bool* success) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Exit callback------------------------------------------------------*
+*#########################################################################################################################*/
+static int exit_callback(int arg1, int arg2, void* arg) {
+	// See comment in PSPSDK /src/user/psploadexec.h
+	// "... By installing the exit callback the home button becomes active. However if sceKernelExitGame
+	//   is not called in the callback it is likely that the psp will just crash."
+	Window_RequestClose();
+	sceKernelExitGame();
+	return 0;
+}
+
+static int exit_callback_thread(SceSize args, void *argp) {
+	int cb_id = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
+	if (cb_id >= 0) sceKernelRegisterExitCallback(cb_id);
+	sceKernelSleepThreadCB();
+	return 0;
+}
+
+static void exit_callback_setup(void) {
+	int thread_id = sceKernelCreateThread("exit thread", exit_callback_thread, 0x11, 0xFA0, 0, 0);
+	if (thread_id >= 0) sceKernelStartThread(thread_id, 0, 0);
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #define NET_PROFILE_FIRST  1
@@ -543,6 +571,7 @@ static void DisplayNetworkDetails(void) {
 }
 
 void Platform_Init(void) {
+	exit_callback_setup();
 	cc_bool net_ok = InitNetworking();
 	if (net_ok) DisplayNetworkDetails();
 	/*pspDebugSioInit();*/ 
