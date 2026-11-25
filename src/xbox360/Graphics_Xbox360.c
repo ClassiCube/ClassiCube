@@ -168,7 +168,12 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 
 static uint32_t clear_color;
 void Gfx_ClearColor(PackedCol color) {
-	clear_color = color;
+	int r = PackedCol_R(color);
+	int g = PackedCol_G(color);
+	int b = PackedCol_B(color);
+	int a = PackedCol_A(color);
+
+	clear_color = b | (g << 8) | (r << 16) | (a << 24);
 }
 
 static void UpdateDepthState(void) {

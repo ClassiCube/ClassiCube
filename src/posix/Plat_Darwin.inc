@@ -12,11 +12,11 @@ void CrashHandler_DumpRegisters(void* ctx, cc_string* str) {
 	String_Format4(str, "esi=%x edi=%x ebp=%x esp=%x" _NL, &r->__ss.__esi, &r->__ss.__edi, &r->__ss.__ebp, &r->__ss.__esp);
 	String_Format1(str, "eip=%x"                      _NL, &r->__ss.__eip);
 #elif defined __x86_64__
-	String_Format4(str, "rax=%x rbx=%x rcx=%x rdx=%x" _NL, &r->__ss__.__rax, &r->__ss__.__rbx, &r->__ss__.__rcx, &r->__ss__.__rdx);
-	String_Format4(str, "rsi=%x rdi=%x rbp=%x rsp=%x" _NL, &r->__ss__.__rsi, &r->__ss__.__rdi, &r->__ss__.__rbp, &r->__ss__.__rsp);
-	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->__ss__.__r8,  &r->__ss__.__r9,  &r->__ss__.__r10, &r->__ss__.__r11);
-	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->__ss__.__r12, &r->__ss__.__r13, &r->__ss__.__r14, &r->__ss__.__r15);
-	String_Format1(str, "rip=%x"                      _NL, &r->__ss__.__rip);
+	String_Format4(str, "rax=%x rbx=%x rcx=%x rdx=%x" _NL, &r->__ss.__rax, &r->__ss.__rbx, &r->__ss.__rcx, &r->__ss.__rdx);
+	String_Format4(str, "rsi=%x rdi=%x rbp=%x rsp=%x" _NL, &r->__ss.__rsi, &r->__ss.__rdi, &r->__ss.__rbp, &r->__ss.__rsp);
+	String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, &r->__ss.__r8,  &r->__ss.__r9,  &r->__ss.__r10, &r->__ss.__r11);
+	String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, &r->__ss.__r12, &r->__ss.__r13, &r->__ss.__r14, &r->__ss.__r15);
+	String_Format1(str, "rip=%x"                      _NL, &r->__ss.__rip);
 #elif defined __aarch64__
 	/* /usr/include/mach/arm/_structs.h */
 	String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, &r->__ss.__x[0],  &r->__ss.__x[1],  &r->__ss.__x[2],  &r->__ss.__x[3]);
