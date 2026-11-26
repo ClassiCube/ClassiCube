@@ -94,7 +94,7 @@ And also runs on:
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3))
 * PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
 * PS1 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps1))
-* Xbox 360 - completely unfinished, **broken on real hardware** (can [download from here](https://www.classicube.net/download/360))
+* Xbox 360 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/360))
 * Xbox - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/xbox))
 * Symbian (S60 3rd Edition FP1 and later) - unfinished, but usable
 
@@ -501,10 +501,10 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
 * [PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK/) - Backend for PS1
 * [duckstation](https://github.com/stenzek/duckstation) - Emulator used to test PS1 port
-* [libxenon](https://github.com/Free60Project/libxenon) - Backend for Xbox 360
+* [xsdk](https://github.com/xenosworks/xsdk) - Backend for Xbox 360
+* [Xenia-Edge](https://github.com/has207/xenia-edge) - Emulator used to test Xbox 360 port
 * [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
-* [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
 * [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
 * [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
 * [libyaul](https://github.com/yaul-org/libyaul) - Backend for Saturn

@@ -23,6 +23,9 @@ jobs:
       - name: Compile 360 build
         shell: bash
         run: |
+          export XSDK_TOOLCHAIN=/usr/local/xsdk-gcc
+          export XSDK_SDK=/usr/local/xsdk
+
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
           make xbox360 EXTRA_CFLAGS="$LATEST_FLAG"
           
