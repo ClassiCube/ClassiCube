@@ -44,13 +44,7 @@ struct ChunkInfo {
 	cc_uint8 skipClip: 1; /* Whether chunk can skip GPU backend clipping (see CC_CLIPPING_FLAGS) */
 	cc_uint8 : 0;         /* pad to next byte*/
 
-	cc_uint8 drawXMin : 1;
-	cc_uint8 drawXMax : 1;
-	cc_uint8 drawZMin : 1;
-	cc_uint8 drawZMax : 1;
-	cc_uint8 drawYMin : 1;
-	cc_uint8 drawYMax : 1;
-	cc_uint8 : 0;          /* pad to next byte */
+	cc_uint8 drawFlags;
 #ifdef OCCLUSION
 	public cc_bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;

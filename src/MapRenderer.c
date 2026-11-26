@@ -54,15 +54,13 @@ static void ChunkInfo_Init(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->vb = 0;
 #endif
 
-	chunk->visible  = true;  
-	chunk->empty    = false;
-	chunk->allAir   = false;
-	chunk->noData   = true;
-	chunk->dirty    = true;
-	chunk->skipClip = false;
-
-	chunk->drawXMin = false; chunk->drawXMax = false; chunk->drawZMin = false;
-	chunk->drawZMax = false; chunk->drawYMin = false; chunk->drawYMax = false;
+	chunk->visible   = true;  
+	chunk->empty     = false;
+	chunk->allAir    = false;
+	chunk->noData    = true;
+	chunk->dirty     = true;
+	chunk->skipClip  = false;
+	chunk->drawFlags = 0;
 
 	chunk->normalParts      = NULL;
 	chunk->translucentParts = NULL;
@@ -141,6 +139,7 @@ static void RenderNormalBatch(int batch) {
 	struct ChunkPartInfo part;
 	cc_bool drawMin, drawMax;
 	int i, offset, count;
+	cc_uint8 flags;
 
 	for (i = 0; i < renderChunksCount; i++) {
 		info = renderChunks[i];
@@ -153,20 +152,21 @@ static void RenderNormalBatch(int batch) {
 #if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 		Gfx_BindVb_Textured(info->vb);
 #endif
+		flags = info->drawFlags;
 
 		offset  = part.offset + part.spriteCount;
-		drawMin = info->drawXMin && part.counts[FACE_XMIN];
-		drawMax = info->drawXMax && part.counts[FACE_XMAX];
+		drawMin = (flags & FACE_BIT_XMIN) && part.counts[FACE_XMIN];
+		drawMax = (flags & FACE_BIT_XMAX) && part.counts[FACE_XMAX];
 		DrawNormalFaces(FACE_XMIN, FACE_XMAX);
 
 		offset  += part.counts[FACE_XMIN] + part.counts[FACE_XMAX];
-		drawMin = info->drawZMin && part.counts[FACE_ZMIN];
-		drawMax = info->drawZMax && part.counts[FACE_ZMAX];
+		drawMin = (flags & FACE_BIT_ZMIN) && part.counts[FACE_ZMIN];
+		drawMax = (flags & FACE_BIT_ZMAX) && part.counts[FACE_ZMAX];
 		DrawNormalFaces(FACE_ZMIN, FACE_ZMAX);
 
 		offset  += part.counts[FACE_ZMIN] + part.counts[FACE_ZMAX];
-		drawMin = info->drawYMin && part.counts[FACE_YMIN];
-		drawMax = info->drawYMax && part.counts[FACE_YMAX];
+		drawMin = (flags & FACE_BIT_YMIN) && part.counts[FACE_YMIN];
+		drawMax = (flags & FACE_BIT_YMAX) && part.counts[FACE_YMAX];
 		DrawNormalFaces(FACE_YMIN, FACE_YMAX);
 
 		if (!part.spriteCount) continue;
@@ -182,19 +182,19 @@ static void RenderNormalBatch(int batch) {
 		Gfx_SetFaceCulling(false);
 		continue;
 #endif
-		if (info->drawXMax || info->drawZMin) {
+		if (flags & (FACE_BIT_XMAX | FACE_BIT_ZMIN)) {
 			DrawBatch(count, offset); Game_Vertices += count;
 		} offset += count;
 
-		if (info->drawXMin || info->drawZMax) {
+		if (flags & (FACE_BIT_XMIN | FACE_BIT_ZMAX)) {
 			DrawBatch(count, offset); Game_Vertices += count;
 		} offset += count;
 
-		if (info->drawXMin || info->drawZMin) {
+		if (flags & (FACE_BIT_XMIN | FACE_BIT_ZMIN)) {
 			DrawBatch(count, offset); Game_Vertices += count;
 		} offset += count;
 
-		if (info->drawXMax || info->drawZMax) {
+		if (flags & (FACE_BIT_XMAX | FACE_BIT_ZMAX)) {
 			DrawBatch(count, offset); Game_Vertices += count;
 		}
 		Gfx_SetFaceCulling(false);
@@ -245,6 +245,7 @@ static void RenderTranslucentBatch(int batch) {
 	struct ChunkPartInfo part;
 	cc_bool drawMin, drawMax;
 	int i, offset;
+	cc_uint8 flags;
 
 	for (i = 0; i < renderChunksCount; i++) {
 		info = renderChunks[i];
@@ -257,20 +258,21 @@ static void RenderTranslucentBatch(int batch) {
 #if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 		Gfx_BindVb_Textured(info->vb);
 #endif
+		flags = inTranslucent ? FACE_BITS_ALL : info->drawFlags;
 
 		offset  = part.offset;
-		drawMin = (inTranslucent || info->drawXMin) && part.counts[FACE_XMIN];
-		drawMax = (inTranslucent || info->drawXMax) && part.counts[FACE_XMAX];
+		drawMin = (flags & FACE_BIT_XMIN) && part.counts[FACE_XMIN];
+		drawMax = (flags & FACE_BIT_XMAX) && part.counts[FACE_XMAX];
 		DrawTranslucentFaces(FACE_XMIN, FACE_XMAX);
 
 		offset  += part.counts[FACE_XMIN] + part.counts[FACE_XMAX];
-		drawMin = (inTranslucent || info->drawZMin) && part.counts[FACE_ZMIN];
-		drawMax = (inTranslucent || info->drawZMax) && part.counts[FACE_ZMAX];
+		drawMin = (flags & FACE_BIT_ZMIN) && part.counts[FACE_ZMIN];
+		drawMax = (flags & FACE_BIT_ZMAX) && part.counts[FACE_ZMAX];
 		DrawTranslucentFaces(FACE_ZMIN, FACE_ZMAX);
 
 		offset  += part.counts[FACE_ZMIN] + part.counts[FACE_ZMAX];
-		drawMin = (inTranslucent || info->drawYMin) && part.counts[FACE_YMIN];
-		drawMax = (inTranslucent || info->drawYMax) && part.counts[FACE_YMAX];
+		drawMin = (flags & FACE_BIT_YMIN) && part.counts[FACE_YMIN];
+		drawMax = (flags & FACE_BIT_YMAX) && part.counts[FACE_YMAX];
 		DrawTranslucentFaces(FACE_YMIN, FACE_YMAX);
 	}
 }
@@ -703,10 +705,13 @@ static void UpdateSortOrder(void) {
 		/*    X-1: DrawXMin = false, DrawXMax = true  */
 		/*    X  : DrawXMin = true,  DrawXMax = true  */
 		/*    X+1: DrawXMin = true,  DrawXMax = false */
-
-		info->drawXMin = dx >= 0; info->drawXMax = dx <= 0;
-		info->drawZMin = dz >= 0; info->drawZMax = dz <= 0;
-		info->drawYMin = dy >= 0; info->drawYMax = dy <= 0;
+		info->drawFlags = 
+			(dx >= 0 ? FACE_BIT_XMIN : 0) |
+			(dx <= 0 ? FACE_BIT_XMAX : 0) |
+			(dz >= 0 ? FACE_BIT_ZMIN : 0) |
+			(dz <= 0 ? FACE_BIT_ZMAX : 0) |
+			(dy >= 0 ? FACE_BIT_YMIN : 0) |
+			(dy <= 0 ? FACE_BIT_YMAX : 0);
 	}
 
 	SortMapChunks(0, chunksCount - 1);

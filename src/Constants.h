@@ -62,6 +62,7 @@ Copyright 2014-2025 ClassiCube | Licensed under BSD-3
 #define FACE_BIT_ZMAX (1 << FACE_ZMAX)
 #define FACE_BIT_YMIN (1 << FACE_YMIN) 
 #define FACE_BIT_YMAX (1 << FACE_YMAX)
+#define FACE_BITS_ALL 0x3F
 
 enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
 #define DRAWER2D_MAX_COLORS 256

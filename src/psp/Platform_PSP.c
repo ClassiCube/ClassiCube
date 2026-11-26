@@ -47,7 +47,7 @@ PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER | PSP_THREAD_ATTR_VFPU);
 PSP_DISABLE_AUTOSTART_PTHREAD()
 // Save 70kb by not linking in sprintf/setenv code etc
 PSP_DISABLE_NEWLIB_TIMEZONE_SUPPORT()
-
+// Save a couple of kb by not linking in pipe/socket support
 PSP_DISABLE_NEWLIB_PIPE_SUPPORT()
 PSP_DISABLE_NEWLIB_SOCKET_SUPPORT()
 

@@ -355,7 +355,7 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 
 	/* Fast path: Full opaque neighbouring blocks will always have all shared faces hidden */
 	if (Blocks.FullOpaque[block] && Blocks.FullOpaque[other]) {
-		Blocks.Hidden[(block * BLOCK_COUNT) + other] = 0x3F;
+		Blocks.Hidden[(block * BLOCK_COUNT) + other] = FACE_BITS_ALL;
 		return;
 	}
 
