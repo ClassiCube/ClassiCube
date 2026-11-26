@@ -19,7 +19,7 @@ RUN_PROGRAM	?= xenon
 
 XEX_TITLE_ID 	:= 0x43556265
 XEX_TITLE		:= ClassiCube
-XEX_VERSION		:= 1.3.9.0
+XEX_VERSION		:= 1.4.0.0
 
 default: $(TARGET).xex
 

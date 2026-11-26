@@ -16,20 +16,13 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     container:
-      image: free60/libxenon
+      image: ghcr.io/classicube/minimal-xsdk:latest
     steps:
       - uses: actions/checkout@v5
-      - name: Install prerequisites
-        run: |
-          sed -i -e 's/archive.ubuntu.com\|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-          apt-get update
-          apt-get install -y curl
 
       - name: Compile 360 build
         shell: bash
         run: |
-          export DEVKITXENON=/usr/local/xenon
-
           LATEST_FLAG=-DCC_COMMIT_SHA=\\\"${GITHUB_SHA::9}\\\"
           make xbox360 EXTRA_CFLAGS="$LATEST_FLAG"
           
@@ -41,8 +34,8 @@ jobs:
           
       - uses: ./.github/actions/upload_build
         with:
-          SOURCE_FILE: 'ClassiCube-xbox360.elf32'
-          DEST_NAME: 'ClassiCube-xbox360.elf32'
+          SOURCE_FILE: 'ClassiCube-xbox360.xex'
+          DEST_NAME: 'ClassiCube-xbox360.xex'
           
           
       - uses: ./.github/actions/notify_success
