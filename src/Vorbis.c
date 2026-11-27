@@ -1,7 +1,5 @@
 #include "Vorbis.h"
-#include "Logger.h"
 #include "Platform.h"
-#include "Event.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Errors.h"
@@ -1119,8 +1117,8 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) 
 	{
 		e_1 = -in[k4+3];   e_2 = -in[k4+1];
-		g_1 = e_1 * A[n2-1-k2] + e_2 * A[n2-2-k2];
-		g_2 = e_1 * A[n2-2-k2] - e_2 * A[n2-1-k2];
+		g_1 = -e_1 * A[n4-2-k2] + e_2 * A[n4-1-k2];
+		g_2 =  e_1 * A[n4-1-k2] + e_2 * A[n4-2-k2];
 
 		f_1 = in[n2-4-k4]; f_2 = in[n2-2-k4];
 		h_2 = f_1 * A[n4-2-k2] - f_2 * A[n4-1-k2];

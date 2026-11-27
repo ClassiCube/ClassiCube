@@ -99,7 +99,7 @@ static void CheckWeather(float delta) {
 }
 
 #ifdef CC_CLIPPING_FLAGS
-	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, chunk->skipClip ? DRAW_HINT_NOCLIP : 0)
+	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, (chunk->flags & CHUNK_FLAG_SKIP_CLIP) ? DRAW_HINT_NOCLIP : 0)
 #else
 	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, 0)
 #endif
