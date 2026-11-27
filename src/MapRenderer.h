@@ -32,19 +32,23 @@ struct ChunkPartInfo {
 	cc_uint16 counts[FACE_COUNT]; /* Counts per face */
 };
 
+#define CHUNK_FLAG_VISIBLE    (1 << 0) /* Whether chunk is visible to the player */
+#define CHUNK_FLAG_EMPTY      (1 << 1) /* Whether chunk is empty of data and is known to have no data */
+#define CHUNK_FLAG_DIRTY      (1 << 2) /* Whether chunk is pending being rebuilt */
+#define CHUNK_FLAG_ALL_AIR    (1 << 3) /* Whether chunk is completely air */
+#define CHUNK_FLAG_SKIP_CLIP  (1 << 4) /* Whether chunk can skip GPU backend clipping (see CC_CLIPPING_FLAGS) */
+#define CHUNK_FLAG_NORM_PARTS (1 << 5) /* Whether chunk has any normal parts */
+#define CHUNK_FLAG_TRNS_PARTS (1 << 6) /* Whether chunk has any translucent parts */
+
+#define CHUNK_FLAGS_ANY_PARTS (CHUNK_FLAG_NORM_PARTS | CHUNK_FLAG_TRNS_PARTS)
+
 /* Describes data necessary for rendering a chunk. */
 struct ChunkInfo {	
 	cc_uint16 centreX, centreY, centreZ; /* Centre coordinates of the chunk */
-
-	cc_uint8 visible : 1; /* Whether chunk is visible to the player */
-	cc_uint8 empty   : 1; /* Whether chunk is empty of data and is known to have no data */
-	cc_uint8 dirty   : 1; /* Whether chunk is pending being rebuilt */
-	cc_uint8 allAir  : 1; /* Whether chunk is completely air */
-	cc_uint8 noData  : 1; /* Whether chunk is currently empty of data, but may have data if built */
-	cc_uint8 skipClip: 1; /* Whether chunk can skip GPU backend clipping (see CC_CLIPPING_FLAGS) */
-	cc_uint8 : 0;         /* pad to next byte*/
-
+	cc_uint8 flags;
 	cc_uint8 drawFlags;
+	int index;
+
 #ifdef OCCLUSION
 	public cc_bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
@@ -52,8 +56,6 @@ struct ChunkInfo {
 #if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 	GfxResourceID vb;
 #endif
-	struct ChunkPartInfo* normalParts;
-	struct ChunkPartInfo* translucentParts;
 };
 
 /* Renders the meshes of non-translucent blocks in visible chunks. */

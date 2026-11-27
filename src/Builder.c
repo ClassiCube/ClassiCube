@@ -334,30 +334,27 @@ static cc_bool ReadBorderChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
 	return false;
 }
 
-static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
-	cc_bool hasNorm, hasTran;
+static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* chunk) {
+	cc_bool hasNorm, hasTrns;
 	int partsIndex;
 	int i, j, curIdx, offset;
 	
-	partsIndex = World_ChunkPack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
+	partsIndex = chunk->index;
+	chunk->flags &= ~CHUNK_FLAGS_ANY_PARTS;
 	offset  = 0;
 	hasNorm = false;
-	hasTran = false;
+	hasTrns = false;
 
 	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
 		j = i + ATLAS1D_MAX_ATLASES;
 		curIdx = partsIndex + i * World.ChunksCount;
 
 		hasNorm |= SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx]);
-		hasTran |= SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx]);
+		hasTrns |= SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx]);
 	}
 
-	if (hasNorm) {
-		info->normalParts      = &MapRenderer_PartsNormal[partsIndex];
-	}
-	if (hasTran) {
-		info->translucentParts = &MapRenderer_PartsTranslucent[partsIndex];
-	}
+	if (hasNorm) chunk->flags |= CHUNK_FLAG_NORM_PARTS;
+	if (hasTrns) chunk->flags |= CHUNK_FLAG_TRNS_PARTS;
 }
 
 cc_bool Builder_MakeChunk(struct ChunkInfo* info) {
@@ -401,7 +398,9 @@ cc_bool Builder_MakeChunk(struct ChunkInfo* info) {
 		allSolid = ReadChunkData(x1, y1, z1, &allAir);
 	}
 
-	info->allAir = allAir;
+	info->flags &= ~CHUNK_FLAG_ALL_AIR;
+	if (allAir) info->flags |= CHUNK_FLAG_ALL_AIR;
+
 	if (allAir || allSolid) return true;
 	Lighting.LightHint(x1 - 1, y1 - 1, z1 - 1);
 
@@ -453,7 +452,7 @@ cc_bool Builder_MakeChunk(struct ChunkInfo* info) {
 	}
 
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
-	cIndex = World_ChunkPack(x1 >> CHUNK_SHIFT, y1 >> CHUNK_SHIFT, z1 >> CHUNK_SHIFT);
+	cIndex = info->index;
 
 	for (index = 0; index < MapRenderer_1DUsedCount; index++) {
 		int curIdx = cIndex + index * World.ChunksCount;

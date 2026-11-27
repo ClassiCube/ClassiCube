@@ -48,29 +48,24 @@ static int maxChunkUpdates;
 static int chunksCount;
 
 static void ChunkInfo_Init(struct ChunkInfo* chunk, int x, int y, int z) {
-	chunk->centreX = x + HALF_CHUNK_SIZE; chunk->centreY = y + HALF_CHUNK_SIZE; 
+	chunk->centreX = x + HALF_CHUNK_SIZE; 
+	chunk->centreY = y + HALF_CHUNK_SIZE; 
 	chunk->centreZ = z + HALF_CHUNK_SIZE;
 #if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
 	chunk->vb = 0;
 #endif
 
-	chunk->visible   = true;  
-	chunk->empty     = false;
-	chunk->allAir    = false;
-	chunk->noData    = true;
-	chunk->dirty     = true;
-	chunk->skipClip  = false;
+	chunk->index     = World_ChunkPack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
+	chunk->flags     = CHUNK_FLAG_VISIBLE | CHUNK_FLAG_DIRTY; 
 	chunk->drawFlags = 0;
-
-	chunk->normalParts      = NULL;
-	chunk->translucentParts = NULL;
 }
 
 static CC_INLINE void ChunkInfo_Refresh(struct ChunkInfo* chunk) {
-	if (chunk->allAir) return; /* do not recreate chunks completely air */
+	/* do not recreate chunks completely air */
+	if (chunk->flags & CHUNK_FLAG_ALL_AIR) return;
 
-	chunk->empty = false;
-	chunk->dirty = true;
+	chunk->flags &= ~CHUNK_FLAG_EMPTY;
+	chunk->flags |=  CHUNK_FLAG_DIRTY;
 }
 
 /* Index of maximum used 1D atlas + 1 */
@@ -106,7 +101,7 @@ static void CheckWeather(float delta) {
 }
 
 #ifdef CC_CLIPPING_FLAGS
-	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, info->skipClip ? DRAW_HINT_NOCLIP : 0)
+	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, chunk->skipClip ? DRAW_HINT_NOCLIP : 0)
 #else
 	#define DrawBatch(count, start) Gfx_DrawIndexedTris_T2fC4b(count, start, 0)
 #endif
@@ -134,25 +129,27 @@ if (drawMin && drawMax) { \
 }
 
 static void RenderNormalBatch(int batch) {
+	struct ChunkPartInfo* partsBase = MapRenderer_PartsNormal;
 	int batchOffset = chunksCount * batch;
-	struct ChunkInfo* info;
+	struct ChunkInfo* chunk;
 	struct ChunkPartInfo part;
 	cc_bool drawMin, drawMax;
 	int i, offset, count;
 	cc_uint8 flags;
 
-	for (i = 0; i < renderChunksCount; i++) {
-		info = renderChunks[i];
-		if (!info->normalParts) continue;
+	for (i = 0; i < renderChunksCount; i++) 
+	{
+		chunk = renderChunks[i];
+		if (!(chunk->flags & CHUNK_FLAG_NORM_PARTS)) continue;
 
-		part = info->normalParts[batchOffset];
+		part = partsBase[chunk->index + batchOffset];
 		if (part.offset < 0) continue;
 		hasNormParts[batch] = true;
 
 #if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
-		Gfx_BindVb_Textured(info->vb);
+		Gfx_BindVb_Textured(chunk->vb);
 #endif
-		flags = info->drawFlags;
+		flags = chunk->drawFlags;
 
 		offset  = part.offset + part.spriteCount;
 		drawMin = (flags & FACE_BIT_XMIN) && part.counts[FACE_XMIN];
@@ -240,25 +237,27 @@ if (drawMin && drawMax) { \
 }
 
 static void RenderTranslucentBatch(int batch) {
+	struct ChunkPartInfo* partsBase = MapRenderer_PartsTranslucent;
 	int batchOffset = chunksCount * batch;
-	struct ChunkInfo* info;
+	struct ChunkInfo* chunk;
 	struct ChunkPartInfo part;
 	cc_bool drawMin, drawMax;
 	int i, offset;
 	cc_uint8 flags;
 
-	for (i = 0; i < renderChunksCount; i++) {
-		info = renderChunks[i];
-		if (!info->translucentParts) continue;
+	for (i = 0; i < renderChunksCount; i++) 
+	{
+		chunk = renderChunks[i];
+		if (!(chunk->flags & CHUNK_FLAG_TRNS_PARTS)) continue;
 
-		part = info->translucentParts[batchOffset];
+		part = partsBase[chunk->index + batchOffset];
 		if (part.offset < 0) continue;
 		hasTranParts[batch] = true;
 
 #if CC_GFX_BACKEND != CC_GFX_BACKEND_GL11
-		Gfx_BindVb_Textured(info->vb);
+		Gfx_BindVb_Textured(chunk->vb);
 #endif
-		flags = inTranslucent ? FACE_BITS_ALL : info->drawFlags;
+		flags = inTranslucent ? FACE_BITS_ALL : chunk->drawFlags;
 
 		offset  = part.offset;
 		drawMin = (flags & FACE_BIT_XMIN) && part.counts[FACE_XMIN];
@@ -337,39 +336,39 @@ static void DeleteChunk(struct ChunkInfo* chunk) {
 	Gfx_DeleteVb(&chunk->vb);
 #endif
 
-	chunk->empty  = false; 
-	chunk->allAir = false;
-	chunk->noData = true;
-	chunk->dirty  = true;
-
-#ifdef OCCLUSION
-	chunk.OcclusionFlags = 0;
-	chunk.OccludedFlags = 0;
-#endif
-
-	if (chunk->normalParts) {
-		ptr = chunk->normalParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
+	if (chunk->flags & CHUNK_FLAG_NORM_PARTS) {
+		ptr = &MapRenderer_PartsNormal[chunk->index];
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) 
+		{
 			if (ptr->offset < 0) continue; 
 			normPartsCount[i]--;
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		chunk->normalParts = NULL;
 	}
 
-	if (chunk->translucentParts) {
-		ptr = chunk->translucentParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
+	if (chunk->flags & CHUNK_FLAG_TRNS_PARTS) {
+		ptr = &MapRenderer_PartsTranslucent[chunk->index];
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) 
+		{
 			if (ptr->offset < 0) continue;
 			tranPartsCount[i]--;
 #if CC_GFX_BACKEND == CC_GFX_BACKEND_GL11
 			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		chunk->translucentParts = NULL;
 	}
+
+	chunk->flags &= ~CHUNK_FLAG_EMPTY;
+	chunk->flags &= ~CHUNK_FLAG_ALL_AIR;
+	chunk->flags &= ~CHUNK_FLAGS_ANY_PARTS;
+	chunk->flags |=  CHUNK_FLAG_DIRTY;
+
+#ifdef OCCLUSION
+	chunk.OcclusionFlags = 0;
+	chunk.OccludedFlags = 0;
+#endif
 }
 
 /* Builds the mesh (hence vertex buffer) for the given chunk, and updates internal state */
@@ -381,21 +380,22 @@ static void BuildChunk(struct ChunkInfo* chunk, int* chunkUpdates) {
 	(*chunkUpdates)++;
 	if (!Builder_MakeChunk(chunk)) return;
 
-	chunk->dirty  = false;
-	chunk->noData = !chunk->normalParts && !chunk->translucentParts;
-	chunk->empty  = chunk->noData;
-	if (chunk->empty) return;
+	chunk->flags &= ~CHUNK_FLAG_DIRTY;
+	chunk->flags &= ~CHUNK_FLAG_EMPTY;
+	if (!(chunk->flags & CHUNK_FLAGS_ANY_PARTS)) chunk->flags |= CHUNK_FLAG_EMPTY;
 	
-	if (chunk->normalParts) {
-		ptr = chunk->normalParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
+	if (chunk->flags & CHUNK_FLAG_NORM_PARTS) {
+		ptr = &MapRenderer_PartsNormal[chunk->index];
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) 
+		{
 			if (ptr->offset >= 0) normPartsCount[i]++;
 		}
 	}
 
-	if (chunk->translucentParts) {
-		ptr = chunk->translucentParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
+	if (chunk->flags & CHUNK_FLAG_TRNS_PARTS) {
+		ptr = &MapRenderer_PartsTranslucent[chunk->index];
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) 
+		{
 			if (ptr->offset >= 0) tranPartsCount[i]++;
 		}
 	}
@@ -568,28 +568,38 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 	for (i = 0; i < chunksCount; i++) 
 	{
 		chunk = sortedChunks[i];
-		if (chunk->empty) continue;
+		if (chunk->flags & CHUNK_FLAG_EMPTY) continue;
 		distSqr = distances[i];
 		
 		/* Auto unload chunks far away chunks */
-		if (!chunk->noData && distSqr >= buildDistSqr + 32 * 16) {
+		if ((chunk->flags & CHUNK_FLAGS_ANY_PARTS) && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(chunk); continue;
 		}
 
-		if (chunk->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
+		/* Build chunks within (visible range + small buffer) that have changed */
+		/* Building chunks ahead of time slightly past visible range reduces chunk pop-in when moving */
+		if ((chunk->flags & CHUNK_FLAG_DIRTY) && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(chunk);
 			BuildChunk(chunk, chunkUpdates);
+
+			if (!(chunk->flags & CHUNK_FLAGS_ANY_PARTS)) continue;
 		}
 
+		/* Skip over chunks definitely can't see */
 		if (distSqr > renderDistSqr) {
-			chunk->visible  = false;
-		} else {
-			res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
-			chunk->visible  = res != FRUSTUM_OUTSIDE;
-			chunk->skipClip = Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14);
+			chunk->flags &= ~CHUNK_FLAG_VISIBLE; continue;
 		}
 
-		if (chunk->visible && !chunk->empty) { renderChunks[j] = chunk; j++; }
+		res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+		chunk->flags &= ~CHUNK_FLAG_VISIBLE;
+		if (res != FRUSTUM_OUTSIDE) chunk->flags |= CHUNK_FLAG_VISIBLE;
+
+		chunk->flags &= ~CHUNK_FLAG_SKIP_CLIP;
+		if (Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14)) chunk->flags |= CHUNK_FLAG_SKIP_CLIP;
+
+		if ((chunk->flags & CHUNK_FLAG_VISIBLE) && (chunk->flags & CHUNK_FLAGS_ANY_PARTS)) { 
+			renderChunks[j] = chunk; j++;
+		}
 	}
 	return j;
 }
@@ -604,29 +614,35 @@ static int UpdateChunksStill(int* chunkUpdates) {
 	for (i = 0; i < chunksCount; i++) 
 	{
 		chunk = sortedChunks[i];
-		if (chunk->empty) continue;
+		if (chunk->flags & CHUNK_FLAG_EMPTY) continue;
 		distSqr = distances[i];
 
 		/* Auto unload chunks far away chunks */
-		if (!chunk->noData && distSqr >= buildDistSqr + 32 * 16) {
+		if ((chunk->flags & CHUNK_FLAGS_ANY_PARTS) && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(chunk); continue;
 		}
 
-		if (chunk->dirty && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
+		/* Build chunks within (visible range + small buffer) that have changed */
+		/* Building chunks ahead of time slightly past visible range reduces chunk pop-in when moving */
+		if ((chunk->flags & CHUNK_FLAG_DIRTY) && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(chunk);
 			BuildChunk(chunk, chunkUpdates);
+			if (!(chunk->flags & CHUNK_FLAGS_ANY_PARTS)) continue;
 
-			/* only need to update the visibility of chunks in range. */
+			/* only need to update the visibility of chunks in visible range */
 			if (distSqr > renderDistSqr) {
-				chunk->visible  = false;
-			} else {
-				res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
-				chunk->visible  = res != FRUSTUM_OUTSIDE;
-				chunk->skipClip = Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14);
+				chunk->flags &= ~CHUNK_FLAG_VISIBLE; continue;
 			}
 
-			if (chunk->visible && !chunk->empty) { renderChunks[j] = chunk; j++; }
-		} else if (chunk->visible) {
+			res = Frustum_TestSphere(chunk->centreX, chunk->centreY, chunk->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+			chunk->flags &= ~CHUNK_FLAG_VISIBLE;
+			if (res != FRUSTUM_OUTSIDE) chunk->flags |= CHUNK_FLAG_VISIBLE;
+
+			chunk->flags &= ~CHUNK_FLAG_SKIP_CLIP;
+			if (Gfx_CanSphereSkipClipping(chunk->centreX, chunk->centreY, chunk->centreZ, 14)) chunk->flags |= CHUNK_FLAG_SKIP_CLIP;
+		}
+
+		if ((chunk->flags & CHUNK_FLAG_VISIBLE) && (chunk->flags & CHUNK_FLAGS_ANY_PARTS)) { 
 			renderChunks[j] = chunk; j++;
 		}
 	}
@@ -677,7 +693,7 @@ static void SortMapChunks(int left, int right) {
 }
 
 static void UpdateSortOrder(void) {
-	struct ChunkInfo* info;
+	struct ChunkInfo* chunk;
 	IVec3 pos;
 	int i, dx, dy, dz;
 
@@ -692,10 +708,11 @@ static void UpdateSortOrder(void) {
 	chunkPos = pos;
 	if (!chunksCount) return;
 
-	for (i = 0; i < chunksCount; i++) {
-		info = sortedChunks[i];
+	for (i = 0; i < chunksCount; i++) 
+	{
+		chunk = sortedChunks[i];
 		/* Calculate distance to chunk centre */
-		dx = info->centreX - pos.x; dy = info->centreY - pos.y; dz = info->centreZ - pos.z;
+		dx = chunk->centreX - pos.x; dy = chunk->centreY - pos.y; dz = chunk->centreZ - pos.z;
 		distances[i] = dx * dx + dy * dy + dz * dz;
 
 		/* Consider these 3 chunks: */
@@ -705,7 +722,7 @@ static void UpdateSortOrder(void) {
 		/*    X-1: DrawXMin = false, DrawXMax = true  */
 		/*    X  : DrawXMin = true,  DrawXMax = true  */
 		/*    X+1: DrawXMin = true,  DrawXMax = false */
-		info->drawFlags = 
+		chunk->drawFlags = 
 			(dx >= 0 ? FACE_BIT_XMIN : 0) |
 			(dx <= 0 ? FACE_BIT_XMAX : 0) |
 			(dz >= 0 ? FACE_BIT_ZMIN : 0) |
@@ -742,8 +759,8 @@ void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
 	struct ChunkInfo* chunk;
 
 	chunk = &mapChunks[World_ChunkPack(cx, cy, cz)];
-	chunk->allAir &= Blocks.Draw[block] == DRAW_GAS;
-	/* TODO: Don't lookup twice, refresh directly using chunk pointer */
+	if (Blocks.Draw[block] != DRAW_GAS) chunk->flags &= ~CHUNK_FLAG_ALL_AIR;
+
 	ChunkInfo_Refresh(chunk);
 }
 
