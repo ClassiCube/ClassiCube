@@ -40,8 +40,6 @@ static struct ChunkInfo** sortedChunks;
 static struct ChunkInfo** renderChunks;
 /* Number of actually used pointers in the renderChunks array. Entries past this are ignored and skipped. */
 static int renderChunksCount;
-/* Distance of each chunk from the camera. */
-static cc_uint32* distances;
 /* Maximum number of chunk updates that can be performed in one frame. */
 static int maxChunkUpdates;
 /* Cached number of chunks in the world */
@@ -415,12 +413,10 @@ static void FreeChunks(void) {
 	Mem_Free(mapChunks);
 	Mem_Free(sortedChunks);
 	Mem_Free(renderChunks);
-	Mem_Free(distances);
 
 	mapChunks    = NULL;
 	sortedChunks = NULL;
 	renderChunks = NULL;
-	distances    = NULL;
 }
 
 static void AllocateParts(void) {
@@ -436,7 +432,6 @@ static void AllocateChunks(void) {
 	mapChunks    = (struct ChunkInfo*) Mem_Alloc(chunksCount, sizeof(struct ChunkInfo),  "chunk info");
 	sortedChunks = (struct ChunkInfo**)Mem_Alloc(chunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
 	renderChunks = (struct ChunkInfo**)Mem_Alloc(chunksCount, sizeof(struct ChunkInfo*), "render chunk info");
-	distances    = (cc_uint32*)Mem_Alloc(chunksCount, 4, "chunk distances");
 }
 
 static void ResetPartFlags(void) {
@@ -465,7 +460,6 @@ static void InitChunks(void) {
 				ChunkInfo_Init(&mapChunks[index], x, y, z);
 				sortedChunks[index] = &mapChunks[index];
 				renderChunks[index] = &mapChunks[index];
-				distances[index]    = 0;
 				index++;
 			}
 		}
@@ -569,7 +563,7 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 	{
 		chunk = sortedChunks[i];
 		if (chunk->flags & CHUNK_FLAG_EMPTY) continue;
-		distSqr = distances[i];
+		distSqr = chunk->distSqr;
 		
 		/* Auto unload chunks far away chunks */
 		if ((chunk->flags & CHUNK_FLAGS_ANY_PARTS) && distSqr >= buildDistSqr + 32 * 16) {
@@ -615,7 +609,7 @@ static int UpdateChunksStill(int* chunkUpdates) {
 	{
 		chunk = sortedChunks[i];
 		if (chunk->flags & CHUNK_FLAG_EMPTY) continue;
-		distSqr = distances[i];
+		distSqr = chunk->distSqr;
 
 		/* Auto unload chunks far away chunks */
 		if ((chunk->flags & CHUNK_FLAGS_ANY_PARTS) && distSqr >= buildDistSqr + 32 * 16) {
@@ -674,18 +668,17 @@ static void UpdateChunks(float delta) {
 }
 
 static void SortMapChunks(int left, int right) {
-	struct ChunkInfo** values = sortedChunks; struct ChunkInfo* value;
-	cc_uint32* keys = distances; cc_uint32 key;
+	struct ChunkInfo** keys = sortedChunks; struct ChunkInfo* key;
 
 	while (left < right) {
 		int i = left, j = right;
-		cc_uint32 pivot = keys[(i + j) >> 1];
+		cc_uint32 pivot = keys[(i + j) >> 1]->distSqr;
 
 		/* partition the list */
 		while (i <= j) {
-			while (pivot > keys[i]) i++;
-			while (pivot < keys[j]) j--;
-			QuickSort_Swap_KV_Maybe();
+			while (pivot > keys[i]->distSqr) i++;
+			while (pivot < keys[j]->distSqr) j--;
+			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */
 		QuickSort_Recurse(SortMapChunks)
@@ -713,7 +706,7 @@ static void UpdateSortOrder(void) {
 		chunk = sortedChunks[i];
 		/* Calculate distance to chunk centre */
 		dx = chunk->centreX - pos.x; dy = chunk->centreY - pos.y; dz = chunk->centreZ - pos.z;
-		distances[i] = dx * dx + dy * dy + dz * dz;
+		chunk->distSqr = dx * dx + dy * dy + dz * dz;
 
 		/* Consider these 3 chunks: */
 		/* |       X-1      |        X        |       X+1      | */

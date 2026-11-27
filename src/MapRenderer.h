@@ -43,11 +43,13 @@ struct ChunkPartInfo {
 #define CHUNK_FLAGS_ANY_PARTS (CHUNK_FLAG_NORM_PARTS | CHUNK_FLAG_TRNS_PARTS)
 
 /* Describes data necessary for rendering a chunk. */
-struct ChunkInfo {	
+struct ChunkInfo {
 	cc_uint16 centreX, centreY, centreZ; /* Centre coordinates of the chunk */
-	cc_uint8 flags;
-	cc_uint8 drawFlags;
-	int index;
+	cc_uint8 flags;     /* General flags about the chunk */
+	cc_uint8 drawFlags; /* Which faces of chunk's blocks are front facing to the camera */
+
+	int index; /* Index of the chunk in the world */
+	cc_uint32 distSqr; /* Squared distance of chunk from the camera */
 
 #ifdef OCCLUSION
 	public cc_bool Visited = false, Occluded = false;
