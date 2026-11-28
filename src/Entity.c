@@ -855,7 +855,7 @@ static void LocalPlayers_OnNewMap(void) {
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 
-static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
+static void LocalPlayer_DoRespawn(struct LocalPlayer* p, cc_bool notifyServer) {
 	struct LocationUpdate update;
 	struct AABB bb;
 	Vec3 spawn = p->Spawn;
@@ -884,7 +884,7 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 		}
 	}
 
-	CPE_SendNotifyPositionAction(NOTIFY_ACTION_RESPAWNED, p->Base.prev.pos);
+	if (notifyServer) CPE_SendNotifyPositionAction(NOTIFY_ACTION_RESPAWNED, p->Base.prev.pos);
 
 	/* Adjust the position to be slightly above the ground, so that */
 	/*  it's obvious to the player that they are being respawned */
@@ -903,18 +903,23 @@ static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device) {
+
+
+static cc_bool LocalPlayer_HandleRespawn(int key, struct InputDevice* device, cc_bool notifyServer) {
 	struct LocalPlayer* p = &LocalPlayer_Instances[device->mappedIndex];
 	if (Gui.InputGrab) return false;
 	
 	if (p->Hacks.CanRespawn) {
-		LocalPlayer_DoRespawn(p);
+		LocalPlayer_DoRespawn(p, notifyServer);
 		return true;
 	} else if (!p->_warnedRespawn) {
 		p->_warnedRespawn = true;
 		if (hackPermMsgs) Chat_AddRaw("&cRespawning is currently disabled");
 	}
 	return false;
+}
+static cc_bool LocalPlayer_HandleRespawnKeybind(int key, struct InputDevice* device) {
+	return LocalPlayer_HandleRespawn(key, device, true);
 }
 
 static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
@@ -942,9 +947,9 @@ static cc_bool LocalPlayer_HandleSetSpawn(int key, struct InputDevice* device) {
 		p->SpawnYaw   = p->Base.Yaw;
 		if (!Game_ClassicMode) p->SpawnPitch = p->Base.Pitch;
 
-		CPE_SendNotifyPositionAction(NOTIFY_ACTION_SPAWN_UPDATED, p->Spawn);
+		CPE_SendNotifyPositionAction(NOTIFY_ACTION_SETSPAWN, p->Spawn);
 	}
-	return LocalPlayer_HandleRespawn(key, device);
+	return LocalPlayer_HandleRespawn(key, device, false);
 }
 
 static cc_bool LocalPlayer_HandleFly(int key, struct InputDevice* device) {
@@ -1063,7 +1068,7 @@ static void LocalPlayer_ReleaseNoclip(int key, struct InputDevice* device) {
 }
 
 static void LocalPlayer_HookBinds(void) {
-	Bind_OnTriggered[BIND_RESPAWN]   = LocalPlayer_HandleRespawn;
+	Bind_OnTriggered[BIND_RESPAWN]   = LocalPlayer_HandleRespawnKeybind;
 	Bind_OnTriggered[BIND_SET_SPAWN] = LocalPlayer_HandleSetSpawn;
 	Bind_OnTriggered[BIND_FLY]       = LocalPlayer_HandleFly;
 	Bind_OnTriggered[BIND_NOCLIP]    = LocalPlayer_HandleNoclip;
