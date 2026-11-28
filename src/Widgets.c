@@ -18,6 +18,7 @@
 #include "Input.h"
 #include "InputHandler.h"
 #include "Launcher.h"
+#include "Protocol.h"
 
 static void Widget_NullFunc(void* widget) { }
 static int  Widget_Pointer(void* elem, int id, int x, int y) { return false; }
@@ -932,6 +933,7 @@ static int TableWidget_PointerDown(void* widget, int id, int x, int y) {
 		return TOUCH_TYPE_GUI;
 	} else if (w->selectedIndex != -1 && w->blocks[w->selectedIndex] != BLOCK_AIR) {
 		Inventory_SetSelectedBlock(w->blocks[w->selectedIndex]);
+		CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_SELECTED, w->blocks[w->selectedIndex]);
 		w->pendingClose = true;
 		return TOUCH_TYPE_GUI;
 	} else if (Gui_Contains(Table_X(w), Table_Y(w), Table_Width(w), Table_Height(w), x, y)) {

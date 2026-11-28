@@ -1828,6 +1828,7 @@ static void InventoryScreen_Init(void* screen) {
 	Event_Register_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
+	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 1);
 }
 
 static void InventoryScreen_Free(void* screen) {
@@ -1836,6 +1837,7 @@ static void InventoryScreen_Free(void* screen) {
 	Event_Unregister_(&TextureEvents.AtlasChanged,     s, InventoryScreen_NeedRedrawing);
 	Event_Unregister_(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
 	Event_Unregister_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 }
 
 static void InventoryScreen_Update(void* screen, float delta) {
@@ -1867,11 +1869,10 @@ static int InventoryScreen_KeyDown(void* screen, int key, struct InputDevice* de
 	/* Accuracy: Original classic doesn't close inventory menu when B is pressed */
 	if (InputBind_Claims(BIND_INVENTORY, key, device) && s->releasedInv && !Game_ClassicMode) {
 		Gui_Remove((struct Screen*)s);
-		CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 	} else if (InputDevice_IsEnter(key, device) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
+		CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_SELECTED, table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
-		CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 	} else if (Elem_HandlesKeyDown(table, key, device)) {
 	} else {
 		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key, device);
@@ -1903,7 +1904,6 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 		hotbar = Input_IsCtrlPressed() || Input_IsShiftPressed();
 		if (!hotbar) {
 			Gui_Remove((struct Screen*)s);
-			CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 		}
 	}
 	return TOUCH_TYPE_GUI;
@@ -1948,13 +1948,11 @@ void InventoryScreen_Show(void) {
 
 	s->VTABLE = &InventoryScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_INVENTORY);
-	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 1);
 }
 
 void InventoryScreen_Hide(void) {
 	struct InventoryScreen* s = &InventoryScreen;
 	Gui_Remove((struct Screen*)s);
-	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_TOGGLED, 0);
 }
 
 

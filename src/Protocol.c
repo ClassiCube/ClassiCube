@@ -95,7 +95,7 @@ static struct CpeExt
 	extTeleport_Ext     = { "ExtEntityTeleport", 1 },
 	lightingMode_Ext    = { "LightingMode", 1 },
 	cinematicGui_Ext    = { "CinematicGui", 1 },
-	notifyAction_Ext    = { "NotifyAction", 1 },
+	notifyAction_Ext    = { "NotifyAction", 2 },
 	toggleBlockList_Ext = { "ToggleBlockList", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
 	extBlocks_Ext       = { "ExtendedBlocks", 1 };
@@ -912,18 +912,31 @@ void CPE_SendNotifyAction(int action, cc_uint16 value) {
 	Server.SendData(data, 5);
 }
 
-void CPE_SendNotifyPositionAction(int action, int x, int y, int z) {
-	cc_uint8 data[9];
+void CPE_SendNotifyPositionAction(int action, Vec3 pos) {
+	int x, y, z;
+	cc_uint8 tmp[15];
+	cc_uint8* data = tmp;
 	if (!Server.SupportsNotifyAction) return;
 
-	data[0] = OPCODE_NOTIFY_POSITION_ACTION;
+	x = (int)(pos.x * 32);
+	y = (int)(pos.y * 32) + 51;
+	z = (int)(pos.z * 32);
+
+	*data++ = OPCODE_NOTIFY_POSITION_ACTION;
 	{
-		Mem_WriteU16_BE(data + 1, action);
-		Mem_WriteU16_BE(data + 3, x);
-		Mem_WriteU16_BE(data + 5, y);
-		Mem_WriteU16_BE(data + 7, z);
+		Mem_WriteU16_BE(data, action); data += 2;
+		if (IsSupported(extEntityPos_Ext)) {
+			Mem_WriteU32_BE(data, x); data += 4;
+			Mem_WriteU32_BE(data, y); data += 4;
+			Mem_WriteU32_BE(data, z); data += 4;
+		}
+		else {
+			Mem_WriteU16_BE(data, x); data += 2;
+			Mem_WriteU16_BE(data, y); data += 2;
+			Mem_WriteU16_BE(data, z); data += 2;
+		}
 	}
-	Server.SendData(data, 9);
+	Server.SendData(tmp, (cc_uint32)(data - tmp));
 }
 
 static void CPE_SendExtInfo(int extsCount) {
@@ -1029,11 +1042,12 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (ext->serverVersion == 1) return;
 		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (ext == &extEntityPos_Ext) {
-		Protocol.Sizes[OPCODE_ENTITY_TELEPORT]     += 6;
-		Protocol.Sizes[OPCODE_ADD_ENTITY]          += 6;
-		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2]     += 6;
-		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]      += 6;
-		Protocol.Sizes[OPCODE_ENTITY_TELEPORT_EXT] += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT]        += 6;
+		Protocol.Sizes[OPCODE_ADD_ENTITY]             += 6;
+		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2]        += 6;
+		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]         += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT_EXT]    += 6;
+		Protocol.Sizes[OPCODE_NOTIFY_POSITION_ACTION] += 6;
 	} else if (ext == &fastMap_Ext) {
 		Protocol.Sizes[OPCODE_LEVEL_BEGIN] += 4;
 	} else if (ext == &envMapAspect_Ext) {
@@ -1986,7 +2000,7 @@ static void OnReset(void) {
 #else
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) { }
 void CPE_SendNotifyAction(int action, cc_uint16 value) { }
-void CPE_SendNotifyPositionAction(int action, int x, int y, int z) { }
+void CPE_SendNotifyPositionAction(int action, Vec3 pos) { }
 
 static void OnInit(void) { }
 

@@ -45,9 +45,22 @@ static void Server_ResetState(void) {
 }
 
 void Server_RetrieveTexturePack(const cc_string* url) {
-	if (!Game_AllowServerTextures || TextureUrls_HasDenied(url)) return;
+	if (!Game_AllowServerTextures) return;
+
+	if (TextureUrls_HasDenied(url)) {
+		CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_OPENED);
+		CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_DENIED);
+		return;
+	}
 
 	if (!url->length || TextureUrls_HasAccepted(url)) {
+		
+		CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_OPENED);
+		CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PROMPT_RESPONSE, NOTIFY_ACTION_VALUE__TEXTURE_PROMPT_RESPONSE_ACCEPTED);
+		if (!url->length) {
+			CPE_SendNotifyAction(NOTIFY_ACTION_TEXTURE_PACK_CHANGED, NOTIFY_ACTION_VALUE__TEXTURE_CHANGE_FROM_SERVER);
+		}
+
 		TexturePack_Extract(url);
 	} else {
 		TexPackOverlay_Show(url);

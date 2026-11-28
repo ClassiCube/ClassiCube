@@ -16,16 +16,31 @@ cc_bool Inventory_CheckChangeSelected(void) {
 	return true;
 }
 
+static cc_uint16 lastSent = 0;
+static void SendCurrentHotbarIndex() {
+	int hotbar = Inventory.Offset / INVENTORY_BLOCKS_PER_HOTBAR;
+	cc_uint8 slot = Inventory.SelectedIndex % INVENTORY_BLOCKS_PER_HOTBAR;
+	/* Hotbar number is stored in the most significant byte, index in least significant byte */
+	cc_uint16 value = (hotbar << 8) | slot;
+
+	if (value == lastSent) return;
+	CPE_SendNotifyAction(NOTIFY_ACTION_HOTBAR_INDEX_CHANGED, value);
+	lastSent = value;
+}
 void Inventory_SetSelectedIndex(int index) {
 	if (!Inventory_CheckChangeSelected()) return;
 	Inventory.SelectedIndex = index;
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
+
+	SendCurrentHotbarIndex();
 }
 
 void Inventory_SetHotbarIndex(int index) {
 	if (!Inventory_CheckChangeSelected() || Game_ClassicMode) return;
 	Inventory.Offset = index * INVENTORY_BLOCKS_PER_HOTBAR;
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
+
+	SendCurrentHotbarIndex();
 }
 
 void Inventory_SwitchHotbar(void) {
@@ -46,7 +61,6 @@ void Inventory_SetSelectedBlock(BlockID block) {
 
 	Inventory_Set(Inventory.SelectedIndex, block);
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
-	CPE_SendNotifyAction(NOTIFY_ACTION_BLOCK_LIST_SELECTED, block);
 }
 
 void Inventory_PickBlock(BlockID block) {
